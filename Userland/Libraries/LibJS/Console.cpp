@@ -1,13 +1,14 @@
 /*
  * Copyright (c) 2020, Emanuele Torre <torreemanuele6@gmail.com>
  * Copyright (c) 2020-2022, Linus Groh <linusg@serenityos.org>
- * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2021-2022, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <LibJS/Console.h>
-#include <LibJS/Runtime/GlobalObject.h>
+#include <LibJS/Runtime/AbstractOperations.h>
+#include <LibJS/Runtime/StringConstructor.h>
 #include <LibJS/Runtime/Temporal/Duration.h>
 
 namespace JS {
@@ -511,24 +512,128 @@ ThrowCompletionOr<Value> ConsoleClient::logger(Console::LogLevel log_level, Mark
         return printer(log_level, move(first_as_vector));
     }
 
-    // 5. If first does not contain any format specifiers, perform Printer(logLevel, args).
-    if (!TRY(first.to_string(vm)).contains('%')) {
-        TRY(printer(log_level, args));
-    } else {
-        // 6. Otherwise, perform Printer(logLevel, Formatter(args)).
+    // 5. Otherwise, perform Printer(logLevel, Formatter(args)).
+    else {
         auto formatted = TRY(formatter(args));
         TRY(printer(log_level, formatted));
     }
 
-    // 7. Return undefined.
+    // 6. Return undefined.
     return js_undefined();
 }
 
 // 2.2. Formatter(args), https://console.spec.whatwg.org/#formatter
 ThrowCompletionOr<MarkedVector<Value>> ConsoleClient::formatter(MarkedVector<Value> const& args)
 {
-    // TODO: Actually implement formatting
-    return args;
+    auto& vm = m_console.vm();
+    auto& realm = *vm.current_realm();
+
+    // 1. If args’s size is 1, return args.
+    if (args.size() == 1)
+        return args;
+
+    // 2. Let target be the first element of args.
+    auto target = (!args.is_empty()) ? TRY(args.first().to_string(vm)) : "";
+
+    // 3. Let current be the second element of args.
+    auto current = (args.size() > 1) ? args[1] : js_undefined();
+
+    // 4. Find the first possible format specifier specifier, from the left to the right in target.
+    auto find_specifier = [](StringView target) -> Optional<StringView> {
+        size_t start_index = 0;
+        while (start_index < target.length()) {
+            auto maybe_index = target.find('%');
+            if (!maybe_index.has_value())
+                return {};
+
+            auto index = maybe_index.value();
+            if (index + 1 >= target.length())
+                return {};
+
+            switch (target[index + 1]) {
+            case 'c':
+            case 'd':
+            case 'f':
+            case 'i':
+            case 'o':
+            case 'O':
+            case 's':
+                return target.substring_view(index, 2);
+            }
+
+            start_index = index + 1;
+        }
+        return {};
+    };
+    auto maybe_specifier = find_specifier(target);
+
+    // 5. If no format specifier was found, return args.
+    if (!maybe_specifier.has_value()) {
+        return args;
+    }
+    // 6. Otherwise:
+    else {
+        auto specifier = maybe_specifier.release_value();
+        Optional<Value> converted;
+
+        // 1. If specifier is %s, let converted be the result of Call(%String%, undefined, « current »).
+        if (specifier == "%s"sv) {
+            converted = TRY(call(vm, realm.intrinsics().string_constructor(), js_undefined(), current));
+        }
+        // 2. If specifier is %d or %i:
+        else if (specifier.is_one_of("%d"sv, "%i"sv)) {
+            // 1. If Type(current) is Symbol, let converted be NaN
+            if (current.is_symbol()) {
+                converted = js_nan();
+            }
+            // 2. Otherwise, let converted be the result of Call(%parseInt%, undefined, « current, 10 »).
+            else {
+                converted = TRY(call(vm, realm.intrinsics().parse_int_function(), js_undefined(), current, Value { 10 }));
+            }
+        }
+        // 3. If specifier is %f:
+        else if (specifier == "%f"sv) {
+            // 1. If Type(current) is Symbol, let converted be NaN
+            if (current.is_symbol()) {
+                converted = js_nan();
+            }
+            // 2. Otherwise, let converted be the result of Call(% parseFloat %, undefined, « current »).
+            else {
+                converted = TRY(call(vm, realm.intrinsics().parse_float_function(), js_undefined(), current));
+            }
+        }
+        // 4. If specifier is %o, optionally let converted be current with optimally useful formatting applied.
+        else if (specifier == "%o"sv) {
+            // TODO: "Optimally-useful formatting"
+            converted = current;
+        }
+        // 5. If specifier is %O, optionally let converted be current with generic JavaScript object formatting applied.
+        else if (specifier == "%O"sv) {
+            // TODO: "generic JavaScript object formatting"
+            converted = current;
+        }
+        // 6. TODO: process %c
+        else if (specifier == "%c"sv) {
+            // NOTE: This has no spec yet. `%c` specifiers treat the argument as CSS styling for the log message.
+            //       For now, we'll just consume the specifier and the argument.
+            // FIXME: Actually style the message somehow.
+            converted = js_string(vm, "");
+        }
+
+        // 7. If any of the previous steps set converted, replace specifier in target with converted.
+        if (converted.has_value())
+            target = target.replace(specifier, TRY(converted->to_string(vm)), ReplaceMode::FirstOnly);
+    }
+
+    // 7. Let result be a list containing target together with the elements of args starting from the third onward.
+    MarkedVector<Value> result { vm.heap() };
+    result.ensure_capacity(args.size() - 1);
+    result.empend(js_string(vm, target));
+    for (size_t i = 2; i < args.size(); ++i)
+        result.unchecked_append(args[i]);
+
+    // 8. Return Formatter(result).
+    return formatter(result);
 }
 
 }
