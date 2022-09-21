@@ -31,5 +31,3 @@ template<>
 inline bool Node::fast_is<ProcessingInstruction>() const { return node_type() == (u16)NodeType::PROCESSING_INSTRUCTION_NODE; }
 
 }
-
-WRAPPER_HACK(ProcessingInstruction, Web::DOM)

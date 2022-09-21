@@ -35,5 +35,3 @@ private:
 };
 
 }
-
-WRAPPER_HACK(Performance, Web::HighResolutionTime)

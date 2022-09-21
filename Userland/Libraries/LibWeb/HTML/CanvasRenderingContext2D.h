@@ -124,5 +124,3 @@ DOM::ExceptionOr<CanvasImageSourceUsability> check_usability_of_image(CanvasImag
 bool image_is_not_origin_clean(CanvasImageSource const&);
 
 }
-
-WRAPPER_HACK(CanvasRenderingContext2D, Web::HTML)

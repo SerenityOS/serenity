@@ -33,5 +33,3 @@ private:
 };
 
 }
-
-WRAPPER_HACK(WebGLContextEvent, Web::WebGL)

@@ -70,5 +70,3 @@ inline void ParentNode::for_each_child(Callback callback)
 }
 
 }
-
-WRAPPER_HACK(ParentNode, Web::DOM)

@@ -31,5 +31,3 @@ public:
 };
 
 }
-
-WRAPPER_HACK(StaticRange, Web::DOM)

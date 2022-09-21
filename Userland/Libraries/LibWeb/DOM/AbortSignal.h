@@ -54,5 +54,3 @@ private:
 };
 
 }
-
-WRAPPER_HACK(AbortSignal, Web::DOM)

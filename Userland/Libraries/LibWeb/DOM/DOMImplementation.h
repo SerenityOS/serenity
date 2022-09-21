@@ -39,5 +39,3 @@ private:
 };
 
 }
-
-WRAPPER_HACK(DOMImplementation, Web::DOM)

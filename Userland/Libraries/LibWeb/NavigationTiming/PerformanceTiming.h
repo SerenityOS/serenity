@@ -50,5 +50,3 @@ private:
 };
 
 }
-
-WRAPPER_HACK(PerformanceTiming, Web::NavigationTiming)

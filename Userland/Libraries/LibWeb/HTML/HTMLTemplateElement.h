@@ -40,5 +40,3 @@ namespace Web::DOM {
 template<>
 inline bool Node::fast_is<HTML::HTMLTemplateElement>() const { return is_html_template_element(); }
 }
-
-WRAPPER_HACK(HTMLTemplateElement, Web::HTML)

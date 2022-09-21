@@ -35,5 +35,3 @@ private:
 };
 
 }
-
-WRAPPER_HACK(DOMRect, Web::Geometry)

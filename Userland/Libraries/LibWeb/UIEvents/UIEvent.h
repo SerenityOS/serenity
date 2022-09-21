@@ -48,5 +48,3 @@ protected:
 };
 
 }
-
-WRAPPER_HACK(UIEvent, Web::UIEvents)

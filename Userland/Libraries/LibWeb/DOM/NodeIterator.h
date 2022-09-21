@@ -78,5 +78,3 @@ private:
 };
 
 }
-
-WRAPPER_HACK(NodeIterator, Web::DOM)

@@ -37,5 +37,3 @@ private:
 };
 
 }
-
-WRAPPER_HACK(File, Web::FileAPI)

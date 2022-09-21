@@ -29,5 +29,3 @@ private:
 };
 
 }
-
-WRAPPER_HACK(IdleDeadline, Web::RequestIdleCallback)

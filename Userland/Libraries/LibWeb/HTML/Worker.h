@@ -96,5 +96,3 @@ private:
 };
 
 }
-
-WRAPPER_HACK(Worker, Web::HTML)

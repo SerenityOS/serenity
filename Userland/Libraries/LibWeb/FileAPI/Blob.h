@@ -61,5 +61,3 @@ private:
 };
 
 }
-
-WRAPPER_HACK(Blob, Web::FileAPI)

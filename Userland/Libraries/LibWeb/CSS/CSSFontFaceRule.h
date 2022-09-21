@@ -37,5 +37,3 @@ template<>
 inline bool CSSRule::fast_is<CSSFontFaceRule>() const { return type() == CSSRule::Type::FontFace; }
 
 }
-
-WRAPPER_HACK(CSSFontFaceRule, Web::CSS)

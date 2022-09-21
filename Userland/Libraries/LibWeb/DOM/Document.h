@@ -594,5 +594,3 @@ private:
 };
 
 }
-
-WRAPPER_HACK(Document, Web::DOM)

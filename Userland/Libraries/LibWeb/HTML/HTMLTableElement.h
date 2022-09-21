@@ -49,5 +49,3 @@ private:
 };
 
 }
-
-WRAPPER_HACK(HTMLTableElement, Web::HTML)

@@ -175,5 +175,3 @@ inline bool Node::fast_is<Element>() const { return is_element(); }
 ExceptionOr<QualifiedName> validate_and_extract(JS::Object& global_object, FlyString namespace_, FlyString qualified_name);
 
 }
-
-WRAPPER_HACK(Element, Web::DOM)

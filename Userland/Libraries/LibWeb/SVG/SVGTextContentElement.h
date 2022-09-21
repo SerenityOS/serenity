@@ -22,5 +22,3 @@ protected:
 };
 
 }
-
-WRAPPER_HACK(SVGTextContentElement, Web::SVG)

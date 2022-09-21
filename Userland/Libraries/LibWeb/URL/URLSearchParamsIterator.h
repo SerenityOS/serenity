@@ -32,5 +32,3 @@ private:
 };
 
 }
-
-WRAPPER_HACK(URLSearchParamsIterator, Web::URL)

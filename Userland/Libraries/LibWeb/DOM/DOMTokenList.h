@@ -54,5 +54,3 @@ private:
 };
 
 }
-
-WRAPPER_HACK(DOMTokenList, Web::DOM)

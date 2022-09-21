@@ -70,5 +70,3 @@ private:
 };
 
 }
-
-WRAPPER_HACK(KeyboardEvent, Web::UIEvents)

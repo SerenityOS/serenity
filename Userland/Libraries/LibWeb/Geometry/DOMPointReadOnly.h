@@ -36,5 +36,3 @@ protected:
 };
 
 }
-
-WRAPPER_HACK(DOMPointReadOnly, Web::Geometry)

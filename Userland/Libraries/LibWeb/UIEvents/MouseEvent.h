@@ -56,5 +56,3 @@ private:
 };
 
 }
-
-WRAPPER_HACK(MouseEvent, Web::UIEvents)

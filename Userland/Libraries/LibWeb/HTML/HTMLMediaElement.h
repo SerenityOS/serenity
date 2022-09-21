@@ -23,5 +23,3 @@ protected:
 };
 
 }
-
-WRAPPER_HACK(HTMLMediaElement, Web::HTML)

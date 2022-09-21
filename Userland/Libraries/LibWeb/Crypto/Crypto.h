@@ -36,5 +36,3 @@ private:
 };
 
 }
-
-WRAPPER_HACK(Crypto, Web::Crypto)

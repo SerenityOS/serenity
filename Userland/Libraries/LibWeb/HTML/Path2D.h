@@ -30,5 +30,3 @@ private:
 };
 
 }
-
-WRAPPER_HACK(Path2D, Web::HTML)

@@ -64,5 +64,3 @@ private:
 };
 
 }
-
-WRAPPER_HACK(StyleSheet, Web::CSS)

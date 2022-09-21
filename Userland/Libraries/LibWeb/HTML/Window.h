@@ -293,5 +293,3 @@ private:
 void run_animation_frame_callbacks(DOM::Document&, double now);
 
 }
-
-WRAPPER_HACK(Window, Web::HTML)

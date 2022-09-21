@@ -23,5 +23,3 @@ private:
 };
 
 }
-
-WRAPPER_HACK(HTMLBRElement, Web::HTML)

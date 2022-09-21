@@ -28,5 +28,3 @@ template<>
 inline bool Node::fast_is<CDATASection>() const { return is_cdata_section(); }
 
 }
-
-WRAPPER_HACK(CDATASection, Web::DOM)

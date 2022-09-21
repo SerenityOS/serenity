@@ -36,5 +36,3 @@ private:
 };
 
 }
-
-WRAPPER_HACK(SVGCircleElement, Web::SVG)

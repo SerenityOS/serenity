@@ -116,5 +116,3 @@ private:
 };
 
 }
-
-WRAPPER_HACK(WorkerGlobalScope, Web::HTML)

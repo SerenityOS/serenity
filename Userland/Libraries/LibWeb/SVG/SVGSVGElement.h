@@ -43,5 +43,3 @@ template<>
 inline bool Node::fast_is<SVG::SVGSVGElement>() const { return is_svg_svg_element(); }
 
 }
-
-WRAPPER_HACK(SVGSVGElement, Web::SVG)

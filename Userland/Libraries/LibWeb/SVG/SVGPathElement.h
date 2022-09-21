@@ -32,5 +32,3 @@ private:
 };
 
 }
-
-WRAPPER_HACK(SVGPathElement, Web::SVG)

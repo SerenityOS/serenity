@@ -178,5 +178,3 @@ private:
 };
 
 }
-
-WRAPPER_HACK(Event, Web::DOM)

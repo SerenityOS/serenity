@@ -33,5 +33,3 @@ private:
     bool m_matches;
 };
 }
-
-WRAPPER_HACK(MediaQueryListEvent, Web::CSS)

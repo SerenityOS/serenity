@@ -42,5 +42,3 @@ private:
 };
 
 }
-
-WRAPPER_HACK(TextDecoder, Web::Encoding)

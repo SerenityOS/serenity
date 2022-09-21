@@ -46,5 +46,3 @@ protected:
 };
 
 }
-
-WRAPPER_HACK(AbstractRange, Web::DOM)

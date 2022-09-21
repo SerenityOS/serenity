@@ -22,5 +22,3 @@ private:
 };
 
 }
-
-WRAPPER_HACK(HTMLFrameElement, Web::HTML)

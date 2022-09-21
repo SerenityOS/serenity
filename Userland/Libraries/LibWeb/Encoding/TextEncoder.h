@@ -34,5 +34,3 @@ protected:
 };
 
 }
-
-WRAPPER_HACK(TextEncoder, Web::Encoding)

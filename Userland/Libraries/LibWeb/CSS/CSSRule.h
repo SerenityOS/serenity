@@ -56,5 +56,3 @@ protected:
 };
 
 }
-
-WRAPPER_HACK(CSSRule, Web::CSS)
