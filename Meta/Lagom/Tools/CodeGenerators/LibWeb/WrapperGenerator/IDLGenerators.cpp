@@ -17,8 +17,11 @@ Vector<StringView> s_header_search_paths;
 namespace IDL {
 
 // FIXME: Generate this automatically somehow.
-static bool is_wrappable_type(Type const& type)
+static bool is_platform_object(Type const& type)
 {
+    // NOTE: This is a hand-curated subset of platform object types that are actually relevant
+    // in places where this function is used. If you add IDL code and get compile errors, you
+    // might simply need to add another type here.
     if (type.name() == "EventTarget")
         return true;
     if (type.name() == "Node")
@@ -103,7 +106,7 @@ static String union_type_to_variant(UnionType const& union_type, Interface const
 
 CppType idl_type_name_to_cpp_type(Type const& type, Interface const& interface)
 {
-    if (is_wrappable_type(type))
+    if (is_platform_object(type))
         return { .name = String::formatted("JS::Handle<{}>", type.name()), .sequence_storage_type = SequenceStorageType::MarkedVector };
 
     if (type.is_string())
@@ -342,7 +345,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
     auto @cpp_name@ = adopt_ref(*new @cpp_type@(move(callback_type)));
 )~~~");
         }
-    } else if (IDL::is_wrappable_type(*parameter.type)) {
+    } else if (IDL::is_platform_object(*parameter.type)) {
         if (!parameter.type->is_nullable()) {
             if (!optional) {
                 scoped_generator.append(R"~~~(
@@ -932,15 +935,15 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
             [[maybe_unused]] auto& @js_name@@js_suffix@_object = @js_name@@js_suffix@.as_object();
 )~~~");
 
-        bool includes_wrappable_type = false;
+        bool includes_platform_object = false;
         for (auto& type : types) {
-            if (IDL::is_wrappable_type(type)) {
-                includes_wrappable_type = true;
+            if (IDL::is_platform_object(type)) {
+                includes_platform_object = true;
                 break;
             }
         }
 
-        if (includes_wrappable_type) {
+        if (includes_platform_object) {
             // 5. If V is a platform object, then:
             union_generator.append(R"~~~(
             if (is<PlatformObject>(@js_name@@js_suffix@_object)) {
@@ -950,7 +953,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
 
             //    1. If types includes an interface type that V implements, then return the IDL value that is a reference to the object V.
             for (auto& type : types) {
-                if (!IDL::is_wrappable_type(type))
+                if (!IDL::is_platform_object(type))
                     continue;
 
                 auto union_platform_object_type_generator = union_generator.fork();
@@ -1434,7 +1437,7 @@ static void generate_wrap_statement(SourceGenerator& generator, String const& va
         // If the type is a platform object we currently return a Vector<JS::Handle<T>> from the
         // C++ implementation, thus allowing us to unwrap the element (a handle) like below.
         // This might need to change if we switch to a MarkedVector.
-        if (is_wrappable_type(sequence_generic_type.parameters().first())) {
+        if (is_platform_object(sequence_generic_type.parameters().first())) {
             scoped_generator.append(R"~~~(
             auto* wrapped_element@recursion_depth@ = &(*element@recursion_depth@);
 )~~~");
