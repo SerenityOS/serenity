@@ -648,6 +648,8 @@ private:
     JS::GCPtr<Node> m_last_child;
     JS::GCPtr<Node> m_next_sibling;
     JS::GCPtr<Node> m_previous_sibling;
+
+    JS::GCPtr<NodeList> m_child_nodes;
 };
 
 }

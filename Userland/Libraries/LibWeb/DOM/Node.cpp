@@ -90,6 +90,7 @@ void Node::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_last_child.ptr());
     visitor.visit(m_next_sibling.ptr());
     visitor.visit(m_previous_sibling.ptr());
+    visitor.visit(m_child_nodes);
 
     for (auto& registered_observer : m_registered_observer_list)
         visitor.visit(registered_observer);
@@ -861,11 +862,12 @@ ParentNode* Node::parent_or_shadow_host()
 
 JS::NonnullGCPtr<NodeList> Node::child_nodes()
 {
-    // FIXME: This should return the same LiveNodeList object every time,
-    //        but that would cause a reference cycle since NodeList refs the root.
-    return LiveNodeList::create(window(), *this, [this](auto& node) {
-        return is_parent_of(node);
-    });
+    if (!m_child_nodes) {
+        m_child_nodes = LiveNodeList::create(window(), *this, [this](auto& node) {
+            return is_parent_of(node);
+        });
+    }
+    return *m_child_nodes;
 }
 
 Vector<JS::Handle<Node>> Node::children_as_vector() const
