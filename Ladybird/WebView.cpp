@@ -556,14 +556,13 @@ void WebView::did_output_js_console_message(i32 message_index)
 
 void WebView::did_get_js_console_messages(i32, Vector<String>, Vector<String> messages)
 {
-    if (!m_js_console_input_edit)
-        return;
+    ensure_js_console_widget();
     for (auto& message : messages) {
         m_js_console_output_edit->append(qstring_from_akstring(message).trimmed());
     }
 }
 
-void WebView::show_js_console()
+void WebView::ensure_js_console_widget()
 {
     if (!m_js_console_widget) {
         m_js_console_widget = new QWidget;
@@ -587,6 +586,11 @@ void WebView::show_js_console()
             m_page_client->m_console_client->handle_input(akstring_from_qstring(code));
         });
     }
+}
+
+void WebView::show_js_console()
+{
+    ensure_js_console_widget();
     m_js_console_widget->show();
     m_js_console_input_edit->setFocus();
 }
