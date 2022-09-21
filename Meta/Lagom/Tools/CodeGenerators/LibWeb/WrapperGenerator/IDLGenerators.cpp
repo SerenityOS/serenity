@@ -22,47 +22,32 @@ static bool is_platform_object(Type const& type)
     // NOTE: This is a hand-curated subset of platform object types that are actually relevant
     // in places where this function is used. If you add IDL code and get compile errors, you
     // might simply need to add another type here.
-    if (type.name() == "EventTarget")
-        return true;
-    if (type.name() == "Node")
-        return true;
-    if (type.name() == "Document")
-        return true;
-    if (type.name() == "Text")
-        return true;
-    if (type.name() == "DocumentType")
-        return true;
+    static constexpr Array types = {
+        "AbortSignal"sv,
+        "Attr"sv,
+        "Blob"sv,
+        "CanvasRenderingContext2D"sv,
+        "Document"sv,
+        "DocumentType"sv,
+        "EventTarget"sv,
+        "ImageData"sv,
+        "MutationRecord"sv,
+        "NamedNodeMap"sv,
+        "Node"sv,
+        "Path2D"sv,
+        "Range"sv,
+        "Selection"sv,
+        "Text"sv,
+        "TextMetrics"sv,
+        "URLSearchParams"sv,
+        "WebGLRenderingContext"sv,
+        "Window"sv,
+    };
     if (type.name().ends_with("Element"sv))
         return true;
     if (type.name().ends_with("Event"sv))
         return true;
-    if (type.name() == "ImageData")
-        return true;
-    if (type.name() == "Window")
-        return true;
-    if (type.name() == "Range")
-        return true;
-    if (type.name() == "Selection")
-        return true;
-    if (type.name() == "Attr")
-        return true;
-    if (type.name() == "NamedNodeMap")
-        return true;
-    if (type.name() == "TextMetrics")
-        return true;
-    if (type.name() == "AbortSignal")
-        return true;
-    if (type.name() == "CanvasRenderingContext2D")
-        return true;
-    if (type.name() == "WebGLRenderingContext")
-        return true;
-    if (type.name() == "URLSearchParams")
-        return true;
-    if (type.name() == "Blob")
-        return true;
-    if (type.name() == "Path2D")
-        return true;
-    if (type.name() == "MutationRecord")
+    if (types.span().contains_slow(type.name()))
         return true;
     return false;
 }
