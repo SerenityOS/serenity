@@ -41,7 +41,16 @@ void Processor::initialize(u32 cpu)
 
 void Processor::flush_tlb_local(VirtualAddress, size_t)
 {
-    // FIXME: Implement this
+    // FIXME: Figure out how to flush a single page
+    asm volatile("dsb ishst");
+    asm volatile("tlbi vmalle1is");
+    asm volatile("dsb ish");
+    asm volatile("isb");
+}
+
+void Processor::flush_tlb(Memory::PageDirectory const*, VirtualAddress vaddr, size_t page_count)
+{
+    flush_tlb_local(vaddr, page_count);
 }
 
 }
