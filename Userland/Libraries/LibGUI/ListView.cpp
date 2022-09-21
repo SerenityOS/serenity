@@ -42,7 +42,7 @@ void ListView::update_content_size()
     int content_width = 0;
     for (int row = 0, row_count = model()->row_count(); row < row_count; ++row) {
         auto text = model()->index(row, m_model_column).data();
-        content_width = max(content_width, font().width(text.to_string()) + horizontal_padding() + 1);
+        content_width = max(content_width, font().width(text.to_string()) + horizontal_padding() * 2);
     }
 
     content_width = max(content_width, widget_inner_rect().width());
