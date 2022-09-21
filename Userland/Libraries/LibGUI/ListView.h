@@ -54,6 +54,7 @@ private:
     virtual void keydown_event(KeyEvent&) override;
     virtual void resize_event(ResizeEvent&) override;
     virtual void mousemove_event(MouseEvent&) override;
+    virtual void layout_relevant_change_occured() override;
 
     Gfx::IntRect content_rect(int row) const;
     void update_content_size();
