@@ -398,6 +398,8 @@ void FrameLoader::resource_did_load()
     document->set_content_type(resource()->mime_type());
 
     browsing_context().set_active_document(document);
+    if (auto* page = browsing_context().page())
+        page->client().page_did_create_main_document();
 
     if (!parse_document(*document, resource()->encoded_data())) {
         load_error_page(url, "Failed to parse content.");
