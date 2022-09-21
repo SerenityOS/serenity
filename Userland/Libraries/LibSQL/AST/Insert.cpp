@@ -47,7 +47,8 @@ ResultOr<ResultSet> Insert::execute(ExecutionContext& context) const
 
         auto row_value = TRY(row_expr.evaluate(context));
         VERIFY(row_value.type() == SQLType::Tuple);
-        auto values = row_value.to_vector().value();
+
+        auto values = row_value.to_vector().release_value();
 
         if (m_column_names.is_empty() && values.size() != row.size())
             return Result { SQLCommand::Insert, SQLErrorCode::InvalidNumberOfValues, String::empty() };
@@ -62,7 +63,7 @@ ResultOr<ResultSet> Insert::execute(ExecutionContext& context) const
             if (!does_value_data_type_match(element_type, input_value_type))
                 return Result { SQLCommand::Insert, SQLErrorCode::InvalidValueType, table_def->columns()[element_index].name() };
 
-            row[element_index] = values[ix];
+            row[element_index] = move(values[ix]);
         }
 
         TRY(context.database->insert(row));

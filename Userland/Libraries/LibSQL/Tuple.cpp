@@ -231,8 +231,8 @@ int Tuple::compare(Tuple const& other) const
 int Tuple::match(Tuple const& other) const
 {
     auto other_index = 0u;
-    for (auto& part : *other.descriptor()) {
-        auto other_value = other[other_index];
+    for (auto const& part : *other.descriptor()) {
+        auto const& other_value = other[other_index];
         if (other_value.is_null())
             return 0;
         auto my_index = index_of(part.name);
