@@ -90,6 +90,8 @@ ComboBox::ComboBox()
             m_open_button->click();
     };
     m_editor->on_keypress = [this](KeyEvent& event) {
+        if (!m_only_allow_values_from_model)
+            return;
         if (!m_list_window->is_visible() && event.key() <= Key_Z && event.key() >= Key_A) {
             open();
             m_list_window->event(event);
