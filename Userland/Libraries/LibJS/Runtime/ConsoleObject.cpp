@@ -14,7 +14,7 @@ namespace JS {
 
 ConsoleObject::ConsoleObject(Realm& realm)
     : Object(*realm.intrinsics().object_prototype())
-    , m_console(make<Console>(realm.vm()))
+    , m_console(make<Console>(realm))
 {
 }
 
