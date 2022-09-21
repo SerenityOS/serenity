@@ -76,7 +76,7 @@ READONLY_AFTER_INIT bool g_in_early_boot;
 
 namespace Kernel {
 
-static void draw_logo();
+static void draw_logo(u8* framebuffer_data);
 static u32 query_firmware_version();
 
 extern "C" [[noreturn]] void halt();
@@ -143,7 +143,7 @@ extern "C" [[noreturn]] void init()
     auto& framebuffer = RPi::Framebuffer::the();
     if (framebuffer.initialized()) {
         g_boot_console = &try_make_lock_ref_counted<Graphics::BootFramebufferConsole>(PhysicalAddress((PhysicalPtr)framebuffer.gpu_buffer()), framebuffer.width(), framebuffer.height(), framebuffer.pitch()).value().leak_ref();
-        draw_logo();
+        draw_logo(static_cast<Graphics::BootFramebufferConsole*>(g_boot_console.load())->unsafe_framebuffer_data());
     }
 
     initialize_interrupts();
@@ -196,7 +196,7 @@ static u32 query_firmware_version()
 extern "C" const u32 serenity_boot_logo_start;
 extern "C" const u32 serenity_boot_logo_size;
 
-static void draw_logo()
+static void draw_logo(u8* framebuffer_data)
 {
     BootPPMParser logo_parser(reinterpret_cast<u8 const*>(&serenity_boot_logo_start), serenity_boot_logo_size);
     if (!logo_parser.parse()) {
@@ -207,7 +207,7 @@ static void draw_logo()
     dbgln("Boot logo size: {} ({} x {})", serenity_boot_logo_size, logo_parser.image.width, logo_parser.image.height);
 
     auto& framebuffer = RPi::Framebuffer::the();
-    auto fb_ptr = framebuffer.gpu_buffer();
+    auto fb_ptr = framebuffer_data;
     auto image_left = (framebuffer.width() - logo_parser.image.width) / 2;
     auto image_right = image_left + logo_parser.image.width;
     auto image_top = (framebuffer.height() - logo_parser.image.height) / 2;
