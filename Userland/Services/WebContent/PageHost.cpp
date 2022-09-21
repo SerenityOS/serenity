@@ -187,11 +187,13 @@ void PageHost::page_did_start_loading(const URL& url)
     m_client.async_did_start_loading(url);
 }
 
+void PageHost::page_did_create_main_document()
+{
+    m_client.initialize_js_console({});
+}
+
 void PageHost::page_did_finish_loading(const URL& url)
 {
-    // FIXME: This is called after the page has finished loading, which means any log messages
-    //        that happen *while* it is loading (such as inline <script>s) will be lost.
-    m_client.initialize_js_console({});
     m_client.async_did_finish_loading(url);
 }
 
