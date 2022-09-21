@@ -270,7 +270,7 @@ Optional<StringView> XMLHttpRequest::get_final_encoding() const
 
 // https://fetch.spec.whatwg.org/#concept-bodyinit-extract
 // FIXME: The parameter 'body_init' should be 'typedef (ReadableStream or XMLHttpRequestBodyInit) BodyInit'. For now we just let it be 'XMLHttpRequestBodyInit'.
-static ErrorOr<Fetch::Infrastructure::BodyWithType> extract_body(XMLHttpRequestBodyInit const& body_init)
+static ErrorOr<Fetch::Infrastructure::BodyWithType> extract_body(Fetch::XMLHttpRequestBodyInit const& body_init)
 {
     // FIXME: 1. Let stream be object if object is a ReadableStream object. Otherwise, let stream be a new ReadableStream, and set up stream.
     Fetch::Infrastructure::Body::ReadableStreamDummy stream {};
@@ -453,7 +453,7 @@ DOM::ExceptionOr<void> XMLHttpRequest::open(String const& method_string, String 
 }
 
 // https://xhr.spec.whatwg.org/#dom-xmlhttprequest-send
-DOM::ExceptionOr<void> XMLHttpRequest::send(Optional<XMLHttpRequestBodyInit> body)
+DOM::ExceptionOr<void> XMLHttpRequest::send(Optional<Fetch::XMLHttpRequestBodyInit> body)
 {
     if (m_ready_state != ReadyState::Opened)
         return DOM::InvalidStateError::create(global_object(), "XHR readyState is not OPENED");

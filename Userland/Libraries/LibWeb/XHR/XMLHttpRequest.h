@@ -13,6 +13,7 @@
 #include <AK/Weakable.h>
 #include <LibWeb/DOM/EventTarget.h>
 #include <LibWeb/DOM/ExceptionOr.h>
+#include <LibWeb/Fetch/BodyInit.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP/Headers.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP/Statuses.h>
 #include <LibWeb/HTML/Window.h>
@@ -21,9 +22,6 @@
 #include <LibWeb/XHR/XMLHttpRequestEventTarget.h>
 
 namespace Web::XHR {
-
-// https://fetch.spec.whatwg.org/#typedefdef-xmlhttprequestbodyinit
-using XMLHttpRequestBodyInit = Variant<JS::Handle<FileAPI::Blob>, JS::Handle<JS::Object>, JS::Handle<URL::URLSearchParams>, String>;
 
 class XMLHttpRequest final : public XMLHttpRequestEventTarget {
     WEB_PLATFORM_OBJECT(XMLHttpRequest, XMLHttpRequestEventTarget);
@@ -49,7 +47,7 @@ public:
 
     DOM::ExceptionOr<void> open(String const& method, String const& url);
     DOM::ExceptionOr<void> open(String const& method, String const& url, bool async, String const& username = {}, String const& password = {});
-    DOM::ExceptionOr<void> send(Optional<XMLHttpRequestBodyInit> body);
+    DOM::ExceptionOr<void> send(Optional<Fetch::XMLHttpRequestBodyInit> body);
 
     DOM::ExceptionOr<void> set_request_header(String const& header, String const& value);
     void set_response_type(Bindings::XMLHttpRequestResponseType type) { m_response_type = type; }
