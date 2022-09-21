@@ -34,5 +34,3 @@ private:
 };
 
 }
-
-WRAPPER_HACK(DOMRectList, Web::Geometry)

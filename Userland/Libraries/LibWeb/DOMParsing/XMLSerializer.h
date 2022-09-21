@@ -32,5 +32,3 @@ enum class RequireWellFormed {
 DOM::ExceptionOr<String> serialize_node_to_xml_string(JS::NonnullGCPtr<DOM::Node> root, RequireWellFormed require_well_formed);
 
 }
-
-WRAPPER_HACK(XMLSerializer, Web::DOMParsing)

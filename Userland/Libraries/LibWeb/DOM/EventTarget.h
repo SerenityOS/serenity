@@ -77,5 +77,3 @@ private:
 bool is_window_reflecting_body_element_event_handler(FlyString const& name);
 
 }
-
-WRAPPER_HACK(EventTarget, Web::DOM)

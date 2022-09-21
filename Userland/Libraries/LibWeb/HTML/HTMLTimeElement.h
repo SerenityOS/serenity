@@ -21,5 +21,3 @@ private:
 };
 
 }
-
-WRAPPER_HACK(HTMLTimeElement, Web::HTML)

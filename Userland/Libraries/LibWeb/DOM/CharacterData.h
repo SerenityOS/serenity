@@ -41,4 +41,3 @@ private:
 };
 
 }
-WRAPPER_HACK(CharacterData, Web::DOM)

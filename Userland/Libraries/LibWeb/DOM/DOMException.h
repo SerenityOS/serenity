@@ -137,8 +137,6 @@ ENUMERATE_DOM_EXCEPTION_ERROR_NAMES
 
 }
 
-WRAPPER_HACK(DOMException, Web::DOM)
-
 namespace Web {
 
 inline JS::Completion throw_completion(JS::NonnullGCPtr<DOM::DOMException> exception)

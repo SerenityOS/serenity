@@ -51,5 +51,3 @@ namespace Web::DOM {
 template<>
 inline bool Node::fast_is<HTML::BrowsingContextContainer>() const { return is_browsing_context_container(); }
 }
-
-WRAPPER_HACK(BrowsingContextContainer, Web::HTML)

@@ -66,5 +66,3 @@ inline IterationDecision Node::for_each_shadow_including_descendant(Callback cal
 }
 
 }
-
-WRAPPER_HACK(ShadowRoot, Web::DOM)

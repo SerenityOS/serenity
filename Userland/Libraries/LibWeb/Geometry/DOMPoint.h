@@ -34,5 +34,3 @@ private:
 };
 
 }
-
-WRAPPER_HACK(DOMPoint, Web::Geometry)

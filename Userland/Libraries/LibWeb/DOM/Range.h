@@ -96,5 +96,3 @@ private:
 };
 
 }
-
-WRAPPER_HACK(Range, Web::DOM)

@@ -43,5 +43,3 @@ private:
 };
 
 }
-
-WRAPPER_HACK(MediaList, Web::CSS)

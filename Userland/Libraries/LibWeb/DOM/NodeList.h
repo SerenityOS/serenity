@@ -29,5 +29,3 @@ protected:
 };
 
 }
-
-WRAPPER_HACK(NodeList, Web::DOM)

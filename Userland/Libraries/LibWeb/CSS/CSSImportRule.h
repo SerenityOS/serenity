@@ -59,5 +59,3 @@ template<>
 inline bool CSSRule::fast_is<CSSImportRule>() const { return type() == CSSRule::Type::Import; }
 
 }
-
-WRAPPER_HACK(CSSImportRule, Web::CSS)

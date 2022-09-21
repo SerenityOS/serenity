@@ -653,5 +653,3 @@ private:
 };
 
 }
-
-WRAPPER_HACK(Node, Web::DOM)

@@ -55,5 +55,3 @@ template<>
 inline bool Node::fast_is<Attr>() const { return is_attribute(); }
 
 }
-
-WRAPPER_HACK(Attr, Web::DOM)

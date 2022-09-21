@@ -106,5 +106,3 @@ private:
 };
 
 }
-
-WRAPPER_HACK(MutationObserver, Web::DOM)

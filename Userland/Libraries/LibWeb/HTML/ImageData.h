@@ -38,5 +38,3 @@ private:
 };
 
 }
-
-WRAPPER_HACK(ImageData, Web::HTML)

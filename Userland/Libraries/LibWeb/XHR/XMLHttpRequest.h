@@ -112,5 +112,3 @@ private:
 };
 
 }
-
-WRAPPER_HACK(XMLHttpRequest, Web::XHR)

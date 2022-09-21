@@ -45,5 +45,3 @@ template<>
 inline bool CSSRule::fast_is<CSSMediaRule>() const { return type() == CSSRule::Type::Media; }
 
 }
-
-WRAPPER_HACK(CSSMediaRule, Web::CSS)

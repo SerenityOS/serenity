@@ -121,5 +121,3 @@ private:
 };
 
 }
-
-WRAPPER_HACK(CSSStyleDeclaration, Web::CSS)

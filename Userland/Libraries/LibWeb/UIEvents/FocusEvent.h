@@ -25,5 +25,3 @@ public:
 };
 
 }
-
-WRAPPER_HACK(FocusEvent, Web::UIEvents)

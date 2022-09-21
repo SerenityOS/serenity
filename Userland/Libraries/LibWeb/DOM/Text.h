@@ -47,5 +47,3 @@ template<>
 inline bool Node::fast_is<Text>() const { return is_text(); }
 
 }
-
-WRAPPER_HACK(Text, Web::DOM)

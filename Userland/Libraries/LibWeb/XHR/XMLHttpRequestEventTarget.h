@@ -41,5 +41,3 @@ protected:
 };
 
 }
-
-WRAPPER_HACK(XMLHttpRequestEventTarget, Web::XHR)

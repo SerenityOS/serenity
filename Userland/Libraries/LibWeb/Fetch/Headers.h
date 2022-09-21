@@ -63,5 +63,3 @@ private:
 };
 
 }
-
-WRAPPER_HACK(Headers, Web::Fetch)

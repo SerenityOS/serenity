@@ -42,5 +42,3 @@ private:
 void run_iframe_load_event_steps(HTML::HTMLIFrameElement&);
 
 }
-
-WRAPPER_HACK(HTMLIFrameElement, Web::HTML)

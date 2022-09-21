@@ -37,5 +37,3 @@ protected:
     Gfx::FloatRect m_rect;
 };
 }
-
-WRAPPER_HACK(DOMRectReadOnly, Web::Geometry)

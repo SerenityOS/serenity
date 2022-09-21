@@ -40,5 +40,3 @@ private:
 };
 
 }
-
-WRAPPER_HACK(MessageEvent, Web::HTML)

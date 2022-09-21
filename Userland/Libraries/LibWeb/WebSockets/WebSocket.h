@@ -126,5 +126,3 @@ protected:
 };
 
 }
-
-WRAPPER_HACK(WebSocket, Web::WebSockets)

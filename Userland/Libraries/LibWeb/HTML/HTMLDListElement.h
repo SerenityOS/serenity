@@ -21,5 +21,3 @@ private:
 };
 
 }
-
-WRAPPER_HACK(HTMLDListElement, Web::HTML)

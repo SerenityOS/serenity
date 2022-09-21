@@ -28,5 +28,3 @@ template<>
 inline bool Node::fast_is<Comment>() const { return is_comment(); }
 
 }
-
-WRAPPER_HACK(Comment, Web::DOM)

@@ -24,5 +24,3 @@ private:
 };
 
 }
-
-WRAPPER_HACK(WorkerNavigator, Web::HTML)

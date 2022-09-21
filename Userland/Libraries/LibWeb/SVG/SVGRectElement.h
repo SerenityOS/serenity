@@ -44,5 +44,3 @@ private:
 };
 
 }
-
-WRAPPER_HACK(SVGRectElement, Web::SVG)

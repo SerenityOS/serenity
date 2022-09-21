@@ -23,5 +23,3 @@ private:
 };
 
 }
-
-WRAPPER_HACK(HTMLTitleElement, Web::HTML)

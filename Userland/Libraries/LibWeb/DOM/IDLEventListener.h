@@ -42,5 +42,3 @@ private:
 };
 
 }
-
-WRAPPER_HACK(IDLEventListener, Web::DOM)
