@@ -16,4 +16,6 @@ namespace Web::Fetch {
 // https://fetch.spec.whatwg.org/#typedefdef-xmlhttprequestbodyinit
 using XMLHttpRequestBodyInit = Variant<JS::Handle<FileAPI::Blob>, JS::Handle<JS::Object>, JS::Handle<URL::URLSearchParams>, String>;
 
+ErrorOr<Infrastructure::BodyWithType> extract_body(JS::Realm&, XMLHttpRequestBodyInit const&);
+
 }

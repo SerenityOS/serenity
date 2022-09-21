@@ -189,6 +189,7 @@ class HeadersIterator;
 
 namespace Web::Fetch::Infrastructure {
 class Body;
+struct BodyWithType;
 struct Header;
 class HeaderList;
 class Request;
