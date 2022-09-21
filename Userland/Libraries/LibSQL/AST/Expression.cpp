@@ -40,12 +40,13 @@ ResultOr<Value> NestedExpression::evaluate(ExecutionContext& context) const
 
 ResultOr<Value> ChainedExpression::evaluate(ExecutionContext& context) const
 {
-    Value ret(SQLType::Tuple);
     Vector<Value> values;
+    TRY(values.try_ensure_capacity(expressions().size()));
+
     for (auto& expression : expressions())
-        values.append(TRY(expression.evaluate(context)));
-    ret = values;
-    return ret;
+        values.unchecked_append(TRY(expression.evaluate(context)));
+
+    return Value { move(values) };
 }
 
 ResultOr<Value> BinaryOperatorExpression::evaluate(ExecutionContext& context) const
