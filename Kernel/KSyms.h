@@ -29,5 +29,6 @@ extern FlatPtr g_lowest_kernel_symbol_address;
 extern FlatPtr g_highest_kernel_symbol_address;
 
 void dump_backtrace(PrintToScreen print_to_screen = PrintToScreen::No);
+void dump_backtrace_from_base_pointer(FlatPtr base_pointer);
 
 }

@@ -161,6 +161,11 @@ NEVER_INLINE static void dump_backtrace_impl(FlatPtr base_pointer, bool use_ksym
     }
 }
 
+void dump_backtrace_from_base_pointer(FlatPtr base_pointer)
+{
+    dump_backtrace_impl(base_pointer, g_kernel_symbols_available, PrintToScreen::Yes);
+}
+
 void dump_backtrace(PrintToScreen print_to_screen)
 {
     static bool in_dump_backtrace = false;
