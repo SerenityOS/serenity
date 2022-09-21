@@ -176,12 +176,16 @@ void ResourceClient::set_resource(Resource* resource)
                     return;
 
                 // Make sure that reused resources also have their load callback fired.
-                if (weak_this->m_resource->is_loaded())
+                if (weak_this->m_resource->is_loaded()) {
                     weak_this->resource_did_load();
+                    return;
+                }
 
                 // Make sure that reused resources also have their fail callback fired.
-                if (weak_this->m_resource->is_failed())
+                if (weak_this->m_resource->is_failed()) {
                     weak_this->resource_did_fail();
+                    return;
+                }
             });
         }
     }
