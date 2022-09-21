@@ -71,6 +71,7 @@ signals:
 
 private:
     void update_viewport_rect();
+    void ensure_js_console_widget();
 
     OwnPtr<Ladybird::PageClientLadybird> m_page_client;
 
