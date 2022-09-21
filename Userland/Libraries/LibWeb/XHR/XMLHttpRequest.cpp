@@ -270,10 +270,12 @@ Optional<StringView> XMLHttpRequest::get_final_encoding() const
 
 // https://fetch.spec.whatwg.org/#concept-bodyinit-extract
 // FIXME: The parameter 'body_init' should be 'typedef (ReadableStream or XMLHttpRequestBodyInit) BodyInit'. For now we just let it be 'XMLHttpRequestBodyInit'.
-static ErrorOr<Fetch::Infrastructure::BodyWithType> extract_body(Fetch::XMLHttpRequestBodyInit const& body_init)
+static ErrorOr<Fetch::Infrastructure::BodyWithType> extract_body(JS::Realm& realm, Fetch::XMLHttpRequestBodyInit const& body_init)
 {
+    auto& window = verify_cast<HTML::Window>(realm.global_object());
+
     // FIXME: 1. Let stream be object if object is a ReadableStream object. Otherwise, let stream be a new ReadableStream, and set up stream.
-    Fetch::Infrastructure::Body::ReadableStreamDummy stream {};
+    auto* stream = realm.heap().allocate<Streams::ReadableStream>(realm, window);
     // FIXME: 2. Let action be null.
     // 3. Let source be null.
     Fetch::Infrastructure::Body::SourceType source {};
@@ -321,7 +323,7 @@ static ErrorOr<Fetch::Infrastructure::BodyWithType> extract_body(Fetch::XMLHttpR
     // FIXME: 8. If action is non-null, then run these steps in in parallel:
 
     // 9. Let body be a body whose stream is stream, source is source, and length is length.
-    auto body = Fetch::Infrastructure::Body { move(stream), move(source), move(length) };
+    auto body = Fetch::Infrastructure::Body { JS::make_handle(stream), move(source), move(length) };
     // 10. Return (body, type).
     return Fetch::Infrastructure::BodyWithType { .body = move(body), .type = move(type) };
 }
@@ -455,6 +457,9 @@ DOM::ExceptionOr<void> XMLHttpRequest::open(String const& method_string, String 
 // https://xhr.spec.whatwg.org/#dom-xmlhttprequest-send
 DOM::ExceptionOr<void> XMLHttpRequest::send(Optional<Fetch::XMLHttpRequestBodyInit> body)
 {
+    auto& vm = this->vm();
+    auto& realm = *vm.current_realm();
+
     if (m_ready_state != ReadyState::Opened)
         return DOM::InvalidStateError::create(global_object(), "XHR readyState is not OPENED");
 
@@ -465,7 +470,7 @@ DOM::ExceptionOr<void> XMLHttpRequest::send(Optional<Fetch::XMLHttpRequestBodyIn
     if (m_method.is_one_of("GET"sv, "HEAD"sv))
         body = {};
 
-    auto body_with_type = body.has_value() ? TRY_OR_RETURN_OOM(global_object(), extract_body(body.value())) : Optional<Fetch::Infrastructure::BodyWithType> {};
+    auto body_with_type = body.has_value() ? TRY_OR_RETURN_OOM(global_object(), extract_body(realm, body.value())) : Optional<Fetch::Infrastructure::BodyWithType> {};
 
     AK::URL request_url = m_window->associated_document().parse_url(m_url.to_string());
     dbgln("XHR send from {} to {}", m_window->associated_document().url(), request_url);
