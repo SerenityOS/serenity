@@ -25,7 +25,7 @@ public:
     explicit Body(JS::Handle<Streams::ReadableStream>);
     Body(JS::Handle<Streams::ReadableStream>, SourceType, Optional<u64>);
 
-    [[nodiscard]] JS::NonnullGCPtr<Streams::ReadableStream> stream() { return *m_stream; }
+    [[nodiscard]] JS::NonnullGCPtr<Streams::ReadableStream> stream() const { return *m_stream; }
     [[nodiscard]] SourceType const& source() const { return m_source; }
     [[nodiscard]] Optional<u64> const& length() const { return m_length; }
 
