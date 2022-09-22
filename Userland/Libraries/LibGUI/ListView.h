@@ -56,12 +56,15 @@ private:
     virtual void mousemove_event(MouseEvent&) override;
     virtual void layout_relevant_change_occured() override;
 
+    virtual Optional<UISize> calculated_min_size() const override;
+
     Gfx::IntRect content_rect(int row) const;
     void update_content_size();
 
     int m_horizontal_padding { 2 };
     int m_vertical_padding { 2 };
     int m_model_column { 0 };
+    int m_max_item_width { 0 };
     bool m_alternating_row_colors { true };
     bool m_hover_highlighting { false };
 };
