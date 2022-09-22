@@ -415,6 +415,7 @@ set(SOURCES
     WebIDL/CallbackType.cpp
     WebIDL/DOMException.cpp
     WebIDL/OverloadResolution.cpp
+    WebIDL/Promise.cpp
     WebSockets/WebSocket.cpp
     XHR/EventNames.cpp
     XHR/ProgressEvent.cpp
