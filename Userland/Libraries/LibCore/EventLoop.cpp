@@ -17,7 +17,6 @@
 #include <AK/Singleton.h>
 #include <AK/TemporaryChange.h>
 #include <AK/Time.h>
-#include <LibCore/Account.h>
 #include <LibCore/Event.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/LocalServer.h>
@@ -37,6 +36,8 @@
 #include <unistd.h>
 
 #ifdef __serenity__
+#    include <LibCore/Account.h>
+
 extern bool s_global_initializers_ran;
 #endif
 

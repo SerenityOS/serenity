@@ -12,7 +12,6 @@
 #include <AK/StdLibExtras.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
-#include <LibCore/Account.h>
 #include <LibCore/File.h>
 #include <LibCore/System.h>
 #include <limits.h>
@@ -26,6 +25,7 @@
 #include <unistd.h>
 
 #ifdef __serenity__
+#    include <LibCore/Account.h>
 #    include <LibSystem/syscall.h>
 #    include <serenity.h>
 #endif
