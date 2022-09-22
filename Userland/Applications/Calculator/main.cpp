@@ -5,6 +5,7 @@
  */
 
 #include "CalculatorWidget.h"
+#include "RoundingDialog.h"
 #include <LibCore/System.h>
 #include <LibCrypto/NumberTheory/ModularFunctions.h>
 #include <LibGUI/Action.h>
@@ -51,7 +52,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         auto clipboard = GUI::Clipboard::the().fetch_data_and_type();
         if (clipboard.mime_type == "text/plain") {
             if (!clipboard.data.is_empty()) {
-                widget->set_entry(Crypto::BigFraction(StringView(clipboard.data)));
+                auto const number = StringView(clipboard.data);
+                widget->set_entry(Crypto::BigFraction(number));
             }
         }
     }));
@@ -74,16 +76,37 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     static constexpr auto rounding_modes = Array { 0, 2, 4 };
 
-    for (auto const rounding_mode : rounding_modes) {
-        auto round_action = GUI::Action::create_checkable(String::formatted("To &{} digits", rounding_mode), [&widget, rounding_mode](auto&) {
-            widget->set_rounding_length(rounding_mode);
-        });
+    Optional<unsigned> last_rounding_mode = 1;
+    for (unsigned i {}; i < rounding_modes.size(); ++i) {
+        auto round_action = GUI::Action::create_checkable(String::formatted("To &{} digits", rounding_modes[i]),
+            [&widget, rounding_mode = rounding_modes[i], &last_rounding_mode, i](auto&) {
+                widget->set_rounding_length(rounding_mode);
+                last_rounding_mode = i;
+            });
 
         preview_actions.add_action(*round_action);
         round_menu.add_action(*round_action);
     }
 
+    constexpr auto format { "&Custom - {} ..."sv };
+    auto round_custom = GUI::Action::create_checkable(String::formatted(format, 0), [&](auto& action) {
+        unsigned custom_rounding_length = widget->rounding_length();
+
+        if (RoundingDialog::show(window, custom_rounding_length) == GUI::Dialog::ExecResult::OK) {
+            action.set_text(String::formatted(format, custom_rounding_length));
+            widget->set_rounding_length(custom_rounding_length);
+            last_rounding_mode.clear();
+        } else if (last_rounding_mode.has_value())
+            round_menu.action_at(last_rounding_mode.value())->activate();
+    });
+
+    widget->set_rounding_custom(round_custom, format);
+
+    preview_actions.add_action(*round_custom);
     preview_actions.set_exclusive(true);
+    round_menu.add_action(*round_custom);
+
+    round_menu.action_at(last_rounding_mode.value())->activate();
 
     auto& help_menu = window->add_menu("&Help");
     help_menu.add_action(GUI::CommonActions::make_about_action("Calculator", app_icon, window));
