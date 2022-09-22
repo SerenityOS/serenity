@@ -9,7 +9,6 @@
 
 #include "CalculatorWidget.h"
 #include <Applications/Calculator/CalculatorGML.h>
-#include <LibCore/Event.h>
 #include <LibCrypto/BigFraction/BigFraction.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/Label.h>
@@ -160,8 +159,7 @@ void CalculatorWidget::keydown_event(GUI::KeyEvent& event)
         m_keypad.set_value(m_calculator.finish_operation(m_keypad.value()));
         mimic_pressed_button(m_equals_button);
     } else if (event.code_point() >= '0' && event.code_point() <= '9') {
-        u32 digit = event.code_point() - '0';
-        m_keypad.type_digit(digit);
+        auto const digit = m_keypad.type_digit(event.code_point() - '0');
         mimic_pressed_button(m_digit_button[digit]);
     } else if (event.code_point() == '.') {
         m_keypad.type_decimal_point();
@@ -219,8 +217,19 @@ void CalculatorWidget::keydown_event(GUI::KeyEvent& event)
     update_display();
 }
 
+unsigned CalculatorWidget::rounding_length() const
+{
+    return m_keypad.rounding_length();
+}
+
 void CalculatorWidget::set_rounding_length(unsigned rounding_threshold)
 {
     m_keypad.set_rounding_length(rounding_threshold);
     update_display();
+}
+
+void CalculatorWidget::set_rounding_custom(GUI::Action& action, StringView format)
+{
+    m_format = format;
+    m_rounding_custom = action;
 }
