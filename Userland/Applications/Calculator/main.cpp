@@ -8,6 +8,7 @@
 #include <LibCore/System.h>
 #include <LibCrypto/NumberTheory/ModularFunctions.h>
 #include <LibGUI/Action.h>
+#include <LibGUI/ActionGroup.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Clipboard.h>
 #include <LibGUI/Icon.h>
@@ -16,8 +17,6 @@
 #include <LibGUI/Window.h>
 #include <LibGfx/Bitmap.h>
 #include <LibMain/Main.h>
-#include <stdio.h>
-#include <unistd.h>
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
@@ -69,6 +68,22 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     constants_menu.add_action(GUI::Action::create("&Phi", TRY(Gfx::Bitmap::try_load_from_file("/res/icons/calculator/phi.png"sv)), [&](auto&) {
         widget->set_entry(Crypto::BigFraction { Crypto::SignedBigInteger(16180339887), power });
     }));
+
+    auto& round_menu = window->add_menu("&Round");
+    GUI::ActionGroup preview_actions;
+
+    static constexpr auto rounding_modes = Array { 0, 2, 4 };
+
+    for (auto const rounding_mode : rounding_modes) {
+        auto round_action = GUI::Action::create_checkable(String::formatted("To &{} digits", rounding_mode), [&widget, rounding_mode](auto&) {
+            widget->set_rounding_length(rounding_mode);
+        });
+
+        preview_actions.add_action(*round_action);
+        round_menu.add_action(*round_action);
+    }
+
+    preview_actions.set_exclusive(true);
 
     auto& help_menu = window->add_menu("&Help");
     help_menu.add_action(GUI::CommonActions::make_about_action("Calculator", app_icon, window));
