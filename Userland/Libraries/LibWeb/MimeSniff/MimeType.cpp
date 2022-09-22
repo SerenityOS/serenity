@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2022, Luke Wilde <lukew@serenityos.org>
+ * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -170,6 +171,45 @@ String MimeType::essence() const
     // The essence of a MIME type mimeType is mimeType’s type, followed by U+002F (/), followed by mimeType’s subtype.
     // FIXME: I believe this can easily be cached as I don't think anything directly changes the type and subtype.
     return String::formatted("{}/{}", m_type, m_subtype);
+}
+
+// https://mimesniff.spec.whatwg.org/#serialize-a-mime-type
+String MimeType::serialized() const
+{
+    // 1. Let serialization be the concatenation of mimeType’s type, U+002F (/), and mimeType’s subtype.
+    StringBuilder serialization;
+    serialization.append(m_type);
+    serialization.append('/');
+    serialization.append(m_subtype);
+
+    // 2. For each name → value of mimeType’s parameters:
+    for (auto [name, value] : m_parameters) {
+        // 1. Append U+003B (;) to serialization.
+        serialization.append(';');
+
+        // 2. Append name to serialization.
+        serialization.append(name);
+
+        // 3. Append U+003D (=) to serialization.
+        serialization.append('=');
+
+        // 4. If value does not solely contain HTTP token code points or value is the empty string, then:
+        if (!contains_only_http_token_code_points(value) || value.is_empty()) {
+            // 1. Precede each occurence of U+0022 (") or U+005C (\) in value with U+005C (\).
+            value = value.replace("\""sv, "\\\""sv, ReplaceMode::All);
+            value = value.replace("\\"sv, "\\\\"sv, ReplaceMode::All);
+
+            // 2. Prepend U+0022 (") to value.
+            // 3. Append U+0022 (") to value.
+            value = String::formatted("\"{}\"", value);
+        }
+
+        // 5. Append value to serialization.
+        serialization.append(value);
+    }
+
+    // 3. Return serialization.
+    return serialization.to_string();
 }
 
 void MimeType::set_parameter(String const& name, String const& value)
