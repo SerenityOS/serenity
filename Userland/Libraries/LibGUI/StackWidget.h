@@ -22,6 +22,8 @@ public:
 
     Function<void(Widget*)> on_active_widget_change;
 
+    virtual Optional<UISize> calculated_min_size() const override;
+
 protected:
     StackWidget() = default;
     virtual void child_event(Core::ChildEvent&) override;

@@ -66,4 +66,9 @@ void StackWidget::child_event(Core::ChildEvent& event)
     Widget::child_event(event);
 }
 
+Optional<UISize> StackWidget::calculated_min_size() const
+{
+    return m_active_widget->calculated_min_size();
+}
+
 }
