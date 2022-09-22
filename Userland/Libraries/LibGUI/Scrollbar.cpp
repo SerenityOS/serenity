@@ -420,10 +420,11 @@ void Scrollbar::update_animated_scroll()
 
 Optional<UISize> Scrollbar::calculated_min_size() const
 {
+    auto scrubber_and_gutter = default_button_size() + 1;
     if (orientation() == Gfx::Orientation::Vertical)
-        return { { default_button_size(), 2 * default_button_size() } };
+        return { { default_button_size(), 2 * default_button_size() + scrubber_and_gutter } };
     else
-        return { { 2 * default_button_size(), default_button_size() } };
+        return { { 2 * default_button_size() + scrubber_and_gutter, default_button_size() } };
 }
 
 Optional<UISize> Scrollbar::calculated_preferred_size() const
