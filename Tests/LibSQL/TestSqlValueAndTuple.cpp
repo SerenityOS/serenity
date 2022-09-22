@@ -84,12 +84,6 @@ TEST_CASE(text_value_to_other_types)
     }
 }
 
-TEST_CASE(text_value_to_int_crash)
-{
-    SQL::Value v(SQL::SQLType::Text, "Not a valid integer");
-    EXPECT_CRASH("Can't convert 'Not a valid integer' to integer", [&]() { (void) (int) v; return Test::Crash::Failure::DidNotCrash; });
-}
-
 TEST_CASE(serialize_text_value)
 {
     SQL::Value v("Test");
@@ -100,7 +94,7 @@ TEST_CASE(serialize_text_value)
 
     serializer.rewind();
     auto v2 = serializer.deserialize<SQL::Value>();
-    EXPECT((String)v2 == "Test");
+    EXPECT(v2.to_string() == "Test");
 }
 
 TEST_CASE(integer_value)
@@ -226,14 +220,14 @@ TEST_CASE(assign_int_to_text_value)
 {
     SQL::Value text(SQL::SQLType::Text);
     text = 42;
-    EXPECT_EQ((String)text, "42");
+    EXPECT_EQ(text.to_string(), "42");
 }
 
 TEST_CASE(copy_value)
 {
     SQL::Value text(SQL::SQLType::Text, 42);
     SQL::Value copy(text);
-    EXPECT_EQ((String)copy, "42");
+    EXPECT_EQ(copy.to_string(), "42");
 }
 
 TEST_CASE(compare_text_to_int)
@@ -281,7 +275,7 @@ TEST_CASE(serialize_boolean_value)
 {
     SQL::Value v(true);
     EXPECT_EQ(v.type(), SQL::SQLType::Boolean);
-    EXPECT(bool(v));
+    EXPECT_EQ(v.to_bool(), true);
 
     SQL::Serializer serializer;
     serializer.serialize<SQL::Value>(v);
@@ -290,7 +284,7 @@ TEST_CASE(serialize_boolean_value)
     auto v2 = serializer.deserialize<SQL::Value>();
     EXPECT(!v2.is_null());
     EXPECT_EQ(v2.type(), SQL::SQLType::Boolean);
-    EXPECT(bool(v2));
+    EXPECT_EQ(v2.to_bool(), true);
     EXPECT_EQ(v, v2);
 }
 
@@ -508,8 +502,8 @@ TEST_CASE(serialize_tuple)
     tuple["col1"] = "Test";
     tuple["col2"] = 42;
 
-    EXPECT_EQ((String)tuple[0], "Test");
-    EXPECT_EQ((int)tuple[1], 42);
+    EXPECT_EQ(tuple[0], "Test");
+    EXPECT_EQ(tuple[1], 42);
 
     SQL::Serializer serializer;
     serializer.serialize<SQL::Tuple>(tuple);

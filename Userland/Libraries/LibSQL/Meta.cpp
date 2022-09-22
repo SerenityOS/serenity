@@ -183,9 +183,10 @@ void TableDef::append_column(String name, SQLType sql_type)
 
 void TableDef::append_column(Key const& column)
 {
-    append_column(
-        (String)column["column_name"],
-        (SQLType)((int)column["column_type"]));
+    auto column_type = column["column_type"].to_int();
+    VERIFY(column_type.has_value());
+
+    append_column(column["column_name"].to_string(), static_cast<SQLType>(*column_type));
 }
 
 Key TableDef::make_key(SchemaDef const& schema_def)

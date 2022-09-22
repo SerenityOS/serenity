@@ -189,39 +189,6 @@ Optional<Vector<Value>> Value::to_vector() const
         return {};
 }
 
-Value::operator String() const
-{
-    return to_string();
-}
-
-Value::operator int() const
-{
-    auto i = to_int();
-    VERIFY(i.has_value());
-    return i.value();
-}
-
-Value::operator u32() const
-{
-    auto i = to_u32();
-    VERIFY(i.has_value());
-    return i.value();
-}
-
-Value::operator double() const
-{
-    auto d = to_double();
-    VERIFY(d.has_value());
-    return d.value();
-}
-
-Value::operator bool() const
-{
-    auto b = to_bool();
-    VERIFY(b.has_value());
-    return b.value();
-}
-
 void Value::assign(Value const& other_value)
 {
     m_impl.visit([&](auto& impl) { impl.assign(other_value); });
