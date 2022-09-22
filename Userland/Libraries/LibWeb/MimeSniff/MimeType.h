@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2022, Luke Wilde <lukew@serenityos.org>
+ * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -26,6 +27,7 @@ public:
     void set_parameter(String const& name, String const& value);
 
     String essence() const;
+    String serialized() const;
 
 private:
     // https://mimesniff.spec.whatwg.org/#type
