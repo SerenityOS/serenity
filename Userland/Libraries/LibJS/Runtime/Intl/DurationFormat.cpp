@@ -244,23 +244,32 @@ ThrowCompletionOr<DurationUnitOptions> get_duration_unit_options(VM& vm, String 
 
     // 3. If style is undefined, then
     if (style_value.is_undefined()) {
-        // a. Set displayDefault to "auto".
-        display_default = "auto"sv;
-
-        // b. If baseStyle is "digital", then
+        // a. If baseStyle is "digital", then
         if (base_style == "digital"sv) {
-            // i. Set style to digitalBase.
+            // i. If unit is not one of "hours", "minutes", or "seconds", then
+            if (!unit.is_one_of("hours"sv, "minutes"sv, "seconds"sv)) {
+                // 1. Set displayDefault to "auto".
+                display_default = "auto"sv;
+            }
+
+            // ii. Set style to digitalBase.
             style = digital_base;
         }
-        // c. Else if prevStyle is "numeric" or "2-digit", then
-        else if (previous_style == "numeric"sv || previous_style == "2-digit"sv) {
-            // i. Set style to "numeric".
-            style = "numeric"sv;
-        }
-        // d. Else,
+        // b. Else,
         else {
-            // i. Set style to baseStyle.
-            style = base_style;
+            // i. Set displayDefault to "auto".
+            display_default = "auto"sv;
+
+            // ii. If prevStyle is "numeric" or "2-digit", then
+            if (previous_style == "numeric"sv || previous_style == "2-digit"sv) {
+                // 1. Set style to "numeric".
+                style = "numeric"sv;
+            }
+            // iii. Else,
+            else {
+                // 1. Set style to baseStyle.
+                style = base_style;
+            }
         }
     } else {
         style = style_value.as_string().string();
