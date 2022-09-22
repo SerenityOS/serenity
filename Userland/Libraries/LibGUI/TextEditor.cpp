@@ -754,13 +754,10 @@ void TextEditor::paint_event(PaintEvent& event)
 
 Optional<UISize> TextEditor::calculated_min_size() const
 {
-    auto margins = content_margins();
-    int horizontal = margins.left() + margins.right(),
-        vertical = margins.top() + margins.bottom();
-    int vertical_content_size = font().glyph_height() + 4;
-    if (!is_multi_line() && m_icon)
-        vertical_content_size = max(vertical_content_size, icon_size() + 2);
-    return UISize(horizontal, vertical);
+    if (is_multi_line())
+        return AbstractScrollableWidget::calculated_min_size();
+    auto m = content_margins();
+    return UISize { m.left() + m.right(), m.top() + m.bottom() };
 }
 
 void TextEditor::select_all()
