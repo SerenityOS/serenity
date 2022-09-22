@@ -14,7 +14,7 @@
 
 namespace Web::FileAPI {
 
-DOM::ExceptionOr<JS::NonnullGCPtr<Blob>> Blob::create(HTML::Window& window, ByteBuffer byte_buffer, String type)
+JS::NonnullGCPtr<Blob> Blob::create(HTML::Window& window, ByteBuffer byte_buffer, String type)
 {
     return JS::NonnullGCPtr(*window.heap().allocate<Blob>(window.realm(), window, move(byte_buffer), move(type)));
 }

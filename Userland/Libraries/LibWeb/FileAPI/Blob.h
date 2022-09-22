@@ -33,8 +33,8 @@ class Blob : public Bindings::PlatformObject {
 public:
     virtual ~Blob() override;
 
+    static JS::NonnullGCPtr<Blob> create(HTML::Window&, ByteBuffer, String type);
     static DOM::ExceptionOr<JS::NonnullGCPtr<Blob>> create(HTML::Window&, Optional<Vector<BlobPart>> const& blob_parts = {}, Optional<BlobPropertyBag> const& options = {});
-    static DOM::ExceptionOr<JS::NonnullGCPtr<Blob>> create(HTML::Window&, ByteBuffer, String type);
     static DOM::ExceptionOr<JS::NonnullGCPtr<Blob>> create_with_global_object(HTML::Window&, Optional<Vector<BlobPart>> const& blob_parts = {}, Optional<BlobPropertyBag> const& options = {});
 
     // https://w3c.github.io/FileAPI/#dfn-size
