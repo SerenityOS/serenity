@@ -263,6 +263,7 @@ file(GLOB AK_SOURCES CONFIGURE_DEPENDS "../../AK/*.cpp")
 file(GLOB LIBCORE_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibCore/*.cpp")
 if (ANDROID)
     list(REMOVE_ITEM LIBCORE_SOURCES "${CMAKE_CURRENT_LIST_DIR}/../../Userland/Libraries/LibCore/Account.cpp")
+    list(REMOVE_ITEM LIBCORE_SOURCES "${CMAKE_CURRENT_LIST_DIR}/../../Userland/Libraries/LibCore/LocalServer.cpp")
 endif()
 lagom_lib(Core core
     SOURCES ${AK_SOURCES} ${LIBCORE_SOURCES}
