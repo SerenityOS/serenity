@@ -126,10 +126,10 @@ ComboBox::ComboBox()
     m_list_view->set_hover_highlighting(true);
     m_list_view->set_frame_thickness(1);
     m_list_view->set_frame_shadow(Gfx::FrameShadow::Plain);
+    m_list_view->set_activates_on_selection(true);
     m_list_view->on_selection_change = [this] {
         VERIFY(model());
         const auto& index = m_list_view->selection().first();
-        m_list_view->set_activates_on_selection(true);
         if (m_updating_model)
             selection_updated(index);
     };
@@ -140,7 +140,6 @@ ComboBox::ComboBox()
             if (on_change)
                 on_change(m_editor->text(), index);
         });
-        m_list_view->set_activates_on_selection(false);
         close();
     };
 
