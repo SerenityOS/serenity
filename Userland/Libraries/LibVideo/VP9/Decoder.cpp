@@ -560,10 +560,322 @@ DecoderErrorOr<void> Decoder::predict_intra(u8 plane, u32 x, u32 y, bool have_le
     return {};
 }
 
-DecoderErrorOr<void> Decoder::predict_inter(u8, u32, u32, u32, u32, u32)
+MotionVector Decoder::select_motion_vector(u8 plane, u8 ref_list, u32 block_index)
 {
-    // TODO: Implement
-    return DecoderError::not_implemented();
+    // The inputs to this process are:
+    // − a variable plane specifying which plane is being predicted,
+    // − a variable refList specifying that we should select the motion vector from BlockMvs[ refList ],
+    // − a variable blockIdx, specifying how much of the block has already been predicted in units of 4x4 samples.
+    // The output of this process is a 2 element array called mv containing the motion vector for this block.
+
+    // The purpose of this process is to find the motion vector for this block. Motion vectors are specified for each
+    // luma block, but a chroma block may cover more than one luma block due to subsampling. In this case, an
+    // average motion vector is constructed for the chroma block.
+
+    // The functions round_mv_comp_q2 and round_mv_comp_q4 perform division with rounding to the nearest
+    // integer and are specified as:
+    auto round_mv_comp_q2 = [&](MotionVector in) {
+        // return (value < 0 ? value - 1 : value + 1) / 2
+        return MotionVector {
+            (in.row() < 0 ? in.row() - 1 : in.row() + 1) >> 1,
+            (in.column() < 0 ? in.column() - 1 : in.column() + 1) >> 1
+        };
+    };
+    auto round_mv_comp_q4 = [&](MotionVector in) {
+        // return (value < 0 ? value - 2 : value + 2) / 4
+        return MotionVector {
+            (in.row() < 0 ? in.row() - 2 : in.row() + 2) >> 2,
+            (in.column() < 0 ? in.column() - 2 : in.column() + 2) >> 2
+        };
+    };
+
+    // The motion vector array mv is derived as follows:
+    // − If plane is equal to 0, or MiSize is greater than or equal to BLOCK_8X8, mv is set equal to
+    // BlockMvs[ refList ][ blockIdx ].
+    if (plane == 0 || m_parser->m_mi_size >= Block_8x8)
+        return m_parser->m_block_mvs[ref_list][block_index];
+    // − Otherwise, if subsampling_x is equal to 0 and subsampling_y is equal to 0, mv is set equal to
+    // BlockMvs[ refList ][ blockIdx ].
+    if (!m_parser->m_subsampling_x && !m_parser->m_subsampling_y)
+        return m_parser->m_block_mvs[ref_list][block_index];
+    // − Otherwise, if subsampling_x is equal to 0 and subsampling_y is equal to 1, mv[ comp ] is set equal to
+    // round_mv_comp_q2( BlockMvs[ refList ][ blockIdx ][ comp ] + BlockMvs[ refList ][ blockIdx + 2 ][ comp ] )
+    // for comp = 0..1.
+    if (!m_parser->m_subsampling_x && m_parser->m_subsampling_y)
+        return round_mv_comp_q2(m_parser->m_block_mvs[ref_list][block_index] + m_parser->m_block_mvs[ref_list][block_index + 2]);
+    // − Otherwise, if subsampling_x is equal to 1 and subsampling_y is equal to 0, mv[ comp ] is set equal to
+    // round_mv_comp_q2( BlockMvs[ refList ][ blockIdx ][ comp ] + BlockMvs[ refList ][ blockIdx + 1 ][ comp ] )
+    // for comp = 0..1.
+    if (m_parser->m_subsampling_x && !m_parser->m_subsampling_y)
+        return round_mv_comp_q2(m_parser->m_block_mvs[ref_list][block_index] + m_parser->m_block_mvs[ref_list][block_index + 1]);
+    // − Otherwise, (subsampling_x is equal to 1 and subsampling_y is equal to 1), mv[ comp ] is set equal to
+    // round_mv_comp_q4( BlockMvs[ refList ][ 0 ][ comp ] + BlockMvs[ refList ][ 1 ][ comp ] +
+    // BlockMvs[ refList ][ 2 ][ comp ] + BlockMvs[ refList ][ 3 ][ comp ] ) for comp = 0..1.
+    VERIFY(m_parser->m_subsampling_x && m_parser->m_subsampling_y);
+    return round_mv_comp_q4(m_parser->m_block_mvs[ref_list][0] + m_parser->m_block_mvs[ref_list][1]
+        + m_parser->m_block_mvs[ref_list][2] + m_parser->m_block_mvs[ref_list][3]);
+}
+
+MotionVector Decoder::clamp_motion_vector(u8 plane, MotionVector vector)
+{
+    // FIXME: This function is named very similarly to Parser::clamp_mv. Rename one or the other?
+
+    // The purpose of this process is to change the motion vector into the appropriate precision for the current plane
+    // and to clamp motion vectors that go too far off the edge of the frame.
+    // The variables sx and sy are set equal to the subsampling for the current plane as follows:
+    // − If plane is equal to 0, sx is set equal to 0 and sy is set equal to 0.
+    // − Otherwise, sx is set equal to subsampling_x and sy is set equal to subsampling_y.
+    bool subsampling_x = plane > 0 ? m_parser->m_subsampling_x : false;
+    bool subsampling_y = plane > 0 ? m_parser->m_subsampling_y : false;
+
+    // The output array clampedMv is specified by the following steps:
+    i32 blocks_high = num_8x8_blocks_high_lookup[m_parser->m_mi_size];
+    // Casts must be done here to prevent subtraction underflow from wrapping the values.
+    i32 mb_to_top_edge = -(static_cast<i32>(m_parser->m_mi_row * MI_SIZE) * 16) >> subsampling_y;
+    i32 mb_to_bottom_edge = (((static_cast<i32>(m_parser->m_mi_rows) - blocks_high - static_cast<i32>(m_parser->m_mi_row)) * MI_SIZE) * 16) >> subsampling_y;
+
+    i32 blocks_wide = num_8x8_blocks_wide_lookup[m_parser->m_mi_size];
+    i32 mb_to_left_edge = -(static_cast<i32>(m_parser->m_mi_col * MI_SIZE) * 16) >> subsampling_x;
+    i32 mb_to_right_edge = (((static_cast<i32>(m_parser->m_mi_cols) - blocks_wide - static_cast<i32>(m_parser->m_mi_col)) * MI_SIZE) * 16) >> subsampling_x;
+
+    i32 subpel_left = (INTERP_EXTEND + ((blocks_wide * MI_SIZE) >> subsampling_x)) << SUBPEL_BITS;
+    i32 subpel_right = subpel_left - SUBPEL_SHIFTS;
+    i32 subpel_top = (INTERP_EXTEND + ((blocks_high * MI_SIZE) >> subsampling_y)) << SUBPEL_BITS;
+    i32 subpel_bottom = subpel_top - SUBPEL_SHIFTS;
+    return {
+        clip_3(mb_to_top_edge - subpel_top, mb_to_bottom_edge + subpel_bottom, (2 * vector.row()) >> subsampling_y),
+        clip_3(mb_to_left_edge - subpel_left, mb_to_right_edge + subpel_right, (2 * vector.column()) >> subsampling_x)
+    };
+}
+
+DecoderErrorOr<void> Decoder::predict_inter_block(u8 plane, u8 ref_list, u32 x, u32 y, u32 width, u32 height, u32 block_index, Vector<u16>& block_buffer)
+{
+    // 2. The motion vector selection process in section 8.5.2.1 is invoked with plane, refList, blockIdx as inputs
+    // and the output being the motion vector mv.
+    auto motion_vector = select_motion_vector(plane, ref_list, block_index);
+
+    // 3. The motion vector clamping process in section 8.5.2.2 is invoked with plane, mv as inputs and the output
+    // being the clamped motion vector clampedMv
+    auto clamped_vector = clamp_motion_vector(plane, motion_vector);
+
+    // 4. The motion vector scaling process in section 8.5.2.3 is invoked with plane, refList, x, y, clampedMv as
+    // inputs and the output being the initial location startX, startY, and the step sizes stepX, stepY.
+    // 8.5.2.3 Motion vector scaling process
+    // The inputs to this process are:
+    // − a variable plane specifying which plane is being predicted,
+    // − a variable refList specifying that we should scale to match reference frame ref_frame[ refList ],
+    // − variables x and y specifying the location of the top left sample in the CurrFrame[ plane ] array of the region
+    // to be predicted,
+    // − a variable clampedMv specifying the clamped motion vector.
+    // The outputs of this process are the variables startX and startY giving the reference block location in units of
+    // 1/16 th of a sample, and variables xStep and yStep giving the step size in units of 1/16 th of a sample.
+    // This process is responsible for computing the sampling locations in the reference frame based on the motion
+    // vector. The sampling locations are also adjusted to compensate for any difference in the size of the reference
+    // frame compared to the current frame.
+
+    // A variable refIdx specifying which reference frame is being used is set equal to
+    // ref_frame_idx[ ref_frame[ refList ] - LAST_FRAME ].
+    auto reference_frame_index = m_parser->m_ref_frame_idx[m_parser->m_ref_frame[ref_list] - LastFrame];
+
+    // It is a requirement of bitstream conformance that all the following conditions are satisfied:
+    // − 2 * FrameWidth >= RefFrameWidth[ refIdx ]
+    // − 2 * FrameHeight >= RefFrameHeight[ refIdx ]
+    // − FrameWidth <= 16 * RefFrameWidth[ refIdx ]
+    // − FrameHeight <= 16 * RefFrameHeight[ refIdx ]
+    if (m_parser->m_frame_store[reference_frame_index][plane].is_empty())
+        return DecoderError::format(DecoderErrorCategory::Corrupted, "Attempted to use reference frame {} that has not been saved", reference_frame_index);
+    if (2 * m_parser->m_frame_width < m_parser->m_ref_frame_width[reference_frame_index]
+        || 2 * m_parser->m_frame_height < m_parser->m_ref_frame_height[reference_frame_index])
+        return DecoderError::format(DecoderErrorCategory::Corrupted, "Inter frame size is too small relative to reference frame {}", reference_frame_index);
+    if (m_parser->m_frame_width > 16 * m_parser->m_ref_frame_width[reference_frame_index]
+        || m_parser->m_frame_height > 16 * m_parser->m_ref_frame_height[reference_frame_index])
+        return DecoderError::format(DecoderErrorCategory::Corrupted, "Inter frame size is too large relative to reference frame {}", reference_frame_index);
+
+    // FIXME: Convert all the operations in this function to vector operations supported by
+    //        MotionVector.
+
+    // A variable xScale is set equal to (RefFrameWidth[ refIdx ] << REF_SCALE_SHIFT) / FrameWidth.
+    // A variable yScale is set equal to (RefFrameHeight[ refIdx ] << REF_SCALE_SHIFT) / FrameHeight.
+    // (xScale and yScale specify the size of the reference frame relative to the current frame in units where 16 is
+    // equivalent to the reference frame having the same size.)
+    i32 x_scale = (m_parser->m_ref_frame_width[reference_frame_index] << REF_SCALE_SHIFT) / m_parser->m_frame_width;
+    i32 y_scale = (m_parser->m_ref_frame_height[reference_frame_index] << REF_SCALE_SHIFT) / m_parser->m_frame_height;
+
+    // The variable baseX is set equal to (x * xScale) >> REF_SCALE_SHIFT.
+    // The variable baseY is set equal to (y * yScale) >> REF_SCALE_SHIFT.
+    // (baseX and baseY specify the location of the block in the reference frame if a zero motion vector is used).
+    i32 base_x = (x * x_scale) >> REF_SCALE_SHIFT;
+    i32 base_y = (y * y_scale) >> REF_SCALE_SHIFT;
+
+    // The variable lumaX is set equal to (plane > 0) ? x << subsampling_x : x.
+    // The variable lumaY is set equal to (plane > 0) ? y << subsampling_y : y.
+    // (lumaX and lumaY specify the location of the block to be predicted in the current frame in units of luma
+    // samples.)
+    bool subsampling_x = plane > 0 ? m_parser->m_subsampling_x : false;
+    bool subsampling_y = plane > 0 ? m_parser->m_subsampling_y : false;
+    i32 luma_x = x << subsampling_x;
+    i32 luma_y = y << subsampling_y;
+
+    // The variable fracX is set equal to ( (16 * lumaX * xScale) >> REF_SCALE_SHIFT) & SUBPEL_MASK.
+    // The variable fracY is set equal to ( (16 * lumaY * yScale) >> REF_SCALE_SHIFT) & SUBPEL_MASK.
+    i32 frac_x = ((16 * luma_x * x_scale) >> REF_SCALE_SHIFT) & SUBPEL_MASK;
+    i32 frac_y = ((16 * luma_y * y_scale) >> REF_SCALE_SHIFT) & SUBPEL_MASK;
+
+    // The variable dX is set equal to ( (clampedMv[ 1 ] * xScale) >> REF_SCALE_SHIFT) + fracX.
+    // The variable dY is set equal to ( (clampedMv[ 0 ] * yScale) >> REF_SCALE_SHIFT) + fracY.
+    // (dX and dY specify a scaled motion vector.)
+    i32 scaled_vector_x = ((clamped_vector.column() * x_scale) >> REF_SCALE_SHIFT) + frac_x;
+    i32 scaled_vector_y = ((clamped_vector.row() * y_scale) >> REF_SCALE_SHIFT) + frac_y;
+
+    // The output variable stepX is set equal to (16 * xScale) >> REF_SCALE_SHIFT.
+    // The output variable stepY is set equal to (16 * yScale) >> REF_SCALE_SHIFT.
+    i32 scaled_step_x = (16 * x_scale) >> REF_SCALE_SHIFT;
+    i32 scaled_step_y = (16 * y_scale) >> REF_SCALE_SHIFT;
+
+    // The output variable startX is set equal to (baseX << SUBPEL_BITS) + dX.
+    // The output variable startY is set equal to (baseY << SUBPEL_BITS) + dY.
+    i32 offset_scaled_block_x = (base_x << SUBPEL_BITS) + scaled_vector_x;
+    i32 offset_scaled_block_y = (base_y << SUBPEL_BITS) + scaled_vector_y;
+
+    // 5. The block inter prediction process in section 8.5.2.4 is invoked with plane, refList, startX, startY, stepX,
+    // stepY, w, h as inputs and the output is assigned to the 2D array preds[ refList ].
+
+    // 8.5.2.4 Block inter prediction process
+    // The inputs to this process are:
+    // − a variable plane,
+    // − a variable refList specifying that we should predict from ref_frame[ refList ],
+    // − variables x and y giving the block location in units of 1/16 th of a sample,
+    // − variables xStep and yStep giving the step size in units of 1/16 th of a sample. (These will be at most equal
+    // to 80 due to the restrictions on scaling between reference frames.)
+    VERIFY(scaled_step_x <= 80 && scaled_step_y <= 80);
+    // − variables w and h giving the width and height of the block in units of samples
+    // The output from this process is the 2D array named pred containing inter predicted samples.
+
+    // A variable ref specifying the reference frame contents is set equal to FrameStore[ refIdx ].
+    auto& reference_frame_buffer = m_parser->m_frame_store[reference_frame_index][plane];
+    auto reference_frame_width = m_parser->m_ref_frame_width[reference_frame_index] >> subsampling_x;
+    auto reference_frame_buffer_at = [&](u32 row, u32 column) -> u16& {
+        return reference_frame_buffer[row * reference_frame_width + column];
+    };
+
+    block_buffer.resize_and_keep_capacity(width * height);
+    auto block_buffer_at = [&](u32 row, u32 column) -> u16& {
+        return block_buffer[row * width + column];
+    };
+
+    // The variable lastX is set equal to ( (RefFrameWidth[ refIdx ] + subX) >> subX) - 1.
+    // The variable lastY is set equal to ( (RefFrameHeight[ refIdx ] + subY) >> subY) - 1.
+    // (lastX and lastY specify the coordinates of the bottom right sample of the reference plane.)
+    i32 scaled_right = ((m_parser->m_ref_frame_width[reference_frame_index] + subsampling_x) >> subsampling_x) - 1;
+    i32 scaled_bottom = ((m_parser->m_ref_frame_height[reference_frame_index] + subsampling_y) >> subsampling_y) - 1;
+
+    // The variable intermediateHeight specifying the height required for the intermediate array is set equal to (((h -
+    // 1) * yStep + 15) >> 4) + 8.
+    auto intermediate_height = (((height - 1) * scaled_step_y + 15) >> 4) + 8;
+    // The sub-sample interpolation is effected via two one-dimensional convolutions. First a horizontal filter is used
+    // to build up a temporary array, and then this array is vertically filtered to obtain the final prediction. The
+    // fractional parts of the motion vectors determine the filtering process. If the fractional part is zero, then the
+    // filtering is equivalent to a straight sample copy.
+    // The filtering is applied as follows:
+    // The array intermediate is specified as follows:
+    // Note: Height is specified by `intermediate_height`, width is specified by `width`
+    Vector<u16>& intermediate_buffer = m_buffers.inter_horizontal;
+    intermediate_buffer.clear_with_capacity();
+    intermediate_buffer.resize_and_keep_capacity(intermediate_height * width);
+    auto intermediate_buffer_at = [&](u32 row, u32 column) -> u16& {
+        return intermediate_buffer[row * width + column];
+    };
+
+    for (auto row = 0u; row < intermediate_height; row++) {
+        for (auto column = 0u; column < width; column++) {
+            auto samples_start = offset_scaled_block_x + static_cast<i32>(scaled_step_x * column);
+
+            i32 accumulated_samples = 0;
+            for (auto t = 0u; t < 8u; t++) {
+                auto sample = reference_frame_buffer_at(
+                    clip_3(0, scaled_bottom, (offset_scaled_block_y >> 4) + static_cast<i32>(row) - 3),
+                    clip_3(0, scaled_right, (samples_start >> 4) + static_cast<i32>(t) - 3));
+                accumulated_samples += subpel_filters[m_parser->m_interp_filter][samples_start & 15][t] * sample;
+            }
+            intermediate_buffer_at(row, column) = clip_1(m_parser->m_bit_depth, round_2(accumulated_samples, 7));
+        }
+    }
+
+    for (auto row = 0u; row < height; row++) {
+        for (auto column = 0u; column < width; column++) {
+            auto samples_start = (offset_scaled_block_y & 15) + static_cast<i32>(scaled_step_y * row);
+
+            i32 accumulated_samples = 0;
+            for (auto t = 0u; t < 8u; t++) {
+                auto sample = intermediate_buffer_at((samples_start >> 4) + t, column);
+                accumulated_samples += subpel_filters[m_parser->m_interp_filter][samples_start & 15][t] * sample;
+            }
+            block_buffer_at(row, column) = clip_1(m_parser->m_bit_depth, round_2(accumulated_samples, 7));
+        }
+    }
+
+    return {};
+}
+
+DecoderErrorOr<void> Decoder::predict_inter(u8 plane, u32 x, u32 y, u32 width, u32 height, u32 block_index)
+{
+    // The inter prediction process is invoked for inter coded blocks. When MiSize is smaller than BLOCK_8X8, the
+    // prediction is done with a granularity of 4x4 samples, otherwise the whole plane is predicted at the same time.
+    // The inputs to this process are:
+    // − a variable plane specifying which plane is being predicted,
+    // − variables x and y specifying the location of the top left sample in the CurrFrame[ plane ] array of the region
+    // to be predicted,
+    // − variables w and h specifying the width and height of the region to be predicted,
+    // − a variable blockIdx, specifying how much of the block has already been predicted in units of 4x4 samples.
+    // The outputs of this process are inter predicted samples in the current frame CurrFrame.
+
+    // The variable isCompound is set equal to ref_frame[ 1 ] > NONE.
+    auto is_compound = m_parser->m_ref_frame[1] > None;
+    // The prediction arrays are formed by the following ordered steps:
+    // 1. The variable refList is set equal to 0.
+    // 2. through 5.
+    auto predicted_buffer = m_buffers.inter_predicted;
+    TRY(predict_inter_block(plane, 0, x, y, width, height, block_index, predicted_buffer));
+    auto predicted_buffer_at = [&](Vector<u16>& buffer, u32 row, u32 column) -> u16& {
+        return buffer[row * width + column];
+    };
+
+    // 6. If isCompound is equal to 1, then the variable refList is set equal to 1 and steps 2, 3, 4 and 5 are repeated
+    // to form the prediction for the second reference.
+    // The inter predicted samples are then derived as follows:
+    auto& frame_buffer = get_output_buffer(plane);
+    VERIFY(!frame_buffer.is_empty());
+    auto frame_width = (m_parser->m_mi_cols * 8u) >> (plane > 0 ? m_parser->m_subsampling_x : false);
+    auto frame_height = (m_parser->m_mi_rows * 8u) >> (plane > 0 ? m_parser->m_subsampling_y : false);
+    auto frame_buffer_at = [&](u32 row, u32 column) -> u16& {
+        return frame_buffer[row * frame_width + column];
+    };
+
+    auto width_in_frame_buffer = min(width, frame_width - x);
+    auto height_in_frame_buffer = min(height, frame_height - y);
+
+    // − If isCompound is equal to 0, CurrFrame[ plane ][ y + i ][ x + j ] is set equal to preds[ 0 ][ i ][ j ] for i = 0..h-1
+    // and j = 0..w-1.
+    if (!is_compound) {
+        for (auto i = 0u; i < height_in_frame_buffer; i++) {
+            for (auto j = 0u; j < width_in_frame_buffer; j++)
+                frame_buffer_at(y + i, x + j) = predicted_buffer_at(predicted_buffer, i, j);
+        }
+
+        return {};
+    }
+
+    // − Otherwise, CurrFrame[ plane ][ y + i ][ x + j ] is set equal to Round2( preds[ 0 ][ i ][ j ] + preds[ 1 ][ i ][ j ], 1 )
+    // for i = 0..h-1 and j = 0..w-1.
+    auto second_predicted_buffer = m_buffers.inter_predicted_compound;
+    TRY(predict_inter_block(plane, 1, x, y, width, height, block_index, second_predicted_buffer));
+
+    for (auto i = 0u; i < height_in_frame_buffer; i++) {
+        for (auto j = 0u; j < width_in_frame_buffer; j++)
+            frame_buffer_at(y + i, x + j) = round_2(predicted_buffer_at(predicted_buffer, i, j) + predicted_buffer_at(second_predicted_buffer, i, j), 1);
+    }
+
+    return {};
 }
 
 u16 Decoder::dc_q(u8 b)
@@ -1331,50 +1643,67 @@ DecoderErrorOr<void> Decoder::update_reference_frames()
 
     // 1. For each value of i from 0 to NUM_REF_FRAMES - 1, the following applies if bit i of refresh_frame_flags
     // is equal to 1 (i.e. if (refresh_frame_flags>>i)&1 is equal to 1):
+    auto refresh_flags = m_parser->m_refresh_frame_flags;
     for (auto i = 0; i < NUM_REF_FRAMES; i++) {
-        if ((m_parser->m_refresh_frame_flags & (1 << i)) != 1)
-            continue;
-        // − RefFrameWidth[ i ] is set equal to FrameWidth.
-        m_parser->m_ref_frame_width[i] = m_parser->m_frame_width;
-        // − RefFrameHeight[ i ] is set equal to FrameHeight.
-        m_parser->m_ref_frame_height[i] = m_parser->m_frame_height;
-        // − RefSubsamplingX[ i ] is set equal to subsampling_x.
-        m_parser->m_ref_subsampling_x[i] = m_parser->m_subsampling_x;
-        // − RefSubsamplingY[ i ] is set equal to subsampling_y.
-        m_parser->m_ref_subsampling_y[i] = m_parser->m_subsampling_y;
-        // − RefBitDepth[ i ] is set equal to BitDepth.
-        m_parser->m_ref_bit_depth[i] = m_parser->m_bit_depth;
+        if ((refresh_flags & 1) != 0) {
+            // − RefFrameWidth[ i ] is set equal to FrameWidth.
+            m_parser->m_ref_frame_width[i] = m_parser->m_frame_width;
+            // − RefFrameHeight[ i ] is set equal to FrameHeight.
+            m_parser->m_ref_frame_height[i] = m_parser->m_frame_height;
+            // − RefSubsamplingX[ i ] is set equal to subsampling_x.
+            m_parser->m_ref_subsampling_x[i] = m_parser->m_subsampling_x;
+            // − RefSubsamplingY[ i ] is set equal to subsampling_y.
+            m_parser->m_ref_subsampling_y[i] = m_parser->m_subsampling_y;
+            // − RefBitDepth[ i ] is set equal to BitDepth.
+            m_parser->m_ref_bit_depth[i] = m_parser->m_bit_depth;
 
-        // − FrameStore[ i ][ 0 ][ y ][ x ] is set equal to CurrFrame[ 0 ][ y ][ x ] for x = 0..FrameWidth-1, for y =
-        // 0..FrameHeight-1.
-        // − FrameStore[ i ][ plane ][ y ][ x ] is set equal to CurrFrame[ plane ][ y ][ x ] for plane = 1..2, for x =
-        // 0..((FrameWidth+subsampling_x) >> subsampling_x)-1, for y = 0..((FrameHeight+subsampling_y) >>
-        // subsampling_y)-1.
+            // − FrameStore[ i ][ 0 ][ y ][ x ] is set equal to CurrFrame[ 0 ][ y ][ x ] for x = 0..FrameWidth-1, for y =
+            // 0..FrameHeight-1.
+            // − FrameStore[ i ][ plane ][ y ][ x ] is set equal to CurrFrame[ plane ][ y ][ x ] for plane = 1..2, for x =
+            // 0..((FrameWidth+subsampling_x) >> subsampling_x)-1, for y = 0..((FrameHeight+subsampling_y) >>
+            // subsampling_y)-1.
 
-        // We can just copy the vectors over to the frame store.
-        for (auto plane = 0u; plane < 3; plane++)
-            m_parser->m_frame_store[i][plane] = get_output_buffer_for_plane(plane);
+            // FIXME: Frame width is not equal to the buffer's stride. If we store the stride of the buffer with the reference
+            //        frame, we can just copy the framebuffer data instead. Alternatively, we should crop the output framebuffer.
+            for (auto plane = 0u; plane < 3; plane++) {
+                auto width = m_parser->m_frame_width;
+                auto height = m_parser->m_frame_height;
+                auto stride = m_parser->m_mi_cols * 8;
+
+                if (plane > 0) {
+                    width = (width + m_parser->m_subsampling_x) >> m_parser->m_subsampling_x;
+                    height = (height + m_parser->m_subsampling_y) >> m_parser->m_subsampling_y;
+                    stride >>= m_parser->m_subsampling_x;
+                }
+
+                auto original_buffer = get_output_buffer(plane);
+                auto& frame_store_buffer = m_parser->m_frame_store[i][plane];
+                frame_store_buffer.resize_and_keep_capacity(width * height);
+
+                for (auto x = 0u; x < width; x++) {
+                    for (auto y = 0u; y < height; y++) {
+                        auto sample = original_buffer[index_from_row_and_column(y, x, stride)];
+                        frame_store_buffer[index_from_row_and_column(y, x, width)] = sample;
+                    }
+                }
+            }
+        }
+
+        refresh_flags >>= 1;
     }
 
     // 2. If show_existing_frame is equal to 0, the following applies:
     if (!m_parser->m_show_existing_frame) {
         VERIFY(m_parser->m_ref_frames.size() == m_parser->m_mi_rows * m_parser->m_mi_cols);
-        VERIFY(m_parser->m_prev_ref_frames.size() == m_parser->m_mi_rows * m_parser->m_mi_cols);
         VERIFY(m_parser->m_mvs.size() == m_parser->m_mi_rows * m_parser->m_mi_cols);
-        VERIFY(m_parser->m_prev_mvs.size() == m_parser->m_mi_rows * m_parser->m_mi_cols);
         // − PrevRefFrames[ row ][ col ][ list ] is set equal to RefFrames[ row ][ col ][ list ] for row = 0..MiRows-1,
         // for col = 0..MiCols-1, for list = 0..1.
         // − PrevMvs[ row ][ col ][ list ][ comp ] is set equal to Mvs[ row ][ col ][ list ][ comp ] for row = 0..MiRows-1,
         // for col = 0..MiCols-1, for list = 0..1, for comp = 0..1.
-        for (auto row = 0u; row < m_parser->m_mi_rows; row++) {
-            for (auto column = 0u; column < m_parser->m_mi_cols; column++) {
-                auto index = m_parser->get_image_index(row, column);
-                for (auto list = 0u; list < 2; list++) {
-                    m_parser->m_prev_ref_frames[index][list] = m_parser->m_ref_frames[index][list];
-                    m_parser->m_prev_mvs[index][list] = m_parser->m_mvs[index][list];
-                }
-            }
-        }
+
+        // We can copy these.
+        m_parser->m_prev_ref_frames = m_parser->m_ref_frames;
+        m_parser->m_prev_mvs = m_parser->m_mvs;
     }
 
     return {};

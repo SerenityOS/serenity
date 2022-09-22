@@ -251,11 +251,13 @@ private:
     MotionVector m_near_mv[2];
     MotionVector m_nearest_mv[2];
     MotionVector m_best_mv[2];
+    // FIXME: Move these to a struct to store together in one array.
     u32 m_ref_frame_width[NUM_REF_FRAMES];
     u32 m_ref_frame_height[NUM_REF_FRAMES];
     bool m_ref_subsampling_x[NUM_REF_FRAMES];
     bool m_ref_subsampling_y[NUM_REF_FRAMES];
     u8 m_ref_bit_depth[NUM_REF_FRAMES];
+
     Vector<u16> m_frame_store[NUM_REF_FRAMES][3];
 
     u32 m_eob_total { 0 };
