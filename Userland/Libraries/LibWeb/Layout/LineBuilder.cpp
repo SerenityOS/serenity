@@ -184,7 +184,7 @@ void LineBuilder::update_last_line()
     float x_offset_bottom = m_context.leftmost_x_offset_at(m_current_y + current_line_height - 1);
     float x_offset = max(x_offset_top, x_offset_bottom);
 
-    float excess_horizontal_space = m_context.effective_containing_block_width() - line_box.width();
+    float excess_horizontal_space = m_available_width_for_current_line - line_box.width();
 
     switch (text_align) {
     case CSS::TextAlign::Center:
