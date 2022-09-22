@@ -42,9 +42,6 @@ jobs:
         build_directory: 'Meta/Lagom/Build'
         serenity_ccache_path: '$(SERENITY_CCACHE_DIR)'
         with_remote_data_caches: true
-        ${{ if eq(parameters.os, 'Android') }}:
-          with_ndk_cache: true
-          ndk_version: '$(ndk_version)'
         ${{ if eq(parameters.os, 'macOS') }}:
           ccache_version: 2
           serenity_ccache_size: '2G'
