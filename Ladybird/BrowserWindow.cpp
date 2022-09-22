@@ -26,9 +26,7 @@ BrowserWindow::BrowserWindow()
     m_tabs_container->setMovable(true);
     m_tabs_container->setTabsClosable(true);
     m_tabs_container->setDocumentMode(true);
-
-    m_tabs_bar = m_tabs_container->findChild<QTabBar*>();
-    m_tabs_bar->hide();
+    m_tabs_container->setTabBarAutoHide(true);
 
     auto* menu = menuBar()->addMenu("&File");
 
@@ -251,9 +249,6 @@ void BrowserWindow::new_tab()
     QObject::connect(tab_ptr, &Tab::title_changed, this, &BrowserWindow::tab_title_changed);
     QObject::connect(tab_ptr, &Tab::favicon_changed, this, &BrowserWindow::tab_favicon_changed);
 
-    if (m_tabs_container->count() > 1)
-        m_tabs_bar->show();
-
     tab_ptr->focus_location_editor();
 }
 
@@ -264,9 +259,6 @@ void BrowserWindow::close_tab(int index)
     m_tabs.remove_first_matching([&](auto& entry) {
         return entry == tab;
     });
-
-    if (m_tabs_container->count() <= 1)
-        m_tabs_bar->hide();
 }
 
 void BrowserWindow::close_current_tab()

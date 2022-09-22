@@ -11,7 +11,6 @@
 #include <QLineEdit>
 #include <QMainWindow>
 #include <QMenuBar>
-#include <QTabBar>
 #include <QTabWidget>
 #include <QToolBar>
 
@@ -44,7 +43,6 @@ private:
     void debug_request(String const& request, String const& argument = "");
 
     QTabWidget* m_tabs_container { nullptr };
-    QTabBar* m_tabs_bar { nullptr };
     NonnullOwnPtrVector<Tab> m_tabs;
     Tab* m_current_tab { nullptr };
 };
