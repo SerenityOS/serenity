@@ -268,12 +268,14 @@ void insert_into_and_scan_hash_index(int num_keys)
         int count = 0;
         for (auto iter = hash_index->begin(); !iter.is_end(); iter++, count++) {
             auto key = (*iter);
-            auto key_value = (int)key[0];
+            auto key_value = key[0].to_int();
+            VERIFY(key_value.has_value());
+
             for (auto ix = 0; ix < num_keys; ix++) {
                 if (keys[ix] == key_value) {
                     EXPECT_EQ(key.pointer(), pointers[ix]);
                     if (found[ix])
-                        FAIL(String::formatted("Key {}, index {} already found previously", key_value, ix));
+                        FAIL(String::formatted("Key {}, index {} already found previously", *key_value, ix));
                     found[ix] = true;
                     break;
                 }

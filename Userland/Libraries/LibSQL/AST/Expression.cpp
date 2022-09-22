@@ -126,23 +126,23 @@ ResultOr<Value> UnaryOperatorExpression::evaluate(ExecutionContext& context) con
         return Result { SQLCommand::Unknown, SQLErrorCode::NumericOperatorTypeMismatch, UnaryOperator_name(type()) };
     case UnaryOperator::Minus:
         if (expression_value.type() == SQLType::Integer) {
-            expression_value = -int(expression_value);
+            expression_value = -expression_value.to_int().value();
             return expression_value;
         }
         if (expression_value.type() == SQLType::Float) {
-            expression_value = -double(expression_value);
+            expression_value = -expression_value.to_double().value();
             return expression_value;
         }
         return Result { SQLCommand::Unknown, SQLErrorCode::NumericOperatorTypeMismatch, UnaryOperator_name(type()) };
     case UnaryOperator::Not:
         if (expression_value.type() == SQLType::Boolean) {
-            expression_value = !bool(expression_value);
+            expression_value = !expression_value.to_bool().value();
             return expression_value;
         }
         return Result { SQLCommand::Unknown, SQLErrorCode::BooleanOperatorTypeMismatch, UnaryOperator_name(type()) };
     case UnaryOperator::BitwiseNot:
         if (expression_value.type() == SQLType::Integer) {
-            expression_value = ~u32(expression_value);
+            expression_value = ~expression_value.to_u32().value();
             return expression_value;
         }
         return Result { SQLCommand::Unknown, SQLErrorCode::IntegerOperatorTypeMismatch, UnaryOperator_name(type()) };

@@ -78,12 +78,6 @@ public:
     [[nodiscard]] Optional<bool> to_bool() const;
     [[nodiscard]] Optional<Vector<Value>> to_vector() const;
 
-    explicit operator String() const;
-    explicit operator int() const;
-    explicit operator u32() const;
-    explicit operator double() const;
-    explicit operator bool() const;
-
     void assign(Value const& other_value);
     void assign(String const& string_value);
     void assign(int int_value);
