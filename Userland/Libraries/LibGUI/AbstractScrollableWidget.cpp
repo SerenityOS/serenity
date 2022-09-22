@@ -331,4 +331,12 @@ Gfx::IntPoint AbstractScrollableWidget::to_widget_position(Gfx::IntPoint const& 
     widget_position.translate_by(frame_thickness(), frame_thickness());
     return widget_position;
 }
+
+Optional<UISize> AbstractScrollableWidget::calculated_min_size() const
+{
+    auto vertical_scrollbar = m_vertical_scrollbar->effective_min_size().height().as_int();
+    auto horizontal_scrollbar = m_horizontal_scrollbar->effective_min_size().width().as_int();
+    return { { horizontal_scrollbar + corner_widget().width() + frame_thickness() * 2, vertical_scrollbar + corner_widget().height() + frame_thickness() * 2 } };
+}
+
 }
