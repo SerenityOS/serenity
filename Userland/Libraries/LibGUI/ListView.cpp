@@ -44,7 +44,7 @@ void ListView::update_content_size()
         auto text = model()->index(row, m_model_column).data();
         content_width = max(content_width, font().width(text.to_string()) + horizontal_padding() * 2);
     }
-
+    m_max_item_width = content_width;
     content_width = max(content_width, widget_inner_rect().width());
 
     int content_height = item_count() * item_height();
@@ -266,6 +266,17 @@ void ListView::scroll_into_view(ModelIndex const& index, bool scroll_horizontall
     if (!model())
         return;
     AbstractScrollableWidget::scroll_into_view(content_rect(index.row()), scroll_horizontally, scroll_vertically);
+}
+
+Optional<UISize> ListView::calculated_min_size() const
+{
+    auto min_width = horizontal_scrollbar().effective_min_size().width().as_int() + vertical_scrollbar().width() + frame_thickness() * 2;
+    auto min_height = vertical_scrollbar().effective_min_size().height().as_int() + horizontal_scrollbar().height() + frame_thickness() * 2;
+    auto content_exceeds_minimums = content_width() > min_width && content_height() > min_height;
+    auto scrollbars_are_visible = horizontal_scrollbar().is_visible() && vertical_scrollbar().is_visible();
+    if (content_exceeds_minimums || scrollbars_are_visible)
+        return AbstractScrollableWidget::calculated_min_size();
+    return { { m_max_item_width + frame_thickness() * 2, content_height() + frame_thickness() * 2 } };
 }
 
 }
