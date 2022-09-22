@@ -19,6 +19,6 @@ using XMLHttpRequestBodyInit = Variant<JS::Handle<FileAPI::Blob>, JS::Handle<JS:
 // https://fetch.spec.whatwg.org/#bodyinit
 using BodyInit = Variant<JS::Handle<Streams::ReadableStream>, JS::Handle<FileAPI::Blob>, JS::Handle<JS::Object>, JS::Handle<URL::URLSearchParams>, String>;
 
-ErrorOr<Infrastructure::BodyWithType> extract_body(JS::Realm&, XMLHttpRequestBodyInit const&);
+DOM::ExceptionOr<Infrastructure::BodyWithType> extract_body(JS::Realm&, BodyInit const&, bool keepalive = false);
 
 }

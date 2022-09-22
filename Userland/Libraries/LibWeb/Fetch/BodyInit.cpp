@@ -6,6 +6,7 @@
  */
 
 #include <LibWeb/Bindings/IDLAbstractOperations.h>
+#include <LibWeb/DOM/ExceptionOr.h>
 #include <LibWeb/Fetch/BodyInit.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP/Bodies.h>
 #include <LibWeb/HTML/Window.h>
@@ -14,13 +15,18 @@
 namespace Web::Fetch {
 
 // https://fetch.spec.whatwg.org/#concept-bodyinit-extract
-// FIXME: The parameter 'body_init' should be 'typedef (ReadableStream or XMLHttpRequestBodyInit) BodyInit'. For now we just let it be 'XMLHttpRequestBodyInit'.
-ErrorOr<Infrastructure::BodyWithType> extract_body(JS::Realm& realm, XMLHttpRequestBodyInit const& body_init)
+DOM::ExceptionOr<Infrastructure::BodyWithType> extract_body(JS::Realm& realm, BodyInit const& object, bool keepalive)
 {
     auto& window = verify_cast<HTML::Window>(realm.global_object());
 
-    // FIXME: 1. Let stream be object if object is a ReadableStream object. Otherwise, let stream be a new ReadableStream, and set up stream.
-    auto* stream = realm.heap().allocate<Streams::ReadableStream>(realm, window);
+    // 1. Let stream be object if object is a ReadableStream object. Otherwise, let stream be a new ReadableStream, and set up stream.
+    Streams::ReadableStream* stream;
+    if (auto const* handle = object.get_pointer<JS::Handle<Streams::ReadableStream>>()) {
+        stream = const_cast<Streams::ReadableStream*>(handle->cell());
+    } else {
+        stream = realm.heap().allocate<Streams::ReadableStream>(realm, window);
+    }
+
     // FIXME: 2. Let action be null.
     // 3. Let source be null.
     Infrastructure::Body::SourceType source {};
@@ -31,8 +37,8 @@ ErrorOr<Infrastructure::BodyWithType> extract_body(JS::Realm& realm, XMLHttpRequ
 
     // 6. Switch on object.
     // FIXME: Still need to support BufferSource and FormData
-    TRY(body_init.visit(
-        [&](JS::Handle<FileAPI::Blob> const& blob) -> ErrorOr<void> {
+    TRY(object.visit(
+        [&](JS::Handle<FileAPI::Blob> const& blob) -> DOM::ExceptionOr<void> {
             // FIXME: Set action to this step: read object.
             // Set source to object.
             source = blob;
@@ -43,24 +49,35 @@ ErrorOr<Infrastructure::BodyWithType> extract_body(JS::Realm& realm, XMLHttpRequ
                 type = blob->type().to_byte_buffer();
             return {};
         },
-        [&](JS::Handle<JS::Object> const& buffer_source) -> ErrorOr<void> {
+        [&](JS::Handle<JS::Object> const& buffer_source) -> DOM::ExceptionOr<void> {
             // Set source to a copy of the bytes held by object.
-            source = TRY(Bindings::IDL::get_buffer_source_copy(*buffer_source.cell()));
+            source = TRY_OR_RETURN_OOM(window, Bindings::IDL::get_buffer_source_copy(*buffer_source.cell()));
             return {};
         },
-        [&](JS::Handle<URL::URLSearchParams> const& url_search_params) -> ErrorOr<void> {
+        [&](JS::Handle<URL::URLSearchParams> const& url_search_params) -> DOM::ExceptionOr<void> {
             // Set source to the result of running the application/x-www-form-urlencoded serializer with object’s list.
             source = url_search_params->to_string().to_byte_buffer();
             // Set type to `application/x-www-form-urlencoded;charset=UTF-8`.
-            type = TRY(ByteBuffer::copy("application/x-www-form-urlencoded;charset=UTF-8"sv.bytes()));
+            type = TRY_OR_RETURN_OOM(window, ByteBuffer::copy("application/x-www-form-urlencoded;charset=UTF-8"sv.bytes()));
             return {};
         },
-        [&](String const& scalar_value_string) -> ErrorOr<void> {
+        [&](String const& scalar_value_string) -> DOM::ExceptionOr<void> {
             // NOTE: AK::String is always UTF-8.
             // Set source to the UTF-8 encoding of object.
             source = scalar_value_string.to_byte_buffer();
             // Set type to `text/plain;charset=UTF-8`.
-            type = TRY(ByteBuffer::copy("text/plain;charset=UTF-8"sv.bytes()));
+            type = TRY_OR_RETURN_OOM(window, ByteBuffer::copy("text/plain;charset=UTF-8"sv.bytes()));
+            return {};
+        },
+        [&](JS::Handle<Streams::ReadableStream> const& stream) -> DOM::ExceptionOr<void> {
+            // If keepalive is true, then throw a TypeError.
+            if (keepalive)
+                return DOM::SimpleException { DOM::SimpleExceptionType::TypeError, "Cannot extract body from stream when keepalive is set" };
+
+            // If object is disturbed or locked, then throw a TypeError.
+            if (stream->is_disturbed() || stream->is_locked())
+                return DOM::SimpleException { DOM::SimpleExceptionType::TypeError, "Cannot extract body from disturbed or locked stream" };
+
             return {};
         }));
 

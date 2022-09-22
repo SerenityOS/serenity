@@ -410,7 +410,7 @@ DOM::ExceptionOr<void> XMLHttpRequest::send(Optional<Fetch::XMLHttpRequestBodyIn
     if (m_method.is_one_of("GET"sv, "HEAD"sv))
         body = {};
 
-    auto body_with_type = body.has_value() ? TRY_OR_RETURN_OOM(global_object(), Fetch::extract_body(realm, body.value())) : Optional<Fetch::Infrastructure::BodyWithType> {};
+    auto body_with_type = body.has_value() ? TRY(Fetch::extract_body(realm, body.value())) : Optional<Fetch::Infrastructure::BodyWithType> {};
 
     AK::URL request_url = m_window->associated_document().parse_url(m_url.to_string());
     dbgln("XHR send from {} to {}", m_window->associated_document().url(), request_url);
