@@ -295,8 +295,8 @@ void Parser::compute_image_size()
     // cleared to all zeros by setting SegmentId[ row ][ col ] equal to 0 for row = 0..MiRows-1 and col =
     // 0..MiCols-1.
     bool first_invoke = !m_mi_cols && !m_mi_rows;
-    bool same_size = m_mi_cols != new_cols || m_mi_rows != new_rows;
-    if (first_invoke || same_size) {
+    bool same_size = m_mi_cols == new_cols && m_mi_rows == new_rows;
+    if (first_invoke || !same_size) {
         // m_segment_ids will be resized from decode_tiles() later.
         m_segment_ids.clear_with_capacity();
     }
@@ -777,8 +777,6 @@ void Parser::cleanup_tile_allocations()
     m_mvs.clear_with_capacity();
     m_sub_mvs.clear_with_capacity();
     m_sub_modes.clear_with_capacity();
-    m_prev_ref_frames.clear_with_capacity();
-    m_prev_mvs.clear_with_capacity();
 }
 
 DecoderErrorOr<void> Parser::allocate_tile_data()
@@ -795,8 +793,6 @@ DecoderErrorOr<void> Parser::allocate_tile_data()
     DECODER_TRY_ALLOC(m_mvs.try_resize_and_keep_capacity(dimensions));
     DECODER_TRY_ALLOC(m_sub_mvs.try_resize_and_keep_capacity(dimensions));
     DECODER_TRY_ALLOC(m_sub_modes.try_resize_and_keep_capacity(dimensions));
-    DECODER_TRY_ALLOC(m_prev_ref_frames.try_resize_and_keep_capacity(dimensions));
-    DECODER_TRY_ALLOC(m_prev_mvs.try_resize_and_keep_capacity(dimensions));
     return {};
 }
 
@@ -1082,10 +1078,19 @@ DecoderErrorOr<void> Parser::inter_segment_id()
         m_segment_id = predicted_segment_id;
     else
         m_segment_id = TRY_READ(m_tree_parser->parse_tree<u8>(SyntaxElementType::SegmentID));
-    for (size_t i = 0; i < num_8x8_blocks_wide_lookup[m_mi_size]; i++)
-        m_above_seg_pred_context[m_mi_col + i] = seg_id_predicted;
-    for (size_t i = 0; i < num_8x8_blocks_high_lookup[m_mi_size]; i++)
-        m_left_seg_pred_context[m_mi_row + i] = seg_id_predicted;
+
+    for (size_t i = 0; i < num_8x8_blocks_wide_lookup[m_mi_size]; i++) {
+        auto index = m_mi_col + i;
+        // (7.4.1) AboveSegPredContext[ i ] only needs to be set to 0 for i = 0..MiCols-1.
+        if (index < m_above_seg_pred_context.size())
+            m_above_seg_pred_context[index] = seg_id_predicted;
+    }
+    for (size_t i = 0; i < num_8x8_blocks_high_lookup[m_mi_size]; i++) {
+        auto index = m_mi_row + i;
+        // (7.4.1) LeftSegPredContext[ i ] only needs to be set to 0 for i = 0..MiRows-1.
+        if (index < m_above_seg_pred_context.size())
+            m_left_seg_pred_context[m_mi_row + i] = seg_id_predicted;
+    }
     return {};
 }
 
@@ -1331,12 +1336,19 @@ DecoderErrorOr<void> Parser::residual()
                         TRY(m_decoder.reconstruct(plane, start_x, start_y, tx_size));
                     }
                 }
+
                 auto& above_sub_context = m_above_nonzero_context[plane];
+                auto above_sub_context_index = start_x >> 2;
+                auto above_sub_context_end = min(above_sub_context_index + step, above_sub_context.size());
+                for (; above_sub_context_index < above_sub_context_end; above_sub_context_index++)
+                    above_sub_context[above_sub_context_index] = non_zero;
+
                 auto& left_sub_context = m_left_nonzero_context[plane];
-                for (auto i = 0; i < step; i++) {
-                    above_sub_context[(start_x >> 2) + i] = non_zero;
-                    left_sub_context[(start_y >> 2) + i] = non_zero;
-                }
+                auto left_sub_context_index = start_y >> 2;
+                auto left_sub_context_end = min(left_sub_context_index + step, left_sub_context.size());
+                for (; left_sub_context_index < left_sub_context_end; left_sub_context_index++)
+                    left_sub_context[left_sub_context_index] = non_zero;
+
                 block_index++;
             }
         }
@@ -1620,7 +1632,8 @@ void Parser::find_best_ref_mvs(u8 ref_list)
             if (delta_column & 1)
                 delta_column += delta_column > 0 ? -1 : 1;
         }
-        m_ref_list_mv[i] = clamp_mv(m_ref_list_mv[i], (BORDERINPIXELS - INTERP_EXTEND) << 3);
+        delta = { delta_row, delta_column };
+        m_ref_list_mv[i] = clamp_mv(delta, (BORDERINPIXELS - INTERP_EXTEND) << 3);
     }
 
     m_nearest_mv[ref_list] = m_ref_list_mv[0];

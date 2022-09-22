@@ -50,10 +50,19 @@ private:
     DecoderErrorOr<void> predict_intra(u8 plane, u32 x, u32 y, bool have_left, bool have_above, bool not_on_right, TXSize tx_size, u32 block_index);
 
     // (8.5.1) Inter prediction process
-    DecoderErrorOr<void> predict_inter(u8 plane, u32 x, u32 y, u32 w, u32 h, u32 block_index);
+    DecoderErrorOr<void> predict_inter(u8 plane, u32 x, u32 y, u32 width, u32 height, u32 block_index);
+    // (8.5.2.1) Motion vector selection process
+    MotionVector select_motion_vector(u8 plane, u8 ref_list, u32 block_index);
+    // (8.5.2.2) Motion vector clamping process
+    MotionVector clamp_motion_vector(u8 plane, MotionVector vector);
+    // (8.5.2.3) Motion vector scaling process
+    DecoderErrorOr<MotionVector> scale_motion_vector(u8 plane, u8 ref_list, u32 x, u32 y, MotionVector vector);
+    // From (8.5.1) Inter prediction process, steps 2-5
+    DecoderErrorOr<void> predict_inter_block(u8 plane, u8 ref_list, u32 x, u32 y, u32 width, u32 height, u32 block_index, Vector<u16>& buffer);
 
     /* (8.6) Reconstruction and Dequantization */
 
+    // FIXME: These should be inline or constexpr
     u16 dc_q(u8 b);
     u16 ac_q(u8 b);
     // Returns the quantizer index for the current block
@@ -126,6 +135,12 @@ private:
 
     struct {
         // FIXME: We may be able to consolidate some of these to reduce memory consumption.
+
+        // FIXME: Create a new struct to store these buffers, specifying size and providing
+        //        helper functions to get values at coordinates. All *_at(row, column)
+        //        functions in Decoder.cpp and functions returning row * width + column
+        //        should be replaced if possible.
+
         Vector<Intermediate> dequantized;
         Vector<Intermediate> row_or_column;
 
@@ -137,6 +152,11 @@ private:
         // transforms (dct, adst)
         Vector<Intermediate> transform_temp;
         Vector<i64> adst_temp;
+
+        // predict_inter
+        Vector<u16> inter_horizontal;
+        Vector<u16> inter_predicted;
+        Vector<u16> inter_predicted_compound;
 
         Vector<Intermediate> intermediate[3];
         Vector<u16> output[3];

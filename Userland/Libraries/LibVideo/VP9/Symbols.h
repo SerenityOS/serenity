@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Hunter Salyer <thefalsehonesty@gmail.com>
+ * Copyright (c) 2022, Gregory Bertilson<zaggy1024@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -59,11 +60,14 @@ namespace Video::VP9 {
 #define COMPANDED_MVREF_THRESH 8
 #define MAX_LOOP_FILTER 63
 #define REF_SCALE_SHIFT 14
+// Number of bits of precision when performing inter prediction.
 #define SUBPEL_BITS 4
 #define SUBPEL_SHIFTS 16
-#define SUBPEL_MASH 15
+#define SUBPEL_MASK 15
 #define MV_BORDER 128
+// Value used when clipping motion vectors.
 #define INTERP_EXTEND 4
+// Value used when clipping motion vectors.
 #define BORDERINPIXELS 160
 #define MAX_UPDATE_FACTOR 128
 #define COUNT_SAT 20
