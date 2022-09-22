@@ -29,11 +29,7 @@ void ScriptEditor::new_script_with_temp_name(String name)
 ErrorOr<void> ScriptEditor::open_script_from_file(LexicalPath const& file_path)
 {
     auto file = TRY(Core::Stream::File::open(file_path.string(), Core::Stream::OpenMode::Read));
-    auto file_size = TRY(file->size());
-    auto buffer = TRY(ByteBuffer::create_uninitialized(file_size));
-
-    if (!file->read_or_error(buffer))
-        return Error::from_string_literal("Failed to read from file");
+    auto buffer = TRY(file->read_all());
 
     set_text({ buffer.bytes() });
     m_path = file_path.string();
@@ -47,7 +43,8 @@ ErrorOr<bool> ScriptEditor::save()
         return save_as();
 
     auto file = TRY(Core::Stream::File::open(m_path, Core::Stream::OpenMode::Write));
-    if (!file->write_or_error(text().bytes()))
+    auto editor_text = text();
+    if (editor_text.length() && !file->write_or_error(editor_text.bytes()))
         return Error::from_string_literal("Failed to write to file");
 
     document().set_unmodified();
@@ -62,7 +59,8 @@ ErrorOr<bool> ScriptEditor::save_as()
     auto save_path = maybe_save_path.release_value();
 
     auto file = TRY(Core::Stream::File::open(save_path, Core::Stream::OpenMode::Write));
-    if (!file->write_or_error(text().bytes()))
+    auto editor_text = text();
+    if (editor_text.length() && !file->write_or_error(editor_text.bytes()))
         return Error::from_string_literal("Failed to write to file");
 
     m_path = save_path;
