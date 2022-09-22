@@ -113,10 +113,8 @@ void Keypad::set_to_0()
 
 String Keypad::to_string() const
 {
-    // TODO: Implement custom rounding length in the calculator.
-    constexpr auto maximum_precision = 6;
     if (m_state == State::External)
-        return m_internal_value.to_string(maximum_precision);
+        return m_internal_value.to_string(m_displayed_fraction_length);
 
     StringBuilder builder;
 
@@ -135,4 +133,9 @@ String Keypad::to_string() const
     }
 
     return builder.to_string();
+}
+
+void Keypad::set_rounding_length(unsigned rounding_threshold)
+{
+    m_displayed_fraction_length = rounding_threshold;
 }

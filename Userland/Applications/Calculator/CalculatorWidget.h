@@ -21,6 +21,8 @@ public:
     String get_entry();
     void set_entry(Crypto::BigFraction);
 
+    void set_rounding_length(unsigned);
+
 private:
     CalculatorWidget();
     void add_operation_button(GUI::Button&, Calculator::Operation);

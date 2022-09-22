@@ -29,6 +29,8 @@ public:
     void set_value(Crypto::BigFraction);
     void set_to_0();
 
+    void set_rounding_length(unsigned);
+
     String to_string() const;
 
 private:
@@ -45,6 +47,8 @@ private:
     // m_frac_length = 6
 
     mutable Crypto::BigFraction m_internal_value {};
+
+    unsigned m_displayed_fraction_length { 0 };
 
     enum class State {
         External,
