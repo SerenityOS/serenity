@@ -95,27 +95,32 @@ void LineBuilder::append_text_chunk(TextNode const& text_node, size_t offset_in_
 float LineBuilder::y_for_float_to_be_inserted_here(Box const& box)
 {
     auto const& box_state = m_layout_state.get(box);
-    auto width = box_state.margin_box_width();
+    auto const width = box_state.margin_box_width();
+    auto const height = box_state.margin_box_height();
 
-    auto current_line_width = ensure_last_line_box().width();
-    if (roundf(current_line_width + width) > m_available_width_for_current_line) {
-        float candidate_y = m_current_y + m_context.containing_block().line_height();
-        // FIXME: This is super dumb, we move 1px downwards per iteration and stop
-        //        when we find an Y value where we don't collide with other floats.
-        while (true) {
-            if (width > m_context.available_space_for_line(candidate_y)) {
-                if (!m_context.any_floats_intrude_at_y(candidate_y)) {
-                    return candidate_y;
-                }
-            } else {
+    float candidate_y = m_current_y;
+
+    float current_line_width = ensure_last_line_box().width();
+    // If there's already inline content on the current line, check if the new float can fit
+    // alongside the content. If not, place it on the next line.
+    if (current_line_width > 0 && roundf(current_line_width + width) > m_available_width_for_current_line)
+        candidate_y += m_context.containing_block().line_height();
+
+    // Then, look for the next Y position where we can fit the new float.
+    // FIXME: This is super dumb, we move 1px downwards per iteration and stop
+    //        when we find an Y value where we don't collide with other floats.
+    while (true) {
+        auto space_at_y_top = m_context.available_space_for_line(candidate_y);
+        auto space_at_y_bottom = m_context.available_space_for_line(candidate_y + height);
+        if (width >= space_at_y_top || width >= space_at_y_bottom) {
+            if (!m_context.any_floats_intrude_at_y(candidate_y) && !m_context.any_floats_intrude_at_y(candidate_y + height)) {
                 return candidate_y;
             }
-            candidate_y += 1;
+        } else {
+            return candidate_y;
         }
-
-        return m_current_y + m_context.containing_block().line_height();
+        candidate_y += 1;
     }
-    return m_current_y;
 }
 
 bool LineBuilder::should_break(float next_item_width)
