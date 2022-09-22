@@ -132,7 +132,7 @@ DOM::ExceptionOr<JS::Value> XMLHttpRequest::response()
     }
     // 6. Otherwise, if this’s response type is "blob", set this’s response object to a new Blob object representing this’s received bytes with type set to the result of get a final MIME type for this.
     else if (m_response_type == Bindings::XMLHttpRequestResponseType::Blob) {
-        auto blob_part = TRY(FileAPI::Blob::create(global_object(), m_received_bytes, get_final_mime_type().type()));
+        auto blob_part = FileAPI::Blob::create(global_object(), m_received_bytes, get_final_mime_type().type());
         auto blob = TRY(FileAPI::Blob::create(global_object(), Vector<FileAPI::BlobPart> { JS::make_handle(*blob_part) }));
         m_response_object = JS::Value(blob.ptr());
     }
