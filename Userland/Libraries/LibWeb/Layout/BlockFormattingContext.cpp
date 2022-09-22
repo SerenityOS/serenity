@@ -504,12 +504,25 @@ void BlockFormattingContext::place_block_level_element_in_normal_flow_vertically
 
     auto clear_floating_boxes = [&](FloatSideData& float_side) {
         if (!float_side.current_boxes.is_empty()) {
-            float clearance_y = 0;
+            // NOTE: Floating boxes are globally relevant within this BFC, *but* their offset coordinates
+            //       are relative to their containing block.
+            //       This means that we have to first convert to a root-space Y coordinate before clearing,
+            //       and then convert back to a local Y coordinate when assigning the cleared offset to
+            //       the `child_box` layout state.
+
+            // First, find the lowest margin box edge on this float side and calculate the Y offset just below it.
+            float clearance_y_in_root = 0;
             for (auto const& floating_box : float_side.current_boxes) {
-                auto const& floating_box_state = m_state.get(floating_box.box);
-                clearance_y = max(clearance_y, floating_box_state.offset.y() + floating_box_state.border_box_height());
+                auto floating_box_rect_in_root = margin_box_rect_in_ancestor_coordinate_space(floating_box.box, root(), m_state);
+                clearance_y_in_root = max(clearance_y_in_root, floating_box_rect_in_root.bottom() + 1);
             }
-            y = max(y, clearance_y);
+
+            // Then, convert the clearance Y to a coordinate relative to the containing block of `child_box`.
+            float clearance_y_in_containing_block = clearance_y_in_root;
+            for (auto* containing_block = child_box.containing_block(); containing_block && containing_block != &root(); containing_block = containing_block->containing_block())
+                clearance_y_in_containing_block -= m_state.get(*containing_block).offset.y();
+
+            y = max(y, clearance_y_in_containing_block);
             float_side.clear();
         }
     };
