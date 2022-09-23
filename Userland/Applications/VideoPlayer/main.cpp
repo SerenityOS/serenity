@@ -59,7 +59,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         if (!optional_sample.has_value())
             return;
 
-        auto result = vp9_decoder.decode_frame(optional_sample.release_value());
+        auto result = vp9_decoder.decode(optional_sample.release_value());
 
         if (result.is_error()) {
             outln("Error decoding frame {}: {}", frame_number, result.error().string_literal());

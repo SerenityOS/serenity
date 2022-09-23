@@ -28,8 +28,55 @@ Parser::~Parser()
 {
 }
 
+Vector<size_t> Parser::parse_superframe_sizes(Span<const u8> frame_data)
+{
+    if (frame_data.size() < 1)
+        return {};
+
+    // The decoder determines the presence of a superframe by:
+    // 1. parsing the final byte of the chunk and checking that the superframe_marker equals 0b110,
+
+    // If the checks in steps 1 and 3 both pass, then the chunk is determined to contain a superframe and each
+    // frame in the superframe is passed to the decoding process in turn.
+    // Otherwise, the chunk is determined to not contain a superframe, and the whole chunk is passed to the
+    // decoding process.
+
+    // NOTE: Reading from span data will be quicker than spinning up a BitStream.
+    u8 superframe_byte = frame_data[frame_data.size() - 1];
+
+    // NOTE: We have to read out of the byte from the little end first, hence the padding bits in the masks below.
+    u8 superframe_marker = superframe_byte & 0b1110'0000;
+    if (superframe_marker == 0b1100'0000) {
+        u8 bytes_per_framesize = ((superframe_byte >> 3) & 0b11) + 1;
+        u8 frames_in_superframe = (superframe_byte & 0b111) + 1;
+        // 2. setting the total size of the superframe_index SzIndex equal to 2 + NumFrames * SzBytes,
+        size_t index_size = 2 + bytes_per_framesize * frames_in_superframe;
+
+        if (index_size > frame_data.size())
+            return {};
+
+        auto superframe_header_data = frame_data.data() + frame_data.size() - index_size;
+
+        u8 start_superframe_byte = *(superframe_header_data++);
+        // 3. checking that the first byte of the superframe_index matches the final byte.
+        if (superframe_byte != start_superframe_byte)
+            return {};
+
+        Vector<size_t> result;
+        for (u8 i = 0; i < frames_in_superframe; i++) {
+            size_t frame_size = 0;
+            for (u8 j = 0; j < bytes_per_framesize; j++)
+                frame_size |= (static_cast<size_t>(*(superframe_header_data++)) << (j * 8));
+            result.append(frame_size);
+        }
+        return result;
+    }
+
+    return {};
+}
+
 /* (6.1) */
-DecoderErrorOr<void> Parser::parse_frame(ByteBuffer const& frame_data)
+DecoderErrorOr<void> Parser::parse_frame(Span<const u8> frame_data)
 {
     m_bit_stream = make<BitStream>(frame_data.data(), frame_data.size());
     m_syntax_element_counter = make<SyntaxElementCounter>();
