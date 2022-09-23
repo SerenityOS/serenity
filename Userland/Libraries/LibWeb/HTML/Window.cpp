@@ -600,9 +600,9 @@ DOM::ExceptionOr<void> Window::post_message_impl(JS::Value message, String const
 {
     // FIXME: This is an ad-hoc hack implementation instead, since we don't currently
     //        have serialization and deserialization of messages.
-    HTML::queue_global_task(HTML::Task::Source::PostedMessage, *this, [strong_this = JS::make_handle(*this), message]() mutable {
+    HTML::queue_global_task(HTML::Task::Source::PostedMessage, *this, [strong_this = JS::make_handle(*this), strong_message = JS::make_handle(message)]() mutable {
         HTML::MessageEventInit event_init {};
-        event_init.data = message;
+        event_init.data = strong_message.value();
         event_init.origin = "<origin>";
         strong_this->dispatch_event(*HTML::MessageEvent::create(*strong_this, HTML::EventNames::message, event_init));
     });
