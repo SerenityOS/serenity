@@ -33,6 +33,14 @@ String StandardPaths::desktop_directory()
     return LexicalPath::canonicalized_path(builder.to_string());
 }
 
+String StandardPaths::documents_directory()
+{
+    StringBuilder builder;
+    builder.append(home_directory());
+    builder.append("/Documents"sv);
+    return LexicalPath::canonicalized_path(builder.to_string());
+}
+
 String StandardPaths::downloads_directory()
 {
     StringBuilder builder;
