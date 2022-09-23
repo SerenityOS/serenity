@@ -121,6 +121,7 @@ static bool is_html_integration_point(DOM::Element const& element)
 
 HTMLParser::HTMLParser(DOM::Document& document, StringView input, String const& encoding)
     : m_tokenizer(input, encoding)
+    , m_scripting_enabled(document.is_scripting_enabled())
     , m_document(JS::make_handle(document))
 {
     m_tokenizer.set_parser({}, *this);
@@ -132,7 +133,8 @@ HTMLParser::HTMLParser(DOM::Document& document, StringView input, String const& 
 }
 
 HTMLParser::HTMLParser(DOM::Document& document)
-    : m_document(JS::make_handle(document))
+    : m_scripting_enabled(document.is_scripting_enabled())
+    , m_document(JS::make_handle(document))
 {
     m_document->set_parser({}, *this);
     m_tokenizer.set_parser({}, *this);
