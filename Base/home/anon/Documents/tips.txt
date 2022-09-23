@@ -23,3 +23,6 @@ Holding Ctrl accelerates mouse wheel interaction with sliders and spin boxes.
 Selected files can be renamed by pressing F2.
 Assistant can help you quickly find files and applications by pressing Super+Space.
 Holding Ctrl while activating a menu item prevents that menu from closing.
+Applications can be viewed with Inspector by including 'MAKE_INSPECTABLE=1' in their environment.
+Pressing Ctrl+Shift+A on a focused widget or application activates the command palette, a searchable list of available actions.
+Workspaces can be switched by pressing Ctrl+Alt+Arrows. Shift brings the active window along.
