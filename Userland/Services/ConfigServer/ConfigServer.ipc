@@ -15,4 +15,6 @@ endpoint ConfigServer
     write_i32_value(String domain, String group, String key, i32 value) => ()
     write_bool_value(String domain, String group, String key, bool value)  => ()
     remove_key_entry(String domain, String group, String key) => ()
+    remove_group_entry(String domain, String group) => ()
+    add_group_entry(String domain, String group)  => ()
 }

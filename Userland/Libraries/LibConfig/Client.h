@@ -35,6 +35,8 @@ public:
     void write_i32(StringView domain, StringView group, StringView key, i32 value);
     void write_bool(StringView domain, StringView group, StringView key, bool value);
     void remove_key(StringView domain, StringView group, StringView key);
+    void remove_group(StringView domain, StringView group);
+    void add_group(StringView domain, StringView group);
 
     static Client& the();
 
@@ -48,6 +50,8 @@ private:
     void notify_changed_i32_value(String const& domain, String const& group, String const& key, i32 value) override;
     void notify_changed_bool_value(String const& domain, String const& group, String const& key, bool value) override;
     void notify_removed_key(String const& domain, String const& group, String const& key) override;
+    void notify_removed_group(String const& domain, String const& group) override;
+    void notify_added_group(String const& domain, String const& group) override;
 };
 
 inline Vector<String> list_groups(StringView domain)
@@ -93,6 +97,16 @@ inline void write_bool(StringView domain, StringView group, StringView key, bool
 inline void remove_key(StringView domain, StringView group, StringView key)
 {
     Client::the().remove_key(domain, group, key);
+}
+
+inline void remove_group(StringView domain, StringView group)
+{
+    Client::the().remove_group(domain, group);
+}
+
+inline void add_group(StringView domain, StringView group)
+{
+    Client::the().add_group(domain, group);
 }
 
 inline void pledge_domains(Vector<String> const& domains)

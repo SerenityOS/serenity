@@ -45,4 +45,12 @@ void Listener::config_key_was_removed(String const&, String const&, String const
 {
 }
 
+void Listener::config_group_was_removed(String const&, String const&)
+{
+}
+
+void Listener::config_group_was_added(String const&, String const&)
+{
+}
+
 }

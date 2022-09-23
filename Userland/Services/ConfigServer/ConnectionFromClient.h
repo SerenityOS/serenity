@@ -36,6 +36,8 @@ private:
     virtual void write_i32_value([[maybe_unused]] String const& domain, [[maybe_unused]] String const& group, [[maybe_unused]] String const& key, [[maybe_unused]] i32 value) override;
     virtual void write_bool_value([[maybe_unused]] String const& domain, [[maybe_unused]] String const& group, [[maybe_unused]] String const& key, [[maybe_unused]] bool value) override;
     virtual void remove_key_entry([[maybe_unused]] String const& domain, [[maybe_unused]] String const& group, [[maybe_unused]] String const& key) override;
+    virtual void remove_group_entry([[maybe_unused]] String const& domain, [[maybe_unused]] String const& group) override;
+    virtual void add_group_entry([[maybe_unused]] String const& domain, [[maybe_unused]] String const& group) override;
 
     bool validate_access(String const& domain, String const& group, String const& key);
     void sync_dirty_domains_to_disk();

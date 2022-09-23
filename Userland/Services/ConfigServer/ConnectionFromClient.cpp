@@ -267,4 +267,40 @@ void ConnectionFromClient::remove_key_entry(String const& domain, String const& 
     });
 }
 
+void ConnectionFromClient::remove_group_entry(String const& domain, String const& group)
+{
+    if (!validate_access(domain, group, {}))
+        return;
+
+    auto& config = ensure_domain_config(domain);
+    if (!config.has_group(group))
+        return;
+
+    config.remove_group(group);
+    m_dirty_domains.set(domain);
+    start_or_restart_sync_timer();
+
+    for_each_monitoring_connection(domain, this, [&domain, &group](ConnectionFromClient& connection) {
+        connection.async_notify_removed_group(domain, group);
+    });
+}
+
+void ConnectionFromClient::add_group_entry(String const& domain, String const& group)
+{
+    if (!validate_access(domain, group, {}))
+        return;
+
+    auto& config = ensure_domain_config(domain);
+    if (config.has_group(group))
+        return;
+
+    config.add_group(group);
+    m_dirty_domains.set(domain);
+    start_or_restart_sync_timer();
+
+    for_each_monitoring_connection(domain, this, [&domain, &group](ConnectionFromClient& connection) {
+        connection.async_notify_added_group(domain, group);
+    });
+}
+
 }

@@ -54,6 +54,7 @@ public:
 
     ErrorOr<void> sync();
 
+    void add_group(String const& group);
     void remove_group(String const& group);
     void remove_entry(String const& group, String const& key);
 
