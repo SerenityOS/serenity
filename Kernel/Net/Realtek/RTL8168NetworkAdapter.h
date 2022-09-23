@@ -8,9 +8,9 @@
 
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/OwnPtr.h>
-#include <Kernel/Arch/x86/IO.h>
 #include <Kernel/Bus/PCI/Access.h>
 #include <Kernel/Bus/PCI/Device.h>
+#include <Kernel/IOWindow.h>
 #include <Kernel/Interrupts/IRQHandler.h>
 #include <Kernel/Net/NetworkAdapter.h>
 #include <Kernel/Random.h>
@@ -38,7 +38,7 @@ private:
     static constexpr size_t number_of_rx_descriptors = 64;
     static constexpr size_t number_of_tx_descriptors = 16;
 
-    RTL8168NetworkAdapter(PCI::Address, u8 irq, NonnullOwnPtr<KString>);
+    RTL8168NetworkAdapter(PCI::Address, u8 irq, NonnullOwnPtr<IOWindow> registers_io_window, NonnullOwnPtr<KString>);
 
     virtual bool handle_irq(RegisterState const&) override;
     virtual StringView class_name() const override { return "RTL8168NetworkAdapter"sv; }
@@ -199,7 +199,7 @@ private:
 
     ChipVersion m_version { ChipVersion::Unknown };
     bool m_version_uncertain { true };
-    IOAddress m_io_base;
+    NonnullOwnPtr<IOWindow> m_registers_io_window;
     u32 m_ocp_base_address { 0 };
     OwnPtr<Memory::Region> m_rx_descriptors_region;
     NonnullOwnPtrVector<Memory::Region> m_rx_buffers_regions;

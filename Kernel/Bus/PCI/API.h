@@ -33,6 +33,7 @@ u32 get_BAR4(Address);
 u32 get_BAR5(Address);
 u32 get_BAR(Address address, HeaderType0BaseRegister);
 size_t get_BAR_space_size(Address, HeaderType0BaseRegister);
+BARSpaceType get_BAR_space_type(u32 pci_bar_value);
 void enable_bus_mastering(Address);
 void disable_bus_mastering(Address);
 void enable_io_space(Address);

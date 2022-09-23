@@ -28,10 +28,10 @@ UNMAP_AFTER_INIT ISAIDEController::ISAIDEController()
 
 UNMAP_AFTER_INIT void ISAIDEController::initialize_channels()
 {
-    auto primary_base_io = IOAddress(0x1F0);
-    auto primary_control_io = IOAddress(0x3F6);
-    auto secondary_base_io = IOAddress(0x170);
-    auto secondary_control_io = IOAddress(0x376);
+    auto primary_base_io_window = IOWindow::create_for_io_space(IOAddress(0x1F0), 8).release_value_but_fixme_should_propagate_errors();
+    auto primary_control_io_window = IOWindow::create_for_io_space(IOAddress(0x3F6), 4).release_value_but_fixme_should_propagate_errors();
+    auto secondary_base_io_window = IOWindow::create_for_io_space(IOAddress(0x170), 8).release_value_but_fixme_should_propagate_errors();
+    auto secondary_control_io_window = IOWindow::create_for_io_space(IOAddress(0x376), 4).release_value_but_fixme_should_propagate_errors();
 
     auto initialize_and_enumerate = [](IDEChannel& channel) -> void {
         {
@@ -46,11 +46,14 @@ UNMAP_AFTER_INIT void ISAIDEController::initialize_channels()
         }
     };
 
-    m_channels.append(IDEChannel::create(*this, { primary_base_io, primary_control_io }, IDEChannel::ChannelType::Primary));
+    auto primary_channel_io_window_group = IDEChannel::IOWindowGroup { move(primary_base_io_window), move(primary_control_io_window) };
+    auto secondary_channel_io_window_group = IDEChannel::IOWindowGroup { move(secondary_base_io_window), move(secondary_control_io_window) };
+
+    m_channels.append(IDEChannel::create(*this, move(primary_channel_io_window_group), IDEChannel::ChannelType::Primary));
     initialize_and_enumerate(m_channels[0]);
     m_channels[0].enable_irq();
 
-    m_channels.append(IDEChannel::create(*this, { secondary_base_io, secondary_control_io }, IDEChannel::ChannelType::Secondary));
+    m_channels.append(IDEChannel::create(*this, move(secondary_channel_io_window_group), IDEChannel::ChannelType::Secondary));
     initialize_and_enumerate(m_channels[1]);
     m_channels[1].enable_irq();
     dbgln("ISA IDE controller detected and initialized");

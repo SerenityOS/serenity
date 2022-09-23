@@ -192,7 +192,8 @@ UNMAP_AFTER_INIT LockRefPtr<E1000ENetworkAdapter> E1000ENetworkAdapter::try_to_i
     auto interface_name_or_error = NetworkingManagement::generate_interface_name_from_pci_address(pci_device_identifier);
     if (interface_name_or_error.is_error())
         return {};
-    auto adapter = adopt_lock_ref_if_nonnull(new (nothrow) E1000ENetworkAdapter(pci_device_identifier.address(), irq, interface_name_or_error.release_value()));
+    auto registers_io_window = IOWindow::create_for_pci_device_bar(pci_device_identifier, PCI::HeaderType0BaseRegister::BAR0).release_value_but_fixme_should_propagate_errors();
+    auto adapter = adopt_lock_ref_if_nonnull(new (nothrow) E1000ENetworkAdapter(pci_device_identifier.address(), irq, move(registers_io_window), interface_name_or_error.release_value()));
     if (!adapter)
         return {};
     if (adapter->initialize())
@@ -203,21 +204,9 @@ UNMAP_AFTER_INIT LockRefPtr<E1000ENetworkAdapter> E1000ENetworkAdapter::try_to_i
 UNMAP_AFTER_INIT bool E1000ENetworkAdapter::initialize()
 {
     dmesgln("E1000e: Found @ {}", pci_address());
-
-    m_io_base = IOAddress(PCI::get_BAR2(pci_address()) & ~1);
-
     enable_bus_mastering(pci_address());
 
-    size_t mmio_base_size = PCI::get_BAR_space_size(pci_address(), PCI::HeaderType0BaseRegister::BAR0);
-    auto region_or_error = MM.allocate_kernel_region(PhysicalAddress(page_base_of(PCI::get_BAR0(pci_address()))), Memory::page_round_up(mmio_base_size).release_value_but_fixme_should_propagate_errors(), "E1000e MMIO"sv, Memory::Region::Access::ReadWrite, Memory::Region::Cacheable::No);
-    if (region_or_error.is_error())
-        return false;
-    m_mmio_region = region_or_error.release_value();
-    m_mmio_base = m_mmio_region->vaddr();
-    m_use_mmio = true;
-    dmesgln("E1000e: port base: {}", m_io_base);
-    dmesgln("E1000e: MMIO base: {}", PhysicalAddress(PCI::get_BAR0(pci_address()) & 0xfffffffc));
-    dmesgln("E1000e: MMIO base size: {} bytes", mmio_base_size);
+    dmesgln("E1000e: IO base: {}", m_registers_io_window);
     dmesgln("E1000e: Interrupt line: {}", interrupt_number());
     detect_eeprom();
     dmesgln("E1000e: Has EEPROM? {}", m_has_eeprom);
@@ -233,8 +222,8 @@ UNMAP_AFTER_INIT bool E1000ENetworkAdapter::initialize()
     return true;
 }
 
-UNMAP_AFTER_INIT E1000ENetworkAdapter::E1000ENetworkAdapter(PCI::Address address, u8 irq, NonnullOwnPtr<KString> interface_name)
-    : E1000NetworkAdapter(address, irq, move(interface_name))
+UNMAP_AFTER_INIT E1000ENetworkAdapter::E1000ENetworkAdapter(PCI::Address address, u8 irq, NonnullOwnPtr<IOWindow> registers_io_window, NonnullOwnPtr<KString> interface_name)
+    : E1000NetworkAdapter(address, irq, move(registers_io_window), move(interface_name))
 {
 }
 

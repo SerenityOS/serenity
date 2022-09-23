@@ -84,6 +84,7 @@ set(KERNEL_SOURCES
     Graphics/VirtIOGPU/Console.cpp
     Graphics/VirtIOGPU/GPU3DDevice.cpp
     Graphics/VirtIOGPU/GraphicsAdapter.cpp
+    IOWindow.cpp
     SanCov.cpp
     Storage/ATA/AHCI/Controller.cpp
     Storage/ATA/AHCI/Port.cpp
@@ -336,6 +337,7 @@ if ("${SERENITY_ARCH}" STREQUAL "i686" OR "${SERENITY_ARCH}" STREQUAL "x86_64")
         Arch/x86/ISABus/HID/VMWareMouseDevice.cpp
         Arch/x86/ISABus/I8042Controller.cpp
         Arch/x86/ISABus/IDEController.cpp
+        Arch/x86/ISABus/SerialDevice.cpp
         Arch/x86/PCI/Controller/HostBridge.cpp
         Arch/x86/PCI/IDELegacyModeController.cpp
         Arch/x86/PCI/Initializer.cpp

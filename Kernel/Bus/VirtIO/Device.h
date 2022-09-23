@@ -7,10 +7,10 @@
 #pragma once
 
 #include <AK/NonnullOwnPtrVector.h>
-#include <Kernel/Arch/x86/IO.h>
 #include <Kernel/Bus/PCI/Access.h>
 #include <Kernel/Bus/PCI/Device.h>
 #include <Kernel/Bus/VirtIO/Queue.h>
+#include <Kernel/IOWindow.h>
 #include <Kernel/Interrupts/IRQHandler.h>
 #include <Kernel/Memory/MemoryManager.h>
 
@@ -94,30 +94,6 @@ public:
 protected:
     virtual StringView class_name() const { return "VirtIO::Device"sv; }
     explicit Device(PCI::DeviceIdentifier const&);
-    struct MappedMMIO {
-        OwnPtr<Memory::Region> base;
-        size_t size { 0 };
-
-        template<typename T>
-        T read(u32 offset) const
-        {
-            if (!base)
-                return 0;
-            VERIFY(size >= sizeof(T));
-            VERIFY(offset + sizeof(T) <= size);
-            return *(volatile T*)(base->vaddr().offset(offset).get());
-        }
-
-        template<typename T>
-        void write(u32 offset, T value)
-        {
-            if (!base)
-                return;
-            VERIFY(size >= sizeof(T));
-            VERIFY(offset + sizeof(T) <= size);
-            *(volatile T*)(base->vaddr().offset(offset).get()) = value;
-        }
-    };
 
     Configuration const* get_config(ConfigurationType cfg_type, u32 index = 0) const
     {
@@ -156,7 +132,7 @@ protected:
     void config_write32(Configuration const&, u32, u32);
     void config_write64(Configuration const&, u32, u64);
 
-    auto mapping_for_bar(u8) -> MappedMMIO&;
+    auto mapping_for_bar(u8) -> IOWindow&;
 
     u8 read_status_bits();
     void mask_status_bits(u8 status_mask);
@@ -203,18 +179,6 @@ protected:
     virtual void handle_queue_update(u16 queue_index) = 0;
 
 private:
-    template<typename T>
-    void out(u16 address, T value)
-    {
-        m_io_base.offset(address).out(value);
-    }
-
-    template<typename T>
-    T in(u16 address)
-    {
-        return m_io_base.offset(address).in<T>();
-    }
-
     bool accept_device_features(u64 device_features, u64 accepted_features);
 
     bool setup_queue(u16 queue_index);
@@ -232,8 +196,8 @@ private:
     Configuration const* m_notify_cfg { nullptr }; // Cached due to high usage
     Configuration const* m_isr_cfg { nullptr };    // Cached due to high usage
 
-    IOAddress m_io_base;
-    MappedMMIO m_mmio[6];
+    IOWindow& base_io_window();
+    Array<OwnPtr<IOWindow>, 6> m_register_bases;
 
     StringView const m_class_name;
 

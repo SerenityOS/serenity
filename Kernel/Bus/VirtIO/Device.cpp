@@ -90,8 +90,6 @@ UNMAP_AFTER_INIT void Device::initialize()
 {
     auto address = pci_address();
     enable_bus_mastering(pci_address());
-    PCI::enable_interrupt_line(pci_address());
-    enable_irq();
 
     auto capabilities = PCI::get_device_identifier(address).capabilities();
     for (auto& capability : capabilities) {
@@ -128,26 +126,22 @@ UNMAP_AFTER_INIT void Device::initialize()
 
     if (m_use_mmio) {
         for (auto& cfg : m_configs) {
-            auto& mapping = m_mmio[cfg.bar];
-            mapping.size = PCI::get_BAR_space_size(pci_address(), static_cast<PCI::HeaderType0BaseRegister>(cfg.bar));
-            if (!mapping.base && mapping.size) {
-                auto region_size_or_error = Memory::page_round_up(mapping.size);
-                if (region_size_or_error.is_error()) {
-                    dbgln_if(VIRTIO_DEBUG, "{}: Failed to round up size={} to pages", m_class_name, mapping.size);
-                    continue;
-                }
-                auto region_or_error = MM.allocate_kernel_region(PhysicalAddress(page_base_of(PCI::get_BAR(pci_address(), static_cast<PCI::HeaderType0BaseRegister>(cfg.bar)))), region_size_or_error.value(), "VirtIO MMIO"sv, Memory::Region::Access::ReadWrite, Memory::Region::Cacheable::No);
-                if (region_or_error.is_error()) {
-                    dbgln_if(VIRTIO_DEBUG, "{}: Failed to map bar {} - (size={}) {}", m_class_name, cfg.bar, mapping.size, region_or_error.error());
-                } else {
-                    mapping.base = region_or_error.release_value();
-                }
-            }
+            auto mapping_io_window = IOWindow::create_for_pci_device_bar(pci_address(), static_cast<PCI::HeaderType0BaseRegister>(cfg.bar)).release_value_but_fixme_should_propagate_errors();
+            m_register_bases[cfg.bar] = move(mapping_io_window);
         }
         m_common_cfg = get_config(ConfigurationType::Common, 0);
         m_notify_cfg = get_config(ConfigurationType::Notify, 0);
         m_isr_cfg = get_config(ConfigurationType::ISR, 0);
+    } else {
+        auto mapping_io_window = IOWindow::create_for_pci_device_bar(pci_address(), PCI::HeaderType0BaseRegister::BAR0).release_value_but_fixme_should_propagate_errors();
+        m_register_bases[0] = move(mapping_io_window);
     }
+
+    // Note: We enable interrupts at least after the m_register_bases[0] ptr is
+    // assigned with an IOWindow, to ensure that in case of getting an interrupt
+    // we can access registers from that IO window range.
+    PCI::enable_interrupt_line(pci_address());
+    enable_irq();
 
     reset_device();
     set_status_bit(DEVICE_STATUS_ACKNOWLEDGE);
@@ -158,66 +152,67 @@ UNMAP_AFTER_INIT void Device::initialize()
 UNMAP_AFTER_INIT VirtIO::Device::Device(PCI::DeviceIdentifier const& device_identifier)
     : PCI::Device(device_identifier.address())
     , IRQHandler(device_identifier.interrupt_line().value())
-    , m_io_base(IOAddress(PCI::get_BAR0(pci_address()) & ~1))
     , m_class_name(VirtIO::determine_device_class(device_identifier))
 {
     dbgln("{}: Found @ {}", m_class_name, pci_address());
-}
-
-auto Device::mapping_for_bar(u8 bar) -> MappedMMIO&
-{
-    VERIFY(m_use_mmio);
-    return m_mmio[bar];
 }
 
 void Device::notify_queue(u16 queue_index)
 {
     dbgln_if(VIRTIO_DEBUG, "{}: notifying about queue change at idx: {}", m_class_name, queue_index);
     if (!m_notify_cfg)
-        out<u16>(REG_QUEUE_NOTIFY, queue_index);
+        base_io_window().write16(REG_QUEUE_NOTIFY, queue_index);
     else
         config_write16(*m_notify_cfg, get_queue(queue_index).notify_offset() * m_notify_multiplier, queue_index);
 }
 
+auto Device::mapping_for_bar(u8 bar) -> IOWindow&
+{
+    VERIFY(m_use_mmio);
+    VERIFY(m_register_bases[bar]);
+    return *m_register_bases[bar];
+}
+
 u8 Device::config_read8(Configuration const& config, u32 offset)
 {
-    return mapping_for_bar(config.bar).read<u8>(config.offset + offset);
+    return mapping_for_bar(config.bar).read8(config.offset + offset);
 }
 
 u16 Device::config_read16(Configuration const& config, u32 offset)
 {
-    return mapping_for_bar(config.bar).read<u16>(config.offset + offset);
+    return mapping_for_bar(config.bar).read16(config.offset + offset);
 }
 
 u32 Device::config_read32(Configuration const& config, u32 offset)
 {
-    return mapping_for_bar(config.bar).read<u32>(config.offset + offset);
+    return mapping_for_bar(config.bar).read32(config.offset + offset);
 }
 
 void Device::config_write8(Configuration const& config, u32 offset, u8 value)
 {
-    mapping_for_bar(config.bar).write(config.offset + offset, value);
+    mapping_for_bar(config.bar).write8(config.offset + offset, value);
 }
 
 void Device::config_write16(Configuration const& config, u32 offset, u16 value)
 {
-    mapping_for_bar(config.bar).write(config.offset + offset, value);
+    mapping_for_bar(config.bar).write16(config.offset + offset, value);
 }
 
 void Device::config_write32(Configuration const& config, u32 offset, u32 value)
 {
-    mapping_for_bar(config.bar).write(config.offset + offset, value);
+    mapping_for_bar(config.bar).write32(config.offset + offset, value);
 }
 
 void Device::config_write64(Configuration const& config, u32 offset, u64 value)
 {
-    mapping_for_bar(config.bar).write(config.offset + offset, value);
+    mapping_for_bar(config.bar).write32(config.offset + offset, (u32)(value & 0xFFFFFFFF));
+    mapping_for_bar(config.bar).write32(config.offset + offset + 4, (u32)(value >> 32));
 }
 
 u8 Device::read_status_bits()
 {
     if (!m_common_cfg)
-        return in<u8>(REG_DEVICE_STATUS);
+        return base_io_window().read8(REG_DEVICE_STATUS);
     return config_read8(*m_common_cfg, COMMON_CFG_DEVICE_STATUS);
 }
 
@@ -225,7 +220,7 @@ void Device::mask_status_bits(u8 status_mask)
 {
     m_status &= status_mask;
     if (!m_common_cfg)
-        out<u8>(REG_DEVICE_STATUS, m_status);
+        base_io_window().write8(REG_DEVICE_STATUS, m_status);
     else
         config_write8(*m_common_cfg, COMMON_CFG_DEVICE_STATUS, m_status);
 }
@@ -234,7 +229,7 @@ void Device::set_status_bit(u8 status_bit)
 {
     m_status |= status_bit;
     if (!m_common_cfg)
-        out<u8>(REG_DEVICE_STATUS, m_status);
+        base_io_window().write8(REG_DEVICE_STATUS, m_status);
     else
         config_write8(*m_common_cfg, COMMON_CFG_DEVICE_STATUS, m_status);
 }
@@ -242,12 +237,18 @@ void Device::set_status_bit(u8 status_bit)
 u64 Device::get_device_features()
 {
     if (!m_common_cfg)
-        return in<u32>(REG_DEVICE_FEATURES);
+        return base_io_window().read32(REG_DEVICE_FEATURES);
     config_write32(*m_common_cfg, COMMON_CFG_DEVICE_FEATURE_SELECT, 0);
     auto lower_bits = config_read32(*m_common_cfg, COMMON_CFG_DEVICE_FEATURE);
     config_write32(*m_common_cfg, COMMON_CFG_DEVICE_FEATURE_SELECT, 1);
     u64 upper_bits = (u64)config_read32(*m_common_cfg, COMMON_CFG_DEVICE_FEATURE) << 32;
     return upper_bits | lower_bits;
+}
+
+IOWindow& Device::base_io_window()
+{
+    VERIFY(m_register_bases[0]);
+    return *m_register_bases[0];
 }
 
 bool Device::accept_device_features(u64 device_features, u64 accepted_features)
@@ -277,7 +278,7 @@ bool Device::accept_device_features(u64 device_features, u64 accepted_features)
     dbgln_if(VIRTIO_DEBUG, "{}: Accepted features: {}", m_class_name, accepted_features);
 
     if (!m_common_cfg) {
-        out<u32>(REG_GUEST_FEATURES, accepted_features);
+        base_io_window().write32(REG_GUEST_FEATURES, accepted_features);
     } else {
         config_write32(*m_common_cfg, COMMON_CFG_DRIVER_FEATURE_SELECT, 0);
         config_write32(*m_common_cfg, COMMON_CFG_DRIVER_FEATURE, accepted_features);
@@ -399,7 +400,7 @@ void Device::finish_init()
 u8 Device::isr_status()
 {
     if (!m_isr_cfg)
-        return in<u8>(REG_ISR_STATUS);
+        return base_io_window().read8(REG_ISR_STATUS);
     return config_read8(*m_isr_cfg, 0);
 }
 

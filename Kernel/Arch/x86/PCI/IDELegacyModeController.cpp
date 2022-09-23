@@ -80,12 +80,12 @@ static char const* detect_controller_type(u8 programming_value)
 
 UNMAP_AFTER_INIT void PCIIDELegacyModeController::initialize(bool force_pio)
 {
-    auto bus_master_base = IOAddress(PCI::get_BAR4(pci_address()) & (~1));
-    dbgln("IDE controller @ {}: bus master base was set to {}", pci_address(), bus_master_base);
     dbgln("IDE controller @ {}: interrupt line was set to {}", pci_address(), m_interrupt_line.value());
     dbgln("IDE controller @ {}: {}", pci_address(), detect_controller_type(m_prog_if.value()));
-    dbgln("IDE controller @ {}: primary channel DMA capable? {}", pci_address(), ((bus_master_base.offset(2).in<u8>() >> 5) & 0b11));
-    dbgln("IDE controller @ {}: secondary channel DMA capable? {}", pci_address(), ((bus_master_base.offset(2 + 8).in<u8>() >> 5) & 0b11));
+    {
+        auto bus_master_base = IOAddress(PCI::get_BAR4(pci_address()) & (~1));
+        dbgln("IDE controller @ {}: bus master base was set to {}", pci_address(), bus_master_base);
+    }
 
     auto initialize_and_enumerate = [&force_pio](IDEChannel& channel) -> void {
         {
@@ -103,20 +103,40 @@ UNMAP_AFTER_INIT void PCIIDELegacyModeController::initialize(bool force_pio)
     if (!is_bus_master_capable())
         force_pio = true;
 
-    auto bar0 = PCI::get_BAR0(pci_address());
-    auto bar1 = PCI::get_BAR1(pci_address());
-    auto bar2 = PCI::get_BAR2(pci_address());
-    auto bar3 = PCI::get_BAR3(pci_address());
+    OwnPtr<IOWindow> primary_base_io_window;
+    OwnPtr<IOWindow> primary_control_io_window;
+    if (!is_pci_native_mode_enabled_on_primary_channel()) {
+        primary_base_io_window = IOWindow::create_for_io_space(IOAddress(0x1F0), 8).release_value_but_fixme_should_propagate_errors();
+        primary_control_io_window = IOWindow::create_for_io_space(IOAddress(0x3F6), 4).release_value_but_fixme_should_propagate_errors();
+    } else {
+        auto primary_base_io_window = IOWindow::create_for_pci_device_bar(pci_address(), PCI::HeaderType0BaseRegister::BAR0).release_value_but_fixme_should_propagate_errors();
+        auto pci_primary_control_io_window = IOWindow::create_for_pci_device_bar(pci_address(), PCI::HeaderType0BaseRegister::BAR1).release_value_but_fixme_should_propagate_errors();
+        // Note: the PCI IDE specification says we should access the IO address with an offset of 2
+        // on native PCI IDE controllers.
+        primary_control_io_window = pci_primary_control_io_window->create_from_io_window_with_offset(2, 4).release_value_but_fixme_should_propagate_errors();
+    }
 
-    auto primary_base_io = (bar0 == 0x1 || bar0 == 0) ? IOAddress(0x1F0) : IOAddress(bar0 & (~1));
-    // Note: the PCI IDE specification says we should access the IO address with an offset of 2
-    // on native PCI IDE controllers.
-    auto primary_control_io = (bar1 == 0x1 || bar1 == 0) ? IOAddress(0x3F6) : IOAddress((bar1 & (~1)) | 2);
+    VERIFY(primary_base_io_window);
+    VERIFY(primary_control_io_window);
 
-    auto secondary_base_io = (bar2 == 0x1 || bar2 == 0) ? IOAddress(0x170) : IOAddress(bar2 & (~1));
-    // Note: the PCI IDE specification says we should access the IO address with an offset of 2
-    // on native PCI IDE controllers.
-    auto secondary_control_io = (bar3 == 0x1 || bar3 == 0) ? IOAddress(0x376) : IOAddress((bar3 & (~1)) | 2);
+    OwnPtr<IOWindow> secondary_base_io_window;
+    OwnPtr<IOWindow> secondary_control_io_window;
+
+    if (!is_pci_native_mode_enabled_on_primary_channel()) {
+        secondary_base_io_window = IOWindow::create_for_io_space(IOAddress(0x170), 8).release_value_but_fixme_should_propagate_errors();
+        secondary_control_io_window = IOWindow::create_for_io_space(IOAddress(0x376), 4).release_value_but_fixme_should_propagate_errors();
+    } else {
+        secondary_base_io_window = IOWindow::create_for_pci_device_bar(pci_address(), PCI::HeaderType0BaseRegister::BAR2).release_value_but_fixme_should_propagate_errors();
+        auto pci_secondary_control_io_window = IOWindow::create_for_pci_device_bar(pci_address(), PCI::HeaderType0BaseRegister::BAR3).release_value_but_fixme_should_propagate_errors();
+        // Note: the PCI IDE specification says we should access the IO address with an offset of 2
+        // on native PCI IDE controllers.
+        secondary_control_io_window = pci_secondary_control_io_window->create_from_io_window_with_offset(2, 4).release_value_but_fixme_should_propagate_errors();
+    }
+    VERIFY(secondary_base_io_window);
+    VERIFY(secondary_control_io_window);
+
+    auto primary_bus_master_io = IOWindow::create_for_pci_device_bar(pci_address(), PCI::HeaderType0BaseRegister::BAR4, 16).release_value_but_fixme_should_propagate_errors();
+    auto secondary_bus_master_io = primary_bus_master_io->create_from_io_window_with_offset(8).release_value_but_fixme_should_propagate_errors();
 
     // FIXME: On IOAPIC based system, this value might be completely wrong
     // On QEMU for example, it should be "u8 irq_line = 22;" to actually work.
@@ -126,18 +146,21 @@ UNMAP_AFTER_INIT void PCIIDELegacyModeController::initialize(bool force_pio)
         VERIFY(irq_line != 0);
     }
 
+    auto primary_channel_io_window_group = IDEChannel::IOWindowGroup { primary_base_io_window.release_nonnull(), primary_control_io_window.release_nonnull(), move(primary_bus_master_io) };
+    auto secondary_channel_io_window_group = IDEChannel::IOWindowGroup { secondary_base_io_window.release_nonnull(), secondary_control_io_window.release_nonnull(), move(secondary_bus_master_io) };
+
     if (is_pci_native_mode_enabled_on_primary_channel()) {
-        m_channels.append(IDEChannel::create(*this, irq_line, { primary_base_io, primary_control_io, bus_master_base }, IDEChannel::ChannelType::Primary));
+        m_channels.append(IDEChannel::create(*this, irq_line, move(primary_channel_io_window_group), IDEChannel::ChannelType::Primary));
     } else {
-        m_channels.append(IDEChannel::create(*this, { primary_base_io, primary_control_io, bus_master_base }, IDEChannel::ChannelType::Primary));
+        m_channels.append(IDEChannel::create(*this, move(primary_channel_io_window_group), IDEChannel::ChannelType::Primary));
     }
     initialize_and_enumerate(m_channels[0]);
     m_channels[0].enable_irq();
 
     if (is_pci_native_mode_enabled_on_secondary_channel()) {
-        m_channels.append(IDEChannel::create(*this, irq_line, { secondary_base_io, secondary_control_io, bus_master_base.offset(8) }, IDEChannel::ChannelType::Secondary));
+        m_channels.append(IDEChannel::create(*this, irq_line, move(secondary_channel_io_window_group), IDEChannel::ChannelType::Secondary));
     } else {
-        m_channels.append(IDEChannel::create(*this, { secondary_base_io, secondary_control_io, bus_master_base.offset(8) }, IDEChannel::ChannelType::Secondary));
+        m_channels.append(IDEChannel::create(*this, move(secondary_channel_io_window_group), IDEChannel::ChannelType::Secondary));
     }
     initialize_and_enumerate(m_channels[1]);
     m_channels[1].enable_irq();

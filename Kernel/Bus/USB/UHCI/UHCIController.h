@@ -10,12 +10,12 @@
 #include <AK/Array.h>
 #include <AK/NonnullOwnPtr.h>
 #include <AK/Platform.h>
-#include <Kernel/Arch/x86/IO.h>
 #include <Kernel/Bus/PCI/Device.h>
 #include <Kernel/Bus/USB/UHCI/UHCIDescriptorPool.h>
 #include <Kernel/Bus/USB/UHCI/UHCIDescriptorTypes.h>
 #include <Kernel/Bus/USB/UHCI/UHCIRootHub.h>
 #include <Kernel/Bus/USB/USBController.h>
+#include <Kernel/IOWindow.h>
 #include <Kernel/Interrupts/IRQHandler.h>
 #include <Kernel/Locking/Spinlock.h>
 #include <Kernel/Memory/AnonymousVMObject.h>
@@ -54,25 +54,25 @@ public:
     ErrorOr<void> clear_port_feature(Badge<UHCIRootHub>, u8, HubFeatureSelector);
 
 private:
-    explicit UHCIController(PCI::DeviceIdentifier const& pci_device_identifier);
+    UHCIController(PCI::DeviceIdentifier const& pci_device_identifier, NonnullOwnPtr<IOWindow> registers_io_window);
 
-    u16 read_usbcmd() { return m_io_base.offset(0).in<u16>(); }
-    u16 read_usbsts() { return m_io_base.offset(0x2).in<u16>(); }
-    u16 read_usbintr() { return m_io_base.offset(0x4).in<u16>(); }
-    u16 read_frnum() { return m_io_base.offset(0x6).in<u16>(); }
-    u32 read_flbaseadd() { return m_io_base.offset(0x8).in<u32>(); }
-    u8 read_sofmod() { return m_io_base.offset(0xc).in<u8>(); }
-    u16 read_portsc1() { return m_io_base.offset(0x10).in<u16>(); }
-    u16 read_portsc2() { return m_io_base.offset(0x12).in<u16>(); }
+    u16 read_usbcmd() { return m_registers_io_window->read16(0); }
+    u16 read_usbsts() { return m_registers_io_window->read16(0x2); }
+    u16 read_usbintr() { return m_registers_io_window->read16(0x4); }
+    u16 read_frnum() { return m_registers_io_window->read16(0x6); }
+    u32 read_flbaseadd() { return m_registers_io_window->read32(0x8); }
+    u8 read_sofmod() { return m_registers_io_window->read8(0xc); }
+    u16 read_portsc1() { return m_registers_io_window->read16(0x10); }
+    u16 read_portsc2() { return m_registers_io_window->read16(0x12); }
 
-    void write_usbcmd(u16 value) { m_io_base.offset(0).out(value); }
-    void write_usbsts(u16 value) { m_io_base.offset(0x2).out(value); }
-    void write_usbintr(u16 value) { m_io_base.offset(0x4).out(value); }
-    void write_frnum(u16 value) { m_io_base.offset(0x6).out(value); }
-    void write_flbaseadd(u32 value) { m_io_base.offset(0x8).out(value); }
-    void write_sofmod(u8 value) { m_io_base.offset(0xc).out(value); }
-    void write_portsc1(u16 value) { m_io_base.offset(0x10).out(value); }
-    void write_portsc2(u16 value) { m_io_base.offset(0x12).out(value); }
+    void write_usbcmd(u16 value) { m_registers_io_window->write16(0, value); }
+    void write_usbsts(u16 value) { m_registers_io_window->write16(0x2, value); }
+    void write_usbintr(u16 value) { m_registers_io_window->write16(0x4, value); }
+    void write_frnum(u16 value) { m_registers_io_window->write16(0x6, value); }
+    void write_flbaseadd(u32 value) { m_registers_io_window->write32(0x8, value); }
+    void write_sofmod(u8 value) { m_registers_io_window->write8(0xc, value); }
+    void write_portsc1(u16 value) { m_registers_io_window->write16(0x10, value); }
+    void write_portsc2(u16 value) { m_registers_io_window->write16(0x12, value); }
 
     virtual bool handle_irq(RegisterState const&) override;
 
@@ -93,7 +93,7 @@ private:
 
     void reset_port(u8);
 
-    IOAddress m_io_base;
+    NonnullOwnPtr<IOWindow> m_registers_io_window;
 
     Spinlock m_schedule_lock;
 
