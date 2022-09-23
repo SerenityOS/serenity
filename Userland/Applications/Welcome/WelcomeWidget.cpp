@@ -66,11 +66,14 @@ WelcomeWidget::WelcomeWidget()
         GUI::Application::the()->quit();
     };
 
-    auto exec_path = Config::read_string("SystemServer"sv, "Welcome"sv, "Executable"sv, {});
-    m_startup_checkbox = *find_descendant_of_type_named<GUI::CheckBox>("startup_checkbox");
-    m_startup_checkbox->set_checked(!exec_path.is_empty());
+    auto welcome = Config::list_groups("SystemServer"sv).first_matching([](auto& group) { return group == "Welcome"sv; });
+    m_startup_checkbox = find_descendant_of_type_named<GUI::CheckBox>("startup_checkbox");
+    m_startup_checkbox->set_checked(welcome.has_value());
     m_startup_checkbox->on_checked = [](bool is_checked) {
-        Config::write_string("SystemServer"sv, "Welcome"sv, "Executable"sv, is_checked ? "/bin/Welcome"sv : ""sv);
+        if (is_checked)
+            Config::add_group("SystemServer"sv, "Welcome"sv);
+        else
+            Config::remove_group("SystemServer"sv, "Welcome"sv);
     };
 
     open_and_parse_readme_file();
