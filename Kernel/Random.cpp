@@ -7,11 +7,13 @@
 
 #include <AK/Singleton.h>
 #include <Kernel/Arch/Processor.h>
+#if ARCH(I386) || ARCH(X86_64)
+#    include <Kernel/Arch/x86/Time/HPET.h>
+#    include <Kernel/Arch/x86/Time/RTC.h>
+#endif
 #include <Kernel/Devices/RandomDevice.h>
 #include <Kernel/Random.h>
 #include <Kernel/Sections.h>
-#include <Kernel/Time/HPET.h>
-#include <Kernel/Time/RTC.h>
 #include <Kernel/Time/TimeManagement.h>
 
 namespace Kernel {
@@ -48,7 +50,9 @@ UNMAP_AFTER_INIT KernelRng::KernelRng()
 
             add_random_event(value, i % 32);
         }
-    } else if (TimeManagement::the().can_query_precise_time()) {
+    }
+#if ARCH(I386) || ARCH(X86_64)
+    else if (TimeManagement::the().can_query_precise_time()) {
         // Add HPET as entropy source if we don't have anything better.
         dmesgln("KernelRng: Using HPET as entropy source");
 
@@ -66,6 +70,7 @@ UNMAP_AFTER_INIT KernelRng::KernelRng()
             current_time += 0x40b2u;
         }
     }
+#endif
 }
 
 void KernelRng::wait_for_entropy()

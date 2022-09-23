@@ -8,7 +8,7 @@
 
 #include <AK/Function.h>
 #include <AK/Types.h>
-#include <Kernel/Time/HPET.h>
+#include <Kernel/Arch/x86/Time/HPET.h>
 #include <Kernel/Time/HardwareTimer.h>
 
 namespace Kernel {

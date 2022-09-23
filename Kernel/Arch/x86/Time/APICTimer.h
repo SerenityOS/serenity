@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Types.h>
+#include <Kernel/Arch/x86/common/Interrupts/APIC.h>
 #include <Kernel/Interrupts/GenericInterruptHandler.h>
 #include <Kernel/Time/HardwareTimer.h>
 
