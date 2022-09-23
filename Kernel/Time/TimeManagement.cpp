@@ -7,20 +7,22 @@
 #include <AK/Singleton.h>
 #include <AK/StdLibExtras.h>
 #include <AK/Time.h>
-#include <Kernel/Arch/InterruptDisabler.h>
-#include <Kernel/Arch/x86/common/Interrupts/APIC.h>
-#include <Kernel/Arch/x86/common/RTC.h>
+#if ARCH(I386) || ARCH(X86_64)
+#    include <Kernel/Arch/InterruptDisabler.h>
+#    include <Kernel/Arch/x86/Time/APICTimer.h>
+#    include <Kernel/Arch/x86/Time/HPET.h>
+#    include <Kernel/Arch/x86/Time/HPETComparator.h>
+#    include <Kernel/Arch/x86/Time/PIT.h>
+#    include <Kernel/Arch/x86/Time/RTC.h>
+#    include <Kernel/Arch/x86/common/Interrupts/APIC.h>
+#    include <Kernel/Arch/x86/common/RTC.h>
+#endif
 #include <Kernel/CommandLine.h>
 #include <Kernel/Firmware/ACPI/Parser.h>
 #include <Kernel/PerformanceManager.h>
 #include <Kernel/Scheduler.h>
 #include <Kernel/Sections.h>
-#include <Kernel/Time/APICTimer.h>
-#include <Kernel/Time/HPET.h>
-#include <Kernel/Time/HPETComparator.h>
 #include <Kernel/Time/HardwareTimer.h>
-#include <Kernel/Time/PIT.h>
-#include <Kernel/Time/RTC.h>
 #include <Kernel/Time/TimeManagement.h>
 #include <Kernel/TimerQueue.h>
 
@@ -137,8 +139,9 @@ u64 TimeManagement::uptime_ms() const
     return ms;
 }
 
-UNMAP_AFTER_INIT void TimeManagement::initialize(u32 cpu)
+UNMAP_AFTER_INIT void TimeManagement::initialize([[maybe_unused]] u32 cpu)
 {
+#if ARCH(I386) || ARCH(X86_64)
     if (cpu == 0) {
         VERIFY(!s_the.is_initialized());
         s_the.ensure_instance();
@@ -160,6 +163,7 @@ UNMAP_AFTER_INIT void TimeManagement::initialize(u32 cpu)
             apic_timer->enable_local_timer();
         }
     }
+#endif
 }
 
 void TimeManagement::set_system_timer(HardwareTimerBase& timer)
@@ -184,6 +188,7 @@ time_t TimeManagement::boot_time()
 UNMAP_AFTER_INIT TimeManagement::TimeManagement()
     : m_time_page_region(MM.allocate_kernel_region(PAGE_SIZE, "Time page"sv, Memory::Region::Access::ReadWrite, AllocationStrategy::AllocateNow).release_value_but_fixme_should_propagate_errors())
 {
+#if ARCH(I386) || ARCH(X86_64)
     bool probe_non_legacy_hardware_timers = !(kernel_command_line().is_legacy_time_enabled());
     if (ACPI::is_enabled()) {
         if (!ACPI::Parser::the()->x86_specific_flags().cmos_rtc_not_present) {
@@ -198,12 +203,13 @@ UNMAP_AFTER_INIT TimeManagement::TimeManagement()
         m_epoch_time.tv_sec += boot_time();
     }
     if (probe_non_legacy_hardware_timers) {
-        if (!probe_and_set_non_legacy_hardware_timers())
-            if (!probe_and_set_legacy_hardware_timers())
+        if (!probe_and_set_x86_non_legacy_hardware_timers())
+            if (!probe_and_set_x86_legacy_hardware_timers())
                 VERIFY_NOT_REACHED();
-    } else if (!probe_and_set_legacy_hardware_timers()) {
+    } else if (!probe_and_set_x86_legacy_hardware_timers()) {
         VERIFY_NOT_REACHED();
     }
+#endif
 }
 
 Time TimeManagement::now()
@@ -249,7 +255,8 @@ bool TimeManagement::is_hpet_periodic_mode_allowed()
     }
 }
 
-UNMAP_AFTER_INIT bool TimeManagement::probe_and_set_non_legacy_hardware_timers()
+#if ARCH(I386) || ARCH(X86_64)
+UNMAP_AFTER_INIT bool TimeManagement::probe_and_set_x86_non_legacy_hardware_timers()
 {
     if (!ACPI::is_enabled())
         return false;
@@ -323,7 +330,7 @@ UNMAP_AFTER_INIT bool TimeManagement::probe_and_set_non_legacy_hardware_timers()
     return true;
 }
 
-UNMAP_AFTER_INIT bool TimeManagement::probe_and_set_legacy_hardware_timers()
+UNMAP_AFTER_INIT bool TimeManagement::probe_and_set_x86_legacy_hardware_timers()
 {
     if (ACPI::is_enabled()) {
         if (ACPI::Parser::the()->x86_specific_flags().cmos_rtc_not_present) {
@@ -343,6 +350,7 @@ UNMAP_AFTER_INIT bool TimeManagement::probe_and_set_legacy_hardware_timers()
     m_time_ticks_per_second = m_time_keeper_timer->ticks_per_second();
     return true;
 }
+#endif
 
 void TimeManagement::update_time(RegisterState const&)
 {

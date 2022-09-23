@@ -5,10 +5,10 @@
  */
 
 #include <Kernel/Arch/InterruptDisabler.h>
+#include <Kernel/Arch/x86/Time/HPETComparator.h>
 #include <Kernel/Assertions.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Sections.h>
-#include <Kernel/Time/HPETComparator.h>
 #include <Kernel/Time/TimeManagement.h>
 
 namespace Kernel {

@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <Kernel/Arch/x86/Time/APICTimer.h>
 #include <Kernel/Arch/x86/common/Interrupts/APIC.h>
 #include <Kernel/Panic.h>
 #include <Kernel/Sections.h>
-#include <Kernel/Time/APICTimer.h>
 #include <Kernel/Time/TimeManagement.h>
 
 namespace Kernel {

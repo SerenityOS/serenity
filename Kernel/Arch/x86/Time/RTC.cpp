@@ -7,8 +7,8 @@
 #include <Kernel/Arch/InterruptDisabler.h>
 #include <Kernel/Arch/x86/IO.h>
 #include <Kernel/Arch/x86/NonMaskableInterruptDisabler.h>
+#include <Kernel/Arch/x86/Time/RTC.h>
 #include <Kernel/Arch/x86/common/CMOS.h>
-#include <Kernel/Time/RTC.h>
 #include <Kernel/Time/TimeManagement.h>
 
 namespace Kernel {

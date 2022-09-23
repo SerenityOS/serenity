@@ -5,13 +5,13 @@
  */
 
 #include <AK/StringView.h>
+#include <Kernel/Arch/x86/Time/HPET.h>
+#include <Kernel/Arch/x86/Time/HPETComparator.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Firmware/ACPI/Parser.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Memory/TypedMapping.h>
 #include <Kernel/Sections.h>
-#include <Kernel/Time/HPET.h>
-#include <Kernel/Time/HPETComparator.h>
 #include <Kernel/Time/TimeManagement.h>
 
 namespace Kernel {

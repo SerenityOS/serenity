@@ -6,11 +6,11 @@
 
 #include <Kernel/Arch/InterruptDisabler.h>
 #include <Kernel/Arch/x86/IO.h>
+#include <Kernel/Arch/x86/Time/PIT.h>
 #include <Kernel/Interrupts/GenericInterruptHandler.h>
 #include <Kernel/Scheduler.h>
 #include <Kernel/Sections.h>
 #include <Kernel/Thread.h>
-#include <Kernel/Time/PIT.h>
 #include <Kernel/Time/TimeManagement.h>
 
 #define IRQ_TIMER 0

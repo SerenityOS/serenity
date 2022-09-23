@@ -8,6 +8,7 @@
 
 #include <AK/Error.h>
 #include <AK/OwnPtr.h>
+#include <AK/Platform.h>
 #include <AK/Time.h>
 #include <AK/Types.h>
 #include <Kernel/API/TimePage.h>
@@ -79,8 +80,10 @@ private:
     TimePage& time_page();
     void update_time_page();
 
-    bool probe_and_set_legacy_hardware_timers();
-    bool probe_and_set_non_legacy_hardware_timers();
+#if ARCH(I386) || ARCH(X86_64)
+    bool probe_and_set_x86_legacy_hardware_timers();
+    bool probe_and_set_x86_non_legacy_hardware_timers();
+#endif
     Vector<HardwareTimerBase*> scan_and_initialize_periodic_timers();
     Vector<HardwareTimerBase*> scan_for_non_periodic_timers();
     NonnullLockRefPtrVector<HardwareTimerBase> m_hardware_timers;

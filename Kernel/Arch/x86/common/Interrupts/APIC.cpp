@@ -11,6 +11,7 @@
 #include <Kernel/Arch/Delay.h>
 #include <Kernel/Arch/x86/MSR.h>
 #include <Kernel/Arch/x86/ProcessorInfo.h>
+#include <Kernel/Arch/x86/Time/APICTimer.h>
 #include <Kernel/Arch/x86/common/Interrupts/APIC.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Firmware/ACPI/Parser.h>
@@ -23,7 +24,6 @@
 #include <Kernel/Scheduler.h>
 #include <Kernel/Sections.h>
 #include <Kernel/Thread.h>
-#include <Kernel/Time/APICTimer.h>
 
 #define IRQ_APIC_TIMER (0xfc - IRQ_VECTOR_BASE)
 #define IRQ_APIC_IPI (0xfd - IRQ_VECTOR_BASE)
