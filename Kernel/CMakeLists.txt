@@ -344,6 +344,8 @@ if ("${SERENITY_ARCH}" STREQUAL "i686" OR "${SERENITY_ARCH}" STREQUAL "x86_64")
         Arch/x86/PCI/Controller/HostBridge.cpp
         Arch/x86/PCI/IDELegacyModeController.cpp
         Arch/x86/PCI/Initializer.cpp
+
+        Arch/x86/VGA/IOArbiter.cpp
     )
 
     set(KERNEL_SOURCES
