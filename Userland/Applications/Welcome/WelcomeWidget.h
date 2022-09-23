@@ -28,6 +28,7 @@ private:
     RefPtr<GUI::Button> m_next_button;
     RefPtr<GUI::Button> m_help_button;
     RefPtr<GUI::Button> m_new_button;
+    RefPtr<GUI::Frame> m_tip_frame;
     RefPtr<GUI::Label> m_tip_label;
     RefPtr<GUI::CheckBox> m_startup_checkbox;
     RefPtr<WebView::OutOfProcessWebView> m_web_view;

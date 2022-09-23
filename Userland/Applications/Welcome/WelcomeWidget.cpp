@@ -13,6 +13,7 @@
 #include <LibGUI/Application.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/CheckBox.h>
+#include <LibGUI/Frame.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Process.h>
@@ -23,24 +24,14 @@ WelcomeWidget::WelcomeWidget()
 {
     load_from_gml(welcome_window_gml);
 
-    auto& tip_frame = *find_descendant_of_type_named<GUI::Frame>("tip_frame");
-    tip_frame.set_background_role(Gfx::ColorRole::Base);
-    tip_frame.set_fill_with_background_color(true);
+    m_web_view = find_descendant_of_type_named<WebView::OutOfProcessWebView>("web_view");
+    m_tip_label = find_descendant_of_type_named<GUI::Label>("tip_label");
+    m_tip_frame = find_descendant_of_type_named<GUI::Frame>("tip_frame");
 
-    auto& light_bulb_label = *find_descendant_of_type_named<GUI::Label>("light_bulb_label");
-    light_bulb_label.set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/32x32/app-welcome.png"sv).release_value_but_fixme_should_propagate_errors());
-
-    m_web_view = *find_descendant_of_type_named<WebView::OutOfProcessWebView>("web_view");
-
-    m_tip_label = *find_descendant_of_type_named<GUI::Label>("tip_label");
-
-    m_next_button = *find_descendant_of_type_named<GUI::Button>("next_button");
-    m_next_button->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-forward.png"sv).release_value_but_fixme_should_propagate_errors());
+    m_next_button = find_descendant_of_type_named<GUI::Button>("next_button");
     m_next_button->on_click = [&](auto) {
-        if (!tip_frame.is_visible()) {
-            m_web_view->set_visible(false);
-            tip_frame.set_visible(true);
-        }
+        m_web_view->set_visible(false);
+        m_tip_frame->set_visible(true);
         if (m_tips.is_empty())
             return;
         m_initial_tip_index++;
@@ -49,19 +40,18 @@ WelcomeWidget::WelcomeWidget()
         m_tip_label->set_text(m_tips[m_initial_tip_index]);
     };
 
-    m_help_button = *find_descendant_of_type_named<GUI::Button>("help_button");
-    m_help_button->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/book-open.png"sv).release_value_but_fixme_should_propagate_errors());
+    m_help_button = find_descendant_of_type_named<GUI::Button>("help_button");
     m_help_button->on_click = [&](auto) {
         GUI::Process::spawn_or_show_error(window(), "/bin/Help"sv);
     };
 
-    m_new_button = *find_descendant_of_type_named<GUI::Button>("new_button");
+    m_new_button = find_descendant_of_type_named<GUI::Button>("new_button");
     m_new_button->on_click = [&](auto) {
         m_web_view->set_visible(!m_web_view->is_visible());
-        tip_frame.set_visible(!tip_frame.is_visible());
+        m_tip_frame->set_visible(!m_tip_frame->is_visible());
     };
 
-    m_close_button = *find_descendant_of_type_named<GUI::Button>("close_button");
+    m_close_button = find_descendant_of_type_named<GUI::Button>("close_button");
     m_close_button->on_click = [](auto) {
         GUI::Application::the()->quit();
     };
