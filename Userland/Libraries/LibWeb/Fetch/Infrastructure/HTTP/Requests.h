@@ -156,7 +156,7 @@ public:
 
     Request() = default;
 
-    [[nodiscard]] ReadonlyBytes method() { return m_method; }
+    [[nodiscard]] ReadonlyBytes method() const { return m_method; }
     void set_method(ByteBuffer method) { m_method = move(method); }
 
     [[nodiscard]] bool local_urls_only() const { return m_local_urls_only; }
@@ -193,7 +193,7 @@ public:
     [[nodiscard]] Optional<InitiatorType> const& initiator_type() const { return m_initiator_type; }
     void set_initiator_type(Optional<InitiatorType> initiator_type) { m_initiator_type = move(initiator_type); }
 
-    [[nodiscard]] ServiceWorkersMode service_workers_mode() { return m_service_workers_mode; }
+    [[nodiscard]] ServiceWorkersMode service_workers_mode() const { return m_service_workers_mode; }
     void set_service_workers_mode(ServiceWorkersMode service_workers_mode) { m_service_workers_mode = service_workers_mode; }
 
     [[nodiscard]] Optional<Initiator> const& initiator() const { return m_initiator; }
