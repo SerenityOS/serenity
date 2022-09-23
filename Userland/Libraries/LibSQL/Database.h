@@ -13,6 +13,7 @@
 #include <LibSQL/Forward.h>
 #include <LibSQL/Heap.h>
 #include <LibSQL/Meta.h>
+#include <LibSQL/Serializer.h>
 
 namespace SQL {
 

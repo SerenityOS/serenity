@@ -9,6 +9,7 @@
 #include <LibCore/Object.h>
 #include <LibSQL/Forward.h>
 #include <LibSQL/Meta.h>
+#include <LibSQL/Serializer.h>
 
 namespace SQL {
 
