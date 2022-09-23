@@ -8,8 +8,8 @@
 #pragma once
 
 #include <AK/Array.h>
-#include <AK/ByteBuffer.h>
 #include <AK/OwnPtr.h>
+#include <AK/Span.h>
 #include <AK/Vector.h>
 #include <LibGfx/Forward.h>
 #include <LibVideo/DecoderError.h>
@@ -32,10 +32,14 @@ class Parser {
 public:
     explicit Parser(Decoder&);
     ~Parser();
-    DecoderErrorOr<void> parse_frame(ByteBuffer const&);
+    DecoderErrorOr<void> parse_frame(Span<const u8>);
     void dump_info();
 
 private:
+    /* Annex B: Superframes are a method of storing multiple coded frames into a single chunk
+     * See also section 5.26. */
+    Vector<size_t> parse_superframe_sizes(Span<const u8>);
+
     DecoderErrorOr<FrameType> read_frame_type();
     DecoderErrorOr<ColorRange> read_color_range();
 

@@ -18,21 +18,72 @@ Decoder::Decoder()
 {
 }
 
-DecoderErrorOr<void> Decoder::decode_frame(ByteBuffer const& frame_data)
+DecoderErrorOr<void> Decoder::decode(Span<const u8> chunk_data)
 {
-    TRY(m_parser->parse_frame(frame_data));
-    // TODO:
-    //  - #2
-    //  - #3
-    //  - #4
-    TRY(update_reference_frames());
+    auto superframe_sizes = m_parser->parse_superframe_sizes(chunk_data);
+
+    if (superframe_sizes.is_empty()) {
+        return decode_frame(chunk_data);
+    }
+
+    size_t offset = 0;
+
+    for (auto superframe_size : superframe_sizes) {
+        auto frame_data = chunk_data.slice(offset, superframe_size);
+        TRY(decode_frame(frame_data));
+        offset += superframe_size;
+    }
 
     return {};
+}
+
+DecoderErrorOr<void> Decoder::decode(ByteBuffer const& chunk_data)
+{
+    return decode(chunk_data.span());
 }
 
 void Decoder::dump_frame_info()
 {
     m_parser->dump_info();
+}
+
+inline size_t index_from_row_and_column(u32 row, u32 column, u32 stride)
+{
+    return row * stride + column;
+}
+
+DecoderErrorOr<void> Decoder::decode_frame(Span<const u8> frame_data)
+{
+    // 1. The syntax elements for the coded frame are extracted as specified in sections 6 and 7. The syntax
+    // tables include function calls indicating when the block decode processes should be triggered.
+    TRY(m_parser->parse_frame(frame_data));
+
+    // 2. If loop_filter_level is not equal to 0, the loop filter process as specified in section 8.8 is invoked once the
+    // coded frame has been decoded.
+    // FIXME: Implement loop filtering.
+
+    // 3. If all of the following conditions are true, PrevSegmentIds[ row ][ col ] is set equal to
+    // SegmentIds[ row ][ col ] for row = 0..MiRows-1, for col = 0..MiCols-1:
+    // − show_existing_frame is equal to 0,
+    // − segmentation_enabled is equal to 1,
+    // − segmentation_update_map is equal to 1.
+    if (!m_parser->m_show_existing_frame && m_parser->m_segmentation_enabled && m_parser->m_segmentation_update_map) {
+        for (auto row = 0u; row < m_parser->m_mi_rows; row++) {
+            for (auto column = 0u; column < m_parser->m_mi_cols; column++) {
+                auto index = index_from_row_and_column(row, column, m_parser->m_mi_rows);
+                m_parser->m_prev_segment_ids[index] = m_parser->m_segment_ids[index];
+            }
+        }
+    }
+
+    // 4. The output process as specified in section 8.9 is invoked.
+    // FIXME: Create a struct to store an output frame along with all information needed to display
+    //        it. This function will need to append the images to a vector to ensure that if a superframe
+    //        with multiple output frames is encountered, all of them can be displayed.
+
+    // 5. The reference frame update process as specified in section 8.10 is invoked.
+    TRY(update_reference_frames());
+    return {};
 }
 
 inline size_t buffer_size(size_t width, size_t height)
@@ -213,11 +264,6 @@ void Decoder::adapt_probs(int const* tree, u8* probs, u8* counts)
 u8 Decoder::adapt_prob(u8 prob, u8 counts[2])
 {
     return merge_prob(prob, counts[0], counts[1], COUNT_SAT, MAX_UPDATE_FACTOR);
-}
-
-inline size_t index_from_row_and_column(u32 row, u32 column, u32 stride)
-{
-    return row * stride + column;
 }
 
 DecoderErrorOr<void> Decoder::predict_intra(u8 plane, u32 x, u32 y, bool have_left, bool have_above, bool not_on_right, TXSize tx_size, u32 block_index)

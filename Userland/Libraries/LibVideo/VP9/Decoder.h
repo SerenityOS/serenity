@@ -9,6 +9,7 @@
 
 #include <AK/ByteBuffer.h>
 #include <AK/Error.h>
+#include <AK/Span.h>
 #include <LibVideo/DecoderError.h>
 
 #include "Parser.h"
@@ -20,7 +21,9 @@ class Decoder {
 
 public:
     Decoder();
-    DecoderErrorOr<void> decode_frame(ByteBuffer const&);
+    /* (8.1) General */
+    DecoderErrorOr<void> decode(Span<const u8>);
+    DecoderErrorOr<void> decode(ByteBuffer const&);
     void dump_frame_info();
 
     // FIXME: These functions should be replaced by a struct that contains
@@ -32,6 +35,8 @@ public:
 
 private:
     typedef i32 Intermediate;
+
+    DecoderErrorOr<void> decode_frame(Span<const u8>);
 
     DecoderErrorOr<void> allocate_buffers();
     Vector<Intermediate>& get_temp_buffer(u8 plane);
