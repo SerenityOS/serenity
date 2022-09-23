@@ -284,7 +284,7 @@ public:
     [[nodiscard]] String serialize_origin() const;
     [[nodiscard]] ErrorOr<ByteBuffer> byte_serialize_origin() const;
 
-    [[nodiscard]] Request clone() const;
+    [[nodiscard]] NonnullOwnPtr<Request> clone() const;
 
     [[nodiscard]] ErrorOr<void> add_range_reader(u64 first, Optional<u64> const& last);
 

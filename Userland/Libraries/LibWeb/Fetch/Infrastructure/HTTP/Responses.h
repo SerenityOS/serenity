@@ -44,8 +44,8 @@ public:
         u64 decoded_size { 0 };
     };
 
-    [[nodiscard]] static Response aborted_network_error();
-    [[nodiscard]] static Response network_error();
+    [[nodiscard]] static NonnullOwnPtr<Response> aborted_network_error();
+    [[nodiscard]] static NonnullOwnPtr<Response> network_error();
 
     Response() = default;
     virtual ~Response() = default;
@@ -157,7 +157,7 @@ private:
 };
 
 // https://fetch.spec.whatwg.org/#concept-filtered-response
-class FilteredResponse : protected Response {
+class FilteredResponse : public Response {
 public:
     explicit FilteredResponse(Response&);
     virtual ~FilteredResponse() = 0;
@@ -187,7 +187,7 @@ protected:
 // https://fetch.spec.whatwg.org/#concept-filtered-response-basic
 class BasicFilteredResponse final : public FilteredResponse {
 public:
-    static ErrorOr<BasicFilteredResponse> create(Response&);
+    static ErrorOr<NonnullOwnPtr<BasicFilteredResponse>> create(Response&);
 
     [[nodiscard]] virtual Type type() const override { return Type::Basic; }
     [[nodiscard]] virtual HeaderList const& header_list() const override { return m_header_list; }
@@ -201,7 +201,7 @@ private:
 // https://fetch.spec.whatwg.org/#concept-filtered-response-cors
 class CORSFilteredResponse final : public FilteredResponse {
 public:
-    static ErrorOr<CORSFilteredResponse> create(Response&);
+    static ErrorOr<NonnullOwnPtr<CORSFilteredResponse>> create(Response&);
 
     [[nodiscard]] virtual Type type() const override { return Type::CORS; }
     [[nodiscard]] virtual HeaderList const& header_list() const override { return m_header_list; }
@@ -215,7 +215,7 @@ private:
 // https://fetch.spec.whatwg.org/#concept-filtered-response-opaque
 class OpaqueFilteredResponse final : public FilteredResponse {
 public:
-    static OpaqueFilteredResponse create(Response&);
+    static NonnullOwnPtr<OpaqueFilteredResponse> create(Response&);
 
     [[nodiscard]] virtual Type type() const override { return Type::Opaque; }
     [[nodiscard]] virtual Vector<AK::URL> const& url_list() const override { return m_url_list; }
@@ -235,7 +235,7 @@ private:
 // https://fetch.spec.whatwg.org/#concept-filtered-response-opaque-redirect
 class OpaqueRedirectFilteredResponse final : public FilteredResponse {
 public:
-    static OpaqueRedirectFilteredResponse create(Response&);
+    static NonnullOwnPtr<OpaqueRedirectFilteredResponse> create(Response&);
 
     [[nodiscard]] virtual Type type() const override { return Type::OpaqueRedirect; }
     [[nodiscard]] virtual Status status() const override { return 0; }
