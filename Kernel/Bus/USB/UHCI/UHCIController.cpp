@@ -66,7 +66,8 @@ static constexpr u16 UHCI_NUMBER_OF_FRAMES = 1024;
 ErrorOr<NonnullLockRefPtr<UHCIController>> UHCIController::try_to_initialize(PCI::DeviceIdentifier const& pci_device_identifier)
 {
     // NOTE: This assumes that address is pointing to a valid UHCI controller.
-    auto controller = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) UHCIController(pci_device_identifier)));
+    auto registers_io_window = TRY(IOWindow::create_for_pci_device_bar(pci_device_identifier, PCI::HeaderType0BaseRegister::BAR4));
+    auto controller = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) UHCIController(pci_device_identifier, move(registers_io_window))));
     TRY(controller->initialize());
     return controller;
 }
@@ -74,7 +75,7 @@ ErrorOr<NonnullLockRefPtr<UHCIController>> UHCIController::try_to_initialize(PCI
 ErrorOr<void> UHCIController::initialize()
 {
     dmesgln("UHCI: Controller found {} @ {}", PCI::get_hardware_id(pci_address()), pci_address());
-    dmesgln("UHCI: I/O base {}", m_io_base);
+    dmesgln("UHCI: I/O base {}", m_registers_io_window);
     dmesgln("UHCI: Interrupt line: {}", interrupt_number());
 
     TRY(spawn_port_process());
@@ -83,10 +84,10 @@ ErrorOr<void> UHCIController::initialize()
     return start();
 }
 
-UNMAP_AFTER_INIT UHCIController::UHCIController(PCI::DeviceIdentifier const& pci_device_identifier)
+UNMAP_AFTER_INIT UHCIController::UHCIController(PCI::DeviceIdentifier const& pci_device_identifier, NonnullOwnPtr<IOWindow> registers_io_window)
     : PCI::Device(pci_device_identifier.address())
     , IRQHandler(pci_device_identifier.interrupt_line().value())
-    , m_io_base(PCI::get_BAR4(pci_address()) & ~1)
+    , m_registers_io_window(move(registers_io_window))
     , m_schedule_lock(LockRank::None)
 {
 }

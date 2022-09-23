@@ -7,9 +7,9 @@
 #pragma once
 
 #include <AK/OwnPtr.h>
-#include <Kernel/Arch/x86/IO.h>
 #include <Kernel/Bus/PCI/Access.h>
 #include <Kernel/Bus/PCI/Device.h>
+#include <Kernel/IOWindow.h>
 #include <Kernel/Interrupts/IRQHandler.h>
 #include <Kernel/Net/NetworkAdapter.h>
 #include <Kernel/Random.h>
@@ -34,7 +34,7 @@ public:
     virtual StringView purpose() const override { return class_name(); }
 
 private:
-    RTL8139NetworkAdapter(PCI::Address, u8 irq, NonnullOwnPtr<KString>);
+    RTL8139NetworkAdapter(PCI::Address, u8 irq, NonnullOwnPtr<IOWindow> registers_io_window, NonnullOwnPtr<KString>);
     virtual bool handle_irq(RegisterState const&) override;
     virtual StringView class_name() const override { return "RTL8139NetworkAdapter"sv; }
 
@@ -50,7 +50,7 @@ private:
     u16 in16(u16 address);
     u32 in32(u16 address);
 
-    IOAddress m_io_base;
+    NonnullOwnPtr<IOWindow> m_registers_io_window;
     u8 m_interrupt_line { 0 };
     OwnPtr<Memory::Region> m_rx_buffer;
     u16 m_rx_buffer_offset { 0 };

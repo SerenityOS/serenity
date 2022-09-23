@@ -7,10 +7,13 @@
  */
 
 #include <AK/Format.h>
+#include <AK/Platform.h>
 #include <AK/StringView.h>
 #include <AK/Try.h>
 #include <Kernel/Arch/InterruptDisabler.h>
-#include <Kernel/Arch/x86/IO.h>
+#if ARCH(I386) || ARCH(X86_64)
+#    include <Kernel/Arch/x86/IO.h>
+#endif
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Firmware/ACPI/Parser.h>
@@ -216,6 +219,7 @@ void Parser::access_generic_address(Structures::GenericAddressStructure const& s
 {
     switch ((GenericAddressStructure::AddressSpace)structure.address_space) {
     case GenericAddressStructure::AddressSpace::SystemIO: {
+#if ARCH(I386) || ARCH(X86_64)
         IOAddress address(structure.address);
         dbgln("ACPI: Sending value {:x} to {}", value, address);
         switch (structure.access_size) {
@@ -236,6 +240,7 @@ void Parser::access_generic_address(Structures::GenericAddressStructure const& s
             address.out(value, (8 << (structure.access_size - 1)));
             break;
         }
+#endif
         return;
     }
     case GenericAddressStructure::AddressSpace::SystemMemory: {

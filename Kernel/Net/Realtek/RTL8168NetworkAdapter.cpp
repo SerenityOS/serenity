@@ -193,7 +193,8 @@ UNMAP_AFTER_INIT LockRefPtr<RTL8168NetworkAdapter> RTL8168NetworkAdapter::try_to
     auto interface_name_or_error = NetworkingManagement::generate_interface_name_from_pci_address(pci_device_identifier);
     if (interface_name_or_error.is_error())
         return {};
-    return adopt_lock_ref_if_nonnull(new (nothrow) RTL8168NetworkAdapter(pci_device_identifier.address(), irq, interface_name_or_error.release_value()));
+    auto registers_io_window = MUST(IOWindow::create_for_pci_device_bar(pci_device_identifier, PCI::HeaderType0BaseRegister::BAR0));
+    return adopt_lock_ref_if_nonnull(new (nothrow) RTL8168NetworkAdapter(pci_device_identifier.address(), irq, move(registers_io_window), interface_name_or_error.release_value()));
 }
 
 bool RTL8168NetworkAdapter::determine_supported_version() const
@@ -241,16 +242,16 @@ bool RTL8168NetworkAdapter::determine_supported_version() const
     }
 }
 
-UNMAP_AFTER_INIT RTL8168NetworkAdapter::RTL8168NetworkAdapter(PCI::Address address, u8 irq, NonnullOwnPtr<KString> interface_name)
+UNMAP_AFTER_INIT RTL8168NetworkAdapter::RTL8168NetworkAdapter(PCI::Address address, u8 irq, NonnullOwnPtr<IOWindow> registers_io_window, NonnullOwnPtr<KString> interface_name)
     : NetworkAdapter(move(interface_name))
     , PCI::Device(address)
     , IRQHandler(irq)
-    , m_io_base(PCI::get_BAR0(pci_address()) & ~1)
+    , m_registers_io_window(move(registers_io_window))
     , m_rx_descriptors_region(MM.allocate_contiguous_kernel_region(Memory::page_round_up(sizeof(TXDescriptor) * (number_of_rx_descriptors + 1)).release_value_but_fixme_should_propagate_errors(), "RTL8168 RX"sv, Memory::Region::Access::ReadWrite).release_value())
     , m_tx_descriptors_region(MM.allocate_contiguous_kernel_region(Memory::page_round_up(sizeof(RXDescriptor) * (number_of_tx_descriptors + 1)).release_value_but_fixme_should_propagate_errors(), "RTL8168 TX"sv, Memory::Region::Access::ReadWrite).release_value())
 {
     dmesgln("RTL8168: Found @ {}", pci_address());
-    dmesgln("RTL8168: I/O port base: {}", m_io_base);
+    dmesgln("RTL8168: I/O port base: {}", m_registers_io_window);
 
     identify_chip_version();
     dmesgln("RTL8168: Version detected - {} ({}{})", possible_device_name(), (u8)m_version, m_version_uncertain ? "?" : "");
@@ -1258,39 +1259,39 @@ void RTL8168NetworkAdapter::receive()
 
 void RTL8168NetworkAdapter::out8(u16 address, u8 data)
 {
-    m_io_base.offset(address).out(data);
+    m_registers_io_window->write8(address, data);
 }
 
 void RTL8168NetworkAdapter::out16(u16 address, u16 data)
 {
-    m_io_base.offset(address).out(data);
+    m_registers_io_window->write16(address, data);
 }
 
 void RTL8168NetworkAdapter::out32(u16 address, u32 data)
 {
-    m_io_base.offset(address).out(data);
+    m_registers_io_window->write32(address, data);
 }
 
 void RTL8168NetworkAdapter::out64(u16 address, u64 data)
 {
     // ORDER MATTERS: Some NICs require the high part of the address to be written first
-    m_io_base.offset(address + 4).out((u32)(data >> 32));
-    m_io_base.offset(address).out((u32)(data & 0xFFFFFFFF));
+    m_registers_io_window->write32(address + 4, (u32)(data >> 32));
+    m_registers_io_window->write32(address, (u32)(data & 0xFFFFFFFF));
 }
 
 u8 RTL8168NetworkAdapter::in8(u16 address)
 {
-    return m_io_base.offset(address).in<u8>();
+    return m_registers_io_window->read8(address);
 }
 
 u16 RTL8168NetworkAdapter::in16(u16 address)
 {
-    return m_io_base.offset(address).in<u16>();
+    return m_registers_io_window->read16(address);
 }
 
 u32 RTL8168NetworkAdapter::in32(u16 address)
 {
-    return m_io_base.offset(address).in<u32>();
+    return m_registers_io_window->read32(address);
 }
 
 void RTL8168NetworkAdapter::phy_out(u8 address, u16 data)

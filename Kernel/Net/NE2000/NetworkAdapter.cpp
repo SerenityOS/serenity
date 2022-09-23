@@ -5,9 +5,9 @@
  */
 
 #include <AK/MACAddress.h>
-#include <Kernel/Arch/x86/IO.h>
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Debug.h>
+#include <Kernel/IOWindow.h>
 #include <Kernel/Net/NE2000/NetworkAdapter.h>
 #include <Kernel/Net/NetworkingManagement.h>
 #include <Kernel/Sections.h>
@@ -162,18 +162,19 @@ UNMAP_AFTER_INIT LockRefPtr<NE2000NetworkAdapter> NE2000NetworkAdapter::try_to_i
     auto interface_name_or_error = NetworkingManagement::generate_interface_name_from_pci_address(pci_device_identifier);
     if (interface_name_or_error.is_error())
         return {};
-    return adopt_lock_ref_if_nonnull(new (nothrow) NE2000NetworkAdapter(pci_device_identifier.address(), irq, interface_name_or_error.release_value()));
+    auto registers_io_window = MUST(IOWindow::create_for_pci_device_bar(pci_device_identifier, PCI::HeaderType0BaseRegister::BAR0));
+    return adopt_lock_ref_if_nonnull(new (nothrow) NE2000NetworkAdapter(pci_device_identifier.address(), irq, move(registers_io_window), interface_name_or_error.release_value()));
 }
 
-UNMAP_AFTER_INIT NE2000NetworkAdapter::NE2000NetworkAdapter(PCI::Address address, u8 irq, NonnullOwnPtr<KString> interface_name)
+UNMAP_AFTER_INIT NE2000NetworkAdapter::NE2000NetworkAdapter(PCI::Address address, u8 irq, NonnullOwnPtr<IOWindow> registers_io_window, NonnullOwnPtr<KString> interface_name)
     : NetworkAdapter(move(interface_name))
     , PCI::Device(address)
     , IRQHandler(irq)
-    , m_io_base(PCI::get_BAR0(pci_address()) & ~3)
+    , m_registers_io_window(move(registers_io_window))
 {
     dmesgln("NE2000: Found @ {}", pci_address());
 
-    dmesgln("NE2000: Port base: {}", m_io_base);
+    dmesgln("NE2000: Port base: {}", m_registers_io_window);
     dmesgln("NE2000: Interrupt line: {}", interrupt_number());
 
     int ram_errors = ram_test();
@@ -237,7 +238,6 @@ bool NE2000NetworkAdapter::handle_irq(RegisterState const&)
 
 UNMAP_AFTER_INIT int NE2000NetworkAdapter::ram_test()
 {
-    IOAddress io(PCI::get_BAR0(pci_address()) & ~3);
     int errors = 0;
 
     out8(REG_RW_COMMAND, BIT_COMMAND_DMA_ABORT | BIT_COMMAND_STOP);
@@ -454,23 +454,22 @@ void NE2000NetworkAdapter::receive()
 
 void NE2000NetworkAdapter::out8(u16 address, u8 data)
 {
-    m_io_base.offset(address).out(data);
+    m_registers_io_window->write8(address, data);
 }
 
 void NE2000NetworkAdapter::out16(u16 address, u16 data)
 {
-    m_io_base.offset(address).out(data);
+    m_registers_io_window->write16(address, data);
 }
 
 u8 NE2000NetworkAdapter::in8(u16 address)
 {
-    u8 data = m_io_base.offset(address).in<u8>();
-    return data;
+    return m_registers_io_window->read8(address);
 }
 
 u16 NE2000NetworkAdapter::in16(u16 address)
 {
-    return m_io_base.offset(address).in<u16>();
+    return m_registers_io_window->read16(address);
 }
 
 }

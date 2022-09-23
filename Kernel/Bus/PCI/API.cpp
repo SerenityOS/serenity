@@ -115,6 +115,24 @@ u32 get_BAR(Address address, HeaderType0BaseRegister pci_bar)
     }
 }
 
+BARSpaceType get_BAR_space_type(u32 pci_bar_value)
+{
+    // Note: For IO space, bit 0 is set to 1.
+    if (pci_bar_value & (1 << 0))
+        return BARSpaceType::IOSpace;
+    auto memory_space_type = (pci_bar_value >> 1) & 0b11;
+    switch (memory_space_type) {
+    case 0:
+        return BARSpaceType::Memory32BitSpace;
+    case 1:
+        return BARSpaceType::Memory16BitSpace;
+    case 2:
+        return BARSpaceType::Memory64BitSpace;
+    default:
+        VERIFY_NOT_REACHED();
+    }
+}
+
 void enable_bus_mastering(Address address)
 {
     auto value = read16(address, PCI::RegisterOffset::COMMAND);

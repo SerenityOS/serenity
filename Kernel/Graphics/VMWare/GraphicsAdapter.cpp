@@ -15,6 +15,7 @@
 #include <Kernel/Graphics/VMWare/Definitions.h>
 #include <Kernel/Graphics/VMWare/DisplayConnector.h>
 #include <Kernel/Graphics/VMWare/GraphicsAdapter.h>
+#include <Kernel/IOWindow.h>
 #include <Kernel/Memory/TypedMapping.h>
 #include <Kernel/Sections.h>
 
@@ -27,29 +28,30 @@ UNMAP_AFTER_INIT LockRefPtr<VMWareGraphicsAdapter> VMWareGraphicsAdapter::try_in
     // Note: We only support VMWare SVGA II adapter
     if (id.device_id != 0x0405)
         return {};
-    auto adapter = MUST(adopt_nonnull_lock_ref_or_enomem(new (nothrow) VMWareGraphicsAdapter(pci_device_identifier)));
+    auto registers_io_window = MUST(IOWindow::create_for_pci_device_bar(pci_device_identifier, PCI::HeaderType0BaseRegister::BAR0));
+    auto adapter = MUST(adopt_nonnull_lock_ref_or_enomem(new (nothrow) VMWareGraphicsAdapter(pci_device_identifier, move(registers_io_window))));
     MUST(adapter->initialize_adapter());
     return adapter;
 }
 
-UNMAP_AFTER_INIT VMWareGraphicsAdapter::VMWareGraphicsAdapter(PCI::DeviceIdentifier const& pci_device_identifier)
+UNMAP_AFTER_INIT VMWareGraphicsAdapter::VMWareGraphicsAdapter(PCI::DeviceIdentifier const& pci_device_identifier, NonnullOwnPtr<IOWindow> registers_io_window)
     : PCI::Device(pci_device_identifier.address())
-    , m_io_registers_base(PCI::get_BAR0(pci_device_identifier.address()) & 0xfffffff0)
+    , m_registers_io_window(move(registers_io_window))
 {
-    dbgln("VMWare SVGA @ {}, {}", pci_device_identifier.address(), m_io_registers_base);
+    dbgln("VMWare SVGA @ {}, {}", pci_device_identifier.address(), m_registers_io_window);
 }
 
 u32 VMWareGraphicsAdapter::read_io_register(VMWareDisplayRegistersOffset register_offset) const
 {
     SpinlockLocker locker(m_io_access_lock);
-    m_io_registers_base.out<u32>(to_underlying(register_offset));
-    return m_io_registers_base.offset(1).in<u32>();
+    m_registers_io_window->write32(0, to_underlying(register_offset));
+    return m_registers_io_window->read32_unaligned(1);
 }
 void VMWareGraphicsAdapter::write_io_register(VMWareDisplayRegistersOffset register_offset, u32 value)
 {
     SpinlockLocker locker(m_io_access_lock);
-    m_io_registers_base.out<u32>(to_underlying(register_offset));
-    m_io_registers_base.offset(1).out<u32>(value);
+    m_registers_io_window->write32(0, to_underlying(register_offset));
+    m_registers_io_window->write32_unaligned(1, value);
 }
 
 UNMAP_AFTER_INIT ErrorOr<void> VMWareGraphicsAdapter::negotiate_device_version()

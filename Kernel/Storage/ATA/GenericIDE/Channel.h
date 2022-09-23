@@ -18,8 +18,8 @@
 #pragma once
 
 #include <AK/Error.h>
-#include <Kernel/Arch/x86/IO.h>
 #include <Kernel/Devices/Device.h>
+#include <Kernel/IOWindow.h>
 #include <Kernel/Interrupts/IRQHandler.h>
 #include <Kernel/Library/LockRefPtr.h>
 #include <Kernel/Locking/Mutex.h>
@@ -56,57 +56,40 @@ public:
         Slave,
     };
 
-    struct IOAddressGroup {
-        IOAddressGroup(IOAddress io_base, IOAddress control_base, IOAddress bus_master_base)
-            : m_io_base(io_base)
-            , m_control_base(control_base)
-            , m_bus_master_base(bus_master_base)
+    struct IOWindowGroup {
+        IOWindowGroup(NonnullOwnPtr<IOWindow> io_window, NonnullOwnPtr<IOWindow> control_window, NonnullOwnPtr<IOWindow> m_bus_master_window)
+            : m_io_window(move(io_window))
+            , m_control_window(move(control_window))
+            , m_bus_master_window(move(m_bus_master_window))
         {
         }
 
-        IOAddressGroup(IOAddress io_base, IOAddress control_base, Optional<IOAddress> bus_master_base)
-            : m_io_base(io_base)
-            , m_control_base(control_base)
-            , m_bus_master_base(bus_master_base)
+        IOWindowGroup(NonnullOwnPtr<IOWindow> io_window, NonnullOwnPtr<IOWindow> control_window)
+            : m_io_window(move(io_window))
+            , m_control_window(move(control_window))
         {
         }
-
-        IOAddressGroup(IOAddress io_base, IOAddress control_base)
-            : m_io_base(io_base)
-            , m_control_base(control_base)
-            , m_bus_master_base()
-        {
-        }
-
-        IOAddressGroup(IOAddressGroup const& other, IOAddress bus_master_base)
-            : m_io_base(other.io_base())
-            , m_control_base(other.control_base())
-            , m_bus_master_base(bus_master_base)
-        {
-        }
-
-        IOAddressGroup(IOAddressGroup const&) = default;
 
         // Disable default implementations that would use surprising integer promotion.
-        bool operator==(IOAddressGroup const&) const = delete;
-        bool operator<=(IOAddressGroup const&) const = delete;
-        bool operator>=(IOAddressGroup const&) const = delete;
-        bool operator<(IOAddressGroup const&) const = delete;
-        bool operator>(IOAddressGroup const&) const = delete;
+        bool operator==(IOWindowGroup const&) const = delete;
+        bool operator<=(IOWindowGroup const&) const = delete;
+        bool operator>=(IOWindowGroup const&) const = delete;
+        bool operator<(IOWindowGroup const&) const = delete;
+        bool operator>(IOWindowGroup const&) const = delete;
 
-        IOAddress io_base() const { return m_io_base; };
-        IOAddress control_base() const { return m_control_base; }
-        Optional<IOAddress> bus_master_base() const { return m_bus_master_base; }
+        IOWindow& io_window() const { return *m_io_window; };
+        IOWindow& control_window() const { return *m_control_window; }
+        IOWindow* bus_master_window() const { return m_bus_master_window.ptr(); }
 
     private:
-        IOAddress m_io_base;
-        IOAddress m_control_base;
-        Optional<IOAddress> m_bus_master_base;
+        mutable NonnullOwnPtr<IOWindow> m_io_window;
+        mutable NonnullOwnPtr<IOWindow> m_control_window;
+        mutable OwnPtr<IOWindow> m_bus_master_window;
     };
 
 public:
-    static NonnullLockRefPtr<IDEChannel> create(IDEController const&, IOAddressGroup, ChannelType type);
-    static NonnullLockRefPtr<IDEChannel> create(IDEController const&, u8 irq, IOAddressGroup, ChannelType type);
+    static NonnullLockRefPtr<IDEChannel> create(IDEController const&, IOWindowGroup, ChannelType type);
+    static NonnullLockRefPtr<IDEChannel> create(IDEController const&, u8 irq, IOWindowGroup, ChannelType type);
 
     virtual ~IDEChannel() override;
 
@@ -157,8 +140,8 @@ private:
     virtual ErrorOr<void> read_pio_data_to_buffer(UserOrKernelBuffer&, size_t block_offset, size_t words_count) override;
     virtual ErrorOr<void> write_pio_data_from_buffer(UserOrKernelBuffer const&, size_t block_offset, size_t words_count) override;
 
-    IDEChannel(IDEController const&, IOAddressGroup, ChannelType type, NonnullOwnPtr<KBuffer> ata_identify_data_buffer);
-    IDEChannel(IDEController const&, u8 irq, IOAddressGroup, ChannelType type, NonnullOwnPtr<KBuffer> ata_identify_data_buffer);
+    IDEChannel(IDEController const&, IOWindowGroup, ChannelType type, NonnullOwnPtr<KBuffer> ata_identify_data_buffer);
+    IDEChannel(IDEController const&, u8 irq, IOWindowGroup, ChannelType type, NonnullOwnPtr<KBuffer> ata_identify_data_buffer);
     //^ IRQHandler
     virtual bool handle_irq(RegisterState const&) override;
 
@@ -168,6 +151,6 @@ private:
     bool m_dma_enabled { false };
     bool m_interrupts_enabled { true };
 
-    IOAddressGroup m_io_group;
+    IOWindowGroup m_io_window_group;
 };
 }

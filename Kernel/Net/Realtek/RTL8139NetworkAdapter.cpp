@@ -5,7 +5,6 @@
  */
 
 #include <AK/MACAddress.h>
-#include <Kernel/Arch/x86/IO.h>
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Net/NetworkingManagement.h>
@@ -123,14 +122,15 @@ UNMAP_AFTER_INIT LockRefPtr<RTL8139NetworkAdapter> RTL8139NetworkAdapter::try_to
     auto interface_name_or_error = NetworkingManagement::generate_interface_name_from_pci_address(pci_device_identifier);
     if (interface_name_or_error.is_error())
         return {};
-    return adopt_lock_ref_if_nonnull(new (nothrow) RTL8139NetworkAdapter(pci_device_identifier.address(), irq, interface_name_or_error.release_value()));
+    auto registers_io_window = MUST(IOWindow::create_for_pci_device_bar(pci_device_identifier, PCI::HeaderType0BaseRegister::BAR0));
+    return adopt_lock_ref_if_nonnull(new (nothrow) RTL8139NetworkAdapter(pci_device_identifier.address(), irq, move(registers_io_window), interface_name_or_error.release_value()));
 }
 
-UNMAP_AFTER_INIT RTL8139NetworkAdapter::RTL8139NetworkAdapter(PCI::Address address, u8 irq, NonnullOwnPtr<KString> interface_name)
+UNMAP_AFTER_INIT RTL8139NetworkAdapter::RTL8139NetworkAdapter(PCI::Address address, u8 irq, NonnullOwnPtr<IOWindow> registers_io_window, NonnullOwnPtr<KString> interface_name)
     : NetworkAdapter(move(interface_name))
     , PCI::Device(address)
     , IRQHandler(irq)
-    , m_io_base(PCI::get_BAR0(pci_address()) & ~1)
+    , m_registers_io_window(move(registers_io_window))
     , m_rx_buffer(MM.allocate_contiguous_kernel_region(Memory::page_round_up(RX_BUFFER_SIZE + PACKET_SIZE_MAX).release_value_but_fixme_should_propagate_errors(), "RTL8139 RX"sv, Memory::Region::Access::ReadWrite).release_value())
     , m_packet_buffer(MM.allocate_contiguous_kernel_region(Memory::page_round_up(PACKET_SIZE_MAX).release_value_but_fixme_should_propagate_errors(), "RTL8139 Packet buffer"sv, Memory::Region::Access::ReadWrite).release_value())
 {
@@ -140,7 +140,7 @@ UNMAP_AFTER_INIT RTL8139NetworkAdapter::RTL8139NetworkAdapter(PCI::Address addre
 
     enable_bus_mastering(pci_address());
 
-    dmesgln("RTL8139: I/O port base: {}", m_io_base);
+    dmesgln("RTL8139: I/O port base: {}", m_registers_io_window);
     dmesgln("RTL8139: Interrupt line: {}", interrupt_number());
 
     // we add space to account for overhang from the last packet - the rtl8139
@@ -349,32 +349,32 @@ void RTL8139NetworkAdapter::receive()
 
 void RTL8139NetworkAdapter::out8(u16 address, u8 data)
 {
-    m_io_base.offset(address).out(data);
+    m_registers_io_window->write8(address, data);
 }
 
 void RTL8139NetworkAdapter::out16(u16 address, u16 data)
 {
-    m_io_base.offset(address).out(data);
+    m_registers_io_window->write16(address, data);
 }
 
 void RTL8139NetworkAdapter::out32(u16 address, u32 data)
 {
-    m_io_base.offset(address).out(data);
+    m_registers_io_window->write32(address, data);
 }
 
 u8 RTL8139NetworkAdapter::in8(u16 address)
 {
-    return m_io_base.offset(address).in<u8>();
+    return m_registers_io_window->read8(address);
 }
 
 u16 RTL8139NetworkAdapter::in16(u16 address)
 {
-    return m_io_base.offset(address).in<u16>();
+    return m_registers_io_window->read16(address);
 }
 
 u32 RTL8139NetworkAdapter::in32(u16 address)
 {
-    return m_io_base.offset(address).in<u32>();
+    return m_registers_io_window->read32(address);
 }
 
 bool RTL8139NetworkAdapter::link_full_duplex()

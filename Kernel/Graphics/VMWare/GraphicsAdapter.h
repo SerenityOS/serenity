@@ -7,10 +7,10 @@
 #pragma once
 
 #include <AK/Types.h>
-#include <Kernel/Arch/x86/IO.h>
 #include <Kernel/Bus/PCI/Device.h>
 #include <Kernel/Graphics/GenericGraphicsAdapter.h>
 #include <Kernel/Graphics/VMWare/Definitions.h>
+#include <Kernel/IOWindow.h>
 #include <Kernel/Locking/Spinlock.h>
 #include <Kernel/Memory/TypedMapping.h>
 #include <Kernel/PhysicalAddress.h>
@@ -46,11 +46,11 @@ private:
     void print_svga_capabilities() const;
     void modeset_primary_screen_resolution(size_t width, size_t height);
 
-    explicit VMWareGraphicsAdapter(PCI::DeviceIdentifier const&);
+    VMWareGraphicsAdapter(PCI::DeviceIdentifier const&, NonnullOwnPtr<IOWindow> registers_io_window);
 
     Memory::TypedMapping<volatile VMWareDisplayFIFORegisters> m_fifo_registers;
     LockRefPtr<VMWareDisplayConnector> m_display_connector;
-    const IOAddress m_io_registers_base;
+    mutable NonnullOwnPtr<IOWindow> m_registers_io_window;
     mutable Spinlock m_io_access_lock { LockRank::None };
     mutable RecursiveSpinlock m_operation_lock { LockRank::None };
 };

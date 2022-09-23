@@ -7,11 +7,11 @@
 #pragma once
 
 #include <AK/Error.h>
-#include <Kernel/Arch/x86/IO.h>
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Bus/PCI/Device.h>
 #include <Kernel/Devices/Audio/Controller.h>
 #include <Kernel/Devices/CharacterDevice.h>
+#include <Kernel/IOWindow.h>
 #include <Kernel/Interrupts/IRQHandler.h>
 #include <Kernel/Locking/SpinlockProtected.h>
 
@@ -123,12 +123,7 @@ private:
             Control = 0x0b,
         };
 
-        AC97Channel(AC97& device, StringView name, IOAddress channel_base)
-            : m_channel_base(channel_base)
-            , m_device(device)
-            , m_name(name)
-        {
-        }
+        static ErrorOr<NonnullOwnPtr<AC97Channel>> create_with_parent_pci_device(PCI::Address pci_device_address, StringView name, NonnullOwnPtr<IOWindow> channel_io_base);
 
         bool dma_running() const
         {
@@ -136,24 +131,31 @@ private:
         }
         void handle_dma_stopped();
         StringView name() const { return m_name; }
-        IOAddress reg(Register reg) const { return m_channel_base.offset(reg); }
         void reset();
         void set_last_valid_index(u32 buffer_address, u8 last_valid_index);
         void start_dma();
 
+        IOWindow& io_window() { return *m_channel_io_window; }
+
     private:
-        IOAddress m_channel_base;
-        AC97& m_device;
+        AC97Channel(PCI::Address pci_device_address, StringView name, NonnullOwnPtr<IOWindow> channel_io_base)
+            : m_channel_io_window(move(channel_io_base))
+            , m_device_pci_address(pci_device_address)
+            , m_name(name)
+        {
+        }
+
+        NonnullOwnPtr<IOWindow> m_channel_io_window;
+        PCI::Address m_device_pci_address;
         SpinlockProtected<bool> m_dma_running { LockRank::None, false };
         StringView m_name;
     };
 
-    explicit AC97(PCI::DeviceIdentifier const&);
+    AC97(PCI::DeviceIdentifier const&, NonnullOwnPtr<AC97Channel> pcm_out_channel, NonnullOwnPtr<IOWindow> mixer_io_window, NonnullOwnPtr<IOWindow> bus_io_window);
 
     // ^IRQHandler
     virtual bool handle_irq(RegisterState const&) override;
 
-    AC97Channel channel(StringView name, NativeAudioBusChannel channel) { return AC97Channel(*this, name, m_io_bus_base.offset(channel)); }
     ErrorOr<void> initialize();
     void set_master_output_volume(u8, u8, Muted);
     ErrorOr<void> set_pcm_output_sample_rate(u32);
@@ -171,13 +173,13 @@ private:
     u8 m_buffer_descriptor_list_index { 0 };
     AC97Revision m_codec_revision { AC97Revision::Revision21OrEarlier };
     bool m_double_rate_pcm_enabled { false };
-    IOAddress m_io_mixer_base;
-    IOAddress m_io_bus_base;
+    NonnullOwnPtr<IOWindow> m_mixer_io_window;
+    NonnullOwnPtr<IOWindow> m_bus_io_window;
     WaitQueue m_irq_queue;
     OwnPtr<Memory::Region> m_output_buffer;
     u8 m_output_buffer_page_count { 4 };
     u8 m_output_buffer_page_index { 0 };
-    AC97Channel m_pcm_out_channel;
+    NonnullOwnPtr<AC97Channel> m_pcm_out_channel;
     u32 m_sample_rate { 0 };
     bool m_variable_rate_pcm_supported { false };
     LockRefPtr<AudioChannel> m_audio_channel;

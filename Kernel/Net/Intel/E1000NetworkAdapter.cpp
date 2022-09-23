@@ -170,7 +170,8 @@ UNMAP_AFTER_INIT LockRefPtr<E1000NetworkAdapter> E1000NetworkAdapter::try_to_ini
     auto interface_name_or_error = NetworkingManagement::generate_interface_name_from_pci_address(pci_device_identifier);
     if (interface_name_or_error.is_error())
         return {};
-    auto adapter = adopt_lock_ref_if_nonnull(new (nothrow) E1000NetworkAdapter(pci_device_identifier.address(), irq, interface_name_or_error.release_value()));
+    auto registers_io_window = IOWindow::create_for_pci_device_bar(pci_device_identifier, PCI::HeaderType0BaseRegister::BAR0).release_value_but_fixme_should_propagate_errors();
+    auto adapter = adopt_lock_ref_if_nonnull(new (nothrow) E1000NetworkAdapter(pci_device_identifier.address(), irq, move(registers_io_window), interface_name_or_error.release_value()));
     if (!adapter)
         return {};
     if (adapter->initialize())
@@ -197,18 +198,7 @@ UNMAP_AFTER_INIT bool E1000NetworkAdapter::initialize()
     dmesgln("E1000: Found @ {}", pci_address());
     enable_bus_mastering(pci_address());
 
-    m_io_base = IOAddress(PCI::get_BAR1(pci_address()) & ~1);
-
-    size_t mmio_base_size = PCI::get_BAR_space_size(pci_address(), PCI::HeaderType0BaseRegister::BAR0);
-    auto region_or_error = MM.allocate_kernel_region(PhysicalAddress(page_base_of(PCI::get_BAR0(pci_address()))), Memory::page_round_up(mmio_base_size).release_value_but_fixme_should_propagate_errors(), "E1000 MMIO"sv, Memory::Region::Access::ReadWrite, Memory::Region::Cacheable::No);
-    if (region_or_error.is_error())
-        return false;
-    m_mmio_region = region_or_error.release_value();
-    m_mmio_base = m_mmio_region->vaddr();
-    m_use_mmio = true;
-    dmesgln("E1000: port base: {}", m_io_base);
-    dmesgln("E1000: MMIO base: {}", PhysicalAddress(PCI::get_BAR0(pci_address()) & 0xfffffffc));
-    dmesgln("E1000: MMIO base size: {} bytes", mmio_base_size);
+    dmesgln("E1000: IO base: {}", m_registers_io_window);
     dmesgln("E1000: Interrupt line: {}", interrupt_number());
     detect_eeprom();
     dmesgln("E1000: Has EEPROM? {}", m_has_eeprom);
@@ -227,10 +217,11 @@ UNMAP_AFTER_INIT bool E1000NetworkAdapter::initialize()
     return true;
 }
 
-UNMAP_AFTER_INIT E1000NetworkAdapter::E1000NetworkAdapter(PCI::Address address, u8 irq, NonnullOwnPtr<KString> interface_name)
+UNMAP_AFTER_INIT E1000NetworkAdapter::E1000NetworkAdapter(PCI::Address address, u8 irq, NonnullOwnPtr<IOWindow> registers_io_window, NonnullOwnPtr<KString> interface_name)
     : NetworkAdapter(move(interface_name))
     , PCI::Device(address)
     , IRQHandler(irq)
+    , m_registers_io_window(move(registers_io_window))
     , m_rx_descriptors_region(MM.allocate_contiguous_kernel_region(Memory::page_round_up(sizeof(e1000_rx_desc) * number_of_rx_descriptors).release_value_but_fixme_should_propagate_errors(), "E1000 RX Descriptors"sv, Memory::Region::Access::ReadWrite).release_value())
     , m_tx_descriptors_region(MM.allocate_contiguous_kernel_region(Memory::page_round_up(sizeof(e1000_tx_desc) * number_of_tx_descriptors).release_value_but_fixme_should_propagate_errors(), "E1000 TX Descriptors"sv, Memory::Region::Access::ReadWrite).release_value())
 {
@@ -369,58 +360,37 @@ UNMAP_AFTER_INIT void E1000NetworkAdapter::initialize_tx_descriptors()
 void E1000NetworkAdapter::out8(u16 address, u8 data)
 {
     dbgln_if(E1000_DEBUG, "E1000: OUT8 {:#02x} @ {:#04x}", data, address);
-    if (m_use_mmio) {
-        auto* ptr = (u8 volatile*)(m_mmio_base.get() + address);
-        *ptr = data;
-        return;
-    }
-    m_io_base.offset(address).out(data);
+    m_registers_io_window->write8(address, data);
 }
 
 void E1000NetworkAdapter::out16(u16 address, u16 data)
 {
     dbgln_if(E1000_DEBUG, "E1000: OUT16 {:#04x} @ {:#04x}", data, address);
-    if (m_use_mmio) {
-        auto* ptr = (u16 volatile*)(m_mmio_base.get() + address);
-        *ptr = data;
-        return;
-    }
-    m_io_base.offset(address).out(data);
+    m_registers_io_window->write16(address, data);
 }
 
 void E1000NetworkAdapter::out32(u16 address, u32 data)
 {
     dbgln_if(E1000_DEBUG, "E1000: OUT32 {:#08x} @ {:#04x}", data, address);
-    if (m_use_mmio) {
-        auto* ptr = (u32 volatile*)(m_mmio_base.get() + address);
-        *ptr = data;
-        return;
-    }
-    m_io_base.offset(address).out(data);
+    m_registers_io_window->write32(address, data);
 }
 
 u8 E1000NetworkAdapter::in8(u16 address)
 {
     dbgln_if(E1000_DEBUG, "E1000: IN8 @ {:#04x}", address);
-    if (m_use_mmio)
-        return *(u8 volatile*)(m_mmio_base.get() + address);
-    return m_io_base.offset(address).in<u8>();
+    return m_registers_io_window->read8(address);
 }
 
 u16 E1000NetworkAdapter::in16(u16 address)
 {
     dbgln_if(E1000_DEBUG, "E1000: IN16 @ {:#04x}", address);
-    if (m_use_mmio)
-        return *(u16 volatile*)(m_mmio_base.get() + address);
-    return m_io_base.offset(address).in<u16>();
+    return m_registers_io_window->read16(address);
 }
 
 u32 E1000NetworkAdapter::in32(u16 address)
 {
     dbgln_if(E1000_DEBUG, "E1000: IN32 @ {:#04x}", address);
-    if (m_use_mmio)
-        return *(u32 volatile*)(m_mmio_base.get() + address);
-    return m_io_base.offset(address).in<u32>();
+    return m_registers_io_window->read32(address);
 }
 
 void E1000NetworkAdapter::send_raw(ReadonlyBytes payload)
