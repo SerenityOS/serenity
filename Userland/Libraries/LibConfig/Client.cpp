@@ -72,7 +72,7 @@ void Client::write_bool(StringView domain, StringView group, StringView key, boo
 
 void Client::remove_key(StringView domain, StringView group, StringView key)
 {
-    async_remove_key(domain, group, key);
+    remove_key_entry(domain, group, key);
 }
 
 void Client::notify_changed_string_value(String const& domain, String const& group, String const& key, String const& value)

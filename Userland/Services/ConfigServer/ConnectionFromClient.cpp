@@ -249,7 +249,7 @@ void ConnectionFromClient::write_bool_value(String const& domain, String const& 
     });
 }
 
-void ConnectionFromClient::remove_key(String const& domain, String const& group, String const& key)
+void ConnectionFromClient::remove_key_entry(String const& domain, String const& group, String const& key)
 {
     if (!validate_access(domain, group, key))
         return;
