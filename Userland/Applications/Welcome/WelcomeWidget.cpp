@@ -8,7 +8,8 @@
 #include <AK/Random.h>
 #include <Applications/Welcome/WelcomeWindowGML.h>
 #include <LibConfig/Client.h>
-#include <LibCore/File.h>
+#include <LibCore/StandardPaths.h>
+#include <LibCore/Stream.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/CheckBox.h>
@@ -76,30 +77,30 @@ WelcomeWidget::WelcomeWidget()
     };
 
     open_and_parse_readme_file();
-    open_and_parse_tips_file();
+    if (auto result = open_and_parse_tips_file(); result.is_error()) {
+        auto error = String::formatted("Opening \"{}/tips.txt\" failed: {}", Core::StandardPaths::documents_directory(), result.error());
+        m_tip_label->set_text(error);
+        warnln(error);
+    }
+
     set_random_tip();
 }
 
-void WelcomeWidget::open_and_parse_tips_file()
+ErrorOr<void> WelcomeWidget::open_and_parse_tips_file()
 {
-    auto file = Core::File::construct("/home/anon/Documents/tips.txt");
-    if (!file->open(Core::OpenMode::ReadOnly)) {
-        m_tip_label->set_text("~/Documents/tips.txt has gone missing!");
-        return;
-    }
+    auto path = String::formatted("{}/tips.txt", Core::StandardPaths::documents_directory());
+    auto file = TRY(Core::Stream::File::open(path, Core::Stream::OpenMode::Read));
+    auto buffered_file = TRY(Core::Stream::BufferedFile::create(move(file)));
+    Array<u8, PAGE_SIZE> buffer;
 
-    while (file->can_read_line()) {
-        auto line = file->read_line();
-        auto* ch = line.characters();
-        switch (*ch) {
-        case '\n':
-        case '\r':
-        case '\0':
-        case '#':
+    while (TRY(buffered_file->can_read_line())) {
+        auto line = TRY(buffered_file->read_line(buffer));
+        if (line.starts_with('#') || line.is_empty())
             continue;
-        }
         m_tips.append(line);
     }
+
+    return {};
 }
 
 void WelcomeWidget::open_and_parse_readme_file()
