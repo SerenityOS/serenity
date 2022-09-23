@@ -75,6 +75,16 @@ void Client::remove_key(StringView domain, StringView group, StringView key)
     remove_key_entry(domain, group, key);
 }
 
+void Client::remove_group(StringView domain, StringView group)
+{
+    remove_group_entry(domain, group);
+}
+
+void Client::add_group(StringView domain, StringView group)
+{
+    add_group_entry(domain, group);
+}
+
 void Client::notify_changed_string_value(String const& domain, String const& group, String const& key, String const& value)
 {
     Listener::for_each([&](auto& listener) {
@@ -100,6 +110,20 @@ void Client::notify_removed_key(String const& domain, String const& group, Strin
 {
     Listener::for_each([&](auto& listener) {
         listener.config_key_was_removed(domain, group, key);
+    });
+}
+
+void Client::notify_removed_group(String const& domain, String const& group)
+{
+    Listener::for_each([&](auto& listener) {
+        listener.config_group_was_removed(domain, group);
+    });
+}
+
+void Client::notify_added_group(String const& domain, String const& group)
+{
+    Listener::for_each([&](auto& listener) {
+        listener.config_group_was_added(domain, group);
     });
 }
 

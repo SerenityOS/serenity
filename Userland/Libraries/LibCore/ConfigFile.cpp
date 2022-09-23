@@ -234,6 +234,12 @@ bool ConfigFile::has_group(String const& group) const
     return m_groups.contains(group);
 }
 
+void ConfigFile::add_group(String const& group)
+{
+    m_groups.ensure(group);
+    m_dirty = true;
+}
+
 void ConfigFile::remove_group(String const& group)
 {
     m_groups.remove(group);
