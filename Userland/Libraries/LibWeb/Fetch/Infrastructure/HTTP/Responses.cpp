@@ -12,19 +12,19 @@ namespace Web::Fetch::Infrastructure {
 // A network error is a response whose status is always 0, status message is always
 // the empty byte sequence, header list is always empty, and body is always null.
 
-Response Response::aborted_network_error()
+NonnullOwnPtr<Response> Response::aborted_network_error()
 {
     auto response = network_error();
-    response.set_aborted(true);
+    response->set_aborted(true);
     return response;
 }
 
-Response Response::network_error()
+NonnullOwnPtr<Response> Response::network_error()
 {
-    Response response;
-    response.set_status(0);
-    response.set_type(Type::Error);
-    VERIFY(!response.body().has_value());
+    auto response = make<Response>();
+    response->set_status(0);
+    response->set_type(Type::Error);
+    VERIFY(!response->body().has_value());
     return response;
 }
 
@@ -85,7 +85,7 @@ FilteredResponse::~FilteredResponse()
 {
 }
 
-ErrorOr<BasicFilteredResponse> BasicFilteredResponse::create(Response& internal_response)
+ErrorOr<NonnullOwnPtr<BasicFilteredResponse>> BasicFilteredResponse::create(Response& internal_response)
 {
     // A basic filtered response is a filtered response whose type is "basic" and header list excludes
     // any headers in internal response’s header list whose name is a forbidden response-header name.
@@ -95,7 +95,7 @@ ErrorOr<BasicFilteredResponse> BasicFilteredResponse::create(Response& internal_
             TRY(header_list.append(header));
     }
 
-    return BasicFilteredResponse(internal_response, move(header_list));
+    return adopt_own(*new BasicFilteredResponse(internal_response, move(header_list)));
 }
 
 BasicFilteredResponse::BasicFilteredResponse(Response& internal_response, HeaderList header_list)
@@ -104,7 +104,7 @@ BasicFilteredResponse::BasicFilteredResponse(Response& internal_response, Header
 {
 }
 
-ErrorOr<CORSFilteredResponse> CORSFilteredResponse::create(Response& internal_response)
+ErrorOr<NonnullOwnPtr<CORSFilteredResponse>> CORSFilteredResponse::create(Response& internal_response)
 {
     // A CORS filtered response is a filtered response whose type is "cors" and header list excludes
     // any headers in internal response’s header list whose name is not a CORS-safelisted response-header
@@ -119,7 +119,7 @@ ErrorOr<CORSFilteredResponse> CORSFilteredResponse::create(Response& internal_re
             TRY(header_list.append(header));
     }
 
-    return CORSFilteredResponse(internal_response, move(header_list));
+    return adopt_own(*new CORSFilteredResponse(internal_response, move(header_list)));
 }
 
 CORSFilteredResponse::CORSFilteredResponse(Response& internal_response, HeaderList header_list)
@@ -128,11 +128,11 @@ CORSFilteredResponse::CORSFilteredResponse(Response& internal_response, HeaderLi
 {
 }
 
-OpaqueFilteredResponse OpaqueFilteredResponse::create(Response& internal_response)
+NonnullOwnPtr<OpaqueFilteredResponse> OpaqueFilteredResponse::create(Response& internal_response)
 {
     // An opaque-redirect filtered response is a filtered response whose type is "opaqueredirect",
     // status is 0, status message is the empty byte sequence, header list is empty, and body is null.
-    return OpaqueFilteredResponse(internal_response);
+    return adopt_own(*new OpaqueFilteredResponse(internal_response));
 }
 
 OpaqueFilteredResponse::OpaqueFilteredResponse(Response& internal_response)
@@ -140,9 +140,9 @@ OpaqueFilteredResponse::OpaqueFilteredResponse(Response& internal_response)
 {
 }
 
-OpaqueRedirectFilteredResponse OpaqueRedirectFilteredResponse::create(Response& internal_response)
+NonnullOwnPtr<OpaqueRedirectFilteredResponse> OpaqueRedirectFilteredResponse::create(Response& internal_response)
 {
-    return OpaqueRedirectFilteredResponse(internal_response);
+    return adopt_own(*new OpaqueRedirectFilteredResponse(internal_response));
 }
 
 OpaqueRedirectFilteredResponse::OpaqueRedirectFilteredResponse(Response& internal_response)
