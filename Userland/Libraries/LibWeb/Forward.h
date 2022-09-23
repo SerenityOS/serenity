@@ -357,6 +357,10 @@ namespace Web::Platform {
 class Timer;
 }
 
+namespace Web::ReferrerPolicy {
+enum class ReferrerPolicy;
+}
+
 namespace Web::RequestIdleCallback {
 class IdleDeadline;
 }
