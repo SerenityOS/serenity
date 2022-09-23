@@ -257,6 +257,9 @@ public:
     [[nodiscard]] ReferrerType const& referrer() const { return m_referrer; }
     void set_referrer(ReferrerType referrer) { m_referrer = move(referrer); }
 
+    [[nodiscard]] Optional<ReferrerPolicy::ReferrerPolicy> const& referrer_policy() const { return m_referrer_policy; }
+    void set_referrer_policy(Optional<ReferrerPolicy::ReferrerPolicy> referrer_policy) { m_referrer_policy = move(referrer_policy); }
+
     [[nodiscard]] ResponseTainting response_tainting() const { return m_response_tainting; }
     void set_response_tainting(ResponseTainting response_tainting) { m_response_tainting = response_tainting; }
 
@@ -364,7 +367,8 @@ private:
     ReferrerType m_referrer { Referrer::Client };
 
     // https://fetch.spec.whatwg.org/#concept-request-referrer-policy
-    // FIXME: A request has an associated referrer policy, which is a referrer policy. Unless stated otherwise it is the empty string.
+    // A request has an associated referrer policy, which is a referrer policy. Unless stated otherwise it is the empty string.
+    Optional<ReferrerPolicy::ReferrerPolicy> m_referrer_policy;
 
     // https://fetch.spec.whatwg.org/#concept-request-mode
     // A request has an associated mode, which is "same-origin", "cors", "no-cors", "navigate", or "websocket". Unless stated otherwise, it is "no-cors".
