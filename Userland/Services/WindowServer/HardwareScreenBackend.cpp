@@ -85,7 +85,11 @@ ErrorOr<void> HardwareScreenBackend::map_framebuffer()
     if (rc != 0) {
         return Error::from_syscall("graphics_connector_get_head_mode_setting"sv, rc);
     }
-    m_size_in_bytes = mode_setting.horizontal_stride * mode_setting.vertical_active * 2;
+    if (m_can_set_head_buffer) {
+        m_size_in_bytes = mode_setting.horizontal_stride * mode_setting.vertical_active * 2;
+    } else {
+        m_size_in_bytes = mode_setting.horizontal_stride * mode_setting.vertical_active;
+    }
     m_framebuffer = (Gfx::ARGB32*)TRY(Core::System::mmap(nullptr, m_size_in_bytes, PROT_READ | PROT_WRITE, MAP_SHARED, m_display_connector_fd, 0));
 
     if (m_can_set_head_buffer) {
