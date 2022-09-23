@@ -21,7 +21,7 @@ private:
     virtual void paint_event(GUI::PaintEvent&) override;
 
     void set_random_tip();
-    void open_and_parse_tips_file();
+    ErrorOr<void> open_and_parse_tips_file();
     void open_and_parse_readme_file();
 
     RefPtr<GUI::Button> m_close_button;
