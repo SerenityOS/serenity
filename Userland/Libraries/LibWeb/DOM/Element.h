@@ -122,7 +122,7 @@ public:
     void set_custom_properties(HashMap<FlyString, CSS::StyleProperty> custom_properties) { m_custom_properties = move(custom_properties); }
     HashMap<FlyString, CSS::StyleProperty> const& custom_properties() const { return m_custom_properties; }
 
-    void queue_an_element_task(HTML::Task::Source, Function<void()>);
+    void queue_an_element_task(HTML::Task::Source, JS::SafeFunction<void()>);
 
     bool is_void_element() const;
     bool serializes_as_void() const;
