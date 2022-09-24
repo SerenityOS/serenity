@@ -198,11 +198,10 @@ ErrorOr<Parser> Parser::from_bytes(ByteBuffer&& bytes)
 }
 
 #ifndef KERNEL
-ErrorOr<Parser> Parser::from_display_connector_device(int display_connector_fd, size_t head)
+ErrorOr<Parser> Parser::from_display_connector_device(int display_connector_fd)
 {
     RawBytes edid_bytes;
     GraphicsHeadEDID edid_info {};
-    edid_info.head_index = head;
     edid_info.bytes = &edid_bytes[0];
     edid_info.bytes_size = sizeof(edid_bytes);
     if (graphics_connector_get_head_edid(display_connector_fd, &edid_info) < 0) {
@@ -226,7 +225,7 @@ ErrorOr<Parser> Parser::from_display_connector_device(int display_connector_fd, 
     return from_bytes(move(edid_byte_buffer));
 }
 
-ErrorOr<Parser> Parser::from_display_connector_device(String const& display_connector_device, size_t head)
+ErrorOr<Parser> Parser::from_display_connector_device(String const& display_connector_device)
 {
     int display_connector_fd = open(display_connector_device.characters(), O_RDWR | O_CLOEXEC);
     if (display_connector_fd < 0) {
@@ -236,7 +235,7 @@ ErrorOr<Parser> Parser::from_display_connector_device(String const& display_conn
     ScopeGuard fd_guard([&] {
         close(display_connector_fd);
     });
-    return from_display_connector_device(display_connector_fd, head);
+    return from_display_connector_device(display_connector_fd);
 }
 #endif
 

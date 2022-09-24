@@ -42,8 +42,6 @@ struct GraphicsHeadModeSetting {
 };
 
 struct GraphicsHeadEDID {
-    int head_index;
-
     unsigned char* bytes;
     unsigned bytes_size;
 };
