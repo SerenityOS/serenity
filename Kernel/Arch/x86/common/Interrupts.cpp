@@ -317,11 +317,16 @@ void page_fault_handler(TrapFrame* trap)
     PageFault fault { regs.exception_code, VirtualAddress { fault_address } };
     auto response = MM.handle_page_fault(fault);
 
-    if (response == PageFaultResponse::ShouldCrash || response == PageFaultResponse::OutOfMemory) {
+    if (response == PageFaultResponse::ShouldCrash || response == PageFaultResponse::OutOfMemory || response == PageFaultResponse::BusError) {
         if (faulted_in_kernel && handle_safe_access_fault(regs, fault_address)) {
             // If this would be a ring0 (kernel) fault and the fault was triggered by
             // safe_memcpy, safe_strnlen, or safe_memset then we resume execution at
             // the appropriate _fault label rather than crashing
+            return;
+        }
+
+        if (response == PageFaultResponse::BusError && current_thread->has_signal_handler(SIGBUS)) {
+            current_thread->send_urgent_signal_to_self(SIGBUS);
             return;
         }
 
@@ -341,7 +346,9 @@ void page_fault_handler(TrapFrame* trap)
         constexpr FlatPtr free_scrub_pattern = explode_byte(FREE_SCRUB_BYTE);
         constexpr FlatPtr kmalloc_scrub_pattern = explode_byte(KMALLOC_SCRUB_BYTE);
         constexpr FlatPtr kfree_scrub_pattern = explode_byte(KFREE_SCRUB_BYTE);
-        if ((fault_address & 0xffff0000) == (malloc_scrub_pattern & 0xffff0000)) {
+        if (response == PageFaultResponse::BusError) {
+            dbgln("Note: Address {} is an access to an undefined memory range of an Inode-backed VMObject", VirtualAddress(fault_address));
+        } else if ((fault_address & 0xffff0000) == (malloc_scrub_pattern & 0xffff0000)) {
             dbgln("Note: Address {} looks like it may be uninitialized malloc() memory", VirtualAddress(fault_address));
         } else if ((fault_address & 0xffff0000) == (free_scrub_pattern & 0xffff0000)) {
             dbgln("Note: Address {} looks like it may be recently free()'d memory", VirtualAddress(fault_address));
@@ -390,6 +397,8 @@ void page_fault_handler(TrapFrame* trap)
             }
         }
 
+        if (response == PageFaultResponse::BusError)
+            return handle_crash(regs, "Page Fault (Bus Error)", SIGBUS, false);
         return handle_crash(regs, "Page Fault", SIGSEGV, response == PageFaultResponse::OutOfMemory);
     } else if (response == PageFaultResponse::Continue) {
         dbgln_if(PAGE_FAULT_DEBUG, "Continuing after resolved page fault");
