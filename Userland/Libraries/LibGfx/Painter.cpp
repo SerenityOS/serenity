@@ -31,6 +31,7 @@
 #include <LibGfx/FillPathImplementation.h>
 #include <LibGfx/Palette.h>
 #include <LibGfx/Path.h>
+#include <LibGfx/Quad.h>
 #include <LibGfx/TextDirection.h>
 #include <LibGfx/TextLayout.h>
 #include <stdio.h>
@@ -2420,6 +2421,62 @@ void Painter::draw_text_run(FloatPoint const& baseline_start, Utf8View const& st
         draw_glyph_or_emoji({ static_cast<int>(x), y }, code_point_iterator, font, color);
         x += font.glyph_or_emoji_width(code_point) + font.glyph_spacing();
         last_code_point = code_point;
+    }
+}
+
+void Painter::draw_scaled_bitmap_with_transform(Gfx::IntRect const& dst_rect, Gfx::Bitmap const& bitmap, Gfx::FloatRect const& src_rect, Gfx::AffineTransform const& transform, float opacity, Gfx::Painter::ScalingMode scaling_mode)
+{
+    if (transform.is_identity_or_translation()) {
+        translate(transform.e(), transform.f());
+        draw_scaled_bitmap(dst_rect, bitmap, src_rect, opacity, scaling_mode);
+        translate(-transform.e(), -transform.f());
+    } else {
+        // The painter has an affine transform, we have to draw through it!
+
+        // FIXME: This is *super* inefficient.
+        // What we currently do, roughly:
+        // - Map the destination rect through the context's transform.
+        // - Compute the bounding rect of the destination quad.
+        // - For each point in the computed bounding rect, reverse-map it to a point in the source image.
+        //   - Sample the source image at the computed point.
+        //   - Set or blend (depending on alpha values) one pixel in the canvas.
+        //   - Loop.
+
+        // FIXME: Painter should have an affine transform as part of its state and handle all of this instead.
+
+        auto inverse_transform = transform.inverse();
+        if (!inverse_transform.has_value())
+            return;
+
+        auto destination_quad = transform.map_to_quad(dst_rect.to_type<float>());
+        auto destination_bounding_rect = destination_quad.bounding_rect().to_rounded<int>();
+
+        Gfx::AffineTransform source_transform;
+        source_transform.translate(src_rect.x(), src_rect.y());
+        source_transform.scale(src_rect.width() / dst_rect.width(), src_rect.height() / dst_rect.height());
+        source_transform.translate(-dst_rect.x(), -dst_rect.y());
+
+        for (int y = destination_bounding_rect.y(); y <= destination_bounding_rect.bottom(); ++y) {
+            for (int x = destination_bounding_rect.x(); x <= destination_bounding_rect.right(); ++x) {
+                auto destination_point = Gfx::IntPoint { x, y };
+                if (!clip_rect().contains(destination_point))
+                    continue;
+                if (!destination_quad.contains(destination_point.to_type<float>()))
+                    continue;
+                auto source_point = source_transform.map(inverse_transform->map(destination_point)).to_rounded<int>();
+                if (!bitmap.rect().contains(source_point))
+                    continue;
+                auto source_color = bitmap.get_pixel(source_point);
+                if (source_color.alpha() == 0)
+                    continue;
+                if (source_color.alpha() == 255) {
+                    set_pixel(destination_point, source_color);
+                    continue;
+                }
+                auto dst_color = target()->get_pixel(destination_point);
+                set_pixel(destination_point, dst_color.blend(source_color));
+            }
+        }
     }
 }
 
