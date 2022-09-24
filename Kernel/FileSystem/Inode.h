@@ -33,7 +33,6 @@ class Inode : public ListedRefCounted<Inode, LockType::Spinlock>
     friend class VirtualFileSystem;
     friend class FileSystem;
     friend class InodeFile;
-    friend class Kernel::Memory::SharedInodeVMObject; // FIXME: Remove when write_bytes becomes non-virtual
 
 public:
     virtual ~Inode();
