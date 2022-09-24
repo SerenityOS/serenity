@@ -11,7 +11,7 @@
 #include <LibIDL/Types.h>
 #include <LibJS/Runtime/VM.h>
 
-namespace Web::Bindings {
+namespace Web::WebIDL {
 
 struct ResolvedOverload {
     // Corresponds to "the special value “missing”" in the overload resolution algorithm.

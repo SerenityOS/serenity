@@ -9,10 +9,10 @@
 #include <LibJS/Runtime/FunctionObject.h>
 #include <LibJS/Runtime/TypedArray.h>
 #include <LibJS/Runtime/Value.h>
-#include <LibWeb/Bindings/IDLOverloadResolution.h>
 #include <LibWeb/Bindings/PlatformObject.h>
+#include <LibWeb/WebIDL/OverloadResolution.h>
 
-namespace Web::Bindings {
+namespace Web::WebIDL {
 
 // https://webidl.spec.whatwg.org/#dfn-convert-ecmascript-to-idl-value
 static JS::Value convert_ecmascript_type_to_idl_value(JS::Value value, IDL::Type const&)
