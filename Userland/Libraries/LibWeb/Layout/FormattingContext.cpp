@@ -361,8 +361,11 @@ float FormattingContext::compute_auto_height_for_block_formatting_context_root(L
 // 10.3.2 Inline, replaced elements, https://www.w3.org/TR/CSS22/visudet.html#inline-replaced-width
 float FormattingContext::tentative_width_for_replaced_element(LayoutState const& state, ReplacedBox const& box, CSS::LengthPercentage const& computed_width)
 {
-    auto const& containing_block = *box.containing_block();
-    auto height_of_containing_block = CSS::Length::make_px(state.get(containing_block).content_height());
+    // Treat percentages of indefinite containing block widths as 0 (the initial width).
+    if (computed_width.is_percentage() && !state.get(*box.containing_block()).has_definite_width())
+        return 0;
+
+    auto height_of_containing_block = CSS::Length::make_px(containing_block_height_for(box, state));
     auto computed_height = box.computed_values().height().resolved(box, height_of_containing_block).resolved(box);
 
     float used_width = computed_width.resolved(box, CSS::Length::make_px(containing_block_width_for(box, state))).to_px(box);
@@ -463,6 +466,10 @@ float FormattingContext::compute_width_for_replaced_element(LayoutState const& s
 // https://www.w3.org/TR/CSS22/visudet.html#inline-replaced-height
 float FormattingContext::tentative_height_for_replaced_element(LayoutState const& state, ReplacedBox const& box, CSS::LengthPercentage const& computed_height)
 {
+    // Treat percentages of indefinite containing block heights as 0 (the initial height).
+    if (computed_height.is_percentage() && !state.get(*box.containing_block()).has_definite_height())
+        return 0;
+
     auto computed_width = box.computed_values().width();
 
     // If 'height' and 'width' both have computed values of 'auto' and the element also has
