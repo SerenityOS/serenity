@@ -259,8 +259,6 @@ float FormattingContext::compute_auto_height_for_block_level_element(LayoutState
     auto display = box.computed_values().display();
     if (display.is_flex_inside())
         return box_state.content_height();
-    if (display.is_grid_inside())
-        return box_state.content_height();
 
     // https://www.w3.org/TR/CSS22/visudet.html#normal-block
     // 10.6.3 Block-level non-replaced elements in normal flow when 'overflow' computes to 'visible'
