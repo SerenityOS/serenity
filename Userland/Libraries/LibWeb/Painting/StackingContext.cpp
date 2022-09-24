@@ -135,7 +135,7 @@ void StackingContext::paint_internal(PaintContext& context) const
 
     auto paint_child = [&](auto* child) {
         auto parent = child->m_box.parent();
-        auto should_clip_overflow = child->m_box.is_positioned() ? Paintable::ShouldClipOverflow::No : Paintable::ShouldClipOverflow::Yes;
+        auto should_clip_overflow = child->m_box.is_absolutely_positioned() ? Paintable::ShouldClipOverflow::No : Paintable::ShouldClipOverflow::Yes;
         auto* paintable = parent ? parent->paintable() : nullptr;
         if (paintable)
             paintable->before_children_paint(context, PaintPhase::Foreground, should_clip_overflow);
