@@ -51,8 +51,27 @@ HardwareScreenBackend::~HardwareScreenBackend()
     }
 }
 
+ErrorOr<void> HardwareScreenBackend::set_safe_head_mode_setting()
+{
+    auto rc = graphics_connector_set_safe_head_mode_setting(m_display_connector_fd);
+    if (rc != 0) {
+        dbgln("Failed to set backend safe mode setting: aborting");
+        return Error::from_syscall("graphics_connector_set_safe_head_mode_setting"sv, rc);
+    }
+    return {};
+}
+
 ErrorOr<void> HardwareScreenBackend::set_head_mode_setting(GraphicsHeadModeSetting mode_setting)
 {
+    size_t size_in_bytes = 0;
+    if (m_can_set_head_buffer) {
+        size_in_bytes = mode_setting.horizontal_stride * mode_setting.vertical_active * 2;
+    } else {
+        size_in_bytes = mode_setting.horizontal_stride * mode_setting.vertical_active;
+    }
+    VERIFY(size_in_bytes != 0);
+    if (m_max_size_in_bytes < size_in_bytes)
+        return Error::from_errno(EOVERFLOW);
 
     GraphicsHeadModeSetting requested_mode_setting = mode_setting;
     auto rc = graphics_connector_set_head_mode_setting(m_display_connector_fd, &requested_mode_setting);
@@ -91,6 +110,9 @@ ErrorOr<void> HardwareScreenBackend::map_framebuffer()
     } else {
         m_size_in_bytes = mode_setting.horizontal_stride * mode_setting.vertical_active;
     }
+
+    if (m_max_size_in_bytes < m_size_in_bytes)
+        return Error::from_errno(EOVERFLOW);
     m_framebuffer = (Gfx::ARGB32*)TRY(Core::System::mmap(nullptr, m_size_in_bytes, PROT_READ | PROT_WRITE, MAP_SHARED, m_display_connector_fd, 0));
 
     if (m_can_set_head_buffer) {
