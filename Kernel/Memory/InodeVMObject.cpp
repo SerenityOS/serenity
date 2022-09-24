@@ -31,11 +31,13 @@ size_t InodeVMObject::amount_clean() const
 {
     size_t count = 0;
     VERIFY(page_count() == m_dirty_pages.size());
-    for (size_t i = 0; i < page_count(); ++i) {
-        if (!m_dirty_pages.get(i) && m_physical_pages[i])
-            ++count;
-    }
-    return count * PAGE_SIZE;
+    return m_physical_pages.with([&](auto& array) -> size_t {
+        for (size_t i = 0; i < page_count(); ++i) {
+            if (!m_dirty_pages.get(i) && array[i])
+                ++count;
+        }
+        return count * PAGE_SIZE;
+    });
 }
 
 size_t InodeVMObject::amount_dirty() const
@@ -50,39 +52,39 @@ size_t InodeVMObject::amount_dirty() const
 
 int InodeVMObject::release_all_clean_pages()
 {
-    SpinlockLocker locker(m_lock);
-
     int count = 0;
-    for (size_t i = 0; i < page_count(); ++i) {
-        if (!m_dirty_pages.get(i) && m_physical_pages[i]) {
-            m_physical_pages[i] = nullptr;
-            ++count;
+    m_physical_pages.with([&](auto& array) {
+        for (size_t i = 0; i < page_count(); ++i) {
+            if (!m_dirty_pages.get(i) && array[i]) {
+                array[i] = nullptr;
+                ++count;
+            }
         }
-    }
-    if (count) {
-        for_each_region([](auto& region) {
-            region.remap();
-        });
-    }
+        if (count) {
+            for_each_region([](auto& region) {
+                region.remap();
+            });
+        }
+    });
     return count;
 }
 
 int InodeVMObject::try_release_clean_pages(int page_amount)
 {
-    SpinlockLocker locker(m_lock);
-
     int count = 0;
-    for (size_t i = 0; i < page_count() && count < page_amount; ++i) {
-        if (!m_dirty_pages.get(i) && m_physical_pages[i]) {
-            m_physical_pages[i] = nullptr;
-            ++count;
+    m_physical_pages.with([&](auto& array) {
+        for (size_t i = 0; i < page_count() && count < page_amount; ++i) {
+            if (!m_dirty_pages.get(i) && array[i]) {
+                array[i] = nullptr;
+                ++count;
+            }
         }
-    }
-    if (count) {
-        for_each_region([](auto& region) {
-            region.remap();
-        });
-    }
+        if (count) {
+            for_each_region([](auto& region) {
+                region.remap();
+            });
+        }
+    });
     return count;
 }
 

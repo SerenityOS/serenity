@@ -397,9 +397,12 @@ size_t AddressSpace::amount_purgeable_volatile() const
     for (auto const& region : m_region_tree.regions()) {
         if (!region.vmobject().is_anonymous())
             continue;
+
         auto const& vmobject = static_cast<AnonymousVMObject const&>(region.vmobject());
-        if (vmobject.is_purgeable() && vmobject.is_volatile())
-            amount += region.amount_resident();
+        vmobject.attributes().with([&](auto& attributes) {
+            if (attributes.is_purgeable && attributes.is_volatile)
+                amount += region.amount_resident();
+        });
     }
     return amount;
 }
@@ -411,8 +414,10 @@ size_t AddressSpace::amount_purgeable_nonvolatile() const
         if (!region.vmobject().is_anonymous())
             continue;
         auto const& vmobject = static_cast<AnonymousVMObject const&>(region.vmobject());
-        if (vmobject.is_purgeable() && !vmobject.is_volatile())
-            amount += region.amount_resident();
+        vmobject.attributes().with([&](auto& attributes) {
+            if (attributes.is_purgeable && !attributes.is_volatile)
+                amount += region.amount_resident();
+        });
     }
     return amount;
 }

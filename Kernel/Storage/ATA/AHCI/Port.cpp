@@ -527,60 +527,64 @@ bool AHCIPort::access_device(AsyncBlockDeviceRequest::RequestType direction, u64
 
     size_t scatter_entry_index = 0;
     size_t data_transfer_count = (block_count * m_connected_device->block_size());
-    for (auto scatter_page : m_current_scatter_list->vmobject().physical_pages()) {
-        VERIFY(data_transfer_count != 0);
-        VERIFY(scatter_page);
-        dbgln_if(AHCI_DEBUG, "AHCI Port {}: Add a transfer scatter entry @ {}", representative_port_index(), scatter_page->paddr());
-        command_table.descriptors[scatter_entry_index].base_high = 0;
-        command_table.descriptors[scatter_entry_index].base_low = scatter_page->paddr().get();
-        if (data_transfer_count <= PAGE_SIZE) {
-            command_table.descriptors[scatter_entry_index].byte_count = data_transfer_count - 1;
-            data_transfer_count = 0;
-        } else {
-            command_table.descriptors[scatter_entry_index].byte_count = PAGE_SIZE - 1;
-            data_transfer_count -= PAGE_SIZE;
+    auto result = m_current_scatter_list->vmobject().physical_pages().with([&](auto& array) -> bool {
+        for (auto scatter_page : array) {
+            VERIFY(data_transfer_count != 0);
+            VERIFY(scatter_page);
+            dbgln_if(AHCI_DEBUG, "AHCI Port {}: Add a transfer scatter entry @ {}", representative_port_index(), scatter_page->paddr());
+            command_table.descriptors[scatter_entry_index].base_high = 0;
+            command_table.descriptors[scatter_entry_index].base_low = scatter_page->paddr().get();
+            if (data_transfer_count <= PAGE_SIZE) {
+                command_table.descriptors[scatter_entry_index].byte_count = data_transfer_count - 1;
+                data_transfer_count = 0;
+            } else {
+                command_table.descriptors[scatter_entry_index].byte_count = PAGE_SIZE - 1;
+                data_transfer_count -= PAGE_SIZE;
+            }
+            scatter_entry_index++;
         }
-        scatter_entry_index++;
-    }
-    command_table.descriptors[scatter_entry_index].byte_count = (PAGE_SIZE - 1) | (1 << 31);
 
-    memset(const_cast<u8*>(command_table.atapi_command), 0, 32);
+        command_table.descriptors[scatter_entry_index].byte_count = (PAGE_SIZE - 1) | (1 << 31);
 
-    auto& fis = *(volatile FIS::HostToDevice::Register*)command_table.command_fis;
-    fis.header.fis_type = (u8)FIS::Type::RegisterHostToDevice;
-    if (is_atapi_attached()) {
-        fis.command = ATA_CMD_PACKET;
-        TODO();
-    } else {
-        if (direction == AsyncBlockDeviceRequest::RequestType::Write)
-            fis.command = ATA_CMD_WRITE_DMA_EXT;
-        else
-            fis.command = ATA_CMD_READ_DMA_EXT;
-    }
+        memset(const_cast<u8*>(command_table.atapi_command), 0, 32);
 
-    full_memory_barrier();
+        auto& fis = *(volatile FIS::HostToDevice::Register*)command_table.command_fis;
+        fis.header.fis_type = (u8)FIS::Type::RegisterHostToDevice;
+        if (is_atapi_attached()) {
+            fis.command = ATA_CMD_PACKET;
+            TODO();
+        } else {
+            if (direction == AsyncBlockDeviceRequest::RequestType::Write)
+                fis.command = ATA_CMD_WRITE_DMA_EXT;
+            else
+                fis.command = ATA_CMD_READ_DMA_EXT;
+        }
 
-    fis.device = ATA_USE_LBA_ADDRESSING;
-    fis.header.port_muliplier = (u8)FIS::HeaderAttributes::C;
+        full_memory_barrier();
 
-    fis.lba_high[0] = (lba >> 24) & 0xff;
-    fis.lba_high[1] = (lba >> 32) & 0xff;
-    fis.lba_high[2] = (lba >> 40) & 0xff;
-    fis.lba_low[0] = lba & 0xff;
-    fis.lba_low[1] = (lba >> 8) & 0xff;
-    fis.lba_low[2] = (lba >> 16) & 0xff;
-    fis.count = (block_count);
+        fis.device = ATA_USE_LBA_ADDRESSING;
+        fis.header.port_muliplier = (u8)FIS::HeaderAttributes::C;
 
-    // The below loop waits until the port is no longer busy before issuing a new command
-    if (!spin_until_ready())
-        return false;
+        fis.lba_high[0] = (lba >> 24) & 0xff;
+        fis.lba_high[1] = (lba >> 32) & 0xff;
+        fis.lba_high[2] = (lba >> 40) & 0xff;
+        fis.lba_low[0] = lba & 0xff;
+        fis.lba_low[1] = (lba >> 8) & 0xff;
+        fis.lba_low[2] = (lba >> 16) & 0xff;
+        fis.count = (block_count);
 
-    full_memory_barrier();
-    mark_command_header_ready_to_process(unused_command_header.value());
-    full_memory_barrier();
+        // The below loop waits until the port is no longer busy before issuing a new command
+        if (!spin_until_ready())
+            return false;
 
+        full_memory_barrier();
+        mark_command_header_ready_to_process(unused_command_header.value());
+        full_memory_barrier();
+
+        return true;
+    });
     dbgln_if(AHCI_DEBUG, "AHCI Port {}: Do a {}, lba {}, block count {} @ {}, ended", representative_port_index(), direction == AsyncBlockDeviceRequest::RequestType::Write ? "write" : "read", lba, block_count, m_dma_buffers[0]->paddr());
-    return true;
+    return result;
 }
 
 bool AHCIPort::identify_device()

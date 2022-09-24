@@ -56,23 +56,23 @@ ErrorOr<void> SharedFramebufferVMObject::create_real_writes_framebuffer_vm_objec
     return {};
 }
 
-Span<RefPtr<PhysicalPage>> SharedFramebufferVMObject::real_framebuffer_physical_pages()
+SpinlockProtected<FixedArray<RefPtr<PhysicalPage>>, LockRank::None>& SharedFramebufferVMObject::real_framebuffer_physical_pages()
 {
     return m_real_framebuffer_vmobject->physical_pages();
 }
-ReadonlySpan<RefPtr<PhysicalPage>> SharedFramebufferVMObject::real_framebuffer_physical_pages() const
+SpinlockProtected<FixedArray<RefPtr<PhysicalPage>>, LockRank::None> const& SharedFramebufferVMObject::real_framebuffer_physical_pages() const
 {
     return m_real_framebuffer_vmobject->physical_pages();
 }
 
-Span<RefPtr<PhysicalPage>> SharedFramebufferVMObject::fake_sink_framebuffer_physical_pages()
+SpinlockProtected<FixedArray<RefPtr<PhysicalPage>>, LockRank::None>& SharedFramebufferVMObject::fake_sink_framebuffer_physical_pages()
 {
-    return m_physical_pages.span();
+    return m_physical_pages;
 }
 
-ReadonlySpan<RefPtr<PhysicalPage>> SharedFramebufferVMObject::fake_sink_framebuffer_physical_pages() const
+SpinlockProtected<FixedArray<RefPtr<PhysicalPage>>, LockRank::None> const& SharedFramebufferVMObject::fake_sink_framebuffer_physical_pages() const
 {
-    return m_physical_pages.span();
+    return m_physical_pages;
 }
 
 void SharedFramebufferVMObject::switch_to_fake_sink_framebuffer_writes(Badge<Kernel::DisplayConnector>)
@@ -92,14 +92,14 @@ void SharedFramebufferVMObject::switch_to_real_framebuffer_writes(Badge<Kernel::
     });
 }
 
-ReadonlySpan<RefPtr<PhysicalPage>> SharedFramebufferVMObject::physical_pages() const
+SpinlockProtected<FixedArray<RefPtr<PhysicalPage>>, LockRank::None> const& SharedFramebufferVMObject::physical_pages() const
 {
     SpinlockLocker locker(m_writes_state_lock);
     if (m_writes_are_faked)
         return VMObject::physical_pages();
     return m_real_framebuffer_vmobject->physical_pages();
 }
-Span<RefPtr<PhysicalPage>> SharedFramebufferVMObject::physical_pages()
+SpinlockProtected<FixedArray<RefPtr<PhysicalPage>>, LockRank::None>& SharedFramebufferVMObject::physical_pages()
 {
     SpinlockLocker locker(m_writes_state_lock);
     if (m_writes_are_faked)
@@ -112,9 +112,11 @@ SharedFramebufferVMObject::SharedFramebufferVMObject(FixedArray<RefPtr<PhysicalP
     , m_real_framebuffer_vmobject(real_framebuffer_vmobject)
     , m_committed_pages(move(committed_pages))
 {
-    // Allocate all pages right now. We know we can get all because we committed the amount needed
-    for (size_t i = 0; i < page_count(); ++i)
-        m_physical_pages[i] = m_committed_pages.take_one();
+    m_physical_pages.with([this](auto& array) {
+        // Allocate all pages right now. We know we can get all because we committed the amount needed
+        for (size_t i = 0; i < page_count(); ++i)
+            array[i] = m_committed_pages.take_one();
+    });
 }
 
 }

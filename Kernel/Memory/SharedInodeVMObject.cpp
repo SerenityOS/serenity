@@ -51,12 +51,20 @@ SharedInodeVMObject::SharedInodeVMObject(SharedInodeVMObject const& other, Fixed
 
 ErrorOr<void> SharedInodeVMObject::sync(off_t offset_in_pages, size_t pages)
 {
-    SpinlockLocker locker(m_lock);
-
+    // Note: This will ensure only one thread can do the sync and grab the physical pages
+    // being attached to this VMObject.
+    MutexLocker sync_locker(m_sync_lock);
     size_t highest_page_to_flush = min(page_count(), offset_in_pages + pages);
 
     for (size_t page_index = offset_in_pages; page_index < highest_page_to_flush; ++page_index) {
-        auto& physical_page = m_physical_pages[page_index];
+        // FIXME: This will be locked multiple times which is probably bad for
+        // performance...
+        auto physical_page = m_physical_pages.with([&](auto& array) -> RefPtr<PhysicalPage> {
+            auto& physical_page = array[page_index];
+            if (!physical_page)
+                return nullptr;
+            return *physical_page;
+        });
         if (!physical_page)
             continue;
 

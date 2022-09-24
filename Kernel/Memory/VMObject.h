@@ -33,25 +33,27 @@ public:
     virtual bool is_shared_inode() const { return false; }
     virtual bool is_private_inode() const { return false; }
 
-    size_t page_count() const { return m_physical_pages.size(); }
+    virtual void will_be_destroyed() { }
+    virtual SpinlockProtected<FixedArray<RefPtr<PhysicalPage>>, LockRank::None>& physical_pages() { return m_physical_pages; }
+    virtual SpinlockProtected<FixedArray<RefPtr<PhysicalPage>>, LockRank::None> const& physical_pages() const { return m_physical_pages; }
 
-    virtual ReadonlySpan<RefPtr<PhysicalPage>> physical_pages() const { return m_physical_pages.span(); }
-    virtual Span<RefPtr<PhysicalPage>> physical_pages() { return m_physical_pages.span(); }
-
-    size_t size() const { return m_physical_pages.size() * PAGE_SIZE; }
+    size_t size() const { return m_physical_pages_count * PAGE_SIZE; }
+    size_t page_count() const { return m_physical_pages_count; }
 
     virtual StringView class_name() const = 0;
 
     ALWAYS_INLINE void add_region(Region& region)
     {
-        SpinlockLocker locker(m_lock);
-        m_regions.append(region);
+        m_regions.with([&](auto& list) {
+            list.append(region);
+        });
     }
 
     ALWAYS_INLINE void remove_region(Region& region)
     {
-        SpinlockLocker locker(m_lock);
-        m_regions.remove(region);
+        m_regions.with([&](auto& list) {
+            list.remove(region);
+        });
     }
 
 protected:
@@ -63,16 +65,15 @@ protected:
     void for_each_region(Callback);
 
     IntrusiveListNode<VMObject> m_list_node;
-    FixedArray<RefPtr<PhysicalPage>> m_physical_pages;
-
-    mutable RecursiveSpinlock<LockRank::None> m_lock {};
+    size_t const m_physical_pages_count { 0 };
+    SpinlockProtected<FixedArray<RefPtr<PhysicalPage>>, LockRank::None> m_physical_pages;
 
 private:
     VMObject& operator=(VMObject const&) = delete;
     VMObject& operator=(VMObject&&) = delete;
     VMObject(VMObject&&) = delete;
 
-    Region::ListInVMObject m_regions;
+    SpinlockProtected<Region::ListInVMObject, LockRank::None> m_regions;
 
 public:
     using AllInstancesList = IntrusiveList<&VMObject::m_list_node>;
@@ -82,10 +83,11 @@ public:
 template<typename Callback>
 inline void VMObject::for_each_region(Callback callback)
 {
-    SpinlockLocker lock(m_lock);
-    for (auto& region : m_regions) {
-        callback(region);
-    }
+    m_regions.with([&](auto& list) {
+        for (auto& region : list) {
+            callback(region);
+        }
+    });
 }
 
 }

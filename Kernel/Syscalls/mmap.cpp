@@ -429,8 +429,6 @@ ErrorOr<FlatPtr> Process::sys$madvise(Userspace<void*> address, size_t size, int
             if (!region->vmobject().is_anonymous())
                 return EINVAL;
             auto& vmobject = static_cast<Memory::AnonymousVMObject&>(region->vmobject());
-            if (!vmobject.is_purgeable())
-                return EINVAL;
             bool was_purged = false;
             TRY(vmobject.set_volatile(advice == MADV_SET_VOLATILE, was_purged));
             return was_purged ? 1 : 0;

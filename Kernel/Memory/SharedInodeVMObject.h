@@ -30,6 +30,8 @@ private:
     virtual StringView class_name() const override { return "SharedInodeVMObject"sv; }
 
     SharedInodeVMObject& operator=(SharedInodeVMObject const&) = delete;
+
+    Mutex m_sync_lock;
 };
 
 }

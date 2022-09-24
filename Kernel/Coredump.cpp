@@ -246,15 +246,16 @@ ErrorOr<void> Coredump::write_regions()
             real_region->set_readable(true);
             real_region->remap();
 
-            for (size_t i = 0; i < region.page_count(); i++) {
-                auto page = real_region->physical_page(i);
-                auto src_buffer = [&]() -> ErrorOr<UserOrKernelBuffer> {
+            for (size_t i = 0; i < region.page_count(); ++i) {
+                auto src_buffer = TRY(real_region->vmobject().physical_pages().with([&](auto& array) -> ErrorOr<UserOrKernelBuffer> {
+                    auto page = array[real_region->first_page_index() + i];
                     if (page)
                         return UserOrKernelBuffer::for_user_buffer(reinterpret_cast<uint8_t*>((region.vaddr().as_ptr() + (i * PAGE_SIZE))), PAGE_SIZE);
                     // If the current page is not backed by a physical page, we zero it in the coredump file.
                     return UserOrKernelBuffer::for_kernel_buffer(zero_buffer);
-                }();
-                TRY(src_buffer.value().read(buffer->bytes().slice(i * PAGE_SIZE, PAGE_SIZE)));
+                }));
+
+                TRY(src_buffer.read(buffer->bytes().slice(i * PAGE_SIZE, PAGE_SIZE)));
             }
 
             return {};

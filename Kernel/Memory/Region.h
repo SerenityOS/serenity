@@ -14,6 +14,7 @@
 #include <Kernel/KString.h>
 #include <Kernel/Library/LockWeakable.h>
 #include <Kernel/Locking/LockRank.h>
+#include <Kernel/Locking/Spinlock.h>
 #include <Kernel/Memory/PageFaultResponse.h>
 #include <Kernel/Memory/VirtualRange.h>
 #include <Kernel/Sections.h>
@@ -163,7 +164,6 @@ public:
     }
 
     RefPtr<PhysicalPage> physical_page(size_t index) const;
-    RefPtr<PhysicalPage>& physical_page_slot(size_t index);
 
     [[nodiscard]] size_t offset_in_vmobject() const
     {

@@ -309,7 +309,10 @@ ErrorOr<void> Process::procfs_get_virtual_memory_stats(KBufferBuilder& builder) 
             TRY(region_object.add("syscall"sv, region.is_syscall_region()));
             TRY(region_object.add("purgeable"sv, region.vmobject().is_anonymous()));
             if (region.vmobject().is_anonymous()) {
-                TRY(region_object.add("volatile"sv, static_cast<Memory::AnonymousVMObject const&>(region.vmobject()).is_volatile()));
+                TRY(static_cast<Memory::AnonymousVMObject const&>(region.vmobject()).attributes().with([&](auto& attributes) -> ErrorOr<void> {
+                    TRY(region_object.add("volatile"sv, attributes.is_volatile));
+                    return {};
+                }));
             }
             TRY(region_object.add("cacheable"sv, region.is_cacheable()));
             TRY(region_object.add("address"sv, region.vaddr().get()));
@@ -321,15 +324,18 @@ ErrorOr<void> Process::procfs_get_virtual_memory_stats(KBufferBuilder& builder) 
             TRY(region_object.add("vmobject"sv, region.vmobject().class_name()));
 
             StringBuilder pagemap_builder;
-            for (size_t i = 0; i < region.page_count(); ++i) {
-                auto page = region.physical_page(i);
-                if (!page)
-                    pagemap_builder.append('N');
-                else if (page->is_shared_zero_page() || page->is_lazy_committed_page())
-                    pagemap_builder.append('Z');
-                else
-                    pagemap_builder.append('P');
-            }
+            region.vmobject().physical_pages().with([&](auto& array) {
+                for (size_t i = 0; i < region.page_count(); ++i) {
+                    auto page = array[region.first_page_index() + i];
+                    if (!page)
+                        pagemap_builder.append('N');
+                    else if (page->is_shared_zero_page() || page->is_lazy_committed_page())
+                        pagemap_builder.append('Z');
+                    else
+                        pagemap_builder.append('P');
+                }
+            });
+
             TRY(region_object.add("pagemap"sv, pagemap_builder.string_view()));
             TRY(region_object.finish());
         }

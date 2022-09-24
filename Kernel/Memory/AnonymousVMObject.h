@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <Kernel/Locking/LockRank.h>
 #include <Kernel/Memory/AllocationStrategy.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Memory/PageFaultResponse.h>
@@ -16,6 +17,12 @@ namespace Kernel::Memory {
 
 class AnonymousVMObject final : public VMObject {
 public:
+    struct Attributes {
+        bool is_purgeable { false };
+        bool is_volatile { false };
+        bool was_purged { false };
+    };
+
     virtual ~AnonymousVMObject() override;
 
     static ErrorOr<NonnullLockRefPtr<AnonymousVMObject>> try_create_with_size(size_t, AllocationStrategy);
@@ -31,8 +38,10 @@ public:
     bool should_cow(size_t page_index, bool) const;
     ErrorOr<void> set_should_cow(size_t page_index, bool);
 
-    bool is_purgeable() const { return m_purgeable; }
-    bool is_volatile() const { return m_volatile; }
+    SpinlockProtected<Attributes, LockRank::None>& attributes() { return m_attributes; }
+    SpinlockProtected<Attributes, LockRank::None> const& attributes() const { return m_attributes; }
+
+    virtual void will_be_destroyed() override;
 
     ErrorOr<void> set_volatile(bool is_volatile, bool& was_purged);
 
@@ -83,11 +92,9 @@ private:
     };
 
     LockWeakPtr<AnonymousVMObject> m_cow_parent;
-    LockRefPtr<SharedCommittedCowPages> m_shared_committed_cow_pages;
+    SpinlockProtected<RefPtr<SharedCommittedCowPages>, LockRank::None> m_shared_committed_cow_pages;
 
-    bool m_purgeable { false };
-    bool m_volatile { false };
-    bool m_was_purged { false };
+    SpinlockProtected<Attributes, LockRank::None> m_attributes;
 };
 
 }

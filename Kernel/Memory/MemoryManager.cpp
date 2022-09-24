@@ -1004,8 +1004,6 @@ ErrorOr<NonnullRefPtr<PhysicalPage>> MemoryManager::allocate_physical_page(Shoul
                 if (!vmobject.is_anonymous())
                     return IterationDecision::Continue;
                 auto& anonymous_vmobject = static_cast<AnonymousVMObject&>(vmobject);
-                if (!anonymous_vmobject.is_purgeable() || !anonymous_vmobject.is_volatile())
-                    return IterationDecision::Continue;
                 if (auto purged_page_count = anonymous_vmobject.purge()) {
                     dbgln("MM: Purge saved the day! Purged {} pages from AnonymousVMObject", purged_page_count);
                     page = find_free_physical_page(false);

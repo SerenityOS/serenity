@@ -19,7 +19,9 @@ SpinlockProtected<VMObject::AllInstancesList, LockRank::None>& VMObject::all_ins
 
 ErrorOr<FixedArray<RefPtr<PhysicalPage>>> VMObject::try_clone_physical_pages() const
 {
-    return m_physical_pages.clone();
+    return m_physical_pages.with([&](auto& array) -> ErrorOr<FixedArray<RefPtr<PhysicalPage>>> {
+        return array.clone();
+    });
 }
 
 ErrorOr<FixedArray<RefPtr<PhysicalPage>>> VMObject::try_create_physical_pages(size_t size)
@@ -28,14 +30,19 @@ ErrorOr<FixedArray<RefPtr<PhysicalPage>>> VMObject::try_create_physical_pages(si
 }
 
 VMObject::VMObject(FixedArray<RefPtr<PhysicalPage>>&& new_physical_pages)
-    : m_physical_pages(move(new_physical_pages))
+    : m_physical_pages_count(new_physical_pages.size())
 {
+    m_physical_pages.with([&](auto& array) {
+        FixedArray<RefPtr<PhysicalPage>>::move_elements_to_new_array_from_old_array(array, move(new_physical_pages));
+    });
     all_instances().with([&](auto& list) { list.append(*this); });
 }
 
 VMObject::~VMObject()
 {
-    VERIFY(m_regions.is_empty());
+    m_regions.with([&](auto& list) {
+        VERIFY(list.is_empty());
+    });
 }
 
 }

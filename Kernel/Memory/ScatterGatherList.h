@@ -22,7 +22,7 @@ public:
     static LockRefPtr<ScatterGatherList> try_create(AsyncBlockDeviceRequest&, Span<NonnullRefPtr<PhysicalPage>> allocated_pages, size_t device_block_size);
     VMObject const& vmobject() const { return m_vm_object; }
     VirtualAddress dma_region() const { return m_dma_region->vaddr(); }
-    size_t scatters_count() const { return m_vm_object->physical_pages().size(); }
+    size_t scatters_count() const { return m_vm_object->page_count(); }
 
 private:
     ScatterGatherList(NonnullLockRefPtr<AnonymousVMObject>, AsyncBlockDeviceRequest&, size_t device_block_size);
