@@ -1130,8 +1130,10 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
         child_box_state.offset = { x_start, y_start };
     };
 
-    for (auto& positioned_box : positioned_boxes)
-        layout_box(positioned_box.row, positioned_box.row + positioned_box.row_span, positioned_box.column, positioned_box.column + positioned_box.column_span, positioned_box.box);
+    for (auto& positioned_box : positioned_boxes) {
+        auto resolved_span = positioned_box.row + positioned_box.row_span > static_cast<int>(grid_rows.size()) ? static_cast<int>(grid_rows.size()) - positioned_box.row : positioned_box.row_span;
+        layout_box(positioned_box.row, positioned_box.row + resolved_span, positioned_box.column, positioned_box.column + positioned_box.column_span, positioned_box.box);
+    }
 
     float total_y = 0;
     for (auto& grid_row : grid_rows)
