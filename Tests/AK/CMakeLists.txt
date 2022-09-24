@@ -21,6 +21,7 @@ set(AK_TEST_SOURCES
     TestComplex.cpp
     TestDisjointChunks.cpp
     TestDistinctNumeric.cpp
+    TestDouble.cpp
     TestDoublyLinkedList.cpp
     TestEndian.cpp
     TestEnumBits.cpp
