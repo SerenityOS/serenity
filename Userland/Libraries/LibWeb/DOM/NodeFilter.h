@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <LibWeb/Bindings/CallbackType.h>
 #include <LibWeb/Bindings/PlatformObject.h>
+#include <LibWeb/WebIDL/CallbackType.h>
 
 namespace Web::DOM {
 
@@ -15,11 +15,11 @@ class NodeFilter final : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(NodeFilter, Bindings::PlatformObject);
 
 public:
-    static JS::NonnullGCPtr<NodeFilter> create(JS::Realm&, Bindings::CallbackType&);
+    static JS::NonnullGCPtr<NodeFilter> create(JS::Realm&, WebIDL::CallbackType&);
 
     virtual ~NodeFilter() = default;
 
-    Bindings::CallbackType& callback() { return m_callback; }
+    WebIDL::CallbackType& callback() { return m_callback; }
 
     enum Result {
         FILTER_ACCEPT = 1,
@@ -28,11 +28,11 @@ public:
     };
 
 private:
-    NodeFilter(JS::Realm&, Bindings::CallbackType&);
+    NodeFilter(JS::Realm&, WebIDL::CallbackType&);
 
     virtual void visit_edges(Cell::Visitor&) override;
 
-    Bindings::CallbackType& m_callback;
+    WebIDL::CallbackType& m_callback;
 };
 
 }

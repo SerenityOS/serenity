@@ -57,12 +57,12 @@ void AbortSignal::signal_abort(JS::Value reason)
     dispatch_event(*Event::create(global_object(), HTML::EventNames::abort));
 }
 
-void AbortSignal::set_onabort(Bindings::CallbackType* event_handler)
+void AbortSignal::set_onabort(WebIDL::CallbackType* event_handler)
 {
     set_event_handler_attribute(HTML::EventNames::abort, event_handler);
 }
 
-Bindings::CallbackType* AbortSignal::onabort()
+WebIDL::CallbackType* AbortSignal::onabort()
 {
     return event_handler_attribute(HTML::EventNames::abort);
 }

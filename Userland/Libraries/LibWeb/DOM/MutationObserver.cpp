@@ -11,13 +11,13 @@
 
 namespace Web::DOM {
 
-JS::NonnullGCPtr<MutationObserver> MutationObserver::create_with_global_object(HTML::Window& window, JS::GCPtr<Bindings::CallbackType> callback)
+JS::NonnullGCPtr<MutationObserver> MutationObserver::create_with_global_object(HTML::Window& window, JS::GCPtr<WebIDL::CallbackType> callback)
 {
     return *window.heap().allocate<MutationObserver>(window.realm(), window, callback);
 }
 
 // https://dom.spec.whatwg.org/#dom-mutationobserver-mutationobserver
-MutationObserver::MutationObserver(HTML::Window& window, JS::GCPtr<Bindings::CallbackType> callback)
+MutationObserver::MutationObserver(HTML::Window& window, JS::GCPtr<WebIDL::CallbackType> callback)
     : PlatformObject(window.realm())
     , m_callback(move(callback))
 {

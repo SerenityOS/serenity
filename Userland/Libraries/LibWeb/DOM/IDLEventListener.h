@@ -8,8 +8,8 @@
 
 #include <AK/RefCounted.h>
 #include <LibJS/Heap/Handle.h>
-#include <LibWeb/Bindings/CallbackType.h>
 #include <LibWeb/DOM/AbortSignal.h>
+#include <LibWeb/WebIDL/CallbackType.h>
 
 namespace Web::DOM {
 
@@ -28,17 +28,17 @@ class IDLEventListener final : public JS::Object {
     JS_OBJECT(IDLEventListener, JS::Object);
 
 public:
-    static JS::NonnullGCPtr<IDLEventListener> create(JS::Realm&, JS::NonnullGCPtr<Bindings::CallbackType>);
-    IDLEventListener(JS::Realm&, JS::NonnullGCPtr<Bindings::CallbackType>);
+    static JS::NonnullGCPtr<IDLEventListener> create(JS::Realm&, JS::NonnullGCPtr<WebIDL::CallbackType>);
+    IDLEventListener(JS::Realm&, JS::NonnullGCPtr<WebIDL::CallbackType>);
 
     virtual ~IDLEventListener() = default;
 
-    Bindings::CallbackType& callback() { return *m_callback; }
+    WebIDL::CallbackType& callback() { return *m_callback; }
 
 private:
     virtual void visit_edges(Cell::Visitor&) override;
 
-    JS::NonnullGCPtr<Bindings::CallbackType> m_callback;
+    JS::NonnullGCPtr<WebIDL::CallbackType> m_callback;
 };
 
 }

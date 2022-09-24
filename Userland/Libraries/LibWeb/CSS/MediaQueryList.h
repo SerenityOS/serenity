@@ -28,8 +28,8 @@ public:
     void add_listener(DOM::IDLEventListener*);
     void remove_listener(DOM::IDLEventListener*);
 
-    void set_onchange(Bindings::CallbackType*);
-    Bindings::CallbackType* onchange();
+    void set_onchange(WebIDL::CallbackType*);
+    WebIDL::CallbackType* onchange();
 
 private:
     MediaQueryList(DOM::Document&, NonnullRefPtrVector<MediaQuery>&&);

@@ -11,7 +11,7 @@
 namespace Web::ResizeObserver {
 
 // https://drafts.csswg.org/resize-observer/#dom-resizeobserver-resizeobserver
-JS::NonnullGCPtr<ResizeObserver> ResizeObserver::create_with_global_object(HTML::Window& window, Bindings::CallbackType* callback)
+JS::NonnullGCPtr<ResizeObserver> ResizeObserver::create_with_global_object(HTML::Window& window, WebIDL::CallbackType* callback)
 {
     // FIXME: Implement
     (void)callback;

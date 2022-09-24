@@ -25,7 +25,7 @@ namespace Web::HTML {
 class IdleCallback;
 
 // https://html.spec.whatwg.org/#timerhandler
-using TimerHandler = Variant<JS::Handle<Bindings::CallbackType>, String>;
+using TimerHandler = Variant<JS::Handle<WebIDL::CallbackType>, String>;
 
 class Window final
     : public DOM::EventTarget
@@ -57,7 +57,7 @@ public:
     void alert_impl(String const&);
     bool confirm_impl(String const&);
     String prompt_impl(String const&, String const&);
-    i32 request_animation_frame_impl(Bindings::CallbackType& js_callback);
+    i32 request_animation_frame_impl(WebIDL::CallbackType& js_callback);
     void cancel_animation_frame_impl(i32);
     bool has_animation_frame_callbacks() const { return m_animation_frame_callback_driver.has_callbacks(); }
 
@@ -66,7 +66,7 @@ public:
     void clear_timeout_impl(i32);
     void clear_interval_impl(i32);
 
-    void queue_microtask_impl(Bindings::CallbackType& callback);
+    void queue_microtask_impl(WebIDL::CallbackType& callback);
 
     int inner_width() const;
     int inner_height() const;
@@ -115,7 +115,7 @@ public:
 
     void start_an_idle_period();
 
-    u32 request_idle_callback_impl(Bindings::CallbackType& callback);
+    u32 request_idle_callback_impl(WebIDL::CallbackType& callback);
     void cancel_idle_callback_impl(u32);
 
     AnimationFrameCallbackDriver& animation_frame_callback_driver() { return m_animation_frame_callback_driver; }

@@ -11,8 +11,8 @@
 #include <LibJS/Forward.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/FunctionObject.h>
-#include <LibWeb/Bindings/CallbackType.h>
 #include <LibWeb/HTML/Scripting/Environments.h>
+#include <LibWeb/WebIDL/CallbackType.h>
 
 namespace Web::Bindings::IDL {
 
@@ -44,7 +44,7 @@ inline JS::Completion clean_up_on_return(HTML::EnvironmentSettingsObject& stored
 
 // https://webidl.spec.whatwg.org/#call-a-user-objects-operation
 template<typename... Args>
-JS::Completion call_user_object_operation(Bindings::CallbackType& callback, String const& operation_name, Optional<JS::Value> this_argument, Args&&... args)
+JS::Completion call_user_object_operation(WebIDL::CallbackType& callback, String const& operation_name, Optional<JS::Value> this_argument, Args&&... args)
 {
     // 1. Let completion be an uninitialized variable.
     JS::Completion completion;
@@ -120,11 +120,11 @@ JS::Completion call_user_object_operation(Bindings::CallbackType& callback, Stri
     return clean_up_on_return(stored_settings, relevant_settings, completion);
 }
 
-JS::Completion invoke_callback(Bindings::CallbackType& callback, Optional<JS::Value> this_argument, JS::MarkedVector<JS::Value> args);
+JS::Completion invoke_callback(WebIDL::CallbackType& callback, Optional<JS::Value> this_argument, JS::MarkedVector<JS::Value> args);
 
 // https://webidl.spec.whatwg.org/#invoke-a-callback-function
 template<typename... Args>
-JS::Completion invoke_callback(Bindings::CallbackType& callback, Optional<JS::Value> this_argument, Args&&... args)
+JS::Completion invoke_callback(WebIDL::CallbackType& callback, Optional<JS::Value> this_argument, Args&&... args)
 {
     auto& function_object = callback.callback;
 

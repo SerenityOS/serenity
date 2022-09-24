@@ -10,7 +10,7 @@
 #include <LibJS/Heap/Cell.h>
 #include <LibWeb/Forward.h>
 
-namespace Web::Bindings {
+namespace Web::WebIDL {
 
 // https://heycam.github.io/webidl/#idl-callback-interface
 class CallbackType final : public JS::Cell {

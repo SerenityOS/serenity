@@ -15,7 +15,7 @@ EventHandler::EventHandler(String s)
 {
 }
 
-EventHandler::EventHandler(Bindings::CallbackType& c)
+EventHandler::EventHandler(WebIDL::CallbackType& c)
     : value(&c)
 {
 }
@@ -25,7 +25,7 @@ void EventHandler::visit_edges(Cell::Visitor& visitor)
     Cell::visit_edges(visitor);
     visitor.visit(listener);
 
-    if (auto* callback = value.get_pointer<Bindings::CallbackType*>())
+    if (auto* callback = value.get_pointer<WebIDL::CallbackType*>())
         visitor.visit(*callback);
 }
 

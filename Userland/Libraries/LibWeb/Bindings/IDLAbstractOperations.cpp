@@ -82,7 +82,7 @@ ErrorOr<ByteBuffer> get_buffer_source_copy(JS::Object const& buffer_source)
 }
 
 // https://webidl.spec.whatwg.org/#invoke-a-callback-function
-JS::Completion invoke_callback(Bindings::CallbackType& callback, Optional<JS::Value> this_argument, JS::MarkedVector<JS::Value> args)
+JS::Completion invoke_callback(WebIDL::CallbackType& callback, Optional<JS::Value> this_argument, JS::MarkedVector<JS::Value> args)
 {
     // 1. Let completion be an uninitialized variable.
     JS::Completion completion;
