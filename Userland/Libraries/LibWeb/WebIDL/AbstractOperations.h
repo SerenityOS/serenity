@@ -14,7 +14,7 @@
 #include <LibWeb/HTML/Scripting/Environments.h>
 #include <LibWeb/WebIDL/CallbackType.h>
 
-namespace Web::Bindings::IDL {
+namespace Web::WebIDL {
 
 ErrorOr<ByteBuffer> get_buffer_source_copy(JS::Object const& buffer_source);
 

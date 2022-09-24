@@ -8,9 +8,9 @@
 #include <AK/StdLibExtras.h>
 #include <LibJS/Runtime/ArrayBuffer.h>
 #include <LibWeb/Bindings/BlobPrototype.h>
-#include <LibWeb/Bindings/IDLAbstractOperations.h>
 #include <LibWeb/FileAPI/Blob.h>
 #include <LibWeb/HTML/Window.h>
+#include <LibWeb/WebIDL/AbstractOperations.h>
 
 namespace Web::FileAPI {
 
@@ -90,7 +90,7 @@ ErrorOr<ByteBuffer> process_blob_parts(Vector<BlobPart> const& blob_parts, Optio
             },
             // 2. If element is a BufferSource, get a copy of the bytes held by the buffer source, and append those bytes to bytes.
             [&](JS::Handle<JS::Object> const& buffer_source) -> ErrorOr<void> {
-                auto data_buffer = TRY(Bindings::IDL::get_buffer_source_copy(*buffer_source.cell()));
+                auto data_buffer = TRY(WebIDL::get_buffer_source_copy(*buffer_source.cell()));
                 return bytes.try_append(data_buffer.bytes());
             },
             // 3. If element is a Blob, append the bytes it represents to bytes.

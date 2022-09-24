@@ -5,12 +5,12 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibWeb/Bindings/IDLAbstractOperations.h>
 #include <LibWeb/DOM/ExceptionOr.h>
 #include <LibWeb/Fetch/BodyInit.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP/Bodies.h>
 #include <LibWeb/HTML/Window.h>
 #include <LibWeb/URL/URLSearchParams.h>
+#include <LibWeb/WebIDL/AbstractOperations.h>
 
 namespace Web::Fetch {
 
@@ -51,7 +51,7 @@ DOM::ExceptionOr<Infrastructure::BodyWithType> extract_body(JS::Realm& realm, Bo
         },
         [&](JS::Handle<JS::Object> const& buffer_source) -> DOM::ExceptionOr<void> {
             // Set source to a copy of the bytes held by object.
-            source = TRY_OR_RETURN_OOM(window, Bindings::IDL::get_buffer_source_copy(*buffer_source.cell()));
+            source = TRY_OR_RETURN_OOM(window, WebIDL::get_buffer_source_copy(*buffer_source.cell()));
             return {};
         },
         [&](JS::Handle<URL::URLSearchParams> const& url_search_params) -> DOM::ExceptionOr<void> {
