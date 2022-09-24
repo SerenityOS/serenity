@@ -13,7 +13,6 @@ set(SOURCES
     Bindings/OptionConstructor.cpp
     Bindings/PlatformObject.cpp
     Bindings/WindowConstructor.cpp
-    Bindings/WindowProxy.cpp
     Crypto/Crypto.cpp
     Crypto/SubtleCrypto.cpp
     CSS/Angle.cpp
@@ -262,6 +261,7 @@ set(SOURCES
     HTML/Timer.cpp
     HTML/Window.cpp
     HTML/WindowEventHandlers.cpp
+    HTML/WindowProxy.cpp
     HTML/Worker.cpp
     HTML/WorkerDebugConsoleClient.cpp
     HTML/WorkerGlobalScope.cpp
