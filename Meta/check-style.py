@@ -22,6 +22,7 @@ GOOD_LICENSE_HEADER_PATTERN = re.compile(
 LICENSE_HEADER_CHECK_EXCLUDES = {
     'AK/Checked.h',
     'AK/Function.h',
+    'Userland/Libraries/LibJS/SafeFunction.h',
     'Userland/Libraries/LibC/elf.h',
     'Userland/Libraries/LibCodeComprehension/Cpp/Tests/',
     'Userland/Libraries/LibCpp/Tests/parser/',

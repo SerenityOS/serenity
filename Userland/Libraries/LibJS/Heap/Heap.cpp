@@ -17,6 +17,7 @@
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Object.h>
 #include <LibJS/Runtime/WeakContainer.h>
+#include <LibJS/SafeFunction.h>
 #include <setjmp.h>
 
 #ifdef __serenity__
@@ -28,6 +29,9 @@ namespace JS {
 #ifdef __serenity__
 static int gc_perf_string_id;
 #endif
+
+// NOTE: We keep a per-thread list of custom ranges. This hinges on the assumption that there is one JS VM per thread.
+static __thread HashMap<FlatPtr*, size_t>* s_custom_ranges_for_conservative_scan = nullptr;
 
 Heap::Heap(VM& vm)
     : m_vm(vm)
@@ -162,6 +166,16 @@ __attribute__((no_sanitize("address"))) void Heap::gather_conservative_roots(Has
     for (FlatPtr stack_address = stack_reference; stack_address < stack_info.top(); stack_address += sizeof(FlatPtr)) {
         auto data = *reinterpret_cast<FlatPtr*>(stack_address);
         add_possible_value(data);
+    }
+
+    // NOTE: If we have any custom ranges registered, scan those as well.
+    //       This is where JS::SafeFunction closures get marked.
+    if (s_custom_ranges_for_conservative_scan) {
+        for (auto& custom_range : *s_custom_ranges_for_conservative_scan) {
+            for (size_t i = 0; i < (custom_range.value / sizeof(FlatPtr)); ++i) {
+                add_possible_value(custom_range.key[i]);
+            }
+        }
     }
 
     HashTable<HeapBlock*> all_live_heap_blocks;
@@ -347,6 +361,23 @@ void Heap::undefer_gc(Badge<DeferGC>)
 void Heap::uproot_cell(Cell* cell)
 {
     m_uprooted_cells.append(cell);
+}
+
+void register_safe_function_closure(void* base, size_t size)
+{
+    if (!s_custom_ranges_for_conservative_scan) {
+        // FIXME: This per-thread HashMap is currently leaked on thread exit.
+        s_custom_ranges_for_conservative_scan = new HashMap<FlatPtr*, size_t>;
+    }
+    auto result = s_custom_ranges_for_conservative_scan->set(reinterpret_cast<FlatPtr*>(base), size);
+    VERIFY(result == AK::HashSetResult::InsertedNewEntry);
+}
+
+void unregister_safe_function_closure(void* base, size_t)
+{
+    VERIFY(s_custom_ranges_for_conservative_scan);
+    bool did_remove = s_custom_ranges_for_conservative_scan->remove(reinterpret_cast<FlatPtr*>(base));
+    VERIFY(did_remove);
 }
 
 }
