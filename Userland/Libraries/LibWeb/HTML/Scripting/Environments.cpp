@@ -286,7 +286,7 @@ EnvironmentSettingsObject& incumbent_settings_object()
     }
 
     // 3. Return context's Realm component's settings object.
-    return verify_cast<EnvironmentSettingsObject>(*context->realm->host_defined());
+    return Bindings::host_defined_environment_settings_object(*context->realm);
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#concept-incumbent-realm
@@ -310,7 +310,7 @@ EnvironmentSettingsObject& current_settings_object()
     auto& vm = event_loop.vm();
 
     // Then, the current settings object is the environment settings object of the current Realm Record.
-    return verify_cast<EnvironmentSettingsObject>(*vm.current_realm()->host_defined());
+    return Bindings::host_defined_environment_settings_object(*vm.current_realm());
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#current-global-object
@@ -334,7 +334,7 @@ JS::Realm& relevant_realm(JS::Object const& object)
 EnvironmentSettingsObject& relevant_settings_object(JS::Object const& object)
 {
     // Then, the relevant settings object for a platform object o is the environment settings object of the relevant Realm for o.
-    return verify_cast<EnvironmentSettingsObject>(*relevant_realm(object).host_defined());
+    return Bindings::host_defined_environment_settings_object(relevant_realm(object));
 }
 
 EnvironmentSettingsObject& relevant_settings_object(DOM::Node const& node)

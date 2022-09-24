@@ -394,8 +394,9 @@
 
 #define ADD_WINDOW_OBJECT_CONSTRUCTOR_AND_PROTOTYPE(interface_name, constructor_name, prototype_name)                                \
     {                                                                                                                                \
-        auto& prototype = ensure_web_prototype<Bindings::prototype_name>(#interface_name);                                           \
-        auto& constructor = ensure_web_constructor<Bindings::constructor_name>(#interface_name);                                     \
+        auto& prototype = Bindings::ensure_web_prototype<Bindings::prototype_name>(realm, #interface_name);                          \
+        auto& constructor = Bindings::ensure_web_constructor<Bindings::constructor_name>(realm, #interface_name);                    \
+        define_direct_property(#interface_name, &constructor, JS::Attribute::Writable | JS::Attribute::Configurable);                \
         prototype.define_direct_property(vm.names.constructor, &constructor, JS::Attribute::Writable | JS::Attribute::Configurable); \
         constructor.define_direct_property(vm.names.name, js_string(vm, #interface_name), JS::Attribute::Configurable);              \
     }
@@ -405,6 +406,7 @@
 
 #define ADD_WINDOW_OBJECT_INTERFACES                                                                \
     auto& vm = this->vm();                                                                          \
+    auto& realm = this->realm();                                                                    \
     ADD_WINDOW_OBJECT_INTERFACE(AbortController)                                                    \
     ADD_WINDOW_OBJECT_INTERFACE(AbortSignal)                                                        \
     ADD_WINDOW_OBJECT_INTERFACE(AbstractRange)                                                      \

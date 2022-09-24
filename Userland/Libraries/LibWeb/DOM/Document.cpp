@@ -1087,7 +1087,7 @@ Color Document::visited_link_color() const
 HTML::EnvironmentSettingsObject& Document::relevant_settings_object()
 {
     // Then, the relevant settings object for a platform object o is the environment settings object of the relevant Realm for o.
-    return verify_cast<HTML::EnvironmentSettingsObject>(*realm().host_defined());
+    return Bindings::host_defined_environment_settings_object(realm());
 }
 
 JS::Value Document::run_javascript(StringView source, StringView filename)

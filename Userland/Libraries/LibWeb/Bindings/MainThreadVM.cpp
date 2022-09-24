@@ -11,6 +11,7 @@
 #include <LibJS/Runtime/FinalizationRegistry.h>
 #include <LibJS/Runtime/NativeFunction.h>
 #include <LibJS/Runtime/VM.h>
+#include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/Bindings/LocationObject.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/DOM/Document.h>
@@ -181,7 +182,7 @@ JS::VM& main_thread_vm()
             // 2. Queue a global task on the JavaScript engine task source given global to perform the following steps:
             HTML::queue_global_task(HTML::Task::Source::JavaScriptEngine, global, [&finalization_registry]() mutable {
                 // 1. Let entry be finalizationRegistry.[[CleanupCallback]].[[Callback]].[[Realm]]'s environment settings object.
-                auto& entry = verify_cast<HTML::EnvironmentSettingsObject>(*finalization_registry.cleanup_callback().callback.cell()->realm()->host_defined());
+                auto& entry = host_defined_environment_settings_object(*finalization_registry.cleanup_callback().callback.cell()->realm());
 
                 // 2. Check if we can run script with entry. If this returns "do not run", then return.
                 if (entry.can_run_script() == HTML::RunScriptDecision::DoNotRun)
@@ -207,7 +208,7 @@ JS::VM& main_thread_vm()
             // 1. If realm is not null, then let job settings be the settings object for realm. Otherwise, let job settings be null.
             HTML::EnvironmentSettingsObject* job_settings { nullptr };
             if (realm)
-                job_settings = verify_cast<HTML::EnvironmentSettingsObject>(realm->host_defined());
+                job_settings = &host_defined_environment_settings_object(*realm);
 
             // IMPLEMENTATION DEFINED: The JS spec says we must take implementation defined steps to make the currently active script or module at the time of HostEnqueuePromiseJob being invoked
             //                         also be the active script or module of the job at the time of its invocation.
@@ -311,6 +312,11 @@ JS::VM& main_thread_vm()
                 return custom_data.internal_window_object.cell();
             },
             nullptr));
+
+        auto* root_realm = custom_data.root_execution_context->realm;
+        auto* intrinsics = root_realm->heap().allocate<Intrinsics>(*root_realm, *root_realm);
+        auto host_defined = make<HostDefined>(nullptr, *intrinsics);
+        root_realm->set_host_defined(move(host_defined));
 
         vm->push_execution_context(*custom_data.root_execution_context);
     }
