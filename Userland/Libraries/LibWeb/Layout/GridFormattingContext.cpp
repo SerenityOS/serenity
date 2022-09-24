@@ -300,7 +300,7 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
         maybe_add_row_to_occupation_grid(row_start + row_span, occupation_grid);
 
         int column_start = 0;
-        int column_span = 1;
+        auto column_span = child_box.computed_values().grid_column_start().is_span() ? child_box.computed_values().grid_column_start().raw_value() : 1;
         bool found_available_column = false;
         for (int column_index = column_start; column_index < (int)occupation_grid[0].size(); column_index++) {
             if (!occupation_grid[0][column_index]) {
@@ -388,6 +388,7 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
             // grid-column-end: span 2 indicates the second grid line in the endward direction from the
             // grid-column-start line.
             int column_span = 1;
+            auto row_span = child_box.computed_values().grid_row_start().is_span() ? child_box.computed_values().grid_row_start().raw_value() : 1;
             if (child_box.computed_values().grid_column_start().is_position() && child_box.computed_values().grid_column_end().is_span())
                 column_span = child_box.computed_values().grid_column_end().raw_value();
             if (child_box.computed_values().grid_column_end().is_position() && child_box.computed_values().grid_column_start().is_span()) {
@@ -432,8 +433,8 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
             if (column_start < auto_placement_cursor_x)
                 auto_placement_cursor_y++;
 
-            maybe_add_column_to_occupation_grid(auto_placement_cursor_x + 1, occupation_grid);
-            maybe_add_row_to_occupation_grid(auto_placement_cursor_y + 1, occupation_grid);
+            maybe_add_column_to_occupation_grid(auto_placement_cursor_x + column_span, occupation_grid);
+            maybe_add_row_to_occupation_grid(auto_placement_cursor_y + row_span, occupation_grid);
 
             // 4.1.1.2. Increment the cursor's row position until a value is found where the grid item does not
             // overlap any occupied grid cells (creating new rows in the implicit grid as necessary).
@@ -442,13 +443,13 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
                     break;
                 }
                 auto_placement_cursor_y++;
-                maybe_add_row_to_occupation_grid(auto_placement_cursor_y + 1, occupation_grid);
+                maybe_add_row_to_occupation_grid(auto_placement_cursor_y + row_span, occupation_grid);
             }
             // 4.1.1.3. Set the item's row-start line to the cursor's row position, and set the item's row-end
             // line according to its span from that position.
-            set_occupied_cells(auto_placement_cursor_y, auto_placement_cursor_y + 1, column_start, column_start + column_span, occupation_grid);
+            set_occupied_cells(auto_placement_cursor_y, auto_placement_cursor_y + row_span, column_start, column_start + column_span, occupation_grid);
 
-            positioned_boxes.append({ child_box, auto_placement_cursor_y, 1, column_start, column_span });
+            positioned_boxes.append({ child_box, auto_placement_cursor_y, row_span, column_start, column_span });
         }
         // 4.1.2. If the item has an automatic grid position in both axes:
         else {
@@ -457,9 +458,9 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
             // column span, overflow the number of columns in the implicit grid, as determined earlier in this
             // algorithm.
             auto column_start = 0;
-            auto column_span = 1;
+            auto column_span = child_box.computed_values().grid_column_start().is_span() ? child_box.computed_values().grid_column_start().raw_value() : 1;
             auto row_start = 0;
-            auto row_span = 1;
+            auto row_span = child_box.computed_values().grid_row_start().is_span() ? child_box.computed_values().grid_row_start().raw_value() : 1;
             auto found_unoccupied_cell = false;
             for (int row_index = auto_placement_cursor_y; row_index < (int)occupation_grid.size(); row_index++) {
                 for (int column_index = auto_placement_cursor_x; column_index < (int)occupation_grid[0].size(); column_index++) {
