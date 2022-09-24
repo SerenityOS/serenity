@@ -22,7 +22,7 @@ class IntersectionObserver : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(IntersectionObserver, Bindings::PlatformObject);
 
 public:
-    static JS::NonnullGCPtr<IntersectionObserver> create_with_global_object(HTML::Window&, Bindings::CallbackType* callback, IntersectionObserverInit const& options = {});
+    static JS::NonnullGCPtr<IntersectionObserver> create_with_global_object(HTML::Window&, WebIDL::CallbackType* callback, IntersectionObserverInit const& options = {});
 
     virtual ~IntersectionObserver() override;
 

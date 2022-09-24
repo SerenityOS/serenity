@@ -231,14 +231,14 @@ void WebSocket::on_message(ByteBuffer message, bool is_text)
 }
 
 #undef __ENUMERATE
-#define __ENUMERATE(attribute_name, event_name)                         \
-    void WebSocket::set_##attribute_name(Bindings::CallbackType* value) \
-    {                                                                   \
-        set_event_handler_attribute(event_name, value);                 \
-    }                                                                   \
-    Bindings::CallbackType* WebSocket::attribute_name()                 \
-    {                                                                   \
-        return event_handler_attribute(event_name);                     \
+#define __ENUMERATE(attribute_name, event_name)                       \
+    void WebSocket::set_##attribute_name(WebIDL::CallbackType* value) \
+    {                                                                 \
+        set_event_handler_attribute(event_name, value);               \
+    }                                                                 \
+    WebIDL::CallbackType* WebSocket::attribute_name()                 \
+    {                                                                 \
+        return event_handler_attribute(event_name);                   \
     }
 ENUMERATE_WEBSOCKET_EVENT_HANDLERS(__ENUMERATE)
 #undef __ENUMERATE

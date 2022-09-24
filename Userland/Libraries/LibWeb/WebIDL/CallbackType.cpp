@@ -5,9 +5,9 @@
  */
 
 #include <LibJS/Runtime/Object.h>
-#include <LibWeb/Bindings/CallbackType.h>
+#include <LibWeb/WebIDL/CallbackType.h>
 
-namespace Web::Bindings {
+namespace Web::WebIDL {
 
 CallbackType::CallbackType(JS::Object& callback, HTML::EnvironmentSettingsObject& callback_context)
     : callback(callback)

@@ -55,8 +55,8 @@ public:
     String get_response_header(String const& name) { return m_response_headers.get(name).value_or({}); }
     String get_all_response_headers() const;
 
-    Bindings::CallbackType* onreadystatechange();
-    void set_onreadystatechange(Bindings::CallbackType*);
+    WebIDL::CallbackType* onreadystatechange();
+    void set_onreadystatechange(WebIDL::CallbackType*);
 
     DOM::ExceptionOr<void> override_mime_type(String const& mime);
 

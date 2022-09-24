@@ -519,12 +519,12 @@ DOM::ExceptionOr<void> XMLHttpRequest::send(Optional<Fetch::XMLHttpRequestBodyIn
     return {};
 }
 
-Bindings::CallbackType* XMLHttpRequest::onreadystatechange()
+WebIDL::CallbackType* XMLHttpRequest::onreadystatechange()
 {
     return event_handler_attribute(Web::XHR::EventNames::readystatechange);
 }
 
-void XMLHttpRequest::set_onreadystatechange(Bindings::CallbackType* value)
+void XMLHttpRequest::set_onreadystatechange(WebIDL::CallbackType* value)
 {
     set_event_handler_attribute(Web::XHR::EventNames::readystatechange, value);
 }

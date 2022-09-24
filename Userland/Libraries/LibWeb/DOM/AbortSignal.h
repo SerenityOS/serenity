@@ -31,8 +31,8 @@ public:
 
     void signal_abort(JS::Value reason);
 
-    void set_onabort(Bindings::CallbackType*);
-    Bindings::CallbackType* onabort();
+    void set_onabort(WebIDL::CallbackType*);
+    WebIDL::CallbackType* onabort();
 
     // https://dom.spec.whatwg.org/#dom-abortsignal-reason
     JS::Value reason() const { return m_abort_reason; }

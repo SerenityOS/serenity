@@ -51,8 +51,8 @@ public:
     virtual void legacy_cancelled_activation_behavior() { }
     virtual void legacy_cancelled_activation_behavior_was_not_called() { }
 
-    Bindings::CallbackType* event_handler_attribute(FlyString const& name);
-    void set_event_handler_attribute(FlyString const& name, Bindings::CallbackType*);
+    WebIDL::CallbackType* event_handler_attribute(FlyString const& name);
+    void set_event_handler_attribute(FlyString const& name, WebIDL::CallbackType*);
 
 protected:
     explicit EventTarget(JS::Realm&);
@@ -68,7 +68,7 @@ private:
     // Spec Note: The order of the entries of event handler map could be arbitrary. It is not observable through any algorithms that operate on the map.
     HashMap<FlyString, JS::GCPtr<HTML::EventHandler>> m_event_handler_map;
 
-    Bindings::CallbackType* get_current_value_of_event_handler(FlyString const& name);
+    WebIDL::CallbackType* get_current_value_of_event_handler(FlyString const& name);
     void activate_event_handler(FlyString const& name, HTML::EventHandler& event_handler);
     void deactivate_event_handler(FlyString const& name);
     JS::ThrowCompletionOr<void> process_event_handler_for_event(FlyString const& name, Event& event);

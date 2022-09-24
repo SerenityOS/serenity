@@ -11,7 +11,7 @@
 namespace Web::IntersectionObserver {
 
 // https://w3c.github.io/IntersectionObserver/#dom-intersectionobserver-intersectionobserver
-JS::NonnullGCPtr<IntersectionObserver> IntersectionObserver::create_with_global_object(HTML::Window& window, Bindings::CallbackType* callback, IntersectionObserverInit const& options)
+JS::NonnullGCPtr<IntersectionObserver> IntersectionObserver::create_with_global_object(HTML::Window& window, WebIDL::CallbackType* callback, IntersectionObserverInit const& options)
 {
     // FIXME: Implement
     (void)callback;

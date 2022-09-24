@@ -317,7 +317,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         if (!@js_name@@js_suffix@.is_object())
             return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObject, @js_name@@js_suffix@.to_string_without_side_effects());
 
-        auto* callback_type = vm.heap().allocate_without_realm<CallbackType>(@js_name@@js_suffix@.as_object(), HTML::incumbent_settings_object());
+        auto* callback_type = vm.heap().allocate_without_realm<WebIDL::CallbackType>(@js_name@@js_suffix@.as_object(), HTML::incumbent_settings_object());
         @cpp_name@ = @cpp_type@::create(realm, *callback_type).ptr();
     }
 )~~~");
@@ -326,7 +326,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
     if (!@js_name@@js_suffix@.is_object())
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObject, @js_name@@js_suffix@.to_string_without_side_effects());
 
-    auto* callback_type = vm.heap().allocate_without_realm<CallbackType>(@js_name@@js_suffix@.as_object(), HTML::incumbent_settings_object());
+    auto* callback_type = vm.heap().allocate_without_realm<WebIDL::CallbackType>(@js_name@@js_suffix@.as_object(), HTML::incumbent_settings_object());
     auto @cpp_name@ = adopt_ref(*new @cpp_type@(move(callback_type)));
 )~~~");
         }
@@ -675,13 +675,13 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         // 2. Return the IDL callback function type value that represents a reference to the same object that V represents, with the incumbent settings object as the callback context.
         if (callback_function.is_legacy_treat_non_object_as_null) {
             callback_function_generator.append(R"~~~(
-    Bindings::CallbackType* @cpp_name@ = nullptr;
+    WebIDL::CallbackType* @cpp_name@ = nullptr;
     if (@js_name@@js_suffix@.is_object())
-        @cpp_name@ = vm.heap().allocate_without_realm<CallbackType>(@js_name@@js_suffix@.as_object(), HTML::incumbent_settings_object());
+        @cpp_name@ = vm.heap().allocate_without_realm<WebIDL::CallbackType>(@js_name@@js_suffix@.as_object(), HTML::incumbent_settings_object());
 )~~~");
         } else {
             callback_function_generator.append(R"~~~(
-    auto @cpp_name@ = vm.heap().allocate_without_realm<CallbackType>(@js_name@@js_suffix@.as_object(), HTML::incumbent_settings_object());
+    auto @cpp_name@ = vm.heap().allocate_without_realm<WebIDL::CallbackType>(@js_name@@js_suffix@.as_object(), HTML::incumbent_settings_object());
 )~~~");
         }
     } else if (parameter.type->name() == "sequence") {

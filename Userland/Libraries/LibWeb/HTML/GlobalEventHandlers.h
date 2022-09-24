@@ -84,9 +84,9 @@ public:
     virtual ~GlobalEventHandlers();
 
 #undef __ENUMERATE
-#define __ENUMERATE(attribute_name, event_name)         \
-    void set_##attribute_name(Bindings::CallbackType*); \
-    Bindings::CallbackType* attribute_name();
+#define __ENUMERATE(attribute_name, event_name)       \
+    void set_##attribute_name(WebIDL::CallbackType*); \
+    WebIDL::CallbackType* attribute_name();
     ENUMERATE_GLOBAL_EVENT_HANDLERS(__ENUMERATE)
 #undef __ENUMERATE
 

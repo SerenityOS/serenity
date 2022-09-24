@@ -112,14 +112,14 @@ void MessagePort::close()
 }
 
 #undef __ENUMERATE
-#define __ENUMERATE(attribute_name, event_name)                           \
-    void MessagePort::set_##attribute_name(Bindings::CallbackType* value) \
-    {                                                                     \
-        set_event_handler_attribute(event_name, value);                   \
-    }                                                                     \
-    Bindings::CallbackType* MessagePort::attribute_name()                 \
-    {                                                                     \
-        return event_handler_attribute(event_name);                       \
+#define __ENUMERATE(attribute_name, event_name)                         \
+    void MessagePort::set_##attribute_name(WebIDL::CallbackType* value) \
+    {                                                                   \
+        set_event_handler_attribute(event_name, value);                 \
+    }                                                                   \
+    WebIDL::CallbackType* MessagePort::attribute_name()                 \
+    {                                                                   \
+        return event_handler_attribute(event_name);                     \
     }
 ENUMERATE_MESSAGE_PORT_EVENT_HANDLERS(__ENUMERATE)
 #undef __ENUMERATE

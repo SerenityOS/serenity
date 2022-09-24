@@ -213,7 +213,7 @@ i32 Window::run_timer_initialization_steps(TimerHandler handler, i32 timeout, JS
 
         handler.visit(
             // 2. If handler is a Function, then invoke handler given arguments with the callback this value set to thisArg. If this throws an exception, catch it, and report the exception.
-            [&](JS::Handle<Bindings::CallbackType> callback) {
+            [&](JS::Handle<WebIDL::CallbackType> callback) {
                 if (auto result = Bindings::IDL::invoke_callback(*callback, window.ptr(), arguments); result.is_error())
                     HTML::report_exception(result);
             },
@@ -277,7 +277,7 @@ i32 Window::run_timer_initialization_steps(TimerHandler handler, i32 timeout, JS
 }
 
 // https://html.spec.whatwg.org/multipage/imagebitmap-and-animations.html#run-the-animation-frame-callbacks
-i32 Window::request_animation_frame_impl(Bindings::CallbackType& js_callback)
+i32 Window::request_animation_frame_impl(WebIDL::CallbackType& js_callback)
 {
     return m_animation_frame_callback_driver.add([this, js_callback = JS::make_handle(js_callback)](auto) mutable {
         // 3. Invoke callback, passing now as the only argument,
@@ -506,7 +506,7 @@ void Window::fire_a_page_transition_event(FlyString const& event_name, bool pers
 }
 
 // https://html.spec.whatwg.org/#dom-queuemicrotask
-void Window::queue_microtask_impl(Bindings::CallbackType& callback)
+void Window::queue_microtask_impl(WebIDL::CallbackType& callback)
 {
     // The queueMicrotask(callback) method must queue a microtask to invoke callback,
     HTML::queue_a_microtask(&associated_document(), [&callback]() mutable {
@@ -686,7 +686,7 @@ void Window::invoke_idle_callbacks()
 }
 
 // https://w3c.github.io/requestidlecallback/#the-requestidlecallback-method
-u32 Window::request_idle_callback_impl(Bindings::CallbackType& callback)
+u32 Window::request_idle_callback_impl(WebIDL::CallbackType& callback)
 {
     // 1. Let window be this Window object.
     auto& window = *this;
@@ -696,7 +696,7 @@ u32 Window::request_idle_callback_impl(Bindings::CallbackType& callback)
     auto handle = window.m_idle_callback_identifier;
     // 4. Push callback to the end of window's list of idle request callbacks, associated with handle.
     auto handler = [callback = JS::make_handle(callback)](JS::NonnullGCPtr<RequestIdleCallback::IdleDeadline> deadline) -> JS::Completion {
-        return Bindings::IDL::invoke_callback(const_cast<Bindings::CallbackType&>(*callback), {}, deadline.ptr());
+        return Bindings::IDL::invoke_callback(const_cast<WebIDL::CallbackType&>(*callback), {}, deadline.ptr());
     };
     window.m_idle_request_callbacks.append(adopt_ref(*new IdleCallback(move(handler), handle)));
     // 5. Return handle and then continue running this algorithm asynchronously.
@@ -914,7 +914,7 @@ JS_DEFINE_NATIVE_FUNCTION(Window::prompt)
 static JS::ThrowCompletionOr<TimerHandler> make_timer_handler(JS::VM& vm, JS::Value handler)
 {
     if (handler.is_function())
-        return JS::make_handle(vm.heap().allocate_without_realm<Bindings::CallbackType>(handler.as_function(), HTML::incumbent_settings_object()));
+        return JS::make_handle(vm.heap().allocate_without_realm<WebIDL::CallbackType>(handler.as_function(), HTML::incumbent_settings_object()));
     return TRY(handler.to_string(vm));
 }
 
@@ -996,7 +996,7 @@ JS_DEFINE_NATIVE_FUNCTION(Window::request_animation_frame)
     auto* callback_object = TRY(vm.argument(0).to_object(vm));
     if (!callback_object->is_function())
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAFunctionNoParam);
-    auto* callback = vm.heap().allocate_without_realm<Bindings::CallbackType>(*callback_object, HTML::incumbent_settings_object());
+    auto* callback = vm.heap().allocate_without_realm<WebIDL::CallbackType>(*callback_object, HTML::incumbent_settings_object());
     return JS::Value(impl->request_animation_frame_impl(*callback));
 }
 
@@ -1019,7 +1019,7 @@ JS_DEFINE_NATIVE_FUNCTION(Window::queue_microtask)
     if (!callback_object->is_function())
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAFunctionNoParam);
 
-    auto* callback = vm.heap().allocate_without_realm<Bindings::CallbackType>(*callback_object, HTML::incumbent_settings_object());
+    auto* callback = vm.heap().allocate_without_realm<WebIDL::CallbackType>(*callback_object, HTML::incumbent_settings_object());
 
     impl->queue_microtask_impl(*callback);
     return JS::js_undefined();
@@ -1035,7 +1035,7 @@ JS_DEFINE_NATIVE_FUNCTION(Window::request_idle_callback)
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAFunctionNoParam);
     // FIXME: accept options object
 
-    auto* callback = vm.heap().allocate_without_realm<Bindings::CallbackType>(*callback_object, HTML::incumbent_settings_object());
+    auto* callback = vm.heap().allocate_without_realm<WebIDL::CallbackType>(*callback_object, HTML::incumbent_settings_object());
 
     return JS::Value(impl->request_idle_callback_impl(*callback));
 }
@@ -1461,26 +1461,26 @@ JS_DEFINE_NATIVE_FUNCTION(Window::name_setter)
     return JS::js_undefined();
 }
 
-#define __ENUMERATE(attribute, event_name)                                        \
-    JS_DEFINE_NATIVE_FUNCTION(Window::attribute##_getter)                         \
-    {                                                                             \
-        auto* impl = TRY(impl_from(vm));                                          \
-        auto retval = impl->attribute();                                          \
-        if (!retval)                                                              \
-            return JS::js_null();                                                 \
-        return &retval->callback;                                                 \
-    }                                                                             \
-    JS_DEFINE_NATIVE_FUNCTION(Window::attribute##_setter)                         \
-    {                                                                             \
-        auto* impl = TRY(impl_from(vm));                                          \
-        auto value = vm.argument(0);                                              \
-        Bindings::CallbackType* cpp_value = nullptr;                              \
-        if (value.is_object()) {                                                  \
-            cpp_value = vm.heap().allocate_without_realm<Bindings::CallbackType>( \
-                value.as_object(), HTML::incumbent_settings_object());            \
-        }                                                                         \
-        impl->set_##attribute(cpp_value);                                         \
-        return JS::js_undefined();                                                \
+#define __ENUMERATE(attribute, event_name)                                      \
+    JS_DEFINE_NATIVE_FUNCTION(Window::attribute##_getter)                       \
+    {                                                                           \
+        auto* impl = TRY(impl_from(vm));                                        \
+        auto retval = impl->attribute();                                        \
+        if (!retval)                                                            \
+            return JS::js_null();                                               \
+        return &retval->callback;                                               \
+    }                                                                           \
+    JS_DEFINE_NATIVE_FUNCTION(Window::attribute##_setter)                       \
+    {                                                                           \
+        auto* impl = TRY(impl_from(vm));                                        \
+        auto value = vm.argument(0);                                            \
+        WebIDL::CallbackType* cpp_value = nullptr;                              \
+        if (value.is_object()) {                                                \
+            cpp_value = vm.heap().allocate_without_realm<WebIDL::CallbackType>( \
+                value.as_object(), HTML::incumbent_settings_object());          \
+        }                                                                       \
+        impl->set_##attribute(cpp_value);                                       \
+        return JS::js_undefined();                                              \
     }
 ENUMERATE_GLOBAL_EVENT_HANDLERS(__ENUMERATE)
 ENUMERATE_WINDOW_EVENT_HANDLERS(__ENUMERATE)

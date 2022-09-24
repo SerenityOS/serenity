@@ -393,6 +393,10 @@ class SVGRectElement;
 class SVGSVGElement;
 }
 
+namespace Web::WebIDL {
+class CallbackType;
+}
+
 namespace Web::WebSockets {
 class WebSocket;
 }
@@ -460,7 +464,6 @@ class URLSearchParamsIterator;
 }
 
 namespace Web::Bindings {
-class CallbackType;
 class LocationObject;
 class OptionConstructor;
 class RangePrototype;

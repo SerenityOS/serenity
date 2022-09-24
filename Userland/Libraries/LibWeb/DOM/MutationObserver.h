@@ -10,9 +10,9 @@
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/RefCounted.h>
 #include <LibJS/Heap/Handle.h>
-#include <LibWeb/Bindings/CallbackType.h>
 #include <LibWeb/DOM/ExceptionOr.h>
 #include <LibWeb/DOM/MutationRecord.h>
+#include <LibWeb/WebIDL/CallbackType.h>
 
 namespace Web::DOM {
 
@@ -32,7 +32,7 @@ class MutationObserver final : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(MutationObserver, Bindings::PlatformObject);
 
 public:
-    static JS::NonnullGCPtr<MutationObserver> create_with_global_object(HTML::Window&, JS::GCPtr<Bindings::CallbackType>);
+    static JS::NonnullGCPtr<MutationObserver> create_with_global_object(HTML::Window&, JS::GCPtr<WebIDL::CallbackType>);
     virtual ~MutationObserver() override;
 
     ExceptionOr<void> observe(Node& target, MutationObserverInit options = {});
@@ -42,7 +42,7 @@ public:
     Vector<WeakPtr<Node>>& node_list() { return m_node_list; }
     Vector<WeakPtr<Node>> const& node_list() const { return m_node_list; }
 
-    Bindings::CallbackType& callback() { return *m_callback; }
+    WebIDL::CallbackType& callback() { return *m_callback; }
 
     void enqueue_record(Badge<Node>, JS::NonnullGCPtr<MutationRecord> mutation_record)
     {
@@ -50,12 +50,12 @@ public:
     }
 
 private:
-    MutationObserver(HTML::Window&, JS::GCPtr<Bindings::CallbackType>);
+    MutationObserver(HTML::Window&, JS::GCPtr<WebIDL::CallbackType>);
 
     virtual void visit_edges(Cell::Visitor&) override;
 
     // https://dom.spec.whatwg.org/#concept-mo-callback
-    JS::GCPtr<Bindings::CallbackType> m_callback;
+    JS::GCPtr<WebIDL::CallbackType> m_callback;
 
     // https://dom.spec.whatwg.org/#mutationobserver-node-list
     // NOTE: These are weak, per https://dom.spec.whatwg.org/#garbage-collection

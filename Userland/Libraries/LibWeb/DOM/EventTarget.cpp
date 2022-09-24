@@ -299,7 +299,7 @@ static EventTarget* determine_target_of_event_handler(EventTarget& event_target,
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#event-handler-attributes:event-handler-idl-attributes-2
-Bindings::CallbackType* EventTarget::event_handler_attribute(FlyString const& name)
+WebIDL::CallbackType* EventTarget::event_handler_attribute(FlyString const& name)
 {
     // 1. Let eventTarget be the result of determining the target of an event handler given this object and name.
     auto target = determine_target_of_event_handler(*this, name);
@@ -313,7 +313,7 @@ Bindings::CallbackType* EventTarget::event_handler_attribute(FlyString const& na
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#getting-the-current-value-of-the-event-handler
-Bindings::CallbackType* EventTarget::get_current_value_of_event_handler(FlyString const& name)
+WebIDL::CallbackType* EventTarget::get_current_value_of_event_handler(FlyString const& name)
 {
     // 1. Let handlerMap be eventTarget's event handler map. (NOTE: Not necessary)
 
@@ -464,16 +464,16 @@ Bindings::CallbackType* EventTarget::get_current_value_of_event_handler(FlyStrin
         function->set_script_or_module({});
 
         // 12. Set eventHandler's value to the result of creating a Web IDL EventHandler callback function object whose object reference is function and whose callback context is settings object.
-        event_handler->value = realm.heap().allocate_without_realm<Bindings::CallbackType>(*function, settings_object);
+        event_handler->value = realm.heap().allocate_without_realm<WebIDL::CallbackType>(*function, settings_object);
     }
 
     // 4. Return eventHandler's value.
-    VERIFY(event_handler->value.has<Bindings::CallbackType*>());
-    return *event_handler->value.get_pointer<Bindings::CallbackType*>();
+    VERIFY(event_handler->value.has<WebIDL::CallbackType*>());
+    return *event_handler->value.get_pointer<WebIDL::CallbackType*>();
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#event-handler-attributes:event-handler-idl-attributes-3
-void EventTarget::set_event_handler_attribute(FlyString const& name, Bindings::CallbackType* value)
+void EventTarget::set_event_handler_attribute(FlyString const& name, WebIDL::CallbackType* value)
 {
     // 1. Let eventTarget be the result of determining the target of an event handler given this object and name.
     auto event_target = determine_target_of_event_handler(*this, name);
@@ -556,7 +556,7 @@ void EventTarget::activate_event_handler(FlyString const& name, HTML::EventHandl
         0, "", &realm);
 
     // NOTE: As per the spec, the callback context is arbitrary.
-    auto* callback = realm.heap().allocate_without_realm<Bindings::CallbackType>(*callback_function, verify_cast<HTML::EnvironmentSettingsObject>(*realm.host_defined()));
+    auto* callback = realm.heap().allocate_without_realm<WebIDL::CallbackType>(*callback_function, verify_cast<HTML::EnvironmentSettingsObject>(*realm.host_defined()));
 
     // 5. Let listener be a new event listener whose type is the event handler event type corresponding to eventHandler and callback is callback.
     auto* listener = realm.heap().allocate_without_realm<DOMEventListener>();
