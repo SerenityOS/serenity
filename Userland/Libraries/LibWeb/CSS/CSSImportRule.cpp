@@ -8,6 +8,8 @@
 
 #include <AK/Debug.h>
 #include <AK/URL.h>
+#include <LibWeb/Bindings/CSSImportRulePrototype.h>
+#include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/CSS/CSSImportRule.h>
 #include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/DOM/Document.h>
@@ -18,16 +20,16 @@ namespace Web::CSS {
 
 CSSImportRule* CSSImportRule::create(AK::URL url, DOM::Document& document)
 {
-    auto& window_object = document.window();
-    return window_object.heap().allocate<CSSImportRule>(window_object.realm(), move(url), document);
+    auto& realm = document.realm();
+    return realm.heap().allocate<CSSImportRule>(realm, move(url), document);
 }
 
 CSSImportRule::CSSImportRule(AK::URL url, DOM::Document& document)
-    : CSSRule(document.window())
+    : CSSRule(document.realm())
     , m_url(move(url))
     , m_document(document)
 {
-    set_prototype(&document.window().cached_web_prototype("CSSImportRule"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::CSSImportRulePrototype>(document.realm(), "CSSImportRule"));
 
     dbgln_if(CSS_LOADER_DEBUG, "CSSImportRule: Loading import URL: {}", m_url);
     auto request = LoadRequest::create_for_url_on_page(m_url, document.page());

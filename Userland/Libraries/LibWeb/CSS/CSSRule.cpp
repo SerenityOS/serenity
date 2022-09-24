@@ -8,12 +8,11 @@
 
 #include <LibWeb/CSS/CSSRule.h>
 #include <LibWeb/CSS/CSSStyleSheet.h>
-#include <LibWeb/HTML/Window.h>
 
 namespace Web::CSS {
 
-CSSRule::CSSRule(HTML::Window& window_object)
-    : PlatformObject(window_object.cached_web_prototype("CSSRule"))
+CSSRule::CSSRule(JS::Realm& realm)
+    : PlatformObject(realm)
 {
 }
 

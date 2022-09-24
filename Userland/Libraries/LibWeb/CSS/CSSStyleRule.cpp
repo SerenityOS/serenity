@@ -4,23 +4,24 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibWeb/Bindings/CSSStyleRulePrototype.h>
+#include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/CSS/CSSStyleRule.h>
 #include <LibWeb/CSS/Parser/Parser.h>
-#include <LibWeb/HTML/Window.h>
 
 namespace Web::CSS {
 
-CSSStyleRule* CSSStyleRule::create(HTML::Window& window_object, NonnullRefPtrVector<Web::CSS::Selector>&& selectors, CSSStyleDeclaration& declaration)
+CSSStyleRule* CSSStyleRule::create(JS::Realm& realm, NonnullRefPtrVector<Web::CSS::Selector>&& selectors, CSSStyleDeclaration& declaration)
 {
-    return window_object.heap().allocate<CSSStyleRule>(window_object.realm(), window_object, move(selectors), declaration);
+    return realm.heap().allocate<CSSStyleRule>(realm, realm, move(selectors), declaration);
 }
 
-CSSStyleRule::CSSStyleRule(HTML::Window& window_object, NonnullRefPtrVector<Selector>&& selectors, CSSStyleDeclaration& declaration)
-    : CSSRule(window_object)
+CSSStyleRule::CSSStyleRule(JS::Realm& realm, NonnullRefPtrVector<Selector>&& selectors, CSSStyleDeclaration& declaration)
+    : CSSRule(realm)
     , m_selectors(move(selectors))
     , m_declaration(declaration)
 {
-    set_prototype(&window_object.cached_web_prototype("CSSStyleRule"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::CSSStyleRulePrototype>(realm, "CSSStyleRule"));
 }
 
 void CSSStyleRule::visit_edges(Cell::Visitor& visitor)

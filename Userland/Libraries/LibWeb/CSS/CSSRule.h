@@ -16,7 +16,7 @@
 namespace Web::CSS {
 
 class CSSRule : public Bindings::PlatformObject {
-    WEB_PLATFORM_OBJECT(CSSRule, JS::Object);
+    WEB_PLATFORM_OBJECT(CSSRule, Bindings::PlatformObject);
 
 public:
     virtual ~CSSRule() = default;
@@ -45,7 +45,7 @@ public:
     bool fast_is() const = delete;
 
 protected:
-    explicit CSSRule(HTML::Window&);
+    explicit CSSRule(JS::Realm&);
 
     virtual String serialized() const = 0;
 

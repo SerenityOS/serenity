@@ -4,28 +4,23 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/Bindings/MediaQueryListEventPrototype.h>
 #include <LibWeb/CSS/MediaQueryListEvent.h>
-#include <LibWeb/HTML/Window.h>
 
 namespace Web::CSS {
 
-MediaQueryListEvent* MediaQueryListEvent::create(HTML::Window& window_object, FlyString const& event_name, MediaQueryListEventInit const& event_init)
+MediaQueryListEvent* MediaQueryListEvent::construct_impl(JS::Realm& realm, FlyString const& event_name, MediaQueryListEventInit const& event_init)
 {
-    return window_object.heap().allocate<MediaQueryListEvent>(window_object.realm(), window_object, event_name, event_init);
+    return realm.heap().allocate<MediaQueryListEvent>(realm, realm, event_name, event_init);
 }
 
-MediaQueryListEvent* MediaQueryListEvent::create_with_global_object(HTML::Window& window_object, FlyString const& event_name, MediaQueryListEventInit const& event_init)
-{
-    return create(window_object, event_name, event_init);
-}
-
-MediaQueryListEvent::MediaQueryListEvent(HTML::Window& window_object, FlyString const& event_name, MediaQueryListEventInit const& event_init)
-    : DOM::Event(window_object, event_name, event_init)
+MediaQueryListEvent::MediaQueryListEvent(JS::Realm& realm, FlyString const& event_name, MediaQueryListEventInit const& event_init)
+    : DOM::Event(realm, event_name, event_init)
     , m_media(event_init.media)
     , m_matches(event_init.matches)
 {
-    set_prototype(&window_object.cached_web_prototype("MediaQueryListEvent"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::MediaQueryListEventPrototype>(realm, "MediaQueryListEvent"));
 }
 
 MediaQueryListEvent::~MediaQueryListEvent() = default;

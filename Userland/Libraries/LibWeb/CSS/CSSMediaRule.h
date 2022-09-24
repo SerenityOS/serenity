@@ -18,7 +18,7 @@ class CSSMediaRule final : public CSSConditionRule {
     WEB_PLATFORM_OBJECT(CSSMediaRule, CSSConditionRule);
 
 public:
-    static CSSMediaRule* create(HTML::Window&, MediaList& media_queries, CSSRuleList&);
+    static CSSMediaRule* create(JS::Realm&, MediaList& media_queries, CSSRuleList&);
 
     virtual ~CSSMediaRule() = default;
 
@@ -33,7 +33,7 @@ public:
     bool evaluate(HTML::Window const& window) { return m_media.evaluate(window); }
 
 private:
-    explicit CSSMediaRule(HTML::Window&, MediaList&, CSSRuleList&);
+    CSSMediaRule(JS::Realm&, MediaList&, CSSRuleList&);
 
     virtual void visit_edges(Cell::Visitor&) override;
     virtual String serialized() const override;

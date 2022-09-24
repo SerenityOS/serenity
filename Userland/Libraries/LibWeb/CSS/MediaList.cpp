@@ -5,19 +5,20 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibWeb/Bindings/Intrinsics.h>
+#include <LibWeb/Bindings/MediaListPrototype.h>
 #include <LibWeb/CSS/MediaList.h>
 #include <LibWeb/CSS/Parser/Parser.h>
-#include <LibWeb/HTML/Window.h>
 
 namespace Web::CSS {
 
-MediaList* MediaList::create(HTML::Window& window_object, NonnullRefPtrVector<MediaQuery>&& media)
+MediaList* MediaList::create(JS::Realm& realm, NonnullRefPtrVector<MediaQuery>&& media)
 {
-    return window_object.heap().allocate<MediaList>(window_object.realm(), window_object, move(media));
+    return realm.heap().allocate<MediaList>(realm, realm, move(media));
 }
 
-MediaList::MediaList(HTML::Window& window_object, NonnullRefPtrVector<MediaQuery>&& media)
-    : Bindings::LegacyPlatformObject(window_object.cached_web_prototype("MediaList"))
+MediaList::MediaList(JS::Realm& realm, NonnullRefPtrVector<MediaQuery>&& media)
+    : Bindings::LegacyPlatformObject(Bindings::ensure_web_prototype<Bindings::MediaListPrototype>(realm, "MediaList"))
     , m_media(move(media))
 {
 }

@@ -5,21 +5,23 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibJS/Runtime/Realm.h>
+#include <LibWeb/Bindings/CSSMediaRulePrototype.h>
+#include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/CSS/CSSMediaRule.h>
-#include <LibWeb/HTML/Window.h>
 
 namespace Web::CSS {
 
-CSSMediaRule* CSSMediaRule::create(HTML::Window& window_object, MediaList& media_queries, CSSRuleList& rules)
+CSSMediaRule* CSSMediaRule::create(JS::Realm& realm, MediaList& media_queries, CSSRuleList& rules)
 {
-    return window_object.heap().allocate<CSSMediaRule>(window_object.realm(), window_object, media_queries, rules);
+    return realm.heap().allocate<CSSMediaRule>(realm, realm, media_queries, rules);
 }
 
-CSSMediaRule::CSSMediaRule(HTML::Window& window_object, MediaList& media, CSSRuleList& rules)
-    : CSSConditionRule(window_object, rules)
+CSSMediaRule::CSSMediaRule(JS::Realm& realm, MediaList& media, CSSRuleList& rules)
+    : CSSConditionRule(realm, rules)
     , m_media(media)
 {
-    set_prototype(&window_object.cached_web_prototype("CSSMediaRule"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::CSSMediaRulePrototype>(realm, "CSSMediaRule"));
 }
 
 void CSSMediaRule::visit_edges(Cell::Visitor& visitor)

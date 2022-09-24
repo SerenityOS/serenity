@@ -40,31 +40,31 @@ static void log_parse_error(SourceLocation const& location = SourceLocation::cur
 namespace Web::CSS::Parser {
 
 ParsingContext::ParsingContext()
-    : m_window_object(Bindings::main_thread_internal_window_object())
+    : m_realm(*Bindings::main_thread_vm().current_realm())
 {
 }
 
-ParsingContext::ParsingContext(HTML::Window& window_object)
-    : m_window_object(window_object)
+ParsingContext::ParsingContext(JS::Realm& realm)
+    : m_realm(realm)
 {
 }
 
 ParsingContext::ParsingContext(DOM::Document const& document, AK::URL url)
-    : m_window_object(const_cast<HTML::Window&>(document.window()))
+    : m_realm(const_cast<JS::Realm&>(document.realm()))
     , m_document(&document)
     , m_url(move(url))
 {
 }
 
 ParsingContext::ParsingContext(DOM::Document const& document)
-    : m_window_object(const_cast<HTML::Window&>(document.window()))
+    : m_realm(const_cast<JS::Realm&>(document.realm()))
     , m_document(&document)
     , m_url(document.url())
 {
 }
 
 ParsingContext::ParsingContext(DOM::ParentNode& parent_node)
-    : m_window_object(parent_node.document().window())
+    : m_realm(parent_node.realm())
     , m_document(&parent_node.document())
     , m_url(parent_node.document().url())
 {
@@ -118,7 +118,7 @@ CSSStyleSheet* Parser::parse_as_css_stylesheet(Optional<AK::URL> location)
     auto style_sheet = parse_a_stylesheet(m_token_stream, {});
 
     // Interpret all of the resulting top-level qualified rules as style rules, defined below.
-    JS::MarkedVector<CSSRule*> rules(m_context.window_object().heap());
+    JS::MarkedVector<CSSRule*> rules(m_context.realm().heap());
     for (auto& raw_rule : style_sheet.rules) {
         auto* rule = convert_to_rule(raw_rule);
         // If any style rule is invalid, or any at-rule is not recognized or is invalid according to its grammar or context, it’s a parse error. Discard that rule.
@@ -126,8 +126,8 @@ CSSStyleSheet* Parser::parse_as_css_stylesheet(Optional<AK::URL> location)
             rules.append(rule);
     }
 
-    auto* rule_list = CSSRuleList::create(m_context.window_object(), rules);
-    return CSSStyleSheet::create(m_context.window_object(), *rule_list, move(location));
+    auto* rule_list = CSSRuleList::create(m_context.realm(), rules);
+    return CSSStyleSheet::create(m_context.realm(), *rule_list, move(location));
 }
 
 Optional<SelectorList> Parser::parse_as_selector(SelectorParsingMode parsing_mode)
@@ -2561,13 +2561,13 @@ CSSRule* Parser::convert_to_rule(NonnullRefPtr<Rule> rule)
 
             auto child_tokens = TokenStream { rule->block()->values() };
             auto parser_rules = parse_a_list_of_rules(child_tokens);
-            JS::MarkedVector<CSSRule*> child_rules(m_context.window_object().heap());
+            JS::MarkedVector<CSSRule*> child_rules(m_context.realm().heap());
             for (auto& raw_rule : parser_rules) {
                 if (auto* child_rule = convert_to_rule(raw_rule))
                     child_rules.append(child_rule);
             }
-            auto* rule_list = CSSRuleList::create(m_context.window_object(), child_rules);
-            return CSSMediaRule::create(m_context.window_object(), *MediaList::create(m_context.window_object(), move(media_query_list)), *rule_list);
+            auto* rule_list = CSSRuleList::create(m_context.realm(), child_rules);
+            return CSSMediaRule::create(m_context.realm(), *MediaList::create(m_context.realm(), move(media_query_list)), *rule_list);
         }
         if (rule->at_rule_name().equals_ignoring_case("supports"sv)) {
             auto supports_tokens = TokenStream { rule->prelude() };
@@ -2584,14 +2584,14 @@ CSSRule* Parser::convert_to_rule(NonnullRefPtr<Rule> rule)
                 return {};
             auto child_tokens = TokenStream { rule->block()->values() };
             auto parser_rules = parse_a_list_of_rules(child_tokens);
-            JS::MarkedVector<CSSRule*> child_rules(m_context.window_object().heap());
+            JS::MarkedVector<CSSRule*> child_rules(m_context.realm().heap());
             for (auto& raw_rule : parser_rules) {
                 if (auto* child_rule = convert_to_rule(raw_rule))
                     child_rules.append(child_rule);
             }
 
-            auto* rule_list = CSSRuleList::create(m_context.window_object(), child_rules);
-            return CSSSupportsRule::create(m_context.window_object(), supports.release_nonnull(), *rule_list);
+            auto* rule_list = CSSRuleList::create(m_context.realm(), child_rules);
+            return CSSSupportsRule::create(m_context.realm(), supports.release_nonnull(), *rule_list);
         }
 
         // FIXME: More at rules!
@@ -2629,7 +2629,7 @@ CSSRule* Parser::convert_to_rule(NonnullRefPtr<Rule> rule)
         return {};
     }
 
-    return CSSStyleRule::create(m_context.window_object(), move(selectors.value()), *declaration);
+    return CSSStyleRule::create(m_context.realm(), move(selectors.value()), *declaration);
 }
 
 auto Parser::extract_properties(Vector<DeclarationOrAtRule> const& declarations_and_at_rules) -> PropertiesAndCustomProperties
@@ -2658,7 +2658,7 @@ auto Parser::extract_properties(Vector<DeclarationOrAtRule> const& declarations_
 PropertyOwningCSSStyleDeclaration* Parser::convert_to_style_declaration(Vector<DeclarationOrAtRule> const& declarations_and_at_rules)
 {
     auto [properties, custom_properties] = extract_properties(declarations_and_at_rules);
-    return PropertyOwningCSSStyleDeclaration::create(m_context.window_object(), move(properties), move(custom_properties));
+    return PropertyOwningCSSStyleDeclaration::create(m_context.realm(), move(properties), move(custom_properties));
 }
 
 Optional<StyleProperty> Parser::convert_to_style_property(Declaration const& declaration)
@@ -4890,7 +4890,7 @@ CSSRule* Parser::parse_font_face_rule(TokenStream<ComponentValue>& tokens)
         unicode_range.empend(0x0u, 0x10FFFFu);
     }
 
-    return CSSFontFaceRule::create(m_context.window_object(), FontFace { font_family.release_value(), move(src), move(unicode_range) });
+    return CSSFontFaceRule::create(m_context.realm(), FontFace { font_family.release_value(), move(src), move(unicode_range) });
 }
 
 Vector<FontFace::Source> Parser::parse_font_face_src(TokenStream<ComponentValue>& component_values)
@@ -6505,7 +6505,7 @@ namespace Web {
 CSS::CSSStyleSheet* parse_css_stylesheet(CSS::Parser::ParsingContext const& context, StringView css, Optional<AK::URL> location)
 {
     if (css.is_empty())
-        return CSS::CSSStyleSheet::create(context.window_object(), *CSS::CSSRuleList::create_empty(context.window_object()), location);
+        return CSS::CSSStyleSheet::create(context.realm(), *CSS::CSSRuleList::create_empty(context.realm()), location);
     CSS::Parser::Parser parser(context, css);
     return parser.parse_as_css_stylesheet(location);
 }

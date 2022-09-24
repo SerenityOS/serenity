@@ -8,12 +8,11 @@
 #include <LibWeb/CSS/CSSStyleSheet.h>
 #include <LibWeb/CSS/StyleSheet.h>
 #include <LibWeb/DOM/Element.h>
-#include <LibWeb/HTML/Window.h>
 
 namespace Web::CSS {
 
-StyleSheet::StyleSheet(HTML::Window& window_object)
-    : PlatformObject(window_object.cached_web_prototype("StyleSheet"))
+StyleSheet::StyleSheet(JS::Realm& realm)
+    : PlatformObject(realm)
 {
 }
 

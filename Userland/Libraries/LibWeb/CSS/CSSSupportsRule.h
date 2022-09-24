@@ -20,7 +20,7 @@ class CSSSupportsRule final : public CSSConditionRule {
     WEB_PLATFORM_OBJECT(CSSSupportsRule, CSSConditionRule);
 
 public:
-    static CSSSupportsRule* create(HTML::Window&, NonnullRefPtr<Supports>&&, CSSRuleList&);
+    static CSSSupportsRule* create(JS::Realm&, NonnullRefPtr<Supports>&&, CSSRuleList&);
 
     virtual ~CSSSupportsRule() = default;
 
@@ -31,7 +31,7 @@ public:
     virtual bool condition_matches() const override { return m_supports->matches(); }
 
 private:
-    explicit CSSSupportsRule(HTML::Window&, NonnullRefPtr<Supports>&&, CSSRuleList&);
+    CSSSupportsRule(JS::Realm&, NonnullRefPtr<Supports>&&, CSSRuleList&);
 
     virtual String serialized() const override;
 

@@ -19,16 +19,16 @@ class MediaQueryListEvent final : public DOM::Event {
     WEB_PLATFORM_OBJECT(MediaQueryListEvent, DOM::Event);
 
 public:
-    static MediaQueryListEvent* create(HTML::Window&, FlyString const& event_name, MediaQueryListEventInit const& event_init = {});
-    static MediaQueryListEvent* create_with_global_object(HTML::Window&, FlyString const& event_name, MediaQueryListEventInit const& event_init);
+    static MediaQueryListEvent* construct_impl(JS::Realm&, FlyString const& event_name, MediaQueryListEventInit const& event_init = {});
 
-    MediaQueryListEvent(HTML::Window&, FlyString const& event_name, MediaQueryListEventInit const& event_init);
     virtual ~MediaQueryListEvent() override;
 
     String const& media() const { return m_media; }
     bool matches() const { return m_matches; }
 
 private:
+    MediaQueryListEvent(JS::Realm&, FlyString const& event_name, MediaQueryListEventInit const& event_init);
+
     String m_media;
     bool m_matches;
 };

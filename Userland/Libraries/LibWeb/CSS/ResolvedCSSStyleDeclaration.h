@@ -15,7 +15,6 @@ class ResolvedCSSStyleDeclaration final : public CSSStyleDeclaration {
 
 public:
     static ResolvedCSSStyleDeclaration* create(DOM::Element& element);
-    explicit ResolvedCSSStyleDeclaration(DOM::Element&);
 
     virtual ~ResolvedCSSStyleDeclaration() override = default;
 
@@ -28,6 +27,8 @@ public:
     virtual String serialized() const override;
 
 private:
+    explicit ResolvedCSSStyleDeclaration(DOM::Element&);
+
     virtual void visit_edges(Cell::Visitor&) override;
 
     RefPtr<StyleValue> style_value_for_property(Layout::NodeWithStyle const&, PropertyID) const;

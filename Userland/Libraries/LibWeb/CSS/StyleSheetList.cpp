@@ -5,6 +5,7 @@
  */
 
 #include <AK/QuickSort.h>
+#include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/Bindings/StyleSheetListPrototype.h>
 #include <LibWeb/CSS/StyleSheetList.h>
 #include <LibWeb/DOM/Document.h>
@@ -36,12 +37,12 @@ void StyleSheetList::remove_sheet(CSSStyleSheet& sheet)
 
 StyleSheetList* StyleSheetList::create(DOM::Document& document)
 {
-    auto& realm = document.window().realm();
+    auto& realm = document.realm();
     return realm.heap().allocate<StyleSheetList>(realm, document);
 }
 
 StyleSheetList::StyleSheetList(DOM::Document& document)
-    : Bindings::LegacyPlatformObject(document.window().cached_web_prototype("StyleSheetList"))
+    : Bindings::LegacyPlatformObject(Bindings::ensure_web_prototype<Bindings::StyleSheetListPrototype>(document.realm(), "StyleSheetList"))
     , m_document(document)
 {
 }

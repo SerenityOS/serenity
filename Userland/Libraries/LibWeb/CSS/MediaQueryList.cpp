@@ -5,6 +5,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibWeb/Bindings/Intrinsics.h>
+#include <LibWeb/Bindings/MediaQueryListPrototype.h>
 #include <LibWeb/CSS/MediaQueryList.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/EventDispatcher.h>
@@ -23,7 +25,7 @@ MediaQueryList::MediaQueryList(DOM::Document& document, NonnullRefPtrVector<Medi
     , m_document(document)
     , m_media(move(media))
 {
-    set_prototype(&document.window().cached_web_prototype("MediaQueryList"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::MediaQueryListPrototype>(document.realm(), "MediaQueryList"));
     evaluate();
 }
 
