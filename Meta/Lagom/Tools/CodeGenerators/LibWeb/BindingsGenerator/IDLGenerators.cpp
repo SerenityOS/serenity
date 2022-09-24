@@ -1928,7 +1928,7 @@ JS_DEFINE_NATIVE_FUNCTION(@class_name@::@function.name:snakecase@)
     if (!effective_overload_set.has_value())
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::OverloadResolutionFailed);
 
-    auto chosen_overload = TRY(resolve_overload(vm, effective_overload_set.value()));
+    auto chosen_overload = TRY(WebIDL::resolve_overload(vm, effective_overload_set.value()));
     switch (chosen_overload.callable_id) {
 )~~~");
 
@@ -2358,7 +2358,6 @@ void generate_prototype_implementation(IDL::Interface const& interface)
 #include <LibJS/Runtime/Value.h>
 #include <LibWeb/Bindings/@prototype_class@.h>
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
-#include <LibWeb/Bindings/IDLOverloadResolution.h>
 #include <LibWeb/Bindings/LocationObject.h>
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/DOM/Event.h>
@@ -2368,6 +2367,7 @@ void generate_prototype_implementation(IDL::Interface const& interface)
 #include <LibWeb/HTML/Origin.h>
 #include <LibWeb/HTML/Scripting/Environments.h>
 #include <LibWeb/HTML/Window.h>
+#include <LibWeb/WebIDL/OverloadResolution.h>
 
 #if __has_include(<LibWeb/Bindings/@prototype_base_class@.h>)
 #    include <LibWeb/Bindings/@prototype_base_class@.h>
