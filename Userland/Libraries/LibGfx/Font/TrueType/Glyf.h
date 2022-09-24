@@ -105,7 +105,7 @@ public:
         RefPtr<Gfx::Bitmap> rasterize_simple(i16 ascender, i16 descender, float x_scale, float y_scale) const;
 
         template<typename GlyphCb>
-        void rasterize_composite_loop(Rasterizer& rasterizer, Gfx::AffineTransform& transform, GlyphCb glyph_callback) const
+        void rasterize_composite_loop(Rasterizer& rasterizer, Gfx::AffineTransform const& transform, GlyphCb glyph_callback) const
         {
             ComponentIterator component_iterator(m_slice);
 
@@ -115,7 +115,8 @@ public:
                     break;
                 }
                 auto item = opt_item.value();
-                auto affine_here = transform.multiply(item.affine);
+                Gfx::AffineTransform affine_here { transform };
+                affine_here.multiply(item.affine);
                 Glyph glyph = glyph_callback(item.glyph_id);
 
                 if (glyph.m_type == Type::Simple) {
