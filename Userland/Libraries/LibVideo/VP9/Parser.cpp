@@ -963,6 +963,7 @@ DecoderErrorOr<void> Parser::decode_partition(u32 row, u32 col, u8 block_subsize
 
 size_t Parser::get_image_index(u32 row, u32 column)
 {
+    VERIFY(row < m_mi_rows && column < m_mi_cols);
     return row * m_mi_cols + column;
 }
 
@@ -978,8 +979,16 @@ DecoderErrorOr<void> Parser::decode_block(u32 row, u32 col, BlockSubsize subsize
     TRY(residual());
     if (m_is_inter && subsize >= Block_8x8 && m_eob_total == 0)
         m_skip = true;
-    for (size_t y = 0; y < num_8x8_blocks_high_lookup[subsize]; y++) {
-        for (size_t x = 0; x < num_8x8_blocks_wide_lookup[subsize]; x++) {
+
+    // Spec doesn't specify whether it might index outside the frame here, but it seems that it can. Ensure that we don't
+    // write out of bounds. This check seems consistent with libvpx.
+    // See here:
+    // https://github.com/webmproject/libvpx/blob/705bf9de8c96cfe5301451f1d7e5c90a41c64e5f/vp9/decoder/vp9_decodeframe.c#L917
+    auto maximum_block_y = min(num_8x8_blocks_high_lookup[subsize], m_mi_rows - row);
+    auto maximum_block_x = min(num_8x8_blocks_wide_lookup[subsize], m_mi_cols - col);
+
+    for (size_t y = 0; y < maximum_block_y; y++) {
+        for (size_t x = 0; x < maximum_block_x; x++) {
             auto pos = get_image_index(row + y, col + x);
             m_skips[pos] = m_skip;
             m_tx_sizes[pos] = m_tx_size;
@@ -991,6 +1000,8 @@ DecoderErrorOr<void> Parser::decode_block(u32 row, u32 col, BlockSubsize subsize
             if (m_is_inter) {
                 m_interp_filters[pos] = m_interp_filter;
                 for (size_t ref_list = 0; ref_list < 2; ref_list++) {
+                    // FIXME: Can we just store all the sub_mvs and then look up
+                    //        the main one by index 3?
                     m_mvs[pos][ref_list] = m_block_mvs[ref_list][3];
                     for (size_t b = 0; b < 4; b++)
                         m_sub_mvs[pos][ref_list][b] = m_block_mvs[ref_list][b];
@@ -1301,6 +1312,9 @@ DecoderErrorOr<void> Parser::read_mv(u8 ref)
         diff_mv.set_row(TRY(read_mv_component(0)));
     if (mv_joint == MvJointHnzvz || mv_joint == MvJointHnzvnz)
         diff_mv.set_column(TRY(read_mv_component(1)));
+
+    // FIXME: We probably don't need to assign MVs to a field, these can just
+    //        be returned and assigned where they are requested.
     m_mv[ref] = m_best_mv[ref] + diff_mv;
     return {};
 }
