@@ -31,6 +31,8 @@ public:
     virtual ErrorOr<void> unmap_framebuffer() override;
     virtual ErrorOr<void> map_framebuffer() override;
 
+    virtual ErrorOr<void> set_safe_head_mode_setting() override;
+
     virtual ErrorOr<void> set_head_mode_setting(GraphicsHeadModeSetting) override;
     virtual ErrorOr<GraphicsHeadModeSetting> get_head_mode_setting() override;
 

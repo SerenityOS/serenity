@@ -370,12 +370,15 @@ bool Screen::set_resolution(bool initial)
         if (!return_value.is_error())
             return true;
     }
-    if (return_value.is_error()) {
+    if (return_value.is_error() && return_value.error() != Error::from_errno(EOVERFLOW)) {
         dbgln("Screen #{}: Failed to set resolution {}: {}", index(), info.resolution, return_value.error());
         MUST(on_change_resolution());
         return false;
     }
-    VERIFY_NOT_REACHED();
+    dbgln("Screen #{}: Failed to set resolution {}: {}, falling back to safe resolution", index(), info.resolution, return_value.error());
+    MUST(m_backend->set_safe_head_mode_setting());
+    MUST(on_change_resolution());
+    return false;
 }
 
 void Screen::set_buffer(int index)

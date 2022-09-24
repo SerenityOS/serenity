@@ -35,6 +35,7 @@ public:
     virtual ErrorOr<void> flush_framebuffer() = 0;
 
     virtual ErrorOr<void> set_head_mode_setting(GraphicsHeadModeSetting) = 0;
+    virtual ErrorOr<void> set_safe_head_mode_setting() = 0;
     virtual ErrorOr<GraphicsHeadModeSetting> get_head_mode_setting() = 0;
 
     bool m_can_device_flush_buffers { true };

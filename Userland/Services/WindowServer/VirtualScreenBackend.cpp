@@ -31,6 +31,11 @@ void VirtualScreenBackend::set_head_buffer(int index)
     m_first_buffer_active = index == 0;
 }
 
+ErrorOr<void> VirtualScreenBackend::set_safe_head_mode_setting()
+{
+    return {};
+}
+
 ErrorOr<void> VirtualScreenBackend::set_head_mode_setting(GraphicsHeadModeSetting mode_setting)
 {
     m_height = mode_setting.vertical_active;
