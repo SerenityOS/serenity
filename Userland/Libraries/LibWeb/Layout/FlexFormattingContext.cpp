@@ -619,7 +619,7 @@ float FlexFormattingContext::calculate_indefinite_main_size(FlexItem const& item
     box_state.set_content_width(fit_content_cross_size);
     independent_formatting_context->run(item.box, LayoutMode::Normal);
 
-    return BlockFormattingContext::compute_theoretical_height(throwaway_state, item.box);
+    return independent_formatting_context->automatic_content_height();
 }
 
 // https://drafts.csswg.org/css-flexbox-1/#propdef-flex-basis
@@ -1073,7 +1073,7 @@ void FlexFormattingContext::determine_hypothetical_cross_size_of_item(FlexItem& 
 
     independent_formatting_context->run(item.box, LayoutMode::Normal);
 
-    auto automatic_cross_size = is_row_layout() ? BlockFormattingContext::compute_theoretical_height(throwaway_state, item.box)
+    auto automatic_cross_size = is_row_layout() ? independent_formatting_context->automatic_content_height()
                                                 : box_state.content_width();
 
     item.hypothetical_cross_size = css_clamp(automatic_cross_size, clamp_min, clamp_max);
