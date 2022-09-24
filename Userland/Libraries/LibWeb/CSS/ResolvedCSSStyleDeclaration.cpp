@@ -21,12 +21,11 @@ namespace Web::CSS {
 
 ResolvedCSSStyleDeclaration* ResolvedCSSStyleDeclaration::create(DOM::Element& element)
 {
-    auto& window_object = element.document().window();
-    return window_object.heap().allocate<ResolvedCSSStyleDeclaration>(window_object.realm(), element);
+    return element.realm().heap().allocate<ResolvedCSSStyleDeclaration>(element.realm(), element);
 }
 
 ResolvedCSSStyleDeclaration::ResolvedCSSStyleDeclaration(DOM::Element& element)
-    : CSSStyleDeclaration(element.document().window())
+    : CSSStyleDeclaration(element.realm())
     , m_element(element)
 {
 }
@@ -541,14 +540,14 @@ Optional<StyleProperty> ResolvedCSSStyleDeclaration::property(PropertyID propert
 WebIDL::ExceptionOr<void> ResolvedCSSStyleDeclaration::set_property(PropertyID, StringView, StringView)
 {
     // 1. If the computed flag is set, then throw a NoModificationAllowedError exception.
-    return WebIDL::NoModificationAllowedError::create(global_object(), "Cannot modify properties in result of getComputedStyle()");
+    return WebIDL::NoModificationAllowedError::create(realm(), "Cannot modify properties in result of getComputedStyle()");
 }
 
 // https://drafts.csswg.org/cssom/#dom-cssstyledeclaration-removeproperty
 WebIDL::ExceptionOr<String> ResolvedCSSStyleDeclaration::remove_property(PropertyID)
 {
     // 1. If the computed flag is set, then throw a NoModificationAllowedError exception.
-    return WebIDL::NoModificationAllowedError::create(global_object(), "Cannot remove properties from result of getComputedStyle()");
+    return WebIDL::NoModificationAllowedError::create(realm(), "Cannot remove properties from result of getComputedStyle()");
 }
 
 String ResolvedCSSStyleDeclaration::serialized() const

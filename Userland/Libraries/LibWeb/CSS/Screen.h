@@ -17,8 +17,6 @@ class Screen final : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(Screen, Bindings::PlatformObject);
 
 public:
-    using AllowOwnPtr = TrueType;
-
     static JS::NonnullGCPtr<Screen> create(HTML::Window&);
 
     i32 width() const { return screen_rect().width(); }

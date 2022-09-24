@@ -55,7 +55,7 @@ public:
     virtual JS::ThrowCompletionOr<bool> internal_set(JS::PropertyKey const&, JS::Value value, JS::Value receiver) override;
 
 protected:
-    explicit CSSStyleDeclaration(HTML::Window&);
+    explicit CSSStyleDeclaration(JS::Realm&);
 };
 
 class PropertyOwningCSSStyleDeclaration : public CSSStyleDeclaration {
@@ -63,7 +63,7 @@ class PropertyOwningCSSStyleDeclaration : public CSSStyleDeclaration {
     friend class ElementInlineCSSStyleDeclaration;
 
 public:
-    static PropertyOwningCSSStyleDeclaration* create(HTML::Window&, Vector<StyleProperty>, HashMap<String, StyleProperty> custom_properties);
+    static PropertyOwningCSSStyleDeclaration* create(JS::Realm&, Vector<StyleProperty>, HashMap<String, StyleProperty> custom_properties);
 
     virtual ~PropertyOwningCSSStyleDeclaration() override = default;
 
@@ -83,7 +83,7 @@ public:
     virtual String serialized() const final override;
 
 protected:
-    PropertyOwningCSSStyleDeclaration(HTML::Window&, Vector<StyleProperty>, HashMap<String, StyleProperty>);
+    PropertyOwningCSSStyleDeclaration(JS::Realm&, Vector<StyleProperty>, HashMap<String, StyleProperty>);
 
     virtual void update_style_attribute() { }
 
@@ -108,7 +108,7 @@ public:
     bool is_updating() const { return m_updating; }
 
 private:
-    explicit ElementInlineCSSStyleDeclaration(DOM::Element&, Vector<StyleProperty> properties, HashMap<String, StyleProperty> custom_properties);
+    ElementInlineCSSStyleDeclaration(DOM::Element&, Vector<StyleProperty> properties, HashMap<String, StyleProperty> custom_properties);
 
     virtual void visit_edges(Cell::Visitor&) override;
 

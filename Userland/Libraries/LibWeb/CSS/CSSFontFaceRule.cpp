@@ -5,22 +5,23 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibWeb/Bindings/CSSFontFaceRulePrototype.h>
+#include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/CSS/CSSFontFaceRule.h>
 #include <LibWeb/CSS/Serialize.h>
-#include <LibWeb/HTML/Window.h>
 
 namespace Web::CSS {
 
-CSSFontFaceRule* CSSFontFaceRule::create(HTML::Window& window_object, FontFace&& font_face)
+CSSFontFaceRule* CSSFontFaceRule::create(JS::Realm& realm, FontFace&& font_face)
 {
-    return window_object.heap().allocate<CSSFontFaceRule>(window_object.realm(), window_object, move(font_face));
+    return realm.heap().allocate<CSSFontFaceRule>(realm, realm, move(font_face));
 }
 
-CSSFontFaceRule::CSSFontFaceRule(HTML::Window& window_object, FontFace&& font_face)
-    : CSSRule(window_object)
+CSSFontFaceRule::CSSFontFaceRule(JS::Realm& realm, FontFace&& font_face)
+    : CSSRule(realm)
     , m_font_face(move(font_face))
 {
-    set_prototype(&window_object.cached_web_prototype("CSSFontFaceRule"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::CSSFontFaceRulePrototype>(realm, "CSSFontFaceRule"));
 }
 
 CSSStyleDeclaration* CSSFontFaceRule::style()

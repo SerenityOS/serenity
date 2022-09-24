@@ -46,7 +46,7 @@ public:
     void set_parent_css_style_sheet(CSSStyleSheet*);
 
 protected:
-    explicit StyleSheet(HTML::Window&);
+    explicit StyleSheet(JS::Realm&);
     virtual void visit_edges(Cell::Visitor&) override;
 
 private:

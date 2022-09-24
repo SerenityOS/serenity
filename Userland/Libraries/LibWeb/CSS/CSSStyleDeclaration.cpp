@@ -4,26 +4,27 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibWeb/Bindings/CSSStyleDeclarationPrototype.h>
+#include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/CSS/CSSStyleDeclaration.h>
 #include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Element.h>
-#include <LibWeb/HTML/Window.h>
 
 namespace Web::CSS {
 
-CSSStyleDeclaration::CSSStyleDeclaration(HTML::Window& window_object)
-    : PlatformObject(window_object.cached_web_prototype("CSSStyleDeclaration"))
+CSSStyleDeclaration::CSSStyleDeclaration(JS::Realm& realm)
+    : PlatformObject(Bindings::ensure_web_prototype<Bindings::CSSStyleDeclarationPrototype>(realm, "CSSStyleDeclaration"))
 {
 }
 
-PropertyOwningCSSStyleDeclaration* PropertyOwningCSSStyleDeclaration::create(HTML::Window& window_object, Vector<StyleProperty> properties, HashMap<String, StyleProperty> custom_properties)
+PropertyOwningCSSStyleDeclaration* PropertyOwningCSSStyleDeclaration::create(JS::Realm& realm, Vector<StyleProperty> properties, HashMap<String, StyleProperty> custom_properties)
 {
-    return window_object.heap().allocate<PropertyOwningCSSStyleDeclaration>(window_object.realm(), window_object, move(properties), move(custom_properties));
+    return realm.heap().allocate<PropertyOwningCSSStyleDeclaration>(realm, realm, move(properties), move(custom_properties));
 }
 
-PropertyOwningCSSStyleDeclaration::PropertyOwningCSSStyleDeclaration(HTML::Window& window_object, Vector<StyleProperty> properties, HashMap<String, StyleProperty> custom_properties)
-    : CSSStyleDeclaration(window_object)
+PropertyOwningCSSStyleDeclaration::PropertyOwningCSSStyleDeclaration(JS::Realm& realm, Vector<StyleProperty> properties, HashMap<String, StyleProperty> custom_properties)
+    : CSSStyleDeclaration(realm)
     , m_properties(move(properties))
     , m_custom_properties(move(custom_properties))
 {
@@ -38,12 +39,12 @@ String PropertyOwningCSSStyleDeclaration::item(size_t index) const
 
 ElementInlineCSSStyleDeclaration* ElementInlineCSSStyleDeclaration::create(DOM::Element& element, Vector<StyleProperty> properties, HashMap<String, StyleProperty> custom_properties)
 {
-    auto& window_object = element.document().window();
-    return window_object.heap().allocate<ElementInlineCSSStyleDeclaration>(window_object.realm(), element, move(properties), move(custom_properties));
+    auto& realm = element.realm();
+    return realm.heap().allocate<ElementInlineCSSStyleDeclaration>(realm, element, move(properties), move(custom_properties));
 }
 
 ElementInlineCSSStyleDeclaration::ElementInlineCSSStyleDeclaration(DOM::Element& element, Vector<StyleProperty> properties, HashMap<String, StyleProperty> custom_properties)
-    : PropertyOwningCSSStyleDeclaration(element.document().window(), move(properties), move(custom_properties))
+    : PropertyOwningCSSStyleDeclaration(element.realm(), move(properties), move(custom_properties))
     , m_element(element.make_weak_ptr<DOM::Element>())
 {
 }

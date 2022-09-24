@@ -20,7 +20,7 @@ class MediaList final : public Bindings::LegacyPlatformObject {
     WEB_PLATFORM_OBJECT(MediaList, Bindings::LegacyPlatformObject);
 
 public:
-    static MediaList* create(HTML::Window&, NonnullRefPtrVector<MediaQuery>&& media);
+    static MediaList* create(JS::Realm&, NonnullRefPtrVector<MediaQuery>&& media);
     ~MediaList() = default;
 
     String media_text() const;
@@ -37,7 +37,7 @@ public:
     bool matches() const;
 
 private:
-    explicit MediaList(HTML::Window&, NonnullRefPtrVector<MediaQuery>&&);
+    MediaList(JS::Realm&, NonnullRefPtrVector<MediaQuery>&&);
 
     NonnullRefPtrVector<MediaQuery> m_media;
 };

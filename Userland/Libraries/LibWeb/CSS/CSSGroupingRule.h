@@ -31,7 +31,7 @@ public:
     virtual void set_parent_style_sheet(CSSStyleSheet*) override;
 
 protected:
-    explicit CSSGroupingRule(HTML::Window&, CSSRuleList&);
+    CSSGroupingRule(JS::Realm&, CSSRuleList&);
     virtual void visit_edges(Cell::Visitor&) override;
 
 private:

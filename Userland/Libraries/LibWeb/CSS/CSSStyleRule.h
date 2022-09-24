@@ -19,7 +19,7 @@ class CSSStyleRule final : public CSSRule {
     WEB_PLATFORM_OBJECT(CSSStyleRule, CSSRule);
 
 public:
-    static CSSStyleRule* create(HTML::Window&, NonnullRefPtrVector<Selector>&&, CSSStyleDeclaration&);
+    static CSSStyleRule* create(JS::Realm&, NonnullRefPtrVector<Selector>&&, CSSStyleDeclaration&);
 
     virtual ~CSSStyleRule() override = default;
 
@@ -34,7 +34,7 @@ public:
     CSSStyleDeclaration* style();
 
 private:
-    CSSStyleRule(HTML::Window&, NonnullRefPtrVector<Selector>&&, CSSStyleDeclaration&);
+    CSSStyleRule(JS::Realm&, NonnullRefPtrVector<Selector>&&, CSSStyleDeclaration&);
 
     virtual void visit_edges(Cell::Visitor&) override;
     virtual String serialized() const override;

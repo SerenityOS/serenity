@@ -5,6 +5,8 @@
  */
 
 #include <LibGfx/Rect.h>
+#include <LibWeb/Bindings/Intrinsics.h>
+#include <LibWeb/Bindings/ScreenPrototype.h>
 #include <LibWeb/CSS/Screen.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/Page/Page.h>
@@ -20,7 +22,7 @@ Screen::Screen(HTML::Window& window)
     : PlatformObject(window.realm())
     , m_window(window)
 {
-    set_prototype(&window.cached_web_prototype("Screen"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::ScreenPrototype>(window.realm(), "Screen"));
 }
 
 void Screen::visit_edges(Cell::Visitor& visitor)

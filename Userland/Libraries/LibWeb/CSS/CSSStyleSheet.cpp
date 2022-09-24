@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibWeb/Bindings/CSSStyleSheetPrototype.h>
+#include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/CSS/CSSStyleSheet.h>
 #include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/CSS/StyleSheetList.h>
@@ -12,16 +14,16 @@
 
 namespace Web::CSS {
 
-CSSStyleSheet* CSSStyleSheet::create(HTML::Window& window_object, CSSRuleList& rules, Optional<AK::URL> location)
+CSSStyleSheet* CSSStyleSheet::create(JS::Realm& realm, CSSRuleList& rules, Optional<AK::URL> location)
 {
-    return window_object.heap().allocate<CSSStyleSheet>(window_object.realm(), window_object, rules, move(location));
+    return realm.heap().allocate<CSSStyleSheet>(realm, realm, rules, move(location));
 }
 
-CSSStyleSheet::CSSStyleSheet(HTML::Window& window_object, CSSRuleList& rules, Optional<AK::URL> location)
-    : StyleSheet(window_object)
+CSSStyleSheet::CSSStyleSheet(JS::Realm& realm, CSSRuleList& rules, Optional<AK::URL> location)
+    : StyleSheet(realm)
     , m_rules(&rules)
 {
-    set_prototype(&window_object.cached_web_prototype("CSSStyleSheet"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::CSSStyleSheetPrototype>(realm, "CSSStyleSheet"));
 
     if (location.has_value())
         set_location(location->to_string());
@@ -50,7 +52,7 @@ WebIDL::ExceptionOr<unsigned> CSSStyleSheet::insert_rule(StringView rule, unsign
 
     // 4. If parsed rule is a syntax error, return parsed rule.
     if (!parsed_rule)
-        return WebIDL::SyntaxError::create(global_object(), "Unable to parse CSS rule.");
+        return WebIDL::SyntaxError::create(realm(), "Unable to parse CSS rule.");
 
     // FIXME: 5. If parsed rule is an @import rule, and the constructed flag is set, throw a SyntaxError DOMException.
 

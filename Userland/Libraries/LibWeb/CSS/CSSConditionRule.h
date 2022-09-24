@@ -25,7 +25,7 @@ public:
     virtual void for_each_effective_style_rule(Function<void(CSSStyleRule const&)> const& callback) const override;
 
 protected:
-    explicit CSSConditionRule(HTML::Window&, CSSRuleList&);
+    CSSConditionRule(JS::Realm&, CSSRuleList&);
 };
 
 }

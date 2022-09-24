@@ -24,9 +24,8 @@ class CSSStyleSheet final
     WEB_PLATFORM_OBJECT(CSSStyleSheet, StyleSheet);
 
 public:
-    static CSSStyleSheet* create(HTML::Window&, CSSRuleList& rules, Optional<AK::URL> location);
+    static CSSStyleSheet* create(JS::Realm&, CSSRuleList& rules, Optional<AK::URL> location);
 
-    explicit CSSStyleSheet(HTML::Window&, CSSRuleList&, Optional<AK::URL> location);
     virtual ~CSSStyleSheet() override = default;
 
     void set_owner_css_rule(CSSRule* rule) { m_owner_css_rule = rule; }
@@ -51,6 +50,8 @@ public:
     void set_style_sheet_list(Badge<StyleSheetList>, StyleSheetList*);
 
 private:
+    CSSStyleSheet(JS::Realm&, CSSRuleList&, Optional<AK::URL> location);
+
     virtual void visit_edges(Cell::Visitor&) override;
 
     CSSRuleList* m_rules { nullptr };

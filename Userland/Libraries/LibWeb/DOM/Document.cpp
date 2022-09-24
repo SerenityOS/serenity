@@ -1709,7 +1709,7 @@ void Document::evaluate_media_queries_and_report_changes()
             CSS::MediaQueryListEventInit init;
             init.media = media_query_list->media();
             init.matches = now_matches;
-            auto event = CSS::MediaQueryListEvent::create(window(), HTML::EventNames::change, init);
+            auto event = CSS::MediaQueryListEvent::create(realm(), HTML::EventNames::change, init);
             event->set_is_trusted(true);
             media_query_list->dispatch_event(*event);
         }

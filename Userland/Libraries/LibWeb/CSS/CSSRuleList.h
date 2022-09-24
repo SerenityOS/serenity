@@ -23,10 +23,9 @@ class CSSRuleList : public Bindings::LegacyPlatformObject {
     WEB_PLATFORM_OBJECT(CSSRuleList, Bindings::LegacyPlatformObject);
 
 public:
-    static CSSRuleList* create(HTML::Window&, JS::MarkedVector<CSSRule*> const&);
-    static CSSRuleList* create_empty(HTML::Window&);
+    static CSSRuleList* create(JS::Realm&, JS::MarkedVector<CSSRule*> const&);
+    static CSSRuleList* create_empty(JS::Realm&);
 
-    explicit CSSRuleList(HTML::Window&);
     ~CSSRuleList() = default;
 
     CSSRule const* item(size_t index) const
@@ -65,6 +64,8 @@ public:
     bool evaluate_media_queries(HTML::Window const&);
 
 private:
+    explicit CSSRuleList(JS::Realm&);
+
     virtual void visit_edges(Cell::Visitor&) override;
 
     Vector<CSSRule&> m_rules;
