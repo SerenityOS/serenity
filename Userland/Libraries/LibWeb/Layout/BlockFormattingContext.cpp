@@ -321,8 +321,10 @@ void BlockFormattingContext::compute_width_for_block_level_replaced_element_in_n
     m_state.get_mutable(box).set_content_width(compute_width_for_replaced_element(m_state, box));
 }
 
-float BlockFormattingContext::compute_theoretical_height(LayoutState const& state, Box const& box)
+void BlockFormattingContext::compute_height(Box const& box, LayoutState& state)
 {
+    resolve_vertical_box_model_metrics(box, *box.containing_block(), state);
+
     auto const& computed_values = box.computed_values();
     auto containing_block_height = CSS::Length::make_px(containing_block_height_for(box, state));
 
@@ -344,13 +346,8 @@ float BlockFormattingContext::compute_theoretical_height(LayoutState const& stat
     auto specified_min_height = computed_values.min_height().resolved(box, containing_block_height).resolved(box);
     if (!specified_min_height.is_auto())
         height = max(height, specified_min_height.to_px(box));
-    return height;
-}
 
-void BlockFormattingContext::compute_height(Box const& box, LayoutState& state)
-{
-    resolve_vertical_box_model_metrics(box, *box.containing_block(), state);
-    state.get_mutable(box).set_content_height(compute_theoretical_height(state, box));
+    state.get_mutable(box).set_content_height(height);
 }
 
 void BlockFormattingContext::layout_inline_children(BlockContainer const& block_container, LayoutMode layout_mode)

@@ -30,7 +30,6 @@ public:
     auto const& left_side_floats() const { return m_left_floats; }
     auto const& right_side_floats() const { return m_right_floats; }
 
-    static float compute_theoretical_height(LayoutState const&, Box const&);
     void compute_width(Box const&, LayoutMode = LayoutMode::Normal);
 
     // https://www.w3.org/TR/css-display/#block-formatting-context-root
