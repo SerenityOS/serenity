@@ -18,7 +18,6 @@
 #include <LibWeb/Bindings/EventTargetConstructor.h>
 #include <LibWeb/Bindings/EventTargetPrototype.h>
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
-#include <LibWeb/Bindings/IDLAbstractOperations.h>
 #include <LibWeb/Bindings/LocationObject.h>
 #include <LibWeb/Bindings/NavigatorObject.h>
 #include <LibWeb/Bindings/Replaceable.h>
@@ -50,6 +49,7 @@
 #include <LibWeb/RequestIdleCallback/IdleDeadline.h>
 #include <LibWeb/Selection/Selection.h>
 #include <LibWeb/WebAssembly/WebAssemblyObject.h>
+#include <LibWeb/WebIDL/AbstractOperations.h>
 
 namespace Web::HTML {
 
@@ -214,7 +214,7 @@ i32 Window::run_timer_initialization_steps(TimerHandler handler, i32 timeout, JS
         handler.visit(
             // 2. If handler is a Function, then invoke handler given arguments with the callback this value set to thisArg. If this throws an exception, catch it, and report the exception.
             [&](JS::Handle<WebIDL::CallbackType> callback) {
-                if (auto result = Bindings::IDL::invoke_callback(*callback, window.ptr(), arguments); result.is_error())
+                if (auto result = WebIDL::invoke_callback(*callback, window.ptr(), arguments); result.is_error())
                     HTML::report_exception(result);
             },
             // 3. Otherwise:
@@ -281,7 +281,7 @@ i32 Window::request_animation_frame_impl(WebIDL::CallbackType& js_callback)
 {
     return m_animation_frame_callback_driver.add([this, js_callback = JS::make_handle(js_callback)](auto) mutable {
         // 3. Invoke callback, passing now as the only argument,
-        auto result = Bindings::IDL::invoke_callback(*js_callback, {}, JS::Value(performance().now()));
+        auto result = WebIDL::invoke_callback(*js_callback, {}, JS::Value(performance().now()));
 
         // and if an exception is thrown, report the exception.
         if (result.is_error())
@@ -510,7 +510,7 @@ void Window::queue_microtask_impl(WebIDL::CallbackType& callback)
 {
     // The queueMicrotask(callback) method must queue a microtask to invoke callback,
     HTML::queue_a_microtask(&associated_document(), [&callback]() mutable {
-        auto result = Bindings::IDL::invoke_callback(callback, {});
+        auto result = WebIDL::invoke_callback(callback, {});
         // and if callback throws an exception, report the exception.
         if (result.is_error())
             HTML::report_exception(result);
@@ -696,7 +696,7 @@ u32 Window::request_idle_callback_impl(WebIDL::CallbackType& callback)
     auto handle = window.m_idle_callback_identifier;
     // 4. Push callback to the end of window's list of idle request callbacks, associated with handle.
     auto handler = [callback = JS::make_handle(callback)](JS::NonnullGCPtr<RequestIdleCallback::IdleDeadline> deadline) -> JS::Completion {
-        return Bindings::IDL::invoke_callback(const_cast<WebIDL::CallbackType&>(*callback), {}, deadline.ptr());
+        return WebIDL::invoke_callback(const_cast<WebIDL::CallbackType&>(*callback), {}, deadline.ptr());
     };
     window.m_idle_request_callbacks.append(adopt_ref(*new IdleCallback(move(handler), handle)));
     // 5. Return handle and then continue running this algorithm asynchronously.

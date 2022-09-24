@@ -6,9 +6,9 @@
 
 #include <AK/FlyString.h>
 #include <LibJS/Runtime/TypedArray.h>
-#include <LibWeb/Bindings/IDLAbstractOperations.h>
 #include <LibWeb/Encoding/TextDecoder.h>
 #include <LibWeb/HTML/Window.h>
+#include <LibWeb/WebIDL/AbstractOperations.h>
 
 namespace Web::Encoding {
 
@@ -39,7 +39,7 @@ DOM::ExceptionOr<String> TextDecoder::decode(JS::Handle<JS::Object> const& input
 {
     // FIXME: Implement the streaming stuff.
 
-    auto data_buffer_or_error = Bindings::IDL::get_buffer_source_copy(*input.cell());
+    auto data_buffer_or_error = WebIDL::get_buffer_source_copy(*input.cell());
     if (data_buffer_or_error.is_error())
         return DOM::OperationError::create(global_object(), "Failed to copy bytes from ArrayBuffer");
     auto& data_buffer = data_buffer_or_error.value();

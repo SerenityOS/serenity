@@ -12,9 +12,9 @@
 #include <LibJS/Runtime/DataView.h>
 #include <LibJS/Runtime/PropertyKey.h>
 #include <LibJS/Runtime/TypedArray.h>
-#include <LibWeb/Bindings/IDLAbstractOperations.h>
+#include <LibWeb/WebIDL/AbstractOperations.h>
 
-namespace Web::Bindings::IDL {
+namespace Web::WebIDL {
 
 // https://webidl.spec.whatwg.org/#dfn-get-buffer-source-copy
 ErrorOr<ByteBuffer> get_buffer_source_copy(JS::Object const& buffer_source)

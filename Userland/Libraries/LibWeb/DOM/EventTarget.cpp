@@ -14,7 +14,6 @@
 #include <LibJS/Runtime/ObjectEnvironment.h>
 #include <LibJS/Runtime/VM.h>
 #include <LibWeb/Bindings/EventTargetPrototype.h>
-#include <LibWeb/Bindings/IDLAbstractOperations.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/DOM/AbortSignal.h>
 #include <LibWeb/DOM/DOMEventListener.h>
@@ -32,6 +31,7 @@
 #include <LibWeb/HTML/HTMLFrameSetElement.h>
 #include <LibWeb/HTML/Window.h>
 #include <LibWeb/UIEvents/EventNames.h>
+#include <LibWeb/WebIDL/AbstractOperations.h>
 
 namespace Web::DOM {
 
@@ -635,7 +635,7 @@ JS::ThrowCompletionOr<void> EventTarget::process_event_handler_for_event(FlyStri
         //        calls directly into the callback without considering things such as proxies, it is a waste. However, if it observable, then we must reuse the this_value that was given to the callback.
         auto* this_value = error_event.current_target().ptr();
 
-        return_value_or_error = Bindings::IDL::invoke_callback(*callback, this_value, wrapped_message, wrapped_filename, wrapped_lineno, wrapped_colno, error_event.error());
+        return_value_or_error = WebIDL::invoke_callback(*callback, this_value, wrapped_message, wrapped_filename, wrapped_lineno, wrapped_colno, error_event.error());
     } else {
         // -> Otherwise
         // Invoke callback with one argument, the value of which is the Event object event, with the callback this value set to event's currentTarget. Let return value be the callback's return value. [WEBIDL]
@@ -646,7 +646,7 @@ JS::ThrowCompletionOr<void> EventTarget::process_event_handler_for_event(FlyStri
         // FIXME: The comments about this in the special_error_event_handling path also apply here.
         auto* this_value = event.current_target().ptr();
 
-        return_value_or_error = Bindings::IDL::invoke_callback(*callback, this_value, wrapped_event);
+        return_value_or_error = WebIDL::invoke_callback(*callback, this_value, wrapped_event);
     }
 
     // If an exception gets thrown by the callback, end these steps and allow the exception to propagate. (It will propagate to the DOM event dispatch logic, which will then report the exception.)

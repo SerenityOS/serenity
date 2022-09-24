@@ -3,7 +3,6 @@ include(libweb_generators)
 set(SOURCES
     Bindings/AudioConstructor.cpp
     Bindings/CSSNamespace.cpp
-    Bindings/IDLAbstractOperations.cpp
     Bindings/IDLOverloadResolution.cpp
     Bindings/ImageConstructor.cpp
     Bindings/LegacyPlatformObject.cpp
@@ -412,6 +411,7 @@ set(SOURCES
     WebGL/WebGLContextEvent.cpp
     WebGL/WebGLRenderingContext.cpp
     WebGL/WebGLRenderingContextBase.cpp
+    WebIDL/AbstractOperations.cpp
     WebIDL/CallbackType.cpp
     WebSockets/WebSocket.cpp
     XHR/EventNames.cpp

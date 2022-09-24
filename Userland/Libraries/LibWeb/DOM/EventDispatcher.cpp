@@ -8,7 +8,6 @@
 #include <AK/TypeCasts.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/FunctionObject.h>
-#include <LibWeb/Bindings/IDLAbstractOperations.h>
 #include <LibWeb/DOM/AbortSignal.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>
@@ -21,6 +20,7 @@
 #include <LibWeb/HTML/Scripting/ExceptionReporter.h>
 #include <LibWeb/HTML/Window.h>
 #include <LibWeb/UIEvents/MouseEvent.h>
+#include <LibWeb/WebIDL/AbstractOperations.h>
 
 namespace Web::DOM {
 
@@ -109,7 +109,7 @@ bool EventDispatcher::inner_invoke(Event& event, Vector<JS::Handle<DOM::DOMEvent
         // FIXME: These should be wrapped for us in call_user_object_operation, but it currently doesn't do that.
         auto* this_value = event.current_target().ptr();
         auto* wrapped_event = &event;
-        auto result = Bindings::IDL::call_user_object_operation(callback, "handleEvent", this_value, wrapped_event);
+        auto result = WebIDL::call_user_object_operation(callback, "handleEvent", this_value, wrapped_event);
 
         // If this throws an exception, then:
         if (result.is_error()) {

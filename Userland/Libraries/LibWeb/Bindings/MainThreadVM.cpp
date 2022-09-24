@@ -11,7 +11,6 @@
 #include <LibJS/Runtime/FinalizationRegistry.h>
 #include <LibJS/Runtime/NativeFunction.h>
 #include <LibJS/Runtime/VM.h>
-#include <LibWeb/Bindings/IDLAbstractOperations.h>
 #include <LibWeb/Bindings/LocationObject.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/Bindings/WindowProxy.h>
@@ -22,6 +21,7 @@
 #include <LibWeb/HTML/Scripting/ExceptionReporter.h>
 #include <LibWeb/HTML/Window.h>
 #include <LibWeb/Platform/EventLoopPlugin.h>
+#include <LibWeb/WebIDL/AbstractOperations.h>
 
 namespace Web::Bindings {
 
@@ -380,7 +380,7 @@ void queue_mutation_observer_microtask(DOM::Document& document)
                     MUST(wrapped_records->create_data_property(property_index, record.ptr()));
                 }
 
-                auto result = IDL::invoke_callback(callback, mutation_observer.ptr(), wrapped_records, mutation_observer.ptr());
+                auto result = WebIDL::invoke_callback(callback, mutation_observer.ptr(), wrapped_records, mutation_observer.ptr());
                 if (result.is_abrupt())
                     HTML::report_exception(result);
             }
