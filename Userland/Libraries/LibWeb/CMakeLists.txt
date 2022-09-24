@@ -4,7 +4,6 @@ set(SOURCES
     Bindings/AudioConstructor.cpp
     Bindings/CSSNamespace.cpp
     Bindings/CallbackType.cpp
-    Bindings/CrossOriginAbstractOperations.cpp
     Bindings/IDLAbstractOperations.cpp
     Bindings/IDLOverloadResolution.cpp
     Bindings/ImageConstructor.cpp
@@ -152,6 +151,7 @@ set(SOURCES
     HTML/CanvasGradient.cpp
     HTML/CanvasRenderingContext2D.cpp
     HTML/CloseEvent.cpp
+    HTML/CrossOrigin/AbstractOperations.cpp
     HTML/CrossOrigin/Reporting.cpp
     HTML/DOMParser.cpp
     HTML/DOMStringMap.cpp

@@ -10,9 +10,9 @@
 #include <AK/URL.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Runtime/Completion.h>
-#include <LibWeb/Bindings/CrossOriginAbstractOperations.h>
 #include <LibWeb/Bindings/PlatformObject.h>
 #include <LibWeb/Forward.h>
+#include <LibWeb/HTML/CrossOrigin/CrossOriginPropertyDescriptorMap.h>
 
 namespace Web {
 namespace Bindings {
@@ -34,8 +34,8 @@ public:
     virtual JS::ThrowCompletionOr<bool> internal_delete(JS::PropertyKey const&) override;
     virtual JS::ThrowCompletionOr<JS::MarkedVector<JS::Value>> internal_own_property_keys() const override;
 
-    CrossOriginPropertyDescriptorMap const& cross_origin_property_descriptor_map() const { return m_cross_origin_property_descriptor_map; }
-    CrossOriginPropertyDescriptorMap& cross_origin_property_descriptor_map() { return m_cross_origin_property_descriptor_map; }
+    HTML::CrossOriginPropertyDescriptorMap const& cross_origin_property_descriptor_map() const { return m_cross_origin_property_descriptor_map; }
+    HTML::CrossOriginPropertyDescriptorMap& cross_origin_property_descriptor_map() { return m_cross_origin_property_descriptor_map; }
 
 private:
     explicit LocationObject(JS::Realm&);
@@ -61,7 +61,7 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(port_getter);
 
     // [[CrossOriginPropertyDescriptorMap]], https://html.spec.whatwg.org/multipage/browsers.html#crossoriginpropertydescriptormap
-    CrossOriginPropertyDescriptorMap m_cross_origin_property_descriptor_map;
+    HTML::CrossOriginPropertyDescriptorMap m_cross_origin_property_descriptor_map;
 
     // [[DefaultProperties]], https://html.spec.whatwg.org/multipage/history.html#defaultproperties
     Vector<JS::Value> m_default_properties;

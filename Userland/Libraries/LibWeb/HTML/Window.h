@@ -13,10 +13,10 @@
 #include <AK/TypeCasts.h>
 #include <AK/URL.h>
 #include <LibJS/Heap/Heap.h>
-#include <LibWeb/Bindings/CrossOriginAbstractOperations.h>
 #include <LibWeb/DOM/EventTarget.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/HTML/AnimationFrameCallbackDriver.h>
+#include <LibWeb/HTML/CrossOrigin/CrossOriginPropertyDescriptorMap.h>
 #include <LibWeb/HTML/GlobalEventHandlers.h>
 #include <LibWeb/HTML/WindowEventHandlers.h>
 
@@ -202,8 +202,8 @@ public:
 
     virtual JS::ThrowCompletionOr<bool> internal_set_prototype_of(JS::Object* prototype) override;
 
-    Bindings::CrossOriginPropertyDescriptorMap const& cross_origin_property_descriptor_map() const { return m_cross_origin_property_descriptor_map; }
-    Bindings::CrossOriginPropertyDescriptorMap& cross_origin_property_descriptor_map() { return m_cross_origin_property_descriptor_map; }
+    CrossOriginPropertyDescriptorMap const& cross_origin_property_descriptor_map() const { return m_cross_origin_property_descriptor_map; }
+    CrossOriginPropertyDescriptorMap& cross_origin_property_descriptor_map() { return m_cross_origin_property_descriptor_map; }
 
 private:
     JS_DECLARE_NATIVE_FUNCTION(length_getter);
@@ -287,7 +287,7 @@ private:
     HashMap<String, JS::NativeFunction*> m_constructors;
 
     // [[CrossOriginPropertyDescriptorMap]], https://html.spec.whatwg.org/multipage/browsers.html#crossoriginpropertydescriptormap
-    Bindings::CrossOriginPropertyDescriptorMap m_cross_origin_property_descriptor_map;
+    CrossOriginPropertyDescriptorMap m_cross_origin_property_descriptor_map;
 };
 
 void run_animation_frame_callbacks(DOM::Document&, double now);
