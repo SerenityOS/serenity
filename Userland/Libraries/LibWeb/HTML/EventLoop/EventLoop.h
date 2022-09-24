@@ -10,6 +10,7 @@
 #include <AK/WeakPtr.h>
 #include <LibCore/Forward.h>
 #include <LibJS/Forward.h>
+#include <LibJS/SafeFunction.h>
 #include <LibWeb/HTML/EventLoop/TaskQueue.h>
 
 namespace Web::HTML {
@@ -107,9 +108,9 @@ private:
 };
 
 EventLoop& main_thread_event_loop();
-void old_queue_global_task_with_document(HTML::Task::Source, DOM::Document&, Function<void()> steps);
-void queue_global_task(HTML::Task::Source, JS::Object&, Function<void()> steps);
-void queue_a_microtask(DOM::Document*, Function<void()> steps);
+void old_queue_global_task_with_document(HTML::Task::Source, DOM::Document&, JS::SafeFunction<void()> steps);
+void queue_global_task(HTML::Task::Source, JS::Object&, JS::SafeFunction<void()> steps);
+void queue_a_microtask(DOM::Document*, JS::SafeFunction<void()> steps);
 void perform_a_microtask_checkpoint();
 
 }

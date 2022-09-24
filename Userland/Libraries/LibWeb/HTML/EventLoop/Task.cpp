@@ -9,7 +9,7 @@
 
 namespace Web::HTML {
 
-Task::Task(Source source, DOM::Document* document, Function<void()> steps)
+Task::Task(Source source, DOM::Document* document, JS::SafeFunction<void()> steps)
     : m_source(source)
     , m_steps(move(steps))
     , m_document(JS::make_handle(document))

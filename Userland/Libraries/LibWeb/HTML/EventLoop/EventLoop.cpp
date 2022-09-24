@@ -231,13 +231,13 @@ void EventLoop::process()
 
 // FIXME: This is here to paper over an issue in the HTML parser where it'll create new interpreters (and thus ESOs) on temporary documents created for innerHTML if it uses Document::realm() to get the global object.
 //        Use queue_global_task instead.
-void old_queue_global_task_with_document(HTML::Task::Source source, DOM::Document& document, Function<void()> steps)
+void old_queue_global_task_with_document(HTML::Task::Source source, DOM::Document& document, JS::SafeFunction<void()> steps)
 {
     main_thread_event_loop().task_queue().add(HTML::Task::create(source, &document, move(steps)));
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#queue-a-global-task
-void queue_global_task(HTML::Task::Source source, JS::Object& global_object, Function<void()> steps)
+void queue_global_task(HTML::Task::Source source, JS::Object& global_object, JS::SafeFunction<void()> steps)
 {
     // 1. Let event loop be global's relevant agent's event loop.
     auto& global_custom_data = verify_cast<Bindings::WebEngineCustomData>(*global_object.vm().custom_data());
@@ -255,7 +255,7 @@ void queue_global_task(HTML::Task::Source source, JS::Object& global_object, Fun
 }
 
 // https://html.spec.whatwg.org/#queue-a-microtask
-void queue_a_microtask(DOM::Document* document, Function<void()> steps)
+void queue_a_microtask(DOM::Document* document, JS::SafeFunction<void()> steps)
 {
     // 1. If event loop was not given, set event loop to the implied event loop.
     auto& event_loop = HTML::main_thread_event_loop();
