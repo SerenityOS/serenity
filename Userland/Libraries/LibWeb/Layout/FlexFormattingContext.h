@@ -19,6 +19,7 @@ public:
     virtual bool inhibits_floating() const override { return true; }
 
     virtual void run(Box const&, LayoutMode) override;
+    virtual float automatic_content_height() const override;
 
     Box const& flex_container() const { return context_box(); }
 

@@ -52,6 +52,11 @@ FlexFormattingContext::FlexFormattingContext(LayoutState& state, Box const& flex
 
 FlexFormattingContext::~FlexFormattingContext() = default;
 
+float FlexFormattingContext::automatic_content_height() const
+{
+    return m_state.get(flex_container()).content_height();
+}
+
 void FlexFormattingContext::run(Box const& run_box, LayoutMode layout_mode)
 {
     VERIFY(&run_box == &flex_container());

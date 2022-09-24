@@ -78,6 +78,11 @@ float InlineFormattingContext::available_space_for_line(float y) const
     return space.right - space.left;
 }
 
+float InlineFormattingContext::automatic_content_height() const
+{
+    return compute_auto_height_for_block_formatting_context_root(m_state, containing_block());
+}
+
 void InlineFormattingContext::run(Box const&, LayoutMode layout_mode)
 {
     VERIFY(containing_block().children_are_inline());

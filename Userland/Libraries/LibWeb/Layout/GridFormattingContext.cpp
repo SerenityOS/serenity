@@ -1002,7 +1002,12 @@ void GridFormattingContext::run(Box const& box, LayoutMode)
     float total_y = 0;
     for (auto& grid_row : grid_rows)
         total_y += grid_row.base_size;
-    box_state.set_content_height(total_y);
+    m_automatic_content_height = total_y;
+}
+
+float GridFormattingContext::automatic_content_height() const
+{
+    return m_automatic_content_height;
 }
 
 }

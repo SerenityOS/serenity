@@ -39,6 +39,11 @@ bool BlockFormattingContext::is_initial() const
     return is<InitialContainingBlock>(root());
 }
 
+float BlockFormattingContext::automatic_content_height() const
+{
+    return compute_auto_height_for_block_formatting_context_root(m_state, root());
+}
+
 void BlockFormattingContext::run(Box const&, LayoutMode layout_mode)
 {
     if (is_initial()) {

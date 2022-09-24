@@ -107,7 +107,7 @@ void TableFormattingContext::run(Box const& box, LayoutMode)
         box_state.set_content_width(total_content_width);
 
     // FIXME: This is a total hack, we should respect the 'height' property.
-    box_state.set_content_height(total_content_height);
+    m_automatic_content_height = total_content_height;
 }
 
 void TableFormattingContext::calculate_column_widths(Box const& row, CSS::Length const& table_width, Vector<ColumnWidth>& column_widths)
@@ -207,6 +207,11 @@ void TableFormattingContext::layout_row(Box const& row, Vector<ColumnWidth>& col
         auto& table_state = m_state.get_mutable(*table);
         row_state.set_content_width(table_state.content_width());
     }
+}
+
+float TableFormattingContext::automatic_content_height() const
+{
+    return m_automatic_content_height;
 }
 
 }

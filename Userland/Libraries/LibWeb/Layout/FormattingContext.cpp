@@ -103,6 +103,7 @@ OwnPtr<FormattingContext> FormattingContext::create_independent_formatting_conte
                 : FormattingContext(Type::Block, state, box)
             {
             }
+            virtual float automatic_content_height() const override { return 0; };
             virtual void run(Box const&, LayoutMode) override { }
         };
         return make<ReplacedFormattingContext>(state, child_box);
@@ -144,6 +145,7 @@ OwnPtr<FormattingContext> FormattingContext::create_independent_formatting_conte
                 : FormattingContext(Type::Block, state, box)
             {
             }
+            virtual float automatic_content_height() const override { return 0; };
             virtual void run(Box const&, LayoutMode) override { }
         };
         return make<DummyFormattingContext>(state, child_box);

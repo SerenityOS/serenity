@@ -17,6 +17,7 @@ public:
     ~SVGFormattingContext();
 
     virtual void run(Box const&, LayoutMode) override;
+    virtual float automatic_content_height() const override;
 };
 
 }

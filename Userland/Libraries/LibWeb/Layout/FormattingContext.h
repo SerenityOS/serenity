@@ -26,6 +26,9 @@ public:
 
     virtual void run(Box const&, LayoutMode) = 0;
 
+    // This function returns the automatic content height of the context's root box.
+    virtual float automatic_content_height() const = 0;
+
     Box const& context_box() const { return m_context_box; }
 
     FormattingContext* parent() { return m_parent; }
