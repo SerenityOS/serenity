@@ -906,15 +906,6 @@ float FormattingContext::calculate_fit_content_height(Layout::Box const& box, Si
     return calculate_fit_content_size(calculate_min_content_height(box), calculate_max_content_height(box), constraint, available_space);
 }
 
-float FormattingContext::calculate_auto_height(LayoutState const& state, Box const& box)
-{
-    if (is<ReplacedBox>(box)) {
-        return compute_height_for_replaced_element(state, verify_cast<ReplacedBox>(box));
-    }
-
-    return compute_auto_height_for_block_level_element(state, box);
-}
-
 float FormattingContext::calculate_min_content_width(Layout::Box const& box) const
 {
     if (box.has_intrinsic_width())
@@ -1026,11 +1017,7 @@ float FormattingContext::calculate_min_content_height(Layout::Box const& box) co
     auto context = const_cast<FormattingContext*>(this)->create_independent_formatting_context_if_needed(throwaway_state, box);
     VERIFY(context);
     context->run_intrinsic_sizing(box);
-    if (context->type() == FormattingContext::Type::Flex) {
-        cache.min_content_height = box_state.content_height();
-    } else {
-        cache.min_content_height = calculate_auto_height(throwaway_state, box);
-    }
+    cache.min_content_height = context->automatic_content_height();
 
     if (!isfinite(*cache.min_content_height)) {
         // HACK: If layout calculates a non-finite result, something went wrong. Force it to zero and log a little whine.
@@ -1068,11 +1055,7 @@ float FormattingContext::calculate_max_content_height(Layout::Box const& box) co
     auto context = const_cast<FormattingContext*>(this)->create_independent_formatting_context_if_needed(throwaway_state, box);
     VERIFY(context);
     context->run_intrinsic_sizing(box);
-    if (context->type() == FormattingContext::Type::Flex) {
-        cache.max_content_height = box_state.content_height();
-    } else {
-        cache.max_content_height = calculate_auto_height(throwaway_state, box);
-    }
+    cache.max_content_height = context->automatic_content_height();
 
     if (!isfinite(*cache.max_content_height)) {
         // HACK: If layout calculates a non-finite result, something went wrong. Force it to zero and log a little whine.

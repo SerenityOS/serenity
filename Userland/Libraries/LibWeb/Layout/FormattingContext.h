@@ -90,7 +90,6 @@ protected:
     static float tentative_height_for_replaced_element(LayoutState const&, ReplacedBox const&, CSS::LengthPercentage const& computed_height);
     static float compute_auto_height_for_block_formatting_context_root(LayoutState const&, BlockContainer const&);
     static float compute_auto_height_for_block_level_element(LayoutState const&, Box const&);
-    static float calculate_auto_height(LayoutState const& state, Box const& box);
 
     ShrinkToFitResult calculate_shrink_to_fit_widths(Box const&);
 
