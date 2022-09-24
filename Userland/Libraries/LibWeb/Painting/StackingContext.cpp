@@ -30,6 +30,7 @@ static void paint_node(Layout::Node const& layout_node, PaintContext& context, P
 StackingContext::StackingContext(Layout::Box& box, StackingContext* parent)
     : m_box(box)
     , m_transform(combine_transformations(m_box.computed_values().transformations()))
+    , m_transform_origin(compute_transform_origin())
     , m_parent(parent)
 {
     VERIFY(m_parent != this);
@@ -316,7 +317,7 @@ void StackingContext::paint(PaintContext& context) const
     }
 }
 
-Gfx::FloatPoint StackingContext::transform_origin() const
+Gfx::FloatPoint StackingContext::compute_transform_origin() const
 {
     auto style_value = m_box.computed_values().transform_origin();
     // FIXME: respect transform-box property
