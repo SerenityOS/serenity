@@ -12,7 +12,7 @@
 #include <LibJS/Runtime/Object.h>
 #include <LibWeb/Forward.h>
 
-namespace Web::Bindings {
+namespace Web::HTML {
 
 class WindowProxy final : public JS::Object {
     JS_OBJECT(WindowProxy, JS::Object);
@@ -31,19 +31,19 @@ public:
     virtual JS::ThrowCompletionOr<bool> internal_delete(JS::PropertyKey const&) override;
     virtual JS::ThrowCompletionOr<JS::MarkedVector<JS::Value>> internal_own_property_keys() const override;
 
-    HTML::Window& window() const { return const_cast<HTML::Window&>(*m_window); }
+    Window& window() const { return const_cast<Window&>(*m_window); }
 
     // NOTE: Someone will have to replace the wrapped window object as well:
     // "When the browsing context is navigated, the Window object wrapped by the browsing context's associated WindowProxy object is changed."
     // I haven't found where that actually happens yet. Make sure to use a Badge<T> guarded setter.
 
 private:
-    WindowProxy(JS::Realm&, HTML::Window&);
+    WindowProxy(JS::Realm&, Window&);
 
     virtual void visit_edges(JS::Cell::Visitor&) override;
 
     // [[Window]], https://html.spec.whatwg.org/multipage/window-object.html#concept-windowproxy-window
-    JS::GCPtr<HTML::Window> m_window;
+    JS::GCPtr<Window> m_window;
 };
 
 }

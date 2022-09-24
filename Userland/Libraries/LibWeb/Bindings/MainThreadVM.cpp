@@ -13,13 +13,13 @@
 #include <LibJS/Runtime/VM.h>
 #include <LibWeb/Bindings/LocationObject.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
-#include <LibWeb/Bindings/WindowProxy.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/PromiseRejectionEvent.h>
 #include <LibWeb/HTML/Scripting/ClassicScript.h>
 #include <LibWeb/HTML/Scripting/Environments.h>
 #include <LibWeb/HTML/Scripting/ExceptionReporter.h>
 #include <LibWeb/HTML/Window.h>
+#include <LibWeb/HTML/WindowProxy.h>
 #include <LibWeb/Platform/EventLoopPlugin.h>
 #include <LibWeb/WebIDL/AbstractOperations.h>
 
@@ -62,7 +62,7 @@ JS::VM& main_thread_vm()
         // 8.1.5.1 HostEnsureCanAddPrivateElement(O), https://html.spec.whatwg.org/multipage/webappapis.html#the-hostensurecanaddprivateelement-implementation
         vm->host_ensure_can_add_private_element = [](JS::Object const& object) -> JS::ThrowCompletionOr<void> {
             // 1. If O is a WindowProxy object, or implements Location, then return Completion { [[Type]]: throw, [[Value]]: a new TypeError }.
-            if (is<WindowProxy>(object) || is<LocationObject>(object))
+            if (is<HTML::WindowProxy>(object) || is<LocationObject>(object))
                 return vm->throw_completion<JS::TypeError>("Cannot add private elements to window or location object");
 
             // 2. Return NormalCompletion(unused).

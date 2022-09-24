@@ -317,6 +317,7 @@ class TextMetrics;
 class Timer;
 class Window;
 class WindowEnvironmentSettingsObject;
+class WindowProxy;
 class Worker;
 class WorkerEnvironmentSettingsObject;
 class WorkerGlobalScope;
@@ -467,7 +468,6 @@ namespace Web::Bindings {
 class LocationObject;
 class OptionConstructor;
 class RangePrototype;
-class WindowProxy;
 class Wrappable;
 class Wrapper;
 class XMLHttpRequestPrototype;
