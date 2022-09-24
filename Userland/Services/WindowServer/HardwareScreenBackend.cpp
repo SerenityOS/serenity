@@ -33,6 +33,7 @@ ErrorOr<void> HardwareScreenBackend::open()
     m_can_device_flush_buffers = (properties.partial_flushing_support != 0);
     m_can_device_flush_entire_framebuffer = (properties.flushing_support != 0);
     m_can_set_head_buffer = (properties.doublebuffer_support != 0);
+    m_max_size_in_bytes = properties.max_buffer_bytes;
     return {};
 }
 
