@@ -303,7 +303,7 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
         auto column_span = child_box.computed_values().grid_column_start().is_span() ? child_box.computed_values().grid_column_start().raw_value() : 1;
         bool found_available_column = false;
         for (int column_index = column_start; column_index < (int)occupation_grid[0].size(); column_index++) {
-            if (!occupation_grid[0][column_index]) {
+            if (!occupation_grid[row_start][column_index]) {
                 found_available_column = true;
                 column_start = column_index;
                 break;
