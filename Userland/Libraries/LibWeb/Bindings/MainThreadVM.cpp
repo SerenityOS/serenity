@@ -124,14 +124,14 @@ JS::VM& main_thread_vm()
 
                 // 5. Queue a global task on the DOM manipulation task source given global to fire an event named rejectionhandled at global, using PromiseRejectionEvent,
                 //    with the promise attribute initialized to promise, and the reason attribute initialized to the value of promise's [[PromiseResult]] internal slot.
-                HTML::queue_global_task(HTML::Task::Source::DOMManipulation, global, [global = JS::make_handle(&global), promise = JS::make_handle(&promise)]() mutable {
+                HTML::queue_global_task(HTML::Task::Source::DOMManipulation, global, [&global, &promise]() mutable {
                     // FIXME: This currently assumes that global is a WindowObject.
-                    auto& window = verify_cast<HTML::Window>(*global.cell());
+                    auto& window = verify_cast<HTML::Window>(global);
 
                     HTML::PromiseRejectionEventInit event_init {
                         {}, // Initialize the inherited DOM::EventInit
                         /* .promise = */ promise,
-                        /* .reason = */ promise.cell()->result(),
+                        /* .reason = */ promise.result(),
                     };
                     auto promise_rejection_event = HTML::PromiseRejectionEvent::create(window, HTML::EventNames::rejectionhandled, event_init);
                     window.dispatch_event(*promise_rejection_event);
@@ -179,9 +179,9 @@ JS::VM& main_thread_vm()
             auto& global = finalization_registry.realm().global_object();
 
             // 2. Queue a global task on the JavaScript engine task source given global to perform the following steps:
-            HTML::queue_global_task(HTML::Task::Source::JavaScriptEngine, global, [finalization_registry = JS::make_handle(&finalization_registry)]() mutable {
+            HTML::queue_global_task(HTML::Task::Source::JavaScriptEngine, global, [&finalization_registry]() mutable {
                 // 1. Let entry be finalizationRegistry.[[CleanupCallback]].[[Callback]].[[Realm]]'s environment settings object.
-                auto& entry = verify_cast<HTML::EnvironmentSettingsObject>(*finalization_registry.cell()->cleanup_callback().callback.cell()->realm()->host_defined());
+                auto& entry = verify_cast<HTML::EnvironmentSettingsObject>(*finalization_registry.cleanup_callback().callback.cell()->realm()->host_defined());
 
                 // 2. Check if we can run script with entry. If this returns "do not run", then return.
                 if (entry.can_run_script() == HTML::RunScriptDecision::DoNotRun)
@@ -191,7 +191,7 @@ JS::VM& main_thread_vm()
                 entry.prepare_to_run_script();
 
                 // 4. Let result be the result of performing CleanupFinalizationRegistry(finalizationRegistry).
-                auto result = finalization_registry.cell()->cleanup();
+                auto result = finalization_registry.cleanup();
 
                 // 5. Clean up after running script with entry.
                 entry.clean_up_after_running_script();

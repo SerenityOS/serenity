@@ -195,7 +195,7 @@ void EnvironmentSettingsObject::notify_about_rejected_promises(Badge<EventLoop>)
     auto& global = global_object();
 
     // 5. Queue a global task on the DOM manipulation task source given global to run the following substep:
-    queue_global_task(Task::Source::DOMManipulation, global, [this, global = JS::make_handle(&global), list = move(list)]() mutable {
+    queue_global_task(Task::Source::DOMManipulation, global, [this, &global, list = move(list)]() mutable {
         // 1. For each promise p in list:
         for (auto promise_handle : list) {
             auto& promise = *promise_handle.cell();
@@ -217,7 +217,7 @@ void EnvironmentSettingsObject::notify_about_rejected_promises(Badge<EventLoop>)
                 /* .reason = */ promise.result(),
             };
             // FIXME: This currently assumes that global is a WindowObject.
-            auto& window = verify_cast<HTML::Window>(*global.cell());
+            auto& window = verify_cast<HTML::Window>(global);
 
             auto promise_rejection_event = PromiseRejectionEvent::create(window, HTML::EventNames::unhandledrejection, event_init);
 

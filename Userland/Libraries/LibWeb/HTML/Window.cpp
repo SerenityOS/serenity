@@ -600,11 +600,11 @@ DOM::ExceptionOr<void> Window::post_message_impl(JS::Value message, String const
 {
     // FIXME: This is an ad-hoc hack implementation instead, since we don't currently
     //        have serialization and deserialization of messages.
-    HTML::queue_global_task(HTML::Task::Source::PostedMessage, *this, [strong_this = JS::make_handle(*this), strong_message = JS::make_handle(message)]() mutable {
+    HTML::queue_global_task(HTML::Task::Source::PostedMessage, *this, [this, message]() mutable {
         HTML::MessageEventInit event_init {};
-        event_init.data = strong_message.value();
+        event_init.data = message;
         event_init.origin = "<origin>";
-        strong_this->dispatch_event(*HTML::MessageEvent::create(*strong_this, HTML::EventNames::message, event_init));
+        dispatch_event(*HTML::MessageEvent::create(*this, HTML::EventNames::message, event_init));
     });
     return {};
 }
@@ -655,8 +655,8 @@ void Window::start_an_idle_period()
 
     // 5. Queue a task on the queue associated with the idle-task task source,
     //    which performs the steps defined in the invoke idle callbacks algorithm with window and getDeadline as parameters.
-    HTML::queue_global_task(HTML::Task::Source::IdleTask, *this, [window = JS::make_handle(*this)]() mutable {
-        window->invoke_idle_callbacks();
+    HTML::queue_global_task(HTML::Task::Source::IdleTask, *this, [this]() mutable {
+        invoke_idle_callbacks();
     });
 }
 
@@ -679,8 +679,8 @@ void Window::invoke_idle_callbacks()
             HTML::report_exception(result);
         // 4. If window's list of runnable idle callbacks is not empty, queue a task which performs the steps
         //    in the invoke idle callbacks algorithm with getDeadline and window as a parameters and return from this algorithm
-        HTML::queue_global_task(HTML::Task::Source::IdleTask, *this, [window = JS::make_handle(*this)]() mutable {
-            window->invoke_idle_callbacks();
+        HTML::queue_global_task(HTML::Task::Source::IdleTask, *this, [this]() mutable {
+            invoke_idle_callbacks();
         });
     }
 }
