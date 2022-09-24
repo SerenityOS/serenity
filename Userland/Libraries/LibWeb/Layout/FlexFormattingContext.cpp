@@ -595,31 +595,42 @@ float FlexFormattingContext::calculate_indefinite_main_size(FlexItem const& item
 {
     VERIFY(!has_definite_main_size(item.box));
 
-    if (has_definite_cross_size(item.box))
+    // Otherwise, size the item into the available space using its used flex basis in place of its main size,
+    // treating a value of content as max-content.
+    if (item.used_flex_basis.type == CSS::FlexBasis::Content)
         return calculate_max_content_main_size(item);
 
-    // Item has indefinite cross size, layout with "fit-content"
+    // If a cross size is needed to determine the main size
+    // (e.g. when the flex item’s main size is in its block axis, or when it has a preferred aspect ratio)
+    // and the flex item’s cross size is auto and not definite,
+    // in this calculation use fit-content as the flex item’s cross size.
+    // The flex base size is the item’s resulting main size.
 
-    // If we're in a row layout and looking for the width, just use the fit-content width.
-    if (is_row_layout())
-        return calculate_fit_content_width(item.box, m_state.get(item.box).width_constraint, m_available_space->main);
+    bool main_size_is_in_block_axis = !is_row_layout();
+    // FIXME: Figure out if we have a preferred aspect ratio.
+    bool has_preferred_aspect_ratio = false;
 
-    // We're in a column layout, looking for the height. Figure out the fit-content width,
-    // then layout with that and see what height comes out of it.
-    float fit_content_cross_size = calculate_fit_content_width(item.box, m_state.get(item.box).width_constraint, m_available_space->cross);
+    bool cross_size_needed_to_determine_main_size = main_size_is_in_block_axis || has_preferred_aspect_ratio;
 
-    LayoutState throwaway_state(&m_state);
-    auto& box_state = throwaway_state.get_mutable(item.box);
+    if (cross_size_needed_to_determine_main_size) {
+        // Figure out the fit-content cross size, then layout with that and see what height comes out of it.
+        float fit_content_cross_size = calculate_fit_content_cross_size(item);
 
-    // Item has definite cross size, layout with that as the used cross size.
-    auto independent_formatting_context = create_independent_formatting_context_if_needed(throwaway_state, item.box);
-    // NOTE: Flex items should always create an independent formatting context!
-    VERIFY(independent_formatting_context);
+        LayoutState throwaway_state(&m_state);
+        auto& box_state = throwaway_state.get_mutable(item.box);
 
-    box_state.set_content_width(fit_content_cross_size);
-    independent_formatting_context->run(item.box, LayoutMode::Normal);
+        // Item has definite cross size, layout with that as the used cross size.
+        auto independent_formatting_context = create_independent_formatting_context_if_needed(throwaway_state, item.box);
+        // NOTE: Flex items should always create an independent formatting context!
+        VERIFY(independent_formatting_context);
 
-    return independent_formatting_context->automatic_content_height();
+        box_state.set_content_width(fit_content_cross_size);
+        independent_formatting_context->run(item.box, LayoutMode::Normal);
+
+        return independent_formatting_context->automatic_content_height();
+    }
+
+    return calculate_fit_content_main_size(item);
 }
 
 // https://drafts.csswg.org/css-flexbox-1/#propdef-flex-basis
