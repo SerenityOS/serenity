@@ -43,6 +43,7 @@ public:
 
     Gfx::ARGB32* m_framebuffer { nullptr };
     size_t m_size_in_bytes { 0 };
+    size_t m_max_size_in_bytes { 0 };
     size_t m_back_buffer_offset { 0 };
 
     int m_pitch { 0 };

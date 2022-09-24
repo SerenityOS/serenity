@@ -24,6 +24,7 @@ struct GraphicsConnectorProperties {
     unsigned char flushing_support;
     unsigned char partial_flushing_support;
     unsigned char refresh_rate_support;
+    unsigned max_buffer_bytes;
 };
 
 struct GraphicsHeadModeSetting {
