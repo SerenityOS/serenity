@@ -96,25 +96,11 @@ void Window::visit_edges(JS::Cell::Visitor& visitor)
     visitor.visit(m_screen.ptr());
     visitor.visit(m_location_object);
     visitor.visit(m_crypto);
-    for (auto& it : m_prototypes)
-        visitor.visit(it.value);
-    for (auto& it : m_constructors)
-        visitor.visit(it.value);
     for (auto& it : m_timers)
         visitor.visit(it.value.ptr());
 }
 
 Window::~Window() = default;
-
-JS::Object& Window::cached_web_prototype(String const& class_name)
-{
-    auto it = m_prototypes.find(class_name);
-    if (it == m_prototypes.end()) {
-        dbgln("Missing prototype: {}", class_name);
-    }
-    VERIFY(it != m_prototypes.end());
-    return *it->value;
-}
 
 HighResolutionTime::Performance& Window::performance()
 {
@@ -750,7 +736,10 @@ void Window::initialize(JS::Realm& realm)
 
     // FIXME: This is a hack..
     realm.set_global_object(this, this);
+}
 
+void Window::initialize_web_interfaces(Badge<WindowEnvironmentSettingsObject>)
+{
     ADD_WINDOW_OBJECT_INTERFACES;
 
     Object::set_prototype(&ensure_web_prototype<Bindings::WindowPrototype>("Window"));

@@ -29,7 +29,7 @@ WebContentConsoleClient::WebContentConsoleClient(JS::Console& console, JS::Realm
     auto console_global_object = realm.heap().allocate_without_realm<ConsoleGlobalObject>(realm, window);
 
     // NOTE: We need to push an execution context here for NativeFunction::create() to succeed during global object initialization.
-    auto& eso = verify_cast<Web::HTML::EnvironmentSettingsObject>(*realm.host_defined());
+    auto& eso = Web::Bindings::host_defined_environment_settings_object(realm);
     vm.push_execution_context(eso.realm_execution_context());
     console_global_object->initialize(realm);
     vm.pop_execution_context();
@@ -42,7 +42,7 @@ void WebContentConsoleClient::handle_input(String const& js_source)
     if (!m_realm)
         return;
 
-    auto& settings = verify_cast<Web::HTML::EnvironmentSettingsObject>(*m_realm->host_defined());
+    auto& settings = Web::Bindings::host_defined_environment_settings_object(*m_realm);
     auto script = Web::HTML::ClassicScript::create("(console)", js_source, settings, settings.api_base_url());
 
     // FIXME: Add parse error printouts back once ClassicScript can report parse errors.

@@ -3,7 +3,9 @@ include(libweb_generators)
 set(SOURCES
     Bindings/AudioConstructor.cpp
     Bindings/CSSNamespace.cpp
+    Bindings/HostDefined.cpp
     Bindings/ImageConstructor.cpp
+    Bindings/Intrinsics.cpp
     Bindings/LegacyPlatformObject.cpp
     Bindings/LocationConstructor.cpp
     Bindings/LocationObject.cpp

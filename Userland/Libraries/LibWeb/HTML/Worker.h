@@ -78,7 +78,7 @@ private:
 
     NonnullRefPtr<JS::VM> m_worker_vm;
     NonnullOwnPtr<JS::Interpreter> m_interpreter;
-    WeakPtr<WorkerEnvironmentSettingsObject> m_inner_settings;
+    JS::GCPtr<WorkerEnvironmentSettingsObject> m_inner_settings;
     JS::VM::InterpreterExecutionScope m_interpreter_scope;
     RefPtr<WorkerDebugConsoleClient> m_console;
 

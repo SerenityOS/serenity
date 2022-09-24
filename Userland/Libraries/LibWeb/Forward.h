@@ -473,6 +473,7 @@ class URLSearchParamsIterator;
 }
 
 namespace Web::Bindings {
+class Intrinsics;
 class LocationObject;
 class OptionConstructor;
 class RangePrototype;

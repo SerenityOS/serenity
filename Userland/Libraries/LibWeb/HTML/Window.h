@@ -13,6 +13,7 @@
 #include <AK/TypeCasts.h>
 #include <AK/URL.h>
 #include <LibJS/Heap/Heap.h>
+#include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/DOM/EventTarget.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/HTML/AnimationFrameCallbackDriver.h>
@@ -123,6 +124,8 @@ public:
     // https://html.spec.whatwg.org/multipage/interaction.html#transient-activation
     bool has_transient_activation() const;
 
+    void initialize_web_interfaces(Badge<WindowEnvironmentSettingsObject>);
+
 private:
     explicit Window(JS::Realm&);
     virtual void initialize(JS::Realm&) override;
@@ -170,34 +173,18 @@ public:
     Bindings::LocationObject* location_object() { return m_location_object; }
     Bindings::LocationObject const* location_object() const { return m_location_object; }
 
-    JS::Object* web_prototype(String const& class_name) { return m_prototypes.get(class_name).value_or(nullptr); }
-    JS::NativeFunction* web_constructor(String const& class_name) { return m_constructors.get(class_name).value_or(nullptr); }
-
-    JS::Object& cached_web_prototype(String const& class_name);
+    JS::Object& cached_web_prototype(String const& class_name) { return Bindings::cached_web_prototype(realm(), class_name); }
 
     template<typename T>
     JS::Object& ensure_web_prototype(String const& class_name)
     {
-        auto it = m_prototypes.find(class_name);
-        if (it != m_prototypes.end())
-            return *it->value;
-        auto& realm = shape().realm();
-        auto* prototype = heap().allocate<T>(realm, realm);
-        m_prototypes.set(class_name, prototype);
-        return *prototype;
+        return Bindings::ensure_web_prototype<T>(realm(), class_name);
     }
 
     template<typename T>
     JS::NativeFunction& ensure_web_constructor(String const& class_name)
     {
-        auto it = m_constructors.find(class_name);
-        if (it != m_constructors.end())
-            return *it->value;
-        auto& realm = shape().realm();
-        auto* constructor = heap().allocate<T>(realm, realm);
-        m_constructors.set(class_name, constructor);
-        define_direct_property(class_name, JS::Value(constructor), JS::Attribute::Writable | JS::Attribute::Configurable);
-        return *constructor;
+        return Bindings::ensure_web_constructor<T>(realm(), class_name);
     }
 
     virtual JS::ThrowCompletionOr<bool> internal_set_prototype_of(JS::Object* prototype) override;
@@ -282,9 +269,6 @@ private:
 #undef __ENUMERATE
 
     Bindings::LocationObject* m_location_object { nullptr };
-
-    HashMap<String, JS::Object*> m_prototypes;
-    HashMap<String, JS::NativeFunction*> m_constructors;
 
     // [[CrossOriginPropertyDescriptorMap]], https://html.spec.whatwg.org/multipage/browsers.html#crossoriginpropertydescriptormap
     CrossOriginPropertyDescriptorMap m_cross_origin_property_descriptor_map;

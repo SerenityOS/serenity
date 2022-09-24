@@ -164,7 +164,7 @@ NonnullRefPtr<BrowsingContext> BrowsingContext::create_a_new_browsing_context(Pa
     auto load_timing_info = DOM::DocumentLoadTimingInfo();
     load_timing_info.navigation_start_time = HighResolutionTime::coarsen_time(
         unsafe_context_creation_time,
-        verify_cast<WindowEnvironmentSettingsObject>(window->realm().host_defined())->cross_origin_isolated_capability() == CanUseCrossOriginIsolatedAPIs::Yes);
+        verify_cast<WindowEnvironmentSettingsObject>(Bindings::host_defined_environment_settings_object(window->realm())).cross_origin_isolated_capability() == CanUseCrossOriginIsolatedAPIs::Yes);
 
     // 13. Let coop be a new cross-origin opener policy.
     auto coop = CrossOriginOpenerPolicy {};

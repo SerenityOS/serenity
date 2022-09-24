@@ -108,7 +108,7 @@ JS::Completion invoke_callback(WebIDL::CallbackType& callback, Optional<JS::Valu
     auto& realm = function_object.shape().realm();
 
     // 6. Let relevant settings be realm’s settings object.
-    auto& relevant_settings = verify_cast<HTML::EnvironmentSettingsObject>(*realm.host_defined());
+    auto& relevant_settings = Bindings::host_defined_environment_settings_object(realm);
 
     // 7. Let stored settings be value’s callback context.
     auto& stored_settings = callback.callback_context;

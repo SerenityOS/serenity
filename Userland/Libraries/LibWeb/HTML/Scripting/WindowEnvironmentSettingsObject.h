@@ -12,6 +12,8 @@
 namespace Web::HTML {
 
 class WindowEnvironmentSettingsObject final : public EnvironmentSettingsObject {
+    JS_CELL(WindowEnvironmentSettingsObject, EnvironmentSettingsObject);
+
 public:
     static void setup(AK::URL const& creation_url, NonnullOwnPtr<JS::ExecutionContext>, Optional<Environment>, AK::URL top_level_creation_url, Origin top_level_origin);
 

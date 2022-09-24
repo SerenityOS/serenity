@@ -54,7 +54,9 @@ enum class RunScriptDecision {
 // https://html.spec.whatwg.org/multipage/webappapis.html#environment-settings-object
 struct EnvironmentSettingsObject
     : public Environment
-    , public JS::Realm::HostDefined {
+    , public JS::Cell {
+    JS_CELL(EnvironmentSettingsObject, JS::Cell);
+
     virtual ~EnvironmentSettingsObject() override;
 
     // https://html.spec.whatwg.org/multipage/webappapis.html#concept-environment-target-browsing-context

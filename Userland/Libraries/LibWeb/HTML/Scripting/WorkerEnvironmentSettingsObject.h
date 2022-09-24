@@ -13,23 +13,27 @@
 namespace Web::HTML {
 
 class WorkerEnvironmentSettingsObject final
-    : public EnvironmentSettingsObject
-    , public Weakable<WorkerEnvironmentSettingsObject> {
+    : public EnvironmentSettingsObject {
+    JS_CELL(WindowEnvironmentSettingsObject, EnvironmentSettingsObject);
+
 public:
     WorkerEnvironmentSettingsObject(NonnullOwnPtr<JS::ExecutionContext> execution_context)
         : EnvironmentSettingsObject(move(execution_context))
     {
     }
 
-    static WeakPtr<WorkerEnvironmentSettingsObject> setup(NonnullOwnPtr<JS::ExecutionContext> execution_context /* FIXME: null or an environment reservedEnvironment, a URL topLevelCreationURL, and an origin topLevelOrigin */)
+    static JS::NonnullGCPtr<WorkerEnvironmentSettingsObject> setup(NonnullOwnPtr<JS::ExecutionContext> execution_context /* FIXME: null or an environment reservedEnvironment, a URL topLevelCreationURL, and an origin topLevelOrigin */)
     {
         auto* realm = execution_context->realm;
         VERIFY(realm);
-        auto settings_object = adopt_own(*new WorkerEnvironmentSettingsObject(move(execution_context)));
+        auto settings_object = realm->heap().allocate<WorkerEnvironmentSettingsObject>(*realm, move(execution_context));
         settings_object->target_browsing_context = nullptr;
-        realm->set_host_defined(move(settings_object));
 
-        return static_cast<WorkerEnvironmentSettingsObject*>(realm->host_defined());
+        auto* intrinsics = realm->heap().allocate<Bindings::Intrinsics>(*realm, *realm);
+        auto host_defined = make<Bindings::HostDefined>(*settings_object, *intrinsics);
+        realm->set_host_defined(move(host_defined));
+
+        return *settings_object;
     }
 
     virtual ~WorkerEnvironmentSettingsObject() override = default;

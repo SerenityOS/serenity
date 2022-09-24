@@ -11,6 +11,7 @@
 #include <LibJS/Forward.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/FunctionObject.h>
+#include <LibWeb/Bindings/HostDefined.h>
 #include <LibWeb/HTML/Scripting/Environments.h>
 #include <LibWeb/WebIDL/CallbackType.h>
 
@@ -60,7 +61,7 @@ JS::Completion call_user_object_operation(WebIDL::CallbackType& callback, String
     auto& realm = object.shape().realm();
 
     // 5. Let relevant settings be realm’s settings object.
-    auto& relevant_settings = verify_cast<HTML::EnvironmentSettingsObject>(*realm.host_defined());
+    auto& relevant_settings = Bindings::host_defined_environment_settings_object(realm);
 
     // 6. Let stored settings be value’s callback context.
     auto& stored_settings = callback.callback_context;
