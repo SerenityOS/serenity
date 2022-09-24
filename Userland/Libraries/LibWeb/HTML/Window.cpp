@@ -509,8 +509,8 @@ void Window::fire_a_page_transition_event(FlyString const& event_name, bool pers
 void Window::queue_microtask_impl(Bindings::CallbackType& callback)
 {
     // The queueMicrotask(callback) method must queue a microtask to invoke callback,
-    HTML::queue_a_microtask(&associated_document(), [callback = JS::make_handle(callback)]() mutable {
-        auto result = Bindings::IDL::invoke_callback(*callback, {});
+    HTML::queue_a_microtask(&associated_document(), [&callback]() mutable {
+        auto result = Bindings::IDL::invoke_callback(callback, {});
         // and if callback throws an exception, report the exception.
         if (result.is_error())
             HTML::report_exception(result);

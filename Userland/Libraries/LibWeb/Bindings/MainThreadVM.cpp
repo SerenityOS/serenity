@@ -220,7 +220,7 @@ JS::VM& main_thread_vm()
             auto* script = active_script();
 
             // NOTE: This keeps job_settings alive by keeping realm alive, which is holding onto job_settings.
-            HTML::queue_a_microtask(script ? script->settings_object().responsible_document().ptr() : nullptr, [job_settings, job = move(job), realm = realm ? JS::make_handle(realm) : JS::Handle<JS::Realm> {}, script_or_module = move(script_or_module)]() mutable {
+            HTML::queue_a_microtask(script ? script->settings_object().responsible_document().ptr() : nullptr, [job_settings, job = move(job), realm, script_or_module = move(script_or_module)]() mutable {
                 // The dummy execution context has to be kept up here to keep it alive for the duration of the function.
                 Optional<JS::ExecutionContext> dummy_execution_context;
 
