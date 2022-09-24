@@ -12,14 +12,14 @@
 
 namespace Web::WebIDL {
 
-// https://heycam.github.io/webidl/#idl-callback-interface
+// https://webidl.spec.whatwg.org/#idl-callback-interface
 class CallbackType final : public JS::Cell {
 public:
     CallbackType(JS::Object& callback, HTML::EnvironmentSettingsObject& callback_context);
 
     JS::Object& callback;
 
-    // https://heycam.github.io/webidl/#dfn-callback-context
+    // https://webidl.spec.whatwg.org/#dfn-callback-context
     HTML::EnvironmentSettingsObject& callback_context;
 
 private:

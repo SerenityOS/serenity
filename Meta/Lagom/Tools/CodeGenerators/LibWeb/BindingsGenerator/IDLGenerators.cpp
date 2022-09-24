@@ -303,7 +303,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
             }
         }
     } else if (parameter.type->name().is_one_of("EventListener", "NodeFilter")) {
-        // FIXME: Replace this with support for callback interfaces. https://heycam.github.io/webidl/#idl-callback-interface
+        // FIXME: Replace this with support for callback interfaces. https://webidl.spec.whatwg.org/#idl-callback-interface
 
         if (parameter.type->name() == "EventListener")
             scoped_generator.set("cpp_type", "IDLEventListener");
