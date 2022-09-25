@@ -405,8 +405,8 @@ void SimpleWebView::resizeEvent(QResizeEvent* event)
 
 void SimpleWebView::update_viewport_rect()
 {
-    auto scaled_width = int(size().width() / m_inverse_pixel_scaling_ratio);
-    auto scaled_height = int(size().height() / m_inverse_pixel_scaling_ratio);
+    auto scaled_width = int(viewport()->size().width() / m_inverse_pixel_scaling_ratio);
+    auto scaled_height = int(viewport()->size().height() / m_inverse_pixel_scaling_ratio);
     Gfx::IntRect rect(horizontalScrollBar()->value(), verticalScrollBar()->value(), scaled_width, scaled_height);
     m_page_client->set_viewport_rect(rect);
 }
