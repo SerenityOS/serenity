@@ -13,6 +13,7 @@
 #include "EventLoopPluginQt.h"
 #include "FontPluginQt.h"
 #include "ImageCodecPluginLadybird.h"
+#include "ModelTranslator.h"
 #include "PageClientLadybird.h"
 #include "RequestManagerQt.h"
 #include "Utilities.h"
@@ -53,6 +54,7 @@
 #include <LibWeb/Painting/PaintableBox.h>
 #include <LibWeb/Painting/StackingContext.h>
 #include <LibWeb/Platform/EventLoopPlugin.h>
+#include <LibWebView/DOMTreeModel.h>
 #include <QApplication>
 #include <QCursor>
 #include <QIcon>
@@ -64,6 +66,7 @@
 #include <QScrollBar>
 #include <QTextEdit>
 #include <QToolTip>
+#include <QTreeView>
 #include <QVBoxLayout>
 
 String s_serenity_resource_root;
@@ -593,6 +596,38 @@ void SimpleWebView::show_js_console()
     ensure_js_console_widget();
     m_js_console_widget->show();
     m_js_console_input_edit->setFocus();
+}
+
+void SimpleWebView::ensure_inspector_widget()
+{
+    if (m_inspector_widget)
+        return;
+    m_inspector_widget = new QWidget;
+    m_inspector_widget->setWindowTitle("Inspector");
+    auto* layout = new QVBoxLayout;
+    m_inspector_widget->setLayout(layout);
+    auto* tree_view = new QTreeView;
+    layout->addWidget(tree_view);
+
+    auto dom_tree = m_page_client->page().top_level_browsing_context().active_document()->dump_dom_tree_as_json();
+    auto dom_tree_model = ::WebView::DOMTreeModel::create(dom_tree);
+    auto* model = new Ladybird::ModelTranslator(dom_tree_model);
+    tree_view->setModel(model);
+    tree_view->setHeaderHidden(true);
+    tree_view->expandToDepth(3);
+
+    m_inspector_widget->resize(640, 480);
+
+    QObject::connect(tree_view->selectionModel(), &QItemSelectionModel::currentChanged, [this](QModelIndex const& index, QModelIndex const&) {
+        auto const* json = (JsonObject const*)index.internalPointer();
+        m_page_client->page().top_level_browsing_context().active_document()->set_inspected_node(Web::DOM::Node::from_id(json->get("id"sv).to_i32()));
+    });
+}
+
+void SimpleWebView::show_inspector()
+{
+    ensure_inspector_widget();
+    m_inspector_widget->show();
 }
 
 void SimpleWebView::set_color_scheme(ColorScheme color_scheme)

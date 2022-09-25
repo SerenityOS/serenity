@@ -56,6 +56,7 @@ public:
     void did_get_js_console_messages(i32 start_index, Vector<String> message_types, Vector<String> messages);
 
     void show_js_console();
+    void show_inspector();
 
     Gfx::IntPoint to_content(Gfx::IntPoint) const;
     Gfx::IntPoint to_widget(Gfx::IntPoint) const;
@@ -71,7 +72,9 @@ signals:
 
 private:
     void update_viewport_rect();
+
     void ensure_js_console_widget();
+    void ensure_inspector_widget();
 
     OwnPtr<Ladybird::PageClientLadybird> m_page_client;
 
@@ -79,6 +82,8 @@ private:
     bool m_should_show_line_box_borders { false };
 
     QPointer<QWidget> m_js_console_widget;
+    QPointer<QWidget> m_inspector_widget;
+
     QTextEdit* m_js_console_output_edit { nullptr };
     QLineEdit* m_js_console_input_edit { nullptr };
 };
