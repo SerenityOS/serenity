@@ -585,6 +585,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
     auto @js_name.as_string@ = TRY(@js_name@@js_suffix@.to_string(vm));
 )~~~");
         auto first = true;
+        VERIFY(enumeration.translated_cpp_names.size() >= 1);
         for (auto& it : enumeration.translated_cpp_names) {
             enum_generator.set("enum.alt.name", it.key);
             enum_generator.set("enum.alt.value", it.value);
@@ -600,12 +601,12 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         // NOTE: Attribute setters return undefined instead of throwing when the string doesn't match an enum value.
         if constexpr (!IsSame<Attribute, RemoveConst<ParameterType>>) {
             enum_generator.append(R"~~~(
-    @else@
+    else
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::InvalidEnumerationValue, @js_name.as_string@, "@parameter.type.name@");
 )~~~");
         } else {
             enum_generator.append(R"~~~(
-    @else@
+    else
         return JS::js_undefined();
 )~~~");
         }
