@@ -320,6 +320,11 @@ struct [[gnu::packed]] MCFG {
     u64 reserved;
     PCI_MMIO_Descriptor descriptors[];
 };
+
+struct [[gnu::packed]] DSDT {
+    SDTHeader h;
+    unsigned char definition_block[];
+};
 }
 
 class Parser;
