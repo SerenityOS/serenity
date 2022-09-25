@@ -8,7 +8,7 @@
 
 #include <AK/URL.h>
 #include <AK/Vector.h>
-#include <LibWeb/DOM/ExceptionOr.h>
+#include <LibWeb/WebIDL/ExceptionOr.h>
 
 namespace Web::URL {
 
@@ -24,7 +24,7 @@ class URLSearchParams : public Bindings::PlatformObject {
 
 public:
     static JS::NonnullGCPtr<URLSearchParams> create(HTML::Window&, Vector<QueryParam> list);
-    static DOM::ExceptionOr<JS::NonnullGCPtr<URLSearchParams>> create_with_global_object(HTML::Window&, Variant<Vector<Vector<String>>, OrderedHashMap<String, String>, String> const& init);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<URLSearchParams>> create_with_global_object(HTML::Window&, Variant<Vector<Vector<String>>, OrderedHashMap<String, String>, String> const& init);
 
     virtual ~URLSearchParams() override;
 

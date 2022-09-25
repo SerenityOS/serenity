@@ -25,7 +25,7 @@ SVGLength::SVGLength(HTML::Window& window, u8 unit_type, float value)
 SVGLength::~SVGLength() = default;
 
 // https://www.w3.org/TR/SVG11/types.html#__svg__SVGLength__value
-DOM::ExceptionOr<void> SVGLength::set_value(float value)
+WebIDL::ExceptionOr<void> SVGLength::set_value(float value)
 {
     // FIXME: Raise an exception if this <length> is read-only.
     m_value = value;

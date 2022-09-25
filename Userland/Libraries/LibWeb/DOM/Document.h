@@ -21,7 +21,6 @@
 #include <LibWeb/CSS/StyleComputer.h>
 #include <LibWeb/CSS/StyleSheetList.h>
 #include <LibWeb/Cookie/Cookie.h>
-#include <LibWeb/DOM/ExceptionOr.h>
 #include <LibWeb/DOM/NonElementParentNode.h>
 #include <LibWeb/DOM/ParentNode.h>
 #include <LibWeb/HTML/CrossOrigin/CrossOriginOpenerPolicy.h>
@@ -33,6 +32,7 @@
 #include <LibWeb/HTML/Scripting/Environments.h>
 #include <LibWeb/HTML/VisibilityState.h>
 #include <LibWeb/HTML/Window.h>
+#include <LibWeb/WebIDL/ExceptionOr.h>
 
 namespace Web::DOM {
 
@@ -156,7 +156,7 @@ public:
         return const_cast<Document*>(this)->body();
     }
 
-    ExceptionOr<void> set_body(HTML::HTMLElement* new_body);
+    WebIDL::ExceptionOr<void> set_body(HTML::HTMLElement* new_body);
 
     String title() const;
     void set_title(String const&);
@@ -219,12 +219,12 @@ public:
 
     JS::Value run_javascript(StringView source, StringView filename = "(unknown)"sv);
 
-    ExceptionOr<JS::NonnullGCPtr<Element>> create_element(FlyString const& local_name);
-    ExceptionOr<JS::NonnullGCPtr<Element>> create_element_ns(String const& namespace_, String const& qualified_name);
+    WebIDL::ExceptionOr<JS::NonnullGCPtr<Element>> create_element(FlyString const& local_name);
+    WebIDL::ExceptionOr<JS::NonnullGCPtr<Element>> create_element_ns(String const& namespace_, String const& qualified_name);
     JS::NonnullGCPtr<DocumentFragment> create_document_fragment();
     JS::NonnullGCPtr<Text> create_text_node(String const& data);
     JS::NonnullGCPtr<Comment> create_comment(String const& data);
-    ExceptionOr<JS::NonnullGCPtr<Event>> create_event(String const& interface);
+    WebIDL::ExceptionOr<JS::NonnullGCPtr<Event>> create_event(String const& interface);
     JS::NonnullGCPtr<Range> create_range();
 
     void set_pending_parsing_blocking_script(Badge<HTML::HTMLScriptElement>, HTML::HTMLScriptElement*);
@@ -253,9 +253,9 @@ public:
     // https://dom.spec.whatwg.org/#xml-document
     bool is_xml_document() const { return m_type == Type::XML; }
 
-    ExceptionOr<JS::NonnullGCPtr<Node>> import_node(JS::NonnullGCPtr<Node> node, bool deep);
+    WebIDL::ExceptionOr<JS::NonnullGCPtr<Node>> import_node(JS::NonnullGCPtr<Node> node, bool deep);
     void adopt_node(Node&);
-    ExceptionOr<JS::NonnullGCPtr<Node>> adopt_node_binding(JS::NonnullGCPtr<Node>);
+    WebIDL::ExceptionOr<JS::NonnullGCPtr<Node>> adopt_node_binding(JS::NonnullGCPtr<Node>);
 
     DocumentType const* doctype() const;
     String const& compat_mode() const;
@@ -286,11 +286,11 @@ public:
 
     void set_window(Badge<HTML::BrowsingContext>, HTML::Window&);
 
-    ExceptionOr<void> write(Vector<String> const& strings);
-    ExceptionOr<void> writeln(Vector<String> const& strings);
+    WebIDL::ExceptionOr<void> write(Vector<String> const& strings);
+    WebIDL::ExceptionOr<void> writeln(Vector<String> const& strings);
 
-    ExceptionOr<Document*> open(String const& = "", String const& = "");
-    ExceptionOr<void> close();
+    WebIDL::ExceptionOr<Document*> open(String const& = "", String const& = "");
+    WebIDL::ExceptionOr<void> close();
 
     HTML::Window* default_view() { return m_window.ptr(); }
 
@@ -367,7 +367,7 @@ public:
         FlyString prefix;
         FlyString tag_name;
     };
-    static ExceptionOr<PrefixAndTagName> validate_qualified_name(JS::Object& global_object, String const& qualified_name);
+    static WebIDL::ExceptionOr<PrefixAndTagName> validate_qualified_name(JS::Object& global_object, String const& qualified_name);
 
     JS::NonnullGCPtr<NodeIterator> create_node_iterator(Node& root, unsigned what_to_show, JS::GCPtr<NodeFilter>);
     JS::NonnullGCPtr<TreeWalker> create_tree_walker(Node& root, unsigned what_to_show, JS::GCPtr<NodeFilter>);
@@ -449,7 +449,7 @@ private:
 
     void evaluate_media_rules();
 
-    ExceptionOr<void> run_the_document_write_steps(String);
+    WebIDL::ExceptionOr<void> run_the_document_write_steps(String);
 
     size_t m_next_layout_node_serial_id { 0 };
 

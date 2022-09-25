@@ -13,7 +13,7 @@
 
 namespace Web::HTML {
 
-DOM::ExceptionOr<JS::NonnullGCPtr<DOMParser>> DOMParser::create_with_global_object(HTML::Window& window)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMParser>> DOMParser::create_with_global_object(HTML::Window& window)
 {
     return JS::NonnullGCPtr(*window.heap().allocate<DOMParser>(window.realm(), window));
 }

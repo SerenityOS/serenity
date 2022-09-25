@@ -14,7 +14,7 @@
 namespace Web::DOM {
 
 // https://dom.spec.whatwg.org/#converting-nodes-into-a-node
-ExceptionOr<JS::NonnullGCPtr<Node>> convert_nodes_to_single_node(Vector<Variant<JS::Handle<Node>, String>> const& nodes, DOM::Document& document)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<Node>> convert_nodes_to_single_node(Vector<Variant<JS::Handle<Node>, String>> const& nodes, DOM::Document& document)
 {
     // 1. Let node be null.
     // 2. Replace each string in nodes with a new Text node whose data is the string and node document is document.

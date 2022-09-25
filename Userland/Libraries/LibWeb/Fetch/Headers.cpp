@@ -11,7 +11,7 @@
 namespace Web::Fetch {
 
 // https://fetch.spec.whatwg.org/#dom-headers
-DOM::ExceptionOr<JS::NonnullGCPtr<Headers>> Headers::create_with_global_object(HTML::Window& window, Optional<HeadersInit> const& init)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<Headers>> Headers::create_with_global_object(HTML::Window& window, Optional<HeadersInit> const& init)
 {
     // The new Headers(init) constructor steps are:
     auto* headers = window.heap().allocate<Headers>(window.realm(), window);
@@ -35,7 +35,7 @@ Headers::Headers(HTML::Window& window)
 Headers::~Headers() = default;
 
 // https://fetch.spec.whatwg.org/#dom-headers-append
-DOM::ExceptionOr<void> Headers::append(String const& name_string, String const& value_string)
+WebIDL::ExceptionOr<void> Headers::append(String const& name_string, String const& value_string)
 {
     // The append(name, value) method steps are to append (name, value) to this.
     auto header = Infrastructure::Header {
@@ -47,18 +47,18 @@ DOM::ExceptionOr<void> Headers::append(String const& name_string, String const& 
 }
 
 // https://fetch.spec.whatwg.org/#dom-headers-delete
-DOM::ExceptionOr<void> Headers::delete_(String const& name_string)
+WebIDL::ExceptionOr<void> Headers::delete_(String const& name_string)
 {
     // The delete(name) method steps are:
     auto name = name_string.bytes();
 
     // 1. If name is not a header name, then throw a TypeError.
     if (!Infrastructure::is_header_name(name))
-        return DOM::SimpleException { DOM::SimpleExceptionType::TypeError, "Invalid header name" };
+        return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "Invalid header name" };
 
     // 2. If this’s guard is "immutable", then throw a TypeError.
     if (m_guard == Guard::Immutable)
-        return DOM::SimpleException { DOM::SimpleExceptionType::TypeError, "Headers object is immutable" };
+        return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "Headers object is immutable" };
 
     // 3. Otherwise, if this’s guard is "request" and name is a forbidden header name, return.
     if (m_guard == Guard::Request && Infrastructure::is_forbidden_header_name(name))
@@ -87,14 +87,14 @@ DOM::ExceptionOr<void> Headers::delete_(String const& name_string)
 }
 
 // https://fetch.spec.whatwg.org/#dom-headers-get
-DOM::ExceptionOr<String> Headers::get(String const& name_string)
+WebIDL::ExceptionOr<String> Headers::get(String const& name_string)
 {
     // The get(name) method steps are:
     auto name = name_string.bytes();
 
     // 1. If name is not a header name, then throw a TypeError.
     if (!Infrastructure::is_header_name(name))
-        return DOM::SimpleException { DOM::SimpleExceptionType::TypeError, "Invalid header name" };
+        return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "Invalid header name" };
 
     // 2. Return the result of getting name from this’s header list.
     auto byte_buffer = TRY_OR_RETURN_OOM(global_object(), m_header_list.get(name));
@@ -103,21 +103,21 @@ DOM::ExceptionOr<String> Headers::get(String const& name_string)
 }
 
 // https://fetch.spec.whatwg.org/#dom-headers-has
-DOM::ExceptionOr<bool> Headers::has(String const& name_string)
+WebIDL::ExceptionOr<bool> Headers::has(String const& name_string)
 {
     // The has(name) method steps are:
     auto name = name_string.bytes();
 
     // 1. If name is not a header name, then throw a TypeError.
     if (!Infrastructure::is_header_name(name))
-        return DOM::SimpleException { DOM::SimpleExceptionType::TypeError, "Invalid header name" };
+        return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "Invalid header name" };
 
     // 2. Return true if this’s header list contains name; otherwise false.
     return m_header_list.contains(name);
 }
 
 // https://fetch.spec.whatwg.org/#dom-headers-set
-DOM::ExceptionOr<void> Headers::set(String const& name_string, String const& value_string)
+WebIDL::ExceptionOr<void> Headers::set(String const& name_string, String const& value_string)
 {
     // The set(name, value) method steps are:
     auto name = name_string.bytes();
@@ -133,13 +133,13 @@ DOM::ExceptionOr<void> Headers::set(String const& name_string, String const& val
 
     // 2. If name is not a header name or value is not a header value, then throw a TypeError.
     if (!Infrastructure::is_header_name(name))
-        return DOM::SimpleException { DOM::SimpleExceptionType::TypeError, "Invalid header name" };
+        return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "Invalid header name" };
     if (!Infrastructure::is_header_value(value))
-        return DOM::SimpleException { DOM::SimpleExceptionType::TypeError, "Invalid header value" };
+        return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "Invalid header value" };
 
     // 3. If this’s guard is "immutable", then throw a TypeError.
     if (m_guard == Guard::Immutable)
-        return DOM::SimpleException { DOM::SimpleExceptionType::TypeError, "Headers object is immutable" };
+        return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "Headers object is immutable" };
 
     // 4. Otherwise, if this’s guard is "request" and name is a forbidden header name, return.
     if (m_guard == Guard::Request && Infrastructure::is_forbidden_header_name(name))
@@ -201,7 +201,7 @@ JS::ThrowCompletionOr<void> Headers::for_each(ForEachCallback callback)
 }
 
 // https://fetch.spec.whatwg.org/#concept-headers-append
-DOM::ExceptionOr<void> Headers::append(Infrastructure::Header header)
+WebIDL::ExceptionOr<void> Headers::append(Infrastructure::Header header)
 {
     // To append a header (name, value) to a Headers object headers, run these steps:
     auto& [name, value] = header;
@@ -211,13 +211,13 @@ DOM::ExceptionOr<void> Headers::append(Infrastructure::Header header)
 
     // 2. If name is not a header name or value is not a header value, then throw a TypeError.
     if (!Infrastructure::is_header_name(name))
-        return DOM::SimpleException { DOM::SimpleExceptionType::TypeError, "Invalid header name" };
+        return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "Invalid header name" };
     if (!Infrastructure::is_header_value(value))
-        return DOM::SimpleException { DOM::SimpleExceptionType::TypeError, "Invalid header value" };
+        return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "Invalid header value" };
 
     // 3. If headers’s guard is "immutable", then throw a TypeError.
     if (m_guard == Guard::Immutable)
-        return DOM::SimpleException { DOM::SimpleExceptionType::TypeError, "Headers object is immutable" };
+        return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "Headers object is immutable" };
 
     // 4. Otherwise, if headers’s guard is "request" and name is a forbidden header name, return.
     if (m_guard == Guard::Request && Infrastructure::is_forbidden_header_name(name))
@@ -264,16 +264,16 @@ DOM::ExceptionOr<void> Headers::append(Infrastructure::Header header)
 }
 
 // https://fetch.spec.whatwg.org/#concept-headers-fill
-DOM::ExceptionOr<void> Headers::fill(HeadersInit const& object)
+WebIDL::ExceptionOr<void> Headers::fill(HeadersInit const& object)
 {
     // To fill a Headers object headers with a given object object, run these steps:
     return object.visit(
         // 1. If object is a sequence, then for each header in object:
-        [this](Vector<Vector<String>> const& object) -> DOM::ExceptionOr<void> {
+        [this](Vector<Vector<String>> const& object) -> WebIDL::ExceptionOr<void> {
             for (auto const& entry : object) {
                 // 1. If header does not contain exactly two items, then throw a TypeError.
                 if (entry.size() != 2)
-                    return DOM::SimpleException { DOM::SimpleExceptionType::TypeError, "Array must contain header key/value pair" };
+                    return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "Array must contain header key/value pair" };
 
                 // 2. Append (header’s first item, header’s second item) to headers.
                 auto header = Fetch::Infrastructure::Header {
@@ -285,7 +285,7 @@ DOM::ExceptionOr<void> Headers::fill(HeadersInit const& object)
             return {};
         },
         // 2. Otherwise, object is a record, then for each key → value in object, append (key, value) to headers.
-        [this](OrderedHashMap<String, String> const& object) -> DOM::ExceptionOr<void> {
+        [this](OrderedHashMap<String, String> const& object) -> WebIDL::ExceptionOr<void> {
             for (auto const& entry : object) {
                 auto header = Fetch::Infrastructure::Header {
                     .name = TRY_OR_RETURN_OOM(global_object(), ByteBuffer::copy(entry.key.bytes())),

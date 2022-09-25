@@ -11,8 +11,8 @@
 #include <AK/String.h>
 #include <AK/StringView.h>
 #include <LibWeb/Bindings/LegacyPlatformObject.h>
-#include <LibWeb/DOM/ExceptionOr.h>
 #include <LibWeb/Forward.h>
+#include <LibWeb/WebIDL/ExceptionOr.h>
 
 namespace Web::DOM {
 
@@ -35,13 +35,13 @@ public:
     // Methods defined by the spec for JavaScript:
     Attr const* item(u32 index) const;
     Attr const* get_named_item(StringView qualified_name) const;
-    ExceptionOr<Attr const*> set_named_item(Attr& attribute);
-    ExceptionOr<Attr const*> remove_named_item(StringView qualified_name);
+    WebIDL::ExceptionOr<Attr const*> set_named_item(Attr& attribute);
+    WebIDL::ExceptionOr<Attr const*> remove_named_item(StringView qualified_name);
 
     // Methods defined by the spec for internal use:
     Attr* get_attribute(StringView qualified_name, size_t* item_index = nullptr);
     Attr const* get_attribute(StringView qualified_name, size_t* item_index = nullptr) const;
-    ExceptionOr<Attr const*> set_attribute(Attr& attribute);
+    WebIDL::ExceptionOr<Attr const*> set_attribute(Attr& attribute);
     void replace_attribute(Attr& old_attribute, Attr& new_attribute, size_t old_attribute_index);
     void append_attribute(Attr& attribute);
     Attr const* remove_attribute(StringView qualified_name);

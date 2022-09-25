@@ -20,9 +20,9 @@ public:
     static JS::NonnullGCPtr<DOMImplementation> create(Document&);
     virtual ~DOMImplementation();
 
-    ExceptionOr<JS::NonnullGCPtr<Document>> create_document(String const&, String const&, JS::GCPtr<DocumentType>) const;
+    WebIDL::ExceptionOr<JS::NonnullGCPtr<Document>> create_document(String const&, String const&, JS::GCPtr<DocumentType>) const;
     JS::NonnullGCPtr<Document> create_html_document(String const& title) const;
-    ExceptionOr<JS::NonnullGCPtr<DocumentType>> create_document_type(String const& qualified_name, String const& public_id, String const& system_id);
+    WebIDL::ExceptionOr<JS::NonnullGCPtr<DocumentType>> create_document_type(String const& qualified_name, String const& public_id, String const& system_id);
 
     // https://dom.spec.whatwg.org/#dom-domimplementation-hasfeature
     bool has_feature() const { return true; }

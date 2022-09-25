@@ -36,13 +36,13 @@ class Worker : public DOM::EventTarget {
     WEB_PLATFORM_OBJECT(Worker, DOM::EventTarget);
 
 public:
-    static DOM::ExceptionOr<JS::NonnullGCPtr<Worker>> create(FlyString const& script_url, WorkerOptions const options, DOM::Document& document);
-    static DOM::ExceptionOr<JS::NonnullGCPtr<Worker>> create_with_global_object(HTML::Window& window, FlyString const& script_url, WorkerOptions const options)
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<Worker>> create(FlyString const& script_url, WorkerOptions const options, DOM::Document& document);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<Worker>> create_with_global_object(HTML::Window& window, FlyString const& script_url, WorkerOptions const options)
     {
         return Worker::create(script_url, options, window.associated_document());
     }
 
-    DOM::ExceptionOr<void> terminate();
+    WebIDL::ExceptionOr<void> terminate();
 
     void post_message(JS::Value message, JS::Value transfer);
 

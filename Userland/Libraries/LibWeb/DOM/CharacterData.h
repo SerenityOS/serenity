@@ -27,11 +27,11 @@ public:
 
     unsigned length() const { return m_data.length(); }
 
-    ExceptionOr<String> substring_data(size_t offset, size_t count) const;
-    ExceptionOr<void> append_data(String const&);
-    ExceptionOr<void> insert_data(size_t offset, String const&);
-    ExceptionOr<void> delete_data(size_t offset, size_t count);
-    ExceptionOr<void> replace_data(size_t offset, size_t count, String const&);
+    WebIDL::ExceptionOr<String> substring_data(size_t offset, size_t count) const;
+    WebIDL::ExceptionOr<void> append_data(String const&);
+    WebIDL::ExceptionOr<void> insert_data(size_t offset, String const&);
+    WebIDL::ExceptionOr<void> delete_data(size_t offset, size_t count);
+    WebIDL::ExceptionOr<void> replace_data(size_t offset, size_t count, String const&);
 
 protected:
     explicit CharacterData(Document&, NodeType, String const&);

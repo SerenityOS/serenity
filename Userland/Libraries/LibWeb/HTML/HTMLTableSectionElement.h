@@ -18,8 +18,8 @@ public:
     virtual ~HTMLTableSectionElement() override;
 
     JS::NonnullGCPtr<DOM::HTMLCollection> rows() const;
-    DOM::ExceptionOr<JS::NonnullGCPtr<HTMLTableRowElement>> insert_row(long index);
-    DOM::ExceptionOr<void> delete_row(long index);
+    WebIDL::ExceptionOr<JS::NonnullGCPtr<HTMLTableRowElement>> insert_row(long index);
+    WebIDL::ExceptionOr<void> delete_row(long index);
 
 private:
     HTMLTableSectionElement(DOM::Document&, DOM::QualifiedName);

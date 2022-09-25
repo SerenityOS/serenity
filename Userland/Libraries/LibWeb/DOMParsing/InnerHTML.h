@@ -7,15 +7,15 @@
 #pragma once
 
 #include <LibWeb/DOM/Element.h>
-#include <LibWeb/DOM/ExceptionOr.h>
 #include <LibWeb/DOM/ShadowRoot.h>
 #include <LibWeb/HTML/HTMLTemplateElement.h>
+#include <LibWeb/WebIDL/ExceptionOr.h>
 
 namespace Web::DOMParsing {
 
 // https://w3c.github.io/DOM-Parsing/#dom-innerhtml-innerhtml
-DOM::ExceptionOr<void> inner_html_setter(JS::NonnullGCPtr<DOM::Node> context_object, String const& value);
+WebIDL::ExceptionOr<void> inner_html_setter(JS::NonnullGCPtr<DOM::Node> context_object, String const& value);
 
-DOM::ExceptionOr<JS::NonnullGCPtr<DOM::DocumentFragment>> parse_fragment(String const& markup, DOM::Element& context_element);
+WebIDL::ExceptionOr<JS::NonnullGCPtr<DOM::DocumentFragment>> parse_fragment(String const& markup, DOM::Element& context_element);
 
 }

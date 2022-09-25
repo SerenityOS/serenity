@@ -14,7 +14,6 @@
 #include <LibGfx/Painter.h>
 #include <LibGfx/Path.h>
 #include <LibWeb/Bindings/PlatformObject.h>
-#include <LibWeb/DOM/ExceptionOr.h>
 #include <LibWeb/HTML/Canvas/CanvasDrawImage.h>
 #include <LibWeb/HTML/Canvas/CanvasDrawPath.h>
 #include <LibWeb/HTML/Canvas/CanvasFillStrokeStyles.h>
@@ -28,6 +27,7 @@
 #include <LibWeb/HTML/CanvasGradient.h>
 #include <LibWeb/Layout/InlineNode.h>
 #include <LibWeb/Layout/LineBox.h>
+#include <LibWeb/WebIDL/ExceptionOr.h>
 
 namespace Web::HTML {
 
@@ -58,7 +58,7 @@ public:
     virtual void stroke_rect(float x, float y, float width, float height) override;
     virtual void clear_rect(float x, float y, float width, float height) override;
 
-    virtual DOM::ExceptionOr<void> draw_image_internal(CanvasImageSource const&, float source_x, float source_y, float source_width, float source_height, float destination_x, float destination_y, float destination_width, float destination_height) override;
+    virtual WebIDL::ExceptionOr<void> draw_image_internal(CanvasImageSource const&, float source_x, float source_y, float source_width, float source_height, float destination_x, float destination_y, float destination_width, float destination_height) override;
 
     virtual void begin_path() override;
     virtual void stroke() override;
@@ -71,7 +71,7 @@ public:
     virtual void fill(Path2D& path, String const& fill_rule) override;
 
     virtual JS::GCPtr<ImageData> create_image_data(int width, int height) const override;
-    virtual DOM::ExceptionOr<JS::GCPtr<ImageData>> get_image_data(int x, int y, int width, int height) const override;
+    virtual WebIDL::ExceptionOr<JS::GCPtr<ImageData>> get_image_data(int x, int y, int width, int height) const override;
     virtual void put_image_data(ImageData const&, float x, float y) override;
 
     virtual void reset_to_default_state() override;
@@ -120,7 +120,7 @@ enum class CanvasImageSourceUsability {
     Good,
 };
 
-DOM::ExceptionOr<CanvasImageSourceUsability> check_usability_of_image(CanvasImageSource const&);
+WebIDL::ExceptionOr<CanvasImageSourceUsability> check_usability_of_image(CanvasImageSource const&);
 bool image_is_not_origin_clean(CanvasImageSource const&);
 
 }

@@ -8,7 +8,7 @@
 #include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/CSS/StyleSheetList.h>
 #include <LibWeb/DOM/Document.h>
-#include <LibWeb/DOM/ExceptionOr.h>
+#include <LibWeb/WebIDL/ExceptionOr.h>
 
 namespace Web::CSS {
 
@@ -39,7 +39,7 @@ void CSSStyleSheet::visit_edges(Cell::Visitor& visitor)
 }
 
 // https://www.w3.org/TR/cssom/#dom-cssstylesheet-insertrule
-DOM::ExceptionOr<unsigned> CSSStyleSheet::insert_rule(StringView rule, unsigned index)
+WebIDL::ExceptionOr<unsigned> CSSStyleSheet::insert_rule(StringView rule, unsigned index)
 {
     // FIXME: 1. If the origin-clean flag is unset, throw a SecurityError exception.
 
@@ -71,7 +71,7 @@ DOM::ExceptionOr<unsigned> CSSStyleSheet::insert_rule(StringView rule, unsigned 
 }
 
 // https://www.w3.org/TR/cssom/#dom-cssstylesheet-deleterule
-DOM::ExceptionOr<void> CSSStyleSheet::delete_rule(unsigned index)
+WebIDL::ExceptionOr<void> CSSStyleSheet::delete_rule(unsigned index)
 {
     // FIXME: 1. If the origin-clean flag is unset, throw a SecurityError exception.
 
@@ -89,7 +89,7 @@ DOM::ExceptionOr<void> CSSStyleSheet::delete_rule(unsigned index)
 }
 
 // https://www.w3.org/TR/cssom/#dom-cssstylesheet-removerule
-DOM::ExceptionOr<void> CSSStyleSheet::remove_rule(unsigned index)
+WebIDL::ExceptionOr<void> CSSStyleSheet::remove_rule(unsigned index)
 {
     // The removeRule(index) method must run the same steps as deleteRule().
     return delete_rule(index);

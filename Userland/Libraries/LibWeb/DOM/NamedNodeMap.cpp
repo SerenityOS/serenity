@@ -80,13 +80,13 @@ Attr const* NamedNodeMap::get_named_item(StringView qualified_name) const
 }
 
 // https://dom.spec.whatwg.org/#dom-namednodemap-setnameditem
-ExceptionOr<Attr const*> NamedNodeMap::set_named_item(Attr& attribute)
+WebIDL::ExceptionOr<Attr const*> NamedNodeMap::set_named_item(Attr& attribute)
 {
     return set_attribute(attribute);
 }
 
 // https://dom.spec.whatwg.org/#dom-namednodemap-removenameditem
-ExceptionOr<Attr const*> NamedNodeMap::remove_named_item(StringView qualified_name)
+WebIDL::ExceptionOr<Attr const*> NamedNodeMap::remove_named_item(StringView qualified_name)
 {
     // 1. Let attr be the result of removing an attribute given qualifiedName and element.
     auto const* attribute = remove_attribute(qualified_name);
@@ -133,7 +133,7 @@ Attr const* NamedNodeMap::get_attribute(StringView qualified_name, size_t* item_
 }
 
 // https://dom.spec.whatwg.org/#concept-element-attributes-set
-ExceptionOr<Attr const*> NamedNodeMap::set_attribute(Attr& attribute)
+WebIDL::ExceptionOr<Attr const*> NamedNodeMap::set_attribute(Attr& attribute)
 {
     // 1. If attr’s element is neither null nor element, throw an "InUseAttributeError" DOMException.
     if ((attribute.owner_element() != nullptr) && (attribute.owner_element() != &associated_element()))

@@ -10,9 +10,9 @@
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/RefCounted.h>
 #include <LibJS/Heap/Handle.h>
-#include <LibWeb/DOM/ExceptionOr.h>
 #include <LibWeb/DOM/MutationRecord.h>
 #include <LibWeb/WebIDL/CallbackType.h>
+#include <LibWeb/WebIDL/ExceptionOr.h>
 
 namespace Web::DOM {
 
@@ -35,7 +35,7 @@ public:
     static JS::NonnullGCPtr<MutationObserver> create_with_global_object(HTML::Window&, JS::GCPtr<WebIDL::CallbackType>);
     virtual ~MutationObserver() override;
 
-    ExceptionOr<void> observe(Node& target, MutationObserverInit options = {});
+    WebIDL::ExceptionOr<void> observe(Node& target, MutationObserverInit options = {});
     void disconnect();
     Vector<JS::Handle<MutationRecord>> take_records();
 

@@ -97,7 +97,7 @@ JS::GCPtr<HTMLTableSectionElement> HTMLTableElement::t_head()
     return nullptr;
 }
 
-DOM::ExceptionOr<void> HTMLTableElement::set_t_head(HTMLTableSectionElement* thead)
+WebIDL::ExceptionOr<void> HTMLTableElement::set_t_head(HTMLTableSectionElement* thead)
 {
     // FIXME: This is not always the case, but this function is currently written in a way that assumes non-null.
     VERIFY(thead);
@@ -184,7 +184,7 @@ JS::GCPtr<HTMLTableSectionElement> HTMLTableElement::t_foot()
     return nullptr;
 }
 
-DOM::ExceptionOr<void> HTMLTableElement::set_t_foot(HTMLTableSectionElement* tfoot)
+WebIDL::ExceptionOr<void> HTMLTableElement::set_t_foot(HTMLTableSectionElement* tfoot)
 {
     // FIXME: This is not always the case, but this function is currently written in a way that assumes non-null.
     VERIFY(tfoot);
@@ -280,7 +280,7 @@ JS::NonnullGCPtr<DOM::HTMLCollection> HTMLTableElement::rows()
     });
 }
 
-DOM::ExceptionOr<JS::NonnullGCPtr<HTMLTableRowElement>> HTMLTableElement::insert_row(long index)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<HTMLTableRowElement>> HTMLTableElement::insert_row(long index)
 {
     auto rows = this->rows();
     auto rows_length = rows->length();
@@ -306,7 +306,7 @@ DOM::ExceptionOr<JS::NonnullGCPtr<HTMLTableRowElement>> HTMLTableElement::insert
 }
 
 // https://html.spec.whatwg.org/multipage/tables.html#dom-table-deleterow
-DOM::ExceptionOr<void> HTMLTableElement::delete_row(long index)
+WebIDL::ExceptionOr<void> HTMLTableElement::delete_row(long index)
 {
     auto rows = this->rows();
     auto rows_length = rows->length();

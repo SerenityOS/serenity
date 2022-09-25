@@ -5,14 +5,14 @@
  */
 
 #include <LibWeb/DOM/DocumentFragment.h>
-#include <LibWeb/DOM/ExceptionOr.h>
 #include <LibWeb/DOMParsing/InnerHTML.h>
 #include <LibWeb/HTML/Parser/HTMLParser.h>
+#include <LibWeb/WebIDL/ExceptionOr.h>
 
 namespace Web::DOMParsing {
 
 // https://w3c.github.io/DOM-Parsing/#dfn-fragment-parsing-algorithm
-DOM::ExceptionOr<JS::NonnullGCPtr<DOM::DocumentFragment>> parse_fragment(String const& markup, DOM::Element& context_element)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<DOM::DocumentFragment>> parse_fragment(String const& markup, DOM::Element& context_element)
 {
     // FIXME: Handle XML documents.
 
@@ -30,7 +30,7 @@ DOM::ExceptionOr<JS::NonnullGCPtr<DOM::DocumentFragment>> parse_fragment(String 
 }
 
 // https://w3c.github.io/DOM-Parsing/#dom-innerhtml-innerhtml
-DOM::ExceptionOr<void> inner_html_setter(JS::NonnullGCPtr<DOM::Node> context_object, String const& value)
+WebIDL::ExceptionOr<void> inner_html_setter(JS::NonnullGCPtr<DOM::Node> context_object, String const& value)
 {
     // 1. Let context element be the context object's host if the context object is a ShadowRoot object, or the context object otherwise.
     //    (This is handled in Element and ShadowRoot)

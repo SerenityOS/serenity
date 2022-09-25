@@ -12,7 +12,6 @@
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/EventDispatcher.h>
-#include <LibWeb/DOM/ExceptionOr.h>
 #include <LibWeb/DOM/IDLEventListener.h>
 #include <LibWeb/HTML/CloseEvent.h>
 #include <LibWeb/HTML/EventHandler.h>
@@ -20,6 +19,7 @@
 #include <LibWeb/HTML/MessageEvent.h>
 #include <LibWeb/HTML/Origin.h>
 #include <LibWeb/HTML/Window.h>
+#include <LibWeb/WebIDL/ExceptionOr.h>
 #include <LibWeb/WebSockets/WebSocket.h>
 
 namespace Web::WebSockets {
@@ -47,7 +47,7 @@ WebSocketClientSocket::~WebSocketClientSocket() = default;
 WebSocketClientManager::WebSocketClientManager() = default;
 
 // https://websockets.spec.whatwg.org/#dom-websocket-websocket
-DOM::ExceptionOr<JS::NonnullGCPtr<WebSocket>> WebSocket::create_with_global_object(HTML::Window& window, String const& url)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<WebSocket>> WebSocket::create_with_global_object(HTML::Window& window, String const& url)
 {
     AK::URL url_record(url);
     if (!url_record.is_valid())
@@ -133,7 +133,7 @@ String WebSocket::protocol() const
 }
 
 // https://websockets.spec.whatwg.org/#dom-websocket-close
-DOM::ExceptionOr<void> WebSocket::close(Optional<u16> code, Optional<String> reason)
+WebIDL::ExceptionOr<void> WebSocket::close(Optional<u16> code, Optional<String> reason)
 {
     // 1. If code is present, but is neither an integer equal to 1000 nor an integer in the range 3000 to 4999, inclusive, throw an "InvalidAccessError" DOMException.
     if (code.has_value() && *code != 1000 && (*code < 3000 || *code > 4099))
@@ -160,7 +160,7 @@ DOM::ExceptionOr<void> WebSocket::close(Optional<u16> code, Optional<String> rea
 }
 
 // https://websockets.spec.whatwg.org/#dom-websocket-send
-DOM::ExceptionOr<void> WebSocket::send(String const& data)
+WebIDL::ExceptionOr<void> WebSocket::send(String const& data)
 {
     auto state = ready_state();
     if (state == WebSocket::ReadyState::Connecting)

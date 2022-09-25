@@ -48,7 +48,7 @@ bool CSSRuleList::is_supported_property_index(u32 index) const
 }
 
 // https://www.w3.org/TR/cssom/#insert-a-css-rule
-DOM::ExceptionOr<unsigned> CSSRuleList::insert_a_css_rule(Variant<StringView, CSSRule*> rule, u32 index)
+WebIDL::ExceptionOr<unsigned> CSSRuleList::insert_a_css_rule(Variant<StringView, CSSRule*> rule, u32 index)
 {
     // 1. Set length to the number of items in list.
     auto length = m_rules.size();
@@ -86,7 +86,7 @@ DOM::ExceptionOr<unsigned> CSSRuleList::insert_a_css_rule(Variant<StringView, CS
 }
 
 // https://www.w3.org/TR/cssom/#remove-a-css-rule
-DOM::ExceptionOr<void> CSSRuleList::remove_a_css_rule(u32 index)
+WebIDL::ExceptionOr<void> CSSRuleList::remove_a_css_rule(u32 index)
 {
     // 1. Set length to the number of items in list.
     auto length = m_rules.size();

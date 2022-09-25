@@ -12,11 +12,11 @@
 
 namespace Web::Encoding {
 
-DOM::ExceptionOr<JS::NonnullGCPtr<TextDecoder>> TextDecoder::create_with_global_object(HTML::Window& window, FlyString encoding)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<TextDecoder>> TextDecoder::create_with_global_object(HTML::Window& window, FlyString encoding)
 {
     auto decoder = TextCodec::decoder_for(encoding);
     if (!decoder)
-        return DOM::SimpleException { DOM::SimpleExceptionType::TypeError, String::formatted("Invalid encoding {}", encoding) };
+        return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, String::formatted("Invalid encoding {}", encoding) };
 
     return JS::NonnullGCPtr(*window.heap().allocate<TextDecoder>(window.realm(), window, *decoder, move(encoding), false, false));
 }
@@ -35,7 +35,7 @@ TextDecoder::TextDecoder(HTML::Window& window, TextCodec::Decoder& decoder, FlyS
 TextDecoder::~TextDecoder() = default;
 
 // https://encoding.spec.whatwg.org/#dom-textdecoder-decode
-DOM::ExceptionOr<String> TextDecoder::decode(JS::Handle<JS::Object> const& input) const
+WebIDL::ExceptionOr<String> TextDecoder::decode(JS::Handle<JS::Object> const& input) const
 {
     // FIXME: Implement the streaming stuff.
 

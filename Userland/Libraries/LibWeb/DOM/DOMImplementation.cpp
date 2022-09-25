@@ -38,7 +38,7 @@ void DOMImplementation::visit_edges(Cell::Visitor& visitor)
 }
 
 // https://dom.spec.whatwg.org/#dom-domimplementation-createdocument
-ExceptionOr<JS::NonnullGCPtr<Document>> DOMImplementation::create_document(String const& namespace_, String const& qualified_name, JS::GCPtr<DocumentType> doctype) const
+WebIDL::ExceptionOr<JS::NonnullGCPtr<Document>> DOMImplementation::create_document(String const& namespace_, String const& qualified_name, JS::GCPtr<DocumentType> doctype) const
 {
     // FIXME: This should specifically be an XML document.
     auto xml_document = Document::create(Bindings::main_thread_internal_window_object());
@@ -103,7 +103,7 @@ JS::NonnullGCPtr<Document> DOMImplementation::create_html_document(String const&
 }
 
 // https://dom.spec.whatwg.org/#dom-domimplementation-createdocumenttype
-ExceptionOr<JS::NonnullGCPtr<DocumentType>> DOMImplementation::create_document_type(String const& qualified_name, String const& public_id, String const& system_id)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<DocumentType>> DOMImplementation::create_document_type(String const& qualified_name, String const& public_id, String const& system_id)
 {
     TRY(Document::validate_qualified_name(global_object(), qualified_name));
     auto document_type = DocumentType::create(document());

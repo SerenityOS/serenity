@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <LibWeb/DOM/ExceptionOr.h>
 #include <LibWeb/DOM/NodeOperations.h>
+#include <LibWeb/WebIDL/ExceptionOr.h>
 
 namespace Web::DOM {
 
@@ -16,7 +16,7 @@ template<typename NodeType>
 class ChildNode {
 public:
     // https://dom.spec.whatwg.org/#dom-childnode-before
-    ExceptionOr<void> before(Vector<Variant<JS::Handle<Node>, String>> const& nodes)
+    WebIDL::ExceptionOr<void> before(Vector<Variant<JS::Handle<Node>, String>> const& nodes)
     {
         auto* node = static_cast<NodeType*>(this);
 
@@ -46,7 +46,7 @@ public:
     }
 
     // https://dom.spec.whatwg.org/#dom-childnode-after
-    ExceptionOr<void> after(Vector<Variant<JS::Handle<Node>, String>> const& nodes)
+    WebIDL::ExceptionOr<void> after(Vector<Variant<JS::Handle<Node>, String>> const& nodes)
     {
         auto* node = static_cast<NodeType*>(this);
 
@@ -70,7 +70,7 @@ public:
     }
 
     // https://dom.spec.whatwg.org/#dom-childnode-replacewith
-    ExceptionOr<void> replace_with(Vector<Variant<JS::Handle<Node>, String>> const& nodes)
+    WebIDL::ExceptionOr<void> replace_with(Vector<Variant<JS::Handle<Node>, String>> const& nodes)
     {
         auto* node = static_cast<NodeType*>(this);
 

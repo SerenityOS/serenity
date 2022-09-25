@@ -8,7 +8,7 @@
 
 #include <LibWeb/Bindings/PlatformObject.h>
 #include <LibWeb/Crypto/SubtleCrypto.h>
-#include <LibWeb/DOM/ExceptionOr.h>
+#include <LibWeb/WebIDL/ExceptionOr.h>
 
 namespace Web::Crypto {
 
@@ -22,7 +22,7 @@ public:
 
     JS::NonnullGCPtr<SubtleCrypto> subtle() const;
 
-    DOM::ExceptionOr<JS::Value> get_random_values(JS::Value array) const;
+    WebIDL::ExceptionOr<JS::Value> get_random_values(JS::Value array) const;
     String random_uuid() const;
 
 protected:

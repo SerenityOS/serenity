@@ -169,9 +169,6 @@ class TreeWalker;
 enum class QuirksMode;
 struct EventListenerOptions;
 struct AddEventListenerOptions;
-
-template<typename ValueType>
-class ExceptionOr;
 }
 
 namespace Web::DOMParsing {
@@ -396,6 +393,9 @@ class SVGSVGElement;
 
 namespace Web::WebIDL {
 class CallbackType;
+
+template<typename ValueType>
+class ExceptionOr;
 }
 
 namespace Web::WebSockets {

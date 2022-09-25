@@ -108,7 +108,7 @@ public:
 
     Window* parent();
 
-    DOM::ExceptionOr<void> post_message_impl(JS::Value, String const& target_origin);
+    WebIDL::ExceptionOr<void> post_message_impl(JS::Value, String const& target_origin);
 
     String name() const;
     void set_name(String const&);

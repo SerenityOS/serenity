@@ -69,7 +69,7 @@ Optional<StyleProperty> PropertyOwningCSSStyleDeclaration::property(PropertyID p
 }
 
 // https://drafts.csswg.org/cssom/#dom-cssstyledeclaration-setproperty
-DOM::ExceptionOr<void> PropertyOwningCSSStyleDeclaration::set_property(PropertyID property_id, StringView value, StringView priority)
+WebIDL::ExceptionOr<void> PropertyOwningCSSStyleDeclaration::set_property(PropertyID property_id, StringView value, StringView priority)
 {
     // 1. If the computed flag is set, then throw a NoModificationAllowedError exception.
     // NOTE: This is handled by the virtual override in ResolvedCSSStyleDeclaration.
@@ -117,7 +117,7 @@ DOM::ExceptionOr<void> PropertyOwningCSSStyleDeclaration::set_property(PropertyI
 }
 
 // https://drafts.csswg.org/cssom/#dom-cssstyledeclaration-removeproperty
-DOM::ExceptionOr<String> PropertyOwningCSSStyleDeclaration::remove_property(PropertyID property_id)
+WebIDL::ExceptionOr<String> PropertyOwningCSSStyleDeclaration::remove_property(PropertyID property_id)
 {
     // 1. If the computed flag is set, then throw a NoModificationAllowedError exception.
     // NOTE: This is handled by the virtual override in ResolvedCSSStyleDeclaration.
@@ -214,7 +214,7 @@ String CSSStyleDeclaration::get_property_priority(StringView property_name) cons
     return maybe_property->important == Important::Yes ? "important" : "";
 }
 
-DOM::ExceptionOr<void> CSSStyleDeclaration::set_property(StringView property_name, StringView css_text, StringView priority)
+WebIDL::ExceptionOr<void> CSSStyleDeclaration::set_property(StringView property_name, StringView css_text, StringView priority)
 {
     auto property_id = property_id_from_string(property_name);
     if (property_id == CSS::PropertyID::Invalid)
@@ -222,7 +222,7 @@ DOM::ExceptionOr<void> CSSStyleDeclaration::set_property(StringView property_nam
     return set_property(property_id, css_text, priority);
 }
 
-DOM::ExceptionOr<String> CSSStyleDeclaration::remove_property(StringView property_name)
+WebIDL::ExceptionOr<String> CSSStyleDeclaration::remove_property(StringView property_name)
 {
     auto property_id = property_id_from_string(property_name);
     if (property_id == CSS::PropertyID::Invalid)

@@ -596,7 +596,7 @@ Window* Window::parent()
 }
 
 // https://html.spec.whatwg.org/multipage/web-messaging.html#window-post-message-steps
-DOM::ExceptionOr<void> Window::post_message_impl(JS::Value message, String const&)
+WebIDL::ExceptionOr<void> Window::post_message_impl(JS::Value message, String const&)
 {
     // FIXME: This is an ad-hoc hack implementation instead, since we don't currently
     //        have serialization and deserialization of messages.

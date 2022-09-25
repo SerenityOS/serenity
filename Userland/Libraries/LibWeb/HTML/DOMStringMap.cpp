@@ -111,7 +111,7 @@ String DOMStringMap::determine_value_of_named_property(String const& name) const
 }
 
 // https://html.spec.whatwg.org/multipage/dom.html#dom-domstringmap-setitem
-DOM::ExceptionOr<void> DOMStringMap::set_value_of_new_named_property(String const& name, String const& value)
+WebIDL::ExceptionOr<void> DOMStringMap::set_value_of_new_named_property(String const& name, String const& value)
 {
     AK::StringBuilder builder;
 
@@ -150,7 +150,7 @@ DOM::ExceptionOr<void> DOMStringMap::set_value_of_new_named_property(String cons
 }
 
 // https://html.spec.whatwg.org/multipage/dom.html#dom-domstringmap-setitem
-DOM::ExceptionOr<void> DOMStringMap::set_value_of_existing_named_property(String const& name, String const& value)
+WebIDL::ExceptionOr<void> DOMStringMap::set_value_of_existing_named_property(String const& name, String const& value)
 {
     return set_value_of_new_named_property(name, value);
 }

@@ -6,11 +6,11 @@
 
 #pragma once
 
-#include <LibWeb/DOM/ExceptionOr.h>
 #include <LibWeb/HTML/HTMLElement.h>
 #include <LibWeb/HTML/HTMLTableCaptionElement.h>
 #include <LibWeb/HTML/HTMLTableRowElement.h>
 #include <LibWeb/HTML/HTMLTableSectionElement.h>
+#include <LibWeb/WebIDL/ExceptionOr.h>
 
 namespace Web::HTML {
 
@@ -26,12 +26,12 @@ public:
     void delete_caption();
 
     JS::GCPtr<HTMLTableSectionElement> t_head();
-    DOM::ExceptionOr<void> set_t_head(HTMLTableSectionElement* thead);
+    WebIDL::ExceptionOr<void> set_t_head(HTMLTableSectionElement* thead);
     JS::NonnullGCPtr<HTMLTableSectionElement> create_t_head();
     void delete_t_head();
 
     JS::GCPtr<HTMLTableSectionElement> t_foot();
-    DOM::ExceptionOr<void> set_t_foot(HTMLTableSectionElement* tfoot);
+    WebIDL::ExceptionOr<void> set_t_foot(HTMLTableSectionElement* tfoot);
     JS::NonnullGCPtr<HTMLTableSectionElement> create_t_foot();
     void delete_t_foot();
 
@@ -39,8 +39,8 @@ public:
     JS::NonnullGCPtr<HTMLTableSectionElement> create_t_body();
 
     JS::NonnullGCPtr<DOM::HTMLCollection> rows();
-    DOM::ExceptionOr<JS::NonnullGCPtr<HTMLTableRowElement>> insert_row(long index);
-    DOM::ExceptionOr<void> delete_row(long index);
+    WebIDL::ExceptionOr<JS::NonnullGCPtr<HTMLTableRowElement>> insert_row(long index);
+    WebIDL::ExceptionOr<void> delete_row(long index);
 
 private:
     HTMLTableElement(DOM::Document&, DOM::QualifiedName);

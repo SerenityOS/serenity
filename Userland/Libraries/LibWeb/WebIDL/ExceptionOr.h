@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -11,7 +11,7 @@
 #include <AK/RefPtr.h>
 #include <LibWeb/DOM/DOMException.h>
 
-namespace Web::DOM {
+namespace Web::WebIDL {
 
 #define ENUMERATE_SIMPLE_WEBIDL_EXCEPTION_TYPES(E) \
     E(EvalError)                                   \
@@ -49,7 +49,7 @@ public:
     {
     }
 
-    ExceptionOr(JS::NonnullGCPtr<DOMException> exception)
+    ExceptionOr(JS::NonnullGCPtr<DOM::DOMException> exception)
         : m_exception(move(exception))
     {
     }
@@ -59,8 +59,8 @@ public:
     {
     }
 
-    ExceptionOr(Variant<SimpleException, JS::NonnullGCPtr<DOMException>> exception)
-        : m_exception(move(exception).template downcast<Empty, SimpleException, JS::NonnullGCPtr<DOMException>>())
+    ExceptionOr(Variant<SimpleException, JS::NonnullGCPtr<DOM::DOMException>> exception)
+        : m_exception(move(exception).template downcast<Empty, SimpleException, JS::NonnullGCPtr<DOM::DOMException>>())
     {
     }
 
@@ -78,9 +78,9 @@ public:
         return m_result.release_value();
     }
 
-    Variant<SimpleException, JS::NonnullGCPtr<DOMException>> exception() const
+    Variant<SimpleException, JS::NonnullGCPtr<DOM::DOMException>> exception() const
     {
-        return m_exception.template downcast<SimpleException, JS::NonnullGCPtr<DOMException>>();
+        return m_exception.template downcast<SimpleException, JS::NonnullGCPtr<DOM::DOMException>>();
     }
 
     bool is_exception() const
@@ -90,12 +90,13 @@ public:
 
     // These are for compatibility with the TRY() macro in AK.
     [[nodiscard]] bool is_error() const { return is_exception(); }
-    Variant<SimpleException, JS::NonnullGCPtr<DOMException>> release_error() { return exception(); }
+    Variant<SimpleException, JS::NonnullGCPtr<DOM::DOMException>> release_error() { return exception(); }
 
 private:
     Optional<ValueType> m_result;
+
     // https://webidl.spec.whatwg.org/#idl-exceptions
-    Variant<Empty, SimpleException, JS::NonnullGCPtr<DOMException>> m_exception {};
+    Variant<Empty, SimpleException, JS::NonnullGCPtr<DOM::DOMException>> m_exception {};
 };
 
 template<>

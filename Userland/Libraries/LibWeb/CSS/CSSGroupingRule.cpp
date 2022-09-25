@@ -27,7 +27,7 @@ void CSSGroupingRule::visit_edges(Cell::Visitor& visitor)
     visitor.visit(&m_rules);
 }
 
-DOM::ExceptionOr<u32> CSSGroupingRule::insert_rule(StringView rule, u32 index)
+WebIDL::ExceptionOr<u32> CSSGroupingRule::insert_rule(StringView rule, u32 index)
 {
     TRY(m_rules.insert_a_css_rule(rule, index));
     // NOTE: The spec doesn't say where to set the parent rule, so we'll do it here.
@@ -35,7 +35,7 @@ DOM::ExceptionOr<u32> CSSGroupingRule::insert_rule(StringView rule, u32 index)
     return index;
 }
 
-DOM::ExceptionOr<void> CSSGroupingRule::delete_rule(u32 index)
+WebIDL::ExceptionOr<void> CSSGroupingRule::delete_rule(u32 index)
 {
     return m_rules.remove_a_css_rule(index);
 }

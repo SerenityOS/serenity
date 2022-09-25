@@ -21,7 +21,7 @@ static void default_source_size(CanvasImageSource const& image, float& source_wi
     });
 }
 
-DOM::ExceptionOr<void> CanvasDrawImage::draw_image(Web::HTML::CanvasImageSource const& image, float destination_x, float destination_y)
+WebIDL::ExceptionOr<void> CanvasDrawImage::draw_image(Web::HTML::CanvasImageSource const& image, float destination_x, float destination_y)
 {
     // If not specified, the dw and dh arguments must default to the values of sw and sh, interpreted such that one CSS pixel in the image is treated as one unit in the output bitmap's coordinate space.
     // If the sx, sy, sw, and sh arguments are omitted, then they must default to 0, 0, the image's intrinsic width in image pixels, and the image's intrinsic height in image pixels, respectively.
@@ -33,7 +33,7 @@ DOM::ExceptionOr<void> CanvasDrawImage::draw_image(Web::HTML::CanvasImageSource 
     return draw_image_internal(image, 0, 0, source_width, source_height, destination_x, destination_y, source_width, source_height);
 }
 
-DOM::ExceptionOr<void> CanvasDrawImage::draw_image(Web::HTML::CanvasImageSource const& image, float destination_x, float destination_y, float destination_width, float destination_height)
+WebIDL::ExceptionOr<void> CanvasDrawImage::draw_image(Web::HTML::CanvasImageSource const& image, float destination_x, float destination_y, float destination_width, float destination_height)
 {
     // If the sx, sy, sw, and sh arguments are omitted, then they must default to 0, 0, the image's intrinsic width in image pixels, and the image's intrinsic height in image pixels, respectively.
     // If the image has no intrinsic dimensions, then the concrete object size must be used instead, as determined using the CSS "Concrete Object Size Resolution" algorithm, with the specified size having
@@ -44,7 +44,7 @@ DOM::ExceptionOr<void> CanvasDrawImage::draw_image(Web::HTML::CanvasImageSource 
     return draw_image_internal(image, 0, 0, source_width, source_height, destination_x, destination_y, destination_width, destination_height);
 }
 
-DOM::ExceptionOr<void> CanvasDrawImage::draw_image(Web::HTML::CanvasImageSource const& image, float source_x, float source_y, float source_width, float source_height, float destination_x, float destination_y, float destination_width, float destination_height)
+WebIDL::ExceptionOr<void> CanvasDrawImage::draw_image(Web::HTML::CanvasImageSource const& image, float source_x, float source_y, float source_width, float source_height, float destination_x, float destination_y, float destination_width, float destination_height)
 {
     return draw_image_internal(image, source_x, source_y, source_width, source_height, destination_x, destination_y, destination_width, destination_height);
 }

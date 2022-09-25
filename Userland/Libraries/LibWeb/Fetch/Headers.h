@@ -11,8 +11,8 @@
 #include <AK/Variant.h>
 #include <AK/Vector.h>
 #include <LibWeb/Bindings/PlatformObject.h>
-#include <LibWeb/DOM/ExceptionOr.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP/Headers.h>
+#include <LibWeb/WebIDL/ExceptionOr.h>
 
 namespace Web::Fetch {
 
@@ -31,16 +31,16 @@ public:
         None,
     };
 
-    static DOM::ExceptionOr<JS::NonnullGCPtr<Headers>> create_with_global_object(HTML::Window& window, Optional<HeadersInit> const& init);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<Headers>> create_with_global_object(HTML::Window& window, Optional<HeadersInit> const& init);
 
     virtual ~Headers() override;
 
-    DOM::ExceptionOr<void> append(Infrastructure::Header);
-    DOM::ExceptionOr<void> append(String const& name, String const& value);
-    DOM::ExceptionOr<void> delete_(String const& name);
-    DOM::ExceptionOr<String> get(String const& name);
-    DOM::ExceptionOr<bool> has(String const& name);
-    DOM::ExceptionOr<void> set(String const& name, String const& value);
+    WebIDL::ExceptionOr<void> append(Infrastructure::Header);
+    WebIDL::ExceptionOr<void> append(String const& name, String const& value);
+    WebIDL::ExceptionOr<void> delete_(String const& name);
+    WebIDL::ExceptionOr<String> get(String const& name);
+    WebIDL::ExceptionOr<bool> has(String const& name);
+    WebIDL::ExceptionOr<void> set(String const& name, String const& value);
 
     using ForEachCallback = Function<JS::ThrowCompletionOr<void>(String const&, String const&)>;
     JS::ThrowCompletionOr<void> for_each(ForEachCallback);
@@ -50,7 +50,7 @@ private:
 
     explicit Headers(HTML::Window&);
 
-    DOM::ExceptionOr<void> fill(HeadersInit const&);
+    WebIDL::ExceptionOr<void> fill(HeadersInit const&);
     void remove_privileged_no_cors_headers();
 
     // https://fetch.spec.whatwg.org/#concept-headers-header-list

@@ -41,7 +41,7 @@ void MutationObserver::visit_edges(Cell::Visitor& visitor)
 }
 
 // https://dom.spec.whatwg.org/#dom-mutationobserver-observe
-ExceptionOr<void> MutationObserver::observe(Node& target, MutationObserverInit options)
+WebIDL::ExceptionOr<void> MutationObserver::observe(Node& target, MutationObserverInit options)
 {
     // 1. If either options["attributeOldValue"] or options["attributeFilter"] exists, and options["attributes"] does not exist, then set options["attributes"] to true.
     if ((options.attribute_old_value.has_value() || options.attribute_filter.has_value()) && !options.attributes.has_value())
@@ -53,22 +53,22 @@ ExceptionOr<void> MutationObserver::observe(Node& target, MutationObserverInit o
 
     // 3. If none of options["childList"], options["attributes"], and options["characterData"] is true, then throw a TypeError.
     if (!options.child_list && (!options.attributes.has_value() || !options.attributes.value()) && (!options.character_data.has_value() || !options.character_data.value()))
-        return SimpleException { SimpleExceptionType::TypeError, "Options must have one of childList, attributes or characterData set to true." };
+        return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "Options must have one of childList, attributes or characterData set to true." };
 
     // 4. If options["attributeOldValue"] is true and options["attributes"] is false, then throw a TypeError.
     // NOTE: If attributeOldValue is present, attributes will be present because of step 1.
     if (options.attribute_old_value.has_value() && options.attribute_old_value.value() && !options.attributes.value())
-        return SimpleException { SimpleExceptionType::TypeError, "attributes must be true if attributeOldValue is true." };
+        return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "attributes must be true if attributeOldValue is true." };
 
     // 5. If options["attributeFilter"] is present and options["attributes"] is false, then throw a TypeError.
     // NOTE: If attributeFilter is present, attributes will be present because of step 1.
     if (options.attribute_filter.has_value() && !options.attributes.value())
-        return SimpleException { SimpleExceptionType::TypeError, "attributes must be true if attributeFilter is present." };
+        return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "attributes must be true if attributeFilter is present." };
 
     // 6. If options["characterDataOldValue"] is true and options["characterData"] is false, then throw a TypeError.
     // NOTE: If characterDataOldValue is present, characterData will be present because of step 2.
     if (options.character_data_old_value.has_value() && options.character_data_old_value.value() && !options.character_data.value())
-        return SimpleException { SimpleExceptionType::TypeError, "characterData must be true if characterDataOldValue is true." };
+        return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "characterData must be true if characterDataOldValue is true." };
 
     // 7. For each registered of target’s registered observer list, if registered’s observer is this:
     bool updated_existing_observer = false;

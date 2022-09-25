@@ -10,10 +10,10 @@
 #include <AK/RefCounted.h>
 #include <AK/URL.h>
 #include <LibWeb/DOM/EventTarget.h>
-#include <LibWeb/DOM/ExceptionOr.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/HTML/WorkerLocation.h>
 #include <LibWeb/HTML/WorkerNavigator.h>
+#include <LibWeb/WebIDL/ExceptionOr.h>
 
 #define ENUMERATE_WORKER_GLOBAL_SCOPE_EVENT_HANDLERS(E)       \
     E(onerror, HTML::EventNames::error)                       \
@@ -42,7 +42,7 @@ public:
 
     JS::NonnullGCPtr<WorkerLocation> location() const;
     JS::NonnullGCPtr<WorkerNavigator> navigator() const;
-    DOM::ExceptionOr<void> import_scripts(Vector<String> urls);
+    WebIDL::ExceptionOr<void> import_scripts(Vector<String> urls);
 
 #undef __ENUMERATE
 #define __ENUMERATE(attribute_name, event_name)       \
@@ -57,8 +57,8 @@ public:
     String origin() const;
     bool is_secure_context() const;
     bool cross_origin_isolated() const;
-    DOM::ExceptionOr<String> btoa(String const& data) const;
-    DOM::ExceptionOr<String> atob(String const& data) const;
+    WebIDL::ExceptionOr<String> btoa(String const& data) const;
+    WebIDL::ExceptionOr<String> atob(String const& data) const;
 
     // Non-IDL public methods
 

@@ -11,9 +11,9 @@
 #include <LibCore/Object.h>
 #include <LibWeb/Bindings/PlatformObject.h>
 #include <LibWeb/DOM/EventTarget.h>
-#include <LibWeb/DOM/ExceptionOr.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/HTML/Window.h>
+#include <LibWeb/WebIDL/ExceptionOr.h>
 
 #define ENUMERATE_WEBSOCKET_EVENT_HANDLERS(E) \
     E(onerror, HTML::EventNames::error)       \
@@ -37,7 +37,7 @@ public:
         Closed = 3,
     };
 
-    static DOM::ExceptionOr<JS::NonnullGCPtr<WebSocket>> create_with_global_object(HTML::Window&, String const& url);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<WebSocket>> create_with_global_object(HTML::Window&, String const& url);
 
     virtual ~WebSocket() override;
 
@@ -57,8 +57,8 @@ public:
     String const& binary_type() { return m_binary_type; };
     void set_binary_type(String const& type) { m_binary_type = type; };
 
-    DOM::ExceptionOr<void> close(Optional<u16> code, Optional<String> reason);
-    DOM::ExceptionOr<void> send(String const& data);
+    WebIDL::ExceptionOr<void> close(Optional<u16> code, Optional<String> reason);
+    WebIDL::ExceptionOr<void> send(String const& data);
 
 private:
     void on_open();

@@ -13,8 +13,8 @@
 #include <AK/StringView.h>
 #include <AK/Vector.h>
 #include <LibWeb/Bindings/LegacyPlatformObject.h>
-#include <LibWeb/DOM/ExceptionOr.h>
 #include <LibWeb/Forward.h>
+#include <LibWeb/WebIDL/ExceptionOr.h>
 
 namespace Web::DOM {
 
@@ -34,18 +34,18 @@ public:
     size_t length() const { return m_token_set.size(); }
     String const& item(size_t index) const;
     bool contains(StringView token);
-    ExceptionOr<void> add(Vector<String> const& tokens);
-    ExceptionOr<void> remove(Vector<String> const& tokens);
-    ExceptionOr<bool> toggle(String const& token, Optional<bool> force);
-    ExceptionOr<bool> replace(String const& token, String const& new_token);
-    ExceptionOr<bool> supports(StringView token);
+    WebIDL::ExceptionOr<void> add(Vector<String> const& tokens);
+    WebIDL::ExceptionOr<void> remove(Vector<String> const& tokens);
+    WebIDL::ExceptionOr<bool> toggle(String const& token, Optional<bool> force);
+    WebIDL::ExceptionOr<bool> replace(String const& token, String const& new_token);
+    WebIDL::ExceptionOr<bool> supports(StringView token);
     String value() const;
     void set_value(String value);
 
 private:
     DOMTokenList(Element const& associated_element, FlyString associated_attribute);
 
-    ExceptionOr<void> validate_token(StringView token) const;
+    WebIDL::ExceptionOr<void> validate_token(StringView token) const;
     void run_update_steps();
 
     WeakPtr<Element> m_associated_element;

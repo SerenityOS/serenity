@@ -10,8 +10,8 @@
 #include <AK/String.h>
 #include <AK/URL.h>
 #include <LibWeb/Bindings/PlatformObject.h>
-#include <LibWeb/DOM/ExceptionOr.h>
 #include <LibWeb/URL/URLSearchParams.h>
+#include <LibWeb/WebIDL/ExceptionOr.h>
 
 namespace Web::URL {
 
@@ -20,12 +20,12 @@ class URL : public Bindings::PlatformObject {
 
 public:
     static JS::NonnullGCPtr<URL> create(HTML::Window&, AK::URL url, JS::NonnullGCPtr<URLSearchParams> query);
-    static DOM::ExceptionOr<JS::NonnullGCPtr<URL>> create_with_global_object(HTML::Window&, String const& url, String const& base);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<URL>> create_with_global_object(HTML::Window&, String const& url, String const& base);
 
     virtual ~URL() override;
 
     String href() const;
-    DOM::ExceptionOr<void> set_href(String const&);
+    WebIDL::ExceptionOr<void> set_href(String const&);
 
     String origin() const;
 

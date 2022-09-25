@@ -9,7 +9,7 @@
 #include <AK/Optional.h>
 #include <AK/StdLibExtras.h>
 #include <LibJS/Runtime/VM.h>
-#include <LibWeb/DOM/ExceptionOr.h>
+#include <LibWeb/WebIDL/ExceptionOr.h>
 
 namespace Web::Bindings {
 
@@ -17,7 +17,7 @@ template<typename>
 constexpr bool IsExceptionOr = false;
 
 template<typename T>
-constexpr bool IsExceptionOr<DOM::ExceptionOr<T>> = true;
+constexpr bool IsExceptionOr<WebIDL::ExceptionOr<T>> = true;
 
 template<typename>
 constexpr bool IsThrowCompletionOr = false;
@@ -33,7 +33,7 @@ struct ExtractExceptionOrValueType {
 };
 
 template<typename T>
-struct ExtractExceptionOrValueType<DOM::ExceptionOr<T>> {
+struct ExtractExceptionOrValueType<WebIDL::ExceptionOr<T>> {
     using Type = T;
 };
 
@@ -48,22 +48,22 @@ struct ExtractExceptionOrValueType<void> {
 };
 
 template<>
-struct ExtractExceptionOrValueType<DOM::ExceptionOr<Empty>> {
+struct ExtractExceptionOrValueType<WebIDL::ExceptionOr<Empty>> {
     using Type = JS::Value;
 };
 
 template<>
-struct ExtractExceptionOrValueType<DOM::ExceptionOr<void>> {
+struct ExtractExceptionOrValueType<WebIDL::ExceptionOr<void>> {
     using Type = JS::Value;
 };
 
 ALWAYS_INLINE JS::Completion dom_exception_to_throw_completion(auto&& vm, auto&& exception)
 {
     return exception.visit(
-        [&](DOM::SimpleException const& exception) {
+        [&](WebIDL::SimpleException const& exception) {
             switch (exception.type) {
-#define E(x)                          \
-    case DOM::SimpleExceptionType::x: \
+#define E(x)                             \
+    case WebIDL::SimpleExceptionType::x: \
         return vm.template throw_completion<JS::x>(exception.message);
 
                 ENUMERATE_SIMPLE_WEBIDL_EXCEPTION_TYPES(E)
