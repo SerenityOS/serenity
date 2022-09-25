@@ -397,6 +397,14 @@ if (BUILD_LAGOM)
         SOURCES ${LIBGL_SOURCES} ${LIBGL_TEX_SOURCES}
         LIBS m LibGfx LibGPU)
 
+    # GUI
+    list(APPEND LIBGUI_SOURCES "../../Userland/Libraries/LibGUI/ModelIndex.cpp")
+    list(APPEND LIBGUI_SOURCES "../../Userland/Libraries/LibGUI/Model.cpp")
+    list(APPEND LIBGUI_SOURCES "../../Userland/Libraries/LibGUI/Icon.cpp")
+    lagom_lib(GUI gui
+        SOURCES ${LIBGUI_SOURCES}
+        LIBS LibGfx)
+
     # GUI-GML
     file(GLOB LIBGUI_GML_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibGUI/GML/*.cpp")
     list(REMOVE_ITEM LIBGUI_GML_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/../../Userland/Libraries/LibGUI/GML/AutocompleteProvider.cpp")
