@@ -36,7 +36,7 @@ JS::NonnullGCPtr<DOM::HTMLCollection> HTMLTableSectionElement::rows() const
 }
 
 // https://html.spec.whatwg.org/multipage/tables.html#dom-tbody-insertrow
-DOM::ExceptionOr<JS::NonnullGCPtr<HTMLTableRowElement>> HTMLTableSectionElement::insert_row(long index)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<HTMLTableRowElement>> HTMLTableSectionElement::insert_row(long index)
 {
     auto rows_collection = rows();
     auto rows_collection_size = static_cast<long>(rows_collection->length());
@@ -60,7 +60,7 @@ DOM::ExceptionOr<JS::NonnullGCPtr<HTMLTableRowElement>> HTMLTableSectionElement:
 }
 
 // https://html.spec.whatwg.org/multipage/tables.html#dom-tbody-deleterow
-DOM::ExceptionOr<void> HTMLTableSectionElement::delete_row(long index)
+WebIDL::ExceptionOr<void> HTMLTableSectionElement::delete_row(long index)
 {
     auto rows_collection = rows();
     auto rows_collection_size = static_cast<long>(rows_collection->length());

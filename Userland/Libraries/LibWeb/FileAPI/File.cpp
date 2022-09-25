@@ -20,7 +20,7 @@ File::File(HTML::Window& window, ByteBuffer byte_buffer, String file_name, Strin
 File::~File() = default;
 
 // https://w3c.github.io/FileAPI/#ref-for-dom-file-file
-DOM::ExceptionOr<JS::NonnullGCPtr<File>> File::create(HTML::Window& window, Vector<BlobPart> const& file_bits, String const& file_name, Optional<FilePropertyBag> const& options)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<File>> File::create(HTML::Window& window, Vector<BlobPart> const& file_bits, String const& file_name, Optional<FilePropertyBag> const& options)
 {
     // 1. Let bytes be the result of processing blob parts given fileBits and options.
     auto bytes = TRY_OR_RETURN_OOM(window, process_blob_parts(file_bits, static_cast<Optional<BlobPropertyBag> const&>(*options)));
@@ -60,7 +60,7 @@ DOM::ExceptionOr<JS::NonnullGCPtr<File>> File::create(HTML::Window& window, Vect
     return JS::NonnullGCPtr(*window.heap().allocate<File>(window.realm(), window, move(bytes), move(name), move(type), last_modified));
 }
 
-DOM::ExceptionOr<JS::NonnullGCPtr<File>> File::create_with_global_object(HTML::Window& window, Vector<BlobPart> const& file_bits, String const& file_name, Optional<FilePropertyBag> const& options)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<File>> File::create_with_global_object(HTML::Window& window, Vector<BlobPart> const& file_bits, String const& file_name, Optional<FilePropertyBag> const& options)
 {
     return create(window, file_bits, file_name, options);
 }

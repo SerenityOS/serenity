@@ -223,7 +223,7 @@ void EventTarget::remove_from_event_listener_list(DOMEventListener& listener)
 }
 
 // https://dom.spec.whatwg.org/#dom-eventtarget-dispatchevent
-ExceptionOr<bool> EventTarget::dispatch_event_binding(Event& event)
+WebIDL::ExceptionOr<bool> EventTarget::dispatch_event_binding(Event& event)
 {
     // 1. If event’s dispatch flag is set, or if its initialized flag is not set, then throw an "InvalidStateError" DOMException.
     if (event.dispatched())

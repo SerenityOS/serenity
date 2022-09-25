@@ -28,7 +28,6 @@
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/DOM/ElementFactory.h>
 #include <LibWeb/DOM/Event.h>
-#include <LibWeb/DOM/ExceptionOr.h>
 #include <LibWeb/DOM/HTMLCollection.h>
 #include <LibWeb/DOM/NodeIterator.h>
 #include <LibWeb/DOM/Range.h>
@@ -73,6 +72,7 @@
 #include <LibWeb/UIEvents/FocusEvent.h>
 #include <LibWeb/UIEvents/KeyboardEvent.h>
 #include <LibWeb/UIEvents/MouseEvent.h>
+#include <LibWeb/WebIDL/ExceptionOr.h>
 
 namespace Web::DOM {
 
@@ -351,7 +351,7 @@ void Document::visit_edges(Cell::Visitor& visitor)
 }
 
 // https://html.spec.whatwg.org/multipage/dynamic-markup-insertion.html#dom-document-write
-ExceptionOr<void> Document::write(Vector<String> const& strings)
+WebIDL::ExceptionOr<void> Document::write(Vector<String> const& strings)
 {
     StringBuilder builder;
     builder.join(""sv, strings);
@@ -360,7 +360,7 @@ ExceptionOr<void> Document::write(Vector<String> const& strings)
 }
 
 // https://html.spec.whatwg.org/multipage/dynamic-markup-insertion.html#dom-document-writeln
-ExceptionOr<void> Document::writeln(Vector<String> const& strings)
+WebIDL::ExceptionOr<void> Document::writeln(Vector<String> const& strings)
 {
     StringBuilder builder;
     builder.join(""sv, strings);
@@ -370,7 +370,7 @@ ExceptionOr<void> Document::writeln(Vector<String> const& strings)
 }
 
 // https://html.spec.whatwg.org/multipage/dynamic-markup-insertion.html#document-write-steps
-ExceptionOr<void> Document::run_the_document_write_steps(String input)
+WebIDL::ExceptionOr<void> Document::run_the_document_write_steps(String input)
 {
     // 1. If document is an XML document, then throw an "InvalidStateError" DOMException.
     if (m_type == Type::XML)
@@ -405,7 +405,7 @@ ExceptionOr<void> Document::run_the_document_write_steps(String input)
 }
 
 // https://html.spec.whatwg.org/multipage/dynamic-markup-insertion.html#dom-document-open
-ExceptionOr<Document*> Document::open(String const&, String const&)
+WebIDL::ExceptionOr<Document*> Document::open(String const&, String const&)
 {
     // 1. If document is an XML document, then throw an "InvalidStateError" DOMException exception.
     if (m_type == Type::XML)
@@ -476,7 +476,7 @@ ExceptionOr<Document*> Document::open(String const&, String const&)
 }
 
 // https://html.spec.whatwg.org/multipage/dynamic-markup-insertion.html#closing-the-input-stream
-ExceptionOr<void> Document::close()
+WebIDL::ExceptionOr<void> Document::close()
 {
     // 1. If document is an XML document, then throw an "InvalidStateError" DOMException exception.
     if (m_type == Type::XML)
@@ -585,7 +585,7 @@ HTML::HTMLElement* Document::body()
 }
 
 // https://html.spec.whatwg.org/multipage/dom.html#dom-document-body
-ExceptionOr<void> Document::set_body(HTML::HTMLElement* new_body)
+WebIDL::ExceptionOr<void> Document::set_body(HTML::HTMLElement* new_body)
 {
     if (!is<HTML::HTMLBodyElement>(new_body) && !is<HTML::HTMLFrameSetElement>(new_body))
         return DOM::HierarchyRequestError::create(global_object(), "Invalid document body element, must be 'body' or 'frameset'");
@@ -1108,7 +1108,7 @@ JS::Value Document::run_javascript(StringView source, StringView filename)
 }
 
 // https://dom.spec.whatwg.org/#dom-document-createelement
-DOM::ExceptionOr<JS::NonnullGCPtr<Element>> Document::create_element(FlyString const& a_local_name)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<Element>> Document::create_element(FlyString const& a_local_name)
 {
     auto local_name = a_local_name;
 
@@ -1135,7 +1135,7 @@ DOM::ExceptionOr<JS::NonnullGCPtr<Element>> Document::create_element(FlyString c
 // https://dom.spec.whatwg.org/#dom-document-createelementns
 // https://dom.spec.whatwg.org/#internal-createelementns-steps
 // FIXME: This only implements step 4 of the algorithm and does not take in options.
-DOM::ExceptionOr<JS::NonnullGCPtr<Element>> Document::create_element_ns(String const& namespace_, String const& qualified_name)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<Element>> Document::create_element_ns(String const& namespace_, String const& qualified_name)
 {
     // 1. Let namespace, prefix, and localName be the result of passing namespace and qualifiedName to validate and extract.
     auto extracted_qualified_name = TRY(validate_and_extract(global_object(), namespace_, qualified_name));
@@ -1168,7 +1168,7 @@ JS::NonnullGCPtr<Range> Document::create_range()
 }
 
 // https://dom.spec.whatwg.org/#dom-document-createevent
-DOM::ExceptionOr<JS::NonnullGCPtr<Event>> Document::create_event(String const& interface)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<Event>> Document::create_event(String const& interface)
 {
     auto& window_object = window();
 
@@ -1285,7 +1285,7 @@ Vector<JS::Handle<HTML::HTMLScriptElement>> Document::take_scripts_to_execute_in
 }
 
 // https://dom.spec.whatwg.org/#dom-document-importnode
-ExceptionOr<JS::NonnullGCPtr<Node>> Document::import_node(JS::NonnullGCPtr<Node> node, bool deep)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<Node>> Document::import_node(JS::NonnullGCPtr<Node> node, bool deep)
 {
     // 1. If node is a document or shadow root, then throw a "NotSupportedError" DOMException.
     if (is<Document>(*node) || is<ShadowRoot>(*node))
@@ -1333,7 +1333,7 @@ void Document::adopt_node(Node& node)
 }
 
 // https://dom.spec.whatwg.org/#dom-document-adoptnode
-ExceptionOr<JS::NonnullGCPtr<Node>> Document::adopt_node_binding(JS::NonnullGCPtr<Node> node)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<Node>> Document::adopt_node_binding(JS::NonnullGCPtr<Node> node)
 {
     if (is<Document>(*node))
         return DOM::NotSupportedError::create(global_object(), "Cannot adopt a document into a document");
@@ -1798,7 +1798,7 @@ bool Document::is_valid_name(String const& name)
 }
 
 // https://dom.spec.whatwg.org/#validate
-ExceptionOr<Document::PrefixAndTagName> Document::validate_qualified_name(JS::Object& global_object, String const& qualified_name)
+WebIDL::ExceptionOr<Document::PrefixAndTagName> Document::validate_qualified_name(JS::Object& global_object, String const& qualified_name)
 {
     if (qualified_name.is_empty())
         return InvalidCharacterError::create(global_object, "Empty string is not a valid qualified name.");

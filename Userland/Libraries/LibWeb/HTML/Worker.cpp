@@ -8,10 +8,10 @@
 #include <LibJS/Runtime/ConsoleObject.h>
 #include <LibJS/Runtime/Realm.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
-#include <LibWeb/DOM/ExceptionOr.h>
 #include <LibWeb/HTML/Scripting/Environments.h>
 #include <LibWeb/HTML/Worker.h>
 #include <LibWeb/HTML/WorkerDebugConsoleClient.h>
+#include <LibWeb/WebIDL/ExceptionOr.h>
 
 namespace Web::HTML {
 
@@ -39,7 +39,7 @@ void Worker::visit_edges(Cell::Visitor& visitor)
 }
 
 // https://html.spec.whatwg.org/multipage/workers.html#dom-worker
-DOM::ExceptionOr<JS::NonnullGCPtr<Worker>> Worker::create(FlyString const& script_url, WorkerOptions const options, DOM::Document& document)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<Worker>> Worker::create(FlyString const& script_url, WorkerOptions const options, DOM::Document& document)
 {
     dbgln_if(WEB_WORKER_DEBUG, "WebWorker: Creating worker with script_url = {}", script_url);
 
@@ -312,7 +312,7 @@ void Worker::run_a_worker(AK::URL& url, EnvironmentSettingsObject& outside_setti
 }
 
 // https://html.spec.whatwg.org/multipage/workers.html#dom-worker-terminate
-DOM::ExceptionOr<void> Worker::terminate()
+WebIDL::ExceptionOr<void> Worker::terminate()
 {
     dbgln_if(WEB_WORKER_DEBUG, "WebWorker: Terminate");
 

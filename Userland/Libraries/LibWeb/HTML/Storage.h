@@ -8,7 +8,7 @@
 
 #include <AK/HashMap.h>
 #include <LibWeb/Bindings/PlatformObject.h>
-#include <LibWeb/DOM/ExceptionOr.h>
+#include <LibWeb/WebIDL/ExceptionOr.h>
 
 namespace Web::HTML {
 
@@ -22,7 +22,7 @@ public:
     size_t length() const;
     String key(size_t index);
     String get_item(String const& key) const;
-    DOM::ExceptionOr<void> set_item(String const& key, String const& value);
+    WebIDL::ExceptionOr<void> set_item(String const& key, String const& value);
     void remove_item(String const& key);
     void clear();
 

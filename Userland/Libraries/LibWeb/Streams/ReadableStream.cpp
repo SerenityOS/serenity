@@ -11,7 +11,7 @@
 namespace Web::Streams {
 
 // https://streams.spec.whatwg.org/#rs-constructor
-DOM::ExceptionOr<JS::NonnullGCPtr<ReadableStream>> ReadableStream::create_with_global_object(HTML::Window& window)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<ReadableStream>> ReadableStream::create_with_global_object(HTML::Window& window)
 {
     auto* readable_stream = window.heap().allocate<ReadableStream>(window.realm(), window);
 

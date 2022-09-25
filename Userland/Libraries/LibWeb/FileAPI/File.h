@@ -19,8 +19,8 @@ class File : public Blob {
     WEB_PLATFORM_OBJECT(File, Blob);
 
 public:
-    static DOM::ExceptionOr<JS::NonnullGCPtr<File>> create(HTML::Window&, Vector<BlobPart> const& file_bits, String const& file_name, Optional<FilePropertyBag> const& options = {});
-    static DOM::ExceptionOr<JS::NonnullGCPtr<File>> create_with_global_object(HTML::Window&, Vector<BlobPart> const& file_bits, String const& file_name, Optional<FilePropertyBag> const& options = {});
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<File>> create(HTML::Window&, Vector<BlobPart> const& file_bits, String const& file_name, Optional<FilePropertyBag> const& options = {});
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<File>> create_with_global_object(HTML::Window&, Vector<BlobPart> const& file_bits, String const& file_name, Optional<FilePropertyBag> const& options = {});
 
     virtual ~File() override;
 

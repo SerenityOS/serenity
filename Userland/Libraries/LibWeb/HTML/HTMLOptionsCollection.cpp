@@ -27,7 +27,7 @@ HTMLOptionsCollection::HTMLOptionsCollection(DOM::ParentNode& root, Function<boo
 HTMLOptionsCollection::~HTMLOptionsCollection() = default;
 
 // https://html.spec.whatwg.org/multipage/common-dom-interfaces.html#dom-htmloptionscollection-add
-DOM::ExceptionOr<void> HTMLOptionsCollection::add(HTMLOptionOrOptGroupElement element, Optional<HTMLElementOrElementIndex> before)
+WebIDL::ExceptionOr<void> HTMLOptionsCollection::add(HTMLOptionOrOptGroupElement element, Optional<HTMLElementOrElementIndex> before)
 {
     auto resolved_element = element.visit(
         [](auto& e) -> JS::Handle<HTMLElement> {

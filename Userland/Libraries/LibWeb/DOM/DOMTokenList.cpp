@@ -108,7 +108,7 @@ bool DOMTokenList::contains(StringView token)
 }
 
 // https://dom.spec.whatwg.org/#dom-domtokenlist-add
-ExceptionOr<void> DOMTokenList::add(Vector<String> const& tokens)
+WebIDL::ExceptionOr<void> DOMTokenList::add(Vector<String> const& tokens)
 {
     // 1. For each token in tokens:
     for (auto const& token : tokens) {
@@ -126,7 +126,7 @@ ExceptionOr<void> DOMTokenList::add(Vector<String> const& tokens)
 }
 
 // https://dom.spec.whatwg.org/#dom-domtokenlist-remove
-ExceptionOr<void> DOMTokenList::remove(Vector<String> const& tokens)
+WebIDL::ExceptionOr<void> DOMTokenList::remove(Vector<String> const& tokens)
 {
     // 1. For each token in tokens:
     for (auto const& token : tokens) {
@@ -144,7 +144,7 @@ ExceptionOr<void> DOMTokenList::remove(Vector<String> const& tokens)
 }
 
 // https://dom.spec.whatwg.org/#dom-domtokenlist-toggle
-ExceptionOr<bool> DOMTokenList::toggle(String const& token, Optional<bool> force)
+WebIDL::ExceptionOr<bool> DOMTokenList::toggle(String const& token, Optional<bool> force)
 {
     // 1. If token is the empty string, then throw a "SyntaxError" DOMException.
     // 2. If token contains any ASCII whitespace, then throw an "InvalidCharacterError" DOMException.
@@ -175,7 +175,7 @@ ExceptionOr<bool> DOMTokenList::toggle(String const& token, Optional<bool> force
 }
 
 // https://dom.spec.whatwg.org/#dom-domtokenlist-replace
-ExceptionOr<bool> DOMTokenList::replace(String const& token, String const& new_token)
+WebIDL::ExceptionOr<bool> DOMTokenList::replace(String const& token, String const& new_token)
 {
     // 1. If either token or newToken is the empty string, then throw a "SyntaxError" DOMException.
     // 2. If either token or newToken contains any ASCII whitespace, then throw an "InvalidCharacterError" DOMException.
@@ -198,13 +198,13 @@ ExceptionOr<bool> DOMTokenList::replace(String const& token, String const& new_t
 
 // https://dom.spec.whatwg.org/#dom-domtokenlist-supports
 // https://dom.spec.whatwg.org/#concept-domtokenlist-validation
-ExceptionOr<bool> DOMTokenList::supports([[maybe_unused]] StringView token)
+WebIDL::ExceptionOr<bool> DOMTokenList::supports([[maybe_unused]] StringView token)
 {
     // FIXME: Implement this fully when any use case defines supported tokens.
 
     // 1. If the associated attribute’s local name does not define supported tokens, throw a TypeError.
-    return DOM::SimpleException {
-        DOM::SimpleExceptionType::TypeError,
+    return WebIDL::SimpleException {
+        WebIDL::SimpleExceptionType::TypeError,
         String::formatted("Attribute {} does not define any supported tokens", m_associated_attribute)
     };
 
@@ -231,7 +231,7 @@ void DOMTokenList::set_value(String value)
     associated_element->set_attribute(m_associated_attribute, move(value));
 }
 
-ExceptionOr<void> DOMTokenList::validate_token(StringView token) const
+WebIDL::ExceptionOr<void> DOMTokenList::validate_token(StringView token) const
 {
     if (token.is_empty())
         return SyntaxError::create(global_object(), "Non-empty DOM tokens are not allowed");

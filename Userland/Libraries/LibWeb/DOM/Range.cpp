@@ -131,7 +131,7 @@ static RelativeBoundaryPointPosition position_of_boundary_point_relative_to_othe
     return RelativeBoundaryPointPosition::Before;
 }
 
-ExceptionOr<void> Range::set_start_or_end(Node& node, u32 offset, StartOrEnd start_or_end)
+WebIDL::ExceptionOr<void> Range::set_start_or_end(Node& node, u32 offset, StartOrEnd start_or_end)
 {
     // To set the start or end of a range to a boundary point (node, offset), run these steps:
 
@@ -176,20 +176,20 @@ ExceptionOr<void> Range::set_start_or_end(Node& node, u32 offset, StartOrEnd sta
 }
 
 // https://dom.spec.whatwg.org/#concept-range-bp-set
-ExceptionOr<void> Range::set_start(Node& node, u32 offset)
+WebIDL::ExceptionOr<void> Range::set_start(Node& node, u32 offset)
 {
     // The setStart(node, offset) method steps are to set the start of this to boundary point (node, offset).
     return set_start_or_end(node, offset, StartOrEnd::Start);
 }
 
-ExceptionOr<void> Range::set_end(Node& node, u32 offset)
+WebIDL::ExceptionOr<void> Range::set_end(Node& node, u32 offset)
 {
     // The setEnd(node, offset) method steps are to set the end of this to boundary point (node, offset).
     return set_start_or_end(node, offset, StartOrEnd::End);
 }
 
 // https://dom.spec.whatwg.org/#dom-range-setstartbefore
-ExceptionOr<void> Range::set_start_before(Node& node)
+WebIDL::ExceptionOr<void> Range::set_start_before(Node& node)
 {
     // 1. Let parent be node’s parent.
     auto* parent = node.parent();
@@ -203,7 +203,7 @@ ExceptionOr<void> Range::set_start_before(Node& node)
 }
 
 // https://dom.spec.whatwg.org/#dom-range-setstartafter
-ExceptionOr<void> Range::set_start_after(Node& node)
+WebIDL::ExceptionOr<void> Range::set_start_after(Node& node)
 {
     // 1. Let parent be node’s parent.
     auto* parent = node.parent();
@@ -217,7 +217,7 @@ ExceptionOr<void> Range::set_start_after(Node& node)
 }
 
 // https://dom.spec.whatwg.org/#dom-range-setendbefore
-ExceptionOr<void> Range::set_end_before(Node& node)
+WebIDL::ExceptionOr<void> Range::set_end_before(Node& node)
 {
     // 1. Let parent be node’s parent.
     auto* parent = node.parent();
@@ -231,7 +231,7 @@ ExceptionOr<void> Range::set_end_before(Node& node)
 }
 
 // https://dom.spec.whatwg.org/#dom-range-setendafter
-ExceptionOr<void> Range::set_end_after(Node& node)
+WebIDL::ExceptionOr<void> Range::set_end_after(Node& node)
 {
     // 1. Let parent be node’s parent.
     auto* parent = node.parent();
@@ -245,7 +245,7 @@ ExceptionOr<void> Range::set_end_after(Node& node)
 }
 
 // https://dom.spec.whatwg.org/#dom-range-compareboundarypoints
-ExceptionOr<i16> Range::compare_boundary_points(u16 how, Range const& source_range) const
+WebIDL::ExceptionOr<i16> Range::compare_boundary_points(u16 how, Range const& source_range) const
 {
     // 1. If how is not one of
     //      - START_TO_START,
@@ -332,7 +332,7 @@ ExceptionOr<i16> Range::compare_boundary_points(u16 how, Range const& source_ran
 }
 
 // https://dom.spec.whatwg.org/#concept-range-select
-ExceptionOr<void> Range::select(Node& node)
+WebIDL::ExceptionOr<void> Range::select(Node& node)
 {
     // 1. Let parent be node’s parent.
     auto* parent = node.parent();
@@ -356,7 +356,7 @@ ExceptionOr<void> Range::select(Node& node)
 }
 
 // https://dom.spec.whatwg.org/#dom-range-selectnode
-ExceptionOr<void> Range::select_node(Node& node)
+WebIDL::ExceptionOr<void> Range::select_node(Node& node)
 {
     // The selectNode(node) method steps are to select node within this.
     return select(node);
@@ -377,7 +377,7 @@ void Range::collapse(bool to_start)
 }
 
 // https://dom.spec.whatwg.org/#dom-range-selectnodecontents
-ExceptionOr<void> Range::select_node_contents(Node const& node)
+WebIDL::ExceptionOr<void> Range::select_node_contents(Node const& node)
 {
     // 1. If node is a doctype, throw an "InvalidNodeTypeError" DOMException.
     if (is<DocumentType>(node))
@@ -466,7 +466,7 @@ bool Range::intersects_node(Node const& node) const
 }
 
 // https://dom.spec.whatwg.org/#dom-range-ispointinrange
-ExceptionOr<bool> Range::is_point_in_range(Node const& node, u32 offset) const
+WebIDL::ExceptionOr<bool> Range::is_point_in_range(Node const& node, u32 offset) const
 {
     // 1. If node’s root is different from this’s root, return false.
     if (&node.root() != &root())
@@ -491,7 +491,7 @@ ExceptionOr<bool> Range::is_point_in_range(Node const& node, u32 offset) const
 }
 
 // https://dom.spec.whatwg.org/#dom-range-comparepoint
-ExceptionOr<i16> Range::compare_point(Node const& node, u32 offset) const
+WebIDL::ExceptionOr<i16> Range::compare_point(Node const& node, u32 offset) const
 {
     // 1. If node’s root is different from this’s root, then throw a "WrongDocumentError" DOMException.
     if (&node.root() != &root())
@@ -549,13 +549,13 @@ String Range::to_string() const
 }
 
 // https://dom.spec.whatwg.org/#dom-range-extractcontents
-ExceptionOr<JS::NonnullGCPtr<DocumentFragment>> Range::extract_contents()
+WebIDL::ExceptionOr<JS::NonnullGCPtr<DocumentFragment>> Range::extract_contents()
 {
     return extract();
 }
 
 // https://dom.spec.whatwg.org/#concept-range-extract
-ExceptionOr<JS::NonnullGCPtr<DocumentFragment>> Range::extract()
+WebIDL::ExceptionOr<JS::NonnullGCPtr<DocumentFragment>> Range::extract()
 {
     // 1. Let fragment be a new DocumentFragment node whose node document is range’s start node’s node document.
     auto* fragment = heap().allocate<DOM::DocumentFragment>(realm(), const_cast<Document&>(start_container()->document()));
@@ -771,13 +771,13 @@ bool Range::partially_contains_node(Node const& node) const
 }
 
 // https://dom.spec.whatwg.org/#dom-range-insertnode
-ExceptionOr<void> Range::insert_node(JS::NonnullGCPtr<Node> node)
+WebIDL::ExceptionOr<void> Range::insert_node(JS::NonnullGCPtr<Node> node)
 {
     return insert(node);
 }
 
 // https://dom.spec.whatwg.org/#concept-range-insert
-ExceptionOr<void> Range::insert(JS::NonnullGCPtr<Node> node)
+WebIDL::ExceptionOr<void> Range::insert(JS::NonnullGCPtr<Node> node)
 {
     // 1. If range’s start node is a ProcessingInstruction or Comment node, is a Text node whose parent is null, or is node, then throw a "HierarchyRequestError" DOMException.
     if ((is<ProcessingInstruction>(*m_start_container) || is<Comment>(*m_start_container))
@@ -844,7 +844,7 @@ ExceptionOr<void> Range::insert(JS::NonnullGCPtr<Node> node)
 }
 
 // https://dom.spec.whatwg.org/#dom-range-surroundcontents
-ExceptionOr<void> Range::surround_contents(JS::NonnullGCPtr<Node> new_parent)
+WebIDL::ExceptionOr<void> Range::surround_contents(JS::NonnullGCPtr<Node> new_parent)
 {
     // 1. If a non-Text node is partially contained in this, then throw an "InvalidStateError" DOMException.
     Node* start_non_text_node = start_container();
@@ -878,13 +878,13 @@ ExceptionOr<void> Range::surround_contents(JS::NonnullGCPtr<Node> new_parent)
 }
 
 // https://dom.spec.whatwg.org/#dom-range-clonecontents
-ExceptionOr<JS::NonnullGCPtr<DocumentFragment>> Range::clone_contents()
+WebIDL::ExceptionOr<JS::NonnullGCPtr<DocumentFragment>> Range::clone_contents()
 {
     return clone_the_contents();
 }
 
 // https://dom.spec.whatwg.org/#concept-range-clone
-ExceptionOr<JS::NonnullGCPtr<DocumentFragment>> Range::clone_the_contents()
+WebIDL::ExceptionOr<JS::NonnullGCPtr<DocumentFragment>> Range::clone_the_contents()
 {
     // 1. Let fragment be a new DocumentFragment node whose node document is range’s start node’s node document.
     auto* fragment = heap().allocate<DOM::DocumentFragment>(realm(), const_cast<Document&>(start_container()->document()));
@@ -1040,7 +1040,7 @@ ExceptionOr<JS::NonnullGCPtr<DocumentFragment>> Range::clone_the_contents()
 }
 
 // https://dom.spec.whatwg.org/#dom-range-deletecontents
-ExceptionOr<void> Range::delete_contents()
+WebIDL::ExceptionOr<void> Range::delete_contents()
 {
     // 1. If this is collapsed, then return.
     if (collapsed())

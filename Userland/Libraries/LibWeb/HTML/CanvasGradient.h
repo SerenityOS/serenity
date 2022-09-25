@@ -25,7 +25,7 @@ public:
     static JS::NonnullGCPtr<CanvasGradient> create_linear(HTML::Window&, double x0, double y0, double x1, double y1);
     static JS::NonnullGCPtr<CanvasGradient> create_conic(HTML::Window&, double start_angle, double x, double y);
 
-    DOM::ExceptionOr<void> add_color_stop(double offset, String const& color);
+    WebIDL::ExceptionOr<void> add_color_stop(double offset, String const& color);
 
     ~CanvasGradient();
 

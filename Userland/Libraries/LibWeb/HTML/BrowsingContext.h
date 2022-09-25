@@ -140,7 +140,7 @@ public:
     bool is_allowed_to_navigate(BrowsingContext const&) const;
 
     // https://html.spec.whatwg.org/multipage/browsing-the-web.html#navigate
-    DOM::ExceptionOr<void> navigate(
+    WebIDL::ExceptionOr<void> navigate(
         Fetch::Infrastructure::Request resource,
         BrowsingContext& source_browsing_context,
         bool exceptions_enabled = false,
@@ -151,13 +151,13 @@ public:
         Function<void(NonnullOwnPtr<Fetch::Infrastructure::Response>)> process_response_end_of_body = {});
 
     // https://html.spec.whatwg.org/multipage/browsing-the-web.html#navigate-fragid
-    DOM::ExceptionOr<void> navigate_to_a_fragment(AK::URL const&, HistoryHandlingBehavior, String navigation_id);
+    WebIDL::ExceptionOr<void> navigate_to_a_fragment(AK::URL const&, HistoryHandlingBehavior, String navigation_id);
 
     // https://html.spec.whatwg.org/multipage/origin.html#one-permitted-sandboxed-navigator
     BrowsingContext const* the_one_permitted_sandboxed_navigator() const;
 
     // https://html.spec.whatwg.org/multipage/browsing-the-web.html#traverse-the-history
-    DOM::ExceptionOr<void> traverse_the_history(size_t entry_index, HistoryHandlingBehavior = HistoryHandlingBehavior::Default, bool explicit_history_navigation = false);
+    WebIDL::ExceptionOr<void> traverse_the_history(size_t entry_index, HistoryHandlingBehavior = HistoryHandlingBehavior::Default, bool explicit_history_navigation = false);
 
     Vector<JS::Handle<DOM::Document>> document_family() const;
     bool document_family_contains(DOM::Document const&) const;

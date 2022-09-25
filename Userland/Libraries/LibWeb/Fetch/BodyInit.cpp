@@ -5,17 +5,17 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibWeb/DOM/ExceptionOr.h>
 #include <LibWeb/Fetch/BodyInit.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP/Bodies.h>
 #include <LibWeb/HTML/Window.h>
 #include <LibWeb/URL/URLSearchParams.h>
 #include <LibWeb/WebIDL/AbstractOperations.h>
+#include <LibWeb/WebIDL/ExceptionOr.h>
 
 namespace Web::Fetch {
 
 // https://fetch.spec.whatwg.org/#concept-bodyinit-extract
-DOM::ExceptionOr<Infrastructure::BodyWithType> extract_body(JS::Realm& realm, BodyInit const& object, bool keepalive)
+WebIDL::ExceptionOr<Infrastructure::BodyWithType> extract_body(JS::Realm& realm, BodyInit const& object, bool keepalive)
 {
     auto& window = verify_cast<HTML::Window>(realm.global_object());
 
@@ -38,7 +38,7 @@ DOM::ExceptionOr<Infrastructure::BodyWithType> extract_body(JS::Realm& realm, Bo
     // 6. Switch on object.
     // FIXME: Still need to support BufferSource and FormData
     TRY(object.visit(
-        [&](JS::Handle<FileAPI::Blob> const& blob) -> DOM::ExceptionOr<void> {
+        [&](JS::Handle<FileAPI::Blob> const& blob) -> WebIDL::ExceptionOr<void> {
             // FIXME: Set action to this step: read object.
             // Set source to object.
             source = blob;
@@ -49,19 +49,19 @@ DOM::ExceptionOr<Infrastructure::BodyWithType> extract_body(JS::Realm& realm, Bo
                 type = blob->type().to_byte_buffer();
             return {};
         },
-        [&](JS::Handle<JS::Object> const& buffer_source) -> DOM::ExceptionOr<void> {
+        [&](JS::Handle<JS::Object> const& buffer_source) -> WebIDL::ExceptionOr<void> {
             // Set source to a copy of the bytes held by object.
             source = TRY_OR_RETURN_OOM(window, WebIDL::get_buffer_source_copy(*buffer_source.cell()));
             return {};
         },
-        [&](JS::Handle<URL::URLSearchParams> const& url_search_params) -> DOM::ExceptionOr<void> {
+        [&](JS::Handle<URL::URLSearchParams> const& url_search_params) -> WebIDL::ExceptionOr<void> {
             // Set source to the result of running the application/x-www-form-urlencoded serializer with object’s list.
             source = url_search_params->to_string().to_byte_buffer();
             // Set type to `application/x-www-form-urlencoded;charset=UTF-8`.
             type = TRY_OR_RETURN_OOM(window, ByteBuffer::copy("application/x-www-form-urlencoded;charset=UTF-8"sv.bytes()));
             return {};
         },
-        [&](String const& scalar_value_string) -> DOM::ExceptionOr<void> {
+        [&](String const& scalar_value_string) -> WebIDL::ExceptionOr<void> {
             // NOTE: AK::String is always UTF-8.
             // Set source to the UTF-8 encoding of object.
             source = scalar_value_string.to_byte_buffer();
@@ -69,14 +69,14 @@ DOM::ExceptionOr<Infrastructure::BodyWithType> extract_body(JS::Realm& realm, Bo
             type = TRY_OR_RETURN_OOM(window, ByteBuffer::copy("text/plain;charset=UTF-8"sv.bytes()));
             return {};
         },
-        [&](JS::Handle<Streams::ReadableStream> const& stream) -> DOM::ExceptionOr<void> {
+        [&](JS::Handle<Streams::ReadableStream> const& stream) -> WebIDL::ExceptionOr<void> {
             // If keepalive is true, then throw a TypeError.
             if (keepalive)
-                return DOM::SimpleException { DOM::SimpleExceptionType::TypeError, "Cannot extract body from stream when keepalive is set" };
+                return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "Cannot extract body from stream when keepalive is set" };
 
             // If object is disturbed or locked, then throw a TypeError.
             if (stream->is_disturbed() || stream->is_locked())
-                return DOM::SimpleException { DOM::SimpleExceptionType::TypeError, "Cannot extract body from disturbed or locked stream" };
+                return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "Cannot extract body from disturbed or locked stream" };
 
             return {};
         }));

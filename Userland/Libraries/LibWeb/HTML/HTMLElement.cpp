@@ -9,7 +9,6 @@
 #include <LibJS/Parser.h>
 #include <LibWeb/DOM/DOMException.h>
 #include <LibWeb/DOM/Document.h>
-#include <LibWeb/DOM/ExceptionOr.h>
 #include <LibWeb/DOM/IDLEventListener.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/BrowsingContextContainer.h>
@@ -25,6 +24,7 @@
 #include <LibWeb/UIEvents/EventNames.h>
 #include <LibWeb/UIEvents/FocusEvent.h>
 #include <LibWeb/UIEvents/MouseEvent.h>
+#include <LibWeb/WebIDL/ExceptionOr.h>
 
 namespace Web::HTML {
 
@@ -90,7 +90,7 @@ String HTMLElement::content_editable() const
 }
 
 // https://html.spec.whatwg.org/multipage/interaction.html#contenteditable
-DOM::ExceptionOr<void> HTMLElement::set_content_editable(String const& content_editable)
+WebIDL::ExceptionOr<void> HTMLElement::set_content_editable(String const& content_editable)
 {
     if (content_editable.equals_ignoring_case("inherit"sv)) {
         remove_attribute(HTML::AttributeNames::contenteditable);

@@ -13,8 +13,8 @@
 #include <AK/RefPtr.h>
 #include <LibWeb/Bindings/LegacyPlatformObject.h>
 #include <LibWeb/CSS/CSSRule.h>
-#include <LibWeb/DOM/ExceptionOr.h>
 #include <LibWeb/Forward.h>
+#include <LibWeb/WebIDL/ExceptionOr.h>
 
 namespace Web::CSS {
 
@@ -57,8 +57,8 @@ public:
     virtual bool is_supported_property_index(u32 index) const override;
     virtual JS::Value item_value(size_t index) const override;
 
-    DOM::ExceptionOr<void> remove_a_css_rule(u32 index);
-    DOM::ExceptionOr<unsigned> insert_a_css_rule(Variant<StringView, CSSRule*>, u32 index);
+    WebIDL::ExceptionOr<void> remove_a_css_rule(u32 index);
+    WebIDL::ExceptionOr<unsigned> insert_a_css_rule(Variant<StringView, CSSRule*>, u32 index);
 
     void for_each_effective_style_rule(Function<void(CSSStyleRule const&)> const& callback) const;
     // Returns whether the match state of any media queries changed after evaluation.

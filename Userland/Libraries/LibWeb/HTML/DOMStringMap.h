@@ -25,8 +25,8 @@ public:
 
     String determine_value_of_named_property(String const&) const;
 
-    DOM::ExceptionOr<void> set_value_of_new_named_property(String const&, String const&);
-    DOM::ExceptionOr<void> set_value_of_existing_named_property(String const&, String const&);
+    WebIDL::ExceptionOr<void> set_value_of_new_named_property(String const&, String const&);
+    WebIDL::ExceptionOr<void> set_value_of_existing_named_property(String const&, String const&);
 
     bool delete_existing_named_property(String const&);
 

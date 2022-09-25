@@ -859,7 +859,7 @@ void BrowsingContext::remove()
 }
 
 // https://html.spec.whatwg.org/multipage/browsing-the-web.html#navigate
-DOM::ExceptionOr<void> BrowsingContext::navigate(
+WebIDL::ExceptionOr<void> BrowsingContext::navigate(
     Fetch::Infrastructure::Request resource,
     BrowsingContext& source_browsing_context,
     bool exceptions_enabled,
@@ -983,7 +983,7 @@ DOM::ExceptionOr<void> BrowsingContext::navigate(
 }
 
 // https://html.spec.whatwg.org/multipage/browsing-the-web.html#navigate-fragid
-DOM::ExceptionOr<void> BrowsingContext::navigate_to_a_fragment(AK::URL const& url, HistoryHandlingBehavior history_handling, String navigation_id)
+WebIDL::ExceptionOr<void> BrowsingContext::navigate_to_a_fragment(AK::URL const& url, HistoryHandlingBehavior history_handling, String navigation_id)
 {
     // 1. If historyHandling is not "replace",
     if (history_handling != HistoryHandlingBehavior::Replace) {
@@ -1025,7 +1025,7 @@ DOM::ExceptionOr<void> BrowsingContext::navigate_to_a_fragment(AK::URL const& ur
 }
 
 // https://html.spec.whatwg.org/multipage/browsing-the-web.html#traverse-the-history
-DOM::ExceptionOr<void> BrowsingContext::traverse_the_history(size_t entry_index, HistoryHandlingBehavior history_handling, bool explicit_history_navigation)
+WebIDL::ExceptionOr<void> BrowsingContext::traverse_the_history(size_t entry_index, HistoryHandlingBehavior history_handling, bool explicit_history_navigation)
 {
     auto* entry = &m_session_history[entry_index];
 

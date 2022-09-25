@@ -12,13 +12,13 @@
 #include <AK/URL.h>
 #include <AK/Weakable.h>
 #include <LibWeb/DOM/EventTarget.h>
-#include <LibWeb/DOM/ExceptionOr.h>
 #include <LibWeb/Fetch/BodyInit.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP/Headers.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP/Statuses.h>
 #include <LibWeb/HTML/Window.h>
 #include <LibWeb/MimeSniff/MimeType.h>
 #include <LibWeb/URL/URLSearchParams.h>
+#include <LibWeb/WebIDL/ExceptionOr.h>
 #include <LibWeb/XHR/XMLHttpRequestEventTarget.h>
 
 namespace Web::XHR {
@@ -41,15 +41,15 @@ public:
 
     ReadyState ready_state() const { return m_ready_state; };
     Fetch::Infrastructure::Status status() const { return m_status; };
-    DOM::ExceptionOr<String> response_text() const;
-    DOM::ExceptionOr<JS::Value> response();
+    WebIDL::ExceptionOr<String> response_text() const;
+    WebIDL::ExceptionOr<JS::Value> response();
     Bindings::XMLHttpRequestResponseType response_type() const { return m_response_type; }
 
-    DOM::ExceptionOr<void> open(String const& method, String const& url);
-    DOM::ExceptionOr<void> open(String const& method, String const& url, bool async, String const& username = {}, String const& password = {});
-    DOM::ExceptionOr<void> send(Optional<Fetch::XMLHttpRequestBodyInit> body);
+    WebIDL::ExceptionOr<void> open(String const& method, String const& url);
+    WebIDL::ExceptionOr<void> open(String const& method, String const& url, bool async, String const& username = {}, String const& password = {});
+    WebIDL::ExceptionOr<void> send(Optional<Fetch::XMLHttpRequestBodyInit> body);
 
-    DOM::ExceptionOr<void> set_request_header(String const& header, String const& value);
+    WebIDL::ExceptionOr<void> set_request_header(String const& header, String const& value);
     void set_response_type(Bindings::XMLHttpRequestResponseType type) { m_response_type = type; }
 
     String get_response_header(String const& name) { return m_response_headers.get(name).value_or({}); }
@@ -58,9 +58,9 @@ public:
     WebIDL::CallbackType* onreadystatechange();
     void set_onreadystatechange(WebIDL::CallbackType*);
 
-    DOM::ExceptionOr<void> override_mime_type(String const& mime);
+    WebIDL::ExceptionOr<void> override_mime_type(String const& mime);
 
-    DOM::ExceptionOr<void> set_timeout(u32 timeout);
+    WebIDL::ExceptionOr<void> set_timeout(u32 timeout);
     u32 timeout() const;
 
 private:

@@ -89,7 +89,7 @@ JS::NonnullGCPtr<URLSearchParams> URLSearchParams::create(HTML::Window& window, 
 
 // https://url.spec.whatwg.org/#dom-urlsearchparams-urlsearchparams
 // https://url.spec.whatwg.org/#urlsearchparams-initialize
-DOM::ExceptionOr<JS::NonnullGCPtr<URLSearchParams>> URLSearchParams::create_with_global_object(HTML::Window& window, Variant<Vector<Vector<String>>, OrderedHashMap<String, String>, String> const& init)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<URLSearchParams>> URLSearchParams::create_with_global_object(HTML::Window& window, Variant<Vector<Vector<String>>, OrderedHashMap<String, String>, String> const& init)
 {
     // 1. If init is a string and starts with U+003F (?), then remove the first code point from init.
     // NOTE: We do this when we know that it's a string on step 3 of initialization.
@@ -108,7 +108,7 @@ DOM::ExceptionOr<JS::NonnullGCPtr<URLSearchParams>> URLSearchParams::create_with
         for (auto const& pair : init_sequence) {
             // a. If pair does not contain exactly two items, then throw a TypeError.
             if (pair.size() != 2)
-                return DOM::SimpleException { DOM::SimpleExceptionType::TypeError, String::formatted("Expected only 2 items in pair, got {}", pair.size()) };
+                return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, String::formatted("Expected only 2 items in pair, got {}", pair.size()) };
 
             // b. Append a new name-value pair whose name is pair’s first item, and value is pair’s second item, to query’s list.
             list.append(QueryParam { .name = pair[0], .value = pair[1] });

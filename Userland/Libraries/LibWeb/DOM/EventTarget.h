@@ -12,9 +12,9 @@
 #include <LibJS/Forward.h>
 #include <LibWeb/Bindings/PlatformObject.h>
 #include <LibWeb/DOM/DOMEventListener.h>
-#include <LibWeb/DOM/ExceptionOr.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/HTML/EventHandler.h>
+#include <LibWeb/WebIDL/ExceptionOr.h>
 
 namespace Web::DOM {
 
@@ -34,7 +34,7 @@ public:
     void remove_event_listener_without_options(FlyString const& type, IDLEventListener& callback);
 
     virtual bool dispatch_event(Event&);
-    ExceptionOr<bool> dispatch_event_binding(Event&);
+    WebIDL::ExceptionOr<bool> dispatch_event_binding(Event&);
 
     virtual EventTarget* get_parent(Event const&) { return nullptr; }
 

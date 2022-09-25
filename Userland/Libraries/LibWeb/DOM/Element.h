@@ -12,7 +12,6 @@
 #include <LibWeb/CSS/StyleComputer.h>
 #include <LibWeb/DOM/Attr.h>
 #include <LibWeb/DOM/ChildNode.h>
-#include <LibWeb/DOM/ExceptionOr.h>
 #include <LibWeb/DOM/NamedNodeMap.h>
 #include <LibWeb/DOM/NonDocumentTypeChildNode.h>
 #include <LibWeb/DOM/ParentNode.h>
@@ -22,6 +21,7 @@
 #include <LibWeb/HTML/TagNames.h>
 #include <LibWeb/Layout/Node.h>
 #include <LibWeb/Layout/TreeBuilder.h>
+#include <LibWeb/WebIDL/ExceptionOr.h>
 
 namespace Web::DOM {
 
@@ -52,18 +52,18 @@ public:
     bool has_attributes() const { return !m_attributes->is_empty(); }
     String attribute(FlyString const& name) const { return get_attribute(name); }
     String get_attribute(FlyString const& name) const;
-    ExceptionOr<void> set_attribute(FlyString const& name, String const& value);
-    ExceptionOr<void> set_attribute_ns(FlyString const& namespace_, FlyString const& qualified_name, String const& value);
+    WebIDL::ExceptionOr<void> set_attribute(FlyString const& name, String const& value);
+    WebIDL::ExceptionOr<void> set_attribute_ns(FlyString const& namespace_, FlyString const& qualified_name, String const& value);
     void remove_attribute(FlyString const& name);
-    DOM::ExceptionOr<bool> toggle_attribute(FlyString const& name, Optional<bool> force);
+    WebIDL::ExceptionOr<bool> toggle_attribute(FlyString const& name, Optional<bool> force);
     size_t attribute_list_size() const { return m_attributes->length(); }
     NamedNodeMap const* attributes() const { return m_attributes.ptr(); }
     Vector<String> get_attribute_names() const;
 
     DOMTokenList* class_list();
 
-    DOM::ExceptionOr<bool> matches(StringView selectors) const;
-    DOM::ExceptionOr<DOM::Element const*> closest(StringView selectors) const;
+    WebIDL::ExceptionOr<bool> matches(StringView selectors) const;
+    WebIDL::ExceptionOr<DOM::Element const*> closest(StringView selectors) const;
 
     int client_top() const;
     int client_left() const;
@@ -106,9 +106,9 @@ public:
     CSS::CSSStyleDeclaration* style_for_bindings();
 
     String inner_html() const;
-    ExceptionOr<void> set_inner_html(String const&);
+    WebIDL::ExceptionOr<void> set_inner_html(String const&);
 
-    ExceptionOr<void> insert_adjacent_html(String position, String text);
+    WebIDL::ExceptionOr<void> insert_adjacent_html(String position, String text);
 
     bool is_focused() const;
     bool is_active() const;
@@ -172,6 +172,6 @@ private:
 template<>
 inline bool Node::fast_is<Element>() const { return is_element(); }
 
-ExceptionOr<QualifiedName> validate_and_extract(JS::Object& global_object, FlyString namespace_, FlyString qualified_name);
+WebIDL::ExceptionOr<QualifiedName> validate_and_extract(JS::Object& global_object, FlyString namespace_, FlyString qualified_name);
 
 }

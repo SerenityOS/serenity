@@ -43,7 +43,7 @@ JS::GCPtr<HTMLOptionsCollection> const& HTMLSelectElement::options()
 }
 
 // https://html.spec.whatwg.org/multipage/form-elements.html#dom-select-add
-DOM::ExceptionOr<void> HTMLSelectElement::add(HTMLOptionOrOptGroupElement element, Optional<HTMLElementOrElementIndex> before)
+WebIDL::ExceptionOr<void> HTMLSelectElement::add(HTMLOptionOrOptGroupElement element, Optional<HTMLElementOrElementIndex> before)
 {
     // Similarly, the add(element, before) method must act like its namesake method on that same options collection.
     return const_cast<HTMLOptionsCollection&>(*options()).add(move(element), move(before));

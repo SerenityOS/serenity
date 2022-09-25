@@ -135,7 +135,7 @@ Blob::Blob(HTML::Window& window, ByteBuffer byte_buffer)
 Blob::~Blob() = default;
 
 // https://w3c.github.io/FileAPI/#ref-for-dom-blob-blob
-DOM::ExceptionOr<JS::NonnullGCPtr<Blob>> Blob::create(HTML::Window& window, Optional<Vector<BlobPart>> const& blob_parts, Optional<BlobPropertyBag> const& options)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<Blob>> Blob::create(HTML::Window& window, Optional<Vector<BlobPart>> const& blob_parts, Optional<BlobPropertyBag> const& options)
 {
     // 1. If invoked with zero parameters, return a new Blob object consisting of 0 bytes, with size set to 0, and with type set to the empty string.
     if (!blob_parts.has_value() && !options.has_value())
@@ -167,13 +167,13 @@ DOM::ExceptionOr<JS::NonnullGCPtr<Blob>> Blob::create(HTML::Window& window, Opti
     return JS::NonnullGCPtr(*window.heap().allocate<Blob>(window.realm(), window, move(byte_buffer), move(type)));
 }
 
-DOM::ExceptionOr<JS::NonnullGCPtr<Blob>> Blob::create_with_global_object(HTML::Window& window, Optional<Vector<BlobPart>> const& blob_parts, Optional<BlobPropertyBag> const& options)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<Blob>> Blob::create_with_global_object(HTML::Window& window, Optional<Vector<BlobPart>> const& blob_parts, Optional<BlobPropertyBag> const& options)
 {
     return Blob::create(window, blob_parts, options);
 }
 
 // https://w3c.github.io/FileAPI/#dfn-slice
-DOM::ExceptionOr<JS::NonnullGCPtr<Blob>> Blob::slice(Optional<i64> start, Optional<i64> end, Optional<String> const& content_type)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<Blob>> Blob::slice(Optional<i64> start, Optional<i64> end, Optional<String> const& content_type)
 {
     // 1. The optional start parameter is a value for the start point of a slice() call, and must be treated as a byte-order position, with the zeroth position representing the first byte.
     //    User agents must process slice() with start normalized according to the following:

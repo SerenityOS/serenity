@@ -10,7 +10,6 @@
 #include <LibGfx/Painter.h>
 #include <LibGfx/Quad.h>
 #include <LibGfx/Rect.h>
-#include <LibWeb/DOM/ExceptionOr.h>
 #include <LibWeb/HTML/CanvasRenderingContext2D.h>
 #include <LibWeb/HTML/HTMLCanvasElement.h>
 #include <LibWeb/HTML/HTMLImageElement.h>
@@ -20,6 +19,7 @@
 #include <LibWeb/HTML/Window.h>
 #include <LibWeb/Layout/TextNode.h>
 #include <LibWeb/Platform/FontPlugin.h>
+#include <LibWeb/WebIDL/ExceptionOr.h>
 
 namespace Web::HTML {
 
@@ -107,7 +107,7 @@ void CanvasRenderingContext2D::stroke_rect(float x, float y, float width, float 
 }
 
 // 4.12.5.1.14 Drawing images, https://html.spec.whatwg.org/multipage/canvas.html#drawing-images
-DOM::ExceptionOr<void> CanvasRenderingContext2D::draw_image_internal(CanvasImageSource const& image, float source_x, float source_y, float source_width, float source_height, float destination_x, float destination_y, float destination_width, float destination_height)
+WebIDL::ExceptionOr<void> CanvasRenderingContext2D::draw_image_internal(CanvasImageSource const& image, float source_x, float source_y, float source_width, float source_height, float destination_x, float destination_y, float destination_width, float destination_height)
 {
     // 1. If any of the arguments are infinite or NaN, then return.
     if (!isfinite(source_x) || !isfinite(source_y) || !isfinite(source_width) || !isfinite(source_height) || !isfinite(destination_x) || !isfinite(destination_y) || !isfinite(destination_width) || !isfinite(destination_height))
@@ -271,7 +271,7 @@ JS::GCPtr<ImageData> CanvasRenderingContext2D::create_image_data(int width, int 
 }
 
 // https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-getimagedata
-DOM::ExceptionOr<JS::GCPtr<ImageData>> CanvasRenderingContext2D::get_image_data(int x, int y, int width, int height) const
+WebIDL::ExceptionOr<JS::GCPtr<ImageData>> CanvasRenderingContext2D::get_image_data(int x, int y, int width, int height) const
 {
     // 1. If either the sw or sh arguments are zero, then throw an "IndexSizeError" DOMException.
     if (width == 0 || height == 0)
@@ -471,12 +471,12 @@ void CanvasRenderingContext2D::clip()
 }
 
 // https://html.spec.whatwg.org/multipage/canvas.html#check-the-usability-of-the-image-argument
-DOM::ExceptionOr<CanvasImageSourceUsability> check_usability_of_image(CanvasImageSource const& image)
+WebIDL::ExceptionOr<CanvasImageSourceUsability> check_usability_of_image(CanvasImageSource const& image)
 {
     // 1. Switch on image:
     auto usability = TRY(image.visit(
         // HTMLOrSVGImageElement
-        [](JS::Handle<HTMLImageElement> const& image_element) -> DOM::ExceptionOr<Optional<CanvasImageSourceUsability>> {
+        [](JS::Handle<HTMLImageElement> const& image_element) -> WebIDL::ExceptionOr<Optional<CanvasImageSourceUsability>> {
             // FIXME: If image's current request's state is broken, then throw an "InvalidStateError" DOMException.
 
             // If image is not fully decodable, then return bad.
@@ -494,7 +494,7 @@ DOM::ExceptionOr<CanvasImageSourceUsability> check_usability_of_image(CanvasImag
 
         // HTMLCanvasElement
         // FIXME: OffscreenCanvas
-        [](JS::Handle<HTMLCanvasElement> const& canvas_element) -> DOM::ExceptionOr<Optional<CanvasImageSourceUsability>> {
+        [](JS::Handle<HTMLCanvasElement> const& canvas_element) -> WebIDL::ExceptionOr<Optional<CanvasImageSourceUsability>> {
             // If image has either a horizontal dimension or a vertical dimension equal to zero, then throw an "InvalidStateError" DOMException.
             if (canvas_element->width() == 0 || canvas_element->height() == 0)
                 return DOM::InvalidStateError::create(canvas_element->global_object(), "Canvas width or height is zero");

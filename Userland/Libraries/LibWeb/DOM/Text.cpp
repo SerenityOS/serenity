@@ -43,7 +43,7 @@ void Text::set_owner_input_element(Badge<HTML::HTMLInputElement>, HTML::HTMLInpu
 
 // https://dom.spec.whatwg.org/#dom-text-splittext
 // https://dom.spec.whatwg.org/#concept-text-split
-ExceptionOr<JS::NonnullGCPtr<Text>> Text::split_text(size_t offset)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<Text>> Text::split_text(size_t offset)
 {
     // 1. Let length be node’s length.
     auto length = this->length();

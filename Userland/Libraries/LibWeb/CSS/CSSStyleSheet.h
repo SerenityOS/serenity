@@ -40,9 +40,9 @@ public:
     CSSRuleList* css_rules() { return m_rules; }
     CSSRuleList const* css_rules() const { return m_rules; }
 
-    DOM::ExceptionOr<unsigned> insert_rule(StringView rule, unsigned index);
-    DOM::ExceptionOr<void> remove_rule(unsigned index);
-    DOM::ExceptionOr<void> delete_rule(unsigned index);
+    WebIDL::ExceptionOr<unsigned> insert_rule(StringView rule, unsigned index);
+    WebIDL::ExceptionOr<void> remove_rule(unsigned index);
+    WebIDL::ExceptionOr<void> delete_rule(unsigned index);
 
     void for_each_effective_style_rule(Function<void(CSSStyleRule const&)> const& callback) const;
     // Returns whether the match state of any media queries changed after evaluation.

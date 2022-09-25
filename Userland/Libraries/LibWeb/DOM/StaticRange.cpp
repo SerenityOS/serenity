@@ -9,8 +9,8 @@
 #include <LibWeb/DOM/Attr.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/DocumentType.h>
-#include <LibWeb/DOM/ExceptionOr.h>
 #include <LibWeb/DOM/StaticRange.h>
+#include <LibWeb/WebIDL/ExceptionOr.h>
 
 namespace Web::DOM {
 
@@ -23,7 +23,7 @@ StaticRange::StaticRange(Node& start_container, u32 start_offset, Node& end_cont
 StaticRange::~StaticRange() = default;
 
 // https://dom.spec.whatwg.org/#dom-staticrange-staticrange
-ExceptionOr<StaticRange*> StaticRange::create_with_global_object(HTML::Window& window, StaticRangeInit& init)
+WebIDL::ExceptionOr<StaticRange*> StaticRange::create_with_global_object(HTML::Window& window, StaticRangeInit& init)
 {
     // 1. If init["startContainer"] or init["endContainer"] is a DocumentType or Attr node, then throw an "InvalidNodeTypeError" DOMException.
     if (is<DocumentType>(*init.start_container) || is<Attr>(*init.start_container))

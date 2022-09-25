@@ -5,9 +5,9 @@
  */
 
 #include <AK/QuickSort.h>
-#include <LibWeb/DOM/ExceptionOr.h>
 #include <LibWeb/HTML/CanvasGradient.h>
 #include <LibWeb/HTML/Window.h>
+#include <LibWeb/WebIDL/ExceptionOr.h>
 
 namespace Web::HTML {
 
@@ -49,7 +49,7 @@ CanvasGradient::CanvasGradient(HTML::Window& window, Type type)
 CanvasGradient::~CanvasGradient() = default;
 
 // https://html.spec.whatwg.org/multipage/canvas.html#dom-canvasgradient-addcolorstop
-DOM::ExceptionOr<void> CanvasGradient::add_color_stop(double offset, String const& color)
+WebIDL::ExceptionOr<void> CanvasGradient::add_color_stop(double offset, String const& color)
 {
     // 1. If the offset is less than 0 or greater than 1, then throw an "IndexSizeError" DOMException.
     if (offset < 0 || offset > 1)

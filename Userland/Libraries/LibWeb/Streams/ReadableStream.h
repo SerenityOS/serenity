@@ -24,7 +24,7 @@ public:
         Errored,
     };
 
-    static DOM::ExceptionOr<JS::NonnullGCPtr<ReadableStream>> create_with_global_object(HTML::Window&);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<ReadableStream>> create_with_global_object(HTML::Window&);
 
     virtual ~ReadableStream() override;
 

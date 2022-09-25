@@ -16,7 +16,7 @@ JS::NonnullGCPtr<URL> URL::create(HTML::Window& window, AK::URL url, JS::Nonnull
     return *window.heap().allocate<URL>(window.realm(), window, move(url), move(query));
 }
 
-DOM::ExceptionOr<JS::NonnullGCPtr<URL>> URL::create_with_global_object(HTML::Window& window, String const& url, String const& base)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<URL>> URL::create_with_global_object(HTML::Window& window, String const& url, String const& base)
 {
     // 1. Let parsedBase be null.
     Optional<AK::URL> parsed_base;
@@ -26,7 +26,7 @@ DOM::ExceptionOr<JS::NonnullGCPtr<URL>> URL::create_with_global_object(HTML::Win
         parsed_base = base;
         // 2. If parsedBase is failure, then throw a TypeError.
         if (!parsed_base->is_valid())
-            return DOM::SimpleException { DOM::SimpleExceptionType::TypeError, "Invalid base URL" };
+            return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "Invalid base URL" };
     }
     // 3. Let parsedURL be the result of running the basic URL parser on url with parsedBase.
     AK::URL parsed_url;
@@ -36,7 +36,7 @@ DOM::ExceptionOr<JS::NonnullGCPtr<URL>> URL::create_with_global_object(HTML::Win
         parsed_url = url;
     // 4. If parsedURL is failure, then throw a TypeError.
     if (!parsed_url.is_valid())
-        return DOM::SimpleException { DOM::SimpleExceptionType::TypeError, "Invalid URL" };
+        return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "Invalid URL" };
     // 5. Let query be parsedURL’s query, if that is non-null, and the empty string otherwise.
     auto& query = parsed_url.query().is_null() ? String::empty() : parsed_url.query();
     // 6. Set this’s URL to parsedURL.
@@ -78,13 +78,13 @@ String URL::to_json() const
     return m_url.serialize();
 }
 
-DOM::ExceptionOr<void> URL::set_href(String const& href)
+WebIDL::ExceptionOr<void> URL::set_href(String const& href)
 {
     // 1. Let parsedURL be the result of running the basic URL parser on the given value.
     AK::URL parsed_url = href;
     // 2. If parsedURL is failure, then throw a TypeError.
     if (!parsed_url.is_valid())
-        return DOM::SimpleException { DOM::SimpleExceptionType::TypeError, "Invalid URL" };
+        return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "Invalid URL" };
     // 3. Set this’s URL to parsedURL.
     m_url = move(parsed_url);
     // 4. Empty this’s query object’s list.

@@ -9,7 +9,7 @@
 
 #include <LibJS/Heap/Handle.h>
 #include <LibWeb/Bindings/PlatformObject.h>
-#include <LibWeb/DOM/ExceptionOr.h>
+#include <LibWeb/WebIDL/ExceptionOr.h>
 
 namespace Web::HTML {
 
@@ -21,8 +21,8 @@ public:
 
     virtual ~History() override;
 
-    DOM::ExceptionOr<void> push_state(JS::Value data, String const& unused, String const& url);
-    DOM::ExceptionOr<void> replace_state(JS::Value data, String const& unused, String const& url);
+    WebIDL::ExceptionOr<void> push_state(JS::Value data, String const& unused, String const& url);
+    WebIDL::ExceptionOr<void> replace_state(JS::Value data, String const& unused, String const& url);
 
 private:
     explicit History(HTML::Window&, DOM::Document&);
@@ -33,7 +33,7 @@ private:
         No,
         Yes,
     };
-    DOM::ExceptionOr<void> shared_history_push_replace_state(JS::Value data, String const& url, IsPush is_push);
+    WebIDL::ExceptionOr<void> shared_history_push_replace_state(JS::Value data, String const& url, IsPush is_push);
 
     JS::NonnullGCPtr<DOM::Document> m_associated_document;
 };

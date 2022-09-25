@@ -8,8 +8,8 @@
 
 #include <LibWeb/Bindings/PlatformObject.h>
 #include <LibWeb/DOM/Document.h>
-#include <LibWeb/DOM/ExceptionOr.h>
 #include <LibWeb/Forward.h>
+#include <LibWeb/WebIDL/ExceptionOr.h>
 
 namespace Web::HTML {
 
@@ -18,7 +18,7 @@ class DOMParser final : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(DOMParser, Bindings::PlatformObject);
 
 public:
-    static DOM::ExceptionOr<JS::NonnullGCPtr<DOMParser>> create_with_global_object(HTML::Window&);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMParser>> create_with_global_object(HTML::Window&);
 
     virtual ~DOMParser() override;
 
