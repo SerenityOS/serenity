@@ -103,7 +103,6 @@ DecoderErrorOr<void> Decoder::allocate_buffers()
 
     for (size_t plane = 0; plane < 3; plane++) {
         auto size = m_parser->get_decoded_size_for_plane(plane);
-        dbgln("Allocating buffers for plane {} with size {}x{} ({})", plane, size.width(), size.height(), buffer_size(size));
 
         auto& temp_buffer = get_temp_buffer(plane);
         temp_buffer.clear_with_capacity();

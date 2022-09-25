@@ -82,7 +82,6 @@ DecoderErrorOr<void> Parser::parse_frame(Span<const u8> frame_data)
     m_syntax_element_counter = make<SyntaxElementCounter>();
 
     TRY(uncompressed_header());
-    dbgln("Finished reading uncompressed header");
     if (!trailing_bits())
         return DecoderError::corrupted("Trailing bits were non-zero"sv);
     if (m_header_size_in_bytes == 0)
@@ -92,9 +91,7 @@ DecoderErrorOr<void> Parser::parse_frame(Span<const u8> frame_data)
     m_syntax_element_counter->clear_counts();
 
     TRY_READ(m_bit_stream->init_bool(m_header_size_in_bytes));
-    dbgln("Reading compressed header with size {}", m_header_size_in_bytes);
     TRY(compressed_header());
-    dbgln("Finished reading compressed header");
     TRY_READ(m_bit_stream->exit_bool());
 
     TRY(m_decoder.allocate_buffers());
@@ -102,7 +99,6 @@ DecoderErrorOr<void> Parser::parse_frame(Span<const u8> frame_data)
     TRY(decode_tiles());
     TRY(refresh_probs());
 
-    dbgln("Finished reading frame!");
     return {};
 }
 
@@ -314,7 +310,6 @@ DecoderErrorOr<void> Parser::frame_size_with_refs()
     for (auto frame_index : m_ref_frame_idx) {
         found_ref = TRY_READ(m_bit_stream->read_bit());
         if (found_ref) {
-            dbgln("Reading size from ref frame {}", frame_index);
             m_frame_width = m_ref_frame_width[frame_index];
             m_frame_height = m_ref_frame_height[frame_index];
             break;
@@ -1047,8 +1042,6 @@ DecoderErrorOr<void> Parser::intra_frame_mode_info()
                 for (auto y = 0; y < m_num_4x4_h; y++) {
                     for (auto x = 0; x < m_num_4x4_w; x++) {
                         auto index = (idy + y) * 2 + idx + x;
-                        if (index > 3)
-                            dbgln("Trying to access index {} on m_sub_modes", index);
                         m_block_sub_modes[index] = m_default_intra_mode;
                     }
                 }
@@ -1738,6 +1731,7 @@ void Parser::dump_info()
     outln("Frame dimensions: {}x{}", m_frame_width, m_frame_height);
     outln("Render dimensions: {}x{}", m_render_width, m_render_height);
     outln("Bit depth: {}", m_bit_depth);
+    outln("Show frame: {}", m_show_frame);
 }
 
 }
