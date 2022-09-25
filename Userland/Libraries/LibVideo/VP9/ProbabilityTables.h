@@ -1,14 +1,16 @@
 /*
  * Copyright (c) 2021, Hunter Salyer <thefalsehonesty@gmail.com>
+ * Copyright (c) 2022, Gregory Bertilson <zaggy1024@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
-#include "Symbols.h"
+#include <AK/Array.h>
 #include <AK/Types.h>
-#include <AK/Vector.h>
+
+#include "Symbols.h"
 
 namespace Video::VP9 {
 
@@ -97,7 +99,7 @@ private:
         CoefProbs coef_probs;
     };
 
-    Vector<ProbabilityTable, 4> m_saved_probability_tables;
+    Array<ProbabilityTable, 4> m_saved_probability_tables;
     ProbabilityTable m_current_probability_table;
 };
 

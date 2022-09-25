@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Hunter Salyer <thefalsehonesty@gmail.com>
+ * Copyright (c) 2022, Gregory Bertilson <zaggy1024@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -1172,7 +1173,7 @@ KfUVModeProbs const& ProbabilityTables::kf_uv_mode_prob() const
 
 void ProbabilityTables::save_probs(size_t index)
 {
-    m_saved_probability_tables.insert(index, m_current_probability_table);
+    m_saved_probability_tables[index] = m_current_probability_table;
 }
 
 void ProbabilityTables::reset_probs()
