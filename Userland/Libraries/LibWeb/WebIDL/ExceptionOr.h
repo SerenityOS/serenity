@@ -50,6 +50,15 @@ public:
     {
     }
 
+    // Allows implicit construction of ExceptionOr<T> from a type U if T(U) is a supported constructor.
+    // Most commonly: Value from Object* or similar, so we can omit the curly braces from "return { TRY(...) };".
+    // Disabled for POD types to avoid weird conversion shenanigans.
+    template<typename WrappedValueType>
+    ExceptionOr(WrappedValueType result) requires(!IsPOD<ValueType>)
+        : m_result(move(result))
+    {
+    }
+
     ExceptionOr(JS::NonnullGCPtr<DOMException> exception)
         : m_exception(move(exception))
     {
