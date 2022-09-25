@@ -303,6 +303,8 @@
 #include <LibWeb/Bindings/RangePrototype.h>
 #include <LibWeb/Bindings/ReadableStreamConstructor.h>
 #include <LibWeb/Bindings/ReadableStreamPrototype.h>
+#include <LibWeb/Bindings/RequestConstructor.h>
+#include <LibWeb/Bindings/RequestPrototype.h>
 #include <LibWeb/Bindings/ResizeObserverConstructor.h>
 #include <LibWeb/Bindings/ResizeObserverPrototype.h>
 #include <LibWeb/Bindings/SVGAnimatedLengthConstructor.h>
@@ -546,6 +548,7 @@
     ADD_WINDOW_OBJECT_INTERFACE(PromiseRejectionEvent)                                              \
     ADD_WINDOW_OBJECT_INTERFACE(Range)                                                              \
     ADD_WINDOW_OBJECT_INTERFACE(ReadableStream)                                                     \
+    ADD_WINDOW_OBJECT_INTERFACE(Request)                                                            \
     ADD_WINDOW_OBJECT_INTERFACE(ResizeObserver)                                                     \
     ADD_WINDOW_OBJECT_INTERFACE(Screen)                                                             \
     ADD_WINDOW_OBJECT_INTERFACE(Selection)                                                          \

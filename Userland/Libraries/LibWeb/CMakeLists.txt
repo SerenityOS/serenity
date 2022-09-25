@@ -120,16 +120,18 @@ set(SOURCES
     Encoding/TextEncoder.cpp
     Fetch/Body.cpp
     Fetch/BodyInit.cpp
+    Fetch/Enums.cpp
     Fetch/Headers.cpp
     Fetch/HeadersIterator.cpp
     Fetch/Infrastructure/HTTP.cpp
-    Fetch/Infrastructure/URL.cpp
     Fetch/Infrastructure/HTTP/Bodies.cpp
     Fetch/Infrastructure/HTTP/Headers.cpp
     Fetch/Infrastructure/HTTP/Methods.cpp
     Fetch/Infrastructure/HTTP/Requests.cpp
     Fetch/Infrastructure/HTTP/Responses.cpp
     Fetch/Infrastructure/HTTP/Statuses.cpp
+    Fetch/Infrastructure/URL.cpp
+    Fetch/Request.cpp
     FileAPI/Blob.cpp
     FileAPI/File.cpp
     FontCache.cpp
