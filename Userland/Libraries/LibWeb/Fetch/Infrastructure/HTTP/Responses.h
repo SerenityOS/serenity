@@ -100,6 +100,8 @@ public:
     [[nodiscard]] Optional<AK::URL const&> url() const;
     [[nodiscard]] ErrorOr<Optional<AK::URL>> location_url(Optional<String> const& request_fragment) const;
 
+    [[nodiscard]] NonnullOwnPtr<Response> clone() const;
+
 private:
     // https://fetch.spec.whatwg.org/#concept-response-type
     // A response has an associated type which is "basic", "cors", "default", "error", "opaque", or "opaqueredirect". Unless stated otherwise, it is "default".

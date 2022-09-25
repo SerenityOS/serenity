@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibWeb/Fetch/Infrastructure/HTTP/Bodies.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP/Responses.h>
 
 namespace Web::Fetch::Infrastructure {
@@ -74,6 +75,25 @@ ErrorOr<Optional<AK::URL>> Response::location_url(Optional<String> const& reques
 
     // 5. Return location.
     return location;
+}
+
+// https://fetch.spec.whatwg.org/#concept-response-clone
+NonnullOwnPtr<Response> Response::clone() const
+{
+    // To clone a response response, run these steps:
+
+    // FIXME: 1. If response is a filtered response, then return a new identical filtered response whose internal response is a clone of response’s internal response.
+
+    // 2. Let newResponse be a copy of response, except for its body.
+    Optional<Body> body;
+    swap(body, const_cast<Optional<Body>&>(m_body));
+    auto new_response = adopt_own(*new Infrastructure::Response(*this));
+    swap(body, const_cast<Optional<Body>&>(m_body));
+
+    // FIXME: 3. If response’s body is non-null, then set newResponse’s body to the result of cloning response’s body.
+
+    // 4. Return newResponse.
+    return new_response;
 }
 
 FilteredResponse::FilteredResponse(Response& internal_response)
