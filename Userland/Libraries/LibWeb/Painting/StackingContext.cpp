@@ -303,12 +303,18 @@ void StackingContext::paint(PaintContext& context) const
         // to the size of the source (which could add some artefacts, though just scaling the bitmap already does that).
         // We need to copy the background at the destination because a bunch of our rendering effects now rely on
         // being able to sample the painter (see border radii, shadows, filters, etc).
+        Gfx::FloatPoint destination_clipped_fixup {};
         auto try_get_scaled_destination_bitmap = [&]() -> ErrorOr<NonnullRefPtr<Gfx::Bitmap>> {
-            auto bitmap = TRY(context.painter().get_region_bitmap(destination_rect, Gfx::BitmapFormat::BGRA8888, destination_rect));
+            Gfx::IntRect actual_destination_rect;
+            auto bitmap = TRY(context.painter().get_region_bitmap(destination_rect, Gfx::BitmapFormat::BGRA8888, actual_destination_rect));
+            // get_region_bitmap() may clip to a smaller region if the requested rect goes outside the painter, so we need to account for that.
+            destination_clipped_fixup = Gfx::FloatPoint { destination_rect.location() - actual_destination_rect.location() };
+            destination_rect = actual_destination_rect;
             if (source_rect.size() != transformed_destination_rect.size()) {
-                bitmap = TRY(bitmap->scaled(
-                    static_cast<float>(source_rect.width()) / transformed_destination_rect.width(),
-                    static_cast<float>(source_rect.height()) / transformed_destination_rect.height()));
+                auto sx = static_cast<float>(source_rect.width()) / transformed_destination_rect.width();
+                auto sy = static_cast<float>(source_rect.height()) / transformed_destination_rect.height();
+                bitmap = TRY(bitmap->scaled(sx, sy));
+                destination_clipped_fixup.scale_by(sx, sy);
             }
             return bitmap;
         };
@@ -318,13 +324,12 @@ void StackingContext::paint(PaintContext& context) const
             return;
         auto bitmap = bitmap_or_error.release_value_but_fixme_should_propagate_errors();
         Gfx::Painter painter(bitmap);
-        painter.translate(-paintable().absolute_paint_rect().location().to_rounded<int>());
+        painter.translate((-paintable().absolute_paint_rect().location() + destination_clipped_fixup).to_rounded<int>());
         auto paint_context = context.clone(painter);
         paint_internal(paint_context);
 
-        // NOTE: If the destination and source rects are the same size, we round the source rect to ensure that it's pixel-aligned.
-        if (transformed_destination_rect.size() == source_rect.size())
-            context.painter().draw_scaled_bitmap(destination_rect, *bitmap, bitmap->rect(), opacity);
+        if (destination_rect.size() == bitmap->size())
+            context.painter().blit(destination_rect.location(), *bitmap, bitmap->rect(), opacity);
         else
             context.painter().draw_scaled_bitmap(destination_rect, *bitmap, bitmap->rect(), opacity, Gfx::Painter::ScalingMode::BilinearBlend);
     } else {
