@@ -9,6 +9,11 @@
 
 namespace Web::Fetch::Infrastructure {
 
+Request::Request()
+    : m_header_list(make_ref_counted<HeaderList>())
+{
+}
+
 // https://fetch.spec.whatwg.org/#concept-request-url
 AK::URL const& Request::url() const
 {
@@ -202,7 +207,7 @@ ErrorOr<void> Request::add_range_reader(u64 first, Optional<u64> const& last)
         .name = TRY(ByteBuffer::copy("Range"sv.bytes())),
         .value = move(range_value),
     };
-    TRY(m_header_list.append(move(header)));
+    TRY(m_header_list->append(move(header)));
 
     return {};
 }

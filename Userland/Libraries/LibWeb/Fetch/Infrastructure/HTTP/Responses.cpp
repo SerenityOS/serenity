@@ -9,6 +9,11 @@
 
 namespace Web::Fetch::Infrastructure {
 
+Response::Response()
+    : m_header_list(make_ref_counted<HeaderList>())
+{
+}
+
 // https://fetch.spec.whatwg.org/#ref-for-concept-network-error%E2%91%A3
 // A network error is a response whose status is always 0, status message is always
 // the empty byte sequence, header list is always empty, and body is always null.
@@ -111,16 +116,16 @@ ErrorOr<NonnullOwnPtr<BasicFilteredResponse>> BasicFilteredResponse::create(Resp
 {
     // A basic filtered response is a filtered response whose type is "basic" and header list excludes
     // any headers in internal response’s header list whose name is a forbidden response-header name.
-    HeaderList header_list;
-    for (auto const& header : internal_response.header_list()) {
+    auto header_list = make_ref_counted<HeaderList>();
+    for (auto const& header : *internal_response.header_list()) {
         if (!is_forbidden_response_header_name(header.name))
-            TRY(header_list.append(header));
+            TRY(header_list->append(header));
     }
 
     return adopt_own(*new BasicFilteredResponse(internal_response, move(header_list)));
 }
 
-BasicFilteredResponse::BasicFilteredResponse(Response& internal_response, HeaderList header_list)
+BasicFilteredResponse::BasicFilteredResponse(Response& internal_response, NonnullRefPtr<HeaderList> header_list)
     : FilteredResponse(internal_response)
     , m_header_list(move(header_list))
 {
@@ -135,16 +140,16 @@ ErrorOr<NonnullOwnPtr<CORSFilteredResponse>> CORSFilteredResponse::create(Respon
     for (auto const& header_name : internal_response.cors_exposed_header_name_list())
         cors_exposed_header_name_list.append(header_name.span());
 
-    HeaderList header_list;
-    for (auto const& header : internal_response.header_list()) {
+    auto header_list = make_ref_counted<HeaderList>();
+    for (auto const& header : *internal_response.header_list()) {
         if (is_cors_safelisted_response_header_name(header.name, cors_exposed_header_name_list))
-            TRY(header_list.append(header));
+            TRY(header_list->append(header));
     }
 
     return adopt_own(*new CORSFilteredResponse(internal_response, move(header_list)));
 }
 
-CORSFilteredResponse::CORSFilteredResponse(Response& internal_response, HeaderList header_list)
+CORSFilteredResponse::CORSFilteredResponse(Response& internal_response, NonnullRefPtr<HeaderList> header_list)
     : FilteredResponse(internal_response)
     , m_header_list(move(header_list))
 {
@@ -159,6 +164,7 @@ NonnullOwnPtr<OpaqueFilteredResponse> OpaqueFilteredResponse::create(Response& i
 
 OpaqueFilteredResponse::OpaqueFilteredResponse(Response& internal_response)
     : FilteredResponse(internal_response)
+    , m_header_list(make_ref_counted<HeaderList>())
 {
 }
 
@@ -169,6 +175,7 @@ NonnullOwnPtr<OpaqueRedirectFilteredResponse> OpaqueRedirectFilteredResponse::cr
 
 OpaqueRedirectFilteredResponse::OpaqueRedirectFilteredResponse(Response& internal_response)
     : FilteredResponse(internal_response)
+    , m_header_list(make_ref_counted<HeaderList>())
 {
 }
 
