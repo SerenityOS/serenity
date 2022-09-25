@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibCore/ArgsParser.h>
+#include <LibCore/ElapsedTimer.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/ImageWidget.h>
@@ -15,10 +17,23 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
+    bool benchmark = false;
+    StringView filename = "/home/anon/Videos/test-webm.webm"sv;
+
+    Core::ArgsParser args_parser;
+    args_parser.add_option(benchmark, "Benchmark the video decoder.", "benchmark", 'b');
+    args_parser.add_positional_argument(filename, "The video file to display.", "filename", Core::ArgsParser::Required::No);
+    args_parser.parse(arguments);
+
     auto app = TRY(GUI::Application::try_create(arguments));
     auto window = TRY(GUI::Window::try_create());
 
-    auto document = Video::MatroskaReader::parse_matroska_from_file("/home/anon/Videos/test-webm.webm"sv);
+    auto document = Video::MatroskaReader::parse_matroska_from_file(filename);
+    // FIXME: MatroskaReader should use ErrorOr
+    if (!document) {
+        outln("{} could not be read", filename);
+        return 1;
+    }
     auto const& optional_track = document->track_for_track_type(Video::TrackEntry::TrackType::Video);
     if (!optional_track.has_value())
         return 1;
@@ -104,6 +119,18 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         frame_index++;
         frame_number++;
     };
+
+    image_widget->set_fixed_size(video_track.pixel_width, video_track.pixel_height);
+    image_widget->on_click = [&]() { display_next_frame(); };
+
+    if (benchmark) {
+        auto timer = Core::ElapsedTimer::start_new();
+        for (auto i = 0; i < 100; i++)
+            display_next_frame();
+        auto elapsed_time = timer.elapsed_time();
+        outln("Decoding 100 frames took {} ms", elapsed_time.to_milliseconds());
+        return 0;
+    }
 
     display_next_frame();
 
