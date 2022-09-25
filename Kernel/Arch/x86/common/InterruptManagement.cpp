@@ -138,20 +138,13 @@ UNMAP_AFTER_INIT InterruptManagement::InterruptManagement()
 
 UNMAP_AFTER_INIT void InterruptManagement::switch_to_pic_mode()
 {
+    VERIFY(m_interrupt_controllers.is_empty());
     dmesgln("Interrupts: Switch to Legacy PIC mode");
     InterruptDisabler disabler;
     m_interrupt_controllers.append(adopt_lock_ref(*new PIC()));
     SpuriousInterruptHandler::initialize(7);
     SpuriousInterruptHandler::initialize(15);
-    for (auto& irq_controller : m_interrupt_controllers) {
-        VERIFY(irq_controller);
-        if (irq_controller->type() == IRQControllerType::i82093AA) {
-            irq_controller->hard_disable();
-            dbgln("Interrupts: Detected {} - Disabled", irq_controller->model());
-        } else {
-            dbgln("Interrupts: Detected {}", irq_controller->model());
-        }
-    }
+    dbgln("Interrupts: Detected {}", m_interrupt_controllers[0]->model());
 }
 
 UNMAP_AFTER_INIT void InterruptManagement::switch_to_ioapic_mode()
