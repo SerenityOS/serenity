@@ -5,6 +5,7 @@
  */
 
 #include <LibWeb/Bindings/RequestPrototype.h>
+#include <LibWeb/Bindings/ResponsePrototype.h>
 #include <LibWeb/Fetch/Enums.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP/Requests.h>
 #include <LibWeb/ReferrerPolicy/ReferrerPolicy.h>
@@ -252,6 +253,26 @@ Bindings::RequestRedirect to_bindings_enum(Infrastructure::Request::RedirectMode
         return Bindings::RequestRedirect::Error;
     case Infrastructure::Request::RedirectMode::Manual:
         return Bindings::RequestRedirect::Manual;
+    default:
+        VERIFY_NOT_REACHED();
+    }
+}
+
+Bindings::ResponseType to_bindings_enum(Infrastructure::Response::Type type)
+{
+    switch (type) {
+    case Infrastructure::Response::Type::Basic:
+        return Bindings::ResponseType::Basic;
+    case Infrastructure::Response::Type::CORS:
+        return Bindings::ResponseType::Cors;
+    case Infrastructure::Response::Type::Default:
+        return Bindings::ResponseType::Default;
+    case Infrastructure::Response::Type::Error:
+        return Bindings::ResponseType::Error;
+    case Infrastructure::Response::Type::Opaque:
+        return Bindings::ResponseType::Opaque;
+    case Infrastructure::Response::Type::OpaqueRedirect:
+        return Bindings::ResponseType::Opaqueredirect;
     default:
         VERIFY_NOT_REACHED();
     }

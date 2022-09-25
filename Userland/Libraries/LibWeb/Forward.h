@@ -184,6 +184,7 @@ class BodyMixin;
 class Headers;
 class HeadersIterator;
 class Request;
+class Response;
 }
 
 namespace Web::Fetch::Infrastructure {
@@ -489,6 +490,7 @@ enum class RequestCredentials;
 enum class RequestCache;
 enum class RequestRedirect;
 enum class RequestDuplex;
+enum class ResponseType;
 enum class ResizeObserverBoxOptions;
 enum class XMLHttpRequestResponseType;
 }

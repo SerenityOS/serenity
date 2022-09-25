@@ -307,6 +307,8 @@
 #include <LibWeb/Bindings/RequestPrototype.h>
 #include <LibWeb/Bindings/ResizeObserverConstructor.h>
 #include <LibWeb/Bindings/ResizeObserverPrototype.h>
+#include <LibWeb/Bindings/ResponseConstructor.h>
+#include <LibWeb/Bindings/ResponsePrototype.h>
 #include <LibWeb/Bindings/SVGAnimatedLengthConstructor.h>
 #include <LibWeb/Bindings/SVGAnimatedLengthPrototype.h>
 #include <LibWeb/Bindings/SVGCircleElementConstructor.h>
@@ -550,6 +552,7 @@
     ADD_WINDOW_OBJECT_INTERFACE(ReadableStream)                                                     \
     ADD_WINDOW_OBJECT_INTERFACE(Request)                                                            \
     ADD_WINDOW_OBJECT_INTERFACE(ResizeObserver)                                                     \
+    ADD_WINDOW_OBJECT_INTERFACE(Response)                                                           \
     ADD_WINDOW_OBJECT_INTERFACE(Screen)                                                             \
     ADD_WINDOW_OBJECT_INTERFACE(Selection)                                                          \
     ADD_WINDOW_OBJECT_INTERFACE(ShadowRoot)                                                         \
