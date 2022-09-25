@@ -8,7 +8,6 @@
 #include <LibJS/Parser.h>
 #include <LibJS/Runtime/ArrayBuffer.h>
 #include <LibJS/Runtime/FunctionObject.h>
-#include <LibWeb/DOM/DOMException.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/EventDispatcher.h>
@@ -19,6 +18,7 @@
 #include <LibWeb/HTML/MessageEvent.h>
 #include <LibWeb/HTML/Origin.h>
 #include <LibWeb/HTML/Window.h>
+#include <LibWeb/WebIDL/DOMException.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
 #include <LibWeb/WebSockets/WebSocket.h>
 
@@ -51,11 +51,11 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<WebSocket>> WebSocket::create_with_global_o
 {
     AK::URL url_record(url);
     if (!url_record.is_valid())
-        return DOM::SyntaxError::create(window, "Invalid URL");
+        return WebIDL::SyntaxError::create(window, "Invalid URL");
     if (!url_record.protocol().is_one_of("ws", "wss"))
-        return DOM::SyntaxError::create(window, "Invalid protocol");
+        return WebIDL::SyntaxError::create(window, "Invalid protocol");
     if (!url_record.fragment().is_empty())
-        return DOM::SyntaxError::create(window, "Presence of URL fragment is invalid");
+        return WebIDL::SyntaxError::create(window, "Presence of URL fragment is invalid");
     // 5. If `protocols` is a string, set `protocols` to a sequence consisting of just that string
     // 6. If any of the values in `protocols` occur more than once or otherwise fail to match the requirements, throw SyntaxError
     return JS::NonnullGCPtr(*window.heap().allocate<WebSocket>(window.realm(), window, url_record));
@@ -137,13 +137,13 @@ WebIDL::ExceptionOr<void> WebSocket::close(Optional<u16> code, Optional<String> 
 {
     // 1. If code is present, but is neither an integer equal to 1000 nor an integer in the range 3000 to 4999, inclusive, throw an "InvalidAccessError" DOMException.
     if (code.has_value() && *code != 1000 && (*code < 3000 || *code > 4099))
-        return DOM::InvalidAccessError::create(global_object(), "The close error code is invalid");
+        return WebIDL::InvalidAccessError::create(global_object(), "The close error code is invalid");
     // 2. If reason is present, then run these substeps:
     if (reason.has_value()) {
         // 1. Let reasonBytes be the result of encoding reason.
         // 2. If reasonBytes is longer than 123 bytes, then throw a "SyntaxError" DOMException.
         if (reason->bytes().size() > 123)
-            return DOM::SyntaxError::create(global_object(), "The close reason is longer than 123 bytes");
+            return WebIDL::SyntaxError::create(global_object(), "The close reason is longer than 123 bytes");
     }
     // 3. Run the first matching steps from the following list:
     auto state = ready_state();
@@ -164,7 +164,7 @@ WebIDL::ExceptionOr<void> WebSocket::send(String const& data)
 {
     auto state = ready_state();
     if (state == WebSocket::ReadyState::Connecting)
-        return DOM::InvalidStateError::create(global_object(), "Websocket is still CONNECTING");
+        return WebIDL::InvalidStateError::create(global_object(), "Websocket is still CONNECTING");
     if (state == WebSocket::ReadyState::Open) {
         m_websocket->send(data);
         // TODO : If the data cannot be sent, e.g. because it would need to be buffered but the buffer is full, the user agent must flag the WebSocket as full and then close the WebSocket connection.

@@ -10,7 +10,6 @@
 #include <AK/Vector.h>
 #include <LibTextCodec/Decoder.h>
 #include <LibWeb/Bindings/WorkerGlobalScopePrototype.h>
-#include <LibWeb/DOM/DOMException.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/HTML/EventHandler.h>
 #include <LibWeb/HTML/EventNames.h>
@@ -18,6 +17,7 @@
 #include <LibWeb/HTML/WorkerGlobalScope.h>
 #include <LibWeb/HTML/WorkerLocation.h>
 #include <LibWeb/HTML/WorkerNavigator.h>
+#include <LibWeb/WebIDL/DOMException.h>
 
 namespace Web::HTML {
 
@@ -131,7 +131,7 @@ WebIDL::ExceptionOr<String> WorkerGlobalScope::btoa(String const& data) const
     byte_string.ensure_capacity(data.length());
     for (u32 code_point : Utf8View(data)) {
         if (code_point > 0xff)
-            return DOM::InvalidCharacterError::create(global_object(), "Data contains characters outside the range U+0000 and U+00FF");
+            return WebIDL::InvalidCharacterError::create(global_object(), "Data contains characters outside the range U+0000 and U+00FF");
         byte_string.append(code_point);
     }
 
@@ -151,7 +151,7 @@ WebIDL::ExceptionOr<String> WorkerGlobalScope::atob(String const& data) const
 
     // 2. If decodedData is failure, then throw an "InvalidCharacterError" DOMException.
     if (decoded_data.is_error())
-        return DOM::InvalidCharacterError::create(global_object(), "Input string is not valid base64 data");
+        return WebIDL::InvalidCharacterError::create(global_object(), "Input string is not valid base64 data");
 
     // 3. Return decodedData.
     // decode_base64() returns a byte string. LibJS uses UTF-8 for strings. Use Latin1Decoder to convert bytes 128-255 to UTF-8.

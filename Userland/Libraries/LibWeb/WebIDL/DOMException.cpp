@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibWeb/DOM/DOMException.h>
 #include <LibWeb/HTML/Window.h>
+#include <LibWeb/WebIDL/DOMException.h>
 
-namespace Web::DOM {
+namespace Web::WebIDL {
 
 JS::NonnullGCPtr<DOMException> DOMException::create(JS::Object& global_object, FlyString const& name, FlyString const& message)
 {

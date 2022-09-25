@@ -2087,6 +2087,7 @@ using namespace Web::Selection;
 using namespace Web::UIEvents;
 using namespace Web::XHR;
 using namespace Web::WebGL;
+using namespace Web::WebIDL;
 
 namespace Web::Bindings {
 
@@ -2402,6 +2403,7 @@ using namespace Web::URL;
 using namespace Web::WebSockets;
 using namespace Web::XHR;
 using namespace Web::WebGL;
+using namespace Web::WebIDL;
 
 namespace Web::Bindings {
 
@@ -2843,6 +2845,7 @@ using namespace Web::XHR;
 using namespace Web::UIEvents;
 using namespace Web::URL;
 using namespace Web::WebGL;
+using namespace Web::WebIDL;
 
 namespace Web::Bindings {
 

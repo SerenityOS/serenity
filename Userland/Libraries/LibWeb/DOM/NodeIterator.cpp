@@ -130,7 +130,7 @@ JS::ThrowCompletionOr<NodeFilter::Result> NodeIterator::filter(Node& node)
 {
     // 1. If traverser’s active flag is set, then throw an "InvalidStateError" DOMException.
     if (m_active)
-        return throw_completion(InvalidStateError::create(global_object(), "NodeIterator is already active"));
+        return throw_completion(WebIDL::InvalidStateError::create(global_object(), "NodeIterator is already active"));
 
     // 2. Let n be node’s nodeType attribute value − 1.
     auto n = node.node_type() - 1;

@@ -13,10 +13,10 @@
 #include <LibJS/Runtime/PropertyKey.h>
 #include <LibWeb/Bindings/LocationObject.h>
 #include <LibWeb/Bindings/LocationPrototype.h>
-#include <LibWeb/DOM/DOMException.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/CrossOrigin/AbstractOperations.h>
 #include <LibWeb/HTML/Window.h>
+#include <LibWeb/WebIDL/DOMException.h>
 
 namespace Web::Bindings {
 
@@ -315,7 +315,7 @@ JS::ThrowCompletionOr<bool> LocationObject::internal_define_own_property(JS::Pro
     }
 
     // 2. Throw a "SecurityError" DOMException.
-    return throw_completion(DOM::SecurityError::create(global_object(), String::formatted("Can't define property '{}' on cross-origin object", property_key)));
+    return throw_completion(WebIDL::SecurityError::create(global_object(), String::formatted("Can't define property '{}' on cross-origin object", property_key)));
 }
 
 // 7.10.5.7 [[Get]] ( P, Receiver ), https://html.spec.whatwg.org/multipage/history.html#location-get
@@ -352,7 +352,7 @@ JS::ThrowCompletionOr<bool> LocationObject::internal_delete(JS::PropertyKey cons
         return JS::Object::internal_delete(property_key);
 
     // 2. Throw a "SecurityError" DOMException.
-    return throw_completion(DOM::SecurityError::create(global_object(), String::formatted("Can't delete property '{}' on cross-origin object", property_key)));
+    return throw_completion(WebIDL::SecurityError::create(global_object(), String::formatted("Can't delete property '{}' on cross-origin object", property_key)));
 }
 
 // 7.10.5.10 [[OwnPropertyKeys]] ( ), https://html.spec.whatwg.org/multipage/history.html#location-ownpropertykeys

@@ -8,10 +8,10 @@
 #include <LibCore/ElapsedTimer.h>
 #include <LibJS/Interpreter.h>
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
-#include <LibWeb/DOM/DOMException.h>
 #include <LibWeb/HTML/Scripting/ClassicScript.h>
 #include <LibWeb/HTML/Scripting/Environments.h>
 #include <LibWeb/HTML/Scripting/ExceptionReporter.h>
+#include <LibWeb/WebIDL/DOMException.h>
 
 namespace Web::HTML {
 
@@ -124,7 +124,7 @@ JS::Completion ClassicScript::run(RethrowErrors rethrow_errors)
             dbgln("network error");
 
             // 2. Throw a "NetworkError" DOMException.
-            return throw_completion(DOM::NetworkError::create(settings.global_object(), "Script error."));
+            return throw_completion(WebIDL::NetworkError::create(settings.global_object(), "Script error."));
         }
 
         // 3. Otherwise, rethrow errors is false. Perform the following steps:

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -10,16 +10,16 @@
 #include <LibJS/Runtime/VM.h>
 #include <LibWeb/Bindings/PlatformObject.h>
 
-namespace Web::DOM {
+namespace Web::WebIDL {
 
-#define TRY_OR_RETURN_OOM(global_object, expression)                             \
-    ({                                                                           \
-        auto _temporary_result = (expression);                                   \
-        if (_temporary_result.is_error()) {                                      \
-            VERIFY(_temporary_result.error().code() == ENOMEM);                  \
-            return DOM::UnknownError::create(global_object, "Out of memory."sv); \
-        }                                                                        \
-        _temporary_result.release_value();                                       \
+#define TRY_OR_RETURN_OOM(global_object, expression)                                \
+    ({                                                                              \
+        auto _temporary_result = (expression);                                      \
+        if (_temporary_result.is_error()) {                                         \
+            VERIFY(_temporary_result.error().code() == ENOMEM);                     \
+            return WebIDL::UnknownError::create(global_object, "Out of memory."sv); \
+        }                                                                           \
+        _temporary_result.release_value();                                          \
     })
 
 // The following have a legacy code value but *don't* produce it as
@@ -139,7 +139,7 @@ ENUMERATE_DOM_EXCEPTION_ERROR_NAMES
 
 namespace Web {
 
-inline JS::Completion throw_completion(JS::NonnullGCPtr<DOM::DOMException> exception)
+inline JS::Completion throw_completion(JS::NonnullGCPtr<WebIDL::DOMException> exception)
 {
     return JS::throw_completion(JS::Value(static_cast<JS::Object*>(exception.ptr())));
 }

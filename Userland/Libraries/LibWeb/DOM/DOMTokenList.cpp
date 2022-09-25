@@ -7,11 +7,11 @@
 
 #include <AK/CharacterTypes.h>
 #include <AK/StringBuilder.h>
-#include <LibWeb/DOM/DOMException.h>
 #include <LibWeb/DOM/DOMTokenList.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/HTML/Window.h>
+#include <LibWeb/WebIDL/DOMException.h>
 
 namespace {
 
@@ -234,9 +234,9 @@ void DOMTokenList::set_value(String value)
 WebIDL::ExceptionOr<void> DOMTokenList::validate_token(StringView token) const
 {
     if (token.is_empty())
-        return SyntaxError::create(global_object(), "Non-empty DOM tokens are not allowed");
+        return WebIDL::SyntaxError::create(global_object(), "Non-empty DOM tokens are not allowed");
     if (any_of(token, is_ascii_space))
-        return InvalidCharacterError::create(global_object(), "DOM tokens containing ASCII whitespace are not allowed");
+        return WebIDL::InvalidCharacterError::create(global_object(), "DOM tokens containing ASCII whitespace are not allowed");
     return {};
 }
 
