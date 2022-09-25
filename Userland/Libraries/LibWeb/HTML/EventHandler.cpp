@@ -6,7 +6,6 @@
 
 #include <LibWeb/DOM/DOMEventListener.h>
 #include <LibWeb/HTML/EventHandler.h>
-#include <LibWeb/HTML/Window.h>
 
 namespace Web::HTML {
 

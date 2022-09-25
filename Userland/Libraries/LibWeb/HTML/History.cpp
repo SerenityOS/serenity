@@ -4,21 +4,22 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/History.h>
 
 namespace Web::HTML {
 
-JS::NonnullGCPtr<History> History::create(HTML::Window& window, DOM::Document& document)
+JS::NonnullGCPtr<History> History::create(JS::Realm& realm, DOM::Document& document)
 {
-    return *window.heap().allocate<History>(window.realm(), window, document);
+    return *realm.heap().allocate<History>(realm, realm, document);
 }
 
-History::History(HTML::Window& window, DOM::Document& document)
-    : PlatformObject(window.realm())
+History::History(JS::Realm& realm, DOM::Document& document)
+    : PlatformObject(realm)
     , m_associated_document(document)
 {
-    set_prototype(&window.cached_web_prototype("History"));
+    set_prototype(&Bindings::cached_web_prototype(realm, "History"));
 }
 
 History::~History() = default;
@@ -50,7 +51,7 @@ WebIDL::ExceptionOr<void> History::shared_history_push_replace_state(JS::Value, 
 
     // 2. If document is not fully active, then throw a "SecurityError" DOMException.
     if (!m_associated_document->is_fully_active())
-        return WebIDL::SecurityError::create(global_object(), "Cannot perform pushState or replaceState on a document that isn't fully active.");
+        return WebIDL::SecurityError::create(realm(), "Cannot perform pushState or replaceState on a document that isn't fully active.");
 
     // 3. Optionally, return. (For example, the user agent might disallow calls to these methods that are invoked on a timer,
     //    or from event listeners that are not triggered in response to a clear user action, or that are invoked in rapid succession.)

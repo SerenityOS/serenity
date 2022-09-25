@@ -5,13 +5,13 @@
  */
 
 #include <AK/QuickSort.h>
+#include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/HTML/CanvasGradient.h>
-#include <LibWeb/HTML/Window.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
 
 namespace Web::HTML {
 
-JS::NonnullGCPtr<CanvasGradient> CanvasGradient::create_radial(HTML::Window& window, double x0, double y0, double r0, double x1, double y1, double r1)
+JS::NonnullGCPtr<CanvasGradient> CanvasGradient::create_radial(JS::Realm& realm, double x0, double y0, double r0, double x1, double y1, double r1)
 {
     (void)x0;
     (void)y0;
@@ -19,31 +19,31 @@ JS::NonnullGCPtr<CanvasGradient> CanvasGradient::create_radial(HTML::Window& win
     (void)x1;
     (void)y1;
     (void)r1;
-    return *window.heap().allocate<CanvasGradient>(window.realm(), window, Type::Radial);
+    return *realm.heap().allocate<CanvasGradient>(realm, realm, Type::Radial);
 }
 
-JS::NonnullGCPtr<CanvasGradient> CanvasGradient::create_linear(HTML::Window& window, double x0, double y0, double x1, double y1)
+JS::NonnullGCPtr<CanvasGradient> CanvasGradient::create_linear(JS::Realm& realm, double x0, double y0, double x1, double y1)
 {
     (void)x0;
     (void)y0;
     (void)x1;
     (void)y1;
-    return *window.heap().allocate<CanvasGradient>(window.realm(), window, Type::Linear);
+    return *realm.heap().allocate<CanvasGradient>(realm, realm, Type::Linear);
 }
 
-JS::NonnullGCPtr<CanvasGradient> CanvasGradient::create_conic(HTML::Window& window, double start_angle, double x, double y)
+JS::NonnullGCPtr<CanvasGradient> CanvasGradient::create_conic(JS::Realm& realm, double start_angle, double x, double y)
 {
     (void)start_angle;
     (void)x;
     (void)y;
-    return *window.heap().allocate<CanvasGradient>(window.realm(), window, Type::Conic);
+    return *realm.heap().allocate<CanvasGradient>(realm, realm, Type::Conic);
 }
 
-CanvasGradient::CanvasGradient(HTML::Window& window, Type type)
-    : PlatformObject(window.realm())
+CanvasGradient::CanvasGradient(JS::Realm& realm, Type type)
+    : PlatformObject(realm)
     , m_type(type)
 {
-    set_prototype(&window.cached_web_prototype("CanvasGradient"));
+    set_prototype(&Bindings::cached_web_prototype(realm, "CanvasGradient"));
 }
 
 CanvasGradient::~CanvasGradient() = default;
@@ -53,14 +53,14 @@ WebIDL::ExceptionOr<void> CanvasGradient::add_color_stop(double offset, String c
 {
     // 1. If the offset is less than 0 or greater than 1, then throw an "IndexSizeError" DOMException.
     if (offset < 0 || offset > 1)
-        return WebIDL::IndexSizeError::create(global_object(), "CanvasGradient color stop offset out of bounds");
+        return WebIDL::IndexSizeError::create(realm(), "CanvasGradient color stop offset out of bounds");
 
     // 2. Let parsed color be the result of parsing color.
     auto parsed_color = Color::from_string(color);
 
     // 3. If parsed color is failure, throw a "SyntaxError" DOMException.
     if (!parsed_color.has_value())
-        return WebIDL::SyntaxError::create(global_object(), "Could not parse color for CanvasGradient");
+        return WebIDL::SyntaxError::create(realm(), "Could not parse color for CanvasGradient");
 
     // 4. Place a new stop on the gradient, at offset offset relative to the whole gradient, and with the color parsed color.
     m_color_stops.append(ColorStop { offset, parsed_color.value() });

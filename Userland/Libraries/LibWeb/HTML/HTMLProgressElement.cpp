@@ -18,7 +18,7 @@ namespace Web::HTML {
 HTMLProgressElement::HTMLProgressElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
-    set_prototype(&window().cached_web_prototype("HTMLProgressElement"));
+    set_prototype(&Bindings::cached_web_prototype(realm(), "HTMLProgressElement"));
 }
 
 HTMLProgressElement::~HTMLProgressElement() = default;

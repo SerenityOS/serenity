@@ -1210,7 +1210,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Event>> Document::create_event(String const
     } else if (interface_lowercase == "keyboardevent") {
         event = UIEvents::KeyboardEvent::create(window, "");
     } else if (interface_lowercase == "messageevent") {
-        event = HTML::MessageEvent::create(window, "");
+        event = HTML::MessageEvent::create(realm, "");
     } else if (interface_lowercase.is_one_of("mouseevent", "mouseevents")) {
         event = UIEvents::MouseEvent::create(window, "");
     } else if (interface_lowercase == "storageevent") {
@@ -1967,7 +1967,7 @@ CSS::StyleSheetList const& Document::style_sheets() const
 JS::NonnullGCPtr<HTML::History> Document::history()
 {
     if (!m_history)
-        m_history = HTML::History::create(window(), *this);
+        m_history = HTML::History::create(realm(), *this);
     return *m_history;
 }
 

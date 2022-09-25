@@ -7,7 +7,6 @@
 
 #pragma once
 
-#include <LibJS/Heap/Handle.h>
 #include <LibWeb/Bindings/PlatformObject.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
 
@@ -17,7 +16,7 @@ class History final : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(History, Bindings::PlatformObject);
 
 public:
-    static JS::NonnullGCPtr<History> create(HTML::Window&, DOM::Document&);
+    static JS::NonnullGCPtr<History> create(JS::Realm&, DOM::Document&);
 
     virtual ~History() override;
 
@@ -25,7 +24,7 @@ public:
     WebIDL::ExceptionOr<void> replace_state(JS::Value data, String const& unused, String const& url);
 
 private:
-    explicit History(HTML::Window&, DOM::Document&);
+    History(JS::Realm&, DOM::Document&);
 
     virtual void visit_edges(Cell::Visitor&) override;
 

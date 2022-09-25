@@ -18,10 +18,10 @@ class PageTransitionEvent final : public DOM::Event {
     WEB_PLATFORM_OBJECT(PageTransitionEvent, DOM::Event);
 
 public:
-    static PageTransitionEvent* create(HTML::Window&, FlyString const& event_name, PageTransitionEventInit const& event_init);
-    static PageTransitionEvent* create_with_global_object(HTML::Window&, FlyString const& event_name, PageTransitionEventInit const& event_init);
+    static PageTransitionEvent* create(JS::Realm&, FlyString const& event_name, PageTransitionEventInit const& event_init);
+    static PageTransitionEvent* construct_impl(JS::Realm&, FlyString const& event_name, PageTransitionEventInit const& event_init);
 
-    PageTransitionEvent(HTML::Window&, FlyString const& event_name, PageTransitionEventInit const& event_init);
+    PageTransitionEvent(JS::Realm&, FlyString const& event_name, PageTransitionEventInit const& event_init);
 
     virtual ~PageTransitionEvent() override;
 

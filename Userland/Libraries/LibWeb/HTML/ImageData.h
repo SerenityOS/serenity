@@ -15,7 +15,7 @@ class ImageData final : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(ImageData, Bindings::PlatformObject);
 
 public:
-    static JS::GCPtr<ImageData> create_with_size(HTML::Window&, int width, int height);
+    static JS::GCPtr<ImageData> create_with_size(JS::Realm&, int width, int height);
 
     virtual ~ImageData() override;
 
@@ -29,7 +29,7 @@ public:
     const JS::Uint8ClampedArray* data() const;
 
 private:
-    explicit ImageData(HTML::Window&, NonnullRefPtr<Gfx::Bitmap>, JS::NonnullGCPtr<JS::Uint8ClampedArray>);
+    ImageData(JS::Realm&, NonnullRefPtr<Gfx::Bitmap>, JS::NonnullGCPtr<JS::Uint8ClampedArray>);
 
     virtual void visit_edges(Cell::Visitor&) override;
 

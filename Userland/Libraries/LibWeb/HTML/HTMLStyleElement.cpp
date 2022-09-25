@@ -14,7 +14,7 @@ namespace Web::HTML {
 HTMLStyleElement::HTMLStyleElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
-    set_prototype(&window().cached_web_prototype("HTMLStyleElement"));
+    set_prototype(&Bindings::cached_web_prototype(realm(), "HTMLStyleElement"));
 }
 
 HTMLStyleElement::~HTMLStyleElement() = default;

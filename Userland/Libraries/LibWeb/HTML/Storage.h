@@ -16,7 +16,7 @@ class Storage : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(Storage, Bindings::PlatformObject);
 
 public:
-    static JS::NonnullGCPtr<Storage> create(HTML::Window&);
+    static JS::NonnullGCPtr<Storage> create(JS::Realm&);
     ~Storage();
 
     size_t length() const;
@@ -33,7 +33,7 @@ public:
     void dump() const;
 
 private:
-    explicit Storage(HTML::Window&);
+    explicit Storage(JS::Realm&);
 
     void reorder();
     void broadcast(String const& key, String const& old_value, String const& new_value);

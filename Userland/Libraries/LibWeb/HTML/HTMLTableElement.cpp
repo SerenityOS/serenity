@@ -20,7 +20,7 @@ namespace Web::HTML {
 HTMLTableElement::HTMLTableElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
-    set_prototype(&window().cached_web_prototype("HTMLTableElement"));
+    set_prototype(&Bindings::cached_web_prototype(realm(), "HTMLTableElement"));
 }
 
 HTMLTableElement::~HTMLTableElement() = default;
@@ -103,7 +103,7 @@ WebIDL::ExceptionOr<void> HTMLTableElement::set_t_head(HTMLTableSectionElement* 
     VERIFY(thead);
 
     if (thead->local_name() != TagNames::thead)
-        return WebIDL::HierarchyRequestError::create(global_object(), "Element is not thead");
+        return WebIDL::HierarchyRequestError::create(realm(), "Element is not thead");
 
     // FIXME: The spec requires deleting the current thead if thead is null
     //        Currently the wrapper generator doesn't send us a nullable value
@@ -190,7 +190,7 @@ WebIDL::ExceptionOr<void> HTMLTableElement::set_t_foot(HTMLTableSectionElement* 
     VERIFY(tfoot);
 
     if (tfoot->local_name() != TagNames::tfoot)
-        return WebIDL::HierarchyRequestError::create(global_object(), "Element is not tfoot");
+        return WebIDL::HierarchyRequestError::create(realm(), "Element is not tfoot");
 
     // FIXME: The spec requires deleting the current tfoot if tfoot is null
     //        Currently the wrapper generator doesn't send us a nullable value
@@ -286,7 +286,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<HTMLTableRowElement>> HTMLTableElement::ins
     auto rows_length = rows->length();
 
     if (index < -1 || index > (long)rows_length) {
-        return WebIDL::IndexSizeError::create(global_object(), "Index is negative or greater than the number of rows");
+        return WebIDL::IndexSizeError::create(realm(), "Index is negative or greater than the number of rows");
     }
     auto& tr = static_cast<HTMLTableRowElement&>(*DOM::create_element(document(), TagNames::tr, Namespace::HTML));
     if (rows_length == 0 && !has_child_of_type<HTMLTableRowElement>()) {
@@ -313,7 +313,7 @@ WebIDL::ExceptionOr<void> HTMLTableElement::delete_row(long index)
 
     // 1. If index is less than −1 or greater than or equal to the number of elements in the rows collection, then throw an "IndexSizeError" DOMException.
     if (index < -1 || index >= (long)rows_length)
-        return WebIDL::IndexSizeError::create(global_object(), "Index is negative or greater than or equal to the number of rows");
+        return WebIDL::IndexSizeError::create(realm(), "Index is negative or greater than or equal to the number of rows");
 
     // 2. If index is −1, then remove the last element in the rows collection from its parent, or do nothing if the rows collection is empty.
     if (index == -1) {

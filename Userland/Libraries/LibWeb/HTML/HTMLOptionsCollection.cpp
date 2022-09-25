@@ -4,11 +4,11 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/HTML/HTMLOptGroupElement.h>
 #include <LibWeb/HTML/HTMLOptionElement.h>
 #include <LibWeb/HTML/HTMLOptionsCollection.h>
 #include <LibWeb/HTML/HTMLSelectElement.h>
-#include <LibWeb/HTML/Window.h>
 #include <LibWeb/WebIDL/DOMException.h>
 
 namespace Web::HTML {
@@ -21,7 +21,7 @@ JS::NonnullGCPtr<HTMLOptionsCollection> HTMLOptionsCollection::create(DOM::Paren
 HTMLOptionsCollection::HTMLOptionsCollection(DOM::ParentNode& root, Function<bool(DOM::Element const&)> filter)
     : DOM::HTMLCollection(root, move(filter))
 {
-    set_prototype(&root.window().cached_web_prototype("HTMLOptionsCollection"));
+    set_prototype(&Bindings::cached_web_prototype(realm(), "HTMLOptionsCollection"));
 }
 
 HTMLOptionsCollection::~HTMLOptionsCollection() = default;
@@ -40,11 +40,11 @@ WebIDL::ExceptionOr<void> HTMLOptionsCollection::add(HTMLOptionOrOptGroupElement
 
     // 1. If element is an ancestor of the select element on which the HTMLOptionsCollection is rooted, then throw a "HierarchyRequestError" DOMException.
     if (resolved_element->is_ancestor_of(root()))
-        return WebIDL::HierarchyRequestError::create(global_object(), "The provided element is an ancestor of the root select element.");
+        return WebIDL::HierarchyRequestError::create(realm(), "The provided element is an ancestor of the root select element.");
 
     // 2. If before is an element, but that element isn't a descendant of the select element on which the HTMLOptionsCollection is rooted, then throw a "NotFoundError" DOMException.
     if (before_element && !before_element->is_descendant_of(root()))
-        return WebIDL::NotFoundError::create(global_object(), "The 'before' element is not a descendant of the root select element.");
+        return WebIDL::NotFoundError::create(realm(), "The 'before' element is not a descendant of the root select element.");
 
     // 3. If element and before are the same element, then return.
     if (before_element && (resolved_element.ptr() == before_element.ptr()))

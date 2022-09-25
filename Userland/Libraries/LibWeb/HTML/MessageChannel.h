@@ -16,7 +16,7 @@ class MessageChannel final : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(MessageChannel, Bindings::PlatformObject);
 
 public:
-    static JS::NonnullGCPtr<MessageChannel> create_with_global_object(HTML::Window&);
+    static JS::NonnullGCPtr<MessageChannel> construct_impl(JS::Realm&);
     virtual ~MessageChannel() override;
 
     MessagePort* port1();
@@ -26,7 +26,7 @@ public:
     MessagePort const* port2() const;
 
 private:
-    explicit MessageChannel(HTML::Window&);
+    explicit MessageChannel(JS::Realm&);
 
     virtual void visit_edges(Cell::Visitor&) override;
 

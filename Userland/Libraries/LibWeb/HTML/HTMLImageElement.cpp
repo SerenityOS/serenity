@@ -22,13 +22,13 @@ HTMLImageElement::HTMLImageElement(DOM::Document& document, DOM::QualifiedName q
     : HTMLElement(document, move(qualified_name))
     , m_image_loader(*this)
 {
-    set_prototype(&window().cached_web_prototype("HTMLImageElement"));
+    set_prototype(&Bindings::cached_web_prototype(realm(), "HTMLImageElement"));
 
     m_image_loader.on_load = [this] {
         set_needs_style_update(true);
         this->document().set_needs_layout();
         queue_an_element_task(HTML::Task::Source::DOMManipulation, [this] {
-            dispatch_event(*DOM::Event::create(this->document().window(), EventNames::load));
+            dispatch_event(*DOM::Event::create(this->realm(), EventNames::load));
         });
     };
 
@@ -37,7 +37,7 @@ HTMLImageElement::HTMLImageElement(DOM::Document& document, DOM::QualifiedName q
         set_needs_style_update(true);
         this->document().set_needs_layout();
         queue_an_element_task(HTML::Task::Source::DOMManipulation, [this] {
-            dispatch_event(*DOM::Event::create(this->document().window(), EventNames::error));
+            dispatch_event(*DOM::Event::create(this->realm(), EventNames::error));
         });
     };
 

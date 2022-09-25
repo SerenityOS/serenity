@@ -4,30 +4,30 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/HTML/ErrorEvent.h>
-#include <LibWeb/HTML/Window.h>
 
 namespace Web::HTML {
 
-ErrorEvent* ErrorEvent::create(HTML::Window& window_object, FlyString const& event_name, ErrorEventInit const& event_init)
+ErrorEvent* ErrorEvent::create(JS::Realm& realm, FlyString const& event_name, ErrorEventInit const& event_init)
 {
-    return window_object.heap().allocate<ErrorEvent>(window_object.realm(), window_object, event_name, event_init);
+    return realm.heap().allocate<ErrorEvent>(realm, realm, event_name, event_init);
 }
 
-ErrorEvent* ErrorEvent::create_with_global_object(HTML::Window& window_object, FlyString const& event_name, ErrorEventInit const& event_init)
+ErrorEvent* ErrorEvent::construct_impl(JS::Realm& realm, FlyString const& event_name, ErrorEventInit const& event_init)
 {
-    return create(window_object, event_name, event_init);
+    return create(realm, event_name, event_init);
 }
 
-ErrorEvent::ErrorEvent(HTML::Window& window_object, FlyString const& event_name, ErrorEventInit const& event_init)
-    : DOM::Event(window_object, event_name)
+ErrorEvent::ErrorEvent(JS::Realm& realm, FlyString const& event_name, ErrorEventInit const& event_init)
+    : DOM::Event(realm, event_name)
     , m_message(event_init.message)
     , m_filename(event_init.filename)
     , m_lineno(event_init.lineno)
     , m_colno(event_init.colno)
     , m_error(event_init.error)
 {
-    set_prototype(&window_object.cached_web_prototype("ErrorEvent"));
+    set_prototype(&Bindings::cached_web_prototype(realm, "ErrorEvent"));
 }
 
 ErrorEvent::~ErrorEvent() = default;

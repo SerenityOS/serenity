@@ -51,7 +51,7 @@ class CanvasRenderingContext2D
     WEB_PLATFORM_OBJECT(CanvasRenderingContext2D, Bindings::PlatformObject);
 
 public:
-    static JS::NonnullGCPtr<CanvasRenderingContext2D> create(HTML::Window&, HTMLCanvasElement&);
+    static JS::NonnullGCPtr<CanvasRenderingContext2D> create(JS::Realm&, HTMLCanvasElement&);
     virtual ~CanvasRenderingContext2D() override;
 
     virtual void fill_rect(float x, float y, float width, float height) override;
@@ -83,7 +83,7 @@ public:
     virtual void clip() override;
 
 private:
-    explicit CanvasRenderingContext2D(HTML::Window&, HTMLCanvasElement&);
+    explicit CanvasRenderingContext2D(JS::Realm&, HTMLCanvasElement&);
 
     virtual void visit_edges(Cell::Visitor&) override;
 

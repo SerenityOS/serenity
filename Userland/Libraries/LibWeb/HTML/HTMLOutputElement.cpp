@@ -12,7 +12,7 @@ namespace Web::HTML {
 HTMLOutputElement::HTMLOutputElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
-    set_prototype(&window().cached_web_prototype("HTMLOutputElement"));
+    set_prototype(&Bindings::cached_web_prototype(realm(), "HTMLOutputElement"));
 }
 
 HTMLOutputElement::~HTMLOutputElement() = default;

@@ -21,16 +21,16 @@ public:
         Conic,
     };
 
-    static JS::NonnullGCPtr<CanvasGradient> create_radial(HTML::Window&, double x0, double y0, double r0, double x1, double y1, double r1);
-    static JS::NonnullGCPtr<CanvasGradient> create_linear(HTML::Window&, double x0, double y0, double x1, double y1);
-    static JS::NonnullGCPtr<CanvasGradient> create_conic(HTML::Window&, double start_angle, double x, double y);
+    static JS::NonnullGCPtr<CanvasGradient> create_radial(JS::Realm&, double x0, double y0, double r0, double x1, double y1, double r1);
+    static JS::NonnullGCPtr<CanvasGradient> create_linear(JS::Realm&, double x0, double y0, double x1, double y1);
+    static JS::NonnullGCPtr<CanvasGradient> create_conic(JS::Realm&, double start_angle, double x, double y);
 
     WebIDL::ExceptionOr<void> add_color_stop(double offset, String const& color);
 
     ~CanvasGradient();
 
 private:
-    CanvasGradient(HTML::Window&, Type);
+    CanvasGradient(JS::Realm&, Type);
 
     Type m_type {};
 

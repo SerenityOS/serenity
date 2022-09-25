@@ -22,7 +22,7 @@ class MessagePort final : public DOM::EventTarget {
     WEB_PLATFORM_OBJECT(MessagePort, DOM::EventTarget);
 
 public:
-    static JS::NonnullGCPtr<MessagePort> create(HTML::Window&);
+    static JS::NonnullGCPtr<MessagePort> create(JS::Realm&);
 
     virtual ~MessagePort() override;
 
@@ -44,7 +44,7 @@ public:
 #undef __ENUMERATE
 
 private:
-    explicit MessagePort(HTML::Window&);
+    explicit MessagePort(JS::Realm&);
 
     virtual void visit_edges(Cell::Visitor&) override;
 

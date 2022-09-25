@@ -14,7 +14,7 @@ class TextMetrics : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(TextMetrics, Bindings::PlatformObject);
 
 public:
-    static JS::NonnullGCPtr<TextMetrics> create(HTML::Window&);
+    static JS::NonnullGCPtr<TextMetrics> create(JS::Realm&);
 
     virtual ~TextMetrics() override;
 
@@ -45,7 +45,7 @@ public:
     void set_ideographic_baseline(double baseline) { m_ideographic_baseline = baseline; }
 
 private:
-    explicit TextMetrics(HTML::Window&);
+    explicit TextMetrics(JS::Realm&);
 
     double m_width { 0 };
     double m_actual_bounding_box_left { 0 };

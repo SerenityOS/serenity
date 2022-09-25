@@ -6,14 +6,13 @@
 
 #include <LibGfx/Bitmap.h>
 #include <LibJS/Runtime/TypedArray.h>
+#include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/HTML/ImageData.h>
-#include <LibWeb/HTML/Window.h>
 
 namespace Web::HTML {
 
-JS::GCPtr<ImageData> ImageData::create_with_size(HTML::Window& window, int width, int height)
+JS::GCPtr<ImageData> ImageData::create_with_size(JS::Realm& realm, int width, int height)
 {
-    auto& realm = window.realm();
 
     if (width <= 0 || height <= 0)
         return nullptr;
@@ -29,15 +28,15 @@ JS::GCPtr<ImageData> ImageData::create_with_size(HTML::Window& window, int width
     auto bitmap_or_error = Gfx::Bitmap::try_create_wrapper(Gfx::BitmapFormat::RGBA8888, Gfx::IntSize(width, height), 1, width * sizeof(u32), data->data().data());
     if (bitmap_or_error.is_error())
         return nullptr;
-    return realm.heap().allocate<ImageData>(realm, window, bitmap_or_error.release_value(), move(data));
+    return realm.heap().allocate<ImageData>(realm, realm, bitmap_or_error.release_value(), move(data));
 }
 
-ImageData::ImageData(HTML::Window& window, NonnullRefPtr<Gfx::Bitmap> bitmap, JS::NonnullGCPtr<JS::Uint8ClampedArray> data)
-    : PlatformObject(window.realm())
+ImageData::ImageData(JS::Realm& realm, NonnullRefPtr<Gfx::Bitmap> bitmap, JS::NonnullGCPtr<JS::Uint8ClampedArray> data)
+    : PlatformObject(realm)
     , m_bitmap(move(bitmap))
     , m_data(move(data))
 {
-    set_prototype(&window.cached_web_prototype("ImageData"));
+    set_prototype(&Bindings::cached_web_prototype(realm, "ImageData"));
 }
 
 ImageData::~ImageData() = default;

@@ -4,26 +4,26 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/HTML/PageTransitionEvent.h>
-#include <LibWeb/HTML/Window.h>
 
 namespace Web::HTML {
 
-PageTransitionEvent* PageTransitionEvent::create(HTML::Window& window_object, FlyString const& event_name, PageTransitionEventInit const& event_init)
+PageTransitionEvent* PageTransitionEvent::create(JS::Realm& realm, FlyString const& event_name, PageTransitionEventInit const& event_init)
 {
-    return window_object.heap().allocate<PageTransitionEvent>(window_object.realm(), window_object, event_name, event_init);
+    return realm.heap().allocate<PageTransitionEvent>(realm, realm, event_name, event_init);
 }
 
-PageTransitionEvent* PageTransitionEvent::create_with_global_object(HTML::Window& window_object, FlyString const& event_name, PageTransitionEventInit const& event_init)
+PageTransitionEvent* PageTransitionEvent::construct_impl(JS::Realm& realm, FlyString const& event_name, PageTransitionEventInit const& event_init)
 {
-    return create(window_object, event_name, event_init);
+    return create(realm, event_name, event_init);
 }
 
-PageTransitionEvent::PageTransitionEvent(HTML::Window& window_object, FlyString const& event_name, PageTransitionEventInit const& event_init)
-    : DOM::Event(window_object, event_name, event_init)
+PageTransitionEvent::PageTransitionEvent(JS::Realm& realm, FlyString const& event_name, PageTransitionEventInit const& event_init)
+    : DOM::Event(realm, event_name, event_init)
     , m_persisted(event_init.persisted)
 {
-    set_prototype(&window_object.cached_web_prototype("PageTransitionEvent"));
+    set_prototype(&Bindings::cached_web_prototype(realm, "PageTransitionEvent"));
 }
 
 PageTransitionEvent::~PageTransitionEvent() = default;

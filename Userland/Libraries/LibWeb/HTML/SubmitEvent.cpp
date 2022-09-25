@@ -4,26 +4,26 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/HTML/SubmitEvent.h>
-#include <LibWeb/HTML/Window.h>
 
 namespace Web::HTML {
 
-SubmitEvent* SubmitEvent::create(HTML::Window& window_object, FlyString const& event_name, SubmitEventInit const& event_init)
+SubmitEvent* SubmitEvent::create(JS::Realm& realm, FlyString const& event_name, SubmitEventInit const& event_init)
 {
-    return window_object.heap().allocate<SubmitEvent>(window_object.realm(), window_object, event_name, event_init);
+    return realm.heap().allocate<SubmitEvent>(realm, realm, event_name, event_init);
 }
 
-SubmitEvent* SubmitEvent::create_with_global_object(HTML::Window& window_object, FlyString const& event_name, SubmitEventInit const& event_init)
+SubmitEvent* SubmitEvent::construct_impl(JS::Realm& realm, FlyString const& event_name, SubmitEventInit const& event_init)
 {
-    return create(window_object, event_name, event_init);
+    return create(realm, event_name, event_init);
 }
 
-SubmitEvent::SubmitEvent(HTML::Window& window_object, FlyString const& event_name, SubmitEventInit const& event_init)
-    : DOM::Event(window_object, event_name, event_init)
+SubmitEvent::SubmitEvent(JS::Realm& realm, FlyString const& event_name, SubmitEventInit const& event_init)
+    : DOM::Event(realm, event_name, event_init)
     , m_submitter(event_init.submitter)
 {
-    set_prototype(&window_object.cached_web_prototype("SubmitEvent"));
+    set_prototype(&Bindings::cached_web_prototype(realm, "SubmitEvent"));
 }
 
 SubmitEvent::~SubmitEvent() = default;

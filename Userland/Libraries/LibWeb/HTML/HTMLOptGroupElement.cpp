@@ -12,7 +12,7 @@ namespace Web::HTML {
 HTMLOptGroupElement::HTMLOptGroupElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
-    set_prototype(&window().cached_web_prototype("HTMLOptGroupElement"));
+    set_prototype(&Bindings::cached_web_prototype(realm(), "HTMLOptGroupElement"));
 }
 
 HTMLOptGroupElement::~HTMLOptGroupElement() = default;

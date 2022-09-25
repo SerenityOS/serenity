@@ -21,7 +21,7 @@ static constexpr auto max_canvas_area = 16384 * 16384;
 HTMLCanvasElement::HTMLCanvasElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
-    set_prototype(&document.window().cached_web_prototype("HTMLCanvasElement"));
+    set_prototype(&Bindings::cached_web_prototype(realm(), "HTMLCanvasElement"));
 }
 
 HTMLCanvasElement::~HTMLCanvasElement() = default;
@@ -88,7 +88,7 @@ HTMLCanvasElement::HasOrCreatedContext HTMLCanvasElement::create_2d_context()
     if (!m_context.has<Empty>())
         return m_context.has<JS::NonnullGCPtr<CanvasRenderingContext2D>>() ? HasOrCreatedContext::Yes : HasOrCreatedContext::No;
 
-    m_context = CanvasRenderingContext2D::create(window(), *this);
+    m_context = CanvasRenderingContext2D::create(realm(), *this);
     return HasOrCreatedContext::Yes;
 }
 

@@ -240,7 +240,7 @@ void HTMLParser::the_end()
         document->load_timing_info().dom_content_loaded_event_start_time = main_thread_event_loop().unsafe_shared_current_time();
 
         // 2. Fire an event named DOMContentLoaded at the Document object, with its bubbles attribute initialized to true.
-        auto content_loaded_event = DOM::Event::create(document->window(), HTML::EventNames::DOMContentLoaded);
+        auto content_loaded_event = DOM::Event::create(document->realm(), HTML::EventNames::DOMContentLoaded);
         content_loaded_event->set_bubbles(true);
         document->dispatch_event(*content_loaded_event);
 
@@ -281,7 +281,7 @@ void HTMLParser::the_end()
         // 5. Fire an event named load at window, with legacy target override flag set.
         // FIXME: The legacy target override flag is currently set by a virtual override of dispatch_event()
         //        We should reorganize this so that the flag appears explicitly here instead.
-        window->dispatch_event(*DOM::Event::create(document->window(), HTML::EventNames::load));
+        window->dispatch_event(*DOM::Event::create(document->realm(), HTML::EventNames::load));
 
         // FIXME: 6. Invoke WebDriver BiDi load complete with the Document's browsing context, and a new WebDriver BiDi navigation status whose id is the Document object's navigation id, status is "complete", and url is the Document object's URL.
 
@@ -3375,7 +3375,7 @@ DOM::Document& HTMLParser::document()
 
 Vector<JS::Handle<DOM::Node>> HTMLParser::parse_html_fragment(DOM::Element& context_element, StringView markup)
 {
-    auto temp_document = DOM::Document::create(context_element.window());
+    auto temp_document = DOM::Document::create(context_element.realm());
     auto parser = HTMLParser::create(*temp_document, markup, "utf-8");
     parser->m_context_element = JS::make_handle(context_element);
     parser->m_parsing_fragment = true;
