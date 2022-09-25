@@ -78,7 +78,7 @@ GUI::ModelIndex ModelTranslator::to_gui(QModelIndex const& index) const
 {
     if (!index.isValid())
         return {};
-    return m_model->create_index_unsafe(index.row(), index.column(), index.internalPointer());
+    return m_model->unsafe_create_index(index.row(), index.column(), index.internalPointer());
 }
 
 }
