@@ -67,7 +67,7 @@ float FlexFormattingContext::automatic_content_height() const
     return m_state.get(flex_container()).content_height();
 }
 
-void FlexFormattingContext::run(Box const& run_box, LayoutMode layout_mode)
+void FlexFormattingContext::run(Box const& run_box, LayoutMode layout_mode, [[maybe_unused]] AvailableSpace const& available_width, [[maybe_unused]] AvailableSpace const& available_height)
 {
     VERIFY(&run_box == &flex_container());
 
@@ -598,7 +598,7 @@ void FlexFormattingContext::determine_available_main_and_cross_space(bool& main_
             cross_available_space = cross_max_size;
     }
 
-    m_available_space = AvailableSpace { .main = main_available_space, .cross = cross_available_space };
+    m_available_space = AvailableSpaceForItems { .main = main_available_space, .cross = cross_available_space };
 }
 
 float FlexFormattingContext::calculate_indefinite_main_size(FlexItem const& item)
@@ -635,7 +635,7 @@ float FlexFormattingContext::calculate_indefinite_main_size(FlexItem const& item
         VERIFY(independent_formatting_context);
 
         box_state.set_content_width(fit_content_cross_size);
-        independent_formatting_context->run(item.box, LayoutMode::Normal);
+        independent_formatting_context->run(item.box, LayoutMode::Normal, AvailableSpace::make_indefinite(), AvailableSpace::make_indefinite());
 
         return independent_formatting_context->automatic_content_height();
     }
@@ -1100,7 +1100,7 @@ void FlexFormattingContext::determine_hypothetical_cross_size_of_item(FlexItem& 
     // NOTE: Flex items should always create an independent formatting context!
     VERIFY(independent_formatting_context);
 
-    independent_formatting_context->run(item.box, LayoutMode::Normal);
+    independent_formatting_context->run(item.box, LayoutMode::Normal, AvailableSpace::make_indefinite(), AvailableSpace::make_indefinite());
 
     auto automatic_cross_size = is_row_layout() ? independent_formatting_context->automatic_content_height()
                                                 : box_state.content_width();

@@ -44,7 +44,7 @@ float BlockFormattingContext::automatic_content_height() const
     return compute_auto_height_for_block_formatting_context_root(m_state, root());
 }
 
-void BlockFormattingContext::run(Box const&, LayoutMode layout_mode)
+void BlockFormattingContext::run(Box const&, LayoutMode layout_mode, [[maybe_unused]] AvailableSpace const& available_width, [[maybe_unused]] AvailableSpace const& available_height)
 {
     if (is_initial()) {
         layout_initial_containing_block(layout_mode);
@@ -366,7 +366,11 @@ void BlockFormattingContext::layout_inline_children(BlockContainer const& block_
     }
 
     InlineFormattingContext context(m_state, block_container, *this);
-    context.run(block_container, layout_mode);
+    context.run(
+        block_container,
+        layout_mode,
+        AvailableSpace::make_definite(containing_block_width_for(block_container)),
+        AvailableSpace::make_definite(containing_block_height_for(block_container)));
 
     float max_line_width = 0;
     float content_height = 0;
@@ -419,7 +423,7 @@ void BlockFormattingContext::layout_block_level_box(Box const& box, BlockContain
         } else {
             independent_formatting_context = create_independent_formatting_context_if_needed(m_state, box);
             if (independent_formatting_context)
-                independent_formatting_context->run(box, layout_mode);
+                independent_formatting_context->run(box, layout_mode, AvailableSpace::make_indefinite(), AvailableSpace::make_indefinite());
             else
                 layout_block_level_children(verify_cast<BlockContainer>(box), layout_mode);
         }
@@ -440,19 +444,6 @@ void BlockFormattingContext::layout_block_level_box(Box const& box, BlockContain
 
     if (independent_formatting_context)
         independent_formatting_context->parent_context_did_dimension_child_root_box();
-}
-
-void BlockFormattingContext::run_intrinsic_sizing(Box const& box)
-{
-    auto& box_state = m_state.get_mutable(box);
-
-    if (box_state.has_definite_width())
-        box_state.set_content_width(box.computed_values().width().resolved(box, CSS::Length::make_px(containing_block_width_for(box))).to_px(box));
-
-    if (box_state.has_definite_height())
-        box_state.set_content_height(box.computed_values().height().resolved(box, CSS::Length::make_px(containing_block_height_for(box))).to_px(box));
-
-    run(box, LayoutMode::IntrinsicSizing);
 }
 
 void BlockFormattingContext::layout_block_level_children(BlockContainer const& block_container, LayoutMode layout_mode)

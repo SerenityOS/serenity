@@ -39,7 +39,18 @@ void FormattingContext::run_intrinsic_sizing(Box const& box)
     if (box_state.has_definite_height())
         box_state.set_content_height(box.computed_values().height().resolved(box, CSS::Length::make_px(containing_block_height_for(box))).to_px(box));
 
-    run(box, LayoutMode::IntrinsicSizing);
+    auto to_available_space = [&](SizeConstraint constraint) {
+        if (constraint == SizeConstraint::MinContent)
+            return AvailableSpace::make_min_content();
+        if (constraint == SizeConstraint::MaxContent)
+            return AvailableSpace::make_max_content();
+        return AvailableSpace::make_indefinite();
+    };
+
+    auto available_width = to_available_space(box_state.width_constraint);
+    auto available_height = to_available_space(box_state.height_constraint);
+
+    run(box, LayoutMode::IntrinsicSizing, available_width, available_height);
 }
 
 bool FormattingContext::creates_block_formatting_context(Box const& box)
@@ -104,7 +115,7 @@ OwnPtr<FormattingContext> FormattingContext::create_independent_formatting_conte
             {
             }
             virtual float automatic_content_height() const override { return 0; };
-            virtual void run(Box const&, LayoutMode) override { }
+            virtual void run(Box const&, LayoutMode, AvailableSpace const&, AvailableSpace const&) override { }
         };
         return make<ReplacedFormattingContext>(state, child_box);
     }
@@ -146,7 +157,7 @@ OwnPtr<FormattingContext> FormattingContext::create_independent_formatting_conte
             {
             }
             virtual float automatic_content_height() const override { return 0; };
-            virtual void run(Box const&, LayoutMode) override { }
+            virtual void run(Box const&, LayoutMode, AvailableSpace const&, AvailableSpace const&) override { }
         };
         return make<DummyFormattingContext>(state, child_box);
     }
@@ -176,9 +187,9 @@ OwnPtr<FormattingContext> FormattingContext::layout_inside(Box const& child_box,
 
     auto independent_formatting_context = create_independent_formatting_context_if_needed(m_state, child_box);
     if (independent_formatting_context)
-        independent_formatting_context->run(child_box, layout_mode);
+        independent_formatting_context->run(child_box, layout_mode, AvailableSpace::make_indefinite(), AvailableSpace::make_indefinite());
     else
-        run(child_box, layout_mode);
+        run(child_box, layout_mode, AvailableSpace::make_indefinite(), AvailableSpace::make_indefinite());
 
     return independent_formatting_context;
 }

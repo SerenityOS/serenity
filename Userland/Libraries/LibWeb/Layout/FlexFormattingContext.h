@@ -18,7 +18,7 @@ public:
 
     virtual bool inhibits_floating() const override { return true; }
 
-    virtual void run(Box const&, LayoutMode) override;
+    virtual void run(Box const&, LayoutMode, AvailableSpace const& available_width, AvailableSpace const& available_height) override;
     virtual float automatic_content_height() const override;
 
     Box const& flex_container() const { return context_box(); }
@@ -190,11 +190,11 @@ private:
     Vector<FlexItem> m_flex_items;
     CSS::FlexDirection m_flex_direction {};
 
-    struct AvailableSpace {
+    struct AvailableSpaceForItems {
         Optional<float> main;
         Optional<float> cross;
     };
-    Optional<AvailableSpace> m_available_space;
+    Optional<AvailableSpaceForItems> m_available_space;
 };
 
 }

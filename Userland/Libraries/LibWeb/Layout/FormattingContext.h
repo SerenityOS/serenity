@@ -8,6 +8,7 @@
 
 #include <AK/OwnPtr.h>
 #include <LibWeb/Forward.h>
+#include <LibWeb/Layout/AvailableSpace.h>
 #include <LibWeb/Layout/LayoutState.h>
 
 namespace Web::Layout {
@@ -24,7 +25,7 @@ public:
         SVG,
     };
 
-    virtual void run(Box const&, LayoutMode) = 0;
+    virtual void run(Box const&, LayoutMode, AvailableSpace const& available_width, AvailableSpace const& available_height) = 0;
 
     // This function returns the automatic content height of the context's root box.
     virtual float automatic_content_height() const = 0;
@@ -64,7 +65,7 @@ public:
     static float containing_block_width_for(Box const&, LayoutState const&);
     static float containing_block_height_for(Box const&, LayoutState const&);
 
-    virtual void run_intrinsic_sizing(Box const&);
+    void run_intrinsic_sizing(Box const&);
 
     float compute_box_y_position_with_respect_to_siblings(Box const&, LayoutState::UsedValues const&);
 

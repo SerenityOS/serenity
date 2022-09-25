@@ -809,7 +809,11 @@ void Document::update_layout()
         icb_state.set_content_width(viewport_rect.width());
         icb_state.set_content_height(viewport_rect.height());
 
-        root_formatting_context.run(*m_layout_root, Layout::LayoutMode::Normal);
+        root_formatting_context.run(
+            *m_layout_root,
+            Layout::LayoutMode::Normal,
+            Layout::AvailableSpace::make_definite(viewport_rect.width()),
+            Layout::AvailableSpace::make_definite(viewport_rect.height()));
     }
 
     layout_state.commit();

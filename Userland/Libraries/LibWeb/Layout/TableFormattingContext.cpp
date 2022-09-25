@@ -23,7 +23,7 @@ TableFormattingContext::TableFormattingContext(LayoutState& state, BlockContaine
 
 TableFormattingContext::~TableFormattingContext() = default;
 
-void TableFormattingContext::run(Box const& box, LayoutMode)
+void TableFormattingContext::run(Box const& box, LayoutMode, [[maybe_unused]] AvailableSpace const& available_width, [[maybe_unused]] AvailableSpace const& available_height)
 {
     auto& box_state = m_state.get_mutable(box);
 

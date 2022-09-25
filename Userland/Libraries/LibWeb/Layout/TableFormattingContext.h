@@ -23,7 +23,7 @@ public:
     explicit TableFormattingContext(LayoutState&, BlockContainer const&, FormattingContext* parent);
     ~TableFormattingContext();
 
-    virtual void run(Box const&, LayoutMode) override;
+    virtual void run(Box const&, LayoutMode, AvailableSpace const& available_width, AvailableSpace const& available_height) override;
     virtual float automatic_content_height() const override;
 
 private:

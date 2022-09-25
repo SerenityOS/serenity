@@ -16,7 +16,7 @@ public:
     explicit SVGFormattingContext(LayoutState&, Box const&, FormattingContext* parent);
     ~SVGFormattingContext();
 
-    virtual void run(Box const&, LayoutMode) override;
+    virtual void run(Box const&, LayoutMode, AvailableSpace const& available_width, AvailableSpace const& available_height) override;
     virtual float automatic_content_height() const override;
 };
 

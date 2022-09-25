@@ -21,8 +21,7 @@ public:
     explicit BlockFormattingContext(LayoutState&, BlockContainer const&, FormattingContext* parent);
     ~BlockFormattingContext();
 
-    virtual void run(Box const&, LayoutMode) override;
-    virtual void run_intrinsic_sizing(Box const&) override;
+    virtual void run(Box const&, LayoutMode, AvailableSpace const& available_width, AvailableSpace const& available_height) override;
     virtual float automatic_content_height() const override;
 
     bool is_initial() const;
