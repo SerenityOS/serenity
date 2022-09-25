@@ -9,6 +9,7 @@
 #include <LibWeb/Painting/BorderPainting.h>
 #include <LibWeb/Painting/BorderRadiusCornerClipper.h>
 #include <LibWeb/Painting/Paintable.h>
+#include <LibWeb/Painting/ShadowPainting.h>
 
 namespace Web::Painting {
 
@@ -68,6 +69,8 @@ public:
         return rect;
     }
 
+    Gfx::FloatRect absolute_paint_rect() const;
+
     float border_box_width() const
     {
         auto border_box = box_model().border_box();
@@ -123,6 +126,7 @@ protected:
     virtual void paint_box_shadow(PaintContext&) const;
 
     virtual Gfx::FloatRect compute_absolute_rect() const;
+    virtual Gfx::FloatRect compute_absolute_paint_rect() const;
 
     enum class ShrinkRadiiForBorders {
         Yes,
@@ -130,6 +134,8 @@ protected:
     };
 
     Painting::BorderRadiiData normalized_border_radii_data(ShrinkRadiiForBorders shrink = ShrinkRadiiForBorders::No) const;
+
+    Vector<ShadowData> resolve_box_shadow_data() const;
 
 private:
     Optional<OverflowData> m_overflow_data;
@@ -143,6 +149,7 @@ private:
     OwnPtr<Painting::StackingContext> m_stacking_context;
 
     Optional<Gfx::FloatRect> mutable m_absolute_rect;
+    Optional<Gfx::FloatRect> mutable m_absolute_paint_rect;
 
     mutable bool m_clipping_overflow { false };
     Optional<BorderRadiusCornerClipper> mutable m_overflow_corner_radius_clipper;

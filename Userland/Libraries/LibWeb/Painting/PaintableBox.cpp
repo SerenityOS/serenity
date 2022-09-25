@@ -13,7 +13,6 @@
 #include <LibWeb/Painting/BackgroundPainting.h>
 #include <LibWeb/Painting/FilterPainting.h>
 #include <LibWeb/Painting/PaintableBox.h>
-#include <LibWeb/Painting/ShadowPainting.h>
 #include <LibWeb/Painting/StackingContext.h>
 #include <LibWeb/Platform/FontPlugin.h>
 
@@ -90,6 +89,28 @@ Gfx::FloatRect PaintableBox::absolute_rect() const
     if (!m_absolute_rect.has_value())
         m_absolute_rect = compute_absolute_rect();
     return *m_absolute_rect;
+}
+
+Gfx::FloatRect PaintableBox::compute_absolute_paint_rect() const
+{
+    // FIXME: This likely incomplete:
+    auto rect = absolute_border_box_rect();
+    auto resolved_box_shadow_data = resolve_box_shadow_data();
+    for (auto const& shadow : resolved_box_shadow_data) {
+        if (shadow.placement == ShadowPlacement::Inner)
+            continue;
+        auto inflate = shadow.spread_distance + shadow.blur_radius;
+        auto shadow_rect = rect.inflated(inflate, inflate, inflate, inflate).translated(shadow.offset_x, shadow.offset_y);
+        rect = rect.united(shadow_rect);
+    }
+    return rect;
+}
+
+Gfx::FloatRect PaintableBox::absolute_paint_rect() const
+{
+    if (!m_absolute_paint_rect.has_value())
+        m_absolute_paint_rect = compute_absolute_paint_rect();
+    return *m_absolute_paint_rect;
 }
 
 void PaintableBox::set_containing_line_box_fragment(Optional<Layout::LineBoxFragmentCoordinate> fragment_coordinate)
@@ -235,11 +256,11 @@ void PaintableBox::paint_background(PaintContext& context) const
     Painting::paint_background(context, layout_box(), background_rect, background_color, computed_values().image_rendering(), background_layers, normalized_border_radii_data());
 }
 
-void PaintableBox::paint_box_shadow(PaintContext& context) const
+Vector<ShadowData> PaintableBox::resolve_box_shadow_data() const
 {
     auto box_shadow_data = computed_values().box_shadow();
     if (box_shadow_data.is_empty())
-        return;
+        return {};
 
     Vector<ShadowData> resolved_box_shadow_data;
     resolved_box_shadow_data.ensure_capacity(box_shadow_data.size());
@@ -252,6 +273,15 @@ void PaintableBox::paint_box_shadow(PaintContext& context) const
             static_cast<int>(layer.spread_distance.to_px(layout_box())),
             layer.placement == CSS::ShadowPlacement::Outer ? ShadowPlacement::Outer : ShadowPlacement::Inner);
     }
+
+    return resolved_box_shadow_data;
+}
+
+void PaintableBox::paint_box_shadow(PaintContext& context) const
+{
+    auto resolved_box_shadow_data = resolve_box_shadow_data();
+    if (resolved_box_shadow_data.is_empty())
+        return;
     Painting::paint_box_shadow(context, absolute_border_box_rect().to_rounded<int>(), normalized_border_radii_data(), resolved_box_shadow_data);
 }
 
