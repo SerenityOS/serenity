@@ -85,7 +85,7 @@ void IOAPIC::map_interrupt_redirection(u8 interrupt_vector)
     isa_identity_map(interrupt_vector);
 }
 
-void IOAPIC::isa_identity_map(int index)
+void IOAPIC::isa_identity_map(size_t index)
 {
     InterruptDisabler disabler;
     configure_redirection_entry(index, InterruptManagement::acquire_mapped_interrupt_number(index) + IRQ_VECTOR_BASE, DeliveryMode::Normal, false, false, false, true, 0);
@@ -165,16 +165,16 @@ void IOAPIC::hard_disable()
     IRQController::hard_disable();
 }
 
-void IOAPIC::reset_redirection_entry(int index) const
+void IOAPIC::reset_redirection_entry(size_t index) const
 {
     InterruptDisabler disabler;
     configure_redirection_entry(index, 0, 0, false, false, false, true, 0);
 }
 
-void IOAPIC::configure_redirection_entry(int index, u8 interrupt_vector, u8 delivery_mode, bool logical_destination, bool active_low, bool trigger_level_mode, bool masked, u8 destination) const
+void IOAPIC::configure_redirection_entry(size_t index, u8 interrupt_vector, u8 delivery_mode, bool logical_destination, bool active_low, bool trigger_level_mode, bool masked, u8 destination) const
 {
     InterruptDisabler disabler;
-    VERIFY((u32)index < m_redirection_entries_count);
+    VERIFY(index < m_redirection_entries_count);
     u32 redirection_entry1 = interrupt_vector | (delivery_mode & 0b111) << 8 | logical_destination << 11 | active_low << 13 | trigger_level_mode << 15 | masked << 16;
     u32 redirection_entry2 = destination << 24;
     write_register((index << 1) + IOAPIC_REDIRECTION_ENTRY_OFFSET, redirection_entry1);
@@ -197,7 +197,7 @@ void IOAPIC::mask_all_redirection_entries() const
 
 void IOAPIC::mask_redirection_entry(u8 index) const
 {
-    VERIFY((u32)index < m_redirection_entries_count);
+    VERIFY(index < m_redirection_entries_count);
     u32 redirection_entry = read_register((index << 1) + IOAPIC_REDIRECTION_ENTRY_OFFSET);
     if (redirection_entry & (1 << 16))
         return;
@@ -206,13 +206,13 @@ void IOAPIC::mask_redirection_entry(u8 index) const
 
 bool IOAPIC::is_redirection_entry_masked(u8 index) const
 {
-    VERIFY((u32)index < m_redirection_entries_count);
+    VERIFY(index < m_redirection_entries_count);
     return (read_register((index << 1) + IOAPIC_REDIRECTION_ENTRY_OFFSET) & (1 << 16)) != 0;
 }
 
 void IOAPIC::unmask_redirection_entry(u8 index) const
 {
-    VERIFY((u32)index < m_redirection_entries_count);
+    VERIFY(index < m_redirection_entries_count);
     u32 redirection_entry = read_register((index << 1) + IOAPIC_REDIRECTION_ENTRY_OFFSET);
     if (!(redirection_entry & (1 << 16)))
         return;
@@ -227,7 +227,7 @@ bool IOAPIC::is_vector_enabled(u8 interrupt_vector) const
 
 u8 IOAPIC::read_redirection_entry_vector(u8 index) const
 {
-    VERIFY((u32)index < m_redirection_entries_count);
+    VERIFY(index < m_redirection_entries_count);
     return (read_register((index << 1) + IOAPIC_REDIRECTION_ENTRY_OFFSET) & 0xFF);
 }
 

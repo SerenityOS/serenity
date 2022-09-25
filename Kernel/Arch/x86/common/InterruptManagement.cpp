@@ -51,7 +51,7 @@ UNMAP_AFTER_INIT void InterruptManagement::initialize()
 
 void InterruptManagement::enumerate_interrupt_handlers(Function<void(GenericInterruptHandler&)> callback)
 {
-    for (int i = 0; i < GENERIC_INTERRUPT_HANDLERS_COUNT; i++) {
+    for (size_t i = 0; i < GENERIC_INTERRUPT_HANDLERS_COUNT; i++) {
         auto& handler = get_interrupt_handler(i);
         if (handler.type() == HandlerType::SharedIRQHandler) {
             static_cast<SharedIRQHandler&>(handler).enumerate_handlers(callback);
@@ -62,9 +62,8 @@ void InterruptManagement::enumerate_interrupt_handlers(Function<void(GenericInte
     }
 }
 
-IRQController& InterruptManagement::get_interrupt_controller(int index)
+IRQController& InterruptManagement::get_interrupt_controller(size_t index)
 {
-    VERIFY(index >= 0);
     return *m_interrupt_controllers[index];
 }
 
