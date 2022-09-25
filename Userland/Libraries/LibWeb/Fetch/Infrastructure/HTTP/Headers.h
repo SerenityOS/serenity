@@ -26,7 +26,9 @@ struct Header {
 
 // https://fetch.spec.whatwg.org/#concept-header-list
 // A header list is a list of zero or more headers. It is initially the empty list.
-class HeaderList final : Vector<Header> {
+class HeaderList final
+    : public RefCounted<HeaderList>
+    , Vector<Header> {
 public:
     using Vector::begin;
     using Vector::end;

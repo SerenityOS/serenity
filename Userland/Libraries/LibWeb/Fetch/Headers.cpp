@@ -28,6 +28,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Headers>> Headers::create_with_global_objec
 
 Headers::Headers(HTML::Window& window)
     : PlatformObject(window.realm())
+    , m_header_list(make_ref_counted<Infrastructure::HeaderList>())
 {
     set_prototype(&window.cached_web_prototype("Headers"));
 }
@@ -73,11 +74,11 @@ WebIDL::ExceptionOr<void> Headers::delete_(String const& name_string)
         return {};
 
     // 6. If this’s header list does not contain name, then return.
-    if (!m_header_list.contains(name))
+    if (!m_header_list->contains(name))
         return {};
 
     // 7. Delete name from this’s header list.
-    m_header_list.delete_(name);
+    m_header_list->delete_(name);
 
     // 8. If this’s guard is "request-no-cors", then remove privileged no-CORS request headers from this.
     if (m_guard == Guard::RequestNoCORS)
@@ -97,7 +98,7 @@ WebIDL::ExceptionOr<String> Headers::get(String const& name_string)
         return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "Invalid header name" };
 
     // 2. Return the result of getting name from this’s header list.
-    auto byte_buffer = TRY_OR_RETURN_OOM(global_object(), m_header_list.get(name));
+    auto byte_buffer = TRY_OR_RETURN_OOM(global_object(), m_header_list->get(name));
     // FIXME: Teach BindingsGenerator about Optional<String>
     return byte_buffer.has_value() ? String { byte_buffer->span() } : String {};
 }
@@ -113,7 +114,7 @@ WebIDL::ExceptionOr<bool> Headers::has(String const& name_string)
         return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "Invalid header name" };
 
     // 2. Return true if this’s header list contains name; otherwise false.
-    return m_header_list.contains(name);
+    return m_header_list->contains(name);
 }
 
 // https://fetch.spec.whatwg.org/#dom-headers-set
@@ -154,7 +155,7 @@ WebIDL::ExceptionOr<void> Headers::set(String const& name_string, String const& 
         return {};
 
     // 7. Set (name, value) in this’s header list.
-    TRY_OR_RETURN_OOM(global_object(), m_header_list.set(move(header)));
+    TRY_OR_RETURN_OOM(global_object(), m_header_list->set(move(header)));
 
     // 8. If this’s guard is "request-no-cors", then remove privileged no-CORS request headers from this.
     if (m_guard == Guard::RequestNoCORS)
@@ -168,7 +169,7 @@ JS::ThrowCompletionOr<void> Headers::for_each(ForEachCallback callback)
 {
     // The value pairs to iterate over are the return value of running sort and combine with this’s header list.
     auto value_pairs_to_iterate_over = [&]() -> JS::ThrowCompletionOr<Vector<Fetch::Infrastructure::Header>> {
-        auto headers_or_error = m_header_list.sort_and_combine();
+        auto headers_or_error = m_header_list->sort_and_combine();
         if (headers_or_error.is_error())
             return vm().throw_completion<JS::InternalError>(JS::ErrorType::NotEnoughMemoryToAllocate);
         return headers_or_error.release_value();
@@ -226,7 +227,7 @@ WebIDL::ExceptionOr<void> Headers::append(Infrastructure::Header header)
     // 5. Otherwise, if headers’s guard is "request-no-cors":
     if (m_guard == Guard::RequestNoCORS) {
         // 1. Let temporaryValue be the result of getting name from headers’s header list.
-        auto temporary_value = TRY_OR_RETURN_OOM(global_object(), m_header_list.get(name));
+        auto temporary_value = TRY_OR_RETURN_OOM(global_object(), m_header_list->get(name));
 
         // 2. If temporaryValue is null, then set temporaryValue to value.
         if (!temporary_value.has_value()) {
@@ -253,8 +254,8 @@ WebIDL::ExceptionOr<void> Headers::append(Infrastructure::Header header)
     if (m_guard == Guard::Response && Infrastructure::is_forbidden_response_header_name(name))
         return {};
 
-    // 7. Append (name, value) to headers’s header list.
-    TRY_OR_RETURN_OOM(global_object(), m_header_list.append(move(header)));
+    // 7. Append (name, value) to headers’s header list
+    TRY_OR_RETURN_OOM(global_object(), m_header_list->append(move(header)));
 
     // 8. If headers’s guard is "request-no-cors", then remove privileged no-CORS request headers from headers.
     if (m_guard == Guard::RequestNoCORS)
@@ -309,7 +310,7 @@ void Headers::remove_privileged_no_cors_headers()
     // 1. For each headerName of privileged no-CORS request-header names:
     for (auto const& header_name : privileged_no_cors_request_header_names) {
         // 1. Delete headerName from headers’s header list.
-        m_header_list.delete_(header_name.bytes());
+        m_header_list->delete_(header_name.bytes());
     }
 }
 

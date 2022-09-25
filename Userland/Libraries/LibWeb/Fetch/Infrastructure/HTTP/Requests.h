@@ -154,7 +154,7 @@ public:
     using ReservedClientType = Variant<Empty, HTML::Environment*, HTML::EnvironmentSettingsObject*>;
     using WindowType = Variant<Window, HTML::EnvironmentSettingsObject*>;
 
-    Request() = default;
+    Request();
 
     [[nodiscard]] ReadonlyBytes method() const { return m_method; }
     void set_method(ByteBuffer method) { m_method = move(method); }
@@ -162,9 +162,9 @@ public:
     [[nodiscard]] bool local_urls_only() const { return m_local_urls_only; }
     void set_local_urls_only(bool local_urls_only) { m_local_urls_only = local_urls_only; }
 
-    [[nodiscard]] HeaderList const& header_list() const { return m_header_list; }
-    [[nodiscard]] HeaderList& header_list() { return m_header_list; }
-    void set_header_list(HeaderList header_list) { m_header_list = move(header_list); }
+    [[nodiscard]] NonnullRefPtr<HeaderList> const& header_list() const { return m_header_list; }
+    [[nodiscard]] NonnullRefPtr<HeaderList>& header_list() { return m_header_list; }
+    void set_header_list(NonnullRefPtr<HeaderList> header_list) { m_header_list = move(header_list); }
 
     [[nodiscard]] bool unsafe_request() const { return m_unsafe_request; }
     void set_unsafe_request(bool unsafe_request) { m_unsafe_request = unsafe_request; }
@@ -304,7 +304,7 @@ private:
 
     // https://fetch.spec.whatwg.org/#concept-request-header-list
     // A request has an associated header list (a header list). Unless stated otherwise it is empty.
-    HeaderList m_header_list;
+    NonnullRefPtr<HeaderList> m_header_list;
 
     // https://fetch.spec.whatwg.org/#unsafe-request-flag
     // A request has an associated unsafe-request flag. Unless stated otherwise it is unset.
