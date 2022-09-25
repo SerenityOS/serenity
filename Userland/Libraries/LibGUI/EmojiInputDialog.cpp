@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/FuzzyMatch.h>
 #include <AK/LexicalPath.h>
 #include <AK/QuickSort.h>
 #include <AK/ScopeGuard.h>
@@ -221,6 +222,8 @@ void EmojiInputDialog::update_displayed_emoji()
     size_t rows = ceil_div(m_emojis.size(), columns);
     size_t index = 0;
 
+    auto query = m_search_box->text();
+
     for (size_t row = 0; row < rows && index < m_emojis.size(); ++row) {
         auto& horizontal_container = m_emojis_widget->add<Widget>();
         horizontal_container.set_preferred_height(SpecialDimension::Fit);
@@ -237,10 +240,12 @@ void EmojiInputDialog::update_displayed_emoji()
                 if (m_selected_category.has_value() && emoji.emoji.group != m_selected_category)
                     continue;
 
-                if (!emoji.emoji.name.is_empty())
-                    found_match = emoji.emoji.name.contains(m_search_box->text(), CaseSensitivity::CaseInsensitive);
-                else
-                    found_match = m_search_box->text().is_empty();
+                if (query.is_empty()) {
+                    found_match = true;
+                } else if (!emoji.emoji.name.is_empty()) {
+                    auto result = fuzzy_match(query, emoji.emoji.name);
+                    found_match = result.score > 0;
+                }
 
                 if (found_match)
                     horizontal_container.add_child(*emoji.button);

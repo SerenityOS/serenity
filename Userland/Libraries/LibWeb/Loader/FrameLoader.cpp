@@ -172,8 +172,10 @@ bool FrameLoader::load(LoadRequest& request, Type type)
     auto& url = request.url();
 
     if (type == Type::Navigation || type == Type::Reload) {
-        if (auto* page = browsing_context().page())
-            page->client().page_did_start_loading(url);
+        if (auto* page = browsing_context().page()) {
+            if (&page->top_level_browsing_context() == &m_browsing_context)
+                page->client().page_did_start_loading(url);
+        }
     }
 
     // https://fetch.spec.whatwg.org/#concept-fetch
@@ -275,7 +277,7 @@ void FrameLoader::load_html(StringView html, const AK::URL& url)
 
     auto parser = HTML::HTMLParser::create(document, html, "utf-8");
     parser->run(url);
-    browsing_context().set_active_document(&parser->document());
+    browsing_context().set_active_document(parser->document());
 }
 
 static String s_error_page_url = "file:///res/html/error.html";
@@ -398,6 +400,8 @@ void FrameLoader::resource_did_load()
     document->set_content_type(resource()->mime_type());
 
     browsing_context().set_active_document(document);
+    if (auto* page = browsing_context().page())
+        page->client().page_did_create_main_document();
 
     if (!parse_document(*document, resource()->encoded_data())) {
         load_error_page(url, "Failed to parse content.");

@@ -45,6 +45,11 @@ protected:
         : Node(document, type)
     {
     }
+
+    virtual void visit_edges(Cell::Visitor&) override;
+
+private:
+    JS::GCPtr<HTMLCollection> m_children;
 };
 
 template<>
@@ -65,5 +70,3 @@ inline void ParentNode::for_each_child(Callback callback)
 }
 
 }
-
-WRAPPER_HACK(ParentNode, Web::DOM)

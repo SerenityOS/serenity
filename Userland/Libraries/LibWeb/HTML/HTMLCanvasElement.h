@@ -59,5 +59,3 @@ private:
 };
 
 }
-
-WRAPPER_HACK(HTMLCanvasElement, Web::HTML)

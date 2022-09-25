@@ -43,14 +43,9 @@ LibC, namely:
 * The number of errno constants defined by us is given by the value of
   the `ELAST` macro.
 * Multithreading is implemented though the pthread library.
-* Aligned memory allocation is provided by the MSVCRT-like
-  `_aligned_{malloc,free}` functions.
-
-Adds a hack for a header not found error when including
-`<initializer_list>` inside the SerenityOS kernel.
-
-Makes libc++ use its builtin character type table instead of the one
-provided by LibC as it is incomplete.
+* Use libc++'s builtin character type table instead of the one provided
+  by LibC as there's a lot of extra porting work to convince the rest of
+  locale.cpp to use our character type table properly.
 
 ## `0006-compiler-rt-Build-crtbegin.o-crtend.o-for-SerenityOS.patch`
 
@@ -85,3 +80,4 @@ enough to linux to use the pre-canned InstrProfiling implementation.
 
 Curiously, enabling profiling for the SerenityOS target changes the ELF
 OS ABI for userspace binaries to 3, or GNU/Linux.
+

@@ -10,6 +10,7 @@
 #include <AK/WeakPtr.h>
 #include <LibCore/Forward.h>
 #include <LibJS/Forward.h>
+#include <LibJS/SafeFunction.h>
 #include <LibWeb/HTML/EventLoop/TaskQueue.h>
 
 namespace Web::HTML {
@@ -38,6 +39,11 @@ public:
 
     void spin_until(Function<bool()> goal_condition);
     void process();
+
+    // https://html.spec.whatwg.org/multipage/browsing-the-web.html#termination-nesting-level
+    size_t termination_nesting_level() const { return m_termination_nesting_level; }
+    void increment_termination_nesting_level() { ++m_termination_nesting_level; }
+    void decrement_termination_nesting_level() { --m_termination_nesting_level; }
 
     Task const* currently_running_task() const { return m_currently_running_task; }
 
@@ -96,12 +102,15 @@ private:
 
     // https://html.spec.whatwg.org/multipage/webappapis.html#backup-incumbent-settings-object-stack
     Vector<EnvironmentSettingsObject&> m_backup_incumbent_settings_object_stack;
+
+    // https://html.spec.whatwg.org/multipage/browsing-the-web.html#termination-nesting-level
+    size_t m_termination_nesting_level { 0 };
 };
 
 EventLoop& main_thread_event_loop();
-void old_queue_global_task_with_document(HTML::Task::Source, DOM::Document&, Function<void()> steps);
-void queue_global_task(HTML::Task::Source, JS::Object&, Function<void()> steps);
-void queue_a_microtask(DOM::Document*, Function<void()> steps);
+void old_queue_global_task_with_document(HTML::Task::Source, DOM::Document&, JS::SafeFunction<void()> steps);
+void queue_global_task(HTML::Task::Source, JS::Object&, JS::SafeFunction<void()> steps);
+void queue_a_microtask(DOM::Document*, JS::SafeFunction<void()> steps);
 void perform_a_microtask_checkpoint();
 
 }

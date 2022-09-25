@@ -14,8 +14,8 @@
 #include <LibWeb/Bindings/AbortSignalPrototype.h>
 #include <LibWeb/Bindings/AbstractRangeConstructor.h>
 #include <LibWeb/Bindings/AbstractRangePrototype.h>
-#include <LibWeb/Bindings/AttributeConstructor.h>
-#include <LibWeb/Bindings/AttributePrototype.h>
+#include <LibWeb/Bindings/AttrConstructor.h>
+#include <LibWeb/Bindings/AttrPrototype.h>
 #include <LibWeb/Bindings/AudioConstructor.h>
 #include <LibWeb/Bindings/BlobConstructor.h>
 #include <LibWeb/Bindings/BlobPrototype.h>
@@ -301,6 +301,8 @@
 #include <LibWeb/Bindings/PromiseRejectionEventPrototype.h>
 #include <LibWeb/Bindings/RangeConstructor.h>
 #include <LibWeb/Bindings/RangePrototype.h>
+#include <LibWeb/Bindings/ReadableStreamConstructor.h>
+#include <LibWeb/Bindings/ReadableStreamPrototype.h>
 #include <LibWeb/Bindings/ResizeObserverConstructor.h>
 #include <LibWeb/Bindings/ResizeObserverPrototype.h>
 #include <LibWeb/Bindings/SVGAnimatedLengthConstructor.h>
@@ -402,7 +404,7 @@
     ADD_WINDOW_OBJECT_INTERFACE(AbortController)                                                    \
     ADD_WINDOW_OBJECT_INTERFACE(AbortSignal)                                                        \
     ADD_WINDOW_OBJECT_INTERFACE(AbstractRange)                                                      \
-    ADD_WINDOW_OBJECT_INTERFACE(Attribute)                                                          \
+    ADD_WINDOW_OBJECT_INTERFACE(Attr)                                                               \
     ADD_WINDOW_OBJECT_INTERFACE(Blob)                                                               \
     ADD_WINDOW_OBJECT_INTERFACE(CDATASection)                                                       \
     ADD_WINDOW_OBJECT_INTERFACE(CSSConditionRule)                                                   \
@@ -543,6 +545,7 @@
     ADD_WINDOW_OBJECT_INTERFACE(ProgressEvent)                                                      \
     ADD_WINDOW_OBJECT_INTERFACE(PromiseRejectionEvent)                                              \
     ADD_WINDOW_OBJECT_INTERFACE(Range)                                                              \
+    ADD_WINDOW_OBJECT_INTERFACE(ReadableStream)                                                     \
     ADD_WINDOW_OBJECT_INTERFACE(ResizeObserver)                                                     \
     ADD_WINDOW_OBJECT_INTERFACE(Screen)                                                             \
     ADD_WINDOW_OBJECT_INTERFACE(Selection)                                                          \

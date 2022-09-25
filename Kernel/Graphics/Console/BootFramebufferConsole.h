@@ -30,6 +30,11 @@ public:
     BootFramebufferConsole(PhysicalAddress framebuffer_addr, size_t width, size_t height, size_t pitch);
 #endif
 
+private:
+    virtual void set_cursor(size_t x, size_t y) override;
+    virtual void hide_cursor() override;
+    virtual void show_cursor() override;
+
 protected:
     virtual void clear_glyph(size_t x, size_t y) override;
 

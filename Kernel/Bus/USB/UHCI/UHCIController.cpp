@@ -6,6 +6,7 @@
  */
 
 #include <AK/Platform.h>
+#include <Kernel/Arch/Delay.h>
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Bus/USB/UHCI/UHCIController.h>
 #include <Kernel/Bus/USB/USBRequest.h>
@@ -65,7 +66,8 @@ static constexpr u16 UHCI_NUMBER_OF_FRAMES = 1024;
 ErrorOr<NonnullLockRefPtr<UHCIController>> UHCIController::try_to_initialize(PCI::DeviceIdentifier const& pci_device_identifier)
 {
     // NOTE: This assumes that address is pointing to a valid UHCI controller.
-    auto controller = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) UHCIController(pci_device_identifier)));
+    auto registers_io_window = TRY(IOWindow::create_for_pci_device_bar(pci_device_identifier, PCI::HeaderType0BaseRegister::BAR4));
+    auto controller = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) UHCIController(pci_device_identifier, move(registers_io_window))));
     TRY(controller->initialize());
     return controller;
 }
@@ -73,7 +75,7 @@ ErrorOr<NonnullLockRefPtr<UHCIController>> UHCIController::try_to_initialize(PCI
 ErrorOr<void> UHCIController::initialize()
 {
     dmesgln("UHCI: Controller found {} @ {}", PCI::get_hardware_id(pci_address()), pci_address());
-    dmesgln("UHCI: I/O base {}", m_io_base);
+    dmesgln("UHCI: I/O base {}", m_registers_io_window);
     dmesgln("UHCI: Interrupt line: {}", interrupt_number());
 
     TRY(spawn_port_process());
@@ -82,10 +84,10 @@ ErrorOr<void> UHCIController::initialize()
     return start();
 }
 
-UNMAP_AFTER_INIT UHCIController::UHCIController(PCI::DeviceIdentifier const& pci_device_identifier)
+UNMAP_AFTER_INIT UHCIController::UHCIController(PCI::DeviceIdentifier const& pci_device_identifier, NonnullOwnPtr<IOWindow> registers_io_window)
     : PCI::Device(pci_device_identifier.address())
     , IRQHandler(pci_device_identifier.interrupt_line().value())
-    , m_io_base(PCI::get_BAR4(pci_address()) & ~1)
+    , m_registers_io_window(move(registers_io_window))
     , m_schedule_lock(LockRank::None)
 {
 }
@@ -633,7 +635,7 @@ void UHCIController::reset_port(u8 port)
     // Wait at least 50 ms for the port to reset.
     // This is T DRSTR in the USB 2.0 Specification Page 186 Table 7-13.
     constexpr u16 reset_delay = 50 * 1000;
-    IO::delay(reset_delay);
+    microseconds_delay(reset_delay);
 
     port_data &= ~UHCI_PORTSC_PORT_RESET;
     if (port == 0)
@@ -644,7 +646,7 @@ void UHCIController::reset_port(u8 port)
     // Wait 10 ms for the port to recover.
     // This is T RSTRCY in the USB 2.0 Specification Page 188 Table 7-14.
     constexpr u16 reset_recovery_delay = 10 * 1000;
-    IO::delay(reset_recovery_delay);
+    microseconds_delay(reset_recovery_delay);
 
     port_data = port == 0 ? read_portsc1() : read_portsc2();
     port_data |= UHCI_PORTSC_PORT_ENABLED;

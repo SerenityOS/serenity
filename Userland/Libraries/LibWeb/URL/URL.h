@@ -72,5 +72,3 @@ private:
 };
 
 }
-
-WRAPPER_HACK(URL, Web::URL)

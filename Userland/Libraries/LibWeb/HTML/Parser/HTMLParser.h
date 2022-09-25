@@ -68,7 +68,11 @@ public:
 
     HTMLTokenizer& tokenizer() { return m_tokenizer; }
 
+    // https://html.spec.whatwg.org/multipage/parsing.html#abort-a-parser
+    void abort();
+
     bool aborted() const { return m_aborted; }
+    bool stopped() const { return m_stop_parsing; }
 
     size_t script_nesting_level() const { return m_script_nesting_level; }
 
@@ -165,7 +169,11 @@ private:
     bool m_foster_parenting { false };
     bool m_frameset_ok { true };
     bool m_parsing_fragment { false };
+
+    // https://html.spec.whatwg.org/multipage/parsing.html#scripting-flag
+    // The scripting flag is set to "enabled" if scripting was enabled for the Document with which the parser is associated when the parser was created, and "disabled" otherwise.
     bool m_scripting_enabled { true };
+
     bool m_invoked_via_document_write { false };
     bool m_aborted { false };
     bool m_parser_pause_flag { false };

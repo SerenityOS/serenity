@@ -90,6 +90,7 @@ void Node::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_last_child.ptr());
     visitor.visit(m_next_sibling.ptr());
     visitor.visit(m_previous_sibling.ptr());
+    visitor.visit(m_child_nodes);
 
     for (auto& registered_observer : m_registered_observer_list)
         visitor.visit(registered_observer);
@@ -143,14 +144,18 @@ String Node::descendant_text_content() const
 String Node::text_content() const
 {
     // The textContent getter steps are to return the following, switching on the interface this implements:
+
     // If DocumentFragment or Element, return the descendant text content of this.
     if (is<DocumentFragment>(this) || is<Element>(this))
         return descendant_text_content();
-    else if (is<CharacterData>(this))
-        // If CharacterData, return this’s data.
-        return verify_cast<CharacterData>(this)->data();
 
-    // FIXME: If this is an Attr node, return this's value.
+    // If CharacterData, return this’s data.
+    if (is<CharacterData>(this))
+        return static_cast<CharacterData const&>(*this).data();
+
+    // If Attr node, return this's value.
+    if (is<Attr>(*this))
+        return static_cast<Attr const&>(*this).value();
 
     // Otherwise, return null
     return {};
@@ -165,16 +170,21 @@ void Node::set_text_content(String const& content)
     // If DocumentFragment or Element, string replace all with the given value within this.
     if (is<DocumentFragment>(this) || is<Element>(this)) {
         string_replace_all(content);
-    } else if (is<CharacterData>(this)) {
-        // If CharacterData, replace data with node this, offset 0, count this’s length, and data the given value.
+    }
+
+    // If CharacterData, replace data with node this, offset 0, count this’s length, and data the given value.
+    else if (is<CharacterData>(this)) {
+
         auto* character_data_node = verify_cast<CharacterData>(this);
         character_data_node->set_data(content);
 
         // FIXME: CharacterData::set_data is not spec compliant. Make this match the spec when set_data becomes spec compliant.
         //        Do note that this will make this function able to throw an exception.
-    } else {
-        // FIXME: If this is an Attr node, set an existing attribute value with this and the given value.
-        return;
+    }
+
+    // If Attr, set an existing attribute value with this and the given value.
+    if (is<Attr>(*this)) {
+        static_cast<Attr&>(*this).set_value(content);
     }
 
     // Otherwise, do nothing.
@@ -188,8 +198,8 @@ String Node::node_value() const
     // The nodeValue getter steps are to return the following, switching on the interface this implements:
 
     // If Attr, return this’s value.
-    if (is<Attribute>(this)) {
-        return verify_cast<Attribute>(this)->value();
+    if (is<Attr>(this)) {
+        return verify_cast<Attr>(this)->value();
     }
 
     // If CharacterData, return this’s data.
@@ -208,8 +218,8 @@ void Node::set_node_value(String const& value)
     // and then do as described below, switching on the interface this implements:
 
     // If Attr, set an existing attribute value with this and the given value.
-    if (is<Attribute>(this)) {
-        verify_cast<Attribute>(this)->set_value(value);
+    if (is<Attr>(this)) {
+        verify_cast<Attr>(this)->set_value(value);
     } else if (is<CharacterData>(this)) {
         // If CharacterData, replace data with node this, offset 0, count this’s length, and data the given value.
         verify_cast<CharacterData>(this)->set_data(value);
@@ -594,7 +604,7 @@ void Node::remove(bool suppress_observers)
     // 21. Run the children changed steps for parent.
     parent->children_changed();
 
-    document().invalidate_style();
+    document().invalidate_layout();
 }
 
 // https://dom.spec.whatwg.org/#concept-node-replace
@@ -733,7 +743,7 @@ JS::NonnullGCPtr<Node> Node::clone_node(Document* document, bool clone_children)
         document_type_copy->set_public_id(document_type->public_id());
         document_type_copy->set_system_id(document_type->system_id());
         copy = move(document_type_copy);
-    } else if (is<Attribute>(this)) {
+    } else if (is<Attr>(this)) {
         // FIXME:
         // Attr
         // Set copy’s namespace, namespace prefix, local name, and value to those of node.
@@ -852,11 +862,12 @@ ParentNode* Node::parent_or_shadow_host()
 
 JS::NonnullGCPtr<NodeList> Node::child_nodes()
 {
-    // FIXME: This should return the same LiveNodeList object every time,
-    //        but that would cause a reference cycle since NodeList refs the root.
-    return LiveNodeList::create(window(), *this, [this](auto& node) {
-        return is_parent_of(node);
-    });
+    if (!m_child_nodes) {
+        m_child_nodes = LiveNodeList::create(window(), *this, [this](auto& node) {
+            return is_parent_of(node);
+        });
+    }
+    return *m_child_nodes;
 }
 
 Vector<JS::Handle<Node>> Node::children_as_vector() const
@@ -898,19 +909,19 @@ u16 Node::compare_document_position(JS::GCPtr<Node> other)
     Node* node2 = this;
 
     // 3. Let attr1 and attr2 be null.
-    Attribute* attr1;
-    Attribute* attr2;
+    Attr* attr1;
+    Attr* attr2;
 
     // 4. If node1 is an attribute, then set attr1 to node1 and node1 to attr1’s element.
-    if (is<Attribute>(node1)) {
-        attr1 = verify_cast<Attribute>(node1);
+    if (is<Attr>(node1)) {
+        attr1 = verify_cast<Attr>(node1);
         node1 = const_cast<Element*>(attr1->owner_element());
     }
 
     // 5. If node2 is an attribute, then:
-    if (is<Attribute>(node2)) {
+    if (is<Attr>(node2)) {
         // 1. Set attr2 to node2 and node2 to attr2’s element.
-        attr2 = verify_cast<Attribute>(node2);
+        attr2 = verify_cast<Attr>(node2);
         node2 = const_cast<Element*>(attr2->owner_element());
 
         // 2. If attr1 and node1 are non-null, and node2 is node1, then:

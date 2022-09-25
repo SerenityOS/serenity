@@ -8,7 +8,7 @@
 #include <AK/QuickSort.h>
 #include <AK/Random.h>
 #include <LibConfig/Client.h>
-#include <LibCore/File.h>
+#include <LibCore/Stream.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Painter.h>
@@ -159,17 +159,24 @@ bool WordGame::is_in_dictionary(AK::StringView guess)
 void WordGame::read_words()
 {
     m_words.clear();
-    auto response = Core::File::open("/res/words.txt", Core::OpenMode::ReadOnly);
-    if (response.is_error()) {
+
+    auto try_load_words = [&]() -> ErrorOr<void> {
+        auto response = TRY(Core::Stream::File::open("/res/words.txt"sv, Core::Stream::OpenMode::Read));
+        auto words_file = TRY(Core::Stream::BufferedFile::create(move(response)));
+        Array<u8, 128> buffer;
+
+        while (!words_file->is_eof()) {
+            auto current_word = TRY(words_file->read_line(buffer));
+            if (!current_word.starts_with('#') and current_word.length() > 0)
+                m_words.ensure(current_word.length()).append(current_word.to_uppercase_string());
+        }
+
+        return {};
+    };
+
+    if (try_load_words().is_error()) {
         GUI::MessageBox::show(nullptr, "Could not read /res/words.txt.\nPlease ensure this file exists and restart MasterWord."sv, "MasterWord"sv);
         exit(0);
-    }
-    auto words_file = response.value();
-
-    while (!words_file->eof()) {
-        auto current_word = words_file->read_line();
-        if (!current_word.starts_with('#') and current_word.length() > 0)
-            m_words.ensure(current_word.length()).append(current_word.to_uppercase());
     }
 }
 

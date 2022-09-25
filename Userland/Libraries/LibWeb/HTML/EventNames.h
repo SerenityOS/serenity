@@ -57,7 +57,8 @@ namespace Web::HTML::EventNames {
     __ENUMERATE_HTML_EVENT(submit)                  \
     __ENUMERATE_HTML_EVENT(toggle)                  \
     __ENUMERATE_HTML_EVENT(unhandledrejection)      \
-    __ENUMERATE_HTML_EVENT(unload)
+    __ENUMERATE_HTML_EVENT(unload)                  \
+    __ENUMERATE_HTML_EVENT(visibilitychange)
 
 #define __ENUMERATE_HTML_EVENT(name) extern FlyString name;
 ENUMERATE_HTML_EVENTS

@@ -86,6 +86,7 @@ public:
     virtual CSS::PreferredColorScheme preferred_color_scheme() const = 0;
     virtual void page_did_change_title(String const&) { }
     virtual void page_did_start_loading(const AK::URL&) { }
+    virtual void page_did_create_main_document() { }
     virtual void page_did_finish_loading(const AK::URL&) { }
     virtual void page_did_change_selection() { }
     virtual void page_did_request_cursor_change(Gfx::StandardCursor) { }
@@ -110,6 +111,7 @@ public:
     virtual String page_did_request_cookie(const AK::URL&, Cookie::Source) { return {}; }
     virtual void page_did_set_cookie(const AK::URL&, Cookie::ParsedCookie const&, Cookie::Source) { }
     virtual void page_did_update_resource_count(i32) { }
+    virtual void page_did_close_browsing_context(HTML::BrowsingContext const&) { }
 
     virtual void request_file(NonnullRefPtr<FileRequest>&) = 0;
 

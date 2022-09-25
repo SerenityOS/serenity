@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021-2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -10,6 +10,7 @@
 #include <AK/NonnullOwnPtr.h>
 #include <AK/RefPtr.h>
 #include <LibJS/Heap/Handle.h>
+#include <LibJS/SafeFunction.h>
 #include <LibWeb/Forward.h>
 
 namespace Web::HTML {
@@ -30,7 +31,7 @@ public:
         JavaScriptEngine,
     };
 
-    static NonnullOwnPtr<Task> create(Source source, DOM::Document* document, Function<void()> steps)
+    static NonnullOwnPtr<Task> create(Source source, DOM::Document* document, JS::SafeFunction<void()> steps)
     {
         return adopt_own(*new Task(source, document, move(steps)));
     }
@@ -45,10 +46,10 @@ public:
     bool is_runnable() const;
 
 private:
-    Task(Source, DOM::Document*, Function<void()> steps);
+    Task(Source, DOM::Document*, JS::SafeFunction<void()> steps);
 
     Source m_source { Source::Unspecified };
-    Function<void()> m_steps;
+    JS::SafeFunction<void()> m_steps;
     JS::Handle<DOM::Document> m_document;
 };
 

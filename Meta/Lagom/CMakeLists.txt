@@ -263,6 +263,7 @@ file(GLOB AK_SOURCES CONFIGURE_DEPENDS "../../AK/*.cpp")
 file(GLOB LIBCORE_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibCore/*.cpp")
 if (ANDROID)
     list(REMOVE_ITEM LIBCORE_SOURCES "${CMAKE_CURRENT_LIST_DIR}/../../Userland/Libraries/LibCore/Account.cpp")
+    list(REMOVE_ITEM LIBCORE_SOURCES "${CMAKE_CURRENT_LIST_DIR}/../../Userland/Libraries/LibCore/LocalServer.cpp")
 endif()
 lagom_lib(Core core
     SOURCES ${AK_SOURCES} ${LIBCORE_SOURCES}
@@ -290,6 +291,13 @@ lagom_lib(TimeZone timezone
     SOURCES ${LIBTIMEZONE_SOURCES} ${TIME_ZONE_DATA_SOURCES}
 )
 target_compile_definitions(LibTimeZone PRIVATE ENABLE_TIME_ZONE_DATA=$<BOOL:${ENABLE_TIME_ZONE_DATABASE_DOWNLOAD}>)
+
+# LibIDL
+# This is used by the BindingsGenerator so needs to always be built.
+file(GLOB LIBIDL_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibIDL/*.cpp")
+lagom_lib(IDL idl
+    SOURCES ${LIBIDL_SOURCES}
+)
 
 # Manually install AK headers
 install(
@@ -388,6 +396,14 @@ if (BUILD_LAGOM)
     lagom_lib(GL gl
         SOURCES ${LIBGL_SOURCES} ${LIBGL_TEX_SOURCES}
         LIBS m LibGfx LibGPU)
+
+    # GUI
+    list(APPEND LIBGUI_SOURCES "../../Userland/Libraries/LibGUI/ModelIndex.cpp")
+    list(APPEND LIBGUI_SOURCES "../../Userland/Libraries/LibGUI/Model.cpp")
+    list(APPEND LIBGUI_SOURCES "../../Userland/Libraries/LibGUI/Icon.cpp")
+    lagom_lib(GUI gui
+        SOURCES ${LIBGUI_SOURCES}
+        LIBS LibGfx)
 
     # GUI-GML
     file(GLOB LIBGUI_GML_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibGUI/GML/*.cpp")
@@ -548,9 +564,9 @@ if (BUILD_LAGOM)
 
         lagom_lib(Web web
             SOURCES ${LIBWEB_SOURCES} ${LIBWEB_SUBDIR_SOURCES} ${LIBWEB_SUBSUBDIR_SOURCES} ${LIBWEB_SUBSUBSUBDIR_SOURCES} ${LIBWEB_GENERATED_SOURCES}
-            LIBS LibMarkdown LibGemini LibGfx LibGL LibJS LibTextCodec LibWasm LibXML
+            LIBS LibMarkdown LibGemini LibGfx LibGL LibIDL LibJS LibTextCodec LibWasm LibXML
         )
-        generate_js_wrappers(LibWeb)
+        generate_js_bindings(LibWeb)
     endif()
 
     # WebSocket
@@ -560,6 +576,12 @@ if (BUILD_LAGOM)
         SOURCES ${LIBWEBSOCKET_SOURCES} ${LIBWEBSOCKET_SUBDIR_SOURCES}
         LIBS LibCrypto LibTLS
     )
+
+    # WebView
+    list(APPEND LIBWEBVIEW_SOURCES "../../Userland/Libraries/LibWebView/DOMTreeModel.cpp")
+    lagom_lib(WebView webview
+        SOURCES ${LIBWEBVIEW_SOURCES}
+        LIBS LibGUI)
 
     # x86
     # FIXME: Excluding arm64 is a temporary hack to circumvent a build problem

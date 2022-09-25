@@ -44,5 +44,3 @@ template<>
 inline bool Node::fast_is<DocumentFragment>() const { return is_document_fragment(); }
 
 }
-
-WRAPPER_HACK(DocumentFragment, Web::DOM)

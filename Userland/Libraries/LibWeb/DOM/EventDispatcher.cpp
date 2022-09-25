@@ -8,7 +8,6 @@
 #include <AK/TypeCasts.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/FunctionObject.h>
-#include <LibWeb/Bindings/IDLAbstractOperations.h>
 #include <LibWeb/DOM/AbortSignal.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>
@@ -21,6 +20,7 @@
 #include <LibWeb/HTML/Scripting/ExceptionReporter.h>
 #include <LibWeb/HTML/Window.h>
 #include <LibWeb/UIEvents/MouseEvent.h>
+#include <LibWeb/WebIDL/AbstractOperations.h>
 
 namespace Web::DOM {
 
@@ -91,15 +91,14 @@ bool EventDispatcher::inner_invoke(Event& event, Vector<JS::Handle<DOM::DOMEvent
 
         // 8. If global is a Window object, then:
         if (is<HTML::Window>(global)) {
-            auto& bindings_window_global = verify_cast<HTML::Window>(global);
-            auto& window_impl = bindings_window_global.impl();
+            auto& window = verify_cast<HTML::Window>(global);
 
             // 1. Set currentEvent to global’s current event.
-            current_event = window_impl.current_event();
+            current_event = window.current_event();
 
             // 2. If invocationTargetInShadowTree is false, then set global’s current event to event.
             if (!invocation_target_in_shadow_tree)
-                window_impl.set_current_event(&event);
+                window.set_current_event(&event);
         }
 
         // 9. If listener’s passive is true, then set event’s in passive listener flag.
@@ -110,7 +109,7 @@ bool EventDispatcher::inner_invoke(Event& event, Vector<JS::Handle<DOM::DOMEvent
         // FIXME: These should be wrapped for us in call_user_object_operation, but it currently doesn't do that.
         auto* this_value = event.current_target().ptr();
         auto* wrapped_event = &event;
-        auto result = Bindings::IDL::call_user_object_operation(callback, "handleEvent", this_value, wrapped_event);
+        auto result = WebIDL::call_user_object_operation(callback, "handleEvent", this_value, wrapped_event);
 
         // If this throws an exception, then:
         if (result.is_error()) {
@@ -125,9 +124,8 @@ bool EventDispatcher::inner_invoke(Event& event, Vector<JS::Handle<DOM::DOMEvent
 
         // 12. If global is a Window object, then set global’s current event to currentEvent.
         if (is<HTML::Window>(global)) {
-            auto& bindings_window_global = verify_cast<HTML::Window>(global);
-            auto& window_impl = bindings_window_global.impl();
-            window_impl.set_current_event(current_event);
+            auto& window = verify_cast<HTML::Window>(global);
+            window.set_current_event(current_event);
         }
 
         // 13. If event’s stop immediate propagation flag is set, then return found.

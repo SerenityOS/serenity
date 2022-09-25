@@ -45,5 +45,3 @@ private:
 };
 
 }
-
-WRAPPER_HACK(MutationRecord, Web::DOM)

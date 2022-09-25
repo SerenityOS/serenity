@@ -4,11 +4,11 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#pragma once
+
 #include <AK/Atomic.h>
 #include <AK/Optional.h>
 #include <AK/Types.h>
-
-#pragma once
 
 namespace Kernel {
 

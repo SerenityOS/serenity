@@ -63,5 +63,3 @@ private:
 };
 
 }
-
-WRAPPER_HACK(TextMetrics, Web::HTML)

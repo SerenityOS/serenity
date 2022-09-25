@@ -1,7 +1,7 @@
-From 00ad6c7f79fffa5fe13a9e5b77ad06e987fde3e8 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Andreas Kling <awesomekling@gmail.com>
 Date: Fri, 5 Apr 2019 03:02:52 +0200
-Subject: [PATCH 1/6] Add a gcc driver for SerenityOS
+Subject: [PATCH] Add a gcc driver for SerenityOS
 
 This patch adds support for the `*-*-serenity` target to gcc.
 
@@ -19,17 +19,17 @@ Co-Authored-By: Brian Gianforcaro <bgianf@serenityos.org>
 Co-Authored-By: Philip Herron <herron.philip@googlemail.com>
 Co-Authored-By: Shannon Booth <shannon.ml.booth@gmail.com>
 ---
- gcc/config.gcc             | 20 ++++++++++++++++
+ gcc/config.gcc             | 20 +++++++++++++++
  gcc/config/i386/serenity.h |  7 ++++++
  gcc/config/serenity.h      | 51 ++++++++++++++++++++++++++++++++++++++
- gcc/config/serenity.opt    | 35 ++++++++++++++++++++++++++++
- 4 files changed, 109 insertions(+)
+ gcc/config/serenity.opt    | 35 ++++++++++++++++++++++++++
+ 4 files changed, 113 insertions(+)
  create mode 100644 gcc/config/i386/serenity.h
  create mode 100644 gcc/config/serenity.h
  create mode 100644 gcc/config/serenity.opt
 
 diff --git a/gcc/config.gcc b/gcc/config.gcc
-index c5064dd37..f8a468c6f 100644
+index c5064dd376660c192d5573997b4fc86b6b3e3838..f8a468c6f86c559eda37f780cf592245e42c78ac 100644
 --- a/gcc/config.gcc
 +++ b/gcc/config.gcc
 @@ -673,6 +673,13 @@ x86_cpus="generic intel"
@@ -68,7 +68,7 @@ index c5064dd37..f8a468c6f 100644
  	tm_file="${tm_file} aarch64/aarch64-elf.h aarch64/aarch64-errata.h aarch64/aarch64-elf-raw.h"
 diff --git a/gcc/config/i386/serenity.h b/gcc/config/i386/serenity.h
 new file mode 100644
-index 000000000..53a4b8e93
+index 0000000000000000000000000000000000000000..53a4b8e93b74b4808a4bfed91c4d5558217c584a
 --- /dev/null
 +++ b/gcc/config/i386/serenity.h
 @@ -0,0 +1,7 @@
@@ -81,7 +81,7 @@ index 000000000..53a4b8e93
 +#define PTRDIFF_TYPE    (TARGET_64BIT ? "long int" : "int")
 diff --git a/gcc/config/serenity.h b/gcc/config/serenity.h
 new file mode 100644
-index 000000000..dc2f5361e
+index 0000000000000000000000000000000000000000..17551aaa1a07e6c0b7365f98899375122ba12529
 --- /dev/null
 +++ b/gcc/config/serenity.h
 @@ -0,0 +1,51 @@
@@ -138,7 +138,7 @@ index 000000000..dc2f5361e
 +  } while(0);
 diff --git a/gcc/config/serenity.opt b/gcc/config/serenity.opt
 new file mode 100644
-index 000000000..2756a5575
+index 0000000000000000000000000000000000000000..2756a5575480449a2c46b9fdfde541ba2787a263
 --- /dev/null
 +++ b/gcc/config/serenity.opt
 @@ -0,0 +1,35 @@
@@ -177,6 +177,3 @@ index 000000000..2756a5575
 +Driver
 +
 +; This comment is to ensure we retain the blank line above.
--- 
-2.36.1
-

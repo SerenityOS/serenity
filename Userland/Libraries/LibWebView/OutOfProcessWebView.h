@@ -131,6 +131,8 @@ private:
     virtual void screen_rects_change_event(GUI::ScreenRectsChangeEvent&) override;
     virtual void focusin_event(GUI::FocusEvent&) override;
     virtual void focusout_event(GUI::FocusEvent&) override;
+    virtual void show_event(GUI::ShowEvent&) override;
+    virtual void hide_event(GUI::HideEvent&) override;
 
     // ^AbstractScrollableWidget
     virtual void did_scroll() override;

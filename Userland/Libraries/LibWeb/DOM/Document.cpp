@@ -61,6 +61,7 @@
 #include <LibWeb/HTML/Scripting/ExceptionReporter.h>
 #include <LibWeb/HTML/Scripting/WindowEnvironmentSettingsObject.h>
 #include <LibWeb/HTML/Window.h>
+#include <LibWeb/HighResolutionTime/CoarsenTime.h>
 #include <LibWeb/Layout/BlockFormattingContext.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
 #include <LibWeb/Layout/TreeBuilder.h>
@@ -98,7 +99,7 @@ static NonnullRefPtr<HTML::BrowsingContext> obtain_a_browsing_context_to_use_for
 
     // 3. Let newBrowsingContext be the result of creating a new top-level browsing context.
     VERIFY(browsing_context.page());
-    auto new_browsing_context = HTML::BrowsingContext::create_a_new_browsing_context(*browsing_context.page(), nullptr, nullptr);
+    auto new_browsing_context = HTML::BrowsingContext::create_a_new_top_level_browsing_context(*browsing_context.page());
 
     // FIXME: 4. If navigationCOOP's value is "same-origin-plurs-COEP", then set newBrowsingContext's group's
     //           cross-origin isolation mode to either "logical" or "concrete". The choice of which is implementation-defined.
@@ -216,16 +217,19 @@ JS::NonnullGCPtr<Document> Document::create_and_initialize(Type type, String con
     //    whose type is type,
     //    content type is contentType,
     //    origin is navigationParams's origin,
-    //    FIXME: policy container is navigationParams's policy container,
+    //    policy container is navigationParams's policy container,
     //    FIXME: permissions policy is permissionsPolicy,
-    //    FIXME: active sandboxing flag set is navigationParams's final sandboxing flag set,
+    //    active sandboxing flag set is navigationParams's final sandboxing flag set,
     //    FIXME: and cross-origin opener policy is navigationParams's cross-origin opener policy,
     //    FIXME: load timing info is loadTimingInfo,
-    //    FIXME: and navigation id is navigationParams's id.
+    //    and navigation id is navigationParams's id.
     auto document = Document::create(*window);
     document->m_type = type;
     document->m_content_type = content_type;
     document->set_origin(navigation_params.origin);
+    document->m_policy_container = navigation_params.policy_container;
+    document->m_active_sandboxing_flag_set = navigation_params.final_sandboxing_flag_set;
+    document->m_navigation_id = navigation_params.id;
 
     document->m_window = window;
     window->set_associated_document(*document);
@@ -240,9 +244,16 @@ JS::NonnullGCPtr<Document> Document::create_and_initialize(Type type, String con
 
     // 12. If navigationParams's request is non-null, then:
     if (navigation_params.request) {
-        // FIXME: 1. Set document's referrer to the empty string.
-        // FIXME: 2. Let referrer be navigationParams's request's referrer.
-        // FIXME: 3. If referrer is a URL record, then set document's referrer to the serialization of referrer.
+        // 1. Set document's referrer to the empty string.
+        document->m_referrer = String::empty();
+
+        // 2. Let referrer be navigationParams's request's referrer.
+        auto& referrer = navigation_params.request->referrer();
+
+        // 3. If referrer is a URL record, then set document's referrer to the serialization of referrer.
+        if (referrer.has<AK::URL>()) {
+            document->m_referrer = referrer.get<AK::URL>().serialize();
+        }
     }
 
     // FIXME: 13. Let historyHandling be navigationParams's history handling.
@@ -315,6 +326,15 @@ void Document::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_associated_inert_template_document.ptr());
     visitor.visit(m_pending_parsing_blocking_script.ptr());
     visitor.visit(m_history.ptr());
+
+    visitor.visit(m_applets);
+    visitor.visit(m_anchors);
+    visitor.visit(m_images);
+    visitor.visit(m_embeds);
+    visitor.visit(m_links);
+    visitor.visit(m_forms);
+    visitor.visit(m_scripts);
+    visitor.visit(m_all);
 
     for (auto& script : m_scripts_to_execute_when_parsing_has_finished)
         visitor.visit(script.ptr());
@@ -632,18 +652,6 @@ void Document::set_title(String const& title)
     }
 }
 
-void Document::attach_to_browsing_context(Badge<HTML::BrowsingContext>, HTML::BrowsingContext& browsing_context)
-{
-    m_browsing_context = browsing_context;
-}
-
-void Document::detach_from_browsing_context(Badge<HTML::BrowsingContext>, HTML::BrowsingContext& browsing_context)
-{
-    VERIFY(&browsing_context == m_browsing_context);
-    tear_down_layout_tree();
-    m_browsing_context = nullptr;
-}
-
 void Document::tear_down_layout_tree()
 {
     if (!m_layout_root)
@@ -808,7 +816,7 @@ void Document::update_layout()
 
     browsing_context()->set_needs_display();
 
-    if (browsing_context()->is_top_level()) {
+    if (browsing_context()->is_top_level() && browsing_context()->active_document() == this) {
         if (auto* page = this->page())
             page->client().page_did_layout();
     }
@@ -956,39 +964,42 @@ JS::NonnullGCPtr<HTMLCollection> Document::get_elements_by_class_name(FlyString 
 // https://html.spec.whatwg.org/multipage/obsolete.html#dom-document-applets
 JS::NonnullGCPtr<HTMLCollection> Document::applets()
 {
-    // FIXME: This should return the same HTMLCollection object every time,
-    //        but that would cause a reference cycle since HTMLCollection refs the root.
-    return HTMLCollection::create(*this, [](auto&) { return false; });
+    if (!m_applets)
+        m_applets = HTMLCollection::create(*this, [](auto&) { return false; });
+    return *m_applets;
 }
 
 // https://html.spec.whatwg.org/multipage/obsolete.html#dom-document-anchors
 JS::NonnullGCPtr<HTMLCollection> Document::anchors()
 {
-    // FIXME: This should return the same HTMLCollection object every time,
-    //        but that would cause a reference cycle since HTMLCollection refs the root.
-    return HTMLCollection::create(*this, [](Element const& element) {
-        return is<HTML::HTMLAnchorElement>(element) && element.has_attribute(HTML::AttributeNames::name);
-    });
+    if (!m_anchors) {
+        m_anchors = HTMLCollection::create(*this, [](Element const& element) {
+            return is<HTML::HTMLAnchorElement>(element) && element.has_attribute(HTML::AttributeNames::name);
+        });
+    }
+    return *m_anchors;
 }
 
 // https://html.spec.whatwg.org/multipage/dom.html#dom-document-images
 JS::NonnullGCPtr<HTMLCollection> Document::images()
 {
-    // FIXME: This should return the same HTMLCollection object every time,
-    //        but that would cause a reference cycle since HTMLCollection refs the root.
-    return HTMLCollection::create(*this, [](Element const& element) {
-        return is<HTML::HTMLImageElement>(element);
-    });
+    if (!m_images) {
+        m_images = HTMLCollection::create(*this, [](Element const& element) {
+            return is<HTML::HTMLImageElement>(element);
+        });
+    }
+    return *m_images;
 }
 
 // https://html.spec.whatwg.org/multipage/dom.html#dom-document-embeds
 JS::NonnullGCPtr<HTMLCollection> Document::embeds()
 {
-    // FIXME: This should return the same HTMLCollection object every time,
-    //        but that would cause a reference cycle since HTMLCollection refs the root.
-    return HTMLCollection::create(*this, [](Element const& element) {
-        return is<HTML::HTMLEmbedElement>(element);
-    });
+    if (!m_embeds) {
+        m_embeds = HTMLCollection::create(*this, [](Element const& element) {
+            return is<HTML::HTMLEmbedElement>(element);
+        });
+    }
+    return *m_embeds;
 }
 
 // https://html.spec.whatwg.org/multipage/dom.html#dom-document-plugins
@@ -1000,31 +1011,45 @@ JS::NonnullGCPtr<HTMLCollection> Document::plugins()
 // https://html.spec.whatwg.org/multipage/dom.html#dom-document-links
 JS::NonnullGCPtr<HTMLCollection> Document::links()
 {
-    // FIXME: This should return the same HTMLCollection object every time,
-    //        but that would cause a reference cycle since HTMLCollection refs the root.
-    return HTMLCollection::create(*this, [](Element const& element) {
-        return (is<HTML::HTMLAnchorElement>(element) || is<HTML::HTMLAreaElement>(element)) && element.has_attribute(HTML::AttributeNames::href);
-    });
+    if (!m_links) {
+        m_links = HTMLCollection::create(*this, [](Element const& element) {
+            return (is<HTML::HTMLAnchorElement>(element) || is<HTML::HTMLAreaElement>(element)) && element.has_attribute(HTML::AttributeNames::href);
+        });
+    }
+    return *m_links;
 }
 
 // https://html.spec.whatwg.org/multipage/dom.html#dom-document-forms
 JS::NonnullGCPtr<HTMLCollection> Document::forms()
 {
-    // FIXME: This should return the same HTMLCollection object every time,
-    //        but that would cause a reference cycle since HTMLCollection refs the root.
-    return HTMLCollection::create(*this, [](Element const& element) {
-        return is<HTML::HTMLFormElement>(element);
-    });
+    if (!m_forms) {
+        m_forms = HTMLCollection::create(*this, [](Element const& element) {
+            return is<HTML::HTMLFormElement>(element);
+        });
+    }
+    return *m_forms;
 }
 
 // https://html.spec.whatwg.org/multipage/dom.html#dom-document-scripts
 JS::NonnullGCPtr<HTMLCollection> Document::scripts()
 {
-    // FIXME: This should return the same HTMLCollection object every time,
-    //        but that would cause a reference cycle since HTMLCollection refs the root.
-    return HTMLCollection::create(*this, [](Element const& element) {
-        return is<HTML::HTMLScriptElement>(element);
-    });
+    if (!m_scripts) {
+        m_scripts = HTMLCollection::create(*this, [](Element const& element) {
+            return is<HTML::HTMLScriptElement>(element);
+        });
+    }
+    return *m_scripts;
+}
+
+// https://html.spec.whatwg.org/multipage/dom.html#dom-document-all
+JS::NonnullGCPtr<HTMLCollection> Document::all()
+{
+    if (!m_all) {
+        m_all = HTMLCollection::create(*this, [](Element const&) {
+            return true;
+        });
+    }
+    return *m_all;
 }
 
 Color Document::link_color() const
@@ -1390,23 +1415,34 @@ String Document::ready_state() const
     VERIFY_NOT_REACHED();
 }
 
-// https://html.spec.whatwg.org/#update-the-current-document-readiness
+// https://html.spec.whatwg.org/multipage/dom.html#update-the-current-document-readiness
 void Document::update_readiness(HTML::DocumentReadyState readiness_value)
 {
     // 1. If document's current document readiness equals readinessValue, then return.
     if (m_readiness == readiness_value)
         return;
 
-    // The spec doesn't actually mention updating the current readiness value.
-    // FIXME: https://github.com/whatwg/html/issues/7120
+    // 2. Set document's current document readiness to readinessValue.
     m_readiness = readiness_value;
 
-    // FIXME: 2. If document is associated with an HTML parser, then:
-    // FIXME:    1. If document is associated with an HTML parser, then:
-    // FIXME:    2. If readinessValue is "complete", and document's load timing info's DOM complete time is 0, then set document's load timing info's DOM complete time to now.
-    // FIXME:    3. Otherwise, if readinessValue is "interactive", and document's load timing info's DOM interactive time is 0, then set document's load timing info's DOM interactive time to now.
+    // 3. If document is associated with an HTML parser, then:
+    if (m_parser) {
+        // 1. Let now be the current high resolution time given document's relevant global object.
+        auto now = HTML::main_thread_event_loop().unsafe_shared_current_time();
 
-    // 3. Fire an event named readystatechange at document.
+        // 2. If readinessValue is "complete", and document's load timing info's DOM complete time is 0,
+        //    then set document's load timing info's DOM complete time to now.
+        if (readiness_value == HTML::DocumentReadyState::Complete && m_load_timing_info.dom_complete_time == 0) {
+            m_load_timing_info.dom_complete_time = now;
+        }
+        // 3. Otherwise, if readinessValue is "interactive", and document's load timing info's DOM interactive time is 0,
+        //    then set document's load timing info's DOM interactive time to now.
+        else if (readiness_value == HTML::DocumentReadyState::Interactive && m_load_timing_info.dom_interactive_time == 0) {
+            m_load_timing_info.dom_interactive_time = now;
+        }
+    }
+
+    // 4. Fire an event named readystatechange at document.
     dispatch_event(*Event::create(window(), HTML::EventNames::readystatechange));
 }
 
@@ -1428,24 +1464,31 @@ EventTarget* Document::get_parent(Event const& event)
     return &window();
 }
 
+// https://html.spec.whatwg.org/#completely-loaded
+bool Document::is_completely_loaded() const
+{
+    return m_completely_loaded_time.has_value();
+}
+
 // https://html.spec.whatwg.org/multipage/browsing-the-web.html#completely-finish-loading
 void Document::completely_finish_loading()
 {
     // 1. Assert: document's browsing context is non-null.
     VERIFY(browsing_context());
 
-    // FIXME: 2. Set document's completely loaded time to the current time.
+    // 2. Set document's completely loaded time to the current time.
+    m_completely_loaded_time = AK::Time::now_realtime();
 
     // 3. Let container be document's browsing context's container.
     auto container = JS::make_handle(browsing_context()->container());
 
-    // If container is an iframe element, then queue an element task on the DOM manipulation task source given container to run the iframe load event steps given container.
+    // 4. If container is an iframe element, then queue an element task on the DOM manipulation task source given container to run the iframe load event steps given container.
     if (container && is<HTML::HTMLIFrameElement>(*container)) {
         container->queue_an_element_task(HTML::Task::Source::DOMManipulation, [container]() mutable {
             run_iframe_load_event_steps(static_cast<HTML::HTMLIFrameElement&>(*container));
         });
     }
-    // Otherwise, if container is non-null, then queue an element task on the DOM manipulation task source given container to fire an event named load at container.
+    // 5. Otherwise, if container is non-null, then queue an element task on the DOM manipulation task source given container to fire an event named load at container.
     else if (container) {
         container->queue_an_element_task(HTML::Task::Source::DOMManipulation, [container]() mutable {
             container->dispatch_event(*DOM::Event::create(container->window(), HTML::EventNames::load));
@@ -1545,13 +1588,42 @@ Bindings::LocationObject* Document::location()
 // https://html.spec.whatwg.org/multipage/interaction.html#dom-document-hidden
 bool Document::hidden() const
 {
-    return false;
+    return visibility_state() == "hidden";
 }
 
 // https://html.spec.whatwg.org/multipage/interaction.html#dom-document-visibilitystate
 String Document::visibility_state() const
 {
-    return hidden() ? "hidden" : "visible";
+    switch (m_visibility_state) {
+    case HTML::VisibilityState::Hidden:
+        return "hidden"sv;
+    case HTML::VisibilityState::Visible:
+        return "visible"sv;
+    }
+    VERIFY_NOT_REACHED();
+}
+
+void Document::set_visibility_state(Badge<HTML::BrowsingContext>, HTML::VisibilityState visibility_state)
+{
+    m_visibility_state = visibility_state;
+}
+
+// https://html.spec.whatwg.org/multipage/interaction.html#update-the-visibility-state
+void Document::update_the_visibility_state(HTML::VisibilityState visibility_state)
+{
+    // 1. If document's visibility state equals visibilityState, then return.
+    if (m_visibility_state == visibility_state)
+        return;
+
+    // 2. Set document's visibility state to visibilityState.
+    m_visibility_state = visibility_state;
+
+    // FIXME: 3. Run any page visibility change steps which may be defined in other specifications, with visibility state and document.
+
+    // 4. Fire an event named visibilitychange at document, with its bubbles attribute initialized to true.
+    auto event = DOM::Event::create(window(), HTML::EventNames::visibilitychange);
+    event->set_bubbles(true);
+    dispatch_event(event);
 }
 
 // https://drafts.csswg.org/cssom-view/#run-the-resize-steps
@@ -1909,6 +1981,234 @@ String Document::domain() const
 void Document::set_domain(String const& domain)
 {
     dbgln("(STUBBED) Document::set_domain(domain='{}')", domain);
+}
+
+void Document::set_navigation_id(Optional<AK::String> navigation_id)
+{
+    m_navigation_id = move(navigation_id);
+}
+
+Optional<String> Document::navigation_id() const
+{
+    return m_navigation_id;
+}
+
+HTML::SandboxingFlagSet Document::active_sandboxing_flag_set() const
+{
+    return m_active_sandboxing_flag_set;
+}
+
+HTML::PolicyContainer Document::policy_container() const
+{
+    return m_policy_container;
+}
+
+// https://html.spec.whatwg.org/multipage/browsers.html#list-of-the-descendant-browsing-contexts
+Vector<NonnullRefPtr<HTML::BrowsingContext>> Document::list_of_descendant_browsing_contexts() const
+{
+    // 1. Let list be an empty list.
+    Vector<NonnullRefPtr<HTML::BrowsingContext>> list;
+
+    // 2. For each browsing context container container,
+    //    whose nested browsing context is non-null and whose shadow-including root is d, in shadow-including tree order:
+
+    // NOTE: We already store our browsing contexts in a tree structure, so we can simply collect all the descendants
+    //       of this document's browsing context.
+    if (browsing_context()) {
+        browsing_context()->for_each_in_subtree([&](auto& context) {
+            list.append(context);
+            return IterationDecision::Continue;
+        });
+    }
+
+    return list;
+}
+
+// https://html.spec.whatwg.org/multipage/window-object.html#discard-a-document
+void Document::discard()
+{
+    // 1. Set document's salvageable state to false.
+    m_salvageable = false;
+
+    // FIXME: 2. Run any unloading document cleanup steps for document that are defined by this specification and other applicable specifications.
+
+    // 3. Abort document.
+    abort();
+
+    // 4. Remove any tasks associated with document in any task source, without running those tasks.
+    HTML::main_thread_event_loop().task_queue().remove_tasks_matching([this](auto& task) {
+        return task.document() == this;
+    });
+
+    // 5. Discard all the child browsing contexts of document.
+    if (browsing_context()) {
+        browsing_context()->for_each_child([](HTML::BrowsingContext& child_browsing_context) {
+            child_browsing_context.discard();
+        });
+    }
+
+    // FIXME: 6. For each session history entry entry whose document is equal to document, set entry's document to null.
+
+    // 7. Set document's browsing context to null.
+    tear_down_layout_tree();
+    m_browsing_context = nullptr;
+
+    // FIXME: 8. Remove document from the owner set of each WorkerGlobalScope object whose set contains document.
+
+    // FIXME: 9. For each workletGlobalScope in document's worklet global scopes, terminate workletGlobalScope.
+}
+
+// https://html.spec.whatwg.org/multipage/browsing-the-web.html#abort-a-document
+void Document::abort()
+{
+    // 1. Abort the active documents of every child browsing context.
+    //    If this results in any of those Document objects having their salvageable state set to false,
+    //    then set document's salvageable state to false also.
+    if (browsing_context()) {
+        browsing_context()->for_each_child([this](HTML::BrowsingContext& child_browsing_context) {
+            if (auto* child_document = child_browsing_context.active_document()) {
+                child_document->abort();
+                if (!child_document->m_salvageable)
+                    m_salvageable = false;
+            }
+        });
+    }
+
+    // FIXME: 2. Cancel any instances of the fetch algorithm in the context of document,
+    //           discarding any tasks queued for them, and discarding any further data received from the network for them.
+    //           If this resulted in any instances of the fetch algorithm being canceled
+    //           or any queued tasks or any network data getting discarded,
+    //           then set document's salvageable state to false.
+
+    // 3. If document's navigation id is non-null, then:
+    if (m_navigation_id.has_value()) {
+        // 1. FIXME: Invoke WebDriver BiDi navigation aborted with document's browsing context,
+        //           and new WebDriver BiDi navigation status whose whose id is document's navigation id,
+        //           status is "canceled", and url is document's URL.
+
+        // 2. Set document's navigation id to null.
+        m_navigation_id = {};
+    }
+
+    // 4. If document has an active parser, then:
+    if (auto parser = active_parser()) {
+        // 1. Set document's active parser was aborted to true.
+        m_active_parser_was_aborted = true;
+
+        // 2. Abort that parser.
+        parser->abort();
+
+        // 3. Set document's salvageable state to false.
+        m_salvageable = false;
+    }
+}
+
+// https://html.spec.whatwg.org/multipage/dom.html#active-parser
+RefPtr<HTML::HTMLParser> Document::active_parser()
+{
+    if (!m_parser)
+        return nullptr;
+
+    if (m_parser->aborted() || m_parser->stopped())
+        return nullptr;
+
+    return m_parser;
+}
+
+void Document::set_browsing_context(HTML::BrowsingContext* browsing_context)
+{
+    m_browsing_context = browsing_context;
+}
+
+// https://html.spec.whatwg.org/multipage/browsing-the-web.html#unload-a-document
+void Document::unload(bool recursive_flag, Optional<DocumentUnloadTimingInfo> unload_timing_info)
+{
+    // 1. Increase the event loop's termination nesting level by one.
+    HTML::main_thread_event_loop().increment_termination_nesting_level();
+
+    // 2. Increase document's unload counter by 1.
+    m_unload_counter += 1;
+
+    // 3. If the user agent does not intend to keep document alive in a session history entry
+    //    (such that it can be reused later on history traversal), set document's salvageable state to false.
+    // FIXME: If we want to implement fast back/forward cache, this has to change.
+    m_salvageable = false;
+
+    // 4. If document's page showing flag is true:
+    if (m_page_showing) {
+        // 1. Set document's page showing flag to false.
+        m_page_showing = false;
+
+        // 2. Fire a page transition event named pagehide at document's relevant global object with document's salvageable state.
+        global_object().fire_a_page_transition_event(HTML::EventNames::pagehide, m_salvageable);
+
+        // 3. Update the visibility state of newDocument to "hidden".
+        update_the_visibility_state(HTML::VisibilityState::Hidden);
+    }
+
+    // 5. If unloadTimingInfo is not null,
+    if (unload_timing_info.has_value()) {
+        // then set unloadTimingInfo's unload event start time to the current high resolution time given newGlobal,
+        // coarsened given document's relevant settings object's cross-origin isolated capability.
+        unload_timing_info->unload_event_start_time = HighResolutionTime::coarsen_time(
+            HTML::main_thread_event_loop().unsafe_shared_current_time(),
+            relevant_settings_object().cross_origin_isolated_capability() == HTML::CanUseCrossOriginIsolatedAPIs::Yes);
+    }
+
+    // 6. If document's salvageable state is false,
+    if (!m_salvageable) {
+        // then fire an event named unload at document's relevant global object, with legacy target override flag set.
+        // FIXME: The legacy target override flag is currently set by a virtual override of dispatch_event()
+        //        We should reorganize this so that the flag appears explicitly here instead.
+        auto event = DOM::Event::create(global_object(), HTML::EventNames::unload);
+        global_object().dispatch_event(event);
+    }
+
+    // 7. If unloadTimingInfo is not null,
+    if (unload_timing_info.has_value()) {
+        // then set unloadTimingInfo's unload event end time to the current high resolution time given newGlobal,
+        // coarsened given document's relevant settings object's cross-origin isolated capability.
+        unload_timing_info->unload_event_end_time = HighResolutionTime::coarsen_time(
+            HTML::main_thread_event_loop().unsafe_shared_current_time(),
+            relevant_settings_object().cross_origin_isolated_capability() == HTML::CanUseCrossOriginIsolatedAPIs::Yes);
+    }
+
+    // 8. Decrease the event loop's termination nesting level by one.
+    HTML::main_thread_event_loop().decrement_termination_nesting_level();
+
+    // FIXME: 9. Set document's suspension time to the current high resolution time given document's relevant global object.
+
+    // FIXME: 10. Set document's suspended timer handles to the result of getting the keys for the map of active timers.
+
+    // FIXME: 11. Run any unloading document cleanup steps for document that are defined by this specification and other applicable specifications.
+
+    // 12. If the recursiveFlag is not set, then:
+    if (!recursive_flag) {
+        // 1. Let descendants be the list of the descendant browsing contexts of document.
+        auto descendants = list_of_descendant_browsing_contexts();
+
+        // 2. For each browsingContext in descendants:
+        for (auto browsing_context : descendants) {
+            JS::GCPtr<Document> active_document = browsing_context->active_document();
+            if (!active_document)
+                continue;
+
+            // 1. Unload the active document of browsingContext with the recursiveFlag set.
+            active_document->unload(true);
+
+            // 2. If the salvageable state of the active document of browsingContext is false,
+            //    then set the salvageable state of document to false also.
+            if (!active_document->m_salvageable)
+                m_salvageable = false;
+        }
+
+        // 3. If document's salvageable state is false, then discard document.
+        if (!m_salvageable)
+            discard();
+    }
+
+    // 13. Decrease document's unload counter by 1.
+    m_unload_counter -= 1;
 }
 
 }

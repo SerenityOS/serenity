@@ -18,6 +18,10 @@
 #cmakedefine01 BMP_DEBUG
 #endif
 
+#ifndef BINDINGS_GENERATOR_DEBUG
+#cmakedefine01 BINDINGS_GENERATOR_DEBUG
+#endif
+
 #ifndef CACHE_DEBUG
 #cmakedefine01 CACHE_DEBUG
 #endif
@@ -500,10 +504,6 @@
 
 #ifndef WINDOWMANAGER_DEBUG
 #cmakedefine01 WINDOWMANAGER_DEBUG
-#endif
-
-#ifndef WRAPPER_GENERATOR_DEBUG
-#cmakedefine01 WRAPPER_GENERATOR_DEBUG
 #endif
 
 #ifndef WSMESSAGELOOP_DEBUG

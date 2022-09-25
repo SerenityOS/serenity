@@ -1,11 +1,12 @@
 /*
  * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2022, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <LibCore/ArgsParser.h>
-#include <LibCore/File.h>
+#include <LibCore/Stream.h>
 #include <LibCore/System.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
@@ -16,9 +17,6 @@
 #include <LibGUI/Window.h>
 #include <LibGfx/Bitmap.h>
 #include <LibMain/Main.h>
-#include <serenity.h>
-#include <spawn.h>
-#include <stdio.h>
 
 class NetworkWidget final : public GUI::ImageWidget {
     C_OBJECT_ABSTRACT(NetworkWidget)
@@ -53,7 +51,7 @@ private:
         GUI::Process::spawn_or_show_error(window(), "/bin/SystemMonitor"sv, Array { "-t", "network" });
     }
 
-    virtual void update_widget()
+    void update_widget()
     {
         auto adapter_info = get_adapter_info();
 
@@ -74,7 +72,7 @@ private:
         update();
     }
 
-    virtual void notify_on_connect()
+    void notify_on_connect()
     {
         if (!m_notifications)
             return;
@@ -85,7 +83,7 @@ private:
         notification->show();
     }
 
-    virtual void notify_on_disconnect()
+    void notify_on_disconnect()
     {
         if (!m_notifications)
             return;
@@ -96,7 +94,7 @@ private:
         notification->show();
     }
 
-    virtual void set_connected(bool connected)
+    void set_connected(bool connected)
     {
         if (m_connected != connected) {
             connected ? notify_on_connect() : notify_on_disconnect();
@@ -105,33 +103,38 @@ private:
         m_connected = connected;
     }
 
-    virtual String get_adapter_info(bool include_loopback = false)
+    String get_adapter_info()
     {
         StringBuilder adapter_info;
 
-        auto file = Core::File::construct("/proc/net/adapters");
-        if (!file->open(Core::OpenMode::ReadOnly)) {
-            dbgln("Error: Could not open {}: {}", file->name(), file->error_string());
-            return adapter_info.to_string();
+        auto file_or_error = Core::Stream::File::open("/proc/net/adapters"sv, Core::Stream::OpenMode::Read);
+        if (file_or_error.is_error()) {
+            dbgln("Error: Could not open /proc/net/adapters: {}", file_or_error.error());
+            return "";
         }
 
-        auto file_contents = file->read_all();
-        auto json = JsonValue::from_string(file_contents);
+        auto file_contents_or_error = file_or_error.value()->read_all();
+        if (file_contents_or_error.is_error()) {
+            dbgln("Error: Could not read /proc/net/adapters: {}", file_contents_or_error.error());
+            return "";
+        }
+
+        auto json = JsonValue::from_string(file_contents_or_error.value());
 
         if (json.is_error())
             return adapter_info.to_string();
 
         int connected_adapters = 0;
-        json.value().as_array().for_each([&adapter_info, include_loopback, &connected_adapters](auto& value) {
+        json.value().as_array().for_each([&adapter_info, &connected_adapters](auto& value) {
             auto& if_object = value.as_object();
             auto ip_address = if_object.get("ipv4_address"sv).as_string_or("no IP");
             auto ifname = if_object.get("name"sv).to_string();
             auto link_up = if_object.get("link_up"sv).as_bool();
             auto link_speed = if_object.get("link_speed"sv).to_i32();
 
-            if (!include_loopback)
-                if (ifname == "loop")
-                    return;
+            if (ifname == "loop")
+                return;
+
             if (ip_address != "null")
                 connected_adapters++;
 

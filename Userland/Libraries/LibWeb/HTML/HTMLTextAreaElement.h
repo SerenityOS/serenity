@@ -53,5 +53,3 @@ private:
 };
 
 }
-
-WRAPPER_HACK(HTMLTextAreaElement, Web::HTML)

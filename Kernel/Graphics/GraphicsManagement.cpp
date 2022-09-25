@@ -5,7 +5,10 @@
  */
 
 #include <AK/Singleton.h>
-#include <Kernel/Arch/x86/IO.h>
+#include <Kernel/Arch/Delay.h>
+#if ARCH(I386) || ARCH(X86_64)
+#    include <Kernel/Arch/x86/Hypervisor/BochsDisplayConnector.h>
+#endif
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Bus/PCI/IDs.h>
 #include <Kernel/CommandLine.h>
@@ -41,44 +44,38 @@ UNMAP_AFTER_INIT GraphicsManagement::GraphicsManagement()
 
 void GraphicsManagement::disable_vga_emulation_access_permanently()
 {
-    SpinlockLocker locker(m_main_vga_lock);
-    disable_vga_text_mode_console_cursor();
-    IO::out8(0x3c4, 1);
-    u8 sr1 = IO::in8(0x3c5);
-    IO::out8(0x3c5, sr1 | 1 << 5);
-    IO::delay(1000);
-    m_vga_access_is_disabled = true;
+#if ARCH(I386) || ARCH(X86_64)
+    if (!m_vga_arbiter)
+        return;
+    m_vga_arbiter->disable_vga_emulation_access_permanently({});
+#endif
 }
 
 void GraphicsManagement::enable_vga_text_mode_console_cursor()
 {
-    SpinlockLocker locker(m_main_vga_lock);
-    if (m_vga_access_is_disabled)
+#if ARCH(I386) || ARCH(X86_64)
+    if (!m_vga_arbiter)
         return;
-    IO::out8(0x3D4, 0xA);
-    IO::out8(0x3D5, 0);
+    m_vga_arbiter->enable_vga_text_mode_console_cursor({});
+#endif
 }
 
 void GraphicsManagement::disable_vga_text_mode_console_cursor()
 {
-    SpinlockLocker locker(m_main_vga_lock);
-    if (m_vga_access_is_disabled)
+#if ARCH(I386) || ARCH(X86_64)
+    if (!m_vga_arbiter)
         return;
-    IO::out8(0x3D4, 0xA);
-    IO::out8(0x3D5, 0x20);
+    m_vga_arbiter->disable_vga_text_mode_console_cursor({});
+#endif
 }
 
-void GraphicsManagement::set_vga_text_mode_cursor(size_t console_width, size_t x, size_t y)
+void GraphicsManagement::set_vga_text_mode_cursor([[maybe_unused]] size_t console_width, [[maybe_unused]] size_t x, [[maybe_unused]] size_t y)
 {
-    SpinlockLocker locker(m_main_vga_lock);
-    if (m_vga_access_is_disabled)
+#if ARCH(I386) || ARCH(X86_64)
+    if (!m_vga_arbiter)
         return;
-    enable_vga_text_mode_console_cursor();
-    u16 value = y * console_width + x;
-    IO::out8(0x3d4, 0x0e);
-    IO::out8(0x3d5, MSB(value));
-    IO::out8(0x3d4, 0x0f);
-    IO::out8(0x3d5, LSB(value));
+    m_vga_arbiter->set_vga_text_mode_cursor({}, console_width, x, y);
+#endif
 }
 
 void GraphicsManagement::deactivate_graphical_mode()
@@ -188,16 +185,42 @@ UNMAP_AFTER_INIT bool GraphicsManagement::initialize()
      * a variant that is suitable for ISA VGA handling, and not PCI adapters.
      */
 
+    ScopeGuard assign_console_on_initialization_exit([this] {
+        if (!m_console) {
+            // If no graphics driver was instantiated and we had a bootloader provided
+            // framebuffer console we can simply re-use it.
+            if (auto* boot_console = g_boot_console.load()) {
+                m_console = *boot_console;
+                boot_console->unref(); // Drop the leaked reference from Kernel::init()
+            }
+        }
+    });
+#if ARCH(I386) || ARCH(X86_64)
+    m_vga_arbiter = VGAIOArbiter::must_create({});
+#endif
+
     auto graphics_subsystem_mode = kernel_command_line().graphics_subsystem_mode();
     if (graphics_subsystem_mode == CommandLine::GraphicsSubsystemMode::Disabled) {
         VERIFY(!m_console);
-        // If no graphics driver was instantiated and we had a bootloader provided
-        // framebuffer console we can simply re-use it.
-        if (auto* boot_console = g_boot_console.load()) {
-            m_console = *boot_console;
-            boot_console->unref(); // Drop the leaked reference from Kernel::init()
-        }
         return true;
+    }
+
+    // Note: Don't try to initialize an ISA Bochs VGA adapter if PCI hardware is
+    // present but the user decided to disable its usage nevertheless.
+    // Otherwise we risk using the Bochs VBE driver on a wrong physical address
+    // for the framebuffer.
+    if (PCI::Access::is_hardware_disabled() && !(graphics_subsystem_mode == CommandLine::GraphicsSubsystemMode::Limited && !multiboot_framebuffer_addr.is_null() && multiboot_framebuffer_type == MULTIBOOT_FRAMEBUFFER_TYPE_RGB)) {
+#if ARCH(I386) || ARCH(X86_64)
+        auto vga_isa_bochs_display_connector = BochsDisplayConnector::try_create_for_vga_isa_connector();
+        if (vga_isa_bochs_display_connector) {
+            dmesgln("Graphics: Using a Bochs ISA VGA compatible adapter");
+            MUST(vga_isa_bochs_display_connector->set_safe_mode_setting());
+            m_platform_board_specific_display_connector = vga_isa_bochs_display_connector;
+            dmesgln("Graphics: Invoking manual blanking with VGA ISA ports");
+            m_vga_arbiter->unblank_screen({});
+            return true;
+        }
+#endif
     }
 
     if (graphics_subsystem_mode == CommandLine::GraphicsSubsystemMode::Limited && !multiboot_framebuffer_addr.is_null() && multiboot_framebuffer_type == MULTIBOOT_FRAMEBUFFER_TYPE_RGB) {
@@ -229,15 +252,6 @@ UNMAP_AFTER_INIT bool GraphicsManagement::initialize()
     if (m_graphics_devices.is_empty() && !multiboot_framebuffer_addr.is_null() && multiboot_framebuffer_type == MULTIBOOT_FRAMEBUFFER_TYPE_RGB) {
         initialize_preset_resolution_generic_display_connector();
         return true;
-    }
-
-    if (!m_console) {
-        // If no graphics driver was instantiated and we had a bootloader provided
-        // framebuffer console we can simply re-use it.
-        if (auto* boot_console = g_boot_console.load()) {
-            m_console = *boot_console;
-            boot_console->unref(); // Drop the leaked reference from Kernel::init()
-        }
     }
 
     if (m_graphics_devices.is_empty()) {

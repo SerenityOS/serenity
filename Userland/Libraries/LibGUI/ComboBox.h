@@ -44,6 +44,9 @@ public:
     void set_editor_placeholder(StringView placeholder);
     String const& editor_placeholder() const;
 
+    int max_visible_items() const { return m_max_visible_items; }
+    void set_max_visible_items(int max) { m_max_visible_items = max; }
+
     Function<void(String const&, ModelIndex const&)> on_change;
     Function<void()> on_return_pressed;
 
@@ -63,6 +66,7 @@ private:
     Optional<ModelIndex> m_selected_index;
     bool m_only_allow_values_from_model { false };
     bool m_updating_model { false };
+    int m_max_visible_items { 15 };
 };
 
 }

@@ -140,5 +140,3 @@ private:
 };
 
 }
-
-WRAPPER_HACK(HTMLInputElement, Web::HTML)

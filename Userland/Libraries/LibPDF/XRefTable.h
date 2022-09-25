@@ -10,6 +10,7 @@
 #include <AK/RefCounted.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
+#include <LibPDF/Error.h>
 
 namespace PDF {
 

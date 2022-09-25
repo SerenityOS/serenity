@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <Kernel/Arch/x86/IO.h>
 #include <Kernel/Devices/CharacterDevice.h>
+#include <Kernel/IOWindow.h>
 
 namespace Kernel {
 
@@ -104,7 +104,7 @@ public:
     };
 
 private:
-    SerialDevice(IOAddress base_addr, unsigned minor);
+    SerialDevice(NonnullOwnPtr<IOWindow> registers_io_window, unsigned minor);
 
     friend class PCISerialDevice;
 
@@ -120,7 +120,7 @@ private:
     void set_modem_control(u8 modem_control);
     u8 get_line_status() const;
 
-    IOAddress m_base_addr;
+    mutable NonnullOwnPtr<IOWindow> m_registers_io_window;
     bool m_interrupt_enable { false };
     u8 m_fifo_control { 0 };
     Baud m_baud { Baud38400 };

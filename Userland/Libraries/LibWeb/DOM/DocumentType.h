@@ -45,5 +45,3 @@ template<>
 inline bool Node::fast_is<DocumentType>() const { return is_document_type(); }
 
 }
-
-WRAPPER_HACK(DocumentType, Web::DOM)

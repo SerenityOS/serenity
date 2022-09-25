@@ -10,7 +10,6 @@ namespace Kernel {
 
 enum class PageFaultResponse {
     ShouldCrash,
-    BusError,
     OutOfMemory,
     Continue,
 };

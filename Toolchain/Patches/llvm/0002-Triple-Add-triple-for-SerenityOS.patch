@@ -9,7 +9,7 @@ Subject: [PATCH] [Triple] Add triple for SerenityOS
  2 files changed, 9 insertions(+), 1 deletion(-)
 
 diff --git a/llvm/include/llvm/ADT/Triple.h b/llvm/include/llvm/ADT/Triple.h
-index ba4584dc6..7249849e8 100644
+index ba4584dc60faf1b9a170493bbe3075c08d5ff2a8..56e793cc0c0afa7c5f6bdd2e019a61dc518964f4 100644
 --- a/llvm/include/llvm/ADT/Triple.h
 +++ b/llvm/include/llvm/ADT/Triple.h
 @@ -219,7 +219,8 @@ public:
@@ -35,7 +35,7 @@ index ba4584dc6..7249849e8 100644
    bool isOSBinFormatELF() const {
      return getObjectFormat() == Triple::ELF;
 diff --git a/llvm/lib/Support/Triple.cpp b/llvm/lib/Support/Triple.cpp
-index 6696d158b..5292164d7 100644
+index 6696d158b2c1ae3d31f0819880ec0814f74a3a16..5292164d7aaed944c934a89fe3e809fc427218eb 100644
 --- a/llvm/lib/Support/Triple.cpp
 +++ b/llvm/lib/Support/Triple.cpp
 @@ -234,6 +234,7 @@ StringRef Triple::getOSTypeName(OSType Kind) {

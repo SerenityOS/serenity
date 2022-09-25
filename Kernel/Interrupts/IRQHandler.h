@@ -40,7 +40,7 @@ protected:
 private:
     bool m_shared_with_others { false };
     bool m_enabled { false };
-    LockRefPtr<IRQController> m_responsible_irq_controller;
+    NonnullLockRefPtr<IRQController> m_responsible_irq_controller;
 };
 
 }

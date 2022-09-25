@@ -26,5 +26,3 @@ private:
 };
 
 }
-
-WRAPPER_HACK(HTMLMeterElement, Web::HTML)

@@ -71,5 +71,3 @@ private:
 };
 
 }
-
-WRAPPER_HACK(CSSRuleList, Web::CSS)

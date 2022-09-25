@@ -90,5 +90,3 @@ public:
 };
 
 }
-
-WRAPPER_HACK(HTMLScriptElement, Web::HTML)

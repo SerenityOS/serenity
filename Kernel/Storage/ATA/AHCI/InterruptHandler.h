@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <Kernel/Arch/x86/IO.h>
 #include <Kernel/Devices/Device.h>
 #include <Kernel/Interrupts/IRQHandler.h>
 #include <Kernel/Library/LockRefPtr.h>

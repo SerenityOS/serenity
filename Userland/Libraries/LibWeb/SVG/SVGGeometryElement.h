@@ -28,5 +28,3 @@ protected:
 };
 
 }
-
-WRAPPER_HACK(SVGGeometryElement, Web::SVG)

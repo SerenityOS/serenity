@@ -43,5 +43,3 @@ private:
 };
 
 }
-
-WRAPPER_HACK(CanvasGradient, Web::HTML)

@@ -16,7 +16,6 @@
 #include <LibJS/Runtime/FunctionObject.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibTextCodec/Decoder.h>
-#include <LibWeb/Bindings/IDLAbstractOperations.h>
 #include <LibWeb/Bindings/XMLHttpRequestPrototype.h>
 #include <LibWeb/DOM/DOMException.h>
 #include <LibWeb/DOM/Document.h>
@@ -24,6 +23,7 @@
 #include <LibWeb/DOM/EventDispatcher.h>
 #include <LibWeb/DOM/ExceptionOr.h>
 #include <LibWeb/DOM/IDLEventListener.h>
+#include <LibWeb/Fetch/BodyInit.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP/Bodies.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP/Methods.h>
@@ -132,7 +132,7 @@ DOM::ExceptionOr<JS::Value> XMLHttpRequest::response()
     }
     // 6. Otherwise, if this’s response type is "blob", set this’s response object to a new Blob object representing this’s received bytes with type set to the result of get a final MIME type for this.
     else if (m_response_type == Bindings::XMLHttpRequestResponseType::Blob) {
-        auto blob_part = TRY(FileAPI::Blob::create(global_object(), m_received_bytes, get_final_mime_type().type()));
+        auto blob_part = FileAPI::Blob::create(global_object(), m_received_bytes, get_final_mime_type().type());
         auto blob = TRY(FileAPI::Blob::create(global_object(), Vector<FileAPI::BlobPart> { JS::make_handle(*blob_part) }));
         m_response_object = JS::Value(blob.ptr());
     }
@@ -268,64 +268,6 @@ Optional<StringView> XMLHttpRequest::get_final_encoding() const
     return encoding;
 }
 
-// https://fetch.spec.whatwg.org/#concept-bodyinit-extract
-// FIXME: The parameter 'body_init' should be 'typedef (ReadableStream or XMLHttpRequestBodyInit) BodyInit'. For now we just let it be 'XMLHttpRequestBodyInit'.
-static ErrorOr<Fetch::Infrastructure::BodyWithType> extract_body(XMLHttpRequestBodyInit const& body_init)
-{
-    // FIXME: 1. Let stream be object if object is a ReadableStream object. Otherwise, let stream be a new ReadableStream, and set up stream.
-    Fetch::Infrastructure::Body::ReadableStreamDummy stream {};
-    // FIXME: 2. Let action be null.
-    // 3. Let source be null.
-    Fetch::Infrastructure::Body::SourceType source {};
-    // 4. Let length be null.
-    Optional<u64> length {};
-    // 5. Let type be null.
-    Optional<ByteBuffer> type {};
-
-    // 6. Switch on object.
-    // FIXME: Still need to support BufferSource and FormData
-    TRY(body_init.visit(
-        [&](JS::Handle<FileAPI::Blob> const& blob) -> ErrorOr<void> {
-            // FIXME: Set action to this step: read object.
-            // Set source to object.
-            source = blob;
-            // Set length to object’s size.
-            length = blob->size();
-            // If object’s type attribute is not the empty byte sequence, set type to its value.
-            if (!blob->type().is_empty())
-                type = blob->type().to_byte_buffer();
-            return {};
-        },
-        [&](JS::Handle<JS::Object> const& buffer_source) -> ErrorOr<void> {
-            // Set source to a copy of the bytes held by object.
-            source = TRY(Bindings::IDL::get_buffer_source_copy(*buffer_source.cell()));
-            return {};
-        },
-        [&](JS::Handle<URL::URLSearchParams> const& url_search_params) -> ErrorOr<void> {
-            // Set source to the result of running the application/x-www-form-urlencoded serializer with object’s list.
-            source = url_search_params->to_string().to_byte_buffer();
-            // Set type to `application/x-www-form-urlencoded;charset=UTF-8`.
-            type = TRY(ByteBuffer::copy("application/x-www-form-urlencoded;charset=UTF-8"sv.bytes()));
-            return {};
-        },
-        [&](String const& scalar_value_string) -> ErrorOr<void> {
-            // NOTE: AK::String is always UTF-8.
-            // Set source to the UTF-8 encoding of object.
-            source = scalar_value_string.to_byte_buffer();
-            // Set type to `text/plain;charset=UTF-8`.
-            type = TRY(ByteBuffer::copy("text/plain;charset=UTF-8"sv.bytes()));
-            return {};
-        }));
-
-    // FIXME: 7. If source is a byte sequence, then set action to a step that returns source and length to source’s length.
-    // FIXME: 8. If action is non-null, then run these steps in in parallel:
-
-    // 9. Let body be a body whose stream is stream, source is source, and length is length.
-    auto body = Fetch::Infrastructure::Body { move(stream), move(source), move(length) };
-    // 10. Return (body, type).
-    return Fetch::Infrastructure::BodyWithType { .body = move(body), .type = move(type) };
-}
-
 // https://xhr.spec.whatwg.org/#dom-xmlhttprequest-setrequestheader
 DOM::ExceptionOr<void> XMLHttpRequest::set_request_header(String const& name_string, String const& value_string)
 {
@@ -453,8 +395,11 @@ DOM::ExceptionOr<void> XMLHttpRequest::open(String const& method_string, String 
 }
 
 // https://xhr.spec.whatwg.org/#dom-xmlhttprequest-send
-DOM::ExceptionOr<void> XMLHttpRequest::send(Optional<XMLHttpRequestBodyInit> body)
+DOM::ExceptionOr<void> XMLHttpRequest::send(Optional<Fetch::XMLHttpRequestBodyInit> body)
 {
+    auto& vm = this->vm();
+    auto& realm = *vm.current_realm();
+
     if (m_ready_state != ReadyState::Opened)
         return DOM::InvalidStateError::create(global_object(), "XHR readyState is not OPENED");
 
@@ -465,7 +410,7 @@ DOM::ExceptionOr<void> XMLHttpRequest::send(Optional<XMLHttpRequestBodyInit> bod
     if (m_method.is_one_of("GET"sv, "HEAD"sv))
         body = {};
 
-    auto body_with_type = body.has_value() ? TRY_OR_RETURN_OOM(global_object(), extract_body(body.value())) : Optional<Fetch::Infrastructure::BodyWithType> {};
+    auto body_with_type = body.has_value() ? TRY(Fetch::extract_body(realm, body.value())) : Optional<Fetch::Infrastructure::BodyWithType> {};
 
     AK::URL request_url = m_window->associated_document().parse_url(m_url.to_string());
     dbgln("XHR send from {} to {}", m_window->associated_document().url(), request_url);
@@ -493,8 +438,11 @@ DOM::ExceptionOr<void> XMLHttpRequest::send(Optional<XMLHttpRequestBodyInit> bod
                 auto byte_buffer = TRY(ByteBuffer::copy(blob->bytes()));
                 request.set_body(byte_buffer);
                 return {}; }, [](auto&) -> ErrorOr<void> { return {}; }));
-        if (body_with_type->type.has_value())
-            request.set_header("Content-Type", String { body_with_type->type->span() });
+        if (body_with_type->type.has_value()) {
+            // If type is non-null and this’s headers’s header list does not contain `Content-Type`, then append (`Content-Type`, type) to this’s headers.
+            if (!m_request_headers.contains("Content-Type"sv))
+                request.set_header("Content-Type", String { body_with_type->type->span() });
+        }
     }
     for (auto& it : m_request_headers)
         request.set_header(it.key, it.value);
@@ -571,12 +519,12 @@ DOM::ExceptionOr<void> XMLHttpRequest::send(Optional<XMLHttpRequestBodyInit> bod
     return {};
 }
 
-Bindings::CallbackType* XMLHttpRequest::onreadystatechange()
+WebIDL::CallbackType* XMLHttpRequest::onreadystatechange()
 {
     return event_handler_attribute(Web::XHR::EventNames::readystatechange);
 }
 
-void XMLHttpRequest::set_onreadystatechange(Bindings::CallbackType* value)
+void XMLHttpRequest::set_onreadystatechange(WebIDL::CallbackType* value)
 {
     set_event_handler_attribute(Web::XHR::EventNames::readystatechange, value);
 }

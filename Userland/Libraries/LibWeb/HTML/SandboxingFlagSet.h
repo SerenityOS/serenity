@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <AK/Types.h>
+
 namespace Web::HTML {
 
 // https://html.spec.whatwg.org/multipage/origin.html#sandboxing-flag-set

@@ -35,6 +35,7 @@ public:
     virtual ErrorOr<void> flush_framebuffer() = 0;
 
     virtual ErrorOr<void> set_head_mode_setting(GraphicsHeadModeSetting) = 0;
+    virtual ErrorOr<void> set_safe_head_mode_setting() = 0;
     virtual ErrorOr<GraphicsHeadModeSetting> get_head_mode_setting() = 0;
 
     bool m_can_device_flush_buffers { true };
@@ -43,6 +44,7 @@ public:
 
     Gfx::ARGB32* m_framebuffer { nullptr };
     size_t m_size_in_bytes { 0 };
+    size_t m_max_size_in_bytes { 0 };
     size_t m_back_buffer_offset { 0 };
 
     int m_pitch { 0 };

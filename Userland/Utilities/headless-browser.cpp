@@ -40,6 +40,8 @@
 #include <LibWeb/Loader/ResourceLoader.h>
 #include <LibWeb/Page/Page.h>
 #include <LibWeb/Painting/PaintableBox.h>
+#include <LibWeb/Platform/EventLoopPluginSerenity.h>
+#include <LibWeb/Platform/FontPluginSerenity.h>
 #include <LibWeb/Platform/ImageCodecPlugin.h>
 #include <LibWeb/WebSockets/WebSocket.h>
 #include <LibWebSocket/ConnectionInfo.h>
@@ -668,6 +670,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_positional_argument(url, "URL to open", "url", Core::ArgsParser::Required::Yes);
     args_parser.parse(arguments);
 
+    Web::Platform::EventLoopPlugin::install(*new Web::Platform::EventLoopPluginSerenity);
+    Web::Platform::FontPlugin::install(*new Web::Platform::FontPluginSerenity);
     Web::Platform::ImageCodecPlugin::install(*new ImageCodecPluginHeadless);
     Web::ResourceLoader::initialize(HeadlessRequestServer::create());
     Web::WebSockets::WebSocketClientManager::initialize(HeadlessWebSocketClientManager::create());

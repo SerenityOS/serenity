@@ -19,13 +19,12 @@ set(KERNEL_HEAP_SOURCES
 
 set(KERNEL_SOURCES
     AddressSanitizer.cpp
-    Bus/PCI/Controller/HostBridge.cpp
+    Bus/PCI/Controller/HostController.cpp
     Bus/PCI/Controller/MemoryBackedHostBridge.cpp
     Bus/PCI/Controller/VolumeManagementDevice.cpp
     Bus/PCI/Access.cpp
     Bus/PCI/API.cpp
     Bus/PCI/Device.cpp
-    Bus/PCI/Initializer.cpp
     Bus/USB/UHCI/UHCIController.cpp
     Bus/USB/UHCI/UHCIRootHub.cpp
     Bus/USB/USBConfiguration.cpp
@@ -40,7 +39,6 @@ set(KERNEL_SOURCES
     Bus/VirtIO/Device.cpp
     Bus/VirtIO/Queue.cpp
     Bus/VirtIO/RNG.cpp
-    CMOS.cpp
     CommandLine.cpp
     Coredump.cpp
     Credentials.cpp
@@ -60,20 +58,14 @@ set(KERNEL_SOURCES
     Devices/MemoryDevice.cpp
     Devices/NullDevice.cpp
     Devices/PCISerialDevice.cpp
-    Devices/PCSpeaker.cpp
     Devices/RandomDevice.cpp
     Devices/SelfTTYDevice.cpp
     Devices/SerialDevice.cpp
     Devices/ZeroDevice.cpp
-    Devices/HID/I8042Controller.cpp
     Devices/HID/HIDManagement.cpp
     Devices/HID/KeyboardDevice.cpp
     Devices/HID/MouseDevice.cpp
-    Devices/HID/PS2KeyboardDevice.cpp
-    Devices/HID/PS2MouseDevice.cpp
-    Devices/HID/VMWareMouseDevice.cpp
     GlobalProcessExposed.cpp
-    Graphics/Bochs/DisplayConnector.cpp
     Graphics/Bochs/GraphicsAdapter.cpp
     Graphics/Bochs/QEMUDisplayConnector.cpp
     Graphics/Console/BootFramebufferConsole.cpp
@@ -92,14 +84,13 @@ set(KERNEL_SOURCES
     Graphics/VirtIOGPU/Console.cpp
     Graphics/VirtIOGPU/GPU3DDevice.cpp
     Graphics/VirtIOGPU/GraphicsAdapter.cpp
+    IOWindow.cpp
     SanCov.cpp
     Storage/ATA/AHCI/Controller.cpp
     Storage/ATA/AHCI/Port.cpp
     Storage/ATA/AHCI/InterruptHandler.cpp
     Storage/ATA/GenericIDE/Controller.cpp
     Storage/ATA/GenericIDE/Channel.cpp
-    Storage/ATA/GenericIDE/ISAController.cpp
-    Storage/ATA/GenericIDE/PCIController.cpp
     Storage/ATA/ATAController.cpp
     Storage/ATA/ATADevice.cpp
     Storage/ATA/ATADiskDevice.cpp
@@ -167,14 +158,10 @@ set(KERNEL_SOURCES
     Firmware/BIOS.cpp
     Firmware/ACPI/Initialize.cpp
     Firmware/ACPI/Parser.cpp
-    Firmware/Hypervisor/VMWareBackdoor.cpp
     Firmware/MultiProcessor/Parser.cpp
     FutexQueue.cpp
-    Interrupts/APIC.cpp
     Interrupts/GenericInterruptHandler.cpp
-    Interrupts/IOAPIC.cpp
     Interrupts/IRQHandler.cpp
-    Interrupts/PIC.cpp
     Interrupts/SharedIRQHandler.cpp
     Interrupts/SpuriousInterruptHandler.cpp
     Interrupts/UnhandledInterruptHandler.cpp
@@ -226,7 +213,6 @@ set(KERNEL_SOURCES
     ProcessSpecificExposed.cpp
     ProcessGroup.cpp
     ProcessProcFSTraits.cpp
-    RTC.cpp
     Random.cpp
     Scheduler.cpp
     StdLib.cpp
@@ -313,28 +299,56 @@ set(KERNEL_SOURCES
     Thread.cpp
     ThreadBlockers.cpp
     ThreadTracer.cpp
-    Time/APICTimer.cpp
-    Time/HPET.cpp
-    Time/HPETComparator.cpp
-    Time/PIT.cpp
-    Time/RTC.cpp
     Time/TimeManagement.cpp
     TimerQueue.cpp
     UBSanitizer.cpp
     UserOrKernelBuffer.cpp
     WaitQueue.cpp
     WorkQueue.cpp
-    init.cpp
     kprintf.cpp
 )
 
 if ("${SERENITY_ARCH}" STREQUAL "i686" OR "${SERENITY_ARCH}" STREQUAL "x86_64")
     set(KERNEL_SOURCES
         ${KERNEL_SOURCES}
+        Arch/x86/init.cpp
+
         Arch/Processor.cpp
 
+        Arch/x86/common/Interrupts/APIC.cpp
+        Arch/x86/common/Interrupts/IOAPIC.cpp
+        Arch/x86/common/Interrupts/PIC.cpp
+
+        Arch/x86/common/CMOS.cpp
+        Arch/x86/common/DebugOutput.cpp
+        Arch/x86/common/Delay.cpp
+        Arch/x86/common/I8042Reboot.cpp
+        Arch/x86/common/PCSpeaker.cpp
+        Arch/x86/common/RTC.cpp
         Arch/x86/common/ScopedCritical.cpp
         Arch/x86/common/SmapDisabler.cpp
+        Arch/x86/common/Shutdown.cpp
+
+        Arch/x86/Hypervisor/BochsDisplayConnector.cpp
+        Arch/x86/Hypervisor/VMWareBackdoor.cpp
+
+        Arch/x86/ISABus/HID/PS2KeyboardDevice.cpp
+        Arch/x86/ISABus/HID/PS2MouseDevice.cpp
+        Arch/x86/ISABus/HID/VMWareMouseDevice.cpp
+        Arch/x86/ISABus/I8042Controller.cpp
+        Arch/x86/ISABus/IDEController.cpp
+        Arch/x86/ISABus/SerialDevice.cpp
+        Arch/x86/PCI/Controller/HostBridge.cpp
+        Arch/x86/PCI/IDELegacyModeController.cpp
+        Arch/x86/PCI/Initializer.cpp
+
+        Arch/x86/Time/APICTimer.cpp
+        Arch/x86/Time/HPET.cpp
+        Arch/x86/Time/HPETComparator.cpp
+        Arch/x86/Time/PIT.cpp
+        Arch/x86/Time/RTC.cpp
+
+        Arch/x86/VGA/IOArbiter.cpp
     )
 
     set(KERNEL_SOURCES
@@ -434,6 +448,7 @@ if (NOT "${SERENITY_ARCH}" STREQUAL "aarch64")
     )
 else()
     set(RPI_SOURCES
+        Arch/aarch64/RPi/DebugOutput.cpp
         Arch/aarch64/RPi/Framebuffer.cpp
         Arch/aarch64/RPi/GPIO.cpp
         Arch/aarch64/RPi/InterruptController.cpp

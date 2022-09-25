@@ -398,6 +398,24 @@ public:
     template<typename... Args>
     [[nodiscard]] ALWAYS_INLINE ThrowCompletionOr<Value> invoke(VM&, PropertyKey const& property_key, Args... args);
 
+    static constexpr FlatPtr extract_pointer_bits(u64 encoded)
+    {
+#ifdef AK_ARCH_32_BIT
+        // For 32-bit system the pointer fully fits so we can just return it directly.
+        static_assert(sizeof(void*) == sizeof(u32));
+        return static_cast<FlatPtr>(encoded & 0xffff'ffff);
+#elif ARCH(X86_64)
+        // For x86_64 the top 16 bits should be sign extending the "real" top bit (47th).
+        // So first shift the top 16 bits away then using the right shift it sign extends the top 16 bits.
+        return static_cast<FlatPtr>((static_cast<i64>(encoded << 16)) >> 16);
+#elif ARCH(AARCH64)
+        // For AArch64 the top 16 bits of the pointer should be zero.
+        return static_cast<FlatPtr>(encoded & 0xffff'ffff'ffffULL);
+#else
+#    error "Unknown architecture. Don't know whether pointers need to be sign-extended."
+#endif
+    }
+
 private:
     Value(u64 tag, u64 val)
     {
@@ -444,15 +462,7 @@ private:
     PointerType* extract_pointer() const
     {
         VERIFY(is_cell());
-
-        // For 32-bit system the pointer fully fits so we can just return it directly.
-        if constexpr (sizeof(PointerType*) < sizeof(u64))
-            return reinterpret_cast<PointerType*>(static_cast<u32>(m_value.encoded & 0xffffffff));
-
-        // For x86_64 the top 16 bits should be sign extending the "real" top bit (47th).
-        // So first shift the top 16 bits away then using the right shift it sign extends the top 16 bits.
-        u64 ptr_val = (u64)(((i64)(m_value.encoded << 16)) >> 16);
-        return reinterpret_cast<PointerType*>(ptr_val);
+        return reinterpret_cast<PointerType*>(extract_pointer_bits(m_value.encoded));
     }
 
     [[nodiscard]] ThrowCompletionOr<Value> invoke_internal(VM&, PropertyKey const&, Optional<MarkedVector<Value>> arguments);

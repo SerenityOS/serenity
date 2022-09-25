@@ -16,6 +16,7 @@ public:
     virtual ~ListView() override;
 
     int item_height() const { return font().preferred_line_height() + vertical_padding(); }
+    int item_count() const;
 
     bool alternating_row_colors() const { return m_alternating_row_colors; }
     void set_alternating_row_colors(bool b) { m_alternating_row_colors = b; }
@@ -53,14 +54,17 @@ private:
     virtual void keydown_event(KeyEvent&) override;
     virtual void resize_event(ResizeEvent&) override;
     virtual void mousemove_event(MouseEvent&) override;
+    virtual void layout_relevant_change_occured() override;
+
+    virtual Optional<UISize> calculated_min_size() const override;
 
     Gfx::IntRect content_rect(int row) const;
-    int item_count() const;
     void update_content_size();
 
     int m_horizontal_padding { 2 };
     int m_vertical_padding { 2 };
     int m_model_column { 0 };
+    int m_max_item_width { 0 };
     bool m_alternating_row_colors { true };
     bool m_hover_highlighting { false };
 };

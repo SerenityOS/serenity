@@ -53,11 +53,11 @@ public:
         Vector<String> stack;
     };
 
-    explicit Console(VM&);
+    explicit Console(Realm&);
 
     void set_client(ConsoleClient& client) { m_client = &client; }
 
-    VM& vm() const { return m_vm; }
+    Realm& realm() const { return m_realm; }
 
     MarkedVector<Value> vm_arguments();
 
@@ -87,7 +87,7 @@ private:
     ThrowCompletionOr<String> value_vector_to_string(MarkedVector<Value> const&);
     ThrowCompletionOr<String> format_time_since(Core::ElapsedTimer timer);
 
-    VM& m_vm;
+    Realm& m_realm;
     ConsoleClient* m_client { nullptr };
 
     HashMap<String, unsigned> m_counters;
@@ -107,6 +107,8 @@ public:
     ThrowCompletionOr<Value> logger(Console::LogLevel log_level, MarkedVector<Value> const& args);
     ThrowCompletionOr<MarkedVector<Value>> formatter(MarkedVector<Value> const& args);
     virtual ThrowCompletionOr<Value> printer(Console::LogLevel log_level, PrinterArguments) = 0;
+
+    virtual void add_css_style_to_current_message(StringView) {};
 
     virtual void clear() = 0;
     virtual void end_group() = 0;

@@ -149,8 +149,10 @@ UNMAP_AFTER_INIT PCIAccessLevel CommandLine::pci_access_level() const
     auto value = lookup("pci"sv).value_or("ecam"sv);
     if (value == "ecam"sv)
         return PCIAccessLevel::MemoryAddressing;
+#if ARCH(I386) || ARCH(X86_64)
     if (value == "io"sv)
         return PCIAccessLevel::IOAddressing;
+#endif
     if (value == "none"sv)
         return PCIAccessLevel::None;
     PANIC("Unknown PCI ECAM setting: {}", value);
@@ -299,9 +301,9 @@ NonnullOwnPtrVector<KString> CommandLine::userspace_init_args() const
 
     auto init_args = lookup("init_args"sv).value_or(""sv).split_view(';');
     if (!init_args.is_empty())
-        MUST(args.try_prepend(KString::must_create(userspace_init())));
+        MUST(args.try_prepend(MUST(KString::try_create(userspace_init()))));
     for (auto& init_arg : init_args)
-        args.append(KString::must_create(init_arg));
+        args.append(MUST(KString::try_create(init_arg)));
     return args;
 }
 

@@ -36,6 +36,7 @@ set(DIFF_DEBUG ON)
 set(DISASM_DUMP_DEBUG ON)
 set(DOUBLECLICK_DEBUG ON)
 set(DRAG_DEBUG ON)
+set(DUMP_REGIONS_ON_CRASH ON)
 set(DWARF_DEBUG ON)
 set(DYNAMIC_LOAD_DEBUG ON)
 set(E1000_DEBUG ON)
@@ -237,8 +238,8 @@ set(XML_PARSER_DEBUG ON)
 # set(DEBUG_STATUS_REGISTER ON)
 # False positive: DEFINE_DEBUG_REGISTER is used to define read/write methods for debug registers.
 # set(DEFINE_DEBUG_REGISTER ON)
-# Clogs up build: The WrapperGenerator stuff is run at compile time.
-# set(WRAPPER_GENERATOR_DEBUG ON)
+# Clogs up build: The BindingsGenerator stuff is run at compile time.
+# set(BINDINGS_GENERATOR_DEBUG ON)
 # Immediately finds violations during boot, shouldn't be discoverable by people who aren't working on fixing.
 # set(KMALLOC_VERIFY_NO_SPINLOCK_HELD ON)
 # False positive: CONSOLE_OUT_TO_BOCHS_DEBUG_PORT is a flag for ConsoleDevice, not a feature.

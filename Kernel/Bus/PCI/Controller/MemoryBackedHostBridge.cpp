@@ -5,7 +5,6 @@
  */
 
 #include <AK/ByteReader.h>
-#include <Kernel/Arch/x86/IO.h>
 #include <Kernel/Bus/PCI/Access.h>
 #include <Kernel/Bus/PCI/Controller/MemoryBackedHostBridge.h>
 
@@ -17,7 +16,7 @@ NonnullOwnPtr<MemoryBackedHostBridge> MemoryBackedHostBridge::must_create(Domain
 }
 
 MemoryBackedHostBridge::MemoryBackedHostBridge(PCI::Domain const& domain, PhysicalAddress start_address)
-    : HostBridge(domain)
+    : HostController(domain)
     , m_start_address(start_address)
 {
 }

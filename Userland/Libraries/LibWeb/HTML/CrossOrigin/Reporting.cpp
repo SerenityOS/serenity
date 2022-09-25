@@ -5,8 +5,8 @@
  */
 
 #include <LibJS/Runtime/PropertyKey.h>
-#include <LibWeb/Bindings/CrossOriginAbstractOperations.h>
 #include <LibWeb/HTML/BrowsingContext.h>
+#include <LibWeb/HTML/CrossOrigin/AbstractOperations.h>
 #include <LibWeb/HTML/CrossOrigin/Reporting.h>
 
 namespace Web::HTML {
@@ -15,7 +15,7 @@ namespace Web::HTML {
 void check_if_access_between_two_browsing_contexts_should_be_reported(BrowsingContext const& accessor, BrowsingContext const& accessed, JS::PropertyKey const& property_key, EnvironmentSettingsObject const& environment)
 {
     // 1. If P is not a cross-origin accessible window property name, then return.
-    if (!Bindings::is_cross_origin_accessible_window_property_name(property_key))
+    if (!is_cross_origin_accessible_window_property_name(property_key))
         return;
 
     // FIXME: 2. If accessor's active document's origin or any of its ancestors' active document's origins are not same origin with accessor's top-level browsing context's active document's origin, or if accessed's active document's origin or any of its ancestors' active document's origins are not same origin with accessed's top-level browsing context's active document's origin, then return.

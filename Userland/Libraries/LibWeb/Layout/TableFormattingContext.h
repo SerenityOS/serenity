@@ -24,10 +24,13 @@ public:
     ~TableFormattingContext();
 
     virtual void run(Box const&, LayoutMode) override;
+    virtual float automatic_content_height() const override;
 
 private:
     void calculate_column_widths(Box const& row, CSS::Length const& table_width, Vector<ColumnWidth>& column_widths);
     void layout_row(Box const& row, Vector<ColumnWidth>& column_widths);
+
+    float m_automatic_content_height { 0 };
 };
 
 }

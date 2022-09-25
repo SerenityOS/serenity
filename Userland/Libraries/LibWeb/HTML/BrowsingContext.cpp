@@ -6,9 +6,12 @@
 
 #include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/DOM/Document.h>
+#include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/HTMLCollection.h>
+#include <LibWeb/Fetch/Infrastructure/HTTP/Requests.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/BrowsingContextContainer.h>
+#include <LibWeb/HTML/BrowsingContextGroup.h>
 #include <LibWeb/HTML/CrossOrigin/CrossOriginOpenerPolicy.h>
 #include <LibWeb/HTML/EventLoop/EventLoop.h>
 #include <LibWeb/HTML/HTMLAnchorElement.h>
@@ -16,6 +19,7 @@
 #include <LibWeb/HTML/SandboxingFlagSet.h>
 #include <LibWeb/HTML/Scripting/WindowEnvironmentSettingsObject.h>
 #include <LibWeb/HTML/Window.h>
+#include <LibWeb/HighResolutionTime/CoarsenTime.h>
 #include <LibWeb/Layout/BreakNode.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
 #include <LibWeb/Layout/TextNode.h>
@@ -86,8 +90,18 @@ HTML::Origin determine_the_origin(BrowsingContext const& browsing_context, Optio
     return url_origin(*url);
 }
 
+// https://html.spec.whatwg.org/multipage/browsers.html#creating-a-new-top-level-browsing-context
+NonnullRefPtr<BrowsingContext> BrowsingContext::create_a_new_top_level_browsing_context(Web::Page& page)
+{
+    // 1. Let group be the result of creating a new browsing context group.
+    auto group = BrowsingContextGroup::create_a_new_browsing_context_group(page);
+
+    // 2. Return group's browsing context set[0].
+    return *group->browsing_context_set().begin();
+}
+
 // https://html.spec.whatwg.org/multipage/browsers.html#creating-a-new-browsing-context
-NonnullRefPtr<BrowsingContext> BrowsingContext::create_a_new_browsing_context(Page& page, JS::GCPtr<DOM::Document> creator, JS::GCPtr<DOM::Element> embedder)
+NonnullRefPtr<BrowsingContext> BrowsingContext::create_a_new_browsing_context(Page& page, JS::GCPtr<DOM::Document> creator, JS::GCPtr<DOM::Element> embedder, BrowsingContextGroup&)
 {
     // 1. Let browsingContext be a new browsing context.
     BrowsingContextContainer* container = (embedder && is<BrowsingContextContainer>(*embedder)) ? static_cast<BrowsingContextContainer*>(embedder.ptr()) : nullptr;
@@ -145,8 +159,12 @@ NonnullRefPtr<BrowsingContext> BrowsingContext::create_a_new_browsing_context(Pa
         top_level_creation_url,
         top_level_origin);
 
-    // FIXME: 12. Let loadTimingInfo be a new document load timing info with its navigation start time set to the result of calling
-    //            coarsen time with unsafeContextCreationTime and the new environment settings object's cross-origin isolated capability.
+    // 12. Let loadTimingInfo be a new document load timing info with its navigation start time set to the result of calling
+    //     coarsen time with unsafeContextCreationTime and the new environment settings object's cross-origin isolated capability.
+    auto load_timing_info = DOM::DocumentLoadTimingInfo();
+    load_timing_info.navigation_start_time = HighResolutionTime::coarsen_time(
+        unsafe_context_creation_time,
+        verify_cast<WindowEnvironmentSettingsObject>(window->realm().host_defined())->cross_origin_isolated_capability() == CanUseCrossOriginIsolatedAPIs::Yes);
 
     // 13. Let coop be a new cross-origin opener policy.
     auto coop = CrossOriginOpenerPolicy {};
@@ -166,7 +184,7 @@ NonnullRefPtr<BrowsingContext> BrowsingContext::create_a_new_browsing_context(Pa
     //     FIXME: active sandboxing flag set is sandboxFlags,
     //     FIXME: permissions policy is permissionsPolicy,
     //     cross-origin opener policy is coop,
-    //     FIXME: load timing info is loadTimingInfo,
+    //     load timing info is loadTimingInfo,
     //     FIXME: navigation id is null,
     //     and which is ready for post-load tasks.
     auto document = DOM::Document::create(*window);
@@ -180,6 +198,7 @@ NonnullRefPtr<BrowsingContext> BrowsingContext::create_a_new_browsing_context(Pa
     document->set_origin(origin);
     document->set_url(AK::URL("about:blank"));
     document->set_cross_origin_opener_policy(coop);
+    document->set_load_timing_info(load_timing_info);
     document->set_ready_for_post_load_tasks(true);
 
     // FIXME: 16. Assert: document's URL and document's relevant settings object's creation URL are about:blank.
@@ -194,7 +213,7 @@ NonnullRefPtr<BrowsingContext> BrowsingContext::create_a_new_browsing_context(Pa
     document->append_child(html_node);
 
     // 19. Set the active document of browsingContext to document.
-    browsing_context->m_active_document = JS::make_handle(*document);
+    browsing_context->set_active_document(*document);
 
     // 20. If browsingContext's creator URL is non-null, then set document's referrer to the serialization of it.
     if (browsing_context->m_creator_url.has_value()) {
@@ -211,10 +230,8 @@ NonnullRefPtr<BrowsingContext> BrowsingContext::create_a_new_browsing_context(Pa
         .policy_container = {},
         .scroll_restoration_mode = {},
         .browsing_context_name = {},
+        .original_source_browsing_context = {},
     });
-
-    // Non-standard:
-    document->attach_to_browsing_context({}, browsing_context);
 
     // 23. Completely finish loading document.
     document->completely_finish_loading();
@@ -272,36 +289,29 @@ bool BrowsingContext::is_focused_context() const
     return m_page && &m_page->focused_context() == this;
 }
 
-void BrowsingContext::set_active_document(DOM::Document* document)
+// https://html.spec.whatwg.org/multipage/browsers.html#set-the-active-document
+void BrowsingContext::set_active_document(JS::NonnullGCPtr<DOM::Document> document)
 {
-    if (m_active_document.ptr() == document)
-        return;
+    // 1. Let window be document's relevant global object.
+    auto& window = verify_cast<HTML::Window>(relevant_global_object(document));
 
-    m_cursor_position = {};
+    // 2. Set document's visibility state to browsingContext's top-level browsing context's system visibility state.
+    document->set_visibility_state({}, top_level_browsing_context().system_visibility_state());
 
-    if (m_active_document)
-        m_active_document->detach_from_browsing_context({}, *this);
+    // 3. Set browsingContext's active window to window.
+    m_active_window = window;
 
-    // https://html.spec.whatwg.org/multipage/browsing-the-web.html#resetBCName
-    // FIXME: The rest of set_active_document does not follow the spec very closely, this just implements the
-    //   relevant steps for resetting the browsing context name and should be updated closer to the spec once
-    //   the other parts of history handling/navigating are implemented
-    // 3. If newDocument's origin is not same origin with the current entry's document's origin, then:
-    if (!document || !m_active_document || !document->origin().is_same_origin(m_active_document->origin())) {
-        // 3. If the browsing context is a top-level browsing context, but not an auxiliary browsing context
-        //    whose disowned is false, then set the browsing context's name to the empty string.
-        // FIXME: this is not checking the second part of the condition yet
-        if (is_top_level())
-            m_name = String::empty();
-    }
+    // 4. Set window's associated Document to document.
+    window.set_associated_document(document);
 
-    m_active_document = JS::make_handle(document);
+    // 5. Set window's relevant settings object's execution ready flag.
+    relevant_settings_object(window).execution_ready = true;
 
-    if (m_active_document) {
-        m_active_document->attach_to_browsing_context({}, *this);
-        if (m_page && is_top_level())
-            m_page->client().page_did_change_title(m_active_document->title());
-    }
+    // AD-HOC:
+    document->set_browsing_context(this);
+
+    if (m_page && is_top_level())
+        m_page->client().page_did_change_title(document->title());
 }
 
 void BrowsingContext::set_viewport_rect(Gfx::IntRect const& rect)
@@ -778,12 +788,26 @@ bool BrowsingContext::still_on_its_initial_about_blank_document() const
 
 DOM::Document const* BrowsingContext::active_document() const
 {
-    return m_active_document.cell();
+    if (!m_active_window)
+        return nullptr;
+    return &m_active_window->associated_document();
 }
 
 DOM::Document* BrowsingContext::active_document()
 {
-    return m_active_document.cell();
+    if (!m_active_window)
+        return nullptr;
+    return &m_active_window->associated_document();
+}
+
+HTML::Window* BrowsingContext::active_window()
+{
+    return m_active_window;
+}
+
+HTML::Window const* BrowsingContext::active_window() const
+{
+    return m_active_window;
 }
 
 void BrowsingContext::scroll_offset_did_change()
@@ -803,6 +827,518 @@ void BrowsingContext::scroll_offset_did_change()
 
     // 3. Append doc to doc’s pending scroll event targets.
     doc->pending_scroll_event_targets().append(*doc);
+}
+
+BrowsingContextGroup* BrowsingContext::group()
+{
+    return m_group;
+}
+
+void BrowsingContext::set_group(BrowsingContextGroup* group)
+{
+    m_group = group;
+}
+
+// https://html.spec.whatwg.org/multipage/browsers.html#bcg-remove
+void BrowsingContext::remove()
+{
+    // 1. Assert: browsingContext's group is non-null, because a browsing context only gets discarded once.
+    VERIFY(group());
+
+    // 2. Let group be browsingContext's group.
+    NonnullRefPtr<BrowsingContextGroup> group = *this->group();
+
+    // 3. Set browsingContext's group to null.
+    set_group(nullptr);
+
+    // 4. Remove browsingContext from group's browsing context set.
+    group->browsing_context_set().remove(*this);
+
+    // 5. If group's browsing context set is empty, then remove group from the user agent's browsing context group set.
+    // NOTE: This is done by ~BrowsingContextGroup() when the refcount reaches 0.
+}
+
+// https://html.spec.whatwg.org/multipage/browsing-the-web.html#navigate
+DOM::ExceptionOr<void> BrowsingContext::navigate(
+    Fetch::Infrastructure::Request resource,
+    BrowsingContext& source_browsing_context,
+    bool exceptions_enabled,
+    HistoryHandlingBehavior history_handling,
+    Optional<PolicyContainer> history_policy_container,
+    String navigation_type,
+    Optional<String> navigation_id,
+    Function<void(NonnullOwnPtr<Fetch::Infrastructure::Response>)> process_response_end_of_body)
+{
+    // 1. If resource is a URL, then set resource to a new request whose URL is resource.
+    // NOTE: This function only accepts resources that are already a request, so this is irrelevant.
+
+    // 2. If resource is a request and historyHandling is "reload", then set resource's reload-navigation flag.
+    if (history_handling == HistoryHandlingBehavior::Reload)
+        resource.set_reload_navigation(true);
+
+    // 3. If the source browsing context is not allowed to navigate browsingContext, then:
+    if (!source_browsing_context.is_allowed_to_navigate(*this)) {
+        // 1. If exceptionsEnabled is given and is true, then throw a "SecurityError" DOMException.
+        if (exceptions_enabled) {
+            VERIFY(source_browsing_context.active_document());
+            return DOM::SecurityError::create(source_browsing_context.active_document()->global_object(), "Source browsing context not allowed to navigate"sv);
+        }
+
+        // FIXME: 2. Otherwise, the user agent may instead offer to open resource in a new top-level browsing context
+        //           or in the top-level browsing context of the source browsing context, at the user's option,
+        //           in which case the user agent must navigate that designated top-level browsing context
+        //           to resource as if the user had requested it independently.
+    }
+
+    // 4. If navigationId is null:
+    if (!navigation_id.has_value()) {
+        // 1. If historyHandling is "reload", and browsingContext's active document's navigation id is not null,
+        if (history_handling == HistoryHandlingBehavior::Reload && active_document()->navigation_id().has_value()) {
+            // let navigationId be browsingContext's active document's navigation id.
+            navigation_id = active_document()->navigation_id();
+        } else {
+            // Otherwise let navigation id be the result of generating a random UUID. [UUID]
+            // FIXME: Generate a UUID.
+            navigation_id = "FIXME";
+        }
+    }
+
+    // FIXME: 5. If browsingContext's active document's unload counter is greater than 0,
+    //           then invoke WebDriver BiDi navigation failed
+    //           with a WebDriver BiDi navigation status whose id is navigationId, status is "canceled", and url is resource's url
+    //           and return.
+
+    // 6. If historyHandling is "default", and any of the following are true:
+    //    - browsingContext is still on its initial about:blank Document
+    //    - resource is a request whose URL equals browsingContext's active document's URL
+    //    - resource is a request whose URL's scheme is "javascript"
+    if (history_handling == HistoryHandlingBehavior::Default
+        && (still_on_its_initial_about_blank_document()
+            || resource.url().equals(active_document()->url())
+            || resource.url().scheme() == "javascript"sv)) {
+        // then set historyHandling to "replace".
+        history_handling = HistoryHandlingBehavior::Replace;
+    }
+
+    // 7. If historyHandling is not "reload", resource is a request,
+    //    resource's URL equals browsingContext's active document's URL with exclude fragments set to true,
+    //    and resource's URL's fragment is non-null, then:
+    if (history_handling != HistoryHandlingBehavior::Reload
+        && resource.url().equals(active_document()->url(), AK::URL::ExcludeFragment::Yes)
+        && !resource.url().fragment().is_null()) {
+        // 1. Navigate to a fragment given browsingContext, resource's URL, historyHandling, and navigationId.
+        navigate_to_a_fragment(resource.url(), history_handling, *navigation_id);
+
+        // 2. Return.
+        return {};
+    }
+
+    // FIXME: 8. Let incumbentNavigationOrigin be the origin of the incumbent settings object,
+    //           or if no script was involved, the origin of the node document of the element that initiated the navigation.
+
+    // FIXME: 9. Let initiatorPolicyContainer be a clone of the source browsing context's active document's policy container.
+
+    // FIXME: 10. If resource is a request, then set resource's policy container to initiatorPolicyContainer.
+
+    // FIXME: 11. Cancel any preexisting but not yet mature attempt to navigate browsingContext,
+    //            including canceling any instances of the fetch algorithm started by those attempts.
+    //            If one of those attempts has already created and initialized a new Document object,
+    //            abort that Document also.
+    //            (Navigation attempts that have matured already have session history entries,
+    //            and are therefore handled during the update the session history with the new page algorithm, later.)
+
+    // FIXME: 12. Let unloadPromptResult be the result of calling prompt to unload with the active document of browsingContext.
+    //            If this instance of the navigation algorithm gets canceled while this step is running,
+    //            the prompt to unload algorithm must nonetheless be run to completion.
+
+    // FIXME: 13. If unloadPromptResult is "refuse", then return a new WebDriver BiDi navigation status whose id is navigationId and status is "canceled".
+
+    // 14. Abort the active document of browsingContext.
+    active_document()->abort();
+
+    // FIXME: 15. If browsingContext is a child browsing context, then put it in the delaying load events mode.
+    //            The user agent must take this child browsing context out of the delaying load events mode when this navigation algorithm later matures,
+    //            or when it terminates (whether due to having run all the steps, or being canceled, or being aborted),
+    //            whichever happens first.
+
+    // FIXME: 16. Let sandboxFlags be the result of determining the creation sandboxing flags given browsingContext and browsingContext's container.
+
+    // FIXME: 17. Let allowedToDownload be the result of running the allowed to download algorithm given the source browsing context and browsingContext.
+
+    // 18. Let hasTransientActivation be true if the source browsing context's active window has transient activation; otherwise false.
+    [[maybe_unused]] bool has_transient_activation = source_browsing_context.active_window()->has_transient_activation();
+
+    // FIXME: 19. Invoke WebDriver BiDi navigation started with browsingContext, and a new WebDriver BiDi navigation status whose id is navigationId, url is resource's url, and status is "pending".
+
+    // 20. Return, and continue running these steps in parallel.
+
+    // FIXME: Implement the rest of this algorithm
+    (void)history_policy_container;
+    (void)navigation_type;
+    (void)process_response_end_of_body;
+
+    // AD-HOC:
+    loader().load(resource.url(), FrameLoader::Type::IFrame);
+    return {};
+}
+
+// https://html.spec.whatwg.org/multipage/browsing-the-web.html#navigate-fragid
+DOM::ExceptionOr<void> BrowsingContext::navigate_to_a_fragment(AK::URL const& url, HistoryHandlingBehavior history_handling, String navigation_id)
+{
+    // 1. If historyHandling is not "replace",
+    if (history_handling != HistoryHandlingBehavior::Replace) {
+        // FIXME: then remove all the entries in browsingContext's session history after the current entry.
+        //        (If the current entry is the last entry in the session history, then no entries are removed.)
+    }
+
+    // 2. Remove any tasks queued by the history traversal task source that are associated with any Document objects
+    //    in browsingContext's top-level browsing context's document family.
+    HTML::main_thread_event_loop().task_queue().remove_tasks_matching([&](HTML::Task const& task) {
+        return task.source() == Task::Source::HistoryTraversal
+            && task.document()
+            && top_level_browsing_context().document_family_contains(*task.document());
+    });
+
+    // 3. Append a new session history entry to the session history whose URL is url,
+    //    document is the current entry's document,
+    //    policy container is the current entry's policy-container
+    //    and scroll restoration mode is the current entry's scroll restoration mode.
+    m_session_history.append(SessionHistoryEntry {
+        .url = url,
+        .document = current_entry().document,
+        .serialized_state = {},
+        .policy_container = current_entry().policy_container,
+        .scroll_restoration_mode = current_entry().scroll_restoration_mode,
+        .browsing_context_name = {},
+        .original_source_browsing_context = {},
+    });
+
+    // 4. Traverse the history to the new entry, with historyHandling set to historyHandling.
+    //    This will scroll to the fragment given in what is now the document's URL.
+    TRY(traverse_the_history(m_session_history.size() - 1, history_handling));
+
+    // FIXME: 5. Invoke WebDriver BiDi fragment navigated with browsingContext,
+    //           and a new WebDriver BiDi navigation status whose id is navigationId, url is resource's url, and status is "complete".
+    (void)navigation_id;
+
+    return {};
+}
+
+// https://html.spec.whatwg.org/multipage/browsing-the-web.html#traverse-the-history
+DOM::ExceptionOr<void> BrowsingContext::traverse_the_history(size_t entry_index, HistoryHandlingBehavior history_handling, bool explicit_history_navigation)
+{
+    auto* entry = &m_session_history[entry_index];
+
+    // 1. If entry's document is null, then:
+    if (!entry->document) {
+        // 1. Assert: historyHandling is "default".
+        VERIFY(history_handling == HistoryHandlingBehavior::Default);
+
+        // 2. Let request be a new request whose URL is entry's URL.
+        auto request = Fetch::Infrastructure::Request();
+        request.set_url(entry->url);
+
+        // 3. If explicitHistoryNavigation is true, then set request's history-navigation flag.
+        if (explicit_history_navigation)
+            request.set_history_navigation(true);
+
+        // 4. Navigate the browsing context to request with historyHandling set to "entry update"
+        //    and with historyPolicyContainer set to entry's policy container.
+        //    The navigation must be done using the same source browsing context as was used the first time entry was created.
+        VERIFY(entry->original_source_browsing_context);
+        TRY(navigate(request, *entry->original_source_browsing_context, false, HistoryHandlingBehavior::EntryUpdate, entry->policy_container));
+
+        // 5. Return.
+        return {};
+    }
+
+    // FIXME: 2. Save persisted state to the current entry.
+
+    // 3. Let newDocument be entry's document.
+    JS::GCPtr<DOM::Document> new_document = entry->document.ptr();
+
+    // 4. Assert: newDocument's is initial about:blank is false,
+    //   i.e., we never traverse back to the initial about:blank Document because it always gets replaced when we navigate away from it.
+    VERIFY(!new_document->is_initial_about_blank());
+
+    // 5. If newDocument is different than the current entry's document, or historyHandling is "entry update" or "reload", then:
+    if (new_document.ptr() != current_entry().document.ptr()
+        || history_handling == HistoryHandlingBehavior::EntryUpdate) {
+        // FIXME: 1. If newDocument's suspended timer handles is not empty:
+        // FIXME:    1. Assert: newDocument's suspension time is not zero.
+        // FIXME:    2. Let suspendDuration be the current high resolution time minus newDocument's suspension time.
+        // FIXME:    3. Let activeTimers be newDocument's relevant global object's map of active timers.
+        // FIXME:    4. For each handle in newDocument's suspended timer handles, if activeTimers[handle] exists, then increase activeTimers[handle] by suspendDuration.
+    }
+
+    // 2. Remove any tasks queued by the history traversal task source
+    //    that are associated with any Document objects in the top-level browsing context's document family.
+    HTML::main_thread_event_loop().task_queue().remove_tasks_matching([&](HTML::Task const& task) {
+        return task.source() == Task::Source::HistoryTraversal
+            && task.document()
+            && top_level_browsing_context().document_family_contains(*task.document());
+    });
+
+    // 3. If newDocument's origin is not same origin with the current entry's document's origin, then:
+    if (!new_document->origin().is_same_origin(current_entry().document->origin())) {
+        // FIXME: 1. Let entriesToUpdate be all entries in the session history whose document's origin is same origin as the active document
+        //           and that are contiguous with the current entry.
+        // FIXME: 2. For each entryToUpdate of entriesToUpdate, set entryToUpdate's browsing context name to the current browsing context name.
+        // FIXME: 3. If the browsing context is a top-level browsing context, but not an auxiliary browsing context whose disowned is false, then set the browsing context's name to the empty string.
+    }
+
+    // 4. Set the active document of the browsing context to newDocument.
+    set_active_document(*new_document);
+
+    // 5. If entry's browsing context name is not null, then:
+    if (entry->browsing_context_name.has_value()) {
+        // 1. Set the browsing context's name to entry's browsing context name.
+        m_name = *entry->browsing_context_name;
+
+        // FIXME: 2. Let entriesToUpdate be all entries in the session history whose document's origin is same origin as the new active document's origin and that are contiguous with entry.
+        // FIXME: 3. For each entryToUpdate of entriesToUpdate, set entryToUpdate's browsing context name to null.
+    }
+
+    // FIXME: 6. If newDocument has any form controls whose autofill field name is "off", invoke the reset algorithm of each of those elements.
+
+    // 7. If newDocument's current document readiness "complete",
+    if (new_document->ready_state() == "complete"sv) {
+        // then queue a global task on the DOM manipulation task source given newDocument's relevant global object to run the following steps:
+
+        queue_global_task(Task::Source::DOMManipulation, relevant_global_object(*new_document), [new_document]() mutable {
+            // 1. If newDocument's page showing flag is true, then abort these steps.
+            if (new_document->page_showing())
+                return;
+
+            // 2. Set newDocument's page showing flag to true.
+            new_document->set_page_showing(true);
+
+            // 3. Update the visibility state of newDocument to "hidden".
+            new_document->update_the_visibility_state(VisibilityState::Hidden);
+
+            // 4. Fire a page transition event named pageshow at newDocument's relevant global object with true.
+            auto& window = verify_cast<HTML::Window>(relevant_global_object(*new_document));
+            window.fire_a_page_transition_event(HTML::EventNames::pageshow, true);
+        });
+    }
+
+    // 6. Set newDocument's URL to entry's URL.
+    new_document->set_url(entry->url);
+
+    // 7. Let hashChanged be false, and let oldURL and newURL be null.
+    bool hash_changed = false;
+    Optional<AK::URL> old_url;
+    Optional<AK::URL> new_url;
+
+    // 8. If entry's URL's fragment is not identical to the current entry's URL's fragment,
+    //    and entry's document equals the current entry's document,
+    if (entry->url.fragment() != current_entry().url.fragment()
+        && entry->document.ptr() == current_entry().document.ptr()) {
+        // then set hashChanged to true, set oldURL to the current entry's URL, and set newURL to entry's URL.
+        hash_changed = true;
+        old_url = current_entry().url;
+        new_url = entry->url;
+    }
+
+    // 9. If historyHandling is "replace", then remove the entry immediately before entry in the session history.
+    if (history_handling == HistoryHandlingBehavior::Replace) {
+        // FIXME: This is gnarly.
+        m_session_history.remove(entry_index - 1);
+        entry_index--;
+        entry = &m_session_history[entry_index];
+    }
+
+    // 10. If entry's persisted user state is null, and its URL's fragment is non-null, then scroll to the fragment.
+    if (!entry->url.fragment().is_null()) {
+        // FIXME: Implement the full "scroll to the fragment" algorithm:
+        // https://html.spec.whatwg.org/multipage/browsing-the-web.html#scroll-to-the-fragment-identifier
+        scroll_to_anchor(entry->url.fragment());
+    }
+
+    // 11. Set the current entry to entry.
+    m_session_history_index = entry_index;
+
+    // 12. Let targetRealm be the current Realm Record.
+    auto* target_realm = Bindings::main_thread_vm().current_realm();
+    VERIFY(target_realm);
+
+    // FIXME: 13. Let state be null.
+    // FIXME: 14. If entry's serialized state is not null, then set state to StructuredDeserialize(entry's serialized state, targetRealm).
+    //            If this throws an exception, catch it and ignore the exception.
+    // FIXME: 15. Set newDocument's History object's state to state.
+    // FIXME: 16. Let stateChanged be true if newDocument has a latest entry, and that entry is not entry; otherwise let it be false.
+    // FIXME: 17. Set newDocument's latest entry to entry.
+    // FIXME: 18. If stateChanged is true, then fire an event named popstate at newDocument's relevant global object, using PopStateEvent, with the state attribute initialized to state.
+    // FIXME: 19. Restore persisted state from entry.
+
+    // 20. If hashChanged is true,
+    if (hash_changed) {
+        // then queue a global task on the DOM manipulation task source given newDocument's relevant global object
+        queue_global_task(Task::Source::DOMManipulation, relevant_global_object(*new_document), [new_document]() mutable {
+            // to fire an event named hashchange at newDocument's relevant global object,
+            // using HashChangeEvent, with the oldURL attribute initialized to oldURL
+            // and the newURL attribute initialized to newURL.
+
+            // FIXME: Implement a proper HashChangeEvent class.
+            auto event = DOM::Event::create(verify_cast<HTML::Window>(relevant_global_object(*new_document)), HTML::EventNames::hashchange);
+            new_document->dispatch_event(event);
+        });
+    }
+
+    return {};
+}
+
+// https://html.spec.whatwg.org/multipage/browsers.html#allowed-to-navigate
+bool BrowsingContext::is_allowed_to_navigate(BrowsingContext const& other) const
+{
+    VERIFY(active_window());
+    VERIFY(active_document());
+
+    // 1. If A is not the same browsing context as B,
+    //    and A is not one of the ancestor browsing contexts of B,
+    //    and B is not a top-level browsing context,
+    //    FIXME: and A's active document's active sandboxing flag set has its sandboxed navigation browsing context flag set,
+    //    then return false.
+    if (this != &other
+        && !this->is_ancestor_of(other)
+        && !other.is_top_level()) {
+        return false;
+    }
+
+    // 2. Otherwise, if B is a top-level browsing context, and is one of the ancestor browsing contexts of A, then:
+    if (other.is_top_level() && other.is_ancestor_of(*this)) {
+        // 1. If A's active window has transient activation
+        //    and A's active document's active sandboxing flag set has its sandboxed top-level navigation with user activation browsing context flag set,
+        //    then return false.
+        if (active_window()->has_transient_activation()
+            && active_document()->active_sandboxing_flag_set().flags & SandboxingFlagSet::SandboxedTopLevelNavigationWithUserActivation) {
+            return false;
+        }
+
+        // 2. Otherwise, if A's active window does not have transient activation
+        //    and A's active document's active sandboxing flag set has its sandboxed top-level navigation without user activation browsing context flag set,
+        //    then return false.
+        if (!active_window()->has_transient_activation()
+            && active_document()->active_sandboxing_flag_set().flags & SandboxingFlagSet::SandboxedTopLevelNavigationWithoutUserActivation) {
+            return false;
+        }
+    }
+
+    // 3. Otherwise, if B is a top-level browsing context,
+    //    and is neither A nor one of the ancestor browsing contexts of A,
+    //    and A's Document's active sandboxing flag set has its sandboxed navigation browsing context flag set,
+    //    and A is not the one permitted sandboxed navigator of B,
+    //    then return false.
+    if (other.is_top_level()
+        && &other != this
+        && !other.is_ancestor_of(*this)
+        && active_document()->active_sandboxing_flag_set().flags & SandboxingFlagSet::SandboxedNavigation
+        && this != other.the_one_permitted_sandboxed_navigator()) {
+        return false;
+    }
+
+    // 4. Return true.
+    return true;
+}
+
+// https://html.spec.whatwg.org/multipage/origin.html#one-permitted-sandboxed-navigator
+BrowsingContext const* BrowsingContext::the_one_permitted_sandboxed_navigator() const
+{
+    // FIXME: Implement this.
+    return nullptr;
+}
+
+// https://html.spec.whatwg.org/multipage/browsers.html#document-family
+Vector<JS::Handle<DOM::Document>> BrowsingContext::document_family() const
+{
+    HashTable<DOM::Document*> documents;
+    for (auto& entry : m_session_history) {
+        if (!entry.document)
+            continue;
+        if (documents.set(entry.document.ptr()) == AK::HashSetResult::ReplacedExistingEntry)
+            continue;
+        for (auto& context : entry.document->list_of_descendant_browsing_contexts()) {
+            for (auto& document : context->document_family()) {
+                documents.set(document.ptr());
+            }
+        }
+    }
+
+    Vector<JS::Handle<DOM::Document>> family;
+    for (auto* document : documents) {
+        family.append(*document);
+    }
+    return family;
+}
+
+// https://html.spec.whatwg.org/multipage/browsers.html#document-family
+bool BrowsingContext::document_family_contains(DOM::Document const& document) const
+{
+    return document_family().first_matching([&](auto& entry) { return entry.ptr() == &document; }).has_value();
+}
+
+VisibilityState BrowsingContext::system_visibility_state() const
+{
+    return m_system_visibility_state;
+}
+
+// https://html.spec.whatwg.org/multipage/interaction.html#system-visibility-state
+void BrowsingContext::set_system_visibility_state(VisibilityState visibility_state)
+{
+    if (m_system_visibility_state == visibility_state)
+        return;
+    m_system_visibility_state = visibility_state;
+
+    // When a user-agent determines that the system visibility state for top-level browsing context context
+    // has changed to newState, it must queue a task on the user interaction task source to update
+    // the visibility state of all the Document objects in the top-level browsing context's document family with newState.
+    auto document_family = top_level_browsing_context().document_family();
+    queue_global_task(Task::Source::UserInteraction, Bindings::main_thread_vm().current_realm()->global_object(), [visibility_state, document_family = move(document_family)]() mutable {
+        for (auto& document : document_family) {
+            document->update_the_visibility_state(visibility_state);
+        }
+    });
+}
+
+// https://html.spec.whatwg.org/multipage/window-object.html#a-browsing-context-is-discarded
+void BrowsingContext::discard()
+{
+    // 1. Discard all Document objects for all the entries in browsingContext's session history.
+    for (auto& entry : m_session_history) {
+        if (entry.document)
+            entry.document->discard();
+    }
+
+    // AD-HOC:
+    // FIXME: This should be in the session history!
+    if (auto* document = active_document())
+        document->discard();
+
+    // 2. If browsingContext is a top-level browsing context, then remove browsingContext.
+    if (is_top_level())
+        remove();
+
+    // AD-HOC:
+    if (parent())
+        parent()->remove_child(*this);
+}
+
+// https://html.spec.whatwg.org/multipage/window-object.html#close-a-browsing-context
+void BrowsingContext::close()
+{
+    VERIFY(active_document());
+
+    // FIXME: 1. If the result of calling prompt to unload with browsingContext's active document is "refuse", then return.
+
+    // 2. Unload browsingContext's active document.
+    active_document()->unload();
+
+    // 3. Remove browsingContext from the user interface (e.g., close or hide its tab in a tabbed browser).
+    if (m_page)
+        m_page->client().page_did_close_browsing_context(*this);
+
+    // 4. Discard browsingContext.
+    discard();
 }
 
 }

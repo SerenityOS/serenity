@@ -333,14 +333,14 @@ void Worker::post_message(JS::Value message, JS::Value)
 }
 
 #undef __ENUMERATE
-#define __ENUMERATE(attribute_name, event_name)                      \
-    void Worker::set_##attribute_name(Bindings::CallbackType* value) \
-    {                                                                \
-        set_event_handler_attribute(event_name, move(value));        \
-    }                                                                \
-    Bindings::CallbackType* Worker::attribute_name()                 \
-    {                                                                \
-        return event_handler_attribute(event_name);                  \
+#define __ENUMERATE(attribute_name, event_name)                    \
+    void Worker::set_##attribute_name(WebIDL::CallbackType* value) \
+    {                                                              \
+        set_event_handler_attribute(event_name, move(value));      \
+    }                                                              \
+    WebIDL::CallbackType* Worker::attribute_name()                 \
+    {                                                              \
+        return event_handler_attribute(event_name);                \
     }
 ENUMERATE_WORKER_EVENT_HANDLERS(__ENUMERATE)
 #undef __ENUMERATE

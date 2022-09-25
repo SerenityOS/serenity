@@ -121,15 +121,16 @@ Gfx::FloatRect border_box_rect(Box const& box, LayoutState const& state)
 Gfx::FloatRect border_box_rect_in_ancestor_coordinate_space(Box const& box, Box const& ancestor_box, LayoutState const& state)
 {
     auto rect = border_box_rect(box, state);
-    for (auto const* current = box.parent(); current; current = current->parent()) {
+    if (&box == &ancestor_box)
+        return rect;
+    for (auto const* current = box.containing_block(); current; current = current->containing_block()) {
         if (current == &ancestor_box)
-            break;
-        if (is<Box>(*current)) {
-            auto const& current_state = state.get(static_cast<Box const&>(*current));
-            rect.translate_by(current_state.offset);
-        }
+            return rect;
+        auto const& current_state = state.get(static_cast<Box const&>(*current));
+        rect.translate_by(current_state.offset);
     }
-    return rect;
+    // If we get here, ancestor_box was not a containing block ancestor of `box`!
+    VERIFY_NOT_REACHED();
 }
 
 Gfx::FloatRect content_box_rect(Box const& box, LayoutState const& state)
@@ -141,29 +142,31 @@ Gfx::FloatRect content_box_rect(Box const& box, LayoutState const& state)
 Gfx::FloatRect content_box_rect_in_ancestor_coordinate_space(Box const& box, Box const& ancestor_box, LayoutState const& state)
 {
     auto rect = content_box_rect(box, state);
-    for (auto const* current = box.parent(); current; current = current->parent()) {
+    if (&box == &ancestor_box)
+        return rect;
+    for (auto const* current = box.containing_block(); current; current = current->containing_block()) {
         if (current == &ancestor_box)
-            break;
-        if (is<Box>(*current)) {
-            auto const& current_state = state.get(static_cast<Box const&>(*current));
-            rect.translate_by(current_state.offset);
-        }
+            return rect;
+        auto const& current_state = state.get(static_cast<Box const&>(*current));
+        rect.translate_by(current_state.offset);
     }
-    return rect;
+    // If we get here, ancestor_box was not a containing block ancestor of `box`!
+    VERIFY_NOT_REACHED();
 }
 
 Gfx::FloatRect margin_box_rect_in_ancestor_coordinate_space(Box const& box, Box const& ancestor_box, LayoutState const& state)
 {
     auto rect = margin_box_rect(box, state);
-    for (auto const* current = box.parent(); current; current = current->parent()) {
+    if (&box == &ancestor_box)
+        return rect;
+    for (auto const* current = box.containing_block(); current; current = current->containing_block()) {
         if (current == &ancestor_box)
-            break;
-        if (is<Box>(*current)) {
-            auto const& current_state = state.get(static_cast<Box const&>(*current));
-            rect.translate_by(current_state.offset);
-        }
+            return rect;
+        auto const& current_state = state.get(static_cast<Box const&>(*current));
+        rect.translate_by(current_state.offset);
     }
-    return rect;
+    // If we get here, ancestor_box was not a containing block ancestor of `box`!
+    VERIFY_NOT_REACHED();
 }
 
 Gfx::FloatRect absolute_content_rect(Box const& box, LayoutState const& state)

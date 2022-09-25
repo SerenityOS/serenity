@@ -18,4 +18,18 @@ if [ -z "${GML_FORMAT:-}" ] ; then
     GML_FORMAT="Build/lagom/gml-format"
 fi
 
-find AK Base Documentation Kernel Meta Ports Tests Userland -type f -name '*.gml' -print0 | xargs -0 "${GML_FORMAT}" -i
+if [ "$#" -gt "0" ] ; then
+    # We're in the middle of a pre-commit run, so we should only check the files that have
+    # actually changed. The reason is that "git ls-files | grep" on the entire repo takes
+    # about 100ms. That is perfectly fine during a CI run, but becomes noticable during a
+    # pre-commit hook. It is unnecessary to check the entire repository on every single
+    # commit, so we save some time here.
+    for file in "$@"; do
+        if [[ "${file}" =~ \.gml ]]; then
+            echo "$file"
+        fi
+    done
+else
+    find AK Base Documentation Kernel Meta Ports Tests Userland -type f -name '*.gml' -print
+fi \
+| xargs -r "${GML_FORMAT}" -i

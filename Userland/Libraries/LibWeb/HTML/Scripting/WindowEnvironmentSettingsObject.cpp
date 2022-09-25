@@ -32,8 +32,7 @@ void WindowEnvironmentSettingsObject::setup(AK::URL const& creation_url, Nonnull
     VERIFY(realm);
 
     // 2. Let window be realm's global object.
-    // NOTE: We want to store the Window impl rather than the WindowObject.
-    auto& window = verify_cast<HTML::Window>(realm->global_object()).impl();
+    auto& window = verify_cast<HTML::Window>(realm->global_object());
 
     // 3. Let settings object be a new environment settings object whose algorithms are defined as follows:
     // NOTE: See the functions defined for this class.
@@ -44,9 +43,11 @@ void WindowEnvironmentSettingsObject::setup(AK::URL const& creation_url, Nonnull
         // FIXME:    1. Set settings object's id to reservedEnvironment's id,
         //              target browsing context to reservedEnvironment's target browsing context,
         //              and active service worker to reservedEnvironment's active service worker.
+        settings_object->id = reserved_environment->id;
         settings_object->target_browsing_context = reserved_environment->target_browsing_context;
 
-        // FIXME:    2. Set reservedEnvironment's id to the empty string.
+        // 2. Set reservedEnvironment's id to the empty string.
+        reserved_environment->id = String::empty();
     }
 
     // 5. Otherwise, ...
@@ -54,6 +55,8 @@ void WindowEnvironmentSettingsObject::setup(AK::URL const& creation_url, Nonnull
         // FIXME: ...set settings object's id to a new unique opaque string,
         //        settings object's target browsing context to null,
         //        and settings object's active service worker to null.
+        static i64 next_id = 1;
+        settings_object->id = String::number(next_id++);
         settings_object->target_browsing_context = nullptr;
     }
 
@@ -102,7 +105,7 @@ CanUseCrossOriginIsolatedAPIs WindowEnvironmentSettingsObject::cross_origin_isol
     // FIXME: Return true if both of the following hold, and false otherwise:
     //          1. realm's agent cluster's cross-origin-isolation mode is "concrete", and
     //          2. window's associated Document is allowed to use the "cross-origin-isolated" feature.
-    TODO();
+    return CanUseCrossOriginIsolatedAPIs::Yes;
 }
 
 }

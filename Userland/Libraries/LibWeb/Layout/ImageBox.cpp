@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibGfx/Font/FontDatabase.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/Layout/ImageBox.h>
 #include <LibWeb/Painting/ImagePaintable.h>
+#include <LibWeb/Platform/FontPlugin.h>
 
 namespace Web::Layout {
 
@@ -55,7 +55,7 @@ void ImageBox::prepare_for_replaced_layout()
 
     if (renders_as_alt_text()) {
         auto& image_element = verify_cast<HTML::HTMLImageElement>(dom_node());
-        auto& font = Gfx::FontDatabase::default_font();
+        auto& font = Platform::FontPlugin::the().default_font();
         auto alt = image_element.alt();
         if (alt.is_empty())
             alt = image_element.src();

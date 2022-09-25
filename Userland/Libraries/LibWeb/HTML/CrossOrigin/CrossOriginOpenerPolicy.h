@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <AK/String.h>
+
 namespace Web::HTML {
 
 // https://html.spec.whatwg.org/multipage/origin.html#cross-origin-opener-policy-value

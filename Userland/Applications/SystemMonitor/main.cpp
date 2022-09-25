@@ -293,15 +293,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto& process_table_view = *process_table_container.find_child_of_type_named<GUI::TreeView>("process_table");
     process_table_view.set_model(TRY(GUI::SortingProxyModel::create(process_model)));
-    for (auto column = 0; column < ProcessModel::Column::__Count; ++column)
-        process_table_view.set_column_visible(column, false);
-    process_table_view.set_column_visible(ProcessModel::Column::PID, true);
-    process_table_view.set_column_visible(ProcessModel::Column::TID, true);
-    process_table_view.set_column_visible(ProcessModel::Column::Name, true);
-    process_table_view.set_column_visible(ProcessModel::Column::CPU, true);
-    process_table_view.set_column_visible(ProcessModel::Column::User, true);
-    process_table_view.set_column_visible(ProcessModel::Column::Virtual, true);
-    process_table_view.set_column_visible(ProcessModel::Column::DirtyPrivate, true);
+
+    for (auto column = 0; column < ProcessModel::Column::__Count; ++column) {
+        process_table_view.set_column_visible(column,
+            Config::read_bool("SystemMonitor"sv, "ProcessTableColumns"sv, process_model->column_name(column),
+                process_model->is_default_column(column)));
+    }
 
     process_table_view.set_key_column_and_sort_order(ProcessModel::Column::CPU, GUI::SortOrder::Descending);
     process_model->update();
@@ -490,7 +487,15 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     else if (args_tab_view == "network")
         tabwidget.set_active_widget(tabwidget.find_descendant_of_type_named<GUI::Widget>("network"));
 
-    return app->exec();
+    int exec = app->exec();
+
+    // When exiting the application, save the configuration of the columns
+    // to be loaded the next time the application is opened.
+    auto& process_table_header = process_table_view.column_header();
+    for (auto column = 0; column < ProcessModel::Column::__Count; ++column)
+        Config::write_bool("SystemMonitor"sv, "ProcessTableColumns"sv, process_model->column_name(column), process_table_header.is_section_visible(column));
+
+    return exec;
 }
 
 ErrorOr<NonnullRefPtr<GUI::Window>> build_process_window(pid_t pid)

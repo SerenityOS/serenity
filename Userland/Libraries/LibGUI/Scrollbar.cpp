@@ -205,7 +205,7 @@ void Scrollbar::paint_event(PaintEvent& event)
     Gfx::StylePainter::paint_button(painter, decrement_button_rect(), palette(), Gfx::ButtonStyle::ThickCap, decrement_pressed, hovered_component_for_painting == Component::DecrementButton);
     Gfx::StylePainter::paint_button(painter, increment_button_rect(), palette(), Gfx::ButtonStyle::ThickCap, increment_pressed, hovered_component_for_painting == Component::IncrementButton);
 
-    if (length(orientation()) > default_button_size()) {
+    if (length(orientation()) >= default_button_size() * 2) {
         auto decrement_location = decrement_button_rect().location().translated(3, 3);
         if (decrement_pressed)
             decrement_location.translate_by(1, 1);
@@ -420,10 +420,11 @@ void Scrollbar::update_animated_scroll()
 
 Optional<UISize> Scrollbar::calculated_min_size() const
 {
+    auto scrubber_and_gutter = default_button_size() + 1;
     if (orientation() == Gfx::Orientation::Vertical)
-        return { { default_button_size(), 2 * default_button_size() } };
+        return { { default_button_size(), 2 * default_button_size() + scrubber_and_gutter } };
     else
-        return { { 2 * default_button_size(), default_button_size() } };
+        return { { 2 * default_button_size() + scrubber_and_gutter, default_button_size() } };
 }
 
 Optional<UISize> Scrollbar::calculated_preferred_size() const

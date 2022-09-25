@@ -235,7 +235,7 @@ void HTMLObjectElement::run_object_representation_handler_steps(Optional<String>
     else if (resource_type.has_value() && resource_type->starts_with("image/"sv)) {
         // If the object element's nested browsing context is non-null, then it must be discarded and then set to null.
         if (m_nested_browsing_context) {
-            discard_nested_browsing_context();
+            m_nested_browsing_context->discard();
             m_nested_browsing_context = nullptr;
         }
 
@@ -276,7 +276,7 @@ void HTMLObjectElement::run_object_representation_fallback_steps()
 {
     // 6. Fallback: The object element represents the element's children, ignoring any leading param element children. This is the element's fallback content. If the element has an instantiated plugin, then unload it. If the element's nested browsing context is non-null, then it must be discarded and then set to null.
     if (m_nested_browsing_context) {
-        discard_nested_browsing_context();
+        m_nested_browsing_context->discard();
         m_nested_browsing_context = nullptr;
     }
 

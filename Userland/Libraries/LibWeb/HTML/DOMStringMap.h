@@ -47,5 +47,3 @@ private:
 };
 
 }
-
-WRAPPER_HACK(DOMStringMap, Web::HTML)

@@ -11,6 +11,7 @@
 #include <Applications/Run/RunGML.h>
 #include <LibCore/File.h>
 #include <LibCore/StandardPaths.h>
+#include <LibCore/Stream.h>
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/Event.h>
@@ -29,7 +30,8 @@ RunWindow::RunWindow()
     : m_path_history()
     , m_path_history_model(GUI::ItemListModel<String>::create(m_path_history))
 {
-    load_history();
+    // FIXME: Handle failure to load history somehow.
+    (void)load_history();
 
     auto app_icon = GUI::Icon::default_icon("app-run"sv);
 
@@ -95,7 +97,8 @@ void RunWindow::do_run()
         // Remove any existing history entry, prepend the successful run string to history and save.
         m_path_history.remove_all_matching([&](String v) { return v == run_input; });
         m_path_history.prepend(run_input);
-        save_history();
+        // FIXME: Handle failure to save history somehow.
+        (void)save_history();
 
         close();
         return;
@@ -164,29 +167,28 @@ String RunWindow::history_file_path()
     return LexicalPath::canonicalized_path(String::formatted("{}/{}", Core::StandardPaths::config_directory(), "RunHistory.txt"));
 }
 
-void RunWindow::load_history()
+ErrorOr<void> RunWindow::load_history()
 {
     m_path_history.clear();
-    auto file_or_error = Core::File::open(history_file_path(), Core::OpenMode::ReadOnly);
-    if (file_or_error.is_error())
-        return;
+    auto file = TRY(Core::Stream::File::open(history_file_path(), Core::Stream::OpenMode::Read));
+    auto buffered_file = TRY(Core::Stream::BufferedFile::create(move(file)));
+    Array<u8, PAGE_SIZE> line_buffer;
 
-    auto file = file_or_error.release_value();
-    while (!file->eof()) {
-        auto line = file->read_line();
+    while (!buffered_file->is_eof()) {
+        StringView line = TRY(buffered_file->read_line(line_buffer));
         if (!line.is_empty() && !line.is_whitespace())
             m_path_history.append(line);
     }
+    return {};
 }
 
-void RunWindow::save_history()
+ErrorOr<void> RunWindow::save_history()
 {
-    auto file_or_error = Core::File::open(history_file_path(), Core::OpenMode::WriteOnly);
-    if (file_or_error.is_error())
-        return;
+    auto file = TRY(Core::Stream::File::open(history_file_path(), Core::Stream::OpenMode::Write));
 
-    auto file = file_or_error.release_value();
     // Write the first 25 items of history
     for (int i = 0; i < min(static_cast<int>(m_path_history.size()), 25); i++)
-        file->write(String::formatted("{}\n", m_path_history[i]));
+        TRY(file->write(String::formatted("{}\n", m_path_history[i]).bytes()));
+
+    return {};
 }

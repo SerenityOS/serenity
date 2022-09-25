@@ -13,10 +13,10 @@
 #include <AK/TypeCasts.h>
 #include <AK/URL.h>
 #include <LibJS/Heap/Heap.h>
-#include <LibWeb/Bindings/CrossOriginAbstractOperations.h>
 #include <LibWeb/DOM/EventTarget.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/HTML/AnimationFrameCallbackDriver.h>
+#include <LibWeb/HTML/CrossOrigin/CrossOriginPropertyDescriptorMap.h>
 #include <LibWeb/HTML/GlobalEventHandlers.h>
 #include <LibWeb/HTML/WindowEventHandlers.h>
 
@@ -25,7 +25,7 @@ namespace Web::HTML {
 class IdleCallback;
 
 // https://html.spec.whatwg.org/#timerhandler
-using TimerHandler = Variant<JS::Handle<Bindings::CallbackType>, String>;
+using TimerHandler = Variant<JS::Handle<WebIDL::CallbackType>, String>;
 
 class Window final
     : public DOM::EventTarget
@@ -57,7 +57,7 @@ public:
     void alert_impl(String const&);
     bool confirm_impl(String const&);
     String prompt_impl(String const&, String const&);
-    i32 request_animation_frame_impl(Bindings::CallbackType& js_callback);
+    i32 request_animation_frame_impl(WebIDL::CallbackType& js_callback);
     void cancel_animation_frame_impl(i32);
     bool has_animation_frame_callbacks() const { return m_animation_frame_callback_driver.has_callbacks(); }
 
@@ -66,7 +66,7 @@ public:
     void clear_timeout_impl(i32);
     void clear_interval_impl(i32);
 
-    void queue_microtask_impl(Bindings::CallbackType& callback);
+    void queue_microtask_impl(WebIDL::CallbackType& callback);
 
     int inner_width() const;
     int inner_height() const;
@@ -115,10 +115,13 @@ public:
 
     void start_an_idle_period();
 
-    u32 request_idle_callback_impl(Bindings::CallbackType& callback);
+    u32 request_idle_callback_impl(WebIDL::CallbackType& callback);
     void cancel_idle_callback_impl(u32);
 
     AnimationFrameCallbackDriver& animation_frame_callback_driver() { return m_animation_frame_callback_driver; }
+
+    // https://html.spec.whatwg.org/multipage/interaction.html#transient-activation
+    bool has_transient_activation() const;
 
 private:
     explicit Window(JS::Realm&);
@@ -199,14 +202,16 @@ public:
 
     virtual JS::ThrowCompletionOr<bool> internal_set_prototype_of(JS::Object* prototype) override;
 
-    Bindings::CrossOriginPropertyDescriptorMap const& cross_origin_property_descriptor_map() const { return m_cross_origin_property_descriptor_map; }
-    Bindings::CrossOriginPropertyDescriptorMap& cross_origin_property_descriptor_map() { return m_cross_origin_property_descriptor_map; }
+    CrossOriginPropertyDescriptorMap const& cross_origin_property_descriptor_map() const { return m_cross_origin_property_descriptor_map; }
+    CrossOriginPropertyDescriptorMap& cross_origin_property_descriptor_map() { return m_cross_origin_property_descriptor_map; }
 
 private:
     JS_DECLARE_NATIVE_FUNCTION(length_getter);
     JS_DECLARE_NATIVE_FUNCTION(top_getter);
 
     JS_DECLARE_NATIVE_FUNCTION(document_getter);
+
+    JS_DECLARE_NATIVE_FUNCTION(frame_element_getter);
 
     JS_DECLARE_NATIVE_FUNCTION(location_getter);
     JS_DECLARE_NATIVE_FUNCTION(location_setter);
@@ -282,11 +287,9 @@ private:
     HashMap<String, JS::NativeFunction*> m_constructors;
 
     // [[CrossOriginPropertyDescriptorMap]], https://html.spec.whatwg.org/multipage/browsers.html#crossoriginpropertydescriptormap
-    Bindings::CrossOriginPropertyDescriptorMap m_cross_origin_property_descriptor_map;
+    CrossOriginPropertyDescriptorMap m_cross_origin_property_descriptor_map;
 };
 
 void run_animation_frame_callbacks(DOM::Document&, double now);
 
 }
-
-WRAPPER_HACK(Window, Web::HTML)

@@ -10,7 +10,7 @@
 #include <AK/String.h>
 #include <LibWeb/CSS/CSSStyleDeclaration.h>
 #include <LibWeb/CSS/StyleComputer.h>
-#include <LibWeb/DOM/Attribute.h>
+#include <LibWeb/DOM/Attr.h>
 #include <LibWeb/DOM/ChildNode.h>
 #include <LibWeb/DOM/ExceptionOr.h>
 #include <LibWeb/DOM/NamedNodeMap.h>
@@ -108,6 +108,8 @@ public:
     String inner_html() const;
     ExceptionOr<void> set_inner_html(String const&);
 
+    ExceptionOr<void> insert_adjacent_html(String position, String text);
+
     bool is_focused() const;
     bool is_active() const;
 
@@ -120,7 +122,7 @@ public:
     void set_custom_properties(HashMap<FlyString, CSS::StyleProperty> custom_properties) { m_custom_properties = move(custom_properties); }
     HashMap<FlyString, CSS::StyleProperty> const& custom_properties() const { return m_custom_properties; }
 
-    void queue_an_element_task(HTML::Task::Source, Function<void()>);
+    void queue_an_element_task(HTML::Task::Source, JS::SafeFunction<void()>);
 
     bool is_void_element() const;
     bool serializes_as_void() const;
@@ -173,5 +175,3 @@ inline bool Node::fast_is<Element>() const { return is_element(); }
 ExceptionOr<QualifiedName> validate_and_extract(JS::Object& global_object, FlyString namespace_, FlyString qualified_name);
 
 }
-
-WRAPPER_HACK(Element, Web::DOM)

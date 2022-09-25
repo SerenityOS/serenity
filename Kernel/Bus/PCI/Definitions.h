@@ -21,6 +21,22 @@ enum class HeaderType {
     Bridge = 1,
 };
 
+enum class HeaderType0BaseRegister {
+    BAR0 = 0,
+    BAR1,
+    BAR2,
+    BAR3,
+    BAR4,
+    BAR5,
+};
+
+enum class BARSpaceType {
+    IOSpace,
+    Memory16BitSpace,
+    Memory32BitSpace,
+    Memory64BitSpace,
+};
+
 enum class RegisterOffset {
     VENDOR_ID = 0x00,            // word
     DEVICE_ID = 0x02,            // word

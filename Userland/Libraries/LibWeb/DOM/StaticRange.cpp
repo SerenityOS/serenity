@@ -6,7 +6,7 @@
  */
 
 #include <AK/TypeCasts.h>
-#include <LibWeb/DOM/Attribute.h>
+#include <LibWeb/DOM/Attr.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/DocumentType.h>
 #include <LibWeb/DOM/ExceptionOr.h>
@@ -26,10 +26,10 @@ StaticRange::~StaticRange() = default;
 ExceptionOr<StaticRange*> StaticRange::create_with_global_object(HTML::Window& window, StaticRangeInit& init)
 {
     // 1. If init["startContainer"] or init["endContainer"] is a DocumentType or Attr node, then throw an "InvalidNodeTypeError" DOMException.
-    if (is<DocumentType>(*init.start_container) || is<Attribute>(*init.start_container))
+    if (is<DocumentType>(*init.start_container) || is<Attr>(*init.start_container))
         return DOM::InvalidNodeTypeError::create(window, "startContainer cannot be a DocumentType or Attribute node.");
 
-    if (is<DocumentType>(*init.end_container) || is<Attribute>(*init.end_container))
+    if (is<DocumentType>(*init.end_container) || is<Attr>(*init.end_container))
         return DOM::InvalidNodeTypeError::create(window, "endContainer cannot be a DocumentType or Attribute node.");
 
     // 2. Set this’s start to (init["startContainer"], init["startOffset"]) and end to (init["endContainer"], init["endOffset"]).

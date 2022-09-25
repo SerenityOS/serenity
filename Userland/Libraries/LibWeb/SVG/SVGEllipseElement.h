@@ -38,5 +38,3 @@ private:
 };
 
 }
-
-WRAPPER_HACK(SVGEllipseElement, Web::SVG)

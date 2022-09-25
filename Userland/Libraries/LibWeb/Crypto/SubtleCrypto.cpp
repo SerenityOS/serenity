@@ -7,10 +7,10 @@
 #include <LibCrypto/Hash/HashManager.h>
 #include <LibJS/Runtime/ArrayBuffer.h>
 #include <LibJS/Runtime/Promise.h>
-#include <LibWeb/Bindings/IDLAbstractOperations.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/Crypto/SubtleCrypto.h>
 #include <LibWeb/DOM/DOMException.h>
+#include <LibWeb/WebIDL/AbstractOperations.h>
 
 namespace Web::Crypto {
 
@@ -35,7 +35,7 @@ JS::Promise* SubtleCrypto::digest(String const& algorithm, JS::Handle<JS::Object
     // 1. Let algorithm be the algorithm parameter passed to the digest() method.
 
     // 2. Let data be the result of getting a copy of the bytes held by the data parameter passed to the digest() method.
-    auto data_buffer_or_error = Bindings::IDL::get_buffer_source_copy(*data.cell());
+    auto data_buffer_or_error = WebIDL::get_buffer_source_copy(*data.cell());
     if (data_buffer_or_error.is_error()) {
         auto error = DOM::OperationError::create(global_object(), "Failed to copy bytes from ArrayBuffer");
         auto* promise = JS::Promise::create(realm);

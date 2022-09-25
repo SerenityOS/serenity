@@ -40,4 +40,11 @@ bool TaskQueue::has_runnable_tasks() const
     return false;
 }
 
+void TaskQueue::remove_tasks_matching(Function<bool(HTML::Task const&)> filter)
+{
+    m_tasks.remove_all_matching([&](auto& task) {
+        return filter(*task);
+    });
+}
+
 }

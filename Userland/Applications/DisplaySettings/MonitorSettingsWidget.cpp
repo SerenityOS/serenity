@@ -153,7 +153,7 @@ void MonitorSettingsWidget::load_current_settings()
     for (size_t i = 0; i < m_screen_layout.screens.size(); i++) {
         String screen_display_name;
         if (m_screen_layout.screens[i].mode == WindowServer::ScreenLayout::Screen::Mode::Device) {
-            if (auto edid = EDID::Parser::from_display_connector_device(m_screen_layout.screens[i].device.value(), 0); !edid.is_error()) { // TODO: multihead
+            if (auto edid = EDID::Parser::from_display_connector_device(m_screen_layout.screens[i].device.value()); !edid.is_error()) { // TODO: multihead
                 screen_display_name = display_name_from_edid(edid.value());
                 m_screen_edids.append(edid.release_value());
             } else {

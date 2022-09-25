@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2020, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2022, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -8,7 +9,7 @@
 #include <AK/CircularQueue.h>
 #include <AK/JsonObject.h>
 #include <LibCore/ArgsParser.h>
-#include <LibCore/File.h>
+#include <LibCore/Stream.h>
 #include <LibCore/System.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Frame.h>
@@ -17,8 +18,6 @@
 #include <LibGUI/Window.h>
 #include <LibGfx/Palette.h>
 #include <LibMain/Main.h>
-#include <serenity.h>
-#include <spawn.h>
 #include <stdio.h>
 
 enum class GraphType {
@@ -145,28 +144,29 @@ private:
         GUI::Process::spawn_or_show_error(window(), "/bin/SystemMonitor"sv, Array { "-t", m_graph_type == GraphType::Network ? "network" : "graphs" });
     }
 
+    ErrorOr<JsonValue> get_data_as_json(OwnPtr<Core::Stream::File>& file, StringView filename)
+    {
+        if (file) {
+            // Seeking to the beginning causes a data refresh!
+            TRY(file->seek(0, Core::Stream::SeekMode::SetPosition));
+        } else {
+            file = TRY(Core::Stream::File::open(filename, Core::Stream::OpenMode::Read));
+        }
+
+        auto file_contents = TRY(file->read_all());
+        return TRY(JsonValue::from_string(file_contents));
+    }
+
     bool get_cpu_usage(u64& total, u64& idle)
     {
         total = 0;
         idle = 0;
 
-        if (m_proc_stat) {
-            // Seeking to the beginning causes a data refresh!
-            if (!m_proc_stat->seek(0, Core::SeekMode::SetPosition))
-                return false;
-        } else {
-            auto proc_stat = Core::File::construct("/proc/stat");
-            if (!proc_stat->open(Core::OpenMode::ReadOnly))
-                return false;
-            m_proc_stat = move(proc_stat);
-        }
-
-        auto file_contents = m_proc_stat->read_all();
-        auto json_or_error = JsonValue::from_string(file_contents);
-        if (json_or_error.is_error())
+        auto json = get_data_as_json(m_proc_stat, "/proc/stat"sv);
+        if (json.is_error())
             return false;
-        auto json = json_or_error.release_value();
-        auto const& obj = json.as_object();
+
+        auto const& obj = json.value().as_object();
         total = obj.get("total_time"sv).to_u64();
         idle = obj.get("idle_time"sv).to_u64();
         return true;
@@ -174,23 +174,11 @@ private:
 
     bool get_memory_usage(u64& allocated, u64& available)
     {
-        if (m_proc_mem) {
-            // Seeking to the beginning causes a data refresh!
-            if (!m_proc_mem->seek(0, Core::SeekMode::SetPosition))
-                return false;
-        } else {
-            auto proc_memstat = Core::File::construct("/proc/memstat");
-            if (!proc_memstat->open(Core::OpenMode::ReadOnly))
-                return false;
-            m_proc_mem = move(proc_memstat);
-        }
-
-        auto file_contents = m_proc_mem->read_all();
-        auto json_or_error = JsonValue::from_string(file_contents);
-        if (json_or_error.is_error())
+        auto json = get_data_as_json(m_proc_mem, "/proc/memstat"sv);
+        if (json.is_error())
             return false;
-        auto json = json_or_error.release_value();
-        auto const& obj = json.as_object();
+
+        auto const& obj = json.value().as_object();
         unsigned kmalloc_allocated = obj.get("kmalloc_allocated"sv).to_u32();
         unsigned kmalloc_available = obj.get("kmalloc_available"sv).to_u32();
         auto physical_allocated = obj.get("physical_allocated"sv).to_u64();
@@ -207,23 +195,12 @@ private:
     bool get_network_usage(u64& tx, u64& rx, u64& link_speed)
     {
         tx = rx = link_speed = 0;
-        if (m_proc_net) {
-            // Seeking to the beginning causes a data refresh!
-            if (!m_proc_net->seek(0, Core::SeekMode::SetPosition))
-                return false;
-        } else {
-            auto proc_net_adapters = Core::File::construct("/proc/net/adapters");
-            if (!proc_net_adapters->open(Core::OpenMode::ReadOnly))
-                return false;
-            m_proc_net = move(proc_net_adapters);
-        }
 
-        auto file_contents = m_proc_net->read_all();
-        auto json_or_error = JsonValue::from_string(file_contents);
-        if (json_or_error.is_error())
+        auto json = get_data_as_json(m_proc_net, "/proc/net/adapters"sv);
+        if (json.is_error())
             return false;
-        auto json = json_or_error.release_value();
-        auto const& array = json.as_array();
+
+        auto const& array = json.value().as_array();
         for (auto const& adapter_value : array.values()) {
             auto const& adapter_obj = adapter_value.as_object();
             if (!adapter_obj.has_string("ipv4_address"sv) || !adapter_obj.get("link_up"sv).as_bool())
@@ -254,9 +231,9 @@ private:
     static constexpr u64 const scale_unit = 8000;
     u64 m_current_scale { scale_unit };
     String m_tooltip;
-    RefPtr<Core::File> m_proc_stat;
-    RefPtr<Core::File> m_proc_mem;
-    RefPtr<Core::File> m_proc_net;
+    OwnPtr<Core::Stream::File> m_proc_stat;
+    OwnPtr<Core::Stream::File> m_proc_mem;
+    OwnPtr<Core::Stream::File> m_proc_net;
 };
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)

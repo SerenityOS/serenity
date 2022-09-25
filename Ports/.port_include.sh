@@ -95,13 +95,10 @@ cleanup_git() {
     run git clean -xffd >/dev/null 2>&1
 }
 
-# Use the local git target repo as the workdir
-# Make sure to clean it up afterwards
+# Make sure to clean up the git repository of the port afterwards.
 if [ -n "${IN_SERENITY_PORT_DEV:-}" ]; then
     echo "WARNING: All changes to the workdir in the current state (inside ./package.sh dev) are temporary!"
     echo "         They will be reverted once the command exits!"
-    nongit_workdir="$workdir"
-    workdir=".$workdir-git"
     trap "run cleanup_git" EXIT
 fi
 
@@ -627,6 +624,14 @@ do_generate_patch_readme() {
         fi
     fi
 
+    # An existing patches directory but no actual patches presumably means that we just deleted all patches,
+    # so remove the ReadMe file accordingly.
+    if [ -z "$(find -L "${PORT_META_DIR}/patches" -maxdepth 1 -name '*.patch' -print -quit)" ]; then
+        >&2 echo "Port $port does not have any patches, deleting ReadMe..."
+        rm -f "${PORT_META_DIR}/patches/ReadMe.md"
+        exit 0
+    fi
+
     local tempdir="$(pwd)/.patches.tmp"
     rm -fr "$tempdir"
     mkdir "$tempdir"
@@ -713,28 +718,27 @@ do_dev() {
         exit 1
     fi
 
-    git_repo=".${workdir////_}-git"
-    [ -d "$git_repo" ] || (
-        mv "$workdir" "$git_repo"
-        pushd "$git_repo"
-        if [ ! -d "$git_repo/.git" ]; then
+    [ -d "$workdir" ] || (
+        do_fetch
+        pushd "$workdir"
+        if [ ! -d ".git" ]; then
             git init .
             git config core.autocrlf false
             git add --all --force
             git commit -a -m 'Initial import'
+            git tag import
         fi
-        # Make it allow pushes from other local checkouts
-        git config receive.denyCurrentBranch ignore
+
         # Import patches as commits, or ask the user to commit them
         # if they're not git patches already.
-        if [ -d "${PORT_META_DIR}/patches" ] && [ -n "$(find "${PORT_META_DIR}/patches" -maxdepth 1 -name '*.patch' -print -quit)" ]; then
+        if [ -d "${PORT_META_DIR}/patches" ] && [ -n "$(find -L "${PORT_META_DIR}/patches" -maxdepth 1 -name '*.patch' -print -quit)" ]; then
             for patch in "${PORT_META_DIR}"/patches/*.patch; do
                 if [ -f "$workdir/.$(basename $patch).applied" ]; then
                     continue
                 fi
 
                 echo "Importing patch $(basename "${patch}")..."
-                git am --keep-cr "$patch" >/dev/null 2>&1 || {
+                git am --keep-cr --keep-non-patch "$patch" >/dev/null 2>&1 || {
                     git am --abort >/dev/null 2>&1 || true
                     if git apply < $patch; then
                         git add -A
@@ -797,36 +801,30 @@ do_dev() {
                 }
             done
         fi
+
+        git tag original
+
         popd
     )
 
-    [ -d "$git_repo" ] && [ ! -d "$workdir" ] && {
-        git clone --config core.autocrlf=false "$git_repo" "$workdir"
-    }
-
     [ -d "$workdir/.git" ] || {
-        >&2 echo "$workdir does not appear to be a git repository, if you did this manually, you're on your own"
-        if prompt_yes_no "Otherwise, press 'y' to remove that directory and clone it again"; then
-            rm -fr "$workdir"
-            git clone --config core.autocrlf=false "$git_repo" "$workdir"
-        else
-            exit 1
-        fi
+        >&2 echo "$workdir does not appear to be a git repository."
+        >&2 echo "If you want to use './package.sh dev', please run './package.sh clean' first."
+        exit 1
     }
-
-    local first_hash="$(git -C "$git_repo" rev-list --max-parents=0 HEAD)"
 
     pushd "$workdir"
     launch_user_shell
     popd >/dev/null 2>&1
 
-    local current_hash="$(git -C "$git_repo" rev-parse HEAD)"
+    local original_hash="$(git -C "$workdir" rev-parse refs/tags/original)"
+    local current_hash="$(git -C "$workdir" rev-parse HEAD)"
 
-    # If the hashes are the same, we have no patches, otherwise generate patches
-    if [ "$first_hash" != "$current_hash" ]; then
-        >&2 echo "Note: Regenerating patches as there are some commits in the port repo (started at $first_hash, now is $current_hash)"
+    # If the hashes are the same, we have no changes, otherwise generate patches
+    if [ "$original_hash" != "$current_hash" ]; then
+        >&2 echo "Note: Regenerating patches as there are changed commits in the port repo (started at $original_hash, now is $current_hash)"
         rm -fr "${PORT_META_DIR}"/patches/*.patch
-        git -C "$git_repo" format-patch --no-numbered --zero-commit --no-signature "$first_hash" -o "$(realpath "${PORT_META_DIR}/patches")"
+        git -C "$workdir" format-patch --no-numbered --zero-commit --no-signature --full-index refs/tags/import -o "$(realpath "${PORT_META_DIR}/patches")"
         do_generate_patch_readme
     fi
 }
@@ -865,7 +863,6 @@ parse_arguments() {
                     do_clean
                 fi
             fi
-            do_fetch
             do_dev
             ;;
         *)

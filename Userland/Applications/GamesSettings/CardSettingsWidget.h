@@ -10,6 +10,7 @@
 #include <LibGUI/Frame.h>
 #include <LibGUI/IconView.h>
 #include <LibGUI/ImageWidget.h>
+#include <LibGUI/ModelIndex.h>
 #include <LibGUI/SettingsWindow.h>
 
 class CardSettingsWidget final : public GUI::SettingsWindow::Tab {
@@ -34,4 +35,6 @@ private:
 
     RefPtr<GUI::ColorInput> m_background_color_input;
     RefPtr<GUI::IconView> m_card_back_image_view;
+
+    GUI::ModelIndex m_last_selected_card_back;
 };

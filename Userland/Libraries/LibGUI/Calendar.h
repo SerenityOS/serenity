@@ -8,13 +8,16 @@
 #pragma once
 
 #include <AK/String.h>
+#include <LibConfig/Listener.h>
 #include <LibCore/DateTime.h>
 #include <LibGUI/Frame.h>
 #include <LibGUI/Widget.h>
 
 namespace GUI {
 
-class Calendar final : public GUI::Frame {
+class Calendar final
+    : public GUI::Frame
+    , public Config::Listener {
     C_OBJECT(Calendar)
 
 public:
@@ -67,6 +70,8 @@ public:
         m_unadjusted_tile_size.set_height(height);
     }
 
+    virtual void config_string_did_change(String const&, String const&, String const&, String const&) override;
+
     Function<void()> on_tile_click;
     Function<void()> on_tile_doubleclick;
     Function<void()> on_month_click;
@@ -74,6 +79,8 @@ public:
 private:
     Calendar(Core::DateTime date_time = Core::DateTime::now(), Mode mode = Month);
     virtual ~Calendar() override = default;
+
+    static size_t day_of_week_index(String const&);
 
     virtual void resize_event(GUI::ResizeEvent&) override;
     virtual void paint_event(GUI::PaintEvent&) override;
@@ -128,6 +135,17 @@ private:
     Gfx::IntSize m_event_size;
     Gfx::IntSize m_month_size[12];
     Mode m_mode { Month };
+
+    enum class DayOfWeek {
+        Sunday,
+        Monday,
+        Tuesday,
+        Wednesday,
+        Thursday,
+        Friday,
+        Saturday
+    };
+    DayOfWeek m_first_day_of_week { DayOfWeek::Sunday };
 };
 
 }

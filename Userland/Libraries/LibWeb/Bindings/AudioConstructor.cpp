@@ -40,7 +40,7 @@ JS::ThrowCompletionOr<JS::Object*> AudioConstructor::construct(FunctionObject&)
 
     // 1. Let document be the current global object's associated Document.
     auto& window = verify_cast<HTML::Window>(HTML::current_global_object());
-    auto& document = window.impl().associated_document();
+    auto& document = window.associated_document();
 
     // 2. Let audio be the result of creating an element given document, audio, and the HTML namespace.
     auto audio = DOM::create_element(document, HTML::TagNames::audio, Namespace::HTML);

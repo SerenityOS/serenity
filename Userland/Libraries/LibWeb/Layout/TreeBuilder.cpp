@@ -187,9 +187,6 @@ void TreeBuilder::create_layout_tree(DOM::Node& dom_node, TreeBuilder::Context& 
         insert_node_into_inline_or_block_ancestor(layout_node);
     }
 
-    if (layout_node->has_style() && style)
-        static_cast<Layout::NodeWithStyle&>(*layout_node).did_insert_into_layout_tree(*style);
-
     auto* shadow_root = is<DOM::Element>(dom_node) ? verify_cast<DOM::Element>(dom_node).shadow_root() : nullptr;
 
     if ((dom_node.has_children() || shadow_root) && layout_node->can_have_children()) {

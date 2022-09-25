@@ -56,6 +56,7 @@ public:
     void draw_bitmap(IntPoint const&, GlyphBitmap const&, Color = Color());
     void draw_scaled_bitmap(IntRect const& dst_rect, Gfx::Bitmap const&, IntRect const& src_rect, float opacity = 1.0f, ScalingMode = ScalingMode::NearestNeighbor);
     void draw_scaled_bitmap(IntRect const& dst_rect, Gfx::Bitmap const&, FloatRect const& src_rect, float opacity = 1.0f, ScalingMode = ScalingMode::NearestNeighbor);
+    void draw_scaled_bitmap_with_transform(IntRect const& dst_rect, Gfx::Bitmap const&, FloatRect const& src_rect, Gfx::AffineTransform const&, float opacity = 1.0f, ScalingMode = ScalingMode::NearestNeighbor);
     void draw_triangle(IntPoint const&, IntPoint const&, IntPoint const&, Color);
     void draw_triangle(IntPoint const& offset, Span<IntPoint const>, Color);
     void draw_ellipse_intersecting(IntRect const&, Color, int thickness = 1);

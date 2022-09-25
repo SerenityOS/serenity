@@ -103,6 +103,7 @@ OwnPtr<FormattingContext> FormattingContext::create_independent_formatting_conte
                 : FormattingContext(Type::Block, state, box)
             {
             }
+            virtual float automatic_content_height() const override { return 0; };
             virtual void run(Box const&, LayoutMode) override { }
         };
         return make<ReplacedFormattingContext>(state, child_box);
@@ -144,6 +145,7 @@ OwnPtr<FormattingContext> FormattingContext::create_independent_formatting_conte
                 : FormattingContext(Type::Block, state, box)
             {
             }
+            virtual float automatic_content_height() const override { return 0; };
             virtual void run(Box const&, LayoutMode) override { }
         };
         return make<DummyFormattingContext>(state, child_box);
@@ -257,8 +259,6 @@ float FormattingContext::compute_auto_height_for_block_level_element(LayoutState
     auto display = box.computed_values().display();
     if (display.is_flex_inside())
         return box_state.content_height();
-    if (display.is_grid_inside())
-        return box_state.content_height();
 
     // https://www.w3.org/TR/CSS22/visudet.html#normal-block
     // 10.6.3 Block-level non-replaced elements in normal flow when 'overflow' computes to 'visible'
@@ -359,8 +359,11 @@ float FormattingContext::compute_auto_height_for_block_formatting_context_root(L
 // 10.3.2 Inline, replaced elements, https://www.w3.org/TR/CSS22/visudet.html#inline-replaced-width
 float FormattingContext::tentative_width_for_replaced_element(LayoutState const& state, ReplacedBox const& box, CSS::LengthPercentage const& computed_width)
 {
-    auto const& containing_block = *box.containing_block();
-    auto height_of_containing_block = CSS::Length::make_px(state.get(containing_block).content_height());
+    // Treat percentages of indefinite containing block widths as 0 (the initial width).
+    if (computed_width.is_percentage() && !state.get(*box.containing_block()).has_definite_width())
+        return 0;
+
+    auto height_of_containing_block = CSS::Length::make_px(containing_block_height_for(box, state));
     auto computed_height = box.computed_values().height().resolved(box, height_of_containing_block).resolved(box);
 
     float used_width = computed_width.resolved(box, CSS::Length::make_px(containing_block_width_for(box, state))).to_px(box);
@@ -461,6 +464,10 @@ float FormattingContext::compute_width_for_replaced_element(LayoutState const& s
 // https://www.w3.org/TR/CSS22/visudet.html#inline-replaced-height
 float FormattingContext::tentative_height_for_replaced_element(LayoutState const& state, ReplacedBox const& box, CSS::LengthPercentage const& computed_height)
 {
+    // Treat percentages of indefinite containing block heights as 0 (the initial height).
+    if (computed_height.is_percentage() && !state.get(*box.containing_block()).has_definite_height())
+        return 0;
+
     auto computed_width = box.computed_values().width();
 
     // If 'height' and 'width' both have computed values of 'auto' and the element also has
@@ -904,15 +911,6 @@ float FormattingContext::calculate_fit_content_height(Layout::Box const& box, Si
     return calculate_fit_content_size(calculate_min_content_height(box), calculate_max_content_height(box), constraint, available_space);
 }
 
-float FormattingContext::calculate_auto_height(LayoutState const& state, Box const& box)
-{
-    if (is<ReplacedBox>(box)) {
-        return compute_height_for_replaced_element(state, verify_cast<ReplacedBox>(box));
-    }
-
-    return compute_auto_height_for_block_level_element(state, box);
-}
-
 float FormattingContext::calculate_min_content_width(Layout::Box const& box) const
 {
     if (box.has_intrinsic_width())
@@ -1024,11 +1022,7 @@ float FormattingContext::calculate_min_content_height(Layout::Box const& box) co
     auto context = const_cast<FormattingContext*>(this)->create_independent_formatting_context_if_needed(throwaway_state, box);
     VERIFY(context);
     context->run_intrinsic_sizing(box);
-    if (context->type() == FormattingContext::Type::Flex) {
-        cache.min_content_height = box_state.content_height();
-    } else {
-        cache.min_content_height = calculate_auto_height(throwaway_state, box);
-    }
+    cache.min_content_height = context->automatic_content_height();
 
     if (!isfinite(*cache.min_content_height)) {
         // HACK: If layout calculates a non-finite result, something went wrong. Force it to zero and log a little whine.
@@ -1066,11 +1060,7 @@ float FormattingContext::calculate_max_content_height(Layout::Box const& box) co
     auto context = const_cast<FormattingContext*>(this)->create_independent_formatting_context_if_needed(throwaway_state, box);
     VERIFY(context);
     context->run_intrinsic_sizing(box);
-    if (context->type() == FormattingContext::Type::Flex) {
-        cache.max_content_height = box_state.content_height();
-    } else {
-        cache.max_content_height = calculate_auto_height(throwaway_state, box);
-    }
+    cache.max_content_height = context->automatic_content_height();
 
     if (!isfinite(*cache.max_content_height)) {
         // HACK: If layout calculates a non-finite result, something went wrong. Force it to zero and log a little whine.

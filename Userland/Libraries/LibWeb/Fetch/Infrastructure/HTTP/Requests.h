@@ -254,6 +254,9 @@ public:
     [[nodiscard]] u8 redirect_count() const { return m_redirect_count; }
     void set_redirect_count(u8 redirect_count) { m_redirect_count = redirect_count; }
 
+    [[nodiscard]] ReferrerType const& referrer() const { return m_referrer; }
+    void set_referrer(ReferrerType referrer) { m_referrer = move(referrer); }
+
     [[nodiscard]] ResponseTainting response_tainting() const { return m_response_tainting; }
     void set_response_tainting(ResponseTainting response_tainting) { m_response_tainting = response_tainting; }
 

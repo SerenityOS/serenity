@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "NVMePollQueue.h"
-#include "Kernel/Arch/x86/IO.h"
-#include "Kernel/Devices/BlockDevice.h"
-#include "NVMeDefinitions.h"
+#include <Kernel/Arch/Delay.h>
+#include <Kernel/Devices/BlockDevice.h>
+#include <Kernel/Storage/NVMe/NVMeDefinitions.h>
+#include <Kernel/Storage/NVMe/NVMePollQueue.h>
 
 namespace Kernel {
 UNMAP_AFTER_INIT NVMePollQueue::NVMePollQueue(NonnullOwnPtr<Memory::Region> rw_dma_region, Memory::PhysicalPage const& rw_dma_page, u16 qid, u32 q_depth, OwnPtr<Memory::Region> cq_dma_region, NonnullRefPtrVector<Memory::PhysicalPage> cq_dma_page, OwnPtr<Memory::Region> sq_dma_region, NonnullRefPtrVector<Memory::PhysicalPage> sq_dma_page, Memory::TypedMapping<volatile DoorbellRegister> db_regs)
@@ -20,7 +20,7 @@ void NVMePollQueue::submit_sqe(NVMeSubmission& sub)
     NVMeQueue::submit_sqe(sub);
     SpinlockLocker lock_cq(m_cq_lock);
     while (!process_cq()) {
-        IO::delay(1);
+        microseconds_delay(1);
     }
 }
 

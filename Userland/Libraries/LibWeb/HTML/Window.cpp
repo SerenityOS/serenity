@@ -18,7 +18,6 @@
 #include <LibWeb/Bindings/EventTargetConstructor.h>
 #include <LibWeb/Bindings/EventTargetPrototype.h>
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
-#include <LibWeb/Bindings/IDLAbstractOperations.h>
 #include <LibWeb/Bindings/LocationObject.h>
 #include <LibWeb/Bindings/NavigatorObject.h>
 #include <LibWeb/Bindings/Replaceable.h>
@@ -50,6 +49,7 @@
 #include <LibWeb/RequestIdleCallback/IdleDeadline.h>
 #include <LibWeb/Selection/Selection.h>
 #include <LibWeb/WebAssembly/WebAssemblyObject.h>
+#include <LibWeb/WebIDL/AbstractOperations.h>
 
 namespace Web::HTML {
 
@@ -213,8 +213,8 @@ i32 Window::run_timer_initialization_steps(TimerHandler handler, i32 timeout, JS
 
         handler.visit(
             // 2. If handler is a Function, then invoke handler given arguments with the callback this value set to thisArg. If this throws an exception, catch it, and report the exception.
-            [&](JS::Handle<Bindings::CallbackType> callback) {
-                if (auto result = Bindings::IDL::invoke_callback(*callback, window.ptr(), arguments); result.is_error())
+            [&](JS::Handle<WebIDL::CallbackType> callback) {
+                if (auto result = WebIDL::invoke_callback(*callback, window.ptr(), arguments); result.is_error())
                     HTML::report_exception(result);
             },
             // 3. Otherwise:
@@ -277,11 +277,11 @@ i32 Window::run_timer_initialization_steps(TimerHandler handler, i32 timeout, JS
 }
 
 // https://html.spec.whatwg.org/multipage/imagebitmap-and-animations.html#run-the-animation-frame-callbacks
-i32 Window::request_animation_frame_impl(Bindings::CallbackType& js_callback)
+i32 Window::request_animation_frame_impl(WebIDL::CallbackType& js_callback)
 {
     return m_animation_frame_callback_driver.add([this, js_callback = JS::make_handle(js_callback)](auto) mutable {
         // 3. Invoke callback, passing now as the only argument,
-        auto result = Bindings::IDL::invoke_callback(*js_callback, {}, JS::Value(performance().now()));
+        auto result = WebIDL::invoke_callback(*js_callback, {}, JS::Value(performance().now()));
 
         // and if an exception is thrown, report the exception.
         if (result.is_error())
@@ -506,11 +506,11 @@ void Window::fire_a_page_transition_event(FlyString const& event_name, bool pers
 }
 
 // https://html.spec.whatwg.org/#dom-queuemicrotask
-void Window::queue_microtask_impl(Bindings::CallbackType& callback)
+void Window::queue_microtask_impl(WebIDL::CallbackType& callback)
 {
     // The queueMicrotask(callback) method must queue a microtask to invoke callback,
-    HTML::queue_a_microtask(&associated_document(), [callback = JS::make_handle(callback)]() mutable {
-        auto result = Bindings::IDL::invoke_callback(*callback, {});
+    HTML::queue_a_microtask(&associated_document(), [&callback]() mutable {
+        auto result = WebIDL::invoke_callback(callback, {});
         // and if callback throws an exception, report the exception.
         if (result.is_error())
             HTML::report_exception(result);
@@ -600,11 +600,11 @@ DOM::ExceptionOr<void> Window::post_message_impl(JS::Value message, String const
 {
     // FIXME: This is an ad-hoc hack implementation instead, since we don't currently
     //        have serialization and deserialization of messages.
-    HTML::queue_global_task(HTML::Task::Source::PostedMessage, *this, [strong_this = JS::make_handle(*this), message]() mutable {
+    HTML::queue_global_task(HTML::Task::Source::PostedMessage, *this, [this, message]() mutable {
         HTML::MessageEventInit event_init {};
         event_init.data = message;
         event_init.origin = "<origin>";
-        strong_this->dispatch_event(*HTML::MessageEvent::create(*strong_this, HTML::EventNames::message, event_init));
+        dispatch_event(*HTML::MessageEvent::create(*this, HTML::EventNames::message, event_init));
     });
     return {};
 }
@@ -629,6 +629,13 @@ void Window::set_name(String const& name)
     browsing_context()->set_name(name);
 }
 
+// https://html.spec.whatwg.org/multipage/interaction.html#transient-activation
+bool Window::has_transient_activation() const
+{
+    // FIXME: Implement this.
+    return false;
+}
+
 // https://w3c.github.io/requestidlecallback/#start-an-idle-period-algorithm
 void Window::start_an_idle_period()
 {
@@ -648,8 +655,8 @@ void Window::start_an_idle_period()
 
     // 5. Queue a task on the queue associated with the idle-task task source,
     //    which performs the steps defined in the invoke idle callbacks algorithm with window and getDeadline as parameters.
-    HTML::queue_global_task(HTML::Task::Source::IdleTask, *this, [window = JS::make_handle(*this)]() mutable {
-        window->invoke_idle_callbacks();
+    HTML::queue_global_task(HTML::Task::Source::IdleTask, *this, [this]() mutable {
+        invoke_idle_callbacks();
     });
 }
 
@@ -672,14 +679,14 @@ void Window::invoke_idle_callbacks()
             HTML::report_exception(result);
         // 4. If window's list of runnable idle callbacks is not empty, queue a task which performs the steps
         //    in the invoke idle callbacks algorithm with getDeadline and window as a parameters and return from this algorithm
-        HTML::queue_global_task(HTML::Task::Source::IdleTask, *this, [window = JS::make_handle(*this)]() mutable {
-            window->invoke_idle_callbacks();
+        HTML::queue_global_task(HTML::Task::Source::IdleTask, *this, [this]() mutable {
+            invoke_idle_callbacks();
         });
     }
 }
 
 // https://w3c.github.io/requestidlecallback/#the-requestidlecallback-method
-u32 Window::request_idle_callback_impl(Bindings::CallbackType& callback)
+u32 Window::request_idle_callback_impl(WebIDL::CallbackType& callback)
 {
     // 1. Let window be this Window object.
     auto& window = *this;
@@ -689,7 +696,7 @@ u32 Window::request_idle_callback_impl(Bindings::CallbackType& callback)
     auto handle = window.m_idle_callback_identifier;
     // 4. Push callback to the end of window's list of idle request callbacks, associated with handle.
     auto handler = [callback = JS::make_handle(callback)](JS::NonnullGCPtr<RequestIdleCallback::IdleDeadline> deadline) -> JS::Completion {
-        return Bindings::IDL::invoke_callback(const_cast<Bindings::CallbackType&>(*callback), {}, deadline.ptr());
+        return WebIDL::invoke_callback(const_cast<WebIDL::CallbackType&>(*callback), {}, deadline.ptr());
     };
     window.m_idle_request_callbacks.append(adopt_ref(*new IdleCallback(move(handler), handle)));
     // 5. Return handle and then continue running this algorithm asynchronously.
@@ -757,6 +764,7 @@ void Window::initialize(JS::Realm& realm)
     define_native_accessor(realm, "top", top_getter, nullptr, JS::Attribute::Enumerable);
     define_native_accessor(realm, "parent", parent_getter, {}, JS::Attribute::Enumerable);
     define_native_accessor(realm, "document", document_getter, {}, JS::Attribute::Enumerable);
+    define_native_accessor(realm, "frameElement", frame_element_getter, {}, JS::Attribute::Enumerable);
     define_native_accessor(realm, "name", name_getter, name_setter, JS::Attribute::Enumerable);
     define_native_accessor(realm, "history", history_getter, {}, JS::Attribute::Enumerable);
     define_native_accessor(realm, "performance", performance_getter, performance_setter, JS::Attribute::Enumerable | JS::Attribute::Configurable);
@@ -836,7 +844,7 @@ void Window::initialize(JS::Realm& realm)
 
 HTML::Origin Window::origin() const
 {
-    return impl().associated_document().origin();
+    return associated_document().origin();
 }
 
 // https://webidl.spec.whatwg.org/#platform-object-setprototypeof
@@ -862,7 +870,7 @@ static JS::ThrowCompletionOr<HTML::Window*> impl_from(JS::VM& vm)
 
     if (!is<Window>(*this_object))
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, "Window");
-    return &static_cast<Window*>(this_object)->impl();
+    return static_cast<Window*>(this_object);
 }
 
 JS_DEFINE_NATIVE_FUNCTION(Window::alert)
@@ -906,7 +914,7 @@ JS_DEFINE_NATIVE_FUNCTION(Window::prompt)
 static JS::ThrowCompletionOr<TimerHandler> make_timer_handler(JS::VM& vm, JS::Value handler)
 {
     if (handler.is_function())
-        return JS::make_handle(vm.heap().allocate_without_realm<Bindings::CallbackType>(handler.as_function(), HTML::incumbent_settings_object()));
+        return JS::make_handle(vm.heap().allocate_without_realm<WebIDL::CallbackType>(handler.as_function(), HTML::incumbent_settings_object()));
     return TRY(handler.to_string(vm));
 }
 
@@ -988,7 +996,7 @@ JS_DEFINE_NATIVE_FUNCTION(Window::request_animation_frame)
     auto* callback_object = TRY(vm.argument(0).to_object(vm));
     if (!callback_object->is_function())
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAFunctionNoParam);
-    auto* callback = vm.heap().allocate_without_realm<Bindings::CallbackType>(*callback_object, HTML::incumbent_settings_object());
+    auto* callback = vm.heap().allocate_without_realm<WebIDL::CallbackType>(*callback_object, HTML::incumbent_settings_object());
     return JS::Value(impl->request_animation_frame_impl(*callback));
 }
 
@@ -1011,7 +1019,7 @@ JS_DEFINE_NATIVE_FUNCTION(Window::queue_microtask)
     if (!callback_object->is_function())
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAFunctionNoParam);
 
-    auto* callback = vm.heap().allocate_without_realm<Bindings::CallbackType>(*callback_object, HTML::incumbent_settings_object());
+    auto* callback = vm.heap().allocate_without_realm<WebIDL::CallbackType>(*callback_object, HTML::incumbent_settings_object());
 
     impl->queue_microtask_impl(*callback);
     return JS::js_undefined();
@@ -1027,7 +1035,7 @@ JS_DEFINE_NATIVE_FUNCTION(Window::request_idle_callback)
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAFunctionNoParam);
     // FIXME: accept options object
 
-    auto* callback = vm.heap().allocate_without_realm<Bindings::CallbackType>(*callback_object, HTML::incumbent_settings_object());
+    auto* callback = vm.heap().allocate_without_realm<WebIDL::CallbackType>(*callback_object, HTML::incumbent_settings_object());
 
     return JS::Value(impl->request_idle_callback_impl(*callback));
 }
@@ -1125,6 +1133,33 @@ JS_DEFINE_NATIVE_FUNCTION(Window::document_getter)
 {
     auto* impl = TRY(impl_from(vm));
     return &impl->associated_document();
+}
+
+// https://html.spec.whatwg.org/multipage/browsers.html#dom-frameelement
+JS_DEFINE_NATIVE_FUNCTION(Window::frame_element_getter)
+{
+    auto* impl = TRY(impl_from(vm));
+
+    // 1. Let current be this Window object's browsing context.
+    auto* current = impl->browsing_context();
+
+    // 2. If current is null, then return null.
+    if (!current)
+        return JS::js_null();
+
+    // 3. Let container be current's container.
+    auto* container = current->container();
+
+    // 4. If container is null, then return null.
+    if (!container)
+        return JS::js_null();
+
+    // 5. If container's node document's origin is not same origin-domain with the current settings object's origin, then return null.
+    if (!container->document().origin().is_same_origin(current_settings_object().origin()))
+        return JS::js_null();
+
+    // 6. Return container.
+    return container;
 }
 
 JS_DEFINE_NATIVE_FUNCTION(Window::performance_getter)
@@ -1426,26 +1461,26 @@ JS_DEFINE_NATIVE_FUNCTION(Window::name_setter)
     return JS::js_undefined();
 }
 
-#define __ENUMERATE(attribute, event_name)                                        \
-    JS_DEFINE_NATIVE_FUNCTION(Window::attribute##_getter)                         \
-    {                                                                             \
-        auto* impl = TRY(impl_from(vm));                                          \
-        auto retval = impl->attribute();                                          \
-        if (!retval)                                                              \
-            return JS::js_null();                                                 \
-        return &retval->callback;                                                 \
-    }                                                                             \
-    JS_DEFINE_NATIVE_FUNCTION(Window::attribute##_setter)                         \
-    {                                                                             \
-        auto* impl = TRY(impl_from(vm));                                          \
-        auto value = vm.argument(0);                                              \
-        Bindings::CallbackType* cpp_value = nullptr;                              \
-        if (value.is_object()) {                                                  \
-            cpp_value = vm.heap().allocate_without_realm<Bindings::CallbackType>( \
-                value.as_object(), HTML::incumbent_settings_object());            \
-        }                                                                         \
-        impl->set_##attribute(cpp_value);                                         \
-        return JS::js_undefined();                                                \
+#define __ENUMERATE(attribute, event_name)                                      \
+    JS_DEFINE_NATIVE_FUNCTION(Window::attribute##_getter)                       \
+    {                                                                           \
+        auto* impl = TRY(impl_from(vm));                                        \
+        auto retval = impl->attribute();                                        \
+        if (!retval)                                                            \
+            return JS::js_null();                                               \
+        return &retval->callback;                                               \
+    }                                                                           \
+    JS_DEFINE_NATIVE_FUNCTION(Window::attribute##_setter)                       \
+    {                                                                           \
+        auto* impl = TRY(impl_from(vm));                                        \
+        auto value = vm.argument(0);                                            \
+        WebIDL::CallbackType* cpp_value = nullptr;                              \
+        if (value.is_object()) {                                                \
+            cpp_value = vm.heap().allocate_without_realm<WebIDL::CallbackType>( \
+                value.as_object(), HTML::incumbent_settings_object());          \
+        }                                                                       \
+        impl->set_##attribute(cpp_value);                                       \
+        return JS::js_undefined();                                              \
     }
 ENUMERATE_GLOBAL_EVENT_HANDLERS(__ENUMERATE)
 ENUMERATE_WINDOW_EVENT_HANDLERS(__ENUMERATE)

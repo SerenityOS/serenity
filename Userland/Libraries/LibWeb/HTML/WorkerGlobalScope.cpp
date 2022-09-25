@@ -85,14 +85,14 @@ JS::NonnullGCPtr<WorkerNavigator> WorkerGlobalScope::navigator() const
 }
 
 #undef __ENUMERATE
-#define __ENUMERATE(attribute_name, event_name)                                 \
-    void WorkerGlobalScope::set_##attribute_name(Bindings::CallbackType* value) \
-    {                                                                           \
-        set_event_handler_attribute(event_name, move(value));                   \
-    }                                                                           \
-    Bindings::CallbackType* WorkerGlobalScope::attribute_name()                 \
-    {                                                                           \
-        return event_handler_attribute(event_name);                             \
+#define __ENUMERATE(attribute_name, event_name)                               \
+    void WorkerGlobalScope::set_##attribute_name(WebIDL::CallbackType* value) \
+    {                                                                         \
+        set_event_handler_attribute(event_name, move(value));                 \
+    }                                                                         \
+    WebIDL::CallbackType* WorkerGlobalScope::attribute_name()                 \
+    {                                                                         \
+        return event_handler_attribute(event_name);                           \
     }
 ENUMERATE_WORKER_GLOBAL_SCOPE_EVENT_HANDLERS(__ENUMERATE)
 #undef __ENUMERATE

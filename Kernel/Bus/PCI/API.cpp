@@ -94,10 +94,10 @@ u32 get_BAR5(Address address)
     return read32(address, PCI::RegisterOffset::BAR5);
 }
 
-u32 get_BAR(Address address, u8 bar)
+u32 get_BAR(Address address, HeaderType0BaseRegister pci_bar)
 {
-    VERIFY(bar <= 5);
-    switch (bar) {
+    VERIFY(to_underlying(pci_bar) <= 5);
+    switch (to_underlying(pci_bar)) {
     case 0:
         return get_BAR0(address);
     case 1:
@@ -110,6 +110,24 @@ u32 get_BAR(Address address, u8 bar)
         return get_BAR4(address);
     case 5:
         return get_BAR5(address);
+    default:
+        VERIFY_NOT_REACHED();
+    }
+}
+
+BARSpaceType get_BAR_space_type(u32 pci_bar_value)
+{
+    // Note: For IO space, bit 0 is set to 1.
+    if (pci_bar_value & (1 << 0))
+        return BARSpaceType::IOSpace;
+    auto memory_space_type = (pci_bar_value >> 1) & 0b11;
+    switch (memory_space_type) {
+    case 0:
+        return BARSpaceType::Memory32BitSpace;
+    case 1:
+        return BARSpaceType::Memory16BitSpace;
+    case 2:
+        return BARSpaceType::Memory64BitSpace;
     default:
         VERIFY_NOT_REACHED();
     }
@@ -138,11 +156,11 @@ static u8 read8_offsetted(Address address, u32 field) { return Access::the().rea
 static u16 read16_offsetted(Address address, u32 field) { return Access::the().read16_field(address, field); }
 static u32 read32_offsetted(Address address, u32 field) { return Access::the().read32_field(address, field); }
 
-size_t get_BAR_space_size(Address address, u8 bar_number)
+size_t get_BAR_space_size(Address address, HeaderType0BaseRegister pci_bar)
 {
     // See PCI Spec 2.3, Page 222
-    VERIFY(bar_number < 6);
-    u8 field = to_underlying(PCI::RegisterOffset::BAR0) + (bar_number << 2);
+    VERIFY(to_underlying(pci_bar) < 6);
+    u8 field = to_underlying(PCI::RegisterOffset::BAR0) + (to_underlying(pci_bar) << 2);
     u32 bar_reserved = read32_offsetted(address, field);
     write32_offsetted(address, field, 0xFFFFFFFF);
     u32 space_size = read32_offsetted(address, field);

@@ -82,12 +82,12 @@ void MediaQueryList::remove_listener(DOM::IDLEventListener* listener)
     remove_event_listener_without_options(HTML::EventNames::change, *listener);
 }
 
-void MediaQueryList::set_onchange(Bindings::CallbackType* event_handler)
+void MediaQueryList::set_onchange(WebIDL::CallbackType* event_handler)
 {
     set_event_handler_attribute(HTML::EventNames::change, event_handler);
 }
 
-Bindings::CallbackType* MediaQueryList::onchange()
+WebIDL::CallbackType* MediaQueryList::onchange()
 {
     return event_handler_attribute(HTML::EventNames::change);
 }

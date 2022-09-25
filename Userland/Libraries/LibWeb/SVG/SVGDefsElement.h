@@ -23,5 +23,3 @@ private:
 };
 
 }
-
-WRAPPER_HACK(SVGDefsElement, Web::SVG)

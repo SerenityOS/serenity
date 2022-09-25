@@ -15,8 +15,8 @@
 #include <AK/QuickSort.h>
 #include <AK/RefPtr.h>
 #include <AK/Try.h>
-#include <LibCore/File.h>
 #include <LibCore/MappedFile.h>
+#include <LibCore/Stream.h>
 #include <LibELF/Image.h>
 #include <LibSymbolication/Symbolication.h>
 #include <sys/stat.h>
@@ -236,9 +236,9 @@ OwnPtr<Debug::DebugInfo> g_kernel_debug_info;
 
 ErrorOr<NonnullOwnPtr<Profile>> Profile::load_from_perfcore_file(StringView path)
 {
-    auto file = TRY(Core::File::open(path, Core::OpenMode::ReadOnly));
+    auto file = TRY(Core::Stream::File::open(path, Core::Stream::OpenMode::Read));
 
-    auto json = JsonValue::from_string(file->read_all());
+    auto json = JsonValue::from_string(TRY(file->read_all()));
     if (json.is_error() || !json.value().is_object())
         return Error::from_string_literal("Invalid perfcore format (not a JSON object)");
 

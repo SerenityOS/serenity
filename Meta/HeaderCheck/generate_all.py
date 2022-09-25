@@ -12,7 +12,9 @@ TEST_FILE_TEMPLATE = '''\
 
 
 def get_headers_here():
-    result = subprocess.run(['git', 'ls-files', 'Userland/Libraries/*.h'], check=True, capture_output=True, text=True)
+    result = subprocess.run(
+        ['git', 'ls-files', 'AK/*.h', 'Userland/Libraries/*.h'],
+        check=True, capture_output=True, text=True)
     assert result.stderr == ''
     output = result.stdout.split('\n')
     assert output[-1] == ''  # Trailing newline
@@ -61,8 +63,6 @@ if __name__ == '__main__':
         print('Must set SERENITY_SOURCE_DIR first!', file=sys.stderr)
         exit(1)
     if len(sys.argv) == 2:
-        with open('/tmp/the_arg', 'w') as fp:
-            fp.write(sys.argv[1])
         run(os.environ['SERENITY_SOURCE_DIR'], sys.argv[1])
     else:
         print('Usage: SERENITY_SOURCE_DIR=/path/to/serenity {} SERENITY_BUILD_ARCH'

@@ -204,7 +204,7 @@ DOM::ExceptionOr<String> serialize_node_to_xml_string_impl(JS::NonnullGCPtr<DOM:
         return serialize_processing_instruction(static_cast<DOM::ProcessingInstruction&>(*root), require_well_formed);
     }
 
-    if (is<DOM::Attribute>(*root)) {
+    if (is<DOM::Attr>(*root)) {
         // -> An Attr object
         //    Return an empty string.
         return String::empty();

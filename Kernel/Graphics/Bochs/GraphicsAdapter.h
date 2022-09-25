@@ -19,7 +19,6 @@ namespace Kernel {
 class GraphicsManagement;
 struct BochsDisplayMMIORegisters;
 
-class BochsDisplayConnector;
 class BochsGraphicsAdapter final : public GenericGraphicsAdapter
     , public PCI::Device {
     friend class GraphicsManagement;
@@ -33,6 +32,6 @@ private:
 
     explicit BochsGraphicsAdapter(PCI::DeviceIdentifier const&);
 
-    LockRefPtr<BochsDisplayConnector> m_display_connector;
+    LockRefPtr<DisplayConnector> m_display_connector;
 };
 }

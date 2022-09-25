@@ -57,6 +57,8 @@ void History::clear()
 
 void History::update_title(String const& title)
 {
+    if (m_current == -1)
+        return;
     m_items[m_current].title = title;
 }
 

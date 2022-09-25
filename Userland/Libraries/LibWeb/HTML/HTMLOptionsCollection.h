@@ -29,5 +29,3 @@ private:
 };
 
 }
-
-WRAPPER_HACK(HTMLOptionsCollection, Web::HTML)

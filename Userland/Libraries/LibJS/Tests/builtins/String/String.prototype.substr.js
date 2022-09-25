@@ -21,6 +21,24 @@ test("basic functionality", () => {
     expect("hello friends".substr(-3, -5)).toBe("");
 });
 
+test("Non numeric values", () => {
+    expect("a".substr(0, Infinity)).toBe("a");
+    expect("a".substr(0, -Infinity)).toBe("");
+    expect("abc".substr(0, Infinity)).toBe("abc");
+    expect("abc".substr(0, -Infinity)).toBe("");
+    expect("abc".substr(Infinity, Infinity)).toBe("");
+    expect("abc".substr(Infinity)).toBe("");
+    expect("abc".substr(-Infinity)).toBe("abc");
+    expect("abc".substr(-Infinity, 1)).toBe("a");
+    expect("abc".substr(-Infinity, Infinity)).toBe("abc");
+
+    expect("abc".substr(NaN)).toBe("abc");
+    expect("abc".substr(NaN, NaN)).toBe("");
+    expect("abc".substr(0, NaN)).toBe("");
+    expect("abc".substr(NaN, Infinity)).toBe("abc");
+    expect("abc".substr(NaN, -Infinity)).toBe("");
+});
+
 test("UTF-16", () => {
     var s = "😀";
     expect(s).toHaveLength(2);

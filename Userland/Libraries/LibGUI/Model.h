@@ -98,6 +98,13 @@ public:
 
     WeakPtr<PersistentHandle> register_persistent_index(Badge<PersistentModelIndex>, ModelIndex const&);
 
+    // NOTE: This is a public version of create_index() which is normally protected,
+    //       but this can be used when creating a model translator like in Ladybird.
+    ModelIndex unsafe_create_index(int row, int column, void const* data = nullptr) const
+    {
+        return create_index(row, column, data);
+    }
+
 protected:
     Model();
 

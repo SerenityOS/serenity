@@ -18,6 +18,10 @@ public:
     ~GridFormattingContext();
 
     virtual void run(Box const&, LayoutMode) override;
+    virtual float automatic_content_height() const override;
+
+private:
+    float m_automatic_content_height { 0 };
 };
 
 }

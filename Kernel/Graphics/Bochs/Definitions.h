@@ -34,6 +34,7 @@ enum class BochsDISPIRegisters {
     VIRT_HEIGHT = 0x7,
     X_OFFSET = 0x8,
     Y_OFFSET = 0x9,
+    VIDEO_RAM_64K_CHUNKS_COUNT = 0xA,
 };
 
 struct [[gnu::packed]] DISPIInterface {
@@ -47,6 +48,7 @@ struct [[gnu::packed]] DISPIInterface {
     u16 virt_height;
     u16 x_offset;
     u16 y_offset;
+    u16 vram_64k_chunks_count;
 };
 
 struct [[gnu::packed]] ExtensionRegisters {

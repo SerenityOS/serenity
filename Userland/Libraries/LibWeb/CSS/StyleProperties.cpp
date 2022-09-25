@@ -7,12 +7,12 @@
 
 #include <AK/TypeCasts.h>
 #include <LibCore/DirIterator.h>
-#include <LibGfx/Font/FontDatabase.h>
 #include <LibWeb/CSS/Clip.h>
 #include <LibWeb/CSS/StyleProperties.h>
 #include <LibWeb/FontCache.h>
 #include <LibWeb/Layout/BlockContainer.h>
 #include <LibWeb/Layout/Node.h>
+#include <LibWeb/Platform/FontPlugin.h>
 
 namespace Web::CSS {
 
@@ -99,15 +99,15 @@ Color StyleProperties::color_or_fallback(CSS::PropertyID id, Layout::NodeWithSty
 NonnullRefPtr<Gfx::Font> StyleProperties::font_fallback(bool monospace, bool bold)
 {
     if (monospace && bold)
-        return Gfx::FontDatabase::default_fixed_width_font().bold_variant();
+        return Platform::FontPlugin::the().default_fixed_width_font().bold_variant();
 
     if (monospace)
-        return Gfx::FontDatabase::default_fixed_width_font();
+        return Platform::FontPlugin::the().default_fixed_width_font();
 
     if (bold)
-        return Gfx::FontDatabase::default_font().bold_variant();
+        return Platform::FontPlugin::the().default_font().bold_variant();
 
-    return Gfx::FontDatabase::default_font();
+    return Platform::FontPlugin::the().default_font();
 }
 
 float StyleProperties::line_height(Layout::Node const& layout_node) const

@@ -48,8 +48,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio recvfd sendfd proc exec rpath unix sigaction"));
     auto app = TRY(GUI::Application::try_create(arguments));
-    Config::pledge_domain("Taskbar");
+    Config::pledge_domains({ "Taskbar", "Calendar" });
     Config::monitor_domain("Taskbar");
+    Config::monitor_domain("Calendar");
     app->event_loop().register_signal(SIGCHLD, [](int) {
         // Wait all available children
         while (waitpid(-1, nullptr, WNOHANG) > 0)

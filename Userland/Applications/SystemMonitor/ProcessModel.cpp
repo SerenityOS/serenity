@@ -528,3 +528,19 @@ void ProcessModel::update()
     //        It would be good if GUI::Model had a way to orchestrate removal/insertion while preserving indices.
     did_update(previous_tid_count == m_threads.size() ? GUI::Model::UpdateFlag::DontInvalidateIndices : GUI::Model::UpdateFlag::InvalidateAllIndices);
 }
+
+bool ProcessModel::is_default_column(int index) const
+{
+    switch (index) {
+    case Column::PID:
+    case Column::TID:
+    case Column::Name:
+    case Column::CPU:
+    case Column::User:
+    case Column::Virtual:
+    case Column::DirtyPrivate:
+        return true;
+    default:
+        return false;
+    }
+}

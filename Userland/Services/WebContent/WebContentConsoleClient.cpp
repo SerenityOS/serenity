@@ -143,11 +143,14 @@ void WebContentConsoleClient::clear()
 // 2.3. Printer(logLevel, args[, options]), https://console.spec.whatwg.org/#printer
 JS::ThrowCompletionOr<JS::Value> WebContentConsoleClient::printer(JS::Console::LogLevel log_level, PrinterArguments arguments)
 {
+    auto styling = escape_html_entities(m_current_message_style.string_view());
+    m_current_message_style.clear();
+
     if (log_level == JS::Console::LogLevel::Trace) {
         auto trace = arguments.get<JS::Console::Trace>();
         StringBuilder html;
         if (!trace.label.is_empty())
-            html.appendff("<span class='title'>{}</span><br>", escape_html_entities(trace.label));
+            html.appendff("<span class='title' style='{}'>{}</span><br>", styling, escape_html_entities(trace.label));
 
         html.append("<span class='trace'>"sv);
         for (auto& function_name : trace.stack)
@@ -160,7 +163,7 @@ JS::ThrowCompletionOr<JS::Value> WebContentConsoleClient::printer(JS::Console::L
 
     if (log_level == JS::Console::LogLevel::Group || log_level == JS::Console::LogLevel::GroupCollapsed) {
         auto group = arguments.get<JS::Console::Group>();
-        begin_group(group.label, log_level == JS::Console::LogLevel::Group);
+        begin_group(String::formatted("<span style='{}'>{}</span>", styling, escape_html_entities(group.label)), log_level == JS::Console::LogLevel::Group);
         return JS::js_undefined();
     }
 
@@ -170,23 +173,23 @@ JS::ThrowCompletionOr<JS::Value> WebContentConsoleClient::printer(JS::Console::L
     StringBuilder html;
     switch (log_level) {
     case JS::Console::LogLevel::Debug:
-        html.append("<span class=\"debug\">(d) "sv);
+        html.appendff("<span class=\"debug\" style=\"{}\">(d) "sv, styling);
         break;
     case JS::Console::LogLevel::Error:
-        html.append("<span class=\"error\">(e) "sv);
+        html.appendff("<span class=\"error\" style=\"{}\">(e) "sv, styling);
         break;
     case JS::Console::LogLevel::Info:
-        html.append("<span class=\"info\">(i) "sv);
+        html.appendff("<span class=\"info\" style=\"{}\">(i) "sv, styling);
         break;
     case JS::Console::LogLevel::Log:
-        html.append("<span class=\"log\"> "sv);
+        html.appendff("<span class=\"log\" style=\"{}\"> "sv, styling);
         break;
     case JS::Console::LogLevel::Warn:
     case JS::Console::LogLevel::CountReset:
-        html.append("<span class=\"warn\">(w) "sv);
+        html.appendff("<span class=\"warn\" style=\"{}\">(w) "sv, styling);
         break;
     default:
-        html.append("<span>"sv);
+        html.appendff("<span style=\"{}\">"sv, styling);
         break;
     }
 

@@ -14,7 +14,6 @@
 #include <LibJS/Runtime/ObjectEnvironment.h>
 #include <LibJS/Runtime/VM.h>
 #include <LibWeb/Bindings/EventTargetPrototype.h>
-#include <LibWeb/Bindings/IDLAbstractOperations.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/DOM/AbortSignal.h>
 #include <LibWeb/DOM/DOMEventListener.h>
@@ -32,6 +31,7 @@
 #include <LibWeb/HTML/HTMLFrameSetElement.h>
 #include <LibWeb/HTML/Window.h>
 #include <LibWeb/UIEvents/EventNames.h>
+#include <LibWeb/WebIDL/AbstractOperations.h>
 
 namespace Web::DOM {
 
@@ -299,7 +299,7 @@ static EventTarget* determine_target_of_event_handler(EventTarget& event_target,
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#event-handler-attributes:event-handler-idl-attributes-2
-Bindings::CallbackType* EventTarget::event_handler_attribute(FlyString const& name)
+WebIDL::CallbackType* EventTarget::event_handler_attribute(FlyString const& name)
 {
     // 1. Let eventTarget be the result of determining the target of an event handler given this object and name.
     auto target = determine_target_of_event_handler(*this, name);
@@ -313,7 +313,7 @@ Bindings::CallbackType* EventTarget::event_handler_attribute(FlyString const& na
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#getting-the-current-value-of-the-event-handler
-Bindings::CallbackType* EventTarget::get_current_value_of_event_handler(FlyString const& name)
+WebIDL::CallbackType* EventTarget::get_current_value_of_event_handler(FlyString const& name)
 {
     // 1. Let handlerMap be eventTarget's event handler map. (NOTE: Not necessary)
 
@@ -464,16 +464,16 @@ Bindings::CallbackType* EventTarget::get_current_value_of_event_handler(FlyStrin
         function->set_script_or_module({});
 
         // 12. Set eventHandler's value to the result of creating a Web IDL EventHandler callback function object whose object reference is function and whose callback context is settings object.
-        event_handler->value = realm.heap().allocate_without_realm<Bindings::CallbackType>(*function, settings_object);
+        event_handler->value = realm.heap().allocate_without_realm<WebIDL::CallbackType>(*function, settings_object);
     }
 
     // 4. Return eventHandler's value.
-    VERIFY(event_handler->value.has<Bindings::CallbackType*>());
-    return *event_handler->value.get_pointer<Bindings::CallbackType*>();
+    VERIFY(event_handler->value.has<WebIDL::CallbackType*>());
+    return *event_handler->value.get_pointer<WebIDL::CallbackType*>();
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#event-handler-attributes:event-handler-idl-attributes-3
-void EventTarget::set_event_handler_attribute(FlyString const& name, Bindings::CallbackType* value)
+void EventTarget::set_event_handler_attribute(FlyString const& name, WebIDL::CallbackType* value)
 {
     // 1. Let eventTarget be the result of determining the target of an event handler given this object and name.
     auto event_target = determine_target_of_event_handler(*this, name);
@@ -548,8 +548,7 @@ void EventTarget::activate_event_handler(FlyString const& name, HTML::EventHandl
             // The argument must be an object and it must be an Event.
             auto event_wrapper_argument = vm.argument(0);
             VERIFY(event_wrapper_argument.is_object());
-            auto& event_wrapper = verify_cast<DOM::Event>(event_wrapper_argument.as_object());
-            auto& event = event_wrapper.impl();
+            auto& event = verify_cast<DOM::Event>(event_wrapper_argument.as_object());
 
             TRY(event_target->process_event_handler_for_event(name, event));
             return JS::js_undefined();
@@ -557,7 +556,7 @@ void EventTarget::activate_event_handler(FlyString const& name, HTML::EventHandl
         0, "", &realm);
 
     // NOTE: As per the spec, the callback context is arbitrary.
-    auto* callback = realm.heap().allocate_without_realm<Bindings::CallbackType>(*callback_function, verify_cast<HTML::EnvironmentSettingsObject>(*realm.host_defined()));
+    auto* callback = realm.heap().allocate_without_realm<WebIDL::CallbackType>(*callback_function, verify_cast<HTML::EnvironmentSettingsObject>(*realm.host_defined()));
 
     // 5. Let listener be a new event listener whose type is the event handler event type corresponding to eventHandler and callback is callback.
     auto* listener = realm.heap().allocate_without_realm<DOMEventListener>();
@@ -636,7 +635,7 @@ JS::ThrowCompletionOr<void> EventTarget::process_event_handler_for_event(FlyStri
         //        calls directly into the callback without considering things such as proxies, it is a waste. However, if it observable, then we must reuse the this_value that was given to the callback.
         auto* this_value = error_event.current_target().ptr();
 
-        return_value_or_error = Bindings::IDL::invoke_callback(*callback, this_value, wrapped_message, wrapped_filename, wrapped_lineno, wrapped_colno, error_event.error());
+        return_value_or_error = WebIDL::invoke_callback(*callback, this_value, wrapped_message, wrapped_filename, wrapped_lineno, wrapped_colno, error_event.error());
     } else {
         // -> Otherwise
         // Invoke callback with one argument, the value of which is the Event object event, with the callback this value set to event's currentTarget. Let return value be the callback's return value. [WEBIDL]
@@ -647,7 +646,7 @@ JS::ThrowCompletionOr<void> EventTarget::process_event_handler_for_event(FlyStri
         // FIXME: The comments about this in the special_error_event_handling path also apply here.
         auto* this_value = event.current_target().ptr();
 
-        return_value_or_error = Bindings::IDL::invoke_callback(*callback, this_value, wrapped_event);
+        return_value_or_error = WebIDL::invoke_callback(*callback, this_value, wrapped_event);
     }
 
     // If an exception gets thrown by the callback, end these steps and allow the exception to propagate. (It will propagate to the DOM event dispatch logic, which will then report the exception.)

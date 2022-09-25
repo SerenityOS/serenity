@@ -41,6 +41,6 @@ private:
     explicit SharedIRQHandler(u8 interrupt_number);
     bool m_enabled { true };
     GenericInterruptHandler::List m_handlers;
-    LockRefPtr<IRQController> m_responsible_irq_controller;
+    NonnullLockRefPtr<IRQController> m_responsible_irq_controller;
 };
 }

@@ -14,20 +14,7 @@
 namespace Web::Bindings {
 
 #define WEB_PLATFORM_OBJECT(class_, base_class) \
-    JS_OBJECT(class_, base_class)               \
-    auto& impl()                                \
-    {                                           \
-        return *this;                           \
-    }                                           \
-    auto const& impl() const                    \
-    {                                           \
-        return *this;                           \
-    }
-
-#define WRAPPER_HACK(class_, namespace_)        \
-    namespace Web::Bindings {                   \
-    using class_##Wrapper = namespace_::class_; \
-    }
+    JS_OBJECT(class_, base_class)
 
 // https://webidl.spec.whatwg.org/#dfn-platform-object
 class PlatformObject

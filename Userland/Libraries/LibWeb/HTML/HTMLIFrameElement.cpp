@@ -38,23 +38,70 @@ void HTMLIFrameElement::inserted()
 {
     HTMLElement::inserted();
 
-    if (!is_connected())
+    // When an iframe element element is inserted into a document whose browsing context is non-null, the user agent must run these steps:
+    if (document().browsing_context()) {
+        // 1. Create a new nested browsing context for element.
+        create_new_nested_browsing_context();
+
+        // FIXME: 2. If element has a sandbox attribute, then parse the sandboxing directive given the attribute's value and element's iframe sandboxing flag set.
+
+        // 3. Process the iframe attributes for element, with initialInsertion set to true.
+        process_the_iframe_attributes(true);
+        load_src(attribute(HTML::AttributeNames::src));
+    }
+}
+
+// https://html.spec.whatwg.org/multipage/urls-and-fetching.html#will-lazy-load-element-steps
+bool HTMLIFrameElement::will_lazy_load_element() const
+{
+    // 1. If scripting is disabled for element, then return false.
+    if (document().is_scripting_disabled())
+        return false;
+
+    // FIXME: 2. If element's lazy loading attribute is in the Lazy state, then return true.
+
+    // 3. Return false.
+    return false;
+}
+
+// https://html.spec.whatwg.org/multipage/iframe-embed-object.html#process-the-iframe-attributes
+void HTMLIFrameElement::process_the_iframe_attributes(bool initial_insertion)
+{
+    // 1. If element's srcdoc attribute is specified, then:
+    if (has_attribute(HTML::AttributeNames::srcdoc)) {
+        // 2. Set element's current navigation was lazy loaded boolean to false.
+        m_current_navigation_was_lazy_loaded = false;
+
+        // 3. If the will lazy load element steps given element return true, then:
+        if (will_lazy_load_element()) {
+            // FIXME: 1. Set element's lazy load resumption steps to the rest of this algorithm starting with the step labeled navigate to the srcdoc resource.
+            // FIXME: 2. Set element's current navigation was lazy loaded boolean to true.
+            // FIXME: 3. Start intersection-observing a lazy loading element for element.
+            // FIXME: 4. Return.
+        }
+
+        // FIXME: 4. Navigate to the srcdoc resource: navigate an iframe or frame given element and a new response whose URL list is « about:srcdoc », header list is « (`Content-Type`, `text/html`) », and body is the value of element's srcdoc attribute.
+
+        // FIXME: The resulting Document must be considered an iframe srcdoc document.
+
         return;
+    }
 
-    // 1. Create a new nested browsing context for element.
-    create_new_nested_browsing_context();
-
-    // FIXME: 2. If element has a sandbox attribute, then parse the sandboxing directive given the attribute's value and element's iframe sandboxing flag set.
-
-    // 3. Process the iframe attributes for element, with initialInsertion set to true.
-    load_src(attribute(HTML::AttributeNames::src));
+    // 2. Otherwise, run the shared attribute processing steps for iframe and frame elements given element and initialInsertion.
+    shared_attribute_processing_steps_for_iframe_and_frame(initial_insertion);
 }
 
 // https://html.spec.whatwg.org/multipage/iframe-embed-object.html#the-iframe-element:the-iframe-element-7
 void HTMLIFrameElement::removed_from(DOM::Node* node)
 {
     HTMLElement::removed_from(node);
-    discard_nested_browsing_context();
+
+    // When an iframe element is removed from a document, the user agent must discard the element's nested browsing context,
+    // if it is not null, and then set the element's nested browsing context to null.
+    if (m_nested_browsing_context) {
+        m_nested_browsing_context->discard();
+        m_nested_browsing_context = nullptr;
+    }
 }
 
 void HTMLIFrameElement::load_src(String const& value)
@@ -82,8 +129,12 @@ void HTMLIFrameElement::load_src(String const& value)
 // https://html.spec.whatwg.org/multipage/iframe-embed-object.html#iframe-load-event-steps
 void run_iframe_load_event_steps(HTML::HTMLIFrameElement& element)
 {
-    // 1. Assert: element's nested browsing context is not null.
-    VERIFY(element.nested_browsing_context());
+    // FIXME: 1. Assert: element's nested browsing context is not null.
+    if (!element.nested_browsing_context()) {
+        // FIXME: For some reason, we sometimes end up here in the middle of SunSpider.
+        dbgln("FIXME: run_iframe_load_event_steps called with null nested browsing context");
+        return;
+    }
 
     // 2. Let childDocument be the active document of element's nested browsing context.
     [[maybe_unused]] auto* child_document = element.nested_browsing_context()->active_document();

@@ -52,6 +52,8 @@ interface Element : Node {
     readonly attribute long clientLeft;
     readonly attribute long clientWidth;
     readonly attribute long clientHeight;
+
+    [CEReactions] undefined insertAdjacentHTML(DOMString position, DOMString text);
 };
 
 Element includes ParentNode;

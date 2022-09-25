@@ -1,11 +1,13 @@
 /*
  * Copyright (c) 2020, Luke Wilde <lukew@serenityos.org>
+ * Copyright (c) 2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/CSS/SelectorEngine.h>
+#include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/HTMLCollection.h>
 #include <LibWeb/DOM/NodeOperations.h>
 #include <LibWeb/DOM/ParentNode.h>
@@ -82,15 +84,22 @@ u32 ParentNode::child_element_count() const
     return count;
 }
 
+void ParentNode::visit_edges(Cell::Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    visitor.visit(m_children);
+}
+
 // https://dom.spec.whatwg.org/#dom-parentnode-children
 JS::NonnullGCPtr<HTMLCollection> ParentNode::children()
 {
     // The children getter steps are to return an HTMLCollection collection rooted at this matching only element children.
-    // FIXME: This should return the same HTMLCollection object every time,
-    //        but that would cause a reference cycle since HTMLCollection refs the root.
-    return HTMLCollection::create(*this, [this](Element const& element) {
-        return is_parent_of(element);
-    });
+    if (!m_children) {
+        m_children = HTMLCollection::create(*this, [this](Element const& element) {
+            return is_parent_of(element);
+        });
+    }
+    return *m_children;
 }
 
 // https://dom.spec.whatwg.org/#concept-getelementsbytagname
@@ -99,26 +108,27 @@ JS::NonnullGCPtr<HTMLCollection> ParentNode::get_elements_by_tag_name(FlyString 
 {
     // 1. If qualifiedName is "*" (U+002A), return a HTMLCollection rooted at root, whose filter matches only descendant elements.
     if (qualified_name == "*") {
-        return HTMLCollection::create(*this, [this](Element const& element) {
-            return element.is_descendant_of(*this);
+        return HTMLCollection::create(*this, [](Element const&) {
+            return true;
         });
     }
 
-    // FIXME: 2. Otherwise, if root’s node document is an HTML document, return a HTMLCollection rooted at root, whose filter matches the following descendant elements:
-    //           (It is currently always a HTML document)
-    return HTMLCollection::create(*this, [this, qualified_name](Element const& element) {
-        if (!element.is_descendant_of(*this))
-            return false;
+    // 2. Otherwise, if root’s node document is an HTML document, return a HTMLCollection rooted at root, whose filter matches the following descendant elements:
+    if (root().document().document_type() == Document::Type::HTML) {
+        return HTMLCollection::create(*this, [qualified_name](Element const& element) {
+            // - Whose namespace is the HTML namespace and whose qualified name is qualifiedName, in ASCII lowercase.
+            if (element.namespace_() == Namespace::HTML)
+                return element.qualified_name().to_lowercase() == qualified_name.to_lowercase();
 
-        // - Whose namespace is the HTML namespace and whose qualified name is qualifiedName, in ASCII lowercase.
-        if (element.namespace_() == Namespace::HTML)
-            return element.qualified_name().to_lowercase() == qualified_name.to_lowercase();
+            // - Whose namespace is not the HTML namespace and whose qualified name is qualifiedName.
+            return element.qualified_name() == qualified_name;
+        });
+    }
 
-        // - Whose namespace is not the HTML namespace and whose qualified name is qualifiedName.
+    // 3. Otherwise, return a HTMLCollection rooted at root, whose filter matches descendant elements whose qualified name is qualifiedName.
+    return HTMLCollection::create(*this, [qualified_name](Element const& element) {
         return element.qualified_name() == qualified_name;
     });
-
-    // FIXME: 3. Otherwise, return a HTMLCollection rooted at root, whose filter matches descendant elements whose qualified name is qualifiedName.
 }
 
 // https://dom.spec.whatwg.org/#concept-getelementsbytagnamens
@@ -132,28 +142,28 @@ JS::NonnullGCPtr<HTMLCollection> ParentNode::get_elements_by_tag_name_ns(FlyStri
 
     // 2. If both namespace and localName are "*" (U+002A), return a HTMLCollection rooted at root, whose filter matches descendant elements.
     if (namespace_ == "*" && local_name == "*") {
-        return HTMLCollection::create(*this, [this](Element const& element) {
-            return element.is_descendant_of(*this);
+        return HTMLCollection::create(*this, [](Element const&) {
+            return true;
         });
     }
 
     // 3. Otherwise, if namespace is "*" (U+002A), return a HTMLCollection rooted at root, whose filter matches descendant elements whose local name is localName.
     if (namespace_ == "*") {
-        return HTMLCollection::create(*this, [this, local_name](Element const& element) {
-            return element.is_descendant_of(*this) && element.local_name() == local_name;
+        return HTMLCollection::create(*this, [local_name](Element const& element) {
+            return element.local_name() == local_name;
         });
     }
 
     // 4. Otherwise, if localName is "*" (U+002A), return a HTMLCollection rooted at root, whose filter matches descendant elements whose namespace is namespace.
     if (local_name == "*") {
-        return HTMLCollection::create(*this, [this, namespace_](Element const& element) {
-            return element.is_descendant_of(*this) && element.namespace_() == namespace_;
+        return HTMLCollection::create(*this, [namespace_](Element const& element) {
+            return element.namespace_() == namespace_;
         });
     }
 
     // 5. Otherwise, return a HTMLCollection rooted at root, whose filter matches descendant elements whose namespace is namespace and local name is localName.
-    return HTMLCollection::create(*this, [this, namespace_, local_name](Element const& element) {
-        return element.is_descendant_of(*this) && element.namespace_() == namespace_ && element.local_name() == local_name;
+    return HTMLCollection::create(*this, [namespace_, local_name](Element const& element) {
+        return element.namespace_() == namespace_ && element.local_name() == local_name;
     });
 }
 

@@ -13,11 +13,11 @@ namespace Web::HTML {
 
 #undef __ENUMERATE
 #define __ENUMERATE(attribute_name, event_name)                                                           \
-    void GlobalEventHandlers::set_##attribute_name(Bindings::CallbackType* value)                         \
+    void GlobalEventHandlers::set_##attribute_name(WebIDL::CallbackType* value)                           \
     {                                                                                                     \
         global_event_handlers_to_event_target(event_name).set_event_handler_attribute(event_name, value); \
     }                                                                                                     \
-    Bindings::CallbackType* GlobalEventHandlers::attribute_name()                                         \
+    WebIDL::CallbackType* GlobalEventHandlers::attribute_name()                                           \
     {                                                                                                     \
         return global_event_handlers_to_event_target(event_name).event_handler_attribute(event_name);     \
     }

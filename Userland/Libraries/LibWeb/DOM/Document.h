@@ -29,7 +29,9 @@
 #include <LibWeb/HTML/HTMLScriptElement.h>
 #include <LibWeb/HTML/History.h>
 #include <LibWeb/HTML/Origin.h>
+#include <LibWeb/HTML/SandboxingFlagSet.h>
 #include <LibWeb/HTML/Scripting/Environments.h>
+#include <LibWeb/HTML/VisibilityState.h>
 #include <LibWeb/HTML/Window.h>
 
 namespace Web::DOM {
@@ -38,6 +40,32 @@ enum class QuirksMode {
     No,
     Limited,
     Yes
+};
+
+// https://html.spec.whatwg.org/multipage/dom.html#document-load-timing-info
+struct DocumentLoadTimingInfo {
+    // https://html.spec.whatwg.org/multipage/dom.html#navigation-start-time
+    double navigation_start_time { 0 };
+    // https://html.spec.whatwg.org/multipage/dom.html#dom-interactive-time
+    double dom_interactive_time { 0 };
+    // https://html.spec.whatwg.org/multipage/dom.html#dom-content-loaded-event-start-time
+    double dom_content_loaded_event_start_time { 0 };
+    // https://html.spec.whatwg.org/multipage/dom.html#dom-content-loaded-event-end-time
+    double dom_content_loaded_event_end_time { 0 };
+    // https://html.spec.whatwg.org/multipage/dom.html#dom-complete-time
+    double dom_complete_time { 0 };
+    // https://html.spec.whatwg.org/multipage/dom.html#load-event-start-time
+    double load_event_start_time { 0 };
+    // https://html.spec.whatwg.org/multipage/dom.html#load-event-end-time
+    double load_event_end_time { 0 };
+};
+
+// https://html.spec.whatwg.org/multipage/dom.html#document-unload-timing-info
+struct DocumentUnloadTimingInfo {
+    // https://html.spec.whatwg.org/multipage/dom.html#unload-event-start-time
+    double unload_event_start_time { 0 };
+    // https://html.spec.whatwg.org/multipage/dom.html#unload-event-end-time
+    double unload_event_end_time { 0 };
 };
 
 class Document
@@ -133,11 +161,10 @@ public:
     String title() const;
     void set_title(String const&);
 
-    void attach_to_browsing_context(Badge<HTML::BrowsingContext>, HTML::BrowsingContext&);
-    void detach_from_browsing_context(Badge<HTML::BrowsingContext>, HTML::BrowsingContext&);
-
     HTML::BrowsingContext* browsing_context() { return m_browsing_context.ptr(); }
     HTML::BrowsingContext const* browsing_context() const { return m_browsing_context.ptr(); }
+
+    void set_browsing_context(HTML::BrowsingContext*);
 
     Page* page();
     Page const* page() const;
@@ -183,6 +210,7 @@ public:
     JS::NonnullGCPtr<HTMLCollection> links();
     JS::NonnullGCPtr<HTMLCollection> forms();
     JS::NonnullGCPtr<HTMLCollection> scripts();
+    JS::NonnullGCPtr<HTMLCollection> all();
 
     String const& source() const { return m_source; }
     void set_source(String const& source) { m_source = source; }
@@ -316,6 +344,12 @@ public:
     bool hidden() const;
     String visibility_state() const;
 
+    // https://html.spec.whatwg.org/multipage/interaction.html#update-the-visibility-state
+    void update_the_visibility_state(HTML::VisibilityState);
+
+    // NOTE: This does not fire any events, unlike update_the_visibility_state().
+    void set_visibility_state(Badge<HTML::BrowsingContext>, HTML::VisibilityState);
+
     void run_the_resize_steps();
     void run_the_scroll_steps();
 
@@ -363,6 +397,44 @@ public:
 
     auto& pending_scroll_event_targets() { return m_pending_scroll_event_targets; }
     auto& pending_scrollend_event_targets() { return m_pending_scrollend_event_targets; }
+
+    // https://html.spec.whatwg.org/#completely-loaded
+    bool is_completely_loaded() const;
+
+    // https://html.spec.whatwg.org/multipage/dom.html#concept-document-navigation-id
+    Optional<String> navigation_id() const;
+    void set_navigation_id(Optional<String>);
+
+    // https://html.spec.whatwg.org/multipage/origin.html#active-sandboxing-flag-set
+    HTML::SandboxingFlagSet active_sandboxing_flag_set() const;
+
+    // https://html.spec.whatwg.org/multipage/dom.html#concept-document-policy-container
+    HTML::PolicyContainer policy_container() const;
+
+    // https://html.spec.whatwg.org/multipage/browsers.html#list-of-the-descendant-browsing-contexts
+    Vector<NonnullRefPtr<HTML::BrowsingContext>> list_of_descendant_browsing_contexts() const;
+
+    // https://html.spec.whatwg.org/multipage/window-object.html#discard-a-document
+    void discard();
+
+    // https://html.spec.whatwg.org/multipage/browsing-the-web.html#abort-a-document
+    void abort();
+
+    // https://html.spec.whatwg.org/multipage/browsing-the-web.html#unload-a-document
+    void unload(bool recursive_flag = false, Optional<DocumentUnloadTimingInfo> = {});
+
+    // https://html.spec.whatwg.org/multipage/dom.html#active-parser
+    RefPtr<HTML::HTMLParser> active_parser();
+
+    // https://html.spec.whatwg.org/multipage/dom.html#load-timing-info
+    DocumentLoadTimingInfo& load_timing_info() { return m_load_timing_info; }
+    DocumentLoadTimingInfo const& load_timing_info() const { return m_load_timing_info; }
+    void set_load_timing_info(DocumentLoadTimingInfo const& load_timing_info) { m_load_timing_info = load_timing_info; }
+
+    // https://html.spec.whatwg.org/multipage/dom.html#previous-document-unload-timing
+    DocumentUnloadTimingInfo& previous_document_unload_timing() { return m_previous_document_unload_timing; }
+    DocumentUnloadTimingInfo const& previous_document_unload_timing() const { return m_previous_document_unload_timing; }
+    void set_previous_document_unload_timing(DocumentUnloadTimingInfo const& previous_document_unload_timing) { m_previous_document_unload_timing = previous_document_unload_timing; }
 
 protected:
     virtual void visit_edges(Cell::Visitor&) override;
@@ -454,6 +526,9 @@ private:
 
     size_t m_number_of_things_delaying_the_load_event { 0 };
 
+    // https://html.spec.whatwg.org/multipage/browsing-the-web.html#concept-document-salvageable
+    bool m_salvageable { true };
+
     // https://html.spec.whatwg.org/#page-showing
     bool m_page_showing { false };
 
@@ -486,8 +561,36 @@ private:
 
     // https://dom.spec.whatwg.org/#concept-document-origin
     HTML::Origin m_origin;
+
+    JS::GCPtr<HTMLCollection> m_applets;
+    JS::GCPtr<HTMLCollection> m_anchors;
+    JS::GCPtr<HTMLCollection> m_images;
+    JS::GCPtr<HTMLCollection> m_embeds;
+    JS::GCPtr<HTMLCollection> m_links;
+    JS::GCPtr<HTMLCollection> m_forms;
+    JS::GCPtr<HTMLCollection> m_scripts;
+    JS::GCPtr<HTMLCollection> m_all;
+
+    // https://html.spec.whatwg.org/#completely-loaded-time
+    Optional<AK::Time> m_completely_loaded_time;
+
+    // https://html.spec.whatwg.org/multipage/dom.html#concept-document-navigation-id
+    Optional<String> m_navigation_id;
+
+    // https://html.spec.whatwg.org/multipage/origin.html#active-sandboxing-flag-set
+    HTML::SandboxingFlagSet m_active_sandboxing_flag_set;
+
+    // https://html.spec.whatwg.org/multipage/dom.html#concept-document-policy-container
+    HTML::PolicyContainer m_policy_container;
+
+    // https://html.spec.whatwg.org/multipage/interaction.html#visibility-state
+    HTML::VisibilityState m_visibility_state { HTML::VisibilityState::Hidden };
+
+    // https://html.spec.whatwg.org/multipage/dom.html#load-timing-info
+    DocumentLoadTimingInfo m_load_timing_info;
+
+    // https://html.spec.whatwg.org/multipage/dom.html#previous-document-unload-timing
+    DocumentUnloadTimingInfo m_previous_document_unload_timing;
 };
 
 }
-
-WRAPPER_HACK(Document, Web::DOM)

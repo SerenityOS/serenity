@@ -17,7 +17,6 @@
 #include <Kernel/Locking/Spinlock.h>
 #include <Kernel/Memory/ScopedAddressSpaceSwitcher.h>
 #include <Kernel/Process.h>
-#include <Kernel/RTC.h>
 #include <LibC/elf.h>
 #include <LibELF/Core.h>
 

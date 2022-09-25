@@ -11,7 +11,7 @@ are built.
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/llvm/cmake/modules/HandleLLVMOptions.cmake b/llvm/cmake/modules/HandleLLVMOptions.cmake
-index 56d05f5b5..8597d80d3 100644
+index 56d05f5b5fcedf692cae22ffbe10a047d5532635..8597d80d3afd3e70e1306fdb7c36963f8e6aede4 100644
 --- a/llvm/cmake/modules/HandleLLVMOptions.cmake
 +++ b/llvm/cmake/modules/HandleLLVMOptions.cmake
 @@ -228,7 +228,7 @@ endif()

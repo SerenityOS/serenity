@@ -4,13 +4,12 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "NVMeQueue.h"
-#include "Kernel/StdLib.h"
-#include "NVMeQueue.h"
-#include <Kernel/Arch/x86/IO.h>
+#include <Kernel/Arch/Delay.h>
+#include <Kernel/StdLib.h>
 #include <Kernel/Storage/NVMe/NVMeController.h>
 #include <Kernel/Storage/NVMe/NVMeInterruptQueue.h>
 #include <Kernel/Storage/NVMe/NVMePollQueue.h>
+#include <Kernel/Storage/NVMe/NVMeQueue.h>
 
 namespace Kernel {
 ErrorOr<NonnullLockRefPtr<NVMeQueue>> NVMeQueue::try_create(u16 qid, Optional<u8> irq, u32 q_depth, OwnPtr<Memory::Region> cq_dma_region, NonnullRefPtrVector<Memory::PhysicalPage> cq_dma_page, OwnPtr<Memory::Region> sq_dma_region, NonnullRefPtrVector<Memory::PhysicalPage> sq_dma_page, Memory::TypedMapping<volatile DoorbellRegister> db_regs)
@@ -127,7 +126,7 @@ u16 NVMeQueue::submit_sync_sqe(NVMeSubmission& sub)
                 index = m_qdepth - 1;
         }
         cqe_cid = m_cqe_array[index].command_id;
-        IO::delay(1);
+        microseconds_delay(1);
     } while (cid != cqe_cid);
 
     auto status = CQ_STATUS_FIELD(m_cqe_array[m_cq_head].status);

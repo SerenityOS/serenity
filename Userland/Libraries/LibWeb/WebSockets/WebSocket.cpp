@@ -58,7 +58,7 @@ DOM::ExceptionOr<JS::NonnullGCPtr<WebSocket>> WebSocket::create_with_global_obje
         return DOM::SyntaxError::create(window, "Presence of URL fragment is invalid");
     // 5. If `protocols` is a string, set `protocols` to a sequence consisting of just that string
     // 6. If any of the values in `protocols` occur more than once or otherwise fail to match the requirements, throw SyntaxError
-    return JS::NonnullGCPtr(*window.heap().allocate<WebSocket>(window.realm(), window.impl(), url_record));
+    return JS::NonnullGCPtr(*window.heap().allocate<WebSocket>(window.realm(), window, url_record));
 }
 
 WebSocket::WebSocket(HTML::Window& window, AK::URL& url)
@@ -231,14 +231,14 @@ void WebSocket::on_message(ByteBuffer message, bool is_text)
 }
 
 #undef __ENUMERATE
-#define __ENUMERATE(attribute_name, event_name)                         \
-    void WebSocket::set_##attribute_name(Bindings::CallbackType* value) \
-    {                                                                   \
-        set_event_handler_attribute(event_name, value);                 \
-    }                                                                   \
-    Bindings::CallbackType* WebSocket::attribute_name()                 \
-    {                                                                   \
-        return event_handler_attribute(event_name);                     \
+#define __ENUMERATE(attribute_name, event_name)                       \
+    void WebSocket::set_##attribute_name(WebIDL::CallbackType* value) \
+    {                                                                 \
+        set_event_handler_attribute(event_name, value);               \
+    }                                                                 \
+    WebIDL::CallbackType* WebSocket::attribute_name()                 \
+    {                                                                 \
+        return event_handler_attribute(event_name);                   \
     }
 ENUMERATE_WEBSOCKET_EVENT_HANDLERS(__ENUMERATE)
 #undef __ENUMERATE

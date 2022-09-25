@@ -55,5 +55,3 @@ namespace Web::DOM {
 template<>
 inline bool Node::fast_is<HTML::HTMLAnchorElement>() const { return is_html_anchor_element(); }
 }
-
-WRAPPER_HACK(HTMLAnchorElement, Web::HTML)

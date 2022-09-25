@@ -6,7 +6,9 @@
 
 #pragma once
 
+#include <AK/StringView.h>
 #include <AK/Types.h>
+#include <AK/Vector.h>
 
 namespace WindowServer {
 

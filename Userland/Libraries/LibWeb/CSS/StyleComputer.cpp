@@ -953,7 +953,7 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
         if (parent_element && parent_element->computed_css_values())
             font_metrics = parent_element->computed_css_values()->computed_font().pixel_metrics();
         else
-            font_metrics = Gfx::FontDatabase::default_font().pixel_metrics();
+            font_metrics = Platform::FontPlugin::the().default_font().pixel_metrics();
 
         auto parent_font_size = [&]() -> float {
             if (!parent_element || !parent_element->computed_css_values())

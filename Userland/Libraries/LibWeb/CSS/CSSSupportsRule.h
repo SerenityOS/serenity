@@ -42,5 +42,3 @@ template<>
 inline bool CSSRule::fast_is<CSSSupportsRule>() const { return type() == CSSRule::Type::Supports; }
 
 }
-
-WRAPPER_HACK(CSSSupportsRule, Web::CSS)

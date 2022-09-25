@@ -526,4 +526,13 @@ void ConnectionFromClient::request_file(NonnullRefPtr<Web::FileRequest>& file_re
 
     async_did_request_file(file_request->path(), id);
 }
+
+void ConnectionFromClient::set_system_visibility_state(bool visible)
+{
+    m_page_host->page().top_level_browsing_context().set_system_visibility_state(
+        visible
+            ? Web::HTML::VisibilityState::Visible
+            : Web::HTML::VisibilityState::Hidden);
+}
+
 }

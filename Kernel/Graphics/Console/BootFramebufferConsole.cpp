@@ -71,6 +71,31 @@ void BootFramebufferConsole::write(size_t x, size_t y, char ch, Color background
         GenericFramebufferConsoleImpl::write(x, y, ch, background, foreground, critical);
 }
 
+void BootFramebufferConsole::set_cursor(size_t x, size_t y)
+{
+    // Note: To ensure we don't trigger a deadlock, let's assert in
+    // case we already locked the spinlock, so we know there's a bug
+    // in the call path.
+    VERIFY(!m_lock.is_locked());
+    SpinlockLocker lock(m_lock);
+    hide_cursor();
+    m_x = x;
+    m_y = y;
+    show_cursor();
+}
+
+void BootFramebufferConsole::hide_cursor()
+{
+    VERIFY(m_lock.is_locked());
+    GenericFramebufferConsoleImpl::hide_cursor();
+}
+
+void BootFramebufferConsole::show_cursor()
+{
+    VERIFY(m_lock.is_locked());
+    GenericFramebufferConsoleImpl::show_cursor();
+}
+
 u8* BootFramebufferConsole::framebuffer_data()
 {
     VERIFY(m_lock.is_locked());

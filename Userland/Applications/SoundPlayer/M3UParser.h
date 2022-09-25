@@ -32,7 +32,7 @@ struct M3UEntry {
 
 class M3UParser {
 public:
-    static NonnullOwnPtr<M3UParser> from_file(String path);
+    static NonnullOwnPtr<M3UParser> from_file(StringView path);
     static NonnullOwnPtr<M3UParser> from_memory(String const& m3u_contents, bool utf8);
 
     NonnullOwnPtr<Vector<M3UEntry>> parse(bool include_extended_info);

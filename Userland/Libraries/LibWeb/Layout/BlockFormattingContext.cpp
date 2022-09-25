@@ -39,6 +39,11 @@ bool BlockFormattingContext::is_initial() const
     return is<InitialContainingBlock>(root());
 }
 
+float BlockFormattingContext::automatic_content_height() const
+{
+    return compute_auto_height_for_block_formatting_context_root(m_state, root());
+}
+
 void BlockFormattingContext::run(Box const&, LayoutMode layout_mode)
 {
     if (is_initial()) {
@@ -316,8 +321,10 @@ void BlockFormattingContext::compute_width_for_block_level_replaced_element_in_n
     m_state.get_mutable(box).set_content_width(compute_width_for_replaced_element(m_state, box));
 }
 
-float BlockFormattingContext::compute_theoretical_height(LayoutState const& state, Box const& box)
+void BlockFormattingContext::compute_height(Box const& box, LayoutState& state)
 {
+    resolve_vertical_box_model_metrics(box, *box.containing_block(), state);
+
     auto const& computed_values = box.computed_values();
     auto containing_block_height = CSS::Length::make_px(containing_block_height_for(box, state));
 
@@ -339,27 +346,8 @@ float BlockFormattingContext::compute_theoretical_height(LayoutState const& stat
     auto specified_min_height = computed_values.min_height().resolved(box, containing_block_height).resolved(box);
     if (!specified_min_height.is_auto())
         height = max(height, specified_min_height.to_px(box));
-    return height;
-}
 
-void BlockFormattingContext::compute_height(Box const& box, LayoutState& state)
-{
-    auto const& computed_values = box.computed_values();
-    auto width_of_containing_block_as_length = CSS::Length::make_px(containing_block_width_for(box, state));
-
-    // First, resolve the top/bottom parts of the surrounding box model.
-
-    auto& box_state = state.get_mutable(box);
-
-    box_state.margin_top = computed_values.margin().top().resolved(box, width_of_containing_block_as_length).to_px(box);
-    box_state.margin_bottom = computed_values.margin().bottom().resolved(box, width_of_containing_block_as_length).to_px(box);
-
-    box_state.border_top = computed_values.border_top().width;
-    box_state.border_bottom = computed_values.border_bottom().width;
-    box_state.padding_top = computed_values.padding().top().resolved(box, width_of_containing_block_as_length).to_px(box);
-    box_state.padding_bottom = computed_values.padding().bottom().resolved(box, width_of_containing_block_as_length).to_px(box);
-
-    box_state.set_content_height(compute_theoretical_height(state, box));
+    state.get_mutable(box).set_content_height(height);
 }
 
 void BlockFormattingContext::layout_inline_children(BlockContainer const& block_container, LayoutMode layout_mode)
@@ -493,11 +481,11 @@ void BlockFormattingContext::layout_block_level_children(BlockContainer const& b
     }
 }
 
-void BlockFormattingContext::compute_vertical_box_model_metrics(Box const& box, BlockContainer const& containing_block)
+void BlockFormattingContext::resolve_vertical_box_model_metrics(Box const& box, BlockContainer const& containing_block, LayoutState& state)
 {
-    auto& box_state = m_state.get_mutable(box);
+    auto& box_state = state.get_mutable(box);
     auto const& computed_values = box.computed_values();
-    auto width_of_containing_block = CSS::Length::make_px(containing_block_width_for(box));
+    auto width_of_containing_block = CSS::Length::make_px(containing_block_width_for(box, state));
 
     box_state.margin_top = computed_values.margin().top().resolved(box, width_of_containing_block).resolved(containing_block).to_px(box);
     box_state.margin_bottom = computed_values.margin().bottom().resolved(box, width_of_containing_block).resolved(containing_block).to_px(box);
@@ -512,18 +500,31 @@ void BlockFormattingContext::place_block_level_element_in_normal_flow_vertically
     auto& box_state = m_state.get_mutable(child_box);
     auto const& computed_values = child_box.computed_values();
 
-    compute_vertical_box_model_metrics(child_box, containing_block);
+    resolve_vertical_box_model_metrics(child_box, containing_block, m_state);
 
     auto y = FormattingContext::compute_box_y_position_with_respect_to_siblings(child_box, box_state);
 
     auto clear_floating_boxes = [&](FloatSideData& float_side) {
         if (!float_side.current_boxes.is_empty()) {
-            float clearance_y = 0;
+            // NOTE: Floating boxes are globally relevant within this BFC, *but* their offset coordinates
+            //       are relative to their containing block.
+            //       This means that we have to first convert to a root-space Y coordinate before clearing,
+            //       and then convert back to a local Y coordinate when assigning the cleared offset to
+            //       the `child_box` layout state.
+
+            // First, find the lowest margin box edge on this float side and calculate the Y offset just below it.
+            float clearance_y_in_root = 0;
             for (auto const& floating_box : float_side.current_boxes) {
-                auto const& floating_box_state = m_state.get(floating_box.box);
-                clearance_y = max(clearance_y, floating_box_state.offset.y() + floating_box_state.border_box_height());
+                auto floating_box_rect_in_root = margin_box_rect_in_ancestor_coordinate_space(floating_box.box, root(), m_state);
+                clearance_y_in_root = max(clearance_y_in_root, floating_box_rect_in_root.bottom() + 1);
             }
-            y = max(y, clearance_y);
+
+            // Then, convert the clearance Y to a coordinate relative to the containing block of `child_box`.
+            float clearance_y_in_containing_block = clearance_y_in_root;
+            for (auto* containing_block = child_box.containing_block(); containing_block && containing_block != &root(); containing_block = containing_block->containing_block())
+                clearance_y_in_containing_block -= m_state.get(*containing_block).offset.y();
+
+            y = max(y, clearance_y_in_containing_block);
             float_side.clear();
         }
     };
@@ -656,7 +657,7 @@ void BlockFormattingContext::layout_floating_box(Box const& box, BlockContainer 
             }
 
             if (fits_on_line) {
-                auto const previous_rect = border_box_rect_in_ancestor_coordinate_space(previous_box.box, root(), m_state);
+                auto const previous_rect = margin_box_rect_in_ancestor_coordinate_space(previous_box.box, root(), m_state);
                 if (previous_rect.contains_vertically(y_in_root + side_data.y_offset)) {
                     // This box touches another already floating box. Stack after others.
                     offset_from_edge = wanted_offset_from_edge;
@@ -773,7 +774,7 @@ BlockFormattingContext::SpaceUsedByFloats BlockFormattingContext::space_used_by_
         auto const& floating_box = *floating_box_ptr;
         auto const& floating_box_state = m_state.get(floating_box.box);
         // NOTE: The floating box is *not* in the final horizontal position yet, but the size and vertical position is valid.
-        auto rect = border_box_rect_in_ancestor_coordinate_space(floating_box.box, root(), m_state);
+        auto rect = margin_box_rect_in_ancestor_coordinate_space(floating_box.box, root(), m_state);
         if (rect.contains_vertically(y)) {
             space_used_by_floats.left = floating_box.offset_from_edge
                 + floating_box_state.content_width()
@@ -786,7 +787,7 @@ BlockFormattingContext::SpaceUsedByFloats BlockFormattingContext::space_used_by_
         auto const& floating_box = *floating_box_ptr;
         auto const& floating_box_state = m_state.get(floating_box.box);
         // NOTE: The floating box is *not* in the final horizontal position yet, but the size and vertical position is valid.
-        auto rect = border_box_rect_in_ancestor_coordinate_space(floating_box.box, root(), m_state);
+        auto rect = margin_box_rect_in_ancestor_coordinate_space(floating_box.box, root(), m_state);
         if (rect.contains_vertically(y)) {
             space_used_by_floats.right = floating_box.offset_from_edge
                 + floating_box_state.margin_box_left();

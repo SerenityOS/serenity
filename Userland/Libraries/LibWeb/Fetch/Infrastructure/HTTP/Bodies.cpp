@@ -8,13 +8,13 @@
 
 namespace Web::Fetch::Infrastructure {
 
-Body::Body(ReadableStreamDummy stream)
-    : m_stream(stream)
+Body::Body(JS::Handle<Streams::ReadableStream> stream)
+    : m_stream(move(stream))
 {
 }
 
-Body::Body(ReadableStreamDummy stream, SourceType source, Optional<u64> length)
-    : m_stream(stream)
+Body::Body(JS::Handle<Streams::ReadableStream> stream, SourceType source, Optional<u64> length)
+    : m_stream(move(stream))
     , m_source(move(source))
     , m_length(move(length))
 {

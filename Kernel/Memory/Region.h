@@ -122,11 +122,6 @@ public:
         return (vaddr - m_range.base()).get() / PAGE_SIZE;
     }
 
-    [[nodiscard]] unsigned offset_in_page_from_address(VirtualAddress vaddr) const
-    {
-        return (vaddr - m_range.base()).get() % PAGE_SIZE;
-    }
-
     [[nodiscard]] VirtualAddress vaddr_from_page_index(size_t page_index) const
     {
         return vaddr().offset(page_index * PAGE_SIZE);
@@ -224,7 +219,7 @@ private:
     }
 
     [[nodiscard]] PageFaultResponse handle_cow_fault(size_t page_index);
-    [[nodiscard]] PageFaultResponse handle_inode_fault(size_t page_index, size_t offset_in_page_in_region);
+    [[nodiscard]] PageFaultResponse handle_inode_fault(size_t page_index);
     [[nodiscard]] PageFaultResponse handle_zero_fault(size_t page_index, PhysicalPage& page_in_slot_at_time_of_fault);
 
     [[nodiscard]] bool map_individual_page_impl(size_t page_index);

@@ -53,5 +53,3 @@ private:
 };
 
 }
-
-WRAPPER_HACK(HTMLImageElement, Web::HTML)

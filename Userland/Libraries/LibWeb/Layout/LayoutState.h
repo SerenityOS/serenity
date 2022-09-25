@@ -148,8 +148,6 @@ struct LayoutState {
 
     HashMap<NodeWithStyleAndBoxModelMetrics const*, NonnullOwnPtr<IntrinsicSizes>> mutable intrinsic_sizes;
 
-    HashMap<Box const*, float> mutable flex_item_size_cache;
-
     LayoutState const* m_parent { nullptr };
     LayoutState const& m_root;
 };

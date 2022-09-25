@@ -6,7 +6,9 @@
 
 #pragma once
 
+#include <AK/NonnullOwnPtr.h>
 #include <AK/StringView.h>
+#include <AK/Try.h>
 #include <Kernel/Memory/MemoryManager.h>
 
 namespace Kernel::Memory {
@@ -21,8 +23,23 @@ struct TypedMapping {
     const T& operator*() const { return *ptr(); }
     T& operator*() { return *ptr(); }
     OwnPtr<Region> region;
+    PhysicalAddress paddr;
     size_t offset { 0 };
+    size_t length { 0 };
 };
+
+template<typename T>
+static ErrorOr<NonnullOwnPtr<TypedMapping<T>>> adopt_new_nonnull_own_typed_mapping(PhysicalAddress paddr, size_t length, Region::Access access = Region::Access::Read)
+{
+    auto mapping_length = TRY(page_round_up(paddr.offset_in_page() + length));
+    auto region = TRY(MM.allocate_kernel_region(paddr.page_base(), mapping_length, {}, access));
+    auto table = TRY(adopt_nonnull_own_or_enomem(new (nothrow) Memory::TypedMapping<T>()));
+    table->region = move(region);
+    table->offset = paddr.offset_in_page();
+    table->paddr = paddr;
+    table->length = length;
+    return table;
+}
 
 template<typename T>
 static ErrorOr<TypedMapping<T>> map_typed(PhysicalAddress paddr, size_t length, Region::Access access = Region::Access::Read)
@@ -31,6 +48,8 @@ static ErrorOr<TypedMapping<T>> map_typed(PhysicalAddress paddr, size_t length, 
     auto mapping_length = TRY(page_round_up(paddr.offset_in_page() + length));
     table.region = TRY(MM.allocate_kernel_region(paddr.page_base(), mapping_length, {}, access));
     table.offset = paddr.offset_in_page();
+    table.paddr = paddr;
+    table.length = length;
     return table;
 }
 

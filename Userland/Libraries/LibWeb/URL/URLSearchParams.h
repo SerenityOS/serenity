@@ -57,5 +57,3 @@ private:
 };
 
 }
-
-WRAPPER_HACK(URLSearchParams, Web::URL)

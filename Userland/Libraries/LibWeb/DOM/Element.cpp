@@ -98,7 +98,7 @@ ExceptionOr<void> Element::set_attribute(FlyString const& name, String const& va
 
     // 4. If attribute is null, create an attribute whose local name is qualifiedName, value is value, and node document is this’s node document, then append this attribute to this, and then return.
     if (!attribute) {
-        auto new_attribute = Attribute::create(document(), insert_as_lowercase ? name.to_lowercase() : name, value);
+        auto new_attribute = Attr::create(document(), insert_as_lowercase ? name.to_lowercase() : name, value);
         m_attributes->append_attribute(new_attribute);
 
         attribute = new_attribute.ptr();
@@ -208,7 +208,7 @@ DOM::ExceptionOr<bool> Element::toggle_attribute(FlyString const& name, Optional
     if (!attribute) {
         // 1. If force is not given or is true, create an attribute whose local name is qualifiedName, value is the empty string, and node document is this’s node document, then append this attribute to this, and then return true.
         if (!force.has_value() || force.value()) {
-            auto new_attribute = Attribute::create(document(), insert_as_lowercase ? name.to_lowercase() : name, "");
+            auto new_attribute = Attr::create(document(), insert_as_lowercase ? name.to_lowercase() : name, "");
             m_attributes->append_attribute(new_attribute);
 
             parse_attribute(new_attribute->local_name(), "");
@@ -545,18 +545,16 @@ CSS::CSSStyleDeclaration* Element::style_for_bindings()
 void Element::make_html_uppercased_qualified_name()
 {
     // This is allowed by the spec: "User agents could optimize qualified name and HTML-uppercased qualified name by storing them in internal slots."
-    if (namespace_() == Namespace::HTML /* FIXME: and its node document is an HTML document */)
+    if (namespace_() == Namespace::HTML && document().document_type() == Document::Type::HTML)
         m_html_uppercased_qualified_name = qualified_name().to_uppercase();
     else
         m_html_uppercased_qualified_name = qualified_name();
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#queue-an-element-task
-void Element::queue_an_element_task(HTML::Task::Source source, Function<void()> steps)
+void Element::queue_an_element_task(HTML::Task::Source source, JS::SafeFunction<void()> steps)
 {
-    auto task = HTML::Task::create(source, &document(), [strong_this = JS::make_handle(*this), steps = move(steps)] {
-        steps();
-    });
+    auto task = HTML::Task::create(source, &document(), move(steps));
     HTML::main_thread_event_loop().task_queue().add(move(task));
 }
 
@@ -728,6 +726,79 @@ void Element::serialize_pseudo_elements_as_json(JsonArraySerializer<StringBuilde
         MUST(object.add("pseudo-element"sv, i));
         MUST(object.finish());
     }
+}
+
+// https://w3c.github.io/DOM-Parsing/#dom-element-insertadjacenthtml
+DOM::ExceptionOr<void> Element::insert_adjacent_html(String position, String text)
+{
+    JS::GCPtr<Node> context;
+    // 1. Use the first matching item from this list:
+    // - If position is an ASCII case-insensitive match for the string "beforebegin"
+    // - If position is an ASCII case-insensitive match for the string "afterend"
+    if (position.equals_ignoring_case("beforebegin"sv) || position.equals_ignoring_case("afterend"sv)) {
+        // Let context be the context object's parent.
+        context = this->parent();
+
+        // If context is null or a Document, throw a "NoModificationAllowedError" DOMException.
+        if (!context || context->is_document())
+            return NoModificationAllowedError::create(window(), "insertAdjacentHTML: context is null or a Document"sv);
+    }
+    // - If position is an ASCII case-insensitive match for the string "afterbegin"
+    // - If position is an ASCII case-insensitive match for the string "beforeend"
+    else if (position.equals_ignoring_case("afterbegin"sv) || position.equals_ignoring_case("beforeend"sv)) {
+        // Let context be the context object.
+        context = this;
+    }
+    // Otherwise
+    else {
+        // Throw a "SyntaxError" DOMException.
+        return SyntaxError::create(window(), "insertAdjacentHTML: invalid position argument"sv);
+    }
+
+    // 2. If context is not an Element or the following are all true:
+    //    - context's node document is an HTML document,
+    //    - context's local name is "html", and
+    //    - context's namespace is the HTML namespace;
+    if (!is<Element>(*context)
+        || (context->document().document_type() == Document::Type::HTML
+            && static_cast<Element const&>(*context).local_name() == "html"sv
+            && static_cast<Element const&>(*context).namespace_() == Namespace::HTML)) {
+        // FIXME: let context be a new Element with
+        //        - body as its local name,
+        //        - The HTML namespace as its namespace, and
+        //        - The context object's node document as its node document.
+        TODO();
+    }
+
+    // 3. Let fragment be the result of invoking the fragment parsing algorithm with text as markup, and context as the context element.
+    auto fragment = TRY(DOMParsing::parse_fragment(text, verify_cast<Element>(*context)));
+
+    // 4. Use the first matching item from this list:
+
+    // - If position is an ASCII case-insensitive match for the string "beforebegin"
+    if (position.equals_ignoring_case("beforebegin"sv)) {
+        // Insert fragment into the context object's parent before the context object.
+        parent()->insert_before(fragment, this);
+    }
+
+    // - If position is an ASCII case-insensitive match for the string "afterbegin"
+    else if (position.equals_ignoring_case("afterbegin"sv)) {
+        // Insert fragment into the context object before its first child.
+        insert_before(fragment, first_child());
+    }
+
+    // - If position is an ASCII case-insensitive match for the string "beforeend"
+    else if (position.equals_ignoring_case("beforeend"sv)) {
+        // Append fragment to the context object.
+        TRY(append_child(fragment));
+    }
+
+    // - If position is an ASCII case-insensitive match for the string "afterend"
+    else if (position.equals_ignoring_case("afterend"sv)) {
+        // Insert fragment into the context object's parent before the context object's next sibling.
+        parent()->insert_before(fragment, next_sibling());
+    }
+    return {};
 }
 
 }

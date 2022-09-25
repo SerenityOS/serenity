@@ -14,7 +14,6 @@
 #include <AK/JsonObjectSerializer.h>
 #include <AK/JsonValue.h>
 #include <AK/StringBuilder.h>
-#include <LibCore/MappedFile.h>
 #include <LibGUI/Painter.h>
 #include <LibGfx/BMPWriter.h>
 #include <LibGfx/Bitmap.h>
@@ -147,19 +146,6 @@ void Image::serialize_as_json(JsonObjectSerializer<StringBuilder>& json) const
 
         MUST(json_layers.finish());
     }
-}
-
-ErrorOr<void> Image::write_to_file(String const& file_path) const
-{
-    StringBuilder builder;
-    auto json = MUST(JsonObjectSerializer<>::try_create(builder));
-    serialize_as_json(json);
-    MUST(json.finish());
-
-    auto file = TRY(Core::File::open(file_path, (Core::OpenMode)(Core::OpenMode::WriteOnly | Core::OpenMode::Truncate)));
-    if (!file->write(builder.string_view()))
-        return Error::from_errno(file->error());
-    return {};
 }
 
 ErrorOr<NonnullRefPtr<Gfx::Bitmap>> Image::try_compose_bitmap(Gfx::BitmapFormat format) const

@@ -38,5 +38,3 @@ private:
 };
 
 }
-
-WRAPPER_HACK(HTMLFieldSetElement, Web::HTML)

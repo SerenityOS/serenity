@@ -1,7 +1,7 @@
-From 7cb91a236863aa5c582d25a920ffbb7408c10e2f Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Daniel Bertalan <dani@danielbertalan.dev>
 Date: Mon, 16 May 2022 15:04:33 +0200
-Subject: [PATCH 5/6] i386: Disable math errno for SerenityOS
+Subject: [PATCH] i386: Disable math errno for SerenityOS
 
 SerenityOS uses exceptions for math error handling, which allows the
 compiler to do more optimizations on calls to math functions. This patch
@@ -11,7 +11,7 @@ has the effect of setting -fno-math-errno by default.
  1 file changed, 4 insertions(+)
 
 diff --git a/gcc/common/config/i386/i386-common.cc b/gcc/common/config/i386/i386-common.cc
-index 07fdd045f..6e2419563 100644
+index 07fdd045f3032a445a0be45fa62eab9636c3ce2f..6e241956311fbcee3d7e04c7a30f4b73cd61877f 100644
 --- a/gcc/common/config/i386/i386-common.cc
 +++ b/gcc/common/config/i386/i386-common.cc
 @@ -1707,6 +1707,10 @@ ix86_option_init_struct (struct gcc_options *opts)
@@ -25,6 +25,3 @@ index 07fdd045f..6e2419563 100644
    opts->x_flag_pcc_struct_return = 2;
    opts->x_flag_asynchronous_unwind_tables = 2;
  }
--- 
-2.36.1
-

@@ -14,14 +14,14 @@ protection and position-independent code by default.
  clang/lib/Driver/Driver.cpp              |   4 +
  clang/lib/Driver/ToolChain.cpp           |   2 +
  clang/lib/Driver/ToolChains/Arch/X86.cpp |   1 +
- clang/lib/Driver/ToolChains/Serenity.cpp | 337 +++++++++++++++++++++++
+ clang/lib/Driver/ToolChains/Serenity.cpp | 336 +++++++++++++++++++++++
  clang/lib/Driver/ToolChains/Serenity.h   |  99 +++++++
- 8 files changed, 468 insertions(+)
+ 8 files changed, 467 insertions(+)
  create mode 100644 clang/lib/Driver/ToolChains/Serenity.cpp
  create mode 100644 clang/lib/Driver/ToolChains/Serenity.h
 
 diff --git a/clang/lib/Basic/Targets.cpp b/clang/lib/Basic/Targets.cpp
-index 2d6ef9984..06abf1dfd 100644
+index 2d6ef998485ae1404e561dc12f962ce1bef2996d..06abf1dfdd5b91c2a0051363e2f04ec9b3f3285f 100644
 --- a/clang/lib/Basic/Targets.cpp
 +++ b/clang/lib/Basic/Targets.cpp
 @@ -151,6 +151,8 @@ TargetInfo *AllocateTarget(const llvm::Triple &Triple,
@@ -52,7 +52,7 @@ index 2d6ef9984..06abf1dfd 100644
        return new X86_64TargetInfo(Triple, Opts);
      }
 diff --git a/clang/lib/Basic/Targets/OSTargets.h b/clang/lib/Basic/Targets/OSTargets.h
-index a814f681b..927eeb664 100644
+index a814f681b1468c7628daf6f5c9c6d723155821b0..927eeb66446a451b3cd9b08d9cdcfd6f8d4064ba 100644
 --- a/clang/lib/Basic/Targets/OSTargets.h
 +++ b/clang/lib/Basic/Targets/OSTargets.h
 @@ -1013,6 +1013,24 @@ public:
@@ -81,7 +81,7 @@ index a814f681b..927eeb664 100644
  } // namespace clang
  #endif // LLVM_CLANG_LIB_BASIC_TARGETS_OSTARGETS_H
 diff --git a/clang/lib/Driver/CMakeLists.txt b/clang/lib/Driver/CMakeLists.txt
-index 18c9b2d04..ed7178e51 100644
+index 18c9b2d042f6c6e27382a4c72119250533e93482..ed7178e510584a465e695f64716bd399f3b131db 100644
 --- a/clang/lib/Driver/CMakeLists.txt
 +++ b/clang/lib/Driver/CMakeLists.txt
 @@ -74,6 +74,7 @@ add_clang_library(clangDriver
@@ -93,7 +93,7 @@ index 18c9b2d04..ed7178e51 100644
    ToolChains/SPIRV.cpp
    ToolChains/TCE.cpp
 diff --git a/clang/lib/Driver/Driver.cpp b/clang/lib/Driver/Driver.cpp
-index 3f29afd35..184336551 100644
+index 3f29afd359718a1c21e9c9911f0e6ad5f1002a3a..18433655172bc90a97a24b619f11a3d9eba0d327 100644
 --- a/clang/lib/Driver/Driver.cpp
 +++ b/clang/lib/Driver/Driver.cpp
 @@ -45,6 +45,7 @@
@@ -115,7 +115,7 @@ index 3f29afd35..184336551 100644
        TC = std::make_unique<toolchains::Solaris>(*this, Target, Args);
        break;
 diff --git a/clang/lib/Driver/ToolChain.cpp b/clang/lib/Driver/ToolChain.cpp
-index 7a4319ea6..8db07d9dd 100644
+index 7a4319ea680f97dde074b21afa2ee6f75c350091..8db07d9dd0754bffeddf00afe365fe7d011cc602 100644
 --- a/clang/lib/Driver/ToolChain.cpp
 +++ b/clang/lib/Driver/ToolChain.cpp
 @@ -452,6 +452,8 @@ StringRef ToolChain::getOSLibName() const {
@@ -128,7 +128,7 @@ index 7a4319ea6..8db07d9dd 100644
      return getOS();
    }
 diff --git a/clang/lib/Driver/ToolChains/Arch/X86.cpp b/clang/lib/Driver/ToolChains/Arch/X86.cpp
-index cd7c014fa..004185d28 100644
+index cd7c014faa5e0d503adc9f2c30b83b3efbb7e315..004185d28816b8e8bb903612aa053cb883524fc5 100644
 --- a/clang/lib/Driver/ToolChains/Arch/X86.cpp
 +++ b/clang/lib/Driver/ToolChains/Arch/X86.cpp
 @@ -113,6 +113,7 @@ std::string x86::getX86TargetCPU(const Driver &D, const ArgList &Args,
@@ -141,7 +141,7 @@ index cd7c014fa..004185d28 100644
      // Fallback to p4.
 diff --git a/clang/lib/Driver/ToolChains/Serenity.cpp b/clang/lib/Driver/ToolChains/Serenity.cpp
 new file mode 100644
-index 000000000..6fc664a05
+index 0000000000000000000000000000000000000000..4fdf45a19eb2704d00a03e7b2f34f87f63a0a074
 --- /dev/null
 +++ b/clang/lib/Driver/ToolChains/Serenity.cpp
 @@ -0,0 +1,336 @@
@@ -483,7 +483,7 @@ index 000000000..6fc664a05
 +}
 diff --git a/clang/lib/Driver/ToolChains/Serenity.h b/clang/lib/Driver/ToolChains/Serenity.h
 new file mode 100644
-index 000000000..d414f8366
+index 0000000000000000000000000000000000000000..d414f836601c8ea8b43d64e9b111bffa2b71cd54
 --- /dev/null
 +++ b/clang/lib/Driver/ToolChains/Serenity.h
 @@ -0,0 +1,99 @@

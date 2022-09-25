@@ -7,6 +7,7 @@
 #pragma once
 
 #include <Kernel/API/POSIX/sys/limits.h>
+#include <bits/posix1_lim.h>
 #include <bits/stdint.h>
 #include <bits/wchar.h>
 
@@ -92,5 +93,3 @@
 #define LINK_MAX 4096
 
 #define TZNAME_MAX 64
-
-#include <bits/posix1_lim.h>

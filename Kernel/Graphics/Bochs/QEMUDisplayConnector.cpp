@@ -7,6 +7,7 @@
 #include <Kernel/Debug.h>
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Graphics/Bochs/QEMUDisplayConnector.h>
+#include <Kernel/Graphics/Console/ContiguousFramebufferConsole.h>
 #include <Kernel/Graphics/GraphicsManagement.h>
 #include <LibEDID/Definitions.h>
 
@@ -31,8 +32,54 @@ ErrorOr<void> QEMUDisplayConnector::fetch_and_initialize_edid()
     return {};
 }
 
+ErrorOr<void> QEMUDisplayConnector::create_attached_framebuffer_console()
+{
+    // We assume safe resolution is 1024x768x32
+    m_framebuffer_console = Graphics::ContiguousFramebufferConsole::initialize(m_framebuffer_address.value(), 1024, 768, 1024 * sizeof(u32));
+    GraphicsManagement::the().set_console(*m_framebuffer_console);
+    return {};
+}
+
+void QEMUDisplayConnector::enable_console()
+{
+    VERIFY(m_control_lock.is_locked());
+    VERIFY(m_framebuffer_console);
+    m_framebuffer_console->enable();
+}
+
+void QEMUDisplayConnector::disable_console()
+{
+    VERIFY(m_control_lock.is_locked());
+    VERIFY(m_framebuffer_console);
+    m_framebuffer_console->disable();
+}
+
+ErrorOr<void> QEMUDisplayConnector::flush_first_surface()
+{
+    return Error::from_errno(ENOTSUP);
+}
+
+ErrorOr<void> QEMUDisplayConnector::set_safe_mode_setting()
+{
+    DisplayConnector::ModeSetting safe_mode_set {
+        .horizontal_stride = 1024 * sizeof(u32),
+        .pixel_clock_in_khz = 0, // Note: There's no pixel clock in paravirtualized hardware
+        .horizontal_active = 1024,
+        .horizontal_front_porch_pixels = 0, // Note: There's no horizontal_front_porch_pixels in paravirtualized hardware
+        .horizontal_sync_time_pixels = 0,   // Note: There's no horizontal_sync_time_pixels in paravirtualized hardware
+        .horizontal_blank_pixels = 0,       // Note: There's no horizontal_blank_pixels in paravirtualized hardware
+        .vertical_active = 768,
+        .vertical_front_porch_lines = 0, // Note: There's no vertical_front_porch_lines in paravirtualized hardware
+        .vertical_sync_time_lines = 0,   // Note: There's no vertical_sync_time_lines in paravirtualized hardware
+        .vertical_blank_lines = 0,       // Note: There's no vertical_blank_lines in paravirtualized hardware
+        .horizontal_offset = 0,
+        .vertical_offset = 0,
+    };
+    return set_mode_setting(safe_mode_set);
+}
+
 QEMUDisplayConnector::QEMUDisplayConnector(PhysicalAddress framebuffer_address, size_t framebuffer_resource_size, Memory::TypedMapping<BochsDisplayMMIORegisters volatile> registers_mapping)
-    : BochsDisplayConnector(framebuffer_address, framebuffer_resource_size)
+    : DisplayConnector(framebuffer_address, framebuffer_resource_size, false)
     , m_registers(move(registers_mapping))
 {
 }

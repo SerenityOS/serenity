@@ -4,10 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Debug.h>
 #include <AK/SourceGenerator.h>
 #include <LibCore/ArgsParser.h>
-#include <LibCore/File.h>
+#include <LibCore/Stream.h>
 
 enum class PnpIdColumns {
     ManufacturerName,
@@ -117,9 +116,9 @@ static ErrorOr<ApprovalDate> parse_approval_date(StringView const& str)
     return ApprovalDate { .year = year.value(), .month = month.value(), .day = day.value() };
 }
 
-static ErrorOr<HashMap<String, PnpIdData>> parse_pnp_ids_database(Core::File& pnp_ids_file)
+static ErrorOr<HashMap<String, PnpIdData>> parse_pnp_ids_database(Core::Stream::File& pnp_ids_file)
 {
-    auto pnp_ids_file_bytes = pnp_ids_file.read_all();
+    auto pnp_ids_file_bytes = TRY(pnp_ids_file.read_all());
     StringView pnp_ids_file_contents(pnp_ids_file_bytes);
 
     HashMap<String, PnpIdData> pnp_id_data;
@@ -182,7 +181,7 @@ static ErrorOr<HashMap<String, PnpIdData>> parse_pnp_ids_database(Core::File& pn
     return pnp_id_data;
 }
 
-static void generate_header(Core::File& file, HashMap<String, PnpIdData> const& pnp_ids)
+static ErrorOr<void> generate_header(Core::Stream::File& file, HashMap<String, PnpIdData> const& pnp_ids)
 {
     StringBuilder builder;
     SourceGenerator generator { builder };
@@ -212,10 +211,11 @@ namespace PnpIDs {
 }
 )~~~");
 
-    VERIFY(file.write(generator.as_string_view()));
+    TRY(file.write(generator.as_string_view().bytes()));
+    return {};
 }
 
-static void generate_source(Core::File& file, HashMap<String, PnpIdData> const& pnp_ids)
+static ErrorOr<void> generate_source(Core::Stream::File& file, HashMap<String, PnpIdData> const& pnp_ids)
 {
     StringBuilder builder;
     SourceGenerator generator { builder };
@@ -265,7 +265,8 @@ IterationDecision for_each(Function<IterationDecision(PnpIDData const&)> callbac
 }
 )~~~");
 
-    VERIFY(file.write(generator.as_string_view()));
+    TRY(file.write(generator.as_string_view().bytes()));
+    return {};
 }
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
@@ -280,22 +281,22 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(pnp_ids_file_path, "Path to the input PNP ID database file", "pnp-ids-file", 'p', "pnp-ids-file");
     args_parser.parse(arguments);
 
-    auto open_file = [&](StringView path, Core::OpenMode mode = Core::OpenMode::ReadOnly) -> ErrorOr<NonnullRefPtr<Core::File>> {
+    auto open_file = [&](StringView path, Core::Stream::OpenMode mode = Core::Stream::OpenMode::Read) -> ErrorOr<NonnullOwnPtr<Core::Stream::File>> {
         if (path.is_empty()) {
             args_parser.print_usage(stderr, arguments.argv[0]);
             return Error::from_string_literal("Must provide all command line options");
         }
 
-        return Core::File::open(path, mode);
+        return Core::Stream::File::open(path, mode);
     };
 
-    auto generated_header_file = TRY(open_file(generated_header_path, Core::OpenMode::ReadWrite));
-    auto generated_implementation_file = TRY(open_file(generated_implementation_path, Core::OpenMode::ReadWrite));
+    auto generated_header_file = TRY(open_file(generated_header_path, Core::Stream::OpenMode::ReadWrite));
+    auto generated_implementation_file = TRY(open_file(generated_implementation_path, Core::Stream::OpenMode::ReadWrite));
     auto pnp_ids_file = TRY(open_file(pnp_ids_file_path));
 
     auto pnp_id_map = TRY(parse_pnp_ids_database(*pnp_ids_file));
 
-    generate_header(*generated_header_file, pnp_id_map);
-    generate_source(*generated_implementation_file, pnp_id_map);
+    TRY(generate_header(*generated_header_file, pnp_id_map));
+    TRY(generate_source(*generated_implementation_file, pnp_id_map));
     return 0;
 }

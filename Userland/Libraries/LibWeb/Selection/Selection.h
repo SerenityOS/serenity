@@ -47,5 +47,3 @@ private:
 };
 
 }
-
-WRAPPER_HACK(Selection, Web::Selection)

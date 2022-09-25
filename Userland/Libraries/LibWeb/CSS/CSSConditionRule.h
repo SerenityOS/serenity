@@ -29,5 +29,3 @@ protected:
 };
 
 }
-
-WRAPPER_HACK(CSSConditionRule, Web::CSS)

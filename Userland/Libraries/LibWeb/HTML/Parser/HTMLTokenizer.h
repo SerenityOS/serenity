@@ -143,6 +143,9 @@ public:
         m_insertion_point.position = m_utf8_view.iterator_offset(m_utf8_iterator);
     }
 
+    // This permanently cuts off the tokenizer input stream.
+    void abort() { m_aborted = true; }
+
 private:
     void skip(size_t count);
     Optional<u32> next_code_point();
@@ -206,6 +209,8 @@ private:
     u32 m_character_reference_code { 0 };
 
     bool m_blocked { false };
+
+    bool m_aborted { false };
 
     Vector<HTMLToken::Position> m_source_positions;
 };

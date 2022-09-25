@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "NVMeNameSpace.h"
 #include <AK/NonnullOwnPtr.h>
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Storage/NVMe/NVMeController.h>
+#include <Kernel/Storage/NVMe/NVMeNameSpace.h>
 #include <Kernel/Storage/StorageManagement.h>
 
 namespace Kernel {

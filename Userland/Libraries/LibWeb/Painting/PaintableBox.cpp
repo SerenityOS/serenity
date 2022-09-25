@@ -15,6 +15,7 @@
 #include <LibWeb/Painting/PaintableBox.h>
 #include <LibWeb/Painting/ShadowPainting.h>
 #include <LibWeb/Painting/StackingContext.h>
+#include <LibWeb/Platform/FontPlugin.h>
 
 namespace Web::Painting {
 
@@ -158,7 +159,7 @@ void PaintableBox::paint(PaintContext& context, PaintPhase phase) const
         paint_inspector_rect(border_rect, Color::Green);
         paint_inspector_rect(content_rect, Color::Magenta);
 
-        auto& font = Gfx::FontDatabase::default_font();
+        auto& font = Platform::FontPlugin::the().default_font();
 
         StringBuilder builder;
         if (layout_box().dom_node())

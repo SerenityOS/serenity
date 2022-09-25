@@ -87,11 +87,11 @@ void MessagePort::post_message(JS::Value message)
 
     // FIXME: This is an ad-hoc hack implementation instead, since we don't currently
     //        have serialization and deserialization of messages.
-    main_thread_event_loop().task_queue().add(HTML::Task::create(HTML::Task::Source::PostedMessage, nullptr, [strong_port = JS::make_handle(*target_port), message]() mutable {
+    main_thread_event_loop().task_queue().add(HTML::Task::create(HTML::Task::Source::PostedMessage, nullptr, [target_port, message]() mutable {
         MessageEventInit event_init {};
         event_init.data = message;
         event_init.origin = "<origin>";
-        strong_port->dispatch_event(*MessageEvent::create(verify_cast<HTML::Window>(strong_port->realm().global_object()), HTML::EventNames::message, event_init));
+        target_port->dispatch_event(*MessageEvent::create(verify_cast<HTML::Window>(target_port->realm().global_object()), HTML::EventNames::message, event_init));
     }));
 }
 
@@ -112,14 +112,14 @@ void MessagePort::close()
 }
 
 #undef __ENUMERATE
-#define __ENUMERATE(attribute_name, event_name)                           \
-    void MessagePort::set_##attribute_name(Bindings::CallbackType* value) \
-    {                                                                     \
-        set_event_handler_attribute(event_name, value);                   \
-    }                                                                     \
-    Bindings::CallbackType* MessagePort::attribute_name()                 \
-    {                                                                     \
-        return event_handler_attribute(event_name);                       \
+#define __ENUMERATE(attribute_name, event_name)                         \
+    void MessagePort::set_##attribute_name(WebIDL::CallbackType* value) \
+    {                                                                   \
+        set_event_handler_attribute(event_name, value);                 \
+    }                                                                   \
+    WebIDL::CallbackType* MessagePort::attribute_name()                 \
+    {                                                                   \
+        return event_handler_attribute(event_name);                     \
     }
 ENUMERATE_MESSAGE_PORT_EVENT_HANDLERS(__ENUMERATE)
 #undef __ENUMERATE

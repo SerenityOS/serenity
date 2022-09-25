@@ -17,7 +17,7 @@ OS ABI for userspace binaries to 3, or GNU/Linux.
  4 files changed, 5 insertions(+), 4 deletions(-)
 
 diff --git a/compiler-rt/cmake/config-ix.cmake b/compiler-rt/cmake/config-ix.cmake
-index cd45176cf..ebaa74f4b 100644
+index cd45176cf2ba761667793903daccd5f02b0e690c..ebaa74f4b5a21c20459af911e2aaede3ac3a8184 100644
 --- a/compiler-rt/cmake/config-ix.cmake
 +++ b/compiler-rt/cmake/config-ix.cmake
 @@ -756,7 +756,7 @@ else()
@@ -30,7 +30,7 @@ index cd45176cf..ebaa74f4b 100644
  else()
    set(COMPILER_RT_HAS_PROFILE FALSE)
 diff --git a/compiler-rt/lib/profile/InstrProfilingPlatformLinux.c b/compiler-rt/lib/profile/InstrProfilingPlatformLinux.c
-index 3af61d249..ee46741d4 100644
+index 3af61d24948e7c9b6e8f3950a418516c603457a2..ee46741d47ead6c9e6931c8d3a6f16e8cd6407ae 100644
 --- a/compiler-rt/lib/profile/InstrProfilingPlatformLinux.c
 +++ b/compiler-rt/lib/profile/InstrProfilingPlatformLinux.c
 @@ -8,7 +8,7 @@
@@ -43,7 +43,7 @@ index 3af61d249..ee46741d4 100644
  #if !defined(_AIX)
  #include <elf.h>
 diff --git a/compiler-rt/lib/profile/InstrProfilingPlatformOther.c b/compiler-rt/lib/profile/InstrProfilingPlatformOther.c
-index c7b6e842c..00fdf9ee6 100644
+index c7b6e842c9fac27b2885242d6c2cd48797bfe799..00fdf9ee6adc8e5fffda50cd981c901f02fddaf2 100644
 --- a/compiler-rt/lib/profile/InstrProfilingPlatformOther.c
 +++ b/compiler-rt/lib/profile/InstrProfilingPlatformOther.c
 @@ -8,7 +8,7 @@
@@ -56,7 +56,7 @@ index c7b6e842c..00fdf9ee6 100644
  #include <stdlib.h>
  #include <stdio.h>
 diff --git a/llvm/lib/Transforms/Instrumentation/InstrProfiling.cpp b/llvm/lib/Transforms/Instrumentation/InstrProfiling.cpp
-index 5b7aa304b..b3b037a6f 100644
+index 5b7aa304b9876fc027e251547340df56dcf0c343..b3b037a6fdf5ea2dd749c8eb5329c9a29b44f75c 100644
 --- a/llvm/lib/Transforms/Instrumentation/InstrProfiling.cpp
 +++ b/llvm/lib/Transforms/Instrumentation/InstrProfiling.cpp
 @@ -822,7 +822,8 @@ static bool needsRuntimeRegistrationOfSectionRange(const Triple &TT) {

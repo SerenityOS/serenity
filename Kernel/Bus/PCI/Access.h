@@ -16,11 +16,13 @@
 
 namespace Kernel::PCI {
 
-class HostBridge;
 class Access {
 public:
     static bool initialize_for_multiple_pci_domains(PhysicalAddress mcfg_table);
+
+#if ARCH(I386) || ARCH(X86_64)
     static bool initialize_for_one_pci_domain();
+#endif
 
     ErrorOr<void> fast_enumerate(Function<void(DeviceIdentifier const&)>&) const;
     void rescan_hardware();
@@ -28,6 +30,7 @@ public:
     static Access& the();
     static bool is_initialized();
     static bool is_disabled();
+    static bool is_hardware_disabled();
 
     void write8_field(Address address, u32 field, u8 value);
     void write16_field(Address address, u32 field, u16 value);

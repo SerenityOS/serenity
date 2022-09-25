@@ -12,7 +12,7 @@
 namespace Web::DOMParsing {
 
 // https://w3c.github.io/DOM-Parsing/#dfn-fragment-parsing-algorithm
-static DOM::ExceptionOr<JS::NonnullGCPtr<DOM::DocumentFragment>> parse_fragment(String const& markup, DOM::Element& context_element)
+DOM::ExceptionOr<JS::NonnullGCPtr<DOM::DocumentFragment>> parse_fragment(String const& markup, DOM::Element& context_element)
 {
     // FIXME: Handle XML documents.
 

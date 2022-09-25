@@ -31,6 +31,7 @@
 
             @GUI::ComboBox {
                 name: "time_zone_input"
+                max_visible_items: 24
             }
         }
 

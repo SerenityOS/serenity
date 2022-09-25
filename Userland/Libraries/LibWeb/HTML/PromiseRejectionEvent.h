@@ -41,5 +41,3 @@ private:
 };
 
 }
-
-WRAPPER_HACK(PromiseRejectionEvent, Web::HTML)

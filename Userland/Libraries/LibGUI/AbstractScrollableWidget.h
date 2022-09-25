@@ -70,6 +70,8 @@ public:
     Gfx::IntRect to_content_rect(Gfx::IntRect const& widget_rect) const { return { to_content_position(widget_rect.location()), widget_rect.size() }; }
     Gfx::IntRect to_widget_rect(Gfx::IntRect const& content_rect) const { return { to_widget_position(content_rect.location()), content_rect.size() }; }
 
+    virtual Optional<UISize> calculated_min_size() const override;
+
 protected:
     AbstractScrollableWidget();
     virtual void custom_layout() override;

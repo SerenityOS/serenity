@@ -41,5 +41,3 @@ private:
 };
 
 }
-
-WRAPPER_HACK(HTMLProgressElement, Web::HTML)

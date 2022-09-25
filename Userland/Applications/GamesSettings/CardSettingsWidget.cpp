@@ -43,12 +43,16 @@ CardSettingsWidget::CardSettingsWidget()
     if (!set_card_back_image_path(Config::read_string("Games"sv, "Cards"sv, "CardBackImage"sv)))
         set_card_back_image_path(default_card_back_image_path);
     m_card_back_image_view->on_selection_change = [&]() {
-        if (m_card_back_image_view->selection().is_empty())
+        auto& card_back_selection = m_card_back_image_view->selection();
+        if (card_back_selection.is_empty())
             return;
+        m_last_selected_card_back = card_back_selection.first();
         set_modified(true);
         Cards::CardPainter::the().set_background_image_path(card_back_image_path());
         m_preview_card_back->update();
     };
+
+    m_last_selected_card_back = m_card_back_image_view->selection().first();
 }
 
 void CardSettingsWidget::apply_settings()
@@ -84,6 +88,9 @@ bool CardSettingsWidget::set_card_back_image_path(String const& path)
 
 String CardSettingsWidget::card_back_image_path() const
 {
-    auto card_back_image_index = m_card_back_image_view->selection().first();
+    auto& card_back_selection = m_card_back_image_view->selection();
+    GUI::ModelIndex card_back_image_index = m_last_selected_card_back;
+    if (!card_back_selection.is_empty())
+        card_back_image_index = card_back_selection.first();
     return static_cast<GUI::FileSystemModel const*>(m_card_back_image_view->model())->full_path(card_back_image_index);
 }

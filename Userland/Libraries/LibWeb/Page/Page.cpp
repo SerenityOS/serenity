@@ -13,7 +13,7 @@ namespace Web {
 Page::Page(PageClient& client)
     : m_client(client)
 {
-    m_top_level_browsing_context = HTML::BrowsingContext::create_a_new_browsing_context(*this, nullptr, nullptr);
+    m_top_level_browsing_context = HTML::BrowsingContext::create_a_new_top_level_browsing_context(*this);
 }
 
 Page::~Page() = default;

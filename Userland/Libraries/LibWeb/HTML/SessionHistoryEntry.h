@@ -48,6 +48,8 @@ struct SessionHistoryEntry {
 
     // FIXME: persisted user state, which is implementation-defined, initially null
     // NOTE: This is where we could remember the state of form controls, for example.
+
+    WeakPtr<BrowsingContext> original_source_browsing_context;
 };
 
 }
