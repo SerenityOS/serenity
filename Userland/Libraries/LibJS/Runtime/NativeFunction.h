@@ -8,11 +8,11 @@
 #pragma once
 
 #include <AK/Badge.h>
-#include <AK/Function.h>
 #include <AK/Optional.h>
 #include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/FunctionObject.h>
 #include <LibJS/Runtime/PropertyKey.h>
+#include <LibJS/SafeFunction.h>
 
 namespace JS {
 
@@ -20,8 +20,8 @@ class NativeFunction : public FunctionObject {
     JS_OBJECT(NativeFunction, FunctionObject);
 
 public:
-    static NativeFunction* create(Realm&, Function<ThrowCompletionOr<Value>(VM&)> behaviour, i32 length, PropertyKey const& name, Optional<Realm*> = {}, Optional<Object*> prototype = {}, Optional<StringView> const& prefix = {});
-    static NativeFunction* create(Realm&, FlyString const& name, Function<ThrowCompletionOr<Value>(VM&)>);
+    static NativeFunction* create(Realm&, SafeFunction<ThrowCompletionOr<Value>(VM&)> behaviour, i32 length, PropertyKey const& name, Optional<Realm*> = {}, Optional<Object*> prototype = {}, Optional<StringView> const& prefix = {});
+    static NativeFunction* create(Realm&, FlyString const& name, SafeFunction<ThrowCompletionOr<Value>(VM&)>);
 
     virtual void initialize(Realm&) override { }
     virtual ~NativeFunction() override = default;
@@ -44,8 +44,8 @@ public:
 
 protected:
     NativeFunction(FlyString name, Object& prototype);
-    NativeFunction(Function<ThrowCompletionOr<Value>(VM&)>, Object* prototype, Realm& realm);
-    NativeFunction(FlyString name, Function<ThrowCompletionOr<Value>(VM&)>, Object& prototype);
+    NativeFunction(SafeFunction<ThrowCompletionOr<Value>(VM&)>, Object* prototype, Realm& realm);
+    NativeFunction(FlyString name, SafeFunction<ThrowCompletionOr<Value>(VM&)>, Object& prototype);
     explicit NativeFunction(Object& prototype);
 
 private:
@@ -53,7 +53,7 @@ private:
 
     FlyString m_name;
     Optional<FlyString> m_initial_name; // [[InitialName]]
-    Function<ThrowCompletionOr<Value>(VM&)> m_native_function;
+    SafeFunction<ThrowCompletionOr<Value>(VM&)> m_native_function;
     Realm* m_realm { nullptr };
 };
 
