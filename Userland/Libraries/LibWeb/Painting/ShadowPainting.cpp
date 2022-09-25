@@ -6,6 +6,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/NumericLimits.h>
 #include <LibGfx/DisjointRectSet.h>
 #include <LibGfx/Filters/StackBlurFilter.h>
 #include <LibGfx/Painter.h>
@@ -281,17 +282,22 @@ void paint_box_shadow(PaintContext& context, Gfx::IntRect const& content_rect, B
 
         // FIXME: Could reduce the shadow paints from 8 to 4 for shadows with all corner radii 50%.
 
+        // FIXME: We use this since we want the clip rect to include everything after a certain x or y.
+        // Note: Using painter.target()->width() or height() does not work, when the painter is a small
+        // translated bitmap rather than full screen, as the clip rect may not intersect.
+        constexpr auto really_large_number = NumericLimits<int>::max() / 2;
+
         // Everything above content_rect, including sides
-        paint_shadow({ 0, 0, painter.target()->width(), content_rect.top() });
+        paint_shadow({ 0, 0, really_large_number, content_rect.top() });
 
         // Everything below content_rect, including sides
-        paint_shadow({ 0, content_rect.bottom() + 1, painter.target()->width(), painter.target()->height() });
+        paint_shadow({ 0, content_rect.bottom() + 1, really_large_number, really_large_number });
 
         // Everything directly to the left of content_rect
         paint_shadow({ 0, content_rect.top(), content_rect.left(), content_rect.height() });
 
         // Everything directly to the right of content_rect
-        paint_shadow({ content_rect.right() + 1, content_rect.top(), painter.target()->width(), content_rect.height() });
+        paint_shadow({ content_rect.right() + 1, content_rect.top(), really_large_number, content_rect.height() });
 
         if (top_left_corner) {
             // Inside the top left corner (the part outside the border radius)
