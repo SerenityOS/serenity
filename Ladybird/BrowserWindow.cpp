@@ -9,7 +9,7 @@
 #include "BrowserWindow.h"
 #include "Settings.h"
 #include "SettingsDialog.h"
-#include "WebView.h"
+#include "SimpleWebView.h"
 #include <AK/TypeCasts.h>
 #include <QAction>
 #include <QActionGroup>

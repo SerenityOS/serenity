@@ -11,13 +11,13 @@
 #include <LibGfx/Rect.h>
 #include <LibWeb/Page/Page.h>
 
-class WebView;
+class SimpleWebView;
 
 namespace Ladybird {
 
 class PageClientLadybird final : public Web::PageClient {
 public:
-    static NonnullOwnPtr<PageClientLadybird> create(WebView&);
+    static NonnullOwnPtr<PageClientLadybird> create(SimpleWebView&);
     virtual ~PageClientLadybird() override;
 
     Web::Page& page() { return *m_page; }
@@ -69,9 +69,9 @@ public:
 
     void set_should_show_line_box_borders(bool);
 
-    explicit PageClientLadybird(WebView&);
+    explicit PageClientLadybird(SimpleWebView&);
 
-    WebView& m_view;
+    SimpleWebView& m_view;
     NonnullOwnPtr<Web::Page> m_page;
     Browser::CookieJar m_cookie_jar;
 

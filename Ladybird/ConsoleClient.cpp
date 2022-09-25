@@ -9,7 +9,7 @@
 
 #include "ConsoleClient.h"
 #include "ConsoleGlobalObject.h"
-#include "WebView.h"
+#include "SimpleWebView.h"
 #include <LibJS/Interpreter.h>
 #include <LibJS/MarkupGenerator.h>
 #include <LibWeb/HTML/Scripting/ClassicScript.h>
@@ -18,7 +18,7 @@
 
 namespace Ladybird {
 
-ConsoleClient::ConsoleClient(JS::Console& console, JS::Realm& realm, WebView& view)
+ConsoleClient::ConsoleClient(JS::Console& console, JS::Realm& realm, SimpleWebView& view)
     : JS::ConsoleClient(console)
     , m_view(view)
     , m_realm(realm)

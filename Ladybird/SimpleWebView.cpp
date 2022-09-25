@@ -7,7 +7,7 @@
 
 #define AK_DONT_REPLACE_STD
 
-#include "WebView.h"
+#include "SimpleWebView.h"
 #include "ConsoleClient.h"
 #include "CookieJar.h"
 #include "EventLoopPluginQt.h"
@@ -68,7 +68,7 @@
 
 String s_serenity_resource_root;
 
-WebView::WebView()
+SimpleWebView::SimpleWebView()
 {
     setMouseTracking(true);
 
@@ -92,17 +92,17 @@ WebView::WebView()
     });
 }
 
-WebView::~WebView()
+SimpleWebView::~SimpleWebView()
 {
 }
 
-void WebView::reload()
+void SimpleWebView::reload()
 {
     auto url = m_page_client->page().top_level_browsing_context().active_document()->url();
     m_page_client->load(url);
 }
 
-void WebView::load(String const& url)
+void SimpleWebView::load(String const& url)
 {
     m_page_client->load(AK::URL(url));
 }
@@ -292,7 +292,7 @@ KeyCode get_keycode_from_qt_keyboard_event(QKeyEvent const& event)
     return Key_Invalid;
 }
 
-void WebView::mouseMoveEvent(QMouseEvent* event)
+void SimpleWebView::mouseMoveEvent(QMouseEvent* event)
 {
     Gfx::IntPoint position(event->position().x() / m_inverse_pixel_scaling_ratio, event->position().y() / m_inverse_pixel_scaling_ratio);
     auto buttons = get_buttons_from_qt_event(*event);
@@ -300,7 +300,7 @@ void WebView::mouseMoveEvent(QMouseEvent* event)
     m_page_client->page().handle_mousemove(to_content(position), buttons, modifiers);
 }
 
-void WebView::mousePressEvent(QMouseEvent* event)
+void SimpleWebView::mousePressEvent(QMouseEvent* event)
 {
     Gfx::IntPoint position(event->position().x() / m_inverse_pixel_scaling_ratio, event->position().y() / m_inverse_pixel_scaling_ratio);
     auto button = get_button_from_qt_event(*event);
@@ -314,7 +314,7 @@ void WebView::mousePressEvent(QMouseEvent* event)
     m_page_client->page().handle_mousedown(to_content(position), button, modifiers);
 }
 
-void WebView::mouseReleaseEvent(QMouseEvent* event)
+void SimpleWebView::mouseReleaseEvent(QMouseEvent* event)
 {
     Gfx::IntPoint position(event->position().x() / m_inverse_pixel_scaling_ratio, event->position().y() / m_inverse_pixel_scaling_ratio);
     auto button = get_button_from_qt_event(*event);
@@ -328,7 +328,7 @@ void WebView::mouseReleaseEvent(QMouseEvent* event)
     m_page_client->page().handle_mouseup(to_content(position), button, modifiers);
 }
 
-void WebView::keyPressEvent(QKeyEvent* event)
+void SimpleWebView::keyPressEvent(QKeyEvent* event)
 {
     switch (event->key()) {
     case Qt::Key_Left:
@@ -353,7 +353,7 @@ void WebView::keyPressEvent(QKeyEvent* event)
     m_page_client->page().handle_keydown(keycode, modifiers, point);
 }
 
-void WebView::keyReleaseEvent(QKeyEvent* event)
+void SimpleWebView::keyReleaseEvent(QKeyEvent* event)
 {
     auto text = event->text();
     if (text.isEmpty()) {
@@ -365,17 +365,17 @@ void WebView::keyReleaseEvent(QKeyEvent* event)
     m_page_client->page().handle_keyup(keycode, modifiers, point);
 }
 
-Gfx::IntPoint WebView::to_content(Gfx::IntPoint viewport_position) const
+Gfx::IntPoint SimpleWebView::to_content(Gfx::IntPoint viewport_position) const
 {
     return viewport_position.translated(horizontalScrollBar()->value(), verticalScrollBar()->value());
 }
 
-Gfx::IntPoint WebView::to_widget(Gfx::IntPoint content_position) const
+Gfx::IntPoint SimpleWebView::to_widget(Gfx::IntPoint content_position) const
 {
     return content_position.translated(-horizontalScrollBar()->value(), -verticalScrollBar()->value());
 }
 
-void WebView::paintEvent(QPaintEvent* event)
+void SimpleWebView::paintEvent(QPaintEvent* event)
 {
     QPainter painter(viewport());
     painter.setClipRect(event->rect());
@@ -393,13 +393,13 @@ void WebView::paintEvent(QPaintEvent* event)
     painter.drawImage(QPoint(0, 0), q_image);
 }
 
-void WebView::resizeEvent(QResizeEvent* event)
+void SimpleWebView::resizeEvent(QResizeEvent* event)
 {
     QAbstractScrollArea::resizeEvent(event);
     update_viewport_rect();
 }
 
-void WebView::update_viewport_rect()
+void SimpleWebView::update_viewport_rect()
 {
     auto scaled_width = int(size().width() / m_inverse_pixel_scaling_ratio);
     auto scaled_height = int(size().height() / m_inverse_pixel_scaling_ratio);
@@ -446,7 +446,7 @@ void initialize_web_engine()
     Web::FrameLoader::set_error_page_url(String::formatted("file://{}/res/html/error.html", s_serenity_resource_root));
 }
 
-void WebView::debug_request(String const& request, String const& argument)
+void SimpleWebView::debug_request(String const& request, String const& argument)
 {
     auto& page = m_page_client->page();
 
@@ -514,7 +514,7 @@ void WebView::debug_request(String const& request, String const& argument)
         m_page_client->dump_cookies();
 }
 
-String WebView::source() const
+String SimpleWebView::source() const
 {
     auto* document = m_page_client->page().top_level_browsing_context().active_document();
     if (!document)
@@ -522,7 +522,7 @@ String WebView::source() const
     return document->source();
 }
 
-void WebView::run_javascript(String const& js_source) const
+void SimpleWebView::run_javascript(String const& js_source) const
 {
     auto* active_document = const_cast<Web::DOM::Document*>(m_page_client->page().top_level_browsing_context().active_document());
 
@@ -549,12 +549,12 @@ void WebView::run_javascript(String const& js_source) const
         dbgln("Exception :(");
 }
 
-void WebView::did_output_js_console_message(i32 message_index)
+void SimpleWebView::did_output_js_console_message(i32 message_index)
 {
     m_page_client->m_console_client->send_messages(message_index);
 }
 
-void WebView::did_get_js_console_messages(i32, Vector<String>, Vector<String> messages)
+void SimpleWebView::did_get_js_console_messages(i32, Vector<String>, Vector<String> messages)
 {
     ensure_js_console_widget();
     for (auto& message : messages) {
@@ -562,7 +562,7 @@ void WebView::did_get_js_console_messages(i32, Vector<String>, Vector<String> me
     }
 }
 
-void WebView::ensure_js_console_widget()
+void SimpleWebView::ensure_js_console_widget()
 {
     if (!m_js_console_widget) {
         m_js_console_widget = new QWidget;
@@ -588,14 +588,14 @@ void WebView::ensure_js_console_widget()
     }
 }
 
-void WebView::show_js_console()
+void SimpleWebView::show_js_console()
 {
     ensure_js_console_widget();
     m_js_console_widget->show();
     m_js_console_input_edit->setFocus();
 }
 
-void WebView::set_color_scheme(ColorScheme color_scheme)
+void SimpleWebView::set_color_scheme(ColorScheme color_scheme)
 {
     switch (color_scheme) {
     case ColorScheme::Auto:
@@ -612,13 +612,13 @@ void WebView::set_color_scheme(ColorScheme color_scheme)
         document->invalidate_style();
 }
 
-void WebView::showEvent(QShowEvent* event)
+void SimpleWebView::showEvent(QShowEvent* event)
 {
     QAbstractScrollArea::showEvent(event);
     m_page_client->page().top_level_browsing_context().set_system_visibility_state(Web::HTML::VisibilityState::Visible);
 }
 
-void WebView::hideEvent(QHideEvent* event)
+void SimpleWebView::hideEvent(QHideEvent* event)
 {
     QAbstractScrollArea::hideEvent(event);
     m_page_client->page().top_level_browsing_context().set_system_visibility_state(Web::HTML::VisibilityState::Hidden);

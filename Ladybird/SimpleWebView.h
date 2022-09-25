@@ -27,11 +27,11 @@ enum class ColorScheme {
     Dark,
 };
 
-class WebView final : public QAbstractScrollArea {
+class SimpleWebView final : public QAbstractScrollArea {
     Q_OBJECT
 public:
-    WebView();
-    virtual ~WebView() override;
+    SimpleWebView();
+    virtual ~SimpleWebView() override;
 
     void load(String const& url);
     void reload();

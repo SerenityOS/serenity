@@ -6,7 +6,7 @@
 
 #include "BrowserWindow.h"
 #include "Settings.h"
-#include "WebView.h"
+#include "SimpleWebView.h"
 #include <LibCore/ArgsParser.h>
 #include <LibCore/Timer.h>
 #include <LibMain/Main.h>
