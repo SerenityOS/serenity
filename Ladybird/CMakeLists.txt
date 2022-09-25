@@ -54,6 +54,7 @@ set(SOURCES
     EventLoopPluginQt.cpp
     FontPluginQt.cpp
     ImageCodecPluginLadybird.cpp
+    ModelTranslator.cpp
     PageClientLadybird.cpp
     RequestManagerQt.cpp
     main.cpp
@@ -71,7 +72,7 @@ set(SOURCES
 qt_add_executable(ladybird ${SOURCES}
     MANUAL_FINALIZATION
 )
-target_link_libraries(ladybird PRIVATE Qt::Widgets Qt::Network LibWeb LibWebSocket LibGL LibSoftGPU LibMain)
+target_link_libraries(ladybird PRIVATE Qt::Widgets Qt::Network LibWeb LibWebSocket LibGUI LibWebView LibGL LibSoftGPU LibMain)
 
 set_target_properties(ladybird PROPERTIES
     MACOSX_BUNDLE_GUI_IDENTIFIER org.serenityos.ladybird

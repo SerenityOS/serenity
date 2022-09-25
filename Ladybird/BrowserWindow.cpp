@@ -112,6 +112,16 @@ BrowserWindow::BrowserWindow()
         }
     });
 
+    auto* inspector_action = new QAction("Open &Inspector");
+    inspector_action->setIcon(QIcon(QString("%1/res/icons/browser/dom-tree.png").arg(s_serenity_resource_root.characters())));
+    inspector_action->setShortcut(QKeySequence("Ctrl+Shift+I"));
+    inspect_menu->addAction(inspector_action);
+    QObject::connect(inspector_action, &QAction::triggered, this, [this] {
+        if (m_current_tab) {
+            m_current_tab->view().show_inspector();
+        }
+    });
+
     auto* debug_menu = menuBar()->addMenu("&Debug");
 
     auto* dump_dom_tree_action = new QAction("Dump DOM Tree");
