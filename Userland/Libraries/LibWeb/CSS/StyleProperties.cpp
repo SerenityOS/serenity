@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021-2022, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -42,6 +42,42 @@ NonnullRefPtr<StyleValue> StyleProperties::property(CSS::PropertyID property_id)
     // By the time we call this method, all properties have values assigned.
     VERIFY(!value.is_null());
     return value.release_nonnull();
+}
+
+CSS::Size StyleProperties::size_value(CSS::PropertyID id) const
+{
+    auto value = property(id);
+    if (value->is_identifier()) {
+        switch (value->to_identifier()) {
+        case ValueID::Auto:
+            return CSS::Size::make_auto();
+        case ValueID::MinContent:
+            return CSS::Size::make_min_content();
+        case ValueID::MaxContent:
+            return CSS::Size::make_max_content();
+        case ValueID::None:
+            return CSS::Size::make_none();
+        default:
+            VERIFY_NOT_REACHED();
+        }
+    }
+
+    if (value->is_calculated())
+        return CSS::Size::make_length(CSS::Length::make_calculated(value->as_calculated()));
+
+    if (value->is_percentage())
+        return CSS::Size::make_percentage(value->as_percentage().percentage());
+
+    if (value->has_length()) {
+        auto length = value->to_length();
+        if (length.is_auto())
+            return CSS::Size::make_auto();
+        return CSS::Size::make_length(value->to_length());
+    }
+
+    // FIXME: Support `fit-content(<length>)`
+    dbgln("FIXME: Unsupported size value: `{}`, treating as `auto`", value->to_string());
+    return CSS::Size::make_auto();
 }
 
 Length StyleProperties::length_or_fallback(CSS::PropertyID id, Length const& fallback) const
