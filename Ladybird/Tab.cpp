@@ -25,7 +25,7 @@ Tab::Tab(BrowserWindow* window)
     m_layout->setSpacing(0);
     m_layout->setContentsMargins(0, 0, 0, 0);
 
-    m_view = new WebView;
+    m_view = new SimpleWebView;
     m_toolbar = new QToolBar;
     m_location_edit = new QLineEdit;
 
@@ -61,24 +61,24 @@ Tab::Tab(BrowserWindow* window)
     m_toolbar->addAction(m_home_action);
     m_toolbar->addWidget(m_location_edit);
 
-    QObject::connect(m_view, &WebView::link_hovered, [this](QString const& title) {
+    QObject::connect(m_view, &SimpleWebView::link_hovered, [this](QString const& title) {
         m_hover_label->setText(title);
         update_hover_label();
         m_hover_label->show();
     });
-    QObject::connect(m_view, &WebView::link_unhovered, [this] {
+    QObject::connect(m_view, &SimpleWebView::link_unhovered, [this] {
         m_hover_label->hide();
     });
 
-    QObject::connect(m_view, &WebView::load_started, [this](const URL& url) {
+    QObject::connect(m_view, &SimpleWebView::load_started, [this](const URL& url) {
         m_location_edit->setText(url.to_string().characters());
         m_history.push(url, m_title.toUtf8().data());
         m_back_action->setEnabled(m_history.can_go_back());
         m_forward_action->setEnabled(m_history.can_go_forward());
     });
     QObject::connect(m_location_edit, &QLineEdit::returnPressed, this, &Tab::location_edit_return_pressed);
-    QObject::connect(m_view, &WebView::title_changed, this, &Tab::page_title_changed);
-    QObject::connect(m_view, &WebView::favicon_changed, this, &Tab::page_favicon_changed);
+    QObject::connect(m_view, &SimpleWebView::title_changed, this, &Tab::page_title_changed);
+    QObject::connect(m_view, &SimpleWebView::favicon_changed, this, &Tab::page_favicon_changed);
 
     QObject::connect(m_back_action, &QAction::triggered, this, &Tab::back);
     QObject::connect(m_forward_action, &QAction::triggered, this, &Tab::forward);

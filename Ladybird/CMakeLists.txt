@@ -57,10 +57,10 @@ set(SOURCES
     PageClientLadybird.cpp
     RequestManagerQt.cpp
     main.cpp
-    WebView.cpp
     History.cpp
     Settings.cpp
     SettingsDialog.cpp
+    SimpleWebView.cpp
     Tab.cpp
     TimerQt.cpp
     Utilities.cpp

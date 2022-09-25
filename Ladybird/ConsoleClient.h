@@ -17,13 +17,13 @@
 #include <LibJS/Forward.h>
 #include <LibWeb/Forward.h>
 
-class WebView;
+class SimpleWebView;
 
 namespace Ladybird {
 
 class ConsoleClient final : public JS::ConsoleClient {
 public:
-    ConsoleClient(JS::Console&, JS::Realm&, WebView&);
+    ConsoleClient(JS::Console&, JS::Realm&, SimpleWebView&);
 
     void handle_input(String const& js_source);
     void send_messages(i32 start_index);
@@ -32,7 +32,7 @@ private:
     virtual void clear() override;
     virtual JS::ThrowCompletionOr<JS::Value> printer(JS::Console::LogLevel log_level, PrinterArguments) override;
 
-    WebView& m_view;
+    SimpleWebView& m_view;
 
     WeakPtr<JS::Interpreter> m_interpreter;
     JS::Handle<ConsoleGlobalObject> m_console_global_object;

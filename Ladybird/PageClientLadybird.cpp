@@ -8,7 +8,7 @@
 
 #include "PageClientLadybird.h"
 #include "Utilities.h"
-#include "WebView.h"
+#include "SimpleWebView.h"
 #include <LibCore/System.h>
 #include <LibGfx/Painter.h>
 #include <LibJS/Runtime/ConsoleObject.h>
@@ -23,12 +23,12 @@
 
 namespace Ladybird {
 
-NonnullOwnPtr<PageClientLadybird> PageClientLadybird::create(WebView& view)
+NonnullOwnPtr<PageClientLadybird> PageClientLadybird::create(SimpleWebView& view)
 {
     return adopt_own(*new PageClientLadybird(view));
 }
 
-PageClientLadybird::PageClientLadybird(WebView& view)
+PageClientLadybird::PageClientLadybird(SimpleWebView& view)
     : m_view(view)
     , m_page(make<Web::Page>(*this))
 {
