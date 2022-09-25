@@ -63,7 +63,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Worker>> Worker::create(FlyString const& sc
     // 4. If this fails, throw a "SyntaxError" DOMException.
     if (!url.is_valid()) {
         dbgln_if(WEB_WORKER_DEBUG, "WebWorker: Invalid URL loaded '{}'.", script_url);
-        return DOM::SyntaxError::create(document.global_object(), "url is not valid");
+        return WebIDL::SyntaxError::create(document.global_object(), "url is not valid");
     }
 
     // 5. Let worker URL be the resulting URL record.

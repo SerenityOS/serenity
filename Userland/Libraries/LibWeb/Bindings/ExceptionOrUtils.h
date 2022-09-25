@@ -73,7 +73,7 @@ ALWAYS_INLINE JS::Completion dom_exception_to_throw_completion(auto&& vm, auto&&
                 VERIFY_NOT_REACHED();
             }
         },
-        [&](JS::NonnullGCPtr<DOM::DOMException> const& exception) {
+        [&](JS::NonnullGCPtr<WebIDL::DOMException> const& exception) {
             return throw_completion(exception);
         });
 }

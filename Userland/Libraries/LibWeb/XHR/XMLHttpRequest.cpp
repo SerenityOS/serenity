@@ -17,7 +17,6 @@
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibTextCodec/Decoder.h>
 #include <LibWeb/Bindings/XMLHttpRequestPrototype.h>
-#include <LibWeb/DOM/DOMException.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/EventDispatcher.h>
@@ -33,6 +32,7 @@
 #include <LibWeb/HTML/Window.h>
 #include <LibWeb/Loader/ResourceLoader.h>
 #include <LibWeb/Page/Page.h>
+#include <LibWeb/WebIDL/DOMException.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
 #include <LibWeb/XHR/EventNames.h>
 #include <LibWeb/XHR/ProgressEvent.h>
@@ -84,7 +84,7 @@ WebIDL::ExceptionOr<String> XMLHttpRequest::response_text() const
 {
     // 1. If this’s response type is not the empty string or "text", then throw an "InvalidStateError" DOMException.
     if (m_response_type != Bindings::XMLHttpRequestResponseType::Empty && m_response_type != Bindings::XMLHttpRequestResponseType::Text)
-        return DOM::InvalidStateError::create(global_object(), "XHR responseText can only be used for responseType \"\" or \"text\"");
+        return WebIDL::InvalidStateError::create(global_object(), "XHR responseText can only be used for responseType \"\" or \"text\"");
 
     // 2. If this’s state is not loading or done, then return the empty string.
     if (m_ready_state != ReadyState::Loading && m_ready_state != ReadyState::Done)
@@ -276,20 +276,20 @@ WebIDL::ExceptionOr<void> XMLHttpRequest::set_request_header(String const& name_
 
     // 1. If this’s state is not opened, then throw an "InvalidStateError" DOMException.
     if (m_ready_state != ReadyState::Opened)
-        return DOM::InvalidStateError::create(global_object(), "XHR readyState is not OPENED");
+        return WebIDL::InvalidStateError::create(global_object(), "XHR readyState is not OPENED");
 
     // 2. If this’s send() flag is set, then throw an "InvalidStateError" DOMException.
     if (m_send)
-        return DOM::InvalidStateError::create(global_object(), "XHR send() flag is already set");
+        return WebIDL::InvalidStateError::create(global_object(), "XHR send() flag is already set");
 
     // 3. Normalize value.
     value = MUST(Fetch::Infrastructure::normalize_header_value(value));
 
     // 4. If name is not a header name or value is not a header value, then throw a "SyntaxError" DOMException.
     if (!Fetch::Infrastructure::is_header_name(name))
-        return DOM::SyntaxError::create(global_object(), "Header name contains invalid characters.");
+        return WebIDL::SyntaxError::create(global_object(), "Header name contains invalid characters.");
     if (!Fetch::Infrastructure::is_header_value(value))
-        return DOM::SyntaxError::create(global_object(), "Header value contains invalid characters.");
+        return WebIDL::SyntaxError::create(global_object(), "Header value contains invalid characters.");
 
     // 5. If name is a forbidden header name, then return.
     if (Fetch::Infrastructure::is_forbidden_header_name(name))
@@ -327,15 +327,15 @@ WebIDL::ExceptionOr<void> XMLHttpRequest::open(String const& method_string, Stri
 
     // 2. If settingsObject has a responsible document and it is not fully active, then throw an "InvalidStateError" DOMException.
     if (settings_object.responsible_document() && !settings_object.responsible_document()->is_active())
-        return DOM::InvalidStateError::create(global_object(), "Invalid state: Responsible document is not fully active.");
+        return WebIDL::InvalidStateError::create(global_object(), "Invalid state: Responsible document is not fully active.");
 
     // 3. If method is not a method, then throw a "SyntaxError" DOMException.
     if (!Fetch::Infrastructure::is_method(method))
-        return DOM::SyntaxError::create(global_object(), "An invalid or illegal string was specified.");
+        return WebIDL::SyntaxError::create(global_object(), "An invalid or illegal string was specified.");
 
     // 4. If method is a forbidden method, then throw a "SecurityError" DOMException.
     if (Fetch::Infrastructure::is_forbidden_method(method))
-        return DOM::SecurityError::create(global_object(), "Forbidden method, must not be 'CONNECT', 'TRACE', or 'TRACK'");
+        return WebIDL::SecurityError::create(global_object(), "Forbidden method, must not be 'CONNECT', 'TRACE', or 'TRACK'");
 
     // 5. Normalize method.
     method = MUST(Fetch::Infrastructure::normalize_method(method));
@@ -345,7 +345,7 @@ WebIDL::ExceptionOr<void> XMLHttpRequest::open(String const& method_string, Stri
 
     // 7. If parsedURL is failure, then throw a "SyntaxError" DOMException.
     if (!parsed_url.is_valid())
-        return DOM::SyntaxError::create(global_object(), "Invalid URL");
+        return WebIDL::SyntaxError::create(global_object(), "Invalid URL");
 
     // 8. If the async argument is omitted, set async to true, and set username and password to null.
     // NOTE: This is handled in the overload lacking the async argument.
@@ -401,10 +401,10 @@ WebIDL::ExceptionOr<void> XMLHttpRequest::send(Optional<Fetch::XMLHttpRequestBod
     auto& realm = *vm.current_realm();
 
     if (m_ready_state != ReadyState::Opened)
-        return DOM::InvalidStateError::create(global_object(), "XHR readyState is not OPENED");
+        return WebIDL::InvalidStateError::create(global_object(), "XHR readyState is not OPENED");
 
     if (m_send)
-        return DOM::InvalidStateError::create(global_object(), "XHR send() flag is already set");
+        return WebIDL::InvalidStateError::create(global_object(), "XHR send() flag is already set");
 
     // If this’s request method is `GET` or `HEAD`, then set body to null.
     if (m_method.is_one_of("GET"sv, "HEAD"sv))
@@ -552,7 +552,7 @@ WebIDL::ExceptionOr<void> XMLHttpRequest::override_mime_type(String const& mime)
 {
     // 1. If this’s state is loading or done, then throw an "InvalidStateError" DOMException.
     if (m_ready_state == ReadyState::Loading || m_ready_state == ReadyState::Done)
-        return DOM::InvalidStateError::create(global_object(), "Cannot override MIME type when state is Loading or Done.");
+        return WebIDL::InvalidStateError::create(global_object(), "Cannot override MIME type when state is Loading or Done.");
 
     // 2. Set this’s override MIME type to the result of parsing mime.
     m_override_mime_type = MimeSniff::MimeType::from_string(mime);
@@ -570,7 +570,7 @@ WebIDL::ExceptionOr<void> XMLHttpRequest::set_timeout(u32 timeout)
     // 1. If the current global object is a Window object and this’s synchronous flag is set,
     //    then throw an "InvalidAccessError" DOMException.
     if (is<HTML::Window>(HTML::current_global_object()) && m_synchronous)
-        return DOM::InvalidAccessError::create(global_object(), "Use of XMLHttpRequest's timeout attribute is not supported in the synchronous mode in window context.");
+        return WebIDL::InvalidAccessError::create(global_object(), "Use of XMLHttpRequest's timeout attribute is not supported in the synchronous mode in window context.");
 
     // 2. Set this’s timeout to the given value.
     m_timeout = timeout;

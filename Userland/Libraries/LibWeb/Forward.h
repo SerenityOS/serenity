@@ -140,7 +140,6 @@ class DocumentFragment;
 class DocumentLoadEventDelayer;
 class DocumentType;
 class DOMEventListener;
-class DOMException;
 class DOMImplementation;
 class DOMTokenList;
 class Element;
@@ -394,6 +393,7 @@ class SVGSVGElement;
 
 namespace Web::WebIDL {
 class CallbackType;
+class DOMException;
 
 template<typename ValueType>
 class ExceptionOr;

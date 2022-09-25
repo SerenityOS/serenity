@@ -44,7 +44,7 @@ void AbortSignal::signal_abort(JS::Value reason)
     if (!reason.is_undefined())
         m_abort_reason = reason;
     else
-        m_abort_reason = AbortError::create(global_object(), "Aborted without reason").ptr();
+        m_abort_reason = WebIDL::AbortError::create(global_object(), "Aborted without reason").ptr();
 
     // 3. For each algorithm in signal’s abort algorithms: run algorithm.
     for (auto& algorithm : m_abort_algorithms)

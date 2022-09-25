@@ -315,24 +315,24 @@ WebIDL::ExceptionOr<void> Node::ensure_pre_insertion_validity(JS::NonnullGCPtr<N
 {
     // 1. If parent is not a Document, DocumentFragment, or Element node, then throw a "HierarchyRequestError" DOMException.
     if (!is<Document>(this) && !is<DocumentFragment>(this) && !is<Element>(this))
-        return DOM::HierarchyRequestError::create(global_object(), "Can only insert into a document, document fragment or element");
+        return WebIDL::HierarchyRequestError::create(global_object(), "Can only insert into a document, document fragment or element");
 
     // 2. If node is a host-including inclusive ancestor of parent, then throw a "HierarchyRequestError" DOMException.
     if (node->is_host_including_inclusive_ancestor_of(*this))
-        return DOM::HierarchyRequestError::create(global_object(), "New node is an ancestor of this node");
+        return WebIDL::HierarchyRequestError::create(global_object(), "New node is an ancestor of this node");
 
     // 3. If child is non-null and its parent is not parent, then throw a "NotFoundError" DOMException.
     if (child && child->parent() != this)
-        return DOM::NotFoundError::create(global_object(), "This node is not the parent of the given child");
+        return WebIDL::NotFoundError::create(global_object(), "This node is not the parent of the given child");
 
     // FIXME: All the following "Invalid node type for insertion" messages could be more descriptive.
     // 4. If node is not a DocumentFragment, DocumentType, Element, or CharacterData node, then throw a "HierarchyRequestError" DOMException.
     if (!is<DocumentFragment>(*node) && !is<DocumentType>(*node) && !is<Element>(*node) && !is<Text>(*node) && !is<Comment>(*node) && !is<ProcessingInstruction>(*node))
-        return DOM::HierarchyRequestError::create(global_object(), "Invalid node type for insertion");
+        return WebIDL::HierarchyRequestError::create(global_object(), "Invalid node type for insertion");
 
     // 5. If either node is a Text node and parent is a document, or node is a doctype and parent is not a document, then throw a "HierarchyRequestError" DOMException.
     if ((is<Text>(*node) && is<Document>(this)) || (is<DocumentType>(*node) && !is<Document>(this)))
-        return DOM::HierarchyRequestError::create(global_object(), "Invalid node type for insertion");
+        return WebIDL::HierarchyRequestError::create(global_object(), "Invalid node type for insertion");
 
     // 6. If parent is a document, and any of the statements below, switched on the interface node implements, are true, then throw a "HierarchyRequestError" DOMException.
     if (is<Document>(this)) {
@@ -343,18 +343,18 @@ WebIDL::ExceptionOr<void> Node::ensure_pre_insertion_validity(JS::NonnullGCPtr<N
             auto node_element_child_count = verify_cast<DocumentFragment>(*node).child_element_count();
             if ((node_element_child_count > 1 || node->has_child_of_type<Text>())
                 || (node_element_child_count == 1 && (has_child_of_type<Element>() || is<DocumentType>(child.ptr()) || (child && child->has_following_node_of_type_in_tree_order<DocumentType>())))) {
-                return DOM::HierarchyRequestError::create(global_object(), "Invalid node type for insertion");
+                return WebIDL::HierarchyRequestError::create(global_object(), "Invalid node type for insertion");
             }
         } else if (is<Element>(*node)) {
             // Element
             // If parent has an element child, child is a doctype, or child is non-null and a doctype is following child.
             if (has_child_of_type<Element>() || is<DocumentType>(child.ptr()) || (child && child->has_following_node_of_type_in_tree_order<DocumentType>()))
-                return DOM::HierarchyRequestError::create(global_object(), "Invalid node type for insertion");
+                return WebIDL::HierarchyRequestError::create(global_object(), "Invalid node type for insertion");
         } else if (is<DocumentType>(*node)) {
             // DocumentType
             // parent has a doctype child, child is non-null and an element is preceding child, or child is null and parent has an element child.
             if (has_child_of_type<DocumentType>() || (child && child->has_preceding_node_of_type_in_tree_order<Element>()) || (!child && has_child_of_type<Element>()))
-                return DOM::HierarchyRequestError::create(global_object(), "Invalid node type for insertion");
+                return WebIDL::HierarchyRequestError::create(global_object(), "Invalid node type for insertion");
         }
     }
 
@@ -487,7 +487,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Node>> Node::pre_remove(JS::NonnullGCPtr<No
 {
     // 1. If child’s parent is not parent, then throw a "NotFoundError" DOMException.
     if (child->parent() != this)
-        return DOM::NotFoundError::create(global_object(), "Child does not belong to this node");
+        return WebIDL::NotFoundError::create(global_object(), "Child does not belong to this node");
 
     // 2. Remove child.
     child->remove();
@@ -612,25 +612,25 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Node>> Node::replace_child(JS::NonnullGCPtr
 {
     // If parent is not a Document, DocumentFragment, or Element node, then throw a "HierarchyRequestError" DOMException.
     if (!is<Document>(this) && !is<DocumentFragment>(this) && !is<Element>(this))
-        return DOM::HierarchyRequestError::create(global_object(), "Can only insert into a document, document fragment or element");
+        return WebIDL::HierarchyRequestError::create(global_object(), "Can only insert into a document, document fragment or element");
 
     // 2. If node is a host-including inclusive ancestor of parent, then throw a "HierarchyRequestError" DOMException.
     if (node->is_host_including_inclusive_ancestor_of(*this))
-        return DOM::HierarchyRequestError::create(global_object(), "New node is an ancestor of this node");
+        return WebIDL::HierarchyRequestError::create(global_object(), "New node is an ancestor of this node");
 
     // 3. If child’s parent is not parent, then throw a "NotFoundError" DOMException.
     if (child->parent() != this)
-        return DOM::NotFoundError::create(global_object(), "This node is not the parent of the given child");
+        return WebIDL::NotFoundError::create(global_object(), "This node is not the parent of the given child");
 
     // FIXME: All the following "Invalid node type for insertion" messages could be more descriptive.
 
     // 4. If node is not a DocumentFragment, DocumentType, Element, or CharacterData node, then throw a "HierarchyRequestError" DOMException.
     if (!is<DocumentFragment>(*node) && !is<DocumentType>(*node) && !is<Element>(*node) && !is<Text>(*node) && !is<Comment>(*node) && !is<ProcessingInstruction>(*node))
-        return DOM::HierarchyRequestError::create(global_object(), "Invalid node type for insertion");
+        return WebIDL::HierarchyRequestError::create(global_object(), "Invalid node type for insertion");
 
     // 5. If either node is a Text node and parent is a document, or node is a doctype and parent is not a document, then throw a "HierarchyRequestError" DOMException.
     if ((is<Text>(*node) && is<Document>(this)) || (is<DocumentType>(*node) && !is<Document>(this)))
-        return DOM::HierarchyRequestError::create(global_object(), "Invalid node type for insertion");
+        return WebIDL::HierarchyRequestError::create(global_object(), "Invalid node type for insertion");
 
     // If parent is a document, and any of the statements below, switched on the interface node implements, are true, then throw a "HierarchyRequestError" DOMException.
     if (is<Document>(this)) {
@@ -641,18 +641,18 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Node>> Node::replace_child(JS::NonnullGCPtr
             auto node_element_child_count = verify_cast<DocumentFragment>(*node).child_element_count();
             if ((node_element_child_count > 1 || node->has_child_of_type<Text>())
                 || (node_element_child_count == 1 && (first_child_of_type<Element>() != child || child->has_following_node_of_type_in_tree_order<DocumentType>()))) {
-                return DOM::HierarchyRequestError::create(global_object(), "Invalid node type for insertion");
+                return WebIDL::HierarchyRequestError::create(global_object(), "Invalid node type for insertion");
             }
         } else if (is<Element>(*node)) {
             // Element
             // parent has an element child that is not child or a doctype is following child.
             if (first_child_of_type<Element>() != child || child->has_following_node_of_type_in_tree_order<DocumentType>())
-                return DOM::HierarchyRequestError::create(global_object(), "Invalid node type for insertion");
+                return WebIDL::HierarchyRequestError::create(global_object(), "Invalid node type for insertion");
         } else if (is<DocumentType>(*node)) {
             // DocumentType
             // parent has a doctype child that is not child, or an element is preceding child.
             if (first_child_of_type<DocumentType>() != node || child->has_preceding_node_of_type_in_tree_order<Element>())
-                return DOM::HierarchyRequestError::create(global_object(), "Invalid node type for insertion");
+                return WebIDL::HierarchyRequestError::create(global_object(), "Invalid node type for insertion");
         }
     }
 
@@ -796,7 +796,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Node>> Node::clone_node_binding(bool deep)
 {
     // 1. If this is a shadow root, then throw a "NotSupportedError" DOMException.
     if (is<ShadowRoot>(*this))
-        return NotSupportedError::create(global_object(), "Cannot clone shadow root");
+        return WebIDL::NotSupportedError::create(global_object(), "Cannot clone shadow root");
 
     // 2. Return a clone of this, with the clone children flag set if deep is true.
     return clone_node(nullptr, deep);

@@ -1075,7 +1075,7 @@ JS_DEFINE_NATIVE_FUNCTION(Window::btoa)
     byte_string.ensure_capacity(string.length());
     for (u32 code_point : Utf8View(string)) {
         if (code_point > 0xff)
-            return throw_completion(DOM::InvalidCharacterError::create(vm.current_realm()->global_object(), "Data contains characters outside the range U+0000 and U+00FF"));
+            return throw_completion(WebIDL::InvalidCharacterError::create(vm.current_realm()->global_object(), "Data contains characters outside the range U+0000 and U+00FF"));
         byte_string.append(code_point);
     }
 

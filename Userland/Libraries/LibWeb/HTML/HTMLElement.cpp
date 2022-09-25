@@ -7,7 +7,6 @@
 #include <AK/StringBuilder.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Parser.h>
-#include <LibWeb/DOM/DOMException.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/IDLEventListener.h>
 #include <LibWeb/HTML/BrowsingContext.h>
@@ -24,6 +23,7 @@
 #include <LibWeb/UIEvents/EventNames.h>
 #include <LibWeb/UIEvents/FocusEvent.h>
 #include <LibWeb/UIEvents/MouseEvent.h>
+#include <LibWeb/WebIDL/DOMException.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
 
 namespace Web::HTML {
@@ -104,7 +104,7 @@ WebIDL::ExceptionOr<void> HTMLElement::set_content_editable(String const& conten
         set_attribute(HTML::AttributeNames::contenteditable, "false");
         return {};
     }
-    return DOM::SyntaxError::create(global_object(), "Invalid contentEditable value, must be 'true', 'false', or 'inherit'");
+    return WebIDL::SyntaxError::create(global_object(), "Invalid contentEditable value, must be 'true', 'false', or 'inherit'");
 }
 
 void HTMLElement::set_inner_text(StringView text)

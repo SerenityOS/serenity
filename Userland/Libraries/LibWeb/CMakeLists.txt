@@ -78,7 +78,6 @@ set(SOURCES
     DOM/Comment.cpp
     DOM/CustomEvent.cpp
     DOM/DOMEventListener.cpp
-    DOM/DOMException.cpp
     DOM/DOMImplementation.cpp
     DOM/DOMTokenList.cpp
     DOM/DOMTokenList.idl
@@ -413,6 +412,7 @@ set(SOURCES
     WebGL/WebGLRenderingContextBase.cpp
     WebIDL/AbstractOperations.cpp
     WebIDL/CallbackType.cpp
+    WebIDL/DOMException.cpp
     WebIDL/OverloadResolution.cpp
     WebSockets/WebSocket.cpp
     XHR/EventNames.cpp
