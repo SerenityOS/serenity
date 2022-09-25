@@ -22,6 +22,8 @@ String Shortcut::to_string() const
         parts.append("Shift");
     if (m_modifiers & Mod_Alt)
         parts.append("Alt");
+    if (m_modifiers & Mod_AltGr)
+        parts.append("AltGr");
     if (m_modifiers & Mod_Super)
         parts.append("Super");
 
