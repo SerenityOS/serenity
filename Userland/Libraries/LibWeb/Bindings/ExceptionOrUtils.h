@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, the SerenityOS developers.
+ * Copyright (c) 2021-2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -75,6 +75,9 @@ ALWAYS_INLINE JS::Completion dom_exception_to_throw_completion(auto&& vm, auto&&
         },
         [&](JS::NonnullGCPtr<WebIDL::DOMException> const& exception) {
             return throw_completion(exception);
+        },
+        [&](JS::Completion const& completion) {
+            return completion;
         });
 }
 
