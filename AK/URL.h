@@ -11,6 +11,11 @@
 #include <AK/StringView.h>
 #include <AK/Vector.h>
 
+// On Linux distros that use mlibc `basename` is defined as a macro that expands to `__mlibc_gnu_basename` or `__mlibc_gnu_basename_c`, so we undefine it.
+#if defined(AK_OS_LINUX) && defined(basename)
+#    undef basename
+#endif
+
 namespace AK {
 
 // NOTE: The member variables cannot contain any percent encoded sequences.
