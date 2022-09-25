@@ -604,7 +604,7 @@ void Node::remove(bool suppress_observers)
     // 21. Run the children changed steps for parent.
     parent->children_changed();
 
-    document().invalidate_style();
+    document().invalidate_layout();
 }
 
 // https://dom.spec.whatwg.org/#concept-node-replace
