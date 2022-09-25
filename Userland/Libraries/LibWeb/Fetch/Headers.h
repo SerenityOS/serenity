@@ -35,6 +35,14 @@ public:
 
     virtual ~Headers() override;
 
+    [[nodiscard]] Infrastructure::HeaderList& header_list() { return m_header_list; }
+    [[nodiscard]] Infrastructure::HeaderList const& header_list() const { return m_header_list; }
+    void set_header_list(Infrastructure::HeaderList header_list) { m_header_list = move(header_list); }
+
+    [[nodiscard]] Guard guard() const { return m_guard; }
+    void set_guard(Guard guard) { m_guard = guard; }
+
+    // JS API functions
     WebIDL::ExceptionOr<void> append(Infrastructure::Header);
     WebIDL::ExceptionOr<void> append(String const& name, String const& value);
     WebIDL::ExceptionOr<void> delete_(String const& name);
