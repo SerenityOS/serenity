@@ -42,7 +42,7 @@ private:
     explicit SpuriousInterruptHandler(u8 interrupt_number);
     bool m_enabled { false };
     bool m_real_irq { false };
-    LockRefPtr<IRQController> m_responsible_irq_controller;
+    NonnullLockRefPtr<IRQController> m_responsible_irq_controller;
     OwnPtr<GenericInterruptHandler> m_real_handler;
 };
 }
