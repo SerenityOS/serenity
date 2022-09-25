@@ -108,6 +108,7 @@ void SpinBox::mousewheel_event(MouseEvent& event)
     if (event.modifiers() == KeyModifier::Mod_Ctrl)
         wheel_delta *= 6;
     set_value(m_value - wheel_delta);
+    event.accept();
 }
 
 void SpinBox::resize_event(ResizeEvent& event)

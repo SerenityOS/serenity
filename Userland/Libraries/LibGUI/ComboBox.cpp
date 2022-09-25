@@ -39,6 +39,7 @@ private:
             set_focus(true);
         if (on_mousewheel)
             on_mousewheel(event.wheel_delta_y());
+        event.accept();
     }
 
     virtual void keydown_event(KeyEvent& event) override
