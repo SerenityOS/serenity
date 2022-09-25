@@ -4,14 +4,14 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/DOM/AbstractRange.h>
 #include <LibWeb/DOM/Document.h>
-#include <LibWeb/HTML/Window.h>
 
 namespace Web::DOM {
 
 AbstractRange::AbstractRange(Node& start_container, u32 start_offset, Node& end_container, u32 end_offset)
-    : Bindings::PlatformObject(start_container.document().window().cached_web_prototype("AbstractRange"))
+    : Bindings::PlatformObject(Bindings::cached_web_prototype(start_container.realm(), "AbstractRange"))
     , m_start_container(start_container)
     , m_start_offset(start_offset)
     , m_end_container(end_container)

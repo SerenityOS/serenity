@@ -315,24 +315,24 @@ WebIDL::ExceptionOr<void> Node::ensure_pre_insertion_validity(JS::NonnullGCPtr<N
 {
     // 1. If parent is not a Document, DocumentFragment, or Element node, then throw a "HierarchyRequestError" DOMException.
     if (!is<Document>(this) && !is<DocumentFragment>(this) && !is<Element>(this))
-        return WebIDL::HierarchyRequestError::create(global_object(), "Can only insert into a document, document fragment or element");
+        return WebIDL::HierarchyRequestError::create(realm(), "Can only insert into a document, document fragment or element");
 
     // 2. If node is a host-including inclusive ancestor of parent, then throw a "HierarchyRequestError" DOMException.
     if (node->is_host_including_inclusive_ancestor_of(*this))
-        return WebIDL::HierarchyRequestError::create(global_object(), "New node is an ancestor of this node");
+        return WebIDL::HierarchyRequestError::create(realm(), "New node is an ancestor of this node");
 
     // 3. If child is non-null and its parent is not parent, then throw a "NotFoundError" DOMException.
     if (child && child->parent() != this)
-        return WebIDL::NotFoundError::create(global_object(), "This node is not the parent of the given child");
+        return WebIDL::NotFoundError::create(realm(), "This node is not the parent of the given child");
 
     // FIXME: All the following "Invalid node type for insertion" messages could be more descriptive.
     // 4. If node is not a DocumentFragment, DocumentType, Element, or CharacterData node, then throw a "HierarchyRequestError" DOMException.
     if (!is<DocumentFragment>(*node) && !is<DocumentType>(*node) && !is<Element>(*node) && !is<Text>(*node) && !is<Comment>(*node) && !is<ProcessingInstruction>(*node))
-        return WebIDL::HierarchyRequestError::create(global_object(), "Invalid node type for insertion");
+        return WebIDL::HierarchyRequestError::create(realm(), "Invalid node type for insertion");
 
     // 5. If either node is a Text node and parent is a document, or node is a doctype and parent is not a document, then throw a "HierarchyRequestError" DOMException.
     if ((is<Text>(*node) && is<Document>(this)) || (is<DocumentType>(*node) && !is<Document>(this)))
-        return WebIDL::HierarchyRequestError::create(global_object(), "Invalid node type for insertion");
+        return WebIDL::HierarchyRequestError::create(realm(), "Invalid node type for insertion");
 
     // 6. If parent is a document, and any of the statements below, switched on the interface node implements, are true, then throw a "HierarchyRequestError" DOMException.
     if (is<Document>(this)) {
@@ -343,18 +343,18 @@ WebIDL::ExceptionOr<void> Node::ensure_pre_insertion_validity(JS::NonnullGCPtr<N
             auto node_element_child_count = verify_cast<DocumentFragment>(*node).child_element_count();
             if ((node_element_child_count > 1 || node->has_child_of_type<Text>())
                 || (node_element_child_count == 1 && (has_child_of_type<Element>() || is<DocumentType>(child.ptr()) || (child && child->has_following_node_of_type_in_tree_order<DocumentType>())))) {
-                return WebIDL::HierarchyRequestError::create(global_object(), "Invalid node type for insertion");
+                return WebIDL::HierarchyRequestError::create(realm(), "Invalid node type for insertion");
             }
         } else if (is<Element>(*node)) {
             // Element
             // If parent has an element child, child is a doctype, or child is non-null and a doctype is following child.
             if (has_child_of_type<Element>() || is<DocumentType>(child.ptr()) || (child && child->has_following_node_of_type_in_tree_order<DocumentType>()))
-                return WebIDL::HierarchyRequestError::create(global_object(), "Invalid node type for insertion");
+                return WebIDL::HierarchyRequestError::create(realm(), "Invalid node type for insertion");
         } else if (is<DocumentType>(*node)) {
             // DocumentType
             // parent has a doctype child, child is non-null and an element is preceding child, or child is null and parent has an element child.
             if (has_child_of_type<DocumentType>() || (child && child->has_preceding_node_of_type_in_tree_order<Element>()) || (!child && has_child_of_type<Element>()))
-                return WebIDL::HierarchyRequestError::create(global_object(), "Invalid node type for insertion");
+                return WebIDL::HierarchyRequestError::create(realm(), "Invalid node type for insertion");
         }
     }
 
@@ -385,7 +385,7 @@ void Node::insert_before(JS::NonnullGCPtr<Node> node, JS::GCPtr<Node> child, boo
 
         // 2. Queue a tree mutation record for node with « », nodes, null, and null.
         // NOTE: This step intentionally does not pay attention to the suppress observers flag.
-        node->queue_tree_mutation_record(StaticNodeList::create(window(), {}), StaticNodeList::create(window(), nodes), nullptr, nullptr);
+        node->queue_tree_mutation_record(StaticNodeList::create(realm(), {}), StaticNodeList::create(realm(), nodes), nullptr, nullptr);
     }
 
     // 5. If child is non-null, then:
@@ -447,7 +447,7 @@ void Node::insert_before(JS::NonnullGCPtr<Node> node, JS::GCPtr<Node> child, boo
 
     // 8. If suppress observers flag is unset, then queue a tree mutation record for parent with nodes, « », previousSibling, and child.
     if (!suppress_observers)
-        queue_tree_mutation_record(StaticNodeList::create(window(), move(nodes)), StaticNodeList::create(window(), {}), previous_sibling.ptr(), child.ptr());
+        queue_tree_mutation_record(StaticNodeList::create(realm(), move(nodes)), StaticNodeList::create(realm(), {}), previous_sibling.ptr(), child.ptr());
 
     // 9. Run the children changed steps for parent.
     children_changed();
@@ -487,7 +487,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Node>> Node::pre_remove(JS::NonnullGCPtr<No
 {
     // 1. If child’s parent is not parent, then throw a "NotFoundError" DOMException.
     if (child->parent() != this)
-        return WebIDL::NotFoundError::create(global_object(), "Child does not belong to this node");
+        return WebIDL::NotFoundError::create(realm(), "Child does not belong to this node");
 
     // 2. Remove child.
     child->remove();
@@ -598,7 +598,7 @@ void Node::remove(bool suppress_observers)
     if (!suppress_observers) {
         Vector<JS::Handle<Node>> removed_nodes;
         removed_nodes.append(JS::make_handle(*this));
-        parent->queue_tree_mutation_record(StaticNodeList::create(window(), {}), StaticNodeList::create(window(), move(removed_nodes)), old_previous_sibling.ptr(), old_next_sibling.ptr());
+        parent->queue_tree_mutation_record(StaticNodeList::create(realm(), {}), StaticNodeList::create(realm(), move(removed_nodes)), old_previous_sibling.ptr(), old_next_sibling.ptr());
     }
 
     // 21. Run the children changed steps for parent.
@@ -612,25 +612,25 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Node>> Node::replace_child(JS::NonnullGCPtr
 {
     // If parent is not a Document, DocumentFragment, or Element node, then throw a "HierarchyRequestError" DOMException.
     if (!is<Document>(this) && !is<DocumentFragment>(this) && !is<Element>(this))
-        return WebIDL::HierarchyRequestError::create(global_object(), "Can only insert into a document, document fragment or element");
+        return WebIDL::HierarchyRequestError::create(realm(), "Can only insert into a document, document fragment or element");
 
     // 2. If node is a host-including inclusive ancestor of parent, then throw a "HierarchyRequestError" DOMException.
     if (node->is_host_including_inclusive_ancestor_of(*this))
-        return WebIDL::HierarchyRequestError::create(global_object(), "New node is an ancestor of this node");
+        return WebIDL::HierarchyRequestError::create(realm(), "New node is an ancestor of this node");
 
     // 3. If child’s parent is not parent, then throw a "NotFoundError" DOMException.
     if (child->parent() != this)
-        return WebIDL::NotFoundError::create(global_object(), "This node is not the parent of the given child");
+        return WebIDL::NotFoundError::create(realm(), "This node is not the parent of the given child");
 
     // FIXME: All the following "Invalid node type for insertion" messages could be more descriptive.
 
     // 4. If node is not a DocumentFragment, DocumentType, Element, or CharacterData node, then throw a "HierarchyRequestError" DOMException.
     if (!is<DocumentFragment>(*node) && !is<DocumentType>(*node) && !is<Element>(*node) && !is<Text>(*node) && !is<Comment>(*node) && !is<ProcessingInstruction>(*node))
-        return WebIDL::HierarchyRequestError::create(global_object(), "Invalid node type for insertion");
+        return WebIDL::HierarchyRequestError::create(realm(), "Invalid node type for insertion");
 
     // 5. If either node is a Text node and parent is a document, or node is a doctype and parent is not a document, then throw a "HierarchyRequestError" DOMException.
     if ((is<Text>(*node) && is<Document>(this)) || (is<DocumentType>(*node) && !is<Document>(this)))
-        return WebIDL::HierarchyRequestError::create(global_object(), "Invalid node type for insertion");
+        return WebIDL::HierarchyRequestError::create(realm(), "Invalid node type for insertion");
 
     // If parent is a document, and any of the statements below, switched on the interface node implements, are true, then throw a "HierarchyRequestError" DOMException.
     if (is<Document>(this)) {
@@ -641,18 +641,18 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Node>> Node::replace_child(JS::NonnullGCPtr
             auto node_element_child_count = verify_cast<DocumentFragment>(*node).child_element_count();
             if ((node_element_child_count > 1 || node->has_child_of_type<Text>())
                 || (node_element_child_count == 1 && (first_child_of_type<Element>() != child || child->has_following_node_of_type_in_tree_order<DocumentType>()))) {
-                return WebIDL::HierarchyRequestError::create(global_object(), "Invalid node type for insertion");
+                return WebIDL::HierarchyRequestError::create(realm(), "Invalid node type for insertion");
             }
         } else if (is<Element>(*node)) {
             // Element
             // parent has an element child that is not child or a doctype is following child.
             if (first_child_of_type<Element>() != child || child->has_following_node_of_type_in_tree_order<DocumentType>())
-                return WebIDL::HierarchyRequestError::create(global_object(), "Invalid node type for insertion");
+                return WebIDL::HierarchyRequestError::create(realm(), "Invalid node type for insertion");
         } else if (is<DocumentType>(*node)) {
             // DocumentType
             // parent has a doctype child that is not child, or an element is preceding child.
             if (first_child_of_type<DocumentType>() != node || child->has_preceding_node_of_type_in_tree_order<Element>())
-                return WebIDL::HierarchyRequestError::create(global_object(), "Invalid node type for insertion");
+                return WebIDL::HierarchyRequestError::create(realm(), "Invalid node type for insertion");
         }
     }
 
@@ -690,7 +690,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Node>> Node::replace_child(JS::NonnullGCPtr
     insert_before(node, reference_child, true);
 
     // 14. Queue a tree mutation record for parent with nodes, removedNodes, previousSibling, and referenceChild.
-    queue_tree_mutation_record(StaticNodeList::create(window(), move(nodes)), StaticNodeList::create(window(), move(removed_nodes)), previous_sibling.ptr(), reference_child.ptr());
+    queue_tree_mutation_record(StaticNodeList::create(realm(), move(nodes)), StaticNodeList::create(realm(), move(removed_nodes)), previous_sibling.ptr(), reference_child.ptr());
 
     // 15. Return child.
     return child;
@@ -723,7 +723,7 @@ JS::NonnullGCPtr<Node> Node::clone_node(Document* document, bool clone_children)
     else if (is<Document>(this)) {
         // Document
         auto document_ = verify_cast<Document>(this);
-        auto document_copy = Document::create(Bindings::main_thread_internal_window_object(), document_->url());
+        auto document_copy = Document::create(this->realm(), document_->url());
 
         // Set copy’s encoding, content type, URL, origin, type, and mode to those of node.
         document_copy->set_encoding(document_->encoding());
@@ -796,7 +796,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Node>> Node::clone_node_binding(bool deep)
 {
     // 1. If this is a shadow root, then throw a "NotSupportedError" DOMException.
     if (is<ShadowRoot>(*this))
-        return WebIDL::NotSupportedError::create(global_object(), "Cannot clone shadow root");
+        return WebIDL::NotSupportedError::create(realm(), "Cannot clone shadow root");
 
     // 2. Return a clone of this, with the clone children flag set if deep is true.
     return clone_node(nullptr, deep);
@@ -863,7 +863,7 @@ ParentNode* Node::parent_or_shadow_host()
 JS::NonnullGCPtr<NodeList> Node::child_nodes()
 {
     if (!m_child_nodes) {
-        m_child_nodes = LiveNodeList::create(window(), *this, [this](auto& node) {
+        m_child_nodes = LiveNodeList::create(realm(), *this, [this](auto& node) {
             return is_parent_of(node);
         });
     }
@@ -1143,7 +1143,7 @@ void Node::replace_all(JS::GCPtr<Node> node)
 
     // 7. If either addedNodes or removedNodes is not empty, then queue a tree mutation record for parent with addedNodes, removedNodes, null, and null.
     if (!added_nodes.is_empty() || !removed_nodes.is_empty())
-        queue_tree_mutation_record(StaticNodeList::create(window(), move(added_nodes)), StaticNodeList::create(window(), move(removed_nodes)), nullptr, nullptr);
+        queue_tree_mutation_record(StaticNodeList::create(realm(), move(added_nodes)), StaticNodeList::create(realm(), move(removed_nodes)), nullptr, nullptr);
 }
 
 // https://dom.spec.whatwg.org/#string-replace-all
@@ -1382,7 +1382,7 @@ void Node::queue_mutation_record(FlyString const& type, String attribute_name, S
     for (auto& interested_observer : interested_observers) {
         // 1. Let record be a new MutationRecord object with its type set to type, target set to target, attributeName set to name, attributeNamespace set to namespace, oldValue set to mappedOldValue,
         //    addedNodes set to addedNodes, removedNodes set to removedNodes, previousSibling set to previousSibling, and nextSibling set to nextSibling.
-        auto record = MutationRecord::create(window(), type, *this, added_nodes, removed_nodes, previous_sibling, next_sibling, attribute_name, attribute_namespace, /* mappedOldValue */ interested_observer.value);
+        auto record = MutationRecord::create(realm(), type, *this, added_nodes, removed_nodes, previous_sibling, next_sibling, attribute_name, attribute_namespace, /* mappedOldValue */ interested_observer.value);
 
         // 2. Enqueue record to observer’s record queue.
         interested_observer.key->enqueue_record({}, move(record));

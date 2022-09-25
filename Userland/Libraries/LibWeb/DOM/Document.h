@@ -23,6 +23,7 @@
 #include <LibWeb/Cookie/Cookie.h>
 #include <LibWeb/DOM/NonElementParentNode.h>
 #include <LibWeb/DOM/ParentNode.h>
+#include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/CrossOrigin/CrossOriginOpenerPolicy.h>
 #include <LibWeb/HTML/DocumentReadyState.h>
 #include <LibWeb/HTML/HTMLScriptElement.h>
@@ -82,8 +83,9 @@ public:
 
     static JS::NonnullGCPtr<Document> create_and_initialize(Type, String content_type, HTML::NavigationParams);
 
+    static JS::NonnullGCPtr<Document> create(JS::Realm&, AK::URL const& url = "about:blank"sv);
     static JS::NonnullGCPtr<Document> create(HTML::Window&, AK::URL const& url = "about:blank"sv);
-    static JS::NonnullGCPtr<Document> create_with_global_object(HTML::Window&);
+    static JS::NonnullGCPtr<Document> construct_impl(JS::Realm&);
     virtual ~Document() override;
 
     size_t next_layout_node_serial_id(Badge<Layout::Node>) { return m_next_layout_node_serial_id++; }
@@ -367,7 +369,7 @@ public:
         FlyString prefix;
         FlyString tag_name;
     };
-    static WebIDL::ExceptionOr<PrefixAndTagName> validate_qualified_name(JS::Object& global_object, String const& qualified_name);
+    static WebIDL::ExceptionOr<PrefixAndTagName> validate_qualified_name(JS::Realm&, String const& qualified_name);
 
     JS::NonnullGCPtr<NodeIterator> create_node_iterator(Node& root, unsigned what_to_show, JS::GCPtr<NodeFilter>);
     JS::NonnullGCPtr<TreeWalker> create_tree_walker(Node& root, unsigned what_to_show, JS::GCPtr<NodeFilter>);
@@ -440,7 +442,7 @@ protected:
     virtual void visit_edges(Cell::Visitor&) override;
 
 private:
-    Document(HTML::Window&, AK::URL const&);
+    Document(JS::Realm&, AK::URL const&);
 
     // ^HTML::GlobalEventHandlers
     virtual EventTarget& global_event_handlers_to_event_target(FlyString const&) final { return *this; }

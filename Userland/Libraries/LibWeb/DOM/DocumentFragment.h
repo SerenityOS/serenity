@@ -19,7 +19,7 @@ class DocumentFragment
     WEB_PLATFORM_OBJECT(DocumentFragment, ParentNode);
 
 public:
-    static JS::NonnullGCPtr<DocumentFragment> create_with_global_object(HTML::Window& window);
+    static JS::NonnullGCPtr<DocumentFragment> construct_impl(JS::Realm& realm);
 
     virtual ~DocumentFragment() override = default;
 

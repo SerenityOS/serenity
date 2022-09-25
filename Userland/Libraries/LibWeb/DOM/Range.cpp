@@ -6,6 +6,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/DOM/Comment.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/DocumentFragment.h>
@@ -31,31 +32,32 @@ JS::NonnullGCPtr<Range> Range::create(HTML::Window& window)
 
 JS::NonnullGCPtr<Range> Range::create(Document& document)
 {
-    auto& window_object = document.window();
-    return *window_object.heap().allocate<Range>(window_object.realm(), document);
+    auto& realm = document.realm();
+    return *realm.heap().allocate<Range>(realm, document);
 }
 
 JS::NonnullGCPtr<Range> Range::create(Node& start_container, u32 start_offset, Node& end_container, u32 end_offset)
 {
-    auto& window_object = start_container.document().window();
-    return *window_object.heap().allocate<Range>(window_object.realm(), start_container, start_offset, end_container, end_offset);
+    auto& realm = start_container.realm();
+    return *realm.heap().allocate<Range>(realm, start_container, start_offset, end_container, end_offset);
 }
 
-JS::NonnullGCPtr<Range> Range::create_with_global_object(HTML::Window& window)
+JS::NonnullGCPtr<Range> Range::construct_impl(JS::Realm& realm)
 {
+    auto& window = verify_cast<HTML::Window>(realm.global_object());
     return Range::create(window);
 }
 
 Range::Range(Document& document)
     : Range(document, 0, document, 0)
 {
-    set_prototype(&document.window().cached_web_prototype("Range"));
+    set_prototype(&Bindings::cached_web_prototype(document.realm(), "Range"));
 }
 
 Range::Range(Node& start_container, u32 start_offset, Node& end_container, u32 end_offset)
     : AbstractRange(start_container, start_offset, end_container, end_offset)
 {
-    set_prototype(&start_container.window().cached_web_prototype("Range"));
+    set_prototype(&Bindings::cached_web_prototype(start_container.realm(), "Range"));
     live_ranges().set(this);
 }
 
@@ -137,11 +139,11 @@ WebIDL::ExceptionOr<void> Range::set_start_or_end(Node& node, u32 offset, StartO
 
     // 1. If node is a doctype, then throw an "InvalidNodeTypeError" DOMException.
     if (is<DocumentType>(node))
-        return WebIDL::InvalidNodeTypeError::create(global_object(), "Node cannot be a DocumentType.");
+        return WebIDL::InvalidNodeTypeError::create(realm(), "Node cannot be a DocumentType.");
 
     // 2. If offset is greater than node’s length, then throw an "IndexSizeError" DOMException.
     if (offset > node.length())
-        return WebIDL::IndexSizeError::create(global_object(), String::formatted("Node does not contain a child at offset {}", offset));
+        return WebIDL::IndexSizeError::create(realm(), String::formatted("Node does not contain a child at offset {}", offset));
 
     // 3. Let bp be the boundary point (node, offset).
 
@@ -196,7 +198,7 @@ WebIDL::ExceptionOr<void> Range::set_start_before(Node& node)
 
     // 2. If parent is null, then throw an "InvalidNodeTypeError" DOMException.
     if (!parent)
-        return WebIDL::InvalidNodeTypeError::create(global_object(), "Given node has no parent.");
+        return WebIDL::InvalidNodeTypeError::create(realm(), "Given node has no parent.");
 
     // 3. Set the start of this to boundary point (parent, node’s index).
     return set_start_or_end(*parent, node.index(), StartOrEnd::Start);
@@ -210,7 +212,7 @@ WebIDL::ExceptionOr<void> Range::set_start_after(Node& node)
 
     // 2. If parent is null, then throw an "InvalidNodeTypeError" DOMException.
     if (!parent)
-        return WebIDL::InvalidNodeTypeError::create(global_object(), "Given node has no parent.");
+        return WebIDL::InvalidNodeTypeError::create(realm(), "Given node has no parent.");
 
     // 3. Set the start of this to boundary point (parent, node’s index plus 1).
     return set_start_or_end(*parent, node.index() + 1, StartOrEnd::Start);
@@ -224,7 +226,7 @@ WebIDL::ExceptionOr<void> Range::set_end_before(Node& node)
 
     // 2. If parent is null, then throw an "InvalidNodeTypeError" DOMException.
     if (!parent)
-        return WebIDL::InvalidNodeTypeError::create(global_object(), "Given node has no parent.");
+        return WebIDL::InvalidNodeTypeError::create(realm(), "Given node has no parent.");
 
     // 3. Set the end of this to boundary point (parent, node’s index).
     return set_start_or_end(*parent, node.index(), StartOrEnd::End);
@@ -238,7 +240,7 @@ WebIDL::ExceptionOr<void> Range::set_end_after(Node& node)
 
     // 2. If parent is null, then throw an "InvalidNodeTypeError" DOMException.
     if (!parent)
-        return WebIDL::InvalidNodeTypeError::create(global_object(), "Given node has no parent.");
+        return WebIDL::InvalidNodeTypeError::create(realm(), "Given node has no parent.");
 
     // 3. Set the end of this to boundary point (parent, node’s index plus 1).
     return set_start_or_end(*parent, node.index() + 1, StartOrEnd::End);
@@ -254,11 +256,11 @@ WebIDL::ExceptionOr<i16> Range::compare_boundary_points(u16 how, Range const& so
     //      - END_TO_START,
     //    then throw a "NotSupportedError" DOMException.
     if (how != HowToCompareBoundaryPoints::START_TO_START && how != HowToCompareBoundaryPoints::START_TO_END && how != HowToCompareBoundaryPoints::END_TO_END && how != HowToCompareBoundaryPoints::END_TO_START)
-        return WebIDL::NotSupportedError::create(global_object(), String::formatted("Expected 'how' to be one of START_TO_START (0), START_TO_END (1), END_TO_END (2) or END_TO_START (3), got {}", how));
+        return WebIDL::NotSupportedError::create(realm(), String::formatted("Expected 'how' to be one of START_TO_START (0), START_TO_END (1), END_TO_END (2) or END_TO_START (3), got {}", how));
 
     // 2. If this’s root is not the same as sourceRange’s root, then throw a "WrongDocumentError" DOMException.
     if (&root() != &source_range.root())
-        return WebIDL::WrongDocumentError::create(global_object(), "This range is not in the same tree as the source range.");
+        return WebIDL::WrongDocumentError::create(realm(), "This range is not in the same tree as the source range.");
 
     JS::GCPtr<Node> this_point_node;
     u32 this_point_offset = 0;
@@ -339,7 +341,7 @@ WebIDL::ExceptionOr<void> Range::select(Node& node)
 
     // 2. If parent is null, then throw an "InvalidNodeTypeError" DOMException.
     if (!parent)
-        return WebIDL::InvalidNodeTypeError::create(global_object(), "Given node has no parent.");
+        return WebIDL::InvalidNodeTypeError::create(realm(), "Given node has no parent.");
 
     // 3. Let index be node’s index.
     auto index = node.index();
@@ -381,7 +383,7 @@ WebIDL::ExceptionOr<void> Range::select_node_contents(Node const& node)
 {
     // 1. If node is a doctype, throw an "InvalidNodeTypeError" DOMException.
     if (is<DocumentType>(node))
-        return WebIDL::InvalidNodeTypeError::create(global_object(), "Node cannot be a DocumentType.");
+        return WebIDL::InvalidNodeTypeError::create(realm(), "Node cannot be a DocumentType.");
 
     // 2. Let length be the length of node.
     auto length = node.length();
@@ -474,11 +476,11 @@ WebIDL::ExceptionOr<bool> Range::is_point_in_range(Node const& node, u32 offset)
 
     // 2. If node is a doctype, then throw an "InvalidNodeTypeError" DOMException.
     if (is<DocumentType>(node))
-        return WebIDL::InvalidNodeTypeError::create(global_object(), "Node cannot be a DocumentType.");
+        return WebIDL::InvalidNodeTypeError::create(realm(), "Node cannot be a DocumentType.");
 
     // 3. If offset is greater than node’s length, then throw an "IndexSizeError" DOMException.
     if (offset > node.length())
-        return WebIDL::IndexSizeError::create(global_object(), String::formatted("Node does not contain a child at offset {}", offset));
+        return WebIDL::IndexSizeError::create(realm(), String::formatted("Node does not contain a child at offset {}", offset));
 
     // 4. If (node, offset) is before start or after end, return false.
     auto relative_position_to_start = position_of_boundary_point_relative_to_other_boundary_point(node, offset, m_start_container, m_start_offset);
@@ -495,15 +497,15 @@ WebIDL::ExceptionOr<i16> Range::compare_point(Node const& node, u32 offset) cons
 {
     // 1. If node’s root is different from this’s root, then throw a "WrongDocumentError" DOMException.
     if (&node.root() != &root())
-        return WebIDL::WrongDocumentError::create(global_object(), "Given node is not in the same document as the range.");
+        return WebIDL::WrongDocumentError::create(realm(), "Given node is not in the same document as the range.");
 
     // 2. If node is a doctype, then throw an "InvalidNodeTypeError" DOMException.
     if (is<DocumentType>(node))
-        return WebIDL::InvalidNodeTypeError::create(global_object(), "Node cannot be a DocumentType.");
+        return WebIDL::InvalidNodeTypeError::create(realm(), "Node cannot be a DocumentType.");
 
     // 3. If offset is greater than node’s length, then throw an "IndexSizeError" DOMException.
     if (offset > node.length())
-        return WebIDL::IndexSizeError::create(global_object(), String::formatted("Node does not contain a child at offset {}", offset));
+        return WebIDL::IndexSizeError::create(realm(), String::formatted("Node does not contain a child at offset {}", offset));
 
     // 4. If (node, offset) is before start, return −1.
     auto relative_position_to_start = position_of_boundary_point_relative_to_other_boundary_point(node, offset, m_start_container, m_start_offset);
@@ -636,7 +638,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<DocumentFragment>> Range::extract()
     // 12. If any member of contained children is a doctype, then throw a "HierarchyRequestError" DOMException.
     for (auto const& child : contained_children) {
         if (is<DocumentType>(*child))
-            return WebIDL::HierarchyRequestError::create(global_object(), "Contained child is a DocumentType");
+            return WebIDL::HierarchyRequestError::create(realm(), "Contained child is a DocumentType");
     }
 
     JS::GCPtr<Node> new_node;
@@ -783,7 +785,7 @@ WebIDL::ExceptionOr<void> Range::insert(JS::NonnullGCPtr<Node> node)
     if ((is<ProcessingInstruction>(*m_start_container) || is<Comment>(*m_start_container))
         || (is<Text>(*m_start_container) && !m_start_container->parent_node())
         || m_start_container.ptr() == node.ptr()) {
-        return WebIDL::HierarchyRequestError::create(global_object(), "Range has inappropriate start node for insertion");
+        return WebIDL::HierarchyRequestError::create(realm(), "Range has inappropriate start node for insertion");
     }
 
     // 2. Let referenceNode be null.
@@ -854,11 +856,11 @@ WebIDL::ExceptionOr<void> Range::surround_contents(JS::NonnullGCPtr<Node> new_pa
     if (is<Text>(*end_non_text_node))
         end_non_text_node = end_non_text_node->parent_node();
     if (start_non_text_node != end_non_text_node)
-        return WebIDL::InvalidStateError::create(global_object(), "Non-Text node is partially contained in range.");
+        return WebIDL::InvalidStateError::create(realm(), "Non-Text node is partially contained in range.");
 
     // 2. If newParent is a Document, DocumentType, or DocumentFragment node, then throw an "InvalidNodeTypeError" DOMException.
     if (is<Document>(*new_parent) || is<DocumentType>(*new_parent) || is<DocumentFragment>(*new_parent))
-        return WebIDL::InvalidNodeTypeError::create(global_object(), "Invalid parent node type");
+        return WebIDL::InvalidNodeTypeError::create(realm(), "Invalid parent node type");
 
     // 3. Let fragment be the result of extracting this.
     auto fragment = TRY(extract());
@@ -962,7 +964,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<DocumentFragment>> Range::clone_the_content
     // 12. If any member of contained children is a doctype, then throw a "HierarchyRequestError" DOMException.
     for (auto const& child : contained_children) {
         if (is<DocumentType>(*child))
-            return WebIDL::HierarchyRequestError::create(global_object(), "Contained child is a DocumentType");
+            return WebIDL::HierarchyRequestError::create(realm(), "Contained child is a DocumentType");
     }
 
     // 13. If first partially contained child is a CharacterData node, then:

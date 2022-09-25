@@ -10,7 +10,6 @@
 #include <AK/Weakable.h>
 #include <LibWeb/DOM/EventTarget.h>
 #include <LibWeb/Forward.h>
-#include <LibWeb/HTML/Window.h>
 
 namespace Web::DOM {
 
@@ -19,7 +18,7 @@ class AbortSignal final : public EventTarget {
     WEB_PLATFORM_OBJECT(AbortSignal, EventTarget);
 
 public:
-    static JS::NonnullGCPtr<AbortSignal> create_with_global_object(HTML::Window&);
+    static JS::NonnullGCPtr<AbortSignal> construct_impl(JS::Realm&);
 
     virtual ~AbortSignal() override = default;
 
@@ -40,6 +39,7 @@ public:
     JS::ThrowCompletionOr<void> throw_if_aborted() const;
 
 private:
+    explicit AbortSignal(JS::Realm&);
     explicit AbortSignal(HTML::Window&);
 
     virtual void visit_edges(JS::Cell::Visitor&) override;

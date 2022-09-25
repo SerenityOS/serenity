@@ -19,10 +19,8 @@ public:
     static JS::NonnullGCPtr<Range> create(Document&);
     static JS::NonnullGCPtr<Range> create(HTML::Window&);
     static JS::NonnullGCPtr<Range> create(Node& start_container, u32 start_offset, Node& end_container, u32 end_offset);
-    static JS::NonnullGCPtr<Range> create_with_global_object(HTML::Window&);
+    static JS::NonnullGCPtr<Range> construct_impl(JS::Realm&);
 
-    explicit Range(Document&);
-    Range(Node& start_container, u32 start_offset, Node& end_container, u32 end_offset);
     virtual ~Range() override;
 
     // FIXME: There are a ton of methods missing here.
@@ -76,6 +74,9 @@ public:
     static HashTable<Range*>& live_ranges();
 
 private:
+    explicit Range(Document&);
+    Range(Node& start_container, u32 start_offset, Node& end_container, u32 end_offset);
+
     Node& root();
     Node const& root() const;
 

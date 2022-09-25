@@ -16,7 +16,7 @@ class AbortController final : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(AbortController, Bindings::PlatformObject);
 
 public:
-    static JS::NonnullGCPtr<AbortController> create_with_global_object(HTML::Window&);
+    static JS::NonnullGCPtr<AbortController> construct_impl(JS::Realm&);
 
     virtual ~AbortController() override;
 
@@ -26,7 +26,7 @@ public:
     void abort(JS::Value reason);
 
 private:
-    AbortController(HTML::Window&, JS::NonnullGCPtr<AbortSignal>);
+    AbortController(JS::Realm&, JS::NonnullGCPtr<AbortSignal>);
 
     virtual void visit_edges(Cell::Visitor&) override;
 

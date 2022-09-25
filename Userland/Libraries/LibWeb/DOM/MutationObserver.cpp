@@ -4,29 +4,29 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/DOM/MutationObserver.h>
 #include <LibWeb/DOM/Node.h>
-#include <LibWeb/HTML/Window.h>
 
 namespace Web::DOM {
 
-JS::NonnullGCPtr<MutationObserver> MutationObserver::create_with_global_object(HTML::Window& window, JS::GCPtr<WebIDL::CallbackType> callback)
+JS::NonnullGCPtr<MutationObserver> MutationObserver::construct_impl(JS::Realm& realm, JS::GCPtr<WebIDL::CallbackType> callback)
 {
-    return *window.heap().allocate<MutationObserver>(window.realm(), window, callback);
+    return *realm.heap().allocate<MutationObserver>(realm, realm, callback);
 }
 
 // https://dom.spec.whatwg.org/#dom-mutationobserver-mutationobserver
-MutationObserver::MutationObserver(HTML::Window& window, JS::GCPtr<WebIDL::CallbackType> callback)
-    : PlatformObject(window.realm())
+MutationObserver::MutationObserver(JS::Realm& realm, JS::GCPtr<WebIDL::CallbackType> callback)
+    : PlatformObject(realm)
     , m_callback(move(callback))
 {
-    set_prototype(&window.cached_web_prototype("MutationObserver"));
+    set_prototype(&Bindings::cached_web_prototype(realm, "MutationObserver"));
 
     // 1. Set this’s callback to callback.
 
     // 2. Append this to this’s relevant agent’s mutation observers.
-    auto* agent_custom_data = verify_cast<Bindings::WebEngineCustomData>(window.vm().custom_data());
+    auto* agent_custom_data = verify_cast<Bindings::WebEngineCustomData>(realm.vm().custom_data());
     agent_custom_data->mutation_observers.append(*this);
 }
 

@@ -18,7 +18,7 @@ class Text : public CharacterData {
 public:
     virtual ~Text() override = default;
 
-    static JS::NonnullGCPtr<Text> create_with_global_object(HTML::Window& window, String const& data);
+    static JS::NonnullGCPtr<Text> construct_impl(JS::Realm& window, String const& data);
 
     // ^Node
     virtual FlyString node_name() const override { return "#text"; }
@@ -32,7 +32,7 @@ public:
     WebIDL::ExceptionOr<JS::NonnullGCPtr<Text>> split_text(size_t offset);
 
 protected:
-    explicit Text(Document&, String const&);
+    Text(Document&, String const&);
     Text(Document&, NodeType, String const&);
 
     virtual void visit_edges(Cell::Visitor&) override;

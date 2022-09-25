@@ -4,18 +4,18 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibJS/Heap/Heap.h>
 #include <LibWeb/DOM/StaticNodeList.h>
-#include <LibWeb/HTML/Window.h>
 
 namespace Web::DOM {
 
-JS::NonnullGCPtr<NodeList> StaticNodeList::create(HTML::Window& window, Vector<JS::Handle<Node>> static_nodes)
+JS::NonnullGCPtr<NodeList> StaticNodeList::create(JS::Realm& realm, Vector<JS::Handle<Node>> static_nodes)
 {
-    return *window.heap().allocate<StaticNodeList>(window.realm(), window, move(static_nodes));
+    return *realm.heap().allocate<StaticNodeList>(realm, realm, move(static_nodes));
 }
 
-StaticNodeList::StaticNodeList(HTML::Window& window, Vector<JS::Handle<Node>> static_nodes)
-    : NodeList(window)
+StaticNodeList::StaticNodeList(JS::Realm& realm, Vector<JS::Handle<Node>> static_nodes)
+    : NodeList(realm)
 {
     for (auto& node : static_nodes)
         m_static_nodes.append(*node);

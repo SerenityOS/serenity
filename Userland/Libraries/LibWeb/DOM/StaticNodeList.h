@@ -16,7 +16,7 @@ class StaticNodeList final : public NodeList {
     WEB_PLATFORM_OBJECT(StaticNodeList, NodeList);
 
 public:
-    static JS::NonnullGCPtr<NodeList> create(HTML::Window&, Vector<JS::Handle<Node>>);
+    static JS::NonnullGCPtr<NodeList> create(JS::Realm&, Vector<JS::Handle<Node>>);
 
     virtual ~StaticNodeList() override;
 
@@ -26,7 +26,7 @@ public:
     virtual bool is_supported_property_index(u32) const override;
 
 private:
-    StaticNodeList(HTML::Window&, Vector<JS::Handle<Node>>);
+    StaticNodeList(JS::Realm&, Vector<JS::Handle<Node>>);
 
     virtual void visit_edges(Cell::Visitor&) override;
 

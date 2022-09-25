@@ -10,6 +10,7 @@
 #include <LibWeb/HTML/EventNames.h>
 #include <LibWeb/HTML/MessageEvent.h>
 #include <LibWeb/HTML/MessagePort.h>
+#include <LibWeb/HTML/Window.h>
 
 namespace Web::HTML {
 

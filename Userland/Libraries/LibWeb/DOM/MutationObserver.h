@@ -32,7 +32,7 @@ class MutationObserver final : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(MutationObserver, Bindings::PlatformObject);
 
 public:
-    static JS::NonnullGCPtr<MutationObserver> create_with_global_object(HTML::Window&, JS::GCPtr<WebIDL::CallbackType>);
+    static JS::NonnullGCPtr<MutationObserver> construct_impl(JS::Realm&, JS::GCPtr<WebIDL::CallbackType>);
     virtual ~MutationObserver() override;
 
     WebIDL::ExceptionOr<void> observe(Node& target, MutationObserverInit options = {});
@@ -50,7 +50,7 @@ public:
     }
 
 private:
-    MutationObserver(HTML::Window&, JS::GCPtr<WebIDL::CallbackType>);
+    MutationObserver(JS::Realm&, JS::GCPtr<WebIDL::CallbackType>);
 
     virtual void visit_edges(Cell::Visitor&) override;
 

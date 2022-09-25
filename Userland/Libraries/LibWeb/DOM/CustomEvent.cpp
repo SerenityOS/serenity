@@ -5,32 +5,27 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibJS/Runtime/Realm.h>
+#include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/DOM/CustomEvent.h>
-#include <LibWeb/HTML/Window.h>
 
 namespace Web::DOM {
 
-CustomEvent* CustomEvent::create(HTML::Window& window_object, FlyString const& event_name, CustomEventInit const& event_init)
+CustomEvent* CustomEvent::create(JS::Realm& realm, FlyString const& event_name, CustomEventInit const& event_init)
 {
-    return window_object.heap().allocate<CustomEvent>(window_object.realm(), window_object, event_name, event_init);
+    return realm.heap().allocate<CustomEvent>(realm, realm, event_name, event_init);
 }
 
-CustomEvent* CustomEvent::create_with_global_object(HTML::Window& window_object, FlyString const& event_name, CustomEventInit const& event_init)
+CustomEvent* CustomEvent::construct_impl(JS::Realm& realm, FlyString const& event_name, CustomEventInit const& event_init)
 {
-    return create(window_object, event_name, event_init);
+    return create(realm, event_name, event_init);
 }
 
-CustomEvent::CustomEvent(HTML::Window& window_object, FlyString const& event_name)
-    : Event(window_object, event_name)
-{
-    set_prototype(&window_object.cached_web_prototype("CustomEvent"));
-}
-
-CustomEvent::CustomEvent(HTML::Window& window_object, FlyString const& event_name, CustomEventInit const& event_init)
-    : Event(window_object, event_name, event_init)
+CustomEvent::CustomEvent(JS::Realm& realm, FlyString const& event_name, CustomEventInit const& event_init)
+    : Event(realm, event_name, event_init)
     , m_detail(event_init.detail)
 {
-    set_prototype(&window_object.cached_web_prototype("CustomEvent"));
+    set_prototype(&Bindings::cached_web_prototype(realm, "CustomEvent"));
 }
 
 CustomEvent::~CustomEvent() = default;

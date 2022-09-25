@@ -4,9 +4,11 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/DOM/Range.h>
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/HTML/HTMLInputElement.h>
+#include <LibWeb/HTML/Scripting/Environments.h>
 #include <LibWeb/HTML/Window.h>
 #include <LibWeb/Layout/TextNode.h>
 
@@ -15,13 +17,13 @@ namespace Web::DOM {
 Text::Text(Document& document, String const& data)
     : CharacterData(document, NodeType::TEXT_NODE, data)
 {
-    set_prototype(&window().cached_web_prototype("Text"));
+    set_prototype(&Bindings::cached_web_prototype(realm(), "Text"));
 }
 
 Text::Text(Document& document, NodeType type, String const& data)
     : CharacterData(document, type, data)
 {
-    set_prototype(&window().cached_web_prototype("Text"));
+    set_prototype(&Bindings::cached_web_prototype(realm(), "Text"));
 }
 
 void Text::visit_edges(Cell::Visitor& visitor)
@@ -31,9 +33,11 @@ void Text::visit_edges(Cell::Visitor& visitor)
 }
 
 // https://dom.spec.whatwg.org/#dom-text-text
-JS::NonnullGCPtr<Text> Text::create_with_global_object(HTML::Window& window, String const& data)
+JS::NonnullGCPtr<Text> Text::construct_impl(JS::Realm& realm, String const& data)
 {
-    return *window.heap().allocate<Text>(window.realm(), window.associated_document(), data);
+    // The new Text(data) constructor steps are to set this’s data to data and this’s node document to current global object’s associated Document.
+    auto& window = verify_cast<HTML::Window>(HTML::current_global_object());
+    return *realm.heap().allocate<Text>(realm, window.associated_document(), data);
 }
 
 void Text::set_owner_input_element(Badge<HTML::HTMLInputElement>, HTML::HTMLInputElement& input_element)
@@ -50,7 +54,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Text>> Text::split_text(size_t offset)
 
     // 2. If offset is greater than length, then throw an "IndexSizeError" DOMException.
     if (offset > length)
-        return WebIDL::IndexSizeError::create(global_object(), "Split offset is greater than length");
+        return WebIDL::IndexSizeError::create(realm(), "Split offset is greater than length");
 
     // 3. Let count be length minus offset.
     auto count = length - offset;

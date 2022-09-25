@@ -8,6 +8,7 @@
 #pragma once
 
 #include <AK/RefPtr.h>
+#include <LibJS/Heap/Handle.h>
 #include <LibWeb/DOM/Node.h>
 #include <LibWeb/Forward.h>
 

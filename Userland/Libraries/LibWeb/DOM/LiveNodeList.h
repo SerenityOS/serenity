@@ -18,7 +18,7 @@ class LiveNodeList final : public NodeList {
     WEB_PLATFORM_OBJECT(LiveNodeList, NodeList);
 
 public:
-    static JS::NonnullGCPtr<NodeList> create(HTML::Window&, Node& root, Function<bool(Node const&)> filter);
+    static JS::NonnullGCPtr<NodeList> create(JS::Realm&, Node& root, Function<bool(Node const&)> filter);
     virtual ~LiveNodeList() override;
 
     virtual u32 length() const override;
@@ -27,7 +27,7 @@ public:
     virtual bool is_supported_property_index(u32) const override;
 
 private:
-    LiveNodeList(HTML::Window&, Node& root, Function<bool(Node const&)> filter);
+    LiveNodeList(JS::Realm&, Node& root, Function<bool(Node const&)> filter);
 
     virtual void visit_edges(Cell::Visitor&) override;
 

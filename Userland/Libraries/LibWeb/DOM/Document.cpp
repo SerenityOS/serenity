@@ -223,9 +223,9 @@ JS::NonnullGCPtr<Document> Document::create_and_initialize(Type type, String con
     //    FIXME: and cross-origin opener policy is navigationParams's cross-origin opener policy,
     //    FIXME: load timing info is loadTimingInfo,
     //    and navigation id is navigationParams's id.
-    auto document = Document::create(*window);
+    auto document = Document::create(window->realm());
     document->m_type = type;
-    document->m_content_type = content_type;
+    document->m_content_type = move(content_type);
     document->set_origin(navigation_params.origin);
     document->m_policy_container = navigation_params.policy_container;
     document->m_active_sandboxing_flag_set = navigation_params.final_sandboxing_flag_set;
@@ -276,24 +276,27 @@ JS::NonnullGCPtr<Document> Document::create_and_initialize(Type type, String con
     return document;
 }
 
-JS::NonnullGCPtr<Document> Document::create_with_global_object(HTML::Window& window)
+JS::NonnullGCPtr<Document> Document::construct_impl(JS::Realm& realm)
 {
-    return Document::create(window);
+    return Document::create(realm);
+}
+
+JS::NonnullGCPtr<Document> Document::create(JS::Realm& realm, AK::URL const& url)
+{
+    return *realm.heap().allocate<Document>(realm, realm, url);
 }
 
 JS::NonnullGCPtr<Document> Document::create(HTML::Window& window, AK::URL const& url)
 {
-    auto& realm = window.realm();
-    return *realm.heap().allocate<Document>(realm, window, url);
+    return create(window.realm(), url);
 }
 
-Document::Document(HTML::Window& window, const AK::URL& url)
-    : ParentNode(window.realm(), *this, NodeType::DOCUMENT_NODE)
+Document::Document(JS::Realm& realm, const AK::URL& url)
+    : ParentNode(realm, *this, NodeType::DOCUMENT_NODE)
     , m_style_computer(make<CSS::StyleComputer>(*this))
     , m_url(url)
-    , m_window(window)
 {
-    set_prototype(&window.cached_web_prototype("Document"));
+    set_prototype(&Bindings::cached_web_prototype(realm, "Document"));
 
     HTML::main_thread_event_loop().register_document({}, *this);
 
@@ -374,11 +377,11 @@ WebIDL::ExceptionOr<void> Document::run_the_document_write_steps(String input)
 {
     // 1. If document is an XML document, then throw an "InvalidStateError" DOMException.
     if (m_type == Type::XML)
-        return WebIDL::InvalidStateError::create(global_object(), "write() called on XML document.");
+        return WebIDL::InvalidStateError::create(realm(), "write() called on XML document.");
 
     // 2. If document's throw-on-dynamic-markup-insertion counter is greater than 0, then throw an "InvalidStateError" DOMException.
     if (m_throw_on_dynamic_markup_insertion_counter > 0)
-        return WebIDL::InvalidStateError::create(global_object(), "throw-on-dynamic-markup-insertion-counter greater than zero.");
+        return WebIDL::InvalidStateError::create(realm(), "throw-on-dynamic-markup-insertion-counter greater than zero.");
 
     // 3. If document's active parser was aborted is true, then return.
     if (m_active_parser_was_aborted)
@@ -409,18 +412,18 @@ WebIDL::ExceptionOr<Document*> Document::open(String const&, String const&)
 {
     // 1. If document is an XML document, then throw an "InvalidStateError" DOMException exception.
     if (m_type == Type::XML)
-        return WebIDL::InvalidStateError::create(global_object(), "open() called on XML document.");
+        return WebIDL::InvalidStateError::create(realm(), "open() called on XML document.");
 
     // 2. If document's throw-on-dynamic-markup-insertion counter is greater than 0, then throw an "InvalidStateError" DOMException.
     if (m_throw_on_dynamic_markup_insertion_counter > 0)
-        return WebIDL::InvalidStateError::create(global_object(), "throw-on-dynamic-markup-insertion-counter greater than zero.");
+        return WebIDL::InvalidStateError::create(realm(), "throw-on-dynamic-markup-insertion-counter greater than zero.");
 
     // FIXME: 3. Let entryDocument be the entry global object's associated Document.
     auto& entry_document = *this;
 
     // 4. If document's origin is not same origin to entryDocument's origin, then throw a "SecurityError" DOMException.
     if (origin() != entry_document.origin())
-        return WebIDL::SecurityError::create(global_object(), "Document.origin() not the same as entryDocument's.");
+        return WebIDL::SecurityError::create(realm(), "Document.origin() not the same as entryDocument's.");
 
     // 5. If document has an active parser whose script nesting level is greater than 0, then return document.
     if (m_parser && m_parser->script_nesting_level() > 0)
@@ -480,11 +483,11 @@ WebIDL::ExceptionOr<void> Document::close()
 {
     // 1. If document is an XML document, then throw an "InvalidStateError" DOMException exception.
     if (m_type == Type::XML)
-        return WebIDL::InvalidStateError::create(global_object(), "close() called on XML document.");
+        return WebIDL::InvalidStateError::create(realm(), "close() called on XML document.");
 
     // 2. If document's throw-on-dynamic-markup-insertion counter is greater than 0, then throw an "InvalidStateError" DOMException.
     if (m_throw_on_dynamic_markup_insertion_counter > 0)
-        return WebIDL::InvalidStateError::create(global_object(), "throw-on-dynamic-markup-insertion-counter greater than zero.");
+        return WebIDL::InvalidStateError::create(realm(), "throw-on-dynamic-markup-insertion-counter greater than zero.");
 
     // 3. If there is no script-created parser associated with the document, then return.
     if (!m_parser)
@@ -588,7 +591,7 @@ HTML::HTMLElement* Document::body()
 WebIDL::ExceptionOr<void> Document::set_body(HTML::HTMLElement* new_body)
 {
     if (!is<HTML::HTMLBodyElement>(new_body) && !is<HTML::HTMLFrameSetElement>(new_body))
-        return WebIDL::HierarchyRequestError::create(global_object(), "Invalid document body element, must be 'body' or 'frameset'");
+        return WebIDL::HierarchyRequestError::create(realm(), "Invalid document body element, must be 'body' or 'frameset'");
 
     auto* existing_body = body();
     if (existing_body) {
@@ -598,7 +601,7 @@ WebIDL::ExceptionOr<void> Document::set_body(HTML::HTMLElement* new_body)
 
     auto* document_element = this->document_element();
     if (!document_element)
-        return WebIDL::HierarchyRequestError::create(global_object(), "Missing document element");
+        return WebIDL::HierarchyRequestError::create(realm(), "Missing document element");
 
     (void)TRY(document_element->append_child(*new_body));
     return {};
@@ -1118,7 +1121,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Element>> Document::create_element(FlyStrin
 
     // 1. If localName does not match the Name production, then throw an "InvalidCharacterError" DOMException.
     if (!is_valid_name(local_name))
-        return WebIDL::InvalidCharacterError::create(global_object(), "Invalid character in tag name.");
+        return WebIDL::InvalidCharacterError::create(realm(), "Invalid character in tag name.");
 
     // 2. If this is an HTML document, then set localName to localName in ASCII lowercase.
     if (document_type() == Type::HTML)
@@ -1142,7 +1145,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Element>> Document::create_element(FlyStrin
 WebIDL::ExceptionOr<JS::NonnullGCPtr<Element>> Document::create_element_ns(String const& namespace_, String const& qualified_name)
 {
     // 1. Let namespace, prefix, and localName be the result of passing namespace and qualifiedName to validate and extract.
-    auto extracted_qualified_name = TRY(validate_and_extract(global_object(), namespace_, qualified_name));
+    auto extracted_qualified_name = TRY(validate_and_extract(realm(), namespace_, qualified_name));
 
     // FIXME: 2. Let is be null.
     // FIXME: 3. If options is a dictionary and options["is"] exists, then set is to it.
@@ -1174,7 +1177,8 @@ JS::NonnullGCPtr<Range> Document::create_range()
 // https://dom.spec.whatwg.org/#dom-document-createevent
 WebIDL::ExceptionOr<JS::NonnullGCPtr<Event>> Document::create_event(String const& interface)
 {
-    auto& window_object = window();
+    auto& realm = this->realm();
+    auto& window = verify_cast<HTML::Window>(realm.global_object());
 
     // NOTE: This is named event here, since we do step 5 and 6 as soon as possible for each case.
     // 1. Let constructor be null.
@@ -1184,46 +1188,46 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Event>> Document::create_event(String const
     //      then set constructor to the interface in the second column on the same row as the matching string:
     auto interface_lowercase = interface.to_lowercase();
     if (interface_lowercase == "beforeunloadevent") {
-        event = Event::create(window_object, ""); // FIXME: Create BeforeUnloadEvent
+        event = Event::create(realm, ""); // FIXME: Create BeforeUnloadEvent
     } else if (interface_lowercase == "compositionevent") {
-        event = Event::create(window_object, ""); // FIXME: Create CompositionEvent
+        event = Event::create(realm, ""); // FIXME: Create CompositionEvent
     } else if (interface_lowercase == "customevent") {
-        event = CustomEvent::create(window_object, "");
+        event = CustomEvent::create(realm, "");
     } else if (interface_lowercase == "devicemotionevent") {
-        event = Event::create(window_object, ""); // FIXME: Create DeviceMotionEvent
+        event = Event::create(realm, ""); // FIXME: Create DeviceMotionEvent
     } else if (interface_lowercase == "deviceorientationevent") {
-        event = Event::create(window_object, ""); // FIXME: Create DeviceOrientationEvent
+        event = Event::create(realm, ""); // FIXME: Create DeviceOrientationEvent
     } else if (interface_lowercase == "dragevent") {
-        event = Event::create(window_object, ""); // FIXME: Create DragEvent
+        event = Event::create(realm, ""); // FIXME: Create DragEvent
     } else if (interface_lowercase.is_one_of("event", "events")) {
-        event = Event::create(window_object, "");
+        event = Event::create(realm, "");
     } else if (interface_lowercase == "focusevent") {
-        event = UIEvents::FocusEvent::create(window_object, "");
+        event = UIEvents::FocusEvent::create(window, "");
     } else if (interface_lowercase == "hashchangeevent") {
-        event = Event::create(window_object, ""); // FIXME: Create HashChangeEvent
+        event = Event::create(realm, ""); // FIXME: Create HashChangeEvent
     } else if (interface_lowercase == "htmlevents") {
-        event = Event::create(window_object, "");
+        event = Event::create(realm, "");
     } else if (interface_lowercase == "keyboardevent") {
-        event = UIEvents::KeyboardEvent::create(window_object, "");
+        event = UIEvents::KeyboardEvent::create(window, "");
     } else if (interface_lowercase == "messageevent") {
-        event = HTML::MessageEvent::create(window_object, "");
+        event = HTML::MessageEvent::create(window, "");
     } else if (interface_lowercase.is_one_of("mouseevent", "mouseevents")) {
-        event = UIEvents::MouseEvent::create(window_object, "");
+        event = UIEvents::MouseEvent::create(window, "");
     } else if (interface_lowercase == "storageevent") {
-        event = Event::create(window_object, ""); // FIXME: Create StorageEvent
+        event = Event::create(realm, ""); // FIXME: Create StorageEvent
     } else if (interface_lowercase == "svgevents") {
-        event = Event::create(window_object, "");
+        event = Event::create(realm, "");
     } else if (interface_lowercase == "textevent") {
-        event = Event::create(window_object, ""); // FIXME: Create CompositionEvent
+        event = Event::create(realm, ""); // FIXME: Create CompositionEvent
     } else if (interface_lowercase == "touchevent") {
-        event = Event::create(window_object, ""); // FIXME: Create TouchEvent
+        event = Event::create(realm, ""); // FIXME: Create TouchEvent
     } else if (interface_lowercase.is_one_of("uievent", "uievents")) {
-        event = UIEvents::UIEvent::create(window_object, "");
+        event = UIEvents::UIEvent::create(window, "");
     }
 
     // 3. If constructor is null, then throw a "NotSupportedError" DOMException.
     if (!event) {
-        return WebIDL::NotSupportedError::create(global_object(), "No constructor for interface found");
+        return WebIDL::NotSupportedError::create(realm, "No constructor for interface found");
     }
 
     // FIXME: 4. If the interface indicated by constructor is not exposed on the relevant global object of this, then throw a "NotSupportedError" DOMException.
@@ -1293,7 +1297,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Node>> Document::import_node(JS::NonnullGCP
 {
     // 1. If node is a document or shadow root, then throw a "NotSupportedError" DOMException.
     if (is<Document>(*node) || is<ShadowRoot>(*node))
-        return WebIDL::NotSupportedError::create(global_object(), "Cannot import a document or shadow root.");
+        return WebIDL::NotSupportedError::create(realm(), "Cannot import a document or shadow root.");
 
     // 2. Return a clone of node, with this and the clone children flag set if deep is true.
     return node->clone_node(this, deep);
@@ -1340,10 +1344,10 @@ void Document::adopt_node(Node& node)
 WebIDL::ExceptionOr<JS::NonnullGCPtr<Node>> Document::adopt_node_binding(JS::NonnullGCPtr<Node> node)
 {
     if (is<Document>(*node))
-        return WebIDL::NotSupportedError::create(global_object(), "Cannot adopt a document into a document");
+        return WebIDL::NotSupportedError::create(realm(), "Cannot adopt a document into a document");
 
     if (is<ShadowRoot>(*node))
-        return WebIDL::HierarchyRequestError::create(global_object(), "Cannot adopt a shadow root into a document");
+        return WebIDL::HierarchyRequestError::create(realm(), "Cannot adopt a shadow root into a document");
 
     if (is<DocumentFragment>(*node) && verify_cast<DocumentFragment>(*node).host())
         return node;
@@ -1447,7 +1451,7 @@ void Document::update_readiness(HTML::DocumentReadyState readiness_value)
     }
 
     // 4. Fire an event named readystatechange at document.
-    dispatch_event(*Event::create(window(), HTML::EventNames::readystatechange));
+    dispatch_event(*Event::create(realm(), HTML::EventNames::readystatechange));
 }
 
 Page* Document::page()
@@ -1465,7 +1469,7 @@ EventTarget* Document::get_parent(Event const& event)
     if (event.type() == HTML::EventNames::load)
         return nullptr;
 
-    return &window();
+    return m_window;
 }
 
 // https://html.spec.whatwg.org/#completely-loaded
@@ -1495,7 +1499,7 @@ void Document::completely_finish_loading()
     // 5. Otherwise, if container is non-null, then queue an element task on the DOM manipulation task source given container to fire an event named load at container.
     else if (container) {
         container->queue_an_element_task(HTML::Task::Source::DOMManipulation, [container]() mutable {
-            container->dispatch_event(*DOM::Event::create(container->window(), HTML::EventNames::load));
+            container->dispatch_event(*DOM::Event::create(container->realm(), HTML::EventNames::load));
         });
     }
 }
@@ -1625,7 +1629,7 @@ void Document::update_the_visibility_state(HTML::VisibilityState visibility_stat
     // FIXME: 3. Run any page visibility change steps which may be defined in other specifications, with visibility state and document.
 
     // 4. Fire an event named visibilitychange at document, with its bubbles attribute initialized to true.
-    auto event = DOM::Event::create(window(), HTML::EventNames::visibilitychange);
+    auto event = DOM::Event::create(realm(), HTML::EventNames::visibilitychange);
     event->set_bubbles(true);
     dispatch_event(event);
 }
@@ -1646,7 +1650,7 @@ void Document::run_the_resize_steps()
         return;
     m_last_viewport_size = viewport_size;
 
-    window().dispatch_event(*DOM::Event::create(window(), UIEvents::EventNames::resize));
+    window().dispatch_event(*DOM::Event::create(realm(), UIEvents::EventNames::resize));
 
     update_layout();
 }
@@ -1658,14 +1662,14 @@ void Document::run_the_scroll_steps()
     for (auto& target : m_pending_scroll_event_targets) {
         // 1. If target is a Document, fire an event named scroll that bubbles at target and fire an event named scroll at the VisualViewport that is associated with target.
         if (is<Document>(*target)) {
-            auto event = DOM::Event::create(window(), HTML::EventNames::scroll);
+            auto event = DOM::Event::create(realm(), HTML::EventNames::scroll);
             event->set_bubbles(true);
             target->dispatch_event(*event);
             // FIXME: Fire at the associated VisualViewport
         }
         // 2. Otherwise, fire an event named scroll at target.
         else {
-            auto event = DOM::Event::create(window(), HTML::EventNames::scroll);
+            auto event = DOM::Event::create(realm(), HTML::EventNames::scroll);
             target->dispatch_event(*event);
         }
     }
@@ -1802,14 +1806,14 @@ bool Document::is_valid_name(String const& name)
 }
 
 // https://dom.spec.whatwg.org/#validate
-WebIDL::ExceptionOr<Document::PrefixAndTagName> Document::validate_qualified_name(JS::Object& global_object, String const& qualified_name)
+WebIDL::ExceptionOr<Document::PrefixAndTagName> Document::validate_qualified_name(JS::Realm& realm, String const& qualified_name)
 {
     if (qualified_name.is_empty())
-        return WebIDL::InvalidCharacterError::create(global_object, "Empty string is not a valid qualified name.");
+        return WebIDL::InvalidCharacterError::create(realm, "Empty string is not a valid qualified name.");
 
     Utf8View utf8view { qualified_name };
     if (!utf8view.validate())
-        return WebIDL::InvalidCharacterError::create(global_object, "Invalid qualified name.");
+        return WebIDL::InvalidCharacterError::create(realm, "Invalid qualified name.");
 
     Optional<size_t> colon_offset;
 
@@ -1819,19 +1823,19 @@ WebIDL::ExceptionOr<Document::PrefixAndTagName> Document::validate_qualified_nam
         auto code_point = *it;
         if (code_point == ':') {
             if (colon_offset.has_value())
-                return WebIDL::InvalidCharacterError::create(global_object, "More than one colon (:) in qualified name.");
+                return WebIDL::InvalidCharacterError::create(realm, "More than one colon (:) in qualified name.");
             colon_offset = utf8view.byte_offset_of(it);
             at_start_of_name = true;
             continue;
         }
         if (at_start_of_name) {
             if (!is_valid_name_start_character(code_point))
-                return WebIDL::InvalidCharacterError::create(global_object, "Invalid start of qualified name.");
+                return WebIDL::InvalidCharacterError::create(realm, "Invalid start of qualified name.");
             at_start_of_name = false;
             continue;
         }
         if (!is_valid_name_character(code_point))
-            return WebIDL::InvalidCharacterError::create(global_object, "Invalid character in qualified name.");
+            return WebIDL::InvalidCharacterError::create(realm, "Invalid character in qualified name.");
     }
 
     if (!colon_offset.has_value())
@@ -1841,10 +1845,10 @@ WebIDL::ExceptionOr<Document::PrefixAndTagName> Document::validate_qualified_nam
         };
 
     if (*colon_offset == 0)
-        return WebIDL::InvalidCharacterError::create(global_object, "Qualified name can't start with colon (:).");
+        return WebIDL::InvalidCharacterError::create(realm, "Qualified name can't start with colon (:).");
 
     if (*colon_offset >= (qualified_name.length() - 1))
-        return WebIDL::InvalidCharacterError::create(global_object, "Qualified name can't end with colon (:).");
+        return WebIDL::InvalidCharacterError::create(realm, "Qualified name can't end with colon (:).");
 
     return Document::PrefixAndTagName {
         .prefix = qualified_name.substring_view(0, *colon_offset),
@@ -2164,7 +2168,7 @@ void Document::unload(bool recursive_flag, Optional<DocumentUnloadTimingInfo> un
         // then fire an event named unload at document's relevant global object, with legacy target override flag set.
         // FIXME: The legacy target override flag is currently set by a virtual override of dispatch_event()
         //        We should reorganize this so that the flag appears explicitly here instead.
-        auto event = DOM::Event::create(global_object(), HTML::EventNames::unload);
+        auto event = DOM::Event::create(realm(), HTML::EventNames::unload);
         global_object().dispatch_event(event);
     }
 
