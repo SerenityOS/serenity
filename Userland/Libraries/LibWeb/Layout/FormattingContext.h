@@ -86,8 +86,8 @@ protected:
         float preferred_minimum_width { 0 };
     };
 
-    static float tentative_width_for_replaced_element(LayoutState const&, ReplacedBox const&, CSS::LengthPercentage const& computed_width);
-    static float tentative_height_for_replaced_element(LayoutState const&, ReplacedBox const&, CSS::LengthPercentage const& computed_height);
+    static float tentative_width_for_replaced_element(LayoutState const&, ReplacedBox const&, CSS::Size const& computed_width);
+    static float tentative_height_for_replaced_element(LayoutState const&, ReplacedBox const&, CSS::Size const& computed_height);
     static float compute_auto_height_for_block_formatting_context_root(LayoutState const&, BlockContainer const&);
     static float compute_auto_height_for_block_level_element(LayoutState const&, Box const&);
 

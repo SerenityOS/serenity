@@ -184,7 +184,7 @@ void LayoutState::UsedValues::set_node(NodeWithStyleAndBoxModelMetrics& node, Us
 
     auto const& computed_values = node.computed_values();
 
-    auto is_definite_size = [&](CSS::LengthPercentage const& size, float& resolved_definite_size, bool width) {
+    auto is_definite_size = [&](CSS::Size const& size, float& resolved_definite_size, bool width) {
         // A size that can be determined without performing layout; that is,
         // a <length>,
         // a measure of text (without consideration of line-wrapping),
@@ -206,6 +206,8 @@ void LayoutState::UsedValues::set_node(NodeWithStyleAndBoxModelMetrics& node, Us
         }
 
         if (size.is_length()) {
+            if (size.length().is_calculated())
+                return false;
             resolved_definite_size = size.length().to_px(node);
             return true;
         }

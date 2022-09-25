@@ -489,19 +489,13 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
 
     m_visible = computed_values.opacity() != 0 && computed_values.visibility() == CSS::Visibility::Visible;
 
-    if (auto maybe_length_percentage = computed_style.length_percentage(CSS::PropertyID::Width); maybe_length_percentage.has_value())
-        computed_values.set_width(maybe_length_percentage.release_value());
-    if (auto maybe_length_percentage = computed_style.length_percentage(CSS::PropertyID::MinWidth); maybe_length_percentage.has_value())
-        computed_values.set_min_width(maybe_length_percentage.release_value());
-    if (auto maybe_length_percentage = computed_style.length_percentage(CSS::PropertyID::MaxWidth); maybe_length_percentage.has_value())
-        computed_values.set_max_width(maybe_length_percentage.release_value());
+    computed_values.set_width(computed_style.size_value(CSS::PropertyID::Width));
+    computed_values.set_min_width(computed_style.size_value(CSS::PropertyID::MinWidth));
+    computed_values.set_max_width(computed_style.size_value(CSS::PropertyID::MaxWidth));
 
-    if (auto maybe_length_percentage = computed_style.length_percentage(CSS::PropertyID::Height); maybe_length_percentage.has_value())
-        computed_values.set_height(maybe_length_percentage.release_value());
-    if (auto maybe_length_percentage = computed_style.length_percentage(CSS::PropertyID::MinHeight); maybe_length_percentage.has_value())
-        computed_values.set_min_height(maybe_length_percentage.release_value());
-    if (auto maybe_length_percentage = computed_style.length_percentage(CSS::PropertyID::MaxHeight); maybe_length_percentage.has_value())
-        computed_values.set_max_height(maybe_length_percentage.release_value());
+    computed_values.set_height(computed_style.size_value(CSS::PropertyID::Height));
+    computed_values.set_min_height(computed_style.size_value(CSS::PropertyID::MinHeight));
+    computed_values.set_max_height(computed_style.size_value(CSS::PropertyID::MaxHeight));
 
     computed_values.set_inset(computed_style.length_box(CSS::PropertyID::Left, CSS::PropertyID::Top, CSS::PropertyID::Right, CSS::PropertyID::Bottom, CSS::Length::make_auto()));
     computed_values.set_margin(computed_style.length_box(CSS::PropertyID::MarginLeft, CSS::PropertyID::MarginTop, CSS::PropertyID::MarginRight, CSS::PropertyID::MarginBottom, CSS::Length::make_px(0)));

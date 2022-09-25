@@ -138,6 +138,24 @@ static NonnullRefPtr<StyleValue> style_value_for_length_percentage(LengthPercent
     return length_percentage.calculated();
 }
 
+static NonnullRefPtr<StyleValue> style_value_for_size(CSS::Size const& size)
+{
+    if (size.is_none())
+        return IdentifierStyleValue::create(ValueID::None);
+    if (size.is_percentage())
+        return PercentageStyleValue::create(size.percentage());
+    if (size.is_length())
+        return LengthStyleValue::create(size.length());
+    if (size.is_auto())
+        return IdentifierStyleValue::create(ValueID::Auto);
+    if (size.is_min_content())
+        return IdentifierStyleValue::create(ValueID::MinContent);
+    if (size.is_max_content())
+        return IdentifierStyleValue::create(ValueID::MaxContent);
+    // FIXME: Support fit-content(<length>)
+    TODO();
+}
+
 RefPtr<StyleValue> ResolvedCSSStyleDeclaration::style_value_for_property(Layout::NodeWithStyle const& layout_node, PropertyID property_id) const
 {
     switch (property_id) {
@@ -349,7 +367,7 @@ RefPtr<StyleValue> ResolvedCSSStyleDeclaration::style_value_for_property(Layout:
     case CSS::PropertyID::GridTemplateRows:
         return GridTrackSizeStyleValue::create(layout_node.computed_values().grid_template_rows());
     case CSS::PropertyID::Height:
-        return style_value_for_length_percentage(layout_node.computed_values().height());
+        return style_value_for_size(layout_node.computed_values().height());
     case CSS::PropertyID::ImageRendering:
         return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().image_rendering()));
     case CSS::PropertyID::JustifyContent:
@@ -374,13 +392,13 @@ RefPtr<StyleValue> ResolvedCSSStyleDeclaration::style_value_for_property(Layout:
     case CSS::PropertyID::MarginTop:
         return style_value_for_length_percentage(layout_node.computed_values().margin().top());
     case CSS::PropertyID::MaxHeight:
-        return style_value_for_length_percentage(layout_node.computed_values().max_height());
+        return style_value_for_size(layout_node.computed_values().max_height());
     case CSS::PropertyID::MaxWidth:
-        return style_value_for_length_percentage(layout_node.computed_values().max_width());
+        return style_value_for_size(layout_node.computed_values().max_width());
     case CSS::PropertyID::MinHeight:
-        return style_value_for_length_percentage(layout_node.computed_values().min_height());
+        return style_value_for_size(layout_node.computed_values().min_height());
     case CSS::PropertyID::MinWidth:
-        return style_value_for_length_percentage(layout_node.computed_values().min_width());
+        return style_value_for_size(layout_node.computed_values().min_width());
     case CSS::PropertyID::Opacity:
         return NumericStyleValue::create_float(layout_node.computed_values().opacity());
     case CSS::PropertyID::Order:
@@ -470,7 +488,7 @@ RefPtr<StyleValue> ResolvedCSSStyleDeclaration::style_value_for_property(Layout:
     case CSS::PropertyID::WhiteSpace:
         return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().white_space()));
     case CSS::PropertyID::Width:
-        return style_value_for_length_percentage(layout_node.computed_values().width());
+        return style_value_for_size(layout_node.computed_values().width());
     case CSS::PropertyID::ZIndex: {
         auto maybe_z_index = layout_node.computed_values().z_index();
         if (!maybe_z_index.has_value())

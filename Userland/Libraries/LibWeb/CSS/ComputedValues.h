@@ -10,6 +10,7 @@
 #include <LibWeb/CSS/BackdropFilter.h>
 #include <LibWeb/CSS/Clip.h>
 #include <LibWeb/CSS/LengthBox.h>
+#include <LibWeb/CSS/Size.h>
 #include <LibWeb/CSS/StyleValue.h>
 
 namespace Web::CSS {
@@ -56,12 +57,12 @@ public:
     static CSS::LengthBox inset() { return { CSS::Length::make_auto(), CSS::Length::make_auto(), CSS::Length::make_auto(), CSS::Length::make_auto() }; }
     static CSS::LengthBox margin() { return { CSS::Length::make_px(0), CSS::Length::make_px(0), CSS::Length::make_px(0), CSS::Length::make_px(0) }; }
     static CSS::LengthBox padding() { return { CSS::Length::make_px(0), CSS::Length::make_px(0), CSS::Length::make_px(0), CSS::Length::make_px(0) }; }
-    static CSS::Length width() { return CSS::Length::make_auto(); }
-    static CSS::Length min_width() { return CSS::Length::make_auto(); }
-    static CSS::Length max_width() { return CSS::Length::make_auto(); }
-    static CSS::Length height() { return CSS::Length::make_auto(); }
-    static CSS::Length min_height() { return CSS::Length::make_auto(); }
-    static CSS::Length max_height() { return CSS::Length::make_auto(); }
+    static CSS::Size width() { return CSS::Size::make_auto(); }
+    static CSS::Size min_width() { return CSS::Size::make_auto(); }
+    static CSS::Size max_width() { return CSS::Size::make_none(); }
+    static CSS::Size height() { return CSS::Size::make_auto(); }
+    static CSS::Size min_height() { return CSS::Size::make_auto(); }
+    static CSS::Size max_height() { return CSS::Size::make_none(); }
     static Vector<CSS::GridTrackSize> grid_template_columns() { return Vector<CSS::GridTrackSize> {}; }
     static Vector<CSS::GridTrackSize> grid_template_rows() { return Vector<CSS::GridTrackSize> {}; }
     static CSS::GridTrackPlacement grid_column_end() { return CSS::GridTrackPlacement::make_auto(); }
@@ -172,12 +173,12 @@ public:
     CSS::BackdropFilter const& backdrop_filter() const { return m_noninherited.backdrop_filter; }
     Vector<ShadowData> const& box_shadow() const { return m_noninherited.box_shadow; }
     CSS::BoxSizing box_sizing() const { return m_noninherited.box_sizing; }
-    CSS::LengthPercentage const& width() const { return m_noninherited.width; }
-    CSS::LengthPercentage const& min_width() const { return m_noninherited.min_width; }
-    CSS::LengthPercentage const& max_width() const { return m_noninherited.max_width; }
-    CSS::LengthPercentage const& height() const { return m_noninherited.height; }
-    CSS::LengthPercentage const& min_height() const { return m_noninherited.min_height; }
-    CSS::LengthPercentage const& max_height() const { return m_noninherited.max_height; }
+    CSS::Size const& width() const { return m_noninherited.width; }
+    CSS::Size const& min_width() const { return m_noninherited.min_width; }
+    CSS::Size const& max_width() const { return m_noninherited.max_width; }
+    CSS::Size const& height() const { return m_noninherited.height; }
+    CSS::Size const& min_height() const { return m_noninherited.min_height; }
+    CSS::Size const& max_height() const { return m_noninherited.max_height; }
     Variant<CSS::VerticalAlign, CSS::LengthPercentage> const& vertical_align() const { return m_noninherited.vertical_align; }
     Vector<CSS::GridTrackSize> const& grid_template_columns() const { return m_noninherited.grid_template_columns; }
     Vector<CSS::GridTrackSize> const& grid_template_rows() const { return m_noninherited.grid_template_rows; }
@@ -261,12 +262,12 @@ protected:
         Color text_decoration_color { InitialValues::color() };
         Vector<ShadowData> text_shadow {};
         CSS::Position position { InitialValues::position() };
-        CSS::LengthPercentage width { InitialValues::width() };
-        CSS::LengthPercentage min_width { InitialValues::min_width() };
-        CSS::LengthPercentage max_width { InitialValues::max_width() };
-        CSS::LengthPercentage height { InitialValues::height() };
-        CSS::LengthPercentage min_height { InitialValues::min_height() };
-        CSS::LengthPercentage max_height { InitialValues::max_height() };
+        CSS::Size width { InitialValues::width() };
+        CSS::Size min_width { InitialValues::min_width() };
+        CSS::Size max_width { InitialValues::max_width() };
+        CSS::Size height { InitialValues::height() };
+        CSS::Size min_height { InitialValues::min_height() };
+        CSS::Size max_height { InitialValues::max_height() };
         CSS::LengthBox inset { InitialValues::inset() };
         CSS::LengthBox margin { InitialValues::margin() };
         CSS::LengthBox padding { InitialValues::padding() };
@@ -338,12 +339,12 @@ public:
     void set_text_shadow(Vector<ShadowData>&& value) { m_noninherited.text_shadow = move(value); }
     void set_position(CSS::Position position) { m_noninherited.position = position; }
     void set_white_space(CSS::WhiteSpace value) { m_inherited.white_space = value; }
-    void set_width(CSS::LengthPercentage const& width) { m_noninherited.width = width; }
-    void set_min_width(CSS::LengthPercentage const& width) { m_noninherited.min_width = width; }
-    void set_max_width(CSS::LengthPercentage const& width) { m_noninherited.max_width = width; }
-    void set_height(CSS::LengthPercentage const& height) { m_noninherited.height = height; }
-    void set_min_height(CSS::LengthPercentage const& height) { m_noninherited.min_height = height; }
-    void set_max_height(CSS::LengthPercentage const& height) { m_noninherited.max_height = height; }
+    void set_width(CSS::Size const& width) { m_noninherited.width = width; }
+    void set_min_width(CSS::Size const& width) { m_noninherited.min_width = width; }
+    void set_max_width(CSS::Size const& width) { m_noninherited.max_width = width; }
+    void set_height(CSS::Size const& height) { m_noninherited.height = height; }
+    void set_min_height(CSS::Size const& height) { m_noninherited.min_height = height; }
+    void set_max_height(CSS::Size const& height) { m_noninherited.max_height = height; }
     void set_inset(CSS::LengthBox const& inset) { m_noninherited.inset = inset; }
     void set_margin(const CSS::LengthBox& margin) { m_noninherited.margin = margin; }
     void set_padding(const CSS::LengthBox& padding) { m_noninherited.padding = padding; }
