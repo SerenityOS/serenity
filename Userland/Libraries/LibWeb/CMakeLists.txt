@@ -57,6 +57,7 @@ set(SOURCES
     CSS/Selector.cpp
     CSS/SelectorEngine.cpp
     CSS/Serialize.cpp
+    CSS/Size.cpp
     CSS/StyleComputer.cpp
     CSS/StyleProperties.cpp
     CSS/StyleSheet.cpp

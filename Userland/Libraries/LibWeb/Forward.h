@@ -91,6 +91,7 @@ class ResolutionStyleValue;
 class Screen;
 class Selector;
 class ShadowStyleValue;
+class Size;
 class StringStyleValue;
 class StyleComputer;
 class StyleProperties;
