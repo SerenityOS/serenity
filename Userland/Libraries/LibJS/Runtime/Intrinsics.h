@@ -55,6 +55,7 @@ public:
     FunctionObject* array_prototype_values_function() const { return m_array_prototype_values_function; }
     FunctionObject* date_constructor_now_function() const { return m_date_constructor_now_function; }
     FunctionObject* json_parse_function() const { return m_json_parse_function; }
+    FunctionObject* json_stringify_function() const { return m_json_stringify_function; }
     FunctionObject* object_prototype_to_string_function() const { return m_object_prototype_to_string_function; }
     FunctionObject* throw_type_error_function() const { return m_throw_type_error_function; }
 
@@ -149,6 +150,7 @@ private:
     FunctionObject* m_array_prototype_values_function { nullptr };
     FunctionObject* m_date_constructor_now_function { nullptr };
     FunctionObject* m_json_parse_function { nullptr };
+    FunctionObject* m_json_stringify_function { nullptr };
     FunctionObject* m_object_prototype_to_string_function { nullptr };
     FunctionObject* m_throw_type_error_function { nullptr };
 
