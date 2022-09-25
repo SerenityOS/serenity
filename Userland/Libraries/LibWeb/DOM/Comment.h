@@ -15,13 +15,13 @@ class Comment final : public CharacterData {
     WEB_PLATFORM_OBJECT(Comment, CharacterData);
 
 public:
-    static JS::NonnullGCPtr<Comment> create_with_global_object(HTML::Window&, String const& data);
+    static JS::NonnullGCPtr<Comment> construct_impl(JS::Realm&, String const& data);
     virtual ~Comment() override = default;
 
     virtual FlyString node_name() const override { return "#comment"; }
 
 private:
-    explicit Comment(Document&, String const&);
+    Comment(Document&, String const&);
 };
 
 template<>

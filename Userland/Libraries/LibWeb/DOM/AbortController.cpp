@@ -4,23 +4,24 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/DOM/AbortController.h>
 #include <LibWeb/DOM/AbortSignal.h>
 
 namespace Web::DOM {
 
-JS::NonnullGCPtr<AbortController> AbortController::create_with_global_object(HTML::Window& window)
+JS::NonnullGCPtr<AbortController> AbortController::construct_impl(JS::Realm& realm)
 {
-    auto signal = AbortSignal::create_with_global_object(window);
-    return *window.heap().allocate<AbortController>(window.realm(), window, move(signal));
+    auto signal = AbortSignal::construct_impl(realm);
+    return *realm.heap().allocate<AbortController>(realm, realm, move(signal));
 }
 
 // https://dom.spec.whatwg.org/#dom-abortcontroller-abortcontroller
-AbortController::AbortController(HTML::Window& window, JS::NonnullGCPtr<AbortSignal> signal)
-    : PlatformObject(window.realm())
+AbortController::AbortController(JS::Realm& realm, JS::NonnullGCPtr<AbortSignal> signal)
+    : PlatformObject(realm)
     , m_signal(move(signal))
 {
-    set_prototype(&window.cached_web_prototype("AbortController"));
+    set_prototype(&Bindings::cached_web_prototype(realm, "AbortController"));
 }
 
 AbortController::~AbortController() = default;

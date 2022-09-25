@@ -34,7 +34,7 @@ public:
     WebIDL::ExceptionOr<void> replace_data(size_t offset, size_t count, String const&);
 
 protected:
-    explicit CharacterData(Document&, NodeType, String const&);
+    CharacterData(Document&, NodeType, String const&);
 
 private:
     String m_data;

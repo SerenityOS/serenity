@@ -4,29 +4,27 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibWeb/HTML/Window.h>
+#include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/WebIDL/DOMException.h>
 
 namespace Web::WebIDL {
 
-JS::NonnullGCPtr<DOMException> DOMException::create(JS::Object& global_object, FlyString const& name, FlyString const& message)
+JS::NonnullGCPtr<DOMException> DOMException::create(JS::Realm& realm, FlyString const& name, FlyString const& message)
 {
-    auto& window = verify_cast<HTML::Window>(global_object);
-    return *window.heap().allocate<DOMException>(window.realm(), window, name, message);
+    return *realm.heap().allocate<DOMException>(realm, realm, name, message);
 }
 
-JS::NonnullGCPtr<DOMException> DOMException::create_with_global_object(JS::Object& global_object, FlyString const& message, FlyString const& name)
+JS::NonnullGCPtr<DOMException> DOMException::construct_impl(JS::Realm& realm, FlyString const& message, FlyString const& name)
 {
-    auto& window = verify_cast<HTML::Window>(global_object);
-    return *window.heap().allocate<DOMException>(window.realm(), window, name, message);
+    return *realm.heap().allocate<DOMException>(realm, realm, name, message);
 }
 
-DOMException::DOMException(HTML::Window& window, FlyString const& name, FlyString const& message)
-    : PlatformObject(window.realm())
+DOMException::DOMException(JS::Realm& realm, FlyString const& name, FlyString const& message)
+    : PlatformObject(realm)
     , m_name(name)
     , m_message(message)
 {
-    set_prototype(&window.cached_web_prototype("DOMException"));
+    set_prototype(&Bindings::cached_web_prototype(realm, "DOMException"));
 }
 
 DOMException::~DOMException() = default;

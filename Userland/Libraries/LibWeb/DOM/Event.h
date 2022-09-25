@@ -9,7 +9,6 @@
 #include <AK/FlyString.h>
 #include <LibWeb/Bindings/PlatformObject.h>
 #include <LibWeb/DOM/EventTarget.h>
-#include <LibWeb/HTML/Window.h>
 
 namespace Web::DOM {
 
@@ -46,9 +45,12 @@ public:
 
     using Path = Vector<PathEntry>;
 
+    static JS::NonnullGCPtr<Event> create(JS::Realm&, FlyString const& event_name, EventInit const& event_init = {});
     static JS::NonnullGCPtr<Event> create(HTML::Window&, FlyString const& event_name, EventInit const& event_init = {});
-    static JS::NonnullGCPtr<Event> create_with_global_object(HTML::Window&, FlyString const& event_name, EventInit const& event_init);
+    static JS::NonnullGCPtr<Event> construct_impl(JS::Realm&, FlyString const& event_name, EventInit const& event_init);
 
+    Event(JS::Realm&, FlyString const& type);
+    Event(JS::Realm&, FlyString const& type, EventInit const& event_init);
     Event(HTML::Window&, FlyString const& type);
     Event(HTML::Window&, FlyString const& type, EventInit const& event_init);
 

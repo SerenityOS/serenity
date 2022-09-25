@@ -227,10 +227,10 @@ WebIDL::ExceptionOr<bool> EventTarget::dispatch_event_binding(Event& event)
 {
     // 1. If event’s dispatch flag is set, or if its initialized flag is not set, then throw an "InvalidStateError" DOMException.
     if (event.dispatched())
-        return WebIDL::InvalidStateError::create(global_object(), "The event is already being dispatched.");
+        return WebIDL::InvalidStateError::create(realm(), "The event is already being dispatched.");
 
     if (!event.initialized())
-        return WebIDL::InvalidStateError::create(global_object(), "Cannot dispatch an uninitialized event.");
+        return WebIDL::InvalidStateError::create(realm(), "Cannot dispatch an uninitialized event.");
 
     // 2. Initialize event’s isTrusted attribute to false.
     event.set_is_trusted(false);

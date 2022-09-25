@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/DOM/AbortSignal.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/EventDispatcher.h>
@@ -11,15 +12,20 @@
 
 namespace Web::DOM {
 
-JS::NonnullGCPtr<AbortSignal> AbortSignal::create_with_global_object(HTML::Window& window)
+JS::NonnullGCPtr<AbortSignal> AbortSignal::construct_impl(JS::Realm& realm)
 {
-    return *window.heap().allocate<AbortSignal>(window.realm(), window);
+    return *realm.heap().allocate<AbortSignal>(realm, realm);
+}
+
+AbortSignal::AbortSignal(JS::Realm& realm)
+    : EventTarget(realm)
+{
+    set_prototype(&Bindings::cached_web_prototype(realm, "AbortSignal"));
 }
 
 AbortSignal::AbortSignal(HTML::Window& window)
-    : EventTarget(window.realm())
+    : AbortSignal(window.realm())
 {
-    set_prototype(&window.cached_web_prototype("AbortSignal"));
 }
 
 // https://dom.spec.whatwg.org/#abortsignal-add
@@ -44,7 +50,7 @@ void AbortSignal::signal_abort(JS::Value reason)
     if (!reason.is_undefined())
         m_abort_reason = reason;
     else
-        m_abort_reason = WebIDL::AbortError::create(global_object(), "Aborted without reason").ptr();
+        m_abort_reason = WebIDL::AbortError::create(realm(), "Aborted without reason").ptr();
 
     // 3. For each algorithm in signal’s abort algorithms: run algorithm.
     for (auto& algorithm : m_abort_algorithms)
@@ -54,7 +60,7 @@ void AbortSignal::signal_abort(JS::Value reason)
     m_abort_algorithms.clear();
 
     // 5. Fire an event named abort at signal.
-    dispatch_event(*Event::create(global_object(), HTML::EventNames::abort));
+    dispatch_event(*Event::create(realm(), HTML::EventNames::abort));
 }
 
 void AbortSignal::set_onabort(WebIDL::CallbackType* event_handler)

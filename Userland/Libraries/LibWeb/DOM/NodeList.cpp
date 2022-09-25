@@ -4,14 +4,14 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/DOM/Node.h>
 #include <LibWeb/DOM/NodeList.h>
-#include <LibWeb/HTML/Window.h>
 
 namespace Web::DOM {
 
-NodeList::NodeList(HTML::Window& window)
-    : LegacyPlatformObject(window.cached_web_prototype("NodeList"))
+NodeList::NodeList(JS::Realm& realm)
+    : LegacyPlatformObject(Bindings::cached_web_prototype(realm, "NodeList"))
 {
 }
 

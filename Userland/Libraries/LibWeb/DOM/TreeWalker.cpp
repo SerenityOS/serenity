@@ -14,7 +14,7 @@
 namespace Web::DOM {
 
 TreeWalker::TreeWalker(Node& root)
-    : PlatformObject(root.window().cached_web_prototype("TreeWalker"))
+    : PlatformObject(Bindings::cached_web_prototype(root.realm(), "TreeWalker"))
     , m_root(root)
     , m_current(root)
 {
@@ -231,7 +231,7 @@ JS::ThrowCompletionOr<NodeFilter::Result> TreeWalker::filter(Node& node)
 {
     // 1. If traverser’s active flag is set, then throw an "InvalidStateError" DOMException.
     if (m_active)
-        return throw_completion(WebIDL::InvalidStateError::create(global_object(), "NodeIterator is already active"));
+        return throw_completion(WebIDL::InvalidStateError::create(realm(), "NodeIterator is already active"));
 
     // 2. Let n be node’s nodeType attribute value − 1.
     auto n = node.node_type() - 1;

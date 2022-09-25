@@ -54,7 +54,7 @@ Element::Element(Document& document, DOM::QualifiedName qualified_name)
     : ParentNode(document, NodeType::ELEMENT_NODE)
     , m_qualified_name(move(qualified_name))
 {
-    set_prototype(&window().cached_web_prototype("Element"));
+    set_prototype(&Bindings::cached_web_prototype(document.realm(), "Element"));
     make_html_uppercased_qualified_name();
 }
 
@@ -95,7 +95,7 @@ WebIDL::ExceptionOr<void> Element::set_attribute(FlyString const& name, String c
     // 1. If qualifiedName does not match the Name production in XML, then throw an "InvalidCharacterError" DOMException.
     // FIXME: Proper name validation
     if (name.is_empty())
-        return WebIDL::InvalidCharacterError::create(global_object(), "Attribute name must not be empty");
+        return WebIDL::InvalidCharacterError::create(realm(), "Attribute name must not be empty");
 
     // 2. If this is in the HTML namespace and its node document is an HTML document, then set qualifiedName to qualifiedName in ASCII lowercase.
     // FIXME: Handle the second condition, assume it is an HTML document for now.
@@ -126,14 +126,14 @@ WebIDL::ExceptionOr<void> Element::set_attribute(FlyString const& name, String c
 }
 
 // https://dom.spec.whatwg.org/#validate-and-extract
-WebIDL::ExceptionOr<QualifiedName> validate_and_extract(JS::Object& global_object, FlyString namespace_, FlyString qualified_name)
+WebIDL::ExceptionOr<QualifiedName> validate_and_extract(JS::Realm& realm, FlyString namespace_, FlyString qualified_name)
 {
     // 1. If namespace is the empty string, then set it to null.
     if (namespace_.is_empty())
         namespace_ = {};
 
     // 2. Validate qualifiedName.
-    TRY(Document::validate_qualified_name(global_object, qualified_name));
+    TRY(Document::validate_qualified_name(realm, qualified_name));
 
     // 3. Let prefix be null.
     FlyString prefix = {};
@@ -150,19 +150,19 @@ WebIDL::ExceptionOr<QualifiedName> validate_and_extract(JS::Object& global_objec
 
     // 6. If prefix is non-null and namespace is null, then throw a "NamespaceError" DOMException.
     if (!prefix.is_null() && namespace_.is_null())
-        return WebIDL::NamespaceError::create(global_object, "Prefix is non-null and namespace is null.");
+        return WebIDL::NamespaceError::create(realm, "Prefix is non-null and namespace is null.");
 
     // 7. If prefix is "xml" and namespace is not the XML namespace, then throw a "NamespaceError" DOMException.
     if (prefix == "xml"sv && namespace_ != Namespace::XML)
-        return WebIDL::NamespaceError::create(global_object, "Prefix is 'xml' and namespace is not the XML namespace.");
+        return WebIDL::NamespaceError::create(realm, "Prefix is 'xml' and namespace is not the XML namespace.");
 
     // 8. If either qualifiedName or prefix is "xmlns" and namespace is not the XMLNS namespace, then throw a "NamespaceError" DOMException.
     if ((qualified_name == "xmlns"sv || prefix == "xmlns"sv) && namespace_ != Namespace::XMLNS)
-        return WebIDL::NamespaceError::create(global_object, "Either qualifiedName or prefix is 'xmlns' and namespace is not the XMLNS namespace.");
+        return WebIDL::NamespaceError::create(realm, "Either qualifiedName or prefix is 'xmlns' and namespace is not the XMLNS namespace.");
 
     // 9. If namespace is the XMLNS namespace and neither qualifiedName nor prefix is "xmlns", then throw a "NamespaceError" DOMException.
     if (namespace_ == Namespace::XMLNS && !(qualified_name == "xmlns"sv || prefix == "xmlns"sv))
-        return WebIDL::NamespaceError::create(global_object, "Namespace is the XMLNS namespace and neither qualifiedName nor prefix is 'xmlns'.");
+        return WebIDL::NamespaceError::create(realm, "Namespace is the XMLNS namespace and neither qualifiedName nor prefix is 'xmlns'.");
 
     // 10. Return namespace, prefix, and localName.
     return QualifiedName { local_name, prefix, namespace_ };
@@ -172,7 +172,7 @@ WebIDL::ExceptionOr<QualifiedName> validate_and_extract(JS::Object& global_objec
 WebIDL::ExceptionOr<void> Element::set_attribute_ns(FlyString const& namespace_, FlyString const& qualified_name, String const& value)
 {
     // 1. Let namespace, prefix, and localName be the result of passing namespace and qualifiedName to validate and extract.
-    auto extracted_qualified_name = TRY(validate_and_extract(global_object(), namespace_, qualified_name));
+    auto extracted_qualified_name = TRY(validate_and_extract(realm(), namespace_, qualified_name));
 
     // FIXME: 2. Set an attribute value for this using localName, value, and also prefix and namespace.
 
@@ -203,7 +203,7 @@ WebIDL::ExceptionOr<bool> Element::toggle_attribute(FlyString const& name, Optio
     // 1. If qualifiedName does not match the Name production in XML, then throw an "InvalidCharacterError" DOMException.
     // FIXME: Proper name validation
     if (name.is_empty())
-        return WebIDL::InvalidCharacterError::create(global_object(), "Attribute name must not be empty");
+        return WebIDL::InvalidCharacterError::create(realm(), "Attribute name must not be empty");
 
     // 2. If this is in the HTML namespace and its node document is an HTML document, then set qualifiedName to qualifiedName in ASCII lowercase.
     // FIXME: Handle the second condition, assume it is an HTML document for now.
@@ -451,7 +451,7 @@ WebIDL::ExceptionOr<bool> Element::matches(StringView selectors) const
 {
     auto maybe_selectors = parse_selector(CSS::Parser::ParsingContext(static_cast<ParentNode&>(const_cast<Element&>(*this))), selectors);
     if (!maybe_selectors.has_value())
-        return WebIDL::SyntaxError::create(global_object(), "Failed to parse selector");
+        return WebIDL::SyntaxError::create(realm(), "Failed to parse selector");
 
     auto sel = maybe_selectors.value();
     for (auto& s : sel) {
@@ -466,7 +466,7 @@ WebIDL::ExceptionOr<DOM::Element const*> Element::closest(StringView selectors) 
 {
     auto maybe_selectors = parse_selector(CSS::Parser::ParsingContext(static_cast<ParentNode&>(const_cast<Element&>(*this))), selectors);
     if (!maybe_selectors.has_value())
-        return WebIDL::SyntaxError::create(global_object(), "Failed to parse selector");
+        return WebIDL::SyntaxError::create(realm(), "Failed to parse selector");
 
     auto matches_selectors = [](CSS::SelectorList const& selector_list, Element const* element) {
         for (auto& selector : selector_list) {
@@ -780,7 +780,7 @@ WebIDL::ExceptionOr<void> Element::insert_adjacent_html(String position, String 
 
         // If context is null or a Document, throw a "NoModificationAllowedError" DOMException.
         if (!context || context->is_document())
-            return WebIDL::NoModificationAllowedError::create(window(), "insertAdjacentHTML: context is null or a Document"sv);
+            return WebIDL::NoModificationAllowedError::create(realm(), "insertAdjacentHTML: context is null or a Document"sv);
     }
     // - If position is an ASCII case-insensitive match for the string "afterbegin"
     // - If position is an ASCII case-insensitive match for the string "beforeend"
@@ -791,7 +791,7 @@ WebIDL::ExceptionOr<void> Element::insert_adjacent_html(String position, String 
     // Otherwise
     else {
         // Throw a "SyntaxError" DOMException.
-        return WebIDL::SyntaxError::create(window(), "insertAdjacentHTML: invalid position argument"sv);
+        return WebIDL::SyntaxError::create(realm(), "insertAdjacentHTML: invalid position argument"sv);
     }
 
     // 2. If context is not an Element or the following are all true:
@@ -878,7 +878,7 @@ WebIDL::ExceptionOr<JS::GCPtr<Node>> Element::insert_adjacent(String const& wher
 
     // -> Otherwise
     // Throw a "SyntaxError" DOMException.
-    return WebIDL::SyntaxError::create(global_object(), String::formatted("Unknown position '{}'. Must be one of 'beforebegin', 'afterbegin', 'beforeend' or 'afterend'"sv, where));
+    return WebIDL::SyntaxError::create(realm(), String::formatted("Unknown position '{}'. Must be one of 'beforebegin', 'afterbegin', 'beforeend' or 'afterend'"sv, where));
 }
 
 // https://dom.spec.whatwg.org/#dom-element-insertadjacentelement

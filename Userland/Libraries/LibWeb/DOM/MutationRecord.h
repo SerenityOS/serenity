@@ -15,7 +15,7 @@ class MutationRecord : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(MutationRecord, Bindings::PlatformObject);
 
 public:
-    static JS::NonnullGCPtr<MutationRecord> create(HTML::Window&, FlyString const& type, Node& target, NodeList& added_nodes, NodeList& removed_nodes, Node* previous_sibling, Node* next_sibling, String const& attribute_name, String const& attribute_namespace, String const& old_value);
+    static JS::NonnullGCPtr<MutationRecord> create(JS::Realm&, FlyString const& type, Node& target, NodeList& added_nodes, NodeList& removed_nodes, Node* previous_sibling, Node* next_sibling, String const& attribute_name, String const& attribute_namespace, String const& old_value);
 
     virtual ~MutationRecord() override;
 
@@ -30,7 +30,7 @@ public:
     String const& old_value() const { return m_old_value; }
 
 private:
-    MutationRecord(HTML::Window& window, FlyString const& type, Node& target, NodeList& added_nodes, NodeList& removed_nodes, Node* previous_sibling, Node* next_sibling, String const& attribute_name, String const& attribute_namespace, String const& old_value);
+    MutationRecord(JS::Realm& realm, FlyString const& type, Node& target, NodeList& added_nodes, NodeList& removed_nodes, Node* previous_sibling, Node* next_sibling, String const& attribute_name, String const& attribute_namespace, String const& old_value);
     virtual void visit_edges(Cell::Visitor&) override;
 
     FlyString m_type;

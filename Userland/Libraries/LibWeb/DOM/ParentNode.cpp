@@ -22,7 +22,7 @@ WebIDL::ExceptionOr<JS::GCPtr<Element>> ParentNode::query_selector(StringView se
 {
     auto maybe_selectors = parse_selector(CSS::Parser::ParsingContext(*this), selector_text);
     if (!maybe_selectors.has_value())
-        return WebIDL::SyntaxError::create(global_object(), "Failed to parse selector");
+        return WebIDL::SyntaxError::create(realm(), "Failed to parse selector");
 
     auto selectors = maybe_selectors.value();
 
@@ -45,7 +45,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<NodeList>> ParentNode::query_selector_all(S
 {
     auto maybe_selectors = parse_selector(CSS::Parser::ParsingContext(*this), selector_text);
     if (!maybe_selectors.has_value())
-        return WebIDL::SyntaxError::create(global_object(), "Failed to parse selector");
+        return WebIDL::SyntaxError::create(realm(), "Failed to parse selector");
 
     auto selectors = maybe_selectors.value();
 
@@ -60,7 +60,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<NodeList>> ParentNode::query_selector_all(S
         return IterationDecision::Continue;
     });
 
-    return StaticNodeList::create(window(), move(elements));
+    return StaticNodeList::create(realm(), move(elements));
 }
 
 JS::GCPtr<Element> ParentNode::first_element_child()

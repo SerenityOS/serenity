@@ -5,20 +5,20 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/DOM/MutationRecord.h>
 #include <LibWeb/DOM/Node.h>
 #include <LibWeb/DOM/NodeList.h>
-#include <LibWeb/HTML/Window.h>
 
 namespace Web::DOM {
 
-JS::NonnullGCPtr<MutationRecord> MutationRecord::create(HTML::Window& window, FlyString const& type, Node& target, NodeList& added_nodes, NodeList& removed_nodes, Node* previous_sibling, Node* next_sibling, String const& attribute_name, String const& attribute_namespace, String const& old_value)
+JS::NonnullGCPtr<MutationRecord> MutationRecord::create(JS::Realm& realm, FlyString const& type, Node& target, NodeList& added_nodes, NodeList& removed_nodes, Node* previous_sibling, Node* next_sibling, String const& attribute_name, String const& attribute_namespace, String const& old_value)
 {
-    return *window.heap().allocate<MutationRecord>(window.realm(), window, type, target, added_nodes, removed_nodes, previous_sibling, next_sibling, attribute_name, attribute_namespace, old_value);
+    return *realm.heap().allocate<MutationRecord>(realm, realm, type, target, added_nodes, removed_nodes, previous_sibling, next_sibling, attribute_name, attribute_namespace, old_value);
 }
 
-MutationRecord::MutationRecord(HTML::Window& window, FlyString const& type, Node& target, NodeList& added_nodes, NodeList& removed_nodes, Node* previous_sibling, Node* next_sibling, String const& attribute_name, String const& attribute_namespace, String const& old_value)
-    : PlatformObject(window.realm())
+MutationRecord::MutationRecord(JS::Realm& realm, FlyString const& type, Node& target, NodeList& added_nodes, NodeList& removed_nodes, Node* previous_sibling, Node* next_sibling, String const& attribute_name, String const& attribute_namespace, String const& old_value)
+    : PlatformObject(realm)
     , m_type(type)
     , m_target(JS::make_handle(target))
     , m_added_nodes(added_nodes)
@@ -29,7 +29,7 @@ MutationRecord::MutationRecord(HTML::Window& window, FlyString const& type, Node
     , m_attribute_namespace(attribute_namespace)
     , m_old_value(old_value)
 {
-    set_prototype(&window.cached_web_prototype("MutationRecord"));
+    set_prototype(&Bindings::cached_web_prototype(realm, "MutationRecord"));
 }
 
 MutationRecord::~MutationRecord() = default;

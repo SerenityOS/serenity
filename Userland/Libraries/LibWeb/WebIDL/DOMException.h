@@ -9,17 +9,18 @@
 #include <AK/FlyString.h>
 #include <LibJS/Runtime/VM.h>
 #include <LibWeb/Bindings/PlatformObject.h>
+#include <LibWeb/HTML/Scripting/Environments.h>
 
 namespace Web::WebIDL {
 
-#define TRY_OR_RETURN_OOM(global_object, expression)                                \
-    ({                                                                              \
-        auto _temporary_result = (expression);                                      \
-        if (_temporary_result.is_error()) {                                         \
-            VERIFY(_temporary_result.error().code() == ENOMEM);                     \
-            return WebIDL::UnknownError::create(global_object, "Out of memory."sv); \
-        }                                                                           \
-        _temporary_result.release_value();                                          \
+#define TRY_OR_RETURN_OOM(realm, expression)                                \
+    ({                                                                      \
+        auto _temporary_result = (expression);                              \
+        if (_temporary_result.is_error()) {                                 \
+            VERIFY(_temporary_result.error().code() == ENOMEM);             \
+            return WebIDL::UnknownError::create(realm, "Out of memory."sv); \
+        }                                                                   \
+        _temporary_result.release_value();                                  \
     })
 
 // The following have a legacy code value but *don't* produce it as
@@ -102,13 +103,11 @@ class DOMException final : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(DOMException, Bindings::PlatformObject);
 
 public:
-    static JS::NonnullGCPtr<DOMException> create(JS::Object& global_object, FlyString const& name, FlyString const& message);
+    static JS::NonnullGCPtr<DOMException> create(JS::Realm& realm, FlyString const& name, FlyString const& message);
 
     // JS constructor has message first, name second
     // FIXME: This is a completely pointless footgun, let's use the same order for both factories.
-    static JS::NonnullGCPtr<DOMException> create_with_global_object(JS::Object& global_object, FlyString const& message, FlyString const& name);
-
-    static JS::NonnullGCPtr<DOMException> create(JS::Realm& realm, FlyString const& message);
+    static JS::NonnullGCPtr<DOMException> construct_impl(JS::Realm& realm, FlyString const& message, FlyString const& name);
 
     virtual ~DOMException() override;
 
@@ -117,20 +116,24 @@ public:
     u16 code() const { return get_legacy_code_for_name(m_name); }
 
 protected:
-    DOMException(HTML::Window&, FlyString const& name, FlyString const& message);
+    DOMException(JS::Realm&, FlyString const& name, FlyString const& message);
 
 private:
     FlyString m_name;
     FlyString m_message;
 };
 
-#define __ENUMERATE(ErrorName)                                                                            \
-    class ErrorName final {                                                                               \
-    public:                                                                                               \
-        static JS::NonnullGCPtr<DOMException> create(JS::Object& global_object, FlyString const& message) \
-        {                                                                                                 \
-            return DOMException::create(global_object, #ErrorName, message);                              \
-        }                                                                                                 \
+#define __ENUMERATE(ErrorName)                                                                                  \
+    class ErrorName final {                                                                                     \
+    public:                                                                                                     \
+        static JS::NonnullGCPtr<DOMException> create(JS::Realm& realm, FlyString const& message)                \
+        {                                                                                                       \
+            return DOMException::create(realm, #ErrorName, message);                                            \
+        }                                                                                                       \
+        static JS::NonnullGCPtr<DOMException> create(JS::Object const& global_object, FlyString const& message) \
+        {                                                                                                       \
+            return create(HTML::relevant_realm(global_object), message);                                        \
+        }                                                                                                       \
     };
 ENUMERATE_DOM_EXCEPTION_ERROR_NAMES
 #undef __ENUMERATE

@@ -12,7 +12,7 @@ namespace Web::DOM {
 DocumentFragment::DocumentFragment(Document& document)
     : ParentNode(document, NodeType::DOCUMENT_FRAGMENT_NODE)
 {
-    set_prototype(&window().cached_web_prototype("DocumentFragment"));
+    set_prototype(&Bindings::cached_web_prototype(realm(), "DocumentFragment"));
 }
 
 void DocumentFragment::visit_edges(Cell::Visitor& visitor)
@@ -27,9 +27,10 @@ void DocumentFragment::set_host(Web::DOM::Element* element)
 }
 
 // https://dom.spec.whatwg.org/#dom-documentfragment-documentfragment
-JS::NonnullGCPtr<DocumentFragment> DocumentFragment::create_with_global_object(HTML::Window& window)
+JS::NonnullGCPtr<DocumentFragment> DocumentFragment::construct_impl(JS::Realm& realm)
 {
-    return *window.heap().allocate<DocumentFragment>(window.realm(), window.associated_document());
+    auto& window = verify_cast<HTML::Window>(realm.global_object());
+    return *realm.heap().allocate<DocumentFragment>(realm, window.associated_document());
 }
 
 }

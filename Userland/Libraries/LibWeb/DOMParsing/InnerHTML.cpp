@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibJS/Heap/Heap.h>
 #include <LibWeb/DOM/DocumentFragment.h>
 #include <LibWeb/DOMParsing/InnerHTML.h>
 #include <LibWeb/HTML/Parser/HTMLParser.h>

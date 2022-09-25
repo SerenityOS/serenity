@@ -22,7 +22,7 @@ class EventTarget : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(EventTarget, Bindings::PlatformObject);
 
 public:
-    virtual ~EventTarget();
+    virtual ~EventTarget() override;
 
     virtual bool is_focusable() const { return false; }
 
