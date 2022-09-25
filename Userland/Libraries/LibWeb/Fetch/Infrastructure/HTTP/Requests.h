@@ -296,7 +296,7 @@ public:
 private:
     // https://fetch.spec.whatwg.org/#concept-request-method
     // A request has an associated method (a method). Unless stated otherwise it is `GET`.
-    ByteBuffer m_method;
+    ByteBuffer m_method { ByteBuffer::copy("GET"sv.bytes()).release_value() };
 
     // https://fetch.spec.whatwg.org/#local-urls-only-flag
     // A request has an associated local-URLs-only flag. Unless stated otherwise it is unset.
