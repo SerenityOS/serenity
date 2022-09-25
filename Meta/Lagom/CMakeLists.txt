@@ -577,6 +577,12 @@ if (BUILD_LAGOM)
         LIBS LibCrypto LibTLS
     )
 
+    # WebView
+    list(APPEND LIBWEBVIEW_SOURCES "../../Userland/Libraries/LibWebView/DOMTreeModel.cpp")
+    lagom_lib(WebView webview
+        SOURCES ${LIBWEBVIEW_SOURCES}
+        LIBS LibGUI)
+
     # x86
     # FIXME: Excluding arm64 is a temporary hack to circumvent a build problem
     #        for Lagom on Apple M1
