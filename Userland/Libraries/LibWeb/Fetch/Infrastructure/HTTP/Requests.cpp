@@ -36,7 +36,8 @@ void Request::set_url(AK::URL url)
     // Sometimes setting the URL and URL list are done as two distinct steps in the spec,
     // but since we know the URL is always the URL list's first item and doesn't change later
     // on, we can combine them.
-    VERIFY(m_url_list.is_empty());
+    if (!m_url_list.is_empty())
+        m_url_list.clear();
     m_url_list.append(move(url));
 }
 

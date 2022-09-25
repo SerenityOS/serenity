@@ -31,6 +31,7 @@ class HeaderList final
     , Vector<Header> {
 public:
     using Vector::begin;
+    using Vector::clear;
     using Vector::end;
 
     [[nodiscard]] bool contains(ReadonlyBytes) const;

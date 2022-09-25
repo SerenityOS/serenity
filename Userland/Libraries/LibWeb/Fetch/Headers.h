@@ -42,6 +42,8 @@ public:
     [[nodiscard]] Guard guard() const { return m_guard; }
     void set_guard(Guard guard) { m_guard = guard; }
 
+    WebIDL::ExceptionOr<void> fill(HeadersInit const&);
+
     // JS API functions
     WebIDL::ExceptionOr<void> append(Infrastructure::Header);
     WebIDL::ExceptionOr<void> append(String const& name, String const& value);
@@ -58,7 +60,6 @@ private:
 
     explicit Headers(HTML::Window&);
 
-    WebIDL::ExceptionOr<void> fill(HeadersInit const&);
     void remove_privileged_no_cors_headers();
 
     // https://fetch.spec.whatwg.org/#concept-headers-header-list

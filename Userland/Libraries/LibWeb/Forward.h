@@ -183,6 +183,7 @@ namespace Web::Fetch {
 class BodyMixin;
 class Headers;
 class HeadersIterator;
+class Request;
 }
 
 namespace Web::Fetch::Infrastructure {
@@ -481,6 +482,13 @@ enum class CanPlayTypeResult;
 enum class CanvasFillRule;
 enum class EndingType;
 enum class DOMParserSupportedType;
+enum class ReferrerPolicy;
+enum class RequestDestination;
+enum class RequestMode;
+enum class RequestCredentials;
+enum class RequestCache;
+enum class RequestRedirect;
+enum class RequestDuplex;
 enum class ResizeObserverBoxOptions;
 enum class XMLHttpRequestResponseType;
 }
