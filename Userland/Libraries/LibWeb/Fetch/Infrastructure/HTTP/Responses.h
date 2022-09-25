@@ -100,7 +100,7 @@ public:
     [[nodiscard]] Optional<AK::URL const&> url() const;
     [[nodiscard]] ErrorOr<Optional<AK::URL>> location_url(Optional<String> const& request_fragment) const;
 
-    [[nodiscard]] NonnullOwnPtr<Response> clone() const;
+    [[nodiscard]] WebIDL::ExceptionOr<NonnullOwnPtr<Response>> clone() const;
 
 private:
     // https://fetch.spec.whatwg.org/#concept-response-type

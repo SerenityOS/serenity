@@ -158,17 +158,19 @@ ErrorOr<ByteBuffer> Request::byte_serialize_origin() const
 }
 
 // https://fetch.spec.whatwg.org/#concept-request-clone
-NonnullOwnPtr<Request> Request::clone() const
+WebIDL::ExceptionOr<NonnullOwnPtr<Request>> Request::clone() const
 {
     // To clone a request request, run these steps:
 
     // 1. Let newRequest be a copy of request, except for its body.
-    BodyType body;
-    swap(body, const_cast<BodyType&>(m_body));
-    auto new_request = adopt_own(*new Infrastructure::Request(*this));
-    swap(body, const_cast<BodyType&>(m_body));
+    BodyType tmp_body;
+    swap(tmp_body, const_cast<BodyType&>(m_body));
+    auto new_request = make<Infrastructure::Request>(*this);
+    swap(tmp_body, const_cast<BodyType&>(m_body));
 
-    // FIXME: 2. If request’s body is non-null, set newRequest’s body to the result of cloning request’s body.
+    // 2. If request’s body is non-null, set newRequest’s body to the result of cloning request’s body.
+    if (auto const* body = m_body.get_pointer<Body>())
+        new_request->set_body(TRY(body->clone()));
 
     // 3. Return newRequest.
     return new_request;

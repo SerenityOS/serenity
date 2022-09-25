@@ -29,6 +29,8 @@ public:
     [[nodiscard]] SourceType const& source() const { return m_source; }
     [[nodiscard]] Optional<u64> const& length() const { return m_length; }
 
+    [[nodiscard]] WebIDL::ExceptionOr<Body> clone() const;
+
 private:
     // https://fetch.spec.whatwg.org/#concept-body-stream
     // A stream (a ReadableStream object).
