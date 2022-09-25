@@ -270,6 +270,7 @@ set(SOURCES
     HighResolutionTime/CoarsenTime.cpp
     HighResolutionTime/Performance.cpp
     Infra/ByteSequences.cpp
+    Infra/JSON.cpp
     IntersectionObserver/IntersectionObserver.cpp
     Layout/BlockContainer.cpp
     Layout/BlockFormattingContext.cpp
