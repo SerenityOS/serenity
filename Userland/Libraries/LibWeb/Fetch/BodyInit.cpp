@@ -15,7 +15,7 @@
 namespace Web::Fetch {
 
 // https://fetch.spec.whatwg.org/#concept-bodyinit-extract
-WebIDL::ExceptionOr<Infrastructure::BodyWithType> extract_body(JS::Realm& realm, BodyInit const& object, bool keepalive)
+WebIDL::ExceptionOr<Infrastructure::BodyWithType> extract_body(JS::Realm& realm, BodyInitOrReadbleBytes const& object, bool keepalive)
 {
     auto& window = verify_cast<HTML::Window>(realm.global_object());
 
@@ -47,6 +47,11 @@ WebIDL::ExceptionOr<Infrastructure::BodyWithType> extract_body(JS::Realm& realm,
             // If object’s type attribute is not the empty byte sequence, set type to its value.
             if (!blob->type().is_empty())
                 type = blob->type().to_byte_buffer();
+            return {};
+        },
+        [&](ReadonlyBytes bytes) -> WebIDL::ExceptionOr<void> {
+            // Set source to object.
+            source = TRY_OR_RETURN_OOM(window, ByteBuffer::copy(bytes));
             return {};
         },
         [&](JS::Handle<JS::Object> const& buffer_source) -> WebIDL::ExceptionOr<void> {
