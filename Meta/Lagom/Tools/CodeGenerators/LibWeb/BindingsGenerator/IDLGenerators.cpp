@@ -631,28 +631,40 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
             for (auto& member : current_dictionary->members) {
                 dictionary_generator.set("member_key", member.name);
                 auto member_js_name = make_input_acceptable_cpp(member.name.to_snakecase());
+                auto member_value_name = String::formatted("{}_value", member_js_name);
+                auto member_property_value_name = String::formatted("{}_property_value", member_js_name);
                 dictionary_generator.set("member_name", member_js_name);
+                dictionary_generator.set("member_value_name", member_value_name);
+                dictionary_generator.set("member_property_value_name", member_property_value_name);
                 dictionary_generator.append(R"~~~(
-    JS::Value @member_name@;
-    if (@js_name@@js_suffix@.is_nullish()) {
-        @member_name@ = JS::js_undefined();
-    } else {
-        @member_name@ = TRY(@js_name@@js_suffix@.as_object().get("@member_key@"));
-    }
+    auto @member_property_value_name@ = JS::js_undefined();
+    if (@js_name@@js_suffix@.is_object())
+        @member_property_value_name@ = TRY(@js_name@@js_suffix@.as_object().get("@member_key@"));
 )~~~");
                 if (member.required) {
                     dictionary_generator.append(R"~~~(
-    if (@member_name@.is_undefined())
+    if (@member_property_value_name@.is_undefined())
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::MissingRequiredProperty, "@member_key@");
+)~~~");
+                } else if (!member.default_value.has_value()) {
+                    // Assume struct member is Optional<T> and _don't_ assign the generated default
+                    // value (e.g. first enum member) when the dictionary member is optional (i.e.
+                    // no `required` and doesn't have a default value).
+                    // This is needed so that "dictionary has member" checks work as expected.
+                    dictionary_generator.append(R"~~~(
+    if (!@member_property_value_name@.is_undefined()) {
 )~~~");
                 }
 
-                auto member_value_name = String::formatted("{}_value", member_js_name);
-                dictionary_generator.set("member_value_name", member_value_name);
-                generate_to_cpp(dictionary_generator, member, member_js_name, "", member_value_name, interface, member.extended_attributes.contains("LegacyNullToEmptyString"), !member.required, member.default_value);
+                generate_to_cpp(dictionary_generator, member, member_property_value_name, "", member_value_name, interface, member.extended_attributes.contains("LegacyNullToEmptyString"), !member.required, member.default_value);
                 dictionary_generator.append(R"~~~(
     @cpp_name@.@member_name@ = @member_value_name@;
 )~~~");
+                if (!member.required && !member.default_value.has_value()) {
+                    dictionary_generator.append(R"~~~(
+    }
+)~~~");
+                }
             }
             if (current_dictionary->parent_name.is_null())
                 break;
