@@ -51,8 +51,8 @@ public:
     virtual void switch_to_pic_mode();
     virtual void switch_to_ioapic_mode();
 
-    LockRefPtr<IRQController> get_responsible_irq_controller(u8 interrupt_vector);
-    LockRefPtr<IRQController> get_responsible_irq_controller(IRQControllerType controller_type, u8 interrupt_vector);
+    NonnullLockRefPtr<IRQController> get_responsible_irq_controller(u8 interrupt_vector);
+    NonnullLockRefPtr<IRQController> get_responsible_irq_controller(IRQControllerType controller_type, u8 interrupt_vector);
 
     Vector<ISAInterruptOverrideMetadata> const& isa_overrides() const { return m_isa_interrupt_overrides; }
 
@@ -69,7 +69,7 @@ private:
     InterruptManagement();
     PhysicalAddress search_for_madt();
     void locate_apic_data();
-    Vector<LockRefPtr<IRQController>> m_interrupt_controllers;
+    Vector<NonnullLockRefPtr<IRQController>> m_interrupt_controllers;
     Vector<ISAInterruptOverrideMetadata> m_isa_interrupt_overrides;
     Vector<PCIInterruptOverrideMetadata> m_pci_interrupt_overrides;
     PhysicalAddress m_madt;

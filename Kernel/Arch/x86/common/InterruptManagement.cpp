@@ -65,7 +65,6 @@ void InterruptManagement::enumerate_interrupt_handlers(Function<void(GenericInte
 IRQController& InterruptManagement::get_interrupt_controller(int index)
 {
     VERIFY(index >= 0);
-    VERIFY(!m_interrupt_controllers[index].is_null());
     return *m_interrupt_controllers[index];
 }
 
@@ -98,7 +97,7 @@ u8 InterruptManagement::get_irq_vector(u8 mapped_interrupt_vector)
     return mapped_interrupt_vector;
 }
 
-LockRefPtr<IRQController> InterruptManagement::get_responsible_irq_controller(IRQControllerType controller_type, u8 interrupt_vector)
+NonnullLockRefPtr<IRQController> InterruptManagement::get_responsible_irq_controller(IRQControllerType controller_type, u8 interrupt_vector)
 {
     for (auto& irq_controller : m_interrupt_controllers) {
         if (irq_controller->gsi_base() <= interrupt_vector && irq_controller->type() == controller_type)
@@ -107,7 +106,7 @@ LockRefPtr<IRQController> InterruptManagement::get_responsible_irq_controller(IR
     VERIFY_NOT_REACHED();
 }
 
-LockRefPtr<IRQController> InterruptManagement::get_responsible_irq_controller(u8 interrupt_vector)
+NonnullLockRefPtr<IRQController> InterruptManagement::get_responsible_irq_controller(u8 interrupt_vector)
 {
     if (m_interrupt_controllers.size() == 1 && m_interrupt_controllers[0]->type() == IRQControllerType::i8259) {
         return m_interrupt_controllers[0];
