@@ -172,8 +172,10 @@ bool FrameLoader::load(LoadRequest& request, Type type)
     auto& url = request.url();
 
     if (type == Type::Navigation || type == Type::Reload) {
-        if (auto* page = browsing_context().page())
-            page->client().page_did_start_loading(url);
+        if (auto* page = browsing_context().page()) {
+            if (&page->top_level_browsing_context() == &m_browsing_context)
+                page->client().page_did_start_loading(url);
+        }
     }
 
     // https://fetch.spec.whatwg.org/#concept-fetch
