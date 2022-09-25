@@ -130,6 +130,7 @@ UNMAP_AFTER_INIT void Parser::locate_static_data()
     locate_main_system_description_table();
     initialize_main_system_description_table();
     process_fadt_data();
+    process_dsdt();
 }
 
 UNMAP_AFTER_INIT Optional<PhysicalAddress> Parser::find_table(StringView signature)
@@ -170,7 +171,6 @@ UNMAP_AFTER_INIT void Parser::process_fadt_data()
 
     auto sdt = Memory::map_typed<Structures::FADT>(m_fadt).release_value_but_fixme_should_propagate_errors();
     dmesgln("ACPI: Fixed ACPI data, Revision {}, length: {} bytes", (size_t)sdt->h.revision, (size_t)sdt->h.length);
-    dmesgln("ACPI: DSDT {}", PhysicalAddress(sdt->dsdt_ptr));
     m_x86_specific_flags.cmos_rtc_not_present = (sdt->ia_pc_boot_arch_flags & (u8)FADTFlags::IA_PC_Flags::CMOS_RTC_Not_Present);
 
     // FIXME: QEMU doesn't report that we have an i8042 controller in these flags, even if it should (when FADT revision is 3),
@@ -203,6 +203,21 @@ UNMAP_AFTER_INIT void Parser::process_fadt_data()
     m_hardware_flags.use_platform_clock = (sdt->flags & (u32)FADTFlags::FeatureFlags::USE_PLATFORM_CLOCK);
     m_hardware_flags.wbinvd = (sdt->flags & (u32)FADTFlags::FeatureFlags::WBINVD);
     m_hardware_flags.wbinvd_flush = (sdt->flags & (u32)FADTFlags::FeatureFlags::WBINVD_FLUSH);
+}
+
+UNMAP_AFTER_INIT void Parser::process_dsdt()
+{
+    auto sdt = Memory::map_typed<Structures::FADT>(m_fadt).release_value_but_fixme_should_propagate_errors();
+
+    // Add DSDT-pointer to expose the full table in /sys/firmware/acpi/
+    m_sdt_pointers.append(PhysicalAddress(sdt->dsdt_ptr));
+
+    auto dsdt_or_error = Memory::map_typed<Structures::DSDT>(PhysicalAddress(sdt->dsdt_ptr));
+    if (dsdt_or_error.is_error()) {
+        dmesgln("ACPI: DSDT is unmappable");
+        return;
+    }
+    dmesgln("ACPI: Using DSDT @ {} with {} bytes", PhysicalAddress(sdt->dsdt_ptr), dsdt_or_error.value()->h.length);
 }
 
 bool Parser::can_reboot()

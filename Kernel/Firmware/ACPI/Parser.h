@@ -89,6 +89,7 @@ private:
     size_t get_table_size(PhysicalAddress);
     u8 get_table_revision(PhysicalAddress);
     void process_fadt_data();
+    void process_dsdt();
 
     bool validate_reset_register(Memory::TypedMapping<Structures::FADT> const&);
     void access_generic_address(Structures::GenericAddressStructure const&, u32 value);
