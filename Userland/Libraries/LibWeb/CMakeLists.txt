@@ -132,6 +132,7 @@ set(SOURCES
     Fetch/Infrastructure/HTTP/Statuses.cpp
     Fetch/Infrastructure/URL.cpp
     Fetch/Request.cpp
+    Fetch/Response.cpp
     FileAPI/Blob.cpp
     FileAPI/File.cpp
     FontCache.cpp

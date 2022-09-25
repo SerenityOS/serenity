@@ -8,6 +8,7 @@
 
 #include <AK/Forward.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP/Requests.h>
+#include <LibWeb/Fetch/Infrastructure/HTTP/Responses.h>
 #include <LibWeb/Forward.h>
 
 namespace Web::Fetch {
@@ -24,5 +25,6 @@ namespace Web::Fetch {
 [[nodiscard]] Bindings::RequestCredentials to_bindings_enum(Infrastructure::Request::CredentialsMode);
 [[nodiscard]] Bindings::RequestCache to_bindings_enum(Infrastructure::Request::CacheMode);
 [[nodiscard]] Bindings::RequestRedirect to_bindings_enum(Infrastructure::Request::RedirectMode);
+[[nodiscard]] Bindings::ResponseType to_bindings_enum(Infrastructure::Response::Type);
 
 }
