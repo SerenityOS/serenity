@@ -14,13 +14,16 @@
 
 namespace WebView {
 
-DOMTreeModel::DOMTreeModel(JsonObject dom_tree, GUI::TreeView& tree_view)
+DOMTreeModel::DOMTreeModel(JsonObject dom_tree, GUI::TreeView* tree_view)
     : m_tree_view(tree_view)
     , m_dom_tree(move(dom_tree))
 {
+    // FIXME: Get these from the outside somehow instead of hard-coding paths here.
+#ifdef __serenity__
     m_document_icon.set_bitmap_for_size(16, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/filetype-html.png"sv).release_value_but_fixme_should_propagate_errors());
     m_element_icon.set_bitmap_for_size(16, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/inspector-object.png"sv).release_value_but_fixme_should_propagate_errors());
     m_text_icon.set_bitmap_for_size(16, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/filetype-unknown.png"sv).release_value_but_fixme_should_propagate_errors());
+#endif
 
     map_dom_nodes_to_parent(nullptr, &m_dom_tree);
 }
@@ -119,18 +122,23 @@ GUI::Variant DOMTreeModel::data(const GUI::ModelIndex& index, GUI::ModelRole rol
     auto node_name = node.get("name"sv).as_string();
     auto type = node.get("type"sv).as_string_or("unknown"sv);
 
+    // FIXME: This FIXME can go away when we fix the one below.
+#ifdef __serenity__
     if (role == GUI::ModelRole::ForegroundColor) {
         // FIXME: Allow models to return a foreground color *role*.
         //        Then we won't need to have a GUI::TreeView& member anymore.
         if (type == "comment"sv)
-            return m_tree_view.palette().syntax_comment();
+            return m_tree_view->palette().syntax_comment();
         if (type == "pseudo-element"sv)
-            return m_tree_view.palette().syntax_type();
+            return m_tree_view->palette().syntax_type();
         if (!node.get("visible"sv).to_bool(true))
-            return m_tree_view.palette().syntax_comment();
+            return m_tree_view->palette().syntax_comment();
         return {};
     }
+#endif
 
+    // FIXME: This FIXME can go away when the icons are provided from the outside (see constructor).
+#ifdef __serenity__
     if (role == GUI::ModelRole::Icon) {
         if (type == "document")
             return m_document_icon;
@@ -139,6 +147,8 @@ GUI::Variant DOMTreeModel::data(const GUI::ModelIndex& index, GUI::ModelRole rol
         // FIXME: More node type icons?
         return m_text_icon;
     }
+#endif
+
     if (role == GUI::ModelRole::Display) {
         if (type == "text")
             return with_whitespace_collapsed(node.get("text"sv).as_string());
