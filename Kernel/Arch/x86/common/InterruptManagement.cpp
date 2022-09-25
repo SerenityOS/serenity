@@ -142,7 +142,6 @@ UNMAP_AFTER_INIT void InterruptManagement::switch_to_pic_mode()
 {
     dmesgln("Interrupts: Switch to Legacy PIC mode");
     InterruptDisabler disabler;
-    m_smp_enabled = false;
     m_interrupt_controllers[0] = adopt_lock_ref(*new PIC());
     SpuriousInterruptHandler::initialize(7);
     SpuriousInterruptHandler::initialize(15);
@@ -170,7 +169,6 @@ UNMAP_AFTER_INIT void InterruptManagement::switch_to_ioapic_mode()
 
     dbgln("Interrupts: MADT @ P {}", m_madt.as_ptr());
     locate_apic_data();
-    m_smp_enabled = true;
     if (m_interrupt_controllers.size() == 1) {
         if (get_interrupt_controller(0).type() == IRQControllerType::i8259) {
             dmesgln("Interrupts: NO IOAPIC detected, Reverting to PIC mode.");

@@ -51,7 +51,6 @@ public:
     virtual void switch_to_pic_mode();
     virtual void switch_to_ioapic_mode();
 
-    bool smp_enabled() const { return m_smp_enabled; }
     LockRefPtr<IRQController> get_responsible_irq_controller(u8 interrupt_vector);
     LockRefPtr<IRQController> get_responsible_irq_controller(IRQControllerType controller_type, u8 interrupt_vector);
 
@@ -70,7 +69,6 @@ private:
     InterruptManagement();
     PhysicalAddress search_for_madt();
     void locate_apic_data();
-    bool m_smp_enabled { false };
     Vector<LockRefPtr<IRQController>> m_interrupt_controllers;
     Vector<ISAInterruptOverrideMetadata> m_isa_interrupt_overrides;
     Vector<PCIInterruptOverrideMetadata> m_pci_interrupt_overrides;
