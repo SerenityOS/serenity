@@ -118,6 +118,7 @@ set(SOURCES
     Dump.cpp
     Encoding/TextDecoder.cpp
     Encoding/TextEncoder.cpp
+    Fetch/Body.cpp
     Fetch/BodyInit.cpp
     Fetch/Headers.cpp
     Fetch/HeadersIterator.cpp

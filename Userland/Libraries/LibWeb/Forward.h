@@ -180,6 +180,7 @@ class TextEncoder;
 }
 
 namespace Web::Fetch {
+class BodyMixin;
 class Headers;
 class HeadersIterator;
 }
