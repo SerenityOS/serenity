@@ -60,7 +60,7 @@ public:
     u8 get_irq_vector(u8 mapped_interrupt_vector);
 
     void enumerate_interrupt_handlers(Function<void(GenericInterruptHandler&)>);
-    IRQController& get_interrupt_controller(int index);
+    IRQController& get_interrupt_controller(size_t index);
 
 protected:
     virtual ~InterruptManagement() = default;

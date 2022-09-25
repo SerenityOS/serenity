@@ -55,8 +55,8 @@ public:
     virtual IRQControllerType type() const override { return IRQControllerType::i82093AA; }
 
 private:
-    void configure_redirection_entry(int index, u8 interrupt_vector, u8 delivery_mode, bool logical_destination, bool active_low, bool trigger_level_mode, bool masked, u8 destination) const;
-    void reset_redirection_entry(int index) const;
+    void configure_redirection_entry(size_t index, u8 interrupt_vector, u8 delivery_mode, bool logical_destination, bool active_low, bool trigger_level_mode, bool masked, u8 destination) const;
+    void reset_redirection_entry(size_t index) const;
     void map_interrupt_redirection(u8 interrupt_vector);
     void reset_all_redirection_entries() const;
 
@@ -75,7 +75,7 @@ private:
     virtual void initialize() override;
     void map_isa_interrupts();
     void map_pci_interrupts();
-    void isa_identity_map(int index);
+    void isa_identity_map(size_t index);
 
     PhysicalAddress m_address;
     mutable Memory::TypedMapping<ioapic_mmio_regs> m_regs;
