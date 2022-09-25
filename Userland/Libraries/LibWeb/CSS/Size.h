@@ -24,6 +24,7 @@ public:
     };
 
     static Size make_auto();
+    static Size make_px(float);
     static Size make_length(Length);
     static Size make_percentage(Percentage);
     static Size make_min_content();
