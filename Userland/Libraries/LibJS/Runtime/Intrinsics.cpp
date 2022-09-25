@@ -310,6 +310,7 @@ void Intrinsics::initialize_intrinsics(Realm& realm)
     m_array_prototype_values_function = &m_array_prototype->get_without_side_effects(vm.names.values).as_function();
     m_date_constructor_now_function = &m_date_constructor->get_without_side_effects(vm.names.now).as_function();
     m_json_parse_function = &m_json_object->get_without_side_effects(vm.names.parse).as_function();
+    m_json_stringify_function = &m_json_object->get_without_side_effects(vm.names.stringify).as_function();
     m_object_prototype_to_string_function = &m_object_prototype->get_without_side_effects(vm.names.toString).as_function();
 }
 
@@ -327,6 +328,7 @@ void Intrinsics::visit_edges(Visitor& visitor)
     visitor.visit(m_date_constructor_now_function);
     visitor.visit(m_eval_function);
     visitor.visit(m_json_parse_function);
+    visitor.visit(m_json_stringify_function);
     visitor.visit(m_object_prototype_to_string_function);
     visitor.visit(m_throw_type_error_function);
 
