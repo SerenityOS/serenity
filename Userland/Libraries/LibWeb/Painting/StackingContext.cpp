@@ -293,25 +293,40 @@ void StackingContext::paint(PaintContext& context) const
     auto affine_transform = affine_transform_matrix();
 
     if (opacity < 1.0f || !affine_transform.is_identity()) {
-        auto bitmap_or_error = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, context.painter().target()->size());
+        auto transform_origin = this->transform_origin();
+        auto source_rect = paintable().absolute_paint_rect().translated(-transform_origin);
+        auto transformed_destination_rect = affine_transform.map(source_rect).translated(transform_origin);
+        auto destination_rect = transformed_destination_rect.to_rounded<int>();
+
+        // FIXME: We should find a way to scale the paintable, rather than paint into a separate bitmap,
+        // then scale it. This snippet now copies the background at the destination, then scales it down/up
+        // to the size of the source (which could add some artefacts, though just scaling the bitmap already does that).
+        // We need to copy the background at the destination because a bunch of our rendering effects now rely on
+        // being able to sample the painter (see border radii, shadows, filters, etc).
+        auto try_get_scaled_destination_bitmap = [&]() -> ErrorOr<NonnullRefPtr<Gfx::Bitmap>> {
+            auto bitmap = TRY(context.painter().get_region_bitmap(destination_rect, Gfx::BitmapFormat::BGRA8888, destination_rect));
+            if (source_rect.size() != transformed_destination_rect.size()) {
+                bitmap = TRY(bitmap->scaled(
+                    static_cast<float>(source_rect.width()) / transformed_destination_rect.width(),
+                    static_cast<float>(source_rect.height()) / transformed_destination_rect.height()));
+            }
+            return bitmap;
+        };
+
+        auto bitmap_or_error = try_get_scaled_destination_bitmap();
         if (bitmap_or_error.is_error())
             return;
         auto bitmap = bitmap_or_error.release_value_but_fixme_should_propagate_errors();
         Gfx::Painter painter(bitmap);
+        painter.translate(-paintable().absolute_paint_rect().location().to_rounded<int>());
         auto paint_context = context.clone(painter);
         paint_internal(paint_context);
 
-        auto transform_origin = this->transform_origin();
-        auto source_rect = paintable().absolute_border_box_rect().translated(-transform_origin);
-
-        auto transformed_destination_rect = affine_transform.map(source_rect).translated(transform_origin);
-        source_rect.translate_by(transform_origin);
-
         // NOTE: If the destination and source rects are the same size, we round the source rect to ensure that it's pixel-aligned.
         if (transformed_destination_rect.size() == source_rect.size())
-            context.painter().draw_scaled_bitmap(transformed_destination_rect.to_rounded<int>(), *bitmap, source_rect.to_rounded<int>(), opacity);
+            context.painter().draw_scaled_bitmap(destination_rect, *bitmap, bitmap->rect(), opacity);
         else
-            context.painter().draw_scaled_bitmap(transformed_destination_rect.to_rounded<int>(), *bitmap, source_rect, opacity, Gfx::Painter::ScalingMode::BilinearBlend);
+            context.painter().draw_scaled_bitmap(destination_rect, *bitmap, bitmap->rect(), opacity, Gfx::Painter::ScalingMode::BilinearBlend);
     } else {
         paint_internal(context);
     }
