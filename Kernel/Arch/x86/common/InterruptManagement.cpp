@@ -135,14 +135,13 @@ UNMAP_AFTER_INIT PhysicalAddress InterruptManagement::search_for_madt()
 UNMAP_AFTER_INIT InterruptManagement::InterruptManagement()
     : m_madt(search_for_madt())
 {
-    m_interrupt_controllers.resize(1);
 }
 
 UNMAP_AFTER_INIT void InterruptManagement::switch_to_pic_mode()
 {
     dmesgln("Interrupts: Switch to Legacy PIC mode");
     InterruptDisabler disabler;
-    m_interrupt_controllers[0] = adopt_lock_ref(*new PIC());
+    m_interrupt_controllers.append(adopt_lock_ref(*new PIC()));
     SpuriousInterruptHandler::initialize(7);
     SpuriousInterruptHandler::initialize(15);
     for (auto& irq_controller : m_interrupt_controllers) {
@@ -200,11 +199,8 @@ UNMAP_AFTER_INIT void InterruptManagement::locate_apic_data()
     VERIFY(!m_madt.is_null());
     auto madt = Memory::map_typed<ACPI::Structures::MADT>(m_madt).release_value_but_fixme_should_propagate_errors();
 
-    int irq_controller_count = 0;
-    if (madt->flags & PCAT_COMPAT_FLAG) {
-        m_interrupt_controllers[0] = adopt_lock_ref(*new PIC());
-        irq_controller_count++;
-    }
+    if (madt->flags & PCAT_COMPAT_FLAG)
+        m_interrupt_controllers.append(adopt_lock_ref(*new PIC()));
     size_t entry_index = 0;
     size_t entries_length = madt->h.length - sizeof(ACPI::Structures::MADT);
     auto* madt_entry = madt->entries;
@@ -213,9 +209,7 @@ UNMAP_AFTER_INIT void InterruptManagement::locate_apic_data()
         if (madt_entry->type == (u8)ACPI::Structures::MADTEntryType::IOAPIC) {
             auto* ioapic_entry = (const ACPI::Structures::MADTEntries::IOAPIC*)madt_entry;
             dbgln("IOAPIC found @ MADT entry {}, MMIO Registers @ {}", entry_index, PhysicalAddress(ioapic_entry->ioapic_address));
-            m_interrupt_controllers.resize(1 + irq_controller_count);
-            m_interrupt_controllers[irq_controller_count] = adopt_lock_ref(*new IOAPIC(PhysicalAddress(ioapic_entry->ioapic_address), ioapic_entry->gsi_base));
-            irq_controller_count++;
+            m_interrupt_controllers.append(adopt_lock_ref(*new IOAPIC(PhysicalAddress(ioapic_entry->ioapic_address), ioapic_entry->gsi_base)));
         }
         if (madt_entry->type == (u8)ACPI::Structures::MADTEntryType::InterruptSourceOverride) {
             auto* interrupt_override_entry = (const ACPI::Structures::MADTEntries::InterruptSourceOverride*)madt_entry;
