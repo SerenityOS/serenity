@@ -5,20 +5,20 @@
  */
 
 #include <AK/String.h>
+#include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/HTML/Storage.h>
-#include <LibWeb/HTML/Window.h>
 
 namespace Web::HTML {
 
-JS::NonnullGCPtr<Storage> Storage::create(HTML::Window& window)
+JS::NonnullGCPtr<Storage> Storage::create(JS::Realm& realm)
 {
-    return *window.heap().allocate<Storage>(window.realm(), window);
+    return *realm.heap().allocate<Storage>(realm, realm);
 }
 
-Storage::Storage(HTML::Window& window)
-    : PlatformObject(window.realm())
+Storage::Storage(JS::Realm& realm)
+    : PlatformObject(realm)
 {
-    set_prototype(&window.cached_web_prototype("Storage"));
+    set_prototype(&Bindings::cached_web_prototype(realm, "Storage"));
 }
 
 Storage::~Storage() = default;

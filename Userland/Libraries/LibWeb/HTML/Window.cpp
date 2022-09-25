@@ -479,7 +479,7 @@ void Window::fire_a_page_transition_event(FlyString const& event_name, bool pers
     // with the persisted attribute initialized to persisted,
     HTML::PageTransitionEventInit event_init {};
     event_init.persisted = persisted;
-    auto event = HTML::PageTransitionEvent::create(associated_document().window(), event_name, event_init);
+    auto event = HTML::PageTransitionEvent::create(associated_document().realm(), event_name, event_init);
 
     // ...the cancelable attribute initialized to true,
     event->set_cancelable(true);
@@ -539,7 +539,7 @@ JS::NonnullGCPtr<HTML::Storage> Window::local_storage()
 
     static HashMap<Origin, JS::Handle<HTML::Storage>> local_storage_per_origin;
     auto storage = local_storage_per_origin.ensure(associated_document().origin(), [this]() -> JS::Handle<HTML::Storage> {
-        return *HTML::Storage::create(*this);
+        return *HTML::Storage::create(realm());
     });
     return *storage;
 }
@@ -551,7 +551,7 @@ JS::NonnullGCPtr<HTML::Storage> Window::session_storage()
 
     static HashMap<Origin, JS::Handle<HTML::Storage>> session_storage_per_origin;
     auto storage = session_storage_per_origin.ensure(associated_document().origin(), [this]() -> JS::Handle<HTML::Storage> {
-        return *HTML::Storage::create(*this);
+        return *HTML::Storage::create(realm());
     });
     return *storage;
 }
@@ -590,7 +590,7 @@ WebIDL::ExceptionOr<void> Window::post_message_impl(JS::Value message, String co
         HTML::MessageEventInit event_init {};
         event_init.data = message;
         event_init.origin = "<origin>";
-        dispatch_event(*HTML::MessageEvent::create(*this, HTML::EventNames::message, event_init));
+        dispatch_event(*HTML::MessageEvent::create(realm(), HTML::EventNames::message, event_init));
     });
     return {};
 }
@@ -742,7 +742,7 @@ void Window::initialize_web_interfaces(Badge<WindowEnvironmentSettingsObject>)
 {
     ADD_WINDOW_OBJECT_INTERFACES;
 
-    Object::set_prototype(&ensure_web_prototype<Bindings::WindowPrototype>("Window"));
+    Object::set_prototype(&Bindings::ensure_web_prototype<Bindings::WindowPrototype>(realm, "Window"));
 
     m_crypto = Crypto::Crypto::create(*this);
 
@@ -1064,7 +1064,7 @@ JS_DEFINE_NATIVE_FUNCTION(Window::btoa)
     byte_string.ensure_capacity(string.length());
     for (u32 code_point : Utf8View(string)) {
         if (code_point > 0xff)
-            return throw_completion(WebIDL::InvalidCharacterError::create(vm.current_realm()->global_object(), "Data contains characters outside the range U+0000 and U+00FF"));
+            return throw_completion(WebIDL::InvalidCharacterError::create(*vm.current_realm(), "Data contains characters outside the range U+0000 and U+00FF"));
         byte_string.append(code_point);
     }
 

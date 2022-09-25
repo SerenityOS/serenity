@@ -4,28 +4,28 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/MessageChannel.h>
 #include <LibWeb/HTML/MessagePort.h>
-#include <LibWeb/HTML/Window.h>
 
 namespace Web::HTML {
 
-JS::NonnullGCPtr<MessageChannel> MessageChannel::create_with_global_object(HTML::Window& window)
+JS::NonnullGCPtr<MessageChannel> MessageChannel::construct_impl(JS::Realm& realm)
 {
-    return *window.heap().allocate<MessageChannel>(window.realm(), window);
+    return *realm.heap().allocate<MessageChannel>(realm, realm);
 }
 
-MessageChannel::MessageChannel(HTML::Window& window)
-    : PlatformObject(window.realm())
+MessageChannel::MessageChannel(JS::Realm& realm)
+    : PlatformObject(realm)
 {
-    set_prototype(&window.cached_web_prototype("MessageChannel"));
+    set_prototype(&Bindings::cached_web_prototype(realm, "MessageChannel"));
 
     // 1. Set this's port 1 to a new MessagePort in this's relevant Realm.
-    m_port1 = MessagePort::create(window);
+    m_port1 = MessagePort::create(realm);
 
     // 2. Set this's port 2 to a new MessagePort in this's relevant Realm.
-    m_port2 = MessagePort::create(window);
+    m_port2 = MessagePort::create(realm);
 
     // 3. Entangle this's port 1 and this's port 2.
     m_port1->entangle_with(*m_port2);

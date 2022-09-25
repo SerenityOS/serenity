@@ -10,30 +10,30 @@
 #include <LibGfx/Painter.h>
 #include <LibGfx/Quad.h>
 #include <LibGfx/Rect.h>
+#include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/HTML/CanvasRenderingContext2D.h>
 #include <LibWeb/HTML/HTMLCanvasElement.h>
 #include <LibWeb/HTML/HTMLImageElement.h>
 #include <LibWeb/HTML/ImageData.h>
 #include <LibWeb/HTML/Path2D.h>
 #include <LibWeb/HTML/TextMetrics.h>
-#include <LibWeb/HTML/Window.h>
 #include <LibWeb/Layout/TextNode.h>
 #include <LibWeb/Platform/FontPlugin.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
 
 namespace Web::HTML {
 
-JS::NonnullGCPtr<CanvasRenderingContext2D> CanvasRenderingContext2D::create(HTML::Window& window, HTMLCanvasElement& element)
+JS::NonnullGCPtr<CanvasRenderingContext2D> CanvasRenderingContext2D::create(JS::Realm& realm, HTMLCanvasElement& element)
 {
-    return *window.heap().allocate<CanvasRenderingContext2D>(window.realm(), window, element);
+    return *realm.heap().allocate<CanvasRenderingContext2D>(realm, realm, element);
 }
 
-CanvasRenderingContext2D::CanvasRenderingContext2D(HTML::Window& window, HTMLCanvasElement& element)
-    : PlatformObject(window.realm())
+CanvasRenderingContext2D::CanvasRenderingContext2D(JS::Realm& realm, HTMLCanvasElement& element)
+    : PlatformObject(realm)
     , CanvasPath(static_cast<Bindings::PlatformObject&>(*this))
     , m_element(element)
 {
-    set_prototype(&window.cached_web_prototype("CanvasRenderingContext2D"));
+    set_prototype(&Bindings::cached_web_prototype(realm, "CanvasRenderingContext2D"));
 }
 
 CanvasRenderingContext2D::~CanvasRenderingContext2D() = default;
@@ -267,7 +267,7 @@ void CanvasRenderingContext2D::fill(Path2D& path, String const& fill_rule)
 
 JS::GCPtr<ImageData> CanvasRenderingContext2D::create_image_data(int width, int height) const
 {
-    return ImageData::create_with_size(global_object(), width, height);
+    return ImageData::create_with_size(realm(), width, height);
 }
 
 // https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-getimagedata
@@ -275,15 +275,15 @@ WebIDL::ExceptionOr<JS::GCPtr<ImageData>> CanvasRenderingContext2D::get_image_da
 {
     // 1. If either the sw or sh arguments are zero, then throw an "IndexSizeError" DOMException.
     if (width == 0 || height == 0)
-        return WebIDL::IndexSizeError::create(global_object(), "Width and height must not be zero");
+        return WebIDL::IndexSizeError::create(realm(), "Width and height must not be zero");
 
     // 2. If the CanvasRenderingContext2D's origin-clean flag is set to false, then throw a "SecurityError" DOMException.
     if (!m_origin_clean)
-        return WebIDL::SecurityError::create(global_object(), "CanvasRenderingContext2D is not origin-clean");
+        return WebIDL::SecurityError::create(realm(), "CanvasRenderingContext2D is not origin-clean");
 
     // 3. Let imageData be a new ImageData object.
     // 4. Initialize imageData given sw, sh, settings set to settings, and defaultColorSpace set to this's color space.
-    auto image_data = ImageData::create_with_size(global_object(), width, height);
+    auto image_data = ImageData::create_with_size(realm(), width, height);
 
     // NOTE: We don't attempt to create the underlying bitmap here; if it doesn't exist, it's like copying only transparent black pixels (which is a no-op).
     if (!canvas_element().bitmap())
@@ -352,7 +352,7 @@ JS::NonnullGCPtr<TextMetrics> CanvasRenderingContext2D::measure_text(String cons
     // TextMetrics object with members behaving as described in the following
     // list:
     auto prepared_text = prepare_text(text);
-    auto metrics = TextMetrics::create(global_object());
+    auto metrics = TextMetrics::create(realm());
     // FIXME: Use the font that was used to create the glyphs in prepared_text.
     auto& font = Platform::FontPlugin::the().default_font();
 
@@ -497,7 +497,7 @@ WebIDL::ExceptionOr<CanvasImageSourceUsability> check_usability_of_image(CanvasI
         [](JS::Handle<HTMLCanvasElement> const& canvas_element) -> WebIDL::ExceptionOr<Optional<CanvasImageSourceUsability>> {
             // If image has either a horizontal dimension or a vertical dimension equal to zero, then throw an "InvalidStateError" DOMException.
             if (canvas_element->width() == 0 || canvas_element->height() == 0)
-                return WebIDL::InvalidStateError::create(canvas_element->global_object(), "Canvas width or height is zero");
+                return WebIDL::InvalidStateError::create(canvas_element->realm(), "Canvas width or height is zero");
             return Optional<CanvasImageSourceUsability> {};
         }));
     if (usability.has_value())

@@ -5,21 +5,21 @@
  */
 
 #include <AK/CharacterTypes.h>
+#include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/HTML/DOMStringMap.h>
-#include <LibWeb/HTML/Window.h>
 
 namespace Web::HTML {
 
 JS::NonnullGCPtr<DOMStringMap> DOMStringMap::create(DOM::Element& element)
 {
-    auto& realm = element.document().window().realm();
+    auto& realm = element.realm();
     return *realm.heap().allocate<DOMStringMap>(realm, element);
 }
 
 DOMStringMap::DOMStringMap(DOM::Element& element)
-    : PlatformObject(element.window().cached_web_prototype("DOMStringMap"))
+    : PlatformObject(Bindings::cached_web_prototype(element.realm(), "DOMStringMap"))
     , m_associated_element(element)
 {
 }
@@ -126,7 +126,7 @@ WebIDL::ExceptionOr<void> DOMStringMap::set_value_of_new_named_property(String c
         if (current_character == '-' && character_index + 1 < name.length()) {
             auto next_character = name[character_index + 1];
             if (is_ascii_lower_alpha(next_character))
-                return WebIDL::SyntaxError::create(global_object(), "Name cannot contain a '-' followed by a lowercase character.");
+                return WebIDL::SyntaxError::create(realm(), "Name cannot contain a '-' followed by a lowercase character.");
         }
 
         // 2. For each ASCII upper alpha in name, insert a U+002D HYPHEN-MINUS character (-) before the character and replace the character with the same character converted to ASCII lowercase.

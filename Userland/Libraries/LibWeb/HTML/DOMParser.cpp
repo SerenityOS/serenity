@@ -13,15 +13,15 @@
 
 namespace Web::HTML {
 
-WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMParser>> DOMParser::create_with_global_object(HTML::Window& window)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMParser>> DOMParser::construct_impl(JS::Realm& realm)
 {
-    return JS::NonnullGCPtr(*window.heap().allocate<DOMParser>(window.realm(), window));
+    return JS::NonnullGCPtr(*realm.heap().allocate<DOMParser>(realm, realm));
 }
 
-DOMParser::DOMParser(HTML::Window& window)
-    : PlatformObject(window.realm())
+DOMParser::DOMParser(JS::Realm& realm)
+    : PlatformObject(realm)
 {
-    set_prototype(&window.cached_web_prototype("DOMParser"));
+    set_prototype(&Bindings::cached_web_prototype(realm, "DOMParser"));
 }
 
 DOMParser::~DOMParser() = default;
@@ -30,7 +30,7 @@ DOMParser::~DOMParser() = default;
 JS::NonnullGCPtr<DOM::Document> DOMParser::parse_from_string(String const& string, Bindings::DOMParserSupportedType type)
 {
     // 1. Let document be a new Document, whose content type is type and url is this's relevant global object's associated Document's URL.
-    auto document = DOM::Document::create(Bindings::main_thread_internal_window_object(), verify_cast<HTML::Window>(relevant_global_object(*this)).associated_document().url());
+    auto document = DOM::Document::create(realm(), verify_cast<HTML::Window>(relevant_global_object(*this)).associated_document().url());
     document->set_content_type(Bindings::idl_enum_to_string(type));
 
     // 2. Switch on type:

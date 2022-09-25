@@ -4,22 +4,22 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/HTML/Path2D.h>
-#include <LibWeb/HTML/Window.h>
 
 namespace Web::HTML {
 
-JS::NonnullGCPtr<Path2D> Path2D::create_with_global_object(HTML::Window& window, Optional<Variant<JS::Handle<Path2D>, String>> const& path)
+JS::NonnullGCPtr<Path2D> Path2D::construct_impl(JS::Realm& realm, Optional<Variant<JS::Handle<Path2D>, String>> const& path)
 {
-    return *window.heap().allocate<Path2D>(window.realm(), window, path);
+    return *realm.heap().allocate<Path2D>(realm, realm, path);
 }
 
 // https://html.spec.whatwg.org/multipage/canvas.html#dom-path2d
-Path2D::Path2D(HTML::Window& window, Optional<Variant<JS::Handle<Path2D>, String>> const& path)
-    : PlatformObject(window.realm())
+Path2D::Path2D(JS::Realm& realm, Optional<Variant<JS::Handle<Path2D>, String>> const& path)
+    : PlatformObject(realm)
     , CanvasPath(static_cast<Bindings::PlatformObject&>(*this))
 {
-    set_prototype(&window.cached_web_prototype("Path2D"));
+    set_prototype(&Bindings::cached_web_prototype(realm, "Path2D"));
 
     // 1. Let output be a new Path2D object.
     // 2. If path is not given, then return output.

@@ -37,8 +37,9 @@ class Worker : public DOM::EventTarget {
 
 public:
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<Worker>> create(FlyString const& script_url, WorkerOptions const options, DOM::Document& document);
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<Worker>> create_with_global_object(HTML::Window& window, FlyString const& script_url, WorkerOptions const options)
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<Worker>> construct_impl(JS::Realm& realm, FlyString const& script_url, WorkerOptions const options)
     {
+        auto& window = verify_cast<HTML::Window>(realm.global_object());
         return Worker::create(script_url, options, window.associated_document());
     }
 
@@ -92,7 +93,7 @@ private:
     //        There should be *no* Window object in a Worker context.
     JS::GCPtr<HTML::Window> m_worker_window;
 
-    void run_a_worker(AK::URL& url, EnvironmentSettingsObject& outside_settings, MessagePort& outside_port, WorkerOptions const options);
+    void run_a_worker(AK::URL& url, EnvironmentSettingsObject& outside_settings, MessagePort& outside_port, WorkerOptions const& options);
 };
 
 }

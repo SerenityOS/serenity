@@ -21,12 +21,12 @@ class Path2D final
     WEB_PLATFORM_OBJECT(Path2D, Bindings::PlatformObject);
 
 public:
-    static JS::NonnullGCPtr<Path2D> create_with_global_object(HTML::Window&, Optional<Variant<JS::Handle<Path2D>, String>> const& path);
+    static JS::NonnullGCPtr<Path2D> construct_impl(JS::Realm&, Optional<Variant<JS::Handle<Path2D>, String>> const& path);
 
     virtual ~Path2D() override;
 
 private:
-    Path2D(HTML::Window&, Optional<Variant<JS::Handle<Path2D>, String>> const&);
+    Path2D(JS::Realm&, Optional<Variant<JS::Handle<Path2D>, String>> const&);
 };
 
 }

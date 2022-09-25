@@ -13,7 +13,7 @@ namespace Web::HTML {
 HTMLFrameSetElement::HTMLFrameSetElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
-    set_prototype(&window().cached_web_prototype("HTMLFrameSetElement"));
+    set_prototype(&Bindings::cached_web_prototype(realm(), "HTMLFrameSetElement"));
 }
 
 HTMLFrameSetElement::~HTMLFrameSetElement() = default;

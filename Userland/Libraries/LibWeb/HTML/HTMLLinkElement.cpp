@@ -21,7 +21,7 @@ namespace Web::HTML {
 HTMLLinkElement::HTMLLinkElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
-    set_prototype(&window().cached_web_prototype("HTMLLinkElement"));
+    set_prototype(&Bindings::cached_web_prototype(realm(), "HTMLLinkElement"));
 }
 
 HTMLLinkElement::~HTMLLinkElement() = default;

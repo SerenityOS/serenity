@@ -4,27 +4,27 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/HTML/PromiseRejectionEvent.h>
-#include <LibWeb/HTML/Window.h>
 
 namespace Web::HTML {
 
-PromiseRejectionEvent* PromiseRejectionEvent::create(HTML::Window& window_object, FlyString const& event_name, PromiseRejectionEventInit const& event_init)
+PromiseRejectionEvent* PromiseRejectionEvent::create(JS::Realm& realm, FlyString const& event_name, PromiseRejectionEventInit const& event_init)
 {
-    return window_object.heap().allocate<PromiseRejectionEvent>(window_object.realm(), window_object, event_name, event_init);
+    return realm.heap().allocate<PromiseRejectionEvent>(realm, realm, event_name, event_init);
 }
 
-PromiseRejectionEvent* PromiseRejectionEvent::create_with_global_object(HTML::Window& window_object, FlyString const& event_name, PromiseRejectionEventInit const& event_init)
+PromiseRejectionEvent* PromiseRejectionEvent::construct_impl(JS::Realm& realm, FlyString const& event_name, PromiseRejectionEventInit const& event_init)
 {
-    return create(window_object, event_name, event_init);
+    return create(realm, event_name, event_init);
 }
 
-PromiseRejectionEvent::PromiseRejectionEvent(HTML::Window& window_object, FlyString const& event_name, PromiseRejectionEventInit const& event_init)
-    : DOM::Event(window_object, event_name, event_init)
+PromiseRejectionEvent::PromiseRejectionEvent(JS::Realm& realm, FlyString const& event_name, PromiseRejectionEventInit const& event_init)
+    : DOM::Event(realm, event_name, event_init)
     , m_promise(const_cast<JS::Promise*>(event_init.promise.cell()))
     , m_reason(event_init.reason)
 {
-    set_prototype(&window_object.cached_web_prototype("PromiseRejectionEvent"));
+    set_prototype(&Bindings::cached_web_prototype(realm, "PromiseRejectionEvent"));
 }
 
 PromiseRejectionEvent::~PromiseRejectionEvent() = default;

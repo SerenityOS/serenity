@@ -368,8 +368,10 @@ void EventLoop::unregister_environment_settings_object(Badge<EnvironmentSettings
 Vector<JS::Handle<HTML::Window>> EventLoop::same_loop_windows() const
 {
     Vector<JS::Handle<HTML::Window>> windows;
-    for (auto& document : documents_in_this_event_loop())
-        windows.append(JS::make_handle(document->window()));
+    for (auto& document : documents_in_this_event_loop()) {
+        if (document->is_fully_active())
+            windows.append(JS::make_handle(document->window()));
+    }
     return windows;
 }
 

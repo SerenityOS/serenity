@@ -187,7 +187,7 @@ NonnullRefPtr<BrowsingContext> BrowsingContext::create_a_new_browsing_context(Pa
     //     load timing info is loadTimingInfo,
     //     FIXME: navigation id is null,
     //     and which is ready for post-load tasks.
-    auto document = DOM::Document::create(*window);
+    auto document = DOM::Document::create(window->realm());
 
     // Non-standard
     document->set_window({}, *window);
@@ -885,7 +885,7 @@ WebIDL::ExceptionOr<void> BrowsingContext::navigate(
         // 1. If exceptionsEnabled is given and is true, then throw a "SecurityError" DOMException.
         if (exceptions_enabled) {
             VERIFY(source_browsing_context.active_document());
-            return WebIDL::SecurityError::create(source_browsing_context.active_document()->global_object(), "Source browsing context not allowed to navigate"sv);
+            return WebIDL::SecurityError::create(source_browsing_context.active_document()->realm(), "Source browsing context not allowed to navigate"sv);
         }
 
         // FIXME: 2. Otherwise, the user agent may instead offer to open resource in a new top-level browsing context
@@ -1184,7 +1184,7 @@ WebIDL::ExceptionOr<void> BrowsingContext::traverse_the_history(size_t entry_ind
             // and the newURL attribute initialized to newURL.
 
             // FIXME: Implement a proper HashChangeEvent class.
-            auto event = DOM::Event::create(verify_cast<HTML::Window>(relevant_global_object(*new_document)), HTML::EventNames::hashchange);
+            auto event = DOM::Event::create(verify_cast<HTML::Window>(relevant_global_object(*new_document)).realm(), HTML::EventNames::hashchange);
             new_document->dispatch_event(event);
         });
     }

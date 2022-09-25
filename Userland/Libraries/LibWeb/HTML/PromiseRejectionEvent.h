@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <LibJS/Heap/Handle.h>
 #include <LibJS/Runtime/Promise.h>
 #include <LibJS/Runtime/Value.h>
 #include <LibWeb/DOM/Event.h>
@@ -22,10 +23,8 @@ class PromiseRejectionEvent final : public DOM::Event {
     WEB_PLATFORM_OBJECT(PromiseRejectionEvent, DOM::Event);
 
 public:
-    static PromiseRejectionEvent* create(HTML::Window&, FlyString const& event_name, PromiseRejectionEventInit const& event_init = {});
-    static PromiseRejectionEvent* create_with_global_object(HTML::Window&, FlyString const& event_name, PromiseRejectionEventInit const& event_init);
-
-    PromiseRejectionEvent(HTML::Window&, FlyString const& event_name, PromiseRejectionEventInit const& event_init);
+    static PromiseRejectionEvent* create(JS::Realm&, FlyString const& event_name, PromiseRejectionEventInit const& event_init = {});
+    static PromiseRejectionEvent* construct_impl(JS::Realm&, FlyString const& event_name, PromiseRejectionEventInit const& event_init);
 
     virtual ~PromiseRejectionEvent() override;
 
@@ -34,6 +33,8 @@ public:
     JS::Value reason() const { return m_reason; }
 
 private:
+    PromiseRejectionEvent(JS::Realm&, FlyString const& event_name, PromiseRejectionEventInit const& event_init);
+
     virtual void visit_edges(Cell::Visitor&) override;
 
     JS::Promise* m_promise { nullptr };

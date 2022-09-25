@@ -12,7 +12,7 @@ namespace Web::HTML {
 HTMLTimeElement::HTMLTimeElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
-    set_prototype(&window().cached_web_prototype("HTMLTimeElement"));
+    set_prototype(&Bindings::cached_web_prototype(realm(), "HTMLTimeElement"));
 }
 
 HTMLTimeElement::~HTMLTimeElement() = default;

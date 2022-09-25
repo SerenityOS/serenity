@@ -13,7 +13,7 @@ namespace Web::HTML {
 HTMLTemplateElement::HTMLTemplateElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
-    set_prototype(&window().cached_web_prototype("HTMLTemplateElement"));
+    set_prototype(&Bindings::cached_web_prototype(realm(), "HTMLTemplateElement"));
 
     m_content = heap().allocate<DOM::DocumentFragment>(realm(), appropriate_template_contents_owner_document(document));
     m_content->set_host(this);
@@ -31,7 +31,7 @@ DOM::Document& HTMLTemplateElement::appropriate_template_contents_owner_document
 {
     if (!document.created_for_appropriate_template_contents()) {
         if (!document.associated_inert_template_document()) {
-            auto new_document = DOM::Document::create(Bindings::main_thread_internal_window_object());
+            auto new_document = DOM::Document::create(realm());
             new_document->set_created_for_appropriate_template_contents(true);
             new_document->set_document_type(document.document_type());
 

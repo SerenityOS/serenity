@@ -4,25 +4,25 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/DOM/EventDispatcher.h>
 #include <LibWeb/HTML/EventHandler.h>
 #include <LibWeb/HTML/EventLoop/EventLoop.h>
 #include <LibWeb/HTML/EventNames.h>
 #include <LibWeb/HTML/MessageEvent.h>
 #include <LibWeb/HTML/MessagePort.h>
-#include <LibWeb/HTML/Window.h>
 
 namespace Web::HTML {
 
-JS::NonnullGCPtr<MessagePort> MessagePort::create(HTML::Window& window)
+JS::NonnullGCPtr<MessagePort> MessagePort::create(JS::Realm& realm)
 {
-    return *window.heap().allocate<MessagePort>(window.realm(), window);
+    return *realm.heap().allocate<MessagePort>(realm, realm);
 }
 
-MessagePort::MessagePort(HTML::Window& window)
-    : DOM::EventTarget(window.realm())
+MessagePort::MessagePort(JS::Realm& realm)
+    : DOM::EventTarget(realm)
 {
-    set_prototype(&window.cached_web_prototype("MessagePort"));
+    set_prototype(&Bindings::cached_web_prototype(realm, "MessagePort"));
 }
 
 MessagePort::~MessagePort() = default;
@@ -92,7 +92,7 @@ void MessagePort::post_message(JS::Value message)
         MessageEventInit event_init {};
         event_init.data = message;
         event_init.origin = "<origin>";
-        target_port->dispatch_event(*MessageEvent::create(verify_cast<HTML::Window>(target_port->realm().global_object()), HTML::EventNames::message, event_init));
+        target_port->dispatch_event(*MessageEvent::create(target_port->realm(), HTML::EventNames::message, event_init));
     }));
 }
 

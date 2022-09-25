@@ -12,7 +12,7 @@ namespace Web::HTML {
 HTMLDirectoryElement::HTMLDirectoryElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
-    set_prototype(&window().cached_web_prototype("HTMLDirectoryElement"));
+    set_prototype(&Bindings::cached_web_prototype(realm(), "HTMLDirectoryElement"));
 }
 
 HTMLDirectoryElement::~HTMLDirectoryElement() = default;

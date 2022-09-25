@@ -31,7 +31,7 @@ namespace Web::HTML {
 HTMLElement::HTMLElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : Element(document, move(qualified_name))
 {
-    set_prototype(&window().cached_web_prototype("HTMLElement"));
+    set_prototype(&Bindings::cached_web_prototype(realm(), "HTMLElement"));
 }
 
 HTMLElement::~HTMLElement() = default;
@@ -104,7 +104,7 @@ WebIDL::ExceptionOr<void> HTMLElement::set_content_editable(String const& conten
         set_attribute(HTML::AttributeNames::contenteditable, "false");
         return {};
     }
-    return WebIDL::SyntaxError::create(global_object(), "Invalid contentEditable value, must be 'true', 'false', or 'inherit'");
+    return WebIDL::SyntaxError::create(realm(), "Invalid contentEditable value, must be 'true', 'false', or 'inherit'");
 }
 
 void HTMLElement::set_inner_text(StringView text)
@@ -436,7 +436,7 @@ bool HTMLElement::fire_a_synthetic_pointer_event(FlyString const& type, DOM::Ele
     // 1. Let event be the result of creating an event using PointerEvent.
     // 2. Initialize event's type attribute to e.
     // FIXME: Actually create a PointerEvent!
-    auto event = UIEvents::MouseEvent::create(document().window(), type);
+    auto event = UIEvents::MouseEvent::create(window(), type);
 
     // 3. Initialize event's bubbles and cancelable attributes to true.
     event->set_bubbles(true);

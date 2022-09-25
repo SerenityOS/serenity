@@ -124,7 +124,7 @@ JS::Completion ClassicScript::run(RethrowErrors rethrow_errors)
             dbgln("network error");
 
             // 2. Throw a "NetworkError" DOMException.
-            return throw_completion(WebIDL::NetworkError::create(settings.global_object(), "Script error."));
+            return throw_completion(WebIDL::NetworkError::create(settings.realm(), "Script error."));
         }
 
         // 3. Otherwise, rethrow errors is false. Perform the following steps:
