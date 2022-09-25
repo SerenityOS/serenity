@@ -16,14 +16,14 @@
 
 #pragma once
 
-class WebView;
+class SimpleWebView;
 
 class BrowserWindow : public QMainWindow {
     Q_OBJECT
 public:
     explicit BrowserWindow();
 
-    WebView& view() const { return m_current_tab->view(); }
+    SimpleWebView& view() const { return m_current_tab->view(); }
 
     int tab_index(Tab*);
 
