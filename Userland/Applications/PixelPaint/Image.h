@@ -101,8 +101,10 @@ public:
     void rotate(Gfx::RotationDirection direction);
     void crop(Gfx::IntRect const& rect);
     void resize(Gfx::IntSize const& new_size, Gfx::Painter::ScalingMode scaling_mode);
+    void set_canvas_size(Gfx::IntRect const& rect);
 
     Optional<Gfx::IntRect> nonempty_content_bounding_rect() const;
+    Optional<Gfx::IntRect> bounding_rect() const;
 
     Color color_at(Gfx::IntPoint const& point) const;
 

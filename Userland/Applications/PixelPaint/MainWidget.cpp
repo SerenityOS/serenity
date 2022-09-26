@@ -577,6 +577,29 @@ void MainWidget::initialize_menubar(GUI::Window& window)
             editor->image().crop(content_bounding_rect.value());
             editor->did_complete_action("Crop Image to Content"sv);
         }));
+    m_image_menu->add_separator();
+    m_image_menu->add_action(GUI::Action::create(
+        "&Fit Canvas to Layers", [&](auto&) {
+            auto* editor = current_image_editor();
+            VERIFY(editor);
+            auto bounding_rect = editor->image().bounding_rect();
+            if (!bounding_rect.has_value())
+                return;
+            editor->image().set_canvas_size(bounding_rect.value());
+            editor->did_complete_action("Fit Canvas to Layers"sv);
+        }));
+    m_image_menu->add_action(GUI::Action::create(
+        "&Fit Canvas to Selection", [&](auto&) {
+            auto* editor = current_image_editor();
+            VERIFY(editor);
+            // FIXME: disable this action if there is no selection
+            if (editor->image().selection().is_empty())
+                return;
+            auto rect = editor->image().rect().intersected(editor->image().selection().bounding_rect());
+            editor->image().set_canvas_size(rect);
+            editor->image().selection().clear();
+            editor->did_complete_action("Fit Canvas to Selection"sv);
+        }));
 
     m_layer_menu = window.add_menu("&Layer");
     m_layer_menu->add_action(GUI::Action::create(

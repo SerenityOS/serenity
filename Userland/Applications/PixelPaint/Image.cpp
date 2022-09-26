@@ -528,6 +528,28 @@ void Image::crop(Gfx::IntRect const& cropped_rect)
     did_change_rect(cropped_rect);
 }
 
+Optional<Gfx::IntRect> Image::bounding_rect() const
+{
+    if (m_layers.is_empty())
+        return {};
+
+    Optional<Gfx::IntRect> rect;
+
+    for (auto const& layer : m_layers)
+        rect = rect.has_value() ? rect->united(layer.relative_rect()) : layer.relative_rect();
+
+    return rect;
+}
+
+void Image::set_canvas_size(Gfx::IntRect const& rect)
+{
+    for (auto& layer : m_layers)
+        layer.set_location({ layer.location().x() - rect.x(), layer.location().y() - rect.y() });
+
+    m_size = { rect.width(), rect.height() };
+    did_change_rect(rect);
+}
+
 Optional<Gfx::IntRect> Image::nonempty_content_bounding_rect() const
 {
     if (m_layers.is_empty())
