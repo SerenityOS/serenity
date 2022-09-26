@@ -28,11 +28,10 @@ class KeyboardEvent final : public UIEvent {
     WEB_PLATFORM_OBJECT(KeyboardEvent, UIEvent);
 
 public:
-    static KeyboardEvent* create(HTML::Window&, FlyString const& event_name, KeyboardEventInit const& event_init = {});
-    static KeyboardEvent* create_with_global_object(HTML::Window&, FlyString const& event_name, KeyboardEventInit const& event_init);
+    static KeyboardEvent* create(JS::Realm&, FlyString const& event_name, KeyboardEventInit const& event_init = {});
+    static KeyboardEvent* construct_impl(JS::Realm&, FlyString const& event_name, KeyboardEventInit const& event_init);
+    static KeyboardEvent* create_from_platform_event(JS::Realm&, FlyString const& event_name, KeyCode, unsigned modifiers, u32 code_point);
     static KeyboardEvent* create_from_platform_event(HTML::Window&, FlyString const& event_name, KeyCode, unsigned modifiers, u32 code_point);
-
-    KeyboardEvent(HTML::Window&, FlyString const& event_name, KeyboardEventInit const& event_init);
 
     virtual ~KeyboardEvent() override;
 
@@ -56,6 +55,8 @@ public:
     virtual u32 which() const override { return m_key_code; }
 
 private:
+    KeyboardEvent(JS::Realm&, FlyString const& event_name, KeyboardEventInit const& event_init);
+
     String m_key;
     String m_code;
     u32 m_location { 0 };

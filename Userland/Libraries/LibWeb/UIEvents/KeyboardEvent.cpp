@@ -5,7 +5,7 @@
  */
 
 #include <AK/CharacterTypes.h>
-#include <LibWeb/HTML/Window.h>
+#include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/UIEvents/KeyboardEvent.h>
 
 namespace Web::UIEvents {
@@ -66,7 +66,7 @@ static unsigned long determine_key_code(KeyCode platform_key, u32 code_point)
     return platform_key;
 }
 
-KeyboardEvent* KeyboardEvent::create_from_platform_event(HTML::Window& window_object, FlyString const& event_name, KeyCode platform_key, unsigned modifiers, u32 code_point)
+KeyboardEvent* KeyboardEvent::create_from_platform_event(JS::Realm& realm, FlyString const& event_name, KeyCode platform_key, unsigned modifiers, u32 code_point)
 {
     // FIXME: Figure out what these should actually contain.
     String event_key = key_code_to_string(platform_key);
@@ -88,7 +88,12 @@ KeyboardEvent* KeyboardEvent::create_from_platform_event(HTML::Window& window_ob
     event_init.bubbles = true;
     event_init.cancelable = true;
     event_init.composed = true;
-    return KeyboardEvent::create(window_object, event_name, event_init);
+    return KeyboardEvent::create(realm, event_name, event_init);
+}
+
+KeyboardEvent* KeyboardEvent::create_from_platform_event(HTML::Window& window, FlyString const& event_name, KeyCode platform_key, unsigned modifiers, u32 code_point)
+{
+    return create_from_platform_event(window.realm(), event_name, platform_key, modifiers, code_point);
 }
 
 bool KeyboardEvent::get_modifier_state(String const& key_arg)
@@ -104,18 +109,18 @@ bool KeyboardEvent::get_modifier_state(String const& key_arg)
     return false;
 }
 
-KeyboardEvent* KeyboardEvent::create(HTML::Window& window_object, FlyString const& event_name, KeyboardEventInit const& event_init)
+KeyboardEvent* KeyboardEvent::create(JS::Realm& realm, FlyString const& event_name, KeyboardEventInit const& event_init)
 {
-    return window_object.heap().allocate<KeyboardEvent>(window_object.realm(), window_object, event_name, event_init);
+    return realm.heap().allocate<KeyboardEvent>(realm, realm, event_name, event_init);
 }
 
-KeyboardEvent* KeyboardEvent::create_with_global_object(HTML::Window& window_object, FlyString const& event_name, KeyboardEventInit const& event_init)
+KeyboardEvent* KeyboardEvent::construct_impl(JS::Realm& realm, FlyString const& event_name, KeyboardEventInit const& event_init)
 {
-    return create(window_object, event_name, event_init);
+    return create(realm, event_name, event_init);
 }
 
-KeyboardEvent::KeyboardEvent(HTML::Window& window_object, FlyString const& event_name, KeyboardEventInit const& event_init)
-    : UIEvent(window_object, event_name, event_init)
+KeyboardEvent::KeyboardEvent(JS::Realm& realm, FlyString const& event_name, KeyboardEventInit const& event_init)
+    : UIEvent(realm, event_name, event_init)
     , m_key(event_init.key)
     , m_code(event_init.code)
     , m_location(event_init.location)
@@ -128,7 +133,7 @@ KeyboardEvent::KeyboardEvent(HTML::Window& window_object, FlyString const& event
     , m_key_code(event_init.key_code)
     , m_char_code(event_init.char_code)
 {
-    set_prototype(&window_object.cached_web_prototype("KeyboardEvent"));
+    set_prototype(&Bindings::cached_web_prototype(realm, "KeyboardEvent"));
 }
 
 KeyboardEvent::~KeyboardEvent() = default;
