@@ -10,6 +10,7 @@
 #pragma once
 
 #include <LibGUI/AbstractThemePreview.h>
+#include <LibGUI/Application.h>
 #include <LibGUI/ColorFilterer.h>
 #include <LibGUI/Frame.h>
 #include <LibGfx/Bitmap.h>

@@ -18,6 +18,8 @@
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/WindowTheme.h>
 
+REGISTER_WIDGET(ThemeEditor, PreviewWidget);
+
 namespace ThemeEditor {
 
 class MiniWidgetGallery final : public GUI::Widget {

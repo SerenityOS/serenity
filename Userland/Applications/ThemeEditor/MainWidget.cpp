@@ -17,7 +17,6 @@
 #include <Applications/ThemeEditor/ThemeEditorGML.h>
 #include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/ActionGroup.h>
-#include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/ConnectionToWindowServer.h>
@@ -191,8 +190,7 @@ MainWidget::MainWidget()
 
     m_alignment_model = MUST(AlignmentModel::try_create());
 
-    m_preview_widget = find_descendant_of_type_named<GUI::Frame>("preview_frame")
-                           ->add<ThemeEditor::PreviewWidget>(m_current_palette);
+    m_preview_widget = find_descendant_of_type_named<ThemeEditor::PreviewWidget>("preview_widget");
     m_property_tabs = find_descendant_of_type_named<GUI::TabWidget>("property_tabs");
     add_property_tab(window_tab);
     add_property_tab(widgets_tab);
@@ -371,8 +369,8 @@ void MainWidget::build_override_controls()
 {
     auto* theme_override_controls = find_descendant_of_type_named<GUI::Widget>("theme_override_controls");
 
-    m_theme_override_apply = theme_override_controls->find_child_of_type_named<GUI::Button>("apply");
-    m_theme_override_reset = theme_override_controls->find_child_of_type_named<GUI::Button>("reset");
+    m_theme_override_apply = theme_override_controls->find_child_of_type_named<GUI::DialogButton>("apply_button");
+    m_theme_override_reset = theme_override_controls->find_child_of_type_named<GUI::DialogButton>("reset_button");
 
     m_theme_override_apply->on_click = [&](auto) {
         auto encoded = encode();
