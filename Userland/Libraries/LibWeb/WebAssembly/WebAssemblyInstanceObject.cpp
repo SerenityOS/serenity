@@ -10,7 +10,7 @@
 #include <LibJS/Runtime/BigInt.h>
 #include <LibJS/Runtime/TypedArray.h>
 #include <LibWasm/AbstractMachine/Interpreter.h>
-#include <LibWeb/HTML/Window.h>
+#include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/WebAssembly/WebAssemblyInstanceObject.h>
 #include <LibWeb/WebAssembly/WebAssemblyMemoryPrototype.h>
 #include <LibWeb/WebAssembly/WebAssemblyObject.h>
@@ -18,7 +18,7 @@
 namespace Web::Bindings {
 
 WebAssemblyInstanceObject::WebAssemblyInstanceObject(JS::Realm& realm, size_t index)
-    : Object(static_cast<Web::HTML::Window&>(realm.global_object()).ensure_web_prototype<WebAssemblyInstancePrototype>("WebAssemblyInstancePrototype"))
+    : Object(Bindings::ensure_web_prototype<WebAssemblyInstancePrototype>(realm, "WebAssemblyInstancePrototype"))
     , m_index(index)
 {
 }
