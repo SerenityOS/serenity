@@ -173,20 +173,6 @@ public:
     Bindings::LocationObject* location_object() { return m_location_object; }
     Bindings::LocationObject const* location_object() const { return m_location_object; }
 
-    JS::Object& cached_web_prototype(String const& class_name) { return Bindings::cached_web_prototype(realm(), class_name); }
-
-    template<typename T>
-    JS::Object& ensure_web_prototype(String const& class_name)
-    {
-        return Bindings::ensure_web_prototype<T>(realm(), class_name);
-    }
-
-    template<typename T>
-    JS::NativeFunction& ensure_web_constructor(String const& class_name)
-    {
-        return Bindings::ensure_web_constructor<T>(realm(), class_name);
-    }
-
     virtual JS::ThrowCompletionOr<bool> internal_set_prototype_of(JS::Object* prototype) override;
 
     CrossOriginPropertyDescriptorMap const& cross_origin_property_descriptor_map() const { return m_cross_origin_property_descriptor_map; }
