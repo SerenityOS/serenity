@@ -1178,4 +1178,20 @@ float FormattingContext::compute_box_y_position_with_respect_to_siblings(Box con
     }
 }
 
+// https://drafts.csswg.org/css-sizing-3/#stretch-fit-size
+float FormattingContext::calculate_stretch_fit_width(Box const& box, AvailableSpace const& available_width) const
+{
+    // The size a box would take if its outer size filled the available space in the given axis;
+    // in other words, the stretch fit into the available space, if that is definite.
+    // Undefined if the available space is indefinite.
+    auto const& box_state = m_state.get(box);
+    return available_width.to_px()
+        - box_state.margin_left
+        - box_state.margin_right
+        - box_state.padding_left
+        - box_state.padding_right
+        - box_state.border_left
+        - box_state.border_right;
+}
+
 }

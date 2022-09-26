@@ -69,6 +69,8 @@ public:
 
     float compute_box_y_position_with_respect_to_siblings(Box const&, LayoutState::UsedValues const&);
 
+    float calculate_stretch_fit_width(Box const&, AvailableSpace const& available_width) const;
+
 protected:
     FormattingContext(Type, LayoutState&, Box const&, FormattingContext* parent = nullptr);
 
