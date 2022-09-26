@@ -93,6 +93,7 @@ int main(int argc, char** argv)
         "UIEvents"sv,
         "URL"sv,
         "WebGL"sv,
+        "WebIDL"sv,
         "WebSockets"sv,
         "XHR"sv,
     };
