@@ -4,24 +4,24 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/Geometry/DOMPointReadOnly.h>
-#include <LibWeb/HTML/Window.h>
 
 namespace Web::Geometry {
 
-JS::NonnullGCPtr<DOMPointReadOnly> DOMPointReadOnly::create_with_global_object(HTML::Window& window, double x, double y, double z, double w)
+JS::NonnullGCPtr<DOMPointReadOnly> DOMPointReadOnly::construct_impl(JS::Realm& realm, double x, double y, double z, double w)
 {
-    return *window.heap().allocate<DOMPointReadOnly>(window.realm(), window, x, y, z, w);
+    return *realm.heap().allocate<DOMPointReadOnly>(realm, realm, x, y, z, w);
 }
 
-DOMPointReadOnly::DOMPointReadOnly(HTML::Window& window, double x, double y, double z, double w)
-    : PlatformObject(window.realm())
+DOMPointReadOnly::DOMPointReadOnly(JS::Realm& realm, double x, double y, double z, double w)
+    : PlatformObject(realm)
     , m_x(x)
     , m_y(y)
     , m_z(z)
     , m_w(w)
 {
-    set_prototype(&window.cached_web_prototype("DOMPointReadOnly"));
+    set_prototype(&Bindings::cached_web_prototype(realm, "DOMPointReadOnly"));
 }
 
 DOMPointReadOnly::~DOMPointReadOnly() = default;

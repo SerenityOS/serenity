@@ -17,7 +17,7 @@ class DOMRectList final : public Bindings::LegacyPlatformObject {
     WEB_PLATFORM_OBJECT(DOMRectList, Bindings::LegacyPlatformObject);
 
 public:
-    static JS::NonnullGCPtr<DOMRectList> create(HTML::Window&, Vector<JS::Handle<DOMRect>>);
+    static JS::NonnullGCPtr<DOMRectList> create(JS::Realm&, Vector<JS::Handle<DOMRect>>);
 
     virtual ~DOMRectList() override;
 
@@ -28,7 +28,7 @@ public:
     virtual JS::Value item_value(size_t index) const override;
 
 private:
-    DOMRectList(HTML::Window&, Vector<JS::NonnullGCPtr<DOMRect>>);
+    DOMRectList(JS::Realm&, Vector<JS::NonnullGCPtr<DOMRect>>);
 
     Vector<JS::NonnullGCPtr<DOMRect>> m_rects;
 };
