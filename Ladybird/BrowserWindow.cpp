@@ -10,10 +10,12 @@
 #include "Settings.h"
 #include "SettingsDialog.h"
 #include "SimpleWebView.h"
+#include "Utilities.h"
 #include <AK/TypeCasts.h>
+#include <LibWeb/Loader/ResourceLoader.h>
 #include <QAction>
 #include <QActionGroup>
-#include <QDialog>
+#include <QInputDialog>
 #include <QPlainTextEdit>
 
 extern String s_serenity_resource_root;
@@ -197,6 +199,46 @@ BrowserWindow::BrowserWindow()
     debug_menu->addAction(clear_cache_action);
     QObject::connect(clear_cache_action, &QAction::triggered, this, [this] {
         debug_request("clear-cache");
+    });
+
+    auto* spoof_user_agent_menu = debug_menu->addMenu("Spoof User Agent");
+    spoof_user_agent_menu->setIcon(QIcon(QString("%1/res/icons/16x16/spoof.png").arg(s_serenity_resource_root.characters())));
+
+    auto* user_agent_group = new QActionGroup(this);
+
+    auto add_user_agent = [this, &user_agent_group, &spoof_user_agent_menu](auto& name, auto& user_agent) {
+        auto* action = new QAction(name);
+        action->setCheckable(true);
+        user_agent_group->addAction(action);
+        spoof_user_agent_menu->addAction(action);
+        QObject::connect(action, &QAction::triggered, this, [this, user_agent] {
+            debug_request("spoof-user-agent", user_agent);
+            debug_request("clear-cache"); // clear the cache to ensure requests are re-done with the new user agent
+        });
+        return action;
+    };
+
+    auto* disable_spoofing = add_user_agent("Disabled", Web::default_user_agent);
+    disable_spoofing->setChecked(true);
+    add_user_agent("Chrome Linux Desktop", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.128 Safari/537.36");
+    add_user_agent("Firefox Linux Desktop", "Mozilla/5.0 (X11; Linux i686; rv:87.0) Gecko/20100101 Firefox/87.0");
+    add_user_agent("Safari macOS Desktop", "Mozilla/5.0 (Macintosh; Intel Mac OS X 11_2_3) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0.3 Safari/605.1.15");
+    add_user_agent("Chrome Android Mobile", "Mozilla/5.0 (Linux; Android 10) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.66 Mobile Safari/537.36");
+    add_user_agent("Firefox Android Mobile", "Mozilla/5.0 (Android 11; Mobile; rv:68.0) Gecko/68.0 Firefox/86.0");
+    add_user_agent("Safari iOS Mobile", "Mozilla/5.0 (iPhone; CPU iPhone OS 14_4_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Mobile/15E148 Safari/604.1");
+
+    auto* custom_user_agent_action = new QAction("Custom...");
+    custom_user_agent_action->setCheckable(true);
+    user_agent_group->addAction(custom_user_agent_action);
+    spoof_user_agent_menu->addAction(custom_user_agent_action);
+    QObject::connect(custom_user_agent_action, &QAction::triggered, this, [this, disable_spoofing] {
+        auto user_agent = QInputDialog::getText(this, "Custom User Agent", "Enter User Agent:");
+        if (!user_agent.isEmpty()) {
+            debug_request("spoof-user-agent", akstring_from_qstring(user_agent));
+            debug_request("clear-cache"); // clear the cache to ensure requests are re-done with the new user agent
+        } else {
+            disable_spoofing->activate(QAction::Trigger);
+        }
     });
 
     debug_menu->addSeparator();
