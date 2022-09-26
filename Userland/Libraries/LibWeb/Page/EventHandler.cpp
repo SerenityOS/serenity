@@ -50,31 +50,29 @@ static Gfx::StandardCursor cursor_css_to_gfx(Optional<CSS::Cursor> cursor)
     case CSS::Cursor::Progress:
     case CSS::Cursor::Wait:
         return Gfx::StandardCursor::Wait;
-
     case CSS::Cursor::ColResize:
         return Gfx::StandardCursor::ResizeColumn;
     case CSS::Cursor::EResize:
     case CSS::Cursor::WResize:
     case CSS::Cursor::EwResize:
         return Gfx::StandardCursor::ResizeHorizontal;
-
     case CSS::Cursor::RowResize:
         return Gfx::StandardCursor::ResizeRow;
     case CSS::Cursor::NResize:
     case CSS::Cursor::SResize:
     case CSS::Cursor::NsResize:
         return Gfx::StandardCursor::ResizeVertical;
-
     case CSS::Cursor::NeResize:
     case CSS::Cursor::SwResize:
     case CSS::Cursor::NeswResize:
         return Gfx::StandardCursor::ResizeDiagonalBLTR;
-
     case CSS::Cursor::NwResize:
     case CSS::Cursor::SeResize:
     case CSS::Cursor::NwseResize:
         return Gfx::StandardCursor::ResizeDiagonalTLBR;
-
+    case CSS::Cursor::ZoomIn:
+    case CSS::Cursor::ZoomOut:
+        return Gfx::StandardCursor::Zoom;
     default:
         return Gfx::StandardCursor::None;
     }
