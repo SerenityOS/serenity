@@ -251,11 +251,13 @@ pushd "$DIR/Tarballs"
             git init > /dev/null
             git add . > /dev/null
             git commit -am "BASE" > /dev/null
-            git am "$DIR"/Patches/binutils.patch > /dev/null
+            git am "$DIR"/Patches/binutils/*.patch > /dev/null
         else
-            patch -p1 < "$DIR"/Patches/binutils.patch > /dev/null
+            for patch in "$DIR"/Patches/binutils/*.patch; do
+                patch -p1 < "$patch" > /dev/null
+            done
         fi
-        $MD5SUM "$DIR"/Patches/binutils.patch > .patch.applied
+        $MD5SUM "$DIR"/Patches/binutils/*.patch > .patch.applied
     popd
 
     if [ -d ${GCC_NAME} ]; then

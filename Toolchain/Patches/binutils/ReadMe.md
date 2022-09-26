@@ -1,6 +1,6 @@
 # Patches for binutils on SerenityOS
 
-## `binutils.patch`
+## `0001-Add-support-for-SerenityOS.patch`
 
 Add support for SerenityOS
 
