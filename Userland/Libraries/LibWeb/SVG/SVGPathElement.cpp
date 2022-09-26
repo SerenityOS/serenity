@@ -86,7 +86,7 @@ namespace Web::SVG {
 SVGPathElement::SVGPathElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : SVGGeometryElement(document, move(qualified_name))
 {
-    set_prototype(&window().cached_web_prototype("SVGPathElement"));
+    set_prototype(&Bindings::cached_web_prototype(realm(), "SVGPathElement"));
 }
 
 void SVGPathElement::parse_attribute(FlyString const& name, String const& value)

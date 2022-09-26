@@ -16,14 +16,14 @@ class SVGAnimatedLength final : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(SVGAnimatedLength, Bindings::PlatformObject);
 
 public:
-    static JS::NonnullGCPtr<SVGAnimatedLength> create(HTML::Window&, JS::NonnullGCPtr<SVGLength> base_val, JS::NonnullGCPtr<SVGLength> anim_val);
+    static JS::NonnullGCPtr<SVGAnimatedLength> create(JS::Realm&, JS::NonnullGCPtr<SVGLength> base_val, JS::NonnullGCPtr<SVGLength> anim_val);
     virtual ~SVGAnimatedLength() override;
 
     JS::NonnullGCPtr<SVGLength> base_val() const { return m_base_val; }
     JS::NonnullGCPtr<SVGLength> anim_val() const { return m_anim_val; }
 
 private:
-    SVGAnimatedLength(HTML::Window&, JS::NonnullGCPtr<SVGLength> base_val, JS::NonnullGCPtr<SVGLength> anim_val);
+    SVGAnimatedLength(JS::Realm&, JS::NonnullGCPtr<SVGLength> base_val, JS::NonnullGCPtr<SVGLength> anim_val);
 
     virtual void visit_edges(Cell::Visitor&) override;
 

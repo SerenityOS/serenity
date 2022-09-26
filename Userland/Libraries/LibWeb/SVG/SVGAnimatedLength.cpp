@@ -4,22 +4,22 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibWeb/HTML/Window.h>
+#include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/SVG/SVGAnimatedLength.h>
 
 namespace Web::SVG {
 
-JS::NonnullGCPtr<SVGAnimatedLength> SVGAnimatedLength::create(HTML::Window& window, JS::NonnullGCPtr<SVGLength> base_val, JS::NonnullGCPtr<SVGLength> anim_val)
+JS::NonnullGCPtr<SVGAnimatedLength> SVGAnimatedLength::create(JS::Realm& realm, JS::NonnullGCPtr<SVGLength> base_val, JS::NonnullGCPtr<SVGLength> anim_val)
 {
-    return *window.heap().allocate<SVGAnimatedLength>(window.realm(), window, move(base_val), move(anim_val));
+    return *realm.heap().allocate<SVGAnimatedLength>(realm, realm, move(base_val), move(anim_val));
 }
 
-SVGAnimatedLength::SVGAnimatedLength(HTML::Window& window, JS::NonnullGCPtr<SVGLength> base_val, JS::NonnullGCPtr<SVGLength> anim_val)
-    : PlatformObject(window.realm())
+SVGAnimatedLength::SVGAnimatedLength(JS::Realm& realm, JS::NonnullGCPtr<SVGLength> base_val, JS::NonnullGCPtr<SVGLength> anim_val)
+    : PlatformObject(realm)
     , m_base_val(move(base_val))
     , m_anim_val(move(anim_val))
 {
-    set_prototype(&window.cached_web_prototype("SVGAnimatedLength"));
+    set_prototype(&Bindings::cached_web_prototype(realm, "SVGAnimatedLength"));
 
     // The object referenced by animVal will always be distinct from the one referenced by baseVal, even when the attribute is not animated.
     VERIFY(m_base_val.ptr() != m_anim_val.ptr());

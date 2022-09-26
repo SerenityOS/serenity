@@ -20,7 +20,7 @@ namespace Web::SVG {
 SVGSVGElement::SVGSVGElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : SVGGraphicsElement(document, qualified_name)
 {
-    set_prototype(&window().cached_web_prototype("SVGSVGElement"));
+    set_prototype(&Bindings::cached_web_prototype(realm(), "SVGSVGElement"));
 }
 
 RefPtr<Layout::Node> SVGSVGElement::create_layout_node(NonnullRefPtr<CSS::StyleProperties> style)

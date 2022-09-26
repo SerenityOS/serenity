@@ -12,7 +12,7 @@ namespace Web::SVG {
 SVGClipPathElement::SVGClipPathElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : SVGElement(document, move(qualified_name))
 {
-    set_prototype(&window().cached_web_prototype("SVGClipPathElement"));
+    set_prototype(&Bindings::cached_web_prototype(realm(), "SVGClipPathElement"));
 }
 
 SVGClipPathElement::~SVGClipPathElement()

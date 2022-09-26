@@ -16,7 +16,7 @@ namespace Web::SVG {
 SVGGraphicsElement::SVGGraphicsElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : SVGElement(document, move(qualified_name))
 {
-    set_prototype(&window().cached_web_prototype("SVGGraphicsElement"));
+    set_prototype(&Bindings::cached_web_prototype(realm(), "SVGGraphicsElement"));
 }
 
 void SVGGraphicsElement::apply_presentational_hints(CSS::StyleProperties& style) const
