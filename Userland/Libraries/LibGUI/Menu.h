@@ -10,11 +10,18 @@
 #include <AK/WeakPtr.h>
 #include <LibCore/Object.h>
 #include <LibGUI/Action.h>
+#include <LibGUI/ColorFilterer.h>
 #include <LibGUI/Event.h>
 #include <LibGUI/Forward.h>
 #include <LibGfx/Forward.h>
 
 namespace GUI {
+
+namespace CommonMenus {
+
+ErrorOr<NonnullRefPtr<Menu>> make_accessibility_menu(GUI::ColorFilterer&);
+
+};
 
 class Menu final : public Core::Object {
     C_OBJECT(Menu)
