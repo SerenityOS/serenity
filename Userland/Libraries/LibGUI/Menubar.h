@@ -23,6 +23,7 @@ class Menubar : public Core::Object {
 public:
     virtual ~Menubar() override = default;
 
+    ErrorOr<void> try_add_menu(Badge<Window>, NonnullRefPtr<Menu>);
     ErrorOr<NonnullRefPtr<Menu>> try_add_menu(Badge<Window>, String name);
     Menu& add_menu(Badge<Window>, String name);
 
