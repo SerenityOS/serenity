@@ -127,6 +127,7 @@ void Job::shutdown(ShutdownMode mode)
         return;
     if (mode == ShutdownMode::CloseSocket) {
         m_socket->close();
+        m_socket->on_ready_to_read = nullptr;
     } else {
         m_socket->on_ready_to_read = nullptr;
         m_socket = nullptr;
