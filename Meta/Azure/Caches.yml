@@ -26,7 +26,7 @@ steps:
     - ${{ if eq(parameters.toolchain, 'gcc') }}:
       - task: Cache@2
         inputs:
-          key: '"toolchain" | "${{ parameters.arch }}" | Toolchain/BuildIt.sh | Toolchain/Patches/binutils.patch | Toolchain/Patches/gcc/*.patch | Userland/Libraries/LibC/**/*.h'
+          key: '"toolchain" | "${{ parameters.arch }}" | Toolchain/BuildIt.sh | Toolchain/Patches/binutils/*.patch | Toolchain/Patches/gcc/*.patch | Userland/Libraries/LibC/**/*.h'
           path: $(Build.SourcesDirectory)/Toolchain/Cache
         displayName: 'Toolchain Prebuilt Cache'
 
