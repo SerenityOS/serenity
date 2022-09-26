@@ -10,6 +10,7 @@
 #pragma once
 
 #include <LibGUI/AbstractThemePreview.h>
+#include <LibGUI/ColorFilterer.h>
 #include <LibGUI/Frame.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Filters/ColorBlindnessFilter.h>
@@ -19,16 +20,18 @@ namespace ThemeEditor {
 
 class MiniWidgetGallery;
 
-class PreviewWidget final : public GUI::AbstractThemePreview {
+class PreviewWidget final
+    : public GUI::AbstractThemePreview
+    , public GUI::ColorFilterer {
     C_OBJECT(PreviewWidget);
 
 public:
     virtual ~PreviewWidget() override = default;
 
-    void set_color_filter(OwnPtr<Gfx::ColorBlindnessFilter>);
+    virtual void set_color_filter(OwnPtr<Gfx::ColorBlindnessFilter>) override;
 
 private:
-    explicit PreviewWidget(Gfx::Palette const&);
+    explicit PreviewWidget(Gfx::Palette const& = GUI::Application::the()->palette());
 
     virtual void paint_preview(GUI::PaintEvent&) override;
     virtual void second_paint_event(GUI::PaintEvent&) override;

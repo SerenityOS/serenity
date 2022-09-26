@@ -8,17 +8,19 @@
 #pragma once
 
 #include <AK/CircularQueue.h>
+#include <LibGUI/ColorFilterer.h>
 #include <LibGUI/Frame.h>
 #include <LibGfx/Filters/ColorBlindnessFilter.h>
 
-class MagnifierWidget final : public GUI::Frame {
+class MagnifierWidget final
+    : public GUI::Frame
+    , public GUI::ColorFilterer {
     C_OBJECT(MagnifierWidget);
 
 public:
     virtual ~MagnifierWidget() override = default;
     void set_scale_factor(int scale_factor);
-    void set_color_filter(OwnPtr<Gfx::ColorBlindnessFilter>);
-
+    virtual void set_color_filter(OwnPtr<Gfx::ColorBlindnessFilter>) override;
     void pause_capture(bool pause)
     {
         m_pause_capture = pause;
