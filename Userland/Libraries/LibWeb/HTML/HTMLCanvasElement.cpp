@@ -97,7 +97,7 @@ JS::ThrowCompletionOr<HTMLCanvasElement::HasOrCreatedContext> HTMLCanvasElement:
     if (!m_context.has<Empty>())
         return m_context.has<JS::NonnullGCPtr<WebGL::WebGLRenderingContext>>() ? HasOrCreatedContext::Yes : HasOrCreatedContext::No;
 
-    auto maybe_context = TRY(WebGL::WebGLRenderingContext::create(window(), *this, options));
+    auto maybe_context = TRY(WebGL::WebGLRenderingContext::create(realm(), *this, options));
     if (!maybe_context)
         return HasOrCreatedContext::No;
 

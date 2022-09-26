@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/HTMLCanvasElement.h>
-#include <LibWeb/HTML/Window.h>
 #include <LibWeb/WebGL/WebGLContextEvent.h>
 #include <LibWeb/WebGL/WebGLRenderingContext.h>
 
@@ -17,7 +17,7 @@ static void fire_webgl_context_event(HTML::HTMLCanvasElement& canvas_element, Fl
 {
     // To fire a WebGL context event named e means that an event using the WebGLContextEvent interface, with its type attribute [DOM4] initialized to e, its cancelable attribute initialized to true, and its isTrusted attribute [DOM4] initialized to true, is to be dispatched at the given object.
     // FIXME: Consider setting a status message.
-    auto event = WebGLContextEvent::create(canvas_element.document().window(), type, WebGLContextEventInit {});
+    auto event = WebGLContextEvent::create(canvas_element.realm(), type, WebGLContextEventInit {});
     event->set_is_trusted(true);
     event->set_cancelable(true);
     canvas_element.dispatch_event(*event);
@@ -30,7 +30,7 @@ static void fire_webgl_context_creation_error(HTML::HTMLCanvasElement& canvas_el
     fire_webgl_context_event(canvas_element, "webglcontextcreationerror"sv);
 }
 
-JS::ThrowCompletionOr<JS::GCPtr<WebGLRenderingContext>> WebGLRenderingContext::create(HTML::Window& window, HTML::HTMLCanvasElement& canvas_element, JS::Value options)
+JS::ThrowCompletionOr<JS::GCPtr<WebGLRenderingContext>> WebGLRenderingContext::create(JS::Realm& realm, HTML::HTMLCanvasElement& canvas_element, JS::Value options)
 {
     // We should be coming here from getContext being called on a wrapped <canvas> element.
     auto context_attributes = TRY(convert_value_to_context_attributes_dictionary(canvas_element.vm(), options));
@@ -46,13 +46,13 @@ JS::ThrowCompletionOr<JS::GCPtr<WebGLRenderingContext>> WebGLRenderingContext::c
         fire_webgl_context_creation_error(canvas_element);
         return JS::GCPtr<WebGLRenderingContext> { nullptr };
     }
-    return window.heap().allocate<WebGLRenderingContext>(window.realm(), window, canvas_element, context_or_error.release_value(), context_attributes, context_attributes);
+    return realm.heap().allocate<WebGLRenderingContext>(realm, realm, canvas_element, context_or_error.release_value(), context_attributes, context_attributes);
 }
 
-WebGLRenderingContext::WebGLRenderingContext(HTML::Window& window, HTML::HTMLCanvasElement& canvas_element, NonnullOwnPtr<GL::GLContext> context, WebGLContextAttributes context_creation_parameters, WebGLContextAttributes actual_context_parameters)
-    : WebGLRenderingContextBase(window, canvas_element, move(context), move(context_creation_parameters), move(actual_context_parameters))
+WebGLRenderingContext::WebGLRenderingContext(JS::Realm& realm, HTML::HTMLCanvasElement& canvas_element, NonnullOwnPtr<GL::GLContext> context, WebGLContextAttributes context_creation_parameters, WebGLContextAttributes actual_context_parameters)
+    : WebGLRenderingContextBase(realm, canvas_element, move(context), move(context_creation_parameters), move(actual_context_parameters))
 {
-    set_prototype(&window.cached_web_prototype("WebGLRenderingContext"));
+    set_prototype(&Bindings::cached_web_prototype(realm, "WebGLRenderingContext"));
 }
 
 WebGLRenderingContext::~WebGLRenderingContext() = default;

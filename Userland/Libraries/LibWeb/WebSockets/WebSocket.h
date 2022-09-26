@@ -37,7 +37,7 @@ public:
         Closed = 3,
     };
 
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<WebSocket>> create_with_global_object(HTML::Window&, String const& url);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<WebSocket>> construct_impl(JS::Realm&, String const& url);
 
     virtual ~WebSocket() override;
 
@@ -66,7 +66,7 @@ private:
     void on_error();
     void on_close(u16 code, String reason, bool was_clean);
 
-    explicit WebSocket(HTML::Window&, AK::URL&);
+    WebSocket(HTML::Window&, AK::URL&);
 
     virtual void visit_edges(Cell::Visitor&) override;
 

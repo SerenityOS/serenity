@@ -47,25 +47,26 @@ WebSocketClientSocket::~WebSocketClientSocket() = default;
 WebSocketClientManager::WebSocketClientManager() = default;
 
 // https://websockets.spec.whatwg.org/#dom-websocket-websocket
-WebIDL::ExceptionOr<JS::NonnullGCPtr<WebSocket>> WebSocket::create_with_global_object(HTML::Window& window, String const& url)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<WebSocket>> WebSocket::construct_impl(JS::Realm& realm, String const& url)
 {
+    auto& window = verify_cast<HTML::Window>(realm.global_object());
     AK::URL url_record(url);
     if (!url_record.is_valid())
-        return WebIDL::SyntaxError::create(window, "Invalid URL");
+        return WebIDL::SyntaxError::create(realm, "Invalid URL");
     if (!url_record.scheme().is_one_of("ws", "wss"))
-        return WebIDL::SyntaxError::create(window, "Invalid protocol");
+        return WebIDL::SyntaxError::create(realm, "Invalid protocol");
     if (!url_record.fragment().is_empty())
-        return WebIDL::SyntaxError::create(window, "Presence of URL fragment is invalid");
+        return WebIDL::SyntaxError::create(realm, "Presence of URL fragment is invalid");
     // 5. If `protocols` is a string, set `protocols` to a sequence consisting of just that string
     // 6. If any of the values in `protocols` occur more than once or otherwise fail to match the requirements, throw SyntaxError
-    return JS::NonnullGCPtr(*window.heap().allocate<WebSocket>(window.realm(), window, url_record));
+    return JS::NonnullGCPtr(*realm.heap().allocate<WebSocket>(realm, window, url_record));
 }
 
 WebSocket::WebSocket(HTML::Window& window, AK::URL& url)
     : EventTarget(window.realm())
     , m_window(window)
 {
-    set_prototype(&window.cached_web_prototype("WebSocket"));
+    set_prototype(&Bindings::cached_web_prototype(window.realm(), "WebSocket"));
 
     // FIXME: Integrate properly with FETCH as per https://fetch.spec.whatwg.org/#websocket-opening-handshake
     auto origin_string = m_window->associated_document().origin().serialize();
@@ -137,13 +138,13 @@ WebIDL::ExceptionOr<void> WebSocket::close(Optional<u16> code, Optional<String> 
 {
     // 1. If code is present, but is neither an integer equal to 1000 nor an integer in the range 3000 to 4999, inclusive, throw an "InvalidAccessError" DOMException.
     if (code.has_value() && *code != 1000 && (*code < 3000 || *code > 4099))
-        return WebIDL::InvalidAccessError::create(global_object(), "The close error code is invalid");
+        return WebIDL::InvalidAccessError::create(realm(), "The close error code is invalid");
     // 2. If reason is present, then run these substeps:
     if (reason.has_value()) {
         // 1. Let reasonBytes be the result of encoding reason.
         // 2. If reasonBytes is longer than 123 bytes, then throw a "SyntaxError" DOMException.
         if (reason->bytes().size() > 123)
-            return WebIDL::SyntaxError::create(global_object(), "The close reason is longer than 123 bytes");
+            return WebIDL::SyntaxError::create(realm(), "The close reason is longer than 123 bytes");
     }
     // 3. Run the first matching steps from the following list:
     auto state = ready_state();
@@ -164,7 +165,7 @@ WebIDL::ExceptionOr<void> WebSocket::send(String const& data)
 {
     auto state = ready_state();
     if (state == WebSocket::ReadyState::Connecting)
-        return WebIDL::InvalidStateError::create(global_object(), "Websocket is still CONNECTING");
+        return WebIDL::InvalidStateError::create(realm(), "Websocket is still CONNECTING");
     if (state == WebSocket::ReadyState::Open) {
         m_websocket->send(data);
         // TODO : If the data cannot be sent, e.g. because it would need to be buffered but the buffer is full, the user agent must flag the WebSocket as full and then close the WebSocket connection.
@@ -179,13 +180,13 @@ void WebSocket::on_open()
     // 1. Change the readyState attribute's value to OPEN (1).
     // 2. Change the extensions attribute's value to the extensions in use, if it is not the null value. [WSP]
     // 3. Change the protocol attribute's value to the subprotocol in use, if it is not the null value. [WSP]
-    dispatch_event(*DOM::Event::create(*m_window, HTML::EventNames::open));
+    dispatch_event(*DOM::Event::create(realm(), HTML::EventNames::open));
 }
 
 // https://websockets.spec.whatwg.org/#feedback-from-the-protocol
 void WebSocket::on_error()
 {
-    dispatch_event(*DOM::Event::create(*m_window, HTML::EventNames::error));
+    dispatch_event(*DOM::Event::create(realm(), HTML::EventNames::error));
 }
 
 // https://websockets.spec.whatwg.org/#feedback-from-the-protocol
@@ -197,7 +198,7 @@ void WebSocket::on_close(u16 code, String reason, bool was_clean)
     event_init.was_clean = was_clean;
     event_init.code = code;
     event_init.reason = move(reason);
-    dispatch_event(*HTML::CloseEvent::create(*m_window, HTML::EventNames::close, event_init));
+    dispatch_event(*HTML::CloseEvent::create(realm(), HTML::EventNames::close, event_init));
 }
 
 // https://websockets.spec.whatwg.org/#feedback-from-the-protocol
@@ -210,7 +211,7 @@ void WebSocket::on_message(ByteBuffer message, bool is_text)
         HTML::MessageEventInit event_init;
         event_init.data = JS::js_string(vm(), text_message);
         event_init.origin = url();
-        dispatch_event(*HTML::MessageEvent::create(*m_window, HTML::EventNames::message, event_init));
+        dispatch_event(*HTML::MessageEvent::create(realm(), HTML::EventNames::message, event_init));
         return;
     }
 
@@ -222,7 +223,7 @@ void WebSocket::on_message(ByteBuffer message, bool is_text)
         HTML::MessageEventInit event_init;
         event_init.data = JS::ArrayBuffer::create(realm(), message);
         event_init.origin = url();
-        dispatch_event(*HTML::MessageEvent::create(*m_window, HTML::EventNames::message, event_init));
+        dispatch_event(*HTML::MessageEvent::create(realm(), HTML::EventNames::message, event_init));
         return;
     }
 
