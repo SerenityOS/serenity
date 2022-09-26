@@ -239,53 +239,63 @@ pushd "$DIR/Tarballs"
         popd
     fi
 
-    if [ -d ${BINUTILS_NAME} ]; then
-        rm -rf "${BINUTILS_NAME}"
-        rm -rf "$DIR/Build/$ARCH/$BINUTILS_NAME"
-    fi
-    echo "Extracting binutils..."
-    tar -xzf ${BINUTILS_PKG}
+    patch_md5="$(${MD5SUM} "${DIR}"/Patches/binutils/*.patch)"
 
-    pushd ${BINUTILS_NAME}
-        if [ "$git_patch" = "1" ]; then
-            git init > /dev/null
-            git add . > /dev/null
-            git commit -am "BASE" > /dev/null
-            git am "$DIR"/Patches/binutils/*.patch > /dev/null
-        else
-            for patch in "$DIR"/Patches/binutils/*.patch; do
-                patch -p1 < "$patch" > /dev/null
-            done
+    if [ ! -d "${BINUTILS_NAME}" ] || [ "$(cat ${BINUTILS_NAME}/.patch.applied)" != "${patch_md5}" ]; then
+        if [ -d ${BINUTILS_NAME} ]; then
+            rm -rf "${BINUTILS_NAME}"
+            rm -rf "${DIR}/Build/${ARCH}/${BINUTILS_NAME}"
         fi
-        $MD5SUM "$DIR"/Patches/binutils/*.patch > .patch.applied
-    popd
+        echo "Extracting binutils..."
+        tar -xzf ${BINUTILS_PKG}
 
-    if [ -d ${GCC_NAME} ]; then
-        # Drop the previously patched extracted dir
-        rm -rf "${GCC_NAME}"
-        # Also drop the build dir
-        rm -rf "$DIR/Build/$ARCH/$GCC_NAME"
-    fi
-    echo "Extracting gcc..."
-    tar -xzf $GCC_PKG
-    pushd $GCC_NAME
-        if [ "$git_patch" = "1" ]; then
-            git init > /dev/null
-            git add . > /dev/null
-            git commit -am "BASE" > /dev/null
-            git am --keep-non-patch "$DIR"/Patches/gcc/*.patch > /dev/null
-        else
-            for patch in "$DIR"/Patches/gcc/*.patch; do
-                patch -p1 < "$patch" > /dev/null
-            done
-        fi
-        $MD5SUM "$DIR"/Patches/gcc/*.patch > .patch.applied
-    popd
-
-    if [ "$SYSTEM_NAME" = "Darwin" ]; then
-        pushd "gcc-${GCC_VERSION}"
-        ./contrib/download_prerequisites
+        pushd ${BINUTILS_NAME}
+            if [ "${git_patch}" = "1" ]; then
+                git init > /dev/null
+                git add . > /dev/null
+                git commit -am "BASE" > /dev/null
+                git am "${DIR}"/Patches/binutils/*.patch > /dev/null
+            else
+                for patch in "${DIR}"/Patches/binutils/*.patch; do
+                    patch -p1 < "${patch}" > /dev/null
+                done
+            fi
+            ${MD5SUM} "${DIR}"/Patches/binutils/*.patch > .patch.applied
         popd
+    else
+        echo "Using existing binutils source directory"
+    fi
+
+
+    patch_md5="$(${MD5SUM} "${DIR}"/Patches/gcc/*.patch)"
+
+    if [ ! -d "${GCC_NAME}" ] || [ "$(cat ${GCC_NAME}/.patch.applied)" != "${patch_md5}" ]; then
+        if [ -d ${GCC_NAME} ]; then
+            rm -rf "${GCC_NAME}"
+            rm -rf "${DIR}/Build/${ARCH}/${GCC_NAME}"
+        fi
+        echo "Extracting gcc..."
+        tar -xzf ${GCC_PKG}
+
+        pushd ${GCC_NAME}
+            if [ "${git_patch}" = "1" ]; then
+                git init > /dev/null
+                git add . > /dev/null
+                git commit -am "BASE" > /dev/null
+                git am --keep-non-patch "${DIR}"/Patches/gcc/*.patch > /dev/null
+            else
+                for patch in "${DIR}"/Patches/gcc/*.patch; do
+                    patch -p1 < "${patch}" > /dev/null
+                done
+            fi
+            ${MD5SUM} "${DIR}"/Patches/gcc/*.patch > .patch.applied
+
+            if [ "${SYSTEM_NAME}" = "Darwin" ]; then
+                ./contrib/download_prerequisites
+            fi
+        popd
+    else
+        echo "Using existing GCC source directory"
     fi
 popd
 
