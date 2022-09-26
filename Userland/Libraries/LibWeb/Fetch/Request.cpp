@@ -6,6 +6,7 @@
 
 #include <AK/ScopeGuard.h>
 #include <AK/URLParser.h>
+#include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/DOM/AbortSignal.h>
 #include <LibWeb/Fetch/Enums.h>
 #include <LibWeb/Fetch/Headers.h>
@@ -15,7 +16,6 @@
 #include <LibWeb/Fetch/Infrastructure/HTTP/Requests.h>
 #include <LibWeb/Fetch/Request.h>
 #include <LibWeb/HTML/Scripting/Environments.h>
-#include <LibWeb/HTML/Window.h>
 #include <LibWeb/ReferrerPolicy/ReferrerPolicy.h>
 
 namespace Web::Fetch {
@@ -24,8 +24,7 @@ Request::Request(JS::Realm& realm, NonnullOwnPtr<Infrastructure::Request> reques
     : PlatformObject(realm)
     , m_request(move(request))
 {
-    auto& window = verify_cast<HTML::Window>(realm.global_object());
-    set_prototype(&window.cached_web_prototype("Request"));
+    set_prototype(&Bindings::cached_web_prototype(realm, "Request"));
 }
 
 Request::~Request() = default;
@@ -75,8 +74,6 @@ Optional<Infrastructure::Body&> Request::body_impl()
 // https://fetch.spec.whatwg.org/#request-create
 JS::NonnullGCPtr<Request> Request::create(NonnullOwnPtr<Infrastructure::Request> request, Headers::Guard guard, JS::Realm& realm)
 {
-    auto& window = verify_cast<HTML::Window>(realm.global_object());
-
     // Copy a NonnullRefPtr to the request's header list before request is being move()'d.
     auto request_reader_list = request->header_list();
 
@@ -85,27 +82,22 @@ JS::NonnullGCPtr<Request> Request::create(NonnullOwnPtr<Infrastructure::Request>
     auto* request_object = realm.heap().allocate<Request>(realm, realm, move(request));
 
     // 3. Set requestObject’s headers to a new Headers object with realm, whose headers list is request’s headers list and guard is guard.
-    request_object->m_headers = realm.heap().allocate<Headers>(realm, window);
+    request_object->m_headers = realm.heap().allocate<Headers>(realm, realm);
     request_object->m_headers->set_header_list(move(request_reader_list));
     request_object->m_headers->set_guard(guard);
 
     // 4. Set requestObject’s signal to a new AbortSignal object with realm.
-    request_object->m_signal = realm.heap().allocate<DOM::AbortSignal>(realm, window);
+    request_object->m_signal = realm.heap().allocate<DOM::AbortSignal>(realm, realm);
 
     // 5. Return requestObject.
     return JS::NonnullGCPtr { *request_object };
 }
 
 // https://fetch.spec.whatwg.org/#dom-request
-WebIDL::ExceptionOr<JS::NonnullGCPtr<Request>> Request::create_with_global_object(HTML::Window& html_window, RequestInfo const& input, RequestInit const& init)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<Request>> Request::construct_impl(JS::Realm& realm, RequestInfo const& input, RequestInit const& init)
 {
-    auto& realm = html_window.realm();
-
     // Referred to as 'this' in the spec.
-    auto request_object = [&] {
-        auto request = adopt_own(*new Infrastructure::Request());
-        return JS::NonnullGCPtr { *realm.heap().allocate<Request>(realm, realm, move(request)) };
-    }();
+    auto request_object = JS::NonnullGCPtr { *realm.heap().allocate<Request>(realm, realm, make<Infrastructure::Request>()) };
 
     // 1. Let request be null.
     Infrastructure::Request const* input_request = nullptr;
@@ -191,13 +183,13 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Request>> Request::create_with_global_objec
 
     // method
     //     request’s method.
-    request.set_method(TRY_OR_RETURN_OOM(html_window, ByteBuffer::copy(request.method())));
+    request.set_method(TRY_OR_RETURN_OOM(realm, ByteBuffer::copy(request.method())));
 
     // header list
     //     A copy of request’s header list.
     auto header_list_copy = make_ref_counted<Infrastructure::HeaderList>();
     for (auto& header : *request.header_list())
-        TRY_OR_RETURN_OOM(html_window, header_list_copy->append(header));
+        TRY_OR_RETURN_OOM(realm, header_list_copy->append(header));
     request.set_header_list(move(header_list_copy));
 
     // unsafe-request flag
@@ -382,7 +374,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Request>> Request::create_with_global_objec
             return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "Method must not be one of CONNECT, TRACE, or TRACK"sv };
 
         // 3. Normalize method.
-        method = TRY_OR_RETURN_OOM(html_window, Infrastructure::normalize_method(method.bytes()));
+        method = TRY_OR_RETURN_OOM(realm, Infrastructure::normalize_method(method.bytes()));
 
         // 4. Set request’s method to method.
         request.set_method(MUST(ByteBuffer::copy(method.bytes())));
@@ -397,7 +389,8 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Request>> Request::create_with_global_objec
     //       cannot exist with a null Infrastructure::Request.
 
     // 28. Set this’s signal to a new AbortSignal object with this’s relevant Realm.
-    request_object->m_signal = realm.heap().allocate<DOM::AbortSignal>(HTML::relevant_realm(*request_object), html_window);
+    auto& this_relevant_realm = HTML::relevant_realm(*request_object);
+    request_object->m_signal = realm.heap().allocate<DOM::AbortSignal>(this_relevant_realm, this_relevant_realm);
 
     // 29. If signal is not null, then make this’s signal follow signal.
     if (input_signal != nullptr) {
@@ -405,7 +398,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Request>> Request::create_with_global_objec
     }
 
     // 30. Set this’s headers to a new Headers object with this’s relevant Realm, whose header list is request’s header list and guard is "request".
-    request_object->m_headers = realm.heap().allocate<Headers>(realm, html_window);
+    request_object->m_headers = realm.heap().allocate<Headers>(realm, realm);
     request_object->m_headers->set_header_list(request.header_list());
     request_object->m_headers->set_guard(Headers::Guard::Request);
 

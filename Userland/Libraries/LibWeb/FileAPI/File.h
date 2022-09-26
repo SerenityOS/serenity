@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/Time.h>
 #include <LibWeb/FileAPI/Blob.h>
 
 namespace Web::FileAPI {
@@ -19,8 +18,8 @@ class File : public Blob {
     WEB_PLATFORM_OBJECT(File, Blob);
 
 public:
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<File>> create(HTML::Window&, Vector<BlobPart> const& file_bits, String const& file_name, Optional<FilePropertyBag> const& options = {});
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<File>> create_with_global_object(HTML::Window&, Vector<BlobPart> const& file_bits, String const& file_name, Optional<FilePropertyBag> const& options = {});
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<File>> create(JS::Realm&, Vector<BlobPart> const& file_bits, String const& file_name, Optional<FilePropertyBag> const& options = {});
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<File>> construct_impl(JS::Realm&, Vector<BlobPart> const& file_bits, String const& file_name, Optional<FilePropertyBag> const& options = {});
 
     virtual ~File() override;
 
@@ -30,7 +29,7 @@ public:
     i64 last_modified() const { return m_last_modified; }
 
 private:
-    File(HTML::Window&, ByteBuffer, String file_name, String type, i64 last_modified);
+    File(JS::Realm&, ByteBuffer, String file_name, String type, i64 last_modified);
 
     String m_name;
     i64 m_last_modified { 0 };

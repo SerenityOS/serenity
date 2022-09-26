@@ -11,7 +11,6 @@
 #include <LibWeb/Fetch/Body.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP/Bodies.h>
 #include <LibWeb/FileAPI/Blob.h>
-#include <LibWeb/HTML/Window.h>
 #include <LibWeb/Infra/JSON.h>
 #include <LibWeb/MimeSniff/MimeType.h>
 #include <LibWeb/Streams/ReadableStream.h>
@@ -99,7 +98,6 @@ JS::NonnullGCPtr<JS::Promise> BodyMixin::text() const
 WebIDL::ExceptionOr<JS::Value> package_data(JS::Realm& realm, ByteBuffer bytes, PackageDataType type, Optional<MimeSniff::MimeType> const& mime_type)
 {
     auto& vm = realm.vm();
-    auto& window = verify_cast<HTML::Window>(realm.global_object());
 
     switch (type) {
     case PackageDataType::ArrayBuffer:
@@ -109,7 +107,7 @@ WebIDL::ExceptionOr<JS::Value> package_data(JS::Realm& realm, ByteBuffer bytes, 
         // Return a Blob whose contents are bytes and type attribute is mimeType.
         // NOTE: If extracting the mime type returns failure, other browsers set it to an empty string - not sure if that's spec'd.
         auto mime_type_string = mime_type.has_value() ? mime_type->serialized() : String::empty();
-        return FileAPI::Blob::create(window, move(bytes), move(mime_type_string));
+        return FileAPI::Blob::create(realm, move(bytes), move(mime_type_string));
     }
     case PackageDataType::FormData:
         // If mimeType’s essence is "multipart/form-data", then:

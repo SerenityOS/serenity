@@ -64,7 +64,7 @@ class Request final
 
 public:
     static JS::NonnullGCPtr<Request> create(NonnullOwnPtr<Infrastructure::Request>, Headers::Guard, JS::Realm&);
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<Request>> create_with_global_object(HTML::Window&, RequestInfo const& input, RequestInit const& init = {});
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<Request>> construct_impl(JS::Realm&, RequestInfo const& input, RequestInit const& init = {});
 
     virtual ~Request() override;
 

@@ -4,28 +4,28 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibWeb/HTML/Window.h>
+#include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/XHR/ProgressEvent.h>
 
 namespace Web::XHR {
 
-ProgressEvent* ProgressEvent::create(HTML::Window& window_object, FlyString const& event_name, ProgressEventInit const& event_init)
+ProgressEvent* ProgressEvent::create(JS::Realm& realm, FlyString const& event_name, ProgressEventInit const& event_init)
 {
-    return window_object.heap().allocate<ProgressEvent>(window_object.realm(), window_object, event_name, event_init);
+    return realm.heap().allocate<ProgressEvent>(realm, realm, event_name, event_init);
 }
 
-ProgressEvent* ProgressEvent::create_with_global_object(HTML::Window& window_object, FlyString const& event_name, ProgressEventInit const& event_init)
+ProgressEvent* ProgressEvent::construct_impl(JS::Realm& realm, FlyString const& event_name, ProgressEventInit const& event_init)
 {
-    return create(window_object, event_name, event_init);
+    return create(realm, event_name, event_init);
 }
 
-ProgressEvent::ProgressEvent(HTML::Window& window_object, FlyString const& event_name, ProgressEventInit const& event_init)
-    : Event(window_object, event_name, event_init)
+ProgressEvent::ProgressEvent(JS::Realm& realm, FlyString const& event_name, ProgressEventInit const& event_init)
+    : Event(realm, event_name, event_init)
     , m_length_computable(event_init.length_computable)
     , m_loaded(event_init.loaded)
     , m_total(event_init.total)
 {
-    set_prototype(&window_object.cached_web_prototype("ProgressEvent"));
+    set_prototype(&Bindings::cached_web_prototype(realm, "ProgressEvent"));
 }
 
 ProgressEvent::~ProgressEvent() = default;
