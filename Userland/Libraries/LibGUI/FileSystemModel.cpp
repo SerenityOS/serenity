@@ -18,7 +18,6 @@
 #include <LibGUI/FileSystemModel.h>
 #include <LibGUI/Painter.h>
 #include <LibGfx/Bitmap.h>
-#include <LibThreading/BackgroundAction.h>
 #include <grp.h>
 #include <pwd.h>
 #include <stdio.h>
@@ -657,44 +656,23 @@ bool FileSystemModel::fetch_thumbnail_for(Node const& node)
         return true;
     }
 
-    // Otherwise, arrange to render the thumbnail
-    // in background and make it available later.
-
-    s_thumbnail_cache.set(path, nullptr);
+    // FIXME: Ideally this action should work in a background thread but
+    // BackgroundAction needs additional features to support the scenario
+    // where the user closes the window before the job finishes as it currently
+    // causes an access violation when trying to access the current thread's
+    // EventLoop
     m_thumbnail_progress_total++;
-
-    auto weak_this = make_weak_ptr();
-
-    (void)Threading::BackgroundAction<ErrorOr<NonnullRefPtr<Gfx::Bitmap>>>::construct(
-        [path](auto&) {
-            return render_thumbnail(path);
-        },
-
-        [this, path, weak_this](auto thumbnail_or_error) {
-            if (thumbnail_or_error.is_error()) {
-                s_thumbnail_cache.set(path, nullptr);
-                dbgln("Failed to load thumbnail for {}: {}", path, thumbnail_or_error.error());
-            } else {
-                s_thumbnail_cache.set(path, thumbnail_or_error.release_value());
-            }
-
-            // The model was destroyed, no need to update
-            // progress or call any event handlers.
-            if (weak_this.is_null())
-                return;
-
-            m_thumbnail_progress++;
-            if (on_thumbnail_progress)
-                on_thumbnail_progress(m_thumbnail_progress, m_thumbnail_progress_total);
-            if (m_thumbnail_progress == m_thumbnail_progress_total) {
-                m_thumbnail_progress = 0;
-                m_thumbnail_progress_total = 0;
-            }
-
-            did_update(UpdateFlag::DontInvalidateIndices);
-        });
-
-    return false;
+    auto thumbnail_or_error = render_thumbnail(path);
+    if (thumbnail_or_error.is_error()) {
+        s_thumbnail_cache.set(path, nullptr);
+        dbgln("Failed to load thumbnail for {}: {}", path, thumbnail_or_error.error());
+        return false;
+    } else {
+        auto loaded_thumbnail = thumbnail_or_error.release_value();
+        s_thumbnail_cache.set(path, loaded_thumbnail);
+        node.thumbnail = loaded_thumbnail;
+        return true;
+    }
 }
 
 int FileSystemModel::column_count(ModelIndex const&) const
