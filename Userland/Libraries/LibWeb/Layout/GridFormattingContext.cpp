@@ -225,6 +225,9 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
         if (child_box.computed_values().grid_row_end().is_position() && child_box.computed_values().grid_row_start().is_span()) {
             row_span = child_box.computed_values().grid_row_start().raw_value();
             row_start = row_end - row_span;
+            // FIXME: Remove me once have implemented spans overflowing into negative indexes, e.g., grid-row: span 2 / 1
+            if (row_start < 0)
+                row_start = 1;
         }
 
         // If a name is given as a <custom-ident>, only lines with that name are counted. If not enough
@@ -354,6 +357,9 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
             if (child_box.computed_values().grid_column_end().is_position() && child_box.computed_values().grid_column_start().is_span()) {
                 column_span = child_box.computed_values().grid_column_start().raw_value();
                 column_start = column_end - column_span;
+                // FIXME: Remove me once have implemented spans overflowing into negative indexes, e.g., grid-column: span 2 / 1
+                if (column_start < 0)
+                    column_start = 1;
             }
 
             // If a name is given as a <custom-ident>, only lines with that name are counted. If not enough
