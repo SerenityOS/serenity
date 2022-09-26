@@ -20,7 +20,7 @@ class TextEncoder final : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(TextEncoder, Bindings::PlatformObject);
 
 public:
-    static JS::NonnullGCPtr<TextEncoder> create_with_global_object(HTML::Window&);
+    static JS::NonnullGCPtr<TextEncoder> construct_impl(JS::Realm&);
 
     virtual ~TextEncoder() override;
 
@@ -30,7 +30,7 @@ public:
 
 protected:
     // https://encoding.spec.whatwg.org/#dom-textencoder
-    explicit TextEncoder(HTML::Window&);
+    explicit TextEncoder(JS::Realm&);
 };
 
 }

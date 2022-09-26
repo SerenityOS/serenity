@@ -4,26 +4,26 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/DOM/Element.h>
-#include <LibWeb/HTML/Window.h>
 #include <LibWeb/IntersectionObserver/IntersectionObserver.h>
 
 namespace Web::IntersectionObserver {
 
 // https://w3c.github.io/IntersectionObserver/#dom-intersectionobserver-intersectionobserver
-JS::NonnullGCPtr<IntersectionObserver> IntersectionObserver::create_with_global_object(HTML::Window& window, WebIDL::CallbackType* callback, IntersectionObserverInit const& options)
+JS::NonnullGCPtr<IntersectionObserver> IntersectionObserver::construct_impl(JS::Realm& realm, WebIDL::CallbackType* callback, IntersectionObserverInit const& options)
 {
     // FIXME: Implement
     (void)callback;
     (void)options;
 
-    return *window.heap().allocate<IntersectionObserver>(window.realm(), window);
+    return *realm.heap().allocate<IntersectionObserver>(realm, realm);
 }
 
-IntersectionObserver::IntersectionObserver(HTML::Window& window)
-    : PlatformObject(window.realm())
+IntersectionObserver::IntersectionObserver(JS::Realm& realm)
+    : PlatformObject(realm)
 {
-    set_prototype(&window.cached_web_prototype("IntersectionObserver"));
+    set_prototype(&Bindings::cached_web_prototype(realm, "IntersectionObserver"));
 }
 
 IntersectionObserver::~IntersectionObserver() = default;

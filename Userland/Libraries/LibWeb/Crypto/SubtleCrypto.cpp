@@ -7,37 +7,37 @@
 #include <LibCrypto/Hash/HashManager.h>
 #include <LibJS/Runtime/ArrayBuffer.h>
 #include <LibJS/Runtime/Promise.h>
-#include <LibWeb/Bindings/MainThreadVM.h>
+#include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/Crypto/SubtleCrypto.h>
 #include <LibWeb/WebIDL/AbstractOperations.h>
 #include <LibWeb/WebIDL/DOMException.h>
 
 namespace Web::Crypto {
 
-JS::NonnullGCPtr<SubtleCrypto> SubtleCrypto::create(HTML::Window& window)
+JS::NonnullGCPtr<SubtleCrypto> SubtleCrypto::create(JS::Realm& realm)
 {
-    return *window.heap().allocate<SubtleCrypto>(window.realm(), window);
+    return *realm.heap().allocate<SubtleCrypto>(realm, realm);
 }
 
-SubtleCrypto::SubtleCrypto(HTML::Window& window)
-    : PlatformObject(window.realm())
+SubtleCrypto::SubtleCrypto(JS::Realm& realm)
+    : PlatformObject(realm)
 {
-    set_prototype(&window.cached_web_prototype("SubtleCrypto"));
+    set_prototype(&Bindings::cached_web_prototype(realm, "SubtleCrypto"));
 }
 
 SubtleCrypto::~SubtleCrypto() = default;
 
+// https://w3c.github.io/webcrypto/#dfn-SubtleCrypto-method-digest
 JS::Promise* SubtleCrypto::digest(String const& algorithm, JS::Handle<JS::Object> const& data)
 {
-    auto& vm = Bindings::main_thread_vm();
-    auto& realm = *vm.current_realm();
+    auto& realm = this->realm();
 
     // 1. Let algorithm be the algorithm parameter passed to the digest() method.
 
     // 2. Let data be the result of getting a copy of the bytes held by the data parameter passed to the digest() method.
     auto data_buffer_or_error = WebIDL::get_buffer_source_copy(*data.cell());
     if (data_buffer_or_error.is_error()) {
-        auto error = WebIDL::OperationError::create(global_object(), "Failed to copy bytes from ArrayBuffer");
+        auto error = WebIDL::OperationError::create(realm, "Failed to copy bytes from ArrayBuffer");
         auto* promise = JS::Promise::create(realm);
         promise->reject(error.ptr());
         return promise;
@@ -58,7 +58,7 @@ JS::Promise* SubtleCrypto::digest(String const& algorithm, JS::Handle<JS::Object
     }
     // 4. If an error occurred, return a Promise rejected with normalizedAlgorithm.
     else {
-        auto error = WebIDL::NotSupportedError::create(global_object(), String::formatted("Invalid hash function '{}'", algorithm));
+        auto error = WebIDL::NotSupportedError::create(realm, String::formatted("Invalid hash function '{}'", algorithm));
         auto* promise = JS::Promise::create(realm);
         promise->reject(error.ptr());
         return promise;
@@ -79,7 +79,7 @@ JS::Promise* SubtleCrypto::digest(String const& algorithm, JS::Handle<JS::Object
     auto digest = hash.digest();
     auto result_buffer = ByteBuffer::copy(digest.immutable_data(), hash.digest_size());
     if (result_buffer.is_error()) {
-        auto error = WebIDL::OperationError::create(global_object(), "Failed to create result buffer");
+        auto error = WebIDL::OperationError::create(realm, "Failed to create result buffer");
         promise->reject(error.ptr());
         return promise;
     }

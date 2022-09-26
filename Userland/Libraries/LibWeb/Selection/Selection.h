@@ -14,7 +14,7 @@ class Selection final : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(Selection, Bindings::PlatformObject);
 
 public:
-    static JS::NonnullGCPtr<Selection> create(HTML::Window&);
+    static JS::NonnullGCPtr<Selection> create(JS::Realm&);
 
     virtual ~Selection() override;
 
@@ -43,7 +43,7 @@ public:
     String to_string() const;
 
 private:
-    explicit Selection(HTML::Window&);
+    explicit Selection(JS::Realm&);
 };
 
 }

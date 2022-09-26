@@ -16,14 +16,14 @@ class IdleDeadline final : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(IdleDeadline, Bindings::PlatformObject);
 
 public:
-    static JS::NonnullGCPtr<IdleDeadline> create(HTML::Window&, bool did_timeout = false);
+    static JS::NonnullGCPtr<IdleDeadline> create(JS::Realm&, bool did_timeout = false);
     virtual ~IdleDeadline() override;
 
     double time_remaining() const;
     bool did_timeout() const { return m_did_timeout; }
 
 private:
-    IdleDeadline(HTML::Window&, bool did_timeout);
+    IdleDeadline(JS::Realm&, bool did_timeout);
 
     bool m_did_timeout { false };
 };

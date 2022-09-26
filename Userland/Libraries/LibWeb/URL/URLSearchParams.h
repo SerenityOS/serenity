@@ -23,8 +23,8 @@ class URLSearchParams : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(URLSearchParams, Bindings::PlatformObject);
 
 public:
-    static JS::NonnullGCPtr<URLSearchParams> create(HTML::Window&, Vector<QueryParam> list);
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<URLSearchParams>> create_with_global_object(HTML::Window&, Variant<Vector<Vector<String>>, OrderedHashMap<String, String>, String> const& init);
+    static JS::NonnullGCPtr<URLSearchParams> create(JS::Realm&, Vector<QueryParam> list);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<URLSearchParams>> construct_impl(JS::Realm&, Variant<Vector<Vector<String>>, OrderedHashMap<String, String>, String> const& init);
 
     virtual ~URLSearchParams() override;
 
@@ -46,7 +46,7 @@ private:
     friend class URL;
     friend class URLSearchParamsIterator;
 
-    URLSearchParams(HTML::Window&, Vector<QueryParam> list);
+    URLSearchParams(JS::Realm&, Vector<QueryParam> list);
 
     virtual void visit_edges(Cell::Visitor&) override;
 

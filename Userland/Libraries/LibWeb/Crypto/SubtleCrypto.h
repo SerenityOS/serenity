@@ -15,14 +15,14 @@ class SubtleCrypto final : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(SubtleCrypto, Bindings::PlatformObject);
 
 public:
-    static JS::NonnullGCPtr<SubtleCrypto> create(HTML::Window&);
+    static JS::NonnullGCPtr<SubtleCrypto> create(JS::Realm&);
 
     virtual ~SubtleCrypto() override;
 
     JS::Promise* digest(String const& algorithm, JS::Handle<JS::Object> const& data);
 
 private:
-    explicit SubtleCrypto(HTML::Window&);
+    explicit SubtleCrypto(JS::Realm&);
 };
 
 }

@@ -30,11 +30,10 @@ WebIDL::ExceptionOr<Body> Body::clone() const
 
     auto& vm = Bindings::main_thread_vm();
     auto& realm = *vm.current_realm();
-    auto& window = verify_cast<HTML::Window>(realm.global_object());
 
     // FIXME: 1. Let « out1, out2 » be the result of teeing body’s stream.
     // FIXME: 2. Set body’s stream to out1.
-    auto* out2 = vm.heap().allocate<Streams::ReadableStream>(realm, window);
+    auto* out2 = vm.heap().allocate<Streams::ReadableStream>(realm, realm);
 
     // 3. Return a body whose stream is out2 and other members are copied from body.
     return Body { JS::make_handle(out2), m_source, m_length };

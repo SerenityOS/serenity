@@ -4,24 +4,24 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/DOM/Element.h>
-#include <LibWeb/HTML/Window.h>
 #include <LibWeb/ResizeObserver/ResizeObserver.h>
 
 namespace Web::ResizeObserver {
 
 // https://drafts.csswg.org/resize-observer/#dom-resizeobserver-resizeobserver
-JS::NonnullGCPtr<ResizeObserver> ResizeObserver::create_with_global_object(HTML::Window& window, WebIDL::CallbackType* callback)
+JS::NonnullGCPtr<ResizeObserver> ResizeObserver::construct_impl(JS::Realm& realm, WebIDL::CallbackType* callback)
 {
     // FIXME: Implement
     (void)callback;
-    return *window.heap().allocate<ResizeObserver>(window.realm(), window);
+    return *realm.heap().allocate<ResizeObserver>(realm, realm);
 }
 
-ResizeObserver::ResizeObserver(HTML::Window& window)
-    : PlatformObject(window.realm())
+ResizeObserver::ResizeObserver(JS::Realm& realm)
+    : PlatformObject(realm)
 {
-    set_prototype(&window.cached_web_prototype("ResizeObserver"));
+    set_prototype(&Bindings::cached_web_prototype(realm, "ResizeObserver"));
 }
 
 ResizeObserver::~ResizeObserver() = default;

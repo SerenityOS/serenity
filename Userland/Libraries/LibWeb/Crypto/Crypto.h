@@ -16,7 +16,7 @@ class Crypto : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(Crypto, Bindings::PlatformObject);
 
 public:
-    static JS::NonnullGCPtr<Crypto> create(HTML::Window&);
+    static JS::NonnullGCPtr<Crypto> create(JS::Realm&);
 
     virtual ~Crypto() override;
 
@@ -29,7 +29,7 @@ protected:
     virtual void visit_edges(Cell::Visitor&) override;
 
 private:
-    explicit Crypto(HTML::Window&);
+    explicit Crypto(JS::Realm&);
     virtual void initialize(JS::Realm&) override;
 
     JS::GCPtr<SubtleCrypto> m_subtle;

@@ -24,7 +24,7 @@ public:
         Errored,
     };
 
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<ReadableStream>> create_with_global_object(HTML::Window&);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<ReadableStream>> construct_impl(JS::Realm&);
 
     virtual ~ReadableStream() override;
 
@@ -39,7 +39,7 @@ public:
     bool is_disturbed() const;
 
 private:
-    explicit ReadableStream(HTML::Window&);
+    explicit ReadableStream(JS::Realm&);
 
     virtual void visit_edges(Cell::Visitor&) override;
 
