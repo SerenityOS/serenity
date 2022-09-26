@@ -16,7 +16,7 @@ class SVGLength : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(SVGLength, Bindings::PlatformObject);
 
 public:
-    static JS::NonnullGCPtr<SVGLength> create(HTML::Window&, u8 unit_type, float value);
+    static JS::NonnullGCPtr<SVGLength> create(JS::Realm&, u8 unit_type, float value);
     virtual ~SVGLength() override;
 
     u8 unit_type() const { return m_unit_type; }
@@ -25,7 +25,7 @@ public:
     WebIDL::ExceptionOr<void> set_value(float value);
 
 private:
-    SVGLength(HTML::Window&, u8 unit_type, float value);
+    SVGLength(JS::Realm&, u8 unit_type, float value);
 
     u8 m_unit_type { 0 };
     float m_value { 0 };
