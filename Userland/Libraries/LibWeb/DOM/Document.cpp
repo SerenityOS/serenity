@@ -153,6 +153,8 @@ JS::NonnullGCPtr<Document> Document::create_and_initialize(Type type, String con
         && navigation_params.history_handling == HTML::HistoryHandlingBehavior::Replace
         && (browsing_context->active_document() && browsing_context->active_document()->origin().is_same_origin(navigation_params.origin))) {
         // Do nothing.
+        // NOTE: This means that both the initial about:blank Document, and the new Document that is about to be created, will share the same Window object.
+        window = browsing_context->active_window();
     }
 
     // 6. Otherwise:
