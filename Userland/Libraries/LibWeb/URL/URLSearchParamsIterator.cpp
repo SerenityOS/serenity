@@ -6,8 +6,8 @@
 
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/IteratorOperations.h>
+#include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/Bindings/URLSearchParamsIteratorPrototype.h>
-#include <LibWeb/HTML/Window.h>
 #include <LibWeb/URL/URLSearchParamsIterator.h>
 
 namespace Web::URL {
@@ -22,7 +22,7 @@ URLSearchParamsIterator::URLSearchParamsIterator(URLSearchParams const& url_sear
     , m_url_search_params(url_search_params)
     , m_iteration_kind(iteration_kind)
 {
-    set_prototype(&url_search_params.global_object().ensure_web_prototype<Bindings::URLSearchParamsIteratorPrototype>("URLSearchParamsIterator"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::URLSearchParamsIteratorPrototype>(url_search_params.realm(), "URLSearchParamsIterator"));
 }
 
 URLSearchParamsIterator::~URLSearchParamsIterator() = default;

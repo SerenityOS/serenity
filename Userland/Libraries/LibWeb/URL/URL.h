@@ -19,8 +19,8 @@ class URL : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(URL, Bindings::PlatformObject);
 
 public:
-    static JS::NonnullGCPtr<URL> create(HTML::Window&, AK::URL url, JS::NonnullGCPtr<URLSearchParams> query);
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<URL>> create_with_global_object(HTML::Window&, String const& url, String const& base);
+    static JS::NonnullGCPtr<URL> create(JS::Realm&, AK::URL url, JS::NonnullGCPtr<URLSearchParams> query);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<URL>> construct_impl(JS::Realm&, String const& url, String const& base);
 
     virtual ~URL() override;
 
@@ -63,7 +63,7 @@ public:
     void set_query(Badge<URLSearchParams>, String query) { m_url.set_query(move(query)); }
 
 private:
-    URL(HTML::Window&, AK::URL, JS::NonnullGCPtr<URLSearchParams> query);
+    URL(JS::Realm&, AK::URL, JS::NonnullGCPtr<URLSearchParams> query);
 
     virtual void visit_edges(Cell::Visitor&) override;
 

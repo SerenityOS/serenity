@@ -203,12 +203,12 @@ bool EventHandler::handle_mouseup(Gfx::IntPoint const& position, unsigned button
             }
 
             auto offset = compute_mouse_event_offset(position, *layout_node);
-            node->dispatch_event(*UIEvents::MouseEvent::create_from_platform_event(node->document().window(), UIEvents::EventNames::mouseup, offset.x(), offset.y(), position.x(), position.y(), button));
+            node->dispatch_event(*UIEvents::MouseEvent::create_from_platform_event(node->realm(), UIEvents::EventNames::mouseup, offset.x(), offset.y(), position.x(), position.y(), button));
             handled_event = true;
 
             bool run_activation_behavior = true;
             if (node.ptr() == m_mousedown_target && button == GUI::MouseButton::Primary) {
-                run_activation_behavior = node->dispatch_event(*UIEvents::MouseEvent::create_from_platform_event(node->document().window(), UIEvents::EventNames::click, offset.x(), offset.y(), position.x(), position.y(), button));
+                run_activation_behavior = node->dispatch_event(*UIEvents::MouseEvent::create_from_platform_event(node->realm(), UIEvents::EventNames::click, offset.x(), offset.y(), position.x(), position.y(), button));
             }
 
             if (run_activation_behavior) {
@@ -332,7 +332,7 @@ bool EventHandler::handle_mousedown(Gfx::IntPoint const& position, unsigned butt
 
         m_mousedown_target = node.ptr();
         auto offset = compute_mouse_event_offset(position, *layout_node);
-        node->dispatch_event(*UIEvents::MouseEvent::create_from_platform_event(node->document().window(), UIEvents::EventNames::mousedown, offset.x(), offset.y(), position.x(), position.y(), button));
+        node->dispatch_event(*UIEvents::MouseEvent::create_from_platform_event(node->realm(), UIEvents::EventNames::mousedown, offset.x(), offset.y(), position.x(), position.y(), button));
     }
 
     // NOTE: Dispatching an event may have disturbed the world.
@@ -453,7 +453,7 @@ bool EventHandler::handle_mousemove(Gfx::IntPoint const& position, unsigned butt
             }
 
             auto offset = compute_mouse_event_offset(position, *layout_node);
-            node->dispatch_event(*UIEvents::MouseEvent::create_from_platform_event(node->document().window(), UIEvents::EventNames::mousemove, offset.x(), offset.y(), position.x(), position.y()));
+            node->dispatch_event(*UIEvents::MouseEvent::create_from_platform_event(node->realm(), UIEvents::EventNames::mousemove, offset.x(), offset.y(), position.x(), position.y()));
             // NOTE: Dispatching an event may have disturbed the world.
             if (!paint_root() || paint_root() != node->document().paint_box())
                 return true;
@@ -542,7 +542,7 @@ bool EventHandler::handle_doubleclick(Gfx::IntPoint const& position, unsigned bu
         return false;
 
     auto offset = compute_mouse_event_offset(position, *layout_node);
-    node->dispatch_event(*UIEvents::MouseEvent::create_from_platform_event(node->document().window(), UIEvents::EventNames::dblclick, offset.x(), offset.y(), position.x(), position.y(), button));
+    node->dispatch_event(*UIEvents::MouseEvent::create_from_platform_event(node->realm(), UIEvents::EventNames::dblclick, offset.x(), offset.y(), position.x(), position.y(), button));
 
     // NOTE: Dispatching an event may have disturbed the world.
     if (!paint_root() || paint_root() != node->document().paint_box())
@@ -721,7 +721,7 @@ bool EventHandler::handle_keydown(KeyCode key, unsigned modifiers, u32 code_poin
         return true;
     }
 
-    auto event = UIEvents::KeyboardEvent::create_from_platform_event(document->window(), UIEvents::EventNames::keydown, key, modifiers, code_point);
+    auto event = UIEvents::KeyboardEvent::create_from_platform_event(document->realm(), UIEvents::EventNames::keydown, key, modifiers, code_point);
 
     if (JS::GCPtr<DOM::Element> focused_element = document->focused_element())
         return focused_element->dispatch_event(*event);
@@ -738,7 +738,7 @@ bool EventHandler::handle_keyup(KeyCode key, unsigned modifiers, u32 code_point)
     if (!document)
         return false;
 
-    auto event = UIEvents::KeyboardEvent::create_from_platform_event(document->window(), UIEvents::EventNames::keyup, key, modifiers, code_point);
+    auto event = UIEvents::KeyboardEvent::create_from_platform_event(document->realm(), UIEvents::EventNames::keyup, key, modifiers, code_point);
 
     if (JS::GCPtr<DOM::Element> focused_element = document->focused_element())
         return document->focused_element()->dispatch_event(*event);

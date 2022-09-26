@@ -4,24 +4,25 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibWeb/HTML/Window.h>
+#include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/Streams/AbstractOperations.h>
 #include <LibWeb/Streams/ReadableStream.h>
+#include <LibWeb/WebIDL/ExceptionOr.h>
 
 namespace Web::Streams {
 
 // https://streams.spec.whatwg.org/#rs-constructor
-WebIDL::ExceptionOr<JS::NonnullGCPtr<ReadableStream>> ReadableStream::create_with_global_object(HTML::Window& window)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<ReadableStream>> ReadableStream::construct_impl(JS::Realm& realm)
 {
-    auto* readable_stream = window.heap().allocate<ReadableStream>(window.realm(), window);
+    auto* readable_stream = realm.heap().allocate<ReadableStream>(realm, realm);
 
     return JS::NonnullGCPtr { *readable_stream };
 }
 
-ReadableStream::ReadableStream(HTML::Window& window)
-    : PlatformObject(window.realm())
+ReadableStream::ReadableStream(JS::Realm& realm)
+    : PlatformObject(realm)
 {
-    set_prototype(&window.cached_web_prototype("ReadableStream"));
+    set_prototype(&Bindings::cached_web_prototype(realm, "ReadableStream"));
 }
 
 ReadableStream::~ReadableStream() = default;

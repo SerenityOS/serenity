@@ -658,7 +658,7 @@ void Window::invoke_idle_callbacks()
         // 1. Pop the top callback from window's list of runnable idle callbacks.
         auto callback = m_runnable_idle_callbacks.take_first();
         // 2. Let deadlineArg be a new IdleDeadline whose [get deadline time algorithm] is getDeadline.
-        auto deadline_arg = RequestIdleCallback::IdleDeadline::create(*this);
+        auto deadline_arg = RequestIdleCallback::IdleDeadline::create(realm());
         // 3. Call callback with deadlineArg as its argument. If an uncaught runtime script error occurs, then report the exception.
         auto result = callback->invoke(deadline_arg);
         if (result.is_error())
@@ -744,7 +744,7 @@ void Window::initialize_web_interfaces(Badge<WindowEnvironmentSettingsObject>)
 
     Object::set_prototype(&Bindings::ensure_web_prototype<Bindings::WindowPrototype>(realm, "Window"));
 
-    m_crypto = Crypto::Crypto::create(*this);
+    m_crypto = Crypto::Crypto::create(realm);
 
     // FIXME: These should be native accessors, not properties
     define_direct_property("window", this, JS::Attribute::Enumerable);

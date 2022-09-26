@@ -6,20 +6,20 @@
 
 #include <AK/FlyString.h>
 #include <LibJS/Runtime/TypedArray.h>
+#include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/Encoding/TextEncoder.h>
-#include <LibWeb/HTML/Window.h>
 
 namespace Web::Encoding {
 
-JS::NonnullGCPtr<TextEncoder> TextEncoder::create_with_global_object(HTML::Window& window)
+JS::NonnullGCPtr<TextEncoder> TextEncoder::construct_impl(JS::Realm& realm)
 {
-    return *window.heap().allocate<TextEncoder>(window.realm(), window);
+    return *realm.heap().allocate<TextEncoder>(realm, realm);
 }
 
-TextEncoder::TextEncoder(HTML::Window& window)
-    : PlatformObject(window.realm())
+TextEncoder::TextEncoder(JS::Realm& realm)
+    : PlatformObject(realm)
 {
-    set_prototype(&window.cached_web_prototype("TextEncoder"));
+    set_prototype(&Bindings::cached_web_prototype(realm, "TextEncoder"));
 }
 
 TextEncoder::~TextEncoder() = default;

@@ -7,7 +7,6 @@
 
 #include <LibWeb/Fetch/BodyInit.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP/Bodies.h>
-#include <LibWeb/HTML/Window.h>
 #include <LibWeb/URL/URLSearchParams.h>
 #include <LibWeb/WebIDL/AbstractOperations.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
@@ -22,7 +21,7 @@ WebIDL::ExceptionOr<Infrastructure::BodyWithType> extract_body(JS::Realm& realm,
     if (auto const* handle = object.get_pointer<JS::Handle<Streams::ReadableStream>>()) {
         stream = const_cast<Streams::ReadableStream*>(handle->cell());
     } else {
-        stream = realm.heap().allocate<Streams::ReadableStream>(realm, verify_cast<HTML::Window>(realm.global_object()));
+        stream = realm.heap().allocate<Streams::ReadableStream>(realm, realm);
     }
 
     // FIXME: 2. Let action be null.

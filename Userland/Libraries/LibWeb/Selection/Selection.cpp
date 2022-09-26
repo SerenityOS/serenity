@@ -4,20 +4,20 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibWeb/HTML/Window.h>
+#include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/Selection/Selection.h>
 
 namespace Web::Selection {
 
-JS::NonnullGCPtr<Selection> Selection::create(HTML::Window& window)
+JS::NonnullGCPtr<Selection> Selection::create(JS::Realm& realm)
 {
-    return *window.heap().allocate<Selection>(window.realm(), window);
+    return *realm.heap().allocate<Selection>(realm, realm);
 }
 
-Selection::Selection(HTML::Window& window)
-    : PlatformObject(window.realm())
+Selection::Selection(JS::Realm& realm)
+    : PlatformObject(realm)
 {
-    set_prototype(&window.cached_web_prototype("Selection"));
+    set_prototype(&Bindings::cached_web_prototype(realm, "Selection"));
 }
 
 Selection::~Selection() = default;

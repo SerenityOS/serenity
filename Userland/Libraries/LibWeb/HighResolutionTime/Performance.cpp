@@ -17,7 +17,7 @@ Performance::Performance(HTML::Window& window)
     : DOM::EventTarget(window.realm())
     , m_window(window)
 {
-    set_prototype(&window.cached_web_prototype("Performance"));
+    set_prototype(&Bindings::cached_web_prototype(realm(), "Performance"));
     m_timer.start();
 }
 

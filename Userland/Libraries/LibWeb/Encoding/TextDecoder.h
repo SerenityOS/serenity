@@ -21,7 +21,7 @@ class TextDecoder : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(TextDecoder, Bindings::PlatformObject);
 
 public:
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<TextDecoder>> create_with_global_object(HTML::Window&, FlyString encoding);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<TextDecoder>> construct_impl(JS::Realm&, FlyString encoding);
 
     virtual ~TextDecoder() override;
 
@@ -33,7 +33,7 @@ public:
 
 private:
     // https://encoding.spec.whatwg.org/#dom-textdecoder
-    TextDecoder(HTML::Window&, TextCodec::Decoder&, FlyString encoding, bool fatal, bool ignore_bom);
+    TextDecoder(JS::Realm&, TextCodec::Decoder&, FlyString encoding, bool fatal, bool ignore_bom);
 
     TextCodec::Decoder& m_decoder;
     FlyString m_encoding;

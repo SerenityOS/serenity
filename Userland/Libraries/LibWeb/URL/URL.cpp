@@ -6,17 +6,17 @@
  */
 
 #include <AK/URLParser.h>
-#include <LibWeb/HTML/Window.h>
+#include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/URL/URL.h>
 
 namespace Web::URL {
 
-JS::NonnullGCPtr<URL> URL::create(HTML::Window& window, AK::URL url, JS::NonnullGCPtr<URLSearchParams> query)
+JS::NonnullGCPtr<URL> URL::create(JS::Realm& realm, AK::URL url, JS::NonnullGCPtr<URLSearchParams> query)
 {
-    return *window.heap().allocate<URL>(window.realm(), window, move(url), move(query));
+    return *realm.heap().allocate<URL>(realm, realm, move(url), move(query));
 }
 
-WebIDL::ExceptionOr<JS::NonnullGCPtr<URL>> URL::create_with_global_object(HTML::Window& window, String const& url, String const& base)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<URL>> URL::construct_impl(JS::Realm& realm, String const& url, String const& base)
 {
     // 1. Let parsedBase be null.
     Optional<AK::URL> parsed_base;
@@ -41,21 +41,21 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<URL>> URL::create_with_global_object(HTML::
     auto& query = parsed_url.query().is_null() ? String::empty() : parsed_url.query();
     // 6. Set this’s URL to parsedURL.
     // 7. Set this’s query object to a new URLSearchParams object.
-    auto query_object = MUST(URLSearchParams::create_with_global_object(window, query));
+    auto query_object = MUST(URLSearchParams::construct_impl(realm, query));
     // 8. Initialize this’s query object with query.
-    auto result_url = URL::create(window, move(parsed_url), move(query_object));
+    auto result_url = URL::create(realm, move(parsed_url), move(query_object));
     // 9. Set this’s query object’s URL object to this.
     result_url->m_query->m_url = result_url;
 
     return result_url;
 }
 
-URL::URL(HTML::Window& window, AK::URL url, JS::NonnullGCPtr<URLSearchParams> query)
-    : PlatformObject(window.realm())
+URL::URL(JS::Realm& realm, AK::URL url, JS::NonnullGCPtr<URLSearchParams> query)
+    : PlatformObject(realm)
     , m_url(move(url))
     , m_query(move(query))
 {
-    set_prototype(&window.cached_web_prototype("URL"));
+    set_prototype(&Bindings::cached_web_prototype(realm, "URL"));
 }
 
 URL::~URL() = default;

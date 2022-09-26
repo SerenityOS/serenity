@@ -12,7 +12,7 @@ PerformanceTiming::PerformanceTiming(HTML::Window& window)
     : PlatformObject(window.realm())
     , m_window(window)
 {
-    set_prototype(&window.cached_web_prototype("PerformanceTiming"));
+    set_prototype(&Bindings::cached_web_prototype(realm(), "PerformanceTiming"));
 }
 
 PerformanceTiming::~PerformanceTiming() = default;
