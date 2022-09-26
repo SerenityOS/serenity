@@ -4,20 +4,26 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/Geometry/DOMPoint.h>
 #include <LibWeb/HTML/Window.h>
 
 namespace Web::Geometry {
 
-JS::NonnullGCPtr<DOMPoint> DOMPoint::create_with_global_object(HTML::Window& window, double x, double y, double z, double w)
+JS::NonnullGCPtr<DOMPoint> DOMPoint::construct_impl(JS::Realm& realm, double x, double y, double z, double w)
 {
-    return *window.heap().allocate<DOMPoint>(window.realm(), window, x, y, z, w);
+    return *realm.heap().allocate<DOMPoint>(realm, realm, x, y, z, w);
 }
 
-DOMPoint::DOMPoint(HTML::Window& window, double x, double y, double z, double w)
-    : DOMPointReadOnly(window, x, y, z, w)
+JS::NonnullGCPtr<DOMPoint> DOMPoint::create_with_global_object(HTML::Window& window, double x, double y, double z, double w)
 {
-    set_prototype(&window.cached_web_prototype("DOMPoint"));
+    return construct_impl(window.realm(), x, y, z, w);
+}
+
+DOMPoint::DOMPoint(JS::Realm& realm, double x, double y, double z, double w)
+    : DOMPointReadOnly(realm, x, y, z, w)
+{
+    set_prototype(&Bindings::cached_web_prototype(realm, "DOMPoint"));
 }
 
 DOMPoint::~DOMPoint() = default;

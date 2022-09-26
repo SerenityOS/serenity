@@ -17,7 +17,7 @@ class DOMRectReadOnly : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(DOMRectReadOnly, Bindings::PlatformObject);
 
 public:
-    static JS::NonnullGCPtr<DOMRectReadOnly> create_with_global_object(HTML::Window&, double x = 0, double y = 0, double width = 0, double height = 0);
+    static JS::NonnullGCPtr<DOMRectReadOnly> construct_impl(JS::Realm&, double x = 0, double y = 0, double width = 0, double height = 0);
 
     virtual ~DOMRectReadOnly() override;
 
@@ -32,7 +32,7 @@ public:
     double left() const { return min(x(), x() + width()); }
 
 protected:
-    DOMRectReadOnly(HTML::Window&, double x, double y, double width, double height);
+    DOMRectReadOnly(JS::Realm&, double x, double y, double width, double height);
 
     Gfx::FloatRect m_rect;
 };

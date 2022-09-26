@@ -5,22 +5,22 @@
  */
 
 #include <LibJS/Heap/Handle.h>
+#include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/Geometry/DOMRect.h>
 #include <LibWeb/Geometry/DOMRectList.h>
-#include <LibWeb/HTML/Window.h>
 
 namespace Web::Geometry {
 
-JS::NonnullGCPtr<DOMRectList> DOMRectList::create(HTML::Window& window, Vector<JS::Handle<DOMRect>> rect_handles)
+JS::NonnullGCPtr<DOMRectList> DOMRectList::create(JS::Realm& realm, Vector<JS::Handle<DOMRect>> rect_handles)
 {
     Vector<JS::NonnullGCPtr<DOMRect>> rects;
     for (auto& rect : rect_handles)
         rects.append(*rect);
-    return *window.heap().allocate<DOMRectList>(window.realm(), window, move(rects));
+    return *realm.heap().allocate<DOMRectList>(realm, realm, move(rects));
 }
 
-DOMRectList::DOMRectList(HTML::Window& window, Vector<JS::NonnullGCPtr<DOMRect>> rects)
-    : Bindings::LegacyPlatformObject(window.cached_web_prototype("DOMRectList"))
+DOMRectList::DOMRectList(JS::Realm& realm, Vector<JS::NonnullGCPtr<DOMRect>> rects)
+    : Bindings::LegacyPlatformObject(Bindings::cached_web_prototype(realm, "DOMRectList"))
     , m_rects(move(rects))
 {
 }

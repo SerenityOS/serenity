@@ -15,6 +15,7 @@ class DOMPoint final : public DOMPointReadOnly {
     WEB_PLATFORM_OBJECT(DOMPoint, DOMPointReadOnly);
 
 public:
+    static JS::NonnullGCPtr<DOMPoint> construct_impl(JS::Realm&, double x = 0, double y = 0, double z = 0, double w = 0);
     static JS::NonnullGCPtr<DOMPoint> create_with_global_object(HTML::Window&, double x = 0, double y = 0, double z = 0, double w = 0);
 
     virtual ~DOMPoint() override;
@@ -30,7 +31,7 @@ public:
     void set_w(double w) { m_w = w; }
 
 private:
-    DOMPoint(HTML::Window&, double x, double y, double z, double w);
+    DOMPoint(JS::Realm&, double x, double y, double z, double w);
 };
 
 }
