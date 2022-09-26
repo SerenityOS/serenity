@@ -7,13 +7,12 @@
 #include <AK/Debug.h>
 #include <LibGL/GLContext.h>
 #include <LibWeb/HTML/HTMLCanvasElement.h>
-#include <LibWeb/HTML/Window.h>
 #include <LibWeb/WebGL/WebGLRenderingContextBase.h>
 
 namespace Web::WebGL {
 
-WebGLRenderingContextBase::WebGLRenderingContextBase(HTML::Window& window, HTML::HTMLCanvasElement& canvas_element, NonnullOwnPtr<GL::GLContext> context, WebGLContextAttributes context_creation_parameters, WebGLContextAttributes actual_context_parameters)
-    : PlatformObject(window.realm())
+WebGLRenderingContextBase::WebGLRenderingContextBase(JS::Realm& realm, HTML::HTMLCanvasElement& canvas_element, NonnullOwnPtr<GL::GLContext> context, WebGLContextAttributes context_creation_parameters, WebGLContextAttributes actual_context_parameters)
+    : PlatformObject(realm)
     , m_canvas_element(canvas_element)
     , m_context(move(context))
     , m_context_creation_parameters(move(context_creation_parameters))
