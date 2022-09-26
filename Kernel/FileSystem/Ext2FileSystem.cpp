@@ -832,7 +832,7 @@ ErrorOr<size_t> Ext2FSInode::read_bytes_locked(off_t offset, size_t count, UserO
 
     // Note: We bypass the const declaration of this method, but this is a strong
     // requirement to be able to accomplish the read operation successfully.
-    // We call this special method becuase it locks a separate mutex to ensure we
+    // We call this special method because it locks a separate mutex to ensure we
     // update the block list of the inode safely, as the m_inode_lock is locked in
     // shared mode.
     TRY(const_cast<Ext2FSInode&>(*this).compute_block_list_with_exclusive_locking());
