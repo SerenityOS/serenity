@@ -29,6 +29,7 @@ set(SOURCES
     CommandPalette.cpp
     CommonActions.cpp
     CommonLocationsProvider.cpp
+    CommonMenus.cpp
     ConnectionToWindowManagerServer.cpp
     ConnectionToWindowServer.cpp
     Desktop.cpp
