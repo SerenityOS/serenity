@@ -222,6 +222,7 @@ public:
 
     Menu& add_menu(String name);
     ErrorOr<NonnullRefPtr<Menu>> try_add_menu(String name);
+    ErrorOr<void> try_add_menu(NonnullRefPtr<Menu> menu);
     void flash_menubar_menu_for(MenuItem const&);
 
     void flush_pending_paints_immediately();

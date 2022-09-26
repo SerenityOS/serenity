@@ -1272,6 +1272,16 @@ Gfx::Bitmap* Window::back_bitmap()
     return m_back_store ? &m_back_store->bitmap() : nullptr;
 }
 
+ErrorOr<void> Window::try_add_menu(NonnullRefPtr<Menu> menu)
+{
+    TRY(m_menubar->try_add_menu({}, move(menu)));
+    if (m_window_id) {
+        menu->realize_menu_if_needed();
+        ConnectionToWindowServer::the().async_add_menu(m_window_id, menu->menu_id());
+    }
+    return {};
+}
+
 ErrorOr<NonnullRefPtr<Menu>> Window::try_add_menu(String name)
 {
     auto menu = TRY(m_menubar->try_add_menu({}, move(name)));
