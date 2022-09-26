@@ -76,6 +76,8 @@ public:
     static NonnullRefPtr<Action> create_checkable(String text, Shortcut const& shortcut, Function<void(Action&)> callback, Core::Object* parent = nullptr);
     static NonnullRefPtr<Action> create_checkable(String text, Shortcut const& shortcut, RefPtr<Gfx::Bitmap> icon, Function<void(Action&)> callback, Core::Object* parent = nullptr);
 
+    static ErrorOr<NonnullRefPtr<Action>> try_create_checkable(String text, Shortcut const& shortcut, Function<void(Action&)> callback, Core::Object* parent = nullptr);
+
     static RefPtr<Action> find_action_for_shortcut(Core::Object& object, Shortcut const& shortcut);
 
     virtual ~Action() override;
