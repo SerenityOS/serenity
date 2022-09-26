@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibJS/Runtime/GlobalObject.h>
-#include <LibWeb/HTML/Window.h>
+#include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/WebAssembly/WebAssemblyMemoryConstructor.h>
 #include <LibWeb/WebAssembly/WebAssemblyMemoryPrototype.h>
 #include <LibWeb/WebAssembly/WebAssemblyObject.h>
@@ -53,10 +52,9 @@ JS::ThrowCompletionOr<JS::Object*> WebAssemblyMemoryConstructor::construct(Funct
 void WebAssemblyMemoryConstructor::initialize(JS::Realm& realm)
 {
     auto& vm = this->vm();
-    auto& window = verify_cast<HTML::Window>(realm.global_object());
 
     NativeFunction::initialize(realm);
-    define_direct_property(vm.names.prototype, &window.ensure_web_prototype<WebAssemblyMemoryPrototype>("WebAssemblyMemoryPrototype"), 0);
+    define_direct_property(vm.names.prototype, &Bindings::ensure_web_prototype<WebAssemblyMemoryPrototype>(realm, "WebAssemblyMemoryPrototype"), 0);
     define_direct_property(vm.names.length, JS::Value(1), JS::Attribute::Configurable);
 }
 

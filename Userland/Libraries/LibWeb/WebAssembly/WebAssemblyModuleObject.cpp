@@ -10,7 +10,7 @@
 namespace Web::Bindings {
 
 WebAssemblyModuleObject::WebAssemblyModuleObject(JS::Realm& realm, size_t index)
-    : Object(verify_cast<HTML::Window>(realm.global_object()).ensure_web_prototype<WebAssemblyModulePrototype>("WebAssemblyModulePrototype"))
+    : Object(Bindings::ensure_web_prototype<WebAssemblyModulePrototype>(realm, "WebAssemblyModulePrototype"))
     , m_index(index)
 {
 }

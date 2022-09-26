@@ -19,7 +19,7 @@
 #include <LibJS/Runtime/TypedArray.h>
 #include <LibWasm/AbstractMachine/Interpreter.h>
 #include <LibWasm/AbstractMachine/Validator.h>
-#include <LibWeb/HTML/Window.h>
+#include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/WebAssembly/WebAssemblyInstanceConstructor.h>
 #include <LibWeb/WebAssembly/WebAssemblyObject.h>
 
@@ -42,28 +42,27 @@ void WebAssemblyObject::initialize(JS::Realm& realm)
 
     auto& vm = this->vm();
 
-    auto& window = verify_cast<HTML::Window>(realm.global_object());
-    auto& memory_constructor = window.ensure_web_constructor<WebAssemblyMemoryConstructor>("WebAssembly.Memory");
+    auto& memory_constructor = Bindings::ensure_web_constructor<WebAssemblyMemoryConstructor>(realm, "WebAssembly.Memory");
     memory_constructor.define_direct_property(vm.names.name, js_string(vm, "WebAssembly.Memory"), JS::Attribute::Configurable);
-    auto& memory_prototype = window.ensure_web_prototype<WebAssemblyMemoryPrototype>("WebAssemblyMemoryPrototype");
+    auto& memory_prototype = Bindings::ensure_web_prototype<WebAssemblyMemoryPrototype>(realm, "WebAssemblyMemoryPrototype");
     memory_prototype.define_direct_property(vm.names.constructor, &memory_constructor, JS::Attribute::Writable | JS::Attribute::Configurable);
     define_direct_property("Memory", &memory_constructor, JS::Attribute::Writable | JS::Attribute::Configurable);
 
-    auto& instance_constructor = window.ensure_web_constructor<WebAssemblyInstanceConstructor>("WebAssembly.Instance");
+    auto& instance_constructor = Bindings::ensure_web_constructor<WebAssemblyInstanceConstructor>(realm, "WebAssembly.Instance");
     instance_constructor.define_direct_property(vm.names.name, js_string(vm, "WebAssembly.Instance"), JS::Attribute::Configurable);
-    auto& instance_prototype = window.ensure_web_prototype<WebAssemblyInstancePrototype>("WebAssemblyInstancePrototype");
+    auto& instance_prototype = Bindings::ensure_web_prototype<WebAssemblyInstancePrototype>(realm, "WebAssemblyInstancePrototype");
     instance_prototype.define_direct_property(vm.names.constructor, &instance_constructor, JS::Attribute::Writable | JS::Attribute::Configurable);
     define_direct_property("Instance", &instance_constructor, JS::Attribute::Writable | JS::Attribute::Configurable);
 
-    auto& module_constructor = window.ensure_web_constructor<WebAssemblyModuleConstructor>("WebAssembly.Module");
+    auto& module_constructor = Bindings::ensure_web_constructor<WebAssemblyModuleConstructor>(realm, "WebAssembly.Module");
     module_constructor.define_direct_property(vm.names.name, js_string(vm, "WebAssembly.Module"), JS::Attribute::Configurable);
-    auto& module_prototype = window.ensure_web_prototype<WebAssemblyModulePrototype>("WebAssemblyModulePrototype");
+    auto& module_prototype = Bindings::ensure_web_prototype<WebAssemblyModulePrototype>(realm, "WebAssemblyModulePrototype");
     module_prototype.define_direct_property(vm.names.constructor, &module_constructor, JS::Attribute::Writable | JS::Attribute::Configurable);
     define_direct_property("Module", &module_constructor, JS::Attribute::Writable | JS::Attribute::Configurable);
 
-    auto& table_constructor = window.ensure_web_constructor<WebAssemblyTableConstructor>("WebAssembly.Table");
+    auto& table_constructor = Bindings::ensure_web_constructor<WebAssemblyTableConstructor>(realm, "WebAssembly.Table");
     table_constructor.define_direct_property(vm.names.name, js_string(vm, "WebAssembly.Table"), JS::Attribute::Configurable);
-    auto& table_prototype = window.ensure_web_prototype<WebAssemblyTablePrototype>("WebAssemblyTablePrototype");
+    auto& table_prototype = Bindings::ensure_web_prototype<WebAssemblyTablePrototype>(realm, "WebAssemblyTablePrototype");
     table_prototype.define_direct_property(vm.names.constructor, &table_constructor, JS::Attribute::Writable | JS::Attribute::Configurable);
     define_direct_property("Table", &table_constructor, JS::Attribute::Writable | JS::Attribute::Configurable);
 }
@@ -482,7 +481,7 @@ JS::NativeFunction* create_native_function(JS::VM& vm, Wasm::FunctionAddress add
 }
 
 WebAssemblyMemoryObject::WebAssemblyMemoryObject(JS::Realm& realm, Wasm::MemoryAddress address)
-    : Object(verify_cast<HTML::Window>(realm.global_object()).ensure_web_prototype<WebAssemblyMemoryPrototype>("WebAssemblyMemoryPrototype"))
+    : Object(Bindings::ensure_web_prototype<WebAssemblyMemoryPrototype>(realm, "WebAssemblyMemoryPrototype"))
     , m_address(address)
 {
 }

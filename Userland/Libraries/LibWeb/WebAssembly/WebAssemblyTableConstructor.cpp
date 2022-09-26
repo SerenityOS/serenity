@@ -6,7 +6,7 @@
 
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/TypedArray.h>
-#include <LibWeb/HTML/Window.h>
+#include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/WebAssembly/WebAssemblyObject.h>
 #include <LibWeb/WebAssembly/WebAssemblyTableConstructor.h>
 #include <LibWeb/WebAssembly/WebAssemblyTableObject.h>
@@ -83,10 +83,9 @@ JS::ThrowCompletionOr<JS::Object*> WebAssemblyTableConstructor::construct(Functi
 void WebAssemblyTableConstructor::initialize(JS::Realm& realm)
 {
     auto& vm = this->vm();
-    auto& window = verify_cast<HTML::Window>(realm.global_object());
 
     NativeFunction::initialize(realm);
-    define_direct_property(vm.names.prototype, &window.ensure_web_prototype<WebAssemblyTablePrototype>("WebAssemblyTablePrototype"), 0);
+    define_direct_property(vm.names.prototype, &Bindings::ensure_web_prototype<WebAssemblyTablePrototype>(realm, "WebAssemblyTablePrototype"), 0);
     define_direct_property(vm.names.length, JS::Value(1), JS::Attribute::Configurable);
 }
 

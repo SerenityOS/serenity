@@ -4,9 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/TypedArray.h>
-#include <LibWeb/HTML/Window.h>
+#include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/WebAssembly/WebAssemblyModuleConstructor.h>
 #include <LibWeb/WebAssembly/WebAssemblyModuleObject.h>
 #include <LibWeb/WebAssembly/WebAssemblyModulePrototype.h>
@@ -40,10 +39,9 @@ JS::ThrowCompletionOr<JS::Object*> WebAssemblyModuleConstructor::construct(Funct
 void WebAssemblyModuleConstructor::initialize(JS::Realm& realm)
 {
     auto& vm = this->vm();
-    auto& window = verify_cast<HTML::Window>(realm.global_object());
 
     NativeFunction::initialize(realm);
-    define_direct_property(vm.names.prototype, &window.ensure_web_prototype<WebAssemblyModulePrototype>("WebAssemblyModulePrototype"), 0);
+    define_direct_property(vm.names.prototype, &Bindings::ensure_web_prototype<WebAssemblyModulePrototype>(realm, "WebAssemblyModulePrototype"), 0);
     define_direct_property(vm.names.length, JS::Value(1), JS::Attribute::Configurable);
 }
 
