@@ -251,6 +251,9 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
             if (row_start != row_end)
                 row_span = row_end - row_start;
         }
+        // FIXME: Have yet to find the spec for this.
+        if (!child_box.computed_values().grid_row_start().is_position() && child_box.computed_values().grid_row_end().is_position() && row_end == 1)
+            row_start = 1;
 
         // If the placement contains two spans, remove the one contributed by the end grid-placement
         // property.
@@ -361,6 +364,9 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
                 if (column_start < 0)
                     column_start = 1;
             }
+            // FIXME: Have yet to find the spec for this.
+            if (!child_box.computed_values().grid_column_start().is_position() && child_box.computed_values().grid_column_end().is_position() && column_end == 1)
+                column_start = 1;
 
             // If a name is given as a <custom-ident>, only lines with that name are counted. If not enough
             // lines with that name exist, all implicit grid lines on the side of the explicit grid
