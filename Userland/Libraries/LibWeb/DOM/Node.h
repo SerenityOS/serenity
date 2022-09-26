@@ -116,8 +116,6 @@ public:
     Document& document() { return *m_document; }
     Document const& document() const { return *m_document; }
 
-    HTML::Window& window() const;
-
     JS::GCPtr<Document> owner_document() const;
 
     const HTML::HTMLAnchorElement* enclosing_link_element() const;

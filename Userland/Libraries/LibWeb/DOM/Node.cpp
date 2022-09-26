@@ -1497,9 +1497,4 @@ bool Node::is_following(Node const& other) const
     return false;
 }
 
-HTML::Window& Node::window() const
-{
-    return document().window();
-}
-
 }
