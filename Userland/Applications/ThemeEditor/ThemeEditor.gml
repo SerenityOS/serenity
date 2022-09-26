@@ -1,41 +1,44 @@
 @GUI::Widget {
-    layout: @GUI::VerticalBoxLayout {}
+    layout: @GUI::VerticalBoxLayout {
+        margins: [0, 4, 4]
+        spacing: 6
+    }
     fill_with_background_color: true
 
     @GUI::Widget {
-        layout: @GUI::HorizontalBoxLayout {}
+        layout: @GUI::HorizontalBoxLayout {
+            spacing: 4
+        }
 
-        @GUI::Frame {
-            layout: @GUI::HorizontalBoxLayout {}
-            name: "preview_frame"
+        @ThemeEditor::PreviewWidget {
+            name: "preview_widget"
         }
 
         @GUI::TabWidget {
             name: "property_tabs"
+            container_margins: [5]
         }
     }
 
     @GUI::Widget {
         name: "theme_override_controls"
         layout: @GUI::HorizontalBoxLayout {
-            margins: [0, 4]
+            spacing: 6
         }
-        fixed_height: 30
+        preferred_height: "shrink"
 
         @GUI::Layout::Spacer {}
 
-        @GUI::Button {
-            name: "reset"
-            text: "Reset to Previous System Theme"
+        @GUI::DialogButton {
+            name: "reset_button"
+            text: "Reset"
             enabled: false
-            fixed_width: 190
         }
 
-        @GUI::Button {
-            name: "apply"
-            text: "Apply as System Theme"
+        @GUI::DialogButton {
+            name: "apply_button"
+            text: "Apply"
             enabled: false
-            fixed_width: 140
         }
     }
 }
