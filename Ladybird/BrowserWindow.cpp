@@ -62,23 +62,23 @@ BrowserWindow::BrowserWindow()
 
     auto* color_scheme_menu = view_menu->addMenu("&Color Scheme");
 
-    auto* group = new QActionGroup(this);
+    auto* color_scheme_group = new QActionGroup(this);
 
     auto* auto_color_scheme = new QAction("&Auto");
     auto_color_scheme->setCheckable(true);
-    group->addAction(auto_color_scheme);
+    color_scheme_group->addAction(auto_color_scheme);
     color_scheme_menu->addAction(auto_color_scheme);
     QObject::connect(auto_color_scheme, &QAction::triggered, this, &BrowserWindow::enable_auto_color_scheme);
 
     auto* light_color_scheme = new QAction("&Light");
     light_color_scheme->setCheckable(true);
-    group->addAction(light_color_scheme);
+    color_scheme_group->addAction(light_color_scheme);
     color_scheme_menu->addAction(light_color_scheme);
     QObject::connect(light_color_scheme, &QAction::triggered, this, &BrowserWindow::enable_light_color_scheme);
 
     auto* dark_color_scheme = new QAction("&Dark");
     dark_color_scheme->setCheckable(true);
-    group->addAction(dark_color_scheme);
+    color_scheme_group->addAction(dark_color_scheme);
     color_scheme_menu->addAction(dark_color_scheme);
     QObject::connect(dark_color_scheme, &QAction::triggered, this, &BrowserWindow::enable_dark_color_scheme);
 
