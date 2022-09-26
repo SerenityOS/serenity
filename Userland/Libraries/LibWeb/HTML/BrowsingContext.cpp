@@ -392,12 +392,13 @@ void BrowsingContext::scroll_to(Gfx::IntPoint const& position)
 
 void BrowsingContext::scroll_to_anchor(String const& fragment)
 {
-    if (!active_document())
+    JS::GCPtr<DOM::Document> document = active_document();
+    if (!document)
         return;
 
-    auto element = active_document()->get_element_by_id(fragment);
+    auto element = document->get_element_by_id(fragment);
     if (!element) {
-        auto candidates = active_document()->get_elements_by_name(fragment);
+        auto candidates = document->get_elements_by_name(fragment);
         for (auto& candidate : candidates->collect_matching_elements()) {
             if (is<HTML::HTMLAnchorElement>(*candidate)) {
                 element = &verify_cast<HTML::HTMLAnchorElement>(*candidate);
@@ -406,9 +407,12 @@ void BrowsingContext::scroll_to_anchor(String const& fragment)
         }
     }
 
-    active_document()->force_layout();
+    if (!element)
+        return;
 
-    if (!element || !element->layout_node())
+    document->force_layout();
+
+    if (!element->layout_node())
         return;
 
     auto& layout_node = *element->layout_node();
