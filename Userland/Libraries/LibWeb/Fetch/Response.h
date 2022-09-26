@@ -31,7 +31,7 @@ class Response final
 
 public:
     static JS::NonnullGCPtr<Response> create(NonnullOwnPtr<Infrastructure::Response>, Headers::Guard, JS::Realm&);
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<Response>> create_with_global_object(HTML::Window&, Optional<BodyInit> const& body = {}, ResponseInit const& init = {});
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<Response>> construct_impl(JS::Realm&, Optional<BodyInit> const& body = {}, ResponseInit const& init = {});
 
     virtual ~Response() override;
 

@@ -7,8 +7,8 @@
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/IteratorOperations.h>
 #include <LibWeb/Bindings/HeadersIteratorPrototype.h>
+#include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/Fetch/HeadersIterator.h>
-#include <LibWeb/HTML/Window.h>
 
 namespace Web::Fetch {
 
@@ -22,7 +22,7 @@ HeadersIterator::HeadersIterator(Headers const& headers, JS::Object::PropertyKin
     , m_headers(headers)
     , m_iteration_kind(iteration_kind)
 {
-    set_prototype(&headers.global_object().ensure_web_prototype<Bindings::HeadersIteratorPrototype>("HeadersIterator"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::HeadersIteratorPrototype>(headers.realm(), "HeadersIterator"));
 }
 
 HeadersIterator::~HeadersIterator() = default;

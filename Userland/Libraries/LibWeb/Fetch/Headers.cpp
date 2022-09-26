@@ -5,16 +5,16 @@
  */
 
 #include <LibJS/Runtime/VM.h>
+#include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/Fetch/Headers.h>
-#include <LibWeb/HTML/Window.h>
 
 namespace Web::Fetch {
 
 // https://fetch.spec.whatwg.org/#dom-headers
-WebIDL::ExceptionOr<JS::NonnullGCPtr<Headers>> Headers::create_with_global_object(HTML::Window& window, Optional<HeadersInit> const& init)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<Headers>> Headers::construct_impl(JS::Realm& realm, Optional<HeadersInit> const& init)
 {
     // The new Headers(init) constructor steps are:
-    auto* headers = window.heap().allocate<Headers>(window.realm(), window);
+    auto* headers = realm.heap().allocate<Headers>(realm, realm);
 
     // 1. Set this’s guard to "none".
     headers->m_guard = Guard::None;
@@ -26,11 +26,11 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Headers>> Headers::create_with_global_objec
     return JS::NonnullGCPtr(*headers);
 }
 
-Headers::Headers(HTML::Window& window)
-    : PlatformObject(window.realm())
+Headers::Headers(JS::Realm& realm)
+    : PlatformObject(realm)
     , m_header_list(make_ref_counted<Infrastructure::HeaderList>())
 {
-    set_prototype(&window.cached_web_prototype("Headers"));
+    set_prototype(&Bindings::cached_web_prototype(realm, "Headers"));
 }
 
 Headers::~Headers() = default;
@@ -40,8 +40,8 @@ WebIDL::ExceptionOr<void> Headers::append(String const& name_string, String cons
 {
     // The append(name, value) method steps are to append (name, value) to this.
     auto header = Infrastructure::Header {
-        .name = TRY_OR_RETURN_OOM(global_object(), ByteBuffer::copy(name_string.bytes())),
-        .value = TRY_OR_RETURN_OOM(global_object(), ByteBuffer::copy(value_string.bytes())),
+        .name = TRY_OR_RETURN_OOM(realm(), ByteBuffer::copy(name_string.bytes())),
+        .value = TRY_OR_RETURN_OOM(realm(), ByteBuffer::copy(value_string.bytes())),
     };
     TRY(append(move(header)));
     return {};
@@ -98,7 +98,7 @@ WebIDL::ExceptionOr<String> Headers::get(String const& name_string)
         return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "Invalid header name" };
 
     // 2. Return the result of getting name from this’s header list.
-    auto byte_buffer = TRY_OR_RETURN_OOM(global_object(), m_header_list->get(name));
+    auto byte_buffer = TRY_OR_RETURN_OOM(realm(), m_header_list->get(name));
     // FIXME: Teach BindingsGenerator about Optional<String>
     return byte_buffer.has_value() ? String { byte_buffer->span() } : String {};
 }
@@ -125,10 +125,10 @@ WebIDL::ExceptionOr<void> Headers::set(String const& name_string, String const& 
     auto value = value_string.bytes();
 
     // 1. Normalize value.
-    auto normalized_value = TRY_OR_RETURN_OOM(global_object(), Infrastructure::normalize_header_value(value));
+    auto normalized_value = TRY_OR_RETURN_OOM(realm(), Infrastructure::normalize_header_value(value));
 
     auto header = Infrastructure::Header {
-        .name = TRY_OR_RETURN_OOM(global_object(), ByteBuffer::copy(name)),
+        .name = TRY_OR_RETURN_OOM(realm(), ByteBuffer::copy(name)),
         .value = move(normalized_value),
     };
 
@@ -155,7 +155,7 @@ WebIDL::ExceptionOr<void> Headers::set(String const& name_string, String const& 
         return {};
 
     // 7. Set (name, value) in this’s header list.
-    TRY_OR_RETURN_OOM(global_object(), m_header_list->set(move(header)));
+    TRY_OR_RETURN_OOM(realm(), m_header_list->set(move(header)));
 
     // 8. If this’s guard is "request-no-cors", then remove privileged no-CORS request headers from this.
     if (m_guard == Guard::RequestNoCORS)
@@ -208,7 +208,7 @@ WebIDL::ExceptionOr<void> Headers::append(Infrastructure::Header header)
     auto& [name, value] = header;
 
     // 1. Normalize value.
-    value = TRY_OR_RETURN_OOM(global_object(), Infrastructure::normalize_header_value(value));
+    value = TRY_OR_RETURN_OOM(realm(), Infrastructure::normalize_header_value(value));
 
     // 2. If name is not a header name or value is not a header value, then throw a TypeError.
     if (!Infrastructure::is_header_name(name))
@@ -227,21 +227,21 @@ WebIDL::ExceptionOr<void> Headers::append(Infrastructure::Header header)
     // 5. Otherwise, if headers’s guard is "request-no-cors":
     if (m_guard == Guard::RequestNoCORS) {
         // 1. Let temporaryValue be the result of getting name from headers’s header list.
-        auto temporary_value = TRY_OR_RETURN_OOM(global_object(), m_header_list->get(name));
+        auto temporary_value = TRY_OR_RETURN_OOM(realm(), m_header_list->get(name));
 
         // 2. If temporaryValue is null, then set temporaryValue to value.
         if (!temporary_value.has_value()) {
-            temporary_value = TRY_OR_RETURN_OOM(global_object(), ByteBuffer::copy(value));
+            temporary_value = TRY_OR_RETURN_OOM(realm(), ByteBuffer::copy(value));
         }
         // 3. Otherwise, set temporaryValue to temporaryValue, followed by 0x2C 0x20, followed by value.
         else {
-            TRY_OR_RETURN_OOM(global_object(), temporary_value->try_append(0x2c));
-            TRY_OR_RETURN_OOM(global_object(), temporary_value->try_append(0x20));
-            TRY_OR_RETURN_OOM(global_object(), temporary_value->try_append(value));
+            TRY_OR_RETURN_OOM(realm(), temporary_value->try_append(0x2c));
+            TRY_OR_RETURN_OOM(realm(), temporary_value->try_append(0x20));
+            TRY_OR_RETURN_OOM(realm(), temporary_value->try_append(value));
         }
 
         auto temporary_header = Infrastructure::Header {
-            .name = TRY_OR_RETURN_OOM(global_object(), ByteBuffer::copy(name)),
+            .name = TRY_OR_RETURN_OOM(realm(), ByteBuffer::copy(name)),
             .value = temporary_value.release_value(),
         };
 
@@ -254,8 +254,8 @@ WebIDL::ExceptionOr<void> Headers::append(Infrastructure::Header header)
     if (m_guard == Guard::Response && Infrastructure::is_forbidden_response_header_name(name))
         return {};
 
-    // 7. Append (name, value) to headers’s header list
-    TRY_OR_RETURN_OOM(global_object(), m_header_list->append(move(header)));
+    // 7. Append (name, value) to headers’s header list.
+    TRY_OR_RETURN_OOM(realm(), m_header_list->append(move(header)));
 
     // 8. If headers’s guard is "request-no-cors", then remove privileged no-CORS request headers from headers.
     if (m_guard == Guard::RequestNoCORS)
@@ -278,8 +278,8 @@ WebIDL::ExceptionOr<void> Headers::fill(HeadersInit const& object)
 
                 // 2. Append (header’s first item, header’s second item) to headers.
                 auto header = Fetch::Infrastructure::Header {
-                    .name = TRY_OR_RETURN_OOM(global_object(), ByteBuffer::copy(entry[0].bytes())),
-                    .value = TRY_OR_RETURN_OOM(global_object(), ByteBuffer::copy(entry[1].bytes())),
+                    .name = TRY_OR_RETURN_OOM(realm(), ByteBuffer::copy(entry[0].bytes())),
+                    .value = TRY_OR_RETURN_OOM(realm(), ByteBuffer::copy(entry[1].bytes())),
                 };
                 TRY(append(move(header)));
             }
@@ -289,8 +289,8 @@ WebIDL::ExceptionOr<void> Headers::fill(HeadersInit const& object)
         [this](OrderedHashMap<String, String> const& object) -> WebIDL::ExceptionOr<void> {
             for (auto const& entry : object) {
                 auto header = Fetch::Infrastructure::Header {
-                    .name = TRY_OR_RETURN_OOM(global_object(), ByteBuffer::copy(entry.key.bytes())),
-                    .value = TRY_OR_RETURN_OOM(global_object(), ByteBuffer::copy(entry.value.bytes())),
+                    .name = TRY_OR_RETURN_OOM(realm(), ByteBuffer::copy(entry.key.bytes())),
+                    .value = TRY_OR_RETURN_OOM(realm(), ByteBuffer::copy(entry.value.bytes())),
                 };
                 TRY(append(move(header)));
             }

@@ -31,7 +31,7 @@ public:
         None,
     };
 
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<Headers>> create_with_global_object(HTML::Window& window, Optional<HeadersInit> const& init);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<Headers>> construct_impl(JS::Realm& realm, Optional<HeadersInit> const& init);
 
     virtual ~Headers() override;
 
@@ -58,7 +58,7 @@ public:
 private:
     friend class HeadersIterator;
 
-    explicit Headers(HTML::Window&);
+    explicit Headers(JS::Realm&);
 
     void remove_privileged_no_cors_headers();
 

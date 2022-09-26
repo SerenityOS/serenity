@@ -5,6 +5,7 @@
  */
 
 #include <AK/URLParser.h>
+#include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/Fetch/Enums.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP/Bodies.h>
@@ -12,7 +13,6 @@
 #include <LibWeb/Fetch/Infrastructure/HTTP/Statuses.h>
 #include <LibWeb/Fetch/Response.h>
 #include <LibWeb/HTML/Scripting/Environments.h>
-#include <LibWeb/HTML/Window.h>
 #include <LibWeb/Infra/JSON.h>
 
 namespace Web::Fetch {
@@ -21,8 +21,7 @@ Response::Response(JS::Realm& realm, NonnullOwnPtr<Infrastructure::Response> res
     : PlatformObject(realm)
     , m_response(move(response))
 {
-    auto& window = verify_cast<HTML::Window>(realm.global_object());
-    set_prototype(&window.cached_web_prototype("Response"));
+    set_prototype(&Bindings::cached_web_prototype(realm, "Response"));
 }
 
 Response::~Response() = default;
@@ -67,8 +66,6 @@ Optional<Infrastructure::Body&> Response::body_impl()
 // https://fetch.spec.whatwg.org/#response-create
 JS::NonnullGCPtr<Response> Response::create(NonnullOwnPtr<Infrastructure::Response> response, Headers::Guard guard, JS::Realm& realm)
 {
-    auto& window = verify_cast<HTML::Window>(realm.global_object());
-
     // Copy a NonnullRefPtr to the response's header list before response is being move()'d.
     auto response_reader_list = response->header_list();
 
@@ -77,7 +74,7 @@ JS::NonnullGCPtr<Response> Response::create(NonnullOwnPtr<Infrastructure::Respon
     auto* response_object = realm.heap().allocate<Response>(realm, realm, move(response));
 
     // 3. Set responseObject’s headers to a new Headers object with realm, whose headers list is response’s headers list and guard is guard.
-    response_object->m_headers = realm.heap().allocate<Headers>(realm, window);
+    response_object->m_headers = realm.heap().allocate<Headers>(realm, realm);
     response_object->m_headers->set_header_list(move(response_reader_list));
     response_object->m_headers->set_guard(guard);
 
@@ -88,10 +85,6 @@ JS::NonnullGCPtr<Response> Response::create(NonnullOwnPtr<Infrastructure::Respon
 // https://fetch.spec.whatwg.org/#initialize-a-response
 WebIDL::ExceptionOr<void> Response::initialize_response(ResponseInit const& init, Optional<Infrastructure::BodyWithType> const& body)
 {
-    auto& vm = Bindings::main_thread_vm();
-    auto& realm = *vm.current_realm();
-    auto& window = verify_cast<HTML::Window>(realm.global_object());
-
     // 1. If init["status"] is not in the range 200 to 599, inclusive, then throw a RangeError.
     if (init.status < 200 || init.status > 599)
         return WebIDL::SimpleException { WebIDL::SimpleExceptionType::RangeError, "Status must be in range 200-599"sv };
@@ -102,7 +95,7 @@ WebIDL::ExceptionOr<void> Response::initialize_response(ResponseInit const& init
     m_response->set_status(init.status);
 
     // 4. Set response’s response’s status message to init["statusText"].
-    m_response->set_status_message(TRY_OR_RETURN_OOM(window, ByteBuffer::copy(init.status_text.bytes())));
+    m_response->set_status_message(TRY_OR_RETURN_OOM(realm(), ByteBuffer::copy(init.status_text.bytes())));
 
     // 5. If init["headers"] exists, then fill response’s headers with init["headers"].
     if (init.headers.has_value())
@@ -120,10 +113,10 @@ WebIDL::ExceptionOr<void> Response::initialize_response(ResponseInit const& init
         // 3. If body’s type is non-null and response’s header list does not contain `Content-Type`, then append (`Content-Type`, body’s type) to response’s header list.
         if (body->type.has_value() && m_response->header_list()->contains("Content-Type"sv.bytes())) {
             auto header = Infrastructure::Header {
-                .name = TRY_OR_RETURN_OOM(global_object(), ByteBuffer::copy("Content-Type"sv.bytes())),
-                .value = TRY_OR_RETURN_OOM(global_object(), ByteBuffer::copy(body->type->span())),
+                .name = TRY_OR_RETURN_OOM(realm(), ByteBuffer::copy("Content-Type"sv.bytes())),
+                .value = TRY_OR_RETURN_OOM(realm(), ByteBuffer::copy(body->type->span())),
             };
-            TRY_OR_RETURN_OOM(global_object(), m_response->header_list()->append(move(header)));
+            TRY_OR_RETURN_OOM(realm(), m_response->header_list()->append(move(header)));
         }
     }
 
@@ -131,22 +124,17 @@ WebIDL::ExceptionOr<void> Response::initialize_response(ResponseInit const& init
 }
 
 // https://fetch.spec.whatwg.org/#dom-response
-WebIDL::ExceptionOr<JS::NonnullGCPtr<Response>> Response::create_with_global_object(HTML::Window& window, Optional<BodyInit> const& body, ResponseInit const& init)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<Response>> Response::construct_impl(JS::Realm& realm, Optional<BodyInit> const& body, ResponseInit const& init)
 {
-    auto& realm = window.realm();
-
     // Referred to as 'this' in the spec.
-    auto response_object = [&] {
-        auto response = adopt_own(*new Infrastructure::Response());
-        return JS::NonnullGCPtr { *realm.heap().allocate<Response>(realm, realm, move(response)) };
-    }();
+    auto response_object = JS::NonnullGCPtr { *realm.heap().allocate<Response>(realm, realm, make<Infrastructure::Response>()) };
 
     // 1. Set this’s response to a new response.
     // NOTE: This is done at the beginning as the 'this' value Response object
     //       cannot exist with a null Infrastructure::Response.
 
     // 2. Set this’s headers to a new Headers object with this’s relevant Realm, whose header list is this’s response’s header list and guard is "response".
-    response_object->m_headers = realm.heap().allocate<Headers>(realm, window);
+    response_object->m_headers = realm.heap().allocate<Headers>(realm, realm);
     response_object->m_headers->set_header_list(response_object->response().header_list());
     response_object->m_headers->set_guard(Headers::Guard::Response);
 
@@ -176,9 +164,7 @@ JS::NonnullGCPtr<Response> Response::error()
 // https://fetch.spec.whatwg.org/#dom-response-redirect
 WebIDL::ExceptionOr<JS::NonnullGCPtr<Response>> Response::redirect(String const& url, u16 status)
 {
-    auto& vm = Bindings::main_thread_vm();
-    auto& realm = *vm.current_realm();
-    auto& window = verify_cast<HTML::Window>(realm.global_object());
+    auto& realm = HTML::current_settings_object().realm();
 
     // 1. Let parsedURL be the result of parsing url with current settings object’s API base URL.
     auto api_base_url = HTML::current_settings_object().api_base_url();
@@ -194,7 +180,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Response>> Response::redirect(String const&
 
     // 4. Let responseObject be the result of creating a Response object, given a new response, "immutable", and this’s relevant Realm.
     // FIXME: How can we reliably get 'this', i.e. the object the function was called on, in IDL-defined functions?
-    auto response_object = Response::create(make<Infrastructure::Response>(), Headers::Guard::Immutable, *vm.current_realm());
+    auto response_object = Response::create(make<Infrastructure::Response>(), Headers::Guard::Immutable, realm);
 
     // 5. Set responseObject’s response’s status to status.
     response_object->response().set_status(status);
@@ -204,10 +190,10 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Response>> Response::redirect(String const&
 
     // 7. Append (`Location`, value) to responseObject’s response’s header list.
     auto header = Infrastructure::Header {
-        .name = TRY_OR_RETURN_OOM(window, ByteBuffer::copy("Location"sv.bytes())),
-        .value = TRY_OR_RETURN_OOM(window, ByteBuffer::copy(value.bytes())),
+        .name = TRY_OR_RETURN_OOM(realm, ByteBuffer::copy("Location"sv.bytes())),
+        .value = TRY_OR_RETURN_OOM(realm, ByteBuffer::copy(value.bytes())),
     };
-    TRY_OR_RETURN_OOM(window, response_object->response().header_list()->append(move(header)));
+    TRY_OR_RETURN_OOM(realm, response_object->response().header_list()->append(move(header)));
 
     // 8. Return responseObject.
     return response_object;
@@ -218,7 +204,6 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Response>> Response::json(JS::Value data, R
 {
     auto& vm = Bindings::main_thread_vm();
     auto& realm = *vm.current_realm();
-    auto& window = verify_cast<HTML::Window>(realm.global_object());
 
     // 1. Let bytes the result of running serialize a JavaScript value to JSON bytes on data.
     auto bytes = TRY(Infra::serialize_javascript_value_to_json_bytes(vm, data));
@@ -228,12 +213,12 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Response>> Response::json(JS::Value data, R
 
     // 3. Let responseObject be the result of creating a Response object, given a new response, "response", and this’s relevant Realm.
     // FIXME: How can we reliably get 'this', i.e. the object the function was called on, in IDL-defined functions?
-    auto response_object = Response::create(make<Infrastructure::Response>(), Headers::Guard::Response, *vm.current_realm());
+    auto response_object = Response::create(make<Infrastructure::Response>(), Headers::Guard::Response, realm);
 
     // 4. Perform initialize a response given responseObject, init, and (body, "application/json").
     auto body_with_type = Infrastructure::BodyWithType {
         .body = move(body),
-        .type = TRY_OR_RETURN_OOM(window, ByteBuffer::copy("application/json"sv.bytes()))
+        .type = TRY_OR_RETURN_OOM(realm, ByteBuffer::copy("application/json"sv.bytes()))
     };
     TRY(response_object->initialize_response(init, move(body_with_type)));
 

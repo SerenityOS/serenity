@@ -35,7 +35,7 @@ public:
         Done = 4,
     };
 
-    static JS::NonnullGCPtr<XMLHttpRequest> create_with_global_object(HTML::Window&);
+    static JS::NonnullGCPtr<XMLHttpRequest> construct_impl(JS::Realm&);
 
     virtual ~XMLHttpRequest() override;
 
