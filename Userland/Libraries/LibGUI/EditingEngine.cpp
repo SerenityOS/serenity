@@ -223,9 +223,29 @@ void EditingEngine::move_to_logical_line_beginning()
 void EditingEngine::move_to_line_beginning()
 {
     if (m_editor->is_wrapping_enabled()) {
-        // FIXME: Replicate the first_nonspace_column behavior in wrapping mode.
+        TextPosition new_cursor;
+
         auto home_position = m_editor->cursor_content_rect().location().translated(-m_editor->width(), 0);
-        m_editor->set_cursor(m_editor->text_position_at_content_position(home_position));
+        auto start_of_visual_line = m_editor->text_position_at_content_position(home_position);
+        auto first_non_space_column = m_editor->current_line().first_non_whitespace_column();
+
+        // Subsequent "move_to_line_beginning()" calls move us in the following way:
+        // 1. To the start of the current visual line
+        // 2. To the first non-whitespace character on the logical line
+        // 3. To the first character on the logical line
+        // ...and then repeat 2 and 3.
+        if (m_editor->cursor() == start_of_visual_line) {
+            // Already at 1 so go to 2
+            new_cursor = { m_editor->cursor().line(), first_non_space_column };
+        } else if (m_editor->cursor().column() == first_non_space_column) {
+            // At 2 so go to 3
+            new_cursor = { m_editor->cursor().line(), 0 };
+        } else {
+            // Anything else, so go to 1
+            new_cursor = start_of_visual_line;
+        }
+
+        m_editor->set_cursor(new_cursor);
     } else {
         move_to_logical_line_beginning();
     }
