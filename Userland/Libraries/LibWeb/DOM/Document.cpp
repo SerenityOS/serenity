@@ -1178,7 +1178,6 @@ JS::NonnullGCPtr<Range> Document::create_range()
 WebIDL::ExceptionOr<JS::NonnullGCPtr<Event>> Document::create_event(String const& interface)
 {
     auto& realm = this->realm();
-    auto& window = verify_cast<HTML::Window>(realm.global_object());
 
     // NOTE: This is named event here, since we do step 5 and 6 as soon as possible for each case.
     // 1. Let constructor be null.
@@ -1202,17 +1201,17 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Event>> Document::create_event(String const
     } else if (interface_lowercase.is_one_of("event", "events")) {
         event = Event::create(realm, "");
     } else if (interface_lowercase == "focusevent") {
-        event = UIEvents::FocusEvent::create(window, "");
+        event = UIEvents::FocusEvent::create(realm, "");
     } else if (interface_lowercase == "hashchangeevent") {
         event = Event::create(realm, ""); // FIXME: Create HashChangeEvent
     } else if (interface_lowercase == "htmlevents") {
         event = Event::create(realm, "");
     } else if (interface_lowercase == "keyboardevent") {
-        event = UIEvents::KeyboardEvent::create(window, "");
+        event = UIEvents::KeyboardEvent::create(realm, "");
     } else if (interface_lowercase == "messageevent") {
         event = HTML::MessageEvent::create(realm, "");
     } else if (interface_lowercase.is_one_of("mouseevent", "mouseevents")) {
-        event = UIEvents::MouseEvent::create(window, "");
+        event = UIEvents::MouseEvent::create(realm, "");
     } else if (interface_lowercase == "storageevent") {
         event = Event::create(realm, ""); // FIXME: Create StorageEvent
     } else if (interface_lowercase == "svgevents") {
@@ -1222,7 +1221,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Event>> Document::create_event(String const
     } else if (interface_lowercase == "touchevent") {
         event = Event::create(realm, ""); // FIXME: Create TouchEvent
     } else if (interface_lowercase.is_one_of("uievent", "uievents")) {
-        event = UIEvents::UIEvent::create(window, "");
+        event = UIEvents::UIEvent::create(realm, "");
     }
 
     // 3. If constructor is null, then throw a "NotSupportedError" DOMException.

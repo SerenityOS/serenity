@@ -18,10 +18,12 @@ class FocusEvent final : public UIEvent {
     WEB_PLATFORM_OBJECT(FocusEvent, UIEvent);
 
 public:
-    static FocusEvent* create_with_global_object(HTML::Window&, FlyString const& event_name, FocusEventInit const& event_init);
+    static FocusEvent* construct_impl(JS::Realm&, FlyString const& event_name, FocusEventInit const& event_init);
 
-    FocusEvent(HTML::Window&, FlyString const& event_name, FocusEventInit const&);
     virtual ~FocusEvent() override;
+
+private:
+    FocusEvent(JS::Realm&, FlyString const& event_name, FocusEventInit const&);
 };
 
 }

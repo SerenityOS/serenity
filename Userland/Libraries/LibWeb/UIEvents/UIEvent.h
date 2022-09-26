@@ -21,11 +21,8 @@ class UIEvent : public DOM::Event {
     WEB_PLATFORM_OBJECT(UIEvent, DOM::Event);
 
 public:
-    static UIEvent* create(HTML::Window&, FlyString const& type);
-    static UIEvent* create_with_global_object(HTML::Window&, FlyString const& event_name, UIEventInit const& event_init);
-
-    UIEvent(HTML::Window&, FlyString const& event_name);
-    UIEvent(HTML::Window&, FlyString const& event_name, UIEventInit const& event_init);
+    static UIEvent* create(JS::Realm&, FlyString const& type);
+    static UIEvent* construct_impl(JS::Realm&, FlyString const& event_name, UIEventInit const& event_init);
 
     virtual ~UIEvent() override;
 
@@ -41,6 +38,9 @@ public:
     }
 
 protected:
+    UIEvent(JS::Realm&, FlyString const& event_name);
+    UIEvent(JS::Realm&, FlyString const& event_name, UIEventInit const& event_init);
+
     virtual void visit_edges(Cell::Visitor&) override;
 
     JS::GCPtr<HTML::Window> m_view;

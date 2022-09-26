@@ -6,22 +6,22 @@
  */
 
 #include <LibGUI/Event.h>
+#include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/HTML/EventNames.h>
-#include <LibWeb/HTML/Window.h>
 #include <LibWeb/UIEvents/EventNames.h>
 #include <LibWeb/UIEvents/MouseEvent.h>
 
 namespace Web::UIEvents {
 
-MouseEvent::MouseEvent(HTML::Window& window_object, FlyString const& event_name, MouseEventInit const& event_init)
-    : UIEvent(window_object, event_name, event_init)
+MouseEvent::MouseEvent(JS::Realm& realm, FlyString const& event_name, MouseEventInit const& event_init)
+    : UIEvent(realm, event_name, event_init)
     , m_offset_x(event_init.offset_x)
     , m_offset_y(event_init.offset_y)
     , m_client_x(event_init.client_x)
     , m_client_y(event_init.client_y)
     , m_button(event_init.button)
 {
-    set_prototype(&window_object.cached_web_prototype("MouseEvent"));
+    set_prototype(&Bindings::cached_web_prototype(realm, "MouseEvent"));
     set_event_characteristics();
 }
 
@@ -46,12 +46,12 @@ static i16 determine_button(unsigned mouse_button)
     }
 }
 
-MouseEvent* MouseEvent::create(HTML::Window& window_object, FlyString const& event_name, MouseEventInit const& event_init)
+MouseEvent* MouseEvent::create(JS::Realm& realm, FlyString const& event_name, MouseEventInit const& event_init)
 {
-    return window_object.heap().allocate<MouseEvent>(window_object.realm(), window_object, event_name, event_init);
+    return realm.heap().allocate<MouseEvent>(realm, realm, event_name, event_init);
 }
 
-MouseEvent* MouseEvent::create_from_platform_event(HTML::Window& window_object, FlyString const& event_name, double offset_x, double offset_y, double client_x, double client_y, unsigned mouse_button)
+MouseEvent* MouseEvent::create_from_platform_event(JS::Realm& realm, FlyString const& event_name, double offset_x, double offset_y, double client_x, double client_y, unsigned mouse_button)
 {
     MouseEventInit event_init {};
     event_init.offset_x = offset_x;
@@ -59,7 +59,12 @@ MouseEvent* MouseEvent::create_from_platform_event(HTML::Window& window_object, 
     event_init.client_x = client_x;
     event_init.client_y = client_y;
     event_init.button = determine_button(mouse_button);
-    return MouseEvent::create(window_object, event_name, event_init);
+    return MouseEvent::create(realm, event_name, event_init);
+}
+
+MouseEvent* MouseEvent::create_from_platform_event(HTML::Window& window, FlyString const& event_name, double offset_x, double offset_y, double client_x, double client_y, unsigned mouse_button)
+{
+    return create_from_platform_event(window.realm(), event_name, offset_x, offset_y, client_x, client_y, mouse_button);
 }
 
 void MouseEvent::set_event_characteristics()
