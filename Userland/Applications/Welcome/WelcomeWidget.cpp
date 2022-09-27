@@ -17,9 +17,7 @@
 #include <LibGUI/Process.h>
 #include <LibGfx/Font/BitmapFont.h>
 #include <LibGfx/Palette.h>
-#include <LibMarkdown/Document.h>
 #include <LibWebView/OutOfProcessWebView.h>
-#include <serenity.h>
 
 WelcomeWidget::WelcomeWidget()
 {
@@ -104,15 +102,7 @@ void WelcomeWidget::open_and_parse_tips_file()
 
 void WelcomeWidget::open_and_parse_readme_file()
 {
-    auto file = Core::File::construct("/home/anon/README.md");
-    if (!file->open(Core::OpenMode::ReadOnly))
-        return;
-
-    auto document = Markdown::Document::parse(file->read_all());
-    if (document) {
-        auto html = document->render_to_html();
-        m_web_view->load_html(html, URL::create_with_file_protocol("/home/anon/README.md"));
-    }
+    m_web_view->load(URL::create_with_file_scheme("/home/anon/README.md"));
 }
 
 void WelcomeWidget::set_random_tip()
