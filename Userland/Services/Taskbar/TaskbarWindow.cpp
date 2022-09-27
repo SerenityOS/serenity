@@ -101,11 +101,7 @@ TaskbarWindow::TaskbarWindow(NonnullRefPtr<GUI::Menu> start_menu)
 
 void TaskbarWindow::config_string_did_change(String const& domain, String const& group, String const& key, String const& value)
 {
-    if (domain == "Calendar"sv)
-        return;
-
-    VERIFY(domain == "Taskbar");
-    if (group == "Clock" && key == "TimeFormat") {
+    if (domain == "Taskbar" && group == "Clock" && key == "TimeFormat") {
         m_clock_widget->update_format(value);
         update_applet_area();
     }
