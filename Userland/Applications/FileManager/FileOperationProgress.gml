@@ -84,7 +84,7 @@
         shrink_to_fit: true
         layout: @GUI::HorizontalBoxLayout {}
 
-        @GUI::Widget {}
+        @GUI::Layout::Spacer {}
 
         @GUI::Button {
             text: "Cancel"

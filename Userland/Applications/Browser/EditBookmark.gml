@@ -40,7 +40,7 @@
         fixed_height: 24
         layout: @GUI::HorizontalBoxLayout {}
 
-        @GUI::Widget {}
+        @GUI::Layout::Spacer {}
 
         @GUI::Button {
             name: "ok_button"

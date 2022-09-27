@@ -25,5 +25,5 @@
         }
     }
 
-    @GUI::Widget {}
+    @GUI::Layout::Spacer {}
 }

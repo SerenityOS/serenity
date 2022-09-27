@@ -78,7 +78,7 @@
                 spacing: 6
             }
 
-            @GUI::Widget {}
+            @GUI::Layout::Spacer {}
 
             @GUI::DialogButton {
                 text: "OK"

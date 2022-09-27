@@ -29,7 +29,7 @@
                     fixed_height: 60
                 }
 
-                @GUI::Widget {}
+                @GUI::Layout::Spacer {}
             }
 
             @GUI::Widget {

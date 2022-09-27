@@ -71,7 +71,7 @@
         fixed_height: 22
         layout: @GUI::HorizontalBoxLayout {}
 
-        @GUI::Widget {}
+        @GUI::Layout::Spacer {}
 
         @GUI::DialogButton {
             name: "ok_button"
