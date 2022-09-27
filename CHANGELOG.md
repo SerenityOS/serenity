@@ -35,4 +35,4 @@
 
 ## 0.3.0
 
-- Bytecode: Added a new highlighter for LibJS' bytecode
+- Bytecode: Added a new highlighter for LibJS' Bytecode serialization format

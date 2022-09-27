@@ -5,10 +5,11 @@ Syntax highlighting for SerenityOS' Domain Specific Languages:
 - `.ipc`: Endpoint specification for the Inter Process Communication protocol.
 - `.gml`: Graphical Markup Language for creating SerenityOS GUI application layouts.
 - `.idl`: [Web-IDL](https://webidl.spec.whatwg.org/) which SerenityOS's LibWeb directly uses to generate web API bindings.
+- The [LibJS](https://libjs.dev) Bytecode serialization format (no extension) as output by `js` with the `-d` option.
 
 ## Features
 
-Provides TextMate Grammar-based syntax highlighting for the IPC and GML languages. Syntax highlighting is mostly compliant with SerenityOS' own syntax highlighters (in the case of GML) and code generators (in the case of IPC).
+Provides TextMate Grammar-based syntax highlighting for the IPC and GML languages, as well as the LibJS Bytecode serialization format. Syntax highlighting is mostly compliant with SerenityOS' own syntax highlighters (in the case of GML) and code generators (in the case of IPC).
 
 Additionally it provides TextMate Grammar-based syntax highlighting for [Web-IDL](https://webidl.spec.whatwg.org/) with all extensions to it that SerenityOS uses.
 
@@ -23,6 +24,10 @@ Additionally it provides TextMate Grammar-based syntax highlighting for [Web-IDL
 ### Web IDL syntax highlighting
 
 ![](./img/idl-highlight.png)
+
+### LibJS Bytecode serialization highlighting
+
+![](./img/bytecode-highlight.png)
 
 ### GML formatting
 
