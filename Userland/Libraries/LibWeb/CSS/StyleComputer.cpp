@@ -556,7 +556,7 @@ static RefPtr<StyleValue> get_custom_property(DOM::Element const& element, FlySt
     return nullptr;
 }
 
-bool StyleComputer::expand_unresolved_values(DOM::Element& element, StringView property_name, HashMap<FlyString, NonnullRefPtr<PropertyDependencyNode>>& dependencies, Vector<Parser::ComponentValue> const& source, Vector<Parser::ComponentValue>& dest, size_t source_start_index) const
+bool StyleComputer::expand_unresolved_values(DOM::Element& element, StringView property_name, HashMap<FlyString, NonnullRefPtr<PropertyDependencyNode>>& dependencies, Parser::TokenStream<Parser::ComponentValue>& source, Vector<Parser::ComponentValue>& dest) const
 {
     // FIXME: Do this better!
     // We build a copy of the tree of ComponentValues, with all var()s and attr()s replaced with their contents.
@@ -565,7 +565,7 @@ bool StyleComputer::expand_unresolved_values(DOM::Element& element, StringView p
     // Arbitrary large value chosen to avoid the billion-laughs attack.
     // https://www.w3.org/TR/css-variables-1/#long-variables
     const size_t MAX_VALUE_COUNT = 16384;
-    if (source.size() + dest.size() > MAX_VALUE_COUNT) {
+    if (source.remaining_token_count() + dest.size() > MAX_VALUE_COUNT) {
         dbgln("Stopped expanding CSS variables: maximum length reached.");
         return false;
     }
@@ -578,15 +578,16 @@ bool StyleComputer::expand_unresolved_values(DOM::Element& element, StringView p
         return new_node;
     };
 
-    for (size_t source_index = source_start_index; source_index < source.size(); source_index++) {
-        auto const& value = source[source_index];
+    while (source.has_next_token()) {
+        auto const& value = source.next_token();
         if (value.is_function()) {
             if (value.function().name().equals_ignoring_case("var"sv)) {
-                auto const& var_contents = value.function().values();
-                if (var_contents.is_empty())
+                Parser::TokenStream var_contents { value.function().values() };
+                var_contents.skip_whitespace();
+                if (!var_contents.has_next_token())
                     return false;
 
-                auto const& custom_property_name_token = var_contents.first();
+                auto const& custom_property_name_token = var_contents.next_token();
                 if (!custom_property_name_token.is(Parser::Token::Type::Ident))
                     return false;
                 auto custom_property_name = custom_property_name_token.token().ident();
@@ -606,24 +607,32 @@ bool StyleComputer::expand_unresolved_values(DOM::Element& element, StringView p
 
                 if (auto custom_property_value = get_custom_property(element, custom_property_name)) {
                     VERIFY(custom_property_value->is_unresolved());
-                    if (!expand_unresolved_values(element, custom_property_name, dependencies, custom_property_value->as_unresolved().values(), dest, 0))
+                    Parser::TokenStream custom_property_tokens { custom_property_value->as_unresolved().values() };
+                    if (!expand_unresolved_values(element, custom_property_name, dependencies, custom_property_tokens, dest))
                         return false;
                     continue;
                 }
 
                 // Use the provided fallback value, if any.
-                if (var_contents.size() > 2 && var_contents[1].is(Parser::Token::Type::Comma)) {
-                    if (!expand_unresolved_values(element, property_name, dependencies, var_contents, dest, 2))
+                var_contents.skip_whitespace();
+                if (var_contents.has_next_token()) {
+                    auto const& comma_token = var_contents.next_token();
+                    if (!comma_token.is(Parser::Token::Type::Comma))
                         return false;
-                    continue;
+                    var_contents.skip_whitespace();
+                    if (!expand_unresolved_values(element, property_name, dependencies, var_contents, dest))
+                        return false;
                 }
-            } else if (value.function().name().equals_ignoring_case("attr"sv)) {
+                continue;
+            }
+            if (value.function().name().equals_ignoring_case("attr"sv)) {
                 // https://drafts.csswg.org/css-values-5/#attr-substitution
-                auto const& attr_contents = value.function().values();
-                if (attr_contents.is_empty())
+                Parser::TokenStream attr_contents { value.function().values() };
+                attr_contents.skip_whitespace();
+                if (!attr_contents.has_next_token())
                     return false;
 
-                auto const& attr_name_token = attr_contents.first();
+                auto const& attr_name_token = attr_contents.next_token();
                 if (!attr_name_token.is(Parser::Token::Type::Ident))
                     return false;
                 auto attr_name = attr_name_token.token().ident();
@@ -638,8 +647,13 @@ bool StyleComputer::expand_unresolved_values(DOM::Element& element, StringView p
 
                 // 2. Otherwise, if the attr() function has a fallback value as its last argument, replace the attr() function by the fallback value.
                 //    If there are any var() or attr() references in the fallback, substitute them as well.
-                if (attr_contents.size() > 2 && attr_contents[1].is(Parser::Token::Type::Comma)) {
-                    if (!expand_unresolved_values(element, property_name, dependencies, attr_contents, dest, 2))
+                attr_contents.skip_whitespace();
+                if (attr_contents.has_next_token()) {
+                    auto const& comma_token = attr_contents.next_token();
+                    if (!comma_token.is(Parser::Token::Type::Comma))
+                        return false;
+                    attr_contents.skip_whitespace();
+                    if (!expand_unresolved_values(element, property_name, dependencies, attr_contents, dest))
                         return false;
                     continue;
                 }
@@ -650,7 +664,8 @@ bool StyleComputer::expand_unresolved_values(DOM::Element& element, StringView p
 
             auto const& source_function = value.function();
             Vector<Parser::ComponentValue> function_values;
-            if (!expand_unresolved_values(element, property_name, dependencies, source_function.values(), function_values, 0))
+            Parser::TokenStream source_function_contents { source_function.values() };
+            if (!expand_unresolved_values(element, property_name, dependencies, source_function_contents, function_values))
                 return false;
             NonnullRefPtr<Parser::Function> function = Parser::Function::create(source_function.name(), move(function_values));
             dest.empend(function);
@@ -658,8 +673,9 @@ bool StyleComputer::expand_unresolved_values(DOM::Element& element, StringView p
         }
         if (value.is_block()) {
             auto const& source_block = value.block();
+            Parser::TokenStream source_block_values { source_block.values() };
             Vector<Parser::ComponentValue> block_values;
-            if (!expand_unresolved_values(element, property_name, dependencies, source_block.values(), block_values, 0))
+            if (!expand_unresolved_values(element, property_name, dependencies, source_block_values, block_values))
                 return false;
             NonnullRefPtr<Parser::Block> block = Parser::Block::create(source_block.token(), move(block_values));
             dest.empend(move(block));
@@ -679,7 +695,8 @@ RefPtr<StyleValue> StyleComputer::resolve_unresolved_style_value(DOM::Element& e
 
     Vector<Parser::ComponentValue> expanded_values;
     HashMap<FlyString, NonnullRefPtr<PropertyDependencyNode>> dependencies;
-    if (!expand_unresolved_values(element, string_from_property_id(property_id), dependencies, unresolved.values(), expanded_values, 0))
+    Parser::TokenStream unresolved_values { unresolved.values() };
+    if (!expand_unresolved_values(element, string_from_property_id(property_id), dependencies, unresolved_values, expanded_values))
         return {};
 
     if (auto parsed_value = Parser::Parser::parse_css_value({}, Parser::ParsingContext { document() }, property_id, expanded_values))
