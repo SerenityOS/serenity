@@ -127,14 +127,17 @@ InitialContainingBlock& Node::root()
 
 void Node::set_needs_display()
 {
-    if (auto* block = containing_block()) {
-        block->paint_box()->for_each_fragment([&](auto& fragment) {
-            if (&fragment.layout_node() == this || is_ancestor_of(fragment.layout_node())) {
-                browsing_context().set_needs_display(enclosing_int_rect(fragment.absolute_rect()));
-            }
-            return IterationDecision::Continue;
-        });
-    }
+    auto* containing_block = this->containing_block();
+    if (!containing_block)
+        return;
+    if (!containing_block->paint_box())
+        return;
+    containing_block->paint_box()->for_each_fragment([&](auto& fragment) {
+        if (&fragment.layout_node() == this || is_ancestor_of(fragment.layout_node())) {
+            browsing_context().set_needs_display(enclosing_int_rect(fragment.absolute_rect()));
+        }
+        return IterationDecision::Continue;
+    });
 }
 
 Gfx::FloatPoint Node::box_type_agnostic_position() const
