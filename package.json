@@ -59,6 +59,14 @@
                     ".idl"
                 ],
                 "configuration": "./language-config-idl.json"
+            },
+            {
+                "id": "libjs-bytecode-serenity",
+                "aliases": [
+                    "LibJS Bytecode (SerenityOS)"
+                ],
+                "extensions": [],
+                "configuration": "./language-config-libjs-bytecode.json"
             }
         ],
         "grammars": [
@@ -76,6 +84,11 @@
                 "language": "web-idl-serenity",
                 "scopeName": "source.serenity-idl",
                 "path": "./syntaxes/serenity-web-idl.tmLanguage.json"
+            },
+            {
+                "language": "libjs-bytecode-serenity",
+                "scopeName": "source.libjs.bytecode",
+                "path": "./syntaxes/serenity-libjs-bytecode.tmLanguage.json"
             }
         ]
     },

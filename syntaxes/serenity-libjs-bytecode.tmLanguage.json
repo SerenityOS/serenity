@@ -1,0 +1,160 @@
+{
+	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+	"scopeName": "source.libjs.bytecode",
+	"name": "LibJS Bytecode",
+	"firstLineMatch": "JS::Bytecode::Executable",
+	"patterns": [
+		{
+			"include": "#program"
+		},
+		{
+			"include": "#string-table"
+		},
+		{
+			"include": "#identifier-table"
+		}
+	],
+
+	"repository": {
+		"program": {
+			"name": "meta.program",
+			"begin": "^(JS(::)Bytecode(::)Executable) (\\()(.*)(\\))$",
+			"beginCaptures": {
+				"0": { "name": "meta.program.header.libjs.bytecode" },
+				"1": { "name": "header.libjs.bytecode" },
+				"2": { "name": "punctuation.colon.libjs.bytecode" },
+				"3": { "name": "punctuation.colon.libjs.bytecode" },
+				"4": { "name": "punctuation.brace.round.begin.libjs.bytecode" },
+				"5": { "name": "markup.underline.link.libjs.bytecode" },
+				"6": { "name": "punctuation.brace.round.end.libjs.bytecode" }
+			},
+			"patterns": [ { "include": "#block" } ],
+			"end": "^$|(?=^JS::Bytecode::Executable)"
+		},
+		"block": {
+			"name": "meta.block.$1.libjs.bytecode",
+			"begin": "^(\\d+)(:)$",
+			"beginCaptures": {
+				"0": { "name": "meta.block.header.libjs.bytecode" },
+				"1": { "name": "constant.numeric.libjs.bytecode" },
+				"2": { "name": "punctuation.colon.libjs.bytecode" }
+			},
+			"while": "^\\[ *[0-9a-f]+\\] *.+$",
+			"whileCaptures": {
+				"0": { "patterns": [ { "include": "#instruction-line" } ] }
+			}
+		},
+		"instruction-line": {
+			"name": "meta.instruction.libjs.bytecode",
+			"match": "((\\[) *([0-9a-f]+)(\\])) *(.+)",
+			"captures": {
+				"1": { "name": "meta.instruction.address.libjs.bytecode" },
+				"2": { "name": "punctuation.brace.square.open.libjs.bytecode" },
+				"3": { "name": "constant.numeric.libjs.bytecode" },
+				"4": { "name": "punctuation.brace.square.end.libjs.bytecode" },
+				"5": { "patterns": [ { "include": "#instruction" } ] }
+			}
+		},
+		"instruction": {
+			"begin": "\\w+",
+			"beginCaptures": { "0": { "name": "entity.name.function.instruction.libjs.bytecode" } },
+			"patterns": [
+				{
+					"match": "(?<= )(?:(\\w+)(:))?((?:\\(?\"(?:[^\\\\]|\\\\.)*\"\\)?)?|\\S*)(?= |$)",
+					"captures": {
+						"1": { "name": "entity.name.tag.libjs.bytecode" },
+						"2": { "name": "punctuation.colon.libjs.bytecode" },
+						"3": {
+							"patterns": [
+								{
+									"match": "(\\()(.*)(\\))",
+									"captures": {
+										"1": { "name": "punctuation.brace.round.begin.libjs.bytecode" },
+										"2": { "name": "string.other.libjs.bytecode" },
+										"3": { "name": "punctuation.brace.round.end.libjs.bytecode" }
+									}
+								},
+								{
+									"include": "#value"
+								}
+							]
+						}
+					}
+				}
+			],
+			"end": "$"
+		},
+		"value": {
+			"patterns": [
+				{
+					"name": "meta.value.block-index.libjs.bytecode",
+					"match": "(@)(\\d+)",
+					"captures": {
+						"0": { "name": "variable.libjs.bytecode" }
+					}
+				},
+				{
+					"name": "meta.value.register.libjs.bytecode",
+					"match": "(\\$)(\\d+)|(acc)",
+					"captures": {
+						"0": { "name": "variable.libjs.bytecode" }
+					}
+				},
+				{
+					"match": "(\\d+)",
+					"captures": {
+						"1": { "name": "constant.numeric.libjs.bytecode" }
+					}
+				},
+				{
+					"match": "(\\w+)",
+					"captures": {
+						"1": { "name": "string.libjs.bytecode" }
+					}
+				}
+			]
+		},
+		"string-table": {
+			"name": "meta.string-table.libjs.bytecode",
+			"begin": "(String Table)(:)",
+			"beginCaptures": {
+				"0": { "name": "meta.string-table.header.libjs.bytecode" },
+				"1": { "name": "header.libjs.bytecode" },
+				"2": { "name": "punctuation.colon.libjs.bytecode" }
+			},
+			"patterns": [
+				{
+					"name": "meta.string-table.entry.libjs.bytecode",
+					"match": "^(\\d)(:) *(.*)$",
+					"captures": {
+						"1": { "name": "constant.numeric.libjs.bytecode" },
+						"2": { "name": "punctuation.colon.libjs.bytecode" },
+						"3": { "name": "string.libjs.bytecode" }
+					}
+				}
+			],
+			"end": "^$"
+		},
+		"identifier-table": {
+			"name": "meta.identifier-table.libjs.bytecode",
+			"begin": "(Identifier Table)(:)",
+			"beginCaptures": {
+				"0": { "name": "meta.identifier-table.header.libjs.bytecode" },
+				"1": { "name": "header.libjs.bytecode" },
+				"2": { "name": "punctuation.colon.libjs.bytecode" }
+			},
+			"patterns": [
+				{
+					"name": "meta.identifier-table.entry.libjs.bytecode",
+					"match": "^(\\d)(:) *(.*)$",
+					"captures": {
+						"1": { "name": "constant.numeric.libjs.bytecode" },
+						"2": { "name": "punctuation.colon.libjs.bytecode" },
+						"3": { "name": "string.libjs.bytecode" }
+					}
+				}
+			],
+			"end": "^$"
+		}
+	}
+}

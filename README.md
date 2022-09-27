@@ -40,6 +40,11 @@ The GML formatter needs to save the file in order to format it, so formatting an
 
 - Extended attribute highlighting may not be spec-compliant.
 
+### LibJS Bytecode
+
+- It does not have an extension
+- Auto-detection does not seem to work, instead it is usually detected as Markdown
+
 ## Contributing
 
 I always appreciate help with developing this extension. Here's some things you can do:

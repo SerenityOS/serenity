@@ -32,3 +32,7 @@
 
 - IDL: Colour brace-pairs
 - GML: Remove one trailing comma to reenable the highlighting
+
+## 0.3.0
+
+- Bytecode: Added a new highlighter for LibJS' bytecode
