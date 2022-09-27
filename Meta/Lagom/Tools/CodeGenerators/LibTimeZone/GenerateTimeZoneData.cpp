@@ -641,6 +641,7 @@ static Array<DaylightSavingsOffset const*, 2> find_dst_offsets(TimeZoneOffset co
 
     DaylightSavingsOffset const* standard_offset = nullptr;
     DaylightSavingsOffset const* daylight_offset = nullptr;
+    DaylightSavingsOffset const* last_offset = nullptr;
 
     auto preferred_rule = [&](auto* current_offset, auto& new_offset) {
         if (!current_offset)
@@ -652,6 +653,12 @@ static Array<DaylightSavingsOffset const*, 2> find_dst_offsets(TimeZoneOffset co
 
     for (size_t index = 0; (index < dst_rules.size()) && (!standard_offset || !daylight_offset); ++index) {
         auto const& dst_rule = dst_rules[index];
+
+        if (last_offset == nullptr)
+            last_offset = &dst_rule;
+        else if (dst_rule.time_in_effect(dst_rule.year_to) > last_offset->time_in_effect(last_offset->year_to))
+            last_offset = &dst_rule;
+
         if ((time < dst_rule.year_from) || (time >= dst_rule.year_to))
             continue;
 
@@ -661,11 +668,10 @@ static Array<DaylightSavingsOffset const*, 2> find_dst_offsets(TimeZoneOffset co
             daylight_offset = preferred_rule(daylight_offset, dst_rule);
     }
 
-    // In modern times, there will always be a standard rule in the TZDB, but that isn't true in
-    // all time zones in or before the early 1900s. For example, the "US" rules begin in 1918.
+    // If there isn't a standard or daylight rule in effect, fall back to the last rule given in the TZDB.
     if (!standard_offset) {
-        static DaylightSavingsOffset const empty_offset {};
-        return { &empty_offset, &empty_offset };
+        VERIFY(last_offset != nullptr);
+        standard_offset = last_offset;
     }
 
     return { standard_offset, daylight_offset ? daylight_offset : standard_offset };
