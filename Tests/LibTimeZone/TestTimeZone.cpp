@@ -177,6 +177,10 @@ TEST_CASE(get_named_time_zone_offsets)
     test_named_offsets("Europe/Moscow"sv, -1609459200, offset(+1, 2, 31, 19), offset(+1, 3, 31, 19), "MSK"sv, "MSD"sv);  // Wednesday, January 1, 1919 12:00:00 AM
     test_named_offsets("Europe/Moscow"sv, -1596412800, offset(+1, 2, 31, 19), offset(+1, 4, 31, 19), "MSK"sv, "MDST"sv); // Sunday, June 1, 1919 12:00:00 AM
     test_named_offsets("Europe/Moscow"sv, -1589068800, offset(+1, 3, 00, 00), offset(+1, 4, 00, 00), "MSK"sv, "MSD"sv);  // Monday, August 25, 1919 12:00:00 AM
+
+    // Shanghai's DST rules end in 1991.
+    test_named_offsets("Asia/Shanghai"sv, 694223999, offset(+1, 8, 00, 00), offset(+1, 9, 00, 00), "CST"sv, "CDT"sv); // Tuesday, December 31, 1991 11:59:59 PM
+    test_named_offsets("Asia/Shanghai"sv, 694224000, offset(+1, 8, 00, 00), offset(+1, 8, 00, 00), "CST"sv, "CST"sv); // Wednesday, January 1, 1992 12:00:00 AM
 }
 
 #else
