@@ -86,7 +86,7 @@
         layout: @GUI::HorizontalBoxLayout {}
         max_height: 24
 
-        @GUI::Widget {}
+        @GUI::Layout::Spacer {}
 
         @GUI::Button {
             name: "ok_button"

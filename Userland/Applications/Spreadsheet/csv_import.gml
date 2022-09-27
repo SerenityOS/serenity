@@ -92,7 +92,7 @@
                         }
                     }
 
-                    @GUI::Widget {}
+                    @GUI::Layout::Spacer {}
 
                     @GUI::Widget {
                         fixed_height: 25
@@ -109,7 +109,7 @@
                         }
                     }
 
-                    @GUI::Widget {}
+                    @GUI::Layout::Spacer {}
                 }
             }
 
