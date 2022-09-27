@@ -20,6 +20,9 @@ enum class SizeConstraint {
     MaxContent,
 };
 
+class AvailableSize;
+class AvailableSpace;
+
 struct LayoutState {
     LayoutState()
         : m_root(*this)
@@ -52,8 +55,15 @@ struct LayoutState {
 
         bool has_definite_width() const { return m_has_definite_width && width_constraint == SizeConstraint::None; }
         bool has_definite_height() const { return m_has_definite_height && height_constraint == SizeConstraint::None; }
-        void set_has_definite_width(bool value) { m_has_definite_width = value; }
-        void set_has_definite_height(bool value) { m_has_definite_height = value; }
+
+        // Returns the available space for content inside this layout box.
+        // If the space in an axis is indefinite, and the outer space is an intrinsic sizing constraint,
+        // the constraint is used in that axis instead.
+        AvailableSpace available_inner_space_or_constraints_from(AvailableSpace const& outer_space) const;
+
+        void set_content_offset(Gfx::FloatPoint);
+        void set_content_x(float);
+        void set_content_y(float);
 
         Gfx::FloatPoint offset;
 
@@ -113,6 +123,9 @@ struct LayoutState {
         auto const& floating_descendants() const { return m_floating_descendants; }
 
     private:
+        AvailableSize available_width_inside() const;
+        AvailableSize available_height_inside() const;
+
         Layout::NodeWithStyleAndBoxModelMetrics* m_node { nullptr };
 
         float m_content_width { 0 };

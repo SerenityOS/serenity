@@ -23,8 +23,9 @@ public:
 
     BlockContainer const& containing_block() const { return static_cast<BlockContainer const&>(context_box()); }
 
-    virtual void run(Box const&, LayoutMode, AvailableSpace const& available_width, AvailableSpace const& available_height) override;
+    virtual void run(Box const&, LayoutMode, AvailableSpace const&) override;
     virtual float automatic_content_height() const override;
+    virtual float automatic_content_width() const override;
 
     void dimension_box_on_line(Box const&, LayoutMode);
 
@@ -33,14 +34,16 @@ public:
     bool any_floats_intrude_at_y(float y) const;
     bool can_fit_new_line_at_y(float y) const;
 
-    float effective_containing_block_width() const { return m_effective_containing_block_width; }
-
 private:
     void generate_line_boxes(LayoutMode);
     void apply_justification_to_fragments(CSS::TextJustify, LineBox&, bool is_last_line);
 
     LayoutState::UsedValues const& m_containing_block_state;
-    float m_effective_containing_block_width { 0 };
+
+    Optional<AvailableSpace> m_available_space;
+
+    float m_automatic_content_width { 0 };
+    float m_automatic_content_height { 0 };
 };
 
 }

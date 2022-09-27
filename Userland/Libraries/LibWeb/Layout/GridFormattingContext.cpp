@@ -17,7 +17,7 @@ GridFormattingContext::GridFormattingContext(LayoutState& state, BlockContainer 
 
 GridFormattingContext::~GridFormattingContext() = default;
 
-void GridFormattingContext::run(Box const& box, LayoutMode, [[maybe_unused]] AvailableSpace const& available_width, [[maybe_unused]] AvailableSpace const& available_height)
+void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const& available_space)
 {
     auto should_skip_is_anonymous_text_run = [&](Box& child_box) -> bool {
         if (child_box.is_anonymous() && !child_box.first_child_of_type<BlockContainer>()) {
@@ -374,7 +374,8 @@ void GridFormattingContext::run(Box const& box, LayoutMode, [[maybe_unused]] Ava
         auto& child_box_state = m_state.get_mutable(positioned_box.box);
         if (child_box_state.content_height() > positioned_box.computed_height)
             positioned_box.computed_height = child_box_state.content_height();
-        (void)layout_inside(positioned_box.box, LayoutMode::Normal);
+        if (auto independent_formatting_context = layout_inside(positioned_box.box, LayoutMode::Normal, available_space))
+            independent_formatting_context->parent_context_did_dimension_child_root_box();
         if (child_box_state.content_height() > positioned_box.computed_height)
             positioned_box.computed_height = child_box_state.content_height();
     }

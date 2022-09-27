@@ -23,11 +23,11 @@ TableFormattingContext::TableFormattingContext(LayoutState& state, BlockContaine
 
 TableFormattingContext::~TableFormattingContext() = default;
 
-void TableFormattingContext::run(Box const& box, LayoutMode, [[maybe_unused]] AvailableSpace const& available_width, [[maybe_unused]] AvailableSpace const& available_height)
+void TableFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const& available_space)
 {
     auto& box_state = m_state.get_mutable(box);
 
-    compute_width(box);
+    compute_width(box, available_space);
     auto table_width = CSS::Length::make_px(box_state.content_width());
     auto table_width_is_auto = box.computed_values().width().is_auto();
 
@@ -36,12 +36,12 @@ void TableFormattingContext::run(Box const& box, LayoutMode, [[maybe_unused]] Av
 
     Vector<ColumnWidth> column_widths;
     box.for_each_child_of_type<TableRowGroupBox>([&](auto& row_group_box) {
-        compute_width(row_group_box);
+        compute_width(row_group_box, available_space);
         auto column_count = row_group_box.column_count();
         column_widths.resize(max(column_count, column_widths.size()));
 
         row_group_box.template for_each_child_of_type<TableRowBox>([&](auto& row) {
-            calculate_column_widths(row, table_width, column_widths);
+            calculate_column_widths(row, table_width, column_widths, available_space);
         });
     });
     box.for_each_child_of_type<TableRowGroupBox>([&](auto& row_group_box) {
@@ -89,7 +89,7 @@ void TableFormattingContext::run(Box const& box, LayoutMode, [[maybe_unused]] Av
         row_group_box.template for_each_child_of_type<TableRowBox>([&](auto& row) {
             auto& row_state = m_state.get_mutable(row);
             row_state.offset = { 0, content_height };
-            layout_row(row, column_widths);
+            layout_row(row, column_widths, available_space);
             content_width = max(content_width, row_state.content_width());
             content_height += row_state.content_height();
         });
@@ -110,7 +110,7 @@ void TableFormattingContext::run(Box const& box, LayoutMode, [[maybe_unused]] Av
     m_automatic_content_height = total_content_height;
 }
 
-void TableFormattingContext::calculate_column_widths(Box const& row, CSS::Length const& table_width, Vector<ColumnWidth>& column_widths)
+void TableFormattingContext::calculate_column_widths(Box const& row, CSS::Length const& table_width, Vector<ColumnWidth>& column_widths, AvailableSpace const& available_space)
 {
     m_state.get_mutable(row);
     size_t column_index = 0;
@@ -123,10 +123,11 @@ void TableFormattingContext::calculate_column_widths(Box const& row, CSS::Length
             auto width = calculate_max_content_width(cell);
             cell_state.set_content_width(width);
         } else {
-            compute_width(cell, LayoutMode::Normal);
+            compute_width(cell, AvailableSpace(AvailableSize::make_indefinite(), AvailableSize::make_indefinite()), LayoutMode::Normal);
         }
 
-        (void)layout_inside(cell, LayoutMode::Normal);
+        if (auto independent_formatting_context = layout_inside(cell, LayoutMode::Normal, cell_state.available_inner_space_or_constraints_from(available_space)))
+            independent_formatting_context->parent_context_did_dimension_child_root_box();
 
         if (cell.colspan() == 1) {
             auto min_width = calculate_min_content_width(cell);
@@ -167,7 +168,7 @@ void TableFormattingContext::calculate_column_widths(Box const& row, CSS::Length
     });
 }
 
-void TableFormattingContext::layout_row(Box const& row, Vector<ColumnWidth>& column_widths)
+void TableFormattingContext::layout_row(Box const& row, Vector<ColumnWidth>& column_widths, AvailableSpace const& available_space)
 {
     auto& row_state = m_state.get_mutable(row);
     size_t column_index = 0;
@@ -184,11 +185,12 @@ void TableFormattingContext::layout_row(Box const& row, Vector<ColumnWidth>& col
             span_width += column_widths[column_index++].used;
         cell_state.set_content_width(span_width - cell_state.border_box_left() - cell_state.border_box_right());
 
-        BlockFormattingContext::compute_height(cell, m_state);
+        BlockFormattingContext::compute_height(cell, AvailableSpace(AvailableSize::make_indefinite(), AvailableSize::make_indefinite()));
         cell_state.offset = row_state.offset.translated(cell_state.border_box_left() + content_width, cell_state.border_box_top());
 
         // Layout the cell contents a second time, now that we know its final width.
-        (void)layout_inside(cell, LayoutMode::Normal);
+        if (auto independent_formatting_context = layout_inside(cell, LayoutMode::Normal, cell_state.available_inner_space_or_constraints_from(available_space)))
+            independent_formatting_context->parent_context_did_dimension_child_root_box();
 
         content_width += span_width;
         tallest_cell_height = max(tallest_cell_height, cell_state.border_box_height());

@@ -25,7 +25,7 @@ float SVGFormattingContext::automatic_content_height() const
     return 0;
 }
 
-void SVGFormattingContext::run(Box const& box, LayoutMode, [[maybe_unused]] AvailableSpace const& available_width, [[maybe_unused]] AvailableSpace const& available_height)
+void SVGFormattingContext::run(Box const& box, LayoutMode, [[maybe_unused]] AvailableSpace const& available_space)
 {
     auto& svg_svg_element = verify_cast<SVG::SVGSVGElement>(*box.dom_node());
 
@@ -38,7 +38,7 @@ void SVGFormattingContext::run(Box const& box, LayoutMode, [[maybe_unused]] Avai
             auto& dom_node = const_cast<SVGGeometryBox&>(geometry_box).dom_node();
 
             if (svg_svg_element.has_attribute(HTML::AttributeNames::width) && svg_svg_element.has_attribute(HTML::AttributeNames::height)) {
-                geometry_box_state.offset = { 0, 0 };
+                geometry_box_state.set_content_offset({ 0, 0 });
                 auto& layout_node = *svg_svg_element.layout_node();
 
                 // FIXME: Allow for relative lengths here
@@ -67,7 +67,7 @@ void SVGFormattingContext::run(Box const& box, LayoutMode, [[maybe_unused]] Avai
             if (maybe_view_box.has_value()) {
                 auto view_box = maybe_view_box.value();
                 Gfx::FloatPoint viewbox_offset = { view_box.min_x, view_box.min_y };
-                geometry_box_state.offset = path_bounding_box.top_left() + viewbox_offset;
+                geometry_box_state.set_content_offset(path_bounding_box.top_left() + viewbox_offset);
 
                 geometry_box_state.set_content_width(view_box.width);
                 geometry_box_state.set_content_height(view_box.height);
@@ -75,7 +75,7 @@ void SVGFormattingContext::run(Box const& box, LayoutMode, [[maybe_unused]] Avai
                 return IterationDecision::Continue;
             }
 
-            geometry_box_state.offset = path_bounding_box.top_left();
+            geometry_box_state.set_content_offset(path_bounding_box.top_left());
             geometry_box_state.set_content_width(path_bounding_box.width());
             geometry_box_state.set_content_height(path_bounding_box.height());
         }

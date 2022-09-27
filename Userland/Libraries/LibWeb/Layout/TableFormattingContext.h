@@ -23,12 +23,12 @@ public:
     explicit TableFormattingContext(LayoutState&, BlockContainer const&, FormattingContext* parent);
     ~TableFormattingContext();
 
-    virtual void run(Box const&, LayoutMode, AvailableSpace const& available_width, AvailableSpace const& available_height) override;
+    virtual void run(Box const&, LayoutMode, AvailableSpace const&) override;
     virtual float automatic_content_height() const override;
 
 private:
-    void calculate_column_widths(Box const& row, CSS::Length const& table_width, Vector<ColumnWidth>& column_widths);
-    void layout_row(Box const& row, Vector<ColumnWidth>& column_widths);
+    void calculate_column_widths(Box const& row, CSS::Length const& table_width, Vector<ColumnWidth>& column_widths, AvailableSpace const&);
+    void layout_row(Box const& row, Vector<ColumnWidth>& column_widths, AvailableSpace const&);
 
     float m_automatic_content_height { 0 };
 };

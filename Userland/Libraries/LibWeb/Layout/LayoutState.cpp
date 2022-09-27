@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibWeb/Layout/AvailableSpace.h>
 #include <LibWeb/Layout/BlockContainer.h>
 #include <LibWeb/Layout/LayoutState.h>
 #include <LibWeb/Layout/TextNode.h>
@@ -195,9 +196,21 @@ void LayoutState::UsedValues::set_node(NodeWithStyleAndBoxModelMetrics& node, Us
 
         if (size.is_auto()) {
             // NOTE: The width of a non-flex-item block is considered definite if it's auto and the containing block has definite width.
-            if (width && node.parent() && !node.parent()->computed_values().display().is_flex_inside()) {
+            if (width
+                && node.computed_values().display().is_block_outside()
+                && node.parent()
+                && !node.parent()->is_floating()
+                && (node.parent()->computed_values().display().is_flow_root_inside()
+                    || node.parent()->computed_values().display().is_flow_inside())) {
                 if (containing_block_has_definite_size) {
-                    resolved_definite_size = width ? containing_block_used_values->content_width() : containing_block_used_values->content_height();
+                    float available_width = containing_block_used_values->content_width();
+                    resolved_definite_size = available_width
+                        - margin_left
+                        - margin_right
+                        - padding_left
+                        - padding_right
+                        - border_left
+                        - border_right;
                     return true;
                 }
                 return false;
@@ -205,9 +218,22 @@ void LayoutState::UsedValues::set_node(NodeWithStyleAndBoxModelMetrics& node, Us
             return false;
         }
 
-        if (size.is_length()) {
-            if (size.length().is_calculated())
+        if (size.is_length() && size.length().is_calculated()) {
+            if (width && size.length().calculated_style_value()->contains_percentage() && containing_block_has_definite_size) {
+                auto& calc_value = *size.length().calculated_style_value();
+                auto containing_block_width_as_length = CSS::Length::make_px(containing_block_used_values->content_width());
+                resolved_definite_size = calc_value.resolve_length_percentage(node, containing_block_width_as_length).value_or(CSS::Length::make_auto()).to_px(node);
                 return false;
+            }
+            if (size.length().calculated_style_value()->contains_percentage())
+                return false;
+            resolved_definite_size = size.length().to_px(node);
+            return true;
+        }
+
+        if (size.is_length()) {
+            VERIFY(!size.is_auto());                // This should have been covered by the Size::is_auto() branch above.
+            VERIFY(!size.length().is_calculated()); // Covered above.
             resolved_definite_size = size.length().to_px(node);
             return true;
         }
@@ -230,33 +256,73 @@ void LayoutState::UsedValues::set_node(NodeWithStyleAndBoxModelMetrics& node, Us
 void LayoutState::UsedValues::set_content_width(float width)
 {
     m_content_width = width;
+    m_has_definite_width = true;
 }
 
 void LayoutState::UsedValues::set_content_height(float height)
 {
     m_content_height = height;
+    m_has_definite_height = true;
 }
 
 float LayoutState::resolved_definite_width(Box const& box) const
 {
-    auto const& computed_value = box.computed_values().width();
-    if (computed_value.is_auto())
-        return get(*box.containing_block()).content_width();
-    if (computed_value.is_length())
-        return get(box).content_width();
-    auto containing_block_size = get(*box.containing_block()).content_width();
-    return computed_value.resolved(box, CSS::Length::make_px(containing_block_size)).to_px(box);
+    return get(box).content_width();
 }
 
 float LayoutState::resolved_definite_height(Box const& box) const
 {
-    auto const& computed_value = box.computed_values().height();
-    if (computed_value.is_auto())
-        return get(*box.containing_block()).content_height();
-    if (computed_value.is_length())
-        return get(box).content_height();
-    auto containing_block_size = get(*box.containing_block()).content_height();
-    return computed_value.resolved(box, CSS::Length::make_px(containing_block_size)).to_px(box);
+    return get(box).content_height();
+}
+
+AvailableSize LayoutState::UsedValues::available_width_inside() const
+{
+    if (width_constraint == SizeConstraint::MinContent)
+        return AvailableSize::make_min_content();
+    if (width_constraint == SizeConstraint::MaxContent)
+        return AvailableSize::make_max_content();
+    if (has_definite_width())
+        return AvailableSize::make_definite(m_content_width);
+    return AvailableSize::make_indefinite();
+}
+
+AvailableSize LayoutState::UsedValues::available_height_inside() const
+{
+    if (height_constraint == SizeConstraint::MinContent)
+        return AvailableSize::make_min_content();
+    if (height_constraint == SizeConstraint::MaxContent)
+        return AvailableSize::make_max_content();
+    if (has_definite_height())
+        return AvailableSize::make_definite(m_content_height);
+    return AvailableSize::make_indefinite();
+}
+
+AvailableSpace LayoutState::UsedValues::available_inner_space_or_constraints_from(AvailableSpace const& outer_space) const
+{
+    auto inner_width = available_width_inside();
+    auto inner_height = available_height_inside();
+
+    if (inner_width.is_indefinite() && outer_space.width.is_intrinsic_sizing_constraint())
+        inner_width = outer_space.width;
+    if (inner_height.is_indefinite() && outer_space.height.is_intrinsic_sizing_constraint())
+        inner_height = outer_space.height;
+    return AvailableSpace(inner_width, inner_height);
+}
+
+void LayoutState::UsedValues::set_content_offset(Gfx::FloatPoint offset)
+{
+    set_content_x(offset.x());
+    set_content_y(offset.y());
+}
+
+void LayoutState::UsedValues::set_content_x(float x)
+{
+    offset.set_x(x);
+}
+
+void LayoutState::UsedValues::set_content_y(float y)
+{
+    offset.set_y(y);
 }
 
 }

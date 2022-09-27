@@ -9,27 +9,27 @@
 
 namespace Web::Layout {
 
-AvailableSpace AvailableSpace::make_definite(float value)
+AvailableSize AvailableSize::make_definite(float value)
 {
-    return AvailableSpace { Type::Definite, value };
+    return AvailableSize { Type::Definite, value };
 }
 
-AvailableSpace AvailableSpace::make_indefinite()
+AvailableSize AvailableSize::make_indefinite()
 {
-    return AvailableSpace { Type::Indefinite, INFINITY };
+    return AvailableSize { Type::Indefinite, INFINITY };
 }
 
-AvailableSpace AvailableSpace::make_min_content()
+AvailableSize AvailableSize::make_min_content()
 {
-    return AvailableSpace { Type::MinContent, 0 };
+    return AvailableSize { Type::MinContent, 0 };
 }
 
-AvailableSpace AvailableSpace::make_max_content()
+AvailableSize AvailableSize::make_max_content()
 {
-    return AvailableSpace { Type::MaxContent, INFINITY };
+    return AvailableSize { Type::MaxContent, INFINITY };
 }
 
-String AvailableSpace::to_string() const
+String AvailableSize::to_string() const
 {
     switch (m_type) {
     case Type::Definite:
@@ -44,7 +44,12 @@ String AvailableSpace::to_string() const
     VERIFY_NOT_REACHED();
 }
 
-AvailableSpace::AvailableSpace(Type type, float value)
+String AvailableSpace::to_string() const
+{
+    return String::formatted("{} x {}", width, height);
+}
+
+AvailableSize::AvailableSize(Type type, float value)
     : m_type(type)
     , m_value(value)
 {
