@@ -107,6 +107,9 @@ public:
             next_token();
     }
 
+    size_t token_count() const { return m_tokens.size(); }
+    size_t remaining_token_count() const { return token_count() - m_iterator_offset - 1; }
+
     void dump_all_tokens()
     {
         dbgln("Dumping all tokens:");
