@@ -22,6 +22,7 @@
 #include <LibWeb/CSS/Parser/DeclarationOrAtRule.h>
 #include <LibWeb/CSS/Parser/Function.h>
 #include <LibWeb/CSS/Parser/Rule.h>
+#include <LibWeb/CSS/Parser/TokenStream.h>
 #include <LibWeb/CSS/Parser/Tokenizer.h>
 #include <LibWeb/CSS/Ratio.h>
 #include <LibWeb/CSS/Selector.h>
@@ -54,71 +55,6 @@ private:
     DOM::Document const* m_document { nullptr };
     PropertyID m_current_property_id { PropertyID::Invalid };
     AK::URL m_url;
-};
-
-template<typename T>
-class TokenStream {
-public:
-    class StateTransaction {
-    public:
-        explicit StateTransaction(TokenStream<T>& token_stream)
-            : m_token_stream(token_stream)
-            , m_saved_iterator_offset(token_stream.m_iterator_offset)
-        {
-        }
-
-        ~StateTransaction()
-        {
-            if (!m_commit)
-                m_token_stream.m_iterator_offset = m_saved_iterator_offset;
-        }
-
-        StateTransaction create_child() { return StateTransaction(*this); }
-
-        void commit()
-        {
-            m_commit = true;
-            if (m_parent)
-                m_parent->commit();
-        }
-
-    private:
-        explicit StateTransaction(StateTransaction& parent)
-            : m_parent(&parent)
-            , m_token_stream(parent.m_token_stream)
-            , m_saved_iterator_offset(parent.m_token_stream.m_iterator_offset)
-        {
-        }
-
-        StateTransaction* m_parent { nullptr };
-        TokenStream<T>& m_token_stream;
-        int m_saved_iterator_offset { 0 };
-        bool m_commit { false };
-    };
-
-    explicit TokenStream(Vector<T> const&);
-    ~TokenStream() = default;
-
-    TokenStream(TokenStream<T> const&) = delete;
-
-    bool has_next_token();
-    T const& next_token();
-    T const& peek_token(int offset = 0);
-    T const& current_token();
-    void reconsume_current_input_token();
-
-    StateTransaction begin_transaction() { return StateTransaction(*this); }
-
-    void skip_whitespace();
-
-    void dump_all_tokens();
-
-private:
-    Vector<T> const& m_tokens;
-    int m_iterator_offset { -1 };
-
-    T make_eof();
-    T m_eof;
 };
 
 class Parser {
