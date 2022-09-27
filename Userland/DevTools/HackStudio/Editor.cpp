@@ -218,14 +218,7 @@ void Editor::show_documentation_tooltip_if_available(String const& hovered_token
         return;
     }
 
-    StringBuilder html;
-    // FIXME: With the InProcessWebView we used to manipulate the document body directly,
-    // With OutOfProcessWebView this isn't possible (at the moment). The ideal solution
-    // is probably to tweak Markdown::Document::render_to_html() so we can inject styles
-    // into the rendered HTML easily.
-    html.append(man_document->render_to_html());
-    html.append("<style>body { background-color: #dac7b5; }</style>"sv);
-    m_documentation_page_view->load_html(html.build(), {});
+    m_documentation_page_view->load_html(man_document->render_to_html("<style>body { background-color: #dac7b5; }</style>"sv), {});
 
     m_documentation_tooltip_window->move_to(screen_location.translated(4, 4));
     m_documentation_tooltip_window->show();
