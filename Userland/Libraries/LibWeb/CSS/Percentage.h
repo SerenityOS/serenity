@@ -43,6 +43,8 @@ private:
     float m_value;
 };
 
+bool calculated_style_value_contains_percentage(CalculatedStyleValue const&);
+
 template<typename T>
 class PercentageOr {
 public:
@@ -80,11 +82,18 @@ public:
 
     bool contains_percentage() const
     {
-        if (is_percentage())
-            return true;
-        if (is_calculated())
-            return calculated()->contains_percentage();
-        return false;
+        return m_value.visit(
+            [&](T const& t) {
+                if (t.is_calculated())
+                    return calculated_style_value_contains_percentage(*t.calculated_style_value());
+                return false;
+            },
+            [&](Percentage const&) {
+                return true;
+            },
+            [&](NonnullRefPtr<CalculatedStyleValue> const& calculated) {
+                return calculated_style_value_contains_percentage(*calculated);
+            });
     }
 
     Percentage const& percentage() const
