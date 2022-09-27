@@ -12,7 +12,8 @@
 #include <LibMain/Main.h>
 #include <unistd.h>
 
-ErrorOr<int> serenity_main(Main::Arguments arguments)
+decltype(serenity_main) checksum_main;
+ErrorOr<int> checksum_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio rpath"));
 
@@ -126,3 +127,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
     return has_error ? 1 : 0;
 }
+
+#ifndef EXCLUDE_SERENITY_MAIN
+ErrorOr<int> serenity_main(Main::Arguments arguments)
+{
+    return checksum_main(arguments);
+}
+#endif

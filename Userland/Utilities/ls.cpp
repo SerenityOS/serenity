@@ -75,7 +75,8 @@ static HashMap<gid_t, String> groups;
 
 static bool is_a_tty = false;
 
-ErrorOr<int> serenity_main(Main::Arguments arguments)
+decltype(serenity_main) ls_main;
+ErrorOr<int> ls_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio rpath tty"));
 
@@ -554,3 +555,10 @@ bool filemetadata_comparator(FileMetadata& a, FileMetadata& b)
         return (a.stat.st_mtime > b.stat.st_mtime) ^ flag_reverse_sort;
     return (a.name < b.name) ^ flag_reverse_sort;
 }
+
+#ifndef EXCLUDE_SERENITY_MAIN
+ErrorOr<int> serenity_main(Main::Arguments arguments)
+{
+    return ls_main(arguments);
+}
+#endif

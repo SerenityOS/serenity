@@ -16,7 +16,8 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-ErrorOr<int> serenity_main(Main::Arguments arguments)
+decltype(serenity_main) mkdir_main;
+ErrorOr<int> mkdir_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio cpath rpath"));
 
@@ -93,3 +94,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
     return has_errors ? 1 : 0;
 }
+
+#ifndef EXCLUDE_SERENITY_MAIN
+ErrorOr<int> serenity_main(Main::Arguments arguments)
+{
+    return mkdir_main(arguments);
+}
+#endif

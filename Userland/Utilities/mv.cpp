@@ -15,7 +15,8 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-ErrorOr<int> serenity_main(Main::Arguments arguments)
+decltype(serenity_main) mv_main;
+ErrorOr<int> mv_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio rpath wpath cpath fattr"));
 
@@ -99,3 +100,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     return 0;
 }
+
+#ifndef EXCLUDE_SERENITY_MAIN
+ErrorOr<int> serenity_main(Main::Arguments arguments)
+{
+    return mv_main(arguments);
+}
+#endif

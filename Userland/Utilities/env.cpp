@@ -11,7 +11,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-ErrorOr<int> serenity_main(Main::Arguments arguments)
+decltype(serenity_main) env_main;
+ErrorOr<int> env_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio rpath exec"));
 
@@ -61,3 +62,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::exec(new_argv[0], new_argv, Core::System::SearchInPath::Yes));
     return 1;
 }
+
+#ifndef EXCLUDE_SERENITY_MAIN
+ErrorOr<int> serenity_main(Main::Arguments arguments)
+{
+    return env_main(arguments);
+}
+#endif

@@ -17,7 +17,8 @@ static int usage()
     return 1;
 }
 
-ErrorOr<int> serenity_main(Main::Arguments arguments)
+decltype(serenity_main) mknod_main;
+ErrorOr<int> mknod_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio dpath"));
 
@@ -60,3 +61,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     return 0;
 }
+
+#ifndef EXCLUDE_SERENITY_MAIN
+ErrorOr<int> serenity_main(Main::Arguments arguments)
+{
+    return mknod_main(arguments);
+}
+#endif

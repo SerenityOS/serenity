@@ -140,7 +140,8 @@ static Optional<String> get_description_from_mime_type(String const& mime, Strin
     return {};
 }
 
-ErrorOr<int> serenity_main(Main::Arguments arguments)
+decltype(serenity_main) file_main;
+ErrorOr<int> file_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio rpath"));
 
@@ -184,3 +185,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     return all_ok ? 0 : 1;
 }
+
+#ifndef EXCLUDE_SERENITY_MAIN
+ErrorOr<int> serenity_main(Main::Arguments arguments)
+{
+    return file_main(arguments);
+}
+#endif

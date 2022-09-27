@@ -25,7 +25,8 @@ struct FileSystem {
     String mount_point;
 };
 
-ErrorOr<int> serenity_main(Main::Arguments arguments)
+decltype(serenity_main) df_main;
+ErrorOr<int> df_main(Main::Arguments arguments)
 {
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Display free disk space of each partition.");
@@ -71,3 +72,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     return 0;
 }
+
+#ifndef EXCLUDE_SERENITY_MAIN
+ErrorOr<int> serenity_main(Main::Arguments arguments)
+{
+    return df_main(arguments);
+}
+#endif

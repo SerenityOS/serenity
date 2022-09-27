@@ -551,7 +551,8 @@ static void walk_tree(FileData& root_data, Command& command)
     closedir(dir);
 }
 
-ErrorOr<int> serenity_main(Main::Arguments arguments)
+decltype(serenity_main) find_main;
+ErrorOr<int> find_main(Main::Arguments arguments)
 {
     Vector<char*> args;
     args.append(arguments.argv + 1, arguments.argc - 1);
@@ -599,3 +600,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     return g_there_was_an_error ? 1 : 0;
 }
+
+#ifndef EXCLUDE_SERENITY_MAIN
+ErrorOr<int> serenity_main(Main::Arguments arguments)
+{
+    return find_main(arguments);
+}
+#endif

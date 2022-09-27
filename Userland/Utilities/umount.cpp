@@ -8,7 +8,8 @@
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
 
-ErrorOr<int> serenity_main(Main::Arguments arguments)
+decltype(serenity_main) umount_main;
+ErrorOr<int> umount_main(Main::Arguments arguments)
 {
     StringView mount_point;
 
@@ -19,3 +20,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::umount(mount_point));
     return 0;
 }
+
+#ifndef EXCLUDE_SERENITY_MAIN
+ErrorOr<int> serenity_main(Main::Arguments arguments)
+{
+    return umount_main(arguments);
+}
+#endif

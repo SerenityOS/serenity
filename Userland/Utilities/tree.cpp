@@ -102,7 +102,8 @@ static void print_directory_tree(String const& root_path, int depth, String cons
     }
 }
 
-ErrorOr<int> serenity_main(Main::Arguments arguments)
+decltype(serenity_main) tree_main;
+ErrorOr<int> tree_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio rpath tty"));
 
@@ -134,3 +135,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     return 0;
 }
+
+#ifndef EXCLUDE_SERENITY_MAIN
+ErrorOr<int> serenity_main(Main::Arguments arguments)
+{
+    return tree_main(arguments);
+}
+#endif

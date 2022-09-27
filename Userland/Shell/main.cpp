@@ -19,7 +19,8 @@
 RefPtr<Line::Editor> editor;
 Shell::Shell* s_shell;
 
-ErrorOr<int> serenity_main(Main::Arguments arguments)
+decltype(serenity_main) sh_main;
+ErrorOr<int> sh_main(Main::Arguments arguments)
 {
     Core::EventLoop loop;
 
@@ -248,3 +249,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     return loop.exec();
 }
+
+#ifndef EXCLUDE_SERENITY_MAIN
+ErrorOr<int> serenity_main(Main::Arguments arguments)
+{
+    return sh_main(arguments);
+}
+#endif

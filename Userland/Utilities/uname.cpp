@@ -13,7 +13,8 @@
 #include <sys/utsname.h>
 #include <unistd.h>
 
-ErrorOr<int> serenity_main(Main::Arguments arguments)
+decltype(serenity_main) uname_main;
+ErrorOr<int> uname_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio"));
 
@@ -57,3 +58,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     puts(builder.to_string().characters());
     return 0;
 }
+
+#ifndef EXCLUDE_SERENITY_MAIN
+ErrorOr<int> serenity_main(Main::Arguments arguments)
+{
+    return uname_main(arguments);
+}
+#endif

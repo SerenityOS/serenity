@@ -46,7 +46,8 @@ static ErrorOr<off_t> find_seek_pos(Core::Stream::File& file, int wanted_lines)
     return pos;
 }
 
-ErrorOr<int> serenity_main(Main::Arguments arguments)
+decltype(serenity_main) tail_main;
+ErrorOr<int> tail_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio rpath"));
 
@@ -133,3 +134,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
     return 0;
 }
+
+#ifndef EXCLUDE_SERENITY_MAIN
+ErrorOr<int> serenity_main(Main::Arguments arguments)
+{
+    return tail_main(arguments);
+}
+#endif

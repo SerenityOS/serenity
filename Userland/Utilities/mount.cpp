@@ -189,7 +189,8 @@ static ErrorOr<void> print_mounts()
     return {};
 }
 
-ErrorOr<int> serenity_main(Main::Arguments arguments)
+decltype(serenity_main) mount_main;
+ErrorOr<int> mount_main(Main::Arguments arguments)
 {
     StringView source;
     StringView mountpoint;
@@ -231,3 +232,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     return 1;
 }
+
+#ifndef EXCLUDE_SERENITY_MAIN
+ErrorOr<int> serenity_main(Main::Arguments arguments)
+{
+    return mount_main(arguments);
+}
+#endif

@@ -15,7 +15,8 @@
 
 static constexpr StringView format_row = "{:10s}\t{:10s}\t{:10s}\t{:10s}"sv;
 
-ErrorOr<int> serenity_main(Main::Arguments arguments)
+decltype(serenity_main) lsblk_main;
+ErrorOr<int> lsblk_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio rpath"));
     TRY(Core::System::unveil("/sys/devices/storage", "r"));
@@ -82,3 +83,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     return 0;
 }
+
+#ifndef EXCLUDE_SERENITY_MAIN
+ErrorOr<int> serenity_main(Main::Arguments arguments)
+{
+    return lsblk_main(arguments);
+}
+#endif

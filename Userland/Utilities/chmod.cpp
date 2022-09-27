@@ -13,7 +13,8 @@
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
 
-ErrorOr<int> serenity_main(Main::Arguments arguments)
+decltype(serenity_main) chmod_main;
+ErrorOr<int> chmod_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio rpath fattr"));
 
@@ -60,3 +61,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     return 0;
 }
+
+#ifndef EXCLUDE_SERENITY_MAIN
+ErrorOr<int> serenity_main(Main::Arguments arguments)
+{
+    return chmod_main(arguments);
+}
+#endif

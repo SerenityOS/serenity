@@ -34,7 +34,8 @@ static ErrorOr<String> determine_tty_pseudo_name()
     return "n/a";
 }
 
-ErrorOr<int> serenity_main(Main::Arguments arguments)
+decltype(serenity_main) ps_main;
+ErrorOr<int> ps_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio rpath tty"));
 
@@ -200,3 +201,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     return 0;
 }
+
+#ifndef EXCLUDE_SERENITY_MAIN
+ErrorOr<int> serenity_main(Main::Arguments arguments)
+{
+    return ps_main(arguments);
+}
+#endif

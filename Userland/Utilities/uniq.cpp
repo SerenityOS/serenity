@@ -48,7 +48,8 @@ static StringView skip(StringView line, unsigned char_skip_count, unsigned field
     return line.substring_view(char_skip_count);
 }
 
-ErrorOr<int> serenity_main(Main::Arguments arguments)
+decltype(serenity_main) uniq_main;
+ErrorOr<int> uniq_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio rpath wpath cpath"));
 
@@ -112,3 +113,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     return 0;
 }
+
+#ifndef EXCLUDE_SERENITY_MAIN
+ErrorOr<int> serenity_main(Main::Arguments arguments)
+{
+    return uniq_main(arguments);
+}
+#endif

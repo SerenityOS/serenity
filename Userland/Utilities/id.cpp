@@ -23,7 +23,8 @@ static bool flag_print_name = false;
 static bool flag_print_gid_all = false;
 static String user_str;
 
-ErrorOr<int> serenity_main(Main::Arguments arguments)
+decltype(serenity_main) id_main;
+ErrorOr<int> id_main(Main::Arguments arguments)
 {
     TRY(Core::System::unveil("/etc/passwd", "r"));
     TRY(Core::System::unveil("/etc/group", "r"));
@@ -139,3 +140,10 @@ static int print_id_objects(Core::Account const& account)
     outln();
     return 0;
 }
+
+#ifndef EXCLUDE_SERENITY_MAIN
+ErrorOr<int> serenity_main(Main::Arguments arguments)
+{
+    return id_main(arguments);
+}
+#endif

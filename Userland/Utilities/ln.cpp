@@ -8,7 +8,8 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/System.h>
 
-ErrorOr<int> serenity_main(Main::Arguments arguments)
+decltype(serenity_main) ln_main;
+ErrorOr<int> ln_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio cpath rpath"));
 
@@ -54,3 +55,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     return 0;
 }
+
+#ifndef EXCLUDE_SERENITY_MAIN
+ErrorOr<int> serenity_main(Main::Arguments arguments)
+{
+    return ln_main(arguments);
+}
+#endif

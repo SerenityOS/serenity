@@ -489,7 +489,8 @@ static void cat_file(FILE* file)
     }
 }
 
-ErrorOr<int> serenity_main(Main::Arguments arguments)
+decltype(serenity_main) less_main;
+ErrorOr<int> less_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio rpath tty sigaction"));
 
@@ -612,3 +613,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(teardown_tty(!dont_switch_buffer));
     return 0;
 }
+
+#ifndef EXCLUDE_SERENITY_MAIN
+ErrorOr<int> serenity_main(Main::Arguments arguments)
+{
+    return less_main(arguments);
+}
+#endif

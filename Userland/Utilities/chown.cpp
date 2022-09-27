@@ -17,7 +17,8 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-ErrorOr<int> serenity_main(Main::Arguments arguments)
+decltype(serenity_main) chown_main;
+ErrorOr<int> chown_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio rpath chown"));
 
@@ -99,3 +100,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     return 0;
 }
+
+#ifndef EXCLUDE_SERENITY_MAIN
+ErrorOr<int> serenity_main(Main::Arguments arguments)
+{
+    return chown_main(arguments);
+}
+#endif

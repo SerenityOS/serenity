@@ -13,7 +13,8 @@
 #include <stdio.h>
 #include <unistd.h>
 
-ErrorOr<int> serenity_main(Main::Arguments arguments)
+decltype(serenity_main) rm_main;
+ErrorOr<int> rm_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio rpath cpath"));
 
@@ -55,3 +56,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
     return had_errors ? 1 : 0;
 }
+
+#ifndef EXCLUDE_SERENITY_MAIN
+ErrorOr<int> serenity_main(Main::Arguments arguments)
+{
+    return rm_main(arguments);
+}
+#endif

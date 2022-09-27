@@ -12,7 +12,8 @@
 #include <stdio.h>
 #include <unistd.h>
 
-ErrorOr<int> serenity_main(Main::Arguments arguments)
+decltype(serenity_main) cp_main;
+ErrorOr<int> cp_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio rpath wpath cpath fattr chown"));
 
@@ -96,3 +97,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
     return 0;
 }
+
+#ifndef EXCLUDE_SERENITY_MAIN
+ErrorOr<int> serenity_main(Main::Arguments arguments)
+{
+    return cp_main(arguments);
+}
+#endif
