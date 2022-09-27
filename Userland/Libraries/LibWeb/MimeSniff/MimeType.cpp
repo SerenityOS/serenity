@@ -196,8 +196,8 @@ String MimeType::serialized() const
         // 4. If value does not solely contain HTTP token code points or value is the empty string, then:
         if (!contains_only_http_token_code_points(value) || value.is_empty()) {
             // 1. Precede each occurence of U+0022 (") or U+005C (\) in value with U+005C (\).
-            value = value.replace("\""sv, "\\\""sv, ReplaceMode::All);
             value = value.replace("\\"sv, "\\\\"sv, ReplaceMode::All);
+            value = value.replace("\""sv, "\\\""sv, ReplaceMode::All);
 
             // 2. Prepend U+0022 (") to value.
             // 3. Append U+0022 (") to value.
