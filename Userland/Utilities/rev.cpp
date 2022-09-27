@@ -28,12 +28,16 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     if (!paths.is_empty()) {
         for (auto const& path : paths) {
-            FILE* stream = fopen(String(path).characters(), "r");
-            if (!stream) {
-                warnln("Failed to open {}: {}", path, strerror(errno));
-                continue;
+            if (path == "-") {
+                streams.append(stdin);
+            } else {
+                FILE* stream = fopen(String(path).characters(), "r");
+                if (!stream) {
+                    warnln("Failed to open {}: {}", path, strerror(errno));
+                    continue;
+                }
+                streams.append(stream);
             }
-            streams.append(stream);
         }
     } else {
         streams.append(stdin);
@@ -43,8 +47,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     ScopeGuard guard = [&] {
         free(buffer);
         for (auto* stream : streams) {
-            if (fclose(stream))
+            // If the user passes '-' as an argument multiple times, then we will end up trying to
+            // close stdin multiple times.  This will cause `fclose()` to fail but with no error, so
+            // we need to manually check errno.
+            if (fclose(stream) && errno != 0) {
                 perror("fclose");
+            }
         }
     };
 
