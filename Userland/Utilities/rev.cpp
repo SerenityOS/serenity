@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Thomas Voss <thomasvoss@live.com>
+ * Copyright (c) 2021, Thomas Voss <mail@thomasvoss.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
