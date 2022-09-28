@@ -45,11 +45,19 @@ static struct lconv default_locale = {
     default_empty_value
 };
 
-char* setlocale(int, char const*)
+char* setlocale(int, char const* locale)
 {
-    static char locale[2];
-    memcpy(locale, "C", 2);
-    return locale;
+    static char c_locale_string[2];
+    memcpy(c_locale_string, "C", 2);
+
+    // If we get a null pointer, return the current locale as per POSIX spec.
+    if (locale == nullptr)
+        return c_locale_string;
+
+    if (strcmp(locale, "POSIX") == 0 || strcmp(locale, "C") == 0 || strcmp(locale, "") == 0)
+        return c_locale_string;
+
+    return nullptr;
 }
 
 struct lconv* localeconv()
