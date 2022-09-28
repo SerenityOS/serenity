@@ -142,7 +142,7 @@ bool RunWindow::run_via_launch(String const& run_input)
 {
     auto url = URL::create_with_url_or_path(run_input);
 
-    if (url.protocol() == "file") {
+    if (url.scheme() == "file") {
         auto real_path = Core::File::real_path_for(url.path());
         if (real_path.is_null()) {
             // errno *should* be preserved from Core::File::real_path_for().

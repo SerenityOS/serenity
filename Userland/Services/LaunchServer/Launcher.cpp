@@ -140,14 +140,14 @@ bool Launcher::has_mime_handlers(String const& mime_type)
 Vector<String> Launcher::handlers_for_url(const URL& url)
 {
     Vector<String> handlers;
-    if (url.protocol() == "file") {
+    if (url.scheme() == "file") {
         for_each_handler_for_path(url.path(), [&](auto& handler) -> bool {
             handlers.append(handler.executable);
             return true;
         });
     } else {
-        for_each_handler(url.protocol(), m_protocol_handlers, [&](auto const& handler) -> bool {
-            if (handler.handler_type != Handler::Type::Default || handler.protocols.contains(url.protocol())) {
+        for_each_handler(url.scheme(), m_protocol_handlers, [&](auto const& handler) -> bool {
+            if (handler.handler_type != Handler::Type::Default || handler.protocols.contains(url.scheme())) {
                 handlers.append(handler.executable);
                 return true;
             }
@@ -160,14 +160,14 @@ Vector<String> Launcher::handlers_for_url(const URL& url)
 Vector<String> Launcher::handlers_with_details_for_url(const URL& url)
 {
     Vector<String> handlers;
-    if (url.protocol() == "file") {
+    if (url.scheme() == "file") {
         for_each_handler_for_path(url.path(), [&](auto& handler) -> bool {
             handlers.append(handler.to_details_str());
             return true;
         });
     } else {
-        for_each_handler(url.protocol(), m_protocol_handlers, [&](auto const& handler) -> bool {
-            if (handler.handler_type != Handler::Type::Default || handler.protocols.contains(url.protocol())) {
+        for_each_handler(url.scheme(), m_protocol_handlers, [&](auto const& handler) -> bool {
+            if (handler.handler_type != Handler::Type::Default || handler.protocols.contains(url.scheme())) {
                 handlers.append(handler.to_details_str());
                 return true;
             }
@@ -196,10 +196,10 @@ bool Launcher::open_url(const URL& url, String const& handler_name)
     if (!handler_name.is_null())
         return open_with_handler_name(url, handler_name);
 
-    if (url.protocol() == "file")
+    if (url.scheme() == "file")
         return open_file_url(url);
 
-    return open_with_user_preferences(m_protocol_handlers, url.protocol(), { url.to_string() });
+    return open_with_user_preferences(m_protocol_handlers, url.scheme(), { url.to_string() });
 }
 
 bool Launcher::open_with_handler_name(const URL& url, String const& handler_name)
@@ -210,7 +210,7 @@ bool Launcher::open_with_handler_name(const URL& url, String const& handler_name
 
     auto& handler = handler_optional.value();
     String argument;
-    if (url.protocol() == "file")
+    if (url.scheme() == "file")
         argument = url.path();
     else
         argument = url.to_string();

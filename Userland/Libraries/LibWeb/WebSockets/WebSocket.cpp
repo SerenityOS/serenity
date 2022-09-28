@@ -52,7 +52,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<WebSocket>> WebSocket::create_with_global_o
     AK::URL url_record(url);
     if (!url_record.is_valid())
         return WebIDL::SyntaxError::create(window, "Invalid URL");
-    if (!url_record.protocol().is_one_of("ws", "wss"))
+    if (!url_record.scheme().is_one_of("ws", "wss"))
         return WebIDL::SyntaxError::create(window, "Invalid protocol");
     if (!url_record.fragment().is_empty())
         return WebIDL::SyntaxError::create(window, "Presence of URL fragment is invalid");

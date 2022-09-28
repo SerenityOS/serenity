@@ -88,7 +88,7 @@ NonnullRefPtrVector<LauncherHandler> DirectoryView::get_launch_handlers(URL cons
 
 NonnullRefPtrVector<LauncherHandler> DirectoryView::get_launch_handlers(String const& path)
 {
-    return get_launch_handlers(URL::create_with_file_protocol(path));
+    return get_launch_handlers(URL::create_with_file_scheme(path));
 }
 
 void DirectoryView::handle_activation(GUI::ModelIndex const& index)
@@ -107,14 +107,14 @@ void DirectoryView::handle_activation(GUI::ModelIndex const& index)
 
     if (S_ISDIR(st.st_mode)) {
         if (is_desktop()) {
-            Desktop::Launcher::open(URL::create_with_file_protocol(path));
+            Desktop::Launcher::open(URL::create_with_file_scheme(path));
             return;
         }
         open(path);
         return;
     }
 
-    auto url = URL::create_with_file_protocol(path);
+    auto url = URL::create_with_file_scheme(path);
     auto launcher_handlers = get_launch_handlers(url);
     auto default_launcher = get_default_launch_handler(launcher_handlers);
 

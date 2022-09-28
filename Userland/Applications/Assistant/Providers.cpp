@@ -44,7 +44,7 @@ void CalculatorResult::activate() const
 
 void FileResult::activate() const
 {
-    Desktop::Launcher::open(URL::create_with_file_protocol(title()));
+    Desktop::Launcher::open(URL::create_with_file_scheme(title()));
 }
 
 void TerminalResult::activate() const

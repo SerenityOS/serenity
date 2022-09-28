@@ -77,7 +77,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     // Connect to LaunchServer immediately and let it know that we won't ask for anything other than opening
     // the user's downloads directory.
     // FIXME: This should go away with a standalone download manager at some point.
-    TRY(Desktop::Launcher::add_allowed_url(URL::create_with_file_protocol(Core::StandardPaths::downloads_directory())));
+    TRY(Desktop::Launcher::add_allowed_url(URL::create_with_file_scheme(Core::StandardPaths::downloads_directory())));
     TRY(Desktop::Launcher::seal_allowlist());
 
     TRY(Core::System::unveil("/home", "rwc"));
@@ -120,7 +120,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto url_from_argument_string = [](String const& string) -> URL {
         if (Core::File::exists(string)) {
-            return URL::create_with_file_protocol(Core::File::real_path_for(string));
+            return URL::create_with_file_scheme(Core::File::real_path_for(string));
         }
         return Browser::url_from_user_input(string);
     };

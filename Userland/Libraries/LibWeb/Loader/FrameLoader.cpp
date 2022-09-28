@@ -242,9 +242,9 @@ bool FrameLoader::load(LoadRequest& request, Type type)
     if (document && document->has_active_favicon())
         return true;
 
-    if (url.protocol() == "http" || url.protocol() == "https") {
+    if (url.scheme() == "http" || url.scheme() == "https") {
         AK::URL favicon_url;
-        favicon_url.set_protocol(url.protocol());
+        favicon_url.set_scheme(url.scheme());
         favicon_url.set_host(url.host());
         favicon_url.set_port(url.port_or_default());
         favicon_url.set_paths({ "favicon.ico" });

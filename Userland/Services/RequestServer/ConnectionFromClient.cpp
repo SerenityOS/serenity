@@ -42,7 +42,7 @@ Messages::RequestServer::StartRequestResponse ConnectionFromClient::start_reques
         dbgln("StartRequest: Invalid URL requested: '{}'", url);
         return { -1, Optional<IPC::File> {} };
     }
-    auto* protocol = Protocol::find_by_name(url.protocol());
+    auto* protocol = Protocol::find_by_name(url.scheme());
     if (!protocol) {
         dbgln("StartRequest: No protocol handler for URL: '{}'", url);
         return { -1, Optional<IPC::File> {} };

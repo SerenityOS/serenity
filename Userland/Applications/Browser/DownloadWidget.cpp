@@ -155,7 +155,7 @@ void DownloadWidget::did_finish(bool success)
     m_close_button->set_enabled(true);
     m_cancel_button->set_text("Open in Folder");
     m_cancel_button->on_click = [this](auto) {
-        Desktop::Launcher::open(URL::create_with_file_protocol(Core::StandardPaths::downloads_directory(), m_url.basename()));
+        Desktop::Launcher::open(URL::create_with_file_scheme(Core::StandardPaths::downloads_directory(), m_url.basename()));
         window()->close();
     };
     m_cancel_button->update();

@@ -606,7 +606,7 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_show_in_file_manager_action(
     auto show_in_file_manager_action = GUI::Action::create("Show in File &Manager", [this](const GUI::Action&) {
         auto files = selected_file_paths();
         for (auto& file : files)
-            Desktop::Launcher::open(URL::create_with_file_protocol(m_project->root_path(), file));
+            Desktop::Launcher::open(URL::create_with_file_scheme(m_project->root_path(), file));
     });
     show_in_file_manager_action->set_enabled(true);
     show_in_file_manager_action->set_icon(GUI::Icon::default_icon("app-file-manager"sv).bitmap_for_size(16));

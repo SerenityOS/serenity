@@ -21,7 +21,7 @@ ContentFilter::~ContentFilter() = default;
 
 bool ContentFilter::is_filtered(const AK::URL& url) const
 {
-    if (url.protocol() == "data")
+    if (url.scheme() == "data")
         return false;
 
     auto url_string = url.to_string();

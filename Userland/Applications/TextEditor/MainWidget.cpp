@@ -618,7 +618,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
 
     auto& help_menu = window.add_menu("&Help");
     help_menu.add_action(GUI::CommonActions::make_help_action([](auto&) {
-        Desktop::Launcher::open(URL::create_with_file_protocol("/usr/share/man/man1/TextEditor.md"), "/bin/Help");
+        Desktop::Launcher::open(URL::create_with_file_scheme("/usr/share/man/man1/TextEditor.md"), "/bin/Help");
     }));
     help_menu.add_action(GUI::CommonActions::make_about_action("Text Editor", GUI::Icon::default_icon("app-text-editor"sv), &window));
 
@@ -813,7 +813,7 @@ void MainWidget::update_markdown_preview()
     if (document) {
         auto html = document->render_to_html();
         auto current_scroll_pos = m_page_view->visible_content_rect();
-        m_page_view->load_html(html, URL::create_with_file_protocol(m_path));
+        m_page_view->load_html(html, URL::create_with_file_scheme(m_path));
         m_page_view->scroll_into_view(current_scroll_pos, true, true);
     }
 }
@@ -821,7 +821,7 @@ void MainWidget::update_markdown_preview()
 void MainWidget::update_html_preview()
 {
     auto current_scroll_pos = m_page_view->visible_content_rect();
-    m_page_view->load_html(m_editor->text(), URL::create_with_file_protocol(m_path));
+    m_page_view->load_html(m_editor->text(), URL::create_with_file_scheme(m_path));
     m_page_view->scroll_into_view(current_scroll_pos, true, true);
 }
 

@@ -264,7 +264,7 @@ Optional<Position> Sheet::position_from_url(const URL& url) const
         return {};
     }
 
-    if (url.protocol() != "spreadsheet" || url.host() != "cell") {
+    if (url.scheme() != "spreadsheet" || url.host() != "cell") {
         dbgln("Bad url: {}", url.to_string());
         return {};
     }
@@ -756,7 +756,7 @@ String Position::to_cell_identifier(Sheet const& sheet) const
 URL Position::to_url(Sheet const& sheet) const
 {
     URL url;
-    url.set_protocol("spreadsheet");
+    url.set_scheme("spreadsheet");
     url.set_host("cell");
     url.set_paths({ String::number(getpid()) });
     url.set_fragment(to_cell_identifier(sheet));

@@ -67,14 +67,14 @@ void BackgroundSettingsWidget::create_frame()
     m_context_menu = GUI::Menu::construct();
     m_show_in_file_manager_action = GUI::Action::create("Show in File Manager", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-file-manager.png"sv).release_value_but_fixme_should_propagate_errors(), [this](GUI::Action const&) {
         LexicalPath path { m_monitor_widget->wallpaper() };
-        Desktop::Launcher::open(URL::create_with_file_protocol(path.dirname(), path.basename()));
+        Desktop::Launcher::open(URL::create_with_file_scheme(path.dirname(), path.basename()));
     });
     m_context_menu->add_action(*m_show_in_file_manager_action);
 
     m_context_menu->add_separator();
     m_copy_action = GUI::CommonActions::make_copy_action(
         [this](auto&) {
-            auto url = URL::create_with_file_protocol(m_monitor_widget->wallpaper()).to_string();
+            auto url = URL::create_with_file_scheme(m_monitor_widget->wallpaper()).to_string();
             GUI::Clipboard::the().set_data(url.bytes(), "text/uri-list");
         },
         this);
