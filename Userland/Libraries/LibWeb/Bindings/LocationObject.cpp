@@ -204,7 +204,7 @@ JS_DEFINE_NATIVE_FUNCTION(LocationObject::protocol_getter)
     // FIXME: 1. If this's relevant Document is non-null and its origin is not same origin-domain with the entry settings object's origin, then throw a "SecurityError" DOMException.
 
     // 2. Return this's url's scheme, followed by ":".
-    return JS::js_string(vm, String::formatted("{}:", location_object->url().protocol()));
+    return JS::js_string(vm, String::formatted("{}:", location_object->url().scheme()));
 }
 
 // https://html.spec.whatwg.org/multipage/history.html#dom-location-port

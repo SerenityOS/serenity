@@ -31,7 +31,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/tmp/user/%uid/portal/launch", "rw"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
-    TRY(Desktop::Launcher::add_allowed_url(URL::create_with_file_protocol("/bin/MailSettings")));
+    TRY(Desktop::Launcher::add_allowed_url(URL::create_with_file_scheme("/bin/MailSettings")));
     TRY(Desktop::Launcher::add_allowed_handler_with_any_url("/bin/MailSettings"));
     TRY(Desktop::Launcher::seal_allowlist());
 

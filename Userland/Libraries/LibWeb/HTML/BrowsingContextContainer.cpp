@@ -168,7 +168,7 @@ void BrowsingContextContainer::shared_attribute_processing_steps_for_iframe_and_
     // FIXME: Set the referrer policy.
 
     // AD-HOC:
-    if (url.protocol() == "file" && document().origin().protocol() != "file") {
+    if (url.scheme() == "file" && document().origin().protocol() != "file") {
         dbgln("iframe failed to load URL: Security violation: {} may not load {}", document().url(), url);
         return;
     }

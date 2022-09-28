@@ -273,7 +273,7 @@ Vector<Web::Cookie::Cookie&> CookieJar::get_matching_cookies(const URL& url, Str
             continue;
 
         // If the cookie's secure-only-flag is true, then the request-uri's scheme must denote a "secure" protocol.
-        if (cookie.value.secure && (url.protocol() != "https"))
+        if (cookie.value.secure && (url.scheme() != "https"))
             continue;
 
         // If the cookie's http-only-flag is true, then exclude the cookie if the cookie-string is being generated for a "non-HTTP" API.

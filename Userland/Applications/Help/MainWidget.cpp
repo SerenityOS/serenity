@@ -92,7 +92,7 @@ MainWidget::MainWidget()
 
     m_web_view = find_descendant_of_type_named<WebView::OutOfProcessWebView>("web_view");
     m_web_view->on_link_click = [this](auto& url, auto&, unsigned) {
-        if (url.protocol() == "file") {
+        if (url.scheme() == "file") {
             auto path = url.path();
             if (!path.starts_with("/usr/share/man/"sv)) {
                 open_external(url);
@@ -106,7 +106,7 @@ MainWidget::MainWidget()
             }
             m_history.push(path);
             open_page(path);
-        } else if (url.protocol() == "help") {
+        } else if (url.scheme() == "help") {
             if (url.host() == "man") {
                 if (url.paths().size() != 2) {
                     dbgln("Bad help page URL '{}'", url);
@@ -272,7 +272,7 @@ void MainWidget::open_url(URL const& url)
     m_go_back_action->set_enabled(m_history.can_go_back());
     m_go_forward_action->set_enabled(m_history.can_go_forward());
 
-    if (url.protocol() == "file") {
+    if (url.scheme() == "file") {
         m_web_view->load(url);
         m_web_view->scroll_to_top();
 

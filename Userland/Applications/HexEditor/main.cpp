@@ -24,7 +24,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto app = TRY(GUI::Application::try_create(arguments));
 
-    TRY(Desktop::Launcher::add_allowed_handler_with_only_specific_urls("/bin/Help", { URL::create_with_file_protocol("/usr/share/man/man1/HexEditor.md") }));
+    TRY(Desktop::Launcher::add_allowed_handler_with_only_specific_urls("/bin/Help", { URL::create_with_file_scheme("/usr/share/man/man1/HexEditor.md") }));
     TRY(Desktop::Launcher::seal_allowlist());
 
     Config::pledge_domain("HexEditor");

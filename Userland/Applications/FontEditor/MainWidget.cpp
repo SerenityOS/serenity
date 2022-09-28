@@ -670,7 +670,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
 
     auto help_menu = TRY(window.try_add_menu("&Help"));
     TRY(help_menu->try_add_action(GUI::CommonActions::make_help_action([](auto&) {
-        Desktop::Launcher::open(URL::create_with_file_protocol("/usr/share/man/man1/FontEditor.md"), "/bin/Help");
+        Desktop::Launcher::open(URL::create_with_file_scheme("/usr/share/man/man1/FontEditor.md"), "/bin/Help");
     })));
     TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action("Font Editor", TRY(GUI::Icon::try_create_default_icon("app-font-editor"sv)), &window)));
 

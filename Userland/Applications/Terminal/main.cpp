@@ -412,7 +412,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto help_menu = TRY(window->try_add_menu("&Help"));
     TRY(help_menu->try_add_action(GUI::CommonActions::make_help_action([](auto&) {
-        Desktop::Launcher::open(URL::create_with_file_protocol("/usr/share/man/man1/Terminal.md"), "/bin/Help");
+        Desktop::Launcher::open(URL::create_with_file_scheme("/usr/share/man/man1/Terminal.md"), "/bin/Help");
     })));
     TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action("Terminal", app_icon, window)));
 

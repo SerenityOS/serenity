@@ -515,19 +515,19 @@ public:
     virtual RefPtr<Web::ResourceLoaderConnectorRequest> start_request(String const& method, AK::URL const& url, HashMap<String, String> const& request_headers, ReadonlyBytes request_body, Core::ProxyData const& proxy) override
     {
         RefPtr<Web::ResourceLoaderConnectorRequest> request;
-        if (url.protocol().equals_ignoring_case("http"sv)) {
+        if (url.scheme().equals_ignoring_case("http"sv)) {
             auto request_or_error = HTTPHeadlessRequest::create(method, url, request_headers, request_body, proxy);
             if (request_or_error.is_error())
                 return {};
             request = request_or_error.release_value();
         }
-        if (url.protocol().equals_ignoring_case("https"sv)) {
+        if (url.scheme().equals_ignoring_case("https"sv)) {
             auto request_or_error = HTTPSHeadlessRequest::create(method, url, request_headers, request_body, proxy);
             if (request_or_error.is_error())
                 return {};
             request = request_or_error.release_value();
         }
-        if (url.protocol().equals_ignoring_case("gemini"sv)) {
+        if (url.scheme().equals_ignoring_case("gemini"sv)) {
             auto request_or_error = GeminiHeadlessRequest::create(method, url, request_headers, request_body, proxy);
             if (request_or_error.is_error())
                 return {};

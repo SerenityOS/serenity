@@ -139,7 +139,7 @@ void do_copy(Vector<String> const& selected_file_paths, FileOperation file_opera
         copy_text.append("#cut\n"sv); // This exploits the comment lines in the text/uri-list specification, which might be a bit hackish
     }
     for (auto& path : selected_file_paths) {
-        auto url = URL::create_with_file_protocol(path);
+        auto url = URL::create_with_file_scheme(path);
         copy_text.appendff("{}\n", url);
     }
     GUI::Clipboard::the().set_data(copy_text.build().bytes(), "text/uri-list");
@@ -169,7 +169,7 @@ void do_paste(String const& target_directory, GUI::Window* window)
         if (uri_as_string.is_empty())
             continue;
         URL url = uri_as_string;
-        if (!url.is_valid() || url.protocol() != "file") {
+        if (!url.is_valid() || url.scheme() != "file") {
             dbgln("Cannot paste URI {}", uri_as_string);
             continue;
         }
@@ -309,7 +309,7 @@ bool add_launch_handler_actions_to_menu(RefPtr<GUI::Menu>& menu, DirectoryView c
     auto default_file_handler = directory_view.get_default_launch_handler(current_file_launch_handlers);
     if (default_file_handler) {
         auto file_open_action = default_file_handler->create_launch_action([&, full_path = move(full_path)](auto& launcher_handler) {
-            directory_view.launch(URL::create_with_file_protocol(full_path), launcher_handler);
+            directory_view.launch(URL::create_with_file_scheme(full_path), launcher_handler);
         });
         if (default_file_handler->details().launcher_type == Desktop::Launcher::LauncherType::Application)
             file_open_action->set_text(String::formatted("Run {}", file_open_action->text()));
@@ -331,7 +331,7 @@ bool add_launch_handler_actions_to_menu(RefPtr<GUI::Menu>& menu, DirectoryView c
             if (&handler == default_file_handler.ptr())
                 continue;
             file_open_with_menu.add_action(handler.create_launch_action([&, full_path = move(full_path)](auto& launcher_handler) {
-                directory_view.launch(URL::create_with_file_protocol(full_path), launcher_handler);
+                directory_view.launch(URL::create_with_file_scheme(full_path), launcher_handler);
             }));
         }
     }
@@ -444,13 +444,13 @@ ErrorOr<int> run_in_desktop_mode()
     auto file_manager_action = GUI::Action::create("Open in File &Manager", {}, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-file-manager.png"sv).release_value_but_fixme_should_propagate_errors(), [&](auto&) {
         auto paths = directory_view->selected_file_paths();
         if (paths.is_empty()) {
-            Desktop::Launcher::open(URL::create_with_file_protocol(directory_view->path()));
+            Desktop::Launcher::open(URL::create_with_file_scheme(directory_view->path()));
             return;
         }
 
         for (auto& path : paths) {
             if (Core::File::is_directory(path))
-                Desktop::Launcher::open(URL::create_with_file_protocol(path));
+                Desktop::Launcher::open(URL::create_with_file_scheme(path));
         }
     });
 
@@ -469,7 +469,7 @@ ErrorOr<int> run_in_desktop_mode()
     });
 
     auto display_properties_action = GUI::Action::create("&Display Settings", {}, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-display-settings.png"sv).release_value_but_fixme_should_propagate_errors(), [&](GUI::Action const&) {
-        Desktop::Launcher::open(URL::create_with_file_protocol("/bin/DisplaySettings"));
+        Desktop::Launcher::open(URL::create_with_file_scheme("/bin/DisplaySettings"));
     });
 
     TRY(desktop_view_context_menu->try_add_action(directory_view->mkdir_action()));
@@ -801,7 +801,7 @@ ErrorOr<int> run_in_windowed_mode(String const& initial_location, String const& 
 
                 for (auto& path : paths) {
                     if (Core::File::is_directory(path))
-                        Desktop::Launcher::open(URL::create_with_file_protocol(path));
+                        Desktop::Launcher::open(URL::create_with_file_scheme(path));
                 }
             },
             window);

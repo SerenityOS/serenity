@@ -136,7 +136,7 @@ void GLContextWidget::drop_event(GUI::DropEvent& event)
         return;
 
     for (auto& url : event.mime_data().urls()) {
-        if (url.protocol() != "file")
+        if (url.scheme() != "file")
             continue;
 
         auto response = FileSystemAccessClient::Client::the().try_request_file(window(), url.path(), Core::OpenMode::ReadOnly);

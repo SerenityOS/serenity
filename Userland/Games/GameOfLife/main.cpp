@@ -31,7 +31,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto app = TRY(GUI::Application::try_create(arguments));
 
-    TRY(Desktop::Launcher::add_allowed_handler_with_only_specific_urls("/bin/Help", { URL::create_with_file_protocol("/usr/share/man/man6/GameOfLife.md") }));
+    TRY(Desktop::Launcher::add_allowed_handler_with_only_specific_urls("/bin/Help", { URL::create_with_file_scheme("/usr/share/man/man6/GameOfLife.md") }));
     TRY(Desktop::Launcher::seal_allowlist());
 
     TRY(Core::System::pledge("stdio rpath recvfd sendfd"));
@@ -140,7 +140,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto help_menu = TRY(window->try_add_menu("&Help"));
     TRY(help_menu->try_add_action(GUI::CommonActions::make_help_action([](auto&) {
-        Desktop::Launcher::open(URL::create_with_file_protocol("/usr/share/man/man6/GameOfLife.md"), "/bin/Help");
+        Desktop::Launcher::open(URL::create_with_file_scheme("/usr/share/man/man6/GameOfLife.md"), "/bin/Help");
     })));
     TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action("Game Of Life", app_icon, window)));
 

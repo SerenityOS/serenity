@@ -416,7 +416,7 @@ WebIDL::ExceptionOr<void> XMLHttpRequest::send(Optional<Fetch::XMLHttpRequestBod
     dbgln("XHR send from {} to {}", m_window->associated_document().url(), request_url);
 
     // TODO: Add support for preflight requests to support CORS requests
-    auto request_url_origin = HTML::Origin(request_url.protocol(), request_url.host(), request_url.port_or_default());
+    auto request_url_origin = HTML::Origin(request_url.scheme(), request_url.host(), request_url.port_or_default());
 
     bool should_enforce_same_origin_policy = true;
     if (auto* page = m_window->page())

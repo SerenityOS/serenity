@@ -91,7 +91,7 @@ PropertiesWindow::PropertiesWindow(String const& path, bool disable_rename, Wind
     auto location = general_tab.find_descendant_of_type_named<GUI::LinkLabel>("location");
     location->set_text(path);
     location->on_click = [this] {
-        Desktop::Launcher::open(URL::create_with_file_protocol(m_parent_path, m_name));
+        Desktop::Launcher::open(URL::create_with_file_scheme(m_parent_path, m_name));
     };
 
     if (S_ISLNK(m_mode)) {
@@ -104,7 +104,7 @@ PropertiesWindow::PropertiesWindow(String const& path, bool disable_rename, Wind
             link_location->set_text(link_destination);
             link_location->on_click = [link_destination] {
                 auto link_directory = LexicalPath(link_destination);
-                Desktop::Launcher::open(URL::create_with_file_protocol(link_directory.dirname(), link_directory.basename()));
+                Desktop::Launcher::open(URL::create_with_file_scheme(link_directory.dirname(), link_directory.basename()));
             };
         }
     } else {

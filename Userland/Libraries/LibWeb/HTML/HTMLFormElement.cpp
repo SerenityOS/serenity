@@ -96,8 +96,8 @@ void HTMLFormElement::submit_form(JS::GCPtr<HTMLElement> submitter, bool from_su
         return;
     }
 
-    if (url.protocol() == "file") {
-        if (document().url().protocol() != "file") {
+    if (url.scheme() == "file") {
+        if (document().url().scheme() != "file") {
             dbgln("Failed to submit form: Security violation: {} may not submit to {}", document().url(), url);
             return;
         }
@@ -105,7 +105,7 @@ void HTMLFormElement::submit_form(JS::GCPtr<HTMLElement> submitter, bool from_su
             dbgln("Failed to submit form: Unsupported form method '{}' for URL: {}", method(), url);
             return;
         }
-    } else if (url.protocol() != "http" && url.protocol() != "https") {
+    } else if (url.scheme() != "http" && url.scheme() != "https") {
         dbgln("Failed to submit form: Unsupported protocol for URL: {}", url);
         return;
     }

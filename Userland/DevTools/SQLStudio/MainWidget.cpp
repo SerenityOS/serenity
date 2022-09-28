@@ -265,7 +265,7 @@ void MainWidget::initialize_menu(GUI::Window* window)
 
     auto& help_menu = window->add_menu("&Help");
     help_menu.add_action(GUI::CommonActions::make_help_action([](auto&) {
-        Desktop::Launcher::open(URL::create_with_file_protocol("/usr/share/man/man1/SQLStudio.md"), "/bin/Help");
+        Desktop::Launcher::open(URL::create_with_file_scheme("/usr/share/man/man1/SQLStudio.md"), "/bin/Help");
     }));
     help_menu.add_action(GUI::CommonActions::make_about_action("SQL Studio", GUI::Icon::default_icon("app-sql-studio"sv), window));
 }

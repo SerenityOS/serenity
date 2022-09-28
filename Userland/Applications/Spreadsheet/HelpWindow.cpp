@@ -81,7 +81,7 @@ HelpWindow::HelpWindow(GUI::Window* parent)
 
     m_webview = splitter.add<WebView::OutOfProcessWebView>();
     m_webview->on_link_click = [this](auto& url, auto&, auto&&) {
-        VERIFY(url.protocol() == "spreadsheet");
+        VERIFY(url.scheme() == "spreadsheet");
         if (url.host() == "example") {
             auto entry = LexicalPath::basename(url.path());
             auto doc_option = m_docs.get(entry);
