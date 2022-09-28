@@ -56,20 +56,25 @@ RefPtr<CardStack> CardGame::find_stack_to_drop_on(CardStack::MovementRule moveme
 {
     auto bounds_to_check = moving_cards_bounds();
 
-    // FIXME: This currently returns only the first stack we overlap,
-    //        but what we want is the stack we overlap the most.
+    RefPtr<CardStack> closest_stack;
+    float closest_distance = FLT_MAX;
+
     for (auto const& stack : stacks()) {
         if (stack.is_focused())
             continue;
 
-        if (stack.bounding_box().intersects(bounds_to_check)) {
-            if (stack.is_allowed_to_push(moving_cards().at(0), moving_cards().size(), movement_rule)) {
-                return stack;
+        if (stack.bounding_box().intersects(bounds_to_check)
+            && stack.is_allowed_to_push(moving_cards().at(0), moving_cards().size(), movement_rule)) {
+
+            auto distance = bounds_to_check.center().distance_from(stack.bounding_box().center());
+            if (distance < closest_distance) {
+                closest_stack = stack;
+                closest_distance = distance;
             }
         }
     }
 
-    return nullptr;
+    return closest_stack;
 }
 
 void CardGame::drop_cards_on_stack(Cards::CardStack& stack, CardStack::MovementRule movement_rule)
