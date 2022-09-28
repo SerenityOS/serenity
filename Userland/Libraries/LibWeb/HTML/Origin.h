@@ -14,17 +14,17 @@ namespace Web::HTML {
 class Origin {
 public:
     Origin() = default;
-    Origin(String const& protocol, String const& host, u16 port)
-        : m_protocol(protocol)
+    Origin(String const& scheme, String const& host, u16 port)
+        : m_scheme(scheme)
         , m_host(host)
         , m_port(port)
     {
     }
 
     // https://html.spec.whatwg.org/multipage/origin.html#concept-origin-opaque
-    bool is_opaque() const { return m_protocol.is_null() && m_host.is_null() && m_port == 0; }
+    bool is_opaque() const { return m_scheme.is_null() && m_host.is_null() && m_port == 0; }
 
-    String const& protocol() const { return m_protocol; }
+    String const& scheme() const { return m_scheme; }
     String const& host() const { return m_host; }
     u16 port() const { return m_port; }
 
@@ -37,7 +37,7 @@ public:
 
         // 2. If A and B are both tuple origins and their schemes, hosts, and port are identical, then return true.
         // 3. Return false.
-        return protocol() == other.protocol()
+        return scheme() == other.scheme()
             && host() == other.host()
             && port() == other.port();
     }
@@ -53,7 +53,7 @@ public:
         if (!is_opaque() && !other.is_opaque()) {
             // 1. If A and B's schemes are identical, and their domains are identical and non-null, then return true.
             // FIXME: Check domains once supported.
-            if (protocol() == other.protocol())
+            if (scheme() == other.scheme())
                 return true;
 
             // 2. Otherwise, if A and B are same origin and their domains are identical and null, then return true.
@@ -75,7 +75,7 @@ public:
 
         // 2. Otherwise, let result be origin's scheme.
         StringBuilder result;
-        result.append(protocol());
+        result.append(scheme());
 
         // 3. Append "://" to result.
         result.append("://"sv);
@@ -109,7 +109,7 @@ public:
     bool operator!=(Origin const& other) const { return !is_same_origin(other); }
 
 private:
-    String m_protocol;
+    String m_scheme;
     String m_host;
     u16 m_port { 0 };
 };
@@ -121,7 +121,7 @@ template<>
 struct Traits<Web::HTML::Origin> : public GenericTraits<Web::HTML::Origin> {
     static unsigned hash(Web::HTML::Origin const& origin)
     {
-        return pair_int_hash(origin.protocol().hash(), pair_int_hash(int_hash(origin.port()), origin.host().hash()));
+        return pair_int_hash(origin.scheme().hash(), pair_int_hash(int_hash(origin.port()), origin.host().hash()));
     }
 };
 } // namespace AK
