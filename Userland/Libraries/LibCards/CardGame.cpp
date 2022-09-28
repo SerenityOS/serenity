@@ -45,10 +45,7 @@ Gfx::IntRect CardGame::moving_cards_bounds() const
 
 void CardGame::pick_up_cards_from_stack(Cards::CardStack& stack, Gfx::IntPoint click_location, CardStack::MovementRule movement_rule)
 {
-    if (m_moving_cards_source_stack)
-        m_moving_cards_source_stack->set_focused(false);
     stack.add_all_grabbed_cards(click_location, m_moving_cards, movement_rule);
-    stack.set_focused(true);
     m_moving_cards_source_stack = stack;
 }
 
@@ -60,7 +57,7 @@ RefPtr<CardStack> CardGame::find_stack_to_drop_on(CardStack::MovementRule moveme
     float closest_distance = FLT_MAX;
 
     for (auto const& stack : stacks()) {
-        if (stack.is_focused())
+        if (stack == moving_cards_source_stack())
             continue;
 
         if (stack.bounding_box().intersects(bounds_to_check)
@@ -92,8 +89,6 @@ void CardGame::drop_cards_on_stack(Cards::CardStack& stack, CardStack::MovementR
 
 void CardGame::clear_moving_cards()
 {
-    if (!m_moving_cards_source_stack.is_null())
-        m_moving_cards_source_stack->set_focused(false);
     m_moving_cards_source_stack.clear();
     m_moving_cards.clear();
 }

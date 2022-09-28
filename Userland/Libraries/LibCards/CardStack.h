@@ -34,7 +34,6 @@ public:
     CardStack(Gfx::IntPoint const& position, Type type, RefPtr<CardStack> covered_stack = nullptr);
 
     bool is_empty() const { return m_stack.is_empty(); }
-    bool is_focused() const { return m_focused; }
     Type type() const { return m_type; }
     NonnullRefPtrVector<Card> const& stack() const { return m_stack; }
     size_t count() const { return m_stack.size(); }
@@ -42,7 +41,6 @@ public:
     Card& peek() { return m_stack.last(); }
     Gfx::IntRect const& bounding_box() const { return m_bounding_box; }
 
-    void set_focused(bool focused) { m_focused = focused; }
     bool make_top_card_visible(); // Returns true if the card was flipped.
 
     void push(NonnullRefPtr<Card> card);
@@ -93,7 +91,6 @@ private:
     Gfx::IntRect m_bounding_box;
     Type m_type { Type::Invalid };
     StackRules m_rules;
-    bool m_focused { false };
     Gfx::IntRect m_base;
 };
 
