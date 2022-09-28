@@ -292,7 +292,7 @@ void StackingContext::paint(PaintContext& context) const
 
     auto affine_transform = affine_transform_matrix();
 
-    if (opacity < 1.0f || !affine_transform.is_identity()) {
+    if (opacity < 1.0f || !affine_transform.is_identity_or_translation()) {
         auto transform_origin = this->transform_origin();
         auto source_rect = paintable().absolute_paint_rect().translated(-transform_origin);
         auto transformed_destination_rect = affine_transform.map(source_rect).translated(transform_origin);
@@ -333,6 +333,8 @@ void StackingContext::paint(PaintContext& context) const
         else
             context.painter().draw_scaled_bitmap(destination_rect, *bitmap, bitmap->rect(), opacity, Gfx::Painter::ScalingMode::BilinearBlend);
     } else {
+        Gfx::PainterStateSaver saver(context.painter());
+        context.painter().translate(affine_transform.translation().to_rounded<int>());
         paint_internal(context);
     }
 }
