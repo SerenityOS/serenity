@@ -171,7 +171,7 @@ void FlexFormattingContext::run(Box const& run_box, LayoutMode layout_mode, [[ma
     distribute_any_remaining_free_space();
 
     // 13. Resolve cross-axis auto margins.
-    // FIXME: This
+    resolve_cross_axis_auto_margins();
 
     // 14. Align all flex items along the cross-axis
     align_all_flex_items_along_the_cross_axis();
@@ -1783,6 +1783,36 @@ CSS::Size const& FlexFormattingContext::computed_cross_min_size(Box const& box) 
 CSS::Size const& FlexFormattingContext::computed_cross_max_size(Box const& box) const
 {
     return !is_row_layout() ? box.computed_values().max_width() : box.computed_values().max_height();
+}
+
+// https://drafts.csswg.org/css-flexbox-1/#algo-cross-margins
+void FlexFormattingContext::resolve_cross_axis_auto_margins()
+{
+    for (auto& line : m_flex_lines) {
+        for (auto& item : line.items) {
+            //  If a flex item has auto cross-axis margins:
+            if (!item->margins.cross_before_is_auto && !item->margins.cross_after_is_auto)
+                continue;
+
+            // If its outer cross size (treating those auto margins as zero) is less than the cross size of its flex line,
+            // distribute the difference in those sizes equally to the auto margins.
+            auto outer_cross_size = item->cross_size + item->padding.cross_before + item->padding.cross_after + item->borders.cross_before + item->borders.cross_after;
+            if (outer_cross_size < line.cross_size) {
+                float remainder = line.cross_size - outer_cross_size;
+                if (item->margins.cross_before_is_auto && item->margins.cross_after_is_auto) {
+                    item->margins.cross_before = remainder / 2.0f;
+                    item->margins.cross_after = remainder / 2.0f;
+                } else if (item->margins.cross_before_is_auto) {
+                    item->margins.cross_before = remainder;
+                } else {
+                    item->margins.cross_after = remainder;
+                }
+            } else {
+                // FIXME: Otherwise, if the block-start or inline-start margin (whichever is in the cross axis) is auto, set it to zero.
+                //        Set the opposite margin so that the outer cross size of the item equals the cross size of its flex line.
+            }
+        }
+    }
 }
 
 }
