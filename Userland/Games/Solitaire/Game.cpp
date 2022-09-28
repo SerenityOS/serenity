@@ -521,16 +521,6 @@ void Game::auto_move_eligible_cards_to_foundations()
         auto_move_eligible_cards_to_foundations();
 }
 
-void Game::mark_intersecting_stacks_dirty(Card& intersecting_card)
-{
-    for (auto& stack : stacks()) {
-        if (intersecting_card.rect().intersects(stack.bounding_box()))
-            update(stack.bounding_box());
-    }
-
-    update(intersecting_card.rect());
-}
-
 void Game::paint_event(GUI::PaintEvent& event)
 {
     Gfx::Color background_color = this->background_color();

@@ -22,6 +22,16 @@ void CardGame::add_stack(NonnullRefPtr<CardStack> stack)
     m_stacks.append(move(stack));
 }
 
+void CardGame::mark_intersecting_stacks_dirty(Cards::Card const& intersecting_card)
+{
+    for (auto& stack : stacks()) {
+        if (intersecting_card.rect().intersects(stack.bounding_box()))
+            update(stack.bounding_box());
+    }
+
+    update(intersecting_card.rect());
+}
+
 void CardGame::dump_layout() const
 {
     dbgln("------------------------------");

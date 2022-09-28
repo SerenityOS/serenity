@@ -25,6 +25,7 @@ public:
     NonnullRefPtrVector<CardStack> const& stacks() const { return m_stacks; }
     CardStack& stack_at_location(int location) { return m_stacks[location]; }
     void add_stack(NonnullRefPtr<CardStack>);
+    void mark_intersecting_stacks_dirty(Card const& intersecting_card);
 
     void dump_layout() const;
 
