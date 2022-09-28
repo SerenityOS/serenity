@@ -70,7 +70,6 @@ private:
     void start_timer_if_necessary();
     void update_score(int delta);
     void draw_cards();
-    void mark_intersecting_stacks_dirty(Card& intersecting_card);
     void detect_full_stacks();
     void detect_victory();
     void move_focused_cards(CardStack& stack);

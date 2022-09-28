@@ -105,16 +105,6 @@ void Game::draw_cards()
     start_timer(s_timer_interval_ms);
 }
 
-void Game::mark_intersecting_stacks_dirty(Card& intersecting_card)
-{
-    for (auto& stack : stacks()) {
-        if (intersecting_card.rect().intersects(stack.bounding_box()))
-            update(stack.bounding_box());
-    }
-
-    update(intersecting_card.rect());
-}
-
 void Game::detect_full_stacks()
 {
     auto& completed_stack = stack_at_location(Completed);
