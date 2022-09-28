@@ -115,18 +115,6 @@ void Game::mark_intersecting_stacks_dirty(Card& intersecting_card)
     update(intersecting_card.rect());
 }
 
-void Game::ensure_top_card_is_visible(NonnullRefPtr<CardStack> stack)
-{
-    if (stack->is_empty())
-        return;
-
-    auto& top_card = stack->peek();
-    if (top_card.is_upside_down()) {
-        top_card.set_upside_down(false);
-        update(top_card.rect());
-    }
-}
-
 void Game::detect_full_stacks()
 {
     auto& completed_stack = stack_at_location(Completed);
@@ -160,7 +148,8 @@ void Game::detect_full_stacks()
                 update(original_current_rect);
                 update(completed_stack.bounding_box());
 
-                ensure_top_card_is_visible(current_pile);
+                if (current_pile.make_top_card_visible())
+                    update(current_pile.peek().rect());
 
                 update_score(101);
             }
@@ -283,7 +272,8 @@ void Game::move_focused_cards(CardStack& stack)
 
     detect_full_stacks();
 
-    ensure_top_card_is_visible(*m_focused_stack);
+    if (m_focused_stack->make_top_card_visible())
+        update(m_focused_stack->peek().rect());
 }
 
 void Game::mouseup_event(GUI::MouseEvent& event)

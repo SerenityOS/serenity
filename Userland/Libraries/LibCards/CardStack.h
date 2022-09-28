@@ -43,6 +43,7 @@ public:
     Gfx::IntRect const& bounding_box() const { return m_bounding_box; }
 
     void set_focused(bool focused) { m_focused = focused; }
+    bool make_top_card_visible(); // Returns true if the card was flipped.
 
     void push(NonnullRefPtr<Card> card);
     NonnullRefPtr<Card> pop();
