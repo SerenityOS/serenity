@@ -162,15 +162,7 @@ void Game::setup(Mode mode)
     if (on_undo_availability_change)
         on_undo_availability_change(false);
 
-    for (int i = 0; i < Card::card_count; ++i) {
-        m_new_deck.append(Card::construct(Cards::Suit::Clubs, static_cast<Cards::Rank>(i)));
-        m_new_deck.append(Card::construct(Cards::Suit::Spades, static_cast<Cards::Rank>(i)));
-        m_new_deck.append(Card::construct(Cards::Suit::Hearts, static_cast<Cards::Rank>(i)));
-        m_new_deck.append(Card::construct(Cards::Suit::Diamonds, static_cast<Cards::Rank>(i)));
-    }
-
-    for (uint8_t i = 0; i < 200; ++i)
-        m_new_deck.append(m_new_deck.take(get_random_uniform(m_new_deck.size())));
+    m_new_deck = Cards::create_standard_deck(Cards::Shuffle::Yes);
 
     m_focused_stack = nullptr;
     m_focused_cards.clear();

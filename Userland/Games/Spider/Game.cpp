@@ -48,32 +48,24 @@ void Game::setup(Mode mode)
     m_score = 500;
     update_score(0);
 
-    NonnullRefPtrVector<Card> deck;
-    deck.ensure_capacity(Card::card_count * 2);
+    unsigned heart_suits = 0;
+    unsigned spade_suits = 0;
 
-    for (int i = 0; i < Card::card_count; ++i) {
-        switch (m_mode) {
-        case Mode::SingleSuit:
-            for (int j = 0; j < 8; j++) {
-                deck.append(Card::construct(Cards::Suit::Spades, static_cast<Cards::Rank>(i)));
-            }
-            break;
-        case Mode::TwoSuit:
-            for (int j = 0; j < 4; j++) {
-                deck.append(Card::construct(Cards::Suit::Spades, static_cast<Cards::Rank>(i)));
-                deck.append(Card::construct(Cards::Suit::Hearts, static_cast<Cards::Rank>(i)));
-            }
-            break;
-        default:
-            VERIFY_NOT_REACHED();
-            break;
-        }
+    switch (m_mode) {
+    case Mode::SingleSuit:
+        spade_suits = 8;
+        heart_suits = 0;
+        break;
+    case Mode::TwoSuit:
+        spade_suits = 4;
+        heart_suits = 4;
+        break;
+    default:
+        VERIFY_NOT_REACHED();
+        break;
     }
 
-    m_new_deck.clear_with_capacity();
-    m_new_deck.ensure_capacity(deck.size());
-    while (!deck.is_empty())
-        m_new_deck.append(deck.take(get_random_uniform(deck.size())));
+    m_new_deck = Cards::create_deck(0, 0, heart_suits, spade_suits, Cards::Shuffle::Yes);
 
     m_focused_stack = nullptr;
     m_focused_cards.clear();
