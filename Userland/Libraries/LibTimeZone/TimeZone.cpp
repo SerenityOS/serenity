@@ -4,10 +4,15 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Debug.h>
 #include <AK/String.h>
 #include <LibTimeZone/TimeZone.h>
+#include <limits.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <time.h>
+#include <unistd.h>
 
 namespace TimeZone {
 
@@ -72,17 +77,52 @@ private:
 StringView system_time_zone()
 {
     TimeZoneFile time_zone_file("r");
+    auto time_zone = time_zone_file.read_time_zone();
 
     // FIXME: Propagate the error to existing callers.
-    if (auto time_zone = time_zone_file.read_time_zone(); !time_zone.is_error())
-        return canonicalize_time_zone(time_zone.value()).value_or("UTC"sv);
+    if (time_zone.is_error()) {
+        dbgln_if(TIME_ZONE_DEBUG, "{}", time_zone.error());
+        return "UTC"sv;
+    }
 
-    return "UTC"sv;
+    return canonicalize_time_zone(time_zone.value()).value_or("UTC"sv);
 }
 
 StringView current_time_zone()
 {
-    return canonicalize_time_zone({ tzname[0], __builtin_strlen(tzname[0]) }).value_or("UTC"sv);
+    if (char* tz = getenv("TZ"); tz != nullptr) {
+        // FIXME: Actually parse the TZ environment variable, described here:
+        // https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap08.html#tag_08
+        StringView time_zone { tz, strlen(tz) };
+
+        if (auto maybe_time_zone = canonicalize_time_zone(time_zone); maybe_time_zone.has_value())
+            return *maybe_time_zone;
+
+        dbgln_if(TIME_ZONE_DEBUG, "Could not determine time zone from TZ environment: {}", time_zone);
+    }
+
+#ifdef __serenity__
+    return system_time_zone();
+#else
+    static constexpr auto zoneinfo = "/zoneinfo/"sv;
+    char buffer[PATH_MAX];
+
+    if (auto size = readlink("/etc/localtime", buffer, sizeof(buffer)); size > 0) {
+        StringView time_zone { buffer, static_cast<size_t>(size) };
+
+        if (auto index = time_zone.find(zoneinfo); index.has_value())
+            time_zone = time_zone.substring_view(*index + zoneinfo.length());
+
+        if (auto maybe_time_zone = canonicalize_time_zone(time_zone); maybe_time_zone.has_value())
+            return *maybe_time_zone;
+
+        dbgln_if(TIME_ZONE_DEBUG, "Could not determine time zone from /etc/localtime: {}", time_zone);
+    } else {
+        dbgln_if(TIME_ZONE_DEBUG, "Could not read the /etc/localtime link: {}", strerror(errno));
+    }
+
+    return "UTC"sv;
+#endif
 }
 
 ErrorOr<void> change_time_zone([[maybe_unused]] StringView time_zone)
