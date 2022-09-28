@@ -103,7 +103,7 @@ float LineBuilder::y_for_float_to_be_inserted_here(Box const& box)
     float current_line_width = ensure_last_line_box().width();
     // If there's already inline content on the current line, check if the new float can fit
     // alongside the content. If not, place it on the next line.
-    if (current_line_width > 0 && roundf(current_line_width + width) > m_available_width_for_current_line)
+    if (current_line_width > 0 && (current_line_width + width) > m_available_width_for_current_line)
         candidate_y += m_context.containing_block().line_height();
 
     // Then, look for the next Y position where we can fit the new float.
@@ -138,7 +138,7 @@ bool LineBuilder::should_break(float next_item_width)
             return false;
     }
     auto current_line_width = ensure_last_line_box().width();
-    return roundf(current_line_width + next_item_width) > m_available_width_for_current_line;
+    return (current_line_width + next_item_width) > m_available_width_for_current_line;
 }
 
 static float box_baseline(LayoutState const& state, Box const& box)
