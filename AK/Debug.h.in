@@ -450,6 +450,10 @@
 #cmakedefine01 TEXTEDITOR_DEBUG
 #endif
 
+#ifndef TIME_ZONE_DEBUG
+#cmakedefine01 TIME_ZONE_DEBUG
+#endif
+
 #ifndef TLS_DEBUG
 #cmakedefine01 TLS_DEBUG
 #endif
