@@ -36,8 +36,8 @@ void CardStack::paint(GUI::Painter& painter, Gfx::Color const& background_color)
 {
     auto draw_background_if_empty = [&]() {
         size_t number_of_moving_cards = 0;
-        for (const auto& card : m_stack)
-            number_of_moving_cards += card.is_moving();
+        for (auto const& card : m_stack)
+            number_of_moving_cards += card.is_moving() ? 1 : 0;
 
         if (m_covered_stack && !m_covered_stack->is_empty())
             return false;
@@ -194,7 +194,7 @@ bool CardStack::is_allowed_to_push(Card const& card, size_t stack_size, Movement
         return card.rank() == Rank::Ace;
 
     if (!is_empty()) {
-        auto& top_card = peek();
+        auto const& top_card = peek();
         if (top_card.is_upside_down())
             return false;
 
@@ -203,7 +203,8 @@ bool CardStack::is_allowed_to_push(Card const& card, size_t stack_size, Movement
             if (stack_size > 1)
                 return false;
             return top_card.suit() == card.suit() && m_stack.size() == to_underlying(card.rank());
-        } else if (m_type == Type::Normal) {
+        }
+        if (m_type == Type::Normal) {
             bool color_match;
             switch (movement_rule) {
             case MovementRule::Alternating:
@@ -228,10 +229,9 @@ bool CardStack::is_allowed_to_push(Card const& card, size_t stack_size, Movement
 
 void CardStack::push(NonnullRefPtr<Card> card)
 {
-    auto size = m_stack.size();
     auto top_most_position = m_stack_positions.is_empty() ? m_position : m_stack_positions.last();
 
-    if (size && size % m_rules.step == 0) {
+    if (!m_stack.is_empty() && m_stack.size() % m_rules.step == 0) {
         if (peek().is_upside_down())
             top_most_position.translate_by(m_rules.shift_x, m_rules.shift_y_upside_down);
         else
@@ -282,7 +282,7 @@ void CardStack::calculate_bounding_box()
     uint16_t height = 0;
     size_t card_position = 0;
     for (auto& card : m_stack) {
-        if (card_position % m_rules.step == 0 && card_position) {
+        if (card_position % m_rules.step == 0 && card_position != 0) {
             if (card.is_upside_down()) {
                 width += m_rules.shift_x;
                 height += m_rules.shift_y_upside_down;
