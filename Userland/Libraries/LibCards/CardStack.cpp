@@ -227,6 +227,20 @@ bool CardStack::is_allowed_to_push(Card const& card, size_t stack_size, Movement
     return true;
 }
 
+bool CardStack::make_top_card_visible()
+{
+    if (is_empty())
+        return false;
+
+    auto& top_card = peek();
+    if (top_card.is_upside_down()) {
+        top_card.set_upside_down(false);
+        return true;
+    }
+
+    return false;
+}
+
 void CardStack::push(NonnullRefPtr<Card> card)
 {
     auto top_most_position = m_stack_positions.is_empty() ? m_position : m_stack_positions.last();
