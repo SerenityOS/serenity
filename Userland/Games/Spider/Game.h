@@ -82,9 +82,7 @@ private:
 
     Mode m_mode { Mode::SingleSuit };
 
-    NonnullRefPtrVector<Card> m_focused_cards;
     NonnullRefPtrVector<Card> m_new_deck;
-    CardStack* m_focused_stack { nullptr };
     Gfx::IntPoint m_mouse_down_location;
 
     bool m_mouse_down { false };
