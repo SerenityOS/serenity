@@ -1,5 +1,7 @@
 /*
+ * Copyright (c) 2020, Till Mayer <till.mayer@web.de>
  * Copyright (c) 2022, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -30,6 +32,65 @@ void CardGame::mark_intersecting_stacks_dirty(Cards::Card const& intersecting_ca
     }
 
     update(intersecting_card.rect());
+}
+
+Gfx::IntRect CardGame::moving_cards_bounds() const
+{
+    if (!is_moving_cards())
+        return {};
+
+    // Note: This assumes that the cards are arranged in a line.
+    return m_moving_cards.first().rect().united(m_moving_cards.last().rect());
+}
+
+void CardGame::pick_up_cards_from_stack(Cards::CardStack& stack, Gfx::IntPoint click_location, CardStack::MovementRule movement_rule)
+{
+    if (m_moving_cards_source_stack)
+        m_moving_cards_source_stack->set_focused(false);
+    stack.add_all_grabbed_cards(click_location, m_moving_cards, movement_rule);
+    stack.set_focused(true);
+    m_moving_cards_source_stack = stack;
+}
+
+RefPtr<CardStack> CardGame::find_stack_to_drop_on(CardStack::MovementRule movement_rule) const
+{
+    auto bounds_to_check = moving_cards_bounds();
+
+    // FIXME: This currently returns only the first stack we overlap,
+    //        but what we want is the stack we overlap the most.
+    for (auto const& stack : stacks()) {
+        if (stack.is_focused())
+            continue;
+
+        if (stack.bounding_box().intersects(bounds_to_check)) {
+            if (stack.is_allowed_to_push(moving_cards().at(0), moving_cards().size(), movement_rule)) {
+                return stack;
+            }
+        }
+    }
+
+    return nullptr;
+}
+
+void CardGame::drop_cards_on_stack(Cards::CardStack& stack, CardStack::MovementRule movement_rule)
+{
+    VERIFY(stack.is_allowed_to_push(m_moving_cards.at(0), m_moving_cards.size(), movement_rule));
+    for (auto& to_intersect : moving_cards()) {
+        mark_intersecting_stacks_dirty(to_intersect);
+        stack.push(to_intersect);
+        (void)moving_cards_source_stack()->pop();
+    }
+
+    update(moving_cards_source_stack()->bounding_box());
+    update(stack.bounding_box());
+}
+
+void CardGame::clear_moving_cards()
+{
+    if (!m_moving_cards_source_stack.is_null())
+        m_moving_cards_source_stack->set_focused(false);
+    m_moving_cards_source_stack.clear();
+    m_moving_cards.clear();
 }
 
 void CardGame::dump_layout() const
