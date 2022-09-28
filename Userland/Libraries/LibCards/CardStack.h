@@ -31,8 +31,7 @@ public:
     };
 
     CardStack();
-    CardStack(Gfx::IntPoint const& position, Type type);
-    CardStack(Gfx::IntPoint const& position, Type type, NonnullRefPtr<CardStack> associated_stack);
+    CardStack(Gfx::IntPoint const& position, Type type, RefPtr<CardStack> covered_stack = nullptr);
 
     bool is_empty() const { return m_stack.is_empty(); }
     bool is_focused() const { return m_focused; }
@@ -83,7 +82,10 @@ private:
 
     void calculate_bounding_box();
 
-    RefPtr<CardStack> m_associated_stack;
+    // An optional stack that this stack is painted on top of.
+    // eg, in Solitaire the Play stack is positioned over the Waste stack.
+    RefPtr<CardStack> m_covered_stack;
+
     NonnullRefPtrVector<Card> m_stack;
     Vector<Gfx::IntPoint> m_stack_positions;
     Gfx::IntPoint m_position;

@@ -15,18 +15,8 @@ CardStack::CardStack()
 {
 }
 
-CardStack::CardStack(Gfx::IntPoint const& position, Type type)
-    : m_position(position)
-    , m_type(type)
-    , m_rules(rules_for_type(type))
-    , m_base(m_position, { Card::width, Card::height })
-{
-    VERIFY(type != Type::Invalid);
-    calculate_bounding_box();
-}
-
-CardStack::CardStack(Gfx::IntPoint const& position, Type type, NonnullRefPtr<CardStack> associated_stack)
-    : m_associated_stack(move(associated_stack))
+CardStack::CardStack(Gfx::IntPoint const& position, Type type, RefPtr<CardStack> covered_stack)
+    : m_covered_stack(move(covered_stack))
     , m_position(position)
     , m_type(type)
     , m_rules(rules_for_type(type))
@@ -49,7 +39,7 @@ void CardStack::paint(GUI::Painter& painter, Gfx::Color const& background_color)
         for (const auto& card : m_stack)
             number_of_moving_cards += card.is_moving();
 
-        if (m_associated_stack && !m_associated_stack->is_empty())
+        if (m_covered_stack && !m_covered_stack->is_empty())
             return false;
         if (!is_empty() && (m_stack.size() != number_of_moving_cards))
             return false;
