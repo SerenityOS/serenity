@@ -117,7 +117,7 @@ void HTMLIFrameElement::load_src(String const& value)
         dbgln("iframe failed to load URL: Invalid URL: {}", value);
         return;
     }
-    if (url.scheme() == "file" && document().origin().protocol() != "file") {
+    if (url.scheme() == "file" && document().origin().scheme() != "file") {
         dbgln("iframe failed to load URL: Security violation: {} may not load {}", document().url(), url);
         return;
     }
