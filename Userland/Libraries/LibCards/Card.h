@@ -123,6 +123,14 @@ private:
     bool m_inverted { false };
 };
 
+enum class Shuffle {
+    No,
+    Yes,
+};
+NonnullRefPtrVector<Card> create_standard_deck(Shuffle);
+NonnullRefPtrVector<Card> create_deck(unsigned full_club_suit_count, unsigned full_diamond_suit_count, unsigned full_heart_suit_count, unsigned full_spade_suit_count, Shuffle);
+void shuffle_deck(NonnullRefPtrVector<Card>&);
+
 }
 
 template<>
