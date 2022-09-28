@@ -67,8 +67,7 @@ void Game::setup(Mode mode)
 
     m_new_deck = Cards::create_deck(0, 0, heart_suits, spade_suits, Cards::Shuffle::Yes);
 
-    m_focused_stack = nullptr;
-    m_focused_cards.clear();
+    clear_moving_cards();
 
     m_new_game_animation = true;
     start_timer(s_timer_interval_ms);
@@ -174,33 +173,28 @@ void Game::paint_event(GUI::PaintEvent& event)
     painter.add_clip_rect(frame_inner_rect());
     painter.add_clip_rect(event.rect());
 
-    if (!m_focused_cards.is_empty()) {
-        for (auto& focused_card : m_focused_cards)
-            focused_card.clear(painter, background_color);
+    if (is_moving_cards()) {
+        for (auto& card : moving_cards())
+            card.clear(painter, background_color);
     }
 
     for (auto& stack : stacks()) {
         stack.paint(painter, background_color);
     }
 
-    if (!m_focused_cards.is_empty()) {
-        for (auto& focused_card : m_focused_cards) {
-            focused_card.paint(painter);
-            focused_card.save_old_position();
+    if (is_moving_cards()) {
+        for (auto& card : moving_cards()) {
+            card.paint(painter);
+            card.save_old_position();
         }
     }
 
     if (!m_mouse_down) {
-        if (!m_focused_cards.is_empty()) {
-            for (auto& card : m_focused_cards)
+        if (is_moving_cards()) {
+            for (auto& card : moving_cards())
                 card.set_moving(false);
-            m_focused_cards.clear();
         }
-
-        if (m_focused_stack) {
-            m_focused_stack->set_focused(false);
-            m_focused_stack = nullptr;
-        }
+        clear_moving_cards();
     }
 }
 
@@ -229,13 +223,9 @@ void Game::mousedown_event(GUI::MouseEvent& event)
                         start_timer_if_necessary();
                         update(top_card.rect());
                     }
-                } else if (m_focused_cards.is_empty()) {
-                    to_check.add_all_grabbed_cards(click_location, m_focused_cards, Cards::CardStack::MovementRule::Same);
+                } else if (!is_moving_cards()) {
+                    pick_up_cards_from_stack(to_check, click_location, Cards::CardStack::MovementRule::Same);
                     m_mouse_down_location = click_location;
-                    if (m_focused_stack)
-                        m_focused_stack->set_focused(false);
-                    to_check.set_focused(true);
-                    m_focused_stack = &to_check;
                     // When the user wants to automatically move cards, do not go into the drag mode.
                     if (event.button() != GUI::MouseButton::Secondary)
                         m_mouse_down = true;
@@ -249,28 +239,17 @@ void Game::mousedown_event(GUI::MouseEvent& event)
 
 void Game::move_focused_cards(CardStack& stack)
 {
-    for (auto& to_intersect : m_focused_cards) {
-        mark_intersecting_stacks_dirty(to_intersect);
-        stack.push(to_intersect);
-        (void)m_focused_stack->pop();
-    }
-
+    drop_cards_on_stack(stack, Cards::CardStack::MovementRule::Any);
     update_score(-1);
-
-    update(m_focused_stack->bounding_box());
-    update(stack.bounding_box());
-
+    moving_cards_source_stack()->make_top_card_visible();
     detect_full_stacks();
-
-    if (m_focused_stack->make_top_card_visible())
-        update(m_focused_stack->peek().rect());
 }
 
 void Game::mouseup_event(GUI::MouseEvent& event)
 {
     GUI::Frame::mouseup_event(event);
 
-    if (!m_focused_stack || m_focused_cards.is_empty() || m_new_game_animation || m_draw_animation)
+    if (!is_moving_cards() || m_new_game_animation || m_draw_animation)
         return;
 
     bool rebound = true;
@@ -281,37 +260,25 @@ void Game::mouseup_event(GUI::MouseEvent& event)
             if (stack.is_focused())
                 continue;
 
-            if (stack.is_allowed_to_push(m_focused_cards.at(0), m_focused_cards.size(), Cards::CardStack::MovementRule::Any) && !stack.is_empty()) {
+            if (stack.is_allowed_to_push(moving_cards().at(0), moving_cards().size(), Cards::CardStack::MovementRule::Any) && !stack.is_empty()) {
                 move_focused_cards(stack);
 
                 rebound = false;
                 break;
             }
         }
-    } else {
-        for (auto& stack : stacks()) {
-            if (stack.is_focused())
-                continue;
-
-            for (auto& focused_card : m_focused_cards) {
-                if (stack.bounding_box().intersects(focused_card.rect())) {
-                    if (stack.is_allowed_to_push(m_focused_cards.at(0), m_focused_cards.size(), Cards::CardStack::MovementRule::Any)) {
-                        move_focused_cards(stack);
-
-                        rebound = false;
-                        break;
-                    }
-                }
-            }
-        }
+    } else if (auto target_stack = find_stack_to_drop_on(Cards::CardStack::MovementRule::Any); !target_stack.is_null()) {
+        auto& stack = *target_stack;
+        move_focused_cards(stack);
+        rebound = false;
     }
 
     if (rebound) {
-        for (auto& to_intersect : m_focused_cards)
+        for (auto& to_intersect : moving_cards())
             mark_intersecting_stacks_dirty(to_intersect);
 
-        m_focused_stack->rebound_cards();
-        update(m_focused_stack->bounding_box());
+        moving_cards_source_stack()->rebound_cards();
+        update(moving_cards_source_stack()->bounding_box());
     }
 
     m_mouse_down = false;
@@ -328,7 +295,7 @@ void Game::mousemove_event(GUI::MouseEvent& event)
     int dx = click_location.dx_relative_to(m_mouse_down_location);
     int dy = click_location.dy_relative_to(m_mouse_down_location);
 
-    for (auto& to_intersect : m_focused_cards) {
+    for (auto& to_intersect : moving_cards()) {
         mark_intersecting_stacks_dirty(to_intersect);
         to_intersect.rect().translate_by(dx, dy);
         update(to_intersect.rect());
