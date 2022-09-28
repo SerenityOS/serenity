@@ -22,11 +22,11 @@ static constexpr int s_timer_interval_ms = 1000 / 60;
 
 Game::Game()
 {
-    m_stacks.append(adopt_ref(*new CardStack({ 10, Game::height - Card::height - 10 }, CardStack::Type::Waste)));
-    m_stacks.append(adopt_ref(*new CardStack({ Game::width - Card::width - 10, Game::height - Card::height - 10 }, CardStack::Type::Stock)));
+    add_stack(adopt_ref(*new CardStack({ 10, Game::height - Card::height - 10 }, CardStack::Type::Waste)));
+    add_stack(adopt_ref(*new CardStack({ Game::width - Card::width - 10, Game::height - Card::height - 10 }, CardStack::Type::Stock)));
 
     for (int i = 0; i < 10; i++) {
-        m_stacks.append(adopt_ref(*new CardStack({ 10 + i * (Card::width + 10), 10 }, CardStack::Type::Normal)));
+        add_stack(adopt_ref(*new CardStack({ 10 + i * (Card::width + 10), 10 }, CardStack::Type::Normal)));
     }
 }
 
@@ -40,7 +40,7 @@ void Game::setup(Mode mode)
     if (on_game_end)
         on_game_end(GameOverReason::NewGame, m_score);
 
-    for (auto& stack : m_stacks)
+    for (auto& stack : stacks())
         stack.clear();
 
     m_new_game_animation_pile = 0;
@@ -94,7 +94,7 @@ void Game::update_score(int delta)
 void Game::draw_cards()
 {
     // draw a single card from the stock for each pile
-    auto& stock_pile = stack(Stock);
+    auto& stock_pile = stack_at_location(Stock);
     if (stock_pile.is_empty())
         return;
 
@@ -107,7 +107,7 @@ void Game::draw_cards()
 
 void Game::mark_intersecting_stacks_dirty(Card& intersecting_card)
 {
-    for (auto& stack : m_stacks) {
+    for (auto& stack : stacks()) {
         if (intersecting_card.rect().intersects(stack.bounding_box()))
             update(stack.bounding_box());
     }
@@ -129,9 +129,9 @@ void Game::ensure_top_card_is_visible(NonnullRefPtr<CardStack> stack)
 
 void Game::detect_full_stacks()
 {
-    auto& completed_stack = stack(Completed);
+    auto& completed_stack = stack_at_location(Completed);
     for (auto pile : piles) {
-        auto& current_pile = stack(pile);
+        auto& current_pile = stack_at_location(pile);
 
         bool started = false;
         uint8_t last_value;
@@ -175,7 +175,7 @@ void Game::detect_full_stacks()
 void Game::detect_victory()
 {
     for (auto pile : piles) {
-        auto& current_pile = stack(pile);
+        auto& current_pile = stack_at_location(pile);
 
         if (!current_pile.is_empty())
             return;
@@ -200,7 +200,7 @@ void Game::paint_event(GUI::PaintEvent& event)
             focused_card.clear(painter, background_color);
     }
 
-    for (auto& stack : m_stacks) {
+    for (auto& stack : stacks()) {
         stack.draw(painter, background_color);
     }
 
@@ -233,7 +233,7 @@ void Game::mousedown_event(GUI::MouseEvent& event)
         return;
 
     auto click_location = event.position();
-    for (auto& to_check : m_stacks) {
+    for (auto& to_check : stacks()) {
         if (to_check.type() == CardStack::Type::Waste)
             continue;
 
@@ -297,7 +297,7 @@ void Game::mouseup_event(GUI::MouseEvent& event)
     if (event.button() == GUI::MouseButton::Secondary) {
         // This enables the game to move the focused cards to the first possible stack excluding empty stacks.
         // NOTE: This ignores empty stacks, as the game has no undo button, and a card, which has been moved to an empty stack without any other possibilities is not reversible.
-        for (auto& stack : m_stacks) {
+        for (auto& stack : stacks()) {
             if (stack.is_focused())
                 continue;
 
@@ -309,7 +309,7 @@ void Game::mouseup_event(GUI::MouseEvent& event)
             }
         }
     } else {
-        for (auto& stack : m_stacks) {
+        for (auto& stack : stacks()) {
             if (stack.is_focused())
                 continue;
 
@@ -364,7 +364,7 @@ void Game::timer_event(Core::TimerEvent&)
             ++m_new_game_animation_delay;
         } else {
             m_new_game_animation_delay = 0;
-            auto& current_pile = stack(piles.at(m_new_game_animation_pile));
+            auto& current_pile = stack_at_location(piles.at(m_new_game_animation_pile));
 
             // for first 4 piles, draw 6 cards
             // for last 6 piles, draw 5 cards
@@ -384,7 +384,7 @@ void Game::timer_event(Core::TimerEvent&)
             if (m_new_game_animation_pile == piles.size()) {
                 VERIFY(m_new_deck.size() == 50);
 
-                auto& stock_pile = stack(Stock);
+                auto& stock_pile = stack_at_location(Stock);
                 while (!m_new_deck.is_empty())
                     stock_pile.push(m_new_deck.take_last());
 
@@ -399,8 +399,8 @@ void Game::timer_event(Core::TimerEvent&)
         if (m_draw_animation_delay < draw_animation_delay) {
             ++m_draw_animation_delay;
         } else {
-            auto& stock_pile = stack(Stock);
-            auto& current_pile = stack(piles.at(m_draw_animation_pile));
+            auto& stock_pile = stack_at_location(Stock);
+            auto& current_pile = stack_at_location(piles.at(m_draw_animation_pile));
             auto card = stock_pile.pop();
             card->set_upside_down(false);
             current_pile.push(card);

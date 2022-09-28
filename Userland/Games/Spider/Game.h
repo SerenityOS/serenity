@@ -76,11 +76,6 @@ private:
     void detect_victory();
     void move_focused_cards(CardStack& stack);
 
-    ALWAYS_INLINE CardStack& stack(StackLocation location)
-    {
-        return m_stacks[location];
-    }
-
     void paint_event(GUI::PaintEvent&) override;
     void mousedown_event(GUI::MouseEvent&) override;
     void mouseup_event(GUI::MouseEvent&) override;
@@ -91,7 +86,6 @@ private:
 
     NonnullRefPtrVector<Card> m_focused_cards;
     NonnullRefPtrVector<Card> m_new_deck;
-    NonnullRefPtrVector<CardStack> m_stacks;
     CardStack* m_focused_stack { nullptr };
     Gfx::IntPoint m_mouse_down_location;
 

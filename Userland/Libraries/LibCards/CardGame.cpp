@@ -17,6 +17,18 @@ CardGame::CardGame()
     set_background_color(background_color.value_or(Color::from_rgb(0x008000)));
 }
 
+void CardGame::add_stack(NonnullRefPtr<CardStack> stack)
+{
+    m_stacks.append(move(stack));
+}
+
+void CardGame::dump_layout() const
+{
+    dbgln("------------------------------");
+    for (auto const& stack : stacks())
+        dbgln("{}", stack);
+}
+
 void CardGame::config_string_did_change(String const& domain, String const& group, String const& key, String const& value)
 {
     if (domain == "Games" && group == "Cards") {
