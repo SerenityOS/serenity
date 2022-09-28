@@ -257,7 +257,7 @@ void Game::mouseup_event(GUI::MouseEvent& event)
         // This enables the game to move the focused cards to the first possible stack excluding empty stacks.
         // NOTE: This ignores empty stacks, as the game has no undo button, and a card, which has been moved to an empty stack without any other possibilities is not reversible.
         for (auto& stack : stacks()) {
-            if (stack.is_focused())
+            if (stack == moving_cards_source_stack())
                 continue;
 
             if (stack.is_allowed_to_push(moving_cards().at(0), moving_cards().size(), Cards::CardStack::MovementRule::Any) && !stack.is_empty()) {
