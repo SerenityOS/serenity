@@ -896,21 +896,21 @@ void Game::paint_event(GUI::PaintEvent& event)
         if (!game_ended()) {
             for (auto& card : player.hand)
                 if (!card.is_null())
-                    card->draw(painter);
+                    card->paint(painter);
         } else {
             // FIXME: reposition cards in advance_game() maybe
             auto card_position = player.first_card_position;
             for (auto& card : player.cards_taken) {
                 card->set_upside_down(false);
                 card->set_position(card_position);
-                card->draw(painter);
+                card->paint(painter);
                 card_position.translate_by(player.card_offset);
             }
         }
     }
 
     for (size_t i = 0; i < m_trick.size(); i++)
-        m_trick[i].draw(painter);
+        m_trick[i].paint(painter);
 }
 
 void Game::dump_state() const

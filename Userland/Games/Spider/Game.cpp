@@ -201,12 +201,12 @@ void Game::paint_event(GUI::PaintEvent& event)
     }
 
     for (auto& stack : stacks()) {
-        stack.draw(painter, background_color);
+        stack.paint(painter, background_color);
     }
 
     if (!m_focused_cards.is_empty()) {
         for (auto& focused_card : m_focused_cards) {
-            focused_card.draw(painter);
+            focused_card.paint(painter);
             focused_card.save_old_position();
         }
     }
