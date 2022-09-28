@@ -42,7 +42,7 @@ void CardStack::clear()
     m_stack_positions.clear();
 }
 
-void CardStack::draw(GUI::Painter& painter, Gfx::Color const& background_color)
+void CardStack::paint(GUI::Painter& painter, Gfx::Color const& background_color)
 {
     auto draw_background_if_empty = [&]() {
         size_t number_of_moving_cards = 0;
@@ -89,13 +89,13 @@ void CardStack::draw(GUI::Painter& painter, Gfx::Color const& background_color)
 
     if (m_rules.shift_x == 0 && m_rules.shift_y == 0) {
         auto& card = peek();
-        card.draw(painter);
+        card.paint(painter);
         return;
     }
 
     for (auto& card : m_stack) {
         if (!card.is_moving())
-            card.clear_and_draw(painter, Gfx::Color::Transparent);
+            card.clear_and_paint(painter, Gfx::Color::Transparent);
     }
 }
 

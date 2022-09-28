@@ -20,7 +20,7 @@ Card::Card(Suit suit, Rank rank)
     VERIFY(to_underlying(rank) < card_count);
 }
 
-void Card::draw(GUI::Painter& painter) const
+void Card::paint(GUI::Painter& painter) const
 {
     auto& card_painter = CardPainter::the();
     auto bitmap = [&]() {
@@ -43,12 +43,12 @@ void Card::save_old_position()
     m_old_position_valid = true;
 }
 
-void Card::clear_and_draw(GUI::Painter& painter, Color const& background_color)
+void Card::clear_and_paint(GUI::Painter& painter, Color const& background_color)
 {
     if (is_old_position_valid())
         clear(painter, background_color);
 
-    draw(painter);
+    paint(painter);
     save_old_position();
 }
 

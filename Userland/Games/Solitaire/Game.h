@@ -70,7 +70,7 @@ private:
         void draw(GUI::Painter& painter)
         {
             VERIFY(!m_animation_card.is_null());
-            m_animation_card->draw(painter);
+            m_animation_card->paint(painter);
             m_dirty = false;
         }
 

@@ -52,7 +52,7 @@ public:
 
     bool is_allowed_to_push(Card const&, size_t stack_size = 1, MovementRule movement_rule = MovementRule::Alternating) const;
     void add_all_grabbed_cards(Gfx::IntPoint const& click_location, NonnullRefPtrVector<Card>& grabbed, MovementRule movement_rule = MovementRule::Alternating);
-    void draw(GUI::Painter&, Gfx::Color const& background_color);
+    void paint(GUI::Painter&, Gfx::Color const& background_color);
     void clear();
 
 private:
