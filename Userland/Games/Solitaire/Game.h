@@ -175,12 +175,6 @@ private:
     void create_new_animation_card();
     void set_background_fill_enabled(bool);
     void check_for_game_over();
-    void dump_layout() const;
-
-    ALWAYS_INLINE CardStack& stack(StackLocation location)
-    {
-        return m_stacks[location];
-    }
 
     virtual void paint_event(GUI::PaintEvent&) override;
     virtual void mousedown_event(GUI::MouseEvent&) override;
@@ -195,7 +189,6 @@ private:
     LastMove m_last_move;
     NonnullRefPtrVector<Card> m_focused_cards;
     NonnullRefPtrVector<Card> m_new_deck;
-    NonnullRefPtrVector<CardStack> m_stacks;
     CardStack* m_focused_stack { nullptr };
     Gfx::IntPoint m_mouse_down_location;
 

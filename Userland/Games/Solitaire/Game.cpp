@@ -21,20 +21,20 @@ static constexpr int s_timer_interval_ms = 1000 / 60;
 
 Game::Game()
 {
-    m_stacks.append(adopt_ref(*new CardStack({ 10, 10 }, CardStack::Type::Stock)));
-    m_stacks.append(adopt_ref(*new CardStack({ 10 + Card::width + 10, 10 }, CardStack::Type::Waste)));
-    m_stacks.append(adopt_ref(*new CardStack({ 10 + Card::width + 10, 10 }, CardStack::Type::Play, m_stacks.ptr_at(Waste))));
-    m_stacks.append(adopt_ref(*new CardStack({ Game::width - 4 * Card::width - 40, 10 }, CardStack::Type::Foundation)));
-    m_stacks.append(adopt_ref(*new CardStack({ Game::width - 3 * Card::width - 30, 10 }, CardStack::Type::Foundation)));
-    m_stacks.append(adopt_ref(*new CardStack({ Game::width - 2 * Card::width - 20, 10 }, CardStack::Type::Foundation)));
-    m_stacks.append(adopt_ref(*new CardStack({ Game::width - Card::width - 10, 10 }, CardStack::Type::Foundation)));
-    m_stacks.append(adopt_ref(*new CardStack({ 10, 10 + Card::height + 10 }, CardStack::Type::Normal)));
-    m_stacks.append(adopt_ref(*new CardStack({ 10 + Card::width + 10, 10 + Card::height + 10 }, CardStack::Type::Normal)));
-    m_stacks.append(adopt_ref(*new CardStack({ 10 + 2 * Card::width + 20, 10 + Card::height + 10 }, CardStack::Type::Normal)));
-    m_stacks.append(adopt_ref(*new CardStack({ 10 + 3 * Card::width + 30, 10 + Card::height + 10 }, CardStack::Type::Normal)));
-    m_stacks.append(adopt_ref(*new CardStack({ 10 + 4 * Card::width + 40, 10 + Card::height + 10 }, CardStack::Type::Normal)));
-    m_stacks.append(adopt_ref(*new CardStack({ 10 + 5 * Card::width + 50, 10 + Card::height + 10 }, CardStack::Type::Normal)));
-    m_stacks.append(adopt_ref(*new CardStack({ 10 + 6 * Card::width + 60, 10 + Card::height + 10 }, CardStack::Type::Normal)));
+    add_stack(adopt_ref(*new CardStack({ 10, 10 }, CardStack::Type::Stock)));
+    add_stack(adopt_ref(*new CardStack({ 10 + Card::width + 10, 10 }, CardStack::Type::Waste)));
+    add_stack(adopt_ref(*new CardStack({ 10 + Card::width + 10, 10 }, CardStack::Type::Play, stack_at_location(Waste))));
+    add_stack(adopt_ref(*new CardStack({ Game::width - 4 * Card::width - 40, 10 }, CardStack::Type::Foundation)));
+    add_stack(adopt_ref(*new CardStack({ Game::width - 3 * Card::width - 30, 10 }, CardStack::Type::Foundation)));
+    add_stack(adopt_ref(*new CardStack({ Game::width - 2 * Card::width - 20, 10 }, CardStack::Type::Foundation)));
+    add_stack(adopt_ref(*new CardStack({ Game::width - Card::width - 10, 10 }, CardStack::Type::Foundation)));
+    add_stack(adopt_ref(*new CardStack({ 10, 10 + Card::height + 10 }, CardStack::Type::Normal)));
+    add_stack(adopt_ref(*new CardStack({ 10 + Card::width + 10, 10 + Card::height + 10 }, CardStack::Type::Normal)));
+    add_stack(adopt_ref(*new CardStack({ 10 + 2 * Card::width + 20, 10 + Card::height + 10 }, CardStack::Type::Normal)));
+    add_stack(adopt_ref(*new CardStack({ 10 + 3 * Card::width + 30, 10 + Card::height + 10 }, CardStack::Type::Normal)));
+    add_stack(adopt_ref(*new CardStack({ 10 + 4 * Card::width + 40, 10 + Card::height + 10 }, CardStack::Type::Normal)));
+    add_stack(adopt_ref(*new CardStack({ 10 + 5 * Card::width + 50, 10 + Card::height + 10 }, CardStack::Type::Normal)));
+    add_stack(adopt_ref(*new CardStack({ 10 + 6 * Card::width + 60, 10 + Card::height + 10 }, CardStack::Type::Normal)));
 }
 
 static float rand_float()
@@ -60,7 +60,7 @@ void Game::timer_event(Core::TimerEvent&)
             ++m_new_game_animation_delay;
         } else {
             m_new_game_animation_delay = 0;
-            auto& current_pile = stack(piles.at(m_new_game_animation_pile));
+            auto& current_pile = stack_at_location(piles.at(m_new_game_animation_pile));
 
             if (current_pile.count() < m_new_game_animation_pile) {
                 auto card = m_new_deck.take_last();
@@ -74,7 +74,7 @@ void Game::timer_event(Core::TimerEvent&)
             update(current_pile.bounding_box());
 
             if (m_new_game_animation_pile == piles.size()) {
-                auto& stock_pile = stack(Stock);
+                auto& stock_pile = stack_at_location(Stock);
                 while (!m_new_deck.is_empty())
                     stock_pile.push(m_new_deck.take_last());
 
@@ -151,7 +151,7 @@ void Game::setup(Mode mode)
     if (on_game_end)
         on_game_end(GameOverReason::NewGame, m_score);
 
-    for (auto& stack : m_stacks)
+    for (auto& stack : stacks())
         stack.clear();
 
     m_new_deck.clear();
@@ -218,7 +218,9 @@ void Game::keydown_event(GUI::KeyEvent& event)
     } else if (event.key() == KeyCode::Key_Space && m_mouse_down != true) {
         draw_cards();
     } else if (event.shift() && event.key() == KeyCode::Key_F11) {
-        dump_layout();
+        if constexpr (SOLITAIRE_DEBUG) {
+            dump_layout();
+        }
     }
 }
 
@@ -230,7 +232,7 @@ void Game::mousedown_event(GUI::MouseEvent& event)
         return;
 
     auto click_location = event.position();
-    for (auto& to_check : m_stacks) {
+    for (auto& to_check : stacks()) {
         if (to_check.type() == CardStack::Type::Waste)
             continue;
 
@@ -273,7 +275,7 @@ void Game::mouseup_event(GUI::MouseEvent& event)
         return;
 
     bool rebound = true;
-    for (auto& stack : m_stacks) {
+    for (auto& stack : stacks()) {
         if (stack.is_focused())
             continue;
 
@@ -348,7 +350,7 @@ void Game::doubleclick_event(GUI::MouseEvent& event)
         return;
 
     auto click_location = event.position();
-    for (auto& to_check : m_stacks) {
+    for (auto& to_check : stacks()) {
         if (to_check.type() != CardStack::Type::Normal && to_check.type() != CardStack::Type::Play)
             continue;
 
@@ -365,7 +367,7 @@ void Game::doubleclick_event(GUI::MouseEvent& event)
 void Game::check_for_game_over()
 {
     for (auto foundationID : foundations) {
-        auto& foundation = stack(foundationID);
+        auto& foundation = stack_at_location(foundationID);
 
         if (foundation.count() != Card::card_count)
             return;
@@ -376,9 +378,9 @@ void Game::check_for_game_over()
 
 void Game::draw_cards()
 {
-    auto& waste = stack(Waste);
-    auto& stock = stack(Stock);
-    auto& play = stack(Play);
+    auto& waste = stack_at_location(Waste);
+    auto& stock = stack_at_location(Stock);
+    auto& play = stack_at_location(Play);
 
     if (stock.is_empty()) {
         if (waste.is_empty() && play.is_empty())
@@ -447,8 +449,8 @@ void Game::draw_cards()
 
 void Game::pop_waste_to_play_stack()
 {
-    auto& waste = this->stack(Waste);
-    auto& play = this->stack(Play);
+    auto& waste = stack_at_location(Waste);
+    auto& play = stack_at_location(Play);
     if (play.is_empty() && !waste.is_empty()) {
         auto card = waste.pop();
         m_focused_cards.append(card);
@@ -468,7 +470,7 @@ bool Game::attempt_to_move_card_to_foundations(CardStack& from)
     bool card_was_moved = false;
 
     for (auto foundationID : foundations) {
-        auto& foundation = stack(foundationID);
+        auto& foundation = stack_at_location(foundationID);
 
         if (foundation.is_allowed_to_push(top_card)) {
             update(from.bounding_box());
@@ -506,7 +508,7 @@ void Game::auto_move_eligible_cards_to_foundations()
 {
     bool card_was_moved = false;
 
-    for (auto& to_check : m_stacks) {
+    for (auto& to_check : stacks()) {
         if (to_check.type() != CardStack::Type::Normal && to_check.type() != CardStack::Type::Play)
             continue;
 
@@ -521,7 +523,7 @@ void Game::auto_move_eligible_cards_to_foundations()
 
 void Game::mark_intersecting_stacks_dirty(Card& intersecting_card)
 {
-    for (auto& stack : m_stacks) {
+    for (auto& stack : stacks()) {
         if (intersecting_card.rect().intersects(stack.bounding_box()))
             update(stack.bounding_box());
     }
@@ -549,7 +551,7 @@ void Game::paint_event(GUI::PaintEvent& event)
             focused_card.clear(painter, background_color);
     }
 
-    for (auto& stack : m_stacks) {
+    for (auto& stack : stacks()) {
         stack.draw(painter, background_color);
     }
 
@@ -610,7 +612,7 @@ void Game::perform_undo()
     }
 
     if (m_last_move.from->type() == CardStack::Type::Play && m_mode == Mode::SingleCardDraw) {
-        auto& waste = stack(Waste);
+        auto& waste = stack_at_location(Waste);
         if (!m_last_move.from->is_empty())
             waste.push(m_last_move.from->pop());
     }
@@ -622,8 +624,8 @@ void Game::perform_undo()
     }
 
     if (m_last_move.from->type() == CardStack::Type::Stock) {
-        auto& waste = this->stack(Waste);
-        auto& play = this->stack(Play);
+        auto& waste = stack_at_location(Waste);
+        auto& play = stack_at_location(Play);
         NonnullRefPtrVector<Card> cards_popped;
         for (size_t i = 0; i < m_last_move.cards.size(); i++) {
             if (!waste.is_empty()) {
@@ -646,15 +648,6 @@ void Game::perform_undo()
     if (on_undo_availability_change)
         on_undo_availability_change(false);
     invalidate_layout();
-}
-
-void Game::dump_layout() const
-{
-    if constexpr (SOLITAIRE_DEBUG) {
-        dbgln("------------------------------");
-        for (auto const& stack : m_stacks)
-            dbgln("{}", stack);
-    }
 }
 
 }
