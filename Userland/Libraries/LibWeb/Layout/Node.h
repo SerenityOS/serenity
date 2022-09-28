@@ -41,6 +41,9 @@ public:
     DOM::Node const* dom_node() const;
     DOM::Node* dom_node();
 
+    bool is_generated() const { return m_generated; }
+    void set_generated(bool b) { m_generated = b; }
+
     Painting::Paintable* paintable() { return m_paintable; }
     Painting::Paintable const* paintable() const { return m_paintable; }
     void set_paintable(RefPtr<Painting::Paintable>);
@@ -153,6 +156,7 @@ private:
     SelectionState m_selection_state { SelectionState::None };
 
     bool m_is_flex_item { false };
+    bool m_generated { false };
 };
 
 class NodeWithStyle : public Node {

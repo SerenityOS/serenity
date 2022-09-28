@@ -291,7 +291,7 @@ void FlexFormattingContext::generate_anonymous_flex_items()
 
     flex_container().for_each_child_of_type<Box>([&](Box& child_box) {
         // Skip anonymous text runs that are only whitespace.
-        if (child_box.is_anonymous() && !child_box.first_child_of_type<BlockContainer>()) {
+        if (child_box.is_anonymous() && !child_box.is_generated() && !child_box.first_child_of_type<BlockContainer>()) {
             bool contains_only_white_space = true;
             child_box.for_each_in_subtree([&](auto const& node) {
                 if (!is<TextNode>(node) || !static_cast<TextNode const&>(node).dom_node().data().is_whitespace()) {

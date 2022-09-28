@@ -214,6 +214,7 @@ void TreeBuilder::create_layout_tree(DOM::Node& dom_node, TreeBuilder::Context& 
                 return nullptr;
 
             if (auto pseudo_element_node = DOM::Element::create_layout_node_for_display_type(document, pseudo_element_display, move(pseudo_element_style), nullptr)) {
+                pseudo_element_node->set_generated(true);
                 // FIXME: Handle images, and multiple values
                 if (pseudo_element_content.type == CSS::ContentData::Type::String) {
                     auto* text = document.heap().allocate<DOM::Text>(document.realm(), document, pseudo_element_content.data);
