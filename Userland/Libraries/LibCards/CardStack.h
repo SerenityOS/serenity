@@ -62,7 +62,7 @@ private:
         uint8_t shift_y_upside_down { 0 };
     };
 
-    constexpr StackRules rules_for_type(Type stack_type)
+    static constexpr StackRules rules_for_type(Type stack_type)
     {
         switch (stack_type) {
         case Type::Foundation:
