@@ -65,6 +65,8 @@ bool FormattingContext::creates_block_formatting_context(Box const& box)
         return true;
     if (is<TableCellBox>(box))
         return true;
+    if (box.computed_values().display().is_flex_inside())
+        return false;
 
     CSS::Overflow overflow_x = box.computed_values().overflow_x();
     if ((overflow_x != CSS::Overflow::Visible) && (overflow_x != CSS::Overflow::Clip))
