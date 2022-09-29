@@ -49,6 +49,7 @@
 #include <LibWeb/HTML/Storage.h>
 #include <LibWeb/HTML/Window.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
+#include <LibWeb/Loader/ContentFilter.h>
 #include <LibWeb/Loader/ResourceLoader.h>
 #include <LibWeb/Page/Page.h>
 #include <LibWeb/Painting/PaintableBox.h>
@@ -432,6 +433,19 @@ static void platform_init()
 #endif
 }
 
+static ErrorOr<void> load_content_filters()
+{
+    auto file = TRY(Core::Stream::File::open(String::formatted("{}/home/anon/.config/BrowserContentFilters.txt", s_serenity_resource_root), Core::Stream::OpenMode::Read));
+    auto ad_filter_list = TRY(Core::Stream::BufferedFile::create(move(file)));
+    auto buffer = TRY(ByteBuffer::create_uninitialized(4096));
+    while (TRY(ad_filter_list->can_read_line())) {
+        auto line = TRY(ad_filter_list->read_line(buffer));
+        if (!line.is_empty())
+            Web::ContentFilter::the().add_pattern(line);
+    }
+    return {};
+}
+
 void initialize_web_engine()
 {
     platform_init();
@@ -447,6 +461,10 @@ void initialize_web_engine()
     Web::Platform::FontPlugin::install(*new Ladybird::FontPluginQt);
 
     Web::FrameLoader::set_error_page_url(String::formatted("file://{}/res/html/error.html", s_serenity_resource_root));
+
+    auto maybe_content_filter_error = load_content_filters();
+    if (maybe_content_filter_error.is_error())
+        dbgln("Failed to load content filters: {}", maybe_content_filter_error.error());
 }
 
 void SimpleWebView::debug_request(String const& request, String const& argument)
