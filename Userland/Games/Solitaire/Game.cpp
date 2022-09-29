@@ -486,19 +486,19 @@ bool Game::attempt_to_move_card_to_foundations(CardStack& from)
 
 void Game::auto_move_eligible_cards_to_foundations()
 {
-    bool card_was_moved = false;
+    while (true) {
+        bool card_was_moved = false;
+        for (auto& to_check : stacks()) {
+            if (to_check.type() != CardStack::Type::Normal && to_check.type() != CardStack::Type::Play)
+                continue;
 
-    for (auto& to_check : stacks()) {
-        if (to_check.type() != CardStack::Type::Normal && to_check.type() != CardStack::Type::Play)
-            continue;
+            if (attempt_to_move_card_to_foundations(to_check))
+                card_was_moved = true;
+        }
 
-        if (attempt_to_move_card_to_foundations(to_check))
-            card_was_moved = true;
+        if (!card_was_moved)
+            break;
     }
-
-    // If at least one card was moved, check again to see if now any additional cards can now be moved
-    if (card_was_moved)
-        auto_move_eligible_cards_to_foundations();
 }
 
 void Game::paint_event(GUI::PaintEvent& event)
