@@ -112,7 +112,7 @@ float LineBuilder::y_for_float_to_be_inserted_here(Box const& box)
     while (true) {
         auto space_at_y_top = m_context.available_space_for_line(candidate_y);
         auto space_at_y_bottom = m_context.available_space_for_line(candidate_y + height);
-        if (width >= space_at_y_top || width >= space_at_y_bottom) {
+        if (width > space_at_y_top || width > space_at_y_bottom) {
             if (!m_context.any_floats_intrude_at_y(candidate_y) && !m_context.any_floats_intrude_at_y(candidate_y + height)) {
                 return candidate_y;
             }
