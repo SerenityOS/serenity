@@ -207,14 +207,14 @@ void Game::update_score(int to_add)
 
 void Game::keydown_event(GUI::KeyEvent& event)
 {
-    if (m_new_game_animation || m_game_over_animation)
+    if (is_moving_cards() || m_new_game_animation || m_game_over_animation)
         return;
 
     if (event.shift() && event.key() == KeyCode::Key_F12) {
         start_game_over_animation();
     } else if (event.key() == KeyCode::Key_Tab) {
         auto_move_eligible_cards_to_foundations();
-    } else if (event.key() == KeyCode::Key_Space && m_mouse_down != true) {
+    } else if (event.key() == KeyCode::Key_Space) {
         draw_cards();
     } else if (event.shift() && event.key() == KeyCode::Key_F11) {
         if constexpr (SOLITAIRE_DEBUG) {
