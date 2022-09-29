@@ -276,6 +276,7 @@ set(SOURCES
     Infra/ByteSequences.cpp
     Infra/JSON.cpp
     IntersectionObserver/IntersectionObserver.cpp
+    Layout/AvailableSpace.cpp
     Layout/BlockContainer.cpp
     Layout/BlockFormattingContext.cpp
     Layout/Box.cpp
