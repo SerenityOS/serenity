@@ -25,6 +25,8 @@ WelcomeWidget::WelcomeWidget()
     load_from_gml(welcome_window_gml);
 
     m_web_view = find_descendant_of_type_named<WebView::OutOfProcessWebView>("web_view");
+    m_web_view->load(URL::create_with_file_scheme(String::formatted("{}/README.md", Core::StandardPaths::home_directory())));
+
     m_tip_label = find_descendant_of_type_named<GUI::Label>("tip_label");
     m_tip_frame = find_descendant_of_type_named<GUI::Frame>("tip_frame");
 
@@ -66,7 +68,6 @@ WelcomeWidget::WelcomeWidget()
             Config::remove_group("SystemServer"sv, "Welcome"sv);
     };
 
-    open_and_parse_readme_file();
     if (auto result = open_and_parse_tips_file(); result.is_error()) {
         auto error = String::formatted("Opening \"{}/tips.txt\" failed: {}", Core::StandardPaths::documents_directory(), result.error());
         m_tip_label->set_text(error);
@@ -91,11 +92,6 @@ ErrorOr<void> WelcomeWidget::open_and_parse_tips_file()
     }
 
     return {};
-}
-
-void WelcomeWidget::open_and_parse_readme_file()
-{
-    m_web_view->load(URL::create_with_file_scheme("/home/anon/README.md"));
 }
 
 void WelcomeWidget::set_random_tip()
