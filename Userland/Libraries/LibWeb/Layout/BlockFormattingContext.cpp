@@ -172,30 +172,6 @@ void BlockFormattingContext::compute_width(Box const& box, LayoutMode layout_mod
                     margin_right = half_of_the_underflow;
                 }
             }
-        } else if (box.is_inline_block()) {
-
-            // 10.3.9 'Inline-block', non-replaced elements in normal flow
-
-            // A computed value of 'auto' for 'margin-left' or 'margin-right' becomes a used value of '0'.
-            if (margin_left.is_auto())
-                margin_left = zero_value;
-            if (margin_right.is_auto())
-                margin_right = zero_value;
-
-            // If 'width' is 'auto', the used value is the shrink-to-fit width as for floating elements.
-            if (width.is_auto()) {
-
-                // Find the available width: in this case, this is the width of the containing
-                // block minus the used values of 'margin-left', 'border-left-width', 'padding-left',
-                // 'padding-right', 'border-right-width', 'margin-right', and the widths of any relevant scroll bars.
-                float available_width = width_of_containing_block
-                    - margin_left.to_px(box) - computed_values.border_left().width - padding_left.to_px(box)
-                    - padding_right.to_px(box) - computed_values.border_right().width - margin_right.to_px(box);
-                auto result = calculate_shrink_to_fit_widths(box);
-
-                // Then the shrink-to-fit width is: min(max(preferred minimum width, available width), preferred width).
-                width = CSS::Length(min(max(result.preferred_minimum_width, available_width), result.preferred_width), CSS::Length::Type::Px);
-            }
         }
 
         return width;
