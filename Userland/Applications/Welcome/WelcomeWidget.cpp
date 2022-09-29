@@ -17,7 +17,6 @@
 #include <LibGUI/Process.h>
 #include <LibGfx/Font/BitmapFont.h>
 #include <LibGfx/Palette.h>
-#include <LibWebView/OutOfProcessWebView.h>
 
 WelcomeWidget::WelcomeWidget()
 {
