@@ -23,7 +23,7 @@ void RequestManagerQt::reply_finished(QNetworkReply* reply)
 
 RefPtr<Web::ResourceLoaderConnectorRequest> RequestManagerQt::start_request(String const& method, AK::URL const& url, HashMap<String, String> const& request_headers, ReadonlyBytes request_body, Core::ProxyData const& proxy)
 {
-    if (!url.protocol().is_one_of_ignoring_case("http"sv, "https"sv)) {
+    if (!url.scheme().is_one_of_ignoring_case("http"sv, "https"sv)) {
         return nullptr;
     }
     auto request_or_error = Request::create(*m_qnam, method, url, request_headers, request_body, proxy);
