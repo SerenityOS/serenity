@@ -255,6 +255,15 @@ public:
             alpha() * other.alpha() / 255);
     }
 
+    constexpr float distance_squared_to(Color const& other) const
+    {
+        int a = other.red() - red();
+        int b = other.green() - green();
+        int c = other.blue() - blue();
+        int d = other.alpha() - alpha();
+        return (a * a + b * b + c * c + d * d) / (4.0f * 255.0f * 255.0f);
+    }
+
     constexpr u8 luminosity() const
     {
         return (red() * 0.2126f + green() * 0.7152f + blue() * 0.0722f);

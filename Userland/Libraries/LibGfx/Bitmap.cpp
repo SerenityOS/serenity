@@ -1,14 +1,17 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, Timothy Slater <tslater2006@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Bitmap.h>
 #include <AK/Checked.h>
 #include <AK/LexicalPath.h>
 #include <AK/Memory.h>
 #include <AK/MemoryStream.h>
 #include <AK/Optional.h>
+#include <AK/Queue.h>
 #include <AK/ScopeGuard.h>
 #include <AK/String.h>
 #include <AK/Try.h>
@@ -631,6 +634,52 @@ Optional<Color> Bitmap::solid_color(u8 alpha_threshold) const
         }
     }
     return color;
+}
+
+void Bitmap::flood_visit_from_point(Gfx::IntPoint const& start_point, int threshold,
+    Function<void(Gfx::IntPoint location)> pixel_reached)
+{
+
+    VERIFY(rect().contains(start_point));
+
+    auto target_color = get_pixel(start_point.x(), start_point.y());
+
+    float threshold_normalized_squared = (threshold / 100.0f) * (threshold / 100.0f);
+
+    Queue<Gfx::IntPoint> points_to_visit = Queue<Gfx::IntPoint>();
+
+    points_to_visit.enqueue(start_point);
+    pixel_reached(start_point);
+    auto flood_mask = AK::Bitmap::must_create(width() * height(), false);
+
+    flood_mask.set(width() * start_point.y() + start_point.x(), true);
+
+    // This implements a non-recursive flood fill. This is a breadth-first search of paintable neighbors
+    // As we find neighbors that are reachable we call the location_reached callback, add them to the queue, and mark them in the mask
+    while (!points_to_visit.is_empty()) {
+        auto current_point = points_to_visit.dequeue();
+        auto candidate_points = Array {
+            current_point.moved_left(1),
+            current_point.moved_right(1),
+            current_point.moved_up(1),
+            current_point.moved_down(1)
+        };
+        for (auto candidate_point : candidate_points) {
+            auto flood_mask_index = width() * candidate_point.y() + candidate_point.x();
+            if (!rect().contains(candidate_point))
+                continue;
+
+            auto pixel_color = get_pixel<Gfx::StorageFormat::BGRA8888>(candidate_point.x(), candidate_point.y());
+            auto can_paint = pixel_color.distance_squared_to(target_color) <= threshold_normalized_squared;
+
+            if (flood_mask.get(flood_mask_index) == false && can_paint) {
+                points_to_visit.enqueue(candidate_point);
+                pixel_reached(candidate_point);
+            }
+
+            flood_mask.set(flood_mask_index, true);
+        }
+    }
 }
 
 }
