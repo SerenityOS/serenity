@@ -1477,6 +1477,7 @@ protected:
     virtual bool is_call_expression() const override { return true; }
 
     Completion throw_type_error_for_callee(Interpreter&, Value callee_value, StringView call_type) const;
+    Optional<String> expression_string() const;
 
     NonnullRefPtr<Expression> m_callee;
     Vector<Argument> const m_arguments;

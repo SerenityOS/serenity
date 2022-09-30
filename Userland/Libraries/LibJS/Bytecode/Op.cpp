@@ -584,6 +584,15 @@ static MarkedVector<Value> argument_list_evaluation(Bytecode::Interpreter& inter
     return argument_values;
 }
 
+Completion Call::throw_type_error_for_callee(Bytecode::Interpreter& interpreter, StringView callee_type) const
+{
+    auto callee = interpreter.reg(m_callee);
+    if (m_expression_string.has_value())
+        return interpreter.vm().throw_completion<TypeError>(ErrorType::IsNotAEvaluatedFrom, callee.to_string_without_side_effects(), callee_type, interpreter.current_executable().get_string(m_expression_string->value()));
+
+    return interpreter.vm().throw_completion<TypeError>(ErrorType::IsNotA, callee.to_string_without_side_effects(), callee_type);
+}
+
 ThrowCompletionOr<void> Call::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& vm = interpreter.vm();
@@ -591,10 +600,9 @@ ThrowCompletionOr<void> Call::execute_impl(Bytecode::Interpreter& interpreter) c
     auto callee = interpreter.reg(m_callee);
 
     if (m_type == CallType::Call && !callee.is_function())
-        return vm.throw_completion<TypeError>(ErrorType::IsNotA, callee.to_string_without_side_effects(), "function"sv);
-
+        return throw_type_error_for_callee(interpreter, "function"sv);
     if (m_type == CallType::Construct && !callee.is_constructor())
-        return vm.throw_completion<TypeError>(ErrorType::IsNotA, callee.to_string_without_side_effects(), "constructor"sv);
+        return throw_type_error_for_callee(interpreter, "constructor"sv);
 
     auto& function = callee.as_function();
 
@@ -1138,8 +1146,11 @@ String JumpUndefined::to_string_impl(Bytecode::Executable const&) const
     return String::formatted("JumpUndefined undefined:{} not undefined:{}", true_string, false_string);
 }
 
-String Call::to_string_impl(Bytecode::Executable const&) const
+String Call::to_string_impl(Bytecode::Executable const& executable) const
 {
+    if (m_expression_string.has_value())
+        return String::formatted("Call callee:{}, this:{}, arguments:[...acc] ({})", m_callee, m_this_value, executable.get_string(m_expression_string.value()));
+
     return String::formatted("Call callee:{}, this:{}, arguments:[...acc]", m_callee, m_this_value);
 }
 
