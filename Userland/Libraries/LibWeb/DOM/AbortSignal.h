@@ -40,7 +40,6 @@ public:
 
 private:
     explicit AbortSignal(JS::Realm&);
-    explicit AbortSignal(HTML::Window&);
 
     virtual void visit_edges(JS::Cell::Visitor&) override;
 

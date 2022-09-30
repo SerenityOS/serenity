@@ -27,7 +27,6 @@ class MouseEvent final : public UIEvent {
 public:
     static MouseEvent* create(JS::Realm&, FlyString const& event_name, MouseEventInit const& event_init = {});
     static MouseEvent* create_from_platform_event(JS::Realm&, FlyString const& event_name, double offset_x, double offset_y, double client_x, double client_y, unsigned mouse_button = 1);
-    static MouseEvent* create_from_platform_event(HTML::Window&, FlyString const& event_name, double offset_x, double offset_y, double client_x, double client_y, unsigned mouse_button = 1);
 
     virtual ~MouseEvent() override;
 

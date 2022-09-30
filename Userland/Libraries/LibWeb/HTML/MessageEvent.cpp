@@ -6,18 +6,12 @@
 
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/HTML/MessageEvent.h>
-#include <LibWeb/HTML/Window.h>
 
 namespace Web::HTML {
 
 MessageEvent* MessageEvent::create(JS::Realm& realm, FlyString const& event_name, MessageEventInit const& event_init)
 {
     return realm.heap().allocate<MessageEvent>(realm, realm, event_name, event_init);
-}
-
-MessageEvent* MessageEvent::create(HTML::Window& window, FlyString const& event_name, MessageEventInit const& event_init)
-{
-    return create(window.realm(), event_name, event_init);
 }
 
 MessageEvent* MessageEvent::construct_impl(JS::Realm& realm, FlyString const& event_name, MessageEventInit const& event_init)

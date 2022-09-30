@@ -5,7 +5,6 @@
  */
 
 #include <LibWeb/DOM/IDLEventListener.h>
-#include <LibWeb/HTML/Window.h>
 
 namespace Web::DOM {
 

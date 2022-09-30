@@ -4,9 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibJS/Runtime/Realm.h>
+#include <LibJS/Runtime/VM.h>
 #include <LibWeb/DOM/NodeFilter.h>
-#include <LibWeb/HTML/Window.h>
 
 namespace Web::DOM {
 

@@ -136,7 +136,7 @@ JS::ThrowCompletionOr<Optional<JS::PropertyDescriptor>> LegacyPlatformObject::le
     // FIXME: Can this throw?
     if (is_supported_property_index(index)) {
 
-        auto value = TRY(throw_dom_exception_if_needed(global_object(), [&] { return item_value(index); }));
+        auto value = TRY(throw_dom_exception_if_needed(vm(), [&] { return item_value(index); }));
 
         // 5. Let desc be a newly created Property Descriptor with no fields.
         JS::PropertyDescriptor descriptor;

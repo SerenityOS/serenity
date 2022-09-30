@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/HTML/HTMLSpanElement.h>
-#include <LibWeb/HTML/Window.h>
 
 namespace Web::HTML {
 

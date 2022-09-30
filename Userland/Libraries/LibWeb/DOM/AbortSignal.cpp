@@ -23,11 +23,6 @@ AbortSignal::AbortSignal(JS::Realm& realm)
     set_prototype(&Bindings::cached_web_prototype(realm, "AbortSignal"));
 }
 
-AbortSignal::AbortSignal(HTML::Window& window)
-    : AbortSignal(window.realm())
-{
-}
-
 // https://dom.spec.whatwg.org/#abortsignal-add
 void AbortSignal::add_abort_algorithm(Function<void()> abort_algorithm)
 {

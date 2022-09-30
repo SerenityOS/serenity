@@ -7,7 +7,6 @@
 
 #include <LibWeb/DOM/LiveNodeList.h>
 #include <LibWeb/DOM/Node.h>
-#include <LibWeb/HTML/Window.h>
 
 namespace Web::DOM {
 

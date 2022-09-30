@@ -2039,7 +2039,6 @@ void generate_constructor_implementation(IDL::Interface const& interface)
 #include <LibWeb/Bindings/@prototype_class@.h>
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
 #include <LibWeb/Bindings/Intrinsics.h>
-#include <LibWeb/HTML/Window.h>
 #if __has_include(<LibWeb/Crypto/@name@.h>)
 #    include <LibWeb/Crypto/@name@.h>
 #elif __has_include(<LibWeb/CSS/@name@.h>)
@@ -2141,8 +2140,7 @@ JS::ThrowCompletionOr<JS::Object*> @constructor_class@::construct(FunctionObject
 
         generator.append(R"~~~(
     auto& vm = this->vm();
-    [[maybe_unused]] auto& realm = *vm.current_realm();
-    [[maybe_unused]] auto& window = verify_cast<HTML::Window>(realm.global_object());
+    auto& realm = *vm.current_realm();
 )~~~");
 
         if (!constructor.parameters.is_empty()) {
@@ -2153,29 +2151,14 @@ JS::ThrowCompletionOr<JS::Object*> @constructor_class@::construct(FunctionObject
             generator.set(".constructor_arguments", arguments_builder.string_view());
 
             generator.append(R"~~~(
-    auto construct_impl = [&] <typename T>() {
-        if constexpr (requires(T) { T::construct_impl(declval<::JS::Realm&>(), @.constructor_arguments@ ); })
-            return T::construct_impl(realm, @.constructor_arguments@);
-        else if constexpr (requires(T) { T::create_with_global_object(declval<::Web::HTML::Window&>(), @.constructor_arguments@); })
-            return T::create_with_global_object(window, @.constructor_arguments@);
-        else if constexpr (requires(T) { sizeof(T); })
-            static_assert(DependentFalse<T>, "Bound type is missing constructor factory");
-    };
+    auto impl = TRY(throw_dom_exception_if_needed(vm, [&] { return @fully_qualified_name@::construct_impl(realm, @.constructor_arguments@); }));
 )~~~");
         } else {
             generator.append(R"~~~(
-    auto construct_impl = [&] <typename T>() {
-        if constexpr (requires(T) { T::construct_impl(declval<::JS::Realm&>()); })
-            return T::construct_impl(realm);
-        else if constexpr (requires(T) { T::create_with_global_object(declval<::Web::HTML::Window&>()); })
-            return T::create_with_global_object(window);
-        else if constexpr (requires(T) { sizeof(T); })
-            static_assert(DependentFalse<T>, "Bound type is missing constructor factory");
-    };
+    auto impl = TRY(throw_dom_exception_if_needed(vm, [&] { return @fully_qualified_name@::construct_impl(realm); }));
 )~~~");
         }
         generator.append(R"~~~(
-    auto impl = TRY(throw_dom_exception_if_needed(vm, [&] { return construct_impl.operator()<@fully_qualified_name@>(); }));
     return &(*impl);
 )~~~");
     } else {

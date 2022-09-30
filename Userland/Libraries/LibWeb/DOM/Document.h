@@ -84,7 +84,6 @@ public:
     static JS::NonnullGCPtr<Document> create_and_initialize(Type, String content_type, HTML::NavigationParams);
 
     static JS::NonnullGCPtr<Document> create(JS::Realm&, AK::URL const& url = "about:blank"sv);
-    static JS::NonnullGCPtr<Document> create(HTML::Window&, AK::URL const& url = "about:blank"sv);
     static JS::NonnullGCPtr<Document> construct_impl(JS::Realm&);
     virtual ~Document() override;
 
