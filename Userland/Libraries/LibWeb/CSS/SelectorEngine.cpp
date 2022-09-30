@@ -222,17 +222,13 @@ static inline bool matches_pseudo_class(CSS::Selector::SimpleSelector::PseudoCla
     case CSS::Selector::SimpleSelector::PseudoClass::Type::Lang:
         return matches_lang_pseudo_class(element, pseudo_class.languages);
     case CSS::Selector::SimpleSelector::PseudoClass::Type::Disabled:
-        if (!is<HTML::HTMLInputElement>(element))
-            return false;
-        if (!element.has_attribute(HTML::AttributeNames::disabled))
-            return false;
-        return true;
+        // https://html.spec.whatwg.org/multipage/semantics-other.html#selector-disabled
+        // The :disabled pseudo-class must match any element that is actually disabled.
+        return element.is_actually_disabled();
     case CSS::Selector::SimpleSelector::PseudoClass::Type::Enabled:
-        if (!is<HTML::HTMLInputElement>(element))
-            return false;
-        if (element.has_attribute(HTML::AttributeNames::disabled))
-            return false;
-        return true;
+        // https://html.spec.whatwg.org/multipage/semantics-other.html#selector-enabled
+        // The :enabled pseudo-class must match any button, input, select, textarea, optgroup, option, fieldset element, or form-associated custom element that is not actually disabled.
+        return !element.is_actually_disabled();
     case CSS::Selector::SimpleSelector::PseudoClass::Type::Checked:
         return matches_checked_pseudo_class(element);
     case CSS::Selector::SimpleSelector::PseudoClass::Type::Is:

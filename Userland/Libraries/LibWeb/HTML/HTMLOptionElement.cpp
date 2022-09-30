@@ -8,6 +8,7 @@
 #include <AK/StringBuilder.h>
 #include <LibWeb/DOM/Node.h>
 #include <LibWeb/DOM/Text.h>
+#include <LibWeb/HTML/HTMLOptGroupElement.h>
 #include <LibWeb/HTML/HTMLOptionElement.h>
 #include <LibWeb/HTML/HTMLScriptElement.h>
 #include <LibWeb/HTML/HTMLSelectElement.h>
@@ -154,6 +155,14 @@ int HTMLOptionElement::index() const
 void HTMLOptionElement::ask_for_a_reset()
 {
     // FIXME: Implement this operation.
+}
+
+// https://html.spec.whatwg.org/multipage/form-elements.html#concept-option-disabled
+bool HTMLOptionElement::disabled() const
+{
+    // An option element is disabled if its disabled attribute is present or if it is a child of an optgroup element whose disabled attribute is present.
+    return has_attribute(AttributeNames::disabled)
+        || (parent() && is<HTMLOptGroupElement>(parent()) && static_cast<HTMLOptGroupElement const&>(*parent()).has_attribute(AttributeNames::disabled));
 }
 
 }
