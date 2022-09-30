@@ -36,13 +36,23 @@ public:
     {
     }
 
-    Matrix(Matrix const& other)
+    constexpr Matrix(Matrix const& other)
     {
-        __builtin_memcpy(m_elements, other.elements(), sizeof(T) * N * N);
+        *this = other;
     }
 
-    Matrix& operator=(Matrix const& other)
+    constexpr Matrix& operator=(Matrix const& other)
     {
+#ifndef __clang__
+        if (is_constant_evaluated()) {
+            for (size_t i = 0; i < N; i++) {
+                for (size_t j = 0; j < N; j++) {
+                    m_elements[i][j] = other.elements()[i][j];
+                }
+            }
+            return *this;
+        }
+#endif
         __builtin_memcpy(m_elements, other.elements(), sizeof(T) * N * N);
         return *this;
     }
