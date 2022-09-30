@@ -390,7 +390,9 @@ static OwnPtr<Condition> parse_simple_expression(char* argv[])
         case 'N':
         case 'O':
         case 's':
-            fatal_error("Unsupported operator \033[1m%s", argv[optind]);
+            // 'optind' has been incremented to refer to the argument after the
+            // operator, while we want to print the operator itself.
+            fatal_error("Unsupported operator \033[1m%s", argv[optind - 1]);
         default:
             --optind;
             break;
