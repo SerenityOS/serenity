@@ -891,4 +891,16 @@ WebIDL::ExceptionOr<JS::GCPtr<Element>> Element::insert_adjacent_element(String 
     return JS::GCPtr<Element> { verify_cast<Element>(*returned_node) };
 }
 
+// https://dom.spec.whatwg.org/#dom-element-insertadjacenttext
+WebIDL::ExceptionOr<void> Element::insert_adjacent_text(String const& where, String const& data)
+{
+    // 1. Let text be a new Text node whose data is data and node document is this’s node document.
+    JS::NonnullGCPtr<Text> text = *heap().allocate<DOM::Text>(realm(), document(), data);
+
+    // 2. Run insert adjacent, given this, where, and text.
+    // Spec Note: This method returns nothing because it existed before we had a chance to design it.
+    (void)TRY(insert_adjacent(where, move(text)));
+    return {};
+}
+
 }
