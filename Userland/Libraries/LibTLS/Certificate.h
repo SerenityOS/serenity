@@ -11,6 +11,7 @@
 #include <AK/Optional.h>
 #include <AK/Singleton.h>
 #include <AK/Types.h>
+#include <LibCore/ConfigFile.h>
 #include <LibCore/DateTime.h>
 #include <LibCrypto/BigInt/UnsignedBigInteger.h>
 #include <LibCrypto/PK/RSA.h>
@@ -130,6 +131,8 @@ public:
     DefaultRootCACertificates();
 
     Vector<Certificate> const& certificates() const { return m_ca_certificates; }
+
+    void reload_certificates(Core::ConfigFile&);
 
     static DefaultRootCACertificates& the() { return s_the; }
 

@@ -13,6 +13,7 @@
 #include <AK/StringBuilder.h>
 #include <AK/Types.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/ConfigFile.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
 #include <LibCore/IODevice.h>
@@ -660,6 +661,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     StringView url;
     StringView resources_folder;
     StringView error_page_url;
+    StringView ca_certs_path;
 
     Core::EventLoop event_loop;
     Core::ArgsParser args_parser;
@@ -667,6 +669,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(take_screenshot_after, "Take a screenshot after [n] seconds (default: 1)", "screenshot", 's', "n");
     args_parser.add_option(resources_folder, "Path of the base resources folder (defaults to /res)", "resources", 'r', "resources-root-path");
     args_parser.add_option(error_page_url, "URL for the error page (defaults to file:///res/html/error.html)", "error-page", 'e', "error-page-url");
+    args_parser.add_option(ca_certs_path, "The bundled ca certificates file", "certs", 'c', "ca-certs-path");
     args_parser.add_positional_argument(url, "URL to open", "url", Core::ArgsParser::Required::Yes);
     args_parser.parse(arguments);
 
@@ -679,6 +682,15 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (!resources_folder.is_empty()) {
         Web::FrameLoader::set_default_favicon_path(LexicalPath::join(resources_folder, "icons/16x16/app-browser.png"sv).string());
         Gfx::FontDatabase::set_default_fonts_lookup_path(LexicalPath::join(resources_folder, "fonts"sv).string());
+    }
+    if (!ca_certs_path.is_empty()) {
+        auto config_result = Core::ConfigFile::open(ca_certs_path);
+        if (config_result.is_error()) {
+            dbgln("Failed to load CA Certificates: {}", config_result.error());
+        } else {
+            auto config = config_result.release_value();
+            DefaultRootCACertificates::the().reload_certificates(config);
+        }
     }
 
     Gfx::FontDatabase::set_default_font_query("Katica 10 400 0");
