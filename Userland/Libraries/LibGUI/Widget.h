@@ -404,6 +404,8 @@ protected:
     void show_or_hide_tooltip();
 
 private:
+    virtual bool is_widget() const final { return true; }
+
     void handle_paint_event(PaintEvent&);
     void handle_resize_event(ResizeEvent&);
     void handle_mousedown_event(MouseEvent&);
@@ -465,6 +467,9 @@ inline Widget const* Widget::parent_widget() const
     return nullptr;
 }
 }
+
+template<>
+inline bool Core::Object::fast_is<GUI::Widget>() const { return is_widget(); }
 
 template<>
 struct AK::Formatter<GUI::Widget> : AK::Formatter<Core::Object> {

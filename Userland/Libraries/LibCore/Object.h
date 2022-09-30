@@ -98,6 +98,11 @@ public:
 
     virtual StringView class_name() const = 0;
 
+    template<typename T>
+    bool fast_is() const = delete;
+
+    virtual bool is_widget() const { return false; }
+
     String const& name() const { return m_name; }
     void set_name(String name) { m_name = move(name); }
 
