@@ -28,6 +28,8 @@ public:
 
     int index() const;
 
+    bool disabled() const;
+
 private:
     friend class Bindings::OptionConstructor;
     friend class HTMLSelectElement;

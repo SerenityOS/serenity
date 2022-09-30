@@ -24,7 +24,15 @@
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/EventLoop/EventLoop.h>
 #include <LibWeb/HTML/HTMLBodyElement.h>
+#include <LibWeb/HTML/HTMLButtonElement.h>
+#include <LibWeb/HTML/HTMLFieldSetElement.h>
+#include <LibWeb/HTML/HTMLFrameSetElement.h>
 #include <LibWeb/HTML/HTMLHtmlElement.h>
+#include <LibWeb/HTML/HTMLInputElement.h>
+#include <LibWeb/HTML/HTMLOptGroupElement.h>
+#include <LibWeb/HTML/HTMLOptionElement.h>
+#include <LibWeb/HTML/HTMLSelectElement.h>
+#include <LibWeb/HTML/HTMLTextAreaElement.h>
 #include <LibWeb/HTML/Parser/HTMLParser.h>
 #include <LibWeb/Layout/BlockContainer.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
@@ -726,6 +734,37 @@ void Element::serialize_pseudo_elements_as_json(JsonArraySerializer<StringBuilde
         MUST(object.add("pseudo-element"sv, i));
         MUST(object.finish());
     }
+}
+
+// https://html.spec.whatwg.org/multipage/semantics-other.html#concept-element-disabled
+bool Element::is_actually_disabled() const
+{
+    // An element is said to be actually disabled if it is one of the following:
+    // - a button element that is disabled
+    // - an input element that is disabled
+    // - a select element that is disabled
+    // - a textarea element that is disabled
+    if (is<HTML::HTMLButtonElement>(this) || is<HTML::HTMLInputElement>(this) || is<HTML::HTMLSelectElement>(this) || is<HTML::HTMLTextAreaElement>(this)) {
+        auto const* form_associated_element = dynamic_cast<HTML::FormAssociatedElement const*>(this);
+        VERIFY(form_associated_element);
+
+        return !form_associated_element->enabled();
+    }
+
+    // - an optgroup element that has a disabled attribute
+    if (is<HTML::HTMLOptGroupElement>(this))
+        return has_attribute(HTML::AttributeNames::disabled);
+
+    // - an option element that is disabled
+    if (is<HTML::HTMLOptionElement>(this))
+        return static_cast<HTML::HTMLOptionElement const&>(*this).disabled();
+
+    // - a fieldset element that is a disabled fieldset
+    if (is<HTML::HTMLFieldSetElement>(this))
+        return static_cast<HTML::HTMLFieldSetElement const&>(*this).is_disabled();
+
+    // FIXME: - a form-associated custom element that is disabled
+    return false;
 }
 
 // https://w3c.github.io/DOM-Parsing/#dom-element-insertadjacenthtml
