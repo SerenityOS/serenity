@@ -240,7 +240,7 @@ Gfx::FloatMatrix4x4 StackingContext::get_transformation_matrix(CSS::Transformati
                 0, 0, 0, 1);
         if (count == 2)
             return Gfx::FloatMatrix4x4(value(0), 0, 0, 0,
-                0, value(0), 0, 0,
+                0, value(1), 0, 0,
                 0, 0, 1, 0,
                 0, 0, 0, 1);
         break;
