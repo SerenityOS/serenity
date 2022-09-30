@@ -107,6 +107,7 @@ public:
     }
     [[nodiscard]] Optional<size_t> find(StringView needle, size_t start = 0) const { return StringUtils::find(*this, needle, start); }
     [[nodiscard]] Optional<size_t> find_last(char needle) const { return StringUtils::find_last(*this, needle); }
+    [[nodiscard]] Optional<size_t> find_last_not(char needle) const { return StringUtils::find_last_not(*this, needle); }
     // FIXME: Implement find_last(StringView) for API symmetry.
 
     [[nodiscard]] Vector<size_t> find_all(StringView needle) const;

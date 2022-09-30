@@ -388,6 +388,15 @@ Optional<size_t> find_last(StringView haystack, char needle)
     return {};
 }
 
+Optional<size_t> find_last_not(StringView haystack, char needle)
+{
+    for (size_t i = haystack.length(); i > 0; --i) {
+        if (haystack[i - 1] != needle)
+            return i - 1;
+    }
+    return {};
+}
+
 Vector<size_t> find_all(StringView haystack, StringView needle)
 {
     Vector<size_t> positions;

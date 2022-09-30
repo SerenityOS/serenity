@@ -74,6 +74,7 @@ StringView trim_whitespace(StringView string, TrimMode mode);
 Optional<size_t> find(StringView haystack, char needle, size_t start = 0);
 Optional<size_t> find(StringView haystack, StringView needle, size_t start = 0);
 Optional<size_t> find_last(StringView haystack, char needle);
+Optional<size_t> find_last_not(StringView haystack, char needle);
 Vector<size_t> find_all(StringView haystack, StringView needle);
 enum class SearchDirection {
     Forward,
