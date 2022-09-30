@@ -6,12 +6,9 @@
 
 #pragma once
 
-#include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Object.h>
-#include <LibJS/Runtime/VM.h>
-#include <LibWeb/Bindings/EventTargetPrototype.h>
+#include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/Forward.h>
-#include <LibWeb/HTML/Window.h>
 
 namespace Web::Bindings {
 
@@ -20,7 +17,7 @@ class WindowPrototype final : public JS::Object {
 
 public:
     explicit WindowPrototype(JS::Realm& realm)
-        : JS::Object(verify_cast<HTML::Window>(realm.global_object()).cached_web_prototype("EventTarget"))
+        : JS::Object(cached_web_prototype(realm, "EventTarget"))
     {
     }
 };

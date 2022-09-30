@@ -4,10 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibJS/Runtime/GlobalObject.h>
+#include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/Bindings/LocationConstructor.h>
 #include <LibWeb/Bindings/LocationPrototype.h>
-#include <LibWeb/HTML/Window.h>
 
 namespace Web::Bindings {
 
@@ -31,10 +30,9 @@ JS::ThrowCompletionOr<JS::Object*> LocationConstructor::construct(FunctionObject
 void LocationConstructor::initialize(JS::Realm& realm)
 {
     auto& vm = this->vm();
-    auto& window = verify_cast<HTML::Window>(realm.global_object());
 
     NativeFunction::initialize(realm);
-    define_direct_property(vm.names.prototype, &window.cached_web_prototype("Location"), 0);
+    define_direct_property(vm.names.prototype, &cached_web_prototype(realm, "Location"), 0);
     define_direct_property(vm.names.length, JS::Value(0), JS::Attribute::Configurable);
 }
 

@@ -24,7 +24,7 @@ namespace Web::Bindings {
 LocationObject::LocationObject(JS::Realm& realm)
     : PlatformObject(realm)
 {
-    set_prototype(&verify_cast<HTML::Window>(realm.global_object()).cached_web_prototype("Location"));
+    set_prototype(&cached_web_prototype(realm, "Location"));
 }
 
 LocationObject::~LocationObject() = default;
@@ -315,7 +315,7 @@ JS::ThrowCompletionOr<bool> LocationObject::internal_define_own_property(JS::Pro
     }
 
     // 2. Throw a "SecurityError" DOMException.
-    return throw_completion(WebIDL::SecurityError::create(global_object(), String::formatted("Can't define property '{}' on cross-origin object", property_key)));
+    return throw_completion(WebIDL::SecurityError::create(realm(), String::formatted("Can't define property '{}' on cross-origin object", property_key)));
 }
 
 // 7.10.5.7 [[Get]] ( P, Receiver ), https://html.spec.whatwg.org/multipage/history.html#location-get
@@ -352,7 +352,7 @@ JS::ThrowCompletionOr<bool> LocationObject::internal_delete(JS::PropertyKey cons
         return JS::Object::internal_delete(property_key);
 
     // 2. Throw a "SecurityError" DOMException.
-    return throw_completion(WebIDL::SecurityError::create(global_object(), String::formatted("Can't delete property '{}' on cross-origin object", property_key)));
+    return throw_completion(WebIDL::SecurityError::create(realm(), String::formatted("Can't delete property '{}' on cross-origin object", property_key)));
 }
 
 // 7.10.5.10 [[OwnPropertyKeys]] ( ), https://html.spec.whatwg.org/multipage/history.html#location-ownpropertykeys

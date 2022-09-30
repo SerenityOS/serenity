@@ -5,7 +5,7 @@
  */
 
 #include <LibJS/Runtime/Array.h>
-#include <LibJS/Runtime/GlobalObject.h>
+#include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/Bindings/NavigatorObject.h>
 #include <LibWeb/Bindings/NavigatorPrototype.h>
 #include <LibWeb/Loader/ResourceLoader.h>
@@ -14,7 +14,7 @@ namespace Web {
 namespace Bindings {
 
 NavigatorObject::NavigatorObject(JS::Realm& realm)
-    : Object(verify_cast<HTML::Window>(realm.global_object()).cached_web_prototype("Navigator"))
+    : Object(cached_web_prototype(realm, "Navigator"))
 {
 }
 

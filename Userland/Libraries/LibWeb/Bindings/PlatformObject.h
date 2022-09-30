@@ -31,7 +31,7 @@ public:
     HTML::Window& global_object() const;
 
 protected:
-    PlatformObject(JS::Realm&);
+    explicit PlatformObject(JS::Realm&);
     explicit PlatformObject(JS::Object& prototype);
 };
 
