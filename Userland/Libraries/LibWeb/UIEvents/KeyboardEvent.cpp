@@ -91,11 +91,6 @@ KeyboardEvent* KeyboardEvent::create_from_platform_event(JS::Realm& realm, FlySt
     return KeyboardEvent::create(realm, event_name, event_init);
 }
 
-KeyboardEvent* KeyboardEvent::create_from_platform_event(HTML::Window& window, FlyString const& event_name, KeyCode platform_key, unsigned modifiers, u32 code_point)
-{
-    return create_from_platform_event(window.realm(), event_name, platform_key, modifiers, code_point);
-}
-
 bool KeyboardEvent::get_modifier_state(String const& key_arg)
 {
     if (key_arg == "Alt")

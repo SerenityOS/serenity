@@ -22,7 +22,6 @@ class CloseEvent : public DOM::Event {
 
 public:
     static CloseEvent* create(JS::Realm&, FlyString const& event_name, CloseEventInit const& event_init = {});
-    static CloseEvent* create(HTML::Window&, FlyString const& event_name, CloseEventInit const& event_init = {});
     static CloseEvent* construct_impl(JS::Realm&, FlyString const& event_name, CloseEventInit const& event_init);
 
     virtual ~CloseEvent() override;

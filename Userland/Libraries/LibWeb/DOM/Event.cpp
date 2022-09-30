@@ -11,18 +11,12 @@
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/Node.h>
 #include <LibWeb/DOM/ShadowRoot.h>
-#include <LibWeb/HTML/Window.h>
 
 namespace Web::DOM {
 
 JS::NonnullGCPtr<Event> Event::create(JS::Realm& realm, FlyString const& event_name, EventInit const& event_init)
 {
     return *realm.heap().allocate<Event>(realm, realm, event_name, event_init);
-}
-
-JS::NonnullGCPtr<Event> Event::create(HTML::Window& window, FlyString const& event_name, EventInit const& event_init)
-{
-    return create(window.realm(), event_name, event_init);
 }
 
 JS::NonnullGCPtr<Event> Event::construct_impl(JS::Realm& realm, FlyString const& event_name, EventInit const& event_init)
@@ -44,16 +38,6 @@ Event::Event(JS::Realm& realm, FlyString const& type, EventInit const& event_ini
     , m_cancelable(event_init.cancelable)
     , m_composed(event_init.composed)
     , m_initialized(true)
-{
-}
-
-Event::Event(HTML::Window& window, FlyString const& type, EventInit const& event_init)
-    : Event(window.realm(), type, event_init)
-{
-}
-
-Event::Event(HTML::Window& window, FlyString const& type)
-    : Event(window.realm(), type)
 {
 }
 

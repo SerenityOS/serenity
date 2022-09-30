@@ -62,11 +62,6 @@ MouseEvent* MouseEvent::create_from_platform_event(JS::Realm& realm, FlyString c
     return MouseEvent::create(realm, event_name, event_init);
 }
 
-MouseEvent* MouseEvent::create_from_platform_event(HTML::Window& window, FlyString const& event_name, double offset_x, double offset_y, double client_x, double client_y, unsigned mouse_button)
-{
-    return create_from_platform_event(window.realm(), event_name, offset_x, offset_y, client_x, client_y, mouse_button);
-}
-
 void MouseEvent::set_event_characteristics()
 {
     if (type().is_one_of(EventNames::mousedown, EventNames::mousemove, EventNames::mouseout, EventNames::mouseover, EventNames::mouseup, HTML::EventNames::click)) {

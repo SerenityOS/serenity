@@ -5,6 +5,7 @@
  */
 
 #include "WebAssemblyTablePrototype.h"
+#include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/WebAssembly/WebAssemblyTableObject.h>
 
 namespace Web::Bindings {

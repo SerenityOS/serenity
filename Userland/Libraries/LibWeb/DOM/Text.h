@@ -18,7 +18,7 @@ class Text : public CharacterData {
 public:
     virtual ~Text() override = default;
 
-    static JS::NonnullGCPtr<Text> construct_impl(JS::Realm& window, String const& data);
+    static JS::NonnullGCPtr<Text> construct_impl(JS::Realm& realm, String const& data);
 
     // ^Node
     virtual FlyString node_name() const override { return "#text"; }

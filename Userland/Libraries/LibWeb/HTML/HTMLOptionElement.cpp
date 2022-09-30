@@ -6,13 +6,13 @@
  */
 
 #include <AK/StringBuilder.h>
+#include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/DOM/Node.h>
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/HTML/HTMLOptGroupElement.h>
 #include <LibWeb/HTML/HTMLOptionElement.h>
 #include <LibWeb/HTML/HTMLScriptElement.h>
 #include <LibWeb/HTML/HTMLSelectElement.h>
-#include <LibWeb/HTML/Window.h>
 #include <ctype.h>
 
 namespace Web::HTML {

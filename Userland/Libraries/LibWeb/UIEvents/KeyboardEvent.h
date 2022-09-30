@@ -31,7 +31,6 @@ public:
     static KeyboardEvent* create(JS::Realm&, FlyString const& event_name, KeyboardEventInit const& event_init = {});
     static KeyboardEvent* construct_impl(JS::Realm&, FlyString const& event_name, KeyboardEventInit const& event_init);
     static KeyboardEvent* create_from_platform_event(JS::Realm&, FlyString const& event_name, KeyCode, unsigned modifiers, u32 code_point);
-    static KeyboardEvent* create_from_platform_event(HTML::Window&, FlyString const& event_name, KeyCode, unsigned modifiers, u32 code_point);
 
     virtual ~KeyboardEvent() override;
 

@@ -10,7 +10,6 @@
 #include <LibWeb/DOM/DOMTokenList.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Element.h>
-#include <LibWeb/HTML/Window.h>
 #include <LibWeb/WebIDL/DOMException.h>
 
 namespace {
@@ -55,7 +54,7 @@ namespace Web::DOM {
 
 DOMTokenList* DOMTokenList::create(Element const& associated_element, FlyString associated_attribute)
 {
-    auto& realm = associated_element.document().window().realm();
+    auto& realm = associated_element.realm();
     return realm.heap().allocate<DOMTokenList>(realm, associated_element, move(associated_attribute));
 }
 

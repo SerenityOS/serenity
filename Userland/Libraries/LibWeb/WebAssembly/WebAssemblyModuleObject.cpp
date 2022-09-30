@@ -5,6 +5,7 @@
  */
 
 #include "WebAssemblyModulePrototype.h"
+#include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/WebAssembly/WebAssemblyModuleObject.h>
 
 namespace Web::Bindings {

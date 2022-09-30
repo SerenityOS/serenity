@@ -5,8 +5,8 @@
  */
 
 #include <LibWeb/Bindings/HTMLMediaElementPrototype.h>
+#include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/HTML/HTMLMediaElement.h>
-#include <LibWeb/HTML/Window.h>
 
 namespace Web::HTML {
 

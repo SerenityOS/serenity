@@ -22,7 +22,6 @@ class MessageEvent : public DOM::Event {
 
 public:
     static MessageEvent* create(JS::Realm&, FlyString const& event_name, MessageEventInit const& event_init = {});
-    static MessageEvent* create(HTML::Window&, FlyString const& event_name, MessageEventInit const& event_init = {});
     static MessageEvent* construct_impl(JS::Realm&, FlyString const& event_name, MessageEventInit const& event_init);
 
     MessageEvent(JS::Realm&, FlyString const& event_name, MessageEventInit const& event_init);

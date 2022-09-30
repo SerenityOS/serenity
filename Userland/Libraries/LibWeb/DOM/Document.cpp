@@ -288,11 +288,6 @@ JS::NonnullGCPtr<Document> Document::create(JS::Realm& realm, AK::URL const& url
     return *realm.heap().allocate<Document>(realm, realm, url);
 }
 
-JS::NonnullGCPtr<Document> Document::create(HTML::Window& window, AK::URL const& url)
-{
-    return create(window.realm(), url);
-}
-
 Document::Document(JS::Realm& realm, const AK::URL& url)
     : ParentNode(realm, *this, NodeType::DOCUMENT_NODE)
     , m_style_computer(make<CSS::StyleComputer>(*this))

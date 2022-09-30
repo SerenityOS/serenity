@@ -6,7 +6,6 @@
 
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/Geometry/DOMPoint.h>
-#include <LibWeb/HTML/Window.h>
 
 namespace Web::Geometry {
 

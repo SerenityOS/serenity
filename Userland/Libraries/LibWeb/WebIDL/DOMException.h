@@ -123,17 +123,13 @@ private:
     FlyString m_message;
 };
 
-#define __ENUMERATE(ErrorName)                                                                                  \
-    class ErrorName final {                                                                                     \
-    public:                                                                                                     \
-        static JS::NonnullGCPtr<DOMException> create(JS::Realm& realm, FlyString const& message)                \
-        {                                                                                                       \
-            return DOMException::create(realm, #ErrorName, message);                                            \
-        }                                                                                                       \
-        static JS::NonnullGCPtr<DOMException> create(JS::Object const& global_object, FlyString const& message) \
-        {                                                                                                       \
-            return create(HTML::relevant_realm(global_object), message);                                        \
-        }                                                                                                       \
+#define __ENUMERATE(ErrorName)                                                                   \
+    class ErrorName final {                                                                      \
+    public:                                                                                      \
+        static JS::NonnullGCPtr<DOMException> create(JS::Realm& realm, FlyString const& message) \
+        {                                                                                        \
+            return DOMException::create(realm, #ErrorName, message);                             \
+        }                                                                                        \
     };
 ENUMERATE_DOM_EXCEPTION_ERROR_NAMES
 #undef __ENUMERATE

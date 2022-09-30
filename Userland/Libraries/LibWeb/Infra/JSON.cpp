@@ -53,13 +53,12 @@ WebIDL::ExceptionOr<String> serialize_javascript_value_to_json_string(JS::VM& vm
 WebIDL::ExceptionOr<ByteBuffer> serialize_javascript_value_to_json_bytes(JS::VM& vm, JS::Value value)
 {
     auto& realm = *vm.current_realm();
-    auto& global_object = realm.global_object();
 
     // 1. Let string be the result of serializing a JavaScript value to a JSON string given value.
     auto string = TRY(serialize_javascript_value_to_json_string(vm, value));
 
     // 2. Return the result of running UTF-8 encode on string. [ENCODING]
-    return TRY_OR_RETURN_OOM(global_object, ByteBuffer::copy(string.bytes()));
+    return TRY_OR_RETURN_OOM(realm, ByteBuffer::copy(string.bytes()));
 }
 
 }

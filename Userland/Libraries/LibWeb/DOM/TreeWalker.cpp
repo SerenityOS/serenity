@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibWeb/DOM/Document.h>
+#include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/DOM/Node.h>
 #include <LibWeb/DOM/NodeFilter.h>
 #include <LibWeb/DOM/TreeWalker.h>
@@ -35,8 +35,8 @@ JS::NonnullGCPtr<TreeWalker> TreeWalker::create(Node& root, unsigned what_to_sho
 {
     // 1. Let walker be a new TreeWalker object.
     // 2. Set walker’s root and walker’s current to root.
-    auto& window_object = root.document().window();
-    auto* walker = window_object.heap().allocate<TreeWalker>(window_object.realm(), root);
+    auto& realm = root.realm();
+    auto* walker = realm.heap().allocate<TreeWalker>(realm, root);
 
     // 3. Set walker’s whatToShow to whatToShow.
     walker->m_what_to_show = what_to_show;
