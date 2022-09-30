@@ -37,11 +37,12 @@ bool FormAssociatedElement::enabled() const
         return false;
 
     // 2. The element is a descendant of a fieldset element whose disabled attribute is specified, and is not a descendant of that fieldset element's first legend element child, if any.
-    auto* fieldset_ancestor = html_element.first_ancestor_of_type<HTMLFieldSetElement>();
-    if (fieldset_ancestor && fieldset_ancestor->has_attribute(HTML::AttributeNames::disabled)) {
-        auto* first_legend_element_child = fieldset_ancestor->first_child_of_type<HTMLLegendElement>();
-        if (!first_legend_element_child || !html_element.is_descendant_of(*first_legend_element_child))
-            return false;
+    for (auto* fieldset_ancestor = html_element.first_ancestor_of_type<HTMLFieldSetElement>(); fieldset_ancestor; fieldset_ancestor = fieldset_ancestor->first_ancestor_of_type<HTMLFieldSetElement>()) {
+        if (fieldset_ancestor->has_attribute(HTML::AttributeNames::disabled)) {
+            auto* first_legend_element_child = fieldset_ancestor->first_child_of_type<HTMLLegendElement>();
+            if (!first_legend_element_child || !html_element.is_descendant_of(*first_legend_element_child))
+                return false;
+        }
     }
 
     return true;
