@@ -63,7 +63,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(file_menu->try_add_action(GUI::CommonActions::make_save_as_action([&](auto&) {
         AK::String filename = "file for saving";
         auto do_save = [&]() -> ErrorOr<void> {
-            auto file = TRY(FileSystemAccessClient::Client::the().try_save_file(window, "Capture", "png"));
+            auto response = FileSystemAccessClient::Client::the().try_save_file(window, "Capture", "png");
+            if (response.is_error())
+                return {};
+            auto file = response.release_value();
             auto path = AK::LexicalPath(file->filename());
             filename = path.basename();
             auto encoded = TRY(dump_bitmap(magnifier->current_bitmap(), path.extension()));
