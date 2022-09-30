@@ -27,62 +27,18 @@ BucketTool::BucketTool()
     m_cursor = Gfx::Bitmap::try_load_from_file("/res/icons/pixelpaint/bucket.png"sv).release_value_but_fixme_should_propagate_errors();
 }
 
-static float color_distance_squared(Gfx::Color const& lhs, Gfx::Color const& rhs)
-{
-    int a = rhs.red() - lhs.red();
-    int b = rhs.green() - lhs.green();
-    int c = rhs.blue() - lhs.blue();
-    int d = rhs.alpha() - lhs.alpha();
-    return (a * a + b * b + c * c + d * d) / (4.0f * 255.0f * 255.0f);
-}
-
-static bool can_paint(Gfx::IntPoint point, Gfx::Bitmap& bitmap, Gfx::Color const& target_color, float threshold_normalized_squared)
-{
-    auto pixel_color = bitmap.get_pixel<Gfx::StorageFormat::BGRA8888>(point.x(), point.y());
-    return color_distance_squared(pixel_color, target_color) <= threshold_normalized_squared;
-}
-
-static void flood_fill(Gfx::Bitmap& bitmap, Gfx::IntPoint const& start_position, Color target_color, Color fill_color, int threshold)
+static void flood_fill(Gfx::Bitmap& bitmap, Gfx::IntPoint const& start_position, Color fill_color, int threshold)
 {
     VERIFY(bitmap.bpp() == 32);
-
-    if (target_color == fill_color)
-        return;
 
     if (!bitmap.rect().contains(start_position))
         return;
 
-    float threshold_normalized_squared = (threshold / 100.0f) * (threshold / 100.0f);
+    auto pixel_visited = [&](Gfx::IntPoint location) {
+        bitmap.set_pixel<Gfx::StorageFormat::BGRA8888>(location.x(), location.y(), fill_color);
+    };
 
-    // Create Mask which will track already-colored pixels
-    Mask flood_mask = Mask::empty(bitmap.rect());
-
-    Queue<Gfx::IntPoint> points_to_visit = Queue<Gfx::IntPoint>();
-
-    points_to_visit.enqueue({ start_position.x(), start_position.y() });
-    bitmap.set_pixel<Gfx::StorageFormat::BGRA8888>(start_position.x(), start_position.y(), fill_color);
-    flood_mask.set(start_position.x(), start_position.y(), 1);
-
-    // This implements a non-recursive flood fill. This is a breadth-first search of paintable neighbors
-    // As we find neighbors that are paintable we update their pixel, add them to the queue, and mark them in the mask
-    while (!points_to_visit.is_empty()) {
-        auto current_point = points_to_visit.dequeue();
-        auto candidate_points = Array {
-            current_point.moved_left(1),
-            current_point.moved_right(1),
-            current_point.moved_up(1),
-            current_point.moved_down(1)
-        };
-        for (auto candidate_point : candidate_points) {
-            if (!bitmap.rect().contains(candidate_point))
-                continue;
-            if (flood_mask.get(candidate_point.x(), candidate_point.y()) == 0 && can_paint(candidate_point, bitmap, target_color, threshold_normalized_squared)) {
-                points_to_visit.enqueue(candidate_point);
-                bitmap.set_pixel<Gfx::StorageFormat::BGRA8888>(candidate_point.x(), candidate_point.y(), fill_color);
-            }
-            flood_mask.set(candidate_point.x(), candidate_point.y(), 0xFF);
-        }
-    }
+    bitmap.flood_visit_from_point(start_position, threshold, move(pixel_visited));
 }
 
 void BucketTool::on_mousedown(Layer* layer, MouseEvent& event)
@@ -95,9 +51,8 @@ void BucketTool::on_mousedown(Layer* layer, MouseEvent& event)
         return;
 
     GUI::Painter painter(layer->currently_edited_bitmap());
-    auto target_color = layer->currently_edited_bitmap().get_pixel(layer_event.x(), layer_event.y());
 
-    flood_fill(layer->currently_edited_bitmap(), layer_event.position(), target_color, m_editor->color_for(layer_event), m_threshold);
+    flood_fill(layer->currently_edited_bitmap(), layer_event.position(), m_editor->color_for(layer_event), m_threshold);
 
     layer->did_modify_bitmap();
     m_editor->did_complete_action(tool_name());

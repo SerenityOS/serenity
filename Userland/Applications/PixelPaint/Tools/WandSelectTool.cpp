@@ -21,57 +21,18 @@
 
 namespace PixelPaint {
 
-static float color_distance_squared(Gfx::Color const& lhs, Gfx::Color const& rhs)
-{
-    int a = rhs.red() - lhs.red();
-    int b = rhs.green() - lhs.green();
-    int c = rhs.blue() - lhs.blue();
-    int d = rhs.alpha() - lhs.alpha();
-    return (a * a + b * b + c * c + d * d) / (4.0f * 255.0f * 255.0f);
-}
-
-static bool meets_wand_threshold(Gfx::IntPoint point, Gfx::Bitmap& bitmap, Gfx::Color const& target_color, float threshold_normalized_squared)
-{
-    auto pixel_color = bitmap.get_pixel<Gfx::StorageFormat::BGRA8888>(point.x(), point.y());
-    bool meets_threshold = color_distance_squared(pixel_color, target_color) <= threshold_normalized_squared;
-    return meets_threshold;
-}
-
-static void set_flood_selection(Gfx::Bitmap& bitmap, Image& image, Gfx::IntPoint const& start_position, Color target_color, int threshold, Selection::MergeMode merge_mode)
+static void set_flood_selection(Gfx::Bitmap& bitmap, Image& image, Gfx::IntPoint const& start_position, int threshold, Selection::MergeMode merge_mode)
 {
     VERIFY(bitmap.bpp() == 32);
 
-    float threshold_normalized_squared = (threshold / 100.0f) * (threshold / 100.0f);
-
-    // Create Mask which will track already-colored pixels
-    Mask flood_mask = Mask::empty(bitmap.rect());
     Mask selection_mask = Mask::empty(bitmap.rect());
-    Queue<Gfx::IntPoint> points_to_visit = Queue<Gfx::IntPoint>();
 
-    points_to_visit.enqueue({ start_position.x(), start_position.y() });
-    selection_mask.set(start_position.x(), start_position.y(), 0xFF);
-    flood_mask.set(start_position.x(), start_position.y(), 0xFF);
+    auto pixel_reached = [&](Gfx::IntPoint location) {
+        selection_mask.set(location.x(), location.y(), 0xFF);
+    };
 
-    // This implements a non-recursive flood fill. This is a breadth-first search of paintable neighbors
-    // As we find neighbors that are paintable we update their pixel, add them to the queue, and mark them in the mask
-    while (!points_to_visit.is_empty()) {
-        auto current_point = points_to_visit.dequeue();
-        auto candidate_points = Array {
-            current_point.moved_left(1),
-            current_point.moved_right(1),
-            current_point.moved_up(1),
-            current_point.moved_down(1)
-        };
-        for (auto candidate_point : candidate_points) {
-            if (!bitmap.rect().contains(candidate_point))
-                continue;
-            if (flood_mask.get(candidate_point.x(), candidate_point.y()) == 0 && meets_wand_threshold(candidate_point, bitmap, target_color, threshold_normalized_squared)) {
-                points_to_visit.enqueue(candidate_point);
-                selection_mask.set(candidate_point.x(), candidate_point.y(), 0xFF);
-            }
-            flood_mask.set(candidate_point.x(), candidate_point.y(), 0xFF);
-        }
-    }
+    bitmap.flood_visit_from_point(start_position, threshold, move(pixel_reached));
+
     selection_mask.shrink_to_fit();
     image.selection().merge(selection_mask, merge_mode);
 }
@@ -85,9 +46,8 @@ void WandSelectTool::on_mousedown(Layer* layer, MouseEvent& event)
     if (!layer->rect().contains(layer_event.position()))
         return;
 
-    auto target_color = layer->currently_edited_bitmap().get_pixel(layer_event.x(), layer_event.y());
     m_editor->image().selection().begin_interactive_selection();
-    set_flood_selection(layer->currently_edited_bitmap(), m_editor->image(), layer_event.position(), target_color, m_threshold, m_merge_mode);
+    set_flood_selection(layer->currently_edited_bitmap(), m_editor->image(), layer_event.position(), m_threshold, m_merge_mode);
     m_editor->image().selection().end_interactive_selection();
     m_editor->update();
     m_editor->did_complete_action(tool_name());
