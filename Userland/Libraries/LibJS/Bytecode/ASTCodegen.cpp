@@ -1548,7 +1548,12 @@ Bytecode::CodeGenerationErrorOr<void> CallExpression::generate_bytecode(Bytecode
         call_type = Bytecode::Op::Call::CallType::Call;
     }
 
-    generator.emit<Bytecode::Op::Call>(call_type, callee_reg, this_reg);
+    Optional<Bytecode::StringTableIndex> expression_string_index;
+    if (auto expression_string = this->expression_string(); expression_string.has_value())
+        expression_string_index = generator.intern_string(expression_string.release_value());
+
+    generator.emit<Bytecode::Op::Call>(call_type, callee_reg, this_reg, expression_string_index);
+
     return {};
 }
 

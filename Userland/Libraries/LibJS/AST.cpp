@@ -404,21 +404,25 @@ Completion NewExpression::execute(Interpreter& interpreter) const
     return Value { TRY(construct(vm, constructor.as_function(), move(arg_list))) };
 }
 
+Optional<String> CallExpression::expression_string() const
+{
+    if (is<Identifier>(*m_callee))
+        return static_cast<Identifier const&>(*m_callee).string();
+
+    if (is<MemberExpression>(*m_callee))
+        return static_cast<MemberExpression const&>(*m_callee).to_string_approximation();
+
+    return {};
+}
+
 Completion CallExpression::throw_type_error_for_callee(Interpreter& interpreter, Value callee_value, StringView call_type) const
 {
     auto& vm = interpreter.vm();
 
-    if (is<Identifier>(*m_callee) || is<MemberExpression>(*m_callee)) {
-        String expression_string;
-        if (is<Identifier>(*m_callee)) {
-            expression_string = static_cast<Identifier const&>(*m_callee).string();
-        } else {
-            expression_string = static_cast<MemberExpression const&>(*m_callee).to_string_approximation();
-        }
-        return vm.throw_completion<TypeError>(ErrorType::IsNotAEvaluatedFrom, callee_value.to_string_without_side_effects(), call_type, expression_string);
-    } else {
-        return vm.throw_completion<TypeError>(ErrorType::IsNotA, callee_value.to_string_without_side_effects(), call_type);
-    }
+    if (auto expression_string = this->expression_string(); expression_string.has_value())
+        return vm.throw_completion<TypeError>(ErrorType::IsNotAEvaluatedFrom, callee_value.to_string_without_side_effects(), call_type, expression_string.release_value());
+
+    return vm.throw_completion<TypeError>(ErrorType::IsNotA, callee_value.to_string_without_side_effects(), call_type);
 }
 
 // 13.3.6.1 Runtime Semantics: Evaluation, https://tc39.es/ecma262/#sec-function-calls-runtime-semantics-evaluation

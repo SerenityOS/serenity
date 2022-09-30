@@ -604,11 +604,12 @@ public:
         Construct,
     };
 
-    Call(CallType type, Register callee, Register this_value)
+    Call(CallType type, Register callee, Register this_value, Optional<StringTableIndex> expression_string = {})
         : Instruction(Type::Call)
         , m_callee(callee)
         , m_this_value(this_value)
         , m_type(type)
+        , m_expression_string(expression_string)
     {
     }
 
@@ -616,10 +617,13 @@ public:
     String to_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 
+    Completion throw_type_error_for_callee(Bytecode::Interpreter&, StringView callee_type) const;
+
 private:
     Register m_callee;
     Register m_this_value;
     CallType m_type;
+    Optional<StringTableIndex> m_expression_string;
 };
 
 // NOTE: This instruction is variable-width depending on the number of arguments!
