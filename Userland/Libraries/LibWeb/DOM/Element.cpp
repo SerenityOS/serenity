@@ -840,4 +840,55 @@ WebIDL::ExceptionOr<void> Element::insert_adjacent_html(String position, String 
     return {};
 }
 
+// https://dom.spec.whatwg.org/#insert-adjacent
+WebIDL::ExceptionOr<JS::GCPtr<Node>> Element::insert_adjacent(String const& where, JS::NonnullGCPtr<Node> node)
+{
+    // To insert adjacent, given an element element, string where, and a node node, run the steps associated with the first ASCII case-insensitive match for where:
+    if (where.equals_ignoring_case("beforebegin"sv)) {
+        // -> "beforebegin"
+        // If element’s parent is null, return null.
+        if (!parent())
+            return JS::GCPtr<Node> { nullptr };
+
+        // Return the result of pre-inserting node into element’s parent before element.
+        return JS::GCPtr<Node> { TRY(parent()->pre_insert(move(node), this)) };
+    }
+
+    if (where.equals_ignoring_case("afterbegin"sv)) {
+        // -> "afterbegin"
+        // Return the result of pre-inserting node into element before element’s first child.
+        return JS::GCPtr<Node> { TRY(pre_insert(move(node), first_child())) };
+    }
+
+    if (where.equals_ignoring_case("beforeend"sv)) {
+        // -> "beforeend"
+        // Return the result of pre-inserting node into element before null.
+        return JS::GCPtr<Node> { TRY(pre_insert(move(node), nullptr)) };
+    }
+
+    if (where.equals_ignoring_case("afterend"sv)) {
+        // -> "afterend"
+        // If element’s parent is null, return null.
+        if (!parent())
+            return JS::GCPtr<Node> { nullptr };
+
+        // Return the result of pre-inserting node into element’s parent before element’s next sibling.
+        return JS::GCPtr<Node> { TRY(parent()->pre_insert(move(node), next_sibling())) };
+    }
+
+    // -> Otherwise
+    // Throw a "SyntaxError" DOMException.
+    return WebIDL::SyntaxError::create(global_object(), String::formatted("Unknown position '{}'. Must be one of 'beforebegin', 'afterbegin', 'beforeend' or 'afterend'"sv, where));
+}
+
+// https://dom.spec.whatwg.org/#dom-element-insertadjacentelement
+WebIDL::ExceptionOr<JS::GCPtr<Element>> Element::insert_adjacent_element(String const& where, JS::NonnullGCPtr<Element> element)
+{
+    // The insertAdjacentElement(where, element) method steps are to return the result of running insert adjacent, give this, where, and element.
+    auto returned_node = TRY(insert_adjacent(where, move(element)));
+    if (!returned_node)
+        return JS::GCPtr<Element> { nullptr };
+    return JS::GCPtr<Element> { verify_cast<Element>(*returned_node) };
+}
+
 }
