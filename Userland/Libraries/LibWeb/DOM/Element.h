@@ -145,6 +145,7 @@ public:
     bool is_actually_disabled() const;
 
     WebIDL::ExceptionOr<JS::GCPtr<Element>> insert_adjacent_element(String const& where, JS::NonnullGCPtr<Element> element);
+    WebIDL::ExceptionOr<void> insert_adjacent_text(String const& where, String const& data);
 
 protected:
     Element(Document&, DOM::QualifiedName);

@@ -54,6 +54,7 @@ interface Element : Node {
     readonly attribute long clientHeight;
 
     [CEReactions] Element? insertAdjacentElement(DOMString where, Element element);
+    undefined insertAdjacentText(DOMString where, DOMString data);
     [CEReactions] undefined insertAdjacentHTML(DOMString position, DOMString text);
 };
 
