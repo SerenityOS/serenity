@@ -84,10 +84,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.set_general_help("Print the end ('tail') of a file.");
     args_parser.add_option(follow, "Output data as it is written to the file", "follow", 'f');
     args_parser.add_option(line_count, "Fetch the specified number of lines", "lines", 'n', "number");
-    args_parser.add_positional_argument(file, "File path", "file");
+    args_parser.add_positional_argument(file, "File path", "file", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
 
-    auto f = TRY(Core::File::open(file, Core::OpenMode::ReadOnly));
+    auto f = TRY(Core::File::open((file == "-"sv || file == nullptr) ? "/dev/stdin" : file, Core::OpenMode::ReadOnly));
     TRY(Core::System::pledge("stdio"));
 
     auto pos = find_seek_pos(*f, line_count);

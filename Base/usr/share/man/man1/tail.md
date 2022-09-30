@@ -4,13 +4,13 @@ tail
 
 ## Synopsis
 
-```sh
-$ tail [--follow] [--lines number] <file>
+```*sh
+$ tail [--follow] [--lines number] [file]
 ```
 
 ## Description
 
-Print the end ('tail') of a file.
+Print the end ('tail') of a file. If no file is specified, or the filename '-' is specified, it defaults to standard input.
 
 ## Options:
 
