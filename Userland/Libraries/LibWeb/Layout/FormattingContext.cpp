@@ -749,9 +749,9 @@ void FormattingContext::layout_absolutely_positioned_element(Box const& box, Ava
     compute_height_for_absolutely_positioned_element(box, available_space);
 
     box_state.margin_left = box.computed_values().margin().left().resolved(box, width_of_containing_block_as_length).to_px(box);
-    box_state.margin_top = box.computed_values().margin().top().resolved(box, height_of_containing_block_as_length).to_px(box);
+    box_state.margin_top = box.computed_values().margin().top().resolved(box, width_of_containing_block_as_length).to_px(box);
     box_state.margin_right = box.computed_values().margin().right().resolved(box, width_of_containing_block_as_length).to_px(box);
-    box_state.margin_bottom = box.computed_values().margin().bottom().resolved(box, height_of_containing_block_as_length).to_px(box);
+    box_state.margin_bottom = box.computed_values().margin().bottom().resolved(box, width_of_containing_block_as_length).to_px(box);
 
     box_state.border_left = box.computed_values().border_left().width;
     box_state.border_right = box.computed_values().border_right().width;
