@@ -21,10 +21,9 @@ ImageConstructor::ImageConstructor(JS::Realm& realm)
 void ImageConstructor::initialize(JS::Realm& realm)
 {
     auto& vm = this->vm();
-    auto& window = verify_cast<HTML::Window>(realm.global_object());
-    NativeFunction::initialize(realm);
 
-    define_direct_property(vm.names.prototype, &window.cached_web_prototype("HTMLImageElement"), 0);
+    NativeFunction::initialize(realm);
+    define_direct_property(vm.names.prototype, &cached_web_prototype(realm, "HTMLImageElement"), 0);
     define_direct_property(vm.names.length, JS::Value(0), JS::Attribute::Configurable);
 }
 

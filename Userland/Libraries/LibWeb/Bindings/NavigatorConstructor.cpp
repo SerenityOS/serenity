@@ -4,10 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibJS/Runtime/GlobalObject.h>
+#include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/Bindings/NavigatorConstructor.h>
 #include <LibWeb/Bindings/NavigatorPrototype.h>
-#include <LibWeb/HTML/Window.h>
 
 namespace Web::Bindings {
 
@@ -31,10 +30,9 @@ JS::ThrowCompletionOr<JS::Object*> NavigatorConstructor::construct(FunctionObjec
 void NavigatorConstructor::initialize(JS::Realm& realm)
 {
     auto& vm = this->vm();
-    auto& window = verify_cast<HTML::Window>(realm.global_object());
 
     NativeFunction::initialize(realm);
-    define_direct_property(vm.names.prototype, &window.cached_web_prototype("Navigator"), 0);
+    define_direct_property(vm.names.prototype, &cached_web_prototype(realm, "Navigator"), 0);
     define_direct_property(vm.names.length, JS::Value(0), JS::Attribute::Configurable);
 }
 
