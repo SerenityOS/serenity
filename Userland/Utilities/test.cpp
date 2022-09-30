@@ -182,6 +182,89 @@ private:
     Permission m_kind { Read };
 };
 
+class FileHasFlag : public Condition {
+public:
+    enum Flag {
+        SGID,
+        SUID,
+        SVTX,
+    };
+    FileHasFlag(StringView path, Flag kind)
+        : m_path(path)
+        , m_kind(kind)
+    {
+    }
+
+private:
+    virtual bool check() const override
+    {
+        struct stat statbuf;
+        int rc = stat(m_path.characters(), &statbuf);
+
+        if (rc < 0) {
+            if (errno != ENOENT) {
+                perror(m_path.characters());
+                g_there_was_an_error = true;
+            }
+            return false;
+        }
+
+        switch (m_kind) {
+        case SGID:
+            return statbuf.st_mode & S_ISGID;
+        case SUID:
+            return statbuf.st_mode & S_ISUID;
+        case SVTX:
+            return statbuf.st_mode & S_ISVTX;
+        default:
+            VERIFY_NOT_REACHED();
+        }
+    }
+
+    String m_path;
+    Flag m_kind { SGID };
+};
+
+class FileIsOwnedBy : public Condition {
+public:
+    enum Owner {
+        EffectiveGID,
+        EffectiveUID,
+    };
+    FileIsOwnedBy(StringView path, Owner kind)
+        : m_path(path)
+        , m_kind(kind)
+    {
+    }
+
+private:
+    virtual bool check() const override
+    {
+        struct stat statbuf;
+        int rc = stat(m_path.characters(), &statbuf);
+
+        if (rc < 0) {
+            if (errno != ENOENT) {
+                perror(m_path.characters());
+                g_there_was_an_error = true;
+            }
+            return false;
+        }
+
+        switch (m_kind) {
+        case EffectiveGID:
+            return statbuf.st_gid == getgid();
+        case EffectiveUID:
+            return statbuf.st_uid == getuid();
+        default:
+            VERIFY_NOT_REACHED();
+        }
+    }
+
+    String m_path;
+    Owner m_kind { EffectiveGID };
+};
+
 class StringCompare : public Condition {
 public:
     enum Mode {
@@ -374,6 +457,12 @@ static OwnPtr<Condition> parse_simple_expression(char* argv[])
             return make<UserHasPermission>(value, UserHasPermission::Execute);
         case 'e':
             return make<UserHasPermission>(value, UserHasPermission::Any);
+        case 'g':
+            return make<FileHasFlag>(value, FileHasFlag::SGID);
+        case 'k':
+            return make<FileHasFlag>(value, FileHasFlag::SVTX);
+        case 'u':
+            return make<FileHasFlag>(value, FileHasFlag::SUID);
         case 'o':
         case 'a':
             // '-a' and '-o' are boolean ops, which are part of a complex expression
@@ -384,11 +473,11 @@ static OwnPtr<Condition> parse_simple_expression(char* argv[])
             return make<StringCompare>(""sv, value, StringCompare::NotEqual);
         case 'z':
             return make<StringCompare>(""sv, value, StringCompare::Equal);
-        case 'g':
         case 'G':
-        case 'k':
-        case 'N':
+            return make<FileIsOwnedBy>(value, FileIsOwnedBy::EffectiveGID);
         case 'O':
+            return make<FileIsOwnedBy>(value, FileIsOwnedBy::EffectiveUID);
+        case 'N':
         case 's':
             // 'optind' has been incremented to refer to the argument after the
             // operator, while we want to print the operator itself.
