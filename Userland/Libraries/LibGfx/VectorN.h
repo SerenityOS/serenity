@@ -251,8 +251,8 @@ public:
         return result;
     }
 
-    auto& data() { return m_data; }
-    auto const& data() const { return m_data; }
+    constexpr auto& data() { return m_data; }
+    constexpr auto const& data() const { return m_data; }
 
 private:
     AK::Array<T, N> m_data;
