@@ -12,6 +12,7 @@
 #include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/HTMLLinkElement.h>
+#include <LibWeb/Infra/CharacterTypes.h>
 #include <LibWeb/Loader/ResourceLoader.h>
 #include <LibWeb/Page/Page.h>
 #include <LibWeb/Platform/ImageCodecPlugin.h>
@@ -75,7 +76,7 @@ void HTMLLinkElement::parse_attribute(FlyString const& name, String const& value
         // To determine which link types apply to a link, a, area, or form element,
         // the element's rel attribute must be split on ASCII whitespace.
         // The resulting tokens are the keywords for the link types that apply to that element.
-        auto parts = lowercased_value.split_view(' ');
+        auto parts = lowercased_value.split_view(Infra::is_ascii_whitespace);
         for (auto& part : parts) {
             if (part == "stylesheet"sv)
                 m_relationship |= Relationship::Stylesheet;
