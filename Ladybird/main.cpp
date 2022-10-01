@@ -28,9 +28,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_positional_argument(url, "URL to open", "url", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
 
-    s_settings = new Browser::Settings();
-
     BrowserWindow window;
+    s_settings = new Browser::Settings(&window);
     window.setWindowTitle("Ladybird");
     window.resize(800, 600);
     window.show();

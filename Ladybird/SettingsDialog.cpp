@@ -14,11 +14,11 @@ extern Browser::Settings* s_settings;
 SettingsDialog::SettingsDialog(QMainWindow* window)
     : m_window(window)
 {
-    m_layout = new QFormLayout;
-    m_homepage = new QLineEdit;
-    m_ok_button = new QPushButton("&Save");
+    m_layout = new QFormLayout(this);
+    m_homepage = new QLineEdit(this);
+    m_ok_button = new QPushButton("&Save", this);
 
-    m_layout->addWidget(new QLabel("Homepage"));
+    m_layout->addWidget(new QLabel("Homepage", this));
     m_layout->addWidget(m_homepage);
     m_layout->addWidget(m_ok_button);
 

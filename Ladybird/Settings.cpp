@@ -8,9 +8,9 @@
 
 namespace Browser {
 
-Settings::Settings()
+Settings::Settings(QObject* parent)
 {
-    m_qsettings = new QSettings("Serenity", "Ladybird");
+    m_qsettings = new QSettings("Serenity", "Ladybird", parent);
 }
 
 QString Settings::homepage()

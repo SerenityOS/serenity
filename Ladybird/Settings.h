@@ -15,7 +15,7 @@ namespace Browser {
 
 class Settings {
 public:
-    Settings();
+    Settings(QObject* parent);
 
     QString homepage();
     void set_homepage(QString const& homepage);
