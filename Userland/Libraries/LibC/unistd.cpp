@@ -673,11 +673,17 @@ int unlinkat(int dirfd, char const* pathname, int flags)
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/symlink.html
 int symlink(char const* target, char const* linkpath)
 {
+    return symlinkat(target, AT_FDCWD, linkpath);
+}
+
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/symlinkat.html
+int symlinkat(char const* target, int newdirfd, char const* linkpath)
+{
     if (!target || !linkpath) {
         errno = EFAULT;
         return -1;
     }
-    Syscall::SC_symlink_params params { { target, strlen(target) }, { linkpath, strlen(linkpath) } };
+    Syscall::SC_symlink_params params { { target, strlen(target) }, { linkpath, strlen(linkpath) }, newdirfd };
     int rc = syscall(SC_symlink, &params);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }

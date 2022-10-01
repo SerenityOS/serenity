@@ -95,6 +95,7 @@ int link(char const* oldpath, char const* newpath);
 int unlink(char const* pathname);
 int unlinkat(int dirfd, char const* pathname, int flags);
 int symlink(char const* target, char const* linkpath);
+int symlinkat(char const* target, int newdirfd, char const* linkpath);
 int rmdir(char const* pathname);
 int dup(int old_fd);
 int dup2(int old_fd, int new_fd);
