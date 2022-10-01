@@ -34,7 +34,7 @@ void InterruptManagement::initialize()
 void InterruptManagement::find_controllers()
 {
     // TODO: Once device tree support is in place, find interrupt controllers using that.
-    m_interrupt_controllers.append(new RPi::InterruptController);
+    m_interrupt_controllers.append(adopt_lock_ref(*new (nothrow) RPi::InterruptController));
 }
 
 u8 InterruptManagement::acquire_mapped_interrupt_number(u8 interrupt_number)
