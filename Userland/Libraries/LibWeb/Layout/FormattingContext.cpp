@@ -758,12 +758,17 @@ void FormattingContext::layout_absolutely_positioned_element(Box const& box, Ava
     box_state.border_top = box.computed_values().border_top().width;
     box_state.border_bottom = box.computed_values().border_bottom().width;
 
-    box_state.inset_left = box.computed_values().inset().left().resolved(box, width_of_containing_block_as_length).to_px(box);
-    box_state.inset_top = box.computed_values().inset().top().resolved(box, height_of_containing_block_as_length).to_px(box);
-    box_state.inset_right = box.computed_values().inset().right().resolved(box, width_of_containing_block_as_length).to_px(box);
-    box_state.inset_bottom = box.computed_values().inset().bottom().resolved(box, height_of_containing_block_as_length).to_px(box);
+    auto const& computed_left = box.computed_values().inset().left();
+    auto const& computed_right = box.computed_values().inset().right();
+    auto const& computed_top = box.computed_values().inset().top();
+    auto const& computed_bottom = box.computed_values().inset().bottom();
 
-    if (box.computed_values().inset().left().is_auto() && box.computed_values().width().is_auto() && box.computed_values().inset().right().is_auto()) {
+    box_state.inset_left = computed_left.resolved(box, width_of_containing_block_as_length).to_px(box);
+    box_state.inset_top = computed_top.resolved(box, height_of_containing_block_as_length).to_px(box);
+    box_state.inset_right = computed_right.resolved(box, width_of_containing_block_as_length).to_px(box);
+    box_state.inset_bottom = computed_bottom.resolved(box, height_of_containing_block_as_length).to_px(box);
+
+    if (computed_left.is_auto() && box.computed_values().width().is_auto() && computed_right.is_auto()) {
         if (box.computed_values().margin().left().is_auto())
             box_state.margin_left = 0;
         if (box.computed_values().margin().right().is_auto())
@@ -782,11 +787,11 @@ void FormattingContext::layout_absolutely_positioned_element(Box const& box, Ava
     }
     auto parent_location = absolute_content_rect(static_cast<Box const&>(*relevant_parent), m_state);
 
-    if (!box.computed_values().inset().left().is_auto()) {
+    if (!computed_left.is_auto()) {
         float x_offset = box_state.inset_left
             + box_state.border_box_left();
         used_offset.set_x(x_offset + box_state.margin_left);
-    } else if (!box.computed_values().inset().right().is_auto()) {
+    } else if (!computed_right.is_auto()) {
         float x_offset = 0
             - box_state.inset_right
             - box_state.border_box_right();
@@ -797,11 +802,11 @@ void FormattingContext::layout_absolutely_positioned_element(Box const& box, Ava
         used_offset.set_x(x_offset);
     }
 
-    if (!box.computed_values().inset().top().is_auto()) {
+    if (!computed_top.is_auto()) {
         float y_offset = box_state.inset_top
             + box_state.border_box_top();
         used_offset.set_y(y_offset + box_state.margin_top);
-    } else if (!box.computed_values().inset().bottom().is_auto()) {
+    } else if (!computed_bottom.is_auto()) {
         float y_offset = 0
             - box_state.inset_bottom
             - box_state.border_box_bottom();
