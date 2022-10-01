@@ -567,20 +567,20 @@ template<template<typename...> typename U, typename... Us>
 inline constexpr bool IsSpecializationOf<U<Us...>, U> = true;
 
 template<typename T>
-struct __decay {
+struct __Decay {
     typedef Detail::RemoveCVReference<T> type;
 };
 template<typename T>
-struct __decay<T[]> {
+struct __Decay<T[]> {
     typedef T* type;
 };
 template<typename T, decltype(sizeof(T)) N>
-struct __decay<T[N]> {
+struct __Decay<T[N]> {
     typedef T* type;
 };
 // FIXME: Function decay
 template<typename T>
-using Decay = typename __decay<T>::type;
+using Decay = typename __Decay<T>::type;
 
 template<typename T, typename U>
 inline constexpr bool IsPointerOfType = IsPointer<Decay<U>>&& IsSame<T, RemoveCV<RemovePointer<Decay<U>>>>;
