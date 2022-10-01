@@ -1100,4 +1100,15 @@ RefPtr<Custody const> Process::executable() const
     return m_executable.with([](auto& executable) { return executable; });
 }
 
+ErrorOr<NonnullRefPtr<Custody>> Process::custody_for_dirfd(int dirfd)
+{
+    if (dirfd == AT_FDCWD)
+        return current_directory();
+
+    auto base_description = TRY(open_file_description(dirfd));
+    if (!base_description->custody())
+        return EINVAL;
+    return *base_description->custody();
+}
+
 }
