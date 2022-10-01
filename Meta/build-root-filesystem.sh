@@ -97,6 +97,10 @@ if [ -f mnt/bin/pls ]; then
     chown 0:$wheel_gid mnt/bin/pls
     chmod 4750 mnt/bin/pls
 fi
+if [ -f mnt/bin/Escalator ]; then
+    chown 0:$wheel_gid mnt/bin/Escalator
+    chmod 4750 mnt/bin/Escalator
+fi
 if [ -f mnt/bin/utmpupdate ]; then
     chown 0:$utmp_gid mnt/bin/utmpupdate
     chmod 2755 mnt/bin/utmpupdate
