@@ -9,14 +9,15 @@
 #include <LibVideo/MatroskaReader.h>
 #include <LibVideo/VP9/Decoder.h>
 
-TEST_CASE(webm_in_vp9)
+static void decode_video(StringView path, size_t expected_frame_count)
 {
-    auto matroska_document = Video::MatroskaReader::MatroskaReader::parse_matroska_from_file("./vp9_in_webm.webm"sv);
+    auto matroska_document = Video::MatroskaReader::MatroskaReader::parse_matroska_from_file(path);
     VERIFY(matroska_document);
     auto video_track_optional = matroska_document->track_for_track_type(Video::TrackEntry::TrackType::Video);
     VERIFY(video_track_optional.has_value());
     auto video_track_entry = video_track_optional.value();
 
+    size_t frame_count = 0;
     size_t cluster_index, block_index, frame_index;
     Video::VP9::Decoder vp9_decoder;
 
@@ -29,9 +30,19 @@ TEST_CASE(webm_in_vp9)
 
             for (frame_index = 0; frame_index < block.frames().size(); frame_index++) {
                 MUST(vp9_decoder.decode(block.frames()[frame_index]));
+                frame_count++;
             }
         }
     }
+    VERIFY(frame_count == expected_frame_count);
+}
 
-    VERIFY(cluster_index == 1 && block_index == 25 && frame_index == 1);
+TEST_CASE(webm_in_vp9)
+{
+    decode_video("./vp9_in_webm.webm"sv, 25);
+}
+
+BENCHMARK_CASE(vp9_4k)
+{
+    decode_video("./vp9_4k.webm"sv, 2);
 }
