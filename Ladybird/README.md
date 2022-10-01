@@ -16,7 +16,7 @@ On Arch Linux/Manjaro:
 sudo pacman -S --needed base-devel cmake libgl ninja qt6-base qt6-tools qt6-wayland
 ```
 
-On Fedora or derivates:
+On Fedora or derivatives:
 ```
 sudo dnf install cmake libglvnd-devel ninja-build qt6-qtbase-devel qt6-qttools-devel qt6-qtwayland-devel
 ```
