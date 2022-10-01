@@ -7,6 +7,7 @@
 #include <LibGfx/Filters/BrightnessFilter.h>
 #include <LibGfx/Filters/ContrastFilter.h>
 #include <LibGfx/Filters/GrayscaleFilter.h>
+#include <LibGfx/Filters/HueRotateFilter.h>
 #include <LibGfx/Filters/InvertFilter.h>
 #include <LibGfx/Filters/OpacityFilter.h>
 #include <LibGfx/Filters/SepiaFilter.h>
@@ -19,6 +20,9 @@ namespace Web::Painting {
 
 void apply_filter_list(Gfx::Bitmap& target_bitmap, Layout::Node const& node, Span<CSS::FilterFunction const> filter_list)
 {
+    auto apply_color_filter = [&](Gfx::ColorFilter const& filter) {
+        const_cast<Gfx::ColorFilter&>(filter).apply(target_bitmap, target_bitmap.rect(), target_bitmap, target_bitmap.rect());
+    };
     for (auto& filter_function : filter_list) {
         // See: https://drafts.fxtf.org/filter-effects-1/#supported-filter-functions
         filter_function.visit(
@@ -31,9 +35,6 @@ void apply_filter_list(Gfx::Bitmap& target_bitmap, Layout::Node const& node, Spa
             [&](CSS::Filter::Color const& color) {
                 auto amount = color.resolved_amount();
                 auto amount_clamped = clamp(amount, 0.0f, 1.0f);
-                auto apply_color_filter = [&](Gfx::ColorFilter const& filter) {
-                    const_cast<Gfx::ColorFilter&>(filter).apply(target_bitmap, target_bitmap.rect(), target_bitmap, target_bitmap.rect());
-                };
                 switch (color.operation) {
                 case CSS::Filter::Color::Operation::Grayscale: {
                     // Converts the input image to grayscale. The passed parameter defines the proportion of the conversion.
@@ -80,8 +81,8 @@ void apply_filter_list(Gfx::Bitmap& target_bitmap, Layout::Node const& node, Spa
                     break;
                 }
             },
-            [&](CSS::Filter::HueRotate const&) {
-                dbgln("TODO: Implement hue-rotate() filter function!");
+            [&](CSS::Filter::HueRotate const& hue_rotate) {
+                apply_color_filter(Gfx::HueRotateFilter { hue_rotate.angle_degrees() });
             },
             [&](CSS::Filter::DropShadow const&) {
                 dbgln("TODO: Implement drop-shadow() filter function!");
