@@ -23,6 +23,15 @@
     "rotate": {
         "parameters": "<angle>"
     },
+    "rotateX": {
+        "parameters": "<angle>"
+    },
+    "rotateY": {
+        "parameters": "<angle>"
+    },
+    "rotateZ": {
+        "parameters": "<angle>"
+    },
     "skew": {
         "parameters": "<angle>{1,2}"
     },
