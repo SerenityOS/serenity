@@ -12,6 +12,7 @@
 #include <LibWeb/DOM/Attr.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/Parser/HTMLEncodingDetection.h>
+#include <LibWeb/Infra/CharacterTypes.h>
 #include <ctype.h>
 
 namespace Web::HTML {
@@ -50,8 +51,7 @@ Optional<StringView> extract_character_encoding_from_meta_element(String const& 
         lexer.ignore(charset_index.value() + 7);
 
         lexer.ignore_while([](char c) {
-            // FIXME: Not the exact same ASCII whitespace. The spec does not include vertical tab (\v).
-            return is_ascii_space(c);
+            return Infra::is_ascii_whitespace(c);
         });
 
         if (lexer.peek() != '=')
@@ -64,8 +64,7 @@ Optional<StringView> extract_character_encoding_from_meta_element(String const& 
     lexer.ignore();
 
     lexer.ignore_while([](char c) {
-        // FIXME: Not the exact same ASCII whitespace. The spec does not include vertical tab (\v).
-        return is_ascii_space(c);
+        return Infra::is_ascii_whitespace(c);
     });
 
     if (lexer.is_eof())
@@ -90,8 +89,7 @@ Optional<StringView> extract_character_encoding_from_meta_element(String const& 
     }
 
     auto encoding = lexer.consume_until([](char c) {
-        // FIXME: Not the exact same ASCII whitespace. The spec does not include vertical tab (\v).
-        return is_ascii_space(c) || c == ';';
+        return Infra::is_ascii_whitespace(c) || c == ';';
     });
     return TextCodec::get_standardized_encoding(encoding);
 }

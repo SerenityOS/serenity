@@ -28,6 +28,7 @@
 #include <LibWeb/HTML/Parser/HTMLParser.h>
 #include <LibWeb/HTML/Parser/HTMLToken.h>
 #include <LibWeb/HTML/Window.h>
+#include <LibWeb/Infra/CharacterTypes.h>
 #include <LibWeb/Namespace.h>
 #include <LibWeb/SVG/TagNames.h>
 
@@ -3668,7 +3669,7 @@ RefPtr<CSS::StyleValue> parse_dimension_value(StringView string)
     auto position = input.begin();
 
     // 3. Skip ASCII whitespace within input given position.
-    while (position != input.end() && is_ascii_space(*position))
+    while (position != input.end() && Infra::is_ascii_whitespace(*position))
         ++position;
 
     // 4. If position is past the end of input or the code point at position within input is not an ASCII digit,

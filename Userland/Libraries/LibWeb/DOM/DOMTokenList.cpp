@@ -5,11 +5,11 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/CharacterTypes.h>
 #include <AK/StringBuilder.h>
 #include <LibWeb/DOM/DOMTokenList.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Element.h>
+#include <LibWeb/Infra/CharacterTypes.h>
 #include <LibWeb/WebIDL/DOMException.h>
 
 namespace {
@@ -234,7 +234,7 @@ WebIDL::ExceptionOr<void> DOMTokenList::validate_token(StringView token) const
 {
     if (token.is_empty())
         return WebIDL::SyntaxError::create(realm(), "Non-empty DOM tokens are not allowed");
-    if (any_of(token, is_ascii_space))
+    if (any_of(token, Infra::is_ascii_whitespace))
         return WebIDL::InvalidCharacterError::create(realm(), "DOM tokens containing ASCII whitespace are not allowed");
     return {};
 }
