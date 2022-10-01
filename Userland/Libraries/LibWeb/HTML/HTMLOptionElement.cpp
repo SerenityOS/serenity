@@ -13,8 +13,7 @@
 #include <LibWeb/HTML/HTMLOptionElement.h>
 #include <LibWeb/HTML/HTMLScriptElement.h>
 #include <LibWeb/HTML/HTMLSelectElement.h>
-#include <LibWeb/Infra/CharacterTypes.h>
-#include <ctype.h>
+#include <LibWeb/Infra/Strings.h>
 
 namespace Web::HTML {
 
@@ -76,31 +75,6 @@ void HTMLOptionElement::set_value(String value)
     set_attribute(HTML::AttributeNames::value, value);
 }
 
-// https://infra.spec.whatwg.org/#strip-and-collapse-ascii-whitespace
-static String strip_and_collapse_whitespace(StringView string)
-{
-    // Replace any sequence of one or more consecutive code points that are ASCII whitespace in the string with a single U+0020 SPACE code point.
-    StringBuilder builder;
-    for (size_t i = 0; i < string.length(); ++i) {
-        if (isspace(string[i])) {
-            builder.append(' ');
-            while (i < string.length()) {
-                if (isspace(string[i])) {
-                    ++i;
-                    continue;
-                }
-                builder.append(string[i]);
-                break;
-            }
-            continue;
-        }
-        builder.append(string[i]);
-    }
-
-    // ...and then remove any leading and trailing ASCII whitespace from that string.
-    return builder.to_string().trim(Infra::ASCII_WHITESPACE);
-}
-
 static void concatenate_descendants_text_content(DOM::Node const* node, StringBuilder& builder)
 {
     // FIXME: SVGScriptElement should also be skipped, but it doesn't exist yet.
@@ -126,7 +100,7 @@ String HTMLOptionElement::text() const
     });
 
     // Return the result of stripping and collapsing ASCII whitespace from the above concatenation.
-    return strip_and_collapse_whitespace(builder.to_string());
+    return Infra::strip_and_collapse_whitespace(builder.string_view());
 }
 
 // https://html.spec.whatwg.org/multipage/form-elements.html#dom-option-text
