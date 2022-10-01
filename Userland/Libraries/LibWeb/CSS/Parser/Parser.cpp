@@ -2430,10 +2430,6 @@ RefPtr<StyleValue> Parser::parse_linear_gradient_function(ComponentValue const& 
     // <color-stop-list> =
     //      <linear-color-stop> , [ <linear-color-hint>? , <linear-color-stop> ]#
 
-    // FIXME: Support multi-position color stops
-    // https://developer.mozilla.org/en-US/docs/Web/CSS/gradient/linear-gradient#gradient_with_multi-position_color_stops
-    // These are shown on MDN... Though do not appear in the W3 spec(?)
-
     enum class ElementType {
         Garbage,
         ColorStop,
