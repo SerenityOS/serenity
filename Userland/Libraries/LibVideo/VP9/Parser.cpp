@@ -979,8 +979,8 @@ DecoderErrorOr<void> Parser::decode_block(u32 row, u32 col, BlockSubsize subsize
     // write out of bounds. This check seems consistent with libvpx.
     // See here:
     // https://github.com/webmproject/libvpx/blob/705bf9de8c96cfe5301451f1d7e5c90a41c64e5f/vp9/decoder/vp9_decodeframe.c#L917
-    auto maximum_block_y = min(num_8x8_blocks_high_lookup[subsize], m_mi_rows - row);
-    auto maximum_block_x = min(num_8x8_blocks_wide_lookup[subsize], m_mi_cols - col);
+    auto maximum_block_y = min<u32>(num_8x8_blocks_high_lookup[subsize], m_mi_rows - row);
+    auto maximum_block_x = min<u32>(num_8x8_blocks_wide_lookup[subsize], m_mi_cols - col);
 
     for (size_t y = 0; y < maximum_block_y; y++) {
         for (size_t x = 0; x < maximum_block_x; x++) {
@@ -1337,7 +1337,7 @@ DecoderErrorOr<i32> Parser::read_mv_component(u8 component)
     return (mv_sign ? -1 : 1) * static_cast<i32>(mag);
 }
 
-Gfx::Point<size_t> Parser::get_decoded_point_for_plane(u8 column, u8 row, u8 plane)
+Gfx::Point<size_t> Parser::get_decoded_point_for_plane(u32 column, u32 row, u8 plane)
 {
     if (plane == 0)
         return { column * 8, row * 8 };

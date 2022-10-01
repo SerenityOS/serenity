@@ -141,7 +141,7 @@ private:
     void scale_mv(u8 ref_list, ReferenceFrame ref_frame);
     void add_mv_ref_list(u8 ref_list);
 
-    Gfx::Point<size_t> get_decoded_point_for_plane(u8 row, u8 column, u8 plane);
+    Gfx::Point<size_t> get_decoded_point_for_plane(u32 row, u32 column, u8 plane);
     Gfx::Size<size_t> get_decoded_size_for_plane(u8 plane);
 
     u8 m_profile { 0 };

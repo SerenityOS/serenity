@@ -1097,7 +1097,7 @@ inline i32 Decoder::round_2(T value, u8 bits)
 
 inline bool check_bounds(i64 value, u8 bits)
 {
-    const i64 maximum = (1u << (bits - 1u)) - 1u;
+    i64 const maximum = (1ll << (bits - 1ll)) - 1ll;
     return value >= ~maximum && value <= maximum;
 }
 

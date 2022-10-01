@@ -7,3 +7,4 @@ foreach(source IN LISTS TEST_SOURCES)
 endforeach()
 
 install(FILES vp9_in_webm.webm DESTINATION usr/Tests/LibVideo)
+install(FILES vp9_4k.webm DESTINATION usr/Tests/LibVideo)
