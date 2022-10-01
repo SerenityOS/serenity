@@ -12,15 +12,15 @@ but disabling fullscreen at this point fixes the flickering.
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/src/SDL12_compat.c b/src/SDL12_compat.c
-index b3a411e..4d8001d 100644
+index 2dddc16937882f66c315f099f506704851b32d8e..57ace97794e7507d228f1dd076202d3aa22810c6 100644
 --- a/src/SDL12_compat.c
 +++ b/src/SDL12_compat.c
-@@ -5184,7 +5184,7 @@ SDL_SetVideoMode(int width, int height, int bpp, Uint32 flags12)
-                 fullscreen_flags20 &= ~SDL_WINDOW_FULLSCREEN_DESKTOP;
+@@ -5894,7 +5894,7 @@ SDL_SetVideoMode(int width, int height, int bpp, Uint32 flags12)
                  SDL20_SetWindowFullscreen(VideoWindow20, fullscreen_flags20);
-                 SDL20_SetWindowSize(VideoWindow20, width, height);
--                fullscreen_flags20 |= SDL_WINDOW_FULLSCREEN;
-+                /* fullscreen_flags20 |= SDL_WINDOW_FULLSCREEN; */
-                 SDL20_SetWindowFullscreen(VideoWindow20, fullscreen_flags20);
+                 SDL20_SetWindowSize(VideoWindow20, width, height);  /* not scaled_width, scaled_height */
+                 if (was_fullscreen) {
+-                    fullscreen_flags20 |= SDL_WINDOW_FULLSCREEN;
++                    /* fullscreen_flags20 |= SDL_WINDOW_FULLSCREEN; */
+                     SDL20_SetWindowFullscreen(VideoWindow20, fullscreen_flags20);
+                 }
              }
-         }
