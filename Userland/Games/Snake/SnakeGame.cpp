@@ -9,6 +9,7 @@
 #include "SnakeGame.h"
 #include <AK/Random.h>
 #include <LibConfig/Client.h>
+#include <LibGUI/MessageBox.h>
 #include <LibGUI/Painter.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Font/Font.h>
@@ -34,6 +35,7 @@ void SnakeGame::reset()
     m_length = 2;
     m_score = 0;
     m_score_text = "Score: 0";
+    m_is_new_high_score = false;
     m_velocity_queue.clear();
     stop_timer();
     start_timer(100);
@@ -123,6 +125,7 @@ void SnakeGame::timer_event(Core::TimerEvent&)
         ++m_score;
         m_score_text = String::formatted("Score: {}", m_score);
         if (m_score > m_high_score) {
+            m_is_new_high_score = true;
             m_high_score = m_score;
             m_high_score_text = String::formatted("Best: {}", m_high_score);
             update(high_score_rect());
@@ -214,6 +217,18 @@ void SnakeGame::paint_event(GUI::PaintEvent& event)
 
 void SnakeGame::game_over()
 {
+    stop_timer();
+
+    StringBuilder text;
+    text.appendff("Your score was {}", m_score);
+    if (m_is_new_high_score) {
+        text.append("\nThat's a new high score!"sv);
+    }
+    GUI::MessageBox::show(window(),
+        text.to_string(),
+        "Game Over"sv,
+        GUI::MessageBox::Type::Information);
+
     reset();
 }
 
