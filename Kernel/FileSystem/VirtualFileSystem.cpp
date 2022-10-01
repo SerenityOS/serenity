@@ -530,17 +530,17 @@ ErrorOr<void> VirtualFileSystem::access(Credentials const& credentials, StringVi
     auto& inode = custody->inode();
     auto metadata = inode.metadata();
     if (mode & R_OK) {
-        if (!metadata.may_read(credentials))
+        if (!metadata.may_read(credentials, UseEffectiveIDs::No))
             return EACCES;
     }
     if (mode & W_OK) {
-        if (!metadata.may_write(credentials))
+        if (!metadata.may_write(credentials, UseEffectiveIDs::No))
             return EACCES;
         if (custody->is_readonly())
             return EROFS;
     }
     if (mode & X_OK) {
-        if (!metadata.may_execute(credentials))
+        if (!metadata.may_execute(credentials, UseEffectiveIDs::No))
             return EACCES;
     }
     return {};

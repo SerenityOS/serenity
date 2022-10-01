@@ -9,19 +9,22 @@
 
 namespace Kernel {
 
-bool InodeMetadata::may_read(Credentials const& credentials) const
+bool InodeMetadata::may_read(Credentials const& credentials, UseEffectiveIDs use_effective_ids) const
 {
-    return may_read(credentials.euid(), credentials.egid(), credentials.extra_gids());
+    bool eids = use_effective_ids == UseEffectiveIDs::Yes;
+    return may_read(eids ? credentials.euid() : credentials.uid(), eids ? credentials.egid() : credentials.gid(), credentials.extra_gids());
 }
 
-bool InodeMetadata::may_write(Credentials const& credentials) const
+bool InodeMetadata::may_write(Credentials const& credentials, UseEffectiveIDs use_effective_ids) const
 {
-    return may_write(credentials.euid(), credentials.egid(), credentials.extra_gids());
+    bool eids = use_effective_ids == UseEffectiveIDs::Yes;
+    return may_write(eids ? credentials.euid() : credentials.uid(), eids ? credentials.egid() : credentials.gid(), credentials.extra_gids());
 }
 
-bool InodeMetadata::may_execute(Credentials const& credentials) const
+bool InodeMetadata::may_execute(Credentials const& credentials, UseEffectiveIDs use_effective_ids) const
 {
-    return may_execute(credentials.euid(), credentials.egid(), credentials.extra_gids());
+    bool eids = use_effective_ids == UseEffectiveIDs::Yes;
+    return may_execute(eids ? credentials.euid() : credentials.uid(), eids ? credentials.egid() : credentials.gid(), credentials.extra_gids());
 }
 
 }

@@ -36,12 +36,17 @@ inline bool is_sticky(mode_t mode) { return (mode & S_ISVTX) == S_ISVTX; }
 inline bool is_setuid(mode_t mode) { return (mode & S_ISUID) == S_ISUID; }
 inline bool is_setgid(mode_t mode) { return (mode & S_ISGID) == S_ISGID; }
 
+enum class UseEffectiveIDs {
+    Yes,
+    No
+};
+
 struct InodeMetadata {
     bool is_valid() const { return inode.is_valid(); }
 
-    bool may_read(Credentials const&) const;
-    bool may_write(Credentials const&) const;
-    bool may_execute(Credentials const&) const;
+    bool may_read(Credentials const&, UseEffectiveIDs = UseEffectiveIDs::Yes) const;
+    bool may_write(Credentials const&, UseEffectiveIDs = UseEffectiveIDs::Yes) const;
+    bool may_execute(Credentials const&, UseEffectiveIDs = UseEffectiveIDs::Yes) const;
 
     bool may_read(UserID u, GroupID g, Span<GroupID const> eg) const
     {
