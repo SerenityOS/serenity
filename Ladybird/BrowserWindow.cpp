@@ -23,7 +23,7 @@ extern Browser::Settings* s_settings;
 
 BrowserWindow::BrowserWindow()
 {
-    m_tabs_container = new QTabWidget;
+    m_tabs_container = new QTabWidget(this);
     m_tabs_container->setElideMode(Qt::TextElideMode::ElideRight);
     m_tabs_container->setMovable(true);
     m_tabs_container->setTabsClosable(true);
@@ -32,30 +32,30 @@ BrowserWindow::BrowserWindow()
 
     auto* menu = menuBar()->addMenu("&File");
 
-    auto* new_tab_action = new QAction("New &Tab");
+    auto* new_tab_action = new QAction("New &Tab", this);
     new_tab_action->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_T));
     menu->addAction(new_tab_action);
 
-    auto* settings_action = new QAction("&Settings");
+    auto* settings_action = new QAction("&Settings", this);
     settings_action->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_Comma));
     menu->addAction(settings_action);
 
-    auto* close_current_tab_action = new QAction("Close Current Tab");
+    auto* close_current_tab_action = new QAction("Close Current Tab", this);
     close_current_tab_action->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_W));
     menu->addAction(close_current_tab_action);
 
-    auto* quit_action = new QAction("&Quit");
+    auto* quit_action = new QAction("&Quit", this);
     quit_action->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_Q));
     menu->addAction(quit_action);
 
     auto* view_menu = menuBar()->addMenu("&View");
 
-    auto* open_next_tab_action = new QAction("Open &Next Tab");
+    auto* open_next_tab_action = new QAction("Open &Next Tab", this);
     open_next_tab_action->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_PageDown));
     view_menu->addAction(open_next_tab_action);
     QObject::connect(open_next_tab_action, &QAction::triggered, this, &BrowserWindow::open_next_tab);
 
-    auto* open_previous_tab_action = new QAction("Open &Previous Tab");
+    auto* open_previous_tab_action = new QAction("Open &Previous Tab", this);
     open_previous_tab_action->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_PageUp));
     view_menu->addAction(open_previous_tab_action);
     QObject::connect(open_previous_tab_action, &QAction::triggered, this, &BrowserWindow::open_previous_tab);
@@ -66,19 +66,19 @@ BrowserWindow::BrowserWindow()
 
     auto* color_scheme_group = new QActionGroup(this);
 
-    auto* auto_color_scheme = new QAction("&Auto");
+    auto* auto_color_scheme = new QAction("&Auto", this);
     auto_color_scheme->setCheckable(true);
     color_scheme_group->addAction(auto_color_scheme);
     color_scheme_menu->addAction(auto_color_scheme);
     QObject::connect(auto_color_scheme, &QAction::triggered, this, &BrowserWindow::enable_auto_color_scheme);
 
-    auto* light_color_scheme = new QAction("&Light");
+    auto* light_color_scheme = new QAction("&Light", this);
     light_color_scheme->setCheckable(true);
     color_scheme_group->addAction(light_color_scheme);
     color_scheme_menu->addAction(light_color_scheme);
     QObject::connect(light_color_scheme, &QAction::triggered, this, &BrowserWindow::enable_light_color_scheme);
 
-    auto* dark_color_scheme = new QAction("&Dark");
+    auto* dark_color_scheme = new QAction("&Dark", this);
     dark_color_scheme->setCheckable(true);
     color_scheme_group->addAction(dark_color_scheme);
     color_scheme_menu->addAction(dark_color_scheme);
@@ -88,7 +88,7 @@ BrowserWindow::BrowserWindow()
 
     auto* inspect_menu = menuBar()->addMenu("&Inspect");
 
-    auto* view_source_action = new QAction("View &Source");
+    auto* view_source_action = new QAction("View &Source", this);
     view_source_action->setIcon(QIcon(QString("%1/res/icons/16x16/filetype-html.png").arg(s_serenity_resource_root.characters())));
     view_source_action->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_U));
     inspect_menu->addAction(view_source_action);
@@ -96,7 +96,7 @@ BrowserWindow::BrowserWindow()
         if (m_current_tab) {
             auto source = m_current_tab->view().source();
 
-            auto* text_edit = new QPlainTextEdit;
+            auto* text_edit = new QPlainTextEdit(this);
             text_edit->setFont(QFontDatabase::systemFont(QFontDatabase::SystemFont::FixedFont));
             text_edit->resize(800, 600);
             text_edit->setPlainText(source.characters());
@@ -104,7 +104,7 @@ BrowserWindow::BrowserWindow()
         }
     });
 
-    auto* js_console_action = new QAction("Show &JS Console");
+    auto* js_console_action = new QAction("Show &JS Console", this);
     js_console_action->setIcon(QIcon(QString("%1/res/icons/16x16/filetype-javascript.png").arg(s_serenity_resource_root.characters())));
     js_console_action->setShortcut(QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_J));
     inspect_menu->addAction(js_console_action);
@@ -126,49 +126,49 @@ BrowserWindow::BrowserWindow()
 
     auto* debug_menu = menuBar()->addMenu("&Debug");
 
-    auto* dump_dom_tree_action = new QAction("Dump DOM Tree");
+    auto* dump_dom_tree_action = new QAction("Dump DOM Tree", this);
     dump_dom_tree_action->setIcon(QIcon(QString("%1/res/icons/browser/dom-tree.png").arg(s_serenity_resource_root.characters())));
     debug_menu->addAction(dump_dom_tree_action);
     QObject::connect(dump_dom_tree_action, &QAction::triggered, this, [this] {
         debug_request("dump-dom-tree");
     });
 
-    auto* dump_layout_tree_action = new QAction("Dump Layout Tree");
+    auto* dump_layout_tree_action = new QAction("Dump Layout Tree", this);
     dump_layout_tree_action->setIcon(QIcon(QString("%1/res/icons/16x16/layout.png").arg(s_serenity_resource_root.characters())));
     debug_menu->addAction(dump_layout_tree_action);
     QObject::connect(dump_layout_tree_action, &QAction::triggered, this, [this] {
         debug_request("dump-layout-tree");
     });
 
-    auto* dump_stacking_context_tree_action = new QAction("Dump Stacking Context Tree");
+    auto* dump_stacking_context_tree_action = new QAction("Dump Stacking Context Tree", this);
     dump_stacking_context_tree_action->setIcon(QIcon(QString("%1/res/icons/16x16/layers.png").arg(s_serenity_resource_root.characters())));
     debug_menu->addAction(dump_stacking_context_tree_action);
     QObject::connect(dump_stacking_context_tree_action, &QAction::triggered, this, [this] {
         debug_request("dump-stacking-context-tree");
     });
 
-    auto* dump_style_sheets_action = new QAction("Dump Style Sheets");
+    auto* dump_style_sheets_action = new QAction("Dump Style Sheets", this);
     dump_style_sheets_action->setIcon(QIcon(QString("%1/res/icons/16x16/filetype-css.png").arg(s_serenity_resource_root.characters())));
     debug_menu->addAction(dump_style_sheets_action);
     QObject::connect(dump_style_sheets_action, &QAction::triggered, this, [this] {
         debug_request("dump-style-sheets");
     });
 
-    auto* dump_history_action = new QAction("Dump History");
+    auto* dump_history_action = new QAction("Dump History", this);
     dump_history_action->setIcon(QIcon(QString("%1/res/icons/16x16/history.png").arg(s_serenity_resource_root.characters())));
     debug_menu->addAction(dump_history_action);
     QObject::connect(dump_history_action, &QAction::triggered, this, [this] {
         debug_request("dump-history");
     });
 
-    auto* dump_cookies_action = new QAction("Dump Cookies");
+    auto* dump_cookies_action = new QAction("Dump Cookies", this);
     dump_cookies_action->setIcon(QIcon(QString("%1/res/icons/browser/cookie.png").arg(s_serenity_resource_root.characters())));
     debug_menu->addAction(dump_cookies_action);
     QObject::connect(dump_cookies_action, &QAction::triggered, this, [this] {
         debug_request("dump-cookies");
     });
 
-    auto* dump_local_storage_action = new QAction("Dump Local Storage");
+    auto* dump_local_storage_action = new QAction("Dump Local Storage", this);
     dump_local_storage_action->setIcon(QIcon(QString("%1/res/icons/browser/local-storage.png").arg(s_serenity_resource_root.characters())));
     debug_menu->addAction(dump_local_storage_action);
     QObject::connect(dump_local_storage_action, &QAction::triggered, this, [this] {
@@ -177,7 +177,7 @@ BrowserWindow::BrowserWindow()
 
     debug_menu->addSeparator();
 
-    auto* show_line_box_borders_action = new QAction("Show Line Box Borders");
+    auto* show_line_box_borders_action = new QAction("Show Line Box Borders", this);
     show_line_box_borders_action->setCheckable(true);
     debug_menu->addAction(show_line_box_borders_action);
     QObject::connect(show_line_box_borders_action, &QAction::triggered, this, [this, show_line_box_borders_action] {
@@ -187,14 +187,14 @@ BrowserWindow::BrowserWindow()
 
     debug_menu->addSeparator();
 
-    auto* collect_garbage_action = new QAction("Collect Garbage");
+    auto* collect_garbage_action = new QAction("Collect Garbage", this);
     collect_garbage_action->setIcon(QIcon(QString("%1/res/icons/16x16/trash-can.png").arg(s_serenity_resource_root.characters())));
     debug_menu->addAction(collect_garbage_action);
     QObject::connect(collect_garbage_action, &QAction::triggered, this, [this] {
         debug_request("collect-garbage");
     });
 
-    auto* clear_cache_action = new QAction("Clear Cache");
+    auto* clear_cache_action = new QAction("Clear Cache", this);
     clear_cache_action->setIcon(QIcon(QString("%1/res/icons/browser/clear-cache.png").arg(s_serenity_resource_root.characters())));
     debug_menu->addAction(clear_cache_action);
     QObject::connect(clear_cache_action, &QAction::triggered, this, [this] {
@@ -243,7 +243,7 @@ BrowserWindow::BrowserWindow()
 
     debug_menu->addSeparator();
 
-    auto* enable_scripting_action = new QAction("Enable Scripting");
+    auto* enable_scripting_action = new QAction("Enable Scripting", this);
     enable_scripting_action->setCheckable(true);
     enable_scripting_action->setChecked(true);
     debug_menu->addAction(enable_scripting_action);
@@ -252,7 +252,7 @@ BrowserWindow::BrowserWindow()
         debug_request("scripting", state ? "on" : "off");
     });
 
-    auto* enable_same_origin_policy_action = new QAction("Enable Same-Origin Policy");
+    auto* enable_same_origin_policy_action = new QAction("Enable Same-Origin Policy", this);
     enable_same_origin_policy_action->setCheckable(true);
     debug_menu->addAction(enable_same_origin_policy_action);
     QObject::connect(enable_same_origin_policy_action, &QAction::triggered, this, [this, enable_same_origin_policy_action] {

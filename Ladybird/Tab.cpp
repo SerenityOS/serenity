@@ -19,15 +19,16 @@ extern String s_serenity_resource_root;
 extern Browser::Settings* s_settings;
 
 Tab::Tab(BrowserWindow* window)
-    : m_window(window)
+    : QWidget(window)
+    , m_window(window)
 {
     m_layout = new QBoxLayout(QBoxLayout::Direction::TopToBottom, this);
     m_layout->setSpacing(0);
     m_layout->setContentsMargins(0, 0, 0, 0);
 
     m_view = new SimpleWebView;
-    m_toolbar = new QToolBar;
-    m_location_edit = new QLineEdit;
+    m_toolbar = new QToolBar(this);
+    m_location_edit = new QLineEdit(this);
 
     m_hover_label = new QLabel(this);
     m_hover_label->hide();
