@@ -5456,7 +5456,10 @@ RefPtr<StyleValue> Parser::parse_grid_track_placement(Vector<ComponentValue> con
         // If the <integer> is omitted, it defaults to 1.
         if (current_token.is(Token::Type::Ident) && current_token.ident().equals_ignoring_case("span"sv))
             return GridTrackPlacementStyleValue::create(CSS::GridTrackPlacement(1, true));
-        if (current_token.is(Token::Type::Number) && current_token.number().is_integer())
+        // https://drafts.csswg.org/css-grid/#grid-placement-int
+        // [ <integer [−∞,−1]> | <integer [1,∞]> ] && <custom-ident>?
+        // An <integer> value of zero makes the declaration invalid.
+        if (current_token.is(Token::Type::Number) && current_token.number().is_integer() && current_token.number_value() != 0)
             return GridTrackPlacementStyleValue::create(CSS::GridTrackPlacement(static_cast<int>(current_token.number_value())));
         return {};
     }
@@ -5468,7 +5471,10 @@ RefPtr<StyleValue> Parser::parse_grid_track_placement(Vector<ComponentValue> con
         current_token = tokens.next_token().token();
     }
 
-    if (current_token.is(Token::Type::Number) && current_token.number().is_integer() && !tokens.has_next_token()) {
+    // https://drafts.csswg.org/css-grid/#grid-placement-int
+    // [ <integer [−∞,−1]> | <integer [1,∞]> ] && <custom-ident>?
+    // An <integer> value of zero makes the declaration invalid.
+    if (current_token.is(Token::Type::Number) && current_token.number().is_integer() && current_token.number_value() != 0 && !tokens.has_next_token()) {
         // https://drafts.csswg.org/css-grid/#grid-placement-span-int
         // Negative integers or zero are invalid.
         if (is_span && static_cast<int>(current_token.number_value()) < 1)
@@ -5490,25 +5496,33 @@ RefPtr<StyleValue> Parser::parse_grid_track_placement_shorthand_value(Vector<Com
         // If the <integer> is omitted, it defaults to 1.
         if (current_token.is(Token::Type::Ident) && current_token.ident().equals_ignoring_case("span"sv))
             return GridTrackPlacementShorthandStyleValue::create(CSS::GridTrackPlacement(1, true));
-        if (current_token.is(Token::Type::Number) && current_token.number().is_integer())
+        // https://drafts.csswg.org/css-grid/#grid-placement-int
+        // [ <integer [−∞,−1]> | <integer [1,∞]> ] && <custom-ident>?
+        // An <integer> value of zero makes the declaration invalid.
+        if (current_token.is(Token::Type::Number) && current_token.number().is_integer() && current_token.number_value() != 0)
             return GridTrackPlacementShorthandStyleValue::create(CSS::GridTrackPlacement(current_token.number_value()));
         return {};
     }
 
-    auto calculate_grid_track_placement = [](auto& current_token, auto& tokens) -> CSS::GridTrackPlacement {
+    auto calculate_grid_track_placement = [](auto& current_token, auto& tokens) -> Optional<CSS::GridTrackPlacement> {
         auto is_span = false;
         if (current_token.is(Token::Type::Ident) && current_token.ident().equals_ignoring_case("span"sv)) {
             is_span = true;
             tokens.skip_whitespace();
             current_token = tokens.next_token().token();
         }
-        if (current_token.is(Token::Type::Number) && current_token.number().is_integer()) {
+        if (current_token.is(Token::Type::Number) && current_token.number().is_integer() && current_token.number_value() != 0) {
             // https://drafts.csswg.org/css-grid/#grid-placement-span-int
             // Negative integers or zero are invalid.
             if (is_span && static_cast<int>(current_token.number_value()) < 1)
                 return CSS::GridTrackPlacement(1, true);
             return CSS::GridTrackPlacement(static_cast<int>(current_token.number_value()), is_span);
         }
+        // https://drafts.csswg.org/css-grid/#grid-placement-int
+        // [ <integer [−∞,−1]> | <integer [1,∞]> ] && <custom-ident>?
+        // An <integer> value of zero makes the declaration invalid.
+        if (current_token.is(Token::Type::Number) && current_token.number().is_integer() && current_token.number_value() == 0)
+            return {};
         // https://drafts.csswg.org/css-grid/#grid-placement-span-int
         // If the <integer> is omitted, it defaults to 1.
         if (is_span && current_token.is(Token::Type::Delim) && current_token.delim() == "/"sv)
@@ -5517,8 +5531,8 @@ RefPtr<StyleValue> Parser::parse_grid_track_placement_shorthand_value(Vector<Com
     };
 
     auto first_grid_track_placement = calculate_grid_track_placement(current_token, tokens);
-    if (!tokens.has_next_token())
-        return GridTrackPlacementShorthandStyleValue::create(CSS::GridTrackPlacement(first_grid_track_placement));
+    if (!tokens.has_next_token() && first_grid_track_placement.has_value())
+        return GridTrackPlacementShorthandStyleValue::create(CSS::GridTrackPlacement(first_grid_track_placement.value()));
 
     tokens.skip_whitespace();
     current_token = tokens.next_token().token();
@@ -5526,8 +5540,8 @@ RefPtr<StyleValue> Parser::parse_grid_track_placement_shorthand_value(Vector<Com
     current_token = tokens.next_token().token();
 
     auto second_grid_track_placement = calculate_grid_track_placement(current_token, tokens);
-    if (!tokens.has_next_token())
-        return GridTrackPlacementShorthandStyleValue::create(GridTrackPlacementStyleValue::create(first_grid_track_placement), GridTrackPlacementStyleValue::create(second_grid_track_placement));
+    if (!tokens.has_next_token() && first_grid_track_placement.has_value() && second_grid_track_placement.has_value())
+        return GridTrackPlacementShorthandStyleValue::create(GridTrackPlacementStyleValue::create(first_grid_track_placement.value()), GridTrackPlacementStyleValue::create(second_grid_track_placement.value()));
     return {};
 }
 
