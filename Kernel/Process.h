@@ -317,7 +317,7 @@ public:
     ErrorOr<FlatPtr> sys$pread(int fd, Userspace<u8*>, size_t, Userspace<off_t const*>);
     ErrorOr<FlatPtr> sys$readv(int fd, Userspace<const struct iovec*> iov, int iov_count);
     ErrorOr<FlatPtr> sys$write(int fd, Userspace<u8 const*>, size_t);
-    ErrorOr<FlatPtr> sys$writev(int fd, Userspace<const struct iovec*> iov, int iov_count);
+    ErrorOr<FlatPtr> sys$pwritev(int fd, Userspace<const struct iovec*> iov, int iov_count, Userspace<off_t const*>);
     ErrorOr<FlatPtr> sys$fstat(int fd, Userspace<stat*>);
     ErrorOr<FlatPtr> sys$stat(Userspace<Syscall::SC_stat_params const*>);
     ErrorOr<FlatPtr> sys$lseek(int fd, Userspace<off_t*>, int whence);
@@ -602,7 +602,7 @@ private:
     void delete_perf_events_buffer();
 
     ErrorOr<void> do_exec(NonnullLockRefPtr<OpenFileDescription> main_program_description, NonnullOwnPtrVector<KString> arguments, NonnullOwnPtrVector<KString> environment, LockRefPtr<OpenFileDescription> interpreter_description, Thread*& new_main_thread, u32& prev_flags, const ElfW(Ehdr) & main_program_header);
-    ErrorOr<FlatPtr> do_write(OpenFileDescription&, UserOrKernelBuffer const&, size_t);
+    ErrorOr<FlatPtr> do_write(OpenFileDescription&, UserOrKernelBuffer const&, size_t, Optional<off_t> = {});
 
     ErrorOr<FlatPtr> do_statvfs(FileSystem const& path, Custody const*, statvfs* buf);
 

@@ -195,7 +195,7 @@ enum class NeedsBigProcessLock {
     S(utimensat, NeedsBigProcessLock::No)                   \
     S(waitid, NeedsBigProcessLock::Yes)                     \
     S(write, NeedsBigProcessLock::Yes)                      \
-    S(writev, NeedsBigProcessLock::Yes)                     \
+    S(pwritev, NeedsBigProcessLock::Yes)                    \
     S(yield, NeedsBigProcessLock::No)
 
 namespace Syscall {
