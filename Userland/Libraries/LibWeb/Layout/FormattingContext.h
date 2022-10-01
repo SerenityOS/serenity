@@ -70,13 +70,15 @@ public:
 
     void run_intrinsic_sizing(Box const&);
 
-    float compute_box_y_position_with_respect_to_siblings(Box const&, LayoutState::UsedValues const&);
+    float compute_box_y_position_with_respect_to_siblings(Box const&) const;
 
     float calculate_stretch_fit_width(Box const&, AvailableSize const&) const;
 
     virtual bool can_determine_size_of_child() const { return false; }
     virtual void determine_width_of_child(Box const&, AvailableSpace const&) { }
     virtual void determine_height_of_child(Box const&, AvailableSpace const&) { }
+
+    virtual Gfx::FloatPoint calculate_static_position(Box const&) const;
 
 protected:
     FormattingContext(Type, LayoutState&, Box const&, FormattingContext* parent = nullptr);

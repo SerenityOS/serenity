@@ -10,6 +10,7 @@
 #include <LibWeb/Layout/FlexFormattingContext.h>
 #include <LibWeb/Layout/FormattingContext.h>
 #include <LibWeb/Layout/GridFormattingContext.h>
+#include <LibWeb/Layout/InitialContainingBlock.h>
 #include <LibWeb/Layout/ReplacedBox.h>
 #include <LibWeb/Layout/SVGFormattingContext.h>
 #include <LibWeb/Layout/SVGSVGBox.h>
@@ -732,6 +733,65 @@ void FormattingContext::compute_height_for_absolutely_positioned_non_replaced_el
     box_state.set_content_height(used_height);
 }
 
+// NOTE: This is different from content_box_rect_in_ancestor_coordinate_space() as this does *not* follow the containing block chain up, but rather the parent() chain.
+static Gfx::FloatRect content_box_rect_in_static_position_ancestor_coordinate_space(Box const& box, Box const& ancestor_box, LayoutState const& state)
+{
+    auto rect = content_box_rect(box, state);
+    if (&box == &ancestor_box)
+        return rect;
+    for (auto const* current = box.parent(); current; current = current->parent()) {
+        if (current == &ancestor_box)
+            return rect;
+        auto const& current_state = state.get(static_cast<Box const&>(*current));
+        rect.translate_by(current_state.offset);
+    }
+    // If we get here, ancestor_box was not an ancestor of `box`!
+    VERIFY_NOT_REACHED();
+}
+
+// https://www.w3.org/TR/css-position-3/#staticpos-rect
+Gfx::FloatPoint FormattingContext::calculate_static_position(Box const& box) const
+{
+    // NOTE: This is very ad-hoc.
+    // The purpose of this function is to calculate the approximate position that `box`
+    // would have had if it were position:static.
+
+    float x = 0.0f;
+    float y = 0.0f;
+
+    VERIFY(box.parent());
+    if (box.parent()->children_are_inline()) {
+        // We're an abspos box with inline siblings. This is gonna get messy!
+        if (auto* sibling = box.previous_sibling()) {
+            // Hard case: there's a previous sibling. This means there's already inline content
+            // preceding the hypothetical static position of `box` within its containing block.
+            // If we had been position:static, that inline content would have been wrapped in
+            // anonymous block box, so now we get to imagine what the world might have looked like
+            // in that scenario..
+            // Basically, we find its last associated line box fragment and place `box` under it.
+            // FIXME: I'm 100% sure this can be smarter, better and faster.
+            LineBoxFragment const* last_fragment = nullptr;
+            auto& cb_state = m_state.get(*sibling->containing_block());
+            for (auto& line_box : cb_state.line_boxes) {
+                for (auto& fragment : line_box.fragments()) {
+                    if (&fragment.layout_node() == sibling)
+                        last_fragment = &fragment;
+                }
+            }
+            if (last_fragment) {
+                y = last_fragment->offset().y() + last_fragment->height();
+            }
+        } else {
+            // Easy case: no previous sibling, we're at the top of the containing block.
+        }
+    } else {
+        // We're among block siblings, Y can be calculated easily.
+        y = compute_box_y_position_with_respect_to_siblings(box);
+    }
+    auto offset_to_static_parent = content_box_rect_in_static_position_ancestor_coordinate_space(box, *box.containing_block(), m_state);
+    return offset_to_static_parent.location().translated(x, y);
+}
+
 void FormattingContext::layout_absolutely_positioned_element(Box const& box, AvailableSpace const& available_space)
 {
     auto& containing_block_state = m_state.get_mutable(*box.containing_block());
@@ -775,17 +835,9 @@ void FormattingContext::layout_absolutely_positioned_element(Box const& box, Ava
             box_state.margin_right = 0;
     }
 
-    Gfx::FloatPoint used_offset;
+    auto static_position = calculate_static_position(box);
 
-    auto* relevant_parent = box.first_ancestor_of_type<Layout::BlockContainer>();
-    while (relevant_parent != nullptr) {
-        if (!relevant_parent->is_absolutely_positioned() && !relevant_parent->is_floating()) {
-            break;
-        } else {
-            relevant_parent = relevant_parent->first_ancestor_of_type<Layout::BlockContainer>();
-        }
-    }
-    auto parent_location = absolute_content_rect(static_cast<Box const&>(*relevant_parent), m_state);
+    Gfx::FloatPoint used_offset;
 
     if (!computed_left.is_auto()) {
         float x_offset = box_state.inset_left
@@ -798,7 +850,7 @@ void FormattingContext::layout_absolutely_positioned_element(Box const& box, Ava
         used_offset.set_x(width_of_containing_block + x_offset - box_state.content_width() - box_state.margin_right);
     } else {
         float x_offset = box_state.margin_box_left()
-            + (relevant_parent->computed_values().position() == CSS::Position::Relative ? 0 : parent_location.x());
+            + static_position.x();
         used_offset.set_x(x_offset);
     }
 
@@ -813,8 +865,7 @@ void FormattingContext::layout_absolutely_positioned_element(Box const& box, Ava
         used_offset.set_y(height_of_containing_block + y_offset - box_state.content_height() - box_state.margin_bottom);
     } else {
         float y_offset = box_state.margin_box_top()
-            + compute_box_y_position_with_respect_to_siblings(box, box_state)
-            + (relevant_parent->computed_values().position() == CSS::Position::Relative ? 0 : parent_location.y());
+            + static_position.y();
         used_offset.set_y(y_offset);
     }
 
@@ -1088,13 +1139,14 @@ static Box const* previous_block_level_sibling(Box const& box)
     return nullptr;
 }
 
-float FormattingContext::compute_box_y_position_with_respect_to_siblings(Box const& child_box, LayoutState::UsedValues const& box_state)
+float FormattingContext::compute_box_y_position_with_respect_to_siblings(Box const& box) const
 {
+    auto const& box_state = m_state.get(box);
     float y = box_state.border_box_top();
 
     Vector<float> collapsible_margins;
 
-    auto* relevant_sibling = previous_block_level_sibling(child_box);
+    auto* relevant_sibling = previous_block_level_sibling(box);
     while (relevant_sibling != nullptr) {
         if (!relevant_sibling->is_absolutely_positioned() && !relevant_sibling->is_floating()) {
             auto const& relevant_sibling_state = m_state.get(*relevant_sibling);

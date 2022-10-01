@@ -447,7 +447,7 @@ void BlockFormattingContext::place_block_level_element_in_normal_flow_vertically
 
     resolve_vertical_box_model_metrics(child_box, available_space, m_state);
 
-    auto y = FormattingContext::compute_box_y_position_with_respect_to_siblings(child_box, box_state);
+    auto y = FormattingContext::compute_box_y_position_with_respect_to_siblings(child_box);
 
     auto clear_floating_boxes = [&](FloatSideData& float_side) {
         if (!float_side.current_boxes.is_empty()) {
