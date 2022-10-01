@@ -35,39 +35,6 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
         return false;
     };
 
-    auto maybe_add_column_to_occupation_grid = [](int needed_number_of_columns, Vector<Vector<bool>>& occupation_grid) -> void {
-        int current_column_count = (int)occupation_grid[0].size();
-        if (needed_number_of_columns <= current_column_count)
-            return;
-        for (auto& occupation_grid_row : occupation_grid)
-            for (int idx = 0; idx < (needed_number_of_columns + 1) - current_column_count; idx++)
-                occupation_grid_row.append(false);
-    };
-
-    auto maybe_add_row_to_occupation_grid = [](int needed_number_of_rows, Vector<Vector<bool>>& occupation_grid) -> void {
-        if (needed_number_of_rows <= (int)occupation_grid.size())
-            return;
-
-        Vector<bool> new_occupation_grid_row;
-        for (int idx = 0; idx < (int)occupation_grid[0].size(); idx++)
-            new_occupation_grid_row.append(false);
-
-        for (int idx = 0; idx < needed_number_of_rows - (int)occupation_grid.size(); idx++)
-            occupation_grid.append(new_occupation_grid_row);
-    };
-
-    auto set_occupied_cells = [](int row_start, int row_end, int column_start, int column_end, Vector<Vector<bool>>& occupation_grid) -> void {
-        for (int row_index = 0; row_index < (int)occupation_grid.size(); row_index++) {
-            if (row_index >= row_start && row_index < row_end) {
-                for (int column_index = 0; column_index < (int)occupation_grid[0].size(); column_index++) {
-                    if (column_index >= column_start && column_index < column_end) {
-                        occupation_grid[row_index][column_index] = true;
-                    }
-                }
-            }
-        }
-    };
-
     // https://drafts.csswg.org/css-grid/#overview-placement
     // 2.2. Placing Items
     // The contents of the grid container are organized into individual grid items (analogous to
@@ -83,14 +50,6 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
         float computed_height { 0 };
     };
     Vector<PositionedBox> positioned_boxes;
-
-    Vector<Vector<bool>> occupation_grid;
-    Vector<bool> occupation_grid_row;
-    for (int column_index = 0; column_index < max((int)box.computed_values().grid_template_columns().size(), 1); column_index++)
-        occupation_grid_row.append(false);
-    for (int row_index = 0; row_index < max((int)box.computed_values().grid_template_rows().size(), 1); row_index++)
-        occupation_grid.append(occupation_grid_row);
-
     Vector<Box const&> boxes_to_place;
     box.for_each_child_of_type<Box>([&](Box& child_box) {
         if (should_skip_is_anonymous_text_run(child_box))
@@ -98,6 +57,7 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
         boxes_to_place.append(child_box);
         return IterationDecision::Continue;
     });
+    auto occupation_grid = OccupationGrid(static_cast<int>(box.computed_values().grid_template_columns().size()), static_cast<int>(box.computed_values().grid_template_rows().size()));
 
     // https://drafts.csswg.org/css-grid/#auto-placement-algo
     // 8.5. Grid Item Placement Algorithm
@@ -136,9 +96,9 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
         // Contributes the Nth grid line to the grid item’s placement. If a negative integer is given, it
         // instead counts in reverse, starting from the end edge of the explicit grid.
         if (row_end < 0)
-            row_end = static_cast<int>(occupation_grid.size()) + row_end + 2;
+            row_end = occupation_grid.row_count() + row_end + 2;
         if (column_end < 0)
-            column_end = static_cast<int>(occupation_grid[0].size()) + column_end + 2;
+            column_end = occupation_grid.column_count() + column_end + 2;
 
         // If a name is given as a <custom-ident>, only lines with that name are counted. If not enough
         // lines with that name exist, all implicit grid lines are assumed to have that name for the purpose
@@ -208,9 +168,9 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
         column_start -= 1;
         positioned_boxes.append({ child_box, row_start, row_span, column_start, column_span });
 
-        maybe_add_row_to_occupation_grid(row_start + row_span, occupation_grid);
-        maybe_add_column_to_occupation_grid(column_start + column_span, occupation_grid);
-        set_occupied_cells(row_start, row_start + row_span, column_start, column_start + column_span, occupation_grid);
+        occupation_grid.maybe_add_row(row_start + row_span);
+        occupation_grid.maybe_add_column(column_start + column_span);
+        occupation_grid.set_occupied(column_start, column_start + column_span, row_start, row_start + row_span);
         boxes_to_place.remove(i);
         i--;
     }
@@ -245,7 +205,7 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
         // Contributes the Nth grid line to the grid item’s placement. If a negative integer is given, it
         // instead counts in reverse, starting from the end edge of the explicit grid.
         if (row_end < 0)
-            row_end = static_cast<int>(occupation_grid.size()) + row_end + 2;
+            row_end = occupation_grid.row_count() + row_end + 2;
 
         // If a name is given as a <custom-ident>, only lines with that name are counted. If not enough
         // lines with that name exist, all implicit grid lines are assumed to have that name for the purpose
@@ -297,23 +257,23 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
         // FIXME: If the placement contains only a span for a named line, replace it with a span of 1.
 
         row_start -= 1;
-        maybe_add_row_to_occupation_grid(row_start + row_span, occupation_grid);
+        occupation_grid.maybe_add_row(row_start + row_span);
 
         int column_start = 0;
         auto column_span = child_box.computed_values().grid_column_start().is_span() ? child_box.computed_values().grid_column_start().raw_value() : 1;
         bool found_available_column = false;
-        for (int column_index = column_start; column_index < (int)occupation_grid[0].size(); column_index++) {
-            if (!occupation_grid[row_start][column_index]) {
+        for (int column_index = column_start; column_index < occupation_grid.column_count(); column_index++) {
+            if (!occupation_grid.is_occupied(column_index, row_start)) {
                 found_available_column = true;
                 column_start = column_index;
                 break;
             }
         }
         if (!found_available_column) {
-            column_start = occupation_grid[0].size();
-            maybe_add_column_to_occupation_grid(column_start + column_span, occupation_grid);
+            column_start = occupation_grid.column_count();
+            occupation_grid.maybe_add_column(column_start + column_span);
         }
-        set_occupied_cells(row_start, row_start + row_span, column_start, column_start + column_span, occupation_grid);
+        occupation_grid.set_occupied(column_start, column_start + column_span, row_start, row_start + row_span);
 
         positioned_boxes.append({ child_box, row_start, row_span, column_start, column_span });
         boxes_to_place.remove(i);
@@ -373,7 +333,7 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
             // Contributes the Nth grid line to the grid item’s placement. If a negative integer is given, it
             // instead counts in reverse, starting from the end edge of the explicit grid.
             if (column_end < 0)
-                column_end = static_cast<int>(occupation_grid[0].size()) + column_end + 2;
+                column_end = occupation_grid.column_count() + column_end + 2;
 
             // If a name is given as a <custom-ident>, only lines with that name are counted. If not enough
             // lines with that name exist, all implicit grid lines are assumed to have that name for the purpose
@@ -433,21 +393,21 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
                 auto_placement_cursor_y++;
             auto_placement_cursor_x = column_start;
 
-            maybe_add_column_to_occupation_grid(auto_placement_cursor_x + column_span, occupation_grid);
-            maybe_add_row_to_occupation_grid(auto_placement_cursor_y + row_span, occupation_grid);
+            occupation_grid.maybe_add_column(auto_placement_cursor_x + column_span);
+            occupation_grid.maybe_add_row(auto_placement_cursor_y + row_span);
 
             // 4.1.1.2. Increment the cursor's row position until a value is found where the grid item does not
             // overlap any occupied grid cells (creating new rows in the implicit grid as necessary).
             while (true) {
-                if (!occupation_grid[auto_placement_cursor_y][column_start]) {
+                if (!occupation_grid.is_occupied(column_start, auto_placement_cursor_y)) {
                     break;
                 }
                 auto_placement_cursor_y++;
-                maybe_add_row_to_occupation_grid(auto_placement_cursor_y + row_span, occupation_grid);
+                occupation_grid.maybe_add_row(auto_placement_cursor_y + row_span);
             }
             // 4.1.1.3. Set the item's row-start line to the cursor's row position, and set the item's row-end
             // line according to its span from that position.
-            set_occupied_cells(auto_placement_cursor_y, auto_placement_cursor_y + row_span, column_start, column_start + column_span, occupation_grid);
+            occupation_grid.set_occupied(column_start, column_start + column_span, auto_placement_cursor_y, auto_placement_cursor_y + row_span);
 
             positioned_boxes.append({ child_box, auto_placement_cursor_y, row_span, column_start, column_span });
         }
@@ -462,12 +422,12 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
             auto row_start = 0;
             auto row_span = child_box.computed_values().grid_row_start().is_span() ? child_box.computed_values().grid_row_start().raw_value() : 1;
             auto found_unoccupied_area = false;
-            for (int row_index = auto_placement_cursor_y; row_index < (int)occupation_grid.size(); row_index++) {
-                for (int column_index = auto_placement_cursor_x; column_index < (int)occupation_grid[0].size(); column_index++) {
-                    if (column_span + column_index <= static_cast<int>(occupation_grid[0].size())) {
+            for (int row_index = auto_placement_cursor_y; row_index < occupation_grid.row_count(); row_index++) {
+                for (int column_index = auto_placement_cursor_x; column_index < occupation_grid.column_count(); column_index++) {
+                    if (column_span + column_index <= occupation_grid.column_count()) {
                         auto found_all_available = true;
                         for (int span_index = 0; span_index < column_span; span_index++) {
-                            if (occupation_grid[row_index][column_index + span_index])
+                            if (occupation_grid.is_occupied(column_index + span_index, row_index))
                                 found_all_available = false;
                         }
                         if (found_all_available) {
@@ -489,11 +449,11 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
             // row position (creating new rows in the implicit grid as necessary), set its column position to the
             // start-most column line in the implicit grid, and return to the previous step.
             if (!found_unoccupied_area) {
-                row_start = (int)occupation_grid.size();
-                maybe_add_row_to_occupation_grid((int)occupation_grid.size() + 1, occupation_grid);
+                row_start = occupation_grid.row_count();
+                occupation_grid.maybe_add_row(occupation_grid.row_count() + 1);
             }
 
-            set_occupied_cells(row_start, row_start + row_span, column_start, column_start + column_span, occupation_grid);
+            occupation_grid.set_occupied(column_start, column_start + column_span, row_start, row_start + row_span);
             positioned_boxes.append({ child_box, row_start, row_span, column_start, column_span });
         }
         boxes_to_place.remove(i);
@@ -547,9 +507,9 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
     for (auto& row_size : box.computed_values().grid_template_rows())
         grid_rows.append({ row_size, row_size });
 
-    for (int column_index = grid_columns.size(); column_index < static_cast<int>(occupation_grid[0].size()); column_index++)
+    for (int column_index = grid_columns.size(); column_index < occupation_grid.column_count(); column_index++)
         grid_columns.append({ CSS::GridTrackSize::make_auto(), CSS::GridTrackSize::make_auto() });
-    for (int row_index = grid_rows.size(); row_index < static_cast<int>(occupation_grid.size()); row_index++)
+    for (int row_index = grid_rows.size(); row_index < occupation_grid.row_count(); row_index++)
         grid_rows.append({ CSS::GridTrackSize::make_auto(), CSS::GridTrackSize::make_auto() });
 
     // https://drafts.csswg.org/css-grid/#algo-overview
@@ -1110,7 +1070,6 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
             grid_row.base_size = max(grid_row.base_size, remaining_vertical_space / count_of_auto_max_row_tracks);
     }
 
-    // Do layout
     auto layout_box = [&](int row_start, int row_end, int column_start, int column_end, Box const& child_box) -> void {
         auto& child_box_state = m_state.get_mutable(child_box);
         float x_start = 0;
@@ -1159,6 +1118,59 @@ bool GridFormattingContext::is_auto_positioned_column(CSS::GridTrackPlacement co
 bool GridFormattingContext::is_auto_positioned_track(CSS::GridTrackPlacement const& grid_track_start, CSS::GridTrackPlacement const& grid_track_end) const
 {
     return grid_track_start.is_auto_positioned() && grid_track_end.is_auto_positioned();
+}
+
+OccupationGrid::OccupationGrid(int column_count, int row_count)
+{
+    Vector<bool> occupation_grid_row;
+    for (int column_index = 0; column_index < max(column_count, 1); column_index++)
+        occupation_grid_row.append(false);
+    for (int row_index = 0; row_index < max(row_count, 1); row_index++)
+        m_occupation_grid.append(occupation_grid_row);
+}
+
+void OccupationGrid::maybe_add_column(int needed_number_of_columns)
+{
+    if (needed_number_of_columns <= column_count())
+        return;
+    for (auto& occupation_grid_row : m_occupation_grid)
+        for (int idx = 0; idx < (needed_number_of_columns + 1) - column_count(); idx++)
+            occupation_grid_row.append(false);
+}
+
+void OccupationGrid::maybe_add_row(int needed_number_of_rows)
+{
+    if (needed_number_of_rows <= row_count())
+        return;
+
+    Vector<bool> new_occupation_grid_row;
+    for (int idx = 0; idx < column_count(); idx++)
+        new_occupation_grid_row.append(false);
+
+    for (int idx = 0; idx < needed_number_of_rows - row_count(); idx++)
+        m_occupation_grid.append(new_occupation_grid_row);
+}
+
+void OccupationGrid::set_occupied(int column_start, int column_end, int row_start, int row_end)
+{
+    for (int row_index = 0; row_index < row_count(); row_index++) {
+        if (row_index >= row_start && row_index < row_end) {
+            for (int column_index = 0; column_index < column_count(); column_index++) {
+                if (column_index >= column_start && column_index < column_end)
+                    set_occupied(column_index, row_index);
+            }
+        }
+    }
+}
+
+void OccupationGrid::set_occupied(int column_index, int row_index)
+{
+    m_occupation_grid[row_index][column_index] = true;
+}
+
+bool OccupationGrid::is_occupied(int column_index, int row_index)
+{
+    return m_occupation_grid[row_index][column_index];
 }
 
 }

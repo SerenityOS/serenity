@@ -27,4 +27,21 @@ private:
     bool is_auto_positioned_track(CSS::GridTrackPlacement const&, CSS::GridTrackPlacement const&) const;
 };
 
+class OccupationGrid {
+public:
+    OccupationGrid(int column_count, int row_count);
+
+    void maybe_add_column(int needed_number_of_columns);
+    void maybe_add_row(int needed_number_of_rows);
+    void set_occupied(int column_start, int column_end, int row_start, int row_end);
+    void set_occupied(int column_index, int row_index);
+
+    int column_count() { return static_cast<int>(m_occupation_grid[0].size()); }
+    int row_count() { return static_cast<int>(m_occupation_grid.size()); }
+    bool is_occupied(int column_index, int row_index);
+
+private:
+    Vector<Vector<bool>> m_occupation_grid;
+};
+
 }
