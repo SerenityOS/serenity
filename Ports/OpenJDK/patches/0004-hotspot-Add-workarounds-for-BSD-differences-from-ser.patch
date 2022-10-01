@@ -21,7 +21,7 @@ Co-Authored-By: Timur Sultanov <sultanovts@yandex.ru>
  7 files changed, 113 insertions(+), 7 deletions(-)
 
 diff --git a/src/hotspot/os/bsd/attachListener_bsd.cpp b/src/hotspot/os/bsd/attachListener_bsd.cpp
-index 9daad43dc..092b4d94a 100644
+index 9daad43dc7ad567dd87c9ce44b1363d18c4f5931..092b4d94ab99eb016fe8583ae9defca4922f807f 100644
 --- a/src/hotspot/os/bsd/attachListener_bsd.cpp
 +++ b/src/hotspot/os/bsd/attachListener_bsd.cpp
 @@ -358,11 +358,23 @@ BsdAttachOperation* BsdAttachListener::dequeue() {
@@ -49,7 +49,7 @@ index 9daad43dc..092b4d94a 100644
      if (!os::Posix::matches_effective_uid_and_gid_or_root(puid, pgid)) {
        log_debug(attach)("euid/egid check failed (%d/%d vs %d/%d)", puid, pgid,
 diff --git a/src/hotspot/os/bsd/osThread_bsd.cpp b/src/hotspot/os/bsd/osThread_bsd.cpp
-index 9eba7288f..d7164e5d5 100644
+index 9eba7288fbe36fbe2149fb54c5709b5fd3f098ba..d7164e5d5f2151e71b535ccf998a5c9b260ad160 100644
 --- a/src/hotspot/os/bsd/osThread_bsd.cpp
 +++ b/src/hotspot/os/bsd/osThread_bsd.cpp
 @@ -31,13 +31,17 @@
@@ -72,7 +72,7 @@ index 9eba7288f..d7164e5d5 100644
    _ucontext         = NULL;
    _expanding_stack  = 0;
 diff --git a/src/hotspot/os/bsd/os_bsd.cpp b/src/hotspot/os/bsd/os_bsd.cpp
-index 1896c036c..4452b5e9b 100644
+index 1896c036cffa2f6eccff0b1e9bd20f7c36ae8bb8..4452b5e9b0b5cd6376849709230584c70b778467 100644
 --- a/src/hotspot/os/bsd/os_bsd.cpp
 +++ b/src/hotspot/os/bsd/os_bsd.cpp
 @@ -87,8 +87,10 @@
@@ -304,7 +304,7 @@ index 1896c036c..4452b5e9b 100644
  
  void os::pause() {
 diff --git a/src/hotspot/os/bsd/os_perf_bsd.cpp b/src/hotspot/os/bsd/os_perf_bsd.cpp
-index e69bfc795..4e67e2e4b 100644
+index e69bfc79558c3fb5cebf3a8451b98f1fd0ecad80..4e67e2e4b7add0a56cf356156c6f40987db773e3 100644
 --- a/src/hotspot/os/bsd/os_perf_bsd.cpp
 +++ b/src/hotspot/os/bsd/os_perf_bsd.cpp
 @@ -425,6 +425,9 @@ NetworkPerformanceInterface::NetworkPerformance::~NetworkPerformance() {
@@ -326,7 +326,7 @@ index e69bfc795..4e67e2e4b 100644
  
  NetworkPerformanceInterface::NetworkPerformanceInterface() {
 diff --git a/src/hotspot/os_cpu/bsd_zero/bytes_bsd_zero.hpp b/src/hotspot/os_cpu/bsd_zero/bytes_bsd_zero.hpp
-index 0da7ecc78..bd1ee9a67 100644
+index 0da7ecc7892dc74b21caf5c9ac831d6ab45aae2e..bd1ee9a6756e040733b30cef6823053f793d7c75 100644
 --- a/src/hotspot/os_cpu/bsd_zero/bytes_bsd_zero.hpp
 +++ b/src/hotspot/os_cpu/bsd_zero/bytes_bsd_zero.hpp
 @@ -30,6 +30,8 @@
@@ -339,7 +339,7 @@ index 0da7ecc78..bd1ee9a67 100644
  #  include <sys/endian.h>
  #endif
 diff --git a/src/hotspot/os_cpu/bsd_zero/os_bsd_zero.cpp b/src/hotspot/os_cpu/bsd_zero/os_bsd_zero.cpp
-index a9fda1d4b..494f073ac 100644
+index a9fda1d4b75aa08462cbb9ca9853fe4199faee80..494f073ac1a040535b3791f94ccc8cab283bbdcd 100644
 --- a/src/hotspot/os_cpu/bsd_zero/os_bsd_zero.cpp
 +++ b/src/hotspot/os_cpu/bsd_zero/os_bsd_zero.cpp
 @@ -23,11 +23,15 @@
@@ -386,7 +386,7 @@ index a9fda1d4b..494f073ac 100644
    pthread_attr_t attr;
  
 diff --git a/src/hotspot/share/classfile/classLoader.cpp b/src/hotspot/share/classfile/classLoader.cpp
-index 0287b73e5..101299b2f 100644
+index 0287b73e50373c5634fbfa5b0ab09059b507a576..101299b2f28ae496d9de2cc32c3b52974ac1b32b 100644
 --- a/src/hotspot/share/classfile/classLoader.cpp
 +++ b/src/hotspot/share/classfile/classLoader.cpp
 @@ -249,7 +249,7 @@ ClassFileStream* ClassPathDirEntry::open_stream(JavaThread* current, const char*

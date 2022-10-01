@@ -38,7 +38,7 @@ Co-Authored-By: Andrew Kaster <akaster@serenityos.org>
 
 diff --git a/src/java.base/serenity/classes/sun/nio/ch/DefaultAsynchronousChannelProvider.java b/src/java.base/serenity/classes/sun/nio/ch/DefaultAsynchronousChannelProvider.java
 new file mode 100644
-index 000000000..7a7bfe089
+index 0000000000000000000000000000000000000000..7a7bfe0897390a5828dfea7a7f9d0e83f25af9af
 --- /dev/null
 +++ b/src/java.base/serenity/classes/sun/nio/ch/DefaultAsynchronousChannelProvider.java
 @@ -0,0 +1,47 @@
@@ -91,7 +91,7 @@ index 000000000..7a7bfe089
 +}
 diff --git a/src/java.base/serenity/classes/sun/nio/ch/DefaultSelectorProvider.java b/src/java.base/serenity/classes/sun/nio/ch/DefaultSelectorProvider.java
 new file mode 100644
-index 000000000..86d3ade19
+index 0000000000000000000000000000000000000000..86d3ade19de292048b3b028a7f78a1cc61f4784f
 --- /dev/null
 +++ b/src/java.base/serenity/classes/sun/nio/ch/DefaultSelectorProvider.java
 @@ -0,0 +1,54 @@
@@ -152,7 +152,7 @@ index 000000000..86d3ade19
 \ No newline at end of file
 diff --git a/src/java.base/serenity/classes/sun/nio/ch/SerenityAsynchronousChannelProvider.java b/src/java.base/serenity/classes/sun/nio/ch/SerenityAsynchronousChannelProvider.java
 new file mode 100644
-index 000000000..2daa2cca4
+index 0000000000000000000000000000000000000000..2daa2cca4717a6db0dff166bc4befd19d9fdb528
 --- /dev/null
 +++ b/src/java.base/serenity/classes/sun/nio/ch/SerenityAsynchronousChannelProvider.java
 @@ -0,0 +1,91 @@
@@ -249,7 +249,7 @@ index 000000000..2daa2cca4
 +}
 diff --git a/src/java.base/serenity/classes/sun/nio/ch/SerenityPollPort.java b/src/java.base/serenity/classes/sun/nio/ch/SerenityPollPort.java
 new file mode 100644
-index 000000000..0894d1814
+index 0000000000000000000000000000000000000000..0894d1814244f39887d119da00290798c960e53c
 --- /dev/null
 +++ b/src/java.base/serenity/classes/sun/nio/ch/SerenityPollPort.java
 @@ -0,0 +1,538 @@
@@ -793,7 +793,7 @@ index 000000000..0894d1814
 +}
 diff --git a/src/java.base/serenity/classes/sun/nio/fs/DefaultFileSystemProvider.java b/src/java.base/serenity/classes/sun/nio/fs/DefaultFileSystemProvider.java
 new file mode 100644
-index 000000000..b24f3de01
+index 0000000000000000000000000000000000000000..b24f3de0139e5447455417914c47b3bfcff1301c
 --- /dev/null
 +++ b/src/java.base/serenity/classes/sun/nio/fs/DefaultFileSystemProvider.java
 @@ -0,0 +1,53 @@
@@ -852,7 +852,7 @@ index 000000000..b24f3de01
 +}
 diff --git a/src/java.base/serenity/classes/sun/nio/fs/SerenityFileStore.java b/src/java.base/serenity/classes/sun/nio/fs/SerenityFileStore.java
 new file mode 100644
-index 000000000..3f408ec9b
+index 0000000000000000000000000000000000000000..3f408ec9bd370405e4b2287742b3ba09c9233bbc
 --- /dev/null
 +++ b/src/java.base/serenity/classes/sun/nio/fs/SerenityFileStore.java
 @@ -0,0 +1,105 @@
@@ -963,7 +963,7 @@ index 000000000..3f408ec9b
 +}
 diff --git a/src/java.base/serenity/classes/sun/nio/fs/SerenityFileSystem.java b/src/java.base/serenity/classes/sun/nio/fs/SerenityFileSystem.java
 new file mode 100644
-index 000000000..bee588a7e
+index 0000000000000000000000000000000000000000..bee588a7ebc0e5d3994a05ac733ba6a8e0d34117
 --- /dev/null
 +++ b/src/java.base/serenity/classes/sun/nio/fs/SerenityFileSystem.java
 @@ -0,0 +1,94 @@
@@ -1063,7 +1063,7 @@ index 000000000..bee588a7e
 +}
 diff --git a/src/java.base/serenity/classes/sun/nio/fs/SerenityFileSystemProvider.java b/src/java.base/serenity/classes/sun/nio/fs/SerenityFileSystemProvider.java
 new file mode 100644
-index 000000000..8582190af
+index 0000000000000000000000000000000000000000..8582190afb01b4f1415789aa36b2dd11431443c4
 --- /dev/null
 +++ b/src/java.base/serenity/classes/sun/nio/fs/SerenityFileSystemProvider.java
 @@ -0,0 +1,52 @@
@@ -1121,7 +1121,7 @@ index 000000000..8582190af
 +}
 diff --git a/src/java.base/serenity/classes/sun/nio/fs/SerenityNativeDispatcher.java b/src/java.base/serenity/classes/sun/nio/fs/SerenityNativeDispatcher.java
 new file mode 100644
-index 000000000..7c50b719c
+index 0000000000000000000000000000000000000000..7c50b719c792a157f53348d00ecfdc6f89a1f726
 --- /dev/null
 +++ b/src/java.base/serenity/classes/sun/nio/fs/SerenityNativeDispatcher.java
 @@ -0,0 +1,49 @@
@@ -1176,7 +1176,7 @@ index 000000000..7c50b719c
 +}
 diff --git a/src/java.base/serenity/native/libnet/serenity_close.c b/src/java.base/serenity/native/libnet/serenity_close.c
 new file mode 100644
-index 000000000..6a177bbb9
+index 0000000000000000000000000000000000000000..6a177bbb90a59efdcc6734ee68a06fdd12e4fa61
 --- /dev/null
 +++ b/src/java.base/serenity/native/libnet/serenity_close.c
 @@ -0,0 +1,458 @@
@@ -1640,7 +1640,7 @@ index 000000000..6a177bbb9
 +}
 diff --git a/src/jdk.attach/serenity/classes/sun/tools/attach/AttachProviderImpl.java b/src/jdk.attach/serenity/classes/sun/tools/attach/AttachProviderImpl.java
 new file mode 100644
-index 000000000..2f6fc4d4d
+index 0000000000000000000000000000000000000000..2f6fc4d4df22ccfda0c36d5ce1cbb6704ec05bbf
 --- /dev/null
 +++ b/src/jdk.attach/serenity/classes/sun/tools/attach/AttachProviderImpl.java
 @@ -0,0 +1,82 @@
@@ -1728,7 +1728,7 @@ index 000000000..2f6fc4d4d
 +}
 diff --git a/src/jdk.attach/serenity/classes/sun/tools/attach/VirtualMachineImpl.java b/src/jdk.attach/serenity/classes/sun/tools/attach/VirtualMachineImpl.java
 new file mode 100644
-index 000000000..0c432edee
+index 0000000000000000000000000000000000000000..0c432edeee3c7d5241006d1aaaf68c1b6d81dd3c
 --- /dev/null
 +++ b/src/jdk.attach/serenity/classes/sun/tools/attach/VirtualMachineImpl.java
 @@ -0,0 +1,326 @@
@@ -2060,7 +2060,7 @@ index 000000000..0c432edee
 +}
 diff --git a/src/jdk.attach/serenity/native/libattach/VirtualMachineImpl.c b/src/jdk.attach/serenity/native/libattach/VirtualMachineImpl.c
 new file mode 100644
-index 000000000..d20a6f012
+index 0000000000000000000000000000000000000000..d20a6f012f20be4d3ef49b4b05417b92c1f42975
 --- /dev/null
 +++ b/src/jdk.attach/serenity/native/libattach/VirtualMachineImpl.c
 @@ -0,0 +1,328 @@

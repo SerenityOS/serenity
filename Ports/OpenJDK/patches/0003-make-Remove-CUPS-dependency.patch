@@ -8,7 +8,7 @@ Subject: [PATCH] make: Remove CUPS dependency
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/make/autoconf/libraries.m4 b/make/autoconf/libraries.m4
-index a65d91ee9..7c779d012 100644
+index a65d91ee974bff4248cd39cce662159f23f84720..7c779d01201661e3f5cd124c2e86a8d554b9d502 100644
 --- a/make/autoconf/libraries.m4
 +++ b/make/autoconf/libraries.m4
 @@ -26,7 +26,7 @@

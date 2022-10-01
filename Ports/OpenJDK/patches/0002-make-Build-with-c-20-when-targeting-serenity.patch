@@ -12,7 +12,7 @@ Subject: [PATCH] make: Build with c++20 when targeting serenity
  5 files changed, 10 insertions(+), 6 deletions(-)
 
 diff --git a/make/autoconf/flags-cflags.m4 b/make/autoconf/flags-cflags.m4
-index 62e53a1c4..9239dfb43 100644
+index 62e53a1c421c600ed92eaeb6805fd61e825e3072..9239dfb435521ab276ea1ca566e6bf539f649ddb 100644
 --- a/make/autoconf/flags-cflags.m4
 +++ b/make/autoconf/flags-cflags.m4
 @@ -154,7 +154,8 @@ AC_DEFUN([FLAGS_SETUP_WARNINGS],
@@ -45,7 +45,7 @@ index 62e53a1c4..9239dfb43 100644
    TOOLCHAIN_CFLAGS_JVM="$TOOLCHAIN_CFLAGS_JVM $LANGSTD_CXXFLAGS"
    ADLC_LANGSTD_CXXFLAGS="$LANGSTD_CXXFLAGS"
 diff --git a/src/hotspot/share/utilities/chunkedList.hpp b/src/hotspot/share/utilities/chunkedList.hpp
-index 1a899ee2b..13f05cd3a 100644
+index 1a899ee2bfb2e8ef20bb98914fe909248f1aec45..13f05cd3a85acde45124b5cda6303f5198eecb9c 100644
 --- a/src/hotspot/share/utilities/chunkedList.hpp
 +++ b/src/hotspot/share/utilities/chunkedList.hpp
 @@ -44,7 +44,7 @@ template <class T, MEMFLAGS F> class ChunkedList : public CHeapObj<F> {
@@ -58,7 +58,7 @@ index 1a899ee2b..13f05cd3a 100644
    bool is_full() const {
      return _top == end();
 diff --git a/src/hotspot/share/utilities/events.hpp b/src/hotspot/share/utilities/events.hpp
-index b5d67bd6a..3cf3b399f 100644
+index b5d67bd6a8ad8eae3d844e904d2d105408f22719..3cf3b399f96cf0be0e5ff15c29fcd7ce12fc2ffd 100644
 --- a/src/hotspot/share/utilities/events.hpp
 +++ b/src/hotspot/share/utilities/events.hpp
 @@ -99,7 +99,7 @@ template <class T> class EventLogBase : public EventLog {
@@ -71,7 +71,7 @@ index b5d67bd6a..3cf3b399f 100644
      _name(name),
      _handle(handle),
 diff --git a/src/hotspot/share/utilities/growableArray.hpp b/src/hotspot/share/utilities/growableArray.hpp
-index b75283843..67074b86f 100644
+index b75283843eb798e476ffd15d2b8d7a06c8c41586..67074b86fe231fcf3efc93e0bef04c792e2f62c1 100644
 --- a/src/hotspot/share/utilities/growableArray.hpp
 +++ b/src/hotspot/share/utilities/growableArray.hpp
 @@ -118,7 +118,7 @@ class GrowableArrayView : public GrowableArrayBase {
@@ -84,7 +84,7 @@ index b75283843..67074b86f 100644
  
    ~GrowableArrayView() {}
 diff --git a/src/hotspot/share/utilities/linkedlist.hpp b/src/hotspot/share/utilities/linkedlist.hpp
-index 16ee6a844..2c5ffe6cb 100644
+index 16ee6a844fa1afb1cdbc8f3f0656c59710ac4e5e..2c5ffe6cb48085791598252c40b9c526a8b9ac97 100644
 --- a/src/hotspot/share/utilities/linkedlist.hpp
 +++ b/src/hotspot/share/utilities/linkedlist.hpp
 @@ -82,7 +82,7 @@ template <class E> class LinkedListNode : public ResourceObj {
