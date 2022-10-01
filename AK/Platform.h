@@ -24,13 +24,37 @@
 #    define AK_ARCH_32_BIT
 #endif
 
+#if defined(__serenity__)
+#    define AK_OS_SERENITY
+#endif
+
+#if defined(__linux__)
+#    define AK_OS_LINUX
+#endif
+
 #if defined(__APPLE__) && defined(__MACH__)
 #    define AK_OS_MACOS
 #    define AK_OS_BSD_GENERIC
 #endif
 
-#if defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__) || defined(__DragonFly__)
+#if defined(__FreeBSD__)
 #    define AK_OS_BSD_GENERIC
+#    define AK_OS_FREEBSD
+#endif
+
+#if defined(__NetBSD__)
+#    define AK_OS_BSD_GENERIC
+#    define AK_OS_NETBSD
+#endif
+
+#if defined(__OpenBSD__)
+#    define AK_OS_BSD_GENERIC
+#    define AK_OS_OPENBSD
+#endif
+
+#if defined(__DragonFly__)
+#    define AK_OS_BSD_GENERIC
+#    define AK_OS_DRAGONFLY
 #endif
 
 #if defined(_WIN32) || defined(_WIN64)
