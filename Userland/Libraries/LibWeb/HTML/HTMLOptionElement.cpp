@@ -13,6 +13,7 @@
 #include <LibWeb/HTML/HTMLOptionElement.h>
 #include <LibWeb/HTML/HTMLScriptElement.h>
 #include <LibWeb/HTML/HTMLSelectElement.h>
+#include <LibWeb/Infra/CharacterTypes.h>
 #include <ctype.h>
 
 namespace Web::HTML {
@@ -97,7 +98,7 @@ static String strip_and_collapse_whitespace(StringView string)
     }
 
     // ...and then remove any leading and trailing ASCII whitespace from that string.
-    return builder.to_string().trim_whitespace();
+    return builder.to_string().trim(Infra::ASCII_WHITESPACE);
 }
 
 static void concatenate_descendants_text_content(DOM::Node const* node, StringBuilder& builder)
