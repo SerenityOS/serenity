@@ -1372,7 +1372,13 @@ ErrorOr<void> access(StringView pathname, int mode)
         return Error::from_syscall("access"sv, -EFAULT);
 
 #ifdef AK_OS_SERENITY
-    int rc = ::syscall(Syscall::SC_access, pathname.characters_without_null_termination(), pathname.length(), mode);
+    Syscall::SC_faccessat_params params {
+        .dirfd = AT_FDCWD,
+        .pathname = { pathname.characters_without_null_termination(), pathname.length() },
+        .mode = mode,
+        .flags = 0,
+    };
+    int rc = ::syscall(Syscall::SC_faccessat, &params);
     HANDLE_SYSCALL_RETURN_VALUE("access", rc, {});
 #else
     DeprecatedString path_string = pathname;

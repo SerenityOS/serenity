@@ -144,7 +144,6 @@ private:
     void emit_profile_event(AK::OutputStream&, StringView event_name, DeprecatedString const& contents);
 
     int virt$accept4(FlatPtr);
-    int virt$access(FlatPtr, size_t, int);
     u32 virt$allocate_tls(FlatPtr, size_t);
     int virt$anon_create(size_t, int);
     int virt$beep();
@@ -164,6 +163,7 @@ private:
     int virt$emuctl(FlatPtr, FlatPtr, FlatPtr);
     int virt$execve(FlatPtr);
     void virt$exit(int);
+    int virt$faccessat(FlatPtr);
     int virt$fchmod(int, mode_t);
     int virt$fchown(int, uid_t, gid_t);
     u32 virt$fcntl(int fd, int, u32);

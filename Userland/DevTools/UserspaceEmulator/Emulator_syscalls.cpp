@@ -42,8 +42,6 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
     switch (function) {
     case SC_accept4:
         return virt$accept4(arg1);
-    case SC_access:
-        return virt$access(arg1, arg2, arg3);
     case SC_allocate_tls:
         return virt$allocate_tls(arg1, arg2);
     case SC_anon_create:
@@ -83,6 +81,8 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
     case SC_exit:
         virt$exit((int)arg1);
         return 0;
+    case SC_faccessat:
+        return virt$faccessat(arg1);
     case SC_fchmod:
         return virt$fchmod(arg1, arg2);
     case SC_fchown:
@@ -1462,10 +1462,16 @@ int Emulator::virt$getsid(pid_t pid)
     return syscall(SC_getsid, pid);
 }
 
-int Emulator::virt$access(FlatPtr path, size_t path_length, int type)
+int Emulator::virt$faccessat(FlatPtr params_addr)
 {
-    auto host_path = mmu().copy_buffer_from_vm(path, path_length);
-    return syscall(SC_access, host_path.data(), host_path.size(), type);
+    Syscall::SC_faccessat_params params;
+    mmu().copy_from_vm(&params, params_addr, sizeof(params));
+
+    auto host_path = mmu().copy_buffer_from_vm(reinterpret_cast<FlatPtr>(params.pathname.characters), params.pathname.length);
+    Syscall::SC_faccessat_params host_params = params;
+    host_params.pathname = { reinterpret_cast<char const*>(host_path.data()), host_path.size() };
+
+    return syscall(SC_faccessat, &host_params);
 }
 
 int Emulator::virt$waitid(FlatPtr params_addr)

@@ -41,7 +41,6 @@ enum class NeedsBigProcessLock {
 //
 #define ENUMERATE_SYSCALLS(S)                               \
     S(accept4, NeedsBigProcessLock::No)                     \
-    S(access, NeedsBigProcessLock::Yes)                     \
     S(adjtime, NeedsBigProcessLock::No)                     \
     S(alarm, NeedsBigProcessLock::Yes)                      \
     S(allocate_tls, NeedsBigProcessLock::Yes)               \
@@ -68,6 +67,7 @@ enum class NeedsBigProcessLock {
     S(execve, NeedsBigProcessLock::Yes)                     \
     S(exit, NeedsBigProcessLock::Yes)                       \
     S(exit_thread, NeedsBigProcessLock::Yes)                \
+    S(faccessat, NeedsBigProcessLock::Yes)                  \
     S(fchdir, NeedsBigProcessLock::No)                      \
     S(fchmod, NeedsBigProcessLock::No)                      \
     S(fchown, NeedsBigProcessLock::No)                      \
@@ -506,6 +506,13 @@ struct SC_scheduler_parameters_params {
     pid_t pid_or_tid;
     SchedulerParametersMode mode;
     struct sched_param parameters;
+};
+
+struct SC_faccessat_params {
+    int dirfd;
+    StringArgument pathname;
+    int mode;
+    int flags;
 };
 
 void initialize();
