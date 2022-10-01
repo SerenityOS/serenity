@@ -3336,7 +3336,7 @@ RefPtr<StyleValue> Parser::parse_rect_value(ComponentValue const& component_valu
         // <top>, <right>, <bottom>, and <left> may either have a <length> value or 'auto'.
         // Negative lengths are permitted.
         auto current_token = tokens.next_token().token();
-        if (current_token.to_string() == "auto") {
+        if (current_token.is(Token::Type::Ident) && current_token.ident().equals_ignoring_case("auto"sv)) {
             params.append(Length::make_auto());
         } else {
             auto maybe_length = parse_length(current_token);
@@ -5450,7 +5450,7 @@ RefPtr<StyleValue> Parser::parse_grid_track_placement(Vector<ComponentValue> con
     auto current_token = tokens.next_token().token();
 
     if (!tokens.has_next_token()) {
-        if (current_token.to_string() == "auto"sv)
+        if (current_token.is(Token::Type::Ident) && current_token.ident().equals_ignoring_case("auto"sv))
             return GridTrackPlacementStyleValue::create(CSS::GridTrackPlacement());
         if (current_token.is(Token::Type::Number) && current_token.number().is_integer())
             return GridTrackPlacementStyleValue::create(CSS::GridTrackPlacement(static_cast<int>(current_token.number_value())));
@@ -5458,7 +5458,7 @@ RefPtr<StyleValue> Parser::parse_grid_track_placement(Vector<ComponentValue> con
     }
 
     auto has_span = false;
-    if (current_token.to_string() == "span"sv) {
+    if (current_token.is(Token::Type::Ident) && current_token.ident().equals_ignoring_case("span"sv)) {
         has_span = true;
         tokens.skip_whitespace();
         current_token = tokens.next_token().token();
@@ -5474,7 +5474,7 @@ RefPtr<StyleValue> Parser::parse_grid_track_placement_shorthand_value(Vector<Com
     auto current_token = tokens.next_token().token();
 
     if (!tokens.has_next_token()) {
-        if (current_token.to_string() == "auto"sv)
+        if (current_token.is(Token::Type::Ident) && current_token.ident().equals_ignoring_case("auto"sv))
             return GridTrackPlacementShorthandStyleValue::create(CSS::GridTrackPlacement::make_auto());
         if (current_token.is(Token::Type::Number) && current_token.number().is_integer())
             return GridTrackPlacementShorthandStyleValue::create(CSS::GridTrackPlacement(current_token.number_value()));
@@ -5483,7 +5483,7 @@ RefPtr<StyleValue> Parser::parse_grid_track_placement_shorthand_value(Vector<Com
 
     auto calculate_grid_track_placement = [](auto& current_token, auto& tokens) -> CSS::GridTrackPlacement {
         auto has_span = false;
-        if (current_token.to_string() == "span"sv) {
+        if (current_token.is(Token::Type::Ident) && current_token.ident().equals_ignoring_case("span"sv)) {
             has_span = true;
             tokens.skip_whitespace();
             current_token = tokens.next_token().token();
