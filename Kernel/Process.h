@@ -374,7 +374,7 @@ public:
     ErrorOr<FlatPtr> sys$access(Userspace<char const*> pathname, size_t path_length, int mode);
     ErrorOr<FlatPtr> sys$fcntl(int fd, int cmd, uintptr_t extra_arg);
     ErrorOr<FlatPtr> sys$ioctl(int fd, unsigned request, FlatPtr arg);
-    ErrorOr<FlatPtr> sys$mkdir(Userspace<char const*> pathname, size_t path_length, mode_t mode);
+    ErrorOr<FlatPtr> sys$mkdir(int dirfd, Userspace<char const*> pathname, size_t path_length, mode_t mode);
     ErrorOr<FlatPtr> sys$times(Userspace<tms*>);
     ErrorOr<FlatPtr> sys$utime(Userspace<char const*> pathname, size_t path_length, Userspace<const struct utimbuf*>);
     ErrorOr<FlatPtr> sys$utimensat(Userspace<Syscall::SC_utimensat_params const*>);

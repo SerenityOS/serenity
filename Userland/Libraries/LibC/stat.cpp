@@ -24,11 +24,17 @@ mode_t umask(mode_t mask)
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/mkdir.html
 int mkdir(char const* pathname, mode_t mode)
 {
+    return mkdirat(AT_FDCWD, pathname, mode);
+}
+
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/mkdirat.html
+int mkdirat(int dirfd, char const* pathname, mode_t mode)
+{
     if (!pathname) {
         errno = EFAULT;
         return -1;
     }
-    int rc = syscall(SC_mkdir, pathname, strlen(pathname), mode);
+    int rc = syscall(SC_mkdir, dirfd, pathname, strlen(pathname), mode);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
