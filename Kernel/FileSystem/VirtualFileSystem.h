@@ -67,7 +67,7 @@ public:
     ErrorOr<InodeMetadata> lookup_metadata(Credentials const&, StringView path, Custody& base, int options = 0);
     ErrorOr<void> utime(Credentials const&, StringView path, Custody& base, time_t atime, time_t mtime);
     ErrorOr<void> utimensat(Credentials const&, StringView path, Custody& base, timespec const& atime, timespec const& mtime, int options = 0);
-    ErrorOr<void> rename(Credentials const&, StringView oldpath, StringView newpath, Custody& base);
+    ErrorOr<void> rename(Credentials const&, Custody& old_base, StringView oldpath, Custody& new_base, StringView newpath);
     ErrorOr<void> mknod(Credentials const&, StringView path, mode_t, dev_t, Custody& base);
     ErrorOr<NonnullRefPtr<Custody>> open_directory(Credentials const&, StringView path, Custody& base);
 
