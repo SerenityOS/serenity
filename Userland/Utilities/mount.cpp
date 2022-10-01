@@ -51,20 +51,14 @@ static bool is_source_none(StringView source)
     return source == "none"sv;
 }
 
-static int get_source_fd(StringView source)
+static ErrorOr<int> get_source_fd(StringView source)
 {
     if (is_source_none(source))
         return -1;
     auto fd_or_error = Core::System::open(source, O_RDWR);
     if (fd_or_error.is_error())
         fd_or_error = Core::System::open(source, O_RDONLY);
-    if (fd_or_error.is_error()) {
-        int saved_errno = errno;
-        auto message = String::formatted("Failed to open: {}\n", source);
-        errno = saved_errno;
-        perror(message.characters());
-    }
-    return fd_or_error.release_value();
+    return fd_or_error;
 }
 
 static bool mount_by_line(String const& line)
@@ -90,7 +84,12 @@ static bool mount_by_line(String const& line)
 
     auto filename = parts[0];
 
-    int fd = get_source_fd(filename);
+    auto fd_or_error = get_source_fd(filename);
+    if (fd_or_error.is_error()) {
+        outln("{}", fd_or_error.release_error());
+        return false;
+    }
+    auto const fd = fd_or_error.release_value();
 
     dbgln("Mounting {} ({}) on {}", filename, fstype, mountpoint);
 
@@ -222,7 +221,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             fs_type = "ext2"sv;
         int flags = !options.is_empty() ? parse_options(options) : 0;
 
-        int fd = get_source_fd(source);
+        int const fd = TRY(get_source_fd(source));
 
         TRY(Core::System::mount(fd, mountpoint, fs_type, flags));
 
