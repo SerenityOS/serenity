@@ -104,6 +104,7 @@ int pipe(int pipefd[2]);
 int pipe2(int pipefd[2], int flags);
 unsigned int alarm(unsigned int seconds);
 int access(char const* pathname, int mode);
+int faccessat(int dirfd, char const* pathname, int mode, int flags);
 int isatty(int fd);
 int mknod(char const* pathname, mode_t, dev_t);
 long fpathconf(int fd, int name);

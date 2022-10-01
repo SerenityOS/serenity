@@ -264,7 +264,6 @@ set(KERNEL_SOURCES
     Scheduler.cpp
     StdLib.cpp
     Syscalls/anon_create.cpp
-    Syscalls/access.cpp
     Syscalls/alarm.cpp
     Syscalls/beep.cpp
     Syscalls/chdir.cpp
@@ -276,6 +275,7 @@ set(KERNEL_SOURCES
     Syscalls/dup2.cpp
     Syscalls/emuctl.cpp
     Syscalls/exit.cpp
+    Syscalls/faccessat.cpp
     Syscalls/fallocate.cpp
     Syscalls/fcntl.cpp
     Syscalls/fsync.cpp

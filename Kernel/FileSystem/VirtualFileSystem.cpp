@@ -523,24 +523,26 @@ ErrorOr<void> VirtualFileSystem::mkdir(Credentials const& credentials, StringVie
     return {};
 }
 
-ErrorOr<void> VirtualFileSystem::access(Credentials const& credentials, StringView path, int mode, Custody& base)
+ErrorOr<void> VirtualFileSystem::access(Credentials const& credentials, StringView path, int mode, Custody& base, AccessFlags access_flags)
 {
-    auto custody = TRY(resolve_path(credentials, path, base));
+    auto should_follow_symlinks = !has_flag(access_flags, AccessFlags::DoNotFollowSymlinks);
+    auto custody = TRY(resolve_path(credentials, path, base, nullptr, should_follow_symlinks ? 0 : O_NOFOLLOW_NOERROR));
 
     auto& inode = custody->inode();
     auto metadata = inode.metadata();
+    auto use_effective_ids = has_flag(access_flags, AccessFlags::EffectiveAccess) ? UseEffectiveIDs::Yes : UseEffectiveIDs::No;
     if (mode & R_OK) {
-        if (!metadata.may_read(credentials, UseEffectiveIDs::No))
+        if (!metadata.may_read(credentials, use_effective_ids))
             return EACCES;
     }
     if (mode & W_OK) {
-        if (!metadata.may_write(credentials, UseEffectiveIDs::No))
+        if (!metadata.may_write(credentials, use_effective_ids))
             return EACCES;
         if (custody->is_readonly())
             return EROFS;
     }
     if (mode & X_OK) {
-        if (!metadata.may_execute(credentials, UseEffectiveIDs::No))
+        if (!metadata.may_execute(credentials, use_effective_ids))
             return EACCES;
     }
     return {};
