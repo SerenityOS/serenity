@@ -39,10 +39,6 @@ inline bool is_setgid(mode_t mode) { return (mode & S_ISGID) == S_ISGID; }
 struct InodeMetadata {
     bool is_valid() const { return inode.is_valid(); }
 
-    bool may_read(Process const&) const;
-    bool may_write(Process const&) const;
-    bool may_execute(Process const&) const;
-
     bool may_read(Credentials const&) const;
     bool may_write(Credentials const&) const;
     bool may_execute(Credentials const&) const;
