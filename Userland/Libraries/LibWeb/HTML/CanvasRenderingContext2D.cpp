@@ -17,6 +17,7 @@
 #include <LibWeb/HTML/ImageData.h>
 #include <LibWeb/HTML/Path2D.h>
 #include <LibWeb/HTML/TextMetrics.h>
+#include <LibWeb/Infra/CharacterTypes.h>
 #include <LibWeb/Layout/TextNode.h>
 #include <LibWeb/Platform/FontPlugin.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
@@ -393,11 +394,9 @@ CanvasRenderingContext2D::PreparedText CanvasRenderingContext2D::prepare_text(St
     }
 
     // 2. Replace all ASCII whitespace in text with U+0020 SPACE characters.
-    // NOTE: This also replaces vertical tabs with space even though WHATWG
-    //       doesn't consider it as whitespace.
     StringBuilder builder { text.length() };
     for (auto c : text) {
-        builder.append(is_ascii_space(c) ? ' ' : c);
+        builder.append(Infra::is_ascii_whitespace(c) ? ' ' : c);
     }
     String replaced_text = builder.build();
 
