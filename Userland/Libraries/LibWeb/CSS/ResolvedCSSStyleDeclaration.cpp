@@ -458,6 +458,9 @@ RefPtr<StyleValue> ResolvedCSSStyleDeclaration::style_value_for_property(Layout:
         VERIFY(layout_node.paintable());
         auto const& paintable_box = verify_cast<Painting::PaintableBox const>(layout_node.paintable());
         VERIFY(paintable_box->stacking_context());
+
+        // FIXME: This needs to serialize to matrix3d if the transformation matrix is a 3D matrix.
+        //        https://w3c.github.io/csswg-drafts/css-transforms-2/#serialization-of-the-computed-value
         auto affine_matrix = paintable_box->stacking_context()->affine_transform_matrix();
 
         NonnullRefPtrVector<StyleValue> parameters;

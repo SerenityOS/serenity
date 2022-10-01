@@ -199,6 +199,13 @@ Gfx::FloatMatrix4x4 StackingContext::get_transformation_matrix(CSS::Transformati
                 0, 0, 1, 0,
                 0, 0, 0, 1);
         break;
+    case CSS::TransformFunction::Matrix3d:
+        if (count == 16)
+            return Gfx::FloatMatrix4x4(value(0), value(4), value(8), value(12),
+                value(1), value(5), value(9), value(13),
+                value(2), value(6), value(10), value(14),
+                value(3), value(7), value(11), value(15));
+        break;
     case CSS::TransformFunction::Translate:
         if (count == 1)
             return Gfx::FloatMatrix4x4(1, 0, 0, value(0, width),
