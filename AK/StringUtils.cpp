@@ -8,6 +8,7 @@
 #include <AK/CharacterTypes.h>
 #include <AK/MemMem.h>
 #include <AK/Memory.h>
+#include <AK/NumericLimits.h>
 #include <AK/Optional.h>
 #include <AK/StringBuilder.h>
 #include <AK/StringUtils.h>
@@ -92,7 +93,8 @@ Optional<T> convert_to_int(StringView str, TrimWhitespace trim_whitespace)
 
     T sign = 1;
     size_t i = 0;
-    auto const characters = string.characters_without_null_termination();
+    auto const* characters = string.characters_without_null_termination();
+    bool may_overflow = false;
 
     if (characters[0] == '-' || characters[0] == '+') {
         if (string.length() == 1)
@@ -102,17 +104,35 @@ Optional<T> convert_to_int(StringView str, TrimWhitespace trim_whitespace)
             sign = -1;
     }
 
+    while (characters[i] == '0' && i < string.length())
+        i++;
+
+    if ((string.length() - i) > NumericLimits<T>::max_digits())
+        return {};
+
+    may_overflow = (string.length() - i) == NumericLimits<T>::max_digits();
+
     T value = 0;
-    for (; i < string.length(); i++) {
+    for (; i < string.length() - may_overflow; i++) {
         if (characters[i] < '0' || characters[i] > '9')
             return {};
 
-        if (__builtin_mul_overflow(value, 10, &value))
-            return {};
-
-        if (__builtin_add_overflow(value, sign * (characters[i] - '0'), &value))
-            return {};
+        value *= 10;
+        value += sign * (characters[i] - '0');
     }
+
+    // If we are at the edge of the representable range, we need to check for overflows
+    if (may_overflow) {
+        if (characters[i] < '0' || characters[i] > '9')
+            return {};
+        Checked<T> safe_value = value;
+        safe_value *= 10;
+        safe_value += characters[i] - '0';
+        if (safe_value.has_overflow())
+            return {};
+        value = safe_value.value();
+    }
+
     return value;
 }
 
@@ -132,18 +152,37 @@ Optional<T> convert_to_uint(StringView str, TrimWhitespace trim_whitespace)
         return {};
 
     T value = 0;
-    auto const characters = string.characters_without_null_termination();
+    auto const* characters = string.characters_without_null_termination();
+    bool may_overflow = false;
 
-    for (size_t i = 0; i < string.length(); i++) {
+    size_t i = 0;
+    while (characters[i] == '0' && i < string.length())
+        ++i;
+
+    if ((string.length() - i) > NumericLimits<T>::max_digits())
+        return {};
+    may_overflow = (string.length() - i) == NumericLimits<T>::max_digits();
+
+    for (; i < string.length() - may_overflow; i++) {
         if (characters[i] < '0' || characters[i] > '9')
             return {};
 
-        if (__builtin_mul_overflow(value, 10, &value))
-            return {};
-
-        if (__builtin_add_overflow(value, characters[i] - '0', &value))
-            return {};
+        value *= 10;
+        value += characters[i] - '0';
     }
+
+    // If we are at the edge of the representable range, we need to check for overflows
+    if (may_overflow) {
+        if (characters[i] < '0' || characters[i] > '9')
+            return {};
+        Checked<T> safe_value = value;
+        safe_value *= 10;
+        safe_value += characters[i] - '0';
+        if (safe_value.has_overflow())
+            return {};
+        value = safe_value.value();
+    }
+
     return value;
 }
 

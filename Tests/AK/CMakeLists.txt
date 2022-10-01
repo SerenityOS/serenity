@@ -1,4 +1,5 @@
 set(AK_TEST_SOURCES
+    BenchmarkDec2Int.cpp
     TestFixedPoint.cpp
     TestAllOf.cpp
     TestAnyOf.cpp
