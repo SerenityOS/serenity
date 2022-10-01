@@ -136,7 +136,7 @@ ErrorOr<void> Access::add_host_controller_and_enumerate_attached_devices(Nonnull
 
         VERIFY(!m_host_controllers.contains(domain_number));
         // Note: We need to register the new controller as soon as possible, and
-        // definitely before enumerating devices behing that.
+        // definitely before enumerating devices behind that.
         m_host_controllers.set(domain_number, move(controller));
         ErrorOr<void> expansion_result;
         m_host_controllers.get(domain_number).value()->enumerate_attached_devices([&](DeviceIdentifier const& device_identifier) -> IterationDecision {
