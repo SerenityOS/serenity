@@ -279,6 +279,7 @@ static ErrorOr<LoadResult> load_elf_object(NonnullOwnPtr<Memory::AddressSpace> n
     size_t master_tls_size = 0;
     size_t master_tls_alignment = 0;
     FlatPtr load_base_address = 0;
+    size_t stack_size = 0;
 
     auto elf_name = TRY(object_description.pseudo_path());
     VERIFY(!Processor::in_critical());
@@ -374,6 +375,10 @@ static ErrorOr<LoadResult> load_elf_object(NonnullOwnPtr<Memory::AddressSpace> n
         if (program_header.type() == PT_LOAD)
             return load_section(program_header);
 
+        if (program_header.type() == PT_GNU_STACK) {
+            stack_size = program_header.size_in_memory();
+        }
+
         // NOTE: We ignore other program header types.
         return {};
     };
@@ -387,12 +392,16 @@ static ErrorOr<LoadResult> load_elf_object(NonnullOwnPtr<Memory::AddressSpace> n
         return result;
     }());
 
+    if (stack_size == 0) {
+        stack_size = Thread::default_userspace_stack_size;
+    }
+
     if (!elf_image.entry().offset(load_offset).get()) {
         dbgln("do_exec: Failure loading program, entry pointer is invalid! {})", elf_image.entry().offset(load_offset));
         return ENOEXEC;
     }
 
-    auto* stack_region = TRY(new_space->allocate_region(Memory::RandomizeVirtualAddress::Yes, {}, Thread::default_userspace_stack_size, PAGE_SIZE, "Stack (Main thread)"sv, PROT_READ | PROT_WRITE, AllocationStrategy::Reserve));
+    auto* stack_region = TRY(new_space->allocate_region(Memory::RandomizeVirtualAddress::Yes, {}, stack_size, PAGE_SIZE, "Stack (Main thread)"sv, PROT_READ | PROT_WRITE, AllocationStrategy::Reserve));
     stack_region->set_stack(true);
 
     return LoadResult {

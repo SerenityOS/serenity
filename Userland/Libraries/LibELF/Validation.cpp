@@ -7,6 +7,7 @@
 
 #include <AK/Assertions.h>
 #include <AK/Checked.h>
+#include <Kernel/API/serenity_limits.h>
 #include <LibC/elf.h>
 #include <LibELF/Validation.h>
 #include <limits.h>
@@ -298,6 +299,21 @@ ErrorOr<bool> validate_program_headers(ElfW(Ehdr) const& elf_header, size_t file
                 if (verbose)
                     dbgln("Possible shenanigans! Validating an ELF with executable stack.");
             }
+
+            if (program_header.p_memsz != 0) {
+                if (program_header.p_memsz < static_cast<unsigned>(PTHREAD_STACK_MIN) || program_header.p_memsz > static_cast<unsigned>(PTHREAD_STACK_MAX)) {
+                    if (verbose)
+                        dbgln("PT_GNU_STACK defines an unacceptable stack size.");
+                    return false;
+                }
+
+                if (program_header.p_memsz % PAGE_SIZE != 0) {
+                    if (verbose)
+                        dbgln("PT_GNU_STACK size is not page-aligned.");
+                    return false;
+                }
+            }
+
             break;
         case PT_GNU_RELRO:
             if ((program_header.p_flags & PF_X) && (program_header.p_flags & PF_W)) {

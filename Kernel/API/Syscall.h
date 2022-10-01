@@ -360,7 +360,7 @@ struct SC_create_thread_params {
     // ... ok, if you say so posix. Guess we get to lie to people about guard page size
     unsigned int guard_page_size = 0;          // Rounded up to PAGE_SIZE
     unsigned int reported_guard_page_size = 0; // The lie we tell callers
-    unsigned int stack_size = 1 * MiB;         // Default PTHREAD_STACK_MIN
+    unsigned int stack_size = 1 * MiB;         // Equal to Thread::default_userspace_stack_size
     void* stack_location;                      // nullptr means any, o.w. process virtual address
 #    if ARCH(X86_64)
     FlatPtr rdi;

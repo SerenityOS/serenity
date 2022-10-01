@@ -7,6 +7,7 @@
 #pragma once
 
 #include <Kernel/API/POSIX/sys/limits.h>
+#include <Kernel/API/serenity_limits.h>
 #include <bits/posix1_lim.h>
 #include <bits/stdint.h>
 #include <bits/wchar.h>
@@ -85,8 +86,6 @@
 #define ULLONG_WIDTH 64
 
 #define ARG_MAX 65536
-
-#define PTHREAD_STACK_MIN 65536
 
 #define SSIZE_MAX 2147483647
 

@@ -34,7 +34,6 @@ using PthreadAttrImpl = Syscall::SC_create_thread_params;
 
 static constexpr size_t required_stack_alignment = 4 * MiB;
 static constexpr size_t highest_reasonable_guard_size = 32 * PAGE_SIZE;
-static constexpr size_t highest_reasonable_stack_size = 8 * MiB; // That's the default in Ubuntu?
 
 __thread void* s_stack_location;
 __thread size_t s_stack_size;
@@ -467,7 +466,7 @@ int pthread_attr_setstacksize(pthread_attr_t* attributes, size_t stack_size)
     if (!attributes_impl)
         return EINVAL;
 
-    if ((stack_size < PTHREAD_STACK_MIN) || stack_size > highest_reasonable_stack_size)
+    if (stack_size < PTHREAD_STACK_MIN || stack_size > PTHREAD_STACK_MAX)
         return EINVAL;
 
     attributes_impl->stack_size = stack_size;
