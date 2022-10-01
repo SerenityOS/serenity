@@ -76,7 +76,7 @@ void DOMTokenList::associated_attribute_changed(StringView value)
     if (value.is_empty())
         return;
 
-    auto split_values = value.split_view(' ');
+    auto split_values = value.split_view(Infra::ASCII_WHITESPACE);
     for (auto const& split_value : split_values)
         append_to_ordered_set(m_token_set, split_value);
 }

@@ -5,7 +5,6 @@
  */
 
 #include <AK/AnyOf.h>
-#include <AK/CharacterTypes.h>
 #include <AK/Debug.h>
 #include <AK/StringBuilder.h>
 #include <LibWeb/CSS/Parser/Parser.h>
@@ -34,6 +33,7 @@
 #include <LibWeb/HTML/HTMLSelectElement.h>
 #include <LibWeb/HTML/HTMLTextAreaElement.h>
 #include <LibWeb/HTML/Parser/HTMLParser.h>
+#include <LibWeb/Infra/CharacterTypes.h>
 #include <LibWeb/Layout/BlockContainer.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
 #include <LibWeb/Layout/InlineNode.h>
@@ -328,7 +328,7 @@ CSS::CSSStyleDeclaration const* Element::inline_style() const
 void Element::parse_attribute(FlyString const& name, String const& value)
 {
     if (name == HTML::AttributeNames::class_) {
-        auto new_classes = value.split_view(is_ascii_space);
+        auto new_classes = value.split_view(Infra::is_ascii_whitespace);
         m_classes.clear();
         m_classes.ensure_capacity(new_classes.size());
         for (auto& new_class : new_classes) {
@@ -518,7 +518,7 @@ bool Element::is_active() const
 JS::NonnullGCPtr<HTMLCollection> Element::get_elements_by_class_name(FlyString const& class_names)
 {
     Vector<FlyString> list_of_class_names;
-    for (auto& name : class_names.view().split_view(' ')) {
+    for (auto& name : class_names.view().split_view(Infra::ASCII_WHITESPACE)) {
         list_of_class_names.append(name);
     }
     return HTMLCollection::create(*this, [list_of_class_names = move(list_of_class_names), quirks_mode = document().in_quirks_mode()](Element const& element) {
