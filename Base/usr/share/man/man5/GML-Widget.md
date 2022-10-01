@@ -39,7 +39,7 @@ Defines a GUI widget.
 | fixed_width                 | ui_dimension  | Regular (currently only integer values ≥0 allowed)    | Both maximum and minimum width; widget is fixed-width                                              |
 | fixed_height                | ui_dimension  | Regular (currently only integer values ≥0 allowed)    | Both maximum and minimum height; widget is fixed-height                                            |
 | fixed_size                  | ui_size       | {Regular}²                                            | Both maximum and minimum size; widget is fixed-size                                                |
-| shrink_to_fit               | bool          |                                                       | Whether the widget shrinks as much as possible while still respecting its childrens minimum sizes  |
+| shrink_to_fit               | bool          |                                                       | Whether the widget shrinks as much as possible while still respecting its children's minimum sizes |
 | font                        | string        | Any system-known font                                 | Font family                                                                                        |
 | font_size                   | int           | Font size that is available on this family            | Font size                                                                                          |
 | font_weight                 | font_weight   | Font weight that is available on this family and size | Font weight                                                                                        |
