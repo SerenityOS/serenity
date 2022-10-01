@@ -8,7 +8,7 @@ Subject: [PATCH] java.base: Update native modules to support Serenity
  src/java.base/share/native/libjava/io_util.h  |  5 +-
  src/java.base/share/native/libjli/jli_util.h  |  3 +
  src/java.base/share/native/libzip/zip_util.c  |  2 +-
- .../sun/nio/fs/UnixConstants.java.template    | 92 ++++++++++++++++++-
+ .../sun/nio/fs/UnixConstants.java.template    | 91 ++++++++++++++++++-
  .../native/libjava/ProcessHandleImpl_unix.c   |  2 +-
  .../unix/native/libjava/TimeZone_md.c         |  4 +-
  .../unix/native/libjava/io_util_md.c          |  2 +-
@@ -19,17 +19,16 @@ Subject: [PATCH] java.base: Update native modules to support Serenity
  .../unix/native/libnet/NetworkInterface.c     | 11 ++-
  .../unix/native/libnet/net_util_md.h          |  4 +
  .../unix/native/libnio/MappedMemoryUtils.c    |  4 +
- .../native/libnio/ch/DatagramDispatcher.c     |  1 +
  .../unix/native/libnio/ch/FileChannelImpl.c   |  3 +
  .../native/libnio/ch/FileDispatcherImpl.c     |  7 +-
  src/java.base/unix/native/libnio/ch/FileKey.c |  2 +-
  .../unix/native/libnio/ch/NativeThread.c      |  2 +-
  src/java.base/unix/native/libnio/ch/Net.c     |  2 +-
  .../native/libnio/fs/UnixNativeDispatcher.c   | 39 +++++++-
- 22 files changed, 207 insertions(+), 16 deletions(-)
+ 21 files changed, 205 insertions(+), 16 deletions(-)
 
 diff --git a/src/java.base/share/classes/sun/nio/ch/SocketOptionRegistry.java.template b/src/java.base/share/classes/sun/nio/ch/SocketOptionRegistry.java.template
-index 0672ced15..55bde3569 100644
+index 0672ced15e268cd5f07cabd91793eafe441e6fa8..55bde3569d9a429e5e24ad39e393bdb8149f956c 100644
 --- a/src/java.base/share/classes/sun/nio/ch/SocketOptionRegistry.java.template
 +++ b/src/java.base/share/classes/sun/nio/ch/SocketOptionRegistry.java.template
 @@ -50,6 +50,24 @@
@@ -68,7 +67,7 @@ index 0672ced15..55bde3569 100644
                  StandardProtocolFamily.INET6), new OptionKey(41, IPV6_TCLASS));
              map.put(new RegistryKey(StandardSocketOptions.PREFIX_IP_MULTICAST_IF,
 diff --git a/src/java.base/share/native/libjava/io_util.h b/src/java.base/share/native/libjava/io_util.h
-index 6e960c034..cbd1d087e 100644
+index 6e960c0347fe7cf8d2d40211a9b8f744673f1a05..cbd1d087ed50ba0a74e35e7e1c1cec0ef0aa4ccf 100644
 --- a/src/java.base/share/native/libjava/io_util.h
 +++ b/src/java.base/share/native/libjava/io_util.h
 @@ -30,11 +30,14 @@ extern jfieldID IO_fd_fdID;
@@ -88,7 +87,7 @@ index 6e960c034..cbd1d087e 100644
  #define O_DSYNC O_FSYNC
  #endif
 diff --git a/src/java.base/share/native/libjli/jli_util.h b/src/java.base/share/native/libjli/jli_util.h
-index 3512b1e96..e60f7581f 100644
+index 3512b1e96f5820afd0d130d840e2bc591183d84f..e60f7581ff8793a26e8453cdc44e90c351c0cd50 100644
 --- a/src/java.base/share/native/libjli/jli_util.h
 +++ b/src/java.base/share/native/libjli/jli_util.h
 @@ -108,6 +108,9 @@ JLI_CmdToArgs(char *cmdline);
@@ -102,7 +101,7 @@ index 3512b1e96..e60f7581f 100644
  #define JLI_Lseek                       lseek
  #endif
 diff --git a/src/java.base/share/native/libzip/zip_util.c b/src/java.base/share/native/libzip/zip_util.c
-index fbbd9d850..eef30b9e4 100644
+index fbbd9d850fcc7d4ccc7a55a22c8a5fe84affe6f9..eef30b9e4dedbe96dfd615444f10adf8b5732f16 100644
 --- a/src/java.base/share/native/libzip/zip_util.c
 +++ b/src/java.base/share/native/libzip/zip_util.c
 @@ -46,7 +46,7 @@
@@ -115,7 +114,7 @@ index fbbd9d850..eef30b9e4 100644
  #define mmap64 mmap
  #endif
 diff --git a/src/java.base/unix/classes/sun/nio/fs/UnixConstants.java.template b/src/java.base/unix/classes/sun/nio/fs/UnixConstants.java.template
-index d60283d24..5d428521b 100644
+index d60283d24aafd83854c2506de5b5a88d2e13ac5f..cc953ba3a89456c70d5bf98225fdaaea6acba2ed 100644
 --- a/src/java.base/unix/classes/sun/nio/fs/UnixConstants.java.template
 +++ b/src/java.base/unix/classes/sun/nio/fs/UnixConstants.java.template
 @@ -31,6 +31,95 @@
@@ -214,7 +213,7 @@ index d60283d24..5d428521b 100644
  /* To be able to name the Java constants the same as the C constants without
     having the preprocessor rewrite those identifiers, add PREFIX_ to all
     identifiers matching a C constant. The PREFIX_ is filtered out in the
-@@ -120,7 +210,7 @@ class UnixConstants {
+@@ -120,7 +209,7 @@ class UnixConstants {
  // fgetxattr error codes for absent attributes depend on the OS:
  #ifdef _ALLBSD_SOURCE
      static final int PREFIX_XATTR_NOT_FOUND = ENOATTR;
@@ -224,7 +223,7 @@ index d60283d24..5d428521b 100644
  #else
      // not supported (dummy values will not be used at runtime).
 diff --git a/src/java.base/unix/native/libjava/ProcessHandleImpl_unix.c b/src/java.base/unix/native/libjava/ProcessHandleImpl_unix.c
-index d53e88764..eddb5f169 100644
+index d53e88764c5892996bd7bb5a611b6cb7ebc48c2e..eddb5f169d149bb62cc9a317c691675c9cb34ecc 100644
 --- a/src/java.base/unix/native/libjava/ProcessHandleImpl_unix.c
 +++ b/src/java.base/unix/native/libjava/ProcessHandleImpl_unix.c
 @@ -488,7 +488,7 @@ void unix_getUserInfo(JNIEnv* env, jobject jinfo, uid_t uid) {
@@ -237,7 +236,7 @@ index d53e88764..eddb5f169 100644
  /*
   * Returns the children of the requested pid and optionally each parent and
 diff --git a/src/java.base/unix/native/libjava/TimeZone_md.c b/src/java.base/unix/native/libjava/TimeZone_md.c
-index 94dfc207f..2a6c3851a 100644
+index 94dfc207f965204d6485f3e6154b669ac951e96e..2a6c3851aef90e0a66517efc134f168d4345439d 100644
 --- a/src/java.base/unix/native/libjava/TimeZone_md.c
 +++ b/src/java.base/unix/native/libjava/TimeZone_md.c
 @@ -53,7 +53,7 @@ static char *isFileIdentical(char* buf, size_t size, char *pathname);
@@ -259,7 +258,7 @@ index 94dfc207f..2a6c3851a 100644
  /*
   * Returns a pointer to the zone ID portion of the given zoneinfo file
 diff --git a/src/java.base/unix/native/libjava/io_util_md.c b/src/java.base/unix/native/libjava/io_util_md.c
-index e207c57d4..8afabc544 100644
+index e207c57d49b751b03a845f6ab2f053f8bbb38b30..8afabc544caada520dc990b649895acee3b95c46 100644
 --- a/src/java.base/unix/native/libjava/io_util_md.c
 +++ b/src/java.base/unix/native/libjava/io_util_md.c
 @@ -30,7 +30,7 @@
@@ -272,7 +271,7 @@ index e207c57d4..8afabc544 100644
  #endif
  
 diff --git a/src/java.base/unix/native/libjava/io_util_md.h b/src/java.base/unix/native/libjava/io_util_md.h
-index 3dccf64f4..3e9e7d3b0 100644
+index 3dccf64f41f7bc2cecada62d428514afcb94ef10..3e9e7d3b09e07866eb02f3c40e60ce090c546dda 100644
 --- a/src/java.base/unix/native/libjava/io_util_md.h
 +++ b/src/java.base/unix/native/libjava/io_util_md.h
 @@ -66,7 +66,7 @@ FD getFD(JNIEnv *env, jobject cur, jfieldID fid);
@@ -296,7 +295,7 @@ index 3dccf64f4..3e9e7d3b0 100644
   * On Solaris, the handle field is unused
   */
 diff --git a/src/java.base/unix/native/libjsig/jsig.c b/src/java.base/unix/native/libjsig/jsig.c
-index 1108b2f9c..d891aab93 100644
+index 1108b2f9ce5a37efd0e404d2ebb4f9415730e2b0..d891aab931ba6e12c8e861db7ac04584de69104d 100644
 --- a/src/java.base/unix/native/libjsig/jsig.c
 +++ b/src/java.base/unix/native/libjsig/jsig.c
 @@ -100,6 +100,10 @@ static sa_handler_t call_os_signal(int sig, sa_handler_t disp,
@@ -311,7 +310,7 @@ index 1108b2f9c..d891aab93 100644
      // Deprecation warning first time through
      printf(HOTSPOT_VM_DISTRO " VM warning: the use of signal() and sigset() "
 diff --git a/src/java.base/unix/native/libnet/Inet4AddressImpl.c b/src/java.base/unix/native/libnet/Inet4AddressImpl.c
-index b165be7ce..a4cd70003 100644
+index b165be7cea1f60836c354772b5adfd6c5119ade4..a4cd7000329ab444bf1937c833bab8df6a33fbd7 100644
 --- a/src/java.base/unix/native/libnet/Inet4AddressImpl.c
 +++ b/src/java.base/unix/native/libnet/Inet4AddressImpl.c
 @@ -335,6 +335,7 @@ static jboolean
@@ -332,7 +331,7 @@ index b165be7ce..a4cd70003 100644
  }
  
 diff --git a/src/java.base/unix/native/libnet/Inet6AddressImpl.c b/src/java.base/unix/native/libnet/Inet6AddressImpl.c
-index 058f3d3a7..61460fda8 100644
+index 058f3d3a7e47d09e20d1851a38c0a696e8cab1fd..61460fda89f1b54d36744dac69ea5726e9fedbe3 100644
 --- a/src/java.base/unix/native/libnet/Inet6AddressImpl.c
 +++ b/src/java.base/unix/native/libnet/Inet6AddressImpl.c
 @@ -29,7 +29,9 @@
@@ -362,7 +361,7 @@ index 058f3d3a7..61460fda8 100644
  }
  
 diff --git a/src/java.base/unix/native/libnet/NetworkInterface.c b/src/java.base/unix/native/libnet/NetworkInterface.c
-index 990bc1bcc..fdeff2bf6 100644
+index 990bc1bcc5101185803c16164ee414ddd946c6f1..fdeff2bf67a34d9765f4c7c24df60d884dcc7352 100644
 --- a/src/java.base/unix/native/libnet/NetworkInterface.c
 +++ b/src/java.base/unix/native/libnet/NetworkInterface.c
 @@ -43,6 +43,10 @@
@@ -412,7 +411,7 @@ index 990bc1bcc..fdeff2bf6 100644
  }
  
 diff --git a/src/java.base/unix/native/libnet/net_util_md.h b/src/java.base/unix/native/libnet/net_util_md.h
-index 68835987b..f99b11207 100644
+index 68835987b64008df1c7e02b17d8b302fac289d22..f99b112077eb95081c2c61ae7e3cd4664520f5aa 100644
 --- a/src/java.base/unix/native/libnet/net_util_md.h
 +++ b/src/java.base/unix/native/libnet/net_util_md.h
 @@ -30,6 +30,10 @@
@@ -427,7 +426,7 @@ index 68835987b..f99b11207 100644
   * Macros and constants
   */
 diff --git a/src/java.base/unix/native/libnio/MappedMemoryUtils.c b/src/java.base/unix/native/libnio/MappedMemoryUtils.c
-index e90acd286..34787fff4 100644
+index e90acd2863fa1e96564456a616ea0cb65971bf4b..34787fff4b7fd1af6f38bd3330dd7d92984c9cf1 100644
 --- a/src/java.base/unix/native/libnio/MappedMemoryUtils.c
 +++ b/src/java.base/unix/native/libnio/MappedMemoryUtils.c
 @@ -58,6 +58,7 @@ JNIEXPORT jboolean JNICALL
@@ -449,7 +448,7 @@ index e90acd286..34787fff4 100644
  
  
 diff --git a/src/java.base/unix/native/libnio/ch/FileChannelImpl.c b/src/java.base/unix/native/libnio/ch/FileChannelImpl.c
-index 8cc753e6a..28fa55269 100644
+index 8cc753e6aa090c14623afecb47f59281eeddea88..28fa5526972b032681905fa5a9e6e716467a2423 100644
 --- a/src/java.base/unix/native/libnio/ch/FileChannelImpl.c
 +++ b/src/java.base/unix/native/libnio/ch/FileChannelImpl.c
 @@ -39,6 +39,9 @@
@@ -463,7 +462,7 @@ index 8cc753e6a..28fa55269 100644
  
  #include "jni.h"
 diff --git a/src/java.base/unix/native/libnio/ch/FileDispatcherImpl.c b/src/java.base/unix/native/libnio/ch/FileDispatcherImpl.c
-index c0c31d6ab..3a4d8a632 100644
+index c0c31d6ab2cec8445aac9c85645052cbc9200034..3a4d8a632becb07c46879badfa652b93a9523c34 100644
 --- a/src/java.base/unix/native/libnio/ch/FileDispatcherImpl.c
 +++ b/src/java.base/unix/native/libnio/ch/FileDispatcherImpl.c
 @@ -40,7 +40,7 @@
@@ -488,7 +487,7 @@ index c0c31d6ab..3a4d8a632 100644
  #include "jni_util.h"
  #include "jvm.h"
 diff --git a/src/java.base/unix/native/libnio/ch/FileKey.c b/src/java.base/unix/native/libnio/ch/FileKey.c
-index bdb42a632..a433cdf01 100644
+index bdb42a6324b685400fd2a6893b80f7504cea56b6..a433cdf013471f584b06dcd6592ffc4ddb525d7c 100644
 --- a/src/java.base/unix/native/libnio/ch/FileKey.c
 +++ b/src/java.base/unix/native/libnio/ch/FileKey.c
 @@ -30,7 +30,7 @@
@@ -501,7 +500,7 @@ index bdb42a632..a433cdf01 100644
  
  #define fstat64 fstat
 diff --git a/src/java.base/unix/native/libnio/ch/NativeThread.c b/src/java.base/unix/native/libnio/ch/NativeThread.c
-index 92dcb9e56..4bf09d03b 100644
+index 92dcb9e569c81bb69e149279b29f074872faf185..4bf09d03b90afefb297cbe073ccb344eea953516 100644
 --- a/src/java.base/unix/native/libnio/ch/NativeThread.c
 +++ b/src/java.base/unix/native/libnio/ch/NativeThread.c
 @@ -40,7 +40,7 @@
@@ -514,7 +513,7 @@ index 92dcb9e56..4bf09d03b 100644
    #define INTERRUPT_SIGNAL SIGIO
  #else
 diff --git a/src/java.base/unix/native/libnio/ch/Net.c b/src/java.base/unix/native/libnio/ch/Net.c
-index 42a07359d..ca1401861 100644
+index 42a07359dde3e2daa8b5dfb3b34e1184bae37d94..ca14018610dd531c5efdf46da76d79e415ca9734 100644
 --- a/src/java.base/unix/native/libnio/ch/Net.c
 +++ b/src/java.base/unix/native/libnio/ch/Net.c
 @@ -701,7 +701,7 @@ JNIEXPORT jint JNICALL
@@ -527,7 +526,7 @@ index 42a07359d..ca1401861 100644
      return IOS_UNAVAILABLE;
  #else
 diff --git a/src/java.base/unix/native/libnio/fs/UnixNativeDispatcher.c b/src/java.base/unix/native/libnio/fs/UnixNativeDispatcher.c
-index 9df8be1e6..993e240db 100644
+index 9df8be1e62c21b5d059f1354e699679c26596fa0..993e240db043f10cb41c218b3b2e909e1f78b807 100644
 --- a/src/java.base/unix/native/libnio/fs/UnixNativeDispatcher.c
 +++ b/src/java.base/unix/native/libnio/fs/UnixNativeDispatcher.c
 @@ -57,7 +57,7 @@

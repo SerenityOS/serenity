@@ -6,13 +6,13 @@ Subject: [PATCH] java.base: Enable java.lang.Process on serenity
 ---
  make/modules/java.base/Launcher.gmk           |   2 +-
  make/modules/java.base/lib/CoreLibraries.gmk  |   3 +
- .../libjava/ProcessHandleImpl_serenity.cpp    | 167 ++++++++++++++++++
+ .../libjava/ProcessHandleImpl_serenity.cpp    | 164 ++++++++++++++++++
  .../unix/classes/java/lang/ProcessImpl.java   |   7 +-
- 4 files changed, 177 insertions(+), 2 deletions(-)
+ 4 files changed, 174 insertions(+), 2 deletions(-)
  create mode 100644 src/java.base/serenity/native/libjava/ProcessHandleImpl_serenity.cpp
 
 diff --git a/make/modules/java.base/Launcher.gmk b/make/modules/java.base/Launcher.gmk
-index 700ddefda..78c884dae 100644
+index 700ddefda49e891ac1a2cfd8602fb8a9409ad1d4..78c884dae8271aea4431976823a0f18506cab4b4 100644
 --- a/make/modules/java.base/Launcher.gmk
 +++ b/make/modules/java.base/Launcher.gmk
 @@ -73,7 +73,7 @@ endif
@@ -25,7 +25,7 @@ index 700ddefda..78c884dae 100644
        NAME := jspawnhelper, \
        SRC := $(TOPDIR)/src/$(MODULE)/unix/native/jspawnhelper, \
 diff --git a/make/modules/java.base/lib/CoreLibraries.gmk b/make/modules/java.base/lib/CoreLibraries.gmk
-index 0a61d009f..7867a3095 100644
+index 0a61d009f34a4e73ace746d0cc6068fe2852e832..7867a3095dbe3d76c8db6d7d1948ae0f05d41c63 100644
 --- a/make/modules/java.base/lib/CoreLibraries.gmk
 +++ b/make/modules/java.base/lib/CoreLibraries.gmk
 @@ -90,6 +90,8 @@ $(eval $(call SetupJdkLibrary, BUILD_LIBJAVA, \
@@ -47,10 +47,10 @@ index 0a61d009f..7867a3095 100644
          -framework SystemConfiguration, \
 diff --git a/src/java.base/serenity/native/libjava/ProcessHandleImpl_serenity.cpp b/src/java.base/serenity/native/libjava/ProcessHandleImpl_serenity.cpp
 new file mode 100644
-index 000000000..e9bb2ec4a
+index 0000000000000000000000000000000000000000..cc0c08cb85a682d66a00f6b48ad2871f83b5e719
 --- /dev/null
 +++ b/src/java.base/serenity/native/libjava/ProcessHandleImpl_serenity.cpp
-@@ -0,0 +1,167 @@
+@@ -0,0 +1,164 @@
 +/*
 + * Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
 + * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
@@ -188,15 +188,12 @@ index 000000000..e9bb2ec4a
 +    unix_getUserInfo(env, jinfo, proc.pid);
 +    JNU_CHECK_EXCEPTION(env);
 +
-+    char cmdline_name[256];
-+    snprintf(cmdline_name , sizeof(cmdline_name) - 1, "/proc/%d/cmdline", pid);
-+
-+    auto cmdline_file = JAVA_TRY(Core::Stream::File::open(cmdline_name, Core::Stream::OpenMode::Read), "Unable to open /proc/pid/cmdline"sv);
++    auto cmdline_file = JAVA_TRY(Core::Stream::File::open(String::formatted("/proc/{}/cmdline", pid), Core::Stream::OpenMode::Read), "Unable to open /proc/pid/cmdline"sv);
 +    auto contents = JAVA_TRY(cmdline_file->read_all(), "Unable to read /proc/pid/cmdline"sv);
 +    auto cmdline = JAVA_TRY(JsonValue::from_string(contents), "Invalid JSON in /proc/pid/cmdline"sv);
 +
 +    if (!cmdline.is_array())
-+        return throwSerenityError(env, Error::from_string_literal("Not an array"), "Unexpected JSON in /proc/pid/cmdline");
++        return throwSerenityError(env, Error::from_string_literal("Not an array"), "Unexpected JSON in /proc/pid/cmdline"sv);
 +
 +    jstring cmdexe = JNU_NewStringPlatform(env, cmdline.as_array()[0].as_string().characters());
 +    env->ExceptionClear();        // unconditionally clear any exception
@@ -219,7 +216,7 @@ index 000000000..e9bb2ec4a
 +}
 +}
 diff --git a/src/java.base/unix/classes/java/lang/ProcessImpl.java b/src/java.base/unix/classes/java/lang/ProcessImpl.java
-index 2bf36f8f1..317bbf158 100644
+index 2bf36f8f136794af4030e12c64026ab217696959..317bbf158a2032cc23ef3b73528a9e9c801612cf 100644
 --- a/src/java.base/unix/classes/java/lang/ProcessImpl.java
 +++ b/src/java.base/unix/classes/java/lang/ProcessImpl.java
 @@ -89,7 +89,9 @@ final class ProcessImpl extends Process {

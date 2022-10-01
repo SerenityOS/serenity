@@ -16,7 +16,7 @@ Co-Authored-By: Andrew Kaster <akaster@serenityos.org>
  7 files changed, 39 insertions(+)
 
 diff --git a/make/autoconf/flags-cflags.m4 b/make/autoconf/flags-cflags.m4
-index 5eed1138f..62e53a1c4 100644
+index 5eed1138f1f205874e21b92050634fbfcfefd0c7..62e53a1c421c600ed92eaeb6805fd61e825e3072 100644
 --- a/make/autoconf/flags-cflags.m4
 +++ b/make/autoconf/flags-cflags.m4
 @@ -382,6 +382,9 @@ AC_DEFUN([FLAGS_SETUP_CFLAGS_HELPER],
@@ -30,7 +30,7 @@ index 5eed1138f..62e53a1c4 100644
      CFLAGS_OS_DEF_JVM="-D_WINDOWS -DWIN32 -D_JNI_IMPLEMENTATION_"
    fi
 diff --git a/make/autoconf/flags-ldflags.m4 b/make/autoconf/flags-ldflags.m4
-index 23bb33e87..e3deb0c3f 100644
+index 23bb33e878d17d2b8072189c1c6d4b17097598e7..e3deb0c3fb0cecfb39b4052f0e5abda34465abc9 100644
 --- a/make/autoconf/flags-ldflags.m4
 +++ b/make/autoconf/flags-ldflags.m4
 @@ -110,6 +110,17 @@ AC_DEFUN([FLAGS_SETUP_LDFLAGS_HELPER],
@@ -52,7 +52,7 @@ index 23bb33e87..e3deb0c3f 100644
    if test "x$TOOLCHAIN_TYPE" = xgcc; then
      if test "x$OPENJDK_TARGET_OS" = xlinux; then
 diff --git a/make/autoconf/platform.m4 b/make/autoconf/platform.m4
-index 205d64f56..6e668edc4 100644
+index 205d64f566d93a9a9c9d0b9191372e3aabb05143..6e668edc45672128a3e70bb4e37d0100a1ef9243 100644
 --- a/make/autoconf/platform.m4
 +++ b/make/autoconf/platform.m4
 @@ -220,6 +220,10 @@ AC_DEFUN([PLATFORM_EXTRACT_VARS_FROM_OS],
@@ -85,7 +85,7 @@ index 205d64f56..6e668edc4 100644
    AC_SUBST(OPENJDK_$1_OS_INCLUDE_SUBDIR)
  ])
 diff --git a/make/autoconf/toolchain.m4 b/make/autoconf/toolchain.m4
-index 69540e160..badd84a50 100644
+index 69540e1608e1df16ca2a3e631c061ba6ae366ca7..badd84a506a201d664f0a6902c68109017c86180 100644
 --- a/make/autoconf/toolchain.m4
 +++ b/make/autoconf/toolchain.m4
 @@ -42,6 +42,7 @@ VALID_TOOLCHAINS_linux="gcc clang"
@@ -97,7 +97,7 @@ index 69540e160..badd84a50 100644
  # Toolchain descriptions
  TOOLCHAIN_DESCRIPTION_clang="clang/LLVM"
 diff --git a/make/common/modules/LauncherCommon.gmk b/make/common/modules/LauncherCommon.gmk
-index 7ad0375e2..8100f655e 100644
+index 7ad0375e2e38ff31419eb47d028a652c2dead647..8100f655e9273de3775e828d7c9dc8aa0185bf46 100644
 --- a/make/common/modules/LauncherCommon.gmk
 +++ b/make/common/modules/LauncherCommon.gmk
 @@ -157,11 +157,14 @@ define SetupBuildLauncherBody
@@ -116,7 +116,7 @@ index 7ad0375e2..8100f655e 100644
            -framework ApplicationServices, \
        LIBS_aix := -ljli_static, \
 diff --git a/make/hotspot/lib/JvmMapfile.gmk b/make/hotspot/lib/JvmMapfile.gmk
-index 5cba93178..752727d0d 100644
+index 5cba93178c744feb0d1c0286634a40def232eca2..752727d0d8b445ab584a09ee5e0cd3f65f9813d4 100644
 --- a/make/hotspot/lib/JvmMapfile.gmk
 +++ b/make/hotspot/lib/JvmMapfile.gmk
 @@ -64,6 +64,18 @@ ifeq ($(call isTargetOs, linux), true)
@@ -139,7 +139,7 @@ index 5cba93178..752727d0d 100644
    # nm on macosx prints out "warning: nm: no name list" to stderr for
    # files without symbols. Hide this, even at the expense of hiding real errors.
 diff --git a/make/modules/java.base/lib/CoreLibraries.gmk b/make/modules/java.base/lib/CoreLibraries.gmk
-index 1d5fede2a..0a61d009f 100644
+index 1d5fede2aa8af9e475ab2980e303b3ff22412795..0a61d009f34a4e73ace746d0cc6068fe2852e832 100644
 --- a/make/modules/java.base/lib/CoreLibraries.gmk
 +++ b/make/modules/java.base/lib/CoreLibraries.gmk
 @@ -209,6 +209,7 @@ $(eval $(call SetupJdkLibrary, BUILD_LIBJLI, \

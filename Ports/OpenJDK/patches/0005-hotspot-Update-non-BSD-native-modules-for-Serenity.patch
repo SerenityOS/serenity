@@ -16,7 +16,7 @@ Co-Authored-By: Andrew Kaster <akaster@serenityos.org>
  8 files changed, 49 insertions(+), 8 deletions(-)
 
 diff --git a/src/hotspot/os/posix/os_posix.cpp b/src/hotspot/os/posix/os_posix.cpp
-index 9eb1fcbcc..0676cb83d 100644
+index 9eb1fcbcc0b22d2e633082877fd5a1ea849738cb..0676cb83d276f284de800c561828c405d29c15d3 100644
 --- a/src/hotspot/os/posix/os_posix.cpp
 +++ b/src/hotspot/os/posix/os_posix.cpp
 @@ -65,7 +65,9 @@
@@ -96,7 +96,7 @@ index 9eb1fcbcc..0676cb83d 100644
  
  const char* os::get_current_directory(char *buf, size_t buflen) {
 diff --git a/src/hotspot/os/posix/signals_posix.cpp b/src/hotspot/os/posix/signals_posix.cpp
-index 2c020a794..9f3316f5b 100644
+index 2c020a79408049797d5c2f1fcc1e5de8d968323e..9f3316f5b9ad66a47bedf7f56a318610a4d88873 100644
 --- a/src/hotspot/os/posix/signals_posix.cpp
 +++ b/src/hotspot/os/posix/signals_posix.cpp
 @@ -552,6 +552,8 @@ public:
@@ -152,7 +152,7 @@ index 2c020a794..9f3316f5b 100644
  #ifdef SI_TKILL
      { SI_TKILL,     "SI_TKILL",    "Signal sent by tkill (pthread_kill)" },
 diff --git a/src/hotspot/share/runtime/os.cpp b/src/hotspot/share/runtime/os.cpp
-index 9b8e667f9..4e9a5f0e6 100644
+index 9b8e667f9ec38e33ec33e9f8bbf90bfb1efa36bc..4e9a5f0e6c5748a6942af6dd637ccd45b6580796 100644
 --- a/src/hotspot/share/runtime/os.cpp
 +++ b/src/hotspot/share/runtime/os.cpp
 @@ -155,7 +155,7 @@ char* os::iso8601_time(jlong milliseconds_since_19700101, char* buffer, size_t b
@@ -183,7 +183,7 @@ index 9b8e667f9..4e9a5f0e6 100644
    #define DEFINE_ENTRY(e, text) { e, #e, text },
  
 diff --git a/src/hotspot/share/runtime/os.hpp b/src/hotspot/share/runtime/os.hpp
-index 7eaaa9db9..50591f707 100644
+index 7eaaa9db984f423c184599050b94238bc0cd1b6f..50591f7070e150e0586bbb05eef00a52b29df47b 100644
 --- a/src/hotspot/share/runtime/os.hpp
 +++ b/src/hotspot/share/runtime/os.hpp
 @@ -468,7 +468,7 @@ class os: AllStatic {
@@ -196,7 +196,7 @@ index 7eaaa9db9..50591f707 100644
      { return false; }
  #else
 diff --git a/src/hotspot/share/runtime/semaphore.hpp b/src/hotspot/share/runtime/semaphore.hpp
-index 0e19c101d..afc007e7a 100644
+index 0e19c101da035baf13a4dd60d81bc024e4d6ac2d..afc007e7a328e05a297a278668386a4944ee1c48 100644
 --- a/src/hotspot/share/runtime/semaphore.hpp
 +++ b/src/hotspot/share/runtime/semaphore.hpp
 @@ -28,7 +28,7 @@
@@ -209,7 +209,7 @@ index 0e19c101d..afc007e7a 100644
  #elif defined(BSD)
  # include "semaphore_bsd.hpp"
 diff --git a/src/hotspot/share/utilities/globalDefinitions.hpp b/src/hotspot/share/utilities/globalDefinitions.hpp
-index 082a3272c..65157b52e 100644
+index 082a3272c6faf5899002fc30d14988bde3869af4..65157b52ed0fc68f289fb529ad7e10fd4699a6b0 100644
 --- a/src/hotspot/share/utilities/globalDefinitions.hpp
 +++ b/src/hotspot/share/utilities/globalDefinitions.hpp
 @@ -1209,5 +1209,9 @@ template<typename K> bool primitive_equals(const K& k0, const K& k1) {
@@ -223,7 +223,7 @@ index 082a3272c..65157b52e 100644
  
  #endif // SHARE_UTILITIES_GLOBALDEFINITIONS_HPP
 diff --git a/src/hotspot/share/utilities/globalDefinitions_gcc.hpp b/src/hotspot/share/utilities/globalDefinitions_gcc.hpp
-index 30cca9ee7..7cac45142 100644
+index 30cca9ee7aef6abd56a4156d4dfb7e1f191bc542..7cac45142b53c8e407e62108a4c84444fa6c1cd7 100644
 --- a/src/hotspot/share/utilities/globalDefinitions_gcc.hpp
 +++ b/src/hotspot/share/utilities/globalDefinitions_gcc.hpp
 @@ -48,7 +48,7 @@
@@ -254,7 +254,7 @@ index 30cca9ee7..7cac45142 100644
  inline int g_isnan(double f) { return isnan(f); }
  #else
 diff --git a/src/hotspot/share/utilities/ostream.cpp b/src/hotspot/share/utilities/ostream.cpp
-index 04995064f..e25c3a429 100644
+index 04995064fe3a98489bebb3605ceadc9d02b38f95..e25c3a4296577ab796f6d750d20186a4de412381 100644
 --- a/src/hotspot/share/utilities/ostream.cpp
 +++ b/src/hotspot/share/utilities/ostream.cpp
 @@ -1065,7 +1065,7 @@ bufferedStream::~bufferedStream() {
