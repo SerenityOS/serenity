@@ -2,6 +2,9 @@
     "matrix": {
         "parameters": "<number>{6}"
     },
+    "matrix3d": {
+        "parameters": "<number>{16}"
+    },
     "translate": {
         "parameters": "<length-percentage>{1,2}"
     },
