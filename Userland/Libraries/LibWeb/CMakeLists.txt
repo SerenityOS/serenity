@@ -277,6 +277,7 @@ set(SOURCES
     HighResolutionTime/Performance.cpp
     Infra/ByteSequences.cpp
     Infra/JSON.cpp
+    Infra/Strings.cpp
     IntersectionObserver/IntersectionObserver.cpp
     Layout/AvailableSpace.cpp
     Layout/BlockContainer.cpp
