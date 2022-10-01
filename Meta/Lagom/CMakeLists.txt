@@ -171,9 +171,13 @@ install(
 )
 
 function(lagom_lib library fs_name)
-    cmake_parse_arguments(LAGOM_LIBRARY "" "" "SOURCES;LIBS" ${ARGN})
+    cmake_parse_arguments(LAGOM_LIBRARY "STATIC" "" "SOURCES;LIBS" ${ARGN})
     set(target_name "Lib${library}")
-    add_library(${target_name} ${LAGOM_LIBRARY_SOURCES})
+    if (LAGOM_LIBRARY_STATIC)
+        add_library(${target_name} STATIC ${LAGOM_LIBRARY_SOURCES})
+    else()
+        add_library(${target_name} ${LAGOM_LIBRARY_SOURCES})
+    endif()
 
     # Don't make alias when we're going to import a previous build for Tools
     # FIXME: Is there a better way to write this?
@@ -283,11 +287,8 @@ endif()
 file(GLOB LIBMAIN_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibMain/*.cpp")
 lagom_lib(Main main
     SOURCES ${LIBMAIN_SOURCES}
+    STATIC
 )
-# The macOS linker is not happy about LibMain's main() calling an undefined symbol (serenity_main()).
-if (APPLE)
-    target_link_options(LibMain PRIVATE -undefined dynamic_lookup)
-endif()
 
 # LibTimeZone
 # This is needed even if Lagom is not enabled because it is depended upon by code generators.
