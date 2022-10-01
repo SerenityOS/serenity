@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/CharacterTypes.h>
 #include <AK/Debug.h>
 #include <AK/JsonObject.h>
 #include <LibCompress/Brotli.h>
@@ -277,6 +278,15 @@ void Job::on_socket_connected()
                 dbgln("Job: Expected 2-part or 3-part HTTP status line, got '{}'", line);
                 return deferred_invoke([this] { did_fail(Core::NetworkJob::Error::ProtocolFailed); });
             }
+
+            if (!parts[0].matches("HTTP/?.?"sv, CaseSensitivity::CaseSensitive) || !is_ascii_digit(parts[0][5]) || !is_ascii_digit(parts[0][7])) {
+                dbgln("Job: Expected HTTP-Version to be of the form 'HTTP/X.Y', got '{}'", parts[0]);
+                return deferred_invoke([this] { did_fail(Core::NetworkJob::Error::ProtocolFailed); });
+            }
+            auto http_major_version = parse_ascii_digit(parts[0][5]);
+            auto http_minor_version = parse_ascii_digit(parts[0][7]);
+            m_legacy_connection = http_major_version < 1 || (http_major_version == 1 && http_minor_version == 0);
+
             auto code = parts[1].to_uint();
             if (!code.has_value()) {
                 dbgln("Job: Expected numeric HTTP status");
@@ -641,8 +651,9 @@ void Job::finish_up()
     auto response = HttpResponse::create(m_code, move(m_headers), m_received_size);
     deferred_invoke([this, response = move(response)] {
         // If the server responded with "Connection: close", close the connection
-        // as the server may or may not want to close the socket.
-        if (auto result = response->headers().get("Connection"sv); result.has_value() && result.value().equals_ignoring_case("close"sv))
+        // as the server may or may not want to close the socket. Also, if this is
+        // a legacy HTTP server (1.0 or older), assume close is the default value.
+        if (auto result = response->headers().get("Connection"sv); result.has_value() ? result->equals_ignoring_case("close"sv) : m_legacy_connection)
             shutdown(ShutdownMode::CloseSocket);
         did_finish(response);
     });
