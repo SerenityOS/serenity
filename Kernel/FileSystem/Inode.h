@@ -104,7 +104,7 @@ public:
 
     ErrorOr<NonnullLockRefPtr<FIFO>> fifo();
 
-    bool can_apply_flock(flock const&) const;
+    bool can_apply_flock(flock const&, Optional<OpenFileDescription const&> = {}) const;
     ErrorOr<void> apply_flock(Process const&, OpenFileDescription const&, Userspace<flock const*>, ShouldBlock);
     ErrorOr<void> get_flock(OpenFileDescription const&, Userspace<flock*>) const;
     void remove_flocks_for_description(OpenFileDescription const&);
