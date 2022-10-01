@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/FlyString.h>
+#include <LibJS/Heap/Handle.h>
 #include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/StringOrSymbol.h>
 
@@ -186,7 +187,7 @@ private:
     Type m_type { Type::Invalid };
     u32 m_number { 0 };
     FlyString m_string;
-    Symbol* m_symbol { nullptr };
+    Handle<Symbol> m_symbol;
 };
 
 }
