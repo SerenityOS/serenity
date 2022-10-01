@@ -790,6 +790,12 @@ int setresuid(uid_t ruid, uid_t euid, uid_t suid)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
+int setregid(gid_t rgid, gid_t egid)
+{
+    int rc = syscall(SC_setresgid, rgid, egid);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
+}
+
 int setresgid(gid_t rgid, gid_t egid, gid_t sgid)
 {
     int rc = syscall(SC_setresgid, rgid, egid, sgid);

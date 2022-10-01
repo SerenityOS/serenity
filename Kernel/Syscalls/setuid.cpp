@@ -206,6 +206,40 @@ ErrorOr<FlatPtr> Process::sys$setresuid(UserID new_ruid, UserID new_euid, UserID
     });
 }
 
+ErrorOr<FlatPtr> Process::sys$setregid(GroupID new_rgid, GroupID new_egid)
+{
+    VERIFY_NO_PROCESS_BIG_LOCK(this);
+    TRY(require_promise(Pledge::id));
+
+    return with_mutable_protected_data([&](auto& protected_data) -> ErrorOr<FlatPtr> {
+        auto credentials = this->credentials();
+
+        if (new_rgid == (gid_t)-1)
+            new_rgid = credentials->gid();
+        if (new_egid == (gid_t)-1)
+            new_egid = credentials->egid();
+
+        auto ok = [&credentials](GroupID id) { return id == credentials->gid() || id == credentials->egid() || id == credentials->sgid(); };
+        if (!ok(new_rgid) || !ok(new_egid))
+            return EPERM;
+
+        auto new_credentials = TRY(Credentials::create(
+            credentials->uid(),
+            new_rgid,
+            credentials->euid(),
+            new_egid,
+            credentials->suid(),
+            credentials->sgid(),
+            credentials->extra_gids()));
+
+        if (credentials->egid() != new_egid)
+            protected_data.dumpable = false;
+
+        protected_data.credentials = move(new_credentials);
+        return 0;
+    });
+}
+
 ErrorOr<FlatPtr> Process::sys$setresgid(GroupID new_rgid, GroupID new_egid, GroupID new_sgid)
 {
     VERIFY_NO_PROCESS_BIG_LOCK(this);

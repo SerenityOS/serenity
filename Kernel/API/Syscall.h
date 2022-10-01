@@ -163,6 +163,7 @@ enum class NeedsBigProcessLock {
     S(sethostname, NeedsBigProcessLock::No)                 \
     S(setkeymap, NeedsBigProcessLock::No)                   \
     S(setpgid, NeedsBigProcessLock::Yes)                    \
+    S(setregid, NeedsBigProcessLock::No)                    \
     S(setresgid, NeedsBigProcessLock::No)                   \
     S(setresuid, NeedsBigProcessLock::No)                   \
     S(setreuid, NeedsBigProcessLock::No)                    \
