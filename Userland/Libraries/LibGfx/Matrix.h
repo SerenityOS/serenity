@@ -84,6 +84,16 @@ public:
         return product;
     }
 
+    constexpr Matrix operator+(Matrix const& other) const
+    {
+        Matrix sum;
+        for (size_t i = 0; i < N; ++i) {
+            for (size_t j = 0; j < N; ++j)
+                sum.m_elements[i][j] = m_elements[i][j] + other.m_elements[i][j];
+        }
+        return sum;
+    }
+
     constexpr Matrix operator/(T divisor) const
     {
         Matrix division;
