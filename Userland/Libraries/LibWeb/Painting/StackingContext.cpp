@@ -251,7 +251,16 @@ Gfx::FloatMatrix4x4 StackingContext::get_transformation_matrix(CSS::Transformati
                 0, 0, 1, 0,
                 0, 0, 0, 1);
         break;
+    case CSS::TransformFunction::RotateX:
+        if (count == 1)
+            return Gfx::rotation_matrix({ 1.0f, 0.0f, 0.0f }, value(0));
+        break;
+    case CSS::TransformFunction::RotateY:
+        if (count == 1)
+            return Gfx::rotation_matrix({ 0.0f, 1.0f, 0.0f }, value(0));
+        break;
     case CSS::TransformFunction::Rotate:
+    case CSS::TransformFunction::RotateZ:
         if (count == 1)
             return Gfx::rotation_matrix({ 0.0f, 0.0f, 1.0f }, value(0));
         break;
