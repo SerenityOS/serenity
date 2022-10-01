@@ -1386,8 +1386,9 @@ ErrorOr<DeprecatedString> readlink(StringView pathname)
     char data[PATH_MAX];
 #ifdef AK_OS_SERENITY
     Syscall::SC_readlink_params small_params {
-        { pathname.characters_without_null_termination(), pathname.length() },
-        { data, sizeof(data) }
+        .path = { pathname.characters_without_null_termination(), pathname.length() },
+        .buffer = { data, sizeof(data) },
+        .dirfd = AT_FDCWD,
     };
     int rc = syscall(SC_readlink, &small_params);
     HANDLE_SYSCALL_RETURN_VALUE("readlink", rc, DeprecatedString(data, rc));

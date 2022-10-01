@@ -389,6 +389,7 @@ struct SC_execve_params {
 struct SC_readlink_params {
     StringArgument path;
     MutableBufferArgument<char, size_t> buffer;
+    int dirfd;
 };
 
 struct SC_link_params {
