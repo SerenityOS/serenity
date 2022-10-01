@@ -577,14 +577,14 @@ ErrorOr<void> VirtualFileSystem::chmod(Credentials const& credentials, StringVie
     return chmod(credentials, custody, mode);
 }
 
-ErrorOr<void> VirtualFileSystem::rename(Credentials const& credentials, StringView old_path, StringView new_path, Custody& base)
+ErrorOr<void> VirtualFileSystem::rename(Credentials const& credentials, Custody& old_base, StringView old_path, Custody& new_base, StringView new_path)
 {
     RefPtr<Custody> old_parent_custody;
-    auto old_custody = TRY(resolve_path(credentials, old_path, base, &old_parent_custody, O_NOFOLLOW_NOERROR));
+    auto old_custody = TRY(resolve_path(credentials, old_path, old_base, &old_parent_custody, O_NOFOLLOW_NOERROR));
     auto& old_inode = old_custody->inode();
 
     RefPtr<Custody> new_parent_custody;
-    auto new_custody_or_error = resolve_path(credentials, new_path, base, &new_parent_custody);
+    auto new_custody_or_error = resolve_path(credentials, new_path, new_base, &new_parent_custody);
     if (new_custody_or_error.is_error()) {
         if (new_custody_or_error.error().code() != ENOENT || !new_parent_custody)
             return new_custody_or_error.release_error();

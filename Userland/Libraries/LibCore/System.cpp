@@ -920,7 +920,9 @@ ErrorOr<void> rename(StringView old_path, StringView new_path)
 
 #ifdef AK_OS_SERENITY
     Syscall::SC_rename_params params {
+        .olddirfd = AT_FDCWD,
         .old_path = { old_path.characters_without_null_termination(), old_path.length() },
+        .newdirfd = AT_FDCWD,
         .new_path = { new_path.characters_without_null_termination(), new_path.length() },
     };
     int rc = syscall(SC_rename, &params);

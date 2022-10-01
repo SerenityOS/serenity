@@ -418,7 +418,9 @@ struct SC_symlink_params {
 };
 
 struct SC_rename_params {
+    int olddirfd;
     StringArgument old_path;
+    int newdirfd;
     StringArgument new_path;
 };
 
