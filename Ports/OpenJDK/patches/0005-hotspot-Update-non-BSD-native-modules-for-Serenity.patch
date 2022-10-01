@@ -5,18 +5,18 @@ Subject: [PATCH] hotspot: Update non-BSD native modules for Serenity
 
 Co-Authored-By: Andrew Kaster <akaster@serenityos.org>
 ---
- src/hotspot/os/posix/os_posix.cpp             | 23 ++++++++++++++++++-
- src/hotspot/os/posix/signals_posix.cpp        | 12 ++++++++++
- src/hotspot/share/runtime/os.cpp              |  6 ++++-
- src/hotspot/share/runtime/os.hpp              |  2 +-
- src/hotspot/share/runtime/semaphore.hpp       |  2 +-
- .../share/utilities/globalDefinitions.hpp     |  4 ++++
- .../share/utilities/globalDefinitions_gcc.hpp |  6 ++---
- src/hotspot/share/utilities/ostream.cpp       |  2 +-
- 8 files changed, 49 insertions(+), 8 deletions(-)
+ src/hotspot/os/posix/os_posix.cpp              | 18 +++++++++++++++++-
+ src/hotspot/os/posix/signals_posix.cpp         | 12 ++++++++++++
+ src/hotspot/share/runtime/os.cpp               |  6 +++++-
+ src/hotspot/share/runtime/os.hpp               |  2 +-
+ src/hotspot/share/runtime/semaphore.hpp        |  2 +-
+ .../share/utilities/globalDefinitions.hpp      |  4 ++++
+ .../share/utilities/globalDefinitions_gcc.hpp  |  6 +++---
+ src/hotspot/share/utilities/ostream.cpp        |  2 +-
+ 8 files changed, 44 insertions(+), 8 deletions(-)
 
 diff --git a/src/hotspot/os/posix/os_posix.cpp b/src/hotspot/os/posix/os_posix.cpp
-index 9eb1fcbcc0b22d2e633082877fd5a1ea849738cb..0676cb83d276f284de800c561828c405d29c15d3 100644
+index 9eb1fcbcc0b22d2e633082877fd5a1ea849738cb..a50fa75f27e243ca93503f7846cf4abaf58cc404 100644
 --- a/src/hotspot/os/posix/os_posix.cpp
 +++ b/src/hotspot/os/posix/os_posix.cpp
 @@ -65,7 +65,9 @@
@@ -29,20 +29,7 @@ index 9eb1fcbcc0b22d2e633082877fd5a1ea849738cb..0676cb83d276f284de800c561828c405
  
  #ifdef __APPLE__
    #include <crt_externs.h>
-@@ -272,7 +274,12 @@ static int util_posix_fallocate(int fd, off_t offset, off_t len) {
-   }
-   return -1;
- #else
-+#ifndef SERENITY
-   return posix_fallocate(fd, offset, len);
-+#else
-+  // YOLO
-+  return 0;
-+#endif
- #endif
- }
- 
-@@ -418,6 +425,7 @@ void os::Posix::print_load_average(outputStream* st) {
+@@ -418,6 +420,7 @@ void os::Posix::print_load_average(outputStream* st) {
  // unfortunately it does not work on macOS and Linux because the utx chain has no entry
  // for reboot at least on my test machines
  void os::Posix::print_uptime_info(outputStream* st) {
@@ -50,7 +37,7 @@ index 9eb1fcbcc0b22d2e633082877fd5a1ea849738cb..0676cb83d276f284de800c561828c405
    int bootsec = -1;
    int currsec = time(NULL);
    struct utmpx* ent;
-@@ -432,6 +440,9 @@ void os::Posix::print_uptime_info(outputStream* st) {
+@@ -432,6 +435,9 @@ void os::Posix::print_uptime_info(outputStream* st) {
    if (bootsec != -1) {
      os::print_dhm(st, "OS uptime:", (long) (currsec-bootsec));
    }
@@ -60,7 +47,7 @@ index 9eb1fcbcc0b22d2e633082877fd5a1ea849738cb..0676cb83d276f284de800c561828c405
  }
  
  static void print_rlimit(outputStream* st, const char* msg,
-@@ -470,7 +481,9 @@ void os::Posix::print_rlimit_info(outputStream* st) {
+@@ -470,7 +476,9 @@ void os::Posix::print_rlimit_info(outputStream* st) {
  
    print_rlimit(st, ", THREADS", RLIMIT_THREADS);
  #else
@@ -70,7 +57,7 @@ index 9eb1fcbcc0b22d2e633082877fd5a1ea849738cb..0676cb83d276f284de800c561828c405
  #endif
  
    print_rlimit(st, ", NOFILE", RLIMIT_NOFILE);
-@@ -638,7 +651,11 @@ void os::dll_unload(void *lib) {
+@@ -638,7 +646,11 @@ void os::dll_unload(void *lib) {
  }
  
  jlong os::lseek(int fd, jlong offset, int whence) {
@@ -82,7 +69,7 @@ index 9eb1fcbcc0b22d2e633082877fd5a1ea849738cb..0676cb83d276f284de800c561828c405
  }
  
  int os::fsync(int fd) {
-@@ -646,7 +663,11 @@ int os::fsync(int fd) {
+@@ -646,7 +658,11 @@ int os::fsync(int fd) {
  }
  
  int os::ftruncate(int fd, jlong length) {
