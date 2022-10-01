@@ -461,14 +461,21 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
             auto column_span = child_box.computed_values().grid_column_start().is_span() ? child_box.computed_values().grid_column_start().raw_value() : 1;
             auto row_start = 0;
             auto row_span = child_box.computed_values().grid_row_start().is_span() ? child_box.computed_values().grid_row_start().raw_value() : 1;
-            auto found_unoccupied_cell = false;
+            auto found_unoccupied_area = false;
             for (int row_index = auto_placement_cursor_y; row_index < (int)occupation_grid.size(); row_index++) {
                 for (int column_index = auto_placement_cursor_x; column_index < (int)occupation_grid[0].size(); column_index++) {
-                    if (!occupation_grid[row_index][column_index]) {
-                        found_unoccupied_cell = true;
-                        column_start = column_index;
-                        row_start = row_index;
-                        goto finish;
+                    if (column_span + column_index <= static_cast<int>(occupation_grid[0].size())) {
+                        auto found_all_available = true;
+                        for (int span_index = 0; span_index < column_span; span_index++) {
+                            if (occupation_grid[row_index][column_index + span_index])
+                                found_all_available = false;
+                        }
+                        if (found_all_available) {
+                            found_unoccupied_area = true;
+                            column_start = column_index;
+                            row_start = row_index;
+                            goto finish;
+                        }
                     }
                     auto_placement_cursor_x = 0;
                 }
@@ -481,7 +488,7 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
             // and column-start lines to the cursor's position. Otherwise, increment the auto-placement cursor's
             // row position (creating new rows in the implicit grid as necessary), set its column position to the
             // start-most column line in the implicit grid, and return to the previous step.
-            if (!found_unoccupied_cell) {
+            if (!found_unoccupied_area) {
                 row_start = (int)occupation_grid.size();
                 maybe_add_row_to_occupation_grid((int)occupation_grid.size() + 1, occupation_grid);
             }
