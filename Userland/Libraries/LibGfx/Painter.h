@@ -142,6 +142,8 @@ public:
     void translate(int dx, int dy) { translate({ dx, dy }); }
     void translate(IntPoint const& delta) { state().translation.translate_by(delta); }
 
+    IntPoint translation() const { return state().translation; }
+
     Gfx::Bitmap* target() { return m_target.ptr(); }
 
     void save() { m_state_stack.append(m_state_stack.last()); }
@@ -156,7 +158,6 @@ public:
     int scale() const { return state().scale; }
 
 protected:
-    IntPoint translation() const { return state().translation; }
     IntRect to_physical(IntRect const& r) const { return r.translated(translation()) * scale(); }
     IntPoint to_physical(IntPoint const& p) const { return p.translated(translation()) * scale(); }
     void set_physical_pixel_with_draw_op(u32& pixel, Color const&);
