@@ -26,7 +26,25 @@ namespace Web {
 #    define CPU_STRING "AArch64"
 #endif
 
-constexpr auto default_user_agent = "Mozilla/5.0 (SerenityOS; " CPU_STRING ") LibWeb+LibJS/1.0 Browser/1.0";
+#if defined(AK_OS_SERENITY)
+#    define OS_STRING "SerenityOS"
+#elif defined(AK_OS_LINUX)
+#    define OS_STRING "Linux"
+#elif defined(AK_OS_MAC)
+#    define OS_STRING "macOS"
+#elif defined(AK_OS_WINDOWS)
+#    define OS_STRING "Windows"
+#elif defined(AK_OS_FREEBSD)
+#    define OS_STRING "FreeBSD"
+#elif defined(AK_OS_OPENBSD)
+#    define OS_STRING "OpenBSD"
+#elif defined(AK_OS_NETBSD)
+#    define OS_STRING "NetBSD"
+#else
+#    error Unknown OS
+#endif
+
+constexpr auto default_user_agent = "Mozilla/5.0 (" OS_STRING "; " CPU_STRING ") LibWeb+LibJS/1.0 Browser/1.0";
 
 class ResourceLoaderConnectorRequest : public RefCounted<ResourceLoaderConnectorRequest> {
 public:
