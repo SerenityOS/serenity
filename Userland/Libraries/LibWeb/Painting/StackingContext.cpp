@@ -299,7 +299,7 @@ void StackingContext::paint(PaintContext& context) const
 {
     Gfx::PainterStateSaver saver(context.painter());
     if (m_box.is_fixed_position()) {
-        context.painter().translate(context.scroll_offset());
+        context.painter().translate(-context.painter().translation());
     }
 
     auto opacity = m_box.computed_values().opacity();
