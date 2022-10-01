@@ -52,6 +52,7 @@ protected:
     HttpRequest m_request;
     State m_state { State::InStatus };
     Core::Stream::BufferedSocketBase* m_socket { nullptr };
+    bool m_legacy_connection { false };
     int m_code { -1 };
     HashMap<String, String, CaseInsensitiveStringTraits> m_headers;
     Vector<String> m_set_cookie_headers;
