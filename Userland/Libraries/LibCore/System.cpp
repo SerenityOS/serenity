@@ -839,6 +839,7 @@ ErrorOr<void> symlink(StringView target, StringView link_path)
     Syscall::SC_symlink_params params {
         .target = { target.characters_without_null_termination(), target.length() },
         .linkpath = { link_path.characters_without_null_termination(), link_path.length() },
+        .dirfd = AT_FDCWD,
     };
     int rc = syscall(SC_symlink, &params);
     HANDLE_SYSCALL_RETURN_VALUE("symlink", rc, {});

@@ -29,7 +29,7 @@ ErrorOr<FlatPtr> Process::sys$symlink(Userspace<Syscall::SC_symlink_params const
 
     auto target = TRY(get_syscall_path_argument(params.target));
     auto linkpath = TRY(get_syscall_path_argument(params.linkpath));
-    TRY(VirtualFileSystem::the().symlink(credentials(), target->view(), linkpath->view(), current_directory()));
+    TRY(VirtualFileSystem::the().symlink(credentials(), target->view(), linkpath->view(), TRY(custody_for_dirfd(params.dirfd))));
     return 0;
 }
 

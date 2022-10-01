@@ -413,6 +413,7 @@ struct SC_mknod_params {
 struct SC_symlink_params {
     StringArgument target;
     StringArgument linkpath;
+    int dirfd;
 };
 
 struct SC_rename_params {
