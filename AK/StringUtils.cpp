@@ -81,7 +81,7 @@ bool matches(StringView str, StringView mask, CaseSensitivity case_sensitivity, 
     return string_ptr == string_end && mask_ptr == mask_end;
 }
 
-template<typename T>
+template<Signed T>
 Optional<T> convert_to_int(StringView str, TrimWhitespace trim_whitespace)
 {
     auto string = trim_whitespace == TrimWhitespace::Yes
@@ -122,7 +122,7 @@ template Optional<i32> convert_to_int(StringView str, TrimWhitespace);
 template Optional<long> convert_to_int(StringView str, TrimWhitespace);
 template Optional<long long> convert_to_int(StringView str, TrimWhitespace);
 
-template<typename T>
+template<Unsigned T>
 Optional<T> convert_to_uint(StringView str, TrimWhitespace trim_whitespace)
 {
     auto string = trim_whitespace == TrimWhitespace::Yes
@@ -152,10 +152,8 @@ template Optional<u16> convert_to_uint(StringView str, TrimWhitespace);
 template Optional<u32> convert_to_uint(StringView str, TrimWhitespace);
 template Optional<unsigned long> convert_to_uint(StringView str, TrimWhitespace);
 template Optional<unsigned long long> convert_to_uint(StringView str, TrimWhitespace);
-template Optional<long> convert_to_uint(StringView str, TrimWhitespace);
-template Optional<long long> convert_to_uint(StringView str, TrimWhitespace);
 
-template<typename T>
+template<Unsigned T>
 Optional<T> convert_to_uint_from_hex(StringView str, TrimWhitespace trim_whitespace)
 {
     auto string = trim_whitespace == TrimWhitespace::Yes
@@ -194,7 +192,7 @@ template Optional<u16> convert_to_uint_from_hex(StringView str, TrimWhitespace);
 template Optional<u32> convert_to_uint_from_hex(StringView str, TrimWhitespace);
 template Optional<u64> convert_to_uint_from_hex(StringView str, TrimWhitespace);
 
-template<typename T>
+template<Unsigned T>
 Optional<T> convert_to_uint_from_octal(StringView str, TrimWhitespace trim_whitespace)
 {
     auto string = trim_whitespace == TrimWhitespace::Yes

@@ -55,13 +55,13 @@ struct MaskSpan {
 namespace StringUtils {
 
 bool matches(StringView str, StringView mask, CaseSensitivity = CaseSensitivity::CaseInsensitive, Vector<MaskSpan>* match_spans = nullptr);
-template<typename T = int>
+template<Signed T = int>
 Optional<T> convert_to_int(StringView, TrimWhitespace = TrimWhitespace::Yes);
-template<typename T = unsigned>
+template<Unsigned T = unsigned>
 Optional<T> convert_to_uint(StringView, TrimWhitespace = TrimWhitespace::Yes);
-template<typename T = unsigned>
+template<Unsigned T = unsigned>
 Optional<T> convert_to_uint_from_hex(StringView, TrimWhitespace = TrimWhitespace::Yes);
-template<typename T = unsigned>
+template<Unsigned T = unsigned>
 Optional<T> convert_to_uint_from_octal(StringView, TrimWhitespace = TrimWhitespace::Yes);
 bool equals_ignoring_case(StringView, StringView);
 bool ends_with(StringView a, StringView b, CaseSensitivity);

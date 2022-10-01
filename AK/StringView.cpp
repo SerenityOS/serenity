@@ -194,7 +194,7 @@ bool StringView::copy_characters_to_buffer(char* buffer, size_t buffer_size) con
     return characters_to_copy == m_length;
 }
 
-template<typename T>
+template<Signed T>
 Optional<T> StringView::to_int() const
 {
     return StringUtils::convert_to_int<T>(*this);
@@ -206,7 +206,7 @@ template Optional<i32> StringView::to_int() const;
 template Optional<long> StringView::to_int() const;
 template Optional<long long> StringView::to_int() const;
 
-template<typename T>
+template<Unsigned T>
 Optional<T> StringView::to_uint() const
 {
     return StringUtils::convert_to_uint<T>(*this);
@@ -217,8 +217,6 @@ template Optional<u16> StringView::to_uint() const;
 template Optional<u32> StringView::to_uint() const;
 template Optional<unsigned long> StringView::to_uint() const;
 template Optional<unsigned long long> StringView::to_uint() const;
-template Optional<long> StringView::to_uint() const;
-template Optional<long long> StringView::to_uint() const;
 
 #ifndef KERNEL
 bool StringView::operator==(String const& string) const

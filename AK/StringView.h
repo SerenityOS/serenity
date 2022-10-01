@@ -184,9 +184,9 @@ public:
     // following newline.".
     [[nodiscard]] Vector<StringView> lines(bool consider_cr = true) const;
 
-    template<typename T = int>
+    template<Signed T = int>
     Optional<T> to_int() const;
-    template<typename T = unsigned>
+    template<Unsigned T = unsigned>
     Optional<T> to_uint() const;
 
     // Create a new substring view of this string view, starting either at the beginning of
