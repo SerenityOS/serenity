@@ -26,6 +26,7 @@ struct NumericLimits<signed char> {
     static constexpr signed char min() { return -__SCHAR_MAX__ - 1; }
     static constexpr signed char max() { return __SCHAR_MAX__; }
     static constexpr bool is_signed() { return true; }
+    static constexpr size_t max_digits() { return 3; }
 };
 
 template<>
@@ -33,6 +34,7 @@ struct NumericLimits<char> {
     static constexpr char min() { return -__SCHAR_MAX__ - 1; }
     static constexpr char max() { return __SCHAR_MAX__; }
     static constexpr bool is_signed() { return true; }
+    static constexpr size_t max_digits() { return 3; }
 };
 
 template<>
@@ -40,6 +42,7 @@ struct NumericLimits<short> {
     static constexpr short min() { return -__SHRT_MAX__ - 1; }
     static constexpr short max() { return __SHRT_MAX__; }
     static constexpr bool is_signed() { return true; }
+    static constexpr size_t max_digits() { return 5; }
 };
 
 template<>
@@ -47,6 +50,7 @@ struct NumericLimits<int> {
     static constexpr int min() { return -__INT_MAX__ - 1; }
     static constexpr int max() { return __INT_MAX__; }
     static constexpr bool is_signed() { return true; }
+    static constexpr size_t max_digits() { return 10; }
 };
 
 template<>
@@ -54,6 +58,7 @@ struct NumericLimits<long> {
     static constexpr long min() { return -__LONG_MAX__ - 1; }
     static constexpr long max() { return __LONG_MAX__; }
     static constexpr bool is_signed() { return true; }
+    static constexpr size_t max_digits() { return (sizeof(long) == 4) ? 10 : 19; }
 };
 
 template<>
@@ -61,6 +66,7 @@ struct NumericLimits<long long> {
     static constexpr long long min() { return -__LONG_LONG_MAX__ - 1; }
     static constexpr long long max() { return __LONG_LONG_MAX__; }
     static constexpr bool is_signed() { return true; }
+    static constexpr size_t max_digits() { return 19; }
 };
 
 template<>
@@ -68,6 +74,7 @@ struct NumericLimits<unsigned char> {
     static constexpr unsigned char min() { return 0; }
     static constexpr unsigned char max() { return __SCHAR_MAX__ * 2u + 1; }
     static constexpr bool is_signed() { return false; }
+    static constexpr size_t max_digits() { return 3; }
 };
 
 template<>
@@ -75,6 +82,7 @@ struct NumericLimits<unsigned short> {
     static constexpr unsigned short min() { return 0; }
     static constexpr unsigned short max() { return __SHRT_MAX__ * 2u + 1; }
     static constexpr bool is_signed() { return false; }
+    static constexpr size_t max_digits() { return 5; }
 };
 
 template<>
@@ -82,6 +90,7 @@ struct NumericLimits<unsigned> {
     static constexpr unsigned min() { return 0; }
     static constexpr unsigned max() { return __INT_MAX__ * 2u + 1; }
     static constexpr bool is_signed() { return false; }
+    static constexpr size_t max_digits() { return 10; }
 };
 
 template<>
@@ -89,6 +98,7 @@ struct NumericLimits<unsigned long> {
     static constexpr unsigned long min() { return 0; }
     static constexpr unsigned long max() { return __LONG_MAX__ * 2ul + 1; }
     static constexpr bool is_signed() { return false; }
+    static constexpr size_t max_digits() { return (sizeof(long) == 4) ? 10 : 20; }
 };
 
 template<>
@@ -96,6 +106,7 @@ struct NumericLimits<unsigned long long> {
     static constexpr unsigned long long min() { return 0; }
     static constexpr unsigned long long max() { return __LONG_LONG_MAX__ * 2ull + 1; }
     static constexpr bool is_signed() { return false; }
+    static constexpr size_t max_digits() { return 20; }
 };
 
 #ifndef KERNEL
