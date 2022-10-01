@@ -10,6 +10,8 @@
 
 namespace Web::Infra {
 
+constexpr auto ASCII_WHITESPACE = "\t\n\f\r "sv;
+
 // https://infra.spec.whatwg.org/#ascii-whitespace
 constexpr bool is_ascii_whitespace(u32 code_point)
 {

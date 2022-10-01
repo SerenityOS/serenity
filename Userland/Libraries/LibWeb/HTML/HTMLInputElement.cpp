@@ -13,6 +13,7 @@
 #include <LibWeb/HTML/EventNames.h>
 #include <LibWeb/HTML/HTMLFormElement.h>
 #include <LibWeb/HTML/HTMLInputElement.h>
+#include <LibWeb/Infra/CharacterTypes.h>
 #include <LibWeb/Layout/BlockContainer.h>
 #include <LibWeb/Layout/ButtonBox.h>
 #include <LibWeb/Layout/CheckBox.h>
@@ -300,7 +301,7 @@ String HTMLInputElement::value_sanitization_algorithm(String value) const
                 if (!(c == '\r' || c == '\n'))
                     builder.append(c);
             }
-            return builder.to_string().trim_whitespace();
+            return builder.string_view().trim(Infra::ASCII_WHITESPACE);
         }
     } else if (type_state() == HTMLInputElement::TypeAttributeState::Number) {
         // If the value of the element is not a valid floating-point number, then set it to the empty string instead.

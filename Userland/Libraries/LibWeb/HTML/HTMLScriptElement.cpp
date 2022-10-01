@@ -15,6 +15,7 @@
 #include <LibWeb/HTML/EventNames.h>
 #include <LibWeb/HTML/HTMLScriptElement.h>
 #include <LibWeb/HTML/Scripting/ClassicScript.h>
+#include <LibWeb/Infra/CharacterTypes.h>
 #include <LibWeb/Loader/ResourceLoader.h>
 
 namespace Web::HTML {
@@ -168,7 +169,7 @@ void HTMLScriptElement::prepare_script()
     }
 
     // Determine the script's type as follows:
-    if (is_javascript_mime_type_essence_match(script_block_type.trim_whitespace())) {
+    if (is_javascript_mime_type_essence_match(script_block_type.trim(Infra::ASCII_WHITESPACE))) {
         // - If the script block's type string with leading and trailing ASCII whitespace stripped is a JavaScript MIME type essence match, the script's type is "classic".
         m_script_type = ScriptType::Classic;
     } else if (script_block_type.equals_ignoring_case("module"sv)) {
@@ -222,8 +223,8 @@ void HTMLScriptElement::prepare_script()
         auto event = attribute(HTML::AttributeNames::event);
 
         // 3. Strip leading and trailing ASCII whitespace from event and for.
-        for_ = for_.trim_whitespace();
-        event = event.trim_whitespace();
+        for_ = for_.trim(Infra::ASCII_WHITESPACE);
+        event = event.trim(Infra::ASCII_WHITESPACE);
 
         // 4. If for is not an ASCII case-insensitive match for the string "window", then return. The script is not executed.
         if (!for_.equals_ignoring_case("window"sv)) {
