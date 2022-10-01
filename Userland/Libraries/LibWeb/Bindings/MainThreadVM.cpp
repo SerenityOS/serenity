@@ -9,6 +9,7 @@
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/Environment.h>
 #include <LibJS/Runtime/FinalizationRegistry.h>
+#include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/NativeFunction.h>
 #include <LibJS/Runtime/VM.h>
 #include <LibWeb/Bindings/Intrinsics.h>
@@ -306,12 +307,7 @@ JS::VM& main_thread_vm()
         // NOTE: We push a dummy execution context onto the JS execution context stack,
         //       just to make sure that it's never empty.
         auto& custom_data = *verify_cast<WebEngineCustomData>(vm->custom_data());
-        custom_data.root_execution_context = MUST(JS::Realm::initialize_host_defined_realm(
-            *vm, [&](JS::Realm& realm) -> JS::Object* {
-                custom_data.internal_window_object = JS::make_handle(*HTML::Window::create(realm));
-                return custom_data.internal_window_object.cell();
-            },
-            nullptr));
+        custom_data.root_execution_context = MUST(JS::Realm::initialize_host_defined_realm(*vm, nullptr, nullptr));
 
         auto* root_realm = custom_data.root_execution_context->realm;
         auto* intrinsics = root_realm->heap().allocate<Intrinsics>(*root_realm, *root_realm);
@@ -321,13 +317,6 @@ JS::VM& main_thread_vm()
         vm->push_execution_context(*custom_data.root_execution_context);
     }
     return *vm;
-}
-
-HTML::Window& main_thread_internal_window_object()
-{
-    auto& vm = main_thread_vm();
-    auto& custom_data = verify_cast<WebEngineCustomData>(*vm.custom_data());
-    return *custom_data.internal_window_object;
 }
 
 // https://dom.spec.whatwg.org/#queue-a-mutation-observer-compound-microtask

@@ -13,7 +13,6 @@
 #include <LibJS/Runtime/VM.h>
 #include <LibWeb/DOM/MutationObserver.h>
 #include <LibWeb/HTML/EventLoop/EventLoop.h>
-#include <LibWeb/HTML/Window.h>
 
 namespace Web::Bindings {
 
@@ -34,10 +33,6 @@ struct WebEngineCustomData final : public JS::VM::CustomData {
     Vector<JS::Handle<DOM::MutationObserver>> mutation_observers;
 
     OwnPtr<JS::ExecutionContext> root_execution_context;
-
-    // This object is used as the global object for GC-allocated objects that don't
-    // belong to a web-facing global object.
-    JS::Handle<HTML::Window> internal_window_object;
 };
 
 struct WebEngineCustomJobCallbackData final : public JS::JobCallback::CustomData {
@@ -55,7 +50,6 @@ struct WebEngineCustomJobCallbackData final : public JS::JobCallback::CustomData
 
 HTML::ClassicScript* active_script();
 JS::VM& main_thread_vm();
-HTML::Window& main_thread_internal_window_object();
 void queue_mutation_observer_microtask(DOM::Document&);
 NonnullOwnPtr<JS::ExecutionContext> create_a_new_javascript_realm(JS::VM&, Function<JS::Object*(JS::Realm&)> create_global_object, Function<JS::Object*(JS::Realm&)> create_global_this_value);
 
