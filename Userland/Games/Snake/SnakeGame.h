@@ -68,6 +68,7 @@ private:
     String m_score_text;
     unsigned m_high_score { 0 };
     String m_high_score_text;
+    bool m_is_new_high_score { false };
 
     NonnullRefPtrVector<Gfx::Bitmap> m_fruit_bitmaps;
 };
