@@ -844,6 +844,8 @@ public:
     }
 
 private:
+    ErrorOr<NonnullRefPtr<Custody>> custody_for_dirfd(int dirfd);
+
     SpinlockProtected<Thread::ListInProcess>& thread_list() { return m_thread_list; }
     SpinlockProtected<Thread::ListInProcess> const& thread_list() const { return m_thread_list; }
 
