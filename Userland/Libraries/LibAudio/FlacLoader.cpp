@@ -112,6 +112,9 @@ MaybeLoaderError FlacLoaderPlugin::parse_header()
         case (FlacMetadataBlockType::SEEKTABLE):
             TRY(load_seektable(block));
             break;
+        case FlacMetadataBlockType::PICTURE:
+            TRY(load_picture(block));
+            break;
         case FlacMetadataBlockType::APPLICATION:
             // Note: Third-party library can encode specific data in this.
             dbgln("Unknown 'Application' metadata block encountered.");
@@ -126,6 +129,43 @@ MaybeLoaderError FlacLoaderPlugin::parse_header()
     }
 
     dbgln_if(AFLACLOADER_DEBUG, "Parsed FLAC header: blocksize {}-{}{}, framesize {}-{}, {}Hz, {}bit, {} channels, {} samples total ({:.2f}s), MD5 {}, data start at {:x} bytes, {} headers total (skipped {})", m_min_block_size, m_max_block_size, is_fixed_blocksize_stream() ? " (constant)" : "", m_min_frame_size, m_max_frame_size, m_sample_rate, pcm_bits_per_sample(m_sample_format), m_num_channels, m_total_samples, static_cast<float>(m_total_samples) / static_cast<float>(m_sample_rate), md5_checksum, m_data_start_location, total_meta_blocks, total_meta_blocks - meta_blocks_parsed);
+
+    return {};
+}
+
+// 11.19. METADATA_BLOCK_PICTURE
+MaybeLoaderError FlacLoaderPlugin::load_picture(FlacRawMetadataBlock& block)
+{
+    auto memory_stream = LOADER_TRY(Core::Stream::MemoryStream::construct(block.data.bytes()));
+    auto picture_block_bytes = LOADER_TRY(BigEndianInputBitStream::construct(*memory_stream));
+
+    PictureData picture {};
+
+    picture.type = static_cast<ID3PictureType>(LOADER_TRY(picture_block_bytes->read_bits(32)));
+
+    auto const mime_string_length = LOADER_TRY(picture_block_bytes->read_bits(32));
+    // Note: We are seeking before reading the value to ensure that we stayed inside buffer's size.
+    auto offset_before_seeking = memory_stream->offset();
+    LOADER_TRY(memory_stream->seek(mime_string_length, Core::Stream::SeekMode::FromCurrentPosition));
+    picture.mime_string = { block.data.bytes().data() + offset_before_seeking, (size_t)mime_string_length };
+
+    auto const description_string_length = LOADER_TRY(picture_block_bytes->read_bits(32));
+    offset_before_seeking = memory_stream->offset();
+    LOADER_TRY(memory_stream->seek(description_string_length, Core::Stream::SeekMode::FromCurrentPosition));
+    picture.description_string = Vector<u32> { Span<u32> { reinterpret_cast<u32*>(block.data.bytes().data() + offset_before_seeking), (size_t)description_string_length } };
+
+    picture.width = LOADER_TRY(picture_block_bytes->read_bits(32));
+    picture.height = LOADER_TRY(picture_block_bytes->read_bits(32));
+
+    picture.color_depth = LOADER_TRY(picture_block_bytes->read_bits(32));
+    picture.colors = LOADER_TRY(picture_block_bytes->read_bits(32));
+
+    auto const picture_size = LOADER_TRY(picture_block_bytes->read_bits(32));
+    offset_before_seeking = memory_stream->offset();
+    LOADER_TRY(memory_stream->seek(picture_size, Core::Stream::SeekMode::FromCurrentPosition));
+    picture.data = Vector<u8> { Span<u8> { block.data.bytes().data() + offset_before_seeking, (size_t)picture_size } };
+
+    m_pictures.append(move(picture));
 
     return {};
 }
