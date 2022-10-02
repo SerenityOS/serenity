@@ -112,6 +112,10 @@ MaybeLoaderError FlacLoaderPlugin::parse_header()
         case (FlacMetadataBlockType::SEEKTABLE):
             TRY(load_seektable(block));
             break;
+        case FlacMetadataBlockType::APPLICATION:
+            // Note: Third-party library can encode specific data in this.
+            dbgln("Unknown 'Application' metadata block encountered.");
+            [[fallthrough]];
         case FlacMetadataBlockType::PADDING:
             // Note: A padding block is empty and does not need any treatment.
         default:
