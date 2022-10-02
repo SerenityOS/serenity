@@ -177,8 +177,6 @@ class NativeFunction;
 class ObjectEnvironment;
 class PrimitiveString;
 class PromiseReaction;
-class PromiseReactionJob;
-class PromiseResolveThenableJob;
 class PropertyAttributes;
 class PropertyDescriptor;
 class PropertyKey;
