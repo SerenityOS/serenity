@@ -176,6 +176,7 @@ class Module;
 class NativeFunction;
 class ObjectEnvironment;
 class PrimitiveString;
+class PromiseCapability;
 class PromiseReaction;
 class PropertyAttributes;
 class PropertyDescriptor;
@@ -199,7 +200,6 @@ enum class DeclarationKind;
 struct AlreadyResolved;
 struct JobCallback;
 struct ModuleRequest;
-struct PromiseCapability;
 
 // Not included in JS_ENUMERATE_NATIVE_OBJECTS due to missing distinct prototype
 class ProxyObject;

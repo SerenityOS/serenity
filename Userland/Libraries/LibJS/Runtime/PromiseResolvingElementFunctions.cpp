@@ -20,11 +20,11 @@ void PromiseValueList::visit_edges(Visitor& visitor)
         visitor.visit(val);
 }
 
-PromiseResolvingElementFunction::PromiseResolvingElementFunction(size_t index, PromiseValueList& values, PromiseCapability capability, RemainingElements& remaining_elements, Object& prototype)
+PromiseResolvingElementFunction::PromiseResolvingElementFunction(size_t index, PromiseValueList& values, NonnullGCPtr<PromiseCapability> capability, RemainingElements& remaining_elements, Object& prototype)
     : NativeFunction(prototype)
     , m_index(index)
     , m_values(values)
-    , m_capability(move(capability))
+    , m_capability(capability)
     , m_remaining_elements(remaining_elements)
 {
 }
@@ -49,19 +49,17 @@ void PromiseResolvingElementFunction::visit_edges(Cell::Visitor& visitor)
     Base::visit_edges(visitor);
 
     visitor.visit(&m_values);
-    visitor.visit(m_capability.promise);
-    visitor.visit(m_capability.resolve);
-    visitor.visit(m_capability.reject);
+    visitor.visit(m_capability);
     visitor.visit(&m_remaining_elements);
 }
 
-PromiseAllResolveElementFunction* PromiseAllResolveElementFunction::create(Realm& realm, size_t index, PromiseValueList& values, PromiseCapability capability, RemainingElements& remaining_elements)
+PromiseAllResolveElementFunction* PromiseAllResolveElementFunction::create(Realm& realm, size_t index, PromiseValueList& values, NonnullGCPtr<PromiseCapability> capability, RemainingElements& remaining_elements)
 {
     return realm.heap().allocate<PromiseAllResolveElementFunction>(realm, index, values, capability, remaining_elements, *realm.intrinsics().function_prototype());
 }
 
-PromiseAllResolveElementFunction::PromiseAllResolveElementFunction(size_t index, PromiseValueList& values, PromiseCapability capability, RemainingElements& remaining_elements, Object& prototype)
-    : PromiseResolvingElementFunction(index, values, move(capability), remaining_elements, prototype)
+PromiseAllResolveElementFunction::PromiseAllResolveElementFunction(size_t index, PromiseValueList& values, NonnullGCPtr<PromiseCapability> capability, RemainingElements& remaining_elements, Object& prototype)
+    : PromiseResolvingElementFunction(index, values, capability, remaining_elements, prototype)
 {
 }
 
@@ -80,20 +78,20 @@ ThrowCompletionOr<Value> PromiseAllResolveElementFunction::resolve_element()
         auto* values_array = Array::create_from(realm, m_values.values());
 
         // b. Return ? Call(promiseCapability.[[Resolve]], undefined, « valuesArray »).
-        return JS::call(vm, *m_capability.resolve, js_undefined(), values_array);
+        return JS::call(vm, *m_capability->resolve(), js_undefined(), values_array);
     }
 
     // 11. Return undefined.
     return js_undefined();
 }
 
-PromiseAllSettledResolveElementFunction* PromiseAllSettledResolveElementFunction::create(Realm& realm, size_t index, PromiseValueList& values, PromiseCapability capability, RemainingElements& remaining_elements)
+PromiseAllSettledResolveElementFunction* PromiseAllSettledResolveElementFunction::create(Realm& realm, size_t index, PromiseValueList& values, NonnullGCPtr<PromiseCapability> capability, RemainingElements& remaining_elements)
 {
     return realm.heap().allocate<PromiseAllSettledResolveElementFunction>(realm, index, values, capability, remaining_elements, *realm.intrinsics().function_prototype());
 }
 
-PromiseAllSettledResolveElementFunction::PromiseAllSettledResolveElementFunction(size_t index, PromiseValueList& values, PromiseCapability capability, RemainingElements& remaining_elements, Object& prototype)
-    : PromiseResolvingElementFunction(index, values, move(capability), remaining_elements, prototype)
+PromiseAllSettledResolveElementFunction::PromiseAllSettledResolveElementFunction(size_t index, PromiseValueList& values, NonnullGCPtr<PromiseCapability> capability, RemainingElements& remaining_elements, Object& prototype)
+    : PromiseResolvingElementFunction(index, values, capability, remaining_elements, prototype)
 {
 }
 
@@ -121,20 +119,20 @@ ThrowCompletionOr<Value> PromiseAllSettledResolveElementFunction::resolve_elemen
         auto* values_array = Array::create_from(realm, m_values.values());
 
         // b. Return ? Call(promiseCapability.[[Resolve]], undefined, « valuesArray »).
-        return JS::call(vm, *m_capability.resolve, js_undefined(), values_array);
+        return JS::call(vm, *m_capability->resolve(), js_undefined(), values_array);
     }
 
     // 15. Return undefined.
     return js_undefined();
 }
 
-PromiseAllSettledRejectElementFunction* PromiseAllSettledRejectElementFunction::create(Realm& realm, size_t index, PromiseValueList& values, PromiseCapability capability, RemainingElements& remaining_elements)
+PromiseAllSettledRejectElementFunction* PromiseAllSettledRejectElementFunction::create(Realm& realm, size_t index, PromiseValueList& values, NonnullGCPtr<PromiseCapability> capability, RemainingElements& remaining_elements)
 {
     return realm.heap().allocate<PromiseAllSettledRejectElementFunction>(realm, index, values, capability, remaining_elements, *realm.intrinsics().function_prototype());
 }
 
-PromiseAllSettledRejectElementFunction::PromiseAllSettledRejectElementFunction(size_t index, PromiseValueList& values, PromiseCapability capability, RemainingElements& remaining_elements, Object& prototype)
-    : PromiseResolvingElementFunction(index, values, move(capability), remaining_elements, prototype)
+PromiseAllSettledRejectElementFunction::PromiseAllSettledRejectElementFunction(size_t index, PromiseValueList& values, NonnullGCPtr<PromiseCapability> capability, RemainingElements& remaining_elements, Object& prototype)
+    : PromiseResolvingElementFunction(index, values, capability, remaining_elements, prototype)
 {
 }
 
@@ -162,20 +160,20 @@ ThrowCompletionOr<Value> PromiseAllSettledRejectElementFunction::resolve_element
         auto* values_array = Array::create_from(realm, m_values.values());
 
         // b. Return ? Call(promiseCapability.[[Resolve]], undefined, « valuesArray »).
-        return JS::call(vm, *m_capability.resolve, js_undefined(), values_array);
+        return JS::call(vm, *m_capability->resolve(), js_undefined(), values_array);
     }
 
     // 15. Return undefined.
     return js_undefined();
 }
 
-PromiseAnyRejectElementFunction* PromiseAnyRejectElementFunction::create(Realm& realm, size_t index, PromiseValueList& errors, PromiseCapability capability, RemainingElements& remaining_elements)
+PromiseAnyRejectElementFunction* PromiseAnyRejectElementFunction::create(Realm& realm, size_t index, PromiseValueList& errors, NonnullGCPtr<PromiseCapability> capability, RemainingElements& remaining_elements)
 {
     return realm.heap().allocate<PromiseAnyRejectElementFunction>(realm, index, errors, capability, remaining_elements, *realm.intrinsics().function_prototype());
 }
 
-PromiseAnyRejectElementFunction::PromiseAnyRejectElementFunction(size_t index, PromiseValueList& errors, PromiseCapability capability, RemainingElements& remaining_elements, Object& prototype)
-    : PromiseResolvingElementFunction(index, errors, move(capability), remaining_elements, prototype)
+PromiseAnyRejectElementFunction::PromiseAnyRejectElementFunction(size_t index, PromiseValueList& errors, NonnullGCPtr<PromiseCapability> capability, RemainingElements& remaining_elements, Object& prototype)
+    : PromiseResolvingElementFunction(index, errors, capability, remaining_elements, prototype)
 {
 }
 
@@ -198,7 +196,7 @@ ThrowCompletionOr<Value> PromiseAnyRejectElementFunction::resolve_element()
         MUST(error->define_property_or_throw(vm.names.errors, { .value = errors_array, .writable = true, .enumerable = false, .configurable = true }));
 
         // c. Return ? Call(promiseCapability.[[Reject]], undefined, « error »).
-        return JS::call(vm, *m_capability.reject, js_undefined(), error);
+        return JS::call(vm, *m_capability->reject(), js_undefined(), error);
     }
 
     return js_undefined();

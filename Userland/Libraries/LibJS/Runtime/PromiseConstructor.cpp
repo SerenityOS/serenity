@@ -39,7 +39,7 @@ static ThrowCompletionOr<Value> get_promise_resolve(VM& vm, Value constructor)
 using EndOfElementsCallback = Function<ThrowCompletionOr<Value>(PromiseValueList&)>;
 using InvokeElementFunctionCallback = Function<ThrowCompletionOr<Value>(PromiseValueList&, RemainingElements&, Value, size_t)>;
 
-static ThrowCompletionOr<Value> perform_promise_common(VM& vm, Iterator& iterator_record, Value constructor, PromiseCapability result_capability, Value promise_resolve, EndOfElementsCallback end_of_list, InvokeElementFunctionCallback invoke_element_function)
+static ThrowCompletionOr<Value> perform_promise_common(VM& vm, Iterator& iterator_record, Value constructor, PromiseCapability const& result_capability, Value promise_resolve, EndOfElementsCallback end_of_list, InvokeElementFunctionCallback invoke_element_function)
 {
     VERIFY(constructor.is_constructor());
     VERIFY(promise_resolve.is_function());
@@ -79,7 +79,7 @@ static ThrowCompletionOr<Value> perform_promise_common(VM& vm, Iterator& iterato
             }
 
             // iv. Return resultCapability.[[Promise]].
-            return result_capability.promise;
+            return result_capability.promise();
         }
 
         // e. Let nextValue be Completion(IteratorValue(next)).
@@ -113,7 +113,7 @@ static ThrowCompletionOr<Value> perform_promise_common(VM& vm, Iterator& iterato
 }
 
 // 27.2.4.1.2 PerformPromiseAll ( iteratorRecord, constructor, resultCapability, promiseResolve ), https://tc39.es/ecma262/#sec-performpromiseall
-static ThrowCompletionOr<Value> perform_promise_all(VM& vm, Iterator& iterator_record, Value constructor, PromiseCapability result_capability, Value promise_resolve)
+static ThrowCompletionOr<Value> perform_promise_all(VM& vm, Iterator& iterator_record, Value constructor, PromiseCapability const& result_capability, Value promise_resolve)
 {
     auto& realm = *vm.current_realm();
 
@@ -124,10 +124,10 @@ static ThrowCompletionOr<Value> perform_promise_all(VM& vm, Iterator& iterator_r
             auto* values_array = Array::create_from(realm, values.values());
 
             // 2. Perform ? Call(resultCapability.[[Resolve]], undefined, « valuesArray »).
-            TRY(call(vm, *result_capability.resolve, js_undefined(), values_array));
+            TRY(call(vm, *result_capability.resolve(), js_undefined(), values_array));
 
             // iv. Return resultCapability.[[Promise]].
-            return Value(result_capability.promise);
+            return result_capability.promise();
         },
         [&](PromiseValueList& values, RemainingElements& remaining_elements_count, Value next_promise, size_t index) {
             // j. Let steps be the algorithm steps defined in Promise.all Resolve Element Functions.
@@ -142,12 +142,12 @@ static ThrowCompletionOr<Value> perform_promise_all(VM& vm, Iterator& iterator_r
             on_fulfilled->define_direct_property(vm.names.name, js_string(vm, String::empty()), Attribute::Configurable);
 
             // s. Perform ? Invoke(nextPromise, "then", « onFulfilled, resultCapability.[[Reject]] »).
-            return next_promise.invoke(vm, vm.names.then, on_fulfilled, result_capability.reject);
+            return next_promise.invoke(vm, vm.names.then, on_fulfilled, result_capability.reject());
         });
 }
 
 // 27.2.4.2.1 PerformPromiseAllSettled ( iteratorRecord, constructor, resultCapability, promiseResolve ), https://tc39.es/ecma262/#sec-performpromiseallsettled
-static ThrowCompletionOr<Value> perform_promise_all_settled(VM& vm, Iterator& iterator_record, Value constructor, PromiseCapability result_capability, Value promise_resolve)
+static ThrowCompletionOr<Value> perform_promise_all_settled(VM& vm, Iterator& iterator_record, Value constructor, PromiseCapability const& result_capability, Value promise_resolve)
 {
     auto& realm = *vm.current_realm();
 
@@ -156,9 +156,9 @@ static ThrowCompletionOr<Value> perform_promise_all_settled(VM& vm, Iterator& it
         [&](PromiseValueList& values) -> ThrowCompletionOr<Value> {
             auto* values_array = Array::create_from(realm, values.values());
 
-            TRY(call(vm, *result_capability.resolve, js_undefined(), values_array));
+            TRY(call(vm, *result_capability.resolve(), js_undefined(), values_array));
 
-            return Value(result_capability.promise);
+            return result_capability.promise();
         },
         [&](PromiseValueList& values, RemainingElements& remaining_elements_count, Value next_promise, size_t index) {
             // j. Let stepsFulfilled be the algorithm steps defined in Promise.allSettled Resolve Element Functions.
@@ -190,7 +190,7 @@ static ThrowCompletionOr<Value> perform_promise_all_settled(VM& vm, Iterator& it
 }
 
 // 27.2.4.3.1 PerformPromiseAny ( iteratorRecord, constructor, resultCapability, promiseResolve ), https://tc39.es/ecma262/#sec-performpromiseany
-static ThrowCompletionOr<Value> perform_promise_any(VM& vm, Iterator& iterator_record, Value constructor, PromiseCapability result_capability, Value promise_resolve)
+static ThrowCompletionOr<Value> perform_promise_any(VM& vm, Iterator& iterator_record, Value constructor, PromiseCapability const& result_capability, Value promise_resolve)
 {
     auto& realm = *vm.current_realm();
 
@@ -220,22 +220,22 @@ static ThrowCompletionOr<Value> perform_promise_any(VM& vm, Iterator& iterator_r
             on_rejected->define_direct_property(vm.names.name, js_string(vm, String::empty()), Attribute::Configurable);
 
             // s. Perform ? Invoke(nextPromise, "then", « resultCapability.[[Resolve]], onRejected »).
-            return next_promise.invoke(vm, vm.names.then, result_capability.resolve, on_rejected);
+            return next_promise.invoke(vm, vm.names.then, result_capability.resolve(), on_rejected);
         });
 }
 
 // 27.2.4.5.1 PerformPromiseRace ( iteratorRecord, constructor, resultCapability, promiseResolve ), https://tc39.es/ecma262/#sec-performpromiserace
-static ThrowCompletionOr<Value> perform_promise_race(VM& vm, Iterator& iterator_record, Value constructor, PromiseCapability result_capability, Value promise_resolve)
+static ThrowCompletionOr<Value> perform_promise_race(VM& vm, Iterator& iterator_record, Value constructor, PromiseCapability const& result_capability, Value promise_resolve)
 {
     return perform_promise_common(
         vm, iterator_record, constructor, result_capability, promise_resolve,
         [&](PromiseValueList&) -> ThrowCompletionOr<Value> {
             // ii. Return resultCapability.[[Promise]].
-            return Value(result_capability.promise);
+            return result_capability.promise();
         },
         [&](PromiseValueList&, RemainingElements&, Value next_promise, size_t) {
             // i. Perform ? Invoke(nextPromise, "then", « resultCapability.[[Resolve]], resultCapability.[[Reject]] »).
-            return next_promise.invoke(vm, vm.names.then, result_capability.resolve, result_capability.reject);
+            return next_promise.invoke(vm, vm.names.then, result_capability.resolve(), result_capability.reject());
         });
 }
 
@@ -456,10 +456,10 @@ JS_DEFINE_NATIVE_FUNCTION(PromiseConstructor::reject)
     auto promise_capability = TRY(new_promise_capability(vm, constructor));
 
     // 3. Perform ? Call(promiseCapability.[[Reject]], undefined, « r »).
-    [[maybe_unused]] auto result = TRY(JS::call(vm, *promise_capability.reject, js_undefined(), reason));
+    [[maybe_unused]] auto result = TRY(JS::call(vm, *promise_capability->reject(), js_undefined(), reason));
 
     // 4. Return promiseCapability.[[Promise]].
-    return promise_capability.promise;
+    return promise_capability->promise();
 }
 
 // 27.2.4.7 Promise.resolve ( x ), https://tc39.es/ecma262/#sec-promise.resolve

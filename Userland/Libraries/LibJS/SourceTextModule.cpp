@@ -646,9 +646,9 @@ ThrowCompletionOr<ResolvedBinding> SourceTextModule::resolve_export(VM& vm, FlyS
 }
 
 // 16.2.1.6.5 ExecuteModule ( [ capability ] ), https://tc39.es/ecma262/#sec-source-text-module-record-execute-module
-ThrowCompletionOr<void> SourceTextModule::execute_module(VM& vm, Optional<PromiseCapability> capability)
+ThrowCompletionOr<void> SourceTextModule::execute_module(VM& vm, GCPtr<PromiseCapability> capability)
 {
-    dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] SourceTextModule::execute_module({}, capability has value: {})", filename(), capability.has_value());
+    dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] SourceTextModule::execute_module({}, PromiseCapability @ {})", filename(), capability.ptr());
 
     // 1. Let moduleContext be a new ECMAScript code execution context.
     ExecutionContext module_context { vm.heap() };
@@ -679,7 +679,7 @@ ThrowCompletionOr<void> SourceTextModule::execute_module(VM& vm, Optional<Promis
     // 9. If module.[[HasTLA]] is false, then
     if (!m_has_top_level_await) {
         // a. Assert: capability is not present.
-        VERIFY(!capability.has_value());
+        VERIFY(capability == nullptr);
         // b. Push moduleContext onto the execution context stack; moduleContext is now the running execution context.
         TRY(vm.push_execution_context(module_context, {}));
 
@@ -701,10 +701,10 @@ ThrowCompletionOr<void> SourceTextModule::execute_module(VM& vm, Optional<Promis
     // 10. Else,
     else {
         // a. Assert: capability is a PromiseCapability Record.
-        VERIFY(capability.has_value());
+        VERIFY(capability != nullptr);
 
         // b. Perform AsyncBlockStart(capability, module.[[ECMAScriptCode]], moduleContext).
-        async_block_start(vm, m_ecmascript_code, capability.value(), module_context);
+        async_block_start(vm, m_ecmascript_code, *capability, module_context);
     }
 
     // 11. Return unused.

@@ -147,7 +147,7 @@ JS::NonnullGCPtr<JS::Promise> consume_body(JS::Realm& realm, BodyMixin const& ob
     // 1. If object is unusable, then return a promise rejected with a TypeError.
     if (object.is_unusable()) {
         auto promise_capability = WebIDL::create_rejected_promise(realm, JS::TypeError::create(realm, "Body is unusable"sv));
-        return static_cast<JS::Promise&>(*promise_capability.promise);
+        return verify_cast<JS::Promise>(*promise_capability->promise().ptr());
     }
 
     // 2. Let promise be a promise resolved with an empty byte sequence.

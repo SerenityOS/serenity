@@ -3361,10 +3361,10 @@ Completion ImportCall::execute(Interpreter& interpreter) const
         if (!options_value.is_object()) {
             auto* error = TypeError::create(realm, String::formatted(ErrorType::NotAnObject.message(), "ImportOptions"));
             // i. Perform ! Call(promiseCapability.[[Reject]], undefined, « a newly created TypeError object »).
-            MUST(call(vm, *promise_capability.reject, js_undefined(), error));
+            MUST(call(vm, *promise_capability->reject(), js_undefined(), error));
 
             // ii. Return promiseCapability.[[Promise]].
-            return Value { promise_capability.promise };
+            return Value { promise_capability->promise() };
         }
 
         // b. Let assertionsObj be Get(options, "assert").
@@ -3377,10 +3377,10 @@ Completion ImportCall::execute(Interpreter& interpreter) const
             if (!assertion_object.is_object()) {
                 auto* error = TypeError::create(realm, String::formatted(ErrorType::NotAnObject.message(), "ImportOptionsAssertions"));
                 // 1. Perform ! Call(promiseCapability.[[Reject]], undefined, « a newly created TypeError object »).
-                MUST(call(vm, *promise_capability.reject, js_undefined(), error));
+                MUST(call(vm, *promise_capability->reject(), js_undefined(), error));
 
                 // 2. Return promiseCapability.[[Promise]].
-                return Value { promise_capability.promise };
+                return Value { promise_capability->promise() };
             }
 
             // ii. Let keys be EnumerableOwnPropertyNames(assertionsObj, key).
@@ -3402,10 +3402,10 @@ Completion ImportCall::execute(Interpreter& interpreter) const
                 if (!value.is_string()) {
                     auto* error = TypeError::create(realm, String::formatted(ErrorType::NotAString.message(), "Import Assertion option value"));
                     // a. Perform ! Call(promiseCapability.[[Reject]], undefined, « a newly created TypeError object »).
-                    MUST(call(vm, *promise_capability.reject, js_undefined(), error));
+                    MUST(call(vm, *promise_capability->reject(), js_undefined(), error));
 
                     // b. Return promiseCapability.[[Promise]].
-                    return Value { promise_capability.promise };
+                    return Value { promise_capability->promise() };
                 }
 
                 // 4. If supportedAssertions contains key, then
@@ -3426,7 +3426,7 @@ Completion ImportCall::execute(Interpreter& interpreter) const
     interpreter.vm().host_import_module_dynamically(referencing_script_or_module, move(request), promise_capability);
 
     // 13. Return promiseCapability.[[Promise]].
-    return Value { promise_capability.promise };
+    return Value { promise_capability->promise() };
 }
 
 // 13.2.3.1 Runtime Semantics: Evaluation, https://tc39.es/ecma262/#sec-literals-runtime-semantics-evaluation
