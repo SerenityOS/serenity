@@ -84,7 +84,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
         Config::write_string("Hearts"sv, ""sv, "player_name"sv, player_name);
 
-        GUI::MessageBox::show(window, "Settings have been successfully saved and will take effect in the next game."sv, "Settings Changed Successfully"sv, GUI::MessageBox::Type::Information);
+        GUI::MessageBox::show(settings_dialog, "Settings have been successfully saved and will take effect in the next game."sv, "Settings Changed Successfully"sv, GUI::MessageBox::Type::Information);
     };
 
     auto game_menu = TRY(window->try_add_menu("&Game"));
