@@ -89,6 +89,7 @@ private:
     // decode a single rice partition that has its own rice parameter
     ALWAYS_INLINE ErrorOr<Vector<i32>, LoaderError> decode_rice_partition(u8 partition_type, u32 partitions, u32 partition_index, FlacSubframeHeader& subframe, BigEndianInputBitStream& bit_input);
     MaybeLoaderError load_seektable(FlacRawMetadataBlock&);
+    MaybeLoaderError load_picture(FlacRawMetadataBlock&);
 
     // Converters for special coding used in frame headers
     ALWAYS_INLINE ErrorOr<u32, LoaderError> convert_sample_count_code(u8 sample_count_code);

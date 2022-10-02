@@ -15,6 +15,7 @@
 #include <AK/Span.h>
 #include <AK/StringView.h>
 #include <AK/Try.h>
+#include <LibAudio/GenericTypes.h>
 #include <LibAudio/LoaderError.h>
 #include <LibAudio/Sample.h>
 #include <LibAudio/SampleFormats.h>
@@ -62,6 +63,8 @@ protected:
     OwnPtr<Core::Stream::SeekableStream> m_stream;
     // The constructor might set this so that we can initialize the data stream later.
     Optional<Bytes> m_backing_memory;
+
+    Vector<PictureData> m_pictures;
 };
 
 class Loader : public RefCounted<Loader> {
