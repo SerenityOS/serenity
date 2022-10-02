@@ -29,7 +29,7 @@ sudo true
 
 if [ -z "$BUILD_DIR" ]; then
     if [ -z "$SERENITY_ARCH" ]; then
-        export SERENITY_ARCH="i686"
+        export SERENITY_ARCH="x86_64"
         echo "SERENITY_ARCH not given. Assuming ${SERENITY_ARCH}."
     fi
     BUILD_DIR=Build/"$SERENITY_ARCH"

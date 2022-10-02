@@ -5,7 +5,7 @@ set -eo pipefail
 SCRIPT_DIR="$(dirname "${0}")"
 
 if [ -z "$SERENITY_ARCH" ]; then
-    SERENITY_ARCH="i686"
+    SERENITY_ARCH="x86_64"
 fi
 
 toolchain_suffix=

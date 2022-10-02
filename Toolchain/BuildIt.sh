@@ -9,7 +9,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 echo "$DIR"
 
-ARCH=${ARCH:-"i686"}
+ARCH=${ARCH:-"x86_64"}
 TARGET="$ARCH-pc-serenity"
 PREFIX="$DIR/Local/$ARCH"
 BUILD="$DIR/../Build/$ARCH"

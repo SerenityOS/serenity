@@ -91,7 +91,7 @@ fi
 if [ -n "$1" ]; then
     TARGET="$1"; shift
 else
-    TARGET="${SERENITY_ARCH:-"i686"}"
+    TARGET="${SERENITY_ARCH:-"x86_64"}"
 fi
 
 CMAKE_ARGS=()
