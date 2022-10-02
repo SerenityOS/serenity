@@ -214,13 +214,11 @@ void LineBuilder::update_last_line()
 
             float fragment_baseline = 0;
             if (fragment.layout_node().is_text_node()) {
-                fragment_baseline = font_metrics.ascent;
+                fragment_baseline = font_metrics.ascent + half_leading;
             } else {
                 auto const& box = verify_cast<Layout::Box>(fragment.layout_node());
                 fragment_baseline = box_baseline(m_layout_state, box);
             }
-
-            fragment_baseline += half_leading;
 
             // Remember the baseline used for this fragment. This will be used when painting the fragment.
             fragment.set_baseline(fragment_baseline);
