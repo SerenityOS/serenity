@@ -18,6 +18,7 @@
 #include <AK/String.h>
 #include <AK/Types.h>
 #include <LibJS/Forward.h>
+#include <LibJS/Heap/GCPtr.h>
 #include <LibJS/Runtime/BigInt.h>
 #include <LibJS/Runtime/Utf16String.h>
 #include <math.h>
@@ -272,6 +273,18 @@ public:
 
     Value(BigInt const* bigint)
         : Value(BIGINT_TAG << TAG_SHIFT, reinterpret_cast<void const*>(bigint))
+    {
+    }
+
+    template<typename T>
+    Value(GCPtr<T> ptr)
+        : Value(ptr.ptr())
+    {
+    }
+
+    template<typename T>
+    Value(NonnullGCPtr<T> ptr)
+        : Value(ptr.ptr())
     {
     }
 
