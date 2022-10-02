@@ -11,6 +11,7 @@
 #include <AK/Noncopyable.h>
 #include <AK/StringView.h>
 #include <LibJS/Forward.h>
+#include <LibJS/Heap/GCPtr.h>
 
 namespace JS {
 
@@ -54,6 +55,17 @@ public:
         void visit(Cell& cell)
         {
             visit_impl(cell);
+        }
+        template<typename T>
+        void visit(GCPtr<T> cell)
+        {
+            if (cell)
+                visit_impl(*cell.ptr());
+        }
+        template<typename T>
+        void visit(NonnullGCPtr<T> cell)
+        {
+            visit_impl(*cell.ptr());
         }
         void visit(Value);
 
