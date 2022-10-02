@@ -14,8 +14,8 @@
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/IteratorOperations.h>
 #include <LibJS/Runtime/Promise.h>
+#include <LibJS/Runtime/PromiseCapability.h>
 #include <LibJS/Runtime/PromiseConstructor.h>
-#include <LibJS/Runtime/PromiseReaction.h>
 #include <LibJS/Runtime/PromiseResolvingElementFunctions.h>
 
 namespace JS {

@@ -8,7 +8,7 @@
 
 #include <AK/StringView.h>
 #include <LibJS/Runtime/NativeFunction.h>
-#include <LibJS/Runtime/PromiseReaction.h>
+#include <LibJS/Runtime/PromiseCapability.h>
 
 namespace JS {
 

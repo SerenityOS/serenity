@@ -155,6 +155,7 @@ set(SOURCES
     Runtime/PrimitiveString.cpp
     Runtime/PrivateEnvironment.cpp
     Runtime/Promise.cpp
+    Runtime/PromiseCapability.cpp
     Runtime/PromiseConstructor.cpp
     Runtime/PromiseJobs.cpp
     Runtime/PromisePrototype.cpp

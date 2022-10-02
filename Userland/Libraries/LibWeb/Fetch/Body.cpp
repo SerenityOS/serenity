@@ -6,7 +6,7 @@
 
 #include <LibJS/Runtime/ArrayBuffer.h>
 #include <LibJS/Runtime/Error.h>
-#include <LibJS/Runtime/PromiseReaction.h>
+#include <LibJS/Runtime/PromiseCapability.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/Fetch/Body.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP/Bodies.h>

@@ -7,7 +7,7 @@
 #pragma once
 
 #include <LibJS/Runtime/Completion.h>
-#include <LibJS/Runtime/PromiseReaction.h>
+#include <LibJS/Runtime/PromiseCapability.h>
 
 namespace JS {
 

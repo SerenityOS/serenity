@@ -8,7 +8,7 @@
 #include <LibJS/Runtime/AggregateError.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/GlobalObject.h>
-#include <LibJS/Runtime/PromiseReaction.h>
+#include <LibJS/Runtime/PromiseCapability.h>
 #include <LibJS/Runtime/PromiseResolvingElementFunctions.h>
 
 namespace JS {

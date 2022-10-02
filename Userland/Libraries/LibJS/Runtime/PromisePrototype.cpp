@@ -10,9 +10,9 @@
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Promise.h>
+#include <LibJS/Runtime/PromiseCapability.h>
 #include <LibJS/Runtime/PromiseConstructor.h>
 #include <LibJS/Runtime/PromisePrototype.h>
-#include <LibJS/Runtime/PromiseReaction.h>
 
 namespace JS {
 

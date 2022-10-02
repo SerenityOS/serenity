@@ -5,6 +5,7 @@
  */
 
 #include <AK/Function.h>
+#include <LibJS/Runtime/PromiseCapability.h>
 #include <LibJS/Runtime/PromiseConstructor.h>
 #include <LibJS/Runtime/Realm.h>
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
