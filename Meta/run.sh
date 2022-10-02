@@ -121,6 +121,11 @@ if [ "$installed_major_version" -lt "$SERENITY_QEMU_MIN_REQ_MAJOR_VERSION" ] ||
     die
 fi
 
+# https://github.com/SerenityOS/serenity/issues/14952
+if [ "$installed_major_version" -ge 7 ] && [ "$installed_minor_version" -gt 0  ]; then
+    SERENITY_MACHINE_FORCE_VERSION_SEVEN_ZERO="-machine pc-i440fx-7.0"
+fi
+
 NATIVE_WINDOWS_QEMU="0"
 
 if command -v wslpath >/dev/null; then
@@ -256,6 +261,7 @@ if [ -z "$SERENITY_MACHINE" ]; then
         SERENITY_MACHINE="-M raspi3b -serial stdio"
     else
         SERENITY_MACHINE="
+        $SERENITY_MACHINE_FORCE_VERSION_SEVEN_ZERO
         -m $SERENITY_RAM_SIZE
         -smp $SERENITY_CPUS
         -display $SERENITY_QEMU_DISPLAY_BACKEND
