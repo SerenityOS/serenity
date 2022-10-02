@@ -30,7 +30,7 @@ namespace Web {
 #    define OS_STRING "SerenityOS"
 #elif defined(AK_OS_LINUX)
 #    define OS_STRING "Linux"
-#elif defined(AK_OS_MAC)
+#elif defined(AK_OS_MACOS)
 #    define OS_STRING "macOS"
 #elif defined(AK_OS_WINDOWS)
 #    define OS_STRING "Windows"
