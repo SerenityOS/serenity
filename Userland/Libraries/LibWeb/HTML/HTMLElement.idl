@@ -15,6 +15,8 @@ interface HTMLElement : Element {
     // FIXME: Support the optional FocusOptions parameter.
     undefined focus();
 
+    undefined blur();
+
     [LegacyNullToEmptyString] attribute DOMString innerText;
 
     readonly attribute long offsetTop;
