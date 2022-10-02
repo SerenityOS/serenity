@@ -44,6 +44,8 @@ public:
 
     void click();
 
+    void blur();
+
     bool fire_a_synthetic_pointer_event(FlyString const& type, DOM::Element& target, bool not_trusted);
 
     // https://html.spec.whatwg.org/multipage/forms.html#category-label
