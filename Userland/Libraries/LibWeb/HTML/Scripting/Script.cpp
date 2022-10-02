@@ -17,4 +17,9 @@ Script::Script(AK::URL base_url, String filename, EnvironmentSettingsObject& env
 
 Script::~Script() = default;
 
+void Script::visit_host_defined_self(JS::Cell::Visitor& visitor)
+{
+    visitor.visit(this);
+}
+
 }
