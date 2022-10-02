@@ -1155,7 +1155,8 @@ String NewFunction::to_string_impl(Bytecode::Executable const&) const
 
 String NewClass::to_string_impl(Bytecode::Executable const&) const
 {
-    return "NewClass";
+    auto name = m_class_expression.name();
+    return String::formatted("NewClass '{}'", name.is_null() ? ""sv : name);
 }
 
 String Return::to_string_impl(Bytecode::Executable const&) const
