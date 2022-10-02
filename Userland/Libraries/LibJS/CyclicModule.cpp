@@ -11,8 +11,8 @@
 
 namespace JS {
 
-CyclicModule::CyclicModule(Realm& realm, StringView filename, bool has_top_level_await, Vector<ModuleRequest> requested_modules)
-    : Module(realm, filename)
+CyclicModule::CyclicModule(Realm& realm, StringView filename, bool has_top_level_await, Vector<ModuleRequest> requested_modules, Script::HostDefined* host_defined)
+    : Module(realm, filename, host_defined)
     , m_requested_modules(move(requested_modules))
     , m_has_top_level_await(has_top_level_await)
 {

@@ -11,8 +11,9 @@
 
 namespace JS {
 
-Module::Module(Realm& realm, String filename)
+Module::Module(Realm& realm, String filename, Script::HostDefined* host_defined)
     : m_realm(realm)
+    , m_host_defined(host_defined)
     , m_filename(move(filename))
 {
 }
@@ -25,6 +26,8 @@ void Module::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_realm);
     visitor.visit(m_environment);
     visitor.visit(m_namespace);
+    if (m_host_defined)
+        m_host_defined->visit_host_defined_self(visitor);
 }
 
 // 16.2.1.5.1.1 InnerModuleLinking ( module, stack, index ), https://tc39.es/ecma262/#sec-InnerModuleLinking
