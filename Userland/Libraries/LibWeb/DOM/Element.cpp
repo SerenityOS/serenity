@@ -518,7 +518,7 @@ bool Element::is_active() const
 JS::NonnullGCPtr<HTMLCollection> Element::get_elements_by_class_name(FlyString const& class_names)
 {
     Vector<FlyString> list_of_class_names;
-    for (auto& name : class_names.view().split_view(Infra::ASCII_WHITESPACE)) {
+    for (auto& name : class_names.view().split_view_if(Infra::is_ascii_whitespace)) {
         list_of_class_names.append(name);
     }
     return HTMLCollection::create(*this, [list_of_class_names = move(list_of_class_names), quirks_mode = document().in_quirks_mode()](Element const& element) {
