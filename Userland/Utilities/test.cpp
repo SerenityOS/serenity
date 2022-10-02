@@ -426,7 +426,8 @@ static OwnPtr<Condition> parse_simple_expression(char* argv[])
 
     // Try to read a unary op.
     if (arg.starts_with('-') && arg.length() == 2) {
-        optind++;
+        if (argv[++optind] == nullptr)
+            fatal_error("expected an argument");
         if (should_treat_expression_as_single_string({ argv[optind], strlen(argv[optind]) })) {
             --optind;
             return make<StringCompare>(move(arg), ""sv, StringCompare::NotEqual);
@@ -571,10 +572,12 @@ static OwnPtr<Condition> parse_complex_expression(char* argv[])
         } binary_operation { AndOp };
 
         if (arg == "-a") {
-            optind++;
+            if (argv[++optind] == nullptr)
+                fatal_error("expected an expression");
             binary_operation = AndOp;
         } else if (arg == "-o") {
-            optind++;
+            if (argv[++optind] == nullptr)
+                fatal_error("expected an expression");
             binary_operation = OrOp;
         } else {
             // Ooops, looked too far.
