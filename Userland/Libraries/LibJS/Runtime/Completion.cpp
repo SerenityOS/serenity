@@ -6,12 +6,11 @@
  */
 
 #include <AK/TypeCasts.h>
-#include <LibCore/EventLoop.h>
 #include <LibJS/Runtime/Completion.h>
-#include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/NativeFunction.h>
+#include <LibJS/Runtime/Promise.h>
+#include <LibJS/Runtime/PromiseCapability.h>
 #include <LibJS/Runtime/PromiseConstructor.h>
-#include <LibJS/Runtime/PromiseReaction.h>
 #include <LibJS/Runtime/VM.h>
 #include <LibJS/Runtime/Value.h>
 

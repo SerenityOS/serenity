@@ -12,8 +12,8 @@
 #include <LibJS/Runtime/GlobalEnvironment.h>
 #include <LibJS/Runtime/ModuleNamespaceObject.h>
 #include <LibJS/Runtime/NativeFunction.h>
+#include <LibJS/Runtime/PromiseCapability.h>
 #include <LibJS/Runtime/PromiseConstructor.h>
-#include <LibJS/Runtime/PromiseReaction.h>
 #include <LibJS/Runtime/ShadowRealm.h>
 #include <LibJS/Runtime/WrappedFunction.h>
 

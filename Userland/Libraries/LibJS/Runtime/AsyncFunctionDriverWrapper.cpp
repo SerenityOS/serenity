@@ -7,7 +7,7 @@
 #include <LibJS/Runtime/AsyncFunctionDriverWrapper.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/NativeFunction.h>
-#include <LibJS/Runtime/PromiseReaction.h>
+#include <LibJS/Runtime/PromiseCapability.h>
 #include <LibJS/Runtime/VM.h>
 
 namespace JS {

@@ -7,8 +7,6 @@
 #pragma once
 
 #include <LibJS/Forward.h>
-#include <LibJS/Runtime/PromiseReaction.h>
-#include <LibJS/Runtime/Value.h>
 #include <LibJS/SafeFunction.h>
 #include <LibWeb/Forward.h>
 
