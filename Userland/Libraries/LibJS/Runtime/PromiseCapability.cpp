@@ -42,32 +42,33 @@ ThrowCompletionOr<NonnullGCPtr<PromiseCapability>> new_promise_capability(VM& vm
     // 2. NOTE: C is assumed to be a constructor function that supports the parameter conventions of the Promise constructor (see 27.2.3.1).
 
     // 3. Let promiseCapability be the PromiseCapability Record { [[Promise]]: undefined, [[Resolve]]: undefined, [[Reject]]: undefined }.
-    // FIXME: This should not be stack-allocated, the executor function below can be captured and outlive it!
-    //        See https://discord.com/channels/830522505605283862/886211697843531866/900081190621569154 for some discussion.
-    struct {
-        Value resolve { js_undefined() };
-        Value reject { js_undefined() };
-    } promise_capability_functions;
+    auto promise_capability = PromiseCapability::create(vm, nullptr, nullptr, nullptr);
 
     // 4. Let executorClosure be a new Abstract Closure with parameters (resolve, reject) that captures promiseCapability and performs the following steps when called:
-    auto executor_closure = [&promise_capability_functions](auto& vm) -> ThrowCompletionOr<Value> {
+    // NOTE: Additionally to capturing the GC-allocated promise capability, we also create handles for
+    // the resolve and reject values to keep them alive within the closure, as it may outlive the former.
+    auto executor_closure = [&promise_capability, resolve_handle = make_handle({}), reject_handle = make_handle({})](auto& vm) mutable -> ThrowCompletionOr<Value> {
         auto resolve = vm.argument(0);
         auto reject = vm.argument(1);
 
         // No idea what other engines say here.
         // a. If promiseCapability.[[Resolve]] is not undefined, throw a TypeError exception.
-        if (!promise_capability_functions.resolve.is_undefined())
+        if (!resolve_handle.is_null())
             return vm.template throw_completion<TypeError>(ErrorType::GetCapabilitiesExecutorCalledMultipleTimes);
 
         // b. If promiseCapability.[[Reject]] is not undefined, throw a TypeError exception.
-        if (!promise_capability_functions.reject.is_undefined())
+        if (!reject_handle.is_null())
             return vm.template throw_completion<TypeError>(ErrorType::GetCapabilitiesExecutorCalledMultipleTimes);
 
         // c. Set promiseCapability.[[Resolve]] to resolve.
-        promise_capability_functions.resolve = resolve;
+        resolve_handle = make_handle(resolve);
+        if (resolve.is_function())
+            promise_capability->set_resolve(resolve.as_function());
 
         // d. Set promiseCapability.[[Reject]] to reject.
-        promise_capability_functions.reject = reject;
+        reject_handle = make_handle(reject);
+        if (reject.is_function())
+            promise_capability->set_reject(reject.as_function());
 
         // e. Return undefined.
         return js_undefined();
@@ -80,20 +81,20 @@ ThrowCompletionOr<NonnullGCPtr<PromiseCapability>> new_promise_capability(VM& vm
     auto* promise = TRY(construct(vm, constructor.as_function(), executor));
 
     // 7. If IsCallable(promiseCapability.[[Resolve]]) is false, throw a TypeError exception.
-    if (!promise_capability_functions.resolve.is_function())
-        return vm.throw_completion<TypeError>(ErrorType::NotAFunction, promise_capability_functions.resolve.to_string_without_side_effects());
+    // NOTE: We only assign a value in the executor closure if it is a function.
+    if (promise_capability->resolve() == nullptr)
+        return vm.throw_completion<TypeError>(ErrorType::NotAFunction, "Promise capability resolve value");
 
     // 8. If IsCallable(promiseCapability.[[Reject]]) is false, throw a TypeError exception.
-    if (!promise_capability_functions.reject.is_function())
-        return vm.throw_completion<TypeError>(ErrorType::NotAFunction, promise_capability_functions.reject.to_string_without_side_effects());
+    // NOTE: We only assign a value in the executor closure if it is a function.
+    if (promise_capability->reject() == nullptr)
+        return vm.throw_completion<TypeError>(ErrorType::NotAFunction, "Promise capability reject value");
 
     // 9. Set promiseCapability.[[Promise]] to promise.
+    promise_capability->set_promise(*promise);
+
     // 10. Return promiseCapability.
-    return PromiseCapability::create(
-        vm,
-        promise,
-        &promise_capability_functions.resolve.as_function(),
-        &promise_capability_functions.reject.as_function());
+    return promise_capability;
 }
 
 }
