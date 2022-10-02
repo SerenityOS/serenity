@@ -112,9 +112,10 @@ MaybeLoaderError FlacLoaderPlugin::parse_header()
         case (FlacMetadataBlockType::SEEKTABLE):
             TRY(load_seektable(block));
             break;
+        case FlacMetadataBlockType::PADDING:
+            // Note: A padding block is empty and does not need any treatment.
         default:
             // TODO: Parse the remaining metadata block types.
-            //       Currently only STREAMINFO and SEEKTABLE are handled.
             break;
         }
         ++total_meta_blocks;
