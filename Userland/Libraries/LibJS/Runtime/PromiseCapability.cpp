@@ -11,8 +11,27 @@
 
 namespace JS {
 
+NonnullGCPtr<PromiseCapability> PromiseCapability::create(VM& vm, GCPtr<Object> promise, GCPtr<FunctionObject> resolve, GCPtr<FunctionObject> reject)
+{
+    return NonnullGCPtr { *vm.heap().allocate_without_realm<PromiseCapability>(promise, resolve, reject) };
+}
+
+PromiseCapability::PromiseCapability(GCPtr<Object> promise, GCPtr<FunctionObject> resolve, GCPtr<FunctionObject> reject)
+    : m_promise(promise)
+    , m_resolve(resolve)
+    , m_reject(reject)
+{
+}
+
+void PromiseCapability::visit_edges(Cell::Visitor& visitor)
+{
+    visitor.visit(m_promise);
+    visitor.visit(m_resolve);
+    visitor.visit(m_reject);
+}
+
 // 27.2.1.5 NewPromiseCapability ( C ), https://tc39.es/ecma262/#sec-newpromisecapability
-ThrowCompletionOr<PromiseCapability> new_promise_capability(VM& vm, Value constructor)
+ThrowCompletionOr<NonnullGCPtr<PromiseCapability>> new_promise_capability(VM& vm, Value constructor)
 {
     auto& realm = *vm.current_realm();
 
@@ -70,11 +89,11 @@ ThrowCompletionOr<PromiseCapability> new_promise_capability(VM& vm, Value constr
 
     // 9. Set promiseCapability.[[Promise]] to promise.
     // 10. Return promiseCapability.
-    return PromiseCapability {
+    return PromiseCapability::create(
+        vm,
         promise,
         &promise_capability_functions.resolve.as_function(),
-        &promise_capability_functions.reject.as_function(),
-    };
+        &promise_capability_functions.reject.as_function());
 }
 
 }

@@ -31,7 +31,7 @@ public:
 
     [[nodiscard]] WebIDL::ExceptionOr<Body> clone() const;
 
-    [[nodiscard]] JS::PromiseCapability fully_read_as_promise() const;
+    [[nodiscard]] JS::NonnullGCPtr<JS::PromiseCapability> fully_read_as_promise() const;
 
 private:
     // https://fetch.spec.whatwg.org/#concept-body-stream

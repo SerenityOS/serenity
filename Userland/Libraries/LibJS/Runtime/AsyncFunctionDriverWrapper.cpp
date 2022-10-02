@@ -59,7 +59,8 @@ ThrowCompletionOr<Value> AsyncFunctionDriverWrapper::react_to_async_task_complet
     if (TRY(result.get(vm, vm.names.done)).to_boolean())
         return promise;
 
-    return promise->perform_then(m_on_fulfillment, m_on_rejection, PromiseCapability { promise, m_on_fulfillment, m_on_rejection });
+    auto promise_capability = PromiseCapability::create(vm, promise, m_on_fulfillment, m_on_rejection);
+    return promise->perform_then(m_on_fulfillment, m_on_rejection, promise_capability);
 }
 
 void AsyncFunctionDriverWrapper::visit_edges(Cell::Visitor& visitor)

@@ -15,7 +15,7 @@
 namespace Web::WebIDL {
 
 // https://webidl.spec.whatwg.org/#a-new-promise
-JS::PromiseCapability create_promise(JS::Realm& realm)
+JS::NonnullGCPtr<JS::PromiseCapability> create_promise(JS::Realm& realm)
 {
     auto& vm = realm.vm();
 
@@ -28,7 +28,7 @@ JS::PromiseCapability create_promise(JS::Realm& realm)
 }
 
 // https://webidl.spec.whatwg.org/#a-promise-resolved-with
-JS::PromiseCapability create_resolved_promise(JS::Realm& realm, JS::Value value)
+JS::NonnullGCPtr<JS::PromiseCapability> create_resolved_promise(JS::Realm& realm, JS::Value value)
 {
     auto& vm = realm.vm();
 
@@ -42,14 +42,14 @@ JS::PromiseCapability create_resolved_promise(JS::Realm& realm, JS::Value value)
     auto promise_capability = MUST(JS::new_promise_capability(vm, constructor));
 
     // 4. Perform ! Call(promiseCapability.[[Resolve]], undefined, « value »).
-    MUST(JS::call(vm, promise_capability.resolve, JS::js_undefined(), value));
+    MUST(JS::call(vm, *promise_capability->resolve(), JS::js_undefined(), value));
 
     // 5. Return promiseCapability.
     return promise_capability;
 }
 
 // https://webidl.spec.whatwg.org/#a-promise-rejected-with
-JS::PromiseCapability create_rejected_promise(JS::Realm& realm, JS::Value reason)
+JS::NonnullGCPtr<JS::PromiseCapability> create_rejected_promise(JS::Realm& realm, JS::Value reason)
 {
     auto& vm = realm.vm();
 
@@ -61,7 +61,7 @@ JS::PromiseCapability create_rejected_promise(JS::Realm& realm, JS::Value reason
     auto promise_capability = MUST(JS::new_promise_capability(vm, constructor));
 
     // 3. Perform ! Call(promiseCapability.[[Reject]], undefined, « r »).
-    MUST(JS::call(vm, promise_capability.reject, JS::js_undefined(), reason));
+    MUST(JS::call(vm, *promise_capability->reject(), JS::js_undefined(), reason));
 
     // 4. Return promiseCapability.
     return promise_capability;
@@ -76,20 +76,20 @@ void resolve_promise(JS::VM& vm, JS::PromiseCapability const& promise_capability
     // 2. Let value be the result of converting x to an ECMAScript value.
 
     // 3. Perform ! Call(p.[[Resolve]], undefined, « value »).
-    MUST(JS::call(vm, promise_capability.resolve, JS::js_undefined(), value));
+    MUST(JS::call(vm, *promise_capability.resolve(), JS::js_undefined(), value));
 }
 
 // https://webidl.spec.whatwg.org/#reject
 void reject_promise(JS::VM& vm, JS::PromiseCapability const& promise_capability, JS::Value reason)
 {
     // 1. Perform ! Call(p.[[Reject]], undefined, « r »).
-    MUST(JS::call(vm, promise_capability.reject, JS::js_undefined(), reason));
+    MUST(JS::call(vm, *promise_capability.reject(), JS::js_undefined(), reason));
 }
 
 // https://webidl.spec.whatwg.org/#dfn-perform-steps-once-promise-is-settled
 JS::NonnullGCPtr<JS::Promise> react_to_promise(JS::PromiseCapability const& promise_capability, Optional<ReactionSteps> on_fulfilled_callback, Optional<ReactionSteps> on_rejected_callback)
 {
-    auto& realm = promise_capability.promise->shape().realm();
+    auto& realm = promise_capability.promise()->shape().realm();
     auto& vm = realm.vm();
 
     // 1. Let onFulfilledSteps be the following steps given argument V:
@@ -117,7 +117,7 @@ JS::NonnullGCPtr<JS::Promise> react_to_promise(JS::PromiseCapability const& prom
         // 2. If there is a set of steps to be run if the promise was rejected, then let result be the result of performing them, given reason. Otherwise, let result be a promise rejected with reason.
         auto result = on_rejected_callback.has_value()
             ? TRY(Bindings::throw_dom_exception_if_needed(vm, [&] { return (*on_rejected_callback)(reason); }))
-            : WebIDL::create_rejected_promise(realm, reason).promise;
+            : WebIDL::create_rejected_promise(realm, reason)->promise();
 
         // 3. Return result, converted to an ECMAScript value.
         return result;
@@ -134,7 +134,7 @@ JS::NonnullGCPtr<JS::Promise> react_to_promise(JS::PromiseCapability const& prom
     auto new_capability = MUST(JS::new_promise_capability(vm, constructor));
 
     // 7. Return PerformPromiseThen(promise.[[Promise]], onFulfilled, onRejected, newCapability).
-    auto* promise = static_cast<JS::Promise*>(promise_capability.promise);
+    auto* promise = verify_cast<JS::Promise>(promise_capability.promise().ptr());
     auto value = promise->perform_then(on_fulfilled, on_rejected, new_capability);
     return verify_cast<JS::Promise>(value.as_object());
 }
@@ -172,7 +172,7 @@ JS::NonnullGCPtr<JS::Promise> upon_rejection(JS::PromiseCapability const& promis
 void mark_promise_as_handled(JS::PromiseCapability const& promise_capability)
 {
     // To mark as handled a Promise<T> promise, set promise.[[Promise]].[[PromiseIsHandled]] to true.
-    auto* promise = static_cast<JS::Promise*>(promise_capability.promise);
+    auto* promise = verify_cast<JS::Promise>(promise_capability.promise().ptr());
     promise->set_is_handled();
 }
 

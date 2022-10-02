@@ -51,13 +51,13 @@ public:
     virtual ThrowCompletionOr<Value> call() override;
 
 protected:
-    explicit PromiseResolvingElementFunction(size_t, PromiseValueList&, PromiseCapability, RemainingElements&, Object& prototype);
+    explicit PromiseResolvingElementFunction(size_t, PromiseValueList&, NonnullGCPtr<PromiseCapability>, RemainingElements&, Object& prototype);
 
     virtual ThrowCompletionOr<Value> resolve_element() = 0;
 
     size_t m_index { 0 };
     PromiseValueList& m_values;
-    PromiseCapability m_capability;
+    NonnullGCPtr<PromiseCapability> m_capability;
     RemainingElements& m_remaining_elements;
 
 private:
@@ -71,12 +71,12 @@ class PromiseAllResolveElementFunction final : public PromiseResolvingElementFun
     JS_OBJECT(PromiseResolvingFunction, NativeFunction);
 
 public:
-    static PromiseAllResolveElementFunction* create(Realm&, size_t, PromiseValueList&, PromiseCapability, RemainingElements&);
+    static PromiseAllResolveElementFunction* create(Realm&, size_t, PromiseValueList&, NonnullGCPtr<PromiseCapability>, RemainingElements&);
 
     virtual ~PromiseAllResolveElementFunction() override = default;
 
 private:
-    explicit PromiseAllResolveElementFunction(size_t, PromiseValueList&, PromiseCapability, RemainingElements&, Object& prototype);
+    explicit PromiseAllResolveElementFunction(size_t, PromiseValueList&, NonnullGCPtr<PromiseCapability>, RemainingElements&, Object& prototype);
 
     virtual ThrowCompletionOr<Value> resolve_element() override;
 };
@@ -86,12 +86,12 @@ class PromiseAllSettledResolveElementFunction final : public PromiseResolvingEle
     JS_OBJECT(PromiseResolvingFunction, NativeFunction);
 
 public:
-    static PromiseAllSettledResolveElementFunction* create(Realm&, size_t, PromiseValueList&, PromiseCapability, RemainingElements&);
+    static PromiseAllSettledResolveElementFunction* create(Realm&, size_t, PromiseValueList&, NonnullGCPtr<PromiseCapability>, RemainingElements&);
 
     virtual ~PromiseAllSettledResolveElementFunction() override = default;
 
 private:
-    explicit PromiseAllSettledResolveElementFunction(size_t, PromiseValueList&, PromiseCapability, RemainingElements&, Object& prototype);
+    explicit PromiseAllSettledResolveElementFunction(size_t, PromiseValueList&, NonnullGCPtr<PromiseCapability>, RemainingElements&, Object& prototype);
 
     virtual ThrowCompletionOr<Value> resolve_element() override;
 };
@@ -101,12 +101,12 @@ class PromiseAllSettledRejectElementFunction final : public PromiseResolvingElem
     JS_OBJECT(PromiseResolvingFunction, PromiseResolvingElementFunction);
 
 public:
-    static PromiseAllSettledRejectElementFunction* create(Realm&, size_t, PromiseValueList&, PromiseCapability, RemainingElements&);
+    static PromiseAllSettledRejectElementFunction* create(Realm&, size_t, PromiseValueList&, NonnullGCPtr<PromiseCapability>, RemainingElements&);
 
     virtual ~PromiseAllSettledRejectElementFunction() override = default;
 
 private:
-    explicit PromiseAllSettledRejectElementFunction(size_t, PromiseValueList&, PromiseCapability, RemainingElements&, Object& prototype);
+    explicit PromiseAllSettledRejectElementFunction(size_t, PromiseValueList&, NonnullGCPtr<PromiseCapability>, RemainingElements&, Object& prototype);
 
     virtual ThrowCompletionOr<Value> resolve_element() override;
 };
@@ -116,12 +116,12 @@ class PromiseAnyRejectElementFunction final : public PromiseResolvingElementFunc
     JS_OBJECT(PromiseResolvingFunction, PromiseResolvingElementFunction);
 
 public:
-    static PromiseAnyRejectElementFunction* create(Realm&, size_t, PromiseValueList&, PromiseCapability, RemainingElements&);
+    static PromiseAnyRejectElementFunction* create(Realm&, size_t, PromiseValueList&, NonnullGCPtr<PromiseCapability>, RemainingElements&);
 
     virtual ~PromiseAnyRejectElementFunction() override = default;
 
 private:
-    explicit PromiseAnyRejectElementFunction(size_t, PromiseValueList&, PromiseCapability, RemainingElements&, Object& prototype);
+    explicit PromiseAnyRejectElementFunction(size_t, PromiseValueList&, NonnullGCPtr<PromiseCapability>, RemainingElements&, Object& prototype);
 
     virtual ThrowCompletionOr<Value> resolve_element() override;
 };

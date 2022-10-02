@@ -743,12 +743,12 @@ void async_block_start(VM& vm, NonnullRefPtr<Statement> const& async_body, Promi
         // d. If result.[[Type]] is normal, then
         if (result.type() == Completion::Type::Normal) {
             // i. Perform ! Call(promiseCapability.[[Resolve]], undefined, « undefined »).
-            MUST(call(vm, promise_capability.resolve, js_undefined(), js_undefined()));
+            MUST(call(vm, *promise_capability.resolve(), js_undefined(), js_undefined()));
         }
         // e. Else if result.[[Type]] is return, then
         else if (result.type() == Completion::Type::Return) {
             // i. Perform ! Call(promiseCapability.[[Resolve]], undefined, « result.[[Value]] »).
-            MUST(call(vm, promise_capability.resolve, js_undefined(), *result.value()));
+            MUST(call(vm, *promise_capability.resolve(), js_undefined(), *result.value()));
         }
         // f. Else,
         else {
@@ -756,7 +756,7 @@ void async_block_start(VM& vm, NonnullRefPtr<Statement> const& async_body, Promi
             VERIFY(result.type() == Completion::Type::Throw);
 
             // ii. Perform ! Call(promiseCapability.[[Reject]], undefined, « result.[[Value]] »).
-            MUST(call(vm, promise_capability.reject, js_undefined(), *result.value()));
+            MUST(call(vm, *promise_capability.reject(), js_undefined(), *result.value()));
         }
         // g. Return unused.
         // NOTE: We don't support returning an empty/optional/unused value here.
@@ -877,7 +877,7 @@ Completion ECMAScriptFunctionObject::ordinary_call_evaluate_body()
             // 3. If declResult is an abrupt completion, then
             if (declaration_result.is_throw_completion()) {
                 // a. Perform ! Call(promiseCapability.[[Reject]], undefined, « declResult.[[Value]] »).
-                MUST(call(vm, promise_capability.reject, js_undefined(), *declaration_result.throw_completion().value()));
+                MUST(call(vm, *promise_capability->reject(), js_undefined(), *declaration_result.throw_completion().value()));
             }
             // 4. Else,
             else {
@@ -886,7 +886,7 @@ Completion ECMAScriptFunctionObject::ordinary_call_evaluate_body()
             }
 
             // 5. Return Completion Record { [[Type]]: return, [[Value]]: promiseCapability.[[Promise]], [[Target]]: empty }.
-            return Completion { Completion::Type::Return, promise_capability.promise, {} };
+            return Completion { Completion::Type::Return, promise_capability->promise(), {} };
         }
     }
     VERIFY_NOT_REACHED();

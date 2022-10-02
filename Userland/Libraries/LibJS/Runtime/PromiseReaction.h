@@ -23,23 +23,23 @@ public:
         Reject,
     };
 
-    static PromiseReaction* create(VM& vm, Type type, Optional<PromiseCapability> capability, Optional<JobCallback> handler);
+    static PromiseReaction* create(VM& vm, Type type, GCPtr<PromiseCapability> capability, Optional<JobCallback> handler);
 
     virtual ~PromiseReaction() = default;
 
     Type type() const { return m_type; }
-    Optional<PromiseCapability> const& capability() const { return m_capability; }
+    GCPtr<PromiseCapability> capability() const { return m_capability; }
 
     Optional<JobCallback>& handler() { return m_handler; }
     Optional<JobCallback> const& handler() const { return m_handler; }
 
 private:
-    PromiseReaction(Type type, Optional<PromiseCapability> capability, Optional<JobCallback> handler);
+    PromiseReaction(Type type, GCPtr<PromiseCapability> capability, Optional<JobCallback> handler);
 
     virtual void visit_edges(Visitor&) override;
 
     Type m_type;
-    Optional<PromiseCapability> m_capability;
+    GCPtr<PromiseCapability> m_capability;
     Optional<JobCallback> m_handler;
 };
 
