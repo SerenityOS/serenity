@@ -166,9 +166,4 @@ void ClassicScript::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_script_record);
 }
 
-void ClassicScript::visit_host_defined_self(Cell::Visitor& visitor)
-{
-    visitor.visit(this);
-}
-
 }

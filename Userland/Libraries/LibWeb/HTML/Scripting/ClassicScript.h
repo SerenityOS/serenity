@@ -13,9 +13,7 @@
 namespace Web::HTML {
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#classic-script
-class ClassicScript final
-    : public Script
-    , public JS::Script::HostDefined {
+class ClassicScript final : public Script {
     JS_CELL(ClassicScript, Script);
 
 public:
@@ -42,7 +40,6 @@ private:
     ClassicScript(AK::URL base_url, String filename, EnvironmentSettingsObject& environment_settings_object);
 
     virtual void visit_edges(Cell::Visitor&) override;
-    virtual void visit_host_defined_self(Cell::Visitor&) override;
 
     JS::GCPtr<JS::Script> m_script_record;
     MutedErrors m_muted_errors { MutedErrors::No };
