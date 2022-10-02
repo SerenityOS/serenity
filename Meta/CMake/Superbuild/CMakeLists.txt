@@ -32,7 +32,7 @@ get_filename_component(
     SERENITY_SOURCE_DIR "${PROJECT_SOURCE_DIR}/../../.."
     ABSOLUTE CACHE
 )
-set(SERENITY_ARCH "i686" CACHE STRING "Target architecture for SerenityOS.")
+set(SERENITY_ARCH "x86_64" CACHE STRING "Target architecture for SerenityOS.")
 set(SERENITY_TOOLCHAIN "GNU" CACHE STRING "Compiler toolchain to use for Serenity (GNU or Clang)")
 
 # FIXME: It is preferred to keep all the sub-build artifacts below the binary directory for the superbuild
