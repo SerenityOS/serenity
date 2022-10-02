@@ -112,11 +112,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             Config::write_i32("2048"sv, ""sv, "target_tile"sv, target_tile);
             Config::write_bool("2048"sv, ""sv, "evil_ai"sv, evil_ai);
 
-            GUI::MessageBox::show(window, "New settings have been saved and will be applied on a new game"sv, "Settings Changed Successfully"sv, GUI::MessageBox::Type::Information);
+            GUI::MessageBox::show(size_dialog, "New settings have been saved and will be applied on a new game"sv, "Settings Changed Successfully"sv, GUI::MessageBox::Type::Information);
             return;
         }
 
-        GUI::MessageBox::show(window, "New settings have been set and will be applied on the next game"sv, "Settings Changed Successfully"sv, GUI::MessageBox::Type::Information);
+        GUI::MessageBox::show(size_dialog, "New settings have been set and will be applied on the next game"sv, "Settings Changed Successfully"sv, GUI::MessageBox::Type::Information);
     };
     auto start_a_new_game = [&] {
         // Do not leak game states between games.
