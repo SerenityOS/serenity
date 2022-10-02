@@ -11,6 +11,7 @@
 #include <LibJS/Heap/GCPtr.h>
 #include <LibJS/Runtime/Environment.h>
 #include <LibJS/Runtime/Realm.h>
+#include <LibJS/Script.h>
 
 namespace JS {
 
@@ -68,6 +69,8 @@ public:
 
     Environment* environment() { return m_environment; }
 
+    Script::HostDefined* host_defined() const { return m_host_defined; }
+
     ThrowCompletionOr<Object*> get_module_namespace(VM& vm);
 
     virtual ThrowCompletionOr<void> link(VM& vm) = 0;
@@ -80,7 +83,7 @@ public:
     virtual ThrowCompletionOr<u32> inner_module_evaluation(VM& vm, Vector<Module*>& stack, u32 index);
 
 protected:
-    Module(Realm&, String filename);
+    Module(Realm&, String filename, Script::HostDefined* host_defined = nullptr);
 
     virtual void visit_edges(Cell::Visitor&) override;
 
@@ -97,9 +100,10 @@ private:
     // destroy the VM but keep the modules this should not happen. Because VM
     // stores modules with a RefPtr we cannot just store the VM as that leads to
     // cycles.
-    GCPtr<Realm> m_realm;             // [[Realm]]
-    GCPtr<Environment> m_environment; // [[Environment]]
-    GCPtr<Object> m_namespace;        // [[Namespace]]
+    GCPtr<Realm> m_realm;                            // [[Realm]]
+    GCPtr<Environment> m_environment;                // [[Environment]]
+    GCPtr<Object> m_namespace;                       // [[Namespace]]
+    Script::HostDefined* m_host_defined { nullptr }; // [[HostDefined]]
 
     // Needed for potential lookups of modules.
     String m_filename;

@@ -98,11 +98,11 @@ static Vector<ModuleRequest> module_requests(Program& program, Vector<String> co
     return requested_modules_in_source_order;
 }
 
-SourceTextModule::SourceTextModule(Realm& realm, StringView filename, bool has_top_level_await, NonnullRefPtr<Program> body, Vector<ModuleRequest> requested_modules,
+SourceTextModule::SourceTextModule(Realm& realm, StringView filename, Script::HostDefined* host_defined, bool has_top_level_await, NonnullRefPtr<Program> body, Vector<ModuleRequest> requested_modules,
     Vector<ImportEntry> import_entries, Vector<ExportEntry> local_export_entries,
     Vector<ExportEntry> indirect_export_entries, Vector<ExportEntry> star_export_entries,
     RefPtr<ExportStatement> default_export)
-    : CyclicModule(realm, filename, has_top_level_await, move(requested_modules))
+    : CyclicModule(realm, filename, has_top_level_await, move(requested_modules), host_defined)
     , m_ecmascript_code(move(body))
     , m_execution_context(realm.heap())
     , m_import_entries(move(import_entries))
@@ -120,7 +120,7 @@ void SourceTextModule::visit_edges(Cell::Visitor& visitor)
 }
 
 // 16.2.1.6.1 ParseModule ( sourceText, realm, hostDefined ), https://tc39.es/ecma262/#sec-parsemodule
-Result<NonnullGCPtr<SourceTextModule>, Vector<Parser::Error>> SourceTextModule::parse(StringView source_text, Realm& realm, StringView filename)
+Result<NonnullGCPtr<SourceTextModule>, Vector<Parser::Error>> SourceTextModule::parse(StringView source_text, Realm& realm, StringView filename, Script::HostDefined* host_defined)
 {
     // 1. Let body be ParseText(sourceText, Module).
     auto parser = Parser(Lexer(source_text, filename), Program::Type::Module);
@@ -248,6 +248,7 @@ Result<NonnullGCPtr<SourceTextModule>, Vector<Parser::Error>> SourceTextModule::
     return NonnullGCPtr(*realm.heap().allocate_without_realm<SourceTextModule>(
         realm,
         filename,
+        host_defined,
         async,
         move(body),
         move(requested_modules),

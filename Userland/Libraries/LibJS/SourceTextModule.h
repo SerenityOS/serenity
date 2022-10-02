@@ -22,7 +22,7 @@ public:
     using ImportEntry = ImportStatement::ImportEntry;
     using ExportEntry = ExportStatement::ExportEntry;
 
-    static Result<NonnullGCPtr<SourceTextModule>, Vector<Parser::Error>> parse(StringView source_text, Realm&, StringView filename = {});
+    static Result<NonnullGCPtr<SourceTextModule>, Vector<Parser::Error>> parse(StringView source_text, Realm&, StringView filename = {}, Script::HostDefined* host_defined = nullptr);
 
     Program const& parse_node() const { return *m_ecmascript_code; }
 
@@ -37,7 +37,7 @@ protected:
     virtual ThrowCompletionOr<void> execute_module(VM& vm, GCPtr<PromiseCapability> capability) override;
 
 private:
-    SourceTextModule(Realm&, StringView filename, bool has_top_level_await, NonnullRefPtr<Program> body, Vector<ModuleRequest> requested_modules,
+    SourceTextModule(Realm&, StringView filename, Script::HostDefined* host_defined, bool has_top_level_await, NonnullRefPtr<Program> body, Vector<ModuleRequest> requested_modules,
         Vector<ImportEntry> import_entries, Vector<ExportEntry> local_export_entries,
         Vector<ExportEntry> indirect_export_entries, Vector<ExportEntry> star_export_entries,
         RefPtr<ExportStatement> default_export);
