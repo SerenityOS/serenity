@@ -118,6 +118,7 @@ A general guide for contributing can be found in [`CONTRIBUTING.md`](CONTRIBUTIN
 * **frhun** - [frhun](https://github.com/frhun)
 * **networkException** - [networkException](https://github.com/networkException)
 * **Brandon Jordan** - [electrikmilk](https://github.com/electrikmilk)
+* **Lucas Chollet** - [LucasChollet](https://github.com/LucasChollet)
 
 And many more! [See here](https://github.com/SerenityOS/serenity/graphs/contributors) for a full contributor list. The people listed above have landed more than 100 commits in the project. :^)
 
