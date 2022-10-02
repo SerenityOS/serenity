@@ -586,7 +586,7 @@ void SimpleWebView::did_get_js_console_messages(i32, Vector<String>, Vector<Stri
 void SimpleWebView::ensure_js_console_widget()
 {
     if (!m_js_console_widget) {
-        m_js_console_widget = new QWidget(this);
+        m_js_console_widget = new QWidget;
         m_js_console_widget->setWindowTitle("JS Console");
         auto* layout = new QVBoxLayout(m_js_console_widget);
         m_js_console_widget->setLayout(layout);
