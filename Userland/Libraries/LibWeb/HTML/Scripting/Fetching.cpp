@@ -309,7 +309,7 @@ void fetch_descendants_of_and_link_a_module_script(JavaScriptModuleScript const&
     // 1. Fetch the descendants of module script, given fetch client settings object, destination, visited set, and onFetchDescendantsComplete as defined below.
     //    If performFetch was given, pass it along as well.
     // FIXME: Pass performFetch if given.
-    fetch_descendants_of_a_module_script(module_script, fetch_client_settings_object, destination, visited_set, [on_complete = move(on_complete)](JavaScriptModuleScript const* result) {
+    fetch_descendants_of_a_module_script(module_script, fetch_client_settings_object, destination, visited_set, [&fetch_client_settings_object, on_complete = move(on_complete)](JavaScriptModuleScript const* result) {
         // onFetchDescendantsComplete given result is the following algorithm:
         // 1. If result is null, then run onComplete given result, and abort these steps.
         if (!result) {
@@ -324,8 +324,14 @@ void fetch_descendants_of_and_link_a_module_script(JavaScriptModuleScript const&
             // 1. Let record be result's record.
             auto const& record = *result->record();
 
+            // NOTE: Although the spec does not say this we have to have a proper execution context when linking so we modify the stack here.
+            // FIXME: Determine whether we are missing something from the spec or the spec is missing this step.
+            fetch_client_settings_object.realm().vm().push_execution_context(fetch_client_settings_object.realm_execution_context());
+
             // 2. Perform record.Link().
             auto linking_result = const_cast<JS::SourceTextModule&>(record).link(result->vm());
+
+            fetch_client_settings_object.realm().vm().pop_execution_context();
 
             // TODO: If this throws an exception, set result's error to rethrow to that exception.
             if (linking_result.is_error())
