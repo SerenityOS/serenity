@@ -107,8 +107,8 @@ AddEventDialog::AddEventDialog(Core::DateTime date_time, Window* parent_window)
         starting_day_combo.set_range(1, days_in_month(year, month + 1));
     };
 
-    starting_year_combo.on_change = [&update_starting_day_range](auto) { update_starting_day_range(); };
-    starting_month_combo.on_change = [&update_starting_day_range](auto, auto) { update_starting_day_range(); };
+    starting_year_combo.on_change = [update_starting_day_range](auto) { update_starting_day_range(); };
+    starting_month_combo.on_change = [update_starting_day_range](auto, auto) { update_starting_day_range(); };
 
     event_title_textbox.set_focus(true);
 }
