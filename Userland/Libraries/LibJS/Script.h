@@ -32,7 +32,7 @@ public:
     Realm& realm() { return *m_realm; }
     Program const& parse_node() const { return *m_parse_node; }
 
-    HostDefined* host_defined() { return m_host_defined; }
+    HostDefined* host_defined() const { return m_host_defined; }
     StringView filename() const { return m_filename; }
 
 private:
