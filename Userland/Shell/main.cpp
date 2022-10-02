@@ -5,6 +5,7 @@
  */
 
 #include "Shell.h"
+#include <AK/LexicalPath.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/Event.h>
 #include <LibCore/EventLoop.h>
@@ -58,7 +59,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         editor = Line::Editor::construct(move(configuration));
         editor->initialize();
 
-        shell = Shell::Shell::construct(*editor, attempt_interactive);
+        shell = Shell::Shell::construct(*editor, attempt_interactive, LexicalPath::basename(arguments.strings[0]) == "sh"sv);
         s_shell = shell.ptr();
 
         s_shell->setup_signals();

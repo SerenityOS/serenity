@@ -376,9 +376,11 @@ public:
 #undef __ENUMERATE_SHELL_OPTION
 
 private:
-    Shell(Line::Editor&, bool attempt_interactive);
+    Shell(Line::Editor&, bool attempt_interactive, bool posix_mode = false);
     Shell();
     virtual ~Shell() override;
+
+    RefPtr<AST::Node> parse(StringView, bool interactive = false) const;
 
     void timer_event(Core::TimerEvent&) override;
 
@@ -450,6 +452,7 @@ private:
     bool m_is_interactive { true };
     bool m_is_subshell { false };
     bool m_should_reinstall_signal_handlers { true };
+    bool m_in_posix_mode { false };
 
     ShellError m_error { ShellError::None };
     DeprecatedString m_error_description;

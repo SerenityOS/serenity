@@ -27,6 +27,7 @@
 #include <LibCore/System.h>
 #include <LibCore/Timer.h>
 #include <LibLine/Editor.h>
+#include <Shell/PosixLexer.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <inttypes.h>
@@ -298,7 +299,7 @@ Vector<AST::Command> Shell::expand_aliases(Vector<AST::Command> initial_commands
             auto alias = resolve_alias(command.argv[0]);
             if (!alias.is_null()) {
                 auto argv0 = command.argv.take_first();
-                auto subcommand_ast = Parser { alias }.parse();
+                auto subcommand_ast = parse(alias, false);
                 if (subcommand_ast) {
                     while (subcommand_ast->is_execute()) {
                         auto* ast = static_cast<AST::Execute*>(subcommand_ast.ptr());
@@ -581,7 +582,7 @@ int Shell::run_command(StringView cmd, Optional<SourcePosition> source_position_
     if (cmd.is_empty())
         return 0;
 
-    auto command = Parser(cmd, m_is_interactive).parse();
+    auto command = parse(cmd, m_is_interactive);
 
     if (!command)
         return 0;
@@ -1411,8 +1412,7 @@ void Shell::remove_entry_from_cache(StringView entry)
 void Shell::highlight(Line::Editor& editor) const
 {
     auto line = editor.line();
-    Parser parser(line, m_is_interactive);
-    auto ast = parser.parse();
+    auto ast = parse(line, m_is_interactive);
     if (!ast)
         return;
     ast->highlight_in_editor(editor, const_cast<Shell&>(*this));
@@ -1426,9 +1426,7 @@ Vector<Line::CompletionSuggestion> Shell::complete()
 
 Vector<Line::CompletionSuggestion> Shell::complete(StringView line)
 {
-    Parser parser(line, m_is_interactive);
-
-    auto ast = parser.parse();
+    auto ast = parse(line, m_is_interactive);
 
     if (!ast)
         return {};
@@ -2178,8 +2176,9 @@ Shell::Shell()
     cache_path();
 }
 
-Shell::Shell(Line::Editor& editor, bool attempt_interactive)
-    : m_editor(editor)
+Shell::Shell(Line::Editor& editor, bool attempt_interactive, bool posix_mode)
+    : m_in_posix_mode(posix_mode)
+    , m_editor(editor)
 {
     uid = getuid();
     tcsetpgrp(0, getpgrp());
@@ -2225,8 +2224,8 @@ Shell::Shell(Line::Editor& editor, bool attempt_interactive)
         cache_path();
     }
 
-    m_editor->register_key_input_callback('\n', [](Line::Editor& editor) {
-        auto ast = Parser(editor.line()).parse();
+    m_editor->register_key_input_callback('\n', [this](Line::Editor& editor) {
+        auto ast = parse(editor.line(), false);
         if (ast && ast->is_syntax_error() && ast->syntax_error_node().is_continuable())
             return true;
 
@@ -2483,6 +2482,35 @@ void Shell::timer_event(Core::TimerEvent& event)
 
     if (m_editor && m_editor->is_history_dirty())
         m_editor->save_history(get_history_path());
+}
+
+RefPtr<AST::Node> Shell::parse(StringView input, bool interactive) const
+{
+    if (m_in_posix_mode) {
+        Posix::Lexer lexer(input);
+        for (;;) {
+            auto tokens = lexer.batch_next();
+            auto done = false;
+            for (auto& token : tokens) {
+                String position = "(~)";
+                if (token.position.has_value())
+                    position = String::formatted("{}:{}", token.position->start_offset, token.position->end_offset);
+                String expansions = "";
+                for (auto& exp : token.expansions)
+                    exp.visit(
+                        [&](Posix::ParameterExpansion& x) { expansions = String::formatted("{}param: {},", expansions, x.parameter.string_view()); },
+                        [&](Posix::CommandExpansion& x) { expansions = String::formatted("{}command: {},", expansions, x.command.string_view()); },
+                        [&](Posix::ArithmeticExpansion& x) { expansions = String::formatted("{}arith: {},", expansions, x.expression); });
+                dbgln("Token @ {}: '{}' - expansions: {}", position, token.value.replace("\n"sv, "\\n"sv, ReplaceMode::All), expansions);
+                if (token.type == Posix::Token::Type::Eof)
+                    done = true;
+            }
+            if (done)
+                break;
+        }
+    }
+
+    return Parser { input, interactive }.parse();
 }
 
 void FileDescriptionCollector::collect()
