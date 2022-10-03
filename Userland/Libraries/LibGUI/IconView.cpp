@@ -211,9 +211,16 @@ void IconView::mousedown_event(MouseEvent& event)
     if (!model())
         return AbstractView::mousedown_event(event);
 
-    if (event.button() != MouseButton::Primary)
+    if ((event.button() != MouseButton::Primary) && (event.button() != MouseButton::Secondary))
         return AbstractView::mousedown_event(event);
 
+    //Stop the rubberband rect when MouseButton::Secondary is pushed down.
+    if (event.button() == MouseButton::Secondary){
+        m_rubber_banding = false;
+        set_automatic_scrolling_timer(false);
+        update(to_widget_rect(Gfx::IntRect::from_two_points(m_rubber_band_origin, m_rubber_band_current)));
+        return AbstractView::mousedown_event(event);
+    }
     auto index = index_at_event_position(event.position());
     if (index.is_valid()) {
         // We might start dragging this item, but not rubber-banding.
