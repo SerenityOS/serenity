@@ -15,8 +15,7 @@ index d3404be..809a412 100755
      cpu_type="x86"
      newoldwritesample=enabled
    ;;
--  i686-*-linux*|i686-*-kfreebsd*-gnu)
-+  i686-*-linux*|i686-*-kfreebsd*-gnu|i686-*-serenity*)
+   i686-*-linux*|i686-*-kfreebsd*-gnu)
      cpu_type="x86"
      newoldwritesample=enabled
    ;;

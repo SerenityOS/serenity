@@ -6,9 +6,7 @@ files="https://luajit.org/download/LuaJIT-${version}.tar.gz LuaJIT-${version}.ta
 auth_type=sha256
 workdir="LuaJIT-${version}"
 
-if [ ${SERENITY_ARCH} = "i686" ]; then
-    M_FLAG=-m32
-elif [ ${SERENITY_ARCH} = "x86_64" ]; then
+if [ ${SERENITY_ARCH} = "x86_64" ]; then
     M_FLAG=-m64
 fi
 

@@ -26,7 +26,7 @@ configuration/compilation options, and some other things (see
   script in this directory. This is sometimes required when LibC changes, for
   example. Pass `clean` as first argument to remove old build files beforehand.
 
-Installed ports are being tracked in `Build/i686/Root/usr/Ports/packages.db` (a simple text file).
+Installed ports are being tracked in `Build/x86_64/Root/usr/Ports/packages.db` (a simple text file).
 You can delete this file at any time, in fact it must be edited or removed
 when clearing the build directory as port dependencies may not be installed
 again otherwise.
@@ -169,7 +169,7 @@ hash along with the [`files`](#files).
 Options passed to the port's [`configscript`](#configscript) in the default
 `configure` function.
 
-`--host=i686-pc-serenity` is always passed, override the `configure` function
+`--host=x86_64-pc-serenity` is always passed, override the `configure` function
 if that's undesirable.
 
 #### `use_fresh_config_sub`
