@@ -5,5 +5,5 @@
 Don't build the docs and the demo
 
 - docs - segfault during make :/
-- demo - i686-pc-serenity-gcc: error: unrecognized command line option '-rdynamic'
+- demo - x86_64-pc-serenity-gcc: error: unrecognized command line option '-rdynamic'
 

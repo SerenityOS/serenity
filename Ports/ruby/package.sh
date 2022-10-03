@@ -26,9 +26,6 @@ case "${SERENITY_ARCH}" in
     x86_64)
         configopts+=("--with-coroutine=amd64")
         ;;
-    i686)
-        configopts+=("--with-coroutine=x86")
-        ;;
     *)
         echo "Error: Architecture ${SERENITY_ARCH} is not supported for this port"
         exit 1

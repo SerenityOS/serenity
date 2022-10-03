@@ -5,11 +5,11 @@ Subject: [PATCH] Add serenity toolchain information and makefile files
 
 ---
  build/platform.simulator.serenity.mak |  6 ++++
- build/toolchain.i686-pc-serenity.mak  |  4 +++
+ build/toolchain.x86_64-pc-serenity.mak  |  4 +++
  ion/src/simulator/serenity/Makefile   | 43 +++++++++++++++++++++++++++
  3 files changed, 53 insertions(+)
  create mode 100644 build/platform.simulator.serenity.mak
- create mode 100644 build/toolchain.i686-pc-serenity.mak
+ create mode 100644 build/toolchain.x86_64-pc-serenity.mak
  create mode 100644 ion/src/simulator/serenity/Makefile
 
 diff --git a/build/platform.simulator.serenity.mak b/build/platform.simulator.serenity.mak
@@ -18,19 +18,19 @@ index 0000000..ff985de
 --- /dev/null
 +++ b/build/platform.simulator.serenity.mak
 @@ -0,0 +1,6 @@
-+TOOLCHAIN = i686-pc-serenity
++TOOLCHAIN = x86_64-pc-serenity
 +EXE = elf
 +
 +EPSILON_TELEMETRY ?= 0
 +
 +SHOULD_USE_DYNAMIC_SDL = 1
-diff --git a/build/toolchain.i686-pc-serenity.mak b/build/toolchain.i686-pc-serenity.mak
+diff --git a/build/toolchain.x86_64-pc-serenity.mak b/build/toolchain.x86_64-pc-serenity.mak
 new file mode 100644
 index 0000000..d6110e2
 --- /dev/null
-+++ b/build/toolchain.i686-pc-serenity.mak
++++ b/build/toolchain.x86_64-pc-serenity.mak
 @@ -0,0 +1,4 @@
-+TOOLCHAIN_PREFIX = i686-pc-serenity
++TOOLCHAIN_PREFIX = x86_64-pc-serenity
 +CC = $(TOOLCHAIN_PREFIX)-gcc
 +CXX = $(TOOLCHAIN_PREFIX)-g++
 +LD = $(TOOLCHAIN_PREFIX)-g++
