@@ -1173,11 +1173,20 @@ void FlexFormattingContext::distribute_any_remaining_free_space()
 
         switch (flex_container().computed_values().justify_content()) {
         case CSS::JustifyContent::FlexStart:
-            initial_offset = 0;
+            if (is_direction_reverse()) {
+                flex_region_render_cursor = FlexRegionRenderCursor::Right;
+                initial_offset = specified_main_size(flex_container());
+            } else {
+                initial_offset = 0;
+            }
             break;
         case CSS::JustifyContent::FlexEnd:
-            flex_region_render_cursor = FlexRegionRenderCursor::Right;
-            initial_offset = specified_main_size(flex_container());
+            if (is_direction_reverse()) {
+                initial_offset = 0;
+            } else {
+                flex_region_render_cursor = FlexRegionRenderCursor::Right;
+                initial_offset = specified_main_size(flex_container());
+            }
             break;
         case CSS::JustifyContent::Center:
             initial_offset = (specified_main_size(flex_container()) - used_main_space) / 2.0f;
