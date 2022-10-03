@@ -68,8 +68,6 @@ public:
     static float containing_block_width_for(Box const&, LayoutState const&);
     static float containing_block_height_for(Box const&, LayoutState const&);
 
-    void run_intrinsic_sizing(Box const&);
-
     float compute_box_y_position_with_respect_to_siblings(Box const&) const;
 
     float calculate_stretch_fit_width(Box const&, AvailableSize const&) const;

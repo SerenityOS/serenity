@@ -30,24 +30,6 @@ FormattingContext::FormattingContext(Type type, LayoutState& state, Box const& c
 
 FormattingContext::~FormattingContext() = default;
 
-void FormattingContext::run_intrinsic_sizing(Box const& box)
-{
-    auto& box_state = m_state.get_mutable(box);
-
-    auto to_available_size = [&](SizeConstraint constraint) {
-        if (constraint == SizeConstraint::MinContent)
-            return AvailableSize::make_min_content();
-        if (constraint == SizeConstraint::MaxContent)
-            return AvailableSize::make_max_content();
-        return AvailableSize::make_indefinite();
-    };
-
-    auto available_width = to_available_size(box_state.width_constraint);
-    auto available_height = to_available_size(box_state.height_constraint);
-
-    run(box, LayoutMode::IntrinsicSizing, AvailableSpace(available_width, available_height));
-}
-
 bool FormattingContext::creates_block_formatting_context(Box const& box)
 {
     if (box.is_root_element())
@@ -988,7 +970,11 @@ float FormattingContext::calculate_min_content_width(Layout::Box const& box) con
 
     auto context = const_cast<FormattingContext*>(this)->create_independent_formatting_context_if_needed(throwaway_state, box);
     VERIFY(context);
-    context->run_intrinsic_sizing(box);
+
+    auto available_width = AvailableSize::make_min_content();
+    auto available_height = AvailableSize::make_indefinite();
+    context->run(box, LayoutMode::IntrinsicSizing, AvailableSpace(available_width, available_height));
+
     if (context->type() == FormattingContext::Type::Flex) {
         cache.min_content_width = box_state.content_width();
     } else {
@@ -1022,7 +1008,11 @@ float FormattingContext::calculate_max_content_width(Layout::Box const& box) con
 
     auto context = const_cast<FormattingContext*>(this)->create_independent_formatting_context_if_needed(throwaway_state, box);
     VERIFY(context);
-    context->run_intrinsic_sizing(box);
+
+    auto available_width = AvailableSize::make_max_content();
+    auto available_height = AvailableSize::make_indefinite();
+    context->run(box, LayoutMode::IntrinsicSizing, AvailableSpace(available_width, available_height));
+
     if (context->type() == FormattingContext::Type::Flex) {
         cache.max_content_width = box_state.content_width();
     } else {
@@ -1056,7 +1046,11 @@ float FormattingContext::calculate_min_content_height(Layout::Box const& box) co
 
     auto context = const_cast<FormattingContext*>(this)->create_independent_formatting_context_if_needed(throwaway_state, box);
     VERIFY(context);
-    context->run_intrinsic_sizing(box);
+
+    auto available_width = AvailableSize::make_indefinite();
+    auto available_height = AvailableSize::make_min_content();
+    context->run(box, LayoutMode::IntrinsicSizing, AvailableSpace(available_width, available_height));
+
     cache.min_content_height = context->automatic_content_height();
 
     if (!isfinite(*cache.min_content_height)) {
@@ -1086,7 +1080,11 @@ float FormattingContext::calculate_max_content_height(Layout::Box const& box) co
 
     auto context = const_cast<FormattingContext*>(this)->create_independent_formatting_context_if_needed(throwaway_state, box);
     VERIFY(context);
-    context->run_intrinsic_sizing(box);
+
+    auto available_width = AvailableSize::make_indefinite();
+    auto available_height = AvailableSize::make_max_content();
+    context->run(box, LayoutMode::IntrinsicSizing, AvailableSpace(available_width, available_height));
+
     cache.max_content_height = context->automatic_content_height();
 
     if (!isfinite(*cache.max_content_height)) {
