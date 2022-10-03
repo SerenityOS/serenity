@@ -478,19 +478,12 @@ DynamicLoader::RelocationResult DynamicLoader::do_relocation(const ELF::DynamicO
     };
 
     switch (relocation.type()) {
-#if ARCH(I386)
-    case R_386_NONE:
-#else
+
     case R_X86_64_NONE:
-#endif
         // Apparently most loaders will just skip these?
         // Seems if the 'link editor' generates one something is funky with your code
         break;
-#if ARCH(I386)
-    case R_386_32: {
-#else
     case R_X86_64_64: {
-#endif
         auto symbol = relocation.symbol();
         auto res = lookup_symbol(symbol);
         if (!res.has_value()) {
@@ -508,20 +501,7 @@ DynamicLoader::RelocationResult DynamicLoader::do_relocation(const ELF::DynamicO
             *patch_ptr = call_ifunc_resolver(VirtualAddress { *patch_ptr }).get();
         break;
     }
-#if ARCH(I386)
-    case R_386_PC32: {
-        auto symbol = relocation.symbol();
-        auto result = lookup_symbol(symbol);
-        if (!result.has_value())
-            return RelocationResult::Failed;
-        auto relative_offset = result.value().address - m_dynamic_object->base_address().offset(relocation.offset());
-        *patch_ptr += relative_offset.get();
-        break;
-    }
-    case R_386_GLOB_DAT: {
-#else
     case R_X86_64_GLOB_DAT: {
-#endif
         auto symbol = relocation.symbol();
         auto res = lookup_symbol(symbol);
         VirtualAddress symbol_location;
@@ -549,11 +529,7 @@ DynamicLoader::RelocationResult DynamicLoader::do_relocation(const ELF::DynamicO
         *patch_ptr = symbol_location.get();
         break;
     }
-#if ARCH(I386)
-    case R_386_RELATIVE: {
-#else
     case R_X86_64_RELATIVE: {
-#endif
         if (!image().is_dynamic())
             break;
         // FIXME: According to the spec, R_386_relative ones must be done first.
@@ -565,12 +541,7 @@ DynamicLoader::RelocationResult DynamicLoader::do_relocation(const ELF::DynamicO
             *patch_ptr += m_dynamic_object->base_address().get();
         break;
     }
-#if ARCH(I386)
-    case R_386_TLS_TPOFF32:
-    case R_386_TLS_TPOFF: {
-#else
     case R_X86_64_TPOFF64: {
-#endif
         auto symbol = relocation.symbol();
         FlatPtr symbol_value;
         DynamicObject const* dynamic_object_of_symbol;
@@ -595,11 +566,7 @@ DynamicLoader::RelocationResult DynamicLoader::do_relocation(const ELF::DynamicO
 
         break;
     }
-#if ARCH(I386)
-    case R_386_JMP_SLOT: {
-#else
     case R_X86_64_JUMP_SLOT: {
-#endif
         // FIXME: Or BIND_NOW flag passed in?
         if (m_dynamic_object->must_bind_now()) {
             // Eagerly BIND_NOW the PLT entries, doing all the symbol looking goodness
@@ -613,11 +580,7 @@ DynamicLoader::RelocationResult DynamicLoader::do_relocation(const ELF::DynamicO
         }
         break;
     }
-#if ARCH(I386)
-    case R_386_IRELATIVE: {
-#else
     case R_X86_64_IRELATIVE: {
-#endif
         VirtualAddress resolver;
         if (relocation.addend_used())
             resolver = m_dynamic_object->base_address().offset(relocation.addend());

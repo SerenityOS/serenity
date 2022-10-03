@@ -59,11 +59,7 @@ bool perform_relative_relocations(FlatPtr base_address)
     for (unsigned i = 0; i < relocation_count; ++i) {
         size_t offset_in_section = i * relocation_entry_size;
         auto* relocation = (ElfW(Rela)*)(relocation_section_addr + offset_in_section);
-#if ARCH(I386)
-        VERIFY(ELF32_R_TYPE(relocation->r_info) == R_386_RELATIVE);
-#else
         VERIFY(ELF64_R_TYPE(relocation->r_info) == R_X86_64_RELATIVE);
-#endif
         auto* patch_address = (FlatPtr*)(base_address + relocation->r_offset);
         FlatPtr relocated_address;
         if (use_addend) {
