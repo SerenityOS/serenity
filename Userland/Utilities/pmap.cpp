@@ -30,11 +30,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     outln("{}:", pid);
 
-#if ARCH(I386)
-    auto padding = "";
-#else
     auto padding = "        ";
-#endif
 
     if (extended) {
         outln("Address{}           Size   Resident      Dirty Access  VMObject Type  Purgeable   CoW Pages Name", padding);

@@ -210,11 +210,7 @@ END_VALUES_TO_NAMES()
 
 static int g_pid = -1;
 
-#if ARCH(I386)
-using syscall_arg_t = u32;
-#elif ARCH(X86_64) || ARCH(AARCH64)
 using syscall_arg_t = u64;
-#endif
 
 static void handle_sigint(int)
 {
@@ -887,12 +883,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
         PtraceRegisters regs = {};
         TRY(Core::System::ptrace(PT_GETREGS, g_pid, &regs, 0));
-#if ARCH(I386)
-        syscall_arg_t syscall_index = regs.eax;
-        syscall_arg_t arg1 = regs.edx;
-        syscall_arg_t arg2 = regs.ecx;
-        syscall_arg_t arg3 = regs.ebx;
-#elif ARCH(X86_64)
+#if ARCH(X86_64)
         syscall_arg_t syscall_index = regs.rax;
         syscall_arg_t arg1 = regs.rdx;
         syscall_arg_t arg2 = regs.rcx;
@@ -915,9 +906,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
         TRY(Core::System::ptrace(PT_GETREGS, g_pid, &regs, 0));
 
-#if ARCH(I386)
-        u32 res = regs.eax;
-#elif ARCH(X86_64)
+#if ARCH(X86_64)
         u64 res = regs.rax;
 #elif ARCH(AARCH64)
         u64 res = 0; // FIXME

@@ -187,30 +187,7 @@ static char const* object_symbol_binding_to_string(ElfW(Word) type)
 static char const* object_relocation_type_to_string(ElfW(Word) type)
 {
     switch (type) {
-#if ARCH(I386)
-    case R_386_NONE:
-        return "R_386_NONE";
-    case R_386_32:
-        return "R_386_32";
-    case R_386_PC32:
-        return "R_386_PC32";
-    case R_386_GOT32:
-        return "R_386_GOT32";
-    case R_386_PLT32:
-        return "R_386_PLT32";
-    case R_386_COPY:
-        return "R_386_COPY";
-    case R_386_GLOB_DAT:
-        return "R_386_GLOB_DAT";
-    case R_386_JMP_SLOT:
-        return "R_386_JMP_SLOT";
-    case R_386_RELATIVE:
-        return "R_386_RELATIVE";
-    case R_386_TLS_TPOFF:
-        return "R_386_TLS_TPOFF";
-    case R_386_TLS_TPOFF32:
-        return "R_386_TLS_TPOFF32";
-#else
+#if ARCH(x86_64)
     case R_X86_64_NONE:
         return "R_X86_64_NONE";
     case R_X86_64_64:
@@ -386,11 +363,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         outln();
     }
 
-#if ARCH(I386)
-    auto addr_padding = "";
-#else
     auto addr_padding = "        ";
-#endif
 
     if (display_section_headers) {
         if (!display_all) {
