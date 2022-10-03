@@ -58,6 +58,8 @@ public:
     virtual String format_name() = 0;
     virtual PcmSampleFormat pcm_format() = 0;
 
+    Vector<PictureData> const& pictures() const { return m_pictures; };
+
 protected:
     StringView m_path;
     OwnPtr<Core::Stream::SeekableStream> m_stream;
@@ -83,6 +85,7 @@ public:
     u16 num_channels() const { return m_plugin->num_channels(); }
     String format_name() const { return m_plugin->format_name(); }
     u16 bits_per_sample() const { return pcm_bits_per_sample(m_plugin->pcm_format()); }
+    Vector<PictureData> const& pictures() const { return m_plugin->pictures(); };
 
 private:
     static Result<NonnullOwnPtr<LoaderPlugin>, LoaderError> try_create(StringView path);

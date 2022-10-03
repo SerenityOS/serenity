@@ -6,6 +6,7 @@
  */
 
 #include "Player.h"
+#include <LibAudio/FlacLoader.h>
 #include <LibCore/File.h>
 
 Player::Player(Audio::ConnectionToServer& audio_client_connection)
@@ -63,9 +64,9 @@ void Player::play_file_path(String const& path)
 
     m_loaded_filename = path;
 
-    file_name_changed(path);
     total_samples_changed(loader->total_samples());
     m_playback_manager.set_loader(move(loader));
+    file_name_changed(path);
 
     play();
 }
@@ -155,4 +156,9 @@ void Player::toggle_mute()
 void Player::seek(int sample)
 {
     m_playback_manager.seek(sample);
+}
+
+Vector<Audio::PictureData> const& Player::pictures() const
+{
+    return m_playback_manager.loader()->pictures();
 }

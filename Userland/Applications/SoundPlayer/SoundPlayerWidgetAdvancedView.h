@@ -25,12 +25,12 @@ public:
     void set_nonlinear_volume_slider(bool nonlinear);
     void set_playlist_visible(bool visible);
 
-    template<typename T>
-    void set_visualization()
+    template<typename T, typename... Args>
+    void set_visualization(Args... args)
     {
         m_visualization->remove_from_parent();
         update();
-        auto new_visualization = T::construct();
+        auto new_visualization = T::construct(move(args)...);
         m_player_view->insert_child_before(new_visualization, *static_cast<Core::Object*>(m_playback_progress_slider.ptr()));
         m_visualization = new_visualization;
         if (!loaded_filename().is_empty())
