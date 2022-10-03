@@ -936,10 +936,29 @@ void Document::set_hovered_node(Node* node)
     JS::GCPtr<Node> old_hovered_node = move(m_hovered_node);
     m_hovered_node = node;
 
-    if (auto* common_ancestor = find_common_ancestor(old_hovered_node, m_hovered_node))
+    auto* common_ancestor = find_common_ancestor(old_hovered_node, m_hovered_node);
+    if (common_ancestor)
         common_ancestor->invalidate_style();
     else
         invalidate_style();
+
+    // https://w3c.github.io/uievents/#mouseleave
+    if (old_hovered_node && (!m_hovered_node || !m_hovered_node->is_descendant_of(*old_hovered_node))) {
+        // FIXME: Check if we need to dispatch these events in a specific order.
+        for (auto target = old_hovered_node; target && target.ptr() != common_ancestor; target = target->parent()) {
+            // FIXME: Populate the event with mouse coordinates, etc.
+            target->dispatch_event(*UIEvents::MouseEvent::create(realm(), UIEvents::EventNames::mouseleave));
+        }
+    }
+
+    // https://w3c.github.io/uievents/#mouseenter
+    if (m_hovered_node && (!old_hovered_node || !m_hovered_node->is_ancestor_of(*old_hovered_node))) {
+        // FIXME: Check if we need to dispatch these events in a specific order.
+        for (auto target = m_hovered_node; target.ptr() != common_ancestor; target = target->parent()) {
+            // FIXME: Populate the event with mouse coordinates, etc.
+            target->dispatch_event(*UIEvents::MouseEvent::create(realm(), UIEvents::EventNames::mouseenter));
+        }
+    }
 }
 
 JS::NonnullGCPtr<HTMLCollection> Document::get_elements_by_name(String const& name)
