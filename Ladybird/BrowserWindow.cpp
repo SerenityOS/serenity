@@ -97,6 +97,7 @@ BrowserWindow::BrowserWindow()
             auto source = m_current_tab->view().source();
 
             auto* text_edit = new QPlainTextEdit(this);
+            text_edit->setWindowFlags(Qt::Window);
             text_edit->setFont(QFontDatabase::systemFont(QFontDatabase::SystemFont::FixedFont));
             text_edit->resize(800, 600);
             text_edit->setPlainText(source.characters());
