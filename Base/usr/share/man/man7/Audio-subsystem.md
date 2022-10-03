@@ -1,6 +1,6 @@
 ## Name
 
-Overview of the SerenityOS audio subsystem, including a brief description of [`/dev/audio`](help://man/4/audio), the AudioServer and their interfaces. 
+Overview of the SerenityOS audio subsystem, including a brief description of [`/dev/audio`](help://man/4/audio), the AudioServer and their interfaces.
 
 ## Description
 
@@ -18,9 +18,8 @@ AudioServer is responsible for handling userland audio clients and talking to th
 application should ever need to write to a device in `/dev/audio` directly, except for special cases in which
 AudioServer is not present.
 
-As with all system servers, AudioServer provides an IPC interface on `/tmp/user/%uid/portal/audio`, with `%uid` being
-the uid
-of the current user. For specifics on how to talk to AudioServer, the IPC interface specifications are the best source
+As with all system servers, AudioServer provides an IPC interface on `/tmp/session/%sid/portal/audio`, with `%sid` being
+the current login session id. For specifics on how to talk to AudioServer, the IPC interface specifications are the best source
 of information. For controlling mixer functionality, clients have the ability to obtain and change their own volume, or
 the main volume and mute state.
 
