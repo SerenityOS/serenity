@@ -167,9 +167,7 @@ NonnullOwnPtrVector<DebugInfo::VariableInfo> DebugInfo::get_variables_in_current
     // TODO: We can store the scopes in a better data structure
     for (auto const& scope : m_scopes) {
         FlatPtr ip;
-#if ARCH(I386)
-        ip = regs.eip;
-#elif ARCH(X86_64)
+#if ARCH(X86_64)
         ip = regs.rip;
 #elif ARCH(AARCH64)
         TODO_AARCH64();

@@ -184,9 +184,7 @@ void DebugSession::run(DesiredInitialDebugeeState initial_debugee_state, Callbac
 
         auto regs = get_registers();
 
-#if ARCH(I386)
-        FlatPtr current_instruction = regs.eip;
-#elif ARCH(X86_64)
+#if ARCH(X86_64)
         FlatPtr current_instruction = regs.rip;
 #elif ARCH(AARCH64)
         FlatPtr current_instruction;
@@ -210,9 +208,7 @@ void DebugSession::run(DesiredInitialDebugeeState initial_debugee_state, Callbac
                 auto required_ebp = watchpoint.value().ebp;
                 auto found_ebp = false;
 
-#if ARCH(I386)
-                FlatPtr current_ebp = regs.ebp;
-#elif ARCH(X86_64)
+#if ARCH(X86_64)
                 FlatPtr current_ebp = regs.rbp;
 #elif ARCH(AARCH64)
                 FlatPtr current_ebp;
@@ -261,9 +257,7 @@ void DebugSession::run(DesiredInitialDebugeeState initial_debugee_state, Callbac
             // 2. We restore the original first byte of the instruction,
             //    because it was patched with INT3.
             auto breakpoint_addr = bit_cast<FlatPtr>(current_breakpoint.value().address);
-#if ARCH(I386)
-            regs.eip = breakpoint_addr;
-#elif ARCH(X86_64)
+#if ARCH(X86_64)
             regs.rip = breakpoint_addr;
 #elif ARCH(AARCH64)
             (void)breakpoint_addr;

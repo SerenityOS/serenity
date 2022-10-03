@@ -343,12 +343,8 @@ FlatPtr DebugSession::single_step()
     // After the debuggee has stopped, we clear the TRAP flag.
 
     auto regs = get_registers();
-#if ARCH(I386) || ARCH(X86_64)
+#if ARCH(X86_64)
     constexpr u32 TRAP_FLAG = 0x100;
-#endif
-#if ARCH(I386)
-    regs.eflags |= TRAP_FLAG;
-#elif ARCH(X86_64)
     regs.rflags |= TRAP_FLAG;
 #elif ARCH(AARCH64)
     TODO_AARCH64();
@@ -365,9 +361,7 @@ FlatPtr DebugSession::single_step()
     }
 
     regs = get_registers();
-#if ARCH(I386)
-    regs.eflags &= ~(TRAP_FLAG);
-#elif ARCH(X86_64)
+#if ARCH(X86_64)
     regs.rflags &= ~(TRAP_FLAG);
 #elif ARCH(AARCH64)
     TODO_AARCH64();
