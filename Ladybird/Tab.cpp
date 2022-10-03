@@ -154,7 +154,10 @@ int Tab::tab_index()
 
 void Tab::debug_request(String const& request, String const& argument)
 {
-    m_view->debug_request(request, argument);
+    if (request == "dump-history")
+        m_history.dump();
+    else
+        m_view->debug_request(request, argument);
 }
 
 void Tab::resizeEvent(QResizeEvent* event)
