@@ -19,6 +19,7 @@ enum class Script : u8;
 enum class SentenceBreakProperty : u8;
 enum class WordBreakProperty : u8;
 
+struct CodePointDecomposition;
 struct CurrencyCode;
 struct Emoji;
 struct SpecialCasing;
