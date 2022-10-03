@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <LibC/sys/arch/i386/regs.h>
+#include <LibC/sys/arch/aarch64/regs.h>
 
 #include <AK/Platform.h>
 VALIDATE_IS_AARCH64()

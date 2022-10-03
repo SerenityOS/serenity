@@ -18,7 +18,7 @@
 
 #ifdef __cplusplus
 struct [[gnu::packed]] PtraceRegisters : public __mcontext {
-#if defined(__cplusplus) && defined(__cpp_concepts)
+#    if defined(__cplusplus) && defined(__cpp_concepts)
     FlatPtr ip() const
     {
         return rip;
@@ -38,7 +38,7 @@ struct [[gnu::packed]] PtraceRegisters : public __mcontext {
     {
         rbp = bp;
     }
-#endif
+#    endif
 };
 
 #else

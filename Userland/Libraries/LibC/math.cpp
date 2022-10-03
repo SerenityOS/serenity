@@ -633,7 +633,7 @@ long double frexpl(long double x, int* exp) NOEXCEPT
     return scalbnl(x, -(*exp));
 }
 
-#if !(ARCH(I386) || ARCH(X86_64))
+#if !(ARCH(X86_64))
 
 double round(double value) NOEXCEPT
 {
