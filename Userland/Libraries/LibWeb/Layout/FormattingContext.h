@@ -54,11 +54,11 @@ public:
 
     float calculate_min_content_width(Layout::Box const&) const;
     float calculate_max_content_width(Layout::Box const&) const;
-    float calculate_min_content_height(Layout::Box const&) const;
-    float calculate_max_content_height(Layout::Box const&) const;
+    float calculate_min_content_height(Layout::Box const&, AvailableSize const& available_width) const;
+    float calculate_max_content_height(Layout::Box const&, AvailableSize const& available_width) const;
 
-    float calculate_fit_content_height(Layout::Box const&, AvailableSize const&) const;
-    float calculate_fit_content_width(Layout::Box const&, AvailableSize const&) const;
+    float calculate_fit_content_height(Layout::Box const&, AvailableSpace const&) const;
+    float calculate_fit_content_width(Layout::Box const&, AvailableSpace const&) const;
 
     virtual float greatest_child_width(Box const&);
 
@@ -99,7 +99,7 @@ protected:
     static float tentative_width_for_replaced_element(LayoutState const&, ReplacedBox const&, CSS::Size const& computed_width, AvailableSpace const&);
     static float tentative_height_for_replaced_element(LayoutState const&, ReplacedBox const&, CSS::Size const& computed_height, AvailableSpace const&);
     float compute_auto_height_for_block_formatting_context_root(BlockContainer const&) const;
-    float compute_auto_height_for_block_level_element(Box const&) const;
+    float compute_auto_height_for_block_level_element(Box const&, AvailableSpace const&) const;
 
     ShrinkToFitResult calculate_shrink_to_fit_widths(Box const&);
 

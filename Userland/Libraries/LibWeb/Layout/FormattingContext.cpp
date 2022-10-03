@@ -239,7 +239,7 @@ static Gfx::FloatSize solve_replaced_size_constraint(LayoutState const& state, f
     return { w, h };
 }
 
-float FormattingContext::compute_auto_height_for_block_level_element(Box const& box) const
+float FormattingContext::compute_auto_height_for_block_level_element(Box const& box, AvailableSpace const& available_space) const
 {
     if (creates_block_formatting_context(box))
         return compute_auto_height_for_block_formatting_context_root(verify_cast<BlockContainer>(box));
@@ -250,7 +250,7 @@ float FormattingContext::compute_auto_height_for_block_level_element(Box const& 
     if (display.is_flex_inside()) {
         // https://drafts.csswg.org/css-flexbox-1/#algo-main-container
         // NOTE: The automatic block size of a block-level flex container is its max-content size.
-        return calculate_max_content_height(box);
+        return calculate_max_content_height(box, available_space.width);
     }
 
     // https://www.w3.org/TR/CSS22/visudet.html#normal-block
@@ -694,11 +694,11 @@ void FormattingContext::compute_height_for_absolutely_positioned_non_replaced_el
     box_state.padding_bottom = computed_values.padding().bottom().resolved(box, width_of_containing_block_as_length).to_px(box);
 
     if (computed_height.is_auto() && computed_top.is_auto() && computed_bottom.is_auto()) {
-        tentative_height = CSS::Length(compute_auto_height_for_block_level_element(box), CSS::Length::Type::Px);
+        tentative_height = CSS::Length(compute_auto_height_for_block_level_element(box, available_space), CSS::Length::Type::Px);
     }
 
     else if (computed_height.is_auto() && !computed_top.is_auto() && computed_bottom.is_auto()) {
-        tentative_height = CSS::Length(compute_auto_height_for_block_level_element(box), CSS::Length::Type::Px);
+        tentative_height = CSS::Length(compute_auto_height_for_block_level_element(box, available_space), CSS::Length::Type::Px);
         box_state.inset_bottom = height_of_containing_block - tentative_height.to_px(box) - used_top - box_state.margin_top - box_state.padding_top - box_state.border_top - box_state.margin_bottom - box_state.padding_bottom - box_state.border_bottom;
     }
 
@@ -926,30 +926,30 @@ float FormattingContext::calculate_fit_content_size(float min_content_size, floa
     return max_content_size;
 }
 
-float FormattingContext::calculate_fit_content_width(Layout::Box const& box, AvailableSize const& available_size) const
+float FormattingContext::calculate_fit_content_width(Layout::Box const& box, AvailableSpace const& available_space) const
 {
     // When sizing under a min-content constraint, equal to the min-content size.
     // NOTE: We check this first, to avoid needlessly calculating the max-content size.
-    if (available_size.is_min_content())
+    if (available_space.width.is_min_content())
         return calculate_min_content_width(box);
 
-    if (available_size.is_max_content())
+    if (available_space.width.is_max_content())
         return calculate_max_content_width(box);
 
-    return calculate_fit_content_size(calculate_min_content_width(box), calculate_max_content_width(box), available_size);
+    return calculate_fit_content_size(calculate_min_content_width(box), calculate_max_content_width(box), available_space.width);
 }
 
-float FormattingContext::calculate_fit_content_height(Layout::Box const& box, AvailableSize const& available_size) const
+float FormattingContext::calculate_fit_content_height(Layout::Box const& box, AvailableSpace const& available_space) const
 {
     // When sizing under a min-content constraint, equal to the min-content size.
     // NOTE: We check this first, to avoid needlessly calculating the max-content size.
-    if (available_size.is_min_content())
-        return calculate_min_content_height(box);
+    if (available_space.height.is_min_content())
+        return calculate_min_content_height(box, available_space.width);
 
-    if (available_size.is_max_content())
-        return calculate_max_content_height(box);
+    if (available_space.height.is_max_content())
+        return calculate_max_content_height(box, available_space.width);
 
-    return calculate_fit_content_size(calculate_min_content_height(box), calculate_max_content_height(box), available_size);
+    return calculate_fit_content_size(calculate_min_content_height(box, available_space.width), calculate_max_content_height(box, available_space.width), available_space.height);
 }
 
 float FormattingContext::calculate_min_content_width(Layout::Box const& box) const
@@ -1028,7 +1028,7 @@ float FormattingContext::calculate_max_content_width(Layout::Box const& box) con
     return *cache.max_content_width;
 }
 
-float FormattingContext::calculate_min_content_height(Layout::Box const& box) const
+float FormattingContext::calculate_min_content_height(Layout::Box const& box, AvailableSize const& available_width) const
 {
     if (box.has_intrinsic_height())
         return *box.intrinsic_height();
@@ -1047,9 +1047,7 @@ float FormattingContext::calculate_min_content_height(Layout::Box const& box) co
     auto context = const_cast<FormattingContext*>(this)->create_independent_formatting_context_if_needed(throwaway_state, box);
     VERIFY(context);
 
-    auto available_width = AvailableSize::make_indefinite();
-    auto available_height = AvailableSize::make_min_content();
-    context->run(box, LayoutMode::IntrinsicSizing, AvailableSpace(available_width, available_height));
+    context->run(box, LayoutMode::IntrinsicSizing, AvailableSpace(available_width, AvailableSize::make_min_content()));
 
     cache.min_content_height = context->automatic_content_height();
 
@@ -1062,7 +1060,7 @@ float FormattingContext::calculate_min_content_height(Layout::Box const& box) co
     return *cache.min_content_height;
 }
 
-float FormattingContext::calculate_max_content_height(Layout::Box const& box) const
+float FormattingContext::calculate_max_content_height(Layout::Box const& box, AvailableSize const& available_width) const
 {
     if (box.has_intrinsic_height())
         return *box.intrinsic_height();
@@ -1081,9 +1079,7 @@ float FormattingContext::calculate_max_content_height(Layout::Box const& box) co
     auto context = const_cast<FormattingContext*>(this)->create_independent_formatting_context_if_needed(throwaway_state, box);
     VERIFY(context);
 
-    auto available_width = AvailableSize::make_indefinite();
-    auto available_height = AvailableSize::make_max_content();
-    context->run(box, LayoutMode::IntrinsicSizing, AvailableSpace(available_width, available_height));
+    context->run(box, LayoutMode::IntrinsicSizing, AvailableSpace(available_width, AvailableSize::make_max_content()));
 
     cache.max_content_height = context->automatic_content_height();
 

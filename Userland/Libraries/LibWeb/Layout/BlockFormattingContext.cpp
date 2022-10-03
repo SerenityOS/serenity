@@ -311,7 +311,7 @@ void BlockFormattingContext::compute_height(Box const& box, AvailableSpace const
         height = compute_height_for_replaced_element(m_state, verify_cast<ReplacedBox>(box), available_space);
     } else {
         if (should_treat_height_as_auto(box, available_space)) {
-            height = compute_auto_height_for_block_level_element(box);
+            height = compute_auto_height_for_block_level_element(box, available_space);
         } else {
             height = computed_values.height().resolved(box, containing_block_height).to_px(box);
         }

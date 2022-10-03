@@ -185,8 +185,7 @@ private:
     struct AxisAgnosticAvailableSpace {
         AvailableSize main;
         AvailableSize cross;
-        AvailableSize width;
-        AvailableSize height;
+        AvailableSpace space;
     };
     Optional<AxisAgnosticAvailableSpace> m_available_space_for_items;
     Optional<AxisAgnosticAvailableSpace> m_available_space_for_flex_container;
