@@ -1251,110 +1251,45 @@ ParseResult<Module> Module::parse(InputStream& stream)
         };
 
         switch (section_id) {
-        case CustomSection::section_id: {
-            if (auto section = CustomSection::parse(section_stream); !section.is_error()) {
-                sections.append(section.release_value());
-                continue;
-            } else {
-                return section.error();
-            }
-        }
-        case TypeSection::section_id: {
-            if (auto section = TypeSection::parse(section_stream); !section.is_error()) {
-                sections.append(section.release_value());
-                continue;
-            } else {
-                return section.error();
-            }
-        }
-        case ImportSection::section_id: {
-            if (auto section = ImportSection::parse(section_stream); !section.is_error()) {
-                sections.append(section.release_value());
-                continue;
-            } else {
-                return section.error();
-            }
-        }
-        case FunctionSection::section_id: {
-            if (auto section = FunctionSection::parse(section_stream); !section.is_error()) {
-                sections.append(section.release_value());
-                continue;
-            } else {
-                return section.error();
-            }
-        }
-        case TableSection::section_id: {
-            if (auto section = TableSection::parse(section_stream); !section.is_error()) {
-                sections.append(section.release_value());
-                continue;
-            } else {
-                return section.error();
-            }
-        }
-        case MemorySection::section_id: {
-            if (auto section = MemorySection::parse(section_stream); !section.is_error()) {
-                sections.append(section.release_value());
-                continue;
-            } else {
-                return section.error();
-            }
-        }
-        case GlobalSection::section_id: {
-            if (auto section = GlobalSection::parse(section_stream); !section.is_error()) {
-                sections.append(section.release_value());
-                continue;
-            } else {
-                return section.error();
-            }
-        }
-        case ExportSection::section_id: {
-            if (auto section = ExportSection::parse(section_stream); !section.is_error()) {
-                sections.append(section.release_value());
-                continue;
-            } else {
-                return section.error();
-            }
-        }
-        case StartSection::section_id: {
-            if (auto section = StartSection::parse(section_stream); !section.is_error()) {
-                sections.append(section.release_value());
-                continue;
-            } else {
-                return section.error();
-            }
-        }
-        case ElementSection::section_id: {
-            if (auto section = ElementSection::parse(section_stream); !section.is_error()) {
-                sections.append(section.release_value());
-                continue;
-            } else {
-                return section.error();
-            }
-        }
-        case CodeSection::section_id: {
-            if (auto section = CodeSection::parse(section_stream); !section.is_error()) {
-                sections.append(section.release_value());
-                continue;
-            } else {
-                return section.error();
-            }
-        }
-        case DataSection::section_id: {
-            if (auto section = DataSection::parse(section_stream); !section.is_error()) {
-                sections.append(section.release_value());
-                continue;
-            } else {
-                return section.error();
-            }
-        }
-        case DataCountSection::section_id: {
-            if (auto section = DataCountSection::parse(section_stream); !section.is_error()) {
-                sections.append(section.release_value());
-                continue;
-            } else {
-                return section.error();
-            }
-        }
+        case CustomSection::section_id:
+            sections.append(TRY(CustomSection::parse(section_stream)));
+            continue;
+        case TypeSection::section_id:
+            sections.append(TRY(TypeSection::parse(section_stream)));
+            continue;
+        case ImportSection::section_id:
+            sections.append(TRY(ImportSection::parse(section_stream)));
+            continue;
+        case FunctionSection::section_id:
+            sections.append(TRY(FunctionSection::parse(section_stream)));
+            continue;
+        case TableSection::section_id:
+            sections.append(TRY(TableSection::parse(section_stream)));
+            continue;
+        case MemorySection::section_id:
+            sections.append(TRY(MemorySection::parse(section_stream)));
+            continue;
+        case GlobalSection::section_id:
+            sections.append(TRY(GlobalSection::parse(section_stream)));
+            continue;
+        case ExportSection::section_id:
+            sections.append(TRY(ExportSection::parse(section_stream)));
+            continue;
+        case StartSection::section_id:
+            sections.append(TRY(StartSection::parse(section_stream)));
+            continue;
+        case ElementSection::section_id:
+            sections.append(TRY(ElementSection::parse(section_stream)));
+            continue;
+        case CodeSection::section_id:
+            sections.append(TRY(CodeSection::parse(section_stream)));
+            continue;
+        case DataSection::section_id:
+            sections.append(TRY(DataSection::parse(section_stream)));
+            continue;
+        case DataCountSection::section_id:
+            sections.append(TRY(DataCountSection::parse(section_stream)));
+            continue;
         default:
             return with_eof_check(stream, ParseError::InvalidIndex);
         }
