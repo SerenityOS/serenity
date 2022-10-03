@@ -58,19 +58,11 @@ public:
         FlatPtr value() const { return m_sym.st_value; }
         size_t size() const { return m_sym.st_size; }
         unsigned index() const { return m_index; }
-#if ARCH(I386)
-        unsigned type() const
-        {
-            return ELF32_ST_TYPE(m_sym.st_info);
-        }
-        unsigned bind() const { return ELF32_ST_BIND(m_sym.st_info); }
-#else
         unsigned type() const
         {
             return ELF64_ST_TYPE(m_sym.st_info);
         }
         unsigned bind() const { return ELF64_ST_BIND(m_sym.st_info); }
-#endif
         Section section() const
         {
             return m_image.section(section_index());
@@ -169,19 +161,11 @@ public:
         ~Relocation() = default;
 
         size_t offset() const { return m_rel.r_offset; }
-#if ARCH(I386)
-        unsigned type() const
-        {
-            return ELF32_R_TYPE(m_rel.r_info);
-        }
-        unsigned symbol_index() const { return ELF32_R_SYM(m_rel.r_info); }
-#else
         unsigned type() const
         {
             return ELF64_R_TYPE(m_rel.r_info);
         }
         unsigned symbol_index() const { return ELF64_R_SYM(m_rel.r_info); }
-#endif
         Symbol symbol() const
         {
             return m_image.symbol(symbol_index());
