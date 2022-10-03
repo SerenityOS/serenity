@@ -65,3 +65,8 @@ Include 'strings.h' for strcasecmp
 Exclude arpa/nameser.h as it does not exist on Serenity
 
 
+## `0012-Do-not-flag-support-for-extended-attributes-xattr.patch`
+
+Do not flag support for extended attributes (xattr)
+
+
