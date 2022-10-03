@@ -130,7 +130,7 @@ int timingsafe_memcmp(void const* b1, void const* b2, size_t len)
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/memcpy.html
 void* memcpy(void* dest_ptr, void const* src_ptr, size_t n)
 {
-#if ARCH(I386) || ARCH(X86_64)
+#if ARCH(X86_64)
     void* original_dest = dest_ptr;
     asm volatile(
         "rep movsb"
@@ -146,34 +146,9 @@ void* memcpy(void* dest_ptr, void const* src_ptr, size_t n)
 #endif
 }
 
-#if ARCH(I386)
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/memset.html
-void* memset(void* dest_ptr, int c, size_t n)
-{
-    size_t dest = (size_t)dest_ptr;
-    // FIXME: Support starting at an unaligned address.
-    if (!(dest & 0x3) && n >= 12) {
-        size_t size_ts = n / sizeof(size_t);
-        size_t expanded_c = explode_byte((u8)c);
-        asm volatile(
-            "rep stosl\n"
-            : "=D"(dest)
-            : "D"(dest), "c"(size_ts), "a"(expanded_c)
-            : "memory");
-        n -= size_ts * sizeof(size_t);
-        if (n == 0)
-            return dest_ptr;
-    }
-    asm volatile(
-        "rep stosb\n"
-        : "=D"(dest), "=c"(n)
-        : "0"(dest), "1"(n), "a"(c)
-        : "memory");
-    return dest_ptr;
-}
-#elif ARCH(X86_64)
 // For x86-64, an optimized ASM implementation is found in ./arch/x86_64/memset.S
-#elif ARCH(AARCH64)
+#if ARCH(AARCH64)
 void* memset(void* dest_ptr, int c, size_t n)
 {
     (void)dest_ptr;
@@ -181,6 +156,7 @@ void* memset(void* dest_ptr, int c, size_t n)
     (void)n;
     TODO_AARCH64();
 }
+#elif ARCH(X86_64)
 #else
 #    error Unknown architecture
 #endif
