@@ -11,7 +11,7 @@ library for mold, but the OS detection logic still needs updated.
  2 files changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/third-party/tbb/src/tbb/allocator.cpp b/third-party/tbb/src/tbb/allocator.cpp
-index f30ded6..0acccef 100644
+index f30ded675f1372d572f4156489b15655cd302b2e..0acccef4b2521eee061e4df0aa8dd055e57f41c3 100644
 --- a/third-party/tbb/src/tbb/allocator.cpp
 +++ b/third-party/tbb/src/tbb/allocator.cpp
 @@ -101,7 +101,7 @@ static const dynamic_link_descriptor MallocLinkTable[] = {
@@ -24,7 +24,7 @@ index f30ded6..0acccef 100644
  #elif __unix__  // Note that order of these #elif's is important!
  #define MALLOCLIB_NAME "libtbbmalloc" DEBUG_SUFFIX ".so.2"
 diff --git a/third-party/tbb/src/tbb/rml_tbb.cpp b/third-party/tbb/src/tbb/rml_tbb.cpp
-index d31a77f..fb676bc 100644
+index d31a77fb6ff25ef86557daf946aeefe8fe9db5ca..fb676bc90ec22c624b13835f77b5dda1c8d99d93 100644
 --- a/third-party/tbb/src/tbb/rml_tbb.cpp
 +++ b/third-party/tbb/src/tbb/rml_tbb.cpp
 @@ -50,7 +50,7 @@ namespace rml {

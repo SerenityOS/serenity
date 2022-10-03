@@ -12,7 +12,7 @@ runtime. So, just lie to TBB that we don't support weak symbols.
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/third-party/tbb/include/oneapi/tbb/detail/_config.h b/third-party/tbb/include/oneapi/tbb/detail/_config.h
-index cce8ad6..3e07302 100644
+index fa287cd2968ec7f336b754ee450a8da12f4ded23..b93878aa6369a8ffe386da4dd822ab5bd1fe3c3b 100644
 --- a/third-party/tbb/include/oneapi/tbb/detail/_config.h
 +++ b/third-party/tbb/include/oneapi/tbb/detail/_config.h
 @@ -195,7 +195,7 @@
