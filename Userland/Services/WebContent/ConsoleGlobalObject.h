@@ -33,13 +33,18 @@ public:
     virtual JS::ThrowCompletionOr<bool> internal_delete(JS::PropertyKey const& name) override;
     virtual JS::ThrowCompletionOr<JS::MarkedVector<JS::Value>> internal_own_property_keys() const override;
 
+    void set_most_recent_result(JS::Value result) { m_most_recent_result = move(result); }
+
 private:
     virtual void visit_edges(Visitor&) override;
 
     // $0, the DOM node currently selected in the inspector
     JS_DECLARE_NATIVE_FUNCTION($0_getter);
+    // $_, the value of the most recent expression entered into the console
+    JS_DECLARE_NATIVE_FUNCTION($__getter);
 
     Web::HTML::Window* m_window_object;
+    JS::Value m_most_recent_result { JS::js_undefined() };
 };
 
 }

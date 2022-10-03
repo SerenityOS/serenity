@@ -22,6 +22,7 @@ void ConsoleGlobalObject::initialize(JS::Realm& realm)
     Base::initialize(realm);
 
     define_native_accessor(realm, "$0", $0_getter, nullptr, 0);
+    define_native_accessor(realm, "$_", $__getter, nullptr, 0);
 }
 
 void ConsoleGlobalObject::visit_edges(Visitor& visitor)
@@ -108,6 +109,12 @@ JS_DEFINE_NATIVE_FUNCTION(ConsoleGlobalObject::$0_getter)
         return JS::js_undefined();
 
     return inspected_node;
+}
+
+JS_DEFINE_NATIVE_FUNCTION(ConsoleGlobalObject::$__getter)
+{
+    auto* console_global_object = TRY(get_console(vm));
+    return console_global_object->m_most_recent_result;
 }
 
 }

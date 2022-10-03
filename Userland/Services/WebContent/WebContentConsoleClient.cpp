@@ -77,8 +77,10 @@ void WebContentConsoleClient::handle_input(String const& js_source)
 
     auto result = script->run();
 
-    if (result.value().has_value())
+    if (result.value().has_value()) {
+        m_console_global_object->set_most_recent_result(result.value().value());
         print_html(JS::MarkupGenerator::html_from_value(*result.value()));
+    }
 }
 
 void WebContentConsoleClient::report_exception(JS::Error const& exception, bool in_promise)
