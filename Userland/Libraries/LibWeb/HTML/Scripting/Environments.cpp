@@ -11,6 +11,7 @@
 #include <LibWeb/HTML/PromiseRejectionEvent.h>
 #include <LibWeb/HTML/Scripting/Environments.h>
 #include <LibWeb/HTML/Scripting/ExceptionReporter.h>
+#include <LibWeb/HTML/Scripting/WindowEnvironmentSettingsObject.h>
 #include <LibWeb/HTML/Window.h>
 #include <LibWeb/Page/Page.h>
 
@@ -32,6 +33,11 @@ JS::ExecutionContext& EnvironmentSettingsObject::realm_execution_context()
 {
     // NOTE: All environment settings objects are created with a realm execution context, so it's stored and returned here in the base class.
     return *m_realm_execution_context;
+}
+
+ModuleMap& EnvironmentSettingsObject::module_map()
+{
+    return m_module_map;
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#environment-settings-object%27s-realm
