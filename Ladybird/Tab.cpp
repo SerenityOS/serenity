@@ -9,6 +9,7 @@
 #include "BrowserWindow.h"
 #include "History.h"
 #include "Settings.h"
+#include "Utilities.h"
 #include <QCoreApplication>
 #include <QFont>
 #include <QFontMetrics>
@@ -137,6 +138,7 @@ void Tab::location_edit_return_pressed()
 void Tab::page_title_changed(QString title)
 {
     m_title = title;
+    m_history.update_title(akstring_from_qstring(m_title));
     emit title_changed(tab_index(), std::move(title));
 }
 
