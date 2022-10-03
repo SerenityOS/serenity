@@ -5,12 +5,16 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+// FIXME: LibIPC Decoder and Encoder are sensitive to include order here
+#include <LibImageDecoderClient/Client.h>
+
 #include "AlbumCoverVisualizationWidget.h"
 #include "BarsVisualizationWidget.h"
 #include "Player.h"
 #include "SampleWidget.h"
 #include "SoundPlayerWidgetAdvancedView.h"
 #include <LibAudio/ConnectionToServer.h>
+#include <LibAudio/FlacLoader.h>
 #include <LibCore/System.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/ActionGroup.h>
@@ -21,7 +25,6 @@
 #include <LibGUI/Window.h>
 #include <LibGfx/CharacterBitmap.h>
 #include <LibMain/Main.h>
-#include <stdio.h>
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
@@ -29,6 +32,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto app = TRY(GUI::Application::try_create(arguments));
     auto audio_client = TRY(Audio::ConnectionToServer::try_create());
+    auto decoder_client = TRY(ImageDecoderClient::Client::try_create());
 
     TRY(Core::System::pledge("stdio recvfd sendfd rpath thread"));
 
@@ -125,7 +129,23 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     visualization_actions.add_action(samples);
 
     auto album_cover_visualization = GUI::Action::create_checkable("&Album Cover", [&](auto&) {
-        static_cast<SoundPlayerWidgetAdvancedView*>(player)->set_visualization<AlbumCoverVisualizationWidget>();
+        auto get_image_from_music_file = [&player, &decoder_client]() -> RefPtr<Gfx::Bitmap> {
+            auto const& pictures = player->pictures();
+
+            if (pictures.is_empty())
+                return {};
+
+            // FIXME: We randomly select the first picture available for the track,
+            //        We might want to hardcode or let the user set a preference.
+            auto decoded_image_or_error = decoder_client->decode_image(pictures[0].data);
+            if (!decoded_image_or_error.has_value())
+                return {};
+
+            auto const decoded_image = decoded_image_or_error.release_value();
+            return decoded_image.frames[0].bitmap;
+        };
+
+        static_cast<SoundPlayerWidgetAdvancedView*>(player)->set_visualization<AlbumCoverVisualizationWidget>(get_image_from_music_file);
     });
     TRY(visualization_menu->try_add_action(album_cover_visualization));
     visualization_actions.add_action(album_cover_visualization);
