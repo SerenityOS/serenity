@@ -474,65 +474,46 @@ void SimpleWebView::debug_request(String const& request, String const& argument)
     if (request == "dump-dom-tree") {
         if (auto* doc = page.top_level_browsing_context().active_document())
             Web::dump_tree(*doc);
-    }
-
-    if (request == "dump-layout-tree") {
+    } else if (request == "dump-layout-tree") {
         if (auto* doc = page.top_level_browsing_context().active_document()) {
             if (auto* icb = doc->layout_node())
                 Web::dump_tree(*icb);
         }
-    }
-
-    if (request == "dump-stacking-context-tree") {
+    } else if (request == "dump-stacking-context-tree") {
         if (auto* doc = page.top_level_browsing_context().active_document()) {
             if (auto* icb = doc->layout_node()) {
                 if (auto* stacking_context = icb->paint_box()->stacking_context())
                     stacking_context->dump();
             }
         }
-    }
-
-    if (request == "dump-style-sheets") {
+    } else if (request == "dump-style-sheets") {
         if (auto* doc = page.top_level_browsing_context().active_document()) {
             for (auto& sheet : doc->style_sheets().sheets()) {
                 Web::dump_sheet(sheet);
             }
         }
-    }
-
-    if (request == "collect-garbage") {
+    } else if (request == "collect-garbage") {
         Web::Bindings::main_thread_vm().heap().collect_garbage(JS::Heap::CollectionType::CollectGarbage, true);
-    }
-
-    if (request == "set-line-box-borders") {
+    } else if (request == "set-line-box-borders") {
         bool state = argument == "on";
         m_page_client->set_should_show_line_box_borders(state);
         page.top_level_browsing_context().set_needs_display(page.top_level_browsing_context().viewport_rect());
-    }
-
-    if (request == "clear-cache") {
+    } else if (request == "clear-cache") {
         Web::ResourceLoader::the().clear_cache();
-    }
-
-    if (request == "spoof-user-agent") {
+    } else if (request == "spoof-user-agent") {
         Web::ResourceLoader::the().set_user_agent(argument);
-    }
-
-    if (request == "same-origin-policy") {
+    } else if (request == "same-origin-policy") {
         page.set_same_origin_policy_enabled(argument == "on");
-    }
-
-    if (request == "scripting") {
+    } else if (request == "scripting") {
         page.set_is_scripting_enabled(argument == "on");
-    }
-
-    if (request == "dump-local-storage") {
+    } else if (request == "dump-local-storage") {
         if (auto* doc = page.top_level_browsing_context().active_document())
             doc->window().local_storage()->dump();
-    }
-
-    if (request == "dump-cookies"sv)
+    } else if (request == "dump-cookies"sv) {
         m_page_client->dump_cookies();
+    } else {
+        dbgln("Unknown debug request: {}", request);
+    }
 }
 
 String SimpleWebView::source() const
