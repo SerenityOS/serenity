@@ -84,7 +84,7 @@ private:
     [[nodiscard]] Token consume_an_ident_like_token();
     [[nodiscard]] Number consume_a_number();
     [[nodiscard]] float convert_a_string_to_a_number(StringView);
-    [[nodiscard]] String consume_a_name();
+    [[nodiscard]] String consume_an_ident_sequence();
     [[nodiscard]] u32 consume_escaped_code_point();
     [[nodiscard]] Token consume_a_url_token();
     void consume_the_remnants_of_a_bad_url();
@@ -92,7 +92,7 @@ private:
     void consume_as_much_whitespace_as_possible();
     void reconsume_current_input_code_point();
     [[nodiscard]] static bool is_valid_escape_sequence(U32Twin);
-    [[nodiscard]] static bool would_start_an_identifier(U32Triplet);
+    [[nodiscard]] static bool would_start_an_ident_sequence(U32Triplet);
     [[nodiscard]] static bool would_start_a_number(U32Triplet);
 
     String m_decoded_input;
