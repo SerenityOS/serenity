@@ -30,6 +30,8 @@ public:
 private:
     explicit ModuleEnvironment(Environment* outer_environment);
 
+    virtual void visit_edges(Visitor&) override;
+
     struct IndirectBinding {
         FlyString name;
         Module* module;

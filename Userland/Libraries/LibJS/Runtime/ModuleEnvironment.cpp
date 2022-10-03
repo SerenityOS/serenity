@@ -126,4 +126,11 @@ Optional<ModuleEnvironment::BindingAndIndex> ModuleEnvironment::find_binding_and
     return DeclarativeEnvironment::find_binding_and_index(name);
 }
 
+void ModuleEnvironment::visit_edges(Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    for (auto& indirect_binding : m_indirect_bindings)
+        visitor.visit(indirect_binding.module);
+}
+
 }
