@@ -16,7 +16,7 @@ namespace Core {
 
 HashMap<uid_t, String> ProcessStatisticsReader::s_usernames;
 
-Optional<AllProcessesStatistics> ProcessStatisticsReader::get_all(RefPtr<Core::File>& proc_all_file)
+Optional<AllProcessesStatistics> ProcessStatisticsReader::get_all(RefPtr<Core::File>& proc_all_file, bool include_usernames)
 {
     if (proc_all_file) {
         if (!proc_all_file->seek(0, Core::SeekMode::SetPosition)) {
@@ -93,7 +93,9 @@ Optional<AllProcessesStatistics> ProcessStatisticsReader::get_all(RefPtr<Core::F
         });
 
         // and synthetic data last
-        process.username = username_from_uid(process.uid);
+        if (include_usernames) {
+            process.username = username_from_uid(process.uid);
+        }
         all_processes_statistics.processes.append(move(process));
     });
 
@@ -102,10 +104,10 @@ Optional<AllProcessesStatistics> ProcessStatisticsReader::get_all(RefPtr<Core::F
     return all_processes_statistics;
 }
 
-Optional<AllProcessesStatistics> ProcessStatisticsReader::get_all()
+Optional<AllProcessesStatistics> ProcessStatisticsReader::get_all(bool include_usernames)
 {
     RefPtr<Core::File> proc_all_file;
-    return get_all(proc_all_file);
+    return get_all(proc_all_file, include_usernames);
 }
 
 String ProcessStatisticsReader::username_from_uid(uid_t uid)
