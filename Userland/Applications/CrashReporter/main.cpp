@@ -110,11 +110,7 @@ static TitleAndText build_cpu_registers(const ELF::Core::ThreadInfo& thread_info
 
     StringBuilder builder;
 
-#if ARCH(I386)
-    builder.appendff("eax={:p} ebx={:p} ecx={:p} edx={:p}\n", regs.eax, regs.ebx, regs.ecx, regs.edx);
-    builder.appendff("ebp={:p} esp={:p} esi={:p} edi={:p}\n", regs.ebp, regs.esp, regs.esi, regs.edi);
-    builder.appendff("eip={:p} eflags={:p}", regs.eip, regs.eflags);
-#elif ARCH(X86_64)
+#if ARCH(X86_64)
     builder.appendff("rax={:p} rbx={:p} rcx={:p} rdx={:p}\n", regs.rax, regs.rbx, regs.rcx, regs.rdx);
     builder.appendff("rbp={:p} rsp={:p} rsi={:p} rdi={:p}\n", regs.rbp, regs.rsp, regs.rsi, regs.rdi);
     builder.appendff(" r8={:p}  r9={:p} r10={:p} r11={:p}\n", regs.r8, regs.r9, regs.r10, regs.r11);
