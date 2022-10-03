@@ -14,6 +14,7 @@
 #include <LibJS/Runtime/Realm.h>
 #include <LibWeb/HTML/EventLoop/EventLoop.h>
 #include <LibWeb/HTML/Origin.h>
+#include <LibWeb/HTML/Scripting/ModuleMap.h>
 
 namespace Web::HTML {
 
@@ -61,7 +62,8 @@ struct EnvironmentSettingsObject
     // https://html.spec.whatwg.org/multipage/webappapis.html#concept-environment-target-browsing-context
     JS::ExecutionContext& realm_execution_context();
 
-    // FIXME: A module map https://html.spec.whatwg.org/multipage/webappapis.html#concept-settings-object-module-map
+    // https://html.spec.whatwg.org/multipage/webappapis.html#concept-settings-object-module-map
+    ModuleMap& module_map();
 
     // https://html.spec.whatwg.org/multipage/webappapis.html#responsible-document
     virtual JS::GCPtr<DOM::Document> responsible_document() = 0;
@@ -113,6 +115,8 @@ protected:
 
 private:
     NonnullOwnPtr<JS::ExecutionContext> m_realm_execution_context;
+    ModuleMap m_module_map;
+
     EventLoop* m_responsible_event_loop { nullptr };
 
     // https://html.spec.whatwg.org/multipage/webappapis.html#outstanding-rejected-promises-weak-set
