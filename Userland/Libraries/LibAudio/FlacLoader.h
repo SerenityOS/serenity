@@ -49,9 +49,7 @@ class FlacLoaderPlugin : public LoaderPlugin {
 public:
     explicit FlacLoaderPlugin(StringView path);
     explicit FlacLoaderPlugin(Bytes buffer);
-    ~FlacLoaderPlugin()
-    {
-    }
+    virtual ~FlacLoaderPlugin() override = default;
 
     virtual MaybeLoaderError initialize() override;
 
