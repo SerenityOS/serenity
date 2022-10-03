@@ -10,7 +10,9 @@
 // /!\ Read setjmp.h before modifying this file!
 //
 
+.global _setjmp
 .global setjmp
+_setjmp:
 setjmp:
     mov $0, %esi            // Set val argument to 0
 
@@ -44,7 +46,9 @@ sigsetjmp:
     xor %eax, %eax
     ret
 
+.global _longjmp
 .global longjmp
+_longjmp:
 longjmp:
     mov %esi, %eax
     test %eax, %eax

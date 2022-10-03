@@ -4,12 +4,16 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+.global _setjmp
 .global setjmp
+_setjmp:
 setjmp:
     # FIXME: Possibly incomplete.
     ret
 
+.global _longjmp
 .global longjmp
+_longjmp:
 longjmp:
     # FIXME: Possibly incomplete.
     ret
