@@ -17,7 +17,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
 {
     Core::EventLoop event_loop;
 
-    TRY(Core::System::pledge("stdio unix accept rpath proc"));
+    TRY(Core::System::pledge("stdio unix accept rpath"));
 
     auto server = TRY(IPC::MultiServer<InspectorServer::ConnectionFromClient>::try_create("/tmp/session/%sid/portal/inspector"));
 

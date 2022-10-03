@@ -28,7 +28,7 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio rpath recvfd sendfd unix proc"));
+    TRY(Core::System::pledge("stdio rpath recvfd sendfd unix"));
 
     srand(time(nullptr));
 

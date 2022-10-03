@@ -37,7 +37,7 @@ static ErrorOr<ByteBuffer> dump_bitmap(RefPtr<Gfx::Bitmap> bitmap, AK::StringVie
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio cpath rpath recvfd sendfd unix proc"));
+    TRY(Core::System::pledge("stdio cpath rpath recvfd sendfd unix"));
     auto app = TRY(GUI::Application::try_create(arguments));
 
     TRY(Core::System::unveil("/tmp/session/%sid/portal/filesystemaccess", "rw"));

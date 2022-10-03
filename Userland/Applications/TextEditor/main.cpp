@@ -18,7 +18,7 @@ using namespace TextEditor;
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio recvfd sendfd thread rpath cpath wpath unix proc"));
+    TRY(Core::System::pledge("stdio recvfd sendfd thread rpath cpath wpath unix"));
 
     auto app = TRY(GUI::Application::try_create(arguments));
 

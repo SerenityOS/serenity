@@ -18,7 +18,7 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio recvfd sendfd rpath unix inet proc"));
+    TRY(Core::System::pledge("stdio recvfd sendfd rpath unix inet"));
 
     auto app = TRY(GUI::Application::try_create(arguments));
 

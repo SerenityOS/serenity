@@ -22,7 +22,7 @@ constexpr size_t LOAD_CHUNK_SIZE = 128 * KiB;
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio rpath sendfd unix thread proc"));
+    TRY(Core::System::pledge("stdio rpath sendfd unix thread"));
 
     StringView path {};
     bool should_loop = false;
