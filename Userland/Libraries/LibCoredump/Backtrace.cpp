@@ -44,10 +44,7 @@ ELFObjectInfo const* Backtrace::object_info_for_region(Reader const& coredump, M
 Backtrace::Backtrace(Reader const& coredump, const ELF::Core::ThreadInfo& thread_info, Function<void(size_t, size_t)> on_progress)
     : m_thread_info(move(thread_info))
 {
-#if ARCH(I386)
-    auto start_bp = m_thread_info.regs.ebp;
-    auto start_ip = m_thread_info.regs.eip;
-#elif ARCH(X86_64)
+#if ARCH(X86_64)
     auto start_bp = m_thread_info.regs.rbp;
     auto start_ip = m_thread_info.regs.rip;
 #elif ARCH(AARCH64)
