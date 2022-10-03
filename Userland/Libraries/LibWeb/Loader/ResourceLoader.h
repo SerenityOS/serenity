@@ -18,9 +18,7 @@
 
 namespace Web {
 
-#if ARCH(I386)
-#    define CPU_STRING "x86"
-#elif ARCH(X86_64)
+#if ARCH(X86_64)
 #    define CPU_STRING "x86_64"
 #elif ARCH(AARCH64)
 #    define CPU_STRING "AArch64"
