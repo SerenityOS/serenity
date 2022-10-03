@@ -32,11 +32,6 @@ fi
 # Prepend the toolchain qemu directory so we pick up QEMU from there
 PATH="$SCRIPT_DIR/../Toolchain/Local/qemu/bin:$PATH"
 
-# Also prepend the i686 toolchain directory because that's where most
-# people will have their QEMU binaries if they built them before the
-# directory was changed to Toolchain/Local/qemu.
-PATH="$SCRIPT_DIR/../Toolchain/Local/i686/bin:$PATH"
-
 # We depend on GNU coreutils du for the --apparent-size extension.
 # GNU coreutils is a build dependency.
 if command -v gdu > /dev/null 2>&1 && gdu --version | grep -q "GNU coreutils"; then

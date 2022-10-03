@@ -9,7 +9,7 @@ echo "$DIR"
 
 PREFIX="$DIR/Local/clang/"
 BUILD="$DIR/../Build/"
-USERLAND_ARCHS="i686 x86_64"
+USERLAND_ARCHS="x86_64"
 ARCHS="$USERLAND_ARCHS aarch64"
 
 MD5SUM="md5sum"
@@ -286,7 +286,6 @@ pushd "$DIR/Build/clang"
     pushd llvm
         buildstep "llvm/configure" cmake "$DIR/Tarballs/$LLVM_NAME/llvm" \
             -G Ninja \
-            -DSERENITY_i686-pc-serenity_SYSROOT="$BUILD/i686clang/Root" \
             -DSERENITY_x86_64-pc-serenity_SYSROOT="$BUILD/x86_64clang/Root" \
             -DSERENITY_aarch64-pc-serenity_SYSROOT="$BUILD/aarch64clang/Root" \
             -DCMAKE_INSTALL_PREFIX="$PREFIX" \

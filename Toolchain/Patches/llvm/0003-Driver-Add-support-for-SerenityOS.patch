@@ -13,7 +13,6 @@ protection and position-independent code by default.
  clang/lib/Driver/CMakeLists.txt          |   1 +
  clang/lib/Driver/Driver.cpp              |   4 +
  clang/lib/Driver/ToolChain.cpp           |   2 +
- clang/lib/Driver/ToolChains/Arch/X86.cpp |   1 +
  clang/lib/Driver/ToolChains/Serenity.cpp | 336 +++++++++++++++++++++++
  clang/lib/Driver/ToolChains/Serenity.h   |  99 +++++++
  8 files changed, 467 insertions(+)
@@ -127,18 +126,6 @@ index 7a4319ea680f97dde074b21afa2ee6f75c350091..8db07d9dd0754bffeddf00afe365fe7d
    default:
      return getOS();
    }
-diff --git a/clang/lib/Driver/ToolChains/Arch/X86.cpp b/clang/lib/Driver/ToolChains/Arch/X86.cpp
-index cd7c014faa5e0d503adc9f2c30b83b3efbb7e315..004185d28816b8e8bb903612aa053cb883524fc5 100644
---- a/clang/lib/Driver/ToolChains/Arch/X86.cpp
-+++ b/clang/lib/Driver/ToolChains/Arch/X86.cpp
-@@ -113,6 +113,7 @@ std::string x86::getX86TargetCPU(const Driver &D, const ArgList &Args,
-   case llvm::Triple::OpenBSD:
-     return "i586";
-   case llvm::Triple::FreeBSD:
-+  case llvm::Triple::Serenity:
-     return "i686";
-   default:
-     // Fallback to p4.
 diff --git a/clang/lib/Driver/ToolChains/Serenity.cpp b/clang/lib/Driver/ToolChains/Serenity.cpp
 new file mode 100644
 index 0000000000000000000000000000000000000000..4fdf45a19eb2704d00a03e7b2f34f87f63a0a074

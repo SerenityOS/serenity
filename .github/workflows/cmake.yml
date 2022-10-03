@@ -22,13 +22,9 @@ jobs:
       matrix:
         debug-options: ['ALL_DEBUG', 'NORMAL_DEBUG']
         os: [ubuntu-22.04]
-        arch: ['i686', 'x86_64']
+        arch: ['x86_64']
         # If ccache is broken and you would like to bust the ccache cache on Github Actions, increment this:
         ccache-mark: [0]
-        exclude:
-          # We currently manually disable the ALL_DEBUG build on x86_64 for sake of saving CI time, as it is not our main target right now
-          - debug-options: 'ALL_DEBUG'
-            arch: 'x86_64'
 
     steps:
       # Pull requests can trail behind `master` and can cause breakage if merging before running the CI checks on an updated branch.
@@ -121,8 +117,8 @@ jobs:
       - name: Show ccache stats before build and configure
         run: |
           # We only have 5 GiB of cache available *in total*. Beyond that, GitHub deletes caches.
-          # Currently, we use about 130 MB for the two toolchains (i686 & x86_64), and three ccache caches:
-          # One with ALL_DEBUG (i686) and two with NORMAL_DEBUG (i686 & x86_64).
+          # Currently, we use about 130 MB for the toolchains (x86_64), and 2 ccache caches:
+          # One with ALL_DEBUG (x86_64), and one with NORMAL_DEBUG (x86_64).
           # Therefore, using 1.6 GB or more per cache causes disaster.
           # Building from scratch fills the ccache cache from 0 to about 0.7 GB, and after compression it comes out to
           # about 0.25 GB, so 3 GB (1GB after compression) should be plenty, all while comfortably fitting in the cache.
@@ -231,7 +227,7 @@ jobs:
         run: '[ ! -e debug.log ] || cat debug.log'
 
       - name: Check manpages for completeness
-        if: ${{ matrix.debug-options == 'NORMAL_DEBUG' && matrix.arch == 'i686'}}
+        if: ${{ matrix.debug-options == 'NORMAL_DEBUG' && matrix.arch == 'x86_64'}}
         working-directory: ${{ github.workspace }}/Build/${{ matrix.arch }}
         env:
           # The script already sets the correct SERENITY_RUN and SERENITY_KERNEL_CMDLINE envvars.

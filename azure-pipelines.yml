@@ -35,8 +35,4 @@ stages:
     jobs:
       - template: Meta/Azure/Serenity.yml
         parameters:
-          arch: 'i686'
-
-      - template: Meta/Azure/Serenity.yml
-        parameters:
           arch: 'x86_64'

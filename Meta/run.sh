@@ -49,10 +49,10 @@ fi
 # Prepend the toolchain qemu directory so we pick up QEMU from there
 PATH="$SCRIPT_DIR/../Toolchain/Local/qemu/bin:$PATH"
 
-# Also prepend the i686 toolchain directory because that's where most
+# Also prepend the x86_64 toolchain directory because that's where most
 # people will have their QEMU binaries if they built them before the
 # directory was changed to Toolchain/Local/qemu.
-PATH="$SCRIPT_DIR/../Toolchain/Local/i686/bin:$PATH"
+PATH="$SCRIPT_DIR/../Toolchain/Local/x86_64/bin:$PATH"
 
 SERENITY_RUN="${SERENITY_RUN:-$1}"
 
@@ -75,7 +75,7 @@ if [ -z "$SERENITY_QEMU_BIN" ]; then
     elif [ "$SERENITY_ARCH" = "x86_64" ]; then
         SERENITY_QEMU_BIN="${QEMU_BINARY_PREFIX}qemu-system-x86_64${QEMU_BINARY_SUFFIX}"
     else
-        SERENITY_QEMU_BIN="${QEMU_BINARY_PREFIX}qemu-system-i386${QEMU_BINARY_SUFFIX}"
+        die "Please specify a valid CPU architecture."
     fi
 fi
 

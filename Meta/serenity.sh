@@ -7,7 +7,7 @@ print_help() {
     NAME=$(basename "$ARG0")
     cat <<EOF
 Usage: $NAME COMMAND [TARGET] [TOOLCHAIN] [ARGS...]
-  Supported TARGETs: aarch64, i686, x86_64, lagom. Defaults to SERENITY_ARCH, or x86_64 if not set.
+  Supported TARGETs: aarch64, x86_64, lagom. Defaults to SERENITY_ARCH, or x86_64 if not set.
   Supported TOOLCHAINs: GNU, Clang. Defaults to SERENITY_TOOLCHAIN, or GNU if not set.
   Supported COMMANDs:
     build:      Compiles the target binaries, [ARGS...] are passed through to ninja
@@ -46,22 +46,22 @@ Usage: $NAME COMMAND [TARGET] [TOOLCHAIN] [ARGS...]
 
 
   Examples:
-    $NAME run i686 GNU smp=on
+    $NAME run x86_64 GNU smp=on
         Runs the image in QEMU passing "smp=on" to the kernel command line
-    $NAME run i686 GNU 'init=/bin/UserspaceEmulator init_args=/bin/SystemServer'
+    $NAME run x86_64 GNU 'init=/bin/UserspaceEmulator init_args=/bin/SystemServer'
         Runs the image in QEMU, and run the entire system through UserspaceEmulator (not fully supported yet)
     $NAME run
-        Runs the image for the default TARGET i686 in QEMU
+        Runs the image for the default TARGET x86_64 in QEMU
     $NAME run lagom js -A
         Runs the Lagom-built js(1) REPL
     $NAME test lagom
         Runs the unit tests on the build host
-    $NAME kaddr2line i686 0x12345678
+    $NAME kaddr2line x86_64 0x12345678
         Resolves the address 0x12345678 in the Kernel binary
-    $NAME addr2line i686 WindowServer 0x12345678
+    $NAME addr2line x86_64 WindowServer 0x12345678
         Resolves the address 0x12345678 in the WindowServer binary
-    $NAME gdb i686 smp=on -ex 'hb *init'
-        Runs the image for the TARGET i686 in qemu and attaches a gdb session
+    $NAME gdb x86_64 smp=on -ex 'hb *init'
+        Runs the image for the TARGET x86_64 in qemu and attaches a gdb session
         setting a breakpoint at the init() function in the Kernel.
 EOF
 }
@@ -118,10 +118,6 @@ get_top_dir() {
 is_valid_target() {
     if [ "$TARGET" = "aarch64" ]; then
         CMAKE_ARGS+=("-DSERENITY_ARCH=aarch64")
-        return 0
-    fi
-    if [ "$TARGET" = "i686" ]; then
-        CMAKE_ARGS+=("-DSERENITY_ARCH=i686")
         return 0
     fi
     if [ "$TARGET" = "x86_64" ]; then

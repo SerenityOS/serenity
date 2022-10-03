@@ -1,6 +1,6 @@
 parameters:
   os: 'Linux'
-  arch: 'i686'
+  arch: 'x86_64'
   toolchain: 'gcc'
   coverage: 'OFF'
   download_cache_path: ''

@@ -25,7 +25,7 @@ set(LLVM_INSTALL_BINUTILS_SYMLINKS OFF CACHE BOOL "")
 set(CLANG_ENABLE_CLANGD OFF CACHE BOOL "")
 
 set(compiler_flags "-nostdlib -nostdlib++")
-foreach(target i686-pc-serenity;x86_64-pc-serenity;aarch64-pc-serenity)
+foreach(target x86_64-pc-serenity;aarch64-pc-serenity)
     list(APPEND targets "${target}")
 
     set(RUNTIMES_${target}_CMAKE_BUILD_TYPE Release CACHE STRING "")

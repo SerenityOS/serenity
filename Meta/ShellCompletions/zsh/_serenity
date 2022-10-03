@@ -28,8 +28,7 @@ _serenity() {
 
     local targets
     targets=(
-        'i686:Target i686 (default)'
-        'x86_64:Target x86_64'
+        'x86_64:Target x86_64 (default)'
         'aarch64:Target aarch64'
         'lagom:Target host machine'
     )
