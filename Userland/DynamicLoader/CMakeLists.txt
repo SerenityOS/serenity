@@ -8,9 +8,6 @@ file(GLOB LIBC_SOURCES1 "../Libraries/LibC/*.cpp")
 file(GLOB LIBC_SOURCES2 "../Libraries/LibC/*/*.cpp")
 
 set(ARCH_FOLDER "${SERENITY_ARCH}")
-if (SERENITY_ARCH STREQUAL "i686")
-    set(ARCH_FOLDER "i386")
-endif()
 
 file(GLOB LIBC_SOURCES3 "../Libraries/LibC/arch/${ARCH_FOLDER}/*.S")
 set(ELF_SOURCES ${ELF_SOURCES} "../Libraries/LibELF/Arch/${ARCH_FOLDER}/entry.S" "../Libraries/LibELF/Arch/${ARCH_FOLDER}/plt_trampoline.S")
