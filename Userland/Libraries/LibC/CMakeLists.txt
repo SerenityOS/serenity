@@ -62,7 +62,6 @@ set(LIBC_SOURCES
     sys/statvfs.cpp
     sys/uio.cpp
     sys/wait.cpp
-    sys/xattr.cpp
     syslog.cpp
     termcap.cpp
     termios.cpp
