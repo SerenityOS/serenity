@@ -259,6 +259,7 @@ set(SOURCES
     HTML/Scripting/Environments.cpp
     HTML/Scripting/ExceptionReporter.cpp
     HTML/Scripting/ModuleMap.cpp
+    HTML/Scripting/ModuleScript.cpp
     HTML/Scripting/Script.cpp
     HTML/Scripting/WindowEnvironmentSettingsObject.cpp
     HTML/Storage.cpp
