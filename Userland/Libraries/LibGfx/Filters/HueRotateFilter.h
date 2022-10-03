@@ -6,17 +6,14 @@
 
 #pragma once
 
-#include <AK/Math.h>
-#include <LibGfx/Filters/ColorFilter.h>
-#include <LibGfx/Matrix3x3.h>
+#include <LibGfx/Filters/MatrixFilter.h>
 
 namespace Gfx {
 
-class HueRotateFilter : public ColorFilter {
+class HueRotateFilter : public MatrixFilter {
 public:
     HueRotateFilter(float angle_degrees)
-        : ColorFilter(angle_degrees)
-        , m_operation(calculate_operation_matrix(angle_degrees))
+        : MatrixFilter(calculate_hue_rotate_matrix(angle_degrees))
     {
     }
 
@@ -25,37 +22,12 @@ public:
         return true;
     }
 
-    float angle_degrees() const
-    {
-        return m_amount;
-    }
-
     virtual StringView class_name() const override { return "HueRotateFilter"sv; }
 
-protected:
-    Color convert_color(Color original) override
-    {
-        FloatVector3 rgb = {
-            original.red() / 256.0f,
-            original.green() / 256.0f,
-            original.blue() / 256.0f,
-        };
-        rgb = m_operation * rgb;
-        auto safe_float_to_u8 = [](float value) -> u8 {
-            return static_cast<u8>(AK::clamp(value, 0.0f, 1.0f) * 256);
-        };
-        return Color {
-            safe_float_to_u8(rgb[0]),
-            safe_float_to_u8(rgb[1]),
-            safe_float_to_u8(rgb[2]),
-            original.alpha()
-        };
-    }
-
 private:
-    static FloatMatrix3x3 calculate_operation_matrix(float angle)
+    static FloatMatrix3x3 calculate_hue_rotate_matrix(float angle_degrees)
     {
-        float angle_rads = angle * (AK::Pi<float> / 180);
+        float angle_rads = angle_degrees * (AK::Pi<float> / 180);
         float cos_angle = 0;
         float sin_angle = 0;
         AK::sincos(angle_rads, sin_angle, cos_angle);
@@ -77,8 +49,6 @@ private:
         };
         // clang-format on
     }
-
-    FloatMatrix3x3 m_operation;
 };
 
 }
