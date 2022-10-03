@@ -40,6 +40,9 @@ public:
     unsigned natural_width() const;
     unsigned natural_height() const;
 
+    // https://html.spec.whatwg.org/multipage/embedded-content.html#dom-img-complete
+    bool complete() const;
+
 private:
     HTMLImageElement(DOM::Document&, DOM::QualifiedName);
 

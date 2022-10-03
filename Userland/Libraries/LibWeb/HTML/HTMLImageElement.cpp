@@ -179,4 +179,26 @@ unsigned HTMLImageElement::natural_height() const
     return 0;
 }
 
+// https://html.spec.whatwg.org/multipage/embedded-content.html#dom-img-complete
+bool HTMLImageElement::complete() const
+{
+    // The IDL attribute complete must return true if any of the following conditions is true:
+
+    // - Both the src attribute and the srcset attribute are omitted.
+    if (!has_attribute(HTML::AttributeNames::src) && !has_attribute(HTML::AttributeNames::srcset))
+        return true;
+
+    // - The srcset attribute is omitted and the src attribute's value is the empty string.
+    if (!has_attribute(HTML::AttributeNames::srcset) && attribute(HTML::AttributeNames::src) == ""sv)
+        return true;
+
+    // - The img element's current request's state is completely available and its pending request is null.
+    // - The img element's current request's state is broken and its pending request is null.
+    // FIXME: This is ad-hoc and should be updated once we are loading images via the Fetch mechanism.
+    if (m_image_loader.has_loaded_or_failed())
+        return true;
+
+    return false;
+}
+
 }
