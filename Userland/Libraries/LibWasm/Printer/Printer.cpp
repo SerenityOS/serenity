@@ -131,27 +131,13 @@ void Printer::print(Wasm::DataSection::Data const& data)
             [this](DataSection::Data::Passive const& value) {
                 print_indent();
                 print("(passive init {}xu8 (", value.init.size());
-                bool first = true;
-                for (auto v : value.init) {
-                    if (first)
-                        print("{:x}", v);
-                    else
-                        print(" {:x}", v);
-                    first = false;
-                }
+                print(String::join(' ', value.init, "{:x}"sv));
                 print(")\n");
             },
             [this](DataSection::Data::Active const& value) {
                 print_indent();
                 print("(active init {}xu8 (", value.init.size());
-                bool first = true;
-                for (auto v : value.init) {
-                    if (first)
-                        print("{:x}", v);
-                    else
-                        print(" {:x}", v);
-                    first = false;
-                }
+                print(String::join(' ', value.init, "{:x}"sv));
                 print("\n");
                 {
                     TemporaryChange change { m_indent, m_indent + 1 };
