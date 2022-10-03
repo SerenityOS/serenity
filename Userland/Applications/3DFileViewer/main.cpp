@@ -360,6 +360,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     TRY(Core::System::pledge("stdio thread recvfd sendfd rpath unix prot_exec"));
 
+    TRY(Core::System::unveil("/proc/all", "r"));
     TRY(Core::System::unveil("/tmp/session/%sid/portal/filesystemaccess", "rw"));
     TRY(Core::System::unveil("/home/anon/Documents/3D Models", "r"));
     TRY(Core::System::unveil("/res", "r"));
