@@ -196,48 +196,50 @@ static inline bool is_E(u32 code_point)
 
 Tokenizer::Tokenizer(StringView input, String const& encoding)
 {
-    auto* decoder = TextCodec::decoder_for(encoding);
-    VERIFY(decoder);
+    // https://www.w3.org/TR/css-syntax-3/#css-filter-code-points
+    auto filter_code_points = [](StringView input, auto const& encoding) -> String {
+        auto* decoder = TextCodec::decoder_for(encoding);
+        VERIFY(decoder);
 
-    StringBuilder builder(input.length());
+        StringBuilder builder { input.length() };
+        bool last_was_carriage_return = false;
 
-    // Preprocess the stream, by doing the following:
-    // - Replace \r, \f and \r\n with \n
-    // - replace \0 and anything between U+D800 to U+DFFF with the replacement
-    //   character.
-    // https://www.w3.org/TR/css-syntax-3/#input-preprocessing
-    bool last_was_carriage_return = false;
-    decoder->process(input, [&builder, &last_was_carriage_return](u32 code_point) {
-        if (code_point == '\r') {
-            if (last_was_carriage_return) {
-                builder.append('\n');
-            } else {
-                last_was_carriage_return = true;
-            }
-        } else {
-            if (last_was_carriage_return) {
-                builder.append('\n');
-            }
-
-            if (code_point == '\n') {
-                if (!last_was_carriage_return) {
+        // To filter code points from a stream of (unfiltered) code points input:
+        decoder->process(input, [&builder, &last_was_carriage_return](u32 code_point) {
+            // Replace any U+000D CARRIAGE RETURN (CR) code points,
+            // U+000C FORM FEED (FF) code points,
+            // or pairs of U+000D CARRIAGE RETURN (CR) followed by U+000A LINE FEED (LF)
+            // in input by a single U+000A LINE FEED (LF) code point.
+            if (code_point == '\r') {
+                if (last_was_carriage_return) {
                     builder.append('\n');
+                } else {
+                    last_was_carriage_return = true;
                 }
-            } else if (code_point == '\f') {
-                builder.append('\n');
-            } else if (code_point == 0x00) {
-                builder.append_code_point(REPLACEMENT_CHARACTER);
-            } else if (code_point >= 0xD800 && code_point <= 0xDFFF) {
-                builder.append_code_point(REPLACEMENT_CHARACTER);
             } else {
-                builder.append_code_point(code_point);
+                if (last_was_carriage_return)
+                    builder.append('\n');
+
+                if (code_point == '\n') {
+                    if (!last_was_carriage_return)
+                        builder.append('\n');
+
+                } else if (code_point == '\f') {
+                    builder.append('\n');
+                    // Replace any U+0000 NULL or surrogate code points in input with U+FFFD REPLACEMENT CHARACTER (�).
+                } else if (code_point == 0x00 || (code_point >= 0xD800 && code_point <= 0xDFFF)) {
+                    builder.append_code_point(REPLACEMENT_CHARACTER);
+                } else {
+                    builder.append_code_point(code_point);
+                }
+
+                last_was_carriage_return = false;
             }
+        });
+        return builder.to_string();
+    };
 
-            last_was_carriage_return = false;
-        }
-    });
-
-    m_decoded_input = builder.to_string();
+    m_decoded_input = filter_code_points(input, encoding);
     m_utf8_view = Utf8View(m_decoded_input);
     m_utf8_iterator = m_utf8_view.begin();
 }
