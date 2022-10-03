@@ -33,6 +33,8 @@ public:
     virtual ThrowCompletionOr<void> link(VM& vm) override;
     virtual ThrowCompletionOr<Promise*> evaluate(VM& vm) override;
 
+    Vector<ModuleRequest> const& requested_modules() const { return m_requested_modules; }
+
 protected:
     CyclicModule(Realm& realm, StringView filename, bool has_top_level_await, Vector<ModuleRequest> requested_modules, Script::HostDefined* host_defined);
 
