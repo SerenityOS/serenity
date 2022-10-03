@@ -32,7 +32,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_title("PDF Viewer");
     window->resize(640, 400);
 
-    TRY(Core::System::pledge("stdio recvfd sendfd rpath unix proc"));
+    TRY(Core::System::pledge("stdio recvfd sendfd rpath unix"));
 
     TRY(Core::System::unveil("/tmp/session/%sid/portal/filesystemaccess", "rw"));
     TRY(Core::System::unveil("/res", "r"));
