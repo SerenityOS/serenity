@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, networkException <networkexception@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -15,6 +16,7 @@
 #include <LibWeb/HTML/EventNames.h>
 #include <LibWeb/HTML/HTMLScriptElement.h>
 #include <LibWeb/HTML/Scripting/ClassicScript.h>
+#include <LibWeb/HTML/Scripting/Fetching.h>
 #include <LibWeb/Infra/CharacterTypes.h>
 #include <LibWeb/Loader/ResourceLoader.h>
 #include <LibWeb/MimeSniff/MimeType.h>
@@ -47,6 +49,8 @@ void HTMLScriptElement::begin_delaying_document_load_event(DOM::Document& docume
 // https://html.spec.whatwg.org/multipage/scripting.html#execute-the-script-block
 void HTMLScriptElement::execute_script()
 {
+    // FIXME: Update the steps to match current spec.
+
     // 1. Let document be scriptElement's node document.
     JS::NonnullGCPtr<DOM::Document> node_document = document();
 
@@ -96,8 +100,8 @@ void HTMLScriptElement::execute_script()
         // 1. Assert: document's currentScript attribute is null.
         VERIFY(!document().current_script());
 
-        // FIXME: 2. Run the module script given by the script's script for scriptElement.
-        TODO();
+        // 2. Run the module script given by the script's script for scriptElement.
+        (void)verify_cast<JavaScriptModuleScript>(*m_script).run();
     }
 
     // 6. Decrement the ignore-destructive-writes counter of document, if it was incremented in the earlier step.
@@ -112,6 +116,8 @@ void HTMLScriptElement::execute_script()
 // https://html.spec.whatwg.org/multipage/scripting.html#prepare-a-script
 void HTMLScriptElement::prepare_script()
 {
+    // FIXME: Update the steps to match current spec.
+
     // 1. If the script element is marked as having "already started", then return. The script is not executed.
     if (m_already_started) {
         dbgln("HTMLScriptElement: Refusing to run script because it has already started.");
@@ -293,21 +299,26 @@ void HTMLScriptElement::prepare_script()
             auto resource = ResourceLoader::the().load_resource(Resource::Type::Generic, request);
             set_resource(resource);
         } else if (m_script_type == ScriptType::Module) {
-            // FIXME: -> "module"
-            //        Fetch an external module script graph given url, settings object, and options.
+            // Fetch an external module script graph given url, settings object, options, and onComplete.
+            // FIXME: Pass options.
+            fetch_external_module_script_graph(url, document().relevant_settings_object(), [this](auto const* result) {
+                // 1. Mark as ready el given result.
+                m_script = result;
+                script_became_ready();
+            });
         }
     } else {
         // 27. If the element does not have a src content attribute, run these substeps:
 
-        // FIXME: 1. Let base URL be the script element's node document's document base URL.
+        // 1. Let base URL be the script element's node document's document base URL.
+        auto base_url = m_document->base_url();
 
         // 2. Switch on the script's type:
         if (m_script_type == ScriptType::Classic) {
             // -> "classic"
             // 1. Let script be the result of creating a classic script using source text, settings object, base URL, and options.
-
-            // FIXME: Pass settings, base URL and options.
-            auto script = ClassicScript::create(m_document->url().to_string(), source_text, document().relevant_settings_object(), AK::URL(), m_source_line_number);
+            // FIXME: Pass options.
+            auto script = ClassicScript::create(m_document->url().to_string(), source_text, document().relevant_settings_object(), base_url, m_source_line_number);
 
             // 2. Set the script's script to script.
             m_script = script;
@@ -315,10 +326,15 @@ void HTMLScriptElement::prepare_script()
             // 3. The script is ready.
             script_became_ready();
         } else if (m_script_type == ScriptType::Module) {
-            // FIXME: -> "module"
-            // 1. Fetch an inline module script graph, given source text, base URL, settings object, and options.
-            //    When this asynchronously completes, set the script's script to the result. At that time, the script is ready.
-            TODO();
+            // FIXME: 1. Set el's delaying the load event to true.
+
+            // 2. Fetch an inline module script graph, given source text, base URL, settings object, options, and with the following steps given result:
+            // FIXME: Pass options
+            fetch_inline_module_script_graph(m_document->url().to_string(), source_text, base_url, document().relevant_settings_object(), [this](auto const* result) {
+                // 1. Mark as ready el given result.
+                m_script = result;
+                script_became_ready();
+            });
         }
     }
 
