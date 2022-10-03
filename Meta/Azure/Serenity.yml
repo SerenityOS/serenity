@@ -1,5 +1,5 @@
 parameters:
-  arch: 'i686'
+  arch: 'x86_64'
   coverage: 'OFF'
 
 jobs:

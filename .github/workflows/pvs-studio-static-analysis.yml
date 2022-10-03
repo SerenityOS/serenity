@@ -9,7 +9,7 @@ jobs:
     name: Static Analysis
     runs-on: ubuntu-22.04
     env:
-      PVS_STUDIO_ANALYSIS_ARCH: i686
+      PVS_STUDIO_ANALYSIS_ARCH: x86_64
     if: always() && github.repository == 'SerenityOS/serenity' && github.ref == 'refs/heads/master'
     steps:
       - uses: actions/checkout@v3

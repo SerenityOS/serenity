@@ -94,7 +94,7 @@ index 0000000000000000000000000000000000000000..17551aaa1a07e6c0b7365f9889937512
 +#endif
 +
 +/* Default arguments you want when running your
-+   i686-serenity-gcc/x86_64-serenity-gcc toolchain */
++   x86_64-serenity-gcc toolchain */
 +#undef LIB_SPEC
 +#define LIB_SPEC "-lc" /* link against C standard library */
 +

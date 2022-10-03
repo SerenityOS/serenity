@@ -1,6 +1,6 @@
 # SerenityOS
 
-Graphical Unix-like operating system for x86 computers.
+Graphical Unix-like operating system for x86-64 computers.
 
 [![GitHub Actions Status](https://github.com/SerenityOS/serenity/workflows/Build,%20lint,%20and%20test/badge.svg)](https://github.com/SerenityOS/serenity/actions?query=workflow%3A"Build%2C%20lint%2C%20and%20test")
 [![Azure DevOps Status](https://dev.azure.com/SerenityOS/SerenityOS/_apis/build/status/CI?branchName=master)](https://dev.azure.com/SerenityOS/SerenityOS/_build/latest?definitionId=1&branchName=master)
@@ -28,7 +28,7 @@ You can watch videos of the system being developed on YouTube:
 
 ## Features
 
-* Modern x86 32-bit and 64-bit kernel with pre-emptive multi-threading
+* Modern x86 64-bit kernel with pre-emptive multi-threading
 * [Browser](Userland/Applications/Browser/) with JavaScript, WebAssembly, and more (check the spec compliance for [JS](https://libjs.dev/test262/), [CSS](https://css.tobyase.de/), and [WASM](https://libjs.dev/wasm/))
 * Security features (hardware protections, limited userland capabilities, W^X memory, `pledge` & `unveil`, (K)ASLR, OOM-resistance, web-content isolation, state-of-the-art TLS algorithms, ...)
 * [System services](Userland/Services/) (WindowServer, LoginServer, AudioServer, WebServer, RequestServer, CrashServer, ...) and modern IPC

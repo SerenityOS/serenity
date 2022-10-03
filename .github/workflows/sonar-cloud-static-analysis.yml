@@ -13,7 +13,7 @@ jobs:
       # Latest scanner version is tracked on: https://docs.sonarcloud.io/advanced-setup/ci-based-analysis/sonarscanner-cli/
       SONAR_SCANNER_VERSION: 4.7.0.2747
       SONAR_SERVER_URL: "https://sonarcloud.io"
-      SONAR_ANALYSIS_ARCH: i686
+      SONAR_ANALYSIS_ARCH: x86_64
     steps:
       - uses: actions/checkout@v3
         with:
