@@ -87,6 +87,9 @@ void apply_filter_list(Gfx::Bitmap& target_bitmap, Layout::Node const& node, Spa
                 }
             },
             [&](CSS::Filter::HueRotate const& hue_rotate) {
+                // Applies a hue rotation on the input image.
+                // The passed parameter defines the number of degrees around the color circle the input samples will be adjusted.
+                // A value of 0deg leaves the input unchanged. Implementations must not normalize this value in order to allow animations beyond 360deg.
                 apply_color_filter(Gfx::HueRotateFilter { hue_rotate.angle_degrees() });
             },
             [&](CSS::Filter::DropShadow const&) {
