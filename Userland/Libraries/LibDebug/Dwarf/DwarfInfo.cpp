@@ -64,7 +64,7 @@ void DwarfInfo::populate_compilation_units()
         // HACK: Clang generates line programs for embedded resource assembly files, but not compile units.
         // Meaning that for graphical applications, some line info data would be unread, triggering the assertion below.
         // As a fix, we don't create compilation units for line programs that come from resource files.
-#ifdef __clang__
+#if defined(AK_COMPILER_CLANG)
         if (line_program->source_files().size() == 1 && line_program->source_files()[0].name.view().contains("serenity_icon_"sv)) {
             debug_info_stream.seek(unit_offset);
         } else

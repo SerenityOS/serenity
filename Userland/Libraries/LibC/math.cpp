@@ -19,7 +19,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-#ifdef __clang__
+#if defined(AK_COMPILER_CLANG)
 #    pragma clang diagnostic push
 #    pragma clang diagnostic ignored "-Wdouble-promotion"
 #endif
@@ -1148,6 +1148,6 @@ float nearbyintf(float value) NOEXCEPT
 }
 }
 
-#ifdef __clang__
+#if defined(AK_COMPILER_CLANG)
 #    pragma clang diagnostic pop
 #endif

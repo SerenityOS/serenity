@@ -41,7 +41,7 @@ namespace {
 }
 }
 
-#if !defined(__clang__) && !defined(_DYNAMIC_LOADER)
+#if !defined(AK_COMPILER_CLANG) && !defined(_DYNAMIC_LOADER)
 [[gnu::ifunc("resolve_memset")]] void* memset(void*, int, size_t);
 #else
 // DynamicLoader can't self-relocate IFUNCs.

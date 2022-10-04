@@ -21,7 +21,7 @@ struct KeyPosition {
 
 #define KEY_COUNT 63
 
-#ifdef __clang__
+#if defined(AK_COMPILER_CLANG)
 #    pragma clang diagnostic push
 #    pragma clang diagnostic ignored "-Wc99-designator"
 #endif
@@ -99,6 +99,6 @@ struct KeyPosition keys[KEY_COUNT] = {
     // clang-format on
 };
 
-#ifdef __clang__
+#if defined(AK_COMPILER_CLANG)
 #    pragma clang diagnostic pop
 #endif

@@ -6,7 +6,9 @@
 
 #pragma once
 
-#if defined(__clang__) || defined(__CLION_IDE__)
+#include <AK/Platform.h>
+
+#if defined(AK_COMPILER_CLANG) || defined(__CLION_IDE__)
 #    pragma clang diagnostic ignored "-Wunqualified-std-cast-call"
 #endif
 

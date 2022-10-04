@@ -97,12 +97,12 @@ TEST_CASE(assign_moved_self)
 {
     RefPtr<Object> object = adopt_ref(*new Object);
     EXPECT_EQ(object->ref_count(), 1u);
-#ifdef __clang__
+#if defined(AK_COMPILER_CLANG)
 #    pragma clang diagnostic push
 #    pragma clang diagnostic ignored "-Wself-move"
 #endif
     object = move(object);
-#ifdef __clang__
+#if defined(AK_COMPILER_CLANG)
 #    pragma clang diagnostic pop
 #endif
     EXPECT_EQ(object->ref_count(), 1u);
@@ -113,12 +113,12 @@ TEST_CASE(assign_copy_self)
     RefPtr<Object> object = adopt_ref(*new Object);
     EXPECT_EQ(object->ref_count(), 1u);
 
-#ifdef __clang__
+#if defined(AK_COMPILER_CLANG)
 #    pragma clang diagnostic push
 #    pragma clang diagnostic ignored "-Wself-assign-overloaded"
 #endif
     object = object;
-#ifdef __clang__
+#if defined(AK_COMPILER_CLANG)
 #    pragma clang diagnostic pop
 #endif
 

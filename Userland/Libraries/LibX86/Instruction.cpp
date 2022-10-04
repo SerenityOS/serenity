@@ -8,7 +8,7 @@
 #include <LibX86/Instruction.h>
 #include <LibX86/Interpreter.h>
 
-#if defined(__GNUC__) && !defined(__clang__)
+#if defined(AK_COMPILER_GCC)
 #    pragma GCC optimize("O3")
 #endif
 

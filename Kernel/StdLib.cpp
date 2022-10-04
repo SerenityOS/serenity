@@ -206,7 +206,7 @@ ErrorOr<void> memset_user(void* dest_ptr, int c, size_t n)
     return {};
 }
 
-#if defined(__clang__) && defined(ENABLE_KERNEL_LTO)
+#if defined(AK_COMPILER_CLANG) && defined(ENABLE_KERNEL_LTO)
 // Due to a chicken-and-egg situation, certain linker-defined symbols that are added on-demand (like the GOT)
 // need to be present before LTO bitcode files are compiled. And since we don't link to any native object files,
 // the linker does not know that _GLOBAL_OFFSET_TABLE_ is needed, so it doesn't define it, so linking as a PIE fails.

@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include <AK/Platform.h>
+
 namespace AK::Detail {
 
 template<class T, T v>
@@ -530,7 +532,7 @@ template<typename T>
 inline constexpr bool IsDestructible = requires { declval<T>().~T(); };
 
 template<typename T>
-#if defined(__clang__)
+#if defined(AK_COMPILER_CLANG)
 inline constexpr bool IsTriviallyDestructible = __is_trivially_destructible(T);
 #else
 inline constexpr bool IsTriviallyDestructible = __has_trivial_destructor(T) && IsDestructible<T>;

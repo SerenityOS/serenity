@@ -23,7 +23,7 @@
 
 using Test::Crash;
 
-#ifdef __clang__
+#if defined(AK_COMPILER_CLANG)
 #    pragma clang optimize off
 #else
 #    pragma GCC optimize("O0")

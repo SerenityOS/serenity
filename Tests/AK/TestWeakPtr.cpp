@@ -10,7 +10,7 @@
 #include <AK/WeakPtr.h>
 #include <AK/Weakable.h>
 
-#ifdef __clang__
+#if defined(AK_COMPILER_CLANG)
 #    pragma clang diagnostic push
 #    pragma clang diagnostic ignored "-Wunused-private-field"
 #endif
@@ -24,7 +24,7 @@ private:
     int m_member { 123 };
 };
 
-#ifdef __clang__
+#if defined(AK_COMPILER_CLANG)
 #    pragma clang diagnostic pop
 #endif
 
