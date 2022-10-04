@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2019-2020, Ryan Grieb <ryan.m.grieb@gmail.com>
  * Copyright (c) 2020-2022, the SerenityOS developers.
+ * Copyright (c) 2022, Tobias Christiansen <tobyase@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -29,6 +30,12 @@ Calendar::Calendar(Core::DateTime date_time, Mode mode)
 {
     auto first_day_of_week = Config::read_string("Calendar"sv, "View"sv, "FirstDayOfWeek"sv, "Sunday"sv);
     m_first_day_of_week = static_cast<DayOfWeek>(day_of_week_index(first_day_of_week));
+
+    auto first_day_of_weekend = Config::read_string("Calendar"sv, "View"sv, "FirstDayOfWeekend"sv, "Saturday"sv);
+    m_first_day_of_weekend = static_cast<DayOfWeek>(day_of_week_index(first_day_of_weekend));
+
+    auto weekend_length = Config::read_i32("Calendar"sv, "View"sv, "WeekendLength"sv, 2);
+    m_weekend_length = weekend_length;
 
     set_fill_with_background_color(true);
 
@@ -760,6 +767,17 @@ void Calendar::config_string_did_change(String const& domain, String const& grou
     if (domain == "Calendar" && group == "View" && key == "FirstDayOfWeek") {
         m_first_day_of_week = static_cast<DayOfWeek>(day_of_week_index(value));
         update_tiles(m_view_year, m_view_month);
+    } else if (domain == "Calendar" && group == "View" && key == "FirstDayOfWeekend") {
+        m_first_day_of_weekend = static_cast<DayOfWeek>(day_of_week_index(value));
+        update();
+    }
+}
+
+void Calendar::config_i32_did_change(String const& domain, String const& group, String const& key, i32 value)
+{
+    if (domain == "Calendar" && group == "View" && key == "WeekendLength") {
+        m_weekend_length = value;
+        update();
     }
 }
 }

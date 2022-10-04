@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2019-2020, Ryan Grieb <ryan.m.grieb@gmail.com>
  * Copyright (c) 2020-2022, the SerenityOS developers.
+ * Copyright (c) 2022, Tobias Christiansen <tobyase@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -71,6 +72,7 @@ public:
     }
 
     virtual void config_string_did_change(String const&, String const&, String const&, String const&) override;
+    virtual void config_i32_did_change(String const&, String const&, String const&, i32 value) override;
 
     Function<void()> on_tile_click;
     Function<void()> on_tile_doubleclick;
@@ -146,6 +148,8 @@ private:
         Saturday
     };
     DayOfWeek m_first_day_of_week { DayOfWeek::Sunday };
+    DayOfWeek m_first_day_of_weekend { DayOfWeek::Saturday };
+    int m_weekend_length { 2 };
 };
 
 }
