@@ -1,5 +1,6 @@
 set(TEST_SOURCES
     TestUnicodeCharacterTypes.cpp
+    TestUnicodeNormalization.cpp
 )
 
 foreach(source IN LISTS TEST_SOURCES)
