@@ -1173,11 +1173,20 @@ void FlexFormattingContext::distribute_any_remaining_free_space()
 
         switch (flex_container().computed_values().justify_content()) {
         case CSS::JustifyContent::FlexStart:
-            initial_offset = 0;
+            if (is_direction_reverse()) {
+                flex_region_render_cursor = FlexRegionRenderCursor::Right;
+                initial_offset = specified_main_size(flex_container());
+            } else {
+                initial_offset = 0;
+            }
             break;
         case CSS::JustifyContent::FlexEnd:
-            flex_region_render_cursor = FlexRegionRenderCursor::Right;
-            initial_offset = specified_main_size(flex_container());
+            if (is_direction_reverse()) {
+                initial_offset = 0;
+            } else {
+                flex_region_render_cursor = FlexRegionRenderCursor::Right;
+                initial_offset = specified_main_size(flex_container());
+            }
             break;
         case CSS::JustifyContent::Center:
             initial_offset = (specified_main_size(flex_container()) - used_main_space) / 2.0f;
@@ -1387,15 +1396,13 @@ void FlexFormattingContext::copy_dimensions_from_flex_items_to_boxes()
 // https://drafts.csswg.org/css-flexbox-1/#intrinsic-sizes
 void FlexFormattingContext::determine_intrinsic_size_of_flex_container()
 {
-    float main_size = calculate_intrinsic_main_size_of_flex_container();
-    float cross_size = calculate_intrinsic_cross_size_of_flex_container();
-
-    if (is_row_layout()) {
-        m_flex_container_state.set_content_width(main_size);
-        m_flex_container_state.set_content_height(cross_size);
-    } else {
-        m_flex_container_state.set_content_height(main_size);
-        m_flex_container_state.set_content_width(cross_size);
+    if (m_available_space_for_flex_container->main.is_intrinsic_sizing_constraint()) {
+        float main_size = calculate_intrinsic_main_size_of_flex_container();
+        set_main_size(flex_container(), main_size);
+    }
+    if (m_available_space_for_items->cross.is_intrinsic_sizing_constraint()) {
+        float cross_size = calculate_intrinsic_cross_size_of_flex_container();
+        set_cross_size(flex_container(), cross_size);
     }
 }
 
@@ -1556,7 +1563,10 @@ float FlexFormattingContext::calculate_intrinsic_cross_size_of_flex_container()
     //        min-content/max-content cross-size contribution among the flex items (respectively), then using that size
     //        as the available space in the cross axis for each of the flex items during layout.
 
-    // HACK: We run steps 7, 9 and 11 from the main algorithm. This gives us *some* cross size information to work with.
+    // HACK: We run steps 5, 7, 9 and 11 from the main algorithm. This gives us *some* cross size information to work with.
+    m_flex_lines.clear();
+    collect_flex_items_into_flex_lines();
+
     for (auto& flex_item : m_flex_items) {
         determine_hypothetical_cross_size_of_item(flex_item, false);
     }
