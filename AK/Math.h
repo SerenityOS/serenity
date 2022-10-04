@@ -79,7 +79,7 @@ constexpr T fmod(T x, T y)
 {
     CONSTEXPR_STATE(fmod, x, y);
 
-#if ARCH(I386) || ARCH(X86_64)
+#if ARCH(X86_64)
     u16 fpu_status;
     do {
         asm(
@@ -98,7 +98,7 @@ constexpr T remainder(T x, T y)
 {
     CONSTEXPR_STATE(remainder, x, y);
 
-#if ARCH(I386) || ARCH(X86_64)
+#if ARCH(X86_64)
     u16 fpu_status;
     do {
         asm(
@@ -122,7 +122,7 @@ constexpr T sqrt(T x)
 {
     CONSTEXPR_STATE(sqrt, x);
 
-#if ARCH(I386) || ARCH(X86_64)
+#if ARCH(X86_64)
     T res;
     asm("fsqrt"
         : "=t"(res)
@@ -144,7 +144,7 @@ constexpr T rsqrt(T x)
     return (T)1. / sqrt(x);
 }
 
-#ifdef __SSE__
+#if ARCH(x86_64)
 template<>
 constexpr float sqrt(float x)
 {
@@ -232,7 +232,7 @@ constexpr T fabs(T x)
 {
     if (is_constant_evaluated())
         return x < 0 ? -x : x;
-#if ARCH(I386) || ARCH(X86_64)
+#if ARCH(X86_64)
     asm(
         "fabs"
         : "+t"(x));
@@ -257,7 +257,7 @@ constexpr T sin(T angle)
 {
     CONSTEXPR_STATE(sin, angle);
 
-#if ARCH(I386) || ARCH(X86_64)
+#if ARCH(X86_64)
     T ret;
     asm(
         "fsin"
@@ -274,7 +274,7 @@ constexpr T cos(T angle)
 {
     CONSTEXPR_STATE(cos, angle);
 
-#if ARCH(I386) || ARCH(X86_64)
+#if ARCH(X86_64)
     T ret;
     asm(
         "fcos"
@@ -294,7 +294,7 @@ constexpr void sincos(T angle, T& sin_val, T& cos_val)
         cos_val = cos(angle);
         return;
     }
-#if ARCH(I386) || ARCH(X86_64)
+#if ARCH(X86_64)
     asm(
         "fsincos"
         : "=t"(cos_val), "=u"(sin_val)
@@ -310,7 +310,7 @@ constexpr T tan(T angle)
 {
     CONSTEXPR_STATE(tan, angle);
 
-#if ARCH(I386) || ARCH(X86_64)
+#if ARCH(X86_64)
     T ret, one;
     asm(
         "fptan"
@@ -328,7 +328,7 @@ constexpr T atan(T value)
 {
     CONSTEXPR_STATE(atan, value);
 
-#if ARCH(I386) || ARCH(X86_64)
+#if ARCH(X86_64)
     T ret;
     asm(
         "fld1\n"
@@ -384,7 +384,7 @@ constexpr T atan2(T y, T x)
 {
     CONSTEXPR_STATE(atan2, y, x);
 
-#if ARCH(I386) || ARCH(X86_64)
+#if ARCH(X86_64)
     T ret;
     asm("fpatan"
         : "=t"(ret)
@@ -415,7 +415,7 @@ constexpr T log(T x)
 {
     CONSTEXPR_STATE(log, x);
 
-#if ARCH(I386) || ARCH(X86_64)
+#if ARCH(X86_64)
     T ret;
     asm(
         "fldln2\n"
@@ -434,7 +434,7 @@ constexpr T log2(T x)
 {
     CONSTEXPR_STATE(log2, x);
 
-#if ARCH(I386) || ARCH(X86_64)
+#if ARCH(X86_64)
     T ret;
     asm(
         "fld1\n"
@@ -453,7 +453,7 @@ constexpr T log10(T x)
 {
     CONSTEXPR_STATE(log10, x);
 
-#if ARCH(I386) || ARCH(X86_64)
+#if ARCH(X86_64)
     T ret;
     asm(
         "fldlg2\n"
@@ -472,7 +472,7 @@ constexpr T exp(T exponent)
 {
     CONSTEXPR_STATE(exp, exponent);
 
-#if ARCH(I386) || ARCH(X86_64)
+#if ARCH(X86_64)
     T res;
     asm("fldl2e\n"
         "fmulp\n"
@@ -496,7 +496,7 @@ constexpr T exp2(T exponent)
 {
     CONSTEXPR_STATE(exp2, exponent);
 
-#if ARCH(I386) || ARCH(X86_64)
+#if ARCH(X86_64)
     T res;
     asm("fld1\n"
         "fld %%st(1)\n"
@@ -585,7 +585,7 @@ using Hyperbolic::tanh;
 template<Integral I, FloatingPoint P>
 ALWAYS_INLINE I round_to(P value)
 {
-#if ARCH(I386) || ARCH(X86_64)
+#if ARCH(X86_64)
     // Note: fistps outputs into a signed integer location (i16, i32, i64),
     //       so lets be nice and tell the compiler that.
     Conditional<sizeof(I) >= sizeof(i16), MakeSigned<I>, i16> ret;
@@ -679,22 +679,18 @@ ALWAYS_INLINE I round_to(P value)
 #endif
 }
 
-#ifdef __SSE__
+#if ARCH(x86_64)
 template<Integral I>
 ALWAYS_INLINE I round_to(float value)
 {
     if constexpr (sizeof(I) == sizeof(i64)) {
         // Note: Outputting into 64-bit registers or memory locations requires the
-        //       REX prefix, so we have to fall back to long doubles on i686
-#    if ARCH(X86_64)
+        //       REX prefix, so we have to fall back to long doubles on platforms
         i64 ret;
         asm("cvtss2si %1, %0"
             : "=r"(ret)
             : "xm"(value));
         return static_cast<I>(ret);
-#    else
-        return round_to<I, long double>(value);
-#    endif
     }
     i32 ret;
     asm("cvtss2si %1, %0"
@@ -708,17 +704,11 @@ template<Integral I>
 ALWAYS_INLINE I round_to(double value)
 {
     if constexpr (sizeof(I) == sizeof(i64)) {
-        // Note: Outputting into 64-bit registers or memory locations requires the
-        //       REX prefix, so we have to fall back to long doubles on i686
-#    if ARCH(X86_64)
         i64 ret;
         asm("cvtsd2si %1, %0"
             : "=r"(ret)
             : "xm"(value));
         return static_cast<I>(ret);
-#    else
-        return round_to<I, long double>(value);
-#    endif
     }
     i32 ret;
     asm("cvtsd2si %1, %0"

@@ -171,7 +171,7 @@ TEST_CASE(simple_cases)
 
     // FIXME: These are different in 32 bit, since that will be removed some time (soon?)
     //        we can remove this guard at that point.
-#if not defined(__serenity__) || not ARCH(I386)
+#if not defined(__serenity__)
     DOES_PARSE_FLOAT_AND_DOUBLE_LIKE_CPP(89255e-22);
     DOES_PARSE_FLOAT_AND_DOUBLE_LIKE_CPP(8925.5e-21);
     DOES_PARSE_FLOAT_AND_DOUBLE_LIKE_CPP(8.9255e-18);
