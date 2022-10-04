@@ -16,7 +16,7 @@ namespace GUI {
 class ConnectionToClipboardServer final
     : public IPC::ConnectionToServer<ClipboardClientEndpoint, ClipboardServerEndpoint>
     , public ClipboardClientEndpoint {
-    IPC_CLIENT_CONNECTION(ConnectionToClipboardServer, "/tmp/portal/clipboard"sv)
+    IPC_CLIENT_CONNECTION(ConnectionToClipboardServer, "/tmp/session/%sid/portal/clipboard"sv)
 
 private:
     ConnectionToClipboardServer(NonnullOwnPtr<Core::Stream::LocalSocket> socket)
