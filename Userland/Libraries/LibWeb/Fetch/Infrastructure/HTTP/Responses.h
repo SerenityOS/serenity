@@ -10,6 +10,7 @@
 #include <AK/Error.h>
 #include <AK/Forward.h>
 #include <AK/Optional.h>
+#include <AK/RefCounted.h>
 #include <AK/URL.h>
 #include <AK/Vector.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP/Bodies.h>
@@ -19,7 +20,7 @@
 namespace Web::Fetch::Infrastructure {
 
 // https://fetch.spec.whatwg.org/#concept-response
-class Response {
+class Response : public RefCounted<Response> {
 public:
     enum class CacheState {
         Local,
@@ -44,10 +45,10 @@ public:
         u64 decoded_size { 0 };
     };
 
-    [[nodiscard]] static NonnullOwnPtr<Response> aborted_network_error();
-    [[nodiscard]] static NonnullOwnPtr<Response> network_error();
+    [[nodiscard]] static NonnullRefPtr<Response> create();
+    [[nodiscard]] static NonnullRefPtr<Response> aborted_network_error();
+    [[nodiscard]] static NonnullRefPtr<Response> network_error();
 
-    Response();
     virtual ~Response() = default;
 
     [[nodiscard]] virtual Type type() const { return m_type; }
@@ -100,7 +101,10 @@ public:
     [[nodiscard]] Optional<AK::URL const&> url() const;
     [[nodiscard]] ErrorOr<Optional<AK::URL>> location_url(Optional<String> const& request_fragment) const;
 
-    [[nodiscard]] WebIDL::ExceptionOr<NonnullOwnPtr<Response>> clone() const;
+    [[nodiscard]] WebIDL::ExceptionOr<NonnullRefPtr<Response>> clone() const;
+
+protected:
+    Response();
 
 private:
     // https://fetch.spec.whatwg.org/#concept-response-type
@@ -162,41 +166,40 @@ private:
 // https://fetch.spec.whatwg.org/#concept-filtered-response
 class FilteredResponse : public Response {
 public:
-    explicit FilteredResponse(Response&);
+    explicit FilteredResponse(NonnullRefPtr<Response>);
     virtual ~FilteredResponse() = 0;
 
-    [[nodiscard]] virtual Type type() const override { return m_internal_response.type(); }
-    [[nodiscard]] virtual bool aborted() const override { return m_internal_response.aborted(); }
-    [[nodiscard]] virtual Vector<AK::URL> const& url_list() const override { return m_internal_response.url_list(); }
-    [[nodiscard]] virtual Status status() const override { return m_internal_response.status(); }
-    [[nodiscard]] virtual ReadonlyBytes status_message() const override { return m_internal_response.status_message(); }
-    [[nodiscard]] virtual NonnullRefPtr<HeaderList> const& header_list() const override { return m_internal_response.header_list(); }
-    [[nodiscard]] virtual Optional<Body> const& body() const override { return m_internal_response.body(); }
-    [[nodiscard]] virtual Optional<CacheState> const& cache_state() const override { return m_internal_response.cache_state(); }
-    [[nodiscard]] virtual Vector<ByteBuffer> const& cors_exposed_header_name_list() const override { return m_internal_response.cors_exposed_header_name_list(); }
-    [[nodiscard]] virtual bool range_requested() const override { return m_internal_response.range_requested(); }
-    [[nodiscard]] virtual bool request_includes_credentials() const override { return m_internal_response.request_includes_credentials(); }
-    [[nodiscard]] virtual bool timing_allow_passed() const override { return m_internal_response.timing_allow_passed(); }
-    [[nodiscard]] virtual BodyInfo const& body_info() const override { return m_internal_response.body_info(); }
+    [[nodiscard]] virtual Type type() const override { return m_internal_response->type(); }
+    [[nodiscard]] virtual bool aborted() const override { return m_internal_response->aborted(); }
+    [[nodiscard]] virtual Vector<AK::URL> const& url_list() const override { return m_internal_response->url_list(); }
+    [[nodiscard]] virtual Status status() const override { return m_internal_response->status(); }
+    [[nodiscard]] virtual ReadonlyBytes status_message() const override { return m_internal_response->status_message(); }
+    [[nodiscard]] virtual NonnullRefPtr<HeaderList> const& header_list() const override { return m_internal_response->header_list(); }
+    [[nodiscard]] virtual Optional<Body> const& body() const override { return m_internal_response->body(); }
+    [[nodiscard]] virtual Optional<CacheState> const& cache_state() const override { return m_internal_response->cache_state(); }
+    [[nodiscard]] virtual Vector<ByteBuffer> const& cors_exposed_header_name_list() const override { return m_internal_response->cors_exposed_header_name_list(); }
+    [[nodiscard]] virtual bool range_requested() const override { return m_internal_response->range_requested(); }
+    [[nodiscard]] virtual bool request_includes_credentials() const override { return m_internal_response->request_includes_credentials(); }
+    [[nodiscard]] virtual bool timing_allow_passed() const override { return m_internal_response->timing_allow_passed(); }
+    [[nodiscard]] virtual BodyInfo const& body_info() const override { return m_internal_response->body_info(); }
 
-    [[nodiscard]] Response const& internal_response() const { return m_internal_response; }
-    [[nodiscard]] Response& internal_response() { return m_internal_response; }
+    [[nodiscard]] NonnullRefPtr<Response> internal_response() const { return m_internal_response; }
 
 protected:
     // https://fetch.spec.whatwg.org/#concept-internal-response
-    Response& m_internal_response;
+    NonnullRefPtr<Response> m_internal_response;
 };
 
 // https://fetch.spec.whatwg.org/#concept-filtered-response-basic
 class BasicFilteredResponse final : public FilteredResponse {
 public:
-    static ErrorOr<NonnullOwnPtr<BasicFilteredResponse>> create(Response&);
+    static ErrorOr<NonnullRefPtr<BasicFilteredResponse>> create(NonnullRefPtr<Response>);
 
     [[nodiscard]] virtual Type type() const override { return Type::Basic; }
     [[nodiscard]] virtual NonnullRefPtr<HeaderList> const& header_list() const override { return m_header_list; }
 
 private:
-    BasicFilteredResponse(Response&, NonnullRefPtr<HeaderList>);
+    BasicFilteredResponse(NonnullRefPtr<Response>, NonnullRefPtr<HeaderList>);
 
     NonnullRefPtr<HeaderList> m_header_list;
 };
@@ -204,13 +207,13 @@ private:
 // https://fetch.spec.whatwg.org/#concept-filtered-response-cors
 class CORSFilteredResponse final : public FilteredResponse {
 public:
-    static ErrorOr<NonnullOwnPtr<CORSFilteredResponse>> create(Response&);
+    static ErrorOr<NonnullRefPtr<CORSFilteredResponse>> create(NonnullRefPtr<Response>);
 
     [[nodiscard]] virtual Type type() const override { return Type::CORS; }
     [[nodiscard]] virtual NonnullRefPtr<HeaderList> const& header_list() const override { return m_header_list; }
 
 private:
-    CORSFilteredResponse(Response&, NonnullRefPtr<HeaderList>);
+    CORSFilteredResponse(NonnullRefPtr<Response>, NonnullRefPtr<HeaderList>);
 
     NonnullRefPtr<HeaderList> m_header_list;
 };
@@ -218,7 +221,7 @@ private:
 // https://fetch.spec.whatwg.org/#concept-filtered-response-opaque
 class OpaqueFilteredResponse final : public FilteredResponse {
 public:
-    static NonnullOwnPtr<OpaqueFilteredResponse> create(Response&);
+    static NonnullRefPtr<OpaqueFilteredResponse> create(NonnullRefPtr<Response>);
 
     [[nodiscard]] virtual Type type() const override { return Type::Opaque; }
     [[nodiscard]] virtual Vector<AK::URL> const& url_list() const override { return m_url_list; }
@@ -228,7 +231,7 @@ public:
     [[nodiscard]] virtual Optional<Body> const& body() const override { return m_body; }
 
 private:
-    explicit OpaqueFilteredResponse(Response&);
+    explicit OpaqueFilteredResponse(NonnullRefPtr<Response>);
 
     Vector<AK::URL> m_url_list;
     NonnullRefPtr<HeaderList> m_header_list;
@@ -238,7 +241,7 @@ private:
 // https://fetch.spec.whatwg.org/#concept-filtered-response-opaque-redirect
 class OpaqueRedirectFilteredResponse final : public FilteredResponse {
 public:
-    static NonnullOwnPtr<OpaqueRedirectFilteredResponse> create(Response&);
+    static NonnullRefPtr<OpaqueRedirectFilteredResponse> create(NonnullRefPtr<Response>);
 
     [[nodiscard]] virtual Type type() const override { return Type::OpaqueRedirect; }
     [[nodiscard]] virtual Status status() const override { return 0; }
@@ -247,7 +250,7 @@ public:
     [[nodiscard]] virtual Optional<Body> const& body() const override { return m_body; }
 
 private:
-    explicit OpaqueRedirectFilteredResponse(Response&);
+    explicit OpaqueRedirectFilteredResponse(NonnullRefPtr<Response>);
 
     NonnullRefPtr<HeaderList> m_header_list;
     Optional<Body> m_body;

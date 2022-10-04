@@ -10,6 +10,7 @@
 #include <AK/Error.h>
 #include <AK/Forward.h>
 #include <AK/Optional.h>
+#include <AK/RefCounted.h>
 #include <AK/String.h>
 #include <AK/URL.h>
 #include <AK/Variant.h>
@@ -23,7 +24,7 @@
 namespace Web::Fetch::Infrastructure {
 
 // https://fetch.spec.whatwg.org/#concept-request
-class Request final {
+class Request final : public RefCounted<Request> {
 public:
     enum class CacheMode {
         Default,
@@ -154,7 +155,7 @@ public:
     using ReservedClientType = Variant<Empty, HTML::Environment*, HTML::EnvironmentSettingsObject*>;
     using WindowType = Variant<Window, HTML::EnvironmentSettingsObject*>;
 
-    Request();
+    static NonnullRefPtr<Request> create();
 
     [[nodiscard]] ReadonlyBytes method() const { return m_method; }
     void set_method(ByteBuffer method) { m_method = move(method); }
@@ -290,13 +291,15 @@ public:
     [[nodiscard]] String serialize_origin() const;
     [[nodiscard]] ErrorOr<ByteBuffer> byte_serialize_origin() const;
 
-    [[nodiscard]] WebIDL::ExceptionOr<NonnullOwnPtr<Request>> clone() const;
+    [[nodiscard]] WebIDL::ExceptionOr<NonnullRefPtr<Request>> clone() const;
 
     [[nodiscard]] ErrorOr<void> add_range_reader(u64 first, Optional<u64> const& last);
 
     [[nodiscard]] bool cross_origin_embedder_policy_allows_credentials() const;
 
 private:
+    Request();
+
     // https://fetch.spec.whatwg.org/#concept-request-method
     // A request has an associated method (a method). Unless stated otherwise it is `GET`.
     ByteBuffer m_method { ByteBuffer::copy("GET"sv.bytes()).release_value() };

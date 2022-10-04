@@ -23,10 +23,10 @@ struct NavigationParams {
     String id;
 
     // null or a request that started the navigation
-    OwnPtr<Fetch::Infrastructure::Request> request;
+    RefPtr<Fetch::Infrastructure::Request> request;
 
     // a response that ultimately was navigated to (potentially a network error)
-    NonnullOwnPtr<Fetch::Infrastructure::Response> response;
+    NonnullRefPtr<Fetch::Infrastructure::Response> response;
 
     // an origin to use for the new Document
     Origin origin;

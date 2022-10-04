@@ -17,7 +17,7 @@
 
 namespace Web::Fetch {
 
-Response::Response(JS::Realm& realm, NonnullOwnPtr<Infrastructure::Response> response)
+Response::Response(JS::Realm& realm, NonnullRefPtr<Infrastructure::Response> response)
     : PlatformObject(realm)
     , m_response(move(response))
 {
@@ -64,7 +64,7 @@ Optional<Infrastructure::Body&> Response::body_impl()
 }
 
 // https://fetch.spec.whatwg.org/#response-create
-JS::NonnullGCPtr<Response> Response::create(NonnullOwnPtr<Infrastructure::Response> response, Headers::Guard guard, JS::Realm& realm)
+JS::NonnullGCPtr<Response> Response::create(NonnullRefPtr<Infrastructure::Response> response, Headers::Guard guard, JS::Realm& realm)
 {
     // Copy a NonnullRefPtr to the response's header list before response is being move()'d.
     auto response_reader_list = response->header_list();
@@ -127,7 +127,7 @@ WebIDL::ExceptionOr<void> Response::initialize_response(ResponseInit const& init
 WebIDL::ExceptionOr<JS::NonnullGCPtr<Response>> Response::construct_impl(JS::Realm& realm, Optional<BodyInit> const& body, ResponseInit const& init)
 {
     // Referred to as 'this' in the spec.
-    auto response_object = JS::NonnullGCPtr { *realm.heap().allocate<Response>(realm, realm, make<Infrastructure::Response>()) };
+    auto response_object = JS::NonnullGCPtr { *realm.heap().allocate<Response>(realm, realm, Infrastructure::Response::create()) };
 
     // 1. Set this’s response to a new response.
     // NOTE: This is done at the beginning as the 'this' value Response object
@@ -135,7 +135,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Response>> Response::construct_impl(JS::Rea
 
     // 2. Set this’s headers to a new Headers object with this’s relevant Realm, whose header list is this’s response’s header list and guard is "response".
     response_object->m_headers = realm.heap().allocate<Headers>(realm, realm);
-    response_object->m_headers->set_header_list(response_object->response().header_list());
+    response_object->m_headers->set_header_list(response_object->response()->header_list());
     response_object->m_headers->set_guard(Headers::Guard::Response);
 
     // 3. Let bodyWithType be null.
@@ -180,10 +180,10 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Response>> Response::redirect(String const&
 
     // 4. Let responseObject be the result of creating a Response object, given a new response, "immutable", and this’s relevant Realm.
     // FIXME: How can we reliably get 'this', i.e. the object the function was called on, in IDL-defined functions?
-    auto response_object = Response::create(make<Infrastructure::Response>(), Headers::Guard::Immutable, realm);
+    auto response_object = Response::create(Infrastructure::Response::create(), Headers::Guard::Immutable, realm);
 
     // 5. Set responseObject’s response’s status to status.
-    response_object->response().set_status(status);
+    response_object->response()->set_status(status);
 
     // 6. Let value be parsedURL, serialized and isomorphic encoded.
     auto value = parsed_url.serialize();
@@ -193,7 +193,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Response>> Response::redirect(String const&
         .name = TRY_OR_RETURN_OOM(realm, ByteBuffer::copy("Location"sv.bytes())),
         .value = TRY_OR_RETURN_OOM(realm, ByteBuffer::copy(value.bytes())),
     };
-    TRY_OR_RETURN_OOM(realm, response_object->response().header_list()->append(move(header)));
+    TRY_OR_RETURN_OOM(realm, response_object->response()->header_list()->append(move(header)));
 
     // 8. Return responseObject.
     return response_object;
@@ -213,7 +213,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Response>> Response::json(JS::Value data, R
 
     // 3. Let responseObject be the result of creating a Response object, given a new response, "response", and this’s relevant Realm.
     // FIXME: How can we reliably get 'this', i.e. the object the function was called on, in IDL-defined functions?
-    auto response_object = Response::create(make<Infrastructure::Response>(), Headers::Guard::Response, realm);
+    auto response_object = Response::create(Infrastructure::Response::create(), Headers::Guard::Response, realm);
 
     // 4. Perform initialize a response given responseObject, init, and (body, "application/json").
     auto body_with_type = Infrastructure::BodyWithType {

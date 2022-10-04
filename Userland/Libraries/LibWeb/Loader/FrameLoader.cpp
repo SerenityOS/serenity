@@ -299,7 +299,7 @@ bool FrameLoader::load(const AK::URL& url, Type type)
 
 void FrameLoader::load_html(StringView html, const AK::URL& url)
 {
-    auto response = make<Fetch::Infrastructure::Response>();
+    auto response = Fetch::Infrastructure::Response::create();
     response->url_list().append(url);
     HTML::NavigationParams navigation_params {
         .id = {},
@@ -419,7 +419,7 @@ void FrameLoader::resource_did_load()
     // FIXME: Pass incumbentNavigationOrigin
     auto response_origin = HTML::determine_the_origin(browsing_context(), url, final_sandboxing_flag_set, {});
 
-    auto response = make<Fetch::Infrastructure::Response>();
+    auto response = Fetch::Infrastructure::Response::create();
     response->url_list().append(url);
     HTML::NavigationParams navigation_params {
         .id = {},

@@ -12,6 +12,7 @@
 #include <LibWeb/Fetch/Body.h>
 #include <LibWeb/Fetch/BodyInit.h>
 #include <LibWeb/Fetch/Headers.h>
+#include <LibWeb/Fetch/Infrastructure/HTTP/Responses.h>
 #include <LibWeb/Forward.h>
 
 namespace Web::Fetch {
@@ -30,7 +31,7 @@ class Response final
     WEB_PLATFORM_OBJECT(Response, Bindings::PlatformObject);
 
 public:
-    static JS::NonnullGCPtr<Response> create(NonnullOwnPtr<Infrastructure::Response>, Headers::Guard, JS::Realm&);
+    static JS::NonnullGCPtr<Response> create(NonnullRefPtr<Infrastructure::Response>, Headers::Guard, JS::Realm&);
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<Response>> construct_impl(JS::Realm&, Optional<BodyInit> const& body = {}, ResponseInit const& init = {});
 
     virtual ~Response() override;
@@ -40,8 +41,7 @@ public:
     virtual Optional<Infrastructure::Body&> body_impl() override;
     virtual Optional<Infrastructure::Body const&> body_impl() const override;
 
-    [[nodiscard]] Infrastructure::Response& response() { return *m_response; }
-    [[nodiscard]] Infrastructure::Response const& response() const { return *m_response; }
+    [[nodiscard]] NonnullRefPtr<Infrastructure::Response> response() const { return m_response; }
 
     // JS API functions
     [[nodiscard]] static JS::NonnullGCPtr<Response> error();
@@ -60,7 +60,7 @@ public:
     using BodyMixin::json;
 
 private:
-    Response(JS::Realm&, NonnullOwnPtr<Infrastructure::Response>);
+    Response(JS::Realm&, NonnullRefPtr<Infrastructure::Response>);
 
     virtual void visit_edges(Cell::Visitor&) override;
 
@@ -68,7 +68,7 @@ private:
 
     // https://fetch.spec.whatwg.org/#concept-response-response
     // A Response object has an associated response (a response).
-    NonnullOwnPtr<Infrastructure::Response> m_response;
+    NonnullRefPtr<Infrastructure::Response> m_response;
 
     // https://fetch.spec.whatwg.org/#response-headers
     // A Response object also has an associated headers (null or a Headers object), initially null.

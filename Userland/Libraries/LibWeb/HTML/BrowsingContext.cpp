@@ -864,21 +864,21 @@ void BrowsingContext::remove()
 
 // https://html.spec.whatwg.org/multipage/browsing-the-web.html#navigate
 WebIDL::ExceptionOr<void> BrowsingContext::navigate(
-    Fetch::Infrastructure::Request resource,
+    NonnullRefPtr<Fetch::Infrastructure::Request> resource,
     BrowsingContext& source_browsing_context,
     bool exceptions_enabled,
     HistoryHandlingBehavior history_handling,
     Optional<PolicyContainer> history_policy_container,
     String navigation_type,
     Optional<String> navigation_id,
-    Function<void(NonnullOwnPtr<Fetch::Infrastructure::Response>)> process_response_end_of_body)
+    Function<void(NonnullRefPtr<Fetch::Infrastructure::Response>)> process_response_end_of_body)
 {
     // 1. If resource is a URL, then set resource to a new request whose URL is resource.
     // NOTE: This function only accepts resources that are already a request, so this is irrelevant.
 
     // 2. If resource is a request and historyHandling is "reload", then set resource's reload-navigation flag.
     if (history_handling == HistoryHandlingBehavior::Reload)
-        resource.set_reload_navigation(true);
+        resource->set_reload_navigation(true);
 
     // 3. If the source browsing context is not allowed to navigate browsingContext, then:
     if (!source_browsing_context.is_allowed_to_navigate(*this)) {
@@ -918,8 +918,8 @@ WebIDL::ExceptionOr<void> BrowsingContext::navigate(
     //    - resource is a request whose URL's scheme is "javascript"
     if (history_handling == HistoryHandlingBehavior::Default
         && (still_on_its_initial_about_blank_document()
-            || resource.url().equals(active_document()->url())
-            || resource.url().scheme() == "javascript"sv)) {
+            || resource->url().equals(active_document()->url())
+            || resource->url().scheme() == "javascript"sv)) {
         // then set historyHandling to "replace".
         history_handling = HistoryHandlingBehavior::Replace;
     }
@@ -928,10 +928,10 @@ WebIDL::ExceptionOr<void> BrowsingContext::navigate(
     //    resource's URL equals browsingContext's active document's URL with exclude fragments set to true,
     //    and resource's URL's fragment is non-null, then:
     if (history_handling != HistoryHandlingBehavior::Reload
-        && resource.url().equals(active_document()->url(), AK::URL::ExcludeFragment::Yes)
-        && !resource.url().fragment().is_null()) {
+        && resource->url().equals(active_document()->url(), AK::URL::ExcludeFragment::Yes)
+        && !resource->url().fragment().is_null()) {
         // 1. Navigate to a fragment given browsingContext, resource's URL, historyHandling, and navigationId.
-        navigate_to_a_fragment(resource.url(), history_handling, *navigation_id);
+        navigate_to_a_fragment(resource->url(), history_handling, *navigation_id);
 
         // 2. Return.
         return {};
@@ -982,7 +982,7 @@ WebIDL::ExceptionOr<void> BrowsingContext::navigate(
     (void)process_response_end_of_body;
 
     // AD-HOC:
-    loader().load(resource.url(), FrameLoader::Type::IFrame);
+    loader().load(resource->url(), FrameLoader::Type::IFrame);
     return {};
 }
 
@@ -1039,18 +1039,18 @@ WebIDL::ExceptionOr<void> BrowsingContext::traverse_the_history(size_t entry_ind
         VERIFY(history_handling == HistoryHandlingBehavior::Default);
 
         // 2. Let request be a new request whose URL is entry's URL.
-        auto request = Fetch::Infrastructure::Request();
-        request.set_url(entry->url);
+        auto request = Fetch::Infrastructure::Request::create();
+        request->set_url(entry->url);
 
         // 3. If explicitHistoryNavigation is true, then set request's history-navigation flag.
         if (explicit_history_navigation)
-            request.set_history_navigation(true);
+            request->set_history_navigation(true);
 
         // 4. Navigate the browsing context to request with historyHandling set to "entry update"
         //    and with historyPolicyContainer set to entry's policy container.
         //    The navigation must be done using the same source browsing context as was used the first time entry was created.
         VERIFY(entry->original_source_browsing_context);
-        TRY(navigate(request, *entry->original_source_browsing_context, false, HistoryHandlingBehavior::EntryUpdate, entry->policy_container));
+        TRY(navigate(move(request), *entry->original_source_browsing_context, false, HistoryHandlingBehavior::EntryUpdate, entry->policy_container));
 
         // 5. Return.
         return {};
