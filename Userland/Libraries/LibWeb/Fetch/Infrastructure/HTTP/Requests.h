@@ -390,18 +390,23 @@ private:
     // A request has an associated cache mode, which is "default", "no-store", "reload", "no-cache", "force-cache", or "only-if-cached". Unless stated otherwise, it is "default".
     CacheMode m_cache_mode { CacheMode::Default };
 
+    // https://fetch.spec.whatwg.org/#concept-request-redirect-mode
     // A request has an associated redirect mode, which is "follow", "error", or "manual". Unless stated otherwise, it is "follow".
     RedirectMode m_redirect_mode { RedirectMode::Follow };
 
+    // https://fetch.spec.whatwg.org/#concept-request-integrity-metadata
     // A request has associated integrity metadata (a string). Unless stated otherwise, it is the empty string.
     String m_integrity_metadata { String::empty() };
 
+    // https://fetch.spec.whatwg.org/#concept-request-nonce-metadata
     // A request has associated cryptographic nonce metadata (a string). Unless stated otherwise, it is the empty string.
     String m_cryptographic_nonce_metadata { String::empty() };
 
+    // https://fetch.spec.whatwg.org/#concept-request-parser-metadata
     // A request has associated parser metadata which is the empty string, "parser-inserted", or "not-parser-inserted". Unless otherwise stated, it is the empty string.
     Optional<ParserMetadata> m_parser_metadata;
 
+    // https://fetch.spec.whatwg.org/#concept-request-reload-navigation-flag
     // A request has an associated reload-navigation flag. Unless stated otherwise, it is unset.
     bool m_reload_navigation { false };
 
