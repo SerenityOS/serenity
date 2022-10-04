@@ -350,46 +350,37 @@ set(KERNEL_SOURCES
 if ("${SERENITY_ARCH}" STREQUAL "x86_64")
     set(KERNEL_SOURCES
         ${KERNEL_SOURCES}
-        Arch/x86/init.cpp
+        Arch/x86_64/init.cpp
 
         Arch/Processor.cpp
 
-        Arch/x86/common/Interrupts/APIC.cpp
-        Arch/x86/common/Interrupts/IOAPIC.cpp
-        Arch/x86/common/Interrupts/PIC.cpp
+        Arch/x86_64/CMOS.cpp
+        Arch/x86_64/DebugOutput.cpp
+        Arch/x86_64/Delay.cpp
 
-        Arch/x86/common/CMOS.cpp
-        Arch/x86/common/DebugOutput.cpp
-        Arch/x86/common/Delay.cpp
-        Arch/x86/common/I8042Reboot.cpp
-        Arch/x86/common/PCSpeaker.cpp
-        Arch/x86/common/RTC.cpp
-        Arch/x86/common/ScopedCritical.cpp
-        Arch/x86/common/SmapDisabler.cpp
-        Arch/x86/common/Shutdown.cpp
+        Arch/x86_64/Hypervisor/BochsDisplayConnector.cpp
+        Arch/x86_64/Hypervisor/VMWareBackdoor.cpp
 
-        Arch/x86/CurrentTime.cpp
+        Arch/x86_64/CurrentTime.cpp
 
-        Arch/x86/Hypervisor/BochsDisplayConnector.cpp
-        Arch/x86/Hypervisor/VMWareBackdoor.cpp
+        Arch/x86_64/Hypervisor/BochsDisplayConnector.cpp
+        Arch/x86_64/Hypervisor/VMWareBackdoor.cpp
 
-        Arch/x86/ISABus/HID/PS2KeyboardDevice.cpp
-        Arch/x86/ISABus/HID/PS2MouseDevice.cpp
-        Arch/x86/ISABus/HID/VMWareMouseDevice.cpp
-        Arch/x86/ISABus/I8042Controller.cpp
-        Arch/x86/ISABus/IDEController.cpp
-        Arch/x86/ISABus/SerialDevice.cpp
-        Arch/x86/PCI/Controller/HostBridge.cpp
-        Arch/x86/PCI/IDELegacyModeController.cpp
-        Arch/x86/PCI/Initializer.cpp
+        Arch/x86_64/Interrupts/APIC.cpp
+        Arch/x86_64/Interrupts/IOAPIC.cpp
+        Arch/x86_64/Interrupts/PIC.cpp
 
-        Arch/x86/Time/APICTimer.cpp
-        Arch/x86/Time/HPET.cpp
-        Arch/x86/Time/HPETComparator.cpp
-        Arch/x86/Time/PIT.cpp
-        Arch/x86/Time/RTC.cpp
+        Arch/x86_64/ISABus/HID/PS2KeyboardDevice.cpp
+        Arch/x86_64/ISABus/HID/PS2MouseDevice.cpp
+        Arch/x86_64/ISABus/HID/VMWareMouseDevice.cpp
+        Arch/x86_64/ISABus/I8042Controller.cpp
+        Arch/x86_64/ISABus/IDEController.cpp
+        Arch/x86_64/ISABus/SerialDevice.cpp
+        Arch/x86_64/PCI/Controller/HostBridge.cpp
+        Arch/x86_64/PCI/IDELegacyModeController.cpp
+        Arch/x86_64/PCI/Initializer.cpp
 
-        Arch/x86/VGA/IOArbiter.cpp
+        Arch/x86_64/VGA/IOArbiter.cpp
 
         # TODO: Share these with the aarch64 build
         Interrupts/SpuriousInterruptHandler.cpp
@@ -405,32 +396,30 @@ if ("${SERENITY_ARCH}" STREQUAL "x86_64")
 
     set(KERNEL_SOURCES
         ${KERNEL_SOURCES}
-        ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/${KERNEL_ARCH}/ASM_wrapper.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/${KERNEL_ARCH}/Boot/ap_setup.S
-        ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/${KERNEL_ARCH}/InterruptEntry.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/${KERNEL_ARCH}/Processor.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86_64/Boot/ap_setup.S
+        ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86_64/InterruptEntry.cpp
     )
 
     set(KERNEL_SOURCES
         ${KERNEL_SOURCES}
         
-        ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/ASM_wrapper.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/CPU.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/CPUID.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/CrashHandler.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/InterruptManagement.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/Interrupts.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/PageDirectory.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/Processor.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/ProcessorInfo.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/SafeMem.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/TrapFrame.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86_64/ASM_wrapper.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86_64/CPU.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86_64/CPUID.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86_64/CrashHandler.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86_64/InterruptManagement.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86_64/Interrupts.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86_64/PageDirectory.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86_64/Processor.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86_64/ProcessorInfo.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86_64/SafeMem.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86_64/TrapFrame.cpp
     )
 
     if("${SERENITY_ARCH}" STREQUAL "x86_64")
         set(KERNEL_SOURCES
             ${KERNEL_SOURCES}
-            ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/${KERNEL_ARCH}/SyscallEntry.cpp
+            ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86_64/SyscallEntry.cpp
         )
     endif()
 elseif("${SERENITY_ARCH}" STREQUAL "aarch64")
@@ -623,7 +612,7 @@ if (ENABLE_KERNEL_COVERAGE_COLLECTION)
         # otherwise we'll end up with recursive calls to that function.
         ../AK/Format.cpp
         ../AK/StringBuilder.cpp
-        ../Kernel/Arch/x86/${KERNEL_ARCH}/Processor.cpp
+        ../Kernel/Arch/x86_64/Processor.cpp
         ../Kernel/Devices/KCOVDevice.cpp
         ../Kernel/Devices/KCOVInstance.cpp
         ../Kernel/FileSystem/File.cpp
@@ -635,7 +624,7 @@ if (ENABLE_KERNEL_COVERAGE_COLLECTION)
         # function prologue for all functions. This assumption is not true for
         # interrupt handlers because their calling convention is not compatible
         # with the System V ABI.
-        ../Kernel/Arch/x86/common/Interrupts.cpp
+        ../Kernel/Arch/x86_64/Interrupts.cpp
         ../Kernel/Syscall.cpp
     )
     set_source_files_properties(${KCOV_EXCLUDED_SOURCES} PROPERTIES COMPILE_FLAGS "-fno-sanitize-coverage=trace-pc")
@@ -677,8 +666,8 @@ add_dependencies(Kernel generate_EscapeSequenceStateMachine.h generate_version_h
 if (NOT "${SERENITY_ARCH}" STREQUAL "aarch64")
     add_custom_command(
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/linker.ld
-        COMMAND "${CMAKE_CXX_COMPILER}" ${TARGET_STRING} -E -P -x c -I${CMAKE_CURRENT_SOURCE_DIR}/.. "${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/linker.ld" -o "${CMAKE_CURRENT_BINARY_DIR}/linker.ld"
-        MAIN_DEPENDENCY "Arch/x86/linker.ld"
+        COMMAND "${CMAKE_CXX_COMPILER}" ${TARGET_STRING} -E -P -x c -I${CMAKE_CURRENT_SOURCE_DIR}/.. "${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86_64/linker.ld" -o "${CMAKE_CURRENT_BINARY_DIR}/linker.ld"
+        MAIN_DEPENDENCY "Arch/x86_64/linker.ld"
         COMMENT "Preprocessing linker.ld"
         VERBATIM
     )

@@ -47,7 +47,7 @@ extern "C" void handle_interrupt(TrapFrame const* const)
     }
 }
 
-// FIXME: Share the code below with Arch/x86/common/Interrupts.cpp
+// FIXME: Share the code below with Arch/x86_64/Interrupts.cpp
 //        While refactoring, the interrupt handlers can also be moved into the InterruptManagement class.
 GenericInterruptHandler& get_interrupt_handler(u8 interrupt_number)
 {

@@ -8,7 +8,7 @@
 #include <Kernel/API/VirtualMemoryAnnotations.h>
 #include <Kernel/Arch/SafeMem.h>
 #include <Kernel/Arch/SmapDisabler.h>
-#include <Kernel/Arch/x86/MSR.h>
+#include <Kernel/Arch/x86_64/MSR.h>
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/OpenFileDescription.h>
 #include <Kernel/Memory/AnonymousVMObject.h>

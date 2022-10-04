@@ -10,7 +10,7 @@
 #include <AK/Platform.h>
 #include <AK/Types.h>
 #if ARCH(X86_64)
-#    include <Kernel/Arch/x86/VGA/IOArbiter.h>
+#    include <Kernel/Arch/x86_64/VGA/IOArbiter.h>
 #endif
 #include <Kernel/Bus/PCI/Definitions.h>
 #include <Kernel/Graphics/Console/Console.h>

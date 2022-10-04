@@ -15,8 +15,8 @@
 #include <LibELF/Relocation.h>
 
 #if ARCH(X86_64)
-#    include <Kernel/Arch/x86/ASM_wrapper.h>
-#    include <Kernel/Arch/x86/CPUID.h>
+#    include <Kernel/Arch/x86_64/ASM_wrapper.h>
+#    include <Kernel/Arch/x86_64/CPUID.h>
 #endif
 
 // Defined in the linker script

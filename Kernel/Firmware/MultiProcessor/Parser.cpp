@@ -7,7 +7,7 @@
  */
 
 #include <AK/StringView.h>
-#include <Kernel/Arch/x86/common/Interrupts/IOAPIC.h>
+#include <Kernel/Arch/x86_64/Interrupts/IOAPIC.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Firmware/BIOS.h>
 #include <Kernel/Firmware/MultiProcessor/Parser.h>

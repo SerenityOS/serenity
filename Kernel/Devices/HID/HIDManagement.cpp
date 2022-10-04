@@ -7,7 +7,7 @@
 #include <AK/Platform.h>
 #include <AK/Singleton.h>
 #if ARCH(X86_64)
-#    include <Kernel/Arch/x86/ISABus/I8042Controller.h>
+#    include <Kernel/Arch/x86_64/ISABus/I8042Controller.h>
 #endif
 #include <Kernel/CommandLine.h>
 #include <Kernel/Devices/HID/HIDManagement.h>

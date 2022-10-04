@@ -9,13 +9,13 @@
 #include <AK/StdLibExtras.h>
 #include <AK/Time.h>
 #if ARCH(X86_64)
-#    include <Kernel/Arch/x86/Time/APICTimer.h>
-#    include <Kernel/Arch/x86/Time/HPET.h>
-#    include <Kernel/Arch/x86/Time/HPETComparator.h>
-#    include <Kernel/Arch/x86/Time/PIT.h>
-#    include <Kernel/Arch/x86/Time/RTC.h>
-#    include <Kernel/Arch/x86/common/Interrupts/APIC.h>
-#    include <Kernel/Arch/x86/common/RTC.h>
+#    include <Kernel/Arch/x86_64/Interrupts/APIC.h>
+#    include <Kernel/Arch/x86_64/RTC.h>
+#    include <Kernel/Arch/x86_64/Time/APICTimer.h>
+#    include <Kernel/Arch/x86_64/Time/HPET.h>
+#    include <Kernel/Arch/x86_64/Time/HPETComparator.h>
+#    include <Kernel/Arch/x86_64/Time/PIT.h>
+#    include <Kernel/Arch/x86_64/Time/RTC.h>
 #elif ARCH(AARCH64)
 #    include <Kernel/Arch/aarch64/RPi/Timer.h>
 #else

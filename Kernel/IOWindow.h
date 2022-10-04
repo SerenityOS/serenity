@@ -10,7 +10,7 @@
 #include <AK/Platform.h>
 #include <AK/Types.h>
 #if ARCH(X86_64)
-#    include <Kernel/Arch/x86/IO.h>
+#    include <Kernel/Arch/x86_64/IO.h>
 #endif
 #include <Kernel/Bus/PCI/Definitions.h>
 #include <Kernel/Memory/TypedMapping.h>
