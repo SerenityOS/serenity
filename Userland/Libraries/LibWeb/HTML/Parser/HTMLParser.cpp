@@ -28,7 +28,7 @@
 #include <LibWeb/HTML/Parser/HTMLParser.h>
 #include <LibWeb/HTML/Parser/HTMLToken.h>
 #include <LibWeb/HTML/Window.h>
-#include <LibWeb/HighResolutionTime/CoarsenTime.h>
+#include <LibWeb/HighResolutionTime/TimeOrigin.h>
 #include <LibWeb/Infra/CharacterTypes.h>
 #include <LibWeb/Namespace.h>
 #include <LibWeb/SVG/TagNames.h>

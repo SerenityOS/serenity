@@ -6,7 +6,7 @@
  */
 
 #include <AK/Time.h>
-#include <LibWeb/HighResolutionTime/CoarsenTime.h>
+#include <LibWeb/HighResolutionTime/TimeOrigin.h>
 
 namespace Web::HighResolutionTime {
 

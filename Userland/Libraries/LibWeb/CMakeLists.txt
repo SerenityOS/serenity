@@ -274,8 +274,8 @@ set(SOURCES
     HTML/WorkerGlobalScope.cpp
     HTML/WorkerLocation.cpp
     HTML/WorkerNavigator.cpp
-    HighResolutionTime/CoarsenTime.cpp
     HighResolutionTime/Performance.cpp
+    HighResolutionTime/TimeOrigin.cpp
     Infra/ByteSequences.cpp
     Infra/JSON.cpp
     Infra/Strings.cpp
