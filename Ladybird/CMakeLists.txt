@@ -25,6 +25,8 @@ if (NOT APPLE)
 endif()
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 include(cmake/EnableLLD.cmake)
 
 # Lagom
