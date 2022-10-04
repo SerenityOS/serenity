@@ -42,13 +42,7 @@ using AK::SIMD::f32x4;
 
 // Transform f32x4 from gamma2.2 space to linear space
 // Assumes x is in range [0, 1]
-// FIXME: Remove this hack once clang-11 is available as the default in Github Actions.
-//        This is apparently sometime mid-December. https://github.com/actions/virtual-environments/issues/2130
-#    if !defined(__clang__) || __clang_major__ >= 11
 constexpr f32x4 gamma_to_linear4(f32x4 x)
-#    else
-inline f32x4 gamma_to_linear4(f32x4 x)
-#    endif
 {
     return (0.8f + 0.2f * x) * x * x;
 }
