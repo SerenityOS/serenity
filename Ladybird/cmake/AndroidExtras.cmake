@@ -49,6 +49,12 @@ copy_res_folder(emoji)
 copy_res_folder(themes)
 copy_res_folder(color-palettes)
 copy_res_folder(cursor-themes)
+add_custom_target(copy-content-filters
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${SERENITY_SOURCE_DIR}/Base/home/anon/.config/BrowserContentFilters.txt"
+        "asset-bundle/res/ladybird/BrowserContentFilters.txt"
+)
+add_dependencies(archive-assets copy-content-filters)
 add_custom_target(copy-assets COMMAND ${CMAKE_COMMAND} -E copy_if_different ladybird-assets.tar.gz "${CMAKE_SOURCE_DIR}/android/assets")
 add_dependencies(copy-assets archive-assets)
 add_dependencies(ladybird copy-assets)
