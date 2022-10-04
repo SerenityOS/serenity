@@ -464,9 +464,7 @@ UNMAP_AFTER_INIT void Processor::cpu_detect()
         }
     }
 
-#if ARCH(X86_64)
     m_has_qemu_hvf_quirk = false;
-#endif
 
     if (max_extended_leaf >= 0x80000008) {
         // CPUID.80000008H:EAX[7:0] reports the physical-address width supported by the processor.
@@ -479,7 +477,6 @@ UNMAP_AFTER_INIT void Processor::cpu_detect()
         m_physical_address_bit_width = has_feature(CPUFeature::PAE) ? 36 : 32;
         // Processors that do not support CPUID function 80000008H, support a linear-address width of 32.
         m_virtual_address_bit_width = 32;
-#if ARCH(X86_64)
         // Workaround QEMU hypervisor.framework bug
         // https://gitlab.com/qemu-project/qemu/-/issues/664
         //
@@ -494,7 +491,6 @@ UNMAP_AFTER_INIT void Processor::cpu_detect()
                 m_virtual_address_bit_width = 48;
             }
         }
-#endif
     }
 }
 
@@ -565,7 +561,6 @@ UNMAP_AFTER_INIT void Processor::cpu_setup()
         }
     }
 
-#if ARCH(X86_64)
     // x86_64 processors must support the syscall feature.
     VERIFY(has_feature(CPUFeature::SYSCALL));
     MSR efer_msr(MSR_EFER);
@@ -595,7 +590,6 @@ UNMAP_AFTER_INIT void Processor::cpu_setup()
         // the RDGSBASE instruction until we implement proper GS swapping at the userspace/kernel boundaries
         write_cr4(read_cr4() & ~0x10000);
     }
-#endif
 
     // Query OS-enabled CPUID features again, and set the flags if needed.
     CPUID processor_info(0x1);
@@ -652,10 +646,8 @@ UNMAP_AFTER_INIT void Processor::initialize(u32 cpu)
         dmesgln("CPU[{}]: No RDRAND support detected, randomness will be poor", current_id());
     dmesgln("CPU[{}]: Physical address bit width: {}", current_id(), m_physical_address_bit_width);
     dmesgln("CPU[{}]: Virtual address bit width: {}", current_id(), m_virtual_address_bit_width);
-#if ARCH(X86_64)
     if (m_has_qemu_hvf_quirk)
         dmesgln("CPU[{}]: Applied correction for QEMU Hypervisor.framework quirk", current_id());
-#endif
 
     if (cpu == 0)
         initialize_interrupts();
@@ -1459,42 +1451,10 @@ UNMAP_AFTER_INIT void Processor::gdt_init()
     m_gdtr.limit = 0;
 
     write_raw_gdt_entry(0x0000, 0x00000000, 0x00000000);
-#if ARCH(I386)
-    write_raw_gdt_entry(GDT_SELECTOR_CODE0, 0x0000ffff, 0x00cf9a00); // code0
-    write_raw_gdt_entry(GDT_SELECTOR_DATA0, 0x0000ffff, 0x00cf9200); // data0
-    write_raw_gdt_entry(GDT_SELECTOR_CODE3, 0x0000ffff, 0x00cffa00); // code3
-    write_raw_gdt_entry(GDT_SELECTOR_DATA3, 0x0000ffff, 0x00cff200); // data3
-#else
     write_raw_gdt_entry(GDT_SELECTOR_CODE0, 0x0000ffff, 0x00af9a00); // code0
     write_raw_gdt_entry(GDT_SELECTOR_DATA0, 0x0000ffff, 0x00af9200); // data0
     write_raw_gdt_entry(GDT_SELECTOR_DATA3, 0x0000ffff, 0x008ff200); // data3
     write_raw_gdt_entry(GDT_SELECTOR_CODE3, 0x0000ffff, 0x00affa00); // code3
-#endif
-
-#if ARCH(I386)
-    Descriptor tls_descriptor {};
-    tls_descriptor.low = tls_descriptor.high = 0;
-    tls_descriptor.dpl = 3;
-    tls_descriptor.segment_present = 1;
-    tls_descriptor.granularity = 0;
-    tls_descriptor.operation_size64 = 0;
-    tls_descriptor.operation_size32 = 1;
-    tls_descriptor.descriptor_type = 1;
-    tls_descriptor.type = 2;
-    write_gdt_entry(GDT_SELECTOR_TLS, tls_descriptor); // tls3
-
-    Descriptor gs_descriptor {};
-    gs_descriptor.set_base(VirtualAddress { this });
-    gs_descriptor.set_limit(sizeof(Processor) - 1);
-    gs_descriptor.dpl = 0;
-    gs_descriptor.segment_present = 1;
-    gs_descriptor.granularity = 0;
-    gs_descriptor.operation_size64 = 0;
-    gs_descriptor.operation_size32 = 1;
-    gs_descriptor.descriptor_type = 1;
-    gs_descriptor.type = 2;
-    write_gdt_entry(GDT_SELECTOR_PROC, gs_descriptor); // gs0
-#endif
 
     Descriptor tss_descriptor {};
     tss_descriptor.set_base(VirtualAddress { (size_t)&m_tss & 0xffffffff });
@@ -1508,36 +1468,15 @@ UNMAP_AFTER_INIT void Processor::gdt_init()
     tss_descriptor.type = Descriptor::SystemType::AvailableTSS;
     write_gdt_entry(GDT_SELECTOR_TSS, tss_descriptor); // tss
 
-#if ARCH(X86_64)
     Descriptor tss_descriptor_part2 {};
     tss_descriptor_part2.low = (size_t)&m_tss >> 32;
     write_gdt_entry(GDT_SELECTOR_TSS_PART2, tss_descriptor_part2);
-#endif
 
     flush_gdt();
     load_task_register(GDT_SELECTOR_TSS);
 
-#if ARCH(X86_64)
     MSR gs_base(MSR_GS_BASE);
     gs_base.set((u64)this);
-#else
-    asm volatile(
-        "mov %%ax, %%ds\n"
-        "mov %%ax, %%es\n"
-        "mov %%ax, %%fs\n"
-        "mov %%ax, %%ss\n" ::"a"(GDT_SELECTOR_DATA0)
-        : "memory");
-    set_gs(GDT_SELECTOR_PROC);
-#endif
-
-#if ARCH(I386)
-    // Make sure CS points to the kernel code descriptor.
-    // clang-format off
-    asm volatile(
-        "ljmpl $" __STRINGIFY(GDT_SELECTOR_CODE0) ", $sanity\n"
-        "sanity:\n");
-    // clang-format on
-#endif
 }
 
 extern "C" void context_first_init([[maybe_unused]] Thread* from_thread, [[maybe_unused]] Thread* to_thread, [[maybe_unused]] TrapFrame* trap)
@@ -1594,13 +1533,6 @@ extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread)
                      : "=m"(from_thread->fpu_state()));
     }
 
-#if ARCH(I386)
-    from_regs.fs = get_fs();
-    from_regs.gs = get_gs();
-    set_fs(to_regs.fs);
-    set_gs(to_regs.gs);
-#endif
-
     if (from_thread->process().is_traced())
         read_debug_registers_into(from_thread->debug_register_state());
 
@@ -1611,14 +1543,8 @@ extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread)
     }
 
     auto& processor = Processor::current();
-#if ARCH(I386)
-    auto& tls_descriptor = processor.get_gdt_entry(GDT_SELECTOR_TLS);
-    tls_descriptor.set_base(to_thread->thread_specific_data());
-    tls_descriptor.set_limit(to_thread->thread_specific_region_size());
-#else
     MSR fs_base_msr(MSR_FS_BASE);
     fs_base_msr.set(to_thread->thread_specific_data().get());
-#endif
 
     if (from_regs.cr3 != to_regs.cr3)
         write_cr3(to_regs.cr3);

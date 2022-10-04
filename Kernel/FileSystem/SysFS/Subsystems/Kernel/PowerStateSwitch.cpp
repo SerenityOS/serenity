@@ -6,7 +6,7 @@
  */
 
 #include <AK/Platform.h>
-#if ARCH(I386) || ARCH(X86_64)
+#if ARCH(X86_64)
 #    include <Kernel/Arch/x86/common/I8042Reboot.h>
 #    include <Kernel/Arch/x86/common/Shutdown.h>
 #endif
@@ -87,7 +87,7 @@ void SysFSPowerStateSwitchNode::reboot()
     dbgln("attempting reboot via ACPI");
     if (ACPI::is_enabled())
         ACPI::Parser::the()->try_acpi_reboot();
-#if ARCH(I386) || ARCH(X86_64)
+#if ARCH(X86_64)
     i8042_reboot();
 #endif
     dbgln("reboot attempts failed, applications will stop responding.");
@@ -106,7 +106,7 @@ void SysFSPowerStateSwitchNode::poweroff()
     dbgln("syncing mounted filesystems...");
     FileSystem::sync();
     dbgln("attempting system shutdown...");
-#if ARCH(I386) || ARCH(X86_64)
+#if ARCH(X86_64)
     qemu_shutdown();
     virtualbox_shutdown();
 #endif

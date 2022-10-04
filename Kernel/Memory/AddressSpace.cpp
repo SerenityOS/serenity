@@ -306,11 +306,7 @@ ErrorOr<Vector<Region*, 2>> AddressSpace::try_split_region_around_range(Region c
 void AddressSpace::dump_regions()
 {
     dbgln("Process regions:");
-#if ARCH(I386)
-    char const* addr_padding = "";
-#else
     char const* addr_padding = "        ";
-#endif
     dbgln("BEGIN{}         END{}        SIZE{}       ACCESS NAME",
         addr_padding, addr_padding, addr_padding);
 

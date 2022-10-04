@@ -121,26 +121,6 @@ ErrorOr<VirtualRange> RegionTree::allocate_range_randomized(size_t size, size_t 
         if (!m_total_range.contains(random_address, size))
             continue;
 
-#if ARCH(I386)
-        // Attempt to limit the amount of wasted address space on platforms with small address sizes (read: i686).
-        // This works by only allowing arbitrary random allocations until a certain threshold, to create more possibilities for placing mappings.
-        // After the threshold has been reached, new allocations can only be placed randomly within a certain range from the adjacent allocations.
-        VirtualAddress random_address_end { random_address.get() + size };
-        constexpr size_t max_allocations_until_limited = 200;
-        constexpr size_t max_space_between_allocations = 1 * MiB;
-
-        if (m_regions.size() >= max_allocations_until_limited) {
-            auto* lower_allocation = m_regions.find_largest_not_above(random_address.get());
-            auto* upper_allocation = m_regions.find_smallest_not_below(random_address_end.get());
-
-            bool lower_in_range = (!lower_allocation || random_address - lower_allocation->range().end() <= VirtualAddress(max_space_between_allocations));
-            bool upper_in_range = (!upper_allocation || upper_allocation->range().base() - random_address_end <= VirtualAddress(max_space_between_allocations));
-
-            if (!upper_in_range && !lower_in_range)
-                continue;
-        }
-#endif
-
         auto range_or_error = allocate_range_specific(random_address, size);
         if (!range_or_error.is_error())
             return range_or_error.release_value();

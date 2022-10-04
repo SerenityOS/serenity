@@ -43,19 +43,11 @@ struct [[gnu::packed]] LegacyRegion {
     u8 FTW;
     u8 : 8;
     u16 FOP;
-#if ARCH(I386)
-    // 32-bit version
-    u32 FIP_32;
-    u16 FCS;
-    u16 : 16;
-    u32 FPD_32;
-    u16 FDS;
-    u16 : 16;
-#elif ARCH(X86_64)
+
     // 64-bit version
     u64 FIP_64;
     u64 FDP_64;
-#endif
+
     AK::MXCSR MXCSR;
     u32 MXCSR_mask;
     u8 st_mmx[128];

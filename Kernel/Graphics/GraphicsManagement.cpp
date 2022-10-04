@@ -6,7 +6,7 @@
 
 #include <AK/Singleton.h>
 #include <Kernel/Arch/Delay.h>
-#if ARCH(I386) || ARCH(X86_64)
+#if ARCH(X86_64)
 #    include <Kernel/Arch/x86/Hypervisor/BochsDisplayConnector.h>
 #endif
 #include <Kernel/Bus/PCI/API.h>
@@ -44,7 +44,7 @@ UNMAP_AFTER_INIT GraphicsManagement::GraphicsManagement()
 
 void GraphicsManagement::disable_vga_emulation_access_permanently()
 {
-#if ARCH(I386) || ARCH(X86_64)
+#if ARCH(X86_64)
     if (!m_vga_arbiter)
         return;
     m_vga_arbiter->disable_vga_emulation_access_permanently({});
@@ -53,7 +53,7 @@ void GraphicsManagement::disable_vga_emulation_access_permanently()
 
 void GraphicsManagement::enable_vga_text_mode_console_cursor()
 {
-#if ARCH(I386) || ARCH(X86_64)
+#if ARCH(X86_64)
     if (!m_vga_arbiter)
         return;
     m_vga_arbiter->enable_vga_text_mode_console_cursor({});
@@ -62,7 +62,7 @@ void GraphicsManagement::enable_vga_text_mode_console_cursor()
 
 void GraphicsManagement::disable_vga_text_mode_console_cursor()
 {
-#if ARCH(I386) || ARCH(X86_64)
+#if ARCH(X86_64)
     if (!m_vga_arbiter)
         return;
     m_vga_arbiter->disable_vga_text_mode_console_cursor({});
@@ -71,7 +71,7 @@ void GraphicsManagement::disable_vga_text_mode_console_cursor()
 
 void GraphicsManagement::set_vga_text_mode_cursor([[maybe_unused]] size_t console_width, [[maybe_unused]] size_t x, [[maybe_unused]] size_t y)
 {
-#if ARCH(I386) || ARCH(X86_64)
+#if ARCH(X86_64)
     if (!m_vga_arbiter)
         return;
     m_vga_arbiter->set_vga_text_mode_cursor({}, console_width, x, y);
@@ -195,7 +195,7 @@ UNMAP_AFTER_INIT bool GraphicsManagement::initialize()
             }
         }
     });
-#if ARCH(I386) || ARCH(X86_64)
+#if ARCH(X86_64)
     m_vga_arbiter = VGAIOArbiter::must_create({});
 #endif
 
@@ -210,7 +210,7 @@ UNMAP_AFTER_INIT bool GraphicsManagement::initialize()
     // Otherwise we risk using the Bochs VBE driver on a wrong physical address
     // for the framebuffer.
     if (PCI::Access::is_hardware_disabled() && !(graphics_subsystem_mode == CommandLine::GraphicsSubsystemMode::Limited && !multiboot_framebuffer_addr.is_null() && multiboot_framebuffer_type == MULTIBOOT_FRAMEBUFFER_TYPE_RGB)) {
-#if ARCH(I386) || ARCH(X86_64)
+#if ARCH(X86_64)
         auto vga_isa_bochs_display_connector = BochsDisplayConnector::try_create_for_vga_isa_connector();
         if (vga_isa_bochs_display_connector) {
             dmesgln("Graphics: Using a Bochs ISA VGA compatible adapter");

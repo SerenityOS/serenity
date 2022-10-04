@@ -8,7 +8,7 @@
 
 #include <AK/StdLibExtras.h>
 #include <Kernel/Arch/Delay.h>
-#if ARCH(I386) || ARCH(X86_64)
+#if ARCH(X86_64)
 #    include <Kernel/Arch/x86/common/PCSpeaker.h>
 #endif
 #include <Kernel/CommandLine.h>
@@ -329,7 +329,7 @@ void VirtualConsole::beep()
 {
     if (!kernel_command_line().is_pc_speaker_enabled())
         return;
-#if ARCH(I386) || ARCH(X86_64)
+#if ARCH(X86_64)
     PCSpeaker::tone_on(440);
     microseconds_delay(10000);
     PCSpeaker::tone_off();

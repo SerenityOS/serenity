@@ -9,7 +9,7 @@
 
 #include <AK/Platform.h>
 
-#if ARCH(X86_64) || ARCH(I386)
+#if ARCH(X86_64)
 #    include <Kernel/Arch/x86/PageDirectory.h>
 #elif ARCH(AARCH64)
 #    include <Kernel/Arch/aarch64/PageDirectory.h>

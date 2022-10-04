@@ -149,16 +149,7 @@ static ErrorOr<FlatPtr> make_userspace_context_for_main_thread([[maybe_unused]] 
     // NOTE: The stack needs to be 16-byte aligned.
     new_sp -= new_sp % 16;
 
-#if ARCH(I386)
-    // GCC assumes that the return address has been pushed to the stack when it enters the function,
-    // so we need to reserve an extra pointer's worth of bytes below this to make GCC's stack alignment
-    // calculations work
-    new_sp -= sizeof(void*);
-
-    push_on_new_stack(envp);
-    push_on_new_stack(argv);
-    push_on_new_stack(argv_entries.size());
-#elif ARCH(X86_64)
+#if ARCH(X86_64)
     regs.rdi = argv_entries.size();
     regs.rsi = argv;
     regs.rdx = envp;
@@ -686,18 +677,8 @@ ErrorOr<void> Process::do_exec(NonnullLockRefPtr<OpenFileDescription> main_progr
 
     auto& regs = new_main_thread->m_regs;
     regs.cs = GDT_SELECTOR_CODE3 | 3;
-#if ARCH(I386)
-    regs.ds = GDT_SELECTOR_DATA3 | 3;
-    regs.es = GDT_SELECTOR_DATA3 | 3;
-    regs.ss = GDT_SELECTOR_DATA3 | 3;
-    regs.fs = GDT_SELECTOR_DATA3 | 3;
-    regs.gs = GDT_SELECTOR_TLS | 3;
-    regs.eip = load_result.entry_eip;
-    regs.esp = new_userspace_sp;
-#else
     regs.rip = load_result.entry_eip;
     regs.rsp = new_userspace_sp;
-#endif
     regs.cr3 = address_space().with([](auto& space) { return space->page_directory().cr3(); });
 
     {

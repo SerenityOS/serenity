@@ -62,10 +62,6 @@ struct [[gnu::packed]] TSS64 {
     u16 iomapbase;
 };
 
-#if ARCH(I386)
-using TSS = TSS32;
-#elif ARCH(X86_64)
 using TSS = TSS64;
-#endif
 
 }

@@ -8,8 +8,7 @@
 #include <AK/Singleton.h>
 #include <AK/StdLibExtras.h>
 #include <AK/Time.h>
-
-#if ARCH(I386) || ARCH(X86_64)
+#if ARCH(X86_64)
 #    include <Kernel/Arch/x86/Time/APICTimer.h>
 #    include <Kernel/Arch/x86/Time/HPET.h>
 #    include <Kernel/Arch/x86/Time/HPETComparator.h>
@@ -125,7 +124,7 @@ Time TimeManagement::monotonic_time(TimePrecision precision) const
         ticks = m_ticks_this_second;
 
         if (do_query) {
-#if ARCH(I386) || ARCH(X86_64)
+#if ARCH(X86_64)
             // We may have to do this over again if the timer interrupt fires
             // while we're trying to query the information. In that case, our
             // seconds and ticks became invalid, producing an incorrect time.
@@ -176,7 +175,7 @@ UNMAP_AFTER_INIT void TimeManagement::initialize([[maybe_unused]] u32 cpu)
     //       the TimeManagement class is completely initialized.
     InterruptDisabler disabler;
 
-#if ARCH(I386) || ARCH(X86_64)
+#if ARCH(X86_64)
     if (cpu == 0) {
         VERIFY(!s_the.is_initialized());
         s_the.ensure_instance();
@@ -229,7 +228,7 @@ time_t TimeManagement::ticks_per_second() const
 
 Time TimeManagement::boot_time()
 {
-#if ARCH(I386) || ARCH(X86_64)
+#if ARCH(X86_64)
     return RTC::boot_time();
 #elif ARCH(AARCH64)
     TODO_AARCH64();
@@ -241,7 +240,7 @@ Time TimeManagement::boot_time()
 UNMAP_AFTER_INIT TimeManagement::TimeManagement()
     : m_time_page_region(MM.allocate_kernel_region(PAGE_SIZE, "Time page"sv, Memory::Region::Access::ReadWrite, AllocationStrategy::AllocateNow).release_value_but_fixme_should_propagate_errors())
 {
-#if ARCH(I386) || ARCH(X86_64)
+#if ARCH(X86_64)
     bool probe_non_legacy_hardware_timers = !(kernel_command_line().is_legacy_time_enabled());
     if (ACPI::is_enabled()) {
         if (!ACPI::Parser::the()->x86_specific_flags().cmos_rtc_not_present) {
@@ -312,7 +311,7 @@ bool TimeManagement::is_hpet_periodic_mode_allowed()
     }
 }
 
-#if ARCH(I386) || ARCH(X86_64)
+#if ARCH(X86_64)
 UNMAP_AFTER_INIT bool TimeManagement::probe_and_set_x86_non_legacy_hardware_timers()
 {
     if (!ACPI::is_enabled())

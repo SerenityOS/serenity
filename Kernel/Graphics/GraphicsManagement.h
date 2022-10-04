@@ -9,7 +9,7 @@
 #include <AK/NonnullOwnPtr.h>
 #include <AK/Platform.h>
 #include <AK/Types.h>
-#if ARCH(I386) || ARCH(X86_64)
+#if ARCH(X86_64)
 #    include <Kernel/Arch/x86/VGA/IOArbiter.h>
 #endif
 #include <Kernel/Bus/PCI/Definitions.h>
@@ -65,7 +65,7 @@ private:
     unsigned m_current_minor_number { 0 };
 
     SpinlockProtected<IntrusiveList<&DisplayConnector::m_list_node>> m_display_connector_nodes { LockRank::None };
-#if ARCH(I386) || ARCH(X86_64)
+#if ARCH(X86_64)
     OwnPtr<VGAIOArbiter> m_vga_arbiter;
 #endif
 };

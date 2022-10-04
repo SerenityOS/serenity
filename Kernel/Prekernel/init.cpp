@@ -14,7 +14,7 @@
 #include <LibC/elf.h>
 #include <LibELF/Relocation.h>
 
-#if ARCH(I386) || ARCH(X86_64)
+#if ARCH(X86_64)
 #    include <Kernel/Arch/x86/ASM_wrapper.h>
 #    include <Kernel/Arch/x86/CPUID.h>
 #endif
@@ -90,11 +90,7 @@ extern "C" [[noreturn]] void init()
     __builtin_memcpy(kernel_program_headers, kernel_image + kernel_elf_header.e_phoff, sizeof(ElfW(Phdr)) * kernel_elf_header.e_phnum);
 
     FlatPtr kernel_physical_base = 0x200000;
-#if ARCH(I386)
-    FlatPtr default_kernel_load_base = 0xc0200000;
-#else
     FlatPtr default_kernel_load_base = 0x2000200000;
-#endif
 
     FlatPtr kernel_load_base = default_kernel_load_base;
 
@@ -125,11 +121,8 @@ extern "C" [[noreturn]] void init()
     VERIFY(kernel_load_base % 0x1000 == 0);
     VERIFY(kernel_load_base >= kernel_mapping_base + 0x200000);
 
-#if ARCH(I386)
-    int pdpt_flags = 0x1;
-#else
     int pdpt_flags = 0x3;
-#endif
+
     boot_pdpt[(kernel_mapping_base >> 30) & 0x1ffu] = (FlatPtr)boot_pd_kernel | pdpt_flags;
 
     boot_pd_kernel[0] = (FlatPtr)boot_pd_kernel_pt0 | 0x3;
@@ -213,13 +206,8 @@ extern "C" [[noreturn]] void init()
     }
 
     asm(
-#if ARCH(I386)
-        "add %0, %%esp"
-#else
         "mov %0, %%rax\n"
-        "add %%rax, %%rsp"
-#endif
-        ::"g"(kernel_mapping_base)
+        "add %%rax, %%rsp" ::"g"(kernel_mapping_base)
         : "ax");
 
     // unmap the 0-1MB region
@@ -244,7 +232,7 @@ u64 generate_secure_seed()
 {
     u32 seed = 0xFEEBDAED;
 
-#if ARCH(I386) || ARCH(X86_64)
+#if ARCH(X86_64)
     CPUID processor_info(0x1);
     if (processor_info.edx() & (1 << 4)) // TSC
         seed ^= read_tsc();

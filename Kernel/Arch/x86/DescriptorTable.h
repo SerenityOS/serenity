@@ -14,29 +14,13 @@
 #include <AK/Platform.h>
 VALIDATE_IS_X86()
 
-#if ARCH(I386)
-#    define GDT_SELECTOR_CODE0 0x08
-#    define GDT_SELECTOR_DATA0 0x10
-#    define GDT_SELECTOR_CODE3 0x18
-#    define GDT_SELECTOR_DATA3 0x20
-#    define GDT_SELECTOR_TLS 0x28
-#    define GDT_SELECTOR_PROC 0x30
-#    define GDT_SELECTOR_TSS 0x38
-
-// SYSENTER makes certain assumptions on how the GDT is structured:
-static_assert(GDT_SELECTOR_CODE0 + 8 == GDT_SELECTOR_DATA0); // SS0 = CS0 + 8
-
-// SYSEXIT makes certain assumptions on how the GDT is structured:
-static_assert(GDT_SELECTOR_CODE0 + 16 == GDT_SELECTOR_CODE3); // CS3 = CS0 + 16
-static_assert(GDT_SELECTOR_CODE0 + 24 == GDT_SELECTOR_DATA3); // SS3 = CS0 + 32
-#else
-#    define GDT_SELECTOR_CODE0 0x08
-#    define GDT_SELECTOR_DATA0 0x10
-#    define GDT_SELECTOR_DATA3 0x18
-#    define GDT_SELECTOR_CODE3 0x20
-#    define GDT_SELECTOR_TSS 0x28
-#    define GDT_SELECTOR_TSS_PART2 0x30
-#endif
+// Note: These values are x86-64.
+#define GDT_SELECTOR_CODE0 0x08
+#define GDT_SELECTOR_DATA0 0x10
+#define GDT_SELECTOR_DATA3 0x18
+#define GDT_SELECTOR_CODE3 0x20
+#define GDT_SELECTOR_TSS 0x28
+#define GDT_SELECTOR_TSS_PART2 0x30
 
 namespace Kernel {
 
@@ -122,14 +106,11 @@ struct [[gnu::packed]] IDTEntry
     u16 offset_1; // offset bits 0..15
     u16 selector; // a code segment selector in GDT or LDT
 
-#if ARCH(I386)
-    u8 zero; // unused, set to 0
-#else
     struct {
         u8 interrupt_stack_table : 3;
         u8 zero : 5; // unused, set to 0
     };
-#endif
+
     struct {
         u8 gate_type : 4;
         u8 storage_segment : 1;
@@ -137,18 +118,14 @@ struct [[gnu::packed]] IDTEntry
         u8 present : 1;
     } type_attr;  // type and attributes
     u16 offset_2; // offset bits 16..31
-#if !ARCH(I386)
     u32 offset_3;
     u32 zeros;
-#endif
 
     IDTEntry() = default;
     IDTEntry(FlatPtr callback, u16 selector_, IDTEntryType type, u8 storage_segment, u8 privilege_level)
         : offset_1 { (u16)((FlatPtr)callback & 0xFFFF) }
         , selector { selector_ }
-#if !ARCH(I386)
         , interrupt_stack_table { 0 }
-#endif
         , zero { 0 }
         , type_attr {
             .gate_type = (u8)type,
@@ -157,20 +134,14 @@ struct [[gnu::packed]] IDTEntry
             .present = 1,
         }
         , offset_2 { (u16)((FlatPtr)callback >> 16) }
-#if !ARCH(I386)
         , offset_3 { (u32)(((FlatPtr)callback) >> 32) }
         , zeros { 0 }
-#endif
     {
     }
 
     FlatPtr off() const
     {
-#if ARCH(I386)
-        return (u32)offset_2 << 16 & (u32)offset_1;
-#else
         return (u64)offset_3 << 32 & (u64)offset_2 << 16 & (u64)offset_1;
-#endif
     }
     IDTEntryType type() const
     {

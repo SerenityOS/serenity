@@ -9,7 +9,7 @@
 #include <AK/ByteReader.h>
 #include <AK/Platform.h>
 #include <AK/Types.h>
-#if ARCH(I386) || ARCH(X86_64)
+#if ARCH(X86_64)
 #    include <Kernel/Arch/x86/IO.h>
 #endif
 #include <Kernel/Bus/PCI/Definitions.h>
@@ -21,7 +21,7 @@ namespace Kernel {
 class IOWindow {
 public:
     enum class SpaceType {
-#if ARCH(I386) || ARCH(X86_64)
+#if ARCH(X86_64)
         IO,
 #endif
         Memory,
@@ -32,7 +32,7 @@ public:
     template<typename V>
     void write();
 
-#if ARCH(I386) || ARCH(X86_64)
+#if ARCH(X86_64)
     static ErrorOr<NonnullOwnPtr<IOWindow>> create_for_io_space(IOAddress, u64 space_length);
 #endif
     static ErrorOr<NonnullOwnPtr<IOWindow>> create_for_pci_device_bar(PCI::DeviceIdentifier const&, PCI::HeaderType0BaseRegister, u64 space_length);
@@ -70,7 +70,7 @@ public:
     ~IOWindow();
 
     PhysicalAddress as_physical_memory_address() const;
-#if ARCH(I386) || ARCH(X86_64)
+#if ARCH(X86_64)
     IOAddress as_io_address() const;
 #endif
 
@@ -79,7 +79,7 @@ private:
 
     u8 volatile* as_memory_address_pointer();
 
-#if ARCH(I386) || ARCH(X86_64)
+#if ARCH(X86_64)
     struct IOAddressData {
     public:
         IOAddressData(u64 address, u64 space_length)
@@ -104,7 +104,7 @@ private:
     template<typename T>
     ALWAYS_INLINE void in(u64 start_offset, T& data)
     {
-#if ARCH(I386) || ARCH(X86_64)
+#if ARCH(X86_64)
         if (m_space_type == SpaceType::IO) {
             data = as_io_address().offset(start_offset).in<T>();
             return;
@@ -122,7 +122,7 @@ private:
     template<typename T>
     ALWAYS_INLINE void out(u64 start_offset, T value)
     {
-#if ARCH(I386) || ARCH(X86_64)
+#if ARCH(X86_64)
         if (m_space_type == SpaceType::IO) {
             VERIFY(m_io_range);
             as_io_address().offset(start_offset).out<T>(value);
@@ -142,7 +142,7 @@ private:
 
     OwnPtr<Memory::TypedMapping<u8 volatile>> m_memory_mapped_range;
 
-#if ARCH(I386) || ARCH(X86_64)
+#if ARCH(X86_64)
     OwnPtr<IOAddressData> m_io_range;
 #endif
 };
@@ -153,7 +153,7 @@ template<>
 struct AK::Formatter<Kernel::IOWindow> : AK::Formatter<FormatString> {
     ErrorOr<void> format(FormatBuilder& builder, Kernel::IOWindow const& value)
     {
-#if ARCH(I386) || ARCH(X86_64)
+#if ARCH(X86_64)
         if (value.space_type() == Kernel::IOWindow::SpaceType::IO)
             return Formatter<FormatString>::format(builder, "{}"sv, value.as_io_address());
 #endif

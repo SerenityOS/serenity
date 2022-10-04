@@ -519,16 +519,11 @@ struct SC_faccessat_params {
 void initialize();
 int sync();
 
-#    if ARCH(I386) || ARCH(X86_64) || ARCH(AARCH64)
+#    if ARCH(X86_64) || ARCH(AARCH64)
 inline uintptr_t invoke(Function function)
 {
     uintptr_t result;
-#        if ARCH(I386)
-    asm volatile("int $0x82"
-                 : "=a"(result)
-                 : "a"(function)
-                 : "memory");
-#        elif ARCH(X86_64)
+#        if ARCH(X86_64)
     asm volatile("syscall"
                  : "=a"(result)
                  : "a"(function)
@@ -549,17 +544,12 @@ template<typename T1>
 inline uintptr_t invoke(Function function, T1 arg1)
 {
     uintptr_t result;
-#        if ARCH(I386)
-    asm volatile("int $0x82"
-                 : "=a"(result)
-                 : "a"(function), "d"((uintptr_t)arg1)
-                 : "memory");
-#        elif ARCH(X86_64)
+#        if ARCH(X86_64)
     asm volatile("syscall"
                  : "=a"(result)
                  : "a"(function), "d"((uintptr_t)arg1)
                  : "rcx", "r11", "memory");
-#        else
+#        elif ARCH(AARCH64)
     register uintptr_t x0 asm("x0");
     register uintptr_t x1 asm("x1") = arg1;
     register uintptr_t x8 asm("x8") = function;
@@ -576,17 +566,12 @@ template<typename T1, typename T2>
 inline uintptr_t invoke(Function function, T1 arg1, T2 arg2)
 {
     uintptr_t result;
-#        if ARCH(I386)
-    asm volatile("int $0x82"
-                 : "=a"(result)
-                 : "a"(function), "d"((uintptr_t)arg1), "c"((uintptr_t)arg2)
-                 : "memory");
-#        elif ARCH(X86_64)
+#        if ARCH(X86_64)
     asm volatile("syscall"
                  : "=a"(result)
                  : "a"(function), "d"((uintptr_t)arg1), "D"((uintptr_t)arg2)
                  : "rcx", "r11", "memory");
-#        else
+#        elif ARCH(AARCH64)
     register uintptr_t x0 asm("x0");
     register uintptr_t x1 asm("x1") = arg1;
     register uintptr_t x2 asm("x2") = arg2;
@@ -604,17 +589,12 @@ template<typename T1, typename T2, typename T3>
 inline uintptr_t invoke(Function function, T1 arg1, T2 arg2, T3 arg3)
 {
     uintptr_t result;
-#        if ARCH(I386)
-    asm volatile("int $0x82"
-                 : "=a"(result)
-                 : "a"(function), "d"((uintptr_t)arg1), "c"((uintptr_t)arg2), "b"((uintptr_t)arg3)
-                 : "memory");
-#        elif ARCH(X86_64)
+#        if ARCH(X86_64)
     asm volatile("syscall"
                  : "=a"(result)
                  : "a"(function), "d"((uintptr_t)arg1), "D"((uintptr_t)arg2), "b"((uintptr_t)arg3)
                  : "rcx", "r11", "memory");
-#        else
+#        elif ARCH(AARCH64)
     register uintptr_t x0 asm("x0");
     register uintptr_t x1 asm("x1") = arg1;
     register uintptr_t x2 asm("x2") = arg2;
@@ -633,17 +613,12 @@ template<typename T1, typename T2, typename T3, typename T4>
 inline uintptr_t invoke(Function function, T1 arg1, T2 arg2, T3 arg3, T4 arg4)
 {
     uintptr_t result;
-#        if ARCH(I386)
-    asm volatile("int $0x82"
-                 : "=a"(result)
-                 : "a"(function), "d"((uintptr_t)arg1), "c"((uintptr_t)arg2), "b"((uintptr_t)arg3), "S"((uintptr_t)arg4)
-                 : "memory");
-#        elif ARCH(X86_64)
+#        if ARCH(X86_64)
     asm volatile("syscall"
                  : "=a"(result)
                  : "a"(function), "d"((uintptr_t)arg1), "D"((uintptr_t)arg2), "b"((uintptr_t)arg3), "S"((uintptr_t)arg4)
                  : "memory");
-#        else
+#        elif ARCH(AARCH64)
     register uintptr_t x0 asm("x0");
     register uintptr_t x1 asm("x1") = arg1;
     register uintptr_t x2 asm("x2") = arg2;

@@ -6,7 +6,7 @@
 
 #include <AK/Format.h>
 #include <Kernel/Arch/Processor.h>
-#if ARCH(I386) || ARCH(X86_64)
+#if ARCH(X86_64)
 #    include <Kernel/Arch/x86/common/Shutdown.h>
 #endif
 #include <Kernel/CommandLine.h>
@@ -18,7 +18,7 @@ namespace Kernel {
 
 [[noreturn]] static void __shutdown()
 {
-#if ARCH(I386) || ARCH(X86_64)
+#if ARCH(X86_64)
     qemu_shutdown();
     virtualbox_shutdown();
 #endif

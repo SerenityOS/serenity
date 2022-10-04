@@ -87,7 +87,7 @@ ErrorOr<FlatPtr> Process::sys$sigreturn([[maybe_unused]] RegisterState& register
     // Stack state (created by the signal trampoline):
     // saved_ax, ucontext, signal_info, fpu_state?.
 
-#if ARCH(I386) || ARCH(X86_64)
+#if ARCH(X86_64)
     // The FPU state is at the top here, pop it off and restore it.
     // FIXME: The stack alignment is off by 8 bytes here, figure this out and remove this excessively aligned object.
     alignas(alignof(FPUState) * 2) FPUState data {};
@@ -107,8 +107,6 @@ ErrorOr<FlatPtr> Process::sys$sigreturn([[maybe_unused]] RegisterState& register
     Thread::current()->m_currently_handled_signal = 0;
 #if ARCH(X86_64)
     auto sp = registers.rsp;
-#elif ARCH(I386)
-    auto sp = registers.esp;
 #endif
 
     copy_ptrace_registers_into_kernel_registers(registers, static_cast<PtraceRegisters const&>(ucontext.uc_mcontext));
@@ -116,9 +114,6 @@ ErrorOr<FlatPtr> Process::sys$sigreturn([[maybe_unused]] RegisterState& register
 #if ARCH(X86_64)
     registers.set_userspace_sp(registers.rsp);
     registers.rsp = sp;
-#elif ARCH(I386)
-    registers.set_userspace_sp(registers.esp);
-    registers.esp = sp;
 #endif
 
     return saved_ax;

@@ -82,7 +82,7 @@ ErrorOr<void> IDEChannel::port_phy_reset()
     return {};
 }
 
-#if ARCH(I386) || ARCH(X86_64)
+#if ARCH(X86_64)
 ErrorOr<void> IDEChannel::allocate_resources_for_pci_ide_controller(Badge<PCIIDELegacyModeController>, bool force_pio)
 {
     return allocate_resources(force_pio);
