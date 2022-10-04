@@ -23,14 +23,13 @@ public:
 protected:
     Color convert_color(Color original) override
     {
-        auto constexpr u8_max = AK::NumericLimits<u8>::max();
         auto safe_float_to_u8 = [](float value) -> u8 {
-            return AK::clamp(static_cast<int>(value * u8_max), 0, u8_max);
+            return AK::clamp(static_cast<int>(value), 0, AK::NumericLimits<u8>::max());
         };
         FloatVector3 rgb = {
-            original.red() / float(u8_max),
-            original.green() / float(u8_max),
-            original.blue() / float(u8_max),
+            float(original.red()),
+            float(original.green()),
+            float(original.blue())
         };
         rgb = m_operation * rgb;
         return Color {
