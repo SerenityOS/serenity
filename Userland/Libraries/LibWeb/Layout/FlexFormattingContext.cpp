@@ -768,11 +768,35 @@ float FlexFormattingContext::content_based_minimum_size(FlexItem const& item) co
     return unclamped_size;
 }
 
+bool FlexFormattingContext::can_determine_size_of_child() const
+{
+    return true;
+}
+
+void FlexFormattingContext::determine_width_of_child(Box const&, AvailableSpace const&)
+{
+    // NOTE: For now, we simply do nothing here. If a child context is calling up to us
+    //       and asking us to determine its width, we've already done so as part of the
+    //       flex layout algorithm.
+}
+
+void FlexFormattingContext::determine_height_of_child(Box const&, AvailableSpace const&)
+{
+    // NOTE: For now, we simply do nothing here. If a child context is calling up to us
+    //       and asking us to determine its height, we've already done so as part of the
+    //       flex layout algorithm.
+}
+
 // https://drafts.csswg.org/css-flexbox-1/#algo-main-container
 void FlexFormattingContext::determine_main_size_of_flex_container()
 {
     // Determine the main size of the flex container using the rules of the formatting context in which it participates.
     // NOTE: The automatic block size of a block-level flex container is its max-content size.
+
+    // FIXME: The code below doesn't know how to size absolutely positioned flex containers at all.
+    //        We just leave it alone for now and let the parent context deal with it.
+    if (flex_container().is_absolutely_positioned())
+        return;
 
     // FIXME: Once all parent contexts now how to size a given child, we can remove
     //        `can_determine_size_of_child()`.
@@ -784,11 +808,6 @@ void FlexFormattingContext::determine_main_size_of_flex_container()
         }
         return;
     }
-
-    // HACK: The hack below doesn't know how to size absolutely positioned flex containers at all.
-    //       We just leave it alone for now and let the parent context deal with it.
-    if (flex_container().is_absolutely_positioned())
-        return;
 
     if (is_row_layout()) {
         if (!flex_container().is_out_of_flow(*parent()) && m_state.get(*flex_container().containing_block()).has_definite_width()) {

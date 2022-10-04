@@ -23,6 +23,10 @@ public:
 
     Box const& flex_container() const { return context_box(); }
 
+    virtual bool can_determine_size_of_child() const override;
+    virtual void determine_width_of_child(Box const&, AvailableSpace const&) override;
+    virtual void determine_height_of_child(Box const&, AvailableSpace const&) override;
+
 private:
     void dump_items() const;
 
