@@ -111,6 +111,7 @@ private:
     // A response can have an associated aborted flag, which is initially unset.
     bool m_aborted { false };
 
+    // https://fetch.spec.whatwg.org/#concept-response-url-list
     // A response has an associated URL list (a list of zero or more URLs). Unless stated otherwise, it is the empty list.
     Vector<AK::URL> m_url_list;
 
