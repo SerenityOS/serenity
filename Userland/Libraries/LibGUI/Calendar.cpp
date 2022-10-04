@@ -459,6 +459,7 @@ void Calendar::paint_event(GUI::PaintEvent& event)
             if (j > 0)
                 y_offset += m_tiles[0][(j - 1) * 7].height + 1;
             for (int k = 0; k < 7; k++) {
+                bool is_weekend = is_day_in_weekend((DayOfWeek)((k + to_underlying(m_first_day_of_week)) % 7));
                 if (k > 0)
                     x_offset += m_tiles[0][k - 1].width + 1;
                 auto tile_rect = Gfx::IntRect(
@@ -467,10 +468,16 @@ void Calendar::paint_event(GUI::PaintEvent& event)
                     m_tiles[0][i].width,
                     m_tiles[0][i].height);
                 m_tiles[0][i].rect = tile_rect.translated(frame_thickness(), frame_thickness());
-                if (m_tiles[0][i].is_hovered || m_tiles[0][i].is_selected)
-                    painter.fill_rect(tile_rect, palette().hover_highlight());
-                else
-                    painter.fill_rect(tile_rect, palette().base());
+
+                Color background_color = palette().base();
+
+                if (m_tiles[0][i].is_hovered || m_tiles[0][i].is_selected) {
+                    background_color = palette().hover_highlight();
+                } else if (is_weekend) {
+                    background_color = palette().gutter();
+                }
+
+                painter.fill_rect(tile_rect, background_color);
 
                 auto text_alignment = Gfx::TextAlignment::TopRight;
                 auto text_rect = Gfx::IntRect(
@@ -780,4 +787,17 @@ void Calendar::config_i32_did_change(String const& domain, String const& group, 
         update();
     }
 }
+
+bool Calendar::is_day_in_weekend(DayOfWeek day)
+{
+    auto day_index = to_underlying(day);
+    auto weekend_start_index = to_underlying(m_first_day_of_weekend);
+    auto weekend_end_index = weekend_start_index + m_weekend_length;
+
+    if (day_index < weekend_start_index)
+        day_index += 7;
+
+    return day_index < weekend_end_index;
+}
+
 }

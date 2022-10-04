@@ -92,6 +92,18 @@ private:
     virtual void doubleclick_event(MouseEvent&) override;
     virtual void leave_event(Core::Event&) override;
 
+    enum class DayOfWeek {
+        Sunday,
+        Monday,
+        Tuesday,
+        Wednesday,
+        Thursday,
+        Friday,
+        Saturday
+    };
+
+    bool is_day_in_weekend(DayOfWeek);
+
     struct Day {
         String name;
         int width { 0 };
@@ -138,15 +150,6 @@ private:
     Gfx::IntSize m_month_size[12];
     Mode m_mode { Month };
 
-    enum class DayOfWeek {
-        Sunday,
-        Monday,
-        Tuesday,
-        Wednesday,
-        Thursday,
-        Friday,
-        Saturday
-    };
     DayOfWeek m_first_day_of_week { DayOfWeek::Sunday };
     DayOfWeek m_first_day_of_weekend { DayOfWeek::Saturday };
     int m_weekend_length { 2 };
