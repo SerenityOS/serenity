@@ -1396,15 +1396,13 @@ void FlexFormattingContext::copy_dimensions_from_flex_items_to_boxes()
 // https://drafts.csswg.org/css-flexbox-1/#intrinsic-sizes
 void FlexFormattingContext::determine_intrinsic_size_of_flex_container()
 {
-    float main_size = calculate_intrinsic_main_size_of_flex_container();
-    float cross_size = calculate_intrinsic_cross_size_of_flex_container();
-
-    if (is_row_layout()) {
-        m_flex_container_state.set_content_width(main_size);
-        m_flex_container_state.set_content_height(cross_size);
-    } else {
-        m_flex_container_state.set_content_height(main_size);
-        m_flex_container_state.set_content_width(cross_size);
+    if (m_available_space_for_flex_container->main.is_intrinsic_sizing_constraint()) {
+        float main_size = calculate_intrinsic_main_size_of_flex_container();
+        set_main_size(flex_container(), main_size);
+    }
+    if (m_available_space_for_items->cross.is_intrinsic_sizing_constraint()) {
+        float cross_size = calculate_intrinsic_cross_size_of_flex_container();
+        set_cross_size(flex_container(), cross_size);
     }
 }
 
