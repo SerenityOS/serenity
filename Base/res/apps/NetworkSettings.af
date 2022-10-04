@@ -1,5 +1,6 @@
 [App]
 Name=Network Settings
 Executable=/bin/NetworkSettings
+RequiresRoot=true
 Category=Settings
 Description=Configure network connections
