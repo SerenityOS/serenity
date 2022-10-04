@@ -15,7 +15,7 @@
 #ifdef ENABLE_COMPILETIME_FORMAT_CHECK
 // FIXME: Seems like clang doesn't like calling 'consteval' functions inside 'consteval' functions quite the same way as GCC does,
 //        it seems to entirely forget that it accepted that parameters to a 'consteval' function to begin with.
-#    if defined(__clang__) || defined(__CLION_IDE__) || defined(__CLION_IDE_)
+#    if defined(AK_COMPILER_CLANG) || defined(__CLION_IDE__) || defined(__CLION_IDE_)
 #        undef ENABLE_COMPILETIME_FORMAT_CHECK
 #    endif
 #endif

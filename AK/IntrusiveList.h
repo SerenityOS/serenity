@@ -168,7 +168,7 @@ public:
 
     // Note: For some reason, clang does not consider `member` as declared here, and as declared above (`SubstitutedIntrusiveListNode<T, Container> T::*`)
     //       to be of equal types. so for now, just make the members public on clang.
-#ifndef __clang__
+#if !defined(AK_COMPILER_CLANG)
 private:
     template<class T_, typename Container_, SubstitutedIntrusiveListNode<T_, Container_> T_::*member>
     friend class ::AK::Detail::IntrusiveList;

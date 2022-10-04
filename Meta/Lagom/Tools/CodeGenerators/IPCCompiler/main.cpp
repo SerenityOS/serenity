@@ -751,7 +751,7 @@ public:
 private:
 };
 
-#ifdef __clang__
+#if defined(AK_COMPILER_CLANG)
 #pragma clang diagnostic pop
 #endif)~~~");
 }
@@ -781,7 +781,7 @@ void build(StringBuilder& builder, Vector<Endpoint> const& endpoints)
 #include <LibIPC/Message.h>
 #include <LibIPC/Stub.h>
 
-#ifdef __clang__
+#if defined(AK_COMPILER_CLANG)
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdefaulted-function-deleted"
 #endif)~~~");

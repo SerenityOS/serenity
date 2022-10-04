@@ -11,7 +11,7 @@
 template<Unsigned IntType>
 inline constexpr int popcount(IntType value)
 {
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(AK_COMPILER_CLANG) || defined(AK_COMPILER_GCC)
     static_assert(sizeof(IntType) <= sizeof(unsigned long long));
     if constexpr (sizeof(IntType) <= sizeof(unsigned int))
         return __builtin_popcount(value);
@@ -39,7 +39,7 @@ inline constexpr int popcount(IntType value)
 template<Unsigned IntType>
 inline constexpr int count_trailing_zeroes(IntType value)
 {
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(AK_COMPILER_CLANG) || defined(AK_COMPILER_GCC)
     static_assert(sizeof(IntType) <= sizeof(unsigned long long));
     if constexpr (sizeof(IntType) <= sizeof(unsigned int))
         return __builtin_ctz(value);
@@ -77,7 +77,7 @@ inline constexpr int count_trailing_zeroes_safe(IntType value)
 template<Unsigned IntType>
 inline constexpr int count_leading_zeroes(IntType value)
 {
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(AK_COMPILER_CLANG) || defined(AK_COMPILER_GCC)
     static_assert(sizeof(IntType) <= sizeof(unsigned long long));
     if constexpr (sizeof(IntType) <= sizeof(unsigned int))
         return __builtin_clz(value) - (32 - (8 * sizeof(IntType)));
@@ -114,7 +114,7 @@ inline constexpr int count_leading_zeroes_safe(IntType value)
 template<Integral IntType>
 inline constexpr int bit_scan_forward(IntType value)
 {
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(AK_COMPILER_CLANG) || defined(AK_COMPILER_GCC)
     static_assert(sizeof(IntType) <= sizeof(unsigned long long));
     if constexpr (sizeof(IntType) <= sizeof(unsigned int))
         return __builtin_ffs(value);
