@@ -28,6 +28,7 @@
 #include <LibWeb/HTML/Parser/HTMLParser.h>
 #include <LibWeb/HTML/Parser/HTMLToken.h>
 #include <LibWeb/HTML/Window.h>
+#include <LibWeb/HighResolutionTime/CoarsenTime.h>
 #include <LibWeb/Infra/CharacterTypes.h>
 #include <LibWeb/Namespace.h>
 #include <LibWeb/SVG/TagNames.h>
@@ -238,7 +239,7 @@ void HTMLParser::the_end()
     // 6. Queue a global task on the DOM manipulation task source given the Document's relevant global object to run the following substeps:
     old_queue_global_task_with_document(HTML::Task::Source::DOMManipulation, *m_document, [document = m_document]() mutable {
         // 1. Set the Document's load timing info's DOM content loaded event start time to the current high resolution time given the Document's relevant global object.
-        document->load_timing_info().dom_content_loaded_event_start_time = main_thread_event_loop().unsafe_shared_current_time();
+        document->load_timing_info().dom_content_loaded_event_start_time = HighResolutionTime::unsafe_shared_current_time();
 
         // 2. Fire an event named DOMContentLoaded at the Document object, with its bubbles attribute initialized to true.
         auto content_loaded_event = DOM::Event::create(document->realm(), HTML::EventNames::DOMContentLoaded);
@@ -246,7 +247,7 @@ void HTMLParser::the_end()
         document->dispatch_event(*content_loaded_event);
 
         // 3. Set the Document's load timing info's DOM content loaded event end time to the current high resolution time given the Document's relevant global object.
-        document->load_timing_info().dom_content_loaded_event_end_time = main_thread_event_loop().unsafe_shared_current_time();
+        document->load_timing_info().dom_content_loaded_event_end_time = HighResolutionTime::unsafe_shared_current_time();
 
         // FIXME: 4. Enable the client message queue of the ServiceWorkerContainer object whose associated service worker client is the Document object's relevant settings object.
 
@@ -277,7 +278,7 @@ void HTMLParser::the_end()
         JS::NonnullGCPtr<Window> window = document->window();
 
         // 4. Set the Document's load timing info's load event start time to the current high resolution time given window.
-        document->load_timing_info().load_event_start_time = main_thread_event_loop().unsafe_shared_current_time();
+        document->load_timing_info().load_event_start_time = HighResolutionTime::unsafe_shared_current_time();
 
         // 5. Fire an event named load at window, with legacy target override flag set.
         // FIXME: The legacy target override flag is currently set by a virtual override of dispatch_event()
@@ -289,7 +290,7 @@ void HTMLParser::the_end()
         // FIXME: 7. Set the Document object's navigation id to null.
 
         // 8. Set the Document's load timing info's load event end time to the current high resolution time given window.
-        document->load_timing_info().load_event_end_time = main_thread_event_loop().unsafe_shared_current_time();
+        document->load_timing_info().load_event_end_time = HighResolutionTime::unsafe_shared_current_time();
 
         // 9. Assert: Document's page showing is false.
         VERIFY(!document->page_showing());
