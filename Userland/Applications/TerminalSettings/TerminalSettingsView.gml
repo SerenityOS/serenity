@@ -59,7 +59,7 @@
     }
 
     @GUI::GroupBox {
-        title: "Cursor settings"
+        title: "Cursor Settings"
         preferred_height: "fit"
         layout: @GUI::VerticalBoxLayout {
             margins: [16, 8, 8]

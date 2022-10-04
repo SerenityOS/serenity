@@ -59,7 +59,7 @@
     }
 
     @GUI::GroupBox {
-        title: "Test input"
+        title: "Test Input"
         layout: @GUI::HorizontalBoxLayout {
             margins: [16, 8, 8]
             spacing: 16

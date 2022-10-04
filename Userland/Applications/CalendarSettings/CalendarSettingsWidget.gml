@@ -6,7 +6,7 @@
     }
 
     @GUI::GroupBox {
-        title: "Preferred first day of week"
+        title: "Preferred First Day of Week"
         fixed_height: 72
         layout: @GUI::VerticalBoxLayout {
             margins: [6]
@@ -94,7 +94,7 @@
     }
 
     @GUI::GroupBox {
-        title: "Default view"
+        title: "Default View"
         fixed_height: 72
         layout: @GUI::VerticalBoxLayout {
             margins: [6]
