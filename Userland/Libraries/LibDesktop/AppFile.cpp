@@ -102,6 +102,11 @@ bool AppFile::run_in_terminal() const
     return m_config->read_bool_entry("App", "RunInTerminal", false);
 }
 
+bool AppFile::requires_root() const
+{
+    return m_config->read_bool_entry("App", "RequiresRoot", false);
+}
+
 Vector<String> AppFile::launcher_mime_types() const
 {
     Vector<String> mime_types;

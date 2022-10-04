@@ -32,6 +32,7 @@ public:
     String icon_path() const;
     GUI::Icon icon() const;
     bool run_in_terminal() const;
+    bool requires_root() const;
     Vector<String> launcher_mime_types() const;
     Vector<String> launcher_file_types() const;
     Vector<String> launcher_protocols() const;
