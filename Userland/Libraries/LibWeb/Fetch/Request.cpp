@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/ScopeGuard.h>
 #include <AK/URLParser.h>
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/DOM/AbortSignal.h>
@@ -20,7 +19,7 @@
 
 namespace Web::Fetch {
 
-Request::Request(JS::Realm& realm, NonnullOwnPtr<Infrastructure::Request> request)
+Request::Request(JS::Realm& realm, NonnullRefPtr<Infrastructure::Request> request)
     : PlatformObject(realm)
     , m_request(move(request))
 {
@@ -72,7 +71,7 @@ Optional<Infrastructure::Body&> Request::body_impl()
 }
 
 // https://fetch.spec.whatwg.org/#request-create
-JS::NonnullGCPtr<Request> Request::create(NonnullOwnPtr<Infrastructure::Request> request, Headers::Guard guard, JS::Realm& realm)
+JS::NonnullGCPtr<Request> Request::create(NonnullRefPtr<Infrastructure::Request> request, Headers::Guard guard, JS::Realm& realm)
 {
     // Copy a NonnullRefPtr to the request's header list before request is being move()'d.
     auto request_reader_list = request->header_list();
@@ -97,16 +96,10 @@ JS::NonnullGCPtr<Request> Request::create(NonnullOwnPtr<Infrastructure::Request>
 WebIDL::ExceptionOr<JS::NonnullGCPtr<Request>> Request::construct_impl(JS::Realm& realm, RequestInfo const& input, RequestInit const& init)
 {
     // Referred to as 'this' in the spec.
-    auto request_object = JS::NonnullGCPtr { *realm.heap().allocate<Request>(realm, realm, make<Infrastructure::Request>()) };
+    auto request_object = JS::NonnullGCPtr { *realm.heap().allocate<Request>(realm, realm, Infrastructure::Request::create()) };
 
     // 1. Let request be null.
-    Infrastructure::Request const* input_request = nullptr;
-
-    // Cleanup for the special case where we create a temporary Request ourselves
-    // instead of just taking a pointer from something else.
-    ArmedScopeGuard delete_input_request { [&] {
-        delete input_request;
-    } };
+    RefPtr<Infrastructure::Request> input_request;
 
     // 2. Let fallbackMode be null.
     Optional<Infrastructure::Request::Mode> fallback_mode;
@@ -131,9 +124,8 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Request>> Request::construct_impl(JS::Realm
             return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "Input URL must not include credentials"sv };
 
         // 4. Set request to a new request whose URL is parsedURL.
-        auto* new_request = new Infrastructure::Request();
-        new_request->set_url(move(parsed_url));
-        input_request = new_request;
+        input_request = Infrastructure::Request::create();
+        input_request->set_url(move(parsed_url));
 
         // 5. Set fallbackMode to "cors".
         fallback_mode = Infrastructure::Request::Mode::CORS;
@@ -144,8 +136,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Request>> Request::construct_impl(JS::Realm
         VERIFY(input.has<JS::Handle<Request>>());
 
         // 2. Set request to input’s request.
-        input_request = &input.get<JS::Handle<Request>>()->request();
-        delete_input_request.disarm();
+        input_request = input.get<JS::Handle<Request>>()->request();
 
         // 3. Set signal to input’s signal.
         input_signal = input.get<JS::Handle<Request>>()->signal();
@@ -175,114 +166,114 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Request>> Request::construct_impl(JS::Realm
     // 12. Set request to a new request with the following properties:
     // NOTE: This is done at the beginning as the 'this' value Request object
     //       cannot exist with a null Infrastructure::Request.
-    auto& request = request_object->request();
+    auto request = request_object->request();
 
     // URL
     //     request’s URL.
-    request.set_url(input_request->url());
+    request->set_url(input_request->url());
 
     // method
     //     request’s method.
-    request.set_method(TRY_OR_RETURN_OOM(realm, ByteBuffer::copy(request.method())));
+    request->set_method(TRY_OR_RETURN_OOM(realm, ByteBuffer::copy(request->method())));
 
     // header list
     //     A copy of request’s header list.
     auto header_list_copy = make_ref_counted<Infrastructure::HeaderList>();
-    for (auto& header : *request.header_list())
+    for (auto& header : *request->header_list())
         TRY_OR_RETURN_OOM(realm, header_list_copy->append(header));
-    request.set_header_list(move(header_list_copy));
+    request->set_header_list(move(header_list_copy));
 
     // unsafe-request flag
     //     Set.
-    request.set_unsafe_request(true);
+    request->set_unsafe_request(true);
 
     // client
     //     This’s relevant settings object.
-    request.set_client(&HTML::relevant_settings_object(*request_object));
+    request->set_client(&HTML::relevant_settings_object(*request_object));
 
     // window
     //     window.
-    request.set_window(window);
+    request->set_window(window);
 
     // priority
     //     request’s priority.
-    request.set_priority(input_request->priority());
+    request->set_priority(input_request->priority());
 
     // origin
     //     request’s origin. The propagation of the origin is only significant for navigation requests being handled by a service worker. In this scenario a request can have an origin that is different from the current client.
-    request.set_origin(input_request->origin());
+    request->set_origin(input_request->origin());
 
     // referrer
     //     request’s referrer.
-    request.set_referrer(input_request->referrer());
+    request->set_referrer(input_request->referrer());
 
     // referrer policy
     //     request’s referrer policy.
-    request.set_referrer_policy(input_request->referrer_policy());
+    request->set_referrer_policy(input_request->referrer_policy());
 
     // mode
     //     request’s mode.
-    request.set_mode(input_request->mode());
+    request->set_mode(input_request->mode());
 
     // credentials mode
     //     request’s credentials mode.
-    request.set_credentials_mode(input_request->credentials_mode());
+    request->set_credentials_mode(input_request->credentials_mode());
 
     // cache mode
     //     request’s cache mode.
-    request.set_cache_mode(input_request->cache_mode());
+    request->set_cache_mode(input_request->cache_mode());
 
     // redirect mode
     //     request’s redirect mode.
-    request.set_redirect_mode(input_request->redirect_mode());
+    request->set_redirect_mode(input_request->redirect_mode());
 
     // integrity metadata
     //     request’s integrity metadata.
-    request.set_integrity_metadata(input_request->integrity_metadata());
+    request->set_integrity_metadata(input_request->integrity_metadata());
 
     // keepalive
     //     request’s keepalive.
-    request.set_keepalive(input_request->keepalive());
+    request->set_keepalive(input_request->keepalive());
 
     // reload-navigation flag
     //     request’s reload-navigation flag.
-    request.set_reload_navigation(input_request->reload_navigation());
+    request->set_reload_navigation(input_request->reload_navigation());
 
     // history-navigation flag
     //     request’s history-navigation flag.
-    request.set_history_navigation(input_request->history_navigation());
+    request->set_history_navigation(input_request->history_navigation());
 
     // URL list
     //     A clone of request’s URL list.
-    request.set_url_list(input_request->url_list());
+    request->set_url_list(input_request->url_list());
 
     // initiator type
     //     "fetch".
-    request.set_initiator_type(Infrastructure::Request::InitiatorType::Fetch);
+    request->set_initiator_type(Infrastructure::Request::InitiatorType::Fetch);
 
     // 13. If init is not empty, then:
     if (!init.is_empty()) {
         // 1. If request’s mode is "navigate", then set it to "same-origin".
-        if (request.mode() == Infrastructure::Request::Mode::Navigate)
-            request.set_mode(Infrastructure::Request::Mode::SameOrigin);
+        if (request->mode() == Infrastructure::Request::Mode::Navigate)
+            request->set_mode(Infrastructure::Request::Mode::SameOrigin);
 
         // 2. Unset request’s reload-navigation flag.
-        request.set_reload_navigation(false);
+        request->set_reload_navigation(false);
 
         // 3. Unset request’s history-navigation flag.
-        request.set_history_navigation(false);
+        request->set_history_navigation(false);
 
         // 4. Set request’s origin to "client".
-        request.set_origin(Infrastructure::Request::Origin::Client);
+        request->set_origin(Infrastructure::Request::Origin::Client);
 
         // 5. Set request’s referrer to "client".
-        request.set_referrer(Infrastructure::Request::Referrer::Client);
+        request->set_referrer(Infrastructure::Request::Referrer::Client);
 
         // 6. Set request’s referrer policy to the empty string.
-        request.set_referrer_policy({});
+        request->set_referrer_policy({});
 
         // 7. Set request’s URL to request’s current URL.
-        request.set_url(request.current_url());
+        request->set_url(request->current_url());
 
         // 8. Set request’s URL list to « request’s URL ».
         // NOTE: This is done implicitly by assigning the initial URL above.
@@ -295,7 +286,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Request>> Request::construct_impl(JS::Realm
 
         // 2. If referrer is the empty string, then set request’s referrer to "no-referrer".
         if (referrer.is_empty()) {
-            request.set_referrer(Infrastructure::Request::Referrer::NoReferrer);
+            request->set_referrer(Infrastructure::Request::Referrer::NoReferrer);
         }
         // 3. Otherwise:
         else {
@@ -312,18 +303,18 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Request>> Request::construct_impl(JS::Realm
             // then set request’s referrer to "client".
             // FIXME: Actually use the given origin once we have https://url.spec.whatwg.org/#concept-url-origin.
             if ((parsed_referrer.scheme() == "about"sv && parsed_referrer.path() == "client"sv) || !HTML::Origin().is_same_origin(origin)) {
-                request.set_referrer(Infrastructure::Request::Referrer::Client);
+                request->set_referrer(Infrastructure::Request::Referrer::Client);
             }
             // 4. Otherwise, set request’s referrer to parsedReferrer.
             else {
-                request.set_referrer(move(parsed_referrer));
+                request->set_referrer(move(parsed_referrer));
             }
         }
     }
 
     // 15. If init["referrerPolicy"] exists, then set request’s referrer policy to it.
     if (init.referrer_policy.has_value())
-        request.set_referrer_policy(from_bindings_enum(*init.referrer_policy));
+        request->set_referrer_policy(from_bindings_enum(*init.referrer_policy));
 
     // 16. Let mode be init["mode"] if it exists, and fallbackMode otherwise.
     auto mode = init.mode.has_value()
@@ -336,31 +327,31 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Request>> Request::construct_impl(JS::Realm
 
     // 18. If mode is non-null, set request’s mode to mode.
     if (mode.has_value())
-        request.set_mode(*mode);
+        request->set_mode(*mode);
 
     // 19. If init["credentials"] exists, then set request’s credentials mode to it.
     if (init.credentials.has_value())
-        request.set_credentials_mode(from_bindings_enum(*init.credentials));
+        request->set_credentials_mode(from_bindings_enum(*init.credentials));
 
     // 20. If init["cache"] exists, then set request’s cache mode to it.
     if (init.cache.has_value())
-        request.set_cache_mode(from_bindings_enum(*init.cache));
+        request->set_cache_mode(from_bindings_enum(*init.cache));
 
     // 21. If request’s cache mode is "only-if-cached" and request’s mode is not "same-origin", then throw a TypeError.
-    if (request.cache_mode() == Infrastructure::Request::CacheMode::OnlyIfCached && request.mode() != Infrastructure::Request::Mode::SameOrigin)
+    if (request->cache_mode() == Infrastructure::Request::CacheMode::OnlyIfCached && request->mode() != Infrastructure::Request::Mode::SameOrigin)
         return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "Mode must be 'same-origin' when cache mode is 'only-if-cached'"sv };
 
     // 22. If init["redirect"] exists, then set request’s redirect mode to it.
     if (init.redirect.has_value())
-        request.set_redirect_mode(from_bindings_enum(*init.redirect));
+        request->set_redirect_mode(from_bindings_enum(*init.redirect));
 
     // 23. If init["integrity"] exists, then set request’s integrity metadata to it.
     if (init.integrity.has_value())
-        request.set_integrity_metadata(*init.integrity);
+        request->set_integrity_metadata(*init.integrity);
 
     // 24. If init["keepalive"] exists, then set request’s keepalive to it.
     if (init.keepalive.has_value())
-        request.set_keepalive(*init.keepalive);
+        request->set_keepalive(*init.keepalive);
 
     // 25. If init["method"] exists, then:
     if (init.method.has_value()) {
@@ -377,7 +368,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Request>> Request::construct_impl(JS::Realm
         method = TRY_OR_RETURN_OOM(realm, Infrastructure::normalize_method(method.bytes()));
 
         // 4. Set request’s method to method.
-        request.set_method(MUST(ByteBuffer::copy(method.bytes())));
+        request->set_method(MUST(ByteBuffer::copy(method.bytes())));
     }
 
     // 26. If init["signal"] exists, then set signal to it.
@@ -399,13 +390,13 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Request>> Request::construct_impl(JS::Realm
 
     // 30. Set this’s headers to a new Headers object with this’s relevant Realm, whose header list is request’s header list and guard is "request".
     request_object->m_headers = realm.heap().allocate<Headers>(realm, realm);
-    request_object->m_headers->set_header_list(request.header_list());
+    request_object->m_headers->set_header_list(request->header_list());
     request_object->m_headers->set_guard(Headers::Guard::Request);
 
     // 31. If this’s request’s mode is "no-cors", then:
-    if (request_object->request().mode() == Infrastructure::Request::Mode::NoCORS) {
+    if (request_object->request()->mode() == Infrastructure::Request::Mode::NoCORS) {
         // 1. If this’s request’s method is not a CORS-safelisted method, then throw a TypeError.
-        if (!Infrastructure::is_cors_safelisted_method(request_object->request().method()))
+        if (!Infrastructure::is_cors_safelisted_method(request_object->request()->method()))
             return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "Method must be one of GET, HEAD, or POST"sv };
 
         // 2. Set this’s headers’s guard to "request-no-cors".
@@ -438,11 +429,11 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Request>> Request::construct_impl(JS::Realm
 
     // 33. Let inputBody be input’s request’s body if input is a Request object; otherwise null.
     auto const& input_body = input.has<JS::Handle<Request>>()
-        ? input.get<JS::Handle<Request>>()->request().body().get<Infrastructure::Body>()
+        ? input.get<JS::Handle<Request>>()->request()->body().get<Infrastructure::Body>()
         : Optional<Infrastructure::Body> {};
 
     // 34. If either init["body"] exists and is non-null or inputBody is non-null, and request’s method is `GET` or `HEAD`, then throw a TypeError.
-    if (((init.body.has_value() && (*init.body).has_value()) || input_body.has_value()) && StringView { request.method() }.is_one_of("GET"sv, "HEAD"sv))
+    if (((init.body.has_value() && (*init.body).has_value()) || input_body.has_value()) && StringView { request->method() }.is_one_of("GET"sv, "HEAD"sv))
         return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "Method must not be GET or HEAD when body is provided"sv };
 
     // 35. Let initBody be null.
@@ -451,7 +442,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Request>> Request::construct_impl(JS::Realm
     // 36. If init["body"] exists and is non-null, then:
     if (init.body.has_value() && (*init.body).has_value()) {
         // 1. Let bodyWithType be the result of extracting init["body"], with keepalive set to request’s keepalive.
-        auto body_with_type = TRY(extract_body(realm, (*init.body).value(), request.keepalive()));
+        auto body_with_type = TRY(extract_body(realm, (*init.body).value(), request->keepalive()));
 
         // 2. Set initBody to bodyWithType’s body.
         init_body = move(body_with_type.body);
@@ -474,11 +465,11 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Request>> Request::construct_impl(JS::Realm
             return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "Body without source requires 'duplex' value to be set"sv };
 
         // 2. If this’s request’s mode is neither "same-origin" nor "cors", then throw a TypeError.
-        if (request_object->request().mode() != Infrastructure::Request::Mode::SameOrigin && request_object->request().mode() != Infrastructure::Request::Mode::CORS)
+        if (request_object->request()->mode() != Infrastructure::Request::Mode::SameOrigin && request_object->request()->mode() != Infrastructure::Request::Mode::CORS)
             return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "Request mode must be 'same-origin' or 'cors'"sv };
 
         // 3. Set this’s request’s use-CORS-preflight flag.
-        request_object->request().set_use_cors_preflight(true);
+        request_object->request()->set_use_cors_preflight(true);
     }
 
     // 39. Let finalBody be inputOrInitBody.
@@ -495,7 +486,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Request>> Request::construct_impl(JS::Realm
 
     // 41. Set this’s request’s body to finalBody.
     if (final_body.has_value())
-        request_object->request().set_body(*final_body);
+        request_object->request()->set_body(*final_body);
 
     return JS::NonnullGCPtr { *request_object };
 }

@@ -163,8 +163,8 @@ void BrowsingContextContainer::shared_attribute_processing_steps_for_iframe_and_
     }
 
     // 5. Let resource be a new request whose URL is url and whose referrer policy is the current state of element's referrerpolicy content attribute.
-    auto resource = Fetch::Infrastructure::Request();
-    resource.set_url(url);
+    auto resource = Fetch::Infrastructure::Request::create();
+    resource->set_url(url);
     // FIXME: Set the referrer policy.
 
     // AD-HOC:
@@ -191,7 +191,7 @@ void BrowsingContextContainer::shared_attribute_processing_steps_for_iframe_and_
 }
 
 // https://html.spec.whatwg.org/multipage/iframe-embed-object.html#navigate-an-iframe-or-frame
-void BrowsingContextContainer::navigate_an_iframe_or_frame(Fetch::Infrastructure::Request resource)
+void BrowsingContextContainer::navigate_an_iframe_or_frame(NonnullRefPtr<Fetch::Infrastructure::Request> resource)
 {
     // 1. Let historyHandling be "default".
     auto history_handling = HistoryHandlingBehavior::Default;

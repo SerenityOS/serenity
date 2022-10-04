@@ -14,6 +14,11 @@ Request::Request()
 {
 }
 
+NonnullRefPtr<Request> Request::create()
+{
+    return adopt_ref(*new Request());
+}
+
 // https://fetch.spec.whatwg.org/#concept-request-url
 AK::URL const& Request::url() const
 {
@@ -164,15 +169,50 @@ ErrorOr<ByteBuffer> Request::byte_serialize_origin() const
 }
 
 // https://fetch.spec.whatwg.org/#concept-request-clone
-WebIDL::ExceptionOr<NonnullOwnPtr<Request>> Request::clone() const
+WebIDL::ExceptionOr<NonnullRefPtr<Request>> Request::clone() const
 {
     // To clone a request request, run these steps:
 
     // 1. Let newRequest be a copy of request, except for its body.
-    BodyType tmp_body;
-    swap(tmp_body, const_cast<BodyType&>(m_body));
-    auto new_request = make<Infrastructure::Request>(*this);
-    swap(tmp_body, const_cast<BodyType&>(m_body));
+    auto new_request = Infrastructure::Request::create();
+    new_request->set_method(m_method);
+    new_request->set_local_urls_only(m_local_urls_only);
+    for (auto const& header : *m_header_list)
+        MUST(new_request->header_list()->append(header));
+    new_request->set_unsafe_request(m_unsafe_request);
+    new_request->set_client(m_client);
+    new_request->set_reserved_client(m_reserved_client);
+    new_request->set_replaces_client_id(m_replaces_client_id);
+    new_request->set_window(m_window);
+    new_request->set_keepalive(m_keepalive);
+    new_request->set_initiator_type(m_initiator_type);
+    new_request->set_service_workers_mode(m_service_workers_mode);
+    new_request->set_initiator(m_initiator);
+    new_request->set_destination(m_destination);
+    new_request->set_priority(m_priority);
+    new_request->set_origin(m_origin);
+    new_request->set_policy_container(m_policy_container);
+    new_request->set_referrer(m_referrer);
+    new_request->set_referrer_policy(m_referrer_policy);
+    new_request->set_mode(m_mode);
+    new_request->set_use_cors_preflight(m_use_cors_preflight);
+    new_request->set_credentials_mode(m_credentials_mode);
+    new_request->set_use_url_credentials(m_use_url_credentials);
+    new_request->set_cache_mode(m_cache_mode);
+    new_request->set_redirect_mode(m_redirect_mode);
+    new_request->set_integrity_metadata(m_integrity_metadata);
+    new_request->set_cryptographic_nonce_metadata(m_cryptographic_nonce_metadata);
+    new_request->set_parser_metadata(m_parser_metadata);
+    new_request->set_reload_navigation(m_reload_navigation);
+    new_request->set_history_navigation(m_history_navigation);
+    new_request->set_user_activation(m_user_activation);
+    new_request->set_render_blocking(m_render_blocking);
+    new_request->set_url_list(m_url_list);
+    new_request->set_redirect_count(m_redirect_count);
+    new_request->set_response_tainting(m_response_tainting);
+    new_request->set_prevent_no_cache_cache_control_header_modification(m_prevent_no_cache_cache_control_header_modification);
+    new_request->set_done(m_done);
+    new_request->set_timing_allow_failed(m_timing_allow_failed);
 
     // 2. If request’s body is non-null, set newRequest’s body to the result of cloning request’s body.
     if (auto const* body = m_body.get_pointer<Body>())

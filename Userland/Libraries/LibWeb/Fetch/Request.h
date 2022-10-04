@@ -12,6 +12,7 @@
 #include <LibWeb/Fetch/Body.h>
 #include <LibWeb/Fetch/BodyInit.h>
 #include <LibWeb/Fetch/Headers.h>
+#include <LibWeb/Fetch/Infrastructure/HTTP/Requests.h>
 #include <LibWeb/Forward.h>
 
 namespace Web::Fetch {
@@ -63,7 +64,7 @@ class Request final
     WEB_PLATFORM_OBJECT(Request, Bindings::PlatformObject);
 
 public:
-    static JS::NonnullGCPtr<Request> create(NonnullOwnPtr<Infrastructure::Request>, Headers::Guard, JS::Realm&);
+    static JS::NonnullGCPtr<Request> create(NonnullRefPtr<Infrastructure::Request>, Headers::Guard, JS::Realm&);
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<Request>> construct_impl(JS::Realm&, RequestInfo const& input, RequestInit const& init = {});
 
     virtual ~Request() override;
@@ -73,8 +74,7 @@ public:
     virtual Optional<Infrastructure::Body&> body_impl() override;
     virtual Optional<Infrastructure::Body const&> body_impl() const override;
 
-    [[nodiscard]] Infrastructure::Request& request() { return *m_request; }
-    [[nodiscard]] Infrastructure::Request const& request() const { return *m_request; }
+    [[nodiscard]] NonnullRefPtr<Infrastructure::Request> request() const { return m_request; }
 
     // JS API functions
     [[nodiscard]] String method() const;
@@ -95,13 +95,13 @@ public:
     [[nodiscard]] WebIDL::ExceptionOr<JS::NonnullGCPtr<Request>> clone() const;
 
 private:
-    Request(JS::Realm&, NonnullOwnPtr<Infrastructure::Request>);
+    Request(JS::Realm&, NonnullRefPtr<Infrastructure::Request>);
 
     virtual void visit_edges(Cell::Visitor&) override;
 
     // https://fetch.spec.whatwg.org/#concept-request-request
     // A Request object has an associated request (a request).
-    NonnullOwnPtr<Infrastructure::Request> m_request;
+    NonnullRefPtr<Infrastructure::Request> m_request;
 
     // https://fetch.spec.whatwg.org/#request-headers
     // A Request object also has an associated headers (null or a Headers object), initially null.

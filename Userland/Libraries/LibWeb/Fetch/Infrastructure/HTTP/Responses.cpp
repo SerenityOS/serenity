@@ -14,20 +14,25 @@ Response::Response()
 {
 }
 
+NonnullRefPtr<Response> Response::create()
+{
+    return adopt_ref(*new Response());
+}
+
 // https://fetch.spec.whatwg.org/#ref-for-concept-network-error%E2%91%A3
 // A network error is a response whose status is always 0, status message is always
 // the empty byte sequence, header list is always empty, and body is always null.
 
-NonnullOwnPtr<Response> Response::aborted_network_error()
+NonnullRefPtr<Response> Response::aborted_network_error()
 {
     auto response = network_error();
     response->set_aborted(true);
     return response;
 }
 
-NonnullOwnPtr<Response> Response::network_error()
+NonnullRefPtr<Response> Response::network_error()
 {
-    auto response = make<Response>();
+    auto response = Response::create();
     response->set_status(0);
     response->set_type(Type::Error);
     VERIFY(!response->body().has_value());
@@ -83,17 +88,28 @@ ErrorOr<Optional<AK::URL>> Response::location_url(Optional<String> const& reques
 }
 
 // https://fetch.spec.whatwg.org/#concept-response-clone
-WebIDL::ExceptionOr<NonnullOwnPtr<Response>> Response::clone() const
+WebIDL::ExceptionOr<NonnullRefPtr<Response>> Response::clone() const
 {
     // To clone a response response, run these steps:
 
     // FIXME: 1. If response is a filtered response, then return a new identical filtered response whose internal response is a clone of response’s internal response.
 
     // 2. Let newResponse be a copy of response, except for its body.
-    Optional<Body> tmp_body;
-    swap(tmp_body, const_cast<Optional<Body>&>(m_body));
-    auto new_response = make<Infrastructure::Response>(*this);
-    swap(tmp_body, const_cast<Optional<Body>&>(m_body));
+    auto new_response = Infrastructure::Response::create();
+    new_response->set_type(m_type);
+    new_response->set_aborted(m_aborted);
+    new_response->set_url_list(m_url_list);
+    new_response->set_status(m_status);
+    new_response->set_status_message(m_status_message);
+    for (auto const& header : *m_header_list)
+        MUST(new_response->header_list()->append(header));
+    new_response->set_cache_state(m_cache_state);
+    new_response->set_cors_exposed_header_name_list(m_cors_exposed_header_name_list);
+    new_response->set_range_requested(m_range_requested);
+    new_response->set_request_includes_credentials(m_request_includes_credentials);
+    new_response->set_timing_allow_passed(m_timing_allow_passed);
+    new_response->set_body_info(m_body_info);
+    // FIXME: service worker timing info
 
     // 3. If response’s body is non-null, then set newResponse’s body to the result of cloning response’s body.
     if (m_body.has_value())
@@ -103,8 +119,8 @@ WebIDL::ExceptionOr<NonnullOwnPtr<Response>> Response::clone() const
     return new_response;
 }
 
-FilteredResponse::FilteredResponse(Response& internal_response)
-    : m_internal_response(internal_response)
+FilteredResponse::FilteredResponse(NonnullRefPtr<Response> internal_response)
+    : m_internal_response(move(internal_response))
 {
 }
 
@@ -112,69 +128,69 @@ FilteredResponse::~FilteredResponse()
 {
 }
 
-ErrorOr<NonnullOwnPtr<BasicFilteredResponse>> BasicFilteredResponse::create(Response& internal_response)
+ErrorOr<NonnullRefPtr<BasicFilteredResponse>> BasicFilteredResponse::create(NonnullRefPtr<Response> internal_response)
 {
     // A basic filtered response is a filtered response whose type is "basic" and header list excludes
     // any headers in internal response’s header list whose name is a forbidden response-header name.
     auto header_list = make_ref_counted<HeaderList>();
-    for (auto const& header : *internal_response.header_list()) {
+    for (auto const& header : *internal_response->header_list()) {
         if (!is_forbidden_response_header_name(header.name))
             TRY(header_list->append(header));
     }
 
-    return adopt_own(*new BasicFilteredResponse(internal_response, move(header_list)));
+    return adopt_ref(*new BasicFilteredResponse(internal_response, move(header_list)));
 }
 
-BasicFilteredResponse::BasicFilteredResponse(Response& internal_response, NonnullRefPtr<HeaderList> header_list)
-    : FilteredResponse(internal_response)
+BasicFilteredResponse::BasicFilteredResponse(NonnullRefPtr<Response> internal_response, NonnullRefPtr<HeaderList> header_list)
+    : FilteredResponse(move(internal_response))
     , m_header_list(move(header_list))
 {
 }
 
-ErrorOr<NonnullOwnPtr<CORSFilteredResponse>> CORSFilteredResponse::create(Response& internal_response)
+ErrorOr<NonnullRefPtr<CORSFilteredResponse>> CORSFilteredResponse::create(NonnullRefPtr<Response> internal_response)
 {
     // A CORS filtered response is a filtered response whose type is "cors" and header list excludes
     // any headers in internal response’s header list whose name is not a CORS-safelisted response-header
     // name, given internal response’s CORS-exposed header-name list.
     Vector<ReadonlyBytes> cors_exposed_header_name_list;
-    for (auto const& header_name : internal_response.cors_exposed_header_name_list())
+    for (auto const& header_name : internal_response->cors_exposed_header_name_list())
         cors_exposed_header_name_list.append(header_name.span());
 
     auto header_list = make_ref_counted<HeaderList>();
-    for (auto const& header : *internal_response.header_list()) {
+    for (auto const& header : *internal_response->header_list()) {
         if (is_cors_safelisted_response_header_name(header.name, cors_exposed_header_name_list))
             TRY(header_list->append(header));
     }
 
-    return adopt_own(*new CORSFilteredResponse(internal_response, move(header_list)));
+    return adopt_ref(*new CORSFilteredResponse(internal_response, move(header_list)));
 }
 
-CORSFilteredResponse::CORSFilteredResponse(Response& internal_response, NonnullRefPtr<HeaderList> header_list)
-    : FilteredResponse(internal_response)
+CORSFilteredResponse::CORSFilteredResponse(NonnullRefPtr<Response> internal_response, NonnullRefPtr<HeaderList> header_list)
+    : FilteredResponse(move(internal_response))
     , m_header_list(move(header_list))
 {
 }
 
-NonnullOwnPtr<OpaqueFilteredResponse> OpaqueFilteredResponse::create(Response& internal_response)
+NonnullRefPtr<OpaqueFilteredResponse> OpaqueFilteredResponse::create(NonnullRefPtr<Response> internal_response)
 {
     // An opaque-redirect filtered response is a filtered response whose type is "opaqueredirect",
     // status is 0, status message is the empty byte sequence, header list is empty, and body is null.
-    return adopt_own(*new OpaqueFilteredResponse(internal_response));
+    return adopt_ref(*new OpaqueFilteredResponse(move(internal_response)));
 }
 
-OpaqueFilteredResponse::OpaqueFilteredResponse(Response& internal_response)
-    : FilteredResponse(internal_response)
+OpaqueFilteredResponse::OpaqueFilteredResponse(NonnullRefPtr<Response> internal_response)
+    : FilteredResponse(move(internal_response))
     , m_header_list(make_ref_counted<HeaderList>())
 {
 }
 
-NonnullOwnPtr<OpaqueRedirectFilteredResponse> OpaqueRedirectFilteredResponse::create(Response& internal_response)
+NonnullRefPtr<OpaqueRedirectFilteredResponse> OpaqueRedirectFilteredResponse::create(NonnullRefPtr<Response> internal_response)
 {
-    return adopt_own(*new OpaqueRedirectFilteredResponse(internal_response));
+    return adopt_ref(*new OpaqueRedirectFilteredResponse(move(internal_response)));
 }
 
-OpaqueRedirectFilteredResponse::OpaqueRedirectFilteredResponse(Response& internal_response)
-    : FilteredResponse(internal_response)
+OpaqueRedirectFilteredResponse::OpaqueRedirectFilteredResponse(NonnullRefPtr<Response> internal_response)
+    : FilteredResponse(move(internal_response))
     , m_header_list(make_ref_counted<HeaderList>())
 {
 }
