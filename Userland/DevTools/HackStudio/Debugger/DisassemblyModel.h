@@ -10,7 +10,7 @@
 #include <AK/Vector.h>
 #include <LibGUI/Model.h>
 #include <LibX86/Instruction.h>
-#include <sys/arch/i386/regs.h>
+#include <sys/arch/regs.h>
 
 namespace Debug {
 

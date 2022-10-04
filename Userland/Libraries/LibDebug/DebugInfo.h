@@ -15,7 +15,7 @@
 #include <LibDebug/Dwarf/DwarfInfo.h>
 #include <LibDebug/Dwarf/LineProgram.h>
 #include <LibELF/Image.h>
-#include <sys/arch/i386/regs.h>
+#include <sys/arch/regs.h>
 
 namespace Debug {
 

@@ -13,7 +13,7 @@
 #include <AK/NonnullRefPtr.h>
 #include <AK/Optional.h>
 #include <AK/OwnPtr.h>
-#include <LibC/sys/arch/i386/regs.h>
+#include <LibC/sys/arch/regs.h>
 #include <LibCore/MappedFile.h>
 #include <LibDebug/DebugInfo.h>
 #include <LibDebug/ProcessInspector.h>

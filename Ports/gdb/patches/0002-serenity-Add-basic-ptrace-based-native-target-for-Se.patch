@@ -129,7 +129,7 @@ index 0000000..034252a
 +#include "regset.h"
 +#include "target.h"
 +
-+#include <sys/arch/i386/regs.h>
++#include <sys/arch/regs.h>
 +#include <sys/ptrace.h>
 +
 +#include "i386-tdep.h"
