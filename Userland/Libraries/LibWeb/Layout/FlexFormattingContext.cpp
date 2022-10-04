@@ -1565,7 +1565,10 @@ float FlexFormattingContext::calculate_intrinsic_cross_size_of_flex_container()
     //        min-content/max-content cross-size contribution among the flex items (respectively), then using that size
     //        as the available space in the cross axis for each of the flex items during layout.
 
-    // HACK: We run steps 7, 9 and 11 from the main algorithm. This gives us *some* cross size information to work with.
+    // HACK: We run steps 5, 7, 9 and 11 from the main algorithm. This gives us *some* cross size information to work with.
+    m_flex_lines.clear();
+    collect_flex_items_into_flex_lines();
+
     for (auto& flex_item : m_flex_items) {
         determine_hypothetical_cross_size_of_item(flex_item, false);
     }
