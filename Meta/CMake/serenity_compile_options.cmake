@@ -29,6 +29,9 @@ add_compile_options(-fstack-protector-strong)
 add_link_options(-fstack-protector-strong)
 add_compile_options(-g1)
 
+# FIXME: Remove this once DWARF revision 5 is supported
+add_compile_options(-gdwarf-4)
+
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     add_compile_options(-Wno-literal-suffix)
     add_compile_options(-Wno-maybe-uninitialized)
