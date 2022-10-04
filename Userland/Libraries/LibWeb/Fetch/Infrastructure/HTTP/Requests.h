@@ -208,6 +208,9 @@ public:
     [[nodiscard]] OriginType const& origin() const { return m_origin; }
     void set_origin(OriginType origin) { m_origin = move(origin); }
 
+    [[nodiscard]] PolicyContainerType const& policy_container() const { return m_policy_container; }
+    void set_policy_container(PolicyContainerType policy_container) { m_policy_container = move(policy_container); }
+
     [[nodiscard]] Mode mode() const { return m_mode; }
     void set_mode(Mode mode) { m_mode = mode; }
 
