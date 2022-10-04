@@ -30,6 +30,7 @@ static bool is_platform_object(Type const& type)
         "Document"sv,
         "DocumentType"sv,
         "EventTarget"sv,
+        "FileList"sv,
         "ImageData"sv,
         "MutationRecord"sv,
         "NamedNodeMap"sv,

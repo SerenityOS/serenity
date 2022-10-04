@@ -7,8 +7,10 @@
 
 #pragma once
 
+#include <LibWeb/FileAPI/FileList.h>
 #include <LibWeb/HTML/FormAssociatedElement.h>
 #include <LibWeb/HTML/HTMLElement.h>
+#include <LibWeb/WebIDL/DOMException.h>
 
 namespace Web::HTML {
 
@@ -62,7 +64,7 @@ public:
     String name() const { return attribute(HTML::AttributeNames::name); }
 
     String value() const;
-    void set_value(String);
+    WebIDL::ExceptionOr<void> set_value(String);
 
     bool checked() const { return m_checked; }
     enum class ChangeSource {
@@ -75,6 +77,15 @@ public:
     void set_checked_binding(bool);
 
     void did_edit_text_node(Badge<BrowsingContext>);
+
+    JS::GCPtr<FileAPI::FileList> files();
+    void set_files(JS::GCPtr<FileAPI::FileList>);
+
+    // NOTE: User interaction
+    // https://html.spec.whatwg.org/multipage/input.html#update-the-file-selection
+    void update_the_file_selection(JS::NonnullGCPtr<FileAPI::FileList>);
+
+    WebIDL::ExceptionOr<void> show_picker();
 
     // ^EventTarget
     // https://html.spec.whatwg.org/multipage/interaction.html#the-tabindex-attribute:the-input-element
@@ -134,6 +145,9 @@ private:
     // https://html.spec.whatwg.org/multipage/input.html#the-input-element:legacy-pre-activation-behavior
     bool m_before_legacy_pre_activation_behavior_checked { false };
     JS::GCPtr<HTMLInputElement> m_legacy_pre_activation_behavior_checked_element_in_group;
+
+    // https://html.spec.whatwg.org/multipage/input.html#concept-input-type-file-selected
+    JS::GCPtr<FileAPI::FileList> m_selected_files;
 
     TypeAttributeState m_type { TypeAttributeState::Text };
     String m_value;

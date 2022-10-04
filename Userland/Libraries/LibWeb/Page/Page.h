@@ -115,6 +115,9 @@ public:
 
     virtual void request_file(NonnullRefPtr<FileRequest>&) = 0;
 
+    // https://html.spec.whatwg.org/multipage/input.html#show-the-picker,-if-applicable
+    virtual void page_did_request_file_picker(WeakPtr<DOM::EventTarget>, [[maybe_unused]] bool multiple) {};
+
 protected:
     virtual ~PageClient() = default;
 };

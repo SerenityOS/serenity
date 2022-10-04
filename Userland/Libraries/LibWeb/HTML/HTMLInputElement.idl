@@ -1,9 +1,11 @@
 #import <HTML/HTMLElement.idl>
 #import <HTML/HTMLFormElement.idl>
+#import <FileAPI/FileList.idl>
 
 interface HTMLInputElement : HTMLElement {
 
     readonly attribute HTMLFormElement? form;
+    attribute FileList? files;
 
     [Reflect] attribute DOMString accept;
     [Reflect] attribute DOMString alt;
@@ -33,5 +35,7 @@ interface HTMLInputElement : HTMLElement {
 
     [Reflect] attribute DOMString align;
     [Reflect=usemap] attribute DOMString useMap;
+
+    undefined showPicker();
 
 };
