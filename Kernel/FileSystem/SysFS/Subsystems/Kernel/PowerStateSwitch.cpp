@@ -7,8 +7,8 @@
 
 #include <AK/Platform.h>
 #if ARCH(X86_64)
-#    include <Kernel/Arch/x86/common/I8042Reboot.h>
-#    include <Kernel/Arch/x86/common/Shutdown.h>
+#    include <Kernel/Arch/x86_64/I8042Reboot.h>
+#    include <Kernel/Arch/x86_64/Shutdown.h>
 #endif
 #include <Kernel/FileSystem/FileSystem.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/PowerStateSwitch.h>

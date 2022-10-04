@@ -10,7 +10,7 @@
 #include <AK/Types.h>
 
 #if ARCH(X86_64)
-#    include <Kernel/Arch/x86/Interrupts.h>
+#    include <Kernel/Arch/x86_64/Interrupts.h>
 #endif
 
 namespace Kernel {

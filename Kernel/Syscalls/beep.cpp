@@ -6,7 +6,7 @@
 
 #include <Kernel/CommandLine.h>
 #if ARCH(X86_64)
-#    include <Kernel/Arch/x86/common/PCSpeaker.h>
+#    include <Kernel/Arch/x86_64/PCSpeaker.h>
 #endif
 #include <Kernel/Process.h>
 

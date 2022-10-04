@@ -7,7 +7,7 @@
 #include <AK/Format.h>
 #include <Kernel/Arch/Processor.h>
 #if ARCH(X86_64)
-#    include <Kernel/Arch/x86/common/Shutdown.h>
+#    include <Kernel/Arch/x86_64/Shutdown.h>
 #endif
 #include <Kernel/CommandLine.h>
 #include <Kernel/KSyms.h>

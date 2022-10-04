@@ -7,7 +7,7 @@
 #include <AK/Singleton.h>
 #include <Kernel/Arch/Delay.h>
 #if ARCH(X86_64)
-#    include <Kernel/Arch/x86/Hypervisor/BochsDisplayConnector.h>
+#    include <Kernel/Arch/x86_64/Hypervisor/BochsDisplayConnector.h>
 #endif
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Bus/PCI/IDs.h>

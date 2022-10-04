@@ -24,7 +24,7 @@ void restore_processor_interrupts_state(InterruptsState);
 }
 
 #if ARCH(X86_64)
-#    include <Kernel/Arch/x86/Processor.h>
+#    include <Kernel/Arch/x86_64/Processor.h>
 #elif ARCH(AARCH64)
 #    include <Kernel/Arch/aarch64/Processor.h>
 #else

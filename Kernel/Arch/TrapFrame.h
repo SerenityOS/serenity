@@ -9,7 +9,7 @@
 #include <AK/Platform.h>
 
 #if ARCH(X86_64)
-#    include <Kernel/Arch/x86/TrapFrame.h>
+#    include <Kernel/Arch/x86_64/TrapFrame.h>
 #elif ARCH(AARCH64)
 #    include <Kernel/Arch/aarch64/TrapFrame.h>
 #else

@@ -6,7 +6,7 @@
 
 #include <AK/JsonObjectSerializer.h>
 #if ARCH(X86_64)
-#    include <Kernel/Arch/x86/ProcessorInfo.h>
+#    include <Kernel/Arch/x86_64/ProcessorInfo.h>
 #endif
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/CPUInfo.h>
 #include <Kernel/Sections.h>

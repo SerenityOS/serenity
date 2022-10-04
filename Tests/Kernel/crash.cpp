@@ -9,7 +9,7 @@
 #include <AK/DeprecatedString.h>
 #include <AK/Function.h>
 #if ARCH(X86_64)
-#    include <Kernel/Arch/x86/IO.h>
+#    include <Kernel/Arch/x86_64/IO.h>
 #endif
 #include <LibCore/ArgsParser.h>
 #include <LibCore/Object.h>
