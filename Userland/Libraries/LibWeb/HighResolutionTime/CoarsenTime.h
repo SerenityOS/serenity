@@ -13,5 +13,6 @@ namespace Web::HighResolutionTime {
 
 DOMHighResTimeStamp coarsen_time(DOMHighResTimeStamp timestamp, bool cross_origin_isolated_capability = false);
 DOMHighResTimeStamp coarsened_shared_current_time(bool cross_origin_isolated_capability = false);
+DOMHighResTimeStamp unsafe_shared_current_time();
 
 }

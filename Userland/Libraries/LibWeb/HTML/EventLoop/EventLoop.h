@@ -71,7 +71,6 @@ public:
     void register_environment_settings_object(Badge<EnvironmentSettingsObject>, EnvironmentSettingsObject&);
     void unregister_environment_settings_object(Badge<EnvironmentSettingsObject>, EnvironmentSettingsObject&);
 
-    double unsafe_shared_current_time() const;
     double compute_deadline() const;
 
 private:

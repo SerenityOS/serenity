@@ -108,7 +108,7 @@ NonnullRefPtr<BrowsingContext> BrowsingContext::create_a_new_browsing_context(Pa
     auto browsing_context = adopt_ref(*new BrowsingContext(page, container));
 
     // 2. Let unsafeContextCreationTime be the unsafe shared current time.
-    [[maybe_unused]] auto unsafe_context_creation_time = HTML::main_thread_event_loop().unsafe_shared_current_time();
+    [[maybe_unused]] auto unsafe_context_creation_time = HighResolutionTime::unsafe_shared_current_time();
 
     // 3. If creator is non-null, then set browsingContext's creator origin to return creator's origin,
     //    browsingContext's creator URL to return creator's URL,

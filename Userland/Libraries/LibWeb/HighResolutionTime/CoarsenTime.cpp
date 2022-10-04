@@ -5,7 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibWeb/HTML/EventLoop/EventLoop.h>
+#include <AK/Time.h>
 #include <LibWeb/HighResolutionTime/CoarsenTime.h>
 
 namespace Web::HighResolutionTime {
@@ -22,7 +22,14 @@ DOMHighResTimeStamp coarsen_time(DOMHighResTimeStamp timestamp, bool cross_origi
 DOMHighResTimeStamp coarsened_shared_current_time(bool cross_origin_isolated_capability)
 {
     // The coarsened shared current time given an optional boolean crossOriginIsolatedCapability (default false), must return the result of calling coarsen time with the unsafe shared current time and crossOriginIsolatedCapability.
-    return coarsen_time(HTML::main_thread_event_loop().unsafe_shared_current_time(), cross_origin_isolated_capability);
+    return coarsen_time(unsafe_shared_current_time(), cross_origin_isolated_capability);
+}
+
+// https://w3c.github.io/hr-time/#dfn-unsafe-shared-current-time
+DOMHighResTimeStamp unsafe_shared_current_time()
+{
+    // The unsafe shared current time must return the current value of the shared monotonic clock.
+    return Time::now_monotonic().to_nanoseconds() / 1e6;
 }
 
 }

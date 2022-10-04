@@ -7,6 +7,7 @@
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/HTML/HTMLTemplateElement.h>
 #include <LibWeb/HTML/Window.h>
+#include <LibWeb/HighResolutionTime/CoarsenTime.h>
 #include <LibWeb/XML/XMLDocumentBuilder.h>
 
 inline namespace {
@@ -174,7 +175,7 @@ void XMLDocumentBuilder::document_end()
     // Queue a global task on the DOM manipulation task source given the Document's relevant global object to run the following substeps:
     old_queue_global_task_with_document(HTML::Task::Source::DOMManipulation, m_document, [document = &m_document]() mutable {
         // Set the Document's load timing info's DOM content loaded event start time to the current high resolution time given the Document's relevant global object.
-        document->load_timing_info().dom_content_loaded_event_start_time = HTML::main_thread_event_loop().unsafe_shared_current_time();
+        document->load_timing_info().dom_content_loaded_event_start_time = HighResolutionTime::unsafe_shared_current_time();
 
         // Fire an event named DOMContentLoaded at the Document object, with its bubbles attribute initialized to true.
         auto content_loaded_event = DOM::Event::create(document->realm(), HTML::EventNames::DOMContentLoaded);
@@ -182,7 +183,7 @@ void XMLDocumentBuilder::document_end()
         document->dispatch_event(*content_loaded_event);
 
         // Set the Document's load timing info's DOM content loaded event end time to the current high resolution time given the Document's relevant global object.
-        document->load_timing_info().dom_content_loaded_event_end_time = HTML::main_thread_event_loop().unsafe_shared_current_time();
+        document->load_timing_info().dom_content_loaded_event_end_time = HighResolutionTime::unsafe_shared_current_time();
 
         // FIXME: Enable the client message queue of the ServiceWorkerContainer object whose associated service worker client is the Document object's relevant settings object.
 
@@ -212,7 +213,7 @@ void XMLDocumentBuilder::document_end()
         JS::NonnullGCPtr<HTML::Window> window = verify_cast<HTML::Window>(relevant_global_object(*document));
 
         // Set the Document's load timing info's load event start time to the current high resolution time given window.
-        document->load_timing_info().load_event_start_time = HTML::main_thread_event_loop().unsafe_shared_current_time();
+        document->load_timing_info().load_event_start_time = HighResolutionTime::unsafe_shared_current_time();
 
         // Fire an event named load at window, with legacy target override flag set.
         // FIXME: The legacy target override flag is currently set by a virtual override of dispatch_event()
@@ -224,7 +225,7 @@ void XMLDocumentBuilder::document_end()
         // FIXME: Set the Document object's navigation id to null.
 
         // Set the Document's load timing info's load event end time to the current high resolution time given window.
-        document->load_timing_info().dom_content_loaded_event_end_time = HTML::main_thread_event_loop().unsafe_shared_current_time();
+        document->load_timing_info().dom_content_loaded_event_end_time = HighResolutionTime::unsafe_shared_current_time();
 
         // Assert: Document's page showing is false.
         VERIFY(!document->page_showing());

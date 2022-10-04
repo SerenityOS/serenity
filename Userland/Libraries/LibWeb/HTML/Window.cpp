@@ -43,6 +43,7 @@
 #include <LibWeb/HTML/Storage.h>
 #include <LibWeb/HTML/Timer.h>
 #include <LibWeb/HTML/Window.h>
+#include <LibWeb/HighResolutionTime/CoarsenTime.h>
 #include <LibWeb/HighResolutionTime/Performance.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
 #include <LibWeb/Page/Page.h>
@@ -652,7 +653,7 @@ void Window::invoke_idle_callbacks()
     auto& event_loop = main_thread_event_loop();
     // 1. If the user-agent believes it should end the idle period early due to newly scheduled high-priority work, return from the algorithm.
     // 2. Let now be the current time.
-    auto now = event_loop.unsafe_shared_current_time();
+    auto now = HighResolutionTime::unsafe_shared_current_time();
     // 3. If now is less than the result of calling getDeadline and the window's list of runnable idle callbacks is not empty:
     if (now < event_loop.compute_deadline() && !m_runnable_idle_callbacks.is_empty()) {
         // 1. Pop the top callback from window's list of runnable idle callbacks.

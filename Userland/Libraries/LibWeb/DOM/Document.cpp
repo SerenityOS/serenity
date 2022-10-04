@@ -1450,7 +1450,7 @@ void Document::update_readiness(HTML::DocumentReadyState readiness_value)
     // 3. If document is associated with an HTML parser, then:
     if (m_parser) {
         // 1. Let now be the current high resolution time given document's relevant global object.
-        auto now = HTML::main_thread_event_loop().unsafe_shared_current_time();
+        auto now = HighResolutionTime::unsafe_shared_current_time();
 
         // 2. If readinessValue is "complete", and document's load timing info's DOM complete time is 0,
         //    then set document's load timing info's DOM complete time to now.
@@ -2173,7 +2173,7 @@ void Document::unload(bool recursive_flag, Optional<DocumentUnloadTimingInfo> un
         // then set unloadTimingInfo's unload event start time to the current high resolution time given newGlobal,
         // coarsened given document's relevant settings object's cross-origin isolated capability.
         unload_timing_info->unload_event_start_time = HighResolutionTime::coarsen_time(
-            HTML::main_thread_event_loop().unsafe_shared_current_time(),
+            HighResolutionTime::unsafe_shared_current_time(),
             relevant_settings_object().cross_origin_isolated_capability() == HTML::CanUseCrossOriginIsolatedAPIs::Yes);
     }
 
@@ -2191,7 +2191,7 @@ void Document::unload(bool recursive_flag, Optional<DocumentUnloadTimingInfo> un
         // then set unloadTimingInfo's unload event end time to the current high resolution time given newGlobal,
         // coarsened given document's relevant settings object's cross-origin isolated capability.
         unload_timing_info->unload_event_end_time = HighResolutionTime::coarsen_time(
-            HTML::main_thread_event_loop().unsafe_shared_current_time(),
+            HighResolutionTime::unsafe_shared_current_time(),
             relevant_settings_object().cross_origin_isolated_capability() == HTML::CanUseCrossOriginIsolatedAPIs::Yes);
     }
 
