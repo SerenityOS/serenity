@@ -33,7 +33,6 @@ ErrorOr<void> DomainListModel::load()
     auto buffer = TRY(ByteBuffer::create_uninitialized(4096));
     while (TRY(content_filter_list->can_read_line())) {
         auto line = TRY(content_filter_list->read_line(buffer));
-        dbgln("Content filter for {}", line);
         if (!line.is_empty())
             m_domain_list.append(line);
     }
