@@ -8,6 +8,7 @@
 
 #include <AK/FlyString.h>
 #include <AK/String.h>
+#include <LibWeb/Bindings/ElementPrototype.h>
 #include <LibWeb/CSS/CSSStyleDeclaration.h>
 #include <LibWeb/CSS/StyleComputer.h>
 #include <LibWeb/DOM/Attr.h>
@@ -24,6 +25,17 @@
 #include <LibWeb/WebIDL/ExceptionOr.h>
 
 namespace Web::DOM {
+
+// https://w3c.github.io/csswg-drafts/cssom-view-1/#dictdef-scrolloptions
+struct ScrollOptions {
+    Bindings::ScrollBehavior behavior { Bindings::ScrollBehavior::Auto };
+};
+
+// https://w3c.github.io/csswg-drafts/cssom-view-1/#dictdef-scrollintoviewoptions
+struct ScrollIntoViewOptions : public ScrollOptions {
+    Bindings::ScrollLogicalPosition block { Bindings::ScrollLogicalPosition::Start };
+    Bindings::ScrollLogicalPosition inline_ { Bindings::ScrollLogicalPosition::Nearest };
+};
 
 class Element
     : public ParentNode
@@ -146,6 +158,9 @@ public:
 
     WebIDL::ExceptionOr<JS::GCPtr<Element>> insert_adjacent_element(String const& where, JS::NonnullGCPtr<Element> element);
     WebIDL::ExceptionOr<void> insert_adjacent_text(String const& where, String const& data);
+
+    // https://w3c.github.io/csswg-drafts/cssom-view-1/#dom-element-scrollintoview
+    void scroll_into_view(Optional<Variant<bool, ScrollIntoViewOptions>>);
 
 protected:
     Element(Document&, DOM::QualifiedName);

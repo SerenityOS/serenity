@@ -9,6 +9,17 @@
 #import <Geometry/DOMRect.idl>
 #import <Geometry/DOMRectList.idl>
 
+enum ScrollBehavior { "auto", "smooth" };
+dictionary ScrollOptions {
+    ScrollBehavior behavior = "auto";
+};
+
+enum ScrollLogicalPosition { "start", "center", "end", "nearest" };
+dictionary ScrollIntoViewOptions : ScrollOptions {
+    ScrollLogicalPosition block = "start";
+    ScrollLogicalPosition inline = "nearest";
+};
+
 // https://dom.spec.whatwg.org/#element
 interface Element : Node {
     readonly attribute DOMString? namespaceURI;
@@ -56,6 +67,9 @@ interface Element : Node {
     [CEReactions] Element? insertAdjacentElement(DOMString where, Element element);
     undefined insertAdjacentText(DOMString where, DOMString data);
     [CEReactions] undefined insertAdjacentHTML(DOMString position, DOMString text);
+
+    undefined scrollIntoView(optional (boolean or ScrollIntoViewOptions) arg = {});
+
 };
 
 Element includes ParentNode;

@@ -7,6 +7,7 @@
 #include <AK/AnyOf.h>
 #include <AK/Debug.h>
 #include <AK/StringBuilder.h>
+#include <LibWeb/Bindings/ElementPrototype.h>
 #include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/CSS/PropertyID.h>
 #include <LibWeb/CSS/ResolvedCSSStyleDeclaration.h>
@@ -44,6 +45,7 @@
 #include <LibWeb/Layout/TableRowGroupBox.h>
 #include <LibWeb/Layout/TreeBuilder.h>
 #include <LibWeb/Namespace.h>
+#include <LibWeb/Page/Page.h>
 #include <LibWeb/Painting/PaintableBox.h>
 #include <LibWeb/WebIDL/DOMException.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
@@ -901,6 +903,78 @@ WebIDL::ExceptionOr<void> Element::insert_adjacent_text(String const& where, Str
     // Spec Note: This method returns nothing because it existed before we had a chance to design it.
     (void)TRY(insert_adjacent(where, move(text)));
     return {};
+}
+
+// https://w3c.github.io/csswg-drafts/cssom-view-1/#scroll-an-element-into-view
+static void scroll_an_element_into_view(DOM::Element& element, Bindings::ScrollBehavior behavior, Bindings::ScrollLogicalPosition block, Bindings::ScrollLogicalPosition inline_)
+{
+    // FIXME: The below is ad-hoc, since we don't yet have scrollable elements.
+    //        Return here and implement this according to spec once all overflow is made scrollable.
+
+    (void)behavior;
+    (void)block;
+    (void)inline_;
+
+    if (!element.document().browsing_context())
+        return;
+
+    auto* page = element.document().browsing_context()->page();
+    if (!page)
+        return;
+
+    // If this element doesn't have a layout node, we can't scroll it into view.
+    element.document().update_layout();
+    if (!element.layout_node())
+        return;
+
+    // Find the nearest layout node that is a box (since we need a box to get a usable rect)
+    auto* layout_node = element.layout_node();
+    while (layout_node && !layout_node->is_box())
+        layout_node = layout_node->parent();
+
+    if (!layout_node)
+        return;
+
+    page->client().page_did_request_scroll_into_view(verify_cast<Layout::Box>(*layout_node).paint_box()->absolute_padding_box_rect().to_rounded<int>());
+}
+
+// https://w3c.github.io/csswg-drafts/cssom-view-1/#dom-element-scrollintoview
+void Element::scroll_into_view(Optional<Variant<bool, ScrollIntoViewOptions>> arg)
+{
+    // 1. Let behavior be "auto".
+    auto behavior = Bindings::ScrollBehavior::Auto;
+
+    // 2. Let block be "start".
+    auto block = Bindings::ScrollLogicalPosition::Start;
+
+    // 3. Let inline be "nearest".
+    auto inline_ = Bindings::ScrollLogicalPosition::Nearest;
+
+    // 4. If arg is a ScrollIntoViewOptions dictionary, then:
+    if (arg.has_value() && arg->has<ScrollIntoViewOptions>()) {
+        // 1. Set behavior to the behavior dictionary member of options.
+        behavior = arg->get<ScrollIntoViewOptions>().behavior;
+
+        // 2. Set block to the block dictionary member of options.
+        block = arg->get<ScrollIntoViewOptions>().block;
+
+        // 3. Set inline to the inline dictionary member of options.
+        inline_ = arg->get<ScrollIntoViewOptions>().inline_;
+    }
+    // 5. Otherwise, if arg is false, then set block to "end".
+    else if (arg.has_value() && arg->has<bool>() && arg->get<bool>() == false) {
+        block = Bindings::ScrollLogicalPosition::End;
+    }
+
+    // 6. If the element does not have any associated box, or is not available to user-agent features, then return.
+    document().update_layout();
+    if (!layout_node())
+        return;
+
+    // 7. Scroll the element into view with behavior, block, and inline.
+    scroll_an_element_into_view(*this, behavior, block, inline_);
+
+    // FIXME: 8. Optionally perform some other action that brings the element to the user’s attention.
 }
 
 }
