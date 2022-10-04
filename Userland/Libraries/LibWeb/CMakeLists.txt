@@ -137,6 +137,7 @@ set(SOURCES
     Fetch/Response.cpp
     FileAPI/Blob.cpp
     FileAPI/File.cpp
+    FileAPI/FileList.cpp
     FontCache.cpp
     Geometry/DOMPoint.cpp
     Geometry/DOMPointReadOnly.cpp
