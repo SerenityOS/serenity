@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2022, Adam Hodgen <ant1441@gmail.com>
+ * Copyright (c) 2022, Andrew Kaster <akaster@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -13,11 +14,14 @@
 #include <LibWeb/HTML/EventNames.h>
 #include <LibWeb/HTML/HTMLFormElement.h>
 #include <LibWeb/HTML/HTMLInputElement.h>
+#include <LibWeb/HTML/Scripting/Environments.h>
 #include <LibWeb/Infra/CharacterTypes.h>
 #include <LibWeb/Layout/BlockContainer.h>
 #include <LibWeb/Layout/ButtonBox.h>
 #include <LibWeb/Layout/CheckBox.h>
 #include <LibWeb/Layout/RadioButton.h>
+#include <LibWeb/WebIDL/DOMException.h>
+#include <LibWeb/WebIDL/ExceptionOr.h>
 
 namespace Web::HTML {
 
@@ -44,6 +48,7 @@ void HTMLInputElement::visit_edges(Cell::Visitor& visitor)
     Base::visit_edges(visitor);
     visitor.visit(m_text_node.ptr());
     visitor.visit(m_legacy_pre_activation_behavior_checked_element_in_group.ptr());
+    visitor.visit(m_selected_files);
 }
 
 RefPtr<Layout::Node> HTMLInputElement::create_layout_node(NonnullRefPtr<CSS::StyleProperties> style)
@@ -51,7 +56,7 @@ RefPtr<Layout::Node> HTMLInputElement::create_layout_node(NonnullRefPtr<CSS::Sty
     if (type_state() == TypeAttributeState::Hidden)
         return nullptr;
 
-    if (type_state() == TypeAttributeState::SubmitButton || type_state() == TypeAttributeState::Button || type_state() == TypeAttributeState::ResetButton)
+    if (type_state() == TypeAttributeState::SubmitButton || type_state() == TypeAttributeState::Button || type_state() == TypeAttributeState::ResetButton || type_state() == TypeAttributeState::FileUpload)
         return adopt_ref(*new Layout::ButtonBox(document(), *this, move(style)));
 
     if (type_state() == TypeAttributeState::Checkbox)
@@ -91,6 +96,122 @@ void HTMLInputElement::set_checked_binding(bool checked)
     }
 }
 
+// https://html.spec.whatwg.org/multipage/input.html#dom-input-files
+JS::GCPtr<FileAPI::FileList> HTMLInputElement::files()
+{
+    // On getting, if the IDL attribute applies, it must return a FileList object that represents the current selected files.
+    //  The same object must be returned until the list of selected files changes.
+    // If the IDL attribute does not apply, then it must instead return null.
+    if (m_type != TypeAttributeState::FileUpload)
+        return nullptr;
+
+    if (!m_selected_files)
+        m_selected_files = FileAPI::FileList::create(realm(), {});
+    return m_selected_files;
+}
+
+// https://html.spec.whatwg.org/multipage/input.html#dom-input-files
+void HTMLInputElement::set_files(JS::GCPtr<FileAPI::FileList> files)
+{
+    // 1. If the IDL attribute does not apply or the given value is null, then return.
+    if (m_type != TypeAttributeState::FileUpload || files == nullptr)
+        return;
+
+    // 2. Replace the element's selected files with the given value.
+    m_selected_files = files;
+}
+
+// https://html.spec.whatwg.org/multipage/input.html#update-the-file-selection
+void HTMLInputElement::update_the_file_selection(JS::NonnullGCPtr<FileAPI::FileList> files)
+{
+    // 1. Queue an element task on the user interaction task source given element and the following steps:
+    queue_an_element_task(Task::Source::UserInteraction, [this, files]() mutable {
+        // 1. Update element's selected files so that it represents the user's selection.
+        this->set_files(files.ptr());
+
+        // 2. Fire an event named input at the input element, with the bubbles and composed attributes initialized to true.
+        auto input_event = DOM::Event::create(this->realm(), EventNames::input, { .bubbles = true, .composed = true });
+        this->dispatch_event(*input_event);
+
+        // 3. Fire an event named change at the input element, with the bubbles attribute initialized to true.
+        auto change_event = DOM::Event::create(this->realm(), EventNames::change, { .bubbles = true });
+        this->dispatch_event(*change_event);
+    });
+}
+
+// https://html.spec.whatwg.org/multipage/input.html#show-the-picker,-if-applicable
+static void show_the_picker_if_applicable(HTMLInputElement& element)
+{
+    // To show the picker, if applicable for an input element element:
+
+    // 1. If element's relevant global object does not have transient activation, then return.
+    auto& global_object = relevant_global_object(element);
+    if (!is<HTML::Window>(global_object) || !static_cast<HTML::Window&>(global_object).has_transient_activation())
+        return;
+
+    // FIXME: 2. If element is not mutable, then return.
+
+    // 3. If element's type attribute is in the File Upload state, then run these steps in parallel:
+    if (element.type_state() == HTMLInputElement::TypeAttributeState::FileUpload) {
+        // NOTE: These steps cannot be fully implemented here, and must be done in the PageClient when the response comes back from the PageHost
+
+        // 1. Optionally, wait until any prior execution of this algorithm has terminated.
+        // 2. Display a prompt to the user requesting that the user specify some files.
+        //    If the multiple attribute is not set on element, there must be no more than one file selected; otherwise, any number may be selected.
+        //    Files can be from the filesystem or created on the fly, e.g., a picture taken from a camera connected to the user's device.
+        // 3. Wait for the user to have made their selection.
+        // 4. If the user dismissed the prompt without changing their selection,
+        //    then queue an element task on the user interaction task source given element to fire an event named cancel at element,
+        //    with the bubbles attribute initialized to true.
+        // 5. Otherwise, update the file selection for element.
+
+        bool const multiple = element.has_attribute(HTML::AttributeNames::multiple);
+        auto weak_element = element.make_weak_ptr<DOM::EventTarget>();
+
+        // FIXME: Pass along accept attribute information https://html.spec.whatwg.org/multipage/input.html#attr-input-accept
+        //    The accept attribute may be specified to provide user agents with a hint of what file types will be accepted.
+        element.document().browsing_context()->top_level_browsing_context().page()->client().page_did_request_file_picker(weak_element, multiple);
+        return;
+    }
+
+    // FIXME: show "any relevant user interface" for other type attribute states "in the way [the user agent] normally would"
+
+    // 4. Otherwise, the user agent should show any relevant user interface for selecting a value for element,
+    //    in the way it normally would when the user interacts with the control. (If no such UI applies to element, then this step does nothing.)
+    //    If such a user interface is shown, it must respect the requirements stated in the relevant parts of the specification for how element
+    //    behaves given its type attribute state. (For example, various sections describe restrictions on the resulting value string.)
+    //    This step can have side effects, such as closing other pickers that were previously shown by this algorithm.
+    //    (If this closes a file selection picker, then per the above that will lead to firing either input and change events, or a cancel event.)
+}
+
+// https://html.spec.whatwg.org/multipage/input.html#dom-input-showpicker
+WebIDL::ExceptionOr<void> HTMLInputElement::show_picker()
+{
+    // The showPicker() method steps are:
+
+    // FIXME: 1. If this is not mutable, then throw an "InvalidStateError" DOMException.
+
+    // 2. If this's relevant settings object's origin is not same origin with this's relevant settings object's top-level origin,
+    // and this's type attribute is not in the File Upload state or Color state, then throw a "SecurityError" DOMException.
+    // NOTE: File and Color inputs are exempted from this check for historical reason: their input activation behavior also shows their pickers,
+    //       and has never been guarded by an origin check.
+    if (!relevant_settings_object(*this).origin().is_same_origin(relevant_settings_object(*this).top_level_origin)
+        && m_type != TypeAttributeState::FileUpload && m_type != TypeAttributeState::Color) {
+        return WebIDL::SecurityError::create(realm(), "Cross origin pickers are not allowed"sv);
+    }
+
+    // 3. If this's relevant global object does not have transient activation, then throw a "NotAllowedError" DOMException.
+    // FIXME: The global object we get here should probably not need casted to Window to check for transient activation
+    auto& global_object = relevant_global_object(*this);
+    if (!is<HTML::Window>(global_object) || !static_cast<HTML::Window&>(global_object).has_transient_activation()) {
+        return WebIDL::NotAllowedError::create(realm(), "Too long since user activation to show picker"sv);
+    }
+
+    // 4. Show the picker, if applicable, for this.
+    show_the_picker_if_applicable(*this);
+    return {};
+}
+
 // https://html.spec.whatwg.org/multipage/input.html#input-activation-behavior
 void HTMLInputElement::run_input_activation_behavior()
 {
@@ -121,6 +242,8 @@ void HTMLInputElement::run_input_activation_behavior()
 
         // 3. Submit the form owner from the element.
         form->submit_form(this);
+    } else if (type_state() == TypeAttributeState::FileUpload) {
+        show_the_picker_if_applicable(*this);
     } else {
         dispatch_event(*DOM::Event::create(realm(), EventNames::change));
     }
@@ -147,16 +270,34 @@ void HTMLInputElement::did_edit_text_node(Badge<BrowsingContext>)
     });
 }
 
-// https://html.spec.whatwg.org/multipage/input.html#dom-input-value-value
 String HTMLInputElement::value() const
 {
+    // https://html.spec.whatwg.org/multipage/input.html#dom-input-value-filename
+    if (type_state() == TypeAttributeState::FileUpload) {
+        // NOTE: This "fakepath" requirement is a sad accident of history. See the example in the File Upload state section for more information.
+        // NOTE: Since path components are not permitted in filenames in the list of selected files, the "\fakepath\" cannot be mistaken for a path component.
+        if (m_selected_files && m_selected_files->item(0))
+            return String::formatted("C:\\fakepath\\{}", m_selected_files->item(0)->name());
+        return "C:\\fakepath\\"sv;
+    }
+
+    // https://html.spec.whatwg.org/multipage/input.html#dom-input-value-value
     // Return the current value of the element.
     return m_value;
 }
 
-// https://html.spec.whatwg.org/multipage/input.html#dom-input-value-value
-void HTMLInputElement::set_value(String value)
+WebIDL::ExceptionOr<void> HTMLInputElement::set_value(String value)
 {
+    // https://html.spec.whatwg.org/multipage/input.html#dom-input-value-filename
+    if (type_state() == TypeAttributeState::FileUpload) {
+        // On setting, if the new value is the empty string, empty the list of selected files; otherwise, throw an "InvalidStateError" DOMException.
+        if (value != String::empty())
+            return WebIDL::InvalidStateError::create(realm(), "Setting value of input type file to non-empty string"sv);
+        m_selected_files = nullptr;
+        return {};
+    }
+
+    // https://html.spec.whatwg.org/multipage/input.html#dom-input-value-value
     // 1. Let oldValue be the element's value.
     auto old_value = move(m_value);
 
@@ -174,6 +315,8 @@ void HTMLInputElement::set_value(String value)
     //    text control, unselecting any selected text and resetting the selection direction to "none".
     if (m_text_node && (m_value != old_value))
         m_text_node->set_data(m_value);
+
+    return {};
 }
 
 void HTMLInputElement::create_shadow_tree_if_needed()
@@ -201,7 +344,7 @@ void HTMLInputElement::create_shadow_tree_if_needed()
     auto element = document().create_element(HTML::TagNames::div).release_value();
     element->set_attribute(HTML::AttributeNames::style, "white-space: pre; padding-top: 1px; padding-bottom: 1px; padding-left: 2px; padding-right: 2px");
     m_text_node = heap().allocate<DOM::Text>(realm(), document(), initial_value);
-    m_text_node->set_always_editable(true);
+    m_text_node->set_always_editable(m_type != TypeAttributeState::FileUpload);
     m_text_node->set_owner_input_element({}, *this);
     element->append_child(*m_text_node);
     shadow_root->append_child(move(element));
