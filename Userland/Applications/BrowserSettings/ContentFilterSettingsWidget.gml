@@ -10,7 +10,7 @@
     }
 
     @GUI::GroupBox {
-        title: "Domain list"
+        title: "Domain List"
         layout: @GUI::VerticalBoxLayout {
             margins: [8]
         }
