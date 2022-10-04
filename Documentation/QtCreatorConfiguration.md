@@ -24,11 +24,11 @@ Userland/Services/
 Userland/Libraries/
 Userland/Libraries/LibC/
 Userland/Libraries/LibSystem/
-Toolchain/Local/i686/i686-pc-serenity/include/c++/12.1.0
-Build/i686/
-Build/i686/Userland/
-Build/i686/Userland/Services/
-Build/i686/Userland/Libraries/
+Toolchain/Local/x86_64/x86_64-pc-serenity/include/c++/12.1.0
+Build/x86_64/
+Build/x86_64/Userland/
+Build/x86_64/Userland/Services/
+Build/x86_64/Userland/Libraries/
 AK/
 ```
 
@@ -86,4 +86,4 @@ option "License template:". Click "Browse…", select your file (i.e.,
 ## Compiler Kits
 
 You can slightly improve how well Qt interprets the code by adding and setting up an appropriate "compiler kit".
-For that you will need to reference the compilers at `Toolchain/Local/i686/bin/i686-pc-serenity-gcc` and `Toolchain/Local/i686/bin/i686-pc-serenity-g++`.
+For that you will need to reference the compilers at `Toolchain/Local/x86_64/bin/x86_64-pc-serenity-gcc` and `Toolchain/Local/x86_64/bin/x86_64-pc-serenity-g++`.

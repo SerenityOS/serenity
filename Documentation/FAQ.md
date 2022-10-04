@@ -16,9 +16,9 @@ There are no ISO images. This project does not cater to non-technical users.
 
 Simple, my friend! Just refer to the [build instructions](BuildInstructions.md).
 
-## Why is the system 32-bit?
+## Why is the system 64-bit only?
 
-The system was originally 32-bit only, since that's what Andreas was most familiar with when starting out. Nowadays, there is a 64-bit port as well (Intel/AMD x86\_64)
+The system was originally 32-bit only, since that's what Andreas was most familiar with when starting out. Nowadays, we only support 64-bit CPUs (Intel/AMD x86\_64).
 
 ## I did a `git pull` and now the build is broken! What do I do?
 

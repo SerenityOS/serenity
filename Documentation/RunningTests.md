@@ -12,7 +12,7 @@ command used to initialize the build directory.
 For a full build, pass `-DBUILD_LAGOM=ON` to the CMake command.
 
 ```sh
-cmake -GNinja -S Meta/CMake/Superbuild -B Build/superbuild-i686 -DBUILD_LAGOM=ON
+cmake -GNinja -S Meta/CMake/Superbuild -B Build/superbuild-x86_64 -DBUILD_LAGOM=ON
 ```
 
 For a Lagom-only build, pass the Lagom directory to CMake. The `BUILD_LAGOM` CMake option is still required.
@@ -76,9 +76,9 @@ will run `shutdown -n` after running all the tests.
 For completeness, a basic on-target test run will need the SerenityOS image built and run via QEMU.
 
 ```sh
-cmake -GNinja -S Meta/CMake/Superbuild -B Build/superbuild-i686
-cmake --build Build/superbuild-i686
-cd Build/i686
+cmake -GNinja -S Meta/CMake/Superbuild -B Build/superbuild-x86_64
+cmake --build Build/superbuild-x86_64
+cd Build/x86_64
 ninja install && ninja image && ninja run
 ```
 
