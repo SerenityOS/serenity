@@ -234,6 +234,11 @@ JS::VM& main_thread_vm()
                     // 2. If job settings is not null, then prepare to run script with job settings.
                     job_settings->prepare_to_run_script();
 
+                    // IMPLEMENTATION DEFINED: Additionally to preparing to run a script, we also prepare to run a callback here. This matches WebIDL's
+                    //                         invoke_callback() / call_user_object_operation() functions, and prevents a crash in host_make_job_callback()
+                    //                         when getting the incumbent settings object.
+                    job_settings->prepare_to_run_callback();
+
                     // IMPLEMENTATION DEFINED: Per the previous "implementation defined" comment, we must now make the script or module the active script or module.
                     //                         Since the only active execution context currently is the realm execution context of job settings, lets attach it here.
                     job_settings->realm_execution_context().script_or_module = script_or_module;
@@ -256,6 +261,9 @@ JS::VM& main_thread_vm()
                 if (job_settings) {
                     // IMPLEMENTATION DEFINED: Disassociate the realm execution context from the script or module.
                     job_settings->realm_execution_context().script_or_module = Empty {};
+
+                    // IMPLEMENTATION DEFINED: See comment above, we need to clean up the non-standard prepare_to_run_callback() call.
+                    job_settings->clean_up_after_running_callback();
 
                     job_settings->clean_up_after_running_script();
                 } else {
