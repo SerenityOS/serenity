@@ -11,7 +11,7 @@
 #include <AK/Platform.h>
 #include <AK/StringBuilder.h>
 #include <AK/Try.h>
-#include <LibC/sys/arch/i386/regs.h>
+#include <LibC/sys/arch/regs.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/System.h>
 #include <LibDebug/DebugInfo.h>

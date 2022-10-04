@@ -12,7 +12,7 @@
 #include <LibGUI/Model.h>
 #include <LibGUI/TableView.h>
 #include <LibGUI/Widget.h>
-#include <sys/arch/i386/regs.h>
+#include <sys/arch/regs.h>
 
 namespace HackStudio {
 
