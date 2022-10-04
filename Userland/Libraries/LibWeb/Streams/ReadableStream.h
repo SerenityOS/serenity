@@ -15,7 +15,7 @@ namespace Web::Streams {
 
 // https://streams.spec.whatwg.org/#readablestream
 class ReadableStream final : public Bindings::PlatformObject {
-    WEB_PLATFORM_OBJECT(Request, Bindings::PlatformObject);
+    WEB_PLATFORM_OBJECT(ReadableStream, Bindings::PlatformObject);
 
 public:
     enum class State {
