@@ -435,14 +435,23 @@ static void platform_init()
 
 static ErrorOr<void> load_content_filters()
 {
-    auto file = TRY(Core::Stream::File::open(String::formatted("{}/home/anon/.config/BrowserContentFilters.txt", s_serenity_resource_root), Core::Stream::OpenMode::Read));
+    auto file_or_error = Core::Stream::File::open(String::formatted("{}/home/anon/.config/BrowserContentFilters.txt", s_serenity_resource_root), Core::Stream::OpenMode::Read);
+    if (file_or_error.is_error())
+        file_or_error = Core::Stream::File::open(String::formatted("{}/res/ladybird/BrowserContentFilters.txt", s_serenity_resource_root), Core::Stream::OpenMode::Read);
+    if (file_or_error.is_error())
+        return file_or_error.release_error();
+    auto file = file_or_error.release_value();
     auto ad_filter_list = TRY(Core::Stream::BufferedFile::create(move(file)));
     auto buffer = TRY(ByteBuffer::create_uninitialized(4096));
+    size_t num_filters = 0;
     while (TRY(ad_filter_list->can_read_line())) {
         auto line = TRY(ad_filter_list->read_line(buffer));
-        if (!line.is_empty())
+        if (!line.is_empty()) {
             Web::ContentFilter::the().add_pattern(line);
+            ++num_filters;
+        }
     }
+    dbgln("Added {} content filters", num_filters);
     return {};
 }
 
