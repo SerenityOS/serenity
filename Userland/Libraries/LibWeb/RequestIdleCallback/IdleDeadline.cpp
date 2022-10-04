@@ -7,7 +7,7 @@
 
 #include <LibWeb/HTML/EventLoop/EventLoop.h>
 #include <LibWeb/HTML/Window.h>
-#include <LibWeb/HighResolutionTime/CoarsenTime.h>
+#include <LibWeb/HighResolutionTime/TimeOrigin.h>
 #include <LibWeb/RequestIdleCallback/IdleDeadline.h>
 
 namespace Web::RequestIdleCallback {

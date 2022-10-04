@@ -7,7 +7,7 @@
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/HTML/HTMLTemplateElement.h>
 #include <LibWeb/HTML/Window.h>
-#include <LibWeb/HighResolutionTime/CoarsenTime.h>
+#include <LibWeb/HighResolutionTime/TimeOrigin.h>
 #include <LibWeb/XML/XMLDocumentBuilder.h>
 
 inline namespace {
