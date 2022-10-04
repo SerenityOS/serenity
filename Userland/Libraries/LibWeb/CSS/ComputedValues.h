@@ -149,8 +149,8 @@ public:
     Optional<int> const& z_index() const { return m_noninherited.z_index; }
     CSS::TextAlign text_align() const { return m_inherited.text_align; }
     CSS::TextJustify text_justify() const { return m_inherited.text_justify; }
-    Vector<CSS::TextDecorationLine> text_decoration_line() const { return m_noninherited.text_decoration_line; }
-    CSS::LengthPercentage text_decoration_thickness() const { return m_noninherited.text_decoration_thickness; }
+    Vector<CSS::TextDecorationLine> const& text_decoration_line() const { return m_noninherited.text_decoration_line; }
+    CSS::LengthPercentage const& text_decoration_thickness() const { return m_noninherited.text_decoration_thickness; }
     CSS::TextDecorationStyle text_decoration_style() const { return m_noninherited.text_decoration_style; }
     Color text_decoration_color() const { return m_noninherited.text_decoration_color; }
     CSS::TextTransform text_transform() const { return m_inherited.text_transform; }
@@ -210,12 +210,12 @@ public:
 
     CSS::ListStyleType list_style_type() const { return m_inherited.list_style_type; }
 
-    Optional<Color> fill() const { return m_inherited.fill; }
-    Optional<Color> stroke() const { return m_inherited.stroke; }
+    Optional<Color> const& fill() const { return m_inherited.fill; }
+    Optional<Color> const& stroke() const { return m_inherited.stroke; }
     Optional<LengthPercentage> const& stroke_width() const { return m_inherited.stroke_width; }
 
-    Vector<CSS::Transformation> transformations() const { return m_noninherited.transformations; }
-    CSS::TransformOrigin transform_origin() const { return m_noninherited.transform_origin; }
+    Vector<CSS::Transformation> const& transformations() const { return m_noninherited.transformations; }
+    CSS::TransformOrigin const& transform_origin() const { return m_noninherited.transform_origin; }
 
     float font_size() const { return m_inherited.font_size; }
     int font_weight() const { return m_inherited.font_weight; }
@@ -332,7 +332,7 @@ public:
     void set_text_align(CSS::TextAlign text_align) { m_inherited.text_align = text_align; }
     void set_text_justify(CSS::TextJustify text_justify) { m_inherited.text_justify = text_justify; }
     void set_text_decoration_line(Vector<CSS::TextDecorationLine> value) { m_noninherited.text_decoration_line = move(value); }
-    void set_text_decoration_thickness(CSS::LengthPercentage value) { m_noninherited.text_decoration_thickness = value; }
+    void set_text_decoration_thickness(CSS::LengthPercentage value) { m_noninherited.text_decoration_thickness = move(value); }
     void set_text_decoration_style(CSS::TextDecorationStyle value) { m_noninherited.text_decoration_style = value; }
     void set_text_decoration_color(Color value) { m_noninherited.text_decoration_color = value; }
     void set_text_transform(CSS::TextTransform value) { m_inherited.text_transform = value; }
@@ -353,17 +353,17 @@ public:
     void set_list_style_type(CSS::ListStyleType value) { m_inherited.list_style_type = value; }
     void set_display(CSS::Display value) { m_noninherited.display = value; }
     void set_backdrop_filter(CSS::BackdropFilter backdrop_filter) { m_noninherited.backdrop_filter = move(backdrop_filter); }
-    void set_border_bottom_left_radius(CSS::BorderRadiusData value) { m_noninherited.border_bottom_left_radius = value; }
-    void set_border_bottom_right_radius(CSS::BorderRadiusData value) { m_noninherited.border_bottom_right_radius = value; }
-    void set_border_top_left_radius(CSS::BorderRadiusData value) { m_noninherited.border_top_left_radius = value; }
-    void set_border_top_right_radius(CSS::BorderRadiusData value) { m_noninherited.border_top_right_radius = value; }
+    void set_border_bottom_left_radius(CSS::BorderRadiusData value) { m_noninherited.border_bottom_left_radius = move(value); }
+    void set_border_bottom_right_radius(CSS::BorderRadiusData value) { m_noninherited.border_bottom_right_radius = move(value); }
+    void set_border_top_left_radius(CSS::BorderRadiusData value) { m_noninherited.border_top_left_radius = move(value); }
+    void set_border_top_right_radius(CSS::BorderRadiusData value) { m_noninherited.border_top_right_radius = move(value); }
     BorderData& border_left() { return m_noninherited.border_left; }
     BorderData& border_top() { return m_noninherited.border_top; }
     BorderData& border_right() { return m_noninherited.border_right; }
     BorderData& border_bottom() { return m_noninherited.border_bottom; }
     void set_flex_direction(CSS::FlexDirection value) { m_noninherited.flex_direction = value; }
     void set_flex_wrap(CSS::FlexWrap value) { m_noninherited.flex_wrap = value; }
-    void set_flex_basis(FlexBasisData value) { m_noninherited.flex_basis = value; }
+    void set_flex_basis(FlexBasisData value) { m_noninherited.flex_basis = move(value); }
     void set_flex_grow(float value) { m_noninherited.flex_grow = value; }
     void set_flex_shrink(float value) { m_noninherited.flex_shrink = value; }
     void set_order(int value) { m_noninherited.order = value; }
@@ -376,10 +376,10 @@ public:
     void set_transformations(Vector<CSS::Transformation> value) { m_noninherited.transformations = move(value); }
     void set_transform_origin(CSS::TransformOrigin value) { m_noninherited.transform_origin = value; }
     void set_box_sizing(CSS::BoxSizing value) { m_noninherited.box_sizing = value; }
-    void set_vertical_align(Variant<CSS::VerticalAlign, CSS::LengthPercentage> value) { m_noninherited.vertical_align = value; }
+    void set_vertical_align(Variant<CSS::VerticalAlign, CSS::LengthPercentage> value) { m_noninherited.vertical_align = move(value); }
     void set_visibility(CSS::Visibility value) { m_inherited.visibility = value; }
-    void set_grid_template_columns(Vector<CSS::GridTrackSize> value) { m_noninherited.grid_template_columns = value; }
-    void set_grid_template_rows(Vector<CSS::GridTrackSize> value) { m_noninherited.grid_template_rows = value; }
+    void set_grid_template_columns(Vector<CSS::GridTrackSize> value) { m_noninherited.grid_template_columns = move(value); }
+    void set_grid_template_rows(Vector<CSS::GridTrackSize> value) { m_noninherited.grid_template_rows = move(value); }
     void set_grid_column_end(CSS::GridTrackPlacement value) { m_noninherited.grid_column_end = value; }
     void set_grid_column_start(CSS::GridTrackPlacement value) { m_noninherited.grid_column_start = value; }
     void set_grid_row_end(CSS::GridTrackPlacement value) { m_noninherited.grid_row_end = value; }
