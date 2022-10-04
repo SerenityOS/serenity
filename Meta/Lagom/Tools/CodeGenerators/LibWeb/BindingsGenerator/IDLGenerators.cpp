@@ -169,7 +169,7 @@ CppType idl_type_name_to_cpp_type(Type const& type, Interface const& interface)
 
 static String make_input_acceptable_cpp(String const& input)
 {
-    if (input.is_one_of("class", "template", "for", "default", "char", "namespace", "delete")) {
+    if (input.is_one_of("class", "template", "for", "default", "char", "namespace", "delete", "inline")) {
         StringBuilder builder;
         builder.append(input);
         builder.append('_');
