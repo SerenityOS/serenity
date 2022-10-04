@@ -134,7 +134,7 @@ public:
         m_data.get<u32>() = code_point;
     }
 
-    String const& comment() const
+    FlyString const& comment() const
     {
         VERIFY(is_comment());
         return m_string_data;
@@ -146,7 +146,7 @@ public:
         m_string_data = move(comment);
     }
 
-    String const& tag_name() const
+    FlyString const& tag_name() const
     {
         VERIFY(is_start_tag() || is_end_tag());
         return m_string_data;
@@ -350,7 +350,7 @@ private:
     bool m_tag_self_closing_acknowledged { false };
 
     // Type::Comment (comment data), Type::StartTag and Type::EndTag (tag name)
-    String m_string_data;
+    FlyString m_string_data;
 
     Variant<Empty, u32, OwnPtr<DoctypeData>, OwnPtr<Vector<Attribute>>> m_data {};
 
