@@ -6,6 +6,7 @@
 
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Value.h>
+#include <LibTextCodec/Decoder.h>
 #include <LibWeb/Infra/JSON.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
 
@@ -23,8 +24,9 @@ WebIDL::ExceptionOr<JS::Value> parse_json_string_to_javascript_value(JS::VM& vm,
 // https://infra.spec.whatwg.org/#parse-json-bytes-to-a-javascript-value
 WebIDL::ExceptionOr<JS::Value> parse_json_bytes_to_javascript_value(JS::VM& vm, ReadonlyBytes bytes)
 {
-    // 1. Let string be the result of running UTF-8 decode on bytes. [ENCODING]
-    auto string = StringView { bytes };
+    // 1. Let string be the result of running UTF-8 decode on bytes.
+    TextCodec::UTF8Decoder decoder;
+    auto string = decoder.to_utf8(bytes);
 
     // 2. Return the result of parsing a JSON string to an Infra value given string.
     return parse_json_string_to_javascript_value(vm, string);
@@ -57,7 +59,8 @@ WebIDL::ExceptionOr<ByteBuffer> serialize_javascript_value_to_json_bytes(JS::VM&
     // 1. Let string be the result of serializing a JavaScript value to a JSON string given value.
     auto string = TRY(serialize_javascript_value_to_json_string(vm, value));
 
-    // 2. Return the result of running UTF-8 encode on string. [ENCODING]
+    // 2. Return the result of running UTF-8 encode on string.
+    // NOTE: LibJS strings are stored as UTF-8.
     return TRY_OR_RETURN_OOM(realm, ByteBuffer::copy(string.bytes()));
 }
 
