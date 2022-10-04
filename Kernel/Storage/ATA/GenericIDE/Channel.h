@@ -36,7 +36,7 @@ namespace Kernel {
 class AsyncBlockDeviceRequest;
 
 class IDEController;
-#if ARCH(I386) || ARCH(X86_64)
+#if ARCH(X86_64)
 class PCIIDELegacyModeController;
 class ISAIDEController;
 #endif
@@ -95,7 +95,7 @@ public:
 
     virtual StringView purpose() const override { return "PATA Channel"sv; }
 
-#if ARCH(I386) || ARCH(X86_64)
+#if ARCH(X86_64)
     ErrorOr<void> allocate_resources_for_pci_ide_controller(Badge<PCIIDELegacyModeController>, bool force_pio);
     ErrorOr<void> allocate_resources_for_isa_ide_controller(Badge<ISAIDEController>);
 #endif

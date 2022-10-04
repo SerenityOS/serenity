@@ -42,14 +42,9 @@ namespace Kernel {
 
 ALWAYS_INLINE bool validate_canonical_address(size_t address)
 {
-#if ARCH(X86_64)
     auto most_significant_bits = Processor::current().virtual_address_bit_width() - 1;
     auto insignificant_bits = address >> most_significant_bits;
     return insignificant_bits == 0 || insignificant_bits == (0xffffffffffffffffull >> most_significant_bits);
-#else
-    (void)address;
-    return true;
-#endif
 }
 
 CODE_SECTION(".text.safemem")
@@ -73,11 +68,7 @@ NEVER_INLINE bool safe_memcpy(void* dest_ptr, void const* src_ptr, size_t n, voi
         asm volatile(
             ".globl safe_memcpy_ins_1 \n"
             "safe_memcpy_ins_1: \n"
-#if ARCH(I386)
-            "rep movsl \n"
-#else
             "rep movsq \n"
-#endif
             ".globl safe_memcpy_1_faulted \n"
             "safe_memcpy_1_faulted: \n" // handle_safe_access_fault() set edx/rdx to the fault address!
             : "=S"(src),
@@ -168,11 +159,7 @@ NEVER_INLINE bool safe_memset(void* dest_ptr, int c, size_t n, void*& fault_at)
         asm volatile(
             ".globl safe_memset_ins_1 \n"
             "safe_memset_ins_1: \n"
-#if ARCH(I386)
-            "rep stosl \n"
-#else
             "rep stosq \n"
-#endif
             ".globl safe_memset_1_faulted \n"
             "safe_memset_1_faulted: \n" // handle_safe_access_fault() set edx/rdx to the fault address!
             : "=D"(dest),

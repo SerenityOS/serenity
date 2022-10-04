@@ -4,11 +4,7 @@
 
 .global gdt64ptr
 gdt64ptr:
-#if ARCH(X86_64)
 .quad 0
-#else
-.int 0
-#endif
 
 .global code64_sel
 code64_sel:

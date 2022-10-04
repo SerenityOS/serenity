@@ -52,61 +52,6 @@ static EntropySource s_entropy_source_interrupts { EntropySource::Static::Interr
 
 // clang-format off
 
-#if ARCH(I386)
-#define EH_ENTRY(ec, title)                                                    \
-    extern "C" void title##_asm_entry();                                       \
-    extern "C" void title##_handler(TrapFrame*) __attribute__((used));         \
-    NAKED void title##_asm_entry() {                                           \
-        asm(                                                                   \
-            "    pusha\n"                                                      \
-            "    pushl %ds\n"                                                  \
-            "    pushl %es\n"                                                  \
-            "    pushl %fs\n"                                                  \
-            "    pushl %gs\n"                                                  \
-            "    pushl %ss\n"                                                  \
-            "    mov $" __STRINGIFY(GDT_SELECTOR_DATA0) ", %ax\n"              \
-            "    mov %ax, %ds\n"                                               \
-            "    mov %ax, %es\n"                                               \
-            "    mov $" __STRINGIFY(GDT_SELECTOR_PROC) ", %ax\n"               \
-            "    mov %ax, %gs\n"                                               \
-            "    pushl %esp \n" /* set TrapFrame::regs */                      \
-            "    subl $" __STRINGIFY(TRAP_FRAME_SIZE - 4) ", %esp \n"          \
-            "    pushl %esp \n"                                                \
-            "    cld\n"                                                        \
-            "    call enter_trap_no_irq \n"                                    \
-            "    call " #title "_handler\n"                                    \
-            "    jmp common_trap_exit \n"                                      \
-        );                                                                     \
-    }
-
-#define EH_ENTRY_NO_CODE(ec, title)                                            \
-    extern "C" void title##_asm_entry();                                       \
-    extern "C" void title##_handler(TrapFrame*) __attribute__((used));         \
-    NAKED void title##_asm_entry() {                                           \
-        asm(                                                                   \
-            "    pushl $0x0\n"                                                 \
-            "    pusha\n"                                                      \
-            "    pushl %ds\n"                                                  \
-            "    pushl %es\n"                                                  \
-            "    pushl %fs\n"                                                  \
-            "    pushl %gs\n"                                                  \
-            "    pushl %ss\n"                                                  \
-            "    mov $" __STRINGIFY(GDT_SELECTOR_DATA0) ", %ax\n"              \
-            "    mov %ax, %ds\n"                                               \
-            "    mov %ax, %es\n"                                               \
-            "    mov $" __STRINGIFY(GDT_SELECTOR_PROC) ", %ax\n"               \
-            "    mov %ax, %gs\n"                                               \
-            "    pushl %esp \n" /* set TrapFrame::regs */                      \
-            "    subl $" __STRINGIFY(TRAP_FRAME_SIZE - 4) ", %esp \n"          \
-            "    pushl %esp \n"                                                \
-            "    cld\n"                                                        \
-            "    call enter_trap_no_irq \n"                                    \
-            "    call " #title "_handler\n"                                    \
-            "    jmp common_trap_exit \n"                                      \
-        );                                                                     \
-    }
-
-#elif ARCH(X86_64)
 #define EH_ENTRY(ec, title)                                                    \
     extern "C" void title##_asm_entry();                                       \
     extern "C" void title##_handler(TrapFrame*) __attribute__((used));         \
@@ -173,41 +118,19 @@ static EntropySource s_entropy_source_interrupts { EntropySource::Static::Interr
             "    jmp common_trap_exit \n"                                      \
         );                                                                     \
     }
-#endif
 
 // clang-format on
 
 void dump_registers(RegisterState const& regs)
 {
-#if ARCH(I386)
-    u16 ss;
-    u32 esp;
-
-    if (!(regs.cs & 3)) {
-        ss = regs.ss;
-        esp = regs.esp;
-    } else {
-        ss = regs.userspace_ss;
-        esp = regs.userspace_esp;
-    }
-#else
     u64 rsp;
 
     if (!(regs.cs & 3))
         rsp = regs.rsp;
     else
         rsp = regs.userspace_rsp;
-#endif
 
     dbgln("Exception code: {:04x} (isr: {:04x})", regs.exception_code, regs.isr_number);
-#if ARCH(I386)
-    dbgln("    pc={:#04x}:{:p} eflags={:p}", (u16)regs.cs, regs.eip, regs.eflags);
-    dbgln(" stack={:#04x}:{:p}", ss, esp);
-    dbgln("    ds={:#04x} es={:#04x} fs={:#04x} gs={:#04x}", (u16)regs.ds, (u16)regs.es, (u16)regs.fs, (u16)regs.gs);
-    dbgln("   eax={:p} ebx={:p} ecx={:p} edx={:p}", regs.eax, regs.ebx, regs.ecx, regs.edx);
-    dbgln("   ebp={:p} esp={:p} esi={:p} edi={:p}", regs.ebp, regs.esp, regs.esi, regs.edi);
-    dbgln("   cr0={:p} cr2={:p} cr3={:p} cr4={:p}", read_cr0(), read_cr2(), read_cr3(), read_cr4());
-#else
     dbgln("    pc={:#04x}:{:p} rflags={:p}", (u16)regs.cs, regs.rip, regs.rflags);
     dbgln(" stack={:p}", rsp);
     // FIXME: Add fs_base and gs_base here
@@ -216,7 +139,6 @@ void dump_registers(RegisterState const& regs)
     dbgln("    r8={:p}  r9={:p} r10={:p} r11={:p}", regs.r8, regs.r9, regs.r10, regs.r11);
     dbgln("   r12={:p} r13={:p} r14={:p} r15={:p}", regs.r12, regs.r13, regs.r14, regs.r15);
     dbgln("   cr0={:p} cr2={:p} cr3={:p} cr4={:p}", read_cr0(), read_cr2(), read_cr3(), read_cr4());
-#endif
 }
 
 EH_ENTRY_NO_CODE(6, illegal_instruction);

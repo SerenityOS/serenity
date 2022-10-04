@@ -200,7 +200,7 @@ int main(int argc, char** argv)
                 return Crash::Failure::UnexpectedError;
 
             u8* makeshift_esp = makeshift_stack + 2048;
-#if ARCH(I386) || ARCH(X86_64)
+#if ARCH(X86_64)
             asm volatile("mov %%eax, %%esp" ::"a"(makeshift_esp));
 #elif ARCH(AARCH64)
             (void)makeshift_esp;
@@ -216,7 +216,7 @@ int main(int argc, char** argv)
                 return Crash::Failure::UnexpectedError;
 
             u8* bad_esp = bad_stack + 2048;
-#if ARCH(I386) || ARCH(X86_64)
+#if ARCH(X86_64)
             asm volatile("mov %%eax, %%esp" ::"a"(bad_esp));
 #elif ARCH(AARCH64)
             (void)bad_esp;
@@ -281,7 +281,7 @@ int main(int argc, char** argv)
 
     if (do_trigger_user_mode_instruction_prevention) {
         any_failures |= !Crash("Trigger x86 User Mode Instruction Prevention", []() {
-#if ARCH(I386) || ARCH(X86_64)
+#if ARCH(X86_64)
             asm volatile("str %eax");
 #elif ARCH(AARCH64)
             TODO_AARCH64();

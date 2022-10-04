@@ -7,8 +7,6 @@ endif()
 
 if ("${SERENITY_ARCH}" STREQUAL "aarch64")
     set(KERNEL_ARCH aarch64)
-elseif ("${SERENITY_ARCH}" STREQUAL "i686")
-    set(KERNEL_ARCH i386)
 elseif("${SERENITY_ARCH}" STREQUAL "x86_64")
     set(KERNEL_ARCH x86_64)
 endif()
@@ -349,7 +347,7 @@ set(KERNEL_SOURCES
     WorkQueue.cpp
 )
 
-if ("${SERENITY_ARCH}" STREQUAL "i686" OR "${SERENITY_ARCH}" STREQUAL "x86_64")
+if ("${SERENITY_ARCH}" STREQUAL "x86_64")
     set(KERNEL_SOURCES
         ${KERNEL_SOURCES}
         Arch/x86/init.cpp
@@ -433,13 +431,6 @@ if ("${SERENITY_ARCH}" STREQUAL "i686" OR "${SERENITY_ARCH}" STREQUAL "x86_64")
         set(KERNEL_SOURCES
             ${KERNEL_SOURCES}
             ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/${KERNEL_ARCH}/SyscallEntry.cpp
-        )
-    endif()
-
-    if ("${SERENITY_ARCH}" STREQUAL "i686")
-        set(KERNEL_SOURCES
-            ${KERNEL_SOURCES}
-            ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/${KERNEL_ARCH}/Atomics.cpp
         )
     endif()
 elseif("${SERENITY_ARCH}" STREQUAL "aarch64")
@@ -556,7 +547,7 @@ add_compile_options(-fsigned-char)
 add_compile_options(-Wno-unknown-warning-option -Wvla -Wnull-dereference)
 add_compile_options(-fno-rtti -ffreestanding -fbuiltin)
 
-if ("${SERENITY_ARCH}" STREQUAL "i686" OR "${SERENITY_ARCH}" STREQUAL "x86_64")
+if ("${SERENITY_ARCH}" STREQUAL "x86_64")
     add_compile_options(-mno-80387 -mno-mmx -mno-sse -mno-sse2)
 elseif("${SERENITY_ARCH}" STREQUAL "aarch64")
     add_compile_options(-mgeneral-regs-only)
@@ -617,8 +608,6 @@ endmacro()
 if ("${SERENITY_ARCH}" STREQUAL "x86_64")
     add_compile_options(-mcmodel=large -mno-red-zone)
     set_new_alignment(8)
-elseif ("${SERENITY_ARCH}" STREQUAL "i686")
-    set_new_alignment(4)
 endif()
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static-pie")

@@ -15,7 +15,7 @@ extern "C" {
 
 static void print_location(SourceLocation const&)
 {
-#if ARCH(I386) || ARCH(X86_64)
+#if ARCH(X86_64)
     asm volatile("cli; hlt");
 #else
     for (;;) { }

@@ -5,7 +5,7 @@
  */
 
 #include <AK/Platform.h>
-#if ARCH(I386) || ARCH(X86_64)
+#if ARCH(X86_64)
 #    include <Kernel/Arch/x86/common/BochsDebugOutput.h>
 #endif
 #include <Kernel/Devices/ConsoleDevice.h>

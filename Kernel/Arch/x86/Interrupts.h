@@ -19,11 +19,7 @@ class GenericInterruptHandler;
 
 extern "C" void interrupt_common_asm_entry();
 
-#if ARCH(I386)
-#    define INTERRUPT_HANDLER_PUSH_PADDING
-#else
-#    define INTERRUPT_HANDLER_PUSH_PADDING "pushw $0\npushw $0\n"
-#endif
+#define INTERRUPT_HANDLER_PUSH_PADDING "pushw $0\npushw $0\n"
 
 // clang-format off
 #define GENERATE_GENERIC_INTERRUPT_HANDLER_ASM_ENTRY(isr_number)                  \

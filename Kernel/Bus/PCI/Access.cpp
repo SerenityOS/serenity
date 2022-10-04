@@ -7,7 +7,7 @@
 #include <AK/ByteReader.h>
 #include <AK/Error.h>
 #include <AK/HashTable.h>
-#if ARCH(I386) || ARCH(X86_64)
+#if ARCH(X86_64)
 #    include <Kernel/Arch/x86/PCI/Controller/HostBridge.h>
 #endif
 #include <Kernel/Bus/PCI/Access.h>
@@ -110,7 +110,7 @@ UNMAP_AFTER_INIT bool Access::initialize_for_multiple_pci_domains(PhysicalAddres
     return true;
 }
 
-#if ARCH(I386) || ARCH(X86_64)
+#if ARCH(X86_64)
 UNMAP_AFTER_INIT bool Access::initialize_for_one_pci_domain()
 {
     VERIFY(!Access::is_initialized());

@@ -50,24 +50,7 @@ struct ThreadSpecificData {
 #define THREAD_AFFINITY_DEFAULT 0xffffffff
 
 struct ThreadRegisters {
-#if ARCH(I386)
-    FlatPtr ss;
-    FlatPtr gs;
-    FlatPtr fs;
-    FlatPtr es;
-    FlatPtr ds;
-    FlatPtr edi;
-    FlatPtr esi;
-    FlatPtr ebp;
-    FlatPtr esp;
-    FlatPtr ebx;
-    FlatPtr edx;
-    FlatPtr ecx;
-    FlatPtr eax;
-    FlatPtr eip;
-    FlatPtr esp0;
-    FlatPtr ss0;
-#else
+#if ARCH(X86_64)
     FlatPtr rdi;
     FlatPtr rsi;
     FlatPtr rbp;
@@ -89,14 +72,7 @@ struct ThreadRegisters {
 #endif
     FlatPtr cs;
 
-#if ARCH(I386)
-    FlatPtr eflags;
-    FlatPtr flags() const { return eflags; }
-    void set_flags(FlatPtr value) { eflags = value; }
-    void set_sp(FlatPtr value) { esp = value; }
-    void set_sp0(FlatPtr value) { esp0 = value; }
-    void set_ip(FlatPtr value) { eip = value; }
-#else
+#if ARCH(X86_64)
     FlatPtr rflags;
     FlatPtr flags() const { return rflags; }
     void set_flags(FlatPtr value) { rflags = value; }
@@ -109,18 +85,14 @@ struct ThreadRegisters {
 
     FlatPtr ip() const
     {
-#if ARCH(I386)
-        return eip;
-#else
+#if ARCH(X86_64)
         return rip;
 #endif
     }
 
     FlatPtr sp() const
     {
-#if ARCH(I386)
-        return esp;
-#else
+#if ARCH(X86_64)
         return rsp;
 #endif
     }

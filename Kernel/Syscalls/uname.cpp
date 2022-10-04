@@ -22,9 +22,7 @@ ErrorOr<FlatPtr> Process::sys$uname(Userspace<utsname*> user_buf)
             {}, // Hostname, filled in below.
             {}, // "Release" (1.0-dev), filled in below.
             {}, // "Revision" (git commit hash), filled in below.
-#if ARCH(I386)
-            "i686",
-#elif ARCH(X86_64)
+#if ARCH(X86_64)
             "x86_64",
 #elif ARCH(AARCH64)
             "AArch64",

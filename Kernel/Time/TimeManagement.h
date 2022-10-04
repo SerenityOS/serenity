@@ -81,7 +81,7 @@ private:
     TimePage& time_page();
     void update_time_page();
 
-#if ARCH(I386) || ARCH(X86_64)
+#if ARCH(X86_64)
     bool probe_and_set_x86_legacy_hardware_timers();
     bool probe_and_set_x86_non_legacy_hardware_timers();
     void increment_time_since_boot_hpet();

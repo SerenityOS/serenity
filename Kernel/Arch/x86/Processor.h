@@ -31,14 +31,12 @@ class ProcessorInfo;
 struct ProcessorMessage;
 struct ProcessorMessageEntry;
 
-#if ARCH(X86_64)
-#    define MSR_EFER 0xc0000080
-#    define MSR_STAR 0xc0000081
-#    define MSR_LSTAR 0xc0000082
-#    define MSR_SFMASK 0xc0000084
-#    define MSR_FS_BASE 0xc0000100
-#    define MSR_GS_BASE 0xc0000101
-#endif
+#define MSR_EFER 0xc0000080
+#define MSR_STAR 0xc0000081
+#define MSR_LSTAR 0xc0000082
+#define MSR_SFMASK 0xc0000084
+#define MSR_FS_BASE 0xc0000100
+#define MSR_GS_BASE 0xc0000101
 #define MSR_IA32_EFER 0xc0000080
 #define MSR_IA32_PAT 0x277
 
@@ -73,10 +71,8 @@ class Processor {
 
     Processor* m_self;
 
-#if ARCH(X86_64)
     // Saved user stack for the syscall instruction.
     void* m_user_stack;
-#endif
 
     DescriptorTablePointer m_gdtr;
     alignas(Descriptor) Descriptor m_gdt[256];
@@ -93,9 +89,7 @@ class Processor {
     static Atomic<u32> g_total_processors;
     u8 m_physical_address_bit_width;
     u8 m_virtual_address_bit_width;
-#if ARCH(X86_64)
     bool m_has_qemu_hvf_quirk;
-#endif
 
     ProcessorInfo* m_info;
     Thread* m_current_thread;
@@ -240,7 +234,6 @@ public:
 
     static bool is_smp_enabled();
 
-#if ARCH(X86_64)
     static constexpr u64 user_stack_offset()
     {
         return __builtin_offsetof(Processor, m_user_stack);
@@ -249,7 +242,6 @@ public:
     {
         return __builtin_offsetof(Processor, m_tss) + __builtin_offsetof(TSS, rsp0l);
     }
-#endif
 
     ALWAYS_INLINE static Processor& current()
     {
@@ -258,11 +250,7 @@ public:
 
     ALWAYS_INLINE static bool is_initialized()
     {
-        return
-#if ARCH(I386)
-            get_gs() == GDT_SELECTOR_PROC &&
-#endif
-            read_gs_ptr(__builtin_offsetof(Processor, m_self)) != 0;
+        return read_gs_ptr(__builtin_offsetof(Processor, m_self)) != 0;
     }
 
     template<typename T>

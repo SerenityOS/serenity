@@ -80,23 +80,7 @@ Thread::Thread(NonnullLockRefPtr<Process> process, NonnullOwnPtr<Memory::Region>
     // Only IF is set when a process boots.
     m_regs.set_flags(0x0202);
 
-#if ARCH(I386)
-    if (m_process->is_kernel_process()) {
-        m_regs.cs = GDT_SELECTOR_CODE0;
-        m_regs.ds = GDT_SELECTOR_DATA0;
-        m_regs.es = GDT_SELECTOR_DATA0;
-        m_regs.fs = 0;
-        m_regs.ss = GDT_SELECTOR_DATA0;
-        m_regs.gs = GDT_SELECTOR_PROC;
-    } else {
-        m_regs.cs = GDT_SELECTOR_CODE3 | 3;
-        m_regs.ds = GDT_SELECTOR_DATA3 | 3;
-        m_regs.es = GDT_SELECTOR_DATA3 | 3;
-        m_regs.fs = GDT_SELECTOR_DATA3 | 3;
-        m_regs.ss = GDT_SELECTOR_DATA3 | 3;
-        m_regs.gs = GDT_SELECTOR_TLS | 3;
-    }
-#elif ARCH(X86_64)
+#if ARCH(X86_64)
     if (m_process->is_kernel_process())
         m_regs.cs = GDT_SELECTOR_CODE0;
     else
@@ -118,9 +102,6 @@ Thread::Thread(NonnullLockRefPtr<Process> process, NonnullOwnPtr<Memory::Region>
     } else {
         // Ring 3 processes get a separate stack for ring 0.
         // The ring 3 stack will be assigned by exec().
-#if ARCH(I386)
-        m_regs.ss0 = GDT_SELECTOR_DATA0;
-#endif
         m_regs.set_sp0(m_kernel_stack_top);
     }
 
@@ -1151,9 +1132,7 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
         if (action.flags & SA_SIGINFO)
             fill_signal_info_for_signal(signal_info);
 
-#if ARCH(I386)
-        constexpr static FlatPtr thread_red_zone_size = 0;
-#elif ARCH(X86_64)
+#if ARCH(X86_64)
         constexpr static FlatPtr thread_red_zone_size = 128;
 #elif ARCH(AARCH64)
         constexpr static FlatPtr thread_red_zone_size = 0; // FIXME
@@ -1188,22 +1167,14 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
 
         VERIFY(stack % 16 == 0);
 
-#if ARCH(I386) || ARCH(X86_64)
+#if ARCH(X86_64)
         // Save the FPU/SSE state
         TRY(copy_value_on_user_stack(stack, fpu_state()));
 #endif
 
-#if ARCH(I386)
-        // Leave one empty slot to align the stack for a handler call.
-        TRY(push_value_on_user_stack(stack, 0));
-#endif
         TRY(push_value_on_user_stack(stack, pointer_to_ucontext));
         TRY(push_value_on_user_stack(stack, pointer_to_signal_info));
         TRY(push_value_on_user_stack(stack, signal));
-
-#if ARCH(I386)
-        VERIFY(stack % 16 == 0);
-#endif
 
         TRY(push_value_on_user_stack(stack, handler_vaddr.get()));
 

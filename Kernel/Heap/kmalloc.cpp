@@ -18,9 +18,7 @@
 #include <Kernel/Sections.h>
 #include <Kernel/StdLib.h>
 
-#if ARCH(I386)
-static constexpr size_t CHUNK_SIZE = 32;
-#elif ARCH(X86_64) || ARCH(AARCH64)
+#if ARCH(X86_64) || ARCH(AARCH64)
 static constexpr size_t CHUNK_SIZE = 64;
 #else
 #    error Unknown architecture

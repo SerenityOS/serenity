@@ -274,9 +274,7 @@ LockRefPtr<Process> Process::create_kernel_process(LockRefPtr<Thread>& first_thr
     auto process = process_or_error.release_value();
 
     first_thread->regs().set_ip((FlatPtr)entry);
-#if ARCH(I386)
-    first_thread->regs().esp = FlatPtr(entry_data); // entry function argument is expected to be in regs.esp
-#elif ARCH(X86_64)
+#if ARCH(X86_64)
     first_thread->regs().rdi = FlatPtr(entry_data); // entry function argument is expected to be in regs.rdi
 #elif ARCH(AARCH64)
     (void)entry_data;
@@ -396,40 +394,7 @@ Process::~Process()
 extern void signal_trampoline_dummy() __attribute__((used));
 void signal_trampoline_dummy()
 {
-#if ARCH(I386)
-    // The trampoline preserves the current eax, pushes the signal code and
-    // then calls the signal handler. We do this because, when interrupting a
-    // blocking syscall, that syscall may return some special error code in eax;
-    // This error code would likely be overwritten by the signal handler, so it's
-    // necessary to preserve it here.
-    constexpr static auto offset_to_first_register_slot = sizeof(__ucontext) + sizeof(siginfo) + sizeof(FPUState) + 4 * sizeof(FlatPtr);
-    asm(
-        ".intel_syntax noprefix\n"
-        ".globl asm_signal_trampoline\n"
-        "asm_signal_trampoline:\n"
-        // stack state: 0, ucontext, signal_info, (alignment = 16), fpu_state (alignment = 16), 0, ucontext*, siginfo*, signal, (alignment = 16), handler
-
-        // Pop the handler into ecx
-        "pop ecx\n" // save handler
-        // we have to save eax 'cause it might be the return value from a syscall
-        "mov [esp+%P1], eax\n"
-        // Note that the stack is currently aligned to 16 bytes as we popped the extra entries above.
-        // and it's already setup to call the handler with the expected values on the stack.
-        // call the signal handler
-        "call ecx\n"
-        // drop the 4 arguments
-        "add esp, 16\n"
-        // Current stack state is just saved_eax, ucontext, signal_info, fpu_state?.
-        // syscall SC_sigreturn
-        "mov eax, %P0\n"
-        "int 0x82\n"
-        ".globl asm_signal_trampoline_end\n"
-        "asm_signal_trampoline_end:\n"
-        ".att_syntax"
-        :
-        : "i"(Syscall::SC_sigreturn),
-        "i"(offset_to_first_register_slot));
-#elif ARCH(X86_64)
+#if ARCH(X86_64)
     // The trampoline preserves the current rax, pushes the signal code and
     // then calls the signal handler. We do this because, when interrupting a
     // blocking syscall, that syscall may return some special error code in eax;

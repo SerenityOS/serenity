@@ -10,7 +10,7 @@
 #include <AK/Singleton.h>
 #include <AK/StringView.h>
 #include <AK/UUID.h>
-#if ARCH(I386) || ARCH(X86_64)
+#if ARCH(X86_64)
 #    include <Kernel/Arch/x86/ISABus/IDEController.h>
 #    include <Kernel/Arch/x86/PCI/IDELegacyModeController.h>
 #endif
@@ -102,8 +102,8 @@ UNMAP_AFTER_INIT void StorageManagement::enumerate_pci_controllers(bool force_pi
                 }
             }
 
+#if ARCH(X86_64)
             auto subclass_code = static_cast<SubclassID>(device_identifier.subclass_code().value());
-#if ARCH(I386) || ARCH(X86_64)
             if (subclass_code == SubclassID::IDEController && kernel_command_line().is_ide_enabled()) {
                 m_controllers.append(PCIIDELegacyModeController::initialize(device_identifier, force_pio));
             }
@@ -426,7 +426,7 @@ UNMAP_AFTER_INIT void StorageManagement::initialize(StringView root_device, bool
     VERIFY(s_storage_device_minor_number == 0);
     m_boot_argument = root_device;
     if (PCI::Access::is_disabled()) {
-#if ARCH(I386) || ARCH(X86_64)
+#if ARCH(X86_64)
         // Note: If PCI is disabled, we assume that at least we have an ISA IDE controller
         // to probe and use
         auto isa_ide_controller = MUST(ISAIDEController::initialize());

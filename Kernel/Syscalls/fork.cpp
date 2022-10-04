@@ -101,28 +101,7 @@ ErrorOr<FlatPtr> Process::sys$fork(RegisterState& regs)
     child_first_thread->m_alternative_signal_stack = Thread::current()->m_alternative_signal_stack;
     child_first_thread->m_alternative_signal_stack_size = Thread::current()->m_alternative_signal_stack_size;
 
-#if ARCH(I386)
-    auto& child_regs = child_first_thread->m_regs;
-    child_regs.eax = 0; // fork() returns 0 in the child :^)
-    child_regs.ebx = regs.ebx;
-    child_regs.ecx = regs.ecx;
-    child_regs.edx = regs.edx;
-    child_regs.ebp = regs.ebp;
-    child_regs.esp = regs.userspace_esp;
-    child_regs.esi = regs.esi;
-    child_regs.edi = regs.edi;
-    child_regs.eflags = regs.eflags;
-    child_regs.eip = regs.eip;
-    child_regs.cs = regs.cs;
-    child_regs.ds = regs.ds;
-    child_regs.es = regs.es;
-    child_regs.fs = regs.fs;
-    child_regs.gs = regs.gs;
-    child_regs.ss = regs.userspace_ss;
-
-    dbgln_if(FORK_DEBUG, "fork: child will begin executing at {:#04x}:{:p} with stack {:#04x}:{:p}, kstack {:#04x}:{:p}",
-        child_regs.cs, child_regs.eip, child_regs.ss, child_regs.esp, child_regs.ss0, child_regs.esp0);
-#elif ARCH(X86_64)
+#if ARCH(X86_64)
     auto& child_regs = child_first_thread->m_regs;
     child_regs.rax = 0; // fork() returns 0 in the child :^)
     child_regs.rbx = regs.rbx;

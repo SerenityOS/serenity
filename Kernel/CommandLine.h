@@ -32,7 +32,7 @@ enum class AcpiFeatureLevel {
 
 enum class PCIAccessLevel {
     None,
-#if ARCH(I386) || ARCH(X86_64)
+#if ARCH(X86_64)
     IOAddressing,
 #endif
     MemoryAddressing,

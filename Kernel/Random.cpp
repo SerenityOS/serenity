@@ -7,7 +7,7 @@
 
 #include <AK/Singleton.h>
 #include <Kernel/Arch/Processor.h>
-#if ARCH(I386) || ARCH(X86_64)
+#if ARCH(X86_64)
 #    include <Kernel/Arch/x86/Time/HPET.h>
 #    include <Kernel/Arch/x86/Time/RTC.h>
 #endif
@@ -28,7 +28,7 @@ KernelRng& KernelRng::the()
 
 UNMAP_AFTER_INIT KernelRng::KernelRng()
 {
-#if ARCH(I386) || ARCH(X86_64)
+#if ARCH(X86_64)
     bool supports_rdseed = Processor::current().has_feature(CPUFeature::RDSEED);
     bool supports_rdrand = Processor::current().has_feature(CPUFeature::RDRAND);
     if (supports_rdseed || supports_rdrand) {

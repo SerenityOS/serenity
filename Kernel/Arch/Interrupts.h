@@ -9,7 +9,7 @@
 #include <AK/Platform.h>
 #include <AK/Types.h>
 
-#if ARCH(X86_64) || ARCH(I386)
+#if ARCH(X86_64)
 #    include <Kernel/Arch/x86/Interrupts.h>
 #endif
 
