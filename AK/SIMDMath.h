@@ -6,9 +6,7 @@
 
 #pragma once
 
-#ifndef __SSE__
-#    include <AK/Math.h>
-#endif
+#include <AK/Math.h>
 #include <AK/SIMD.h>
 #include <AK/SIMDExtras.h>
 #include <math.h>
@@ -70,7 +68,7 @@ ALWAYS_INLINE static f32x4 exp(f32x4 v)
 
 ALWAYS_INLINE static f32x4 sqrt(f32x4 v)
 {
-#ifdef __SSE__
+#if ARCH(x86_64)
     return __builtin_ia32_sqrtps(v);
 #else
     return f32x4 {
@@ -84,7 +82,7 @@ ALWAYS_INLINE static f32x4 sqrt(f32x4 v)
 
 ALWAYS_INLINE static f32x4 rsqrt(f32x4 v)
 {
-#ifdef __SSE__
+#if ARCH(x86_64)
     return __builtin_ia32_rsqrtps(v);
 #else
     return f32x4 {

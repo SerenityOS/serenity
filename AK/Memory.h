@@ -18,7 +18,7 @@
 
 ALWAYS_INLINE void fast_u32_copy(u32* dest, u32 const* src, size_t count)
 {
-#if ARCH(I386) || ARCH(X86_64)
+#if ARCH(X86_64)
     asm volatile(
         "rep movsl\n"
         : "+S"(src), "+D"(dest), "+c"(count)::"memory");
@@ -29,7 +29,7 @@ ALWAYS_INLINE void fast_u32_copy(u32* dest, u32 const* src, size_t count)
 
 ALWAYS_INLINE void fast_u32_fill(u32* dest, u32 value, size_t count)
 {
-#if ARCH(I386) || ARCH(X86_64)
+#if ARCH(X86_64)
     asm volatile(
         "rep stosl\n"
         : "=D"(dest), "=c"(count)
