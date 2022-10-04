@@ -9,7 +9,7 @@
 namespace Web::HighResolutionTime {
 
 // https://w3c.github.io/hr-time/#dfn-coarsen-time
-double coarsen_time(double timestamp, bool cross_origin_isolated_capability)
+DOMHighResTimeStamp coarsen_time(DOMHighResTimeStamp timestamp, bool cross_origin_isolated_capability)
 {
     // FIXME: Implement this.
     (void)cross_origin_isolated_capability;
