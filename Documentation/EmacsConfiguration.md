@@ -9,19 +9,19 @@ can use the following `.clangd` file placed in the project root:
 
 ```yaml
 CompileFlags:
-  CompilationDatabase: Build/i686
+  CompilationDatabase: Build/x86_64
   Add:
     - "-D__serenity__"
     - "-UNO_TLS"
-    - "-I/path/to/serenity/Toolchain/Local/i686/i686-pc-serenity/include/c++/12.1.0"
-    - "-I/path/to/serenity/Toolchain/Local/i686/i686-pc-serenity/include/c++/12.1.0/i686-pc-serenity"
+    - "-I/path/to/serenity/Toolchain/Local/x86_64/x86_64-pc-serenity/include/c++/12.1.0"
+    - "-I/path/to/serenity/Toolchain/Local/x86_64/x86_64-pc-serenity/include/c++/12.1.0/x86_64-pc-serenity"
 ```
 
 You will need to change `/path/to/serenity` and change `12.1.0` to
 whatever your GCC toolchain version at the time is.
 
 Run cmake (`Meta/serenity.sh run` or similar) at least once for this
-to work, as it will generate the `Build/i686/compile_commands.json`
+to work, as it will generate the `Build/x86_64/compile_commands.json`
 that is needed by `clangd`.
 
 ### lsp-mode

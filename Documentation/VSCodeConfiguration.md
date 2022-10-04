@@ -316,7 +316,6 @@ Note: The Assertion und KUBSan Problem matchers will only run after you have clo
             "type": "pickString",
             "default": "x86_64",
             "options": [
-                "i686",
                 "x86_64",
                 "aarch64"
             ]
