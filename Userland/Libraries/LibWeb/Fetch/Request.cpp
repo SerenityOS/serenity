@@ -198,7 +198,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Request>> Request::construct_impl(JS::Realm
 
     // client
     //     This’s relevant settings object.
-    request.set_client(HTML::relevant_settings_object(*request_object));
+    request.set_client(&HTML::relevant_settings_object(*request_object));
 
     // window
     //     window.
