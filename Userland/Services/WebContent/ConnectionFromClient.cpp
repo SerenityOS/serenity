@@ -40,7 +40,7 @@ ConnectionFromClient::ConnectionFromClient(NonnullOwnPtr<Core::Stream::LocalSock
     : IPC::ConnectionFromClient<WebContentClientEndpoint, WebContentServerEndpoint>(*this, move(socket), 1)
     , m_page_host(PageHost::create(*this))
 {
-    m_paint_flush_timer = Core::Timer::create_single_shot(0, [this] { flush_pending_paint_requests(); });
+    m_paint_flush_timer = Web::Platform::Timer::create_single_shot(0, [this] { flush_pending_paint_requests(); });
 }
 
 void ConnectionFromClient::die()

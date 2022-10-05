@@ -13,6 +13,7 @@
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
 #include <LibWeb/Painting/PaintableBox.h>
+#include <LibWeb/Platform/Timer.h>
 #include <WebContent/WebContentClientEndpoint.h>
 
 namespace WebContent {
@@ -22,7 +23,7 @@ PageHost::PageHost(ConnectionFromClient& client)
     , m_page(make<Web::Page>(*this))
 {
     setup_palette();
-    m_invalidation_coalescing_timer = Core::Timer::create_single_shot(0, [this] {
+    m_invalidation_coalescing_timer = Web::Platform::Timer::create_single_shot(0, [this] {
         m_client.async_did_invalidate_content_rect(m_invalidation_rect);
         m_invalidation_rect = {};
     });

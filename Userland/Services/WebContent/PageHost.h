@@ -81,7 +81,7 @@ private:
     bool m_should_show_line_box_borders { false };
     bool m_has_focus { false };
 
-    RefPtr<Core::Timer> m_invalidation_coalescing_timer;
+    RefPtr<Web::Platform::Timer> m_invalidation_coalescing_timer;
     Gfx::IntRect m_invalidation_rect;
     Web::CSS::PreferredColorScheme m_preferred_color_scheme { Web::CSS::PreferredColorScheme::Auto };
 };
