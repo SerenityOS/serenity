@@ -34,6 +34,8 @@ public:
 
     void request_file(NonnullRefPtr<Web::FileRequest>&);
 
+    Optional<int> fd() { return socket().fd(); }
+
 private:
     explicit ConnectionFromClient(NonnullOwnPtr<Core::Stream::LocalSocket>);
 
