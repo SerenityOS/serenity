@@ -17,7 +17,7 @@ class DOMPointReadOnly : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(DOMPointReadOnly, Bindings::PlatformObject);
 
 public:
-    static JS::NonnullGCPtr<DOMPointReadOnly> construct_impl(JS::Realm&, double x = 0, double y = 0, double z = 0, double w = 0);
+    static JS::NonnullGCPtr<DOMPointReadOnly> construct_impl(JS::Realm&, double x = 0, double y = 0, double z = 0, double w = 1);
 
     virtual ~DOMPointReadOnly() override;
 

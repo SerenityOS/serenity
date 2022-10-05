@@ -1,10 +1,17 @@
+// https://drafts.fxtf.org/geometry/#dompointreadonly
 interface DOMPointReadOnly {
 
-    constructor(optional double x = 0, optional double y = 0, optional double z = 0, optional double w = 0);
+    constructor(optional unrestricted double x = 0, optional unrestricted double y = 0,
+                optional unrestricted double z = 0, optional unrestricted double w = 1);
 
-    readonly attribute double x;
-    readonly attribute double y;
-    readonly attribute double z;
-    readonly attribute double w;
+    // FIXME: [NewObject] static DOMPointReadOnly fromPoint(optional DOMPointInit other = {});
 
+    readonly attribute unrestricted double x;
+    readonly attribute unrestricted double y;
+    readonly attribute unrestricted double z;
+    readonly attribute unrestricted double w;
+
+    // FIXME: DOMPoint matrixTransform(optional DOMMatrixInit matrix = {});
+
+    // FIXME: [Default] object toJSON();
 };

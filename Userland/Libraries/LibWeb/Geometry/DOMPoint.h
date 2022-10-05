@@ -15,7 +15,7 @@ class DOMPoint final : public DOMPointReadOnly {
     WEB_PLATFORM_OBJECT(DOMPoint, DOMPointReadOnly);
 
 public:
-    static JS::NonnullGCPtr<DOMPoint> construct_impl(JS::Realm&, double x = 0, double y = 0, double z = 0, double w = 0);
+    static JS::NonnullGCPtr<DOMPoint> construct_impl(JS::Realm&, double x = 0, double y = 0, double z = 0, double w = 1);
 
     virtual ~DOMPoint() override;
 
