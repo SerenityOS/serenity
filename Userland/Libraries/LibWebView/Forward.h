@@ -9,5 +9,7 @@
 namespace WebView {
 
 class OutOfProcessWebView;
+class ViewImplementation;
+class WebContentClient;
 
 }

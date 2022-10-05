@@ -14,7 +14,7 @@
 
 namespace WebView {
 
-class OutOfProcessWebView;
+class ViewImplementation;
 
 class WebContentClient final
     : public IPC::ConnectionToServer<WebContentClientEndpoint, WebContentServerEndpoint>
@@ -22,11 +22,11 @@ class WebContentClient final
     IPC_CLIENT_CONNECTION(WebContentClient, "/tmp/session/%sid/portal/webcontent"sv);
 
 public:
+    WebContentClient(NonnullOwnPtr<Core::Stream::LocalSocket>, ViewImplementation&);
+
     Function<void()> on_web_content_process_crash;
 
 private:
-    WebContentClient(NonnullOwnPtr<Core::Stream::LocalSocket>, OutOfProcessWebView&);
-
     virtual void die() override;
 
     virtual void did_paint(Gfx::IntRect const&, i32) override;
@@ -63,7 +63,7 @@ private:
     virtual void did_update_resource_count(i32 count_waiting) override;
     virtual void did_request_file(String const& path, i32) override;
 
-    OutOfProcessWebView& m_view;
+    ViewImplementation& m_view;
 };
 
 }
