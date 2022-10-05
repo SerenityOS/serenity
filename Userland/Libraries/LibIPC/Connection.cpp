@@ -48,17 +48,12 @@ ErrorOr<void> ConnectionBase::post_message(MessageBuffer buffer)
     uint32_t message_size = buffer.data.size();
     TRY(buffer.data.try_prepend(reinterpret_cast<u8 const*>(&message_size), sizeof(message_size)));
 
-#ifdef __serenity__
     for (auto& fd : buffer.fds) {
         if (auto result = fd_passing_socket().send_fd(fd.value()); result.is_error()) {
             shutdown_with_error(result.error());
             return result;
         }
     }
-#else
-    if (!buffer.fds.is_empty())
-        warnln("fd passing is not supported on this platform, sorry :(");
-#endif
 
     ReadonlyBytes bytes_to_write { buffer.data.span() };
     int writes_done = 0;
