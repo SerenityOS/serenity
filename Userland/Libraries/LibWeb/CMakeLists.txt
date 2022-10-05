@@ -383,7 +383,6 @@ set(SOURCES
     SVG/SVGClipPathElement.cpp
     SVG/SVGDefsElement.cpp
     SVG/SVGElement.cpp
-    SVG/SVGElement.cpp
     SVG/SVGGElement.cpp
     SVG/SVGGeometryElement.cpp
     SVG/SVGGraphicsElement.cpp
