@@ -20,6 +20,18 @@ ConnectionBase::ConnectionBase(IPC::Stub& local_stub, NonnullOwnPtr<Core::Stream
     m_responsiveness_timer = Core::Timer::create_single_shot(3000, [this] { may_have_become_unresponsive(); });
 }
 
+void ConnectionBase::set_fd_passing_socket(NonnullOwnPtr<Core::Stream::LocalSocket> socket)
+{
+    m_fd_passing_socket = move(socket);
+}
+
+Core::Stream::LocalSocket& ConnectionBase::fd_passing_socket()
+{
+    if (m_fd_passing_socket)
+        return *m_fd_passing_socket;
+    return *m_socket;
+}
+
 ErrorOr<void> ConnectionBase::post_message(Message const& message)
 {
     return post_message(message.encode());
@@ -38,7 +50,7 @@ ErrorOr<void> ConnectionBase::post_message(MessageBuffer buffer)
 
 #ifdef __serenity__
     for (auto& fd : buffer.fds) {
-        if (auto result = m_socket->send_fd(fd.value()); result.is_error()) {
+        if (auto result = fd_passing_socket().send_fd(fd.value()); result.is_error()) {
             shutdown_with_error(result.error());
             return result;
         }

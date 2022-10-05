@@ -33,6 +33,8 @@ class ConnectionBase : public Core::Object {
 public:
     virtual ~ConnectionBase() override = default;
 
+    void set_fd_passing_socket(NonnullOwnPtr<Core::Stream::LocalSocket>);
+
     bool is_open() const { return m_socket->is_open(); }
     ErrorOr<void> post_message(Message const&);
 
@@ -43,6 +45,7 @@ protected:
     explicit ConnectionBase(IPC::Stub&, NonnullOwnPtr<Core::Stream::LocalSocket>, u32 local_endpoint_magic);
 
     Core::Stream::LocalSocket& socket() { return *m_socket; }
+    Core::Stream::LocalSocket& fd_passing_socket();
 
     virtual void may_have_become_unresponsive() { }
     virtual void did_become_responsive() { }
@@ -60,6 +63,8 @@ protected:
     IPC::Stub& m_local_stub;
 
     NonnullOwnPtr<Core::Stream::LocalSocket> m_socket;
+    OwnPtr<Core::Stream::LocalSocket> m_fd_passing_socket;
+
     RefPtr<Core::Timer> m_responsiveness_timer;
 
     NonnullOwnPtrVector<Message> m_unprocessed_messages;
@@ -123,9 +128,9 @@ protected:
                 break;
             index += sizeof(message_size);
             auto remaining_bytes = ReadonlyBytes { bytes.data() + index, message_size };
-            if (auto message = LocalEndpoint::decode_message(remaining_bytes, *m_socket)) {
+            if (auto message = LocalEndpoint::decode_message(remaining_bytes, fd_passing_socket())) {
                 m_unprocessed_messages.append(message.release_nonnull());
-            } else if (auto message = PeerEndpoint::decode_message(remaining_bytes, *m_socket)) {
+            } else if (auto message = PeerEndpoint::decode_message(remaining_bytes, fd_passing_socket())) {
                 m_unprocessed_messages.append(message.release_nonnull());
             } else {
                 dbgln("Failed to parse a message");
