@@ -1,12 +1,16 @@
 #import <Geometry/DOMPointReadOnly.idl>
 
+// https://drafts.fxtf.org/geometry/#dompoint
 interface DOMPoint : DOMPointReadOnly {
 
-    constructor(optional double x = 0, optional double y = 0, optional double z = 0, optional double w = 0);
+    constructor(optional unrestricted double x = 0, optional unrestricted double y = 0,
+                optional unrestricted double z = 0, optional unrestricted double w = 1);
 
-    attribute double x;
-    attribute double y;
-    attribute double z;
-    attribute double w;
+    // FIXME: [NewObject] static DOMPoint fromPoint(optional DOMPointInit other = {});
+
+    inherit attribute unrestricted double x;
+    inherit attribute unrestricted double y;
+    inherit attribute unrestricted double z;
+    inherit attribute unrestricted double w;
 
 };
