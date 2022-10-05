@@ -10,7 +10,7 @@
 #include <AK/Platform.h>
 #include <AK/StringView.h>
 #include <AK/Try.h>
-#include <Kernel/Arch/InterruptDisabler.h>
+#include <Kernel/InterruptDisabler.h>
 #if ARCH(I386) || ARCH(X86_64)
 #    include <Kernel/Arch/x86/IO.h>
 #endif

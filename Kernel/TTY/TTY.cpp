@@ -8,8 +8,8 @@
 #include <AK/ScopeGuard.h>
 #include <AK/StringView.h>
 #include <Kernel/API/POSIX/errno.h>
-#include <Kernel/Arch/InterruptDisabler.h>
 #include <Kernel/Debug.h>
+#include <Kernel/InterruptDisabler.h>
 #include <Kernel/Process.h>
 #include <Kernel/TTY/TTY.h>
 #include <LibC/signal_numbers.h>

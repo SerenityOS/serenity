@@ -5,11 +5,11 @@
  */
 
 #include <AK/Optional.h>
-#include <Kernel/Arch/InterruptDisabler.h>
 #include <Kernel/Arch/x86/InterruptManagement.h>
 #include <Kernel/Arch/x86/common/Interrupts/APIC.h>
 #include <Kernel/Arch/x86/common/Interrupts/IOAPIC.h>
 #include <Kernel/Debug.h>
+#include <Kernel/InterruptDisabler.h>
 #include <Kernel/Sections.h>
 
 #define IOAPIC_REDIRECTION_ENTRY_OFFSET 0x10

@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/Arch/InterruptDisabler.h>
 #include <Kernel/Arch/InterruptManagement.h>
 #include <Kernel/Debug.h>
+#include <Kernel/InterruptDisabler.h>
 #include <Kernel/Interrupts/IRQHandler.h>
 
 namespace Kernel {

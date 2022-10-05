@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/Arch/InterruptDisabler.h>
 #include <Kernel/Arch/Processor.h>
 #include <Kernel/Arch/x86/TrapFrame.h>
+#include <Kernel/InterruptDisabler.h>
 
 namespace Kernel {
 

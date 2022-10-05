@@ -6,11 +6,11 @@
 
 #include <AK/Memory.h>
 #include <AK/StringView.h>
-#include <Kernel/Arch/InterruptDisabler.h>
 #include <Kernel/Arch/PageDirectory.h>
 #include <Kernel/Arch/PageFault.h>
 #include <Kernel/Debug.h>
 #include <Kernel/FileSystem/Inode.h>
+#include <Kernel/InterruptDisabler.h>
 #include <Kernel/Memory/AnonymousVMObject.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Memory/PageDirectory.h>
