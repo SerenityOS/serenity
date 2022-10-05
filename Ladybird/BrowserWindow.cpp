@@ -9,8 +9,8 @@
 #include "BrowserWindow.h"
 #include "Settings.h"
 #include "SettingsDialog.h"
-#include "SimpleWebView.h"
 #include "Utilities.h"
+#include "WebContentView.h"
 #include <AK/TypeCasts.h>
 #include <LibWeb/Loader/ResourceLoader.h>
 #include <QAction>
@@ -94,14 +94,7 @@ BrowserWindow::BrowserWindow()
     inspect_menu->addAction(view_source_action);
     QObject::connect(view_source_action, &QAction::triggered, this, [this] {
         if (m_current_tab) {
-            auto source = m_current_tab->view().source();
-
-            auto* text_edit = new QPlainTextEdit(this);
-            text_edit->setWindowFlags(Qt::Window);
-            text_edit->setFont(QFontDatabase::systemFont(QFontDatabase::SystemFont::FixedFont));
-            text_edit->resize(800, 600);
-            text_edit->setPlainText(source.characters());
-            text_edit->show();
+            m_current_tab->view().get_source();
         }
     });
 
