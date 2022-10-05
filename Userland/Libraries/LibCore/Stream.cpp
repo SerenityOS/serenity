@@ -561,8 +561,43 @@ ErrorOr<NonnullOwnPtr<LocalSocket>> LocalSocket::adopt_fd(int fd)
 
 ErrorOr<int> LocalSocket::receive_fd(int flags)
 {
-#ifdef __serenity__
+#if defined(AK_OS_SERENITY)
     return Core::System::recvfd(m_helper.fd(), flags);
+#elif defined(AK_OS_LINUX)
+    union {
+        struct cmsghdr cmsghdr;
+        char control[CMSG_SPACE(sizeof(int))];
+    } cmsgu {};
+    char c = 0;
+    struct iovec iov {
+        .iov_base = &c,
+        .iov_len = 1,
+    };
+    struct msghdr msg {
+        .msg_name = NULL,
+        .msg_namelen = 0,
+        .msg_iov = &iov,
+        .msg_iovlen = 1,
+        .msg_control = cmsgu.control,
+        .msg_controllen = sizeof(cmsgu.control),
+        .msg_flags = 0,
+    };
+    TRY(Core::System::recvmsg(m_helper.fd(), &msg, 0));
+
+    struct cmsghdr* cmsg = CMSG_FIRSTHDR(&msg);
+    if (!cmsg || cmsg->cmsg_len != CMSG_LEN(sizeof(int)))
+        return Error::from_string_literal("Malformed message when receiving file descriptor");
+
+    VERIFY(cmsg->cmsg_level == SOL_SOCKET);
+    VERIFY(cmsg->cmsg_type == SCM_RIGHTS);
+    int fd = *((int*)CMSG_DATA(cmsg));
+
+    if (flags & O_CLOEXEC) {
+        auto fd_flags = TRY(Core::System::fcntl(fd, F_GETFD));
+        TRY(Core::System::fcntl(fd, F_SETFD, fd_flags | FD_CLOEXEC));
+    }
+
+    return fd;
 #else
     (void)flags;
     return Error::from_string_literal("File descriptor passing not supported on this platform");
@@ -571,8 +606,39 @@ ErrorOr<int> LocalSocket::receive_fd(int flags)
 
 ErrorOr<void> LocalSocket::send_fd(int fd)
 {
-#ifdef __serenity__
+#if defined(AK_OS_SERENITY)
     return Core::System::sendfd(m_helper.fd(), fd);
+#elif defined(AK_OS_LINUX)
+    char c = 'F';
+    struct iovec iov {
+        .iov_base = &c,
+        .iov_len = sizeof(c)
+    };
+
+    union {
+        struct cmsghdr cmsghdr;
+        char control[CMSG_SPACE(sizeof(int))];
+    } cmsgu {};
+
+    struct msghdr msg {
+        .msg_name = NULL,
+        .msg_namelen = 0,
+        .msg_iov = &iov,
+        .msg_iovlen = 1,
+        .msg_control = cmsgu.control,
+        .msg_controllen = sizeof(cmsgu.control),
+        .msg_flags = 0,
+    };
+
+    struct cmsghdr* cmsg = CMSG_FIRSTHDR(&msg);
+    cmsg->cmsg_len = CMSG_LEN(sizeof(int));
+    cmsg->cmsg_level = SOL_SOCKET;
+    cmsg->cmsg_type = SCM_RIGHTS;
+
+    *((int*)CMSG_DATA(cmsg)) = fd;
+
+    TRY(Core::System::sendmsg(m_helper.fd(), &msg, 0));
+    return {};
 #else
     (void)fd;
     return Error::from_string_literal("File descriptor passing not supported on this platform");
