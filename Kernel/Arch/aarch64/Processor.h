@@ -171,6 +171,12 @@ public:
         return *g_current_processor;
     }
 
+    // FIXME: Move this into generic Processor class, when there is such a class.
+    ALWAYS_INLINE static bool is_bootstrap_processor()
+    {
+        return Processor::current_id() == 0;
+    }
+
     static void deferred_call_queue(Function<void()> /* callback */)
     {
         TODO_AARCH64();
