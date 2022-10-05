@@ -182,6 +182,7 @@ ErrorOr<void> Toolbar::update_overflow_menu()
     auto position { 0 };
     auto is_horizontal { m_orientation == Gfx::Orientation::Horizontal };
     auto margin { is_horizontal ? layout()->margins().horizontal_total() : layout()->margins().vertical_total() };
+    auto spacing { layout()->spacing() };
     auto toolbar_size { is_horizontal ? width() : height() };
 
     for (size_t i = 0; i < m_items.size() - 1; ++i) {
@@ -192,7 +193,7 @@ ErrorOr<void> Toolbar::update_overflow_menu()
             break;
         }
         item.widget->set_visible(true);
-        position += item_size;
+        position += item_size + spacing;
     }
 
     if (!marginal_index.has_value()) {
@@ -207,10 +208,10 @@ ErrorOr<void> Toolbar::update_overflow_menu()
         for (size_t i = marginal_index.value() - 1; i > 0; --i) {
             auto& item = m_items.at(i);
             auto item_size = is_horizontal ? item.widget->width() : item.widget->height();
-            if (position + m_button_size + margin <= toolbar_size)
+            if (position + m_button_size + spacing + margin <= toolbar_size)
                 break;
             item.widget->set_visible(false);
-            position -= item_size;
+            position -= item_size + spacing;
             marginal_index = i;
         }
     }
