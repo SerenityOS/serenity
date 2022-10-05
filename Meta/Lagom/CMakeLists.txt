@@ -586,9 +586,10 @@ if (BUILD_LAGOM)
 
     # WebView
     list(APPEND LIBWEBVIEW_SOURCES "../../Userland/Libraries/LibWebView/DOMTreeModel.cpp")
+    list(APPEND LIBWEBVIEW_SOURCES "../../Userland/Libraries/LibWebView/WebContentClient.cpp")
     lagom_lib(WebView webview
         SOURCES ${LIBWEBVIEW_SOURCES}
-        LIBS LibGUI)
+        LIBS LibGUI LibWeb)
 
     # x86
     # FIXME: Excluding arm64 is a temporary hack to circumvent a build problem
