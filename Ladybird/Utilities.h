@@ -11,3 +11,6 @@
 
 AK::String akstring_from_qstring(QString const&);
 QString qstring_from_akstring(AK::String const&);
+void platform_init();
+
+extern String s_serenity_resource_root;

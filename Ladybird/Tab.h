@@ -10,7 +10,7 @@
 #define AK_DONT_REPLACE_STD
 
 #include "History.h"
-#include "SimpleWebView.h"
+#include "WebContentView.h"
 #include <QBoxLayout>
 #include <QLabel>
 #include <QLineEdit>
@@ -24,7 +24,7 @@ class Tab final : public QWidget {
 public:
     explicit Tab(BrowserWindow* window);
 
-    SimpleWebView& view() { return *m_view; }
+    WebContentView& view() { return *m_view; }
 
     void navigate(QString);
 
@@ -52,7 +52,7 @@ private:
     QBoxLayout* m_layout;
     QToolBar* m_toolbar { nullptr };
     QLineEdit* m_location_edit { nullptr };
-    SimpleWebView* m_view { nullptr };
+    WebContentView* m_view { nullptr };
     BrowserWindow* m_window { nullptr };
     Browser::History m_history;
     QString m_title;

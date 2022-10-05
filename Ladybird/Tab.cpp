@@ -13,6 +13,7 @@
 #include <QCoreApplication>
 #include <QFont>
 #include <QFontMetrics>
+#include <QPlainTextEdit>
 #include <QPoint>
 #include <QResizeEvent>
 
@@ -27,7 +28,7 @@ Tab::Tab(BrowserWindow* window)
     m_layout->setSpacing(0);
     m_layout->setContentsMargins(0, 0, 0, 0);
 
-    m_view = new SimpleWebView;
+    m_view = new WebContentView;
     m_toolbar = new QToolBar(this);
     m_location_edit = new QLineEdit(this);
 
@@ -63,30 +64,39 @@ Tab::Tab(BrowserWindow* window)
     m_toolbar->addAction(m_home_action);
     m_toolbar->addWidget(m_location_edit);
 
-    QObject::connect(m_view, &SimpleWebView::link_hovered, [this](QString const& title) {
+    QObject::connect(m_view, &WebContentView::link_hovered, [this](QString const& title) {
         m_hover_label->setText(title);
         update_hover_label();
         m_hover_label->show();
     });
-    QObject::connect(m_view, &SimpleWebView::link_unhovered, [this] {
+    QObject::connect(m_view, &WebContentView::link_unhovered, [this] {
         m_hover_label->hide();
     });
 
-    QObject::connect(m_view, &SimpleWebView::load_started, [this](const URL& url) {
+    QObject::connect(m_view, &WebContentView::load_started, [this](const URL& url) {
         m_location_edit->setText(url.to_string().characters());
         m_history.push(url, m_title.toUtf8().data());
         m_back_action->setEnabled(m_history.can_go_back());
         m_forward_action->setEnabled(m_history.can_go_forward());
     });
     QObject::connect(m_location_edit, &QLineEdit::returnPressed, this, &Tab::location_edit_return_pressed);
-    QObject::connect(m_view, &SimpleWebView::title_changed, this, &Tab::page_title_changed);
-    QObject::connect(m_view, &SimpleWebView::favicon_changed, this, &Tab::page_favicon_changed);
+    QObject::connect(m_view, &WebContentView::title_changed, this, &Tab::page_title_changed);
+    QObject::connect(m_view, &WebContentView::favicon_changed, this, &Tab::page_favicon_changed);
 
     QObject::connect(m_back_action, &QAction::triggered, this, &Tab::back);
     QObject::connect(m_forward_action, &QAction::triggered, this, &Tab::forward);
     QObject::connect(m_home_action, &QAction::triggered, this, &Tab::home);
     QObject::connect(m_reload_action, &QAction::triggered, this, &Tab::reload);
     QObject::connect(focus_location_editor_action, &QAction::triggered, this, &Tab::focus_location_editor);
+
+    QObject::connect(m_view, &WebContentView::got_source, this, [this](AK::URL, QString const& source) {
+        auto* text_edit = new QPlainTextEdit(this);
+        text_edit->setWindowFlags(Qt::Window);
+        text_edit->setFont(QFontDatabase::systemFont(QFontDatabase::SystemFont::FixedFont));
+        text_edit->resize(800, 600);
+        text_edit->setPlainText(source);
+        text_edit->show();
+    });
 }
 
 void Tab::focus_location_editor()
@@ -99,7 +109,7 @@ void Tab::navigate(QString url)
 {
     if (!url.startsWith("http://", Qt::CaseInsensitive) && !url.startsWith("https://", Qt::CaseInsensitive) && !url.startsWith("file://", Qt::CaseInsensitive))
         url = "http://" + url;
-    view().load(url.toUtf8().data());
+    view().load(akstring_from_qstring(url));
 }
 
 void Tab::back()
