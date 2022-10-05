@@ -50,31 +50,25 @@ find_package(Qt6 REQUIRED COMPONENTS Core Widgets Network)
 
 set(SOURCES
     BrowserWindow.cpp
-    ConsoleClient.cpp
-    ConsoleGlobalObject.cpp
     CookieJar.cpp
-    EventLoopPluginQt.cpp
-    FontPluginQt.cpp
-    ImageCodecPluginLadybird.cpp
-    ModelTranslator.cpp
-    PageClientLadybird.cpp
-    RequestManagerQt.cpp
-    main.cpp
+    WebContentView.cpp
     History.cpp
+    ModelTranslator.cpp
     Settings.cpp
     SettingsDialog.cpp
-    SimpleWebView.cpp
     Tab.cpp
-    TimerQt.cpp
     Utilities.cpp
-    WebSocketClientManagerLadybird.cpp
-    WebSocketLadybird.cpp
+    main.cpp
 )
 
 qt_add_executable(ladybird ${SOURCES}
     MANUAL_FINALIZATION
 )
+#target_link_libraries(ladybird PRIVATE Qt::Widgets Qt::Network LibWeb LibGUI LibWeb LibWebView LibGL LibSoftGPU LibMain)
 target_link_libraries(ladybird PRIVATE Qt::Widgets Qt::Network LibWeb LibWebSocket LibGUI LibWebView LibGL LibSoftGPU LibMain)
+
+target_include_directories(ladybird PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
+target_include_directories(ladybird PRIVATE ${SERENITY_SOURCE_DIR}/Userland/Services/)
 
 set_target_properties(ladybird PROPERTIES
     MACOSX_BUNDLE_GUI_IDENTIFIER org.serenityos.ladybird
@@ -104,3 +98,5 @@ qt_finalize_executable(ladybird)
 if(NOT CMAKE_SKIP_INSTALL_RULES)
     include(cmake/InstallRules.cmake)
 endif()
+
+add_subdirectory(WebContent)
