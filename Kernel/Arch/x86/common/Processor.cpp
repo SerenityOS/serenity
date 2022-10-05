@@ -13,13 +13,13 @@
 #include <AK/Types.h>
 
 #include <Kernel/Arch/x86/common/Interrupts/APIC.h>
+#include <Kernel/InterruptDisabler.h>
 #include <Kernel/Process.h>
 #include <Kernel/Scheduler.h>
 #include <Kernel/Sections.h>
 #include <Kernel/StdLib.h>
 #include <Kernel/Thread.h>
 
-#include <Kernel/Arch/InterruptDisabler.h>
 #include <Kernel/Arch/Interrupts.h>
 #include <Kernel/Arch/Processor.h>
 #include <Kernel/Arch/SafeMem.h>

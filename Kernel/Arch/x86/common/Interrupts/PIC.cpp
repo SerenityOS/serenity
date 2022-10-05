@@ -6,9 +6,9 @@
 
 #include <AK/Assertions.h>
 #include <AK/Types.h>
-#include <Kernel/Arch/InterruptDisabler.h>
 #include <Kernel/Arch/x86/IO.h>
 #include <Kernel/Arch/x86/common/Interrupts/PIC.h>
+#include <Kernel/InterruptDisabler.h>
 #include <Kernel/Interrupts/GenericInterruptHandler.h>
 #include <Kernel/Sections.h>
 

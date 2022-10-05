@@ -9,12 +9,12 @@
 #include <AK/StringBuilder.h>
 #include <AK/TemporaryChange.h>
 #include <AK/Time.h>
-#include <Kernel/Arch/InterruptDisabler.h>
 #include <Kernel/Arch/SmapDisabler.h>
 #include <Kernel/Arch/TrapFrame.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Devices/KCOVDevice.h>
 #include <Kernel/FileSystem/OpenFileDescription.h>
+#include <Kernel/InterruptDisabler.h>
 #include <Kernel/KSyms.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Memory/PageDirectory.h>

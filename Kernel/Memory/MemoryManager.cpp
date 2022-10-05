@@ -9,13 +9,13 @@
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/StringView.h>
 #include <Kernel/Arch/CPU.h>
-#include <Kernel/Arch/InterruptDisabler.h>
 #include <Kernel/Arch/PageDirectory.h>
 #include <Kernel/Arch/PageFault.h>
 #include <Kernel/Arch/RegisterState.h>
 #include <Kernel/BootInfo.h>
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/Heap/kmalloc.h>
+#include <Kernel/InterruptDisabler.h>
 #include <Kernel/KSyms.h>
 #include <Kernel/Memory/AnonymousVMObject.h>
 #include <Kernel/Memory/MemoryManager.h>
