@@ -44,7 +44,7 @@ public:
     virtual void inserted() override;
 
     // https://html.spec.whatwg.org/multipage/scripting.html#dom-script-supports
-    static bool supports(String const& type)
+    static bool supports(JS::VM&, String const& type)
     {
         return type.is_one_of("classic", "module");
     }

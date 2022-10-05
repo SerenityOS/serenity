@@ -1668,6 +1668,12 @@ JS_DEFINE_NATIVE_FUNCTION(@class_name@::@function.name:snakecase@@overload_suffi
     [[maybe_unused]] auto retval = TRY(throw_dom_exception_if_needed(vm, [&] { return impl->@function.cpp_name@(@.arguments@); }));
 )~~~");
     } else {
+        // Make sure first argument for static functions is the Realm.
+        if (arguments_builder.is_empty())
+            function_generator.set(".arguments", "vm");
+        else
+            function_generator.set(".arguments", String::formatted("vm, {}", arguments_builder.string_view()));
+
         function_generator.append(R"~~~(
     [[maybe_unused]] auto retval = TRY(throw_dom_exception_if_needed(vm, [&] { return @interface_fully_qualified_name@::@function.cpp_name@(@.arguments@); }));
 )~~~");

@@ -152,19 +152,17 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Response>> Response::construct_impl(JS::Rea
 }
 
 // https://fetch.spec.whatwg.org/#dom-response-error
-JS::NonnullGCPtr<Response> Response::error()
+JS::NonnullGCPtr<Response> Response::error(JS::VM& vm)
 {
-    auto& vm = Bindings::main_thread_vm();
-
     // The static error() method steps are to return the result of creating a Response object, given a new network error, "immutable", and this’s relevant Realm.
     // FIXME: How can we reliably get 'this', i.e. the object the function was called on, in IDL-defined functions?
     return Response::create(Infrastructure::Response::network_error(), Headers::Guard::Immutable, *vm.current_realm());
 }
 
 // https://fetch.spec.whatwg.org/#dom-response-redirect
-WebIDL::ExceptionOr<JS::NonnullGCPtr<Response>> Response::redirect(String const& url, u16 status)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<Response>> Response::redirect(JS::VM& vm, String const& url, u16 status)
 {
-    auto& realm = HTML::current_settings_object().realm();
+    auto& realm = *vm.current_realm();
 
     // 1. Let parsedURL be the result of parsing url with current settings object’s API base URL.
     auto api_base_url = HTML::current_settings_object().api_base_url();
@@ -200,9 +198,8 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Response>> Response::redirect(String const&
 }
 
 // https://fetch.spec.whatwg.org/#dom-response-json
-WebIDL::ExceptionOr<JS::NonnullGCPtr<Response>> Response::json(JS::Value data, ResponseInit const& init)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<Response>> Response::json(JS::VM& vm, JS::Value data, ResponseInit const& init)
 {
-    auto& vm = Bindings::main_thread_vm();
     auto& realm = *vm.current_realm();
 
     // 1. Let bytes the result of running serialize a JavaScript value to JSON bytes on data.

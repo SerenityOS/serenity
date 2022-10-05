@@ -44,9 +44,9 @@ public:
     [[nodiscard]] NonnullRefPtr<Infrastructure::Response> response() const { return m_response; }
 
     // JS API functions
-    [[nodiscard]] static JS::NonnullGCPtr<Response> error();
-    [[nodiscard]] static WebIDL::ExceptionOr<JS::NonnullGCPtr<Response>> redirect(String const& url, u16 status);
-    [[nodiscard]] static WebIDL::ExceptionOr<JS::NonnullGCPtr<Response>> json(JS::Value data, ResponseInit const& init = {});
+    [[nodiscard]] static JS::NonnullGCPtr<Response> error(JS::VM&);
+    [[nodiscard]] static WebIDL::ExceptionOr<JS::NonnullGCPtr<Response>> redirect(JS::VM&, String const& url, u16 status);
+    [[nodiscard]] static WebIDL::ExceptionOr<JS::NonnullGCPtr<Response>> json(JS::VM&, JS::Value data, ResponseInit const& init = {});
     [[nodiscard]] Bindings::ResponseType type() const;
     [[nodiscard]] String url() const;
     [[nodiscard]] bool redirected() const;
