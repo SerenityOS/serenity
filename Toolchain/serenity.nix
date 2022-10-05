@@ -25,13 +25,10 @@ stdenv.mkDerivation {
     openssl
     xlibsWrapper
     qemu
-    # e2fsprogs needs some optional parameter to activate fuse2fs with which
-    # the qemu image will be mounted without root access.
-    (e2fsprogs.overrideAttrs (oldAttrs: {
-      buildInputs = oldAttrs.buildInputs ++ [ pkgs.fuse ];
-    }))
+    e2fsprogs
+    fuse2fs
     # glibc
   ];
-  
+
   hardeningDisable = [ "format" "fortify" ];
 }
