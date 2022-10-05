@@ -12,12 +12,27 @@
 
 namespace IPC {
 
+struct CoreEventLoopDeferredInvoker final : public DeferredInvoker {
+    virtual ~CoreEventLoopDeferredInvoker() = default;
+
+    virtual void schedule(Function<void()> callback) override
+    {
+        Core::deferred_invoke(move(callback));
+    }
+};
+
 ConnectionBase::ConnectionBase(IPC::Stub& local_stub, NonnullOwnPtr<Core::Stream::LocalSocket> socket, u32 local_endpoint_magic)
     : m_local_stub(local_stub)
     , m_socket(move(socket))
     , m_local_endpoint_magic(local_endpoint_magic)
+    , m_deferred_invoker(make<CoreEventLoopDeferredInvoker>())
 {
     m_responsiveness_timer = Core::Timer::create_single_shot(3000, [this] { may_have_become_unresponsive(); });
+}
+
+void ConnectionBase::set_deferred_invoker(NonnullOwnPtr<DeferredInvoker> deferred_invoker)
+{
+    m_deferred_invoker = move(deferred_invoker);
 }
 
 void ConnectionBase::set_fd_passing_socket(NonnullOwnPtr<Core::Stream::LocalSocket> socket)
@@ -157,7 +172,9 @@ ErrorOr<Vector<u8>> ConnectionBase::read_as_much_as_possible_from_socket_without
 
         auto bytes_read = maybe_bytes_read.release_value();
         if (bytes_read.is_empty()) {
-            deferred_invoke([this] { shutdown(); });
+            m_deferred_invoker->schedule([strong_this = NonnullRefPtr(*this)]() mutable {
+                strong_this->shutdown();
+            });
             if (!bytes.is_empty())
                 break;
             return Error::from_string_literal("IPC connection EOF");
@@ -194,8 +211,8 @@ ErrorOr<void> ConnectionBase::drain_messages_from_peer()
     }
 
     if (!m_unprocessed_messages.is_empty()) {
-        deferred_invoke([this] {
-            handle_messages();
+        m_deferred_invoker->schedule([strong_this = NonnullRefPtr(*this)]() mutable {
+            strong_this->handle_messages();
         });
     }
     return {};

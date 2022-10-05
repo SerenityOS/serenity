@@ -27,6 +27,13 @@
 
 namespace IPC {
 
+// NOTE: This is an abstraction to allow using IPC::Connection without a Core::EventLoop.
+// FIXME: It's not particularly nice, think of something nicer.
+struct DeferredInvoker {
+    virtual ~DeferredInvoker() = default;
+    virtual void schedule(Function<void()>) = 0;
+};
+
 class ConnectionBase : public Core::Object {
     C_OBJECT_ABSTRACT(ConnectionBase);
 
@@ -34,6 +41,7 @@ public:
     virtual ~ConnectionBase() override = default;
 
     void set_fd_passing_socket(NonnullOwnPtr<Core::Stream::LocalSocket>);
+    void set_deferred_invoker(NonnullOwnPtr<DeferredInvoker>);
 
     bool is_open() const { return m_socket->is_open(); }
     ErrorOr<void> post_message(Message const&);
@@ -41,11 +49,11 @@ public:
     void shutdown();
     virtual void die() { }
 
-protected:
-    explicit ConnectionBase(IPC::Stub&, NonnullOwnPtr<Core::Stream::LocalSocket>, u32 local_endpoint_magic);
-
     Core::Stream::LocalSocket& socket() { return *m_socket; }
     Core::Stream::LocalSocket& fd_passing_socket();
+
+protected:
+    explicit ConnectionBase(IPC::Stub&, NonnullOwnPtr<Core::Stream::LocalSocket>, u32 local_endpoint_magic);
 
     virtual void may_have_become_unresponsive() { }
     virtual void did_become_responsive() { }
@@ -71,6 +79,8 @@ protected:
     ByteBuffer m_unprocessed_bytes;
 
     u32 m_local_endpoint_magic { 0 };
+
+    NonnullOwnPtr<DeferredInvoker> m_deferred_invoker;
 };
 
 template<typename LocalEndpoint, typename PeerEndpoint>
