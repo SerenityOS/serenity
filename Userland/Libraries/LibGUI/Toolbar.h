@@ -27,6 +27,8 @@ public:
 
     bool is_collapsible() const { return m_collapsible; }
     void set_collapsible(bool b) { m_collapsible = b; }
+    bool is_grouped() const { return m_grouped; }
+    void set_grouped(bool b) { m_grouped = b; }
 
     virtual Optional<UISize> calculated_preferred_size() const override;
     virtual Optional<UISize> calculated_min_size() const override;
@@ -58,6 +60,7 @@ private:
     const Gfx::Orientation m_orientation;
     int m_button_size { 24 };
     bool m_collapsible { false };
+    bool m_grouped { false };
 };
 
 }

@@ -27,6 +27,7 @@ Toolbar::Toolbar(Orientation orientation, int button_size)
     , m_button_size(button_size)
 {
     REGISTER_BOOL_PROPERTY("collapsible", is_collapsible, set_collapsible);
+    REGISTER_BOOL_PROPERTY("grouped", is_grouped, set_grouped);
 
     if (m_orientation == Orientation::Horizontal)
         set_fixed_height(button_size);
@@ -200,6 +201,16 @@ ErrorOr<void> Toolbar::update_overflow_menu()
             m_overflow_button->set_visible(false);
         }
         return {};
+    }
+
+    if (m_grouped) {
+        for (size_t i = marginal_index.value(); i > 0; --i) {
+            auto& item = m_items.at(i);
+            if (item.type == Item::Type::Separator)
+                break;
+            item.widget->set_visible(false);
+            marginal_index = i;
+        }
     }
 
     if (!m_overflow_action)
