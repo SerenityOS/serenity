@@ -678,6 +678,13 @@ ErrorOr<Bytes> LocalSocket::read_without_waiting(Bytes buffer)
     return m_helper.read(buffer, MSG_DONTWAIT);
 }
 
+Optional<int> LocalSocket::fd() const
+{
+    if (!is_open())
+        return {};
+    return m_helper.fd();
+}
+
 ErrorOr<int> LocalSocket::release_fd()
 {
     if (!is_open()) {

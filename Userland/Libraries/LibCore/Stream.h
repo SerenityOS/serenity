@@ -468,6 +468,9 @@ public:
     /// already closed.
     ErrorOr<int> release_fd();
 
+    Optional<int> fd() const;
+    RefPtr<Core::Notifier> notifier() { return m_helper.notifier(); }
+
     virtual ~LocalSocket() { close(); }
 
 private:
