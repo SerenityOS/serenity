@@ -10,6 +10,7 @@
         @GUI::Toolbar {
             name: "main_toolbar"
             collapsible: true
+            grouped: true
         }
 
         @GUI::Toolbar {
