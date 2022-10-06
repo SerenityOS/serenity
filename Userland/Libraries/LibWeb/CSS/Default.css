@@ -1,3 +1,8 @@
+/* Default user-agent stylesheet for LibWeb
+ * Note: This stylesheet starts with a bunch of ad-hoc custom rules.
+ *       After that, rules from the HTML spec follow.
+ */
+
 html {
     font-family: sans-serif;
     color: -libweb-palette-base-text;
