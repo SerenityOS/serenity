@@ -25,6 +25,9 @@ enum class NormalizationForm {
     NFKC
 };
 
+NormalizationForm normalization_form_from_string(StringView form);
+StringView normalization_form_to_string(NormalizationForm form);
+
 [[nodiscard]] String normalize(StringView string, NormalizationForm form);
 
 }
