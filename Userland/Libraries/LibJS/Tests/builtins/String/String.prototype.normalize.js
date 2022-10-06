@@ -36,8 +36,7 @@ test("Invalid object throws", () => {
     );
 });
 
-// Tests below here are skipped due to the function being a stub at the moment
-test.skip("Normalization works", () => {
+test("Normalization works", () => {
     var s = "\u1E9B\u0323";
 
     expect(s.normalize("NFC")).toBe("\u1E9B\u0323");
@@ -46,7 +45,7 @@ test.skip("Normalization works", () => {
     expect(s.normalize("NFKD")).toBe("\u0073\u0323\u0307");
 });
 
-test.skip("Default parameter is NFC", () => {
+test("Default parameter is NFC", () => {
     var s = "\u1E9B\u0323";
 
     expect(s.normalize("NFC")).toBe(s.normalize());
