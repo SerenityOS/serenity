@@ -124,7 +124,9 @@ void TreeBuilder::insert_node_into_inline_or_block_ancestor(Layout::Node& node, 
         // Non-inlines can't be inserted into an inline parent, so find the nearest non-inline ancestor.
         auto& nearest_non_inline_ancestor = [&]() -> Layout::NodeWithStyle& {
             for (auto& ancestor : m_ancestor_stack.in_reverse()) {
-                if (!ancestor.is_inline() || ancestor.is_inline_block())
+                if (!ancestor.display().is_inline_outside())
+                    return ancestor;
+                if (!ancestor.display().is_flow_inside())
                     return ancestor;
             }
             VERIFY_NOT_REACHED();
