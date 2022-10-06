@@ -381,8 +381,7 @@ UNMAP_AFTER_INIT void Scheduler::initialize()
     VERIFY(Processor::is_initialized()); // sanity check
 
     // Figure out a good scheduling time source
-    if (Processor::current().has_feature(CPUFeature::TSC)) {
-        // TODO: only use if TSC is running at a constant frequency?
+    if (Processor::current().has_feature(CPUFeature::TSC) && Processor::current().has_feature(CPUFeature::CONSTANT_TSC)) {
         current_time = current_time_tsc;
     } else {
         // TODO: Using HPET is rather slow, can we use any other time source that may be faster?
