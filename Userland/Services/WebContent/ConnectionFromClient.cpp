@@ -81,6 +81,7 @@ void ConnectionFromClient::load_url(const URL& url)
 {
     dbgln_if(SPAM_DEBUG, "handle: WebContentServer::LoadURL: url={}", url);
 
+#if defined(AK_OS_SERENITY)
     String process_name;
     if (url.host().is_empty())
         process_name = "WebContent";
@@ -88,6 +89,7 @@ void ConnectionFromClient::load_url(const URL& url)
         process_name = String::formatted("WebContent: {}", url.host());
 
     pthread_setname_np(pthread_self(), process_name.characters());
+#endif
 
     page().load(url);
 }
