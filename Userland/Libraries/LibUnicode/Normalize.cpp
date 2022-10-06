@@ -17,6 +17,34 @@ namespace Unicode {
 Optional<CodePointDecomposition const&> __attribute__((weak)) code_point_decomposition(u32) { return {}; }
 Span<CodePointDecomposition const> __attribute__((weak)) code_point_decompositions() { return {}; }
 
+NormalizationForm normalization_form_from_string(StringView form)
+{
+    if (form == "NFD"sv)
+        return NormalizationForm::NFD;
+    if (form == "NFC"sv)
+        return NormalizationForm::NFC;
+    if (form == "NFKD"sv)
+        return NormalizationForm::NFKD;
+    if (form == "NFKC"sv)
+        return NormalizationForm::NFKC;
+    VERIFY_NOT_REACHED();
+}
+
+StringView normalization_form_to_string(NormalizationForm form)
+{
+    switch (form) {
+    case NormalizationForm::NFD:
+        return "NFD"sv;
+    case NormalizationForm::NFC:
+        return "NFC"sv;
+    case NormalizationForm::NFKD:
+        return "NFKD"sv;
+    case NormalizationForm::NFKC:
+        return "NFKC"sv;
+    }
+    VERIFY_NOT_REACHED();
+}
+
 ALWAYS_INLINE static bool is_starter(u32 code_point)
 {
     return Unicode::canonical_combining_class(code_point) == 0;
