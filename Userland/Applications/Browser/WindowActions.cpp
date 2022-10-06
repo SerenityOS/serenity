@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -31,6 +32,15 @@ WindowActions::WindowActions(GUI::Window& window)
         },
         &window);
     m_create_new_tab_action->set_status_tip("Open a new tab");
+
+    m_create_new_window_action = GUI::Action::create(
+        "&New Window", { Mod_Ctrl, Key_N }, g_icon_bag.go_to, [this](auto&) {
+            if (on_create_new_window) {
+                on_create_new_window();
+            }
+        },
+        &window);
+    m_create_new_window_action->set_status_tip("Open a new browser window");
 
     m_next_tab_action = GUI::Action::create(
         "&Next Tab", { Mod_Ctrl, Key_PageDown }, [this](auto&) {

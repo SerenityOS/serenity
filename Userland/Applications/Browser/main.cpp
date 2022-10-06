@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2022, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -91,6 +92,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/etc/passwd", "r"));
     TRY(Core::System::unveil("/etc/timezone", "r"));
     TRY(Core::System::unveil("/bin/BrowserSettings", "x"));
+    TRY(Core::System::unveil("/bin/Browser", "x"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
     Web::ResourceLoader::initialize(TRY(WebView::RequestServerAdapter::try_create()));
