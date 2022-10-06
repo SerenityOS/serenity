@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2022, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -22,6 +23,13 @@ DOMPointReadOnly::DOMPointReadOnly(JS::Realm& realm, double x, double y, double 
     , m_w(w)
 {
     set_prototype(&Bindings::cached_web_prototype(realm, "DOMPointReadOnly"));
+}
+
+// https://drafts.fxtf.org/geometry/#dom-dompointreadonly-frompoint
+JS::NonnullGCPtr<DOMPointReadOnly> DOMPointReadOnly::from_point(JS::VM& vm, DOMPointInit const& other)
+{
+    // The fromPoint(other) static method on DOMPointReadOnly must create a DOMPointReadOnly from the dictionary other.
+    return construct_impl(*vm.current_realm(), other.x, other.y, other.z, other.w);
 }
 
 DOMPointReadOnly::~DOMPointReadOnly() = default;
