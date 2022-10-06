@@ -172,7 +172,7 @@ void TreeBuilder::create_pseudo_element_if_needed(DOM::Element& element, CSS::Se
         TODO();
     }
 
-    element.set_pseudo_element_node({}, CSS::Selector::PseudoElement::Before, pseudo_element_node);
+    element.set_pseudo_element_node({}, pseudo_element, pseudo_element_node);
     insert_node_into_inline_or_block_ancestor(*pseudo_element_node, pseudo_element_display, mode);
 }
 
