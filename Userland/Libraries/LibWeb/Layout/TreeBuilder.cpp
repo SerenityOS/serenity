@@ -141,7 +141,7 @@ void TreeBuilder::insert_node_into_inline_or_block_ancestor(Layout::Node& node, 
     }
 }
 
-RefPtr<Layout::Node> TreeBuilder::create_pseudo_element_if_needed(DOM::Element& element, CSS::Selector::PseudoElement pseudo_element)
+void TreeBuilder::create_pseudo_element_if_needed(DOM::Element& element, CSS::Selector::PseudoElement pseudo_element, AppendOrPrepend mode)
 {
     auto& document = element.document();
     auto& style_computer = document.style_computer();
@@ -154,25 +154,27 @@ RefPtr<Layout::Node> TreeBuilder::create_pseudo_element_if_needed(DOM::Element& 
     if (pseudo_element_display.is_none()
         || pseudo_element_content.type == CSS::ContentData::Type::Normal
         || pseudo_element_content.type == CSS::ContentData::Type::None)
-        return nullptr;
+        return;
 
-    if (auto pseudo_element_node = DOM::Element::create_layout_node_for_display_type(document, pseudo_element_display, move(pseudo_element_style), nullptr)) {
-        pseudo_element_node->set_generated(true);
-        // FIXME: Handle images, and multiple values
-        if (pseudo_element_content.type == CSS::ContentData::Type::String) {
-            auto* text = document.heap().allocate<DOM::Text>(document.realm(), document, pseudo_element_content.data);
-            auto text_node = adopt_ref(*new TextNode(document, *text));
-            push_parent(verify_cast<NodeWithStyle>(*pseudo_element_node));
-            insert_node_into_inline_or_block_ancestor(text_node, AppendOrPrepend::Append);
-            pop_parent();
-        } else {
-            TODO();
-        }
-        return pseudo_element_node.ptr();
+    auto pseudo_element_node = DOM::Element::create_layout_node_for_display_type(document, pseudo_element_display, pseudo_element_style, nullptr);
+    if (!pseudo_element_node)
+        return;
+
+    pseudo_element_node->set_generated(true);
+    // FIXME: Handle images, and multiple values
+    if (pseudo_element_content.type == CSS::ContentData::Type::String) {
+        auto* text = document.heap().allocate<DOM::Text>(document.realm(), document, pseudo_element_content.data);
+        auto text_node = adopt_ref(*new TextNode(document, *text));
+        push_parent(verify_cast<NodeWithStyle>(*pseudo_element_node));
+        insert_node_into_inline_or_block_ancestor(text_node, AppendOrPrepend::Append);
+        pop_parent();
+    } else {
+        TODO();
     }
 
-    return nullptr;
-};
+    element.set_pseudo_element_node({}, CSS::Selector::PseudoElement::Before, pseudo_element_node);
+    insert_node_into_inline_or_block_ancestor(*pseudo_element_node, mode);
+}
 
 void TreeBuilder::create_layout_tree(DOM::Node& dom_node, TreeBuilder::Context& context)
 {
@@ -237,14 +239,8 @@ void TreeBuilder::create_layout_tree(DOM::Node& dom_node, TreeBuilder::Context& 
     if (is<DOM::Element>(dom_node)) {
         auto& element = static_cast<DOM::Element&>(dom_node);
         push_parent(verify_cast<NodeWithStyle>(*layout_node));
-        if (auto before_node = create_pseudo_element_if_needed(element, CSS::Selector::PseudoElement::Before)) {
-            element.set_pseudo_element_node({}, CSS::Selector::PseudoElement::Before, before_node.ptr());
-            insert_node_into_inline_or_block_ancestor(*before_node, AppendOrPrepend::Prepend);
-        }
-        if (auto after_node = create_pseudo_element_if_needed(element, CSS::Selector::PseudoElement::After)) {
-            element.set_pseudo_element_node({}, CSS::Selector::PseudoElement::After, after_node.ptr());
-            insert_node_into_inline_or_block_ancestor(*after_node, AppendOrPrepend::Append);
-        }
+        create_pseudo_element_if_needed(element, CSS::Selector::PseudoElement::Before, AppendOrPrepend::Prepend);
+        create_pseudo_element_if_needed(element, CSS::Selector::PseudoElement::After, AppendOrPrepend::Append);
         pop_parent();
     }
 

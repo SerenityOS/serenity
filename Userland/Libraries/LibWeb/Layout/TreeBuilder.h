@@ -45,7 +45,7 @@ private:
         Prepend,
     };
     void insert_node_into_inline_or_block_ancestor(Layout::Node&, AppendOrPrepend);
-    RefPtr<Layout::Node> create_pseudo_element_if_needed(DOM::Element&, CSS::Selector::PseudoElement);
+    void create_pseudo_element_if_needed(DOM::Element&, CSS::Selector::PseudoElement, AppendOrPrepend);
 
     RefPtr<Layout::Node> m_layout_root;
     Vector<Layout::NodeWithStyle&> m_ancestor_stack;
