@@ -63,6 +63,7 @@ TEST_CASE(normalize_nfc)
 
     EXPECT_EQ(normalize("\u1103\u1161\u11B0"sv, NormalizationForm::NFC), "닭"sv);
     EXPECT_EQ(normalize("\u1100\uAC00\u11A8"sv, NormalizationForm::NFC), "\u1100\uAC01"sv);
+    EXPECT_EQ(normalize("\u1103\u1161\u11B0\u11B0"sv, NormalizationForm::NFC), "닭\u11B0");
 }
 
 TEST_CASE(normalize_nfkd)
