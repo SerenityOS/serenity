@@ -304,11 +304,8 @@ RefPtr<Layout::Node> Element::create_layout_node_for_display_type(DOM::Document&
     }
 
     if (display.is_inline_outside()) {
-        if (display.is_flow_root_inside()) {
-            auto block = adopt_ref(*new Layout::BlockContainer(document, element, move(style)));
-            block->set_inline(true);
-            return block;
-        }
+        if (display.is_flow_root_inside())
+            return adopt_ref(*new Layout::BlockContainer(document, element, move(style)));
         if (display.is_flow_inside())
             return adopt_ref(*new Layout::InlineNode(document, element, move(style)));
 

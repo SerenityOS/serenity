@@ -14,8 +14,6 @@ namespace Web::Layout {
 ReplacedBox::ReplacedBox(DOM::Document& document, DOM::Element& element, NonnullRefPtr<CSS::StyleProperties> style)
     : Box(document, &element, move(style))
 {
-    // FIXME: Allow non-inline replaced elements.
-    set_inline(true);
 }
 
 ReplacedBox::~ReplacedBox() = default;

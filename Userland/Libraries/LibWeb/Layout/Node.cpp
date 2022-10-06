@@ -579,8 +579,6 @@ String Node::debug_description() const
     return builder.to_string();
 }
 
-void Node::set_inline(bool) { }
-
 bool Node::is_inline() const
 {
     if (!has_style()) {

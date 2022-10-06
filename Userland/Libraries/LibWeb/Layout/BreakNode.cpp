@@ -13,7 +13,6 @@ namespace Web::Layout {
 BreakNode::BreakNode(DOM::Document& document, HTML::HTMLBRElement& element, NonnullRefPtr<CSS::StyleProperties> style)
     : Layout::NodeWithStyleAndBoxModelMetrics(document, &element, move(style))
 {
-    set_inline(true);
 }
 
 BreakNode::~BreakNode() = default;

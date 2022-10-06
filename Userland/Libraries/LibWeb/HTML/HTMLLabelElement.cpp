@@ -20,9 +20,7 @@ HTMLLabelElement::~HTMLLabelElement() = default;
 
 RefPtr<Layout::Node> HTMLLabelElement::create_layout_node(NonnullRefPtr<CSS::StyleProperties> style)
 {
-    auto layout_node = adopt_ref(*new Layout::Label(document(), this, move(style)));
-    layout_node->set_inline(true);
-    return layout_node;
+    return adopt_ref(*new Layout::Label(document(), this, move(style)));
 }
 
 }

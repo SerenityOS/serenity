@@ -18,7 +18,6 @@ namespace Web::Layout {
 TextNode::TextNode(DOM::Document& document, DOM::Text& text)
     : Node(document, &text)
 {
-    set_inline(true);
 }
 
 TextNode::~TextNode() = default;

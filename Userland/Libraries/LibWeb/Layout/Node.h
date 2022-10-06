@@ -68,9 +68,6 @@ public:
 
     virtual bool can_have_children() const { return true; }
 
-    // FIXME: Remove this.
-    void set_inline(bool);
-
     bool is_inline() const;
     bool is_inline_block() const;
 

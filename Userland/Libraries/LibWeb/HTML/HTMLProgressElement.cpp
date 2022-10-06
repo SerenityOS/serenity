@@ -25,14 +25,10 @@ HTMLProgressElement::~HTMLProgressElement() = default;
 
 RefPtr<Layout::Node> HTMLProgressElement::create_layout_node(NonnullRefPtr<CSS::StyleProperties> style)
 {
-    RefPtr<Layout::Node> layout_node;
     if (style->appearance().value_or(CSS::Appearance::Auto) == CSS::Appearance::None) {
-        layout_node = adopt_ref(*new Layout::BlockContainer(document(), this, move(style)));
-        layout_node->set_inline(true);
-    } else {
-        layout_node = adopt_ref(*new Layout::Progress(document(), *this, move(style)));
+        return adopt_ref(*new Layout::BlockContainer(document(), this, move(style)));
     }
-    return layout_node;
+    return adopt_ref(*new Layout::Progress(document(), *this, move(style)));
 }
 
 bool HTMLProgressElement::using_system_appearance() const

@@ -87,11 +87,7 @@ void HTMLImageElement::parse_attribute(FlyString const& name, String const& valu
 
 RefPtr<Layout::Node> HTMLImageElement::create_layout_node(NonnullRefPtr<CSS::StyleProperties> style)
 {
-    auto display = style->display();
-    auto layout_node = adopt_ref(*new Layout::ImageBox(document(), *this, move(style), m_image_loader));
-    if (display.is_block_outside())
-        layout_node->set_inline(false);
-    return layout_node;
+    return adopt_ref(*new Layout::ImageBox(document(), *this, move(style), m_image_loader));
 }
 
 Gfx::Bitmap const* HTMLImageElement::bitmap() const

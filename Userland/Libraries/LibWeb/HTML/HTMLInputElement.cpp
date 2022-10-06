@@ -65,9 +65,7 @@ RefPtr<Layout::Node> HTMLInputElement::create_layout_node(NonnullRefPtr<CSS::Sty
     if (type_state() == TypeAttributeState::RadioButton)
         return adopt_ref(*new Layout::RadioButton(document(), *this, move(style)));
 
-    auto layout_node = adopt_ref(*new Layout::BlockContainer(document(), this, move(style)));
-    layout_node->set_inline(true);
-    return layout_node;
+    return adopt_ref(*new Layout::BlockContainer(document(), this, move(style)));
 }
 
 void HTMLInputElement::set_checked(bool checked, ChangeSource change_source)
