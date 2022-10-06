@@ -110,9 +110,9 @@ static Layout::Node& insertion_parent_for_block_node(Layout::NodeWithStyle& layo
     return layout_parent;
 }
 
-void TreeBuilder::insert_node_into_inline_or_block_ancestor(Layout::Node& node, AppendOrPrepend mode)
+void TreeBuilder::insert_node_into_inline_or_block_ancestor(Layout::Node& node, CSS::Display display, AppendOrPrepend mode)
 {
-    if (node.is_inline() && !(node.is_inline_block() && m_ancestor_stack.last().computed_values().display().is_flex_inside())) {
+    if (display.is_inline_outside() && !(display.is_flow_root_inside() && m_ancestor_stack.last().computed_values().display().is_flex_inside())) {
         // Inlines can be inserted into the nearest ancestor.
         auto& insertion_point = insertion_parent_for_inline_node(m_ancestor_stack.last());
         if (mode == AppendOrPrepend::Prepend)
@@ -166,14 +166,14 @@ void TreeBuilder::create_pseudo_element_if_needed(DOM::Element& element, CSS::Se
         auto* text = document.heap().allocate<DOM::Text>(document.realm(), document, pseudo_element_content.data);
         auto text_node = adopt_ref(*new TextNode(document, *text));
         push_parent(verify_cast<NodeWithStyle>(*pseudo_element_node));
-        insert_node_into_inline_or_block_ancestor(text_node, AppendOrPrepend::Append);
+        insert_node_into_inline_or_block_ancestor(text_node, pseudo_element_display, AppendOrPrepend::Append);
         pop_parent();
     } else {
         TODO();
     }
 
     element.set_pseudo_element_node({}, CSS::Selector::PseudoElement::Before, pseudo_element_node);
-    insert_node_into_inline_or_block_ancestor(*pseudo_element_node, mode);
+    insert_node_into_inline_or_block_ancestor(*pseudo_element_node, pseudo_element_display, mode);
 }
 
 void TreeBuilder::create_layout_tree(DOM::Node& dom_node, TreeBuilder::Context& context)
@@ -194,22 +194,27 @@ void TreeBuilder::create_layout_tree(DOM::Node& dom_node, TreeBuilder::Context& 
     auto& style_computer = document.style_computer();
     RefPtr<Layout::Node> layout_node;
     RefPtr<CSS::StyleProperties> style;
+    CSS::Display display;
 
     if (is<DOM::Element>(dom_node)) {
         auto& element = static_cast<DOM::Element&>(dom_node);
         element.clear_pseudo_element_nodes({});
         VERIFY(!element.needs_style_update());
         style = element.computed_css_values();
-        if (style->display().is_none())
+        display = style->display();
+        if (display.is_none())
             return;
         layout_node = element.create_layout_node(*style);
     } else if (is<DOM::Document>(dom_node)) {
         style = style_computer.create_document_style();
+        display = style->display();
         layout_node = adopt_ref(*new Layout::InitialContainingBlock(static_cast<DOM::Document&>(dom_node), *style));
     } else if (is<DOM::Text>(dom_node)) {
         layout_node = adopt_ref(*new Layout::TextNode(document, static_cast<DOM::Text&>(dom_node)));
+        display = CSS::Display(CSS::Display::Outside::Inline, CSS::Display::Inside::Flow);
     } else if (is<DOM::ShadowRoot>(dom_node)) {
         layout_node = adopt_ref(*new Layout::BlockContainer(document, &static_cast<DOM::ShadowRoot&>(dom_node), CSS::ComputedValues {}));
+        display = CSS::Display(CSS::Display::Outside::Block, CSS::Display::Inside::FlowRoot);
     }
 
     if (!layout_node)
@@ -220,7 +225,7 @@ void TreeBuilder::create_layout_tree(DOM::Node& dom_node, TreeBuilder::Context& 
     } else if (layout_node->is_svg_box()) {
         m_ancestor_stack.last().append_child(*layout_node);
     } else {
-        insert_node_into_inline_or_block_ancestor(*layout_node, AppendOrPrepend::Append);
+        insert_node_into_inline_or_block_ancestor(*layout_node, display, AppendOrPrepend::Append);
     }
 
     auto* shadow_root = is<DOM::Element>(dom_node) ? verify_cast<DOM::Element>(dom_node).shadow_root() : nullptr;

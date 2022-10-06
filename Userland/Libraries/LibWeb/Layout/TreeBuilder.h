@@ -44,7 +44,7 @@ private:
         Append,
         Prepend,
     };
-    void insert_node_into_inline_or_block_ancestor(Layout::Node&, AppendOrPrepend);
+    void insert_node_into_inline_or_block_ancestor(Layout::Node&, CSS::Display, AppendOrPrepend);
     void create_pseudo_element_if_needed(DOM::Element&, CSS::Selector::PseudoElement, AppendOrPrepend);
 
     RefPtr<Layout::Node> m_layout_root;
