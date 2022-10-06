@@ -579,6 +579,16 @@ String Node::debug_description() const
     return builder.to_string();
 }
 
+CSS::Display Node::display() const
+{
+    if (!has_style()) {
+        // NOTE: No style means this is dumb text content.
+        return CSS::Display(CSS::Display::Outside::Inline, CSS::Display::Inside::Flow);
+    }
+
+    return computed_values().display();
+}
+
 bool Node::is_inline() const
 {
     if (!has_style()) {

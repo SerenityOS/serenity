@@ -68,6 +68,8 @@ public:
 
     virtual bool can_have_children() const { return true; }
 
+    CSS::Display display() const;
+
     bool is_inline() const;
     bool is_inline_block() const;
 
