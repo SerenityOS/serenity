@@ -13,9 +13,12 @@
 #    ifndef NDEBUG
 #        define VERIFY assert
 #    else
-#        define VERIFY(expr)              \
-            (__builtin_expect(!(expr), 0) \
-                    ? __builtin_trap()    \
+#        define __stringify_helper(x) #        x
+#        define __stringify(x) __stringify_helper(x)
+extern "C" __attribute__((noreturn)) void ak_verification_failed(char const*);
+#        define VERIFY(expr)                                                                \
+            (__builtin_expect(!(expr), 0)                                                   \
+                    ? ak_verification_failed(#expr "\n" __FILE__ ":" __stringify(__LINE__)) \
                     : (void)0)
 #    endif
 #    define VERIFY_NOT_REACHED() VERIFY(false) /* NOLINT(cert-dcl03-c,misc-static-assert) No, this can't be static_assert, it's a runtime check */
