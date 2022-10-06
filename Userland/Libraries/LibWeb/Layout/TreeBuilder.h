@@ -40,6 +40,13 @@ private:
     void generate_missing_child_wrappers(NodeWithStyle& root);
     void generate_missing_parents(NodeWithStyle& root);
 
+    enum class AppendOrPrepend {
+        Append,
+        Prepend,
+    };
+    void insert_node_into_inline_or_block_ancestor(Layout::Node&, AppendOrPrepend);
+    RefPtr<Layout::Node> create_pseudo_element_if_needed(DOM::Element&, CSS::Selector::PseudoElement);
+
     RefPtr<Layout::Node> m_layout_root;
     Vector<Layout::NodeWithStyle&> m_ancestor_stack;
 };
