@@ -689,7 +689,8 @@ TEST_CASE(code_point_display_name)
     EXPECT_EQ(code_point_display_name(0x20000), "CJK UNIFIED IDEOGRAPH-20000"sv);
     EXPECT_EQ(code_point_display_name(0x20001), "CJK UNIFIED IDEOGRAPH-20001"sv);
     EXPECT_EQ(code_point_display_name(0x20002), "CJK UNIFIED IDEOGRAPH-20002"sv);
-    EXPECT(!Unicode::code_point_display_name(0x2a6df).has_value());
+    EXPECT_EQ(code_point_display_name(0x2a6df), "CJK UNIFIED IDEOGRAPH-2A6DF"sv);
+    EXPECT(!Unicode::code_point_display_name(0x2a6e0).has_value());
 
     // Ideographic code points (which appeared individually in UnicodeData.txt and were coalesced into a range).
     EXPECT_EQ(code_point_display_name(0x2f800), "CJK COMPATIBILITY IDEOGRAPH-2F800"sv);
