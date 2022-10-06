@@ -1212,6 +1212,7 @@ NonnullRefPtr<StyleProperties> StyleComputer::create_document_style() const
     absolutize_values(style, nullptr, {});
     style->set_property(CSS::PropertyID::Width, CSS::LengthStyleValue::create(CSS::Length::make_px(viewport_rect().width())));
     style->set_property(CSS::PropertyID::Height, CSS::LengthStyleValue::create(CSS::Length::make_px(viewport_rect().height())));
+    style->set_property(CSS::PropertyID::Display, CSS::IdentifierStyleValue::create(CSS::ValueID::Block));
     return style;
 }
 
