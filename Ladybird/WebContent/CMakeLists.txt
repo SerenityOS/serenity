@@ -1,8 +1,5 @@
 set(WEBCONTENT_SOURCE_DIR ${SERENITY_SOURCE_DIR}/Userland/Services/WebContent/)
 
-compile_ipc(${WEBCONTENT_SOURCE_DIR}/WebContentServer.ipc WebContentServerEndpoint.h)    
-compile_ipc(${WEBCONTENT_SOURCE_DIR}/WebContentClient.ipc WebContentClientEndpoint.h)    
-    
 set(WEBCONTENT_SOURCES
     ${WEBCONTENT_SOURCE_DIR}/ConnectionFromClient.cpp    
     ${WEBCONTENT_SOURCE_DIR}/ConsoleGlobalObject.cpp    
@@ -16,8 +13,6 @@ set(WEBCONTENT_SOURCES
     ../Utilities.cpp
     ../WebSocketClientManagerLadybird.cpp
     ../WebSocketLadybird.cpp
-    WebContentClientEndpoint.h    
-    WebContentServerEndpoint.h    
     main.cpp
 )    
 
