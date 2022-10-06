@@ -268,7 +268,7 @@ void fetch_external_module_script_graph(AK::URL const& url, EnvironmentSettingsO
 {
     // 1. Fetch a single module script given url, settings object, "script", options, settings object, "client", true, and with the following steps given result:
     // FIXME: Pass options.
-    fetch_single_module_script(url, settings_object, "script"sv, settings_object, "client"sv, {}, TopLevelModule::Yes, [&settings_object, on_complete = move(on_complete), &url](auto* result) mutable {
+    fetch_single_module_script(url, settings_object, "script"sv, settings_object, "client"sv, {}, TopLevelModule::Yes, [&settings_object, on_complete = move(on_complete), url](auto* result) mutable {
         // 1. If result is null, run onComplete given null, and abort these steps.
         if (!result) {
             on_complete(nullptr);
