@@ -101,3 +101,4 @@ if(NOT CMAKE_SKIP_INSTALL_RULES)
 endif()
 
 add_subdirectory(WebContent)
+add_dependencies(ladybird WebContent)
