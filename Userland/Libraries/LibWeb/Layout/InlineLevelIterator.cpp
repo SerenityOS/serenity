@@ -68,7 +68,10 @@ void InlineLevelIterator::exit_node_with_box_model_metrics()
 // This is similar to Layout::Node::next_in_pre_order() but will not descend into inline-block nodes.
 Layout::Node const* InlineLevelIterator::next_inline_node_in_pre_order(Layout::Node const& current, Layout::Node const* stay_within)
 {
-    if (current.first_child() && current.first_child()->is_inline() && !current.is_inline_block() && !current.is_replaced_box()) {
+    if (current.first_child()
+        && current.first_child()->display().is_inline_outside()
+        && current.display().is_flow_inside()
+        && !current.is_replaced_box()) {
         if (!current.is_box() || !static_cast<Box const&>(current).is_out_of_flow(m_inline_formatting_context))
             return current.first_child();
     }
@@ -107,7 +110,11 @@ void InlineLevelIterator::compute_next()
 
 void InlineLevelIterator::skip_to_next()
 {
-    if (m_next_node && is<Layout::NodeWithStyleAndBoxModelMetrics>(*m_next_node) && !m_next_node->is_inline_block() && !m_next_node->is_out_of_flow(m_inline_formatting_context) && !is<ReplacedBox>(m_next_node))
+    if (m_next_node
+        && is<Layout::NodeWithStyleAndBoxModelMetrics>(*m_next_node)
+        && m_next_node->display().is_flow_inside()
+        && !m_next_node->is_out_of_flow(m_inline_formatting_context)
+        && !m_next_node->is_replaced_box())
         enter_node_with_box_model_metrics(static_cast<Layout::NodeWithStyleAndBoxModelMetrics const&>(*m_next_node));
 
     m_current_node = m_next_node;
