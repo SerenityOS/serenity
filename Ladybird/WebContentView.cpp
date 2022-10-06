@@ -7,6 +7,7 @@
 #define AK_DONT_REPLACE_STD
 
 #include "WebContentView.h"
+#include "ConsoleWidget.h"
 #include "CookieJar.h"
 #include "ModelTranslator.h"
 #include "Utilities.h"
@@ -446,46 +447,35 @@ void WebContentView::run_javascript(String const& js_source)
 
 void WebContentView::did_output_js_console_message(i32 message_index)
 {
-    // FIXME
-    (void)message_index;
+    if (m_console_widget)
+        m_console_widget->notify_about_new_console_message(message_index);
 }
 
-void WebContentView::did_get_js_console_messages(i32, Vector<String>, Vector<String> messages)
+void WebContentView::did_get_js_console_messages(i32 start_index, Vector<String> message_types, Vector<String> messages)
 {
-    ensure_js_console_widget();
-    for (auto& message : messages) {
-        m_js_console_output_edit->append(qstring_from_akstring(message).trimmed());
-    }
+    if (m_console_widget)
+        m_console_widget->handle_console_messages(start_index, message_types, messages);
 }
 
 void WebContentView::ensure_js_console_widget()
 {
-    if (!m_js_console_widget) {
-        m_js_console_widget = new QWidget;
-        m_js_console_widget->setWindowTitle("JS Console");
-        auto* layout = new QVBoxLayout(m_js_console_widget);
-        m_js_console_widget->setLayout(layout);
-        m_js_console_output_edit = new QTextEdit(this);
-        m_js_console_output_edit->setReadOnly(true);
-        m_js_console_input_edit = new QLineEdit(this);
-        layout->addWidget(m_js_console_output_edit);
-        layout->addWidget(m_js_console_input_edit);
-        m_js_console_widget->resize(640, 480);
-
-        QObject::connect(m_js_console_input_edit, &QLineEdit::returnPressed, [this] {
-            auto code = m_js_console_input_edit->text().trimmed();
-            client().async_js_console_input(akstring_from_qstring(code));
-            m_js_console_input_edit->clear();
-            m_js_console_output_edit->append(QString("> %1").arg(code));
-        });
+    if (!m_console_widget) {
+        m_console_widget = new Ladybird::ConsoleWidget;
+        m_console_widget->setWindowTitle("JS Console");
+        m_console_widget->resize(640, 480);
+        m_console_widget->on_js_input = [this](auto js_source) {
+            client().async_js_console_input(js_source);
+        };
+        m_console_widget->on_request_messages = [this](i32 start_index) {
+            client().async_js_console_request_messages(start_index);
+        };
     }
 }
 
 void WebContentView::show_js_console()
 {
     ensure_js_console_widget();
-    m_js_console_widget->show();
-    m_js_console_input_edit->setFocus();
+    m_console_widget->show();
 }
 
 void WebContentView::ensure_inspector_widget()
@@ -846,14 +836,14 @@ void WebContentView::notify_server_did_get_dom_node_properties(i32 node_id, Stri
 
 void WebContentView::notify_server_did_output_js_console_message(i32 message_index)
 {
-    if (on_js_console_new_message)
-        on_js_console_new_message(message_index);
+    if (m_console_widget)
+        m_console_widget->notify_about_new_console_message(message_index);
 }
 
 void WebContentView::notify_server_did_get_js_console_messages(i32 start_index, Vector<String> const& message_types, Vector<String> const& messages)
 {
-    if (on_get_js_console_messages)
-        on_get_js_console_messages(start_index, message_types, messages);
+    if (m_console_widget)
+        m_console_widget->handle_console_messages(start_index, message_types, messages);
 }
 
 void WebContentView::notify_server_did_change_favicon(Gfx::Bitmap const& bitmap)
