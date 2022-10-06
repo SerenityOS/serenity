@@ -4,7 +4,7 @@ interface DOMPointReadOnly {
     constructor(optional unrestricted double x = 0, optional unrestricted double y = 0,
                 optional unrestricted double z = 0, optional unrestricted double w = 1);
 
-    // FIXME: [NewObject] static DOMPointReadOnly fromPoint(optional DOMPointInit other = {});
+    [NewObject] static DOMPointReadOnly fromPoint(optional DOMPointInit other = {});
 
     readonly attribute unrestricted double x;
     readonly attribute unrestricted double y;
@@ -14,4 +14,11 @@ interface DOMPointReadOnly {
     // FIXME: DOMPoint matrixTransform(optional DOMMatrixInit matrix = {});
 
     // FIXME: [Default] object toJSON();
+};
+
+dictionary DOMPointInit {
+    unrestricted double x = 0;
+    unrestricted double y = 0;
+    unrestricted double z = 0;
+    unrestricted double w = 1;
 };
