@@ -377,7 +377,7 @@ void BlockFormattingContext::layout_block_level_box(Box const& box, BlockContain
     }
 
     OwnPtr<FormattingContext> independent_formatting_context;
-    if (box.can_have_children()) {
+    if (!box.is_replaced_box() && box.has_children()) {
         if (box.children_are_inline()) {
             layout_inline_children(verify_cast<BlockContainer>(box), layout_mode, box_state.available_inner_space_or_constraints_from(available_space));
         } else {
