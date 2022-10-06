@@ -111,7 +111,8 @@ static u32 combine_hangul_code_points(u32 a, u32 b)
         auto const leading_vowel_index = leading_index * HANGUL_BLOCK_COUNT + vowel_index * HANGUL_TRAILING_COUNT;
         return HANGUL_SYLLABLE_BASE + leading_vowel_index;
     }
-    if (is_hangul_code_point(a) && is_hangul_trailing(b)) {
+    // LV characters are the first in each "T block", so use this check to avoid combining LVT with T.
+    if (is_hangul_code_point(a) && (a - HANGUL_SYLLABLE_BASE) % HANGUL_TRAILING_COUNT == 0 && is_hangul_trailing(b)) {
         return a + b - HANGUL_TRAILING_BASE;
     }
     return 0;
