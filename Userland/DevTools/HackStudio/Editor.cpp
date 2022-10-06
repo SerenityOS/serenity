@@ -42,11 +42,19 @@
 
 namespace HackStudio {
 
+enum class TooltipRole {
+    Documentation,
+    ParametersHint,
+};
+
+static RefPtr<GUI::Window> s_tooltip_window;
+static RefPtr<WebView::OutOfProcessWebView> s_tooltip_page_view;
+static Optional<TooltipRole> m_tooltip_role;
+
 ErrorOr<NonnullRefPtr<Editor>> Editor::try_create()
 {
     NonnullRefPtr<Editor> editor = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) Editor()));
-    TRY(editor->initialize_documentation_tooltip());
-    TRY(editor->initialize_parameters_hint_tooltip());
+    TRY(initialize_tooltip_window());
     return editor;
 }
 
@@ -72,21 +80,15 @@ Editor::Editor()
     set_gutter_visible(true);
 }
 
-ErrorOr<void> Editor::initialize_documentation_tooltip()
+ErrorOr<void> Editor::initialize_tooltip_window()
 {
-    m_documentation_tooltip_window = GUI::Window::construct();
-    m_documentation_tooltip_window->set_rect(0, 0, 500, 400);
-    m_documentation_tooltip_window->set_window_type(GUI::WindowType::Tooltip);
-    m_documentation_page_view = TRY(m_documentation_tooltip_window->try_set_main_widget<WebView::OutOfProcessWebView>());
-    return {};
-}
-
-ErrorOr<void> Editor::initialize_parameters_hint_tooltip()
-{
-    m_parameters_hint_tooltip_window = GUI::Window::construct();
-    m_parameters_hint_tooltip_window->set_rect(0, 0, 280, 35);
-    m_parameters_hint_tooltip_window->set_window_type(GUI::WindowType::Tooltip);
-    m_parameter_hint_page_view = TRY(m_parameters_hint_tooltip_window->try_set_main_widget<WebView::OutOfProcessWebView>());
+    if (s_tooltip_window.is_null()) {
+        s_tooltip_window = GUI::Window::construct();
+        s_tooltip_window->set_window_type(GUI::WindowType::Tooltip);
+    }
+    if (s_tooltip_page_view.is_null()) {
+        s_tooltip_page_view = TRY(s_tooltip_window->try_set_main_widget<WebView::OutOfProcessWebView>());
+    }
     return {};
 }
 
@@ -196,11 +198,14 @@ void Editor::show_documentation_tooltip_if_available(String const& hovered_token
     auto it = man_paths().find(hovered_token);
     if (it == man_paths().end()) {
         dbgln_if(EDITOR_DEBUG, "no man path for {}", hovered_token);
-        m_documentation_tooltip_window->hide();
+        if (m_tooltip_role == TooltipRole::Documentation) {
+            s_tooltip_window->hide();
+            m_tooltip_role.clear();
+        }
         return;
     }
 
-    if (m_documentation_tooltip_window->is_visible() && hovered_token == m_last_parsed_token) {
+    if (s_tooltip_window->is_visible() && m_tooltip_role == TooltipRole::Documentation && hovered_token == m_last_parsed_token) {
         return;
     }
 
@@ -218,10 +223,12 @@ void Editor::show_documentation_tooltip_if_available(String const& hovered_token
         return;
     }
 
-    m_documentation_page_view->load_html(man_document->render_to_html("<style>body { background-color: #dac7b5; }</style>"sv), {});
+    s_tooltip_page_view->load_html(man_document->render_to_html("<style>body { background-color: #dac7b5; }</style>"sv), {});
 
-    m_documentation_tooltip_window->move_to(screen_location.translated(4, 4));
-    m_documentation_tooltip_window->show();
+    s_tooltip_window->set_rect(0, 0, 500, 400);
+    s_tooltip_window->move_to(screen_location.translated(4, 4));
+    m_tooltip_role = TooltipRole::Documentation;
+    s_tooltip_window->show();
 
     m_last_parsed_token = hovered_token;
 }
@@ -234,8 +241,9 @@ void Editor::mousemove_event(GUI::MouseEvent& event)
         return;
 
     auto text_position = text_position_at(event.position());
-    if (!text_position.is_valid()) {
-        m_documentation_tooltip_window->hide();
+    if (!text_position.is_valid() && m_tooltip_role == TooltipRole::Documentation) {
+        s_tooltip_window->hide();
+        m_tooltip_role.clear();
         return;
     }
 
@@ -243,7 +251,7 @@ void Editor::mousemove_event(GUI::MouseEvent& event)
     if (!highlighter)
         return;
 
-    bool hide_tooltip = true;
+    bool hide_tooltip = (m_tooltip_role == TooltipRole::Documentation);
     bool is_over_clickable = false;
 
     auto ruler_line_rect = ruler_content_rect(text_position.line());
@@ -283,15 +291,20 @@ void Editor::mousemove_event(GUI::MouseEvent& event)
     }
 
     m_previous_text_position = text_position;
-    if (hide_tooltip)
-        m_documentation_tooltip_window->hide();
+    if (hide_tooltip) {
+        s_tooltip_window->hide();
+        m_tooltip_role.clear();
+    }
 
     m_hovering_clickable = (is_over_clickable) && (event.modifiers() & Mod_Ctrl);
 }
 
 void Editor::mousedown_event(GUI::MouseEvent& event)
 {
-    m_parameters_hint_tooltip_window->hide();
+    if (m_tooltip_role == TooltipRole::ParametersHint) {
+        s_tooltip_window->hide();
+        m_tooltip_role.clear();
+    }
 
     auto highlighter = wrapper().editor().syntax_highlighter();
     if (!highlighter) {
@@ -655,7 +668,10 @@ void Editor::keydown_event(GUI::KeyEvent& event)
 {
     TextEditor::keydown_event(event);
 
-    m_parameters_hint_tooltip_window->hide();
+    if (m_tooltip_role == TooltipRole::ParametersHint) {
+        s_tooltip_window->hide();
+        m_tooltip_role.clear();
+    }
 
     if (!event.shift() && !event.alt() && event.ctrl() && event.key() == KeyCode::Key_P) {
         handle_function_parameters_hint_request();
@@ -687,14 +703,16 @@ void Editor::handle_function_parameters_hint_request()
         }
         html.append("<style>body { background-color: #dac7b5; }</style>"sv);
 
-        m_parameter_hint_page_view->load_html(html.build(), {});
+        s_tooltip_page_view->load_html(html.build(), {});
 
         auto cursor_rect = current_editor().cursor_content_rect().location().translated(screen_relative_rect().location());
 
-        Gfx::Rect content(cursor_rect.x(), cursor_rect.y(), m_parameter_hint_page_view->children_clip_rect().width(), m_parameter_hint_page_view->children_clip_rect().height());
-        m_parameters_hint_tooltip_window->move_to(cursor_rect.x(), cursor_rect.y() - m_parameters_hint_tooltip_window->height() - vertical_scrollbar().value());
+        Gfx::Rect content(cursor_rect.x(), cursor_rect.y(), s_tooltip_page_view->children_clip_rect().width(), s_tooltip_page_view->children_clip_rect().height());
 
-        m_parameters_hint_tooltip_window->show();
+        m_tooltip_role = TooltipRole::ParametersHint;
+        s_tooltip_window->set_rect(0, 0, 280, 35);
+        s_tooltip_window->move_to(cursor_rect.x(), cursor_rect.y() - s_tooltip_window->height() - vertical_scrollbar().value());
+        s_tooltip_window->show();
     };
 
     m_language_client->get_parameters_hint(
