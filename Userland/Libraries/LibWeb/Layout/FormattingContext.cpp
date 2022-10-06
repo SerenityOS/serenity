@@ -42,7 +42,7 @@ bool FormattingContext::creates_block_formatting_context(Box const& box)
         return true;
     if (is<TableCellBox>(box))
         return true;
-    if (box.computed_values().display().is_flex_inside())
+    if (box.display().is_flex_inside())
         return false;
 
     CSS::Overflow overflow_x = box.computed_values().overflow_x();
@@ -53,13 +53,13 @@ bool FormattingContext::creates_block_formatting_context(Box const& box)
     if ((overflow_y != CSS::Overflow::Visible) && (overflow_y != CSS::Overflow::Clip))
         return true;
 
-    auto display = box.computed_values().display();
+    auto display = box.display();
 
     if (display.is_flow_root_inside())
         return true;
 
     if (box.parent()) {
-        auto parent_display = box.parent()->computed_values().display();
+        auto parent_display = box.parent()->display();
         if (parent_display.is_flex_inside()) {
             // FIXME: Flex items (direct children of the element with display: flex or inline-flex) if they are neither flex nor grid nor table containers themselves.
             if (!display.is_flex_inside())
@@ -102,7 +102,7 @@ OwnPtr<FormattingContext> FormattingContext::create_independent_formatting_conte
     if (!child_box.can_have_children())
         return {};
 
-    auto child_display = child_box.computed_values().display();
+    auto child_display = child_box.display();
 
     if (is<SVGSVGBox>(child_box))
         return make<SVGFormattingContext>(state, child_box, this);
@@ -246,7 +246,7 @@ float FormattingContext::compute_auto_height_for_block_level_element(Box const& 
 
     auto const& box_state = m_state.get(box);
 
-    auto display = box.computed_values().display();
+    auto display = box.display();
     if (display.is_flex_inside()) {
         // https://drafts.csswg.org/css-flexbox-1/#algo-main-container
         // NOTE: The automatic block size of a block-level flex container is its max-content size.
@@ -1127,7 +1127,7 @@ float FormattingContext::containing_block_height_for(Box const& box, LayoutState
 static Box const* previous_block_level_sibling(Box const& box)
 {
     for (auto* sibling = box.previous_sibling_of_type<Box>(); sibling; sibling = sibling->previous_sibling_of_type<Box>()) {
-        if (sibling->computed_values().display().is_block_outside())
+        if (sibling->display().is_block_outside())
             return sibling;
     }
     return nullptr;

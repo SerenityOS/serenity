@@ -182,7 +182,7 @@ void dump_tree(StringBuilder& builder, Layout::Node const& layout_node, bool sho
             builder.appendff(" {}floating{}", floating_color_on, color_off);
         if (box.is_inline_block())
             builder.appendff(" {}inline-block{}", inline_block_color_on, color_off);
-        if (box.computed_values().display().is_flex_inside()) {
+        if (box.display().is_flex_inside()) {
             StringView direction;
             switch (box.computed_values().flex_direction()) {
             case CSS::FlexDirection::Column:

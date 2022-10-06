@@ -61,7 +61,7 @@ static Layout::Node& insertion_parent_for_inline_node(Layout::NodeWithStyle& lay
     if (layout_parent.is_inline() && !layout_parent.is_inline_block())
         return layout_parent;
 
-    if (layout_parent.computed_values().display().is_flex_inside()) {
+    if (layout_parent.display().is_flex_inside()) {
         layout_parent.append_child(layout_parent.create_anonymous_wrapper());
         return *layout_parent.last_child();
     }
@@ -112,7 +112,7 @@ static Layout::Node& insertion_parent_for_block_node(Layout::NodeWithStyle& layo
 
 void TreeBuilder::insert_node_into_inline_or_block_ancestor(Layout::Node& node, CSS::Display display, AppendOrPrepend mode)
 {
-    if (display.is_inline_outside() && !(display.is_flow_root_inside() && m_ancestor_stack.last().computed_values().display().is_flex_inside())) {
+    if (display.is_inline_outside() && !(display.is_flow_root_inside() && m_ancestor_stack.last().display().is_flex_inside())) {
         // Inlines can be inserted into the nearest ancestor.
         auto& insertion_point = insertion_parent_for_inline_node(m_ancestor_stack.last());
         if (mode == AppendOrPrepend::Prepend)
@@ -293,7 +293,7 @@ template<CSS::Display::Internal internal, typename Callback>
 void TreeBuilder::for_each_in_tree_with_internal_display(NodeWithStyle& root, Callback callback)
 {
     root.for_each_in_inclusive_subtree_of_type<Box>([&](auto& box) {
-        auto const& display = box.computed_values().display();
+        auto const display = box.display();
         if (display.is_internal() && display.internal() == internal)
             callback(box);
         return IterationDecision::Continue;
@@ -304,7 +304,7 @@ template<CSS::Display::Inside inside, typename Callback>
 void TreeBuilder::for_each_in_tree_with_inside_display(NodeWithStyle& root, Callback callback)
 {
     root.for_each_in_inclusive_subtree_of_type<Box>([&](auto& box) {
-        auto const& display = box.computed_values().display();
+        auto const display = box.display();
         if (display.is_outside_and_inside() && display.inside() == inside)
             callback(box);
         return IterationDecision::Continue;
@@ -334,7 +334,7 @@ void TreeBuilder::remove_irrelevant_boxes(NodeWithStyle& root)
     // Children of a table-column-group which are not a table-column.
     for_each_in_tree_with_internal_display<CSS::Display::Internal::TableColumnGroup>(root, [&](Box& table_column_group) {
         table_column_group.for_each_child([&](auto& child) {
-            if (child.computed_values().display().is_table_column())
+            if (child.display().is_table_column())
                 to_remove.append(child);
         });
     });
@@ -369,7 +369,7 @@ static bool is_not_proper_table_child(Node const& node)
 {
     if (!node.has_style())
         return true;
-    auto display = node.computed_values().display();
+    auto const display = node.display();
     return !is_table_track_group(display) && !is_table_track(display) && !display.is_table_caption();
 }
 
@@ -377,7 +377,7 @@ static bool is_not_table_row(Node const& node)
 {
     if (!node.has_style())
         return true;
-    auto display = node.computed_values().display();
+    auto const display = node.display();
     return !display.is_table_row();
 }
 
@@ -385,7 +385,7 @@ static bool is_not_table_cell(Node const& node)
 {
     if (!node.has_style())
         return true;
-    auto display = node.computed_values().display();
+    auto const display = node.display();
     return !display.is_table_cell();
 }
 

@@ -302,7 +302,7 @@ RefPtr<StyleValue> ResolvedCSSStyleDeclaration::style_value_for_property(Layout:
     case CSS::PropertyID::Cursor:
         return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().cursor()));
     case CSS::PropertyID::Display:
-        return style_value_for_display(layout_node.computed_values().display());
+        return style_value_for_display(layout_node.display());
     case CSS::PropertyID::FlexBasis: {
         switch (layout_node.computed_values().flex_basis().type) {
         case FlexBasis::Content:
