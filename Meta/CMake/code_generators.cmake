@@ -19,7 +19,9 @@ function(compile_gml source output string_name)
 endfunction()
 
 function(compile_ipc source output)
-    set(source ${CMAKE_CURRENT_SOURCE_DIR}/${source})
+    if (NOT IS_ABSOLUTE ${source})
+        set(source ${CMAKE_CURRENT_SOURCE_DIR}/${source})
+    endif()
     add_custom_command(
         OUTPUT ${output}
         COMMAND $<TARGET_FILE:Lagom::IPCCompiler> ${source} > ${output}.tmp
