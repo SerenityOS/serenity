@@ -50,14 +50,15 @@ find_package(Qt6 REQUIRED COMPONENTS Core Widgets Network)
 
 set(SOURCES
     BrowserWindow.cpp
+    ConsoleWidget.cpp
     CookieJar.cpp
-    WebContentView.cpp
     History.cpp
     ModelTranslator.cpp
     Settings.cpp
     SettingsDialog.cpp
     Tab.cpp
     Utilities.cpp
+    WebContentView.cpp
     main.cpp
 )
 

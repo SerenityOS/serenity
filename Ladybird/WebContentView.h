@@ -25,6 +25,10 @@
 class QTextEdit;
 class QLineEdit;
 
+namespace Ladybird {
+class ConsoleWidget;
+}
+
 namespace WebView {
 class WebContentClient;
 }
@@ -152,11 +156,9 @@ private:
     qreal m_inverse_pixel_scaling_ratio { 1.0 };
     bool m_should_show_line_box_borders { false };
 
-    QPointer<QWidget> m_js_console_widget;
     QPointer<QWidget> m_inspector_widget;
 
-    QTextEdit* m_js_console_output_edit { nullptr };
-    QLineEdit* m_js_console_input_edit { nullptr };
+    Ladybird::ConsoleWidget* m_console_widget { nullptr };
 
     Gfx::IntRect m_viewport_rect;
 
