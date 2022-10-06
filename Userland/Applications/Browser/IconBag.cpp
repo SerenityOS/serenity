@@ -26,6 +26,7 @@ ErrorOr<IconBag> IconBag::try_create()
     icon_bag.new_tab = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/new-tab.png"sv));
     icon_bag.duplicate_tab = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/duplicate-tab.png"sv));
     icon_bag.close_other_tabs = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/close-other-tabs.png"sv));
+    icon_bag.new_window = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/new-window.png"sv));
     icon_bag.code = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/code.png"sv));
     icon_bag.dom_tree = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/browser/dom-tree.png"sv));
     icon_bag.layout = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/layout.png"sv));

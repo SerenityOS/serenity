@@ -34,7 +34,7 @@ WindowActions::WindowActions(GUI::Window& window)
     m_create_new_tab_action->set_status_tip("Open a new tab");
 
     m_create_new_window_action = GUI::Action::create(
-        "&New Window", { Mod_Ctrl, Key_N }, g_icon_bag.go_to, [this](auto&) {
+        "&New Window", { Mod_Ctrl, Key_N }, g_icon_bag.new_window, [this](auto&) {
             if (on_create_new_window) {
                 on_create_new_window();
             }

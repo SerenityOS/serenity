@@ -27,6 +27,7 @@ struct IconBag final {
     RefPtr<Gfx::Bitmap> new_tab { nullptr };
     RefPtr<Gfx::Bitmap> duplicate_tab { nullptr };
     RefPtr<Gfx::Bitmap> close_other_tabs { nullptr };
+    RefPtr<Gfx::Bitmap> new_window { nullptr };
     RefPtr<Gfx::Bitmap> code { nullptr };
     RefPtr<Gfx::Bitmap> dom_tree { nullptr };
     RefPtr<Gfx::Bitmap> layout { nullptr };
