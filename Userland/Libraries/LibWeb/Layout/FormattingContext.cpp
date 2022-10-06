@@ -30,53 +30,73 @@ FormattingContext::FormattingContext(Type type, LayoutState& state, Box const& c
 
 FormattingContext::~FormattingContext() = default;
 
+// https://developer.mozilla.org/en-US/docs/Web/Guide/CSS/Block_formatting_context
 bool FormattingContext::creates_block_formatting_context(Box const& box)
 {
+    // NOTE: This function uses MDN as a reference, not because it's authoritative,
+    //       but because they've gathered all the conditions in one convenient location.
+
+    // The root element of the document (<html>).
     if (box.is_root_element())
         return true;
+
+    // Floats (elements where float isn't none).
     if (box.is_floating())
         return true;
+
+    // Absolutely positioned elements (elements where position is absolute or fixed).
     if (box.is_absolutely_positioned())
         return true;
-    if (box.is_inline_block())
-        return true;
-    if (is<TableCellBox>(box))
-        return true;
-    if (box.display().is_flex_inside())
-        return false;
 
+    // Inline-blocks (elements with display: inline-block).
+    if (box.display().is_inline_block())
+        return true;
+
+    // Table cells (elements with display: table-cell, which is the default for HTML table cells).
+    if (box.display().is_table_cell())
+        return true;
+
+    // Table captions (elements with display: table-caption, which is the default for HTML table captions).
+    if (box.display().is_table_caption())
+        return true;
+
+    // FIXME: Anonymous table cells implicitly created by the elements with display: table, table-row, table-row-group, table-header-group, table-footer-group
+    //        (which is the default for HTML tables, table rows, table bodies, table headers, and table footers, respectively), or inline-table.
+
+    // Block elements where overflow has a value other than visible and clip.
     CSS::Overflow overflow_x = box.computed_values().overflow_x();
     if ((overflow_x != CSS::Overflow::Visible) && (overflow_x != CSS::Overflow::Clip))
         return true;
-
     CSS::Overflow overflow_y = box.computed_values().overflow_y();
     if ((overflow_y != CSS::Overflow::Visible) && (overflow_y != CSS::Overflow::Clip))
         return true;
 
-    auto display = box.display();
-
-    if (display.is_flow_root_inside())
+    // display: flow-root.
+    if (box.display().is_flow_root_inside())
         return true;
+
+    // FIXME: Elements with contain: layout, content, or paint.
 
     if (box.parent()) {
         auto parent_display = box.parent()->display();
+
+        // Flex items (direct children of the element with display: flex or inline-flex) if they are neither flex nor grid nor table containers themselves.
         if (parent_display.is_flex_inside()) {
-            // FIXME: Flex items (direct children of the element with display: flex or inline-flex) if they are neither flex nor grid nor table containers themselves.
-            if (!display.is_flex_inside())
+            if (!box.display().is_flex_inside())
                 return true;
         }
+        // Grid items (direct children of the element with display: grid or inline-grid) if they are neither flex nor grid nor table containers themselves.
         if (parent_display.is_grid_inside()) {
-            if (!display.is_grid_inside()) {
+            if (!box.display().is_grid_inside()) {
                 return true;
             }
         }
     }
 
-    // FIXME: table-caption
-    // FIXME: anonymous table cells
-    // FIXME: Elements with contain: layout, content, or paint.
-    // FIXME: multicol
-    // FIXME: column-span: all
+    // FIXME: Multicol containers (elements where column-count or column-width isn't auto, including elements with column-count: 1).
+
+    // FIXME: column-span: all should always create a new formatting context, even when the column-span: all element isn't contained by a multicol container (Spec change, Chrome bug).
+
     return false;
 }
 

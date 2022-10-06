@@ -108,6 +108,7 @@ public:
 
     bool is_block_outside() const { return is_outside_and_inside() && outside() == Outside::Block; }
     bool is_inline_outside() const { return is_outside_and_inside() && outside() == Outside::Inline; }
+    bool is_inline_block() const { return is_inline_outside() && is_flow_root_inside(); }
     bool is_list_item() const { return is_outside_and_inside() && m_value.outside_inside.list_item == ListItem::Yes; }
 
     Inside inside() const
