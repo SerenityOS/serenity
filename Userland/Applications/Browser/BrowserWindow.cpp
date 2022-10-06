@@ -103,6 +103,10 @@ BrowserWindow::BrowserWindow(CookieJar& cookie_jar, URL url)
         create_new_tab(Browser::url_from_user_input(Browser::g_new_tab_url), true);
     };
 
+    m_window_actions.on_create_new_window = [this] {
+        GUI::Process::spawn_or_show_error(this, "/bin/Browser"sv);
+    };
+
     m_window_actions.on_next_tab = [this] {
         m_tab_widget->activate_next_tab();
     };
@@ -154,6 +158,7 @@ void BrowserWindow::build_menus()
 {
     auto& file_menu = add_menu("&File");
     file_menu.add_action(WindowActions::the().create_new_tab_action());
+    file_menu.add_action(WindowActions::the().create_new_window_action());
 
     auto close_tab_action = GUI::CommonActions::make_close_tab_action([this](auto&) {
         active_tab().on_tab_close_request(active_tab());
