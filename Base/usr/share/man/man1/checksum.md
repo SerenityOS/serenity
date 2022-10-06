@@ -4,12 +4,18 @@ checksum - helper program for calculating checksums
 
 ## Synopsis
 
-`$ md5sum <file>`
-`$ sha1sum <file>`
-`$ sha256sum <file>`
-`$ sha512sum <file>`
+`$ md5sum [options...] <file...>`
+`$ sha1sum [options...] <file...>`
+`$ sha256sum [options...] <file...>`
+`$ sha512sum [options...] <file...>`
 
 ## Description
 
 This program calculates and print specified checksum of files. It cannot be run directly, only
-as `md5sum`, `sha1sum`, `sha256sum` or `sha512sum`.
+as `md5sum`, `sha1sum`, `sha256sum` or `sha512sum`. A non-zero exit code is returned if the
+input cannot be read. If the '--check' option is used, a non-zero exit code is also returned
+if the checksums cannot be verified.
+
+## Options
+
+* `-c`, `--check`: Verify checksums against `file` or stdin.
