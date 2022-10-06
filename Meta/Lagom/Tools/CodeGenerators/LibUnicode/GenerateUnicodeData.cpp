@@ -487,7 +487,7 @@ static ErrorOr<void> parse_normalization_props(Core::Stream::BufferedFile& file,
 
 static void add_canonical_code_point_name(CodePointRange range, StringView name, UnicodeData& unicode_data)
 {
-    // https://www.unicode.org/versions/Unicode14.0.0/ch04.pdf#G142981
+    // https://www.unicode.org/versions/Unicode15.0.0/ch04.pdf#G142981
     // FIXME: Implement the NR1 rules for Hangul syllables.
 
     struct CodePointNameFormat {
@@ -496,22 +496,23 @@ static void add_canonical_code_point_name(CodePointRange range, StringView name,
     };
 
     // These code point ranges are the NR2 set of name replacements defined by Table 4-8.
-    constexpr Array<CodePointNameFormat, 15> s_ideographic_replacements { {
+    constexpr Array<CodePointNameFormat, 16> s_ideographic_replacements { {
         { { 0x3400, 0x4DBF }, "CJK UNIFIED IDEOGRAPH-{:X}"sv },
-        { { 0x4E00, 0x9FFC }, "CJK UNIFIED IDEOGRAPH-{:X}"sv },
+        { { 0x4E00, 0x9FFF }, "CJK UNIFIED IDEOGRAPH-{:X}"sv },
         { { 0xF900, 0xFA6D }, "CJK COMPATIBILITY IDEOGRAPH-{:X}"sv },
         { { 0xFA70, 0xFAD9 }, "CJK COMPATIBILITY IDEOGRAPH-{:X}"sv },
         { { 0x17000, 0x187F7 }, "TANGUT IDEOGRAPH-{:X}"sv },
         { { 0x18B00, 0x18CD5 }, "KHITAN SMALL SCRIPT CHARACTER-{:X}"sv },
         { { 0x18D00, 0x18D08 }, "TANGUT IDEOGRAPH-{:X}"sv },
         { { 0x1B170, 0x1B2FB }, "NUSHU CHARACTER-{:X}"sv },
-        { { 0x20000, 0x2A6DD }, "CJK UNIFIED IDEOGRAPH-{:X}"sv },
-        { { 0x2A700, 0x2B734 }, "CJK UNIFIED IDEOGRAPH-{:X}"sv },
+        { { 0x20000, 0x2A6DF }, "CJK UNIFIED IDEOGRAPH-{:X}"sv },
+        { { 0x2A700, 0x2B739 }, "CJK UNIFIED IDEOGRAPH-{:X}"sv },
         { { 0x2B740, 0x2B81D }, "CJK UNIFIED IDEOGRAPH-{:X}"sv },
         { { 0x2B820, 0x2CEA1 }, "CJK UNIFIED IDEOGRAPH-{:X}"sv },
         { { 0x2CEB0, 0x2EBE0 }, "CJK UNIFIED IDEOGRAPH-{:X}"sv },
         { { 0x2F800, 0x2FA1D }, "CJK COMPATIBILITY IDEOGRAPH-{:X}"sv },
         { { 0x30000, 0x3134A }, "CJK UNIFIED IDEOGRAPH-{:X}"sv },
+        { { 0x31350, 0x323AF }, "CJK UNIFIED IDEOGRAPH-{:X}"sv },
     } };
 
     auto it = find_if(s_ideographic_replacements.begin(), s_ideographic_replacements.end(),
