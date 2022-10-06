@@ -166,7 +166,7 @@ void TreeBuilder::create_pseudo_element_if_needed(DOM::Element& element, CSS::Se
         auto* text = document.heap().allocate<DOM::Text>(document.realm(), document, pseudo_element_content.data);
         auto text_node = adopt_ref(*new TextNode(document, *text));
         push_parent(verify_cast<NodeWithStyle>(*pseudo_element_node));
-        insert_node_into_inline_or_block_ancestor(text_node, pseudo_element_display, AppendOrPrepend::Append);
+        insert_node_into_inline_or_block_ancestor(text_node, text_node->display(), AppendOrPrepend::Append);
         pop_parent();
     } else {
         TODO();
