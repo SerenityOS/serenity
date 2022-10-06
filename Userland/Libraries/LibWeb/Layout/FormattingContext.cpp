@@ -197,7 +197,7 @@ float FormattingContext::greatest_child_width(Box const& box)
 {
     float max_width = 0;
     if (box.children_are_inline()) {
-        for (auto& line_box : m_state.get(verify_cast<BlockContainer>(box)).line_boxes) {
+        for (auto& line_box : m_state.get(box).line_boxes) {
             max_width = max(max_width, line_box.width());
         }
     } else {
