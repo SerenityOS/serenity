@@ -28,6 +28,7 @@
 #include <LibJS/Runtime/Value.h>
 #include <LibLocale/Locale.h>
 #include <LibUnicode/CharacterTypes.h>
+#include <LibUnicode/Normalize.h>
 #include <string.h>
 
 namespace JS {
@@ -850,8 +851,9 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::normalize)
     if (!form.is_one_of("NFC"sv, "NFD"sv, "NFKC"sv, "NFKD"sv))
         return vm.throw_completion<RangeError>(ErrorType::InvalidNormalizationForm, form);
 
-    // FIXME: 6. Let ns be the String value that is the result of normalizing S into the normalization form named by f as specified in https://unicode.org/reports/tr15/.
-    auto ns = string;
+    // 6. Let ns be the String value that is the result of normalizing S into the normalization form named by f as specified in https://unicode.org/reports/tr15/.
+    auto unicode_form = Unicode::normalization_form_from_string(form);
+    auto ns = Unicode::normalize(string, unicode_form);
 
     // 7. return ns.
     return js_string(vm, move(ns));
