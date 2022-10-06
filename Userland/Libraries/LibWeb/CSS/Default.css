@@ -20,6 +20,11 @@ blink {
     display: inline;
 }
 
+/* FIXME: This doesn't seem right. */
+label {
+    display: inline-block;
+}
+
 /* FIXME: This is a temporary hack until we can render a native-looking frame for these. */
 input, textarea {
     border: 1px solid -libweb-palette-threed-shadow1;
