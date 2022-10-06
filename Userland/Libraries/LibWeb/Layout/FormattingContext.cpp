@@ -33,6 +33,10 @@ FormattingContext::~FormattingContext() = default;
 // https://developer.mozilla.org/en-US/docs/Web/Guide/CSS/Block_formatting_context
 bool FormattingContext::creates_block_formatting_context(Box const& box)
 {
+    // NOTE: Replaced elements never create a BFC.
+    if (box.is_replaced_box())
+        return false;
+
     // NOTE: This function uses MDN as a reference, not because it's authoritative,
     //       but because they've gathered all the conditions in one convenient location.
 
