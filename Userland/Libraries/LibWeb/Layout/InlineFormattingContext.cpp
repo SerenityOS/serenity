@@ -122,12 +122,10 @@ void InlineFormattingContext::dimension_box_on_line(Box const& box, LayoutMode l
         return;
     }
 
-    if (box.is_inline_block()) {
-        auto const& inline_block = verify_cast<BlockContainer>(box);
-
-        auto& width_value = inline_block.computed_values().width();
+    if (box.display().is_flow_root_inside()) {
+        auto const& width_value = box.computed_values().width();
         if (width_value.is_auto()) {
-            auto result = calculate_shrink_to_fit_widths(inline_block);
+            auto result = calculate_shrink_to_fit_widths(box);
 
             auto available_width = m_available_space->width.to_px()
                 - box_state.margin_left
@@ -144,18 +142,18 @@ void InlineFormattingContext::dimension_box_on_line(Box const& box, LayoutMode l
                 // NOTE: We can't resolve percentages yet. We'll have to wait until after inner layout.
             } else {
                 auto container_width = CSS::Length::make_px(m_available_space->width.to_px());
-                box_state.set_content_width(width_value.resolved(box, container_width).to_px(inline_block));
+                box_state.set_content_width(width_value.resolved(box, container_width).to_px(box));
             }
         }
-        auto independent_formatting_context = layout_inside(inline_block, layout_mode, box_state.available_inner_space_or_constraints_from(*m_available_space));
+        auto independent_formatting_context = layout_inside(box, layout_mode, box_state.available_inner_space_or_constraints_from(*m_available_space));
 
-        auto& height_value = inline_block.computed_values().height();
+        auto const& height_value = box.computed_values().height();
         if (height_value.is_auto()) {
             // FIXME: (10.6.6) If 'height' is 'auto', the height depends on the element's descendants per 10.6.7.
-            parent().compute_height(inline_block, AvailableSpace(AvailableSize::make_indefinite(), AvailableSize::make_indefinite()));
+            parent().compute_height(box, AvailableSpace(AvailableSize::make_indefinite(), AvailableSize::make_indefinite()));
         } else {
             auto container_height = CSS::Length::make_px(m_containing_block_state.content_height());
-            box_state.set_content_height(height_value.resolved(box, container_height).to_px(inline_block));
+            box_state.set_content_height(height_value.resolved(box, container_height).to_px(box));
         }
 
         if (independent_formatting_context)
