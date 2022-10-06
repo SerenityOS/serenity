@@ -579,9 +579,26 @@ String Node::debug_description() const
     return builder.to_string();
 }
 
+void Node::set_inline(bool) { }
+
+bool Node::is_inline() const
+{
+    if (!has_style()) {
+        // NOTE: If this node doesn't have its own style, computed_values() will get style from the parent.
+        //       This could give unwanted results. Besides, if we don't have style, we're some kind of inline text node.
+        return true;
+    }
+    return computed_values().display().is_inline_outside();
+}
+
 bool Node::is_inline_block() const
 {
-    return is_inline() && is<BlockContainer>(*this);
+    if (!has_style()) {
+        // NOTE: If this node doesn't have its own style, computed_values() will get style from the parent.
+        //       This could give unwanted results. Besides, if we don't have style, we're some kind of inline text node.
+        return false;
+    }
+    return computed_values().display().is_inline_outside() && computed_values().display().is_flow_root_inside();
 }
 
 NonnullRefPtr<NodeWithStyle> NodeWithStyle::create_anonymous_wrapper() const
