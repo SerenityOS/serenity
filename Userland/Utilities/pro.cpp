@@ -300,6 +300,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 }
             } else {
                 following_url = false;
+
+                if (status_code_value >= 400)
+                    warnln("Request returned error {}", status_code_value);
             }
         };
         request->on_finish = [&](bool success, auto) {
