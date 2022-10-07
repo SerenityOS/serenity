@@ -140,7 +140,7 @@ private:
 
     void determine_hypothetical_cross_size_of_item(FlexItem&, bool resolve_percentage_min_max_sizes);
 
-    void calculate_cross_size_of_each_flex_line(float cross_min_size, float cross_max_size);
+    void calculate_cross_size_of_each_flex_line();
 
     CSS::AlignItems alignment_for_item(FlexItem const&) const;
 
@@ -150,7 +150,7 @@ private:
 
     void align_all_flex_items_along_the_cross_axis();
 
-    void determine_flex_container_used_cross_size(float cross_min_size, float cross_max_size);
+    void determine_flex_container_used_cross_size();
 
     void align_all_flex_lines();
 

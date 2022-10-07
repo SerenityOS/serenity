@@ -95,8 +95,6 @@ void FlexFormattingContext::run(Box const& run_box, LayoutMode, AvailableSpace c
     generate_anonymous_flex_items();
 
     // 2. Determine the available main and cross space for the flex items
-    float cross_min_size = has_cross_min_size(flex_container()) ? specified_cross_min_size(flex_container()) : 0;
-    float cross_max_size = has_cross_max_size(flex_container()) ? specified_cross_max_size(flex_container()) : INFINITY;
     determine_available_space_for_items(AvailableSpace(available_width, available_height));
 
     {
@@ -154,7 +152,7 @@ void FlexFormattingContext::run(Box const& run_box, LayoutMode, AvailableSpace c
     }
 
     // 8. Calculate the cross size of each flex line.
-    calculate_cross_size_of_each_flex_line(cross_min_size, cross_max_size);
+    calculate_cross_size_of_each_flex_line();
 
     // 9. Handle 'align-content: stretch'.
     // FIXME: This
@@ -175,7 +173,7 @@ void FlexFormattingContext::run(Box const& run_box, LayoutMode, AvailableSpace c
     align_all_flex_items_along_the_cross_axis();
 
     // 15. Determine the flex container’s used cross size:
-    determine_flex_container_used_cross_size(cross_min_size, cross_max_size);
+    determine_flex_container_used_cross_size();
 
     {
         // https://drafts.csswg.org/css-flexbox-1/#definite-sizes
@@ -1084,7 +1082,7 @@ void FlexFormattingContext::determine_hypothetical_cross_size_of_item(FlexItem& 
 }
 
 // https://www.w3.org/TR/css-flexbox-1/#algo-cross-line
-void FlexFormattingContext::calculate_cross_size_of_each_flex_line(float const cross_min_size, float const cross_max_size)
+void FlexFormattingContext::calculate_cross_size_of_each_flex_line()
 {
     // If the flex container is single-line and has a definite cross size, the cross size of the flex line is the flex container’s inner cross size.
     if (is_single_line() && has_definite_cross_size(flex_container())) {
@@ -1112,8 +1110,13 @@ void FlexFormattingContext::calculate_cross_size_of_each_flex_line(float const c
 
     // If the flex container is single-line, then clamp the line’s cross-size to be within the container’s computed min and max cross sizes.
     // Note that if CSS 2.1’s definition of min/max-width/height applied more generally, this behavior would fall out automatically.
-    if (is_single_line())
+    if (is_single_line()) {
+        auto const& computed_min_size = this->computed_cross_min_size(flex_container());
+        auto const& computed_max_size = this->computed_cross_max_size(flex_container());
+        auto cross_min_size = (!computed_min_size.is_auto() && !computed_min_size.contains_percentage()) ? specified_cross_min_size(flex_container()) : 0;
+        auto cross_max_size = (!computed_max_size.is_none() && !computed_max_size.contains_percentage()) ? specified_cross_max_size(flex_container()) : INFINITY;
         m_flex_lines[0].cross_size = css_clamp(m_flex_lines[0].cross_size, cross_min_size, cross_max_size);
+    }
 }
 
 // https://www.w3.org/TR/css-flexbox-1/#algo-stretch
@@ -1328,7 +1331,7 @@ void FlexFormattingContext::align_all_flex_items_along_the_cross_axis()
 }
 
 // https://www.w3.org/TR/css-flexbox-1/#algo-cross-container
-void FlexFormattingContext::determine_flex_container_used_cross_size(float const cross_min_size, float const cross_max_size)
+void FlexFormattingContext::determine_flex_container_used_cross_size()
 {
     float cross_size = 0;
     if (has_definite_cross_size(flex_container())) {
@@ -1353,6 +1356,10 @@ void FlexFormattingContext::determine_flex_container_used_cross_size(float const
             cross_size = cross_size_value.resolved(flex_container(), CSS::Length::make_px(specified_cross_size(*flex_container().containing_block()))).to_px(flex_container());
         }
     }
+    auto const& computed_min_size = this->computed_cross_min_size(flex_container());
+    auto const& computed_max_size = this->computed_cross_max_size(flex_container());
+    auto cross_min_size = (!computed_min_size.is_auto() && !computed_min_size.contains_percentage()) ? specified_cross_min_size(flex_container()) : 0;
+    auto cross_max_size = (!computed_max_size.is_none() && !computed_max_size.contains_percentage()) ? specified_cross_max_size(flex_container()) : INFINITY;
     set_cross_size(flex_container(), css_clamp(cross_size, cross_min_size, cross_max_size));
 }
 
@@ -1589,7 +1596,7 @@ float FlexFormattingContext::calculate_intrinsic_cross_size_of_flex_container()
     for (auto& flex_item : m_flex_items) {
         determine_hypothetical_cross_size_of_item(flex_item, false);
     }
-    calculate_cross_size_of_each_flex_line(0, INFINITY);
+    calculate_cross_size_of_each_flex_line();
     determine_used_cross_size_of_each_flex_item();
 
     float sum_of_flex_line_cross_sizes = 0;
