@@ -7,20 +7,13 @@
 #include "BrowserWindow.h"
 #include "Settings.h"
 #include "Utilities.h"
-#include "WebContentView.h"
-#include <AK/LexicalPath.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/EventLoop.h>
-#include <LibCore/File.h>
-#include <LibCore/Timer.h>
 #include <LibGfx/Font/FontDatabase.h>
 #include <LibMain/Main.h>
 #include <QApplication>
-#include <QTimer>
-#include <QWidget>
 
 Browser::Settings* s_settings;
-extern String s_serenity_resource_root;
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
