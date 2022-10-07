@@ -571,6 +571,8 @@ void WebContentView::create_client()
 
         auto rc = execlp("./WebContent/WebContent", "WebContent", nullptr);
         if (rc < 0)
+            rc = execlp((QCoreApplication::applicationDirPath() + "/WebContent").toStdString().c_str(), "WebContent", nullptr);
+        if (rc < 0)
             perror("execlp");
         VERIFY_NOT_REACHED();
     }

@@ -1,10 +1,10 @@
 set(WEBCONTENT_SOURCE_DIR ${SERENITY_SOURCE_DIR}/Userland/Services/WebContent/)
 
 set(WEBCONTENT_SOURCES
-    ${WEBCONTENT_SOURCE_DIR}/ConnectionFromClient.cpp    
-    ${WEBCONTENT_SOURCE_DIR}/ConsoleGlobalObject.cpp    
-    ${WEBCONTENT_SOURCE_DIR}/PageHost.cpp    
-    ${WEBCONTENT_SOURCE_DIR}/WebContentConsoleClient.cpp    
+    ${WEBCONTENT_SOURCE_DIR}/ConnectionFromClient.cpp
+    ${WEBCONTENT_SOURCE_DIR}/ConsoleGlobalObject.cpp
+    ${WEBCONTENT_SOURCE_DIR}/PageHost.cpp
+    ${WEBCONTENT_SOURCE_DIR}/WebContentConsoleClient.cpp
     ../EventLoopPluginQt.cpp
     ../FontPluginQt.cpp
     ../ImageCodecPluginLadybird.cpp
@@ -14,7 +14,7 @@ set(WEBCONTENT_SOURCES
     ../WebSocketClientManagerLadybird.cpp
     ../WebSocketLadybird.cpp
     main.cpp
-)    
+)
 
 qt_add_executable(WebContent ${WEBCONTENT_SOURCES})
 

@@ -18,10 +18,23 @@ install(TARGETS ladybird
     DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
 
+install(TARGETS WebContent
+  EXPORT ladybirdTargets
+  RUNTIME
+    COMPONENT ladybird_Runtime
+    DESTINATION ${CMAKE_INSTALL_BINDIR}
+  BUNDLE
+    COMPONENT ladybird_Runtime
+    DESTINATION bundle
+)
+
 include("${Lagom_SOURCE_DIR}/get_linked_lagom_libraries.cmake")
 get_linked_lagom_libraries(ladybird ladybird_lagom_libraries)
+get_linked_lagom_libraries(WebContent webcontent_lagom_libraries)
+list(APPEND all_required_lagom_libraries ${ladybird_lagom_libraries} ${webcontent_lagom_libraries})
+list(REMOVE_DUPLICATES all_required_lagom_libraries)
 
-install(TARGETS ${ladybird_lagom_libraries}
+install(TARGETS ${all_required_lagom_libraries}
   EXPORT ladybirdTargets
   COMPONENT ladybird_Runtime
   LIBRARY
