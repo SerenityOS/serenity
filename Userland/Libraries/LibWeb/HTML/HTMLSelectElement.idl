@@ -1,6 +1,8 @@
 #import <HTML/HTMLElement.idl>
 #import <HTML/HTMLOptionsCollection.idl>
 
+// https://html.spec.whatwg.org/multipage/form-elements.html#htmlselectelement
+[Exposed=Window]
 interface HTMLSelectElement : HTMLElement {
 
     [Reflect] attribute boolean disabled;

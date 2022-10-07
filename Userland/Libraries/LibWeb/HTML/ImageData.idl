@@ -1,3 +1,5 @@
+// https://html.spec.whatwg.org/multipage/canvas.html#imagedata
+[Exposed=(Window,Worker), Serializable]
 interface ImageData {
 
     readonly attribute unsigned long width;

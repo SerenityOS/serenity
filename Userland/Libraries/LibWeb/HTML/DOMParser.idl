@@ -8,6 +8,8 @@ enum DOMParserSupportedType {
     "image/svg+xml"
 };
 
+// https://html.spec.whatwg.org/multipage/dynamic-markup-insertion.html#domparser
+[Exposed=Window]
 interface DOMParser {
     constructor();
 

@@ -1,6 +1,8 @@
 #import <DOM/HTMLCollection.idl>
 #import <HTML/HTMLElement.idl>
 
+// https://html.spec.whatwg.org/multipage/semantics.html#htmlformelement
+[Exposed=Window]
 interface HTMLFormElement : HTMLElement {
 
     [Reflect] attribute DOMString name;

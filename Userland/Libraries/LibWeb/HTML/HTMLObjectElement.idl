@@ -1,6 +1,8 @@
 #import <DOM/Document.idl>
 #import <HTML/HTMLElement.idl>
 
+// https://html.spec.whatwg.org/multipage/iframe-embed-object.html#htmlobjectelement
+[Exposed=Window]
 interface HTMLObjectElement : HTMLElement {
 
     [CEReactions] attribute DOMString data;

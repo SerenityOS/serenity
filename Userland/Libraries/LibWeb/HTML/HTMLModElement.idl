@@ -1,8 +1,10 @@
 #import <HTML/HTMLElement.idl>
 
+// https://html.spec.whatwg.org/multipage/edits.html#htmlmodelement
+[Exposed=Window]
 interface HTMLModElement : HTMLElement {
 
-    [Reflect] attribute DOMString cite;
+    [Reflect] attribute USVString cite;
     [Reflect=datetime] attribute DOMString dateTime;
 
 };

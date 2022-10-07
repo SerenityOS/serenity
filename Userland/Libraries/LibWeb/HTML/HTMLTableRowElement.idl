@@ -1,6 +1,8 @@
 #import <DOM/HTMLCollection.idl>
 #import <HTML/HTMLElement.idl>
 
+// https://html.spec.whatwg.org/multipage/tables.html#htmltablerowelement
+[Exposed=Window]
 interface HTMLTableRowElement : HTMLElement {
 
     [Reflect] attribute DOMString align;

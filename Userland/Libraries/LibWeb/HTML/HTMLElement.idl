@@ -1,6 +1,8 @@
 #import <HTML/DOMStringMap.idl>
 #import <DOM/EventHandler.idl>
 
+// https://html.spec.whatwg.org/multipage/semantics.html#htmlelement
+[Exposed=Window]
 interface HTMLElement : Element {
 
     [Reflect] attribute DOMString title;

@@ -1,4 +1,5 @@
-[]
+// https://drafts.csswg.org/cssom/#cssstyledeclaration
+[Exposed=Window]
 interface CSSStyleDeclaration {
 
     readonly attribute unsigned long length;

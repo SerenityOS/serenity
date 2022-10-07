@@ -1,5 +1,7 @@
 #import <HTML/HTMLElement.idl>
 
+// https://html.spec.whatwg.org/multipage/obsolete.html#htmlmarqueeelement
+[Exposed=Window]
 interface HTMLMarqueeElement : HTMLElement {
 
     [Reflect] attribute DOMString behavior;

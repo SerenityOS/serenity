@@ -1,4 +1,5 @@
 // https://drafts.fxtf.org/geometry/#dompointreadonly
+[Exposed=(Window,Worker), Serializable]
 interface DOMPointReadOnly {
 
     constructor(optional unrestricted double x = 0, optional unrestricted double y = 0,

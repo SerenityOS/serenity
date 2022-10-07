@@ -1,6 +1,8 @@
 #import <Geometry/DOMPoint.idl>
 #import <SVG/SVGGraphicsElement.idl>
 
+// https://svgwg.org/svg2-draft/types.html#InterfaceSVGGeometryElement
+[Exposed=Window]
 interface SVGGeometryElement : SVGGraphicsElement {
 
     float getTotalLength();

@@ -20,6 +20,7 @@
 #import <HTML/HTMLScriptElement.idl>
 
 // https://dom.spec.whatwg.org/#document
+[Exposed=Window]
 interface Document : Node {
     constructor();
 

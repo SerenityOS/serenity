@@ -11,6 +11,8 @@ enum XMLHttpRequestResponseType {
   "text"
 };
 
+// https://xhr.spec.whatwg.org/#xmlhttprequest
+[Exposed=(Window,DedicatedWorker,SharedWorker)]
 interface XMLHttpRequest : XMLHttpRequestEventTarget {
 
     constructor();
