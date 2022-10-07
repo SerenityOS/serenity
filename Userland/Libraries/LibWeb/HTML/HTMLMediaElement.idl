@@ -6,6 +6,8 @@ enum CanPlayTypeResult {
     "probably"
 };
 
+// https://html.spec.whatwg.org/multipage/media.html#htmlmediaelement
+[Exposed=Window]
 interface HTMLMediaElement : HTMLElement {
 
     [Reflect] attribute DOMString src;

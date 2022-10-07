@@ -2,6 +2,7 @@
 #import <DOM/InnerHTML.idl>
 
 // https://dom.spec.whatwg.org/#shadowroot
+[Exposed=Window]
 interface ShadowRoot : DocumentFragment {
     // FIXME: mode should return a ShadowRootMode
     readonly attribute DOMString mode;

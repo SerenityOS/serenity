@@ -21,6 +21,7 @@ dictionary ScrollIntoViewOptions : ScrollOptions {
 };
 
 // https://dom.spec.whatwg.org/#element
+[Exposed=Window]
 interface Element : Node {
     readonly attribute DOMString? namespaceURI;
     readonly attribute DOMString? prefix;

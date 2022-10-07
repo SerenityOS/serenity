@@ -1,5 +1,7 @@
 #import <HTML/HTMLElement.idl>
 
+// https://html.spec.whatwg.org/multipage/form-elements.html#htmloutputelement
+[Exposed=Window]
 interface HTMLOutputElement : HTMLElement {
 
     readonly attribute DOMString type;

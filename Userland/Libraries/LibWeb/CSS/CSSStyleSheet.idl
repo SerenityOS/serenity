@@ -1,6 +1,8 @@
 #import <CSS/CSSRule.idl>
 #import <CSS/CSSRuleList.idl>
 
+// https://drafts.csswg.org/cssom/#cssstylesheet
+[Exposed=Window]
 interface CSSStyleSheet : StyleSheet {
     // readonly attribute CSSRule? ownerRule;
     [SameObject] readonly attribute CSSRuleList cssRules;

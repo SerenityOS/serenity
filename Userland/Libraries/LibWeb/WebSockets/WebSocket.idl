@@ -1,6 +1,8 @@
 #import <DOM/EventTarget.idl>
 #import <DOM/EventHandler.idl>
 
+// https://websockets.spec.whatwg.org/#websocket
+[Exposed=(Window,Worker)]
 interface WebSocket : EventTarget {
 
     // FIXME: A second "protocols" argument should be added once supported

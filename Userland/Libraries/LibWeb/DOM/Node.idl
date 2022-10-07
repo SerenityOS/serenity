@@ -2,6 +2,8 @@
 #import <DOM/Element.idl>
 #import <DOM/EventTarget.idl>
 
+// https://dom.spec.whatwg.org/#node
+[Exposed=Window]
 interface Node : EventTarget {
 
     readonly attribute unsigned short nodeType;

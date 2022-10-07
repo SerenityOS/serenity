@@ -1,6 +1,8 @@
 #import <HTML/HTMLElement.idl>
 #import <DOM/Document.idl>
 
+// https://html.spec.whatwg.org/multipage/iframe-embed-object.html#htmliframeelement
+[Exposed=Window]
 interface HTMLIFrameElement : HTMLElement {
 
     [Reflect] attribute DOMString src;

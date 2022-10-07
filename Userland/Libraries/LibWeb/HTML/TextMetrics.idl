@@ -1,3 +1,5 @@
+// https://html.spec.whatwg.org/multipage/canvas.html#textmetrics
+[Exposed=Window]
 interface TextMetrics {
   // x-direction
   readonly attribute double width; // advance width

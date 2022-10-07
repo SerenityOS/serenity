@@ -4,6 +4,8 @@
 
 typedef (CanvasRenderingContext2D or WebGLRenderingContext) RenderingContext;
 
+// https://html.spec.whatwg.org/multipage/semantics.html#htmlcanvaselement
+[Exposed=Window]
 interface HTMLCanvasElement : HTMLElement {
 
     RenderingContext? getContext(DOMString contextId, optional any options = null);

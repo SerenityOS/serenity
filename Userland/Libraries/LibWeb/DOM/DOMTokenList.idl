@@ -1,4 +1,5 @@
-[]
+// https://dom.spec.whatwg.org/#interface-domtokenlist
+[Exposed=Window]
 interface DOMTokenList {
     readonly attribute unsigned long length;
     getter DOMString? item(unsigned long index);

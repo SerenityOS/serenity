@@ -1,5 +1,7 @@
 #import <HTML/MessagePort.idl>
 
+// https://html.spec.whatwg.org/multipage/web-messaging.html#messagechannel
+[Exposed=(Window,Worker)]
 interface MessageChannel {
 
     constructor();

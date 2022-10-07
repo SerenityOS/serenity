@@ -1,7 +1,6 @@
 #import <HTML/HTMLMediaElement.idl>
 
+[Exposed=Window, LegacyFactoryFunction=Audio(optional DOMString src)]
 interface HTMLAudioElement : HTMLMediaElement {
-
-
-
+    // FIXME: [HTMLConstructor] constructor();
 };

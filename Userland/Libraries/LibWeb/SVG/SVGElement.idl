@@ -2,6 +2,8 @@
 #import <HTML/HTMLElement.idl>
 #import <HTML/DOMStringMap.idl>
 
+// https://svgwg.org/svg2-draft/types.html#InterfaceSVGElement
+[Exposed=Window]
 interface SVGElement : Element {
 };
 
