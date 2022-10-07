@@ -38,7 +38,7 @@ constexpr u32 DEVICE_MEMORY = (1 << 2);
 class PageDirectoryEntry {
 public:
     PhysicalPtr page_table_base() const { return PhysicalAddress::physical_page_base(m_raw); }
-    void set_page_table_base(u32 value)
+    void set_page_table_base(PhysicalPtr value)
     {
         m_raw &= 0xffff000000000fffULL;
         m_raw |= PhysicalAddress::physical_page_base(value);
