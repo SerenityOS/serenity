@@ -97,6 +97,10 @@ Tab::Tab(BrowserWindow* window)
         text_edit->setPlainText(source);
         text_edit->show();
     });
+
+    // FIXME: This is a hack to make the JS console usable in new windows.
+    //        Something else should ensure that there's an initial about:blank document loaded in the view.
+    m_view->load("about:blank"sv);
 }
 
 void Tab::focus_location_editor()
