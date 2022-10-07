@@ -12,6 +12,7 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DateTime.h>
 #include <LibCore/File.h>
+#include <LibCore/Process.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Clipboard.h>
 #include <LibGUI/ConnectionToWindowServer.h>
@@ -95,6 +96,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool output_to_clipboard = false;
     unsigned delay = 0;
     bool select_region = false;
+    bool edit_image = false;
     int screen = -1;
 
     args_parser.add_positional_argument(output_path, "Output filename", "output", Core::ArgsParser::Required::No);
@@ -102,6 +104,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(delay, "Seconds to wait before taking a screenshot", "delay", 'd', "seconds");
     args_parser.add_option(screen, "The index of the screen (default: -1 for all screens)", "screen", 's', "index");
     args_parser.add_option(select_region, "Select a region to capture", "region", 'r');
+    args_parser.add_option(edit_image, "Open in PixelPaint", "edit", 'e');
 
     args_parser.parse(arguments);
 
@@ -152,6 +155,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         warnln("Failed to encode PNG");
         return 1;
     }
+    if (edit_image)
+        output_path = Core::DateTime::now().to_string("/tmp/screenshot-%Y-%m-%d-%H-%M-%S.png"sv);
 
     auto file_or_error = Core::File::open(output_path, Core::OpenMode::ReadWrite);
     if (file_or_error.is_error()) {
@@ -164,6 +169,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         warnln("Failed to write PNG");
         return 1;
     }
+
+    if (edit_image)
+        TRY(Core::Process::spawn("/bin/PixelPaint"sv, Array { output_path }));
 
     bool printed_hyperlink = false;
     if (isatty(STDOUT_FILENO)) {
