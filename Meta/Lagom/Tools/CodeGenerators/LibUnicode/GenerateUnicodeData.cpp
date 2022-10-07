@@ -210,11 +210,6 @@ static CodePointRange parse_code_point_range(StringView list)
     return code_point_range;
 }
 
-// gcc-11, gcc-12 have a codegen bug, see #15449.
-#if defined(AK_COMPILER_GCC)
-#    pragma GCC push_options
-#    pragma GCC optimize("O0")
-#endif
 static ErrorOr<void> parse_special_casing(Core::Stream::BufferedFile& file, UnicodeData& unicode_data)
 {
     Array<u8, 1024> buffer;
@@ -692,9 +687,6 @@ static ErrorOr<void> parse_unicode_data(Core::Stream::BufferedFile& file, Unicod
 
     return {};
 }
-#if defined(AK_COMPILER_GCC)
-#    pragma GCC pop_options
-#endif
 
 static ErrorOr<void> generate_unicode_data_header(Core::Stream::BufferedFile& file, UnicodeData& unicode_data)
 {
