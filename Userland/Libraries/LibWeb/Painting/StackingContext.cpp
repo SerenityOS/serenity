@@ -369,8 +369,6 @@ Optional<HitTestResult> StackingContext::hit_test(Gfx::FloatPoint const& positio
 {
     if (!m_box.is_visible())
         return {};
-    if (m_box.computed_values().z_index().value_or(0) < 0)
-        return {};
 
     auto transform_origin = this->transform_origin();
     auto transformed_position = affine_transform_matrix().inverse().value_or({}).map(position - transform_origin) + transform_origin;
@@ -385,8 +383,11 @@ Optional<HitTestResult> StackingContext::hit_test(Gfx::FloatPoint const& positio
     // https://www.w3.org/TR/CSS22/visuren.html#z-index
 
     // 7. the child stacking contexts with positive stack levels (least positive first).
+    // NOTE: Hit testing follows reverse painting order, that's why the conditions here are reversed.
     for (ssize_t i = m_children.size() - 1; i >= 0; --i) {
         auto const& child = *m_children[i];
+        if (child.m_box.computed_values().z_index().value_or(0) < 0)
+            break;
         auto result = child.hit_test(transformed_position, type);
         if (result.has_value())
             return result;
@@ -457,8 +458,11 @@ Optional<HitTestResult> StackingContext::hit_test(Gfx::FloatPoint const& positio
     }
 
     // 2. the child stacking contexts with negative stack levels (most negative first).
+    // NOTE: Hit testing follows reverse painting order, that's why the conditions here are reversed.
     for (ssize_t i = m_children.size() - 1; i >= 0; --i) {
         auto const& child = *m_children[i];
+        if (child.m_box.computed_values().z_index().value_or(0) >= 0)
+            break;
         auto result = child.hit_test(transformed_position, type);
         if (result.has_value())
             return result;
