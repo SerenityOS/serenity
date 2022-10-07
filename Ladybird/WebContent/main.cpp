@@ -38,9 +38,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     // FIXME: Refactor things so we can get rid of this somehow.
     Core::EventLoop event_loop;
 
-    platform_init();
-
     QGuiApplication app(arguments.argc, arguments.argv);
+
+    platform_init();
 
     Web::Platform::EventLoopPlugin::install(*new Ladybird::EventLoopPluginQt);
     Web::Platform::ImageCodecPlugin::install(*new Ladybird::ImageCodecPluginLadybird);
