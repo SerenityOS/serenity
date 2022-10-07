@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/Optional.h>
 #include <AK/StringView.h>
 #include <AK/Try.h>
 #include <AK/Variant.h>
@@ -74,32 +73,36 @@ private:
 };
 
 template<typename T, typename ErrorType>
-class [[nodiscard]] ErrorOr final : public Variant<T, ErrorType> {
+class [[nodiscard]] ErrorOr {
 public:
-    using Variant<T, ErrorType>::Variant;
+    ErrorOr() requires(IsSame<T, Empty>)
+        : m_value_or_error(Empty {})
+    {
+    }
 
     template<typename U>
-    ALWAYS_INLINE ErrorOr(U&& value) requires(!IsSame<RemoveCVReference<U>, ErrorOr<T>>)
-        : Variant<T, ErrorType>(forward<U>(value))
+    ALWAYS_INLINE ErrorOr(U&& value) requires(!IsSame<RemoveCVReference<U>, ErrorOr<T, ErrorType>>)
+        : m_value_or_error(forward<U>(value))
     {
     }
 
 #ifdef __serenity__
     ErrorOr(ErrnoCode code)
-        : Variant<T, ErrorType>(Error::from_errno(code))
+        : m_value_or_error(Error::from_errno(code))
     {
     }
 #endif
 
     T& value()
     {
-        return this->template get<T>();
+        return m_value_or_error.template get<T>();
     }
-    T const& value() const { return this->template get<T>(); }
-    ErrorType& error() { return this->template get<ErrorType>(); }
-    ErrorType const& error() const { return this->template get<ErrorType>(); }
+    T const& value() const { return m_value_or_error.template get<T>(); }
 
-    bool is_error() const { return this->template has<ErrorType>(); }
+    ErrorType& error() { return m_value_or_error.template get<ErrorType>(); }
+    ErrorType const& error() const { return m_value_or_error.template get<ErrorType>(); }
+
+    bool is_error() const { return m_value_or_error.template has<ErrorType>(); }
 
     T release_value() { return move(value()); }
     ErrorType release_error() { return move(error()); }
@@ -111,41 +114,13 @@ public:
     }
 
 private:
-    // 'downcast' is fishy in this context. Let's hide it by making it private.
-    using Variant<T, ErrorType>::downcast;
+    Variant<T, ErrorType> m_value_or_error;
 };
 
-// Partial specialization for void value type
 template<typename ErrorType>
-class [[nodiscard]] ErrorOr<void, ErrorType> {
+class [[nodiscard]] ErrorOr<void, ErrorType> : public ErrorOr<Empty, ErrorType> {
 public:
-    ErrorOr(ErrorType error)
-        : m_error(move(error))
-    {
-    }
-
-#ifdef __serenity__
-    ErrorOr(ErrnoCode code)
-        : m_error(Error::from_errno(code))
-    {
-    }
-#endif
-
-    ErrorOr() = default;
-    ErrorOr(ErrorOr&& other) = default;
-    ErrorOr(ErrorOr const& other) = default;
-    ~ErrorOr() = default;
-
-    ErrorOr& operator=(ErrorOr&& other) = default;
-    ErrorOr& operator=(ErrorOr const& other) = default;
-
-    ErrorType const& error() const { return m_error.value(); }
-    bool is_error() const { return m_error.has_value(); }
-    ErrorType release_error() { return m_error.release_value(); }
-    void release_value() { }
-
-private:
-    Optional<ErrorType> m_error;
+    using ErrorOr<Empty, ErrorType>::ErrorOr;
 };
 
 }
