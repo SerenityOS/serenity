@@ -17,17 +17,17 @@ Browser::Settings* s_settings;
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    platform_init();
-
-    // NOTE: We only instantiate this to ensure that Gfx::FontDatabase has its default queries initialized.
-    Gfx::FontDatabase::set_default_font_query("Katica 10 400 0");
-    Gfx::FontDatabase::set_fixed_width_font_query("Csilla 10 400 0");
-
     // NOTE: This is only used for the Core::Socket inside the IPC connections.
     // FIXME: Refactor things so we can get rid of this somehow.
     Core::EventLoop event_loop;
 
     QApplication app(arguments.argc, arguments.argv);
+
+    platform_init();
+
+    // NOTE: We only instantiate this to ensure that Gfx::FontDatabase has its default queries initialized.
+    Gfx::FontDatabase::set_default_font_query("Katica 10 400 0");
+    Gfx::FontDatabase::set_fixed_width_font_query("Csilla 10 400 0");
 
     String url;
     Core::ArgsParser args_parser;
