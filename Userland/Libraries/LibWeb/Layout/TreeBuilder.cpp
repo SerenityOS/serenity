@@ -58,7 +58,7 @@ static bool has_in_flow_block_children(Layout::Node const& layout_node)
 
 static Layout::Node& insertion_parent_for_inline_node(Layout::NodeWithStyle& layout_parent)
 {
-    if (layout_parent.is_inline() && !layout_parent.is_inline_block())
+    if (layout_parent.display().is_inline_outside() && layout_parent.display().is_flow_inside())
         return layout_parent;
 
     if (layout_parent.display().is_flex_inside()) {
