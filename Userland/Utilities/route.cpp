@@ -157,8 +157,18 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         if (!value_host_address.is_empty())
             destination = AK::IPv4Address::from_string(value_host_address);
 
-        if (!value_network_address.is_empty())
-            destination = AK::IPv4Address::from_string(value_network_address);
+        StringView address;
+        StringView cidr;
+        if (!value_network_address.is_empty()) {
+            // Check if a CIDR notation was provided and parse accordingly
+            if (auto position = value_network_address.find('/'); position.has_value()) {
+                address = value_network_address.substring_view(0, position.value());
+                cidr = value_network_address.substring_view(position.value() + 1);
+            } else {
+                address = value_network_address;
+            }
+            destination = AK::IPv4Address::from_string(address);
+        }
 
         if (!destination.has_value()) {
             warnln("Invalid destination IPv4 address");
@@ -171,7 +181,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             return 1;
         }
 
-        auto genmask = AK::IPv4Address::from_string(value_netmask_address);
+        Optional<IPv4Address> genmask;
+        if (auto cidr_int = cidr.to_int(); cidr_int.has_value())
+            genmask = AK::IPv4Address::netmask_from_cidr(cidr_int.value());
+        else
+            genmask = AK::IPv4Address::from_string(value_netmask_address);
+
         if (!genmask.has_value()) {
             warnln("Invalid genmask IPv4 address: '{}'", value_netmask_address);
             return 1;
