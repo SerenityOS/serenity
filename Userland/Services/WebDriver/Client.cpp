@@ -391,8 +391,18 @@ ErrorOr<JsonValue, HttpError> Client::handle_get_status(Vector<StringView>, Json
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling GET /status");
 
-    // FIXME: Implement the spec steps
-    return HttpError { 400, "", "" };
+    // 1. Let body be a new JSON Object with the following properties:
+    //    "ready"
+    //        The remote end’s readiness state.
+    //    "message"
+    //        An implementation-defined string explaining the remote end’s readiness state.
+    // FIXME: Report if we are somehow not ready.
+    JsonObject body;
+    body.set("ready", true);
+    body.set("message", "Ready to start some sessions!");
+
+    // 2. Return success with data body.
+    return body;
 }
 
 // POST /session/{session id}/url https://w3c.github.io/webdriver/#dfn-navigate-to
