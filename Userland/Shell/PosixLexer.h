@@ -30,19 +30,229 @@ enum class Reduction {
     ExtendedParameterExpansion,
 };
 
+struct ExpansionRange {
+    size_t start;
+    size_t length;
+};
+
 struct ParameterExpansion {
     StringBuilder parameter;
+    ExpansionRange range;
 };
 struct CommandExpansion {
     StringBuilder command;
-    AST::Position location;
+    ExpansionRange range;
 };
 struct ArithmeticExpansion {
     String expression;
     StringBuilder value;
-    AST::Position location;
+    ExpansionRange range;
 };
 using Expansion = Variant<ParameterExpansion, CommandExpansion, ArithmeticExpansion>;
+
+struct ResolvedParameterExpansion {
+    String parameter;
+    String argument;
+    ExpansionRange range;
+    enum class Op {
+        UseDefaultValue,                    // ${parameter:-word}
+        AssignDefaultValue,                 // ${parameter:=word}
+        IndicateErrorIfEmpty,               // ${parameter:?word}
+        UseAlternativeValue,                // ${parameter:+word}
+        UseDefaultValueIfUnset,             // ${parameter-default}
+        AssignDefaultValueIfUnset,          // ${parameter=default}
+        IndicateErrorIfUnset,               // ${parameter?default}
+        UseAlternativeValueIfUnset,         // ${parameter+default}
+        RemoveLargestSuffixByPattern,       // ${parameter%%pattern}
+        RemoveLargestPrefixByPattern,       // ${parameter##pattern}
+        RemoveSmallestSuffixByPattern,      // ${parameter%pattern}
+        RemoveSmallestPrefixByPattern,      // ${parameter#pattern}
+        StringLength,                       // ${#parameter}
+        GetPositionalParameter,             // ${parameter}
+        GetVariable,                        // ${parameter}
+        GetLastBackgroundPid,               // $!
+        GetPositionalParameterList,         // $*
+        GetCurrentOptionFlags,              // $-
+        GetPositionalParameterCount,        // $#
+        GetLastExitStatus,                  // $?
+        GetPositionalParameterListAsString, // $@
+        GetShellProcessId,                  // $$
+    } op;
+
+    enum class Expand {
+        Nothing,
+        Word,
+    } expand { Expand::Nothing };
+
+    String to_string() const
+    {
+        StringBuilder builder;
+        builder.append("{"sv);
+        switch (op) {
+        case Op::UseDefaultValue:
+            builder.append("UseDefaultValue"sv);
+            break;
+        case Op::AssignDefaultValue:
+            builder.append("AssignDefaultValue"sv);
+            break;
+        case Op::IndicateErrorIfEmpty:
+            builder.append("IndicateErrorIfEmpty"sv);
+            break;
+        case Op::UseAlternativeValue:
+            builder.append("UseAlternativeValue"sv);
+            break;
+        case Op::UseDefaultValueIfUnset:
+            builder.append("UseDefaultValueIfUnset"sv);
+            break;
+        case Op::AssignDefaultValueIfUnset:
+            builder.append("AssignDefaultValueIfUnset"sv);
+            break;
+        case Op::IndicateErrorIfUnset:
+            builder.append("IndicateErrorIfUnset"sv);
+            break;
+        case Op::UseAlternativeValueIfUnset:
+            builder.append("UseAlternativeValueIfUnset"sv);
+            break;
+        case Op::RemoveLargestSuffixByPattern:
+            builder.append("RemoveLargestSuffixByPattern"sv);
+            break;
+        case Op::RemoveLargestPrefixByPattern:
+            builder.append("RemoveLargestPrefixByPattern"sv);
+            break;
+        case Op::RemoveSmallestSuffixByPattern:
+            builder.append("RemoveSmallestSuffixByPattern"sv);
+            break;
+        case Op::RemoveSmallestPrefixByPattern:
+            builder.append("RemoveSmallestPrefixByPattern"sv);
+            break;
+        case Op::StringLength:
+            builder.append("StringLength"sv);
+            break;
+        case Op::GetPositionalParameter:
+            builder.append("GetPositionalParameter"sv);
+            break;
+        case Op::GetLastBackgroundPid:
+            builder.append("GetLastBackgroundPid"sv);
+            break;
+        case Op::GetPositionalParameterList:
+            builder.append("GetPositionalParameterList"sv);
+            break;
+        case Op::GetCurrentOptionFlags:
+            builder.append("GetCurrentOptionFlags"sv);
+            break;
+        case Op::GetPositionalParameterCount:
+            builder.append("GetPositionalParameterCount"sv);
+            break;
+        case Op::GetLastExitStatus:
+            builder.append("GetLastExitStatus"sv);
+            break;
+        case Op::GetPositionalParameterListAsString:
+            builder.append("GetPositionalParameterListAsString"sv);
+            break;
+        case Op::GetShellProcessId:
+            builder.append("GetShellProcessId"sv);
+            break;
+        case Op::GetVariable:
+            builder.append("GetVariable"sv);
+            break;
+        }
+        builder.append(" "sv);
+        builder.append(parameter);
+        builder.append(" ("sv);
+        builder.append(argument);
+        builder.append(")"sv);
+        builder.append("}"sv);
+        return builder.to_string();
+    }
+};
+// struct ResolvedArithmeticExpansion {
+//     // Dr.POSIX:
+//     //     Only signed long integer arithmetic is required.
+//     struct NumberConstant {
+//         long value;
+//     };
+//     struct Variable {
+//         String name;
+//     };
+//     struct Expression;
+//     // Dr.POSIX:
+//     //     [Use the C grammar for arithmetic expressions, except that]
+//     //     The sizeof() operator and the prefix and postfix "++" and "--" operators are not required.
+//     struct Unary {
+//         enum {
+//             Plus,
+//             Minus,
+//             BitwiseNot,
+//             LogicalNot,
+//         } op;
+//         NonnullRefPtr<Expression> operand;
+//     };
+//     struct Binary {
+//         enum {
+//             Plus,
+//             Minus,
+//             Multiply,
+//             Divide,
+//             Modulo,
+//             BitwiseAnd,
+//             BitwiseOr,
+//             BitwiseXor,
+//             LeftShift,
+//             RightShift,
+//             LogicalAnd,
+//             LogicalOr,
+//             Equal,
+//             NotEqual,
+//             LessThan,
+//             GreaterThan,
+//             LessThanOrEqual,
+//             GreaterThanOrEqual,
+//         } op;
+//         NonnullRefPtr<Expression> lhs;
+//         NonnullRefPtr<Expression> rhs;
+//     };
+//     struct Assignment {
+//         enum {
+//             Assign,
+//             PlusAssign,
+//             MinusAssign,
+//             MultiplyAssign,
+//             DivideAssign,
+//             ModuloAssign,
+//             BitwiseAndAssign,
+//             BitwiseOrAssign,
+//             BitwiseXorAssign,
+//             LeftShiftAssign,
+//             RightShiftAssign,
+//         } op;
+//         Variable lhs;
+//         NonnullRefPtr<Expression> rhs;
+//     };
+//     struct Ternary {
+//         enum {
+//             If,
+//         } op;
+//         NonnullRefPtr<Expression> operand0;
+//         NonnullRefPtr<Expression> operand1;
+//         NonnullRefPtr<Expression> operand2;
+//     };
+//
+//     struct Expression : public RefCounted<Expression> {
+//         Expression(Variant<NumberConstant, Variable, Unary, Binary, Assignment, Ternary> value)
+//             : value(move(value))
+//         {
+//         }
+//
+//         Variant<NumberConstant, Variable, Unary, Binary, Assignment, Ternary> value;
+//     };
+//
+//     NonnullRefPtr<Expression> expression;
+// };
+struct ResolvedCommandExpansion {
+    RefPtr<AST::Node> command;
+    ExpansionRange range;
+};
+using ResolvedExpansion = Variant<ResolvedParameterExpansion, ResolvedCommandExpansion>;
 
 struct State {
     StringBuilder buffer {};
@@ -86,13 +296,37 @@ struct Token {
         DoubleLessDash,
         Clobber,
         Semicolon,
+
+        // Not produced by this lexer, but generated in later stages.
+        AssignmentWord,
+        Bang,
+        Case,
+        CloseBrace,
+        Do,
+        Done,
+        Elif,
+        Else,
+        Esac,
+        Fi,
+        For,
+        If,
+        In,
+        IoNumber,
+        OpenBrace,
+        Then,
+        Until,
+        VariableName,
+        While,
+        Word,
     };
 
     Type type;
     String value;
     Optional<AST::Position> position;
     Vector<Expansion> expansions;
+    Vector<ResolvedExpansion> resolved_expansions {};
     StringView original_text;
+    bool could_be_start_of_a_simple_command { false };
 
     static Vector<Token> maybe_from_state(State const& state)
     {
@@ -204,12 +438,14 @@ struct Token {
     {
         return {
             .type = Type::Continuation,
-            .value = expected,
+            .value = move(expected),
             .position = {},
             .expansions = {},
             .original_text = {},
         };
     }
+
+    StringView type_name() const;
 };
 
 class Lexer {
@@ -244,6 +480,7 @@ private:
 
     char consume();
     bool consume_specific(char);
+    ExpansionRange range(ssize_t offset = 0) const;
 
     GenericLexer m_lexer;
     State m_state;

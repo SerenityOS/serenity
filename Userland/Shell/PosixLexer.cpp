@@ -24,11 +24,22 @@ static bool is_part_of_operator(StringView text, char ch)
 namespace Shell::Posix {
 Vector<Token> Lexer::batch_next()
 {
-    if (m_next_reduction == Reduction::None)
-        return { Token::eof() };
-    auto result = reduce(m_next_reduction);
-    m_next_reduction = result.next_reduction;
-    return result.tokens;
+    for (; m_next_reduction != Reduction::None;) {
+        auto result = reduce(m_next_reduction);
+        m_next_reduction = result.next_reduction;
+        if (!result.tokens.is_empty())
+            return result.tokens;
+    }
+
+    return {};
+}
+
+ExpansionRange Lexer::range(ssize_t offset) const
+{
+    return {
+        m_state.position.end_offset - m_state.position.start_offset + offset - 1,
+        0,
+    };
 }
 
 char Lexer::consume()
@@ -167,7 +178,7 @@ Lexer::ReductionResult Lexer::reduce_single_quoted_string()
         tokens.append(Token::continuation('\''));
         return {
             .tokens = move(tokens),
-            .next_reduction = Reduction::None,
+            .next_reduction = Reduction::End,
         };
     }
 
@@ -195,7 +206,7 @@ Lexer::ReductionResult Lexer::reduce_double_quoted_string()
         tokens.append(Token::continuation('"'));
         return {
             .tokens = move(tokens),
-            .next_reduction = Reduction::None,
+            .next_reduction = Reduction::End,
         };
     }
 
@@ -226,15 +237,15 @@ Lexer::ReductionResult Lexer::reduce_double_quoted_string()
         };
     case '$':
         if (m_lexer.next_is("("))
-            m_state.expansions.empend(CommandExpansion { .command = StringBuilder {}, .location = m_state.position });
+            m_state.expansions.empend(CommandExpansion { .command = StringBuilder {}, .range = range() });
         else
-            m_state.expansions.empend(ParameterExpansion { .parameter = StringBuilder {} });
+            m_state.expansions.empend(ParameterExpansion { .parameter = StringBuilder {}, .range = range() });
         return {
             .tokens = {},
             .next_reduction = Reduction::Expansion,
         };
     case '`':
-        m_state.expansions.empend(CommandExpansion { StringBuilder {}, m_state.position });
+        m_state.expansions.empend(CommandExpansion { .command = StringBuilder {}, .range = range() });
         return {
             .tokens = {},
             .next_reduction = Reduction::CommandExpansion,
@@ -271,14 +282,18 @@ Lexer::ReductionResult Lexer::reduce_expansion()
         };
     case 'a' ... 'z':
     case 'A' ... 'Z':
-    case '_':
+    case '_': {
         consume();
         m_state.buffer.append(ch);
-        m_state.expansions.last().get<ParameterExpansion>().parameter.append(ch);
+        auto& expansion = m_state.expansions.last().get<ParameterExpansion>();
+        expansion.parameter.append(ch);
+        expansion.range.length = m_state.position.end_offset - expansion.range.start - m_state.position.start_offset;
+
         return {
             .tokens = {},
             .next_reduction = Reduction::ParameterExpansion,
         };
+    }
     case '0' ... '9':
     case '-':
     case '!':
@@ -298,8 +313,7 @@ Lexer::ReductionResult Lexer::reduce_command_expansion()
 {
     if (m_lexer.is_eof()) {
         auto& expansion = m_state.expansions.last().get<CommandExpansion>();
-        expansion.location.end_line = m_state.position.end_line;
-        expansion.location.end_offset = m_state.position.end_offset;
+        expansion.range.length = m_state.position.end_offset - expansion.range.start - m_state.position.start_offset;
 
         return {
             .tokens = { Token::continuation('`') },
@@ -312,8 +326,7 @@ Lexer::ReductionResult Lexer::reduce_command_expansion()
     if (!m_state.escaping && ch == '`') {
         m_state.buffer.append(ch);
         auto& expansion = m_state.expansions.last().get<CommandExpansion>();
-        expansion.location.end_line = m_state.position.end_line;
-        expansion.location.end_offset = m_state.position.end_offset;
+        expansion.range.length = m_state.position.end_offset - expansion.range.start - m_state.position.start_offset;
 
         return {
             .tokens = {},
@@ -342,7 +355,6 @@ Lexer::ReductionResult Lexer::reduce_start()
 {
     if (m_lexer.is_eof()) {
         auto tokens = Token::maybe_from_state(m_state);
-        dbgln("EOF in start, {} tokens, buffer was '{}'", tokens.size(), m_state.buffer.string_view());
         m_state.buffer.clear();
         m_state.position.start_offset = m_state.position.end_offset;
         m_state.position.start_line = m_state.position.end_line;
@@ -443,9 +455,9 @@ Lexer::ReductionResult Lexer::reduce_start()
     if (!m_state.escaping && consume_specific('$')) {
         m_state.buffer.append('$');
         if (m_lexer.next_is("("))
-            m_state.expansions.empend(CommandExpansion { .command = StringBuilder {}, .location = m_state.position });
+            m_state.expansions.empend(CommandExpansion { .command = StringBuilder {}, .range = range() });
         else
-            m_state.expansions.empend(ParameterExpansion { .parameter = StringBuilder {} });
+            m_state.expansions.empend(ParameterExpansion { .parameter = StringBuilder {}, .range = range() });
 
         return {
             .tokens = {},
@@ -455,7 +467,7 @@ Lexer::ReductionResult Lexer::reduce_start()
 
     if (!m_state.escaping && consume_specific('`')) {
         m_state.buffer.append('`');
-        m_state.expansions.empend(CommandExpansion { StringBuilder {}, m_state.position });
+        m_state.expansions.empend(CommandExpansion { .command = StringBuilder {}, .range = range() });
         return {
             .tokens = {},
             .next_reduction = Reduction::CommandExpansion,
@@ -474,8 +486,7 @@ Lexer::ReductionResult Lexer::reduce_arithmetic_expansion()
 {
     if (m_lexer.is_eof()) {
         auto& expansion = m_state.expansions.last().get<ArithmeticExpansion>();
-        expansion.location.end_line = m_state.position.end_line;
-        expansion.location.end_offset = m_state.position.end_offset;
+        expansion.range.length = m_state.position.end_offset - expansion.range.start - m_state.position.start_offset;
 
         return {
             .tokens = { Token::continuation("$((") },
@@ -488,8 +499,7 @@ Lexer::ReductionResult Lexer::reduce_arithmetic_expansion()
         auto& expansion = m_state.expansions.last().get<ArithmeticExpansion>();
         expansion.expression = expansion.value.to_string().substring(0, expansion.value.length() - 1);
         expansion.value.clear();
-        expansion.location.end_line = m_state.position.end_line;
-        expansion.location.end_offset = m_state.position.end_offset;
+        expansion.range.length = m_state.position.end_offset - expansion.range.start - m_state.position.start_offset;
 
         return {
             .tokens = {},
@@ -511,7 +521,8 @@ Lexer::ReductionResult Lexer::reduce_special_parameter_expansion()
     auto ch = consume();
     m_state.buffer.append(ch);
     m_state.expansions.last() = ParameterExpansion {
-        StringBuilder {}
+        .parameter = StringBuilder {},
+        .range = range(-1),
     };
     m_state.expansions.last().get<ParameterExpansion>().parameter.append(ch);
 
@@ -523,6 +534,8 @@ Lexer::ReductionResult Lexer::reduce_special_parameter_expansion()
 
 Lexer::ReductionResult Lexer::reduce_parameter_expansion()
 {
+    auto& expansion = m_state.expansions.last().get<ParameterExpansion>();
+
     if (m_lexer.is_eof()) {
         return {
             .tokens = {},
@@ -533,7 +546,9 @@ Lexer::ReductionResult Lexer::reduce_parameter_expansion()
     auto next = m_lexer.peek();
     if (is_ascii_alphanumeric(next)) {
         m_state.buffer.append(consume());
-        m_state.expansions.last().get<ParameterExpansion>().parameter.append(next);
+        expansion.parameter.append(next);
+        expansion.range.length = m_state.position.end_offset - expansion.range.start - m_state.position.start_offset;
+
         return {
             .tokens = {},
             .next_reduction = Reduction::ParameterExpansion,
@@ -558,7 +573,7 @@ Lexer::ReductionResult Lexer::reduce_command_or_arithmetic_substitution_expansio
         m_state.expansions.last() = ArithmeticExpansion {
             .expression = "",
             .value = StringBuilder {},
-            .location = m_state.position,
+            .range = range(-2)
         };
         return {
             .tokens = {},
@@ -568,6 +583,9 @@ Lexer::ReductionResult Lexer::reduce_command_or_arithmetic_substitution_expansio
 
     if (ch == ')') {
         m_state.buffer.append(consume());
+        m_state.expansions.last().visit([&](auto& expansion) {
+            expansion.range.length = m_state.position.end_offset - expansion.range.start - m_state.position.start_offset;
+        });
         return {
             .tokens = {},
             .next_reduction = m_state.previous_reduction,
@@ -584,6 +602,8 @@ Lexer::ReductionResult Lexer::reduce_command_or_arithmetic_substitution_expansio
 
 Lexer::ReductionResult Lexer::reduce_extended_parameter_expansion()
 {
+    auto& expansion = m_state.expansions.last().get<ParameterExpansion>();
+
     if (m_lexer.is_eof()) {
         return {
             .tokens = { Token::continuation("${") },
@@ -594,6 +614,8 @@ Lexer::ReductionResult Lexer::reduce_extended_parameter_expansion()
     auto ch = m_lexer.peek();
     if (ch == '}') {
         m_state.buffer.append(consume());
+        expansion.range.length = m_state.position.end_offset - expansion.range.start - m_state.position.start_offset;
+
         return {
             .tokens = {},
             .next_reduction = m_state.previous_reduction,
@@ -601,11 +623,100 @@ Lexer::ReductionResult Lexer::reduce_extended_parameter_expansion()
     }
 
     m_state.buffer.append(consume());
-    m_state.expansions.last().get<ParameterExpansion>().parameter.append(ch);
+    expansion.parameter.append(ch);
+    expansion.range.length = m_state.position.end_offset - expansion.range.start - m_state.position.start_offset;
 
     return {
         .tokens = {},
         .next_reduction = Reduction::ExtendedParameterExpansion,
     };
+}
+StringView Token::type_name() const
+{
+    switch (type) {
+    case Type::Eof:
+        return "Eof"sv;
+    case Type::Newline:
+        return "Newline"sv;
+    case Type::Continuation:
+        return "Continuation"sv;
+    case Type::Token:
+        return "Token"sv;
+    case Type::And:
+        return "And"sv;
+    case Type::Pipe:
+        return "Pipe"sv;
+    case Type::OpenParen:
+        return "OpenParen"sv;
+    case Type::CloseParen:
+        return "CloseParen"sv;
+    case Type::Great:
+        return "Great"sv;
+    case Type::Less:
+        return "Less"sv;
+    case Type::AndIf:
+        return "AndIf"sv;
+    case Type::OrIf:
+        return "OrIf"sv;
+    case Type::DoubleSemicolon:
+        return "DoubleSemicolon"sv;
+    case Type::DoubleLess:
+        return "DoubleLess"sv;
+    case Type::DoubleGreat:
+        return "DoubleGreat"sv;
+    case Type::LessAnd:
+        return "LessAnd"sv;
+    case Type::GreatAnd:
+        return "GreatAnd"sv;
+    case Type::LessGreat:
+        return "LessGreat"sv;
+    case Type::DoubleLessDash:
+        return "DoubleLessDash"sv;
+    case Type::Clobber:
+        return "Clobber"sv;
+    case Type::Semicolon:
+        return "Semicolon"sv;
+    case Type::AssignmentWord:
+        return "AssignmentWord"sv;
+    case Type::Bang:
+        return "Bang"sv;
+    case Type::Case:
+        return "Case"sv;
+    case Type::CloseBrace:
+        return "CloseBrace"sv;
+    case Type::Do:
+        return "Do"sv;
+    case Type::Done:
+        return "Done"sv;
+    case Type::Elif:
+        return "Elif"sv;
+    case Type::Else:
+        return "Else"sv;
+    case Type::Esac:
+        return "Esac"sv;
+    case Type::Fi:
+        return "Fi"sv;
+    case Type::For:
+        return "For"sv;
+    case Type::If:
+        return "If"sv;
+    case Type::In:
+        return "In"sv;
+    case Type::IoNumber:
+        return "IoNumber"sv;
+    case Type::OpenBrace:
+        return "OpenBrace"sv;
+    case Type::Then:
+        return "Then"sv;
+    case Type::Until:
+        return "Until"sv;
+    case Type::VariableName:
+        return "VariableName"sv;
+    case Type::While:
+        return "While"sv;
+    case Type::Word:
+        return "Word"sv;
+    }
+    return "Idk"sv;
 }
 }

@@ -27,7 +27,7 @@
 #include <LibCore/System.h>
 #include <LibCore/Timer.h>
 #include <LibLine/Editor.h>
-#include <Shell/PosixLexer.h>
+#include <Shell/PosixParser.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <inttypes.h>
@@ -479,7 +479,7 @@ bool Shell::invoke_function(const AST::Command& command, int& retval)
 
 DeprecatedString Shell::format(StringView source, ssize_t& cursor) const
 {
-    Formatter formatter(source, cursor);
+    Formatter formatter(source, cursor, m_in_posix_mode);
     auto result = formatter.format();
     cursor = formatter.cursor();
 
@@ -2484,33 +2484,31 @@ void Shell::timer_event(Core::TimerEvent& event)
         m_editor->save_history(get_history_path());
 }
 
-RefPtr<AST::Node> Shell::parse(StringView input, bool interactive) const
+RefPtr<AST::Node> Shell::parse(StringView input, bool interactive, bool as_command) const
 {
     if (m_in_posix_mode) {
-        Posix::Lexer lexer(input);
-        for (;;) {
-            auto tokens = lexer.batch_next();
-            auto done = false;
-            for (auto& token : tokens) {
-                String position = "(~)";
-                if (token.position.has_value())
-                    position = String::formatted("{}:{}", token.position->start_offset, token.position->end_offset);
-                String expansions = "";
-                for (auto& exp : token.expansions)
-                    exp.visit(
-                        [&](Posix::ParameterExpansion& x) { expansions = String::formatted("{}param: {},", expansions, x.parameter.string_view()); },
-                        [&](Posix::CommandExpansion& x) { expansions = String::formatted("{}command: {},", expansions, x.command.string_view()); },
-                        [&](Posix::ArithmeticExpansion& x) { expansions = String::formatted("{}arith: {},", expansions, x.expression); });
-                dbgln("Token @ {}: '{}' - expansions: {}", position, token.value.replace("\n"sv, "\\n"sv, ReplaceMode::All), expansions);
-                if (token.type == Posix::Token::Type::Eof)
-                    done = true;
-            }
-            if (done)
-                break;
+        Posix::Parser parser(input);
+        if (as_command) {
+            auto node = parser.parse();
+            dbgln("Parsed with the POSIX Parser:");
+            node->dump(0);
+            return node;
         }
+
+        auto node = parser.parse_word_list();
+        //        dbgln("Parsed list with the POSIX Parser:");
+        //        node->dump(0);
+        return node;
     }
 
-    return Parser { input, interactive }.parse();
+    Parser parser { input, interactive };
+    if (as_command)
+        return parser.parse();
+
+    auto nodes = parser.parse_as_multiple_expressions();
+    return make_ref_counted<AST::ListConcatenate>(
+        nodes.is_empty() ? AST::Position { 0, 0, { 0, 0 }, { 0, 0 } } : nodes.first().position(),
+        move(nodes));
 }
 
 void FileDescriptionCollector::collect()

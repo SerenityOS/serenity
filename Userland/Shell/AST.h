@@ -47,6 +47,16 @@ struct Position {
     } start_line, end_line;
 
     bool contains(size_t offset) const { return start_offset <= offset && offset <= end_offset; }
+
+    Position with_end(Position const& end) const
+    {
+        return {
+            .start_offset = start_offset,
+            .end_offset = end.end_offset,
+            .start_line = start_line,
+            .end_line = end.end_line,
+        };
+    }
 };
 
 struct NameWithPosition {
@@ -989,6 +999,7 @@ public:
     NonnullRefPtr<Node> const& condition() const { return m_condition; }
     RefPtr<Node> const& true_branch() const { return m_true_branch; }
     RefPtr<Node> const& false_branch() const { return m_false_branch; }
+    RefPtr<Node>& false_branch() { return m_false_branch; }
     Optional<Position> const else_position() const { return m_else_position; }
 
 private:
@@ -1301,7 +1312,11 @@ private:
 
 class Juxtaposition final : public Node {
 public:
-    Juxtaposition(Position, NonnullRefPtr<Node>, NonnullRefPtr<Node>);
+    enum class Mode {
+        ListExpand,
+        StringExpand,
+    };
+    Juxtaposition(Position, NonnullRefPtr<Node>, NonnullRefPtr<Node>, Mode = Mode::ListExpand);
     virtual ~Juxtaposition();
     virtual void visit(NodeVisitor& visitor) override { visitor.visit(this); }
 
@@ -1318,6 +1333,7 @@ private:
 
     NonnullRefPtr<Node> m_left;
     NonnullRefPtr<Node> m_right;
+    Mode m_mode { Mode::ListExpand };
 };
 
 class Heredoc final : public Node {

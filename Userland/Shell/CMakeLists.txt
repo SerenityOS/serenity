@@ -13,6 +13,7 @@ set(SOURCES
     NodeVisitor.cpp
     Parser.cpp
     PosixLexer.cpp
+    PosixParser.cpp
     Shell.cpp
 )
 
