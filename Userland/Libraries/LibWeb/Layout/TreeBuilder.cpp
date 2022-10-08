@@ -265,13 +265,21 @@ void TreeBuilder::create_layout_tree(DOM::Node& dom_node, TreeBuilder::Context& 
         auto& progress = static_cast<HTML::HTMLProgressElement&>(dom_node);
         if (!progress.using_system_appearance()) {
             auto bar_style = style_computer.compute_style(progress, CSS::Selector::PseudoElement::ProgressBar);
+            bar_style->set_property(CSS::PropertyID::Display, CSS::IdentifierStyleValue::create(CSS::ValueID::InlineBlock));
             auto value_style = style_computer.compute_style(progress, CSS::Selector::PseudoElement::ProgressValue);
+            value_style->set_property(CSS::PropertyID::Display, CSS::IdentifierStyleValue::create(CSS::ValueID::Block));
             auto position = progress.position();
             value_style->set_property(CSS::PropertyID::Width, CSS::PercentageStyleValue::create(CSS::Percentage(position >= 0 ? round_to<int>(100 * position) : 0)));
-            auto progress_bar = adopt_ref(*new Layout::BlockContainer(document, nullptr, bar_style));
-            auto progress_value = adopt_ref(*new Layout::BlockContainer(document, nullptr, value_style));
-            progress_bar->append_child(*progress_value);
-            layout_node->append_child(*progress_bar);
+            auto bar_display = bar_style->display();
+            auto value_display = value_style->display();
+            auto progress_bar = DOM::Element::create_layout_node_for_display_type(document, bar_display, bar_style, nullptr);
+            auto progress_value = DOM::Element::create_layout_node_for_display_type(document, value_display, value_style, nullptr);
+            push_parent(verify_cast<NodeWithStyle>(*layout_node));
+            push_parent(verify_cast<NodeWithStyle>(*progress_bar));
+            insert_node_into_inline_or_block_ancestor(*progress_value, value_display, AppendOrPrepend::Append);
+            pop_parent();
+            insert_node_into_inline_or_block_ancestor(*progress_bar, bar_display, AppendOrPrepend::Append);
+            pop_parent();
             progress.set_pseudo_element_node({}, CSS::Selector::PseudoElement::ProgressBar, progress_bar);
             progress.set_pseudo_element_node({}, CSS::Selector::PseudoElement::ProgressValue, progress_value);
         }
