@@ -71,7 +71,8 @@ int main(int argc, char** argv)
     if (import_base_path.is_null())
         import_base_path = lexical_path.dirname();
 
-    auto& interface = IDL::Parser(path, data, import_base_path).parse();
+    IDL::Parser parser(path, data, import_base_path);
+    auto& interface = parser.parse();
 
     static constexpr Array libweb_interface_namespaces = {
         "CSS"sv,
