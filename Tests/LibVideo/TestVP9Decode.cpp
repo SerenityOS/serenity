@@ -29,7 +29,7 @@ static void decode_video(StringView path, size_t expected_frame_count)
                 continue;
 
             for (frame_index = 0; frame_index < block.frames().size(); frame_index++) {
-                MUST(vp9_decoder.decode(block.frames()[frame_index]));
+                MUST(vp9_decoder.receive_sample(block.frames()[frame_index]));
                 frame_count++;
             }
         }

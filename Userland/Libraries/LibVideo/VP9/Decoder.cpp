@@ -19,7 +19,7 @@ Decoder::Decoder()
 {
 }
 
-DecoderErrorOr<void> Decoder::decode(Span<const u8> chunk_data)
+DecoderErrorOr<void> Decoder::receive_sample(Span<u8 const> chunk_data)
 {
     auto superframe_sizes = m_parser->parse_superframe_sizes(chunk_data);
 
@@ -42,9 +42,9 @@ DecoderErrorOr<void> Decoder::decode(Span<const u8> chunk_data)
     return {};
 }
 
-DecoderErrorOr<void> Decoder::decode(ByteBuffer const& chunk_data)
+DecoderErrorOr<void> Decoder::receive_sample(ByteBuffer const& chunk_data)
 {
-    return decode(chunk_data.span());
+    return receive_sample(chunk_data.span());
 }
 
 void Decoder::dump_frame_info()
@@ -57,7 +57,7 @@ inline size_t index_from_row_and_column(u32 row, u32 column, u32 stride)
     return row * stride + column;
 }
 
-DecoderErrorOr<void> Decoder::decode_frame(Span<const u8> frame_data)
+DecoderErrorOr<void> Decoder::decode_frame(Span<u8 const> frame_data)
 {
     // 1. The syntax elements for the coded frame are extracted as specified in sections 6 and 7. The syntax
     // tables include function calls indicating when the block decode processes should be triggered.
@@ -130,27 +130,7 @@ Vector<u16>& Decoder::get_output_buffer(u8 plane)
     return m_buffers.output[plane];
 }
 
-Vector<u16> const& Decoder::get_output_buffer_for_plane(u8 plane) const
-{
-    return m_buffers.output[plane];
-}
-
-Gfx::Size<size_t> Decoder::get_y_plane_size()
-{
-    return m_parser->get_decoded_size_for_plane(0);
-}
-
-bool Decoder::get_uv_subsampling_y()
-{
-    return m_parser->m_subsampling_y;
-}
-
-bool Decoder::get_uv_subsampling_x()
-{
-    return m_parser->m_subsampling_x;
-}
-
-CodingIndependentCodePoints Decoder::get_cicp_color_space()
+inline CodingIndependentCodePoints Decoder::get_cicp_color_space()
 {
     ColorPrimaries color_primaries;
     TransferCharacteristics transfer_characteristics;
@@ -209,9 +189,42 @@ CodingIndependentCodePoints Decoder::get_cicp_color_space()
     return { color_primaries, transfer_characteristics, matrix_coefficients, m_parser->m_color_range };
 }
 
-u8 Decoder::get_bit_depth()
+DecoderErrorOr<NonnullOwnPtr<VideoFrame>> Decoder::get_decoded_frame()
 {
-    return m_parser->m_bit_depth;
+    size_t decoded_y_width = m_parser->m_mi_cols * 8;
+    Gfx::Size<size_t> output_y_size = {
+        m_parser->m_frame_width,
+        m_parser->m_frame_height,
+    };
+    auto decoded_uv_width = decoded_y_width >> m_parser->m_subsampling_x;
+    Gfx::Size<size_t> output_uv_size = {
+        output_y_size.width() >> m_parser->m_subsampling_x,
+        output_y_size.height() >> m_parser->m_subsampling_y,
+    };
+    Array<FixedArray<u16>, 3> output_buffers = {
+        DECODER_TRY_ALLOC(FixedArray<u16>::try_create(output_y_size.width() * output_y_size.height())),
+        DECODER_TRY_ALLOC(FixedArray<u16>::try_create(output_uv_size.width() * output_uv_size.height())),
+        DECODER_TRY_ALLOC(FixedArray<u16>::try_create(output_uv_size.width() * output_uv_size.height())),
+    };
+    for (u8 plane = 0; plane < 3; plane++) {
+        auto& buffer = output_buffers[plane];
+        auto decoded_width = plane == 0 ? decoded_y_width : decoded_uv_width;
+        auto output_size = plane == 0 ? output_y_size : output_uv_size;
+        auto const& decoded_buffer = get_output_buffer(plane);
+
+        for (u32 row = 0; row < output_size.height(); row++) {
+            memcpy(
+                buffer.data() + row * output_size.width(),
+                decoded_buffer.data() + row * decoded_width,
+                output_size.width() * sizeof(*buffer.data()));
+        }
+    }
+
+    return DECODER_TRY_ALLOC(adopt_nonnull_own_or_enomem(new (nothrow) SubsampledYUVFrame(
+        { output_y_size.width(), output_y_size.height() },
+        m_parser->m_bit_depth, get_cicp_color_space(),
+        m_parser->m_subsampling_x, m_parser->m_subsampling_y,
+        output_buffers[0], output_buffers[1], output_buffers[2])));
 }
 
 u8 Decoder::merge_prob(u8 pre_prob, u8 count_0, u8 count_1, u8 count_sat, u8 max_update_factor)

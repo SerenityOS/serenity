@@ -75,46 +75,28 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         if (!optional_sample.has_value())
             return;
 
-        auto result = vp9_decoder.decode(optional_sample.release_value());
+        auto result = vp9_decoder.receive_sample(optional_sample.release_value());
 
         if (result.is_error()) {
             outln("Error decoding frame {}: {}", frame_number, result.error().string_literal());
             return;
         }
 
-        // FIXME: This method of output is temporary and should be replaced with an image struct
-        //        containing the planes and their sizes. Ideally, this struct would be interpreted
-        //        by some color conversion library and then passed to something (GL?) for output.
-        auto const& output_y = vp9_decoder.get_output_buffer_for_plane(0);
-        auto const& output_u = vp9_decoder.get_output_buffer_for_plane(1);
-        auto const& output_v = vp9_decoder.get_output_buffer_for_plane(2);
-        auto y_size = vp9_decoder.get_y_plane_size();
-        auto uv_subsampling_y = vp9_decoder.get_uv_subsampling_y();
-        auto uv_subsampling_x = vp9_decoder.get_uv_subsampling_x();
-        Gfx::IntSize uv_size { y_size.width() >> uv_subsampling_x, y_size.height() >> uv_subsampling_y };
-        auto cicp = vp9_decoder.get_cicp_color_space();
+        auto frame_result = vp9_decoder.get_decoded_frame();
+        if (frame_result.is_error()) {
+            outln("Error retrieving frame {}: {}", frame_number, frame_result.error().string_literal());
+            return;
+        }
+        auto frame = frame_result.release_value();
+
+        auto& cicp = frame->cicp();
         video_track.color_format.replace_code_points_if_specified(cicp);
         cicp.default_code_points_if_unspecified(Video::ColorPrimaries::BT709, Video::TransferCharacteristics::BT709, Video::MatrixCoefficients::BT709);
 
-        auto color_converter_result = Video::ColorConverter::create(vp9_decoder.get_bit_depth(), cicp);
-        if (color_converter_result.is_error()) {
-            outln("Cannot convert video colors: {}", color_converter_result.release_error().string_literal());
+        auto convert_result = frame->output_to_bitmap(image);
+        if (convert_result.is_error()) {
+            outln("Error creating bitmap for frame {}: {}", frame_number, convert_result.error().string_literal());
             return;
-        }
-        auto color_converter = color_converter_result.release_value();
-
-        for (auto y_row = 0u; y_row < video_track.pixel_height; y_row++) {
-            auto uv_row = y_row >> uv_subsampling_y;
-
-            for (auto y_column = 0u; y_column < video_track.pixel_width; y_column++) {
-                auto uv_column = y_column >> uv_subsampling_x;
-
-                auto y = output_y[y_row * y_size.width() + y_column];
-                auto u = output_u[uv_row * uv_size.width() + uv_column];
-                auto v = output_v[uv_row * uv_size.width() + uv_column];
-
-                image->set_pixel(y_column, y_row, color_converter.convert_yuv_to_full_range_rgb(y, u, v));
-            }
         }
 
         image_widget->set_bitmap(image);

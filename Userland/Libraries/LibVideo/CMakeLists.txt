@@ -3,6 +3,7 @@ set(SOURCES
     Color/ColorPrimaries.cpp
     Color/TransferCharacteristics.cpp
     MatroskaReader.cpp
+    VideoFrame.cpp
     VP9/BitStream.cpp
     VP9/Decoder.cpp
     VP9/Parser.cpp
