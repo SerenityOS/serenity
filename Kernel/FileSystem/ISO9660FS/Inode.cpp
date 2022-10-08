@@ -70,6 +70,11 @@ ErrorOr<void> ISO9660Inode::traverse_as_directory(Function<ErrorOr<void>(FileSys
     });
 }
 
+ErrorOr<void> ISO9660Inode::replace_child(StringView, Inode&)
+{
+    return EROFS;
+}
+
 ErrorOr<NonnullLockRefPtr<Inode>> ISO9660Inode::lookup(StringView name)
 {
     LockRefPtr<Inode> inode;

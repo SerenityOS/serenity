@@ -60,6 +60,26 @@ ErrorOr<void> TmpFSInode::traverse_as_directory(Function<ErrorOr<void>(FileSyste
     return {};
 }
 
+ErrorOr<void> TmpFSInode::replace_child(StringView name, Inode& new_child)
+{
+    MutexLocker locker(m_inode_lock);
+    VERIFY(is_directory());
+    VERIFY(new_child.fsid() == fsid());
+
+    auto* child = find_child_by_name(name);
+    if (!child)
+        return ENOENT;
+
+    auto old_child = child->inode;
+    child->inode = static_cast<TmpFSInode&>(new_child);
+
+    old_child->did_delete_self();
+
+    // TODO: Emit a did_replace_child event.
+
+    return {};
+}
+
 ErrorOr<NonnullOwnPtr<TmpFSInode::DataBlock>> TmpFSInode::DataBlock::create()
 {
     auto data_block_buffer_vmobject = TRY(Memory::AnonymousVMObject::try_create_with_size(DataBlock::block_size, AllocationStrategy::AllocateNow));
