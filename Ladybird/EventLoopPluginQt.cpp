@@ -37,4 +37,9 @@ NonnullRefPtr<Web::Platform::Timer> EventLoopPluginQt::create_timer()
     return TimerQt::create();
 }
 
+void EventLoopPluginQt::quit()
+{
+    QCoreApplication::quit();
+}
+
 }
