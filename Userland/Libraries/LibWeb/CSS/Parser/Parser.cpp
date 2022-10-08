@@ -5411,9 +5411,97 @@ RefPtr<StyleValue> Parser::parse_grid_track_sizes(Vector<ComponentValue> const& 
 {
     Vector<CSS::GridTrackSize> params;
     for (auto const& component_value : component_values) {
-        // FIXME: Incomplete as a GridTrackSize can be a function like minmax(min, max), etc.
         if (component_value.is_function()) {
-            params.append(Length::make_auto());
+            auto const& function_token = component_value.function();
+            // https://www.w3.org/TR/css-grid-2/#repeat-syntax
+            // 7.2.3.1. Syntax of repeat()
+            // The generic form of the repeat() syntax is, approximately,
+            // repeat( [ <integer [1,∞]> | auto-fill | auto-fit ] , <track-list> )
+            if (function_token.name().equals_ignoring_case("repeat"sv)) {
+                auto function_tokens = TokenStream(function_token.values());
+                auto comma_separated_list = parse_a_comma_separated_list_of_component_values(function_tokens);
+                if (comma_separated_list.size() != 2)
+                    continue;
+                // The first argument specifies the number of repetitions.
+                TokenStream part_one_tokens { comma_separated_list[0] };
+                part_one_tokens.skip_whitespace();
+                if (!part_one_tokens.has_next_token())
+                    continue;
+                auto current_token = part_one_tokens.next_token().token();
+
+                auto repeat_count = 0;
+                if (current_token.is(Token::Type::Number) && current_token.number().is_integer() && current_token.number_value() > 0)
+                    repeat_count = current_token.number_value();
+
+                // The second argument is a track list, which is repeated that number of times.
+                TokenStream part_two_tokens { comma_separated_list[1] };
+                part_two_tokens.skip_whitespace();
+                if (!part_two_tokens.has_next_token())
+                    continue;
+
+                Vector<CSS::GridTrackSize> repeat_params;
+                while (true) {
+                    part_two_tokens.skip_whitespace();
+                    auto current_component_value = part_two_tokens.next_token();
+                    if (current_component_value.is_function()) {
+                        // However, there are some restrictions:
+                        // The repeat() notation can’t be nested.
+                        if (current_component_value.function().name().equals_ignoring_case("repeat"sv))
+                            return GridTrackSizeStyleValue::create({});
+
+                        // FIXME: Implement MinMax, etc.
+                    } else if (current_component_value.is_block()) {
+                        // FIXME: Implement things like grid-template-columns: repeat(1, [col-start] 8);
+                    } else {
+                        current_token = current_component_value.token();
+                        if (current_token.type() == Token::Type::Dimension && current_token.dimension_unit().equals_ignoring_case("fr"sv)) {
+                            float numeric_value = current_token.dimension_value();
+                            if (numeric_value)
+                                repeat_params.append(GridTrackSize(numeric_value));
+                        } else {
+                            auto dimension = parse_dimension(current_token);
+                            if (!dimension.has_value())
+                                return GridTrackSizeStyleValue::create({});
+                            if (dimension->is_length())
+                                repeat_params.append(GridTrackSize(dimension->length()));
+                            else if (dimension->is_percentage())
+                                repeat_params.append(GridTrackSize(dimension->percentage()));
+                        }
+                    }
+                    part_two_tokens.skip_whitespace();
+                    if (!part_two_tokens.has_next_token()) {
+                        for (int i = 0; i < repeat_count; ++i) {
+                            for (auto const& repeat_param : repeat_params)
+                                params.append(repeat_param);
+                        }
+                        break;
+                    }
+                }
+
+                // Automatic repetitions (auto-fill or auto-fit) cannot be combined with intrinsic or flexible sizes.
+
+                // Thus the precise syntax of the repeat() notation has several forms:
+                // <track-repeat> = repeat( [ <integer [1,∞]> ] , [ <line-names>? <track-size> ]+ <line-names>? )
+                // <auto-repeat>  = repeat( [ auto-fill | auto-fit ] , [ <line-names>? <fixed-size> ]+ <line-names>? )
+                // <fixed-repeat> = repeat( [ <integer [1,∞]> ] , [ <line-names>? <fixed-size> ]+ <line-names>? )
+                // <name-repeat>  = repeat( [ <integer [1,∞]> | auto-fill ], <line-names>+)
+
+                // The <track-repeat> variant can represent the repetition of any <track-size>, but is limited to a
+                // fixed number of repetitions.
+
+                // The <auto-repeat> variant can repeat automatically to fill a space, but requires definite track
+                // sizes so that the number of repetitions can be calculated. It can only appear once in the track
+                // list, but the same track list can also contain <fixed-repeat>s.
+
+                // The <name-repeat> variant is for adding line names to subgrids. It can only be used with the
+                // subgrid keyword and cannot specify track sizes, only line names.
+
+                // If a repeat() function that is not a <name-repeat> ends up placing two <line-names> adjacent to
+                // each other, the name lists are merged. For example, repeat(2, [a] 1fr [b]) is equivalent to [a]
+                // 1fr [b a] 1fr [b].
+            } else {
+                // FIXME: Implement MinMax, etc.
+            }
             continue;
         }
         if (component_value.is_block()) {

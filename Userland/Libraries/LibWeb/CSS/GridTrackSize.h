@@ -18,7 +18,6 @@ public:
         Percentage,
         FlexibleLength,
         // TODO: MinMax
-        // TODO: Repeat
         // TODO: Max-Content
     };
 
