@@ -15,13 +15,11 @@
 #include <LibJS/Runtime/Shape.h>
 #include <LibTextCodec/Decoder.h>
 #include <LibWeb/Bindings/CSSNamespace.h>
-#include <LibWeb/Bindings/EventTargetConstructor.h>
-#include <LibWeb/Bindings/EventTargetPrototype.h>
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
 #include <LibWeb/Bindings/LocationObject.h>
 #include <LibWeb/Bindings/NavigatorObject.h>
 #include <LibWeb/Bindings/Replaceable.h>
-#include <LibWeb/Bindings/WindowObjectHelper.h>
+#include <LibWeb/Bindings/WindowExposedInterfaces.h>
 #include <LibWeb/Bindings/WindowPrototype.h>
 #include <LibWeb/CSS/MediaQueryList.h>
 #include <LibWeb/CSS/Parser/Parser.h>
@@ -741,7 +739,8 @@ void Window::initialize(JS::Realm& realm)
 
 void Window::initialize_web_interfaces(Badge<WindowEnvironmentSettingsObject>)
 {
-    ADD_WINDOW_OBJECT_INTERFACES;
+    auto& realm = this->realm();
+    add_window_exposed_interfaces(*this, realm);
 
     Object::set_prototype(&Bindings::ensure_web_prototype<Bindings::WindowPrototype>(realm, "Window"));
 
