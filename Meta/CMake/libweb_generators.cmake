@@ -158,8 +158,36 @@ function (generate_js_bindings target)
         add_dependencies(all_generated generate_${basename}Prototype.h)
         add_custom_target(generate_${basename}Prototype.cpp DEPENDS ${LIBWEB_OUTPUT_FOLDER}Bindings/${basename}Prototype.cpp)
         add_dependencies(all_generated generate_${basename}Prototype.cpp)
+
+        list(APPEND LIBWEB_ALL_IDL_FILES "${LIBWEB_INPUT_FOLDER}/${class}.idl")
+        set(LIBWEB_ALL_IDL_FILES ${LIBWEB_ALL_IDL_FILES} PARENT_SCOPE)
+    endfunction()
+
+    function(generate_exposed_interface_files)
+        set(exposed_interface_sources DedicatedWorkerExposedInterfaces.cpp DedicatedWorkerExposedInterfaces.h
+        SharedWorkerExposedInterfaces.cpp SharedWorkerExposedInterfaces.h
+        WindowExposedInterfaces.cpp WindowExposedInterfaces.h)
+        list(TRANSFORM exposed_interface_sources PREPEND "${LIBWEB_OUTPUT_FOLDER}Bindings/")
+        add_custom_command(
+            OUTPUT  ${exposed_interface_sources}
+            COMMAND "${CMAKE_COMMAND}" -E make_directory "tmp"
+            COMMAND $<TARGET_FILE:Lagom::GenerateWindowOrWorkerInterfaces> -o "${CMAKE_CURRENT_BINARY_DIR}/tmp" -b "${LIBWEB_INPUT_FOLDER}" ${LIBWEB_ALL_IDL_FILES}
+            COMMAND "${CMAKE_COMMAND}" -E copy_if_different tmp/DedicatedWorkerExposedInterfaces.h "${LIBWEB_OUTPUT_FOLDER}Bindings/DedicatedWorkerExposedInterfaces.h"
+            COMMAND "${CMAKE_COMMAND}" -E copy_if_different tmp/DedicatedWorkerExposedInterfaces.cpp "${LIBWEB_OUTPUT_FOLDER}Bindings/DedicatedWorkerExposedInterfaces.cpp"
+            COMMAND "${CMAKE_COMMAND}" -E copy_if_different tmp/SharedWorkerExposedInterfaces.h "${LIBWEB_OUTPUT_FOLDER}Bindings/SharedWorkerExposedInterfaces.h"
+            COMMAND "${CMAKE_COMMAND}" -E copy_if_different tmp/SharedWorkerExposedInterfaces.cpp "${LIBWEB_OUTPUT_FOLDER}Bindings/SharedWorkerExposedInterfaces.cpp"
+            COMMAND "${CMAKE_COMMAND}" -E copy_if_different tmp/WindowExposedInterfaces.h "${LIBWEB_OUTPUT_FOLDER}Bindings/WindowExposedInterfaces.h"
+            COMMAND "${CMAKE_COMMAND}" -E copy_if_different tmp/WindowExposedInterfaces.cpp "${LIBWEB_OUTPUT_FOLDER}Bindings/WindowExposedInterfaces.cpp"
+            COMMAND "${CMAKE_COMMAND}" -E remove_directory "${CMAKE_CURRENT_BINARY_DIR}/tmp"
+            VERBATIM
+            DEPENDS Lagom::GenerateWindowOrWorkerInterfaces ${LIBWEB_ALL_IDL_FILES}
+        )
+        target_sources(${target} PRIVATE ${exposed_interface_sources})
+        add_custom_target("generate_${LIBWEB_META_PREFIX}exposed_interfaces" DEPENDS ${exposed_interface_sources})
+        add_dependencies(all_generated "generate_${LIBWEB_META_PREFIX}exposed_interfaces")
     endfunction()
 
     include("${LIBWEB_INPUT_FOLDER}/idl_files.cmake")
+    generate_exposed_interface_files()
 
 endfunction()
