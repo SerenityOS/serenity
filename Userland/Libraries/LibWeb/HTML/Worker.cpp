@@ -128,10 +128,6 @@ void Worker::run_a_worker(AK::URL& url, EnvironmentSettingsObject& outside_setti
     auto& console_object = *realm_execution_context->realm->intrinsics().console_object();
     m_worker_realm = realm_execution_context->realm;
 
-    // FIXME: Remove this once we don't need a hack Window (for prototypes and constructors) in workers anymore.
-    m_worker_window = HTML::Window::create(*m_worker_realm);
-    m_worker_realm->set_global_object(m_worker_scope, nullptr);
-
     m_console = adopt_ref(*new WorkerDebugConsoleClient(console_object.console()));
     console_object.console().set_client(*m_console);
 

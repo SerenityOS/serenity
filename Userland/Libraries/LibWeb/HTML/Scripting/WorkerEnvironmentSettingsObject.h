@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/URL.h>
+#include <LibWeb/Bindings/DedicatedWorkerExposedInterfaces.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/Forward.h>
 
@@ -32,6 +33,9 @@ public:
         auto* intrinsics = realm->heap().allocate<Bindings::Intrinsics>(*realm, *realm);
         auto host_defined = make<Bindings::HostDefined>(*settings_object, *intrinsics);
         realm->set_host_defined(move(host_defined));
+
+        // FIXME: Shared workers should use the shared worker method
+        Bindings::add_dedicated_worker_exposed_interfaces(realm->global_object(), *realm);
 
         return *settings_object;
     }
