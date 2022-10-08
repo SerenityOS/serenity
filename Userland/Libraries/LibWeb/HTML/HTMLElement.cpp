@@ -12,6 +12,7 @@
 #include <LibWeb/DOM/ShadowRoot.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/BrowsingContextContainer.h>
+#include <LibWeb/HTML/DOMStringMap.h>
 #include <LibWeb/HTML/EventHandler.h>
 #include <LibWeb/HTML/HTMLAnchorElement.h>
 #include <LibWeb/HTML/HTMLAreaElement.h>

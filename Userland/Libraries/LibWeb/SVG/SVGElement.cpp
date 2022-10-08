@@ -5,6 +5,7 @@
  */
 
 #include <LibWeb/Bindings/Intrinsics.h>
+#include <LibWeb/HTML/DOMStringMap.h>
 #include <LibWeb/SVG/SVGElement.h>
 
 namespace Web::SVG {
