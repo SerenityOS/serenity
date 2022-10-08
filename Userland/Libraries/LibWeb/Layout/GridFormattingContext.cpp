@@ -267,6 +267,12 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
 
         int column_start = 0;
         auto column_span = child_box.computed_values().grid_column_start().is_span() ? child_box.computed_values().grid_column_start().raw_value() : 1;
+        // https://drafts.csswg.org/css-grid/#auto-placement-algo
+        // 8.5. Grid Item Placement Algorithm
+        // 3.3. If the largest column span among all the items without a definite column position is larger
+        // than the width of the implicit grid, add columns to the end of the implicit grid to accommodate
+        // that column span.
+        occupation_grid.maybe_add_column(column_span);
         bool found_available_column = false;
         for (int column_index = column_start; column_index < occupation_grid.column_count(); column_index++) {
             if (!occupation_grid.is_occupied(column_index, row_start)) {
@@ -298,11 +304,6 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
     // NOTE: "Explicitly positioned items" and "items positioned in the previous step" done in step 1
     // and 2, respectively. Adding columns for "items not yet positioned but with a definite column"
     // will be done in step 4.
-
-    // 3.3. If the largest column span among all the items without a definite column position is larger
-    // than the width of the implicit grid, add columns to the end of the implicit grid to accommodate
-    // that column span.
-    // NOTE: Done in step 1, 2, and will be done in step 4.
 
     // 4. Position the remaining grid items.
     // For each grid item that hasn't been positioned by the previous steps, in order-modified document
@@ -431,6 +432,12 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
             // algorithm.
             auto column_start = 0;
             auto column_span = child_box.computed_values().grid_column_start().is_span() ? child_box.computed_values().grid_column_start().raw_value() : 1;
+            // https://drafts.csswg.org/css-grid/#auto-placement-algo
+            // 8.5. Grid Item Placement Algorithm
+            // 3.3. If the largest column span among all the items without a definite column position is larger
+            // than the width of the implicit grid, add columns to the end of the implicit grid to accommodate
+            // that column span.
+            occupation_grid.maybe_add_column(column_span);
             auto row_start = 0;
             auto row_span = child_box.computed_values().grid_row_start().is_span() ? child_box.computed_values().grid_row_start().raw_value() : 1;
             auto found_unoccupied_area = false;

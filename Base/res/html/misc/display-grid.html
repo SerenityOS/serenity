@@ -30,8 +30,8 @@
   <div class="grid-item">4</div>
 </div>
 
+<p>Start of crash tests</p>
 <!-- Check for a bug where a github page was crashing due to the following code. -->
-<p>If you can see this message then the test passed.</p>
 <div 
   class="grid-container"
   style="
@@ -41,7 +41,6 @@
 </div>
 
 <!-- Spans causing positions outside the inherit grid. (span 2 with an end position of 1 causes the start to be -1) -->
-<p>If you can see this message then the test passed.</p>
 <div class="grid-container">
   <div class="grid-item" style="grid-row: span 2 / 1; grid-column: span 2 / 1;">1</div>
   <div class="grid-item" style="grid-row: span 2 / 1;">2</div>
@@ -50,7 +49,6 @@
 </div>
 
 <!-- 0 positioned grid items and similar inputs -->
-<p>If you can see this message then the test passed.</p>
 <div class="grid-container">
   <div class="grid-item" style="grid-row-end: 0;">2</div>
   <div class="grid-item" style="grid-row: 0 / 0;">3</div>
@@ -59,6 +57,25 @@
   <div class="grid-item" style="grid-row-end: 1;">1</div>
   <div class="grid-item" style="grid-column-end: 1;">6</div>
 </div>
+
+<!-- Grid-column-span larger than implicit grid for row-positioned items -->
+<div class="grid-container">
+  <div class="grid-item" style="grid-row: 1 / -1; grid-column: span 4;">1</div>
+</div>
+<!-- Grid-column-span larger than implicit grid for non-positioned items -->
+<div class="grid-container">
+  <div class="grid-item" style="grid-column: span 4;">1</div>
+</div>
+<!-- Grid-row-span larger than implicit grid for column-positioned items -->
+<div class="grid-container">
+  <div class="grid-item" style="grid-column: 1 / -1; grid-row: span 4;">1</div>
+</div>
+<!-- Grid-row-span larger than implicit grid for non-positioned items -->
+<div class="grid-container">
+  <div class="grid-item" style="grid-row: span 4;">1</div>
+</div>
+
+<p>End of crash tests</p>
 
 <!-- Different column sizes -->
 <p>Should render a 2x2 grid with columns 50px and 50%</p>
