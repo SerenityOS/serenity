@@ -155,8 +155,15 @@ struct LayoutState {
     struct IntrinsicSizes {
         Optional<float> min_content_width;
         Optional<float> max_content_width;
-        Optional<float> min_content_height;
-        Optional<float> max_content_height;
+
+        // NOTE: Since intrinsic heights depend on the amount of available width, we have to cache
+        //       three separate results, depending on the available width at the time of calculation.
+        Optional<float> min_content_height_with_definite_available_width;
+        Optional<float> max_content_height_with_definite_available_width;
+        Optional<float> min_content_height_with_min_content_available_width;
+        Optional<float> max_content_height_with_min_content_available_width;
+        Optional<float> min_content_height_with_max_content_available_width;
+        Optional<float> max_content_height_with_max_content_available_width;
     };
 
     HashMap<NodeWithStyleAndBoxModelMetrics const*, NonnullOwnPtr<IntrinsicSizes>> mutable intrinsic_sizes;

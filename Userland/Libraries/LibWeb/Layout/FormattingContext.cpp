@@ -1057,11 +1057,22 @@ float FormattingContext::calculate_min_content_height(Layout::Box const& box, Av
     if (box.has_intrinsic_height())
         return *box.intrinsic_height();
 
-    auto& root_state = m_state.m_root;
+    bool is_cacheable = available_width.is_definite() || available_width.is_intrinsic_sizing_constraint();
+    Optional<float>* cache_slot;
+    if (is_cacheable) {
+        auto& root_state = m_state.m_root;
+        auto& cache = *root_state.intrinsic_sizes.ensure(&box, [] { return adopt_own(*new LayoutState::IntrinsicSizes); });
+        if (available_width.is_definite()) {
+            cache_slot = &cache.min_content_height_with_definite_available_width;
+        } else if (available_width.is_min_content()) {
+            cache_slot = &cache.min_content_height_with_min_content_available_width;
+        } else if (available_width.is_max_content()) {
+            cache_slot = &cache.min_content_height_with_max_content_available_width;
+        }
+    }
 
-    auto& cache = *root_state.intrinsic_sizes.ensure(&box, [] { return adopt_own(*new LayoutState::IntrinsicSizes); });
-    if (cache.min_content_height.has_value())
-        return *cache.min_content_height;
+    if (cache_slot && cache_slot->has_value())
+        return cache_slot->value();
 
     LayoutState throwaway_state(&m_state);
 
@@ -1073,15 +1084,17 @@ float FormattingContext::calculate_min_content_height(Layout::Box const& box, Av
 
     context->run(box, LayoutMode::IntrinsicSizing, AvailableSpace(available_width, AvailableSize::make_min_content()));
 
-    cache.min_content_height = context->automatic_content_height();
-
-    if (!isfinite(*cache.min_content_height)) {
+    auto min_content_height = context->automatic_content_height();
+    if (!isfinite(min_content_height)) {
         // HACK: If layout calculates a non-finite result, something went wrong. Force it to zero and log a little whine.
         dbgln("FIXME: Calculated non-finite min-content height for {}", box.debug_description());
-        cache.min_content_height = 0;
+        min_content_height = 0;
     }
 
-    return *cache.min_content_height;
+    if (cache_slot) {
+        *cache_slot = min_content_height;
+    }
+    return min_content_height;
 }
 
 float FormattingContext::calculate_max_content_height(Layout::Box const& box, AvailableSize const& available_width) const
@@ -1089,11 +1102,22 @@ float FormattingContext::calculate_max_content_height(Layout::Box const& box, Av
     if (box.has_intrinsic_height())
         return *box.intrinsic_height();
 
-    auto& root_state = m_state.m_root;
+    bool is_cacheable = available_width.is_definite() || available_width.is_intrinsic_sizing_constraint();
+    Optional<float>* cache_slot;
+    if (is_cacheable) {
+        auto& root_state = m_state.m_root;
+        auto& cache = *root_state.intrinsic_sizes.ensure(&box, [] { return adopt_own(*new LayoutState::IntrinsicSizes); });
+        if (available_width.is_definite()) {
+            cache_slot = &cache.max_content_height_with_definite_available_width;
+        } else if (available_width.is_min_content()) {
+            cache_slot = &cache.max_content_height_with_min_content_available_width;
+        } else if (available_width.is_max_content()) {
+            cache_slot = &cache.max_content_height_with_max_content_available_width;
+        }
+    }
 
-    auto& cache = *root_state.intrinsic_sizes.ensure(&box, [] { return adopt_own(*new LayoutState::IntrinsicSizes); });
-    if (cache.max_content_height.has_value())
-        return *cache.max_content_height;
+    if (cache_slot && cache_slot->has_value())
+        return cache_slot->value();
 
     LayoutState throwaway_state(&m_state);
 
@@ -1105,15 +1129,19 @@ float FormattingContext::calculate_max_content_height(Layout::Box const& box, Av
 
     context->run(box, LayoutMode::IntrinsicSizing, AvailableSpace(available_width, AvailableSize::make_max_content()));
 
-    cache.max_content_height = context->automatic_content_height();
+    auto max_content_height = context->automatic_content_height();
 
-    if (!isfinite(*cache.max_content_height)) {
+    if (!isfinite(max_content_height)) {
         // HACK: If layout calculates a non-finite result, something went wrong. Force it to zero and log a little whine.
         dbgln("FIXME: Calculated non-finite max-content height for {}", box.debug_description());
-        cache.max_content_height = 0;
+        max_content_height = 0;
     }
 
-    return *cache.max_content_height;
+    if (cache_slot) {
+        *cache_slot = max_content_height;
+    }
+
+    return max_content_height;
 }
 
 float FormattingContext::containing_block_width_for(Box const& box, LayoutState const& state)
