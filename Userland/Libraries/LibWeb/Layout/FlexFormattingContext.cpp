@@ -1726,14 +1726,14 @@ float FlexFormattingContext::calculate_min_content_main_size(FlexItem const& ite
 
 float FlexFormattingContext::calculate_fit_content_main_size(FlexItem const& item) const
 {
-    return is_row_layout() ? calculate_fit_content_width(item.box, m_state.get(item.box).available_inner_space_or_constraints_from(m_available_space_for_items->space))
-                           : calculate_fit_content_height(item.box, m_state.get(item.box).available_inner_space_or_constraints_from(m_available_space_for_items->space));
+    return is_row_layout() ? calculate_fit_content_width(item.box, m_available_space_for_items->space)
+                           : calculate_fit_content_height(item.box, m_available_space_for_items->space);
 }
 
 float FlexFormattingContext::calculate_fit_content_cross_size(FlexItem const& item) const
 {
-    return !is_row_layout() ? calculate_fit_content_width(item.box, m_state.get(item.box).available_inner_space_or_constraints_from(m_available_space_for_items->space))
-                            : calculate_fit_content_height(item.box, m_state.get(item.box).available_inner_space_or_constraints_from(m_available_space_for_items->space));
+    return !is_row_layout() ? calculate_fit_content_width(item.box, m_available_space_for_items->space)
+                            : calculate_fit_content_height(item.box, m_available_space_for_items->space);
 }
 
 float FlexFormattingContext::calculate_max_content_main_size(FlexItem const& item) const
