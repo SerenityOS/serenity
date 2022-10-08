@@ -1145,8 +1145,9 @@ void OccupationGrid::maybe_add_column(int needed_number_of_columns)
 {
     if (needed_number_of_columns <= column_count())
         return;
+    auto column_count_before_modification = column_count();
     for (auto& occupation_grid_row : m_occupation_grid)
-        for (int idx = 0; idx < (needed_number_of_columns + 1) - column_count(); idx++)
+        for (int idx = 0; idx < needed_number_of_columns - column_count_before_modification; idx++)
             occupation_grid_row.append(false);
 }
 
