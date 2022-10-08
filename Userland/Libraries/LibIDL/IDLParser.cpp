@@ -114,7 +114,17 @@ HashMap<String, String> Parser::parse_extended_attributes()
             break;
         auto name = lexer.consume_until([](auto ch) { return ch == ']' || ch == '=' || ch == ','; });
         if (lexer.consume_specific('=')) {
-            auto value = lexer.consume_until([](auto ch) { return ch == ']' || ch == ','; });
+            bool did_open_paren = false;
+            auto value = lexer.consume_until(
+                [&did_open_paren](auto ch) mutable {
+                    if (ch == '(') {
+                        did_open_paren = true;
+                        return false;
+                    }
+                    if (did_open_paren)
+                        return ch == ')';
+                    return ch == ']' || ch == ',';
+                });
             extended_attributes.set(name, value);
         } else {
             extended_attributes.set(name, {});
