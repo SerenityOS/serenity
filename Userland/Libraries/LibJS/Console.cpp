@@ -453,6 +453,12 @@ void Console::output_debug_message([[maybe_unused]] LogLevel log_level, [[maybe_
 #endif
 }
 
+void Console::report_exception(JS::Error const& exception, bool in_promise) const
+{
+    if (m_client)
+        m_client->report_exception(exception, in_promise);
+}
+
 ThrowCompletionOr<String> Console::value_vector_to_string(MarkedVector<Value> const& values)
 {
     auto& vm = realm().vm();

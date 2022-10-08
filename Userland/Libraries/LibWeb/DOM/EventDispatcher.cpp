@@ -114,7 +114,7 @@ bool EventDispatcher::inner_invoke(Event& event, Vector<JS::Handle<DOM::DOMEvent
         // If this throws an exception, then:
         if (result.is_error()) {
             // 1. Report the exception.
-            HTML::report_exception(result);
+            HTML::report_exception(result, realm);
 
             // FIXME: 2. Set legacyOutputDidListenersThrowFlag if given. (Only used by IndexedDB currently)
         }

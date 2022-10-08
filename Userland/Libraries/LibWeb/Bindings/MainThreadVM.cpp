@@ -202,7 +202,7 @@ JS::VM& main_thread_vm()
 
                 // 6. If result is an abrupt completion, then report the exception given by result.[[Value]].
                 if (result.is_error())
-                    HTML::report_exception(result);
+                    HTML::report_exception(result, finalization_registry.realm());
             });
         };
 
@@ -275,7 +275,7 @@ JS::VM& main_thread_vm()
 
                 // 5. If result is an abrupt completion, then report the exception given by result.[[Value]].
                 if (result.is_error())
-                    HTML::report_exception(result);
+                    HTML::report_exception(result, job_settings->realm());
             });
         };
 
@@ -437,7 +437,7 @@ void queue_mutation_observer_microtask(DOM::Document& document)
 
                 auto result = WebIDL::invoke_callback(callback, mutation_observer.ptr(), wrapped_records, mutation_observer.ptr());
                 if (result.is_abrupt())
-                    HTML::report_exception(result);
+                    HTML::report_exception(result, realm);
             }
         }
 

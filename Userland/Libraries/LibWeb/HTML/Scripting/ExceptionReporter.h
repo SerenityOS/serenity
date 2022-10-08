@@ -15,14 +15,14 @@ enum class ErrorInPromise {
     Yes,
 };
 
-void print_error_from_value(JS::Value, ErrorInPromise);
-void report_exception(JS::Completion const&);
+void report_exception_to_console(JS::Value, JS::Realm&, ErrorInPromise);
+void report_exception(JS::Completion const&, JS::Realm&);
 
 template<typename T>
-inline void report_exception(JS::ThrowCompletionOr<T> const& result)
+inline void report_exception(JS::ThrowCompletionOr<T> const& result, JS::Realm& realm)
 {
     VERIFY(result.is_throw_completion());
-    report_exception(result.throw_completion());
+    report_exception(result.throw_completion(), realm);
 }
 
 }

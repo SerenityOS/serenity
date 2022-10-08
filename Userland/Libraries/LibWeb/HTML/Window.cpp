@@ -201,7 +201,7 @@ i32 Window::run_timer_initialization_steps(TimerHandler handler, i32 timeout, JS
             // 2. If handler is a Function, then invoke handler given arguments with the callback this value set to thisArg. If this throws an exception, catch it, and report the exception.
             [&](JS::Handle<WebIDL::CallbackType> callback) {
                 if (auto result = WebIDL::invoke_callback(*callback, window.ptr(), arguments); result.is_error())
-                    HTML::report_exception(result);
+                    HTML::report_exception(result, weak_window->realm());
             },
             // 3. Otherwise:
             [&](String const& source) {
@@ -271,7 +271,7 @@ i32 Window::request_animation_frame_impl(WebIDL::CallbackType& js_callback)
 
         // and if an exception is thrown, report the exception.
         if (result.is_error())
-            HTML::report_exception(result);
+            HTML::report_exception(result, realm());
     });
 }
 
@@ -495,11 +495,15 @@ void Window::fire_a_page_transition_event(FlyString const& event_name, bool pers
 void Window::queue_microtask_impl(WebIDL::CallbackType& callback)
 {
     // The queueMicrotask(callback) method must queue a microtask to invoke callback,
-    HTML::queue_a_microtask(&associated_document(), [&callback]() mutable {
+    HTML::queue_a_microtask(&associated_document(), [weak_window = make_weak_ptr<Window>(), &callback]() mutable {
+        JS::GCPtr<Window> window = weak_window.ptr();
+        if (!window)
+            return;
+
         auto result = WebIDL::invoke_callback(callback, {});
         // and if callback throws an exception, report the exception.
         if (result.is_error())
-            HTML::report_exception(result);
+            HTML::report_exception(result, window->realm());
     });
 }
 
@@ -655,7 +659,7 @@ void Window::invoke_idle_callbacks()
         // 3. Call callback with deadlineArg as its argument. If an uncaught runtime script error occurs, then report the exception.
         auto result = callback->invoke(deadline_arg);
         if (result.is_error())
-            HTML::report_exception(result);
+            HTML::report_exception(result, realm());
         // 4. If window's list of runnable idle callbacks is not empty, queue a task which performs the steps
         //    in the invoke idle callbacks algorithm with getDeadline and window as a parameters and return from this algorithm
         HTML::queue_global_task(HTML::Task::Source::IdleTask, *this, [this]() mutable {

@@ -133,7 +133,7 @@ JS::Completion ClassicScript::run(RethrowErrors rethrow_errors)
         dbgln("no rethrow, stat: {}", evaluation_status.value().value().to_string_without_side_effects());
 
         // 1. Report the exception given by evaluationStatus.[[Value]] for script.
-        report_exception(evaluation_status);
+        report_exception(evaluation_status, settings_object().realm());
 
         // 2. Clean up after running script with settings.
         settings.clean_up_after_running_script();

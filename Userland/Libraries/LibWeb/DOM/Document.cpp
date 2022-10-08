@@ -1139,7 +1139,7 @@ JS::Value Document::run_javascript(StringView source, StringView filename)
 
     if (result.is_error()) {
         // FIXME: I'm sure the spec could tell us something about error propagation here!
-        HTML::report_exception(result);
+        HTML::report_exception(result, realm());
 
         return {};
     }
