@@ -963,6 +963,11 @@ bool VimEditingEngine::on_key_in_normal_mode(KeyEvent const& event)
                 move_to_logical_line_end();
                 switch_to_insert_mode();
                 return true;
+            case (KeyCode::Key_D):
+                m_editor->delete_text_range({ m_editor->cursor(), { m_editor->cursor().line(), m_editor->current_line().length() } });
+                if (m_editor->cursor().column() != 0)
+                    move_one_left();
+                break;
             case (KeyCode::Key_I):
                 move_to_logical_line_beginning();
                 switch_to_insert_mode();
