@@ -82,6 +82,7 @@ public:
     ThrowCompletionOr<Value> time_end();
 
     void output_debug_message(LogLevel log_level, String output) const;
+    void report_exception(JS::Error const&, bool) const;
 
 private:
     ThrowCompletionOr<String> value_vector_to_string(MarkedVector<Value> const&);
@@ -108,7 +109,8 @@ public:
     ThrowCompletionOr<MarkedVector<Value>> formatter(MarkedVector<Value> const& args);
     virtual ThrowCompletionOr<Value> printer(Console::LogLevel log_level, PrinterArguments) = 0;
 
-    virtual void add_css_style_to_current_message(StringView) {};
+    virtual void add_css_style_to_current_message(StringView) { }
+    virtual void report_exception(JS::Error const&, bool) { }
 
     virtual void clear() = 0;
     virtual void end_group() = 0;

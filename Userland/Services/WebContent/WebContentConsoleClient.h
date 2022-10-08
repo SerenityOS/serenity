@@ -22,6 +22,7 @@ public:
 
     void handle_input(String const& js_source);
     void send_messages(i32 start_index);
+    void report_exception(JS::Error const&, bool) override;
 
 private:
     virtual void clear() override;

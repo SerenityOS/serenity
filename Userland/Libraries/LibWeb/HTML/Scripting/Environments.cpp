@@ -239,7 +239,7 @@ void EnvironmentSettingsObject::notify_about_rejected_promises(Badge<EventLoop>)
             // This algorithm results in promise rejections being marked as handled or not handled. These concepts parallel handled and not handled script errors.
             // If a rejection is still not handled after this, then the rejection may be reported to a developer console.
             if (not_handled)
-                HTML::print_error_from_value(promise.result(), ErrorInPromise::Yes);
+                HTML::report_exception_to_console(promise.result(), realm(), ErrorInPromise::Yes);
         }
     });
 }

@@ -36,11 +36,10 @@ String MarkupGenerator::html_from_value(Value value)
     return output_html.to_string();
 }
 
-String MarkupGenerator::html_from_error(Object& object)
+String MarkupGenerator::html_from_error(Error const& object, bool in_promise)
 {
     StringBuilder output_html;
-    HashTable<Object*> seen_objects;
-    error_to_html(object, output_html, seen_objects);
+    error_to_html(object, output_html, in_promise);
     return output_html.to_string();
 }
 
@@ -70,8 +69,6 @@ void MarkupGenerator::value_to_html(Value value, StringBuilder& output_html, Has
             return function_to_html(object, output_html, seen_objects);
         if (is<Date>(object))
             return date_to_html(object, output_html, seen_objects);
-        if (is<Error>(object))
-            return error_to_html(object, output_html, seen_objects);
         return object_to_html(object, output_html, seen_objects);
     }
 
@@ -145,19 +142,35 @@ void MarkupGenerator::date_to_html(Object const& date, StringBuilder& html_outpu
     html_output.appendff("Date {}", to_date_string(static_cast<Date const&>(date).date_value()));
 }
 
-void MarkupGenerator::error_to_html(Object const& object, StringBuilder& html_output, HashTable<Object*>&)
+void MarkupGenerator::trace_to_html(TracebackFrame const& traceback_frame, StringBuilder& html_output)
 {
-    auto& vm = object.vm();
-    auto name = object.get_without_side_effects(vm.names.name).value_or(js_undefined());
-    auto message = object.get_without_side_effects(vm.names.message).value_or(js_undefined());
-    if (name.is_accessor() || message.is_accessor()) {
-        html_output.append(wrap_string_in_style(Value(&object).to_string_without_side_effects(), StyleType::Invalid));
-    } else {
-        auto name_string = name.to_string_without_side_effects();
-        auto message_string = message.to_string_without_side_effects();
-        html_output.append(wrap_string_in_style(String::formatted("[{}]", name_string), StyleType::Invalid));
-        if (!message_string.is_empty())
-            html_output.appendff(": {}", escape_html_entities(message_string));
+    auto function_name = escape_html_entities(traceback_frame.function_name);
+    auto [line, column, _] = traceback_frame.source_range.start;
+    auto get_filename_from_path = [&](StringView filename) -> StringView {
+        auto last_slash_index = filename.find_last('/');
+        return last_slash_index.has_value() ? filename.substring_view(*last_slash_index + 1) : filename;
+    };
+    auto filename = escape_html_entities(get_filename_from_path(traceback_frame.source_range.filename));
+    auto trace = String::formatted("at {} ({}:{}:{})", function_name, filename, line, column);
+
+    html_output.appendff("&nbsp;&nbsp;{}<br>", trace);
+}
+
+void MarkupGenerator::error_to_html(Error const& error, StringBuilder& html_output, bool in_promise)
+{
+    auto& vm = error.vm();
+    auto name = error.get_without_side_effects(vm.names.name).value_or(js_undefined());
+    auto message = error.get_without_side_effects(vm.names.message).value_or(js_undefined());
+    auto name_string = name.to_string_without_side_effects();
+    auto message_string = message.to_string_without_side_effects();
+    auto uncaught_message = String::formatted("Uncaught {}[{}]: ", in_promise ? "(in promise) " : "", name_string);
+
+    html_output.append(wrap_string_in_style(uncaught_message, StyleType::Invalid));
+    html_output.appendff("{}<br>", message_string.is_empty() ? "\"\"" : escape_html_entities(message_string));
+
+    for (size_t i = 0; i < error.traceback().size() - min(error.traceback().size(), 3); i++) {
+        auto& traceback_frame = error.traceback().at(i);
+        trace_to_html(traceback_frame, html_output);
     }
 }
 

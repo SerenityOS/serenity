@@ -9,6 +9,7 @@
 #include <AK/HashTable.h>
 #include <AK/String.h>
 #include <LibJS/Forward.h>
+#include <LibJS/Runtime/Error.h>
 
 namespace JS {
 
@@ -16,7 +17,7 @@ class MarkupGenerator {
 public:
     static String html_from_source(StringView);
     static String html_from_value(Value);
-    static String html_from_error(Object&);
+    static String html_from_error(Error const&, bool);
 
 private:
     enum class StyleType {
@@ -37,7 +38,8 @@ private:
     static void object_to_html(Object const&, StringBuilder& output_html, HashTable<Object*>&);
     static void function_to_html(Object const&, StringBuilder& output_html, HashTable<Object*>&);
     static void date_to_html(Object const&, StringBuilder& output_html, HashTable<Object*>&);
-    static void error_to_html(Object const&, StringBuilder& output_html, HashTable<Object*>&);
+    static void error_to_html(Error const&, StringBuilder& output_html, bool in_promise);
+    static void trace_to_html(TracebackFrame const&, StringBuilder& output_html);
 
     static String style_from_style_type(StyleType);
     static StyleType style_type_for_token(Token);

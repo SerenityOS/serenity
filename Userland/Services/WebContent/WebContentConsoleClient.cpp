@@ -49,21 +49,13 @@ void WebContentConsoleClient::handle_input(String const& js_source)
 
     auto result = script->run();
 
-    StringBuilder output_html;
-
-    if (result.is_abrupt()) {
-        output_html.append("Uncaught exception: "sv);
-        auto error = *result.release_error().value();
-        if (error.is_object())
-            output_html.append(JS::MarkupGenerator::html_from_error(error.as_object()));
-        else
-            output_html.append(JS::MarkupGenerator::html_from_value(error));
-        print_html(output_html.string_view());
-        return;
-    }
-
     if (result.value().has_value())
         print_html(JS::MarkupGenerator::html_from_value(*result.value()));
+}
+
+void WebContentConsoleClient::report_exception(JS::Error const& exception, bool in_promise)
+{
+    print_html(JS::MarkupGenerator::html_from_error(exception, in_promise));
 }
 
 void WebContentConsoleClient::print_html(String const& line)
