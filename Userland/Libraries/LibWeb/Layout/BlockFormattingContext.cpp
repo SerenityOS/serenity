@@ -300,7 +300,7 @@ void BlockFormattingContext::compute_width_for_block_level_replaced_element_in_n
 
 void BlockFormattingContext::compute_height(Box const& box, AvailableSpace const& available_space)
 {
-    resolve_vertical_box_model_metrics(box, available_space, m_state);
+    resolve_vertical_box_model_metrics(box, m_state);
 
     auto const& computed_values = box.computed_values();
     auto containing_block_height = CSS::Length::make_px(available_space.height.to_px());
@@ -370,7 +370,7 @@ void BlockFormattingContext::layout_block_level_box(Box const& box, BlockContain
     compute_width(box, available_space, layout_mode);
 
     if (is<ReplacedBox>(box) || is<BlockContainer>(box))
-        place_block_level_element_in_normal_flow_vertically(box, available_space);
+        place_block_level_element_in_normal_flow_vertically(box);
 
     if (box_state.has_definite_height()) {
         compute_height(box, available_space);
@@ -426,11 +426,11 @@ void BlockFormattingContext::layout_block_level_children(BlockContainer const& b
     }
 }
 
-void BlockFormattingContext::resolve_vertical_box_model_metrics(Box const& box, AvailableSpace const& available_space, LayoutState& state)
+void BlockFormattingContext::resolve_vertical_box_model_metrics(Box const& box, LayoutState& state)
 {
     auto& box_state = state.get_mutable(box);
     auto const& computed_values = box.computed_values();
-    auto width_of_containing_block = CSS::Length::make_px(available_space.width.to_px_or_zero());
+    auto width_of_containing_block = CSS::Length::make_px(containing_block_width_for(box, state));
 
     box_state.margin_top = computed_values.margin().top().resolved(box, width_of_containing_block).to_px(box);
     box_state.margin_bottom = computed_values.margin().bottom().resolved(box, width_of_containing_block).to_px(box);
@@ -440,12 +440,12 @@ void BlockFormattingContext::resolve_vertical_box_model_metrics(Box const& box, 
     box_state.padding_bottom = computed_values.padding().bottom().resolved(box, width_of_containing_block).to_px(box);
 }
 
-void BlockFormattingContext::place_block_level_element_in_normal_flow_vertically(Box const& child_box, AvailableSpace const& available_space)
+void BlockFormattingContext::place_block_level_element_in_normal_flow_vertically(Box const& child_box)
 {
     auto& box_state = m_state.get_mutable(child_box);
     auto const& computed_values = child_box.computed_values();
 
-    resolve_vertical_box_model_metrics(child_box, available_space, m_state);
+    resolve_vertical_box_model_metrics(child_box, m_state);
 
     auto y = FormattingContext::compute_box_y_position_with_respect_to_siblings(child_box);
 
@@ -566,7 +566,7 @@ void BlockFormattingContext::layout_floating_box(Box const& box, BlockContainer 
         auto y = line_builder->y_for_float_to_be_inserted_here(box);
         box_state.set_content_y(y + box_state.margin_box_top());
     } else {
-        place_block_level_element_in_normal_flow_vertically(box, available_space);
+        place_block_level_element_in_normal_flow_vertically(box);
         place_block_level_element_in_normal_flow_horizontally(box, available_space);
     }
 
