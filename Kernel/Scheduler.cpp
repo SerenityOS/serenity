@@ -8,6 +8,7 @@
 #include <AK/ScopeGuard.h>
 #include <AK/Singleton.h>
 #include <AK/Time.h>
+#include <Kernel/Arch/CurrentTime.h>
 #include <Kernel/Arch/InterruptDisabler.h>
 #include <Kernel/Arch/x86/TrapFrame.h>
 #include <Kernel/Debug.h>
@@ -365,11 +366,6 @@ Process* Scheduler::colonel()
     return s_colonel_process;
 }
 
-static u64 current_time_tsc()
-{
-    return read_tsc();
-}
-
 static u64 current_time_monotonic()
 {
     // We always need a precise timestamp here, we cannot rely on a coarse timestamp
@@ -380,13 +376,11 @@ UNMAP_AFTER_INIT void Scheduler::initialize()
 {
     VERIFY(Processor::is_initialized()); // sanity check
 
-    // Figure out a good scheduling time source
-    if (Processor::current().has_feature(CPUFeature::TSC) && Processor::current().has_feature(CPUFeature::CONSTANT_TSC)) {
-        current_time = current_time_tsc;
-    } else {
-        // TODO: Using HPET is rather slow, can we use any other time source that may be faster?
+    auto* possible_arch_specific_current_time_function = optional_current_time();
+    if (possible_arch_specific_current_time_function)
+        current_time = possible_arch_specific_current_time_function;
+    else
         current_time = current_time_monotonic;
-    }
 
     LockRefPtr<Thread> idle_thread;
     g_finalizer_wait_queue = new WaitQueue;
