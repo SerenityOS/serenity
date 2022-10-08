@@ -47,4 +47,9 @@ ErrorOr<void> ProcFSInode::chown(UserID, GroupID)
     return EPERM;
 }
 
+ErrorOr<void> ProcFSInode::replace_child(StringView, Inode&)
+{
+    return EROFS;
+}
+
 }

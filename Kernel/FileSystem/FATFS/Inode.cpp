@@ -102,6 +102,12 @@ ErrorOr<NonnullOwnPtr<KBuffer>> FATInode::read_block_list()
     return blocks.release_nonnull();
 }
 
+ErrorOr<void> FATInode::replace_child(StringView, Inode&)
+{
+    // TODO: Implement this once we have write support.
+    return Error::from_errno(EROFS);
+}
+
 ErrorOr<LockRefPtr<FATInode>> FATInode::traverse(Function<ErrorOr<bool>(LockRefPtr<FATInode>)> callback)
 {
     VERIFY(has_flag(m_entry.attributes, FATAttributes::Directory));
