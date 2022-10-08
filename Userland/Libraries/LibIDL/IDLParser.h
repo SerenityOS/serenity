@@ -28,6 +28,8 @@ private:
         Yes,
     };
 
+    Parser(Parser* parent, String filename, StringView contents, String import_base_path);
+
     void assert_specific(char ch);
     void assert_string(StringView expected);
     void consume_whitespace();
@@ -53,13 +55,17 @@ private:
     NonnullRefPtr<Type> parse_type();
     void parse_constant(Interface&);
 
-    static HashTable<NonnullOwnPtr<Interface>> s_interfaces;
-    static HashMap<String, Interface*> s_resolved_imports;
-
     String import_base_path;
     String filename;
     StringView input;
     GenericLexer lexer;
+
+    HashTable<NonnullOwnPtr<Interface>>& top_level_interfaces();
+    HashTable<NonnullOwnPtr<Interface>> interfaces;
+    HashMap<String, Interface*>& top_level_resolved_imports();
+    HashMap<String, Interface*> resolved_imports;
+    Parser* top_level_parser();
+    Parser* parent = nullptr;
 };
 
 }
