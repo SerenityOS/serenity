@@ -1,5 +1,5 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='lz4'
-version='1.9.3'
-files="https://github.com/lz4/lz4/archive/refs/tags/v${version}.tar.gz lz4-${version}.tar.gz 030644df4611007ff7dc962d981f390361e6c97a34e5cbc393ddfbe019ffe2c1"
+version='1.9.4'
+files="https://github.com/lz4/lz4/archive/refs/tags/v${version}.tar.gz lz4-${version}.tar.gz 0b0e3aa07c8c063ddf40b082bdf7e37a1562bda40a0ff5272957f3e987e0e54b"
 auth_type='sha256'
