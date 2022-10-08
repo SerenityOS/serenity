@@ -23,20 +23,10 @@ interface CSSRule {
 };
 ```
 
-3. If the IDL starts with `[Exposed=Window]`, add the following to [`LibWeb/Bindings/WindowObjectHelper.h`](../../Userland/Libraries/LibWeb/Bindings/WindowObjectHelper.h):
-    - `#include <LibWeb/Bindings/HTMLDetailsElementConstructor.h>` and
-    - `#include <LibWeb/Bindings/HTMLDetailsElementPrototype.h>` to the includes list.
-    - `ADD_WINDOW_OBJECT_INTERFACE(HTMLDetailsElement)      \` to the macro at the bottom.
+3. Add a `libweb_js_bindings(HTML/HTMLDetailsElement)` call to [`LibWeb/idl_files.cmake`](../../Userland/Libraries/LibWeb/idl_files.cmake)
 
-4. Add a `libweb_js_bindings(HTML/HTMLDetailsElement)` call to [`LibWeb/idl_files.cmake`](../../Userland/Libraries/LibWeb/idl_files.cmake)
-
-5. Forward declare the generated classes in [`LibWeb/Forward.h`](../../Userland/Libraries/LibWeb/Forward.h):
+4. Forward declare the generated class in [`LibWeb/Forward.h`](../../Userland/Libraries/LibWeb/Forward.h):
     - `HTMLDetailsElement` in its namespace.
-    - `HTMLDetailsElementWrapper` in the `Web::Bindings` namespace.
 
-6. The C++ class equivalent of the IDL interface has a few requirements:
-   - It must inherit from `public RefCounted<HTMLDetailsElement>` and `public Bindings::Wrappable`
-   - It must have a public `using WrapperType = Bindings::HTMLDetailsElementWrapper;`
-
-8. If your type isn't an Event or Element, you will need to add it to [`is_wrappable_type()`](../../Meta/Lagom/Tools/CodeGenerators/LibWeb/BindingsGenerator/IDLGenerators.cpp)
+5. If your type isn't an Event or Element, you will need to add it to [`is_platform_object()`](../../Meta/Lagom/Tools/CodeGenerators/LibWeb/BindingsGenerator/IDLGenerators.cpp)
    so that it can be accepted as an IDL parameter, attribute or return type.
