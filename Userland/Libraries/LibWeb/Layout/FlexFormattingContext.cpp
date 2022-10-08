@@ -1583,11 +1583,40 @@ float FlexFormattingContext::calculate_intrinsic_cross_size_of_flex_container()
         return second_pass_largest_contribution;
     }
 
-    // FIXME: For a multi-line flex container, the min-content/max-content cross size is the sum of the flex line cross sizes
-    //        resulting from sizing the flex container under a cross-axis min-content constraint/max-content constraint (respectively).
-    // FIXME: However, if the flex container is flex-flow: column wrap;, then it’s sized by first finding the largest
-    //        min-content/max-content cross-size contribution among the flex items (respectively), then using that size
-    //        as the available space in the cross axis for each of the flex items during layout.
+    if (is_row_layout()) {
+        // row multi-line flex container cross-size
+
+        // The min-content/max-content cross size is the sum of the flex line cross sizes resulting from
+        // sizing the flex container under a cross-axis min-content constraint/max-content constraint (respectively).
+
+        // NOTE: We fall through to the ad-hoc section below.
+    } else {
+        // column multi-line flex container cross-size
+
+        // The min-content cross size is the largest min-content contribution among all of its flex items.
+        if (m_available_space_for_items->cross.is_min_content()) {
+            auto calculate_largest_contribution = [&](bool resolve_percentage_min_max_sizes) {
+                float largest_contribution = 0;
+                for (auto& flex_item : m_flex_items) {
+                    float contribution = calculate_cross_min_content_contribution(flex_item, resolve_percentage_min_max_sizes);
+                    largest_contribution = max(largest_contribution, contribution);
+                }
+                return largest_contribution;
+            };
+
+            auto first_pass_largest_contribution = calculate_largest_contribution(false);
+            set_cross_size(flex_container(), first_pass_largest_contribution);
+            auto second_pass_largest_contribution = calculate_largest_contribution(true);
+            return second_pass_largest_contribution;
+        }
+
+        // The max-content cross size is the sum of the flex line cross sizes resulting from
+        // sizing the flex container under a cross-axis max-content constraint,
+        // using the largest max-content cross-size contribution among the flex items
+        // as the available space in the cross axis for each of the flex items during layout.
+
+        // NOTE: We fall through to the ad-hoc section below.
+    }
 
     // HACK: We run steps 5, 7, 9 and 11 from the main algorithm. This gives us *some* cross size information to work with.
     m_flex_lines.clear();
