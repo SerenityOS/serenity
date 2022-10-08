@@ -17,6 +17,7 @@
 #include "ResizeImageDialog.h"
 #include <Applications/PixelPaint/PixelPaintWindowGML.h>
 #include <LibConfig/Client.h>
+#include <LibCore/Debounce.h>
 #include <LibCore/File.h>
 #include <LibCore/MimeData.h>
 #include <LibFileSystemAccessClient/Client.h>
@@ -1100,9 +1101,11 @@ ImageEditor& MainWidget::create_new_editor(NonnullRefPtr<Image> image)
         m_show_rulers_action->set_checked(show_rulers);
     };
 
-    image_editor.on_scale_change = [this](float scale) {
+    image_editor.on_scale_change = Core::debounce([this](float scale) {
         m_zoom_combobox->set_text(String::formatted("{}%", roundf(scale * 100)));
-    };
+        current_image_editor()->update_tool_cursor();
+    },
+        100);
 
     if (image->layer_count())
         image_editor.set_active_layer(&image->layer(0));

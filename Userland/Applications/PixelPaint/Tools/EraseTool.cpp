@@ -73,6 +73,7 @@ GUI::Widget* EraseTool::get_properties_widget()
 
         size_slider.on_change = [&](int value) {
             set_size(value);
+            size_slider.set_override_cursor(cursor());
         };
         set_primary_slider(&size_slider);
 
@@ -119,16 +120,42 @@ GUI::Widget* EraseTool::get_properties_widget()
         pencil_mode_radio.on_checked = [&](bool) {
             m_draw_mode = DrawMode::Pencil;
             hardness_slider.set_enabled(false);
+            refresh_editor_cursor();
+            size_slider.set_override_cursor(cursor());
         };
         brush_mode_radio.on_checked = [&](bool) {
             m_draw_mode = DrawMode::Brush;
             hardness_slider.set_enabled(true);
+            refresh_editor_cursor();
+            size_slider.set_override_cursor(cursor());
         };
 
         pencil_mode_radio.set_checked(true);
     }
 
     return m_properties_widget.ptr();
+}
+
+NonnullRefPtr<Gfx::Bitmap> EraseTool::build_cursor()
+{
+    if (m_draw_mode == DrawMode::Brush)
+        return BrushTool::build_cursor();
+
+    m_scale_last_created_cursor = m_editor ? m_editor->scale() : 1;
+    int scaled_size = size() * m_scale_last_created_cursor;
+
+    NonnullRefPtr<Gfx::Bitmap> new_cursor = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, Gfx::IntSize(scaled_size, scaled_size)).release_value_but_fixme_should_propagate_errors();
+
+    Gfx::IntRect rect { 0, 0, scaled_size, scaled_size };
+    Gfx::Painter painter { new_cursor };
+
+    painter.draw_rect(rect, Color::LightGray);
+    painter.draw_line({ scaled_size / 2 - 5, scaled_size / 2 }, { scaled_size / 2 + 5, scaled_size / 2 }, Color::LightGray, 3);
+    painter.draw_line({ scaled_size / 2, scaled_size / 2 - 5 }, { scaled_size / 2, scaled_size / 2 + 5 }, Color::LightGray, 3);
+    painter.draw_line({ scaled_size / 2 - 5, scaled_size / 2 }, { scaled_size / 2 + 5, scaled_size / 2 }, Color::MidGray, 1);
+    painter.draw_line({ scaled_size / 2, scaled_size / 2 - 5 }, { scaled_size / 2, scaled_size / 2 + 5 }, Color::MidGray, 1);
+
+    return new_cursor;
 }
 
 }
