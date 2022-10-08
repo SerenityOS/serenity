@@ -18,6 +18,7 @@ public:
     virtual void spin_until(Function<bool()> goal_condition) override;
     virtual void deferred_invoke(Function<void()>) override;
     virtual NonnullRefPtr<Timer> create_timer() override;
+    virtual void quit() override;
 };
 
 }

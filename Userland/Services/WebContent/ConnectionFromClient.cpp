@@ -29,6 +29,7 @@
 #include <LibWeb/Loader/ResourceLoader.h>
 #include <LibWeb/Painting/PaintableBox.h>
 #include <LibWeb/Painting/StackingContext.h>
+#include <LibWeb/Platform/EventLoopPlugin.h>
 #include <WebContent/ConnectionFromClient.h>
 #include <WebContent/PageHost.h>
 #include <WebContent/WebContentClientEndpoint.h>
@@ -45,7 +46,7 @@ ConnectionFromClient::ConnectionFromClient(NonnullOwnPtr<Core::Stream::LocalSock
 
 void ConnectionFromClient::die()
 {
-    Core::EventLoop::current().quit(0);
+    Web::Platform::EventLoopPlugin::the().quit();
 }
 
 Web::Page& ConnectionFromClient::page()

@@ -31,4 +31,9 @@ NonnullRefPtr<Timer> EventLoopPluginSerenity::create_timer()
     return TimerSerenity::create();
 }
 
+void EventLoopPluginSerenity::quit()
+{
+    Core::EventLoop::current().quit(0);
+}
+
 }
