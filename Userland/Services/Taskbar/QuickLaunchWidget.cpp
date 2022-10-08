@@ -91,7 +91,7 @@ QuickLaunchWidget::QuickLaunchWidget()
     set_fixed_height(24);
 
     m_context_menu = GUI::Menu::construct();
-    m_context_menu_default_action = GUI::Action::create("&Remove", [this](auto&) {
+    m_context_menu_default_action = GUI::Action::create("&Remove", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/delete.png"sv).release_value_but_fixme_should_propagate_errors(), [this](auto&) {
         Config::remove_key("Taskbar"sv, quick_launch, m_context_menu_app_name);
         auto button = find_child_of_type_named<GUI::Button>(m_context_menu_app_name);
         if (button) {
