@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2020, Ben Jilks <benjyjilks@gmail.com>
  * Copyright (c) 2021, Mustafa Quraish <mustafa@serenityos.org>
+ * Copyright (c) 2022, Torsten Engelmann <engelTorsten@gmx.de>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -13,10 +14,19 @@
 #include <LibGUI/Label.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/ValueSlider.h>
+#include <LibGfx/AntiAliasingPainter.h>
 #include <LibGfx/Color.h>
 #include <LibGfx/Rect.h>
 
 namespace PixelPaint {
+
+void BrushTool::set_size(int size)
+{
+    if (size == m_size)
+        return;
+    m_size = size;
+    refresh_editor_cursor();
+}
 
 void BrushTool::on_mousedown(Layer* layer, MouseEvent& event)
 {
@@ -145,9 +155,12 @@ GUI::Widget* BrushTool::get_properties_widget()
         auto& size_slider = size_container.add<GUI::ValueSlider>(Orientation::Horizontal, "px");
         size_slider.set_range(1, 100);
         size_slider.set_value(m_size);
+        size_slider.set_override_cursor(cursor());
 
         size_slider.on_change = [&](int value) {
             set_size(value);
+            // Update cursor to provide an instant preview for the selected size.
+            size_slider.set_override_cursor(cursor());
         };
         set_primary_slider(&size_slider);
 
@@ -170,6 +183,32 @@ GUI::Widget* BrushTool::get_properties_widget()
     }
 
     return m_properties_widget.ptr();
+}
+
+NonnullRefPtr<Gfx::Bitmap> BrushTool::build_cursor()
+{
+    m_scale_last_created_cursor = m_editor ? m_editor->scale() : 1;
+    auto scaled_size = size() * m_scale_last_created_cursor;
+    auto containing_box_size = 2 * scaled_size;
+    NonnullRefPtr<Gfx::Bitmap> new_cursor = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, Gfx::IntSize(containing_box_size, containing_box_size)).release_value_but_fixme_should_propagate_errors();
+
+    Gfx::Painter painter { new_cursor };
+    Gfx::AntiAliasingPainter aa_painter { painter };
+
+    painter.draw_line({ scaled_size - 5, scaled_size }, { scaled_size + 5, scaled_size }, Color::LightGray, 3);
+    painter.draw_line({ scaled_size, scaled_size - 5 }, { scaled_size, scaled_size + 5 }, Color::LightGray, 3);
+    painter.draw_line({ scaled_size - 5, scaled_size }, { scaled_size + 5, scaled_size }, Color::MidGray, 1);
+    painter.draw_line({ scaled_size, scaled_size - 5 }, { scaled_size, scaled_size + 5 }, Color::MidGray, 1);
+    aa_painter.draw_ellipse(Gfx::IntRect(0, 0, containing_box_size, containing_box_size), Color::LightGray, 1);
+
+    return new_cursor;
+}
+
+void BrushTool::refresh_editor_cursor()
+{
+    m_cursor = build_cursor();
+    if (m_editor)
+        m_editor->update_tool_cursor();
 }
 
 }
