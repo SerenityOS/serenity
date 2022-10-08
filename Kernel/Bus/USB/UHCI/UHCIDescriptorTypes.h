@@ -69,21 +69,29 @@ struct alignas(16) TransferDescriptor final {
         ShortPacketDetect = (1 << 29),
     };
 
+    struct TransferDescriptorBookkeeping {
+        u32 paddr;                               // Physical 4-byte address where this TransferDescriptor is located
+        TransferDescriptor* next_td { nullptr }; // Pointer to first TD
+        TransferDescriptor* prev_td { nullptr }; // Pointer to the previous TD
+        bool in_use;                             // Has this TD been allocated (and therefore in use)?
+    };
+
     TransferDescriptor() = delete;
     TransferDescriptor(u32 paddr)
-        : m_paddr(paddr)
     {
+        m_bookkeeping = new TransferDescriptorBookkeeping;
+        m_bookkeeping->paddr = paddr;
     }
     ~TransferDescriptor() = delete; // Prevent anything except placement new on this object
 
     u32 link_ptr() const { return m_link_ptr; }
-    u32 paddr() const { return m_paddr; }
+    u32 paddr() const { return m_bookkeeping->paddr; }
     u32 status() const { return m_control_status; }
     u32 token() const { return m_token; }
     u32 buffer_ptr() const { return m_buffer_ptr; }
     u16 actual_packet_length() const { return (m_control_status + 1) & 0x7ff; }
 
-    bool in_use() const { return m_in_use; }
+    bool in_use() const { return m_bookkeeping->in_use; }
     bool stalled() const { return m_control_status & StatusBits::Stalled; }
     bool last_in_chain() const { return m_link_ptr & LinkPointerBits::Terminate; }
     bool active() const { return m_control_status & StatusBits::Active; }
@@ -132,7 +140,7 @@ struct alignas(16) TransferDescriptor final {
     }
 
     void set_control_status(u32 control_status) { m_control_status = control_status; }
-    void set_in_use(bool in_use) { m_in_use = in_use; }
+    void set_in_use(bool in_use) { m_bookkeeping->in_use = in_use; }
     void set_max_len(u16 max_len)
     {
         VERIFY(max_len < 0x500 || max_len == 0x7ff);
@@ -165,12 +173,12 @@ struct alignas(16) TransferDescriptor final {
 
     void print()
     {
-        dbgln("UHCI: TD({:#04x}) @ {:#04x}: link_ptr={:#04x}, status={:#04x}, token={:#04x}, buffer_ptr={:#04x}", this, m_paddr, m_link_ptr, (u32)m_control_status, m_token, m_buffer_ptr);
+        dbgln("UHCI: TD({:#04x}) @ {:#04x}: link_ptr={:#04x}, status={:#04x}, token={:#04x}, buffer_ptr={:#04x}", this, m_bookkeeping->paddr, m_link_ptr, (u32)m_control_status, m_token, m_buffer_ptr);
 
         // Now let's print the flags!
         dbgln("UHCI: TD({:#04x}) @ {:#04x}: link_ptr={}{}{}, status={}{}{}{}{}{}{}",
             this,
-            m_paddr,
+            m_bookkeeping->paddr,
             (last_in_chain()) ? "T " : "",
             (m_link_ptr & static_cast<u32>(LinkPointerBits::QHSelect)) ? "QH " : "",
             (m_link_ptr & static_cast<u32>(LinkPointerBits::DepthFlag)) ? "Vf " : "",
@@ -184,13 +192,13 @@ struct alignas(16) TransferDescriptor final {
     }
 
     // FIXME: For the love of God, use AK SMART POINTERS PLEASE!!
-    TransferDescriptor* next_td() { return m_next_td; }
-    TransferDescriptor const* next_td() const { return m_next_td; }
-    void set_next_td(TransferDescriptor* td) { m_next_td = td; }
+    TransferDescriptor* next_td() { return m_bookkeeping->next_td; }
+    TransferDescriptor const* next_td() const { return m_bookkeeping->next_td; }
+    void set_next_td(TransferDescriptor* td) { m_bookkeeping->next_td = td; }
 
-    TransferDescriptor* prev_td() { return m_prev_td; }
-    TransferDescriptor const* prev_td() const { return m_prev_td; }
-    void set_previous_td(TransferDescriptor* td) { m_prev_td = td; }
+    TransferDescriptor* prev_td() { return m_bookkeeping->prev_td; }
+    TransferDescriptor const* prev_td() const { return m_bookkeeping->prev_td; }
+    void set_previous_td(TransferDescriptor* td) { m_bookkeeping->prev_td = td; }
 
     void insert_next_transfer_descriptor(TransferDescriptor* td)
     {
@@ -226,22 +234,19 @@ struct alignas(16) TransferDescriptor final {
         m_link_ptr = 0;
         m_control_status = 0;
         m_token = 0;
-        m_in_use = false;
-        m_next_td = nullptr;
-        m_prev_td = nullptr;
+        m_bookkeeping->in_use = false;
+        m_bookkeeping->next_td = nullptr;
+        m_bookkeeping->prev_td = nullptr;
     }
 
 private:
     u32 m_link_ptr;                // Points to another Queue Head or Transfer Descriptor
-    volatile u32 m_control_status; // Control and status bits
+    volatile u32 m_control_status; // Control and status field
     u32 m_token;                   // Contains all information required to fill in a USB Start Token
     u32 m_buffer_ptr;              // Points to a data buffer for this transaction (i.e what we want to send or recv)
 
-    // These values will be ignored by the controller, but we can use them for configuration/bookkeeping
-    u32 m_paddr;                                     // Physical address where this TransferDescriptor is located
-    Ptr32<TransferDescriptor> m_next_td { nullptr }; // Pointer to first TD
-    Ptr32<TransferDescriptor> m_prev_td { nullptr }; // Pointer to first TD
-    bool m_in_use;                                   // Has this TD been allocated (and therefore in use)?
+    // This structure pointer will be ignored by the controller, but we can use it for configuration and bookkeeping
+    TransferDescriptorBookkeeping* m_bookkeeping { nullptr };
 };
 
 static_assert(AssertSize<TransferDescriptor, 32>()); // Transfer Descriptor is always 8 Dwords
@@ -252,6 +257,20 @@ static_assert(AssertSize<TransferDescriptor, 32>()); // Transfer Descriptor is a
 // Description here please!
 //
 struct alignas(16) QueueHead {
+
+    struct QueueHeadBookkeeping {
+        u32 paddr { 0 };                          // Physical 4-byte address where this QueueHead is located
+        QueueHead* next_qh { nullptr };           // Next QH
+        QueueHead* prev_qh { nullptr };           // Previous QH
+        TransferDescriptor* first_td { nullptr }; // Pointer to first TD
+        Transfer* transfer { nullptr };           // Pointer to transfer linked to this queue head
+        bool in_use { false };                    // Is this QH currently in use?
+    };
+
+    // The number of padding bytes is the size of a full QueueHead descriptor (32-bytes), minus the two required members (8-bytes), minus the size
+    // of a pointer to the bookkeeping structure.
+    static constexpr size_t DESCRIPTOR_PAD_BYTES = 32u - 8 - sizeof(QueueHeadBookkeeping*);
+
     enum class LinkPointerBits : u32 {
         Terminate = 1,
         QHSelect = 2,
@@ -259,31 +278,31 @@ struct alignas(16) QueueHead {
 
     QueueHead() = delete;
     QueueHead(u32 paddr)
-        : m_paddr(paddr)
     {
+        m_bookkeeping = new QueueHeadBookkeeping;
+        m_bookkeeping->paddr = paddr;
     }
     ~QueueHead() = delete; // Prevent anything except placement new on this object
 
     u32 link_ptr() const { return m_link_ptr; }
     u32 element_link_ptr() const { return m_element_link_ptr; }
 
-    u32 paddr() const { return m_paddr; }
-    bool in_use() const { return m_in_use; }
-    void set_in_use(bool in_use) { m_in_use = in_use; }
+    u32 paddr() const { return m_bookkeeping->paddr; }
+    bool in_use() const { return m_bookkeeping->in_use; }
+    void set_in_use(bool in_use) { m_bookkeeping->in_use = in_use; }
 
-    // FIXME: For the love of God, use AK SMART POINTERS PLEASE!!
-    QueueHead* next_qh() { return m_next_qh; }
-    QueueHead const* next_qh() const { return m_next_qh; }
+    QueueHead* next_qh() { return m_bookkeeping->next_qh; }
+    QueueHead const* next_qh() const { return m_bookkeeping->next_qh; }
 
-    QueueHead* prev_qh() { return m_prev_qh; }
-    QueueHead const* prev_qh() const { return m_prev_qh; }
+    QueueHead* prev_qh() { return m_bookkeeping->prev_qh; }
+    QueueHead const* prev_qh() const { return m_bookkeeping->prev_qh; }
 
     void link_next_queue_head(QueueHead* qh)
     {
         m_link_ptr = qh->paddr();
         m_link_ptr |= static_cast<u32>(LinkPointerBits::QHSelect);
-        m_next_qh = qh;
-        qh->m_prev_qh = this;
+        m_bookkeeping->next_qh = qh;
+        qh->m_bookkeeping->prev_qh = this;
     }
 
     void attach_transfer_queue(QueueHead& qh)
@@ -295,13 +314,13 @@ struct alignas(16) QueueHead {
     // TODO: Should we pass in an array or vector of TDs instead????
     void attach_transfer_descriptor_chain(TransferDescriptor* td)
     {
-        m_first_td = td;
+        m_bookkeeping->first_td = td;
         m_element_link_ptr = td->paddr();
     }
 
     TransferDescriptor* get_first_td()
     {
-        return m_first_td;
+        return m_bookkeeping->first_td;
     }
 
     void terminate() { m_link_ptr |= static_cast<u32>(LinkPointerBits::Terminate); }
@@ -313,42 +332,37 @@ struct alignas(16) QueueHead {
 
     void set_transfer(Transfer* transfer)
     {
-        m_transfer = transfer;
+        m_bookkeeping->transfer = transfer;
     }
 
     Transfer* transfer()
     {
-        return m_transfer;
+        return m_bookkeeping->transfer;
     }
 
     void print()
     {
-        dbgln("UHCI: QH({:#04x}) @ {:#04x}: link_ptr={:#04x}, element_link_ptr={:#04x}", this, m_paddr, m_link_ptr, (FlatPtr)m_element_link_ptr);
+        dbgln("UHCI: QH({:#04x}) @ {:#04x}: link_ptr={:#04x}, element_link_ptr={:#04x}", this, m_bookkeeping->paddr, m_link_ptr, (FlatPtr)m_element_link_ptr);
     }
 
     void free()
     {
         m_link_ptr = 0;
         m_element_link_ptr = 0;
-        m_first_td = nullptr;
-        m_transfer = nullptr;
-        m_next_qh = nullptr;
-        m_prev_qh = nullptr;
-        m_in_use = false;
+        m_bookkeeping->first_td = nullptr;
+        m_bookkeeping->transfer = nullptr;
+        m_bookkeeping->next_qh = nullptr;
+        m_bookkeeping->prev_qh = nullptr;
+        m_bookkeeping->in_use = false;
     }
 
 private:
     u32 m_link_ptr { 0 };                  // Pointer to the next horizontal object that the controller will execute after this one
     volatile u32 m_element_link_ptr { 0 }; // Pointer to the first data object in the queue (can be modified by hw)
 
-    // These values will be ignored by the controller, but we can use them for configuration/bookkeeping
-    // Any addresses besides `paddr` are assumed virtual and can be dereferenced
-    u32 m_paddr { 0 };                                // Physical address where this QueueHead is located
-    Ptr32<QueueHead> m_next_qh { nullptr };           // Next QH
-    Ptr32<QueueHead> m_prev_qh { nullptr };           // Previous QH
-    Ptr32<TransferDescriptor> m_first_td { nullptr }; // Pointer to first TD
-    Ptr32<Transfer> m_transfer { nullptr };           // Pointer to transfer linked to this queue head
-    bool m_in_use { false };                          // Is this QH currently in use?
+    // This structure pointer will be ignored by the controller, but we can use it for configuration and bookkeeping
+    QueueHeadBookkeeping* m_bookkeeping { nullptr };
+    u8 m_padding[DESCRIPTOR_PAD_BYTES];
 };
 
 static_assert(AssertSize<QueueHead, 32>()); // Queue Head is always 8 Dwords
