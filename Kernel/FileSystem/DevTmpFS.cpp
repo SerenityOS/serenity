@@ -135,6 +135,11 @@ ErrorOr<void> DevTmpFSInode::remove_child(StringView)
     VERIFY_NOT_REACHED();
 }
 
+ErrorOr<void> DevTmpFSInode::replace_child(StringView, Inode&)
+{
+    VERIFY_NOT_REACHED();
+}
+
 ErrorOr<void> DevTmpFSInode::chmod(mode_t mode)
 {
     MutexLocker locker(m_inode_lock);
@@ -234,6 +239,11 @@ ErrorOr<void> DevTmpFSDirectoryInode::remove_child(StringView name)
         }
     }
     return Error::from_errno(ENOENT);
+}
+
+ErrorOr<void> DevTmpFSDirectoryInode::replace_child(StringView, Inode&)
+{
+    VERIFY_NOT_REACHED();
 }
 
 ErrorOr<NonnullLockRefPtr<Inode>> DevTmpFSDirectoryInode::create_child(StringView name, mode_t mode, dev_t device_mode, UserID, GroupID)

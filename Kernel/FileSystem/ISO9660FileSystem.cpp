@@ -513,6 +513,11 @@ ErrorOr<void> ISO9660Inode::remove_child(StringView)
     return EROFS;
 }
 
+ErrorOr<void> ISO9660Inode::replace_child(StringView, Inode&)
+{
+    return EROFS;
+}
+
 ErrorOr<void> ISO9660Inode::chmod(mode_t)
 {
     return EROFS;

@@ -1208,9 +1208,61 @@ ErrorOr<void> Ext2FSInode::remove_child(StringView name)
     return {};
 }
 
-u64 Ext2FS::inodes_per_block() const
+ErrorOr<void> Ext2FSInode::replace_child(StringView name, Inode& child)
 {
-    return EXT2_INODES_PER_BLOCK(&super_block());
+    MutexLocker locker(m_inode_lock);
+    dbgln_if(EXT2_DEBUG, "Ext2FSInode[{}]::replace_child(): Replacing '{}' with inode {}", identifier(), name, child.index());
+    VERIFY(is_directory());
+
+    TRY(populate_lookup_cache());
+
+    if (name.length() > EXT2_NAME_LEN)
+        return ENAMETOOLONG;
+
+    Vector<Ext2FSDirectoryEntry> entries;
+
+    Optional<InodeIndex> old_child_index;
+    TRY(traverse_as_directory([&](auto& entry) -> ErrorOr<void> {
+        auto is_replacing_this_inode = name == entry.name;
+        auto inode_index = is_replacing_this_inode ? child.index() : entry.inode.index();
+
+        auto entry_name = TRY(KString::try_create(entry.name));
+        TRY(entries.try_empend(move(entry_name), inode_index, to_ext2_file_type(child.mode())));
+        if (is_replacing_this_inode)
+            old_child_index = entry.inode.index();
+
+        return {};
+    }));
+
+    if (!old_child_index.has_value())
+        return ENOENT;
+
+    auto old_child = TRY(fs().get_inode({ fsid(), *old_child_index }));
+
+    auto old_index_it = m_lookup_cache.find(name);
+    VERIFY(old_index_it != m_lookup_cache.end());
+    old_index_it->value = child.index();
+
+    // NOTE: Between this line and the write_directory line, all operations must
+    //       be atomic. Any changes made should be reverted.
+    TRY(child.increment_link_count());
+
+    auto maybe_decrement_error = old_child->decrement_link_count();
+    if (maybe_decrement_error.is_error()) {
+        old_index_it->value = *old_child_index;
+        MUST(child.decrement_link_count());
+        return maybe_decrement_error;
+    }
+
+    // FIXME: The filesystem is left in an inconsistent state if this fails.
+    //        Revert the changes made above if we can't write_directory.
+    //        Ideally, decrement should be the last operation, but we currently
+    //        can't "un-write" a directory entry list.
+    TRY(write_directory(entries));
+
+    // TODO: Emit a did_replace_child event.
+
+    return {};
 }
 
 u64 Ext2FS::inodes_per_group() const

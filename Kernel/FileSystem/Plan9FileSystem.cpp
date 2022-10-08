@@ -920,6 +920,12 @@ ErrorOr<void> Plan9FSInode::remove_child(StringView)
     return ENOTIMPL;
 }
 
+ErrorOr<void> Plan9FSInode::replace_child(StringView, Inode&)
+{
+    // TODO
+    return ENOTIMPL;
+}
+
 ErrorOr<void> Plan9FSInode::chmod(mode_t)
 {
     // TODO

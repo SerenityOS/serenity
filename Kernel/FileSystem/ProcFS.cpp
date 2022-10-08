@@ -83,6 +83,11 @@ ErrorOr<void> ProcFSInode::remove_child(StringView)
     return EROFS;
 }
 
+ErrorOr<void> ProcFSInode::replace_child(StringView, Inode&)
+{
+    return EROFS;
+}
+
 ErrorOr<void> ProcFSInode::chmod(mode_t)
 {
     return EPERM;
