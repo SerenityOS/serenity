@@ -49,7 +49,7 @@
 </div>
 
 <!-- 0 positioned grid items and similar inputs -->
-<div class="grid-container">
+<div class="grid-container" style="grid-template-rows: repeat(4,[row-start] 1fr [row-end]);">
   <div class="grid-item" style="grid-row-end: 0;">2</div>
   <div class="grid-item" style="grid-row: 0 / 0;">3</div>
   <div class="grid-item" style="grid-column: 0 / 1;">4</div>
@@ -104,20 +104,20 @@
 
 <!-- Using grid-row and grid-column -->
 <p>Should render a full-width 4x4 grid with:
-  <ul>
-    <li>one large column on the left</li>
-    <li>one large column on the right, being split in half vertically, with the number 2 in the top half, and numbers 3, 4, 5, and 6 in the bottom</li>
-  </ul>
-  <div 
-    class="grid-container"
-    style="
-      grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
-      grid-template-rows: 25px 25px 25px 25px 25px 25px 25px 25px;
-    ">
-    <div class="grid-item" style="grid-row: 1 / -1; grid-column: span 4;">1</div>
-    <div class="grid-item" style="grid-row: 1 / 5; grid-column: 5 / -1;">2</div>
-    <div class="grid-item" style="grid-column: span 2; grid-row: span 2;">3</div>
-    <div class="grid-item" style="grid-column: span 2 / -1; grid-row: span 2;">4</div>
-    <div class="grid-item" style="grid-column: span 2; grid-row: 7 / span 100;">5</div>  
-    <div class="grid-item" style="grid-column: 7 / span 2; grid-row: span 2 / -1;">6</div>
-  </div>
+<ul>
+  <li>one large column on the left</li>
+  <li>one large column on the right, being split in half vertically, with the number 2 in the top half, and numbers 3, 4, 5, and 6 in the bottom</li>
+</ul>
+<div
+  class="grid-container"
+  style="
+    grid-template-columns: repeat(8, 1fr);
+    grid-template-rows: repeat(2, 25px 25px 25px 25px );
+  ">
+  <div class="grid-item" style="grid-row: 1 / -1; grid-column: span 4;">1</div>
+  <div class="grid-item" style="grid-row: 1 / 5; grid-column: 5 / -1;">2</div>
+  <div class="grid-item" style="grid-column: span 2; grid-row: span 2;">3</div>
+  <div class="grid-item" style="grid-column: span 2 / -1; grid-row: span 2;">4</div>
+  <div class="grid-item" style="grid-column: span 2; grid-row: 7 / span 100;">5</div>
+  <div class="grid-item" style="grid-column: 7 / span 2; grid-row: span 2 / -1;">6</div>
+</div>
