@@ -327,6 +327,8 @@ if ("${SERENITY_ARCH}" STREQUAL "i686" OR "${SERENITY_ARCH}" STREQUAL "x86_64")
         Arch/x86/common/SmapDisabler.cpp
         Arch/x86/common/Shutdown.cpp
 
+        Arch/x86/CurrentTime.cpp
+
         Arch/x86/Hypervisor/BochsDisplayConnector.cpp
         Arch/x86/Hypervisor/VMWareBackdoor.cpp
 
@@ -477,6 +479,7 @@ else()
         Arch/aarch64/boot.S
         Arch/aarch64/BootPPMParser.cpp
         Arch/aarch64/CrashHandler.cpp
+        Arch/aarch64/CurrentTime.cpp
         Arch/aarch64/Dummy.cpp
         Arch/aarch64/Exceptions.cpp
         Arch/aarch64/init.cpp
