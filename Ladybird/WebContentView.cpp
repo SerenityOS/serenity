@@ -563,6 +563,9 @@ void WebContentView::create_client()
 
     auto child_pid = fork();
     if (!child_pid) {
+        MUST(Core::System::close(ui_fd_passing_fd));
+        MUST(Core::System::close(ui_fd));
+
         auto takeover_string = String::formatted("x:{}", wc_fd);
         MUST(Core::System::setenv("SOCKET_TAKEOVER"sv, takeover_string, true));
 
@@ -576,6 +579,9 @@ void WebContentView::create_client()
             perror("execlp");
         VERIFY_NOT_REACHED();
     }
+
+    MUST(Core::System::close(wc_fd_passing_fd));
+    MUST(Core::System::close(wc_fd));
 
     auto socket = MUST(Core::Stream::LocalSocket::adopt_fd(ui_fd));
     MUST(socket->set_blocking(true));
