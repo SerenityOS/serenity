@@ -575,18 +575,23 @@ u8 TreeParser::calculate_inter_mode_probability(u8 node)
 
 u8 TreeParser::calculate_interp_filter_probability(u8 node)
 {
+    // NOTE: SWITCHABLE_FILTERS is not used in the spec for this function. Therefore, the number
+    //       was demystified by referencing the reference codec libvpx:
+    //       https://github.com/webmproject/libvpx/blob/705bf9de8c96cfe5301451f1d7e5c90a41c64e5f/vp9/common/vp9_pred_common.h#L69
     auto left_interp = (AVAIL_L && m_decoder.m_left_ref_frame[0] > IntraFrame)
-        ? m_decoder.m_interp_filters[m_decoder.m_mi_row * m_decoder.m_mi_cols + m_decoder.m_mi_col - 1]
-        : 3;
+        ? m_decoder.m_interp_filters[m_decoder.get_image_index(m_decoder.m_mi_row, m_decoder.m_mi_col - 1)]
+        : SWITCHABLE_FILTERS;
     auto above_interp = (AVAIL_U && m_decoder.m_above_ref_frame[0] > IntraFrame)
-        ? m_decoder.m_interp_filters[m_decoder.m_mi_row * m_decoder.m_mi_cols + m_decoder.m_mi_col - 1]
-        : 3;
-    if (left_interp == above_interp || (left_interp != 3 && above_interp == 3))
+        ? m_decoder.m_interp_filters[m_decoder.get_image_index(m_decoder.m_mi_row - 1, m_decoder.m_mi_col)]
+        : SWITCHABLE_FILTERS;
+    if (left_interp == above_interp)
         m_ctx = left_interp;
-    else if (left_interp == 3 && above_interp != 3)
+    else if (left_interp == SWITCHABLE_FILTERS)
         m_ctx = above_interp;
+    else if (above_interp == SWITCHABLE_FILTERS)
+        m_ctx = left_interp;
     else
-        m_ctx = 3;
+        m_ctx = SWITCHABLE_FILTERS;
     return m_decoder.m_probability_tables->interp_filter_probs()[m_ctx][node];
 }
 
