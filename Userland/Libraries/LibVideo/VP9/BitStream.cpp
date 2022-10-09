@@ -5,6 +5,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/BuiltinWrappers.h>
+
 #include "BitStream.h"
 
 namespace Video::VP9 {
@@ -96,16 +98,15 @@ ErrorOr<bool> BitStream::read_bool(u8 probability)
         return_bool = true;
     }
 
-    while (m_bool_range < 128) {
-        bool new_bit;
-        if (m_bool_max_bits) {
-            new_bit = TRY(read_bit());
-            m_bool_max_bits--;
-        } else {
-            new_bit = false;
-        }
-        m_bool_range *= 2;
-        m_bool_value = (m_bool_value << 1u) + new_bit;
+    if (m_bool_range < 128) {
+        u8 bits_to_shift_into_range = count_leading_zeroes(m_bool_range);
+
+        if (bits_to_shift_into_range > m_bool_max_bits)
+            return Error::from_string_literal("Range decoder is out of data");
+
+        m_bool_range <<= bits_to_shift_into_range;
+        m_bool_value = (m_bool_value << bits_to_shift_into_range) | TRY(read_bits(bits_to_shift_into_range));
+        m_bool_max_bits -= bits_to_shift_into_range;
     }
 
     return return_bool;
