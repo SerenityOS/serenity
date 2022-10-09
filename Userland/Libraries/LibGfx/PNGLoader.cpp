@@ -14,10 +14,6 @@
 #include <LibGfx/PNGShared.h>
 #include <string.h>
 
-#ifdef __serenity__
-#    include <LibCompress/Deflate.h>
-#endif
-
 namespace Gfx {
 
 struct PNG_IHDR {

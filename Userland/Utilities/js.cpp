@@ -1505,9 +1505,7 @@ private:
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-#ifdef __serenity__
     TRY(Core::System::pledge("stdio rpath wpath cpath tty sigaction"));
-#endif
 
     bool gc_on_every_allocation = false;
     bool disable_syntax_highlight = false;
