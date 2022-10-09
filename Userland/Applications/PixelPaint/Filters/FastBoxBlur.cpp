@@ -14,15 +14,8 @@
 
 namespace PixelPaint::Filters {
 
-void FastBoxBlur::apply(Gfx::Bitmap& target_bitmap, Gfx::Bitmap const& source_bitmap) const
+void FastBoxBlur::apply(Gfx::Bitmap& target_bitmap) const
 {
-    // This filter only works in-place, so if we have different target and source, we first copy over
-    // the source bitmap to the target one.
-    if (&target_bitmap != &source_bitmap) {
-        VERIFY(source_bitmap.size_in_bytes() == target_bitmap.size_in_bytes());
-        memcpy(target_bitmap.scanline(0), source_bitmap.scanline(0), source_bitmap.size_in_bytes());
-    }
-
     Gfx::FastBoxBlurFilter filter(target_bitmap);
 
     if (m_use_asymmetric_radii) {

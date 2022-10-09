@@ -6,21 +6,21 @@
 
 #pragma once
 
-#include "Filter.h"
+#include "InplaceFilter.h"
 #include <LibGUI/CheckBox.h>
 #include <LibGUI/ValueSlider.h>
 
 namespace PixelPaint::Filters {
 
-class FastBoxBlur final : public Filter {
+class FastBoxBlur final : public InplaceFilter {
 public:
-    virtual void apply(Gfx::Bitmap& target_bitmap, Gfx::Bitmap const& source_bitmap) const override;
+    virtual void apply(Gfx::Bitmap& target_bitmap) const override;
     virtual RefPtr<GUI::Widget> get_settings_widget() override;
 
     virtual StringView filter_name() const override { return "Fast Box Blur (& Gauss)"sv; }
 
     FastBoxBlur(ImageEditor* editor)
-        : Filter(editor) {};
+        : InplaceFilter(editor) {};
 
 private:
     size_t m_radius { 5 };
