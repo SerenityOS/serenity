@@ -433,12 +433,19 @@ WebIDL::ExceptionOr<void> XMLHttpRequest::send(Optional<Fetch::XMLHttpRequestBod
     auto request = LoadRequest::create_for_url_on_page(request_url, m_window->page());
     request.set_method(m_method);
     if (body_with_type.has_value()) {
-        TRY_OR_RETURN_OOM(realm, body_with_type->body.source().visit([&](ByteBuffer const& buffer) -> ErrorOr<void> {
+        TRY(body_with_type->body.source().visit(
+            [&](ByteBuffer const& buffer) -> WebIDL::ExceptionOr<void> {
                 request.set_body(buffer);
-                return {}; }, [&](JS::Handle<FileAPI::Blob> const& blob) -> ErrorOr<void> {
-                auto byte_buffer = TRY(ByteBuffer::copy(blob->bytes()));
+                return {};
+            },
+            [&](JS::Handle<FileAPI::Blob> const& blob) -> WebIDL::ExceptionOr<void> {
+                auto byte_buffer = TRY_OR_RETURN_OOM(realm, ByteBuffer::copy(blob->bytes()));
                 request.set_body(byte_buffer);
-                return {}; }, [](auto&) -> ErrorOr<void> { return {}; }));
+                return {};
+            },
+            [](auto&) -> WebIDL::ExceptionOr<void> {
+                return {};
+            }));
         if (body_with_type->type.has_value()) {
             // If type is non-null and this’s headers’s header list does not contain `Content-Type`, then append (`Content-Type`, type) to this’s headers.
             if (!m_request_headers.contains("Content-Type"sv))
