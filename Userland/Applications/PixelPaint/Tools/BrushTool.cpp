@@ -46,10 +46,7 @@ void BrushTool::on_mousedown(Layer* layer, MouseEvent& event)
         return;
     }
 
-    int const first_draw_opacity = 10;
-
-    for (int i = 0; i < first_draw_opacity; ++i)
-        draw_point(layer->get_scratch_edited_bitmap(), color_for(layer_event), layer_event.position());
+    draw_point(layer->get_scratch_edited_bitmap(), color_for(layer_event), layer_event.position());
 
     layer->did_modify_bitmap(Gfx::IntRect::centered_on(layer_event.position(), Gfx::IntSize { m_size * 2, m_size * 2 }));
     m_last_position = layer_event.position();
@@ -89,6 +86,7 @@ Color BrushTool::color_for(GUI::MouseEvent const& event)
 
 void BrushTool::draw_point(Gfx::Bitmap& bitmap, Gfx::Color const& color, Gfx::IntPoint const& point)
 {
+    constexpr auto flow_scale = 10;
     for (int y = point.y() - size(); y < point.y() + size(); y++) {
         for (int x = point.x() - size(); x < point.x() + size(); x++) {
             auto distance = point.distance_from({ x, y });
@@ -97,9 +95,9 @@ void BrushTool::draw_point(Gfx::Bitmap& bitmap, Gfx::Color const& color, Gfx::In
             if (distance >= size())
                 continue;
 
-            auto falloff = get_falloff(distance);
+            auto falloff = get_falloff(distance) * flow_scale;
             auto pixel_color = color;
-            pixel_color.set_alpha(falloff * 255);
+            pixel_color.set_alpha(AK::min(falloff * 255, 255));
             bitmap.set_pixel(x, y, bitmap.get_pixel(x, y).blend(pixel_color));
         }
     }
