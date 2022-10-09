@@ -60,24 +60,24 @@ private:
     JS::NonnullGCPtr<JS::Realm> m_realm;
 };
 
-inline Intrinsics& host_defined_intrinsics(JS::Realm& realm)
+[[nodiscard]] inline Intrinsics& host_defined_intrinsics(JS::Realm& realm)
 {
     return *verify_cast<HostDefined>(realm.host_defined())->intrinsics;
 }
 
 template<typename T>
-JS::Object& ensure_web_prototype(JS::Realm& realm, String const& class_name)
+[[nodiscard]] JS::Object& ensure_web_prototype(JS::Realm& realm, String const& class_name)
 {
     return host_defined_intrinsics(realm).ensure_web_prototype<T>(class_name);
 }
 
 template<typename T>
-JS::NativeFunction& ensure_web_constructor(JS::Realm& realm, String const& class_name)
+[[nodiscard]] JS::NativeFunction& ensure_web_constructor(JS::Realm& realm, String const& class_name)
 {
     return host_defined_intrinsics(realm).ensure_web_constructor<T>(class_name);
 }
 
-inline JS::Object& cached_web_prototype(JS::Realm& realm, String const& class_name)
+[[nodiscard]] inline JS::Object& cached_web_prototype(JS::Realm& realm, String const& class_name)
 {
     return host_defined_intrinsics(realm).cached_web_prototype(class_name);
 }
