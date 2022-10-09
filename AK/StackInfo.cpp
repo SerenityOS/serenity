@@ -10,7 +10,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#ifdef __serenity__
+#ifdef AK_OS_SERENITY
 #    include <serenity.h>
 #elif defined(__linux__) or defined(AK_OS_MACOS)
 #    include <pthread.h>
@@ -23,7 +23,7 @@ namespace AK {
 
 StackInfo::StackInfo()
 {
-#ifdef __serenity__
+#ifdef AK_OS_SERENITY
     if (get_stack_bounds(&m_base, &m_size) < 0) {
         perror("get_stack_bounds");
         VERIFY_NOT_REACHED();

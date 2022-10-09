@@ -11,7 +11,7 @@
 #include <AK/StringBuilder.h>
 #include <AK/kstdio.h>
 
-#if defined(__serenity__) && !defined(KERNEL)
+#if defined(AK_OS_SERENITY) && !defined(KERNEL)
 #    include <serenity.h>
 #endif
 
@@ -877,7 +877,7 @@ void vdbgln(StringView fmtstr, TypeErasedFormatParams& params)
 
     StringBuilder builder;
 
-#ifdef __serenity__
+#ifdef AK_OS_SERENITY
 #    ifdef KERNEL
     if (Kernel::Processor::is_initialized()) {
         struct timespec ts = {};
@@ -914,7 +914,7 @@ void vdbgln(StringView fmtstr, TypeErasedFormatParams& params)
 
     auto const string = builder.string_view();
 
-#ifdef __serenity__
+#ifdef AK_OS_SERENITY
 #    ifdef KERNEL
     if (!Kernel::Processor::is_initialized()) {
         kernelearlyputstr(string.characters_without_null_termination(), string.length());
@@ -930,7 +930,7 @@ void vdmesgln(StringView fmtstr, TypeErasedFormatParams& params)
 {
     StringBuilder builder;
 
-#    ifdef __serenity__
+#    ifdef AK_OS_SERENITY
     struct timespec ts = {};
 
 #        if !ARCH(AARCH64)
@@ -959,7 +959,7 @@ void v_critical_dmesgln(StringView fmtstr, TypeErasedFormatParams& params)
     // at OOM conditions.
 
     StringBuilder builder;
-#    ifdef __serenity__
+#    ifdef AK_OS_SERENITY
     if (Kernel::Processor::is_initialized() && Kernel::Thread::current()) {
         auto& thread = *Kernel::Thread::current();
         builder.appendff("[{}({}:{})]: ", thread.process().name(), thread.pid().value(), thread.tid().value());

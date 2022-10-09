@@ -429,7 +429,7 @@ MarkedVector<Value> Console::vm_arguments()
 
 void Console::output_debug_message([[maybe_unused]] LogLevel log_level, [[maybe_unused]] String output) const
 {
-#ifdef __serenity__
+#ifdef AK_OS_SERENITY
     switch (log_level) {
     case Console::LogLevel::Debug:
         dbgln("\033[32;1m(js debug)\033[0m {}", output);

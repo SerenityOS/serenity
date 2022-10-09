@@ -671,7 +671,7 @@ template<>
 struct Formatter<Error> : Formatter<FormatString> {
     ErrorOr<void> format(FormatBuilder& builder, Error const& error)
     {
-#if defined(__serenity__) && defined(KERNEL)
+#if defined(AK_OS_SERENITY) && defined(KERNEL)
         if (error.is_errno())
             return Formatter<FormatString>::format(builder, "Error(errno={})"sv, error.code());
         return Formatter<FormatString>::format(builder, "Error({})"sv, error.string_literal());

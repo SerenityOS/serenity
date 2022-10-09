@@ -14,7 +14,7 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
-#ifdef __serenity__
+#ifdef AK_OS_SERENITY
 #    include <serenity.h>
 #endif
 #ifdef __FreeBSD__

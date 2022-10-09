@@ -20,7 +20,7 @@ namespace JS {
 
 NonnullOwnPtr<HeapBlock> HeapBlock::create_with_cell_size(Heap& heap, size_t cell_size)
 {
-#ifdef __serenity__
+#ifdef AK_OS_SERENITY
     char name[64];
     snprintf(name, sizeof(name), "LibJS: HeapBlock(%zu)", cell_size);
 #else

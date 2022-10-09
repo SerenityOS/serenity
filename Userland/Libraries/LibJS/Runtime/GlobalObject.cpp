@@ -200,7 +200,7 @@ GlobalObject::~GlobalObject() = default;
 
 JS_DEFINE_NATIVE_FUNCTION(GlobalObject::gc)
 {
-#ifdef __serenity__
+#ifdef AK_OS_SERENITY
     dbgln("Forced garbage collection requested!");
 #endif
     vm.heap().collect_garbage();

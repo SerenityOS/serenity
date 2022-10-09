@@ -9,7 +9,7 @@
 #include <AK/Platform.h>
 #include <AK/Types.h>
 
-#if defined(__serenity__) || defined(AK_OS_ANDROID)
+#if defined(AK_OS_SERENITY) || defined(AK_OS_ANDROID)
 #    include <stdlib.h>
 #endif
 
@@ -30,7 +30,7 @@ namespace AK {
 
 inline void fill_with_random([[maybe_unused]] void* buffer, [[maybe_unused]] size_t length)
 {
-#if defined(__serenity__) || defined(AK_OS_ANDROID)
+#if defined(AK_OS_SERENITY) || defined(AK_OS_ANDROID)
     arc4random_buf(buffer, length);
 #elif defined(OSS_FUZZ)
 #elif defined(__unix__) or defined(AK_OS_MACOS)

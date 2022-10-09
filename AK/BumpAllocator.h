@@ -103,7 +103,7 @@ protected:
         void* new_chunk = (void*)s_unused_allocation_cache.exchange(0);
         if (!new_chunk) {
             if constexpr (use_mmap) {
-#ifdef __serenity__
+#ifdef AK_OS_SERENITY
                 new_chunk = serenity_mmap(nullptr, m_chunk_size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_RANDOMIZED | MAP_PRIVATE, 0, 0, m_chunk_size, "BumpAllocator Chunk");
 #else
                 new_chunk = mmap(nullptr, m_chunk_size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);

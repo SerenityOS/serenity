@@ -544,7 +544,7 @@ static bool g_in_assert = false;
     exit(12);
 }
 
-#ifdef __serenity__
+#ifdef AK_OS_SERENITY
 void __assertion_failed(char const* assertion)
 {
     handle_failed_assert(assertion);

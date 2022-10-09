@@ -8,6 +8,7 @@
 #pragma once
 
 #include <AK/Checked.h>
+#include <AK/Platform.h>
 
 #if defined(KERNEL)
 #    include <Kernel/Heap/kmalloc.h>
@@ -25,7 +26,7 @@ inline void kfree_sized(void* ptr, size_t)
 }
 #endif
 
-#ifndef __serenity__
+#ifndef AK_OS_SERENITY
 #    include <AK/Types.h>
 
 #    ifndef AK_OS_MACOS

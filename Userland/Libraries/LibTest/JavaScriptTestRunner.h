@@ -37,7 +37,7 @@
 #include <sys/time.h>
 #include <unistd.h>
 
-#ifdef __serenity__
+#ifdef AK_OS_SERENITY
 #    include <serenity.h>
 #endif
 
@@ -292,7 +292,7 @@ inline JSFileResult TestRunner::run_file_test(String const& test_path)
 {
     g_currently_running_test = test_path;
 
-#ifdef __serenity__
+#ifdef AK_OS_SERENITY
     auto string_id = perf_register_string(test_path.characters(), test_path.length());
     perf_event(PERF_EVENT_SIGNPOST, string_id, 0);
 #endif
@@ -499,7 +499,7 @@ inline void TestRunner::print_file_result(JSFileResult const& file_result) const
 
     if (!file_result.logged_messages.is_empty()) {
         print_modifiers({ FG_GRAY, FG_BOLD });
-#ifdef __serenity__
+#ifdef AK_OS_SERENITY
         outln("     ℹ Console output:");
 #else
         // This emoji has a second invisible byte after it. The one above does not
@@ -514,7 +514,7 @@ inline void TestRunner::print_file_result(JSFileResult const& file_result) const
         auto test_error = file_result.error.value();
 
         print_modifiers({ FG_RED });
-#ifdef __serenity__
+#ifdef AK_OS_SERENITY
         outln("     ❌ The file failed to parse");
 #else
         // No invisible byte here, but the spacing still needs to be altered on the host
@@ -541,14 +541,14 @@ inline void TestRunner::print_file_result(JSFileResult const& file_result) const
             print_modifiers({ FG_GRAY, FG_BOLD });
 
             if (failed) {
-#ifdef __serenity__
+#ifdef AK_OS_SERENITY
                 out("     ❌ Suite:  ");
 #else
                 // No invisible byte here, but the spacing still needs to be altered on the host
                 out("    ❌ Suite:  ");
 #endif
             } else {
-#ifdef __serenity__
+#ifdef AK_OS_SERENITY
                 out("     ⚠ Suite:  ");
 #else
                 // This emoji has a second invisible byte after it. The one above does not

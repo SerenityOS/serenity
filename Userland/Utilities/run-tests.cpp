@@ -306,7 +306,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 #endif
 
     bool print_progress =
-#ifdef __serenity__
+#ifdef AK_OS_SERENITY
         true; // Use OSC 9 to print progress
 #else
         false;

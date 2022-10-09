@@ -6,7 +6,9 @@
 
 #pragma once
 
-#ifdef __serenity__
+#include <AK/Platform.h>
+
+#ifdef AK_OS_SERENITY
 #    ifdef KERNEL
 #        include <Kernel/kstdio.h>
 #    else
