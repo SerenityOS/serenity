@@ -101,7 +101,7 @@ StringView current_time_zone()
         dbgln_if(TIME_ZONE_DEBUG, "Could not determine time zone from TZ environment: {}", time_zone);
     }
 
-#ifdef __serenity__
+#ifdef AK_OS_SERENITY
     return system_time_zone();
 #else
     static constexpr auto zoneinfo = "/zoneinfo/"sv;
@@ -127,7 +127,7 @@ StringView current_time_zone()
 
 ErrorOr<void> change_time_zone([[maybe_unused]] StringView time_zone)
 {
-#ifdef __serenity__
+#ifdef AK_OS_SERENITY
     TimeZoneFile time_zone_file("w");
 
     if (auto new_time_zone = canonicalize_time_zone(time_zone); new_time_zone.has_value())

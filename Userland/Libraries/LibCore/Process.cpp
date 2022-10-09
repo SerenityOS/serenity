@@ -12,7 +12,7 @@
 #include <errno.h>
 #include <spawn.h>
 
-#ifdef __serenity__
+#ifdef AK_OS_SERENITY
 #    include <serenity.h>
 #endif
 
@@ -46,7 +46,7 @@ struct ArgvList {
     ErrorOr<pid_t> spawn()
     {
         auto pid = TRY(System::posix_spawn(m_path.view(), nullptr, nullptr, const_cast<char**>(get().data()), environ));
-#ifdef __serenity__
+#ifdef AK_OS_SERENITY
         TRY(System::disown(pid));
 #endif
         return pid;

@@ -32,7 +32,7 @@
 
 namespace Core::System {
 
-#ifdef __serenity__
+#ifdef AK_OS_SERENITY
 ErrorOr<void> beep();
 ErrorOr<void> pledge(StringView promises, StringView execpromises = {});
 ErrorOr<void> unveil(StringView path, StringView permissions);

@@ -16,7 +16,7 @@
 #    include <math.h>
 #endif
 
-#ifdef __serenity__
+#ifdef AK_OS_SERENITY
 extern "C" size_t strlen(char const*);
 #else
 #    include <string.h>

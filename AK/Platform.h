@@ -148,7 +148,7 @@
 #    define ASAN_UNPOISON_MEMORY_REGION(addr, size)
 #endif
 
-#ifndef __serenity__
+#ifndef AK_OS_SERENITY
 // On macOS (at least Mojave), Apple's version of this header is not wrapped
 // in extern "C".
 #    ifdef AK_OS_MACOS

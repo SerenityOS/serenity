@@ -14,7 +14,7 @@
 #include <LibGfx/QOIWriter.h>
 #include <LibTest/TestCase.h>
 
-#ifdef __serenity__
+#ifdef AK_OS_SERENITY
 #    define REFERENCE_IMAGE_DIR "/usr/Tests/LibGL/reference-images"
 #else
 #    define REFERENCE_IMAGE_DIR "reference-images"

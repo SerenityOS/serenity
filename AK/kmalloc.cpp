@@ -5,10 +5,11 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#if defined(__serenity__) && !defined(KERNEL)
+#include <AK/kmalloc.h>
+
+#if defined(AK_OS_SERENITY) && !defined(KERNEL)
 
 #    include <AK/Assertions.h>
-#    include <AK/kmalloc.h>
 
 // However deceptively simple these functions look, they must not be inlined.
 // Memory allocated in one translation unit has to be deallocatable in another

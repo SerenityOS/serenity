@@ -625,7 +625,7 @@ void BarewordLiteral::highlight_in_editor(Line::Editor& editor, Shell& shell, Hi
             Line::Style bold = { Line::Style::Bold };
             Line::Style style = bold;
 
-#ifdef __serenity__
+#ifdef AK_OS_SERENITY
             if (runnable->kind == Shell::RunnablePath::Kind::Executable || runnable->kind == Shell::RunnablePath::Kind::Alias) {
                 auto name = shell.help_path_for({}, *runnable);
                 if (name.has_value()) {

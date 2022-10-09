@@ -23,7 +23,7 @@ extern "C" __declspec(dllimport) void __stdcall Sleep(unsigned long);
 #    include <sched.h>
 #endif
 
-#ifndef __serenity__
+#ifndef AK_OS_SERENITY
 #    include <new>
 #endif
 

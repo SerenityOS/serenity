@@ -19,7 +19,7 @@ using i32 = __INT32_TYPE__;
 using i16 = __INT16_TYPE__;
 using i8 = __INT8_TYPE__;
 
-#ifdef __serenity__
+#ifdef AK_OS_SERENITY
 
 using size_t = __SIZE_TYPE__;
 using ssize_t = MakeSigned<size_t>;

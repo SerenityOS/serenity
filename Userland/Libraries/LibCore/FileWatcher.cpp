@@ -21,7 +21,7 @@
 namespace Core {
 
 // Only supported in serenity mode because we use InodeWatcher syscalls
-#ifdef __serenity__
+#ifdef AK_OS_SERENITY
 
 static Optional<FileWatcherEvent> get_event_from_fd(int fd, HashMap<unsigned, String> const& wd_to_path)
 {
