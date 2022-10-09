@@ -6,18 +6,16 @@
 
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
+#include <AK/Variant.h>
 #include <LibRegex/Regex.h>
 #include <ctype.h>
+#include <regex.h>
 #include <stdio.h>
 #include <string.h>
 
-#ifdef __serenity__
-#    include <regex.h>
-#else
-#    include <LibC/regex.h>
+#ifndef AK_OS_SERENITY
+#    error "This file is intended for use on Serenity only to implement POSIX regex.h"
 #endif
-
-#include <AK/Variant.h>
 
 struct internal_regex_t {
     u8 cflags;
