@@ -182,4 +182,6 @@ endpoint WindowServer
     add_window_stealing_for_client(i32 client_id, i32 window_id) => ()
     remove_window_stealing_for_client(i32 client_id, i32 window_id) => ()
     remove_window_stealing(i32 window_id) => ()
+
+    set_always_on_top(i32 window_id, bool always_on_top) => ()
 }

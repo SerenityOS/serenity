@@ -232,6 +232,8 @@ public:
     void set_blocks_emoji_input(bool b) { m_blocks_emoji_input = b; }
     bool blocks_emoji_input() const { return m_blocks_emoji_input; }
 
+    void set_always_on_top(bool always_on_top = true);
+
 protected:
     Window(Core::Object* parent = nullptr);
     virtual void wm_event(WMEvent&);

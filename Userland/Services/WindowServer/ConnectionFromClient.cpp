@@ -1341,6 +1341,15 @@ void ConnectionFromClient::remove_window_stealing(i32 window_id)
     window->remove_all_stealing();
 }
 
+void ConnectionFromClient::set_always_on_top(i32 window_id, bool always_on_top)
+{
+    auto window = window_from_id(window_id);
+    if (!window)
+        did_misbehave("SetAlwaysOnTop: Bad window ID");
+
+    window->set_always_on_top(always_on_top);
+}
+
 void ConnectionFromClient::notify_about_theme_change()
 {
     // Recalculate minimum size for each window, using the new theme metrics.
