@@ -1396,7 +1396,6 @@ void Parser::dump_info()
     outln("Frame dimensions: {}x{}", m_frame_width, m_frame_height);
     outln("Render dimensions: {}x{}", m_render_width, m_render_height);
     outln("Bit depth: {}", m_bit_depth);
-    outln("Interpolation filter: {}", (u8)m_interpolation_filter);
 }
 
 }
