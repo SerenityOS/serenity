@@ -40,7 +40,7 @@ private:
     /* Utilities */
     void clear_context(Vector<u8>& context, size_t size);
     void clear_context(Vector<Vector<u8>>& context, size_t outer_size, size_t inner_size);
-    void allocate_tile_data();
+    DecoderErrorOr<void> allocate_tile_data();
     void cleanup_tile_allocations();
 
     /* (6.1) Frame Syntax */
@@ -94,7 +94,7 @@ private:
     DecoderErrorOr<void> decode_tile();
     void clear_left_context();
     DecoderErrorOr<void> decode_partition(u32 row, u32 col, u8 block_subsize);
-    DecoderErrorOr<void> decode_block(u32 row, u32 col, u8 subsize);
+    DecoderErrorOr<void> decode_block(u32 row, u32 col, BlockSubsize subsize);
     DecoderErrorOr<void> mode_info();
     DecoderErrorOr<void> intra_frame_mode_info();
     DecoderErrorOr<void> intra_segment_id();
@@ -123,6 +123,10 @@ private:
     DecoderErrorOr<void> find_best_ref_mvs(int ref_list);
     DecoderErrorOr<void> append_sub8x8_mvs(u8 block, u8 ref_list);
     DecoderErrorOr<bool> use_mv_hp(MV const& delta_mv);
+    size_t get_image_index(u32 row, u32 column);
+
+    Gfx::Point<size_t> get_decoded_point_for_plane(u8 row, u8 column, u8 plane);
+    Gfx::Size<size_t> get_decoded_size_for_plane(u8 plane);
 
     u8 m_profile { 0 };
     u8 m_frame_to_show_map_index { 0 };
@@ -131,8 +135,8 @@ private:
     u8 m_loop_filter_level { 0 };
     u8 m_loop_filter_sharpness { 0 };
     bool m_loop_filter_delta_enabled { false };
-    FrameType m_frame_type;
-    FrameType m_last_frame_type;
+    FrameType m_frame_type { FrameType::KeyFrame };
+    FrameType m_last_frame_type { FrameType::KeyFrame };
     bool m_show_frame { false };
     bool m_error_resilient_mode { false };
     bool m_frame_is_intra { false };
@@ -157,7 +161,11 @@ private:
     u32 m_mi_rows { 0 };
     u32 m_sb64_cols { 0 };
     u32 m_sb64_rows { 0 };
-    InterpolationFilter m_interpolation_filter;
+    InterpolationFilter m_interpolation_filter { 0xf };
+    u8 m_base_q_idx { 0 };
+    i8 m_delta_q_y_dc { 0 };
+    i8 m_delta_q_uv_dc { 0 };
+    i8 m_delta_q_uv_ac { 0 };
     bool m_lossless { false };
     u8 m_segmentation_tree_probs[7];
     u8 m_segmentation_pred_prob[3];
@@ -184,17 +192,24 @@ private:
     u32 m_mi_col_end { 0 };
     u32 m_mi_row { 0 };
     u32 m_mi_col { 0 };
-    u32 m_mi_size { 0 };
+    BlockSubsize m_mi_size { 0 };
     bool m_available_u { false };
     bool m_available_l { false };
     u8 m_segment_id { 0 };
+    // FIXME: Should this be an enum?
+    // skip equal to 0 indicates that there may be some transform coefficients to read for this block; skip equal to 1
+    // indicates that there are no transform coefficients.
+    //
+    // skip may be set to 0 even if transform blocks contain immediate end of block markers.
     bool m_skip { false };
     u8 m_num_8x8 { 0 };
     bool m_has_rows { false };
     bool m_has_cols { false };
     TXSize m_max_tx_size { TX_4x4 };
     u8 m_block_subsize { 0 };
+    // The row to use for getting partition tree probability lookups.
     u32 m_row { 0 };
+    // The column to use for getting partition tree probability lookups.
     u32 m_col { 0 };
     TXSize m_tx_size { TX_4x4 };
     ReferenceFrame m_ref_frame[2];
@@ -228,19 +243,18 @@ private:
     ReferenceFrame m_comp_fixed_ref;
     ReferenceFrame m_comp_var_ref[2];
     MV m_block_mvs[2][4];
-    u8* m_prev_segment_ids { nullptr };
+    Vector<u8> m_prev_segment_ids;
 
-    u32 m_allocated_dimensions { 0 };
-    bool* m_skips { nullptr };
-    TXSize* m_tx_sizes { nullptr };
-    u32* m_mi_sizes { nullptr };
-    u8* m_y_modes { nullptr };
-    u8* m_segment_ids { nullptr };
-    ReferenceFrame* m_ref_frames { nullptr };
-    InterpolationFilter* m_interp_filters { nullptr };
-    MV* m_mvs { nullptr };
-    MV* m_sub_mvs { nullptr };
-    IntraMode* m_sub_modes { nullptr };
+    Vector<bool> m_skips;
+    Vector<TXSize> m_tx_sizes;
+    Vector<u32> m_mi_sizes;
+    Vector<u8> m_y_modes;
+    Vector<u8> m_segment_ids;
+    Vector<Array<ReferenceFrame, 2>> m_ref_frames;
+    Vector<InterpolationFilter> m_interp_filters;
+    Vector<Array<MV, 2>> m_mvs;
+    Vector<Array<Array<MV, 4>, 2>> m_sub_mvs;
+    Vector<Array<IntraMode, 4>> m_sub_modes;
 
     OwnPtr<BitStream> m_bit_stream;
     OwnPtr<ProbabilityTables> m_probability_tables;

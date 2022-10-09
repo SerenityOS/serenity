@@ -5,10 +5,13 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "Parser.h"
-#include "Decoder.h"
-#include "Utilities.h"
 #include <AK/String.h>
+#include <LibGfx/Point.h>
+#include <LibGfx/Size.h>
+
+#include "Decoder.h"
+#include "Parser.h"
+#include "Utilities.h"
 
 namespace Video::VP9 {
 
@@ -23,22 +26,22 @@ Parser::Parser(Decoder& decoder)
 
 Parser::~Parser()
 {
-    cleanup_tile_allocations();
-    free(m_prev_segment_ids);
 }
 
 void Parser::cleanup_tile_allocations()
 {
-    free(m_skips);
-    free(m_tx_sizes);
-    free(m_mi_sizes);
-    free(m_y_modes);
-    free(m_segment_ids);
-    free(m_ref_frames);
-    free(m_interp_filters);
-    free(m_mvs);
-    free(m_sub_mvs);
-    free(m_sub_modes);
+    // FIXME: Is this necessary? Data should be truncated and
+    //        overwritten by the next tile.
+    m_skips.clear_with_capacity();
+    m_tx_sizes.clear_with_capacity();
+    m_mi_sizes.clear_with_capacity();
+    m_y_modes.clear_with_capacity();
+    m_segment_ids.clear_with_capacity();
+    m_ref_frames.clear_with_capacity();
+    m_interp_filters.clear_with_capacity();
+    m_mvs.clear_with_capacity();
+    m_sub_mvs.clear_with_capacity();
+    m_sub_modes.clear_with_capacity();
 }
 
 /* (6.1) */
@@ -62,6 +65,8 @@ DecoderErrorOr<void> Parser::parse_frame(ByteBuffer const& frame_data)
     TRY(compressed_header());
     dbgln("Finished reading compressed header");
     TRY_READ(m_bit_stream->exit_bool());
+
+    TRY(m_decoder.allocate_buffers());
 
     TRY(decode_tiles());
     TRY(refresh_probs());
@@ -335,11 +340,11 @@ DecoderErrorOr<void> Parser::loop_filter_params()
 
 DecoderErrorOr<void> Parser::quantization_params()
 {
-    auto base_q_idx = TRY_READ(m_bit_stream->read_f8());
-    auto delta_q_y_dc = TRY(read_delta_q());
-    auto delta_q_uv_dc = TRY(read_delta_q());
-    auto delta_q_uv_ac = TRY(read_delta_q());
-    m_lossless = base_q_idx == 0 && delta_q_y_dc == 0 && delta_q_uv_dc == 0 && delta_q_uv_ac == 0;
+    m_base_q_idx = TRY_READ(m_bit_stream->read_f8());
+    m_delta_q_y_dc = TRY(read_delta_q());
+    m_delta_q_uv_dc = TRY(read_delta_q());
+    m_delta_q_uv_ac = TRY(read_delta_q());
+    m_lossless = m_base_q_idx == 0 && m_delta_q_y_dc == 0 && m_delta_q_uv_dc == 0 && m_delta_q_uv_ac == 0;
     return {};
 }
 
@@ -441,9 +446,8 @@ void Parser::setup_past_independence()
         }
     }
     m_segmentation_abs_or_delta_update = false;
-    if (m_prev_segment_ids)
-        free(m_prev_segment_ids);
-    m_prev_segment_ids = static_cast<u8*>(kmalloc_array(m_mi_rows, m_mi_cols));
+    m_prev_segment_ids.clear_with_capacity();
+    m_prev_segment_ids.resize_and_keep_capacity(m_mi_rows * m_mi_cols);
     m_loop_filter_delta_enabled = true;
     m_loop_filter_ref_deltas[IntraFrame] = 1;
     m_loop_filter_ref_deltas[LastFrame] = 0;
@@ -561,8 +565,8 @@ DecoderErrorOr<void> Parser::read_coef_probs()
                         auto max_l = (k == 0) ? 3 : 6;
                         for (auto l = 0; l < max_l; l++) {
                             for (auto m = 0; m < 3; m++) {
-                                auto& coef_probs = m_probability_tables->coef_probs()[tx_size];
-                                coef_probs[i][j][k][l][m] = TRY(diff_update_prob(coef_probs[i][j][k][l][m]));
+                                auto& prob = m_probability_tables->coef_probs()[tx_size][i][j][k][l][m];
+                                prob = TRY(diff_update_prob(prob));
                             }
                         }
                     }
@@ -748,30 +752,28 @@ void Parser::setup_compound_reference_mode()
     }
 }
 
-void Parser::allocate_tile_data()
+DecoderErrorOr<void> Parser::allocate_tile_data()
 {
     auto dimensions = m_mi_rows * m_mi_cols;
-    if (dimensions == m_allocated_dimensions)
-        return;
     cleanup_tile_allocations();
-    m_skips = static_cast<bool*>(kmalloc_array(dimensions, sizeof(bool)));
-    m_tx_sizes = static_cast<TXSize*>(kmalloc_array(dimensions, sizeof(TXSize)));
-    m_mi_sizes = static_cast<u32*>(kmalloc_array(dimensions, sizeof(u32)));
-    m_y_modes = static_cast<u8*>(kmalloc_array(dimensions, sizeof(u8)));
-    m_segment_ids = static_cast<u8*>(kmalloc_array(dimensions, sizeof(u8)));
-    m_ref_frames = static_cast<ReferenceFrame*>(kmalloc_array(dimensions, 2, sizeof(ReferenceFrame)));
-    m_interp_filters = static_cast<InterpolationFilter*>(kmalloc_array(dimensions, sizeof(InterpolationFilter)));
-    m_mvs = static_cast<MV*>(kmalloc_array(dimensions, 2, sizeof(MV)));
-    m_sub_mvs = static_cast<MV*>(kmalloc_array(dimensions, 8, sizeof(MV)));
-    m_sub_modes = static_cast<IntraMode*>(kmalloc_array(dimensions, 4, sizeof(IntraMode)));
-    m_allocated_dimensions = dimensions;
+    DECODER_TRY_ALLOC(m_skips.try_resize_and_keep_capacity(dimensions));
+    DECODER_TRY_ALLOC(m_tx_sizes.try_resize_and_keep_capacity(dimensions));
+    DECODER_TRY_ALLOC(m_mi_sizes.try_resize_and_keep_capacity(dimensions));
+    DECODER_TRY_ALLOC(m_y_modes.try_resize_and_keep_capacity(dimensions));
+    DECODER_TRY_ALLOC(m_segment_ids.try_resize_and_keep_capacity(dimensions));
+    DECODER_TRY_ALLOC(m_ref_frames.try_resize_and_keep_capacity(dimensions));
+    DECODER_TRY_ALLOC(m_interp_filters.try_resize_and_keep_capacity(dimensions));
+    DECODER_TRY_ALLOC(m_mvs.try_resize_and_keep_capacity(dimensions));
+    DECODER_TRY_ALLOC(m_sub_mvs.try_resize_and_keep_capacity(dimensions));
+    DECODER_TRY_ALLOC(m_sub_modes.try_resize_and_keep_capacity(dimensions));
+    return {};
 }
 
 DecoderErrorOr<void> Parser::decode_tiles()
 {
     auto tile_cols = 1 << m_tile_cols_log2;
     auto tile_rows = 1 << m_tile_rows_log2;
-    allocate_tile_data();
+    TRY(allocate_tile_data());
     clear_above_context();
     for (auto tile_row = 0; tile_row < tile_rows; tile_row++) {
         for (auto tile_col = 0; tile_col < tile_cols; tile_col++) {
@@ -826,9 +828,7 @@ DecoderErrorOr<void> Parser::decode_tile()
 {
     for (auto row = m_mi_row_start; row < m_mi_row_end; row += 8) {
         clear_left_context();
-        m_row = row;
         for (auto col = m_mi_col_start; col < m_mi_col_end; col += 8) {
-            m_col = col;
             TRY(decode_partition(row, col, Block_64x64));
         }
     }
@@ -845,14 +845,16 @@ void Parser::clear_left_context()
 DecoderErrorOr<void> Parser::decode_partition(u32 row, u32 col, u8 block_subsize)
 {
     if (row >= m_mi_rows || col >= m_mi_cols)
-        return DecoderError::corrupted("Row or column were outside valid ranges"sv);
+        return {};
     m_block_subsize = block_subsize;
     m_num_8x8 = num_8x8_blocks_wide_lookup[block_subsize];
     auto half_block_8x8 = m_num_8x8 >> 1;
     m_has_rows = (row + half_block_8x8) < m_mi_rows;
     m_has_cols = (col + half_block_8x8) < m_mi_cols;
-
+    m_row = row;
+    m_col = col;
     auto partition = TRY_READ(m_tree_parser->parse_tree(SyntaxElementType::Partition));
+
     auto subsize = subsize_lookup[partition][block_subsize];
     if (subsize < Block_8x8 || partition == PartitionNone) {
         TRY(decode_block(row, col, subsize));
@@ -871,15 +873,22 @@ DecoderErrorOr<void> Parser::decode_partition(u32 row, u32 col, u8 block_subsize
         TRY(decode_partition(row + half_block_8x8, col + half_block_8x8, subsize));
     }
     if (block_subsize == Block_8x8 || partition != PartitionSplit) {
+        auto above_context = 15 >> b_width_log2_lookup[subsize];
+        auto left_context = 15 >> b_height_log2_lookup[subsize];
         for (size_t i = 0; i < m_num_8x8; i++) {
-            m_above_partition_context[col + i] = 15 >> b_width_log2_lookup[subsize];
-            m_left_partition_context[row + i] = 15 >> b_width_log2_lookup[subsize];
+            m_above_partition_context[col + i] = above_context;
+            m_left_partition_context[row + i] = left_context;
         }
     }
     return {};
 }
 
-DecoderErrorOr<void> Parser::decode_block(u32 row, u32 col, u8 subsize)
+size_t Parser::get_image_index(u32 row, u32 column)
+{
+    return row * m_mi_cols + column;
+}
+
+DecoderErrorOr<void> Parser::decode_block(u32 row, u32 col, BlockSubsize subsize)
 {
     m_mi_row = row;
     m_mi_col = col;
@@ -893,25 +902,24 @@ DecoderErrorOr<void> Parser::decode_block(u32 row, u32 col, u8 subsize)
         m_skip = true;
     for (size_t y = 0; y < num_8x8_blocks_high_lookup[subsize]; y++) {
         for (size_t x = 0; x < num_8x8_blocks_wide_lookup[subsize]; x++) {
-            auto pos = (row + y) * m_mi_cols + (col + x);
+            auto pos = get_image_index(row + y, col + x);
             m_skips[pos] = m_skip;
             m_tx_sizes[pos] = m_tx_size;
             m_mi_sizes[pos] = m_mi_size;
             m_y_modes[pos] = m_y_mode;
             m_segment_ids[pos] = m_segment_id;
             for (size_t ref_list = 0; ref_list < 2; ref_list++)
-                m_ref_frames[(pos * 2) + ref_list] = m_ref_frame[ref_list];
+                m_ref_frames[pos][ref_list] = m_ref_frame[ref_list];
             if (m_is_inter) {
                 m_interp_filters[pos] = m_interp_filter;
                 for (size_t ref_list = 0; ref_list < 2; ref_list++) {
-                    auto pos_with_ref_list = (pos * 2 + ref_list) * sizeof(MV);
-                    m_mvs[pos_with_ref_list] = m_block_mvs[ref_list][3];
+                    m_mvs[pos][ref_list] = m_block_mvs[ref_list][3];
                     for (size_t b = 0; b < 4; b++)
-                        m_sub_mvs[pos_with_ref_list * 4 + b * sizeof(MV)] = m_block_mvs[ref_list][b];
+                        m_sub_mvs[pos][ref_list][b] = m_block_mvs[ref_list][b];
                 }
             } else {
                 for (size_t b = 0; b < 4; b++)
-                    m_sub_modes[pos * 4 + b] = static_cast<IntraMode>(m_block_sub_modes[b]);
+                    m_sub_modes[pos][b] = static_cast<IntraMode>(m_block_sub_modes[b]);
             }
         }
     }
@@ -998,10 +1006,10 @@ DecoderErrorOr<void> Parser::read_tx_size(bool allow_select)
 
 DecoderErrorOr<void> Parser::inter_frame_mode_info()
 {
-    m_left_ref_frame[0] = m_available_l ? m_ref_frames[m_mi_row * m_mi_cols + (m_mi_col - 1)] : IntraFrame;
-    m_above_ref_frame[0] = m_available_u ? m_ref_frames[(m_mi_row - 1) * m_mi_cols + m_mi_col] : IntraFrame;
-    m_left_ref_frame[1] = m_available_l ? m_ref_frames[m_mi_row * m_mi_cols + (m_mi_col - 1) + 1] : None;
-    m_above_ref_frame[1] = m_available_u ? m_ref_frames[(m_mi_row - 1) * m_mi_cols + m_mi_col + 1] : None;
+    m_left_ref_frame[0] = m_available_l ? m_ref_frames[get_image_index(m_mi_row, m_mi_col - 1)][0] : IntraFrame;
+    m_above_ref_frame[0] = m_available_u ? m_ref_frames[get_image_index(m_mi_row - 1, m_mi_col)][0] : IntraFrame;
+    m_left_ref_frame[1] = m_available_l ? m_ref_frames[get_image_index(m_mi_row, m_mi_col - 1)][1] : None;
+    m_above_ref_frame[1] = m_available_u ? m_ref_frames[get_image_index(m_mi_row - 1, m_mi_col)][1] : None;
     m_left_intra = m_left_ref_frame[0] <= IntraFrame;
     m_above_intra = m_above_ref_frame[0] <= IntraFrame;
     m_left_single = m_left_ref_frame[1] <= None;
@@ -1234,10 +1242,23 @@ DecoderErrorOr<i32> Parser::read_mv_component(u8)
     return (mv_sign ? -1 : 1) * static_cast<i32>(mag);
 }
 
+Gfx::Point<size_t> Parser::get_decoded_point_for_plane(u8 column, u8 row, u8 plane)
+{
+    if (plane == 0)
+        return { column * 8, row * 8 };
+    return { (column * 8) >> m_subsampling_x, (row * 8) >> m_subsampling_y };
+}
+
+Gfx::Size<size_t> Parser::get_decoded_size_for_plane(u8 plane)
+{
+    auto point = get_decoded_point_for_plane(m_mi_cols, m_mi_rows, plane);
+    return { point.x(), point.y() };
+}
+
 DecoderErrorOr<void> Parser::residual()
 {
     auto block_size = m_mi_size < Block_8x8 ? Block_8x8 : static_cast<BlockSubsize>(m_mi_size);
-    for (size_t plane = 0; plane < 3; plane++) {
+    for (u8 plane = 0; plane < 3; plane++) {
         auto tx_size = (plane > 0) ? get_uv_tx_size() : m_tx_size;
         auto step = 1 << tx_size;
         auto plane_size = get_plane_block_size(block_size, plane);
@@ -1274,10 +1295,8 @@ DecoderErrorOr<void> Parser::residual()
                         TRY(m_decoder.reconstruct(plane, start_x, start_y, tx_size));
                     }
                 }
-                auto above_sub_context = m_above_nonzero_context[plane];
-                auto left_sub_context = m_left_nonzero_context[plane];
-                above_sub_context.resize_and_keep_capacity((start_x >> 2) + step);
-                left_sub_context.resize_and_keep_capacity((start_y >> 2) + step);
+                auto& above_sub_context = m_above_nonzero_context[plane];
+                auto& left_sub_context = m_left_nonzero_context[plane];
                 for (auto i = 0; i < step; i++) {
                     above_sub_context[(start_x >> 2) + i] = non_zero;
                     left_sub_context[(start_y >> 2) + i] = non_zero;
@@ -1378,7 +1397,7 @@ DecoderErrorOr<i32> Parser::read_coef(Token token)
 {
     auto cat = extra_bits[token][0];
     auto num_extra = extra_bits[token][1];
-    auto coef = extra_bits[token][2];
+    u32 coef = extra_bits[token][2];
     if (token == DctValCat6) {
         for (size_t e = 0; e < (u8)(m_bit_depth - 8); e++) {
             auto high_bit = TRY_READ(m_bit_stream->read_bool(255));

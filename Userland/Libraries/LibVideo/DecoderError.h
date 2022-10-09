@@ -22,6 +22,7 @@ using DecoderErrorOr = ErrorOr<T, DecoderError>;
 enum class DecoderErrorCategory : u32 {
     Unknown,
     IO,
+    Memory,
     // The input is corrupted.
     Corrupted,
     // The input uses features that are not yet implemented.
@@ -78,5 +79,7 @@ private:
         }                                                                  \
         _result.release_value();                                           \
     })
+
+#define DECODER_TRY_ALLOC(expression) DECODER_TRY(DecoderErrorCategory::Memory, expression)
 
 }
