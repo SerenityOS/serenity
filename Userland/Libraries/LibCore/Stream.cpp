@@ -350,12 +350,17 @@ ErrorOr<IPv4Address> Socket::resolve_host(String const& host, SocketType type)
         return Error::from_string_view({ error_string, strlen(error_string) });
     }
 
-    auto* socket_address = bit_cast<struct sockaddr_in*>(results->ai_addr);
-    NetworkOrdered<u32> network_ordered_address { socket_address->sin_addr.s_addr };
+    ScopeGuard free_results = [results] { freeaddrinfo(results); };
 
-    freeaddrinfo(results);
+    for (auto* result = results; result != nullptr; result = result->ai_next) {
+        if (result->ai_family == AF_INET) {
+            auto* socket_address = bit_cast<struct sockaddr_in*>(result->ai_addr);
+            NetworkOrdered<u32> network_ordered_address { socket_address->sin_addr.s_addr };
+            return IPv4Address { network_ordered_address };
+        }
+    }
 
-    return IPv4Address { network_ordered_address };
+    return Error::from_string_literal("Could not resolve to IPv4 address");
 }
 
 ErrorOr<void> Socket::connect_local(int fd, String const& path)
