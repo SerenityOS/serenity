@@ -1208,7 +1208,7 @@ DecoderErrorOr<void> Parser::assign_mv(bool is_compound)
 DecoderErrorOr<void> Parser::read_mv(u8 ref)
 {
     m_use_hp = m_allow_high_precision_mv && TRY(use_mv_hp(m_best_mv[ref]));
-    MV diff_mv;
+    MotionVector diff_mv;
     auto mv_joint = TRY_READ(m_tree_parser->parse_tree<MvJoint>(SyntaxElementType::MVJoint));
     if (mv_joint == MvJointHzvnz || mv_joint == MvJointHnzvnz)
         diff_mv.set_row(TRY(read_mv_component(0)));
@@ -1429,7 +1429,7 @@ DecoderErrorOr<void> Parser::append_sub8x8_mvs(u8, u8)
     return DecoderError::not_implemented();
 }
 
-DecoderErrorOr<bool> Parser::use_mv_hp(const MV&)
+DecoderErrorOr<bool> Parser::use_mv_hp(const MotionVector&)
 {
     // TODO: Implement
     return DecoderError::not_implemented();
