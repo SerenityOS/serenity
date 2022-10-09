@@ -482,10 +482,9 @@ if (BUILD_LAGOM)
     )
 
     # Regex
-    file(GLOB LIBREGEX_LIBC_SOURCES "../../Userland/Libraries/LibRegex/C/Regex.cpp")
     file(GLOB LIBREGEX_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibRegex/*.cpp")
     lagom_lib(Regex regex
-        SOURCES ${LIBREGEX_SOURCES} ${LIBREGEX_LIBC_SOURCES}
+        SOURCES ${LIBREGEX_SOURCES}
         LIBS LibUnicode
     )
 
