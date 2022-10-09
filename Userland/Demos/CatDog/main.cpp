@@ -50,6 +50,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(context_menu->try_add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); })));
 
     window->show();
+    window->set_always_on_top();
     catdog_widget->start_timer(250, Core::TimerShouldFireWhenNotVisible::Yes);
     catdog_widget->start_the_timer(); // timer for "mouse sleep detection"
 
@@ -74,6 +75,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         catdog_widget->set_roaming(false);
         advice_window->move_to(window->x() - advice_window->width() / 2, window->y() - advice_window->height());
         advice_window->show();
+        advice_window->set_always_on_top();
     };
     advice_timer->start();
 
