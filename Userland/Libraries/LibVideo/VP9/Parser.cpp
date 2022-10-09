@@ -1190,7 +1190,7 @@ DecoderErrorOr<void> Parser::read_ref_frames()
 
 DecoderErrorOr<void> Parser::assign_mv(bool is_compound)
 {
-    m_mv[1] = 0;
+    m_mv[1] = {};
     for (auto i = 0; i < 1 + is_compound; i++) {
         if (m_y_mode == NewMv) {
             TRY(read_mv(i));
@@ -1199,7 +1199,7 @@ DecoderErrorOr<void> Parser::assign_mv(bool is_compound)
         } else if (m_y_mode == NearMv) {
             m_mv[i] = m_near_mv[i];
         } else {
-            m_mv[i] = 0;
+            m_mv[i] = {};
         }
     }
     return {};
@@ -1213,7 +1213,7 @@ DecoderErrorOr<void> Parser::read_mv(u8 ref)
     if (mv_joint == MvJointHzvnz || mv_joint == MvJointHnzvnz)
         diff_mv.set_row(TRY(read_mv_component(0)));
     if (mv_joint == MvJointHnzvz || mv_joint == MvJointHnzvnz)
-        diff_mv.set_col(TRY(read_mv_component(1)));
+        diff_mv.set_column(TRY(read_mv_component(1)));
     m_mv[ref] = m_best_mv[ref] + diff_mv;
     return {};
 }

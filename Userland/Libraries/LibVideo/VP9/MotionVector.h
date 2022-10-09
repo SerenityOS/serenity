@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Hunter Salyer <thefalsehonesty@gmail.com>
+ * Copyright (c) 2022, Gregory Bertilson <zaggy1024@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -10,22 +11,52 @@
 
 namespace Video::VP9 {
 
-class MotionVector {
+struct MotionVector {
 public:
-    MotionVector() = default;
-    MotionVector(u32 row, u32 col);
+    constexpr MotionVector() = default;
+    constexpr MotionVector(MotionVector const& other) = default;
+    constexpr MotionVector(i32 row, i32 col)
+        : m_row(row)
+        , m_column(col)
+    {
+    }
 
-    u32 row() const { return m_row; }
-    void set_row(u32 row) { m_row = row; }
-    u32 col() const { return m_col; }
-    void set_col(u32 col) { m_col = col; }
+    constexpr MotionVector& operator=(MotionVector const& other) = default;
+    constexpr MotionVector& operator=(MotionVector&& other) = default;
 
-    MotionVector& operator=(i32 value);
-    MotionVector operator+(MotionVector const& other) const;
+    constexpr i32 row() const { return m_row; }
+    constexpr void set_row(i32 row) { m_row = row; }
+    constexpr i32 column() const { return m_column; }
+    constexpr void set_column(i32 col) { m_column = col; }
+
+    constexpr MotionVector operator+(MotionVector const& other) const
+    {
+        return MotionVector(this->row() + other.row(), this->column() + other.column());
+    }
+    constexpr MotionVector& operator+=(MotionVector const& other)
+    {
+        *this = *this + other;
+        return *this;
+    }
+
+    constexpr MotionVector operator*(i32 scalar) const
+    {
+        return MotionVector(this->row() * scalar, this->column() * scalar);
+    }
+    constexpr MotionVector& operator*=(i32 scalar)
+    {
+        *this = *this * scalar;
+        return *this;
+    }
+
+    constexpr bool operator==(MotionVector const& other) const
+    {
+        return this->row() == other.row() && this->column() == other.column();
+    }
 
 private:
-    u32 m_row { 0 };
-    u32 m_col { 0 };
+    i32 m_row { 0 };
+    i32 m_column { 0 };
 };
 
 }
