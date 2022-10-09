@@ -26,6 +26,7 @@ set(SOURCES
     Filters/BoxBlur5.cpp
     Filters/Filter.cpp
     Filters/FastBoxBlur.cpp
+    Filters/HueAndSaturation.cpp
     Filters/GaussBlur3.cpp
     Filters/GaussBlur5.cpp
     Filters/Grayscale.cpp
