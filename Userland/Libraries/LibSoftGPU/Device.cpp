@@ -183,12 +183,45 @@ void Device::setup_blend_factors()
     }
 }
 
+ALWAYS_INLINE static void test_alpha(PixelQuad& quad, GPU::AlphaTestFunction alpha_test_function, f32x4 const& reference_value)
+{
+    auto const alpha = quad.out_color.w();
+
+    switch (alpha_test_function) {
+    case GPU::AlphaTestFunction::Always:
+        quad.mask &= expand4(~0);
+        break;
+    case GPU::AlphaTestFunction::Equal:
+        quad.mask &= alpha == reference_value;
+        break;
+    case GPU::AlphaTestFunction::Greater:
+        quad.mask &= alpha > reference_value;
+        break;
+    case GPU::AlphaTestFunction::GreaterOrEqual:
+        quad.mask &= alpha >= reference_value;
+        break;
+    case GPU::AlphaTestFunction::Less:
+        quad.mask &= alpha < reference_value;
+        break;
+    case GPU::AlphaTestFunction::LessOrEqual:
+        quad.mask &= alpha <= reference_value;
+        break;
+    case GPU::AlphaTestFunction::NotEqual:
+        quad.mask &= alpha != reference_value;
+        break;
+    case GPU::AlphaTestFunction::Never:
+    default:
+        VERIFY_NOT_REACHED();
+    }
+}
+
 template<typename CB1, typename CB2, typename CB3>
 ALWAYS_INLINE void Device::rasterize(Gfx::IntRect& render_bounds, CB1 set_coverage_mask, CB2 set_quad_depth, CB3 set_quad_attributes)
 {
     // Return if alpha testing is a no-op
     if (m_options.enable_alpha_test && m_options.alpha_test_func == GPU::AlphaTestFunction::Never)
         return;
+    auto const alpha_test_ref_value = expand4(m_options.alpha_test_ref_value);
 
     // Buffers
     auto color_buffer = m_frame_buffer->color_buffer();
@@ -435,7 +468,7 @@ ALWAYS_INLINE void Device::rasterize(Gfx::IntRect& render_bounds, CB1 set_covera
 
             // Alpha testing
             if (m_options.enable_alpha_test) {
-                test_alpha(quad);
+                test_alpha(quad, m_options.alpha_test_func, alpha_test_ref_value);
                 coverage_bits = maskbits(quad.mask);
                 if (coverage_bits == 0)
                     continue;
@@ -1325,39 +1358,6 @@ ALWAYS_INLINE void Device::shade_fragments(PixelQuad& quad)
 
     // Multiply coverage with the fragment's alpha to obtain the final alpha value
     quad.out_color.set_w(quad.out_color.w() * quad.coverage);
-}
-
-ALWAYS_INLINE void Device::test_alpha(PixelQuad& quad)
-{
-    auto const alpha = quad.out_color.w();
-    auto const ref_value = expand4(m_options.alpha_test_ref_value);
-
-    switch (m_options.alpha_test_func) {
-    case GPU::AlphaTestFunction::Always:
-        quad.mask &= expand4(~0);
-        break;
-    case GPU::AlphaTestFunction::Equal:
-        quad.mask &= alpha == ref_value;
-        break;
-    case GPU::AlphaTestFunction::Greater:
-        quad.mask &= alpha > ref_value;
-        break;
-    case GPU::AlphaTestFunction::GreaterOrEqual:
-        quad.mask &= alpha >= ref_value;
-        break;
-    case GPU::AlphaTestFunction::Less:
-        quad.mask &= alpha < ref_value;
-        break;
-    case GPU::AlphaTestFunction::LessOrEqual:
-        quad.mask &= alpha <= ref_value;
-        break;
-    case GPU::AlphaTestFunction::NotEqual:
-        quad.mask &= alpha != ref_value;
-        break;
-    case GPU::AlphaTestFunction::Never:
-    default:
-        VERIFY_NOT_REACHED();
-    }
 }
 
 void Device::resize(Gfx::IntSize const& size)
