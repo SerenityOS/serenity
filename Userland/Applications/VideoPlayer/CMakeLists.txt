@@ -6,6 +6,8 @@ serenity_component(
 
 set(SOURCES
     main.cpp
+    VideoFrameWidget.cpp
+    VideoPlayerWidget.cpp
 )
 
 serenity_bin(VideoPlayer)
