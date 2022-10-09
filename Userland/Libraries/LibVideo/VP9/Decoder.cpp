@@ -1324,15 +1324,59 @@ DecoderErrorOr<void> Decoder::inverse_transform_2d(Vector<Intermediate>& dequant
 
 DecoderErrorOr<void> Decoder::update_reference_frames()
 {
+    // This process is invoked as the final step in decoding a frame.
+    // The inputs to this process are the samples in the current frame CurrFrame[ plane ][ x ][ y ].
+    // The output from this process is an updated set of reference frames and previous motion vectors.
+    // The following ordered steps apply:
+
+    // 1. For each value of i from 0 to NUM_REF_FRAMES - 1, the following applies if bit i of refresh_frame_flags
+    // is equal to 1 (i.e. if (refresh_frame_flags>>i)&1 is equal to 1):
     for (auto i = 0; i < NUM_REF_FRAMES; i++) {
-        dbgln("updating frame {}? {}", i, (m_parser->m_refresh_frame_flags & (1 << i)) == 1);
         if ((m_parser->m_refresh_frame_flags & (1 << i)) != 1)
             continue;
+        // − RefFrameWidth[ i ] is set equal to FrameWidth.
         m_parser->m_ref_frame_width[i] = m_parser->m_frame_width;
+        // − RefFrameHeight[ i ] is set equal to FrameHeight.
         m_parser->m_ref_frame_height[i] = m_parser->m_frame_height;
-        // TODO: 1.3-1.7
+        // − RefSubsamplingX[ i ] is set equal to subsampling_x.
+        m_parser->m_ref_subsampling_x[i] = m_parser->m_subsampling_x;
+        // − RefSubsamplingY[ i ] is set equal to subsampling_y.
+        m_parser->m_ref_subsampling_y[i] = m_parser->m_subsampling_y;
+        // − RefBitDepth[ i ] is set equal to BitDepth.
+        m_parser->m_ref_bit_depth[i] = m_parser->m_bit_depth;
+
+        // − FrameStore[ i ][ 0 ][ y ][ x ] is set equal to CurrFrame[ 0 ][ y ][ x ] for x = 0..FrameWidth-1, for y =
+        // 0..FrameHeight-1.
+        // − FrameStore[ i ][ plane ][ y ][ x ] is set equal to CurrFrame[ plane ][ y ][ x ] for plane = 1..2, for x =
+        // 0..((FrameWidth+subsampling_x) >> subsampling_x)-1, for y = 0..((FrameHeight+subsampling_y) >>
+        // subsampling_y)-1.
+
+        // We can just copy the vectors over to the frame store.
+        for (auto plane = 0u; plane < 3; plane++)
+            m_parser->m_frame_store[i][plane] = get_output_buffer_for_plane(plane);
     }
-    // TODO: 2.1-2.2
+
+    // 2. If show_existing_frame is equal to 0, the following applies:
+    if (!m_parser->m_show_existing_frame) {
+        VERIFY(m_parser->m_ref_frames.size() == m_parser->m_mi_rows * m_parser->m_mi_cols);
+        VERIFY(m_parser->m_prev_ref_frames.size() == m_parser->m_mi_rows * m_parser->m_mi_cols);
+        VERIFY(m_parser->m_mvs.size() == m_parser->m_mi_rows * m_parser->m_mi_cols);
+        VERIFY(m_parser->m_prev_mvs.size() == m_parser->m_mi_rows * m_parser->m_mi_cols);
+        // − PrevRefFrames[ row ][ col ][ list ] is set equal to RefFrames[ row ][ col ][ list ] for row = 0..MiRows-1,
+        // for col = 0..MiCols-1, for list = 0..1.
+        // − PrevMvs[ row ][ col ][ list ][ comp ] is set equal to Mvs[ row ][ col ][ list ][ comp ] for row = 0..MiRows-1,
+        // for col = 0..MiCols-1, for list = 0..1, for comp = 0..1.
+        for (auto row = 0u; row < m_parser->m_mi_rows; row++) {
+            for (auto column = 0u; column < m_parser->m_mi_cols; column++) {
+                auto index = m_parser->get_image_index(row, column);
+                for (auto list = 0u; list < 2; list++) {
+                    m_parser->m_prev_ref_frames[index][list] = m_parser->m_ref_frames[index][list];
+                    m_parser->m_prev_mvs[index][list] = m_parser->m_mvs[index][list];
+                }
+            }
+        }
+    }
+
     return {};
 }
 

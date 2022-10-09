@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Hunter Salyer <thefalsehonesty@gmail.com>
+ * Copyright (c) 2022, Gregory Bertilson <zaggy1024@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -138,11 +139,12 @@ u8 TreeParser::select_tree_probability(SyntaxElementType type, u8 node)
     case SyntaxElementType::SingleRefP2:
         return calculate_single_ref_p2_probability();
     case SyntaxElementType::MVSign:
-        break;
+        return m_decoder.m_probability_tables->mv_sign_prob()[m_mv_component];
     case SyntaxElementType::MVClass0Bit:
-        break;
+        return m_decoder.m_probability_tables->mv_class0_bit_prob()[m_mv_component];
     case SyntaxElementType::MVBit:
-        break;
+        VERIFY(m_mv_bit < MV_OFFSET_BITS);
+        return m_decoder.m_probability_tables->mv_bits_prob()[m_mv_component][m_mv_bit];
     case SyntaxElementType::TXSize:
         return calculate_tx_size_probability(node);
     case SyntaxElementType::InterMode:
@@ -150,17 +152,20 @@ u8 TreeParser::select_tree_probability(SyntaxElementType type, u8 node)
     case SyntaxElementType::InterpFilter:
         return calculate_interp_filter_probability(node);
     case SyntaxElementType::MVJoint:
-        break;
+        return m_decoder.m_probability_tables->mv_joint_probs()[node];
     case SyntaxElementType::MVClass:
-        break;
+        // Spec doesn't mention node, but the probabilities table has an extra dimension
+        // so we will use node for that.
+        return m_decoder.m_probability_tables->mv_class_probs()[m_mv_component][node];
     case SyntaxElementType::MVClass0FR:
-        break;
+        VERIFY(m_mv_class0_bit < CLASS0_SIZE);
+        return m_decoder.m_probability_tables->mv_class0_fr_probs()[m_mv_component][m_mv_class0_bit][node];
     case SyntaxElementType::MVClass0HP:
-        break;
+        return m_decoder.m_probability_tables->mv_class0_hp_prob()[m_mv_component];
     case SyntaxElementType::MVFR:
-        break;
+        return m_decoder.m_probability_tables->mv_fr_probs()[m_mv_component][node];
     case SyntaxElementType::MVHP:
-        break;
+        return m_decoder.m_probability_tables->mv_hp_prob()[m_mv_component];
     case SyntaxElementType::Token:
         return calculate_token_probability(node);
     case SyntaxElementType::MoreCoefs:
@@ -564,8 +569,7 @@ u8 TreeParser::calculate_tx_size_probability(u8 node)
 
 u8 TreeParser::calculate_inter_mode_probability(u8 node)
 {
-    // FIXME: Implement when ModeContext is implemented
-    //  m_ctx = m_decoder.m_mode_context[m_decoder.m_ref_frame[0]]
+    m_ctx = m_decoder.m_mode_context[m_decoder.m_ref_frame[0]];
     return m_decoder.m_probability_tables->inter_mode_probs()[m_ctx][node];
 }
 
@@ -689,11 +693,16 @@ void TreeParser::count_syntax_element(SyntaxElementType type, int value)
         m_decoder.m_syntax_element_counter->m_counts_single_ref[m_ctx][1][value]++;
         return;
     case SyntaxElementType::MVSign:
-        break;
+        m_decoder.m_syntax_element_counter->m_counts_mv_sign[m_mv_component][value]++;
+        return;
     case SyntaxElementType::MVClass0Bit:
-        break;
+        m_decoder.m_syntax_element_counter->m_counts_mv_class0_bit[m_mv_component][value]++;
+        return;
     case SyntaxElementType::MVBit:
-        break;
+        VERIFY(m_mv_bit < MV_OFFSET_BITS);
+        m_decoder.m_syntax_element_counter->m_counts_mv_bits[m_mv_component][m_mv_bit][value]++;
+        m_mv_bit = 0xFF;
+        return;
     case SyntaxElementType::TXSize:
         m_decoder.m_syntax_element_counter->m_counts_tx_size[m_decoder.m_max_tx_size][m_ctx][value]++;
         return;
@@ -707,15 +716,22 @@ void TreeParser::count_syntax_element(SyntaxElementType type, int value)
         m_decoder.m_syntax_element_counter->m_counts_mv_joint[value]++;
         return;
     case SyntaxElementType::MVClass:
-        break;
+        m_decoder.m_syntax_element_counter->m_counts_mv_class[m_mv_component][value]++;
+        return;
     case SyntaxElementType::MVClass0FR:
-        break;
+        VERIFY(m_mv_class0_bit < CLASS0_SIZE);
+        m_decoder.m_syntax_element_counter->m_counts_mv_class0_fr[m_mv_component][m_mv_class0_bit][value]++;
+        m_mv_class0_bit = 0xFF;
+        return;
     case SyntaxElementType::MVClass0HP:
-        break;
+        m_decoder.m_syntax_element_counter->m_counts_mv_class0_hp[m_mv_component][value]++;
+        return;
     case SyntaxElementType::MVFR:
-        break;
+        m_decoder.m_syntax_element_counter->m_counts_mv_fr[m_mv_component][value]++;
+        return;
     case SyntaxElementType::MVHP:
-        break;
+        m_decoder.m_syntax_element_counter->m_counts_mv_hp[m_mv_component][value]++;
+        return;
     case SyntaxElementType::Token:
         m_decoder.m_syntax_element_counter->m_counts_token[m_tx_size][m_plane > 0][m_decoder.m_is_inter][m_band][m_ctx][min(2, value)]++;
         return;
@@ -730,18 +746,6 @@ void TreeParser::count_syntax_element(SyntaxElementType type, int value)
         return;
     }
     TODO();
-}
-
-TreeParser::TreeSelection::TreeSelection(int const* values)
-    : m_is_single_value(false)
-    , m_value { .m_tree = values }
-{
-}
-
-TreeParser::TreeSelection::TreeSelection(int value)
-    : m_is_single_value(true)
-    , m_value { .m_value = value }
-{
 }
 
 }

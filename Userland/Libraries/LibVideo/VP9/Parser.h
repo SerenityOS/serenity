@@ -7,8 +7,10 @@
 
 #pragma once
 
+#include <AK/Array.h>
 #include <AK/ByteBuffer.h>
 #include <AK/OwnPtr.h>
+#include <AK/Vector.h>
 #include <LibGfx/Forward.h>
 #include <LibVideo/DecoderError.h>
 
@@ -38,8 +40,10 @@ private:
     DecoderErrorOr<ColorRange> read_color_range();
 
     /* Utilities */
-    void clear_context(Vector<u8>& context, size_t size);
-    void clear_context(Vector<Vector<u8>>& context, size_t outer_size, size_t inner_size);
+    template<typename T>
+    void clear_context(Vector<T>& context, size_t size);
+    template<typename T>
+    void clear_context(Vector<Vector<T>>& context, size_t outer_size, size_t inner_size);
     DecoderErrorOr<void> allocate_tile_data();
     void cleanup_tile_allocations();
 
@@ -119,16 +123,25 @@ private:
     DecoderErrorOr<i32> read_coef(Token token);
 
     /* (6.5) Motion Vector Prediction */
-    DecoderErrorOr<void> find_mv_refs(ReferenceFrame, int block);
-    DecoderErrorOr<void> find_best_ref_mvs(int ref_list);
-    DecoderErrorOr<void> append_sub8x8_mvs(u8 block, u8 ref_list);
-    DecoderErrorOr<bool> use_mv_hp(MotionVector const& delta_mv);
+    void find_mv_refs(ReferenceFrame, i32 block);
+    void find_best_ref_mvs(u8 ref_list);
+    bool use_mv_hp(MotionVector const& delta_mv);
+    void append_sub8x8_mvs(i32 block, u8 ref_list);
+    bool is_inside(i32 row, i32 column);
+    void clamp_mv_ref(u8 i);
+    MotionVector clamp_mv(MotionVector mvec, i32 border);
     size_t get_image_index(u32 row, u32 column);
+    void get_block_mv(u32 candidate_row, u32 candidate_column, u8 ref_list, bool use_prev);
+    void if_same_ref_frame_add_mv(u32 candidate_row, u32 candidate_column, ReferenceFrame ref_frame, bool use_prev);
+    void if_diff_ref_frame_add_mv(u32 candidate_row, u32 candidate_column, ReferenceFrame ref_frame, bool use_prev);
+    void scale_mv(u8 ref_list, ReferenceFrame ref_frame);
+    void add_mv_ref_list(u8 ref_list);
 
     Gfx::Point<size_t> get_decoded_point_for_plane(u8 row, u8 column, u8 plane);
     Gfx::Size<size_t> get_decoded_size_for_plane(u8 plane);
 
     u8 m_profile { 0 };
+    bool m_show_existing_frame { false };
     u8 m_frame_to_show_map_index { 0 };
     u16 m_header_size_in_bytes { 0 };
     u8 m_refresh_frame_flags { 0 };
@@ -138,6 +151,7 @@ private:
     FrameType m_frame_type { FrameType::KeyFrame };
     FrameType m_last_frame_type { FrameType::KeyFrame };
     bool m_show_frame { false };
+    bool m_prev_show_frame { false };
     bool m_error_resilient_mode { false };
     bool m_frame_is_intra { false };
     u8 m_reset_frame_context { 0 };
@@ -180,12 +194,15 @@ private:
     i8 m_loop_filter_ref_deltas[MAX_REF_FRAMES];
     i8 m_loop_filter_mode_deltas[2];
 
-    Vector<Vector<u8>> m_above_nonzero_context;
-    Vector<Vector<u8>> m_left_nonzero_context;
+    // FIXME: Move above and left contexts to structs
+    Array<Vector<bool>, 3> m_above_nonzero_context;
+    Array<Vector<bool>, 3> m_left_nonzero_context;
     Vector<u8> m_above_seg_pred_context;
     Vector<u8> m_left_seg_pred_context;
     Vector<u8> m_above_partition_context;
     Vector<u8> m_left_partition_context;
+
+    // FIXME: Move (some?) mi_.. to an array of struct since they are usually used together.
     u32 m_mi_row_start { 0 };
     u32 m_mi_row_end { 0 };
     u32 m_mi_col_start { 0 };
@@ -214,18 +231,21 @@ private:
     TXSize m_tx_size { TX_4x4 };
     ReferenceFrame m_ref_frame[2];
     bool m_is_inter { false };
+    bool m_is_compound { false };
     IntraMode m_default_intra_mode { DcPred };
     u8 m_y_mode { 0 };
     u8 m_block_sub_modes[4];
     u8 m_num_4x4_w { 0 };
     u8 m_num_4x4_h { 0 };
     u8 m_uv_mode { 0 }; // FIXME: Is u8 the right size?
+    Vector<Array<IntraMode, 4>> m_sub_modes;
     ReferenceFrame m_left_ref_frame[2];
     ReferenceFrame m_above_ref_frame[2];
     bool m_left_intra { false };
     bool m_above_intra { false };
     bool m_left_single { false };
     bool m_above_single { false };
+    // The current block's interpolation filter.
     InterpolationFilter m_interp_filter { EightTap };
     MotionVector m_mv[2];
     MotionVector m_near_mv[2];
@@ -233,6 +253,11 @@ private:
     MotionVector m_best_mv[2];
     u32 m_ref_frame_width[NUM_REF_FRAMES];
     u32 m_ref_frame_height[NUM_REF_FRAMES];
+    bool m_ref_subsampling_x[NUM_REF_FRAMES];
+    bool m_ref_subsampling_y[NUM_REF_FRAMES];
+    u8 m_ref_bit_depth[NUM_REF_FRAMES];
+    Vector<u16> m_frame_store[NUM_REF_FRAMES][3];
+
     u32 m_eob_total { 0 };
     u8 m_tx_type { 0 };
     u8 m_token_cache[1024];
@@ -251,10 +276,18 @@ private:
     Vector<u8> m_y_modes;
     Vector<u8> m_segment_ids;
     Vector<Array<ReferenceFrame, 2>> m_ref_frames;
-    Vector<InterpolationFilter> m_interp_filters;
+    Vector<Array<ReferenceFrame, 2>> m_prev_ref_frames;
     Vector<Array<MotionVector, 2>> m_mvs;
+    Vector<Array<MotionVector, 2>> m_prev_mvs;
+    MotionVector m_candidate_mv[2];
+    ReferenceFrame m_candidate_frame[2];
     Vector<Array<Array<MotionVector, 4>, 2>> m_sub_mvs;
-    Vector<Array<IntraMode, 4>> m_sub_modes;
+    u8 m_ref_mv_count { 0 };
+    MotionVector m_ref_list_mv[2];
+    bool m_use_prev_frame_mvs;
+    Vector<InterpolationFilter> m_interp_filters;
+    // Indexed by ReferenceFrame enum.
+    u8 m_mode_context[4] { INVALID_CASE };
 
     OwnPtr<BitStream> m_bit_stream;
     OwnPtr<ProbabilityTables> m_probability_tables;

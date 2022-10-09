@@ -28,22 +28,6 @@ Parser::~Parser()
 {
 }
 
-void Parser::cleanup_tile_allocations()
-{
-    // FIXME: Is this necessary? Data should be truncated and
-    //        overwritten by the next tile.
-    m_skips.clear_with_capacity();
-    m_tx_sizes.clear_with_capacity();
-    m_mi_sizes.clear_with_capacity();
-    m_y_modes.clear_with_capacity();
-    m_segment_ids.clear_with_capacity();
-    m_ref_frames.clear_with_capacity();
-    m_interp_filters.clear_with_capacity();
-    m_mvs.clear_with_capacity();
-    m_sub_mvs.clear_with_capacity();
-    m_sub_modes.clear_with_capacity();
-}
-
 /* (6.1) */
 DecoderErrorOr<void> Parser::parse_frame(ByteBuffer const& frame_data)
 {
@@ -124,8 +108,8 @@ DecoderErrorOr<void> Parser::uncompressed_header()
     m_profile = (profile_high_bit << 1u) + profile_low_bit;
     if (m_profile == 3 && TRY_READ(m_bit_stream->read_bit()))
         return DecoderError::corrupted("uncompressed_header: Profile 3 reserved bit was non-zero"sv);
-    auto show_existing_frame = TRY_READ(m_bit_stream->read_bit());
-    if (show_existing_frame) {
+    m_show_existing_frame = TRY_READ(m_bit_stream->read_bit());
+    if (m_show_existing_frame) {
         m_frame_to_show_map_index = TRY_READ(m_bit_stream->read_bits(3));
         m_header_size_in_bytes = 0;
         m_refresh_frame_flags = 0;
@@ -301,8 +285,35 @@ DecoderErrorOr<void> Parser::frame_size_with_refs()
 
 void Parser::compute_image_size()
 {
-    m_mi_cols = (m_frame_width + 7u) >> 3u;
-    m_mi_rows = (m_frame_height + 7u) >> 3u;
+    auto new_cols = (m_frame_width + 7u) >> 3u;
+    auto new_rows = (m_frame_height + 7u) >> 3u;
+
+    // 7.2.6 Compute image size semantics
+    // When compute_image_size is invoked, the following ordered steps occur:
+    // 1. If this is the first time compute_image_size is invoked, or if either FrameWidth or FrameHeight have
+    // changed in value compared to the previous time this function was invoked, then the segmentation map is
+    // cleared to all zeros by setting SegmentId[ row ][ col ] equal to 0 for row = 0..MiRows-1 and col =
+    // 0..MiCols-1.
+    bool first_invoke = !m_mi_cols && !m_mi_rows;
+    bool same_size = m_mi_cols != new_cols || m_mi_rows != new_rows;
+    if (first_invoke || same_size) {
+        // m_segment_ids will be resized from decode_tiles() later.
+        m_segment_ids.clear_with_capacity();
+    }
+
+    // 2. The variable UsePrevFrameMvs is set equal to 1 if all of the following conditions are true:
+    // a. This is not the first time compute_image_size is invoked.
+    // b. Both FrameWidth and FrameHeight have the same value compared to the previous time this function
+    // was invoked.
+    // c. show_frame was equal to 1 the previous time this function was invoked.
+    // d. error_resilient_mode is equal to 0.
+    // e. FrameIsIntra is equal to 0.
+    // Otherwise, UsePrevFrameMvs is set equal to 0.
+    m_use_prev_frame_mvs = !first_invoke && same_size && m_prev_show_frame && !m_error_resilient_mode && !m_frame_is_intra;
+    m_prev_show_frame = m_show_frame;
+
+    m_mi_cols = new_cols;
+    m_mi_rows = new_rows;
     m_sb64_cols = (m_mi_cols + 7u) >> 3u;
     m_sb64_rows = (m_mi_rows + 7u) >> 3u;
 }
@@ -752,6 +763,24 @@ void Parser::setup_compound_reference_mode()
     }
 }
 
+void Parser::cleanup_tile_allocations()
+{
+    // FIXME: Is this necessary? Data should be truncated and
+    //        overwritten by the next tile.
+    m_skips.clear_with_capacity();
+    m_tx_sizes.clear_with_capacity();
+    m_mi_sizes.clear_with_capacity();
+    m_y_modes.clear_with_capacity();
+    m_segment_ids.clear_with_capacity();
+    m_ref_frames.clear_with_capacity();
+    m_interp_filters.clear_with_capacity();
+    m_mvs.clear_with_capacity();
+    m_sub_mvs.clear_with_capacity();
+    m_sub_modes.clear_with_capacity();
+    m_prev_ref_frames.clear_with_capacity();
+    m_prev_mvs.clear_with_capacity();
+}
+
 DecoderErrorOr<void> Parser::allocate_tile_data()
 {
     auto dimensions = m_mi_rows * m_mi_cols;
@@ -766,6 +795,8 @@ DecoderErrorOr<void> Parser::allocate_tile_data()
     DECODER_TRY_ALLOC(m_mvs.try_resize_and_keep_capacity(dimensions));
     DECODER_TRY_ALLOC(m_sub_mvs.try_resize_and_keep_capacity(dimensions));
     DECODER_TRY_ALLOC(m_sub_modes.try_resize_and_keep_capacity(dimensions));
+    DECODER_TRY_ALLOC(m_prev_ref_frames.try_resize_and_keep_capacity(dimensions));
+    DECODER_TRY_ALLOC(m_prev_mvs.try_resize_and_keep_capacity(dimensions));
     return {};
 }
 
@@ -796,13 +827,15 @@ DecoderErrorOr<void> Parser::decode_tiles()
     return {};
 }
 
-void Parser::clear_context(Vector<u8>& context, size_t size)
+template<typename T>
+void Parser::clear_context(Vector<T>& context, size_t size)
 {
     context.resize_and_keep_capacity(size);
-    __builtin_memset(context.data(), 0, sizeof(u8) * size);
+    __builtin_memset(context.data(), 0, sizeof(T) * size);
 }
 
-void Parser::clear_context(Vector<Vector<u8>>& context, size_t outer_size, size_t inner_size)
+template<typename T>
+void Parser::clear_context(Vector<Vector<T>>& context, size_t outer_size, size_t inner_size)
 {
     if (context.size() < outer_size)
         context.resize(outer_size);
@@ -812,7 +845,8 @@ void Parser::clear_context(Vector<Vector<u8>>& context, size_t outer_size, size_
 
 void Parser::clear_above_context()
 {
-    clear_context(m_above_nonzero_context, 3, 2 * m_mi_cols);
+    for (auto i = 0u; i < m_above_nonzero_context.size(); i++)
+        clear_context(m_above_nonzero_context[i], 2 * m_mi_cols);
     clear_context(m_above_seg_pred_context, m_mi_cols);
     clear_context(m_above_partition_context, m_sb64_cols * 8);
 }
@@ -837,7 +871,8 @@ DecoderErrorOr<void> Parser::decode_tile()
 
 void Parser::clear_left_context()
 {
-    clear_context(m_left_nonzero_context, 3, 2 * m_mi_rows);
+    for (auto i = 0u; i < m_left_nonzero_context.size(); i++)
+        clear_context(m_left_nonzero_context[i], 2 * m_mi_rows);
     clear_context(m_left_seg_pred_context, m_mi_rows);
     clear_context(m_left_partition_context, m_sb64_rows * 8);
 }
@@ -1110,8 +1145,8 @@ DecoderErrorOr<void> Parser::inter_block_mode_info()
     TRY(read_ref_frames());
     for (auto j = 0; j < 2; j++) {
         if (m_ref_frame[j] > IntraFrame) {
-            TRY(find_mv_refs(m_ref_frame[j], -1));
-            TRY(find_best_ref_mvs(j));
+            find_mv_refs(m_ref_frame[j], -1);
+            find_best_ref_mvs(j);
         }
     }
     auto is_compound = m_ref_frame[1] > IntraFrame;
@@ -1134,7 +1169,7 @@ DecoderErrorOr<void> Parser::inter_block_mode_info()
                 m_y_mode = NearestMv + inter_mode;
                 if (m_y_mode == NearestMv || m_y_mode == NearMv) {
                     for (auto j = 0; j < 1 + is_compound; j++)
-                        TRY(append_sub8x8_mvs(idy * 2 + idx, j));
+                        append_sub8x8_mvs(idy * 2 + idx, j);
                 }
                 TRY(assign_mv(is_compound));
                 for (auto y = 0; y < m_num_4x4_h; y++) {
@@ -1207,7 +1242,7 @@ DecoderErrorOr<void> Parser::assign_mv(bool is_compound)
 
 DecoderErrorOr<void> Parser::read_mv(u8 ref)
 {
-    m_use_hp = m_allow_high_precision_mv && TRY(use_mv_hp(m_best_mv[ref]));
+    m_use_hp = m_allow_high_precision_mv && use_mv_hp(m_best_mv[ref]);
     MotionVector diff_mv;
     auto mv_joint = TRY_READ(m_tree_parser->parse_tree<MvJoint>(SyntaxElementType::MVJoint));
     if (mv_joint == MvJointHzvnz || mv_joint == MvJointHnzvnz)
@@ -1218,25 +1253,26 @@ DecoderErrorOr<void> Parser::read_mv(u8 ref)
     return {};
 }
 
-DecoderErrorOr<i32> Parser::read_mv_component(u8)
+DecoderErrorOr<i32> Parser::read_mv_component(u8 component)
 {
+    m_tree_parser->set_mv_component(component);
     auto mv_sign = TRY_READ(m_tree_parser->parse_tree<bool>(SyntaxElementType::MVSign));
     auto mv_class = TRY_READ(m_tree_parser->parse_tree<MvClass>(SyntaxElementType::MVClass));
     u32 mag;
     if (mv_class == MvClass0) {
-        auto mv_class0_bit = TRY_READ(m_tree_parser->parse_tree<u32>(SyntaxElementType::MVClass0Bit));
-        auto mv_class0_fr = TRY_READ(m_tree_parser->parse_tree<u32>(SyntaxElementType::MVClass0FR));
-        auto mv_class0_hp = TRY_READ(m_tree_parser->parse_tree<u32>(SyntaxElementType::MVClass0HP));
+        u32 mv_class0_bit = TRY_READ(m_tree_parser->parse_tree<bool>(SyntaxElementType::MVClass0Bit));
+        u32 mv_class0_fr = TRY_READ(m_tree_parser->parse_mv_class0_fr(mv_class0_bit));
+        u32 mv_class0_hp = TRY_READ(m_tree_parser->parse_tree<bool>(SyntaxElementType::MVClass0HP));
         mag = ((mv_class0_bit << 3) | (mv_class0_fr << 1) | mv_class0_hp) + 1;
     } else {
-        auto d = 0;
-        for (size_t i = 0; i < mv_class; i++) {
-            auto mv_bit = TRY_READ(m_tree_parser->parse_tree<bool>(SyntaxElementType::MVBit));
+        u32 d = 0;
+        for (u8 i = 0; i < mv_class; i++) {
+            u32 mv_bit = TRY_READ(m_tree_parser->parse_mv_bit(i));
             d |= mv_bit << i;
         }
         mag = CLASS0_SIZE << (mv_class + 2);
-        auto mv_fr = TRY_READ(m_tree_parser->parse_tree<u32>(SyntaxElementType::MVFR));
-        auto mv_hp = TRY_READ(m_tree_parser->parse_tree<u32>(SyntaxElementType::MVHP));
+        u32 mv_fr = TRY_READ(m_tree_parser->parse_tree<u8>(SyntaxElementType::MVFR));
+        u32 mv_hp = TRY_READ(m_tree_parser->parse_tree<bool>(SyntaxElementType::MVHP));
         mag += ((d << 3) | (mv_fr << 1) | mv_hp) + 1;
     }
     return (mv_sign ? -1 : 1) * static_cast<i32>(mag);
@@ -1411,28 +1447,216 @@ DecoderErrorOr<i32> Parser::read_coef(Token token)
     return coef;
 }
 
-DecoderErrorOr<void> Parser::find_mv_refs(ReferenceFrame, int)
+bool Parser::is_inside(i32 row, i32 column)
 {
-    // TODO: Implement
-    return DecoderError::not_implemented();
+    if (row < 0)
+        return false;
+    if (column < 0)
+        return false;
+    u32 row_positive = row;
+    u32 column_positive = column;
+    return row_positive < m_mi_rows && column_positive >= m_mi_col_start && column_positive < m_mi_col_end;
 }
 
-DecoderErrorOr<void> Parser::find_best_ref_mvs(int)
+void Parser::add_mv_ref_list(u8 ref_list)
 {
-    // TODO: Implement
-    return DecoderError::not_implemented();
+    if (m_ref_mv_count >= 2)
+        return;
+    if (m_ref_mv_count > 0 && m_candidate_mv[ref_list] == m_ref_list_mv[0])
+        return;
+
+    m_ref_list_mv[m_ref_mv_count] = m_candidate_mv[ref_list];
+    m_ref_mv_count++;
 }
 
-DecoderErrorOr<void> Parser::append_sub8x8_mvs(u8, u8)
+void Parser::get_block_mv(u32 candidate_row, u32 candidate_column, u8 ref_list, bool use_prev)
 {
-    // TODO: Implement
-    return DecoderError::not_implemented();
+    auto index = get_image_index(candidate_row, candidate_column);
+    if (use_prev) {
+        m_candidate_mv[ref_list] = m_prev_mvs[index][ref_list];
+        m_candidate_frame[ref_list] = m_prev_ref_frames[index][ref_list];
+    } else {
+        m_candidate_mv[ref_list] = m_mvs[index][ref_list];
+        m_candidate_frame[ref_list] = m_ref_frames[index][ref_list];
+    }
 }
 
-DecoderErrorOr<bool> Parser::use_mv_hp(const MotionVector&)
+void Parser::if_same_ref_frame_add_mv(u32 candidate_row, u32 candidate_column, ReferenceFrame ref_frame, bool use_prev)
 {
-    // TODO: Implement
-    return DecoderError::not_implemented();
+    for (auto ref_list = 0u; ref_list < 2; ref_list++) {
+        get_block_mv(candidate_row, candidate_column, ref_list, use_prev);
+        if (m_candidate_frame[ref_list] == ref_frame) {
+            add_mv_ref_list(ref_list);
+            return;
+        }
+    }
+}
+
+void Parser::scale_mv(u8 ref_list, ReferenceFrame ref_frame)
+{
+    auto candidate_frame = m_candidate_frame[ref_list];
+    if (m_ref_frame_sign_bias[candidate_frame] != m_ref_frame_sign_bias[ref_frame])
+        m_candidate_mv[ref_list] *= -1;
+}
+
+void Parser::if_diff_ref_frame_add_mv(u32 candidate_row, u32 candidate_column, ReferenceFrame ref_frame, bool use_prev)
+{
+    for (auto ref_list = 0u; ref_list < 2; ref_list++)
+        get_block_mv(candidate_row, candidate_column, ref_list, use_prev);
+    auto mvs_are_same = m_candidate_mv[0] == m_candidate_mv[1];
+    if (m_candidate_frame[0] > ReferenceFrame::IntraFrame && m_candidate_frame[0] != ref_frame) {
+        scale_mv(0, ref_frame);
+        add_mv_ref_list(0);
+    }
+    if (m_candidate_frame[1] > ReferenceFrame::IntraFrame && m_candidate_frame[1] != ref_frame && !mvs_are_same) {
+        scale_mv(1, ref_frame);
+        add_mv_ref_list(1);
+    }
+}
+
+MotionVector Parser::clamp_mv(MotionVector vector, i32 border)
+{
+    i32 blocks_high = num_8x8_blocks_high_lookup[m_mi_size];
+    // Casts must be done here to prevent subtraction underflow from wrapping the values.
+    i32 mb_to_top_edge = -8 * (static_cast<i32>(m_mi_row) * MI_SIZE);
+    i32 mb_to_bottom_edge = 8 * ((static_cast<i32>(m_mi_rows) - blocks_high - static_cast<i32>(m_mi_row)) * MI_SIZE);
+
+    i32 blocks_wide = num_8x8_blocks_wide_lookup[m_mi_size];
+    i32 mb_to_left_edge = -8 * (static_cast<i32>(m_mi_col) * MI_SIZE);
+    i32 mb_to_right_edge = 8 * ((static_cast<i32>(m_mi_cols) - blocks_wide - static_cast<i32>(m_mi_col)) * MI_SIZE);
+
+    return {
+        clip_3(mb_to_top_edge - border, mb_to_bottom_edge + border, vector.row()),
+        clip_3(mb_to_left_edge - border, mb_to_right_edge + border, vector.column())
+    };
+}
+
+void Parser::clamp_mv_ref(u8 i)
+{
+    MotionVector& vector = m_ref_list_mv[i];
+    vector = clamp_mv(vector, MV_BORDER);
+}
+
+// 6.5.1 Find MV refs syntax
+void Parser::find_mv_refs(ReferenceFrame reference_frame, i32 block)
+{
+    m_ref_mv_count = 0;
+    bool different_ref_found = false;
+    u8 context_counter = 0;
+
+    m_ref_list_mv[0] = {};
+    m_ref_list_mv[1] = {};
+
+    MotionVector base_coordinates = MotionVector(m_mi_row, m_mi_col);
+
+    for (auto i = 0u; i < 2; i++) {
+        auto offset_vector = mv_ref_blocks[m_mi_size][i];
+        auto candidate = base_coordinates + offset_vector;
+
+        if (is_inside(candidate.row(), candidate.column())) {
+            auto candidate_index = get_image_index(candidate.row(), candidate.column());
+            auto index = get_image_index(candidate.row(), candidate.column());
+            different_ref_found = true;
+            context_counter += mode_2_counter[m_y_modes[index]];
+
+            for (auto ref_list = 0u; ref_list < 2; ref_list++) {
+                if (m_ref_frames[candidate_index][ref_list] == reference_frame) {
+                    // This section up until add_mv_ref_list() is defined in spec as get_sub_block_mv().
+                    constexpr u8 idx_n_column_to_subblock[4][2] = {
+                        { 1, 2 },
+                        { 1, 3 },
+                        { 3, 2 },
+                        { 3, 3 }
+                    };
+                    auto index = block >= 0 ? idx_n_column_to_subblock[block][offset_vector.column() == 0] : 3;
+                    m_candidate_mv[ref_list] = m_sub_mvs[candidate_index][ref_list][index];
+
+                    add_mv_ref_list(ref_list);
+                    break;
+                }
+            }
+        }
+    }
+
+    for (auto i = 2u; i < MVREF_NEIGHBOURS; i++) {
+        MotionVector candidate = base_coordinates + mv_ref_blocks[m_mi_size][i];
+        if (is_inside(candidate.row(), candidate.column())) {
+            different_ref_found = true;
+            if_same_ref_frame_add_mv(candidate.row(), candidate.column(), reference_frame, false);
+        }
+    }
+    if (m_use_prev_frame_mvs)
+        if_same_ref_frame_add_mv(m_mi_row, m_mi_col, reference_frame, true);
+
+    if (different_ref_found) {
+        for (auto i = 0u; i < MVREF_NEIGHBOURS; i++) {
+            MotionVector candidate = base_coordinates + mv_ref_blocks[m_mi_size][i];
+            if (is_inside(candidate.row(), candidate.column()))
+                if_diff_ref_frame_add_mv(candidate.row(), candidate.column(), reference_frame, false);
+        }
+    }
+    if (m_use_prev_frame_mvs)
+        if_diff_ref_frame_add_mv(m_mi_row, m_mi_col, reference_frame, true);
+
+    m_mode_context[reference_frame] = counter_to_context[context_counter];
+    for (auto i = 0u; i < MAX_MV_REF_CANDIDATES; i++)
+        clamp_mv_ref(i);
+}
+
+bool Parser::use_mv_hp(MotionVector const& vector)
+{
+    return (abs(vector.row()) >> 3) < COMPANDED_MVREF_THRESH && (abs(vector.column()) >> 3) < COMPANDED_MVREF_THRESH;
+}
+
+void Parser::find_best_ref_mvs(u8 ref_list)
+{
+    for (auto i = 0u; i < MAX_MV_REF_CANDIDATES; i++) {
+        auto delta = m_ref_list_mv[i];
+        auto delta_row = delta.row();
+        auto delta_column = delta.column();
+        if (!m_allow_high_precision_mv || !use_mv_hp(delta)) {
+            if (delta_row & 1)
+                delta_row += delta_row > 0 ? -1 : 1;
+            if (delta_column & 1)
+                delta_column += delta_column > 0 ? -1 : 1;
+        }
+        m_ref_list_mv[i] = clamp_mv(m_ref_list_mv[i], (BORDERINPIXELS - INTERP_EXTEND) << 3);
+    }
+
+    m_nearest_mv[ref_list] = m_ref_list_mv[0];
+    m_near_mv[ref_list] = m_ref_list_mv[1];
+    m_best_mv[ref_list] = m_ref_list_mv[0];
+}
+
+void Parser::append_sub8x8_mvs(i32 block, u8 ref_list)
+{
+    MotionVector sub_8x8_mvs[2];
+    find_mv_refs(m_ref_frame[ref_list], block);
+    auto destination_index = 0;
+    if (block == 0) {
+        for (auto i = 0u; i < 2; i++)
+            sub_8x8_mvs[destination_index++] = m_ref_list_mv[i];
+    } else if (block <= 2) {
+        sub_8x8_mvs[destination_index++] = m_block_mvs[ref_list][0];
+    } else {
+        sub_8x8_mvs[destination_index++] = m_block_mvs[ref_list][2];
+        for (auto index = 1; index >= 0 && destination_index < 2; index--) {
+            auto block_vector = m_block_mvs[ref_list][index];
+            if (block_vector != sub_8x8_mvs[0])
+                sub_8x8_mvs[destination_index++] = block_vector;
+        }
+    }
+
+    for (auto n = 0u; n < 2 && destination_index < 2; n++) {
+        auto ref_list_vector = m_ref_list_mv[n];
+        if (ref_list_vector != sub_8x8_mvs[0])
+            sub_8x8_mvs[destination_index++] = ref_list_vector;
+    }
+
+    if (destination_index < 2)
+        sub_8x8_mvs[destination_index++] = {};
+    m_nearest_mv[ref_list] = sub_8x8_mvs[0];
+    m_near_mv[ref_list] = sub_8x8_mvs[1];
 }
 
 void Parser::dump_info()
