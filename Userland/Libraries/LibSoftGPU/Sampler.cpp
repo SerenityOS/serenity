@@ -71,12 +71,12 @@ static f32x4 wrap(f32x4 value, GPU::TextureWrapMode mode, f32x4 num_texels)
     }
 }
 
-ALWAYS_INLINE static Vector4<f32x4> texel4(Image const& image, u32x4 level, u32x4 x, u32x4 y, u32x4 z)
+ALWAYS_INLINE static Vector4<f32x4> texel4(Image const& image, u32x4 level, u32x4 x, u32x4 y)
 {
-    auto const& t0 = image.texel(level[0], x[0], y[0], z[0]);
-    auto const& t1 = image.texel(level[1], x[1], y[1], z[1]);
-    auto const& t2 = image.texel(level[2], x[2], y[2], z[2]);
-    auto const& t3 = image.texel(level[3], x[3], y[3], z[3]);
+    auto const& t0 = image.texel(level[0], x[0], y[0], 0);
+    auto const& t1 = image.texel(level[1], x[1], y[1], 0);
+    auto const& t2 = image.texel(level[2], x[2], y[2], 0);
+    auto const& t3 = image.texel(level[3], x[3], y[3], 0);
 
     return Vector4<f32x4> {
         f32x4 { t0.x(), t1.x(), t2.x(), t3.x() },
@@ -86,14 +86,14 @@ ALWAYS_INLINE static Vector4<f32x4> texel4(Image const& image, u32x4 level, u32x
     };
 }
 
-ALWAYS_INLINE static Vector4<f32x4> texel4border(Image const& image, u32x4 level, u32x4 x, u32x4 y, u32x4 z, FloatVector4 const& border, u32x4 w, u32x4 h)
+ALWAYS_INLINE static Vector4<f32x4> texel4border(Image const& image, u32x4 level, u32x4 x, u32x4 y, FloatVector4 const& border, u32x4 w, u32x4 h)
 {
     auto border_mask = maskbits(x < 0 || x >= w || y < 0 || y >= h);
 
-    auto const& t0 = (border_mask & 1) > 0 ? border : image.texel(level[0], x[0], y[0], z[0]);
-    auto const& t1 = (border_mask & 2) > 0 ? border : image.texel(level[1], x[1], y[1], z[1]);
-    auto const& t2 = (border_mask & 4) > 0 ? border : image.texel(level[2], x[2], y[2], z[2]);
-    auto const& t3 = (border_mask & 8) > 0 ? border : image.texel(level[3], x[3], y[3], z[3]);
+    auto const& t0 = (border_mask & 1) > 0 ? border : image.texel(level[0], x[0], y[0], 0);
+    auto const& t1 = (border_mask & 2) > 0 ? border : image.texel(level[1], x[1], y[1], 0);
+    auto const& t2 = (border_mask & 4) > 0 ? border : image.texel(level[2], x[2], y[2], 0);
+    auto const& t3 = (border_mask & 8) > 0 ? border : image.texel(level[3], x[3], y[3], 0);
 
     return Vector4<f32x4> {
         f32x4 { t0.x(), t1.x(), t2.x(), t3.x() },
@@ -180,12 +180,11 @@ Vector4<AK::SIMD::f32x4> Sampler::sample_2d_lod(Vector2<AK::SIMD::f32x4> const& 
     if (filter == GPU::TextureFilter::Nearest) {
         u32x4 i = to_u32x4(u);
         u32x4 j = to_u32x4(v);
-        u32x4 k = expand4(0u);
 
         i = image.width_is_power_of_two() ? i & width_mask : i % width;
         j = image.height_is_power_of_two() ? j & height_mask : j % height;
 
-        return texel4(image, level, i, j, k);
+        return texel4(image, level, i, j);
     }
 
     u -= 0.5f;
@@ -216,20 +215,18 @@ Vector4<AK::SIMD::f32x4> Sampler::sample_2d_lod(Vector2<AK::SIMD::f32x4> const& 
         }
     }
 
-    u32x4 k = expand4(0u);
-
     Vector4<f32x4> t0, t1, t2, t3;
 
     if (m_config.texture_wrap_u == GPU::TextureWrapMode::Repeat && m_config.texture_wrap_v == GPU::TextureWrapMode::Repeat) {
-        t0 = texel4(image, level, i0, j0, k);
-        t1 = texel4(image, level, i1, j0, k);
-        t2 = texel4(image, level, i0, j1, k);
-        t3 = texel4(image, level, i1, j1, k);
+        t0 = texel4(image, level, i0, j0);
+        t1 = texel4(image, level, i1, j0);
+        t2 = texel4(image, level, i0, j1);
+        t3 = texel4(image, level, i1, j1);
     } else {
-        t1 = texel4border(image, level, i1, j0, k, m_config.border_color, width, height);
-        t0 = texel4border(image, level, i0, j0, k, m_config.border_color, width, height);
-        t2 = texel4border(image, level, i0, j1, k, m_config.border_color, width, height);
-        t3 = texel4border(image, level, i1, j1, k, m_config.border_color, width, height);
+        t0 = texel4border(image, level, i0, j0, m_config.border_color, width, height);
+        t1 = texel4border(image, level, i1, j0, m_config.border_color, width, height);
+        t2 = texel4border(image, level, i0, j1, m_config.border_color, width, height);
+        t3 = texel4border(image, level, i1, j1, m_config.border_color, width, height);
     }
 
     f32x4 const alpha = frac_int_range(u);
