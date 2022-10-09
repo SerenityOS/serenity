@@ -57,14 +57,7 @@ public:
         m_idy = idy;
     }
 
-    void set_tokens_variables(u8 band, u32 c, u32 plane, TXSize tx_size, u32 pos)
-    {
-        m_band = band;
-        m_c = c;
-        m_plane = plane;
-        m_tx_size = tx_size;
-        m_pos = pos;
-    }
+    void set_tokens_variables(u8 band, u32 c, u32 plane, TXSize tx_size, u32 pos);
 
     void set_start_x_and_y(u32 start_x, u32 start_y)
     {
