@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Hunter Salyer <thefalsehonesty@gmail.com>
+ * Copyright (c) 2022, Gregory Bertilson <zaggy1024@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -7,6 +8,7 @@
 #pragma once
 
 #include "Enums.h"
+#include "MotionVector.h"
 #include "Symbols.h"
 
 namespace Video::VP9 {
@@ -287,6 +289,46 @@ static constexpr u8 cat_probs[7][14] = {
     { 176, 155, 140, 135 },
     { 180, 157, 141, 134, 130 },
     { 254, 254, 254, 252, 249, 243, 230, 196, 177, 153, 140, 133, 130, 129 }
+};
+
+static constexpr MotionVector mv_ref_blocks[BLOCK_SIZES][MVREF_NEIGHBOURS] = {
+    { { -1, 0 }, { 0, -1 }, { -1, -1 }, { -2, 0 }, { 0, -2 }, { -2, -1 }, { -1, -2 }, { -2, -2 } },
+    { { -1, 0 }, { 0, -1 }, { -1, -1 }, { -2, 0 }, { 0, -2 }, { -2, -1 }, { -1, -2 }, { -2, -2 } },
+    { { -1, 0 }, { 0, -1 }, { -1, -1 }, { -2, 0 }, { 0, -2 }, { -2, -1 }, { -1, -2 }, { -2, -2 } },
+    { { -1, 0 }, { 0, -1 }, { -1, -1 }, { -2, 0 }, { 0, -2 }, { -2, -1 }, { -1, -2 }, { -2, -2 } },
+    { { 0, -1 }, { -1, 0 }, { 1, -1 }, { -1, -1 }, { 0, -2 }, { -2, 0 }, { -2, -1 }, { -1, -2 } },
+    { { -1, 0 }, { 0, -1 }, { -1, 1 }, { -1, -1 }, { -2, 0 }, { 0, -2 }, { -1, -2 }, { -2, -1 } },
+    { { -1, 0 }, { 0, -1 }, { -1, 1 }, { 1, -1 }, { -1, -1 }, { -3, 0 }, { 0, -3 }, { -3, -3 } },
+    { { 0, -1 }, { -1, 0 }, { 2, -1 }, { -1, -1 }, { -1, 1 }, { 0, -3 }, { -3, 0 }, { -3, -3 } },
+    { { -1, 0 }, { 0, -1 }, { -1, 2 }, { -1, -1 }, { 1, -1 }, { -3, 0 }, { 0, -3 }, { -3, -3 } },
+    { { -1, 1 }, { 1, -1 }, { -1, 2 }, { 2, -1 }, { -1, -1 }, { -3, 0 }, { 0, -3 }, { -3, -3 } },
+    { { 0, -1 }, { -1, 0 }, { 4, -1 }, { -1, 2 }, { -1, -1 }, { 0, -3 }, { -3, 0 }, { 2, -1 } },
+    { { -1, 0 }, { 0, -1 }, { -1, 4 }, { 2, -1 }, { -1, -1 }, { -3, 0 }, { 0, -3 }, { -1, 2 } },
+    { { -1, 3 }, { 3, -1 }, { -1, 4 }, { 4, -1 }, { -1, -1 }, { -1, 0 }, { 0, -1 }, { -1, 6 } }
+};
+
+static constexpr u8 mode_2_counter[MB_MODE_COUNT] = { 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 0, 0, 3, 1 };
+
+static constexpr u8 counter_to_context[19] = {
+    BOTH_PREDICTED,
+    NEW_PLUS_NON_INTRA,
+    BOTH_NEW,
+    ZERO_PLUS_PREDICTED,
+    NEW_PLUS_NON_INTRA,
+    INVALID_CASE,
+    BOTH_ZERO,
+    INVALID_CASE,
+    INVALID_CASE,
+    INTRA_PLUS_NON_INTRA,
+    INTRA_PLUS_NON_INTRA,
+    INVALID_CASE,
+    INTRA_PLUS_NON_INTRA,
+    INVALID_CASE,
+    INVALID_CASE,
+    INVALID_CASE,
+    INVALID_CASE,
+    INVALID_CASE,
+    BOTH_INTRA
 };
 
 }

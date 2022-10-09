@@ -2,7 +2,6 @@ set(SOURCES
     MatroskaReader.cpp
     VP9/BitStream.cpp
     VP9/Decoder.cpp
-    VP9/MotionVector.cpp
     VP9/Parser.cpp
     VP9/ProbabilityTables.cpp
     VP9/SyntaxElementCounter.cpp
