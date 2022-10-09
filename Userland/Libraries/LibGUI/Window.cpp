@@ -1281,4 +1281,11 @@ void Window::flush_pending_paints_immediately()
     handle_multi_paint_event(paint_event);
 }
 
+void Window::set_always_on_top(bool always_on_top)
+{
+    if (!m_window_id)
+        return;
+    ConnectionToWindowServer::the().set_always_on_top(m_window_id, always_on_top);
+}
+
 }
