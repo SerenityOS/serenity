@@ -9,6 +9,7 @@
 #include "Utilities.h"
 #include <LibCore/ArgsParser.h>
 #include <LibCore/EventLoop.h>
+#include <LibCore/File.h>
 #include <LibGfx/Font/FontDatabase.h>
 #include <LibMain/Main.h>
 #include <QApplication>
@@ -29,10 +30,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Gfx::FontDatabase::set_default_font_query("Katica 10 400 0");
     Gfx::FontDatabase::set_fixed_width_font_query("Csilla 10 400 0");
 
-    String url;
+    StringView raw_url;
     Core::ArgsParser args_parser;
     args_parser.set_general_help("The Ladybird web browser :^)");
-    args_parser.add_positional_argument(url, "URL to open", "url", Core::ArgsParser::Required::No);
+    args_parser.add_positional_argument(raw_url, "URL to open", "url", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
 
     BrowserWindow window;
@@ -41,9 +42,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window.resize(800, 600);
     window.show();
 
-    if (!url.is_empty()) {
+    URL url = raw_url;
+    if (Core::File::exists(raw_url))
+        url = URL::create_with_file_scheme(Core::File::real_path_for(raw_url));
+    else if (!url.is_valid())
+        url = String::formatted("http://{}", raw_url);
+
+    if (url.is_valid())
         window.view().load(url);
-    }
 
     return app.exec();
 }
