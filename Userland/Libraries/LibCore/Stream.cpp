@@ -17,7 +17,7 @@
 #ifdef AK_OS_SERENITY
 #    include <serenity.h>
 #endif
-#ifdef __FreeBSD__
+#ifdef AK_OS_FREEBSD
 #    include <sys/ucred.h>
 #endif
 
@@ -655,10 +655,10 @@ ErrorOr<pid_t> LocalSocket::peer_pid() const
 #ifdef AK_OS_MACOS
     pid_t pid;
     socklen_t pid_size = sizeof(pid);
-#elif defined(__FreeBSD__)
+#elif defined(AK_OS_FREEBSD)
     struct xucred creds = {};
     socklen_t creds_size = sizeof(creds);
-#elif defined(__OpenBSD__)
+#elif defined(AK_OS_OPENBSD)
     struct sockpeercred creds = {};
     socklen_t creds_size = sizeof(creds);
 #else
@@ -669,7 +669,7 @@ ErrorOr<pid_t> LocalSocket::peer_pid() const
 #ifdef AK_OS_MACOS
     TRY(System::getsockopt(m_helper.fd(), SOL_LOCAL, LOCAL_PEERPID, &pid, &pid_size));
     return pid;
-#elif defined(__FreeBSD__)
+#elif defined(AK_OS_FREEBSD)
     TRY(System::getsockopt(m_helper.fd(), SOL_LOCAL, LOCAL_PEERCRED, &creds, &creds_size));
     return creds.cr_pid;
 #else

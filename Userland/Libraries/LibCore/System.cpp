@@ -31,7 +31,7 @@
 #    include <serenity.h>
 #endif
 
-#if defined(__linux__) && !defined(MFD_CLOEXEC)
+#if defined(AK_OS_LINUX) && !defined(MFD_CLOEXEC)
 #    include <linux/memfd.h>
 #    include <sys/syscall.h>
 
@@ -41,7 +41,7 @@ static int memfd_create(char const* name, unsigned int flags)
 }
 #endif
 
-#if defined(__APPLE__)
+#if defined(AK_OS_MACOS)
 #    include <sys/mman.h>
 #endif
 
@@ -54,7 +54,7 @@ static int memfd_create(char const* name, unsigned int flags)
 namespace Core::System {
 
 #ifndef HOST_NAME_MAX
-#    ifdef __APPLE__
+#    ifdef AK_OS_MACOS
 #        define HOST_NAME_MAX 255
 #    else
 #        define HOST_NAME_MAX 64
@@ -222,7 +222,7 @@ ErrorOr<void> sigaction(int signal, struct sigaction const* action, struct sigac
     return {};
 }
 
-#if defined(__APPLE__) || defined(__OpenBSD__) || defined(__FreeBSD__)
+#if defined(AK_OS_MACOS) || defined(AK_OS_OPENBSD) || defined(AK_OS_FREEBSD)
 ErrorOr<sig_t> signal(int signal, sig_t handler)
 #else
 ErrorOr<sighandler_t> signal(int signal, sighandler_t handler)
@@ -284,7 +284,7 @@ ErrorOr<int> anon_create([[maybe_unused]] size_t size, [[maybe_unused]] int opti
     int fd = -1;
 #if defined(AK_OS_SERENITY)
     fd = ::anon_create(round_up_to_power_of_two(size, PAGE_SIZE), options);
-#elif defined(__linux__) || defined(__FreeBSD__)
+#elif defined(AK_OS_LINUX) || defined(AK_OS_FREEBSD)
     // FIXME: Support more options on Linux.
     auto linux_options = ((options & O_CLOEXEC) > 0) ? MFD_CLOEXEC : 0;
     fd = memfd_create("", linux_options);
@@ -295,7 +295,7 @@ ErrorOr<int> anon_create([[maybe_unused]] size_t size, [[maybe_unused]] int opti
         TRY(close(fd));
         return Error::from_errno(saved_errno);
     }
-#elif defined(__APPLE__)
+#elif defined(AK_OS_MACOS)
     struct timespec time;
     clock_gettime(CLOCK_REALTIME, &time);
     auto name = String::formatted("/shm-{}{}", (unsigned long)time.tv_sec, (unsigned long)time.tv_nsec);
@@ -1033,7 +1033,7 @@ ErrorOr<void> exec(StringView filename, Span<StringView> arguments, SearchInPath
         envp[environment->size()] = nullptr;
 
         if (search_in_path == SearchInPath::Yes && !filename.contains('/')) {
-#    if defined(__APPLE__) || defined(__FreeBSD__)
+#    if defined(AK_OS_MACOS) || defined(AK_OS_FREEBSD)
             // These BSDs don't support execvpe(), so we'll have to manually search the PATH.
             ScopedValueRollback errno_rollback(errno);
 
