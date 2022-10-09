@@ -18,6 +18,7 @@
 #include <LibGfx/Vector3.h>
 #include <LibSoftGPU/Config.h>
 #include <LibSoftGPU/Device.h>
+#include <LibSoftGPU/Image.h>
 #include <LibSoftGPU/PixelConverter.h>
 #include <LibSoftGPU/PixelQuad.h>
 #include <LibSoftGPU/SIMD.h>
