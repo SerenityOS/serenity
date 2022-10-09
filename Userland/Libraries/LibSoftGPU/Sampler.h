@@ -6,12 +6,10 @@
 
 #pragma once
 
-#include <AK/RefPtr.h>
 #include <AK/SIMD.h>
 #include <LibGPU/SamplerConfig.h>
 #include <LibGfx/Vector2.h>
 #include <LibGfx/Vector4.h>
-#include <LibSoftGPU/Image.h>
 
 namespace SoftGPU {
 
