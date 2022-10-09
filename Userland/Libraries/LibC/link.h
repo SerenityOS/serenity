@@ -6,11 +6,7 @@
 
 #pragma once
 
-#ifndef __serenity__
-#    include <LibC/elf.h>
-#else
-#    include <elf.h>
-#endif
+#include <elf.h>
 #include <limits.h>
 #include <sys/cdefs.h>
 

@@ -665,7 +665,7 @@ if (BUILD_LAGOM)
 
         add_executable(ntpquery_lagom ../../Userland/Utilities/ntpquery.cpp)
         set_target_properties(ntpquery_lagom PROPERTIES OUTPUT_NAME ntpquery)
-        target_link_libraries(ntpquery_lagom LibCore)
+        target_link_libraries(ntpquery_lagom LibCore LibMain)
 
         add_executable(shell_lagom ../../Userland/Shell/main.cpp)
         set_target_properties(shell_lagom PROPERTIES OUTPUT_NAME shell)

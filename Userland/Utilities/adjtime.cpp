@@ -13,9 +13,7 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-#ifdef __serenity__
     TRY(Core::System::pledge("stdio settime"));
-#endif
 
     Core::ArgsParser args_parser;
     Optional<double> delta;
@@ -34,9 +32,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         TRY(Core::System::adjtime(&delta_timeval, nullptr));
     }
 
-#ifdef __serenity__
     TRY(Core::System::pledge("stdio"));
-#endif
 
     timeval remaining_delta_timeval;
     TRY(Core::System::adjtime(nullptr, &remaining_delta_timeval));

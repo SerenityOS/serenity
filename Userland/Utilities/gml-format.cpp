@@ -48,9 +48,7 @@ ErrorOr<bool> format_file(StringView path, bool inplace)
 
 ErrorOr<int> serenity_main(Main::Arguments args)
 {
-#ifdef __serenity__
     TRY(Core::System::pledge("stdio rpath wpath cpath"));
-#endif
 
     bool inplace = false;
     Vector<String> files;
@@ -61,10 +59,8 @@ ErrorOr<int> serenity_main(Main::Arguments args)
     args_parser.add_positional_argument(files, "File(s) to process", "path", Core::ArgsParser::Required::No);
     args_parser.parse(args);
 
-#ifdef __serenity__
     if (!inplace)
         TRY(Core::System::pledge("stdio rpath"));
-#endif
 
     if (files.is_empty())
         files.append("-");

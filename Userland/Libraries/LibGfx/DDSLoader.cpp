@@ -19,10 +19,6 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#ifdef __serenity__
-#    include <serenity.h>
-#endif
-
 namespace Gfx {
 
 struct DDSLoadingContext {

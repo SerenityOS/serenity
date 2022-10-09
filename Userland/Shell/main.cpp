@@ -41,9 +41,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         s_shell->editor()->save_history(s_shell->get_history_path());
     });
 
-#ifdef __serenity__
     TRY(Core::System::pledge("stdio rpath wpath cpath proc exec tty sigaction unix fattr"));
-#endif
 
     RefPtr<::Shell::Shell> shell;
     bool attempt_interactive = false;
@@ -57,13 +55,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
         s_shell->setup_signals();
 
-#ifndef __serenity__
-        sigset_t blocked;
-        sigemptyset(&blocked);
-        sigaddset(&blocked, SIGTTOU);
-        sigaddset(&blocked, SIGTTIN);
-        pthread_sigmask(SIG_BLOCK, &blocked, nullptr);
-#endif
         shell->termios = editor->termios();
         shell->default_termios = editor->default_termios();
 
