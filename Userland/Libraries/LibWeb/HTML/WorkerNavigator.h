@@ -7,11 +7,18 @@
 #pragma once
 
 #include <LibWeb/Bindings/PlatformObject.h>
+#include <LibWeb/HTML/NavigatorConcurrentHardware.h>
+#include <LibWeb/HTML/NavigatorID.h>
+#include <LibWeb/HTML/NavigatorLanguage.h>
+#include <LibWeb/HTML/NavigatorOnLine.h>
 
 namespace Web::HTML {
 
-// FIXME: Add Mixin APIs from https://html.spec.whatwg.org/multipage/workers.html#the-workernavigator-object
-class WorkerNavigator : public Bindings::PlatformObject {
+class WorkerNavigator : public Bindings::PlatformObject
+    , public NavigatorConcurrentHardwareMixin
+    , public NavigatorIDMixin
+    , public NavigatorLanguageMixin
+    , public NavigatorOnLineMixin {
     WEB_PLATFORM_OBJECT(WorkerNavigator, Bindings::PlatformObject);
 
 public:

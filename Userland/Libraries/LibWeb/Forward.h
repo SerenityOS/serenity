@@ -304,6 +304,7 @@ class MessageChannel;
 class MessageEvent;
 class MessagePort;
 struct NavigationParams;
+class Navigator;
 class Origin;
 class PageTransitionEvent;
 class Path2D;

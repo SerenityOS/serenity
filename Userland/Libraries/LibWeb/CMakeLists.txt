@@ -10,8 +10,6 @@ set(SOURCES
     Bindings/LocationConstructor.cpp
     Bindings/LocationObject.cpp
     Bindings/MainThreadVM.cpp
-    Bindings/NavigatorConstructor.cpp
-    Bindings/NavigatorObject.cpp
     Bindings/OptionConstructor.cpp
     Bindings/PlatformObject.cpp
     Bindings/WindowConstructor.cpp
@@ -245,6 +243,8 @@ set(SOURCES
     HTML/MessageChannel.cpp
     HTML/MessageEvent.cpp
     HTML/MessagePort.cpp
+    HTML/Navigator.cpp
+    HTML/NavigatorID.cpp
     HTML/PageTransitionEvent.cpp
     HTML/Parser/Entities.cpp
     HTML/Parser/HTMLEncodingDetection.cpp

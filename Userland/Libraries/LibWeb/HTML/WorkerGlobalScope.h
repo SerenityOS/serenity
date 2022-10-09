@@ -79,7 +79,6 @@ private:
 
     JS::GCPtr<WorkerLocation> m_location;
 
-    // FIXME: Implement WorkerNavigator according to the spec
     JS::GCPtr<WorkerNavigator> m_navigator;
 
     // FIXME: Add all these internal slots
