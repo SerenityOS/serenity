@@ -5,6 +5,7 @@
  */
 
 #include <LibJS/Heap/Heap.h>
+#include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/HTML/WorkerGlobalScope.h>
 #include <LibWeb/HTML/WorkerNavigator.h>
 
@@ -18,7 +19,7 @@ JS::NonnullGCPtr<WorkerNavigator> WorkerNavigator::create(WorkerGlobalScope& glo
 WorkerNavigator::WorkerNavigator(WorkerGlobalScope& global_scope)
     : PlatformObject(global_scope.realm())
 {
-    // FIXME: Set prototype once we can get to worker scope prototypes.
+    set_prototype(&Bindings::cached_web_prototype(global_scope.realm(), "WorkerNavigator"));
 }
 
 WorkerNavigator::~WorkerNavigator() = default;

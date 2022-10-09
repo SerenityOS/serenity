@@ -17,7 +17,6 @@
 #include <LibWeb/Bindings/CSSNamespace.h>
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
 #include <LibWeb/Bindings/LocationObject.h>
-#include <LibWeb/Bindings/NavigatorObject.h>
 #include <LibWeb/Bindings/Replaceable.h>
 #include <LibWeb/Bindings/WindowExposedInterfaces.h>
 #include <LibWeb/Bindings/WindowPrototype.h>
@@ -33,6 +32,7 @@
 #include <LibWeb/HTML/EventHandler.h>
 #include <LibWeb/HTML/EventLoop/EventLoop.h>
 #include <LibWeb/HTML/MessageEvent.h>
+#include <LibWeb/HTML/Navigator.h>
 #include <LibWeb/HTML/Origin.h>
 #include <LibWeb/HTML/PageTransitionEvent.h>
 #include <LibWeb/HTML/Scripting/ClassicScript.h>
@@ -95,6 +95,7 @@ void Window::visit_edges(JS::Cell::Visitor& visitor)
     visitor.visit(m_screen.ptr());
     visitor.visit(m_location_object);
     visitor.visit(m_crypto);
+    visitor.visit(m_navigator);
     for (auto& it : m_timers)
         visitor.visit(it.value.ptr());
 }
@@ -813,9 +814,9 @@ void Window::initialize_web_interfaces(Badge<WindowEnvironmentSettingsObject>)
 
     m_location_object = heap().allocate<Bindings::LocationObject>(realm, realm);
 
-    auto* m_navigator_object = heap().allocate<Bindings::NavigatorObject>(realm, realm);
-    define_direct_property("navigator", m_navigator_object, JS::Attribute::Enumerable | JS::Attribute::Configurable);
-    define_direct_property("clientInformation", m_navigator_object, JS::Attribute::Enumerable | JS::Attribute::Configurable);
+    m_navigator = heap().allocate<HTML::Navigator>(realm, realm);
+    define_direct_property("navigator", m_navigator, JS::Attribute::Enumerable | JS::Attribute::Configurable);
+    define_direct_property("clientInformation", m_navigator, JS::Attribute::Enumerable | JS::Attribute::Configurable);
 
     // NOTE: location is marked as [LegacyUnforgeable], meaning it isn't configurable.
     define_native_accessor(realm, "location", location_getter, location_setter, JS::Attribute::Enumerable);

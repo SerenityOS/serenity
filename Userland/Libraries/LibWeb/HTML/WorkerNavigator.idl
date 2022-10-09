@@ -1,8 +1,13 @@
+#import <HTML/NavigatorID.idl>
+#import <HTML/NavigatorLanguage.idl>
+#import <HTML/NavigatorOnLine.idl>
+#import <HTML/NavigatorConcurrentHardware.idl>
+
+// https://html.spec.whatwg.org/multipage/workers.html#workernavigator
 [Exposed=Worker]
 interface WorkerNavigator {};
 
-// FIXME: Add these mixins that are used to prevent duplication b/w WorkerNavigator and Navigator
-// WorkerNavigator includes NavigatorID;
-// WorkerNavigator includes NavigatorLanguage;
-// WorkerNavigator includes NavigatorOnLine;
-// WorkerNavigator includes NavigatorConcurrentHardware;
+WorkerNavigator includes NavigatorID;
+WorkerNavigator includes NavigatorLanguage;
+WorkerNavigator includes NavigatorOnLine;
+WorkerNavigator includes NavigatorConcurrentHardware;

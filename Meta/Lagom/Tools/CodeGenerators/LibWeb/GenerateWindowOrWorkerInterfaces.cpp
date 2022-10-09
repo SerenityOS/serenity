@@ -69,14 +69,12 @@ static ErrorOr<void> generate_exposed_interface_implementation(StringView class_
 )~~~");
     }
 
-    // FIXME: Special case window. We should convert Window, Location, and Navigator to use IDL
+    // FIXME: Special case window. We should convert Window and Location to use IDL
     if (class_name == "Window"sv) {
         generator.append(R"~~~(#include <LibWeb/Bindings/WindowConstructor.h>
 #include <LibWeb/Bindings/WindowPrototype.h>
 #include <LibWeb/Bindings/LocationConstructor.h>
 #include <LibWeb/Bindings/LocationPrototype.h>
-#include <LibWeb/Bindings/NavigatorConstructor.h>
-#include <LibWeb/Bindings/NavigatorPrototype.h>
 )~~~");
     }
 
@@ -108,12 +106,11 @@ void add_@global_object_snake_name@_exposed_interfaces(JS::Object& global, JS::R
         add_interface(gen, interface.name, interface.prototype_class, interface.constructor_class);
     }
 
-    // FIXME: Special case window. We should convert Window, Location, and Navigator to use IDL
+    // FIXME: Special case window. We should convert Window and Location to use IDL
     if (class_name == "Window"sv) {
         auto gen = generator.fork();
         add_interface(gen, "Window"sv, "WindowPrototype"sv, "WindowConstructor"sv);
         add_interface(gen, "Location"sv, "LocationPrototype"sv, "LocationConstructor"sv);
-        add_interface(gen, "Navigator"sv, "NavigatorPrototype"sv, "NavigatorConstructor"sv);
     }
 
     generator.append(R"~~~(
