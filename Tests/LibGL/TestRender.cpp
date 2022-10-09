@@ -26,15 +26,6 @@ static NonnullOwnPtr<GL::GLContext> create_testing_context(int width, int height
     auto bitmap = MUST(Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRx8888, { width, height }));
     auto context = MUST(GL::create_context(*bitmap));
     GL::make_context_current(context);
-
-    // Assume some defaults for our testing contexts
-    glFrontFace(GL_CCW);
-    glCullFace(GL_BACK);
-    glEnable(GL_CULL_FACE);
-
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
-
     return context;
 }
 
