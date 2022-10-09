@@ -32,7 +32,8 @@ public:
     ErrorOr<void> init_bool(size_t bytes);
     ErrorOr<bool> read_bool(u8 probability);
     ErrorOr<void> exit_bool();
-    ErrorOr<u8> read_literal(size_t n);
+    ErrorOr<u8> read_literal(u8 bit_count);
+    size_t range_coding_bits_remaining();
 
     /* (4.9.2) */
     ErrorOr<i8> read_s(size_t n);

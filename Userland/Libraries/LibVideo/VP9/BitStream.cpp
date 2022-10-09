@@ -71,13 +71,13 @@ ErrorOr<u16> BitStream::read_f16()
 /* 9.2.1 */
 ErrorOr<void> BitStream::init_bool(size_t bytes)
 {
-    if (bytes == 0)
-        return Error::from_string_literal("Range coder size cannot be zero.");
+    if (bytes > bytes_remaining())
+        return Error::from_string_literal("Available data is too small for range decoder");
     m_bool_value = TRY(read_f8());
     m_bool_range = 255;
     m_bool_max_bits = (8 * bytes) - 8;
     if (TRY(read_bool(128)))
-        return Error::from_string_literal("Range coder's first bool was non-zero.");
+        return Error::from_string_literal("Range decoder marker was non-zero");
     return {};
 }
 
@@ -114,17 +114,26 @@ ErrorOr<bool> BitStream::read_bool(u8 probability)
 /* 9.2.3 */
 ErrorOr<void> BitStream::exit_bool()
 {
-    // FIXME: I'm not sure if this call to min is spec compliant, or if there is an issue elsewhere earlier in the parser.
-    auto padding_element = TRY(read_bits(min(m_bool_max_bits, (u64)bits_remaining())));
+    while (m_bool_max_bits > 0) {
+        auto padding_read_size = min(m_bool_max_bits, sizeof(m_reservoir) * 8);
+        auto padding_bits = TRY(read_bits(padding_read_size));
+        m_bool_max_bits -= padding_read_size;
+
+        if (padding_bits != 0)
+            return Error::from_string_literal("Range decoder has non-zero padding element");
+    }
 
     // FIXME: It is a requirement of bitstream conformance that enough padding bits are inserted to ensure that the final coded byte of a frame is not equal to a superframe marker.
     //  A byte b is equal to a superframe marker if and only if (b & 0xe0)is equal to 0xc0, i.e. if the most significant 3 bits are equal to 0b110.
-    if (padding_element != 0)
-        return Error::from_string_literal("Range coder padding was non-zero.");
     return {};
 }
 
-ErrorOr<u8> BitStream::read_literal(size_t n)
+size_t BitStream::range_coding_bits_remaining()
+{
+    return m_bool_max_bits;
+}
+
+ErrorOr<u8> BitStream::read_literal(u8 n)
 {
     u8 return_value = 0;
     for (size_t i = 0; i < n; i++) {
