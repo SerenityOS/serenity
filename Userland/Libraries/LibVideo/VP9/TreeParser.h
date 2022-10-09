@@ -43,7 +43,7 @@ public:
 
     /* (9.3.3) */
     template<typename T = int>
-    T parse_tree(SyntaxElementType type);
+    ErrorOr<T> parse_tree(SyntaxElementType type);
     /* (9.3.1) */
     TreeSelection select_tree(SyntaxElementType type);
     /* (9.3.2) */

@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Hunter Salyer <thefalsehonesty@gmail.com>
+ * Copyright (c) 2022, Gregory Bertilson <zaggy1024@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -14,15 +15,16 @@ Decoder::Decoder()
 {
 }
 
-bool Decoder::decode_frame(ByteBuffer const& frame_data)
+ErrorOr<void> Decoder::decode_frame(ByteBuffer const& frame_data)
 {
-    SAFE_CALL(m_parser->parse_frame(frame_data));
+    TRY(m_parser->parse_frame(frame_data));
     // TODO:
     //  - #2
     //  - #3
     //  - #4
-    SAFE_CALL(update_reference_frames());
-    return true;
+    TRY(update_reference_frames());
+
+    return {};
 }
 
 void Decoder::dump_frame_info()
@@ -49,7 +51,7 @@ u8 Decoder::merge_probs(int const* tree, int index, u8* probs, u8* counts, u8 co
     return left_count + right_count;
 }
 
-bool Decoder::adapt_coef_probs()
+ErrorOr<void> Decoder::adapt_coef_probs()
 {
     u8 update_factor;
     if (m_parser->m_frame_is_intra || m_parser->m_last_frame_type != KeyFrame)
@@ -76,7 +78,7 @@ bool Decoder::adapt_coef_probs()
         }
     }
 
-    return true;
+    return {};
 }
 
 #define ADAPT_PROB_TABLE(name, size)                                     \
@@ -94,7 +96,7 @@ bool Decoder::adapt_coef_probs()
         }                                                                                                  \
     } while (0)
 
-bool Decoder::adapt_non_coef_probs()
+ErrorOr<void> Decoder::adapt_non_coef_probs()
 {
     auto& probs = *m_parser->m_probability_tables;
     auto& counter = *m_parser->m_syntax_element_counter;
@@ -137,7 +139,7 @@ bool Decoder::adapt_non_coef_probs()
             probs.mv_hp_prob()[i] = adapt_prob(probs.mv_hp_prob()[i], counter.m_counts_mv_hp[i]);
         }
     }
-    return true;
+    return {};
 }
 
 void Decoder::adapt_probs(int const* tree, u8* probs, u8* counts)
@@ -150,25 +152,25 @@ u8 Decoder::adapt_prob(u8 prob, u8 counts[2])
     return merge_prob(prob, counts[0], counts[1], COUNT_SAT, MAX_UPDATE_FACTOR);
 }
 
-bool Decoder::predict_intra(size_t, u32, u32, bool, bool, bool, TXSize, u32)
+ErrorOr<void> Decoder::predict_intra(size_t, u32, u32, bool, bool, bool, TXSize, u32)
 {
     // TODO: Implement
-    return true;
+    return Error::from_string_literal("predict_intra not implemented");
 }
 
-bool Decoder::predict_inter(size_t, u32, u32, u32, u32, u32)
+ErrorOr<void> Decoder::predict_inter(size_t, u32, u32, u32, u32, u32)
 {
     // TODO: Implement
-    return true;
+    return Error::from_string_literal("predict_inter not implemented");
 }
 
-bool Decoder::reconstruct(size_t, u32, u32, TXSize)
+ErrorOr<void> Decoder::reconstruct(size_t, u32, u32, TXSize)
 {
     // TODO: Implement
-    return true;
+    return Error::from_string_literal("reconstruct not implemented");
 }
 
-bool Decoder::update_reference_frames()
+ErrorOr<void> Decoder::update_reference_frames()
 {
     for (auto i = 0; i < NUM_REF_FRAMES; i++) {
         dbgln("updating frame {}? {}", i, (m_parser->m_refresh_frame_flags & (1 << i)) == 1);
@@ -179,7 +181,7 @@ bool Decoder::update_reference_frames()
         // TODO: 1.3-1.7
     }
     // TODO: 2.1-2.2
-    return true;
+    return {};
 }
 
 }
