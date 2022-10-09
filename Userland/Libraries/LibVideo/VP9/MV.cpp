@@ -14,15 +14,6 @@ MV::MV(u32 row, u32 col)
 {
 }
 
-MV& MV::operator=(MV const& other)
-{
-    if (this == &other)
-        return *this;
-    m_row = other.row();
-    m_col = other.col();
-    return *this;
-}
-
 MV& MV::operator=(i32 value)
 {
     m_row = value;

@@ -20,7 +20,6 @@ public:
     u32 col() const { return m_col; }
     void set_col(u32 col) { m_col = col; }
 
-    MV& operator=(MV const& other);
     MV& operator=(i32 value);
     MV operator+(MV const& other) const;
 
