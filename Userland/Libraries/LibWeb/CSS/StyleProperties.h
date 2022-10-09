@@ -84,8 +84,8 @@ public:
     Optional<CSS::PointerEvents> pointer_events() const;
     Variant<CSS::VerticalAlign, CSS::LengthPercentage> vertical_align() const;
     Optional<CSS::FontVariant> font_variant() const;
-    Vector<CSS::GridTrackSize> grid_template_columns() const;
-    Vector<CSS::GridTrackSize> grid_template_rows() const;
+    CSS::ExplicitTrackSizing grid_template_columns() const;
+    CSS::ExplicitTrackSizing grid_template_rows() const;
     CSS::GridTrackPlacement grid_column_end() const;
     CSS::GridTrackPlacement grid_column_start() const;
     CSS::GridTrackPlacement grid_row_end() const;

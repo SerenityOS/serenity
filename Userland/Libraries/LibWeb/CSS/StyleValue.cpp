@@ -168,9 +168,9 @@ LengthStyleValue const& StyleValue::as_length() const
     return static_cast<LengthStyleValue const&>(*this);
 }
 
-GridTrackSizeStyleValue const& StyleValue::as_grid_track_size() const
+GridTrackSizeStyleValue const& StyleValue::as_explicit_track_sizing() const
 {
-    VERIFY(is_grid_track_size());
+    VERIFY(is_explicit_track_sizing());
     return static_cast<GridTrackSizeStyleValue const&>(*this);
 }
 
@@ -1418,21 +1418,15 @@ bool GridTrackPlacementStyleValue::equals(StyleValue const& other) const
 
 String GridTrackSizeStyleValue::to_string() const
 {
-    StringBuilder builder;
-    for (size_t i = 0; i < m_grid_track.size(); i++) {
-        builder.append(m_grid_track[i].to_string());
-        if (i != m_grid_track.size() - 1)
-            builder.append(" "sv);
-    }
-    return builder.to_string();
+    return m_explicit_track_sizing.to_string();
 }
 
 bool GridTrackSizeStyleValue::equals(StyleValue const& other) const
 {
     if (type() != other.type())
         return false;
-    auto const& typed_other = other.as_grid_track_size();
-    return m_grid_track == typed_other.grid_track_size();
+    auto const& typed_other = other.as_explicit_track_sizing();
+    return m_explicit_track_sizing == typed_other.explicit_track_sizing();
 }
 
 String IdentifierStyleValue::to_string() const
@@ -2151,9 +2145,9 @@ NonnullRefPtr<GridTrackPlacementStyleValue> GridTrackPlacementStyleValue::create
     return adopt_ref(*new GridTrackPlacementStyleValue(grid_track_placement));
 }
 
-NonnullRefPtr<GridTrackSizeStyleValue> GridTrackSizeStyleValue::create(Vector<CSS::GridTrackSize> grid_track_size)
+NonnullRefPtr<GridTrackSizeStyleValue> GridTrackSizeStyleValue::create(CSS::ExplicitTrackSizing explicit_track_sizing)
 {
-    return adopt_ref(*new GridTrackSizeStyleValue(grid_track_size));
+    return adopt_ref(*new GridTrackSizeStyleValue(explicit_track_sizing));
 }
 
 NonnullRefPtr<RectStyleValue> RectStyleValue::create(EdgeRect rect)
