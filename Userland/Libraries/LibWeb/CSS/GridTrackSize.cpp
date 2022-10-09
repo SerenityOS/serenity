@@ -57,4 +57,51 @@ Length GridTrackSize::length() const
     return m_length;
 }
 
+MetaGridTrackSize::MetaGridTrackSize(GridTrackSize grid_track_size)
+    : m_min_grid_track_size(grid_track_size)
+    , m_max_grid_track_size(grid_track_size)
+{
+}
+
+String MetaGridTrackSize::to_string() const
+{
+    return String::formatted("{}", m_min_grid_track_size.to_string());
+}
+
+ExplicitTrackSizing::ExplicitTrackSizing()
+{
+}
+
+ExplicitTrackSizing::ExplicitTrackSizing(Vector<CSS::MetaGridTrackSize> meta_grid_track_sizes)
+    : m_meta_grid_track_sizes(meta_grid_track_sizes)
+{
+}
+
+ExplicitTrackSizing::ExplicitTrackSizing(Vector<CSS::MetaGridTrackSize> meta_grid_track_sizes, int repeat_count)
+    : m_meta_grid_track_sizes(meta_grid_track_sizes)
+    , m_is_repeat(true)
+    , m_repeat_count(repeat_count)
+{
+}
+
+String ExplicitTrackSizing::to_string() const
+{
+    StringBuilder builder;
+    if (m_is_repeat) {
+        builder.append("repeat("sv);
+        builder.append(m_repeat_count);
+        builder.append(", "sv);
+    }
+    for (int _ = 0; _ < m_repeat_count; ++_) {
+        for (size_t y = 0; y < m_meta_grid_track_sizes.size(); ++y) {
+            builder.append(m_meta_grid_track_sizes[y].to_string());
+            if (y != m_meta_grid_track_sizes.size() - 1)
+                builder.append(" "sv);
+        }
+    }
+    if (m_is_repeat)
+        builder.append(")"sv);
+    return builder.to_string();
+}
+
 }

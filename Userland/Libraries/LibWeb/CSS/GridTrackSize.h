@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/Vector.h>
 #include <LibWeb/CSS/Length.h>
 #include <LibWeb/CSS/Percentage.h>
 
@@ -62,6 +63,50 @@ private:
     Length m_length;
     Percentage m_percentage { Percentage(0) };
     float m_flexible_length { 0 };
+};
+
+class MetaGridTrackSize {
+public:
+    MetaGridTrackSize(CSS::GridTrackSize);
+
+    GridTrackSize grid_track_size() const& { return m_min_grid_track_size; }
+    GridTrackSize min_grid_track_size() const& { return m_min_grid_track_size; }
+    GridTrackSize max_grid_track_size() const& { return m_max_grid_track_size; }
+
+    String to_string() const;
+    bool operator==(MetaGridTrackSize const& other) const
+    {
+        return m_min_grid_track_size == other.min_grid_track_size()
+            && m_max_grid_track_size == other.max_grid_track_size();
+    }
+
+private:
+    GridTrackSize m_min_grid_track_size;
+    GridTrackSize m_max_grid_track_size;
+};
+
+class ExplicitTrackSizing {
+public:
+    ExplicitTrackSizing();
+    ExplicitTrackSizing(Vector<CSS::MetaGridTrackSize>);
+    ExplicitTrackSizing(Vector<CSS::MetaGridTrackSize>, int repeat_count);
+    static ExplicitTrackSizing make_auto() { return ExplicitTrackSizing(); };
+
+    bool is_repeat() const { return m_is_repeat; }
+    int repeat_count() const { return m_repeat_count; }
+
+    Vector<CSS::MetaGridTrackSize> meta_grid_track_sizes() const& { return m_meta_grid_track_sizes; }
+
+    String to_string() const;
+    bool operator==(ExplicitTrackSizing const& other) const
+    {
+        return m_meta_grid_track_sizes == other.meta_grid_track_sizes();
+    }
+
+private:
+    Vector<CSS::MetaGridTrackSize> m_meta_grid_track_sizes;
+    bool m_is_repeat { false };
+    int m_repeat_count { 0 };
 };
 
 }

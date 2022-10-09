@@ -5409,7 +5409,7 @@ RefPtr<StyleValue> Parser::parse_as_css_value(PropertyID property_id)
 
 RefPtr<StyleValue> Parser::parse_grid_track_sizes(Vector<ComponentValue> const& component_values)
 {
-    Vector<CSS::GridTrackSize> params;
+    Vector<CSS::MetaGridTrackSize> params;
     for (auto const& component_value : component_values) {
         if (component_value.is_function()) {
             auto const& function_token = component_value.function();
@@ -5439,7 +5439,7 @@ RefPtr<StyleValue> Parser::parse_grid_track_sizes(Vector<ComponentValue> const& 
                 if (!part_two_tokens.has_next_token())
                     continue;
 
-                Vector<CSS::GridTrackSize> repeat_params;
+                Vector<CSS::MetaGridTrackSize> repeat_params;
                 while (true) {
                     part_two_tokens.skip_whitespace();
                     auto current_component_value = part_two_tokens.next_token();
@@ -5469,13 +5469,8 @@ RefPtr<StyleValue> Parser::parse_grid_track_sizes(Vector<ComponentValue> const& 
                         }
                     }
                     part_two_tokens.skip_whitespace();
-                    if (!part_two_tokens.has_next_token()) {
-                        for (int i = 0; i < repeat_count; ++i) {
-                            for (auto const& repeat_param : repeat_params)
-                                params.append(repeat_param);
-                        }
+                    if (!part_two_tokens.has_next_token())
                         break;
-                    }
                 }
 
                 // Automatic repetitions (auto-fill or auto-fit) cannot be combined with intrinsic or flexible sizes.
@@ -5499,17 +5494,18 @@ RefPtr<StyleValue> Parser::parse_grid_track_sizes(Vector<ComponentValue> const& 
                 // If a repeat() function that is not a <name-repeat> ends up placing two <line-names> adjacent to
                 // each other, the name lists are merged. For example, repeat(2, [a] 1fr [b]) is equivalent to [a]
                 // 1fr [b a] 1fr [b].
+                return GridTrackSizeStyleValue::create(CSS::ExplicitTrackSizing(repeat_params, repeat_count));
             } else {
                 // FIXME: Implement MinMax, etc.
             }
             continue;
         }
         if (component_value.is_block()) {
-            params.append(Length::make_auto());
+            params.append(GridTrackSize(Length::make_auto()));
             continue;
         }
         if (component_value.is(Token::Type::Ident) && component_value.token().ident().equals_ignoring_case("auto"sv)) {
-            params.append(Length::make_auto());
+            params.append(GridTrackSize(Length::make_auto()));
             continue;
         }
         if (component_value.token().type() == Token::Type::Dimension) {
@@ -5525,9 +5521,9 @@ RefPtr<StyleValue> Parser::parse_grid_track_sizes(Vector<ComponentValue> const& 
         if (!dimension.has_value())
             return GridTrackSizeStyleValue::create({});
         if (dimension->is_length())
-            params.append(dimension->length());
+            params.append(GridTrackSize(dimension->length()));
         if (dimension->is_percentage())
-            params.append(dimension->percentage());
+            params.append(GridTrackSize(dimension->percentage()));
     }
     return GridTrackSizeStyleValue::create(params);
 }

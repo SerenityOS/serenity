@@ -57,7 +57,9 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
         boxes_to_place.append(child_box);
         return IterationDecision::Continue;
     });
-    auto occupation_grid = OccupationGrid(static_cast<int>(box.computed_values().grid_template_columns().size()), static_cast<int>(box.computed_values().grid_template_rows().size()));
+    auto column_repeat_count = box.computed_values().grid_template_columns().is_repeat() ? box.computed_values().grid_template_columns().repeat_count() : 1;
+    auto row_repeat_count = box.computed_values().grid_template_rows().is_repeat() ? box.computed_values().grid_template_rows().repeat_count() : 1;
+    auto occupation_grid = OccupationGrid(column_repeat_count * box.computed_values().grid_template_columns().meta_grid_track_sizes().size(), row_repeat_count * box.computed_values().grid_template_rows().meta_grid_track_sizes().size());
 
     // https://drafts.csswg.org/css-grid/#auto-placement-algo
     // 8.5. Grid Item Placement Algorithm
@@ -521,10 +523,14 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
     Vector<GridTrack> grid_rows;
     Vector<GridTrack> grid_columns;
 
-    for (auto& column_size : box.computed_values().grid_template_columns())
-        grid_columns.append({ column_size, column_size });
-    for (auto& row_size : box.computed_values().grid_template_rows())
-        grid_rows.append({ row_size, row_size });
+    for (int x = 0; x < column_repeat_count; ++x) {
+        for (auto& meta_grid_track_size : box.computed_values().grid_template_columns().meta_grid_track_sizes())
+            grid_columns.append({ meta_grid_track_size.min_grid_track_size(), meta_grid_track_size.max_grid_track_size() });
+    }
+    for (int x = 0; x < row_repeat_count; ++x) {
+        for (auto& meta_grid_track_size : box.computed_values().grid_template_rows().meta_grid_track_sizes())
+            grid_rows.append({ meta_grid_track_size.min_grid_track_size(), meta_grid_track_size.max_grid_track_size() });
+    }
 
     for (int column_index = grid_columns.size(); column_index < occupation_grid.column_count(); column_index++)
         grid_columns.append({ CSS::GridTrackSize::make_auto(), CSS::GridTrackSize::make_auto() });
