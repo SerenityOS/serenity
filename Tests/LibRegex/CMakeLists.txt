@@ -1,5 +1,4 @@
 set(TEST_SOURCES
-    Benchmark.cpp
     Regex.cpp
     RegexLibC.cpp
 )
