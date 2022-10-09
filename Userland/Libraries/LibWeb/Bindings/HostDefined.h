@@ -27,7 +27,7 @@ struct HostDefined : public JS::Realm::HostDefined {
     JS::NonnullGCPtr<Intrinsics> intrinsics;
 };
 
-inline HTML::EnvironmentSettingsObject& host_defined_environment_settings_object(JS::Realm& realm)
+[[nodiscard]] inline HTML::EnvironmentSettingsObject& host_defined_environment_settings_object(JS::Realm& realm)
 {
     return *verify_cast<HostDefined>(realm.host_defined())->environment_settings_object;
 }
