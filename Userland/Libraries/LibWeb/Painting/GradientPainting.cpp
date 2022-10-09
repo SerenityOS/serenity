@@ -209,17 +209,18 @@ void paint_linear_gradient(PaintContext& context, Gfx::IntRect const& gradient_r
         return gradient_line_colors[clamp(loc, 0, gradient_color_count - 1)];
     };
 
+    auto repeat_wrap_if_required = [&](float loc) {
+        if (data.repeat_length.has_value())
+            loc = AK::fmod(loc + length, *data.repeat_length);
+        return loc;
+    };
+
     for (int y = 0; y < gradient_rect.height(); y++) {
         for (int x = 0; x < gradient_rect.width(); x++) {
-            auto loc = (x * cos_angle - (gradient_rect.height() - y) * -sin_angle) - rotated_start_point_x - start_offset;
-            if (data.repeat_length.has_value()) {
-                loc = AK::fmod(loc, *data.repeat_length);
-                if (loc < 0)
-                    loc = *data.repeat_length + loc;
-            }
-            // Blend between the two neighbouring colors (this fixes some nasty aliasing issues at small angles)
+            auto loc = repeat_wrap_if_required((x * cos_angle - (gradient_rect.height() - y) * -sin_angle) - rotated_start_point_x - start_offset);
             auto blend = loc - static_cast<int>(loc);
-            auto gradient_color = lookup_color(loc - 1).mixed_with(lookup_color(loc), blend);
+            // Blend between the two neighbouring colors (this fixes some nasty aliasing issues at small angles)
+            auto gradient_color = lookup_color(loc).mixed_with(lookup_color(repeat_wrap_if_required(loc + 1)), blend);
             context.painter().set_pixel(gradient_rect.x() + x, gradient_rect.y() + y, gradient_color, gradient_color.alpha() < 255);
         }
     }
