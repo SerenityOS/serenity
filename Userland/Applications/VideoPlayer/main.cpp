@@ -42,10 +42,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
             auto const& frame = block.frame(0);
             dbgln("Reading frame 0 from block @ {}", block.timestamp());
-            bool failed = !vp9_decoder.decode_frame(frame);
+            auto result = vp9_decoder.decode_frame(frame);
             vp9_decoder.dump_frame_info();
-            if (failed)
+            if (result.is_error()) {
+                outln("Error: {}", result.error().string_literal());
                 return 1;
+            }
         }
     }
 

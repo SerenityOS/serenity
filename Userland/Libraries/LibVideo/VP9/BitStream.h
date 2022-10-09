@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Hunter Salyer <thefalsehonesty@gmail.com>
+ * Copyright (c) 2022, Gregory Bertilson <zaggy1024@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -19,22 +20,22 @@ public:
     {
     }
 
-    u8 read_byte();
-    bool read_bit();
+    ErrorOr<u8> read_byte();
+    ErrorOr<bool> read_bit();
 
     /* (9.1) */
-    u8 read_f(size_t n);
-    u8 read_f8();
-    u16 read_f16();
+    ErrorOr<u8> read_f(size_t n);
+    ErrorOr<u8> read_f8();
+    ErrorOr<u16> read_f16();
 
     /* (9.2) */
-    bool init_bool(size_t bytes);
-    bool read_bool(u8 probability);
-    bool exit_bool();
-    u8 read_literal(size_t n);
+    ErrorOr<void> init_bool(size_t bytes);
+    ErrorOr<bool> read_bool(u8 probability);
+    ErrorOr<void> exit_bool();
+    ErrorOr<u8> read_literal(size_t n);
 
     /* (4.9.2) */
-    i8 read_s(size_t n);
+    ErrorOr<i8> read_s(size_t n);
 
     u64 get_position();
     size_t bytes_remaining();

@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Hunter Salyer <thefalsehonesty@gmail.com>
+ * Copyright (c) 2022, Gregory Bertilson <zaggy1024@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -26,20 +27,20 @@ class Parser {
 public:
     explicit Parser(Decoder&);
     ~Parser();
-    bool parse_frame(ByteBuffer const&);
+    ErrorOr<void> parse_frame(ByteBuffer const&);
     void dump_info();
 
 private:
-    FrameType read_frame_type()
+    ErrorOr<FrameType> read_frame_type()
     {
-        if (m_bit_stream->read_bit())
+        if (TRY(m_bit_stream->read_bit()))
             return NonKeyFrame;
         return KeyFrame;
     }
 
-    ColorRange read_color_range()
+    ErrorOr<ColorRange> read_color_range()
     {
-        if (m_bit_stream->read_bit())
+        if (TRY(m_bit_stream->read_bit()))
             return FullSwing;
         return StudioSwing;
     }
@@ -52,83 +53,83 @@ private:
 
     /* (6.1) Frame Syntax */
     bool trailing_bits();
-    bool refresh_probs();
+    ErrorOr<void> refresh_probs();
 
     /* (6.2) Uncompressed Header Syntax */
-    bool uncompressed_header();
-    bool frame_sync_code();
-    bool color_config();
-    bool frame_size();
-    bool render_size();
-    bool frame_size_with_refs();
-    bool compute_image_size();
-    bool read_interpolation_filter();
-    bool loop_filter_params();
-    bool quantization_params();
-    i8 read_delta_q();
-    bool segmentation_params();
-    u8 read_prob();
-    bool tile_info();
+    ErrorOr<void> uncompressed_header();
+    ErrorOr<void> frame_sync_code();
+    ErrorOr<void> color_config();
+    ErrorOr<void> frame_size();
+    ErrorOr<void> render_size();
+    ErrorOr<void> frame_size_with_refs();
+    void compute_image_size();
+    ErrorOr<void> read_interpolation_filter();
+    ErrorOr<void> loop_filter_params();
+    ErrorOr<void> quantization_params();
+    ErrorOr<i8> read_delta_q();
+    ErrorOr<void> segmentation_params();
+    ErrorOr<u8> read_prob();
+    ErrorOr<void> tile_info();
     u16 calc_min_log2_tile_cols();
     u16 calc_max_log2_tile_cols();
-    bool setup_past_independence();
+    void setup_past_independence();
 
     /* (6.3) Compressed Header Syntax */
-    bool compressed_header();
-    bool read_tx_mode();
-    bool tx_mode_probs();
-    u8 diff_update_prob(u8 prob);
-    u8 decode_term_subexp();
+    ErrorOr<void> compressed_header();
+    ErrorOr<void> read_tx_mode();
+    ErrorOr<void> tx_mode_probs();
+    ErrorOr<u8> diff_update_prob(u8 prob);
+    ErrorOr<u8> decode_term_subexp();
     u8 inv_remap_prob(u8 delta_prob, u8 prob);
     u8 inv_recenter_nonneg(u8 v, u8 m);
-    bool read_coef_probs();
-    bool read_skip_prob();
-    bool read_inter_mode_probs();
-    bool read_interp_filter_probs();
-    bool read_is_inter_probs();
-    bool frame_reference_mode();
-    bool frame_reference_mode_probs();
-    bool read_y_mode_probs();
-    bool read_partition_probs();
-    bool mv_probs();
-    u8 update_mv_prob(u8 prob);
-    bool setup_compound_reference_mode();
+    ErrorOr<void> read_coef_probs();
+    ErrorOr<void> read_skip_prob();
+    ErrorOr<void> read_inter_mode_probs();
+    ErrorOr<void> read_interp_filter_probs();
+    ErrorOr<void> read_is_inter_probs();
+    ErrorOr<void> frame_reference_mode();
+    ErrorOr<void> frame_reference_mode_probs();
+    ErrorOr<void> read_y_mode_probs();
+    ErrorOr<void> read_partition_probs();
+    ErrorOr<void> mv_probs();
+    ErrorOr<u8> update_mv_prob(u8 prob);
+    void setup_compound_reference_mode();
 
     /* (6.4) Decode Tiles Syntax */
-    bool decode_tiles();
-    bool clear_above_context();
+    ErrorOr<void> decode_tiles();
+    void clear_above_context();
     u32 get_tile_offset(u32 tile_num, u32 mis, u32 tile_size_log2);
-    bool decode_tile();
-    bool clear_left_context();
-    bool decode_partition(u32 row, u32 col, u8 block_subsize);
-    bool decode_block(u32 row, u32 col, u8 subsize);
-    bool mode_info();
-    bool intra_frame_mode_info();
-    bool intra_segment_id();
-    bool read_skip();
+    ErrorOr<void> decode_tile();
+    void clear_left_context();
+    ErrorOr<void> decode_partition(u32 row, u32 col, u8 block_subsize);
+    ErrorOr<void> decode_block(u32 row, u32 col, u8 subsize);
+    ErrorOr<void> mode_info();
+    ErrorOr<void> intra_frame_mode_info();
+    ErrorOr<void> intra_segment_id();
+    ErrorOr<void> read_skip();
     bool seg_feature_active(u8 feature);
-    bool read_tx_size(bool allow_select);
-    bool inter_frame_mode_info();
-    bool inter_segment_id();
+    ErrorOr<void> read_tx_size(bool allow_select);
+    ErrorOr<void> inter_frame_mode_info();
+    ErrorOr<void> inter_segment_id();
     u8 get_segment_id();
-    bool read_is_inter();
-    bool intra_block_mode_info();
-    bool inter_block_mode_info();
-    bool read_ref_frames();
-    bool assign_mv(bool is_compound);
-    bool read_mv(u8 ref);
-    i32 read_mv_component(u8 component);
-    bool residual();
+    ErrorOr<void> read_is_inter();
+    ErrorOr<void> intra_block_mode_info();
+    ErrorOr<void> inter_block_mode_info();
+    ErrorOr<void> read_ref_frames();
+    ErrorOr<void> assign_mv(bool is_compound);
+    ErrorOr<void> read_mv(u8 ref);
+    ErrorOr<i32> read_mv_component(u8 component);
+    ErrorOr<void> residual();
     TXSize get_uv_tx_size();
     BlockSubsize get_plane_block_size(u32 subsize, u8 plane);
-    bool tokens(size_t plane, u32 x, u32 y, TXSize tx_size, u32 block_index);
+    ErrorOr<bool> tokens(size_t plane, u32 x, u32 y, TXSize tx_size, u32 block_index);
     u32 const* get_scan(size_t plane, TXSize tx_size, u32 block_index);
-    u32 read_coef(Token token);
+    ErrorOr<i32> read_coef(Token token);
 
     /* (6.5) Motion Vector Prediction */
-    bool find_mv_refs(ReferenceFrame, int block);
-    bool find_best_ref_mvs(int ref_list);
-    bool append_sub8x8_mvs(u8 block, u8 ref_list);
+    ErrorOr<void> find_mv_refs(ReferenceFrame, int block);
+    ErrorOr<void> find_best_ref_mvs(int ref_list);
+    ErrorOr<void> append_sub8x8_mvs(u8 block, u8 ref_list);
     bool use_mv_hp(MV const& delta_mv);
 
     u8 m_profile { 0 };
