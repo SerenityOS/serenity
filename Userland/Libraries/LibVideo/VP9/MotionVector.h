@@ -10,18 +10,18 @@
 
 namespace Video::VP9 {
 
-class MV {
+class MotionVector {
 public:
-    MV() = default;
-    MV(u32 row, u32 col);
+    MotionVector() = default;
+    MotionVector(u32 row, u32 col);
 
     u32 row() const { return m_row; }
     void set_row(u32 row) { m_row = row; }
     u32 col() const { return m_col; }
     void set_col(u32 col) { m_col = col; }
 
-    MV& operator=(i32 value);
-    MV operator+(MV const& other) const;
+    MotionVector& operator=(i32 value);
+    MotionVector operator+(MotionVector const& other) const;
 
 private:
     u32 m_row { 0 };

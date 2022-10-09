@@ -14,7 +14,7 @@
 
 #include "BitStream.h"
 #include "LookupTables.h"
-#include "MV.h"
+#include "MotionVector.h"
 #include "ProbabilityTables.h"
 #include "SyntaxElementCounter.h"
 #include "TreeParser.h"
@@ -122,7 +122,7 @@ private:
     DecoderErrorOr<void> find_mv_refs(ReferenceFrame, int block);
     DecoderErrorOr<void> find_best_ref_mvs(int ref_list);
     DecoderErrorOr<void> append_sub8x8_mvs(u8 block, u8 ref_list);
-    DecoderErrorOr<bool> use_mv_hp(MV const& delta_mv);
+    DecoderErrorOr<bool> use_mv_hp(MotionVector const& delta_mv);
     size_t get_image_index(u32 row, u32 column);
 
     Gfx::Point<size_t> get_decoded_point_for_plane(u8 row, u8 column, u8 plane);
@@ -227,10 +227,10 @@ private:
     bool m_left_single { false };
     bool m_above_single { false };
     InterpolationFilter m_interp_filter { EightTap };
-    MV m_mv[2];
-    MV m_near_mv[2];
-    MV m_nearest_mv[2];
-    MV m_best_mv[2];
+    MotionVector m_mv[2];
+    MotionVector m_near_mv[2];
+    MotionVector m_nearest_mv[2];
+    MotionVector m_best_mv[2];
     u32 m_ref_frame_width[NUM_REF_FRAMES];
     u32 m_ref_frame_height[NUM_REF_FRAMES];
     u32 m_eob_total { 0 };
@@ -242,7 +242,7 @@ private:
     ReferenceMode m_reference_mode;
     ReferenceFrame m_comp_fixed_ref;
     ReferenceFrame m_comp_var_ref[2];
-    MV m_block_mvs[2][4];
+    MotionVector m_block_mvs[2][4];
     Vector<u8> m_prev_segment_ids;
 
     Vector<bool> m_skips;
@@ -252,8 +252,8 @@ private:
     Vector<u8> m_segment_ids;
     Vector<Array<ReferenceFrame, 2>> m_ref_frames;
     Vector<InterpolationFilter> m_interp_filters;
-    Vector<Array<MV, 2>> m_mvs;
-    Vector<Array<Array<MV, 4>, 2>> m_sub_mvs;
+    Vector<Array<MotionVector, 2>> m_mvs;
+    Vector<Array<Array<MotionVector, 4>, 2>> m_sub_mvs;
     Vector<Array<IntraMode, 4>> m_sub_modes;
 
     OwnPtr<BitStream> m_bit_stream;
