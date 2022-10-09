@@ -9,7 +9,7 @@
 
 // Include the 119.9 KiB of dictionary data from a binary file
 extern u8 const brotli_dictionary_data[];
-#if defined(__APPLE__)
+#if defined(AK_OS_MACOS)
 asm(".const_data\n"
     ".globl _brotli_dictionary_data\n"
     "_brotli_dictionary_data:\n");

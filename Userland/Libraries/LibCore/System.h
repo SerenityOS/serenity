@@ -87,7 +87,7 @@ ErrorOr<int> accept4(int sockfd, struct sockaddr*, socklen_t*, int flags);
 #endif
 
 ErrorOr<void> sigaction(int signal, struct sigaction const* action, struct sigaction* old_action);
-#if defined(__APPLE__) || defined(__OpenBSD__) || defined(__FreeBSD__)
+#if defined(AK_OS_MACOS) || defined(AK_OS_OPENBSD) || defined(AK_OS_FREEBSD)
 ErrorOr<sig_t> signal(int signal, sig_t handler);
 #else
 ErrorOr<sighandler_t> signal(int signal, sighandler_t handler);

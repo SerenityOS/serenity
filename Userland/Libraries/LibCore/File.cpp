@@ -22,7 +22,7 @@
 #endif
 
 // On Linux distros that use glibc `basename` is defined as a macro that expands to `__xpg_basename`, so we undefine it
-#if defined(__linux__) && defined(basename)
+#if defined(AK_OS_LINUX) && defined(basename)
 #    undef basename
 #endif
 
