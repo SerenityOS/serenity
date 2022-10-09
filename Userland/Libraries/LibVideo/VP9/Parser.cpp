@@ -95,7 +95,7 @@ ErrorOr<void> Parser::refresh_probs()
 /* (6.2) */
 ErrorOr<void> Parser::uncompressed_header()
 {
-    auto frame_marker = TRY(m_bit_stream->read_f(2));
+    auto frame_marker = TRY(m_bit_stream->read_bits(2));
     if (frame_marker != 2)
         return Error::from_string_literal("uncompressed_header: Frame marker must be 2");
     auto profile_low_bit = TRY(m_bit_stream->read_bit());
@@ -105,7 +105,7 @@ ErrorOr<void> Parser::uncompressed_header()
         return Error::from_string_literal("uncompressed_header: Profile 3 reserved bit was non-zero");
     auto show_existing_frame = TRY(m_bit_stream->read_bit());
     if (show_existing_frame) {
-        m_frame_to_show_map_index = TRY(m_bit_stream->read_f(3));
+        m_frame_to_show_map_index = TRY(m_bit_stream->read_bits(3));
         m_header_size_in_bytes = 0;
         m_refresh_frame_flags = 0;
         m_loop_filter_level = 0;
@@ -128,7 +128,7 @@ ErrorOr<void> Parser::uncompressed_header()
         m_frame_is_intra = !m_show_frame && TRY(m_bit_stream->read_bit());
 
         if (!m_error_resilient_mode) {
-            m_reset_frame_context = TRY(m_bit_stream->read_f(2));
+            m_reset_frame_context = TRY(m_bit_stream->read_bits(2));
         } else {
             m_reset_frame_context = 0;
         }
@@ -150,7 +150,7 @@ ErrorOr<void> Parser::uncompressed_header()
         } else {
             m_refresh_frame_flags = TRY(m_bit_stream->read_f8());
             for (auto i = 0; i < 3; i++) {
-                m_ref_frame_idx[i] = TRY(m_bit_stream->read_f(3));
+                m_ref_frame_idx[i] = TRY(m_bit_stream->read_bits(3));
                 m_ref_frame_sign_bias[LastFrame + i] = TRY(m_bit_stream->read_bit());
             }
             TRY(frame_size_with_refs());
@@ -167,7 +167,7 @@ ErrorOr<void> Parser::uncompressed_header()
         m_frame_parallel_decoding_mode = true;
     }
 
-    m_frame_context_idx = TRY(m_bit_stream->read_f(2));
+    m_frame_context_idx = TRY(m_bit_stream->read_bits(2));
     if (m_frame_is_intra || m_error_resilient_mode) {
         setup_past_independence();
         if (m_frame_type == KeyFrame || m_error_resilient_mode || m_reset_frame_context == 3) {
@@ -209,7 +209,7 @@ ErrorOr<void> Parser::color_config()
         m_bit_depth = 8;
     }
 
-    auto color_space = TRY(m_bit_stream->read_f(3));
+    auto color_space = TRY(m_bit_stream->read_bits(3));
     VERIFY(color_space <= RGB);
     m_color_space = static_cast<ColorSpace>(color_space);
 
@@ -291,15 +291,15 @@ ErrorOr<void> Parser::read_interpolation_filter()
     if (TRY(m_bit_stream->read_bit())) {
         m_interpolation_filter = Switchable;
     } else {
-        m_interpolation_filter = literal_to_type[TRY(m_bit_stream->read_f(2))];
+        m_interpolation_filter = literal_to_type[TRY(m_bit_stream->read_bits(2))];
     }
     return {};
 }
 
 ErrorOr<void> Parser::loop_filter_params()
 {
-    m_loop_filter_level = TRY(m_bit_stream->read_f(6));
-    m_loop_filter_sharpness = TRY(m_bit_stream->read_f(3));
+    m_loop_filter_level = TRY(m_bit_stream->read_bits(6));
+    m_loop_filter_sharpness = TRY(m_bit_stream->read_bits(3));
     m_loop_filter_delta_enabled = TRY(m_bit_stream->read_bit());
     if (m_loop_filter_delta_enabled) {
         if (TRY(m_bit_stream->read_bit())) {
@@ -362,7 +362,7 @@ ErrorOr<void> Parser::segmentation_params()
             m_feature_enabled[i][j] = feature_enabled;
             if (feature_enabled) {
                 auto bits_to_read = segmentation_feature_bits[j];
-                feature_value = TRY(m_bit_stream->read_f(bits_to_read));
+                feature_value = TRY(m_bit_stream->read_bits(bits_to_read));
                 if (segmentation_feature_signed[j]) {
                     if (TRY(m_bit_stream->read_bit()))
                         feature_value = -feature_value;
@@ -764,7 +764,7 @@ ErrorOr<void> Parser::decode_tiles()
             if (last_tile)
                 tile_size = m_bit_stream->bytes_remaining();
             else
-                tile_size = TRY(m_bit_stream->read_f(32));
+                tile_size = TRY(m_bit_stream->read_bits(32));
 
             m_mi_row_start = get_tile_offset(tile_row, m_mi_rows, m_tile_rows_log2);
             m_mi_row_end = get_tile_offset(tile_row + 1, m_mi_rows, m_tile_rows_log2);

@@ -5,60 +5,67 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Error.h>
-
 #include "BitStream.h"
 
 namespace Video::VP9 {
 
-ErrorOr<u8> BitStream::read_byte()
+ErrorOr<void> BitStream::fill_reservoir()
 {
-    if (m_bytes_remaining < 1)
-        return Error::from_string_literal("read_byte: Out of data.");
-    VERIFY(m_bytes_remaining >= 1);
-    m_bytes_remaining--;
-    return *(m_data_ptr++);
+    VERIFY(m_reservoir_bits_remaining == 0);
+    if (m_data_ptr == m_end_ptr)
+        return Error::from_string_literal("Stream is out of data");
+    VERIFY(m_data_ptr < m_end_ptr);
+    m_reservoir = 0;
+
+    size_t byte_index;
+    for (byte_index = 0; m_data_ptr < m_end_ptr && byte_index < sizeof(m_reservoir); byte_index++) {
+        m_reservoir = (m_reservoir << 8) | *m_data_ptr;
+        m_data_ptr++;
+    }
+
+    m_reservoir_bits_remaining = byte_index * 8;
+    m_reservoir <<= (sizeof(m_reservoir) - byte_index) * 8;
+    return {};
+}
+
+ErrorOr<u64> BitStream::read_bits(u8 bit_count)
+{
+    if (bit_count > sizeof(u64) * 8)
+        return Error::from_string_literal("Requested read is too large");
+    u64 result = 0;
+
+    while (bit_count > 0) {
+        if (m_reservoir_bits_remaining == 0)
+            TRY(fill_reservoir());
+
+        u64 batch_bits = min(bit_count, m_reservoir_bits_remaining);
+        u64 bit_shift = (sizeof(m_reservoir) * 8u) - batch_bits;
+
+        result = (result << batch_bits) | m_reservoir >> bit_shift;
+        m_reservoir <<= batch_bits;
+        bit_count -= batch_bits;
+        m_reservoir_bits_remaining -= batch_bits;
+        m_bits_read += batch_bits;
+    }
+
+    return result;
 }
 
 ErrorOr<bool> BitStream::read_bit()
 {
-    if (!m_current_byte.has_value()) {
-        m_current_byte = TRY(read_byte());
-        m_current_bit_position = 7;
-    }
-
-    bool bit_value = m_current_byte.value() & (1u << m_current_bit_position);
-    if (--m_current_bit_position < 0)
-        m_current_byte.clear();
-    return bit_value;
-}
-
-ErrorOr<u8> BitStream::read_f(size_t n)
-{
-    u8 result = 0;
-    for (size_t i = 0; i < n; i++) {
-        result = (2 * result) + TRY(read_bit());
-    }
-    return result;
+    auto value = TRY(read_bits(1));
+    VERIFY(value <= 2);
+    return value != 0;
 }
 
 ErrorOr<u8> BitStream::read_f8()
 {
-    if (!m_current_byte.has_value())
-        return read_byte();
-
-    auto high_bits = m_current_byte.value() & ((1u << m_current_bit_position) - 1);
-    u8 remaining_bits = 7 - m_current_bit_position;
-    m_current_byte = TRY(read_byte());
-    m_current_bit_position = 7;
-    auto low_bits = (m_current_byte.value() >> (8u - remaining_bits)) & ((1u << remaining_bits) - 1);
-    m_current_bit_position -= remaining_bits;
-    return (high_bits << remaining_bits) | low_bits;
+    return TRY(read_bits(8));
 }
 
 ErrorOr<u16> BitStream::read_f16()
 {
-    return (TRY(read_f8()) << 8u) | TRY(read_f8());
+    return TRY(read_bits(16));
 }
 
 /* 9.2.1 */
@@ -108,7 +115,7 @@ ErrorOr<bool> BitStream::read_bool(u8 probability)
 ErrorOr<void> BitStream::exit_bool()
 {
     // FIXME: I'm not sure if this call to min is spec compliant, or if there is an issue elsewhere earlier in the parser.
-    auto padding_element = TRY(read_f(min(m_bool_max_bits, (u64)bits_remaining())));
+    auto padding_element = TRY(read_bits(min(m_bool_max_bits, (u64)bits_remaining())));
 
     // FIXME: It is a requirement of bitstream conformance that enough padding bits are inserted to ensure that the final coded byte of a frame is not equal to a superframe marker.
     //  A byte b is equal to a superframe marker if and only if (b & 0xe0)is equal to 0xc0, i.e. if the most significant 3 bits are equal to 0b110.
@@ -128,24 +135,24 @@ ErrorOr<u8> BitStream::read_literal(size_t n)
 
 ErrorOr<i8> BitStream::read_s(size_t n)
 {
-    auto value = TRY(read_f(n));
+    auto value = TRY(read_bits(n));
     auto sign = TRY(read_bit());
     return sign ? -value : value;
 }
 
 u64 BitStream::get_position()
 {
-    return (m_bytes_read * 8) + (7 - m_current_bit_position);
+    return m_bits_read;
 }
 
 size_t BitStream::bytes_remaining()
 {
-    return m_bytes_remaining;
+    return (m_end_ptr - m_data_ptr) + (m_reservoir_bits_remaining / 8);
 }
 
 size_t BitStream::bits_remaining()
 {
-    return (bytes_remaining() * 8) + m_current_bit_position + 1;
+    return ((m_end_ptr - m_data_ptr) * sizeof(m_data_ptr) * 8) + m_reservoir_bits_remaining;
 }
 
 }

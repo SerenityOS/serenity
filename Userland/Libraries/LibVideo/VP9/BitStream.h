@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <AK/Error.h>
 #include <AK/Optional.h>
 #include <AK/Types.h>
 
@@ -16,15 +17,14 @@ class BitStream {
 public:
     BitStream(u8 const* data, size_t size)
         : m_data_ptr(data)
-        , m_bytes_remaining(size)
+        , m_end_ptr(data + size)
     {
     }
 
-    ErrorOr<u8> read_byte();
     ErrorOr<bool> read_bit();
 
+    ErrorOr<u64> read_bits(u8 bit_count);
     /* (9.1) */
-    ErrorOr<u8> read_f(size_t n);
     ErrorOr<u8> read_f8();
     ErrorOr<u16> read_f16();
 
@@ -42,11 +42,13 @@ public:
     size_t bits_remaining();
 
 private:
+    ErrorOr<void> fill_reservoir();
+
     u8 const* m_data_ptr { nullptr };
-    size_t m_bytes_remaining { 0 };
-    Optional<u8> m_current_byte;
-    i8 m_current_bit_position { 0 };
-    u64 m_bytes_read { 0 };
+    u8 const* m_end_ptr { nullptr };
+    u64 m_reservoir;
+    u8 m_reservoir_bits_remaining { 0 };
+    size_t m_bits_read { 0 };
 
     u8 m_bool_value { 0 };
     u8 m_bool_range { 0 };
