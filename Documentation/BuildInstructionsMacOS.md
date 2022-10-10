@@ -15,6 +15,10 @@ Make sure you also have all the following dependencies installed:
 # core
 brew install coreutils e2fsprogs qemu bash gcc@11 imagemagick ninja cmake ccache rsync zstd
 
+# (on macOS 13)
+brew install texinfo
+# Then add `$(brew --prefix texinfo)/bin` to your $PATH.
+
 # (option 1) fuse + ext2
 brew install m4 autoconf automake libtool
 brew install --cask macfuse
