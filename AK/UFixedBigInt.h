@@ -87,7 +87,7 @@ public:
     }
 
     template<Unsigned U>
-    requires(sizeof(T) >= sizeof(U)) explicit operator U() const
+    requires(sizeof(T) >= sizeof(U)) constexpr explicit operator U() const
     {
         return static_cast<U>(m_low);
     }
