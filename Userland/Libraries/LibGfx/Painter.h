@@ -38,6 +38,7 @@ public:
         NearestNeighbor,
         SmoothPixels,
         BilinearBlend,
+        None,
     };
 
     void clear_rect(IntRect const&, Color);

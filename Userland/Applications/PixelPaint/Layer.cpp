@@ -230,7 +230,11 @@ void Layer::resize(Gfx::IntSize const& new_size, Gfx::IntPoint const& new_locati
         auto dst = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, new_size).release_value_but_fixme_should_propagate_errors();
         Gfx::Painter painter(dst);
 
-        painter.draw_scaled_bitmap(dst_rect, *m_content_bitmap, src_rect, 1.0f, scaling_mode);
+        if (scaling_mode == Gfx::Painter::ScalingMode::None) {
+            painter.blit(src_rect.top_left(), *m_content_bitmap, src_rect, 1.0f);
+        } else {
+            painter.draw_scaled_bitmap(dst_rect, *m_content_bitmap, src_rect, 1.0f, scaling_mode);
+        }
 
         m_content_bitmap = move(dst);
     }
@@ -239,7 +243,12 @@ void Layer::resize(Gfx::IntSize const& new_size, Gfx::IntPoint const& new_locati
         auto dst = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, new_size).release_value_but_fixme_should_propagate_errors();
         Gfx::Painter painter(dst);
 
-        painter.draw_scaled_bitmap(dst_rect, *m_mask_bitmap, src_rect, 1.0f, scaling_mode);
+        if (scaling_mode == Gfx::Painter::ScalingMode::None) {
+            painter.blit(src_rect.top_left(), *m_content_bitmap, src_rect, 1.0f);
+        } else {
+            painter.draw_scaled_bitmap(dst_rect, *m_mask_bitmap, src_rect, 1.0f, scaling_mode);
+        }
+
         m_mask_bitmap = move(dst);
     }
 

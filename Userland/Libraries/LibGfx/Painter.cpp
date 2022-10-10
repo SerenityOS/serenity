@@ -1248,6 +1248,9 @@ ALWAYS_INLINE static void do_draw_scaled_bitmap(Gfx::Bitmap& target, IntRect con
     case Painter::ScalingMode::BilinearBlend:
         do_draw_scaled_bitmap<has_alpha_channel, Painter::ScalingMode::BilinearBlend>(target, dst_rect, clipped_rect, source, src_rect, get_pixel, opacity);
         break;
+    case Painter::ScalingMode::None:
+        do_draw_scaled_bitmap<has_alpha_channel, Painter::ScalingMode::None>(target, dst_rect, clipped_rect, source, src_rect, get_pixel, opacity);
+        break;
     }
 }
 
@@ -1261,6 +1264,11 @@ void Painter::draw_scaled_bitmap(IntRect const& a_dst_rect, Gfx::Bitmap const& s
     IntRect int_src_rect = enclosing_int_rect(a_src_rect);
     if (scale() == source.scale() && a_src_rect == int_src_rect && a_dst_rect.size() == int_src_rect.size())
         return blit(a_dst_rect.location(), source, int_src_rect, opacity);
+
+    if (scaling_mode == ScalingMode::None) {
+        IntRect clipped_draw_rect { (int)a_src_rect.location().x(), (int)a_src_rect.location().y(), a_dst_rect.size().width(), a_dst_rect.size().height() };
+        return blit(a_dst_rect.location(), source, clipped_draw_rect, opacity);
+    }
 
     auto dst_rect = to_physical(a_dst_rect);
     auto src_rect = a_src_rect * source.scale();
