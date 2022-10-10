@@ -117,6 +117,8 @@ public:
 
     void invalidate_stacking_context();
 
+    bool is_out_of_view(PaintContext&) const;
+
 protected:
     explicit PaintableBox(Layout::Box const&);
 
