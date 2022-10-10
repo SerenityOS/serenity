@@ -102,8 +102,6 @@ public:
     int screen_x() const;
     int screen_y() const;
 
-    Selection::Selection* get_selection_impl();
-
     JS::NonnullGCPtr<HTML::Storage> local_storage();
     JS::NonnullGCPtr<HTML::Storage> session_storage();
 

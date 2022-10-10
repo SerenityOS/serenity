@@ -67,6 +67,7 @@
 #include <LibWeb/Page/Page.h>
 #include <LibWeb/Platform/Timer.h>
 #include <LibWeb/SVG/TagNames.h>
+#include <LibWeb/Selection/Selection.h>
 #include <LibWeb/UIEvents/EventNames.h>
 #include <LibWeb/UIEvents/FocusEvent.h>
 #include <LibWeb/UIEvents/KeyboardEvent.h>
@@ -335,6 +336,7 @@ void Document::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_forms);
     visitor.visit(m_scripts);
     visitor.visit(m_all);
+    visitor.visit(m_selection);
 
     for (auto& script : m_scripts_to_execute_when_parsing_has_finished)
         visitor.visit(script.ptr());
@@ -348,6 +350,20 @@ void Document::visit_edges(Cell::Visitor& visitor)
         visitor.visit(target.ptr());
     for (auto& target : m_pending_scrollend_event_targets)
         visitor.visit(target.ptr());
+}
+
+// https://w3c.github.io/selection-api/#dom-document-getselection
+JS::GCPtr<Selection::Selection> Document::get_selection()
+{
+    // The method must return the selection associated with this if this has an associated browsing context,
+    // and it must return null otherwise.
+    if (!browsing_context()) {
+        return nullptr;
+    }
+    if (!m_selection) {
+        m_selection = Selection::Selection::create(realm());
+    }
+    return m_selection;
 }
 
 // https://html.spec.whatwg.org/multipage/dynamic-markup-insertion.html#dom-document-write

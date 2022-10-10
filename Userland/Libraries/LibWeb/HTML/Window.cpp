@@ -525,13 +525,6 @@ int Window::screen_y() const
     return 0;
 }
 
-// https://w3c.github.io/selection-api/#dom-window-getselection
-Selection::Selection* Window::get_selection_impl()
-{
-    // FIXME: Implement.
-    return nullptr;
-}
-
 // https://html.spec.whatwg.org/multipage/webstorage.html#dom-localstorage
 JS::NonnullGCPtr<HTML::Storage> Window::local_storage()
 {
@@ -1241,10 +1234,12 @@ JS_DEFINE_NATIVE_FUNCTION(Window::get_computed_style)
     return impl->get_computed_style_impl(*static_cast<DOM::Element*>(object));
 }
 
+// https://w3c.github.io/selection-api/#dom-window-getselection
 JS_DEFINE_NATIVE_FUNCTION(Window::get_selection)
 {
+    // The method must invoke and return the result of getSelection() on this's Window.document attribute.
     auto* impl = TRY(impl_from(vm));
-    return impl->get_selection_impl();
+    return impl->associated_document().get_selection();
 }
 
 JS_DEFINE_NATIVE_FUNCTION(Window::match_media)

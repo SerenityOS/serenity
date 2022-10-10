@@ -87,6 +87,9 @@ public:
     static JS::NonnullGCPtr<Document> construct_impl(JS::Realm&);
     virtual ~Document() override;
 
+    // https://w3c.github.io/selection-api/#dom-document-getselection
+    JS::GCPtr<Selection::Selection> get_selection();
+
     size_t next_layout_node_serial_id(Badge<Layout::Node>) { return m_next_layout_node_serial_id++; }
     size_t layout_node_count() const { return m_next_layout_node_serial_id; }
 
@@ -592,6 +595,8 @@ private:
 
     // https://html.spec.whatwg.org/multipage/dom.html#previous-document-unload-timing
     DocumentUnloadTimingInfo m_previous_document_unload_timing;
+
+    JS::GCPtr<Selection::Selection> m_selection;
 };
 
 }
