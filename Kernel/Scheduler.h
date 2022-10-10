@@ -55,7 +55,6 @@ public:
     static bool is_initialized();
     static TotalTimeScheduled get_total_time_scheduled();
     static void add_time_scheduled(u64, bool);
-    static u64 (*current_time)();
 };
 
 }

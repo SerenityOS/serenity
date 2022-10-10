@@ -17,6 +17,7 @@
 #    include <Kernel/Arch/x86/common/Interrupts/APIC.h>
 #    include <Kernel/Arch/x86/common/RTC.h>
 #endif
+#include <Kernel/Arch/CurrentTime.h>
 #include <Kernel/CommandLine.h>
 #include <Kernel/Firmware/ACPI/Parser.h>
 #include <Kernel/PerformanceManager.h>
@@ -38,6 +39,22 @@ bool TimeManagement::is_initialized()
 TimeManagement& TimeManagement::the()
 {
     return *s_the;
+}
+
+// The s_scheduler_specific_current_time function provides a current time for scheduling purposes,
+// which may not necessarily relate to wall time
+static u64 (*s_scheduler_current_time)();
+
+static u64 current_time_monotonic()
+{
+    // We always need a precise timestamp here, we cannot rely on a coarse timestamp
+    return (u64)TimeManagement::the().monotonic_time(TimePrecision::Precise).to_nanoseconds();
+}
+
+u64 TimeManagement::scheduler_current_time()
+{
+    VERIFY(s_scheduler_current_time);
+    return s_scheduler_current_time();
 }
 
 ErrorOr<void> TimeManagement::validate_clock_id(clockid_t clock_id)
@@ -163,6 +180,11 @@ UNMAP_AFTER_INIT void TimeManagement::initialize([[maybe_unused]] u32 cpu)
             apic_timer->enable_local_timer();
         }
     }
+    auto* possible_arch_specific_current_time_function = optional_current_time();
+    if (possible_arch_specific_current_time_function)
+        s_scheduler_current_time = possible_arch_specific_current_time_function;
+    else
+        s_scheduler_current_time = current_time_monotonic;
 #endif
 }
 

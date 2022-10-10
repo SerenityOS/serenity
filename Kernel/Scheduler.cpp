@@ -8,7 +8,6 @@
 #include <AK/ScopeGuard.h>
 #include <AK/Singleton.h>
 #include <AK/Time.h>
-#include <Kernel/Arch/CurrentTime.h>
 #include <Kernel/Arch/InterruptDisabler.h>
 #include <Kernel/Arch/x86/TrapFrame.h>
 #include <Kernel/Debug.h>
@@ -50,10 +49,6 @@ struct ThreadReadyQueues {
 static Singleton<SpinlockProtected<ThreadReadyQueues>> g_ready_queues;
 
 static SpinlockProtected<TotalTimeScheduled> g_total_time_scheduled { LockRank::None };
-
-// The Scheduler::current_time function provides a current time for scheduling purposes,
-// which may not necessarily relate to wall time
-u64 (*Scheduler::current_time)();
 
 static void dump_thread_list(bool = false);
 
@@ -309,7 +304,7 @@ void Scheduler::enter_current(Thread& prev_thread)
     VERIFY(g_scheduler_lock.is_locked_by_current_processor());
 
     // We already recorded the scheduled time when entering the trap, so this merely accounts for the kernel time since then
-    auto scheduler_time = Scheduler::current_time();
+    auto scheduler_time = TimeManagement::scheduler_current_time();
     prev_thread.update_time_scheduled(scheduler_time, true, true);
     auto* current_thread = Thread::current();
     current_thread->update_time_scheduled(scheduler_time, true, false);
@@ -366,21 +361,10 @@ Process* Scheduler::colonel()
     return s_colonel_process;
 }
 
-static u64 current_time_monotonic()
-{
-    // We always need a precise timestamp here, we cannot rely on a coarse timestamp
-    return (u64)TimeManagement::the().monotonic_time(TimePrecision::Precise).to_nanoseconds();
-}
-
 UNMAP_AFTER_INIT void Scheduler::initialize()
 {
     VERIFY(Processor::is_initialized()); // sanity check
-
-    auto* possible_arch_specific_current_time_function = optional_current_time();
-    if (possible_arch_specific_current_time_function)
-        current_time = possible_arch_specific_current_time_function;
-    else
-        current_time = current_time_monotonic;
+    VERIFY(TimeManagement::is_initialized());
 
     LockRefPtr<Thread> idle_thread;
     g_finalizer_wait_queue = new WaitQueue;
@@ -440,7 +424,7 @@ void Scheduler::timer_tick(RegisterState const& regs)
         // Because the previous mode when entering/exiting kernel threads never changes
         // we never update the time scheduled. So we need to update it manually on the
         // timer interrupt
-        current_thread->update_time_scheduled(current_time(), true, false);
+        current_thread->update_time_scheduled(TimeManagement::scheduler_current_time(), true, false);
     }
 
     if (current_thread->previous_mode() == Thread::PreviousMode::UserMode && current_thread->should_die() && !current_thread->is_blocked()) {
