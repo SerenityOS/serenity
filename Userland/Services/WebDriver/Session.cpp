@@ -126,6 +126,23 @@ ErrorOr<JsonValue, HttpError> Session::post_url(JsonValue const& payload)
     return JsonValue();
 }
 
+// GET /session/{session id}/url https://w3c.github.io/webdriver/#dfn-get-current-url
+ErrorOr<JsonValue, HttpError> Session::get_url()
+{
+    // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
+    auto current_window = get_window_object();
+    if (!current_window.has_value())
+        return HttpError { 400, "no such window", "Window not found" };
+
+    // FIXME: 2. Handle any user prompts and return its value if it is an error.
+
+    // 3. Let url be the serialization of the current top-level browsing context’s active document’s document URL.
+    auto url = m_browser_connection->get_url().to_string();
+
+    // 4. Return success with data url.
+    return JsonValue(url);
+}
+
 // GET /session/{session id}/title https://w3c.github.io/webdriver/#dfn-get-title
 ErrorOr<JsonValue, HttpError> Session::get_title()
 {
