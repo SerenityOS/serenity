@@ -159,6 +159,7 @@ private:
     bool parse_tracks(MatroskaDocument&);
     OwnPtr<TrackEntry> parse_track_entry();
     Optional<TrackEntry::VideoTrack> parse_video_track_information();
+    Optional<TrackEntry::ColorFormat> parse_video_color_information();
     Optional<TrackEntry::AudioTrack> parse_audio_track_information();
     OwnPtr<Cluster> parse_cluster();
     OwnPtr<Block> parse_simple_block();

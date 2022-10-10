@@ -13,6 +13,7 @@
 #include <AK/OwnPtr.h>
 #include <AK/String.h>
 #include <AK/Utf8View.h>
+#include <LibVideo/Color/CodingIndependentCodePoints.h>
 
 namespace Video {
 
@@ -50,9 +51,49 @@ public:
         Metadata = 33,
     };
 
+    enum class ColorRange : u8 {
+        Unspecified = 0,
+        Broadcast = 1,
+        Full = 2,
+        UseCICP = 3, // defined by MatrixCoefficients / TransferCharacteristics
+    };
+
+    struct ColorFormat {
+        ColorPrimaries color_primaries = ColorPrimaries::Unspecified;
+        TransferCharacteristics transfer_characteristics = TransferCharacteristics::Unspecified;
+        MatrixCoefficients matrix_coefficients = MatrixCoefficients::Unspecified;
+        u64 bits_per_channel = 0;
+        ColorRange range = ColorRange::Unspecified;
+
+        Video::ColorRange full_or_studio_range() const
+        {
+            // FIXME: Figure out what UseCICP should do here. Matroska specification did not
+            //        seem to explain in the 'colour' section. When this is fixed, change
+            //        replace_code_points_if_specified to match.
+            VERIFY(range == ColorRange::Full || range == ColorRange::Broadcast);
+            if (range == ColorRange::Full)
+                return Video::ColorRange::Full;
+            return Video::ColorRange::Studio;
+        }
+
+        void replace_code_points_if_specified(CodingIndependentCodePoints& cicp) const
+        {
+            if (color_primaries != ColorPrimaries::Unspecified)
+                cicp.set_color_primaries(color_primaries);
+            if (transfer_characteristics != TransferCharacteristics::Unspecified)
+                cicp.set_transfer_characteristics(transfer_characteristics);
+            if (matrix_coefficients != MatrixCoefficients::Unspecified)
+                cicp.set_matrix_coefficients(matrix_coefficients);
+            if (range != ColorRange::Unspecified && range != ColorRange::UseCICP)
+                cicp.set_color_range(full_or_studio_range());
+        }
+    };
+
     struct VideoTrack {
         u64 pixel_width;
         u64 pixel_height;
+
+        ColorFormat color_format;
     };
 
     struct AudioTrack {
@@ -93,7 +134,7 @@ private:
     FlyString m_codec_id;
 
     union {
-        VideoTrack m_video_track;
+        VideoTrack m_video_track {};
         AudioTrack m_audio_track;
     };
 };

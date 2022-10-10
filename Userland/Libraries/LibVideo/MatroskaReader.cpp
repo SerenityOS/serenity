@@ -26,6 +26,8 @@ constexpr u32 CLUSTER_ELEMENT_ID = 0x1F43B675;
 constexpr u32 TIMESTAMP_SCALE_ID = 0x2AD7B1;
 constexpr u32 MUXING_APP_ID = 0x4D80;
 constexpr u32 WRITING_APP_ID = 0x5741;
+
+// Tracks
 constexpr u32 TRACK_ENTRY_ID = 0xAE;
 constexpr u32 TRACK_NUMBER_ID = 0xD7;
 constexpr u32 TRACK_UID_ID = 0x73C5;
@@ -34,10 +36,21 @@ constexpr u32 TRACK_LANGUAGE_ID = 0x22B59C;
 constexpr u32 TRACK_CODEC_ID = 0x86;
 constexpr u32 TRACK_VIDEO_ID = 0xE0;
 constexpr u32 TRACK_AUDIO_ID = 0xE1;
+
+// Video
 constexpr u32 PIXEL_WIDTH_ID = 0xB0;
 constexpr u32 PIXEL_HEIGHT_ID = 0xBA;
+constexpr u32 COLOR_ENTRY_ID = 0x55B0;
+constexpr u32 PRIMARIES_ID = 0x55BB;
+constexpr u32 TRANSFER_CHARACTERISTICS_ID = 0x55BA;
+constexpr u32 MATRIX_COEFFICIENTS_ID = 0x55B1;
+constexpr u32 BITS_PER_CHANNEL_ID = 0x55B2;
+
+// Audio
 constexpr u32 CHANNELS_ID = 0x9F;
 constexpr u32 BIT_DEPTH_ID = 0x6264;
+
+// Clusters
 constexpr u32 SIMPLE_BLOCK_ID = 0xA3;
 constexpr u32 TIMESTAMP_ID = 0xE7;
 
@@ -264,6 +277,51 @@ OwnPtr<TrackEntry> MatroskaReader::parse_track_entry()
     return track_entry;
 }
 
+Optional<TrackEntry::ColorFormat> MatroskaReader::parse_video_color_information()
+{
+    TrackEntry::ColorFormat color_format {};
+
+    auto success = parse_master_element("Colour"sv, [&](u64 element_id) {
+        switch (element_id) {
+        case PRIMARIES_ID: {
+            auto primaries_result = read_u64_element();
+            CHECK_HAS_VALUE(primaries_result);
+            color_format.color_primaries = static_cast<ColorPrimaries>(primaries_result.value());
+            dbgln_if(MATROSKA_TRACE_DEBUG, "Read Colour's Primaries attribute: {}", color_primaries_to_string(color_format.color_primaries));
+            break;
+        }
+        case TRANSFER_CHARACTERISTICS_ID: {
+            auto transfer_characteristics_result = read_u64_element();
+            CHECK_HAS_VALUE(transfer_characteristics_result);
+            color_format.transfer_characteristics = static_cast<TransferCharacteristics>(transfer_characteristics_result.value());
+            dbgln_if(MATROSKA_TRACE_DEBUG, "Read Colour's TransferCharacteristics attribute: {}", transfer_characteristics_to_string(color_format.transfer_characteristics));
+            break;
+        }
+        case MATRIX_COEFFICIENTS_ID: {
+            auto matrix_coefficients_result = read_u64_element();
+            CHECK_HAS_VALUE(matrix_coefficients_result);
+            color_format.matrix_coefficients = static_cast<MatrixCoefficients>(matrix_coefficients_result.value());
+            dbgln_if(MATROSKA_TRACE_DEBUG, "Read Colour's MatrixCoefficients attribute: {}", matrix_coefficients_to_string(color_format.matrix_coefficients));
+            break;
+        }
+        case BITS_PER_CHANNEL_ID: {
+            auto bits_per_channel_result = read_u64_element();
+            CHECK_HAS_VALUE(bits_per_channel_result);
+            color_format.bits_per_channel = bits_per_channel_result.value();
+            dbgln_if(MATROSKA_TRACE_DEBUG, "Read Colour's BitsPerChannel attribute: {}", color_format.bits_per_channel);
+            break;
+        }
+        default:
+            return read_unknown_element();
+        }
+        return true;
+    });
+
+    if (!success)
+        return {};
+    return color_format;
+}
+
 Optional<TrackEntry::VideoTrack> MatroskaReader::parse_video_track_information()
 {
     TrackEntry::VideoTrack video_track {};
@@ -279,6 +337,10 @@ Optional<TrackEntry::VideoTrack> MatroskaReader::parse_video_track_information()
             CHECK_HAS_VALUE(pixel_height);
             video_track.pixel_height = pixel_height.value();
             dbgln_if(MATROSKA_TRACE_DEBUG, "Read VideoTrack's PixelHeight attribute: {}", pixel_height.value());
+        } else if (element_id == COLOR_ENTRY_ID) {
+            auto color_information_result = parse_video_color_information();
+            CHECK_HAS_VALUE(color_information_result);
+            video_track.color_format = color_information_result.value();
         } else {
             return read_unknown_element();
         }

@@ -93,6 +93,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         auto uv_subsampling_x = vp9_decoder.get_uv_subsampling_x();
         Gfx::IntSize uv_size { y_size.width() >> uv_subsampling_x, y_size.height() >> uv_subsampling_y };
         auto cicp = vp9_decoder.get_cicp_color_space();
+        video_track.color_format.replace_code_points_if_specified(cicp);
         cicp.default_code_points_if_unspecified(Video::ColorPrimaries::BT709, Video::TransferCharacteristics::BT709, Video::MatrixCoefficients::BT709);
 
         auto color_converter_result = Video::ColorConverter::create(vp9_decoder.get_bit_depth(), cicp);
