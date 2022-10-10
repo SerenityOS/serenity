@@ -541,6 +541,14 @@ if (BUILD_LAGOM)
     )
     target_compile_definitions(LibUnicode PRIVATE ENABLE_UNICODE_DATA=$<BOOL:${ENABLE_UNICODE_DATABASE_DOWNLOAD}>)
 
+    # Video
+    file(GLOB LIBVIDEO_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibVideo/*.cpp")
+    file(GLOB LIBVIDEO_SUBDIR_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibVideo/*/*.cpp")
+    lagom_lib(Video video
+        SOURCES ${LIBVIDEO_SOURCES} ${LIBVIDEO_SUBDIR_SOURCES}
+        LIBS LibAudio LibIPC LibGfx
+    )
+
     # WASM
     file(GLOB LIBWASM_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibWasm/*/*.cpp")
     lagom_lib(Wasm wasm
@@ -788,6 +796,13 @@ if (BUILD_LAGOM)
         file(GLOB LIBUNICODE_TEST_SOURCES CONFIGURE_DEPENDS "../../Tests/LibUnicode/*.cpp")
         foreach(source ${LIBUNICODE_TEST_SOURCES})
             lagom_test(${source} LIBS LibUnicode)
+        endforeach()
+
+        # Video
+        file(GLOB LIBVIDEO_TEST_SOURCES CONFIGURE_DEPENDS "../../Tests/LibVideo/*.cpp")
+        foreach(source ${LIBVIDEO_TEST_SOURCES})
+            lagom_test(${source} LIBS LibVideo
+                WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../../Tests/LibVideo)
         endforeach()
 
         # JavaScriptTestRunner + LibTest tests
