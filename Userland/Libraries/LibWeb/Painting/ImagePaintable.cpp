@@ -33,8 +33,8 @@ void ImagePaintable::paint(PaintContext& context, PaintPhase phase) const
     if (!is_visible())
         return;
 
-    // FIXME: This should be done at a different level. Also rect() does not include padding etc!
-    if (!context.viewport_rect().intersects(enclosing_int_rect(absolute_rect())))
+    // FIXME: This should be done at a different level.
+    if (is_out_of_view(context))
         return;
 
     PaintableBox::paint(context, phase);

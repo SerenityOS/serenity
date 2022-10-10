@@ -37,6 +37,13 @@ void PaintableBox::invalidate_stacking_context()
     m_stacking_context = nullptr;
 }
 
+bool PaintableBox::is_out_of_view(PaintContext& context) const
+{
+    return !enclosing_int_rect(absolute_paint_rect())
+                .translated(context.painter().translation())
+                .intersects(context.painter().clip_rect());
+}
+
 PaintableWithLines::PaintableWithLines(Layout::BlockContainer const& layout_box)
     : PaintableBox(layout_box)
 {

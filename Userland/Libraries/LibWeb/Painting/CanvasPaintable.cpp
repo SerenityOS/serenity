@@ -34,8 +34,8 @@ void CanvasPaintable::paint(PaintContext& context, PaintPhase phase) const
         auto canvas_rect = absolute_rect().to_rounded<int>();
         ScopedCornerRadiusClip corner_clip { context.painter(), canvas_rect, normalized_border_radii_data(ShrinkRadiiForBorders::Yes) };
 
-        // FIXME: This should be done at a different level. Also rect() does not include padding etc!
-        if (!context.viewport_rect().intersects(canvas_rect))
+        // FIXME: This should be done at a different level.
+        if (is_out_of_view(context))
             return;
 
         if (layout_box().dom_node().bitmap()) {
