@@ -329,7 +329,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     dbgln("started request with id {}", request->id());
 
     auto rc = loop.exec();
-    // FIXME: This shouldn't be needed.
-    fclose(stdout);
+    fflush(stdout);
     return rc;
 }
