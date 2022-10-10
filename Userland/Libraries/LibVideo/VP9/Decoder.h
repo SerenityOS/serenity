@@ -10,6 +10,7 @@
 #include <AK/ByteBuffer.h>
 #include <AK/Error.h>
 #include <AK/Span.h>
+#include <LibVideo/Color/CodingIndependentCodePoints.h>
 #include <LibVideo/DecoderError.h>
 
 #include "Parser.h"
@@ -32,6 +33,8 @@ public:
     Gfx::Size<size_t> get_y_plane_size();
     bool get_uv_subsampling_y();
     bool get_uv_subsampling_x();
+    CodingIndependentCodePoints get_cicp_color_space();
+    u8 get_bit_depth();
 
 private:
     typedef i32 Intermediate;

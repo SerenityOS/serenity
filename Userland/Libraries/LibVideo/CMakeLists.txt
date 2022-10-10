@@ -1,4 +1,7 @@
 set(SOURCES
+    Color/ColorConverter.cpp
+    Color/ColorPrimaries.cpp
+    Color/TransferCharacteristics.cpp
     MatroskaReader.cpp
     VP9/BitStream.cpp
     VP9/Decoder.cpp

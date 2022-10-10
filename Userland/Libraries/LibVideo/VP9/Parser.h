@@ -12,6 +12,7 @@
 #include <AK/Span.h>
 #include <AK/Vector.h>
 #include <LibGfx/Forward.h>
+#include <LibVideo/Color/CodingIndependentCodePoints.h>
 #include <LibVideo/DecoderError.h>
 
 #include "BitStream.h"

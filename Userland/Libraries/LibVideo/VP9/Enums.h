@@ -27,11 +27,6 @@ enum ColorSpace : u8 {
     RGB = 7
 };
 
-enum ColorRange {
-    StudioSwing,
-    FullSwing
-};
-
 enum InterpolationFilter : u8 {
     EightTap = 0,
     EightTapSmooth = 1,

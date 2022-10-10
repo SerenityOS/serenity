@@ -7,6 +7,7 @@
 
 #include <AK/IntegralMath.h>
 #include <LibGfx/Size.h>
+#include <LibVideo/Color/CodingIndependentCodePoints.h>
 
 #include "Decoder.h"
 #include "Utilities.h"
@@ -147,6 +148,70 @@ bool Decoder::get_uv_subsampling_y()
 bool Decoder::get_uv_subsampling_x()
 {
     return m_parser->m_subsampling_x;
+}
+
+CodingIndependentCodePoints Decoder::get_cicp_color_space()
+{
+    ColorPrimaries color_primaries;
+    TransferCharacteristics transfer_characteristics;
+    MatrixCoefficients matrix_coefficients;
+
+    switch (m_parser->m_color_space) {
+    case ColorSpace::Unknown:
+        color_primaries = ColorPrimaries::Unspecified;
+        transfer_characteristics = TransferCharacteristics::Unspecified;
+        matrix_coefficients = MatrixCoefficients::Unspecified;
+        break;
+    case ColorSpace::Bt601:
+        color_primaries = ColorPrimaries::BT601;
+        transfer_characteristics = TransferCharacteristics::BT601;
+        matrix_coefficients = MatrixCoefficients::BT601;
+        break;
+    case ColorSpace::Bt709:
+        color_primaries = ColorPrimaries::BT709;
+        transfer_characteristics = TransferCharacteristics::BT709;
+        matrix_coefficients = MatrixCoefficients::BT709;
+        break;
+    case ColorSpace::Smpte170:
+        // https://www.kernel.org/doc/html/v4.9/media/uapi/v4l/pixfmt-007.html#colorspace-smpte-170m-v4l2-colorspace-smpte170m
+        color_primaries = ColorPrimaries::BT601;
+        transfer_characteristics = TransferCharacteristics::BT709;
+        matrix_coefficients = MatrixCoefficients::BT601;
+        break;
+    case ColorSpace::Smpte240:
+        color_primaries = ColorPrimaries::SMPTE240;
+        transfer_characteristics = TransferCharacteristics::SMPTE240;
+        matrix_coefficients = MatrixCoefficients::SMPTE240;
+        break;
+    case ColorSpace::Bt2020:
+        color_primaries = ColorPrimaries::BT2020;
+        // Bit depth doesn't actually matter to our transfer functions since we
+        // convert in floats of range 0-1 (for now?), but just for correctness set
+        // the TC to match the bit depth here.
+        if (m_parser->m_bit_depth == 12)
+            transfer_characteristics = TransferCharacteristics::BT2020BitDepth12;
+        else if (m_parser->m_bit_depth == 10)
+            transfer_characteristics = TransferCharacteristics::BT2020BitDepth10;
+        else
+            transfer_characteristics = TransferCharacteristics::BT709;
+        matrix_coefficients = MatrixCoefficients::BT2020NonConstantLuminance;
+        break;
+    case ColorSpace::RGB:
+        color_primaries = ColorPrimaries::BT709;
+        transfer_characteristics = TransferCharacteristics::Linear;
+        matrix_coefficients = MatrixCoefficients::Identity;
+        break;
+    case ColorSpace::Reserved:
+        VERIFY_NOT_REACHED();
+        break;
+    }
+
+    return { color_primaries, transfer_characteristics, matrix_coefficients, m_parser->m_color_range };
+}
+
+u8 Decoder::get_bit_depth()
+{
+    return m_parser->m_bit_depth;
 }
 
 u8 Decoder::merge_prob(u8 pre_prob, u8 count_0, u8 count_1, u8 count_sat, u8 max_update_factor)
