@@ -136,8 +136,8 @@ DecoderErrorOr<FrameType> Parser::read_frame_type()
 DecoderErrorOr<ColorRange> Parser::read_color_range()
 {
     if (TRY_READ(m_bit_stream->read_bit()))
-        return FullSwing;
-    return StudioSwing;
+        return ColorRange::Full;
+    return ColorRange::Studio;
 }
 
 /* (6.2) */
@@ -273,7 +273,7 @@ DecoderErrorOr<void> Parser::color_config()
             m_subsampling_y = true;
         }
     } else {
-        m_color_range = FullSwing;
+        m_color_range = ColorRange::Full;
         if (m_profile == 1 || m_profile == 3) {
             m_subsampling_x = false;
             m_subsampling_y = false;

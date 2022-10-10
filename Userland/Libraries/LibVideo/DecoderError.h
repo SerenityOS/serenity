@@ -25,6 +25,8 @@ enum class DecoderErrorCategory : u32 {
     Memory,
     // The input is corrupted.
     Corrupted,
+    // Invalid call.
+    Invalid,
     // The input uses features that are not yet implemented.
     NotImplemented,
 };
