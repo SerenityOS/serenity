@@ -182,6 +182,18 @@ template Optional<u32> String::to_uint(TrimWhitespace) const;
 template Optional<unsigned long> String::to_uint(TrimWhitespace) const;
 template Optional<unsigned long long> String::to_uint(TrimWhitespace) const;
 
+#ifndef KERNEL
+Optional<double> String::to_double(TrimWhitespace trim_whitespace) const
+{
+    return StringUtils::convert_to_floating_point<double>(*this, trim_whitespace);
+}
+
+Optional<float> String::to_float(TrimWhitespace trim_whitespace) const
+{
+    return StringUtils::convert_to_floating_point<float>(*this, trim_whitespace);
+}
+#endif
+
 bool String::starts_with(StringView str, CaseSensitivity case_sensitivity) const
 {
     return StringUtils::starts_with(*this, str, case_sensitivity);

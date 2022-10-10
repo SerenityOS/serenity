@@ -15,6 +15,7 @@
 #include <AK/Vector.h>
 
 #ifndef KERNEL
+#    include <AK/FloatingPointStringConversions.h>
 #    include <AK/String.h>
 #endif
 
@@ -231,6 +232,23 @@ template Optional<u8> convert_to_uint_from_octal(StringView str, TrimWhitespace)
 template Optional<u16> convert_to_uint_from_octal(StringView str, TrimWhitespace);
 template Optional<u32> convert_to_uint_from_octal(StringView str, TrimWhitespace);
 template Optional<u64> convert_to_uint_from_octal(StringView str, TrimWhitespace);
+
+#ifndef KERNEL
+template<typename T>
+Optional<T> convert_to_floating_point(StringView str, TrimWhitespace trim_whitespace)
+{
+    static_assert(IsSame<T, double> || IsSame<T, float>);
+    auto string = trim_whitespace == TrimWhitespace::Yes
+        ? str.trim_whitespace()
+        : str;
+
+    char const* start = string.characters_without_null_termination();
+    return parse_floating_point_completely<T>(start, start + str.length());
+}
+
+template Optional<double> convert_to_floating_point(StringView str, TrimWhitespace);
+template Optional<float> convert_to_floating_point(StringView str, TrimWhitespace);
+#endif
 
 bool equals_ignoring_case(StringView a, StringView b)
 {
