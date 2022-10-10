@@ -77,6 +77,10 @@ public:
     Optional<T> to_int(TrimWhitespace = TrimWhitespace::Yes) const;
     template<typename T = unsigned>
     Optional<T> to_uint(TrimWhitespace = TrimWhitespace::Yes) const;
+#ifndef KERNEL
+    Optional<double> to_double(TrimWhitespace = TrimWhitespace::Yes) const;
+    Optional<float> to_float(TrimWhitespace = TrimWhitespace::Yes) const;
+#endif
 
     bool equals_ignoring_case(StringView) const;
     bool starts_with(StringView, CaseSensitivity = CaseSensitivity::CaseSensitive) const;

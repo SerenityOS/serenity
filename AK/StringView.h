@@ -190,6 +190,10 @@ public:
     Optional<T> to_int() const;
     template<typename T = unsigned>
     Optional<T> to_uint() const;
+#ifndef KERNEL
+    Optional<double> to_double(TrimWhitespace trim_whitespace = TrimWhitespace::Yes) const;
+    Optional<float> to_float(TrimWhitespace trim_whitespace = TrimWhitespace::Yes) const;
+#endif
 
     // Create a new substring view of this string view, starting either at the beginning of
     // the given substring view, or after its end, and continuing until the end of this string
