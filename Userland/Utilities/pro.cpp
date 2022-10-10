@@ -154,6 +154,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     char const* data = nullptr;
     StringView proxy_spec;
     String method = "GET";
+    StringView method_override;
     HashMap<String, String, CaseInsensitiveStringTraits> request_headers;
 
     Core::ArgsParser args_parser;
@@ -162,6 +163,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         "and thus supports at least http, https, and gemini.");
     args_parser.add_option(save_at_provided_name, "Write to a file named as the remote file", nullptr, 'O');
     args_parser.add_option(data, "(HTTP only) Send the provided data via an HTTP POST request", "data", 'd', "data");
+    args_parser.add_option(method_override, "(HTTP only) HTTP method to use for the request (eg, GET, POST, etc)", "method", 'm', "method");
     args_parser.add_option(should_follow_url, "(HTTP only) Follow the Location header if a 3xx status is encountered", "follow", 'l');
     args_parser.add_option(Core::ArgsParser::Option {
         .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
@@ -181,7 +183,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_positional_argument(url_str, "URL to download from", "url");
     args_parser.parse(arguments);
 
-    if (data) {
+    if (!method_override.is_empty()) {
+        method = method_override;
+    } else if (data) {
         method = "POST";
         // FIXME: Content-Type?
     }
