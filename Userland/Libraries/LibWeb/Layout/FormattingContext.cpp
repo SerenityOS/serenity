@@ -1058,7 +1058,7 @@ float FormattingContext::calculate_min_content_height(Layout::Box const& box, Av
         return *box.intrinsic_height();
 
     bool is_cacheable = available_width.is_definite() || available_width.is_intrinsic_sizing_constraint();
-    Optional<float>* cache_slot;
+    Optional<float>* cache_slot = nullptr;
     if (is_cacheable) {
         auto& root_state = m_state.m_root;
         auto& cache = *root_state.intrinsic_sizes.ensure(&box, [] { return adopt_own(*new LayoutState::IntrinsicSizes); });
@@ -1103,7 +1103,7 @@ float FormattingContext::calculate_max_content_height(Layout::Box const& box, Av
         return *box.intrinsic_height();
 
     bool is_cacheable = available_width.is_definite() || available_width.is_intrinsic_sizing_constraint();
-    Optional<float>* cache_slot;
+    Optional<float>* cache_slot = nullptr;
     if (is_cacheable) {
         auto& root_state = m_state.m_root;
         auto& cache = *root_state.intrinsic_sizes.ensure(&box, [] { return adopt_own(*new LayoutState::IntrinsicSizes); });
