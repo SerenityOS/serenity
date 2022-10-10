@@ -37,6 +37,8 @@ public:
     static bool is_initialized();
     static TimeManagement& the();
 
+    static u64 scheduler_current_time();
+
     static ErrorOr<void> validate_clock_id(clockid_t);
     Time current_time(clockid_t) const;
     Time monotonic_time(TimePrecision = TimePrecision::Coarse) const;
