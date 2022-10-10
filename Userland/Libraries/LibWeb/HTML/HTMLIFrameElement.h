@@ -23,6 +23,8 @@ public:
 
     void set_current_navigation_was_lazy_loaded(bool value) { m_current_navigation_was_lazy_loaded = value; }
 
+    virtual void apply_presentational_hints(CSS::StyleProperties&) const override;
+
 private:
     HTMLIFrameElement(DOM::Document&, DOM::QualifiedName);
 
