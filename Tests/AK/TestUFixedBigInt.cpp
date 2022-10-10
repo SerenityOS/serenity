@@ -88,6 +88,21 @@ TEST_CASE(div_mod)
     }
 }
 
+TEST_CASE(shifts)
+{
+    u128 val { 0x1234ULL };
+    EXPECT_EQ(val << 1u, u128(0x2468ull));
+    EXPECT_EQ(val << 4u, u128(0x12340ull));
+    EXPECT_EQ(val << 64u, u128(0ull, 0x1234ull));
+}
+
+TEST_CASE(constexpr_truncae)
+{
+    static constexpr u256 wide = u256(u128 { 0x8a4b08d32f8b8e48ULL, 0x8459322f67b8e26dULL }, u128 { 0xeea82af4312d1931ULL, 0x654fb5cfe82dbd58ULL });
+    static constexpr u64 val = static_cast<u64>(wide);
+    EXPECT_EQ(val, 0x8a4b08d32f8b8e48ULL);
+}
+
 TEST_CASE(mod_hardcoded)
 {
     EXPECT_EQ(u256(u128 { 0x8a4b08d32f8b8e48ULL, 0x8459322f67b8e26dULL }, u128 { 0xeea82af4312d1931ULL, 0x654fb5cfe82dbd58ULL }) % u256(u128 { 0x40a58652868d5d66ULL, 0x81d674bf7d6d6861ULL }, u128 { 0xa8314900e6188a82ULL, 0xc273ca947237b4aaULL }), u256(u128 { 0x8a4b08d32f8b8e48ULL, 0x8459322f67b8e26dULL }, u128 { 0xeea82af4312d1931ULL, 0x654fb5cfe82dbd58ULL }));
