@@ -40,7 +40,6 @@ RefPtr<Request> RequestClient::start_request(String const& method, URL const& ur
     request->set_request_fd({}, response_fd);
     m_requests.set(request_id, request);
     return request;
-    return nullptr;
 }
 
 bool RequestClient::stop_request(Badge<Request>, Request& request)
