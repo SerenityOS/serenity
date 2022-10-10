@@ -417,12 +417,14 @@ ErrorOr<JsonValue, HttpError> Client::handle_post_url(Vector<StringView> paramet
 }
 
 // GET /session/{session id}/url https://w3c.github.io/webdriver/#dfn-get-current-url
-ErrorOr<JsonValue, HttpError> Client::handle_get_url(Vector<StringView>, JsonValue const&)
+ErrorOr<JsonValue, HttpError> Client::handle_get_url(Vector<StringView> parameters, JsonValue const&)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session_id>/url");
+    Session* session = TRY(find_session_with_id(parameters[0]));
 
-    // FIXME: Implement the spec steps
-    return HttpError { 400, "", "" };
+    // NOTE: Spec steps handled in Session::get_url().
+    auto result = TRY(session->get_url());
+    return make_json_value(result);
 }
 
 // GET /session/{session id}/title https://w3c.github.io/webdriver/#dfn-get-title
