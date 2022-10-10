@@ -70,10 +70,12 @@ ResizeImageDialog::ResizeImageDialog(Gfx::IntSize const& suggested_size, GUI::Wi
     auto nearest_neighbor_radio = main_widget.find_descendant_of_type_named<GUI::RadioButton>("nearest_neighbor_radio");
     auto smooth_pixels_radio = main_widget.find_descendant_of_type_named<GUI::RadioButton>("smooth_pixels_radio");
     auto bilinear_radio = main_widget.find_descendant_of_type_named<GUI::RadioButton>("bilinear_radio");
+    auto resize_canvas_radio = main_widget.find_descendant_of_type_named<GUI::RadioButton>("resize_canvas");
 
     VERIFY(nearest_neighbor_radio);
     VERIFY(smooth_pixels_radio);
     VERIFY(bilinear_radio);
+    VERIFY(resize_canvas_radio);
 
     m_scaling_mode = Gfx::Painter::ScalingMode::NearestNeighbor;
     if (bilinear_radio->is_checked()) {
@@ -91,6 +93,10 @@ ResizeImageDialog::ResizeImageDialog(Gfx::IntSize const& suggested_size, GUI::Wi
     bilinear_radio->on_checked = [this](bool is_checked) {
         if (is_checked)
             m_scaling_mode = Gfx::Painter::ScalingMode::BilinearBlend;
+    };
+    resize_canvas_radio->on_checked = [this](bool is_checked) {
+        if (is_checked)
+            m_scaling_mode = Gfx::Painter::ScalingMode::None;
     };
 
     auto ok_button = main_widget.find_descendant_of_type_named<GUI::Button>("ok_button");

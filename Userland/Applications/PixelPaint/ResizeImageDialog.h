@@ -17,6 +17,7 @@ class ResizeImageDialog final : public GUI::Dialog {
 public:
     Gfx::IntSize const& desired_size() const { return m_desired_size; }
     Gfx::Painter::ScalingMode scaling_mode() const { return m_scaling_mode; }
+    bool should_rescale() const { return m_rescale_image; }
 
 private:
     ResizeImageDialog(Gfx::IntSize const& starting_size, GUI::Window* parent_window);
@@ -24,6 +25,7 @@ private:
     Gfx::IntSize m_desired_size;
     Gfx::Painter::ScalingMode m_scaling_mode;
     float m_starting_aspect_ratio;
+    bool m_rescale_image;
 };
 
 }

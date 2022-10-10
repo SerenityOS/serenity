@@ -1,7 +1,7 @@
 @GUI::Widget {
     fill_with_background_color: true
     min_width: 260
-    min_height: 210
+    min_height: 260
     layout: @GUI::VerticalBoxLayout {
         margins: [4]
     }
@@ -90,6 +90,12 @@
         @GUI::RadioButton {
             name: "bilinear_radio"
             text: "Bilinear"
+            autosize: true
+        }
+
+        @GUI::RadioButton {
+            name: "resize_canvas"
+            text: "Resize Canvas (None)"
             autosize: true
         }
     }
