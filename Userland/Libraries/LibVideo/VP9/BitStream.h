@@ -47,7 +47,7 @@ private:
 
     u8 const* m_data_ptr { nullptr };
     u8 const* m_end_ptr { nullptr };
-    u64 m_reservoir;
+    u64 m_reservoir { 0 };
     u8 m_reservoir_bits_remaining { 0 };
     size_t m_bits_read { 0 };
 
