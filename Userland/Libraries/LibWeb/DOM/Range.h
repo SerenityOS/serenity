@@ -12,6 +12,15 @@
 
 namespace Web::DOM {
 
+enum class RelativeBoundaryPointPosition {
+    Equal,
+    Before,
+    After,
+};
+
+// https://dom.spec.whatwg.org/#concept-range-bp-position
+RelativeBoundaryPointPosition position_of_boundary_point_relative_to_other_boundary_point(Node const& node_a, u32 offset_a, Node const& node_b, u32 offset_b);
+
 class Range final : public AbstractRange {
     WEB_PLATFORM_OBJECT(Range, AbstractRange);
 
