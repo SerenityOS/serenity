@@ -334,6 +334,12 @@ void WebContentView::keyPressEvent(QKeyEvent* event)
         break;
     }
 
+    if (event->key() == Qt::Key_Backtab) {
+        // NOTE: Qt transforms Shift+Tab into a "Backtab", so we undo that transformation here.
+        client().async_key_down(KeyCode::Key_Tab, Mod_Shift, '\t');
+        return;
+    }
+
     auto text = event->text();
     if (text.isEmpty()) {
         return;
@@ -918,4 +924,20 @@ void WebContentView::request_repaint()
     }
     m_client_state.back_bitmap.pending_paints++;
     client().async_paint(m_client_state.back_bitmap.bitmap->rect().translated(horizontalScrollBar()->value(), verticalScrollBar()->value()), m_client_state.back_bitmap.id);
+}
+
+bool WebContentView::event(QEvent* event)
+{
+    // NOTE: We have to implement event() manually as Qt's focus navigation mechanism
+    //       eats all the Tab key presses by default.
+
+    if (event->type() == QEvent::KeyPress) {
+        keyPressEvent(static_cast<QKeyEvent*>(event));
+        return true;
+    }
+    if (event->type() == QEvent::KeyRelease) {
+        keyReleaseEvent(static_cast<QKeyEvent*>(event));
+        return true;
+    }
+    return QAbstractScrollArea::event(event);
 }
