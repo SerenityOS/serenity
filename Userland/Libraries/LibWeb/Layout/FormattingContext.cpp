@@ -683,60 +683,215 @@ void FormattingContext::compute_width_for_absolutely_positioned_replaced_element
     m_state.get_mutable(box).set_content_width(compute_width_for_replaced_element(m_state, box, available_space));
 }
 
-// https://www.w3.org/TR/CSS22/visudet.html#abs-non-replaced-height
+// https://drafts.csswg.org/css-position-3/#abs-non-replaced-height
 void FormattingContext::compute_height_for_absolutely_positioned_non_replaced_element(Box const& box, AvailableSpace const& available_space)
 {
-    // 10.6.4 Absolutely positioned, non-replaced elements
+    // 5.3. The Height Of Absolutely Positioned, Non-Replaced Elements
 
-    // FIXME: The section below is partly on-spec, partly ad-hoc.
-    auto& computed_values = box.computed_values();
+    // For absolutely positioned elements, the used values of the vertical dimensions must satisfy this constraint:
+    // top + margin-top + border-top-width + padding-top + height + padding-bottom + border-bottom-width + margin-bottom + bottom = height of containing block
 
-    auto width_of_containing_block = containing_block_width_for(box);
+    auto margin_top = box.computed_values().margin().top();
+    auto margin_bottom = box.computed_values().margin().bottom();
+    auto top = box.computed_values().inset().top();
+    auto bottom = box.computed_values().inset().bottom();
+    auto height = box.computed_values().height();
+
     auto height_of_containing_block = available_space.height.to_px();
-    auto width_of_containing_block_as_length = CSS::Length::make_px(width_of_containing_block);
     auto height_of_containing_block_as_length = CSS::Length::make_px(height_of_containing_block);
 
-    auto const& computed_top = computed_values.inset().top();
-    auto const& computed_bottom = computed_values.inset().bottom();
-    auto const& computed_height = computed_values.height();
-    auto const& computed_min_height = computed_values.min_height();
-    auto const& computed_max_height = computed_values.max_height();
+    auto solve_for_top = [&] {
+        top = CSS::Length::make_px(
+            height_of_containing_block
+            - margin_top.length().to_px(box)
+            - box.computed_values().border_top().width
+            - box.computed_values().padding().top().length().to_px(box)
+            - height.resolved(box, height_of_containing_block_as_length).to_px(box)
+            - box.computed_values().padding().bottom().length().to_px(box)
+            - box.computed_values().border_bottom().width
+            - margin_bottom.length().to_px(box)
+            - bottom.resolved(box, height_of_containing_block_as_length).to_px(box));
+    };
 
-    auto used_top = computed_top.resolved(box, height_of_containing_block_as_length).resolved(box).to_px(box);
-    auto used_bottom = computed_bottom.resolved(box, height_of_containing_block_as_length).resolved(box).to_px(box);
-    auto tentative_height = CSS::Length::make_auto();
+    auto solve_for_bottom = [&] {
+        bottom = CSS::Length::make_px(
+            height_of_containing_block
+            - top.resolved(box, height_of_containing_block_as_length).to_px(box)
+            - margin_top.length().to_px(box)
+            - box.computed_values().border_top().width
+            - box.computed_values().padding().top().length().to_px(box)
+            - height.resolved(box, height_of_containing_block_as_length).to_px(box)
+            - box.computed_values().padding().bottom().length().to_px(box)
+            - box.computed_values().border_bottom().width
+            - margin_bottom.length().to_px(box));
+    };
 
-    if (!computed_height.is_auto())
-        tentative_height = computed_values.height().resolved(box, height_of_containing_block_as_length).resolved(box);
+    auto solve_for_height = [&] {
+        height = CSS::Size::make_px(
+            height_of_containing_block
+            - top.resolved(box, height_of_containing_block_as_length).to_px(box)
+            - margin_top.length().to_px(box)
+            - box.computed_values().border_top().width
+            - box.computed_values().padding().top().length().to_px(box)
+            - box.computed_values().padding().bottom().length().to_px(box)
+            - box.computed_values().border_bottom().width
+            - margin_bottom.length().to_px(box)
+            - bottom.resolved(box, height_of_containing_block_as_length).to_px(box));
+    };
+
+    auto solve_for_margin_top = [&] {
+        height = CSS::Size::make_px(
+            height_of_containing_block
+            - top.resolved(box, height_of_containing_block_as_length).to_px(box)
+            - box.computed_values().border_top().width
+            - box.computed_values().padding().top().length().to_px(box)
+            - height.resolved(box, height_of_containing_block_as_length).to_px(box)
+            - box.computed_values().padding().bottom().length().to_px(box)
+            - box.computed_values().border_bottom().width
+            - margin_bottom.length().to_px(box)
+            - bottom.resolved(box, height_of_containing_block_as_length).to_px(box));
+    };
+
+    auto solve_for_margin_bottom = [&] {
+        height = CSS::Size::make_px(
+            height_of_containing_block
+            - top.resolved(box, height_of_containing_block_as_length).to_px(box)
+            - margin_top.length().to_px(box)
+            - box.computed_values().border_top().width
+            - box.computed_values().padding().top().length().to_px(box)
+            - height.resolved(box, height_of_containing_block_as_length).to_px(box)
+            - box.computed_values().padding().bottom().length().to_px(box)
+            - box.computed_values().border_bottom().width
+            - bottom.resolved(box, height_of_containing_block_as_length).to_px(box));
+    };
+
+    auto solve_for_margin_top_and_margin_bottom = [&] {
+        auto remainder = height_of_containing_block
+            - top.resolved(box, height_of_containing_block_as_length).to_px(box)
+            - box.computed_values().border_top().width
+            - box.computed_values().padding().top().length().to_px(box)
+            - height.resolved(box, height_of_containing_block_as_length).to_px(box)
+            - box.computed_values().padding().bottom().length().to_px(box)
+            - box.computed_values().border_bottom().width
+            - bottom.resolved(box, height_of_containing_block_as_length).to_px(box);
+
+        margin_top = CSS::Length::make_px(remainder / 2);
+        margin_bottom = CSS::Length::make_px(remainder / 2);
+    };
+
+    // If all three of top, height, and bottom are auto:
+    if (top.is_auto() && height.is_auto() && bottom.is_auto()) {
+        // First set any auto values for margin-top and margin-bottom to 0,
+        if (margin_top.is_auto())
+            margin_top = CSS::Length::make_px(0);
+        if (margin_bottom.is_auto())
+            margin_bottom = CSS::Length::make_px(0);
+
+        // then set top to the static position,
+        auto static_position = calculate_static_position(box);
+        top = CSS::Length::make_px(static_position.y());
+
+        // and finally apply rule number three below.
+        height = CSS::Size::make_px(compute_auto_height_for_block_formatting_context_root(verify_cast<BlockContainer>(box)));
+        solve_for_bottom();
+    }
+
+    // If none of the three are auto:
+    else if (!top.is_auto() && !height.is_auto() && !bottom.is_auto()) {
+        // If both margin-top and margin-bottom are auto,
+        if (margin_top.is_auto() && margin_bottom.is_auto()) {
+            // solve the equation under the extra constraint that the two margins get equal values.
+            solve_for_margin_top_and_margin_bottom();
+        }
+
+        // If one of margin-top or margin-bottom is auto,
+        else if (margin_top.is_auto() || margin_bottom.is_auto()) {
+            // solve the equation for that value.
+            if (margin_top.is_auto())
+                solve_for_margin_top();
+            else
+                solve_for_margin_bottom();
+        }
+
+        // If the values are over-constrained,
+        else {
+            // ignore the value for bottom and solve for that value.
+            solve_for_bottom();
+        }
+    }
+
+    // Otherwise,
+    else {
+        // set auto values for margin-top and margin-bottom to 0,
+        if (margin_top.is_auto())
+            margin_top = CSS::Length::make_px(0);
+        if (margin_bottom.is_auto())
+            margin_bottom = CSS::Length::make_px(0);
+
+        // and pick one of the following six rules that apply.
+
+        // 1. If top and height are auto and bottom is not auto,
+        if (top.is_auto() && height.is_auto() && !bottom.is_auto()) {
+            // then the height is based on the Auto heights for block formatting context roots,
+            height = CSS::Size::make_px(compute_auto_height_for_block_formatting_context_root(verify_cast<BlockContainer>(box)));
+
+            // and solve for top.
+            solve_for_top();
+        }
+
+        // 2. If top and bottom are auto and height is not auto,
+        else if (top.is_auto() && bottom.is_auto() && !height.is_auto()) {
+            // then set top to the static position,
+            top = CSS::Length::make_px(calculate_static_position(box).y());
+
+            // then solve for bottom.
+            solve_for_bottom();
+        }
+
+        // 3. If height and bottom are auto and top is not auto,
+        else if (height.is_auto() && bottom.is_auto() && !top.is_auto()) {
+            // then the height is based on the Auto heights for block formatting context roots,
+            height = CSS::Size::make_px(compute_auto_height_for_block_formatting_context_root(verify_cast<BlockContainer>(box)));
+
+            // and solve for bottom.
+            solve_for_bottom();
+        }
+
+        // 4. If top is auto, height and bottom are not auto,
+        if (top.is_auto() && !height.is_auto() && !bottom.is_auto()) {
+            // then solve for top.
+            solve_for_top();
+        }
+
+        // 5. If height is auto, top and bottom are not auto,
+        if (height.is_auto() && !top.is_auto() && !bottom.is_auto()) {
+            // then solve for height.
+            solve_for_height();
+        }
+
+        // 6. If bottom is auto, top and height are not auto,
+        if (bottom.is_auto() && !top.is_auto() && !height.is_auto()) {
+            // then solve for bottom.
+            solve_for_bottom();
+        }
+    }
+
+    // NOTE: The following is not directly part of any spec, but this is where we resolve
+    //       the final used values for vertical margin/border/padding.
+
+    auto width_of_containing_block = containing_block_width_for(box);
+    auto width_of_containing_block_as_length = CSS::Length::make_px(width_of_containing_block);
 
     auto& box_state = m_state.get_mutable(box);
-    box_state.margin_top = computed_values.margin().top().resolved(box, width_of_containing_block_as_length).to_px(box);
-    box_state.margin_bottom = computed_values.margin().bottom().resolved(box, width_of_containing_block_as_length).to_px(box);
-    box_state.border_top = computed_values.border_top().width;
-    box_state.border_bottom = computed_values.border_bottom().width;
-    box_state.padding_top = computed_values.padding().top().resolved(box, width_of_containing_block_as_length).to_px(box);
-    box_state.padding_bottom = computed_values.padding().bottom().resolved(box, width_of_containing_block_as_length).to_px(box);
+    box_state.margin_top = margin_top.resolved(box, width_of_containing_block_as_length).to_px(box);
+    box_state.margin_bottom = margin_bottom.resolved(box, width_of_containing_block_as_length).to_px(box);
+    box_state.border_top = box.computed_values().border_top().width;
+    box_state.border_bottom = box.computed_values().border_bottom().width;
+    box_state.padding_top = box.computed_values().padding().top().resolved(box, width_of_containing_block_as_length).to_px(box);
+    box_state.padding_bottom = box.computed_values().padding().bottom().resolved(box, width_of_containing_block_as_length).to_px(box);
 
-    if (computed_height.is_auto() && computed_top.is_auto() && computed_bottom.is_auto()) {
-        tentative_height = CSS::Length(compute_auto_height_for_block_level_element(box, available_space), CSS::Length::Type::Px);
-    }
-
-    else if (computed_height.is_auto() && !computed_top.is_auto() && computed_bottom.is_auto()) {
-        tentative_height = CSS::Length(compute_auto_height_for_block_level_element(box, available_space), CSS::Length::Type::Px);
-        box_state.inset_bottom = height_of_containing_block - tentative_height.to_px(box) - used_top - box_state.margin_top - box_state.padding_top - box_state.border_top - box_state.margin_bottom - box_state.padding_bottom - box_state.border_bottom;
-    }
-
-    else if (computed_height.is_auto() && !computed_top.is_auto() && !computed_bottom.is_auto()) {
-        tentative_height = CSS::Length(height_of_containing_block - used_top - box_state.margin_top - box_state.padding_top - box_state.border_top - used_bottom - box_state.margin_bottom - box_state.padding_bottom - box_state.border_bottom, CSS::Length::Type::Px);
-    }
-
-    float used_height = tentative_height.to_px(box);
-    if (!computed_max_height.is_none())
-        used_height = min(used_height, computed_max_height.resolved(box, height_of_containing_block_as_length).resolved(box).to_px(box));
-    if (!computed_min_height.is_auto())
-        used_height = max(used_height, computed_min_height.resolved(box, height_of_containing_block_as_length).resolved(box).to_px(box));
-
-    box_state.set_content_height(used_height);
+    // And here is where we assign the box's content height.
+    box_state.set_content_height(height.resolved(box, height_of_containing_block_as_length).to_px(box));
 }
 
 // NOTE: This is different from content_box_rect_in_ancestor_coordinate_space() as this does *not* follow the containing block chain up, but rather the parent() chain.
