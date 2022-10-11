@@ -10,7 +10,7 @@ Optional: `fuse2fs` for [building images without root](https://github.com/Sereni
 ## openSUSE
 
 ```console
-sudo zypper install curl cmake mpfr-devel mpc-devel ninja gmp-devel e2fsprogs patch qemu-x86 qemu-audio-pa gcc gcc-c++ ccache rsync patterns-devel-C-C++-devel_C_C++
+sudo zypper install curl cmake mpfr-devel mpc-devel ninja gmp-devel e2fsprogs patch qemu-x86 qemu-audio-pa gcc11 gcc gcc-c++ ccache rsync patterns-devel-C-C++-devel_C_C++
 ```
 
 ## Void Linux
