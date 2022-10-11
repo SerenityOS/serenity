@@ -87,6 +87,7 @@ public:
     virtual void hideEvent(QHideEvent*) override;
     virtual void focusInEvent(QFocusEvent*) override;
     virtual void focusOutEvent(QFocusEvent*) override;
+    virtual bool event(QEvent*) override;
 
     void debug_request(String const& request, String const& argument);
 
