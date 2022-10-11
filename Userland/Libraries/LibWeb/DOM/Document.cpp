@@ -360,8 +360,9 @@ JS::GCPtr<Selection::Selection> Document::get_selection()
     if (!browsing_context()) {
         return nullptr;
     }
+
     if (!m_selection) {
-        m_selection = Selection::Selection::create(realm());
+        m_selection = Selection::Selection::create(realm(), *this);
     }
     return m_selection;
 }
