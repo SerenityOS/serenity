@@ -876,6 +876,15 @@ void FormattingContext::compute_height_for_absolutely_positioned_non_replaced_el
         }
     }
 
+    auto used_height = height.resolved(box, height_of_containing_block_as_length).to_px(box);
+    auto const& computed_min_height = box.computed_values().min_height();
+    auto const& computed_max_height = box.computed_values().max_height();
+
+    if (!computed_max_height.is_none())
+        used_height = min(used_height, computed_max_height.resolved(box, height_of_containing_block_as_length).resolved(box).to_px(box));
+    if (!computed_min_height.is_auto())
+        used_height = max(used_height, computed_min_height.resolved(box, height_of_containing_block_as_length).resolved(box).to_px(box));
+
     // NOTE: The following is not directly part of any spec, but this is where we resolve
     //       the final used values for vertical margin/border/padding.
 
@@ -891,7 +900,7 @@ void FormattingContext::compute_height_for_absolutely_positioned_non_replaced_el
     box_state.padding_bottom = box.computed_values().padding().bottom().resolved(box, width_of_containing_block_as_length).to_px(box);
 
     // And here is where we assign the box's content height.
-    box_state.set_content_height(height.resolved(box, height_of_containing_block_as_length).to_px(box));
+    box_state.set_content_height(used_height);
 }
 
 // NOTE: This is different from content_box_rect_in_ancestor_coordinate_space() as this does *not* follow the containing block chain up, but rather the parent() chain.
