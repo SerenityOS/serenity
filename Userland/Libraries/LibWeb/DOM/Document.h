@@ -596,6 +596,7 @@ private:
     // https://html.spec.whatwg.org/multipage/dom.html#previous-document-unload-timing
     DocumentUnloadTimingInfo m_previous_document_unload_timing;
 
+    // https://w3c.github.io/selection-api/#dfn-selection
     JS::GCPtr<Selection::Selection> m_selection;
 };
 
