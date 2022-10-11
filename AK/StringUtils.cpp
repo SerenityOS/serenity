@@ -338,10 +338,10 @@ StringView trim(StringView str, StringView characters, TrimMode mode)
     }
 
     if (mode == TrimMode::Right || mode == TrimMode::Both) {
-        for (size_t i = str.length() - 1; i > 0; --i) {
+        for (size_t i = str.length(); i > 0; --i) {
             if (substring_length == 0)
                 return ""sv;
-            if (!characters.contains(str[i]))
+            if (!characters.contains(str[i - 1]))
                 break;
             --substring_length;
         }

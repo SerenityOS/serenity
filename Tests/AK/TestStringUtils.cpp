@@ -338,6 +338,17 @@ TEST_CASE(is_whitespace)
     EXPECT(!AK::StringUtils::is_whitespace("a\t"sv));
 }
 
+TEST_CASE(trim)
+{
+    EXPECT_EQ(AK::StringUtils::trim("aaa.a."sv, "."sv, TrimMode::Right), "aaa.a"sv);
+    EXPECT_EQ(AK::StringUtils::trim("...aaa"sv, "."sv, TrimMode::Left), "aaa"sv);
+    EXPECT_EQ(AK::StringUtils::trim("...aaa.a..."sv, "."sv, TrimMode::Both), "aaa.a"sv);
+    EXPECT_EQ(AK::StringUtils::trim("."sv, "."sv, TrimMode::Right), ""sv);
+    EXPECT_EQ(AK::StringUtils::trim("."sv, "."sv, TrimMode::Left), ""sv);
+    EXPECT_EQ(AK::StringUtils::trim("."sv, "."sv, TrimMode::Both), ""sv);
+    EXPECT_EQ(AK::StringUtils::trim("..."sv, "."sv, TrimMode::Both), ""sv);
+}
+
 TEST_CASE(find)
 {
     String test_string = "1234567";
