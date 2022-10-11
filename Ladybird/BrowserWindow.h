@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include "CookieJar.h"
 #include "Tab.h"
 #include <AK/NonnullOwnPtrVector.h>
 #include <LibCore/Forward.h>
@@ -45,4 +46,6 @@ private:
     QTabWidget* m_tabs_container { nullptr };
     NonnullOwnPtrVector<Tab> m_tabs;
     Tab* m_current_tab { nullptr };
+
+    Browser::CookieJar m_cookie_jar;
 };
