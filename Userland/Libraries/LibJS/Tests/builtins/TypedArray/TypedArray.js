@@ -276,7 +276,7 @@ test("TypedArray is abstract", () => {
 
 TYPED_ARRAYS.forEach(T => {
     test(`all numeric indices are valid on ${T.name}`, () => {
-        const newTypedArray = new Float32Array([1, 2, 3, 4, 5, 6, 7, 8, 9, 0]);
+        const newTypedArray = new T([1, 2, 3, 4, 5, 6, 7, 8, 9, 0]);
         expect(newTypedArray).toHaveLength(10);
 
         function PoisonError() {}
