@@ -85,6 +85,8 @@ public:
     virtual void keyReleaseEvent(QKeyEvent* event) override;
     virtual void showEvent(QShowEvent*) override;
     virtual void hideEvent(QHideEvent*) override;
+    virtual void focusInEvent(QFocusEvent*) override;
+    virtual void focusOutEvent(QFocusEvent*) override;
 
     void debug_request(String const& request, String const& argument);
 
