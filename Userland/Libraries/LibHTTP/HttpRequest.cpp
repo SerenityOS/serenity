@@ -12,30 +12,35 @@
 
 namespace HTTP {
 
-String HttpRequest::method_name() const
+String to_string(HttpRequest::Method method)
 {
-    switch (m_method) {
-    case Method::GET:
+    switch (method) {
+    case HttpRequest::Method::GET:
         return "GET";
-    case Method::HEAD:
+    case HttpRequest::Method::HEAD:
         return "HEAD";
-    case Method::POST:
+    case HttpRequest::Method::POST:
         return "POST";
-    case Method::DELETE:
+    case HttpRequest::Method::DELETE:
         return "DELETE";
-    case Method::PATCH:
+    case HttpRequest::Method::PATCH:
         return "PATCH";
-    case Method::OPTIONS:
+    case HttpRequest::Method::OPTIONS:
         return "OPTIONS";
-    case Method::TRACE:
+    case HttpRequest::Method::TRACE:
         return "TRACE";
-    case Method::CONNECT:
+    case HttpRequest::Method::CONNECT:
         return "CONNECT";
-    case Method::PUT:
+    case HttpRequest::Method::PUT:
         return "PUT";
     default:
         VERIFY_NOT_REACHED();
     }
+}
+
+String HttpRequest::method_name() const
+{
+    return to_string(m_method);
 }
 
 ByteBuffer HttpRequest::to_raw_request() const
