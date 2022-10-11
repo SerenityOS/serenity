@@ -14,6 +14,7 @@
 #include <LibCore/Object.h>
 #include <LibGUI/FocusSource.h>
 #include <LibGUI/Forward.h>
+#include <LibGUI/ResizeDirection.h>
 #include <LibGUI/WindowMode.h>
 #include <LibGUI/WindowType.h>
 #include <LibGfx/Forward.h>
@@ -131,7 +132,7 @@ public:
     virtual void close();
     void move_to_front();
 
-    void start_interactive_resize();
+    void start_interactive_resize(ResizeDirection resize_direction);
 
     Widget* main_widget() { return m_main_widget; }
     Widget const* main_widget() const { return m_main_widget; }

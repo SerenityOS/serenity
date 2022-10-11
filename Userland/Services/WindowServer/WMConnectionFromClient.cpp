@@ -86,7 +86,7 @@ void WMConnectionFromClient::popup_window_menu(i32 client_id, i32 window_id, Gfx
     }
 }
 
-void WMConnectionFromClient::start_window_resize(i32 client_id, i32 window_id)
+void WMConnectionFromClient::start_window_resize(i32 client_id, i32 window_id, i32 resize_direction)
 {
     auto* client = WindowServer::ConnectionFromClient::from_client_id(client_id);
     if (!client) {
@@ -101,7 +101,7 @@ void WMConnectionFromClient::start_window_resize(i32 client_id, i32 window_id)
     auto& window = *(*it).value;
     // FIXME: We are cheating a bit here by using the current cursor location and hard-coding the left button.
     //        Maybe the client should be allowed to specify what initiated this request?
-    WindowManager::the().start_window_resize(window, ScreenInput::the().cursor_location(), MouseButton::Primary);
+    WindowManager::the().start_window_resize(window, ScreenInput::the().cursor_location(), MouseButton::Primary, (ResizeDirection)resize_direction);
 }
 
 void WMConnectionFromClient::set_window_minimized(i32 client_id, i32 window_id, bool minimized)

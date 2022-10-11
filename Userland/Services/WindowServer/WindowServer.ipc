@@ -80,7 +80,7 @@ endpoint WindowServer
 
     get_applet_rect_on_screen(i32 window_id) => (Gfx::IntRect rect)
 
-    start_window_resize(i32 window_id) =|
+    start_window_resize(i32 window_id, i32 resize_direction) =|
 
     is_maximized(i32 window_id) => (bool maximized)
     set_maximized(i32 window_id, bool maximized) =|
