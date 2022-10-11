@@ -600,6 +600,9 @@ JS::NonnullGCPtr<Geometry::DOMRectList> Element::get_client_rects() const
 {
     Vector<JS::Handle<Geometry::DOMRect>> rects;
 
+    // NOTE: Ensure that layout is up-to-date before looking at metrics.
+    const_cast<Document&>(document()).update_layout();
+
     // 1. If the element on which it was invoked does not have an associated layout box return an empty DOMRectList object and stop this algorithm.
     if (!layout_node() || !layout_node()->is_box())
         return Geometry::DOMRectList::create(realm(), move(rects));
