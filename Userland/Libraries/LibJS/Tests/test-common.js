@@ -306,14 +306,30 @@ class ExpectationError extends Error {
                     threw = false;
                 } catch (e) {
                     if (typeof value === "string") {
-                        this.__expect(e.message.includes(value));
+                        this.__expect(
+                            e.message.includes(value),
+                            `Expected ${this.target.toString()} to throw and message to include "${value}" but message "${
+                                e.message
+                            }" did not contain it`
+                        );
                     } else if (typeof value === "function") {
-                        this.__expect(e instanceof value);
+                        this.__expect(
+                            e instanceof value,
+                            `Expected ${this.target.toString()} to throw and be of type ${value} but it threw ${e}`
+                        );
                     } else if (typeof value === "object") {
-                        this.__expect(e.message === value.message);
+                        this.__expect(
+                            e.message === value.message,
+                            `Expected ${this.target.toString()} to throw and message to be ${value} but it threw with message ${
+                                e.message
+                            }`
+                        );
                     }
                 }
-                this.__expect(threw);
+                this.__expect(
+                    threw,
+                    `Expected ${this.target.toString()} to throw but it didn't throw anything`
+                );
             });
         }
 
