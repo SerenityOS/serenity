@@ -740,7 +740,7 @@ void FormattingContext::compute_height_for_absolutely_positioned_non_replaced_el
     };
 
     auto solve_for_margin_top = [&] {
-        height = CSS::Size::make_px(
+        margin_top = CSS::Length::make_px(
             height_of_containing_block
             - top.resolved(box, height_of_containing_block_as_length).to_px(box)
             - box.computed_values().border_top().width
@@ -753,7 +753,7 @@ void FormattingContext::compute_height_for_absolutely_positioned_non_replaced_el
     };
 
     auto solve_for_margin_bottom = [&] {
-        height = CSS::Size::make_px(
+        margin_bottom = CSS::Length::make_px(
             height_of_containing_block
             - top.resolved(box, height_of_containing_block_as_length).to_px(box)
             - margin_top.length().to_px(box)
