@@ -73,4 +73,6 @@ private:
     ByteBuffer m_body;
 };
 
+String to_string(HttpRequest::Method);
+
 }
