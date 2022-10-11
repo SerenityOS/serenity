@@ -7,8 +7,8 @@
 #define AK_DONT_REPLACE_STD
 
 #include "WebContentView.h"
-#include "CookieJar.h"
 #include "ConsoleWidget.h"
+#include "CookieJar.h"
 #include "ModelTranslator.h"
 #include "Utilities.h"
 #include <AK/Assertions.h>

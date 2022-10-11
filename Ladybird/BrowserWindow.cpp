@@ -159,7 +159,7 @@ BrowserWindow::BrowserWindow()
     dump_cookies_action->setIcon(QIcon(QString("%1/res/icons/browser/cookie.png").arg(s_serenity_resource_root.characters())));
     debug_menu->addAction(dump_cookies_action);
     QObject::connect(dump_cookies_action, &QAction::triggered, this, [this] {
-        debug_request("dump-cookies");
+        m_cookie_jar.dump_cookies();
     });
 
     auto* dump_local_storage_action = new QAction("Dump Local Storage", this);
@@ -294,6 +294,14 @@ void BrowserWindow::new_tab()
 
     QObject::connect(tab_ptr, &Tab::title_changed, this, &BrowserWindow::tab_title_changed);
     QObject::connect(tab_ptr, &Tab::favicon_changed, this, &BrowserWindow::tab_favicon_changed);
+
+    tab_ptr->view().on_get_cookie = [this](auto& url, auto source) -> String {
+        return m_cookie_jar.get_cookie(url, source);
+    };
+
+    tab_ptr->view().on_set_cookie = [this](auto& url, auto& cookie, auto source) {
+        m_cookie_jar.set_cookie(url, cookie, source);
+    };
 
     tab_ptr->focus_location_editor();
 }
