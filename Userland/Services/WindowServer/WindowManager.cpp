@@ -699,26 +699,12 @@ void WindowManager::start_window_move(Window& window, MouseEvent const& event)
     start_window_move(window, event.position());
 }
 
-void WindowManager::start_window_resize(Window& window, Gfx::IntPoint const& position, MouseButton button)
+void WindowManager::start_window_resize(Window& window, Gfx::IntPoint const& position, MouseButton button, ResizeDirection resize_direction)
 {
     MenuManager::the().close_everyone();
 
     move_to_front_and_make_active(window);
-    constexpr ResizeDirection direction_for_hot_area[3][3] = {
-        { ResizeDirection::UpLeft, ResizeDirection::Up, ResizeDirection::UpRight },
-        { ResizeDirection::Left, ResizeDirection::None, ResizeDirection::Right },
-        { ResizeDirection::DownLeft, ResizeDirection::Down, ResizeDirection::DownRight },
-    };
-    Gfx::IntRect outer_rect = window.frame().rect();
-    if (!outer_rect.contains(position)) {
-        // FIXME: This used to be an VERIFY but crashing WindowServer over this seems silly.
-        dbgln("FIXME: !outer_rect.contains(position): outer_rect={}, position={}", outer_rect, position);
-    }
-    int window_relative_x = position.x() - outer_rect.x();
-    int window_relative_y = position.y() - outer_rect.y();
-    int hot_area_row = min(2, window_relative_y / (outer_rect.height() / 3));
-    int hot_area_column = min(2, window_relative_x / (outer_rect.width() / 3));
-    m_resize_direction = direction_for_hot_area[hot_area_row][hot_area_column];
+    m_resize_direction = resize_direction;
     if (m_resize_direction == ResizeDirection::None) {
         VERIFY(!m_resize_window);
         return;
@@ -738,15 +724,11 @@ void WindowManager::start_window_resize(Window& window, Gfx::IntPoint const& pos
     set_automatic_cursor_tracking_window(nullptr);
 
     window.invalidate(true, true);
-
-    if (hot_area_row == 0 || hot_area_column == 0) {
-        m_resize_window->set_default_positioned(false);
-    }
 }
 
-void WindowManager::start_window_resize(Window& window, MouseEvent const& event)
+void WindowManager::start_window_resize(Window& window, MouseEvent const& event, ResizeDirection resize_direction)
 {
-    start_window_resize(window, event.position(), event.button());
+    start_window_resize(window, event.position(), event.button(), resize_direction);
 }
 
 bool WindowManager::process_ongoing_window_move(MouseEvent& event)
@@ -1005,6 +987,10 @@ bool WindowManager::process_ongoing_window_resize(MouseEvent const& event)
     }
     dbgln_if(RESIZE_DEBUG, "[WM] Resizing, original: {}, now: {}", m_resize_window_original_rect, new_rect);
 
+    if (m_resize_window->rect().location() != m_resize_window_original_rect.location()) {
+        m_resize_window->set_default_positioned(false);
+    }
+
     m_resize_window->set_rect(new_rect);
     if (system_effects().geometry() == ShowGeometry::OnMoveAndResize || system_effects().geometry() == ShowGeometry::OnResizeOnly) {
         m_geometry_overlay->window_rect_changed();
@@ -1240,7 +1226,22 @@ void WindowManager::process_mouse_event_for_window(HitTestResult& result, MouseE
             return;
         }
         if (window.is_resizable() && m_keyboard_modifiers == Mod_Super && event.type() == Event::MouseDown && event.button() == MouseButton::Secondary && !window.blocking_modal_window()) {
-            start_window_resize(window, event);
+            constexpr ResizeDirection direction_for_hot_area[3][3] = {
+                { ResizeDirection::UpLeft, ResizeDirection::Up, ResizeDirection::UpRight },
+                { ResizeDirection::Left, ResizeDirection::None, ResizeDirection::Right },
+                { ResizeDirection::DownLeft, ResizeDirection::Down, ResizeDirection::DownRight },
+            };
+            Gfx::IntRect outer_rect = window.frame().rect();
+            if (!outer_rect.contains(event.position())) {
+                // FIXME: This used to be an VERIFY but crashing WindowServer over this seems silly.
+                dbgln("FIXME: !outer_rect.contains(position): outer_rect={}, position={}", outer_rect, event.position());
+            }
+            int window_relative_x = event.position().x() - outer_rect.x();
+            int window_relative_y = event.position().y() - outer_rect.y();
+            int hot_area_row = min(2, window_relative_y / (outer_rect.height() / 3));
+            int hot_area_column = min(2, window_relative_x / (outer_rect.width() / 3));
+            ResizeDirection resize_direction = direction_for_hot_area[hot_area_row][hot_area_column];
+            start_window_resize(window, event, resize_direction);
             return;
         }
     }
@@ -1948,6 +1949,9 @@ Cursor const& WindowManager::active_cursor() const
         case ResizeDirection::DownLeft:
             return *m_resize_diagonally_bltr_cursor;
         case ResizeDirection::None:
+            break;
+        default:
+            VERIFY_NOT_REACHED();
             break;
         }
     }

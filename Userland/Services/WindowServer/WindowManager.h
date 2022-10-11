@@ -21,6 +21,7 @@
 #include <WindowServer/Event.h>
 #include <WindowServer/KeymapSwitcher.h>
 #include <WindowServer/MenuManager.h>
+#include <WindowServer/ResizeDirection.h>
 #include <WindowServer/ScreenLayout.h>
 #include <WindowServer/SystemEffects.h>
 #include <WindowServer/WMConnectionFromClient.h>
@@ -40,18 +41,6 @@ class WindowSwitcher;
 class Button;
 class DndOverlay;
 class WindowGeometryOverlay;
-
-enum class ResizeDirection {
-    None,
-    Left,
-    UpLeft,
-    Up,
-    UpRight,
-    Right,
-    DownRight,
-    Down,
-    DownLeft
-};
 
 class WindowManager : public Core::Object {
     C_OBJECT(WindowManager)
@@ -202,8 +191,8 @@ public:
 
     void check_hide_geometry_overlay(Window&);
 
-    void start_window_resize(Window&, Gfx::IntPoint const&, MouseButton);
-    void start_window_resize(Window&, MouseEvent const&);
+    void start_window_resize(Window&, Gfx::IntPoint const&, MouseButton, ResizeDirection);
+    void start_window_resize(Window&, MouseEvent const&, ResizeDirection);
     void start_window_move(Window&, MouseEvent const&);
     void start_window_move(Window&, Gfx::IntPoint const&);
 

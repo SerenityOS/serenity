@@ -426,6 +426,9 @@ void Compositor::compose()
                 backing_rect.set_right_without_resize(window_rect.right());
                 backing_rect.set_top(window_rect.top());
                 break;
+            default:
+                VERIFY_NOT_REACHED();
+                break;
             }
 
             Gfx::IntRect dirty_rect_in_backing_coordinates = rect.intersected(window_rect)

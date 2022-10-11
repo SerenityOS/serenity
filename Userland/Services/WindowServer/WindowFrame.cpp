@@ -845,25 +845,30 @@ void WindowFrame::handle_border_mouse_event(MouseEvent const& event)
 
     auto& wm = WindowManager::the();
 
+    constexpr ResizeDirection direction_for_hot_area[3][3] = {
+        { ResizeDirection::UpLeft, ResizeDirection::Up, ResizeDirection::UpRight },
+        { ResizeDirection::Left, ResizeDirection::None, ResizeDirection::Right },
+        { ResizeDirection::DownLeft, ResizeDirection::Down, ResizeDirection::DownRight },
+    };
+    Gfx::IntRect outer_rect = { {}, rect().size() };
+    VERIFY(outer_rect.contains(event.position()));
+    int window_relative_x = event.x() - outer_rect.x();
+    int window_relative_y = event.y() - outer_rect.y();
+    int corner_size = titlebar_rect().height();
+    int hot_area_row = (window_relative_y < corner_size) ? 0 : (window_relative_y > outer_rect.height() - corner_size) ? 2
+                                                                                                                       : 1;
+    int hot_area_column = (window_relative_x < corner_size) ? 0 : (window_relative_x > outer_rect.width() - corner_size) ? 2
+                                                                                                                         : 1;
+    ResizeDirection resize_direction = direction_for_hot_area[hot_area_row][hot_area_column];
+
     if (event.type() == Event::MouseMove && event.buttons() == 0) {
-        constexpr ResizeDirection direction_for_hot_area[3][3] = {
-            { ResizeDirection::UpLeft, ResizeDirection::Up, ResizeDirection::UpRight },
-            { ResizeDirection::Left, ResizeDirection::None, ResizeDirection::Right },
-            { ResizeDirection::DownLeft, ResizeDirection::Down, ResizeDirection::DownRight },
-        };
-        Gfx::IntRect outer_rect = { {}, rect().size() };
-        VERIFY(outer_rect.contains(event.position()));
-        int window_relative_x = event.x() - outer_rect.x();
-        int window_relative_y = event.y() - outer_rect.y();
-        int hot_area_row = min(2, window_relative_y / (outer_rect.height() / 3));
-        int hot_area_column = min(2, window_relative_x / (outer_rect.width() / 3));
-        wm.set_resize_candidate(m_window, direction_for_hot_area[hot_area_row][hot_area_column]);
+        wm.set_resize_candidate(m_window, resize_direction);
         Compositor::the().invalidate_cursor();
         return;
     }
 
     if (event.type() == Event::MouseDown && event.button() == MouseButton::Primary)
-        wm.start_window_resize(m_window, event.translated(rect().location()));
+        wm.start_window_resize(m_window, event.translated(rect().location()), resize_direction);
 }
 
 void WindowFrame::handle_menubar_mouse_event(MouseEvent const& event)
