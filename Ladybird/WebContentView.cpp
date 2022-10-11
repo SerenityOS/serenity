@@ -58,6 +58,8 @@ WebContentView::WebContentView()
 {
     setMouseTracking(true);
 
+    setFocusPolicy(Qt::FocusPolicy::StrongFocus);
+
     m_inverse_pixel_scaling_ratio = 1.0 / devicePixelRatio();
 
     verticalScrollBar()->setSingleStep(24);
@@ -352,6 +354,16 @@ void WebContentView::keyReleaseEvent(QKeyEvent* event)
     auto keycode = get_keycode_from_qt_keyboard_event(*event);
     auto modifiers = get_modifiers_from_qt_keyboard_event(*event);
     client().async_key_up(keycode, modifiers, point);
+}
+
+void WebContentView::focusInEvent(QFocusEvent*)
+{
+    client().async_set_has_focus(true);
+}
+
+void WebContentView::focusOutEvent(QFocusEvent*)
+{
+    client().async_set_has_focus(false);
 }
 
 Gfx::IntPoint WebContentView::to_content(Gfx::IntPoint viewport_position) const
