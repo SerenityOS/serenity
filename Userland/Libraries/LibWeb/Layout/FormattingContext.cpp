@@ -697,6 +697,8 @@ void FormattingContext::compute_height_for_absolutely_positioned_non_replaced_el
     auto bottom = box.computed_values().inset().bottom();
     auto height = box.computed_values().height();
 
+    auto width_of_containing_block = containing_block_width_for(box);
+    auto width_of_containing_block_as_length = CSS::Length::make_px(width_of_containing_block);
     auto height_of_containing_block = available_space.height.to_px();
     auto height_of_containing_block_as_length = CSS::Length::make_px(height_of_containing_block);
 
@@ -704,13 +706,13 @@ void FormattingContext::compute_height_for_absolutely_positioned_non_replaced_el
         return CSS::Length::make_px(
             height_of_containing_block
             - top.resolved(box, height_of_containing_block_as_length).to_px(box)
-            - margin_top.length().to_px(box)
+            - margin_top.resolved(box, width_of_containing_block_as_length).to_px(box)
             - box.computed_values().border_top().width
-            - box.computed_values().padding().top().length().to_px(box)
+            - box.computed_values().padding().top().resolved(box, width_of_containing_block_as_length).to_px(box)
             - height.resolved(box, height_of_containing_block_as_length).to_px(box)
-            - box.computed_values().padding().bottom().length().to_px(box)
+            - box.computed_values().padding().bottom().resolved(box, width_of_containing_block_as_length).to_px(box)
             - box.computed_values().border_bottom().width
-            - margin_bottom.length().to_px(box)
+            - margin_bottom.resolved(box, width_of_containing_block_as_length).to_px(box)
             - bottom.resolved(box, height_of_containing_block_as_length).to_px(box)
             + length.to_px(box));
     };
@@ -728,15 +730,15 @@ void FormattingContext::compute_height_for_absolutely_positioned_non_replaced_el
     };
 
     auto solve_for_margin_top = [&] {
-        margin_top = solve_for(margin_top.length());
+        margin_top = solve_for(margin_top.resolved(box, width_of_containing_block_as_length));
     };
 
     auto solve_for_margin_bottom = [&] {
-        margin_bottom = solve_for(margin_bottom.length());
+        margin_bottom = solve_for(margin_bottom.resolved(box, width_of_containing_block_as_length));
     };
 
     auto solve_for_margin_top_and_margin_bottom = [&] {
-        auto remainder = solve_for(CSS::Length::make_px(margin_top.length().to_px(box) + margin_bottom.length().to_px(box))).to_px(box);
+        auto remainder = solve_for(CSS::Length::make_px(margin_top.resolved(box, width_of_containing_block_as_length).to_px(box) + margin_bottom.resolved(box, width_of_containing_block_as_length).to_px(box))).to_px(box);
         margin_top = CSS::Length::make_px(remainder / 2);
         margin_bottom = CSS::Length::make_px(remainder / 2);
     };
@@ -849,9 +851,6 @@ void FormattingContext::compute_height_for_absolutely_positioned_non_replaced_el
 
     // NOTE: The following is not directly part of any spec, but this is where we resolve
     //       the final used values for vertical margin/border/padding.
-
-    auto width_of_containing_block = containing_block_width_for(box);
-    auto width_of_containing_block_as_length = CSS::Length::make_px(width_of_containing_block);
 
     auto& box_state = m_state.get_mutable(box);
     box_state.margin_top = margin_top.resolved(box, width_of_containing_block_as_length).to_px(box);
