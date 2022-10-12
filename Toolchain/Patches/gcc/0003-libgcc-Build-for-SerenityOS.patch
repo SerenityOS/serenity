@@ -53,8 +53,8 @@ index 8c56fcae5d2fdfcc8d1f9b2614f0c41ad44f258f..f5855cfa66d7950c3d7565ad938b4e47
 +	extra_parts="$extra_parts crti.o crtbegin.o crtend.o crtn.o"
 +	extra_parts="$extra_parts crtfastmath.o"
 +	tmake_file="$tmake_file ${cpu_type}/t-aarch64"
-+	tmake_file="$tmake_file ${cpu_type}/t-lse t-slibgcc-libgcc"
-+	tmake_file="$tmake_file ${cpu_type}/t-softfp t-softp t-crtfm"
++	tmake_file="$tmake_file ${cpu_type}/t-lse t-slibgcc t-slibgcc-libgcc"
++	tmake_file="$tmake_file ${cpu_type}/t-softfp t-softfp t-crtfm"
 +	md_unwind_header=aarch64/aarch64-unwind.h
 +	;;
  *)

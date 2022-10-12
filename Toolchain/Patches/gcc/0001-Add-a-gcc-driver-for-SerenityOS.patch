@@ -101,11 +101,11 @@ index 0000000000000000000000000000000000000000..17551aaa1a07e6c0b7365f9889937512
 +/* Files that are linked before user code.
 +   The %s tells GCC to look for these files in the library directory. */
 +#undef STARTFILE_SPEC
-+#define STARTFILE_SPEC "%{!shared:crt0.o%s} crti.o%s %{shared: %{!fbuilding-libgcc:crt0_shared.o%s}} %{shared|static-pie|!no-pie:crtbeginS.o%s; :crtbegin.o%s}"
++#define STARTFILE_SPEC "%{!shared:crt0.o%s} crti.o%s %{shared: %{!fbuilding-libgcc:crt0_shared.o%s}} %{shared|static-pie|!no-pie:%:if-exists-else(crtbeginS.o%s crtbegin.o%s); :crtbegin.o%s}"
 +
 +/* Files that are linked after user code. */
 +#undef ENDFILE_SPEC
-+#define ENDFILE_SPEC "%{shared|static-pie|!no-pie:crtendS.o%s; :crtend.o%s} crtn.o%s"
++#define ENDFILE_SPEC "%{shared|static-pie|!no-pie:%:if-exists-else(crtendS.o%s crtend.o%s); :crtend.o%s} crtn.o%s"
 +
 +#undef LINK_SPEC
 +#define LINK_SPEC "%{shared:-shared} %{static:-static} %{!static: %{rdynamic:-export-dynamic} -dynamic-linker /usr/lib/Loader.so}"
