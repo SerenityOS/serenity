@@ -9,8 +9,8 @@ interface Navigator {
     // objects implementing this interface also implement the interfaces given below
 };
 
-// NOTE: As NavigatorContentUtils, NavigatorCookies, and NavigatorPlugins are not used in WorkerNavigator,
-//       we define them here.
+// NOTE: As NavigatorContentUtils, NavigatorCookies, NavigatorPlugins, and NavigatorAutomationInformation
+//       are not used in WorkerNavigator, we define them here.
 
 // https://html.spec.whatwg.org/multipage/system-state.html#navigatorcontentutils
 interface mixin NavigatorContentUtils {
@@ -31,6 +31,11 @@ interface mixin NavigatorPlugins {
     readonly attribute boolean pdfViewerEnabled;
 };
 
+// https://w3c.github.io/webdriver/#dom-navigatorautomationinformation
+interface mixin NavigatorAutomationInformation {
+    readonly attribute boolean webdriver;
+};
+
 Navigator includes NavigatorID;
 Navigator includes NavigatorLanguage;
 Navigator includes NavigatorOnLine;
@@ -38,4 +43,4 @@ Navigator includes NavigatorContentUtils;
 Navigator includes NavigatorCookies;
 Navigator includes NavigatorPlugins;
 Navigator includes NavigatorConcurrentHardware;
-
+Navigator includes NavigatorAutomationInformation;
