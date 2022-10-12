@@ -446,9 +446,10 @@ String HTMLInputElement::value_sanitization_algorithm(String value) const
         }
     } else if (type_state() == HTMLInputElement::TypeAttributeState::Number) {
         // If the value of the element is not a valid floating-point number, then set it to the empty string instead.
-        char* end_ptr;
-        auto val = strtod(value.characters(), &end_ptr);
-        if (!isfinite(val) || *end_ptr)
+        // https://html.spec.whatwg.org/multipage/common-microsyntaxes.html#rules-for-parsing-floating-point-number-values
+        // 6. Skip ASCII whitespace within input given position.
+        auto maybe_double = value.to_double(TrimWhitespace::Yes);
+        if (!maybe_double.has_value() || !isfinite(maybe_double.value()))
             return "";
     }
 
