@@ -15,7 +15,7 @@ int main(int, char**)
     pthread_create(
         &tid, nullptr, [](void*) -> void* {
             sleep(1);
-            asm volatile("ud2");
+            __builtin_trap();
             return nullptr;
         },
         nullptr);
