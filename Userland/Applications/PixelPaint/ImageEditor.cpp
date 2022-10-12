@@ -512,6 +512,12 @@ void ImageEditor::set_pixel_grid_visibility(bool show_pixel_grid)
     update();
 }
 
+void ImageEditor::clear_guides()
+{
+    m_guides.clear();
+    update();
+}
+
 void ImageEditor::layers_did_change()
 {
     if (on_modified_change)
