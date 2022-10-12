@@ -8,6 +8,7 @@
 #include "Token.h"
 #include <AK/Assertions.h>
 #include <AK/CharacterTypes.h>
+#include <AK/FloatingPointStringConversions.h>
 #include <AK/GenericLexer.h>
 #include <AK/StringBuilder.h>
 
@@ -79,7 +80,8 @@ double Token::double_value() const
                 return static_cast<double>(strtoul(value_string.characters() + 1, nullptr, 8));
         }
     }
-    return strtod(value_string.characters(), nullptr);
+    // This should always be a valid double
+    return value_string.to_double().release_value();
 }
 
 static u32 hex2int(char x)
