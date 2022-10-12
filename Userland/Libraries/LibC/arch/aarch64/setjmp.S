@@ -17,3 +17,10 @@ _longjmp:
 longjmp:
     # FIXME: Possibly incomplete.
     ret
+
+.global _sigsetjmp
+.global sigsetjmp
+_sigsetjmp:
+sigsetjmp:
+    # FIXME: Possibly incomplete.
+    ret
