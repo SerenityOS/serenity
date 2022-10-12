@@ -26,6 +26,7 @@
 #include <LibGUI/TabWidget.h>
 #include <LibMain/Main.h>
 #include <LibWeb/Loader/ResourceLoader.h>
+#include <LibWebView/OutOfProcessWebView.h>
 #include <LibWebView/RequestServerAdapter.h>
 #include <unistd.h>
 
@@ -39,6 +40,7 @@ bool g_content_filters_enabled { true };
 Vector<String> g_proxies;
 HashMap<String, size_t> g_proxy_mappings;
 IconBag g_icon_bag;
+RefPtr<Browser::WebDriverConnection> g_web_driver_connection;
 
 }
 
@@ -144,10 +146,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Browser::CookieJar cookie_jar;
     auto window = Browser::BrowserWindow::construct(cookie_jar, first_url);
-    RefPtr<Browser::WebDriverConnection> web_driver_connection;
 
-    if (!webdriver_ipc_path.is_empty())
-        web_driver_connection = TRY(Browser::WebDriverConnection::connect_to_webdriver(window, webdriver_ipc_path));
+    if (!webdriver_ipc_path.is_empty()) {
+        Browser::g_web_driver_connection = TRY(Browser::WebDriverConnection::connect_to_webdriver(window, webdriver_ipc_path));
+
+        // The first tab is created with the BrowserWindow above, so we have to do this
+        // manually once after establishing the connection.
+        window->active_tab().view().set_is_webdriver_active(true);
+    }
 
     auto content_filters_watcher = TRY(Core::FileWatcher::create());
     content_filters_watcher->on_change = [&](Core::FileWatcherEvent const&) {

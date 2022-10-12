@@ -127,6 +127,9 @@ Tab::Tab(BrowserWindow& window)
 
     m_web_content_view->set_proxy_mappings(g_proxies, g_proxy_mappings);
 
+    if (!g_web_driver_connection.is_null())
+        m_web_content_view->set_is_webdriver_active(true);
+
     auto& go_back_button = toolbar.add_action(window.go_back_action());
     go_back_button.on_context_menu_request = [&](auto&) {
         if (!m_history.can_go_back())
