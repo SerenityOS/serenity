@@ -858,19 +858,19 @@ void FormattingContext::compute_height_for_absolutely_positioned_non_replaced_el
         }
 
         // 4. If top is auto, height and bottom are not auto,
-        if (top.is_auto() && !height.is_auto() && !bottom.is_auto()) {
+        else if (top.is_auto() && !height.is_auto() && !bottom.is_auto()) {
             // then solve for top.
             solve_for_top();
         }
 
         // 5. If height is auto, top and bottom are not auto,
-        if (height.is_auto() && !top.is_auto() && !bottom.is_auto()) {
+        else if (height.is_auto() && !top.is_auto() && !bottom.is_auto()) {
             // then solve for height.
             solve_for_height();
         }
 
         // 6. If bottom is auto, top and height are not auto,
-        if (bottom.is_auto() && !top.is_auto() && !height.is_auto()) {
+        else if (bottom.is_auto() && !top.is_auto() && !height.is_auto()) {
             // then solve for bottom.
             solve_for_bottom();
         }
