@@ -15,13 +15,16 @@ compile_gml(DemoWizardPage2.gml DemoWizardPage2GML.h demo_wizard_page_2_gml)
 set(SOURCES
     main.cpp
     GalleryWidget.cpp
+    DemoWizardDialog.cpp
+)
+
+set(GENERATED_SOURCES
     WindowGML.h
     BasicsTabGML.h
     SlidersTabGML.h
     CursorsTabGML.h
     IconsTabGML.h
     WizardsTabGML.h
-    DemoWizardDialog.cpp
     DemoWizardPage1GML.h
     DemoWizardPage2GML.h
 )

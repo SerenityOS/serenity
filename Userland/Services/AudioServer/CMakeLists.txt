@@ -11,6 +11,9 @@ set(SOURCES
     ConnectionFromClient.cpp
     Mixer.cpp
     main.cpp
+)
+
+set(GENERATED_SOURCES
     AudioServerEndpoint.h
     AudioClientEndpoint.h
 )

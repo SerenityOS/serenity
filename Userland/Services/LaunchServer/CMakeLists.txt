@@ -11,6 +11,9 @@ set(SOURCES
     ConnectionFromClient.cpp
     Launcher.cpp
     main.cpp
+)
+
+set(GENERATED_SOURCES
     LaunchClientEndpoint.h
     LaunchServerEndpoint.h
 )

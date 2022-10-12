@@ -10,10 +10,13 @@ compile_gml(MailWindow.gml MailWindowGML.h mail_window_gml)
 set(SOURCES
     AccountHolder.cpp
     InboxModel.cpp
-    MailboxTreeModel.cpp
     MailWidget.cpp
-    MailWindowGML.h
+    MailboxTreeModel.cpp
     main.cpp
+)
+
+set(GENERATED_SOURCES
+    MailWindowGML.h
 )
 
 serenity_app(Mail ICON app-mail)

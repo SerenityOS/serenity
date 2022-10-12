@@ -20,8 +20,6 @@ set(SOURCES
     CellType/String.cpp
     CellType/Type.cpp
     CellTypeDialog.cpp
-    CondFormattingGML.h
-    CondFormattingViewGML.h
     ExportDialog.cpp
     HelpWindow.cpp
     ImportDialog.cpp
@@ -38,6 +36,8 @@ set(SOURCES
 set(GENERATED_SOURCES
     CSVExportGML.h
     CSVImportGML.h
+    CondFormattingGML.h
+    CondFormattingViewGML.h
     FormatSelectionPageGML.h
 )
 

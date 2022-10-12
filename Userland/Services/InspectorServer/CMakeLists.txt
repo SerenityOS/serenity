@@ -11,6 +11,9 @@ set(SOURCES
     ConnectionFromClient.cpp
     main.cpp
     InspectableProcess.cpp
+)
+
+set(GENERATED_SOURCES
     InspectorServerEndpoint.h
     InspectorClientEndpoint.h
 )

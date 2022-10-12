@@ -10,11 +10,14 @@ compile_ipc(LookupClient.ipc LookupClientEndpoint.h)
 set(SOURCES
     DNSServer.cpp
     LookupServer.cpp
-    LookupServerEndpoint.h
-    LookupClientEndpoint.h
     ConnectionFromClient.cpp
     MulticastDNS.cpp
     main.cpp
+)
+
+set(GENERATED_SOURCES
+    LookupServerEndpoint.h
+    LookupClientEndpoint.h
 )
 
 serenity_bin(LookupServer)

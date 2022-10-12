@@ -6,7 +6,6 @@ serenity_component(
 
 set(SOURCES
     MagnifierWidget.cpp
-    MagnifierWidget.h
     main.cpp
 )
 

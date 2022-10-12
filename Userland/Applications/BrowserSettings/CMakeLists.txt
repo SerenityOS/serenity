@@ -8,11 +8,14 @@ compile_gml(BrowserSettingsWidget.gml BrowserSettingsWidgetGML.h browser_setting
 compile_gml(ContentFilterSettingsWidget.gml ContentFilterSettingsWidgetGML.h content_filter_settings_widget_gml)
 
 set(SOURCES
-    main.cpp
-    ContentFilterSettingsWidget.cpp
-    ContentFilterSettingsWidgetGML.h
     BrowserSettingsWidget.cpp
+    ContentFilterSettingsWidget.cpp
+    main.cpp
+)
+
+set(GENERATED_SOURCES
     BrowserSettingsWidgetGML.h
+    ContentFilterSettingsWidgetGML.h
 )
 
 serenity_app(BrowserSettings ICON app-browser)

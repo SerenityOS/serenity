@@ -12,10 +12,13 @@ set(SOURCES
     ConsoleGlobalObject.cpp
     ImageCodecPluginSerenity.cpp
     PageHost.cpp
-    WebContentClientEndpoint.h
     WebContentConsoleClient.cpp
-    WebContentServerEndpoint.h
     main.cpp
+)
+
+set(GENERATED_SOURCES
+    WebContentClientEndpoint.h
+    WebContentServerEndpoint.h
 )
 
 serenity_bin(WebContent)

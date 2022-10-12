@@ -8,11 +8,14 @@ compile_gml(MinesweeperCustomGameWindow.gml MinesweeperCustomGameWindowGML.h min
 compile_gml(MinesweeperWindow.gml MinesweeperWindowGML.h minesweeper_window_gml)
 
 set(SOURCES
-    MinesweeperCustomGameWindowGML.h
-    MinesweeperWindowGML.h
     CustomGameDialog.cpp
     Field.cpp
     main.cpp
+)
+
+set(GENERATED_SOURCES
+    MinesweeperCustomGameWindowGML.h
+    MinesweeperWindowGML.h
 )
 
 serenity_app(Minesweeper ICON app-minesweeper)

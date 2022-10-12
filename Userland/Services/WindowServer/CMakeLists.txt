@@ -33,12 +33,15 @@ set(SOURCES
     WindowManager.cpp
     WindowStack.cpp
     WindowSwitcher.cpp
+    WMConnectionFromClient.cpp
+    KeymapSwitcher.cpp
+)
+
+set(GENERATED_SOURCES
     WindowServerEndpoint.h
     WindowClientEndpoint.h
     WindowManagerServerEndpoint.h
     WindowManagerClientEndpoint.h
-    WMConnectionFromClient.cpp
-    KeymapSwitcher.cpp
 )
 
 serenity_bin(WindowServer)

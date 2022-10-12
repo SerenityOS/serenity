@@ -9,7 +9,9 @@ compile_gml(MailSettingsWidget.gml MailSettingsWidgetGML.h mail_settings_widget_
 set(SOURCES
     main.cpp
     MailSettingsWidget.cpp
-    MailSettingsWidget.h
+)
+
+set(GENERATED_SOURCES
     MailSettingsWidgetGML.h
 )
 

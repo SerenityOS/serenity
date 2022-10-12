@@ -10,10 +10,11 @@ compile_gml(TimeZoneSettingsWidget.gml TimeZoneSettingsWidgetGML.h time_zone_set
 set(SOURCES
     main.cpp
     ClockSettingsWidget.cpp
-    ClockSettingsWidget.h
-    ClockSettingsWidgetGML.h
     TimeZoneSettingsWidget.cpp
-    TimeZoneSettingsWidget.h
+)
+
+set(GENERATED_SOURCES
+    ClockSettingsWidgetGML.h
     TimeZoneSettingsWidgetGML.h
 )
 

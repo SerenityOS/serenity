@@ -8,8 +8,11 @@ compile_gml(TerminalSettingsMain.gml TerminalSettingsMainGML.h terminal_settings
 compile_gml(TerminalSettingsView.gml TerminalSettingsViewGML.h terminal_settings_view_gml)
 
 set(SOURCES
-    main.cpp
     TerminalSettingsWidget.cpp
+    main.cpp
+)
+
+set(GENERATED_SOURCES
     TerminalSettingsMainGML.h
     TerminalSettingsViewGML.h
 )

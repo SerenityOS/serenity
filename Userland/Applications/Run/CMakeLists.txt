@@ -9,7 +9,9 @@ compile_gml(Run.gml RunGML.h run_gml)
 set(SOURCES
     main.cpp
     RunWindow.cpp
-    RunWindow.h
+)
+
+set(GENERATED_SOURCES
     RunGML.h
 )
 

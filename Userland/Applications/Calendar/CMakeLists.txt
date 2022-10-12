@@ -7,8 +7,11 @@ compile_gml(CalendarWindow.gml CalendarWindowGML.h calendar_window_gml)
 
 set(SOURCES
     AddEventDialog.cpp
-    CalendarWindowGML.h
     main.cpp
+)
+
+set(GENERATED_SOURCES
+    CalendarWindowGML.h
 )
 
 serenity_app(Calendar ICON app-calendar)

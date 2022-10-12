@@ -9,6 +9,9 @@ compile_gml(CrashReporterWindow.gml CrashReporterWindowGML.h crash_reporter_wind
 
 set(SOURCES
     main.cpp
+)
+
+set(GENERATED_SOURCES
     CrashReporterWindowGML.h
 )
 

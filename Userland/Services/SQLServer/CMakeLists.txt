@@ -11,10 +11,13 @@ set(SOURCES
     ConnectionFromClient.cpp
     DatabaseConnection.cpp
     main.cpp
+    SQLStatement.cpp
+)
+
+set(GENERATED_SOURCES
     SQLClientEndpoint.h
     SQLServerEndpoint.h
-    SQLStatement.cpp
-    )
+)
 
 serenity_bin(SQLServer)
 target_link_libraries(SQLServer LibCore LibIPC LibSQL LibMain)

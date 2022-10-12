@@ -37,15 +37,12 @@ set(SOURCES
     DragOperation.cpp
     EditingEngine.cpp
     EmojiInputDialog.cpp
-    EmojiInputDialogGML.h
     Event.cpp
     FileIconProvider.cpp
     FilePicker.cpp
-    FilePickerDialogGML.h
     FileSystemModel.cpp
     FilteringProxyModel.cpp
     FontPicker.cpp
-    FontPickerDialogGML.h
     Frame.cpp
     GitCommitLexer.cpp
     GitCommitSyntaxHighlighter.cpp
@@ -81,7 +78,6 @@ set(SOURCES
     OpacitySlider.cpp
     Painter.cpp
     PasswordInputDialog.cpp
-    PasswordInputDialogGML.h
     PersistentModelIndex.cpp
     Process.cpp
     ProcessChooser.cpp
@@ -125,14 +121,18 @@ set(SOURCES
 )
 
 set(GENERATED_SOURCES
-    ../../Services/WindowServer/WindowClientEndpoint.h
-    ../../Services/WindowServer/WindowServerEndpoint.h
-    ../../Services/WindowServer/WindowManagerClientEndpoint.h
-    ../../Services/WindowServer/WindowManagerServerEndpoint.h
-    ../../Services/NotificationServer/NotificationClientEndpoint.h
-    ../../Services/NotificationServer/NotificationServerEndpoint.h
     ../../Services/Clipboard/ClipboardClientEndpoint.h
     ../../Services/Clipboard/ClipboardServerEndpoint.h
+    ../../Services/NotificationServer/NotificationClientEndpoint.h
+    ../../Services/NotificationServer/NotificationServerEndpoint.h
+    ../../Services/WindowServer/WindowClientEndpoint.h
+    ../../Services/WindowServer/WindowManagerClientEndpoint.h
+    ../../Services/WindowServer/WindowManagerServerEndpoint.h
+    ../../Services/WindowServer/WindowServerEndpoint.h
+    EmojiInputDialogGML.h
+    FilePickerDialogGML.h
+    FontPickerDialogGML.h
+    PasswordInputDialogGML.h
 )
 
 serenity_lib(LibGUI gui)

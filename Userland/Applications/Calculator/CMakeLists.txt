@@ -11,6 +11,9 @@ set(SOURCES
     CalculatorWidget.cpp
     RoundingDialog.cpp
     Keypad.cpp
+)
+
+set(GENERATED_SOURCES
     CalculatorGML.h
 )
 
