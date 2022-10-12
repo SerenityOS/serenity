@@ -123,7 +123,11 @@
 #ifdef NAKED
 #    undef NAKED
 #endif
-#define NAKED __attribute__((naked))
+#ifndef AK_ARCH_AARCH64
+#    define NAKED __attribute__((naked))
+#else
+#    define NAKED
+#endif
 
 #ifdef DISALLOW
 #    undef DISALLOW
