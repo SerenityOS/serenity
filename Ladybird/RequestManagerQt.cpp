@@ -6,6 +6,7 @@
 
 #include "RequestManagerQt.h"
 #include <AK/JsonObject.h>
+#include <QNetworkCookie>
 
 RequestManagerQt::RequestManagerQt()
 {
@@ -81,7 +82,12 @@ void RequestManagerQt::Request::did_finish()
         auto name = String(it.first.data(), it.first.length());
         auto value = String(it.second.data(), it.second.length());
         if (name.equals_ignoring_case("set-cookie"sv)) {
-            set_cookie_headers.append(value);
+            // NOTE: Qt may have bundled multiple Set-Cookie headers into a single one.
+            //       We have to extract the full list of cookies via QNetworkReply::header().
+            auto set_cookie_list = m_reply.header(QNetworkRequest::SetCookieHeader).value<QList<QNetworkCookie>>();
+            for (auto const& cookie : set_cookie_list) {
+                set_cookie_headers.append(cookie.toRawForm().data());
+            }
         } else {
             response_headers.set(name, value);
         }
