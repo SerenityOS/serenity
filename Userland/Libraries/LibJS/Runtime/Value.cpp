@@ -9,6 +9,7 @@
 #include <AK/AllOf.h>
 #include <AK/Assertions.h>
 #include <AK/CharacterTypes.h>
+#include <AK/FloatingPointStringConversions.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/Utf8View.h>
@@ -549,12 +550,11 @@ Optional<Value> string_to_number(StringView string)
         return Value(bigint.to_double());
     }
 
-    char* endptr;
-    auto parsed_double = strtod(text.characters(), &endptr);
-    if (*endptr)
+    auto maybe_double = text.to_double(AK::TrimWhitespace::No);
+    if (!maybe_double.has_value())
         return js_nan();
 
-    return Value(parsed_double);
+    return Value(*maybe_double);
 }
 
 // 7.1.4 ToNumber ( argument ), https://tc39.es/ecma262/#sec-tonumber
