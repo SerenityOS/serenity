@@ -39,6 +39,8 @@ public:
     // https://html.spec.whatwg.org/multipage/system-state.html#dom-navigator-pdfviewerenabled
     bool pdf_viewer_enabled() const { return false; }
 
+    bool webdriver() const;
+
     virtual ~Navigator() override;
 
 private:
