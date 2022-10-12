@@ -54,14 +54,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             continue;
         }
         auto file = file_or_error.release_value();
-
-        auto stat_or_error = Core::System::stat(filepath);
-        if (stat_or_error.is_error()) {
-            warnln("{}: Failed to fstat {}: {}", arguments.strings[0], filepath, stat_or_error.error());
-            fail = true;
-            continue;
-        }
-        auto st = stat_or_error.release_value();
+        size_t file_size = 0;
 
         if (algorithm == "crc32") {
             Crypto::Checksum::CRC32 crc32;
@@ -72,9 +65,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                     fail = true;
                     continue;
                 }
+                file_size += data_or_error.value().size();
                 crc32.update(data_or_error.value());
             }
-            outln("{:08x} {} {}", crc32.digest(), st.st_size, path);
+            outln("{:08x} {} {}", crc32.digest(), file_size, path);
         } else if (algorithm == "adler32") {
             Crypto::Checksum::Adler32 adler32;
             while (!file->is_eof()) {
@@ -84,9 +78,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                     fail = true;
                     continue;
                 }
+                file_size += data_or_error.value().size();
                 adler32.update(data_or_error.value());
             }
-            outln("{:08x} {} {}", adler32.digest(), st.st_size, path);
+            outln("{:08x} {} {}", adler32.digest(), file_size, path);
         } else {
             warnln("{}: Unknown checksum algorithm: {}", arguments.strings[0], algorithm);
             exit(1);
