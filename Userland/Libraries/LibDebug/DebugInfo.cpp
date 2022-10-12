@@ -171,6 +171,8 @@ NonnullOwnPtrVector<DebugInfo::VariableInfo> DebugInfo::get_variables_in_current
         ip = regs.eip;
 #elif ARCH(X86_64)
         ip = regs.rip;
+#elif ARCH(AARCH64)
+        TODO_AARCH64();
 #else
 #    error Unknown architecture
 #endif

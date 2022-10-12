@@ -49,6 +49,9 @@ static void handle_print_registers(PtraceRegisters const& regs)
     outln("r8 ={:p} r9 ={:p} r10={:p} r11={:p}", regs.r8, regs.r9, regs.r10, regs.r11);
     outln("r12={:p} r13={:p} r14={:p} r15={:p}", regs.r12, regs.r13, regs.r14, regs.r15);
     outln("rip={:p} rflags={:p}", regs.rip, regs.rflags);
+#elif ARCH(AARCH64)
+    (void)regs;
+    TODO_AARCH64();
 #else
 #    error Unknown architecture
 #endif
@@ -250,6 +253,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         const FlatPtr ip = regs.eip;
 #elif ARCH(X86_64)
         const FlatPtr ip = regs.rip;
+#elif ARCH(AARCH64)
+        const FlatPtr ip = 0; // FIXME
+        TODO_AARCH64();
 #else
 #    error Unknown architecture
 #endif

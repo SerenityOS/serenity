@@ -9,7 +9,9 @@
 
 #include <AK/BuiltinWrappers.h>
 #include <AK/ExtraMathConstants.h>
-#include <AK/FPControl.h>
+#ifndef AK_ARCH_AARCH64
+#    include <AK/FPControl.h>
+#endif
 #include <AK/Math.h>
 #include <AK/Platform.h>
 #include <AK/StdLibExtras.h>
@@ -62,7 +64,7 @@ enum class RoundingMode {
 template<typename T>
 union FloatExtractor;
 
-#if ARCH(I386) || ARCH(X86_64)
+#if ARCH(I386) || ARCH(X86_64) || ARCH(AARCH64)
 // This assumes long double is 80 bits, which is true with GCC on Intel platforms
 template<>
 union FloatExtractor<long double> {
@@ -413,6 +415,7 @@ MAKE_AK_BACKED2(remainder);
 
 long double truncl(long double x) NOEXCEPT
 {
+#ifndef AK_ARCH_AARCH64
     if (fabsl(x) < LONG_LONG_MAX) {
         // This is 1.6 times faster than the implementation using the "internal_to_integer"
         // helper (on x86_64)
@@ -425,12 +428,14 @@ long double truncl(long double x) NOEXCEPT
             : [temp] "m"(temp));
         return x;
     }
+#endif
 
     return internal_to_integer(x, RoundingMode::ToZero);
 }
 
 double trunc(double x) NOEXCEPT
 {
+#ifndef AK_ARCH_AARCH64
     if (fabs(x) < LONG_LONG_MAX) {
         u64 temp;
         asm(
@@ -440,12 +445,14 @@ double trunc(double x) NOEXCEPT
             : [temp] "m"(temp));
         return x;
     }
+#endif
 
     return internal_to_integer(x, RoundingMode::ToZero);
 }
 
 float truncf(float x) NOEXCEPT
 {
+#ifndef AK_ARCH_AARCH64
     if (fabsf(x) < LONG_LONG_MAX) {
         u64 temp;
         asm(
@@ -455,40 +462,60 @@ float truncf(float x) NOEXCEPT
             : [temp] "m"(temp));
         return x;
     }
+#endif
 
     return internal_to_integer(x, RoundingMode::ToZero);
 }
 
 long double rintl(long double value)
 {
+#ifdef AK_ARCH_AARCH64
+    (void)value;
+    TODO_AARCH64();
+#else
     long double res;
     asm(
         "frndint\n"
         : "=t"(res)
         : "0"(value));
     return res;
+#endif
 }
 double rint(double value)
 {
+#ifdef AK_ARCH_AARCH64
+    (void)value;
+    TODO_AARCH64();
+#else
     double res;
     asm(
         "frndint\n"
         : "=t"(res)
         : "0"(value));
     return res;
+#endif
 }
 float rintf(float value)
 {
+#ifdef AK_ARCH_AARCH64
+    (void)value;
+    TODO_AARCH64();
+#else
     float res;
     asm(
         "frndint\n"
         : "=t"(res)
         : "0"(value));
     return res;
+#endif
 }
 
 long lrintl(long double value)
 {
+#ifdef AK_ARCH_AARCH64
+    (void)value;
+    TODO_AARCH64();
+#else
     long res;
     asm(
         "fistpl %0\n"
@@ -496,9 +523,14 @@ long lrintl(long double value)
         : "t"(value)
         : "st");
     return res;
+#endif
 }
 long lrint(double value)
 {
+#ifdef AK_ARCH_AARCH64
+    (void)value;
+    TODO_AARCH64();
+#else
     long res;
     asm(
         "fistpl %0\n"
@@ -506,9 +538,14 @@ long lrint(double value)
         : "t"(value)
         : "st");
     return res;
+#endif
 }
 long lrintf(float value)
 {
+#ifdef AK_ARCH_AARCH64
+    (void)value;
+    TODO_AARCH64();
+#else
     long res;
     asm(
         "fistpl %0\n"
@@ -516,10 +553,15 @@ long lrintf(float value)
         : "t"(value)
         : "st");
     return res;
+#endif
 }
 
 long long llrintl(long double value)
 {
+#ifdef AK_ARCH_AARCH64
+    (void)value;
+    TODO_AARCH64();
+#else
     long long res;
     asm(
         "fistpq %0\n"
@@ -527,9 +569,14 @@ long long llrintl(long double value)
         : "t"(value)
         : "st");
     return res;
+#endif
 }
 long long llrint(double value)
 {
+#ifdef AK_ARCH_AARCH64
+    (void)value;
+    TODO_AARCH64();
+#else
     long long res;
     asm(
         "fistpq %0\n"
@@ -537,9 +584,14 @@ long long llrint(double value)
         : "t"(value)
         : "st");
     return res;
+#endif
 }
 long long llrintf(float value)
 {
+#ifdef AK_ARCH_AARCH64
+    (void)value;
+    TODO_AARCH64();
+#else
     long long res;
     asm(
         "fistpq %0\n"
@@ -547,6 +599,7 @@ long long llrintf(float value)
         : "t"(value)
         : "st");
     return res;
+#endif
 }
 
 // On systems where FLT_RADIX == 2, ldexp is equivalent to scalbn
