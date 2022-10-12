@@ -9,6 +9,9 @@ compile_gml(Solitaire.gml SolitaireGML.h solitaire_gml)
 set(SOURCES
     Game.cpp
     main.cpp
+)
+
+set(GENERATED_SOURCES
     SolitaireGML.h
 )
 

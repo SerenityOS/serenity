@@ -18,6 +18,9 @@ set(SOURCES
     ProcessUnveiledPathsWidget.cpp
     ProcessStateWidget.cpp
     ThreadStackWidget.cpp
+)
+
+set(GENERATED_SOURCES
     SystemMonitorGML.h
     ProcessWindowGML.h
 )

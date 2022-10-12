@@ -10,8 +10,6 @@ set(SOURCES
     ConnectionFromClient.cpp
     ConnectionCache.cpp
     Request.cpp
-    RequestClientEndpoint.h
-    RequestServerEndpoint.h
     GeminiRequest.cpp
     GeminiProtocol.cpp
     HttpRequest.cpp
@@ -20,6 +18,11 @@ set(SOURCES
     HttpsProtocol.cpp
     main.cpp
     Protocol.cpp
+)
+
+set(GENERATED_SOURCES
+    RequestClientEndpoint.h
+    RequestServerEndpoint.h
 )
 
 serenity_bin(RequestServer)

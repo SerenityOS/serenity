@@ -7,8 +7,11 @@ compile_gml(PartitionEditorWindow.gml PartitionEditorWindowGML.h partition_edito
 
 set(SOURCES
     main.cpp
-    PartitionEditorWindowGML.h
     PartitionModel.cpp
+)
+
+set(GENERATED_SOURCES
+    PartitionEditorWindowGML.h
 )
 
 serenity_app(PartitionEditor ICON app-partition-editor)

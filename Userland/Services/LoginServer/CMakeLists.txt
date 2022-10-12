@@ -7,9 +7,12 @@ serenity_component(
 compile_gml(LoginWindow.gml LoginWindowGML.h login_window_gml)
 
 set(SOURCES
-    LoginWindowGML.h
     LoginWindow.cpp
     main.cpp
+)
+
+set(GENERATED_SOURCES
+    LoginWindowGML.h
 )
 
 serenity_bin(LoginServer)

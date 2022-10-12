@@ -10,6 +10,9 @@ compile_ipc(FileSystemAccessClient.ipc FileSystemAccessClientEndpoint.h)
 set(SOURCES
     ConnectionFromClient.cpp
     main.cpp
+)
+
+set(GENERATED_SOURCES
     FileSystemAccessServerEndpoint.h
     FileSystemAccessClientEndpoint.h
 )

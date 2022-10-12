@@ -9,6 +9,9 @@ compile_gml(Spider.gml SpiderGML.h spider_gml)
 set(SOURCES
     Game.cpp
     main.cpp
+)
+
+set(GENERATED_SOURCES
     SpiderGML.h
 )
 

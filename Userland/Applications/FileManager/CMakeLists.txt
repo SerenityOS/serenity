@@ -12,13 +12,16 @@ compile_gml(PropertiesWindowGeneralTab.gml PropertiesWindowGeneralTabGML.h prope
 set(SOURCES
     DesktopWidget.cpp
     DirectoryView.cpp
-    FileManagerWindowGML.h
-    FileOperationProgress.gml
     FileOperationProgressWidget.cpp
     FileUtils.cpp
     main.cpp
     PropertiesWindow.cpp
-    PropertiesWindowGeneralTab.gml
+)
+
+set(GENERATED_SOURCES
+    FileManagerWindowGML.h
+    FileOperationProgressGML.h
+    PropertiesWindowGeneralTabGML.h
 )
 
 serenity_app(FileManager ICON app-file-manager)

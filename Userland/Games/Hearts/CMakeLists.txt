@@ -13,6 +13,9 @@ set(SOURCES
     Player.cpp
     ScoreCard.cpp
     SettingsDialog.cpp
+)
+
+set(GENERATED_SOURCES
     HeartsGML.h
 )
 

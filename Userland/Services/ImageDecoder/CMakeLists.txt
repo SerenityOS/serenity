@@ -9,6 +9,9 @@ compile_ipc(ImageDecoderClient.ipc ImageDecoderClientEndpoint.h)
 set(SOURCES
     ConnectionFromClient.cpp
     main.cpp
+)
+
+set(GENERATED_SOURCES
     ImageDecoderServerEndpoint.h
     ImageDecoderClientEndpoint.h
 )

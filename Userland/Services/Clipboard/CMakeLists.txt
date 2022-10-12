@@ -9,10 +9,13 @@ compile_ipc(ClipboardClient.ipc ClipboardClientEndpoint.h)
 
 set(SOURCES
     ConnectionFromClient.cpp
-    ClipboardClientEndpoint.h
-    ClipboardServerEndpoint.h
     Storage.cpp
     main.cpp
+)
+
+set(GENERATED_SOURCES
+    ClipboardClientEndpoint.h
+    ClipboardServerEndpoint.h
 )
 
 serenity_bin(Clipboard)

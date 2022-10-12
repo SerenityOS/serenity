@@ -9,6 +9,9 @@ set(SOURCES
     main.cpp
     GalleryWidget.cpp
     BasicModel.cpp
+)
+
+set(GENERATED_SOURCES
     BasicModelTabGML.h
 )
 

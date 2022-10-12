@@ -10,8 +10,11 @@ set(SOURCES
     main.cpp
     Board.cpp
     BoardWidget.cpp
-    GameOfLifeGML.h
     Pattern.cpp
+)
+
+set(GENERATED_SOURCES
+    GameOfLifeGML.h
 )
 
 serenity_app(GameOfLife ICON app-gameoflife)

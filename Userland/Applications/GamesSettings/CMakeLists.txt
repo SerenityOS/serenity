@@ -7,11 +7,13 @@ serenity_component(
 compile_gml(CardSettingsWidget.gml CardSettingsWidgetGML.h card_settings_widget_gml)
 
 set(SOURCES
-        main.cpp
-        CardSettingsWidgetGML.h
-        CardSettingsWidget.cpp
-        CardSettingsWidget.h
-        )
+    main.cpp
+    CardSettingsWidget.cpp
+)
+
+set(GENERATED_SOURCES
+    CardSettingsWidgetGML.h
+)
 
 serenity_app(GamesSettings ICON games)
 target_link_libraries(GamesSettings LibGUI LibMain LibCards)

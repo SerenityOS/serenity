@@ -11,6 +11,9 @@ set(SOURCES
     ConnectionFromClient.cpp
     main.cpp
     NotificationWindow.cpp
+)
+
+set(GENERATED_SOURCES
     NotificationServerEndpoint.h
     NotificationClientEndpoint.h
 )

@@ -16,9 +16,7 @@ set(SOURCES
     CreateNewImageDialog.cpp
     CreateNewLayerDialog.cpp
     EditGuideDialog.cpp
-    EditGuideDialogGML.h
     FilterGallery.cpp
-    FilterGalleryGML.h
     FilterTreeModel.cpp
     FilterPreviewWidget.cpp
     Filters/Bloom.cpp
@@ -34,7 +32,6 @@ set(SOURCES
     Filters/LaplaceCardinal.cpp
     Filters/LaplaceDiagonal.cpp
     Filters/Median.cpp
-    Filters/MedianSettingsGML.h
     Filters/Sepia.cpp
     Filters/Sharpen.cpp
     HistogramWidget.cpp
@@ -45,15 +42,12 @@ set(SOURCES
     Layer.cpp
     LayerListWidget.cpp
     LayerPropertiesWidget.cpp
-    LevelsDialogGML.h
     LevelsDialog.cpp
     MainWidget.cpp
     Mask.cpp
     PaletteWidget.cpp
-    PixelPaintWindowGML.h
     ProjectLoader.cpp
     ResizeImageDialog.cpp
-    ResizeImageDialogGML.h
     ScopeWidget.cpp
     Selection.cpp
     ToolPropertiesWidget.cpp
@@ -76,7 +70,16 @@ set(SOURCES
     Tools/ZoomTool.cpp
     VectorscopeWidget.cpp
     main.cpp
-    )
+)
+
+set(GENERATED_SOURCES
+    EditGuideDialogGML.h
+    FilterGalleryGML.h
+    Filters/MedianSettingsGML.h
+    LevelsDialogGML.h
+    PixelPaintWindowGML.h
+    ResizeImageDialogGML.h
+)
 
 serenity_app(PixelPaint ICON app-pixel-paint)
 target_link_libraries(PixelPaint LibImageDecoderClient LibGUI LibGfx LibFileSystemAccessClient LibConfig LibMain)
