@@ -5,6 +5,7 @@
  */
 
 #include <AK/Assertions.h>
+#include <AK/FloatingPointStringConversions.h>
 #include <AK/Optional.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
@@ -63,7 +64,12 @@ static Optional<Color> parse_rgba_color(StringView string)
     auto g = parts[1].to_int().value_or(256);
     auto b = parts[2].to_int().value_or(256);
 
-    double alpha = strtod(parts[3].to_string().characters(), nullptr);
+    double alpha = 0;
+    char const* start = parts[3].characters_without_null_termination();
+    auto alpha_result = parse_first_floating_point(start, start + parts[3].length());
+    if (alpha_result.parsed_value())
+        alpha = alpha_result.value;
+
     unsigned a = alpha * 255;
 
     if (r > 255 || g > 255 || b > 255 || a > 255)
