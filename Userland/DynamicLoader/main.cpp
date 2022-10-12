@@ -62,9 +62,14 @@ void _entry(int, char**, char**) __attribute__((used));
 
 NAKED void _start(int, char**, char**)
 {
+#ifdef AK_ARCH_AARCH64
+    asm(
+        "bl _entry\n");
+#else
     asm(
         "push $0\n"
         "jmp _entry@plt\n");
+#endif
 }
 
 void _entry(int argc, char** argv, char** envp)
