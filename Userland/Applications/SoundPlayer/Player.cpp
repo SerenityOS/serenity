@@ -6,6 +6,7 @@
  */
 
 #include "Player.h"
+#include <LibCore/File.h>
 
 Player::Player(Audio::ConnectionToServer& audio_client_connection)
     : m_audio_client_connection(audio_client_connection)
