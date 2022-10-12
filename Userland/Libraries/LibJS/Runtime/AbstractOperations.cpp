@@ -6,6 +6,7 @@
  */
 
 #include <AK/CharacterTypes.h>
+#include <AK/FloatingPointStringConversions.h>
 #include <AK/Function.h>
 #include <AK/Optional.h>
 #include <AK/Utf16View.h>
@@ -1180,7 +1181,7 @@ CanonicalIndex canonical_numeric_index_string(PropertyKey const& property_key, C
     }
 
     // Short circuit a few common cases
-    if (argument == "Infinity" || argument == "-Infinity" || argument == "NaN")
+    if (argument == "Infinity"sv || argument == "-Infinity"sv || argument == "NaN"sv)
         return CanonicalIndex(CanonicalIndex::Type::Numeric, 0);
 
     // Short circuit any string that doesn't start with digits
@@ -1188,13 +1189,14 @@ CanonicalIndex canonical_numeric_index_string(PropertyKey const& property_key, C
         return CanonicalIndex(CanonicalIndex::Type::Undefined, 0);
 
     // 2. Let n be ! ToNumber(argument).
-    char* endptr;
-    auto n = Value(strtod(argument.characters(), &endptr));
-    if (endptr != argument.characters() + argument.length())
+    auto maybe_double = argument.to_double(AK::TrimWhitespace::No);
+    if (!maybe_double.has_value())
         return CanonicalIndex(CanonicalIndex::Type::Undefined, 0);
+    auto double_value = Value(maybe_double.value());
 
+    // FIXME: We return 0 instead of n but it might not observable?
     // 3. If SameValue(! ToString(n), argument) is true, return n.
-    if (n.to_string_without_side_effects() == argument)
+    if (double_value.to_string_without_side_effects() == argument)
         return CanonicalIndex(CanonicalIndex::Type::Numeric, 0);
 
     // 4. Return undefined.
