@@ -143,3 +143,127 @@ TEST_CASE(json_parse_number_with_exponent)
     auto value_with_fraction = JsonValue::from_string("10.5e5"sv);
     EXPECT_EQ(value_with_fraction.value().as_double(), 1050000.0);
 }
+
+TEST_CASE(json_parse_special_numbers)
+{
+#define EXPECT_TO_MATCH_NUMBER_BIT_WISE(string_input, double_input)                                                           \
+    do {                                                                                                                      \
+        auto value_or_error = JsonValue::from_string(string_input##sv);                                                       \
+        VERIFY(!value_or_error.is_error());                                                                                   \
+        if (value_or_error.is_error())                                                                                        \
+            dbgln("got {}", value_or_error.error());                                                                          \
+        EXPECT(value_or_error.value().is_number());                                                                           \
+        EXPECT_EQ(bit_cast<u64>(value_or_error.value().to_double(4321.0)), bit_cast<u64>(static_cast<double>(double_input))); \
+    } while (false)
+
+    EXPECT_TO_MATCH_NUMBER_BIT_WISE("-0", -0.);
+    EXPECT_TO_MATCH_NUMBER_BIT_WISE("-0.0", -0.0);
+    EXPECT_TO_MATCH_NUMBER_BIT_WISE("-0.00", -0.00);
+    EXPECT_TO_MATCH_NUMBER_BIT_WISE("-0e0", -0e0);
+    EXPECT_TO_MATCH_NUMBER_BIT_WISE("-0e1", -0e1);
+    EXPECT_TO_MATCH_NUMBER_BIT_WISE("-0e2", -0e2);
+    EXPECT_TO_MATCH_NUMBER_BIT_WISE("-0e1000", -0e1000);
+    EXPECT_TO_MATCH_NUMBER_BIT_WISE("-0e-1000", -0e-1000);
+
+    EXPECT_TO_MATCH_NUMBER_BIT_WISE("0", 0.);
+    EXPECT_TO_MATCH_NUMBER_BIT_WISE("0.0", 0.0);
+    EXPECT_TO_MATCH_NUMBER_BIT_WISE("0.00", 0.00);
+    EXPECT_TO_MATCH_NUMBER_BIT_WISE("0e0", 0e0);
+    EXPECT_TO_MATCH_NUMBER_BIT_WISE("0e1", 0e1);
+    EXPECT_TO_MATCH_NUMBER_BIT_WISE("0e2", 0e2);
+    EXPECT_TO_MATCH_NUMBER_BIT_WISE("0e1000", 0e1000);
+    EXPECT_TO_MATCH_NUMBER_BIT_WISE("0e-1000", 0e-1000);
+
+    // These technically can be non zero, but not in doubles
+    EXPECT_TO_MATCH_NUMBER_BIT_WISE("-1e-2000", -0.);
+    EXPECT_TO_MATCH_NUMBER_BIT_WISE("1e-2000", 0.);
+
+#undef EXPECT_TO_MATCH_NUMBER_BIT_WISE
+}
+
+TEST_CASE(json_parse_fails_on_invalid_number)
+{
+#define EXPECT_JSON_PARSE_TO_FAIL(value) \
+    EXPECT(JsonValue::from_string(value##sv).is_error());
+
+    EXPECT_JSON_PARSE_TO_FAIL("-");
+    EXPECT_JSON_PARSE_TO_FAIL("00");
+    EXPECT_JSON_PARSE_TO_FAIL("01");
+    EXPECT_JSON_PARSE_TO_FAIL("-01");
+    EXPECT_JSON_PARSE_TO_FAIL(".1");
+    EXPECT_JSON_PARSE_TO_FAIL("-.1");
+    EXPECT_JSON_PARSE_TO_FAIL("-,1");
+    EXPECT_JSON_PARSE_TO_FAIL(".1e1");
+    EXPECT_JSON_PARSE_TO_FAIL(".1e-1");
+    EXPECT_JSON_PARSE_TO_FAIL("-.1e1");
+    EXPECT_JSON_PARSE_TO_FAIL("-.1e-1");
+    EXPECT_JSON_PARSE_TO_FAIL("1.e1");
+    EXPECT_JSON_PARSE_TO_FAIL("1.e-1");
+    EXPECT_JSON_PARSE_TO_FAIL("-1.e1");
+    EXPECT_JSON_PARSE_TO_FAIL("-1.e-1");
+    EXPECT_JSON_PARSE_TO_FAIL("1e");
+    EXPECT_JSON_PARSE_TO_FAIL("1e+");
+    EXPECT_JSON_PARSE_TO_FAIL("1e-");
+    EXPECT_JSON_PARSE_TO_FAIL("1e-f");
+    EXPECT_JSON_PARSE_TO_FAIL("1.e");
+    EXPECT_JSON_PARSE_TO_FAIL("1.e+");
+    EXPECT_JSON_PARSE_TO_FAIL("1.e-");
+    EXPECT_JSON_PARSE_TO_FAIL("1.e-f");
+    EXPECT_JSON_PARSE_TO_FAIL("1p2");
+    EXPECT_JSON_PARSE_TO_FAIL("1.p2");
+    EXPECT_JSON_PARSE_TO_FAIL("0x1.0p2");
+    EXPECT_JSON_PARSE_TO_FAIL("0x1");
+    EXPECT_JSON_PARSE_TO_FAIL("0x7");
+    EXPECT_JSON_PARSE_TO_FAIL("0xA");
+    EXPECT_JSON_PARSE_TO_FAIL("0x");
+    EXPECT_JSON_PARSE_TO_FAIL("-0x");
+    EXPECT_JSON_PARSE_TO_FAIL("0x");
+    EXPECT_JSON_PARSE_TO_FAIL("1x");
+    EXPECT_JSON_PARSE_TO_FAIL("100x");
+    EXPECT_JSON_PARSE_TO_FAIL("1000000000000000000000x");
+    EXPECT_JSON_PARSE_TO_FAIL("0e2x");
+    EXPECT_JSON_PARSE_TO_FAIL("0.1e2x");
+    EXPECT_JSON_PARSE_TO_FAIL("0.1x");
+    EXPECT_JSON_PARSE_TO_FAIL("1e2x");
+    EXPECT_JSON_PARSE_TO_FAIL("1.2x");
+    EXPECT_JSON_PARSE_TO_FAIL("1.2e2x");
+    EXPECT_JSON_PARSE_TO_FAIL(".0");
+    EXPECT_JSON_PARSE_TO_FAIL(".e1");
+    EXPECT_JSON_PARSE_TO_FAIL("-.0");
+    EXPECT_JSON_PARSE_TO_FAIL("-.e1");
+    EXPECT_JSON_PARSE_TO_FAIL("+0");
+    EXPECT_JSON_PARSE_TO_FAIL("+0.0");
+    EXPECT_JSON_PARSE_TO_FAIL("+0.00");
+    EXPECT_JSON_PARSE_TO_FAIL("+0e0");
+    EXPECT_JSON_PARSE_TO_FAIL("+0e1");
+    EXPECT_JSON_PARSE_TO_FAIL("+0e2");
+    EXPECT_JSON_PARSE_TO_FAIL("+0e1000");
+    EXPECT_JSON_PARSE_TO_FAIL("+0e-1000");
+
+    EXPECT_JSON_PARSE_TO_FAIL("+10");
+    EXPECT_JSON_PARSE_TO_FAIL("+10e1");
+    EXPECT_JSON_PARSE_TO_FAIL("+10.3");
+    EXPECT_JSON_PARSE_TO_FAIL("+10.3e1");
+
+    EXPECT_JSON_PARSE_TO_FAIL("0x1");
+    EXPECT_JSON_PARSE_TO_FAIL("0x2");
+    EXPECT_JSON_PARSE_TO_FAIL("0xA");
+    EXPECT_JSON_PARSE_TO_FAIL("0xB");
+    EXPECT_JSON_PARSE_TO_FAIL("0xF");
+    EXPECT_JSON_PARSE_TO_FAIL("0Xf");
+    EXPECT_JSON_PARSE_TO_FAIL("0X3");
+
+    EXPECT_JSON_PARSE_TO_FAIL("10ee1");
+    EXPECT_JSON_PARSE_TO_FAIL("1e1e1");
+
+    // These could be valid within an array but not as the top level value
+    EXPECT_JSON_PARSE_TO_FAIL("0,0");
+    EXPECT_JSON_PARSE_TO_FAIL(",1");
+    EXPECT_JSON_PARSE_TO_FAIL("10e1,");
+    EXPECT_JSON_PARSE_TO_FAIL("10e,1");
+    EXPECT_JSON_PARSE_TO_FAIL("10,e1");
+    EXPECT_JSON_PARSE_TO_FAIL("1,0e1");
+    EXPECT_JSON_PARSE_TO_FAIL(",10e1");
+
+#undef EXPECT_JSON_PARSE_TO_FAIL
+}

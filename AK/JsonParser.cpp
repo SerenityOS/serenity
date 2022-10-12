@@ -5,6 +5,7 @@
  */
 
 #include <AK/CharacterTypes.h>
+#include <AK/FloatingPointStringConversions.h>
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonParser.h>
@@ -187,141 +188,104 @@ ErrorOr<JsonValue> JsonParser::parse_string()
 
 ErrorOr<JsonValue> JsonParser::parse_number()
 {
-    JsonValue value;
-    Vector<char, 128> number_buffer;
-    Vector<char, 128> fraction_buffer;
-    Vector<char, 128> exponent_buffer;
+    Vector<char, 32> number_buffer;
 
-    bool is_double = false;
+    auto start_index = tell();
+
+    bool negative = false;
+    if (peek() == '-') {
+        number_buffer.append('-');
+        ++m_index;
+        negative = true;
+
+        if (!is_ascii_digit(peek()))
+            return Error::from_string_literal("JsonParser: Unexpected '-' without further digits");
+    }
+
+    auto fallback_to_double_parse = [&]() -> ErrorOr<JsonValue> {
+#ifdef KERNEL
+#    error JSONParser is currently not available for the Kernel because it disallows floating point. \
+       If you want to make this KERNEL compatible you can just make this fallback_to_double \
+       function fail with an error in KERNEL mode.
+#endif
+        // FIXME: Since we know all the characters so far are ascii digits (and one . or e) we could
+        //        use that in the floating point parser.
+
+        // The first part should be just ascii digits
+        StringView view = m_input.substring_view(start_index);
+
+        char const* start = view.characters_without_null_termination();
+        auto parse_result = parse_first_floating_point(start, start + view.length());
+
+        if (parse_result.parsed_value()) {
+            auto characters_parsed = parse_result.end_ptr - start;
+            m_index = start_index + characters_parsed;
+
+            return JsonValue(parse_result.value);
+        }
+        return Error::from_string_literal("JsonParser: Invalid floating point");
+    };
+
+    if (peek() == '0') {
+        if (is_ascii_digit(peek(1)))
+            return Error::from_string_literal("JsonParser: Cannot have leading zeros");
+
+        // Leading zeros are not allowed, however we can have a '.' or 'e' with
+        // valid digits after just a zero. These cases will be detected by having the next element
+        // start with a '.' or 'e'.
+    }
+
     bool all_zero = true;
     for (;;) {
         char ch = peek();
         if (ch == '.') {
-            if (is_double)
-                return Error::from_string_literal("JsonParser: Multiple '.' in number");
+            if (!is_ascii_digit(peek(1)))
+                return Error::from_string_literal("JsonParser: Must have digits after decimal point");
 
-            is_double = true;
-            ++m_index;
-            continue;
+            return fallback_to_double_parse();
         }
-        if (ch == '-' || (ch >= '0' && ch <= '9')) {
-            if (ch != '-' && ch != '0')
+        if (ch == 'e' || ch == 'E') {
+            char next = peek(1);
+            if (!is_ascii_digit(next) && ((next != '+' && next != '-') || !is_ascii_digit(peek(2))))
+                return Error::from_string_literal("JsonParser: Must have digits after exponent with an optional sign inbetween");
+
+            return fallback_to_double_parse();
+        }
+
+        if (is_ascii_digit(ch)) {
+            if (ch != '0')
                 all_zero = false;
 
-            if (is_double) {
-                if (ch == '-')
-                    return Error::from_string_literal("JsonParser: Error while parsing number");
-
-                fraction_buffer.append(ch);
-            } else {
-                if (number_buffer.size() > 0) {
-                    if (number_buffer.at(0) == '0')
-                        return Error::from_string_literal("JsonParser: Error while parsing number");
-                }
-
-                if (number_buffer.size() > 1) {
-                    if (number_buffer.at(0) == '-' && number_buffer.at(1) == '0')
-                        return Error::from_string_literal("JsonParser: Error while parsing number");
-                }
-
-                number_buffer.append(ch);
-            }
+            number_buffer.append(ch);
             ++m_index;
             continue;
         }
+
         break;
     }
 
-#ifndef KERNEL
-    if (peek() == 'e' || peek() == 'E') {
-        // Force it to be a double
-        is_double = true;
-        ++m_index;
-
-        for (;;) {
-            char ch = peek();
-            if (ch == '.')
-                return Error::from_string_literal("JsonParser: Error while parsing number");
-            if (ch == '-' || ch == '+' || (ch >= '0' && ch <= '9')) {
-                exponent_buffer.append(ch);
-
-                ++m_index;
-                continue;
-            }
-            break;
-        }
-
-        if (exponent_buffer.is_empty())
-            return Error::from_string_literal("JsonParser: Error while parsing number");
-    }
-#endif
+    // Negative zero is always a double
+    if (negative && all_zero)
+        return JsonValue(-0.0);
 
     StringView number_string(number_buffer.data(), number_buffer.size());
 
-#ifndef KERNEL
-    // Check for negative zero which needs to be forced to be represented with a double
-    if (number_string.starts_with('-') && all_zero)
-        return JsonValue(-0.0);
+    auto to_unsigned_result = number_string.to_uint<u64>();
+    if (to_unsigned_result.has_value()) {
+        if (*to_unsigned_result <= NumericLimits<u32>::max())
+            return JsonValue((u32)*to_unsigned_result);
 
-    if (is_double) {
-        // FIXME: This logic looks shaky.
-        int whole = 0;
-        auto to_signed_result = number_string.to_uint();
-        if (to_signed_result.has_value()) {
-            whole = to_signed_result.value();
-        } else {
-            auto number = number_string.to_int();
-            if (!number.has_value())
-                return Error::from_string_literal("JsonParser: Error while parsing number");
-            whole = number.value();
-        }
-        double number_value = whole;
+        return JsonValue(*to_unsigned_result);
+    } else if (auto signed_number = number_string.to_int<i64>(); signed_number.has_value()) {
 
-        if (!fraction_buffer.is_empty()) {
-            StringView fraction_string(fraction_buffer.data(), fraction_buffer.size());
-            auto fraction_string_uint = fraction_string.to_uint<u64>();
-            if (!fraction_string_uint.has_value())
-                return Error::from_string_literal("JsonParser: Error while parsing number");
-            auto fraction = static_cast<double>(fraction_string_uint.value());
-            double sign = (whole < 0) ? -1 : 1;
-            auto divider = pow(10.0, static_cast<double>(fraction_buffer.size()));
-            number_value += sign * (fraction / divider);
-        }
+        if (*signed_number <= NumericLimits<i32>::max())
+            return JsonValue((i32)*signed_number);
 
-        if (exponent_buffer.size() > 0) {
-            StringView exponent_string(exponent_buffer.data(), exponent_buffer.size());
-            auto exponent_string_uint = exponent_string.to_int();
-            if (!exponent_string_uint.has_value())
-                return Error::from_string_literal("JsonParser: Error while parsing number");
-            double exponent = pow(10.0, static_cast<double>(exponent_string_uint.value()));
-            number_value *= exponent;
-        }
-
-        value = JsonValue(number_value);
-    } else {
-#endif
-        auto to_unsigned_result = number_string.to_uint<u64>();
-        if (to_unsigned_result.has_value()) {
-            auto number = *to_unsigned_result;
-            if (number <= NumericLimits<u32>::max())
-                value = JsonValue((u32)number);
-            else
-                value = JsonValue(number);
-        } else {
-            auto number = number_string.to_int<i64>();
-            if (!number.has_value())
-                return Error::from_string_literal("JsonParser: Error while parsing number");
-            if (number.value() <= NumericLimits<i32>::max()) {
-                value = JsonValue((i32)number.value());
-            } else {
-                value = JsonValue(number.value());
-            }
-        }
-#ifndef KERNEL
+        return JsonValue(*signed_number);
     }
-#endif
 
-    return value;
+    // It's possible the unsigned value is bigger than u64 max
+    return fallback_to_double_parse();
 }
 
 ErrorOr<JsonValue> JsonParser::parse_true()
