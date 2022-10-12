@@ -67,6 +67,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 
     text_widget->initialize_menubar(*window);
+    text_widget->update_title();
 
     window->show();
     window->set_icon(app_icon.bitmap_for_size(16));
@@ -85,8 +86,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 return 1;
             text_widget->editor().set_cursor_and_focus_line(parsed_argument.line().value_or(1) - 1, parsed_argument.column().value_or(0));
         }
+
+        text_widget->update_title();
     }
-    text_widget->update_title();
     text_widget->update_statusbar();
 
     return app->exec();
