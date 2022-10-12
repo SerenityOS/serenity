@@ -10,6 +10,7 @@
 // This is the size of the floating point environment image in protected mode
 static_assert(sizeof(__x87_floating_point_environment) == 28);
 
+#ifndef AK_ARCH_AARCH64
 static u16 read_status_register()
 {
     u16 status_register;
@@ -45,6 +46,7 @@ static void set_mxcsr(u32 new_mxcsr)
 }
 
 static constexpr u32 default_mxcsr_value = 0x1f80;
+#endif
 
 extern "C" {
 
@@ -53,10 +55,14 @@ int fegetenv(fenv_t* env)
     if (!env)
         return 1;
 
+#ifdef AK_ARCH_AARCH64
+    TODO_AARCH64();
+#else
     asm volatile("fnstenv %0"
                  : "=m"(env->__x87_fpu_env)::"memory");
 
     env->__mxcsr = read_mxcsr();
+#endif
 
     return 0;
 }
@@ -66,6 +72,9 @@ int fesetenv(fenv_t const* env)
     if (!env)
         return 1;
 
+#ifdef AK_ARCH_AARCH64
+    TODO_AARCH64();
+#else
     if (env == FE_DFL_ENV) {
         asm volatile("finit");
         set_mxcsr(default_mxcsr_value);
@@ -76,6 +85,7 @@ int fesetenv(fenv_t const* env)
                  : "memory");
 
     set_mxcsr(env->__mxcsr);
+#endif
 
     return 0;
 }
@@ -87,9 +97,13 @@ int feholdexcept(fenv_t* env)
     fenv_t current_env;
     fegetenv(&current_env);
 
+#ifdef AK_ARCH_AARCH64
+    TODO_AARCH64();
+#else
     current_env.__x87_fpu_env.__status_word &= ~FE_ALL_EXCEPT;
     current_env.__x87_fpu_env.__status_word &= ~(1 << 7);      // Clear the "Exception Status Summary" bit
     current_env.__x87_fpu_env.__control_word &= FE_ALL_EXCEPT; // Masking these bits stops the corresponding exceptions from being generated according to the Intel Programmer's Manual
+#endif
 
     fesetenv(&current_env);
 
@@ -122,8 +136,12 @@ int fesetexceptflag(fexcept_t const* except, int exceptions)
     fegetenv(&current_env);
 
     exceptions &= FE_ALL_EXCEPT;
+#ifdef AK_ARCH_AARCH64
+    TODO_AARCH64();
+#else
     current_env.__x87_fpu_env.__status_word &= exceptions;
     current_env.__x87_fpu_env.__status_word &= ~(1 << 7); // Make sure exceptions don't get raised
+#endif
 
     fesetenv(&current_env);
     return 0;
@@ -131,8 +149,12 @@ int fesetexceptflag(fexcept_t const* except, int exceptions)
 
 int fegetround()
 {
+#ifdef AK_ARCH_AARCH64
+    TODO_AARCH64();
+#else
     // There's no way to signal whether the SSE rounding mode and x87 ones are different, so we assume they're the same
     return (read_status_register() >> 10) & 3;
+#endif
 }
 
 int fesetround(int rounding_mode)
@@ -140,6 +162,9 @@ int fesetround(int rounding_mode)
     if (rounding_mode < FE_TONEAREST || rounding_mode > FE_TOWARDZERO)
         return 1;
 
+#ifdef AK_ARCH_AARCH64
+    TODO_AARCH64();
+#else
     auto control_word = read_control_word();
 
     control_word &= ~(3 << 10);
@@ -154,6 +179,8 @@ int fesetround(int rounding_mode)
 
     set_mxcsr(mxcsr);
 
+#endif
+
     return 0;
 }
 
@@ -164,8 +191,12 @@ int feclearexcept(int exceptions)
     fenv_t current_env;
     fegetenv(&current_env);
 
+#ifdef AK_ARCH_AARCH64
+    TODO_AARCH64();
+#else
     current_env.__x87_fpu_env.__status_word &= ~exceptions;
     current_env.__x87_fpu_env.__status_word &= ~(1 << 7); // Clear the "Exception Status Summary" bit
+#endif
 
     fesetenv(&current_env);
     return 0;
@@ -173,10 +204,15 @@ int feclearexcept(int exceptions)
 
 int fetestexcept(int exceptions)
 {
+#ifdef AK_ARCH_AARCH64
+    (void)exceptions;
+    TODO_AARCH64();
+#else
     u16 status_register = read_status_register() & FE_ALL_EXCEPT;
     exceptions &= FE_ALL_EXCEPT;
 
     return status_register & exceptions;
+#endif
 }
 
 int feraiseexcept(int exceptions)
@@ -186,6 +222,9 @@ int feraiseexcept(int exceptions)
 
     exceptions &= FE_ALL_EXCEPT;
 
+#ifdef AK_ARCH_AARCH64
+    TODO_AARCH64();
+#else
     // While the order in which the exceptions is raised is unspecified, FE_OVERFLOW and FE_UNDERFLOW must be raised before FE_INEXACT, so handle that case in this branch
     if (exceptions & FE_INEXACT) {
         env.__x87_fpu_env.__status_word &= ((u16)exceptions & ~FE_INEXACT);
@@ -203,6 +242,7 @@ int feraiseexcept(int exceptions)
     env.__x87_fpu_env.__status_word &= exceptions;
     fesetenv(&env);
     asm volatile("fwait");
+#endif
 
     return 0;
 }

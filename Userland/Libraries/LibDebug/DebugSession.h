@@ -188,6 +188,9 @@ void DebugSession::run(DesiredInitialDebugeeState initial_debugee_state, Callbac
         FlatPtr current_instruction = regs.eip;
 #elif ARCH(X86_64)
         FlatPtr current_instruction = regs.rip;
+#elif ARCH(AARCH64)
+        FlatPtr current_instruction;
+        TODO_AARCH64();
 #else
 #    error Unknown architecture
 #endif
@@ -211,6 +214,9 @@ void DebugSession::run(DesiredInitialDebugeeState initial_debugee_state, Callbac
                 FlatPtr current_ebp = regs.ebp;
 #elif ARCH(X86_64)
                 FlatPtr current_ebp = regs.rbp;
+#elif ARCH(AARCH64)
+                FlatPtr current_ebp;
+                TODO_AARCH64();
 #else
 #    error Unknown architecture
 #endif
@@ -259,6 +265,9 @@ void DebugSession::run(DesiredInitialDebugeeState initial_debugee_state, Callbac
             regs.eip = breakpoint_addr;
 #elif ARCH(X86_64)
             regs.rip = breakpoint_addr;
+#elif ARCH(AARCH64)
+            (void)breakpoint_addr;
+            TODO_AARCH64();
 #else
 #    error Unknown architecture
 #endif

@@ -120,6 +120,9 @@ static TitleAndText build_cpu_registers(const ELF::Core::ThreadInfo& thread_info
     builder.appendff(" r8={:p}  r9={:p} r10={:p} r11={:p}\n", regs.r8, regs.r9, regs.r10, regs.r11);
     builder.appendff("r12={:p} r13={:p} r14={:p} r15={:p}\n", regs.r12, regs.r13, regs.r14, regs.r15);
     builder.appendff("rip={:p} rflags={:p}", regs.rip, regs.rflags);
+#elif ARCH(AARCH64)
+    (void)regs;
+    TODO_AARCH64();
 #else
 #    error Unknown architecture
 #endif

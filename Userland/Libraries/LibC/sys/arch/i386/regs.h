@@ -23,8 +23,10 @@ struct [[gnu::packed]] PtraceRegisters : public __mcontext {
     {
 #        if ARCH(I386)
         return eip;
-#        else
+#        elif ARCH(X86_64)
         return rip;
+#        else
+        TODO_AARCH64();
 #        endif
     }
 
@@ -32,8 +34,11 @@ struct [[gnu::packed]] PtraceRegisters : public __mcontext {
     {
 #        if ARCH(I386)
         eip = ip;
-#        else
+#        elif ARCH(X86_64)
         rip = ip;
+#        else
+        (void)ip;
+        TODO_AARCH64();
 #        endif
     }
 
@@ -41,8 +46,10 @@ struct [[gnu::packed]] PtraceRegisters : public __mcontext {
     {
 #        if ARCH(I386)
         return ebp;
-#        else
+#        elif ARCH(X86_64)
         return rbp;
+#        else
+        TODO_AARCH64();
 #        endif
     }
 
@@ -50,8 +57,11 @@ struct [[gnu::packed]] PtraceRegisters : public __mcontext {
     {
 #        if ARCH(I386)
         ebp = bp;
-#        else
+#        elif ARCH(X86_64)
         rbp = bp;
+#        else
+        (void)bp;
+        TODO_AARCH64();
 #        endif
     }
 #    endif

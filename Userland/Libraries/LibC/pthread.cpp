@@ -102,6 +102,10 @@ static int create_thread(pthread_t* thread, void* (*entry)(void*), void* argumen
     thread_params->rsi = (FlatPtr)argument;
     thread_params->rdx = (FlatPtr)thread_params->stack_location;
     thread_params->rcx = thread_params->stack_size;
+#elif ARCH(AARCH64)
+    (void)entry;
+    (void)argument;
+    TODO_AARCH64();
 #else
 #    error Unknown architecture
 #endif

@@ -66,6 +66,11 @@ static void print_syscall(PtraceRegisters& regs, size_t depth)
         regs.rcx,
         regs.rbx,
         end_color);
+#elif ARCH(AARCH64)
+    (void)regs;
+    (void)begin_color;
+    (void)end_color;
+    TODO_AARCH64();
 #else
 #    error Unknown architecture
 #endif
@@ -145,6 +150,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         const FlatPtr ip = regs.value().eip;
 #elif ARCH(X86_64)
         const FlatPtr ip = regs.value().rip;
+#elif ARCH(AARCH64)
+        const FlatPtr ip = 0; // FIXME
+        TODO_AARCH64();
 #else
 #    error Unknown architecture
 #endif

@@ -894,6 +894,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         syscall_arg_t arg1 = regs.rdx;
         syscall_arg_t arg2 = regs.rcx;
         syscall_arg_t arg3 = regs.rbx;
+#elif ARCH(AARCH64)
+        syscall_arg_t syscall_index = 0; // FIXME
+        syscall_arg_t arg1 = 0;          // FIXME
+        syscall_arg_t arg2 = 0;          // FIXME
+        syscall_arg_t arg3 = 0;          // FIXME
+        TODO_AARCH64();
 #else
 #    error Unknown architecture
 #endif
@@ -910,6 +916,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         u32 res = regs.eax;
 #elif ARCH(X86_64)
         u64 res = regs.rax;
+#elif ARCH(AARCH64)
+        u64 res = 0; // FIXME
+        TODO_AARCH64();
 #else
 #    error Unknown architecture
 #endif
