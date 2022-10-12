@@ -228,20 +228,22 @@ endif()
 
 add_subdirectory(AK)
 add_subdirectory(Kernel)
-if(NOT "${SERENITY_ARCH}" STREQUAL "aarch64")
-    if (ENABLE_MOLD_LINKER)
-        add_link_options(-fuse-ld=mold)
-    endif()
 
+if (ENABLE_MOLD_LINKER)
+    add_link_options(-fuse-ld=mold)
+endif()
+
+if(NOT "${SERENITY_ARCH}" STREQUAL "aarch64")
     if (CMAKE_CXX_COMPILER_ID MATCHES "Clang$" OR ENABLE_MOLD_LINKER)
         add_link_options(LINKER:--pack-dyn-relocs=relr)
     else()
         add_link_options(LINKER:-z,pack-relative-relocs)
     endif()
-
-    add_subdirectory(Userland)
-    add_subdirectory(Tests)
 endif()
+
+add_subdirectory(Userland)
+add_subdirectory(Tests)
+
 if (ENABLE_COMPILETIME_HEADER_CHECK)
     add_subdirectory(Meta/HeaderCheck)
 endif()
