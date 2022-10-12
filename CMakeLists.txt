@@ -182,6 +182,11 @@ if (ENABLE_COMPILETIME_FORMAT_CHECK)
     add_compile_definitions(ENABLE_COMPILETIME_FORMAT_CHECK)
 endif()
 
+if("${SERENITY_ARCH}" STREQUAL "aarch64")
+    # FIXME: re-enable this warning
+    add_compile_options(-Wno-type-limits)
+endif()
+
 add_link_options(-Wno-unused-command-line-argument)
 
 include_directories(.)

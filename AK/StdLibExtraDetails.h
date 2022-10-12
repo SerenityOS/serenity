@@ -274,6 +274,12 @@ template<>
 struct __MakeUnsigned<bool> {
     using Type = bool;
 };
+#ifdef AK_ARCH_AARCH64
+template<>
+struct __MakeUnsigned<wchar_t> {
+    using Type = wchar_t;
+};
+#endif
 
 template<typename T>
 using MakeUnsigned = typename __MakeUnsigned<T>::Type;
@@ -326,6 +332,12 @@ template<>
 struct __MakeSigned<char> {
     using Type = char;
 };
+#ifdef AK_ARCH_AARCH64
+template<>
+struct __MakeSigned<wchar_t> {
+    using Type = void;
+};
+#endif
 
 template<typename T>
 using MakeSigned = typename __MakeSigned<T>::Type;

@@ -270,9 +270,11 @@ public:
         return m_view.visit(
             [&](StringView view) -> u32 {
                 auto ch = view[index];
-                if (ch < 0)
-                    return 256u + ch;
-                return ch;
+                if constexpr (IsSigned<char>) {
+                    if (ch < 0)
+                        return 256u + ch;
+                    return ch;
+                }
             },
             [&](Utf32View const& view) -> u32 { return view[index]; },
             [&](Utf16View const& view) -> u32 { return view.code_point_at(index); },
