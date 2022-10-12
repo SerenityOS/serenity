@@ -21,9 +21,7 @@ PluralRules::PluralRules(Object& prototype)
 ::Locale::PluralOperands get_operands(String const& string)
 {
     // 1.Let n be ! ToNumber(s).
-    char* end { nullptr };
-    auto number = strtod(string.characters(), &end);
-    VERIFY(!*end);
+    auto number = string.to_double(AK::TrimWhitespace::Yes).release_value();
 
     // 2. Assert: n is finite.
     VERIFY(isfinite(number));
