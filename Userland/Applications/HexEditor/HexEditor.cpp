@@ -668,7 +668,7 @@ void HexEditor::paint_event(GUI::PaintEvent& event)
 
 void HexEditor::select_all()
 {
-    highlight(0, m_document->size() - 1);
+    highlight(0, m_document->size());
     set_position(0);
 }
 
@@ -683,7 +683,7 @@ Optional<size_t> HexEditor::find_and_highlight(ByteBuffer& needle, size_t start)
 {
     auto end_of_match = find(needle, start);
     if (end_of_match.has_value()) {
-        highlight(end_of_match.value() - needle.size(), end_of_match.value() - 1);
+        highlight(end_of_match.value() - needle.size(), end_of_match.value());
     }
     return end_of_match;
 }
