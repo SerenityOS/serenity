@@ -700,7 +700,7 @@ void FormattingContext::compute_height_for_absolutely_positioned_non_replaced_el
     auto height_of_containing_block = available_space.height.to_px();
     auto height_of_containing_block_as_length = CSS::Length::make_px(height_of_containing_block);
 
-    auto solve_for = [&](CSS::Length length) {
+    auto solve_for = [&](const CSS::Length& length) {
         return CSS::Length::make_px(
             height_of_containing_block
             - top.resolved(box, height_of_containing_block_as_length).to_px(box)
@@ -842,7 +842,7 @@ void FormattingContext::compute_height_for_absolutely_positioned_non_replaced_el
     auto const& computed_min_height = box.computed_values().min_height();
     auto const& computed_max_height = box.computed_values().max_height();
 
-    if (!computed_max_height.is_none())
+    if (!computed_max_height.is_auto())
         used_height = min(used_height, computed_max_height.resolved(box, height_of_containing_block_as_length).resolved(box).to_px(box));
     if (!computed_min_height.is_auto())
         used_height = max(used_height, computed_min_height.resolved(box, height_of_containing_block_as_length).resolved(box).to_px(box));
