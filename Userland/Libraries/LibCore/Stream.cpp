@@ -127,7 +127,7 @@ ErrorOr<NonnullOwnPtr<File>> File::open(StringView filename, OpenMode mode, mode
     return file;
 }
 
-ErrorOr<NonnullOwnPtr<File>> File::adopt_fd(int fd, OpenMode mode)
+ErrorOr<NonnullOwnPtr<File>> File::adopt_fd(int fd, OpenMode mode, ShouldCloseFileDescriptor should_close_file_descriptor)
 {
     if (fd < 0) {
         return Error::from_errno(EBADF);
@@ -138,7 +138,7 @@ ErrorOr<NonnullOwnPtr<File>> File::adopt_fd(int fd, OpenMode mode)
         return Error::from_errno(EINVAL);
     }
 
-    auto file = TRY(adopt_nonnull_own_or_enomem(new (nothrow) File(mode)));
+    auto file = TRY(adopt_nonnull_own_or_enomem(new (nothrow) File(mode, should_close_file_descriptor)));
     file->m_fd = fd;
     return file;
 }

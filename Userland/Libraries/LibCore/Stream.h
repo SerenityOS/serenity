@@ -183,6 +183,11 @@ enum class OpenMode : unsigned {
     Nonblocking = 64,
 };
 
+enum class ShouldCloseFileDescriptor {
+    Yes,
+    No,
+};
+
 AK_ENUM_BITWISE_OPERATORS(OpenMode)
 
 class File final : public SeekableStream {
@@ -190,7 +195,7 @@ class File final : public SeekableStream {
 
 public:
     static ErrorOr<NonnullOwnPtr<File>> open(StringView filename, OpenMode, mode_t = 0644);
-    static ErrorOr<NonnullOwnPtr<File>> adopt_fd(int fd, OpenMode);
+    static ErrorOr<NonnullOwnPtr<File>> adopt_fd(int fd, OpenMode, ShouldCloseFileDescriptor = ShouldCloseFileDescriptor::Yes);
     static bool exists(StringView filename);
 
     static ErrorOr<NonnullOwnPtr<File>> open_file_or_standard_stream(StringView filename, OpenMode mode);
@@ -219,13 +224,18 @@ public:
     virtual ErrorOr<off_t> seek(i64 offset, SeekMode) override;
     virtual ErrorOr<void> truncate(off_t length) override;
 
-    virtual ~File() override { close(); }
+    virtual ~File() override
+    {
+        if (m_should_close_file_descriptor == ShouldCloseFileDescriptor::Yes)
+            close();
+    }
 
     static int open_mode_to_options(OpenMode mode);
 
 private:
-    File(OpenMode mode)
+    File(OpenMode mode, ShouldCloseFileDescriptor should_close = ShouldCloseFileDescriptor::Yes)
         : m_mode(mode)
+        , m_should_close_file_descriptor(should_close)
     {
     }
 
@@ -234,6 +244,7 @@ private:
     OpenMode m_mode { OpenMode::NotOpen };
     int m_fd { -1 };
     bool m_last_read_was_eof { false };
+    ShouldCloseFileDescriptor m_should_close_file_descriptor { ShouldCloseFileDescriptor::Yes };
 };
 
 class PosixSocketHelper {
