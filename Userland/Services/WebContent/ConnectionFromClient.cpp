@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2020-2022, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -496,6 +497,11 @@ void ConnectionFromClient::set_has_focus(bool has_focus)
 void ConnectionFromClient::set_is_scripting_enabled(bool is_scripting_enabled)
 {
     m_page_host->set_is_scripting_enabled(is_scripting_enabled);
+}
+
+void ConnectionFromClient::set_is_webdriver_active(bool is_webdriver_active)
+{
+    m_page_host->set_is_webdriver_active(is_webdriver_active);
 }
 
 Messages::WebContentServer::GetLocalStorageEntriesResponse ConnectionFromClient::get_local_storage_entries()

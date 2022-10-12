@@ -61,6 +61,7 @@ public:
     void set_content_filters(Vector<String>);
     void set_proxy_mappings(Vector<String> proxies, HashMap<String, size_t> mappings);
     void set_preferred_color_scheme(Web::CSS::PreferredColorScheme);
+    void set_is_webdriver_active(bool);
 
     Function<void(Gfx::IntPoint const& screen_position)> on_context_menu_request;
     Function<void(const AK::URL&, String const& target, unsigned modifiers)> on_link_click;

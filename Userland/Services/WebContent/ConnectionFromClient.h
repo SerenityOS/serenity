@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -70,6 +71,7 @@ private:
     virtual void set_preferred_color_scheme(Web::CSS::PreferredColorScheme const&) override;
     virtual void set_has_focus(bool) override;
     virtual void set_is_scripting_enabled(bool) override;
+    virtual void set_is_webdriver_active(bool) override;
     virtual void handle_file_return(i32 error, Optional<IPC::File> const& file, i32 request_id) override;
     virtual void set_system_visibility_state(bool visible) override;
 

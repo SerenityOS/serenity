@@ -530,6 +530,11 @@ void OutOfProcessWebView::set_preferred_color_scheme(Web::CSS::PreferredColorSch
     client().async_set_preferred_color_scheme(color_scheme);
 }
 
+void OutOfProcessWebView::set_is_webdriver_active(bool is_webdriver_enabled)
+{
+    client().async_set_is_webdriver_active(is_webdriver_enabled);
+}
+
 void OutOfProcessWebView::focusin_event(GUI::FocusEvent&)
 {
     client().async_set_has_focus(true);
