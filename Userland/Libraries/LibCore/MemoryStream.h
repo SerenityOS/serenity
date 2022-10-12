@@ -44,19 +44,19 @@ public:
     {
         switch (seek_mode) {
         case SeekMode::SetPosition:
-            if (offset >= static_cast<i64>(m_bytes.size()))
+            if (offset > static_cast<i64>(m_bytes.size()))
                 return Error::from_string_literal("Offset past the end of the stream memory");
 
             m_offset = offset;
             break;
         case SeekMode::FromCurrentPosition:
-            if (offset + static_cast<i64>(m_offset) >= static_cast<i64>(m_bytes.size()))
+            if (offset + static_cast<i64>(m_offset) > static_cast<i64>(m_bytes.size()))
                 return Error::from_string_literal("Offset past the end of the stream memory");
 
             m_offset += offset;
             break;
         case SeekMode::FromEndPosition:
-            if (offset >= static_cast<i64>(m_bytes.size()))
+            if (offset > static_cast<i64>(m_bytes.size()))
                 return Error::from_string_literal("Offset past the start of the stream memory");
 
             m_offset = m_bytes.size() - offset;
