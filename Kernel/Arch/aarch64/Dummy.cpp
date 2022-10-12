@@ -111,23 +111,6 @@ ErrorOr<size_t> Inode::write_bytes(off_t, size_t, UserOrKernelBuffer const&, Ope
 
 }
 
-// UserOrKernelBuffer.cpp
-namespace Kernel {
-
-ErrorOr<void> UserOrKernelBuffer::write(void const*, size_t, size_t)
-{
-    VERIFY_NOT_REACHED();
-    return {};
-}
-
-ErrorOr<void> UserOrKernelBuffer::read(void*, size_t, size_t) const
-{
-    VERIFY_NOT_REACHED();
-    return {};
-}
-
-}
-
 // x86 init
 
 multiboot_module_entry_t multiboot_copy_boot_modules_array[16];
