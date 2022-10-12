@@ -1482,22 +1482,20 @@ ThrowCompletionOr<DurationRecord> parse_temporal_duration_string(VM& vm, String 
     auto seconds_part = parse_result->duration_whole_seconds;
     auto f_seconds_part = parse_result->duration_seconds_fraction;
 
-    // FIXME: I can has StringView::to<double>()?
-
     // 4. Let yearsMV be ! ToIntegerOrInfinity(CodePointsToString(years)).
-    auto years = strtod(String { years_part.value_or("0"sv) }.characters(), nullptr);
+    auto years = years_part.value_or("0"sv).to_double().release_value();
 
     // 5. Let monthsMV be ! ToIntegerOrInfinity(CodePointsToString(months)).
-    auto months = strtod(String { months_part.value_or("0"sv) }.characters(), nullptr);
+    auto months = months_part.value_or("0"sv).to_double().release_value();
 
     // 6. Let weeksMV be ! ToIntegerOrInfinity(CodePointsToString(weeks)).
-    auto weeks = strtod(String { weeks_part.value_or("0"sv) }.characters(), nullptr);
+    auto weeks = weeks_part.value_or("0"sv).to_double().release_value();
 
     // 7. Let daysMV be ! ToIntegerOrInfinity(CodePointsToString(days)).
-    auto days = strtod(String { days_part.value_or("0"sv) }.characters(), nullptr);
+    auto days = days_part.value_or("0"sv).to_double().release_value();
 
     // 8. Let hoursMV be ! ToIntegerOrInfinity(CodePointsToString(hours)).
-    auto hours = strtod(String { hours_part.value_or("0"sv) }.characters(), nullptr);
+    auto hours = hours_part.value_or("0"sv).to_double().release_value();
 
     double minutes;
 
@@ -1514,12 +1512,12 @@ ThrowCompletionOr<DurationRecord> parse_temporal_duration_string(VM& vm, String 
         auto f_hours_scale = (double)f_hours_digits.length();
 
         // d. Let minutesMV be ! ToIntegerOrInfinity(fHoursDigits) / 10^fHoursScale × 60.
-        minutes = strtod(String { f_hours_digits }.characters(), nullptr) / pow(10, f_hours_scale) * 60;
+        minutes = f_hours_digits.to_double().release_value() / pow(10., f_hours_scale) * 60;
     }
     // 10. Else,
     else {
         // a. Let minutesMV be ! ToIntegerOrInfinity(CodePointsToString(minutes)).
-        minutes = strtod(String { minutes_part.value_or("0"sv) }.characters(), nullptr);
+        minutes = minutes_part.value_or("0"sv).to_double().release_value();
     }
 
     double seconds;
@@ -1537,12 +1535,12 @@ ThrowCompletionOr<DurationRecord> parse_temporal_duration_string(VM& vm, String 
         auto f_minutes_scale = (double)f_minutes_digits.length();
 
         // d. Let secondsMV be ! ToIntegerOrInfinity(fMinutesDigits) / 10^fMinutesScale × 60.
-        seconds = strtod(String { f_minutes_digits }.characters(), nullptr) / pow(10, f_minutes_scale) * 60;
+        seconds = f_minutes_digits.to_double().release_value() / pow(10, f_minutes_scale) * 60;
     }
     // 12. Else if seconds is not empty, then
     else if (seconds_part.has_value()) {
         // a. Let secondsMV be ! ToIntegerOrInfinity(CodePointsToString(seconds)).
-        seconds = strtod(String { *seconds_part }.characters(), nullptr);
+        seconds = seconds_part.value_or("0"sv).to_double().release_value();
     }
     // 13. Else,
     else {
@@ -1561,7 +1559,7 @@ ThrowCompletionOr<DurationRecord> parse_temporal_duration_string(VM& vm, String 
         auto f_seconds_scale = (double)f_seconds_digits.length();
 
         // c. Let millisecondsMV be ! ToIntegerOrInfinity(fSecondsDigits) / 10^fSecondsScale × 1000.
-        milliseconds = strtod(String { f_seconds_digits }.characters(), nullptr) / pow(10, f_seconds_scale) * 1000;
+        milliseconds = f_seconds_digits.to_double().release_value() / pow(10, f_seconds_scale) * 1000;
     }
     // 15. Else,
     else {
