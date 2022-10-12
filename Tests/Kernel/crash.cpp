@@ -113,7 +113,7 @@ int main(int argc, char** argv)
 
     if (do_illegal_instruction || do_all_crash_types) {
         any_failures |= !Crash("Illegal instruction", []() {
-            asm volatile("ud2");
+            __builtin_trap();
             return Crash::Failure::DidNotCrash;
         }).run(run_type);
     }
