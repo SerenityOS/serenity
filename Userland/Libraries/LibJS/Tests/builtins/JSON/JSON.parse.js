@@ -51,3 +51,26 @@ test("negative zero", () => {
 test("long decimal parse", () => {
     expect(JSON.parse("1644452550.6489999294281")).toEqual(1644452550.6489999294281);
 });
+
+test("does not truncate large integers", () => {
+    expect(JSON.parse("1234567890123")).toEqual(1234567890123);
+    expect(JSON.parse("4294967295")).toEqual(4294967295);
+    expect(JSON.parse("4294967296")).toEqual(4294967296);
+    expect(JSON.parse("4294967297")).toEqual(4294967297);
+    expect(JSON.parse("4294967298")).toEqual(4294967298);
+
+    expect(JSON.parse("2147483647")).toEqual(2147483647);
+    expect(JSON.parse("2147483648")).toEqual(2147483648);
+    expect(JSON.parse("2147483649")).toEqual(2147483649);
+    expect(JSON.parse("2147483650")).toEqual(2147483650);
+
+    expect(JSON.parse("9007199254740991")).toEqual(9007199254740991);
+    expect(JSON.parse("9007199254740992")).toEqual(9007199254740992);
+    expect(JSON.parse("9007199254740993")).toEqual(9007199254740993);
+    expect(JSON.parse("9007199254740994")).toEqual(9007199254740994);
+    expect(JSON.parse("9008199254740994")).toEqual(9008199254740994);
+
+    expect(JSON.parse("18446744073709551615")).toEqual(18446744073709551615);
+    expect(JSON.parse("18446744073709551616")).toEqual(18446744073709551616);
+    expect(JSON.parse("18446744073709551617")).toEqual(18446744073709551617);
+});
