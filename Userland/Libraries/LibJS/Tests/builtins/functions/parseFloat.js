@@ -22,6 +22,9 @@ test("parsing strings", () => {
         ["1.23", 1.23],
         ["0.0123E+2", 1.23],
         ["1.23e4", 12300],
+        ["0x1.23p5", 0],
+        ["1.23p5", 1.23],
+        ["1.23e42351245", Infinity],
         ["Infinity", Infinity],
     ].forEach(test => {
         expect(parseFloat(test[0])).toBe(test[1]);

@@ -7,6 +7,7 @@
 
 #include <AK/BuiltinWrappers.h>
 #include <AK/CharacterTypes.h>
+#include <AK/FloatingPointStringConversions.h>
 #include <AK/Hex.h>
 #include <AK/UnicodeUtils.h>
 #include <AK/Utf16View.h>
@@ -226,10 +227,21 @@ JS_DEFINE_NATIVE_FUNCTION(GlobalObject::parse_float)
         return vm.argument(0);
     auto input_string = TRY(vm.argument(0).to_string(vm));
     auto trimmed_string = MUST(trim_string(vm, js_string(vm, input_string), TrimMode::Left));
-    for (size_t length = trimmed_string.length(); length > 0; --length) {
-        auto number = MUST(Value(js_string(vm, trimmed_string.substring(0, length))).to_number(vm));
-        if (!number.is_nan())
-            return number;
+    if (trimmed_string.is_empty())
+        return js_nan();
+
+    auto result = parse_first_floating_point<double>(trimmed_string.characters(), trimmed_string.characters() + trimmed_string.length());
+    if (result.parsed_value())
+        return result.value;
+
+    bool starts_with_sign = trimmed_string[0] == '-' || trimmed_string[0] == '+';
+    auto signless_view = starts_with_sign ? trimmed_string.substring_view(1) : trimmed_string.view();
+    if (signless_view.starts_with("Infinity"sv, AK::CaseSensitivity::CaseSensitive)) {
+        // Only an immediate - means we should return negative infinity
+        if (trimmed_string[0] == '-')
+            return js_negative_infinity();
+
+        return js_infinity();
     }
     return js_nan();
 }
