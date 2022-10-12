@@ -65,12 +65,6 @@ extern ctor_func_t end_ctors[];
 // FIXME: Share this with the Intel Prekernel.
 extern size_t __stack_chk_guard;
 size_t __stack_chk_guard;
-extern "C" [[noreturn]] void __stack_chk_fail();
-
-void __stack_chk_fail()
-{
-    Kernel::Processor::halt();
-}
 
 READONLY_AFTER_INIT bool g_in_early_boot;
 
