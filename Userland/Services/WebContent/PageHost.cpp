@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -68,6 +69,11 @@ void PageHost::set_preferred_color_scheme(Web::CSS::PreferredColorScheme color_s
 void PageHost::set_is_scripting_enabled(bool is_scripting_enabled)
 {
     page().set_is_scripting_enabled(is_scripting_enabled);
+}
+
+void PageHost::set_is_webdriver_active(bool is_webdriver_active)
+{
+    page().set_is_webdriver_active(is_webdriver_active);
 }
 
 Web::Layout::InitialContainingBlock* PageHost::layout_root()

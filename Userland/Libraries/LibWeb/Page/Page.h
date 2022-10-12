@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -67,6 +68,9 @@ public:
     bool is_scripting_enabled() const { return m_is_scripting_enabled; }
     void set_is_scripting_enabled(bool b) { m_is_scripting_enabled = b; }
 
+    bool is_webdriver_active() const { return m_is_webdriver_active; }
+    void set_is_webdriver_active(bool b) { m_is_webdriver_active = b; }
+
 private:
     PageClient& m_client;
 
@@ -77,6 +81,10 @@ private:
     bool m_same_origin_policy_enabled { false };
 
     bool m_is_scripting_enabled { true };
+
+    // https://w3c.github.io/webdriver/#dfn-webdriver-active-flag
+    // The webdriver-active flag is set to true when the user agent is under remote control. It is initially false.
+    bool m_is_webdriver_active { false };
 };
 
 class PageClient {

@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -30,10 +31,10 @@ public:
     void set_viewport_rect(Gfx::IntRect const&);
     void set_screen_rects(Vector<Gfx::IntRect, 4> const& rects, size_t main_screen_index) { m_screen_rect = rects[main_screen_index]; };
     void set_preferred_color_scheme(Web::CSS::PreferredColorScheme);
-
     void set_should_show_line_box_borders(bool b) { m_should_show_line_box_borders = b; }
     void set_has_focus(bool);
     void set_is_scripting_enabled(bool);
+    void set_is_webdriver_active(bool);
 
 private:
     // ^PageClient

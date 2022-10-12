@@ -49,6 +49,7 @@ endpoint WebContentServer
     set_preferred_color_scheme(Web::CSS::PreferredColorScheme color_scheme) =|
     set_has_focus(bool has_focus) =|
     set_is_scripting_enabled(bool is_scripting_enabled) =|
+    set_is_webdriver_active(bool is_webdriver_active) =|
 
     get_local_storage_entries() => (OrderedHashMap<String,String> entries)
     get_session_storage_entries() => (OrderedHashMap<String,String> entries)
