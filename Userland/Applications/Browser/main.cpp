@@ -11,6 +11,7 @@
 #include <Applications/Browser/BrowserWindow.h>
 #include <Applications/Browser/CookieJar.h>
 #include <Applications/Browser/Tab.h>
+#include <Applications/Browser/WebDriverConnection.h>
 #include <Applications/Browser/WindowActions.h>
 #include <LibConfig/Client.h>
 #include <LibCore/ArgsParser.h>
@@ -62,12 +63,15 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return 1;
     }
 
-    TRY(Core::System::pledge("stdio recvfd sendfd unix cpath rpath wpath proc exec"));
+    TRY(Core::System::pledge("stdio recvfd sendfd unix fattr cpath rpath wpath proc exec"));
 
     Vector<String> specified_urls;
+    String webdriver_ipc_path;
 
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(specified_urls, "URLs to open", "url", Core::ArgsParser::Required::No);
+    args_parser.add_option(webdriver_ipc_path, "Path to WebDriver IPC", "webdriver", 0, "path");
+
     args_parser.parse(arguments);
 
     auto app = TRY(GUI::Application::try_create(arguments));
@@ -80,6 +84,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     // FIXME: This should go away with a standalone download manager at some point.
     TRY(Desktop::Launcher::add_allowed_url(URL::create_with_file_scheme(Core::StandardPaths::downloads_directory())));
     TRY(Desktop::Launcher::seal_allowlist());
+
+    if (!webdriver_ipc_path.is_empty()) {
+        specified_urls.empend("about:blank");
+        TRY(Core::System::unveil(webdriver_ipc_path.view(), "rw"sv));
+    }
 
     TRY(Core::System::unveil("/proc/all", "r"));
     TRY(Core::System::unveil("/tmp/session/%sid/portal/filesystemaccess", "rw"));
@@ -135,6 +144,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Browser::CookieJar cookie_jar;
     auto window = Browser::BrowserWindow::construct(cookie_jar, first_url);
+    RefPtr<Browser::WebDriverConnection> web_driver_connection;
+
+    if (!webdriver_ipc_path.is_empty())
+        web_driver_connection = TRY(Browser::WebDriverConnection::connect_to_webdriver(window, webdriver_ipc_path));
 
     auto content_filters_watcher = TRY(Core::FileWatcher::create());
     content_filters_watcher->on_change = [&](Core::FileWatcherEvent const&) {
