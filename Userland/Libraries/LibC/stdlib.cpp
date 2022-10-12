@@ -5,6 +5,8 @@
  */
 
 #include <AK/Assertions.h>
+#include <AK/CharacterTypes.h>
+#include <AK/FloatingPointStringConversions.h>
 #include <AK/HashMap.h>
 #include <AK/Noncopyable.h>
 #include <AK/Random.h>
@@ -180,6 +182,166 @@ inline int generate_unique_filename(char* pattern, size_t suffix_length, Callbac
     }
 
     return EEXIST;
+}
+
+static bool is_infinity_string(char* parse_ptr, char** endptr)
+{
+    if (is_either(parse_ptr, 0, 'i', 'I')) {
+        if (is_either(parse_ptr, 1, 'n', 'N')) {
+            if (is_either(parse_ptr, 2, 'f', 'F')) {
+                parse_ptr += 3;
+                if (is_either(parse_ptr, 0, 'i', 'I')) {
+                    if (is_either(parse_ptr, 1, 'n', 'N')) {
+                        if (is_either(parse_ptr, 2, 'i', 'I')) {
+                            if (is_either(parse_ptr, 3, 't', 'T')) {
+                                if (is_either(parse_ptr, 4, 'y', 'Y')) {
+                                    parse_ptr += 5;
+                                }
+                            }
+                        }
+                    }
+                }
+                if (endptr)
+                    *endptr = parse_ptr;
+
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+static bool is_nan_string(char* parse_ptr, char** endptr)
+{
+    // FIXME: Actually parse (or at least skip) the (n-char-sequenceopt) part
+    if (is_either(parse_ptr, 0, 'n', 'N')) {
+        if (is_either(parse_ptr, 1, 'a', 'A')) {
+            if (is_either(parse_ptr, 2, 'n', 'N')) {
+                if (endptr)
+                    *endptr = parse_ptr + 3;
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+template<FloatingPoint T>
+static T c_str_to_floating_point(char const* str, char** endptr)
+{
+    // First, they decompose the input string into three parts:
+    char* parse_ptr = const_cast<char*>(str);
+
+    // An initial, possibly empty, sequence of white-space characters (as specified by isspace())
+    strtons(parse_ptr, &parse_ptr);
+
+    // A subject sequence interpreted as a floating-point constant or representing infinity or NaN
+
+    if (*parse_ptr == '\0') {
+        if (endptr)
+            *endptr = const_cast<char*>(str);
+        return 0.;
+    }
+
+    bool is_hex = [&] {
+        // A hexfloat must start with either 0x, 0X, -0x or -0X and have something after it
+        char const* parse_head = parse_ptr;
+        if (*parse_head == '-')
+            ++parse_head;
+
+        if (*parse_head != '0')
+            return false;
+
+        ++parse_head;
+
+        if (*parse_head != 'x')
+            return false;
+
+        ++parse_head;
+
+        // We must have at least one digit but it can come after the "decimal" point.
+
+        if (is_ascii_hex_digit(*parse_head))
+            return true;
+
+        if (*parse_head != '.')
+            return false;
+
+        ++parse_head;
+
+        return is_ascii_hex_digit(*parse_head);
+    }();
+
+    AK::FloatingPointParseResults<T> double_parse_result;
+    if (is_hex) {
+        // A 0x or 0X, then a non-empty sequence of hexadecimal digits optionally containing a radix character;
+        // then an optional binary exponent part consisting of the character 'p' or the character 'P',
+        // optionally followed by a '+' or '-' character, and then followed by one or more decimal digits
+
+        double_parse_result = AK::parse_first_hexfloat_until_zero_character<T>(parse_ptr);
+    } else {
+        // A non-empty sequence of decimal digits optionally containing a radix character;
+        // then an optional exponent part consisting of the character 'e' or the character 'E',
+        // optionally followed by a '+' or '-' character, and then followed by one or more decimal digits
+        double_parse_result = AK::parse_first_floating_point_until_zero_character<T>(parse_ptr);
+    }
+
+    if (double_parse_result.error == AK::FloatingPointError::None) {
+        // The only way to get NaN (which we shouldn't) or infinities is rounding up to them so we
+        // have to set ERANGE in that case.
+        if (!__builtin_isfinite(double_parse_result.value))
+            errno = ERANGE;
+
+        if (endptr)
+            *endptr = const_cast<char*>(double_parse_result.end_ptr);
+        return double_parse_result.value;
+    }
+
+    if (double_parse_result.error == AK::FloatingPointError::RoundedDownToZero || double_parse_result.error == AK::FloatingPointError::OutOfRange) {
+        // This is a special case for strtod, where we have a double so close to zero we had to round
+        // it to zero, in which case we have to set ERANGE
+        errno = ERANGE;
+
+        if (endptr)
+            *endptr = const_cast<char*>(double_parse_result.end_ptr);
+        return double_parse_result.value;
+    }
+
+    // The only way we are here is if the input was not valid for parse_first_floating_point or not a valid hex float
+    // So the only cases left are:
+    // - One of INF or INFINITY, ignoring case
+    // - One of NAN or NAN(n-char-sequenceopt), ignoring case in the NAN part
+
+    const Sign sign = strtosign(parse_ptr, &parse_ptr);
+
+    if (is_infinity_string(parse_ptr, endptr)) {
+        // Don't set errno to ERANGE here:
+        // The caller may want to distinguish between "input is
+        // literal infinity" and "input is not literal infinity
+        // but did not fit into double".
+        if (sign != Sign::Negative)
+            return static_cast<T>(__builtin_huge_val());
+        else
+            return static_cast<T>(-__builtin_huge_val());
+    }
+
+    if (is_nan_string(parse_ptr, endptr)) {
+        errno = ERANGE;
+        // FIXME: Do we actually want to return "different" NaN bit values?
+        if (sign != Sign::Negative)
+            return static_cast<T>(__builtin_nan(""));
+        else
+            return static_cast<T>(-__builtin_nan(""));
+    }
+
+    // If no conversion could be performed, 0 shall be returned, and errno may be set to [EINVAL].
+    // FIXME: This is in the posix standard linked from strtod but not in implementations of strtod
+    //        and not in the man pages for linux strtod.
+    if (endptr)
+        *endptr = const_cast<char*>(str);
+    return 0;
 }
 
 extern "C" {
@@ -398,283 +560,7 @@ void setprogname(char const* progname)
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/strtod.html
 double strtod(char const* str, char** endptr)
 {
-    // Parse spaces, sign, and base
-    char* parse_ptr = const_cast<char*>(str);
-    strtons(parse_ptr, &parse_ptr);
-    const Sign sign = strtosign(parse_ptr, &parse_ptr);
-
-    // Parse inf/nan, if applicable.
-    if (is_either(parse_ptr, 0, 'i', 'I')) {
-        if (is_either(parse_ptr, 1, 'n', 'N')) {
-            if (is_either(parse_ptr, 2, 'f', 'F')) {
-                parse_ptr += 3;
-                if (is_either(parse_ptr, 0, 'i', 'I')) {
-                    if (is_either(parse_ptr, 1, 'n', 'N')) {
-                        if (is_either(parse_ptr, 2, 'i', 'I')) {
-                            if (is_either(parse_ptr, 3, 't', 'T')) {
-                                if (is_either(parse_ptr, 4, 'y', 'Y')) {
-                                    parse_ptr += 5;
-                                }
-                            }
-                        }
-                    }
-                }
-                if (endptr)
-                    *endptr = parse_ptr;
-                // Don't set errno to ERANGE here:
-                // The caller may want to distinguish between "input is
-                // literal infinity" and "input is not literal infinity
-                // but did not fit into double".
-                if (sign != Sign::Negative) {
-                    return __builtin_huge_val();
-                } else {
-                    return -__builtin_huge_val();
-                }
-            }
-        }
-    }
-    if (is_either(parse_ptr, 0, 'n', 'N')) {
-        if (is_either(parse_ptr, 1, 'a', 'A')) {
-            if (is_either(parse_ptr, 2, 'n', 'N')) {
-                if (endptr)
-                    *endptr = parse_ptr + 3;
-                errno = ERANGE;
-                if (sign != Sign::Negative) {
-                    return __builtin_nan("");
-                } else {
-                    return -__builtin_nan("");
-                }
-            }
-        }
-    }
-
-    // Parse base
-    char exponent_lower;
-    char exponent_upper;
-    int base = 10;
-    if (*parse_ptr == '0') {
-        char const base_ch = *(parse_ptr + 1);
-        if (base_ch == 'x' || base_ch == 'X') {
-            base = 16;
-            parse_ptr += 2;
-        }
-    }
-
-    if (base == 10) {
-        exponent_lower = 'e';
-        exponent_upper = 'E';
-    } else {
-        exponent_lower = 'p';
-        exponent_upper = 'P';
-    }
-
-    // Parse "digits", possibly keeping track of the exponent offset.
-    // We parse the most significant digits and the position in the
-    // base-`base` representation separately. This allows us to handle
-    // numbers like `0.0000000000000000000000000000000000001234` or
-    // `1234567890123456789012345678901234567890` with ease.
-    LongLongParser digits { sign, base };
-    bool digits_usable = false;
-    bool should_continue = true;
-    bool digits_overflow = false;
-    bool after_decimal = false;
-    int exponent = 0;
-    do {
-        if (!after_decimal && *parse_ptr == '.') {
-            after_decimal = true;
-            parse_ptr += 1;
-            continue;
-        }
-
-        bool is_a_digit;
-        if (digits_overflow) {
-            is_a_digit = digits.parse_digit(*parse_ptr) != -1;
-        } else {
-            DigitConsumeDecision decision = digits.consume(*parse_ptr);
-            switch (decision) {
-            case DigitConsumeDecision::Consumed:
-                is_a_digit = true;
-                // The very first actual digit must pass here:
-                digits_usable = true;
-                break;
-            case DigitConsumeDecision::PosOverflow:
-            case DigitConsumeDecision::NegOverflow:
-                is_a_digit = true;
-                digits_overflow = true;
-                break;
-            case DigitConsumeDecision::Invalid:
-                is_a_digit = false;
-                break;
-            default:
-                VERIFY_NOT_REACHED();
-            }
-        }
-
-        if (is_a_digit) {
-            exponent -= after_decimal ? 1 : 0;
-            exponent += digits_overflow ? 1 : 0;
-        }
-
-        should_continue = is_a_digit;
-        parse_ptr += should_continue;
-    } while (should_continue);
-
-    if (!digits_usable) {
-        // No actual number value available.
-        if (endptr)
-            *endptr = const_cast<char*>(str);
-        return 0.0;
-    }
-
-    // Parse exponent.
-    // We already know the next character is not a digit in the current base,
-    // nor a valid decimal point. Check whether it's an exponent sign.
-    if (*parse_ptr == exponent_lower || *parse_ptr == exponent_upper) {
-        // Need to keep the old parse_ptr around, in case of rollback.
-        char* old_parse_ptr = parse_ptr;
-        parse_ptr += 1;
-
-        // Can't use atol or strtol here: Must accept excessive exponents,
-        // even exponents >64 bits.
-        Sign exponent_sign = strtosign(parse_ptr, &parse_ptr);
-        IntParser exponent_parser { exponent_sign, base };
-        bool exponent_usable = false;
-        bool exponent_overflow = false;
-        should_continue = true;
-        do {
-            bool is_a_digit;
-            if (exponent_overflow) {
-                is_a_digit = exponent_parser.parse_digit(*parse_ptr) != -1;
-            } else {
-                DigitConsumeDecision decision = exponent_parser.consume(*parse_ptr);
-                switch (decision) {
-                case DigitConsumeDecision::Consumed:
-                    is_a_digit = true;
-                    // The very first actual digit must pass here:
-                    exponent_usable = true;
-                    break;
-                case DigitConsumeDecision::PosOverflow:
-                case DigitConsumeDecision::NegOverflow:
-                    is_a_digit = true;
-                    exponent_overflow = true;
-                    break;
-                case DigitConsumeDecision::Invalid:
-                    is_a_digit = false;
-                    break;
-                default:
-                    VERIFY_NOT_REACHED();
-                }
-            }
-
-            should_continue = is_a_digit;
-            parse_ptr += should_continue;
-        } while (should_continue);
-
-        if (!exponent_usable) {
-            parse_ptr = old_parse_ptr;
-        } else if (exponent_overflow) {
-            // Technically this is wrong. If someone gives us 5GB of digits,
-            // and then an exponent of -5_000_000_000, the resulting exponent
-            // should be around 0.
-            // However, I think it's safe to assume that we never have to deal
-            // with that many digits anyway.
-            if (sign != Sign::Negative) {
-                exponent = INT_MIN;
-            } else {
-                exponent = INT_MAX;
-            }
-        } else {
-            // Literal exponent is usable and fits in an int.
-            // However, `exponent + exponent_parser.number()` might overflow an int.
-            // This would result in the wrong sign of the exponent!
-            long long new_exponent = static_cast<long long>(exponent) + static_cast<long long>(exponent_parser.number());
-            if (new_exponent < INT_MIN) {
-                exponent = INT_MIN;
-            } else if (new_exponent > INT_MAX) {
-                exponent = INT_MAX;
-            } else {
-                exponent = static_cast<int>(new_exponent);
-            }
-        }
-    }
-
-    // Parsing finished. now we only have to compute the result.
-    if (endptr)
-        *endptr = const_cast<char*>(parse_ptr);
-
-    // If `digits` is zero, we don't even have to look at `exponent`.
-    if (digits.number() == 0) {
-        if (sign != Sign::Negative) {
-            return 0.0;
-        } else {
-            return -0.0;
-        }
-    }
-
-    // Deal with extreme exponents.
-    // The smallest normal is 2^-1022.
-    // The smallest denormal is 2^-1074.
-    // The largest number in `digits` is 2^63 - 1.
-    // Therefore, if "base^exponent" is smaller than 2^-(1074+63), the result is 0.0 anyway.
-    // This threshold is roughly 5.3566 * 10^-343.
-    // So if the resulting exponent is -344 or lower (closer to -inf),
-    // the result is 0.0 anyway.
-    // We only need to avoid false positives, so we can ignore base 16.
-    if (exponent <= -344) {
-        errno = ERANGE;
-        // Definitely can't be represented more precisely.
-        // I lied, sometimes the result is +0.0, and sometimes -0.0.
-        if (sign != Sign::Negative) {
-            return 0.0;
-        } else {
-            return -0.0;
-        }
-    }
-    // The largest normal is 2^+1024-eps.
-    // The smallest number in `digits` is 1.
-    // Therefore, if "base^exponent" is 2^+1024, the result is INF anyway.
-    // This threshold is roughly 1.7977 * 10^-308.
-    // So if the resulting exponent is +309 or higher,
-    // the result is INF anyway.
-    // We only need to avoid false positives, so we can ignore base 16.
-    if (exponent >= 309) {
-        errno = ERANGE;
-        // Definitely can't be represented more precisely.
-        // I lied, sometimes the result is +INF, and sometimes -INF.
-        if (sign != Sign::Negative) {
-            return __builtin_huge_val();
-        } else {
-            return -__builtin_huge_val();
-        }
-    }
-
-    // TODO: If `exponent` is large, this could be made faster.
-    double value = digits.number();
-    double scale = 1;
-
-    if (exponent < 0) {
-        exponent = -exponent;
-        for (int i = 0; i < min(exponent, 300); ++i) {
-            scale *= base;
-        }
-        value /= scale;
-        for (int i = 300; i < exponent; i++) {
-            value /= base;
-        }
-        if (value == -0.0 || value == +0.0) {
-            errno = ERANGE;
-        }
-    } else if (exponent > 0) {
-        for (int i = 0; i < exponent; ++i) {
-            scale *= base;
-        }
-        value *= scale;
-        if (value == -__builtin_huge_val() || value == +__builtin_huge_val()) {
-            errno = ERANGE;
-        }
-    }
-
-    return value;
+    return c_str_to_floating_point<double>(str, endptr);
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/strtold.html
@@ -687,7 +573,7 @@ long double strtold(char const* str, char** endptr)
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/strtof.html
 float strtof(char const* str, char** endptr)
 {
-    return strtod(str, endptr);
+    return c_str_to_floating_point<float>(str, endptr);
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/atof.html
