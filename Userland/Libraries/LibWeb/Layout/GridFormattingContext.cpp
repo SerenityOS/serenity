@@ -500,7 +500,7 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
     // calculated, accounting for the sizes of their contents and/or available space as specified in
     // the grid definition.
 
-    // https://drafts.csswg.org/css-grid/#layout-algorithm
+    // https://www.w3.org/TR/css-grid-2/#layout-algorithm
     // 12. Grid Sizing
     // This section defines the grid sizing algorithm, which determines the size of all grid tracks and,
     // by extension, the entire grid.
@@ -537,11 +537,71 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
     for (int row_index = grid_rows.size(); row_index < occupation_grid.row_count(); row_index++)
         grid_rows.append({ CSS::GridTrackSize::make_auto(), CSS::GridTrackSize::make_auto() });
 
-    // https://drafts.csswg.org/css-grid/#algo-overview
+    // https://www.w3.org/TR/css-grid-2/#algo-overview
     // 12.1. Grid Sizing Algorithm
-    // FIXME: Deals with subgrids, min-content, and justify-content.. not implemented yet
 
-    // https://drafts.csswg.org/css-grid/#algo-track-sizing
+    // 1. First, the track sizing algorithm is used to resolve the sizes of the grid columns.
+    // In this process, any grid item which is subgridded in the grid container’s inline axis is treated
+    // as empty and its grid items (the grandchildren) are treated as direct children of the grid
+    // container (their grandparent). This introspection is recursive.
+
+    // Items which are subgridded only in the block axis, and whose grid container size in the inline
+    // axis depends on the size of its contents are also introspected: since the size of the item in
+    // this dimension can be dependent on the sizing of its subgridded tracks in the other, the size
+    // contribution of any such item to this grid’s column sizing (see Resolve Intrinsic Track Sizes) is
+    // taken under the provision of having determined its track sizing only up to the same point in the
+    // Grid Sizing Algorithm as this itself. E.g. for the first pass through this step, the item will
+    // have its tracks sized only through this first step; if a second pass of this step is triggered
+    // then the item will have completed a first pass through steps 1-3 as well as the second pass of
+    // this step prior to returning its size for consideration in this grid’s column sizing. Again, this
+    // introspection is recursive.
+
+    // If calculating the layout of a grid item in this step depends on the available space in the block
+    // axis, assume the available space that it would have if any row with a definite max track sizing
+    // function had that size and all other rows were infinite. If both the grid container and all
+    // tracks have definite sizes, also apply align-content to find the final effective size of any gaps
+    // spanned by such items; otherwise ignore the effects of track alignment in this estimation.
+
+    // 2. Next, the track sizing algorithm resolves the sizes of the grid rows.
+    // In this process, any grid item which is subgridded in the grid container’s block axis is treated
+    // as empty and its grid items (the grandchildren) are treated as direct children of the grid
+    // container (their grandparent). This introspection is recursive.
+
+    // As with sizing columns, items which are subgridded only in the inline axis, and whose grid
+    // container size in the block axis depends on the size of its contents are also introspected. (As
+    // with sizing columns, the size contribution to this grid’s row sizing is taken under the provision
+    // of having determined its track sizing only up to this corresponding point in the algorithm; and
+    // again, this introspection is recursive.)
+
+    // To find the inline-axis available space for any items whose block-axis size contributions require
+    // it, use the grid column sizes calculated in the previous step. If the grid container’s inline
+    // size is definite, also apply justify-content to account for the effective column gap sizes.
+
+    // 3. Then, if the min-content contribution of any grid item has changed based on the row sizes and
+    // alignment calculated in step 2, re-resolve the sizes of the grid columns with the new min-content
+    // and max-content contributions (once only).
+
+    // To find the block-axis available space for any items whose inline-axis size contributions require
+    // it, use the grid row sizes calculated in the previous step. If the grid container’s block size is
+    // definite, also apply align-content to account for the effective row gap sizes
+
+    // 4. Next, if the min-content contribution of any grid item has changed based on the column sizes and
+    // alignment calculated in step 3, re-resolve the sizes of the grid rows with the new min-content
+    // and max-content contributions (once only).
+
+    // To find the inline-axis available space for any items whose block-axis size contributions require
+    // it, use the grid column sizes calculated in the previous step. If the grid container’s inline
+    // size is definite, also apply justify-content to account for the effective column gap sizes.
+
+    // 5. Finally, the grid container is sized using the resulting size of the grid as its content size,
+    // and the tracks are aligned within the grid container according to the align-content and
+    // justify-content properties.
+
+    // Once the size of each grid area is thus established, the grid items are laid out into their
+    // respective containing blocks. The grid area’s width and height are considered definite for this
+    // purpose.
+
+    // https://www.w3.org/TR/css-grid-2/#algo-track-sizing
     // 12.3. Track Sizing Algorithm
 
     // The remainder of this section is the track sizing algorithm, which calculates from the min and
@@ -553,9 +613,9 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
     // 2. Resolve Intrinsic Track Sizes
     // 3. Maximize Tracks
     // 4. Expand Flexible Tracks
-    // 5. [[#algo-stretch|Expand Stretched auto Tracks]]
+    // 5. Expand Stretched auto Tracks
 
-    // https://drafts.csswg.org/css-grid/#algo-init
+    // https://www.w3.org/TR/css-grid-2/#algo-init
     // 12.4. Initialize Track Sizes
 
     // Initialize each track’s base size and growth limit.
@@ -564,7 +624,6 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
         switch (grid_column.min_track_sizing_function.type()) {
         // - A fixed sizing function
         // Resolve to an absolute length and use that size as the track’s initial base size.
-        // Indefinite lengths cannot occur, as they’re treated as auto.
         case CSS::GridTrackSize::Type::Length:
             if (!grid_column.min_track_sizing_function.length().is_auto())
                 grid_column.base_size = grid_column.min_track_sizing_function.length().to_px(box);
@@ -611,7 +670,6 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
         switch (grid_row.min_track_sizing_function.type()) {
         // - A fixed sizing function
         // Resolve to an absolute length and use that size as the track’s initial base size.
-        // Indefinite lengths cannot occur, as they’re treated as auto.
         case CSS::GridTrackSize::Type::Length:
             if (!grid_row.min_track_sizing_function.length().is_auto())
                 grid_row.base_size = grid_row.min_track_sizing_function.length().to_px(box);
@@ -655,7 +713,7 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
     // FIXME: In all cases, if the growth limit is less than the base size, increase the growth limit to match
     // the base size.
 
-    // https://drafts.csswg.org/css-grid/#algo-content
+    // https://www.w3.org/TR/css-grid-2/#algo-content
     // 12.5. Resolve Intrinsic Track Sizes
     // This step resolves intrinsic track sizing functions to absolute lengths. First it resolves those
     // sizes based on items that are contained wholly within a single track. Then it gradually adds in
@@ -713,10 +771,6 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
         // result from assuming the item’s used minimum size as its preferred size; else the item’s minimum
         // contribution is its min-content contribution. Because the minimum contribution often depends on
         // the size of the item’s content, it is considered a type of intrinsic size contribution.
-        // For items with a specified minimum size of auto (the initial value), the minimum contribution is
-        // usually equivalent to the min-content contribution—but can differ in some cases, see § 6.6
-        // Automatic Minimum Size of Grid Items. Also, minimum contribution ≤ min-content contribution ≤
-        // max-content contribution.
         float grid_column_width = 0;
         for (auto& box_of_column : boxes_of_column)
             grid_column_width = max(grid_column_width, calculate_min_content_width(box_of_column));
@@ -737,6 +791,7 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
         // to match the base size.
         if (grid_column.growth_limit != -1 && grid_column.growth_limit < grid_column.base_size)
             grid_column.growth_limit = grid_column.base_size;
+
         ++index;
     }
 
@@ -780,10 +835,6 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
         // result from assuming the item’s used minimum size as its preferred size; else the item’s minimum
         // contribution is its min-content contribution. Because the minimum contribution often depends on
         // the size of the item’s content, it is considered a type of intrinsic size contribution.
-        // For items with a specified minimum size of auto (the initial value), the minimum contribution is
-        // usually equivalent to the min-content contribution—but can differ in some cases, see § 6.6
-        // Automatic Minimum Size of Grid Items. Also, minimum contribution ≤ min-content contribution ≤
-        // max-content contribution.
         float grid_row_height = 0;
         for (auto& positioned_box : positioned_boxes_of_row)
             grid_row_height = max(grid_row_height, positioned_box.computed_height);
@@ -811,8 +862,8 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
     // items with a span of 2 that do not span a track with a flexible sizing function.
     // FIXME: Content-sized tracks not implemented (min-content, etc.)
 
-    // 3.1. For intrinsic minimums: First distribute extra space to base sizes of tracks with an intrinsic
-    // min track sizing function, to accommodate these items’ minimum contributions.
+    // 3.1. For intrinsic minimums: First increase the base size of tracks with an intrinsic min track sizing
+    // function by distributing extra space as needed to accommodate these items’ minimum contributions.
 
     // If the grid container is being sized under a min- or max-content constraint, use the items’
     // limited min-content contributions in place of their minimum contributions here. (For an item
@@ -820,66 +871,68 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
     // contribution is the sum of the fixed max track sizing functions of any tracks it spans, and is
     // applied if it only spans such tracks.)
 
-    // 3.2. For content-based minimums: Next continue to distribute extra space to the base sizes of tracks
-    // with a min track sizing function of min-content or max-content, to accommodate these items'
-    // min-content contributions.
+    // 3.2. For content-based minimums: Next continue to increase the base size of tracks with a min track
+    // sizing function of min-content or max-content by distributing extra space as needed to account
+    // for these items' min-content contributions.
 
     // 3.3. For max-content minimums: Next, if the grid container is being sized under a max-content
-    // constraint, continue to distribute extra space to the base sizes of tracks with a min track
-    // sizing function of auto or max-content, to accommodate these items' limited max-content
-    // contributions.
+    // constraint, continue to increase the base size of tracks with a min track sizing function of auto
+    // or max-content by distributing extra space as needed to account for these items' limited
+    // max-content contributions.
 
-    // In all cases, continue to distribute extra space to the base sizes of tracks with a min track
-    // sizing function of max-content, to accommodate these items' max-content contributions.
+    // In all cases, continue to increase the base size of tracks with a min track sizing function of
+    // max-content by distributing extra space as needed to account for these items' max-content
+    // contributions.
 
     // 3.4. If at this point any track’s growth limit is now less than its base size, increase its growth
     // limit to match its base size.
 
-    // 3.5. For intrinsic maximums: Next distribute extra space to the growth limits of tracks with intrinsic
-    // max track sizing function, to accommodate these items' min-content contributions. Mark any tracks
-    // whose growth limit changed from infinite to finite in this step as infinitely growable for the
-    // next step.
+    // 3.5. For intrinsic maximums: Next increase the growth limit of tracks with an intrinsic max track
+    // sizing function by distributing extra space as needed to account for these items' min-content
+    // contributions. Mark any tracks whose growth limit changed from infinite to finite in this step as
+    // infinitely growable for the next step.
 
-    // 3.6. For max-content maximums: Lastly continue to distribute extra space to the growth limits of
-    // tracks with a max track sizing function of max-content, to accommodate these items' max-content
-    // contributions. However, limit the growth of any fit-content() tracks by their fit-content()
-    // argument.
+    // 3.6. For max-content maximums: Lastly continue to increase the growth limit of tracks with a max track
+    // sizing function of max-content by distributing extra space as needed to account for these items'
+    // max-content contributions. However, limit the growth of any fit-content() tracks by their
+    // fit-content() argument.
 
     // Repeat incrementally for items with greater spans until all items have been considered.
 
     // FIXME: 4. Increase sizes to accommodate spanning items crossing flexible tracks: Next, repeat the previous
     // step instead considering (together, rather than grouped by span size) all items that do span a
-    // track with a flexible sizing function while distributing space only to flexible tracks (i.e.
-    // treating all other tracks as having a fixed sizing function)
+    // track with a flexible sizing function while
 
-    // if the sum of the flexible sizing functions of all flexible tracks spanned by the item is greater
-    // than or equal to one, distributing space to such tracks according to the ratios of their flexible
-    // sizing functions rather than distributing space equally; and if the sum is less than one,
-    // distributing that proportion of space according to the ratios of their flexible sizing functions
-    // and the rest equally
+    // - distributing space only to flexible tracks (i.e. treating all other tracks as having a fixed
+    // sizing function)
+
+    // - if the sum of the flexible sizing functions of all flexible tracks spanned by the item is greater
+    // than zero, distributing space to such tracks according to the ratios of their flexible sizing
+    // functions rather than distributing space equally
 
     // FIXME: 5. If any track still has an infinite growth limit (because, for example, it had no items placed in
     // it or it is a flexible track), set its growth limit to its base size.
 
-    // https://drafts.csswg.org/css-grid/#extra-space
+    // https://www.w3.org/TR/css-grid-2/#extra-space
     // 12.5.1. Distributing Extra Space Across Spanned Tracks
+    // To distribute extra space by increasing the affected sizes of a set of tracks as required by a
+    // set of intrinsic size contributions,
 
-    // 1. Maintain separately for each affected track a planned increase, initially set to 0. (This
-    // prevents the size increases from becoming order-dependent.)
+    // 1. Maintain separately for each affected base size or growth limit a planned increase, initially
+    // set to 0. (This prevents the size increases from becoming order-dependent.)
 
-    // 2. For each accommodated item, considering only tracks the item spans:
+    // 2. For each considered item,
 
-    // 2.1. Find the space to distribute: Subtract the affected size of every spanned track (not just the
-    // affected tracks) from the item’s size contribution, flooring it at zero. (For infinite growth
-    // limits, substitute the track’s base size.) This remaining size contribution is the space to
-    // distribute.
-    // space = max(0, size contribution - ∑track-sizes)
+    // 2.1. Find the space to distribute: Subtract the corresponding size (base size or growth limit) of
+    // every spanned track from the item’s size contribution to find the item’s remaining size
+    // contribution. (For infinite growth limits, substitute the track’s base size.) This is the space
+    // to distribute. Floor it at zero.
+    // extra-space = max(0, size-contribution - ∑track-sizes)
 
-    // 2.2. Distribute space up to limits:
-
-    // Find the item-incurred increase for each affected track by: distributing the space equally among
-    // these tracks, freezing a track’s item-incurred increase as its affected size + item-incurred
-    // increase reaches its limit (and continuing to grow the unfrozen tracks as needed).
+    // 2.2. Distribute space up to limits: Find the item-incurred increase for each spanned track with an
+    // affected size by: distributing the space equally among such tracks, freezing a track’s
+    // item-incurred increase as its affected size + item-incurred increase reaches its limit (and
+    // continuing to grow the unfrozen tracks as needed).
 
     // For base sizes, the limit is its growth limit. For growth limits, the limit is infinity if it is
     // marked as infinitely growable, and equal to the growth limit otherwise.
@@ -887,10 +940,8 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
     // If the affected size was a growth limit and the track is not marked infinitely growable, then each
     // item-incurred increase will be zero.
 
-    // 2.3. Distribute space beyond limits:
-
-    // If extra space remains at this point, unfreeze and continue to distribute space to the
-    // item-incurred increase of…
+    // 2.3. Distribute space beyond limits: If space remains after all tracks are frozen, unfreeze and
+    // continue to distribute space to the item-incurred increase of…
 
     // - when accommodating minimum contributions or accommodating min-content contributions: any affected
     // track that happens to also have an intrinsic max track sizing function; if there are no such
@@ -905,17 +956,18 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
     // max-content until it reaches the limit specified as the fit-content() argument, after which it is
     // treated as having a fixed sizing function of that argument.
 
-    // This step prioritizes the distribution of space for accommodating size contributions beyond the
-    // tracks' current growth limits based on the types of their max track sizing functions.
+    // This step prioritizes the distribution of space for accommodating space required by the
+    // tracks’ min track sizing functions beyond their current growth limits based on the types of their
+    // max track sizing functions.
 
     // 2.4. For each affected track, if the track’s item-incurred increase is larger than the track’s planned
     // increase set the track’s planned increase to that value.
 
-    // 3. Update the tracks' affected sizes by adding in the planned increase, so that the next round of
+    // 3. Update the tracks' affected sizes by adding in the planned increase so that the next round of
     // space distribution will account for the increase. (If the affected size is an infinite growth
     // limit, set it to the track’s base size plus the planned increase.)
 
-    // https://drafts.csswg.org/css-grid/#algo-grow-tracks
+    // https://www.w3.org/TR/css-grid-2/#algo-grow-tracks
     // 12.6. Maximize Tracks
 
     // If the free space is positive, distribute it equally to the base sizes of all tracks, freezing
