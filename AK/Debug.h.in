@@ -494,6 +494,10 @@
 #cmakedefine01 WASM_VALIDATOR_DEBUG
 #endif
 
+#ifndef WEBDRIVER_DEBUG
+#cmakedefine01 WEBDRIVER_DEBUG
+#endif
+
 #ifndef WEBGL_CONTEXT_DEBUG
 #cmakedefine01 WEBGL_CONTEXT_DEBUG
 #endif
