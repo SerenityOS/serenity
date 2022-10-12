@@ -10,6 +10,7 @@
 #include <AK/LexicalPath.h>
 #include <AK/Random.h>
 #include <LibAudio/Loader.h>
+#include <LibCore/File.h>
 #include <LibGUI/MessageBox.h>
 
 bool Playlist::load(StringView path)

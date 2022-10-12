@@ -66,7 +66,6 @@ public:
     virtual u16 num_channels() override { return m_num_channels; }
     virtual String format_name() override { return "FLAC (.flac)"; }
     virtual PcmSampleFormat pcm_format() override { return m_sample_format; }
-    virtual RefPtr<Core::File> file() override { return m_file; }
 
     bool is_fixed_blocksize_stream() const { return m_min_block_size == m_max_block_size; }
     bool sample_count_unknown() const { return m_total_samples == 0; }

@@ -18,7 +18,6 @@
 #include <LibAudio/LoaderError.h>
 #include <LibAudio/Sample.h>
 #include <LibAudio/SampleFormats.h>
-#include <LibCore/File.h>
 
 namespace Audio {
 
@@ -54,7 +53,6 @@ public:
     // Human-readable name of the file format, of the form <full abbreviation> (.<ending>)
     virtual String format_name() = 0;
     virtual PcmSampleFormat pcm_format() = 0;
-    virtual RefPtr<Core::File> file() = 0;
 };
 
 class Loader : public RefCounted<Loader> {
@@ -73,7 +71,6 @@ public:
     u16 num_channels() const { return m_plugin->num_channels(); }
     String format_name() const { return m_plugin->format_name(); }
     u16 bits_per_sample() const { return pcm_bits_per_sample(m_plugin->pcm_format()); }
-    RefPtr<Core::File> file() const { return m_plugin->file(); }
 
 private:
     static Result<NonnullOwnPtr<LoaderPlugin>, LoaderError> try_create(StringView path);
