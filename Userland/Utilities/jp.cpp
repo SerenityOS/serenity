@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, Maxwell Trussell <maxtrussell@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -9,12 +10,16 @@
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
 #include <AK/StringBuilder.h>
+#include <AK/StringView.h>
+#include <AK/Types.h>
+#include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
 #include <unistd.h>
 
+static JsonValue query(JsonValue const& value, Vector<StringView>& key_parts, size_t key_index = 0);
 static void print(JsonValue const& value, int spaces_per_indent, int indent = 0, bool use_color = true);
 static void print_indent(int indent, int spaces_per_indent)
 {
@@ -27,10 +32,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::pledge("stdio rpath"));
 
     StringView path;
+    StringView dotted_key;
     int spaces_in_indent = 4;
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Pretty-print a JSON file with syntax-coloring and indentation.");
+    args_parser.add_option(dotted_key, "Dotted query key", "query", 'q', "foo.*.bar");
     args_parser.add_option(spaces_in_indent, "Indent size", "indent-size", 'i', "spaces_in_indent");
     args_parser.add_positional_argument(path, "Path to JSON file", "path", Core::ArgsParser::Required::No);
     VERIFY(spaces_in_indent >= 0);
@@ -46,6 +53,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto file_contents = file->read_all();
     auto json = TRY(JsonValue::from_string(file_contents));
+    if (!dotted_key.is_empty()) {
+        auto key_parts = dotted_key.split_view('.');
+        json = query(json, key_parts);
+    }
 
     print(json, spaces_in_indent, 0, isatty(STDOUT_FILENO));
     outln();
@@ -108,4 +119,35 @@ void print(JsonValue const& value, int spaces_per_indent, int indent, bool use_c
         out("\"");
     if (use_color)
         out("\033[0m");
+}
+
+JsonValue query(JsonValue const& value, Vector<StringView>& key_parts, size_t key_index)
+{
+    if (key_index == key_parts.size())
+        return value;
+    auto key = key_parts[key_index++];
+
+    if (key == "*"sv) {
+        Vector<JsonValue> matches;
+        if (value.is_object()) {
+            value.as_object().for_each_member([&](auto&, auto& member_value) {
+                matches.append(query(member_value, key_parts, key_index));
+            });
+        } else if (value.is_array()) {
+            value.as_array().for_each([&](auto& member) {
+                matches.append(query(member, key_parts, key_index));
+            });
+        }
+        return JsonValue(JsonArray(matches));
+    }
+
+    JsonValue result {};
+    if (value.is_object()) {
+        result = value.as_object().get(key);
+    } else if (value.is_array()) {
+        auto key_as_index = key.to_int();
+        if (key_as_index.has_value())
+            result = value.as_array().at(key_as_index.value());
+    }
+    return query(result, key_parts, key_index);
 }
