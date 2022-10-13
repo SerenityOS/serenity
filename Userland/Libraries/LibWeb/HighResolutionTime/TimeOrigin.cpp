@@ -6,9 +6,18 @@
  */
 
 #include <AK/Time.h>
+#include <LibWeb/HTML/Scripting/Environments.h>
 #include <LibWeb/HighResolutionTime/TimeOrigin.h>
 
 namespace Web::HighResolutionTime {
+
+// https://w3c.github.io/hr-time/#dfn-get-time-origin-timestamp
+DOMHighResTimeStamp get_time_origin_timestamp(JS::Object const& global)
+{
+    // FIXME: Implement this.
+    (void)global;
+    return 0;
+}
 
 // https://w3c.github.io/hr-time/#dfn-coarsen-time
 DOMHighResTimeStamp coarsen_time(DOMHighResTimeStamp timestamp, bool cross_origin_isolated_capability)
@@ -16,6 +25,23 @@ DOMHighResTimeStamp coarsen_time(DOMHighResTimeStamp timestamp, bool cross_origi
     // FIXME: Implement this.
     (void)cross_origin_isolated_capability;
     return timestamp;
+}
+
+// https://w3c.github.io/hr-time/#dfn-relative-high-resolution-time
+DOMHighResTimeStamp relative_high_resolution_time(DOMHighResTimeStamp time, JS::Object const& global)
+{
+    // 1. Let coarse time be the result of calling coarsen time with time and global's relevant settings object's cross-origin isolated capability.
+    auto coarse_time = coarsen_time(time, HTML::relevant_settings_object(global).cross_origin_isolated_capability() == HTML::CanUseCrossOriginIsolatedAPIs::Yes);
+
+    // 2. Return the relative high resolution coarse time for coarse time and global.
+    return relative_high_resolution_coarsen_time(coarse_time, global);
+}
+
+// https://w3c.github.io/hr-time/#dfn-relative-high-resolution-coarse-time
+DOMHighResTimeStamp relative_high_resolution_coarsen_time(DOMHighResTimeStamp coarsen_time, JS::Object const& global)
+{
+    // The relative high resolution coarse time given a DOMHighResTimeStamp coarseTime and a global object global, is the difference between coarseTime and the result of calling get time origin timestamp with global.
+    return coarsen_time - get_time_origin_timestamp(global);
 }
 
 // https://w3c.github.io/hr-time/#dfn-coarsened-shared-current-time
