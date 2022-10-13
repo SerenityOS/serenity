@@ -246,7 +246,8 @@
     M(TemporalInvalidMonthCode, "Invalid month code")                                                                                   \
     M(TemporalInvalidMonthDayString, "Invalid month day string '{}'")                                                                   \
     M(TemporalInvalidMonthDayStringUTCDesignator, "Invalid month day string '{}': must not contain a UTC designator")                   \
-    M(TemporalInvalidOffsetNanosecondsValue, "Invalid offset nanoseconds value, must be in range -86400 * 10^9 to 86400 * 10^9")        \
+    M(TemporalInvalidOffsetNanosecondsValue, "Invalid offset nanoseconds value, must be in range -86400 * 10^9 + 1 to "                 \
+                                             "86400 * 10^9 - 1")                                                                        \
     M(TemporalInvalidPlainDate, "Invalid plain date")                                                                                   \
     M(TemporalInvalidPlainDateTime, "Invalid plain date time")                                                                          \
     M(TemporalInvalidPlainMonthDay, "Invalid plain month day")                                                                          \

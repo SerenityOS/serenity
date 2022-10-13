@@ -14,7 +14,7 @@ describe("correct behavior", () => {
         const calendar = new Temporal.Calendar("iso8601");
         const timeZone = {
             getOffsetNanosecondsFor() {
-                return 86400000000000;
+                return 86399999999999;
             },
         };
         const plainDate = Temporal.Now.plainDate(calendar, "UTC");
@@ -33,6 +33,21 @@ describe("correct behavior", () => {
                 expect(plainDateWithOffset.day).toBe(plainDate.day + 1);
             }
         }
+    });
+
+    test("cannot have a time zone with more than a day", () => {
+        [86400000000000, -86400000000000, 86400000000001, 86400000000002].forEach(offset => {
+            const calendar = new Temporal.Calendar("iso8601");
+            const timeZone = {
+                getOffsetNanosecondsFor() {
+                    return offset;
+                },
+            };
+            expect(() => Temporal.Now.plainDate(calendar, timeZone)).toThrowWithMessage(
+                RangeError,
+                "Invalid offset nanoseconds value, must be in range -86400 * 10^9 + 1 to 86400 * 10^9 - 1"
+            );
+        });
     });
 });
 
