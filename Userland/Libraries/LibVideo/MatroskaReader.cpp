@@ -159,7 +159,7 @@ bool MatroskaReader::parse_segment_elements(MatroskaDocument& matroska_document)
         return true;
     });
 
-    dbgln("Success {}", success);
+    dbgln_if(MATROSKA_DEBUG, "Success {}", success);
     return success;
 }
 
