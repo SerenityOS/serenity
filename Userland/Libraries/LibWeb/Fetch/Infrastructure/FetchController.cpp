@@ -1,0 +1,86 @@
+/*
+ * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
+ *
+ * SPDX-License-Identifier: BSD-2-Clause
+ */
+
+#include <LibJS/Heap/Heap.h>
+#include <LibJS/Runtime/VM.h>
+#include <LibWeb/Fetch/Infrastructure/FetchController.h>
+#include <LibWeb/WebIDL/DOMException.h>
+
+namespace Web::Fetch::Infrastructure {
+
+FetchController::FetchController() = default;
+
+JS::NonnullGCPtr<FetchController> FetchController::create(JS::VM& vm)
+{
+    return { *vm.heap().allocate_without_realm<FetchController>() };
+}
+
+void FetchController::visit_edges(JS::Cell::Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    visitor.visit(m_full_timing_info);
+}
+
+// https://fetch.spec.whatwg.org/#finalize-and-report-timing
+void FetchController::report_timing(JS::Object const& global) const
+{
+    // 1. Assert: this’s report timing steps is not null.
+    VERIFY(m_report_timing_steps.has_value());
+
+    // 2. Call this’s report timing steps with global.
+    (*m_report_timing_steps)(global);
+}
+
+// https://fetch.spec.whatwg.org/#fetch-controller-process-the-next-manual-redirect
+void FetchController::process_next_manual_redirect() const
+{
+    // 1. Assert: controller’s next manual redirect steps are not null.
+    VERIFY(m_next_manual_redirect_steps.has_value());
+
+    // 2. Call controller’s next manual redirect steps.
+    (*m_next_manual_redirect_steps)();
+}
+
+// https://fetch.spec.whatwg.org/#extract-full-timing-info
+JS::NonnullGCPtr<FetchTimingInfo> FetchController::extract_full_timing_info() const
+{
+    // 1. Assert: this’s full timing info is not null.
+    VERIFY(m_full_timing_info);
+
+    // 2. Return this’s full timing info.
+    return *m_full_timing_info;
+}
+
+// https://fetch.spec.whatwg.org/#fetch-controller-abort
+void FetchController::abort(JS::VM& vm, Optional<JS::Value> error)
+{
+    auto& realm = *vm.current_realm();
+
+    // 1. Set controller’s state to "aborted".
+    m_state = State::Aborted;
+
+    // 2. Let fallbackError be an "AbortError" DOMException.
+    auto fallback_error = WebIDL::AbortError::create(realm, "Fetch was aborted"sv);
+
+    // 3. Set error to fallbackError if it is not given.
+    if (!error.has_value())
+        error = fallback_error;
+
+    // FIXME: 4. Let serializedError be StructuredSerialize(error). If that threw an exception, catch it, and let serializedError be StructuredSerialize(fallbackError).
+    // FIXME: 5. Set controller’s serialized abort reason to serializedError.
+    (void)error;
+}
+
+// FIXME: https://fetch.spec.whatwg.org/#deserialize-a-serialized-abort-reason
+
+// https://fetch.spec.whatwg.org/#fetch-controller-terminate
+void FetchController::terminate()
+{
+    // To terminate a fetch controller controller, set controller’s state to "terminated".
+    m_state = State::Terminated;
+}
+
+}
