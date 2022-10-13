@@ -76,7 +76,6 @@ set(LIBC_SOURCES
     wstdio.cpp
 )
 
-file(GLOB AK_SOURCES CONFIGURE_DEPENDS "../../../AK/*.cpp")
 file(GLOB ELF_SOURCES CONFIGURE_DEPENDS "../LibELF/*.cpp")
 
 if ("${SERENITY_ARCH}" STREQUAL "aarch64")
