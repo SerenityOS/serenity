@@ -13,7 +13,9 @@
 #include <LibWeb/HTML/Scripting/ExceptionReporter.h>
 #include <LibWeb/HTML/Scripting/WindowEnvironmentSettingsObject.h>
 #include <LibWeb/HTML/Window.h>
+#include <LibWeb/HTML/WorkerGlobalScope.h>
 #include <LibWeb/Page/Page.h>
+#include <LibWeb/SecureContexts/AbstractOperations.h>
 
 namespace Web::HTML {
 
@@ -389,6 +391,36 @@ JS::Object& relevant_global_object(JS::Object const& object)
 {
     // Similarly, the relevant global object for a platform object o is the global object of the relevant Realm for o.
     return relevant_realm(object).global_object();
+}
+
+// https://html.spec.whatwg.org/multipage/webappapis.html#secure-context
+bool is_secure_context(Environment const& environment)
+{
+    // 1. If environment is an environment settings object, then:
+    if (is<EnvironmentSettingsObject>(environment)) {
+        // 1. Let global be environment's global object.
+        // FIXME: Add a const global_object() getter to ESO
+        auto& global = static_cast<EnvironmentSettingsObject&>(const_cast<Environment&>(environment)).global_object();
+
+        // 2. If global is a WorkerGlobalScope, then:
+        if (is<WorkerGlobalScope>(global)) {
+            // FIXME: 1. If global's owner set[0]'s relevant settings object is a secure context, then return true.
+            // NOTE: We only need to check the 0th item since they will necessarily all be consistent.
+
+            // 2. Return false.
+            return false;
+        }
+
+        // FIXME: 3. If global is a WorkletGlobalScope, then return true.
+        // NOTE: Worklets can only be created in secure contexts.
+    }
+
+    // 2. If the result of Is url potentially trustworthy? given environment's top-level creation URL is "Potentially Trustworthy", then return true.
+    if (SecureContexts::is_url_potentially_trustworthy(environment.top_level_creation_url) == SecureContexts::Trustworthiness::PotentiallyTrustworthy)
+        return true;
+
+    // 3. Return false.
+    return false;
 }
 
 }
