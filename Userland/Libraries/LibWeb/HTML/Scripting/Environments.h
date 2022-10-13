@@ -77,7 +77,8 @@ struct EnvironmentSettingsObject
     // https://html.spec.whatwg.org/multipage/webappapis.html#concept-settings-object-origin
     virtual Origin origin() = 0;
 
-    // FIXME: A policy container https://html.spec.whatwg.org/multipage/webappapis.html#concept-settings-object-policy-container
+    // A policy container https://html.spec.whatwg.org/multipage/webappapis.html#concept-settings-object-policy-container
+    virtual PolicyContainer policy_container() = 0;
 
     // https://html.spec.whatwg.org/multipage/webappapis.html#concept-settings-object-cross-origin-isolated-capability
     virtual CanUseCrossOriginIsolatedAPIs cross_origin_isolated_capability() = 0;
