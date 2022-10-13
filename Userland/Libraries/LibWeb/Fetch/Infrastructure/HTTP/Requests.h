@@ -277,8 +277,10 @@ public:
     [[nodiscard]] bool timing_allow_failed() const { return m_timing_allow_failed; }
     void set_timing_allow_failed(bool timing_allow_failed) { m_timing_allow_failed = timing_allow_failed; }
 
+    [[nodiscard]] AK::URL& url();
     [[nodiscard]] AK::URL const& url() const;
-    [[nodiscard]] AK::URL const& current_url();
+    [[nodiscard]] AK::URL& current_url();
+    [[nodiscard]] AK::URL const& current_url() const;
     void set_url(AK::URL url);
 
     [[nodiscard]] bool destination_is_script_like() const;
