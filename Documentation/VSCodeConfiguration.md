@@ -14,11 +14,11 @@ The official clangd extension can be used for C++ comprehension. It is recommend
 
 ```yaml
 CompileFlags:
-  Add: [-D__serenity__, -I/path/to/serenity/Toolchain/Local/i686/i686-pc-serenity/include/c++/12.1.0, -I/path/to/serenity/Toolchain/Local/i686/i686-pc-serenity/include/c++/12.1.0/i686-pc-serenity]
-  CompilationDatabase: Build/i686
+  Add: [-D__serenity__, -I/path/to/serenity/Toolchain/Local/x86_64/x86_64-pc-serenity/include/c++/12.2.0, -I/path/to/serenity/Toolchain/Local/x86_64/x86_64-pc-serenity/include/c++/12.2.0/x86_64-pc-serenity]
+  CompilationDatabase: Build/x86_64
 ```
 
-You only need the `Add:` line if you're using GCC. Run cmake at least once for this to work. There's some configuring to do for the include paths: First, replace `/path/to/serenity` with the actual path to the Serenity source folder. Then, you should replace the toolchain subdirectory and target triple architecture, here `i686`, with the one you're compiling most often. And finally, the compiler version (`12.1.0`) might need to be updated in the future. Just look in the `c++` parent folder and see what's currently there.
+You only need the `Add:` line if you're using GCC. Run cmake at least once for this to work. There's some configuring to do for the include paths: First, replace `/path/to/serenity` with the actual path to the Serenity source folder. Then, you should replace the toolchain subdirectory and target triple architecture, here `x86_64`, with the one you're compiling most often. And finally, the compiler version (`12.2.0`) might need to be updated in the future. Just look in the `c++` parent folder and see what's currently there.
 
 A known issue with clangd in general is that it likes to crash. You can usually just restart it via the command palette. If that doesn't help, close currently open C++ files and/or switch branches before restarting, which helps sometimes.
 
@@ -36,27 +36,27 @@ These extensions can be used as-is, but you need to point them to the custom Ser
             "name": "userland-i386-gcc",
             "includePath": [
                 "${workspaceFolder}",
-                "${workspaceFolder}/Build/i686/",
-                "${workspaceFolder}/Build/i686/Userland",
-                "${workspaceFolder}/Build/i686/Userland/Applications",
-                "${workspaceFolder}/Build/i686/Userland/Libraries",
-                "${workspaceFolder}/Build/i686/Userland/Services",
-                "${workspaceFolder}/Build/i686/Root/usr/include/**",
+                "${workspaceFolder}/Build/x86_64/",
+                "${workspaceFolder}/Build/x86_64/Userland",
+                "${workspaceFolder}/Build/x86_64/Userland/Applications",
+                "${workspaceFolder}/Build/x86_64/Userland/Libraries",
+                "${workspaceFolder}/Build/x86_64/Userland/Services",
+                "${workspaceFolder}/Build/x86_64/Root/usr/include/**",
                 "${workspaceFolder}/Userland",
                 "${workspaceFolder}/Userland/Libraries",
                 "${workspaceFolder}/Userland/Libraries/LibC",
                 "${workspaceFolder}/Userland/Services",
-                "${workspaceFolder}/Toolchain/Local/i686/i686-pc-serenity/include/c++/**"
+                "${workspaceFolder}/Toolchain/Local/x86_64/x86_64-pc-serenity/include/c++/**"
             ],
             "defines": [
                 "DEBUG",
                 "__serenity__"
             ],
-            "compilerPath": "${workspaceFolder}/Toolchain/Local/i686/bin/i686-pc-serenity-g++",
+            "compilerPath": "${workspaceFolder}/Toolchain/Local/x86_64/bin/x86_64-pc-serenity-g++",
             "cStandard": "c17",
             "cppStandard": "c++20",
             "intelliSenseMode": "linux-gcc-x86",
-            "compileCommands": "Build/i686/compile_commands.json",
+            "compileCommands": "Build/x86_64/compile_commands.json",
             "compilerArgs": [
                 "-Wall",
                 "-Wextra",
@@ -65,20 +65,20 @@ These extensions can be used as-is, but you need to point them to the custom Ser
             "browse": {
                 "path": [
                     "${workspaceFolder}",
-                    "${workspaceFolder}/Build/i686/",
-                    "${workspaceFolder}/Build/i686/Userland",
-                    "${workspaceFolder}/Build/i686/Userland/Applications",
-                    "${workspaceFolder}/Build/i686/Userland/Libraries",
-                    "${workspaceFolder}/Build/i686/Userland/Services",
-                    "${workspaceFolder}/Build/i686/Root/usr/include/**",
+                    "${workspaceFolder}/Build/x86_64/",
+                    "${workspaceFolder}/Build/x86_64/Userland",
+                    "${workspaceFolder}/Build/x86_64/Userland/Applications",
+                    "${workspaceFolder}/Build/x86_64/Userland/Libraries",
+                    "${workspaceFolder}/Build/x86_64/Userland/Services",
+                    "${workspaceFolder}/Build/x86_64/Root/usr/include/**",
                     "${workspaceFolder}/Userland",
                     "${workspaceFolder}/Userland/Libraries",
                     "${workspaceFolder}/Userland/Libraries/LibC",
                     "${workspaceFolder}/Userland/Services",
-                    "${workspaceFolder}/Toolchain/Local/i686/i686-pc-serenity/include/c++/**"
+                    "${workspaceFolder}/Toolchain/Local/x86_64/x86_64-pc-serenity/include/c++/**"
                 ],
                 "limitSymbolsToIncludedHeaders": true,
-                "databaseFilename": "${workspaceFolder}/Build/i686/"
+                "databaseFilename": "${workspaceFolder}/Build/x86_64/"
             }
         }
     ],
@@ -314,7 +314,7 @@ Note: The Assertion und KUBSan Problem matchers will only run after you have clo
             "id": "arch",
             "description": "Architecture to compile for",
             "type": "pickString",
-            "default": "i686",
+            "default": "x86_64",
             "options": [
                 "i686",
                 "x86_64",
