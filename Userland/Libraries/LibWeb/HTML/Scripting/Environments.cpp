@@ -423,4 +423,11 @@ bool is_secure_context(Environment const& environment)
     return false;
 }
 
+// https://html.spec.whatwg.org/multipage/webappapis.html#non-secure-context
+bool is_non_secure_context(Environment const& environment)
+{
+    // An environment is a non-secure context if it is not a secure context.
+    return !is_secure_context(environment);
+}
+
 }
