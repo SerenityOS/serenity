@@ -92,6 +92,9 @@ public:
 
     String text() const;
     String text_in_range(TextRange const&) const;
+    int get_code_points_after_cursor(TextPosition const& cursor, TextPosition const& next_word_break) const;
+    int get_code_points_before_cursor(TextPosition const& cursor, TextPosition const& prev_word_break) const;
+    int get_emoji_code_points_in_span(Span<u32 const> const& cursor_span, int slice_start, size_t slice_size) const;
 
     Vector<TextRange> find_all(StringView needle, bool regmatch = false, bool match_case = true);
 
@@ -182,6 +185,8 @@ public:
 
     size_t first_non_whitespace_column() const;
     Optional<size_t> last_non_whitespace_column() const;
+    TextPosition next_whitespace_column(TextPosition const& cursor) const; // if there is no whitespace before end   then the TextPosition will be begin/end rather than empty/null
+    TextPosition prev_whitespace_column(TextPosition const& cursor) const; // if there is no whitespace before begin then the TextPosition will be begin/end rather than empty/null
     bool ends_in_whitespace() const;
     bool can_select() const;
     bool is_empty() const { return length() == 0; }

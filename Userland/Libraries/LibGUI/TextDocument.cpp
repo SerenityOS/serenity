@@ -15,6 +15,7 @@
 #include <LibCore/Timer.h>
 #include <LibGUI/TextDocument.h>
 #include <LibRegex/Regex.h>
+#include <LibUnicode/Emoji.h>
 
 namespace GUI {
 
@@ -96,6 +97,26 @@ bool TextDocument::set_text(StringView text, AllowCallback allow_callback)
     // FIXME: Should the modified state be cleared on some of the earlier returns as well?
     set_unmodified();
     return true;
+}
+
+TextPosition TextDocumentLine::next_whitespace_column(TextPosition const& cursor) const
+{
+    for (size_t i = cursor.column(); i < length(); ++i) {
+        auto code_point = code_points()[i];
+        if (is_ascii_space(code_point))
+            return TextPosition(cursor.line(), i);
+    }
+    return TextPosition(cursor.line(), length());
+}
+
+TextPosition TextDocumentLine::prev_whitespace_column(TextPosition const& cursor) const
+{
+    for (ssize_t i = cursor.column() - 1; i >= 0; --i) {
+        auto code_point = code_points()[i];
+        if (is_ascii_space(code_point))
+            return TextPosition(cursor.line(), i);
+    }
+    return TextPosition(cursor.line(), 0);
 }
 
 size_t TextDocumentLine::first_non_whitespace_column() const
@@ -341,6 +362,63 @@ String TextDocument::text() const
             builder.append('\n');
     }
     return builder.to_string();
+}
+
+// This function will determine the number of codepoints of the glyph immediately presceding the cursor, by determining if there is an emoji. If no emoji is found it will return 1.
+int TextDocument::get_code_points_before_cursor(TextPosition const& cursor, TextPosition const& prev_word_break) const
+{
+    if (!cursor.is_valid())
+        return 0;
+
+    auto& line = this->line(cursor.line());
+    auto line_span = Span<u32 const>(line.code_points(), line.length());
+    auto cursor_span = line_span.slice(prev_word_break.column(), cursor.column() - prev_word_break.column());
+    auto get_emoji_result = get_emoji_code_points_in_span(cursor_span, cursor_span.size() - 1, 1);
+    return max(get_emoji_result, 1); // We do a max in case of a return 0, then we delete single codepoint glyphs.
+}
+
+// This function will determine the number of codepoints of the glyph immediately following the cursor, by determining if there is an emoji. If no emoji is found it will return 1.
+int TextDocument::get_code_points_after_cursor(TextPosition const& cursor, TextPosition const& next_word_break) const
+{
+    if (!cursor.is_valid())
+        return 0;
+
+    auto& line = this->line(cursor.line());
+    auto line_span = Span<u32 const>(line.code_points(), line.length());
+    auto cursor_span = line_span.slice(cursor.column(), next_word_break.column() - cursor.column());
+
+    // First, check if the entire span an emoji.
+    auto emoji = Unicode::find_emoji_for_code_points(cursor_span);
+    size_t i = 0;
+
+    // Loop over span to see if we find emoji. Assume there is no emoji if no emoji is found assume there is no emoji.
+    while (!emoji.has_value() && i < cursor_span.size() - 1 && cursor_span.size() > 0) {
+        auto cursor_slice = cursor_span.slice(cursor.column(), i);
+        emoji = Unicode::find_emoji_for_code_points(cursor_slice);
+        ++i;
+    }
+    if (emoji.has_value())
+        return emoji.value().code_points.size();
+
+    return 1;
+}
+
+int TextDocument::get_emoji_code_points_in_span(Span<u32 const> const& cursor_span, int slice_start, size_t slice_size) const
+{
+    if (cursor_span.is_empty()) {
+        return 0;
+    }
+    if (slice_start < 0) {
+        return 0; // We have gone outside of our original span and haven't found an emoji, so assume there are none in the span.
+    }
+
+    auto cursor_slice = cursor_span.slice(slice_start, slice_size);
+    auto emoji = Unicode::find_emoji_for_code_points(cursor_slice);
+    if (emoji.has_value()) {
+        return emoji.value().code_points.size();
+    } else {
+        return get_emoji_code_points_in_span(cursor_span, slice_start - 1, slice_size + 1); // Recursively expand to the next code_point and search again.
+    }
 }
 
 String TextDocument::text_in_range(TextRange const& a_range) const
