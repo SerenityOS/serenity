@@ -280,7 +280,7 @@ void LineBuilder::update_last_line()
         float bottom_of_inline_box = 0;
         {
             // FIXME: Support inline-table elements.
-            if (fragment.layout_node().is_replaced_box() || fragment.layout_node().is_inline_block()) {
+            if (fragment.layout_node().is_replaced_box() || (fragment.layout_node().display().is_inline_outside() && !fragment.layout_node().display().is_flow_inside())) {
                 auto const& fragment_box_state = m_layout_state.get(static_cast<Box const&>(fragment.layout_node()));
                 top_of_inline_box = fragment.offset().y() - fragment_box_state.margin_box_top();
                 bottom_of_inline_box = fragment.offset().y() + fragment_box_state.content_height() + fragment_box_state.margin_box_bottom();
