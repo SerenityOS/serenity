@@ -53,7 +53,7 @@ public:
     {
         if (m_headers.size() != other.m_headers.size())
             return false;
-        for (auto& it : m_headers) {
+        for (auto const& it : m_headers) {
             auto jt = other.m_headers.find(it.key);
             if (jt == other.m_headers.end())
                 return false;
@@ -66,12 +66,12 @@ public:
     void set_header(String const& name, String const& value) { m_headers.set(name, value); }
     String header(String const& name) const { return m_headers.get(name).value_or({}); }
 
-    HashMap<String, String> const& headers() const { return m_headers; }
+    HashMap<String, String, CaseInsensitiveStringTraits> const& headers() const { return m_headers; }
 
 private:
     AK::URL m_url;
     String m_method { "GET" };
-    HashMap<String, String> m_headers;
+    HashMap<String, String, CaseInsensitiveStringTraits> m_headers;
     ByteBuffer m_body;
     Core::ElapsedTimer m_load_timer;
     Optional<Page&> m_page;
