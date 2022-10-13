@@ -2015,4 +2015,239 @@ template Optional<double> parse_floating_point_completely(char const* start, cha
 
 template Optional<float> parse_floating_point_completely(char const* start, char const* end);
 
+struct HexFloatParseResult {
+    bool is_negative = false;
+    bool valid = false;
+    char const* last_parsed = nullptr;
+    u64 mantissa = 0;
+    i64 exponent = 0;
+};
+
+static HexFloatParseResult parse_hexfloat(char const* start)
+{
+    HexFloatParseResult result {};
+    if (start == nullptr || *start == '\0')
+        return result;
+
+    char const* parse_head = start;
+    bool any_digits = false;
+    bool truncated_non_zero = false;
+
+    if (*parse_head == '-') {
+        result.is_negative = true;
+        ++parse_head;
+
+        if (*parse_head == '\0' || (!is_ascii_hex_digit(*parse_head) && *parse_head != floating_point_decimal_separator))
+            return result;
+    } else if (*parse_head == '+') {
+        ++parse_head;
+
+        if (*parse_head == '\0' || (!is_ascii_hex_digit(*parse_head) && *parse_head != floating_point_decimal_separator))
+            return result;
+    }
+    if (*parse_head == '0' && (*(parse_head + 1) != '\0') && (*(parse_head + 1) == 'x' || *(parse_head + 1) == 'X')) {
+        // Skip potential 0[xX], we have to do this here since the sign comes at the front
+        parse_head += 2;
+    }
+
+    auto add_mantissa_digit = [&] {
+        any_digits = true;
+
+        // We assume you already checked this is actually a digit
+        auto digit = parse_ascii_hex_digit(*parse_head);
+
+        // Because the power of sixteen is just scaling of power of two we don't
+        // need to keep all the remaining digits beyond the first 52 bits, just because
+        // it's easy we store the first 16 digits. However for rounding we do need to parse
+        // all the digits and keep track if we see any non zero one.
+        if (result.mantissa < (1ull << 60)) {
+            result.mantissa = (result.mantissa * 16) + digit;
+            return true;
+        }
+
+        if (digit != 0)
+            truncated_non_zero = true;
+
+        return false;
+    };
+
+    while (*parse_head != '\0' && is_ascii_hex_digit(*parse_head)) {
+        add_mantissa_digit();
+
+        ++parse_head;
+    }
+
+    if (*parse_head != '\0' && *parse_head == floating_point_decimal_separator) {
+        ++parse_head;
+        i64 digits_after_separator = 0;
+        while (*parse_head != '\0' && is_ascii_hex_digit(*parse_head)) {
+            // Track how many characters we actually read into the mantissa
+            digits_after_separator += add_mantissa_digit() ? 1 : 0;
+
+            ++parse_head;
+        }
+
+        // We parsed x digits after the dot so need to multiply with 2^(-x * 4)
+        // Since every digit is 4 bits
+        result.exponent = -digits_after_separator * 4;
+    }
+
+    if (!any_digits)
+        return result;
+
+    if (*parse_head != '\0' && (*parse_head == 'p' || *parse_head == 'P')) {
+        [&] {
+            auto const* head_before_p = parse_head;
+            ArmedScopeGuard reset_ptr { [&] { parse_head = head_before_p; } };
+            ++parse_head;
+
+            if (*parse_head == '\0')
+                return;
+
+            bool exponent_is_negative = false;
+            i64 explicit_exponent = 0;
+
+            if (*parse_head == '-' || *parse_head == '+') {
+                exponent_is_negative = *parse_head == '-';
+                ++parse_head;
+                if (*parse_head == '\0')
+                    return;
+            }
+
+            if (!is_ascii_digit(*parse_head))
+                return;
+
+            // We have at least one digit (with optional preceding sign) so we will not reset
+            reset_ptr.disarm();
+
+            while (*parse_head != '\0' && is_ascii_digit(*parse_head)) {
+                // If we hit exponent overflow the number is so huge we are in trouble anyway, see
+                // a comment in parse_numbers.
+                if (explicit_exponent < 0x10000000)
+                    explicit_exponent = 10 * explicit_exponent + (*parse_head - '0');
+                ++parse_head;
+            }
+
+            if (exponent_is_negative)
+                explicit_exponent = -explicit_exponent;
+
+            result.exponent += explicit_exponent;
+        }();
+    }
+
+    result.valid = true;
+
+    // Round up exactly halfway with truncated non zeros, but don't if it would cascade up
+    if (truncated_non_zero && (result.mantissa & 0xF) != 0xF) {
+        VERIFY(result.mantissa >= 0x1000'0000'0000'0000);
+        result.mantissa |= 1;
+    }
+
+    result.last_parsed = parse_head;
+
+    return result;
+}
+
+template<FloatingPoint T>
+static FloatingPointBuilder build_hex_float(HexFloatParseResult& parse_result)
+{
+    using FloatingPointRepr = FloatingPointInfo<T>;
+    VERIFY(parse_result.mantissa != 0);
+
+    if (parse_result.exponent >= FloatingPointRepr::infinity_exponent())
+        return FloatingPointBuilder::infinity<T>();
+
+    auto leading_zeros = count_leading_zeroes(parse_result.mantissa);
+    u64 normalized_mantissa = parse_result.mantissa << leading_zeros;
+
+    // No need to multiply with some power of 5 here the exponent is already a power of 2.
+
+    u8 upperbit = normalized_mantissa >> 63;
+    FloatingPointBuilder parts;
+    parts.mantissa = normalized_mantissa >> (upperbit + 64 - FloatingPointRepr::mantissa_bits() - 3);
+
+    parts.exponent = parse_result.exponent + upperbit - leading_zeros + FloatingPointRepr::exponent_bias() + 62;
+
+    if (parts.exponent <= 0) {
+        // subnormal
+        if (-parts.exponent + 1 >= 64) {
+            parts.mantissa = 0;
+            parts.exponent = 0;
+            return parts;
+        }
+
+        parts.mantissa >>= -parts.exponent + 1;
+        parts.mantissa += parts.mantissa & 1;
+        parts.mantissa >>= 1;
+
+        if (parts.mantissa < (1ull << FloatingPointRepr::mantissa_bits())) {
+            parts.exponent = 0;
+        } else {
+            parts.exponent = 1;
+        }
+
+        return parts;
+    }
+
+    // Here we don't have to only do this halfway check for some exponents
+    if ((parts.mantissa & 0b11) == 0b01) {
+        // effectively all discard bits from z.high are 0
+        if (normalized_mantissa == (parts.mantissa << (upperbit + 64 - FloatingPointRepr::mantissa_bits() - 3)))
+            parts.mantissa &= ~u64(1);
+    }
+
+    parts.mantissa += parts.mantissa & 1;
+    parts.mantissa >>= 1;
+
+    if (parts.mantissa >= (2ull << FloatingPointRepr::mantissa_bits())) {
+        parts.mantissa = 1ull << FloatingPointRepr::mantissa_bits();
+        ++parts.exponent;
+    }
+
+    parts.mantissa &= ~(1ull << FloatingPointRepr::mantissa_bits());
+
+    if (parts.exponent >= FloatingPointRepr::infinity_exponent()) {
+        parts.mantissa = 0;
+        parts.exponent = FloatingPointRepr::infinity_exponent();
+    }
+
+    return parts;
+}
+
+template<FloatingPoint T>
+FloatingPointParseResults<T> parse_first_hexfloat_until_zero_character(char const* start)
+{
+    using FloatingPointRepr = FloatingPointInfo<T>;
+    auto parse_result = parse_hexfloat(start);
+
+    if (!parse_result.valid)
+        return { nullptr, FloatingPointError::NoOrInvalidInput, __builtin_nan("") };
+
+    FloatingPointParseResults<T> full_result {};
+    full_result.end_ptr = parse_result.last_parsed;
+
+    // We special case this to be able to differentiate between 0 and values rounded down to 0
+
+    if (parse_result.mantissa == 0) {
+        full_result.value = 0.;
+        return full_result;
+    }
+
+    auto result = build_hex_float<T>(parse_result);
+    full_result.value = result.template to_value<T>(parse_result.is_negative);
+
+    if (result.exponent == FloatingPointRepr::infinity_exponent()) {
+        VERIFY(result.mantissa == 0);
+        full_result.error = FloatingPointError::OutOfRange;
+    } else if (result.mantissa == 0 && result.exponent == 0) {
+        full_result.error = FloatingPointError::RoundedDownToZero;
+    }
+
+    return full_result;
+}
+
+template FloatingPointParseResults<double> parse_first_hexfloat_until_zero_character(char const* start);
+
+template FloatingPointParseResults<float> parse_first_hexfloat_until_zero_character(char const* start);
+
 }
