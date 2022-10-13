@@ -143,6 +143,7 @@ include_directories(../../Userland/Services)
 include_directories(${CMAKE_BINARY_DIR})
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 include_directories(${CMAKE_BINARY_DIR}/Libraries)
+include_directories(${CMAKE_BINARY_DIR}/Userland/Libraries)
 include_directories(${CMAKE_BINARY_DIR}/Services)
 
 # install rules, think about moving to its own helper cmake file
@@ -298,12 +299,9 @@ add_serenity_subdirectory(Userland/Libraries/LibMain)
 
 # LibTimeZone
 # This is needed even if Lagom is not enabled because it is depended upon by code generators.
-include(time_zone_data)
-file(GLOB LIBTIMEZONE_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibTimeZone/*.cpp")
-lagom_lib(TimeZone timezone
-    SOURCES ${LIBTIMEZONE_SOURCES} ${TIME_ZONE_DATA_SOURCES}
-)
-target_compile_definitions(LibTimeZone PRIVATE ENABLE_TIME_ZONE_DATA=$<BOOL:${ENABLE_TIME_ZONE_DATABASE_DOWNLOAD}>)
+add_serenity_subdirectory(Userland/Libraries/LibTimeZone)
+# We need an install rule for LibTimeZone b/c it is a manual OBJECT library instead of serenity_lib
+install(TARGETS LibTimeZone EXPORT LagomTargets)
 
 # LibIDL
 # This is used by the BindingsGenerator so needs to always be built.
