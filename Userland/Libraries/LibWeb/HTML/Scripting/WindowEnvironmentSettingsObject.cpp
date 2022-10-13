@@ -108,6 +108,13 @@ Origin WindowEnvironmentSettingsObject::origin()
     return m_window->associated_document().origin();
 }
 
+// https://html.spec.whatwg.org/multipage/window-object.html#script-settings-for-window-objects:concept-settings-object-policy-container
+PolicyContainer WindowEnvironmentSettingsObject::policy_container()
+{
+    // Return the policy container of window's associated Document.
+    return m_window->associated_document().policy_container();
+}
+
 // https://html.spec.whatwg.org/multipage/window-object.html#script-settings-for-window-objects:concept-settings-object-cross-origin-isolated-capability
 CanUseCrossOriginIsolatedAPIs WindowEnvironmentSettingsObject::cross_origin_isolated_capability()
 {

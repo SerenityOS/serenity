@@ -23,6 +23,7 @@ public:
     virtual String api_url_character_encoding() override;
     virtual AK::URL api_base_url() override;
     virtual Origin origin() override;
+    virtual PolicyContainer policy_container() override;
     virtual CanUseCrossOriginIsolatedAPIs cross_origin_isolated_capability() override;
 
 private:
