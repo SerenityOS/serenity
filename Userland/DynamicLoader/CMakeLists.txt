@@ -3,7 +3,6 @@ set(LOADER_SOURCES
     misc.cpp
 )
 
-file(GLOB AK_SOURCES "../../AK/*.cpp")
 file(GLOB ELF_SOURCES "../Libraries/LibELF/*.cpp")
 file(GLOB LIBC_SOURCES1 "../Libraries/LibC/*.cpp")
 file(GLOB LIBC_SOURCES2 "../Libraries/LibC/*/*.cpp")
