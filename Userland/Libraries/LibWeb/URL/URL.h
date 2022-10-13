@@ -71,4 +71,6 @@ private:
     JS::NonnullGCPtr<URLSearchParams> m_query;
 };
 
+HTML::Origin url_origin(AK::URL const&);
+
 }
