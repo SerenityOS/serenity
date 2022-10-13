@@ -124,6 +124,7 @@ set(SOURCES
     Fetch/Enums.cpp
     Fetch/Headers.cpp
     Fetch/HeadersIterator.cpp
+    Fetch/Infrastructure/ConnectionTimingInfo.cpp
     Fetch/Infrastructure/HTTP.cpp
     Fetch/Infrastructure/HTTP/Bodies.cpp
     Fetch/Infrastructure/HTTP/Headers.cpp

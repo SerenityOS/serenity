@@ -192,6 +192,7 @@ class Response;
 namespace Web::Fetch::Infrastructure {
 class Body;
 struct BodyWithType;
+class ConnectionTimingInfo;
 struct Header;
 class HeaderList;
 class Request;
