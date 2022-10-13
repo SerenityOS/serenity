@@ -20,7 +20,7 @@ NonnullRefPtr<Request> Request::create()
 }
 
 // https://fetch.spec.whatwg.org/#concept-request-url
-AK::URL const& Request::url() const
+AK::URL& Request::url()
 {
     // A request has an associated URL (a URL).
     // NOTE: Implementations are encouraged to make this a pointer to the first URL in request’s URL list. It is provided as a distinct field solely for the convenience of other standards hooking into Fetch.
@@ -28,12 +28,24 @@ AK::URL const& Request::url() const
     return m_url_list.first();
 }
 
+// https://fetch.spec.whatwg.org/#concept-request-url
+AK::URL const& Request::url() const
+{
+    return const_cast<Request&>(*this).url();
+}
+
 // https://fetch.spec.whatwg.org/#concept-request-current-url
-AK::URL const& Request::current_url()
+AK::URL& Request::current_url()
 {
     // A request has an associated current URL. It is a pointer to the last URL in request’s URL list.
     VERIFY(!m_url_list.is_empty());
     return m_url_list.last();
+}
+
+// https://fetch.spec.whatwg.org/#concept-request-current-url
+AK::URL const& Request::current_url() const
+{
+    return const_cast<Request&>(*this).current_url();
 }
 
 void Request::set_url(AK::URL url)
