@@ -171,14 +171,12 @@ install(
 )
 
 function(lagom_lib library fs_name)
-    cmake_parse_arguments(LAGOM_LIBRARY "STATIC" "" "SOURCES;LIBS" ${ARGN})
+    cmake_parse_arguments(LAGOM_LIBRARY "" "LIBRARY_TYPE" "SOURCES;LIBS" ${ARGN})
     set(target_name "Lib${library}")
-    if (LAGOM_LIBRARY_STATIC)
-        add_library(${target_name} STATIC ${LAGOM_LIBRARY_SOURCES})
-    else()
-        add_library(${target_name} ${LAGOM_LIBRARY_SOURCES})
+    if (NOT LAGOM_LIBRARY_LIBRARY_TYPE)
+        set(LAGOM_LIBRARY_LIBRARY_TYPE "")
     endif()
-
+    add_library(${target_name} ${LAGOM_LIBRARY_LIBRARY_TYPE} ${LAGOM_LIBRARY_SOURCES})
     # Don't make alias when we're going to import a previous build for Tools
     # FIXME: Is there a better way to write this?
     if (NOT ENABLE_FUZZERS AND NOT CMAKE_CROSSCOMPILING)
@@ -210,6 +208,7 @@ function(lagom_lib library fs_name)
         INCLUDES #
             DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
     )
+    # FIXME: Move this to serenity_install_headers
     install(
         DIRECTORY "${SERENITY_PROJECT_ROOT}/Userland/Libraries/Lib${library}"
         COMPONENT Lagom_Development
@@ -250,8 +249,24 @@ function(serenity_bin name)
 endfunction()
 
 function(serenity_lib name fs_name)
-    lagom_lib(name fs_name SOURCES ${SOURCES} ${GENERATED_SOURCES})
+    string(REPLACE "Lib" "" name_without_lib ${name})
+    lagom_lib(${name_without_lib} ${fs_name} SOURCES ${SOURCES} ${GENERATED_SOURCES})
 endfunction()
+
+function(serenity_lib_static name fs_name)
+    string(REPLACE "Lib" "" name_without_lib ${name})
+    lagom_lib(${name_without_lib} ${fs_name} LIBRARY_TYPE STATIC SOURCES ${SOURCES} ${GENERATED_SOURCES})
+endfunction()
+
+function(serenity_install_headers dir)
+endfunction()
+
+function(serenity_install_sources dir)
+endfunction()
+
+macro(add_serenity_subdirectory path)
+    add_subdirectory("${SERENITY_PROJECT_ROOT}/${path}" "${CMAKE_CURRENT_BINARY_DIR}/${path}")
+endmacro()
 
 add_custom_target(components ALL)
 option(BUILD_EVERYTHING "Build all optional components" ON)
@@ -261,34 +276,25 @@ if (NOT TARGET all_generated)
     add_custom_target(all_generated)
 endif()
 
+# Create mostly empty targets for system libraries we don't need to build for Lagom
+add_library(LibC INTERFACE)
+add_library(LibCrypt INTERFACE)
+if (NOT APPLE AND NOT ANDROID AND NOT ${CMAKE_SYSTEM_NAME} MATCHES "OpenBSD")
+    target_link_libraries(LibCrypt INTERFACE crypt) # LibCore::Account uses crypt() but it's not in libcrypt on macOS
+endif()
+add_library(NoCoverage INTERFACE)
+# "install" these special targets to placate CMake
+install(TARGETS LibC LibCrypt NoCoverage EXPORT LagomTargets)
+
 # AK/LibCore
 # Note: AK is included in LibCore for the host build instead of LibC per the target build
-file(GLOB AK_SOURCES CONFIGURE_DEPENDS "../../AK/*.cpp")
-file(GLOB LIBCORE_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibCore/*.cpp")
-if (ANDROID)
-    list(REMOVE_ITEM LIBCORE_SOURCES "${CMAKE_CURRENT_LIST_DIR}/../../Userland/Libraries/LibCore/Account.cpp")
-    list(REMOVE_ITEM LIBCORE_SOURCES "${CMAKE_CURRENT_LIST_DIR}/../../Userland/Libraries/LibCore/LocalServer.cpp")
-endif()
-if (WIN32)
-    list(REMOVE_ITEM LIBCORE_SOURCES "${CMAKE_CURRENT_LIST_DIR}/../../Userland/Libraries/LibCore/Account.cpp")
-    list(REMOVE_ITEM LIBCORE_SOURCES "${CMAKE_CURRENT_LIST_DIR}/../../Userland/Libraries/LibCore/FilePermissionsMask.cpp")
-    list(REMOVE_ITEM LIBCORE_SOURCES "${CMAKE_CURRENT_LIST_DIR}/../../Userland/Libraries/LibCore/Group.cpp")
-    list(REMOVE_ITEM LIBCORE_SOURCES "${CMAKE_CURRENT_LIST_DIR}/../../Userland/Libraries/LibCore/GetPassword.cpp")
-endif()
-lagom_lib(Core core
-    SOURCES ${AK_SOURCES} ${LIBCORE_SOURCES}
-    LIBS Threads::Threads
-)
-if (NOT APPLE AND NOT ANDROID AND NOT ${CMAKE_SYSTEM_NAME} MATCHES "OpenBSD")
-    target_link_libraries(LibCore crypt) # LibCore::Account uses crypt() but it's not in libcrypt on macOS
-endif()
+add_serenity_subdirectory(AK)
+add_serenity_subdirectory(Userland/Libraries/LibCore)
+target_link_libraries(LibCore Threads::Threads)
+target_sources(LibCore PRIVATE ${AK_SOURCES})
 
 # LibMain
-file(GLOB LIBMAIN_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibMain/*.cpp")
-lagom_lib(Main main
-    SOURCES ${LIBMAIN_SOURCES}
-    STATIC
-)
+add_serenity_subdirectory(Userland/Libraries/LibMain)
 
 # LibTimeZone
 # This is needed even if Lagom is not enabled because it is depended upon by code generators.
