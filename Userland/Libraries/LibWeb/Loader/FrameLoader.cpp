@@ -229,7 +229,6 @@ bool FrameLoader::load(LoadRequest& request, Type type)
     //              -> "frame"
     //              -> "iframe"
     //                   `text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8`
-    // FIXME: This should be case-insensitive.
     if (!request.headers().contains("Accept"))
         request.set_header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
 
