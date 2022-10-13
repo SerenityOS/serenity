@@ -166,7 +166,7 @@ extern "C" {
 #    define CLOCK_MONOTONIC_COARSE CLOCK_MONOTONIC
 #endif
 
-#if defined(AK_OS_BSD_GENERIC)
+#if defined(AK_OS_BSD_GENERIC) && !defined(AK_OS_FREEBSD)
 #    define CLOCK_MONOTONIC_COARSE CLOCK_MONOTONIC
 #    define CLOCK_REALTIME_COARSE CLOCK_REALTIME
 #endif
