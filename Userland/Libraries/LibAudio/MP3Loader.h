@@ -72,9 +72,6 @@ private:
 
     AK::Optional<MP3::MP3Frame> m_current_frame;
     u32 m_current_frame_read;
-    StringView m_path;
-    OwnPtr<Core::Stream::SeekableStream> m_stream;
-    Optional<Bytes const&> m_backing_memory;
     OwnPtr<Core::Stream::BigEndianInputBitStream> m_bitstream;
     DuplexMemoryStream m_bit_reservoir;
 };

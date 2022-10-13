@@ -11,6 +11,26 @@
 
 namespace Audio {
 
+LoaderPlugin::LoaderPlugin(StringView path)
+    : m_path(path)
+{
+}
+
+LoaderPlugin::LoaderPlugin(Bytes buffer)
+    : m_backing_memory(buffer)
+{
+}
+
+MaybeLoaderError LoaderPlugin::initialize()
+{
+    if (m_backing_memory.has_value())
+        m_stream = LOADER_TRY(Core::Stream::MemoryStream::construct(m_backing_memory.value()));
+    else
+        m_stream = LOADER_TRY(Core::Stream::File::open(m_path, Core::Stream::OpenMode::Read));
+
+    return {};
+}
+
 Loader::Loader(NonnullOwnPtr<LoaderPlugin> plugin)
     : m_plugin(move(plugin))
 {

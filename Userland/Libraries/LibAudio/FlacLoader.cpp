@@ -26,21 +26,18 @@
 namespace Audio {
 
 FlacLoaderPlugin::FlacLoaderPlugin(StringView path)
-    : m_path(path)
+    : LoaderPlugin(path)
 {
 }
 
-FlacLoaderPlugin::FlacLoaderPlugin(Bytes& buffer)
-    : m_backing_memory(buffer)
+FlacLoaderPlugin::FlacLoaderPlugin(Bytes buffer)
+    : LoaderPlugin(buffer)
 {
 }
 
 MaybeLoaderError FlacLoaderPlugin::initialize()
 {
-    if (m_backing_memory.has_value())
-        m_stream = LOADER_TRY(Core::Stream::MemoryStream::construct(m_backing_memory.value()));
-    else
-        m_stream = LOADER_TRY(Core::Stream::File::open(m_path, Core::Stream::OpenMode::Read));
+    LOADER_TRY(LoaderPlugin::initialize());
 
     TRY(parse_header());
     TRY(reset());
