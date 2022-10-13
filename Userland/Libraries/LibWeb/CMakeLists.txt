@@ -125,6 +125,7 @@ set(SOURCES
     Fetch/Headers.cpp
     Fetch/HeadersIterator.cpp
     Fetch/Infrastructure/ConnectionTimingInfo.cpp
+    Fetch/Infrastructure/FetchTimingInfo.cpp
     Fetch/Infrastructure/HTTP.cpp
     Fetch/Infrastructure/HTTP/Bodies.cpp
     Fetch/Infrastructure/HTTP/Headers.cpp
