@@ -1,5 +1,12 @@
+// https://html.spec.whatwg.org/multipage/history.html#the-history-interface
 [Exposed=Window]
 interface History {
+    readonly attribute unsigned long length;
+    // FIXME: attribute ScrollRestoration scrollRestoration;
+    // FIXME: readonly attribute any state;
+    undefined go(optional long delta = 0);
+    undefined back();
+    undefined forward();
     undefined pushState(any data, DOMString unused, optional USVString? url = null);
     undefined replaceState(any data, DOMString unused, optional USVString? url = null);
 };
