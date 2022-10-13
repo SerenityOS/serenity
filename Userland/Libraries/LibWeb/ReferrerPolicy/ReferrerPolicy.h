@@ -20,4 +20,8 @@ enum class ReferrerPolicy {
     UnsafeURL,
 };
 
+// https://w3c.github.io/webappsec-referrer-policy/#default-referrer-policy
+// The default referrer policy is "strict-origin-when-cross-origin".
+constexpr auto DEFAULT_REFERRER_POLICY = ReferrerPolicy::StrictOriginWhenCrossOrigin;
+
 }
