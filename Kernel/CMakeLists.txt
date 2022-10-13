@@ -499,6 +499,7 @@ else()
 
         # Files from base Kernel
         CommandLine.cpp
+        KBufferBuilder.cpp
         KString.cpp
         KSyms.cpp
         MiniStdLib.cpp
