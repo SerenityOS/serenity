@@ -19,6 +19,7 @@ class EmojiInputDialog final : public Dialog {
     struct Emoji {
         RefPtr<Button> button;
         Unicode::Emoji emoji;
+        String text;
     };
 
 public:
@@ -30,6 +31,7 @@ private:
 
     Vector<Emoji> supported_emoji();
     void update_displayed_emoji();
+    void select_first_displayed_emoji();
 
     OwnPtr<ActionGroup> m_category_action_group;
     Optional<Unicode::EmojiGroup> m_selected_category;
@@ -38,6 +40,7 @@ private:
     RefPtr<Toolbar> m_toolbar;
     RefPtr<Widget> m_emojis_widget;
     Vector<Emoji> m_emojis;
+    Emoji const* m_first_displayed_emoji { nullptr };
     String m_selected_emoji_text;
 };
 
