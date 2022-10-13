@@ -15,13 +15,19 @@ DSP::MDCT<12> MP3LoaderPlugin::s_mdct_12;
 DSP::MDCT<36> MP3LoaderPlugin::s_mdct_36;
 
 MP3LoaderPlugin::MP3LoaderPlugin(StringView path)
-    : m_path(path)
+    : LoaderPlugin(path)
+{
+}
+
+MP3LoaderPlugin::MP3LoaderPlugin(Bytes buffer)
+    : m_backing_memory(buffer)
 {
 }
 
 MaybeLoaderError MP3LoaderPlugin::initialize()
 {
-    m_stream = LOADER_TRY(Core::Stream::File::open(m_path, Core::Stream::OpenMode::Read));
+    LOADER_TRY(LoaderPlugin::initialize());
+
     m_bitstream = LOADER_TRY(Core::Stream::BigEndianInputBitStream::construct(*m_stream));
 
     TRY(synchronize());
