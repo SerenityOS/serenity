@@ -13,6 +13,19 @@
 
 namespace Web::Fetch {
 
+// https://fetch.spec.whatwg.org/#bodyinit-safely-extract
+WebIDL::ExceptionOr<Infrastructure::BodyWithType> safely_extract_body(JS::Realm& realm, BodyInitOrReadbleBytes const& object)
+{
+    // 1. If object is a ReadableStream object, then:
+    if (auto const* stream = object.get_pointer<JS::Handle<Streams::ReadableStream>>()) {
+        // 1. Assert: object is neither disturbed nor locked.
+        VERIFY(!((*stream)->is_disturbed() || (*stream)->is_locked()));
+    }
+
+    // 2. Return the result of extracting object.
+    return extract_body(realm, object);
+}
+
 // https://fetch.spec.whatwg.org/#concept-bodyinit-extract
 WebIDL::ExceptionOr<Infrastructure::BodyWithType> extract_body(JS::Realm& realm, BodyInitOrReadbleBytes const& object, bool keepalive)
 {
