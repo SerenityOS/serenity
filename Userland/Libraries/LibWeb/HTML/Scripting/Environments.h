@@ -20,6 +20,8 @@ namespace Web::HTML {
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#environment
 struct Environment {
+    virtual ~Environment() = default;
+
     // An id https://html.spec.whatwg.org/multipage/webappapis.html#concept-environment-id
     String id;
 
@@ -53,8 +55,8 @@ enum class RunScriptDecision {
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#environment-settings-object
 struct EnvironmentSettingsObject
-    : public Environment
-    , public JS::Cell {
+    : public JS::Cell
+    , public Environment {
     JS_CELL(EnvironmentSettingsObject, JS::Cell);
 
     virtual ~EnvironmentSettingsObject() override;
