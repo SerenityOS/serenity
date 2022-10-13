@@ -774,23 +774,33 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::last_index_of)
 // 22.1.3.1 String.prototype.at ( index ), https://tc39.es/ecma262/#sec-string.prototype.at
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::at)
 {
+    // 1. Let O be ? ToObject(this value).
     auto string = TRY(utf16_string_from(vm));
+    // 2. Let len be ? LengthOfArrayLike(O).
     auto length = string.length_in_code_units();
 
+    // 3. Let relativeIndex be ? ToIntegerOrInfinity(index).
     auto relative_index = TRY(vm.argument(0).to_integer_or_infinity(vm));
     if (Value(relative_index).is_infinity())
         return js_undefined();
 
     Checked<size_t> index { 0 };
+    // 4. If relativeIndex ≥ 0, then
     if (relative_index >= 0) {
+        // a. Let k be relativeIndex.
         index += relative_index;
-    } else {
+    }
+    // 5. Else,
+    else {
+        // a. Let k be len + relativeIndex.
         index += length;
         index -= -relative_index;
     }
+    // 6. If k < 0 or k ≥ len, return undefined.
     if (index.has_overflow() || index.value() >= length)
         return js_undefined();
 
+    // 7. Return ? Get(O, ! ToString(𝔽(k))).
     return js_string(vm, string.substring_view(index.value(), 1));
 }
 
