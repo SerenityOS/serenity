@@ -48,7 +48,6 @@ public:
     virtual u16 num_channels() override { return m_num_channels; }
     virtual String format_name() override { return "RIFF WAVE (.wav)"; }
     virtual PcmSampleFormat pcm_format() override { return m_sample_format; }
-    virtual RefPtr<Core::File> file() override { return m_file; }
 
 private:
     MaybeLoaderError parse_header();
@@ -57,8 +56,7 @@ private:
     template<typename SampleReader>
     MaybeLoaderError read_samples_from_stream(Core::Stream::Stream& stream, SampleReader read_sample, FixedArray<Sample>& samples) const;
 
-    // This is only kept around for compatibility for now.
-    RefPtr<Core::File> m_file;
+    StringView m_path;
     OwnPtr<Core::Stream::SeekableStream> m_stream;
     // The constructor might set this so that we can initialize the data stream later.
     Optional<Bytes const&> m_backing_memory;

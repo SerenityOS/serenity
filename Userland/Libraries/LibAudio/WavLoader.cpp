@@ -19,7 +19,7 @@ namespace Audio {
 static constexpr size_t const maximum_wav_size = 1 * GiB; // FIXME: is there a more appropriate size limit?
 
 WavLoaderPlugin::WavLoaderPlugin(StringView path)
-    : m_file(Core::File::construct(path))
+    : m_path(path)
 {
 }
 
@@ -28,7 +28,7 @@ MaybeLoaderError WavLoaderPlugin::initialize()
     if (m_backing_memory.has_value())
         m_stream = LOADER_TRY(Core::Stream::MemoryStream::construct(m_backing_memory.value()));
     else
-        m_stream = LOADER_TRY(Core::Stream::File::open(m_file->filename(), Core::Stream::OpenMode::Read));
+        m_stream = LOADER_TRY(Core::Stream::File::open(m_path, Core::Stream::OpenMode::Read));
 
     TRY(parse_header());
     return {};
