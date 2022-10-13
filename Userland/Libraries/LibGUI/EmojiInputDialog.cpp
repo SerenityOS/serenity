@@ -153,6 +153,10 @@ EmojiInputDialog::EmojiInputDialog(Window* parent_window)
     m_search_box->on_change = [this]() {
         update_displayed_emoji();
     };
+
+    m_search_box->on_return_pressed = [this]() {
+        select_first_displayed_emoji();
+    };
 }
 
 auto EmojiInputDialog::supported_emoji() -> Vector<Emoji>
@@ -182,6 +186,7 @@ auto EmojiInputDialog::supported_emoji() -> Vector<Emoji>
             builder.append_code_point(*code_point);
             code_points.append(*code_point);
         });
+        auto text = builder.to_string();
 
         auto emoji = Unicode::find_emoji_for_code_points(code_points);
         if (!emoji.has_value()) {
@@ -193,7 +198,7 @@ auto EmojiInputDialog::supported_emoji() -> Vector<Emoji>
         auto button = EmojiButton::construct(move(code_points));
         button->set_fixed_size(button_size, button_size);
         button->set_button_style(Gfx::ButtonStyle::Coolbar);
-        button->on_click = [this, text = builder.to_string()](auto) {
+        button->on_click = [this, text](auto) {
             m_selected_emoji_text = move(text);
             done(ExecResult::OK);
         };
@@ -201,7 +206,7 @@ auto EmojiInputDialog::supported_emoji() -> Vector<Emoji>
         if (!emoji->name.is_empty())
             button->set_tooltip(emoji->name);
 
-        emojis.empend(move(button), emoji.release_value());
+        emojis.empend(move(button), emoji.release_value(), move(text));
     }
 
     quick_sort(emojis, [](auto const& lhs, auto const& rhs) {
@@ -217,6 +222,7 @@ void EmojiInputDialog::update_displayed_emoji()
     m_emojis_widget->set_updates_enabled(false);
 
     m_emojis_widget->remove_all_children();
+    m_first_displayed_emoji = nullptr;
 
     constexpr size_t columns = 18;
     size_t rows = ceil_div(m_emojis.size(), columns);
@@ -247,11 +253,24 @@ void EmojiInputDialog::update_displayed_emoji()
                     found_match = result.score > 0;
                 }
 
-                if (found_match)
+                if (found_match) {
                     horizontal_container.add_child(*emoji.button);
+
+                    if (m_first_displayed_emoji == nullptr)
+                        m_first_displayed_emoji = &emoji;
+                }
             }
         }
     }
+}
+
+void EmojiInputDialog::select_first_displayed_emoji()
+{
+    if (m_first_displayed_emoji == nullptr)
+        return;
+
+    m_selected_emoji_text = m_first_displayed_emoji->text;
+    done(ExecResult::OK);
 }
 
 void EmojiInputDialog::event(Core::Event& event)
