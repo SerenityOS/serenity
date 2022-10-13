@@ -62,14 +62,14 @@ constexpr size_t product_odd() { return value * product_odd<value - 2>(); }
         double res;                           \
         asm(#instruction " %d0, %d1"          \
             : "=w"(res)                       \
-            : "w"(##arg));                    \
+            : "w"(arg));                      \
         return res;                           \
     }                                         \
     if constexpr (IsSame<T, float>) {         \
         float res;                            \
         asm(#instruction " %s0, %s1"          \
             : "=w"(res)                       \
-            : "w"(##arg));                    \
+            : "w"(arg));                      \
         return res;                           \
     }
 
@@ -238,7 +238,7 @@ constexpr T fabs(T x)
         : "+t"(x));
     return x;
 #elif ARCH(AARCH64)
-    AARCH64_INSTRUCTION(abs, x);
+    AARCH64_INSTRUCTION(fabs, x);
 #else
     return __builtin_fabs(x);
 #endif
@@ -612,23 +612,27 @@ ALWAYS_INLINE I round_to(P value)
             i32 res;
             if constexpr (IsSame<P, float>) {
                 asm("fcvtns %w0, %s1"
-                    : "=r"(res), "w"(value));
+                    : "=r"(res)
+                    : "w"(value));
             } else if constexpr (IsSame<P, double>) {
                 asm("fcvtns %w0, %d1"
-                    : "=r"(res), "w"(value));
+                    : "=r"(res)
+                    : "w"(value));
             } else if constexpr (IsSame<P, long double>) {
                 TODO();
             }
             return static_cast<I>(res);
         }
-        static_cast<sizeof(I) == 8>; // either long or long long aka i64
+        // either long or long long aka i64
         i64 res;
         if constexpr (IsSame<P, float>) {
             asm("fcvtns %0, %s1"
-                : "=r"(res), "w"(value));
+                : "=r"(res)
+                : "w"(value));
         } else if constexpr (IsSame<P, double>) {
             asm("fcvtns %0, %d1"
-                : "=r"(res), "w"(value));
+                : "=r"(res)
+                : "w"(value));
         } else if constexpr (IsSame<P, long double>) {
             TODO();
         }
@@ -639,24 +643,28 @@ ALWAYS_INLINE I round_to(P value)
         u32 res;
         if constexpr (IsSame<P, float>) {
             asm("fcvtnu %w0, %s1"
-                : "=r"(res), "w"(value));
+                : "=r"(res)
+                : "w"(value));
         } else if constexpr (IsSame<P, double>) {
             asm("fcvtnu %w0, %d1"
-                : "=r"(res), "w"(value));
+                : "=r"(res)
+                : "w"(value));
         } else if constexpr (IsSame<P, long double>) {
             TODO();
         }
         return static_cast<I>(res);
     }
 
-    static_cast<sizeof(I) == 8>; // either unsigned long or unsigned long long aka u64
+    // either unsigned long or unsigned long long aka u64
     u64 res;
     if constexpr (IsSame<P, float>) {
         asm("fcvtnu %0, %s1"
-            : "=r"(res), "w"(value));
+            : "=r"(res)
+            : "w"(value));
     } else if constexpr (IsSame<P, double>) {
         asm("fcvtnu %0, %d1"
-            : "=r"(res), "w"(value));
+            : "=r"(res)
+            : "w"(value));
     } else if constexpr (IsSame<P, long double>) {
         TODO();
     }
