@@ -586,10 +586,16 @@ void HexEditor::paint_event(GUI::PaintEvent& event)
             bool const highlight_flag = selection_inbetween_start_end || selection_inbetween_end_start;
 
             Gfx::IntRect hex_display_rect {
-                frame_thickness() + offset_margin_width() + static_cast<int>(j) * cell_width() + 2 * m_padding,
-                frame_thickness() + m_padding + static_cast<int>(i) * line_height(),
+                frame_thickness() + offset_margin_width() + j * cell_width() + 2 * m_padding,
+                frame_thickness() + m_padding + i * line_height(),
                 cell_width(),
                 line_height() - m_line_spacing
+            };
+            Gfx::IntRect background_rect {
+                frame_thickness() + offset_margin_width() + j * cell_width() + 1 * m_padding,
+                frame_thickness() + m_line_spacing / 2 + i * line_height(),
+                cell_width(),
+                line_height()
             };
 
             const u8 cell_value = m_document->get(byte_position).value;
@@ -611,7 +617,7 @@ void HexEditor::paint_event(GUI::PaintEvent& event)
                 background_color = palette().inactive_selection();
                 text_color = palette().inactive_selection_text();
             }
-            painter.fill_rect(hex_display_rect, background_color);
+            painter.fill_rect(background_rect, background_color);
 
             painter.draw_text(hex_display_rect, line, Gfx::TextAlignment::TopLeft, text_color);
 
@@ -628,10 +634,16 @@ void HexEditor::paint_event(GUI::PaintEvent& event)
             }
 
             Gfx::IntRect text_display_rect {
-                static_cast<int>(frame_thickness() + offset_margin_width() + bytes_per_row() * cell_width() + j * character_width() + 4 * m_padding),
-                static_cast<int>(frame_thickness() + m_padding + i * line_height()),
-                static_cast<int>(character_width()),
-                static_cast<int>(line_height() - m_line_spacing)
+                frame_thickness() + offset_margin_width() + bytes_per_row() * cell_width() + j * character_width() + 4 * m_padding,
+                frame_thickness() + m_padding + i * line_height(),
+                character_width(),
+                line_height() - m_line_spacing
+            };
+            Gfx::IntRect text_background_rect {
+                frame_thickness() + offset_margin_width() + bytes_per_row() * cell_width() + j * character_width() + 4 * m_padding,
+                frame_thickness() + m_line_spacing / 2 + i * line_height(),
+                character_width(),
+                line_height()
             };
 
             background_color = palette().color(background_role());
@@ -651,7 +663,7 @@ void HexEditor::paint_event(GUI::PaintEvent& event)
                 text_color = palette().inactive_selection_text();
             }
 
-            painter.fill_rect(text_display_rect, background_color);
+            painter.fill_rect(text_background_rect, background_color);
             painter.draw_text(text_display_rect, String::formatted("{:c}", isprint(cell_value) ? cell_value : '.'), Gfx::TextAlignment::TopLeft, text_color);
 
             if (m_edit_mode == EditMode::Text) {
