@@ -549,20 +549,31 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::concat)
 // 22.1.3.24 String.prototype.substring ( start, end ), https://tc39.es/ecma262/#sec-string.prototype.substring
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::substring)
 {
+    // 1. Let O be ? RequireObjectCoercible(this value).
+    // 2. Let S be ? ToString(O).
     auto string = TRY(utf16_string_from(vm));
+
+    // 3. Let len be the length of S.
     auto string_length = static_cast<double>(string.length_in_code_units());
 
+    // 4. Let intStart be ? ToIntegerOrInfinity(start).
     auto start = TRY(vm.argument(0).to_integer_or_infinity(vm));
+    // 5. If end is undefined, let intEnd be len; else let intEnd be ? ToIntegerOrInfinity(end).
     auto end = string_length;
     if (!vm.argument(1).is_undefined())
         end = TRY(vm.argument(1).to_integer_or_infinity(vm));
 
+    // 6. Let finalStart be the result of clamping intStart between 0 and len.
     size_t final_start = clamp(start, static_cast<double>(0), string_length);
+    // 7. Let finalEnd be the result of clamping intEnd between 0 and len.
     size_t final_end = clamp(end, static_cast<double>(0), string_length);
 
+    // 8. Let from be min(finalStart, finalEnd).
     size_t from = min(final_start, final_end);
+    // 9. Let to be max(finalStart, finalEnd).
     size_t to = max(final_start, final_end);
 
+    // 10. Return the substring of S from from to to.
     return js_string(vm, string.substring_view(from, to - from));
 }
 
