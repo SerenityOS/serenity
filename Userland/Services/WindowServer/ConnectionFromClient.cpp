@@ -1277,17 +1277,23 @@ void ConnectionFromClient::set_flash_flush(bool enabled)
 
 void ConnectionFromClient::set_window_parent_from_client(i32 client_id, i32 parent_id, i32 child_id)
 {
-    auto child_window = window_from_id(child_id);
-    if (!child_window)
+    auto* child_window = window_from_id(child_id);
+    if (!child_window) {
         did_misbehave("SetWindowParentFromClient: Bad child window ID");
+        return;
+    }
 
-    auto client_connection = from_client_id(client_id);
-    if (!client_connection)
+    auto* client_connection = from_client_id(client_id);
+    if (!client_connection) {
         did_misbehave("SetWindowParentFromClient: Bad client ID");
+        return;
+    }
 
-    auto parent_window = client_connection->window_from_id(parent_id);
-    if (!parent_window)
+    auto* parent_window = client_connection->window_from_id(parent_id);
+    if (!parent_window) {
         did_misbehave("SetWindowParentFromClient: Bad parent window ID");
+        return;
+    }
 
     if (parent_window->is_stealable_by_client(this->client_id())) {
         child_window->set_parent_window(*parent_window);
@@ -1298,34 +1304,44 @@ void ConnectionFromClient::set_window_parent_from_client(i32 client_id, i32 pare
 
 Messages::WindowServer::GetWindowRectFromClientResponse ConnectionFromClient::get_window_rect_from_client(i32 client_id, i32 window_id)
 {
-    auto client_connection = from_client_id(client_id);
-    if (!client_connection)
+    auto* client_connection = from_client_id(client_id);
+    if (!client_connection) {
         did_misbehave("GetWindowRectFromClient: Bad client ID");
+        return { Gfx::IntRect() };
+    }
 
-    auto window = client_connection->window_from_id(window_id);
-    if (!window)
+    auto* window = client_connection->window_from_id(window_id);
+    if (!window) {
         did_misbehave("GetWindowRectFromClient: Bad window ID");
+        return { Gfx::IntRect() };
+    }
 
     return window->rect();
 }
 
 void ConnectionFromClient::add_window_stealing_for_client(i32 client_id, i32 window_id)
 {
-    auto window = window_from_id(window_id);
-    if (!window)
+    auto* window = window_from_id(window_id);
+    if (!window) {
         did_misbehave("AddWindowStealingForClient: Bad window ID");
+        return;
+    }
 
-    if (!from_client_id(client_id))
+    if (!from_client_id(client_id)) {
         did_misbehave("AddWindowStealingForClient: Bad client ID");
+        return;
+    }
 
     window->add_stealing_for_client(client_id);
 }
 
 void ConnectionFromClient::remove_window_stealing_for_client(i32 client_id, i32 window_id)
 {
-    auto window = window_from_id(window_id);
-    if (!window)
+    auto* window = window_from_id(window_id);
+    if (!window) {
         did_misbehave("RemoveWindowStealingForClient: Bad window ID");
+        return;
+    }
 
     // Don't check if the client exists, it may have died
 
@@ -1334,18 +1350,22 @@ void ConnectionFromClient::remove_window_stealing_for_client(i32 client_id, i32 
 
 void ConnectionFromClient::remove_window_stealing(i32 window_id)
 {
-    auto window = window_from_id(window_id);
-    if (!window)
+    auto* window = window_from_id(window_id);
+    if (!window) {
         did_misbehave("RemoveWindowStealing: Bad window ID");
+        return;
+    }
 
     window->remove_all_stealing();
 }
 
 void ConnectionFromClient::set_always_on_top(i32 window_id, bool always_on_top)
 {
-    auto window = window_from_id(window_id);
-    if (!window)
+    auto* window = window_from_id(window_id);
+    if (!window) {
         did_misbehave("SetAlwaysOnTop: Bad window ID");
+        return;
+    }
 
     window->set_always_on_top(always_on_top);
 }
