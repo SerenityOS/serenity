@@ -988,10 +988,15 @@ ThrowCompletionOr<DurationRecord> add_duration(VM& vm, double years1, double mon
         }
 
         // b. Let result be ? BalanceDuration(d1 + d2, h1 + h2, min1 + min2, s1 + s2, ms1 + ms2, mus1 + mus2, ns1 + ns2, largestUnit).
-        VERIFY(trunc(nanoseconds1 + nanoseconds2) == nanoseconds1 + nanoseconds2);
-        if (!isfinite(nanoseconds1 + nanoseconds2))
-            return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidDuration);
-        auto result = TRY(balance_duration(vm, days1 + days2, hours1 + hours2, minutes1 + minutes2, seconds1 + seconds2, milliseconds1 + milliseconds2, microseconds1 + microseconds2, Crypto::SignedBigInteger { nanoseconds1 + nanoseconds2 }, largest_unit));
+        // NOTE: Nanoseconds is the only one that can overflow the safe integer range of a double
+        //       so we have to check for that case.
+        Crypto::SignedBigInteger sum_of_nano_seconds;
+        if (fabs(nanoseconds1 + nanoseconds2) >= MAX_ARRAY_LIKE_INDEX)
+            sum_of_nano_seconds = Crypto::SignedBigInteger { nanoseconds1 }.plus(Crypto::SignedBigInteger { nanoseconds2 });
+        else
+            sum_of_nano_seconds = Crypto::SignedBigInteger { nanoseconds1 + nanoseconds2 };
+
+        auto result = TRY(balance_duration(vm, days1 + days2, hours1 + hours2, minutes1 + minutes2, seconds1 + seconds2, milliseconds1 + milliseconds2, microseconds1 + microseconds2, sum_of_nano_seconds, largest_unit));
 
         // c. Return ! CreateDurationRecord(0, 0, 0, result.[[Days]], result.[[Hours]], result.[[Minutes]], result.[[Seconds]], result.[[Milliseconds]], result.[[Microseconds]], result.[[Nanoseconds]]).
         return MUST(create_duration_record(vm, 0, 0, 0, result.days, result.hours, result.minutes, result.seconds, result.milliseconds, result.microseconds, result.nanoseconds));
@@ -1032,10 +1037,15 @@ ThrowCompletionOr<DurationRecord> add_duration(VM& vm, double years1, double mon
         auto* date_difference = TRY(calendar_date_until(vm, calendar, &relative_to, end, *difference_options));
 
         // k. Let result be ? BalanceDuration(dateDifference.[[Days]], h1 + h2, min1 + min2, s1 + s2, ms1 + ms2, mus1 + mus2, ns1 + ns2, largestUnit).
-        VERIFY(trunc(nanoseconds1 + nanoseconds2) == nanoseconds1 + nanoseconds2);
-        if (!isfinite(nanoseconds1 + nanoseconds2))
-            return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidDuration);
-        auto result = TRY(balance_duration(vm, date_difference->days(), hours1 + hours2, minutes1 + minutes2, seconds1 + seconds2, milliseconds1 + milliseconds2, microseconds1 + microseconds2, Crypto::SignedBigInteger { nanoseconds1 + nanoseconds2 }, largest_unit));
+        // NOTE: Nanoseconds is the only one that can overflow the safe integer range of a double
+        //       so we have to check for that case.
+        Crypto::SignedBigInteger sum_of_nano_seconds;
+        if (fabs(nanoseconds1 + nanoseconds2) >= MAX_ARRAY_LIKE_INDEX)
+            sum_of_nano_seconds = Crypto::SignedBigInteger { nanoseconds1 }.plus(Crypto::SignedBigInteger { nanoseconds2 });
+        else
+            sum_of_nano_seconds = Crypto::SignedBigInteger { nanoseconds1 + nanoseconds2 };
+
+        auto result = TRY(balance_duration(vm, date_difference->days(), hours1 + hours2, minutes1 + minutes2, seconds1 + seconds2, milliseconds1 + milliseconds2, microseconds1 + microseconds2, sum_of_nano_seconds, largest_unit));
 
         // l. Return ? CreateDurationRecord(dateDifference.[[Years]], dateDifference.[[Months]], dateDifference.[[Weeks]], result.[[Days]], result.[[Hours]], result.[[Minutes]], result.[[Seconds]], result.[[Milliseconds]], result.[[Microseconds]], result.[[Nanoseconds]]).
         return MUST(create_duration_record(vm, date_difference->years(), date_difference->months(), date_difference->weeks(), result.days, result.hours, result.minutes, result.seconds, result.milliseconds, result.microseconds, result.nanoseconds));
