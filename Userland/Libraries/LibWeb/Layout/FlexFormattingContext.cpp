@@ -1131,11 +1131,17 @@ void FlexFormattingContext::determine_used_cross_size_of_each_flex_item()
                 && is_cross_auto(flex_item->box)
                 && !flex_item->margins.cross_before_is_auto
                 && !flex_item->margins.cross_after_is_auto) {
-                // FIXME: Clamp to the item's used min and max cross sizes.
-                flex_item->cross_size = flex_line.cross_size
+                auto unclamped_cross_size = flex_line.cross_size
                     - flex_item->margins.cross_before - flex_item->margins.cross_after
                     - flex_item->padding.cross_before - flex_item->padding.cross_after
                     - flex_item->borders.cross_before - flex_item->borders.cross_after;
+
+                auto const& computed_min_size = computed_cross_min_size(flex_item->box);
+                auto const& computed_max_size = computed_cross_max_size(flex_item->box);
+                auto cross_min_size = (!computed_min_size.is_auto() && !computed_min_size.contains_percentage()) ? specified_cross_min_size(flex_item->box) : 0;
+                auto cross_max_size = (!computed_max_size.is_none() && !computed_max_size.contains_percentage()) ? specified_cross_max_size(flex_item->box) : INFINITY;
+
+                flex_item->cross_size = css_clamp(unclamped_cross_size, cross_min_size, cross_max_size);
             } else {
                 // Otherwise, the used cross size is the item’s hypothetical cross size.
                 flex_item->cross_size = flex_item->hypothetical_cross_size;
