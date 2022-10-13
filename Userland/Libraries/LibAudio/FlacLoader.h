@@ -95,8 +95,7 @@ private:
     ALWAYS_INLINE ErrorOr<u32, LoaderError> convert_sample_rate_code(u8 sample_rate_code);
     ALWAYS_INLINE ErrorOr<PcmSampleFormat, LoaderError> convert_bit_depth_code(u8 bit_depth_code);
 
-    RefPtr<Core::File> m_file;
-    Optional<LoaderError> m_error {};
+    StringView m_path;
 
     // Data obtained directly from the FLAC metadata: many values have specific bit counts
     u32 m_sample_rate { 0 };         // 20 bit
@@ -115,6 +114,7 @@ private:
     // keep track of the start of the data in the FLAC stream to seek back more easily
     u64 m_data_start_location { 0 };
     OwnPtr<Core::Stream::SeekableStream> m_stream;
+    Optional<Bytes> m_backing_memory;
     Optional<FlacFrameHeader> m_current_frame;
     // Whatever the last get_more_samples() call couldn't return gets stored here.
     Vector<Sample, FLAC_BUFFER_SIZE> m_unread_data;

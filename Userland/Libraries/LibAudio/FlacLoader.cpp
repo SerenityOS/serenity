@@ -26,33 +26,21 @@
 namespace Audio {
 
 FlacLoaderPlugin::FlacLoaderPlugin(StringView path)
-    : m_file(Core::File::construct(path))
+    : m_path(path)
 {
-    if (!m_file->open(Core::OpenMode::ReadOnly)) {
-        m_error = LoaderError { String::formatted("Can't open file: {}", m_file->error_string()) };
-        return;
-    }
-
-    auto maybe_stream = Core::Stream::BufferedFile::create(MUST(Core::Stream::File::open(path, Core::Stream::OpenMode::Read)), FLAC_BUFFER_SIZE);
-    if (maybe_stream.is_error())
-        m_error = LoaderError { "Can't open file stream" };
-    else
-        m_stream = maybe_stream.release_value();
 }
 
 FlacLoaderPlugin::FlacLoaderPlugin(Bytes& buffer)
+    : m_backing_memory(buffer)
 {
-    auto maybe_stream = Core::Stream::MemoryStream::construct(buffer);
-    if (maybe_stream.is_error())
-        m_error = LoaderError { "Can't open memory stream" };
-    else
-        m_stream = maybe_stream.release_value();
 }
 
 MaybeLoaderError FlacLoaderPlugin::initialize()
 {
-    if (m_error.has_value())
-        return m_error.release_value();
+    if (m_backing_memory.has_value())
+        m_stream = LOADER_TRY(Core::Stream::MemoryStream::construct(m_backing_memory.value()));
+    else
+        m_stream = LOADER_TRY(Core::Stream::File::open(m_path, Core::Stream::OpenMode::Read));
 
     TRY(parse_header());
     TRY(reset());
