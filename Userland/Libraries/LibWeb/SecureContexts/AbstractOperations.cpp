@@ -6,6 +6,7 @@
 
 #include <AK/IPv4Address.h>
 #include <AK/IPv6Address.h>
+#include <AK/URL.h>
 #include <LibWeb/HTML/Origin.h>
 #include <LibWeb/SecureContexts/AbstractOperations.h>
 #include <LibWeb/URL/URL.h>
@@ -55,6 +56,21 @@ Trustworthiness is_origin_potentially_trustworthy(HTML::Origin const& origin)
 
     // 9. Return "Not Trustworthy".
     return Trustworthiness::NotTrustworthy;
+}
+
+// https://w3c.github.io/webappsec-secure-contexts/#is-url-trustworthy
+Trustworthiness is_url_potentially_trustworthy(AK::URL const& url)
+{
+    // 1. If url is "about:blank" or "about:srcdoc", return "Potentially Trustworthy".
+    if (url == "about:blank"sv || url == "about:srcdoc"sv)
+        return Trustworthiness::PotentiallyTrustworthy;
+
+    // 2. If url’s scheme is "data", return "Potentially Trustworthy".
+    if (url.scheme() == "data"sv)
+        return Trustworthiness::PotentiallyTrustworthy;
+
+    // 3. Return the result of executing § 3.1 Is origin potentially trustworthy? on url’s origin.
+    return is_origin_potentially_trustworthy(URL::url_origin(url));
 }
 
 }
