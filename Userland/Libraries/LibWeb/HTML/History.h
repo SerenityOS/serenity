@@ -22,6 +22,10 @@ public:
 
     WebIDL::ExceptionOr<void> push_state(JS::Value data, String const& unused, String const& url);
     WebIDL::ExceptionOr<void> replace_state(JS::Value data, String const& unused, String const& url);
+    WebIDL::ExceptionOr<void> go(long delta);
+    WebIDL::ExceptionOr<void> back();
+    WebIDL::ExceptionOr<void> forward();
+    WebIDL::ExceptionOr<u64> length() const;
 
 private:
     History(JS::Realm&, DOM::Document&);

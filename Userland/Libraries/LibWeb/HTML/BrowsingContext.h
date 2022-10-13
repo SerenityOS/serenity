@@ -126,6 +126,7 @@ public:
 
     Vector<SessionHistoryEntry>& session_history() { return m_session_history; }
     Vector<SessionHistoryEntry> const& session_history() const { return m_session_history; }
+    size_t session_history_index() const { return *m_session_history_index; }
 
     // https://html.spec.whatwg.org/multipage/dom.html#still-on-its-initial-about:blank-document
     bool still_on_its_initial_about_blank_document() const;
