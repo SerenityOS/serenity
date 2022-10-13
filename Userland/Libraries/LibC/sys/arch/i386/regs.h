@@ -25,8 +25,10 @@ struct [[gnu::packed]] PtraceRegisters : public __mcontext {
         return eip;
 #        elif ARCH(X86_64)
         return rip;
+#        elif ARCH(AARCH64)
+        return pc;
 #        else
-        TODO_AARCH64();
+#            error Unknown architecture
 #        endif
     }
 
@@ -36,9 +38,10 @@ struct [[gnu::packed]] PtraceRegisters : public __mcontext {
         eip = ip;
 #        elif ARCH(X86_64)
         rip = ip;
+#        elif ARCH(AARCH64)
+        pc = ip;
 #        else
-        (void)ip;
-        TODO_AARCH64();
+#            error Unknown architecture
 #        endif
     }
 
@@ -48,8 +51,10 @@ struct [[gnu::packed]] PtraceRegisters : public __mcontext {
         return ebp;
 #        elif ARCH(X86_64)
         return rbp;
+#        elif ARCH(AARCH64)
+        return r29;
 #        else
-        TODO_AARCH64();
+#            error Unknown architecture
 #        endif
     }
 
@@ -59,9 +64,10 @@ struct [[gnu::packed]] PtraceRegisters : public __mcontext {
         ebp = bp;
 #        elif ARCH(X86_64)
         rbp = bp;
+#        elif ARCH(AARCH64)
+        r29 = bp;
 #        else
-        (void)bp;
-        TODO_AARCH64();
+#            error Unknown architecture
 #        endif
     }
 #    endif
