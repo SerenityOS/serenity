@@ -5,6 +5,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/IPv4Address.h>
+#include <AK/IPv6Address.h>
 #include <AK/URLParser.h>
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/URL/URL.h>
@@ -338,6 +340,15 @@ HTML::Origin url_origin(AK::URL const& url)
 
     // Return a new opaque origin.
     return HTML::Origin {};
+}
+
+// https://url.spec.whatwg.org/#concept-domain
+bool host_is_domain(StringView host)
+{
+    // A domain is a non-empty ASCII string that identifies a realm within a network.
+    return !host.is_empty()
+        && !IPv4Address::from_string(host).has_value()
+        && !IPv6Address::from_string(host).has_value();
 }
 
 }

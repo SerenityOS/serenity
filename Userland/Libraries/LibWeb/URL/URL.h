@@ -72,5 +72,6 @@ private:
 };
 
 HTML::Origin url_origin(AK::URL const&);
+bool host_is_domain(StringView host);
 
 }
