@@ -44,6 +44,9 @@ Result<NonnullOwnPtr<LoaderPlugin>, LoaderError> Loader::try_create(Bytes& buffe
     plugin = adopt_own(*new FlacLoaderPlugin(buffer));
     if (auto initstate = plugin->initialize(); !initstate.is_error())
         return plugin;
+    plugin = adopt_own(*new MP3LoaderPlugin(buffer));
+    if (auto initstate = plugin->initialize(); !initstate.is_error())
+        return plugin;
     return LoaderError { "No loader plugin available" };
 }
 

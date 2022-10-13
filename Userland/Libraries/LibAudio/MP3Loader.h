@@ -11,6 +11,7 @@
 #include <AK/MemoryStream.h>
 #include <AK/Tuple.h>
 #include <LibCore/InputBitStream.h>
+#include <LibCore/MemoryStream.h>
 #include <LibCore/Stream.h>
 #include <LibDSP/MDCT.h>
 
@@ -23,6 +24,7 @@ struct ScaleFactorBand;
 class MP3LoaderPlugin : public LoaderPlugin {
 public:
     explicit MP3LoaderPlugin(StringView path);
+    explicit MP3LoaderPlugin(Bytes buffer);
     virtual ~MP3LoaderPlugin() = default;
 
     virtual MaybeLoaderError initialize() override;
@@ -72,6 +74,7 @@ private:
     u32 m_current_frame_read;
     StringView m_path;
     OwnPtr<Core::Stream::SeekableStream> m_stream;
+    Optional<Bytes const&> m_backing_memory;
     OwnPtr<Core::Stream::BigEndianInputBitStream> m_bitstream;
     DuplexMemoryStream m_bit_reservoir;
 };
