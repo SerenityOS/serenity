@@ -144,5 +144,6 @@ EnvironmentSettingsObject& relevant_settings_object(JS::Object const&);
 EnvironmentSettingsObject& relevant_settings_object(DOM::Node const&);
 JS::Object& relevant_global_object(JS::Object const&);
 [[nodiscard]] bool is_secure_context(Environment const&);
+[[nodiscard]] bool is_non_secure_context(Environment const&);
 
 }
