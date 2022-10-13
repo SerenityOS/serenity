@@ -67,6 +67,10 @@ private:
         Optional<u64> read_variable_size_integer(bool mask_length = true)
         {
             dbgln_if(MATROSKA_TRACE_DEBUG, "Reading from offset {:p}", m_data_ptr);
+            if (!has_octet()) {
+                dbgln_if(MATROSKA_TRACE_DEBUG, "Ran out of stream data");
+                return {};
+            }
             auto length_descriptor = read_octet();
             dbgln_if(MATROSKA_TRACE_DEBUG, "Reading VINT, first byte is {:#02x}", length_descriptor);
             if (length_descriptor == 0)
