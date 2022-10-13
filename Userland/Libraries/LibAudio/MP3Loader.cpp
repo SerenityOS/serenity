@@ -20,7 +20,7 @@ MP3LoaderPlugin::MP3LoaderPlugin(StringView path)
 }
 
 MP3LoaderPlugin::MP3LoaderPlugin(Bytes buffer)
-    : m_backing_memory(buffer)
+    : LoaderPlugin(buffer)
 {
 }
 

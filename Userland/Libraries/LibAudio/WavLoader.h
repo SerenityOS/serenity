@@ -30,7 +30,7 @@ static constexpr unsigned const WAVE_FORMAT_EXTENSIBLE = 0xFFFE; // Determined b
 class WavLoaderPlugin : public LoaderPlugin {
 public:
     explicit WavLoaderPlugin(StringView path);
-    explicit WavLoaderPlugin(Bytes const& buffer);
+    explicit WavLoaderPlugin(Bytes buffer);
 
     virtual MaybeLoaderError initialize() override;
 
@@ -55,11 +55,6 @@ private:
     LoaderSamples samples_from_pcm_data(Bytes const& data, size_t samples_to_read) const;
     template<typename SampleReader>
     MaybeLoaderError read_samples_from_stream(Core::Stream::Stream& stream, SampleReader read_sample, FixedArray<Sample>& samples) const;
-
-    StringView m_path;
-    OwnPtr<Core::Stream::SeekableStream> m_stream;
-    // The constructor might set this so that we can initialize the data stream later.
-    Optional<Bytes const&> m_backing_memory;
 
     u32 m_sample_rate { 0 };
     u16 m_num_channels { 0 };

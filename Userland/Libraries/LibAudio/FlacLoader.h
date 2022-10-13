@@ -48,7 +48,7 @@ ALWAYS_INLINE ErrorOr<i32> decode_unsigned_exp_golomb(u8 order, BigEndianInputBi
 class FlacLoaderPlugin : public LoaderPlugin {
 public:
     explicit FlacLoaderPlugin(StringView path);
-    explicit FlacLoaderPlugin(Bytes& buffer);
+    explicit FlacLoaderPlugin(Bytes buffer);
     ~FlacLoaderPlugin()
     {
     }
@@ -95,8 +95,6 @@ private:
     ALWAYS_INLINE ErrorOr<u32, LoaderError> convert_sample_rate_code(u8 sample_rate_code);
     ALWAYS_INLINE ErrorOr<PcmSampleFormat, LoaderError> convert_bit_depth_code(u8 bit_depth_code);
 
-    StringView m_path;
-
     // Data obtained directly from the FLAC metadata: many values have specific bit counts
     u32 m_sample_rate { 0 };         // 20 bit
     u8 m_num_channels { 0 };         // 3 bit
@@ -113,8 +111,6 @@ private:
 
     // keep track of the start of the data in the FLAC stream to seek back more easily
     u64 m_data_start_location { 0 };
-    OwnPtr<Core::Stream::SeekableStream> m_stream;
-    Optional<Bytes> m_backing_memory;
     Optional<FlacFrameHeader> m_current_frame;
     // Whatever the last get_more_samples() call couldn't return gets stored here.
     Vector<Sample, FLAC_BUFFER_SIZE> m_unread_data;
