@@ -492,8 +492,8 @@ ThrowCompletionOr<double> get_offset_nanoseconds_for(VM& vm, Value time_zone, In
     // 5. Set offsetNanoseconds to ℝ(offsetNanoseconds).
     auto offset_nanoseconds = offset_nanoseconds_value.as_double();
 
-    // 6. If abs(offsetNanoseconds) > nsPerDay, throw a RangeError exception.
-    if (fabs(offset_nanoseconds) > ns_per_day)
+    // 6. If abs(offsetNanoseconds) ≥ nsPerDay, throw a RangeError exception.
+    if (fabs(offset_nanoseconds) >= ns_per_day)
         return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidOffsetNanosecondsValue);
 
     // 7. Return offsetNanoseconds.

@@ -12,12 +12,26 @@ describe("correct behavior", () => {
     test("custom time zone", () => {
         const timeZone = {
             getOffsetNanosecondsFor() {
-                return 86400000000000;
+                return 86399999999999;
             },
         };
         const plainTime = Temporal.Now.plainTimeISO("UTC");
         const plainTimeWithOffset = Temporal.Now.plainTimeISO(timeZone);
         // FIXME: Compare these in a sensible way
+    });
+
+    test("cannot have a time zone with more than a day", () => {
+        [86400000000000, -86400000000000, 86400000000001, 86400000000002].forEach(offset => {
+            const timeZone = {
+                getOffsetNanosecondsFor() {
+                    return offset;
+                },
+            };
+            expect(() => Temporal.Now.plainTimeISO(timeZone)).toThrowWithMessage(
+                RangeError,
+                "Invalid offset nanoseconds value, must be in range -86400 * 10^9 + 1 to 86400 * 10^9 - 1"
+            );
+        });
     });
 });
 

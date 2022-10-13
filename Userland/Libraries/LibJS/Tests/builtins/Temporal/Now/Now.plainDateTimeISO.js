@@ -31,7 +31,7 @@ describe("correct behavior", () => {
     test("custom time zone positive", () => {
         const timeZone = {
             getOffsetNanosecondsFor() {
-                return 86400000000000;
+                return 86399999999999;
             },
         };
 
@@ -51,7 +51,7 @@ describe("correct behavior", () => {
     test("custom time zone negative", () => {
         const timeZone = {
             getOffsetNanosecondsFor() {
-                return -86400000000000;
+                return -86399999999999;
             },
         };
 
@@ -69,6 +69,20 @@ describe("correct behavior", () => {
     });
 
     expect(timeZoneTested).toBeTrue();
+
+    test("cannot have a time zone with more than a day", () => {
+        [86400000000000, -86400000000000, 86400000000001, 86400000000002].forEach(offset => {
+            const timeZone = {
+                getOffsetNanosecondsFor() {
+                    return offset;
+                },
+            };
+            expect(() => Temporal.Now.plainDateTimeISO(timeZone)).toThrowWithMessage(
+                RangeError,
+                "Invalid offset nanoseconds value, must be in range -86400 * 10^9 + 1 to 86400 * 10^9 - 1"
+            );
+        });
+    });
 });
 
 describe("errors", () => {
