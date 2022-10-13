@@ -307,4 +307,37 @@ void URL::set_hash(String const& hash)
         m_url = move(result_url);
 }
 
+// https://url.spec.whatwg.org/#concept-url-origin
+HTML::Origin url_origin(AK::URL const& url)
+{
+    // FIXME: We should probably have an extended version of AK::URL for LibWeb instead of standalone functions like this.
+
+    // The origin of a URL url is the origin returned by running these steps, switching on url’s scheme:
+    // "blob"
+    if (url.scheme() == "blob"sv) {
+        // FIXME: Support 'blob://' URLs
+        return HTML::Origin {};
+    }
+
+    // "ftp"
+    // "http"
+    // "https"
+    // "ws"
+    // "wss"
+    if (url.scheme().is_one_of("ftp"sv, "http"sv, "https"sv, "ws"sv, "wss"sv)) {
+        // Return the tuple origin (url’s scheme, url’s host, url’s port, null).
+        return HTML::Origin(url.scheme(), url.host(), url.port().value_or(0));
+    }
+
+    // "file"
+    if (url.scheme() == "file"sv) {
+        // Unfortunate as it is, this is left as an exercise to the reader. When in doubt, return a new opaque origin.
+        // Note: We must return an origin with the `file://' protocol for `file://' iframes to work from `file://' pages.
+        return HTML::Origin(url.scheme(), String(), 0);
+    }
+
+    // Return a new opaque origin.
+    return HTML::Origin {};
+}
+
 }
