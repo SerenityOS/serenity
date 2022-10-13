@@ -539,8 +539,7 @@ endif()
 add_compile_options(-fno-asynchronous-unwind-tables)
 add_compile_options(-fstack-protector-strong)
 add_compile_options(-fno-exceptions)
-# FIXME: remove -nodefaultlibs after the next toolchain update
-add_compile_options(-nodefaultlibs -nostdlib)
+add_compile_options(-nostdlib)
 
 # Auto initialize trivial types on the stack, we use "pattern" as 
 # it's the only option portable across compilers going forward.
