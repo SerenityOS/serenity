@@ -1,6 +1,7 @@
 set(AK_SOURCES
     Assertions.cpp
     Base64.cpp
+    FloatingPointStringConversions.cpp
     FlyString.cpp
     Format.cpp
     FuzzyMatch.cpp
