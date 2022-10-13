@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <LibWeb/ReferrerPolicy/ReferrerPolicy.h>
+
 namespace Web::HTML {
 
 // https://html.spec.whatwg.org/multipage/origin.html#policy-container
@@ -18,7 +20,8 @@ struct PolicyContainer {
     // FIXME: An embedder policy, which is an embedder policy. It is initially a new embedder policy.
 
     // https://html.spec.whatwg.org/multipage/origin.html#policy-container-referrer-policy
-    // FIXME: A referrer policy, which is a referrer policy. It is initially the default referrer policy.
+    // A referrer policy, which is a referrer policy. It is initially the default referrer policy.
+    ReferrerPolicy::ReferrerPolicy referrer_policy { ReferrerPolicy::DEFAULT_REFERRER_POLICY };
 };
 
 }
