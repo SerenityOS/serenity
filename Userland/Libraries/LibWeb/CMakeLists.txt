@@ -127,6 +127,7 @@ set(SOURCES
     Fetch/Infrastructure/ConnectionTimingInfo.cpp
     Fetch/Infrastructure/FetchAlgorithms.cpp
     Fetch/Infrastructure/FetchController.cpp
+    Fetch/Infrastructure/FetchParams.cpp
     Fetch/Infrastructure/FetchTimingInfo.cpp
     Fetch/Infrastructure/HTTP.cpp
     Fetch/Infrastructure/HTTP/Bodies.cpp

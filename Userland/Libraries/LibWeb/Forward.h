@@ -195,6 +195,7 @@ struct BodyWithType;
 class ConnectionTimingInfo;
 class FetchAlgorithms;
 class FetchController;
+class FetchParams;
 class FetchTimingInfo;
 struct Header;
 class HeaderList;
