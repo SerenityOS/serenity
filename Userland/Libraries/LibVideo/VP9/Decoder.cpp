@@ -29,9 +29,13 @@ DecoderErrorOr<void> Decoder::decode(Span<const u8> chunk_data)
     size_t offset = 0;
 
     for (auto superframe_size : superframe_sizes) {
+        auto checked_size = Checked<size_t>(superframe_size);
+        checked_size += offset;
+        if (checked_size.has_overflow() || checked_size.value() > chunk_data.size())
+            return DecoderError::with_description(DecoderErrorCategory::Corrupted, "Superframe size invalid"sv);
         auto frame_data = chunk_data.slice(offset, superframe_size);
         TRY(decode_frame(frame_data));
-        offset += superframe_size;
+        offset = checked_size.value();
     }
 
     return {};
