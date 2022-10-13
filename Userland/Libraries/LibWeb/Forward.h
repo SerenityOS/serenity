@@ -193,6 +193,7 @@ namespace Web::Fetch::Infrastructure {
 class Body;
 struct BodyWithType;
 class ConnectionTimingInfo;
+class FetchAlgorithms;
 class FetchController;
 class FetchTimingInfo;
 struct Header;
