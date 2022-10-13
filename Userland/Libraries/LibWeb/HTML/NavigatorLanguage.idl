@@ -3,5 +3,5 @@ interface mixin NavigatorLanguage {
   readonly attribute DOMString language;
   // FIXME: readonly attribute FrozenArray<DOMString> languages;
   //        This is supposed to be a FrozenArray that always returns the same object
-  sequence<DOMString> languages();
+  readonly attribute sequence<DOMString> languages;
 };
