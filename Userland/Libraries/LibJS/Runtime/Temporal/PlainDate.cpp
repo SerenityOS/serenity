@@ -295,7 +295,7 @@ DateDurationRecord difference_iso_date(VM& vm, i32 year1, u8 month1, u8 day1, i3
 
         // h. If largestUnit is "week", then
         if (largest_unit == "week"sv) {
-            // i. Set weeks to RoundTowardsZero(days / 7).
+            // i. Set weeks to truncate(days / 7).
             weeks = trunc(days / 7);
 
             // ii. Set days to remainder(days, 7).
