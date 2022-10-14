@@ -142,6 +142,8 @@ private:
 
     void calculate_cross_size_of_each_flex_line();
 
+    void handle_align_content_stretch();
+
     CSS::AlignItems alignment_for_item(FlexItem const&) const;
 
     void determine_used_cross_size_of_each_flex_item();

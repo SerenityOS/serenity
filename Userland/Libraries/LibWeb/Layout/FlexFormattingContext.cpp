@@ -155,7 +155,7 @@ void FlexFormattingContext::run(Box const& run_box, LayoutMode, AvailableSpace c
     calculate_cross_size_of_each_flex_line();
 
     // 9. Handle 'align-content: stretch'.
-    // FIXME: This
+    handle_align_content_stretch();
 
     // 10. Collapse visibility:collapse items.
     // FIXME: This
@@ -1372,6 +1372,9 @@ void FlexFormattingContext::determine_flex_container_used_cross_size()
 // https://www.w3.org/TR/css-flexbox-1/#algo-line-align
 void FlexFormattingContext::align_all_flex_lines()
 {
+    if (m_flex_lines.is_empty())
+        return;
+
     // FIXME: Support reverse
 
     float cross_size_of_flex_container = specified_cross_size(flex_container());
@@ -1384,16 +1387,39 @@ void FlexFormattingContext::align_all_flex_lines()
             flex_item->cross_offset += center_of_line;
         }
     } else {
-        // FIXME: Support align-content
 
-        float cross_size_per_flex_line = cross_size_of_flex_container / m_flex_lines.size();
-        float half_a_flex_line = cross_size_per_flex_line / 2.0f;
-        float center_of_current_line = 0 + half_a_flex_line;
+        float sum_of_flex_line_cross_sizes = 0;
+        for (auto& line : m_flex_lines)
+            sum_of_flex_line_cross_sizes += line.cross_size;
+
+        float start_of_current_line = 0;
+        switch (flex_container().computed_values().align_content()) {
+        case CSS::AlignContent::FlexStart:
+            start_of_current_line = 0;
+            break;
+        case CSS::AlignContent::FlexEnd:
+            start_of_current_line = cross_size_of_flex_container - sum_of_flex_line_cross_sizes;
+            break;
+        case CSS::AlignContent::Center:
+            start_of_current_line = (cross_size_of_flex_container / 2) - (sum_of_flex_line_cross_sizes / 2);
+            break;
+        case CSS::AlignContent::SpaceBetween:
+            dbgln("FIXME: align-content: space-between");
+            break;
+        case CSS::AlignContent::SpaceAround:
+            dbgln("FIXME: align-content: space-around");
+            break;
+        case CSS::AlignContent::Stretch:
+            start_of_current_line = 0;
+            break;
+        }
+
         for (auto& flex_line : m_flex_lines) {
+            float center_of_current_line = start_of_current_line + (flex_line.cross_size / 2);
             for (auto* flex_item : flex_line.items) {
                 flex_item->cross_offset += center_of_current_line;
             }
-            center_of_current_line += cross_size_per_flex_line;
+            start_of_current_line += flex_line.cross_size;
         }
     }
 }
@@ -1826,6 +1852,34 @@ void FlexFormattingContext::resolve_cross_axis_auto_margins()
             }
         }
     }
+}
+
+// https://drafts.csswg.org/css-flexbox-1/#algo-line-stretch
+void FlexFormattingContext::handle_align_content_stretch()
+{
+    // If the flex container has a definite cross size,
+    if (!has_definite_cross_size(flex_container()))
+        return;
+
+    // align-content is stretch,
+    if (flex_container().computed_values().align_content() != CSS::AlignContent::Stretch)
+        return;
+
+    // and the sum of the flex lines' cross sizes is less than the flex container’s inner cross size,
+    float sum_of_flex_line_cross_sizes = 0;
+    for (auto& line : m_flex_lines)
+        sum_of_flex_line_cross_sizes += line.cross_size;
+
+    if (sum_of_flex_line_cross_sizes >= specified_cross_size(flex_container()))
+        return;
+
+    // increase the cross size of each flex line by equal amounts
+    // such that the sum of their cross sizes exactly equals the flex container’s inner cross size.
+    float remainder = specified_cross_size(flex_container()) - sum_of_flex_line_cross_sizes;
+    float extra_per_line = remainder / m_flex_lines.size();
+
+    for (auto& line : m_flex_lines)
+        line.cross_size += extra_per_line;
 }
 
 }
