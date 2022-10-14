@@ -28,7 +28,7 @@
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio rpath tty inet unix"));
-    TRY(Core::System::unveil("/proc/net/arp", "r"));
+    TRY(Core::System::unveil("/sys/kernel/net/arp", "r"));
     TRY(Core::System::unveil("/tmp/portal/lookup", "rw"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
@@ -89,7 +89,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     outln();
 
     if (!flag_set && !flag_delete) {
-        auto file = Core::File::construct("/proc/net/arp");
+        auto file = Core::File::construct("/sys/kernel/net/arp");
         if (!file->open(Core::OpenMode::ReadOnly)) {
             warnln("Failed to open {}: {}", file->name(), file->error_string());
             return 1;

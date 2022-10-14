@@ -13,10 +13,10 @@
 ErrorOr<int> serenity_main(Main::Arguments)
 {
     TRY(Core::System::pledge("stdio rpath"));
-    TRY(Core::System::unveil("/proc/interrupts", "r"));
+    TRY(Core::System::unveil("/sys/kernel/interrupts", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
-    auto proc_interrupts = TRY(Core::File::open("/proc/interrupts", Core::OpenMode::ReadOnly));
+    auto proc_interrupts = TRY(Core::File::open("/sys/kernel/interrupts", Core::OpenMode::ReadOnly));
 
     TRY(Core::System::pledge("stdio"));
 

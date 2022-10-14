@@ -153,7 +153,7 @@ static ErrorOr<void> mount_all()
 static ErrorOr<void> print_mounts()
 {
     // Output info about currently mounted filesystems.
-    auto df = TRY(Core::File::open("/proc/df", Core::OpenMode::ReadOnly));
+    auto df = TRY(Core::File::open("/sys/kernel/df", Core::OpenMode::ReadOnly));
 
     auto content = df->read_all();
     auto json = TRY(JsonValue::from_string(content));

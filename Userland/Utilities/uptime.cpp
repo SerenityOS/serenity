@@ -14,9 +14,9 @@ ErrorOr<int> serenity_main(Main::Arguments)
 {
     TRY(Core::System::pledge("stdio rpath"));
 
-    FILE* fp = fopen("/proc/uptime", "r");
+    FILE* fp = fopen("/sys/kernel/uptime", "r");
     if (!fp) {
-        perror("fopen(/proc/uptime)");
+        perror("fopen(/sys/kernel/uptime)");
         return 1;
     }
 

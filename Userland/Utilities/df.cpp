@@ -33,7 +33,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(flag_human_readable, "Print human-readable sizes", "human-readable", 'h');
     args_parser.parse(arguments);
 
-    auto file = TRY(Core::File::open("/proc/df", Core::OpenMode::ReadOnly));
+    auto file = TRY(Core::File::open("/sys/kernel/df", Core::OpenMode::ReadOnly));
 
     if (flag_human_readable) {
         outln("Filesystem      Size        Used    Available   Mount point");

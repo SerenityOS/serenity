@@ -25,7 +25,7 @@
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio rpath inet"));
-    TRY(Core::System::unveil("/proc/net", "r"));
+    TRY(Core::System::unveil("/sys/kernel/net", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
     StringView modify_action;
@@ -89,7 +89,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     };
 
     if (modify_action.is_empty()) {
-        auto file = TRY(Core::File::open("/proc/net/route", Core::OpenMode::ReadOnly));
+        auto file = TRY(Core::File::open("/sys/kernel/net/route", Core::OpenMode::ReadOnly));
         auto file_contents = file->read_all();
         auto json = TRY(JsonValue::from_string(file_contents));
 

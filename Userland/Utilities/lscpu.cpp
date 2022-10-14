@@ -56,10 +56,10 @@ ErrorOr<int> serenity_main(Main::Arguments)
 {
     TRY(Core::System::pledge("stdio rpath"));
 
-    TRY(Core::System::unveil("/proc/cpuinfo", "r"));
+    TRY(Core::System::unveil("/sys/kernel/cpuinfo", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
-    auto file = TRY(Core::File::open("/proc/cpuinfo", Core::OpenMode::ReadOnly));
+    auto file = TRY(Core::File::open("/sys/kernel/cpuinfo", Core::OpenMode::ReadOnly));
     auto json = TRY(JsonValue::from_string(file->read_all()));
     auto& array = json.as_array();
 
