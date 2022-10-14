@@ -9,6 +9,7 @@
 #include <Kernel/FileSystem/SysFS/Subsystems/Bus/Directory.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/DeviceIdentifiers/Directory.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Devices/Directory.h>
+#include <Kernel/FileSystem/SysFS/Subsystems/Kernel/Directory.h>
 #include <Kernel/Sections.h>
 
 namespace Kernel {
@@ -23,10 +24,12 @@ SysFSRootDirectory::SysFSRootDirectory()
     auto buses_directory = SysFSBusDirectory::must_create(*this);
     auto device_identifiers_directory = SysFSDeviceIdentifiersDirectory::must_create(*this);
     auto devices_directory = SysFSDevicesDirectory::must_create(*this);
+    auto global_kernel_stats_directory = SysFSGlobalKernelStatsDirectory::must_create(*this);
     MUST(m_child_components.with([&](auto& list) -> ErrorOr<void> {
         list.append(buses_directory);
         list.append(device_identifiers_directory);
         list.append(devices_directory);
+        list.append(global_kernel_stats_directory);
         return {};
     }));
     m_buses_directory = buses_directory;

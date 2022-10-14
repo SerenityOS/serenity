@@ -14,7 +14,9 @@
 #include <Kernel/Sections.h>
 #include <Kernel/kstdio.h>
 
-static Kernel::Spinlock g_console_lock { LockRank::None };
+namespace Kernel {
+
+Spinlock g_console_lock { LockRank::None };
 
 UNMAP_AFTER_INIT NonnullLockRefPtr<ConsoleDevice> ConsoleDevice::must_create()
 {
@@ -59,4 +61,6 @@ void ConsoleDevice::put_char(char ch)
     Kernel::SpinlockLocker lock(g_console_lock);
     dbgputchar(ch);
     m_logbuffer.enqueue(ch);
+}
+
 }

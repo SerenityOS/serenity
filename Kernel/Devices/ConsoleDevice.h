@@ -12,6 +12,8 @@
 
 namespace Kernel {
 
+extern Spinlock g_console_lock;
+
 class ConsoleDevice final : public CharacterDevice {
     friend class DeviceManagement;
 
