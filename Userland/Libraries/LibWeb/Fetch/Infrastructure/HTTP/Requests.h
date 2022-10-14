@@ -60,6 +60,7 @@ public:
         Style,
         Track,
         Video,
+        WebIdentity,
         Worker,
         XSLT,
     };
@@ -353,7 +354,8 @@ private:
     Optional<Initiator> m_initiator;
 
     // https://fetch.spec.whatwg.org/#concept-request-destination
-    // A request has an associated destination, which is the empty string, "audio", "audioworklet", "document", "embed", "font", "frame", "iframe", "image", "manifest", "object", "paintworklet", "report", "script", "serviceworker", "sharedworker", "style", "track", "video", "worker", or "xslt". Unless stated otherwise it is the empty string.
+    // A request has an associated destination, which is the empty string, "audio", "audioworklet", "document", "embed", "font", "frame", "iframe", "image", "manifest", "object", "paintworklet", "report", "script", "serviceworker", "sharedworker", "style", "track", "video", "webidentity", "worker", or "xslt". Unless stated otherwise it is the empty string.
+    // NOTE: These are reflected on RequestDestination except for "serviceworker" and "webidentity" as fetches with those destinations skip service workers.
     Optional<Destination> m_destination;
 
     // https://fetch.spec.whatwg.org/#concept-request-priority
