@@ -92,7 +92,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         TRY(Core::System::unveil(webdriver_ipc_path.view(), "rw"sv));
     }
 
-    TRY(Core::System::unveil("/proc/all", "r"));
+    TRY(Core::System::unveil("/sys/kernel/processes", "r"));
     TRY(Core::System::unveil("/tmp/session/%sid/portal/filesystemaccess", "rw"));
     TRY(Core::System::unveil("/tmp/session/%sid/portal/filesystemaccess", "rw"));
     TRY(Core::System::unveil("/tmp/session/%sid/portal/image", "rw"));

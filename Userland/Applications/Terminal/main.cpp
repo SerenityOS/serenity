@@ -423,7 +423,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return GUI::Window::CloseRequestDecision::StayOpen;
     };
 
-    TRY(Core::System::unveil("/proc/all", "r"));
+    TRY(Core::System::unveil("/sys/kernel/processes", "r"));
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil("/bin", "r"));
     TRY(Core::System::unveil("/proc", "r"));

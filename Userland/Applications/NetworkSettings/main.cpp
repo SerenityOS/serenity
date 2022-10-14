@@ -21,8 +21,8 @@ ErrorOr<int> serenity_main(Main::Arguments args)
 
     TRY(Core::System::unveil("/bin/NetworkServer", "x"));
     TRY(Core::System::unveil("/etc/Network.ini", "rwc"));
-    TRY(Core::System::unveil("/proc/all", "r"));
-    TRY(Core::System::unveil("/proc/net/adapters", "r"));
+    TRY(Core::System::unveil("/sys/kernel/processes", "r"));
+    TRY(Core::System::unveil("/sys/kernel/net/adapters", "r"));
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil("/tmp/session/%sid/portal/clipboard", "rw"));
     TRY(Core::System::unveil("/tmp/portal/window", "rw"));

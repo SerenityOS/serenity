@@ -126,7 +126,7 @@ private:
 
     CatDog()
         : m_temp_pos { 0, 0 }
-        , m_proc_all(MUST(Core::File::open("/proc/all", Core::OpenMode::ReadOnly)))
+        , m_proc_all(MUST(Core::File::open("/sys/kernel/processes", Core::OpenMode::ReadOnly)))
     {
         set_image_by_main_state();
     }
