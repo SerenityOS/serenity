@@ -37,7 +37,7 @@ Additionally, the name `defaults` is accepted and ignored.
 
 * `/etc/fstab` - read by `mount -a` on startup to find out which filesystems to mount.
 * `/etc/fstab.d` - directory with drop-in additions to the normal `fstab` file, also read by `mount -a`.
-* `/proc/df` - read by `mount` to get information about mounted filesystems.
+* `/sys/kernel/df` - read by `mount` to get information about mounted filesystems.
 
 ## Examples
 

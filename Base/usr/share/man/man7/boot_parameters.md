@@ -78,7 +78,7 @@ has set up before booting the Kernel, don't initialize any driver.
 
 * **`nvme_poll`** - This parameter configures the NVMe drive to use polling instead of interrupt driven completion.
 
-* **`system_mode`** - This parameter is not interpreted by the Kernel, and is made available at `/proc/system_mode`. SystemServer uses it to select the set of services that should be started. Common values are:
+* **`system_mode`** - This parameter is not interpreted by the Kernel, and is made available at `/sys/kernel/system_mode`. SystemServer uses it to select the set of services that should be started. Common values are:
   - **`graphical`** (default) - Boots the system in the normal graphical mode.
   - **`self-test`** - Boots the system in self-test, validation mode.
   - **`text`** - Boots the system in text only mode. (You may need to also set **`graphics_subsystem_mode=off`**.)

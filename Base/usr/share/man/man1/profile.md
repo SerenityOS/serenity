@@ -11,7 +11,7 @@ $ profile [-p PID] [-a] [-e] [-d] [-f] [-w] [-c command] [-t event_type]
 ## Options:
 
 * `-p PID`: Target PID
-* `-a`: Profile all processes (super-user only), result at /proc/profile
+* `-a`: Profile all processes (super-user only), result at /sys/kernel/profile
 * `-e`: Enable
 * `-d`: Disable
 * `-f`: Free the profiling buffer for the associated process(es).
