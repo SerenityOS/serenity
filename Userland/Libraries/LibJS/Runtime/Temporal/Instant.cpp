@@ -125,8 +125,12 @@ ThrowCompletionOr<BigInt*> parse_temporal_instant(VM& vm, String const& iso_stri
     // 5. Let utc be GetUTCEpochNanoseconds(result.[[Year]], result.[[Month]], result.[[Day]], result.[[Hour]], result.[[Minute]], result.[[Second]], result.[[Millisecond]], result.[[Microsecond]], result.[[Nanosecond]]).
     auto utc = get_utc_epoch_nanoseconds(result.year, result.month, result.day, result.hour, result.minute, result.second, result.millisecond, result.microsecond, result.nanosecond);
 
-    // 6. Let offsetNanoseconds be ? ParseTimeZoneOffsetString(offsetString).
-    auto offset_nanoseconds = TRY(parse_time_zone_offset_string(vm, *offset_string));
+    // 6. If IsTimeZoneOffsetString(offsetString) is false, throw a RangeError exception.
+    if (!is_time_zone_offset_string(*offset_string))
+        return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidTimeZoneName, *offset_string);
+
+    // 7. Let offsetNanoseconds be ParseTimeZoneOffsetString(offsetString).
+    auto offset_nanoseconds = parse_time_zone_offset_string(*offset_string);
 
     // 7. Let result be utc - ℤ(offsetNanoseconds).
     auto result_ns = utc.minus(Crypto::SignedBigInteger { offset_nanoseconds });

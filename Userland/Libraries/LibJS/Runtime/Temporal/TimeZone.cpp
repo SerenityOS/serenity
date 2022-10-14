@@ -66,11 +66,19 @@ ThrowCompletionOr<TimeZone*> create_temporal_time_zone(VM& vm, String const& ide
     // 2. Let object be ? OrdinaryCreateFromConstructor(newTarget, "%Temporal.TimeZone.prototype%", « [[InitializedTemporalTimeZone]], [[Identifier]], [[OffsetNanoseconds]] »).
     auto* object = TRY(ordinary_create_from_constructor<TimeZone>(vm, *new_target, &Intrinsics::temporal_time_zone_prototype));
 
-    // 3. Let offsetNanosecondsResult be Completion(ParseTimeZoneOffsetString(identifier)).
-    auto offset_nanoseconds_result = parse_time_zone_offset_string(vm, identifier);
+    // 3. If IsTimeZoneOffsetString(identifier) is true, then
+    if (is_time_zone_offset_string(identifier)) {
+        // a. Let offsetNanosecondsResult be ParseTimeZoneOffsetString(identifier).
+        auto offset_nanoseconds_result = parse_time_zone_offset_string(identifier);
 
-    // 4. If offsetNanosecondsResult is an abrupt completion, then
-    if (offset_nanoseconds_result.is_throw_completion()) {
+        // b. Set object.[[Identifier]] to ! FormatTimeZoneOffsetString(offsetNanosecondsResult).
+        object->set_identifier(format_time_zone_offset_string(offset_nanoseconds_result));
+
+        // c. Set object.[[OffsetNanoseconds]] to offsetNanosecondsResult.
+        object->set_offset_nanoseconds(offset_nanoseconds_result);
+    }
+    // 4. Else,
+    else {
         // a. Assert: ! CanonicalizeTimeZoneName(identifier) is identifier.
         VERIFY(canonicalize_time_zone_name(identifier) == identifier);
 
@@ -80,16 +88,8 @@ ThrowCompletionOr<TimeZone*> create_temporal_time_zone(VM& vm, String const& ide
         // c. Set object.[[OffsetNanoseconds]] to undefined.
         // NOTE: No-op.
     }
-    // 5. Else,
-    else {
-        // a. Set object.[[Identifier]] to ! FormatTimeZoneOffsetString(offsetNanosecondsResult.[[Value]]).
-        object->set_identifier(format_time_zone_offset_string(offset_nanoseconds_result.value()));
 
-        // b. Set object.[[OffsetNanoseconds]] to offsetNanosecondsResult.[[Value]].
-        object->set_offset_nanoseconds(offset_nanoseconds_result.value());
-    }
-
-    // 6. Return object.
+    // 5. Return object.
     return object;
 }
 
@@ -206,80 +206,7 @@ bool is_valid_time_zone_numeric_utc_offset_syntax(String const& offset_string)
     return parse_time_zone_numeric_utc_offset_syntax(offset_string, discarded, discarded, optionally_discarded, optionally_discarded, optionally_discarded);
 }
 
-// 11.6.5 ParseTimeZoneOffsetString ( offsetString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetimezoneoffsetstring
-ThrowCompletionOr<double> parse_time_zone_offset_string(VM& vm, String const& offset_string)
-{
-    // 1. Let parseResult be ParseText(StringToCodePoints(offsetString), TimeZoneNumericUTCOffset).
-    auto parse_result = parse_iso8601(Production::TimeZoneNumericUTCOffset, offset_string);
-
-    // 2. If parseResult is a List of errors, throw a RangeError exception.
-    if (!parse_result.has_value())
-        return vm.throw_completion<RangeError>(ErrorType::InvalidFormat, "TimeZone offset");
-
-    // 3. Let each of sign, hours, minutes, seconds, and fSeconds be the source text matched by the respective TimeZoneUTCOffsetSign, TimeZoneUTCOffsetHour, TimeZoneUTCOffsetMinute, TimeZoneUTCOffsetSecond, and TimeZoneUTCOffsetFraction Parse Node contained within parseResult, or an empty sequence of code points if not present.
-    auto sign = parse_result->time_zone_utc_offset_sign;
-    auto hours = parse_result->time_zone_utc_offset_hour;
-    auto minutes = parse_result->time_zone_utc_offset_minute;
-    auto seconds = parse_result->time_zone_utc_offset_second;
-    auto f_seconds = parse_result->time_zone_utc_offset_fraction;
-
-    // 4. Assert: sign is not empty.
-    VERIFY(sign.has_value());
-
-    i8 factor;
-
-    // 5. If sign contains the code point U+002D (HYPHEN-MINUS) or U+2212 (MINUS SIGN), then
-    if (sign->is_one_of("-", "\xE2\x88\x92")) {
-        // a. Let factor be -1.
-        factor = -1;
-    }
-    // 6. Else,
-    else {
-        // a. Let factor be 1.
-        factor = 1;
-    }
-
-    // 7. Assert: hours is not empty.
-    VERIFY(hours.has_value());
-
-    // 8. Let hoursMV be ! ToIntegerOrInfinity(CodePointsToString(hours)).
-    auto hours_mv = *hours->to_uint<u8>();
-
-    // 9. Let minutesMV be ! ToIntegerOrInfinity(CodePointsToString(minutes)).
-    auto minutes_mv = *minutes.value_or("0"sv).to_uint<u8>();
-
-    // 10. Let secondsMV be ! ToIntegerOrInfinity(CodePointsToString(seconds)).
-    auto seconds_mv = *seconds.value_or("0"sv).to_uint<u8>();
-
-    u32 nanoseconds_mv;
-
-    // 11. If fSeconds is not empty, then
-    if (f_seconds.has_value()) {
-        // a. Let fSecondsDigits be the substring of CodePointsToString(fSeconds) from 1.
-        auto f_seconds_digits = f_seconds->substring_view(1);
-
-        // b. Let fSecondsDigitsExtended be the string-concatenation of fSecondsDigits and "000000000".
-        auto f_seconds_digits_extended = String::formatted("{}000000000", f_seconds_digits);
-
-        // c. Let nanosecondsDigits be the substring of fSecondsDigitsExtended from 0 to 9.
-        auto nanoseconds_digits = f_seconds_digits_extended.substring_view(0, 9);
-
-        // d. Let nanosecondsMV be ! ToIntegerOrInfinity(nanosecondsDigits).
-        nanoseconds_mv = *nanoseconds_digits.to_uint<u32>();
-    }
-    // 12. Else,
-    else {
-        // a. Let nanosecondsMV be 0.
-        nanoseconds_mv = 0;
-    }
-
-    // 13. Return factor × (((hoursMV × 60 + minutesMV) × 60 + secondsMV) × 10^9 + nanosecondsMV).
-    // NOTE: Using scientific notation (1e9) ensures the result of this expression is a double,
-    //       which is important - otherwise it's all integers and the result overflows!
-    return factor * (((hours_mv * 60 + minutes_mv) * 60 + seconds_mv) * 1e9 + nanoseconds_mv);
-}
-
-// 11.6.6 FormatTimeZoneOffsetString ( offsetNanoseconds ), https://tc39.es/proposal-temporal/#sec-temporal-formattimezoneoffsetstring
+// 11.6.5 FormatTimeZoneOffsetString ( offsetNanoseconds ), https://tc39.es/proposal-temporal/#sec-temporal-formattimezoneoffsetstring
 String format_time_zone_offset_string(double offset_nanoseconds)
 {
     auto offset = static_cast<i64>(offset_nanoseconds);
@@ -333,7 +260,7 @@ String format_time_zone_offset_string(double offset_nanoseconds)
     return builder.to_string();
 }
 
-// 11.6.7 FormatISOTimeZoneOffsetString ( offsetNanoseconds ), https://tc39.es/proposal-temporal/#sec-temporal-formatisotimezoneoffsetstring
+// 11.6.6 FormatISOTimeZoneOffsetString ( offsetNanoseconds ), https://tc39.es/proposal-temporal/#sec-temporal-formatisotimezoneoffsetstring
 String format_iso_time_zone_offset_string(double offset_nanoseconds)
 {
     // 1. Assert: offsetNanoseconds is an integer.
@@ -360,7 +287,7 @@ String format_iso_time_zone_offset_string(double offset_nanoseconds)
     return String::formatted("{}{:02}:{:02}", sign, (u32)hours, (u32)minutes);
 }
 
-// 11.6.8 ToTemporalTimeZone ( temporalTimeZoneLike ), https://tc39.es/proposal-temporal/#sec-temporal-totemporaltimezone
+// 11.6.7 ToTemporalTimeZone ( temporalTimeZoneLike ), https://tc39.es/proposal-temporal/#sec-temporal-totemporaltimezone
 ThrowCompletionOr<Object*> to_temporal_time_zone(VM& vm, Value temporal_time_zone_like)
 {
     // 1. If Type(temporalTimeZoneLike) is Object, then
@@ -396,8 +323,8 @@ ThrowCompletionOr<Object*> to_temporal_time_zone(VM& vm, Value temporal_time_zon
         // a. Let name be parseResult.[[Name]].
         auto name = parse_result.name.release_value();
 
-        // b. If ParseText(StringToCodePoints(name), TimeZoneNumericUTCOffset) is a List of errors, then
-        if (!is_valid_time_zone_numeric_utc_offset_syntax(name)) {
+        // b. If IsTimeZoneOffsetString(name) is false, then
+        if (!is_time_zone_offset_string(name)) {
             // i. If IsValidTimeZoneName(name) is false, throw a RangeError exception.
             if (!is_valid_time_zone_name(name))
                 return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidTimeZoneName, name);
@@ -418,7 +345,7 @@ ThrowCompletionOr<Object*> to_temporal_time_zone(VM& vm, Value temporal_time_zon
     return MUST(create_temporal_time_zone(vm, *parse_result.offset_string));
 }
 
-// 11.6.9 GetOffsetNanosecondsFor ( timeZone, instant ), https://tc39.es/proposal-temporal/#sec-temporal-getoffsetnanosecondsfor
+// 11.6.8 GetOffsetNanosecondsFor ( timeZone, instant ), https://tc39.es/proposal-temporal/#sec-temporal-getoffsetnanosecondsfor
 ThrowCompletionOr<double> get_offset_nanoseconds_for(VM& vm, Value time_zone, Instant& instant)
 {
     // 1. Let getOffsetNanosecondsFor be ? GetMethod(timeZone, "getOffsetNanosecondsFor").
@@ -446,7 +373,7 @@ ThrowCompletionOr<double> get_offset_nanoseconds_for(VM& vm, Value time_zone, In
     return offset_nanoseconds;
 }
 
-// 11.6.10 BuiltinTimeZoneGetOffsetStringFor ( timeZone, instant ), https://tc39.es/proposal-temporal/#sec-temporal-builtintimezonegetoffsetstringfor
+// 11.6.9 BuiltinTimeZoneGetOffsetStringFor ( timeZone, instant ), https://tc39.es/proposal-temporal/#sec-temporal-builtintimezonegetoffsetstringfor
 ThrowCompletionOr<String> builtin_time_zone_get_offset_string_for(VM& vm, Value time_zone, Instant& instant)
 {
     // 1. Let offsetNanoseconds be ? GetOffsetNanosecondsFor(timeZone, instant).
@@ -456,7 +383,7 @@ ThrowCompletionOr<String> builtin_time_zone_get_offset_string_for(VM& vm, Value 
     return format_time_zone_offset_string(offset_nanoseconds);
 }
 
-// 11.6.11 BuiltinTimeZoneGetPlainDateTimeFor ( timeZone, instant, calendar ), https://tc39.es/proposal-temporal/#sec-temporal-builtintimezonegetplaindatetimefor
+// 11.6.10 BuiltinTimeZoneGetPlainDateTimeFor ( timeZone, instant, calendar ), https://tc39.es/proposal-temporal/#sec-temporal-builtintimezonegetplaindatetimefor
 ThrowCompletionOr<PlainDateTime*> builtin_time_zone_get_plain_date_time_for(VM& vm, Value time_zone, Instant& instant, Object& calendar)
 {
     // 1. Assert: instant has an [[InitializedTemporalInstant]] internal slot.
@@ -474,7 +401,7 @@ ThrowCompletionOr<PlainDateTime*> builtin_time_zone_get_plain_date_time_for(VM& 
     return create_temporal_date_time(vm, result.year, result.month, result.day, result.hour, result.minute, result.second, result.millisecond, result.microsecond, result.nanosecond, calendar);
 }
 
-// 11.6.12 BuiltinTimeZoneGetInstantFor ( timeZone, dateTime, disambiguation ), https://tc39.es/proposal-temporal/#sec-temporal-builtintimezonegetinstantfor
+// 11.6.11 BuiltinTimeZoneGetInstantFor ( timeZone, dateTime, disambiguation ), https://tc39.es/proposal-temporal/#sec-temporal-builtintimezonegetinstantfor
 ThrowCompletionOr<Instant*> builtin_time_zone_get_instant_for(VM& vm, Value time_zone, PlainDateTime& date_time, StringView disambiguation)
 {
     // 1. Assert: dateTime has an [[InitializedTemporalDateTime]] internal slot.
@@ -486,7 +413,7 @@ ThrowCompletionOr<Instant*> builtin_time_zone_get_instant_for(VM& vm, Value time
     return disambiguate_possible_instants(vm, possible_instants, time_zone, date_time, disambiguation);
 }
 
-// 11.6.13 DisambiguatePossibleInstants ( possibleInstants, timeZone, dateTime, disambiguation ), https://tc39.es/proposal-temporal/#sec-temporal-disambiguatepossibleinstants
+// 11.6.12 DisambiguatePossibleInstants ( possibleInstants, timeZone, dateTime, disambiguation ), https://tc39.es/proposal-temporal/#sec-temporal-disambiguatepossibleinstants
 ThrowCompletionOr<Instant*> disambiguate_possible_instants(VM& vm, MarkedVector<Instant*> const& possible_instants, Value time_zone, PlainDateTime& date_time, StringView disambiguation)
 {
     // 1. Assert: dateTime has an [[InitializedTemporalDateTime]] internal slot.
@@ -604,7 +531,7 @@ ThrowCompletionOr<Instant*> disambiguate_possible_instants(VM& vm, MarkedVector<
     return possible_instants_[n - 1];
 }
 
-// 11.6.14 GetPossibleInstantsFor ( timeZone, dateTime ), https://tc39.es/proposal-temporal/#sec-temporal-getpossibleinstantsfor
+// 11.6.13 GetPossibleInstantsFor ( timeZone, dateTime ), https://tc39.es/proposal-temporal/#sec-temporal-getpossibleinstantsfor
 ThrowCompletionOr<MarkedVector<Instant*>> get_possible_instants_for(VM& vm, Value time_zone, PlainDateTime& date_time)
 {
     // 1. Assert: dateTime has an [[InitializedTemporalDateTime]] internal slot.
@@ -649,7 +576,7 @@ ThrowCompletionOr<MarkedVector<Instant*>> get_possible_instants_for(VM& vm, Valu
     return { move(list) };
 }
 
-// 11.6.15 TimeZoneEquals ( one, two ), https://tc39.es/proposal-temporal/#sec-temporal-timezoneequals
+// 11.6.14 TimeZoneEquals ( one, two ), https://tc39.es/proposal-temporal/#sec-temporal-timezoneequals
 ThrowCompletionOr<bool> time_zone_equals(VM& vm, Object& one, Object& two)
 {
     // 1. If one and two are the same Object value, return true.

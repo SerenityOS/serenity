@@ -197,8 +197,8 @@ ThrowCompletionOr<ZonedDateTime*> to_temporal_zoned_date_time(VM& vm, Value item
         // e. Assert: timeZoneName is not undefined.
         VERIFY(time_zone_name.has_value());
 
-        // f. If ParseText(StringToCodePoints(timeZoneName), TimeZoneNumericUTCOffset) is a List of errors, then
-        if (!is_valid_time_zone_numeric_utc_offset_syntax(*time_zone_name)) {
+        // f. If IsTimeZoneOffsetString(timeZoneName) is false, then
+        if (!is_time_zone_offset_string(*time_zone_name)) {
             // i. If IsValidTimeZoneName(timeZoneName) is false, throw a RangeError exception.
             if (!is_valid_time_zone_name(*time_zone_name))
                 return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidTimeZoneName, *time_zone_name);
@@ -239,8 +239,12 @@ ThrowCompletionOr<ZonedDateTime*> to_temporal_zoned_date_time(VM& vm, Value item
 
     // 8. If offsetBehaviour is option, then
     if (offset_behavior == OffsetBehavior::Option) {
+        // a. If IsTimeZoneOffsetString(offsetString) is false, throw a RangeError exception.
+        if (!is_time_zone_offset_string(*offset_string))
+            return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidTimeZoneName, *offset_string);
+
         // a. Set offsetNanoseconds to ? ParseTimeZoneOffsetString(offsetString).
-        offset_nanoseconds = TRY(parse_time_zone_offset_string(vm, *offset_string));
+        offset_nanoseconds = parse_time_zone_offset_string(*offset_string);
     }
 
     // 9. Let disambiguation be ? ToTemporalDisambiguation(options).

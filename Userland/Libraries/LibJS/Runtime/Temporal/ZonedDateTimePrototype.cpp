@@ -6,6 +6,7 @@
  */
 
 #include <AK/TypeCasts.h>
+#include <LibJS/Runtime/Date.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Temporal/AbstractOperations.h>
 #include <LibJS/Runtime/Temporal/Calendar.h>
@@ -772,21 +773,26 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::with)
     fields = TRY(prepare_temporal_fields(vm, *fields, field_names, Vector<StringView> { "timeZone"sv, "offset"sv }));
 
     // 17. Let offsetString be ! Get(fields, "offset").
-    auto offset_string = MUST(fields->get(vm.names.offset));
+    auto offset_string_value = MUST(fields->get(vm.names.offset));
 
     // 18. Assert: Type(offsetString) is String.
-    VERIFY(offset_string.is_string());
+    VERIFY(offset_string_value.is_string());
+    auto const& offset_string = offset_string_value.as_string().string();
 
     // 19. Let dateTimeResult be ? InterpretTemporalDateTimeFields(calendar, fields, options).
     auto date_time_result = TRY(interpret_temporal_date_time_fields(vm, calendar, *fields, *options));
 
-    // 20. Let offsetNanoseconds be ? ParseTimeZoneOffsetString(offsetString).
-    auto offset_nanoseconds = TRY(parse_time_zone_offset_string(vm, offset_string.as_string().string()));
+    // 20. If IsTimeZoneOffsetString(offsetString) is false, throw a RangeError exception.
+    if (!is_time_zone_offset_string(offset_string))
+        return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidTimeZoneName, offset_string);
 
-    // 21. Let epochNanoseconds be ? InterpretISODateTimeOffset(dateTimeResult.[[Year]], dateTimeResult.[[Month]], dateTimeResult.[[Day]], dateTimeResult.[[Hour]], dateTimeResult.[[Minute]], dateTimeResult.[[Second]], dateTimeResult.[[Millisecond]], dateTimeResult.[[Microsecond]], dateTimeResult.[[Nanosecond]], option, offsetNanoseconds, timeZone, disambiguation, offset, match exactly).
+    // 21. Let offsetNanoseconds be ParseTimeZoneOffsetString(offsetString).
+    auto offset_nanoseconds = parse_time_zone_offset_string(offset_string);
+
+    // 22. Let epochNanoseconds be ? InterpretISODateTimeOffset(dateTimeResult.[[Year]], dateTimeResult.[[Month]], dateTimeResult.[[Day]], dateTimeResult.[[Hour]], dateTimeResult.[[Minute]], dateTimeResult.[[Second]], dateTimeResult.[[Millisecond]], dateTimeResult.[[Microsecond]], dateTimeResult.[[Nanosecond]], option, offsetNanoseconds, timeZone, disambiguation, offset, match exactly).
     auto* epoch_nanoseconds = TRY(interpret_iso_date_time_offset(vm, date_time_result.year, date_time_result.month, date_time_result.day, date_time_result.hour, date_time_result.minute, date_time_result.second, date_time_result.millisecond, date_time_result.microsecond, date_time_result.nanosecond, OffsetBehavior::Option, offset_nanoseconds, &time_zone, disambiguation, offset, MatchBehavior::MatchExactly));
 
-    // 22. Return ! CreateTemporalZonedDateTime(epochNanoseconds, timeZone, calendar).
+    // 23. Return ! CreateTemporalZonedDateTime(epochNanoseconds, timeZone, calendar).
     return MUST(create_temporal_zoned_date_time(vm, *epoch_nanoseconds, time_zone, calendar));
 }
 

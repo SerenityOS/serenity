@@ -42,7 +42,6 @@ ThrowCompletionOr<TimeZone*> create_temporal_time_zone(VM&, String const& identi
 ISODateTime get_iso_parts_from_epoch(VM&, Crypto::SignedBigInteger const& epoch_nanoseconds);
 BigInt* get_iana_time_zone_next_transition(VM&, BigInt const& epoch_nanoseconds, StringView time_zone_identifier);
 BigInt* get_iana_time_zone_previous_transition(VM&, BigInt const& epoch_nanoseconds, StringView time_zone_identifier);
-ThrowCompletionOr<double> parse_time_zone_offset_string(VM&, String const&);
 String format_time_zone_offset_string(double offset_nanoseconds);
 String format_iso_time_zone_offset_string(double offset_nanoseconds);
 ThrowCompletionOr<Object*> to_temporal_time_zone(VM&, Value temporal_time_zone_like);

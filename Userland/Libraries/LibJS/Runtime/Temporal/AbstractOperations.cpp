@@ -12,6 +12,7 @@
 #include <AK/Variant.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Completion.h>
+#include <LibJS/Runtime/Date.h>
 #include <LibJS/Runtime/IteratorOperations.h>
 #include <LibJS/Runtime/PropertyKey.h>
 #include <LibJS/Runtime/Temporal/AbstractOperations.h>
@@ -621,10 +622,15 @@ ThrowCompletionOr<Value> to_relative_temporal_object(VM& vm, Object const& optio
         // e. Let timeZoneName be result.[[TimeZone]].[[Name]].
         auto time_zone_name = result.time_zone.name;
 
-        // f. If timeZoneName is not undefined, then
-        if (time_zone_name.has_value()) {
-            // i. If ParseText(StringToCodePoints(timeZoneName), TimeZoneNumericUTCOffset) is a List of errors, then
-            if (!is_valid_time_zone_numeric_utc_offset_syntax(*time_zone_name)) {
+        // f. If timeZoneName is undefined, then
+        if (!time_zone_name.has_value()) {
+            // i. Let timeZone be undefined.
+            time_zone = js_undefined();
+        }
+        // g. Else,
+        else {
+            // i. If IsTimeZoneOffsetString(timeZoneName) is false, then
+            if (!is_time_zone_offset_string(*time_zone_name)) {
                 // 1. If IsValidTimeZoneName(timeZoneName) is false, throw a RangeError exception.
                 if (!is_valid_time_zone_name(*time_zone_name))
                     return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidTimeZoneName, *time_zone_name);
@@ -635,26 +641,21 @@ ThrowCompletionOr<Value> to_relative_temporal_object(VM& vm, Object const& optio
 
             // ii. Let timeZone be ! CreateTemporalTimeZone(timeZoneName).
             time_zone = MUST(create_temporal_time_zone(vm, *time_zone_name));
-        }
-        // g. Else,
-        else {
-            // i. Let timeZone be undefined.
-            time_zone = js_undefined();
-        }
 
-        // h. If result.[[TimeZone]].[[Z]] is true, then
-        if (result.time_zone.z) {
-            // i. Set offsetBehaviour to exact.
-            offset_behavior = OffsetBehavior::Exact;
-        }
-        // i. Else if offsetString is undefined, then
-        else if (offset_string.is_undefined()) {
-            // i. Set offsetBehaviour to wall.
-            offset_behavior = OffsetBehavior::Wall;
-        }
+            // iii. If result.[[TimeZone]].[[Z]] is true, then
+            if (result.time_zone.z) {
+                // 1. Set offsetBehaviour to exact.
+                offset_behavior = OffsetBehavior::Exact;
+            }
+            // iv. Else if offsetString is undefined, then
+            else if (offset_string.is_undefined()) {
+                // 1. Set offsetBehaviour to wall.
+                offset_behavior = OffsetBehavior::Wall;
+            }
 
-        // j. Set matchBehaviour to match minutes.
-        match_behavior = MatchBehavior::MatchMinutes;
+            // v. Set matchBehaviour to match minutes.
+            match_behavior = MatchBehavior::MatchMinutes;
+        }
     }
 
     // 8. If timeZone is not undefined, then
@@ -667,8 +668,12 @@ ThrowCompletionOr<Value> to_relative_temporal_object(VM& vm, Object const& optio
             // NOTE: offsetString is not used after this path, so we don't need to put this into the original offset_string which is of type JS::Value.
             auto actual_offset_string = TRY(offset_string.to_string(vm));
 
-            // ii. Let offsetNs be ? ParseTimeZoneOffsetString(offsetString).
-            offset_ns = TRY(parse_time_zone_offset_string(vm, actual_offset_string));
+            // b. If IsTimeZoneOffsetString(offsetString) is false, throw a RangeError exception.
+            if (!is_time_zone_offset_string(actual_offset_string))
+                return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidTimeZoneName, actual_offset_string);
+
+            // c. Let offsetNs be ParseTimeZoneOffsetString(offsetString).
+            offset_ns = parse_time_zone_offset_string(actual_offset_string);
         }
         // b. Else,
         else {
