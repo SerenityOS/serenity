@@ -86,7 +86,7 @@ public:
         return {};
     }
 
-    virtual ErrorOr<NonnullLockRefPtr<Inode>> to_inode(ProcFS const& procfs_instance) const;
+    virtual ErrorOr<NonnullLockRefPtr<Inode>> to_inode(ProcFS const& procfs_instance) const = 0;
 
     virtual InodeIndex component_index() const { return m_component_index; }
 
@@ -160,46 +160,6 @@ private:
 
 struct ProcFSInodeData : public OpenFileDescriptionData {
     OwnPtr<KBuffer> buffer;
-};
-
-class ProcFSGlobalInformation : public ProcFSExposedComponent {
-public:
-    virtual ~ProcFSGlobalInformation() override {};
-
-    virtual ErrorOr<size_t> read_bytes(off_t offset, size_t count, UserOrKernelBuffer& buffer, OpenFileDescription* description) const override;
-
-    virtual mode_t required_mode() const override { return 0444; }
-
-protected:
-    explicit ProcFSGlobalInformation(StringView name)
-        : ProcFSExposedComponent(name)
-    {
-    }
-    virtual ErrorOr<void> refresh_data(OpenFileDescription&) const override;
-    virtual ErrorOr<void> try_generate(KBufferBuilder&) = 0;
-
-    mutable Mutex m_refresh_lock;
-};
-
-class ProcFSSystemBoolean : public ProcFSGlobalInformation {
-public:
-    virtual bool value() const = 0;
-    virtual void set_value(bool new_value) = 0;
-
-protected:
-    explicit ProcFSSystemBoolean(StringView name)
-        : ProcFSGlobalInformation(name)
-    {
-    }
-
-private:
-    // ^ProcFSGlobalInformation
-    virtual ErrorOr<void> try_generate(KBufferBuilder&) override final;
-
-    // ^ProcFSExposedComponent
-    virtual ErrorOr<size_t> write_bytes(off_t, size_t, UserOrKernelBuffer const&, OpenFileDescription*) override final;
-    virtual mode_t required_mode() const override final { return 0644; }
-    virtual ErrorOr<void> truncate(u64) override final;
 };
 
 }
