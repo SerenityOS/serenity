@@ -28,12 +28,12 @@ If no *path* argument is provided stdin is used.
 
 ```sh
 # Pretty-print stdin
-$ cat /proc/all | json
+$ cat /sys/kernel/processes | json
 # Pretty-print a file
 $ json json-data.json
 # Pretty-print a file with two spaces per indent
 $ json -i 2 json-data.json
 # Query data from JSON
 $ json -q 1 .config/CommonLocations.json
-$ cat /proc/all | json -q processes
+$ cat /sys/kernel/processes | json -q processes
 ```
