@@ -28,6 +28,8 @@ public:
 
     void draw_using(GUI::Painter&, Gfx::IntPoint const& start_position, Gfx::IntPoint const& end_position, Color color, int thickness);
 
+    virtual bool is_overriding_alt() override { return true; }
+
 private:
     virtual StringView tool_name() const override { return "Line Tool"sv; }
 

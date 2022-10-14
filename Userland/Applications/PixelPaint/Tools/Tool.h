@@ -77,6 +77,9 @@ public:
 
     virtual StringView tool_name() const = 0;
 
+    // We only set the override_alt_key flag to true since the override is false by default. If false is desired do not call method.
+    virtual bool is_overriding_alt() { return false; };
+
 protected:
     Tool() = default;
     WeakPtr<ImageEditor> m_editor;

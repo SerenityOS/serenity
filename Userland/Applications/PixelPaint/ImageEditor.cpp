@@ -305,12 +305,40 @@ GUI::MouseEvent ImageEditor::event_adjusted_for_layer(GUI::MouseEvent const& eve
     };
 }
 
+void ImageEditor::set_editor_color_to_color_at_mouse_position(GUI::MouseEvent const& event, bool sample_all_layers = false)
+{
+    auto position = event.position();
+    Color color;
+    auto layer = active_layer();
+    if (sample_all_layers) {
+        color = image().color_at(position);
+    } else {
+        if (!layer || !layer->rect().contains(position))
+            return;
+        color = layer->currently_edited_bitmap().get_pixel(position);
+    }
+
+    // We picked a transparent pixel, do nothing.
+    if (!color.alpha())
+        return;
+
+    if (event.button() == GUI::MouseButton::Primary)
+        set_primary_color(color);
+    else if (event.button() == GUI::MouseButton::Secondary)
+        set_secondary_color(color);
+}
+
 void ImageEditor::mousedown_event(GUI::MouseEvent& event)
 {
     if (event.button() == GUI::MouseButton::Middle) {
         start_panning(event.position());
         set_override_cursor(Gfx::StandardCursor::Drag);
         return;
+    }
+
+    if (event.alt() && !m_active_tool->is_overriding_alt()) {
+        set_editor_color_to_color_at_mouse_position(event);
+        return; // Pick Color instead of acivating active tool when holding alt.
     }
 
     if (!m_active_tool)
