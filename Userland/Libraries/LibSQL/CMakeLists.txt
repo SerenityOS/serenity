@@ -22,16 +22,18 @@ set(SOURCES
     ResultSet.cpp
     Row.cpp
     Serializer.cpp
-    SQLClient.cpp
     TreeNode.cpp
     Tuple.cpp
     Value.cpp
     )
 
-set(GENERATED_SOURCES
-    ../../Services/SQLServer/SQLClientEndpoint.h
-    ../../Services/SQLServer/SQLServerEndpoint.h
+if (SERENITYOS)
+    list(APPEND SOURCES SQLClient.cpp)
+    set(GENERATED_SOURCES
+        ../../Services/SQLServer/SQLClientEndpoint.h
+        ../../Services/SQLServer/SQLServerEndpoint.h
     )
+endif()
 
 serenity_lib(LibSQL sql)
 target_link_libraries(LibSQL LibCore LibSyntax LibRegex)

@@ -155,7 +155,7 @@ function(embed_resource target section file)
 endfunction()
 
 function(link_with_locale_data target)
-    if (ENABLE_UNICODE_DATABASE_DOWNLOAD)
+    if (ENABLE_UNICODE_DATABASE_DOWNLOAD AND SERENITYOS)
         target_link_libraries("${target}" LibLocaleData)
     endif()
 endfunction()
