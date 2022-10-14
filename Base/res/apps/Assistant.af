@@ -1,0 +1,4 @@
+[App]
+Name=Assistant
+Executable=/bin/Assistant
+Category=Utilities

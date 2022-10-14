@@ -1,0 +1,20 @@
+#import <DOM/HTMLCollection.idl>
+#import <HTML/HTMLElement.idl>
+
+// https://html.spec.whatwg.org/multipage/semantics.html#htmlformelement
+[Exposed=Window]
+interface HTMLFormElement : HTMLElement {
+
+    [Reflect] attribute DOMString name;
+    [Reflect] attribute DOMString rel;
+    [Reflect=accept-charset] attribute DOMString acceptCharset;
+    [Reflect=novalidate] attribute boolean noValidate;
+
+    undefined submit();
+
+    // FIXME: Should be a HTMLFormControlsCollection
+    [SameObject] readonly attribute HTMLCollection elements;
+
+    readonly attribute unsigned long length;
+
+};

@@ -1,0 +1,54 @@
+/*
+ * Copyright (c) 2022, MacDue <macdue@dueutil.tech>
+ *
+ * SPDX-License-Identifier: BSD-2-Clause
+ */
+
+#pragma once
+
+#include "DOMNodeProperties.h"
+#include "ModelTranslator.h"
+#include <AK/Optional.h>
+#include <AK/StringView.h>
+#include <LibWeb/CSS/Selector.h>
+#include <QWidget>
+
+class QTreeView;
+class QTableView;
+
+namespace Ladybird {
+
+class InspectorWidget final : public QWidget {
+    Q_OBJECT
+public:
+    InspectorWidget();
+    virtual ~InspectorWidget() = default;
+
+    struct Selection {
+        i32 dom_node_id { 0 };
+        Optional<Web::CSS::Selector::PseudoElement> pseudo_element {};
+        bool operator==(Selection const& other) const = default;
+    };
+
+    void clear_dom_json();
+    void set_dom_json(StringView dom_json);
+
+    void load_style_json(StringView computed_style_json, StringView resolved_style_json, StringView custom_properties_json);
+    void clear_style_json();
+
+    Function<ErrorOr<DOMNodeProperties>(i32, Optional<Web::CSS::Selector::PseudoElement>)> on_dom_node_inspected;
+    Function<void()> on_close;
+
+private:
+    void set_selection(GUI::ModelIndex);
+    void closeEvent(QCloseEvent*) override;
+
+    Selection m_selection;
+
+    ModelTranslator m_dom_model {};
+    ModelTranslator m_computed_style_model {};
+    ModelTranslator m_resolved_style_model {};
+    ModelTranslator m_custom_properties_model {};
+};
+
+}

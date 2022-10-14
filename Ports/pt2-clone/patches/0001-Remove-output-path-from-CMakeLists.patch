@@ -1,0 +1,21 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: EWouters <6179932+EWouters@users.noreply.github.com>
+Date: Tue, 5 Apr 2022 14:41:31 +0200
+Subject: [PATCH] Remove output path from CMakeLists
+
+---
+ CMakeLists.txt | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index b391653..0d42019 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -3,7 +3,6 @@ cmake_minimum_required(VERSION 3.7)
+ project(pt2-clone)
+ 
+ find_package(SDL2 REQUIRED)
+-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${pt2-clone_SOURCE_DIR}/release/other/")
+ 
+ file(GLOB pt2-clone_SRC
+     "${pt2-clone_SOURCE_DIR}/src/*.c"

@@ -1,0 +1,23 @@
+#import <DOM/Document.idl>
+#import <DOM/Element.idl>
+#import <DOM/Node.idl>
+
+callback IntersectionObserverCallback = undefined (sequence<IntersectionObserverEntry> entries, IntersectionObserver observer);
+
+[Exposed=(Window)]
+interface IntersectionObserver {
+    constructor(IntersectionObserverCallback callback, optional IntersectionObserverInit options = {});
+
+    undefined observe(Element target);
+    undefined unobserve(Element target);
+    undefined disconnect();
+
+    // FIXME:
+    // sequence<IntersectionObserverEntry> takeRecords();
+};
+
+dictionary IntersectionObserverInit {
+    (Element or Document)? root = null;
+    DOMString rootMargin = "0px";
+    (double or sequence<double>) threshold = 0;
+};

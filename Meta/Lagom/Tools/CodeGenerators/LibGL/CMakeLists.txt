@@ -1,0 +1,1 @@
+lagom_tool(GenerateGLAPIWrapper SOURCES GenerateGLAPIWrapper.cpp LIBS LibMain)

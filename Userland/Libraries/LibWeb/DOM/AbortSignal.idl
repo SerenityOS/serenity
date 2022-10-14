@@ -1,0 +1,13 @@
+#import <DOM/EventTarget.idl>
+#import <DOM/EventHandler.idl>
+
+[Exposed=(Window,Worker), CustomVisit]
+interface AbortSignal : EventTarget {
+    // FIXME: [NewObject] static AbortSignal abort(optional any reason);
+
+    readonly attribute boolean aborted;
+    readonly attribute any reason;
+    undefined throwIfAborted();
+
+    attribute EventHandler onabort;
+};

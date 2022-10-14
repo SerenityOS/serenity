@@ -1,0 +1,45 @@
+#import <HTML/HTMLElement.idl>
+#import <HTML/HTMLFormElement.idl>
+#import <FileAPI/FileList.idl>
+
+// https://html.spec.whatwg.org/multipage/input.html#htmlinputelement
+[Exposed=Window]
+interface HTMLInputElement : HTMLElement {
+
+    readonly attribute HTMLFormElement? form;
+    attribute FileList? files;
+
+    [Reflect] attribute DOMString accept;
+    [Reflect] attribute DOMString alt;
+    [Reflect] attribute DOMString max;
+    [Reflect] attribute DOMString min;
+    [Reflect] attribute DOMString pattern;
+    [Reflect] attribute DOMString placeholder;
+    [Reflect] attribute DOMString src;
+    [Reflect] attribute DOMString step;
+    [Reflect] attribute DOMString name;
+    [Reflect=dirname] attribute DOMString dirName;
+    [Reflect=value] attribute DOMString defaultValue;
+
+    attribute DOMString type;
+
+    [LegacyNullToEmptyString] attribute DOMString value;
+
+    [ImplementedAs=checked_binding] attribute boolean checked;
+
+    [Reflect] attribute boolean disabled;
+    [Reflect=checked] attribute boolean defaultChecked;
+    [Reflect=formnovalidate] attribute boolean formNoValidate;
+    [Reflect=formtarget] attribute DOMString formTarget;
+    [Reflect] attribute boolean multiple;
+    [Reflect=readonly] attribute boolean readOnly;
+    [Reflect] attribute boolean required;
+
+    [Reflect] attribute DOMString align;
+    [Reflect=usemap] attribute DOMString useMap;
+
+    undefined setSelectionRange(unsigned long start, unsigned long end, optional DOMString direction);
+
+    undefined showPicker();
+
+};

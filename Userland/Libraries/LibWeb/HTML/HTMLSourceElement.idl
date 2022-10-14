@@ -1,0 +1,13 @@
+#import <HTML/HTMLElement.idl>
+
+// https://html.spec.whatwg.org/multipage/embedded-content.html#htmlsourceelement
+[Exposed=Window]
+interface HTMLSourceElement : HTMLElement {
+
+    [Reflect] attribute DOMString src;
+    [Reflect] attribute DOMString type;
+    [Reflect] attribute DOMString srcset;
+    [Reflect] attribute DOMString sizes;
+    [Reflect] attribute DOMString media;
+
+};

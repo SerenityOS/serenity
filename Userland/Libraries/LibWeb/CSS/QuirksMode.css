@@ -1,0 +1,41 @@
+/* 15.3.3 Flow content
+ * https://html.spec.whatwg.org/multipage/rendering.html#flow-content-3
+ */
+
+form {
+    margin-bottom: 1em;
+}
+
+/* 15.3.8 Tables
+ * https://html.spec.whatwg.org/multipage/rendering.html#tables-2
+ */
+
+table {
+    font-weight: initial;
+    font-style: initial;
+    font-variant: initial;
+    font-size: initial;
+    line-height: initial;
+    white-space: initial;
+    text-align: initial;
+}
+
+/* 15.3.10 Form controls
+ * https://html.spec.whatwg.org/multipage/rendering.html#form-controls
+ */
+
+input:not([type=image i]), textarea {
+    box-sizing: border-box;
+}
+
+/* 15.4.2 Images
+ * https://html.spec.whatwg.org/multipage/rendering.html#images-3
+ */
+
+img[align=left i] {
+    margin-right: 3px;
+}
+
+img[align=right i] {
+    margin-left: 3px;
+}

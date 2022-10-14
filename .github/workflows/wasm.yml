@@ -1,0 +1,102 @@
+name: Build Wasm Modules
+on: [ push, pull_request ]
+
+env:
+  SERENITY_SOURCE_DIR: ${{ github.workspace }}
+
+concurrency: wasm
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    if: github.repository == 'SerenityOS/serenity'
+    strategy:
+      fail-fast: false
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+      - name: "Install Ubuntu dependencies"
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ninja-build emscripten gcc-12 g++-12 libstdc++-12-dev
+      - name: "Check versions"
+        run: |
+          set +e
+          emcc --version
+          ninja --version
+          gcc --version
+      - name: "Create build directories"
+        run: |
+          mkdir -p ${{ github.workspace }}/Build/caches/TZDB
+          mkdir -p ${{ github.workspace }}/Build/caches/UCD
+          mkdir -p ${{ github.workspace }}/Build/caches/CLDR
+      - name: "TimeZoneData cache"
+        uses: actions/cache@03e00da99d75a2204924908e1cca7902cafce66b
+        with:
+          path: ${{ github.workspace }}/Build/caches/TZDB
+          key: TimeZoneData-${{ hashFiles('Meta/CMake/time_zone_data.cmake') }}
+      - name: "UnicodeData cache"
+        uses: actions/cache@03e00da99d75a2204924908e1cca7902cafce66b
+        with:
+          path: ${{ github.workspace }}/Build/caches/UCD
+          key: UnicodeData-${{ hashFiles('Meta/CMake/unicode_data.cmake') }}
+      - name: "UnicodeLocale cache"
+        uses: actions/cache@03e00da99d75a2204924908e1cca7902cafce66b
+        with:
+          path: ${{ github.workspace }}/Build/caches/CLDR
+          key: UnicodeLocale-${{ hashFiles('Meta/CMake/locale_data.cmake') }}
+      - name: "Build host lagom tools"
+        run: |
+          cmake -GNinja \
+            -B ${{ github.workspace }}/Build/lagom-tools \
+            -S ${{ github.workspace }}/Meta/Lagom \
+            -DBUILD_LAGOM=OFF \
+            -DSERENITY_CACHE_DIR=${{ github.workspace }}/Build/caches \
+            -DCMAKE_C_COMPILER=gcc-12 \
+            -DCMAKE_CXX_COMPILER=g++-12 \
+            -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/Build/lagom-tools \
+            -Dpackage=LagomTools
+
+          ninja -C ${{ github.workspace }}/Build/lagom-tools install
+      - name: "Create wasm build environment"
+        run: |
+          emcmake cmake -GNinja \
+            -B ${{ github.workspace }}/Build/wasm \
+            -S ${{ github.workspace }}/Meta/Lagom \
+            -DLagomTools_DIR=${{ github.workspace }}/Build/lagom-tools/share/LagomTools \
+            -DBUILD_LAGOM=ON \
+            -DSERENITY_CACHE_DIR=${{ github.workspace }}/Build/caches \
+            -DBUILD_SHARED_LIBS=OFF
+      - name: "Build libjs.{js,wasm}"
+        run: |
+          ninja -C ${{ github.workspace }}/Build/wasm libjs.js
+      - name: "Show me what you built :)"
+        run: |
+          ls -l ${{ github.workspace }}/Build/wasm
+
+      - name: "Checkout linusg/libjs-website"
+        if: github.ref == 'refs/heads/master'
+        uses: actions/checkout@v3
+        with:
+          repository: linusg/libjs-website
+          path: libjs-website
+
+      - name: "Prepare updated REPL data"
+        if: github.ref == 'refs/heads/master'
+        run: |
+          cp ${{ github.workspace }}/Build/wasm/libjs.js libjs-website/repl/libjs.js
+          cp ${{ github.workspace }}/Build/wasm/libjs.wasm libjs-website/repl/libjs.wasm
+          echo 'Module.SERENITYOS_COMMIT = "${{ github.sha }}";' >> libjs-website/repl/libjs.js
+
+      - name: "Deploy to GitHub Pages"
+        if: github.ref == 'refs/heads/master'
+        uses: JamesIves/github-pages-deploy-action@4.1.1
+        with:
+          git-config-name: BuggieBot
+          git-config-email: buggiebot@serenityos.org
+          branch: main
+          repository-name: linusg/libjs-website
+          token: ${{ secrets.BUGGIEBOT }}
+          folder: libjs-website

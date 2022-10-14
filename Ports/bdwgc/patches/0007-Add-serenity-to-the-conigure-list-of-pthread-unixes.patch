@@ -1,0 +1,22 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Peter Elliott <pelliott@ualberta.ca>
+Date: Mon, 16 May 2022 23:55:41 -0600
+Subject: [PATCH] Add serenity to the conigure list of pthread unixes
+
+---
+ configure.ac | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/configure.ac b/configure.ac
+index 3b38e6f..5b6daa4 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -201,7 +201,7 @@ case "$THREADS" in
+       *-*-aix* | *-*-android* | *-*-cygwin* | *-*-darwin* | *-*-dragonfly* | \
+       *-*-freebsd* | *-*-haiku* | *-*-hpux11* | *-*-irix* | \
+       *-*-kfreebsd*-gnu | *-*-gnu* | *-*-*linux* | *-*-msys* | *-*-nacl* | \
+-      *-*-netbsd* | *-*-openbsd* | *-*-osf* | *-*-solaris*)
++      *-*-netbsd* | *-*-openbsd* | *-*-osf* | *-*-solaris* | *-*-serenity* )
+         AC_DEFINE(GC_THREADS)
+         AC_DEFINE([_REENTRANT], [1],
+                   [Required define if using POSIX threads.])

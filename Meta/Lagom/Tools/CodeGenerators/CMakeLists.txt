@@ -1,0 +1,8 @@
+add_subdirectory(IPCCompiler)
+add_subdirectory(LibEDID)
+add_subdirectory(LibGL)
+add_subdirectory(LibLocale)
+add_subdirectory(LibTimeZone)
+add_subdirectory(LibUnicode)
+add_subdirectory(LibWeb)
+add_subdirectory(StateMachineGenerator)

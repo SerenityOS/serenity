@@ -1,0 +1,63 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Ali Mohammad Pur <ali.mpfard@gmail.com>
+Date: Thu, 24 Feb 2022 03:30:02 +0330
+Subject: [PATCH] Teach bdwgc about serenity signals
+
+Serenity doesn't have the realtime POSIX signals, so use SIGXCPU and
+SIGXFSZ instead.
+---
+ include/gc_config_macros.h | 4 +++-
+ include/private/gc_priv.h  | 2 +-
+ pthread_stop_world.c       | 4 +++-
+ 3 files changed, 7 insertions(+), 3 deletions(-)
+
+diff --git a/include/gc_config_macros.h b/include/gc_config_macros.h
+index 14c65ee..c19b050 100644
+--- a/include/gc_config_macros.h
++++ b/include/gc_config_macros.h
+@@ -72,7 +72,7 @@
+ 
+ #if defined(GC_AIX_THREADS) || defined(GC_DARWIN_THREADS) \
+     || defined(GC_DGUX386_THREADS) || defined(GC_FREEBSD_THREADS) \
+-    || defined(GC_HPUX_THREADS) \
++    || defined(GC_HPUX_THREADS) || defined(GC_SERENITY_THREADS) \
+     || defined(GC_IRIX_THREADS) || defined(GC_LINUX_THREADS) \
+     || defined(GC_NETBSD_THREADS) || defined(GC_OPENBSD_THREADS) \
+     || defined(GC_OSF1_THREADS) || defined(GC_SOLARIS_THREADS) \
+@@ -83,6 +83,8 @@
+ #elif defined(GC_THREADS)
+ # if defined(__linux__)
+ #   define GC_LINUX_THREADS
++# elif defined(__serenity__)
++#   define GC_SERENITY_THREADS
+ # elif defined(__OpenBSD__)
+ #   define GC_OPENBSD_THREADS
+ # elif defined(_PA_RISC1_1) || defined(_PA_RISC2_0) || defined(hppa) \
+diff --git a/include/private/gc_priv.h b/include/private/gc_priv.h
+index 629418f..1278091 100644
+--- a/include/private/gc_priv.h
++++ b/include/private/gc_priv.h
+@@ -2641,7 +2641,7 @@ GC_INNER void *GC_store_debug_info_inner(void *p, word sz, const char *str,
+       /* Linuxthreads itself uses SIGUSR1 and SIGUSR2.                  */
+ #     define SIG_SUSPEND SIGPWR
+ #   endif
+-# elif defined(GC_OPENBSD_THREADS)
++# elif defined(GC_OPENBSD_THREADS) || defined(GC_SERENITY_THREADS)
+ #   ifndef GC_OPENBSD_UTHREADS
+ #     define SIG_SUSPEND SIGXFSZ
+ #   endif
+diff --git a/pthread_stop_world.c b/pthread_stop_world.c
+index 4b2c429..25eb2a5 100644
+--- a/pthread_stop_world.c
++++ b/pthread_stop_world.c
+@@ -146,7 +146,9 @@ STATIC volatile AO_t GC_world_is_stopped = FALSE;
+  * pointer(s) and acknowledge.
+  */
+ #ifndef SIG_THR_RESTART
+-# if defined(GC_HPUX_THREADS) || defined(GC_OSF1_THREADS) \
++# if defined(SERENITY)
++#   define SIG_THR_RESTART SIGUSR1
++# elif defined(GC_HPUX_THREADS) || defined(GC_OSF1_THREADS) \
+      || defined(GC_NETBSD_THREADS) || defined(GC_USESIGRT_SIGNALS)
+ #   if defined(_SIGRTMIN) && !defined(CPPCHECK)
+ #     define SIG_THR_RESTART _SIGRTMIN + 5

@@ -1,0 +1,21 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Brendan Coles <bcoles@gmail.com>
+Date: Thu, 8 Apr 2021 07:11:06 +0000
+Subject: [PATCH] Teach configfsf.sub about serenity
+
+---
+ configfsf.sub | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/configfsf.sub b/configfsf.sub
+index 8167d08..ad8066a 100755
+--- a/configfsf.sub
++++ b/configfsf.sub
+@@ -1691,6 +1691,7 @@ case $os in
+ 	# The portable systems comes first.
+ 	# Each alternative MUST end in a * to match a version number.
+ 	gnu* | android* | bsd* | mach* | minix* | genix* | ultrix* | irix* \
++	     | serenity* \
+ 	     | *vms* | esix* | aix* | cnk* | sunos | sunos[34]* \
+ 	     | hpux* | unos* | osf* | luna* | dgux* | auroraux* | solaris* \
+ 	     | sym* |  plan9* | psp* | sim* | xray* | os68k* | v88r* \

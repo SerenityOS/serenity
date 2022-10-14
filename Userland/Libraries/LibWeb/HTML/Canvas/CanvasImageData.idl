@@ -1,0 +1,14 @@
+#import <HTML/ImageData.idl>
+
+// https://html.spec.whatwg.org/multipage/canvas.html#canvasimagedata
+interface mixin CanvasImageData {
+    // FIXME: Should be `ImageData createImageData([EnforceRange] long sw, [EnforceRange] long sh, optional ImageDataSettings settings = {});`
+    ImageData createImageData(long sw, long sh);
+    // FIXME: ImageData createImageData(ImageData imagedata);
+
+    // FIXME: Should be `ImageData getImageData([EnforceRange] long sx, [EnforceRange] long sy, [EnforceRange] long sw, [EnforceRange] long sh, optional ImageDataSettings settings = {});`
+    ImageData getImageData(long sx, long sy, long sw, long sh);
+
+    undefined putImageData(ImageData imagedata, [EnforceRange] long dx, [EnforceRange] long dy);
+    // FIXME: undefined putImageData(ImageData imagedata, [EnforceRange] long dx, [EnforceRange] long dy, [EnforceRange] long dirtyX, [EnforceRange] long dirtyY, [EnforceRange] long dirtyWidth, [EnforceRange] long dirtyHeight);
+};

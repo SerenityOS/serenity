@@ -1,0 +1,5 @@
+[App]
+Name=Calendar Settings
+Executable=/bin/CalendarSettings
+Category=Settings
+Description=Configure the Calendar application and applet

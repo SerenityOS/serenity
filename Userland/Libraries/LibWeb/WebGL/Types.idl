@@ -1,0 +1,14 @@
+typedef unsigned long GLenum;
+typedef boolean GLboolean;
+typedef unsigned long GLbitfield;
+typedef long GLint;
+typedef long GLsizei;
+
+typedef unrestricted float GLfloat;
+typedef unrestricted float GLclampf;
+
+enum WebGLPowerPreference {
+    "default",
+    "low-power",
+    "high-performance"
+};

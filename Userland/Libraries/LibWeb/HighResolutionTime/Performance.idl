@@ -1,0 +1,11 @@
+#import <DOM/EventTarget.idl>
+#import <NavigationTiming/PerformanceTiming.idl>
+
+// https://w3c.github.io/hr-time/#sec-performance
+[Exposed=(Window, Worker)]
+interface Performance : EventTarget {
+    double now();
+    readonly attribute double timeOrigin;
+
+    readonly attribute PerformanceTiming timing;
+};
