@@ -41,7 +41,6 @@ String canonicalize_time_zone_name(String const& time_zone);
 String default_time_zone();
 ThrowCompletionOr<TimeZone*> create_temporal_time_zone(VM&, String const& identifier, FunctionObject const* new_target = nullptr);
 ISODateTime get_iso_parts_from_epoch(VM&, Crypto::SignedBigInteger const& epoch_nanoseconds);
-i64 get_iana_time_zone_offset_nanoseconds(BigInt const& epoch_nanoseconds, String const& time_zone_identifier);
 BigInt* get_iana_time_zone_next_transition(VM&, BigInt const& epoch_nanoseconds, StringView time_zone_identifier);
 BigInt* get_iana_time_zone_previous_transition(VM&, BigInt const& epoch_nanoseconds, StringView time_zone_identifier);
 ThrowCompletionOr<double> parse_time_zone_offset_string(VM&, String const&);
