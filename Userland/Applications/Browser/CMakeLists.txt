@@ -41,6 +41,6 @@ set(GENERATED_SOURCES
     WebDriverSessionServerEndpoint.h
 )
 
-serenity_app(Browser ICON app-browser)
+serenity_app(Browser ICON app-ladybird)
 target_link_libraries(Browser LibWebView LibWeb LibProtocol LibGUI LibDesktop LibConfig LibMain)
 link_with_locale_data(Browser)

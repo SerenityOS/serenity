@@ -61,7 +61,7 @@ BrowserWindow::BrowserWindow(CookieJar& cookie_jar, URL url)
     : m_cookie_jar(cookie_jar)
     , m_window_actions(*this)
 {
-    auto app_icon = GUI::Icon::default_icon("app-browser"sv);
+    auto app_icon = GUI::Icon::default_icon("app-ladybird"sv);
     m_bookmarks_bar = Browser::BookmarksBarWidget::construct(Browser::bookmarks_file_path(), true);
 
     resize(730, 560);
@@ -127,7 +127,7 @@ BrowserWindow::BrowserWindow(CookieJar& cookie_jar, URL url)
     });
 
     m_window_actions.on_about = [this] {
-        auto app_icon = GUI::Icon::default_icon("app-browser"sv);
+        auto app_icon = GUI::Icon::default_icon("app-ladybird"sv);
         GUI::AboutDialog::show("Browser"sv, app_icon.bitmap_for_size(32), this);
     };
 
@@ -513,7 +513,7 @@ void BrowserWindow::set_window_title_for_tab(Tab const& tab)
 {
     auto& title = tab.title();
     auto url = tab.url();
-    set_title(String::formatted("{} - Browser", title.is_empty() ? url.to_string() : title));
+    set_title(String::formatted("{} - Ladybird Browser", title.is_empty() ? url.to_string() : title));
 }
 
 void BrowserWindow::create_new_tab(URL url, bool activate)

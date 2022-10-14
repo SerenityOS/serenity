@@ -116,7 +116,7 @@ class URLResult final : public Result {
 public:
     explicit URLResult(const URL& url)
         : Result(url.to_string(), "'Enter' will open this URL in the browser"sv, 50)
-        , m_bitmap(GUI::Icon::default_icon("app-browser"sv).bitmap_for_size(16))
+        , m_bitmap(GUI::Icon::default_icon("app-ladybird"sv).bitmap_for_size(16))
     {
     }
     ~URLResult() override = default;

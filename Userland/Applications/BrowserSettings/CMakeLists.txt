@@ -18,5 +18,5 @@ set(GENERATED_SOURCES
     ContentFilterSettingsWidgetGML.h
 )
 
-serenity_app(BrowserSettings ICON app-browser)
+serenity_app(BrowserSettings ICON app-ladybird)
 target_link_libraries(BrowserSettings LibGUI LibConfig LibMain)

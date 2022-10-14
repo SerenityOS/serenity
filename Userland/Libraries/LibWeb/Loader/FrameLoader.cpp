@@ -27,7 +27,7 @@
 
 namespace Web {
 
-static String s_default_favicon_path = "/res/icons/16x16/app-browser.png";
+static String s_default_favicon_path = "/res/icons/16x16/app-ladybird.png";
 static RefPtr<Gfx::Bitmap> s_default_favicon_bitmap;
 
 void FrameLoader::set_default_favicon_path(String path)

@@ -108,7 +108,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Web::ResourceLoader::initialize(TRY(WebView::RequestServerAdapter::try_create()));
 
-    auto app_icon = GUI::Icon::default_icon("app-browser"sv);
+    auto app_icon = GUI::Icon::default_icon("app-ladybird"sv);
 
     Browser::g_home_url = Config::read_string("Browser"sv, "Preferences"sv, "Home"sv, "file:///res/html/misc/welcome.html"sv);
     Browser::g_new_tab_url = Config::read_string("Browser"sv, "Preferences"sv, "NewTab"sv, "file:///res/html/misc/new-tab.html"sv);

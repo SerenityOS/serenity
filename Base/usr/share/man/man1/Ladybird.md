@@ -1,6 +1,6 @@
 ## Name
 
-![Icon](/res/icons/16x16/app-browser.png) Browser - Serenity WWW Browser
+![Icon](/res/icons/16x16/app-ladybird.png) Ladybird Browser - Serenity WWW Browser
 
 [Open](file:///bin/Browser)
 
@@ -12,7 +12,7 @@ $ Browser [options] [urls]
 
 ## Description
 
-`Browser` is an application used to view the World Wide Web. It is built on top of Serenity's own `LibWeb` and `LibJS` engines, allowing it to render HTML, CSS, and JavaScript.
+`Ladybird Browser` is an application used to view the World Wide Web. It is built on top of Serenity's own `LibWeb` and `LibJS` engines, allowing it to render HTML, CSS, and JavaScript.
 
 ## Options
 

@@ -76,7 +76,7 @@ WindowActions::WindowActions(GUI::Window& window)
     m_tab_actions.last().set_status_tip("Switch to last tab");
 
     m_about_action = GUI::Action::create(
-        "&About Browser", GUI::Icon::default_icon("app-browser"sv).bitmap_for_size(16), [this](const GUI::Action&) {
+        "&About Browser", GUI::Icon::default_icon("app-ladybird"sv).bitmap_for_size(16), [this](const GUI::Action&) {
             if (on_about)
                 on_about();
         },

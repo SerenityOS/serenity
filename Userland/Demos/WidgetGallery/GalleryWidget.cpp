@@ -133,7 +133,7 @@ GalleryWidget::GalleryWidget()
     };
 
     m_msgbox_button = basics_tab->find_descendant_of_type_named<GUI::Button>("msgbox_button");
-    m_msgbox_button->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-browser.png"sv).release_value_but_fixme_should_propagate_errors());
+    m_msgbox_button->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-ladybird.png"sv).release_value_but_fixme_should_propagate_errors());
 
     m_msgbox_type = GUI::MessageBox::Type::None;
     m_msgbox_input_type = GUI::MessageBox::InputType::OK;
