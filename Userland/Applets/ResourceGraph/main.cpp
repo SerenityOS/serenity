@@ -162,7 +162,7 @@ private:
         total = 0;
         idle = 0;
 
-        auto json = get_data_as_json(m_proc_stat, "/proc/stat"sv);
+        auto json = get_data_as_json(m_proc_stat, "/sys/kernel/stats"sv);
         if (json.is_error())
             return false;
 
@@ -174,7 +174,7 @@ private:
 
     bool get_memory_usage(u64& allocated, u64& available)
     {
-        auto json = get_data_as_json(m_proc_mem, "/proc/memstat"sv);
+        auto json = get_data_as_json(m_proc_mem, "/sys/kernel/memstat"sv);
         if (json.is_error())
             return false;
 
@@ -196,7 +196,7 @@ private:
     {
         tx = rx = link_speed = 0;
 
-        auto json = get_data_as_json(m_proc_net, "/proc/net/adapters"sv);
+        auto json = get_data_as_json(m_proc_net, "/sys/kernel/net/adapters"sv);
         if (json.is_error())
             return false;
 
@@ -291,9 +291,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         TRY(create_applet(GraphType::Network, network));
 
     TRY(Core::System::unveil("/res", "r"));
-    TRY(Core::System::unveil("/proc/stat", "r"));
-    TRY(Core::System::unveil("/proc/memstat", "r"));
-    TRY(Core::System::unveil("/proc/net/adapters", "r"));
+    TRY(Core::System::unveil("/sys/kernel/stats", "r"));
+    TRY(Core::System::unveil("/sys/kernel/memstat", "r"));
+    TRY(Core::System::unveil("/sys/kernel/net/adapters", "r"));
     TRY(Core::System::unveil("/bin/SystemMonitor", "x"));
     TRY(Core::System::unveil(nullptr, nullptr));
 

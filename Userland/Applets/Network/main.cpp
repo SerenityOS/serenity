@@ -107,15 +107,15 @@ private:
     {
         StringBuilder adapter_info;
 
-        auto file_or_error = Core::Stream::File::open("/proc/net/adapters"sv, Core::Stream::OpenMode::Read);
+        auto file_or_error = Core::Stream::File::open("/sys/kernel/net/adapters"sv, Core::Stream::OpenMode::Read);
         if (file_or_error.is_error()) {
-            dbgln("Error: Could not open /proc/net/adapters: {}", file_or_error.error());
+            dbgln("Error: Could not open /sys/kernel/net/adapters: {}", file_or_error.error());
             return "";
         }
 
         auto file_contents_or_error = file_or_error.value()->read_all();
         if (file_contents_or_error.is_error()) {
-            dbgln("Error: Could not read /proc/net/adapters: {}", file_contents_or_error.error());
+            dbgln("Error: Could not read /sys/kernel/net/adapters: {}", file_contents_or_error.error());
             return "";
         }
 
@@ -168,7 +168,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     TRY(Core::System::unveil("/tmp/session/%sid/portal/notify", "rw"));
     TRY(Core::System::unveil("/res", "r"));
-    TRY(Core::System::unveil("/proc/net/adapters", "r"));
+    TRY(Core::System::unveil("/sys/kernel/net/adapters", "r"));
     TRY(Core::System::unveil("/bin/SystemMonitor", "x"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
