@@ -34,7 +34,7 @@ struct ThreadStatistics {
 };
 
 struct ProcessStatistics {
-    // Keep this in sync with /proc/all.
+    // Keep this in sync with /sys/kernel/processes.
     // From the kernel side:
     pid_t pid;
     pid_t pgid;

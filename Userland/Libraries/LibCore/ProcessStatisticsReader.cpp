@@ -20,13 +20,13 @@ Optional<AllProcessesStatistics> ProcessStatisticsReader::get_all(RefPtr<Core::F
 {
     if (proc_all_file) {
         if (!proc_all_file->seek(0, Core::SeekMode::SetPosition)) {
-            warnln("ProcessStatisticsReader: Failed to refresh /proc/all: {}", proc_all_file->error_string());
+            warnln("ProcessStatisticsReader: Failed to refresh /sys/kernel/processes: {}", proc_all_file->error_string());
             return {};
         }
     } else {
-        proc_all_file = Core::File::construct("/proc/all");
+        proc_all_file = Core::File::construct("/sys/kernel/processes");
         if (!proc_all_file->open(Core::OpenMode::ReadOnly)) {
-            warnln("ProcessStatisticsReader: Failed to open /proc/all: {}", proc_all_file->error_string());
+            warnln("ProcessStatisticsReader: Failed to open /sys/kernel/processes: {}", proc_all_file->error_string());
             return {};
         }
     }
