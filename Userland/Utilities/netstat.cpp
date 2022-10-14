@@ -44,8 +44,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(flag_wide, "Do not truncate IP addresses by printing out the whole symbolic host", "wide", 'W');
     args_parser.parse(arguments);
 
-    TRY(Core::System::unveil("/proc/net", "r"));
-    TRY(Core::System::unveil("/proc/all", "r"));
+    TRY(Core::System::unveil("/sys/kernel/net", "r"));
+    TRY(Core::System::unveil("/sys/kernel/processes", "r"));
     TRY(Core::System::unveil("/etc/passwd", "r"));
     TRY(Core::System::unveil("/etc/services", "r"));
     TRY(Core::System::unveil("/tmp/portal/lookup", "rw"));
@@ -154,7 +154,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 
     if (!has_protocol_flag || flag_tcp) {
-        auto file = Core::File::construct("/proc/net/tcp");
+        auto file = Core::File::construct("/sys/kernel/net/tcp");
         if (!file->open(Core::OpenMode::ReadOnly)) {
             warnln("Error: {}", file->error_string());
             return 1;
@@ -251,7 +251,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 
     if (!has_protocol_flag || flag_udp) {
-        auto file = TRY(Core::File::open("/proc/net/udp", Core::OpenMode::ReadOnly));
+        auto file = TRY(Core::File::open("/sys/kernel/net/udp", Core::OpenMode::ReadOnly));
         auto file_contents = file->read_all();
         auto json = TRY(JsonValue::from_string(file_contents));
 

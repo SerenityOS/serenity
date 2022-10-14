@@ -37,7 +37,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.parse(arguments);
 
     if (value_ipv4.is_empty() && value_adapter.is_empty() && value_mask.is_empty()) {
-        auto file = TRY(Core::File::open("/proc/net/adapters", Core::OpenMode::ReadOnly));
+        auto file = TRY(Core::File::open("/sys/kernel/net/adapters", Core::OpenMode::ReadOnly));
         auto json = TRY(JsonValue::from_string(file->read_all()));
 
         json.as_array().for_each([](auto& value) {

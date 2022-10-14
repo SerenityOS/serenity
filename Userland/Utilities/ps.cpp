@@ -41,7 +41,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto this_pseudo_tty_name = TRY(determine_tty_pseudo_name());
 
     TRY(Core::System::pledge("stdio rpath"));
-    TRY(Core::System::unveil("/proc/all", "r"));
+    TRY(Core::System::unveil("/sys/kernel/processes", "r"));
     TRY(Core::System::unveil("/etc/passwd", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 

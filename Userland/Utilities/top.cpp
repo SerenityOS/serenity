@@ -201,7 +201,7 @@ static void enable_nonblocking_stdin()
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio rpath tty sigaction"));
-    TRY(Core::System::unveil("/proc/all", "r"));
+    TRY(Core::System::unveil("/sys/kernel/processes", "r"));
     TRY(Core::System::unveil("/etc/passwd", "r"));
     unveil(nullptr, nullptr);
 

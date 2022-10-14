@@ -22,7 +22,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
     TRY(Core::System::unveil("/etc/passwd", "r"));
     TRY(Core::System::unveil("/etc/timezone", "r"));
     TRY(Core::System::unveil("/var/run/utmp", "r"));
-    TRY(Core::System::unveil("/proc", "r"));
+    TRY(Core::System::unveil("/sys/kernel/processes", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
     auto file = TRY(Core::File::open("/var/run/utmp", Core::OpenMode::ReadOnly));
