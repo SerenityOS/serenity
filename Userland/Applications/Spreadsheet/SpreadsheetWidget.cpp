@@ -279,6 +279,8 @@ SpreadsheetWidget::SpreadsheetWidget(GUI::Window& parent_window, NonnullRefPtrVe
         },
         window());
 
+    m_search_action = GUI::CommonActions::make_command_palette_action(&parent_window);
+
     m_about_action = GUI::CommonActions::make_about_action("Spreadsheet", GUI::Icon::default_icon("app-spreadsheet"sv), &parent_window);
 
     toolbar.add_action(*m_new_action);
@@ -664,6 +666,7 @@ void SpreadsheetWidget::initialize_menubar(GUI::Window& window)
     edit_menu.add_action(*m_insert_emoji_action);
 
     auto& help_menu = window.add_menu("&Help");
+    help_menu.add_action(*m_search_action);
     help_menu.add_action(*m_functions_help_action);
     help_menu.add_action(*m_about_action);
 }

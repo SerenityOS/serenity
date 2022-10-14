@@ -93,6 +93,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     file_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); }));
 
     auto& help_menu = window->add_menu("&Help");
+    help_menu.add_action(GUI::CommonActions::make_command_palette_action(window));
     help_menu.add_action(GUI::CommonActions::make_help_action([](auto&) {
         Desktop::Launcher::open(URL::create_with_file_scheme("/usr/share/man/man1/Inspector.md"), "/bin/Help");
     }));

@@ -447,6 +447,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     make_frequency_action(5);
 
     auto& help_menu = window->add_menu("&Help");
+    help_menu.add_action(GUI::CommonActions::make_command_palette_action(window));
     help_menu.add_action(GUI::CommonActions::make_about_action("System Monitor", app_icon, window));
 
     process_table_view.on_activation = [&](auto&) {

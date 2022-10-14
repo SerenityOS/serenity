@@ -244,6 +244,7 @@ ErrorOr<void> MainWidget::initialize_fallibles(GUI::Window& window)
     TRY(go_menu->try_add_action(*m_go_home_action));
 
     auto help_menu = TRY(window.try_add_menu("&Help"));
+    TRY(help_menu->try_add_action(GUI::CommonActions::make_command_palette_action(&window)));
     TRY(help_menu->try_add_action(GUI::Action::create("&Contents", { Key_F1 }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/filetype-unknown.png"sv)), [&](auto&) {
         String path = "/usr/share/man/man1/Help.md";
         open_page(path);

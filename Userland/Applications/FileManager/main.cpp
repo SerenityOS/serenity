@@ -1047,6 +1047,7 @@ ErrorOr<int> run_in_windowed_mode(String const& initial_location, String const& 
     TRY(go_menu->try_add_action(directory_view->open_terminal_action()));
 
     auto help_menu = TRY(window->try_add_menu("&Help"));
+    TRY(help_menu->try_add_action(GUI::CommonActions::make_command_palette_action(window)));
     TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action("File Manager"sv, GUI::Icon::default_icon("app-file-manager"sv), window)));
 
     (void)TRY(main_toolbar.try_add_action(go_back_action));

@@ -206,6 +206,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(accessibility_menu->try_add_action(achromatomaly_accessibility_action));
 
     auto help_menu = TRY(window->try_add_menu("&Help"));
+    help_menu->add_action(GUI::CommonActions::make_command_palette_action(window));
     help_menu->add_action(GUI::CommonActions::make_about_action("Magnifier", app_icon, window));
 
     window->show();

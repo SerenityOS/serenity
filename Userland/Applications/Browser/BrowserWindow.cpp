@@ -419,6 +419,7 @@ void BrowserWindow::build_menus()
     debug_menu.add_action(same_origin_policy_action);
 
     auto& help_menu = add_menu("&Help");
+    help_menu.add_action(GUI::CommonActions::make_command_palette_action(this));
     help_menu.add_action(WindowActions::the().about_action());
 }
 
