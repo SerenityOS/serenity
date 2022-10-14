@@ -215,7 +215,10 @@ namespace AK {
 struct Empty {
 };
 
-template<typename... Ts>
+template<typename T>
+concept NotLvalueReference = !IsLvalueReference<T>;
+
+template<NotLvalueReference... Ts>
 struct Variant
     : public Detail::MergeAndDeduplicatePacks<Detail::VariantConstructors<Ts, Variant<Ts...>>...> {
 private:
@@ -244,7 +247,7 @@ public:
     {
     }
 
-    template<typename... NewTs>
+    template<NotLvalueReference... NewTs>
     friend struct Variant;
 
     Variant() requires(!can_contain<Empty>()) = delete;
