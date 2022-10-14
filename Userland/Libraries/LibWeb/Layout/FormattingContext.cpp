@@ -1056,49 +1056,44 @@ void FormattingContext::compute_inset(Box const& box)
     resolve_two_opposing_insets(computed_values.inset().top(), computed_values.inset().bottom(), box_state.inset_top, box_state.inset_bottom, containing_block_height_for(box));
 }
 
-float FormattingContext::calculate_fit_content_size(float min_content_size, float max_content_size, AvailableSize const& available_size) const
+// https://drafts.csswg.org/css-sizing-3/#fit-content-size
+float FormattingContext::calculate_fit_content_width(Layout::Box const& box, AvailableSpace const& available_space) const
 {
-    // If the available space in a given axis is definite, equal to clamp(min-content size, stretch-fit size, max-content size)
+    // If the available space in a given axis is definite,
+    // equal to clamp(min-content size, stretch-fit size, max-content size)
     // (i.e. max(min-content size, min(max-content size, stretch-fit size))).
-    if (available_size.is_definite()) {
-        // FIXME: Compute the real stretch-fit size.
-        auto stretch_fit_size = available_size.to_px();
-        auto s = max(min_content_size, min(max_content_size, stretch_fit_size));
-        return s;
+    if (available_space.width.is_definite()) {
+        return max(calculate_min_content_width(box),
+            min(calculate_stretch_fit_width(box, available_space.width),
+                calculate_max_content_width(box)));
     }
 
     // When sizing under a min-content constraint, equal to the min-content size.
-    if (available_size.is_min_content())
-        return min_content_size;
-
-    // Otherwise, equal to the max-content size in that axis.
-    return max_content_size;
-}
-
-float FormattingContext::calculate_fit_content_width(Layout::Box const& box, AvailableSpace const& available_space) const
-{
-    // When sizing under a min-content constraint, equal to the min-content size.
-    // NOTE: We check this first, to avoid needlessly calculating the max-content size.
     if (available_space.width.is_min_content())
         return calculate_min_content_width(box);
 
-    if (available_space.width.is_max_content())
-        return calculate_max_content_width(box);
-
-    return calculate_fit_content_size(calculate_min_content_width(box), calculate_max_content_width(box), available_space.width);
+    // Otherwise, equal to the max-content size in that axis.
+    return calculate_max_content_width(box);
 }
 
+// https://drafts.csswg.org/css-sizing-3/#fit-content-size
 float FormattingContext::calculate_fit_content_height(Layout::Box const& box, AvailableSpace const& available_space) const
 {
+    // If the available space in a given axis is definite,
+    // equal to clamp(min-content size, stretch-fit size, max-content size)
+    // (i.e. max(min-content size, min(max-content size, stretch-fit size))).
+    if (available_space.height.is_definite()) {
+        return max(calculate_min_content_height(box, available_space.width),
+            min(calculate_stretch_fit_height(box, available_space.height),
+                calculate_max_content_height(box, available_space.width)));
+    }
+
     // When sizing under a min-content constraint, equal to the min-content size.
-    // NOTE: We check this first, to avoid needlessly calculating the max-content size.
     if (available_space.height.is_min_content())
         return calculate_min_content_height(box, available_space.width);
 
-    if (available_space.height.is_max_content())
-        return calculate_max_content_height(box, available_space.width);
-
-    return calculate_fit_content_size(calculate_min_content_height(box, available_space.width), calculate_max_content_height(box, available_space.width), available_space.height);
+    // Otherwise, equal to the max-content size in that axis.
+    return calculate_max_content_height(box, available_space.width);
 }
 
 float FormattingContext::calculate_min_content_width(Layout::Box const& box) const
@@ -1380,6 +1375,22 @@ float FormattingContext::calculate_stretch_fit_width(Box const& box, AvailableSi
         - box_state.padding_right
         - box_state.border_left
         - box_state.border_right;
+}
+
+// https://drafts.csswg.org/css-sizing-3/#stretch-fit-size
+float FormattingContext::calculate_stretch_fit_height(Box const& box, AvailableSize const& available_height) const
+{
+    // The size a box would take if its outer size filled the available space in the given axis;
+    // in other words, the stretch fit into the available space, if that is definite.
+    // Undefined if the available space is indefinite.
+    auto const& box_state = m_state.get(box);
+    return available_height.to_px()
+        - box_state.margin_top
+        - box_state.margin_bottom
+        - box_state.padding_top
+        - box_state.padding_bottom
+        - box_state.border_top
+        - box_state.border_bottom;
 }
 
 }
