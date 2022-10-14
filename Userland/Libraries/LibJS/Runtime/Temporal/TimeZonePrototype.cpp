@@ -70,8 +70,8 @@ JS_DEFINE_NATIVE_FUNCTION(TimeZonePrototype::get_offset_nanoseconds_for)
     if (time_zone->offset_nanoseconds().has_value())
         return Value(*time_zone->offset_nanoseconds());
 
-    // 5. Return 𝔽(GetIANATimeZoneOffsetNanoseconds(instant.[[Nanoseconds]], timeZone.[[Identifier]])).
-    return Value((double)get_iana_time_zone_offset_nanoseconds(instant->nanoseconds(), time_zone->identifier()));
+    // 5. Return 𝔽(GetNamedTimeZoneOffsetNanoseconds(timeZone.[[Identifier]], instant.[[Nanoseconds]])).
+    return Value((double)get_named_time_zone_offset_nanoseconds(time_zone->identifier(), instant->nanoseconds().big_integer()));
 }
 
 // 11.4.5 Temporal.TimeZone.prototype.getOffsetStringFor ( instant ), https://tc39.es/proposal-temporal/#sec-temporal.timezone.prototype.getoffsetstringfor
