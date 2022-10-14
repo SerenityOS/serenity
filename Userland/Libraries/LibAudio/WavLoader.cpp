@@ -72,10 +72,13 @@ static ErrorOr<double> read_sample_int24(Core::Stream::Stream& stream)
     i32 sample3 = byte;
 
     i32 value = 0;
-    value = sample1 << 8;
-    value |= sample2 << 16;
-    value |= sample3 << 24;
-    return static_cast<double>(value) / static_cast<double>((1 << 24) - 1);
+    value = sample1;
+    value |= sample2 << 8;
+    value |= sample3 << 16;
+    // Sign extend the value, as it can currently not have the correct sign.
+    value = (value << 8) >> 8;
+    // Range of value is now -2^23 to 2^23-1 and we can rescale normally.
+    return static_cast<double>(value) / static_cast<double>((1 << 23) - 1);
 }
 
 template<typename T>
