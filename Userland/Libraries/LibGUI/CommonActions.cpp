@@ -10,6 +10,7 @@
 #include <LibCore/Version.h>
 #include <LibGUI/AboutDialog.h>
 #include <LibGUI/Action.h>
+#include <LibGUI/CommandPalette.h>
 #include <LibGUI/Icon.h>
 
 namespace GUI {
@@ -195,6 +196,22 @@ NonnullRefPtr<Action> make_rotate_clockwise_action(Function<void(Action&)> callb
 NonnullRefPtr<Action> make_rotate_counterclockwise_action(Function<void(Action&)> callback, Core::Object* parent)
 {
     return GUI::Action::create("Rotate &Counterclockwise", { Mod_Ctrl | Mod_Shift, Key_LessThan }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-rotate-ccw.png"sv).release_value_but_fixme_should_propagate_errors(), move(callback), parent);
+}
+
+NonnullRefPtr<Action> make_command_palette_action(Window* window)
+{
+    auto action = Action::create("&Commands...", { Mod_Ctrl | Mod_Shift, Key_A }, MUST(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/find.png"sv)), [=](auto&) {
+        auto command_palette = CommandPalette::construct(*window);
+        command_palette->set_window_mode(GUI::WindowMode::CaptureInput);
+        if (command_palette->exec() != GUI::Dialog::ExecResult::OK)
+            return;
+        auto* action = command_palette->selected_action();
+        VERIFY(action);
+        action->flash_menubar_menu(*window);
+        action->activate();
+    });
+    action->set_status_tip("Open the command palette");
+    return action;
 }
 
 }
