@@ -14,7 +14,7 @@ static bool s_set_variable = false;
 
 static String get_variable(StringView name)
 {
-    auto path = String::formatted("/proc/sys/{}", name);
+    auto path = String::formatted("/sys/kernel/variables/{}", name);
     auto file = Core::File::construct(path);
     if (!file->open(Core::OpenMode::ReadOnly)) {
         warnln("Failed to open {}: {}", path, file->error_string());
@@ -42,7 +42,7 @@ static bool write_variable(StringView name, StringView value)
     auto old_value = get_variable(name);
     if (old_value.is_null())
         return false;
-    auto path = String::formatted("/proc/sys/{}", name);
+    auto path = String::formatted("/sys/kernel/variables/{}", name);
     auto file = Core::File::construct(path);
     if (!file->open(Core::OpenMode::WriteOnly)) {
         warnln("Failed to open {}: {}", path, file->error_string());
@@ -80,7 +80,7 @@ static int handle_variables(Vector<StringView> const& variables)
 
 static int handle_show_all()
 {
-    Core::DirIterator di("/proc/sys", Core::DirIterator::SkipDots);
+    Core::DirIterator di("/sys/kernel/variables", Core::DirIterator::SkipDots);
     if (di.has_error()) {
         outln("DirIterator: {}", di.error_string());
         return 1;
