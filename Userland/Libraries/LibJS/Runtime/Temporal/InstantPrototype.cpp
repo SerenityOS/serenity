@@ -63,7 +63,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::epoch_seconds_getter)
     // 3. Let ns be instant.[[Nanoseconds]].
     auto& ns = instant->nanoseconds();
 
-    // 4. Let s be RoundTowardsZero(ℝ(ns) / 10^9).
+    // 4. Let s be truncate(ℝ(ns) / 10^9).
     auto [s, _] = ns.big_integer().divided_by(Crypto::UnsignedBigInteger { 1'000'000'000 });
 
     // 5. Return 𝔽(s).
@@ -80,7 +80,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::epoch_milliseconds_getter)
     // 3. Let ns be instant.[[Nanoseconds]].
     auto& ns = instant->nanoseconds();
 
-    // 4. Let ms be RoundTowardsZero(ℝ(ns) / 10^6).
+    // 4. Let ms be truncate(ℝ(ns) / 10^6).
     auto [ms, _] = ns.big_integer().divided_by(Crypto::UnsignedBigInteger { 1'000'000 });
 
     // 5. Return 𝔽(ms).
@@ -97,7 +97,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::epoch_microseconds_getter)
     // 3. Let ns be instant.[[Nanoseconds]].
     auto& ns = instant->nanoseconds();
 
-    // 4. Let µs be RoundTowardsZero(ℝ(ns) / 10^3).
+    // 4. Let µs be truncate(ℝ(ns) / 10^3).
     auto [us, _] = ns.big_integer().divided_by(Crypto::UnsignedBigInteger { 1'000 });
 
     // 5. Return ℤ(µs).

@@ -352,7 +352,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::epoch_seconds_getter)
     // 3. Let ns be zonedDateTime.[[Nanoseconds]].
     auto& ns = zoned_date_time->nanoseconds();
 
-    // 4. Let s be RoundTowardsZero(ℝ(ns) / 10^9).
+    // 4. Let s be truncate(ℝ(ns) / 10^9).
     auto s = ns.big_integer().divided_by(Crypto::UnsignedBigInteger { 1'000'000'000 }).quotient;
 
     // 5. Return 𝔽(s).
@@ -369,7 +369,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::epoch_milliseconds_getter)
     // 3. Let ns be zonedDateTime.[[Nanoseconds]].
     auto& ns = zoned_date_time->nanoseconds();
 
-    // 4. Let ms be RoundTowardsZero(ℝ(ns) / 10^6).
+    // 4. Let ms be truncate(ℝ(ns) / 10^6).
     auto ms = ns.big_integer().divided_by(Crypto::UnsignedBigInteger { 1'000'000 }).quotient;
 
     // 5. Return 𝔽(ms).
@@ -386,7 +386,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::epoch_microseconds_getter)
     // 3. Let ns be zonedDateTime.[[Nanoseconds]].
     auto& ns = zoned_date_time->nanoseconds();
 
-    // 4. Let µs be RoundTowardsZero(ℝ(ns) / 10^3).
+    // 4. Let µs be truncate(ℝ(ns) / 10^3).
     auto us = ns.big_integer().divided_by(Crypto::UnsignedBigInteger { 1'000 }).quotient;
 
     // 5. Return ℤ(µs).

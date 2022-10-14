@@ -381,7 +381,7 @@ ThrowCompletionOr<SecondsStringPrecision> to_seconds_string_precision(VM& vm, Ob
     if (fractional_digits_value.is_nan() || fractional_digits_value.is_infinity())
         return vm.template throw_completion<RangeError>(ErrorType::OptionIsNotValidValue, fractional_digits_value, "fractionalSecondDigits"sv);
 
-    // 12. Let fractionalDigitCount be RoundTowardsZero(ℝ(fractionalDigitsVal)).
+    // 12. Let fractionalDigitCount be truncate(ℝ(fractionalDigitsVal)).
     auto fractional_digit_count_unchecked = trunc(fractional_digits_value.as_double());
 
     // 13. If fractionalDigitCount < 0 or fractionalDigitCount > 9, throw a RangeError exception.
