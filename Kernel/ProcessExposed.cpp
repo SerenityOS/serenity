@@ -110,79 +110,6 @@ ProcFSExposedLink::ProcFSExposedLink(StringView name)
     : ProcFSExposedComponent(name)
 {
 }
-ErrorOr<size_t> ProcFSGlobalInformation::read_bytes(off_t offset, size_t count, UserOrKernelBuffer& buffer, OpenFileDescription* description) const
-{
-    dbgln_if(PROCFS_DEBUG, "ProcFSGlobalInformation @ {}: read_bytes offset: {} count: {}", name(), offset, count);
-
-    VERIFY(offset >= 0);
-    VERIFY(buffer.user_or_kernel_ptr());
-
-    if (!description)
-        return Error::from_errno(EIO);
-
-    MutexLocker locker(m_refresh_lock);
-
-    if (!description->data()) {
-        dbgln("ProcFSGlobalInformation: Do not have cached data!");
-        return Error::from_errno(EIO);
-    }
-
-    auto& typed_cached_data = static_cast<ProcFSInodeData&>(*description->data());
-    auto& data_buffer = typed_cached_data.buffer;
-
-    if (!data_buffer || (size_t)offset >= data_buffer->size())
-        return 0;
-
-    ssize_t nread = min(static_cast<off_t>(data_buffer->size() - offset), static_cast<off_t>(count));
-    TRY(buffer.write(data_buffer->data() + offset, nread));
-    return nread;
-}
-
-ErrorOr<void> ProcFSGlobalInformation::refresh_data(OpenFileDescription& description) const
-{
-    MutexLocker lock(m_refresh_lock);
-    auto& cached_data = description.data();
-    if (!cached_data) {
-        cached_data = adopt_own_if_nonnull(new (nothrow) ProcFSInodeData);
-        if (!cached_data)
-            return ENOMEM;
-    }
-    auto builder = TRY(KBufferBuilder::try_create());
-    TRY(const_cast<ProcFSGlobalInformation&>(*this).try_generate(builder));
-    auto& typed_cached_data = static_cast<ProcFSInodeData&>(*cached_data);
-    typed_cached_data.buffer = builder.build();
-    if (!typed_cached_data.buffer)
-        return ENOMEM;
-    return {};
-}
-
-ErrorOr<void> ProcFSSystemBoolean::try_generate(KBufferBuilder& builder)
-{
-    return builder.appendff("{}\n", static_cast<int>(value()));
-}
-
-ErrorOr<size_t> ProcFSSystemBoolean::write_bytes(off_t, size_t count, UserOrKernelBuffer const& buffer, OpenFileDescription*)
-{
-    if (count != 1)
-        return EINVAL;
-    MutexLocker locker(m_refresh_lock);
-    char value = 0;
-    TRY(buffer.read(&value, 1));
-    if (value == '0')
-        set_value(false);
-    else if (value == '1')
-        set_value(true);
-    else
-        return EINVAL;
-    return 1;
-}
-
-ErrorOr<void> ProcFSSystemBoolean::truncate(u64 size)
-{
-    if (size != 0)
-        return EPERM;
-    return {};
-}
 
 ErrorOr<size_t> ProcFSExposedLink::read_bytes(off_t offset, size_t count, UserOrKernelBuffer& buffer, OpenFileDescription*) const
 {
@@ -203,11 +130,6 @@ ErrorOr<size_t> ProcFSExposedLink::read_bytes(off_t offset, size_t count, UserOr
 ErrorOr<NonnullLockRefPtr<Inode>> ProcFSExposedLink::to_inode(ProcFS const& procfs_instance) const
 {
     return TRY(ProcFSLinkInode::try_create(procfs_instance, *this));
-}
-
-ErrorOr<NonnullLockRefPtr<Inode>> ProcFSExposedComponent::to_inode(ProcFS const& procfs_instance) const
-{
-    return TRY(ProcFSGlobalInode::try_create(procfs_instance, *this));
 }
 
 ErrorOr<NonnullLockRefPtr<Inode>> ProcFSExposedDirectory::to_inode(ProcFS const& procfs_instance) const
@@ -244,6 +166,85 @@ ErrorOr<void> ProcFSExposedDirectory::traverse_as_directory(FileSystemID fsid, F
         TRY(callback({ component.name(), identifier, 0 }));
     }
     return {};
+}
+
+class ProcFSSelfProcessDirectory final : public ProcFSExposedLink {
+public:
+    static NonnullLockRefPtr<ProcFSSelfProcessDirectory> must_create();
+
+private:
+    ProcFSSelfProcessDirectory();
+    virtual bool acquire_link(KBufferBuilder& builder) override
+    {
+        return !builder.appendff("{}", Process::current().pid().value()).is_error();
+    }
+};
+UNMAP_AFTER_INIT NonnullLockRefPtr<ProcFSSelfProcessDirectory> ProcFSSelfProcessDirectory::must_create()
+{
+    return adopt_lock_ref_if_nonnull(new (nothrow) ProcFSSelfProcessDirectory()).release_nonnull();
+}
+UNMAP_AFTER_INIT ProcFSSelfProcessDirectory::ProcFSSelfProcessDirectory()
+    : ProcFSExposedLink("self"sv)
+{
+}
+
+UNMAP_AFTER_INIT NonnullLockRefPtr<ProcFSRootDirectory> ProcFSRootDirectory::must_create()
+{
+    auto directory = adopt_lock_ref(*new (nothrow) ProcFSRootDirectory);
+    directory->m_components.append(ProcFSSelfProcessDirectory::must_create());
+    return directory;
+}
+
+ErrorOr<void> ProcFSRootDirectory::traverse_as_directory(FileSystemID fsid, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)> callback) const
+{
+    MutexLocker locker(ProcFSComponentRegistry::the().get_lock());
+    TRY(callback({ "."sv, { fsid, component_index() }, 0 }));
+    TRY(callback({ ".."sv, { fsid, 0 }, 0 }));
+
+    for (auto const& component : m_components) {
+        InodeIdentifier identifier = { fsid, component.component_index() };
+        TRY(callback({ component.name(), identifier, 0 }));
+    }
+
+    return Process::all_instances().with([&](auto& list) -> ErrorOr<void> {
+        for (auto& process : list) {
+            VERIFY(!(process.pid() < 0));
+            u64 process_id = (u64)process.pid().value();
+            InodeIdentifier identifier = { fsid, static_cast<InodeIndex>(process_id << 36) };
+            auto process_id_string = TRY(KString::formatted("{:d}", process_id));
+            TRY(callback({ process_id_string->view(), identifier, 0 }));
+        }
+        return {};
+    });
+}
+
+ErrorOr<NonnullLockRefPtr<ProcFSExposedComponent>> ProcFSRootDirectory::lookup(StringView name)
+{
+    auto maybe_candidate = ProcFSExposedDirectory::lookup(name);
+    if (maybe_candidate.is_error()) {
+        if (maybe_candidate.error().code() != ENOENT) {
+            return maybe_candidate.release_error();
+        }
+    } else {
+        return maybe_candidate.release_value();
+    }
+
+    auto pid = name.to_uint<unsigned>();
+    if (!pid.has_value())
+        return ESRCH;
+    auto actual_pid = pid.value();
+
+    if (auto maybe_process = Process::from_pid(actual_pid))
+        return maybe_process->procfs_traits();
+
+    return ENOENT;
+}
+
+UNMAP_AFTER_INIT ProcFSRootDirectory::~ProcFSRootDirectory() = default;
+
+UNMAP_AFTER_INIT ProcFSRootDirectory::ProcFSRootDirectory()
+    : ProcFSExposedDirectory("."sv)
+{
 }
 
 }
