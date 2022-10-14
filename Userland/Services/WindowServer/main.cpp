@@ -31,7 +31,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
     TRY(Core::System::unveil("/dev/gpu/", "rw"));
     TRY(Core::System::unveil("/dev/input/", "rw"));
     TRY(Core::System::unveil("/bin/keymap", "x"));
-    TRY(Core::System::unveil("/proc/keymap", "r"));
+    TRY(Core::System::unveil("/sys/kernel/keymap", "r"));
 
     struct sigaction act = {};
     act.sa_flags = SA_NOCLDWAIT;

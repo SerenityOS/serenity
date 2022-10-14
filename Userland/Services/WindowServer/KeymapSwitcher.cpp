@@ -90,7 +90,7 @@ void KeymapSwitcher::next_keymap()
 
 String KeymapSwitcher::get_current_keymap() const
 {
-    auto proc_keymap = Core::File::construct("/proc/keymap");
+    auto proc_keymap = Core::File::construct("/sys/kernel/keymap");
     if (!proc_keymap->open(Core::OpenMode::ReadOnly))
         VERIFY_NOT_REACHED();
 

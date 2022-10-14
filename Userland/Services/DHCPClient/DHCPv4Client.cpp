@@ -177,7 +177,7 @@ void DHCPv4Client::try_discover_ifs()
 
 ErrorOr<DHCPv4Client::Interfaces> DHCPv4Client::get_discoverable_interfaces()
 {
-    auto file = TRY(Core::File::open("/proc/net/adapters", Core::OpenMode::ReadOnly));
+    auto file = TRY(Core::File::open("/sys/kernel/net/adapters", Core::OpenMode::ReadOnly));
 
     auto file_contents = file->read_all();
     auto json = JsonValue::from_string(file_contents);

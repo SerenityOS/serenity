@@ -70,7 +70,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/etc/shadow", "r"));
     TRY(Core::System::unveil("/etc/group", "r"));
     TRY(Core::System::unveil("/bin/SystemServer", "x"));
-    TRY(Core::System::unveil("/proc/all", "r"));
+    TRY(Core::System::unveil("/sys/kernel/processes", "r"));
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 

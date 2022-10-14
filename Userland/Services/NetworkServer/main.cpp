@@ -18,7 +18,7 @@
 ErrorOr<int> serenity_main(Main::Arguments)
 {
     TRY(Core::System::pledge("stdio recvfd sendfd rpath unix exec proc"));
-    TRY(Core::System::unveil("/proc/net", "r"));
+    TRY(Core::System::unveil("/sys/kernel/net", "r"));
     TRY(Core::System::unveil("/bin/DHCPClient", "x"));
     TRY(Core::System::unveil("/etc/Network.ini", "r"));
     TRY(Core::System::unveil("/bin/ifconfig", "x"));
@@ -28,7 +28,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
 
     auto config_file = TRY(Core::ConfigFile::open_for_system("Network"));
 
-    auto proc_net_adapters_file = TRY(Core::Stream::File::open("/proc/net/adapters"sv, Core::Stream::OpenMode::Read));
+    auto proc_net_adapters_file = TRY(Core::Stream::File::open("/sys/kernel/net/adapters"sv, Core::Stream::OpenMode::Read));
     auto data = TRY(proc_net_adapters_file->read_all());
     JsonParser parser(data);
     JsonValue proc_net_adapters_json = TRY(parser.parse());

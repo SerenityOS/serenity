@@ -17,7 +17,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
     auto server = TRY(LookupServer::LookupServer::try_create());
 
     TRY(Core::System::pledge("stdio accept inet rpath"));
-    TRY(Core::System::unveil("/proc/net/adapters", "r"));
+    TRY(Core::System::unveil("/sys/kernel/net/adapters", "r"));
     TRY(Core::System::unveil("/etc/hosts", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
     return event_loop.exec();
