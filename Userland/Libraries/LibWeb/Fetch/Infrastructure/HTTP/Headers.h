@@ -45,6 +45,11 @@ public:
     [[nodiscard]] Optional<MimeSniff::MimeType> extract_mime_type() const;
 };
 
+struct RangeHeaderValue {
+    Optional<u64> start;
+    Optional<u64> end;
+};
+
 [[nodiscard]] ErrorOr<OrderedHashTable<ByteBuffer>> convert_header_names_to_a_sorted_lowercase_set(Span<ReadonlyBytes>);
 [[nodiscard]] bool is_header_name(ReadonlyBytes);
 [[nodiscard]] bool is_header_value(ReadonlyBytes);
@@ -60,6 +65,6 @@ public:
 [[nodiscard]] bool is_forbidden_header_name(ReadonlyBytes);
 [[nodiscard]] bool is_forbidden_response_header_name(ReadonlyBytes);
 [[nodiscard]] bool is_request_body_header_name(ReadonlyBytes);
-[[nodiscard]] bool is_simple_range_header_value(ReadonlyBytes);
+[[nodiscard]] Optional<RangeHeaderValue> parse_single_range_header_value(ReadonlyBytes);
 
 }
