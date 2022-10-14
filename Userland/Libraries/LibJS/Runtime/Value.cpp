@@ -524,7 +524,7 @@ static Optional<NumberParseResult> parse_number_text(StringView text)
 }
 
 // 7.1.4.1.1 StringToNumber ( str ), https://tc39.es/ecma262/#sec-stringtonumber
-static Optional<Value> string_to_number(StringView string)
+Optional<Value> string_to_number(StringView string)
 {
     // 1. Let text be StringToCodePoints(str).
     String text = Utf8View(string).trim(whitespace_characters, AK::TrimMode::Both).as_string();

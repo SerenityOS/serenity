@@ -564,6 +564,8 @@ ThrowCompletionOr<TriState> is_less_than(VM&, Value lhs, Value rhs, bool left_fi
 
 double to_integer_or_infinity(double);
 
+Optional<Value> string_to_number(StringView);
+
 inline bool Value::operator==(Value const& value) const { return same_value(*this, value); }
 
 }
