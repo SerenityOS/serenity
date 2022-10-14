@@ -154,7 +154,7 @@ ThrowCompletionOr<PlainMonthDay*> create_temporal_month_day(VM& vm, u8 iso_month
         return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidPlainMonthDay);
 
     // 4. If ISODateTimeWithinLimits(referenceISOYear, isoMonth, isoDay, 12, 0, 0, 0, 0, 0) is false, throw a RangeError exception.
-    if (!iso_date_time_within_limits(vm, reference_iso_year, iso_month, iso_day, 12, 0, 0, 0, 0, 0))
+    if (!iso_date_time_within_limits(reference_iso_year, iso_month, iso_day, 12, 0, 0, 0, 0, 0))
         return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidPlainMonthDay);
 
     // 5. If newTarget is not present, set newTarget to %Temporal.PlainMonthDay%.

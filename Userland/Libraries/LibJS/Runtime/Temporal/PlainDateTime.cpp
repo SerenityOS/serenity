@@ -44,42 +44,19 @@ void PlainDateTime::visit_edges(Visitor& visitor)
     visitor.visit(&m_calendar);
 }
 
-// 5.5.1 GetEpochFromISOParts ( year, month, day, hour, minute, second, millisecond, microsecond, nanosecond ), https://tc39.es/proposal-temporal/#sec-temporal-getepochfromisoparts
-BigInt* get_epoch_from_iso_parts(VM& vm, i32 year, u8 month, u8 day, u8 hour, u8 minute, u8 second, u16 millisecond, u16 microsecond, u16 nanosecond)
-{
-    // 1. Assert: IsValidISODate(year, month, day) is true.
-    VERIFY(is_valid_iso_date(year, month, day));
-
-    // 2. Let date be MakeDay(𝔽(year), 𝔽(month - 1), 𝔽(day)).
-    auto date = make_day(year, month - 1, day);
-
-    // 3. Let time be MakeTime(𝔽(hour), 𝔽(minute), 𝔽(second), 𝔽(millisecond)).
-    auto time = make_time(hour, minute, second, millisecond);
-
-    // 4. Let ms be MakeDate(date, time).
-    auto ms = make_date(date, time);
-
-    // 5. Assert: ms is finite.
-    VERIFY(isfinite(ms));
-
-    // 6. Return ℤ(ℝ(ms) × 10^6 + microsecond × 10^3 + nanosecond).
-    i32 signed_nanoseconds = nanosecond;
-    return js_bigint(vm, Crypto::SignedBigInteger { ms }.multiplied_by(Crypto::UnsignedBigInteger { 1'000'000 }).plus(Crypto::SignedBigInteger { microsecond * 1000 }).plus(Crypto::SignedBigInteger { signed_nanoseconds }));
-}
-
 // nsMinInstant - nsPerDay
 auto const DATETIME_NANOSECONDS_MIN = "-8640000086400000000000"_sbigint;
 // nsMaxInstant + nsPerDay
 auto const DATETIME_NANOSECONDS_MAX = "8640000086400000000000"_sbigint;
 
-// 5.5.2 ISODateTimeWithinLimits ( year, month, day, hour, minute, second, millisecond, microsecond, nanosecond ), https://tc39.es/proposal-temporal/#sec-temporal-isodatetimewithinlimits
-bool iso_date_time_within_limits(VM& vm, i32 year, u8 month, u8 day, u8 hour, u8 minute, u8 second, u16 millisecond, u16 microsecond, u16 nanosecond)
+// 5.5.1 ISODateTimeWithinLimits ( year, month, day, hour, minute, second, millisecond, microsecond, nanosecond ), https://tc39.es/proposal-temporal/#sec-temporal-isodatetimewithinlimits
+bool iso_date_time_within_limits(i32 year, u8 month, u8 day, u8 hour, u8 minute, u8 second, u16 millisecond, u16 microsecond, u16 nanosecond)
 {
     // 1. Assert: IsValidISODate(year, month, day) is true.
     VERIFY(is_valid_iso_date(year, month, day));
 
-    // 2. Let ns be ℝ(GetEpochFromISOParts(year, month, day, hour, minute, second, millisecond, microsecond, nanosecond)).
-    auto ns = get_epoch_from_iso_parts(vm, year, month, day, hour, minute, second, millisecond, microsecond, nanosecond)->big_integer();
+    // 2. Let ns be ℝ(GetUTCEpochNanoseconds(year, month, day, hour, minute, second, millisecond, microsecond, nanosecond)).
+    auto ns = get_utc_epoch_nanoseconds(year, month, day, hour, minute, second, millisecond, microsecond, nanosecond);
 
     // 3. If ns ≤ nsMinInstant - nsPerDay, then
     if (ns <= DATETIME_NANOSECONDS_MIN) {
@@ -96,7 +73,7 @@ bool iso_date_time_within_limits(VM& vm, i32 year, u8 month, u8 day, u8 hour, u8
     return true;
 }
 
-// 5.5.3 InterpretTemporalDateTimeFields ( calendar, fields, options ), https://tc39.es/proposal-temporal/#sec-temporal-interprettemporaldatetimefields
+// 5.5.2 InterpretTemporalDateTimeFields ( calendar, fields, options ), https://tc39.es/proposal-temporal/#sec-temporal-interprettemporaldatetimefields
 ThrowCompletionOr<ISODateTime> interpret_temporal_date_time_fields(VM& vm, Object& calendar, Object& fields, Object const& options)
 {
     // 1. Let timeResult be ? ToTemporalTimeRecord(fields).
@@ -125,7 +102,7 @@ ThrowCompletionOr<ISODateTime> interpret_temporal_date_time_fields(VM& vm, Objec
     };
 }
 
-// 5.5.4 ToTemporalDateTime ( item [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal-totemporaldatetime
+// 5.5.3 ToTemporalDateTime ( item [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal-totemporaldatetime
 ThrowCompletionOr<PlainDateTime*> to_temporal_date_time(VM& vm, Value item, Object const* options)
 {
     // 1. If options is not present, set options to undefined.
@@ -206,7 +183,7 @@ ThrowCompletionOr<PlainDateTime*> to_temporal_date_time(VM& vm, Value item, Obje
     return create_temporal_date_time(vm, result.year, result.month, result.day, result.hour, result.minute, result.second, result.millisecond, result.microsecond, result.nanosecond, *calendar);
 }
 
-// 5.5.5 BalanceISODateTime ( year, month, day, hour, minute, second, millisecond, microsecond, nanosecond ), https://tc39.es/proposal-temporal/#sec-temporal-balanceisodatetime
+// 5.5.4 BalanceISODateTime ( year, month, day, hour, minute, second, millisecond, microsecond, nanosecond ), https://tc39.es/proposal-temporal/#sec-temporal-balanceisodatetime
 ISODateTime balance_iso_date_time(i32 year, u8 month, u8 day, u8 hour, u8 minute, u8 second, u16 millisecond, u16 microsecond, i64 nanosecond)
 {
     // NOTE: The only use of this AO is in BuiltinTimeZoneGetPlainDateTimeFor, where we know that all values
@@ -225,7 +202,7 @@ ISODateTime balance_iso_date_time(i32 year, u8 month, u8 day, u8 hour, u8 minute
     return ISODateTime { .year = balanced_date.year, .month = balanced_date.month, .day = balanced_date.day, .hour = balanced_time.hour, .minute = balanced_time.minute, .second = balanced_time.second, .millisecond = balanced_time.millisecond, .microsecond = balanced_time.microsecond, .nanosecond = balanced_time.nanosecond };
 }
 
-// 5.5.6 CreateTemporalDateTime ( isoYear, isoMonth, isoDay, hour, minute, second, millisecond, microsecond, nanosecond, calendar [ , newTarget ] ), https://tc39.es/proposal-temporal/#sec-temporal-createtemporaldatetime
+// 5.5.5 CreateTemporalDateTime ( isoYear, isoMonth, isoDay, hour, minute, second, millisecond, microsecond, nanosecond, calendar [ , newTarget ] ), https://tc39.es/proposal-temporal/#sec-temporal-createtemporaldatetime
 ThrowCompletionOr<PlainDateTime*> create_temporal_date_time(VM& vm, i32 iso_year, u8 iso_month, u8 iso_day, u8 hour, u8 minute, u8 second, u16 millisecond, u16 microsecond, u16 nanosecond, Object& calendar, FunctionObject const* new_target)
 {
     auto& realm = *vm.current_realm();
@@ -242,7 +219,7 @@ ThrowCompletionOr<PlainDateTime*> create_temporal_date_time(VM& vm, i32 iso_year
         return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidPlainDateTime);
 
     // 5. If ISODateTimeWithinLimits(isoYear, isoMonth, isoDay, hour, minute, second, millisecond, microsecond, nanosecond) is false, then
-    if (!iso_date_time_within_limits(vm, iso_year, iso_month, iso_day, hour, minute, second, millisecond, microsecond, nanosecond)) {
+    if (!iso_date_time_within_limits(iso_year, iso_month, iso_day, hour, minute, second, millisecond, microsecond, nanosecond)) {
         // a. Throw a RangeError exception.
         return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidPlainDateTime);
     }
@@ -268,7 +245,7 @@ ThrowCompletionOr<PlainDateTime*> create_temporal_date_time(VM& vm, i32 iso_year
     return object;
 }
 
-// 5.5.7 TemporalDateTimeToString ( isoYear, isoMonth, isoDay, hour, minute, second, millisecond, microsecond, nanosecond, calendar, precision, showCalendar ), https://tc39.es/proposal-temporal/#sec-temporal-temporaldatetimetostring
+// 5.5.6 TemporalDateTimeToString ( isoYear, isoMonth, isoDay, hour, minute, second, millisecond, microsecond, nanosecond, calendar, precision, showCalendar ), https://tc39.es/proposal-temporal/#sec-temporal-temporaldatetimetostring
 ThrowCompletionOr<String> temporal_date_time_to_string(VM& vm, i32 iso_year, u8 iso_month, u8 iso_day, u8 hour, u8 minute, u8 second, u16 millisecond, u16 microsecond, u16 nanosecond, Object const* calendar, Variant<StringView, u8> const& precision, StringView show_calendar)
 {
     // 1. Assert: isoYear, isoMonth, isoDay, hour, minute, second, millisecond, microsecond, and nanosecond are integers.
@@ -289,7 +266,7 @@ ThrowCompletionOr<String> temporal_date_time_to_string(VM& vm, i32 iso_year, u8 
     return String::formatted("{}-{:02}-{:02}T{:02}:{:02}{}{}", pad_iso_year(iso_year), iso_month, iso_day, hour, minute, seconds, calendar_string);
 }
 
-// 5.5.8 CompareISODateTime ( y1, mon1, d1, h1, min1, s1, ms1, mus1, ns1, y2, mon2, d2, h2, min2, s2, ms2, mus2, ns2 ), https://tc39.es/proposal-temporal/#sec-temporal-compareisodatetime
+// 5.5.7 CompareISODateTime ( y1, mon1, d1, h1, min1, s1, ms1, mus1, ns1, y2, mon2, d2, h2, min2, s2, ms2, mus2, ns2 ), https://tc39.es/proposal-temporal/#sec-temporal-compareisodatetime
 i8 compare_iso_date_time(i32 year1, u8 month1, u8 day1, u8 hour1, u8 minute1, u8 second1, u16 millisecond1, u16 microsecond1, u16 nanosecond1, i32 year2, u8 month2, u8 day2, u8 hour2, u8 minute2, u8 second2, u16 millisecond2, u16 microsecond2, u16 nanosecond2)
 {
     // 1. Assert: y1, mon1, d1, h1, min1, s1, ms1, mus1, ns1, y2, mon2, d2, h2, min2, s2, ms2, mus2, and ns2 are integers.
@@ -307,11 +284,11 @@ i8 compare_iso_date_time(i32 year1, u8 month1, u8 day1, u8 hour1, u8 minute1, u8
     return compare_temporal_time(hour1, minute1, second1, millisecond1, microsecond1, nanosecond1, hour2, minute2, second2, millisecond2, microsecond2, nanosecond2);
 }
 
-// 5.5.9 AddDateTime ( year, month, day, hour, minute, second, millisecond, microsecond, nanosecond, calendar, years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds, options ), https://tc39.es/proposal-temporal/#sec-temporal-adddatetime
+// 5.5.8 AddDateTime ( year, month, day, hour, minute, second, millisecond, microsecond, nanosecond, calendar, years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds, options ), https://tc39.es/proposal-temporal/#sec-temporal-adddatetime
 ThrowCompletionOr<TemporalPlainDateTime> add_date_time(VM& vm, i32 year, u8 month, u8 day, u8 hour, u8 minute, u8 second, u16 millisecond, u16 microsecond, u16 nanosecond, Object& calendar, double years, double months, double weeks, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds, Object* options)
 {
     // 1. Assert: ISODateTimeWithinLimits(year, month, day, hour, minute, second, millisecond, microsecond, nanosecond) is true.
-    VERIFY(iso_date_time_within_limits(vm, year, month, day, hour, minute, second, millisecond, microsecond, nanosecond));
+    VERIFY(iso_date_time_within_limits(year, month, day, hour, minute, second, millisecond, microsecond, nanosecond));
 
     // 2. Let timeResult be ! AddTime(hour, minute, second, millisecond, microsecond, nanosecond, hours, minutes, seconds, milliseconds, microseconds, nanoseconds).
     auto time_result = add_time(hour, minute, second, millisecond, microsecond, nanosecond, hours, minutes, seconds, milliseconds, microseconds, nanoseconds);
@@ -329,13 +306,13 @@ ThrowCompletionOr<TemporalPlainDateTime> add_date_time(VM& vm, i32 year, u8 mont
     return TemporalPlainDateTime { .year = added_date->iso_year(), .month = added_date->iso_month(), .day = added_date->iso_day(), .hour = time_result.hour, .minute = time_result.minute, .second = time_result.second, .millisecond = time_result.millisecond, .microsecond = time_result.microsecond, .nanosecond = time_result.nanosecond };
 }
 
-// 5.5.10 RoundISODateTime ( year, month, day, hour, minute, second, millisecond, microsecond, nanosecond, increment, unit, roundingMode [ , dayLength ] ), https://tc39.es/proposal-temporal/#sec-temporal-roundisodatetime
-ISODateTime round_iso_date_time(VM& vm, i32 year, u8 month, u8 day, u8 hour, u8 minute, u8 second, u16 millisecond, u16 microsecond, u16 nanosecond, u64 increment, StringView unit, StringView rounding_mode, Optional<double> day_length)
+// 5.5.9 RoundISODateTime ( year, month, day, hour, minute, second, millisecond, microsecond, nanosecond, increment, unit, roundingMode [ , dayLength ] ), https://tc39.es/proposal-temporal/#sec-temporal-roundisodatetime
+ISODateTime round_iso_date_time(i32 year, u8 month, u8 day, u8 hour, u8 minute, u8 second, u16 millisecond, u16 microsecond, u16 nanosecond, u64 increment, StringView unit, StringView rounding_mode, Optional<double> day_length)
 {
     // 1. Assert: year, month, day, hour, minute, second, millisecond, microsecond, and nanosecond are integers.
 
     // 2. Assert: ISODateTimeWithinLimits(year, month, day, hour, minute, second, millisecond, microsecond, nanosecond) is true.
-    VERIFY(iso_date_time_within_limits(vm, year, month, day, hour, minute, second, millisecond, microsecond, nanosecond));
+    VERIFY(iso_date_time_within_limits(year, month, day, hour, minute, second, millisecond, microsecond, nanosecond));
 
     // 3. If dayLength is not present, set dayLength to nsPerDay.
     if (!day_length.has_value())
@@ -351,14 +328,14 @@ ISODateTime round_iso_date_time(VM& vm, i32 year, u8 month, u8 day, u8 hour, u8 
     return ISODateTime { .year = balance_result.year, .month = balance_result.month, .day = balance_result.day, .hour = rounded_time.hour, .minute = rounded_time.minute, .second = rounded_time.second, .millisecond = rounded_time.millisecond, .microsecond = rounded_time.microsecond, .nanosecond = rounded_time.nanosecond };
 }
 
-// 5.5.11 DifferenceISODateTime ( y1, mon1, d1, h1, min1, s1, ms1, mus1, ns1, y2, mon2, d2, h2, min2, s2, ms2, mus2, ns2, calendar, largestUnit, options ), https://tc39.es/proposal-temporal/#sec-temporal-differenceisodatetime
+// 5.5.10 DifferenceISODateTime ( y1, mon1, d1, h1, min1, s1, ms1, mus1, ns1, y2, mon2, d2, h2, min2, s2, ms2, mus2, ns2, calendar, largestUnit, options ), https://tc39.es/proposal-temporal/#sec-temporal-differenceisodatetime
 ThrowCompletionOr<DurationRecord> difference_iso_date_time(VM& vm, i32 year1, u8 month1, u8 day1, u8 hour1, u8 minute1, u8 second1, u16 millisecond1, u16 microsecond1, u16 nanosecond1, i32 year2, u8 month2, u8 day2, u8 hour2, u8 minute2, u8 second2, u16 millisecond2, u16 microsecond2, u16 nanosecond2, Object& calendar, StringView largest_unit, Object const& options)
 {
     // 1. Assert: ISODateTimeWithinLimits(y1, mon1, d1, h1, min1, s1, ms1, mus1, ns1) is true.
-    VERIFY(iso_date_time_within_limits(vm, year1, month1, day1, hour1, minute1, second1, millisecond1, microsecond1, nanosecond1));
+    VERIFY(iso_date_time_within_limits(year1, month1, day1, hour1, minute1, second1, millisecond1, microsecond1, nanosecond1));
 
     // 2. Assert: ISODateTimeWithinLimits(y2, mon2, d2, h2, min2, s2, ms2, mus2, ns2) is true.
-    VERIFY(iso_date_time_within_limits(vm, year2, month2, day2, hour2, minute2, second2, millisecond2, microsecond2, nanosecond2));
+    VERIFY(iso_date_time_within_limits(year2, month2, day2, hour2, minute2, second2, millisecond2, microsecond2, nanosecond2));
 
     // 3. Let timeDifference be ! DifferenceTime(h1, min1, s1, ms1, mus1, ns1, h2, min2, s2, ms2, mus2, ns2).
     auto time_difference = difference_time(vm, hour1, minute1, second1, millisecond1, microsecond1, nanosecond1, hour2, minute2, second2, millisecond2, microsecond2, nanosecond2);
@@ -403,7 +380,7 @@ ThrowCompletionOr<DurationRecord> difference_iso_date_time(VM& vm, i32 year1, u8
     return create_duration_record(date_difference->years(), date_difference->months(), date_difference->weeks(), balance_result.days, balance_result.hours, balance_result.minutes, balance_result.seconds, balance_result.milliseconds, balance_result.microseconds, balance_result.nanoseconds);
 }
 
-// 5.5.12 DifferenceTemporalPlainDateTime ( operation, dateTime, other, options ), https://tc39.es/proposal-temporal/#sec-temporal-differencetemporalplaindatetime
+// 5.5.11 DifferenceTemporalPlainDateTime ( operation, dateTime, other, options ), https://tc39.es/proposal-temporal/#sec-temporal-differencetemporalplaindatetime
 ThrowCompletionOr<Duration*> difference_temporal_plain_date_time(VM& vm, DifferenceOperation operation, PlainDateTime& date_time, Value other_value, Value options_value)
 {
     // 1. If operation is since, let sign be -1. Otherwise, let sign be 1.
@@ -435,7 +412,7 @@ ThrowCompletionOr<Duration*> difference_temporal_plain_date_time(VM& vm, Differe
     return MUST(create_temporal_duration(vm, sign * round_result.years, sign * round_result.months, sign * round_result.weeks, sign * result.days, sign * result.hours, sign * result.minutes, sign * result.seconds, sign * result.milliseconds, sign * result.microseconds, sign * result.nanoseconds));
 }
 
-// 5.5.13 AddDurationToOrSubtractDurationFromPlainDateTime ( operation, dateTime, temporalDurationLike, options ), https://tc39.es/proposal-temporal/#sec-temporal-adddurationtoorsubtractdurationfromplaindatetime
+// 5.5.12 AddDurationToOrSubtractDurationFromPlainDateTime ( operation, dateTime, temporalDurationLike, options ), https://tc39.es/proposal-temporal/#sec-temporal-adddurationtoorsubtractdurationfromplaindatetime
 ThrowCompletionOr<PlainDateTime*> add_duration_to_or_subtract_duration_from_plain_date_time(VM& vm, ArithmeticOperation operation, PlainDateTime& date_time, Value temporal_duration_like, Value options_value)
 {
     // 1. If operation is subtract, let sign be -1. Otherwise, let sign be 1.

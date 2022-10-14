@@ -1027,7 +1027,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::round)
     }
 
     // 20. Let roundResult be ! RoundISODateTime(temporalDateTime.[[ISOYear]], temporalDateTime.[[ISOMonth]], temporalDateTime.[[ISODay]], temporalDateTime.[[ISOHour]], temporalDateTime.[[ISOMinute]], temporalDateTime.[[ISOSecond]], temporalDateTime.[[ISOMillisecond]], temporalDateTime.[[ISOMicrosecond]], temporalDateTime.[[ISONanosecond]], roundingIncrement, smallestUnit, roundingMode, dayLengthNs).
-    auto round_result = round_iso_date_time(vm, temporal_date_time->iso_year(), temporal_date_time->iso_month(), temporal_date_time->iso_day(), temporal_date_time->iso_hour(), temporal_date_time->iso_minute(), temporal_date_time->iso_second(), temporal_date_time->iso_millisecond(), temporal_date_time->iso_microsecond(), temporal_date_time->iso_nanosecond(), rounding_increment, *smallest_unit, rounding_mode, day_length_ns);
+    auto round_result = round_iso_date_time(temporal_date_time->iso_year(), temporal_date_time->iso_month(), temporal_date_time->iso_day(), temporal_date_time->iso_hour(), temporal_date_time->iso_minute(), temporal_date_time->iso_second(), temporal_date_time->iso_millisecond(), temporal_date_time->iso_microsecond(), temporal_date_time->iso_nanosecond(), rounding_increment, *smallest_unit, rounding_mode, day_length_ns);
 
     // 21. Let offsetNanoseconds be ? GetOffsetNanosecondsFor(timeZone, instant).
     auto offset_nanoseconds = TRY(get_offset_nanoseconds_for(vm, &time_zone, *instant));
