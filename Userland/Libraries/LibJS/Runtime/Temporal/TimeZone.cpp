@@ -54,14 +54,6 @@ String canonicalize_time_zone_name(String const& time_zone)
     return *iana_time_zone;
 }
 
-// 11.1.3 DefaultTimeZone ( ), https://tc39.es/proposal-temporal/#sec-defaulttimezone
-// 15.1.3 DefaultTimeZone ( ), https://tc39.es/proposal-temporal/#sup-defaulttimezone
-String default_time_zone()
-{
-    // The DefaultTimeZone abstract operation returns a String value representing the valid (11.1.1) and canonicalized (11.1.2) time zone name for the host environment's current time zone.
-    return ::TimeZone::current_time_zone();
-}
-
 // 11.6.1 CreateTemporalTimeZone ( identifier [ , newTarget ] ), https://tc39.es/proposal-temporal/#sec-temporal-createtemporaltimezone
 ThrowCompletionOr<TimeZone*> create_temporal_time_zone(VM& vm, String const& identifier, FunctionObject const* new_target)
 {

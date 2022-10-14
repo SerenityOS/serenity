@@ -6,6 +6,7 @@
 
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Array.h>
+#include <LibJS/Runtime/Date.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Intl/AbstractOperations.h>
 #include <LibJS/Runtime/Intl/DateTimeFormat.h>
@@ -216,7 +217,7 @@ ThrowCompletionOr<DateTimeFormat*> initialize_date_time_format(VM& vm, DateTimeF
     // 30. If timeZone is undefined, then
     if (time_zone_value.is_undefined()) {
         // a. Set timeZone to ! DefaultTimeZone().
-        time_zone = Temporal::default_time_zone();
+        time_zone = default_time_zone();
     }
     // 31. Else,
     else {

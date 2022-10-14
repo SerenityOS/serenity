@@ -38,7 +38,6 @@ private:
 
 bool is_valid_time_zone_name(String const& time_zone);
 String canonicalize_time_zone_name(String const& time_zone);
-String default_time_zone();
 ThrowCompletionOr<TimeZone*> create_temporal_time_zone(VM&, String const& identifier, FunctionObject const* new_target = nullptr);
 ISODateTime get_iso_parts_from_epoch(VM&, Crypto::SignedBigInteger const& epoch_nanoseconds);
 BigInt* get_iana_time_zone_next_transition(VM&, BigInt const& epoch_nanoseconds, StringView time_zone_identifier);
