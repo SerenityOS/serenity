@@ -46,4 +46,11 @@ Messages::WebDriverSessionClient::GetTitleResponse WebDriverConnection::get_titl
     return { "" };
 }
 
+void WebDriverConnection::refresh()
+{
+    dbgln("WebDriverConnection: refresh");
+    if (auto browser_window = m_browser_window.strong_ref())
+        browser_window->active_tab().reload();
+}
+
 }

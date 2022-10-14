@@ -53,6 +53,7 @@ private:
     ErrorOr<JsonValue, HttpError> handle_get_url(Vector<StringView>, JsonValue const& payload);
     ErrorOr<JsonValue, HttpError> handle_get_title(Vector<StringView>, JsonValue const& payload);
     ErrorOr<JsonValue, HttpError> handle_delete_window(Vector<StringView>, JsonValue const& payload);
+    ErrorOr<JsonValue, HttpError> handle_refresh(Vector<StringView>, JsonValue const& payload);
 
     ErrorOr<Session*, HttpError> find_session_with_id(StringView session_id);
     JsonValue make_json_value(JsonValue const&);

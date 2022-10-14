@@ -26,6 +26,7 @@ Vector<Client::Route> Client::s_routes = {
     { HTTP::HttpRequest::Method::GET, { "session", ":session_id", "url" }, &Client::handle_get_url },
     { HTTP::HttpRequest::Method::GET, { "session", ":session_id", "title" }, &Client::handle_get_title },
     { HTTP::HttpRequest::Method::DELETE, { "session", ":session_id", "window" }, &Client::handle_delete_window },
+    { HTTP::HttpRequest::Method::POST, { "session", ":session_id", "refresh" }, &Client::handle_refresh },
 };
 
 Client::Client(NonnullOwnPtr<Core::Stream::BufferedTCPSocket> socket, Core::Object* parent)
@@ -449,6 +450,17 @@ ErrorOr<JsonValue, HttpError> Client::handle_delete_window(Vector<StringView> pa
     TRY(unwrap_result(session->delete_window()));
 
     return make_json_value(JsonValue());
+}
+
+// POST /session/{session id}/refresh https://w3c.github.io/webdriver/#dfn-refresh
+ErrorOr<JsonValue, HttpError> Client::handle_refresh(Vector<StringView> parameters, JsonValue const&)
+{
+    dbgln_if(WEBDRIVER_DEBUG, "Handling POST /session/<session_id>/refresh");
+    Session* session = TRY(find_session_with_id(parameters[0]));
+
+    // NOTE: Spec steps handled in Session::refresh().
+    auto result = TRY(session->refresh());
+    return make_json_value(result);
 }
 
 }

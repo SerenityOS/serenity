@@ -37,6 +37,7 @@ public:
     ErrorOr<JsonValue, HttpError> post_url(JsonValue const& url);
     ErrorOr<JsonValue, HttpError> get_url();
     ErrorOr<JsonValue, HttpError> get_title();
+    ErrorOr<JsonValue, HttpError> refresh();
 
 private:
     NonnullRefPtr<Client> m_client;
