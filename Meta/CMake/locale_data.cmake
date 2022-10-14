@@ -40,47 +40,26 @@ if (ENABLE_UNICODE_DATABASE_DOWNLOAD)
     extract_path("${CLDR_PATH}" "${CLDR_ZIP_PATH}" "${CLDR_NUMBERS_SOURCE}/**" "${CLDR_NUMBERS_PATH}")
     extract_path("${CLDR_PATH}" "${CLDR_ZIP_PATH}" "${CLDR_UNITS_SOURCE}/**" "${CLDR_UNITS_PATH}")
 
-    set(DATE_TIME_FORMAT_DATA_HEADER LibLocale/DateTimeFormatData.h)
-    set(DATE_TIME_FORMAT_DATA_IMPLEMENTATION LibLocale/DateTimeFormatData.cpp)
+    set(DATE_TIME_FORMAT_DATA_HEADER DateTimeFormatData.h)
+    set(DATE_TIME_FORMAT_DATA_IMPLEMENTATION DateTimeFormatData.cpp)
 
-    set(LOCALE_DATA_HEADER LibLocale/LocaleData.h)
-    set(LOCALE_DATA_IMPLEMENTATION LibLocale/LocaleData.cpp)
+    set(LOCALE_DATA_HEADER LocaleData.h)
+    set(LOCALE_DATA_IMPLEMENTATION LocaleData.cpp)
 
-    set(NUMBER_FORMAT_DATA_HEADER LibLocale/NumberFormatData.h)
-    set(NUMBER_FORMAT_DATA_IMPLEMENTATION LibLocale/NumberFormatData.cpp)
+    set(NUMBER_FORMAT_DATA_HEADER NumberFormatData.h)
+    set(NUMBER_FORMAT_DATA_IMPLEMENTATION NumberFormatData.cpp)
 
-    set(PLURAL_RULES_DATA_HEADER LibLocale/PluralRulesData.h)
-    set(PLURAL_RULES_DATA_IMPLEMENTATION LibLocale/PluralRulesData.cpp)
+    set(PLURAL_RULES_DATA_HEADER PluralRulesData.h)
+    set(PLURAL_RULES_DATA_IMPLEMENTATION PluralRulesData.cpp)
 
-    set(RELATIVE_TIME_FORMAT_DATA_HEADER LibLocale/RelativeTimeFormatData.h)
-    set(RELATIVE_TIME_FORMAT_DATA_IMPLEMENTATION LibLocale/RelativeTimeFormatData.cpp)
-
-    set(LOCALE_META_TARGET_PREFIX LibLocale_)
-
-    if (CMAKE_CURRENT_BINARY_DIR MATCHES ".*/LibLocale") # Serenity build.
-        set(DATE_TIME_FORMAT_DATA_HEADER DateTimeFormatData.h)
-        set(DATE_TIME_FORMAT_DATA_IMPLEMENTATION DateTimeFormatData.cpp)
-
-        set(LOCALE_DATA_HEADER LocaleData.h)
-        set(LOCALE_DATA_IMPLEMENTATION LocaleData.cpp)
-
-        set(NUMBER_FORMAT_DATA_HEADER NumberFormatData.h)
-        set(NUMBER_FORMAT_DATA_IMPLEMENTATION NumberFormatData.cpp)
-
-        set(PLURAL_RULES_DATA_HEADER PluralRulesData.h)
-        set(PLURAL_RULES_DATA_IMPLEMENTATION PluralRulesData.cpp)
-
-        set(RELATIVE_TIME_FORMAT_DATA_HEADER RelativeTimeFormatData.h)
-        set(RELATIVE_TIME_FORMAT_DATA_IMPLEMENTATION RelativeTimeFormatData.cpp)
-
-        set(LOCALE_META_TARGET_PREFIX "")
-    endif()
+    set(RELATIVE_TIME_FORMAT_DATA_HEADER RelativeTimeFormatData.h)
+    set(RELATIVE_TIME_FORMAT_DATA_IMPLEMENTATION RelativeTimeFormatData.cpp)
 
     invoke_generator(
         "DateTimeFormatData"
         Lagom::GenerateDateTimeFormatData
         "${CLDR_VERSION_FILE}"
-        "${LOCALE_META_TARGET_PREFIX}"
+        ""
         "${DATE_TIME_FORMAT_DATA_HEADER}"
         "${DATE_TIME_FORMAT_DATA_IMPLEMENTATION}"
         arguments -r "${CLDR_CORE_PATH}" -d "${CLDR_DATES_PATH}"
@@ -89,7 +68,7 @@ if (ENABLE_UNICODE_DATABASE_DOWNLOAD)
         "LocaleData"
         Lagom::GenerateLocaleData
         "${CLDR_VERSION_FILE}"
-        "${LOCALE_META_TARGET_PREFIX}"
+        ""
         "${LOCALE_DATA_HEADER}"
         "${LOCALE_DATA_IMPLEMENTATION}"
         arguments -b "${CLDR_BCP47_PATH}" -r "${CLDR_CORE_PATH}" -l "${CLDR_LOCALES_PATH}" -m "${CLDR_MISC_PATH}" -n "${CLDR_NUMBERS_PATH}" -d "${CLDR_DATES_PATH}"
@@ -98,7 +77,7 @@ if (ENABLE_UNICODE_DATABASE_DOWNLOAD)
         "NumberFormatData"
         Lagom::GenerateNumberFormatData
         "${CLDR_VERSION_FILE}"
-        "${LOCALE_META_TARGET_PREFIX}"
+        ""
         "${NUMBER_FORMAT_DATA_HEADER}"
         "${NUMBER_FORMAT_DATA_IMPLEMENTATION}"
         arguments -r "${CLDR_CORE_PATH}" -n "${CLDR_NUMBERS_PATH}" -u "${CLDR_UNITS_PATH}"
@@ -107,7 +86,7 @@ if (ENABLE_UNICODE_DATABASE_DOWNLOAD)
         "PluralRulesData"
         Lagom::GeneratePluralRulesData
         "${CLDR_VERSION_FILE}"
-        "${LOCALE_META_TARGET_PREFIX}"
+        ""
         "${PLURAL_RULES_DATA_HEADER}"
         "${PLURAL_RULES_DATA_IMPLEMENTATION}"
         arguments -r "${CLDR_CORE_PATH}" -l "${CLDR_LOCALES_PATH}"
@@ -116,7 +95,7 @@ if (ENABLE_UNICODE_DATABASE_DOWNLOAD)
         "RelativeTimeFormatData"
         Lagom::GenerateRelativeTimeFormatData
         "${CLDR_VERSION_FILE}"
-        "${LOCALE_META_TARGET_PREFIX}"
+        ""
         "${RELATIVE_TIME_FORMAT_DATA_HEADER}"
         "${RELATIVE_TIME_FORMAT_DATA_IMPLEMENTATION}"
         arguments -d "${CLDR_DATES_PATH}"

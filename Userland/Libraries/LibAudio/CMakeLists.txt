@@ -1,6 +1,5 @@
 set(SOURCES
     SampleFormats.cpp
-    ConnectionToServer.cpp
     Loader.cpp
     WavLoader.cpp
     FlacLoader.cpp
@@ -9,10 +8,13 @@ set(SOURCES
     UserSampleQueue.cpp
 )
 
-set(GENERATED_SOURCES
-    ../../Services/AudioServer/AudioClientEndpoint.h
-    ../../Services/AudioServer/AudioServerEndpoint.h
-)
+if (SERENITYOS)
+    list(APPEND SOURCES ConnectionToServer.cpp)
+    set(GENERATED_SOURCES
+        ../../Services/AudioServer/AudioClientEndpoint.h
+        ../../Services/AudioServer/AudioServerEndpoint.h
+    )
+endif()
 
 serenity_lib(LibAudio audio)
 target_link_libraries(LibAudio LibCore LibIPC LibThreading)

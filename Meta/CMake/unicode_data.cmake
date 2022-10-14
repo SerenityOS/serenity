@@ -90,29 +90,17 @@ if (ENABLE_UNICODE_DATABASE_DOWNLOAD)
 
     download_file("${EMOJI_TEST_URL}" "${EMOJI_TEST_PATH}")
 
-    set(UNICODE_DATA_HEADER LibUnicode/UnicodeData.h)
-    set(UNICODE_DATA_IMPLEMENTATION LibUnicode/UnicodeData.cpp)
+    set(UNICODE_DATA_HEADER UnicodeData.h)
+    set(UNICODE_DATA_IMPLEMENTATION UnicodeData.cpp)
 
-    set(EMOJI_DATA_HEADER LibUnicode/EmojiData.h)
-    set(EMOJI_DATA_IMPLEMENTATION LibUnicode/EmojiData.cpp)
-
-    set(UNICODE_META_TARGET_PREFIX LibUnicode_)
-
-    if (CMAKE_CURRENT_BINARY_DIR MATCHES ".*/LibUnicode") # Serenity build.
-        set(UNICODE_DATA_HEADER UnicodeData.h)
-        set(UNICODE_DATA_IMPLEMENTATION UnicodeData.cpp)
-
-        set(EMOJI_DATA_HEADER EmojiData.h)
-        set(EMOJI_DATA_IMPLEMENTATION EmojiData.cpp)
-
-        set(UNICODE_META_TARGET_PREFIX "")
-    endif()
+    set(EMOJI_DATA_HEADER EmojiData.h)
+    set(EMOJI_DATA_IMPLEMENTATION EmojiData.cpp)
 
     invoke_generator(
         "UnicodeData"
         Lagom::GenerateUnicodeData
         "${UCD_VERSION_FILE}"
-        "${UNICODE_META_TARGET_PREFIX}"
+        ""
         "${UNICODE_DATA_HEADER}"
         "${UNICODE_DATA_IMPLEMENTATION}"
         arguments -u "${UNICODE_DATA_PATH}" -s "${SPECIAL_CASING_PATH}" -g "${DERIVED_GENERAL_CATEGORY_PATH}" -p "${PROP_LIST_PATH}" -d "${DERIVED_CORE_PROP_PATH}" -b "${DERIVED_BINARY_PROP_PATH}" -a "${PROP_ALIAS_PATH}" -v "${PROP_VALUE_ALIAS_PATH}" -r "${SCRIPTS_PATH}" -x "${SCRIPT_EXTENSIONS_PATH}" -k "${BLOCKS_PATH}" -e "${EMOJI_DATA_PATH}" -m "${NAME_ALIAS_PATH}" -n "${NORM_PROPS_PATH}" -f "${GRAPHEME_BREAK_PROP_PATH}" -w "${WORD_BREAK_PROP_PATH}" -i "${SENTENCE_BREAK_PROP_PATH}"
@@ -121,13 +109,13 @@ if (ENABLE_UNICODE_DATABASE_DOWNLOAD)
         "EmojiData"
         Lagom::GenerateEmojiData
         "${UCD_VERSION_FILE}"
-        "${UNICODE_META_TARGET_PREFIX}"
+        ""
         "${EMOJI_DATA_HEADER}"
         "${EMOJI_DATA_IMPLEMENTATION}"
         arguments -e "${EMOJI_TEST_PATH}" -s "${EMOJI_SERENITY_PATH}"
     )
 
-    if (CMAKE_CURRENT_BINARY_DIR MATCHES ".*/LibUnicode") # Serenity build.
+    if (SERENITYOS)
         add_custom_command(
             OUTPUT "${EMOJI_INSTALL_PATH}"
             COMMAND "${EMOJI_GENERATOR_PATH}" "${EMOJI_TEST_PATH}" "${EMOJI_RES_PATH}" "${EMOJI_INSTALL_PATH}"

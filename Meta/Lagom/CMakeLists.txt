@@ -60,6 +60,15 @@ if (ENABLE_FUZZERS_LIBFUZZER OR ENABLE_FUZZERS_OSSFUZZ)
 	set(ENABLE_FUZZERS ON)
 endif()
 
+# We need to make sure not to build code generators for Fuzzer builds, as they already have their own main.cpp
+# Instead, we import them from a previous install of Lagom. This mandates a two-stage build for fuzzers.
+# The same concern goes for cross-compile builds, where we need the tools built for the host
+set(BUILD_LAGOM_TOOLS ON)
+if (ENABLE_FUZZERS OR CMAKE_CROSSCOMPILING)
+    find_package(LagomTools REQUIRED)
+    set(BUILD_LAGOM_TOOLS OFF)
+endif()
+
 include(wasm_spec_tests)
 include(flac_spec_tests)
 include(lagom_compile_options)
@@ -142,9 +151,8 @@ include_directories(../../Userland/Libraries/)
 include_directories(../../Userland/Services)
 include_directories(${CMAKE_BINARY_DIR})
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
-include_directories(${CMAKE_BINARY_DIR}/Libraries)
-include_directories(${CMAKE_BINARY_DIR}/Userland/Libraries)
-include_directories(${CMAKE_BINARY_DIR}/Services)
+include_directories(${CMAKE_CURRENT_BINARY_DIR}/Userland/Libraries)
+include_directories(${CMAKE_CURRENT_BINARY_DIR}/Userland/Services)
 
 # install rules, think about moving to its own helper cmake file
 include(CMakePackageConfigHelpers)
@@ -305,10 +313,7 @@ install(TARGETS LibTimeZone EXPORT LagomTargets)
 
 # LibIDL
 # This is used by the BindingsGenerator so needs to always be built.
-file(GLOB LIBIDL_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibIDL/*.cpp")
-lagom_lib(IDL idl
-    SOURCES ${LIBIDL_SOURCES}
-)
+add_serenity_subdirectory(Userland/Libraries/LibIDL)
 
 # Manually install AK headers
 install(
@@ -319,284 +324,48 @@ install(
 )
 
 # Code Generators and other host tools
-# We need to make sure not to build code generators for Fuzzer builds, as they already have their own main.cpp
-# Instead, we import them from a previous install of Lagom. This mandates a two-stage build for fuzzers.
-if (ENABLE_FUZZERS OR CMAKE_CROSSCOMPILING)
-    find_package(LagomTools REQUIRED)
-else()
+if (BUILD_LAGOM_TOOLS)
     add_subdirectory(Tools)
 endif()
 
 if (BUILD_LAGOM)
     # Lagom Libraries
-
-    # Archive
-    file(GLOB LIBARCHIVE_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibArchive/*.cpp")
-    lagom_lib(Archive archive
-        SOURCES ${LIBARCHIVE_SOURCES}
+    set(lagom_standard_libraries
+        Archive
+        Audio
+        Compress
+        Crypto
+        DNS
+        Gemini
+        Gfx
+        GL
+        GPU
+        HTTP
+        IMAP
+        IPC
+        JS
+        Line
+        Locale
+        Markdown
+        PDF
+        Regex
+        SoftGPU
+        SQL
+        Syntax
+        TextCodec
+        Threading
+        TLS
+        Unicode
+        Video
+        Wasm
+        WebSocket
+        XML
     )
 
-    # Audio
-    file(GLOB LIBAUDIO_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibAudio/*.cpp")
-    list(REMOVE_ITEM LIBAUDIO_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/../../Userland/Libraries/LibAudio/ConnectionToServer.cpp")
-    lagom_lib(Audio audio
-        SOURCES ${LIBAUDIO_SOURCES}
-    )
-
-    # Compress
-    file(GLOB LIBCOMPRESS_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibCompress/*.cpp")
-    lagom_lib(Compress compress
-        SOURCES ${LIBCOMPRESS_SOURCES}
-        LIBS LibCrypto
-    )
-
-    # Crypto
-    file(GLOB LIBCRYPTO_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibCrypto/*.cpp")
-    file(GLOB LIBCRYPTO_SUBDIR_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibCrypto/*/*.cpp")
-    file(GLOB LIBCRYPTO_SUBSUBDIR_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibCrypto/*/*/*.cpp")
-    lagom_lib(Crypto crypto
-        SOURCES ${LIBCRYPTO_SOURCES} ${LIBCRYPTO_SUBDIR_SOURCES} ${LIBCRYPTO_SUBSUBDIR_SOURCES}
-    )
-
-    file(GLOB LIBDNS_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibDNS/*.cpp")
-    lagom_lib(DNS dns
-        SOURCES ${LIBDNS_SOURCES}
-        LIBS LibIPC
-    )
-
-    # ELF
-    # FIXME: Excluding arm64 is a temporary hack to circumvent a build problem
-    #        for Lagom on Apple M1
-    if (NOT CMAKE_SYSTEM_PROCESSOR MATCHES "arm64")
-        file(GLOB LIBELF_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibELF/*.cpp")
-        # There's no way we can reliably make the dynamic loading classes cross platform
-        list(FILTER LIBELF_SOURCES EXCLUDE REGEX ".*Dynamic.*.cpp$")
-        lagom_lib(ELF elf
-            SOURCES ${LIBELF_SOURCES}
-        )
-    endif()
-
-    # Gemini
-    file(GLOB LIBGEMINI_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibGemini/*.cpp")
-    lagom_lib(Gemini gemini
-        SOURCES ${LIBGEMINI_SOURCES}
-        LIBS LibTLS
-    )
-
-    # Gfx
-    file(GLOB LIBGFX_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibGfx/*.cpp")
-    file(GLOB LIBGFX_FILTER_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibGfx/Filters/*.cpp")
-    file(GLOB LIBGFX_FONT_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibGfx/Font/*.cpp")
-    file(GLOB LIBGFX_TTF_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibGfx/Font/TrueType/*.cpp")
-    file(GLOB LIBGFX_WOFF_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibGfx/Font/WOFF/*.cpp")
-    lagom_lib(Gfx gfx
-            SOURCES ${LIBGFX_SOURCES} ${LIBGFX_FILTER_SOURCES} ${LIBGFX_FONT_SOURCES} ${LIBGFX_TTF_SOURCES} ${LIBGFX_WOFF_SOURCES}
-            LIBS m LibCompress LibTextCodec LibIPC
-            )
-
-    # GPU
-    file(GLOB LIBGPU_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibGPU/*.cpp")
-    lagom_lib(GPU gpu
-        SOURCES ${LIBGPU_SOURCES}
-        LIBS ${CMAKE_DL_LIBS}
-    )
-
-    # GL
-    file(GLOB LIBGL_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibGL/*.cpp")
-    file(GLOB LIBGL_TEX_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibGL/Tex/*.cpp")
-    lagom_lib(GL gl
-        SOURCES ${LIBGL_SOURCES} ${LIBGL_TEX_SOURCES}
-        LIBS m LibGfx LibGPU)
-
-    # GUI
-    list(APPEND LIBGUI_SOURCES "../../Userland/Libraries/LibGUI/ModelIndex.cpp")
-    list(APPEND LIBGUI_SOURCES "../../Userland/Libraries/LibGUI/Model.cpp")
-    list(APPEND LIBGUI_SOURCES "../../Userland/Libraries/LibGUI/Icon.cpp")
-    lagom_lib(GUI gui
-        SOURCES ${LIBGUI_SOURCES}
-        LIBS LibGfx)
-
-    # GUI-GML
-    file(GLOB LIBGUI_GML_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibGUI/GML/*.cpp")
-    list(REMOVE_ITEM LIBGUI_GML_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/../../Userland/Libraries/LibGUI/GML/AutocompleteProvider.cpp")
-    lagom_lib(GML gml
-        SOURCES ${LIBGUI_GML_SOURCES}
-        LIBS LibSyntax
-    )
-
-    # HTTP
-    file(GLOB LIBHTTP_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibHTTP/*.cpp")
-    lagom_lib(HTTP http
-        SOURCES ${LIBHTTP_SOURCES}
-        LIBS LibCompress LibTLS
-    )
-
-    # IMAP
-    file(GLOB LIBIMAP_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibIMAP/*.cpp")
-    lagom_lib(IMAP imap
-        SOURCES ${LIBIMAP_SOURCES}
-        LIBS LibTLS
-    )
-
-    # IPC
-    file(GLOB LIBIPC_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibIPC/*.cpp")
-    lagom_lib(IPC ipc
-        SOURCES ${LIBIPC_SOURCES}
-    )
-
-    # JS
-    file(GLOB LIBJS_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibJS/*.cpp")
-    file(GLOB LIBJS_SUBDIR_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibJS/*/*.cpp")
-    file(GLOB LIBJS_SUBSUBDIR_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibJS/*/*/*.cpp")
-    list(REMOVE_ITEM LIBJS_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/../../Userland/Libraries/LibJS/SyntaxHighlighter.cpp")
-    lagom_lib(JS js
-        SOURCES ${LIBJS_SOURCES} ${LIBJS_SUBDIR_SOURCES} ${LIBJS_SUBSUBDIR_SOURCES}
-        LIBS m LibCrypto LibRegex LibLocale LibUnicode LibTextCodec
-    )
-
-    # Line
-    file(GLOB LIBLINE_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibLine/*.cpp")
-    lagom_lib(Line line
-        SOURCES ${LIBLINE_SOURCES}
-    )
-
-    # Locale
-    include(locale_data)
-    file(GLOB LIBLOCALE_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibLocale/*.cpp")
-    lagom_lib(Locale locale
-        SOURCES ${LIBLOCALE_SOURCES} ${LOCALE_DATA_SOURCES}
-    )
-    target_compile_definitions(LibLocale PRIVATE ENABLE_UNICODE_DATA=$<BOOL:${ENABLE_UNICODE_DATABASE_DOWNLOAD}>)
-    target_compile_options(LibLocale PRIVATE -Wno-parentheses-equality)
-    target_link_libraries(LibLocale LibTimeZone LibUnicode)
-
-    # Markdown
-    file(GLOB LIBMARKDOWN_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibMarkdown/*.cpp")
-    lagom_lib(Markdown markdown
-        SOURCES ${LIBMARKDOWN_SOURCES}
-        LIBS LibJS
-    )
-
-    # PDF
-    file(GLOB LIBPDF_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibPDF/*.cpp")
-    file(GLOB LIBPDF_SUBDIR_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibPDF/*/*.cpp")
-    lagom_lib(PDF pdf
-       SOURCES ${LIBPDF_SOURCES} ${LIBPDF_SUBDIR_SOURCES}
-       LIBS LibGfx LibIPC LibTextCodec
-    )
-
-    # Regex
-    file(GLOB LIBREGEX_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibRegex/*.cpp")
-    lagom_lib(Regex regex
-        SOURCES ${LIBREGEX_SOURCES}
-        LIBS LibUnicode
-    )
-
-    # Shell
-    file(GLOB SHELL_SOURCES CONFIGURE_DEPENDS "../../Userland/Shell/*.cpp")
-    list(REMOVE_ITEM SHELL_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/../../Userland/Shell/SyntaxHighlighter.cpp")
-    list(FILTER SHELL_SOURCES EXCLUDE REGEX ".*main.cpp$")
-    lagom_lib(Shell shell
-        SOURCES ${SHELL_SOURCES}
-        LIBS LibLine LibRegex
-    )
-
-    # SoftGPU
-    file(GLOB_RECURSE LIBSOFTGPU_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibSoftGPU/*.cpp")
-    lagom_lib(SoftGPU softgpu
-        SOURCES ${LIBSOFTGPU_SOURCES}
-        LIBS m LibGfx
-    )
-
-    # Syntax
-    file(GLOB LIBSYNTAX_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibSyntax/*.cpp")
-    lagom_lib(Syntax syntax
-        SOURCES ${LIBSYNTAX_SOURCES}
-    )
-
-    # SQL
-    file(GLOB_RECURSE LIBSQL_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibSQL/*.cpp")
-    list(REMOVE_ITEM LIBSQL_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/../../Userland/Libraries/LibSQL/AST/SyntaxHighlighter.cpp")
-    list(REMOVE_ITEM LIBSQL_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/../../Userland/Libraries/LibSQL/SQLClient.cpp")
-    lagom_lib(SQL sql
-        SOURCES ${LIBSQL_SOURCES}
-        LIBS LibRegex
-    )
-
-    # TextCodec
-    file(GLOB LIBTEXTCODEC_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibTextCodec/*.cpp")
-    lagom_lib(TextCodec textcodec
-        SOURCES ${LIBTEXTCODEC_SOURCES}
-    )
-
-    # TLS
-    file(GLOB LIBTLS_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibTLS/*.cpp")
-    lagom_lib(TLS tls
-        SOURCES ${LIBTLS_SOURCES}
-        LIBS LibCrypto
-    )
-
-    # Unicode
-    include(unicode_data)
-    file(GLOB LIBUNICODE_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibUnicode/*.cpp")
-    lagom_lib(Unicode unicode
-        SOURCES ${LIBUNICODE_SOURCES} ${UNICODE_DATA_SOURCES}
-    )
-    target_compile_definitions(LibUnicode PRIVATE ENABLE_UNICODE_DATA=$<BOOL:${ENABLE_UNICODE_DATABASE_DOWNLOAD}>)
-
-    # Video
-    file(GLOB LIBVIDEO_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibVideo/*.cpp")
-    file(GLOB LIBVIDEO_SUBDIR_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibVideo/*/*.cpp")
-    lagom_lib(Video video
-        SOURCES ${LIBVIDEO_SOURCES} ${LIBVIDEO_SUBDIR_SOURCES}
-        LIBS LibAudio LibIPC LibGfx
-    )
-
-    # WASM
-    file(GLOB LIBWASM_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibWasm/*/*.cpp")
-    lagom_lib(Wasm wasm
-        SOURCES ${LIBWASM_SOURCES}
-    )
-
-    # Web
     if (ENABLE_LAGOM_LIBWEB)
-        include(libweb_generators)
-        file(GLOB LIBWEB_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibWeb/*.cpp")
-        file(GLOB LIBWEB_SUBDIR_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibWeb/*/*.cpp")
-        file(GLOB LIBWEB_SUBSUBDIR_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibWeb/*/*/*.cpp")
-        file(GLOB LIBWEB_SUBSUBSUBDIR_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibWeb/*/*/*/*.cpp")
-        list(REMOVE_ITEM LIBWEB_SUBSUBDIR_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/../../Userland/Libraries/LibWeb/CSS/SyntaxHighlighter/SyntaxHighlighter.cpp")
-        list(REMOVE_ITEM LIBWEB_SUBSUBDIR_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/../../Userland/Libraries/LibWeb/HTML/SyntaxHighlighter/SyntaxHighlighter.cpp")
+        list(APPEND lagom_standard_libraries Web)
 
-        generate_css_implementation()
-
-        set(LIBWEB_GENERATED_SOURCES
-            LibWeb/CSS/DefaultStyleSheetSource.cpp
-            LibWeb/CSS/Enums.cpp
-            LibWeb/CSS/MediaFeatureID.cpp
-            LibWeb/CSS/PropertyID.cpp
-            LibWeb/CSS/QuirksModeStyleSheetSource.cpp
-            LibWeb/CSS/TransformFunctions.cpp
-            LibWeb/CSS/ValueID.cpp
-        )
-
-        lagom_lib(Web web
-            SOURCES ${LIBWEB_SOURCES} ${LIBWEB_SUBDIR_SOURCES} ${LIBWEB_SUBSUBDIR_SOURCES} ${LIBWEB_SUBSUBSUBDIR_SOURCES} ${LIBWEB_GENERATED_SOURCES}
-            LIBS LibMarkdown LibGemini LibGfx LibGL LibIDL LibJS LibTextCodec LibWasm LibXML
-        )
-        generate_js_bindings(LibWeb)
-    endif()
-
-    # WebSocket
-    file(GLOB LIBWEBSOCKET_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibWebSocket/*.cpp")
-    file(GLOB LIBWEBSOCKET_SUBDIR_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibWebSocket/*/*.cpp")
-    lagom_lib(WebSocket websocket
-        SOURCES ${LIBWEBSOCKET_SOURCES} ${LIBWEBSOCKET_SUBDIR_SOURCES}
-        LIBS LibCrypto LibTLS
-    )
-
-    # WebView
-    if (ENABLE_LAGOM_LIBWEB)
+        # WebView
         list(APPEND LIBWEBVIEW_SOURCES "../../Userland/Libraries/LibWebView/DOMTreeModel.cpp")
         list(APPEND LIBWEBVIEW_SOURCES "../../Userland/Libraries/LibWebView/WebContentClient.cpp")
 
@@ -611,23 +380,50 @@ if (BUILD_LAGOM)
             LIBS LibGUI LibWeb)
     endif()
 
-    # x86
     # FIXME: Excluding arm64 is a temporary hack to circumvent a build problem
     #        for Lagom on Apple M1
     if (NOT CMAKE_SYSTEM_PROCESSOR MATCHES "arm64")
-        file(GLOB LIBX86_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibX86/*.cpp")
-        lagom_lib(X86 x86
-            SOURCES ${LIBX86_SOURCES}
+        # FIXME: Create a LIBELF_SOURCES macro similar to AK
+        file(GLOB LIBELF_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibELF/*.cpp")
+        # There's no way we can reliably make the dynamic loading classes cross platform
+        list(FILTER LIBELF_SOURCES EXCLUDE REGEX ".*Dynamic.*.cpp$")
+        lagom_lib(ELF elf
+            SOURCES ${LIBELF_SOURCES}
         )
+        list(APPEND lagom_standard_libraries X86)
     endif()
 
-    file(GLOB LIBXML_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibXML/*/*.cpp")
-    lagom_lib(XML xml
-        SOURCES ${LIBXML_SOURCES})
+    foreach(lib IN LISTS lagom_standard_libraries)
+        add_serenity_subdirectory("Userland/Libraries/Lib${lib}")
+    endforeach()
+
+    # GUI
+    set(LIBGUI_SOURCES
+        GML/Lexer.cpp
+        GML/Parser.cpp
+        GML/SyntaxHighlighter.cpp
+        Icon.cpp
+        Model.cpp
+        ModelIndex.cpp
+    )
+    list(TRANSFORM LIBGUI_SOURCES PREPEND "${SERENITY_PROJECT_ROOT}/Userland/Libraries/LibGUI/")
+    lagom_lib(GUI gui
+        SOURCES ${LIBGUI_SOURCES}
+        LIBS LibGfx LibSyntax)
+
+    # FIXME: Why doesn't RPATH of the tests handle this properly?
+    set_target_properties(LibSoftGPU PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+
+    # FIXME: LibLocaleData is an object lib in Lagom, because the weak symbol trick we use on serenity
+    #    straight up isn't supposed to work per ELF rules
+    target_link_libraries(LibLocale LibTimeZone)
+    install(TARGETS LibLocaleData EXPORT LagomTargets)
+
+    add_serenity_subdirectory(Userland/Shell)
 
     if (NOT ENABLE_FUZZERS AND NOT ENABLE_COMPILER_EXPLORER_BUILD AND NOT ANDROID)
         # Lagom Services
-        add_subdirectory("${SERENITY_PROJECT_ROOT}/Userland/Services" "${CMAKE_CURRENT_BINARY_DIR}/Services")
+        add_serenity_subdirectory(Userland/Services)
 
         # Lagom Examples
         add_executable(TestApp TestApp.cpp)
@@ -651,7 +447,7 @@ if (BUILD_LAGOM)
 
         add_executable(gml-format_lagom ../../Userland/Utilities/gml-format.cpp)
         set_target_properties(gml-format_lagom PROPERTIES OUTPUT_NAME gml-format)
-        target_link_libraries(gml-format_lagom LibCore LibGML LibMain)
+        target_link_libraries(gml-format_lagom LibCore LibGUI LibMain)
 
         if (ENABLE_LAGOM_LIBWEB)
             add_executable(headless_browser_lagom ../../Userland/Utilities/headless-browser.cpp)
@@ -661,7 +457,7 @@ if (BUILD_LAGOM)
 
         add_executable(js_lagom ../../Userland/Utilities/js.cpp)
         set_target_properties(js_lagom PROPERTIES OUTPUT_NAME js)
-        target_link_libraries(js_lagom LibJS LibLine LibMain Threads::Threads)
+        target_link_libraries(js_lagom LibJS LibLine LibMain LibTextCodec Threads::Threads)
 
         add_executable(markdown-check_lagom ../../Userland/Utilities/markdown-check.cpp)
         set_target_properties(markdown-check_lagom PROPERTIES OUTPUT_NAME markdown-check)
@@ -670,10 +466,6 @@ if (BUILD_LAGOM)
         add_executable(ntpquery_lagom ../../Userland/Utilities/ntpquery.cpp)
         set_target_properties(ntpquery_lagom PROPERTIES OUTPUT_NAME ntpquery)
         target_link_libraries(ntpquery_lagom LibCore LibMain)
-
-        add_executable(shell_lagom ../../Userland/Shell/main.cpp)
-        set_target_properties(shell_lagom PROPERTIES OUTPUT_NAME shell)
-        target_link_libraries(shell_lagom LibCore LibShell LibMain)
 
         add_executable(test262-runner_lagom ../../Tests/LibJS/test262-runner.cpp)
         set_target_properties(test262-runner_lagom PROPERTIES OUTPUT_NAME test262-runner)
@@ -736,7 +528,7 @@ if (BUILD_LAGOM)
         file(COPY "${SERENITY_PROJECT_ROOT}/Tests/LibGL/reference-images" DESTINATION "./")
         file(GLOB LIBGL_TESTS CONFIGURE_DEPENDS "../../Tests/LibGL/*.cpp")
         foreach(source ${LIBGL_TESTS})
-            lagom_test(${source} WORKING_DIRECTORY LIBS LibGL LibGPU LibSoftGPU)
+            lagom_test(${source} LIBS LibGL LibGPU LibSoftGPU)
         endforeach()
 
         # Locale
@@ -868,7 +660,7 @@ if (BUILD_LAGOM)
             get_filename_component(TEST_NAME ${TEST_PATH} NAME_WE)
             add_test(
                 NAME "Shell-${TEST_NAME}"
-                COMMAND shell_lagom --skip-shellrc "${TEST_PATH}"
+                COMMAND Shell --skip-shellrc "${TEST_PATH}"
                 WORKING_DIRECTORY ${SERENITY_PROJECT_ROOT}/Userland/Shell/Tests
             )
             set_tests_properties("Shell-${TEST_NAME}" PROPERTIES
