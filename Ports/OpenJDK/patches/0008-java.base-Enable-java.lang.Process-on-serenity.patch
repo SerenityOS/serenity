@@ -111,7 +111,7 @@ index 0000000000000000000000000000000000000000..cc0c08cb85a682d66a00f6b48ad2871f
 +
 +extern "C" {
 +void os_initNative(JNIEnv *env, jclass clazz) {
-+    proc_all = MUST(Core::File::open("/proc/all", Core::OpenMode::ReadOnly));
++    proc_all = MUST(Core::File::open("/sys/kernel/processes", Core::OpenMode::ReadOnly));
 +}
 +
 +jint os_getChildren(JNIEnv *env, jlong jpid, jlongArray jarray,
@@ -141,7 +141,7 @@ index 0000000000000000000000000000000000000000..cc0c08cb85a682d66a00f6b48ad2871f
 +        *total += thread.time_user + thread.time_kernel;
 +    }
 +
-+    *start = 0; // FIXME: When did thread start? not reported in /proc/all
++    *start = 0; // FIXME: When did thread start? not reported in /sys/kernel/processes
 +
 +    return proc.ppid;
 +}
