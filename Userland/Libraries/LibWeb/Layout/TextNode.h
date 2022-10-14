@@ -33,13 +33,12 @@ public:
 
     class ChunkIterator {
     public:
-        ChunkIterator(StringView text, LayoutMode, bool wrap_lines, bool respect_linebreaks);
+        ChunkIterator(StringView text, bool wrap_lines, bool respect_linebreaks);
         Optional<Chunk> next();
 
     private:
         Optional<Chunk> try_commit_chunk(Utf8View::Iterator const& start, Utf8View::Iterator const& end, bool has_breaking_newline) const;
 
-        const LayoutMode m_layout_mode;
         bool const m_wrap_lines;
         bool const m_respect_linebreaks;
         Utf8View m_utf8_view;

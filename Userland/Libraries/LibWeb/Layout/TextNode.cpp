@@ -85,9 +85,8 @@ void TextNode::compute_text_for_rendering(bool collapse)
     m_text_for_rendering = builder.to_string();
 }
 
-TextNode::ChunkIterator::ChunkIterator(StringView text, LayoutMode layout_mode, bool wrap_lines, bool respect_linebreaks)
-    : m_layout_mode(layout_mode)
-    , m_wrap_lines(wrap_lines)
+TextNode::ChunkIterator::ChunkIterator(StringView text, bool wrap_lines, bool respect_linebreaks)
+    : m_wrap_lines(wrap_lines)
     , m_respect_linebreaks(respect_linebreaks)
     , m_utf8_view(text)
     , m_iterator(m_utf8_view.begin())
