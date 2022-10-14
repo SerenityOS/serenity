@@ -229,12 +229,11 @@ endfunction()
 function(lagom_test source)
     cmake_parse_arguments(LAGOM_TEST "" "WORKING_DIRECTORY" "LIBS" ${ARGN})
     get_filename_component(name ${source} NAME_WE)
-    add_executable(${name}_lagom ${source})
-    set_target_properties(${name}_lagom PROPERTIES OUTPUT_NAME ${name})
-    target_link_libraries(${name}_lagom LibCore LibTest LibTestMain ${LAGOM_TEST_LIBS})
+    add_executable(${name} ${source})
+    target_link_libraries(${name} LibCore LibTest LibTestMain ${LAGOM_TEST_LIBS})
     add_test(
             NAME ${name}
-            COMMAND ${name}_lagom
+            COMMAND ${name}
             WORKING_DIRECTORY ${LAGOM_TEST_WORKING_DIRECTORY}
     )
 endfunction()
@@ -433,51 +432,41 @@ if (BUILD_LAGOM)
         target_link_libraries(TestJson LibCore)
 
         # Lagom Utilities
-        add_executable(adjtime_lagom ../../Userland/Utilities/adjtime.cpp)
-        set_target_properties(adjtime_lagom PROPERTIES OUTPUT_NAME adjtime)
-        target_link_libraries(adjtime_lagom LibCore LibMain)
+        add_executable(adjtime ../../Userland/Utilities/adjtime.cpp)
+        target_link_libraries(adjtime LibCore LibMain)
 
         # FIXME: Excluding arm64 is a temporary hack to circumvent a build problem
         #        for Lagom on Apple M1
         if (NOT CMAKE_SYSTEM_PROCESSOR MATCHES "arm64")
-            add_executable(disasm_lagom ../../Userland/Utilities/disasm.cpp)
-            set_target_properties(disasm_lagom PROPERTIES OUTPUT_NAME disasm)
-            target_link_libraries(disasm_lagom LibCore LibELF LibX86 LibMain)
+            add_executable(disasm ../../Userland/Utilities/disasm.cpp)
+            target_link_libraries(disasm LibCore LibELF LibX86 LibMain)
         endif()
 
-        add_executable(gml-format_lagom ../../Userland/Utilities/gml-format.cpp)
-        set_target_properties(gml-format_lagom PROPERTIES OUTPUT_NAME gml-format)
-        target_link_libraries(gml-format_lagom LibCore LibGUI LibMain)
+        add_executable(gml-format ../../Userland/Utilities/gml-format.cpp)
+        target_link_libraries(gml-format LibCore LibGUI LibMain)
 
         if (ENABLE_LAGOM_LIBWEB)
-            add_executable(headless_browser_lagom ../../Userland/Utilities/headless-browser.cpp)
-            set_target_properties(headless_browser_lagom PROPERTIES OUTPUT_NAME headless-browser)
-            target_link_libraries(headless_browser_lagom LibWeb LibWebSocket LibHTTP LibJS LibGfx LibMain)
+            add_executable(headless-browser ../../Userland/Utilities/headless-browser.cpp)
+            target_link_libraries(headless-browser LibWeb LibWebSocket LibHTTP LibJS LibGfx LibMain)
         endif()
 
-        add_executable(js_lagom ../../Userland/Utilities/js.cpp)
-        set_target_properties(js_lagom PROPERTIES OUTPUT_NAME js)
-        target_link_libraries(js_lagom LibJS LibLine LibMain LibTextCodec Threads::Threads)
+        add_executable(js ../../Userland/Utilities/js.cpp)
+        target_link_libraries(js LibJS LibLine LibMain LibTextCodec Threads::Threads)
 
-        add_executable(markdown-check_lagom ../../Userland/Utilities/markdown-check.cpp)
-        set_target_properties(markdown-check_lagom PROPERTIES OUTPUT_NAME markdown-check)
-        target_link_libraries(markdown-check_lagom LibMarkdown LibMain)
+        add_executable(markdown-check ../../Userland/Utilities/markdown-check.cpp)
+        target_link_libraries(markdown-check LibMarkdown LibMain)
 
-        add_executable(ntpquery_lagom ../../Userland/Utilities/ntpquery.cpp)
-        set_target_properties(ntpquery_lagom PROPERTIES OUTPUT_NAME ntpquery)
-        target_link_libraries(ntpquery_lagom LibCore LibMain)
+        add_executable(ntpquery ../../Userland/Utilities/ntpquery.cpp)
+        target_link_libraries(ntpquery LibCore LibMain)
 
-        add_executable(test262-runner_lagom ../../Tests/LibJS/test262-runner.cpp)
-        set_target_properties(test262-runner_lagom PROPERTIES OUTPUT_NAME test262-runner)
-        target_link_libraries(test262-runner_lagom LibJS LibCore)
+        add_executable(test262-runner ../../Tests/LibJS/test262-runner.cpp)
+        target_link_libraries(test262-runner LibJS LibCore)
 
-        add_executable(wasm_lagom ../../Userland/Utilities/wasm.cpp)
-        set_target_properties(wasm_lagom PROPERTIES OUTPUT_NAME wasm)
-        target_link_libraries(wasm_lagom LibCore LibWasm LibLine LibMain)
+        add_executable(wasm ../../Userland/Utilities/wasm.cpp)
+        target_link_libraries(wasm LibCore LibWasm LibLine LibMain)
 
-        add_executable(xml_lagom ../../Userland/Utilities/xml.cpp)
-        set_target_properties(xml_lagom PROPERTIES OUTPUT_NAME xml)
-        target_link_libraries(xml_lagom LibCore LibXML LibMain)
+        add_executable(xml ../../Userland/Utilities/xml.cpp)
+        target_link_libraries(xml LibCore LibXML LibMain)
 
         enable_testing()
         # LibTest
@@ -584,7 +573,7 @@ if (BUILD_LAGOM)
             lagom_test(${source} LIBS LibTimeZone)
 
             get_filename_component(target "${source}" NAME_WLE)
-            target_compile_definitions("${target}_lagom" PRIVATE ENABLE_TIME_ZONE_DATA=$<BOOL:${ENABLE_TIME_ZONE_DATABASE_DOWNLOAD}>)
+            target_compile_definitions("${target}" PRIVATE ENABLE_TIME_ZONE_DATA=$<BOOL:${ENABLE_TIME_ZONE_DATABASE_DOWNLOAD}>)
         endforeach()
 
         # Unicode
@@ -602,14 +591,13 @@ if (BUILD_LAGOM)
 
         # JavaScriptTestRunner + LibTest tests
         # test-js
-        add_executable(test-js_lagom
+        add_executable(test-js
             ../../Tests/LibJS/test-js.cpp
             ../../Userland/Libraries/LibTest/JavaScriptTestRunnerMain.cpp)
-        set_target_properties(test-js_lagom PROPERTIES OUTPUT_NAME test-js)
-        target_link_libraries(test-js_lagom LibCore LibTest LibJS)
+        target_link_libraries(test-js LibCore LibTest LibJS)
         add_test(
             NAME JS
-            COMMAND test-js_lagom --show-progress=false
+            COMMAND test-js --show-progress=false
         )
         set_tests_properties(JS PROPERTIES ENVIRONMENT SERENITY_SOURCE_DIR=${SERENITY_PROJECT_ROOT})
 
@@ -619,14 +607,13 @@ if (BUILD_LAGOM)
         lagom_test(../../Tests/LibJS/test-value-js.cpp LIBS LibJS)
 
         # Spreadsheet
-        add_executable(test-spreadsheet_lagom
+        add_executable(test-spreadsheet
                 ../../Tests/Spreadsheet/test-spreadsheet.cpp
                 ../../Userland/Libraries/LibTest/JavaScriptTestRunnerMain.cpp)
-        set_target_properties(test-spreadsheet_lagom PROPERTIES OUTPUT_NAME test-spreadsheet)
-        target_link_libraries(test-spreadsheet_lagom LibCore LibTest LibJS)
+        target_link_libraries(test-spreadsheet LibCore LibTest LibJS)
         add_test(
                 NAME Spreadsheet
-                COMMAND test-spreadsheet_lagom --show-progress=false
+                COMMAND test-spreadsheet --show-progress=false
         )
         set_tests_properties(Spreadsheet PROPERTIES ENVIRONMENT SERENITY_SOURCE_DIR=${SERENITY_PROJECT_ROOT})
 
@@ -640,14 +627,13 @@ if (BUILD_LAGOM)
         set_tests_properties(TestCommonmark PROPERTIES DISABLED YES)
 
         # test-wasm
-        add_executable(test-wasm_lagom
+        add_executable(test-wasm
             ../../Tests/LibWasm/test-wasm.cpp
             ../../Userland/Libraries/LibTest/JavaScriptTestRunnerMain.cpp)
-        set_target_properties(test-wasm_lagom PROPERTIES OUTPUT_NAME test-wasm)
-        target_link_libraries(test-wasm_lagom LibCore LibTest LibWasm LibJS)
+        target_link_libraries(test-wasm LibCore LibTest LibWasm LibJS)
         add_test(
             NAME WasmParser
-            COMMAND test-wasm_lagom --show-progress=false
+            COMMAND test-wasm --show-progress=false
         )
         set_tests_properties(WasmParser PROPERTIES
             ENVIRONMENT SERENITY_SOURCE_DIR=${SERENITY_PROJECT_ROOT}
@@ -673,9 +659,9 @@ if (BUILD_LAGOM)
         # FIXME: When we are using CMake >= 3.21, the library installations can be replaced with RUNTIME_DEPENDENCIES.
         #        https://cmake.org/cmake/help/latest/command/install.html
         include(get_linked_lagom_libraries.cmake)
-        get_linked_lagom_libraries(js_lagom js_lagom_libraries)
+        get_linked_lagom_libraries(js js_libraries)
 
-        install(TARGETS js_lagom ${js_lagom_libraries} COMPONENT js)
+        install(TARGETS js ${js_libraries} COMPONENT js)
 
         set(CPACK_GENERATOR "TGZ")
         set(CPACK_STRIP_FILES TRUE)
