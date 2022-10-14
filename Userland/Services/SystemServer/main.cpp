@@ -64,20 +64,28 @@ static void sigchld_handler(int)
 
 static ErrorOr<void> determine_system_mode()
 {
+    ArmedScopeGuard declare_text_mode_on_failure([&] {
+        // Note: Only if the mode is not set to self-test, degrade it to text mode.
+        if (g_system_mode != "self-test")
+            g_system_mode = "text";
+    });
+
     auto f = Core::File::construct("/proc/system_mode");
     if (!f->open(Core::OpenMode::ReadOnly)) {
         dbgln("Failed to read system_mode: {}", f->error_string());
-        // Continue to assume "graphical".
+        // Continue and assume "text" mode.
         return {};
     }
     const String system_mode = String::copy(f->read_all(), Chomp);
     if (f->error()) {
         dbgln("Failed to read system_mode: {}", f->error_string());
-        // Continue to assume "graphical".
+        // Continue and assume "text" mode.
         return {};
     }
 
     g_system_mode = system_mode;
+    declare_text_mode_on_failure.disarm();
+
     dbgln("Read system_mode: {}", g_system_mode);
 
     struct stat file_state;
