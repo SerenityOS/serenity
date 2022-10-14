@@ -273,6 +273,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(view_menu->try_add_action(best_time_actions));
 
     auto help_menu = TRY(window->try_add_menu("&Help"));
+    help_menu->add_action(GUI::CommonActions::make_command_palette_action(window));
     help_menu->add_action(GUI::CommonActions::make_about_action("Spider", app_icon, window));
 
     window->set_resizable(false);

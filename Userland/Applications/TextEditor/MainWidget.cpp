@@ -617,6 +617,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
     syntax_menu.add_action(*m_sql_highlight);
 
     auto& help_menu = window.add_menu("&Help");
+    help_menu.add_action(GUI::CommonActions::make_command_palette_action(&window));
     help_menu.add_action(GUI::CommonActions::make_help_action([](auto&) {
         Desktop::Launcher::open(URL::create_with_file_scheme("/usr/share/man/man1/TextEditor.md"), "/bin/Help");
     }));

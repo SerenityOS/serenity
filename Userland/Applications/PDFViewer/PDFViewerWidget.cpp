@@ -67,6 +67,7 @@ void PDFViewerWidget::initialize_menubar(GUI::Window& window)
     view_menu.add_action(*m_reset_zoom_action);
 
     auto& help_menu = window.add_menu("&Help");
+    help_menu.add_action(GUI::CommonActions::make_command_palette_action(&window));
     help_menu.add_action(GUI::CommonActions::make_about_action("PDF Viewer", GUI::Icon::default_icon("app-pdf-viewer"sv), &window));
 }
 

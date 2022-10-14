@@ -96,6 +96,7 @@ private:
     RefPtr<GUI::Action> m_change_background_color_action;
     RefPtr<GUI::Action> m_change_foreground_color_action;
 
+    RefPtr<GUI::Action> m_search_action;
     RefPtr<GUI::Action> m_functions_help_action;
     RefPtr<GUI::Action> m_about_action;
 

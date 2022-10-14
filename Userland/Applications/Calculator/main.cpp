@@ -121,6 +121,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     round_menu.action_at(last_rounding_mode.value())->activate();
 
     auto& help_menu = window->add_menu("&Help");
+    help_menu.add_action(GUI::CommonActions::make_command_palette_action(window));
     help_menu.add_action(GUI::CommonActions::make_about_action("Calculator", app_icon, window));
 
     window->show();

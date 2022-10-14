@@ -469,6 +469,7 @@ void HexEditorWidget::initialize_menubar(GUI::Window& window)
     little_endian_mode->set_checked(true);
 
     auto& help_menu = window.add_menu("&Help");
+    help_menu.add_action(GUI::CommonActions::make_command_palette_action(&window));
     help_menu.add_action(GUI::CommonActions::make_help_action([](auto&) {
         Desktop::Launcher::open(URL::create_with_file_scheme("/usr/share/man/man1/HexEditor.md"), "/bin/Help");
     }));
