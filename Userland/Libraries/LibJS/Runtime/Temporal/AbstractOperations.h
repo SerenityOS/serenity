@@ -47,19 +47,6 @@ enum class UnitGroup {
     DateTime,
 };
 
-struct ISODateTime {
-    i32 year;
-    u8 month;
-    u8 day;
-    u8 hour;
-    u8 minute;
-    u8 second;
-    u16 millisecond;
-    u16 microsecond;
-    u16 nanosecond;
-    Optional<String> calendar = {};
-};
-
 struct TemporalInstant {
     i32 year;
     u8 month;
@@ -110,9 +97,18 @@ struct TemporalMonthDay {
     Optional<String> calendar = {};
 };
 
-struct TemporalZonedDateTime {
-    ISODateTime date_time;
-    TemporalTimeZone time_zone;
+struct ISODateTime {
+    i32 year;
+    u8 month;
+    u8 day;
+    u8 hour;
+    u8 minute;
+    u8 second;
+    u16 millisecond;
+    u16 microsecond;
+    u16 nanosecond;
+    TemporalTimeZone time_zone { .z = false, .offset_string = {}, .name = {} };
+    Optional<String> calendar = {};
 };
 
 struct SecondsStringPrecision {
@@ -167,13 +163,13 @@ Crypto::SignedBigInteger round_number_to_increment(Crypto::SignedBigInteger cons
 Crypto::SignedBigInteger round_number_to_increment_as_if_positive(Crypto::SignedBigInteger const&, u64 increment, StringView rounding_mode);
 ThrowCompletionOr<ISODateTime> parse_iso_date_time(VM&, ParseResult const& parse_result);
 ThrowCompletionOr<TemporalInstant> parse_temporal_instant_string(VM&, String const& iso_string);
-ThrowCompletionOr<TemporalZonedDateTime> parse_temporal_zoned_date_time_string(VM&, String const& iso_string);
+ThrowCompletionOr<ISODateTime> parse_temporal_zoned_date_time_string(VM&, String const& iso_string);
 ThrowCompletionOr<String> parse_temporal_calendar_string(VM&, String const& iso_string);
 ThrowCompletionOr<TemporalDate> parse_temporal_date_string(VM&, String const& iso_string);
 ThrowCompletionOr<ISODateTime> parse_temporal_date_time_string(VM&, String const& iso_string);
 ThrowCompletionOr<DurationRecord> parse_temporal_duration_string(VM&, String const& iso_string);
 ThrowCompletionOr<TemporalMonthDay> parse_temporal_month_day_string(VM&, String const& iso_string);
-ThrowCompletionOr<TemporalZonedDateTime> parse_temporal_relative_to_string(VM&, String const& iso_string);
+ThrowCompletionOr<ISODateTime> parse_temporal_relative_to_string(VM&, String const& iso_string);
 ThrowCompletionOr<TemporalTime> parse_temporal_time_string(VM&, String const& iso_string);
 ThrowCompletionOr<TemporalTimeZone> parse_temporal_time_zone_string(VM&, String const& iso_string);
 ThrowCompletionOr<TemporalYearMonth> parse_temporal_year_month_string(VM&, String const& iso_string);

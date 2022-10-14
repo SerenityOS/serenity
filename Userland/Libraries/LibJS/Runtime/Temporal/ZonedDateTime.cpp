@@ -190,13 +190,10 @@ ThrowCompletionOr<ZonedDateTime*> to_temporal_zoned_date_time(VM& vm, Value item
         auto string = TRY(item.to_string(vm));
 
         // c. Let result be ? ParseTemporalZonedDateTimeString(string).
-        auto parsed_result = TRY(parse_temporal_zoned_date_time_string(vm, string));
+        result = TRY(parse_temporal_zoned_date_time_string(vm, string));
 
-        // NOTE: The ISODateTime struct inside parsed_result will be moved into `result` at the end of this path to avoid mismatching names.
-        //       Thus, all remaining references to `result` in this path actually refers to `parsed_result`.
-
-        // d. Let timeZoneName be result.[[TimeZoneName]].
-        auto time_zone_name = parsed_result.time_zone.name;
+        // d. Let timeZoneName be result.[[TimeZone]].[[Name]].
+        auto time_zone_name = result.time_zone.name;
 
         // e. Assert: timeZoneName is not undefined.
         VERIFY(time_zone_name.has_value());
@@ -211,11 +208,11 @@ ThrowCompletionOr<ZonedDateTime*> to_temporal_zoned_date_time(VM& vm, Value item
             time_zone_name = canonicalize_time_zone_name(*time_zone_name);
         }
 
-        // g. Let offsetString be result.[[TimeZoneOffsetString]].
-        offset_string = move(parsed_result.time_zone.offset_string);
+        // g. Let offsetString be result.[[TimeZone]].[[OffsetString]].
+        offset_string = move(result.time_zone.offset_string);
 
-        // h. If result.[[TimeZoneZ]] is true, then
-        if (parsed_result.time_zone.z) {
+        // h. If result.[[TimeZone]].[[Z]] is true, then
+        if (result.time_zone.z) {
             // i. Set offsetBehaviour to exact.
             offset_behavior = OffsetBehavior::Exact;
         }
@@ -229,16 +226,13 @@ ThrowCompletionOr<ZonedDateTime*> to_temporal_zoned_date_time(VM& vm, Value item
         time_zone = MUST(create_temporal_time_zone(vm, *time_zone_name));
 
         // k. Let calendar be ? ToTemporalCalendarWithISODefault(result.[[Calendar]]).
-        auto temporal_calendar_like = parsed_result.date_time.calendar.has_value()
-            ? js_string(vm, parsed_result.date_time.calendar.value())
+        auto temporal_calendar_like = result.calendar.has_value()
+            ? js_string(vm, result.calendar.value())
             : js_undefined();
         calendar = TRY(to_temporal_calendar_with_iso_default(vm, temporal_calendar_like));
 
         // l. Set matchBehaviour to match minutes.
         match_behavior = MatchBehavior::MatchMinutes;
-
-        // See NOTE above about why this is done.
-        result = move(parsed_result.date_time);
     }
 
     // 7. Let offsetNanoseconds be 0.
