@@ -202,24 +202,6 @@ void ConnectionToWindowServer::key_down(i32 window_id, u32 code_point, u32 key, 
         return;
     }
 
-    bool accepts_command_palette = !window->blocks_command_palette();
-    if (accepts_command_palette && window->focused_widget())
-        accepts_command_palette = window->focused_widget()->accepts_command_palette();
-
-    // FIXME: This shortcut should be configurable.
-    if (accepts_command_palette && !m_in_command_palette && modifiers == (Mod_Ctrl | Mod_Shift) && key == Key_A) {
-        auto command_palette = CommandPalette::construct(*window);
-        command_palette->set_window_mode(GUI::WindowMode::CaptureInput);
-        TemporaryChange change { m_in_command_palette, true };
-        if (command_palette->exec() != GUI::Dialog::ExecResult::OK)
-            return;
-        auto* action = command_palette->selected_action();
-        VERIFY(action);
-        action->flash_menubar_menu(*window);
-        action->activate();
-        return;
-    }
-
     Core::EventLoop::current().post_event(*window, move(key_event));
 }
 

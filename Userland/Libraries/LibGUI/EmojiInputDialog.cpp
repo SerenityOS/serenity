@@ -99,7 +99,6 @@ EmojiInputDialog::EmojiInputDialog(Window* parent_window)
         VERIFY_NOT_REACHED();
 
     set_frameless(true);
-    set_blocks_command_palette(true);
     set_blocks_emoji_input(true);
     set_window_mode(GUI::WindowMode::CaptureInput);
     resize(400, 300);
