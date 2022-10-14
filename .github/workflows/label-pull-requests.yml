@@ -1,0 +1,153 @@
+name: Pull request labeler
+
+# FIXME: Consider adding the `issue_comment` event to change labels based on generic, non-review pull request comments.
+#        Consider the trade off of how spammy it can be (one CI run per comment) and how useful it would be to have.
+#        Consider alternatives to `issue_comment`.
+on:
+  pull_request:
+    types: [opened, reopened, converted_to_draft, ready_for_review, synchronize, edited, review_requested, closed]
+  pull_request_review:
+    types: [submitted, dismissed]
+
+jobs:
+  label_pull_request:
+    runs-on: ubuntu-22.04
+    if: always() && github.repository == 'SerenityOS/serenity'
+    
+    steps:
+      - name: Label pull request
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.BUGGIEBOT }}
+          script: |
+            const prCommunityApprovedLabel = "✅ pr-community-approved";
+            const prMaintainerApprovedButAwaitingCiLabel = "✅ pr-maintainer-approved-but-awaiting-ci";
+            const prNeedsReviewLabel = "👀 pr-needs-review";
+            const prWaitingForAuthorLabel = "⏳ pr-waiting-for-author";
+            const prIsBlockedLabel = "⛔️ pr-is-blocked";
+            const prUnclearLabel = "🤔 pr-unclear";
+
+            const subjectiveLabels = [prIsBlockedLabel, prUnclearLabel];
+
+            function removeExistingPrLabels(currentLabels, keepSubjectiveLabels) {
+                return currentLabels.filter(
+                    label =>
+                        !label.includes("pr-") || (keepSubjectiveLabels && subjectiveLabels.includes(label))
+                );
+            }
+
+            async function labelsForGenericPullRequestChange(currentLabels) {
+                let filteredLabels = removeExistingPrLabels(currentLabels, true);
+                filteredLabels.push(prNeedsReviewLabel);
+                return filteredLabels;
+            }
+
+            async function labelsForPullRequestReviewSubmitted(currentLabels, { pull_request, review }) {
+                let newLabels = currentLabels;
+                const isBlocked = currentLabels.some(label => label === prIsBlockedLabel);
+
+                if (review.state.toLowerCase() === "approved") {
+                    const maintainers = (
+                        await github.rest.teams.listMembersInOrg({
+                            org: "SerenityOS",
+                            team_slug: "maintainers",
+                        })
+                    ).data;
+
+                    const maintainer = maintainers.some(
+                        maintainerInArray => maintainerInArray.login === review.user.login
+                    );
+
+                    if (maintainer) {
+                        newLabels = newLabels.filter(
+                            label => !(label === prNeedsReviewLabel || label === prWaitingForAuthorLabel)
+                        );
+
+                        if (!newLabels.includes(prMaintainerApprovedButAwaitingCiLabel))
+                            newLabels.push(prMaintainerApprovedButAwaitingCiLabel);
+                    } else {
+                        if (!newLabels.includes(prCommunityApprovedLabel))
+                            newLabels.push(prCommunityApprovedLabel);
+                    }
+                } else if (!isBlocked) {
+                    newLabels = newLabels.filter(
+                        label =>
+                            !(
+                                label === prCommunityApprovedLabel ||
+                                label === prMaintainerApprovedButAwaitingCiLabel
+                            )
+                    );
+
+                    if (review.user.login === pull_request.user.login) newLabels.push(prNeedsReviewLabel);
+                    else newLabels.push(prWaitingForAuthorLabel);
+                }
+
+                return newLabels;
+            }
+
+            async function labelsForPullRequestEffectivelyClosed(currentLabels) {
+                return removeExistingPrLabels(currentLabels, false);
+            }
+
+            const eventHandlers = {
+                opened: labelsForGenericPullRequestChange,
+                reopened: labelsForGenericPullRequestChange,
+                submitted: labelsForPullRequestReviewSubmitted,
+                dismissed: labelsForGenericPullRequestChange,
+                converted_to_draft: labelsForPullRequestEffectivelyClosed,
+                ready_for_review: labelsForGenericPullRequestChange,
+                synchronize: labelsForGenericPullRequestChange, // synchronize is triggered when the branch is changed
+                edited: labelsForGenericPullRequestChange,
+                review_requested: labelsForGenericPullRequestChange,
+                closed: labelsForPullRequestEffectivelyClosed,
+            };
+
+            const eventName = context.payload.action;
+            const handlerForCurrentEvent = eventHandlers[eventName];
+
+            function apiErrorHandler(error) {
+                console.log(
+                    "::warning::Encountered error during event handling, not updating labels. Error:",
+                    error
+                );
+            }
+
+            async function updateLabels(currentLabelsAsObjects) {
+                const currentLabels = [];
+                currentLabelsAsObjects.forEach(labelObject => currentLabels.push(labelObject.name));
+                console.log("currentLabels", currentLabels);
+
+                const isEffectivelyClosed =
+                    context.payload.pull_request.draft ||
+                    context.payload.pull_request.state.toLowerCase() === "closed";
+
+                const newLabels = await (!isEffectivelyClosed
+                    ? handlerForCurrentEvent(currentLabels, context.payload)
+                    : labelsForPullRequestEffectivelyClosed(currentLabels, context.payload));
+
+                console.log(
+                    `Received '${eventName}' event for ${
+                        isEffectivelyClosed ? "draft/closed" : "open"
+                    } pull request, changing labels from '${currentLabels}' to '${newLabels}'`
+                );
+
+                return github.rest.issues.setLabels({
+                    issue_number: context.payload.pull_request.number,
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    labels: newLabels,
+                });
+            }
+
+            if (handlerForCurrentEvent) {
+                github.rest.issues
+                    .listLabelsOnIssue({
+                        issue_number: context.payload.pull_request.number,
+                        owner: context.repo.owner,
+                        repo: context.repo.repo,
+                    })
+                    .then(result => updateLabels(result.data))
+                    .catch(apiErrorHandler);
+            } else {
+                console.log(`::warning::No handler for the '${eventName}' event, not updating labels.`);
+            }
