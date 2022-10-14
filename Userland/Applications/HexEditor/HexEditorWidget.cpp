@@ -367,11 +367,19 @@ void HexEditorWidget::update_inspector_values(size_t position)
         if (!is_ascii_control(byte_char) && is_ascii(byte_char)) {
             ascii_string_builder.append(byte_char);
         } else {
-            ascii_string_builder.append(" ");
+            ascii_string_builder.append(' ');
         }
     }
 
     value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::ASCIIString, ascii_string_builder.to_string());
+
+    Utf8View utf8_string_view { ReadonlyBytes { selected_bytes } };
+    utf8_string_view.validate(valid_bytes);
+    if (valid_bytes == 0)
+        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UTF8String, "");
+    else
+        // FIXME: replace control chars with something else - we don't want line breaks here ;)
+        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UTF8String, utf8_string_view.as_string());
 
     // FIXME: Parse as other values like Timestamp etc
 
