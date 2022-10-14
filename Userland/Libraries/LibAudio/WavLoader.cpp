@@ -83,8 +83,16 @@ static ErrorOr<double> read_sample(Core::Stream::Stream& stream)
 {
     T sample { 0 };
     TRY(stream.read(Bytes { &sample, sizeof(T) }));
+    // Remap integer samples to normalized floating-point range of -1 to 1.
     if constexpr (IsIntegral<T>) {
-        return static_cast<double>(AK::convert_between_host_and_little_endian(sample)) / static_cast<double>(NumericLimits<T>::max());
+        if constexpr (NumericLimits<T>::is_signed()) {
+            // Signed integer samples are centered around zero, so this division is enough.
+            return static_cast<double>(AK::convert_between_host_and_little_endian(sample)) / static_cast<double>(NumericLimits<T>::max());
+        } else {
+            // Unsigned integer samples, on the other hand, need to be shifted to center them around zero.
+            // The first division therefore remaps to the range 0 to 2.
+            return static_cast<double>(AK::convert_between_host_and_little_endian(sample)) / (static_cast<double>(NumericLimits<T>::max()) / 2.0) - 1.0;
+        }
     } else {
         return static_cast<double>(AK::convert_between_host_and_little_endian(sample));
     }
