@@ -202,7 +202,7 @@ public:
             df_fields.empend("total_inode_count", "Total inodes", Gfx::TextAlignment::CenterRight);
             df_fields.empend("block_size", "Block size", Gfx::TextAlignment::CenterRight);
 
-            fs_table_view.set_model(MUST(GUI::SortingProxyModel::create(GUI::JsonArrayModel::create("/proc/df", move(df_fields)))));
+            fs_table_view.set_model(MUST(GUI::SortingProxyModel::create(GUI::JsonArrayModel::create("/sys/kernel/df", move(df_fields)))));
 
             fs_table_view.set_column_painting_delegate(3, make<ProgressbarPaintingDelegate>());
 
@@ -243,6 +243,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/etc/passwd", "r"));
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil("/proc", "r"));
+    TRY(Core::System::unveil("/sys/kernel", "r"));
     TRY(Core::System::unveil("/dev", "r"));
     TRY(Core::System::unveil("/bin", "r"));
     TRY(Core::System::unveil("/usr/lib", "r"));

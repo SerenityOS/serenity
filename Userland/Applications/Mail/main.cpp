@@ -24,7 +24,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Config::pledge_domain("Mail");
 
-    TRY(Core::System::unveil("/proc/all", "r"));
+    TRY(Core::System::unveil("/sys/kernel/processes", "r"));
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil("/etc", "r"));
     TRY(Core::System::unveil("/tmp/session/%sid/portal/webcontent", "rw"));

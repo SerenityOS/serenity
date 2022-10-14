@@ -63,7 +63,7 @@ NetworkSettingsWidget::NetworkSettingsWidget()
 
     auto config_file = Core::ConfigFile::open_for_system("Network").release_value_but_fixme_should_propagate_errors();
 
-    auto proc_net_adapters_file = Core::Stream::File::open("/proc/net/adapters"sv, Core::Stream::OpenMode::Read).release_value_but_fixme_should_propagate_errors();
+    auto proc_net_adapters_file = Core::Stream::File::open("/sys/kernel/net/adapters"sv, Core::Stream::OpenMode::Read).release_value_but_fixme_should_propagate_errors();
     auto data = proc_net_adapters_file->read_all().release_value_but_fixme_should_propagate_errors();
     JsonParser parser(data);
     JsonValue proc_net_adapters_json = parser.parse().release_value_but_fixme_should_propagate_errors();

@@ -105,7 +105,7 @@ static inline u64 page_count_to_bytes(size_t count)
 
 void MemoryStatsWidget::refresh()
 {
-    auto proc_memstat = Core::File::construct("/proc/memstat");
+    auto proc_memstat = Core::File::construct("/sys/kernel/memstat");
     if (!proc_memstat->open(Core::OpenMode::ReadOnly))
         VERIFY_NOT_REACHED();
 

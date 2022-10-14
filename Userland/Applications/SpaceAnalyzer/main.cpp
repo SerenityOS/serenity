@@ -79,7 +79,7 @@ struct MountInfo {
 static void fill_mounts(Vector<MountInfo>& output)
 {
     // Output info about currently mounted filesystems.
-    auto file = Core::File::construct("/proc/df");
+    auto file = Core::File::construct("/sys/kernel/df");
     if (!file->open(Core::OpenMode::ReadOnly)) {
         warnln("Failed to open {}: {}", file->name(), file->error_string());
         return;
