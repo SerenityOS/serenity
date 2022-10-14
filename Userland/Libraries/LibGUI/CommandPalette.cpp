@@ -247,13 +247,17 @@ void CommandPalette::collect_actions(GUI::Window& parent_window)
         });
     };
 
+    Function<bool(GUI::Action*)> should_show_action = [&](GUI::Action* action) {
+        return action && action->is_enabled() && action->shortcut() != Shortcut(Mod_Ctrl | Mod_Shift, Key_A);
+    };
+
     Function<void(Menu&)> collect_actions_from_menu = [&](Menu& menu) {
         for (auto menu_item : menu.items()) {
             if (menu_item.submenu())
                 collect_actions_from_menu(*menu_item.submenu());
 
-            auto const* action = menu_item.action();
-            if (action && action->is_enabled())
+            auto* action = menu_item.action();
+            if (should_show_action(action))
                 actions.set(*action);
         }
     };
@@ -271,7 +275,7 @@ void CommandPalette::collect_actions(GUI::Window& parent_window)
 
     if (!parent_window.is_modal()) {
         for (auto const& it : GUI::Application::the()->global_shortcut_actions({})) {
-            if (it.value->is_enabled())
+            if (should_show_action(it.value))
                 actions.set(*it.value);
         }
     }
