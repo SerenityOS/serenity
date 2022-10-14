@@ -6,6 +6,7 @@
 
 #include <AK/URLParser.h>
 #include <LibWeb/Bindings/Intrinsics.h>
+#include <LibWeb/Bindings/RequestPrototype.h>
 #include <LibWeb/DOM/AbortSignal.h>
 #include <LibWeb/Fetch/Enums.h>
 #include <LibWeb/Fetch/Headers.h>
@@ -609,6 +610,13 @@ JS::NonnullGCPtr<DOM::AbortSignal> Request::signal() const
 {
     // The signal getter steps are to return this’s signal.
     return *m_signal;
+}
+
+// https://fetch.spec.whatwg.org/#dom-request-duplex
+Bindings::RequestDuplex Request::duplex() const
+{
+    // The duplex getter steps are to return "half".
+    return Bindings::RequestDuplex::Half;
 }
 
 // https://fetch.spec.whatwg.org/#dom-request-clone

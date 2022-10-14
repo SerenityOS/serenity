@@ -92,6 +92,7 @@ public:
     [[nodiscard]] bool is_reload_navigation() const;
     [[nodiscard]] bool is_history_navigation() const;
     [[nodiscard]] JS::NonnullGCPtr<DOM::AbortSignal> signal() const;
+    [[nodiscard]] Bindings::RequestDuplex duplex() const;
     [[nodiscard]] WebIDL::ExceptionOr<JS::NonnullGCPtr<Request>> clone() const;
 
 private:
