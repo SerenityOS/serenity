@@ -37,7 +37,7 @@ static KernelBaseState s_kernel_base_state = KernelBaseState::Uninitialized;
 Optional<FlatPtr> kernel_base()
 {
     if (s_kernel_base_state == KernelBaseState::Uninitialized) {
-        auto file = Core::File::open("/proc/kernel_base", Core::OpenMode::ReadOnly);
+        auto file = Core::File::open("/sys/kernel/load_base", Core::OpenMode::ReadOnly);
         if (file.is_error()) {
             s_kernel_base_state = KernelBaseState::Invalid;
             return {};
