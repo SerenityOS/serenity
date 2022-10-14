@@ -170,9 +170,9 @@ TEST_CASE(tmpfs_read_past_end)
     VERIFY(rc == 0);
 }
 
-TEST_CASE(procfs_read_past_end)
+TEST_CASE(sysfs_read_past_uptime_end)
 {
-    int fd = open("/proc/uptime", O_RDONLY);
+    int fd = open("/sys/kernel/uptime", O_RDONLY);
     VERIFY(fd >= 0);
 
     int rc = lseek(fd, 4096, SEEK_SET);
@@ -389,7 +389,7 @@ TEST_CASE(open_silly_things)
     EXPECT_ERROR_2(EINVAL, open, "/dev/zero", (O_DIRECTORY | O_CREAT | O_RDWR));
     EXPECT_ERROR_2(EEXIST, open, "/dev/zero", (O_CREAT | O_EXCL | O_RDWR));
     EXPECT_ERROR_2(EINVAL, open, "/tmp/abcdef", (O_DIRECTORY | O_CREAT | O_RDWR));
-    EXPECT_ERROR_2(EACCES, open, "/proc/all", (O_RDWR));
+    EXPECT_ERROR_2(EACCES, open, "/sys/kernel/processes", (O_RDWR));
     EXPECT_ERROR_2(ENOENT, open, "/boof/baaf/nonexistent", (O_CREAT | O_RDWR));
     EXPECT_ERROR_2(EISDIR, open, "/tmp", (O_DIRECTORY | O_RDWR));
     EXPECT_ERROR_2(EPERM, link, "/", "/home/anon/lolroot");
