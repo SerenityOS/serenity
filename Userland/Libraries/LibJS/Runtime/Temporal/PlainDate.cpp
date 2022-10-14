@@ -62,7 +62,7 @@ ThrowCompletionOr<PlainDate*> create_temporal_date(VM& vm, i32 iso_year, u8 iso_
         return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidPlainDate);
 
     // 6. If ISODateTimeWithinLimits(isoYear, isoMonth, isoDay, 12, 0, 0, 0, 0, 0) is false, throw a RangeError exception.
-    if (!iso_date_time_within_limits(vm, iso_year, iso_month, iso_day, 12, 0, 0, 0, 0, 0))
+    if (!iso_date_time_within_limits(iso_year, iso_month, iso_day, 12, 0, 0, 0, 0, 0))
         return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidPlainDate);
 
     // 7. If newTarget is not present, set newTarget to %Temporal.PlainDate%.

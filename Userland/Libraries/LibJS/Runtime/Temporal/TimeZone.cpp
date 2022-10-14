@@ -159,7 +159,7 @@ MarkedVector<BigInt*> get_iana_time_zone_epoch_value(VM& vm, [[maybe_unused]] St
 
     // FIXME: Implement this properly for non-UTC timezones.
     auto list = MarkedVector<BigInt*> { vm.heap() };
-    list.append(get_epoch_from_iso_parts(vm, year, month, day, hour, minute, second, millisecond, microsecond, nanosecond));
+    list.append(js_bigint(vm, get_utc_epoch_nanoseconds(year, month, day, hour, minute, second, millisecond, microsecond, nanosecond)));
     return list;
 }
 
@@ -584,11 +584,11 @@ ThrowCompletionOr<Instant*> disambiguate_possible_instants(VM& vm, MarkedVector<
         return vm.throw_completion<RangeError>(ErrorType::TemporalDisambiguatePossibleInstantsRejectZero);
     }
 
-    // 7. Let epochNanoseconds be GetEpochFromISOParts(dateTime.[[ISOYear]], dateTime.[[ISOMonth]], dateTime.[[ISODay]], dateTime.[[ISOHour]], dateTime.[[ISOMinute]], dateTime.[[ISOSecond]], dateTime.[[ISOMillisecond]], dateTime.[[ISOMicrosecond]], dateTime.[[ISONanosecond]]).
-    auto* epoch_nanoseconds = get_epoch_from_iso_parts(vm, date_time.iso_year(), date_time.iso_month(), date_time.iso_day(), date_time.iso_hour(), date_time.iso_minute(), date_time.iso_second(), date_time.iso_millisecond(), date_time.iso_microsecond(), date_time.iso_nanosecond());
+    // 7. Let epochNanoseconds be GetUTCEpochNanoseconds(dateTime.[[ISOYear]], dateTime.[[ISOMonth]], dateTime.[[ISODay]], dateTime.[[ISOHour]], dateTime.[[ISOMinute]], dateTime.[[ISOSecond]], dateTime.[[ISOMillisecond]], dateTime.[[ISOMicrosecond]], dateTime.[[ISONanosecond]]).
+    auto epoch_nanoseconds = get_utc_epoch_nanoseconds(date_time.iso_year(), date_time.iso_month(), date_time.iso_day(), date_time.iso_hour(), date_time.iso_minute(), date_time.iso_second(), date_time.iso_millisecond(), date_time.iso_microsecond(), date_time.iso_nanosecond());
 
     // 8. Let dayBeforeNs be epochNanoseconds - ℤ(nsPerDay).
-    auto* day_before_ns = js_bigint(vm, epoch_nanoseconds->big_integer().minus(ns_per_day_bigint));
+    auto* day_before_ns = js_bigint(vm, epoch_nanoseconds.minus(ns_per_day_bigint));
 
     // 9. If ! IsValidEpochNanoseconds(dayBeforeNs) is false, throw a RangeError exception.
     if (!is_valid_epoch_nanoseconds(*day_before_ns))
@@ -598,7 +598,7 @@ ThrowCompletionOr<Instant*> disambiguate_possible_instants(VM& vm, MarkedVector<
     auto* day_before = MUST(create_temporal_instant(vm, *day_before_ns));
 
     // 11. Let dayAfterNs be epochNanoseconds + ℤ(nsPerDay).
-    auto* day_after_ns = js_bigint(vm, epoch_nanoseconds->big_integer().plus(ns_per_day_bigint));
+    auto* day_after_ns = js_bigint(vm, epoch_nanoseconds.plus(ns_per_day_bigint));
 
     // 12. If ! IsValidEpochNanoseconds(dayAfterNs) is false, throw a RangeError exception.
     if (!is_valid_epoch_nanoseconds(*day_after_ns))

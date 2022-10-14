@@ -42,6 +42,7 @@ static auto const ns_max_instant = "8640000000000000000000"_sbigint;
 static auto const ns_min_instant = "-8640000000000000000000"_sbigint;
 
 bool is_valid_epoch_nanoseconds(BigInt const& epoch_nanoseconds);
+bool is_valid_epoch_nanoseconds(Crypto::SignedBigInteger const& epoch_nanoseconds);
 ThrowCompletionOr<Instant*> create_temporal_instant(VM&, BigInt const& nanoseconds, FunctionObject const* new_target = nullptr);
 ThrowCompletionOr<Instant*> to_temporal_instant(VM&, Value item);
 ThrowCompletionOr<BigInt*> parse_temporal_instant(VM&, String const& iso_string);

@@ -557,7 +557,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::round)
     auto rounding_increment = TRY(to_temporal_date_time_rounding_increment(vm, *round_to, *smallest_unit));
 
     // 9. Let result be ! RoundISODateTime(dateTime.[[ISOYear]], dateTime.[[ISOMonth]], dateTime.[[ISODay]], dateTime.[[ISOHour]], dateTime.[[ISOMinute]], dateTime.[[ISOSecond]], dateTime.[[ISOMillisecond]], dateTime.[[ISOMicrosecond]], dateTime.[[ISONanosecond]], roundingIncrement, smallestUnit, roundingMode).
-    auto result = round_iso_date_time(vm, date_time->iso_year(), date_time->iso_month(), date_time->iso_day(), date_time->iso_hour(), date_time->iso_minute(), date_time->iso_second(), date_time->iso_millisecond(), date_time->iso_microsecond(), date_time->iso_nanosecond(), rounding_increment, *smallest_unit, rounding_mode);
+    auto result = round_iso_date_time(date_time->iso_year(), date_time->iso_month(), date_time->iso_day(), date_time->iso_hour(), date_time->iso_minute(), date_time->iso_second(), date_time->iso_millisecond(), date_time->iso_microsecond(), date_time->iso_nanosecond(), rounding_increment, *smallest_unit, rounding_mode);
 
     // 10. Return ? CreateTemporalDateTime(result.[[Year]], result.[[Month]], result.[[Day]], result.[[Hour]], result.[[Minute]], result.[[Second]], result.[[Millisecond]], result.[[Microsecond]], result.[[Nanosecond]], dateTime.[[Calendar]]).
     return TRY(create_temporal_date_time(vm, result.year, result.month, result.day, result.hour, result.minute, result.second, result.millisecond, result.microsecond, result.nanosecond, date_time->calendar()));
@@ -604,7 +604,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::to_string)
     auto show_calendar = TRY(to_show_calendar_option(vm, *options));
 
     // 7. Let result be ! RoundISODateTime(dateTime.[[ISOYear]], dateTime.[[ISOMonth]], dateTime.[[ISODay]], dateTime.[[ISOHour]], dateTime.[[ISOMinute]], dateTime.[[ISOSecond]], dateTime.[[ISOMillisecond]], dateTime.[[ISOMicrosecond]], dateTime.[[ISONanosecond]], precision.[[Increment]], precision.[[Unit]], roundingMode).
-    auto result = round_iso_date_time(vm, date_time->iso_year(), date_time->iso_month(), date_time->iso_day(), date_time->iso_hour(), date_time->iso_minute(), date_time->iso_second(), date_time->iso_millisecond(), date_time->iso_microsecond(), date_time->iso_nanosecond(), precision.increment, precision.unit, rounding_mode);
+    auto result = round_iso_date_time(date_time->iso_year(), date_time->iso_month(), date_time->iso_day(), date_time->iso_hour(), date_time->iso_minute(), date_time->iso_second(), date_time->iso_millisecond(), date_time->iso_microsecond(), date_time->iso_nanosecond(), precision.increment, precision.unit, rounding_mode);
 
     // 8. Return ? TemporalDateTimeToString(result.[[Year]], result.[[Month]], result.[[Day]], result.[[Hour]], result.[[Minute]], result.[[Second]], result.[[Millisecond]], result.[[Microsecond]], result.[[Nanosecond]], dateTime.[[Calendar]], precision.[[Precision]], showCalendar).
     return js_string(vm, TRY(temporal_date_time_to_string(vm, result.year, result.month, result.day, result.hour, result.minute, result.second, result.millisecond, result.microsecond, result.nanosecond, &date_time->calendar(), precision.precision, show_calendar)));

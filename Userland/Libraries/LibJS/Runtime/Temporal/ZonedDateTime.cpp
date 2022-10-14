@@ -57,19 +57,18 @@ ThrowCompletionOr<BigInt const*> interpret_iso_date_time_offset(VM& vm, i32 year
 
     // 4. If offsetBehaviour is exact or offsetOption is "use", then
     if (offset_behavior == OffsetBehavior::Exact || offset_option == "use"sv) {
-        // a. Let epochNanoseconds be GetEpochFromISOParts(year, month, day, hour, minute, second, millisecond, microsecond, nanosecond).
-        auto* epoch_nanoseconds = get_epoch_from_iso_parts(vm, year, month, day, hour, minute, second, millisecond, microsecond, nanosecond);
+        // a. Let epochNanoseconds be GetUTCEpochNanoseconds(year, month, day, hour, minute, second, millisecond, microsecond, nanosecond).
+        auto epoch_nanoseconds = get_utc_epoch_nanoseconds(year, month, day, hour, minute, second, millisecond, microsecond, nanosecond);
 
         // b. Set epochNanoseconds to epochNanoseconds - ℤ(offsetNanoseconds).
-        auto offset_nanoseconds_bigint = Crypto::SignedBigInteger { offset_nanoseconds };
-        epoch_nanoseconds = js_bigint(vm, epoch_nanoseconds->big_integer().minus(offset_nanoseconds_bigint));
+        epoch_nanoseconds = epoch_nanoseconds.minus(Crypto::SignedBigInteger { offset_nanoseconds });
 
         // c. If ! IsValidEpochNanoseconds(epochNanoseconds) is false, throw a RangeError exception.
-        if (!is_valid_epoch_nanoseconds(*epoch_nanoseconds))
+        if (!is_valid_epoch_nanoseconds(epoch_nanoseconds))
             return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidEpochNanoseconds);
 
         // d. Return epochNanoseconds.
-        return epoch_nanoseconds;
+        return js_bigint(vm, move(epoch_nanoseconds));
     }
 
     // 5. Assert: offsetBehaviour is option.

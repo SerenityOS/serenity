@@ -9,6 +9,7 @@
 #include <LibCrypto/BigInt/SignedBigInteger.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Completion.h>
+#include <LibJS/Runtime/Date.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Temporal/AbstractOperations.h>
 #include <LibJS/Runtime/Temporal/Calendar.h>
@@ -37,10 +38,16 @@ void Instant::visit_edges(Cell::Visitor& visitor)
 // 8.5.1 IsValidEpochNanoseconds ( epochNanoseconds ), https://tc39.es/proposal-temporal/#sec-temporal-isvalidepochnanoseconds
 bool is_valid_epoch_nanoseconds(BigInt const& epoch_nanoseconds)
 {
+    return is_valid_epoch_nanoseconds(epoch_nanoseconds.big_integer());
+}
+
+// 8.5.1 IsValidEpochNanoseconds ( epochNanoseconds ), https://tc39.es/proposal-temporal/#sec-temporal-isvalidepochnanoseconds
+bool is_valid_epoch_nanoseconds(Crypto::SignedBigInteger const& epoch_nanoseconds)
+{
     // 1. Assert: Type(epochNanoseconds) is BigInt.
 
     // 2. If ℝ(epochNanoseconds) < nsMinInstant or ℝ(epochNanoseconds) > nsMaxInstant, then
-    if (epoch_nanoseconds.big_integer() < ns_min_instant || epoch_nanoseconds.big_integer() > ns_max_instant) {
+    if (epoch_nanoseconds < ns_min_instant || epoch_nanoseconds > ns_max_instant) {
         // a. Return false.
         return false;
     }
@@ -115,23 +122,23 @@ ThrowCompletionOr<BigInt*> parse_temporal_instant(VM& vm, String const& iso_stri
     // 4. Assert: offsetString is not undefined.
     VERIFY(offset_string.has_value());
 
-    // 5. Let utc be GetEpochFromISOParts(result.[[Year]], result.[[Month]], result.[[Day]], result.[[Hour]], result.[[Minute]], result.[[Second]], result.[[Millisecond]], result.[[Microsecond]], result.[[Nanosecond]]).
-    auto* utc = get_epoch_from_iso_parts(vm, result.year, result.month, result.day, result.hour, result.minute, result.second, result.millisecond, result.microsecond, result.nanosecond);
+    // 5. Let utc be GetUTCEpochNanoseconds(result.[[Year]], result.[[Month]], result.[[Day]], result.[[Hour]], result.[[Minute]], result.[[Second]], result.[[Millisecond]], result.[[Microsecond]], result.[[Nanosecond]]).
+    auto utc = get_utc_epoch_nanoseconds(result.year, result.month, result.day, result.hour, result.minute, result.second, result.millisecond, result.microsecond, result.nanosecond);
 
     // 6. Let offsetNanoseconds be ? ParseTimeZoneOffsetString(offsetString).
     auto offset_nanoseconds = TRY(parse_time_zone_offset_string(vm, *offset_string));
 
     // 7. Let result be utc - ℤ(offsetNanoseconds).
-    auto* result_ns = js_bigint(vm, utc->big_integer().minus(Crypto::SignedBigInteger { offset_nanoseconds }));
+    auto result_ns = utc.minus(Crypto::SignedBigInteger { offset_nanoseconds });
 
     // 8. If ! IsValidEpochNanoseconds(result) is false, then
-    if (!is_valid_epoch_nanoseconds(*result_ns)) {
+    if (!is_valid_epoch_nanoseconds(result_ns)) {
         // a. Throw a RangeError exception.
         return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidEpochNanoseconds);
     }
 
     // 9. Return result.
-    return result_ns;
+    return js_bigint(vm, move(result_ns));
 }
 
 // 8.5.5 CompareEpochNanoseconds ( epochNanosecondsOne, epochNanosecondsTwo ), https://tc39.es/proposal-temporal/#sec-temporal-compareepochnanoseconds

@@ -6,6 +6,7 @@
 
 #include <AK/TypeCasts.h>
 #include <LibJS/Runtime/Array.h>
+#include <LibJS/Runtime/Date.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Temporal/AbstractOperations.h>
 #include <LibJS/Runtime/Temporal/Calendar.h>
@@ -141,11 +142,11 @@ JS_DEFINE_NATIVE_FUNCTION(TimeZonePrototype::get_possible_instants_for)
 
     // 4. If timeZone.[[OffsetNanoseconds]] is not undefined, then
     if (time_zone->offset_nanoseconds().has_value()) {
-        // a. Let epochNanoseconds be GetEpochFromISOParts(dateTime.[[ISOYear]], dateTime.[[ISOMonth]], dateTime.[[ISODay]], dateTime.[[ISOHour]], dateTime.[[ISOMinute]], dateTime.[[ISOSecond]], dateTime.[[ISOMillisecond]], dateTime.[[ISOMicrosecond]], dateTime.[[ISONanosecond]]).
-        auto* epoch_nanoseconds = get_epoch_from_iso_parts(vm, date_time->iso_year(), date_time->iso_month(), date_time->iso_day(), date_time->iso_hour(), date_time->iso_minute(), date_time->iso_second(), date_time->iso_millisecond(), date_time->iso_microsecond(), date_time->iso_nanosecond());
+        // a. Let epochNanoseconds be GetUTCEpochNanoseconds(dateTime.[[ISOYear]], dateTime.[[ISOMonth]], dateTime.[[ISODay]], dateTime.[[ISOHour]], dateTime.[[ISOMinute]], dateTime.[[ISOSecond]], dateTime.[[ISOMillisecond]], dateTime.[[ISOMicrosecond]], dateTime.[[ISONanosecond]]).
+        auto epoch_nanoseconds = get_utc_epoch_nanoseconds(date_time->iso_year(), date_time->iso_month(), date_time->iso_day(), date_time->iso_hour(), date_time->iso_minute(), date_time->iso_second(), date_time->iso_millisecond(), date_time->iso_microsecond(), date_time->iso_nanosecond());
 
         // b. Let possibleEpochNanoseconds be « epochNanoseconds - ℤ(timeZone.[[OffsetNanoseconds]]) ».
-        possible_epoch_nanoseconds.append(js_bigint(vm, epoch_nanoseconds->big_integer().minus(Crypto::SignedBigInteger { *time_zone->offset_nanoseconds() })));
+        possible_epoch_nanoseconds.append(js_bigint(vm, epoch_nanoseconds.minus(Crypto::SignedBigInteger { *time_zone->offset_nanoseconds() })));
     }
     // 5. Else,
     else {
