@@ -42,6 +42,7 @@ public:
     static CSS::FlexWrap flex_wrap() { return CSS::FlexWrap::Nowrap; }
     static CSS::ImageRendering image_rendering() { return CSS::ImageRendering::Auto; }
     static CSS::JustifyContent justify_content() { return CSS::JustifyContent::FlexStart; }
+    static CSS::AlignContent align_content() { return CSS::AlignContent::Stretch; }
     static CSS::AlignItems align_items() { return CSS::AlignItems::Stretch; }
     static CSS::AlignSelf align_self() { return CSS::AlignSelf::Auto; }
     static CSS::Appearance appearance() { return CSS::Appearance::Auto; }
@@ -163,6 +164,7 @@ public:
     float flex_grow() const { return m_noninherited.flex_grow; }
     float flex_shrink() const { return m_noninherited.flex_shrink; }
     int order() const { return m_noninherited.order; }
+    CSS::AlignContent align_content() const { return m_noninherited.align_content; }
     CSS::AlignItems align_items() const { return m_noninherited.align_items; }
     CSS::AlignSelf align_self() const { return m_noninherited.align_self; }
     CSS::Appearance appearance() const { return m_noninherited.appearance; }
@@ -288,6 +290,7 @@ protected:
         float flex_grow { InitialValues::flex_grow() };
         float flex_shrink { InitialValues::flex_shrink() };
         int order { InitialValues::order() };
+        CSS::AlignContent align_content { InitialValues::align_content() };
         CSS::AlignItems align_items { InitialValues::align_items() };
         CSS::AlignSelf align_self { InitialValues::align_self() };
         CSS::Appearance appearance { InitialValues::appearance() };
@@ -367,6 +370,7 @@ public:
     void set_flex_grow(float value) { m_noninherited.flex_grow = value; }
     void set_flex_shrink(float value) { m_noninherited.flex_shrink = value; }
     void set_order(int value) { m_noninherited.order = value; }
+    void set_align_content(CSS::AlignContent value) { m_noninherited.align_content = value; }
     void set_align_items(CSS::AlignItems value) { m_noninherited.align_items = value; }
     void set_align_self(CSS::AlignSelf value) { m_noninherited.align_self = value; }
     void set_appearance(CSS::Appearance value) { m_noninherited.appearance = value; }

@@ -349,6 +349,12 @@ CSS::TransformOrigin StyleProperties::transform_origin() const
     return { x_value.value(), y_value.value() };
 }
 
+Optional<CSS::AlignContent> StyleProperties::align_content() const
+{
+    auto value = property(CSS::PropertyID::AlignContent);
+    return value_id_to_align_content(value->to_identifier());
+}
+
 Optional<CSS::AlignItems> StyleProperties::align_items() const
 {
     auto value = property(CSS::PropertyID::AlignItems);

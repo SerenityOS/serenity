@@ -1,4 +1,11 @@
 {
+  "align-content": {
+    "inherited": false,
+    "initial": "stretch",
+    "valid-types": [
+      "align-content"
+    ]
+  },
   "align-items": {
     "inherited": false,
     "initial": "stretch",

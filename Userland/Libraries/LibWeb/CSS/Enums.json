@@ -1,4 +1,12 @@
 {
+    "align-content": [
+        "flex-start",
+        "flex-end",
+        "center",
+        "space-between",
+        "space-around",
+        "stretch"
+    ],
     "align-items": [
         "baseline",
         "center",

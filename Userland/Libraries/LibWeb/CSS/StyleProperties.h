@@ -68,6 +68,7 @@ public:
     float flex_grow() const;
     float flex_shrink() const;
     int order() const;
+    Optional<CSS::AlignContent> align_content() const;
     Optional<CSS::AlignItems> align_items() const;
     Optional<CSS::AlignSelf> align_self() const;
     Optional<CSS::Appearance> appearance() const;

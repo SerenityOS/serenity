@@ -398,6 +398,10 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
     if (justify_content.has_value())
         computed_values.set_justify_content(justify_content.value());
 
+    auto align_content = computed_style.align_content();
+    if (align_content.has_value())
+        computed_values.set_align_content(align_content.value());
+
     auto align_items = computed_style.align_items();
     if (align_items.has_value())
         computed_values.set_align_items(align_items.value());
