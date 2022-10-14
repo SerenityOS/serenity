@@ -152,13 +152,16 @@ Optional<InlineLevelIterator::Item> InlineLevelIterator::next(float available_wi
             };
         }
 
+        // NOTE: We never consider `content: ""` to be collapsible whitespace.
+        bool is_generated_empty_string = text_node.is_generated() && chunk.length == 0;
+
         Item item {
             .type = Item::Type::Text,
             .node = &text_node,
             .offset_in_node = chunk.start,
             .length_in_node = chunk.length,
             .width = chunk_width,
-            .is_collapsible_whitespace = m_text_node_context->do_collapse && chunk.is_all_whitespace,
+            .is_collapsible_whitespace = m_text_node_context->do_collapse && chunk.is_all_whitespace && !is_generated_empty_string,
         };
 
         add_extra_box_model_metrics_to_item(item, m_text_node_context->is_first_chunk, m_text_node_context->is_last_chunk);
