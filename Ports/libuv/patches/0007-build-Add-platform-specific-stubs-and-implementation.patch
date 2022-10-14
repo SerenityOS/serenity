@@ -66,9 +66,9 @@ index 0000000..5c34b75
 +static uint64_t uv__read_proc_memstat(const char* what) {
 +  uint64_t rc;
 +  char* p;
-+  char buf[4096];  /* Large enough to hold all of /proc/memstat. */
++  char buf[4096];  /* Large enough to hold all of /sys/kernel/memstat. */
 +
-+  if (uv__slurp("/proc/memstat", buf, sizeof(buf)))
++  if (uv__slurp("/sys/kernel/memstat", buf, sizeof(buf)))
 +    return 0;
 +
 +  p = strstr(buf, what);
@@ -104,9 +104,9 @@ index 0000000..5c34b75
 +  struct timespec now;
 +  int r;
 +
-+  /* Try /proc/uptime first, then fallback to clock_gettime(). */
++  /* Try /sys/kernel/uptime first, then fallback to clock_gettime(). */
 +  
-+  if (0 == uv__slurp("/proc/uptime", buf, sizeof(buf)))
++  if (0 == uv__slurp("/sys/kernel/uptime", buf, sizeof(buf)))
 +    if (1 == sscanf(buf, "%lf", uptime))
 +      return 0;
 +
