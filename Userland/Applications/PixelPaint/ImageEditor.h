@@ -118,6 +118,8 @@ public:
 
     Core::EventLoop& gui_event_loop() { return m_gui_event_loop; }
 
+    void set_editor_color_to_color_at_mouse_position(GUI::MouseEvent const& event, bool sample_all_layers);
+
 private:
     explicit ImageEditor(NonnullRefPtr<Image>);
 

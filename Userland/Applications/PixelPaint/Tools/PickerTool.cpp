@@ -16,25 +16,10 @@ namespace PixelPaint {
 
 void PickerTool::on_mousedown(Layer* layer, MouseEvent& event)
 {
-    auto& position = event.layer_event().position();
-
-    Color color;
-    if (m_sample_all_layers) {
-        color = m_editor->image().color_at(position);
-    } else {
-        if (!layer || !layer->rect().contains(position))
-            return;
-        color = layer->currently_edited_bitmap().get_pixel(position);
-    }
-
-    // We picked a transparent pixel, do nothing.
-    if (!color.alpha())
+    if (!layer)
         return;
-
-    if (event.layer_event().button() == GUI::MouseButton::Primary)
-        m_editor->set_primary_color(color);
-    else if (event.layer_event().button() == GUI::MouseButton::Secondary)
-        m_editor->set_secondary_color(color);
+    auto layer_event = event.layer_event();
+    m_editor->set_editor_color_to_color_at_mouse_position(layer_event, m_sample_all_layers);
 }
 
 GUI::Widget* PickerTool::get_properties_widget()
