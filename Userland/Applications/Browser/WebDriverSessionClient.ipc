@@ -6,4 +6,5 @@ endpoint WebDriverSessionClient {
     get_url() => (URL url)
     set_url(URL url) =|
     get_title() => (String title)
+    refresh() =|
 }

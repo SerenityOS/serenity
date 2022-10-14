@@ -158,4 +158,29 @@ ErrorOr<JsonValue, HttpError> Session::get_title()
     return JsonValue(m_browser_connection->get_title());
 }
 
+// POST /session/{session id}/refresh https://w3c.github.io/webdriver/#dfn-refresh
+ErrorOr<JsonValue, HttpError> Session::refresh()
+{
+    // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
+    auto current_window = get_window_object();
+    if (!current_window.has_value())
+        return HttpError { 404, "no such window", "Window not found" };
+
+    // FIXME: 2. Handle any user prompts and return its value if it is an error.
+
+    // 3. Initiate an overridden reload of the current top-level browsing context’s active document.
+    m_browser_connection->async_refresh();
+
+    // FIXME: 4. If url is special except for file:
+
+    // FIXME:     1. Try to wait for navigation to complete.
+
+    // FIXME:     2. Try to run the post-navigation checks.
+
+    // FIXME: 5. Set the current browsing context with current top-level browsing context.
+
+    // 6. Return success with data null.
+    return JsonValue();
+}
+
 }
