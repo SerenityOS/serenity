@@ -11,10 +11,15 @@
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Date.h>
 #include <LibJS/Runtime/GlobalObject.h>
+#include <LibJS/Runtime/Temporal/ISO8601.h>
 #include <LibTimeZone/TimeZone.h>
 #include <time.h>
 
 namespace JS {
+
+static Crypto::SignedBigInteger const s_one_billion_bigint { 1'000'000'000 };
+static Crypto::SignedBigInteger const s_one_million_bigint { 1'000'000 };
+static Crypto::SignedBigInteger const s_one_thousand_bigint { 1'000 };
 
 Date* Date::create(Realm& realm, double date_value)
 {
@@ -265,6 +270,7 @@ u8 week_day(double t)
 }
 
 // 21.4.1.7 LocalTZA ( t, isUTC ), https://tc39.es/ecma262/#sec-local-time-zone-adjustment
+// FIXME: Remove this when ECMA-402 is synced with https://github.com/tc39/ecma262/commit/43fd5f25357333d8340bfb486b8f0738e6d0d0cb.
 double local_tza(double time, [[maybe_unused]] bool is_utc, Optional<StringView> time_zone_override)
 {
     // The time_zone_override parameter is non-standard, but allows callers to override the system
@@ -285,21 +291,160 @@ double local_tza(double time, [[maybe_unused]] bool is_utc, Optional<StringView>
     return maybe_offset.has_value() ? static_cast<double>(maybe_offset->seconds) * 1000 : 0;
 }
 
-// 21.4.1.8 LocalTime ( t ), https://tc39.es/ecma262/#sec-localtime
+// 21.4.1.7 GetUTCEpochNanoseconds ( year, month, day, hour, minute, second, millisecond, microsecond, nanosecond ), https://tc39.es/ecma262/#sec-getutcepochnanoseconds
+Crypto::SignedBigInteger get_utc_epoch_nanoseconds(i32 year, u8 month, u8 day, u8 hour, u8 minute, u8 second, u16 millisecond, u16 microsecond, u16 nanosecond)
+{
+    // 1. Let date be MakeDay(𝔽(year), 𝔽(month - 1), 𝔽(day)).
+    auto date = make_day(year, month - 1, day);
+
+    // 2. Let time be MakeTime(𝔽(hour), 𝔽(minute), 𝔽(second), 𝔽(millisecond)).
+    auto time = make_time(hour, minute, second, millisecond);
+
+    // 3. Let ms be MakeDate(date, time).
+    auto ms = make_date(date, time);
+
+    // 4. Assert: ms is an integral Number.
+    VERIFY(ms == trunc(ms));
+
+    // 5. Return ℤ(ℝ(ms) × 10^6 + microsecond × 10^3 + nanosecond).
+    auto result = Crypto::SignedBigInteger { ms }.multiplied_by(s_one_million_bigint);
+    result = result.plus(Crypto::SignedBigInteger { static_cast<i32>(microsecond) }.multiplied_by(s_one_thousand_bigint));
+    result = result.plus(Crypto::SignedBigInteger { static_cast<i32>(nanosecond) });
+    return result;
+}
+
+static i64 clip_bigint_to_sane_time(Crypto::SignedBigInteger const& value)
+{
+    static Crypto::SignedBigInteger const min_bigint { NumericLimits<i64>::min() };
+    static Crypto::SignedBigInteger const max_bigint { NumericLimits<i64>::max() };
+
+    // The provided epoch (nano)seconds value is potentially out of range for AK::Time and subsequently
+    // get_time_zone_offset(). We can safely assume that the TZDB has no useful information that far
+    // into the past and future anyway, so clamp it to the i64 range.
+    if (value < min_bigint)
+        return NumericLimits<i64>::min();
+    if (value > max_bigint)
+        return NumericLimits<i64>::max();
+
+    // FIXME: Can we do this without string conversion?
+    return value.to_base(10).to_int<i64>().value();
+}
+
+// 21.4.1.8 GetNamedTimeZoneEpochNanoseconds ( timeZoneIdentifier, year, month, day, hour, minute, second, millisecond, microsecond, nanosecond ), https://tc39.es/ecma262/#sec-getnamedtimezoneepochnanoseconds
+Vector<Crypto::SignedBigInteger> get_named_time_zone_epoch_nanoseconds(StringView time_zone_identifier, i32 year, u8 month, u8 day, u8 hour, u8 minute, u8 second, u16 millisecond, u16 microsecond, u16 nanosecond)
+{
+    auto local_nanoseconds = get_utc_epoch_nanoseconds(year, month, day, hour, minute, second, millisecond, microsecond, nanosecond);
+    auto local_time = Time::from_nanoseconds(clip_bigint_to_sane_time(local_nanoseconds));
+
+    // FIXME: LibTimeZone does not behave exactly as the spec expects. It does not consider repeated or skipped time points.
+    auto offset = TimeZone::get_time_zone_offset(time_zone_identifier, local_time);
+
+    // Can only fail if the time zone identifier is invalid, which cannot be the case here.
+    VERIFY(offset.has_value());
+
+    return { local_nanoseconds.plus(Crypto::SignedBigInteger { offset->seconds }.multiplied_by(s_one_billion_bigint)) };
+}
+
+// 21.4.1.9 GetNamedTimeZoneOffsetNanoseconds ( timeZoneIdentifier, epochNanoseconds ), https://tc39.es/ecma262/#sec-getnamedtimezoneoffsetnanoseconds
+i64 get_named_time_zone_offset_nanoseconds(StringView time_zone_identifier, Crypto::SignedBigInteger const& epoch_nanoseconds)
+{
+    // Only called with validated time zone identifier as argument.
+    auto time_zone = TimeZone::time_zone_from_string(time_zone_identifier);
+    VERIFY(time_zone.has_value());
+
+    // Since Time::from_seconds() and Time::from_nanoseconds() both take an i64, converting to
+    // seconds first gives us a greater range. The TZDB doesn't have sub-second offsets.
+    auto seconds = epoch_nanoseconds.divided_by(s_one_billion_bigint).quotient;
+    auto time = Time::from_seconds(clip_bigint_to_sane_time(seconds));
+
+    auto offset = TimeZone::get_time_zone_offset(*time_zone, time);
+    VERIFY(offset.has_value());
+
+    return offset->seconds * 1'000'000'000;
+}
+
+// 21.4.1.10 DefaultTimeZone ( ), https://tc39.es/ecma262/#sec-defaulttimezone
+StringView default_time_zone()
+{
+    return TimeZone::current_time_zone();
+}
+
+// 21.4.1.11 LocalTime ( t ), https://tc39.es/ecma262/#sec-localtime
 double local_time(double time)
 {
-    // 1. Return t + LocalTZA(t, true).
-    return time + local_tza(time, true);
+    // 1. Let localTimeZone be DefaultTimeZone().
+    auto local_time_zone = default_time_zone();
+
+    double offset_nanoseconds { 0 };
+
+    // 2. If IsTimeZoneOffsetString(localTimeZone) is true, then
+    if (is_time_zone_offset_string(local_time_zone)) {
+        // a. Let offsetNs be ParseTimeZoneOffsetString(localTimeZone).
+        offset_nanoseconds = parse_time_zone_offset_string(local_time_zone);
+    }
+    // 3. Else,
+    else {
+        // a. Let offsetNs be GetNamedTimeZoneOffsetNanoseconds(localTimeZone, ℤ(ℝ(t) × 10^6)).
+        auto time_bigint = Crypto::SignedBigInteger { time }.multiplied_by(s_one_million_bigint);
+        offset_nanoseconds = get_named_time_zone_offset_nanoseconds(local_time_zone, time_bigint);
+    }
+
+    // 4. Let offsetMs be truncate(offsetNs / 10^6).
+    auto offset_milliseconds = trunc(offset_nanoseconds / 1e6);
+
+    // 5. Return t + 𝔽(offsetMs).
+    return time + offset_milliseconds;
 }
 
-// 21.4.1.9 UTC ( t ), https://tc39.es/ecma262/#sec-utc-t
+// 21.4.1.12 UTC ( t ), https://tc39.es/ecma262/#sec-utc-t
 double utc_time(double time)
 {
-    // 1. Return t - LocalTZA(t, false).
-    return time - local_tza(time, false);
+    // 1. Let localTimeZone be DefaultTimeZone().
+    auto local_time_zone = default_time_zone();
+
+    double offset_nanoseconds { 0 };
+
+    // 2. If IsTimeZoneOffsetString(localTimeZone) is true, then
+    if (is_time_zone_offset_string(local_time_zone)) {
+        // a. Let offsetNs be ParseTimeZoneOffsetString(localTimeZone).
+        offset_nanoseconds = parse_time_zone_offset_string(local_time_zone);
+    }
+    // 3. Else,
+    else {
+        // a. Let possibleInstants be GetNamedTimeZoneEpochNanoseconds(localTimeZone, ℝ(YearFromTime(t)), ℝ(MonthFromTime(t)) + 1, ℝ(DateFromTime(t)), ℝ(HourFromTime(t)), ℝ(MinFromTime(t)), ℝ(SecFromTime(t)), ℝ(msFromTime(t)), 0, 0).
+        auto possible_instants = get_named_time_zone_epoch_nanoseconds(local_time_zone, year_from_time(time), month_from_time(time) + 1, date_from_time(time), hour_from_time(time), min_from_time(time), sec_from_time(time), ms_from_time(time), 0, 0);
+
+        // b. NOTE: The following steps ensure that when t represents local time repeating multiple times at a negative time zone transition (e.g. when the daylight saving time ends or the time zone offset is decreased due to a time zone rule change) or skipped local time at a positive time zone transition (e.g. when the daylight saving time starts or the time zone offset is increased due to a time zone rule change), t is interpreted using the time zone offset before the transition.
+        Crypto::SignedBigInteger disambiguated_instant;
+
+        // c. If possibleInstants is not empty, then
+        if (!possible_instants.is_empty()) {
+            // i. Let disambiguatedInstant be possibleInstants[0].
+            disambiguated_instant = move(possible_instants.first());
+        }
+        // d. Else,
+        else {
+            // i. NOTE: t represents a local time skipped at a positive time zone transition (e.g. due to daylight saving time starting or a time zone rule change increasing the UTC offset).
+            // ii. Let possibleInstantsBefore be GetNamedTimeZoneEpochNanoseconds(localTimeZone, ℝ(YearFromTime(tBefore)), ℝ(MonthFromTime(tBefore)) + 1, ℝ(DateFromTime(tBefore)), ℝ(HourFromTime(tBefore)), ℝ(MinFromTime(tBefore)), ℝ(SecFromTime(tBefore)), ℝ(msFromTime(tBefore)), 0, 0), where tBefore is the largest integral Number < t for which possibleInstantsBefore is not empty (i.e., tBefore represents the last local time before the transition).
+            // iii. Let disambiguatedInstant be the last element of possibleInstantsBefore.
+
+            // FIXME: This branch currently cannot be reached with our implementation, because LibTimeZone does not handle skipped time points.
+            //        When GetNamedTimeZoneEpochNanoseconds is updated to use a LibTimeZone API which does handle them, implement these steps.
+            VERIFY_NOT_REACHED();
+        }
+
+        // e. Let offsetNs be GetNamedTimeZoneOffsetNanoseconds(localTimeZone, disambiguatedInstant).
+        offset_nanoseconds = get_named_time_zone_offset_nanoseconds(local_time_zone, disambiguated_instant);
+    }
+
+    // 4. Let offsetMs be truncate(offsetNs / 10^6).
+    auto offset_milliseconds = trunc(offset_nanoseconds / 1e6);
+
+    // 5. Return t - 𝔽(offsetMs).
+    return time - offset_milliseconds;
 }
 
-// 21.4.1.11 MakeTime ( hour, min, sec, ms ), https://tc39.es/ecma262/#sec-maketime
+// 21.4.1.14 MakeTime ( hour, min, sec, ms ), https://tc39.es/ecma262/#sec-maketime
 double make_time(double hour, double min, double sec, double ms)
 {
     // 1. If hour is not finite or min is not finite or sec is not finite or ms is not finite, return NaN.
@@ -334,7 +479,7 @@ double time_within_day(double time)
     return modulo(time, ms_per_day);
 }
 
-// 21.4.1.12 MakeDay ( year, month, date ), https://tc39.es/ecma262/#sec-makeday
+// 21.4.1.15 MakeDay ( year, month, date ), https://tc39.es/ecma262/#sec-makeday
 double make_day(double year, double month, double date)
 {
     // 1. If year is not finite or month is not finite or date is not finite, return NaN.
@@ -367,7 +512,7 @@ double make_day(double year, double month, double date)
     return day(static_cast<double>(t)) + dt - 1;
 }
 
-// 21.4.1.13 MakeDate ( day, time ), https://tc39.es/ecma262/#sec-makedate
+// 21.4.1.16 MakeDate ( day, time ), https://tc39.es/ecma262/#sec-makedate
 double make_date(double day, double time)
 {
     // 1. If day is not finite or time is not finite, return NaN.
@@ -385,7 +530,7 @@ double make_date(double day, double time)
     return tv;
 }
 
-// 21.4.1.14 TimeClip ( time ), https://tc39.es/ecma262/#sec-timeclip
+// 21.4.1.17 TimeClip ( time ), https://tc39.es/ecma262/#sec-timeclip
 double time_clip(double time)
 {
     // 1. If time is not finite, return NaN.
@@ -398,6 +543,113 @@ double time_clip(double time)
 
     // 3. Return 𝔽(! ToIntegerOrInfinity(time)).
     return to_integer_or_infinity(time);
+}
+
+// 21.4.1.19.1 IsTimeZoneOffsetString ( offsetString ), https://tc39.es/ecma262/#sec-istimezoneoffsetstring
+bool is_time_zone_offset_string(StringView offset_string)
+{
+    // 1. Let parseResult be ParseText(StringToCodePoints(offsetString), UTCOffset).
+    auto parse_result = Temporal::parse_iso8601(Temporal::Production::TimeZoneNumericUTCOffset, offset_string);
+
+    // 2. If parseResult is a List of errors, return false.
+    // 3. Return true.
+    return parse_result.has_value();
+}
+
+// 21.4.1.19.2 ParseTimeZoneOffsetString ( offsetString ), https://tc39.es/ecma262/#sec-parsetimezoneoffsetstring
+double parse_time_zone_offset_string(StringView offset_string)
+{
+    // 1. Let parseResult be ParseText(StringToCodePoints(offsetString), UTCOffset).
+    auto parse_result = Temporal::parse_iso8601(Temporal::Production::TimeZoneNumericUTCOffset, offset_string);
+
+    // 2. Assert: parseResult is not a List of errors.
+    VERIFY(parse_result.has_value());
+
+    // 3. Assert: parseResult contains a TemporalSign Parse Node.
+    VERIFY(parse_result->time_zone_utc_offset_sign.has_value());
+
+    // 4. Let parsedSign be the source text matched by the TemporalSign Parse Node contained within parseResult.
+    auto parsed_sign = *parse_result->time_zone_utc_offset_sign;
+    i8 sign { 0 };
+
+    // 5. If parsedSign is the single code point U+002D (HYPHEN-MINUS) or U+2212 (MINUS SIGN), then
+    if (parsed_sign.is_one_of("-"sv, "\xE2\x88\x92"sv)) {
+        // a. Let sign be -1.
+        sign = -1;
+    }
+    // 6. Else,
+    else {
+        // a. Let sign be 1.
+        sign = 1;
+    }
+
+    // 7. NOTE: Applications of StringToNumber below do not lose precision, since each of the parsed values is guaranteed to be a sufficiently short string of decimal digits.
+
+    // 8. Assert: parseResult contains an Hour Parse Node.
+    VERIFY(parse_result->time_zone_utc_offset_hour.has_value());
+
+    // 9. Let parsedHours be the source text matched by the Hour Parse Node contained within parseResult.
+    auto parsed_hours = *parse_result->time_zone_utc_offset_hour;
+
+    // 10. Let hours be ℝ(StringToNumber(CodePointsToString(parsedHours))).
+    auto hours = string_to_number(parsed_hours)->as_double();
+
+    double minutes { 0 };
+    double seconds { 0 };
+    double nanoseconds { 0 };
+
+    // 11. If parseResult does not contain a MinuteSecond Parse Node, then
+    if (!parse_result->time_zone_utc_offset_minute.has_value()) {
+        // a. Let minutes be 0.
+        minutes = 0;
+    }
+    // 12. Else,
+    else {
+        // a. Let parsedMinutes be the source text matched by the first MinuteSecond Parse Node contained within parseResult.
+        auto parsed_minutes = *parse_result->time_zone_utc_offset_minute;
+
+        // b. Let minutes be ℝ(StringToNumber(CodePointsToString(parsedMinutes))).
+        minutes = string_to_number(parsed_minutes)->as_double();
+    }
+
+    // 13. If parseResult does not contain two MinuteSecond Parse Nodes, then
+    if (!parse_result->time_zone_utc_offset_second.has_value()) {
+        // a. Let seconds be 0.
+        seconds = 0;
+    }
+    // 14. Else,
+    else {
+        // a. Let parsedSeconds be the source text matched by the second secondSecond Parse Node contained within parseResult.
+        auto parsed_seconds = *parse_result->time_zone_utc_offset_second;
+
+        // b. Let seconds be ℝ(StringToNumber(CodePointsToString(parsedSeconds))).
+        seconds = string_to_number(parsed_seconds)->as_double();
+    }
+
+    // 15. If parseResult does not contain a TemporalDecimalFraction Parse Node, then
+    if (!parse_result->time_zone_utc_offset_fraction.has_value()) {
+        // a. Let nanoseconds be 0.
+        nanoseconds = 0;
+    }
+    // 16. Else,
+    else {
+        // a. Let parsedFraction be the source text matched by the TemporalDecimalFraction Parse Node contained within parseResult.
+        auto parsed_fraction = *parse_result->time_zone_utc_offset_fraction;
+
+        // b. Let fraction be the string-concatenation of CodePointsToString(parsedFraction) and "000000000".
+        auto fraction = String::formatted("{}000000000", parsed_fraction);
+
+        // c. Let nanosecondsString be the substring of fraction from 1 to 10.
+        auto nanoseconds_string = fraction.substring_view(1, 9);
+
+        // d. Let nanoseconds be ℝ(StringToNumber(nanosecondsString)).
+        nanoseconds = string_to_number(nanoseconds_string)->as_double();
+    }
+
+    // 17. Return sign × (((hours × 60 + minutes) × 60 + seconds) × 10^9 + nanoseconds).
+    // NOTE: Using scientific notation (1e9) ensures the result of this expression is a double,
+    //       which is important - otherwise it's all integers and the result overflows!
+    return sign * (((hours * 60 + minutes) * 60 + seconds) * 1e9 + nanoseconds);
 }
 
 }

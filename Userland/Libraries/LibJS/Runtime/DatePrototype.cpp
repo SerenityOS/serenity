@@ -1117,18 +1117,35 @@ String date_string(double time)
 // 21.4.4.41.3 TimeZoneString ( tv ), https://tc39.es/ecma262/#sec-timezoneestring
 String time_zone_string(double time)
 {
-    // 1. Let offset be LocalTZA(tv, true).
-    auto offset = local_tza(time, true);
+    // 1. Let localTimeZone be DefaultTimeZone().
+    auto local_time_zone = default_time_zone();
+
+    double offset_nanoseconds { 0 };
+
+    // 2. If IsTimeZoneOffsetString(localTimeZone) is true, then
+    if (is_time_zone_offset_string(local_time_zone)) {
+        // a. Let offsetNs be ParseTimeZoneOffsetString(localTimeZone).
+        offset_nanoseconds = parse_time_zone_offset_string(local_time_zone);
+    }
+    // 3. Else,
+    else {
+        // a. Let offsetNs be GetNamedTimeZoneOffsetNanoseconds(localTimeZone, ℤ(ℝ(tv) × 10^6)).
+        auto time_bigint = Crypto::SignedBigInteger { time }.multiplied_by(Crypto::UnsignedBigInteger { 1'000'000 });
+        offset_nanoseconds = get_named_time_zone_offset_nanoseconds(local_time_zone, time_bigint);
+    }
+
+    // 4. Let offset be 𝔽(truncate(offsetNs / 106)).
+    auto offset = trunc(offset_nanoseconds / 1e6);
 
     StringView offset_sign;
 
-    // 2. If offset is +0𝔽 or offset > +0𝔽, then
+    // 5. If offset is +0𝔽 or offset > +0𝔽, then
     if (offset >= 0) {
         // a. Let offsetSign be "+".
         offset_sign = "+"sv;
         // b. Let absOffset be offset.
     }
-    // 3. Else,
+    // 6. Else,
     else {
         // a. Let offsetSign be "-".
         offset_sign = "-"sv;
@@ -1136,13 +1153,13 @@ String time_zone_string(double time)
         offset *= -1;
     }
 
-    // 4. Let offsetMin be ToZeroPaddedDecimalString(ℝ(MinFromTime(absOffset)), 2).
+    // 7. Let offsetMin be ToZeroPaddedDecimalString(ℝ(MinFromTime(absOffset)), 2).
     auto offset_min = min_from_time(offset);
 
-    // 5. Let offsetHour be ToZeroPaddedDecimalString(ℝ(HourFromTime(absOffset)), 2).
+    // 8. Let offsetHour be ToZeroPaddedDecimalString(ℝ(HourFromTime(absOffset)), 2).
     auto offset_hour = hour_from_time(offset);
 
-    // 6. Let tzName be an implementation-defined string that is either the empty String or the string-concatenation of the code unit 0x0020 (SPACE), the code unit 0x0028 (LEFT PARENTHESIS), an implementation-defined timezone name, and the code unit 0x0029 (RIGHT PARENTHESIS).
+    // 9. Let tzName be an implementation-defined string that is either the empty String or the string-concatenation of the code unit 0x0020 (SPACE), the code unit 0x0028 (LEFT PARENTHESIS), an implementation-defined timezone name, and the code unit 0x0029 (RIGHT PARENTHESIS).
     auto tz_name = TimeZone::current_time_zone();
 
     // Most implementations seem to prefer the long-form display name of the time zone. Not super important, but we may as well match that behavior.
@@ -1151,7 +1168,7 @@ String time_zone_string(double time)
             tz_name = long_name.release_value();
     }
 
-    // 7. Return the string-concatenation of offsetSign, offsetHour, offsetMin, and tzName.
+    // 10. Return the string-concatenation of offsetSign, offsetHour, offsetMin, and tzName.
     return String::formatted("{}{:02}{:02} ({})", offset_sign, offset_hour, offset_min, tz_name);
 }
 
