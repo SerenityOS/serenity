@@ -18,7 +18,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
 
     TRY(Core::System::pledge("unix rpath wpath stdio sendfd recvfd"));
     TRY(Core::System::unveil(SPICE_DEVICE, "rw"sv));
-    TRY(Core::System::unveil("/proc/all", "r"));
+    TRY(Core::System::unveil("/sys/kernel/processes", "r"));
     TRY(Core::System::unveil("/tmp/session/%sid/portal/clipboard", "rw"));
     TRY(Core::System::unveil(nullptr, nullptr));
 

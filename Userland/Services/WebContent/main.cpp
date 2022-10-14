@@ -23,7 +23,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
 {
     Core::EventLoop event_loop;
     TRY(Core::System::pledge("stdio recvfd sendfd accept unix rpath"));
-    TRY(Core::System::unveil("/proc/all", "r"));
+    TRY(Core::System::unveil("/sys/kernel/processes", "r"));
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil("/etc/timezone", "r"));
     TRY(Core::System::unveil("/tmp/session/%sid/portal/request", "rw"));
