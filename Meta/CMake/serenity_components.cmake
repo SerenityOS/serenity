@@ -47,7 +47,7 @@ function(export_components_helper file_name current_dir)
             continue() # Custom properties are not allowed to be set on INTERFACE libraries
         endif()
         get_target_property(component_name "${target}" SERENITY_COMPONENT_NAME)
-        if(NOT "${component_name}" STREQUAL "")
+        if(NOT "${component_name}" STREQUAL "" AND NOT "${component_name}" STREQUAL "component_name-NOTFOUND")
             get_target_property(component_name        "${target}" SERENITY_COMPONENT_NAME)
             get_target_property(component_description "${target}" SERENITY_COMPONENT_DESCRIPTION)
             get_target_property(component_recommended "${target}" SERENITY_COMPONENT_RECOMMENDED)
