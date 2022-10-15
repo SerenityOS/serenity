@@ -74,6 +74,11 @@
 <div class="grid-container">
   <div class="grid-item" style="grid-row: span 4;">1</div>
 </div>
+<!-- Minmax parsing with calc (Another crash found thanks to Github)-->
+<div 
+  class="grid-container"
+  style="grid-template-columns: minmax(0, calc(100% - var(--Layout-sidebar-width) - var(--Layout-gutter)));">
+</div>
 
 <p>End of crash tests</p>
 
@@ -120,4 +125,106 @@
   <div class="grid-item" style="grid-column: span 2 / -1; grid-row: span 2;">4</div>
   <div class="grid-item" style="grid-column: span 2; grid-row: 7 / span 100;">5</div>
   <div class="grid-item" style="grid-column: 7 / span 2; grid-row: span 2 / -1;">6</div>
+</div>
+
+<!-- Invalid minmax value as can't have a flexible length as a minimum value -->
+<p>Should render 2 items with no grid formatting (one on top of the other)
+<div 
+  class="grid-container"
+  style="grid-template-columns: minmax(1fr, 100px) 1fr 1fr;">
+  <div class="grid-item">1</div>
+  <div class="grid-item">2</div>
+</div>
+
+<!-- Invalid minmax value in repeat as can't have a flexible length as a minimum value -->
+<p>Should render 2 items with no grid formatting (one on top of the other)
+<div 
+  class="grid-container"
+  style="grid-template-columns: repeat(3, minmax(1fr, 100px));">
+  <div class="grid-item">1</div>
+  <div class="grid-item">2</div>
+</div>
+
+<!-- Basic minmax -->
+<p>Basic minmax(): Should render 2 items side by side, each with a minimum width of 150px, If there is enough space, 
+they will expand up to 300px each.</p>
+<div 
+  class="grid-container"
+  style="grid-template-columns: minmax(150px, 300px) minmax(150px, 300px);">
+  <div class="grid-item">1</div>
+  <div class="grid-item">2</div>
+</div>
+
+<!-- Basic minmax vertical-->
+<p>Since there is no vertical limit, the two rows should be 50px high each.</p>
+<div 
+  class="grid-container"
+  style="
+    grid-template-columns: minmax(150px, 300px) minmax(150px, 300px);
+    grid-template-rows: minmax(25px, 50px) minmax(25px, 50px);
+  ">
+  <div class="grid-item">1</div>
+  <div class="grid-item">2</div>
+</div>
+
+<!-- Basic minmax vertical-->
+<p>Since there is a height limit, the rows should be 25px high each.</p>
+<div 
+  class="grid-container"
+  style="
+    height: 50px;
+    grid-template-columns: minmax(150px, 300px) minmax(150px, 300px);
+    grid-template-rows: minmax(25px, 50px) minmax(25px, 50px);
+  ">
+  <div class="grid-item">1</div>
+  <div class="grid-item">2</div>
+  <div class="grid-item">2</div>
+  <div class="grid-item">2</div>
+</div>
+
+<!-- Minmax horizontal with maximum as flex-->
+<p>3 columns with minimum 200px and maximum 100%.</p>
+<div 
+  class="grid-container"
+  style="
+    grid-template-columns: minmax(200px, 1fr) minmax(200px, 1fr) minmax(200px, 1fr);
+  ">
+  <div class="grid-item">1</div>
+  <div class="grid-item">2</div>
+  <div class="grid-item">3</div>
+</div>
+
+<!-- Auto-fill-->
+<p>Auto-fill of minimum 250px, max 1fr</p>
+<div 
+  class="grid-container"
+  style="
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  ">
+  <div class="grid-item">1</div>
+  <div class="grid-item">2</div>
+  <div class="grid-item">3</div>
+</div>
+
+<!-- Auto-fit-->
+<p>Auto-fit of minimum 250px, max 1fr</p>
+<div 
+  class="grid-container"
+  style="
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  ">
+  <div class="grid-item">1</div>
+  <div class="grid-item">2</div>
+  <div class="grid-item">3</div>
+</div>
+
+<!-- See point 12.5.1, differences between minmax sizes. For example as a max it's comparing 2 flexes with a 
+length value, and as a minimum two lengths with an auto. -->
+<p>Article layout: small margins on mobile, large on desktop. Centered column with 70ch width maximum</p>
+<div 
+  class="grid-container"
+  style="grid-template-columns: minmax(1rem, 1fr) minmax(auto, 70ch) minmax(1rem, 1fr);">
+  <div class="grid-item">1</div>
+  <div class="grid-item">Article content</div>
+  <div class="grid-item">3</div>
 </div>
