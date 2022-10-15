@@ -33,7 +33,7 @@ public:
     void set_method(String const& method) { m_method = method; }
 
     ByteBuffer const& body() const { return m_body; }
-    void set_body(ByteBuffer const& body) { m_body = body; }
+    void set_body(ByteBuffer body) { m_body = move(body); }
 
     void start_timer() { m_load_timer.start(); };
     Time load_time() const { return m_load_timer.elapsed_time(); }
