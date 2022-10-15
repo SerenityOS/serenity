@@ -1,4 +1,5 @@
 set(SOURCES
+    Buffer.cpp
     ClipPlane.cpp
     ContextParameter.cpp
     GLAPI.cpp
