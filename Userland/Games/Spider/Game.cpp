@@ -37,6 +37,9 @@ void Game::setup(Mode mode)
 
     m_mode = mode;
 
+    if (on_undo_availability_change)
+        on_undo_availability_change(false);
+
     if (on_game_end)
         on_game_end(GameOverReason::NewGame, m_score);
 
@@ -72,6 +75,28 @@ void Game::setup(Mode mode)
     m_new_game_animation = true;
     start_timer(s_timer_interval_ms);
     update();
+}
+
+void Game::perform_undo()
+{
+    if (m_last_move.type == LastMove::Type::Invalid)
+        return;
+
+    if (!m_last_move.was_visible)
+        m_last_move.from->peek().set_upside_down(true);
+
+    NonnullRefPtrVector<Card> cards;
+    for (size_t i = 0; i < m_last_move.card_count; i++)
+        cards.append(m_last_move.to->pop());
+    for (ssize_t i = m_last_move.card_count - 1; i >= 0; i--)
+        m_last_move.from->push(cards[i]);
+
+    update_score(-1);
+
+    m_last_move = {};
+    if (on_undo_availability_change)
+        on_undo_availability_change(false);
+    invalidate_layout();
 }
 
 void Game::start_timer_if_necessary()
@@ -141,6 +166,9 @@ void Game::detect_full_stacks()
                     update(current_pile.peek().rect());
 
                 update_score(101);
+
+                if (on_undo_availability_change)
+                    on_undo_availability_change(false);
             }
 
             last_value = to_underlying(card.rank());
@@ -158,6 +186,9 @@ void Game::detect_victory()
         if (!current_pile.is_empty())
             return;
     }
+
+    if (on_undo_availability_change)
+        on_undo_availability_change(false);
 
     if (on_game_end)
         on_game_end(GameOverReason::Victory, m_score);
@@ -196,6 +227,17 @@ void Game::paint_event(GUI::PaintEvent& event)
         }
         clear_moving_cards();
     }
+}
+
+void Game::remember_move_for_undo(CardStack& from, CardStack& to, size_t card_count, bool was_visible)
+{
+    m_last_move.type = LastMove::Type::MoveCards;
+    m_last_move.from = &from;
+    m_last_move.card_count = card_count;
+    m_last_move.to = &to;
+    m_last_move.was_visible = was_visible;
+    if (on_undo_availability_change)
+        on_undo_availability_change(true);
 }
 
 void Game::mousedown_event(GUI::MouseEvent& event)
@@ -239,7 +281,10 @@ void Game::mousedown_event(GUI::MouseEvent& event)
 
 void Game::move_focused_cards(CardStack& stack)
 {
+    auto card_count = moving_cards().size();
     drop_cards_on_stack(stack, Cards::CardStack::MovementRule::Any);
+    bool was_visible = moving_cards_source_stack()->is_empty() || !moving_cards_source_stack()->peek().is_upside_down();
+    remember_move_for_undo(*moving_cards_source_stack(), stack, card_count, was_visible);
     update_score(-1);
     moving_cards_source_stack()->make_top_card_visible();
     detect_full_stacks();
