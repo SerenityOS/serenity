@@ -12,9 +12,9 @@
 
 namespace Kernel::USB {
 
-ErrorOr<NonnullOwnPtr<Pipe>> Pipe::try_create_pipe(USBController const& controller, Type type, Direction direction, u8 endpoint_address, u16 max_packet_size, i8 device_address, u8 poll_interval)
+ErrorOr<NonnullOwnPtr<Pipe>> Pipe::try_create_pipe(USBController const& controller, Type type, Direction direction, u8 endpoint_address, u16 max_packet_size, i8 device_address, size_t buffer_size, u8 poll_interval)
 {
-    auto dma_region = TRY(MM.allocate_kernel_region(PAGE_SIZE, "USB device DMA buffer"sv, Memory::Region::Access::ReadWrite));
+    auto dma_region = TRY(MM.allocate_dma_buffer_pages(TRY(Memory::page_round_up(buffer_size)), "USB device DMA buffer"sv, Memory::Region::Access::ReadWrite));
     return adopt_nonnull_own_or_enomem(new (nothrow) Pipe(controller, type, direction, endpoint_address, max_packet_size, poll_interval, device_address, move(dma_region)));
 }
 
