@@ -47,7 +47,7 @@ public:
 
     WebIDL::ExceptionOr<void> open(String const& method, String const& url);
     WebIDL::ExceptionOr<void> open(String const& method, String const& url, bool async, String const& username = {}, String const& password = {});
-    WebIDL::ExceptionOr<void> send(Optional<Fetch::XMLHttpRequestBodyInit> body);
+    WebIDL::ExceptionOr<void> send(Optional<Variant<JS::Handle<DOM::Document>, Fetch::XMLHttpRequestBodyInit>> body = {});
 
     WebIDL::ExceptionOr<void> set_request_header(String const& header, String const& value);
     void set_response_type(Bindings::XMLHttpRequestResponseType type) { m_response_type = type; }

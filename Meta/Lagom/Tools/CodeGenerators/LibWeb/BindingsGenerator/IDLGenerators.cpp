@@ -130,6 +130,9 @@ CppType idl_type_name_to_cpp_type(Type const& type, Interface const& interface)
     if (type.name() == "BufferSource")
         return { .name = "JS::Handle<JS::Object>", .sequence_storage_type = SequenceStorageType::MarkedVector };
 
+    if (type.name() == "XMLHttpRequestBodyInit")
+        return { .name = "Fetch::XMLHttpRequestBodyInit", .sequence_storage_type = SequenceStorageType::MarkedVector };
+
     if (type.name() == "sequence") {
         auto& parameterized_type = verify_cast<ParameterizedType>(type);
         auto& sequence_type = parameterized_type.parameters().first();
