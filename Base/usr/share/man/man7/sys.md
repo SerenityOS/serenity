@@ -32,11 +32,6 @@ The `acpi` subdirectory maintains files of the exposed ACPI tables, if present
 by the firmware.
 A file called `power_state` is responsible for power state switching.
 
-#### `power_state`
-
-This file only responds to write requests on it. A written value of `1` results
-in system reboot. A written value of `2` results in system shutdown.
-
 ### `kernel` directory
 
 This directory includes two subdirectories - `net` and `variables`.
@@ -60,6 +55,8 @@ them.
 * **`stats`** - This node exports statistics on scheduler timing data.
 * **`system_mode`** - This node exports the chosen system mode as it was decided based on the kernel commandline or a default value.
 * **`uptime`** - This node exports the uptime data.
+* **`power_state`** - This node only responds to write requests on it. A written value of `1` results
+in system reboot. A written value of `2` results in system shutdown.
 
 #### `net` directory
 
