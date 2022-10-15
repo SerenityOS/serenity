@@ -24,8 +24,11 @@ ErrorOr<int> serenity_main(Main::Arguments args)
     Core::ArgsParser args_parser;
     char const* path = nullptr;
     bool verbose = false;
+    Optional<size_t> max_bytes;
+
     args_parser.add_positional_argument(path, "Input", "input", Core::ArgsParser::Required::No);
     args_parser.add_option(verbose, "Display all input data", "verbose", 'v');
+    args_parser.add_option(max_bytes, "Truncate to a fixed number of bytes", nullptr, 'n', "bytes");
 
     args_parser.parse(args);
 
@@ -65,14 +68,25 @@ ErrorOr<int> serenity_main(Main::Arguments args)
     Span<u8> previous_line;
     static_assert(LINE_LENGTH_BYTES * 2 <= contents.size(), "Buffer is too small?!");
     size_t contents_size = 0;
+    size_t bytes_read = 0;
 
     int nread;
     auto state = State::Print;
-    while (true) {
+    bool is_input_remaining = true;
+    while (is_input_remaining) {
         nread = file->read(&contents[contents_size], BUFSIZ - contents_size);
         if (nread <= 0)
             break;
-        contents_size += nread;
+
+        if (max_bytes.has_value()) {
+            VERIFY(max_bytes.value() >= bytes_read);
+            size_t bytes_remaining = max_bytes.value() - bytes_read;
+            is_input_remaining = (bytes_remaining > 0);
+            contents_size += min(bytes_remaining, nread);
+            bytes_read += contents_size;
+        } else {
+            contents_size += nread;
+        }
 
         size_t offset;
         for (offset = 0; offset + LINE_LENGTH_BYTES - 1 < contents_size; offset += LINE_LENGTH_BYTES) {
