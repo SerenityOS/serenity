@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2022, Florent Castelli <florent.castelli@gmail.com>
  * Copyright (c) 2022, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2022, Tobias Christiansen <tobyase@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -29,6 +30,7 @@ Vector<Client::Route> Client::s_routes = {
     { HTTP::HttpRequest::Method::POST, { "session", ":session_id", "refresh" }, &Client::handle_refresh },
     { HTTP::HttpRequest::Method::POST, { "session", ":session_id", "back" }, &Client::handle_back },
     { HTTP::HttpRequest::Method::POST, { "session", ":session_id", "forward" }, &Client::handle_forward },
+    { HTTP::HttpRequest::Method::GET, { "session", ":session_id", "cookie" }, &Client::handle_get_all_cookies },
 };
 
 Client::Client(NonnullOwnPtr<Core::Stream::BufferedTCPSocket> socket, Core::Object* parent)
@@ -485,6 +487,18 @@ ErrorOr<JsonValue, HttpError> Client::handle_forward(Vector<StringView> paramete
     // NOTE: Spec steps handled in Session::forward().
     auto result = TRY(session->forward());
     return make_json_value(result);
+}
+
+// GET /session/{session id}/cookie https://w3c.github.io/webdriver/#dfn-get-all-cookies
+ErrorOr<JsonValue, HttpError> Client::handle_get_all_cookies(Vector<StringView> parameters, JsonValue const&)
+{
+    dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session_id>/cookie");
+    Session* session = TRY(find_session_with_id(parameters[0]));
+
+    // NOTE: Spec steps handled in Session::get_all_cookies().
+    auto cookies = TRY(session->get_all_cookies());
+
+    return make_json_value(cookies);
 }
 
 }

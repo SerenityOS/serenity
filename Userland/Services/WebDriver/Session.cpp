@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2022, Florent Castelli <florent.castelli@gmail.com>
  * Copyright (c) 2022, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2022, Tobias Christiansen <tobyase@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -11,6 +12,7 @@
 #include <LibCore/LocalServer.h>
 #include <LibCore/Stream.h>
 #include <LibCore/System.h>
+#include <LibWeb/Cookie/Cookie.h>
 #include <unistd.h>
 
 namespace WebDriver {
@@ -227,6 +229,48 @@ ErrorOr<JsonValue, HttpError> Session::forward()
 
     // 6. Return success with data null.
     return JsonValue();
+}
+
+// https://w3c.github.io/webdriver/#dfn-serialized-cookie
+static JsonObject serialize_cookie(Web::Cookie::Cookie const& cookie)
+{
+    JsonObject serialized_cookie = {};
+    serialized_cookie.set("name", cookie.name);
+    serialized_cookie.set("value", cookie.value);
+    serialized_cookie.set("path", cookie.path);
+    serialized_cookie.set("domain", cookie.domain);
+    serialized_cookie.set("secure", cookie.secure);
+    serialized_cookie.set("httpOnly", cookie.http_only);
+    serialized_cookie.set("expiry", cookie.expiry_time.timestamp());
+    // FIXME: Add sameSite to Cookie and serialize it here too.
+
+    return serialized_cookie;
+}
+
+// GET /session/{session id}/cookie https://w3c.github.io/webdriver/#dfn-get-all-cookies
+ErrorOr<JsonValue, HttpError> Session::get_all_cookies()
+{
+    // 1. If the current browsing context is no longer open, return error with error code no such window.
+    auto current_window = get_window_object();
+    if (!current_window.has_value())
+        return HttpError { 404, "no such window", "Window not found" };
+
+    // FIXME: 2. Handle any user prompts, and return its value if it is an error.
+
+    // 3. Let cookies be a new JSON List.
+    JsonArray cookies = {};
+
+    // 4. For each cookie in all associated cookies of the current browsing context’s active document:
+    for (auto const& cookie : m_browser_connection->get_all_cookies()) {
+        // 1. Let serialized cookie be the result of serializing cookie.
+        auto serialized_cookie = serialize_cookie(cookie);
+
+        // 2. Append serialized cookie to cookies
+        cookies.append(serialized_cookie);
+    }
+
+    // 5. Return success with data cookies.
+    return JsonValue(cookies);
 }
 
 }

@@ -1,12 +1,15 @@
 /*
  * Copyright (c) 2022, Florent Castelli <florent.castelli@gmail.com>
  * Copyright (c) 2022, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2022, Tobias Christiansen <tobyase@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "WebDriverConnection.h"
 #include "BrowserWindow.h"
+#include <AK/Vector.h>
+#include <LibWeb/Cookie/Cookie.h>
 
 namespace Browser {
 
@@ -65,6 +68,17 @@ void WebDriverConnection::forward()
     dbgln("WebDriverConnection: forward");
     if (auto browser_window = m_browser_window.strong_ref())
         browser_window->active_tab().go_forward();
+}
+
+Messages::WebDriverSessionClient::GetAllCookiesResponse WebDriverConnection::get_all_cookies()
+{
+    dbgln("WebDriverConnection: get_cookies");
+    if (auto browser_window = m_browser_window.strong_ref()) {
+        if (browser_window->active_tab().on_get_cookies_entries) {
+            return { browser_window->active_tab().on_get_cookies_entries() };
+        }
+    }
+    return { {} };
 }
 
 }
