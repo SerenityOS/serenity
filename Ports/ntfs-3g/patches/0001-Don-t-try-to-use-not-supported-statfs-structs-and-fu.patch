@@ -1,0 +1,22 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Liav A <liavalb@gmail.com>
+Date: Sat, 15 Oct 2022 07:58:53 +0300
+Subject: [PATCH] Don't try to use not-supported statfs structs and functions
+
+---
+ ntfsprogs/ntfsclone.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/ntfsprogs/ntfsclone.c b/ntfsprogs/ntfsclone.c
+index 00876313850819af30b71fbbfb0e0f9686ec0458..16cba879cf7d64fb76fa0e2d2e30d9d222a829a2 100644
+--- a/ntfsprogs/ntfsclone.c
++++ b/ntfsprogs/ntfsclone.c
+@@ -105,7 +105,7 @@
+ #undef HAVE_WINDOWS_H
+ #endif
+ 
+-#if defined(__sun) | defined(HAVE_WINDOWS_H)
++#if defined(__sun) | defined(HAVE_WINDOWS_H) | defined(__serenity__)
+ #define NO_STATFS 1	/* statfs(2) and f_type are not universal */
+ #endif
+ 
