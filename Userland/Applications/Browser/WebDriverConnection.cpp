@@ -53,4 +53,11 @@ void WebDriverConnection::refresh()
         browser_window->active_tab().reload();
 }
 
+void WebDriverConnection::back()
+{
+    dbgln("WebDriverConnection: back");
+    if (auto browser_window = m_browser_window.strong_ref())
+        browser_window->active_tab().go_back();
+}
+
 }

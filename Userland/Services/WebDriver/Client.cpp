@@ -27,6 +27,7 @@ Vector<Client::Route> Client::s_routes = {
     { HTTP::HttpRequest::Method::GET, { "session", ":session_id", "title" }, &Client::handle_get_title },
     { HTTP::HttpRequest::Method::DELETE, { "session", ":session_id", "window" }, &Client::handle_delete_window },
     { HTTP::HttpRequest::Method::POST, { "session", ":session_id", "refresh" }, &Client::handle_refresh },
+    { HTTP::HttpRequest::Method::POST, { "session", ":session_id", "back" }, &Client::handle_back },
 };
 
 Client::Client(NonnullOwnPtr<Core::Stream::BufferedTCPSocket> socket, Core::Object* parent)
@@ -460,6 +461,17 @@ ErrorOr<JsonValue, HttpError> Client::handle_refresh(Vector<StringView> paramete
 
     // NOTE: Spec steps handled in Session::refresh().
     auto result = TRY(session->refresh());
+    return make_json_value(result);
+}
+
+// POST /session/{session id}/back https://w3c.github.io/webdriver/#dfn-back
+ErrorOr<JsonValue, HttpError> Client::handle_back(Vector<StringView> parameters, JsonValue const&)
+{
+    dbgln_if(WEBDRIVER_DEBUG, "Handling POST /session/<session_id>/back");
+    Session* session = TRY(find_session_with_id(parameters[0]));
+
+    // NOTE: Spec steps handled in Session::back().
+    auto result = TRY(session->back());
     return make_json_value(result);
 }
 
