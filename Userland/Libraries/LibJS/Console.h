@@ -81,7 +81,7 @@ public:
     ThrowCompletionOr<Value> time_log();
     ThrowCompletionOr<Value> time_end();
 
-    void output_debug_message(LogLevel log_level, String output) const;
+    void output_debug_message(LogLevel log_level, String const& output) const;
     void report_exception(JS::Error const&, bool) const;
 
 private:
