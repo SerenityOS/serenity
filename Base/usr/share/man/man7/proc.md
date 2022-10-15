@@ -14,8 +14,6 @@ Most of the output layout in the ProcFS nodes is JSON.
 * **`cmdline`** - this node exports the kernel boot commandline that was passed to
 from the bootloader.
 * **`cpuinfo`** - this node exports information on the CPU.
-* **`devices`** - this node exports information on all devices that might be represented
-by a device file.
 * **`df`** - this node exports information on mounted filesystems and basic statistics on
 them.
 * **`dmesg`** - this node exports information from the kernel log.
