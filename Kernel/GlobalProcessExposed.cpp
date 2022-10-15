@@ -751,34 +751,6 @@ private:
     }
 };
 
-class ProcFSDevices final : public ProcFSGlobalInformation {
-public:
-    static NonnullLockRefPtr<ProcFSDevices> must_create();
-
-private:
-    ProcFSDevices();
-    virtual ErrorOr<void> try_generate(KBufferBuilder& builder) override
-    {
-        auto array = TRY(JsonArraySerializer<>::try_create(builder));
-        TRY(DeviceManagement::the().try_for_each([&array](auto& device) -> ErrorOr<void> {
-            auto obj = TRY(array.add_object());
-            TRY(obj.add("major"sv, device.major().value()));
-            TRY(obj.add("minor"sv, device.minor().value()));
-            TRY(obj.add("class_name"sv, device.class_name()));
-
-            if (device.is_block_device())
-                TRY(obj.add("type"sv, "block"));
-            else if (device.is_character_device())
-                TRY(obj.add("type"sv, "character"));
-            else
-                VERIFY_NOT_REACHED();
-            TRY(obj.finish());
-            return {};
-        }));
-        TRY(array.finish());
-        return {};
-    }
-};
 class ProcFSUptime final : public ProcFSGlobalInformation {
 public:
     static NonnullLockRefPtr<ProcFSUptime> must_create();
@@ -888,10 +860,6 @@ UNMAP_AFTER_INIT NonnullLockRefPtr<ProcFSKeymap> ProcFSKeymap::must_create()
 {
     return adopt_lock_ref_if_nonnull(new (nothrow) ProcFSKeymap).release_nonnull();
 }
-UNMAP_AFTER_INIT NonnullLockRefPtr<ProcFSDevices> ProcFSDevices::must_create()
-{
-    return adopt_lock_ref_if_nonnull(new (nothrow) ProcFSDevices).release_nonnull();
-}
 UNMAP_AFTER_INIT NonnullLockRefPtr<ProcFSUptime> ProcFSUptime::must_create()
 {
     return adopt_lock_ref_if_nonnull(new (nothrow) ProcFSUptime).release_nonnull();
@@ -950,10 +918,6 @@ UNMAP_AFTER_INIT ProcFSKeymap::ProcFSKeymap()
     : ProcFSGlobalInformation("keymap"sv)
 {
 }
-UNMAP_AFTER_INIT ProcFSDevices::ProcFSDevices()
-    : ProcFSGlobalInformation("devices"sv)
-{
-}
 UNMAP_AFTER_INIT ProcFSUptime::ProcFSUptime()
     : ProcFSGlobalInformation("uptime"sv)
 {
@@ -1002,7 +966,6 @@ UNMAP_AFTER_INIT NonnullLockRefPtr<ProcFSRootDirectory> ProcFSRootDirectory::mus
     directory->m_components.append(ProcFSDmesg::must_create());
     directory->m_components.append(ProcFSInterrupts::must_create());
     directory->m_components.append(ProcFSKeymap::must_create());
-    directory->m_components.append(ProcFSDevices::must_create());
     directory->m_components.append(ProcFSUptime::must_create());
     directory->m_components.append(ProcFSCommandLine::must_create());
     directory->m_components.append(ProcFSSystemMode::must_create());
