@@ -31,14 +31,11 @@ public:
     virtual JS::ThrowCompletionOr<bool> internal_delete(JS::PropertyKey const&) override;
     virtual JS::ThrowCompletionOr<JS::MarkedVector<JS::Value>> internal_own_property_keys() const override;
 
-    Window& window() const { return const_cast<Window&>(*m_window); }
-
-    // NOTE: Someone will have to replace the wrapped window object as well:
-    // "When the browsing context is navigated, the Window object wrapped by the browsing context's associated WindowProxy object is changed."
-    // I haven't found where that actually happens yet. Make sure to use a Badge<T> guarded setter.
+    JS::GCPtr<Window> window() const { return m_window; }
+    void set_window(Badge<BrowsingContext>, JS::NonnullGCPtr<Window>);
 
 private:
-    WindowProxy(JS::Realm&, Window&);
+    explicit WindowProxy(JS::Realm&);
 
     virtual void visit_edges(JS::Cell::Visitor&) override;
 

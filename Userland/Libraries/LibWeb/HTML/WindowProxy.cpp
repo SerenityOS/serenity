@@ -20,9 +20,8 @@
 namespace Web::HTML {
 
 // 7.4 The WindowProxy exotic object, https://html.spec.whatwg.org/multipage/window-object.html#the-windowproxy-exotic-object
-WindowProxy::WindowProxy(JS::Realm& realm, Window& window)
+WindowProxy::WindowProxy(JS::Realm& realm)
     : JS::Object(realm, nullptr)
-    , m_window(window)
 {
 }
 
@@ -254,6 +253,11 @@ void WindowProxy::visit_edges(JS::Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
     visitor.visit(m_window.ptr());
+}
+
+void WindowProxy::set_window(Badge<BrowsingContext>, JS::NonnullGCPtr<Window> window)
+{
+    m_window = window;
 }
 
 }

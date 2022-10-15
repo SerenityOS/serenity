@@ -19,6 +19,7 @@
 #include <LibWeb/HTML/SandboxingFlagSet.h>
 #include <LibWeb/HTML/Scripting/WindowEnvironmentSettingsObject.h>
 #include <LibWeb/HTML/Window.h>
+#include <LibWeb/HTML/WindowProxy.h>
 #include <LibWeb/HighResolutionTime/TimeOrigin.h>
 #include <LibWeb/Layout/BreakNode.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
@@ -136,13 +137,15 @@ NonnullRefPtr<BrowsingContext> BrowsingContext::create_a_new_browsing_context(Pa
     auto realm_execution_context = Bindings::create_a_new_javascript_realm(
         Bindings::main_thread_vm(),
         [&](JS::Realm& realm) -> JS::Object* {
+            browsing_context->m_window_proxy = realm.heap().allocate<WindowProxy>(realm, realm);
+
             // - For the global object, create a new Window object.
             window = HTML::Window::create(realm);
             return window.ptr();
         },
-        [](JS::Realm&) -> JS::Object* {
-            // FIXME: - For the global this binding, use browsingContext's WindowProxy object.
-            return nullptr;
+        [&](JS::Realm&) -> JS::Object* {
+            // - For the global this binding, use browsingContext's WindowProxy object.
+            return browsing_context->m_window_proxy;
         });
 
     // 9. Let topLevelCreationURL be about:blank if embedder is null; otherwise embedder's relevant settings object's top-level creation URL.
@@ -299,7 +302,7 @@ void BrowsingContext::set_active_document(JS::NonnullGCPtr<DOM::Document> docume
     document->set_visibility_state({}, top_level_browsing_context().system_visibility_state());
 
     // 3. Set browsingContext's active window to window.
-    m_active_window = window;
+    m_window_proxy->set_window({}, window);
 
     // 4. Set window's associated Document to document.
     window.set_associated_document(document);
@@ -792,26 +795,40 @@ bool BrowsingContext::still_on_its_initial_about_blank_document() const
 
 DOM::Document const* BrowsingContext::active_document() const
 {
-    if (!m_active_window)
+    auto* window = active_window();
+    if (!window)
         return nullptr;
-    return &m_active_window->associated_document();
+    return &window->associated_document();
 }
 
 DOM::Document* BrowsingContext::active_document()
 {
-    if (!m_active_window)
+    auto* window = active_window();
+    if (!window)
         return nullptr;
-    return &m_active_window->associated_document();
+    return &window->associated_document();
 }
 
+// https://html.spec.whatwg.org/multipage/browsers.html#active-window
 HTML::Window* BrowsingContext::active_window()
 {
-    return m_active_window;
+    return m_window_proxy->window();
 }
 
+// https://html.spec.whatwg.org/multipage/browsers.html#active-window
 HTML::Window const* BrowsingContext::active_window() const
 {
-    return m_active_window;
+    return m_window_proxy->window();
+}
+
+HTML::WindowProxy* BrowsingContext::window_proxy()
+{
+    return m_window_proxy.ptr();
+}
+
+HTML::WindowProxy const* BrowsingContext::window_proxy() const
+{
+    return m_window_proxy.ptr();
 }
 
 void BrowsingContext::scroll_offset_did_change()

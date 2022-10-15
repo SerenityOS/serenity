@@ -59,6 +59,7 @@
 #include <LibWeb/HTML/Scripting/ExceptionReporter.h>
 #include <LibWeb/HTML/Scripting/WindowEnvironmentSettingsObject.h>
 #include <LibWeb/HTML/Window.h>
+#include <LibWeb/HTML/WindowProxy.h>
 #include <LibWeb/HighResolutionTime/TimeOrigin.h>
 #include <LibWeb/Layout/BlockFormattingContext.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
@@ -177,9 +178,9 @@ JS::NonnullGCPtr<Document> Document::create_and_initialize(Type type, String con
                 window = HTML::Window::create(realm);
                 return window;
             },
-            [](JS::Realm&) -> JS::Object* {
-                // FIXME: - For the global this binding, use browsingContext's WindowProxy object.
-                return nullptr;
+            [&](JS::Realm&) -> JS::Object* {
+                // - For the global this binding, use browsingContext's WindowProxy object.
+                return browsing_context->window_proxy();
             });
 
         // 6. Let topLevelCreationURL be creationURL.

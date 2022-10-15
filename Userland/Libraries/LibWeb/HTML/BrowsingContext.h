@@ -49,6 +49,9 @@ public:
 
     void set_active_document(JS::NonnullGCPtr<DOM::Document>);
 
+    HTML::WindowProxy* window_proxy();
+    HTML::WindowProxy const* window_proxy() const;
+
     HTML::Window* active_window();
     HTML::Window const* active_window() const;
 
@@ -202,9 +205,11 @@ private:
     Optional<HTML::Origin> m_creator_origin;
 
     WeakPtr<HTML::BrowsingContextContainer> m_container;
-    JS::Handle<HTML::Window> m_active_window;
     Gfx::IntSize m_size;
     Gfx::IntPoint m_viewport_scroll_offset;
+
+    // https://html.spec.whatwg.org/multipage/browsers.html#browsing-context
+    JS::Handle<HTML::WindowProxy> m_window_proxy;
 
     DOM::Position m_cursor_position;
     RefPtr<Platform::Timer> m_cursor_blink_timer;
