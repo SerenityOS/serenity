@@ -76,6 +76,11 @@ public:
         return create(span());
     }
 
+    static void move_elements_to_new_array_from_old_array(FixedArray<T>& new_array, FixedArray<T>&& old_array)
+    {
+        new_array.m_storage = exchange(old_array.m_storage, nullptr);
+    }
+
     static size_t storage_allocation_size(size_t size)
     {
         return sizeof(Storage) + size * sizeof(T);

@@ -48,6 +48,23 @@ TEST_CASE(move)
     EXPECT_EQ(moved_from_array.size(), 0u);
 }
 
+TEST_CASE(move_from_old_to_new)
+{
+    FixedArray<int> old_array = FixedArray<int>::must_create_but_fixme_should_propagate_errors(4);
+    FixedArray<int> new_array;
+    old_array[0] = 0;
+    old_array[1] = 1;
+    old_array[2] = 2;
+    old_array[3] = 2;
+    FixedArray<int>::move_elements_to_new_array_from_old_array(new_array, move(old_array));
+    EXPECT_EQ(old_array.size(), 0u);
+    EXPECT_EQ(new_array.size(), 4u);
+    EXPECT_EQ(new_array[0], 0);
+    EXPECT_EQ(new_array[1], 1);
+    EXPECT_EQ(new_array[2], 2);
+    EXPECT_EQ(new_array[3], 2);
+}
+
 TEST_CASE(no_allocation)
 {
     FixedArray<int> array = FixedArray<int>::must_create_but_fixme_should_propagate_errors(5);
