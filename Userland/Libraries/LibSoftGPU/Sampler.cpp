@@ -190,9 +190,12 @@ Vector4<AK::SIMD::f32x4> Sampler::sample_2d_lod(Vector2<AK::SIMD::f32x4> const& 
     u -= 0.5f;
     v -= 0.5f;
 
-    u32x4 i0 = to_u32x4(floor_int_range(u));
+    f32x4 const floored_u = floor_int_range(u);
+    f32x4 const floored_v = floor_int_range(v);
+
+    u32x4 i0 = to_u32x4(floored_u);
     u32x4 i1 = i0 + 1;
-    u32x4 j0 = to_u32x4(floor_int_range(v));
+    u32x4 j0 = to_u32x4(floored_v);
     u32x4 j1 = j0 + 1;
 
     if (m_config.texture_wrap_u == GPU::TextureWrapMode::Repeat) {
@@ -229,8 +232,8 @@ Vector4<AK::SIMD::f32x4> Sampler::sample_2d_lod(Vector2<AK::SIMD::f32x4> const& 
         t3 = texel4border(image, level, i1, j1, m_config.border_color, width, height);
     }
 
-    f32x4 const alpha = frac_int_range(u);
-    f32x4 const beta = frac_int_range(v);
+    f32x4 const alpha = u - floored_u;
+    f32x4 const beta = v - floored_v;
 
     auto const lerp_0 = mix(t0, t1, alpha);
     auto const lerp_1 = mix(t2, t3, alpha);
