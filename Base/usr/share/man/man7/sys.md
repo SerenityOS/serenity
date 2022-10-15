@@ -37,6 +37,47 @@ A file called `power_state` is responsible for power state switching.
 This file only responds to write requests on it. A written value of `1` results
 in system reboot. A written value of `2` results in system shutdown.
 
+### `kernel` directory
+
+This directory includes two subdirectories - `net` and `variables`.
+All other files in the directory are global data nodes which provide statistics
+and other kernel-related data to userspace.
+
+#### `kernel` directory entries
+
+* **`processes`** - This node exports a list of all processes that currently exist.
+* **`cmdline`** - This node exports the kernel boot commandline that was passed from the bootloader.
+* **`cpuinfo`** - This node exports information on the CPU.
+* **`df`** - This node exports information on mounted filesystems and basic statistics on
+them.
+* **`dmesg`** - This node exports information from the kernel log.
+* **`interrupts`** - This node exports information on all IRQ handlers and basic statistics on
+them.
+* **`load_base`** - This node reveals the loading address of the kernel.
+* **`keymap`** - This node exports information on the currently used keymap.
+* **`memstat`** - This node exports statistics on memory allocation in the kernel.
+* **`profile`** - This node exports statistics on profiling data.
+* **`stats`** - This node exports statistics on scheduler timing data.
+* **`system_mode`** - This node exports the chosen system mode as it was decided based on the kernel commandline or a default value.
+* **`uptime`** - This node exports the uptime data.
+
+#### `net` directory
+
+* **`adapters`** - This node exports information on all currently-discovered network adapters.
+* **`arp`** - This node exports information on the kernel ARP table.
+* **`local`** - This node exports information on local (Unix) sockets.
+* **`tcp`** - This node exports information on TCP sockets.
+* **`udp`** - This node exports information on UDP sockets.
+
+#### `variables` directory
+
+This subdirectory includes global settings of the kernel.
+
+* **`caps_lock_to_ctrl`** - This node controls remapping of of caps lock to the Ctrl key.
+* **`kmalloc_stacks`** - This node controls whether to send information about kmalloc to debug log.
+* **`ubsan_is_deadly`** - This node controls the deadliness of the kernel undefined behavior
+sanitizer errors.
+
 ### Consistency and stability of data across multiple read operations
 
 When opening a data node, the kernel generates the required data so it's prepared
