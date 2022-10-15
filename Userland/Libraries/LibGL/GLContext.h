@@ -213,6 +213,11 @@ public:
     void gl_array_element(GLint i);
     void gl_copy_tex_sub_image_2d(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint x, GLint y, GLsizei width, GLsizei height);
     void gl_point_size(GLfloat size);
+    void gl_bind_buffer(GLenum target, GLuint buffer);
+    void gl_buffer_data(GLenum target, GLsizeiptr size, void const* data, GLenum usage);
+    void gl_buffer_sub_data(GLenum target, GLintptr offset, GLsizeiptr size, void const* data);
+    void gl_delete_buffers(GLsizei n, GLuint const* buffers);
+    void gl_gen_buffers(GLsizei n, GLuint* buffers);
 
 private:
     void sync_device_config();

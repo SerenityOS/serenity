@@ -718,7 +718,6 @@ GLAPI void glEnableClientState(GLenum cap);
 GLAPI void glDisableClientState(GLenum cap);
 GLAPI void glClientActiveTextureARB(GLenum target);
 GLAPI void glClientActiveTexture(GLenum target);
-
 GLAPI void glVertexPointer(GLint size, GLenum type, GLsizei stride, void const* pointer);
 GLAPI void glColorPointer(GLint size, GLenum type, GLsizei stride, void const* pointer);
 GLAPI void glTexCoordPointer(GLint size, GLenum type, GLsizei stride, void const* pointer);
@@ -794,6 +793,11 @@ GLAPI void glClipPlane(GLenum plane, GLdouble const* equation);
 GLAPI void glGetClipPlane(GLenum plane, GLdouble* equation);
 GLAPI void glArrayElement(GLint i);
 GLAPI void glCopyTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint x, GLint y, GLsizei width, GLsizei height);
+GLAPI void glBindBuffer(GLenum target, GLuint buffer);
+GLAPI void glBufferData(GLenum target, GLsizeiptr size, void const* data, GLenum usage);
+GLAPI void glBufferSubData(GLenum target, GLintptr offset, GLsizeiptr size, void const* data);
+GLAPI void glDeleteBuffers(GLsizei n, GLuint const* buffers);
+GLAPI void glGenBuffers(GLsizei n, GLuint* buffers);
 
 #ifdef __cplusplus
 }

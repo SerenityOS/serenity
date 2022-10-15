@@ -67,6 +67,11 @@ void glBegin(GLenum mode)
     g_gl_context->gl_begin(mode);
 }
 
+void glBindBuffer(GLenum target, GLuint buffer)
+{
+    g_gl_context->gl_bind_buffer(target, buffer);
+}
+
 void glBindTexture(GLenum target, GLuint texture)
 {
     g_gl_context->gl_bind_texture(target, texture);
@@ -80,6 +85,16 @@ void glBitmap(GLsizei width, GLsizei height, GLfloat xorig, GLfloat yorig, GLflo
 void glBlendFunc(GLenum sfactor, GLenum dfactor)
 {
     return g_gl_context->gl_blend_func(sfactor, dfactor);
+}
+
+void glBufferData(GLenum target, GLsizeiptr size, void const* data, GLenum usage)
+{
+    g_gl_context->gl_buffer_data(target, size, data, usage);
+}
+
+void glBufferSubData(GLenum target, GLintptr offset, GLsizeiptr size, void const* data)
+{
+    g_gl_context->gl_buffer_sub_data(target, offset, size, data);
 }
 
 void glCallList(GLuint list)
@@ -224,6 +239,11 @@ void glCopyTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffse
 void glCullFace(GLenum mode)
 {
     g_gl_context->gl_cull_face(mode);
+}
+
+void glDeleteBuffers(GLsizei n, GLuint const* buffers)
+{
+    g_gl_context->gl_delete_buffers(n, buffers);
 }
 
 void glDepthFunc(GLenum func)
@@ -382,6 +402,11 @@ void glFrontFace(GLenum mode)
 void glFrustum(GLdouble left, GLdouble right, GLdouble bottom, GLdouble top, GLdouble nearVal, GLdouble farVal)
 {
     g_gl_context->gl_frustum(left, right, bottom, top, nearVal, farVal);
+}
+
+void glGenBuffers(GLsizei n, GLuint* buffers)
+{
+    g_gl_context->gl_gen_buffers(n, buffers);
 }
 
 GLuint glGenLists(GLsizei range)
