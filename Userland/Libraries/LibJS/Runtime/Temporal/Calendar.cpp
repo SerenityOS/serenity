@@ -369,7 +369,14 @@ ThrowCompletionOr<Object*> to_temporal_calendar(VM& vm, Value temporal_calendar_
     // 1. If Type(temporalCalendarLike) is Object, then
     if (temporal_calendar_like.is_object()) {
         auto& temporal_calendar_like_object = temporal_calendar_like.as_object();
-        // a. If temporalCalendarLike has an [[InitializedTemporalDate]], [[InitializedTemporalDateTime]], [[InitializedTemporalMonthDay]], [[InitializedTemporalTime]], [[InitializedTemporalYearMonth]], or [[InitializedTemporalZonedDateTime]] internal slot, then
+
+        // a. If temporalCalendarLike has an [[InitializedTemporalCalendar]] internal slot, then
+        if (is<Calendar>(temporal_calendar_like_object)) {
+            // i. Return temporalCalendarLike.
+            return &temporal_calendar_like_object;
+        }
+
+        // b. If temporalCalendarLike has an [[InitializedTemporalDate]], [[InitializedTemporalDateTime]], [[InitializedTemporalMonthDay]], [[InitializedTemporalTime]], [[InitializedTemporalYearMonth]], or [[InitializedTemporalZonedDateTime]] internal slot, then
         // i. Return temporalCalendarLike.[[Calendar]].
         if (is<PlainDate>(temporal_calendar_like_object))
             return &static_cast<PlainDate&>(temporal_calendar_like_object).calendar();
@@ -384,14 +391,14 @@ ThrowCompletionOr<Object*> to_temporal_calendar(VM& vm, Value temporal_calendar_
         if (is<ZonedDateTime>(temporal_calendar_like_object))
             return &static_cast<ZonedDateTime&>(temporal_calendar_like_object).calendar();
 
-        // b. If ? HasProperty(temporalCalendarLike, "calendar") is false, return temporalCalendarLike.
+        // c. If ? HasProperty(temporalCalendarLike, "calendar") is false, return temporalCalendarLike.
         if (!TRY(temporal_calendar_like_object.has_property(vm.names.calendar)))
             return &temporal_calendar_like_object;
 
-        // c. Set temporalCalendarLike to ? Get(temporalCalendarLike, "calendar").
+        // d. Set temporalCalendarLike to ? Get(temporalCalendarLike, "calendar").
         temporal_calendar_like = TRY(temporal_calendar_like_object.get(vm.names.calendar));
 
-        // d. If Type(temporalCalendarLike) is Object and ? HasProperty(temporalCalendarLike, "calendar") is false, return temporalCalendarLike.
+        // e. If Type(temporalCalendarLike) is Object and ? HasProperty(temporalCalendarLike, "calendar") is false, return temporalCalendarLike.
         if (temporal_calendar_like.is_object() && !TRY(temporal_calendar_like.as_object().has_property(vm.names.calendar)))
             return &temporal_calendar_like.as_object();
     }

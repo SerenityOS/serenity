@@ -24,4 +24,22 @@ describe("normal behavior", () => {
         expect(Temporal.Calendar.from("iso8601").id).toBe("iso8601");
         expect(Temporal.Calendar.from("2021-07-06[u-ca=iso8601]").id).toBe("iso8601");
     });
+
+    test("ToTemporalCalendar fast path returns if it is passed a Temporal.Calendar instance", () => {
+        // This is obseravble via there being no property lookups (avoiding a "calendar" property lookup in this case)
+        let madeObservableHasPropertyLookup = false;
+        class Calendar extends Temporal.Calendar {
+            constructor() {
+                super("iso8601");
+            }
+
+            get calendar() {
+                madeObservableHasPropertyLookup = true;
+                return this;
+            }
+        }
+        const calendar = new Calendar();
+        Temporal.Calendar.from(calendar);
+        expect(madeObservableHasPropertyLookup).toBeFalse();
+    });
 });
