@@ -7,4 +7,5 @@ endpoint WebDriverSessionClient {
     set_url(URL url) =|
     get_title() => (String title)
     refresh() =|
+    back() =|
 }

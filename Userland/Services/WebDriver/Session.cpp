@@ -183,4 +183,27 @@ ErrorOr<JsonValue, HttpError> Session::refresh()
     return JsonValue();
 }
 
+// POST /session/{session id}/back https://w3c.github.io/webdriver/#dfn-back
+ErrorOr<JsonValue, HttpError> Session::back()
+{
+    // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
+    auto current_window = get_window_object();
+    if (!current_window.has_value())
+        return HttpError { 404, "no such window", "Window not found" };
+
+    // FIXME: 2. Handle any user prompts and return its value if it is an error.
+
+    // 3. Traverse the history by a delta –1 for the current browsing context.
+    m_browser_connection->async_back();
+
+    // FIXME: 4. If the previous step completed results in a pageHide event firing, wait until pageShow event
+    //           fires or for the session page load timeout milliseconds to pass, whichever occurs sooner.
+
+    // FIXME: 5. If the previous step completed by the session page load timeout being reached, and user
+    //           prompts have been handled, return error with error code timeout.
+
+    // 6. Return success with data null.
+    return JsonValue();
+}
+
 }

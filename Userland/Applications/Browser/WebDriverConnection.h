@@ -40,6 +40,7 @@ public:
     virtual void set_url(AK::URL const& url) override;
     virtual Messages::WebDriverSessionClient::GetTitleResponse get_title() override;
     virtual void refresh() override;
+    virtual void back() override;
 
 private:
     WebDriverConnection(NonnullOwnPtr<Core::Stream::LocalSocket> socket, NonnullRefPtr<BrowserWindow> browser_window);
