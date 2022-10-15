@@ -273,4 +273,28 @@ ErrorOr<JsonValue, HttpError> Session::get_all_cookies()
     return JsonValue(cookies);
 }
 
+// GET /session/{session id}/cookie/{name} https://w3c.github.io/webdriver/#dfn-get-named-cookie
+ErrorOr<JsonValue, HttpError> Session::get_named_cookie(String const& name)
+{
+
+    // 1. If the current browsing context is no longer open, return error with error code no such window.
+    auto current_window = get_window_object();
+    if (!current_window.has_value())
+        return HttpError { 404, "no such window", "Window not found" };
+
+    // FIXME: 2. Handle any user prompts, and return its value if it is an error.
+
+    // 3. If the url variable name is equal to a cookie’s cookie name amongst all associated cookies of the
+    //    current browsing context’s active document, return success with the serialized cookie as data.
+    auto maybe_cookie = m_browser_connection->get_named_cookie(name);
+    if (maybe_cookie.has_value()) {
+        auto cookie = maybe_cookie.release_value();
+        auto serialized_cookie = serialize_cookie(cookie);
+        return JsonValue(serialized_cookie);
+    }
+
+    // 4. Otherwise, return error with error code no such cookie.
+    return HttpError { 404, "no such cookie", "Cookie not found" };
+}
+
 }

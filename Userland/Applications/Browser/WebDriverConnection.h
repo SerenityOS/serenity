@@ -44,6 +44,7 @@ public:
     virtual void back() override;
     virtual void forward() override;
     virtual Messages::WebDriverSessionClient::GetAllCookiesResponse get_all_cookies() override;
+    virtual Messages::WebDriverSessionClient::GetNamedCookieResponse get_named_cookie(String const& name) override;
 
 private:
     WebDriverConnection(NonnullOwnPtr<Core::Stream::LocalSocket> socket, NonnullRefPtr<BrowserWindow> browser_window);
