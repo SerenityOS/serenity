@@ -91,6 +91,7 @@ struct AppMetadata {
     String working_directory;
     GUI::Icon icon;
     bool run_in_terminal;
+    bool requires_root;
 };
 Vector<AppMetadata> g_apps;
 
@@ -105,7 +106,7 @@ ErrorOr<Vector<String>> discover_apps_and_categories()
     HashTable<String> seen_app_categories;
     Desktop::AppFile::for_each([&](auto af) {
         if (access(af->executable().characters(), X_OK) == 0) {
-            g_apps.append({ af->executable(), af->name(), af->category(), af->working_directory(), af->icon(), af->run_in_terminal() });
+            g_apps.append({ af->executable(), af->name(), af->category(), af->working_directory(), af->icon(), af->run_in_terminal(), af->requires_root() });
             seen_app_categories.set(af->category());
         }
     });
@@ -192,10 +193,18 @@ ErrorOr<NonnullRefPtr<GUI::Menu>> build_system_menu(WindowRefence& window_ref)
             dbgln("Activated app with ID {}", app_identifier);
             auto& app = g_apps[app_identifier];
             char const* argv[4] { nullptr, nullptr, nullptr, nullptr };
-            if (app.run_in_terminal) {
+            auto pls_with_executable = String::formatted("/bin/pls {}", app.executable);
+            if (app.run_in_terminal && !app.requires_root) {
                 argv[0] = "/bin/Terminal";
                 argv[1] = "-e";
                 argv[2] = app.executable.characters();
+            } else if (!app.run_in_terminal && app.requires_root) {
+                argv[0] = "/bin/Escalator";
+                argv[1] = app.executable.characters();
+            } else if (app.run_in_terminal && app.requires_root) {
+                argv[0] = "/bin/Terminal";
+                argv[1] = "-e";
+                argv[2] = pls_with_executable.characters();
             } else {
                 argv[0] = app.executable.characters();
             }
