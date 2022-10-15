@@ -40,12 +40,28 @@ public:
     Mode mode() const { return m_mode; }
     void setup(Mode);
 
+    void perform_undo();
+
     Function<void(uint32_t)> on_score_update;
     Function<void()> on_game_start;
     Function<void(GameOverReason, uint32_t)> on_game_end;
+    Function<void(bool)> on_undo_availability_change;
 
 private:
     Game();
+
+    struct LastMove {
+        enum class Type {
+            Invalid,
+            MoveCards
+        };
+
+        Type type { Type::Invalid };
+        CardStack* from { nullptr };
+        size_t card_count;
+        bool was_visible;
+        CardStack* to { nullptr };
+    };
 
     enum StackLocation {
         Completed,
@@ -68,6 +84,7 @@ private:
     };
 
     void start_timer_if_necessary();
+    void remember_move_for_undo(CardStack&, CardStack&, size_t, bool);
     void update_score(int delta);
     void draw_cards();
     void detect_full_stacks();
@@ -82,6 +99,7 @@ private:
 
     Mode m_mode { Mode::SingleSuit };
 
+    LastMove m_last_move;
     NonnullRefPtrVector<Card> m_new_deck;
     Gfx::IntPoint m_mouse_down_location;
 
