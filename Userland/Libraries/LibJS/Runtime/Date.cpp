@@ -342,7 +342,7 @@ Vector<Crypto::SignedBigInteger> get_named_time_zone_epoch_nanoseconds(StringVie
     // Can only fail if the time zone identifier is invalid, which cannot be the case here.
     VERIFY(offset.has_value());
 
-    return { local_nanoseconds.plus(Crypto::SignedBigInteger { offset->seconds }.multiplied_by(s_one_billion_bigint)) };
+    return { local_nanoseconds.minus(Crypto::SignedBigInteger { offset->seconds }.multiplied_by(s_one_billion_bigint)) };
 }
 
 // 21.4.1.9 GetNamedTimeZoneOffsetNanoseconds ( timeZoneIdentifier, epochNanoseconds ), https://tc39.es/ecma262/#sec-getnamedtimezoneoffsetnanoseconds
