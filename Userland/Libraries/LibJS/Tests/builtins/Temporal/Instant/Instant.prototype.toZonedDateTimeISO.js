@@ -25,6 +25,25 @@ describe("correct behavior", () => {
         const zonedDateTime = instant.toZonedDateTimeISO({ timeZone });
         expect(zonedDateTime.timeZone).toBe(timeZone);
     });
+
+    test("avoids extra timeZone property lookup", () => {
+        const instant = new Temporal.Instant(1625614921123456789n);
+
+        let timesGetterCalled = 0;
+        const timeZoneObject = {
+            get timeZone() {
+                timesGetterCalled++;
+                return "UTC";
+            },
+
+            toString() {
+                return "UTC";
+            },
+        };
+
+        instant.toZonedDateTimeISO({ timeZone: timeZoneObject });
+        expect(timesGetterCalled).toBe(0);
+    });
 });
 
 describe("errors", () => {
