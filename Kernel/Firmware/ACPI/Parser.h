@@ -37,6 +37,8 @@ public:
     virtual StringView name() const override { return m_table_name->view(); }
     virtual ErrorOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer&, OpenFileDescription*) const override;
 
+    virtual size_t size() const override final { return m_length; }
+
 protected:
     ErrorOr<NonnullOwnPtr<KBuffer>> try_to_generate_buffer() const;
     ACPISysFSComponent(NonnullOwnPtr<KString> table_name, PhysicalAddress, size_t table_size);
