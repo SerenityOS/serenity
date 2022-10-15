@@ -5409,6 +5409,28 @@ RefPtr<StyleValue> Parser::parse_as_css_value(PropertyID property_id)
 
 RefPtr<StyleValue> Parser::parse_grid_track_sizes(Vector<ComponentValue> const& component_values)
 {
+    auto parse_grid_track_size = [&](ComponentValue const& component_value) -> Optional<GridTrackSize> {
+        // FIXME: Parse calc here if necessary
+        if (component_value.is_function())
+            return {};
+        auto token = component_value.token();
+        if (token.is(Token::Type::Dimension) && token.dimension_unit().equals_ignoring_case("fr"sv)) {
+            float numeric_value = token.dimension_value();
+            if (numeric_value)
+                return GridTrackSize(numeric_value);
+        }
+        if (token.is(Token::Type::Ident) && token.ident().equals_ignoring_case("auto"sv))
+            return GridTrackSize::make_auto();
+        auto dimension = parse_dimension(token);
+        if (!dimension.has_value())
+            return {};
+        if (dimension->is_length())
+            return GridTrackSize(dimension->length());
+        else if (dimension->is_percentage())
+            return GridTrackSize(dimension->percentage());
+        return {};
+    };
+
     Vector<CSS::MetaGridTrackSize> params;
     for (auto const& component_value : component_values) {
         if (component_value.is_function()) {
@@ -5453,20 +5475,10 @@ RefPtr<StyleValue> Parser::parse_grid_track_sizes(Vector<ComponentValue> const& 
                     } else if (current_component_value.is_block()) {
                         // FIXME: Implement things like grid-template-columns: repeat(1, [col-start] 8);
                     } else {
-                        current_token = current_component_value.token();
-                        if (current_token.type() == Token::Type::Dimension && current_token.dimension_unit().equals_ignoring_case("fr"sv)) {
-                            float numeric_value = current_token.dimension_value();
-                            if (numeric_value)
-                                repeat_params.append(GridTrackSize(numeric_value));
-                        } else {
-                            auto dimension = parse_dimension(current_token);
-                            if (!dimension.has_value())
-                                return GridTrackSizeStyleValue::create({});
-                            if (dimension->is_length())
-                                repeat_params.append(GridTrackSize(dimension->length()));
-                            else if (dimension->is_percentage())
-                                repeat_params.append(GridTrackSize(dimension->percentage()));
-                        }
+                        auto grid_track_size = parse_grid_track_size(current_component_value);
+                        if (!grid_track_size.has_value())
+                            return GridTrackSizeStyleValue::create({});
+                        repeat_params.append(grid_track_size.value());
                     }
                     part_two_tokens.skip_whitespace();
                     if (!part_two_tokens.has_next_token())
@@ -5508,22 +5520,10 @@ RefPtr<StyleValue> Parser::parse_grid_track_sizes(Vector<ComponentValue> const& 
             params.append(GridTrackSize(Length::make_auto()));
             continue;
         }
-        if (component_value.token().type() == Token::Type::Dimension) {
-            float numeric_value = component_value.token().dimension_value();
-            auto unit_string = component_value.token().dimension_unit();
-            if (unit_string.equals_ignoring_case("fr"sv) && numeric_value) {
-                params.append(GridTrackSize(numeric_value));
-                continue;
-            }
-        }
-
-        auto dimension = parse_dimension(component_value);
-        if (!dimension.has_value())
+        auto grid_track_size = parse_grid_track_size(component_value);
+        if (!grid_track_size.has_value())
             return GridTrackSizeStyleValue::create({});
-        if (dimension->is_length())
-            params.append(GridTrackSize(dimension->length()));
-        if (dimension->is_percentage())
-            params.append(GridTrackSize(dimension->percentage()));
+        params.append(grid_track_size.value());
     }
     return GridTrackSizeStyleValue::create(params);
 }
