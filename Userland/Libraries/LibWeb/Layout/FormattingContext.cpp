@@ -276,6 +276,12 @@ float FormattingContext::compute_auto_height_for_block_level_element(Box const& 
         // NOTE: The automatic block size of a block-level flex container is its max-content size.
         return calculate_max_content_height(box, available_space.width);
     }
+    if (display.is_grid_inside()) {
+        // https://www.w3.org/TR/css-grid-2/#intrinsic-sizes
+        // In both inline and block formatting contexts, the grid container’s auto block size is its
+        // max-content size.
+        return calculate_max_content_height(box, available_space.width);
+    }
 
     // https://www.w3.org/TR/CSS22/visudet.html#normal-block
     // 10.6.3 Block-level non-replaced elements in normal flow when 'overflow' computes to 'visible'
