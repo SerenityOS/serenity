@@ -63,8 +63,24 @@ MetaGridTrackSize::MetaGridTrackSize(GridTrackSize grid_track_size)
 {
 }
 
+MetaGridTrackSize::MetaGridTrackSize(GridTrackSize min_grid_track_size, GridTrackSize max_grid_track_size)
+    : m_min_grid_track_size(min_grid_track_size)
+    , m_max_grid_track_size(max_grid_track_size)
+    , m_is_min_max(true)
+{
+}
+
 String MetaGridTrackSize::to_string() const
 {
+    if (m_is_min_max) {
+        StringBuilder builder;
+        builder.append("minmax("sv);
+        builder.appendff("{}", m_min_grid_track_size.to_string());
+        builder.append(", "sv);
+        builder.appendff("{}", m_max_grid_track_size.to_string());
+        builder.append(")"sv);
+        return builder.to_string();
+    }
     return String::formatted("{}", m_min_grid_track_size.to_string());
 }
 
