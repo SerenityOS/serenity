@@ -11,6 +11,7 @@
 #include <LibCore/File.h>
 #include <LibCore/System.h>
 #include <LibDesktop/Launcher.h>
+#include <LibGUI/ActionGroup.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/FilePicker.h>
 #include <LibGUI/GML/AutocompleteProvider.h>
@@ -84,9 +85,15 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->resize(800, 600);
 
     auto splitter = TRY(window->try_set_main_widget<GUI::HorizontalSplitter>());
-
     auto editor = TRY(splitter->try_add<GUI::TextEditor>());
-    auto preview = TRY(splitter->try_add<GUI::Frame>());
+    auto preview_frame_widget = TRY(splitter->try_add<GUI::Frame>());
+
+    auto preview_window = TRY(GUI::Window::try_create());
+    preview_window->set_title("Preview - GML Playground");
+    preview_window->set_icon(app_icon.bitmap_for_size(16));
+    auto preview_window_widget = TRY(preview_window->try_set_main_widget<GUI::Widget>());
+
+    GUI::Widget* preview = preview_frame_widget;
 
     editor->set_syntax_highlighter(make<GUI::GML::SyntaxHighlighter>());
     editor->set_autocomplete_provider(make<GUI::GML::AutocompleteProvider>());
@@ -245,6 +252,38 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     });
     vim_emulation_setting_action->set_checked(false);
     TRY(edit_menu->try_add_action(vim_emulation_setting_action));
+
+    auto view_menu = TRY(window->try_add_menu("&View"));
+    GUI::ActionGroup views_group;
+    views_group.set_exclusive(true);
+    views_group.set_unchecking_allowed(false);
+
+    auto view_frame_action = GUI::Action::create_checkable("&Frame", [&](auto&) {
+        dbgln("View switched to frame");
+        preview = preview_frame_widget;
+        editor->on_change();
+        preview_window->hide();
+        preview_frame_widget->set_preferred_width(splitter->width() / 2);
+        preview_frame_widget->set_visible(true);
+    });
+    view_menu->add_action(view_frame_action);
+    views_group.add_action(view_frame_action);
+    view_frame_action->set_checked(true);
+
+    auto view_window_action = GUI::Action::create_checkable("&Window", [&](auto&) {
+        dbgln("View switched to window");
+        preview = preview_window_widget;
+        editor->on_change();
+        preview_window->resize(400, 300);
+        preview_window->show();
+        preview_frame_widget->set_visible(false);
+    });
+    view_menu->add_action(view_window_action);
+    views_group.add_action(view_window_action);
+
+    preview_window->on_close = [&] {
+        view_frame_action->activate();
+    };
 
     auto help_menu = TRY(window->try_add_menu("&Help"));
     TRY(help_menu->try_add_action(GUI::CommonActions::make_help_action([](auto&) {
