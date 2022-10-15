@@ -18,7 +18,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
 
     TRY(Core::System::pledge("unix rpath wpath stdio sendfd recvfd"));
     TRY(Core::System::unveil(SPICE_DEVICE, "rw"sv));
-    TRY(Core::System::unveil("/tmp/portal/clipboard", "rw"));
+    TRY(Core::System::unveil("/tmp/session/%sid/portal/clipboard", "rw"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
     int serial_port_fd = TRY(Core::System::open(SPICE_DEVICE, O_RDWR));
