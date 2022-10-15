@@ -19,6 +19,8 @@ public:
     static ErrorOr<void> add_group(Group& group);
 #endif
 
+    static ErrorOr<Vector<Group>> all();
+
     Group() = default;
     Group(String name, gid_t id = 0, Vector<String> members = {});
 

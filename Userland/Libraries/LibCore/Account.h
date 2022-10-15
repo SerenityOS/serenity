@@ -35,6 +35,7 @@ public:
     static ErrorOr<Account> self(Read options = Read::All);
     static ErrorOr<Account> from_name(StringView username, Read options = Read::All);
     static ErrorOr<Account> from_uid(uid_t uid, Read options = Read::All);
+    static ErrorOr<Vector<Account>> all(Read options = Read::All);
 
     bool authenticate(SecretString const& password) const;
     ErrorOr<void> login() const;
