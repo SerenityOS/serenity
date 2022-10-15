@@ -74,7 +74,7 @@ ErrorOr<void, Variant<HttpError, Error>> Session::delete_window()
     // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
     auto current_window = get_window_object();
     if (!current_window.has_value())
-        return Variant<HttpError, Error>(HttpError { 400, "no such window", "Window not found" });
+        return Variant<HttpError, Error>(HttpError { 404, "no such window", "Window not found" });
 
     // 2. Close the current top-level browsing context.
     m_windows.remove(m_current_window_handle);
@@ -96,7 +96,7 @@ ErrorOr<JsonValue, HttpError> Session::post_url(JsonValue const& payload)
     // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
     auto current_window = get_window_object();
     if (!current_window.has_value())
-        return HttpError { 400, "no such window", "Window not found" };
+        return HttpError { 404, "no such window", "Window not found" };
 
     // FIXME 2. Handle any user prompts and return its value if it is an error.
 
@@ -132,7 +132,7 @@ ErrorOr<JsonValue, HttpError> Session::get_url()
     // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
     auto current_window = get_window_object();
     if (!current_window.has_value())
-        return HttpError { 400, "no such window", "Window not found" };
+        return HttpError { 404, "no such window", "Window not found" };
 
     // FIXME: 2. Handle any user prompts and return its value if it is an error.
 
@@ -149,7 +149,7 @@ ErrorOr<JsonValue, HttpError> Session::get_title()
     // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
     auto current_window = get_window_object();
     if (!current_window.has_value())
-        return HttpError { 400, "no such window", "Window not found" };
+        return HttpError { 404, "no such window", "Window not found" };
 
     // FIXME: 2. Handle any user prompts and return its value if it is an error.
 
