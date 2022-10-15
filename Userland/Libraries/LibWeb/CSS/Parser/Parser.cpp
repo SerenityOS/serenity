@@ -5440,6 +5440,8 @@ RefPtr<StyleValue> Parser::parse_grid_track_sizes(Vector<ComponentValue> const& 
             // The generic form of the repeat() syntax is, approximately,
             // repeat( [ <integer [1,∞]> | auto-fill | auto-fit ] , <track-list> )
             if (function_token.name().equals_ignoring_case("repeat"sv)) {
+                auto is_auto_fill = false;
+                auto is_auto_fit = false;
                 auto function_tokens = TokenStream(function_token.values());
                 auto comma_separated_list = parse_a_comma_separated_list_of_component_values(function_tokens);
                 if (comma_separated_list.size() != 2)
@@ -5454,6 +5456,10 @@ RefPtr<StyleValue> Parser::parse_grid_track_sizes(Vector<ComponentValue> const& 
                 auto repeat_count = 0;
                 if (current_token.is(Token::Type::Number) && current_token.number().is_integer() && current_token.number_value() > 0)
                     repeat_count = current_token.number_value();
+                else if (current_token.is(Token::Type::Ident) && current_token.ident().equals_ignoring_case("auto-fill"sv))
+                    is_auto_fill = true;
+                else if (current_token.is(Token::Type::Ident) && current_token.ident().equals_ignoring_case("auto-fit"sv))
+                    is_auto_fit = true;
 
                 // The second argument is a track list, which is repeated that number of times.
                 TokenStream part_two_tokens { comma_separated_list[1] };
@@ -5478,14 +5484,15 @@ RefPtr<StyleValue> Parser::parse_grid_track_sizes(Vector<ComponentValue> const& 
                         auto grid_track_size = parse_grid_track_size(current_component_value);
                         if (!grid_track_size.has_value())
                             return GridTrackSizeStyleValue::create({});
+                        // Automatic repetitions (auto-fill or auto-fit) cannot be combined with intrinsic or flexible sizes.
+                        if (grid_track_size.value().is_flexible_length() && (is_auto_fill || is_auto_fit))
+                            return GridTrackSizeStyleValue::create({});
                         repeat_params.append(grid_track_size.value());
                     }
                     part_two_tokens.skip_whitespace();
                     if (!part_two_tokens.has_next_token())
                         break;
                 }
-
-                // Automatic repetitions (auto-fill or auto-fit) cannot be combined with intrinsic or flexible sizes.
 
                 // Thus the precise syntax of the repeat() notation has several forms:
                 // <track-repeat> = repeat( [ <integer [1,∞]> ] , [ <line-names>? <track-size> ]+ <line-names>? )
@@ -5506,6 +5513,10 @@ RefPtr<StyleValue> Parser::parse_grid_track_sizes(Vector<ComponentValue> const& 
                 // If a repeat() function that is not a <name-repeat> ends up placing two <line-names> adjacent to
                 // each other, the name lists are merged. For example, repeat(2, [a] 1fr [b]) is equivalent to [a]
                 // 1fr [b a] 1fr [b].
+                if (is_auto_fill)
+                    return GridTrackSizeStyleValue::create(CSS::ExplicitTrackSizing(repeat_params, CSS::ExplicitTrackSizing::Type::AutoFill));
+                if (is_auto_fit)
+                    return GridTrackSizeStyleValue::create(CSS::ExplicitTrackSizing(repeat_params, CSS::ExplicitTrackSizing::Type::AutoFit));
                 return GridTrackSizeStyleValue::create(CSS::ExplicitTrackSizing(repeat_params, repeat_count));
             } else {
                 // FIXME: Implement MinMax, etc.
