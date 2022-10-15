@@ -53,6 +53,11 @@ struct LayoutState {
         void set_content_width(float);
         void set_content_height(float);
 
+        // NOTE: These are used by FlexFormattingContext to assign a temporary main size to items
+        //       early on, so that descendants have something to resolve percentages against.
+        void set_temporary_content_width(float);
+        void set_temporary_content_height(float);
+
         bool has_definite_width() const { return m_has_definite_width && width_constraint == SizeConstraint::None; }
         bool has_definite_height() const { return m_has_definite_height && height_constraint == SizeConstraint::None; }
 

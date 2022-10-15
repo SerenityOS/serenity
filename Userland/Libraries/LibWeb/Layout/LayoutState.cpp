@@ -301,6 +301,16 @@ void LayoutState::UsedValues::set_content_height(float height)
     m_has_definite_height = true;
 }
 
+void LayoutState::UsedValues::set_temporary_content_width(float width)
+{
+    m_content_width = width;
+}
+
+void LayoutState::UsedValues::set_temporary_content_height(float height)
+{
+    m_content_height = height;
+}
+
 float LayoutState::resolved_definite_width(Box const& box) const
 {
     return get(box).content_width();
