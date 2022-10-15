@@ -149,7 +149,6 @@ set(KERNEL_SOURCES
     FileSystem/SysFS/Subsystems/Firmware/BIOS/Component.cpp
     FileSystem/SysFS/Subsystems/Firmware/BIOS/Directory.cpp
     FileSystem/SysFS/Subsystems/Firmware/Directory.cpp
-    FileSystem/SysFS/Subsystems/Firmware/PowerStateSwitch.cpp
     FileSystem/SysFS/Subsystems/Kernel/CommandLine.cpp
     FileSystem/SysFS/Subsystems/Kernel/Interrupts.cpp
     FileSystem/SysFS/Subsystems/Kernel/Processes.cpp
@@ -164,6 +163,7 @@ set(KERNEL_SOURCES
     FileSystem/SysFS/Subsystems/Kernel/SystemStatistics.cpp
     FileSystem/SysFS/Subsystems/Kernel/GlobalInformation.cpp
     FileSystem/SysFS/Subsystems/Kernel/MemoryStatus.cpp
+    FileSystem/SysFS/Subsystems/Kernel/PowerStateSwitch.cpp
     FileSystem/SysFS/Subsystems/Kernel/Uptime.cpp
     FileSystem/SysFS/Subsystems/Kernel/Network/Adapters.cpp
     FileSystem/SysFS/Subsystems/Kernel/Network/ARP.cpp

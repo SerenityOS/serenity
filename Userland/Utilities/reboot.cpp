@@ -10,7 +10,7 @@
 
 ErrorOr<int> serenity_main(Main::Arguments)
 {
-    auto file = TRY(Core::Stream::File::open("/sys/firmware/power_state"sv, Core::Stream::OpenMode::Write));
+    auto file = TRY(Core::Stream::File::open("/sys/kernel/power_state"sv, Core::Stream::OpenMode::Write));
 
     const String file_contents = "1";
     TRY(file->write(file_contents.bytes()));

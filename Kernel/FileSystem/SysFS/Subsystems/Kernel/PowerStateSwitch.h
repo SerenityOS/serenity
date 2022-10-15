@@ -10,7 +10,7 @@
 #include <AK/Types.h>
 #include <AK/Vector.h>
 #include <Kernel/FileSystem/SysFS.h>
-#include <Kernel/FileSystem/SysFS/Subsystems/Firmware/Directory.h>
+#include <Kernel/FileSystem/SysFS/Subsystems/Kernel/Directory.h>
 #include <Kernel/KBuffer.h>
 #include <Kernel/Library/LockRefPtr.h>
 #include <Kernel/Memory/MappedROM.h>
@@ -20,16 +20,16 @@
 
 namespace Kernel {
 
-class PowerStateSwitchNode final : public SysFSComponent {
+class SysFSPowerStateSwitchNode final : public SysFSComponent {
 public:
     virtual StringView name() const override { return "power_state"sv; }
-    static NonnullLockRefPtr<PowerStateSwitchNode> must_create(FirmwareSysFSDirectory&);
+    static NonnullLockRefPtr<SysFSPowerStateSwitchNode> must_create(SysFSDirectory const&);
     virtual mode_t permissions() const override;
     virtual ErrorOr<size_t> write_bytes(off_t, size_t, UserOrKernelBuffer const&, OpenFileDescription*) override;
     virtual ErrorOr<void> truncate(u64) override;
 
 private:
-    PowerStateSwitchNode(FirmwareSysFSDirectory&);
+    explicit SysFSPowerStateSwitchNode(SysFSDirectory const&);
 
     void reboot();
     void poweroff();

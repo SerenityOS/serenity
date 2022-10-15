@@ -14,5 +14,5 @@ $ shutdown
 
 ## Notes
 
-The `shutdown` utility opens the `/sys/firmware/power_state` node and writes the magic value "2"
+The `shutdown` utility opens the `/sys/kernel/power_state` node and writes the magic value "2"
 to instruct the kernel to power off the machine.
