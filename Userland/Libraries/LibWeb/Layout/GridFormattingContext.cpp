@@ -1011,6 +1011,9 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
     // 12.5.1. Distributing Extra Space Across Spanned Tracks
     // To distribute extra space by increasing the affected sizes of a set of tracks as required by a
     // set of intrinsic size contributions,
+    float sum_of_track_sizes = 0;
+    for (auto& it : m_grid_columns)
+        sum_of_track_sizes += it.base_size;
 
     // 1. Maintain separately for each affected base size or growth limit a planned increase, initially
     // set to 0. (This prevents the size increases from becoming order-dependent.)
@@ -1021,18 +1024,54 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
     // every spanned track from the item’s size contribution to find the item’s remaining size
     // contribution. (For infinite growth limits, substitute the track’s base size.) This is the space
     // to distribute. Floor it at zero.
-    // extra-space = max(0, size-contribution - ∑track-sizes)
 
+    // For base sizes, the limit is its growth limit. For growth limits, the limit is infinity if it is
+    // marked as infinitely growable, and equal to the growth limit otherwise. If the affected size was
+    // a growth limit and the track is not marked infinitely growable, then each item-incurred increase
+    // will be zero.
+    // extra-space = max(0, size-contribution - ∑track-sizes)
+    for (auto& grid_column : m_grid_columns)
+        grid_column.space_to_distribute = max(0, (grid_column.growth_limit == -1 ? grid_column.base_size : grid_column.growth_limit) - grid_column.base_size);
+
+    auto remaining_free_space = box_state.content_width() - sum_of_track_sizes;
     // 2.2. Distribute space up to limits: Find the item-incurred increase for each spanned track with an
     // affected size by: distributing the space equally among such tracks, freezing a track’s
     // item-incurred increase as its affected size + item-incurred increase reaches its limit (and
     // continuing to grow the unfrozen tracks as needed).
+    auto count_of_unfrozen_tracks = 0;
+    for (auto& grid_column : m_grid_columns) {
+        if (grid_column.space_to_distribute > 0)
+            count_of_unfrozen_tracks++;
+    }
+    while (remaining_free_space > 0) {
+        if (count_of_unfrozen_tracks == 0)
+            break;
+        auto free_space_to_distribute_per_track = remaining_free_space / count_of_unfrozen_tracks;
 
-    // For base sizes, the limit is its growth limit. For growth limits, the limit is infinity if it is
-    // marked as infinitely growable, and equal to the growth limit otherwise.
+        for (auto& grid_column : m_grid_columns) {
+            if (grid_column.space_to_distribute == 0)
+                continue;
+            // 2.4. For each affected track, if the track’s item-incurred increase is larger than the track’s planned
+            // increase set the track’s planned increase to that value.
+            if (grid_column.space_to_distribute <= free_space_to_distribute_per_track) {
+                grid_column.planned_increase += grid_column.space_to_distribute;
+                remaining_free_space -= grid_column.space_to_distribute;
+                grid_column.space_to_distribute = 0;
+            } else {
+                grid_column.space_to_distribute -= free_space_to_distribute_per_track;
+                grid_column.planned_increase += free_space_to_distribute_per_track;
+                remaining_free_space -= free_space_to_distribute_per_track;
+            }
+        }
 
-    // If the affected size was a growth limit and the track is not marked infinitely growable, then each
-    // item-incurred increase will be zero.
+        count_of_unfrozen_tracks = 0;
+        for (auto& grid_column : m_grid_columns) {
+            if (grid_column.space_to_distribute > 0)
+                count_of_unfrozen_tracks++;
+        }
+        if (remaining_free_space == 0)
+            break;
+    }
 
     // 2.3. Distribute space beyond limits: If space remains after all tracks are frozen, unfreeze and
     // continue to distribute space to the item-incurred increase of…
@@ -1054,18 +1093,47 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
     // tracks’ min track sizing functions beyond their current growth limits based on the types of their
     // max track sizing functions.
 
-    // 2.4. For each affected track, if the track’s item-incurred increase is larger than the track’s planned
-    // increase set the track’s planned increase to that value.
-
     // 3. Update the tracks' affected sizes by adding in the planned increase so that the next round of
     // space distribution will account for the increase. (If the affected size is an infinite growth
     // limit, set it to the track’s base size plus the planned increase.)
+    for (auto& grid_column : m_grid_columns)
+        grid_column.base_size += grid_column.planned_increase;
+    // FIXME: Do for rows.
 
     // https://www.w3.org/TR/css-grid-2/#algo-grow-tracks
     // 12.6. Maximize Tracks
 
     // If the free space is positive, distribute it equally to the base sizes of all tracks, freezing
     // tracks as they reach their growth limits (and continuing to grow the unfrozen tracks as needed).
+    auto free_space = get_free_space_x(box);
+    while (free_space > 0) {
+        auto free_space_to_distribute_per_track = free_space / m_grid_columns.size();
+        for (auto& grid_column : m_grid_columns) {
+            if (grid_column.growth_limit != -1)
+                grid_column.base_size = min(grid_column.growth_limit, grid_column.base_size + free_space_to_distribute_per_track);
+            else
+                grid_column.base_size = grid_column.base_size + free_space_to_distribute_per_track;
+        }
+        if (get_free_space_x(box) == free_space)
+            break;
+        free_space = get_free_space_x(box);
+    }
+
+    free_space = get_free_space_y(box);
+    while (free_space > 0) {
+        auto free_space_to_distribute_per_track = free_space / m_grid_rows.size();
+        for (auto& grid_row : m_grid_rows)
+            grid_row.base_size = min(grid_row.growth_limit, grid_row.base_size + free_space_to_distribute_per_track);
+        if (get_free_space_y(box) == free_space)
+            break;
+        free_space = get_free_space_y(box);
+    }
+    if (free_space == -1) {
+        for (auto& grid_row : m_grid_rows) {
+            if (grid_row.growth_limit != -1)
+                grid_row.base_size = grid_row.growth_limit;
+        }
+    }
 
     // For the purpose of this step: if sizing the grid container under a max-content constraint, the
     // free space is infinite; if sizing under a min-content constraint, the free space is zero.
@@ -1073,7 +1141,6 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
     // If this would cause the grid to be larger than the grid container’s inner size as limited by its
     // max-width/height, then redo this step, treating the available grid space as equal to the grid
     // container’s inner size when it’s sized to its max-width/height.
-    // FIXME: Do later as at the moment all growth limits are equal to base sizes.
 
     // https://drafts.csswg.org/css-grid/#algo-flex-tracks
     // 12.7. Expand Flexible Tracks

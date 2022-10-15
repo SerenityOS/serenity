@@ -31,6 +31,8 @@ private:
         CSS::GridTrackSize max_track_sizing_function;
         float base_size { 0 };
         float growth_limit { 0 };
+        float space_to_distribute { 0 };
+        float planned_increase { 0 };
     };
 
     Vector<GridTrack> m_grid_rows;
