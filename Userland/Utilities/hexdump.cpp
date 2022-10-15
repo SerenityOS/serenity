@@ -7,6 +7,7 @@
 #include <AK/Array.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
+#include <LibCore/System.h>
 #include <LibMain/Main.h>
 #include <ctype.h>
 #include <string.h>
@@ -21,6 +22,8 @@ enum class State {
 
 ErrorOr<int> serenity_main(Main::Arguments args)
 {
+    TRY(Core::System::pledge("stdio rpath"));
+
     Core::ArgsParser args_parser;
     char const* path = nullptr;
     bool verbose = false;
