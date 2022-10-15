@@ -6,40 +6,7 @@ proc - SerenityOS ProcFS
 
 The kernel can expose process related information in /proc.
 This functionality is used by various userland programs.
-Most of the output layout in the ProcFS nodes is JSON.
-
-### Global entries
-
-* **`all`** - this node exports a list of all processes that currently exist.
-* **`cmdline`** - this node exports the kernel boot commandline that was passed to
-from the bootloader.
-* **`cpuinfo`** - this node exports information on the CPU.
-* **`df`** - this node exports information on mounted filesystems and basic statistics on
-them.
-* **`dmesg`** - this node exports information from the kernel log.
-* **`interrupts`** - this node exports information on all IRQ handlers and basic statistics on
-them.
-* **`kernel_base`** - this node reveals the loading address of the kernel.
-* **`keymap`** - this node exports information on current used keymap.
-* **`memstat`** - this node exports statistics on memory allocation in the kernel.
-* **`pci`** - this node exports information on all currently-discovered PCI devices in the system.
-
-### `net` directory
-
-* **`adapters`** - this node exports information on all currently-discovered network adapters.
-* **`arp`** - this node exports information on the kernel ARP table.
-* **`local`** - this node exports information on local (unix) sockets.
-* **`tcp`** - this node exports information on tcp sockets.
-* **`udp`** - this node exports information on udp sockets.
-
-### `sys` directory
-
-This subdirectory includes global settings of the kernel.
-
-* **`caps_lock_to_ctrl`** - this node controls remapping of of caps lock to the Ctrl key.
-* **`kmalloc_stacks`** - this node controls whether to send information about kmalloc to debug log.
-* **`ubsan_is_deadly`** - this node controls the deadliness of the kernel undefined behavior
-sanitizer errors.
+All of the output layout (besides symbolic links) in the ProcFS nodes is JSON.
 
 ### Per process entries
 
