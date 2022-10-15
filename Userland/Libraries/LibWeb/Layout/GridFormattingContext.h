@@ -25,6 +25,16 @@ private:
     bool is_auto_positioned_row(CSS::GridTrackPlacement const&, CSS::GridTrackPlacement const&) const;
     bool is_auto_positioned_column(CSS::GridTrackPlacement const&, CSS::GridTrackPlacement const&) const;
     bool is_auto_positioned_track(CSS::GridTrackPlacement const&, CSS::GridTrackPlacement const&) const;
+
+    struct GridTrack {
+        CSS::GridTrackSize min_track_sizing_function;
+        CSS::GridTrackSize max_track_sizing_function;
+        float base_size { 0 };
+        float growth_limit { 0 };
+    };
+
+    Vector<GridTrack> m_grid_rows;
+    Vector<GridTrack> m_grid_columns;
 };
 
 class OccupationGrid {
