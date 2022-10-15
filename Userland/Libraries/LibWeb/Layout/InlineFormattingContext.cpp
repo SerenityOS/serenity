@@ -126,6 +126,7 @@ void InlineFormattingContext::dimension_box_on_line(Box const& box, LayoutMode l
     VERIFY(!box.display().is_flow_inside());
 
     auto const& width_value = box.computed_values().width();
+    float unconstrained_width = 0;
     if (width_value.is_auto()) {
         auto result = calculate_shrink_to_fit_widths(box);
 
@@ -137,16 +138,31 @@ void InlineFormattingContext::dimension_box_on_line(Box const& box, LayoutMode l
             - box_state.border_right
             - box_state.margin_right;
 
-        auto width = min(max(result.preferred_minimum_width, available_width), result.preferred_width);
-        box_state.set_content_width(width);
+        unconstrained_width = min(max(result.preferred_minimum_width, available_width), result.preferred_width);
     } else {
         if (width_value.contains_percentage() && !m_available_space->width.is_definite()) {
             // NOTE: We can't resolve percentages yet. We'll have to wait until after inner layout.
         } else {
             auto container_width = CSS::Length::make_px(m_available_space->width.to_px());
-            box_state.set_content_width(width_value.resolved(box, container_width).to_px(box));
+            unconstrained_width = width_value.resolved(box, container_width).to_px(box);
         }
     }
+
+    float width = unconstrained_width;
+    auto computed_max_width = box.computed_values().max_width();
+    if (!computed_max_width.is_none()) {
+        auto max_width = computed_max_width.resolved(box, width_of_containing_block).to_px(box);
+        width = min(width, max_width);
+    }
+
+    auto computed_min_width = box.computed_values().min_width();
+    if (!computed_min_width.is_auto()) {
+        auto min_width = computed_min_width.resolved(box, width_of_containing_block).to_px(box);
+        width = max(width, min_width);
+    }
+
+    box_state.set_content_width(width);
+
     auto independent_formatting_context = layout_inside(box, layout_mode, box_state.available_inner_space_or_constraints_from(*m_available_space));
 
     auto const& height_value = box.computed_values().height();
