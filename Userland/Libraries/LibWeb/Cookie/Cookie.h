@@ -8,6 +8,7 @@
 
 #include <AK/String.h>
 #include <LibCore/DateTime.h>
+#include <LibIPC/Forward.h>
 
 namespace Web::Cookie {
 
@@ -29,5 +30,12 @@ struct Cookie {
     bool host_only { false };
     bool persistent { false };
 };
+
+}
+
+namespace IPC {
+
+bool encode(Encoder&, Web::Cookie::Cookie const&);
+ErrorOr<void> decode(Decoder&, Web::Cookie::Cookie&);
 
 }

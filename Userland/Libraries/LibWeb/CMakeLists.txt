@@ -66,6 +66,7 @@ set(SOURCES
     CSS/Supports.cpp
     CSS/SyntaxHighlighter/SyntaxHighlighter.cpp
     CSS/Time.cpp
+    Cookie/Cookie.cpp
     Cookie/ParsedCookie.cpp
     DOM/AbortController.cpp
     DOM/AbortSignal.cpp
