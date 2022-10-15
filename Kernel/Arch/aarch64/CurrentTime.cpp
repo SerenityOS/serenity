@@ -4,8 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#pragma once
-
 #include <Kernel/Arch/CurrentTime.h>
 
 namespace Kernel {
