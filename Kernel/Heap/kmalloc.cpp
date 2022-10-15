@@ -410,14 +410,6 @@ void kmalloc_enable_expand()
     g_kmalloc_global->enable_expansion();
 }
 
-static inline void kmalloc_verify_nospinlock_held()
-{
-    // Catch bad callers allocating under spinlock.
-    if constexpr (KMALLOC_VERIFY_NO_SPINLOCK_HELD) {
-        VERIFY(!Processor::in_critical());
-    }
-}
-
 UNMAP_AFTER_INIT void kmalloc_init()
 {
     // Zero out heap since it's placed after end_of_kernel_bss.
@@ -429,7 +421,11 @@ UNMAP_AFTER_INIT void kmalloc_init()
 
 void* kmalloc(size_t size)
 {
-    kmalloc_verify_nospinlock_held();
+    // Catch bad callers allocating under spinlock.
+    if constexpr (KMALLOC_VERIFY_NO_SPINLOCK_HELD) {
+        Processor::verify_no_spinlocks_held();
+    }
+
     SpinlockLocker lock(s_lock);
     ++g_kmalloc_call_count;
 
@@ -472,7 +468,11 @@ void kfree_sized(void* ptr, size_t size)
 
     VERIFY(size > 0);
 
-    kmalloc_verify_nospinlock_held();
+    // Catch bad callers allocating under spinlock.
+    if constexpr (KMALLOC_VERIFY_NO_SPINLOCK_HELD) {
+        Processor::verify_no_spinlocks_held();
+    }
+
     SpinlockLocker lock(s_lock);
     ++g_kfree_call_count;
     ++g_nested_kfree_calls;

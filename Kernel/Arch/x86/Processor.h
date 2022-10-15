@@ -370,6 +370,11 @@ public:
         return read_gs_ptr(__builtin_offsetof(Processor, m_in_critical));
     }
 
+    ALWAYS_INLINE static void verify_no_spinlocks_held()
+    {
+        VERIFY(!Processor::in_critical());
+    }
+
     ALWAYS_INLINE static FPUState const& clean_fpu_state() { return s_clean_fpu_state; }
 
     static void smp_enable();
