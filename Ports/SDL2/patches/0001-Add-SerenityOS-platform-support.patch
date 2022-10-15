@@ -34,9 +34,9 @@ Co-Authored-By: circl <circl.lastname@gmail.com>
  src/video/serenity/SDL_serenitymessagebox.h   |  38 ++
  src/video/serenity/SDL_serenitymouse.cpp      | 142 ++++
  src/video/serenity/SDL_serenitymouse.h        |  39 ++
- src/video/serenity/SDL_serenityvideo.cpp      | 605 ++++++++++++++++++
+ src/video/serenity/SDL_serenityvideo.cpp      | 608 ++++++++++++++++++
  src/video/serenity/SDL_serenityvideo.h        | 101 +++
- 20 files changed, 1300 insertions(+), 25 deletions(-)
+ 20 files changed, 1303 insertions(+), 25 deletions(-)
  create mode 100644 src/audio/serenity/SDL_serenityaudio.cpp
  create mode 100644 src/audio/serenity/SDL_serenityaudio.h
  create mode 100644 src/video/serenity/SDL_serenityevents.cpp
@@ -49,7 +49,7 @@ Co-Authored-By: circl <circl.lastname@gmail.com>
  create mode 100644 src/video/serenity/SDL_serenityvideo.h
 
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index 6b53699..e910dc4 100644
+index 6b536993781c9a4705667a4f74f1e26d9e03c7c4..e910dc45199af426bda5d09be813757c7ceb18b7 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
 @@ -26,6 +26,9 @@ set(EXTRA_LDFLAGS)
@@ -99,7 +99,7 @@ index 6b53699..e910dc4 100644
    if(UNIX)
      file(GLOB CORE_UNIX_SOURCES ${SDL2_SOURCE_DIR}/src/core/unix/*.c)
 diff --git a/build-scripts/config.sub b/build-scripts/config.sub
-index dba16e8..39c9ecb 100755
+index dba16e84c77c7d25871d80c24deff717faf4c094..39c9ecb7358ff0e2b32994027395eb8962483e02 100755
 --- a/build-scripts/config.sub
 +++ b/build-scripts/config.sub
 @@ -1427,6 +1427,9 @@ case $os in
@@ -113,7 +113,7 @@ index dba16e8..39c9ecb 100755
  		os=`echo "$os" | sed -e 's|sunos5|solaris2|'`
  		;;
 diff --git a/cmake/sdlchecks.cmake b/cmake/sdlchecks.cmake
-index 7e25075..1d09487 100644
+index 7e2507505e589f4893388b346d548db77ca18800..1d094870718df3a95c9832d942fb8a0adb8a1ba2 100644
 --- a/cmake/sdlchecks.cmake
 +++ b/cmake/sdlchecks.cmake
 @@ -785,6 +785,26 @@ macro(CheckDirectFB)
@@ -144,7 +144,7 @@ index 7e25075..1d09487 100644
  # - n/a
  macro(CheckVivante)
 diff --git a/include/SDL_config.h.cmake b/include/SDL_config.h.cmake
-index 2d21b37..370ffcf 100644
+index 2d21b37ddce1e517185e574d1f3b510a672d24e7..370ffcf8d4674a8031b469cec063d4810f30a7e0 100644
 --- a/include/SDL_config.h.cmake
 +++ b/include/SDL_config.h.cmake
 @@ -318,6 +318,7 @@
@@ -164,7 +164,7 @@ index 2d21b37..370ffcf 100644
  #cmakedefine SDL_VIDEO_DRIVER_WINRT @SDL_VIDEO_DRIVER_WINRT@
  #cmakedefine SDL_VIDEO_DRIVER_WAYLAND @SDL_VIDEO_DRIVER_WAYLAND@
 diff --git a/src/SDL_error.c b/src/SDL_error.c
-index 1ca460a..b08d742 100644
+index 1ca460a6903359df2bd8aafa354b67df94d53751..b08d742e55f338a52e139cde0c50bd7524082aaf 100644
 --- a/src/SDL_error.c
 +++ b/src/SDL_error.c
 @@ -53,10 +53,9 @@ SDL_SetError(SDL_PRINTF_FORMAT_STRING const char *fmt, ...)
@@ -182,7 +182,7 @@ index 1ca460a..b08d742 100644
  
      return -1;
 diff --git a/src/audio/SDL_audio.c b/src/audio/SDL_audio.c
-index e2f7412..7181100 100644
+index e2f7412c994eb8f2d54e8f746f37bb1b1cc0645b..7181100bb0f824bf21199cd8af87b3b642572cf8 100644
 --- a/src/audio/SDL_audio.c
 +++ b/src/audio/SDL_audio.c
 @@ -125,6 +125,9 @@ static const AudioBootStrap *const bootstrap[] = {
@@ -196,7 +196,7 @@ index e2f7412..7181100 100644
      NULL
  };
 diff --git a/src/audio/SDL_sysaudio.h b/src/audio/SDL_sysaudio.h
-index 6afaae1..6c7009a 100644
+index 6afaae195c6cedb6f9d7b00ca840907e280c0575..6c7009afd966ab384848a63b51c35ec2ef61b8f5 100644
 --- a/src/audio/SDL_sysaudio.h
 +++ b/src/audio/SDL_sysaudio.h
 @@ -211,6 +211,7 @@ extern AudioBootStrap PSPAUDIO_bootstrap;
@@ -209,7 +209,7 @@ index 6afaae1..6c7009a 100644
  
 diff --git a/src/audio/serenity/SDL_serenityaudio.cpp b/src/audio/serenity/SDL_serenityaudio.cpp
 new file mode 100644
-index 0000000..8a5abd5
+index 0000000000000000000000000000000000000000..8a5abd58967dee12619c45d0e0d6cfc8e00f5445
 --- /dev/null
 +++ b/src/audio/serenity/SDL_serenityaudio.cpp
 @@ -0,0 +1,160 @@
@@ -375,7 +375,7 @@ index 0000000..8a5abd5
 +#endif
 diff --git a/src/audio/serenity/SDL_serenityaudio.h b/src/audio/serenity/SDL_serenityaudio.h
 new file mode 100644
-index 0000000..8d152ca
+index 0000000000000000000000000000000000000000..8d152ca843e732d2d5a8127fc191ca22ce690a83
 --- /dev/null
 +++ b/src/audio/serenity/SDL_serenityaudio.h
 @@ -0,0 +1,38 @@
@@ -418,7 +418,7 @@ index 0000000..8d152ca
 +    size_t mixlen { 0 };
 +};
 diff --git a/src/stdlib/SDL_stdlib.c b/src/stdlib/SDL_stdlib.c
-index 2af18b1..fbef9e7 100644
+index 2af18b1f05e1f1ce2c06de81d844bdb72777b640..fbef9e7f7987aea4dd66e2d4e54ba57c45c371b6 100644
 --- a/src/stdlib/SDL_stdlib.c
 +++ b/src/stdlib/SDL_stdlib.c
 @@ -637,7 +637,7 @@ SDL_memset(SDL_OUT_BYTECAP(len) void *dst, int c, size_t len)
@@ -431,7 +431,7 @@ index 2af18b1..fbef9e7 100644
  #else
  int SDL_isblank(int x) { return ((x) == ' ') || ((x) == '\t'); }
 diff --git a/src/video/SDL_sysvideo.h b/src/video/SDL_sysvideo.h
-index 4ea7705..83b9bba 100644
+index 4ea7705e959b8a2d120b4d1c8599c93f450b7d9f..83b9bba4ff81ff7030f2f6fa2235c91641f18a22 100644
 --- a/src/video/SDL_sysvideo.h
 +++ b/src/video/SDL_sysvideo.h
 @@ -470,6 +470,7 @@ extern VideoBootStrap OFFSCREEN_bootstrap;
@@ -443,7 +443,7 @@ index 4ea7705..83b9bba 100644
  /* Use SDL_OnVideoThread() sparingly, to avoid regressions in use cases that currently happen to work */
  extern SDL_bool SDL_OnVideoThread(void);
 diff --git a/src/video/SDL_video.c b/src/video/SDL_video.c
-index 21c5162..2e765de 100644
+index 21c516265f75b61ec11aeb50e5a8e6cad7a44dd0..2e765deecce851935434c17f662463607fc7fadf 100644
 --- a/src/video/SDL_video.c
 +++ b/src/video/SDL_video.c
 @@ -128,6 +128,9 @@ static VideoBootStrap *bootstrap[] = {
@@ -482,7 +482,7 @@ index 21c5162..2e765de 100644
          const char *error = SDL_GetError();
 diff --git a/src/video/serenity/SDL_serenityevents.cpp b/src/video/serenity/SDL_serenityevents.cpp
 new file mode 100644
-index 0000000..04cbf21
+index 0000000000000000000000000000000000000000..04cbf21ce74fb11e6713ba3a4beaad808751e80b
 --- /dev/null
 +++ b/src/video/serenity/SDL_serenityevents.cpp
 @@ -0,0 +1,52 @@
@@ -540,7 +540,7 @@ index 0000000..04cbf21
 +/* vi: set ts=4 sw=4 expandtab: */
 diff --git a/src/video/serenity/SDL_serenityevents_c.h b/src/video/serenity/SDL_serenityevents_c.h
 new file mode 100644
-index 0000000..89e9e91
+index 0000000000000000000000000000000000000000..89e9e919e319c701144da8f6d73bbb2ea519758d
 --- /dev/null
 +++ b/src/video/serenity/SDL_serenityevents_c.h
 @@ -0,0 +1,33 @@
@@ -579,7 +579,7 @@ index 0000000..89e9e91
 +/* vi: set ts=4 sw=4 expandtab: */
 diff --git a/src/video/serenity/SDL_serenitymessagebox.cpp b/src/video/serenity/SDL_serenitymessagebox.cpp
 new file mode 100644
-index 0000000..fe41a8b
+index 0000000000000000000000000000000000000000..fe41a8beecc4f1e6b9cc17831d53b43c05f167f1
 --- /dev/null
 +++ b/src/video/serenity/SDL_serenitymessagebox.cpp
 @@ -0,0 +1,40 @@
@@ -625,7 +625,7 @@ index 0000000..fe41a8b
 +/* vi: set ts=4 sw=4 expandtab: */
 diff --git a/src/video/serenity/SDL_serenitymessagebox.h b/src/video/serenity/SDL_serenitymessagebox.h
 new file mode 100644
-index 0000000..34e6077
+index 0000000000000000000000000000000000000000..34e607783310310ac8956bccf584b5ab12d45907
 --- /dev/null
 +++ b/src/video/serenity/SDL_serenitymessagebox.h
 @@ -0,0 +1,38 @@
@@ -669,7 +669,7 @@ index 0000000..34e6077
 +/* vi: set ts=4 sw=4 expandtab: */
 diff --git a/src/video/serenity/SDL_serenitymouse.cpp b/src/video/serenity/SDL_serenitymouse.cpp
 new file mode 100644
-index 0000000..5d0cb52
+index 0000000000000000000000000000000000000000..5d0cb527a03dc0ac775ed68d66451495bf993ec6
 --- /dev/null
 +++ b/src/video/serenity/SDL_serenitymouse.cpp
 @@ -0,0 +1,142 @@
@@ -817,7 +817,7 @@ index 0000000..5d0cb52
 +/* vi: set ts=4 sw=4 expandtab: */
 diff --git a/src/video/serenity/SDL_serenitymouse.h b/src/video/serenity/SDL_serenitymouse.h
 new file mode 100644
-index 0000000..039f036
+index 0000000000000000000000000000000000000000..039f0361b3d1b248e218ea69495f58e52ad532c6
 --- /dev/null
 +++ b/src/video/serenity/SDL_serenitymouse.h
 @@ -0,0 +1,39 @@
@@ -862,10 +862,10 @@ index 0000000..039f036
 +/* vi: set ts=4 sw=4 expandtab: */
 diff --git a/src/video/serenity/SDL_serenityvideo.cpp b/src/video/serenity/SDL_serenityvideo.cpp
 new file mode 100644
-index 0000000..4ebe2ad
+index 0000000000000000000000000000000000000000..26ecf9800376d1b83632c3bc9eeb069c18c5a892
 --- /dev/null
 +++ b/src/video/serenity/SDL_serenityvideo.cpp
-@@ -0,0 +1,605 @@
+@@ -0,0 +1,608 @@
 +/*
 +  Simple DirectMedia Layer
 +  Copyright (C) 1997-2019 Sam Lantinga <slouken@libsdl.org>
@@ -1161,6 +1161,9 @@ index 0000000..4ebe2ad
 +
 +void SerenitySDLWidget::paint_event(GUI::PaintEvent& event)
 +{
++    if (!m_buffer)
++        return;
++
 +    GUI::Painter painter(*this);
 +    painter.add_clip_rect(event.rect());
 +    painter.blit(event.rect().location(), *m_buffer, event.rect());
@@ -1473,7 +1476,7 @@ index 0000000..4ebe2ad
 +/* vi: set ts=4 sw=4 expandtab: */
 diff --git a/src/video/serenity/SDL_serenityvideo.h b/src/video/serenity/SDL_serenityvideo.h
 new file mode 100644
-index 0000000..f74e1bd
+index 0000000000000000000000000000000000000000..f74e1bd981734caf023b77a9b9fa30c46be40e4c
 --- /dev/null
 +++ b/src/video/serenity/SDL_serenityvideo.h
 @@ -0,0 +1,101 @@
