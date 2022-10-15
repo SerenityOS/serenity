@@ -18,7 +18,6 @@ public:
         Length,
         Percentage,
         FlexibleLength,
-        // TODO: MinMax
         // TODO: Max-Content
     };
 
@@ -68,6 +67,9 @@ private:
 class MetaGridTrackSize {
 public:
     MetaGridTrackSize(CSS::GridTrackSize);
+    MetaGridTrackSize(CSS::GridTrackSize min_grid_track_size, CSS::GridTrackSize max_grid_track_size);
+
+    bool is_min_max() const { return m_is_min_max; }
 
     GridTrackSize grid_track_size() const& { return m_min_grid_track_size; }
     GridTrackSize min_grid_track_size() const& { return m_min_grid_track_size; }
@@ -83,6 +85,7 @@ public:
 private:
     GridTrackSize m_min_grid_track_size;
     GridTrackSize m_max_grid_track_size;
+    bool m_is_min_max { false };
 };
 
 class ExplicitTrackSizing {
