@@ -147,6 +147,11 @@ public:
         return current().m_in_critical;
     }
 
+    ALWAYS_INLINE static void verify_no_spinlocks_held()
+    {
+        VERIFY(!Processor::in_critical());
+    }
+
     // FIXME: Actually return the idle thread once aarch64 supports threading.
     ALWAYS_INLINE static Thread* idle_thread()
     {
