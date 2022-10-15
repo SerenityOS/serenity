@@ -40,6 +40,7 @@ public:
     ErrorOr<JsonValue, HttpError> refresh();
     ErrorOr<JsonValue, HttpError> back();
     ErrorOr<JsonValue, HttpError> forward();
+    ErrorOr<JsonValue, HttpError> get_all_cookies();
 
 private:
     NonnullRefPtr<Client> m_client;
