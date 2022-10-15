@@ -1183,7 +1183,7 @@ float FormattingContext::calculate_min_content_height(Layout::Box const& box, Av
         auto& root_state = m_state.m_root;
         auto& cache = *root_state.intrinsic_sizes.ensure(&box, [] { return adopt_own(*new LayoutState::IntrinsicSizes); });
         if (available_width.is_definite()) {
-            cache_slot = &cache.min_content_height_with_definite_available_width;
+            cache_slot = &cache.min_content_height_with_definite_available_width.ensure(available_width.to_px());
         } else if (available_width.is_min_content()) {
             cache_slot = &cache.min_content_height_with_min_content_available_width;
         } else if (available_width.is_max_content()) {
@@ -1228,7 +1228,7 @@ float FormattingContext::calculate_max_content_height(Layout::Box const& box, Av
         auto& root_state = m_state.m_root;
         auto& cache = *root_state.intrinsic_sizes.ensure(&box, [] { return adopt_own(*new LayoutState::IntrinsicSizes); });
         if (available_width.is_definite()) {
-            cache_slot = &cache.max_content_height_with_definite_available_width;
+            cache_slot = &cache.max_content_height_with_definite_available_width.ensure(available_width.to_px());
         } else if (available_width.is_min_content()) {
             cache_slot = &cache.max_content_height_with_min_content_available_width;
         } else if (available_width.is_max_content()) {
