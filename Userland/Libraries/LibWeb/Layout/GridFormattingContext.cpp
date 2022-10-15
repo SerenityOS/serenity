@@ -652,6 +652,11 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
         default:
             VERIFY_NOT_REACHED();
         }
+
+        // In all cases, if the growth limit is less than the base size, increase the growth limit to match
+        // the base size.
+        if (grid_column.growth_limit != -1 && grid_column.growth_limit < grid_column.base_size)
+            grid_column.growth_limit = grid_column.base_size;
     }
 
     // Initialize each track’s base size and growth limit.
@@ -698,10 +703,12 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
         default:
             VERIFY_NOT_REACHED();
         }
-    }
 
-    // FIXME: In all cases, if the growth limit is less than the base size, increase the growth limit to match
-    // the base size.
+        // In all cases, if the growth limit is less than the base size, increase the growth limit to match
+        // the base size.
+        if (grid_row.growth_limit != -1 && grid_row.growth_limit < grid_row.base_size)
+            grid_row.growth_limit = grid_row.base_size;
+    }
 
     // https://www.w3.org/TR/css-grid-2/#algo-content
     // 12.5. Resolve Intrinsic Track Sizes
