@@ -45,4 +45,22 @@ describe("normal behavior", () => {
             expect(Temporal.TimeZone.from(arg).id).toBe(expected);
         }
     });
+
+    test("ToTemporalTimeZone fast path returns if it is passed a Temporal.TimeZone instance", () => {
+        // This is obseravble via there being no property lookups (avoiding a "timeZone" property lookup in this case)
+        let madeObservableHasPropertyLookup = false;
+        class TimeZone extends Temporal.TimeZone {
+            constructor() {
+                super("UTC");
+            }
+
+            get timeZone() {
+                madeObservableHasPropertyLookup = true;
+                return this;
+            }
+        }
+        const timeZone = new TimeZone();
+        Temporal.TimeZone.from(timeZone);
+        expect(madeObservableHasPropertyLookup).toBeFalse();
+    });
 });

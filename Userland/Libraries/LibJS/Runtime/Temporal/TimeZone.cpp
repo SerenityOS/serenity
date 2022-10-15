@@ -292,7 +292,13 @@ ThrowCompletionOr<Object*> to_temporal_time_zone(VM& vm, Value temporal_time_zon
 {
     // 1. If Type(temporalTimeZoneLike) is Object, then
     if (temporal_time_zone_like.is_object()) {
-        // a. If temporalTimeZoneLike has an [[InitializedTemporalZonedDateTime]] internal slot, then
+        // a. If temporalTimeZoneLike has an [[InitializedTemporalTimeZone]] internal slot, then
+        if (is<TimeZone>(temporal_time_zone_like.as_object())) {
+            // i. Return temporalTimeZoneLike.
+            return &temporal_time_zone_like.as_object();
+        }
+
+        // b. If temporalTimeZoneLike has an [[InitializedTemporalZonedDateTime]] internal slot, then
         if (is<ZonedDateTime>(temporal_time_zone_like.as_object())) {
             auto& zoned_date_time = static_cast<ZonedDateTime&>(temporal_time_zone_like.as_object());
 
@@ -300,14 +306,14 @@ ThrowCompletionOr<Object*> to_temporal_time_zone(VM& vm, Value temporal_time_zon
             return &zoned_date_time.time_zone();
         }
 
-        // b. If ? HasProperty(temporalTimeZoneLike, "timeZone") is false, return temporalTimeZoneLike.
+        // c. If ? HasProperty(temporalTimeZoneLike, "timeZone") is false, return temporalTimeZoneLike.
         if (!TRY(temporal_time_zone_like.as_object().has_property(vm.names.timeZone)))
             return &temporal_time_zone_like.as_object();
 
-        // c. Set temporalTimeZoneLike to ? Get(temporalTimeZoneLike, "timeZone").
+        // d. Set temporalTimeZoneLike to ? Get(temporalTimeZoneLike, "timeZone").
         temporal_time_zone_like = TRY(temporal_time_zone_like.as_object().get(vm.names.timeZone));
 
-        // d. If Type(temporalTimeZoneLike) is Object and ? HasProperty(temporalTimeZoneLike, "timeZone") is false, return temporalTimeZoneLike.
+        // e. If Type(temporalTimeZoneLike) is Object and ? HasProperty(temporalTimeZoneLike, "timeZone") is false, return temporalTimeZoneLike.
         if (temporal_time_zone_like.is_object() && !TRY(temporal_time_zone_like.as_object().has_property(vm.names.timeZone)))
             return &temporal_time_zone_like.as_object();
     }
