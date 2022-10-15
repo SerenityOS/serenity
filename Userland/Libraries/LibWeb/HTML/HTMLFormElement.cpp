@@ -128,7 +128,7 @@ void HTMLFormElement::submit_form(JS::GCPtr<HTMLElement> submitter, bool from_su
         auto body = url_encode(parameters, AK::URL::PercentEncodeSet::ApplicationXWWWFormUrlencoded).to_byte_buffer();
         request.set_method("POST");
         request.set_header("Content-Type", "application/x-www-form-urlencoded");
-        request.set_body(body);
+        request.set_body(move(body));
     }
 
     if (auto* page = document().page())

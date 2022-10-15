@@ -440,16 +440,17 @@ WebIDL::ExceptionOr<void> XMLHttpRequest::send(Optional<Variant<JS::Handle<DOM::
     auto request = LoadRequest::create_for_url_on_page(request_url, m_window->page());
     request.set_method(m_method);
     if (serialized_document.has_value()) {
-        request.set_body(serialized_document.value());
+        request.set_body(serialized_document.release_value());
     } else if (body_with_type.has_value()) {
         TRY(body_with_type->body.source().visit(
             [&](ByteBuffer const& buffer) -> WebIDL::ExceptionOr<void> {
-                request.set_body(buffer);
+                auto byte_buffer = TRY_OR_RETURN_OOM(realm, ByteBuffer::copy(buffer));
+                request.set_body(move(byte_buffer));
                 return {};
             },
             [&](JS::Handle<FileAPI::Blob> const& blob) -> WebIDL::ExceptionOr<void> {
                 auto byte_buffer = TRY_OR_RETURN_OOM(realm, ByteBuffer::copy(blob->bytes()));
-                request.set_body(byte_buffer);
+                request.set_body(move(byte_buffer));
                 return {};
             },
             [](auto&) -> WebIDL::ExceptionOr<void> {
