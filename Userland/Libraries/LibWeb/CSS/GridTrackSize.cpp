@@ -84,6 +84,13 @@ ExplicitTrackSizing::ExplicitTrackSizing(Vector<CSS::MetaGridTrackSize> meta_gri
 {
 }
 
+ExplicitTrackSizing::ExplicitTrackSizing(Vector<CSS::MetaGridTrackSize> meta_grid_track_sizes, Type type)
+    : m_meta_grid_track_sizes(meta_grid_track_sizes)
+    , m_is_auto_fill(type == Type::AutoFill)
+    , m_is_auto_fit(type == Type::AutoFit)
+{
+}
+
 String ExplicitTrackSizing::to_string() const
 {
     StringBuilder builder;

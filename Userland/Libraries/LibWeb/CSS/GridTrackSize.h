@@ -87,12 +87,21 @@ private:
 
 class ExplicitTrackSizing {
 public:
+    enum class Type {
+        AutoFit,
+        AutoFill,
+    };
+
     ExplicitTrackSizing();
     ExplicitTrackSizing(Vector<CSS::MetaGridTrackSize>);
     ExplicitTrackSizing(Vector<CSS::MetaGridTrackSize>, int repeat_count);
+    ExplicitTrackSizing(Vector<CSS::MetaGridTrackSize>, Type);
+
     static ExplicitTrackSizing make_auto() { return ExplicitTrackSizing(); };
 
     bool is_repeat() const { return m_is_repeat; }
+    bool is_auto_fill() const { return m_is_auto_fill; }
+    bool is_auto_fit() const { return m_is_auto_fit; }
     int repeat_count() const { return m_repeat_count; }
 
     Vector<CSS::MetaGridTrackSize> meta_grid_track_sizes() const& { return m_meta_grid_track_sizes; }
@@ -106,6 +115,8 @@ public:
 private:
     Vector<CSS::MetaGridTrackSize> m_meta_grid_track_sizes;
     bool m_is_repeat { false };
+    bool m_is_auto_fill { false };
+    bool m_is_auto_fit { false };
     int m_repeat_count { 0 };
 };
 
