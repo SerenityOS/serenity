@@ -35,6 +35,9 @@ private:
 
     Vector<GridTrack> m_grid_rows;
     Vector<GridTrack> m_grid_columns;
+
+    float get_free_space_x(Box const&);
+    float get_free_space_y(Box const&);
 };
 
 class OccupationGrid {

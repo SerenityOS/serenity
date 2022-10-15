@@ -46,6 +46,11 @@ public:
         return (m_type == Type::Length && m_length.is_auto());
     }
 
+    bool is_definite() const
+    {
+        return (m_type == Type::Length && !m_length.is_auto()) || is_percentage();
+    }
+
     String to_string() const;
     bool operator==(GridTrackSize const& other) const
     {

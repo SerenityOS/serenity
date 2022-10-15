@@ -19,6 +19,7 @@ GridFormattingContext::~GridFormattingContext() = default;
 
 void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const& available_space)
 {
+    auto& box_state = m_state.get_mutable(box);
     auto should_skip_is_anonymous_text_run = [&](Box& child_box) -> bool {
         if (child_box.is_anonymous() && !child_box.first_child_of_type<BlockContainer>()) {
             bool contains_only_white_space = true;
@@ -33,6 +34,23 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
                 return true;
         }
         return false;
+    };
+
+    auto resolve_definite_track_size = [&](CSS::GridTrackSize const& grid_track_size) -> float {
+        VERIFY(grid_track_size.is_definite());
+        switch (grid_track_size.type()) {
+        case CSS::GridTrackSize::Type::Length:
+            if (grid_track_size.length().is_auto())
+                break;
+            return grid_track_size.length().to_px(box);
+            break;
+        case CSS::GridTrackSize::Type::Percentage:
+            return grid_track_size.percentage().as_fraction() * box_state.content_width();
+            break;
+        default:
+            VERIFY_NOT_REACHED();
+        }
+        return 0;
     };
 
     // https://drafts.csswg.org/css-grid/#overview-placement
@@ -59,6 +77,69 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
     });
     auto column_repeat_count = box.computed_values().grid_template_columns().is_repeat() ? box.computed_values().grid_template_columns().repeat_count() : 1;
     auto row_repeat_count = box.computed_values().grid_template_rows().is_repeat() ? box.computed_values().grid_template_rows().repeat_count() : 1;
+
+    // https://www.w3.org/TR/css-grid-2/#auto-repeat
+    // 7.2.3.2. Repeat-to-fill: auto-fill and auto-fit repetitions
+    // On a subgridded axis, the auto-fill keyword is only valid once per <line-name-list>, and repeats
+    // enough times for the name list to match the subgrid’s specified grid span (falling back to 0 if
+    // the span is already fulfilled).
+
+    // Otherwise on a standalone axis, when auto-fill is given as the repetition number
+    if (box.computed_values().grid_template_columns().is_auto_fill() || box.computed_values().grid_template_columns().is_auto_fit()) {
+        // If the grid container has a definite size or max size in the relevant axis, then the number of
+        // repetitions is the largest possible positive integer that does not cause the grid to overflow the
+        // content box of its grid container
+
+        auto sum_of_grid_track_sizes = 0;
+        // (treating each track as its max track sizing function if that is definite or its minimum track sizing
+        // function otherwise, flooring the max track sizing function by the min track sizing function if both
+        // are definite, and taking gap into account)
+        // FIXME: take gap into account
+        for (auto& meta_grid_track : box.computed_values().grid_template_columns().meta_grid_track_sizes()) {
+            if (meta_grid_track.max_grid_track_size().is_definite() && !meta_grid_track.min_grid_track_size().is_definite())
+                sum_of_grid_track_sizes += resolve_definite_track_size(meta_grid_track.max_grid_track_size());
+            else if (meta_grid_track.min_grid_track_size().is_definite() && !meta_grid_track.max_grid_track_size().is_definite())
+                sum_of_grid_track_sizes += resolve_definite_track_size(meta_grid_track.min_grid_track_size());
+            else if (meta_grid_track.min_grid_track_size().is_definite() && meta_grid_track.max_grid_track_size().is_definite())
+                sum_of_grid_track_sizes += min(resolve_definite_track_size(meta_grid_track.min_grid_track_size()), resolve_definite_track_size(meta_grid_track.max_grid_track_size()));
+        }
+        column_repeat_count = max(1, static_cast<int>(get_free_space_x(box) / sum_of_grid_track_sizes));
+
+        // For the purpose of finding the number of auto-repeated tracks in a standalone axis, the UA must
+        // floor the track size to a UA-specified value to avoid division by zero. It is suggested that this
+        // floor be 1px.
+    }
+    if (box.computed_values().grid_template_rows().is_auto_fill() || box.computed_values().grid_template_rows().is_auto_fit()) {
+        // If the grid container has a definite size or max size in the relevant axis, then the number of
+        // repetitions is the largest possible positive integer that does not cause the grid to overflow the
+        // content box of its grid container
+
+        auto sum_of_grid_track_sizes = 0;
+        // (treating each track as its max track sizing function if that is definite or its minimum track sizing
+        // function otherwise, flooring the max track sizing function by the min track sizing function if both
+        // are definite, and taking gap into account)
+        // FIXME: take gap into account
+        for (auto& meta_grid_track : box.computed_values().grid_template_rows().meta_grid_track_sizes()) {
+            if (meta_grid_track.max_grid_track_size().is_definite() && !meta_grid_track.min_grid_track_size().is_definite())
+                sum_of_grid_track_sizes += resolve_definite_track_size(meta_grid_track.max_grid_track_size());
+            else if (meta_grid_track.min_grid_track_size().is_definite() && !meta_grid_track.max_grid_track_size().is_definite())
+                sum_of_grid_track_sizes += resolve_definite_track_size(meta_grid_track.min_grid_track_size());
+            else if (meta_grid_track.min_grid_track_size().is_definite() && meta_grid_track.max_grid_track_size().is_definite())
+                sum_of_grid_track_sizes += min(resolve_definite_track_size(meta_grid_track.min_grid_track_size()), resolve_definite_track_size(meta_grid_track.max_grid_track_size()));
+        }
+        row_repeat_count = max(1, static_cast<int>(get_free_space_y(box) / sum_of_grid_track_sizes));
+
+        // The auto-fit keyword behaves the same as auto-fill, except that after grid item placement any
+        // empty repeated tracks are collapsed. An empty track is one with no in-flow grid items placed into
+        // or spanning across it. (This can result in all tracks being collapsed, if they’re all empty.)
+
+        // A collapsed track is treated as having a fixed track sizing function of 0px, and the gutters on
+        // either side of it—including any space allotted through distributed alignment—collapse.
+
+        // For the purpose of finding the number of auto-repeated tracks in a standalone axis, the UA must
+        // floor the track size to a UA-specified value to avoid division by zero. It is suggested that this
+        // floor be 1px.
+    }
     auto occupation_grid = OccupationGrid(column_repeat_count * box.computed_values().grid_template_columns().meta_grid_track_sizes().size(), row_repeat_count * box.computed_values().grid_template_rows().meta_grid_track_sizes().size());
 
     // https://drafts.csswg.org/css-grid/#auto-placement-algo
@@ -483,7 +564,6 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
         // FIXME: 4.2. For dense packing:
     }
 
-    auto& box_state = m_state.get_mutable(box);
     for (auto& positioned_box : positioned_boxes) {
         auto& child_box_state = m_state.get_mutable(positioned_box.box);
         if (child_box_state.content_height() > positioned_box.computed_height)
@@ -855,6 +935,23 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
         ++index;
     }
 
+    // https://www.w3.org/TR/css-grid-2/#auto-repeat
+    // The auto-fit keyword behaves the same as auto-fill, except that after grid item placement any
+    // empty repeated tracks are collapsed. An empty track is one with no in-flow grid items placed into
+    // or spanning across it. (This can result in all tracks being collapsed, if they’re all empty.)
+    if (box.computed_values().grid_template_columns().is_auto_fit()) {
+        auto idx = 0;
+        for (auto& grid_column : m_grid_columns) {
+            // A collapsed track is treated as having a fixed track sizing function of 0px, and the gutters on
+            // either side of it—including any space allotted through distributed alignment—collapse.
+            if (!occupation_grid.is_occupied(idx, 0)) {
+                grid_column.base_size = 0;
+                grid_column.growth_limit = 0;
+            }
+            idx++;
+        }
+    }
+
     // 3. Increase sizes to accommodate spanning items crossing content-sized tracks: Next, consider the
     // items with a span of 2 that do not span a track with a flexible sizing function.
     // FIXME: Content-sized tracks not implemented (min-content, etc.)
@@ -1192,6 +1289,35 @@ bool GridFormattingContext::is_auto_positioned_column(CSS::GridTrackPlacement co
 bool GridFormattingContext::is_auto_positioned_track(CSS::GridTrackPlacement const& grid_track_start, CSS::GridTrackPlacement const& grid_track_end) const
 {
     return grid_track_start.is_auto_positioned() && grid_track_end.is_auto_positioned();
+}
+
+float GridFormattingContext::get_free_space_x(Box const& box)
+{
+    // https://www.w3.org/TR/css-grid-2/#algo-terms
+    // free space: Equal to the available grid space minus the sum of the base sizes of all the grid
+    // tracks (including gutters), floored at zero. If available grid space is indefinite, the free
+    // space is indefinite as well.
+    // FIXME: do indefinite space
+    auto sum_base_sizes = 0;
+    for (auto& grid_column : m_grid_columns)
+        sum_base_sizes += grid_column.base_size;
+    auto& box_state = m_state.get_mutable(box);
+    return max(0, box_state.content_width() - sum_base_sizes);
+}
+
+float GridFormattingContext::get_free_space_y(Box const& box)
+{
+    // https://www.w3.org/TR/css-grid-2/#algo-terms
+    // free space: Equal to the available grid space minus the sum of the base sizes of all the grid
+    // tracks (including gutters), floored at zero. If available grid space is indefinite, the free
+    // space is indefinite as well.
+    auto sum_base_sizes = 0;
+    for (auto& grid_row : m_grid_rows)
+        sum_base_sizes += grid_row.base_size;
+    auto& box_state = m_state.get_mutable(box);
+    if (box_state.has_definite_height())
+        return max(0, absolute_content_rect(box, m_state).height() - sum_base_sizes);
+    return -1;
 }
 
 OccupationGrid::OccupationGrid(int column_count, int row_count)
