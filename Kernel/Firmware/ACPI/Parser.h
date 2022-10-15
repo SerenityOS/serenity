@@ -42,7 +42,7 @@ protected:
     ACPISysFSComponent(NonnullOwnPtr<KString> table_name, PhysicalAddress, size_t table_size);
 
     PhysicalAddress m_paddr;
-    size_t m_length;
+    size_t m_length { 0 };
     NonnullOwnPtr<KString> m_table_name;
 };
 
