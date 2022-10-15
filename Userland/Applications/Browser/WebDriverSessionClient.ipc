@@ -12,4 +12,6 @@ endpoint WebDriverSessionClient {
     back() =|
     forward() =|
     get_all_cookies() => (Vector<Web::Cookie::Cookie> cookies)
+    get_named_cookie(String name) => (Optional<Web::Cookie::Cookie> cookie)
+
 }

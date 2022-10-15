@@ -31,6 +31,7 @@ Vector<Client::Route> Client::s_routes = {
     { HTTP::HttpRequest::Method::POST, { "session", ":session_id", "back" }, &Client::handle_back },
     { HTTP::HttpRequest::Method::POST, { "session", ":session_id", "forward" }, &Client::handle_forward },
     { HTTP::HttpRequest::Method::GET, { "session", ":session_id", "cookie" }, &Client::handle_get_all_cookies },
+    { HTTP::HttpRequest::Method::GET, { "session", ":session_id", "cookie", ":name" }, &Client::handle_get_named_cookie },
 };
 
 Client::Client(NonnullOwnPtr<Core::Stream::BufferedTCPSocket> socket, Core::Object* parent)
@@ -497,6 +498,18 @@ ErrorOr<JsonValue, HttpError> Client::handle_get_all_cookies(Vector<StringView> 
 
     // NOTE: Spec steps handled in Session::get_all_cookies().
     auto cookies = TRY(session->get_all_cookies());
+
+    return make_json_value(cookies);
+}
+
+// GET /session/{session id}/cookie/{name} https://w3c.github.io/webdriver/#dfn-get-named-cookie
+ErrorOr<JsonValue, HttpError> Client::handle_get_named_cookie(Vector<StringView> parameters, JsonValue const&)
+{
+    dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session_id>/cookie/<name>");
+    Session* session = TRY(find_session_with_id(parameters[0]));
+
+    // NOTE: Spec steps handled in Session::get_all_cookies().
+    auto cookies = TRY(session->get_named_cookie(parameters[1]));
 
     return make_json_value(cookies);
 }

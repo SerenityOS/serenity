@@ -41,6 +41,7 @@ public:
     ErrorOr<JsonValue, HttpError> back();
     ErrorOr<JsonValue, HttpError> forward();
     ErrorOr<JsonValue, HttpError> get_all_cookies();
+    ErrorOr<JsonValue, HttpError> get_named_cookie(String const& name);
 
 private:
     NonnullRefPtr<Client> m_client;
