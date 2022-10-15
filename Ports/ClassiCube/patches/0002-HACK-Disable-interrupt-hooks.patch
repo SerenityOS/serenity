@@ -1,0 +1,23 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: cflip <cflip@cflip.net>
+Date: Sat, 15 Oct 2022 15:29:44 -0600
+Subject: [PATCH] HACK: Disable interrupt hooks
+
+This allows crashes to be handled by Serenity's crash handler, which
+automatically displays debugging information such as the backtrace.
+---
+ Program.c | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/Program.c b/Program.c
+index 3b210522036a51a8f4a9fece8b5b2e20be79a7aa..f3c9fd895ef163cad75dce4b566676bc83546767 100644
+--- a/Program.c
++++ b/Program.c
+@@ -55,7 +55,6 @@ CC_NOINLINE static void WarnMissingArgs(int argsCount, const cc_string* args) {
+ static void SetupProgram(int argc, char** argv) {
+ 	static char ipBuffer[STRING_SIZE];
+ 	cc_result res;
+-	Logger_Hook();
+ 	Platform_Init();
+ 	res = Platform_SetDefaultCurrentDirectory(argc, argv);
+ 
