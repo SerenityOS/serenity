@@ -74,6 +74,26 @@ describe("correct behavior", () => {
         expect(zonedDateTime.calendar).toBe(plainDate.calendar);
         expect(zonedDateTime.timeZone.id).toBe("UTC");
     });
+
+    test("time zone fast path returns if it is passed a Temporal.TimeZone instance", () => {
+        const plainDate = new Temporal.PlainDate(2021, 7, 6);
+
+        // This is obseravble via there being no property lookups (avoiding a "timeZone" property lookup in this case)
+        let madeObservableHasPropertyLookup = false;
+        class TimeZone extends Temporal.TimeZone {
+            constructor() {
+                super("UTC");
+            }
+
+            get timeZone() {
+                madeObservableHasPropertyLookup = true;
+                return this;
+            }
+        }
+        const timeZone = new TimeZone();
+        plainDate.toZonedDateTime(timeZone);
+        expect(madeObservableHasPropertyLookup).toBeFalse();
+    });
 });
 
 describe("errors", () => {
