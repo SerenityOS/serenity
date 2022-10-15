@@ -7,7 +7,6 @@
 #include <Kernel/FileSystem/SysFS/Registry.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Firmware/BIOS/Directory.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Firmware/Directory.h>
-#include <Kernel/FileSystem/SysFS/Subsystems/Firmware/PowerStateSwitch.h>
 #include <Kernel/Firmware/ACPI/Parser.h>
 #include <Kernel/Sections.h>
 
@@ -26,7 +25,6 @@ void FirmwareSysFSDirectory::create_components()
         list.append(BIOSSysFSDirectory::must_create(*this));
         if (ACPI::is_enabled())
             list.append(ACPI::ACPISysFSDirectory::must_create(*this));
-        list.append(PowerStateSwitchNode::must_create(*this));
         return {};
     }));
 }

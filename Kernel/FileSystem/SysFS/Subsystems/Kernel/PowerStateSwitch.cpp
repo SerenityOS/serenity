@@ -11,7 +11,7 @@
 #    include <Kernel/Arch/x86/common/Shutdown.h>
 #endif
 #include <Kernel/FileSystem/FileSystem.h>
-#include <Kernel/FileSystem/SysFS/Subsystems/Firmware/PowerStateSwitch.h>
+#include <Kernel/FileSystem/SysFS/Subsystems/Kernel/PowerStateSwitch.h>
 #include <Kernel/Firmware/ACPI/Parser.h>
 #include <Kernel/Process.h>
 #include <Kernel/Sections.h>
@@ -19,22 +19,22 @@
 
 namespace Kernel {
 
-mode_t PowerStateSwitchNode::permissions() const
+mode_t SysFSPowerStateSwitchNode::permissions() const
 {
     return S_IRUSR | S_IRGRP | S_IWUSR | S_IWGRP;
 }
 
-UNMAP_AFTER_INIT NonnullLockRefPtr<PowerStateSwitchNode> PowerStateSwitchNode::must_create(FirmwareSysFSDirectory& firmware_directory)
+UNMAP_AFTER_INIT NonnullLockRefPtr<SysFSPowerStateSwitchNode> SysFSPowerStateSwitchNode::must_create(SysFSDirectory const& parent_directory)
 {
-    return adopt_lock_ref_if_nonnull(new (nothrow) PowerStateSwitchNode(firmware_directory)).release_nonnull();
+    return adopt_lock_ref_if_nonnull(new (nothrow) SysFSPowerStateSwitchNode(parent_directory)).release_nonnull();
 }
 
-UNMAP_AFTER_INIT PowerStateSwitchNode::PowerStateSwitchNode(FirmwareSysFSDirectory&)
-    : SysFSComponent()
+UNMAP_AFTER_INIT SysFSPowerStateSwitchNode::SysFSPowerStateSwitchNode(SysFSDirectory const& parent_directory)
+    : SysFSComponent(parent_directory)
 {
 }
 
-ErrorOr<void> PowerStateSwitchNode::truncate(u64 size)
+ErrorOr<void> SysFSPowerStateSwitchNode::truncate(u64 size)
 {
     // Note: This node doesn't store any useful data anyway, so we can safely
     // truncate this to zero (essentially ignoring the request without failing).
@@ -43,7 +43,7 @@ ErrorOr<void> PowerStateSwitchNode::truncate(u64 size)
     return {};
 }
 
-ErrorOr<size_t> PowerStateSwitchNode::write_bytes(off_t offset, size_t count, UserOrKernelBuffer const& data, OpenFileDescription*)
+ErrorOr<size_t> SysFSPowerStateSwitchNode::write_bytes(off_t offset, size_t count, UserOrKernelBuffer const& data, OpenFileDescription*)
 {
     if (Checked<off_t>::addition_would_overflow(offset, count))
         return EOVERFLOW;
@@ -69,7 +69,7 @@ ErrorOr<size_t> PowerStateSwitchNode::write_bytes(off_t offset, size_t count, Us
     VERIFY_NOT_REACHED();
 }
 
-void PowerStateSwitchNode::reboot()
+void SysFSPowerStateSwitchNode::reboot()
 {
     MutexLocker locker(Process::current().big_lock());
 
@@ -88,7 +88,7 @@ void PowerStateSwitchNode::reboot()
     Processor::halt();
 }
 
-void PowerStateSwitchNode::poweroff()
+void SysFSPowerStateSwitchNode::poweroff()
 {
     MutexLocker locker(Process::current().big_lock());
 

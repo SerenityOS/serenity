@@ -18,6 +18,7 @@
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/Log.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/MemoryStatus.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/Network/Directory.h>
+#include <Kernel/FileSystem/SysFS/Subsystems/Kernel/PowerStateSwitch.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/Processes.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/Profile.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/SystemMode.h>
@@ -44,6 +45,7 @@ UNMAP_AFTER_INIT NonnullLockRefPtr<SysFSGlobalKernelStatsDirectory> SysFSGlobalK
         list.append(SysFSSystemMode::must_create(*global_kernel_stats_directory));
         list.append(SysFSProfile::must_create(*global_kernel_stats_directory));
         list.append(SysFSKernelLoadBase::must_create(*global_kernel_stats_directory));
+        list.append(SysFSPowerStateSwitchNode::must_create(*global_kernel_stats_directory));
 
         list.append(SysFSGlobalNetworkStatsDirectory::must_create(*global_kernel_stats_directory));
         list.append(SysFSGlobalKernelVariablesDirectory::must_create(*global_kernel_stats_directory));
