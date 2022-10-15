@@ -105,7 +105,8 @@ public:
     JS::NonnullGCPtr<HTML::Storage> local_storage();
     JS::NonnullGCPtr<HTML::Storage> session_storage();
 
-    Window* parent();
+    // https://html.spec.whatwg.org/multipage/browsers.html#dom-parent
+    WindowProxy* parent();
 
     WebIDL::ExceptionOr<void> post_message_impl(JS::Value, String const& target_origin);
 

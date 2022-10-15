@@ -41,6 +41,7 @@
 #include <LibWeb/HTML/Storage.h>
 #include <LibWeb/HTML/Timer.h>
 #include <LibWeb/HTML/Window.h>
+#include <LibWeb/HTML/WindowProxy.h>
 #include <LibWeb/HighResolutionTime/Performance.h>
 #include <LibWeb/HighResolutionTime/TimeOrigin.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
@@ -554,10 +555,10 @@ JS::NonnullGCPtr<HTML::Storage> Window::session_storage()
 }
 
 // https://html.spec.whatwg.org/multipage/browsers.html#dom-parent
-Window* Window::parent()
+WindowProxy* Window::parent()
 {
     // 1. Let current be this Window object's browsing context.
-    auto* current = associated_document().browsing_context();
+    auto* current = browsing_context();
 
     // 2. If current is null, then return null.
     if (!current)
@@ -566,16 +567,14 @@ Window* Window::parent()
     // 3. If current is a child browsing context of another browsing context parent,
     //    then return parent's WindowProxy object.
     if (current->parent()) {
-        VERIFY(current->parent()->active_document());
-        return &current->parent()->active_document()->window();
+        return current->parent()->window_proxy();
     }
 
     // 4. Assert: current is a top-level browsing context.
     VERIFY(current->is_top_level());
 
-    // FIXME: 5. Return current's WindowProxy object.
-    VERIFY(current->active_document());
-    return &current->active_document()->window();
+    // 5. Return current's WindowProxy object.
+    return current->window_proxy();
 }
 
 // https://html.spec.whatwg.org/multipage/web-messaging.html#window-post-message-steps
@@ -1098,13 +1097,13 @@ JS_DEFINE_NATIVE_FUNCTION(Window::top_getter)
 {
     auto* impl = TRY(impl_from(vm));
 
-    auto* this_browsing_context = impl->associated_document().browsing_context();
-    if (!this_browsing_context)
+    // 1. If this Window object's browsing context is null, then return null.
+    auto* browsing_context = impl->browsing_context();
+    if (!browsing_context)
         return JS::js_null();
 
-    VERIFY(this_browsing_context->top_level_browsing_context().active_document());
-    auto& top_window = this_browsing_context->top_level_browsing_context().active_document()->window();
-    return &top_window;
+    // 2. Return this Window object's browsing context's top-level browsing context's WindowProxy object.
+    return browsing_context->top_level_browsing_context().window_proxy();
 }
 
 JS_DEFINE_NATIVE_FUNCTION(Window::parent_getter)
