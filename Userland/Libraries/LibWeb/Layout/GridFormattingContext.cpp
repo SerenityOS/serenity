@@ -513,29 +513,19 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
     // - A flexible sizing function (<flex>).
 
     // The grid sizing algorithm defines how to resolve these sizing constraints into used track sizes.
-
-    struct GridTrack {
-        CSS::GridTrackSize min_track_sizing_function;
-        CSS::GridTrackSize max_track_sizing_function;
-        float base_size { 0 };
-        float growth_limit { 0 };
-    };
-    Vector<GridTrack> grid_rows;
-    Vector<GridTrack> grid_columns;
-
     for (int x = 0; x < column_repeat_count; ++x) {
         for (auto& meta_grid_track_size : box.computed_values().grid_template_columns().meta_grid_track_sizes())
-            grid_columns.append({ meta_grid_track_size.min_grid_track_size(), meta_grid_track_size.max_grid_track_size() });
+            m_grid_columns.append({ meta_grid_track_size.min_grid_track_size(), meta_grid_track_size.max_grid_track_size() });
     }
     for (int x = 0; x < row_repeat_count; ++x) {
         for (auto& meta_grid_track_size : box.computed_values().grid_template_rows().meta_grid_track_sizes())
-            grid_rows.append({ meta_grid_track_size.min_grid_track_size(), meta_grid_track_size.max_grid_track_size() });
+            m_grid_rows.append({ meta_grid_track_size.min_grid_track_size(), meta_grid_track_size.max_grid_track_size() });
     }
 
-    for (int column_index = grid_columns.size(); column_index < occupation_grid.column_count(); column_index++)
-        grid_columns.append({ CSS::GridTrackSize::make_auto(), CSS::GridTrackSize::make_auto() });
-    for (int row_index = grid_rows.size(); row_index < occupation_grid.row_count(); row_index++)
-        grid_rows.append({ CSS::GridTrackSize::make_auto(), CSS::GridTrackSize::make_auto() });
+    for (int column_index = m_grid_columns.size(); column_index < occupation_grid.column_count(); column_index++)
+        m_grid_columns.append({ CSS::GridTrackSize::make_auto(), CSS::GridTrackSize::make_auto() });
+    for (int row_index = m_grid_rows.size(); row_index < occupation_grid.row_count(); row_index++)
+        m_grid_rows.append({ CSS::GridTrackSize::make_auto(), CSS::GridTrackSize::make_auto() });
 
     // https://www.w3.org/TR/css-grid-2/#algo-overview
     // 12.1. Grid Sizing Algorithm
@@ -619,7 +609,7 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
     // 12.4. Initialize Track Sizes
 
     // Initialize each track’s base size and growth limit.
-    for (auto& grid_column : grid_columns) {
+    for (auto& grid_column : m_grid_columns) {
         // For each track, if the track’s min track sizing function is:
         switch (grid_column.min_track_sizing_function.type()) {
         // - A fixed sizing function
@@ -665,7 +655,7 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
     }
 
     // Initialize each track’s base size and growth limit.
-    for (auto& grid_row : grid_rows) {
+    for (auto& grid_row : m_grid_rows) {
         // For each track, if the track’s min track sizing function is:
         switch (grid_row.min_track_sizing_function.type()) {
         // - A fixed sizing function
@@ -732,7 +722,7 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
     // 2. Size tracks to fit non-spanning items: For each track with an intrinsic track sizing function and
     // not a flexible sizing function, consider the items in it with a span of 1:
     int index = 0;
-    for (auto& grid_column : grid_columns) {
+    for (auto& grid_column : m_grid_columns) {
         if (!grid_column.min_track_sizing_function.is_intrinsic_track_sizing()) {
             ++index;
             continue;
@@ -796,7 +786,7 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
     }
 
     index = 0;
-    for (auto& grid_row : grid_rows) {
+    for (auto& grid_row : m_grid_rows) {
         if (!grid_row.min_track_sizing_function.is_intrinsic_track_sizing()) {
             ++index;
             continue;
@@ -988,7 +978,7 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
 
     // First, find the grid’s used flex fraction:
     auto column_flex_factor_sum = 0;
-    for (auto& grid_column : grid_columns) {
+    for (auto& grid_column : m_grid_columns) {
         if (grid_column.min_track_sizing_function.is_flexible_length())
             column_flex_factor_sum++;
     }
@@ -1000,7 +990,7 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
 
     // See 12.7.1.
     float sized_column_widths = 0;
-    for (auto& grid_column : grid_columns) {
+    for (auto& grid_column : m_grid_columns) {
         if (!grid_column.min_track_sizing_function.is_flexible_length())
             sized_column_widths += grid_column.base_size;
     }
@@ -1015,7 +1005,7 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
     // The used flex fraction is the result of finding the size of an fr using all of the grid tracks
     // and a space to fill of the available grid space.
     if (free_horizontal_space > 0) {
-        for (auto& grid_column : grid_columns) {
+        for (auto& grid_column : m_grid_columns) {
             if (grid_column.min_track_sizing_function.is_flexible_length()) {
                 // See 12.7.1.
                 // Let the hypothetical fr size be the leftover space divided by the flex factor sum.
@@ -1029,7 +1019,7 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
 
     // First, find the grid’s used flex fraction:
     auto row_flex_factor_sum = 0;
-    for (auto& grid_row : grid_rows) {
+    for (auto& grid_row : m_grid_rows) {
         if (grid_row.min_track_sizing_function.is_flexible_length())
             row_flex_factor_sum++;
     }
@@ -1041,7 +1031,7 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
 
     // See 12.7.1.
     float sized_row_heights = 0;
-    for (auto& grid_row : grid_rows) {
+    for (auto& grid_row : m_grid_rows) {
         if (!grid_row.min_track_sizing_function.is_flexible_length())
             sized_row_heights += grid_row.base_size;
     }
@@ -1056,7 +1046,7 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
     // The used flex fraction is the result of finding the size of an fr using all of the grid tracks
     // and a space to fill of the available grid space.
     if (free_vertical_space > 0) {
-        for (auto& grid_row : grid_rows) {
+        for (auto& grid_row : m_grid_rows) {
             if (grid_row.min_track_sizing_function.is_flexible_length()) {
                 // See 12.7.1.
                 // Let the hypothetical fr size be the leftover space divided by the flex factor sum.
@@ -1114,35 +1104,35 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
     // container has a definite min-width/height, use that size to calculate the free space for this
     // step instead.
     float used_horizontal_space = 0;
-    for (auto& grid_column : grid_columns) {
+    for (auto& grid_column : m_grid_columns) {
         if (!(grid_column.max_track_sizing_function.is_length() && grid_column.max_track_sizing_function.length().is_auto()))
             used_horizontal_space += grid_column.base_size;
     }
 
     float remaining_horizontal_space = box_state.content_width() - used_horizontal_space;
     auto count_of_auto_max_column_tracks = 0;
-    for (auto& grid_column : grid_columns) {
+    for (auto& grid_column : m_grid_columns) {
         if (grid_column.max_track_sizing_function.is_length() && grid_column.max_track_sizing_function.length().is_auto())
             count_of_auto_max_column_tracks++;
     }
-    for (auto& grid_column : grid_columns) {
+    for (auto& grid_column : m_grid_columns) {
         if (grid_column.max_track_sizing_function.is_length() && grid_column.max_track_sizing_function.length().is_auto())
             grid_column.base_size = max(grid_column.base_size, remaining_horizontal_space / count_of_auto_max_column_tracks);
     }
 
     float used_vertical_space = 0;
-    for (auto& grid_row : grid_rows) {
+    for (auto& grid_row : m_grid_rows) {
         if (!(grid_row.max_track_sizing_function.is_length() && grid_row.max_track_sizing_function.length().is_auto()))
             used_vertical_space += grid_row.base_size;
     }
 
     float remaining_vertical_space = box_state.content_height() - used_vertical_space;
     auto count_of_auto_max_row_tracks = 0;
-    for (auto& grid_row : grid_rows) {
+    for (auto& grid_row : m_grid_rows) {
         if (grid_row.max_track_sizing_function.is_length() && grid_row.max_track_sizing_function.length().is_auto())
             count_of_auto_max_row_tracks++;
     }
-    for (auto& grid_row : grid_rows) {
+    for (auto& grid_row : m_grid_rows) {
         if (grid_row.max_track_sizing_function.is_length() && grid_row.max_track_sizing_function.length().is_auto())
             grid_row.base_size = max(grid_row.base_size, remaining_vertical_space / count_of_auto_max_row_tracks);
     }
@@ -1154,25 +1144,25 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
         float y_start = 0;
         float y_end = 0;
         for (int i = 0; i < column_start; i++)
-            x_start += grid_columns[i].base_size;
+            x_start += m_grid_columns[i].base_size;
         for (int i = 0; i < column_end; i++)
-            x_end += grid_columns[i].base_size;
+            x_end += m_grid_columns[i].base_size;
         for (int i = 0; i < row_start; i++)
-            y_start += grid_rows[i].base_size;
+            y_start += m_grid_rows[i].base_size;
         for (int i = 0; i < row_end; i++)
-            y_end += grid_rows[i].base_size;
+            y_end += m_grid_rows[i].base_size;
         child_box_state.set_content_width(x_end - x_start);
         child_box_state.set_content_height(y_end - y_start);
         child_box_state.offset = { x_start, y_start };
     };
 
     for (auto& positioned_box : positioned_boxes) {
-        auto resolved_span = positioned_box.row + positioned_box.row_span > static_cast<int>(grid_rows.size()) ? static_cast<int>(grid_rows.size()) - positioned_box.row : positioned_box.row_span;
+        auto resolved_span = positioned_box.row + positioned_box.row_span > static_cast<int>(m_grid_rows.size()) ? static_cast<int>(m_grid_rows.size()) - positioned_box.row : positioned_box.row_span;
         layout_box(positioned_box.row, positioned_box.row + resolved_span, positioned_box.column, positioned_box.column + positioned_box.column_span, positioned_box.box);
     }
 
     float total_y = 0;
-    for (auto& grid_row : grid_rows)
+    for (auto& grid_row : m_grid_rows)
         total_y += grid_row.base_size;
     m_automatic_content_height = total_y;
 }
