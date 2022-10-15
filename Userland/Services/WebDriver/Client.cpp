@@ -28,6 +28,7 @@ Vector<Client::Route> Client::s_routes = {
     { HTTP::HttpRequest::Method::DELETE, { "session", ":session_id", "window" }, &Client::handle_delete_window },
     { HTTP::HttpRequest::Method::POST, { "session", ":session_id", "refresh" }, &Client::handle_refresh },
     { HTTP::HttpRequest::Method::POST, { "session", ":session_id", "back" }, &Client::handle_back },
+    { HTTP::HttpRequest::Method::POST, { "session", ":session_id", "forward" }, &Client::handle_forward },
 };
 
 Client::Client(NonnullOwnPtr<Core::Stream::BufferedTCPSocket> socket, Core::Object* parent)
@@ -472,6 +473,17 @@ ErrorOr<JsonValue, HttpError> Client::handle_back(Vector<StringView> parameters,
 
     // NOTE: Spec steps handled in Session::back().
     auto result = TRY(session->back());
+    return make_json_value(result);
+}
+
+// POST /session/{session id}/forward https://w3c.github.io/webdriver/#dfn-forward
+ErrorOr<JsonValue, HttpError> Client::handle_forward(Vector<StringView> parameters, JsonValue const&)
+{
+    dbgln_if(WEBDRIVER_DEBUG, "Handling POST /session/<session_id>/forward");
+    Session* session = TRY(find_session_with_id(parameters[0]));
+
+    // NOTE: Spec steps handled in Session::forward().
+    auto result = TRY(session->forward());
     return make_json_value(result);
 }
 

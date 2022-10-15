@@ -60,4 +60,11 @@ void WebDriverConnection::back()
         browser_window->active_tab().go_back();
 }
 
+void WebDriverConnection::forward()
+{
+    dbgln("WebDriverConnection: forward");
+    if (auto browser_window = m_browser_window.strong_ref())
+        browser_window->active_tab().go_forward();
+}
+
 }
