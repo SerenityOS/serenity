@@ -5,8 +5,10 @@
  */
 
 #include <AK/Function.h>
+#include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/PrimitiveString.h>
+#include <LibJS/Runtime/RegExpConstructor.h>
 #include <LibJS/Runtime/RegExpObject.h>
 #include <LibJS/Runtime/StringPrototype.h>
 #include <LibJS/Runtime/Value.h>
@@ -154,7 +156,7 @@ void RegExpObject::initialize(Realm& realm)
 }
 
 // 22.2.3.2.2 RegExpInitialize ( obj, pattern, flags ), https://tc39.es/ecma262/#sec-regexpinitialize
-ThrowCompletionOr<RegExpObject*> RegExpObject::regexp_initialize(VM& vm, Value pattern, Value flags)
+ThrowCompletionOr<NonnullGCPtr<RegExpObject>> RegExpObject::regexp_initialize(VM& vm, Value pattern, Value flags)
 {
     String f;
     if (flags.is_undefined()) {
@@ -190,7 +192,7 @@ ThrowCompletionOr<RegExpObject*> RegExpObject::regexp_initialize(VM& vm, Value p
 
     TRY(set(vm.names.lastIndex, Value(0), Object::ShouldThrowExceptions::Yes));
 
-    return this;
+    return NonnullGCPtr { *this };
 }
 
 // 22.2.3.2.5 EscapeRegExpPattern ( P, F ), https://tc39.es/ecma262/#sec-escaperegexppattern
@@ -203,11 +205,24 @@ String RegExpObject::escape_regexp_pattern() const
 }
 
 // 22.2.3.2.4 RegExpCreate ( P, F ), https://tc39.es/ecma262/#sec-regexpcreate
-ThrowCompletionOr<RegExpObject*> regexp_create(VM& vm, Value pattern, Value flags)
+ThrowCompletionOr<NonnullGCPtr<RegExpObject>> regexp_create(VM& vm, Value pattern, Value flags)
 {
     auto& realm = *vm.current_realm();
-    auto* regexp_object = RegExpObject::create(realm);
+    auto regexp_object = MUST(regexp_alloc(vm, *realm.intrinsics().regexp_constructor()));
     return TRY(regexp_object->regexp_initialize(vm, pattern, flags));
+}
+
+// 22.2.3.2 RegExpAlloc ( newTarget ), https://tc39.es/ecma262/#sec-regexpalloc
+ThrowCompletionOr<NonnullGCPtr<RegExpObject>> regexp_alloc(VM& vm, FunctionObject& new_target)
+{
+    // 1. Let obj be ? OrdinaryCreateFromConstructor(newTarget, "%RegExp.prototype%", « [[OriginalSource]], [[OriginalFlags]], [[RegExpRecord]], [[RegExpMatcher]] »).
+    auto* regexp_object = TRY(ordinary_create_from_constructor<RegExpObject>(vm, new_target, &Intrinsics::regexp_prototype));
+
+    // 2. Perform ! DefinePropertyOrThrow(obj, "lastIndex", PropertyDescriptor { [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
+    MUST(regexp_object->define_property_or_throw(vm.names.lastIndex, PropertyDescriptor { .writable = true, .enumerable = false, .configurable = false }));
+
+    // 3. Return obj.
+    return NonnullGCPtr { *regexp_object };
 }
 
 }
