@@ -13,6 +13,7 @@
 #include <LibJS/Runtime/Temporal/Calendar.h>
 #include <LibJS/Runtime/Temporal/CalendarConstructor.h>
 #include <LibJS/Runtime/Temporal/Duration.h>
+#include <LibJS/Runtime/Temporal/ISO8601.h>
 #include <LibJS/Runtime/Temporal/PlainDate.h>
 #include <LibJS/Runtime/Temporal/PlainDateTime.h>
 #include <LibJS/Runtime/Temporal/PlainMonthDay.h>
@@ -756,56 +757,54 @@ ThrowCompletionOr<double> resolve_iso_month(VM& vm, Object const& fields)
     // 2. Let month be ! Get(fields, "month").
     auto month = MUST(fields.get(vm.names.month));
 
-    // 3. Let monthCode be ! Get(fields, "monthCode").
+    // 3. Assert: month is undefined or month is a Number.
+    VERIFY(month.is_undefined() || month.is_number());
+
+    // 4. Let monthCode be ! Get(fields, "monthCode").
     auto month_code = MUST(fields.get(vm.names.monthCode));
 
-    // 4. If monthCode is undefined, then
+    // 5. If monthCode is undefined, then
     if (month_code.is_undefined()) {
         // a. If month is undefined, throw a TypeError exception.
         if (month.is_undefined())
             return vm.throw_completion<TypeError>(ErrorType::MissingRequiredProperty, vm.names.month.as_string());
 
-        // b. Assert: Type(month) is Number.
-        VERIFY(month.is_number());
-
-        // c. Return ℝ(month).
+        // b. Return ℝ(month).
         return month.as_double();
     }
 
-    // 5. Assert: Type(monthCode) is String.
+    // 6. Assert: Type(monthCode) is String.
     VERIFY(month_code.is_string());
     auto& month_code_string = month_code.as_string().string();
 
-    // 6. Let monthLength be the length of monthCode.
+    // 7. If the length of monthCode is not 3, throw a RangeError exception.
     auto month_length = month_code_string.length();
-
-    // 7. If monthLength is not 3, throw a RangeError exception.
     if (month_length != 3)
         return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidMonthCode);
 
-    // 8. Let numberPart be the substring of monthCode from 1.
+    // 8. If the first code unit of monthCode is not 0x004D (LATIN CAPITAL LETTER M), throw a RangeError exception.
+    if (month_code_string[0] != 0x4D)
+        return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidMonthCode);
+
+    // 9. Let numberPart be the substring of monthCode from 1.
     auto number_part = month_code_string.substring(1);
 
-    // 9. Set numberPart to ! ToIntegerOrInfinity(numberPart).
+    // 10. If ParseText(StringToCodePoints(numberPart), DateMonth) is a List of errors, throw a RangeError exception.
+    auto parse_result = parse_iso8601(Production::DateMonth, number_part);
+    if (!parse_result.has_value())
+        return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidMonthCode);
+
+    // 11. Set numberPart to ! ToIntegerOrInfinity(numberPart).
     auto number_part_integer = MUST(Value(js_string(vm, move(number_part))).to_integer_or_infinity(vm));
 
-    // 10. If numberPart < 1 or numberPart > 12, throw a RangeError exception.
-    if (number_part_integer < 1 || number_part_integer > 12)
+    // 12. Assert: SameValue(monthCode, BuildISOMonthCode(numberPart)) is true.
+    VERIFY(month_code_string == build_iso_month_code(number_part_integer));
+
+    // 13. If month is not undefined and SameValue(month, numberPart) is false, throw a RangeError exception.
+    if (!month.is_undefined() && month.as_double() != number_part_integer)
         return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidMonthCode);
 
-    // 11. If month is not undefined and month ≠ numberPart, then
-    if (!month.is_undefined() && month.as_double() != number_part_integer) {
-        // a. Throw a RangeError exception.
-        return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidMonthCode);
-    }
-
-    // 12. If SameValueNonNumeric(monthCode, ! BuildISOMonthCode(numberPart)) is false, then
-    if (month_code_string != build_iso_month_code(number_part_integer)) {
-        // a. Throw a RangeError exception.
-        return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidMonthCode);
-    }
-
-    // 13. Return numberPart.
+    // 14. Return numberPart.
     return number_part_integer;
 }
 

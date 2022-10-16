@@ -1459,7 +1459,8 @@ bool ISO8601Parser::parse_temporal_zoned_date_time_string()
     __JS_ENUMERATE(TemporalYearMonthString, parse_temporal_year_month_string)          \
     __JS_ENUMERATE(TemporalZonedDateTimeString, parse_temporal_zoned_date_time_string) \
     __JS_ENUMERATE(TimeZoneNumericUTCOffset, parse_time_zone_numeric_utc_offset)       \
-    __JS_ENUMERATE(CalendarName, parse_calendar_name)
+    __JS_ENUMERATE(CalendarName, parse_calendar_name)                                  \
+    __JS_ENUMERATE(DateMonth, parse_date_month)
 
 Optional<ParseResult> parse_iso8601(Production production, StringView input)
 {
