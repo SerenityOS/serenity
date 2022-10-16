@@ -152,10 +152,10 @@ BigInt* get_named_time_zone_next_transition(VM&, [[maybe_unused]] StringView tim
     return nullptr;
 }
 
-// 11.6.4 GetIANATimeZonePreviousTransition ( epochNanoseconds, timeZoneIdentifier ), https://tc39.es/proposal-temporal/#sec-temporal-getianatimezoneprevioustransition
-BigInt* get_iana_time_zone_previous_transition(VM&, [[maybe_unused]] BigInt const& epoch_nanoseconds, [[maybe_unused]] StringView time_zone_identifier)
+// 11.6.4 GetNamedTimeZonePreviousTransition ( timeZoneIdentifier, epochNanoseconds ), https://tc39.es/proposal-temporal/#sec-temporal-getianatimezoneprevioustransition
+BigInt* get_named_time_zone_previous_transition(VM&, [[maybe_unused]] StringView time_zone_identifier, [[maybe_unused]] BigInt const& epoch_nanoseconds)
 {
-    // The implementation-defined abstract operation GetIANATimeZonePreviousTransition takes arguments epochNanoseconds (a BigInt) and timeZoneIdentifier (a String) and returns a BigInt or null.
+    // The implementation-defined abstract operation GetNamedTimeZonePreviousTransition takes arguments timeZoneIdentifier (a String) and epochNanoseconds (a BigInt) and returns a BigInt or null.
     // The returned value t represents the number of nanoseconds since the Unix epoch in UTC that corresponds to the last time zone transition before epochNanoseconds in the IANA time zone identified by timeZoneIdentifier. The operation returns null if no such transition exists for which t ≥ ℤ(nsMinInstant).
     // Given the same values of epochNanoseconds and timeZoneIdentifier, the result must be the same for the lifetime of the surrounding agent.
 
