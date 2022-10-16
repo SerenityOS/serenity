@@ -508,9 +508,16 @@ void dump_thread_list(bool with_stack_traces)
     dbgln("Scheduler thread list for processor {}:", Processor::current_id());
 
     auto get_cs = [](Thread& thread) -> u16 {
+#if ARCH(I386) || ARCH(X86_64)
         if (!thread.current_trap())
             return thread.regs().cs;
         return thread.get_register_dump_from_stack().cs;
+#elif ARCH(AARCH64)
+        (void)thread;
+        return 0;
+#else
+#    error Unknown architecture
+#endif
     };
 
     auto get_eip = [](Thread& thread) -> u32 {
