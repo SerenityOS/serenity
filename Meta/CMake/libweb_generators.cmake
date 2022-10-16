@@ -4,7 +4,6 @@ function (generate_css_implementation)
         "Enums.cpp"
         Lagom::GenerateCSSEnums
         "${LIBWEB_INPUT_FOLDER}/CSS/Enums.json"
-        ""
         "CSS/Enums.h"
         "CSS/Enums.cpp"
         arguments -j "${LIBWEB_INPUT_FOLDER}/CSS/Enums.json"
@@ -14,7 +13,6 @@ function (generate_css_implementation)
         "MediaFeatureID.cpp"
         Lagom::GenerateCSSMediaFeatureID
         "${LIBWEB_INPUT_FOLDER}/CSS/MediaFeatures.json"
-        ""
         "CSS/MediaFeatureID.h"
         "CSS/MediaFeatureID.cpp"
         arguments -j "${LIBWEB_INPUT_FOLDER}/CSS/MediaFeatures.json"
@@ -24,7 +22,6 @@ function (generate_css_implementation)
         "PropertyID.cpp"
         Lagom::GenerateCSSPropertyID
         "${LIBWEB_INPUT_FOLDER}/CSS/Properties.json"
-        ""
         "CSS/PropertyID.h"
         "CSS/PropertyID.cpp"
         arguments -j "${LIBWEB_INPUT_FOLDER}/CSS/Properties.json"
@@ -34,7 +31,6 @@ function (generate_css_implementation)
         "TransformFunctions.cpp"
         Lagom::GenerateCSSTransformFunctions
         "${LIBWEB_INPUT_FOLDER}/CSS/TransformFunctions.json"
-        ""
         "CSS/TransformFunctions.h"
         "CSS/TransformFunctions.cpp"
         arguments -j "${LIBWEB_INPUT_FOLDER}/CSS/TransformFunctions.json"
@@ -44,7 +40,6 @@ function (generate_css_implementation)
         "ValueID.cpp"
         Lagom::GenerateCSSValueID
         "${LIBWEB_INPUT_FOLDER}/CSS/Identifiers.json"
-        ""
         "CSS/ValueID.h"
         "CSS/ValueID.cpp"
         arguments -j "${LIBWEB_INPUT_FOLDER}/CSS/Identifiers.json"

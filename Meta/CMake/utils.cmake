@@ -177,7 +177,7 @@ function(remove_path_if_version_changed version version_file cache_path)
     endif()
 endfunction()
 
-function(invoke_generator name generator version_file prefix header implementation)
+function(invoke_generator name generator version_file header implementation)
     cmake_parse_arguments(invoke_generator "" "" "arguments" ${ARGN})
 
     add_custom_command(
@@ -190,8 +190,8 @@ function(invoke_generator name generator version_file prefix header implementati
         DEPENDS ${generator} "${version_file}"
     )
 
-    add_custom_target("generate_${prefix}${name}" DEPENDS "${header}" "${implementation}")
-    add_dependencies(all_generated "generate_${prefix}${name}")
+    add_custom_target("generate_${name}" DEPENDS "${header}" "${implementation}")
+    add_dependencies(all_generated "generate_${name}")
 endfunction()
 
 function(download_file url path)

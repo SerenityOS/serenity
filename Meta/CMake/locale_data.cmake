@@ -59,7 +59,6 @@ if (ENABLE_UNICODE_DATABASE_DOWNLOAD)
         "DateTimeFormatData"
         Lagom::GenerateDateTimeFormatData
         "${CLDR_VERSION_FILE}"
-        ""
         "${DATE_TIME_FORMAT_DATA_HEADER}"
         "${DATE_TIME_FORMAT_DATA_IMPLEMENTATION}"
         arguments -r "${CLDR_CORE_PATH}" -d "${CLDR_DATES_PATH}"
@@ -68,7 +67,6 @@ if (ENABLE_UNICODE_DATABASE_DOWNLOAD)
         "LocaleData"
         Lagom::GenerateLocaleData
         "${CLDR_VERSION_FILE}"
-        ""
         "${LOCALE_DATA_HEADER}"
         "${LOCALE_DATA_IMPLEMENTATION}"
         arguments -b "${CLDR_BCP47_PATH}" -r "${CLDR_CORE_PATH}" -l "${CLDR_LOCALES_PATH}" -m "${CLDR_MISC_PATH}" -n "${CLDR_NUMBERS_PATH}" -d "${CLDR_DATES_PATH}"
@@ -77,7 +75,6 @@ if (ENABLE_UNICODE_DATABASE_DOWNLOAD)
         "NumberFormatData"
         Lagom::GenerateNumberFormatData
         "${CLDR_VERSION_FILE}"
-        ""
         "${NUMBER_FORMAT_DATA_HEADER}"
         "${NUMBER_FORMAT_DATA_IMPLEMENTATION}"
         arguments -r "${CLDR_CORE_PATH}" -n "${CLDR_NUMBERS_PATH}" -u "${CLDR_UNITS_PATH}"
@@ -86,7 +83,6 @@ if (ENABLE_UNICODE_DATABASE_DOWNLOAD)
         "PluralRulesData"
         Lagom::GeneratePluralRulesData
         "${CLDR_VERSION_FILE}"
-        ""
         "${PLURAL_RULES_DATA_HEADER}"
         "${PLURAL_RULES_DATA_IMPLEMENTATION}"
         arguments -r "${CLDR_CORE_PATH}" -l "${CLDR_LOCALES_PATH}"
@@ -95,7 +91,6 @@ if (ENABLE_UNICODE_DATABASE_DOWNLOAD)
         "RelativeTimeFormatData"
         Lagom::GenerateRelativeTimeFormatData
         "${CLDR_VERSION_FILE}"
-        ""
         "${RELATIVE_TIME_FORMAT_DATA_HEADER}"
         "${RELATIVE_TIME_FORMAT_DATA_IMPLEMENTATION}"
         arguments -d "${CLDR_DATES_PATH}"
