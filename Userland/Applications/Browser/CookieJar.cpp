@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2021, Tim Flynn <trflynn89@serenityos.org>
  * Copyright (c) 2022, the SerenityOS developers.
+ * Copyright (c) 2022, Tobias Christiansen <tobyase@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -45,6 +46,34 @@ void CookieJar::set_cookie(const URL& url, Web::Cookie::ParsedCookie const& pars
         return;
 
     store_cookie(parsed_cookie, url, move(domain.value()), source);
+    purge_expired_cookies();
+}
+
+// This is based on https://www.rfc-editor.org/rfc/rfc6265#section-5.3 as store_cookie() below
+// however the whole ParsedCookie->Cookie conversion is skipped.
+void CookieJar::update_cookie(URL const& url, Web::Cookie::Cookie cookie)
+{
+    auto domain = canonicalize_domain(url);
+    if (!domain.has_value())
+        return;
+
+    // 6. If the canonicalized request-host does not domain-match the domain-attribute: Ignore the cookie entirely and abort these steps.
+    if (!domain_matches(domain.value(), cookie.domain))
+        return;
+
+    // 11. If the cookie store contains a cookie with the same name, domain, and path as the newly created cookie:
+    CookieStorageKey key { cookie.name, cookie.domain, cookie.path };
+
+    if (auto old_cookie = m_cookies.find(key); old_cookie != m_cookies.end()) {
+        // Update the creation-time of the newly created cookie to match the creation-time of the old-cookie.
+        cookie.creation_time = old_cookie->value.creation_time;
+        // Remove the old-cookie from the cookie store.
+        m_cookies.remove(old_cookie);
+    }
+
+    // 12. Insert the newly created cookie into the cookie store.
+    m_cookies.set(key, move(cookie));
+
     purge_expired_cookies();
 }
 

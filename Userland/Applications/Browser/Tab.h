@@ -64,6 +64,7 @@ public:
     Function<String(const URL&, Web::Cookie::Source source)> on_get_cookie;
     Function<void(const URL&, Web::Cookie::ParsedCookie const& cookie, Web::Cookie::Source source)> on_set_cookie;
     Function<void()> on_dump_cookies;
+    Function<void(URL const&, Web::Cookie::Cookie)> on_update_cookie;
     Function<Vector<Web::Cookie::Cookie>()> on_get_cookies_entries;
     Function<OrderedHashMap<String, String>()> on_get_local_storage_entries;
     Function<OrderedHashMap<String, String>()> on_get_session_storage_entries;
