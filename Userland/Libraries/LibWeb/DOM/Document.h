@@ -440,6 +440,8 @@ public:
     DocumentUnloadTimingInfo const& previous_document_unload_timing() const { return m_previous_document_unload_timing; }
     void set_previous_document_unload_timing(DocumentUnloadTimingInfo const& previous_document_unload_timing) { m_previous_document_unload_timing = previous_document_unload_timing; }
 
+    void did_stop_being_active_document_in_browsing_context(Badge<HTML::BrowsingContext>);
+
 protected:
     virtual void visit_edges(Cell::Visitor&) override;
 

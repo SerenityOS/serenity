@@ -2256,4 +2256,9 @@ void Document::unload(bool recursive_flag, Optional<DocumentUnloadTimingInfo> un
     m_unload_counter -= 1;
 }
 
+void Document::did_stop_being_active_document_in_browsing_context(Badge<HTML::BrowsingContext>)
+{
+    tear_down_layout_tree();
+}
+
 }
