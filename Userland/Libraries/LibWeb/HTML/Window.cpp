@@ -488,15 +488,11 @@ void Window::fire_a_page_transition_event(FlyString const& event_name, bool pers
 void Window::queue_microtask_impl(WebIDL::CallbackType& callback)
 {
     // The queueMicrotask(callback) method must queue a microtask to invoke callback,
-    HTML::queue_a_microtask(&associated_document(), [weak_window = make_weak_ptr<Window>(), &callback]() mutable {
-        JS::GCPtr<Window> window = weak_window.ptr();
-        if (!window)
-            return;
-
+    HTML::queue_a_microtask(&associated_document(), [this, &callback]() mutable {
         auto result = WebIDL::invoke_callback(callback, {});
         // and if callback throws an exception, report the exception.
         if (result.is_error())
-            HTML::report_exception(result, window->realm());
+            HTML::report_exception(result, realm());
     });
 }
 
