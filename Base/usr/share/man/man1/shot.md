@@ -1,14 +1,22 @@
 ## Name
 
-shot
+shot - Take a screenshot
 
 ## Synopsis
 
-```sh
-$ shot [--clipboard] [--delay seconds] [--screen index] [--region] [--edit] [output]
+```**sh
+$ shot [-c|-e] [-s index] [-r] [-d seconds] [filename]
 ```
 
-## Options:
+## Description
+
+`shot` asks WindowServer to take a screenshot of the entire screen, or of a
+specific region if `--region` is specified. If `filename` isn't specified, it defaults to
+"screenshot-%Y-%m-%d-%H-%M-%S.png" where `%Y` is replaced by the current year, `%m` by the
+current month, `%d` by the current day, `%H` by the current hour, `%M` by the current minute,
+and `%S` by the current second.
+
+## Options
 
 * `-c`, `--clipboard`: Output to clipboard
 * `-d seconds`, `--delay seconds`: Seconds to wait before taking a screenshot
@@ -16,8 +24,19 @@ $ shot [--clipboard] [--delay seconds] [--screen index] [--region] [--edit] [out
 * `-r`, `--region`: Select a region to capture
 * `-e`, `--edit`: Open in PixelPaint
 
-## Arguments:
+## Arguments
 
-* `output`: Output filename
+* `filename`: Output filename
 
-<!-- Auto-generated through ArgsParser -->
+## Examples
+
+Take a screenshot and edit it in PixelPaint:
+```sh
+shot -e
+```
+
+Select a region, wait three seconds, take a screenshot and output it to the clipboard:
+```sh
+shot -red3
+```
+

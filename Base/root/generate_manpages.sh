@@ -30,7 +30,6 @@ for i in ( \
             (ntpquery 1) \
             (profile 1) \
             (readelf 1) \
-            (shot 1) \
             (sql 1) \
             (strace 1) \
             (traceroute 1) \
