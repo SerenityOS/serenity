@@ -741,8 +741,8 @@ u8 to_iso_week_of_year(i32 year, u8 month, u8 day)
     return week;
 }
 
-// 12.2.32 BuildISOMonthCode ( month ), https://tc39.es/proposal-temporal/#sec-buildisomonthcode
-String build_iso_month_code(u8 month)
+// 12.2.32 ISOMonthCode ( month ), https://tc39.es/proposal-temporal/#sec-temporal-isomonthcode
+String iso_month_code(u8 month)
 {
     // 1. Let numberPart be ToZeroPaddedDecimalString(month, 2).
     // 2. Return the string-concatenation of "M" and numberPart.
@@ -797,8 +797,8 @@ ThrowCompletionOr<double> resolve_iso_month(VM& vm, Object const& fields)
     // 11. Let monthCodeNumber be ! ToIntegerOrInfinity(monthCodeDigits).
     auto month_code_number = MUST(Value(js_string(vm, move(month_code_digits))).to_integer_or_infinity(vm));
 
-    // 12. Assert: SameValue(monthCode, BuildISOMonthCode(monthCodeNumber)) is true.
-    VERIFY(month_code_string == build_iso_month_code(month_code_number));
+    // 12. Assert: SameValue(monthCode, ISOMonthCode(monthCodeNumber)) is true.
+    VERIFY(month_code_string == iso_month_code(month_code_number));
 
     // 13. If month is not undefined and SameValue(month, monthCodeNumber) is false, throw a RangeError exception.
     if (!month.is_undefined() && month.as_double() != month_code_number)
@@ -959,25 +959,7 @@ u8 iso_month(Object& temporal_object)
     VERIFY_NOT_REACHED();
 }
 
-// 12.2.39 ISOMonthCode ( temporalObject ), https://tc39.es/proposal-temporal/#sec-temporal-isomonthcode
-String iso_month_code(Object& temporal_object)
-{
-    // 1. Assert: temporalObject has an [[ISOMonth]] internal slot.
-    // NOTE: Asserted by the VERIFY_NOT_REACHED at the end
-
-    // 2. Return ! BuildISOMonthCode(temporalObject.[[ISOMonth]]).
-    if (is<PlainDate>(temporal_object))
-        return build_iso_month_code(static_cast<PlainDate&>(temporal_object).iso_month());
-    if (is<PlainDateTime>(temporal_object))
-        return build_iso_month_code(static_cast<PlainDateTime&>(temporal_object).iso_month());
-    if (is<PlainYearMonth>(temporal_object))
-        return build_iso_month_code(static_cast<PlainYearMonth&>(temporal_object).iso_month());
-    if (is<PlainMonthDay>(temporal_object))
-        return build_iso_month_code(static_cast<PlainMonthDay&>(temporal_object).iso_month());
-    VERIFY_NOT_REACHED();
-}
-
-// 12.2.40 ISODay ( temporalObject ), https://tc39.es/proposal-temporal/#sec-temporal-isomonthcode
+// 12.2.39 ISODay ( temporalObject ), https://tc39.es/proposal-temporal/#sec-temporal-isomonthcode
 u8 iso_day(Object& temporal_object)
 {
     // 1. Assert: temporalObject has an [[ISODay]] internal slot.
@@ -995,7 +977,7 @@ u8 iso_day(Object& temporal_object)
     VERIFY_NOT_REACHED();
 }
 
-// 12.2.41 DefaultMergeCalendarFields ( fields, additionalFields ), https://tc39.es/proposal-temporal/#sec-temporal-defaultmergecalendarfields
+// 12.2.40 DefaultMergeCalendarFields ( fields, additionalFields ), https://tc39.es/proposal-temporal/#sec-temporal-defaultmergecalendarfields
 ThrowCompletionOr<Object*> default_merge_calendar_fields(VM& vm, Object const& fields, Object const& additional_fields)
 {
     auto& realm = *vm.current_realm();
@@ -1071,7 +1053,7 @@ ThrowCompletionOr<Object*> default_merge_calendar_fields(VM& vm, Object const& f
     return merged;
 }
 
-// 12.2.42 ToISODayOfYear ( year, month, day ), https://tc39.es/proposal-temporal/#sec-temporal-toisodayofyear
+// 12.2.41 ToISODayOfYear ( year, month, day ), https://tc39.es/proposal-temporal/#sec-temporal-toisodayofyear
 u16 to_iso_day_of_year(i32 year, u8 month, u8 day)
 {
     // 1. Assert: IsValidISODate(year, month, day) is true.
@@ -1087,7 +1069,7 @@ u16 to_iso_day_of_year(i32 year, u8 month, u8 day)
     return day_within_year(make_date(epoch_days, 0)) + 1;
 }
 
-// 12.2.43 ToISODayOfWeek ( year, month, day ), https://tc39.es/proposal-temporal/#sec-temporal-toisodayofweek
+// 12.2.42 ToISODayOfWeek ( year, month, day ), https://tc39.es/proposal-temporal/#sec-temporal-toisodayofweek
 u8 to_iso_day_of_week(i32 year, u8 month, u8 day)
 {
     // 1. Assert: IsValidISODate(year, month, day) is true.
