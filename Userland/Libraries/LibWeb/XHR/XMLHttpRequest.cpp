@@ -462,7 +462,7 @@ WebIDL::ExceptionOr<void> XMLHttpRequest::send(Optional<Variant<JS::Handle<DOM::
     if (!m_request_headers.contains("Content-Type"sv)) {
         if (body_with_type.has_value() && body_with_type->type.has_value()) {
             request.set_header("Content-Type", String { body_with_type->type->span() });
-        } else if (body->has<JS::Handle<DOM::Document>>()) {
+        } else if (body.has_value() && body->has<JS::Handle<DOM::Document>>()) {
             request.set_header("Content-Type", "text/html;charset=UTF-8");
         }
     }
