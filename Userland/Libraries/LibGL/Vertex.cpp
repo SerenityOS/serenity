@@ -8,6 +8,7 @@
 
 #include <AK/Assertions.h>
 #include <AK/Debug.h>
+#include <AK/NumericLimits.h>
 #include <LibGL/GLContext.h>
 
 namespace GL {
@@ -16,92 +17,43 @@ namespace GL {
 static void read_from_vertex_attribute_pointer(VertexAttribPointer const& attrib, int index, float* elements)
 {
     auto const* byte_ptr = reinterpret_cast<char const*>(attrib.pointer);
-    auto normalize = attrib.normalize;
-    size_t stride = attrib.stride;
+
+    auto read_values = [&]<typename T>() {
+        auto const stride = (attrib.stride == 0) ? sizeof(T) * attrib.size : attrib.stride;
+        for (int i = 0; i < attrib.size; ++i) {
+            elements[i] = *(reinterpret_cast<T const*>(byte_ptr + stride * index) + i);
+            if constexpr (IsIntegral<T>) {
+                if (attrib.normalize)
+                    elements[i] /= NumericLimits<T>::max();
+            }
+        }
+    };
 
     switch (attrib.type) {
-    case GL_BYTE: {
-        if (stride == 0)
-            stride = sizeof(GLbyte) * attrib.size;
-
-        for (int i = 0; i < attrib.size; i++) {
-            elements[i] = *(reinterpret_cast<GLbyte const*>(byte_ptr + stride * index) + i);
-            if (normalize)
-                elements[i] /= 0x80;
-        }
+    case GL_BYTE:
+        read_values.operator()<GLbyte>();
         break;
-    }
-    case GL_UNSIGNED_BYTE: {
-        if (stride == 0)
-            stride = sizeof(GLubyte) * attrib.size;
-
-        for (int i = 0; i < attrib.size; i++) {
-            elements[i] = *(reinterpret_cast<GLubyte const*>(byte_ptr + stride * index) + i);
-            if (normalize)
-                elements[i] /= 0xff;
-        }
+    case GL_UNSIGNED_BYTE:
+        read_values.operator()<GLubyte>();
         break;
-    }
-    case GL_SHORT: {
-        if (stride == 0)
-            stride = sizeof(GLshort) * attrib.size;
-
-        for (int i = 0; i < attrib.size; i++) {
-            elements[i] = *(reinterpret_cast<GLshort const*>(byte_ptr + stride * index) + i);
-            if (normalize)
-                elements[i] /= 0x8000;
-        }
+    case GL_SHORT:
+        read_values.operator()<GLshort>();
         break;
-    }
-    case GL_UNSIGNED_SHORT: {
-        if (stride == 0)
-            stride = sizeof(GLushort) * attrib.size;
-
-        for (int i = 0; i < attrib.size; i++) {
-            elements[i] = *(reinterpret_cast<GLushort const*>(byte_ptr + stride * index) + i);
-            if (normalize)
-                elements[i] /= 0xffff;
-        }
+    case GL_UNSIGNED_SHORT:
+        read_values.operator()<GLushort>();
         break;
-    }
-    case GL_INT: {
-        if (stride == 0)
-            stride = sizeof(GLint) * attrib.size;
-
-        for (int i = 0; i < attrib.size; i++) {
-            elements[i] = *(reinterpret_cast<GLint const*>(byte_ptr + stride * index) + i);
-            if (normalize)
-                elements[i] /= 0x80000000;
-        }
+    case GL_INT:
+        read_values.operator()<GLint>();
         break;
-    }
-    case GL_UNSIGNED_INT: {
-        if (stride == 0)
-            stride = sizeof(GLuint) * attrib.size;
-
-        for (int i = 0; i < attrib.size; i++) {
-            elements[i] = *(reinterpret_cast<GLuint const*>(byte_ptr + stride * index) + i);
-            if (normalize)
-                elements[i] /= 0xffffffff;
-        }
+    case GL_UNSIGNED_INT:
+        read_values.operator()<GLuint>();
         break;
-    }
-    case GL_FLOAT: {
-        if (stride == 0)
-            stride = sizeof(GLfloat) * attrib.size;
-
-        for (int i = 0; i < attrib.size; i++)
-            elements[i] = *(reinterpret_cast<GLfloat const*>(byte_ptr + stride * index) + i);
+    case GL_FLOAT:
+        read_values.operator()<GLfloat>();
         break;
-    }
-    case GL_DOUBLE: {
-        if (stride == 0)
-            stride = sizeof(GLdouble) * attrib.size;
-
-        for (int i = 0; i < attrib.size; i++)
-            elements[i] = static_cast<float>(*(reinterpret_cast<GLdouble const*>(byte_ptr + stride * index) + i));
+    case GL_DOUBLE:
+        read_values.operator()<GLdouble>();
         break;
-    }
     }
 }
 
