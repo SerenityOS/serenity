@@ -1,22 +1,33 @@
 ## Name
 
-utmpupdate
+utmpupdate - Update the utmp file
 
 ## Synopsis
 
 ```sh
-$ utmpupdate [--create] [--delete] [--PID PID] [--from From] <tty>
+$ utmpupdate [--create] [--delete] [--PID pid] [--from application] <tty>
 ```
 
-## Options:
+## Description
 
-* `-c`, `--create`: Create entry
-* `-d`, `--delete`: Delete entry
-* `-p PID`, `--PID PID`: PID
-* `-f From`, `--from From`: From
+`utmpupdate` manages the [`/var/run/utmp`](help://man/4/utmp) file.
+It is executed by [`Terminal`(1)](help://man/1/Terminal).
 
-## Arguments:
+## Options
 
-* `tty`: TTY name
+* `-c`, `--create`: Create an entry
+* `-d`, `--delete`: Delete an entry
+* `-p pid`, `--PID pid`: The process ID on which the user is logged-in.
+* `-f application`, `--from application`: The parent application on which the user is logged-in.
 
-<!-- Auto-generated through ArgsParser -->
+## Arguments
+
+* `tty`: TTY file (e.g. /dev/pts/2, /dev/tty3)
+
+## Files
+
+* /var/run/utmp
+
+## See also
+
+* [`utmp`(4)](help://man/4/utmp)

@@ -43,7 +43,6 @@ for i in ( \
             (traceroute 1) \
             (tree 1) \
             (truncate 1) \
-            (utmpupdate 1) \
         ) {
     filename="generated_manpages/man$i[1]/$i[0].md"
     mkdir -p "generated_manpages/man$i[1]"
