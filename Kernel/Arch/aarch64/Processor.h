@@ -142,6 +142,14 @@ public:
         current_processor.m_in_critical = current_processor.in_critical() - 1;
     }
 
+    static u32 clear_critical();
+
+    ALWAYS_INLINE static void restore_critical(u32 prev_critical)
+    {
+        (void)prev_critical;
+        TODO_AARCH64();
+    }
+
     ALWAYS_INLINE static u32 in_critical()
     {
         return current().m_in_critical;

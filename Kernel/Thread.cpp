@@ -101,6 +101,8 @@ Thread::Thread(NonnullLockRefPtr<Process> process, NonnullOwnPtr<Memory::Region>
         m_regs.cs = GDT_SELECTOR_CODE0;
     else
         m_regs.cs = GDT_SELECTOR_CODE3 | 3;
+#elif ARCH(AARCH64)
+    TODO_AARCH64();
 #else
 #    error Unknown architecture
 #endif
@@ -1153,6 +1155,9 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
         constexpr static FlatPtr thread_red_zone_size = 0;
 #elif ARCH(X86_64)
         constexpr static FlatPtr thread_red_zone_size = 128;
+#elif ARCH(AARCH64)
+        constexpr static FlatPtr thread_red_zone_size = 0; // FIXME
+        TODO_AARCH64();
 #else
 #    error Unknown architecture in dispatch_signal
 #endif
