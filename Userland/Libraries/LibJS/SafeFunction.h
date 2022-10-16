@@ -35,12 +35,16 @@ public:
 
     void register_closure()
     {
+        if (!m_size)
+            return;
         if (auto* wrapper = callable_wrapper())
             register_safe_function_closure(wrapper, m_size);
     }
 
     void unregister_closure()
     {
+        if (!m_size)
+            return;
         if (auto* wrapper = callable_wrapper())
             unregister_safe_function_closure(wrapper, m_size);
     }
@@ -48,13 +52,13 @@ public:
     template<typename CallableType>
     SafeFunction(CallableType&& callable) requires((AK::IsFunctionObject<CallableType> && IsCallableWithArguments<CallableType, In...> && !IsSame<RemoveCVReference<CallableType>, SafeFunction>))
     {
-        init_with_callable(forward<CallableType>(callable));
+        init_with_callable(forward<CallableType>(callable), CallableKind::FunctionObject);
     }
 
     template<typename FunctionType>
     SafeFunction(FunctionType f) requires((AK::IsFunctionPointer<FunctionType> && IsCallableWithArguments<RemovePointer<FunctionType>, In...> && !IsSame<RemoveCVReference<FunctionType>, SafeFunction>))
     {
-        init_with_callable(move(f));
+        init_with_callable(move(f), CallableKind::FunctionPointer);
     }
 
     SafeFunction(SafeFunction&& other)
@@ -110,6 +114,11 @@ public:
     }
 
 private:
+    enum class CallableKind {
+        FunctionPointer,
+        FunctionObject,
+    };
+
     class CallableWrapperBase {
     public:
         virtual ~CallableWrapperBase() = default;
@@ -195,7 +204,7 @@ private:
     }
 
     template<typename Callable>
-    void init_with_callable(Callable&& callable)
+    void init_with_callable(Callable&& callable, CallableKind kind)
     {
         VERIFY(m_call_nesting_level == 0);
         VERIFY(m_kind == FunctionKind::NullPointer);
@@ -207,7 +216,10 @@ private:
             new (m_storage) WrapperType(forward<Callable>(callable));
             m_kind = FunctionKind::Inline;
         }
-        m_size = sizeof(WrapperType);
+        if (kind == CallableKind::FunctionObject)
+            m_size = sizeof(WrapperType);
+        else
+            m_size = 0;
         register_closure();
     }
 
