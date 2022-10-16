@@ -29,6 +29,7 @@ public:
     String executable() const;
     String category() const;
     String description() const;
+    String working_directory() const;
     String icon_path() const;
     GUI::Icon icon() const;
     bool run_in_terminal() const;
