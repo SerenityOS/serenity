@@ -295,6 +295,8 @@ bool BrowsingContext::is_focused_context() const
 // https://html.spec.whatwg.org/multipage/browsers.html#set-the-active-document
 void BrowsingContext::set_active_document(JS::NonnullGCPtr<DOM::Document> document)
 {
+    auto previously_active_document = active_document();
+
     // 1. Let window be document's relevant global object.
     auto& window = verify_cast<HTML::Window>(relevant_global_object(document));
 
@@ -315,6 +317,9 @@ void BrowsingContext::set_active_document(JS::NonnullGCPtr<DOM::Document> docume
 
     if (m_page && is_top_level())
         m_page->client().page_did_change_title(document->title());
+
+    if (previously_active_document && previously_active_document != document.ptr())
+        previously_active_document->did_stop_being_active_document_in_browsing_context({});
 }
 
 void BrowsingContext::set_viewport_rect(Gfx::IntRect const& rect)
