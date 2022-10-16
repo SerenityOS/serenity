@@ -1,11 +1,11 @@
 ## Name
 
-nl
+nl - Number lines of files
 
 ## Synopsis
 
 ```sh
-$ nl [--body-numbering style] [--increment number] [--separator string] [--startnum number] [--width number] [file...]
+$ nl [options]... [files]...
 ```
 
 ## Options:
@@ -18,6 +18,21 @@ $ nl [--body-numbering style] [--increment number] [--separator string] [--start
 
 ## Arguments:
 
-* `file`: Files to process
+* `files`: Files to process, or standard input
 
-<!-- Auto-generated through ArgsParser -->
+## Examples
+
+Number lines in README.md:
+```sh
+$ nl README.md
+```
+
+Number lines, but start at 42:
+```sh
+$ nl -v 42 README.md
+```
+
+Separate numbers from lines with an arrow:
+```sh
+$ echo "Well\nHello\nFriends!" | nl -s " --> "
+```

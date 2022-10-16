@@ -29,7 +29,6 @@ for i in ( \
             (lsof 1) \
             (nc 1) \
             (netstat 1) \
-            (nl 1) \
             (ntpquery 1) \
             (profile 1) \
             (readelf 1) \
