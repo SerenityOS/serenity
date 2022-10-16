@@ -1,6 +1,6 @@
 ## Name
 
-config
+config - Show or modify configuration values
 
 ## Synopsis
 
@@ -10,17 +10,27 @@ $ config [--remove] <domain> <group> [key] [value]
 
 ## Description
 
-Show or modify values in the configuration files through ConfigServer.
+`config` shows and modifies values in the configuration files through ConfigServer.
 
-## Options:
+## Options
 
 * `-r`, `--remove`: Remove group or key
 
-## Arguments:
+## Arguments
 
 * `domain`: Config domain
 * `group`: Group name
 * `key`: Key name
 * `value`: Value to write
 
-<!-- Auto-generated through ArgsParser -->
+## Examples
+
+Add the Piano application to the Taskbar:
+```sh
+$ config Taskbar QuickLaunch Piano Piano.af
+```
+
+Set the wallpaper:
+```sh
+$ config WindowManager Background Wallpaper /res/wallpapers/grid.png
+```
