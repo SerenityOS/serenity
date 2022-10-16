@@ -5,6 +5,7 @@
  */
 
 #include <AK/Format.h>
+#include <AK/Vector.h>
 
 #include <Kernel/Arch/Processor.h>
 #include <Kernel/Arch/aarch64/ASM_wrapper.h>
@@ -56,6 +57,20 @@ void Processor::flush_tlb(Memory::PageDirectory const*, VirtualAddress vaddr, si
 u32 Processor::clear_critical()
 {
     TODO_AARCH64();
+}
+
+u32 Processor::smp_wake_n_idle_processors(u32 wake_count)
+{
+    (void)wake_count;
+    TODO_AARCH64();
+}
+
+ErrorOr<Vector<FlatPtr, 32>> Processor::capture_stack_trace(Thread& thread, size_t max_frames)
+{
+    (void)thread;
+    (void)max_frames;
+    TODO_AARCH64();
+    return Vector<FlatPtr, 32> {};
 }
 
 }
