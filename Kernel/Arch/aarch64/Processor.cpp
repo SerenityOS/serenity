@@ -65,12 +65,44 @@ u32 Processor::smp_wake_n_idle_processors(u32 wake_count)
     TODO_AARCH64();
 }
 
+void Processor::initialize_context_switching(Thread& initial_thread)
+{
+    (void)initial_thread;
+    TODO_AARCH64();
+}
+
+void Processor::switch_context(Thread*& from_thread, Thread*& to_thread)
+{
+    (void)from_thread;
+    (void)to_thread;
+    TODO_AARCH64();
+}
+
+void Processor::assume_context(Thread& thread, FlatPtr flags)
+{
+    (void)thread;
+    (void)flags;
+    TODO_AARCH64();
+}
+
+FlatPtr Processor::init_context(Thread& thread, bool leave_crit)
+{
+    (void)thread;
+    (void)leave_crit;
+    TODO_AARCH64();
+}
+
 ErrorOr<Vector<FlatPtr, 32>> Processor::capture_stack_trace(Thread& thread, size_t max_frames)
 {
     (void)thread;
     (void)max_frames;
     TODO_AARCH64();
     return Vector<FlatPtr, 32> {};
+}
+
+void Processor::check_invoke_scheduler()
+{
+    TODO_AARCH64();
 }
 
 }

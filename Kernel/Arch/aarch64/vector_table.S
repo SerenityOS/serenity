@@ -63,12 +63,21 @@
     mrs x0, sp_el0
     str x0, [sp, #SP_EL0_SLOT]
 
+    // Set up TrapFrame struct on the stack
+    sub sp, sp, #16
+    mov x0, sp
+    str x0, [sp, #(1 * 8)]
+    str xzr, [sp, #(0 * 0)]
+
     // Move stack pointer into first argument register
     // and jump to the C++ exception handler
     mov x0, sp
 .endm
 
 .macro restore_previous_context
+    // Remove TrapFrame from the stack
+    add sp, sp, #16
+
     // Restore special registers first
     ldr x0, [sp, #SPSR_EL1_SLOT]
     msr spsr_el1, x0
