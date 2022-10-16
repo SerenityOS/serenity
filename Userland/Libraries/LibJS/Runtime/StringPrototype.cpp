@@ -826,7 +826,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::match)
 
     auto string = TRY(this_object.to_utf16_string(vm));
 
-    auto* rx = TRY(regexp_create(vm, regexp, js_undefined()));
+    auto rx = TRY(regexp_create(vm, regexp, js_undefined()));
     return TRY(Value(rx).invoke(vm, *vm.well_known_symbol_match(), js_string(vm, move(string))));
 }
 
@@ -850,7 +850,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::match_all)
 
     auto string = TRY(this_object.to_utf16_string(vm));
 
-    auto* rx = TRY(regexp_create(vm, regexp, js_string(vm, "g")));
+    auto rx = TRY(regexp_create(vm, regexp, js_string(vm, "g")));
     return TRY(Value(rx).invoke(vm, *vm.well_known_symbol_match_all(), js_string(vm, move(string))));
 }
 
@@ -1003,7 +1003,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::search)
 
     auto string = TRY(this_object.to_utf16_string(vm));
 
-    auto* rx = TRY(regexp_create(vm, regexp, js_undefined()));
+    auto rx = TRY(regexp_create(vm, regexp, js_undefined()));
     return TRY(Value(rx).invoke(vm, *vm.well_known_symbol_search(), js_string(vm, move(string))));
 }
 

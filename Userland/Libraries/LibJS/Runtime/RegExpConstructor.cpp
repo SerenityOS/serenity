@@ -82,7 +82,9 @@ ThrowCompletionOr<Object*> RegExpConstructor::construct(FunctionObject&)
         flags_value = flags;
     }
 
-    return TRY(regexp_create(vm, pattern_value, flags_value));
+    auto regexp_object = TRY(regexp_alloc(vm, new_target));
+
+    return TRY(regexp_object->regexp_initialize(vm, pattern_value, flags_value)).ptr();
 }
 
 // 22.2.4.2 get RegExp [ @@species ], https://tc39.es/ecma262/#sec-get-regexp-@@species

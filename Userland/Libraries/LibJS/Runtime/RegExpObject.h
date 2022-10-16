@@ -14,7 +14,8 @@
 
 namespace JS {
 
-ThrowCompletionOr<RegExpObject*> regexp_create(VM&, Value pattern, Value flags);
+ThrowCompletionOr<NonnullGCPtr<RegExpObject>> regexp_create(VM&, Value pattern, Value flags);
+ThrowCompletionOr<NonnullGCPtr<RegExpObject>> regexp_alloc(VM&, FunctionObject& new_target);
 
 Result<regex::RegexOptions<ECMAScriptFlags>, String> regex_flags_from_string(StringView flags);
 struct ParseRegexPatternError {
@@ -39,7 +40,7 @@ public:
     static RegExpObject* create(Realm&);
     static RegExpObject* create(Realm&, Regex<ECMA262> regex, String pattern, String flags);
 
-    ThrowCompletionOr<RegExpObject*> regexp_initialize(VM&, Value pattern, Value flags);
+    ThrowCompletionOr<NonnullGCPtr<RegExpObject>> regexp_initialize(VM&, Value pattern, Value flags);
     String escape_regexp_pattern() const;
 
     virtual void initialize(Realm&) override;
