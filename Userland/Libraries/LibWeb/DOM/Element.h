@@ -188,7 +188,7 @@ private:
 
     Vector<FlyString> m_classes;
 
-    Array<RefPtr<Layout::Node>, CSS::Selector::PseudoElementCount> m_pseudo_element_nodes;
+    Array<WeakPtr<Layout::Node>, CSS::Selector::PseudoElementCount> m_pseudo_element_nodes;
 };
 
 template<>
