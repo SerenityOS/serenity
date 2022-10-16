@@ -23,7 +23,6 @@ rm -rf generated_manpages 2> "$ERROR_FILE" || exit_for_error
 for i in ( \
             (UserspaceEmulator 1) \
             (fortune 1) \
-            (grep 1) \
             (gunzip 1) \
             (gzip 1) \
             (ifconfig 1) \
