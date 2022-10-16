@@ -43,7 +43,7 @@ public:
 
     template<size_t size>
     requires(IsConst<T>)
-        ALWAYS_INLINE constexpr Span(Array<T, size> const& array)
+    ALWAYS_INLINE constexpr Span(Array<T, size> const& array)
         : m_values(array.data())
         , m_size(size)
     {

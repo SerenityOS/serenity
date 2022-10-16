@@ -251,8 +251,11 @@ struct BitflagOption {
     StringView name;
 };
 
-#define BITFLAG(NAME) \
-    BitflagOption { NAME, #NAME##sv }
+#define BITFLAG(NAME)   \
+    BitflagOption       \
+    {                   \
+        NAME, #NAME##sv \
+    }
 
 struct BitflagBase {
     int flagset;

@@ -56,7 +56,7 @@ public:
         return value;
     }
 
-    const T& head() const
+    T const& head() const
     {
         VERIFY(!is_empty());
         return m_segments.first()->data[m_index_into_first];

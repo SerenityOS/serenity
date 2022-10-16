@@ -45,7 +45,8 @@ public:
         virtual ~Node() = default;
 
         template<typename NodeType = Node, typename... Args>
-        NonnullRefPtr<NodeType> add_node(String text, Optional<Icon> icon, Args&&... args) requires(IsBaseOf<Node, NodeType>)
+        NonnullRefPtr<NodeType> add_node(String text, Optional<Icon> icon, Args&&... args)
+        requires(IsBaseOf<Node, NodeType>)
         {
             auto node = adopt_ref(*new NodeType(move(text), move(icon), this, forward<Args>(args)...));
             m_child_nodes.append(*static_cast<Node const*>(node.ptr()));
@@ -72,7 +73,8 @@ public:
     NonnullRefPtrVector<Node>& nodes() { return m_nodes; }
 
     template<typename NodeType = Node, typename... Args>
-    NonnullRefPtr<NodeType> add_node(String text, Optional<Icon> icon, Args&&... args) requires(IsBaseOf<Node, NodeType>)
+    NonnullRefPtr<NodeType> add_node(String text, Optional<Icon> icon, Args&&... args)
+    requires(IsBaseOf<Node, NodeType>)
     {
         auto node = adopt_ref(*new NodeType(move(text), move(icon), nullptr, forward<Args>(args)...));
         m_nodes.append(*static_cast<Node const*>(node.ptr()));

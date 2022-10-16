@@ -217,7 +217,7 @@ inline ErrorOr<NonnullOwnPtr<T>> try_make(Args&&... args)
 template<typename T>
 struct Traits<OwnPtr<T>> : public GenericTraits<OwnPtr<T>> {
     using PeekType = T*;
-    using ConstPeekType = const T*;
+    using ConstPeekType = T const*;
     static unsigned hash(OwnPtr<T> const& p) { return ptr_hash(p.ptr()); }
     static bool equals(OwnPtr<T> const& a, OwnPtr<T> const& b) { return a.ptr() == b.ptr(); }
 };

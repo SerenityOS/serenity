@@ -474,7 +474,7 @@ inline Widget* Widget::parent_widget()
 inline Widget const* Widget::parent_widget() const
 {
     if (parent() && is<Widget>(*parent()))
-        return &verify_cast<const Widget>(*parent());
+        return &verify_cast<Widget const>(*parent());
     return nullptr;
 }
 }

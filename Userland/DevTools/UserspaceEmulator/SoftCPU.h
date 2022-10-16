@@ -469,19 +469,19 @@ public:
     void do_once_or_repeat(const X86::Instruction& insn, Callback);
 
     template<typename A>
-    void taint_flags_from(const A& a)
+    void taint_flags_from(A const& a)
     {
         m_flags_tainted = a.is_uninitialized();
     }
 
     template<typename A, typename B>
-    void taint_flags_from(const A& a, const B& b)
+    void taint_flags_from(A const& a, B const& b)
     {
         m_flags_tainted = a.is_uninitialized() || b.is_uninitialized();
     }
 
     template<typename A, typename B, typename C>
-    void taint_flags_from(const A& a, const B& b, const C& c)
+    void taint_flags_from(A const& a, B const& b, C const& c)
     {
         m_flags_tainted = a.is_uninitialized() || b.is_uninitialized() || c.is_uninitialized();
     }

@@ -148,7 +148,8 @@ public:
     }
 
     template<typename U = JS::Completion>
-    explicit(!IsConvertible<U&&, JS::Completion>) Optional(U&& value) requires(!IsSame<RemoveCVReference<U>, Optional<JS::Completion>> && IsConstructible<JS::Completion, U&&>)
+    explicit(!IsConvertible<U&&, JS::Completion>) Optional(U&& value)
+    requires(!IsSame<RemoveCVReference<U>, Optional<JS::Completion>> && IsConstructible<JS::Completion, U &&>)
         : m_value(forward<U>(value))
     {
     }
@@ -237,7 +238,8 @@ namespace JS {
 template<typename ValueType>
 class [[nodiscard]] ThrowCompletionOr {
 public:
-    ThrowCompletionOr() requires(IsSame<ValueType, Empty>)
+    ThrowCompletionOr()
+    requires(IsSame<ValueType, Empty>)
         : m_value(Empty {})
     {
     }
@@ -266,7 +268,8 @@ public:
     // Most commonly: Value from Object* or similar, so we can omit the curly braces from "return { TRY(...) };".
     // Disabled for POD types to avoid weird conversion shenanigans.
     template<typename WrappedValueType>
-    ThrowCompletionOr(WrappedValueType value) requires(!IsPOD<ValueType>)
+    ThrowCompletionOr(WrappedValueType value)
+    requires(!IsPOD<ValueType>)
         : m_value(move(value))
     {
     }
@@ -274,8 +277,16 @@ public:
     [[nodiscard]] bool is_throw_completion() const { return m_throw_completion.has_value(); }
     Completion const& throw_completion() const { return *m_throw_completion; }
 
-    [[nodiscard]] bool has_value() const requires(!IsSame<ValueType, Empty>) { return m_value.has_value(); }
-    [[nodiscard]] ValueType const& value() const requires(!IsSame<ValueType, Empty>) { return *m_value; }
+    [[nodiscard]] bool has_value() const
+    requires(!IsSame<ValueType, Empty>)
+    {
+        return m_value.has_value();
+    }
+    [[nodiscard]] ValueType const& value() const
+    requires(!IsSame<ValueType, Empty>)
+    {
+        return *m_value;
+    }
 
     // These are for compatibility with the TRY() macro in AK.
     [[nodiscard]] bool is_error() const { return m_throw_completion.has_value(); }

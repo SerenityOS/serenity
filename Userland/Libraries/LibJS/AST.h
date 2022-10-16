@@ -192,19 +192,19 @@ private:
 };
 
 template<typename Func, typename... Args>
-concept ThrowCompletionOrVoidFunction = requires(Func func, Args... args)
-{
-    {
-        func(args...)
-        }
-        -> SameAs<ThrowCompletionOr<void>>;
-};
+concept ThrowCompletionOrVoidFunction = requires(Func func, Args... args) {
+                                            {
+                                                func(args...)
+                                                }
+                                                -> SameAs<ThrowCompletionOr<void>>;
+                                        };
 
 template<typename... Args>
 class ThrowCompletionOrVoidCallback : public Function<ThrowCompletionOr<void>(Args...)> {
 public:
     template<typename CallableType>
-    ThrowCompletionOrVoidCallback(CallableType&& callable) requires(VoidFunction<CallableType, Args...>)
+    ThrowCompletionOrVoidCallback(CallableType&& callable)
+    requires(VoidFunction<CallableType, Args...>)
         : Function<ThrowCompletionOr<void>(Args...)>([callable = forward<CallableType>(callable)](Args... args) {
             callable(args...);
             return ThrowCompletionOr<void> {};
@@ -213,7 +213,8 @@ public:
     }
 
     template<typename CallableType>
-    ThrowCompletionOrVoidCallback(CallableType&& callable) requires(ThrowCompletionOrVoidFunction<CallableType, Args...>)
+    ThrowCompletionOrVoidCallback(CallableType&& callable)
+    requires(ThrowCompletionOrVoidFunction<CallableType, Args...>)
         : Function<ThrowCompletionOr<void>(Args...)>(forward<CallableType>(callable))
     {
     }

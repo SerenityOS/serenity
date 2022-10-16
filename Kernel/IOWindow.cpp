@@ -53,7 +53,7 @@ ErrorOr<NonnullOwnPtr<IOWindow>> IOWindow::create_from_io_window_with_offset(u64
         return Error::from_errno(EOVERFLOW);
 #endif
 
-    auto memory_mapped_range = TRY(Memory::adopt_new_nonnull_own_typed_mapping<volatile u8>(m_memory_mapped_range->paddr.offset(offset), space_length, Memory::Region::Access::ReadWrite));
+    auto memory_mapped_range = TRY(Memory::adopt_new_nonnull_own_typed_mapping<u8 volatile>(m_memory_mapped_range->paddr.offset(offset), space_length, Memory::Region::Access::ReadWrite));
     return TRY(adopt_nonnull_own_or_enomem(new (nothrow) IOWindow(move(memory_mapped_range))));
 }
 
@@ -110,7 +110,7 @@ ErrorOr<NonnullOwnPtr<IOWindow>> IOWindow::create_for_pci_device_bar(PCI::Addres
         return Error::from_errno(EOVERFLOW);
     if (pci_bar_space_type == PCI::BARSpaceType::Memory64BitSpace && Checked<u64>::addition_would_overflow(pci_bar_value, space_length))
         return Error::from_errno(EOVERFLOW);
-    auto memory_mapped_range = TRY(Memory::adopt_new_nonnull_own_typed_mapping<volatile u8>(PhysicalAddress(pci_bar_value & 0xfffffff0), space_length, Memory::Region::Access::ReadWrite));
+    auto memory_mapped_range = TRY(Memory::adopt_new_nonnull_own_typed_mapping<u8 volatile>(PhysicalAddress(pci_bar_value & 0xfffffff0), space_length, Memory::Region::Access::ReadWrite));
     return TRY(adopt_nonnull_own_or_enomem(new (nothrow) IOWindow(move(memory_mapped_range))));
 }
 
@@ -131,7 +131,7 @@ ErrorOr<NonnullOwnPtr<IOWindow>> IOWindow::create_for_pci_device_bar(PCI::Device
     return create_for_pci_device_bar(pci_device_identifier.address(), pci_bar, space_length);
 }
 
-IOWindow::IOWindow(NonnullOwnPtr<Memory::TypedMapping<volatile u8>> memory_mapped_range)
+IOWindow::IOWindow(NonnullOwnPtr<Memory::TypedMapping<u8 volatile>> memory_mapped_range)
     : m_space_type(SpaceType::Memory)
     , m_memory_mapped_range(move(memory_mapped_range))
 {

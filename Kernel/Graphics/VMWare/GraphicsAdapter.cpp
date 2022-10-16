@@ -76,7 +76,7 @@ UNMAP_AFTER_INIT ErrorOr<void> VMWareGraphicsAdapter::initialize_fifo_registers(
         return Error::from_errno(ENOTSUP);
     }
 
-    m_fifo_registers = TRY(Memory::map_typed<volatile VMWareDisplayFIFORegisters>(fifo_physical_address, fifo_size, Memory::Region::Access::ReadWrite));
+    m_fifo_registers = TRY(Memory::map_typed<VMWareDisplayFIFORegisters volatile>(fifo_physical_address, fifo_size, Memory::Region::Access::ReadWrite));
     m_fifo_registers->start = 16;
     m_fifo_registers->size = 16 + (10 * 1024);
     m_fifo_registers->next_command = 16;

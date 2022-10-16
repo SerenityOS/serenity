@@ -70,7 +70,7 @@ public:
     }
 
     template<typename T>
-    constexpr bool consume_specific(const T& next)
+    constexpr bool consume_specific(T const& next)
     {
         if (!next_is(next))
             return false;

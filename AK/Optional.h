@@ -38,23 +38,33 @@ public:
     ALWAYS_INLINE Optional() = default;
 
 #ifdef AK_HAS_CONDITIONALLY_TRIVIAL
-    Optional(Optional const& other) requires(!IsCopyConstructible<T>) = delete;
+    Optional(Optional const& other)
+    requires(!IsCopyConstructible<T>)
+    = delete;
     Optional(Optional const& other) = default;
 
-    Optional(Optional&& other) requires(!IsMoveConstructible<T>) = delete;
+    Optional(Optional&& other)
+    requires(!IsMoveConstructible<T>)
+    = delete;
 
-    Optional& operator=(Optional const&) requires(!IsCopyConstructible<T> || !IsDestructible<T>) = delete;
+    Optional& operator=(Optional const&)
+    requires(!IsCopyConstructible<T> || !IsDestructible<T>)
+    = delete;
     Optional& operator=(Optional const&) = default;
 
-    Optional& operator=(Optional&& other) requires(!IsMoveConstructible<T> || !IsDestructible<T>) = delete;
+    Optional& operator=(Optional&& other)
+    requires(!IsMoveConstructible<T> || !IsDestructible<T>)
+    = delete;
 
-    ~Optional() requires(!IsDestructible<T>) = delete;
+    ~Optional()
+    requires(!IsDestructible<T>)
+    = delete;
     ~Optional() = default;
 #endif
 
     ALWAYS_INLINE Optional(Optional const& other)
 #ifdef AK_HAS_CONDITIONALLY_TRIVIAL
-        requires(!IsTriviallyCopyConstructible<T>)
+    requires(!IsTriviallyCopyConstructible<T>)
 #endif
         : m_has_value(other.m_has_value)
     {
@@ -78,7 +88,7 @@ public:
     }
 
     template<typename U>
-    requires(IsConstructible<T, U&&> && !IsSpecializationOf<T, Optional> && !IsSpecializationOf<U, Optional>) ALWAYS_INLINE explicit Optional(Optional<U>&& other)
+    requires(IsConstructible<T, U &&> && !IsSpecializationOf<T, Optional> && !IsSpecializationOf<U, Optional>) ALWAYS_INLINE explicit Optional(Optional<U>&& other)
         : m_has_value(other.m_has_value)
     {
         if (other.has_value())
@@ -86,7 +96,8 @@ public:
     }
 
     template<typename U = T>
-    ALWAYS_INLINE explicit(!IsConvertible<U&&, T>) Optional(U&& value) requires(!IsSame<RemoveCVReference<U>, Optional<T>> && IsConstructible<T, U&&>)
+    ALWAYS_INLINE explicit(!IsConvertible<U&&, T>) Optional(U&& value)
+    requires(!IsSame<RemoveCVReference<U>, Optional<T>> && IsConstructible<T, U &&>)
         : m_has_value(true)
     {
         new (&m_storage) T(forward<U>(value));
@@ -94,7 +105,7 @@ public:
 
     ALWAYS_INLINE Optional& operator=(Optional const& other)
 #ifdef AK_HAS_CONDITIONALLY_TRIVIAL
-        requires(!IsTriviallyCopyConstructible<T> || !IsTriviallyDestructible<T>)
+    requires(!IsTriviallyCopyConstructible<T> || !IsTriviallyDestructible<T>)
 #endif
     {
         if (this != &other) {
@@ -133,7 +144,7 @@ public:
 
     ALWAYS_INLINE ~Optional()
 #ifdef AK_HAS_CONDITIONALLY_TRIVIAL
-        requires(!IsTriviallyDestructible<T>)
+    requires(!IsTriviallyDestructible<T>)
 #endif
     {
         clear();
@@ -222,7 +233,8 @@ public:
     ALWAYS_INLINE Optional() = default;
 
     template<typename U = T>
-    ALWAYS_INLINE Optional(U& value) requires(CanBePlacedInOptional<U&>)
+    ALWAYS_INLINE Optional(U& value)
+    requires(CanBePlacedInOptional<U&>)
         : m_pointer(&value)
     {
     }
@@ -244,13 +256,15 @@ public:
     }
 
     template<typename U>
-    ALWAYS_INLINE Optional(Optional<U> const& other) requires(CanBePlacedInOptional<U>)
+    ALWAYS_INLINE Optional(Optional<U> const& other)
+    requires(CanBePlacedInOptional<U>)
         : m_pointer(other.m_pointer)
     {
     }
 
     template<typename U>
-    ALWAYS_INLINE Optional(Optional<U>&& other) requires(CanBePlacedInOptional<U>)
+    ALWAYS_INLINE Optional(Optional<U>&& other)
+    requires(CanBePlacedInOptional<U>)
         : m_pointer(other.m_pointer)
     {
         other.m_pointer = nullptr;
@@ -270,14 +284,16 @@ public:
     }
 
     template<typename U>
-    ALWAYS_INLINE Optional& operator=(Optional<U> const& other) requires(CanBePlacedInOptional<U>)
+    ALWAYS_INLINE Optional& operator=(Optional<U> const& other)
+    requires(CanBePlacedInOptional<U>)
     {
         m_pointer = other.m_pointer;
         return *this;
     }
 
     template<typename U>
-    ALWAYS_INLINE Optional& operator=(Optional<U>&& other) requires(CanBePlacedInOptional<U>)
+    ALWAYS_INLINE Optional& operator=(Optional<U>&& other)
+    requires(CanBePlacedInOptional<U>)
     {
         m_pointer = other.m_pointer;
         other.m_pointer = nullptr;
@@ -286,7 +302,8 @@ public:
 
     // Note: Disallows assignment from a temporary as this does not do any lifetime extension.
     template<typename U>
-    ALWAYS_INLINE Optional& operator=(U&& value) requires(CanBePlacedInOptional<U>&& IsLvalueReference<U>)
+    ALWAYS_INLINE Optional& operator=(U&& value)
+    requires(CanBePlacedInOptional<U> && IsLvalueReference<U>)
     {
         m_pointer = &value;
         return *this;

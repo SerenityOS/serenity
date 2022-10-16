@@ -48,7 +48,7 @@ private:
 
     VMWareGraphicsAdapter(PCI::DeviceIdentifier const&, NonnullOwnPtr<IOWindow> registers_io_window);
 
-    Memory::TypedMapping<volatile VMWareDisplayFIFORegisters> m_fifo_registers;
+    Memory::TypedMapping<VMWareDisplayFIFORegisters volatile> m_fifo_registers;
     LockRefPtr<VMWareDisplayConnector> m_display_connector;
     mutable NonnullOwnPtr<IOWindow> m_registers_io_window;
     mutable Spinlock m_io_access_lock { LockRank::None };

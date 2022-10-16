@@ -47,7 +47,8 @@ public:
         const_cast<T&>(object).ref();
     }
     template<typename U>
-    ALWAYS_INLINE NonnullLockRefPtr(U const& object) requires(IsConvertible<U*, T*>)
+    ALWAYS_INLINE NonnullLockRefPtr(U const& object)
+    requires(IsConvertible<U*, T*>)
         : m_bits((FlatPtr) static_cast<T const*>(&object))
     {
         VERIFY(!(m_bits & 1));
@@ -64,7 +65,8 @@ public:
         VERIFY(!(m_bits & 1));
     }
     template<typename U>
-    ALWAYS_INLINE NonnullLockRefPtr(NonnullLockRefPtr<U>&& other) requires(IsConvertible<U*, T*>)
+    ALWAYS_INLINE NonnullLockRefPtr(NonnullLockRefPtr<U>&& other)
+    requires(IsConvertible<U*, T*>)
         : m_bits((FlatPtr)&other.leak_ref())
     {
         VERIFY(!(m_bits & 1));
@@ -75,7 +77,8 @@ public:
         VERIFY(!(m_bits & 1));
     }
     template<typename U>
-    ALWAYS_INLINE NonnullLockRefPtr(NonnullLockRefPtr<U> const& other) requires(IsConvertible<U*, T*>)
+    ALWAYS_INLINE NonnullLockRefPtr(NonnullLockRefPtr<U> const& other)
+    requires(IsConvertible<U*, T*>)
         : m_bits((FlatPtr)other.add_ref())
     {
         VERIFY(!(m_bits & 1));
@@ -108,7 +111,8 @@ public:
     }
 
     template<typename U>
-    NonnullLockRefPtr& operator=(NonnullLockRefPtr<U> const& other) requires(IsConvertible<U*, T*>)
+    NonnullLockRefPtr& operator=(NonnullLockRefPtr<U> const& other)
+    requires(IsConvertible<U*, T*>)
     {
         assign(other.add_ref());
         return *this;
@@ -122,7 +126,8 @@ public:
     }
 
     template<typename U>
-    NonnullLockRefPtr& operator=(NonnullLockRefPtr<U>&& other) requires(IsConvertible<U*, T*>)
+    NonnullLockRefPtr& operator=(NonnullLockRefPtr<U>&& other)
+    requires(IsConvertible<U*, T*>)
     {
         assign(&other.leak_ref());
         return *this;
@@ -202,7 +207,8 @@ public:
     }
 
     template<typename U>
-    void swap(NonnullLockRefPtr<U>& other) requires(IsConvertible<U*, T*>)
+    void swap(NonnullLockRefPtr<U>& other)
+    requires(IsConvertible<U*, T*>)
     {
         // NOTE: swap is not atomic!
         U* other_ptr = other.exchange(nullptr);
@@ -318,7 +324,8 @@ struct Formatter<NonnullLockRefPtr<T>> : Formatter<T const*> {
 };
 
 template<typename T, typename U>
-inline void swap(NonnullLockRefPtr<T>& a, NonnullLockRefPtr<U>& b) requires(IsConvertible<U*, T*>)
+inline void swap(NonnullLockRefPtr<T>& a, NonnullLockRefPtr<U>& b)
+requires(IsConvertible<U*, T*>)
 {
     a.swap(b);
 }

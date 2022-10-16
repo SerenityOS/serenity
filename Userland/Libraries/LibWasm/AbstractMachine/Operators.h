@@ -16,12 +16,18 @@
 
 namespace Operators {
 
-#define DEFINE_BINARY_OPERATOR(Name, operation)                               \
-    struct Name {                                                             \
-        template<typename Lhs, typename Rhs>                                  \
-        auto operator()(Lhs lhs, Rhs rhs) const { return lhs operation rhs; } \
-                                                                              \
-        static StringView name() { return #operation##sv; }                   \
+#define DEFINE_BINARY_OPERATOR(Name, operation) \
+    struct Name {                               \
+        template<typename Lhs, typename Rhs>    \
+        auto operator()(Lhs lhs, Rhs rhs) const \
+        {                                       \
+            return lhs operation rhs;           \
+        }                                       \
+                                                \
+        static StringView name()                \
+        {                                       \
+            return #operation##sv;              \
+        }                                       \
     }
 
 DEFINE_BINARY_OPERATOR(Equals, ==);

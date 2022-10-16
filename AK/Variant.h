@@ -97,7 +97,8 @@ struct VisitImpl {
     }
 
     template<typename Self, typename Visitor, IndexType CurrentIndex = 0>
-    ALWAYS_INLINE static constexpr decltype(auto) visit(Self& self, IndexType id, void const* data, Visitor&& visitor) requires(CurrentIndex < sizeof...(Ts))
+    ALWAYS_INLINE static constexpr decltype(auto) visit(Self& self, IndexType id, void const* data, Visitor&& visitor)
+    requires(CurrentIndex < sizeof...(Ts))
     {
         using T = typename TypeList<Ts...>::template Type<CurrentIndex>;
 
@@ -129,13 +130,15 @@ struct VariantConstructTag {
 
 template<typename T, typename Base>
 struct VariantConstructors {
-    ALWAYS_INLINE VariantConstructors(T&& t) requires(requires { T(move(t)); })
+    ALWAYS_INLINE VariantConstructors(T&& t)
+    requires(requires { T(move(t)); })
     {
         internal_cast().clear_without_destruction();
         internal_cast().set(move(t), VariantNoClearTag {});
     }
 
-    ALWAYS_INLINE VariantConstructors(const T& t) requires(requires { T(t); })
+    ALWAYS_INLINE VariantConstructors(T const& t)
+    requires(requires { T(t); })
     {
         internal_cast().clear_without_destruction();
         internal_cast().set(t, VariantNoClearTag {});
@@ -216,7 +219,8 @@ struct Empty {
 };
 
 template<typename T>
-concept NotLvalueReference = !IsLvalueReference<T>;
+concept NotLvalueReference = !
+IsLvalueReference<T>;
 
 template<NotLvalueReference... Ts>
 struct Variant
@@ -236,13 +240,15 @@ public:
     }
 
     template<typename... NewTs>
-    Variant(Variant<NewTs...>&& old) requires((can_contain<NewTs>() && ...))
+    Variant(Variant<NewTs...>&& old)
+    requires((can_contain<NewTs>() && ...))
         : Variant(move(old).template downcast<Ts...>())
     {
     }
 
     template<typename... NewTs>
-    Variant(Variant<NewTs...> const& old) requires((can_contain<NewTs>() && ...))
+    Variant(Variant<NewTs...> const& old)
+    requires((can_contain<NewTs>() && ...))
         : Variant(old.template downcast<Ts...>())
     {
     }
@@ -250,32 +256,45 @@ public:
     template<NotLvalueReference... NewTs>
     friend struct Variant;
 
-    Variant() requires(!can_contain<Empty>()) = delete;
-    Variant() requires(can_contain<Empty>())
+    Variant()
+    requires(!can_contain<Empty>())
+    = delete;
+    Variant()
+    requires(can_contain<Empty>())
         : Variant(Empty())
     {
     }
 
 #ifdef AK_HAS_CONDITIONALLY_TRIVIAL
-    Variant(Variant const&) requires(!(IsCopyConstructible<Ts> && ...)) = delete;
+    Variant(Variant const&)
+    requires(!(IsCopyConstructible<Ts> && ...))
+    = delete;
     Variant(Variant const&) = default;
 
-    Variant(Variant&&) requires(!(IsMoveConstructible<Ts> && ...)) = delete;
+    Variant(Variant&&)
+    requires(!(IsMoveConstructible<Ts> && ...))
+    = delete;
     Variant(Variant&&) = default;
 
-    ~Variant() requires(!(IsDestructible<Ts> && ...)) = delete;
+    ~Variant()
+    requires(!(IsDestructible<Ts> && ...))
+    = delete;
     ~Variant() = default;
 
-    Variant& operator=(Variant const&) requires(!(IsCopyConstructible<Ts> && ...) || !(IsDestructible<Ts> && ...)) = delete;
+    Variant& operator=(Variant const&)
+    requires(!(IsCopyConstructible<Ts> && ...) || !(IsDestructible<Ts> && ...))
+    = delete;
     Variant& operator=(Variant const&) = default;
 
-    Variant& operator=(Variant&&) requires(!(IsMoveConstructible<Ts> && ...) || !(IsDestructible<Ts> && ...)) = delete;
+    Variant& operator=(Variant&&)
+    requires(!(IsMoveConstructible<Ts> && ...) || !(IsDestructible<Ts> && ...))
+    = delete;
     Variant& operator=(Variant&&) = default;
 #endif
 
     ALWAYS_INLINE Variant(Variant const& old)
 #ifdef AK_HAS_CONDITIONALLY_TRIVIAL
-        requires(!(IsTriviallyCopyConstructible<Ts> && ...))
+    requires(!(IsTriviallyCopyConstructible<Ts> && ...))
 #endif
         : Detail::MergeAndDeduplicatePacks<Detail::VariantConstructors<Ts, Variant<Ts...>>...>()
         , m_data {}
@@ -290,7 +309,7 @@ public:
     //       but it will still contain the "moved-from" state of the object it previously contained.
     ALWAYS_INLINE Variant(Variant&& old)
 #ifdef AK_HAS_CONDITIONALLY_TRIVIAL
-        requires(!(IsTriviallyMoveConstructible<Ts> && ...))
+    requires(!(IsTriviallyMoveConstructible<Ts> && ...))
 #endif
         : Detail::MergeAndDeduplicatePacks<Detail::VariantConstructors<Ts, Variant<Ts...>>...>()
         , m_index(old.m_index)
@@ -300,7 +319,7 @@ public:
 
     ALWAYS_INLINE ~Variant()
 #ifdef AK_HAS_CONDITIONALLY_TRIVIAL
-        requires(!(IsTriviallyDestructible<Ts> && ...))
+    requires(!(IsTriviallyDestructible<Ts> && ...))
 #endif
     {
         Helper::delete_(m_index, m_data);
@@ -308,7 +327,7 @@ public:
 
     ALWAYS_INLINE Variant& operator=(Variant const& other)
 #ifdef AK_HAS_CONDITIONALLY_TRIVIAL
-        requires(!(IsTriviallyCopyConstructible<Ts> && ...) || !(IsTriviallyDestructible<Ts> && ...))
+    requires(!(IsTriviallyCopyConstructible<Ts> && ...) || !(IsTriviallyDestructible<Ts> && ...))
 #endif
     {
         if (this != &other) {
@@ -323,7 +342,7 @@ public:
 
     ALWAYS_INLINE Variant& operator=(Variant&& other)
 #ifdef AK_HAS_CONDITIONALLY_TRIVIAL
-        requires(!(IsTriviallyMoveConstructible<Ts> && ...) || !(IsTriviallyDestructible<Ts> && ...))
+    requires(!(IsTriviallyMoveConstructible<Ts> && ...) || !(IsTriviallyDestructible<Ts> && ...))
 #endif
     {
         if (this != &other) {
@@ -339,7 +358,8 @@ public:
     using Detail::MergeAndDeduplicatePacks<Detail::VariantConstructors<Ts, Variant<Ts...>>...>::MergeAndDeduplicatePacks;
 
     template<typename T, typename StrippedT = RemoveCVReference<T>>
-    void set(T&& t) requires(can_contain<StrippedT>() && requires { StrippedT(forward<T>(t)); })
+    void set(T&& t)
+    requires(can_contain<StrippedT>() && requires { StrippedT(forward<T>(t)); })
     {
         constexpr auto new_index = index_of<StrippedT>();
         Helper::delete_(m_index, m_data);
@@ -348,7 +368,8 @@ public:
     }
 
     template<typename T, typename StrippedT = RemoveCVReference<T>>
-    void set(T&& t, Detail::VariantNoClearTag) requires(can_contain<StrippedT>() && requires { StrippedT(forward<T>(t)); })
+    void set(T&& t, Detail::VariantNoClearTag)
+    requires(can_contain<StrippedT>() && requires { StrippedT(forward<T>(t)); })
     {
         constexpr auto new_index = index_of<StrippedT>();
         new (m_data) StrippedT(forward<T>(t));
@@ -356,7 +377,8 @@ public:
     }
 
     template<typename T>
-    T* get_pointer() requires(can_contain<T>())
+    T* get_pointer()
+    requires(can_contain<T>())
     {
         if (index_of<T>() == m_index)
             return bit_cast<T*>(&m_data);
@@ -364,29 +386,33 @@ public:
     }
 
     template<typename T>
-    T& get() requires(can_contain<T>())
+    T& get()
+    requires(can_contain<T>())
     {
         VERIFY(has<T>());
         return *bit_cast<T*>(&m_data);
     }
 
     template<typename T>
-    const T* get_pointer() const requires(can_contain<T>())
+    T const* get_pointer() const
+    requires(can_contain<T>())
     {
         if (index_of<T>() == m_index)
-            return bit_cast<const T*>(&m_data);
+            return bit_cast<T const*>(&m_data);
         return nullptr;
     }
 
     template<typename T>
-    const T& get() const requires(can_contain<T>())
+    T const& get() const
+    requires(can_contain<T>())
     {
         VERIFY(has<T>());
-        return *bit_cast<const T*>(&m_data);
+        return *bit_cast<T const*>(&m_data);
     }
 
     template<typename T>
-    [[nodiscard]] bool has() const requires(can_contain<T>())
+    [[nodiscard]] bool has() const
+    requires(can_contain<T>())
     {
         return index_of<T>() == m_index;
     }

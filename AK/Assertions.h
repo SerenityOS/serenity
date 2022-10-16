@@ -13,7 +13,7 @@
 #    ifndef NDEBUG
 #        define VERIFY assert
 #    else
-#        define __stringify_helper(x) #        x
+#        define __stringify_helper(x) #x
 #        define __stringify(x) __stringify_helper(x)
 extern "C" __attribute__((noreturn)) void ak_verification_failed(char const*);
 #        define VERIFY(expr)                                                                \

@@ -16,21 +16,22 @@ namespace GUI {
 template<typename T, typename Container = Vector<T>, typename ColumnNameListType = void>
 class ItemListModel : public Model {
 public:
-    static constexpr auto IsTwoDimensional = requires(Container data)
-    {
-        requires !IsVoid<ColumnNameListType>;
-        data.at(0).at(0);
-        data.at(0).size();
-    };
+    static constexpr auto IsTwoDimensional = requires(Container data) {
+                                                 requires !IsVoid<ColumnNameListType>;
+                                                 data.at(0).at(0);
+                                                 data.at(0).size();
+                                             };
 
     // Substitute 'void' for a dummy u8.
     using ColumnNamesT = Conditional<IsVoid<ColumnNameListType>, u8, ColumnNameListType>;
 
-    static NonnullRefPtr<ItemListModel> create(Container const& data, ColumnNamesT const& column_names, Optional<size_t> const& row_count = {}) requires(IsTwoDimensional)
+    static NonnullRefPtr<ItemListModel> create(Container const& data, ColumnNamesT const& column_names, Optional<size_t> const& row_count = {})
+    requires(IsTwoDimensional)
     {
         return adopt_ref(*new ItemListModel<T, Container, ColumnNameListType>(data, column_names, row_count));
     }
-    static NonnullRefPtr<ItemListModel> create(Container const& data, Optional<size_t> const& row_count = {}) requires(!IsTwoDimensional)
+    static NonnullRefPtr<ItemListModel> create(Container const& data, Optional<size_t> const& row_count = {})
+    requires(!IsTwoDimensional)
     {
         return adopt_ref(*new ItemListModel<T, Container>(data, row_count));
     }
@@ -119,13 +120,15 @@ public:
     }
 
 protected:
-    explicit ItemListModel(Container const& data, Optional<size_t> row_count = {}) requires(!IsTwoDimensional)
+    explicit ItemListModel(Container const& data, Optional<size_t> row_count = {})
+    requires(!IsTwoDimensional)
         : m_data(data)
         , m_provided_row_count(move(row_count))
     {
     }
 
-    explicit ItemListModel(Container const& data, ColumnNamesT const& column_names, Optional<size_t> row_count = {}) requires(IsTwoDimensional)
+    explicit ItemListModel(Container const& data, ColumnNamesT const& column_names, Optional<size_t> row_count = {})
+    requires(IsTwoDimensional)
         : m_data(data)
         , m_column_names(column_names)
         , m_provided_row_count(move(row_count))

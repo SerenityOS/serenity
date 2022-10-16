@@ -12,7 +12,8 @@
 namespace SoftGPU {
 
 template<typename T>
-static constexpr T reverse_component_bytes_if_needed(T value, GPU::ImageDataLayout const& image_data_layout) requires(sizeof(T) == 2 || sizeof(T) == 4)
+static constexpr T reverse_component_bytes_if_needed(T value, GPU::ImageDataLayout const& image_data_layout)
+requires(sizeof(T) == 2 || sizeof(T) == 4)
 {
     if (image_data_layout.packing.component_bytes_order == GPU::ComponentBytesOrder::Normal)
         return value;

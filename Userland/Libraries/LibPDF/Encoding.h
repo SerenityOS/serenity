@@ -285,31 +285,31 @@
     V("⇒", arrowdblright, 222)                                   \
     V("⇑", arrowdblup, 221)                                      \
     V("↓", arrowdown, 175)                                       \
-    V("", arrowhorizex, 190)                                    \
+    V("", arrowhorizex, 190)                                  \
     V("←", arrowleft, 172)                                       \
     V("→", arrowright, 174)                                      \
     V("↑", arrowup, 173)                                         \
-    V("", arrowvertex, 189)                                     \
+    V("", arrowvertex, 189)                                   \
     V("∗", asteriskmath, 42)                                     \
     V("|", bar, 124)                                             \
     V("β", beta, 98)                                             \
     V("{", braceleft, 123)                                       \
     V("}", braceright, 125)                                      \
-    V("", bracelefttp, 236)                                     \
-    V("", braceleftmid, 237)                                    \
-    V("", braceleftbt, 238)                                     \
-    V("", bracerighttp, 252)                                    \
-    V("", bracerightmid, 253)                                   \
-    V("", bracerightbt, 254)                                    \
-    V("", braceex, 239)                                         \
+    V("", bracelefttp, 236)                                   \
+    V("", braceleftmid, 237)                                  \
+    V("", braceleftbt, 238)                                   \
+    V("", bracerighttp, 252)                                  \
+    V("", bracerightmid, 253)                                 \
+    V("", bracerightbt, 254)                                  \
+    V("", braceex, 239)                                       \
     V("[", bracketleft, 91)                                      \
     V("]", bracketright, 93)                                     \
-    V("", bracketlefttp, 233)                                   \
-    V("", bracketleftex, 234)                                   \
-    V("", bracketleftbt, 235)                                   \
-    V("", bracketrighttp, 249)                                  \
-    V("", bracketrightex, 250)                                  \
-    V("", bracketrightbt, 251)                                  \
+    V("", bracketlefttp, 233)                                 \
+    V("", bracketleftex, 234)                                 \
+    V("", bracketleftbt, 235)                                 \
+    V("", bracketrighttp, 249)                                \
+    V("", bracketrightex, 250)                                \
+    V("", bracketrightbt, 251)                                \
     V("•", bullet, 183)                                          \
     V("↵", carriagereturn, 191)                                  \
     V("χ", chi, 99)                                              \
@@ -319,7 +319,7 @@
     V(":", colon, 58)                                            \
     V(",", comma, 44)                                            \
     V("≅", congruent, 64)                                        \
-    V("", copyrightsans, 227)                                   \
+    V("", copyrightsans, 227)                                 \
     V("©", copyrightserif, 211)                                  \
     V("°", degree, 176)                                          \
     V("δ", delta, 100)                                           \
@@ -348,7 +348,7 @@
     V("∞", infinity, 165)                                        \
     V("`", integral, 242)                                        \
     V("∫", integraltp, 243)                                      \
-    V("", integralex, 244)                                      \
+    V("", integralex, 244)                                    \
     V("⌡", integralbt, 245)                                      \
     V("∩", intersection, 199)                                    \
     V("ι", iota, 105)                                            \
@@ -376,12 +376,12 @@
     V("1", one, 49)                                              \
     V("(", parenleft, 40)                                        \
     V(")", parenright, 41)                                       \
-    V("", parenlefttp, 230)                                     \
-    V("", parenleftex, 231)                                     \
-    V("", parenleftbt, 232)                                     \
-    V("", parenrighttp, 246)                                    \
-    V("", parenrightex, 247)                                    \
-    V("", parenrightbt, 248)                                    \
+    V("", parenlefttp, 230)                                   \
+    V("", parenleftex, 231)                                   \
+    V("", parenleftbt, 232)                                   \
+    V("", parenrighttp, 246)                                  \
+    V("", parenrightex, 247)                                  \
+    V("", parenrightbt, 248)                                  \
     V("∂", partialdiff, 182)                                     \
     V("%", percent, 37)                                          \
     V(".", period, 46)                                           \
@@ -401,7 +401,7 @@
     V("?", radicalex, 96) /* FIXME: What is this character, ? */ \
     V("⊆", reflexsubset, 205)                                    \
     V("⊇", reflexsuperset, 202)                                  \
-    V("", registersans, 226)                                    \
+    V("", registersans, 226)                                  \
     V("®", registerserif, 210)                                   \
     V("ρ", rho, 114)                                             \
     V("″", second, 178)                                          \
@@ -421,7 +421,7 @@
     V("θ", theta, 113)                                           \
     V("ϑ", theta1, 74)                                           \
     V("3", three, 51)                                            \
-    V("", trademarksans, 228)                                   \
+    V("", trademarksans, 228)                                 \
     V("™", trademarkserif, 212)                                  \
     V("2", two, 50)                                              \
     V("_", underscore, 95)                                       \

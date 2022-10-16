@@ -51,13 +51,15 @@ public:
     T value() const { return m_value; }
     ShadowType const& shadow() const { return m_shadow; }
 
-    T shadow_as_value() const requires(IsTriviallyConstructible<T>)
+    T shadow_as_value() const
+    requires(IsTriviallyConstructible<T>)
     {
         return *bit_cast<T const*>(m_shadow.data());
     }
 
     template<auto member>
-    auto reference_to() requires(IsClass<T> || IsUnion<T>)
+    auto reference_to()
+    requires(IsClass<T> || IsUnion<T>)
     {
         using ResultType = ValueAndShadowReference<RemoveReference<decltype(declval<T>().*member)>>;
         return ResultType {
@@ -67,7 +69,8 @@ public:
     }
 
     template<auto member>
-    auto slice() const requires(IsClass<T> || IsUnion<T>)
+    auto slice() const
+    requires(IsClass<T> || IsUnion<T>)
     {
         using ResultType = ValueWithShadow<RemoveReference<decltype(declval<T>().*member)>>;
         return ResultType {
@@ -118,7 +121,8 @@ public:
 
     ValueAndShadowReference<T>& operator=(ValueWithShadow<T> const&);
 
-    T shadow_as_value() const requires(IsTriviallyConstructible<T>)
+    T shadow_as_value() const
+    requires(IsTriviallyConstructible<T>)
     {
         return *bit_cast<T const*>(m_shadow.data());
     }

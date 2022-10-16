@@ -62,7 +62,7 @@ public:
     }
 
     template<typename T>
-    void add_random_event(const T& event_data, size_t pool)
+    void add_random_event(T const& event_data, size_t pool)
     {
         pool %= pool_count;
         if (pool == 0) {
@@ -159,7 +159,7 @@ public:
     }
 
     template<typename T>
-    void add_random_event(const T& event_data)
+    void add_random_event(T const& event_data)
     {
         auto& kernel_rng = KernelRng::the();
         SpinlockLocker lock(kernel_rng.get_lock());

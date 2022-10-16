@@ -103,7 +103,7 @@ TEST_CASE(can_subspan_as_intended)
 {
     static constexpr u16 buffer[8] { 1, 2, 3, 4, 5, 6, 7, 8 };
 
-    constexpr Span<const u16> span { buffer, 8 };
+    constexpr Span<u16 const> span { buffer, 8 };
     constexpr auto slice = span.slice(3, 2);
 
     static_assert(slice.size() == 2u);

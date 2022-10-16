@@ -166,16 +166,16 @@ T Parser::read_host(T const* field) const
 }
 
 template<typename T>
-requires(IsIntegral<T> && sizeof(T) > 1) T Parser::read_le(T const* field)
-const
+requires(IsIntegral<T> && sizeof(T) > 1)
+T Parser::read_le(T const* field) const
 {
     static_assert(sizeof(T) > 1);
     return AK::convert_between_host_and_little_endian(read_host(field));
 }
 
 template<typename T>
-requires(IsIntegral<T> && sizeof(T) > 1) T Parser::read_be(T const* field)
-const
+requires(IsIntegral<T> && sizeof(T) > 1)
+T Parser::read_be(T const* field) const
 {
     static_assert(sizeof(T) > 1);
     return AK::convert_between_host_and_big_endian(read_host(field));

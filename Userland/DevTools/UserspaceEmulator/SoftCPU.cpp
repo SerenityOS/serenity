@@ -38,16 +38,43 @@
         m_vpu.name(insn);                            \
     }
 
-#define DEFINE_GENERIC_SHIFT_ROTATE_INSN_HANDLERS(mnemonic, op)                                                                            \
-    void SoftCPU::mnemonic##_RM8_1(const X86::Instruction& insn) { generic_RM8_1(op<ValueWithShadow<u8>>, insn); }                         \
-    void SoftCPU::mnemonic##_RM8_CL(const X86::Instruction& insn) { generic_RM8_CL(op<ValueWithShadow<u8>>, insn); }                       \
-    void SoftCPU::mnemonic##_RM8_imm8(const X86::Instruction& insn) { generic_RM8_imm8<true, false>(op<ValueWithShadow<u8>>, insn); }      \
-    void SoftCPU::mnemonic##_RM16_1(const X86::Instruction& insn) { generic_RM16_1(op<ValueWithShadow<u16>>, insn); }                      \
-    void SoftCPU::mnemonic##_RM16_CL(const X86::Instruction& insn) { generic_RM16_CL(op<ValueWithShadow<u16>>, insn); }                    \
-    void SoftCPU::mnemonic##_RM16_imm8(const X86::Instruction& insn) { generic_RM16_unsigned_imm8<true>(op<ValueWithShadow<u16>>, insn); } \
-    void SoftCPU::mnemonic##_RM32_1(const X86::Instruction& insn) { generic_RM32_1(op<ValueWithShadow<u32>>, insn); }                      \
-    void SoftCPU::mnemonic##_RM32_CL(const X86::Instruction& insn) { generic_RM32_CL(op<ValueWithShadow<u32>>, insn); }                    \
-    void SoftCPU::mnemonic##_RM32_imm8(const X86::Instruction& insn) { generic_RM32_unsigned_imm8<true>(op<ValueWithShadow<u32>>, insn); }
+#define DEFINE_GENERIC_SHIFT_ROTATE_INSN_HANDLERS(mnemonic, op)           \
+    void SoftCPU::mnemonic##_RM8_1(const X86::Instruction& insn)          \
+    {                                                                     \
+        generic_RM8_1(op<ValueWithShadow<u8>>, insn);                     \
+    }                                                                     \
+    void SoftCPU::mnemonic##_RM8_CL(const X86::Instruction& insn)         \
+    {                                                                     \
+        generic_RM8_CL(op<ValueWithShadow<u8>>, insn);                    \
+    }                                                                     \
+    void SoftCPU::mnemonic##_RM8_imm8(const X86::Instruction& insn)       \
+    {                                                                     \
+        generic_RM8_imm8<true, false>(op<ValueWithShadow<u8>>, insn);     \
+    }                                                                     \
+    void SoftCPU::mnemonic##_RM16_1(const X86::Instruction& insn)         \
+    {                                                                     \
+        generic_RM16_1(op<ValueWithShadow<u16>>, insn);                   \
+    }                                                                     \
+    void SoftCPU::mnemonic##_RM16_CL(const X86::Instruction& insn)        \
+    {                                                                     \
+        generic_RM16_CL(op<ValueWithShadow<u16>>, insn);                  \
+    }                                                                     \
+    void SoftCPU::mnemonic##_RM16_imm8(const X86::Instruction& insn)      \
+    {                                                                     \
+        generic_RM16_unsigned_imm8<true>(op<ValueWithShadow<u16>>, insn); \
+    }                                                                     \
+    void SoftCPU::mnemonic##_RM32_1(const X86::Instruction& insn)         \
+    {                                                                     \
+        generic_RM32_1(op<ValueWithShadow<u32>>, insn);                   \
+    }                                                                     \
+    void SoftCPU::mnemonic##_RM32_CL(const X86::Instruction& insn)        \
+    {                                                                     \
+        generic_RM32_CL(op<ValueWithShadow<u32>>, insn);                  \
+    }                                                                     \
+    void SoftCPU::mnemonic##_RM32_imm8(const X86::Instruction& insn)      \
+    {                                                                     \
+        generic_RM32_unsigned_imm8<true>(op<ValueWithShadow<u32>>, insn); \
+    }
 
 namespace UserspaceEmulator {
 
@@ -332,7 +359,7 @@ ALWAYS_INLINE static T op_dec(SoftCPU& cpu, T data)
 }
 
 template<typename T>
-ALWAYS_INLINE static T op_xor(SoftCPU& cpu, const T& dest, const T& src)
+ALWAYS_INLINE static T op_xor(SoftCPU& cpu, T const& dest, T const& src)
 {
     typename T::ValueType result;
     u32 new_flags = 0;
@@ -364,7 +391,7 @@ ALWAYS_INLINE static T op_xor(SoftCPU& cpu, const T& dest, const T& src)
 }
 
 template<typename T>
-ALWAYS_INLINE static T op_or(SoftCPU& cpu, const T& dest, const T& src)
+ALWAYS_INLINE static T op_or(SoftCPU& cpu, T const& dest, T const& src)
 {
     typename T::ValueType result = 0;
     u32 new_flags = 0;
@@ -396,7 +423,7 @@ ALWAYS_INLINE static T op_or(SoftCPU& cpu, const T& dest, const T& src)
 }
 
 template<typename T>
-ALWAYS_INLINE static T op_sub(SoftCPU& cpu, const T& dest, const T& src)
+ALWAYS_INLINE static T op_sub(SoftCPU& cpu, T const& dest, T const& src)
 {
     typename T::ValueType result = 0;
     u32 new_flags = 0;
@@ -428,7 +455,7 @@ ALWAYS_INLINE static T op_sub(SoftCPU& cpu, const T& dest, const T& src)
 }
 
 template<typename T, bool cf>
-ALWAYS_INLINE static T op_sbb_impl(SoftCPU& cpu, const T& dest, const T& src)
+ALWAYS_INLINE static T op_sbb_impl(SoftCPU& cpu, T const& dest, T const& src)
 {
     typename T::ValueType result = 0;
     u32 new_flags = 0;
@@ -465,7 +492,7 @@ ALWAYS_INLINE static T op_sbb_impl(SoftCPU& cpu, const T& dest, const T& src)
 }
 
 template<typename T>
-ALWAYS_INLINE static T op_sbb(SoftCPU& cpu, T& dest, const T& src)
+ALWAYS_INLINE static T op_sbb(SoftCPU& cpu, T& dest, T const& src)
 {
     cpu.warn_if_flags_tainted("sbb");
     if (cpu.cf())
@@ -474,7 +501,7 @@ ALWAYS_INLINE static T op_sbb(SoftCPU& cpu, T& dest, const T& src)
 }
 
 template<typename T>
-ALWAYS_INLINE static T op_add(SoftCPU& cpu, T& dest, const T& src)
+ALWAYS_INLINE static T op_add(SoftCPU& cpu, T& dest, T const& src)
 {
     typename T::ValueType result = 0;
     u32 new_flags = 0;
@@ -506,7 +533,7 @@ ALWAYS_INLINE static T op_add(SoftCPU& cpu, T& dest, const T& src)
 }
 
 template<typename T, bool cf>
-ALWAYS_INLINE static T op_adc_impl(SoftCPU& cpu, T& dest, const T& src)
+ALWAYS_INLINE static T op_adc_impl(SoftCPU& cpu, T& dest, T const& src)
 {
     typename T::ValueType result = 0;
     u32 new_flags = 0;
@@ -543,7 +570,7 @@ ALWAYS_INLINE static T op_adc_impl(SoftCPU& cpu, T& dest, const T& src)
 }
 
 template<typename T>
-ALWAYS_INLINE static T op_adc(SoftCPU& cpu, T& dest, const T& src)
+ALWAYS_INLINE static T op_adc(SoftCPU& cpu, T& dest, T const& src)
 {
     cpu.warn_if_flags_tainted("adc");
     if (cpu.cf())
@@ -552,7 +579,7 @@ ALWAYS_INLINE static T op_adc(SoftCPU& cpu, T& dest, const T& src)
 }
 
 template<typename T>
-ALWAYS_INLINE static T op_and(SoftCPU& cpu, const T& dest, const T& src)
+ALWAYS_INLINE static T op_and(SoftCPU& cpu, T const& dest, T const& src)
 {
     typename T::ValueType result = 0;
     u32 new_flags = 0;
@@ -584,7 +611,7 @@ ALWAYS_INLINE static T op_and(SoftCPU& cpu, const T& dest, const T& src)
 }
 
 template<typename T>
-ALWAYS_INLINE static void op_imul(SoftCPU& cpu, const T& dest, const T& src, T& result_high, T& result_low)
+ALWAYS_INLINE static void op_imul(SoftCPU& cpu, T const& dest, T const& src, T& result_high, T& result_low)
 {
     bool did_overflow = false;
     if constexpr (sizeof(T) == 4) {
@@ -1167,11 +1194,23 @@ ALWAYS_INLINE void BTx_RM32_imm8(SoftCPU& cpu, const X86::Instruction& insn, Op 
         insn.modrm().write32(cpu, insn, shadow_wrap_with_taint_from(result, original));
 }
 
-#define DEFINE_GENERIC_BTx_INSN_HANDLERS(mnemonic, op, update_dest)                                                          \
-    void SoftCPU::mnemonic##_RM32_reg32(const X86::Instruction& insn) { BTx_RM32_reg32<update_dest>(*this, insn, op<u32>); } \
-    void SoftCPU::mnemonic##_RM16_reg16(const X86::Instruction& insn) { BTx_RM16_reg16<update_dest>(*this, insn, op<u16>); } \
-    void SoftCPU::mnemonic##_RM32_imm8(const X86::Instruction& insn) { BTx_RM32_imm8<update_dest>(*this, insn, op<u32>); }   \
-    void SoftCPU::mnemonic##_RM16_imm8(const X86::Instruction& insn) { BTx_RM16_imm8<update_dest>(*this, insn, op<u16>); }
+#define DEFINE_GENERIC_BTx_INSN_HANDLERS(mnemonic, op, update_dest)   \
+    void SoftCPU::mnemonic##_RM32_reg32(const X86::Instruction& insn) \
+    {                                                                 \
+        BTx_RM32_reg32<update_dest>(*this, insn, op<u32>);            \
+    }                                                                 \
+    void SoftCPU::mnemonic##_RM16_reg16(const X86::Instruction& insn) \
+    {                                                                 \
+        BTx_RM16_reg16<update_dest>(*this, insn, op<u16>);            \
+    }                                                                 \
+    void SoftCPU::mnemonic##_RM32_imm8(const X86::Instruction& insn)  \
+    {                                                                 \
+        BTx_RM32_imm8<update_dest>(*this, insn, op<u32>);             \
+    }                                                                 \
+    void SoftCPU::mnemonic##_RM16_imm8(const X86::Instruction& insn)  \
+    {                                                                 \
+        BTx_RM16_imm8<update_dest>(*this, insn, op<u16>);             \
+    }
 
 DEFINE_GENERIC_BTx_INSN_HANDLERS(BTS, op_bts, true);
 DEFINE_GENERIC_BTx_INSN_HANDLERS(BTR, op_btr, true);
@@ -2903,24 +2942,66 @@ void SoftCPU::XLAT(const X86::Instruction& insn)
     set_al(read_memory8({ segment(insn.segment_prefix().value_or(X86::SegmentRegister::DS)), offset }));
 }
 
-#define DEFINE_GENERIC_INSN_HANDLERS_PARTIAL(mnemonic, op, update_dest, is_zero_idiom_if_both_operands_same, is_or)                                                             \
-    void SoftCPU::mnemonic##_AL_imm8(const X86::Instruction& insn) { generic_AL_imm8<update_dest, is_or>(op<ValueWithShadow<u8>>, insn); }                                      \
-    void SoftCPU::mnemonic##_AX_imm16(const X86::Instruction& insn) { generic_AX_imm16<update_dest, is_or>(op<ValueWithShadow<u16>>, insn); }                                   \
-    void SoftCPU::mnemonic##_EAX_imm32(const X86::Instruction& insn) { generic_EAX_imm32<update_dest, is_or>(op<ValueWithShadow<u32>>, insn); }                                 \
-    void SoftCPU::mnemonic##_RM16_imm16(const X86::Instruction& insn) { generic_RM16_imm16<update_dest, is_or>(op<ValueWithShadow<u16>>, insn); }                               \
-    void SoftCPU::mnemonic##_RM16_reg16(const X86::Instruction& insn) { generic_RM16_reg16<update_dest, is_zero_idiom_if_both_operands_same>(op<ValueWithShadow<u16>>, insn); } \
-    void SoftCPU::mnemonic##_RM32_imm32(const X86::Instruction& insn) { generic_RM32_imm32<update_dest, is_or>(op<ValueWithShadow<u32>>, insn); }                               \
-    void SoftCPU::mnemonic##_RM32_reg32(const X86::Instruction& insn) { generic_RM32_reg32<update_dest, is_zero_idiom_if_both_operands_same>(op<ValueWithShadow<u32>>, insn); } \
-    void SoftCPU::mnemonic##_RM8_imm8(const X86::Instruction& insn) { generic_RM8_imm8<update_dest, is_or>(op<ValueWithShadow<u8>>, insn); }                                    \
-    void SoftCPU::mnemonic##_RM8_reg8(const X86::Instruction& insn) { generic_RM8_reg8<update_dest, is_zero_idiom_if_both_operands_same>(op<ValueWithShadow<u8>>, insn); }
+#define DEFINE_GENERIC_INSN_HANDLERS_PARTIAL(mnemonic, op, update_dest, is_zero_idiom_if_both_operands_same, is_or) \
+    void SoftCPU::mnemonic##_AL_imm8(const X86::Instruction& insn)                                                  \
+    {                                                                                                               \
+        generic_AL_imm8<update_dest, is_or>(op<ValueWithShadow<u8>>, insn);                                         \
+    }                                                                                                               \
+    void SoftCPU::mnemonic##_AX_imm16(const X86::Instruction& insn)                                                 \
+    {                                                                                                               \
+        generic_AX_imm16<update_dest, is_or>(op<ValueWithShadow<u16>>, insn);                                       \
+    }                                                                                                               \
+    void SoftCPU::mnemonic##_EAX_imm32(const X86::Instruction& insn)                                                \
+    {                                                                                                               \
+        generic_EAX_imm32<update_dest, is_or>(op<ValueWithShadow<u32>>, insn);                                      \
+    }                                                                                                               \
+    void SoftCPU::mnemonic##_RM16_imm16(const X86::Instruction& insn)                                               \
+    {                                                                                                               \
+        generic_RM16_imm16<update_dest, is_or>(op<ValueWithShadow<u16>>, insn);                                     \
+    }                                                                                                               \
+    void SoftCPU::mnemonic##_RM16_reg16(const X86::Instruction& insn)                                               \
+    {                                                                                                               \
+        generic_RM16_reg16<update_dest, is_zero_idiom_if_both_operands_same>(op<ValueWithShadow<u16>>, insn);       \
+    }                                                                                                               \
+    void SoftCPU::mnemonic##_RM32_imm32(const X86::Instruction& insn)                                               \
+    {                                                                                                               \
+        generic_RM32_imm32<update_dest, is_or>(op<ValueWithShadow<u32>>, insn);                                     \
+    }                                                                                                               \
+    void SoftCPU::mnemonic##_RM32_reg32(const X86::Instruction& insn)                                               \
+    {                                                                                                               \
+        generic_RM32_reg32<update_dest, is_zero_idiom_if_both_operands_same>(op<ValueWithShadow<u32>>, insn);       \
+    }                                                                                                               \
+    void SoftCPU::mnemonic##_RM8_imm8(const X86::Instruction& insn)                                                 \
+    {                                                                                                               \
+        generic_RM8_imm8<update_dest, is_or>(op<ValueWithShadow<u8>>, insn);                                        \
+    }                                                                                                               \
+    void SoftCPU::mnemonic##_RM8_reg8(const X86::Instruction& insn)                                                 \
+    {                                                                                                               \
+        generic_RM8_reg8<update_dest, is_zero_idiom_if_both_operands_same>(op<ValueWithShadow<u8>>, insn);          \
+    }
 
-#define DEFINE_GENERIC_INSN_HANDLERS(mnemonic, op, update_dest, is_zero_idiom_if_both_operands_same, is_or)                                                                     \
-    DEFINE_GENERIC_INSN_HANDLERS_PARTIAL(mnemonic, op, update_dest, is_zero_idiom_if_both_operands_same, is_or)                                                                 \
-    void SoftCPU::mnemonic##_RM16_imm8(const X86::Instruction& insn) { generic_RM16_imm8<update_dest, is_or>(op<ValueWithShadow<u16>>, insn); }                                 \
-    void SoftCPU::mnemonic##_RM32_imm8(const X86::Instruction& insn) { generic_RM32_imm8<update_dest, is_or>(op<ValueWithShadow<u32>>, insn); }                                 \
-    void SoftCPU::mnemonic##_reg16_RM16(const X86::Instruction& insn) { generic_reg16_RM16<update_dest, is_zero_idiom_if_both_operands_same>(op<ValueWithShadow<u16>>, insn); } \
-    void SoftCPU::mnemonic##_reg32_RM32(const X86::Instruction& insn) { generic_reg32_RM32<update_dest, is_zero_idiom_if_both_operands_same>(op<ValueWithShadow<u32>>, insn); } \
-    void SoftCPU::mnemonic##_reg8_RM8(const X86::Instruction& insn) { generic_reg8_RM8<update_dest, is_zero_idiom_if_both_operands_same>(op<ValueWithShadow<u8>>, insn); }
+#define DEFINE_GENERIC_INSN_HANDLERS(mnemonic, op, update_dest, is_zero_idiom_if_both_operands_same, is_or)     \
+    DEFINE_GENERIC_INSN_HANDLERS_PARTIAL(mnemonic, op, update_dest, is_zero_idiom_if_both_operands_same, is_or) \
+    void SoftCPU::mnemonic##_RM16_imm8(const X86::Instruction& insn)                                            \
+    {                                                                                                           \
+        generic_RM16_imm8<update_dest, is_or>(op<ValueWithShadow<u16>>, insn);                                  \
+    }                                                                                                           \
+    void SoftCPU::mnemonic##_RM32_imm8(const X86::Instruction& insn)                                            \
+    {                                                                                                           \
+        generic_RM32_imm8<update_dest, is_or>(op<ValueWithShadow<u32>>, insn);                                  \
+    }                                                                                                           \
+    void SoftCPU::mnemonic##_reg16_RM16(const X86::Instruction& insn)                                           \
+    {                                                                                                           \
+        generic_reg16_RM16<update_dest, is_zero_idiom_if_both_operands_same>(op<ValueWithShadow<u16>>, insn);   \
+    }                                                                                                           \
+    void SoftCPU::mnemonic##_reg32_RM32(const X86::Instruction& insn)                                           \
+    {                                                                                                           \
+        generic_reg32_RM32<update_dest, is_zero_idiom_if_both_operands_same>(op<ValueWithShadow<u32>>, insn);   \
+    }                                                                                                           \
+    void SoftCPU::mnemonic##_reg8_RM8(const X86::Instruction& insn)                                             \
+    {                                                                                                           \
+        generic_reg8_RM8<update_dest, is_zero_idiom_if_both_operands_same>(op<ValueWithShadow<u8>>, insn);      \
+    }
 
 DEFINE_GENERIC_INSN_HANDLERS(XOR, op_xor, true, true, false)
 DEFINE_GENERIC_INSN_HANDLERS(OR, op_or, true, false, true)

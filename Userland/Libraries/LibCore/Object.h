@@ -67,7 +67,10 @@ enum class TimerShouldFireWhenNotVisible {
 
 #define C_OBJECT(klass)                                                                    \
 public:                                                                                    \
-    virtual StringView class_name() const override { return #klass##sv; }                  \
+    virtual StringView class_name() const override                                         \
+    {                                                                                      \
+        return #klass##sv;                                                                 \
+    }                                                                                      \
     template<typename Klass = klass, class... Args>                                        \
     static NonnullRefPtr<klass> construct(Args&&... args)                                  \
     {                                                                                      \
@@ -79,9 +82,12 @@ public:                                                                         
         return adopt_nonnull_ref_or_enomem(new (nothrow) Klass(::forward<Args>(args)...)); \
     }
 
-#define C_OBJECT_ABSTRACT(klass) \
-public:                          \
-    virtual StringView class_name() const override { return #klass##sv; }
+#define C_OBJECT_ABSTRACT(klass)                   \
+public:                                            \
+    virtual StringView class_name() const override \
+    {                                              \
+        return #klass##sv;                         \
+    }
 
 class Object
     : public RefCounted<Object>
@@ -119,13 +125,16 @@ public:
     }
 
     template<typename T, typename Callback>
-    void for_each_child_of_type(Callback callback) requires IsBaseOf<Object, T>;
+    void for_each_child_of_type(Callback callback)
+    requires IsBaseOf<Object, T>;
 
     template<typename T>
-    T* find_child_of_type_named(String const&) requires IsBaseOf<Object, T>;
+    T* find_child_of_type_named(String const&)
+    requires IsBaseOf<Object, T>;
 
     template<typename T>
-    T* find_descendant_of_type_named(String const&) requires IsBaseOf<Object, T>;
+    T* find_descendant_of_type_named(String const&)
+    requires IsBaseOf<Object, T>;
 
     bool is_ancestor_of(Object const&) const;
 
@@ -226,7 +235,8 @@ struct AK::Formatter<Core::Object> : AK::Formatter<FormatString> {
 
 namespace Core {
 template<typename T, typename Callback>
-inline void Object::for_each_child_of_type(Callback callback) requires IsBaseOf<Object, T>
+inline void Object::for_each_child_of_type(Callback callback)
+requires IsBaseOf<Object, T>
 {
     for_each_child([&](auto& child) {
         if (is<T>(child))
@@ -236,7 +246,8 @@ inline void Object::for_each_child_of_type(Callback callback) requires IsBaseOf<
 }
 
 template<typename T>
-T* Object::find_child_of_type_named(String const& name) requires IsBaseOf<Object, T>
+T* Object::find_child_of_type_named(String const& name)
+requires IsBaseOf<Object, T>
 {
     T* found_child = nullptr;
     for_each_child_of_type<T>([&](auto& child) {
@@ -251,7 +262,8 @@ T* Object::find_child_of_type_named(String const& name) requires IsBaseOf<Object
 }
 
 template<typename T>
-T* Object::find_descendant_of_type_named(String const& name) requires IsBaseOf<Object, T>
+T* Object::find_descendant_of_type_named(String const& name)
+requires IsBaseOf<Object, T>
 {
     if (is<T>(*this) && this->name() == name) {
         return static_cast<T*>(this);

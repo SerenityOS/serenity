@@ -135,13 +135,15 @@ InputStream& operator>>(InputStream& stream, Optional<T>& value)
 }
 
 template<typename Integral>
-InputStream& operator>>(InputStream& stream, Integral& value) requires IsIntegral<Integral>
+InputStream& operator>>(InputStream& stream, Integral& value)
+requires IsIntegral<Integral>
 {
     stream.read_or_error({ &value, sizeof(value) });
     return stream;
 }
 template<typename Integral>
-OutputStream& operator<<(OutputStream& stream, Integral value) requires IsIntegral<Integral>
+OutputStream& operator<<(OutputStream& stream, Integral value)
+requires IsIntegral<Integral>
 {
     stream.write_or_error({ &value, sizeof(value) });
     return stream;
@@ -150,13 +152,15 @@ OutputStream& operator<<(OutputStream& stream, Integral value) requires IsIntegr
 #ifndef KERNEL
 
 template<typename FloatingPoint>
-InputStream& operator>>(InputStream& stream, FloatingPoint& value) requires IsFloatingPoint<FloatingPoint>
+InputStream& operator>>(InputStream& stream, FloatingPoint& value)
+requires IsFloatingPoint<FloatingPoint>
 {
     stream.read_or_error({ &value, sizeof(value) });
     return stream;
 }
 template<typename FloatingPoint>
-OutputStream& operator<<(OutputStream& stream, FloatingPoint value) requires IsFloatingPoint<FloatingPoint>
+OutputStream& operator<<(OutputStream& stream, FloatingPoint value)
+requires IsFloatingPoint<FloatingPoint>
 {
     stream.write_or_error({ &value, sizeof(value) });
     return stream;

@@ -166,7 +166,7 @@ TEST_CASE(IsAssignable)
     EXPECT_TRAIT_TRUE(IsTriviallyMoveAssignable, A);
 
     struct B {
-        B& operator=(const B&) { return *this; }
+        B& operator=(B const&) { return *this; }
         B& operator=(B&&) { return *this; }
     };
     EXPECT_TRAIT_TRUE(IsCopyAssignable, B);
@@ -175,7 +175,7 @@ TEST_CASE(IsAssignable)
     EXPECT_TRAIT_FALSE(IsTriviallyMoveAssignable, B);
 
     struct C {
-        C& operator=(const C&) = delete;
+        C& operator=(C const&) = delete;
         C& operator=(C&&) = delete;
     };
     EXPECT_TRAIT_FALSE(IsCopyAssignable, C);
@@ -194,7 +194,7 @@ TEST_CASE(IsConstructible)
     EXPECT_TRAIT_TRUE(IsTriviallyMoveConstructible, A);
 
     struct B {
-        B(const B&)
+        B(B const&)
         {
         }
         B(B&&)
@@ -207,7 +207,7 @@ TEST_CASE(IsConstructible)
     EXPECT_TRAIT_FALSE(IsTriviallyMoveConstructible, B);
 
     struct C {
-        C(const C&) = delete;
+        C(C const&) = delete;
         C(C&&) = delete;
     };
     EXPECT_TRAIT_FALSE(IsCopyConstructible, C);

@@ -50,13 +50,15 @@ public:
     }
 
     template<typename CallableType>
-    SafeFunction(CallableType&& callable) requires((AK::IsFunctionObject<CallableType> && IsCallableWithArguments<CallableType, In...> && !IsSame<RemoveCVReference<CallableType>, SafeFunction>))
+    SafeFunction(CallableType&& callable)
+    requires((AK::IsFunctionObject<CallableType> && IsCallableWithArguments<CallableType, In...> && !IsSame<RemoveCVReference<CallableType>, SafeFunction>))
     {
         init_with_callable(forward<CallableType>(callable), CallableKind::FunctionObject);
     }
 
     template<typename FunctionType>
-    SafeFunction(FunctionType f) requires((AK::IsFunctionPointer<FunctionType> && IsCallableWithArguments<RemovePointer<FunctionType>, In...> && !IsSame<RemoveCVReference<FunctionType>, SafeFunction>))
+    SafeFunction(FunctionType f)
+    requires((AK::IsFunctionPointer<FunctionType> && IsCallableWithArguments<RemovePointer<FunctionType>, In...> && !IsSame<RemoveCVReference<FunctionType>, SafeFunction>))
     {
         init_with_callable(move(f), CallableKind::FunctionPointer);
     }
@@ -82,7 +84,8 @@ public:
     explicit operator bool() const { return !!callable_wrapper(); }
 
     template<typename CallableType>
-    SafeFunction& operator=(CallableType&& callable) requires((AK::IsFunctionObject<CallableType> && IsCallableWithArguments<CallableType, In...>))
+    SafeFunction& operator=(CallableType&& callable)
+    requires((AK::IsFunctionObject<CallableType> && IsCallableWithArguments<CallableType, In...>))
     {
         clear();
         init_with_callable(forward<CallableType>(callable));
@@ -90,7 +93,8 @@ public:
     }
 
     template<typename FunctionType>
-    SafeFunction& operator=(FunctionType f) requires((AK::IsFunctionPointer<FunctionType> && IsCallableWithArguments<RemovePointer<FunctionType>, In...>))
+    SafeFunction& operator=(FunctionType f)
+    requires((AK::IsFunctionPointer<FunctionType> && IsCallableWithArguments<RemovePointer<FunctionType>, In...>))
     {
         clear();
         if (f)

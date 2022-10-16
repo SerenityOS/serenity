@@ -232,7 +232,7 @@ template<typename T>
 ALWAYS_INLINE static void unpack_grayscale_without_alpha(PNGLoadingContext& context)
 {
     for (int y = 0; y < context.height; ++y) {
-        auto* gray_values = reinterpret_cast<const T*>(context.scanlines[y].data.data());
+        auto* gray_values = reinterpret_cast<T const*>(context.scanlines[y].data.data());
         for (int i = 0; i < context.width; ++i) {
             auto& pixel = (Pixel&)context.bitmap->scanline(y)[i];
             pixel.r = gray_values[i];

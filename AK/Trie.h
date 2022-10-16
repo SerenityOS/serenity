@@ -69,10 +69,26 @@ public:
         return const_cast<Trie*>(this)->traverse_until_last_accessible_node(it, end);
     }
 
-    Optional<MetadataType> metadata() const requires(!IsNullPointer<MetadataType>) { return m_metadata; }
-    void set_metadata(MetadataType metadata) requires(!IsNullPointer<MetadataType>) { m_metadata = move(metadata); }
-    MetadataType const& metadata_value() const requires(!IsNullPointer<MetadataType>) { return m_metadata.value(); }
-    MetadataType& metadata_value() requires(!IsNullPointer<MetadataType>) { return m_metadata.value(); }
+    Optional<MetadataType> metadata() const
+    requires(!IsNullPointer<MetadataType>)
+    {
+        return m_metadata;
+    }
+    void set_metadata(MetadataType metadata)
+    requires(!IsNullPointer<MetadataType>)
+    {
+        m_metadata = move(metadata);
+    }
+    MetadataType const& metadata_value() const
+    requires(!IsNullPointer<MetadataType>)
+    {
+        return m_metadata.value();
+    }
+    MetadataType& metadata_value()
+    requires(!IsNullPointer<MetadataType>)
+    {
+        return m_metadata.value();
+    }
 
     ValueType const& value() const { return m_value; }
     ValueType& value() { return m_value; }
@@ -99,7 +115,8 @@ public:
 
     template<typename It, typename ProvideMetadataFunction>
     ErrorOr<BaseType*> insert(
-        It& it, It const& end, MetadataType metadata, ProvideMetadataFunction provide_missing_metadata) requires(!IsNullPointer<MetadataType>)
+        It& it, It const& end, MetadataType metadata, ProvideMetadataFunction provide_missing_metadata)
+    requires(!IsNullPointer<MetadataType>)
     {
         Trie* last_root_node = &traverse_until_last_accessible_node(it, end);
         auto invoke_provide_missing_metadata = [&]<typename... Ts>(Ts&&... args) -> ErrorOr<Optional<MetadataType>> {
@@ -119,7 +136,8 @@ public:
     }
 
     template<typename It>
-    ErrorOr<BaseType*> insert(It& it, It const& end) requires(IsNullPointer<MetadataType>)
+    ErrorOr<BaseType*> insert(It& it, It const& end)
+    requires(IsNullPointer<MetadataType>)
     {
         Trie* last_root_node = &traverse_until_last_accessible_node(it, end);
         for (; it != end; ++it) {
@@ -133,14 +151,16 @@ public:
 
     template<typename It, typename ProvideMetadataFunction>
     ErrorOr<BaseType*> insert(
-        It const& begin, It const& end, MetadataType metadata, ProvideMetadataFunction provide_missing_metadata) requires(!IsNullPointer<MetadataType>)
+        It const& begin, It const& end, MetadataType metadata, ProvideMetadataFunction provide_missing_metadata)
+    requires(!IsNullPointer<MetadataType>)
     {
         auto it = begin;
         return insert(it, end, move(metadata), move(provide_missing_metadata));
     }
 
     template<typename It>
-    ErrorOr<BaseType*> insert(It const& begin, It const& end) requires(IsNullPointer<MetadataType>)
+    ErrorOr<BaseType*> insert(It const& begin, It const& end)
+    requires(IsNullPointer<MetadataType>)
     {
         auto it = begin;
         return insert(it, end);
@@ -185,7 +205,8 @@ public:
     [[nodiscard]] bool is_empty() const { return m_children.is_empty(); }
     void clear() { m_children.clear(); }
 
-    ErrorOr<BaseType> deep_copy() requires(requires(ValueType value) { { value->try_clone() } -> SpecializationOf<ErrorOr>; })
+    ErrorOr<BaseType> deep_copy()
+    requires(requires(ValueType value) { { value->try_clone() } -> SpecializationOf<ErrorOr>; })
     {
         Trie root(TRY(m_value->try_clone()), TRY(copy_metadata(m_metadata)));
         for (auto& it : m_children)
@@ -260,7 +281,8 @@ public:
     using DetailTrie = Detail::Trie<BaseT, Trie<ValueType, MetadataT, ValueTraits>, ValueType, MetadataT, ValueTraits>;
     using MetadataType = typename DetailTrie::MetadataType;
 
-    Trie(ValueType value, MetadataType metadata) requires(!IsVoid<MetadataType> && !IsNullPointer<MetadataType>)
+    Trie(ValueType value, MetadataType metadata)
+    requires(!IsVoid<MetadataType> && !IsNullPointer<MetadataType>)
         : DetailTrie(move(value), move(metadata))
     {
     }

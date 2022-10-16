@@ -65,13 +65,15 @@ public:
 
     private:
         friend class Map;
-        IteratorImpl(Map const& map) requires(IsConst)
+        IteratorImpl(Map const& map)
+        requires(IsConst)
             : m_map(map)
         {
             ensure_index();
         }
 
-        IteratorImpl(Map& map) requires(!IsConst)
+        IteratorImpl(Map& map)
+        requires(!IsConst)
             : m_map(map)
         {
             ensure_index();

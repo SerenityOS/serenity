@@ -30,7 +30,7 @@ class WeakLink final : public AtomicRefCounted<WeakLink> {
 public:
     template<typename T, typename PtrTraits = LockRefPtrTraits<T>>
     LockRefPtr<T, PtrTraits> strong_ref() const
-        requires(IsBaseOf<AtomicRefCountedBase, T>)
+    requires(IsBaseOf<AtomicRefCountedBase, T>)
     {
         LockRefPtr<T, PtrTraits> ref;
 

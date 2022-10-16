@@ -59,8 +59,16 @@ struct DisjointIterator {
         return &other.m_chunks == &m_chunks && other.m_index_in_chunk == m_index_in_chunk && other.m_chunk_index == m_chunk_index;
     }
 
-    auto& operator*() requires(!IsConst) { return m_chunks[m_chunk_index][m_index_in_chunk]; }
-    auto* operator->() requires(!IsConst) { return &m_chunks[m_chunk_index][m_index_in_chunk]; }
+    auto& operator*()
+    requires(!IsConst)
+    {
+        return m_chunks[m_chunk_index][m_index_in_chunk];
+    }
+    auto* operator->()
+    requires(!IsConst)
+    {
+        return &m_chunks[m_chunk_index][m_index_in_chunk];
+    }
     auto const& operator*() const { return m_chunks[m_chunk_index][m_index_in_chunk]; }
     auto const* operator->() const { return &m_chunks[m_chunk_index][m_index_in_chunk]; }
 

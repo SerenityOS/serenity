@@ -37,8 +37,16 @@ struct Array {
     [[nodiscard]] constexpr T const& first() const { return at(0); }
     [[nodiscard]] constexpr T& first() { return at(0); }
 
-    [[nodiscard]] constexpr T const& last() const requires(Size > 0) { return at(Size - 1); }
-    [[nodiscard]] constexpr T& last() requires(Size > 0) { return at(Size - 1); }
+    [[nodiscard]] constexpr T const& last() const
+    requires(Size > 0)
+    {
+        return at(Size - 1);
+    }
+    [[nodiscard]] constexpr T& last()
+    requires(Size > 0)
+    {
+        return at(Size - 1);
+    }
 
     [[nodiscard]] constexpr bool is_empty() const { return size() == 0; }
 
@@ -68,7 +76,8 @@ struct Array {
         return Size;
     }
 
-    [[nodiscard]] constexpr T max() const requires(requires(T x, T y) { x < y; })
+    [[nodiscard]] constexpr T max() const
+    requires(requires(T x, T y) { x < y; })
     {
         static_assert(Size > 0, "No values to max() over");
 
@@ -78,7 +87,8 @@ struct Array {
         return value;
     }
 
-    [[nodiscard]] constexpr T min() const requires(requires(T x, T y) { x > y; })
+    [[nodiscard]] constexpr T min() const
+    requires(requires(T x, T y) { x > y; })
     {
         static_assert(Size > 0, "No values to min() over");
 

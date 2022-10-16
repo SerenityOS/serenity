@@ -21,7 +21,8 @@ static constexpr u32 replacement_code_point = 0xfffd;
 static constexpr u32 first_supplementary_plane_code_point = 0x10000;
 
 template<typename UtfViewType>
-static Vector<u16, 1> to_utf16_impl(UtfViewType const& view) requires(IsSame<UtfViewType, Utf8View> || IsSame<UtfViewType, Utf32View>)
+static Vector<u16, 1> to_utf16_impl(UtfViewType const& view)
+requires(IsSame<UtfViewType, Utf8View> || IsSame<UtfViewType, Utf32View>)
 {
     Vector<u16, 1> utf16_data;
     utf16_data.ensure_capacity(view.length());

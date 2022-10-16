@@ -35,28 +35,47 @@ requires(N >= 2 && N <= 4) class VectorN final {
 
 public:
     [[nodiscard]] constexpr VectorN() = default;
-    [[nodiscard]] constexpr VectorN(T x, T y) requires(N == 2)
+    [[nodiscard]] constexpr VectorN(T x, T y)
+    requires(N == 2)
         : m_data { x, y }
     {
     }
-    [[nodiscard]] constexpr VectorN(T x, T y, T z) requires(N == 3)
+    [[nodiscard]] constexpr VectorN(T x, T y, T z)
+    requires(N == 3)
         : m_data { x, y, z }
     {
     }
-    [[nodiscard]] constexpr VectorN(T x, T y, T z, T w) requires(N == 4)
+    [[nodiscard]] constexpr VectorN(T x, T y, T z, T w)
+    requires(N == 4)
         : m_data { x, y, z, w }
     {
     }
 
     [[nodiscard]] constexpr T x() const { return m_data[0]; }
     [[nodiscard]] constexpr T y() const { return m_data[1]; }
-    [[nodiscard]] constexpr T z() const requires(N >= 3) { return m_data[2]; }
-    [[nodiscard]] constexpr T w() const requires(N >= 4) { return m_data[3]; }
+    [[nodiscard]] constexpr T z() const
+    requires(N >= 3)
+    {
+        return m_data[2];
+    }
+    [[nodiscard]] constexpr T w() const
+    requires(N >= 4)
+    {
+        return m_data[3];
+    }
 
     constexpr void set_x(T value) { m_data[0] = value; }
     constexpr void set_y(T value) { m_data[1] = value; }
-    constexpr void set_z(T value) requires(N >= 3) { m_data[2] = value; }
-    constexpr void set_w(T value) requires(N >= 4) { m_data[3] = value; }
+    constexpr void set_z(T value)
+    requires(N >= 3)
+    {
+        m_data[2] = value;
+    }
+    constexpr void set_w(T value)
+    requires(N >= 4)
+    {
+        m_data[3] = value;
+    }
 
     [[nodiscard]] constexpr T const& operator[](size_t index) const
     {
@@ -86,7 +105,7 @@ public:
         return *this;
     }
 
-    constexpr VectorN& operator*=(const T& t)
+    constexpr VectorN& operator*=(T const& t)
     {
         UNROLL_LOOP
         for (auto i = 0u; i < N; ++i)
@@ -168,7 +187,8 @@ public:
         return result;
     }
 
-    [[nodiscard]] constexpr VectorN cross(VectorN const& other) const requires(N == 3)
+    [[nodiscard]] constexpr VectorN cross(VectorN const& other) const
+    requires(N == 3)
     {
         return VectorN(
             y() * other.z() - z() * other.y(),
@@ -211,12 +231,14 @@ public:
         return AK::sqrt<O>(dot(*this));
     }
 
-    [[nodiscard]] constexpr VectorN<2, T> xy() const requires(N >= 3)
+    [[nodiscard]] constexpr VectorN<2, T> xy() const
+    requires(N >= 3)
     {
         return VectorN<2, T>(x(), y());
     }
 
-    [[nodiscard]] constexpr VectorN<3, T> xyz() const requires(N >= 4)
+    [[nodiscard]] constexpr VectorN<3, T> xyz() const
+    requires(N >= 4)
     {
         return VectorN<3, T>(x(), y(), z());
     }

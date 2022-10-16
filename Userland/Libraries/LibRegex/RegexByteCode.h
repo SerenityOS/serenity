@@ -340,7 +340,8 @@ public:
     }
 
     template<typename T>
-    static void transform_bytecode_repetition_min_max(ByteCode& bytecode_to_repeat, T minimum, Optional<T> maximum, size_t min_repetition_mark_id, size_t max_repetition_mark_id, bool greedy = true) requires(IsIntegral<T>)
+    static void transform_bytecode_repetition_min_max(ByteCode& bytecode_to_repeat, T minimum, Optional<T> maximum, size_t min_repetition_mark_id, size_t max_repetition_mark_id, bool greedy = true)
+    requires(IsIntegral<T>)
     {
         if (!maximum.has_value()) {
             if (minimum == 0)
@@ -410,7 +411,8 @@ public:
     }
 
     template<typename T>
-    void insert_bytecode_repetition_n(ByteCode& bytecode_to_repeat, T n, size_t repetition_mark_id) requires(IsIntegral<T>)
+    void insert_bytecode_repetition_n(ByteCode& bytecode_to_repeat, T n, size_t repetition_mark_id)
+    requires(IsIntegral<T>)
     {
         // LABEL _LOOP
         // REGEXP

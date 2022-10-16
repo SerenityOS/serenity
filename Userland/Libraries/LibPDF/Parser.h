@@ -17,7 +17,8 @@
 namespace PDF {
 
 template<typename T, typename... Args>
-static NonnullRefPtr<T> make_object(Args... args) requires(IsBaseOf<Object, T>)
+static NonnullRefPtr<T> make_object(Args... args)
+requires(IsBaseOf<Object, T>)
 {
     return adopt_ref(*new T(forward<Args>(args)...));
 }

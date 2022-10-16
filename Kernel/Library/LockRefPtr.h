@@ -129,12 +129,12 @@ public:
     };
 
     LockRefPtr() = default;
-    LockRefPtr(const T* ptr)
+    LockRefPtr(T const* ptr)
         : m_bits(PtrTraits::as_bits(const_cast<T*>(ptr)))
     {
         ref_if_not_null(const_cast<T*>(ptr));
     }
-    LockRefPtr(const T& object)
+    LockRefPtr(T const& object)
         : m_bits(PtrTraits::as_bits(const_cast<T*>(&object)))
     {
         T* ptr = const_cast<T*>(&object);
@@ -156,18 +156,21 @@ public:
     {
     }
     template<typename U>
-    ALWAYS_INLINE LockRefPtr(NonnullLockRefPtr<U> const& other) requires(IsConvertible<U*, T*>)
+    ALWAYS_INLINE LockRefPtr(NonnullLockRefPtr<U> const& other)
+    requires(IsConvertible<U*, T*>)
         : m_bits(PtrTraits::as_bits(const_cast<U*>(other.add_ref())))
     {
     }
     template<typename U>
-    ALWAYS_INLINE LockRefPtr(NonnullLockRefPtr<U>&& other) requires(IsConvertible<U*, T*>)
+    ALWAYS_INLINE LockRefPtr(NonnullLockRefPtr<U>&& other)
+    requires(IsConvertible<U*, T*>)
         : m_bits(PtrTraits::as_bits(&other.leak_ref()))
     {
         VERIFY(!is_null());
     }
     template<typename U, typename P = LockRefPtrTraits<U>>
-    LockRefPtr(LockRefPtr<U, P>&& other) requires(IsConvertible<U*, T*>)
+    LockRefPtr(LockRefPtr<U, P>&& other)
+    requires(IsConvertible<U*, T*>)
         : m_bits(PtrTraits::template convert_from<U, P>(other.leak_ref_raw()))
     {
     }
@@ -176,7 +179,8 @@ public:
     {
     }
     template<typename U, typename P = LockRefPtrTraits<U>>
-    LockRefPtr(LockRefPtr<U, P> const& other) requires(IsConvertible<U*, T*>)
+    LockRefPtr(LockRefPtr<U, P> const& other)
+    requires(IsConvertible<U*, T*>)
         : m_bits(other.add_ref_raw())
     {
     }
@@ -205,7 +209,8 @@ public:
     }
 
     template<typename U, typename P = LockRefPtrTraits<U>>
-    void swap(LockRefPtr<U, P>& other) requires(IsConvertible<U*, T*>)
+    void swap(LockRefPtr<U, P>& other)
+    requires(IsConvertible<U*, T*>)
     {
         // NOTE: swap is not atomic!
         FlatPtr other_bits = P::exchange(other.m_bits, P::default_null_value);
@@ -221,14 +226,16 @@ public:
     }
 
     template<typename U, typename P = LockRefPtrTraits<U>>
-    ALWAYS_INLINE LockRefPtr& operator=(LockRefPtr<U, P>&& other) requires(IsConvertible<U*, T*>)
+    ALWAYS_INLINE LockRefPtr& operator=(LockRefPtr<U, P>&& other)
+    requires(IsConvertible<U*, T*>)
     {
         assign_raw(PtrTraits::template convert_from<U, P>(other.leak_ref_raw()));
         return *this;
     }
 
     template<typename U>
-    ALWAYS_INLINE LockRefPtr& operator=(NonnullLockRefPtr<U>&& other) requires(IsConvertible<U*, T*>)
+    ALWAYS_INLINE LockRefPtr& operator=(NonnullLockRefPtr<U>&& other)
+    requires(IsConvertible<U*, T*>)
     {
         assign_raw(PtrTraits::as_bits(&other.leak_ref()));
         return *this;
@@ -241,7 +248,8 @@ public:
     }
 
     template<typename U>
-    ALWAYS_INLINE LockRefPtr& operator=(NonnullLockRefPtr<U> const& other) requires(IsConvertible<U*, T*>)
+    ALWAYS_INLINE LockRefPtr& operator=(NonnullLockRefPtr<U> const& other)
+    requires(IsConvertible<U*, T*>)
     {
         assign_raw(PtrTraits::as_bits(other.add_ref()));
         return *this;
@@ -255,20 +263,21 @@ public:
     }
 
     template<typename U>
-    ALWAYS_INLINE LockRefPtr& operator=(LockRefPtr<U> const& other) requires(IsConvertible<U*, T*>)
+    ALWAYS_INLINE LockRefPtr& operator=(LockRefPtr<U> const& other)
+    requires(IsConvertible<U*, T*>)
     {
         assign_raw(other.add_ref_raw());
         return *this;
     }
 
-    ALWAYS_INLINE LockRefPtr& operator=(const T* ptr)
+    ALWAYS_INLINE LockRefPtr& operator=(T const* ptr)
     {
         ref_if_not_null(const_cast<T*>(ptr));
         assign_raw(PtrTraits::as_bits(const_cast<T*>(ptr)));
         return *this;
     }
 
-    ALWAYS_INLINE LockRefPtr& operator=(const T& object)
+    ALWAYS_INLINE LockRefPtr& operator=(T const& object)
     {
         const_cast<T&>(object).ref();
         assign_raw(PtrTraits::as_bits(const_cast<T*>(&object)));
@@ -317,14 +326,14 @@ public:
     }
 
     ALWAYS_INLINE T* ptr() { return as_ptr(); }
-    ALWAYS_INLINE const T* ptr() const { return as_ptr(); }
+    ALWAYS_INLINE T const* ptr() const { return as_ptr(); }
 
     ALWAYS_INLINE T* operator->()
     {
         return as_nonnull_ptr();
     }
 
-    ALWAYS_INLINE const T* operator->() const
+    ALWAYS_INLINE T const* operator->() const
     {
         return as_nonnull_ptr();
     }
@@ -334,12 +343,12 @@ public:
         return *as_nonnull_ptr();
     }
 
-    ALWAYS_INLINE const T& operator*() const
+    ALWAYS_INLINE T const& operator*() const
     {
         return *as_nonnull_ptr();
     }
 
-    ALWAYS_INLINE operator const T*() const { return as_ptr(); }
+    ALWAYS_INLINE operator T const*() const { return as_ptr(); }
     ALWAYS_INLINE operator T*() { return as_ptr(); }
 
     ALWAYS_INLINE operator bool() { return !is_null(); }
@@ -353,8 +362,8 @@ public:
     bool operator==(LockRefPtr& other) { return as_ptr() == other.as_ptr(); }
     bool operator!=(LockRefPtr& other) { return as_ptr() != other.as_ptr(); }
 
-    bool operator==(const T* other) const { return as_ptr() == other; }
-    bool operator!=(const T* other) const { return as_ptr() != other; }
+    bool operator==(T const* other) const { return as_ptr() == other; }
+    bool operator!=(T const* other) const { return as_ptr() != other; }
 
     bool operator==(T* other) { return as_ptr() == other; }
     bool operator!=(T* other) { return as_ptr() != other; }
@@ -363,7 +372,7 @@ public:
 
     template<typename U = T>
     typename PtrTraits::NullType null_value() const
-        requires(IsSame<U, T> && !IsNullPointer<typename PtrTraits::NullType>)
+    requires(IsSame<U, T> && !IsNullPointer<typename PtrTraits::NullType>)
     {
         // make sure we are holding a null value
         FlatPtr bits = m_bits.load(AK::MemoryOrder::memory_order_relaxed);
@@ -371,7 +380,8 @@ public:
         return PtrTraits::to_null_value(bits);
     }
     template<typename U = T>
-    void set_null_value(typename PtrTraits::NullType value) requires(IsSame<U, T> && !IsNullPointer<typename PtrTraits::NullType>)
+    void set_null_value(typename PtrTraits::NullType value)
+    requires(IsSame<U, T> && !IsNullPointer<typename PtrTraits::NullType>)
     {
         // make sure that new null value would be interpreted as a null value
         FlatPtr bits = PtrTraits::from_null_value(value);
@@ -445,17 +455,17 @@ private:
 };
 
 template<typename T>
-struct Formatter<LockRefPtr<T>> : Formatter<const T*> {
+struct Formatter<LockRefPtr<T>> : Formatter<T const*> {
     ErrorOr<void> format(FormatBuilder& builder, LockRefPtr<T> const& value)
     {
-        return Formatter<const T*>::format(builder, value.ptr());
+        return Formatter<T const*>::format(builder, value.ptr());
     }
 };
 
 template<typename T>
 struct Traits<LockRefPtr<T>> : public GenericTraits<LockRefPtr<T>> {
     using PeekType = T*;
-    using ConstPeekType = const T*;
+    using ConstPeekType = T const*;
     static unsigned hash(LockRefPtr<T> const& p) { return ptr_hash(p.ptr()); }
     static bool equals(LockRefPtr<T> const& a, LockRefPtr<T> const& b) { return a.ptr() == b.ptr(); }
 };
@@ -463,17 +473,18 @@ struct Traits<LockRefPtr<T>> : public GenericTraits<LockRefPtr<T>> {
 template<typename T, typename U>
 inline NonnullLockRefPtr<T> static_ptr_cast(NonnullLockRefPtr<U> const& ptr)
 {
-    return NonnullLockRefPtr<T>(static_cast<const T&>(*ptr));
+    return NonnullLockRefPtr<T>(static_cast<T const&>(*ptr));
 }
 
 template<typename T, typename U, typename PtrTraits = LockRefPtrTraits<T>>
 inline LockRefPtr<T> static_ptr_cast(LockRefPtr<U> const& ptr)
 {
-    return LockRefPtr<T, PtrTraits>(static_cast<const T*>(ptr.ptr()));
+    return LockRefPtr<T, PtrTraits>(static_cast<T const*>(ptr.ptr()));
 }
 
 template<typename T, typename PtrTraitsT, typename U, typename PtrTraitsU>
-inline void swap(LockRefPtr<T, PtrTraitsT>& a, LockRefPtr<U, PtrTraitsU>& b) requires(IsConvertible<U*, T*>)
+inline void swap(LockRefPtr<T, PtrTraitsT>& a, LockRefPtr<U, PtrTraitsU>& b)
+requires(IsConvertible<U*, T*>)
 {
     a.swap(b);
 }

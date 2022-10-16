@@ -29,7 +29,8 @@ public:
     }
 
     template<IsObject T>
-    Value(NonnullRefPtr<T> const& refptr) requires(!IsSame<Object, T>)
+    Value(NonnullRefPtr<T> const& refptr)
+    requires(!IsSame<Object, T>)
         : Variant(nullptr)
     {
         set<NonnullRefPtr<Object>>(*refptr);

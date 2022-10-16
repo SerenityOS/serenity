@@ -136,7 +136,7 @@ public:
 
     template<typename U>
     requires(!IsSame<T, U>)
-        [[nodiscard]] ALWAYS_INLINE constexpr Line<U> to_type() const
+    [[nodiscard]] ALWAYS_INLINE constexpr Line<U> to_type() const
     {
         return Line<U>(*this);
     }

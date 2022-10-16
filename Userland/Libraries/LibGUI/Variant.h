@@ -42,12 +42,14 @@ public:
     }
 
     template<typename T>
-    Variant(T&& value) requires(IsConstructible<String, T>)
+    Variant(T&& value)
+    requires(IsConstructible<String, T>)
         : Variant(String(forward<T>(value)))
     {
     }
     template<typename T>
-    Variant& operator=(T&& v) requires(IsConstructible<String, T>)
+    Variant& operator=(T&& v)
+    requires(IsConstructible<String, T>)
     {
         set(String(v));
         return *this;

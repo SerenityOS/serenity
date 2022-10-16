@@ -50,7 +50,7 @@ struct __RemoveConst {
     using Type = T;
 };
 template<class T>
-struct __RemoveConst<const T> {
+struct __RemoveConst<T const> {
     using Type = T;
 };
 template<class T>
@@ -62,7 +62,7 @@ struct __RemoveVolatile {
 };
 
 template<class T>
-struct __RemoveVolatile<volatile T> {
+struct __RemoveVolatile<T volatile> {
     using Type = T;
 };
 
@@ -125,9 +125,9 @@ inline constexpr bool IsFunction<Ret(Args...) const volatile&> = true;
 template<class Ret, class... Args>
 inline constexpr bool IsFunction<Ret(Args..., ...) const volatile&> = true;
 template<class Ret, class... Args>
-inline constexpr bool IsFunction<Ret(Args...) &&> = true;
+inline constexpr bool IsFunction<Ret(Args...)&&> = true;
 template<class Ret, class... Args>
-inline constexpr bool IsFunction<Ret(Args..., ...) &&> = true;
+inline constexpr bool IsFunction<Ret(Args..., ...)&&> = true;
 template<class Ret, class... Args>
 inline constexpr bool IsFunction<Ret(Args...) const&&> = true;
 template<class Ret, class... Args>
@@ -373,7 +373,7 @@ template<class T>
 inline constexpr bool IsConst = false;
 
 template<class T>
-inline constexpr bool IsConst<const T> = true;
+inline constexpr bool IsConst<T const> = true;
 
 template<typename T>
 inline constexpr bool IsEnum = __is_enum(T);
@@ -597,7 +597,7 @@ template<typename T>
 using Decay = typename __Decay<T>::type;
 
 template<typename T, typename U>
-inline constexpr bool IsPointerOfType = IsPointer<Decay<U>>&& IsSame<T, RemoveCV<RemovePointer<Decay<U>>>>;
+inline constexpr bool IsPointerOfType = IsPointer<Decay<U>> && IsSame<T, RemoveCV<RemovePointer<Decay<U>>>>;
 
 template<typename T, typename U>
 inline constexpr bool IsHashCompatible = false;

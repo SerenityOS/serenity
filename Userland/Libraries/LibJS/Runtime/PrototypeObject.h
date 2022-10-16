@@ -17,7 +17,10 @@ namespace JS {
 #define JS_PROTOTYPE_OBJECT(prototype_class, object_class, display_name_) \
     using Prototype = PrototypeObject<prototype_class, object_class>;     \
     JS_OBJECT(prototype_class, Prototype)                                 \
-    static constexpr StringView display_name() { return #display_name_##sv; }
+    static constexpr StringView display_name()                            \
+    {                                                                     \
+        return #display_name_##sv;                                        \
+    }
 
 template<typename PrototypeType, typename ObjectType>
 class PrototypeObject : public Object {

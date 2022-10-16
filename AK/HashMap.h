@@ -48,14 +48,14 @@ public:
     void clear() { m_table.clear(); }
     void clear_with_capacity() { m_table.clear_with_capacity(); }
 
-    HashSetResult set(const K& key, const V& value) { return m_table.set({ key, value }); }
-    HashSetResult set(const K& key, V&& value) { return m_table.set({ key, move(value) }); }
+    HashSetResult set(K const& key, V const& value) { return m_table.set({ key, value }); }
+    HashSetResult set(K const& key, V&& value) { return m_table.set({ key, move(value) }); }
     HashSetResult set(K&& key, V&& value) { return m_table.set({ move(key), move(value) }); }
-    ErrorOr<HashSetResult> try_set(const K& key, const V& value) { return m_table.try_set({ key, value }); }
-    ErrorOr<HashSetResult> try_set(const K& key, V&& value) { return m_table.try_set({ key, move(value) }); }
+    ErrorOr<HashSetResult> try_set(K const& key, V const& value) { return m_table.try_set({ key, value }); }
+    ErrorOr<HashSetResult> try_set(K const& key, V&& value) { return m_table.try_set({ key, move(value) }); }
     ErrorOr<HashSetResult> try_set(K&& key, V&& value) { return m_table.try_set({ move(key), move(value) }); }
 
-    bool remove(const K& key)
+    bool remove(K const& key)
     {
         auto it = find(key);
         if (it != end()) {
@@ -90,7 +90,7 @@ public:
 
     [[nodiscard]] IteratorType begin() { return m_table.begin(); }
     [[nodiscard]] IteratorType end() { return m_table.end(); }
-    [[nodiscard]] IteratorType find(const K& key)
+    [[nodiscard]] IteratorType find(K const& key)
     {
         return m_table.find(KeyTraits::hash(key), [&](auto& entry) { return KeyTraits::equals(key, entry.key); });
     }
@@ -102,7 +102,7 @@ public:
 
     [[nodiscard]] ConstIteratorType begin() const { return m_table.begin(); }
     [[nodiscard]] ConstIteratorType end() const { return m_table.end(); }
-    [[nodiscard]] ConstIteratorType find(const K& key) const
+    [[nodiscard]] ConstIteratorType find(K const& key) const
     {
         return m_table.find(KeyTraits::hash(key), [&](auto& entry) { return KeyTraits::equals(key, entry.key); });
     }
@@ -127,7 +127,8 @@ public:
     void ensure_capacity(size_t capacity) { m_table.ensure_capacity(capacity); }
     ErrorOr<void> try_ensure_capacity(size_t capacity) { return m_table.try_ensure_capacity(capacity); }
 
-    Optional<typename Traits<V>::ConstPeekType> get(const K& key) const requires(!IsPointer<typename Traits<V>::PeekType>)
+    Optional<typename Traits<V>::ConstPeekType> get(K const& key) const
+    requires(!IsPointer<typename Traits<V>::PeekType>)
     {
         auto it = find(key);
         if (it == end())
@@ -135,7 +136,8 @@ public:
         return (*it).value;
     }
 
-    Optional<typename Traits<V>::ConstPeekType> get(const K& key) const requires(IsPointer<typename Traits<V>::PeekType>)
+    Optional<typename Traits<V>::ConstPeekType> get(K const& key) const
+    requires(IsPointer<typename Traits<V>::PeekType>)
     {
         auto it = find(key);
         if (it == end())
@@ -143,7 +145,8 @@ public:
         return (*it).value;
     }
 
-    Optional<typename Traits<V>::PeekType> get(const K& key) requires(!IsConst<typename Traits<V>::PeekType>)
+    Optional<typename Traits<V>::PeekType> get(K const& key)
+    requires(!IsConst<typename Traits<V>::PeekType>)
     {
         auto it = find(key);
         if (it == end())
@@ -153,7 +156,8 @@ public:
 
     template<Concepts::HashCompatible<K> Key>
     requires(IsSame<KeyTraits, Traits<K>>) Optional<typename Traits<V>::PeekType> get(Key const& key)
-    const requires(!IsPointer<typename Traits<V>::PeekType>)
+        const
+    requires(!IsPointer<typename Traits<V>::PeekType>)
     {
         auto it = find(key);
         if (it == end())
@@ -163,7 +167,8 @@ public:
 
     template<Concepts::HashCompatible<K> Key>
     requires(IsSame<KeyTraits, Traits<K>>) Optional<typename Traits<V>::ConstPeekType> get(Key const& key)
-    const requires(IsPointer<typename Traits<V>::PeekType>)
+        const
+    requires(IsPointer<typename Traits<V>::PeekType>)
     {
         auto it = find(key);
         if (it == end())
@@ -181,7 +186,7 @@ public:
         return (*it).value;
     }
 
-    [[nodiscard]] bool contains(const K& key) const
+    [[nodiscard]] bool contains(K const& key) const
     {
         return find(key) != end();
     }
@@ -197,7 +202,7 @@ public:
         m_table.remove(it);
     }
 
-    V& ensure(const K& key)
+    V& ensure(K const& key)
     {
         auto it = find(key);
         if (it != end())

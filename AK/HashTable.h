@@ -115,7 +115,7 @@ class HashTable {
         alignas(T) u8 storage[sizeof(T)];
 
         T* slot() { return reinterpret_cast<T*>(storage); }
-        const T* slot() const { return reinterpret_cast<const T*>(storage); }
+        T const* slot() const { return reinterpret_cast<T const*>(storage); }
     };
 
     struct OrderedBucket {
@@ -124,7 +124,7 @@ class HashTable {
         BucketState state;
         alignas(T) u8 storage[sizeof(T)];
         T* slot() { return reinterpret_cast<T*>(storage); }
-        const T* slot() const { return reinterpret_cast<const T*>(storage); }
+        T const* slot() const { return reinterpret_cast<T const*>(storage); }
     };
 
     using BucketType = Conditional<IsOrdered, OrderedBucket, Bucket>;
@@ -265,8 +265,8 @@ public:
     }
 
     using ConstIterator = Conditional<IsOrdered,
-        OrderedHashTableIterator<const HashTable, const T, const BucketType>,
-        HashTableIterator<const HashTable, const T, const BucketType>>;
+        OrderedHashTableIterator<const HashTable, const T, BucketType const>,
+        HashTableIterator<const HashTable, const T, BucketType const>>;
 
     [[nodiscard]] ConstIterator begin() const
     {
@@ -389,7 +389,7 @@ public:
         return find(Traits<K>::hash(value), move(predicate));
     }
 
-    bool remove(const T& value)
+    bool remove(T const& value)
     {
         auto it = find(value);
         if (it != end()) {

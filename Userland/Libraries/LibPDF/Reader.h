@@ -54,7 +54,7 @@ public:
     template<typename T = char>
     T read()
     {
-        T value = reinterpret_cast<const T*>(m_bytes.offset(m_offset))[0];
+        T value = reinterpret_cast<T const*>(m_bytes.offset(m_offset))[0];
         move_by(sizeof(T));
         return value;
     }

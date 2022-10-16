@@ -22,7 +22,7 @@ public:
         m_variable = m_saved_value;
     }
 
-    void set_override_rollback_value(const T& value)
+    void set_override_rollback_value(T const& value)
     {
         m_saved_value = value;
     }

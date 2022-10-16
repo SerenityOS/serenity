@@ -27,7 +27,7 @@ public:
     // This constructor accepts any unsigned with size up to Word.
     template<typename T>
     requires(IsIntegral<T> && sizeof(T) <= sizeof(Word))
-        UnsignedBigInteger(T value)
+    UnsignedBigInteger(T value)
     {
         m_words.append(static_cast<Word>(value));
     }

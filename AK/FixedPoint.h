@@ -157,12 +157,14 @@ public:
         return y;
     }
 
-    constexpr bool signbit() const requires(IsSigned<Underlying>)
+    constexpr bool signbit() const
+    requires(IsSigned<Underlying>)
     {
         return m_value >> (sizeof(Underlying) * 8 - 1);
     }
 
-    constexpr This operator-() const requires(IsSigned<Underlying>)
+    constexpr This operator-() const
+    requires(IsSigned<Underlying>)
     {
         return create_raw(-m_value);
     }

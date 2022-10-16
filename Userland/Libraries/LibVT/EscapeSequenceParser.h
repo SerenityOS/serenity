@@ -20,9 +20,9 @@ public:
     virtual ~EscapeSequenceExecutor() = default;
 
     using Parameters = Span<unsigned const>;
-    using Intermediates = Span<const u8>;
-    using OscParameter = Span<const u8>;
-    using OscParameters = Span<const OscParameter>;
+    using Intermediates = Span<u8 const>;
+    using OscParameter = Span<u8 const>;
+    using OscParameters = Span<OscParameter const>;
 
     virtual void emit_code_point(u32) = 0;
     virtual void execute_control_code(u8) = 0;

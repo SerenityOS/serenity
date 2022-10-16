@@ -52,13 +52,13 @@ public:
         return m_elements[index].value;
     }
 
-    [[nodiscard]] const V& peek_min() const
+    [[nodiscard]] V const& peek_min() const
     {
         VERIFY(!is_empty());
         return m_elements[0].value;
     }
 
-    [[nodiscard]] const K& peek_min_key() const
+    [[nodiscard]] K const& peek_min_key() const
     {
         VERIFY(!is_empty());
         return m_elements[0].key;

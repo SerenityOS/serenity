@@ -75,13 +75,15 @@ private:
 template<typename T, typename ErrorType>
 class [[nodiscard]] ErrorOr {
 public:
-    ErrorOr() requires(IsSame<T, Empty>)
+    ErrorOr()
+    requires(IsSame<T, Empty>)
         : m_value_or_error(Empty {})
     {
     }
 
     template<typename U>
-    ALWAYS_INLINE ErrorOr(U&& value) requires(!IsSame<RemoveCVReference<U>, ErrorOr<T, ErrorType>>)
+    ALWAYS_INLINE ErrorOr(U&& value)
+    requires(!IsSame<RemoveCVReference<U>, ErrorOr<T, ErrorType>>)
         : m_value_or_error(forward<U>(value))
     {
     }

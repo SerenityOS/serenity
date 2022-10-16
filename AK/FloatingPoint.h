@@ -90,7 +90,7 @@ public:
     static const size_t mantissabits = M;
 
     template<typename T>
-    requires(IsIntegral<T>&& IsUnsigned<T> && sizeof(T) <= 8) constexpr FloatingPointBits(T bits)
+    requires(IsIntegral<T> && IsUnsigned<T> && sizeof(T) <= 8) constexpr FloatingPointBits(T bits)
         : m_bits(bits)
     {
     }
@@ -105,8 +105,16 @@ public:
     {
     }
 
-    double as_double() const requires(S == 1 && E == 11 && M == 52) { return bit_cast<double>(m_bits); }
-    float as_float() const requires(S == 1 && E == 8 && M == 23) { return bit_cast<float>(static_cast<u32>(m_bits)); }
+    double as_double() const
+    requires(S == 1 && E == 11 && M == 52)
+    {
+        return bit_cast<double>(m_bits);
+    }
+    float as_float() const
+    requires(S == 1 && E == 8 && M == 23)
+    {
+        return bit_cast<float>(static_cast<u32>(m_bits));
+    }
     u64 bits() const { return m_bits; }
 
 private:

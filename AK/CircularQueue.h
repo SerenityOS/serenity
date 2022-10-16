@@ -63,11 +63,11 @@ public:
         return value;
     }
 
-    const T& at(size_t index) const { return elements()[(m_head + index) % Capacity]; }
+    T const& at(size_t index) const { return elements()[(m_head + index) % Capacity]; }
     T& at(size_t index) { return elements()[(m_head + index) % Capacity]; }
 
-    const T& first() const { return at(0); }
-    const T& last() const { return at(size() - 1); }
+    T const& first() const { return at(0); }
+    T const& last() const { return at(size() - 1); }
 
     class ConstIterator {
     public:
@@ -78,7 +78,7 @@ public:
             return *this;
         }
 
-        const T& operator*() const { return m_queue.at(m_index); }
+        T const& operator*() const { return m_queue.at(m_index); }
 
     private:
         friend class CircularQueue;
@@ -123,7 +123,7 @@ public:
 
 protected:
     T* elements() { return reinterpret_cast<T*>(m_storage); }
-    const T* elements() const { return reinterpret_cast<const T*>(m_storage); }
+    T const* elements() const { return reinterpret_cast<T const*>(m_storage); }
 
     friend class ConstIterator;
     alignas(T) u8 m_storage[sizeof(T) * Capacity];

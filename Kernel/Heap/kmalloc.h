@@ -13,17 +13,23 @@
 #define KMALLOC_SCRUB_BYTE 0xbb
 #define KFREE_SCRUB_BYTE 0xaa
 
-#define MAKE_ALIGNED_ALLOCATED(type, alignment)                                                                                   \
-public:                                                                                                                           \
-    [[nodiscard]] void* operator new(size_t)                                                                                      \
-    {                                                                                                                             \
-        void* ptr = kmalloc_aligned(sizeof(type), alignment);                                                                     \
-        VERIFY(ptr);                                                                                                              \
-        return ptr;                                                                                                               \
-    }                                                                                                                             \
-    [[nodiscard]] void* operator new(size_t, std::nothrow_t const&) noexcept { return kmalloc_aligned(sizeof(type), alignment); } \
-    void operator delete(void* ptr) noexcept { kfree_aligned(ptr); }                                                              \
-                                                                                                                                  \
+#define MAKE_ALIGNED_ALLOCATED(type, alignment)                              \
+public:                                                                      \
+    [[nodiscard]] void* operator new(size_t)                                 \
+    {                                                                        \
+        void* ptr = kmalloc_aligned(sizeof(type), alignment);                \
+        VERIFY(ptr);                                                         \
+        return ptr;                                                          \
+    }                                                                        \
+    [[nodiscard]] void* operator new(size_t, std::nothrow_t const&) noexcept \
+    {                                                                        \
+        return kmalloc_aligned(sizeof(type), alignment);                     \
+    }                                                                        \
+    void operator delete(void* ptr) noexcept                                 \
+    {                                                                        \
+        kfree_aligned(ptr);                                                  \
+    }                                                                        \
+                                                                             \
 private:
 
 // The C++ standard specifies that the nothrow allocation tag should live in the std namespace.

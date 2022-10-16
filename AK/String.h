@@ -283,7 +283,8 @@ public:
     }
 
     template<typename T>
-    [[nodiscard]] static String number(T value) requires IsArithmetic<T>
+    [[nodiscard]] static String number(T value)
+    requires IsArithmetic<T>
     {
         return formatted("{}", value);
     }

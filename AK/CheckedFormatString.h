@@ -27,9 +27,9 @@ namespace AK::Format::Detail {
 template<typename T, size_t Size>
 struct Array {
     constexpr static size_t size() { return Size; }
-    constexpr const T& operator[](size_t index) const { return __data[index]; }
+    constexpr T const& operator[](size_t index) const { return __data[index]; }
     constexpr T& operator[](size_t index) { return __data[index]; }
-    using ConstIterator = SimpleIterator<const Array, const T>;
+    using ConstIterator = SimpleIterator<const Array, T const>;
     using Iterator = SimpleIterator<Array, T>;
 
     constexpr ConstIterator begin() const { return ConstIterator::begin(*this); }
@@ -155,7 +155,8 @@ struct CheckedFormatString {
     }
 
     template<typename T>
-    CheckedFormatString(const T& unchecked_fmt) requires(requires(T t) { StringView { t }; })
+    CheckedFormatString(T const& unchecked_fmt)
+    requires(requires(T t) { StringView { t }; })
         : m_string(unchecked_fmt)
     {
     }
