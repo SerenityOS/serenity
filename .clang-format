@@ -12,3 +12,5 @@ BraceWrapping:
     AfterFunction: true
 NamespaceIndentation: None
 QualifierAlignment: Right
+RequiresClausePosition: WithFollowing
+IndentRequiresClause: false
