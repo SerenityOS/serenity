@@ -14,16 +14,9 @@ fi
 
 set -e
 
-SUDO="sudo"
+SCRIPT_DIR="$(dirname "${0}")"
 
-if [ "$(uname -s)" = "SerenityOS" ]; then
-    SUDO="pls"
-fi
-
-die() {
-    echo "die: $*"
-    exit 1
-}
+. "${SCRIPT_DIR}/.shell_include.sh"
 
 USE_FUSE2FS=0
 
@@ -66,7 +59,6 @@ else
     fi
 fi
 
-SCRIPT_DIR="$(dirname "${0}")"
 
 # Prepend the toolchain qemu directory so we pick up QEMU from there
 PATH="$SCRIPT_DIR/../Toolchain/Local/qemu/bin:$PATH"

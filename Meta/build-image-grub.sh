@@ -2,16 +2,9 @@
 
 set -e
 
-SUDO="sudo"
+script_path=$(cd -P -- "$(dirname -- "$0")" && pwd -P)
 
-if [ "$(uname -s)" = "SerenityOS" ]; then
-    SUDO="pls"
-fi
-
-die() {
-    echo "die: $*"
-    exit 1
-}
+. "${script_path}/.shell_include.sh"
 
 if [ "$(id -u)" != 0 ]; then
     set +e
@@ -116,7 +109,6 @@ mkdir -p mnt
 mount "${dev}${partition_number}" mnt/ || die "couldn't mount filesystem"
 echo "done"
 
-script_path=$(cd -P -- "$(dirname -- "$0")" && pwd -P)
 "$script_path/build-root-filesystem.sh"
 
 if [ -z "$2" ]; then

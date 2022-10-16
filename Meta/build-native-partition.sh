@@ -2,16 +2,9 @@
 
 set -e
 
-SUDO="sudo"
+script_path=$(cd -P -- "$(dirname -- "$0")" && pwd -P)
 
-if [ "$(uname -s)" = "SerenityOS" ]; then
-    SUDO="pls"
-fi
-
-die() {
-    echo "die: $*"
-    exit 1
-}
+. "${script_path}/.shell_include.sh"
 
 cleanup() {
     if [ -d mnt ]; then
@@ -60,5 +53,4 @@ else
     echo "done"
 fi
 
-script_path=$(cd -P -- "$(dirname -- "$0")" && pwd -P)
 "$script_path/build-root-filesystem.sh"
