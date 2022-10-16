@@ -58,6 +58,7 @@ private:
     ErrorOr<JsonValue, HttpError> handle_forward(Vector<StringView>, JsonValue const& payload);
     ErrorOr<JsonValue, HttpError> handle_get_all_cookies(Vector<StringView>, JsonValue const& payload);
     ErrorOr<JsonValue, HttpError> handle_get_named_cookie(Vector<StringView>, JsonValue const& payload);
+    ErrorOr<JsonValue, HttpError> handle_delete_all_cookies(Vector<StringView>, JsonValue const& payload);
 
     ErrorOr<Session*, HttpError> find_session_with_id(StringView session_id);
     JsonValue make_json_value(JsonValue const&);

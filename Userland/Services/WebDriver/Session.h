@@ -42,8 +42,11 @@ public:
     ErrorOr<JsonValue, HttpError> forward();
     ErrorOr<JsonValue, HttpError> get_all_cookies();
     ErrorOr<JsonValue, HttpError> get_named_cookie(String const& name);
+    ErrorOr<JsonValue, HttpError> delete_all_cookies();
 
 private:
+    void delete_cookies(Optional<StringView> const& name = {});
+
     NonnullRefPtr<Client> m_client;
     bool m_started { false };
     unsigned m_id { 0 };
