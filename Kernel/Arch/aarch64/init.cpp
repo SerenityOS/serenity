@@ -158,7 +158,7 @@ extern "C" [[noreturn]] void init()
     for (;;)
         asm volatile("wfi");
 
-    VERIFY_NOT_REACHED();
+    TODO_AARCH64();
 }
 
 class QueryFirmwareVersionMboxMessage : RPi::Mailbox::Message {

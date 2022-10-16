@@ -13,7 +13,7 @@ namespace Kernel {
 
 void handle_crash(Kernel::RegisterState const&, char const*, int, bool)
 {
-    VERIFY_NOT_REACHED();
+    TODO_AARCH64();
 }
 
 }

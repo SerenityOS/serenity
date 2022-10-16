@@ -31,7 +31,7 @@ namespace Kernel {
 
 void get_fast_random_bytes(Bytes)
 {
-    VERIFY_NOT_REACHED();
+    TODO_AARCH64();
 }
 
 }
@@ -41,12 +41,12 @@ namespace Kernel {
 
 void Mutex::lock(Mode, [[maybe_unused]] LockLocation const& location)
 {
-    VERIFY_NOT_REACHED();
+    TODO_AARCH64();
 }
 
 void Mutex::unlock()
 {
-    VERIFY_NOT_REACHED();
+    TODO_AARCH64();
 }
 
 }
@@ -56,7 +56,7 @@ namespace Kernel {
 
 SpinlockProtected<Process::List>& Process::all_instances()
 {
-    VERIFY_NOT_REACHED();
+    TODO_AARCH64();
 }
 
 }
@@ -76,36 +76,36 @@ static Singleton<SpinlockProtected<Inode::AllInstancesList>> s_all_instances;
 
 SpinlockProtected<Inode::AllInstancesList>& Inode::all_instances()
 {
-    VERIFY_NOT_REACHED();
+    TODO_AARCH64();
     return s_all_instances;
 }
 
 LockRefPtr<Memory::SharedInodeVMObject> Inode::shared_vmobject() const
 {
-    VERIFY_NOT_REACHED();
+    TODO_AARCH64();
     return LockRefPtr<Memory::SharedInodeVMObject>(nullptr);
 }
 
 void Inode::will_be_destroyed()
 {
-    VERIFY_NOT_REACHED();
+    TODO_AARCH64();
 }
 
 ErrorOr<void> Inode::set_shared_vmobject(Memory::SharedInodeVMObject&)
 {
-    VERIFY_NOT_REACHED();
+    TODO_AARCH64();
     return {};
 }
 
 ErrorOr<size_t> Inode::read_bytes(off_t, size_t, UserOrKernelBuffer&, OpenFileDescription*) const
 {
-    VERIFY_NOT_REACHED();
+    TODO_AARCH64();
     return 0;
 }
 
 ErrorOr<size_t> Inode::write_bytes(off_t, size_t, UserOrKernelBuffer const&, OpenFileDescription*)
 {
-    VERIFY_NOT_REACHED();
+    TODO_AARCH64();
     return 0;
 }
 
