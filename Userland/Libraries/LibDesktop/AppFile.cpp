@@ -82,6 +82,11 @@ String AppFile::category() const
     return m_config->read_entry("App", "Category").trim_whitespace();
 }
 
+String AppFile::working_directory() const
+{
+    return m_config->read_entry("App", "WorkingDirectory").trim_whitespace();
+}
+
 String AppFile::icon_path() const
 {
     return m_config->read_entry("App", "IconPath").trim_whitespace();
@@ -145,7 +150,7 @@ bool AppFile::spawn() const
     if (!is_valid())
         return false;
 
-    auto pid = Core::Process::spawn(executable());
+    auto pid = Core::Process::spawn(executable(), Span<String const> {}, working_directory());
     if (pid.is_error())
         return false;
 

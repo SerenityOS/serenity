@@ -88,6 +88,7 @@ struct AppMetadata {
     String executable;
     String name;
     String category;
+    String working_directory;
     GUI::Icon icon;
     bool run_in_terminal;
 };
@@ -104,7 +105,7 @@ ErrorOr<Vector<String>> discover_apps_and_categories()
     HashTable<String> seen_app_categories;
     Desktop::AppFile::for_each([&](auto af) {
         if (access(af->executable().characters(), X_OK) == 0) {
-            g_apps.append({ af->executable(), af->name(), af->category(), af->icon(), af->run_in_terminal() });
+            g_apps.append({ af->executable(), af->name(), af->category(), af->working_directory(), af->icon(), af->run_in_terminal() });
             seen_app_categories.set(af->category());
         }
     });
@@ -202,7 +203,10 @@ ErrorOr<NonnullRefPtr<GUI::Menu>> build_system_menu(WindowRefence& window_ref)
             posix_spawn_file_actions_t spawn_actions;
             posix_spawn_file_actions_init(&spawn_actions);
             auto home_directory = Core::StandardPaths::home_directory();
-            posix_spawn_file_actions_addchdir(&spawn_actions, home_directory.characters());
+            if (app.working_directory.is_empty())
+                posix_spawn_file_actions_addchdir(&spawn_actions, home_directory.characters());
+            else
+                posix_spawn_file_actions_addchdir(&spawn_actions, app.working_directory.characters());
 
             pid_t child_pid;
             if ((errno = posix_spawn(&child_pid, argv[0], &spawn_actions, nullptr, const_cast<char**>(argv), environ))) {
