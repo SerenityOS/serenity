@@ -26,6 +26,7 @@ extern "C" {
 }
 
 #define TODO() __assertion_failed("TODO", __FILE__, __LINE__, __PRETTY_FUNCTION__)
+#define TODO_AARCH64() __assertion_failed("TODO_AARCH64", __FILE__, __LINE__, __PRETTY_FUNCTION__)
 
 #define VERIFY_INTERRUPTS_DISABLED() VERIFY(!(Processor::are_interrupts_enabled()))
 #define VERIFY_INTERRUPTS_ENABLED() VERIFY(Processor::are_interrupts_enabled())

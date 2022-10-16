@@ -52,22 +52,22 @@ public:
 
     ALWAYS_INLINE static void pause()
     {
-        VERIFY_NOT_REACHED();
+        TODO_AARCH64();
     }
     ALWAYS_INLINE static void wait_check()
     {
-        VERIFY_NOT_REACHED();
+        TODO_AARCH64();
     }
 
     ALWAYS_INLINE u8 physical_address_bit_width() const
     {
-        VERIFY_NOT_REACHED();
+        TODO_AARCH64();
         return 0;
     }
 
     ALWAYS_INLINE u8 virtual_address_bit_width() const
     {
-        VERIFY_NOT_REACHED();
+        TODO_AARCH64();
         return 0;
     }
 
@@ -103,13 +103,13 @@ public:
 
     ALWAYS_INLINE static FlatPtr current_in_irq()
     {
-        VERIFY_NOT_REACHED();
+        TODO_AARCH64();
         return 0;
     }
 
     ALWAYS_INLINE static u64 read_cpu_counter()
     {
-        VERIFY_NOT_REACHED();
+        TODO_AARCH64();
         return 0;
     }
 
@@ -165,7 +165,7 @@ public:
 
     static void deferred_call_queue(Function<void()> /* callback */)
     {
-        VERIFY_NOT_REACHED();
+        TODO_AARCH64();
     }
 
     [[noreturn]] static void halt();

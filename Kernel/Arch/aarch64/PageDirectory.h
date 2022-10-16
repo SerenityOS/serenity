@@ -60,25 +60,25 @@ public:
     bool is_present() const { return (raw() & Present) == Present; }
     void set_present(bool) { }
 
-    bool is_user_allowed() const { VERIFY_NOT_REACHED(); }
+    bool is_user_allowed() const { TODO_AARCH64(); }
     void set_user_allowed(bool) { }
 
-    bool is_huge() const { VERIFY_NOT_REACHED(); }
+    bool is_huge() const { TODO_AARCH64(); }
     void set_huge(bool) { }
 
-    bool is_writable() const { VERIFY_NOT_REACHED(); }
+    bool is_writable() const { TODO_AARCH64(); }
     void set_writable(bool) { }
 
-    bool is_write_through() const { VERIFY_NOT_REACHED(); }
+    bool is_write_through() const { TODO_AARCH64(); }
     void set_write_through(bool) { }
 
-    bool is_cache_disabled() const { VERIFY_NOT_REACHED(); }
+    bool is_cache_disabled() const { TODO_AARCH64(); }
     void set_cache_disabled(bool) { }
 
-    bool is_global() const { VERIFY_NOT_REACHED(); }
+    bool is_global() const { TODO_AARCH64(); }
     void set_global(bool) { }
 
-    bool is_execute_disabled() const { VERIFY_NOT_REACHED(); }
+    bool is_execute_disabled() const { TODO_AARCH64(); }
     void set_execute_disabled(bool) { }
 
 private:
@@ -116,25 +116,25 @@ public:
     bool is_present() const { return (raw() & Present) == Present; }
     void set_present(bool) { }
 
-    bool is_user_allowed() const { VERIFY_NOT_REACHED(); }
+    bool is_user_allowed() const { TODO_AARCH64(); }
     void set_user_allowed(bool) { }
 
-    bool is_writable() const { VERIFY_NOT_REACHED(); }
+    bool is_writable() const { TODO_AARCH64(); }
     void set_writable(bool) { }
 
-    bool is_write_through() const { VERIFY_NOT_REACHED(); }
+    bool is_write_through() const { TODO_AARCH64(); }
     void set_write_through(bool) { }
 
-    bool is_cache_disabled() const { VERIFY_NOT_REACHED(); }
+    bool is_cache_disabled() const { TODO_AARCH64(); }
     void set_cache_disabled(bool) { }
 
-    bool is_global() const { VERIFY_NOT_REACHED(); }
+    bool is_global() const { TODO_AARCH64(); }
     void set_global(bool) { }
 
-    bool is_execute_disabled() const { VERIFY_NOT_REACHED(); }
+    bool is_execute_disabled() const { TODO_AARCH64(); }
     void set_execute_disabled(bool) { }
 
-    bool is_pat() const { VERIFY_NOT_REACHED(); }
+    bool is_pat() const { TODO_AARCH64(); }
     void set_pat(bool) { }
 
     bool is_null() const { return m_raw == 0; }
