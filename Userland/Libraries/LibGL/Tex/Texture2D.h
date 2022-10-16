@@ -19,10 +19,6 @@ namespace GL {
 
 class Texture2D final : public Texture {
 public:
-    // FIXME: These shouldn't really belong here, they're context specific.
-    static constexpr u16 MAX_TEXTURE_SIZE = 2048;
-    static constexpr u8 LOG2_MAX_TEXTURE_SIZE = AK::log2(MAX_TEXTURE_SIZE);
-
     virtual bool is_texture_2d() const override { return true; }
 
     void download_texture_data(GLuint lod, GPU::ImageDataLayout output_layout, GLvoid* pixels);
