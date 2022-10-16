@@ -98,10 +98,10 @@ struct EnvironmentSettingsObject
     // Returns true if removed, false otherwise.
     bool remove_from_outstanding_rejected_promises_weak_set(JS::Promise*);
 
-    void push_onto_about_to_be_notified_rejected_promises_list(JS::Handle<JS::Promise>);
+    void push_onto_about_to_be_notified_rejected_promises_list(JS::NonnullGCPtr<JS::Promise>);
 
     // Returns true if removed, false otherwise.
-    bool remove_from_about_to_be_notified_rejected_promises_list(JS::Promise*);
+    bool remove_from_about_to_be_notified_rejected_promises_list(JS::NonnullGCPtr<JS::Promise>);
 
     void notify_about_rejected_promises(Badge<EventLoop>);
 
@@ -112,6 +112,8 @@ struct EnvironmentSettingsObject
 
 protected:
     explicit EnvironmentSettingsObject(NonnullOwnPtr<JS::ExecutionContext>);
+
+    virtual void visit_edges(Cell::Visitor&) override;
 
 private:
     NonnullOwnPtr<JS::ExecutionContext> m_realm_execution_context;
@@ -124,7 +126,7 @@ private:
     Vector<JS::Promise*> m_outstanding_rejected_promises_weak_set;
 
     // https://html.spec.whatwg.org/multipage/webappapis.html#about-to-be-notified-rejected-promises-list
-    Vector<JS::Handle<JS::Promise>> m_about_to_be_notified_rejected_promises_list;
+    Vector<JS::NonnullGCPtr<JS::Promise>> m_about_to_be_notified_rejected_promises_list;
 };
 
 EnvironmentSettingsObject& incumbent_settings_object();
