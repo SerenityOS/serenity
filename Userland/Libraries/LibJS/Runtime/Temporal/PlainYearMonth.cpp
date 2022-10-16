@@ -116,8 +116,8 @@ ThrowCompletionOr<ISOYearMonth> regulate_iso_year_month(VM& vm, double year, dou
         if (!AK::is_within_range<i32>(year) || !AK::is_within_range<u8>(month))
             return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidPlainYearMonth);
 
-        // b. If ! IsValidISOMonth(month) is false, throw a RangeError exception.
-        if (!is_valid_iso_month(month))
+        // b. If month < 1 or month > 12, throw a RangeError exception.
+        if (month < 1 || month > 12)
             return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidPlainYearMonth);
 
         // c. Return the Record { [[Year]]: year, [[Month]]: month }.
@@ -125,21 +125,7 @@ ThrowCompletionOr<ISOYearMonth> regulate_iso_year_month(VM& vm, double year, dou
     }
 }
 
-// 9.5.3 IsValidISOMonth ( month ), https://tc39.es/proposal-temporal/#sec-temporal-isvalidisomonth
-bool is_valid_iso_month(u8 month)
-{
-    // 1. Assert: month is an integer.
-    // 2. If month < 1 or month > 12, then
-    if (month < 1 || month > 12) {
-        // a.Return false.
-        return false;
-    }
-
-    // 3. Return true.
-    return true;
-}
-
-// 9.5.4 ISOYearMonthWithinLimits ( year, month ), https://tc39.es/proposal-temporal/#sec-temporal-isoyearmonthwithinlimits
+// 9.5.3 ISOYearMonthWithinLimits ( year, month ), https://tc39.es/proposal-temporal/#sec-temporal-isoyearmonthwithinlimits
 bool iso_year_month_within_limits(i32 year, u8 month)
 {
     // 1. Assert: year and month are integers.
@@ -166,7 +152,7 @@ bool iso_year_month_within_limits(i32 year, u8 month)
     return true;
 }
 
-// 9.5.5 BalanceISOYearMonth ( year, month ), https://tc39.es/proposal-temporal/#sec-temporal-balanceisoyearmonth
+// 9.5.4 BalanceISOYearMonth ( year, month ), https://tc39.es/proposal-temporal/#sec-temporal-balanceisoyearmonth
 ISOYearMonth balance_iso_year_month(double year, double month)
 {
     // 1. Assert: year and month are integers.
@@ -182,7 +168,7 @@ ISOYearMonth balance_iso_year_month(double year, double month)
     return ISOYearMonth { .year = static_cast<i32>(year), .month = static_cast<u8>(month), .reference_iso_day = 0 };
 }
 
-// 9.5.6 CreateTemporalYearMonth ( isoYear, isoMonth, calendar, referenceISODay [ , newTarget ] ), https://tc39.es/proposal-temporal/#sec-temporal-createtemporalyearmonth
+// 9.5.5 CreateTemporalYearMonth ( isoYear, isoMonth, calendar, referenceISODay [ , newTarget ] ), https://tc39.es/proposal-temporal/#sec-temporal-createtemporalyearmonth
 ThrowCompletionOr<PlainYearMonth*> create_temporal_year_month(VM& vm, i32 iso_year, u8 iso_month, Object& calendar, u8 reference_iso_day, FunctionObject const* new_target)
 {
     auto& realm = *vm.current_realm();
@@ -213,7 +199,7 @@ ThrowCompletionOr<PlainYearMonth*> create_temporal_year_month(VM& vm, i32 iso_ye
     return object;
 }
 
-// 9.5.7 TemporalYearMonthToString ( yearMonth, showCalendar ), https://tc39.es/proposal-temporal/#sec-temporal-temporalyearmonthtostring
+// 9.5.6 TemporalYearMonthToString ( yearMonth, showCalendar ), https://tc39.es/proposal-temporal/#sec-temporal-temporalyearmonthtostring
 ThrowCompletionOr<String> temporal_year_month_to_string(VM& vm, PlainYearMonth& year_month, StringView show_calendar)
 {
     // 1. Assert: Type(yearMonth) is Object.
@@ -242,7 +228,7 @@ ThrowCompletionOr<String> temporal_year_month_to_string(VM& vm, PlainYearMonth& 
     return String::formatted("{}{}", result, calendar_string);
 }
 
-// 9.5.8 DifferenceTemporalPlainYearMonth ( operation, yearMonth, other, options ), https://tc39.es/proposal-temporal/#sec-temporal-differencetemporalplainyearmonth
+// 9.5.7 DifferenceTemporalPlainYearMonth ( operation, yearMonth, other, options ), https://tc39.es/proposal-temporal/#sec-temporal-differencetemporalplainyearmonth
 ThrowCompletionOr<Duration*> difference_temporal_plain_year_month(VM& vm, DifferenceOperation operation, PlainYearMonth& year_month, Value other_value, Value options_value)
 {
     // 1. If operation is since, let sign be -1. Otherwise, let sign be 1.
@@ -300,7 +286,7 @@ ThrowCompletionOr<Duration*> difference_temporal_plain_year_month(VM& vm, Differ
     return MUST(create_temporal_duration(vm, sign * result.years, sign * result.months, 0, 0, 0, 0, 0, 0, 0, 0));
 }
 
-// 9.5.9 AddDurationToOrSubtractDurationFromPlainYearMonth ( operation, yearMonth, temporalDurationLike, options ), https://tc39.es/proposal-temporal/#sec-temporal-addtemporalplainyearmonth
+// 9.5.8 AddDurationToOrSubtractDurationFromPlainYearMonth ( operation, yearMonth, temporalDurationLike, options ), https://tc39.es/proposal-temporal/#sec-temporal-addtemporalplainyearmonth
 ThrowCompletionOr<PlainYearMonth*> add_duration_to_or_subtract_duration_from_plain_year_month(VM& vm, ArithmeticOperation operation, PlainYearMonth& year_month, Value temporal_duration_like, Value options_value)
 {
     auto& realm = *vm.current_realm();
