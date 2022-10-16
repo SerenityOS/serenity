@@ -28,6 +28,7 @@ class CookieJar {
 public:
     String get_cookie(const URL& url, Web::Cookie::Source source);
     void set_cookie(const URL& url, Web::Cookie::ParsedCookie const& parsed_cookie, Web::Cookie::Source source);
+    void update_cookie(URL const&, Web::Cookie::Cookie);
     void dump_cookies() const;
     Vector<Web::Cookie::Cookie> get_all_cookies() const;
 
