@@ -33,7 +33,6 @@ for i in ( \
             (netstat 1) \
             (nl 1) \
             (ntpquery 1) \
-            (passwd 1) \
             (profile 1) \
             (readelf 1) \
             (shot 1) \
