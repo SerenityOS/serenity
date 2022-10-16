@@ -36,7 +36,6 @@ for i in ( \
             (sql 1) \
             (strace 1) \
             (traceroute 1) \
-            (tree 1) \
             (truncate 1) \
         ) {
     filename="generated_manpages/man$i[1]/$i[0].md"

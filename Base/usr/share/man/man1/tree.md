@@ -1,21 +1,38 @@
 ## Name
 
-tree
+tree - List files as a tree
 
 ## Synopsis
 
-```sh
-$ tree [--all] [--only-directories] [--maximum-depth level] [directories...]
+```**sh
+$ tree [options]... [directories...]
 ```
 
-## Options:
+## Description
+
+`tree` lists directories and files in specified `directories`, in a colored tree view.
+It also counts them and prints a summary at the bottom.
+If `directories` is unspecified, it defaults to `.`.
+
+## Options
 
 * `-a`, `--all`: Show hidden files
 * `-d`, `--only-directories`: Show only directories
 * `-L level`, `--maximum-depth level`: Maximum depth of the tree
 
-## Arguments:
+## Arguments
 
-* `directories`: Directories to print
+* `directories`: Directories to print (or the current directory)
 
-<!-- Auto-generated through ArgsParser -->
+## Examples
+
+List files in the current directory:
+```sh
+$ tree
+```
+
+List all files on the system:
+```sh
+$ tree -a /
+```
+
