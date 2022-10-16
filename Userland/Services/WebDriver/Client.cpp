@@ -32,6 +32,7 @@ Vector<Client::Route> Client::s_routes = {
     { HTTP::HttpRequest::Method::POST, { "session", ":session_id", "forward" }, &Client::handle_forward },
     { HTTP::HttpRequest::Method::GET, { "session", ":session_id", "cookie" }, &Client::handle_get_all_cookies },
     { HTTP::HttpRequest::Method::GET, { "session", ":session_id", "cookie", ":name" }, &Client::handle_get_named_cookie },
+    { HTTP::HttpRequest::Method::DELETE, { "session", ":session_id", "cookie", ":name" }, &Client::handle_delete_cookie },
     { HTTP::HttpRequest::Method::DELETE, { "session", ":session_id", "cookie" }, &Client::handle_delete_all_cookies },
 };
 
@@ -513,6 +514,17 @@ ErrorOr<JsonValue, HttpError> Client::handle_get_named_cookie(Vector<StringView>
     auto cookies = TRY(session->get_named_cookie(parameters[1]));
 
     return make_json_value(cookies);
+}
+
+// DELETE /session/{session id}/cookie/{name} https://w3c.github.io/webdriver/#dfn-delete-cookie
+ErrorOr<JsonValue, HttpError> Client::handle_delete_cookie(Vector<StringView> parameters, JsonValue const&)
+{
+    dbgln_if(WEBDRIVER_DEBUG, "Handling DELETE /session/<session_id>/cookie/<name>");
+    Session* session = TRY(find_session_with_id(parameters[0]));
+
+    // NOTE: Spec steps handled in Session::delete_cookie().
+    auto result = TRY(session->delete_cookie(parameters[1]));
+    return make_json_value(result);
 }
 
 // DELETE /session/{session id}/cookie https://w3c.github.io/webdriver/#dfn-delete-all-cookies
