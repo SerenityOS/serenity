@@ -20,18 +20,18 @@
 namespace Web::Layout {
 
 Node::Node(DOM::Document& document, DOM::Node* node)
-    : m_document(document)
-    , m_dom_node(node)
+    : m_dom_node(node ? node : &document)
+    , m_anonymous(node == nullptr)
 {
-    m_serial_id = m_document->next_layout_node_serial_id({});
+    m_serial_id = document.next_layout_node_serial_id({});
 
-    if (m_dom_node)
-        m_dom_node->set_layout_node({}, this);
+    if (node)
+        node->set_layout_node({}, this);
 }
 
 Node::~Node()
 {
-    if (m_dom_node && m_dom_node->layout_node() == this)
+    if (!is_anonymous() && m_dom_node->layout_node() == this)
         m_dom_node->set_layout_node({}, nullptr);
 }
 
@@ -625,27 +625,31 @@ RefPtr<Painting::Paintable> Node::create_paintable() const
 
 bool Node::is_anonymous() const
 {
-    return !m_dom_node.ptr();
+    return m_anonymous;
 }
 
 DOM::Node const* Node::dom_node() const
 {
+    if (m_anonymous)
+        return nullptr;
     return m_dom_node.ptr();
 }
 
 DOM::Node* Node::dom_node()
 {
+    if (m_anonymous)
+        return nullptr;
     return m_dom_node.ptr();
 }
 
 DOM::Document& Node::document()
 {
-    return *m_document;
+    return m_dom_node->document();
 }
 
 DOM::Document const& Node::document() const
 {
-    return *m_document;
+    return m_dom_node->document();
 }
 
 }

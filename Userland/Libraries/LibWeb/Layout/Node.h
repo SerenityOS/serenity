@@ -143,12 +143,12 @@ protected:
 private:
     friend class NodeWithStyle;
 
-    JS::Handle<DOM::Document> m_document;
     JS::Handle<DOM::Node> m_dom_node;
     RefPtr<Painting::Paintable> m_paintable;
 
     size_t m_serial_id { 0 };
 
+    bool m_anonymous { false };
     bool m_has_style { false };
     bool m_visible { true };
     bool m_children_are_inline { false };
