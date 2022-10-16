@@ -53,4 +53,9 @@ void Processor::flush_tlb(Memory::PageDirectory const*, VirtualAddress vaddr, si
     flush_tlb_local(vaddr, page_count);
 }
 
+u32 Processor::clear_critical()
+{
+    TODO_AARCH64();
+}
+
 }
