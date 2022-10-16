@@ -19,6 +19,10 @@
 
 namespace JS::Temporal {
 
+[[nodiscard]] static i32 iso_year(Object& temporal_object);
+[[nodiscard]] static u8 iso_month(Object& temporal_object);
+[[nodiscard]] static u8 iso_day(Object& temporal_object);
+
 // 12.4 Properties of the Temporal.Calendar Prototype Object, https://tc39.es/proposal-temporal/#sec-properties-of-the-temporal-calendar-prototype-object
 CalendarPrototype::CalendarPrototype(Realm& realm)
     : PrototypeObject(*realm.intrinsics().object_prototype())
@@ -236,7 +240,10 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::year)
         temporal_date_like = TRY(to_temporal_date(vm, temporal_date_like));
     }
 
-    // 5. Return ! ISOYear(temporalDateLike).
+    // 5. Assert: temporalDateLike has an [[ISOYear]] internal slot.
+    // NOTE: The assertion happens in iso_year() call.
+
+    // 6. Return 𝔽(temporalDateLike.[[ISOYear]]).
     return Value(iso_year(temporal_date_like.as_object()));
 }
 
@@ -264,8 +271,10 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::month)
         // a. Set temporalDateLike to ? ToTemporalDate(temporalDateLike).
         temporal_date_like = TRY(to_temporal_date(vm, temporal_date_like));
     }
+    // 6. Assert: temporalDateLike has an [[ISOMonth]] internal slot.
+    // NOTE: The assertion happens in iso_month() call.
 
-    // 6. Return ! ISOMonth(temporalDateLike).
+    // 7. Return 𝔽(temporalDateLike.[[ISOMonth]]).
     return Value(iso_month(temporal_date_like.as_object()));
 }
 
@@ -311,8 +320,10 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::day)
         // a. Set temporalDateLike to ? ToTemporalDate(temporalDateLike).
         temporal_date_like = TRY(to_temporal_date(vm, temporal_date_like));
     }
+    // 5. Assert: temporalDateLike has an [[ISODay]] internal slot.
+    // NOTE: The assertion happens in iso_day() call.
 
-    // 5. Return ! ISODay(temporalDateLike).
+    // 6. Return 𝔽(temporalDateLike.[[ISODay]]).
     return Value(iso_day(temporal_date_like.as_object()));
 }
 
@@ -645,6 +656,45 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::era_year)
     // 6. Return 𝔽(eraYear).
 
     // NOTE: No support for non-iso8601 calendars yet.
+    VERIFY_NOT_REACHED();
+}
+
+static i32 iso_year(Object& temporal_object)
+{
+    if (is<PlainDate>(temporal_object))
+        return static_cast<PlainDate&>(temporal_object).iso_year();
+    if (is<PlainDateTime>(temporal_object))
+        return static_cast<PlainDateTime&>(temporal_object).iso_year();
+    if (is<PlainYearMonth>(temporal_object))
+        return static_cast<PlainYearMonth&>(temporal_object).iso_year();
+    if (is<PlainMonthDay>(temporal_object))
+        return static_cast<PlainMonthDay&>(temporal_object).iso_year();
+    VERIFY_NOT_REACHED();
+}
+
+static u8 iso_month(Object& temporal_object)
+{
+    if (is<PlainDate>(temporal_object))
+        return static_cast<PlainDate&>(temporal_object).iso_month();
+    if (is<PlainDateTime>(temporal_object))
+        return static_cast<PlainDateTime&>(temporal_object).iso_month();
+    if (is<PlainYearMonth>(temporal_object))
+        return static_cast<PlainYearMonth&>(temporal_object).iso_month();
+    if (is<PlainMonthDay>(temporal_object))
+        return static_cast<PlainMonthDay&>(temporal_object).iso_month();
+    VERIFY_NOT_REACHED();
+}
+
+static u8 iso_day(Object& temporal_object)
+{
+    if (is<PlainDate>(temporal_object))
+        return static_cast<PlainDate&>(temporal_object).iso_day();
+    if (is<PlainDateTime>(temporal_object))
+        return static_cast<PlainDateTime&>(temporal_object).iso_day();
+    if (is<PlainYearMonth>(temporal_object))
+        return static_cast<PlainYearMonth&>(temporal_object).iso_day();
+    if (is<PlainMonthDay>(temporal_object))
+        return static_cast<PlainMonthDay&>(temporal_object).iso_day();
     VERIFY_NOT_REACHED();
 }
 
