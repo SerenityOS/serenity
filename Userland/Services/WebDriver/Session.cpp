@@ -315,6 +315,23 @@ void Session::delete_cookies(Optional<StringView> const& name)
     }
 }
 
+// DELETE /session/{session id}/cookie/{name} https://w3c.github.io/webdriver/#dfn-delete-cookie
+ErrorOr<JsonValue, HttpError> Session::delete_cookie(StringView const& name)
+{
+    // 1. If the current browsing context is no longer open, return error with error code no such window.
+    auto current_window = get_window_object();
+    if (!current_window.has_value())
+        return HttpError { 404, "no such window", "Window not found" };
+
+    // FIXME: 2. Handle any user prompts, and return its value if it is an error.
+
+    // 3. Delete cookies using the url variable name parameter as the filter argument.
+    delete_cookies(name);
+
+    // 4. Return success with data null.
+    return JsonValue();
+}
+
 // DELETE /session/{session id}/cookie https://w3c.github.io/webdriver/#dfn-delete-all-cookies
 ErrorOr<JsonValue, HttpError> Session::delete_all_cookies()
 {
