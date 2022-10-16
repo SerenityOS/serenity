@@ -18,11 +18,6 @@ void GLContext::gl_array_element(GLint i)
     //       individual vertex attribute calls such as `gl_color`, `gl_normal` etc.
     RETURN_WITH_ERROR_IF(i < 0, GL_INVALID_VALUE);
 
-    // This is effectively the same as `gl_draw_elements`, except we only output a single
-    // vertex (this is done between a `gl_begin/end` call) that is to be rendered.
-    if (!m_client_side_vertex_array_enabled)
-        return;
-
     if (m_client_side_color_array_enabled) {
         float color[4] { 0.f, 0.f, 0.f, 1.f };
         read_from_vertex_attribute_pointer(m_client_color_pointer, i, color);
@@ -43,9 +38,11 @@ void GLContext::gl_array_element(GLint i)
         gl_normal(normal[0], normal[1], normal[2]);
     }
 
-    float vertex[4] { 0.f, 0.f, 0.f, 1.f };
-    read_from_vertex_attribute_pointer(m_client_vertex_pointer, i, vertex);
-    gl_vertex(vertex[0], vertex[1], vertex[2], vertex[3]);
+    if (m_client_side_vertex_array_enabled) {
+        float vertex[4] { 0.f, 0.f, 0.f, 1.f };
+        read_from_vertex_attribute_pointer(m_client_vertex_pointer, i, vertex);
+        gl_vertex(vertex[0], vertex[1], vertex[2], vertex[3]);
+    }
 }
 
 void GLContext::gl_color(GLdouble r, GLdouble g, GLdouble b, GLdouble a)
@@ -95,10 +92,6 @@ void GLContext::gl_draw_arrays(GLenum mode, GLint first, GLsizei count)
 
     RETURN_WITH_ERROR_IF(count < 0, GL_INVALID_VALUE);
 
-    // At least the vertex array needs to be enabled
-    if (!m_client_side_vertex_array_enabled)
-        return;
-
     auto last = first + count;
     gl_begin(mode);
     for (int i = first; i < last; i++) {
@@ -122,9 +115,11 @@ void GLContext::gl_draw_arrays(GLenum mode, GLint first, GLsizei count)
             gl_normal(normal[0], normal[1], normal[2]);
         }
 
-        float vertex[4] { 0.f, 0.f, 0.f, 1.f };
-        read_from_vertex_attribute_pointer(m_client_vertex_pointer, i, vertex);
-        gl_vertex(vertex[0], vertex[1], vertex[2], vertex[3]);
+        if (m_client_side_vertex_array_enabled) {
+            float vertex[4] { 0.f, 0.f, 0.f, 1.f };
+            read_from_vertex_attribute_pointer(m_client_vertex_pointer, i, vertex);
+            gl_vertex(vertex[0], vertex[1], vertex[2], vertex[3]);
+        }
     }
     gl_end();
 }
@@ -150,10 +145,6 @@ void GLContext::gl_draw_elements(GLenum mode, GLsizei count, GLenum type, void c
         GL_INVALID_ENUM);
 
     RETURN_WITH_ERROR_IF(count < 0, GL_INVALID_VALUE);
-
-    // At least the vertex array needs to be enabled
-    if (!m_client_side_vertex_array_enabled)
-        return;
 
     gl_begin(mode);
     for (int index = 0; index < count; index++) {
@@ -190,9 +181,11 @@ void GLContext::gl_draw_elements(GLenum mode, GLsizei count, GLenum type, void c
             gl_normal(normal[0], normal[1], normal[2]);
         }
 
-        float vertex[4] { 0.f, 0.f, 0.f, 1.f };
-        read_from_vertex_attribute_pointer(m_client_vertex_pointer, i, vertex);
-        gl_vertex(vertex[0], vertex[1], vertex[2], vertex[3]);
+        if (m_client_side_vertex_array_enabled) {
+            float vertex[4] { 0.f, 0.f, 0.f, 1.f };
+            read_from_vertex_attribute_pointer(m_client_vertex_pointer, i, vertex);
+            gl_vertex(vertex[0], vertex[1], vertex[2], vertex[3]);
+        }
     }
     gl_end();
 }
