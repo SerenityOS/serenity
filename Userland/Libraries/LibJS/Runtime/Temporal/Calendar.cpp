@@ -923,61 +923,7 @@ ThrowCompletionOr<ISOMonthDay> iso_month_day_from_fields(VM& vm, Object const& f
     return ISOMonthDay { .month = result->month, .day = result->day, .reference_iso_year = reference_iso_year };
 }
 
-// 12.2.37 ISOYear ( temporalObject ), https://tc39.es/proposal-temporal/#sec-temporal-isoyear
-i32 iso_year(Object& temporal_object)
-{
-    // 1. Assert: temporalObject has an [[ISOYear]] internal slot.
-    // NOTE: Asserted by the VERIFY_NOT_REACHED at the end
-
-    // 2. Return 𝔽(temporalObject.[[ISOYear]]).
-    if (is<PlainDate>(temporal_object))
-        return static_cast<PlainDate&>(temporal_object).iso_year();
-    if (is<PlainDateTime>(temporal_object))
-        return static_cast<PlainDateTime&>(temporal_object).iso_year();
-    if (is<PlainYearMonth>(temporal_object))
-        return static_cast<PlainYearMonth&>(temporal_object).iso_year();
-    if (is<PlainMonthDay>(temporal_object))
-        return static_cast<PlainMonthDay&>(temporal_object).iso_year();
-    VERIFY_NOT_REACHED();
-}
-
-// 12.2.38 ISOMonth ( temporalObject ), https://tc39.es/proposal-temporal/#sec-temporal-isomonth
-u8 iso_month(Object& temporal_object)
-{
-    // 1. Assert: temporalObject has an [[ISOMonth]] internal slot.
-    // NOTE: Asserted by the VERIFY_NOT_REACHED at the end
-
-    // 2. Return 𝔽(temporalObject.[[ISOMonth]]).
-    if (is<PlainDate>(temporal_object))
-        return static_cast<PlainDate&>(temporal_object).iso_month();
-    if (is<PlainDateTime>(temporal_object))
-        return static_cast<PlainDateTime&>(temporal_object).iso_month();
-    if (is<PlainYearMonth>(temporal_object))
-        return static_cast<PlainYearMonth&>(temporal_object).iso_month();
-    if (is<PlainMonthDay>(temporal_object))
-        return static_cast<PlainMonthDay&>(temporal_object).iso_month();
-    VERIFY_NOT_REACHED();
-}
-
-// 12.2.39 ISODay ( temporalObject ), https://tc39.es/proposal-temporal/#sec-temporal-isomonthcode
-u8 iso_day(Object& temporal_object)
-{
-    // 1. Assert: temporalObject has an [[ISODay]] internal slot.
-    // NOTE: Asserted by the VERIFY_NOT_REACHED at the end
-
-    // 2. Return 𝔽(temporalObject.[[ISODay]]).
-    if (is<PlainDate>(temporal_object))
-        return static_cast<PlainDate&>(temporal_object).iso_day();
-    if (is<PlainDateTime>(temporal_object))
-        return static_cast<PlainDateTime&>(temporal_object).iso_day();
-    if (is<PlainYearMonth>(temporal_object))
-        return static_cast<PlainYearMonth&>(temporal_object).iso_day();
-    if (is<PlainMonthDay>(temporal_object))
-        return static_cast<PlainMonthDay&>(temporal_object).iso_day();
-    VERIFY_NOT_REACHED();
-}
-
-// 12.2.40 DefaultMergeCalendarFields ( fields, additionalFields ), https://tc39.es/proposal-temporal/#sec-temporal-defaultmergecalendarfields
+// 12.2.37 DefaultMergeCalendarFields ( fields, additionalFields ), https://tc39.es/proposal-temporal/#sec-temporal-defaultmergecalendarfields
 ThrowCompletionOr<Object*> default_merge_calendar_fields(VM& vm, Object const& fields, Object const& additional_fields)
 {
     auto& realm = *vm.current_realm();
@@ -1053,7 +999,7 @@ ThrowCompletionOr<Object*> default_merge_calendar_fields(VM& vm, Object const& f
     return merged;
 }
 
-// 12.2.41 ToISODayOfYear ( year, month, day ), https://tc39.es/proposal-temporal/#sec-temporal-toisodayofyear
+// 12.2.38 ToISODayOfYear ( year, month, day ), https://tc39.es/proposal-temporal/#sec-temporal-toisodayofyear
 u16 to_iso_day_of_year(i32 year, u8 month, u8 day)
 {
     // 1. Assert: IsValidISODate(year, month, day) is true.
@@ -1069,7 +1015,7 @@ u16 to_iso_day_of_year(i32 year, u8 month, u8 day)
     return day_within_year(make_date(epoch_days, 0)) + 1;
 }
 
-// 12.2.42 ToISODayOfWeek ( year, month, day ), https://tc39.es/proposal-temporal/#sec-temporal-toisodayofweek
+// 12.2.39 ToISODayOfWeek ( year, month, day ), https://tc39.es/proposal-temporal/#sec-temporal-toisodayofweek
 u8 to_iso_day_of_week(i32 year, u8 month, u8 day)
 {
     // 1. Assert: IsValidISODate(year, month, day) is true.
