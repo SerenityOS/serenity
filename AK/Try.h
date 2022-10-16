@@ -8,6 +8,11 @@
 
 // NOTE: This macro works with any result type that has the expected APIs.
 //       It's designed with AK::Result and AK::Error in mind.
+//
+//       It depends on a non-standard C++ extension, specifically
+//       on statement expressions [1]. This is known to be implemented
+//       by at least clang and gcc.
+//       [1] https://gcc.gnu.org/onlinedocs/gcc/Statement-Exprs.html
 
 #define TRY(expression)                                \
     ({                                                 \
