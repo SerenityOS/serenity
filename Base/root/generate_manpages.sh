@@ -25,7 +25,6 @@ for i in ( \
             (gunzip 1) \
             (gzip 1) \
             (ifconfig 1) \
-            (lsof 1) \
             (nc 1) \
             (netstat 1) \
             (ntpquery 1) \

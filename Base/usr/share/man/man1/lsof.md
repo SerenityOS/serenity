@@ -1,26 +1,42 @@
 ## Name
 
-lsof
+lsof - List open files
 
 ## Synopsis
 
-```sh
-$ lsof [-p pid] [-d fd] [-u login/UID] [-g PGID] [filename]
+```**sh
+$ lsof [options]... [filename]
 ```
 
 ## Description
 
-List open files of a processes. This can mean actual files in the file system, sockets, pipes, etc.
+`lsof` lists and filters opened files such as pipes, sockets or regular files.
+If `filename` is specified, `lsof` will filter out by processes having `filename` opened.
 
-## Options:
+## Options
 
-* `-p pid`: Select by PID
-* `-d fd`: Select by file descriptor
-* `-u login/UID`: Select by login/UID
-* `-g PGID`: Select by process group ID
+* `-p pid`: Filter by PID
+* `-d fd`: Filter by file descriptor
+* `-u username/uid`: Filter by username/UID
+* `-g pgid`: Filter by process group ID
 
-## Arguments:
+## Arguments
 
-* `filename`: Filename
+* `filename`: Target filename. If unspecified, show all open files.
 
-<!-- Auto-generated through ArgsParser -->
+## Examples
+
+List opened files:
+```sh
+$ lsof
+```
+
+List files opened by FileManager:
+```sh
+$ lsof -p $(pidof FileManager)
+```
+
+## See also
+
+* [`proc`(7)](help://man/7/proc)
+
