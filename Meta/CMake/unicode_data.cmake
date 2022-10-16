@@ -100,7 +100,6 @@ if (ENABLE_UNICODE_DATABASE_DOWNLOAD)
         "UnicodeData"
         Lagom::GenerateUnicodeData
         "${UCD_VERSION_FILE}"
-        ""
         "${UNICODE_DATA_HEADER}"
         "${UNICODE_DATA_IMPLEMENTATION}"
         arguments -u "${UNICODE_DATA_PATH}" -s "${SPECIAL_CASING_PATH}" -g "${DERIVED_GENERAL_CATEGORY_PATH}" -p "${PROP_LIST_PATH}" -d "${DERIVED_CORE_PROP_PATH}" -b "${DERIVED_BINARY_PROP_PATH}" -a "${PROP_ALIAS_PATH}" -v "${PROP_VALUE_ALIAS_PATH}" -r "${SCRIPTS_PATH}" -x "${SCRIPT_EXTENSIONS_PATH}" -k "${BLOCKS_PATH}" -e "${EMOJI_DATA_PATH}" -m "${NAME_ALIAS_PATH}" -n "${NORM_PROPS_PATH}" -f "${GRAPHEME_BREAK_PROP_PATH}" -w "${WORD_BREAK_PROP_PATH}" -i "${SENTENCE_BREAK_PROP_PATH}"
@@ -109,7 +108,6 @@ if (ENABLE_UNICODE_DATABASE_DOWNLOAD)
         "EmojiData"
         Lagom::GenerateEmojiData
         "${UCD_VERSION_FILE}"
-        ""
         "${EMOJI_DATA_HEADER}"
         "${EMOJI_DATA_IMPLEMENTATION}"
         arguments -e "${EMOJI_TEST_PATH}" -s "${EMOJI_SERENITY_PATH}"

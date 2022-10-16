@@ -72,7 +72,6 @@ if (ENABLE_TIME_ZONE_DATABASE_DOWNLOAD)
         "TimeZoneData"
         Lagom::GenerateTimeZoneData
         "${TZDB_VERSION_FILE}"
-        ""
         "TimeZoneData.h"
         "TimeZoneData.cpp"
         arguments -z "${TZDB_ZONE_1970_PATH}" "${TZDB_AFRICA_PATH}" "${TZDB_ANTARCTICA_PATH}" "${TZDB_ASIA_PATH}" "${TZDB_AUSTRALASIA_PATH}" "${TZDB_BACKWARD_PATH}" "${TZDB_ETCETERA_PATH}" "${TZDB_EUROPE_PATH}" "${TZDB_NORTH_AMERICA_PATH}" "${TZDB_SOUTH_AMERICA_PATH}"
