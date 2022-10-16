@@ -15,7 +15,17 @@ namespace Kernel {
 
 struct RegisterState {
     FlatPtr userspace_sp() const { return 0; }
+    void set_userspace_sp(FlatPtr value)
+    {
+        (void)value;
+        TODO_AARCH64();
+    }
     FlatPtr ip() const { return 0; }
+    void set_ip(FlatPtr value)
+    {
+        (void)value;
+        TODO_AARCH64();
+    }
 };
 
 inline void copy_kernel_registers_into_ptrace_registers(PtraceRegisters& ptrace_regs, RegisterState const& kernel_regs)

@@ -160,6 +160,8 @@ public:
         VERIFY(!Processor::in_critical());
     }
 
+    ALWAYS_INLINE static FPUState const& clean_fpu_state() { TODO_AARCH64(); }
+
     // FIXME: Actually return the idle thread once aarch64 supports threading.
     ALWAYS_INLINE static Thread* idle_thread()
     {
@@ -182,7 +184,11 @@ public:
         TODO_AARCH64();
     }
 
+    static u32 smp_wake_n_idle_processors(u32 wake_count);
+
     [[noreturn]] static void halt();
+
+    static ErrorOr<Vector<FlatPtr, 32>> capture_stack_trace(Thread& thread, size_t max_frames = 0);
 
 private:
     u32 m_in_critical { 0 };

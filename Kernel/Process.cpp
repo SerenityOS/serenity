@@ -189,6 +189,9 @@ LockRefPtr<Process> Process::create_kernel_process(LockRefPtr<Thread>& first_thr
     first_thread->regs().esp = FlatPtr(entry_data); // entry function argument is expected to be in regs.esp
 #elif ARCH(X86_64)
     first_thread->regs().rdi = FlatPtr(entry_data); // entry function argument is expected to be in regs.rdi
+#elif ARCH(AARCH64)
+    (void)entry_data;
+    TODO_AARCH64();
 #else
 #    error Unknown architecture
 #endif
