@@ -43,7 +43,6 @@ struct ISOYearMonth {
 
 ThrowCompletionOr<PlainYearMonth*> to_temporal_year_month(VM&, Value item, Object const* options = nullptr);
 ThrowCompletionOr<ISOYearMonth> regulate_iso_year_month(VM&, double year, double month, StringView overflow);
-bool is_valid_iso_month(u8 month);
 bool iso_year_month_within_limits(i32 year, u8 month);
 ISOYearMonth balance_iso_year_month(double year, double month);
 ThrowCompletionOr<PlainYearMonth*> create_temporal_year_month(VM&, i32 iso_year, u8 iso_month, Object& calendar, u8 reference_iso_day, FunctionObject const* new_target = nullptr);
