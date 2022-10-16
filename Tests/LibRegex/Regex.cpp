@@ -24,7 +24,8 @@ static PosixOptions match_test_api_options(const PosixOptions options)
 }
 
 template<typename... Flags>
-static constexpr ECMAScriptFlags combine_flags(Flags&&... flags) requires((IsSame<Flags, ECMAScriptFlags> && ...))
+static constexpr ECMAScriptFlags combine_flags(Flags&&... flags)
+requires((IsSame<Flags, ECMAScriptFlags> && ...))
 {
     return static_cast<ECMAScriptFlags>((static_cast<regex::FlagsUnderlyingType>(flags) | ...));
 }

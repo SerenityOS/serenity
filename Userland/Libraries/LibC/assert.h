@@ -7,7 +7,7 @@
 #ifndef _ASSERT_H
 #    define _ASSERT_H
 
-#    define __stringify_helper(x) #    x
+#    define __stringify_helper(x) #x
 #    define __stringify(x) __stringify_helper(x)
 
 #    ifndef __cplusplus

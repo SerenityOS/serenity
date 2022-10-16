@@ -35,7 +35,8 @@ struct SimpleException {
 template<typename ValueType>
 class [[nodiscard]] ExceptionOr {
 public:
-    ExceptionOr() requires(IsSame<ValueType, Empty>)
+    ExceptionOr()
+    requires(IsSame<ValueType, Empty>)
         : m_result(Empty {})
     {
     }
@@ -54,7 +55,8 @@ public:
     // Most commonly: Value from Object* or similar, so we can omit the curly braces from "return { TRY(...) };".
     // Disabled for POD types to avoid weird conversion shenanigans.
     template<typename WrappedValueType>
-    ExceptionOr(WrappedValueType result) requires(!IsPOD<ValueType>)
+    ExceptionOr(WrappedValueType result)
+    requires(!IsPOD<ValueType>)
         : m_result(move(result))
     {
     }
@@ -87,7 +89,8 @@ public:
     ExceptionOr(ExceptionOr const& other) = default;
     ~ExceptionOr() = default;
 
-    ValueType& value() requires(!IsSame<ValueType, Empty>)
+    ValueType& value()
+    requires(!IsSame<ValueType, Empty>)
     {
         return m_result.value();
     }

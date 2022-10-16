@@ -54,7 +54,8 @@ public:
     ConsoleDevice& console_device();
 
     template<typename DeviceType, typename... Args>
-    static inline ErrorOr<NonnullLockRefPtr<DeviceType>> try_create_device(Args&&... args) requires(requires(Args... args) { DeviceType::try_create(args...); })
+    static inline ErrorOr<NonnullLockRefPtr<DeviceType>> try_create_device(Args&&... args)
+    requires(requires(Args... args) { DeviceType::try_create(args...); })
     {
         auto device = TRY(DeviceType::try_create(forward<Args>(args)...));
         device->after_inserting();

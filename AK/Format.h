@@ -239,13 +239,13 @@ private:
 
 class TypeErasedFormatParams {
 public:
-    Span<const TypeErasedParameter> parameters() const { return m_parameters; }
+    Span<TypeErasedParameter const> parameters() const { return m_parameters; }
 
-    void set_parameters(Span<const TypeErasedParameter> parameters) { m_parameters = parameters; }
+    void set_parameters(Span<TypeErasedParameter const> parameters) { m_parameters = parameters; }
     size_t take_next_index() { return m_next_index++; }
 
 private:
-    Span<const TypeErasedParameter> m_parameters;
+    Span<TypeErasedParameter const> m_parameters;
     size_t m_next_index { 0 };
 };
 
@@ -255,7 +255,7 @@ ErrorOr<void> __format_value(TypeErasedFormatParams& params, FormatBuilder& buil
     Formatter<T> formatter;
 
     formatter.parse(params, parser);
-    return formatter.format(builder, *static_cast<const T*>(value));
+    return formatter.format(builder, *static_cast<T const*>(value));
 }
 
 template<typename... Parameters>
@@ -624,15 +624,15 @@ void critical_dmesgln(CheckedFormatString<Parameters...>&& fmt, Parameters const
 template<typename T>
 class FormatIfSupported {
 public:
-    explicit FormatIfSupported(const T& value)
+    explicit FormatIfSupported(T const& value)
         : m_value(value)
     {
     }
 
-    const T& value() const { return m_value; }
+    T const& value() const { return m_value; }
 
 private:
-    const T& m_value;
+    T const& m_value;
 };
 template<typename T, bool Supported = false>
 struct __FormatIfSupported : Formatter<StringView> {

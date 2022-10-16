@@ -212,7 +212,8 @@ public:
     }
 
     template<size_t U>
-    [[nodiscard]] constexpr Matrix<U, T> submatrix_from_topleft() const requires(U > 0 && U < N)
+    [[nodiscard]] constexpr Matrix<U, T> submatrix_from_topleft() const
+    requires(U > 0 && U < N)
     {
         Matrix<U, T> result;
         for (size_t i = 0; i < U; ++i) {

@@ -168,7 +168,8 @@ Vector<T> merge_lists(Vector<T> const& a, Vector<T> const& b)
 
 // x modulo y, https://tc39.es/ecma262/#eqn-modulo
 template<typename T, typename U>
-auto modulo(T x, U y) requires(IsArithmetic<T>, IsArithmetic<U>)
+auto modulo(T x, U y)
+requires(IsArithmetic<T>, IsArithmetic<U>)
 {
     // The notation “x modulo y” (y must be finite and non-zero) computes a value k of the same sign as y (or zero) such that abs(k) < abs(y) and x - k = q × y for some integer q.
     VERIFY(y != 0);

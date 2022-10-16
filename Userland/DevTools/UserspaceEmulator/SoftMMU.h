@@ -33,7 +33,8 @@ public:
     void dump_backtrace();
 
     template<typename T>
-    ValueWithShadow<T> read(X86::LogicalAddress address) requires(IsTriviallyConstructible<T>)
+    ValueWithShadow<T> read(X86::LogicalAddress address)
+    requires(IsTriviallyConstructible<T>)
     {
         auto* region = find_region(address);
         if (!region) {

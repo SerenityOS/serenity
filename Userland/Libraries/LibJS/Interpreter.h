@@ -36,7 +36,8 @@ struct ExecutingASTNodeChain {
 class Interpreter : public Weakable<Interpreter> {
 public:
     template<typename GlobalObjectType, typename... Args>
-    static NonnullOwnPtr<Interpreter> create(VM& vm, Args&&... args) requires(IsBaseOf<GlobalObject, GlobalObjectType>)
+    static NonnullOwnPtr<Interpreter> create(VM& vm, Args&&... args)
+    requires(IsBaseOf<GlobalObject, GlobalObjectType>)
     {
         DeferGC defer_gc(vm.heap());
         auto interpreter = adopt_own(*new Interpreter(vm));

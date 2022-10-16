@@ -20,7 +20,7 @@ namespace AK {
 // at https://nigeltao.github.io/blog/2020/eisel-lemire.html
 
 template<typename T>
-concept ParseableFloatingPoint = IsFloatingPoint<T> &&(sizeof(T) == sizeof(u32) || sizeof(T) == sizeof(u64));
+concept ParseableFloatingPoint = IsFloatingPoint<T> && (sizeof(T) == sizeof(u32) || sizeof(T) == sizeof(u64));
 
 template<ParseableFloatingPoint T>
 struct FloatingPointInfo {

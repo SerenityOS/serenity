@@ -75,7 +75,7 @@ public:
         VERIFY(m_head);
         return m_head->value;
     }
-    [[nodiscard]] const T& first() const
+    [[nodiscard]] T const& first() const
     {
         VERIFY(m_head);
         return m_head->value;
@@ -85,7 +85,7 @@ public:
         VERIFY(m_head);
         return m_tail->value;
     }
-    [[nodiscard]] const T& last() const
+    [[nodiscard]] T const& last() const
     {
         VERIFY(m_head);
         return m_tail->value;
@@ -148,7 +148,7 @@ public:
     }
 #endif
 
-    [[nodiscard]] bool contains_slow(const T& value) const
+    [[nodiscard]] bool contains_slow(T const& value) const
     {
         return find(value) != end();
     }
@@ -158,17 +158,17 @@ public:
     Iterator begin() { return Iterator(m_head); }
     Iterator end() { return Iterator::universal_end(); }
 
-    using ConstIterator = DoublyLinkedListIterator<const DoublyLinkedList, const T>;
+    using ConstIterator = DoublyLinkedListIterator<const DoublyLinkedList, T const>;
     friend ConstIterator;
     ConstIterator begin() const { return ConstIterator(m_head); }
     ConstIterator end() const { return ConstIterator::universal_end(); }
 
-    ConstIterator find(const T& value) const
+    ConstIterator find(T const& value) const
     {
         return AK::find(begin(), end(), value);
     }
 
-    Iterator find(const T& value)
+    Iterator find(T const& value)
     {
         return AK::find(begin(), end(), value);
     }

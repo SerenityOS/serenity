@@ -17,13 +17,15 @@
 #include <AK/Assertions.h>
 
 template<typename T, typename U>
-constexpr auto round_up_to_power_of_two(T value, U power_of_two) requires(AK::Detail::IsIntegral<T>&& AK::Detail::IsIntegral<U>)
+constexpr auto round_up_to_power_of_two(T value, U power_of_two)
+requires(AK::Detail::IsIntegral<T> && AK::Detail::IsIntegral<U>)
 {
     return ((value - 1) & ~(power_of_two - 1)) + power_of_two;
 }
 
 template<typename T>
-constexpr bool is_power_of_two(T value) requires(AK::Detail::IsIntegral<T>)
+constexpr bool is_power_of_two(T value)
+requires(AK::Detail::IsIntegral<T>)
 {
     return value && !((value) & (value - 1));
 }
@@ -81,19 +83,19 @@ constexpr SizeType array_size(T (&)[N])
 }
 
 template<typename T>
-constexpr T min(const T& a, IdentityType<T> const& b)
+constexpr T min(T const& a, IdentityType<T> const& b)
 {
     return b < a ? b : a;
 }
 
 template<typename T>
-constexpr T max(const T& a, IdentityType<T> const& b)
+constexpr T max(T const& a, IdentityType<T> const& b)
 {
     return a < b ? b : a;
 }
 
 template<typename T>
-constexpr T clamp(const T& value, IdentityType<T> const& min, IdentityType<T> const& max)
+constexpr T clamp(T const& value, IdentityType<T> const& min, IdentityType<T> const& max)
 {
     VERIFY(max >= min);
     if (value > max)
@@ -141,7 +143,8 @@ template<typename T>
 using RawPtr = typename Detail::_RawPtr<T>::Type;
 
 template<typename V>
-constexpr decltype(auto) to_underlying(V value) requires(IsEnum<V>)
+constexpr decltype(auto) to_underlying(V value)
+requires(IsEnum<V>)
 {
     return static_cast<UnderlyingType<V>>(value);
 }

@@ -230,7 +230,7 @@ public:
 
     template<typename U>
     requires(!IsSame<T, U>)
-        [[nodiscard]] Point<U> to_type() const
+    [[nodiscard]] Point<U> to_type() const
     {
         return Point<U>(*this);
     }

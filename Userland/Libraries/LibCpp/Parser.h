@@ -29,7 +29,7 @@ public:
     Optional<size_t> index_of_node_at(Position) const;
     Optional<Token> token_at(Position) const;
     Optional<size_t> index_of_token_at(Position) const;
-    RefPtr<const TranslationUnit> root_node() const { return m_root_node; }
+    RefPtr<TranslationUnit const> root_node() const { return m_root_node; }
     String text_of_node(ASTNode const&) const;
     StringView text_of_token(Cpp::Token const& token) const;
     void print_tokens() const;

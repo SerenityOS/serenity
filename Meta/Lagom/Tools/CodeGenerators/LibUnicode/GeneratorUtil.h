@@ -97,7 +97,8 @@ public:
         return "u64"sv;
     }
 
-    void generate(SourceGenerator& generator, StringView type, StringView name, size_t max_values_per_row) requires(!StorageTypeIsList<StorageType>)
+    void generate(SourceGenerator& generator, StringView type, StringView name, size_t max_values_per_row)
+    requires(!StorageTypeIsList<StorageType>)
     {
         generator.set("type"sv, type);
         generator.set("name"sv, name);
@@ -129,7 +130,8 @@ static constexpr Array<@type@, @size@ + 1> @name@ { {
 )~~~");
     }
 
-    void generate(SourceGenerator& generator, StringView type, StringView name) requires(StorageTypeIsList<StorageType>)
+    void generate(SourceGenerator& generator, StringView type, StringView name)
+    requires(StorageTypeIsList<StorageType>)
     {
         generator.set("type"sv, type);
         generator.set("name"sv, name);

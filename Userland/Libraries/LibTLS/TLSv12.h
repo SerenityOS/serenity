@@ -223,18 +223,21 @@ struct Options {
     }
     Vector<CipherSuite> usable_cipher_suites = default_usable_cipher_suites();
 
-#define OPTION_WITH_DEFAULTS(typ, name, ...)                    \
-    static typ default_##name() { return typ { __VA_ARGS__ }; } \
-    typ name = default_##name();                                \
-    Options& set_##name(typ new_value)&                         \
-    {                                                           \
-        name = move(new_value);                                 \
-        return *this;                                           \
-    }                                                           \
-    Options&& set_##name(typ new_value)&&                       \
-    {                                                           \
-        name = move(new_value);                                 \
-        return move(*this);                                     \
+#define OPTION_WITH_DEFAULTS(typ, name, ...) \
+    static typ default_##name()              \
+    {                                        \
+        return typ { __VA_ARGS__ };          \
+    }                                        \
+    typ name = default_##name();             \
+    Options& set_##name(typ new_value)&      \
+    {                                        \
+        name = move(new_value);              \
+        return *this;                        \
+    }                                        \
+    Options&& set_##name(typ new_value)&&    \
+    {                                        \
+        name = move(new_value);              \
+        return move(*this);                  \
     }
 
     OPTION_WITH_DEFAULTS(Version, version, Version::V12)

@@ -461,7 +461,8 @@ void ArgsParser::add_option(StringView& value, char const* help_string, char con
 }
 
 template<typename Integral>
-void ArgsParser::add_option(Integral& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode) requires(IsIntegral<Integral>)
+void ArgsParser::add_option(Integral& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode)
+requires(IsIntegral<Integral>)
 {
     Option option {
         OptionArgumentMode::Required,

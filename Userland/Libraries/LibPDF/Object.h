@@ -43,7 +43,8 @@ public:
     ALWAYS_INLINE void set_generation_index(u32 generation_index) { m_generation_index = generation_index; }
 
     template<IsObject T>
-    bool is() const requires(!IsSame<T, Object>)
+    bool is() const
+    requires(!IsSame<T, Object>)
     {
 #define ENUMERATE_TYPE(class_name, snake_name) \
     if constexpr (IsSame<class_name, T>) {     \
@@ -60,7 +61,8 @@ public:
 #ifdef PDF_DEBUG
         SourceLocation loc = SourceLocation::current()
 #endif
-    ) const requires(!IsSame<T, Object>)
+    ) const
+    requires(!IsSame<T, Object>)
     {
 #ifdef PDF_DEBUG
         if (!is<T>()) {
@@ -76,8 +78,11 @@ public:
     virtual String to_string(int indent) const = 0;
 
 protected:
-#define ENUMERATE_TYPE(_, name) \
-    virtual bool is_##name() const { return false; }
+#define ENUMERATE_TYPE(_, name)    \
+    virtual bool is_##name() const \
+    {                              \
+        return false;              \
+    }
     ENUMERATE_OBJECT_TYPES(ENUMERATE_TYPE)
 #undef ENUMERATE_TYPE
 

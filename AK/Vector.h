@@ -31,13 +31,13 @@ struct CanBePlacedInsideVectorHelper;
 template<typename StorageType>
 struct CanBePlacedInsideVectorHelper<StorageType, true> {
     template<typename U>
-    static constexpr bool value = requires(U&& u) { StorageType { &u }; };
+    static constexpr bool value = requires(U && u) { StorageType { &u }; };
 };
 
 template<typename StorageType>
 struct CanBePlacedInsideVectorHelper<StorageType, false> {
     template<typename U>
-    static constexpr bool value = requires(U&& u) { StorageType(forward<U>(u)); };
+    static constexpr bool value = requires(U && u) { StorageType(forward<U>(u)); };
 };
 }
 
@@ -59,7 +59,8 @@ public:
     {
     }
 
-    Vector(std::initializer_list<T> list) requires(!IsLvalueReference<T>)
+    Vector(std::initializer_list<T> list)
+    requires(!IsLvalueReference<T>)
     {
         ensure_capacity(list.size());
         for (auto& item : list)
@@ -89,7 +90,8 @@ public:
         m_size = other.size();
     }
 
-    explicit Vector(Span<T const> other) requires(!IsLvalueReference<T>)
+    explicit Vector(Span<T const> other)
+    requires(!IsLvalueReference<T>)
     {
         ensure_capacity(other.size());
         TypedTransfer<StorageType>::copy(data(), other.data(), other.size());
@@ -161,7 +163,8 @@ public:
     VisibleType& last() { return at(size() - 1); }
 
     template<typename TUnaryPredicate>
-    Optional<VisibleType&> first_matching(TUnaryPredicate const& predicate) requires(!contains_reference)
+    Optional<VisibleType&> first_matching(TUnaryPredicate const& predicate)
+    requires(!contains_reference)
     {
         for (size_t i = 0; i < size(); ++i) {
             if (predicate(at(i))) {
@@ -172,7 +175,8 @@ public:
     }
 
     template<typename TUnaryPredicate>
-    Optional<VisibleType const&> first_matching(TUnaryPredicate const& predicate) const requires(!contains_reference)
+    Optional<VisibleType const&> first_matching(TUnaryPredicate const& predicate) const
+    requires(!contains_reference)
     {
         for (size_t i = 0; i < size(); ++i) {
             if (predicate(at(i))) {
@@ -183,7 +187,8 @@ public:
     }
 
     template<typename TUnaryPredicate>
-    Optional<VisibleType&> last_matching(TUnaryPredicate const& predicate) requires(!contains_reference)
+    Optional<VisibleType&> last_matching(TUnaryPredicate const& predicate)
+    requires(!contains_reference)
     {
         for (ssize_t i = size() - 1; i >= 0; --i) {
             if (predicate(at(i))) {
@@ -225,13 +230,15 @@ public:
 #ifndef KERNEL
 
     template<typename U = T>
-    void insert(size_t index, U&& value) requires(CanBePlacedInsideVector<U>)
+    void insert(size_t index, U&& value)
+    requires(CanBePlacedInsideVector<U>)
     {
         MUST(try_insert<U>(index, forward<U>(value)));
     }
 
     template<typename TUnaryPredicate, typename U = T>
-    void insert_before_matching(U&& value, TUnaryPredicate const& predicate, size_t first_index = 0, size_t* inserted_index = nullptr) requires(CanBePlacedInsideVector<U>)
+    void insert_before_matching(U&& value, TUnaryPredicate const& predicate, size_t first_index = 0, size_t* inserted_index = nullptr)
+    requires(CanBePlacedInsideVector<U>)
     {
         MUST(try_insert_before_matching(forward<U>(value), predicate, first_index, inserted_index));
     }
@@ -256,7 +263,8 @@ public:
             MUST(try_append(move(value)));
     }
 
-    ALWAYS_INLINE void append(T const& value) requires(!contains_reference)
+    ALWAYS_INLINE void append(T const& value)
+    requires(!contains_reference)
     {
         MUST(try_append(T(value)));
     }
@@ -269,7 +277,8 @@ public:
 #endif
 
     template<typename U = T>
-    ALWAYS_INLINE void unchecked_append(U&& value) requires(CanBePlacedInsideVector<U>)
+    ALWAYS_INLINE void unchecked_append(U&& value)
+    requires(CanBePlacedInsideVector<U>)
     {
         VERIFY((size() + 1) <= capacity());
         if constexpr (contains_reference)
@@ -290,13 +299,15 @@ public:
 
 #ifndef KERNEL
     template<class... Args>
-    void empend(Args&&... args) requires(!contains_reference)
+    void empend(Args&&... args)
+    requires(!contains_reference)
     {
         MUST(try_empend(forward<Args>(args)...));
     }
 
     template<typename U = T>
-    void prepend(U&& value) requires(CanBePlacedInsideVector<U>)
+    void prepend(U&& value)
+    requires(CanBePlacedInsideVector<U>)
     {
         MUST(try_insert(0, forward<U>(value)));
     }
@@ -481,7 +492,8 @@ public:
     }
 
     template<typename U = T>
-    ErrorOr<void> try_insert(size_t index, U&& value) requires(CanBePlacedInsideVector<U>)
+    ErrorOr<void> try_insert(size_t index, U&& value)
+    requires(CanBePlacedInsideVector<U>)
     {
         if (index > size())
             return Error::from_errno(EINVAL);
@@ -505,7 +517,8 @@ public:
     }
 
     template<typename TUnaryPredicate, typename U = T>
-    ErrorOr<void> try_insert_before_matching(U&& value, TUnaryPredicate const& predicate, size_t first_index = 0, size_t* inserted_index = nullptr) requires(CanBePlacedInsideVector<U>)
+    ErrorOr<void> try_insert_before_matching(U&& value, TUnaryPredicate const& predicate, size_t first_index = 0, size_t* inserted_index = nullptr)
+    requires(CanBePlacedInsideVector<U>)
     {
         for (size_t i = first_index; i < size(); ++i) {
             if (predicate(at(i))) {
@@ -554,7 +567,8 @@ public:
         return {};
     }
 
-    ErrorOr<void> try_append(T const& value) requires(!contains_reference)
+    ErrorOr<void> try_append(T const& value)
+    requires(!contains_reference)
     {
         return try_append(T(value));
     }
@@ -570,7 +584,8 @@ public:
     }
 
     template<class... Args>
-    ErrorOr<void> try_empend(Args&&... args) requires(!contains_reference)
+    ErrorOr<void> try_empend(Args&&... args)
+    requires(!contains_reference)
     {
         TRY(try_grow_capacity(m_size + 1));
         new (slot(m_size)) StorageType { forward<Args>(args)... };
@@ -579,7 +594,8 @@ public:
     }
 
     template<typename U = T>
-    ErrorOr<void> try_prepend(U&& value) requires(CanBePlacedInsideVector<U>)
+    ErrorOr<void> try_prepend(U&& value)
+    requires(CanBePlacedInsideVector<U>)
     {
         return try_insert(0, forward<U>(value));
     }
@@ -650,7 +666,8 @@ public:
         return {};
     }
 
-    ErrorOr<void> try_resize(size_t new_size, bool keep_capacity = false) requires(!contains_reference)
+    ErrorOr<void> try_resize(size_t new_size, bool keep_capacity = false)
+    requires(!contains_reference)
     {
         if (new_size <= size()) {
             shrink(new_size, keep_capacity);
@@ -665,7 +682,8 @@ public:
         return {};
     }
 
-    ErrorOr<void> try_resize_and_keep_capacity(size_t new_size) requires(!contains_reference)
+    ErrorOr<void> try_resize_and_keep_capacity(size_t new_size)
+    requires(!contains_reference)
     {
         return try_resize(new_size, true);
     }
@@ -699,12 +717,14 @@ public:
         m_size = new_size;
     }
 
-    void resize(size_t new_size, bool keep_capacity = false) requires(!contains_reference)
+    void resize(size_t new_size, bool keep_capacity = false)
+    requires(!contains_reference)
     {
         MUST(try_resize(new_size, keep_capacity));
     }
 
-    void resize_and_keep_capacity(size_t new_size) requires(!contains_reference)
+    void resize_and_keep_capacity(size_t new_size)
+    requires(!contains_reference)
     {
         MUST(try_resize_and_keep_capacity(new_size));
     }

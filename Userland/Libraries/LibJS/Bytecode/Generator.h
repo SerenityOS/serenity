@@ -173,7 +173,8 @@ public:
         LeaveVariableEnvironment,
     };
     template<typename OpType>
-    void perform_needed_unwinds(bool is_break_node = false) requires(OpType::IsTerminator)
+    void perform_needed_unwinds(bool is_break_node = false)
+    requires(OpType::IsTerminator)
     {
         Optional<BlockBoundaryType> boundary_to_stop_at;
         if constexpr (IsSame<OpType, Bytecode::Op::Return> || IsSame<OpType, Bytecode::Op::Yield>)

@@ -230,7 +230,7 @@ public:
 
 private:
     template<typename T>
-    bool compare(const T& left, const T& right) const
+    bool compare(T const& left, T const& right) const
     {
         switch (m_op) {
         case ComparisonOperation::Less:

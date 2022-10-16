@@ -24,11 +24,10 @@ namespace AK {
 
 // Concept to detect types which look like timespec without requiring the type.
 template<typename T>
-concept TimeSpecType = requires(T t)
-{
-    t.tv_sec;
-    t.tv_nsec;
-};
+concept TimeSpecType = requires(T t) {
+                           t.tv_sec;
+                           t.tv_nsec;
+                       };
 
 constexpr bool is_leap_year(int year)
 {
@@ -315,38 +314,38 @@ inline void timespec_to_timeval(TimespecType const& ts, TimevalType& tv)
 }
 
 template<TimeSpecType T>
-inline bool operator>=(const T& a, const T& b)
+inline bool operator>=(T const& a, T const& b)
 {
     return a.tv_sec > b.tv_sec || (a.tv_sec == b.tv_sec && a.tv_nsec >= b.tv_nsec);
 }
 
 template<TimeSpecType T>
-inline bool operator>(const T& a, const T& b)
+inline bool operator>(T const& a, T const& b)
 {
     return a.tv_sec > b.tv_sec || (a.tv_sec == b.tv_sec && a.tv_nsec > b.tv_nsec);
 }
 
 template<TimeSpecType T>
-inline bool operator<(const T& a, const T& b)
+inline bool operator<(T const& a, T const& b)
 {
     return a.tv_sec < b.tv_sec || (a.tv_sec == b.tv_sec && a.tv_nsec < b.tv_nsec);
 }
 
 template<TimeSpecType T>
-inline bool operator<=(const T& a, const T& b)
+inline bool operator<=(T const& a, T const& b)
 
 {
     return a.tv_sec < b.tv_sec || (a.tv_sec == b.tv_sec && a.tv_nsec <= b.tv_nsec);
 }
 
 template<TimeSpecType T>
-inline bool operator==(const T& a, const T& b)
+inline bool operator==(T const& a, T const& b)
 {
     return a.tv_sec == b.tv_sec && a.tv_nsec == b.tv_nsec;
 }
 
 template<TimeSpecType T>
-inline bool operator!=(const T& a, const T& b)
+inline bool operator!=(T const& a, T const& b)
 {
     return a.tv_sec != b.tv_sec || a.tv_nsec != b.tv_nsec;
 }

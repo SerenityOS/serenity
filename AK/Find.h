@@ -30,7 +30,8 @@ template<typename TEndIterator, IteratorPairWith<TEndIterator> TIterator, typena
 }
 
 template<typename TEndIterator, IteratorPairWith<TEndIterator> TIterator, typename T>
-[[nodiscard]] constexpr size_t find_index(TIterator first, TEndIterator last, T const& value) requires(requires(TIterator it) { it.index(); })
+[[nodiscard]] constexpr size_t find_index(TIterator first, TEndIterator last, T const& value)
+requires(requires(TIterator it) { it.index(); })
 {
     return find_if(first, last, [&](auto const& v) { return Traits<T>::equals(value, v); }).index();
 }

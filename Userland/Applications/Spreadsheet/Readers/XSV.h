@@ -107,7 +107,7 @@ public:
         size_t index() const { return m_index; }
         size_t size() const { return m_xsv.headers().size(); }
 
-        using ConstIterator = AK::SimpleIterator<const Row, const StringView>;
+        using ConstIterator = AK::SimpleIterator<const Row, StringView const>;
         using Iterator = AK::SimpleIterator<Row, StringView>;
 
         constexpr ConstIterator begin() const { return ConstIterator::begin(*this); }
@@ -124,20 +124,26 @@ public:
     template<bool const_>
     class RowIterator {
     public:
-        explicit RowIterator(const XSV& xsv, size_t init_index = 0) requires(const_)
+        explicit RowIterator(const XSV& xsv, size_t init_index = 0)
+        requires(const_)
             : m_xsv(const_cast<XSV&>(xsv))
             , m_index(init_index)
         {
         }
 
-        explicit RowIterator(XSV& xsv, size_t init_index = 0) requires(!const_)
+        explicit RowIterator(XSV& xsv, size_t init_index = 0)
+        requires(!const_)
             : m_xsv(xsv)
             , m_index(init_index)
         {
         }
 
         Row operator*() const { return Row { m_xsv, m_index }; }
-        Row operator*() requires(!const_) { return Row { m_xsv, m_index }; }
+        Row operator*()
+        requires(!const_)
+        {
+            return Row { m_xsv, m_index };
+        }
 
         RowIterator& operator++()
         {

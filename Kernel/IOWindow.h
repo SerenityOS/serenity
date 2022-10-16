@@ -75,7 +75,7 @@ public:
 #endif
 
 private:
-    explicit IOWindow(NonnullOwnPtr<Memory::TypedMapping<volatile u8>>);
+    explicit IOWindow(NonnullOwnPtr<Memory::TypedMapping<u8 volatile>>);
 
     u8 volatile* as_memory_address_pointer();
 
@@ -116,7 +116,7 @@ private:
         // can cause problems with strict bare metal hardware. For example, some XHCI USB controllers
         // might completely lock up because of an unaligned memory access to their registers.
         VERIFY((start_offset % sizeof(T)) == 0);
-        data = *(volatile T*)(as_memory_address_pointer() + start_offset);
+        data = *(T volatile*)(as_memory_address_pointer() + start_offset);
     }
 
     template<typename T>
@@ -135,12 +135,12 @@ private:
         // can cause problems with strict bare metal hardware. For example, some XHCI USB controllers
         // might completely lock up because of an unaligned memory access to their registers.
         VERIFY((start_offset % sizeof(T)) == 0);
-        *(volatile T*)(as_memory_address_pointer() + start_offset) = value;
+        *(T volatile*)(as_memory_address_pointer() + start_offset) = value;
     }
 
     SpaceType m_space_type { SpaceType::Memory };
 
-    OwnPtr<Memory::TypedMapping<volatile u8>> m_memory_mapped_range;
+    OwnPtr<Memory::TypedMapping<u8 volatile>> m_memory_mapped_range;
 
 #if ARCH(I386) || ARCH(X86_64)
     OwnPtr<IOAddressData> m_io_range;

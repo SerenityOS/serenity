@@ -279,7 +279,8 @@ class PosixSocketHelper {
 
 public:
     template<typename T>
-    PosixSocketHelper(Badge<T>) requires(IsBaseOf<Socket, T>)
+    PosixSocketHelper(Badge<T>)
+    requires(IsBaseOf<Socket, T>)
     {
     }
 

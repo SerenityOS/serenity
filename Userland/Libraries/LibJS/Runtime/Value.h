@@ -601,7 +601,8 @@ public:
     }
 
     template<typename U = JS::Value>
-    explicit(!IsConvertible<U&&, JS::Value>) Optional(U&& value) requires(!IsSame<RemoveCVReference<U>, Optional<JS::Value>> && IsConstructible<JS::Value, U&&>)
+    explicit(!IsConvertible<U&&, JS::Value>) Optional(U&& value)
+    requires(!IsSame<RemoveCVReference<U>, Optional<JS::Value>> && IsConstructible<JS::Value, U &&>)
         : m_value(forward<U>(value))
     {
     }

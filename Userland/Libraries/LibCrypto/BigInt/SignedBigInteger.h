@@ -18,7 +18,7 @@ class SignedBigInteger {
 public:
     template<typename T>
     requires(IsSigned<T> && sizeof(T) <= sizeof(i32))
-        SignedBigInteger(T value)
+    SignedBigInteger(T value)
         : m_sign(value < 0)
         , m_unsigned_data(abs(static_cast<i32>(value)))
     {

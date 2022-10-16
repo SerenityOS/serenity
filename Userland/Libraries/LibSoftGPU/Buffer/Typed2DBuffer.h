@@ -33,7 +33,8 @@ public:
     ALWAYS_INLINE T* scanline(int y) { return m_buffer->buffer_pointer(0, y, 0); }
     ALWAYS_INLINE T const* scanline(int y) const { return m_buffer->buffer_pointer(0, y, 0); }
 
-    void blit_flipped_to_bitmap(Gfx::Bitmap& bitmap, Gfx::IntRect const& target) const requires IsSame<T, u32>
+    void blit_flipped_to_bitmap(Gfx::Bitmap& bitmap, Gfx::IntRect const& target) const
+    requires IsSame<T, u32>
     {
         VERIFY(bitmap.format() == Gfx::BitmapFormat::BGRA8888 || bitmap.format() == Gfx::BitmapFormat::BGRx8888);
         int source_y = 0;

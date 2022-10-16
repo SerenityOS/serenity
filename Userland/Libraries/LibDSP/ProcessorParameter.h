@@ -70,7 +70,8 @@ public:
         return value();
     }
 
-    operator double() const requires(IsSame<ParameterT, ParameterFixedPoint>)
+    operator double() const
+    requires(IsSame<ParameterT, ParameterFixedPoint>)
     {
         return static_cast<double>(value());
     }

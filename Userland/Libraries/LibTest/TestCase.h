@@ -42,34 +42,43 @@ void add_test_case_to_suite(NonnullRefPtr<TestCase> const& test_case);
 void set_suite_setup_function(Function<void()> setup);
 }
 
-#define TEST_SETUP                                                  \
-    static void __setup();                                          \
-    struct __setup_type {                                           \
-        __setup_type() { Test::set_suite_setup_function(__setup); } \
-    };                                                              \
-    static struct __setup_type __setup_type;                        \
+#define TEST_SETUP                                   \
+    static void __setup();                           \
+    struct __setup_type {                            \
+        __setup_type()                               \
+        {                                            \
+            Test::set_suite_setup_function(__setup); \
+        }                                            \
+    };                                               \
+    static struct __setup_type __setup_type;         \
     static void __setup()
 
 #define __TESTCASE_FUNC(x) __test_##x
 #define __TESTCASE_TYPE(x) __TestCase_##x
 
-#define TEST_CASE(x)                                                                                    \
-    static void __TESTCASE_FUNC(x)();                                                                   \
-    struct __TESTCASE_TYPE(x) {                                                                         \
-        __TESTCASE_TYPE(x)                                                                              \
-        () { add_test_case_to_suite(adopt_ref(*new ::Test::TestCase(#x, __TESTCASE_FUNC(x), false))); } \
-    };                                                                                                  \
-    static struct __TESTCASE_TYPE(x) __TESTCASE_TYPE(x);                                                \
+#define TEST_CASE(x)                                                                                 \
+    static void __TESTCASE_FUNC(x)();                                                                \
+    struct __TESTCASE_TYPE(x) {                                                                      \
+        __TESTCASE_TYPE(x)                                                                           \
+        ()                                                                                           \
+        {                                                                                            \
+            add_test_case_to_suite(adopt_ref(*new ::Test::TestCase(#x, __TESTCASE_FUNC(x), false))); \
+        }                                                                                            \
+    };                                                                                               \
+    static struct __TESTCASE_TYPE(x) __TESTCASE_TYPE(x);                                             \
     static void __TESTCASE_FUNC(x)()
 
 #define __BENCHMARK_FUNC(x) __benchmark_##x
 #define __BENCHMARK_TYPE(x) __BenchmarkCase_##x
 
-#define BENCHMARK_CASE(x)                                                                               \
-    static void __BENCHMARK_FUNC(x)();                                                                  \
-    struct __BENCHMARK_TYPE(x) {                                                                        \
-        __BENCHMARK_TYPE(x)                                                                             \
-        () { add_test_case_to_suite(adopt_ref(*new ::Test::TestCase(#x, __BENCHMARK_FUNC(x), true))); } \
-    };                                                                                                  \
-    static struct __BENCHMARK_TYPE(x) __BENCHMARK_TYPE(x);                                              \
+#define BENCHMARK_CASE(x)                                                                            \
+    static void __BENCHMARK_FUNC(x)();                                                               \
+    struct __BENCHMARK_TYPE(x) {                                                                     \
+        __BENCHMARK_TYPE(x)                                                                          \
+        ()                                                                                           \
+        {                                                                                            \
+            add_test_case_to_suite(adopt_ref(*new ::Test::TestCase(#x, __BENCHMARK_FUNC(x), true))); \
+        }                                                                                            \
+    };                                                                                               \
+    static struct __BENCHMARK_TYPE(x) __BENCHMARK_TYPE(x);                                           \
     static void __BENCHMARK_FUNC(x)()

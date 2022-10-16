@@ -318,7 +318,7 @@ void pretty_print(Decoder& decoder, OutputStream& stream, int indent)
                 break;
             }
             case Kind::BitString: {
-                auto value = decoder.read<const BitmapView>();
+                auto value = decoder.read<BitmapView const>();
                 if (value.is_error()) {
                     dbgln("BitString PrettyPrint error: {}", value.error());
                     return;

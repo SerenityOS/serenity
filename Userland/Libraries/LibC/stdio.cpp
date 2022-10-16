@@ -276,7 +276,7 @@ bool FILE::gets(T* data, size_t size)
         if (m_buffer.may_use()) {
             // Let's see if the buffer has something queued for us.
             size_t queued_size;
-            const T* queued_data = bit_cast<const T*>(m_buffer.begin_dequeue(queued_size));
+            T const* queued_data = bit_cast<T const*>(m_buffer.begin_dequeue(queued_size));
             queued_size /= sizeof(T);
             if (queued_size == 0) {
                 // Nothing buffered; we're going to have to read some.

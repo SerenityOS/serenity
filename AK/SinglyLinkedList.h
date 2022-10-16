@@ -71,7 +71,7 @@ private:
             : value(move(v))
         {
         }
-        explicit Node(const T& v)
+        explicit Node(T const& v)
             : value(v)
         {
         }
@@ -120,7 +120,7 @@ public:
         VERIFY(head());
         return head()->value;
     }
-    const T& first() const
+    T const& first() const
     {
         VERIFY(head());
         return head()->value;
@@ -130,7 +130,7 @@ public:
         VERIFY(head());
         return tail()->value;
     }
-    const T& last() const
+    T const& last() const
     {
         VERIFY(head());
         return tail()->value;
@@ -194,7 +194,7 @@ public:
     }
 #endif
 
-    bool contains_slow(const T& value) const
+    bool contains_slow(T const& value) const
     {
         return find(value) != end();
     }
@@ -204,7 +204,7 @@ public:
     Iterator begin() { return Iterator(m_head); }
     Iterator end() { return {}; }
 
-    using ConstIterator = SinglyLinkedListIterator<const SinglyLinkedList, const T>;
+    using ConstIterator = SinglyLinkedListIterator<const SinglyLinkedList, T const>;
     friend ConstIterator;
     ConstIterator begin() const { return ConstIterator(m_head); }
     ConstIterator end() const { return {}; }
@@ -221,12 +221,12 @@ public:
         return AK::find_if(begin(), end(), forward<TUnaryPredicate>(pred));
     }
 
-    ConstIterator find(const T& value) const
+    ConstIterator find(T const& value) const
     {
         return find_if([&](auto& other) { return Traits<T>::equals(value, other); });
     }
 
-    Iterator find(const T& value)
+    Iterator find(T const& value)
     {
         return find_if([&](auto& other) { return Traits<T>::equals(value, other); });
     }

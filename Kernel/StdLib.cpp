@@ -54,11 +54,11 @@ ErrorOr<Time> copy_time_from_user(timeval const* tv_user)
 }
 
 template<>
-ErrorOr<Time> copy_time_from_user<const timeval>(Userspace<timeval const*> src) { return copy_time_from_user(src.unsafe_userspace_ptr()); }
+ErrorOr<Time> copy_time_from_user<timeval const>(Userspace<timeval const*> src) { return copy_time_from_user(src.unsafe_userspace_ptr()); }
 template<>
 ErrorOr<Time> copy_time_from_user<timeval>(Userspace<timeval*> src) { return copy_time_from_user(src.unsafe_userspace_ptr()); }
 template<>
-ErrorOr<Time> copy_time_from_user<const timespec>(Userspace<timespec const*> src) { return copy_time_from_user(src.unsafe_userspace_ptr()); }
+ErrorOr<Time> copy_time_from_user<timespec const>(Userspace<timespec const*> src) { return copy_time_from_user(src.unsafe_userspace_ptr()); }
 template<>
 ErrorOr<Time> copy_time_from_user<timespec>(Userspace<timespec*> src) { return copy_time_from_user(src.unsafe_userspace_ptr()); }
 

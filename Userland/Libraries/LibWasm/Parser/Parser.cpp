@@ -82,7 +82,8 @@ struct ParseUntilAnyOfResult {
     Vector<T> values;
 };
 template<typename T, u8... terminators, typename... Args>
-static ParseResult<ParseUntilAnyOfResult<T>> parse_until_any_of(InputStream& stream, Args&... args) requires(requires(InputStream& stream, Args... args) { T::parse(stream, args...); })
+static ParseResult<ParseUntilAnyOfResult<T>> parse_until_any_of(InputStream& stream, Args&... args)
+requires(requires(InputStream& stream, Args... args) { T::parse(stream, args...); })
 {
     ScopeLogger<WASM_BINPARSER_DEBUG> logger;
     ReconsumableStream new_stream { stream };

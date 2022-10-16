@@ -950,7 +950,7 @@ public:
 
     template<typename U>
     requires(!IsSame<T, U>)
-        [[nodiscard]] ALWAYS_INLINE Rect<U> to_type() const
+    [[nodiscard]] ALWAYS_INLINE Rect<U> to_type() const
     {
         return Rect<U>(*this);
     }

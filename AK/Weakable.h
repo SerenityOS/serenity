@@ -27,7 +27,7 @@ class WeakLink : public RefCounted<WeakLink> {
 public:
     template<typename T>
     RefPtr<T> strong_ref() const
-        requires(IsBaseOf<RefCountedBase, T>)
+    requires(IsBaseOf<RefCountedBase, T>)
     {
         return static_cast<T*>(m_ptr);
     }

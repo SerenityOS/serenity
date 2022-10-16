@@ -52,21 +52,21 @@ void const* memmem(void const* haystack, size_t, void const* needle, size_t);
 }
 
 template<typename T>
-[[nodiscard]] inline ErrorOr<void> copy_from_user(T* dest, const T* src)
+[[nodiscard]] inline ErrorOr<void> copy_from_user(T* dest, T const* src)
 {
     static_assert(IsTriviallyCopyable<T>);
     return copy_from_user(dest, src, sizeof(T));
 }
 
 template<typename T>
-[[nodiscard]] inline ErrorOr<void> copy_to_user(T* dest, const T* src)
+[[nodiscard]] inline ErrorOr<void> copy_to_user(T* dest, T const* src)
 {
     static_assert(IsTriviallyCopyable<T>);
     return copy_to_user(dest, src, sizeof(T));
 }
 
 template<typename T>
-[[nodiscard]] inline ErrorOr<void> copy_from_user(T* dest, Userspace<const T*> src)
+[[nodiscard]] inline ErrorOr<void> copy_from_user(T* dest, Userspace<T const*> src)
 {
     static_assert(IsTriviallyCopyable<T>);
     return copy_from_user(dest, src.unsafe_userspace_ptr(), sizeof(T));
@@ -100,7 +100,7 @@ DEPRECATE_COPY_FROM_USER_TYPE(timespec, copy_time_from_user)
 DEPRECATE_COPY_FROM_USER_TYPE(timeval, copy_time_from_user)
 
 template<typename T>
-[[nodiscard]] inline ErrorOr<void> copy_to_user(Userspace<T*> dest, const T* src)
+[[nodiscard]] inline ErrorOr<void> copy_to_user(Userspace<T*> dest, T const* src)
 {
     static_assert(IsTriviallyCopyable<T>);
     return copy_to_user(dest.unsafe_userspace_ptr(), src, sizeof(T));
@@ -114,14 +114,14 @@ template<typename T>
 }
 
 template<typename T>
-[[nodiscard]] inline ErrorOr<void> copy_from_user(void* dest, Userspace<const T*> src, size_t size)
+[[nodiscard]] inline ErrorOr<void> copy_from_user(void* dest, Userspace<T const*> src, size_t size)
 {
     static_assert(IsTriviallyCopyable<T>);
     return copy_from_user(dest, src.unsafe_userspace_ptr(), size);
 }
 
 template<typename T>
-[[nodiscard]] inline ErrorOr<void> copy_n_from_user(T* dest, const T* src, size_t count)
+[[nodiscard]] inline ErrorOr<void> copy_n_from_user(T* dest, T const* src, size_t count)
 {
     static_assert(IsTriviallyCopyable<T>);
     Checked<size_t> size = sizeof(T);
@@ -132,7 +132,7 @@ template<typename T>
 }
 
 template<typename T>
-[[nodiscard]] inline ErrorOr<void> copy_n_to_user(T* dest, const T* src, size_t count)
+[[nodiscard]] inline ErrorOr<void> copy_n_to_user(T* dest, T const* src, size_t count)
 {
     static_assert(IsTriviallyCopyable<T>);
     Checked<size_t> size = sizeof(T);
@@ -143,7 +143,7 @@ template<typename T>
 }
 
 template<typename T>
-[[nodiscard]] inline ErrorOr<void> copy_n_from_user(T* dest, Userspace<const T*> src, size_t count)
+[[nodiscard]] inline ErrorOr<void> copy_n_from_user(T* dest, Userspace<T const*> src, size_t count)
 {
     static_assert(IsTriviallyCopyable<T>);
     Checked<size_t> size = sizeof(T);
@@ -154,7 +154,7 @@ template<typename T>
 }
 
 template<typename T>
-[[nodiscard]] inline ErrorOr<void> try_copy_n_to_user(Userspace<T*> dest, const T* src, size_t count)
+[[nodiscard]] inline ErrorOr<void> try_copy_n_to_user(Userspace<T*> dest, T const* src, size_t count)
 {
     static_assert(IsTriviallyCopyable<T>);
     Checked<size_t> size = sizeof(T);

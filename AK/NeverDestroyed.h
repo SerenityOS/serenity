@@ -26,13 +26,13 @@ public:
     ~NeverDestroyed() = default;
 
     T* operator->() { return &get(); }
-    const T* operator->() const { return &get(); }
+    T const* operator->() const { return &get(); }
 
     T& operator*() { return get(); }
-    const T& operator*() const { return get(); }
+    T const& operator*() const { return get(); }
 
     T& get() { return reinterpret_cast<T&>(storage); }
-    const T& get() const { return reinterpret_cast<T&>(storage); }
+    T const& get() const { return reinterpret_cast<T&>(storage); }
 
 private:
     alignas(T) u8 storage[sizeof(T)];

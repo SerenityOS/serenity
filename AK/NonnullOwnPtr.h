@@ -164,7 +164,7 @@ inline NonnullOwnPtr<T> make(Args&&... args)
 template<typename T>
 struct Traits<NonnullOwnPtr<T>> : public GenericTraits<NonnullOwnPtr<T>> {
     using PeekType = T*;
-    using ConstPeekType = const T*;
+    using ConstPeekType = T const*;
     static unsigned hash(NonnullOwnPtr<T> const& p) { return ptr_hash((FlatPtr)p.ptr()); }
     static bool equals(NonnullOwnPtr<T> const& a, NonnullOwnPtr<T> const& b) { return a.ptr() == b.ptr(); }
 };
@@ -176,10 +176,10 @@ inline void swap(NonnullOwnPtr<T>& a, NonnullOwnPtr<U>& b)
 }
 
 template<typename T>
-struct Formatter<NonnullOwnPtr<T>> : Formatter<const T*> {
+struct Formatter<NonnullOwnPtr<T>> : Formatter<T const*> {
     ErrorOr<void> format(FormatBuilder& builder, NonnullOwnPtr<T> const& value)
     {
-        return Formatter<const T*>::format(builder, value.ptr());
+        return Formatter<T const*>::format(builder, value.ptr());
     }
 };
 

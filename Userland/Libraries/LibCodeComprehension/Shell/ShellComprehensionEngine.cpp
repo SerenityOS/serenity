@@ -68,11 +68,11 @@ Vector<String> const& ShellComprehensionEngine::DocumentData::sourced_paths() co
         return all_sourced_paths.value();
 
     struct : public ::Shell::AST::NodeVisitor {
-        void visit(const ::Shell::AST::CastToCommand* node) override
+        void visit(::Shell::AST::CastToCommand const* node) override
         {
             auto& inner = node->inner();
             if (inner->is_list()) {
-                if (auto* list = dynamic_cast<const ::Shell::AST::ListConcatenate*>(inner.ptr())) {
+                if (auto* list = dynamic_cast<::Shell::AST::ListConcatenate const*>(inner.ptr())) {
                     auto& entries = list->list();
                     if (entries.size() == 2 && entries.first()->is_bareword() && static_ptr_cast<::Shell::AST::BarewordLiteral>(entries.first())->text() == "source") {
                         auto& filename = entries[1];
@@ -200,7 +200,7 @@ void ShellComprehensionEngine::update_declared_symbols(DocumentData const& docum
         {
         }
 
-        void visit(const ::Shell::AST::VariableDeclarations* node) override
+        void visit(::Shell::AST::VariableDeclarations const* node) override
         {
             for (auto& entry : node->variables()) {
                 auto literal = entry.name->leftmost_trivial_literal();
@@ -219,7 +219,7 @@ void ShellComprehensionEngine::update_declared_symbols(DocumentData const& docum
             ::Shell::AST::NodeVisitor::visit(node);
         }
 
-        void visit(const ::Shell::AST::FunctionDeclaration* node) override
+        void visit(::Shell::AST::FunctionDeclaration const* node) override
         {
             dbgln("Found function {}", node->name().name);
             declarations.append({ node->name().name, { filename, node->position().start_line.line_number, node->position().start_line.line_column }, CodeComprehension::DeclarationType::Function, {} });
