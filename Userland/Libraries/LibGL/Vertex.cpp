@@ -14,7 +14,8 @@ namespace GL {
 
 void GLContext::gl_array_element(GLint i)
 {
-    APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_array_element, i);
+    // NOTE: This always dereferences data; display list support is deferred to the
+    //       individual vertex attribute calls such as `gl_color`, `gl_normal` etc.
     RETURN_WITH_ERROR_IF(i < 0, GL_INVALID_VALUE);
 
     // This is effectively the same as `gl_draw_elements`, except we only output a single
@@ -79,7 +80,8 @@ void GLContext::gl_color_pointer(GLint size, GLenum type, GLsizei stride, void c
 
 void GLContext::gl_draw_arrays(GLenum mode, GLint first, GLsizei count)
 {
-    APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_draw_arrays, mode, first, count);
+    // NOTE: This always dereferences data; display list support is deferred to the
+    //       individual vertex attribute calls such as `gl_color`, `gl_normal` etc.
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
 
     // FIXME: Some modes are still missing (GL_POINTS, GL_LINE_STRIP, GL_LINE_LOOP, GL_LINES)
@@ -129,7 +131,8 @@ void GLContext::gl_draw_arrays(GLenum mode, GLint first, GLsizei count)
 
 void GLContext::gl_draw_elements(GLenum mode, GLsizei count, GLenum type, void const* indices)
 {
-    APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_draw_elements, mode, count, type, indices);
+    // NOTE: This always dereferences data; display list support is deferred to the
+    //       individual vertex attribute calls such as `gl_color`, `gl_normal` etc.
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
 
     // FIXME: Some modes are still missing (GL_POINTS, GL_LINE_STRIP, GL_LINE_LOOP, GL_LINES)
