@@ -786,26 +786,26 @@ ThrowCompletionOr<double> resolve_iso_month(VM& vm, Object const& fields)
     if (month_code_string[0] != 0x4D)
         return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidMonthCode);
 
-    // 9. Let numberPart be the substring of monthCode from 1.
-    auto number_part = month_code_string.substring(1);
+    // 9. Let monthCodeDigits be the substring of monthCode from 1.
+    auto month_code_digits = month_code_string.substring(1);
 
-    // 10. If ParseText(StringToCodePoints(numberPart), DateMonth) is a List of errors, throw a RangeError exception.
-    auto parse_result = parse_iso8601(Production::DateMonth, number_part);
+    // 10. If ParseText(StringToCodePoints(monthCodeDigits), DateMonth) is a List of errors, throw a RangeError exception.
+    auto parse_result = parse_iso8601(Production::DateMonth, month_code_digits);
     if (!parse_result.has_value())
         return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidMonthCode);
 
-    // 11. Set numberPart to ! ToIntegerOrInfinity(numberPart).
-    auto number_part_integer = MUST(Value(js_string(vm, move(number_part))).to_integer_or_infinity(vm));
+    // 11. Let monthCodeNumber be ! ToIntegerOrInfinity(monthCodeDigits).
+    auto month_code_number = MUST(Value(js_string(vm, move(month_code_digits))).to_integer_or_infinity(vm));
 
-    // 12. Assert: SameValue(monthCode, BuildISOMonthCode(numberPart)) is true.
-    VERIFY(month_code_string == build_iso_month_code(number_part_integer));
+    // 12. Assert: SameValue(monthCode, BuildISOMonthCode(monthCodeNumber)) is true.
+    VERIFY(month_code_string == build_iso_month_code(month_code_number));
 
-    // 13. If month is not undefined and SameValue(month, numberPart) is false, throw a RangeError exception.
-    if (!month.is_undefined() && month.as_double() != number_part_integer)
+    // 13. If month is not undefined and SameValue(month, monthCodeNumber) is false, throw a RangeError exception.
+    if (!month.is_undefined() && month.as_double() != month_code_number)
         return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidMonthCode);
 
-    // 14. Return numberPart.
-    return number_part_integer;
+    // 14. Return monthCodeNumber.
+    return month_code_number;
 }
 
 // 12.2.34 ISODateFromFields ( fields, options ), https://tc39.es/proposal-temporal/#sec-temporal-isodatefromfields
