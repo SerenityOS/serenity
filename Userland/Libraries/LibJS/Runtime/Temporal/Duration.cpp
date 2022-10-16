@@ -1096,20 +1096,16 @@ ThrowCompletionOr<DurationRecord> add_duration(VM& vm, double years1, double mon
     return difference_zoned_date_time(vm, relative_to.nanoseconds(), *end_ns, time_zone, calendar, largest_unit, *Object::create(realm, nullptr));
 }
 
-// 7.5.23 MoveRelativeDate ( calendar, relativeTo, duration [ , dateAdd ] ), https://tc39.es/proposal-temporal/#sec-temporal-moverelativedate
+// 7.5.23 MoveRelativeDate ( calendar, relativeTo, duration, dateAdd ), https://tc39.es/proposal-temporal/#sec-temporal-moverelativedate
 ThrowCompletionOr<MoveRelativeDateResult> move_relative_date(VM& vm, Object& calendar, PlainDate& relative_to, Duration& duration, FunctionObject* date_add)
 {
-    // 1. If dateAdd is not present, set dateAdd to ? GetMethod(calendar, "dateAdd").
-    if (!date_add)
-        date_add = TRY(Value(&calendar).get_method(vm, vm.names.dateAdd));
-
-    // 2. Let newDate be ? CalendarDateAdd(calendar, relativeTo, duration, undefined, dateAdd)
+    // 1. Let newDate be ? CalendarDateAdd(calendar, relativeTo, duration, undefined, dateAdd)
     auto* new_date = TRY(calendar_date_add(vm, calendar, &relative_to, duration, nullptr, date_add));
 
-    // 3. Let days be DaysUntil(relativeTo, newDate).
+    // 2. Let days be DaysUntil(relativeTo, newDate).
     auto days = days_until(relative_to, *new_date);
 
-    // 4. Return the Record { [[RelativeTo]]: newDate, [[Days]]: days }.
+    // 3. Return the Record { [[RelativeTo]]: newDate, [[Days]]: days }.
     return MoveRelativeDateResult { .relative_to = make_handle(new_date), .days = days };
 }
 
