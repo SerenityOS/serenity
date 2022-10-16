@@ -711,17 +711,17 @@ void Element::children_changed()
 
 void Element::set_pseudo_element_node(Badge<Layout::TreeBuilder>, CSS::Selector::PseudoElement pseudo_element, RefPtr<Layout::Node> pseudo_element_node)
 {
-    m_pseudo_element_nodes[to_underlying(pseudo_element)] = move(pseudo_element_node);
+    m_pseudo_element_nodes[to_underlying(pseudo_element)] = pseudo_element_node->make_weak_ptr();
 }
 
 RefPtr<Layout::Node> Element::get_pseudo_element_node(CSS::Selector::PseudoElement pseudo_element) const
 {
-    return m_pseudo_element_nodes[to_underlying(pseudo_element)];
+    return m_pseudo_element_nodes[to_underlying(pseudo_element)].strong_ref();
 }
 
 void Element::clear_pseudo_element_nodes(Badge<Layout::TreeBuilder>)
 {
-    m_pseudo_element_nodes.fill(nullptr);
+    m_pseudo_element_nodes.fill({});
 }
 
 void Element::serialize_pseudo_elements_as_json(JsonArraySerializer<StringBuilder>& children_array) const
