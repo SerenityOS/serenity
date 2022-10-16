@@ -79,7 +79,7 @@ Optional<ContextParameter> GLContext::get_context_parameter(GLenum name)
     case GL_MAX_TEXTURE_LOD_BIAS:
         return ContextParameter { .type = GL_DOUBLE, .value = { .double_value = static_cast<GLdouble>(m_device_info.max_texture_lod_bias) } };
     case GL_MAX_TEXTURE_SIZE:
-        return ContextParameter { .type = GL_INT, .value = { .integer_value = 4096 } };
+        return ContextParameter { .type = GL_INT, .value = { .integer_value = static_cast<GLint>(m_device_info.max_texture_size) } };
     case GL_MAX_TEXTURE_STACK_DEPTH:
         return ContextParameter { .type = GL_INT, .value = { .integer_value = TEXTURE_MATRIX_STACK_LIMIT } };
     case GL_MAX_TEXTURE_UNITS:

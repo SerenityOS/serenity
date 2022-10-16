@@ -801,6 +801,7 @@ GPU::DeviceInfo Device::info() const
         .num_texture_units = GPU::NUM_TEXTURE_UNITS,
         .num_lights = NUM_LIGHTS,
         .max_clip_planes = MAX_CLIP_PLANES,
+        .max_texture_size = MAX_TEXTURE_SIZE,
         .max_texture_lod_bias = MAX_TEXTURE_LOD_BIAS,
         .stencil_bits = sizeof(GPU::StencilType) * 8,
         .supports_npot_textures = true,

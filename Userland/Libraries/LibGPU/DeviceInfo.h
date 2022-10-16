@@ -16,6 +16,7 @@ struct DeviceInfo final {
     unsigned num_texture_units;
     unsigned num_lights;
     unsigned max_clip_planes;
+    unsigned max_texture_size;
     float max_texture_lod_bias;
     u8 stencil_bits;
     bool supports_npot_textures;

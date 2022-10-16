@@ -13,6 +13,17 @@
 
 namespace GL {
 
+// Helper functions to handle type casting.
+static u16 max_texture_size(GPU::DeviceInfo const& device_info)
+{
+    return static_cast<u16>(device_info.max_texture_size);
+}
+
+static u8 log2_max_texture_size(GPU::DeviceInfo const& device_info)
+{
+    return static_cast<u8>(AK::log2(device_info.max_texture_size));
+}
+
 void GLContext::gl_active_texture(GLenum texture)
 {
     RETURN_WITH_ERROR_IF(texture < GL_TEXTURE0 || texture >= GL_TEXTURE0 + m_device_info.num_texture_units, GL_INVALID_ENUM);
@@ -91,8 +102,8 @@ void GLContext::gl_copy_tex_image_2d(GLenum target, GLint level, GLenum internal
     auto pixel_type_or_error = get_validated_pixel_type(target, internalformat, GL_NONE, GL_NONE);
     RETURN_WITH_ERROR_IF(pixel_type_or_error.is_error(), pixel_type_or_error.release_error().code());
 
-    RETURN_WITH_ERROR_IF(level < 0 || level > Texture2D::LOG2_MAX_TEXTURE_SIZE, GL_INVALID_VALUE);
-    RETURN_WITH_ERROR_IF(width < 0 || height < 0 || width > (2 + Texture2D::MAX_TEXTURE_SIZE) || height > (2 + Texture2D::MAX_TEXTURE_SIZE), GL_INVALID_VALUE);
+    RETURN_WITH_ERROR_IF(level < 0 || level > log2_max_texture_size(m_device_info), GL_INVALID_VALUE);
+    RETURN_WITH_ERROR_IF(width < 0 || height < 0 || width > (2 + max_texture_size(m_device_info)) || height > (2 + max_texture_size(m_device_info)), GL_INVALID_VALUE);
     if (!m_device_info.supports_npot_textures)
         RETURN_WITH_ERROR_IF(!is_power_of_two(width) || !is_power_of_two(height), GL_INVALID_VALUE);
     RETURN_WITH_ERROR_IF(border != 0, GL_INVALID_VALUE);
@@ -102,7 +113,7 @@ void GLContext::gl_copy_tex_image_2d(GLenum target, GLint level, GLenum internal
 
     auto internal_pixel_format = pixel_format_for_internal_format(internalformat);
     if (level == 0) {
-        texture_2d->set_device_image(m_rasterizer->create_image(internal_pixel_format, width, height, 1, Texture2D::LOG2_MAX_TEXTURE_SIZE));
+        texture_2d->set_device_image(m_rasterizer->create_image(internal_pixel_format, width, height, 1, log2_max_texture_size(m_device_info)));
         m_sampler_config_is_dirty = true;
     }
 
@@ -131,8 +142,8 @@ void GLContext::gl_copy_tex_sub_image_2d(GLenum target, GLint level, GLint xoffs
     APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_copy_tex_sub_image_2d, target, level, xoffset, yoffset, x, y, width, height);
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
 
-    RETURN_WITH_ERROR_IF(level < 0 || level > Texture2D::LOG2_MAX_TEXTURE_SIZE, GL_INVALID_VALUE);
-    RETURN_WITH_ERROR_IF(width < 0 || height < 0 || width > (2 + Texture2D::MAX_TEXTURE_SIZE) || height > (2 + Texture2D::MAX_TEXTURE_SIZE), GL_INVALID_VALUE);
+    RETURN_WITH_ERROR_IF(level < 0 || level > log2_max_texture_size(m_device_info), GL_INVALID_VALUE);
+    RETURN_WITH_ERROR_IF(width < 0 || height < 0 || width > (2 + max_texture_size(m_device_info)) || height > (2 + max_texture_size(m_device_info)), GL_INVALID_VALUE);
 
     auto texture_2d = m_active_texture_unit->texture_2d_target_texture();
     VERIFY(!texture_2d.is_null());
@@ -211,7 +222,7 @@ void GLContext::gl_gen_textures(GLsizei n, GLuint* textures)
 
 void GLContext::gl_get_tex_image(GLenum target, GLint level, GLenum format, GLenum type, void* pixels)
 {
-    RETURN_WITH_ERROR_IF(level < 0 || level > Texture2D::LOG2_MAX_TEXTURE_SIZE, GL_INVALID_VALUE);
+    RETURN_WITH_ERROR_IF(level < 0 || level > log2_max_texture_size(m_device_info), GL_INVALID_VALUE);
     RETURN_WITH_ERROR_IF(format == GL_NONE || type == GL_NONE, GL_INVALID_ENUM);
     auto pixel_type_or_error = get_validated_pixel_type(target, GL_NONE, format, type);
     RETURN_WITH_ERROR_IF(pixel_type_or_error.is_error(), pixel_type_or_error.release_error().code());
@@ -247,7 +258,7 @@ void GLContext::gl_get_tex_parameter_integerv(GLenum target, GLint level, GLenum
     RETURN_WITH_ERROR_IF(target != GL_TEXTURE_2D, GL_INVALID_ENUM);
     // FIXME: support other parameter names
     RETURN_WITH_ERROR_IF(pname < GL_TEXTURE_WIDTH || pname > GL_TEXTURE_HEIGHT, GL_INVALID_ENUM);
-    RETURN_WITH_ERROR_IF(level < 0 || level > Texture2D::LOG2_MAX_TEXTURE_SIZE, GL_INVALID_VALUE);
+    RETURN_WITH_ERROR_IF(level < 0 || level > log2_max_texture_size(m_device_info), GL_INVALID_VALUE);
     // FIXME: GL_INVALID_VALUE is generated if target is GL_TEXTURE_BUFFER and level is not zero
     // FIXME: GL_INVALID_OPERATION is generated if GL_TEXTURE_COMPRESSED_IMAGE_SIZE is queried on texture images with an uncompressed internal format or on proxy targets
 
@@ -538,8 +549,8 @@ void GLContext::gl_tex_image_2d(GLenum target, GLint level, GLint internal_forma
     auto pixel_type_or_error = get_validated_pixel_type(target, internal_format, format, type);
     RETURN_WITH_ERROR_IF(pixel_type_or_error.is_error(), pixel_type_or_error.release_error().code());
 
-    RETURN_WITH_ERROR_IF(level < 0 || level > Texture2D::LOG2_MAX_TEXTURE_SIZE, GL_INVALID_VALUE);
-    RETURN_WITH_ERROR_IF(width < 0 || height < 0 || width > (2 + Texture2D::MAX_TEXTURE_SIZE) || height > (2 + Texture2D::MAX_TEXTURE_SIZE), GL_INVALID_VALUE);
+    RETURN_WITH_ERROR_IF(level < 0 || level > log2_max_texture_size(m_device_info), GL_INVALID_VALUE);
+    RETURN_WITH_ERROR_IF(width < 0 || height < 0 || width > (2 + max_texture_size(m_device_info)) || height > (2 + max_texture_size(m_device_info)), GL_INVALID_VALUE);
     if (!m_device_info.supports_npot_textures)
         RETURN_WITH_ERROR_IF(!is_power_of_two(width) || !is_power_of_two(height), GL_INVALID_VALUE);
     RETURN_WITH_ERROR_IF(border != 0, GL_INVALID_VALUE);
@@ -555,7 +566,7 @@ void GLContext::gl_tex_image_2d(GLenum target, GLint level, GLint internal_forma
         // To be spec compliant we should create the device image once the texture has become complete and is used for rendering the first time.
         // All images that were attached before the device image was created need to be stored somewhere to be used to initialize the device image once complete.
         auto internal_pixel_format = pixel_format_for_internal_format(internal_format);
-        texture_2d->set_device_image(m_rasterizer->create_image(internal_pixel_format, width, height, 1, Texture2D::LOG2_MAX_TEXTURE_SIZE));
+        texture_2d->set_device_image(m_rasterizer->create_image(internal_pixel_format, width, height, 1, log2_max_texture_size(m_device_info)));
         m_sampler_config_is_dirty = true;
     }
 
@@ -688,8 +699,8 @@ void GLContext::gl_tex_sub_image_2d(GLenum target, GLint level, GLint xoffset, G
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
 
     // We only support symbolic constants for now
-    RETURN_WITH_ERROR_IF(level < 0 || level > Texture2D::LOG2_MAX_TEXTURE_SIZE, GL_INVALID_VALUE);
-    RETURN_WITH_ERROR_IF(width < 0 || height < 0 || width > (2 + Texture2D::MAX_TEXTURE_SIZE) || height > (2 + Texture2D::MAX_TEXTURE_SIZE), GL_INVALID_VALUE);
+    RETURN_WITH_ERROR_IF(level < 0 || level > log2_max_texture_size(m_device_info), GL_INVALID_VALUE);
+    RETURN_WITH_ERROR_IF(width < 0 || height < 0 || width > (2 + max_texture_size(m_device_info)) || height > (2 + max_texture_size(m_device_info)), GL_INVALID_VALUE);
 
     // A 2D texture array must have been defined by a previous glTexImage2D operation
     auto texture_2d = m_active_texture_unit->texture_2d_target_texture();
