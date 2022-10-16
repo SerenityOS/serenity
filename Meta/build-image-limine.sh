@@ -2,16 +2,9 @@
 
 set -e
 
-SUDO="sudo"
+script_path=$(cd -P -- "$(dirname -- "$0")" && pwd -P)
 
-if [ "$(uname -s)" = "SerenityOS" ]; then
-    SUDO="pls"
-fi
-
-die() {
-    echo "die: $*"
-    exit 1
-}
+. "${script_path}/.shell_include.sh"
 
 if [ ! -d "limine" ]; then
     echo "limine not found, the script will now build it"
@@ -102,7 +95,6 @@ mkdir -p mnt
 mount "${dev}p2" mnt || die "couldn't mount root filesystem"
 echo "done"
 
-script_path=$(cd -P -- "$(dirname -- "$0")" && pwd -P)
 "$script_path/build-root-filesystem.sh"
 
 echo "installing limine"
