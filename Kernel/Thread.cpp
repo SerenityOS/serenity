@@ -11,7 +11,7 @@
 #include <AK/Time.h>
 #include <Kernel/Arch/InterruptDisabler.h>
 #include <Kernel/Arch/SmapDisabler.h>
-#include <Kernel/Arch/x86/TrapFrame.h>
+#include <Kernel/Arch/TrapFrame.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Devices/KCOVDevice.h>
 #include <Kernel/FileSystem/OpenFileDescription.h>

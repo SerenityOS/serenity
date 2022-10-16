@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <Kernel/Arch/TrapFrame.h>
 #include <Kernel/Arch/x86/DescriptorTable.h>
 #include <Kernel/Arch/x86/Processor.h>
-#include <Kernel/Arch/x86/TrapFrame.h>
 
 extern "C" void syscall_entry();
 extern "C" [[gnu::naked]] void syscall_entry()
