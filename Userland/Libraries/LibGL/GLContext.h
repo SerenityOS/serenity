@@ -78,6 +78,14 @@ struct ContextParameter {
     } value;
 };
 
+struct VertexAttribPointer {
+    GLint size { 4 };
+    GLenum type { GL_FLOAT };
+    bool normalize { true };
+    GLsizei stride { 0 };
+    void const* pointer { 0 };
+};
+
 enum Face {
     Front = 0,
     Back = 1,
@@ -496,16 +504,6 @@ private:
         GLenum mode { GL_COMPILE };
     };
     Optional<CurrentListing> m_current_listing_index;
-
-    struct VertexAttribPointer {
-        GLint size { 4 };
-        GLenum type { GL_FLOAT };
-        bool normalize { true };
-        GLsizei stride { 0 };
-        void const* pointer { 0 };
-    };
-
-    static void read_from_vertex_attribute_pointer(VertexAttribPointer const&, int index, float* elements);
 
     VertexAttribPointer m_client_vertex_pointer;
     VertexAttribPointer m_client_color_pointer;
