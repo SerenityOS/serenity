@@ -299,6 +299,13 @@ FLATTEN SignedBigInteger SignedBigInteger::negated_value() const
     return result;
 }
 
+FLATTEN SignedBigInteger SignedBigInteger::absolute_value() const
+{
+    auto result { *this };
+    result.m_sign = false;
+    return result;
+}
+
 u32 SignedBigInteger::hash() const
 {
     return m_unsigned_data.hash() * (1 - (2 * m_sign));

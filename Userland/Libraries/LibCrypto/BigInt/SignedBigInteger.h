@@ -122,6 +122,7 @@ public:
     [[nodiscard]] SignedDivisionResult divided_by(UnsignedBigInteger const& divisor) const;
 
     [[nodiscard]] SignedBigInteger negated_value() const;
+    [[nodiscard]] SignedBigInteger absolute_value() const;
 
     [[nodiscard]] u32 hash() const;
 
