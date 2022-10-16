@@ -189,8 +189,8 @@ JS_DEFINE_NATIVE_FUNCTION(TimeZonePrototype::get_next_transition)
     if (!time_zone->offset_nanoseconds().has_value())
         return js_null();
 
-    // 5. Let transition be GetIANATimeZoneNextTransition(startingPoint.[[Nanoseconds]], timeZone.[[Identifier]]).
-    auto* transition = get_iana_time_zone_next_transition(vm, starting_point->nanoseconds(), time_zone->identifier());
+    // 5. Let transition be GetNamedTimeZoneNextTransition(timeZone.[[Identifier]], startingPoint.[[Nanoseconds]]).
+    auto* transition = get_named_time_zone_next_transition(vm, time_zone->identifier(), starting_point->nanoseconds());
 
     // 6. If transition is null, return null.
     if (!transition)
