@@ -1,6 +1,6 @@
 ## Name
 
-fortune
+fortune - Open a fortune cookie
 
 ## Synopsis
 
@@ -10,10 +10,17 @@ $ fortune [path]
 
 ## Description
 
-Open a fortune cookie, receive a free quote for the day!
+`fortune` chooses a random fortune from `path` (or `/res/fortunes.json`) and prints it out.
 
 ## Arguments:
 
 * `path`: Path to JSON file with quotes (/res/fortunes.json by default)
 
-<!-- Auto-generated through ArgsParser -->
+## Files
+
+* /res/fortunes.json
+
+## See also
+
+* [`fortunes`(4)](help://man/4/fortunes)
+
