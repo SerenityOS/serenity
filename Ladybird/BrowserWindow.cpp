@@ -182,6 +182,7 @@ BrowserWindow::BrowserWindow()
     debug_menu->addSeparator();
 
     auto* collect_garbage_action = new QAction("Collect Garbage", this);
+    collect_garbage_action->setShortcut(QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_G));
     collect_garbage_action->setIcon(QIcon(QString("%1/res/icons/16x16/trash-can.png").arg(s_serenity_resource_root.characters())));
     debug_menu->addAction(collect_garbage_action);
     QObject::connect(collect_garbage_action, &QAction::triggered, this, [this] {
