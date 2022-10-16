@@ -1084,16 +1084,20 @@ ThrowCompletionOr<DurationRecord> add_duration(VM& vm, double years1, double mon
     return difference_zoned_date_time(vm, relative_to.nanoseconds(), *end_ns, time_zone, calendar, largest_unit, *Object::create(realm, nullptr));
 }
 
-// 7.5.23 MoveRelativeDate ( calendar, relativeTo, duration ), https://tc39.es/proposal-temporal/#sec-temporal-moverelativedate
-ThrowCompletionOr<MoveRelativeDateResult> move_relative_date(VM& vm, Object& calendar, PlainDate& relative_to, Duration& duration)
+// 7.5.23 MoveRelativeDate ( calendar, relativeTo, duration [ , dateAdd ] ), https://tc39.es/proposal-temporal/#sec-temporal-moverelativedate
+ThrowCompletionOr<MoveRelativeDateResult> move_relative_date(VM& vm, Object& calendar, PlainDate& relative_to, Duration& duration, FunctionObject* date_add)
 {
-    // 1. Let newDate be ? CalendarDateAdd(calendar, relativeTo, duration, options).
-    auto* new_date = TRY(calendar_date_add(vm, calendar, &relative_to, duration));
+    // 1. If dateAdd is not present, set dateAdd to ? GetMethod(calendar, "dateAdd").
+    if (!date_add)
+        date_add = TRY(Value(&calendar).get_method(vm, vm.names.dateAdd));
 
-    // 2. Let days be DaysUntil(relativeTo, newDate).
+    // 2. Let newDate be ? CalendarDateAdd(calendar, relativeTo, duration, undefined, dateAdd)
+    auto* new_date = TRY(calendar_date_add(vm, calendar, &relative_to, duration, nullptr, date_add));
+
+    // 3. Let days be DaysUntil(relativeTo, newDate).
     auto days = days_until(relative_to, *new_date);
 
-    // 3. Return the Record { [[RelativeTo]]: newDate, [[Days]]: days }.
+    // 4. Return the Record { [[RelativeTo]]: newDate, [[Days]]: days }.
     return MoveRelativeDateResult { .relative_to = make_handle(new_date), .days = days };
 }
 
@@ -1266,8 +1270,8 @@ ThrowCompletionOr<RoundedDuration> round_duration(VM& vm, double years, double m
         // v. Let oneYear be ! CreateTemporalDuration(sign, 0, 0, 0, 0, 0, 0, 0, 0, 0).
         auto* one_year = MUST(create_temporal_duration(vm, sign, 0, 0, 0, 0, 0, 0, 0, 0, 0));
 
-        // w. Let moveResult be ? MoveRelativeDate(calendar, relativeTo, oneYear).
-        auto move_result = TRY(move_relative_date(vm, *calendar, *relative_to, *one_year));
+        // w. Let moveResult be ? MoveRelativeDate(calendar, relativeTo, oneYear, dateAdd).
+        auto move_result = TRY(move_relative_date(vm, *calendar, *relative_to, *one_year, date_add));
 
         // x. Let oneYearDays be moveResult.[[Days]].
         auto one_year_days = move_result.days;
@@ -1320,8 +1324,8 @@ ThrowCompletionOr<RoundedDuration> round_duration(VM& vm, double years, double m
         // j. Let oneMonth be ! CreateTemporalDuration(0, sign, 0, 0, 0, 0, 0, 0, 0, 0).
         auto* one_month = MUST(create_temporal_duration(vm, 0, sign, 0, 0, 0, 0, 0, 0, 0, 0));
 
-        // k. Let moveResult be ? MoveRelativeDate(calendar, relativeTo, oneMonth).
-        auto move_result = TRY(move_relative_date(vm, *calendar, *relative_to, *one_month));
+        // k. Let moveResult be ? MoveRelativeDate(calendar, relativeTo, oneMonth, dateAdd).
+        auto move_result = TRY(move_relative_date(vm, *calendar, *relative_to, *one_month, date_add));
 
         // l. Set relativeTo to moveResult.[[RelativeTo]].
         relative_to = move_result.relative_to.cell();
@@ -1337,8 +1341,8 @@ ThrowCompletionOr<RoundedDuration> round_duration(VM& vm, double years, double m
             // ii. Set days to days - oneMonthDays.
             days -= one_month_days;
 
-            // iii. Set moveResult to ? MoveRelativeDate(calendar, relativeTo, oneMonth).
-            move_result = TRY(move_relative_date(vm, *calendar, *relative_to, *one_month));
+            // iii. Set moveResult to ? MoveRelativeDate(calendar, relativeTo, oneMonth, dateAdd).
+            move_result = TRY(move_relative_date(vm, *calendar, *relative_to, *one_month, date_add));
 
             // iv. Set relativeTo to moveResult.[[RelativeTo]].
             relative_to = move_result.relative_to.cell();
