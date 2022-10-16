@@ -91,6 +91,12 @@
 #    define VALIDATE_IS_X86() static_assert(false, "Trying to include x86 only header on non x86 platform");
 #endif
 
+#if ARCH(AARCH64)
+#    define VALIDATE_IS_AARCH64()
+#else
+#    define VALIDATE_IS_AARCH64() static_assert(false, "Trying to include aarch64 only header on non aarch64 platform");
+#endif
+
 #if !defined(AK_COMPILER_CLANG) && !defined(__CLION_IDE_) && !defined(__CLION_IDE__)
 #    define AK_HAS_CONDITIONALLY_TRIVIAL
 #endif

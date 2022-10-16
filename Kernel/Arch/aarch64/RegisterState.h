@@ -6,6 +6,9 @@
 
 #pragma once
 
+#include <AK/Platform.h>
+VALIDATE_IS_AARCH64()
+
 namespace Kernel {
 
 struct RegisterState {
