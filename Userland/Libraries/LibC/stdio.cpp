@@ -633,8 +633,11 @@ int fgetc(FILE* stream)
     VERIFY(stream);
     char ch;
     size_t nread = fread(&ch, sizeof(char), 1, stream);
-    if (nread == 1)
-        return ch;
+    if (nread == 1) {
+        // Note: We do this static_cast because otherwise when casting a char that contains
+        // 0xFF results in an int containing -1, so an explicit cast is required here.
+        return static_cast<int>(ch & 0xff);
+    }
     return EOF;
 }
 
