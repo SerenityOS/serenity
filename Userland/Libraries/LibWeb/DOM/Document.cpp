@@ -116,7 +116,8 @@ static NonnullRefPtr<HTML::BrowsingContext> obtain_a_browsing_context_to_use_for
         // 3. Set newBrowsingContext's popup sandboxing flag set to a clone of sandboxFlags.
     }
 
-    // FIXME: 6. Discard browsingContext.
+    // 6. Discard browsingContext.
+    browsing_context.discard();
 
     // 7. Return newBrowsingContext.
     return new_browsing_context;
