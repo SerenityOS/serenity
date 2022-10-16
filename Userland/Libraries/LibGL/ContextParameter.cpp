@@ -615,7 +615,7 @@ GLboolean GLContext::gl_is_enabled(GLenum capability)
     auto parameter = optional_parameter.release_value();
     RETURN_VALUE_WITH_ERROR_IF(!parameter.is_capability, GL_INVALID_ENUM, 0);
 
-    return parameter.value.boolean_value;
+    return parameter.value.boolean_value ? GL_TRUE : GL_FALSE;
 }
 
 GPU::PackingSpecification GLContext::get_packing_specification(PackingType packing_type)
