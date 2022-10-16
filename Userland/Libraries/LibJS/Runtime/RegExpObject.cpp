@@ -156,48 +156,89 @@ void RegExpObject::initialize(Realm& realm)
 }
 
 // 22.2.3.2.2 RegExpInitialize ( obj, pattern, flags ), https://tc39.es/ecma262/#sec-regexpinitialize
-ThrowCompletionOr<NonnullGCPtr<RegExpObject>> RegExpObject::regexp_initialize(VM& vm, Value pattern, Value flags)
+ThrowCompletionOr<NonnullGCPtr<RegExpObject>> RegExpObject::regexp_initialize(VM& vm, Value pattern_value, Value flags_value)
 {
-    String f;
-    if (flags.is_undefined()) {
-        f = String::empty();
-    } else {
-        f = TRY(flags.to_string(vm));
-    }
+    // NOTE: This also contains changes adapted from https://arai-a.github.io/ecma262-compare/?pr=2418, which doesn't match the upstream spec anymore.
 
-    String original_pattern;
-    String parsed_pattern;
+    // 1. If pattern is undefined, let P be the empty String.
+    // 2. Else, let P be ? ToString(pattern).
+    auto pattern = pattern_value.is_undefined()
+        ? String::empty()
+        : TRY(pattern_value.to_string(vm));
 
-    if (pattern.is_undefined()) {
-        original_pattern = String::empty();
-        parsed_pattern = String::empty();
-    } else {
-        original_pattern = TRY(pattern.to_string(vm));
-        bool unicode = f.find('u').has_value();
-        bool unicode_sets = f.find('v').has_value();
-        parsed_pattern = TRY(parse_regex_pattern(vm, original_pattern, unicode, unicode_sets));
-    }
+    // 3. If flags is undefined, let F be the empty String.
+    // 4. Else, let F be ? ToString(flags).
+    auto flags = flags_value.is_undefined()
+        ? String::empty()
+        : TRY(flags_value.to_string(vm));
 
-    auto parsed_flags_or_error = regex_flags_from_string(f);
+    // 5. If F contains any code unit other than "d", "g", "i", "m", "s", "u", or "y" or if it contains the same code unit more than once, throw a SyntaxError exception.
+    // 6. If F contains "i", let i be true; else let i be false.
+    // 7. If F contains "m", let m be true; else let m be false.
+    // 8. If F contains "s", let s be true; else let s be false.
+    // 9. If F contains "u", let u be true; else let u be false.
+    // 10. If F contains "v", let v be true; else let v be false.
+    auto parsed_flags_or_error = regex_flags_from_string(flags);
     if (parsed_flags_or_error.is_error())
         return vm.throw_completion<SyntaxError>(parsed_flags_or_error.release_error());
+    auto parsed_flags = parsed_flags_or_error.release_value();
 
-    Regex<ECMA262> regex(move(parsed_pattern), parsed_flags_or_error.release_value());
+    auto parsed_pattern = String::empty();
+    if (!pattern.is_empty()) {
+        bool unicode = parsed_flags.has_flag_set(regex::ECMAScriptFlags::Unicode);
+        bool unicode_sets = parsed_flags.has_flag_set(regex::ECMAScriptFlags::UnicodeSets);
+
+        // 11. If u is true, then
+        //     a. Let patternText be StringToCodePoints(P).
+        // 12. Else,
+        //     a. Let patternText be the result of interpreting each of P's 16-bit elements as a Unicode BMP code point. UTF-16 decoding is not applied to the elements.
+        // 13. Let parseResult be ParsePattern(patternText, u, v).
+        parsed_pattern = TRY(parse_regex_pattern(vm, pattern, unicode, unicode_sets));
+    }
+
+    // 14. If parseResult is a non-empty List of SyntaxError objects, throw a SyntaxError exception.
+    Regex<ECMA262> regex(move(parsed_pattern), parsed_flags);
     if (regex.parser_result.error != regex::Error::NoError)
         return vm.throw_completion<SyntaxError>(ErrorType::RegExpCompileError, regex.error_string());
 
-    m_pattern = move(original_pattern);
-    m_flags = move(f);
+    // 15. Assert: parseResult is a Pattern Parse Node.
+    VERIFY(regex.parser_result.error == regex::Error::NoError);
+
+    // 16. Set obj.[[OriginalSource]] to P.
+    m_pattern = move(pattern);
+
+    // 17. Set obj.[[OriginalFlags]] to F.
+    m_flags = move(flags);
+
+    // 18. Let capturingGroupsCount be CountLeftCapturingParensWithin(parseResult).
+    // 19. Let rer be the RegExp Record { [[IgnoreCase]]: i, [[Multiline]]: m, [[DotAll]]: s, [[Unicode]]: u, [[CapturingGroupsCount]]: capturingGroupsCount }.
+    // 20. Set obj.[[RegExpRecord]] to rer.
+    // 21. Set obj.[[RegExpMatcher]] to CompilePattern of parseResult with argument rer.
     m_regex = move(regex);
 
+    // 22. Perform ? Set(obj, "lastIndex", +0𝔽, true).
     TRY(set(vm.names.lastIndex, Value(0), Object::ShouldThrowExceptions::Yes));
 
+    // 23. Return obj.
     return NonnullGCPtr { *this };
 }
 
 // 22.2.3.2.5 EscapeRegExpPattern ( P, F ), https://tc39.es/ecma262/#sec-escaperegexppattern
 String RegExpObject::escape_regexp_pattern() const
 {
+    // 1. Let S be a String in the form of a Pattern[~UnicodeMode] (Pattern[+UnicodeMode] if F contains "u") equivalent
+    //    to P interpreted as UTF-16 encoded Unicode code points (6.1.4), in which certain code points are escaped as
+    //    described below. S may or may not be identical to P; however, the Abstract Closure that would result from
+    //    evaluating S as a Pattern[~UnicodeMode] (Pattern[+UnicodeMode] if F contains "u") must behave identically to
+    //    the Abstract Closure given by the constructed object's [[RegExpMatcher]] internal slot. Multiple calls to
+    //    this abstract operation using the same values for P and F must produce identical results.
+    // 2. The code points / or any LineTerminator occurring in the pattern shall be escaped in S as necessary to ensure
+    //    that the string-concatenation of "/", S, "/", and F can be parsed (in an appropriate lexical context) as a
+    //    RegularExpressionLiteral that behaves identically to the constructed regular expression. For example, if P is
+    //    "/", then S could be "\/" or "\u002F", among other possibilities, but not "/", because /// followed by F
+    //    would be parsed as a SingleLineComment rather than a RegularExpressionLiteral. If P is the empty String, this
+    //    specification can be met by letting S be "(?:)".
+    // 3. Return S.
     if (m_pattern.is_empty())
         return "(?:)";
     // FIXME: Check the 'u' and 'v' flags and escape accordingly
@@ -208,7 +249,11 @@ String RegExpObject::escape_regexp_pattern() const
 ThrowCompletionOr<NonnullGCPtr<RegExpObject>> regexp_create(VM& vm, Value pattern, Value flags)
 {
     auto& realm = *vm.current_realm();
+
+    // 1. Let obj be ! RegExpAlloc(%RegExp%).
     auto regexp_object = MUST(regexp_alloc(vm, *realm.intrinsics().regexp_constructor()));
+
+    // 2. Return ? RegExpInitialize(obj, P, F).
     return TRY(regexp_object->regexp_initialize(vm, pattern, flags));
 }
 
