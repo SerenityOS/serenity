@@ -95,4 +95,14 @@ Messages::WebDriverSessionClient::GetNamedCookieResponse WebDriverConnection::ge
     return { {} };
 }
 
+void WebDriverConnection::update_cookie(Web::Cookie::Cookie const& cookie)
+{
+    if (auto browser_window = m_browser_window.strong_ref()) {
+        auto& tab = browser_window->active_tab();
+        if (tab.on_update_cookie) {
+            tab.on_update_cookie(tab.url(), cookie);
+        }
+    }
+}
+
 }
