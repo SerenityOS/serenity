@@ -76,6 +76,7 @@ auth_opts=()
 launcher_name=
 launcher_category=
 launcher_command=
+launcher_workdir=
 launcher_run_in_terminal=false
 icon_file=
 
@@ -204,18 +205,19 @@ install_icon() {
 
 install_main_launcher() {
     if [ -n "$launcher_name" ] && [ -n "$launcher_category" ] && [ -n "$launcher_command" ]; then
-        install_launcher "$launcher_name" "$launcher_category" "$launcher_command"
+        install_launcher "$launcher_name" "$launcher_category" "$launcher_command" "$launcher_workdir"
     fi
 }
 
 install_launcher() {
-    if [ "$#" -lt 3 ]; then
-        echo "Syntax: install_launcher <name> <category> <command>"
+    if [ "$#" -lt 4 ]; then
+        echo "Syntax: install_launcher <name> <category> <command> <workdir>"
         exit 1
     fi
     local launcher_name="$1"
     local launcher_category="$2"
     local launcher_command="$3"
+    local launcher_workdir="$4"
     local launcher_filename="${launcher_name,,}"
     launcher_filename="${launcher_filename// /}"
     local icon_override=""
@@ -240,6 +242,7 @@ SCRIPT
 Name=$launcher_name
 Executable=$launcher_executable
 Category=$launcher_category
+WorkingDirectory=$launcher_workdir
 RunInTerminal=$launcher_run_in_terminal
 ${icon_override}
 CONFIG
