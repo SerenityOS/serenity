@@ -106,12 +106,12 @@ JS::VM& main_thread_vm()
             case JS::Promise::RejectionOperation::Reject:
                 // 4. If operation is "reject",
                 //    1. Add promise to settings object's about-to-be-notified rejected promises list.
-                settings_object.push_onto_about_to_be_notified_rejected_promises_list(JS::make_handle(&promise));
+                settings_object.push_onto_about_to_be_notified_rejected_promises_list(promise);
                 break;
             case JS::Promise::RejectionOperation::Handle: {
                 // 5. If operation is "handle",
                 //    1. If settings object's about-to-be-notified rejected promises list contains promise, then remove promise from that list and return.
-                bool removed_about_to_be_notified_rejected_promise = settings_object.remove_from_about_to_be_notified_rejected_promises_list(&promise);
+                bool removed_about_to_be_notified_rejected_promise = settings_object.remove_from_about_to_be_notified_rejected_promises_list(promise);
                 if (removed_about_to_be_notified_rejected_promise)
                     return;
 

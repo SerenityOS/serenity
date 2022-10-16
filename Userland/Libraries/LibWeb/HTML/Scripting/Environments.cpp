@@ -29,6 +29,13 @@ EnvironmentSettingsObject::~EnvironmentSettingsObject()
     responsible_event_loop().unregister_environment_settings_object({}, *this);
 }
 
+void EnvironmentSettingsObject::visit_edges(Cell::Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    for (auto& promise : m_about_to_be_notified_rejected_promises_list)
+        visitor.visit(promise);
+}
+
 JS::ExecutionContext& EnvironmentSettingsObject::realm_execution_context()
 {
     // NOTE: All environment settings objects are created with a realm execution context, so it's stored and returned here in the base class.
@@ -173,15 +180,15 @@ bool EnvironmentSettingsObject::remove_from_outstanding_rejected_promises_weak_s
     });
 }
 
-void EnvironmentSettingsObject::push_onto_about_to_be_notified_rejected_promises_list(JS::Handle<JS::Promise> promise)
+void EnvironmentSettingsObject::push_onto_about_to_be_notified_rejected_promises_list(JS::NonnullGCPtr<JS::Promise> promise)
 {
     m_about_to_be_notified_rejected_promises_list.append(move(promise));
 }
 
-bool EnvironmentSettingsObject::remove_from_about_to_be_notified_rejected_promises_list(JS::Promise* promise)
+bool EnvironmentSettingsObject::remove_from_about_to_be_notified_rejected_promises_list(JS::NonnullGCPtr<JS::Promise> promise)
 {
-    return m_about_to_be_notified_rejected_promises_list.remove_first_matching([&](JS::Handle<JS::Promise> promise_in_list) {
-        return promise == promise_in_list.cell();
+    return m_about_to_be_notified_rejected_promises_list.remove_first_matching([&](auto& promise_in_list) {
+        return promise == promise_in_list;
     });
 }
 
@@ -204,11 +211,10 @@ void EnvironmentSettingsObject::notify_about_rejected_promises(Badge<EventLoop>)
     // 5. Queue a global task on the DOM manipulation task source given global to run the following substep:
     queue_global_task(Task::Source::DOMManipulation, global, [this, &global, list = move(list)]() mutable {
         // 1. For each promise p in list:
-        for (auto promise_handle : list) {
-            auto& promise = *promise_handle.cell();
+        for (auto promise : list) {
 
             // 1. If p's [[PromiseIsHandled]] internal slot is true, continue to the next iteration of the loop.
-            if (promise.is_handled())
+            if (promise->is_handled())
                 continue;
 
             // 2. Let notHandled be the result of firing an event named unhandledrejection at global, using PromiseRejectionEvent, with the cancelable attribute initialized to true,
@@ -220,8 +226,8 @@ void EnvironmentSettingsObject::notify_about_rejected_promises(Badge<EventLoop>)
                     .composed = false,
                 },
                 // Sadly we can't use .promise and .reason here, as we can't use the designator on the initialization of DOM::EventInit above.
-                /* .promise = */ promise_handle,
-                /* .reason = */ promise.result(),
+                /* .promise = */ JS::make_handle(*promise),
+                /* .reason = */ promise->result(),
             };
             // FIXME: This currently assumes that global is a WindowObject.
             auto& window = verify_cast<HTML::Window>(global);
@@ -233,13 +239,13 @@ void EnvironmentSettingsObject::notify_about_rejected_promises(Badge<EventLoop>)
             // 3. If notHandled is false, then the promise rejection is handled. Otherwise, the promise rejection is not handled.
 
             // 4. If p's [[PromiseIsHandled]] internal slot is false, add p to settings object's outstanding rejected promises weak set.
-            if (!promise.is_handled())
-                m_outstanding_rejected_promises_weak_set.append(&promise);
+            if (!promise->is_handled())
+                m_outstanding_rejected_promises_weak_set.append(promise);
 
             // This algorithm results in promise rejections being marked as handled or not handled. These concepts parallel handled and not handled script errors.
             // If a rejection is still not handled after this, then the rejection may be reported to a developer console.
             if (not_handled)
-                HTML::report_exception_to_console(promise.result(), realm(), ErrorInPromise::Yes);
+                HTML::report_exception_to_console(promise->result(), realm(), ErrorInPromise::Yes);
         }
     });
 }
