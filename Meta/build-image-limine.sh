@@ -2,6 +2,12 @@
 
 set -e
 
+SUDO="sudo"
+
+if [ "$(uname -s)" = "SerenityOS" ]; then
+    SUDO="pls"
+fi
+
 die() {
     echo "die: $*"
     exit 1
