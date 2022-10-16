@@ -287,8 +287,11 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::month_code)
         temporal_date_like = TRY(to_temporal_date(vm, temporal_date_like));
     }
 
-    // 5. Return ! ISOMonthCode(temporalDateLike).
-    return js_string(vm, iso_month_code(temporal_date_like.as_object()));
+    // 5. Assert: temporalDateLike has an [[ISOMonth]] internal slot.
+    // NOTE: The assertion happens in iso_month() call.
+
+    // 6. Return ISOMonthCode(temporalDateLike.[[ISOMonth]]).
+    return js_string(vm, iso_month_code(iso_month(temporal_date_like.as_object())));
 }
 
 // 12.4.12 Temporal.Calendar.prototype.day ( temporalDateLike ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.day
