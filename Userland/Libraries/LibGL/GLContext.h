@@ -510,9 +510,18 @@ private:
     Vector<VertexAttribPointer> m_client_tex_coord_pointer;
     VertexAttribPointer m_client_normal_pointer;
 
-    u8 m_pack_alignment { 4 };
-    GLsizei m_unpack_row_length { 0 };
-    u8 m_unpack_alignment { 4 };
+    struct PixelParameters {
+        i32 image_height { 0 };
+        bool least_significant_bit_first { false };
+        u8 pack_alignment { 4 };
+        i32 row_length { 0 };
+        i32 skip_images { 0 };
+        i32 skip_pixels { 0 };
+        i32 skip_rows { 0 };
+        bool swap_bytes { false };
+    };
+    PixelParameters m_packing_parameters;
+    PixelParameters m_unpacking_parameters;
 
     // Point drawing configuration
     bool m_point_smooth { false };

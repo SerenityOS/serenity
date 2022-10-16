@@ -773,19 +773,49 @@ void GLContext::gl_fogi(GLenum pname, GLint param)
 
 void GLContext::gl_pixel_storei(GLenum pname, GLint param)
 {
-    // FIXME: Implement missing parameters
+    auto const is_packing_parameter = (pname >= GL_PACK_SWAP_BYTES && pname <= GL_PACK_ALIGNMENT)
+        || pname == GL_PACK_SKIP_IMAGES
+        || pname == GL_PACK_IMAGE_HEIGHT;
+    auto& pixel_parameters = is_packing_parameter ? m_packing_parameters : m_unpacking_parameters;
+
     switch (pname) {
     case GL_PACK_ALIGNMENT:
-        RETURN_WITH_ERROR_IF(param != 1 && param != 2 && param != 4 && param != 8, GL_INVALID_VALUE);
-        m_pack_alignment = param;
-        break;
-    case GL_UNPACK_ROW_LENGTH:
-        RETURN_WITH_ERROR_IF(param < 0, GL_INVALID_VALUE);
-        m_unpack_row_length = static_cast<size_t>(param);
-        break;
     case GL_UNPACK_ALIGNMENT:
         RETURN_WITH_ERROR_IF(param != 1 && param != 2 && param != 4 && param != 8, GL_INVALID_VALUE);
-        m_unpack_alignment = param;
+        pixel_parameters.pack_alignment = param;
+        break;
+    case GL_PACK_IMAGE_HEIGHT:
+    case GL_UNPACK_IMAGE_HEIGHT:
+        RETURN_WITH_ERROR_IF(param < 0, GL_INVALID_VALUE);
+        pixel_parameters.image_height = param;
+        break;
+    case GL_PACK_LSB_FIRST:
+    case GL_UNPACK_LSB_FIRST:
+        pixel_parameters.least_significant_bit_first = (param != 0);
+        break;
+    case GL_PACK_ROW_LENGTH:
+    case GL_UNPACK_ROW_LENGTH:
+        RETURN_WITH_ERROR_IF(param < 0, GL_INVALID_VALUE);
+        pixel_parameters.row_length = param;
+        break;
+    case GL_PACK_SKIP_IMAGES:
+    case GL_UNPACK_SKIP_IMAGES:
+        RETURN_WITH_ERROR_IF(param < 0, GL_INVALID_VALUE);
+        pixel_parameters.skip_images = param;
+        break;
+    case GL_PACK_SKIP_PIXELS:
+    case GL_UNPACK_SKIP_PIXELS:
+        RETURN_WITH_ERROR_IF(param < 0, GL_INVALID_VALUE);
+        pixel_parameters.skip_pixels = param;
+        break;
+    case GL_PACK_SKIP_ROWS:
+    case GL_UNPACK_SKIP_ROWS:
+        RETURN_WITH_ERROR_IF(param < 0, GL_INVALID_VALUE);
+        pixel_parameters.skip_rows = param;
+        break;
+    case GL_PACK_SWAP_BYTES:
+    case GL_UNPACK_SWAP_BYTES:
+        pixel_parameters.swap_bytes = (param != 0);
         break;
     default:
         RETURN_WITH_ERROR_IF(true, GL_INVALID_ENUM);
