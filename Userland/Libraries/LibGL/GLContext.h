@@ -441,8 +441,6 @@ private:
             decltype(&GLContext::gl_tex_parameter),
             decltype(&GLContext::gl_tex_parameterfv),
             decltype(&GLContext::gl_depth_mask),
-            decltype(&GLContext::gl_draw_arrays),
-            decltype(&GLContext::gl_draw_elements),
             decltype(&GLContext::gl_draw_pixels),
             decltype(&GLContext::gl_depth_range),
             decltype(&GLContext::gl_polygon_offset),
@@ -473,7 +471,6 @@ private:
             decltype(&GLContext::gl_color_material),
             decltype(&GLContext::gl_get_light),
             decltype(&GLContext::gl_clip_plane),
-            decltype(&GLContext::gl_array_element),
             decltype(&GLContext::gl_copy_tex_sub_image_2d),
             decltype(&GLContext::gl_point_size)>;
 

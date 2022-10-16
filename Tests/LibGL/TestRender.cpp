@@ -252,3 +252,29 @@ TEST_CASE(0008_test_pop_matrix_regression)
     context->present();
     expect_bitmap_equals_reference(context->frontbuffer(), "0008_test_pop_matrix_regression"sv);
 }
+
+TEST_CASE(0009_test_draw_elements_in_display_list)
+{
+    auto context = create_testing_context(64, 64);
+
+    glColor3f(0.f, 0.f, 1.f);
+    glEnableClientState(GL_VERTEX_ARRAY);
+
+    auto const list_index = glGenLists(1);
+    glNewList(list_index, GL_COMPILE);
+    float vertices[] = { 0.f, .5f, -.5f, -.5f, .5f, -.5f };
+    glVertexPointer(2, GL_FLOAT, 0, &vertices);
+    u8 indices[] = { 0, 1, 2 };
+    glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_BYTE, &indices);
+    glEndList();
+
+    // Modifying an index here should not have an effect
+    indices[0] = 2;
+
+    glCallList(list_index);
+
+    EXPECT_EQ(glGetError(), 0u);
+
+    context->present();
+    expect_bitmap_equals_reference(context->frontbuffer(), "0009_test_draw_elements_in_display_list"sv);
+}
