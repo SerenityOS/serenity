@@ -89,6 +89,9 @@ void GLContext::gl_call_lists(GLsizei n, GLenum type, void const* lists)
 
 void GLContext::gl_delete_lists(GLuint list, GLsizei range)
 {
+    RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
+    RETURN_WITH_ERROR_IF(range < 0, GL_INVALID_VALUE);
+
     if (m_listings.size() < list || m_listings.size() <= list + range)
         return;
 
