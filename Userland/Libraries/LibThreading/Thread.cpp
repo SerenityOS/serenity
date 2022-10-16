@@ -15,7 +15,10 @@ Threading::Thread::Thread(Function<intptr_t()> action, StringView thread_name)
     , m_thread_name(thread_name.is_null() ? ""sv : thread_name)
 {
     register_property("thread_name", [&] { return JsonValue { m_thread_name }; });
+#if defined(AK_OS_SERENITY) || defined(AK_OS_LINUX)
+    // FIXME: Print out a pretty TID for BSD and macOS platforms, too
     register_property("tid", [&] { return JsonValue { m_tid }; });
+#endif
 }
 
 Threading::Thread::~Thread()
@@ -40,10 +43,12 @@ void Threading::Thread::start()
         static_cast<void*>(this));
 
     VERIFY(rc == 0);
+#ifdef AK_OS_SERENITY
     if (!m_thread_name.is_empty()) {
         rc = pthread_setname_np(m_tid, m_thread_name.characters());
         VERIFY(rc == 0);
     }
+#endif
     dbgln("Started thread \"{}\", tid = {}", m_thread_name, m_tid);
     m_started = true;
 }
