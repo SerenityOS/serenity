@@ -189,20 +189,16 @@ i32 Window::run_timer_initialization_steps(TimerHandler handler, i32 timeout, JS
     // 8. Assert: initiating script is not null, since this algorithm is always called from some script.
 
     // 9. Let task be a task that runs the following substeps:
-    auto task = [weak_window = make_weak_ptr<Window>(), handler = move(handler), timeout, arguments = move(arguments), repeat, id]() mutable {
-        JS::GCPtr<Window> window = weak_window.ptr();
-        if (!window)
-            return;
-
+    JS::SafeFunction<void()> task = [this, handler = move(handler), timeout, arguments = move(arguments), repeat, id]() mutable {
         // 1. If id does not exist in global's map of active timers, then abort these steps.
-        if (!window->m_timers.contains(id))
+        if (!m_timers.contains(id))
             return;
 
         handler.visit(
             // 2. If handler is a Function, then invoke handler given arguments with the callback this value set to thisArg. If this throws an exception, catch it, and report the exception.
             [&](JS::Handle<WebIDL::CallbackType> callback) {
-                if (auto result = WebIDL::invoke_callback(*callback, window.ptr(), arguments); result.is_error())
-                    HTML::report_exception(result, weak_window->realm());
+                if (auto result = WebIDL::invoke_callback(*callback, this, arguments); result.is_error())
+                    HTML::report_exception(result, realm());
             },
             // 3. Otherwise:
             [&](String const& source) {
@@ -210,10 +206,10 @@ i32 Window::run_timer_initialization_steps(TimerHandler handler, i32 timeout, JS
                 // FIXME: 2. Perform HostEnsureCanCompileStrings(callerRealm, calleeRealm). If this throws an exception, catch it, report the exception, and abort these steps.
 
                 // 3. Let settings object be global's relevant settings object.
-                auto& settings_object = window->associated_document().relevant_settings_object();
+                auto& settings_object = associated_document().relevant_settings_object();
 
                 // 4. Let base URL be initiating script's base URL.
-                auto url = window->associated_document().url();
+                auto url = associated_document().url();
 
                 // 5. Assert: base URL is not null, as initiating script is a classic script or a JavaScript module script.
 
@@ -226,18 +222,18 @@ i32 Window::run_timer_initialization_steps(TimerHandler handler, i32 timeout, JS
             });
 
         // 4. If id does not exist in global's map of active timers, then abort these steps.
-        if (!window->m_timers.contains(id))
+        if (!m_timers.contains(id))
             return;
 
         switch (repeat) {
         // 5. If repeat is true, then perform the timer initialization steps again, given global, handler, timeout, arguments, true, and id.
         case Repeat::Yes:
-            window->run_timer_initialization_steps(handler, timeout, move(arguments), repeat, id);
+            run_timer_initialization_steps(handler, timeout, move(arguments), repeat, id);
             break;
 
         // 6. Otherwise, remove global's map of active timers[id].
         case Repeat::No:
-            window->m_timers.remove(id);
+            m_timers.remove(id);
             break;
         }
     };
@@ -246,12 +242,8 @@ i32 Window::run_timer_initialization_steps(TimerHandler handler, i32 timeout, JS
     // FIXME: 11. Set task's timer nesting level to nesting level.
 
     // 12. Let completionStep be an algorithm step which queues a global task on the timer task source given global to run task.
-    auto completion_step = [weak_window = make_weak_ptr<Window>(), task = move(task)]() mutable {
-        JS::GCPtr<Window> window = weak_window.ptr();
-        if (!window)
-            return;
-
-        HTML::queue_global_task(HTML::Task::Source::TimerTask, *window, move(task));
+    JS::SafeFunction<void()> completion_step = [this, task = move(task)]() mutable {
+        HTML::queue_global_task(HTML::Task::Source::TimerTask, *this, move(task));
     };
 
     // 13. Run steps after a timeout given global, "setTimeout/setInterval", timeout, completionStep, and id.
