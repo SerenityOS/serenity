@@ -28,11 +28,11 @@ TimeZone::TimeZone(Object& prototype)
 }
 
 // 11.1.1 IsValidTimeZoneName ( timeZone ), https://tc39.es/proposal-temporal/#sec-isvalidtimezonename
-// 15.1.1 IsValidTimeZoneName ( timeZone ), https://tc39.es/proposal-temporal/#sup-isvalidtimezonename
-bool is_valid_time_zone_name(String const& time_zone)
+bool is_valid_time_zone_name(StringView time_zone)
 {
-    // 1. If one of the Zone or Link names of the IANA Time Zone Database is an ASCII-case-insensitive match of timeZone as described in 6.1, return true.
-    // 2. If timeZone is an ASCII-case-insensitive match of "UTC", return true.
+    // 1. Let timeZones be AvailableTimeZones().
+    // 2. For each String candidate in timeZones, do
+    //     a. If timeZone is an ASCII-case-insensitive match for candidate, return true.
     // 3. Return false.
     // NOTE: When LibTimeZone is built without ENABLE_TIME_ZONE_DATA, this only recognizes 'UTC',
     // which matches the minimum requirements of the Temporal spec.
