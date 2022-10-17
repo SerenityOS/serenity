@@ -186,8 +186,21 @@ ThrowCompletionOr<String> to_temporal_disambiguation(VM& vm, Object const* optio
 // 13.6 ToTemporalRoundingMode ( normalizedOptions, fallback ), https://tc39.es/proposal-temporal/#sec-temporal-totemporalroundingmode
 ThrowCompletionOr<String> to_temporal_rounding_mode(VM& vm, Object const& normalized_options, String const& fallback)
 {
-    // 1. Return ? GetOption(normalizedOptions, "roundingMode", "string", « "ceil", "floor", "trunc", "halfExpand" », fallback).
-    auto option = TRY(get_option(vm, normalized_options, vm.names.roundingMode, OptionType::String, { "ceil"sv, "floor"sv, "trunc"sv, "halfExpand"sv }, fallback.view()));
+    // 1. Return ? GetOption(normalizedOptions, "roundingMode", "string", « "ceil", "floor", "expand", "trunc", "halfCeil", "halfFloor", "halfExpand", "halfTrunc", "halfEven" », fallback).
+    auto option = TRY(get_option(
+        vm, normalized_options, vm.names.roundingMode, OptionType::String,
+        {
+            "ceil"sv,
+            "floor"sv,
+            "expand"sv,
+            "trunc"sv,
+            "halfCeil"sv,
+            "halfFloor"sv,
+            "halfExpand"sv,
+            "halfTrunc"sv,
+            "halfEven"sv,
+        },
+        fallback.view()));
 
     VERIFY(option.is_string());
     return option.as_string().string();
@@ -204,7 +217,15 @@ StringView negate_temporal_rounding_mode(String const& rounding_mode)
     if (rounding_mode == "floor"sv)
         return "ceil"sv;
 
-    // 3. Return roundingMode.
+    // 3. If roundingMode is "halfCeil", return "halfFloor".
+    if (rounding_mode == "halfCeil"sv)
+        return "halfFloor"sv;
+
+    // 4. If roundingMode is "halfFloor", return "halfCeil".
+    if (rounding_mode == "halfFloor"sv)
+        return "halfCeil"sv;
+
+    // 5. Return roundingMode.
     return rounding_mode;
 }
 
@@ -1029,7 +1050,7 @@ Crypto::SignedBigInteger apply_unsigned_rounding_mode(Crypto::SignedDivisionResu
 // 13.25 RoundNumberToIncrement ( x, increment, roundingMode ), https://tc39.es/proposal-temporal/#sec-temporal-roundnumbertoincrement
 double round_number_to_increment(double x, u64 increment, StringView rounding_mode)
 {
-    VERIFY(rounding_mode == "ceil"sv || rounding_mode == "floor"sv || rounding_mode == "trunc"sv || rounding_mode == "halfExpand"sv);
+    VERIFY(rounding_mode.is_one_of("ceil"sv, "floor"sv, "expand"sv, "trunc"sv, "halfCeil"sv, "halfFloor"sv, "halfExpand"sv, "halfTrunc"sv, "halfEven"sv));
 
     // 1. Let quotient be x / increment.
     auto quotient = x / static_cast<double>(increment);
@@ -1075,7 +1096,7 @@ double round_number_to_increment(double x, u64 increment, StringView rounding_mo
 // 13.25 RoundNumberToIncrement ( x, increment, roundingMode ), https://tc39.es/proposal-temporal/#sec-temporal-roundnumbertoincrement
 Crypto::SignedBigInteger round_number_to_increment(Crypto::SignedBigInteger const& x, u64 increment, StringView rounding_mode)
 {
-    VERIFY(rounding_mode == "ceil"sv || rounding_mode == "floor"sv || rounding_mode == "trunc"sv || rounding_mode == "halfExpand"sv);
+    VERIFY(rounding_mode.is_one_of("ceil"sv, "floor"sv, "expand"sv, "trunc"sv, "halfCeil"sv, "halfFloor"sv, "halfExpand"sv, "halfTrunc"sv, "halfEven"sv));
 
     // OPTIMIZATION: If the increment is 1 the number is always rounded
     if (increment == 1)
@@ -1130,7 +1151,7 @@ Crypto::SignedBigInteger round_number_to_increment(Crypto::SignedBigInteger cons
 // 13.26 RoundNumberToIncrementAsIfPositive ( x, increment, roundingMode ), https://tc39.es/proposal-temporal/#sec-temporal-roundnumbertoincrementasifpositive
 Crypto::SignedBigInteger round_number_to_increment_as_if_positive(Crypto::SignedBigInteger const& x, u64 increment, StringView rounding_mode)
 {
-    VERIFY(rounding_mode == "ceil"sv || rounding_mode == "floor"sv || rounding_mode == "trunc"sv || rounding_mode == "halfExpand"sv);
+    VERIFY(rounding_mode.is_one_of("ceil"sv, "floor"sv, "expand"sv, "trunc"sv, "halfCeil"sv, "halfFloor"sv, "halfExpand"sv, "halfTrunc"sv, "halfEven"sv));
 
     // OPTIMIZATION: If the increment is 1 the number is always rounded
     if (increment == 1)
