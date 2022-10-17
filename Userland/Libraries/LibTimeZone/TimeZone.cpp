@@ -108,8 +108,8 @@ StringView current_time_zone()
     static constexpr auto zoneinfo = "/zoneinfo/"sv;
     char buffer[PATH_MAX];
 
-    if (auto size = readlink("/etc/localtime", buffer, sizeof(buffer)); size > 0) {
-        StringView time_zone { buffer, static_cast<size_t>(size) };
+    if (realpath("/etc/localtime", buffer)) {
+        auto time_zone = StringView { buffer, strlen(buffer) };
 
         if (auto index = time_zone.find(zoneinfo); index.has_value())
             time_zone = time_zone.substring_view(*index + zoneinfo.length());
