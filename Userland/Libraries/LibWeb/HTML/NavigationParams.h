@@ -47,7 +47,7 @@ struct NavigationParams {
     Optional<Environment> reserved_environment;
 
     // the browsing context to be navigated (or discarded, if a browsing context group switch occurs)
-    NonnullRefPtr<HTML::BrowsingContext> browsing_context;
+    JS::Handle<HTML::BrowsingContext> browsing_context;
 
     // a history handling behavior
     HistoryHandlingBehavior history_handling { HistoryHandlingBehavior::Default };

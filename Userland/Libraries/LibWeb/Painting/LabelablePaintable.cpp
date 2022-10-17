@@ -83,7 +83,7 @@ void LabelablePaintable::handle_associated_label_mouseup(Badge<Layout::Label>)
 {
     // NOTE: Handling the click may run arbitrary JS, which could disappear this node.
     NonnullRefPtr protected_this = *this;
-    NonnullRefPtr protected_browsing_context = browsing_context();
+    JS::NonnullGCPtr protected_browsing_context { browsing_context() };
 
     set_being_pressed(false);
 }

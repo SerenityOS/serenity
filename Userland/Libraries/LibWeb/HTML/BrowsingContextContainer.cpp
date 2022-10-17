@@ -31,6 +31,12 @@ BrowsingContextContainer::BrowsingContextContainer(DOM::Document& document, DOM:
 
 BrowsingContextContainer::~BrowsingContextContainer() = default;
 
+void BrowsingContextContainer::visit_edges(Cell::Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    visitor.visit(m_nested_browsing_context);
+}
+
 // https://html.spec.whatwg.org/multipage/browsers.html#creating-a-new-nested-browsing-context
 void BrowsingContextContainer::create_new_nested_browsing_context()
 {
@@ -142,7 +148,7 @@ void BrowsingContextContainer::shared_attribute_processing_steps_for_iframe_and_
     // 3. If there exists an ancestor browsing context of element's nested browsing context
     //    whose active document's URL, ignoring fragments, is equal to url, then return.
     if (m_nested_browsing_context) {
-        for (auto* ancestor = m_nested_browsing_context->parent(); ancestor; ancestor = ancestor->parent()) {
+        for (auto ancestor = m_nested_browsing_context->parent(); ancestor; ancestor = ancestor->parent()) {
             VERIFY(ancestor->active_document());
             if (ancestor->active_document()->url().equals(url, AK::URL::ExcludeFragment::Yes))
                 return;

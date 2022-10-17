@@ -92,21 +92,21 @@ HTML::Origin determine_the_origin(BrowsingContext const& browsing_context, Optio
 }
 
 // https://html.spec.whatwg.org/multipage/browsers.html#creating-a-new-top-level-browsing-context
-NonnullRefPtr<BrowsingContext> BrowsingContext::create_a_new_top_level_browsing_context(Web::Page& page)
+JS::NonnullGCPtr<BrowsingContext> BrowsingContext::create_a_new_top_level_browsing_context(Web::Page& page)
 {
     // 1. Let group be the result of creating a new browsing context group.
     auto group = BrowsingContextGroup::create_a_new_browsing_context_group(page);
 
     // 2. Return group's browsing context set[0].
-    return *group->browsing_context_set().begin();
+    return *(*group->browsing_context_set().begin());
 }
 
 // https://html.spec.whatwg.org/multipage/browsers.html#creating-a-new-browsing-context
-NonnullRefPtr<BrowsingContext> BrowsingContext::create_a_new_browsing_context(Page& page, JS::GCPtr<DOM::Document> creator, JS::GCPtr<DOM::Element> embedder, BrowsingContextGroup&)
+JS::NonnullGCPtr<BrowsingContext> BrowsingContext::create_a_new_browsing_context(Page& page, JS::GCPtr<DOM::Document> creator, JS::GCPtr<DOM::Element> embedder, BrowsingContextGroup&)
 {
     // 1. Let browsingContext be a new browsing context.
     BrowsingContextContainer* container = (embedder && is<BrowsingContextContainer>(*embedder)) ? static_cast<BrowsingContextContainer*>(embedder.ptr()) : nullptr;
-    auto browsing_context = adopt_ref(*new BrowsingContext(page, container));
+    auto browsing_context = Bindings::main_thread_vm().heap().allocate_without_realm<BrowsingContext>(page, container);
 
     // 2. Let unsafeContextCreationTime be the unsafe shared current time.
     [[maybe_unused]] auto unsafe_context_creation_time = HighResolutionTime::unsafe_shared_current_time();
@@ -125,7 +125,7 @@ NonnullRefPtr<BrowsingContext> BrowsingContext::create_a_new_browsing_context(Pa
     SandboxingFlagSet sandbox_flags;
 
     // 5. Let origin be the result of determining the origin given browsingContext, about:blank, sandboxFlags, and browsingContext's creator origin.
-    auto origin = determine_the_origin(browsing_context, AK::URL("about:blank"), sandbox_flags, browsing_context->m_creator_origin);
+    auto origin = determine_the_origin(*browsing_context, AK::URL("about:blank"), sandbox_flags, browsing_context->m_creator_origin);
 
     // FIXME: 6. Let permissionsPolicy be the result of creating a permissions policy given browsingContext and origin. [PERMISSIONSPOLICY]
 
@@ -240,7 +240,7 @@ NonnullRefPtr<BrowsingContext> BrowsingContext::create_a_new_browsing_context(Pa
     document->completely_finish_loading();
 
     // 24. Return browsingContext.
-    return browsing_context;
+    return *browsing_context;
 }
 
 BrowsingContext::BrowsingContext(Page& page, HTML::BrowsingContextContainer* container)
@@ -260,6 +260,22 @@ BrowsingContext::BrowsingContext(Page& page, HTML::BrowsingContextContainer* con
 }
 
 BrowsingContext::~BrowsingContext() = default;
+
+void BrowsingContext::visit_edges(Cell::Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+
+    for (auto& entry : m_session_history)
+        visitor.visit(entry.document);
+    visitor.visit(m_container);
+    visitor.visit(m_window_proxy);
+    visitor.visit(m_group);
+    visitor.visit(m_parent);
+    visitor.visit(m_first_child);
+    visitor.visit(m_last_child);
+    visitor.visit(m_next_sibling);
+    visitor.visit(m_previous_sibling);
+}
 
 void BrowsingContext::did_edit(Badge<EditEventHandler>)
 {
@@ -446,7 +462,7 @@ Gfx::IntRect BrowsingContext::to_top_level_rect(Gfx::IntRect const& a_rect)
 Gfx::IntPoint BrowsingContext::to_top_level_position(Gfx::IntPoint const& a_position)
 {
     auto position = a_position;
-    for (auto* ancestor = parent(); ancestor; ancestor = ancestor->parent()) {
+    for (auto ancestor = parent(); ancestor; ancestor = ancestor->parent()) {
         if (ancestor->is_top_level())
             break;
         if (!ancestor->container())
@@ -657,7 +673,7 @@ BrowsingContext* BrowsingContext::choose_a_browsing_context(StringView name, boo
     // name, a browsing context current, and a boolean noopener are as follows:
 
     // 1. Let chosen be null.
-    BrowsingContext* chosen = nullptr;
+    JS::GCPtr<BrowsingContext> chosen = nullptr;
 
     // FIXME: 2. Let windowType be "existing or none".
 
@@ -672,7 +688,7 @@ BrowsingContext* BrowsingContext::choose_a_browsing_context(StringView name, boo
     // set chosen to current's parent browsing context, if any, and current
     // otherwise.
     if (name.equals_ignoring_case("_parent"sv)) {
-        if (auto* parent = this->parent())
+        if (auto parent = this->parent())
             chosen = parent;
         else
             chosen = this;
@@ -872,13 +888,13 @@ void BrowsingContext::remove()
     VERIFY(group());
 
     // 2. Let group be browsingContext's group.
-    NonnullRefPtr<BrowsingContextGroup> group = *this->group();
+    JS::NonnullGCPtr<BrowsingContextGroup> group = *this->group();
 
     // 3. Set browsingContext's group to null.
     set_group(nullptr);
 
     // 4. Remove browsingContext from group's browsing context set.
-    group->browsing_context_set().remove(*this);
+    group->browsing_context_set().remove(this);
 
     // 5. If group's browsing context set is empty, then remove group from the user agent's browsing context group set.
     // NOTE: This is done by ~BrowsingContextGroup() when the refcount reaches 0.
@@ -1281,7 +1297,7 @@ Vector<JS::Handle<DOM::Document>> BrowsingContext::document_family() const
     for (auto& entry : m_session_history) {
         if (!entry.document)
             continue;
-        if (documents.set(entry.document.ptr()) == AK::HashSetResult::ReplacedExistingEntry)
+        if (documents.set(const_cast<DOM::Document*>(entry.document.ptr())) == AK::HashSetResult::ReplacedExistingEntry)
             continue;
         for (auto& context : entry.document->list_of_descendant_browsing_contexts()) {
             for (auto& document : context->document_family()) {
@@ -1365,6 +1381,58 @@ void BrowsingContext::close()
 
     // 4. Discard browsingContext.
     discard();
+}
+
+void BrowsingContext::append_child(JS::NonnullGCPtr<BrowsingContext> child)
+{
+    VERIFY(!child->m_parent);
+
+    if (m_last_child)
+        m_last_child->m_next_sibling = child;
+    child->m_previous_sibling = m_last_child;
+    child->m_parent = this;
+    m_last_child = child;
+    if (!m_first_child)
+        m_first_child = m_last_child;
+}
+
+void BrowsingContext::remove_child(JS::NonnullGCPtr<BrowsingContext> child)
+{
+    VERIFY(child->m_parent.ptr() == this);
+
+    if (m_first_child == child)
+        m_first_child = child->m_next_sibling;
+
+    if (m_last_child == child)
+        m_last_child = child->m_previous_sibling;
+
+    if (child->m_next_sibling)
+        child->m_next_sibling->m_previous_sibling = child->m_previous_sibling;
+
+    if (child->m_previous_sibling)
+        child->m_previous_sibling->m_next_sibling = child->m_next_sibling;
+
+    child->m_next_sibling = nullptr;
+    child->m_previous_sibling = nullptr;
+    child->m_parent = nullptr;
+}
+
+JS::GCPtr<BrowsingContext> BrowsingContext::first_child() const
+{
+    return m_first_child;
+}
+JS::GCPtr<BrowsingContext> BrowsingContext::next_sibling() const
+{
+    return m_next_sibling;
+}
+
+bool BrowsingContext::is_ancestor_of(BrowsingContext const& other) const
+{
+    for (auto ancestor = other.parent(); ancestor; ancestor = ancestor->parent()) {
+        if (ancestor == this)
+            return true;
+    }
+    return false;
 }
 
 }
