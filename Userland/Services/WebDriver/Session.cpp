@@ -71,28 +71,6 @@ ErrorOr<void> Session::stop()
     return {};
 }
 
-// 11.2 Close Window, https://w3c.github.io/webdriver/#dfn-close-window
-ErrorOr<void, Variant<HttpError, Error>> Session::delete_window()
-{
-    // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
-    auto current_window = get_window_object();
-    if (!current_window.has_value())
-        return Variant<HttpError, Error>(HttpError { 404, "no such window", "Window not found" });
-
-    // 2. Close the current top-level browsing context.
-    m_windows.remove(m_current_window_handle);
-
-    // 3. If there are no more open top-level browsing contexts, then close the session.
-    if (m_windows.is_empty()) {
-        auto result = stop();
-        if (result.is_error()) {
-            return Variant<HttpError, Error>(result.release_error());
-        }
-    }
-
-    return {};
-}
-
 // 10.1 Navigate To, https://w3c.github.io/webdriver/#dfn-navigate-to
 ErrorOr<JsonValue, HttpError> Session::post_url(JsonValue const& payload)
 {
@@ -146,46 +124,6 @@ ErrorOr<JsonValue, HttpError> Session::get_url()
     return JsonValue(url);
 }
 
-// 10.6 Get Title, https://w3c.github.io/webdriver/#dfn-get-title
-ErrorOr<JsonValue, HttpError> Session::get_title()
-{
-    // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
-    auto current_window = get_window_object();
-    if (!current_window.has_value())
-        return HttpError { 404, "no such window", "Window not found" };
-
-    // FIXME: 2. Handle any user prompts and return its value if it is an error.
-
-    // 3. Let title be the initial value of the title IDL attribute of the current top-level browsing context's active document.
-    // 4. Return success with data title.
-    return JsonValue(m_browser_connection->get_title());
-}
-
-// 10.5 Refresh, https://w3c.github.io/webdriver/#dfn-refresh
-ErrorOr<JsonValue, HttpError> Session::refresh()
-{
-    // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
-    auto current_window = get_window_object();
-    if (!current_window.has_value())
-        return HttpError { 404, "no such window", "Window not found" };
-
-    // FIXME: 2. Handle any user prompts and return its value if it is an error.
-
-    // 3. Initiate an overridden reload of the current top-level browsing context’s active document.
-    m_browser_connection->async_refresh();
-
-    // FIXME: 4. If url is special except for file:
-
-    // FIXME:     1. Try to wait for navigation to complete.
-
-    // FIXME:     2. Try to run the post-navigation checks.
-
-    // FIXME: 5. Set the current browsing context with current top-level browsing context.
-
-    // 6. Return success with data null.
-    return JsonValue();
-}
-
 // 10.3 Back, https://w3c.github.io/webdriver/#dfn-back
 ErrorOr<JsonValue, HttpError> Session::back()
 {
@@ -230,6 +168,68 @@ ErrorOr<JsonValue, HttpError> Session::forward()
 
     // 6. Return success with data null.
     return JsonValue();
+}
+
+// 10.5 Refresh, https://w3c.github.io/webdriver/#dfn-refresh
+ErrorOr<JsonValue, HttpError> Session::refresh()
+{
+    // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
+    auto current_window = get_window_object();
+    if (!current_window.has_value())
+        return HttpError { 404, "no such window", "Window not found" };
+
+    // FIXME: 2. Handle any user prompts and return its value if it is an error.
+
+    // 3. Initiate an overridden reload of the current top-level browsing context’s active document.
+    m_browser_connection->async_refresh();
+
+    // FIXME: 4. If url is special except for file:
+
+    // FIXME:     1. Try to wait for navigation to complete.
+
+    // FIXME:     2. Try to run the post-navigation checks.
+
+    // FIXME: 5. Set the current browsing context with current top-level browsing context.
+
+    // 6. Return success with data null.
+    return JsonValue();
+}
+
+// 10.6 Get Title, https://w3c.github.io/webdriver/#dfn-get-title
+ErrorOr<JsonValue, HttpError> Session::get_title()
+{
+    // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
+    auto current_window = get_window_object();
+    if (!current_window.has_value())
+        return HttpError { 404, "no such window", "Window not found" };
+
+    // FIXME: 2. Handle any user prompts and return its value if it is an error.
+
+    // 3. Let title be the initial value of the title IDL attribute of the current top-level browsing context's active document.
+    // 4. Return success with data title.
+    return JsonValue(m_browser_connection->get_title());
+}
+
+// 11.2 Close Window, https://w3c.github.io/webdriver/#dfn-close-window
+ErrorOr<void, Variant<HttpError, Error>> Session::delete_window()
+{
+    // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
+    auto current_window = get_window_object();
+    if (!current_window.has_value())
+        return Variant<HttpError, Error>(HttpError { 404, "no such window", "Window not found" });
+
+    // 2. Close the current top-level browsing context.
+    m_windows.remove(m_current_window_handle);
+
+    // 3. If there are no more open top-level browsing contexts, then close the session.
+    if (m_windows.is_empty()) {
+        auto result = stop();
+        if (result.is_error()) {
+            return Variant<HttpError, Error>(result.release_error());
+        }
+    }
+
+    return {};
 }
 
 // https://w3c.github.io/webdriver/#dfn-serialized-cookie

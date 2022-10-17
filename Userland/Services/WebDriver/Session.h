@@ -33,13 +33,13 @@ public:
 
     ErrorOr<void> start();
     ErrorOr<void> stop();
-    ErrorOr<void, Variant<HttpError, Error>> delete_window();
     ErrorOr<JsonValue, HttpError> post_url(JsonValue const& url);
     ErrorOr<JsonValue, HttpError> get_url();
-    ErrorOr<JsonValue, HttpError> get_title();
-    ErrorOr<JsonValue, HttpError> refresh();
     ErrorOr<JsonValue, HttpError> back();
     ErrorOr<JsonValue, HttpError> forward();
+    ErrorOr<JsonValue, HttpError> refresh();
+    ErrorOr<JsonValue, HttpError> get_title();
+    ErrorOr<void, Variant<HttpError, Error>> delete_window();
     ErrorOr<JsonValue, HttpError> get_all_cookies();
     ErrorOr<JsonValue, HttpError> get_named_cookie(String const& name);
     ErrorOr<JsonValue, HttpError> add_cookie(JsonValue const& payload);
