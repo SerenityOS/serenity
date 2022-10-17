@@ -10,6 +10,7 @@
 #include "BrowserWindow.h"
 #include <AK/Vector.h>
 #include <LibWeb/Cookie/Cookie.h>
+#include <LibWeb/Cookie/ParsedCookie.h>
 
 namespace Browser {
 
@@ -83,7 +84,7 @@ Messages::WebDriverSessionClient::GetAllCookiesResponse WebDriverConnection::get
 
 Messages::WebDriverSessionClient::GetNamedCookieResponse WebDriverConnection::get_named_cookie(String const& name)
 {
-    dbgln("WebDriverConnection: get_named_cookie");
+    dbgln("WebDriverConnection: get_named_cookie {}", name);
     if (auto browser_window = m_browser_window.strong_ref()) {
         if (browser_window->active_tab().on_get_cookies_entries) {
             for (auto cookie : browser_window->active_tab().on_get_cookies_entries()) {
@@ -97,7 +98,7 @@ Messages::WebDriverSessionClient::GetNamedCookieResponse WebDriverConnection::ge
 
 void WebDriverConnection::add_cookie(Web::Cookie::ParsedCookie const& cookie)
 {
-    dbgln("WebDriverConnection: add_cookie");
+    dbgln("WebDriverConnection: add_cookie {}", cookie.name);
     if (auto browser_window = m_browser_window.strong_ref()) {
         auto& tab = browser_window->active_tab();
         if (tab.on_set_cookie) {
@@ -111,6 +112,7 @@ void WebDriverConnection::add_cookie(Web::Cookie::ParsedCookie const& cookie)
 
 void WebDriverConnection::update_cookie(Web::Cookie::Cookie const& cookie)
 {
+    dbgln("WebDriverConnection: update_cookie {}", cookie.name);
     if (auto browser_window = m_browser_window.strong_ref()) {
         auto& tab = browser_window->active_tab();
         if (tab.on_update_cookie) {
