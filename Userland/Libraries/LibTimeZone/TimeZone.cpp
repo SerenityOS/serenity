@@ -99,6 +99,7 @@ StringView current_time_zone()
             return *maybe_time_zone;
 
         dbgln_if(TIME_ZONE_DEBUG, "Could not determine time zone from TZ environment: {}", time_zone);
+        return "UTC"sv;
     }
 
 #ifdef AK_OS_SERENITY
