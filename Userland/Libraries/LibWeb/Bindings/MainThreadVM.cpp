@@ -6,6 +6,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibJS/Heap/DeferGC.h>
 #include <LibJS/Module.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/Environment.h>
@@ -16,6 +17,7 @@
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/Bindings/LocationObject.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
+#include <LibWeb/Bindings/WindowExposedInterfaces.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/PromiseRejectionEvent.h>
 #include <LibWeb/HTML/Scripting/ClassicScript.h>
@@ -373,6 +375,15 @@ JS::VM& main_thread_vm()
         auto* intrinsics = root_realm->heap().allocate<Intrinsics>(*root_realm, *root_realm);
         auto host_defined = make<HostDefined>(nullptr, *intrinsics);
         root_realm->set_host_defined(move(host_defined));
+
+        // NOTE: We make sure the internal realm has all the Window intrinsics initialized.
+        //       The DeferGC is a hack to avoid nested GC allocations due to lazy ensure_web_prototype()
+        //       and ensure_web_constructor() invocations.
+        // FIXME: Find a nicer way to do this.
+        JS::DeferGC defer_gc(root_realm->heap());
+        auto* object = JS::Object::create(*root_realm, nullptr);
+        root_realm->set_global_object(object, object);
+        add_window_exposed_interfaces(*object, *root_realm);
 
         vm->push_execution_context(*custom_data.root_execution_context);
     }
