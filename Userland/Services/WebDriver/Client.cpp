@@ -25,11 +25,11 @@ Vector<Client::Route> Client::s_routes = {
     { HTTP::HttpRequest::Method::GET, { "status" }, &Client::handle_get_status },
     { HTTP::HttpRequest::Method::POST, { "session", ":session_id", "url" }, &Client::handle_post_url },
     { HTTP::HttpRequest::Method::GET, { "session", ":session_id", "url" }, &Client::handle_get_url },
-    { HTTP::HttpRequest::Method::GET, { "session", ":session_id", "title" }, &Client::handle_get_title },
-    { HTTP::HttpRequest::Method::DELETE, { "session", ":session_id", "window" }, &Client::handle_delete_window },
-    { HTTP::HttpRequest::Method::POST, { "session", ":session_id", "refresh" }, &Client::handle_refresh },
     { HTTP::HttpRequest::Method::POST, { "session", ":session_id", "back" }, &Client::handle_back },
     { HTTP::HttpRequest::Method::POST, { "session", ":session_id", "forward" }, &Client::handle_forward },
+    { HTTP::HttpRequest::Method::POST, { "session", ":session_id", "refresh" }, &Client::handle_refresh },
+    { HTTP::HttpRequest::Method::GET, { "session", ":session_id", "title" }, &Client::handle_get_title },
+    { HTTP::HttpRequest::Method::DELETE, { "session", ":session_id", "window" }, &Client::handle_delete_window },
     { HTTP::HttpRequest::Method::GET, { "session", ":session_id", "cookie" }, &Client::handle_get_all_cookies },
     { HTTP::HttpRequest::Method::GET, { "session", ":session_id", "cookie", ":name" }, &Client::handle_get_named_cookie },
     { HTTP::HttpRequest::Method::POST, { "session", ":session_id", "cookie" }, &Client::handle_add_cookie },
@@ -441,6 +441,42 @@ ErrorOr<JsonValue, HttpError> Client::handle_get_url(Vector<StringView> paramete
     return make_json_value(result);
 }
 
+// 10.3 Back, https://w3c.github.io/webdriver/#dfn-back
+// POST /session/{session id}/back
+ErrorOr<JsonValue, HttpError> Client::handle_back(Vector<StringView> parameters, JsonValue const&)
+{
+    dbgln_if(WEBDRIVER_DEBUG, "Handling POST /session/<session_id>/back");
+    Session* session = TRY(find_session_with_id(parameters[0]));
+
+    // NOTE: Spec steps handled in Session::back().
+    auto result = TRY(session->back());
+    return make_json_value(result);
+}
+
+// 10.4 Forward, https://w3c.github.io/webdriver/#dfn-forward
+// POST /session/{session id}/forward
+ErrorOr<JsonValue, HttpError> Client::handle_forward(Vector<StringView> parameters, JsonValue const&)
+{
+    dbgln_if(WEBDRIVER_DEBUG, "Handling POST /session/<session_id>/forward");
+    Session* session = TRY(find_session_with_id(parameters[0]));
+
+    // NOTE: Spec steps handled in Session::forward().
+    auto result = TRY(session->forward());
+    return make_json_value(result);
+}
+
+// 10.5 Refresh, https://w3c.github.io/webdriver/#dfn-refresh
+// POST /session/{session id}/refresh
+ErrorOr<JsonValue, HttpError> Client::handle_refresh(Vector<StringView> parameters, JsonValue const&)
+{
+    dbgln_if(WEBDRIVER_DEBUG, "Handling POST /session/<session_id>/refresh");
+    Session* session = TRY(find_session_with_id(parameters[0]));
+
+    // NOTE: Spec steps handled in Session::refresh().
+    auto result = TRY(session->refresh());
+    return make_json_value(result);
+}
+
 // 10.6 Get Title, https://w3c.github.io/webdriver/#dfn-get-title
 // GET /session/{session id}/title
 ErrorOr<JsonValue, HttpError> Client::handle_get_title(Vector<StringView> parameters, JsonValue const&)
@@ -465,42 +501,6 @@ ErrorOr<JsonValue, HttpError> Client::handle_delete_window(Vector<StringView> pa
     TRY(unwrap_result(session->delete_window()));
 
     return make_json_value(JsonValue());
-}
-
-// 10.5 Refresh, https://w3c.github.io/webdriver/#dfn-refresh
-// POST /session/{session id}/refresh
-ErrorOr<JsonValue, HttpError> Client::handle_refresh(Vector<StringView> parameters, JsonValue const&)
-{
-    dbgln_if(WEBDRIVER_DEBUG, "Handling POST /session/<session_id>/refresh");
-    Session* session = TRY(find_session_with_id(parameters[0]));
-
-    // NOTE: Spec steps handled in Session::refresh().
-    auto result = TRY(session->refresh());
-    return make_json_value(result);
-}
-
-// 10.3 Back, https://w3c.github.io/webdriver/#dfn-back
-// POST /session/{session id}/back
-ErrorOr<JsonValue, HttpError> Client::handle_back(Vector<StringView> parameters, JsonValue const&)
-{
-    dbgln_if(WEBDRIVER_DEBUG, "Handling POST /session/<session_id>/back");
-    Session* session = TRY(find_session_with_id(parameters[0]));
-
-    // NOTE: Spec steps handled in Session::back().
-    auto result = TRY(session->back());
-    return make_json_value(result);
-}
-
-// 10.4 Forward, https://w3c.github.io/webdriver/#dfn-forward
-// POST /session/{session id}/forward
-ErrorOr<JsonValue, HttpError> Client::handle_forward(Vector<StringView> parameters, JsonValue const&)
-{
-    dbgln_if(WEBDRIVER_DEBUG, "Handling POST /session/<session_id>/forward");
-    Session* session = TRY(find_session_with_id(parameters[0]));
-
-    // NOTE: Spec steps handled in Session::forward().
-    auto result = TRY(session->forward());
-    return make_json_value(result);
 }
 
 // 14.1 Get All Cookies, https://w3c.github.io/webdriver/#dfn-get-all-cookies
