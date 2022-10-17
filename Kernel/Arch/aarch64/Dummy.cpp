@@ -15,11 +15,18 @@
 #include <Kernel/PhysicalAddress.h>
 #include <Kernel/Process.h>
 #include <Kernel/Random.h>
+#include <Kernel/Scheduler.h>
 #include <Kernel/Sections.h>
 #include <Kernel/UserOrKernelBuffer.h>
 
 // Scheduler
 namespace Kernel {
+
+void Scheduler::timer_tick(RegisterState const&) {
+    // NOTE: This function currently will be called by the TimeManagement code,
+    //       so there is no TODO_AARCH64. Instead there will be a linker error when
+    //       the Scheduler code is compiled for aarch64.
+};
 
 READONLY_AFTER_INIT Thread* g_finalizer;
 RecursiveSpinlock g_scheduler_lock { LockRank::None };
