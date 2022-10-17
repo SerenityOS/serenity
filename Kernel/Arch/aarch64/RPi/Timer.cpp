@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Nico Weber <thakis@chromium.org>
+ * Copyright (c) 2022, Timon Kruiper <timonkruiper@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -30,15 +31,21 @@ enum FlagBits {
 };
 
 Timer::Timer()
-    : IRQHandler(1)
+    : HardwareTimer(1)
     , m_registers(MMIO::the().peripheral<TimerRegisters>(0x3000))
 {
+    // FIXME: Actually query the frequency of the timer. By default it is 100MHz.
+    m_frequency = 1e6;
+
+    set_interrupt_interval_usec(m_frequency / OPTIMAL_TICKS_PER_SECOND_RATE);
+    enable_interrupt_mode();
 }
 
-Timer& Timer::the()
+Timer::~Timer() = default;
+
+NonnullLockRefPtr<Timer> Timer::initialize()
 {
-    static AK::NeverDestroyed<Timer> instance;
-    return *instance;
+    return adopt_lock_ref(*new Timer);
 }
 
 u64 Timer::microseconds_since_boot()
@@ -52,23 +59,45 @@ u64 Timer::microseconds_since_boot()
     return (static_cast<u64>(high) << 32) | low;
 }
 
-bool Timer::handle_irq(RegisterState const&)
+bool Timer::handle_irq(RegisterState const& regs)
 {
-    dmesgln("Timer fired: {} us", m_current_timer_value);
+    auto result = HardwareTimer::handle_irq(regs);
 
-    m_current_timer_value += m_interrupt_interval;
-    set_compare(TimerID::Timer1, m_current_timer_value);
-
+    set_compare(TimerID::Timer1, microseconds_since_boot() + m_interrupt_interval);
     clear_interrupt(TimerID::Timer1);
-    return true;
+
+    return result;
 };
+
+u64 Timer::update_time(u64& seconds_since_boot, u32& ticks_this_second, bool query_only)
+{
+    // Should only be called by the time keeper interrupt handler!
+    u64 current_value = microseconds_since_boot();
+    u64 delta_ticks = m_main_counter_drift;
+    if (current_value >= m_main_counter_last_read) {
+        delta_ticks += current_value - m_main_counter_last_read;
+    } else {
+        // the counter wrapped around
+        delta_ticks += (NumericLimits<u64>::max() - m_main_counter_last_read + 1) + current_value;
+    }
+
+    u64 ticks_since_last_second = (u64)ticks_this_second + delta_ticks;
+    auto ticks_per_second = frequency();
+    seconds_since_boot += ticks_since_last_second / ticks_per_second;
+    ticks_this_second = ticks_since_last_second % ticks_per_second;
+
+    if (!query_only) {
+        m_main_counter_drift = 0;
+        m_main_counter_last_read = current_value;
+    }
+
+    // Return the time passed (in ns) since last time update_time was called
+    return (delta_ticks * 1000000000ull) / ticks_per_second;
+}
 
 void Timer::enable_interrupt_mode()
 {
-    m_current_timer_value = microseconds_since_boot();
-    m_current_timer_value += m_interrupt_interval;
-    set_compare(TimerID::Timer1, m_current_timer_value);
-
+    set_compare(TimerID::Timer1, microseconds_since_boot() + m_interrupt_interval);
     enable_irq();
 }
 

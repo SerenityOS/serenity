@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Nico Weber <thakis@chromium.org>
+ * Copyright (c) 2022, Timon Kruiper <timonkruiper@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -8,15 +9,36 @@
 
 #include <AK/Types.h>
 #include <Kernel/Interrupts/IRQHandler.h>
+#include <Kernel/Library/NonnullLockRefPtr.h>
+#include <Kernel/Time/HardwareTimer.h>
 
 namespace Kernel::RPi {
 
 struct TimerRegisters;
 
-class Timer : public IRQHandler {
+class Timer final : public HardwareTimer<IRQHandler> {
 public:
-    Timer();
-    static Timer& the();
+    virtual ~Timer();
+
+    static NonnullLockRefPtr<Timer> initialize();
+
+    virtual HardwareTimerType timer_type() const override { return HardwareTimerType::RPiTimer; }
+    virtual StringView model() const override { return "RPi Timer"sv; }
+    virtual size_t ticks_per_second() const override { return m_frequency; }
+
+    virtual bool is_periodic() const override { TODO_AARCH64(); }
+    virtual bool is_periodic_capable() const override { TODO_AARCH64(); }
+    virtual void set_periodic() override { TODO_AARCH64(); }
+    virtual void set_non_periodic() override { TODO_AARCH64(); }
+    virtual void disable() override { TODO_AARCH64(); }
+
+    virtual void reset_to_default_ticks_per_second() override { TODO_AARCH64(); }
+    virtual bool try_to_set_frequency(size_t) override { TODO_AARCH64(); }
+    virtual bool is_capable_of_frequency(size_t) const override { TODO_AARCH64(); }
+    virtual size_t calculate_nearest_possible_frequency(size_t) const override { TODO_AARCH64(); }
+
+    // FIXME: Share code with HPET::update_time
+    u64 update_time(u64& seconds_since_boot, u32& ticks_this_second, bool query_only);
 
     u64 microseconds_since_boot();
 
@@ -43,6 +65,8 @@ public:
     static u32 set_clock_rate(ClockID, u32 rate_hz, bool skip_setting_turbo = true);
 
 private:
+    Timer();
+
     enum class TimerID : u32 {
         Timer0 = 0,
         Timer1 = 1,
@@ -57,7 +81,9 @@ private:
 
     TimerRegisters volatile* m_registers;
     u32 m_interrupt_interval { 0 };
-    u32 m_current_timer_value { 0 };
+
+    u64 m_main_counter_last_read { 0 };
+    u64 m_main_counter_drift { 0 };
 };
 
 }

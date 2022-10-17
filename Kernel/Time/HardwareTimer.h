@@ -17,7 +17,10 @@ enum class HardwareTimerType {
     i8253 = 0x1,                   /* PIT */
     RTC = 0x2,                     /* Real Time Clock */
     HighPrecisionEventTimer = 0x3, /* also known as IA-PC HPET */
-    LocalAPICTimer = 0x4           /* Local APIC */
+    LocalAPICTimer = 0x4,          /* Local APIC */
+#if ARCH(AARCH64)
+    RPiTimer = 0x5
+#endif
 };
 
 template<typename InterruptHandlerType>
