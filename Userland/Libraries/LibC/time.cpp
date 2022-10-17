@@ -397,12 +397,7 @@ size_t strftime(char* destination, size_t max_size, char const* format, const st
 
 void tzset()
 {
-    // FIXME: Actually parse the TZ environment variable, described here:
-    // https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap08.html#tag_08
-    if (char* tz = getenv("TZ"); tz != nullptr)
-        __tzname = { tz, strlen(tz) };
-    else
-        __tzname = TimeZone::system_time_zone();
+    __tzname = TimeZone::current_time_zone();
 
     auto set_default_values = []() {
         timezone = 0;
