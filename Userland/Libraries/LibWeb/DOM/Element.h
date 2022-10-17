@@ -142,15 +142,15 @@ public:
     JS::NonnullGCPtr<Geometry::DOMRect> get_bounding_client_rect() const;
     JS::NonnullGCPtr<Geometry::DOMRectList> get_client_rects() const;
 
-    virtual RefPtr<Layout::Node> create_layout_node(NonnullRefPtr<CSS::StyleProperties>);
+    virtual JS::GCPtr<Layout::Node> create_layout_node(NonnullRefPtr<CSS::StyleProperties>);
 
     virtual void did_receive_focus() { }
     virtual void did_lose_focus() { }
 
-    static RefPtr<Layout::Node> create_layout_node_for_display_type(DOM::Document&, CSS::Display const&, NonnullRefPtr<CSS::StyleProperties>, Element*);
+    static JS::GCPtr<Layout::Node> create_layout_node_for_display_type(DOM::Document&, CSS::Display const&, NonnullRefPtr<CSS::StyleProperties>, Element*);
 
-    void set_pseudo_element_node(Badge<Layout::TreeBuilder>, CSS::Selector::PseudoElement, RefPtr<Layout::Node>);
-    RefPtr<Layout::Node> get_pseudo_element_node(CSS::Selector::PseudoElement) const;
+    void set_pseudo_element_node(Badge<Layout::TreeBuilder>, CSS::Selector::PseudoElement, JS::GCPtr<Layout::Node>);
+    JS::GCPtr<Layout::Node> get_pseudo_element_node(CSS::Selector::PseudoElement) const;
     void clear_pseudo_element_nodes(Badge<Layout::TreeBuilder>);
     void serialize_pseudo_elements_as_json(JsonArraySerializer<StringBuilder>& children_array) const;
 
@@ -188,7 +188,7 @@ private:
 
     Vector<FlyString> m_classes;
 
-    Array<WeakPtr<Layout::Node>, CSS::Selector::PseudoElementCount> m_pseudo_element_nodes;
+    Array<JS::GCPtr<Layout::Node>, CSS::Selector::PseudoElementCount> m_pseudo_element_nodes;
 };
 
 template<>

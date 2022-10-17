@@ -51,21 +51,21 @@ void HTMLInputElement::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_selected_files);
 }
 
-RefPtr<Layout::Node> HTMLInputElement::create_layout_node(NonnullRefPtr<CSS::StyleProperties> style)
+JS::GCPtr<Layout::Node> HTMLInputElement::create_layout_node(NonnullRefPtr<CSS::StyleProperties> style)
 {
     if (type_state() == TypeAttributeState::Hidden)
         return nullptr;
 
     if (type_state() == TypeAttributeState::SubmitButton || type_state() == TypeAttributeState::Button || type_state() == TypeAttributeState::ResetButton || type_state() == TypeAttributeState::FileUpload)
-        return adopt_ref(*new Layout::ButtonBox(document(), *this, move(style)));
+        return heap().allocate_without_realm<Layout::ButtonBox>(document(), *this, move(style));
 
     if (type_state() == TypeAttributeState::Checkbox)
-        return adopt_ref(*new Layout::CheckBox(document(), *this, move(style)));
+        return heap().allocate_without_realm<Layout::CheckBox>(document(), *this, move(style));
 
     if (type_state() == TypeAttributeState::RadioButton)
-        return adopt_ref(*new Layout::RadioButton(document(), *this, move(style)));
+        return heap().allocate_without_realm<Layout::RadioButton>(document(), *this, move(style));
 
-    return adopt_ref(*new Layout::BlockContainer(document(), this, move(style)));
+    return heap().allocate_without_realm<Layout::BlockContainer>(document(), this, move(style));
 }
 
 void HTMLInputElement::set_checked(bool checked, ChangeSource change_source)

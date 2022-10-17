@@ -12,6 +12,8 @@
 namespace Web::Layout {
 
 class ButtonBox : public FormAssociatedLabelableNode {
+    JS_CELL(ButtonBox, FormAssociatedLabelableNode);
+
 public:
     ButtonBox(DOM::Document&, HTML::HTMLInputElement&, NonnullRefPtr<CSS::StyleProperties>);
     virtual ~ButtonBox() override;

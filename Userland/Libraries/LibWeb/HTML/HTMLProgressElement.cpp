@@ -23,11 +23,11 @@ HTMLProgressElement::HTMLProgressElement(DOM::Document& document, DOM::Qualified
 
 HTMLProgressElement::~HTMLProgressElement() = default;
 
-RefPtr<Layout::Node> HTMLProgressElement::create_layout_node(NonnullRefPtr<CSS::StyleProperties> style)
+JS::GCPtr<Layout::Node> HTMLProgressElement::create_layout_node(NonnullRefPtr<CSS::StyleProperties> style)
 {
     if (style->appearance().value_or(CSS::Appearance::Auto) == CSS::Appearance::None)
         return HTMLElement::create_layout_node(style);
-    return adopt_ref(*new Layout::Progress(document(), *this, move(style)));
+    return heap().allocate_without_realm<Layout::Progress>(document(), *this, move(style));
 }
 
 bool HTMLProgressElement::using_system_appearance() const

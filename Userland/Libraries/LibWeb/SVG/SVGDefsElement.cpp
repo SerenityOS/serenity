@@ -19,7 +19,7 @@ SVGDefsElement::~SVGDefsElement()
 {
 }
 
-RefPtr<Layout::Node> SVGDefsElement::create_layout_node(NonnullRefPtr<CSS::StyleProperties>)
+JS::GCPtr<Layout::Node> SVGDefsElement::create_layout_node(NonnullRefPtr<CSS::StyleProperties>)
 {
     return nullptr;
 }

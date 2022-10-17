@@ -12,6 +12,8 @@
 namespace Web::Layout {
 
 class SVGSVGBox final : public ReplacedBox {
+    JS_CELL(SVGSVGBox, ReplacedBox);
+
 public:
     SVGSVGBox(DOM::Document&, SVG::SVGSVGElement&, NonnullRefPtr<CSS::StyleProperties>);
     virtual ~SVGSVGBox() override = default;

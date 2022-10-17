@@ -16,9 +16,9 @@ SVGGElement::SVGGElement(DOM::Document& document, DOM::QualifiedName qualified_n
 {
 }
 
-RefPtr<Layout::Node> SVGGElement::create_layout_node(NonnullRefPtr<CSS::StyleProperties> style)
+JS::GCPtr<Layout::Node> SVGGElement::create_layout_node(NonnullRefPtr<CSS::StyleProperties> style)
 {
-    return adopt_ref(*new Layout::SVGGraphicsBox(document(), *this, move(style)));
+    return heap().allocate_without_realm<Layout::SVGGraphicsBox>(document(), *this, move(style));
 }
 
 }

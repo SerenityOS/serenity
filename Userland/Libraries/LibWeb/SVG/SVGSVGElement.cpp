@@ -23,9 +23,9 @@ SVGSVGElement::SVGSVGElement(DOM::Document& document, DOM::QualifiedName qualifi
     set_prototype(&Bindings::cached_web_prototype(realm(), "SVGSVGElement"));
 }
 
-RefPtr<Layout::Node> SVGSVGElement::create_layout_node(NonnullRefPtr<CSS::StyleProperties> style)
+JS::GCPtr<Layout::Node> SVGSVGElement::create_layout_node(NonnullRefPtr<CSS::StyleProperties> style)
 {
-    return adopt_ref(*new Layout::SVGSVGBox(document(), *this, move(style)));
+    return heap().allocate_without_realm<Layout::SVGSVGBox>(document(), *this, move(style));
 }
 
 void SVGSVGElement::apply_presentational_hints(CSS::StyleProperties& style) const

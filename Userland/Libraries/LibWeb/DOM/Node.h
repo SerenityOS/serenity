@@ -156,7 +156,8 @@ public:
     Painting::PaintableBox const* paint_box() const;
     Painting::Paintable const* paintable() const;
 
-    void set_layout_node(Badge<Layout::Node>, Layout::Node*) const;
+    void set_layout_node(Badge<Layout::Node>, JS::NonnullGCPtr<Layout::Node>);
+    void detach_layout_node(Badge<DOM::Document>);
 
     virtual bool is_child_allowed(Node const&) const { return true; }
 
@@ -623,7 +624,7 @@ protected:
     virtual void visit_edges(Cell::Visitor&) override;
 
     JS::GCPtr<Document> m_document;
-    mutable WeakPtr<Layout::Node> m_layout_node;
+    JS::GCPtr<Layout::Node> m_layout_node;
     NodeType m_type { NodeType::INVALID };
     bool m_needs_style_update { false };
     bool m_child_needs_style_update { false };

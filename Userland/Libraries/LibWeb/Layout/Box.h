@@ -18,6 +18,8 @@ struct LineBoxFragmentCoordinate {
 };
 
 class Box : public NodeWithStyleAndBoxModelMetrics {
+    JS_CELL(Box, NodeWithStyleAndBoxModelMetrics);
+
 public:
     Painting::PaintableBox const* paint_box() const;
 

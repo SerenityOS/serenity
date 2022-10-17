@@ -16,9 +16,9 @@ SVGGeometryElement::SVGGeometryElement(DOM::Document& document, DOM::QualifiedNa
     set_prototype(&Bindings::cached_web_prototype(realm(), "SVGGeometryElement"));
 }
 
-RefPtr<Layout::Node> SVGGeometryElement::create_layout_node(NonnullRefPtr<CSS::StyleProperties> style)
+JS::GCPtr<Layout::Node> SVGGeometryElement::create_layout_node(NonnullRefPtr<CSS::StyleProperties> style)
 {
-    return adopt_ref(*new Layout::SVGGeometryBox(document(), *this, move(style)));
+    return heap().allocate_without_realm<Layout::SVGGeometryBox>(document(), *this, move(style));
 }
 
 float SVGGeometryElement::get_total_length()

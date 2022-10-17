@@ -12,6 +12,8 @@
 namespace Web::Layout {
 
 class LabelableNode : public ReplacedBox {
+    JS_CELL(LabelableNode, ReplacedBox);
+
 public:
     Painting::LabelablePaintable* paintable();
     Painting::LabelablePaintable const* paintable() const;

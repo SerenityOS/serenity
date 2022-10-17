@@ -12,6 +12,8 @@
 namespace Web::Layout {
 
 class Label final : public BlockContainer {
+    JS_CELL(Label, BlockContainer);
+
 public:
     Label(DOM::Document&, HTML::HTMLLabelElement*, NonnullRefPtr<CSS::StyleProperties>);
     virtual ~Label() override;

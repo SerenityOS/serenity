@@ -12,6 +12,8 @@
 namespace Web::Layout {
 
 class ListItemMarkerBox final : public Box {
+    JS_CELL(ListItemMarkerBox, Box);
+
 public:
     explicit ListItemMarkerBox(DOM::Document&, CSS::ListStyleType, size_t index, NonnullRefPtr<CSS::StyleProperties>);
     virtual ~ListItemMarkerBox() override;

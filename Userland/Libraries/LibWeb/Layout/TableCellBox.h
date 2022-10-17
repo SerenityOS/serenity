@@ -11,6 +11,8 @@
 namespace Web::Layout {
 
 class TableCellBox final : public BlockContainer {
+    JS_CELL(TableCellBox, BlockContainer);
+
 public:
     TableCellBox(DOM::Document&, DOM::Element*, NonnullRefPtr<CSS::StyleProperties>);
     TableCellBox(DOM::Document&, DOM::Element*, CSS::ComputedValues);

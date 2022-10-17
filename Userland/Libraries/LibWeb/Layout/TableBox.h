@@ -11,6 +11,8 @@
 namespace Web::Layout {
 
 class TableBox final : public Layout::BlockContainer {
+    JS_CELL(TableBox, BlockContainer);
+
 public:
     TableBox(DOM::Document&, DOM::Element*, NonnullRefPtr<CSS::StyleProperties>);
     TableBox(DOM::Document&, DOM::Element*, CSS::ComputedValues);

@@ -11,6 +11,8 @@
 namespace Web::Layout {
 
 class TableRowBox final : public Box {
+    JS_CELL(TableRowBox, Box);
+
 public:
     TableRowBox(DOM::Document&, DOM::Element*, NonnullRefPtr<CSS::StyleProperties>);
     TableRowBox(DOM::Document&, DOM::Element*, CSS::ComputedValues);

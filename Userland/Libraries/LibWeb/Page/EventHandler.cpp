@@ -637,7 +637,7 @@ bool EventHandler::handle_keydown(KeyCode key, unsigned modifiers, u32 code_poin
     if (!document->layout_node())
         return false;
 
-    NonnullRefPtr<Layout::InitialContainingBlock> layout_root = *document->layout_node();
+    JS::NonnullGCPtr<Layout::InitialContainingBlock> layout_root = *document->layout_node();
 
     if (key == KeyCode::Key_Tab) {
         if (modifiers & KeyModifier::Mod_Shift)

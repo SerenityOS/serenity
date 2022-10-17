@@ -16,7 +16,7 @@ class SVGGElement final : public SVGGraphicsElement {
 public:
     virtual ~SVGGElement() override = default;
 
-    virtual RefPtr<Layout::Node> create_layout_node(NonnullRefPtr<CSS::StyleProperties>) override;
+    virtual JS::GCPtr<Layout::Node> create_layout_node(NonnullRefPtr<CSS::StyleProperties>) override;
 
 private:
     SVGGElement(DOM::Document&, DOM::QualifiedName);

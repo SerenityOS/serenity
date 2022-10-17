@@ -18,9 +18,9 @@ HTMLLabelElement::HTMLLabelElement(DOM::Document& document, DOM::QualifiedName q
 
 HTMLLabelElement::~HTMLLabelElement() = default;
 
-RefPtr<Layout::Node> HTMLLabelElement::create_layout_node(NonnullRefPtr<CSS::StyleProperties> style)
+JS::GCPtr<Layout::Node> HTMLLabelElement::create_layout_node(NonnullRefPtr<CSS::StyleProperties> style)
 {
-    return adopt_ref(*new Layout::Label(document(), this, move(style)));
+    return heap().allocate_without_realm<Layout::Label>(document(), this, move(style));
 }
 
 }

@@ -683,7 +683,7 @@ void Document::tear_down_layout_tree()
     // Gather up all the layout nodes in a vector and detach them from parents
     // while the vector keeps them alive.
 
-    NonnullRefPtrVector<Layout::Node> layout_nodes;
+    Vector<JS::Handle<Layout::Node>> layout_nodes;
 
     m_layout_root->for_each_in_inclusive_subtree([&](auto& layout_node) {
         layout_nodes.append(layout_node);
@@ -691,8 +691,8 @@ void Document::tear_down_layout_tree()
     });
 
     for (auto& layout_node : layout_nodes) {
-        if (layout_node.parent())
-            layout_node.parent()->remove_child(layout_node);
+        if (layout_node->parent())
+            layout_node->parent()->remove_child(*layout_node);
     }
 
     m_layout_root = nullptr;
@@ -816,7 +816,7 @@ void Document::update_layout()
     if (!m_layout_root) {
         m_next_layout_node_serial_id = 0;
         Layout::TreeBuilder tree_builder;
-        m_layout_root = static_ptr_cast<Layout::InitialContainingBlock>(tree_builder.build(*this));
+        m_layout_root = verify_cast<Layout::InitialContainingBlock>(*tree_builder.build(*this));
     }
 
     Layout::LayoutState layout_state;

@@ -13,6 +13,8 @@ namespace Web::Layout {
 
 // https://www.w3.org/TR/css-display/#block-container
 class BlockContainer : public Box {
+    JS_CELL(BlockContainer, Box);
+
 public:
     BlockContainer(DOM::Document&, DOM::Node*, NonnullRefPtr<CSS::StyleProperties>);
     BlockContainer(DOM::Document&, DOM::Node*, CSS::ComputedValues);

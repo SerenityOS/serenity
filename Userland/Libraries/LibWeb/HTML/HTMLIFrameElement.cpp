@@ -22,9 +22,9 @@ HTMLIFrameElement::HTMLIFrameElement(DOM::Document& document, DOM::QualifiedName
 
 HTMLIFrameElement::~HTMLIFrameElement() = default;
 
-RefPtr<Layout::Node> HTMLIFrameElement::create_layout_node(NonnullRefPtr<CSS::StyleProperties> style)
+JS::GCPtr<Layout::Node> HTMLIFrameElement::create_layout_node(NonnullRefPtr<CSS::StyleProperties> style)
 {
-    return adopt_ref(*new Layout::FrameBox(document(), *this, move(style)));
+    return heap().allocate_without_realm<Layout::FrameBox>(document(), *this, move(style));
 }
 
 void HTMLIFrameElement::parse_attribute(FlyString const& name, String const& value)

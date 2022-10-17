@@ -469,7 +469,7 @@ private:
 
     JS::GCPtr<HTML::Window> m_window;
 
-    RefPtr<Layout::InitialContainingBlock> m_layout_root;
+    JS::GCPtr<Layout::InitialContainingBlock> m_layout_root;
 
     Optional<Color> m_link_color;
     Optional<Color> m_active_link_color;

@@ -12,6 +12,8 @@
 namespace Web::Layout {
 
 class Progress : public LabelableNode {
+    JS_CELL(Progress, LabelableNode);
+
 public:
     Progress(DOM::Document&, HTML::HTMLProgressElement&, NonnullRefPtr<CSS::StyleProperties>);
     virtual ~Progress() override;
