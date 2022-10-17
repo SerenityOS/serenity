@@ -9,15 +9,16 @@
 
 namespace Kernel::USB {
 
-ErrorOr<NonnullLockRefPtr<Transfer>> Transfer::try_create(Pipe& pipe, u16 length, Memory::Region& dma_buffer)
+ErrorOr<NonnullLockRefPtr<Transfer>> Transfer::create(Pipe& pipe, u16 length, Memory::Region& dma_buffer, USBAsyncCallback callback)
 {
-    return adopt_nonnull_lock_ref_or_enomem(new (nothrow) Transfer(pipe, length, dma_buffer));
+    return adopt_nonnull_lock_ref_or_enomem(new (nothrow) Transfer(pipe, length, dma_buffer, move(callback)));
 }
 
-Transfer::Transfer(Pipe& pipe, u16 len, Memory::Region& dma_buffer)
+Transfer::Transfer(Pipe& pipe, u16 len, Memory::Region& dma_buffer, USBAsyncCallback callback)
     : m_pipe(pipe)
     , m_dma_buffer(dma_buffer)
     , m_transfer_data_size(len)
+    , m_callback(move(callback))
 {
 }
 
@@ -47,6 +48,12 @@ ErrorOr<void> Transfer::write_buffer(u16 len, void* data)
     memcpy(buffer().as_ptr(), data, len);
 
     return {};
+}
+
+void Transfer::invoke_async_callback()
+{
+    if (m_callback)
+        m_callback(this);
 }
 
 }

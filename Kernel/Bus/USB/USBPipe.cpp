@@ -50,7 +50,7 @@ ErrorOr<size_t> ControlPipe::control_transfer(u8 request_type, u8 request, u16 v
     usb_request.index = index;
     usb_request.length = length;
 
-    auto transfer = TRY(Transfer::try_create(*this, length, *m_dma_buffer));
+    auto transfer = TRY(Transfer::create(*this, length, *m_dma_buffer));
     transfer->set_setup_packet(usb_request);
 
     dbgln_if(USB_DEBUG, "ControlPipe: Transfer allocated @ {}", transfer->buffer_physical());
@@ -84,7 +84,7 @@ ErrorOr<size_t> BulkInPipe::bulk_in_transfer(size_t length, void* data)
 
     size_t transfer_length = 0;
 
-    auto transfer = TRY(Transfer::try_create(*this, length, *m_dma_buffer));
+    auto transfer = TRY(Transfer::create(*this, length, *m_dma_buffer));
 
     dbgln_if(USB_DEBUG, "Pipe: Bulk in transfer allocated @ {}", transfer->buffer_physical());
     transfer_length = TRY(m_controller->submit_bulk_transfer(*transfer));
@@ -114,7 +114,7 @@ ErrorOr<size_t> BulkOutPipe::bulk_out_transfer(size_t length, void* data)
     MutexLocker lock(m_dma_buffer_lock);
 
     size_t transfer_length = 0;
-    auto transfer = TRY(Transfer::try_create(*this, length, *m_dma_buffer));
+    auto transfer = TRY(Transfer::create(*this, length, *m_dma_buffer));
 
     TRY(transfer->write_buffer(length, data));
     dbgln_if(USB_DEBUG, "Pipe: Bulk out transfer allocated @ {}", transfer->buffer_physical());
@@ -135,6 +135,16 @@ InterruptInPipe::InterruptInPipe(USBController const& controller, u8 endpoint_ad
     : Pipe(controller, Type::Interrupt, Direction::In, endpoint_address, max_packet_size, device_address, move(dma_buffer))
     , m_poll_interval(poll_interval)
 {
+}
+
+ErrorOr<NonnullLockRefPtr<Transfer>> InterruptInPipe::interrupt_in_transfer(size_t length, u16 ms_interval, USBAsyncCallback callback)
+{
+    VERIFY(length <= m_dma_buffer->size());
+
+    auto transfer = TRY(Transfer::create(*this, length, *m_dma_buffer, move(callback)));
+    dbgln_if(USB_DEBUG, "Pipe: Interrupt in transfer allocated @ {}", transfer->buffer_physical());
+    TRY(m_controller->submit_async_interrupt_transfer(transfer, ms_interval));
+    return transfer;
 }
 
 ErrorOr<NonnullOwnPtr<InterruptOutPipe>> InterruptOutPipe::create(USBController const& controller, u8 endpoint_address, u16 max_packet_size, i8 device_address, u16 poll_interval, size_t buffer_size)

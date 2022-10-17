@@ -31,7 +31,6 @@ class UHCIController final
 
     static constexpr u8 MAXIMUM_NUMBER_OF_TDS = 128; // Upper pool limit. This consumes the second page we have allocated
     static constexpr u8 MAXIMUM_NUMBER_OF_QHS = 64;
-    static constexpr u8 NUMBER_OF_INTERRUPT_QHS = 11;
 
 public:
     static constexpr u8 NUMBER_OF_ROOT_PORTS = 2;
@@ -44,10 +43,16 @@ public:
     virtual ErrorOr<void> reset() override;
     virtual ErrorOr<void> stop() override;
     virtual ErrorOr<void> start() override;
+    ErrorOr<void> spawn_async_poll_process();
     ErrorOr<void> spawn_port_process();
 
+    ErrorOr<QueueHead*> create_transfer_queue(Transfer& transfer);
+    ErrorOr<void> submit_async_transfer(NonnullOwnPtr<AsyncTransferHandle> async_handle, QueueHead* anchor, QueueHead* transfer_queue);
+
+    virtual void cancel_async_transfer(NonnullLockRefPtr<Transfer> transfer) override;
     virtual ErrorOr<size_t> submit_control_transfer(Transfer& transfer) override;
     virtual ErrorOr<size_t> submit_bulk_transfer(Transfer& transfer) override;
+    virtual ErrorOr<void> submit_async_interrupt_transfer(NonnullLockRefPtr<Transfer> transfer, u16 ms_interval) override;
 
     void get_port_status(Badge<UHCIRootHub>, u8, HubStatus&);
     ErrorOr<void> set_port_feature(Badge<UHCIRootHub>, u8, HubFeatureSelector);
@@ -95,15 +100,17 @@ private:
 
     NonnullOwnPtr<IOWindow> m_registers_io_window;
 
+    Spinlock m_async_lock;
     Spinlock m_schedule_lock;
 
     OwnPtr<UHCIRootHub> m_root_hub;
     OwnPtr<UHCIDescriptorPool<QueueHead>> m_queue_head_pool;
     OwnPtr<UHCIDescriptorPool<TransferDescriptor>> m_transfer_descriptor_pool;
     Vector<TransferDescriptor*> m_iso_td_list;
+    Array<OwnPtr<AsyncTransferHandle>, MAXIMUM_NUMBER_OF_QHS> m_active_async_transfers;
 
     QueueHead* m_schedule_begin_anchor;
-    Array<QueueHead*, NUMBER_OF_INTERRUPT_QHS> m_interrupt_qh_anchor_arr;
+    QueueHead* m_interrupt_qh_anchor;
     QueueHead* m_ls_control_qh_anchor;
     QueueHead* m_fs_control_qh_anchor;
     // Always final queue in the schedule, may loop back to previous QH for bandwidth
