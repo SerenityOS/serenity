@@ -53,6 +53,7 @@ static ErrorOr<void> generate_exposed_interface_implementation(StringView class_
     generator.set("global_object_snake_name", String(class_name).to_snakecase());
 
     generator.append(R"~~~(
+#include <LibJS/Heap/DeferGC.h>
 #include <LibJS/Runtime/Object.h>
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/Bindings/@global_object_name@ExposedInterfaces.h>
@@ -85,6 +86,11 @@ void add_@global_object_snake_name@_exposed_interfaces(JS::Object& global, JS::R
 {
     auto& vm = global.vm();
     // FIXME: Should we use vm.current_realm() here?
+
+    // NOTE: Temporarily disable garbage collection to prevent GC from triggering while a not-fully-constructed
+    //       prototype or constructor object has been allocated. This is a hack.
+    // FIXME: Find a nicer way to solve this.
+    JS::DeferGC defer_gc(vm.heap());
 )~~~");
 
     auto add_interface = [](SourceGenerator& gen, StringView name, StringView prototype_class, StringView constructor_class) {
