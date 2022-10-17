@@ -13,6 +13,8 @@
 namespace Web::Layout {
 
 class SVGGraphicsBox : public SVGBox {
+    JS_CELL(SVGGraphicsBox, SVGBox);
+
 public:
     SVGGraphicsBox(DOM::Document&, SVG::SVGGraphicsElement&, NonnullRefPtr<CSS::StyleProperties>);
     virtual ~SVGGraphicsBox() override = default;

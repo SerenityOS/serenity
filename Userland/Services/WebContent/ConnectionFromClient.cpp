@@ -354,7 +354,7 @@ Messages::WebContentServer::InspectDomNodeResponse ConnectionFromClient::inspect
 
         if (pseudo_element.has_value()) {
             auto pseudo_element_node = element.get_pseudo_element_node(pseudo_element.value());
-            if (pseudo_element_node.is_null())
+            if (!pseudo_element_node)
                 return { false, "", "", "", "" };
 
             // FIXME: Pseudo-elements only exist as Layout::Nodes, which don't have style information

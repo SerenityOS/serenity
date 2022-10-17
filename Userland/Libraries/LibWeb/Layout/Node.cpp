@@ -15,24 +15,26 @@
 #include <LibWeb/Layout/Node.h>
 #include <LibWeb/Layout/TextNode.h>
 #include <LibWeb/Platform/FontPlugin.h>
-#include <typeinfo>
 
 namespace Web::Layout {
 
 Node::Node(DOM::Document& document, DOM::Node* node)
-    : m_dom_node(node ? node : &document)
+    : m_dom_node(node ? *node : document)
     , m_anonymous(node == nullptr)
 {
     m_serial_id = document.next_layout_node_serial_id({});
 
     if (node)
-        node->set_layout_node({}, this);
+        node->set_layout_node({}, *this);
 }
 
-Node::~Node()
+Node::~Node() = default;
+
+void Node::visit_edges(Cell::Visitor& visitor)
 {
-    if (!is_anonymous() && m_dom_node->layout_node() == this)
-        m_dom_node->set_layout_node({}, nullptr);
+    Base::visit_edges(visitor);
+    visitor.visit(m_dom_node);
+    TreeNode::visit_edges(visitor);
 }
 
 // https://www.w3.org/TR/css-display-3/#out-of-flow
@@ -558,16 +560,10 @@ bool Node::is_root_element() const
     return is<HTML::HTMLHtmlElement>(*dom_node());
 }
 
-String Node::class_name() const
-{
-    auto const* mangled_name = typeid(*this).name();
-    return demangle({ mangled_name, strlen(mangled_name) });
-}
-
 String Node::debug_description() const
 {
     StringBuilder builder;
-    builder.append(class_name().substring_view(13));
+    builder.append(class_name());
     if (dom_node()) {
         builder.appendff("<{}>", dom_node()->node_name());
         if (dom_node()->is_element()) {
@@ -604,13 +600,13 @@ bool Node::is_inline_block() const
     return display.is_inline_outside() && display.is_flow_root_inside();
 }
 
-NonnullRefPtr<NodeWithStyle> NodeWithStyle::create_anonymous_wrapper() const
+JS::NonnullGCPtr<NodeWithStyle> NodeWithStyle::create_anonymous_wrapper() const
 {
-    auto wrapper = adopt_ref(*new BlockContainer(const_cast<DOM::Document&>(document()), nullptr, m_computed_values.clone_inherited_values()));
+    auto wrapper = heap().allocate_without_realm<BlockContainer>(const_cast<DOM::Document&>(document()), nullptr, m_computed_values.clone_inherited_values());
     static_cast<CSS::MutableComputedValues&>(wrapper->m_computed_values).set_display(CSS::Display(CSS::Display::Outside::Block, CSS::Display::Inside::Flow));
     wrapper->m_font = m_font;
     wrapper->m_line_height = m_line_height;
-    return wrapper;
+    return *wrapper;
 }
 
 void Node::set_paintable(RefPtr<Painting::Paintable> paintable)

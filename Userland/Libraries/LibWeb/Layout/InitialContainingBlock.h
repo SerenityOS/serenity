@@ -13,6 +13,8 @@
 namespace Web::Layout {
 
 class InitialContainingBlock final : public BlockContainer {
+    JS_CELL(InitialContainingBlock, BlockContainer);
+
 public:
     explicit InitialContainingBlock(DOM::Document&, NonnullRefPtr<CSS::StyleProperties>);
     virtual ~InitialContainingBlock() override;

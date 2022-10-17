@@ -12,6 +12,8 @@
 namespace Web::Layout {
 
 class BreakNode final : public NodeWithStyleAndBoxModelMetrics {
+    JS_CELL(BreakNode, NodeWithStyleAndBoxModelMetrics);
+
 public:
     BreakNode(DOM::Document&, HTML::HTMLBRElement&, NonnullRefPtr<CSS::StyleProperties>);
     virtual ~BreakNode() override;

@@ -503,7 +503,7 @@ String BrowsingContext::selected_text() const
 
     auto selection = layout_root->selection().normalized();
 
-    if (selection.start().layout_node == selection.end().layout_node) {
+    if (selection.start().layout_node.ptr() == selection.end().layout_node) {
         if (!is<Layout::TextNode>(*selection.start().layout_node))
             return "";
         return verify_cast<Layout::TextNode>(*selection.start().layout_node).text_for_rendering().substring(selection.start().index_in_node, selection.end().index_in_node - selection.start().index_in_node);
@@ -518,7 +518,7 @@ String BrowsingContext::selected_text() const
 
     // Middle nodes
     layout_node = layout_node->next_in_pre_order();
-    while (layout_node && layout_node != selection.end().layout_node) {
+    while (layout_node && layout_node.ptr() != selection.end().layout_node) {
         if (is<Layout::TextNode>(*layout_node))
             builder.append(verify_cast<Layout::TextNode>(*layout_node).text_for_rendering());
         else if (is<Layout::BreakNode>(*layout_node) || is<Layout::BlockContainer>(*layout_node))
@@ -528,7 +528,7 @@ String BrowsingContext::selected_text() const
     }
 
     // End node
-    VERIFY(layout_node == selection.end().layout_node);
+    VERIFY(layout_node.ptr() == selection.end().layout_node);
     if (is<Layout::TextNode>(*layout_node)) {
         auto& text = verify_cast<Layout::TextNode>(*layout_node).text_for_rendering();
         builder.append(text.substring(0, selection.end().index_in_node));
@@ -573,7 +573,13 @@ void BrowsingContext::select_all()
             last_layout_node_index_in_node = text_for_rendering.length() - 1;
     }
 
-    layout_root->set_selection({ { first_layout_node, 0 }, { last_layout_node, last_layout_node_index_in_node } });
+    auto start = Layout::LayoutPosition {
+        JS::make_handle(const_cast<Layout::Node*>(first_layout_node)), 0
+    };
+    auto end = Layout::LayoutPosition {
+        JS::make_handle(const_cast<Layout::Node*>(last_layout_node)), last_layout_node_index_in_node
+    };
+    layout_root->set_selection({ move(start), move(end) });
 }
 
 void BrowsingContext::register_viewport_client(ViewportClient& client)

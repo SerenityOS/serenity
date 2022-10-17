@@ -16,7 +16,7 @@ class HTMLLabelElement final : public HTMLElement {
 public:
     virtual ~HTMLLabelElement() override;
 
-    virtual RefPtr<Layout::Node> create_layout_node(NonnullRefPtr<CSS::StyleProperties>) override;
+    virtual JS::GCPtr<Layout::Node> create_layout_node(NonnullRefPtr<CSS::StyleProperties>) override;
 
     String for_() const { return attribute(HTML::AttributeNames::for_); }
 

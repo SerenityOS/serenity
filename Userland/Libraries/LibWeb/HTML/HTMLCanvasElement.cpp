@@ -78,9 +78,9 @@ void HTMLCanvasElement::set_height(unsigned value)
     reset_context_to_default_state();
 }
 
-RefPtr<Layout::Node> HTMLCanvasElement::create_layout_node(NonnullRefPtr<CSS::StyleProperties> style)
+JS::GCPtr<Layout::Node> HTMLCanvasElement::create_layout_node(NonnullRefPtr<CSS::StyleProperties> style)
 {
-    return adopt_ref(*new Layout::CanvasBox(document(), *this, move(style)));
+    return heap().allocate_without_realm<Layout::CanvasBox>(document(), *this, move(style));
 }
 
 HTMLCanvasElement::HasOrCreatedContext HTMLCanvasElement::create_2d_context()

@@ -12,6 +12,8 @@
 namespace Web::Layout {
 
 class CanvasBox : public ReplacedBox {
+    JS_CELL(CanvasBox, ReplacedBox);
+
 public:
     CanvasBox(DOM::Document&, HTML::HTMLCanvasElement&, NonnullRefPtr<CSS::StyleProperties>);
     virtual ~CanvasBox() override;

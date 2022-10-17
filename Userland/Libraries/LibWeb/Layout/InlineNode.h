@@ -11,6 +11,8 @@
 namespace Web::Layout {
 
 class InlineNode : public NodeWithStyleAndBoxModelMetrics {
+    JS_CELL(InlineNode, NodeWithStyleAndBoxModelMetrics);
+
 public:
     InlineNode(DOM::Document&, DOM::Element*, NonnullRefPtr<CSS::StyleProperties>);
     virtual ~InlineNode() override;

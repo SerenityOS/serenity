@@ -12,6 +12,8 @@
 namespace Web::Layout {
 
 class SVGGeometryBox final : public SVGGraphicsBox {
+    JS_CELL(SVGGeometryBox, SVGGraphicsBox);
+
 public:
     SVGGeometryBox(DOM::Document&, SVG::SVGGeometryElement&, NonnullRefPtr<CSS::StyleProperties>);
     virtual ~SVGGeometryBox() override = default;

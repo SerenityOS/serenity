@@ -39,7 +39,7 @@ String HTMLObjectElement::data() const
     return document().parse_url(data).to_string();
 }
 
-RefPtr<Layout::Node> HTMLObjectElement::create_layout_node(NonnullRefPtr<CSS::StyleProperties> style)
+JS::GCPtr<Layout::Node> HTMLObjectElement::create_layout_node(NonnullRefPtr<CSS::StyleProperties> style)
 {
     switch (m_representation) {
     case Representation::Children:
@@ -49,7 +49,7 @@ RefPtr<Layout::Node> HTMLObjectElement::create_layout_node(NonnullRefPtr<CSS::St
         return nullptr;
     case Representation::Image:
         if (m_image_loader.has_value() && m_image_loader->has_image())
-            return adopt_ref(*new Layout::ImageBox(document(), *this, move(style), *m_image_loader));
+            return heap().allocate_without_realm<Layout::ImageBox>(document(), *this, move(style), *m_image_loader);
         break;
     default:
         break;

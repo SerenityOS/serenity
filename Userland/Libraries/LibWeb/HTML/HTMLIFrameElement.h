@@ -16,7 +16,7 @@ class HTMLIFrameElement final : public BrowsingContextContainer {
 public:
     virtual ~HTMLIFrameElement() override;
 
-    virtual RefPtr<Layout::Node> create_layout_node(NonnullRefPtr<CSS::StyleProperties>) override;
+    virtual JS::GCPtr<Layout::Node> create_layout_node(NonnullRefPtr<CSS::StyleProperties>) override;
 
     // https://html.spec.whatwg.org/multipage/urls-and-fetching.html#will-lazy-load-element-steps
     bool will_lazy_load_element() const;

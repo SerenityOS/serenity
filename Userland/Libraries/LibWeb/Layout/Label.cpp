@@ -38,9 +38,6 @@ void Label::handle_mouseup_on_label(Badge<Painting::TextPaintable>, Gfx::IntPoin
     if (!m_tracking_mouse || button != GUI::MouseButton::Primary)
         return;
 
-    // NOTE: Changing the checked state of the DOM node may run arbitrary JS, which could disappear this node.
-    NonnullRefPtr protect = *this;
-
     if (auto* control = labeled_control(); control) {
         bool is_inside_control = enclosing_int_rect(control->paint_box()->absolute_rect()).contains(position);
         bool is_inside_label = enclosing_int_rect(paint_box()->absolute_rect()).contains(position);

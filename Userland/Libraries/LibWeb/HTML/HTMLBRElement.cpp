@@ -18,9 +18,9 @@ HTMLBRElement::HTMLBRElement(DOM::Document& document, DOM::QualifiedName qualifi
 
 HTMLBRElement::~HTMLBRElement() = default;
 
-RefPtr<Layout::Node> HTMLBRElement::create_layout_node(NonnullRefPtr<CSS::StyleProperties> style)
+JS::GCPtr<Layout::Node> HTMLBRElement::create_layout_node(NonnullRefPtr<CSS::StyleProperties> style)
 {
-    return adopt_ref(*new Layout::BreakNode(document(), *this, move(style)));
+    return heap().allocate_without_realm<Layout::BreakNode>(document(), *this, move(style));
 }
 
 }

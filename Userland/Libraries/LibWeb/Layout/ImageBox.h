@@ -15,6 +15,8 @@ namespace Web::Layout {
 class ImageBox
     : public ReplacedBox
     , public HTML::BrowsingContext::ViewportClient {
+    JS_CELL(ImageBox, ReplacedBox);
+
 public:
     ImageBox(DOM::Document&, DOM::Element&, NonnullRefPtr<CSS::StyleProperties>, ImageLoader const&);
     virtual ~ImageBox() override;

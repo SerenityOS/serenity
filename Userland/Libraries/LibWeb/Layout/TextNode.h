@@ -15,6 +15,8 @@ namespace Web::Layout {
 class LineBoxFragment;
 
 class TextNode : public Node {
+    JS_CELL(TextNode, Node);
+
 public:
     TextNode(DOM::Document&, DOM::Text&);
     virtual ~TextNode() override;

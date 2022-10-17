@@ -12,6 +12,8 @@
 namespace Web::Layout {
 
 class CheckBox : public FormAssociatedLabelableNode {
+    JS_CELL(CheckBox, FormAssociatedLabelableNode);
+
 public:
     CheckBox(DOM::Document&, HTML::HTMLInputElement&, NonnullRefPtr<CSS::StyleProperties>);
     virtual ~CheckBox() override;

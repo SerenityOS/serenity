@@ -31,7 +31,12 @@ enum class LayoutMode {
     IntrinsicSizing,
 };
 
-class Node : public TreeNode<Node> {
+class Node
+    : public JS::Cell
+    , public TreeNode<Node>
+    , public Weakable<Node> {
+    JS_CELL(Node, JS::Cell);
+
 public:
     virtual ~Node();
 
@@ -61,7 +66,6 @@ public:
 
     bool is_root_element() const;
 
-    String class_name() const;
     String debug_description() const;
 
     bool has_style() const { return m_has_style; }
@@ -140,10 +144,12 @@ public:
 protected:
     Node(DOM::Document&, DOM::Node*);
 
+    virtual void visit_edges(Cell::Visitor&) override;
+
 private:
     friend class NodeWithStyle;
 
-    JS::Handle<DOM::Node> m_dom_node;
+    JS::NonnullGCPtr<DOM::Node> m_dom_node;
     RefPtr<Painting::Paintable> m_paintable;
 
     size_t m_serial_id { 0 };
@@ -159,6 +165,8 @@ private:
 };
 
 class NodeWithStyle : public Node {
+    JS_CELL(NodeWithStyle, Node);
+
 public:
     virtual ~NodeWithStyle() override = default;
 
@@ -171,7 +179,7 @@ public:
     Vector<CSS::BackgroundLayerData> const& background_layers() const { return computed_values().background_layers(); }
     const CSS::AbstractImageStyleValue* list_style_image() const { return m_list_style_image; }
 
-    NonnullRefPtr<NodeWithStyle> create_anonymous_wrapper() const;
+    JS::NonnullGCPtr<NodeWithStyle> create_anonymous_wrapper() const;
 
 protected:
     NodeWithStyle(DOM::Document&, DOM::Node*, NonnullRefPtr<CSS::StyleProperties>);
@@ -185,6 +193,8 @@ private:
 };
 
 class NodeWithStyleAndBoxModelMetrics : public NodeWithStyle {
+    JS_CELL(NodeWithStyleAndBoxModelMetrics, NodeWithStyle);
+
 public:
     BoxModelMetrics& box_model() { return m_box_model; }
     BoxModelMetrics const& box_model() const { return m_box_model; }

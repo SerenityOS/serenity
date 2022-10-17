@@ -42,7 +42,7 @@ private:
 
     virtual void visit_edges(Cell::Visitor&) override;
 
-    virtual RefPtr<Layout::Node> create_layout_node(NonnullRefPtr<CSS::StyleProperties>) override;
+    virtual JS::GCPtr<Layout::Node> create_layout_node(NonnullRefPtr<CSS::StyleProperties>) override;
 
     enum class HasOrCreatedContext {
         No,

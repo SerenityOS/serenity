@@ -31,7 +31,7 @@ TreeBuilder::TreeBuilder() = default;
 
 static bool has_inline_or_in_flow_block_children(Layout::Node const& layout_node)
 {
-    for (auto const* child = layout_node.first_child(); child; child = child->next_sibling()) {
+    for (auto child = layout_node.first_child(); child; child = child->next_sibling()) {
         if (child->is_inline())
             return true;
         if (!child->is_floating() && !child->is_absolutely_positioned())
@@ -44,7 +44,7 @@ static bool has_in_flow_block_children(Layout::Node const& layout_node)
 {
     if (layout_node.children_are_inline())
         return false;
-    for (auto const* child = layout_node.first_child(); child; child = child->next_sibling()) {
+    for (auto child = layout_node.first_child(); child; child = child->next_sibling()) {
         if (child->is_inline())
             continue;
         if (!child->is_floating() && !child->is_absolutely_positioned())
@@ -95,15 +95,15 @@ static Layout::Node& insertion_parent_for_block_node(Layout::NodeWithStyle& layo
 
     // Parent block has inline-level children (our siblings).
     // First move these siblings into an anonymous wrapper block.
-    NonnullRefPtrVector<Layout::Node> children;
-    while (RefPtr<Layout::Node> child = layout_parent.first_child()) {
+    Vector<JS::Handle<Layout::Node>> children;
+    while (JS::GCPtr<Layout::Node> child = layout_parent.first_child()) {
         layout_parent.remove_child(*child);
-        children.append(child.release_nonnull());
+        children.append(*child);
     }
     layout_parent.append_child(layout_parent.create_anonymous_wrapper());
     layout_parent.set_children_are_inline(false);
     for (auto& child : children) {
-        layout_parent.last_child()->append_child(child);
+        layout_parent.last_child()->append_child(*child);
     }
     layout_parent.last_child()->set_children_are_inline(true);
     // Then it's safe to insert this block into parent.
@@ -166,10 +166,10 @@ void TreeBuilder::create_pseudo_element_if_needed(DOM::Element& element, CSS::Se
     // FIXME: Handle images, and multiple values
     if (pseudo_element_content.type == CSS::ContentData::Type::String) {
         auto* text = document.heap().allocate<DOM::Text>(document.realm(), document, pseudo_element_content.data);
-        auto text_node = adopt_ref(*new TextNode(document, *text));
+        auto text_node = document.heap().allocate_without_realm<Layout::TextNode>(document, *text);
         text_node->set_generated(true);
         push_parent(verify_cast<NodeWithStyle>(*pseudo_element_node));
-        insert_node_into_inline_or_block_ancestor(text_node, text_node->display(), AppendOrPrepend::Append);
+        insert_node_into_inline_or_block_ancestor(*text_node, text_node->display(), AppendOrPrepend::Append);
         pop_parent();
     } else {
         TODO();
@@ -195,7 +195,7 @@ void TreeBuilder::create_layout_tree(DOM::Node& dom_node, TreeBuilder::Context& 
 
     auto& document = dom_node.document();
     auto& style_computer = document.style_computer();
-    RefPtr<Layout::Node> layout_node;
+    JS::GCPtr<Layout::Node> layout_node;
     RefPtr<CSS::StyleProperties> style;
     CSS::Display display;
 
@@ -211,12 +211,12 @@ void TreeBuilder::create_layout_tree(DOM::Node& dom_node, TreeBuilder::Context& 
     } else if (is<DOM::Document>(dom_node)) {
         style = style_computer.create_document_style();
         display = style->display();
-        layout_node = adopt_ref(*new Layout::InitialContainingBlock(static_cast<DOM::Document&>(dom_node), *style));
+        layout_node = document.heap().allocate_without_realm<Layout::InitialContainingBlock>(static_cast<DOM::Document&>(dom_node), *style);
     } else if (is<DOM::Text>(dom_node)) {
-        layout_node = adopt_ref(*new Layout::TextNode(document, static_cast<DOM::Text&>(dom_node)));
+        layout_node = document.heap().allocate_without_realm<Layout::TextNode>(document, static_cast<DOM::Text&>(dom_node));
         display = CSS::Display(CSS::Display::Outside::Inline, CSS::Display::Inside::Flow);
     } else if (is<DOM::ShadowRoot>(dom_node)) {
-        layout_node = adopt_ref(*new Layout::BlockContainer(document, &static_cast<DOM::ShadowRoot&>(dom_node), CSS::ComputedValues {}));
+        layout_node = document.heap().allocate_without_realm<Layout::BlockContainer>(document, &static_cast<DOM::ShadowRoot&>(dom_node), CSS::ComputedValues {});
         display = CSS::Display(CSS::Display::Outside::Block, CSS::Display::Inside::FlowRoot);
     }
 
@@ -256,10 +256,10 @@ void TreeBuilder::create_layout_tree(DOM::Node& dom_node, TreeBuilder::Context& 
         auto& element = static_cast<DOM::Element&>(dom_node);
         int child_index = layout_node->parent()->index_of_child<ListItemBox>(*layout_node).value();
         auto marker_style = style_computer.compute_style(element, CSS::Selector::PseudoElement::Marker);
-        auto list_item_marker = adopt_ref(*new ListItemMarkerBox(document, layout_node->computed_values().list_style_type(), child_index + 1, *marker_style));
+        auto list_item_marker = document.heap().allocate_without_realm<ListItemMarkerBox>(document, layout_node->computed_values().list_style_type(), child_index + 1, *marker_style);
         static_cast<ListItemBox&>(*layout_node).set_marker(list_item_marker);
         element.set_pseudo_element_node({}, CSS::Selector::PseudoElement::Marker, list_item_marker);
-        layout_node->append_child(move(list_item_marker));
+        layout_node->append_child(*list_item_marker);
     }
 
     if (is<HTML::HTMLProgressElement>(dom_node)) {
@@ -287,7 +287,7 @@ void TreeBuilder::create_layout_tree(DOM::Node& dom_node, TreeBuilder::Context& 
     }
 }
 
-RefPtr<Node> TreeBuilder::build(DOM::Node& dom_node)
+JS::GCPtr<Layout::Node> TreeBuilder::build(DOM::Node& dom_node)
 {
     VERIFY(dom_node.is_document());
 
@@ -333,7 +333,7 @@ void TreeBuilder::remove_irrelevant_boxes(NodeWithStyle& root)
 {
     // The following boxes are discarded as if they were display:none:
 
-    NonnullRefPtrVector<Node> to_remove;
+    Vector<JS::Handle<Node>> to_remove;
 
     // Children of a table-column.
     for_each_in_tree_with_internal_display<CSS::Display::Internal::TableColumn>(root, [&](Box& table_column) {
@@ -358,7 +358,7 @@ void TreeBuilder::remove_irrelevant_boxes(NodeWithStyle& root)
     // - whose immediate sibling, if any, is a table-non-root box
 
     for (auto& box : to_remove)
-        box.parent()->remove_child(box);
+        box->parent()->remove_child(*box);
 }
 
 static bool is_table_track(CSS::Display display)
@@ -424,18 +424,18 @@ static bool is_ignorable_whitespace(Layout::Node const& node)
 template<typename Matcher, typename Callback>
 static void for_each_sequence_of_consecutive_children_matching(NodeWithStyle& parent, Matcher matcher, Callback callback)
 {
-    NonnullRefPtrVector<Node> sequence;
+    Vector<JS::Handle<Node>> sequence;
 
     auto sequence_is_all_ignorable_whitespace = [&]() -> bool {
         for (auto& node : sequence) {
-            if (!is_ignorable_whitespace(node))
+            if (!is_ignorable_whitespace(*node))
                 return false;
         }
         return true;
     };
 
     Node* next_sibling = nullptr;
-    for (auto* child = parent.first_child(); child; child = next_sibling) {
+    for (auto child = parent.first_child(); child; child = next_sibling) {
         next_sibling = child->next_sibling();
         if (matcher(*child)) {
             sequence.append(*child);
@@ -452,21 +452,21 @@ static void for_each_sequence_of_consecutive_children_matching(NodeWithStyle& pa
 }
 
 template<typename WrapperBoxType>
-static void wrap_in_anonymous(NonnullRefPtrVector<Node>& sequence, Node* nearest_sibling)
+static void wrap_in_anonymous(Vector<JS::Handle<Node>>& sequence, Node* nearest_sibling)
 {
     VERIFY(!sequence.is_empty());
-    auto& parent = *sequence.first().parent();
+    auto& parent = *sequence.first()->parent();
     auto computed_values = parent.computed_values().clone_inherited_values();
     static_cast<CSS::MutableComputedValues&>(computed_values).set_display(WrapperBoxType::static_display());
-    auto wrapper = adopt_ref(*new WrapperBoxType(parent.document(), nullptr, move(computed_values)));
+    auto wrapper = parent.heap().template allocate_without_realm<WrapperBoxType>(parent.document(), nullptr, move(computed_values));
     for (auto& child : sequence) {
-        parent.remove_child(child);
-        wrapper->append_child(child);
+        parent.remove_child(*child);
+        wrapper->append_child(*child);
     }
     if (nearest_sibling)
-        parent.insert_before(move(wrapper), *nearest_sibling);
+        parent.insert_before(*wrapper, *nearest_sibling);
     else
-        parent.append_child(move(wrapper));
+        parent.append_child(*wrapper);
 }
 
 void TreeBuilder::generate_missing_child_wrappers(NodeWithStyle& root)

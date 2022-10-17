@@ -92,6 +92,8 @@ void Node::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_previous_sibling.ptr());
     visitor.visit(m_child_nodes);
 
+    visitor.visit(m_layout_node);
+
     for (auto& registered_observer : m_registered_observer_list)
         visitor.visit(registered_observer);
 }
@@ -823,9 +825,14 @@ bool Node::is_editable() const
     return parent() && parent()->is_editable();
 }
 
-void Node::set_layout_node(Badge<Layout::Node>, Layout::Node* layout_node) const
+void Node::set_layout_node(Badge<Layout::Node>, JS::NonnullGCPtr<Layout::Node> layout_node)
 {
     m_layout_node = layout_node;
+}
+
+void Node::detach_layout_node(Badge<DOM::Document>)
+{
+    m_layout_node = nullptr;
 }
 
 EventTarget* Node::get_parent(Event const&)

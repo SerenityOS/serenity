@@ -11,6 +11,8 @@
 namespace Web::Layout {
 
 class TableRowGroupBox final : public BlockContainer {
+    JS_CELL(TableRowGroupBox, BlockContainer);
+
 public:
     TableRowGroupBox(DOM::Document&, DOM::Element*, NonnullRefPtr<CSS::StyleProperties>);
     virtual ~TableRowGroupBox() override;

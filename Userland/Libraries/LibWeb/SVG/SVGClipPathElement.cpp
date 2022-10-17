@@ -19,7 +19,7 @@ SVGClipPathElement::~SVGClipPathElement()
 {
 }
 
-RefPtr<Layout::Node> SVGClipPathElement::create_layout_node(NonnullRefPtr<CSS::StyleProperties>)
+JS::GCPtr<Layout::Node> SVGClipPathElement::create_layout_node(NonnullRefPtr<CSS::StyleProperties>)
 {
     return nullptr;
 }
