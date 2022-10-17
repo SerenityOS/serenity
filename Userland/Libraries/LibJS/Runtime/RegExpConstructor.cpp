@@ -8,6 +8,7 @@
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/RegExpConstructor.h>
 #include <LibJS/Runtime/RegExpObject.h>
+#include <LibJS/Runtime/Value.h>
 
 namespace JS {
 
@@ -27,6 +28,27 @@ void RegExpConstructor::initialize(Realm& realm)
     define_native_accessor(realm, *vm.well_known_symbol_species(), symbol_species_getter, {}, Attribute::Configurable);
 
     define_direct_property(vm.names.length, Value(2), Attribute::Configurable);
+
+    // Additional properties of the RegExp constructor, https://github.com/tc39/proposal-regexp-legacy-features#additional-properties-of-the-regexp-constructor
+    define_native_accessor(realm, vm.names.input, input_getter, input_setter, Attribute::Configurable);
+    define_native_accessor(realm, vm.names.inputAlias, input_alias_getter, input_alias_setter, Attribute::Configurable);
+    define_native_accessor(realm, vm.names.lastMatch, last_match_getter, {}, Attribute::Configurable);
+    define_native_accessor(realm, vm.names.lastMatchAlias, last_match_alias_getter, {}, Attribute::Configurable);
+    define_native_accessor(realm, vm.names.lastParen, last_paren_getter, {}, Attribute::Configurable);
+    define_native_accessor(realm, vm.names.lastParenAlias, last_paren_alias_getter, {}, Attribute::Configurable);
+    define_native_accessor(realm, vm.names.leftContext, left_context_getter, {}, Attribute::Configurable);
+    define_native_accessor(realm, vm.names.leftContextAlias, left_context_alias_getter, {}, Attribute::Configurable);
+    define_native_accessor(realm, vm.names.rightContext, right_context_getter, {}, Attribute::Configurable);
+    define_native_accessor(realm, vm.names.rightContextAlias, right_context_alias_getter, {}, Attribute::Configurable);
+    define_native_accessor(realm, vm.names.$1, group_1_getter, {}, Attribute::Configurable);
+    define_native_accessor(realm, vm.names.$2, group_2_getter, {}, Attribute::Configurable);
+    define_native_accessor(realm, vm.names.$3, group_3_getter, {}, Attribute::Configurable);
+    define_native_accessor(realm, vm.names.$4, group_4_getter, {}, Attribute::Configurable);
+    define_native_accessor(realm, vm.names.$5, group_5_getter, {}, Attribute::Configurable);
+    define_native_accessor(realm, vm.names.$6, group_6_getter, {}, Attribute::Configurable);
+    define_native_accessor(realm, vm.names.$7, group_7_getter, {}, Attribute::Configurable);
+    define_native_accessor(realm, vm.names.$8, group_8_getter, {}, Attribute::Configurable);
+    define_native_accessor(realm, vm.names.$9, group_9_getter, {}, Attribute::Configurable);
 }
 
 // 22.2.3.1 RegExp ( pattern, flags ), https://tc39.es/ecma262/#sec-regexp-pattern-flags
@@ -124,5 +146,139 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpConstructor::symbol_species_getter)
     // 1. Return the this value.
     return vm.this_value();
 }
+
+// get RegExp.input, https://github.com/tc39/proposal-regexp-legacy-features#get-regexpinput
+JS_DEFINE_NATIVE_FUNCTION(RegExpConstructor::input_getter)
+{
+    auto* regexp_constructor = vm.current_realm()->intrinsics().regexp_constructor();
+
+    // 1. Return ? GetLegacyRegExpStaticProperty(%RegExp%, this value, [[RegExpInput]]).
+    auto property_getter = &RegExpLegacyStaticProperties::input;
+    return TRY(get_legacy_regexp_static_property(vm, *regexp_constructor, vm.this_value(), property_getter));
+}
+
+// get RegExp.$_, https://github.com/tc39/proposal-regexp-legacy-features#get-regexp_
+JS_DEFINE_NATIVE_FUNCTION(RegExpConstructor::input_alias_getter)
+{
+    // Keep the same implementation with `get RegExp.input`
+    return input_getter(vm);
+}
+
+// set RegExp.input, https://github.com/tc39/proposal-regexp-legacy-features#set-regexpinput--val
+JS_DEFINE_NATIVE_FUNCTION(RegExpConstructor::input_setter)
+{
+    auto* regexp_constructor = vm.current_realm()->intrinsics().regexp_constructor();
+
+    // 1. Perform ? SetLegacyRegExpStaticProperty(%RegExp%, this value, [[RegExpInput]], val).
+    auto property_setter = &RegExpLegacyStaticProperties::set_input;
+    TRY(set_legacy_regexp_static_property(vm, *regexp_constructor, vm.this_value(), property_setter, vm.argument(0)));
+    return js_undefined();
+}
+
+// set RegExp.$_, https://github.com/tc39/proposal-regexp-legacy-features#set-regexp_---val
+JS_DEFINE_NATIVE_FUNCTION(RegExpConstructor::input_alias_setter)
+{
+    // Keep the same implementation with `set RegExp.input`
+    return input_setter(vm);
+}
+
+// get RegExp.lastMatch, https://github.com/tc39/proposal-regexp-legacy-features#get-regexplastmatch
+JS_DEFINE_NATIVE_FUNCTION(RegExpConstructor::last_match_getter)
+{
+    auto* regexp_constructor = vm.current_realm()->intrinsics().regexp_constructor();
+
+    // 1. Return ? GetLegacyRegExpStaticProperty(%RegExp%, this value, [[RegExpLastMatch]]).
+    auto property_getter = &RegExpLegacyStaticProperties::last_match;
+    return TRY(get_legacy_regexp_static_property(vm, *regexp_constructor, vm.this_value(), property_getter));
+}
+
+// get RegExp.$&, https://github.com/tc39/proposal-regexp-legacy-features#get-regexp
+JS_DEFINE_NATIVE_FUNCTION(RegExpConstructor::last_match_alias_getter)
+{
+    // Keep the same implementation with `get RegExp.lastMatch`
+    return last_match_getter(vm);
+}
+
+// get RegExp.lastParen, https://github.com/tc39/proposal-regexp-legacy-features#get-regexplastparen
+JS_DEFINE_NATIVE_FUNCTION(RegExpConstructor::last_paren_getter)
+{
+    auto* regexp_constructor = vm.current_realm()->intrinsics().regexp_constructor();
+
+    // 1. Return ? GetLegacyRegExpStaticProperty(%RegExp%, this value, [[RegExpLastParen]]).
+    auto property_getter = &RegExpLegacyStaticProperties::last_paren;
+    return TRY(get_legacy_regexp_static_property(vm, *regexp_constructor, vm.this_value(), property_getter));
+}
+
+// get RegExp.$+, https://github.com/tc39/proposal-regexp-legacy-features#get-regexp-1
+JS_DEFINE_NATIVE_FUNCTION(RegExpConstructor::last_paren_alias_getter)
+{
+    // Keep the same implementation with `get RegExp.lastParen`
+    return last_paren_getter(vm);
+}
+
+// get RegExp.leftContext, https://github.com/tc39/proposal-regexp-legacy-features#get-regexpleftcontext
+JS_DEFINE_NATIVE_FUNCTION(RegExpConstructor::left_context_getter)
+{
+    auto* regexp_constructor = vm.current_realm()->intrinsics().regexp_constructor();
+
+    // 1. Return ? GetLegacyRegExpStaticProperty(%RegExp%, this value, [[RegExpLeftContext]]).
+    auto property_getter = &RegExpLegacyStaticProperties::left_context;
+    return TRY(get_legacy_regexp_static_property(vm, *regexp_constructor, vm.this_value(), property_getter));
+}
+
+// get RegExp.$`, https://github.com/tc39/proposal-regexp-legacy-features#get-regexp-2
+JS_DEFINE_NATIVE_FUNCTION(RegExpConstructor::left_context_alias_getter)
+{
+    // Keep the same implementation with `get RegExp.leftContext`
+    return left_context_getter(vm);
+}
+
+// get RegExp.rightContext, https://github.com/tc39/proposal-regexp-legacy-features#get-regexprightcontext
+JS_DEFINE_NATIVE_FUNCTION(RegExpConstructor::right_context_getter)
+{
+    auto* regexp_constructor = vm.current_realm()->intrinsics().regexp_constructor();
+
+    // 1. Return ? GetLegacyRegExpStaticProperty(%RegExp%, this value, [[RegExpRightContext]]).
+    auto property_getter = &RegExpLegacyStaticProperties::right_context;
+    return TRY(get_legacy_regexp_static_property(vm, *regexp_constructor, vm.this_value(), property_getter));
+}
+
+// get RegExp.$', https://github.com/tc39/proposal-regexp-legacy-features#get-regexp-3
+JS_DEFINE_NATIVE_FUNCTION(RegExpConstructor::right_context_alias_getter)
+{
+    // Keep the same implementation with `get RegExp.rightContext`
+    return right_context_getter(vm);
+}
+
+#define DEFINE_REGEXP_GROUP_GETTER(n)                                                                             \
+    JS_DEFINE_NATIVE_FUNCTION(RegExpConstructor::group_##n##_getter)                                              \
+    {                                                                                                             \
+        auto* regexp_constructor = vm.current_realm()->intrinsics().regexp_constructor();                         \
+                                                                                                                  \
+        /* 1. Return ? GetLegacyRegExpStaticProperty(%RegExp%, this value, [[RegExpParen##n##]]).*/               \
+        auto property_getter = &RegExpLegacyStaticProperties::$##n;                                               \
+        return TRY(get_legacy_regexp_static_property(vm, *regexp_constructor, vm.this_value(), property_getter)); \
+    }
+
+// get RegExp.$1, https://github.com/tc39/proposal-regexp-legacy-features#get-regexp1
+DEFINE_REGEXP_GROUP_GETTER(1);
+// get RegExp.$2, https://github.com/tc39/proposal-regexp-legacy-features#get-regexp2
+DEFINE_REGEXP_GROUP_GETTER(2);
+// get RegExp.$3, https://github.com/tc39/proposal-regexp-legacy-features#get-regexp3
+DEFINE_REGEXP_GROUP_GETTER(3);
+// get RegExp.$4, https://github.com/tc39/proposal-regexp-legacy-features#get-regexp4
+DEFINE_REGEXP_GROUP_GETTER(4);
+// get RegExp.$5, https://github.com/tc39/proposal-regexp-legacy-features#get-regexp5
+DEFINE_REGEXP_GROUP_GETTER(5);
+// get RegExp.$6, https://github.com/tc39/proposal-regexp-legacy-features#get-regexp6
+DEFINE_REGEXP_GROUP_GETTER(6);
+// get RegExp.$7, https://github.com/tc39/proposal-regexp-legacy-features#get-regexp7
+DEFINE_REGEXP_GROUP_GETTER(7);
+// get RegExp.$8, https://github.com/tc39/proposal-regexp-legacy-features#get-regexp8
+DEFINE_REGEXP_GROUP_GETTER(8);
+// get RegExp.$9, https://github.com/tc39/proposal-regexp-legacy-features#get-regexp9
+DEFINE_REGEXP_GROUP_GETTER(9);
+
+#undef DEFINE_REGEXP_GROUP_GETTER
 
 }

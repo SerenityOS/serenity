@@ -304,7 +304,12 @@
     M(BadArgCountMany, "{}() needs {} arguments")                                                                                       \
     M(NotEnoughMemoryToAllocate, "Not enough memory to allocate {} bytes")                                                              \
     M(InvalidEnumerationValue, "Invalid value '{}' for enumeration type '{}'")                                                          \
-    M(InvalidNormalizationForm, "The normalization form must be one of NFC, NFD, NFKC, NFKD. Got '{}'")
+    M(InvalidNormalizationForm, "The normalization form must be one of NFC, NFD, NFKC, NFKD. Got '{}'")                                 \
+    M(SetLegacyRegExpStaticPropertyThisValueMismatch, "Legacy RegExp static property setter "                                           \
+                                                      "must be called with the RegExp constructor for the this value")                  \
+    M(GetLegacyRegExpStaticPropertyThisValueMismatch, "Legacy RegExp static property getter "                                           \
+                                                      "must be called with the RegExp constructor for the this value")                  \
+    M(GetLegacyRegExpStaticPropertyValueEmpty, "Legacy RegExp static property getter value is empty")
 
 namespace JS {
 
