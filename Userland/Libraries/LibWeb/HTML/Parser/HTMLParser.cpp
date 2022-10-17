@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2022, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Luke Wilde <lukew@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -145,6 +145,19 @@ HTMLParser::HTMLParser(DOM::Document& document)
 HTMLParser::~HTMLParser()
 {
     m_document->set_should_invalidate_styles_on_attribute_changes(true);
+}
+
+void HTMLParser::visit_edges(Cell::Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    visitor.visit(m_document);
+    visitor.visit(m_head_element);
+    visitor.visit(m_form_element);
+    visitor.visit(m_context_element);
+    visitor.visit(m_character_insertion_node);
+
+    m_stack_of_open_elements.visit_edges(visitor);
+    m_list_of_active_formatting_elements.visit_edges(visitor);
 }
 
 void HTMLParser::run()
@@ -3426,23 +3439,23 @@ Vector<JS::Handle<DOM::Node>> HTMLParser::parse_html_fragment(DOM::Element& cont
     return children;
 }
 
-NonnullRefPtr<HTMLParser> HTMLParser::create_for_scripting(DOM::Document& document)
+JS::NonnullGCPtr<HTMLParser> HTMLParser::create_for_scripting(DOM::Document& document)
 {
-    return adopt_ref(*new HTMLParser(document));
+    return *document.heap().allocate_without_realm<HTMLParser>(document);
 }
 
-NonnullRefPtr<HTMLParser> HTMLParser::create_with_uncertain_encoding(DOM::Document& document, ByteBuffer const& input)
+JS::NonnullGCPtr<HTMLParser> HTMLParser::create_with_uncertain_encoding(DOM::Document& document, ByteBuffer const& input)
 {
     if (document.has_encoding())
-        return adopt_ref(*new HTMLParser(document, input, document.encoding().value()));
+        return *document.heap().allocate_without_realm<HTMLParser>(document, input, document.encoding().value());
     auto encoding = run_encoding_sniffing_algorithm(document, input);
     dbgln_if(HTML_PARSER_DEBUG, "The encoding sniffing algorithm returned encoding '{}'", encoding);
-    return adopt_ref(*new HTMLParser(document, input, encoding));
+    return *document.heap().allocate_without_realm<HTMLParser>(document, input, encoding);
 }
 
-NonnullRefPtr<HTMLParser> HTMLParser::create(DOM::Document& document, StringView input, String const& encoding)
+JS::NonnullGCPtr<HTMLParser> HTMLParser::create(DOM::Document& document, StringView input, String const& encoding)
 {
-    return adopt_ref(*new HTMLParser(document, input, encoding));
+    return *document.heap().allocate_without_realm<HTMLParser>(document, input, encoding);
 }
 
 // https://html.spec.whatwg.org/multipage/parsing.html#html-fragment-serialisation-algorithm

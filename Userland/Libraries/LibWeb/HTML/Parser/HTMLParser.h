@@ -1,11 +1,12 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
+#include <LibJS/Heap/Cell.h>
 #include <LibWeb/DOM/Node.h>
 #include <LibWeb/HTML/Parser/HTMLTokenizer.h>
 #include <LibWeb/HTML/Parser/ListOfActiveFormattingElements.h>
@@ -38,15 +39,17 @@ namespace Web::HTML {
     __ENUMERATE_INSERTION_MODE(AfterAfterBody)  \
     __ENUMERATE_INSERTION_MODE(AfterAfterFrameset)
 
-class HTMLParser : public RefCounted<HTMLParser> {
+class HTMLParser final : public JS::Cell {
+    JS_CELL(HTMLParser, JS::Cell);
+
     friend class HTMLTokenizer;
 
 public:
     ~HTMLParser();
 
-    static NonnullRefPtr<HTMLParser> create_for_scripting(DOM::Document&);
-    static NonnullRefPtr<HTMLParser> create_with_uncertain_encoding(DOM::Document&, ByteBuffer const& input);
-    static NonnullRefPtr<HTMLParser> create(DOM::Document&, StringView input, String const& encoding);
+    static JS::NonnullGCPtr<HTMLParser> create_for_scripting(DOM::Document&);
+    static JS::NonnullGCPtr<HTMLParser> create_with_uncertain_encoding(DOM::Document&, ByteBuffer const& input);
+    static JS::NonnullGCPtr<HTMLParser> create(DOM::Document&, StringView input, String const& encoding);
 
     void run();
     void run(const AK::URL&);
@@ -79,6 +82,8 @@ public:
 private:
     HTMLParser(DOM::Document&, StringView input, String const& encoding);
     HTMLParser(DOM::Document&);
+
+    virtual void visit_edges(Cell::Visitor&) override;
 
     char const* insertion_mode_name() const;
 
@@ -182,14 +187,14 @@ private:
 
     JS::Realm& realm();
 
-    JS::Handle<DOM::Document> m_document;
-    JS::Handle<HTMLHeadElement> m_head_element;
-    JS::Handle<HTMLFormElement> m_form_element;
-    JS::Handle<DOM::Element> m_context_element;
+    JS::GCPtr<DOM::Document> m_document;
+    JS::GCPtr<HTMLHeadElement> m_head_element;
+    JS::GCPtr<HTMLFormElement> m_form_element;
+    JS::GCPtr<DOM::Element> m_context_element;
 
     Vector<HTMLToken> m_pending_table_character_tokens;
 
-    JS::Handle<DOM::Text> m_character_insertion_node;
+    JS::GCPtr<DOM::Text> m_character_insertion_node;
     StringBuilder m_character_insertion_builder;
 };
 

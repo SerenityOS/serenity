@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -11,15 +11,21 @@ namespace Web::HTML {
 
 ListOfActiveFormattingElements::~ListOfActiveFormattingElements() = default;
 
+void ListOfActiveFormattingElements::visit_edges(JS::Cell::Visitor& visitor)
+{
+    for (auto& entry : m_entries)
+        visitor.visit(entry.element);
+}
+
 void ListOfActiveFormattingElements::add(DOM::Element& element)
 {
     // FIXME: Implement the Noah's Ark clause https://html.spec.whatwg.org/multipage/parsing.html#push-onto-the-list-of-active-formatting-elements
-    m_entries.append({ JS::make_handle(element) });
+    m_entries.append({ element });
 }
 
 void ListOfActiveFormattingElements::add_marker()
 {
-    m_entries.append({ JS::make_handle<DOM::Element>(nullptr) });
+    m_entries.append({ nullptr });
 }
 
 bool ListOfActiveFormattingElements::contains(const DOM::Element& element) const
@@ -78,7 +84,7 @@ void ListOfActiveFormattingElements::replace(DOM::Element& to_remove, DOM::Eleme
 
 void ListOfActiveFormattingElements::insert_at(size_t index, DOM::Element& element)
 {
-    m_entries.insert(index, { JS::make_handle(element) });
+    m_entries.insert(index, { element });
 }
 
 }

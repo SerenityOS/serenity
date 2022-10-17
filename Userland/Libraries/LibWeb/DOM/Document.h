@@ -428,7 +428,7 @@ public:
     void unload(bool recursive_flag = false, Optional<DocumentUnloadTimingInfo> = {});
 
     // https://html.spec.whatwg.org/multipage/dom.html#active-parser
-    RefPtr<HTML::HTMLParser> active_parser();
+    JS::GCPtr<HTML::HTMLParser> active_parser();
 
     // https://html.spec.whatwg.org/multipage/dom.html#load-timing-info
     DocumentLoadTimingInfo& load_timing_info() { return m_load_timing_info; }
@@ -478,7 +478,7 @@ private:
     RefPtr<Platform::Timer> m_style_update_timer;
     RefPtr<Platform::Timer> m_layout_update_timer;
 
-    RefPtr<HTML::HTMLParser> m_parser;
+    JS::GCPtr<HTML::HTMLParser> m_parser;
     bool m_active_parser_was_aborted { false };
 
     String m_source;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -27,7 +27,7 @@ public:
     DOM::Element& last() { return *m_elements.last(); }
 
     bool is_empty() const { return m_elements.is_empty(); }
-    void push(JS::NonnullGCPtr<DOM::Element> element) { m_elements.append(JS::make_handle(*element)); }
+    void push(JS::NonnullGCPtr<DOM::Element> element) { m_elements.append(element); }
     JS::NonnullGCPtr<DOM::Element> pop() { return *m_elements.take_last(); }
     void remove(DOM::Element const& element);
     void replace(DOM::Element const& to_remove, JS::NonnullGCPtr<DOM::Element> to_add);
@@ -47,8 +47,8 @@ public:
     bool contains(const DOM::Element&) const;
     bool contains(FlyString const& tag_name) const;
 
-    Vector<JS::Handle<DOM::Element>> const& elements() const { return m_elements; }
-    Vector<JS::Handle<DOM::Element>>& elements() { return m_elements; }
+    auto const& elements() const { return m_elements; }
+    auto& elements() { return m_elements; }
 
     void pop_until_an_element_with_tag_name_has_been_popped(FlyString const&);
 
@@ -61,11 +61,13 @@ public:
     LastElementResult last_element_with_tag_name(FlyString const&);
     JS::GCPtr<DOM::Element> element_immediately_above(DOM::Element const&);
 
+    void visit_edges(JS::Cell::Visitor&);
+
 private:
     bool has_in_scope_impl(FlyString const& tag_name, Vector<FlyString> const&) const;
     bool has_in_scope_impl(const DOM::Element& target_node, Vector<FlyString> const&) const;
 
-    Vector<JS::Handle<DOM::Element>> m_elements;
+    Vector<JS::NonnullGCPtr<DOM::Element>> m_elements;
 };
 
 }

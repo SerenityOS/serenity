@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -13,6 +13,12 @@ namespace Web::HTML {
 static Vector<FlyString> s_base_list { "applet", "caption", "html", "table", "td", "th", "marquee", "object", "template" };
 
 StackOfOpenElements::~StackOfOpenElements() = default;
+
+void StackOfOpenElements::visit_edges(JS::Cell::Visitor& visitor)
+{
+    for (auto& element : m_elements)
+        visitor.visit(element);
+}
 
 bool StackOfOpenElements::has_in_scope_impl(FlyString const& tag_name, Vector<FlyString> const& list) const
 {
@@ -162,7 +168,7 @@ void StackOfOpenElements::replace(DOM::Element const& to_remove, JS::NonnullGCPt
     for (size_t i = 0; i < m_elements.size(); i++) {
         if (m_elements[i].ptr() == &to_remove) {
             m_elements.remove(i);
-            m_elements.insert(i, JS::make_handle(*to_add));
+            m_elements.insert(i, to_add);
             break;
         }
     }
@@ -172,7 +178,7 @@ void StackOfOpenElements::insert_immediately_below(JS::NonnullGCPtr<DOM::Element
 {
     for (size_t i = 0; i < m_elements.size(); i++) {
         if (m_elements[i].ptr() == &target) {
-            m_elements.insert(i + 1, JS::make_handle(*element_to_add));
+            m_elements.insert(i + 1, element_to_add);
             break;
         }
     }
