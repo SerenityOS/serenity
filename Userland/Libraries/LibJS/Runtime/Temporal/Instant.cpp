@@ -13,6 +13,7 @@
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Temporal/AbstractOperations.h>
 #include <LibJS/Runtime/Temporal/Calendar.h>
+#include <LibJS/Runtime/Temporal/Duration.h>
 #include <LibJS/Runtime/Temporal/Instant.h>
 #include <LibJS/Runtime/Temporal/InstantConstructor.h>
 #include <LibJS/Runtime/Temporal/PlainDateTime.h>
@@ -183,14 +184,26 @@ ThrowCompletionOr<BigInt*> add_instant(VM& vm, BigInt const& epoch_nanoseconds, 
     return result;
 }
 
-// 8.5.7 DifferenceInstant ( ns1, ns2, roundingIncrement, smallestUnit, roundingMode ), https://tc39.es/proposal-temporal/#sec-temporal-differenceinstant
-BigInt* difference_instant(VM& vm, BigInt const& nanoseconds1, BigInt const& nanoseconds2, u64 rounding_increment, StringView smallest_unit, StringView rounding_mode)
+// 8.5.7 DifferenceInstant ( ns1, ns2, roundingIncrement, smallestUnit, largestUnit, roundingMode ), https://tc39.es/proposal-temporal/#sec-temporal-differenceinstant
+TimeDurationRecord difference_instant(VM& vm, BigInt const& nanoseconds1, BigInt const& nanoseconds2, u64 rounding_increment, StringView smallest_unit, StringView largest_unit, StringView rounding_mode)
 {
+    auto n2_minus_n1 = nanoseconds2.big_integer().minus(nanoseconds1.big_integer());
+
     // 1. Assert: Type(ns1) is BigInt.
     // 2. Assert: Type(ns2) is BigInt.
 
-    // 3. Return ! RoundTemporalInstant(ns2 - ns1, roundingIncrement, smallestUnit, roundingMode).
-    return round_temporal_instant(vm, *js_bigint(vm, nanoseconds2.big_integer().minus(nanoseconds1.big_integer())), rounding_increment, smallest_unit, rounding_mode);
+    // 3. Assert: The following step cannot fail due to overflow in the Number domain because abs(ns2 - ns1) ≤ 2 × nsMaxInstant.
+    VERIFY(n2_minus_n1.absolute_value() <= ns_max_instant.multiplied_by("2"_sbigint));
+
+    // 4. Let roundResult be ! RoundDuration(0, 0, 0, 0, 0, 0, 0, 0, 0, ns2 - ns1, roundingIncrement, smallestUnit, roundingMode).[[DurationRecord]].
+    auto round_result = MUST(round_duration(vm, 0, 0, 0, 0, 0, 0, 0, 0, 0, n2_minus_n1.to_double(), rounding_increment, smallest_unit, rounding_mode, nullptr)).duration_record;
+    auto round_result_nanoseconds = Crypto::SignedBigInteger(round_result.nanoseconds);
+
+    // 5. Assert: roundResult.[[Days]] is 0.
+    VERIFY(round_result.days == 0);
+
+    // 6. Return ! BalanceDuration(0, roundResult.[[Hours]], roundResult.[[Minutes]], roundResult.[[Seconds]], roundResult.[[Milliseconds]], roundResult.[[Microseconds]], roundResult.[[Nanoseconds]], largestUnit).
+    return MUST(balance_duration(vm, 0, round_result.hours, round_result.minutes, round_result.seconds, round_result.milliseconds, round_result.microseconds, round_result_nanoseconds, largest_unit));
 }
 
 // 8.5.8 RoundTemporalInstant ( ns, increment, unit, roundingMode ), https://tc39.es/proposal-temporal/#sec-temporal-roundtemporalinstant
@@ -293,15 +306,10 @@ ThrowCompletionOr<Duration*> difference_temporal_instant(VM& vm, DifferenceOpera
     // 3. Let settings be ? GetDifferenceSettings(operation, options, time, « », "nanosecond", "second").
     auto settings = TRY(get_difference_settings(vm, operation, options_value, UnitGroup::Time, {}, { "nanosecond"sv }, "second"sv));
 
-    // 4. Let roundedNs be ! DifferenceInstant(instant.[[Nanoseconds]], other.[[Nanoseconds]], settings.[[RoundingIncrement]], settings.[[SmallestUnit]], settings.[[RoundingMode]]).
-    auto* rounded_ns = difference_instant(vm, instant.nanoseconds(), other->nanoseconds(), settings.rounding_increment, settings.smallest_unit, settings.rounding_mode);
+    // 4. Let result be ! DifferenceInstant(instant.[[Nanoseconds]], other.[[Nanoseconds]], settings.[[RoundingIncrement]], settings.[[SmallestUnit]], settings.[[LargestUnit]], settings.[[RoundingMode]]).
+    auto result = difference_instant(vm, instant.nanoseconds(), other->nanoseconds(), settings.rounding_increment, settings.smallest_unit, settings.largest_unit, settings.rounding_mode);
 
-    // 5. Assert: The following steps cannot fail due to overflow in the Number domain because abs(roundedNs) ≤ 2 × nsMaxInstant.
-
-    // 6. Let result be ! BalanceDuration(0, 0, 0, 0, 0, 0, roundedNs, settings.[[LargestUnit]]).
-    auto result = MUST(balance_duration(vm, 0, 0, 0, 0, 0, 0, rounded_ns->big_integer(), settings.largest_unit));
-
-    // 7. Return ! CreateTemporalDuration(0, 0, 0, 0, sign × result.[[Hours]], sign × result.[[Minutes]], sign × result.[[Seconds]], sign × result.[[Milliseconds]], sign × result.[[Microseconds]], sign × result.[[Nanoseconds]]).
+    // 5. Return ! CreateTemporalDuration(0, 0, 0, 0, sign × result.[[Hours]], sign × result.[[Minutes]], sign × result.[[Seconds]], sign × result.[[Milliseconds]], sign × result.[[Microseconds]], sign × result.[[Nanoseconds]]).
     return MUST(create_temporal_duration(vm, 0, 0, 0, 0, sign * result.hours, sign * result.minutes, sign * result.seconds, sign * result.milliseconds, sign * result.microseconds, sign * result.nanoseconds));
 }
 
