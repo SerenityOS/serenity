@@ -25,7 +25,7 @@ The recommendation from the Microsoft team on that issue is:
 > If it's at all possible, store your projects in the Linux file system in WSL2.
 
 In practice, this means cloning and building the project to somewhere such as `/home/username/serenity`. You can then
-access the linux filesystem at `\\wsl$`, so for example, the project would be at `\\wsl$\home\username\serenity`.
+access the linux filesystem at `\\wsl$`, so for example on WSL with Ubuntu 22.04, the project would be at `\\wsl$\Ubuntu-22.04\home\username\serenity`.
 
 ## Setting up QEMU
 
