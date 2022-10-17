@@ -375,6 +375,7 @@ JS::VM& main_thread_vm()
         auto* intrinsics = root_realm->heap().allocate<Intrinsics>(*root_realm, *root_realm);
         auto host_defined = make<HostDefined>(nullptr, *intrinsics);
         root_realm->set_host_defined(move(host_defined));
+        custom_data.internal_realm = root_realm;
 
         // NOTE: We make sure the internal realm has all the Window intrinsics initialized.
         //       The DeferGC is a hack to avoid nested GC allocations due to lazy ensure_web_prototype()
