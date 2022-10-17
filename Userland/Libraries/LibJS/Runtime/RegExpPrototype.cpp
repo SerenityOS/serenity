@@ -12,6 +12,7 @@
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/Error.h>
+#include <LibJS/Runtime/ErrorTypes.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/RegExpConstructor.h>
 #include <LibJS/Runtime/RegExpObject.h>
@@ -163,6 +164,7 @@ static Value make_match_indices_index_pair_array(VM& vm, Utf16View const& string
 }
 
 // 22.2.5.2.2 RegExpBuiltinExec ( R, S ), https://tc39.es/ecma262/#sec-regexpbuiltinexec
+// 22.2.5.2.2 RegExpBuiltInExec ( R, S ), https://github.com/tc39/proposal-regexp-legacy-features#regexpbuiltinexec--r-s-
 static ThrowCompletionOr<Value> regexp_builtin_exec(VM& vm, RegExpObject& regexp_object, Utf16String string)
 {
     auto& realm = *vm.current_realm();
@@ -172,7 +174,7 @@ static ThrowCompletionOr<Value> regexp_builtin_exec(VM& vm, RegExpObject& regexp
     auto last_index_value = TRY(regexp_object.get(vm.names.lastIndex));
     auto last_index = TRY(last_index_value.to_length(vm));
 
-    auto& regex = regexp_object.regex();
+    auto const& regex = regexp_object.regex();
 
     // 3. Let flags be R.[[OriginalFlags]].
     // 4. If flags contains "g", let global be true; else let global be false.
@@ -263,6 +265,7 @@ static ThrowCompletionOr<Value> regexp_builtin_exec(VM& vm, RegExpObject& regexp
 
     // 24. Let indices be a new empty List.
     Vector<Optional<Match>> indices;
+    Vector<String> captured_values;
 
     // 25. Let groupNames be a new empty List.
     HashMap<FlyString, Match> group_names;
@@ -296,6 +299,8 @@ static ThrowCompletionOr<Value> regexp_builtin_exec(VM& vm, RegExpObject& regexp
             captured_value = js_undefined();
             // ii. Append undefined to indices.
             indices.append({});
+            // iii. Append capture to indices.
+            captured_values.append(String::empty());
         }
         // c. Else,
         else {
@@ -307,8 +312,10 @@ static ThrowCompletionOr<Value> regexp_builtin_exec(VM& vm, RegExpObject& regexp
             // iv. Let capture be the Match { [[StartIndex]]: captureStart, [[EndIndex]: captureEnd }.
             // v. Let capturedValue be ! GetMatchString(S, capture).
             captured_value = js_string(vm, capture.view.u16_view());
-            // vi Append capture to indices.
+            // vi. Append capture to indices.
             indices.append(Match::create(capture));
+            // vii. Append capturedValue to the end of capturedValues.
+            captured_values.append(capture.view.to_string());
         }
 
         // d. Perform ! CreateDataPropertyOrThrow(A, ! ToString(𝔽(i)), capturedValue).
@@ -329,6 +336,27 @@ static ThrowCompletionOr<Value> regexp_builtin_exec(VM& vm, RegExpObject& regexp
         else {
             // i. Append undefined to groupNames.
             // See the note in MakeIndicesArray for why this step is skipped.
+        }
+    }
+
+    // https://github.com/tc39/proposal-regexp-legacy-features#regexpbuiltinexec--r-s-
+    // 5. Let thisRealm be the current Realm Record.
+    auto* this_realm = &realm;
+    // 6. Let rRealm be the value of R's [[Realm]] internal slot.
+    auto* regexp_object_realm = &regexp_object.realm();
+    // 7. If SameValue(thisRealm, rRealm) is true, then
+    if (this_realm == regexp_object_realm) {
+        // i. If the value of R’s [[LegacyFeaturesEnabled]] internal slot is true, then
+        if (regexp_object.legacy_features_enabled()) {
+            // a. Perform UpdateLegacyRegExpStaticProperties(%RegExp%, S, lastIndex, e, capturedValues).
+            auto* regexp_constructor = realm.intrinsics().regexp_constructor();
+            update_legacy_regexp_static_properties(*regexp_constructor, string, match_indices.start_index, match_indices.end_index, captured_values);
+        }
+        // ii. Else,
+        else {
+            // a. Perform InvalidateLegacyRegExpStaticProperties(%RegExp%).
+            auto* regexp_constructor = realm.intrinsics().regexp_constructor();
+            invalidate_legacy_regexp_static_properties(*regexp_constructor);
         }
     }
 
@@ -1060,6 +1088,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::to_string)
 }
 
 // B.2.4.1 RegExp.prototype.compile ( pattern, flags ), https://tc39.es/ecma262/#sec-regexp.prototype.compile
+// B.2.4.1 RegExp.prototype.compile ( pattern, flags ), https://github.com/tc39/proposal-regexp-legacy-features#regexpprototypecompile--pattern-flags-
 JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::compile)
 {
     auto pattern = vm.argument(0);
@@ -1069,7 +1098,21 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::compile)
     // 2. Perform ? RequireInternalSlot(O, [[RegExpMatcher]]).
     auto* regexp_object = TRY(typed_this_object(vm));
 
-    // 3. If Type(pattern) is Object and pattern has a [[RegExpMatcher]] internal slot, then
+    // 3. Let thisRealm be the current Realm Record.
+    auto* this_realm = vm.current_realm();
+
+    // 4. Let oRealm be the value of O’s [[Realm]] internal slot.
+    auto* regexp_object_realm = &regexp_object->realm();
+
+    // 5. If SameValue(thisRealm, oRealm) is false, throw a TypeError exception.
+    if (this_realm != regexp_object_realm)
+        return vm.throw_completion<TypeError>(ErrorType::RegExpCompileError, "thisRealm and oRealm is not same value");
+
+    // 6. If the value of R’s [[LegacyFeaturesEnabled]] internal slot is false, throw a TypeError exception.
+    if (!regexp_object->legacy_features_enabled())
+        return vm.throw_completion<TypeError>(ErrorType::RegExpCompileError, "legacy features is not enabled");
+
+    // 7. If Type(pattern) is Object and pattern has a [[RegExpMatcher]] internal slot, then
     if (pattern.is_object() && is<RegExpObject>(pattern.as_object())) {
         // a. If flags is not undefined, throw a TypeError exception.
         if (!flags.is_undefined())
@@ -1083,11 +1126,11 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::compile)
         // c. Let F be pattern.[[OriginalFlags]].
         flags = js_string(vm, regexp_pattern.flags());
     }
-    // 4. Else,
+    // 8. Else,
     //     a. Let P be pattern.
     //     b. Let F be flags.
 
-    // 5. Return ? RegExpInitialize(O, P, F).
+    // 9. Return ? RegExpInitialize(O, P, F).
     return TRY(regexp_object->regexp_initialize(vm, pattern, flags));
 }
 

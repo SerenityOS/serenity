@@ -50,6 +50,11 @@ public:
     String const& flags() const { return m_flags; }
     Regex<ECMA262> const& regex() { return *m_regex; }
     Regex<ECMA262> const& regex() const { return *m_regex; }
+    Realm& realm() { return *m_realm; }
+    Realm const& realm() const { return *m_realm; }
+    bool legacy_features_enabled() const { return m_legacy_features_enabled; }
+    void set_legacy_features_enabled(bool legacy_features_enabled) { m_legacy_features_enabled = legacy_features_enabled; }
+    void set_realm(Realm& realm) { m_realm = &realm; }
 
 private:
     RegExpObject(Object& prototype);
@@ -57,6 +62,9 @@ private:
 
     String m_pattern;
     String m_flags;
+    bool m_legacy_features_enabled { false }; // [[LegacyFeaturesEnabled]]
+    // Note: This is initialized in RegExpAlloc, but will be non-null afterwards
+    GCPtr<Realm> m_realm; // [[Realm]]
     Optional<Regex<ECMA262>> m_regex;
 };
 

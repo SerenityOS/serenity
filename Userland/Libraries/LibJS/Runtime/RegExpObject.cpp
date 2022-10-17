@@ -152,6 +152,7 @@ void RegExpObject::initialize(Realm& realm)
 {
     auto& vm = this->vm();
     Object::initialize(realm);
+
     define_direct_property(vm.names.lastIndex, Value(0), Attribute::Writable);
 }
 
@@ -258,15 +259,34 @@ ThrowCompletionOr<NonnullGCPtr<RegExpObject>> regexp_create(VM& vm, Value patter
 }
 
 // 22.2.3.2 RegExpAlloc ( newTarget ), https://tc39.es/ecma262/#sec-regexpalloc
+// 22.2.3.2 RegExpAlloc ( newTarget ), https://github.com/tc39/proposal-regexp-legacy-features#regexpalloc--newtarget-
 ThrowCompletionOr<NonnullGCPtr<RegExpObject>> regexp_alloc(VM& vm, FunctionObject& new_target)
 {
     // 1. Let obj be ? OrdinaryCreateFromConstructor(newTarget, "%RegExp.prototype%", « [[OriginalSource]], [[OriginalFlags]], [[RegExpRecord]], [[RegExpMatcher]] »).
     auto* regexp_object = TRY(ordinary_create_from_constructor<RegExpObject>(vm, new_target, &Intrinsics::regexp_prototype));
 
-    // 2. Perform ! DefinePropertyOrThrow(obj, "lastIndex", PropertyDescriptor { [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
+    // 2. Let thisRealm be the current Realm Record.
+    auto& this_realm = *vm.current_realm();
+
+    // 3. Set the value of obj’s [[Realm]] internal slot to thisRealm.
+    regexp_object->set_realm(this_realm);
+
+    // 4. If SameValue(newTarget, thisRealm.[[Intrinsics]].[[%RegExp%]]) is true, then
+    auto* regexp_constructor = this_realm.intrinsics().regexp_constructor();
+    if (same_value(&new_target, regexp_constructor)) {
+        // i. Set the value of obj’s [[LegacyFeaturesEnabled]] internal slot to true.
+        regexp_object->set_legacy_features_enabled(true);
+    }
+    // 5. Else,
+    else {
+        // i. Set the value of obj’s [[LegacyFeaturesEnabled]] internal slot to false.
+        regexp_object->set_legacy_features_enabled(false);
+    }
+
+    // 6. Perform ! DefinePropertyOrThrow(obj, "lastIndex", PropertyDescriptor { [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
     MUST(regexp_object->define_property_or_throw(vm.names.lastIndex, PropertyDescriptor { .writable = true, .enumerable = false, .configurable = false }));
 
-    // 3. Return obj.
+    // 7. Return obj.
     return NonnullGCPtr { *regexp_object };
 }
 

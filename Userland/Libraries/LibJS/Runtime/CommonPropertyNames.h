@@ -18,6 +18,15 @@ namespace JS {
     P(__defineSetter__)                      \
     P(__lookupGetter__)                      \
     P(__lookupSetter__)                      \
+    P($1)                                    \
+    P($2)                                    \
+    P($3)                                    \
+    P($4)                                    \
+    P($5)                                    \
+    P($6)                                    \
+    P($7)                                    \
+    P($8)                                    \
+    P($9)                                    \
     P(Atomics)                               \
     P(BYTES_PER_ELEMENT)                     \
     P(BigInt)                                \
@@ -319,6 +328,9 @@ namespace JS {
     P(log1p)                                 \
     P(log2)                                  \
     P(log10)                                 \
+    P(lastMatch)                             \
+    P(lastParen)                             \
+    P(leftContext)                           \
     P(map)                                   \
     P(max)                                   \
     P(maximize)                              \
@@ -403,6 +415,7 @@ namespace JS {
     P(roundingIncrement)                     \
     P(roundingMode)                          \
     P(roundingPriority)                      \
+    P(rightContext)                          \
     P(script)                                \
     P(seal)                                  \
     P(second)                                \
@@ -567,6 +580,11 @@ struct CommonPropertyNames {
     PropertyKey return_ { "return", PropertyKey::StringMayBeNumber::No };
     PropertyKey throw_ { "throw", PropertyKey::StringMayBeNumber::No };
     PropertyKey xor_ { "xor", PropertyKey::StringMayBeNumber::No };
+    PropertyKey inputAlias { "$_", PropertyKey::StringMayBeNumber::No };
+    PropertyKey lastMatchAlias { "$&", PropertyKey::StringMayBeNumber::No };
+    PropertyKey lastParenAlias { "$+", PropertyKey::StringMayBeNumber::No };
+    PropertyKey leftContextAlias { "$`", PropertyKey::StringMayBeNumber::No };
+    PropertyKey rightContextAlias { "$'", PropertyKey::StringMayBeNumber::No };
 #define __ENUMERATE(x) PropertyKey x { #x, PropertyKey::StringMayBeNumber::No };
     ENUMERATE_STANDARD_PROPERTY_NAMES(__ENUMERATE)
 #undef __ENUMERATE

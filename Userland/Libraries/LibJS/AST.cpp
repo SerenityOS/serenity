@@ -3510,7 +3510,14 @@ Completion RegExpLiteral::execute(Interpreter& interpreter) const
 
     // 3. Return ! RegExpCreate(pattern, flags).
     Regex<ECMA262> regex(parsed_regex(), parsed_pattern(), parsed_flags());
-    return Value { RegExpObject::create(realm, move(regex), move(pattern), move(flags)) };
+    // NOTE: We bypass RegExpCreate and subsequently RegExpAlloc as an optimization to use the already parsed values.
+    auto* regexp_object = RegExpObject::create(realm, move(regex), move(pattern), move(flags));
+    // RegExpAlloc has these two steps from the 'Legacy RegExp features' proposal.
+    regexp_object->set_realm(*vm.current_realm());
+    // We don't need to check 'If SameValue(newTarget, thisRealm.[[Intrinsics]].[[%RegExp%]]) is true'
+    // here as we know RegExpCreate calls RegExpAlloc with %RegExp% for newTarget.
+    regexp_object->set_legacy_features_enabled(true);
+    return Value { regexp_object };
 }
 
 void ArrayExpression::dump(int indent) const

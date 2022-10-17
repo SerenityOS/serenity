@@ -169,6 +169,7 @@ set(SOURCES
     Runtime/Reference.cpp
     Runtime/ReflectObject.cpp
     Runtime/RegExpConstructor.cpp
+    Runtime/RegExpLegacyStaticProperties.cpp
     Runtime/RegExpObject.cpp
     Runtime/RegExpPrototype.cpp
     Runtime/RegExpStringIterator.cpp
