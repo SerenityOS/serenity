@@ -16,21 +16,16 @@ and follow the instructions for your chosen Linux environment, to get the needed
 
 ## Note on filesystems
 
-WSL2 filesystem performance for IO heavy tasks (such as compiling 
-a large C++ project) on the host Windows filesystem is
+WSL2 filesystem performance for IO heavy tasks (such as compiling a large C++ project) on the host Windows filesystem is
 pretty bad. See [this issue on the WSL GitHub project](https://github.com/microsoft/WSL/issues/4197#issuecomment-604592340)
 for details.
 
 The recommendation from the Microsoft team on that issue is:
 
-> If it's at all possible, store your projects in the Linux file 
-system in WSL2.
+> If it's at all possible, store your projects in the Linux file system in WSL2.
 
-In practice, this means cloning and building the project to somewhere 
-such as `/home/username/serenity`. You can then
-access the linux filesystem at `\\wsl$`, so for example, 
-if your distribution in WSL is Ubuntu 22.04,   
-the project would be at `\\wsl$\Ubuntu-22.04\home\username\serenity`.
+In practice, this means cloning and building the project to somewhere such as `/home/username/serenity`. You can then
+access the linux filesystem at `\\wsl$`, so for example, if your distribution in WSL is Ubuntu 22.04, the project would be at `\\wsl$\Ubuntu-22.04\home\username\serenity`.
 
 ## Setting up QEMU
 
