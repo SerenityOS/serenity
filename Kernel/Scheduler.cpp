@@ -475,7 +475,7 @@ void Scheduler::idle_loop(void*)
 {
     auto& proc = Processor::current();
     dbgln("Scheduler[{}]: idle loop running", proc.id());
-    VERIFY(are_interrupts_enabled());
+    VERIFY(Processor::are_interrupts_enabled());
 
     for (;;) {
         proc.idle_begin();
