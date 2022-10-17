@@ -670,28 +670,27 @@ bool FileSystemModel::fetch_thumbnail_for(Node const& node)
             return render_thumbnail(path);
         },
 
-        [this, path, weak_this](auto thumbnail_or_error) {
-            if (thumbnail_or_error.is_error()) {
-                s_thumbnail_cache.set(path, nullptr);
-                dbgln("Failed to load thumbnail for {}: {}", path, thumbnail_or_error.error());
+        [path, weak_this](auto thumbnail_or_error) {
+            if (auto strong_this = weak_this.strong_ref()) {
+                if (thumbnail_or_error.is_error()) {
+                    s_thumbnail_cache.set(path, nullptr);
+                    dbgln("Failed to load thumbnail for {}: {}", path, thumbnail_or_error.error());
+                } else {
+                    s_thumbnail_cache.set(path, thumbnail_or_error.release_value());
+                }
+
+                strong_this->m_thumbnail_progress++;
+                if (strong_this->on_thumbnail_progress)
+                    strong_this->on_thumbnail_progress(strong_this->m_thumbnail_progress, strong_this->m_thumbnail_progress_total);
+                if (strong_this->m_thumbnail_progress == strong_this->m_thumbnail_progress_total) {
+                    strong_this->m_thumbnail_progress = 0;
+                    strong_this->m_thumbnail_progress_total = 0;
+                }
             } else {
-                s_thumbnail_cache.set(path, thumbnail_or_error.release_value());
-            }
-
-            // The model was destroyed, no need to update
-            // progress or call any event handlers.
-            if (weak_this.is_null())
+                // The model was destroyed, no need to update
+                // progress or call any event handlers.
                 return;
-
-            m_thumbnail_progress++;
-            if (on_thumbnail_progress)
-                on_thumbnail_progress(m_thumbnail_progress, m_thumbnail_progress_total);
-            if (m_thumbnail_progress == m_thumbnail_progress_total) {
-                m_thumbnail_progress = 0;
-                m_thumbnail_progress_total = 0;
             }
-
-            did_update(UpdateFlag::DontInvalidateIndices);
         });
 
     return false;
