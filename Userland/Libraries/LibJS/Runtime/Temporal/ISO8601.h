@@ -24,6 +24,7 @@ struct ParseResult {
     Optional<StringView> time_fraction;
     Optional<StringView> calendar_name;
     Optional<StringView> utc_designator;
+    Optional<StringView> time_zone_bracketed_annotation;
     Optional<StringView> time_zone_numeric_utc_offset;
     Optional<StringView> time_zone_utc_offset_sign;
     Optional<StringView> time_zone_utc_offset_hour;
