@@ -228,7 +228,7 @@ void Client::log_response(unsigned code, HTTP::HttpRequest const& request)
 }
 
 // https://w3c.github.io/webdriver/#dfn-match-a-request
-ErrorOr<Client::RoutingResult, HttpError> Client::match_route(HTTP::HttpRequest::Method method, String resource)
+ErrorOr<Client::RoutingResult, HttpError> Client::match_route(HTTP::HttpRequest::Method method, String const& resource)
 {
     // FIXME: Implement to spec.
 
@@ -317,7 +317,7 @@ JsonValue Client::make_json_value(JsonValue const& value)
 
 // 8.1 New Session, https://w3c.github.io/webdriver/#dfn-new-sessions
 // POST /session
-ErrorOr<JsonValue, HttpError> Client::handle_post_session(Vector<StringView>, JsonValue const&)
+ErrorOr<JsonValue, HttpError> Client::handle_post_session(Vector<StringView> const&, JsonValue const&)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling POST /session");
 
@@ -381,7 +381,7 @@ ErrorOr<JsonValue, HttpError> Client::handle_post_session(Vector<StringView>, Js
 
 // 8.2 Delete Session, https://w3c.github.io/webdriver/#dfn-delete-session
 // DELETE /session/{session id}
-ErrorOr<JsonValue, HttpError> Client::handle_delete_session(Vector<StringView> parameters, JsonValue const&)
+ErrorOr<JsonValue, HttpError> Client::handle_delete_session(Vector<StringView> const& parameters, JsonValue const&)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling DELETE /session/<session_id>");
 
@@ -399,7 +399,7 @@ ErrorOr<JsonValue, HttpError> Client::handle_delete_session(Vector<StringView> p
 
 // 8.3 Status, https://w3c.github.io/webdriver/#dfn-status
 // GET /status
-ErrorOr<JsonValue, HttpError> Client::handle_get_status(Vector<StringView>, JsonValue const&)
+ErrorOr<JsonValue, HttpError> Client::handle_get_status(Vector<StringView> const&, JsonValue const&)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling GET /status");
 
@@ -419,7 +419,7 @@ ErrorOr<JsonValue, HttpError> Client::handle_get_status(Vector<StringView>, Json
 
 // 10.1 Navigate To, https://w3c.github.io/webdriver/#dfn-navigate-to
 // POST /session/{session id}/url
-ErrorOr<JsonValue, HttpError> Client::handle_post_url(Vector<StringView> parameters, JsonValue const& payload)
+ErrorOr<JsonValue, HttpError> Client::handle_post_url(Vector<StringView> const& parameters, JsonValue const& payload)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling POST /session/<session_id>/url");
     Session* session = TRY(find_session_with_id(parameters[0]));
@@ -431,7 +431,7 @@ ErrorOr<JsonValue, HttpError> Client::handle_post_url(Vector<StringView> paramet
 
 // 10.2 Get Current URL, https://w3c.github.io/webdriver/#dfn-get-current-url
 // GET /session/{session id}/url
-ErrorOr<JsonValue, HttpError> Client::handle_get_url(Vector<StringView> parameters, JsonValue const&)
+ErrorOr<JsonValue, HttpError> Client::handle_get_url(Vector<StringView> const& parameters, JsonValue const&)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session_id>/url");
     Session* session = TRY(find_session_with_id(parameters[0]));
@@ -443,7 +443,7 @@ ErrorOr<JsonValue, HttpError> Client::handle_get_url(Vector<StringView> paramete
 
 // 10.3 Back, https://w3c.github.io/webdriver/#dfn-back
 // POST /session/{session id}/back
-ErrorOr<JsonValue, HttpError> Client::handle_back(Vector<StringView> parameters, JsonValue const&)
+ErrorOr<JsonValue, HttpError> Client::handle_back(Vector<StringView> const& parameters, JsonValue const&)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling POST /session/<session_id>/back");
     Session* session = TRY(find_session_with_id(parameters[0]));
@@ -455,7 +455,7 @@ ErrorOr<JsonValue, HttpError> Client::handle_back(Vector<StringView> parameters,
 
 // 10.4 Forward, https://w3c.github.io/webdriver/#dfn-forward
 // POST /session/{session id}/forward
-ErrorOr<JsonValue, HttpError> Client::handle_forward(Vector<StringView> parameters, JsonValue const&)
+ErrorOr<JsonValue, HttpError> Client::handle_forward(Vector<StringView> const& parameters, JsonValue const&)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling POST /session/<session_id>/forward");
     Session* session = TRY(find_session_with_id(parameters[0]));
@@ -467,7 +467,7 @@ ErrorOr<JsonValue, HttpError> Client::handle_forward(Vector<StringView> paramete
 
 // 10.5 Refresh, https://w3c.github.io/webdriver/#dfn-refresh
 // POST /session/{session id}/refresh
-ErrorOr<JsonValue, HttpError> Client::handle_refresh(Vector<StringView> parameters, JsonValue const&)
+ErrorOr<JsonValue, HttpError> Client::handle_refresh(Vector<StringView> const& parameters, JsonValue const&)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling POST /session/<session_id>/refresh");
     Session* session = TRY(find_session_with_id(parameters[0]));
@@ -479,7 +479,7 @@ ErrorOr<JsonValue, HttpError> Client::handle_refresh(Vector<StringView> paramete
 
 // 10.6 Get Title, https://w3c.github.io/webdriver/#dfn-get-title
 // GET /session/{session id}/title
-ErrorOr<JsonValue, HttpError> Client::handle_get_title(Vector<StringView> parameters, JsonValue const&)
+ErrorOr<JsonValue, HttpError> Client::handle_get_title(Vector<StringView> const& parameters, JsonValue const&)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session_id>/title");
     Session* session = TRY(find_session_with_id(parameters[0]));
@@ -492,7 +492,7 @@ ErrorOr<JsonValue, HttpError> Client::handle_get_title(Vector<StringView> parame
 
 // 11.2 Close Window, https://w3c.github.io/webdriver/#dfn-close-window
 // DELETE /session/{session id}/window
-ErrorOr<JsonValue, HttpError> Client::handle_delete_window(Vector<StringView> parameters, JsonValue const&)
+ErrorOr<JsonValue, HttpError> Client::handle_delete_window(Vector<StringView> const& parameters, JsonValue const&)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling DELETE /session/<session_id>/window");
     Session* session = TRY(find_session_with_id(parameters[0]));
@@ -505,7 +505,7 @@ ErrorOr<JsonValue, HttpError> Client::handle_delete_window(Vector<StringView> pa
 
 // 14.1 Get All Cookies, https://w3c.github.io/webdriver/#dfn-get-all-cookies
 // GET /session/{session id}/cookie
-ErrorOr<JsonValue, HttpError> Client::handle_get_all_cookies(Vector<StringView> parameters, JsonValue const&)
+ErrorOr<JsonValue, HttpError> Client::handle_get_all_cookies(Vector<StringView> const& parameters, JsonValue const&)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session_id>/cookie");
     Session* session = TRY(find_session_with_id(parameters[0]));
@@ -518,7 +518,7 @@ ErrorOr<JsonValue, HttpError> Client::handle_get_all_cookies(Vector<StringView> 
 
 // 14.2 Get Named Cookie, https://w3c.github.io/webdriver/#dfn-get-named-cookie
 // GET /session/{session id}/cookie/{name}
-ErrorOr<JsonValue, HttpError> Client::handle_get_named_cookie(Vector<StringView> parameters, JsonValue const&)
+ErrorOr<JsonValue, HttpError> Client::handle_get_named_cookie(Vector<StringView> const& parameters, JsonValue const&)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session_id>/cookie/<name>");
     Session* session = TRY(find_session_with_id(parameters[0]));
@@ -531,7 +531,7 @@ ErrorOr<JsonValue, HttpError> Client::handle_get_named_cookie(Vector<StringView>
 
 // 14.3 Add Cookie, https://w3c.github.io/webdriver/#dfn-adding-a-cookie
 // POST /session/{session id}/cookie
-ErrorOr<JsonValue, HttpError> Client::handle_add_cookie(Vector<StringView> parameters, JsonValue const& payload)
+ErrorOr<JsonValue, HttpError> Client::handle_add_cookie(Vector<StringView> const& parameters, JsonValue const& payload)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling POST /session/<session_id>/cookie");
     Session* session = TRY(find_session_with_id(parameters[0]));
@@ -543,7 +543,7 @@ ErrorOr<JsonValue, HttpError> Client::handle_add_cookie(Vector<StringView> param
 
 // 14.4 Delete Cookie, https://w3c.github.io/webdriver/#dfn-delete-cookie
 // DELETE /session/{session id}/cookie/{name}
-ErrorOr<JsonValue, HttpError> Client::handle_delete_cookie(Vector<StringView> parameters, JsonValue const&)
+ErrorOr<JsonValue, HttpError> Client::handle_delete_cookie(Vector<StringView> const& parameters, JsonValue const&)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling DELETE /session/<session_id>/cookie/<name>");
     Session* session = TRY(find_session_with_id(parameters[0]));
@@ -555,7 +555,7 @@ ErrorOr<JsonValue, HttpError> Client::handle_delete_cookie(Vector<StringView> pa
 
 // 14.5 Delete All Cookies, https://w3c.github.io/webdriver/#dfn-delete-all-cookies
 // DELETE /session/{session id}/cookie
-ErrorOr<JsonValue, HttpError> Client::handle_delete_all_cookies(Vector<StringView> parameters, JsonValue const&)
+ErrorOr<JsonValue, HttpError> Client::handle_delete_all_cookies(Vector<StringView> const& parameters, JsonValue const&)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling DELETE /session/<session_id>/cookie");
     Session* session = TRY(find_session_with_id(parameters[0]));
