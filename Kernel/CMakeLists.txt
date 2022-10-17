@@ -532,6 +532,7 @@ else()
         Memory/RegionTree.cpp
         Memory/RingBuffer.cpp
         Memory/ScatterGatherList.cpp
+        Memory/ScopedAddressSpaceSwitcher.cpp
         Memory/SharedInodeVMObject.cpp
         Memory/VirtualRange.cpp
         Memory/VMObject.cpp
