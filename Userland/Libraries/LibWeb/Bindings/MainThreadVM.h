@@ -32,6 +32,8 @@ struct WebEngineCustomData final : public JS::VM::CustomData {
     // FIXME: This should be a set.
     Vector<JS::Handle<DOM::MutationObserver>> mutation_observers;
 
+    JS::Handle<JS::Realm> internal_realm;
+
     OwnPtr<JS::ExecutionContext> root_execution_context;
 };
 
