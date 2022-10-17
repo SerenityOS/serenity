@@ -8,6 +8,7 @@
 #include "Game.h"
 #include "GameSizeDialog.h"
 #include <AK/URL.h>
+#include <Games/2048/GameWindowGML.h>
 #include <LibConfig/Client.h>
 #include <LibCore/System.h>
 #include <LibDesktop/Launcher.h>
@@ -65,15 +66,15 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_title("2048");
     window->resize(315, 336);
 
-    auto main_widget = TRY(window->try_set_main_widget<GUI::Widget>());
-    (void)TRY(main_widget->try_set_layout<GUI::VerticalBoxLayout>());
-    main_widget->set_fill_with_background_color(true);
+    auto& main_widget = window->set_main_widget<GUI::Widget>();
+    if (!main_widget.load_from_gml(game_window_gml))
+        VERIFY_NOT_REACHED();
 
     Game game { board_size, target_tile, evil_ai };
 
-    auto board_view = TRY(main_widget->try_add<BoardView>(&game.board()));
+    auto board_view = TRY(main_widget.find_descendant_of_type_named<GUI::Widget>("board_view_container")->try_add<BoardView>(&game.board()));
     board_view->set_focus(true);
-    auto statusbar = TRY(main_widget->try_add<GUI::Statusbar>());
+    auto statusbar = main_widget.find_descendant_of_type_named<GUI::Statusbar>("statusbar");
 
     app->on_action_enter = [&](GUI::Action& action) {
         auto text = action.status_tip();
