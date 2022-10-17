@@ -42,6 +42,7 @@ public:
     ErrorOr<JsonValue, HttpError> forward();
     ErrorOr<JsonValue, HttpError> get_all_cookies();
     ErrorOr<JsonValue, HttpError> get_named_cookie(String const& name);
+    ErrorOr<JsonValue, HttpError> add_cookie(JsonValue const& payload);
     ErrorOr<JsonValue, HttpError> delete_cookie(StringView const& name);
     ErrorOr<JsonValue, HttpError> delete_all_cookies();
 

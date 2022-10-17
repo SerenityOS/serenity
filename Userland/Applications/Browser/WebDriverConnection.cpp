@@ -95,6 +95,20 @@ Messages::WebDriverSessionClient::GetNamedCookieResponse WebDriverConnection::ge
     return { {} };
 }
 
+void WebDriverConnection::add_cookie(Web::Cookie::ParsedCookie const& cookie)
+{
+    dbgln("WebDriverConnection: add_cookie");
+    if (auto browser_window = m_browser_window.strong_ref()) {
+        auto& tab = browser_window->active_tab();
+        if (tab.on_set_cookie) {
+            // FIXME: The spec doesn't say anything about the source
+            //  but can we assume a cookie created through a HTTP-request to the WebDriver
+            //  to be (source) from an HTTP-API?
+            tab.on_set_cookie(tab.url(), cookie, Web::Cookie::Source::Http);
+        }
+    }
+}
+
 void WebDriverConnection::update_cookie(Web::Cookie::Cookie const& cookie)
 {
     if (auto browser_window = m_browser_window.strong_ref()) {
