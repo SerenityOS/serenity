@@ -422,7 +422,7 @@ add_custom_command(
     OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/Version.h"
     VERBATIM
 )
-add_custom_target(generate_version_header ALL DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/Version.h")
+add_custom_target(generate_version_header DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/Version.h")
 set(GENERATED_SOURCES "${CMAKE_CURRENT_BINARY_DIR}/Version.h")
 
 generate_state_machine(../Userland/Libraries/LibVT/StateMachine.txt ../Userland/Libraries/LibVT/EscapeSequenceStateMachine.h)
@@ -670,7 +670,7 @@ add_link_options(LINKER:-z,notext)
 add_library(kernel_heap STATIC ${KERNEL_HEAP_SOURCES})
 
 add_executable(Kernel ${SOURCES})
-add_dependencies(Kernel generate_EscapeSequenceStateMachine.h)
+add_dependencies(Kernel generate_EscapeSequenceStateMachine.h generate_version_header)
 
 if (NOT "${SERENITY_ARCH}" STREQUAL "aarch64")
     add_custom_command(
