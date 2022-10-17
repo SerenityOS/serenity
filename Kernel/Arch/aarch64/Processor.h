@@ -114,7 +114,8 @@ public:
     // FIXME: Actually return the current thread once aarch64 supports threading.
     ALWAYS_INLINE static Thread* current_thread()
     {
-        return nullptr;
+        static Thread* current_thread { nullptr };
+        return current_thread;
     }
 
     ALWAYS_INLINE bool has_nx() const
