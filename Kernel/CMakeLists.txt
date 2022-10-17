@@ -516,6 +516,7 @@ else()
         Graphics/Console/BootFramebufferConsole.cpp
         Graphics/Console/GenericFramebufferConsole.cpp
 
+        Locking/Mutex.cpp
         Locking/Spinlock.cpp
 
         Memory/AddressSpace.cpp

@@ -91,6 +91,9 @@ LockRefPtr<Process> Process::from_pid(Kernel::ProcessID)
 // Thread
 namespace Kernel {
 
+class Timer : public AtomicRefCounted<Timer> {
+};
+
 bool Thread::JoinBlocker::unblock(void*, bool)
 {
     TODO_AARCH64();
@@ -139,6 +142,25 @@ Thread::Blocker::~Blocker()
     TODO_AARCH64();
 }
 
+u32 Thread::unblock_from_mutex(Kernel::Mutex&)
+{
+    TODO_AARCH64();
+}
+
+void Thread::block(Kernel::Mutex&, SpinlockLocker<Kernel::Spinlock>&, u32)
+{
+    TODO_AARCH64();
+}
+
+SpinlockProtected<Thread::GlobalList>& Thread::all_instances()
+{
+    TODO_AARCH64();
+}
+
+Thread::~Thread()
+{
+    TODO_AARCH64();
+}
 }
 
 // PerformanceEventBuffer
