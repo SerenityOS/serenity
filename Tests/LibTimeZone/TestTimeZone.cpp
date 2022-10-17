@@ -24,6 +24,26 @@ static void test_offset(StringView time_zone, i64 time, i64 expected_offset, Tim
 
 #    include <LibTimeZone/TimeZoneData.h>
 
+class TimeZoneGuard {
+public:
+    explicit TimeZoneGuard(char const* tz)
+        : m_tz(getenv("TZ"))
+    {
+        setenv("TZ", tz, 1);
+    }
+
+    ~TimeZoneGuard()
+    {
+        if (m_tz)
+            setenv("TZ", m_tz, 1);
+        else
+            unsetenv("TZ");
+    }
+
+private:
+    char const* m_tz { nullptr };
+};
+
 TEST_CASE(time_zone_from_string)
 {
     EXPECT_EQ(TimeZone::time_zone_from_string("America/New_York"sv), TimeZone::TimeZone::America_New_York);
@@ -93,6 +113,12 @@ TEST_CASE(canonicalize_time_zone)
     EXPECT_EQ(TimeZone::canonicalize_time_zone("Etc/GMT"sv), "UTC"sv);
 
     EXPECT(!TimeZone::canonicalize_time_zone("I don't exist"sv).has_value());
+}
+
+TEST_CASE(invalid_time_zone)
+{
+    TimeZoneGuard guard { "ladybird" };
+    EXPECT_EQ(TimeZone::current_time_zone(), "UTC"sv);
 }
 
 static i64 offset(i64 sign, i64 hours, i64 minutes, i64 seconds)
