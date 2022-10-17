@@ -20,39 +20,6 @@
 #include <Kernel/Thread.h>
 #include <Kernel/UserOrKernelBuffer.h>
 
-// Scheduler
-namespace Kernel {
-
-void Scheduler::timer_tick(RegisterState const&) {
-    // NOTE: This function currently will be called by the TimeManagement code,
-    //       so there is no TODO_AARCH64. Instead there will be a linker error when
-    //       the Scheduler code is compiled for aarch64.
-};
-
-READONLY_AFTER_INIT Thread* g_finalizer;
-RecursiveSpinlock g_scheduler_lock { LockRank::None };
-
-void Scheduler::yield()
-{
-    TODO_AARCH64();
-}
-
-void Scheduler::notify_finalizer()
-{
-    TODO_AARCH64();
-}
-
-void Scheduler::add_time_scheduled(u64, bool)
-{
-    TODO_AARCH64();
-}
-
-void Scheduler::enqueue_runnable_thread(Kernel::Thread&)
-{
-    TODO_AARCH64();
-}
-}
-
 // Random
 namespace Kernel {
 
@@ -82,6 +49,11 @@ void Process::finalize()
 }
 
 LockRefPtr<Process> Process::from_pid(Kernel::ProcessID)
+{
+    TODO_AARCH64();
+}
+
+LockRefPtr<Thread> Process::create_kernel_thread(void (*)(void*), void*, u32, NonnullOwnPtr<KString>, u32, bool)
 {
     TODO_AARCH64();
 }
@@ -161,6 +133,57 @@ Thread::~Thread()
 {
     TODO_AARCH64();
 }
+
+void Thread::update_time_scheduled(u64, bool, bool)
+{
+    TODO_AARCH64();
+}
+
+void Thread::set_state(State, u8)
+{
+    TODO_AARCH64();
+}
+
+DispatchSignalResult Thread::dispatch_one_pending_signal()
+{
+    TODO_AARCH64();
+}
+
+bool Thread::tick()
+{
+    TODO_AARCH64();
+}
+
+RegisterState& Thread::get_register_dump_from_stack()
+{
+    TODO_AARCH64();
+}
+
+StringView Thread::state_string() const
+{
+    TODO_AARCH64();
+}
+
+ErrorOr<NonnullOwnPtr<KString>> Thread::backtrace()
+{
+    TODO_AARCH64();
+}
+
+}
+
+ErrorOr<void> AK::Formatter<Kernel::Thread>::format(FormatBuilder&, Kernel::Thread const&)
+{
+    TODO_AARCH64();
+}
+
+// WaitQueue
+namespace Kernel {
+
+u32 WaitQueue::wake_all()
+{
+    TODO_AARCH64();
+}
+
 }
 
 // PerformanceEventBuffer

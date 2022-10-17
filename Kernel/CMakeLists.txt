@@ -504,6 +504,7 @@ else()
         KString.cpp
         KSyms.cpp
         MiniStdLib.cpp
+        Scheduler.cpp
         StdLib.cpp
         Time/TimeManagement.cpp
         TimerQueue.cpp
