@@ -1,6 +1,7 @@
 #include <AK/URL.h>
 #include <AK/Vector.h>
 #include <LibWeb/Cookie/Cookie.h>
+#include <LibWeb/Cookie/ParsedCookie.h>
 
 endpoint WebDriverSessionClient {
     quit() =|
@@ -13,6 +14,7 @@ endpoint WebDriverSessionClient {
     forward() =|
     get_all_cookies() => (Vector<Web::Cookie::Cookie> cookies)
     get_named_cookie(String name) => (Optional<Web::Cookie::Cookie> cookie)
+    add_cookie(Web::Cookie::ParsedCookie cookie) =|
     update_cookie(Web::Cookie::Cookie cookie) =|
 
 }

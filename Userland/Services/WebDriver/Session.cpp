@@ -13,6 +13,7 @@
 #include <LibCore/Stream.h>
 #include <LibCore/System.h>
 #include <LibWeb/Cookie/Cookie.h>
+#include <LibWeb/Cookie/ParsedCookie.h>
 #include <unistd.h>
 
 namespace WebDriver {
@@ -295,6 +296,126 @@ ErrorOr<JsonValue, HttpError> Session::get_named_cookie(String const& name)
 
     // 4. Otherwise, return error with error code no such cookie.
     return HttpError { 404, "no such cookie", "Cookie not found" };
+}
+
+// POST /session/{session id}/cookie https://w3c.github.io/webdriver/#dfn-adding-a-cookie
+ErrorOr<JsonValue, HttpError> Session::add_cookie(JsonValue const& payload)
+{
+    // 1. Let data be the result of getting a property named cookie from the parameters argument.
+    if (!payload.is_object() || !payload.as_object().has_object("cookie"sv))
+        return HttpError { 400, "invalid argument", "Payload doesn't have a cookie object" };
+
+    auto const& maybe_data = payload.as_object().get("cookie"sv);
+
+    // 2. If data is not a JSON Object with all the required (non-optional) JSON keys listed in the table for cookie conversion,
+    //    return error with error code invalid argument.
+    // NOTE: Table is here: https://w3c.github.io/webdriver/#dfn-table-for-cookie-conversion
+    if (!maybe_data.is_object())
+        return HttpError { 400, "invalid argument", "Value \"cookie\' is not an object" };
+
+    auto const& data = maybe_data.as_object();
+
+    if (!data.has("name"sv) || !data.has("value"sv))
+        return HttpError { 400, "invalid argument", "Cookie-Object doesn't contain all required keys" };
+
+    // 3. If the current browsing context is no longer open, return error with error code no such window.
+    auto current_window = get_window_object();
+    if (!current_window.has_value())
+        return HttpError { 404, "no such window", "Window not found" };
+
+    // FIXME: 4. Handle any user prompts, and return its value if it is an error.
+
+    // FIXME: 5. If the current browsing context’s document element is a cookie-averse Document object,
+    //           return error with error code invalid cookie domain.
+
+    // 6. If cookie name or cookie value is null,
+    //    FIXME: cookie domain is not equal to the current browsing context’s active document’s domain,
+    //    cookie secure only or cookie HTTP only are not boolean types,
+    //    or cookie expiry time is not an integer type, or it less than 0 or greater than the maximum safe integer,
+    //    return error with error code invalid argument.
+    if (data.get("name"sv).is_null() || data.get("value"sv).is_null())
+        return HttpError { 400, "invalid argument", "Cookie-Object is malformed: name or value are null" };
+    if (data.has("secure"sv) && !data.get("secure"sv).is_bool())
+        return HttpError { 400, "invalid argument", "Cookie-Object is malformed: secure is not bool" };
+    if (data.has("httpOnly"sv) && !data.get("httpOnly"sv).is_bool())
+        return HttpError { 400, "invalid argument", "Cookie-Object is malformed: httpOnly is not bool" };
+    Optional<Core::DateTime> expiry_time;
+    if (data.has("expiry"sv)) {
+        auto expiry_argument = data.get("expiry"sv);
+        if (!expiry_argument.is_u32()) {
+            // NOTE: less than 0 or greater than safe integer are handled by the JSON parser
+            return HttpError { 400, "invalid argument", "Cookie-Object is malformed: expiry is not u32" };
+        }
+        expiry_time = Core::DateTime::from_timestamp(expiry_argument.as_u32());
+    }
+
+    // 7. Create a cookie in the cookie store associated with the active document’s address using
+    //    cookie name name, cookie value value, and an attribute-value list of the following cookie concepts
+    //    listed in the table for cookie conversion from data:
+    Web::Cookie::ParsedCookie cookie;
+    if (auto name_attribute = data.get("name"sv); name_attribute.is_string())
+        cookie.name = name_attribute.as_string();
+    else
+        return HttpError { 400, "invalid argument", "Expect name attribute to be string" };
+
+    if (auto value_attribute = data.get("value"sv); value_attribute.is_string())
+        cookie.value = value_attribute.as_string();
+    else
+        return HttpError { 400, "invalid argument", "Expect value attribute to be string" };
+
+    // Cookie path
+    //     The value if the entry exists, otherwise "/".
+    if (data.has("path"sv)) {
+        if (auto path_attribute = data.get("path"sv); path_attribute.is_string())
+            cookie.path = path_attribute.as_string();
+        else
+            return HttpError { 400, "invalid argument", "Expect path attribute to be string" };
+    } else {
+        cookie.path = "/";
+    }
+
+    // Cookie domain
+    //     The value if the entry exists, otherwise the current browsing context’s active document’s URL domain.
+    // NOTE: The otherwise case is handled by the CookieJar
+    if (data.has("domain"sv)) {
+        if (auto domain_attribute = data.get("domain"sv); domain_attribute.is_string())
+            cookie.domain = domain_attribute.as_string();
+        else
+            return HttpError { 400, "invalid argument", "Expect domain attribute to be string" };
+    }
+
+    // Cookie secure only
+    //     The value if the entry exists, otherwise false.
+    if (data.has("secure"sv)) {
+        cookie.secure_attribute_present = data.get("secure"sv).as_bool();
+    } else {
+        cookie.secure_attribute_present = false;
+    }
+
+    // Cookie HTTP only
+    //     The value if the entry exists, otherwise false.
+    if (data.has("httpOnly"sv)) {
+        cookie.http_only_attribute_present = data.get("httpOnly"sv).as_bool();
+    } else {
+        cookie.http_only_attribute_present = false;
+    }
+
+    // Cookie expiry time
+    //     The value if the entry exists, otherwise leave unset to indicate that this is a session cookie.
+    cookie.expiry_time_from_expires_attribute = expiry_time;
+
+    // FIXME: Cookie same site
+    //            The value if the entry exists, otherwise leave unset to indicate that no same site policy is defined.
+
+    m_browser_connection->async_add_cookie(move(cookie));
+
+    // If there is an error during this step, return error with error code unable to set cookie.
+    // NOTE: This probably should only apply to the actual setting of the cookie in the Browser,
+    //       which cannot fail in our case.
+    //       Thus, the error-codes used above are 400 "invalid argument".
+
+    // 8. Return success with data null.
+    return JsonValue();
 }
 
 // https://w3c.github.io/webdriver/#dfn-delete-cookies
