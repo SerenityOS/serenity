@@ -13,6 +13,7 @@
 #include <AK/Types.h>
 #include <Kernel/API/TimePage.h>
 #include <Kernel/Arch/RegisterState.h>
+#include <Kernel/Forward.h>
 #include <Kernel/Library/LockRefPtr.h>
 #include <Kernel/Library/NonnullLockRefPtrVector.h>
 #include <Kernel/UnixTypes.h>
@@ -54,9 +55,7 @@ public:
 
     bool is_system_timer(HardwareTimerBase const&) const;
 
-    static void update_time(RegisterState const&);
     static void update_time_hpet(RegisterState const&);
-    void increment_time_since_boot_hpet();
     void increment_time_since_boot();
 
     static bool is_hpet_periodic_mode_allowed();
@@ -85,6 +84,12 @@ private:
 #if ARCH(I386) || ARCH(X86_64)
     bool probe_and_set_x86_legacy_hardware_timers();
     bool probe_and_set_x86_non_legacy_hardware_timers();
+    void increment_time_since_boot_hpet();
+    static void update_time(RegisterState const&);
+#elif ARCH(AARCH64)
+    bool probe_and_set_aarch64_hardware_timers();
+#else
+#    error Unknown architecture
 #endif
     Vector<HardwareTimerBase*> scan_and_initialize_periodic_timers();
     Vector<HardwareTimerBase*> scan_for_non_periodic_timers();
@@ -95,6 +100,7 @@ private:
     static u64 scheduling_current_time(bool);
 
     // Variables between m_update1 and m_update2 are synchronized
+    // FIXME: Replace m_update1 and m_update2 with a SpinlockLocker
     Atomic<u32> m_update1 { 0 };
     u32 m_ticks_this_second { 0 };
     u64 m_seconds_since_boot { 0 };

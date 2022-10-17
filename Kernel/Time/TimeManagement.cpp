@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Liav A. <liavalb@hotmail.co.il>
+ * Copyright (c) 2022, Timon Kruiper <timonkruiper@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -7,6 +8,7 @@
 #include <AK/Singleton.h>
 #include <AK/StdLibExtras.h>
 #include <AK/Time.h>
+
 #if ARCH(I386) || ARCH(X86_64)
 #    include <Kernel/Arch/x86/Time/APICTimer.h>
 #    include <Kernel/Arch/x86/Time/HPET.h>
@@ -15,7 +17,12 @@
 #    include <Kernel/Arch/x86/Time/RTC.h>
 #    include <Kernel/Arch/x86/common/Interrupts/APIC.h>
 #    include <Kernel/Arch/x86/common/RTC.h>
+#elif ARCH(AARCH64)
+#    include <Kernel/Arch/aarch64/RPi/Timer.h>
+#else
+#    error Unknown architecture
 #endif
+
 #include <Kernel/Arch/CurrentTime.h>
 #include <Kernel/CommandLine.h>
 #include <Kernel/Firmware/ACPI/Parser.h>
@@ -118,12 +125,19 @@ Time TimeManagement::monotonic_time(TimePrecision precision) const
         ticks = m_ticks_this_second;
 
         if (do_query) {
+#if ARCH(I386) || ARCH(X86_64)
             // We may have to do this over again if the timer interrupt fires
             // while we're trying to query the information. In that case, our
             // seconds and ticks became invalid, producing an incorrect time.
             // Be sure to not modify m_seconds_since_boot and m_ticks_this_second
             // because this may only be modified by the interrupt handler
             HPET::the().update_time(seconds, ticks, true);
+#elif ARCH(AARCH64)
+            // FIXME: Get rid of these horrible casts
+            const_cast<RPi::Timer*>(static_cast<RPi::Timer const*>(m_system_timer.ptr()))->update_time(seconds, ticks, true);
+#else
+#    error Unknown architecture
+#endif
         }
     } while (update_iteration != m_update2.load(AK::MemoryOrder::memory_order_acquire));
 
@@ -158,6 +172,10 @@ u64 TimeManagement::uptime_ms() const
 
 UNMAP_AFTER_INIT void TimeManagement::initialize([[maybe_unused]] u32 cpu)
 {
+    // Note: We must disable interrupts, because the timers interrupt might fire before
+    //       the TimeManagement class is completely initialized.
+    InterruptDisabler disabler;
+
 #if ARCH(I386) || ARCH(X86_64)
     if (cpu == 0) {
         VERIFY(!s_the.is_initialized());
@@ -180,12 +198,19 @@ UNMAP_AFTER_INIT void TimeManagement::initialize([[maybe_unused]] u32 cpu)
             apic_timer->enable_local_timer();
         }
     }
+#elif ARCH(AARCH64)
+    if (cpu == 0) {
+        VERIFY(!s_the.is_initialized());
+        s_the.ensure_instance();
+    }
+#else
+#    error Unknown architecture
+#endif
     auto* possible_arch_specific_current_time_function = optional_current_time();
     if (possible_arch_specific_current_time_function)
         s_scheduler_current_time = possible_arch_specific_current_time_function;
     else
         s_scheduler_current_time = current_time_monotonic;
-#endif
 }
 
 void TimeManagement::set_system_timer(HardwareTimerBase& timer)
@@ -204,7 +229,13 @@ time_t TimeManagement::ticks_per_second() const
 
 time_t TimeManagement::boot_time()
 {
+#if ARCH(I386) || ARCH(X86_64)
     return RTC::boot_time();
+#elif ARCH(AARCH64)
+    TODO_AARCH64();
+#else
+#    error Unknown architecture
+#endif
 }
 
 UNMAP_AFTER_INIT TimeManagement::TimeManagement()
@@ -231,6 +262,10 @@ UNMAP_AFTER_INIT TimeManagement::TimeManagement()
     } else if (!probe_and_set_x86_legacy_hardware_timers()) {
         VERIFY_NOT_REACHED();
     }
+#elif ARCH(AARCH64)
+    probe_and_set_aarch64_hardware_timers();
+#else
+#    error Unknown architecture
 #endif
 }
 
@@ -372,7 +407,6 @@ UNMAP_AFTER_INIT bool TimeManagement::probe_and_set_x86_legacy_hardware_timers()
     m_time_ticks_per_second = m_time_keeper_timer->ticks_per_second();
     return true;
 }
-#endif
 
 void TimeManagement::update_time(RegisterState const&)
 {
@@ -403,6 +437,38 @@ void TimeManagement::increment_time_since_boot_hpet()
 
     update_time_page();
 }
+#elif ARCH(AARCH64)
+UNMAP_AFTER_INIT bool TimeManagement::probe_and_set_aarch64_hardware_timers()
+{
+    m_hardware_timers.append(RPi::Timer::initialize());
+    m_system_timer = m_hardware_timers[0];
+    m_time_ticks_per_second = m_system_timer->frequency();
+
+    m_system_timer->set_callback([this](RegisterState const& regs) {
+        auto seconds_since_boot = m_seconds_since_boot;
+        auto ticks_this_second = m_ticks_this_second;
+        auto delta_ns = static_cast<RPi::Timer*>(m_system_timer.ptr())->update_time(seconds_since_boot, ticks_this_second, false);
+
+        u32 update_iteration = m_update2.fetch_add(1, AK::MemoryOrder::memory_order_acquire);
+        m_seconds_since_boot = seconds_since_boot;
+        m_ticks_this_second = ticks_this_second;
+
+        timespec_add(m_epoch_time, { (time_t)(delta_ns / 1000000000), (long)(delta_ns % 1000000000) }, m_epoch_time);
+
+        m_update1.store(update_iteration + 1, AK::MemoryOrder::memory_order_release);
+
+        update_time_page();
+
+        system_timer_tick(regs);
+    });
+
+    m_time_keeper_timer = m_system_timer;
+
+    return true;
+}
+#else
+#    error Unknown architecture
+#endif
 
 void TimeManagement::increment_time_since_boot()
 {
