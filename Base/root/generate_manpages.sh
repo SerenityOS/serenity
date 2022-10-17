@@ -39,7 +39,6 @@ for i in ( \
             (shot 1) \
             (sql 1) \
             (strace 1) \
-            (tail 1) \
             (tr 1) \
             (traceroute 1) \
             (tree 1) \
