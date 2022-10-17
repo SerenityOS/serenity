@@ -192,6 +192,8 @@ function(invoke_generator name generator version_file header implementation)
 
     add_custom_target("generate_${name}" DEPENDS "${header}" "${implementation}")
     add_dependencies(all_generated "generate_${name}")
+    list(APPEND CURRENT_LIB_GENERATED "${name}")
+    set(CURRENT_LIB_GENERATED ${CURRENT_LIB_GENERATED} PARENT_SCOPE)
 endfunction()
 
 function(download_file url path)

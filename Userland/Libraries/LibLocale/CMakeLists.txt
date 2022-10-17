@@ -2,13 +2,16 @@ include(${SerenityOS_SOURCE_DIR}/Meta/CMake/locale_data.cmake)
 
 if (DEFINED LOCALE_DATA_SOURCES)
     set(SOURCES ${LOCALE_DATA_SOURCES})
+    set(GENERATED_SOURCES ${CURRENT_LIB_GENERATED})
     if (SERENITYOS)
         serenity_lib(LibLocaleData localedata)
     else()
         add_library(LibLocaleData OBJECT ${SOURCES})
+        serenity_generated_sources(LibLocaleData)
     endif()
     target_compile_options(LibLocaleData PRIVATE -g0 -Os -Wno-parentheses-equality)
     target_link_libraries(LibLocaleData LibCore LibTimeZone)
+    unset(GENERATED_SOURCES)
 endif()
 
 set(SOURCES

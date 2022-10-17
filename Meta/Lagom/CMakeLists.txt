@@ -224,6 +224,7 @@ function(lagom_lib target_name fs_name)
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
         FILES_MATCHING PATTERN "*.h"
     )
+    serenity_generated_sources(${target_name})
 endfunction()
 
 function(lagom_test source)
@@ -254,6 +255,7 @@ function(serenity_bin name)
         INCLUDES #
             DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
     )
+    serenity_generated_sources(${name})
 endfunction()
 
 function(serenity_lib name fs_name)
@@ -372,9 +374,11 @@ if (BUILD_LAGOM)
         list(APPEND LIBWEBVIEW_GENERATED_SOURCES WebContent/WebContentClientEndpoint.h)
         list(APPEND LIBWEBVIEW_GENERATED_SOURCES WebContent/WebContentServerEndpoint.h)
 
+        set(GENERATED_SOURCES ${LIBWEBVIEW_GENERATED_SOURCES})
         lagom_lib(LibWebView webview
             SOURCES ${LIBWEBVIEW_SOURCES} ${LIBWEBVIEW_GENERATED_SOURCES}
             LIBS LibGUI LibWeb)
+        unset(GENERATED_SOURCES)
     endif()
 
     # FIXME: Excluding arm64 is a temporary hack to circumvent a build problem
