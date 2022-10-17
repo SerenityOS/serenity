@@ -18,6 +18,8 @@ namespace Kernel::USB {
 class USBController;
 class Transfer;
 
+using USBAsyncCallback = Function<void(Transfer* transfer)>;
+
 //
 // A pipe is the logical connection between a memory buffer on the PC (host) and
 // an endpoint on the device. In this implementation, the data buffer the pipe connects
@@ -110,6 +112,8 @@ private:
 class InterruptInPipe : public Pipe {
 public:
     static ErrorOr<NonnullOwnPtr<InterruptInPipe>> create(USBController const& controller, u8 endpoint_address, u16 max_packet_size, i8 device_address, u16 poll_interval, size_t buffer_size = PAGE_SIZE);
+
+    ErrorOr<NonnullLockRefPtr<Transfer>> interrupt_in_transfer(size_t length, u16 ms_interval, USBAsyncCallback callback);
 
     u16 poll_interval() const { return m_poll_interval; }
 

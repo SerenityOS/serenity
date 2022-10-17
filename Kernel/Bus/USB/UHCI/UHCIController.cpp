@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Find.h>
 #include <AK/Platform.h>
 #include <Kernel/Arch/Delay.h>
 #include <Kernel/Bus/PCI/API.h>
@@ -78,6 +79,7 @@ ErrorOr<void> UHCIController::initialize()
     dmesgln("UHCI: I/O base {}", m_registers_io_window);
     dmesgln("UHCI: Interrupt line: {}", interrupt_number());
 
+    TRY(spawn_async_poll_process());
     TRY(spawn_port_process());
 
     TRY(reset());
@@ -88,6 +90,7 @@ UNMAP_AFTER_INIT UHCIController::UHCIController(PCI::DeviceIdentifier const& pci
     : PCI::Device(pci_device_identifier.address())
     , IRQHandler(pci_device_identifier.interrupt_line().value())
     , m_registers_io_window(move(registers_io_window))
+    , m_async_lock(LockRank::None)
     , m_schedule_lock(LockRank::None)
 {
 }
@@ -132,14 +135,11 @@ UNMAP_AFTER_INIT ErrorOr<void> UHCIController::create_structures()
 {
     m_queue_head_pool = TRY(UHCIDescriptorPool<QueueHead>::try_create("Queue Head Pool"sv));
 
-    // Used as a sentinel value to loop back to the beginning of the list
+    // Doesn't do anything other than give interrupt transfer queues something to set as prev QH so that we don't have to handle that as an extra edge case
     m_schedule_begin_anchor = allocate_queue_head();
-    // Each interrupt QH anchor in the array is linked into the schedule so that
-    // it is executed once every (2^i) milliseconds, where i is it's index
-    for (int i = 0; i < NUMBER_OF_INTERRUPT_QHS; i++) {
-        m_interrupt_qh_anchor_arr[i] = allocate_queue_head();
-    }
-    // Create the Full Speed, Low Speed Control and Bulk Queue Heads
+
+    // Create the Interrupt, Full Speed, Low Speed Control and Bulk Queue Heads
+    m_interrupt_qh_anchor = allocate_queue_head();
     m_ls_control_qh_anchor = allocate_queue_head();
     m_fs_control_qh_anchor = allocate_queue_head();
     m_bulk_qh_anchor = allocate_queue_head();
@@ -201,15 +201,11 @@ UNMAP_AFTER_INIT void UHCIController::setup_schedule()
     // Not specified in the datasheet, however, is another Queue Head with an "inactive" Transfer Descriptor. This
     // is to circumvent a bug in the silicon of the PIIX4's UHCI controller.
     // https://github.com/openbsd/src/blob/master/sys/dev/usb/uhci.c#L390
-    m_schedule_begin_anchor->link_next_queue_head(m_interrupt_qh_anchor_arr[0]);
+    m_schedule_begin_anchor->link_next_queue_head(m_interrupt_qh_anchor);
     m_schedule_begin_anchor->terminate_element_link_ptr();
 
-    for (int i = 0; i < NUMBER_OF_INTERRUPT_QHS - 1; i++) {
-        m_interrupt_qh_anchor_arr[i]->link_next_queue_head(m_interrupt_qh_anchor_arr[i + 1]);
-        m_interrupt_qh_anchor_arr[i]->terminate_element_link_ptr();
-    }
-    m_interrupt_qh_anchor_arr[NUMBER_OF_INTERRUPT_QHS - 1]->link_next_queue_head(m_ls_control_qh_anchor);
-    m_interrupt_qh_anchor_arr[NUMBER_OF_INTERRUPT_QHS - 1]->terminate_element_link_ptr();
+    m_interrupt_qh_anchor->link_next_queue_head(m_ls_control_qh_anchor);
+    m_interrupt_qh_anchor->terminate_element_link_ptr();
 
     m_ls_control_qh_anchor->link_next_queue_head(m_fs_control_qh_anchor);
     m_ls_control_qh_anchor->terminate_element_link_ptr();
@@ -227,20 +223,12 @@ UNMAP_AFTER_INIT void UHCIController::setup_schedule()
 
     u32* framelist = reinterpret_cast<u32*>(m_framelist->vaddr().as_ptr());
     for (int frame_num = 0; frame_num < UHCI_NUMBER_OF_FRAMES; frame_num++) {
-        auto frame_iso_td = m_iso_td_list.at(frame_num % UHCI_NUMBER_OF_ISOCHRONOUS_TDS);
-        // Each frame pointer points to iso_td % NUM_ISO_TDS
-        for (int i = NUMBER_OF_INTERRUPT_QHS - 1; i >= 0; i--) {
-            if (frame_num % (1 << i) == 0) {
-                frame_iso_td->link_queue_head(m_interrupt_qh_anchor_arr[i]->paddr());
-                break;
-            }
-        }
+        auto& frame_iso_td = m_iso_td_list.at(frame_num % UHCI_NUMBER_OF_ISOCHRONOUS_TDS);
+        frame_iso_td->link_queue_head(m_schedule_begin_anchor->paddr());
         framelist[frame_num] = frame_iso_td->paddr();
     }
 
-    for (int i = 0; i < NUMBER_OF_INTERRUPT_QHS; i++) {
-        m_interrupt_qh_anchor_arr[i]->print();
-    }
+    m_interrupt_qh_anchor->print();
     m_ls_control_qh_anchor->print();
     m_fs_control_qh_anchor->print();
     m_bulk_qh_anchor->print();
@@ -387,6 +375,70 @@ void UHCIController::dequeue_qh(QueueHead* transfer_queue)
     transfer_queue->prev_qh()->link_next_queue_head(transfer_queue->next_qh());
 }
 
+ErrorOr<QueueHead*> UHCIController::create_transfer_queue(Transfer& transfer)
+{
+    Pipe& pipe = transfer.pipe();
+
+    // Create a new descriptor chain
+    TransferDescriptor* last_data_descriptor;
+    TransferDescriptor* data_descriptor_chain;
+    auto buffer_address = Ptr32<u8>(transfer.buffer_physical().as_ptr());
+    TRY(create_chain(pipe, transfer.pipe().direction() == Pipe::Direction::In ? PacketID::IN : PacketID::OUT, buffer_address, pipe.max_packet_size(), transfer.transfer_data_size(), &data_descriptor_chain, &last_data_descriptor));
+
+    last_data_descriptor->terminate();
+
+    if constexpr (UHCI_VERBOSE_DEBUG) {
+        if (data_descriptor_chain) {
+            dbgln("Data TD");
+            data_descriptor_chain->print();
+        }
+    }
+
+    QueueHead* transfer_queue = allocate_queue_head();
+    if (!transfer_queue) {
+        free_descriptor_chain(data_descriptor_chain);
+        return ENOMEM;
+    }
+
+    transfer_queue->attach_transfer_descriptor_chain(data_descriptor_chain);
+    transfer_queue->set_transfer(&transfer);
+
+    return transfer_queue;
+}
+
+ErrorOr<void> UHCIController::submit_async_transfer(NonnullOwnPtr<AsyncTransferHandle> async_handle, QueueHead* anchor, QueueHead* transfer_queue)
+{
+    {
+        SpinlockLocker locker { m_async_lock };
+        auto iter = find_if(m_active_async_transfers.begin(), m_active_async_transfers.end(), [](auto& handle) { return handle == nullptr; });
+        if (iter == m_active_async_transfers.end())
+            return ENOMEM;
+        *iter = move(async_handle);
+    }
+
+    enqueue_qh(transfer_queue, anchor);
+
+    return {};
+}
+
+void UHCIController::cancel_async_transfer(NonnullLockRefPtr<Transfer> transfer)
+{
+    SpinlockLocker locker { m_async_lock };
+
+    auto iter = find_if(m_active_async_transfers.begin(), m_active_async_transfers.end(), [transfer](auto& handle) { return handle != nullptr && handle->transfer.ptr() == transfer.ptr(); });
+    if (iter == m_active_async_transfers.end()) {
+        dbgln("Error: couldn't cancel supplied async transfer");
+        return; // We can't really do anything here, so just give up
+    }
+
+    auto& transfer_queue = (*iter)->qh;
+    dequeue_qh(transfer_queue);
+    free_descriptor_chain(transfer_queue->get_first_td());
+    transfer_queue->free();
+    m_queue_head_pool->release_to_pool(transfer_queue);
+    *iter = nullptr;
+}
+
 ErrorOr<size_t> UHCIController::submit_control_transfer(Transfer& transfer)
 {
     Pipe& pipe = transfer.pipe(); // Short circuit the pipe related to this transfer
@@ -467,34 +519,10 @@ ErrorOr<size_t> UHCIController::submit_control_transfer(Transfer& transfer)
 
 ErrorOr<size_t> UHCIController::submit_bulk_transfer(Transfer& transfer)
 {
-    Pipe& pipe = transfer.pipe();
-    dbgln_if(UHCI_DEBUG, "UHCI: Received bulk transfer for address {}. Root Hub is at address {}.", pipe.device_address(), m_root_hub->device_address());
-
-    // Create a new descriptor chain
-    TransferDescriptor* last_data_descriptor;
-    TransferDescriptor* data_descriptor_chain;
-    auto buffer_address = Ptr32<u8>(transfer.buffer_physical().as_ptr());
-    TRY(create_chain(pipe, transfer.pipe().direction() == Pipe::Direction::In ? PacketID::IN : PacketID::OUT, buffer_address, pipe.max_packet_size(), transfer.transfer_data_size(), &data_descriptor_chain, &last_data_descriptor));
-
-    last_data_descriptor->terminate();
-
-    if constexpr (UHCI_VERBOSE_DEBUG) {
-        if (data_descriptor_chain) {
-            dbgln("Data TD");
-            data_descriptor_chain->print();
-        }
-    }
-
-    QueueHead* transfer_queue = allocate_queue_head();
-    if (!transfer_queue) {
-        free_descriptor_chain(data_descriptor_chain);
-        return ENOMEM;
-    }
-
-    transfer_queue->attach_transfer_descriptor_chain(data_descriptor_chain);
-    transfer_queue->set_transfer(&transfer);
-
+    auto transfer_queue = TRY(create_transfer_queue(transfer));
     enqueue_qh(transfer_queue, m_bulk_qh_anchor);
+
+    dbgln_if(UHCI_DEBUG, "UHCI: Received bulk transfer for address {}. Root Hub is at address {}.", transfer.pipe().device_address(), m_root_hub->device_address());
 
     size_t transfer_size = 0;
     while (!transfer.complete()) {
@@ -508,6 +536,21 @@ ErrorOr<size_t> UHCIController::submit_bulk_transfer(Transfer& transfer)
     m_queue_head_pool->release_to_pool(transfer_queue);
 
     return transfer_size;
+}
+
+ErrorOr<void> UHCIController::submit_async_interrupt_transfer(NonnullLockRefPtr<Transfer> transfer, u16 ms_interval)
+{
+    dbgln_if(UHCI_DEBUG, "UHCI: Received interrupt transfer for address {}. Root Hub is at address {}.", transfer->pipe().device_address(), m_root_hub->device_address());
+
+    if (ms_interval == 0) {
+        return EINVAL;
+    }
+
+    auto transfer_queue = TRY(create_transfer_queue(*transfer));
+    auto async_transfer_handle = TRY(adopt_nonnull_own_or_enomem(new (nothrow) AsyncTransferHandle { transfer, transfer_queue, ms_interval }));
+    TRY(submit_async_transfer(move(async_transfer_handle), m_interrupt_qh_anchor, transfer_queue));
+
+    return {};
 }
 
 size_t UHCIController::poll_transfer_queue(QueueHead& transfer_queue)
@@ -551,6 +594,33 @@ ErrorOr<void> UHCIController::spawn_port_process()
                 m_root_hub->check_for_port_updates();
 
             (void)Thread::current()->sleep(Time::from_seconds(1));
+        }
+    });
+    return {};
+}
+
+ErrorOr<void> UHCIController::spawn_async_poll_process()
+{
+    LockRefPtr<Thread> async_poll_thread;
+    (void)Process::create_kernel_process(async_poll_thread, TRY(KString::try_create("UHCI Async Poll Task"sv)), [&] {
+        u16 poll_interval_ms = 1024;
+        for (;;) {
+            {
+                SpinlockLocker locker { m_async_lock };
+                for (OwnPtr<AsyncTransferHandle>& handle : m_active_async_transfers) {
+                    if (handle != nullptr) {
+                        poll_interval_ms = min(poll_interval_ms, handle->ms_poll_interval);
+                        QueueHead* qh = handle->qh;
+                        for (auto td = qh->get_first_td(); td != nullptr && !td->active(); td = td->next_td()) {
+                            if (td->next_td() == nullptr) { // Finished QH
+                                handle->transfer->invoke_async_callback();
+                                qh->reinitialize(); // Set the QH to be active again
+                            }
+                        }
+                    }
+                }
+            }
+            (void)Thread::current()->sleep(Time::from_milliseconds(poll_interval_ms));
         }
     });
     return {};
