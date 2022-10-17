@@ -386,7 +386,7 @@ ErrorOr<JsonValue, HttpError> Client::handle_delete_session(Vector<StringView> c
     dbgln_if(WEBDRIVER_DEBUG, "Handling DELETE /session/<session_id>");
 
     // 1. If the current session is an active session, try to close the session.
-    Session* session = TRY(find_session_with_id(parameters[0]));
+    auto* session = TRY(find_session_with_id(parameters[0]));
 
     auto stop_result = session->stop();
     if (stop_result.is_error()) {
@@ -422,7 +422,7 @@ ErrorOr<JsonValue, HttpError> Client::handle_get_status(Vector<StringView> const
 ErrorOr<JsonValue, HttpError> Client::handle_post_url(Vector<StringView> const& parameters, JsonValue const& payload)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling POST /session/<session_id>/url");
-    Session* session = TRY(find_session_with_id(parameters[0]));
+    auto* session = TRY(find_session_with_id(parameters[0]));
 
     // NOTE: Spec steps handled in Session::post_url().
     auto result = TRY(session->post_url(payload));
@@ -434,7 +434,7 @@ ErrorOr<JsonValue, HttpError> Client::handle_post_url(Vector<StringView> const& 
 ErrorOr<JsonValue, HttpError> Client::handle_get_url(Vector<StringView> const& parameters, JsonValue const&)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session_id>/url");
-    Session* session = TRY(find_session_with_id(parameters[0]));
+    auto* session = TRY(find_session_with_id(parameters[0]));
 
     // NOTE: Spec steps handled in Session::get_url().
     auto result = TRY(session->get_url());
@@ -446,7 +446,7 @@ ErrorOr<JsonValue, HttpError> Client::handle_get_url(Vector<StringView> const& p
 ErrorOr<JsonValue, HttpError> Client::handle_back(Vector<StringView> const& parameters, JsonValue const&)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling POST /session/<session_id>/back");
-    Session* session = TRY(find_session_with_id(parameters[0]));
+    auto* session = TRY(find_session_with_id(parameters[0]));
 
     // NOTE: Spec steps handled in Session::back().
     auto result = TRY(session->back());
@@ -458,7 +458,7 @@ ErrorOr<JsonValue, HttpError> Client::handle_back(Vector<StringView> const& para
 ErrorOr<JsonValue, HttpError> Client::handle_forward(Vector<StringView> const& parameters, JsonValue const&)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling POST /session/<session_id>/forward");
-    Session* session = TRY(find_session_with_id(parameters[0]));
+    auto* session = TRY(find_session_with_id(parameters[0]));
 
     // NOTE: Spec steps handled in Session::forward().
     auto result = TRY(session->forward());
@@ -470,7 +470,7 @@ ErrorOr<JsonValue, HttpError> Client::handle_forward(Vector<StringView> const& p
 ErrorOr<JsonValue, HttpError> Client::handle_refresh(Vector<StringView> const& parameters, JsonValue const&)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling POST /session/<session_id>/refresh");
-    Session* session = TRY(find_session_with_id(parameters[0]));
+    auto* session = TRY(find_session_with_id(parameters[0]));
 
     // NOTE: Spec steps handled in Session::refresh().
     auto result = TRY(session->refresh());
@@ -482,7 +482,7 @@ ErrorOr<JsonValue, HttpError> Client::handle_refresh(Vector<StringView> const& p
 ErrorOr<JsonValue, HttpError> Client::handle_get_title(Vector<StringView> const& parameters, JsonValue const&)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session_id>/title");
-    Session* session = TRY(find_session_with_id(parameters[0]));
+    auto* session = TRY(find_session_with_id(parameters[0]));
 
     // NOTE: Spec steps handled in Session::get_title().
     auto result = TRY(session->get_title());
@@ -495,7 +495,7 @@ ErrorOr<JsonValue, HttpError> Client::handle_get_title(Vector<StringView> const&
 ErrorOr<JsonValue, HttpError> Client::handle_delete_window(Vector<StringView> const& parameters, JsonValue const&)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling DELETE /session/<session_id>/window");
-    Session* session = TRY(find_session_with_id(parameters[0]));
+    auto* session = TRY(find_session_with_id(parameters[0]));
 
     // NOTE: Spec steps handled in Session::delete_window().
     TRY(unwrap_result(session->delete_window()));
@@ -508,7 +508,7 @@ ErrorOr<JsonValue, HttpError> Client::handle_delete_window(Vector<StringView> co
 ErrorOr<JsonValue, HttpError> Client::handle_get_all_cookies(Vector<StringView> const& parameters, JsonValue const&)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session_id>/cookie");
-    Session* session = TRY(find_session_with_id(parameters[0]));
+    auto* session = TRY(find_session_with_id(parameters[0]));
 
     // NOTE: Spec steps handled in Session::get_all_cookies().
     auto cookies = TRY(session->get_all_cookies());
@@ -521,7 +521,7 @@ ErrorOr<JsonValue, HttpError> Client::handle_get_all_cookies(Vector<StringView> 
 ErrorOr<JsonValue, HttpError> Client::handle_get_named_cookie(Vector<StringView> const& parameters, JsonValue const&)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session_id>/cookie/<name>");
-    Session* session = TRY(find_session_with_id(parameters[0]));
+    auto* session = TRY(find_session_with_id(parameters[0]));
 
     // NOTE: Spec steps handled in Session::get_all_cookies().
     auto cookies = TRY(session->get_named_cookie(parameters[1]));
@@ -534,7 +534,7 @@ ErrorOr<JsonValue, HttpError> Client::handle_get_named_cookie(Vector<StringView>
 ErrorOr<JsonValue, HttpError> Client::handle_add_cookie(Vector<StringView> const& parameters, JsonValue const& payload)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling POST /session/<session_id>/cookie");
-    Session* session = TRY(find_session_with_id(parameters[0]));
+    auto* session = TRY(find_session_with_id(parameters[0]));
 
     // NOTE: Spec steps handled in Session::add_cookie().
     auto result = TRY(session->add_cookie(payload));
@@ -546,7 +546,7 @@ ErrorOr<JsonValue, HttpError> Client::handle_add_cookie(Vector<StringView> const
 ErrorOr<JsonValue, HttpError> Client::handle_delete_cookie(Vector<StringView> const& parameters, JsonValue const&)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling DELETE /session/<session_id>/cookie/<name>");
-    Session* session = TRY(find_session_with_id(parameters[0]));
+    auto* session = TRY(find_session_with_id(parameters[0]));
 
     // NOTE: Spec steps handled in Session::delete_cookie().
     auto result = TRY(session->delete_cookie(parameters[1]));
@@ -558,7 +558,7 @@ ErrorOr<JsonValue, HttpError> Client::handle_delete_cookie(Vector<StringView> co
 ErrorOr<JsonValue, HttpError> Client::handle_delete_all_cookies(Vector<StringView> const& parameters, JsonValue const&)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling DELETE /session/<session_id>/cookie");
-    Session* session = TRY(find_session_with_id(parameters[0]));
+    auto* session = TRY(find_session_with_id(parameters[0]));
 
     // NOTE: Spec steps handled in Session::delete_all_cookies().
     auto result = TRY(session->delete_all_cookies());
