@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2021, James Mintram <me@jamesrm.com>
+ * Copyright (c) 2022, Timon Kruiper <timonkruiper@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -103,8 +104,7 @@ public:
 
     ALWAYS_INLINE static FlatPtr current_in_irq()
     {
-        TODO_AARCH64();
-        return 0;
+        return current().m_in_irq;
     }
 
     ALWAYS_INLINE static u64 read_cpu_counter()
@@ -186,6 +186,10 @@ public:
 
 private:
     u32 m_in_critical { 0 };
+
+    // FIXME: Once there is code in place to differentiate IRQs from synchronous exceptions (syscalls),
+    //        this member should be incremented. Also this member shouldn't be a FlatPtr.
+    FlatPtr m_in_irq { 0 };
 };
 
 }
