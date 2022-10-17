@@ -18,7 +18,6 @@
 #include <Kernel/Arch/aarch64/CPU.h>
 #include <Kernel/Arch/aarch64/RPi/Framebuffer.h>
 #include <Kernel/Arch/aarch64/RPi/Mailbox.h>
-#include <Kernel/Arch/aarch64/RPi/Timer.h>
 #include <Kernel/Arch/aarch64/RPi/UART.h>
 #include <Kernel/Arch/aarch64/Registers.h>
 #include <Kernel/Arch/aarch64/TrapFrame.h>
@@ -144,19 +143,22 @@ extern "C" [[noreturn]] void init()
     InterruptManagement::initialize();
     Processor::enable_interrupts();
 
+    TimeManagement::initialize(0);
+
     auto firmware_version = query_firmware_version();
     dmesgln("Firmware version: {}", firmware_version);
-
-    auto& timer = RPi::Timer::the();
-    timer.set_interrupt_interval_usec(1'000'000);
-    timer.enable_interrupt_mode();
 
     dmesgln("Enter loop");
 
     // This will not disable interrupts, so the timer will still fire and show that
     // interrupts are working!
-    for (;;)
+    for (u32 i = 0;; i++) {
         asm volatile("wfi");
+
+        // NOTE: This shows that dmesgln now outputs the time since boot!
+        if (i % 250 == 0)
+            dmesgln("Timer fired!");
+    }
 
     TODO_AARCH64();
 }
