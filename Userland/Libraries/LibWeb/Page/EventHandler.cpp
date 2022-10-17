@@ -19,6 +19,7 @@
 #include <LibWeb/UIEvents/EventNames.h>
 #include <LibWeb/UIEvents/KeyboardEvent.h>
 #include <LibWeb/UIEvents/MouseEvent.h>
+#include <LibWeb/UIEvents/WheelEvent.h>
 
 namespace Web {
 
@@ -133,18 +134,51 @@ bool EventHandler::handle_mousewheel(Gfx::IntPoint const& position, unsigned int
     if (modifiers & KeyModifier::Mod_Shift)
         swap(wheel_delta_x, wheel_delta_y);
 
-    // FIXME: Support wheel events in nested browsing contexts.
+    bool handled_event = false;
 
-    auto result = paint_root()->hit_test(position.to_type<float>(), Painting::HitTestType::Exact);
-    if (result.has_value() && result->paintable->handle_mousewheel({}, position, buttons, modifiers, wheel_delta_x, wheel_delta_y))
-        return true;
-
-    if (auto* page = m_browsing_context.page()) {
-        page->client().page_did_request_scroll(wheel_delta_x * 20, wheel_delta_y * 20);
-        return true;
+    RefPtr<Painting::Paintable> paintable;
+    if (m_mouse_event_tracking_layout_node) {
+        paintable = m_mouse_event_tracking_layout_node->paintable();
+    } else {
+        if (auto result = paint_root()->hit_test(position.to_type<float>(), Painting::HitTestType::Exact); result.has_value())
+            paintable = result->paintable;
     }
 
-    return false;
+    if (paintable) {
+        paintable->handle_mousewheel({}, position, buttons, modifiers, wheel_delta_x, wheel_delta_y);
+
+        JS::GCPtr<DOM::Node> node = paintable->mouse_event_target();
+        if (!node)
+            node = paintable->dom_node();
+
+        if (node) {
+            // FIXME: Support wheel events in nested browsing contexts.
+            if (is<HTML::HTMLIFrameElement>(*node)) {
+                return false;
+            }
+
+            // Search for the first parent of the hit target that's an element.
+            auto* layout_node = &paintable->layout_node();
+            while (layout_node && node && !node->is_element() && layout_node->parent()) {
+                layout_node = layout_node->parent();
+                node = layout_node->dom_node();
+            }
+            if (!node || !layout_node) {
+                return false;
+            }
+
+            auto offset = compute_mouse_event_offset(position, *layout_node);
+            if (node->dispatch_event(*UIEvents::WheelEvent::create_from_platform_event(node->realm(), UIEvents::EventNames::wheel, offset.x(), offset.y(), position.x(), position.y(), wheel_delta_x, wheel_delta_y))) {
+                if (auto* page = m_browsing_context.page()) {
+                    page->client().page_did_request_scroll(wheel_delta_x * 20, wheel_delta_y * 20);
+                }
+            }
+
+            handled_event = true;
+        }
+    }
+
+    return handled_event;
 }
 
 bool EventHandler::handle_mouseup(Gfx::IntPoint const& position, unsigned button, unsigned modifiers)

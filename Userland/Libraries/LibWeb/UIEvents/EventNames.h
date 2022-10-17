@@ -25,7 +25,8 @@ namespace Web::UIEvents::EventNames {
     __ENUMERATE_UI_EVENT(mouseout)   \
     __ENUMERATE_UI_EVENT(mouseover)  \
     __ENUMERATE_UI_EVENT(mouseup)    \
-    __ENUMERATE_UI_EVENT(resize)
+    __ENUMERATE_UI_EVENT(resize)     \
+    __ENUMERATE_UI_EVENT(wheel)
 
 #define __ENUMERATE_UI_EVENT(name) extern FlyString name;
 ENUMERATE_UI_EVENTS

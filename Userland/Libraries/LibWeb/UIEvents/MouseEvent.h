@@ -21,7 +21,7 @@ struct MouseEventInit : public EventModifierInit {
     i16 button = 0;
 };
 
-class MouseEvent final : public UIEvent {
+class MouseEvent : public UIEvent {
     WEB_PLATFORM_OBJECT(MouseEvent, UIEvent);
 
 public:
@@ -43,9 +43,10 @@ public:
 
     virtual u32 which() const override { return m_button + 1; }
 
-private:
+protected:
     MouseEvent(JS::Realm&, FlyString const& event_name, MouseEventInit const& event_init);
 
+private:
     void set_event_characteristics();
 
     double m_offset_x { 0 };
