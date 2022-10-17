@@ -71,7 +71,7 @@ ErrorOr<void> Session::stop()
     return {};
 }
 
-// DELETE /session/{session id}/window https://w3c.github.io/webdriver/#dfn-close-window
+// 11.2 Close Window, https://w3c.github.io/webdriver/#dfn-close-window
 ErrorOr<void, Variant<HttpError, Error>> Session::delete_window()
 {
     // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
@@ -93,7 +93,7 @@ ErrorOr<void, Variant<HttpError, Error>> Session::delete_window()
     return {};
 }
 
-// POST /session/{session id}/url https://w3c.github.io/webdriver/#dfn-navigate-to
+// 10.1 Navigate To, https://w3c.github.io/webdriver/#dfn-navigate-to
 ErrorOr<JsonValue, HttpError> Session::post_url(JsonValue const& payload)
 {
     // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
@@ -129,7 +129,7 @@ ErrorOr<JsonValue, HttpError> Session::post_url(JsonValue const& payload)
     return JsonValue();
 }
 
-// GET /session/{session id}/url https://w3c.github.io/webdriver/#dfn-get-current-url
+// 10.2 Get Current URL, https://w3c.github.io/webdriver/#dfn-get-current-url
 ErrorOr<JsonValue, HttpError> Session::get_url()
 {
     // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
@@ -146,7 +146,7 @@ ErrorOr<JsonValue, HttpError> Session::get_url()
     return JsonValue(url);
 }
 
-// GET /session/{session id}/title https://w3c.github.io/webdriver/#dfn-get-title
+// 10.6 Get Title, https://w3c.github.io/webdriver/#dfn-get-title
 ErrorOr<JsonValue, HttpError> Session::get_title()
 {
     // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
@@ -161,7 +161,7 @@ ErrorOr<JsonValue, HttpError> Session::get_title()
     return JsonValue(m_browser_connection->get_title());
 }
 
-// POST /session/{session id}/refresh https://w3c.github.io/webdriver/#dfn-refresh
+// 10.5 Refresh, https://w3c.github.io/webdriver/#dfn-refresh
 ErrorOr<JsonValue, HttpError> Session::refresh()
 {
     // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
@@ -186,7 +186,7 @@ ErrorOr<JsonValue, HttpError> Session::refresh()
     return JsonValue();
 }
 
-// POST /session/{session id}/back https://w3c.github.io/webdriver/#dfn-back
+// 10.3 Back, https://w3c.github.io/webdriver/#dfn-back
 ErrorOr<JsonValue, HttpError> Session::back()
 {
     // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
@@ -209,7 +209,7 @@ ErrorOr<JsonValue, HttpError> Session::back()
     return JsonValue();
 }
 
-// POST /session/{session id}/forward https://w3c.github.io/webdriver/#dfn-forward
+// 10.4 Forward, https://w3c.github.io/webdriver/#dfn-forward
 ErrorOr<JsonValue, HttpError> Session::forward()
 {
     // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
@@ -248,7 +248,7 @@ static JsonObject serialize_cookie(Web::Cookie::Cookie const& cookie)
     return serialized_cookie;
 }
 
-// GET /session/{session id}/cookie https://w3c.github.io/webdriver/#dfn-get-all-cookies
+// 14.1 Get All Cookies, https://w3c.github.io/webdriver/#dfn-get-all-cookies
 ErrorOr<JsonValue, HttpError> Session::get_all_cookies()
 {
     // 1. If the current browsing context is no longer open, return error with error code no such window.
@@ -274,7 +274,7 @@ ErrorOr<JsonValue, HttpError> Session::get_all_cookies()
     return JsonValue(cookies);
 }
 
-// GET /session/{session id}/cookie/{name} https://w3c.github.io/webdriver/#dfn-get-named-cookie
+// 14.2 Get Named Cookie, https://w3c.github.io/webdriver/#dfn-get-named-cookie
 ErrorOr<JsonValue, HttpError> Session::get_named_cookie(String const& name)
 {
 
@@ -298,7 +298,7 @@ ErrorOr<JsonValue, HttpError> Session::get_named_cookie(String const& name)
     return HttpError { 404, "no such cookie", "Cookie not found" };
 }
 
-// POST /session/{session id}/cookie https://w3c.github.io/webdriver/#dfn-adding-a-cookie
+// 14.3 Add Cookie, https://w3c.github.io/webdriver/#dfn-adding-a-cookie
 ErrorOr<JsonValue, HttpError> Session::add_cookie(JsonValue const& payload)
 {
     // 1. Let data be the result of getting a property named cookie from the parameters argument.
@@ -436,7 +436,7 @@ void Session::delete_cookies(Optional<StringView> const& name)
     }
 }
 
-// DELETE /session/{session id}/cookie/{name} https://w3c.github.io/webdriver/#dfn-delete-cookie
+// 14.4 Delete Cookie, https://w3c.github.io/webdriver/#dfn-delete-cookie
 ErrorOr<JsonValue, HttpError> Session::delete_cookie(StringView const& name)
 {
     // 1. If the current browsing context is no longer open, return error with error code no such window.
@@ -453,7 +453,7 @@ ErrorOr<JsonValue, HttpError> Session::delete_cookie(StringView const& name)
     return JsonValue();
 }
 
-// DELETE /session/{session id}/cookie https://w3c.github.io/webdriver/#dfn-delete-all-cookies
+// 14.5 Delete All Cookies, https://w3c.github.io/webdriver/#dfn-delete-all-cookies
 ErrorOr<JsonValue, HttpError> Session::delete_all_cookies()
 {
     // 1. If the current browsing context is no longer open, return error with error code no such window.

@@ -315,7 +315,8 @@ JsonValue Client::make_json_value(JsonValue const& value)
     return result;
 }
 
-// POST /session https://w3c.github.io/webdriver/#dfn-new-sessions
+// 8.1 New Session, https://w3c.github.io/webdriver/#dfn-new-sessions
+// POST /session
 ErrorOr<JsonValue, HttpError> Client::handle_post_session(Vector<StringView>, JsonValue const&)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling POST /session");
@@ -378,7 +379,8 @@ ErrorOr<JsonValue, HttpError> Client::handle_post_session(Vector<StringView>, Js
     return make_json_value(body);
 }
 
-// DELETE /session/{session id} https://w3c.github.io/webdriver/#dfn-delete-session
+// 8.2 Delete Session, https://w3c.github.io/webdriver/#dfn-delete-session
+// DELETE /session/{session id}
 ErrorOr<JsonValue, HttpError> Client::handle_delete_session(Vector<StringView> parameters, JsonValue const&)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling DELETE /session/<session_id>");
@@ -395,7 +397,8 @@ ErrorOr<JsonValue, HttpError> Client::handle_delete_session(Vector<StringView> p
     return make_json_value(JsonValue());
 }
 
-// GET /status https://w3c.github.io/webdriver/#dfn-status
+// 8.3 Status, https://w3c.github.io/webdriver/#dfn-status
+// GET /status
 ErrorOr<JsonValue, HttpError> Client::handle_get_status(Vector<StringView>, JsonValue const&)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling GET /status");
@@ -414,7 +417,8 @@ ErrorOr<JsonValue, HttpError> Client::handle_get_status(Vector<StringView>, Json
     return body;
 }
 
-// POST /session/{session id}/url https://w3c.github.io/webdriver/#dfn-navigate-to
+// 10.1 Navigate To, https://w3c.github.io/webdriver/#dfn-navigate-to
+// POST /session/{session id}/url
 ErrorOr<JsonValue, HttpError> Client::handle_post_url(Vector<StringView> parameters, JsonValue const& payload)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling POST /session/<session_id>/url");
@@ -425,7 +429,8 @@ ErrorOr<JsonValue, HttpError> Client::handle_post_url(Vector<StringView> paramet
     return make_json_value(result);
 }
 
-// GET /session/{session id}/url https://w3c.github.io/webdriver/#dfn-get-current-url
+// 10.2 Get Current URL, https://w3c.github.io/webdriver/#dfn-get-current-url
+// GET /session/{session id}/url
 ErrorOr<JsonValue, HttpError> Client::handle_get_url(Vector<StringView> parameters, JsonValue const&)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session_id>/url");
@@ -436,7 +441,8 @@ ErrorOr<JsonValue, HttpError> Client::handle_get_url(Vector<StringView> paramete
     return make_json_value(result);
 }
 
-// GET /session/{session id}/title https://w3c.github.io/webdriver/#dfn-get-title
+// 10.6 Get Title, https://w3c.github.io/webdriver/#dfn-get-title
+// GET /session/{session id}/title
 ErrorOr<JsonValue, HttpError> Client::handle_get_title(Vector<StringView> parameters, JsonValue const&)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session_id>/title");
@@ -448,7 +454,8 @@ ErrorOr<JsonValue, HttpError> Client::handle_get_title(Vector<StringView> parame
     return make_json_value(result);
 }
 
-// DELETE /session/{session id}/window https://w3c.github.io/webdriver/#dfn-close-window
+// 11.2 Close Window, https://w3c.github.io/webdriver/#dfn-close-window
+// DELETE /session/{session id}/window
 ErrorOr<JsonValue, HttpError> Client::handle_delete_window(Vector<StringView> parameters, JsonValue const&)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling DELETE /session/<session_id>/window");
@@ -460,7 +467,8 @@ ErrorOr<JsonValue, HttpError> Client::handle_delete_window(Vector<StringView> pa
     return make_json_value(JsonValue());
 }
 
-// POST /session/{session id}/refresh https://w3c.github.io/webdriver/#dfn-refresh
+// 10.5 Refresh, https://w3c.github.io/webdriver/#dfn-refresh
+// POST /session/{session id}/refresh
 ErrorOr<JsonValue, HttpError> Client::handle_refresh(Vector<StringView> parameters, JsonValue const&)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling POST /session/<session_id>/refresh");
@@ -471,7 +479,8 @@ ErrorOr<JsonValue, HttpError> Client::handle_refresh(Vector<StringView> paramete
     return make_json_value(result);
 }
 
-// POST /session/{session id}/back https://w3c.github.io/webdriver/#dfn-back
+// 10.3 Back, https://w3c.github.io/webdriver/#dfn-back
+// POST /session/{session id}/back
 ErrorOr<JsonValue, HttpError> Client::handle_back(Vector<StringView> parameters, JsonValue const&)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling POST /session/<session_id>/back");
@@ -482,7 +491,8 @@ ErrorOr<JsonValue, HttpError> Client::handle_back(Vector<StringView> parameters,
     return make_json_value(result);
 }
 
-// POST /session/{session id}/forward https://w3c.github.io/webdriver/#dfn-forward
+// 10.4 Forward, https://w3c.github.io/webdriver/#dfn-forward
+// POST /session/{session id}/forward
 ErrorOr<JsonValue, HttpError> Client::handle_forward(Vector<StringView> parameters, JsonValue const&)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling POST /session/<session_id>/forward");
@@ -493,7 +503,8 @@ ErrorOr<JsonValue, HttpError> Client::handle_forward(Vector<StringView> paramete
     return make_json_value(result);
 }
 
-// GET /session/{session id}/cookie https://w3c.github.io/webdriver/#dfn-get-all-cookies
+// 14.1 Get All Cookies, https://w3c.github.io/webdriver/#dfn-get-all-cookies
+// GET /session/{session id}/cookie
 ErrorOr<JsonValue, HttpError> Client::handle_get_all_cookies(Vector<StringView> parameters, JsonValue const&)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session_id>/cookie");
@@ -505,7 +516,8 @@ ErrorOr<JsonValue, HttpError> Client::handle_get_all_cookies(Vector<StringView> 
     return make_json_value(cookies);
 }
 
-// GET /session/{session id}/cookie/{name} https://w3c.github.io/webdriver/#dfn-get-named-cookie
+// 14.2 Get Named Cookie, https://w3c.github.io/webdriver/#dfn-get-named-cookie
+// GET /session/{session id}/cookie/{name}
 ErrorOr<JsonValue, HttpError> Client::handle_get_named_cookie(Vector<StringView> parameters, JsonValue const&)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session_id>/cookie/<name>");
@@ -517,7 +529,8 @@ ErrorOr<JsonValue, HttpError> Client::handle_get_named_cookie(Vector<StringView>
     return make_json_value(cookies);
 }
 
-// POST /session/{session id}/cookie https://w3c.github.io/webdriver/#dfn-adding-a-cookie
+// 14.3 Add Cookie, https://w3c.github.io/webdriver/#dfn-adding-a-cookie
+// POST /session/{session id}/cookie
 ErrorOr<JsonValue, HttpError> Client::handle_add_cookie(Vector<StringView> parameters, JsonValue const& payload)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling POST /session/<session_id>/cookie");
@@ -528,7 +541,8 @@ ErrorOr<JsonValue, HttpError> Client::handle_add_cookie(Vector<StringView> param
     return make_json_value(result);
 }
 
-// DELETE /session/{session id}/cookie/{name} https://w3c.github.io/webdriver/#dfn-delete-cookie
+// 14.4 Delete Cookie, https://w3c.github.io/webdriver/#dfn-delete-cookie
+// DELETE /session/{session id}/cookie/{name}
 ErrorOr<JsonValue, HttpError> Client::handle_delete_cookie(Vector<StringView> parameters, JsonValue const&)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling DELETE /session/<session_id>/cookie/<name>");
@@ -539,7 +553,8 @@ ErrorOr<JsonValue, HttpError> Client::handle_delete_cookie(Vector<StringView> pa
     return make_json_value(result);
 }
 
-// DELETE /session/{session id}/cookie https://w3c.github.io/webdriver/#dfn-delete-all-cookies
+// 14.5 Delete All Cookies, https://w3c.github.io/webdriver/#dfn-delete-all-cookies
+// DELETE /session/{session id}/cookie
 ErrorOr<JsonValue, HttpError> Client::handle_delete_all_cookies(Vector<StringView> parameters, JsonValue const&)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling DELETE /session/<session_id>/cookie");
