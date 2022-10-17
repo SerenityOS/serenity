@@ -830,6 +830,7 @@ bool ISO8601Parser::parse_time_zone_bracketed_annotation()
         return false;
     if (!m_state.lexer.consume_specific(']'))
         return false;
+    m_state.parse_result.time_zone_bracketed_annotation = transaction.parsed_string_view();
     transaction.commit();
     return true;
 }

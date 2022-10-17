@@ -1609,12 +1609,18 @@ ThrowCompletionOr<TemporalMonthDay> parse_temporal_month_day_string(VM& vm, Stri
 // 13.36 ParseTemporalRelativeToString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporalrelativetostring
 ThrowCompletionOr<ISODateTime> parse_temporal_relative_to_string(VM& vm, String const& iso_string)
 {
-    // 1. If ParseText(StringToCodePoints(isoString), TemporalDateTimeString) is a List of errors, throw a RangeError exception.
+    // 1. Let parseResult be ParseText(StringToCodePoints(isoString), TemporalDateTimeString).
     auto parse_result = parse_iso8601(Production::TemporalDateTimeString, iso_string);
+
+    // 2. If parseResult is a List of errors, throw a RangeError exception.
     if (!parse_result.has_value())
         return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidDateTimeString, iso_string);
 
-    // 2. Return ? ParseISODateTime(isoString).
+    // 3. If parseResult contains a UTCDesignator ParseNode but no TimeZoneBracketedAnnotation Parse Node, throw a RangeError exception.
+    if (parse_result->utc_designator.has_value() && !parse_result->time_zone_bracketed_annotation.has_value())
+        return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidRelativeToStringUTCDesignatorWithoutBracketedTimeZone, iso_string);
+
+    // 4. Return ? ParseISODateTime(isoString).
     return parse_iso_date_time(vm, *parse_result);
 }
 

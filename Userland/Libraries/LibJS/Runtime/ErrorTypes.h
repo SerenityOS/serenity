@@ -254,6 +254,8 @@
     M(TemporalInvalidPlainMonthDay, "Invalid plain month day")                                                                          \
     M(TemporalInvalidPlainTime, "Invalid plain time")                                                                                   \
     M(TemporalInvalidPlainYearMonth, "Invalid plain year month")                                                                        \
+    M(TemporalInvalidRelativeToStringUTCDesignatorWithoutBracketedTimeZone, "Invalid relativeTo string '{}': must not contain a UTC "   \
+                                                                            "designator without bracketed time zone")                   \
     M(TemporalInvalidTime, "Invalid time")                                                                                              \
     M(TemporalInvalidTimeString, "Invalid time string '{}'")                                                                            \
     M(TemporalInvalidTimeStringUTCDesignator, "Invalid time string '{}': must not contain a UTC designator")                            \
