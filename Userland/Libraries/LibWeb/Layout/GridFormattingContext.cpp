@@ -572,6 +572,8 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
             independent_formatting_context->parent_context_did_dimension_child_root_box();
         if (child_box_state.content_height() > positioned_box.computed_height)
             positioned_box.computed_height = child_box_state.content_height();
+        if (auto min_content_height = calculate_min_content_height(positioned_box.box, available_space.width); min_content_height > positioned_box.computed_height)
+            positioned_box.computed_height = min_content_height;
     }
 
     // https://drafts.csswg.org/css-grid/#overview-sizing
