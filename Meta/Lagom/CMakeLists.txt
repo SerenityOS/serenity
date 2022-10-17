@@ -179,9 +179,9 @@ install(
     COMPONENT Lagom_Development
 )
 
-function(lagom_lib library fs_name)
+function(lagom_lib target_name fs_name)
     cmake_parse_arguments(LAGOM_LIBRARY "" "LIBRARY_TYPE" "SOURCES;LIBS" ${ARGN})
-    set(target_name "Lib${library}")
+    string(REPLACE "Lib" "" library ${target_name})
     if (NOT LAGOM_LIBRARY_LIBRARY_TYPE)
         set(LAGOM_LIBRARY_LIBRARY_TYPE "")
     endif()
@@ -257,13 +257,11 @@ function(serenity_bin name)
 endfunction()
 
 function(serenity_lib name fs_name)
-    string(REPLACE "Lib" "" name_without_lib ${name})
-    lagom_lib(${name_without_lib} ${fs_name} SOURCES ${SOURCES} ${GENERATED_SOURCES})
+    lagom_lib(${name} ${fs_name} SOURCES ${SOURCES} ${GENERATED_SOURCES})
 endfunction()
 
 function(serenity_lib_static name fs_name)
-    string(REPLACE "Lib" "" name_without_lib ${name})
-    lagom_lib(${name_without_lib} ${fs_name} LIBRARY_TYPE STATIC SOURCES ${SOURCES} ${GENERATED_SOURCES})
+    lagom_lib(${name} ${fs_name} LIBRARY_TYPE STATIC SOURCES ${SOURCES} ${GENERATED_SOURCES})
 endfunction()
 
 function(serenity_install_headers dir)
@@ -374,7 +372,7 @@ if (BUILD_LAGOM)
         list(APPEND LIBWEBVIEW_GENERATED_SOURCES WebContent/WebContentClientEndpoint.h)
         list(APPEND LIBWEBVIEW_GENERATED_SOURCES WebContent/WebContentServerEndpoint.h)
 
-        lagom_lib(WebView webview
+        lagom_lib(LibWebView webview
             SOURCES ${LIBWEBVIEW_SOURCES} ${LIBWEBVIEW_GENERATED_SOURCES}
             LIBS LibGUI LibWeb)
     endif()
@@ -386,7 +384,7 @@ if (BUILD_LAGOM)
         file(GLOB LIBELF_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibELF/*.cpp")
         # There's no way we can reliably make the dynamic loading classes cross platform
         list(FILTER LIBELF_SOURCES EXCLUDE REGEX ".*Dynamic.*.cpp$")
-        lagom_lib(ELF elf
+        lagom_lib(LibELF elf
             SOURCES ${LIBELF_SOURCES}
         )
         list(APPEND lagom_standard_libraries X86)
@@ -406,7 +404,7 @@ if (BUILD_LAGOM)
         ModelIndex.cpp
     )
     list(TRANSFORM LIBGUI_SOURCES PREPEND "${SERENITY_PROJECT_ROOT}/Userland/Libraries/LibGUI/")
-    lagom_lib(GUI gui
+    lagom_lib(LibGUI gui
         SOURCES ${LIBGUI_SOURCES}
         LIBS LibGfx LibSyntax)
 
