@@ -17,6 +17,7 @@
 #include <Kernel/Random.h>
 #include <Kernel/Scheduler.h>
 #include <Kernel/Sections.h>
+#include <Kernel/Thread.h>
 #include <Kernel/UserOrKernelBuffer.h>
 
 // Scheduler
@@ -31,6 +32,25 @@ void Scheduler::timer_tick(RegisterState const&) {
 READONLY_AFTER_INIT Thread* g_finalizer;
 RecursiveSpinlock g_scheduler_lock { LockRank::None };
 
+void Scheduler::yield()
+{
+    TODO_AARCH64();
+}
+
+void Scheduler::notify_finalizer()
+{
+    TODO_AARCH64();
+}
+
+void Scheduler::add_time_scheduled(u64, bool)
+{
+    TODO_AARCH64();
+}
+
+void Scheduler::enqueue_runnable_thread(Kernel::Thread&)
+{
+    TODO_AARCH64();
+}
 }
 
 // Random
@@ -43,25 +63,91 @@ void get_fast_random_bytes(Bytes)
 
 }
 
-// Mutex
-namespace Kernel {
-
-void Mutex::lock(Mode, [[maybe_unused]] LockLocation const& location)
-{
-    TODO_AARCH64();
-}
-
-void Mutex::unlock()
-{
-    TODO_AARCH64();
-}
-
-}
-
 // Process
 namespace Kernel {
 
 SpinlockProtected<Process::List>& Process::all_instances()
+{
+    TODO_AARCH64();
+}
+
+bool Process::remove_thread(Kernel::Thread&)
+{
+    TODO_AARCH64();
+}
+
+void Process::finalize()
+{
+    TODO_AARCH64();
+}
+
+LockRefPtr<Process> Process::from_pid(Kernel::ProcessID)
+{
+    TODO_AARCH64();
+}
+
+}
+
+// Thread
+namespace Kernel {
+
+bool Thread::JoinBlocker::unblock(void*, bool)
+{
+    TODO_AARCH64();
+}
+
+Thread::BlockTimeout::BlockTimeout(bool, const AK::Time*, const AK::Time*, clockid_t)
+{
+    TODO_AARCH64();
+}
+
+Thread::SleepBlocker::SleepBlocker(Kernel::Thread::BlockTimeout const&, AK::Time*)
+{
+    TODO_AARCH64();
+}
+
+Thread::BlockTimeout const& Thread::SleepBlocker::override_timeout(Kernel::Thread::BlockTimeout const&)
+{
+    TODO_AARCH64();
+}
+
+void Thread::SleepBlocker::will_unblock_immediately_without_blocking(UnblockImmediatelyReason)
+{
+}
+
+void Thread::SleepBlocker::was_unblocked(bool)
+{
+    TODO_AARCH64();
+}
+
+Thread::BlockResult Thread::SleepBlocker::block_result()
+{
+    TODO_AARCH64();
+}
+
+bool Thread::Blocker::setup_blocker()
+{
+    TODO_AARCH64();
+}
+
+void Thread::Blocker::finalize()
+{
+}
+
+Thread::Blocker::~Blocker()
+{
+    TODO_AARCH64();
+}
+
+}
+
+// PerformanceEventBuffer
+namespace Kernel {
+
+bool g_profiling_all_threads = false;
+PerformanceEventBuffer* g_global_perf_events = nullptr;
+
+ErrorOr<void> PerformanceEventBuffer::append(int, unsigned long, unsigned long, AK::StringView, Kernel::Thread*, unsigned long, u64, ErrorOr<FlatPtr>)
 {
     TODO_AARCH64();
 }
