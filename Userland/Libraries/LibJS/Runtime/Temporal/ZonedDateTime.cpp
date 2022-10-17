@@ -199,8 +199,8 @@ ThrowCompletionOr<ZonedDateTime*> to_temporal_zoned_date_time(VM& vm, Value item
 
         // f. If IsTimeZoneOffsetString(timeZoneName) is false, then
         if (!is_time_zone_offset_string(*time_zone_name)) {
-            // i. If IsValidTimeZoneName(timeZoneName) is false, throw a RangeError exception.
-            if (!is_valid_time_zone_name(*time_zone_name))
+            // i. If IsAvailableTimeZoneName(timeZoneName) is false, throw a RangeError exception.
+            if (!is_available_time_zone_name(*time_zone_name))
                 return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidTimeZoneName, *time_zone_name);
 
             // ii. Set timeZoneName to ! CanonicalizeTimeZoneName(timeZoneName).

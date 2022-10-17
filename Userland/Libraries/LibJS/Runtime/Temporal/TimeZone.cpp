@@ -27,8 +27,8 @@ TimeZone::TimeZone(Object& prototype)
 {
 }
 
-// 11.1.1 IsValidTimeZoneName ( timeZone ), https://tc39.es/proposal-temporal/#sec-isvalidtimezonename
-bool is_valid_time_zone_name(StringView time_zone)
+// 11.1.1 IsAvailableTimeZoneName ( timeZone ), https://tc39.es/proposal-temporal/#sec-isavailabletimezonename
+bool is_available_time_zone_name(StringView time_zone)
 {
     // 1. Let timeZones be AvailableTimeZones().
     // 2. For each String candidate in timeZones, do
@@ -331,8 +331,8 @@ ThrowCompletionOr<Object*> to_temporal_time_zone(VM& vm, Value temporal_time_zon
 
         // b. If IsTimeZoneOffsetString(name) is false, then
         if (!is_time_zone_offset_string(name)) {
-            // i. If IsValidTimeZoneName(name) is false, throw a RangeError exception.
-            if (!is_valid_time_zone_name(name))
+            // i. If IsAvailableTimeZoneName(name) is false, throw a RangeError exception.
+            if (!is_available_time_zone_name(name))
                 return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidTimeZoneName, name);
 
             // ii. Set name to ! CanonicalizeTimeZoneName(name).

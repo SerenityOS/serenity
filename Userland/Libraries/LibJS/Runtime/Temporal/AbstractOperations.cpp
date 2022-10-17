@@ -631,8 +631,8 @@ ThrowCompletionOr<Value> to_relative_temporal_object(VM& vm, Object const& optio
         else {
             // i. If IsTimeZoneOffsetString(timeZoneName) is false, then
             if (!is_time_zone_offset_string(*time_zone_name)) {
-                // 1. If IsValidTimeZoneName(timeZoneName) is false, throw a RangeError exception.
-                if (!is_valid_time_zone_name(*time_zone_name))
+                // 1. If IsAvailableTimeZoneName(timeZoneName) is false, throw a RangeError exception.
+                if (!is_available_time_zone_name(*time_zone_name))
                     return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidTimeZoneName, *time_zone_name);
 
                 // 2. Set timeZoneName to ! CanonicalizeTimeZoneName(timeZoneName).

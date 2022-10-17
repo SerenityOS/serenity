@@ -224,8 +224,8 @@ ThrowCompletionOr<DateTimeFormat*> initialize_date_time_format(VM& vm, DateTimeF
         // a. Set timeZone to ? ToString(timeZone).
         time_zone = TRY(time_zone_value.to_string(vm));
 
-        // b. If the result of IsValidTimeZoneName(timeZone) is false, then
-        if (!Temporal::is_valid_time_zone_name(time_zone)) {
+        // b. If IsAvailableTimeZoneName(timeZone) is false, then
+        if (!Temporal::is_available_time_zone_name(time_zone)) {
             // i. Throw a RangeError exception.
             return vm.throw_completion<RangeError>(ErrorType::OptionIsNotValidValue, time_zone, vm.names.timeZone);
         }

@@ -36,7 +36,7 @@ private:
     Optional<OffsetType> m_offset_nanoseconds; // [[OffsetNanoseconds]]
 };
 
-bool is_valid_time_zone_name(StringView time_zone);
+bool is_available_time_zone_name(StringView time_zone);
 String canonicalize_time_zone_name(String const& time_zone);
 ThrowCompletionOr<TimeZone*> create_temporal_time_zone(VM&, String const& identifier, FunctionObject const* new_target = nullptr);
 ISODateTime get_iso_parts_from_epoch(VM&, Crypto::SignedBigInteger const& epoch_nanoseconds);
