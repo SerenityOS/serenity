@@ -13,7 +13,7 @@ namespace Web {
 Page::Page(PageClient& client)
     : m_client(client)
 {
-    m_top_level_browsing_context = HTML::BrowsingContext::create_a_new_top_level_browsing_context(*this);
+    m_top_level_browsing_context = JS::make_handle(*HTML::BrowsingContext::create_a_new_top_level_browsing_context(*this));
 }
 
 Page::~Page() = default;
@@ -93,6 +93,16 @@ bool Page::handle_keydown(KeyCode key, unsigned modifiers, u32 code_point)
 bool Page::handle_keyup(KeyCode key, unsigned modifiers, u32 code_point)
 {
     return focused_context().event_handler().handle_keyup(key, modifiers, code_point);
+}
+
+HTML::BrowsingContext& Page::top_level_browsing_context()
+{
+    return *m_top_level_browsing_context;
+}
+
+HTML::BrowsingContext const& Page::top_level_browsing_context() const
+{
+    return *m_top_level_browsing_context;
 }
 
 }

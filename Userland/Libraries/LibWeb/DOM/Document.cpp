@@ -79,7 +79,7 @@
 namespace Web::DOM {
 
 // https://html.spec.whatwg.org/multipage/origin.html#obtain-browsing-context-navigation
-static NonnullRefPtr<HTML::BrowsingContext> obtain_a_browsing_context_to_use_for_a_navigation_response(
+static JS::NonnullGCPtr<HTML::BrowsingContext> obtain_a_browsing_context_to_use_for_a_navigation_response(
     HTML::BrowsingContext& browsing_context,
     HTML::SandboxingFlagSet sandbox_flags,
     HTML::CrossOriginOpenerPolicy navigation_coop,
@@ -130,7 +130,7 @@ JS::NonnullGCPtr<Document> Document::create_and_initialize(Type type, String con
     //    given navigationParams's browsing context, navigationParams's final sandboxing flag set,
     //    navigationParams's cross-origin opener policy, and navigationParams's COOP enforcement result.
     auto browsing_context = obtain_a_browsing_context_to_use_for_a_navigation_response(
-        navigation_params.browsing_context,
+        *navigation_params.browsing_context,
         navigation_params.final_sandboxing_flag_set,
         navigation_params.cross_origin_opener_policy,
         navigation_params.coop_enforcement_result);
@@ -329,6 +329,8 @@ void Document::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_associated_inert_template_document.ptr());
     visitor.visit(m_pending_parsing_blocking_script.ptr());
     visitor.visit(m_history.ptr());
+
+    visitor.visit(m_browsing_context);
 
     visitor.visit(m_applets);
     visitor.visit(m_anchors);
@@ -2051,10 +2053,10 @@ HTML::PolicyContainer Document::policy_container() const
 }
 
 // https://html.spec.whatwg.org/multipage/browsers.html#list-of-the-descendant-browsing-contexts
-Vector<NonnullRefPtr<HTML::BrowsingContext>> Document::list_of_descendant_browsing_contexts() const
+Vector<JS::Handle<HTML::BrowsingContext>> Document::list_of_descendant_browsing_contexts() const
 {
     // 1. Let list be an empty list.
-    Vector<NonnullRefPtr<HTML::BrowsingContext>> list;
+    Vector<JS::Handle<HTML::BrowsingContext>> list;
 
     // 2. For each browsing context container container,
     //    whose nested browsing context is non-null and whose shadow-including root is d, in shadow-including tree order:
@@ -2063,7 +2065,7 @@ Vector<NonnullRefPtr<HTML::BrowsingContext>> Document::list_of_descendant_browsi
     //       of this document's browsing context.
     if (browsing_context()) {
         browsing_context()->for_each_in_subtree([&](auto& context) {
-            list.append(context);
+            list.append(JS::make_handle(const_cast<HTML::BrowsingContext&>(context)));
             return IterationDecision::Continue;
         });
     }

@@ -32,6 +32,7 @@ EnvironmentSettingsObject::~EnvironmentSettingsObject()
 void EnvironmentSettingsObject::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
+    visitor.visit(target_browsing_context);
     for (auto& promise : m_about_to_be_notified_rejected_promises_list)
         visitor.visit(promise);
 }

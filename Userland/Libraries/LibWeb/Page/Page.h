@@ -17,6 +17,7 @@
 #include <LibGfx/Forward.h>
 #include <LibGfx/Palette.h>
 #include <LibGfx/StandardCursor.h>
+#include <LibJS/Heap/Handle.h>
 #include <LibWeb/CSS/PreferredColorScheme.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/Loader/FileRequest.h>
@@ -36,8 +37,8 @@ public:
     PageClient& client() { return m_client; }
     PageClient const& client() const { return m_client; }
 
-    HTML::BrowsingContext& top_level_browsing_context() { return *m_top_level_browsing_context; }
-    HTML::BrowsingContext const& top_level_browsing_context() const { return *m_top_level_browsing_context; }
+    HTML::BrowsingContext& top_level_browsing_context();
+    HTML::BrowsingContext const& top_level_browsing_context() const;
 
     HTML::BrowsingContext& focused_context();
     HTML::BrowsingContext const& focused_context() const { return const_cast<Page*>(this)->focused_context(); }
@@ -74,7 +75,7 @@ public:
 private:
     PageClient& m_client;
 
-    RefPtr<HTML::BrowsingContext> m_top_level_browsing_context;
+    JS::Handle<HTML::BrowsingContext> m_top_level_browsing_context;
     WeakPtr<HTML::BrowsingContext> m_focused_context;
 
     // FIXME: Enable this by default once CORS preflight checks are supported.

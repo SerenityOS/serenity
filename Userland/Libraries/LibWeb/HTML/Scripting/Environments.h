@@ -33,7 +33,7 @@ struct Environment {
     Origin top_level_origin;
 
     // https://html.spec.whatwg.org/multipage/webappapis.html#concept-environment-target-browsing-context
-    RefPtr<BrowsingContext> target_browsing_context;
+    JS::GCPtr<BrowsingContext> target_browsing_context;
 
     // FIXME: An active service worker https://html.spec.whatwg.org/multipage/webappapis.html#concept-environment-active-service-worker
 
