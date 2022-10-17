@@ -340,6 +340,8 @@ void Document::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_all);
     visitor.visit(m_selection);
 
+    visitor.visit(m_parser);
+
     for (auto& script : m_scripts_to_execute_when_parsing_has_finished)
         visitor.visit(script.ptr());
     for (auto& script : m_scripts_to_execute_as_soon_as_possible)
@@ -2149,7 +2151,7 @@ void Document::abort()
 }
 
 // https://html.spec.whatwg.org/multipage/dom.html#active-parser
-RefPtr<HTML::HTMLParser> Document::active_parser()
+JS::GCPtr<HTML::HTMLParser> Document::active_parser()
 {
     if (!m_parser)
         return nullptr;
