@@ -6,7 +6,11 @@ workdir=llvm-project-${version}.src
 configopts=("-DCMAKE_TOOLCHAIN_FILE=${SERENITY_BUILD_DIR}/CMakeToolchain.txt")
 files="https://github.com/llvm/llvm-project/releases/download/llvmorg-${version}/llvm-project-${version}.src.tar.xz llvm-project-${version}.src.tar.xz caaf8100365b6ebafc39fea803e902ca3ff38b4d5327b9927097808d32964db7"
 auth_type=sha256
-depends=("ncurses" "zlib")
+depends=(
+    "ncurses"
+    "zlib"
+    "zstd"
+)
 
 configure() {
     # The cross compilers will be picked up from the CMake toolchain file.
