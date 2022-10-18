@@ -2,6 +2,7 @@
  * Copyright (c) 2020-2022, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
  * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2022, Tobias Christiansen <tobyase@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -19,6 +20,7 @@
 #include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/Cookie/ParsedCookie.h>
 #include <LibWeb/DOM/Document.h>
+#include <LibWeb/DOM/NodeList.h>
 #include <LibWeb/Dump.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/Scripting/ClassicScript.h>
@@ -436,6 +438,39 @@ void ConnectionFromClient::js_console_request_messages(i32 start_index)
 {
     if (m_console_client)
         m_console_client->send_messages(start_index);
+}
+
+Messages::WebContentServer::GetDocumentElementResponse ConnectionFromClient::get_document_element()
+{
+    auto* document = page().top_level_browsing_context().active_document();
+    if (!document)
+        return { {} };
+    return { document->id() };
+}
+
+Messages::WebContentServer::QuerySelectorAllResponse ConnectionFromClient::query_selector_all(i32 start_node_id, String const& selector)
+{
+    auto* start_node = Web::DOM::Node::from_id(start_node_id);
+    if (!start_node)
+        return { {} };
+
+    if (!start_node->is_element() && !start_node->is_document())
+        return { {} };
+
+    auto& start_element = verify_cast<Web::DOM::ParentNode>(*start_node);
+
+    auto result = start_element.query_selector_all(selector);
+    if (result.is_error())
+        return { {} };
+
+    auto element_list = result.release_value();
+    Vector<i32> return_list;
+    for (u32 i = 0; i < element_list->length(); i++) {
+        auto node = element_list->item(i);
+        return_list.append(node->id());
+    }
+
+    return { return_list };
 }
 
 Messages::WebContentServer::GetSelectedTextResponse ConnectionFromClient::get_selected_text()

@@ -79,6 +79,9 @@ private:
     virtual void run_javascript(String const&) override;
     virtual void js_console_request_messages(i32) override;
 
+    virtual Messages::WebContentServer::GetDocumentElementResponse get_document_element() override;
+    virtual Messages::WebContentServer::QuerySelectorAllResponse query_selector_all(i32 start_node_id, String const& selector) override;
+
     virtual Messages::WebContentServer::GetLocalStorageEntriesResponse get_local_storage_entries() override;
     virtual Messages::WebContentServer::GetSessionStorageEntriesResponse get_session_storage_entries() override;
 

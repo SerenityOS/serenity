@@ -37,6 +37,9 @@ endpoint WebContentServer
     js_console_input(String js_source) =|
     js_console_request_messages(i32 start_index) =|
 
+    get_document_element() => (Optional<i32> node_id)
+    query_selector_all(i32 start_node_id, String selector) => (Optional<Vector<i32>> elements_ids)
+
     run_javascript(String js_source) =|
 
     dump_layout_tree() => (String dump)
