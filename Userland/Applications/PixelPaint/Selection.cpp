@@ -22,6 +22,13 @@ void Selection::clear()
         client->selection_did_change();
 }
 
+void Selection::invert()
+{
+    auto new_mask = Mask::full(m_image.rect());
+    new_mask.subtract(m_mask);
+    m_mask = new_mask;
+}
+
 void Selection::merge(Mask const& mask, MergeMode mode)
 {
     switch (mode) {
