@@ -11,7 +11,7 @@ diff --git a/Makefile b/Makefile
 index 035fea7..c5a27ab 100644
 --- a/Makefile
 +++ b/Makefile
-@@ -821,6 +821,8 @@ ifeq ($(PLATFORM),serenity)
+@@ -813,6 +813,8 @@ ifeq ($(PLATFORM),serenity)
      -pipe -DUSE_ICON -DMAP_ANONYMOUS=MAP_ANON
    CLIENT_CFLAGS += $(SDL_CFLAGS)
  
