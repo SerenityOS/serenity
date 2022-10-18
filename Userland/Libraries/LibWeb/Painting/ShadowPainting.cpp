@@ -327,7 +327,7 @@ void paint_box_shadow(PaintContext& context, Gfx::IntRect const& content_rect, B
 
 void paint_text_shadow(PaintContext& context, Layout::LineBoxFragment const& fragment, Vector<ShadowData> const& shadow_layers)
 {
-    if (shadow_layers.is_empty())
+    if (shadow_layers.is_empty() || fragment.text().is_empty())
         return;
 
     auto& painter = context.painter();
