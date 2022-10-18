@@ -38,6 +38,7 @@ public:
 
     bool is_empty() const { return m_mask.is_null(); }
     void clear();
+    void invert();
     void merge(Mask const&, MergeMode);
     void merge(Gfx::IntRect const& rect, MergeMode mode) { merge(Mask::full(rect), mode); }
     Gfx::IntRect bounding_rect() const { return m_mask.bounding_rect(); }

@@ -365,6 +365,12 @@ void MainWidget::initialize_menubar(GUI::Window& window)
             VERIFY(editor);
             editor->image().selection().clear();
         }));
+    m_edit_menu->add_action(GUI::Action::create(
+        "&Invert Selection", g_icon_bag.invert_selection, [&](auto&) {
+            auto* editor = current_image_editor();
+            VERIFY(editor);
+            editor->image().selection().invert();
+        }));
 
     m_edit_menu->add_separator();
     m_edit_menu->add_action(GUI::Action::create(

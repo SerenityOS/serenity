@@ -19,6 +19,7 @@ struct IconBag final {
     RefPtr<Gfx::Bitmap> close_image { nullptr };
     RefPtr<Gfx::Bitmap> edit_copy { nullptr };
     RefPtr<Gfx::Bitmap> clear_selection { nullptr };
+    RefPtr<Gfx::Bitmap> invert_selection { nullptr };
     RefPtr<Gfx::Bitmap> swap_colors { nullptr };
     RefPtr<Gfx::Bitmap> default_colors { nullptr };
     RefPtr<Gfx::Bitmap> load_color_palette { nullptr };

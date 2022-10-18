@@ -18,6 +18,7 @@ ErrorOr<IconBag> IconBag::try_create()
     icon_bag.close_image = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/close-tab.png"sv));
     icon_bag.edit_copy = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-copy.png"sv));
     icon_bag.clear_selection = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/clear-selection.png"sv));
+    icon_bag.invert_selection = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/pixelpaint/invert-selection.png"sv));
     icon_bag.swap_colors = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/pixelpaint/swap-colors.png"sv));
     icon_bag.default_colors = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/pixelpaint/default-colors.png"sv));
     icon_bag.load_color_palette = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/pixelpaint/load-color-palette.png"sv));
