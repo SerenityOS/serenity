@@ -21,14 +21,14 @@
 
 namespace PixelPaint {
 
-static void set_flood_selection(Gfx::Bitmap& bitmap, Image& image, Gfx::IntPoint const& start_position, int threshold, Selection::MergeMode merge_mode)
+static void set_flood_selection(Gfx::Bitmap& bitmap, Image& image, Gfx::IntPoint const& start_position, Gfx::IntPoint const& selection_offset, int threshold, Selection::MergeMode merge_mode)
 {
     VERIFY(bitmap.bpp() == 32);
 
     Mask selection_mask = Mask::empty(bitmap.rect());
 
     auto pixel_reached = [&](Gfx::IntPoint location) {
-        selection_mask.set(location.x(), location.y(), 0xFF);
+        selection_mask.set(selection_offset.x() + location.x(), selection_offset.y() + location.y(), 0xFF);
     };
 
     bitmap.flood_visit_from_point(start_position, threshold, move(pixel_reached));
@@ -46,8 +46,10 @@ void WandSelectTool::on_mousedown(Layer* layer, MouseEvent& event)
     if (!layer->rect().contains(layer_event.position()))
         return;
 
+    auto selection_offset = layer->relative_rect().top_left();
+
     m_editor->image().selection().begin_interactive_selection();
-    set_flood_selection(layer->currently_edited_bitmap(), m_editor->image(), layer_event.position(), m_threshold, m_merge_mode);
+    set_flood_selection(layer->currently_edited_bitmap(), m_editor->image(), layer_event.position(), selection_offset, m_threshold, m_merge_mode);
     m_editor->image().selection().end_interactive_selection();
     m_editor->update();
     m_editor->did_complete_action(tool_name());
