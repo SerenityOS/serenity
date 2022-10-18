@@ -30,6 +30,7 @@ Vector<Client::Route> Client::s_routes = {
     { HTTP::HttpRequest::Method::POST, { "session", ":session_id", "refresh" }, &Client::handle_refresh },
     { HTTP::HttpRequest::Method::GET, { "session", ":session_id", "title" }, &Client::handle_get_title },
     { HTTP::HttpRequest::Method::DELETE, { "session", ":session_id", "window" }, &Client::handle_delete_window },
+    { HTTP::HttpRequest::Method::POST, { "session", ":session_id", "element" }, &Client::handle_find_element },
     { HTTP::HttpRequest::Method::GET, { "session", ":session_id", "cookie" }, &Client::handle_get_all_cookies },
     { HTTP::HttpRequest::Method::GET, { "session", ":session_id", "cookie", ":name" }, &Client::handle_get_named_cookie },
     { HTTP::HttpRequest::Method::POST, { "session", ":session_id", "cookie" }, &Client::handle_add_cookie },
@@ -501,6 +502,19 @@ ErrorOr<JsonValue, HttpError> Client::handle_delete_window(Vector<StringView> co
     TRY(unwrap_result(session->delete_window()));
 
     return make_json_value(JsonValue());
+}
+
+// 12.3.2 Find Element, https://w3c.github.io/webdriver/#dfn-find-element
+// POST /session/{session id}/element
+ErrorOr<JsonValue, HttpError> Client::handle_find_element(Vector<StringView> const& parameters, JsonValue const& payload)
+{
+    dbgln_if(WEBDRIVER_DEBUG, "Handling POST /session/<session_id>/element");
+    auto* session = TRY(find_session_with_id(parameters[0]));
+
+    // NOTE: Spec steps handled in Session::find_element().
+    auto result = TRY(session->find_element(payload));
+
+    return make_json_value(result);
 }
 
 // 14.1 Get All Cookies, https://w3c.github.io/webdriver/#dfn-get-all-cookies

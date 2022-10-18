@@ -9,6 +9,7 @@
 #include "Session.h"
 #include "BrowserConnection.h"
 #include "Client.h"
+#include <LibCore/DateTime.h>
 #include <LibCore/LocalServer.h>
 #include <LibCore/Stream.h>
 #include <LibCore/System.h>
@@ -230,6 +231,187 @@ ErrorOr<void, Variant<HttpError, Error>> Session::delete_window()
     }
 
     return {};
+}
+
+// https://w3c.github.io/webdriver/#dfn-get-or-create-a-web-element-reference
+static String get_or_create_a_web_element_reference(Session::LocalElement const& element)
+{
+    // FIXME: 1. For each known element of the current browsing context’s list of known elements:
+    // FIXME:     1. If known element equals element, return success with known element’s web element reference.
+    // FIXME: 2. Add element to the list of known elements of the current browsing context.
+    // FIXME: 3. Return success with the element’s web element reference.
+
+    return String::formatted("{}", element.id);
+}
+
+// https://w3c.github.io/webdriver/#dfn-web-element-identifier
+static const String web_element_identifier = "element-6066-11e4-a52e-4f735466cecf";
+
+// https://w3c.github.io/webdriver/#dfn-web-element-reference-object
+static JsonObject web_element_reference_object(Session::LocalElement const& element)
+{
+    // 1. Let identifier be the web element identifier.
+    auto identifier = web_element_identifier;
+    // 2. Let reference be the result of get or create a web element reference given element.
+    auto reference = get_or_create_a_web_element_reference(element);
+    // 3. Return a JSON Object initialized with a property with name identifier and value reference.
+    JsonObject object;
+    object.set("name"sv, identifier);
+    object.set("value"sv, reference);
+    return object;
+}
+
+// https://w3c.github.io/webdriver/#dfn-find
+ErrorOr<JsonArray, HttpError> Session::find(Session::LocalElement const& start_node, StringView const& using_, StringView const& value)
+{
+    // 1. Let end time be the current time plus the session implicit wait timeout.
+    auto end_time = Core::DateTime::from_timestamp(Core::DateTime::now().timestamp() + s_session_timeouts);
+
+    // 2. Let location strategy be equal to using.
+    auto location_strategy = using_;
+
+    // 3. Let selector be equal to value.
+    auto selector = value;
+
+    // 4. Let elements returned be the result of trying to call the relevant element location strategy with arguments start node, and selector.
+    auto location_strategy_handler = s_locator_strategies.first_matching([&](LocatorStrategy const& match) { return match.name == location_strategy; });
+    if (!location_strategy_handler.has_value())
+        return HttpError { 400, "invalid argument", "No valid location strategy" };
+
+    auto elements_or_error = (this->*location_strategy_handler.value().handler)(start_node, selector);
+
+    // 5. If a DOMException, SyntaxError, XPathException, or other error occurs during the execution of the element location strategy, return error invalid selector.
+    if (elements_or_error.is_error())
+        return HttpError { 400, "invalid selector", String::formatted("The location strategy could not finish: {}", elements_or_error.release_error().message) };
+
+    auto elements = elements_or_error.release_value();
+
+    // FIXME: 6. If elements returned is empty and the current time is less than end time return to step 4. Otherwise, continue to the next step.
+    (void)end_time;
+
+    // 7. Let result be an empty JSON List.
+    auto result = JsonArray();
+
+    // 8. For each element in elements returned, append the web element reference object for element, to result.
+    for (auto const& element : elements) {
+        result.append(JsonValue(web_element_reference_object(element)));
+    }
+
+    // 9. Return success with data result.
+    return result;
+}
+
+// https://w3c.github.io/webdriver/#dfn-table-of-location-strategies
+Vector<Session::LocatorStrategy> Session::s_locator_strategies = {
+    { "css selector", &Session::locator_strategy_css_selectors },
+    { "link text", &Session::locator_strategy_link_text },
+    { "partial link text", &Session::locator_strategy_partial_link_text },
+    { "tag name", &Session::locator_strategy_tag_name },
+    { "xpath", &Session::locator_strategy_x_path },
+};
+
+// https://w3c.github.io/webdriver/#css-selectors
+ErrorOr<Vector<Session::LocalElement>, HttpError> Session::locator_strategy_css_selectors(Session::LocalElement const& start_node, StringView const& selector)
+{
+    // 1. Let elements be the result of calling querySelectorAll() with start node as this and selector as the argument.
+    //    If this causes an exception to be thrown, return error with error code invalid selector.
+    auto elements_ids = m_browser_connection->query_selector_all(start_node.id, selector);
+
+    if (!elements_ids.has_value())
+        return HttpError { 400, "invalid selector", "query_selector_all returned failed!" };
+
+    Vector<Session::LocalElement> elements;
+    for (auto id : elements_ids.release_value()) {
+        elements.append({ id });
+    }
+
+    // 2.Return success with data elements.
+    return elements;
+}
+
+// https://w3c.github.io/webdriver/#link-text
+ErrorOr<Vector<Session::LocalElement>, HttpError> Session::locator_strategy_link_text(Session::LocalElement const&, StringView const&)
+{
+    // FIXME: Implement
+    return HttpError { 501, "not implemented", "locator strategy link text" };
+}
+
+// https://w3c.github.io/webdriver/#partial-link-text
+ErrorOr<Vector<Session::LocalElement>, HttpError> Session::locator_strategy_partial_link_text(Session::LocalElement const&, StringView const&)
+{
+    // FIXME: Implement
+    return HttpError { 501, "not implemented", "locator strategy partial link text" };
+}
+
+// https://w3c.github.io/webdriver/#tag-name
+ErrorOr<Vector<Session::LocalElement>, HttpError> Session::locator_strategy_tag_name(Session::LocalElement const&, StringView const&)
+{
+    // FIXME: Implement
+    return HttpError { 501, "not implemented", "locator strategy tag name" };
+}
+
+// https://w3c.github.io/webdriver/#xpath
+ErrorOr<Vector<Session::LocalElement>, HttpError> Session::locator_strategy_x_path(Session::LocalElement const&, StringView const&)
+{
+    // FIXME: Implement
+    return HttpError { 501, "not implemented", "locator strategy XPath" };
+}
+
+// 12.3.2 Find Element, https://w3c.github.io/webdriver/#dfn-find-element
+ErrorOr<JsonValue, HttpError> Session::find_element(JsonValue const& payload)
+{
+    if (!payload.is_object())
+        return HttpError { 400, "invalid argument", "Payload is not a JSON object" };
+
+    auto properties = payload.as_object();
+    // 1. Let location strategy be the result of getting a property called "using".
+    if (!properties.has("using"sv))
+        return HttpError { 400, "invalid argument", "No property called 'using' present" };
+    auto maybe_location_strategy = properties.get("using"sv);
+    if (!maybe_location_strategy.is_string())
+        return HttpError { 400, "invalid argument", "Property 'using' is not a String" };
+
+    auto location_strategy = maybe_location_strategy.to_string();
+
+    // 2. If location strategy is not present as a keyword in the table of location strategies, return error with error code invalid argument.
+    if (!s_locator_strategies.first_matching([&](LocatorStrategy const& match) { return match.name == location_strategy; }).has_value())
+        return HttpError { 400, "invalid argument", "No valid location strategy" };
+
+    // 3. Let selector be the result of getting a property called "value".
+    // 4. If selector is undefined, return error with error code invalid argument.
+    if (!properties.has("value"sv))
+        return HttpError { 400, "invalid argument", "No property called 'value' present" };
+    auto maybe_selector = properties.get("value"sv);
+    if (!maybe_selector.is_string())
+        return HttpError { 400, "invalid argument", "Property 'value' is not a String" };
+
+    auto selector = maybe_selector.to_string();
+
+    // 5. If the current browsing context is no longer open, return error with error code no such window.
+    auto current_window = get_window_object();
+    if (!current_window.has_value())
+        return HttpError { 404, "no such window", "Window not found" };
+
+    // FIXME: 6. Handle any user prompts and return its value if it is an error.
+
+    // 7. Let start node be the current browsing context’s document element.
+    auto maybe_start_node_id = m_browser_connection->get_document_element();
+
+    // 8. If start node is null, return error with error code no such element.
+    if (!maybe_start_node_id.has_value())
+        return HttpError { 404, "no such element", "document element does not exist" };
+
+    auto start_node_id = maybe_start_node_id.release_value();
+    LocalElement start_node = { start_node_id };
+
+    // 9. Let result be the result of trying to Find with start node, location strategy, and selector.
+    auto result = TRY(find(start_node, location_strategy, selector));
+
+    // 10. If result is empty, return error with error code no such element. Otherwise, return the first element of result.
+    if (result.is_empty())
+        return HttpError { 404, "no such element", "the requested element does not exist" };
+
+    return JsonValue(result.at(0));
 }
 
 // https://w3c.github.io/webdriver/#dfn-serialized-cookie
