@@ -58,6 +58,9 @@ public:
     OrderedHashMap<String, String> get_local_storage_entries();
     OrderedHashMap<String, String> get_session_storage_entries();
 
+    Optional<i32> get_document_element();
+    Optional<Vector<i32>> query_selector_all(i32 start_node_id, String const& selector);
+
     void set_content_filters(Vector<String>);
     void set_proxy_mappings(Vector<String> proxies, HashMap<String, size_t> mappings);
     void set_preferred_color_scheme(Web::CSS::PreferredColorScheme);

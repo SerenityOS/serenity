@@ -582,6 +582,14 @@ void BrowserWindow::create_new_tab(URL url, bool activate)
         return active_tab().view().get_session_storage_entries();
     };
 
+    new_tab.on_get_document_element = [this]() {
+        return active_tab().view().get_document_element();
+    };
+
+    new_tab.on_query_selector_all = [this](i32 start_node_id, String const& selector) {
+        return active_tab().view().query_selector_all(start_node_id, selector);
+    };
+
     new_tab.load(url);
 
     dbgln_if(SPAM_DEBUG, "Added new tab {:p}, loading {}", &new_tab, url);

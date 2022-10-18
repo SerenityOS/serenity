@@ -68,6 +68,8 @@ public:
     Function<Vector<Web::Cookie::Cookie>()> on_get_cookies_entries;
     Function<OrderedHashMap<String, String>()> on_get_local_storage_entries;
     Function<OrderedHashMap<String, String>()> on_get_session_storage_entries;
+    Function<Optional<i32>()> on_get_document_element;
+    Function<Optional<Vector<i32>>(i32 start_node_id, String const&)> on_query_selector_all;
 
     enum class InspectorTarget {
         Document,

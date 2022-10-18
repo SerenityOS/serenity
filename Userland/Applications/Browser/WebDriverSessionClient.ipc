@@ -16,5 +16,7 @@ endpoint WebDriverSessionClient {
     get_named_cookie(String name) => (Optional<Web::Cookie::Cookie> cookie)
     add_cookie(Web::Cookie::ParsedCookie cookie) =|
     update_cookie(Web::Cookie::Cookie cookie) =|
+    get_document_element() => (Optional<i32> document_element_id)
+    query_selector_all(i32 start_node_id, String selector) => (Optional<Vector<i32>> elements_ids)
 
 }
