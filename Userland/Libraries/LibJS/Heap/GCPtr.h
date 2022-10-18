@@ -224,16 +224,4 @@ inline bool operator==(NonnullGCPtr<T> const& a, GCPtr<U> const& b)
     return a.ptr() == b.ptr();
 }
 
-template<typename T, typename U>
-inline bool operator==(NonnullGCPtr<T> const& a, U const* b)
-{
-    return a.ptr() == b;
-}
-
-template<typename T, typename U>
-inline bool operator==(GCPtr<T> const& a, U const* b)
-{
-    return a.ptr() == b;
-}
-
 }
