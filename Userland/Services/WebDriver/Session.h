@@ -37,14 +37,14 @@ public:
 
     ErrorOr<void> start();
     ErrorOr<void> stop();
-    ErrorOr<JsonValue, HttpError> post_url(JsonValue const& url);
-    ErrorOr<JsonValue, HttpError> get_url();
+    ErrorOr<JsonValue, HttpError> navigate_to(JsonValue const& url);
+    ErrorOr<JsonValue, HttpError> get_current_url();
     ErrorOr<JsonValue, HttpError> back();
     ErrorOr<JsonValue, HttpError> forward();
     ErrorOr<JsonValue, HttpError> refresh();
     ErrorOr<JsonValue, HttpError> get_title();
     ErrorOr<JsonValue, HttpError> find_element(JsonValue const& payload);
-    ErrorOr<void, Variant<HttpError, Error>> delete_window();
+    ErrorOr<void, Variant<HttpError, Error>> close_window();
     ErrorOr<JsonValue, HttpError> get_all_cookies();
     ErrorOr<JsonValue, HttpError> get_named_cookie(String const& name);
     ErrorOr<JsonValue, HttpError> add_cookie(JsonValue const& payload);

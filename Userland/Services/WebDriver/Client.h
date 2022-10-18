@@ -46,17 +46,17 @@ private:
     };
 
     ErrorOr<RoutingResult, HttpError> match_route(HTTP::HttpRequest::Method method, String const& resource);
-    ErrorOr<JsonValue, HttpError> handle_post_session(Vector<StringView> const&, JsonValue const& payload);
+    ErrorOr<JsonValue, HttpError> handle_new_session(Vector<StringView> const&, JsonValue const& payload);
     ErrorOr<JsonValue, HttpError> handle_delete_session(Vector<StringView> const&, JsonValue const& payload);
     ErrorOr<JsonValue, HttpError> handle_get_status(Vector<StringView> const&, JsonValue const& payload);
-    ErrorOr<JsonValue, HttpError> handle_post_url(Vector<StringView> const&, JsonValue const& payload);
-    ErrorOr<JsonValue, HttpError> handle_get_url(Vector<StringView> const&, JsonValue const& payload);
+    ErrorOr<JsonValue, HttpError> handle_navigate_to(Vector<StringView> const&, JsonValue const& payload);
+    ErrorOr<JsonValue, HttpError> handle_get_current_url(Vector<StringView> const&, JsonValue const& payload);
     ErrorOr<JsonValue, HttpError> handle_back(Vector<StringView> const&, JsonValue const& payload);
     ErrorOr<JsonValue, HttpError> handle_forward(Vector<StringView> const&, JsonValue const& payload);
     ErrorOr<JsonValue, HttpError> handle_refresh(Vector<StringView> const&, JsonValue const& payload);
     ErrorOr<JsonValue, HttpError> handle_get_title(Vector<StringView> const&, JsonValue const& payload);
     ErrorOr<JsonValue, HttpError> handle_get_window_handle(Vector<StringView> const&, JsonValue const& payload);
-    ErrorOr<JsonValue, HttpError> handle_delete_window(Vector<StringView> const&, JsonValue const& payload);
+    ErrorOr<JsonValue, HttpError> handle_close_window(Vector<StringView> const&, JsonValue const& payload);
     ErrorOr<JsonValue, HttpError> handle_find_element(Vector<StringView> const&, JsonValue const& payload);
     ErrorOr<JsonValue, HttpError> handle_get_all_cookies(Vector<StringView> const&, JsonValue const& payload);
     ErrorOr<JsonValue, HttpError> handle_get_named_cookie(Vector<StringView> const&, JsonValue const& payload);
