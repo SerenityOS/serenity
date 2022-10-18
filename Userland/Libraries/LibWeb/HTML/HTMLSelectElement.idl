@@ -10,6 +10,9 @@ interface HTMLSelectElement : HTMLElement {
     [Reflect] attribute boolean required;
     [SameObject] readonly attribute HTMLOptionsCollection options;
 
+    readonly attribute unsigned long length;
+    getter Element? item(unsigned long index);
+    getter Element? namedItem(DOMString name);
     [CEReactions] undefined add((HTMLOptionElement or HTMLOptGroupElement) element, optional (HTMLElement or long)? before = null);
 
     attribute long selectedIndex;
