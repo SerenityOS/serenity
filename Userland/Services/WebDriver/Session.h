@@ -33,7 +33,7 @@ public:
 
     HashMap<String, NonnullOwnPtr<Window>>& get_window_handles() { return m_windows; }
     Optional<Window*> get_window_object() { return m_windows.get(m_current_window_handle); }
-    String get_window() { return m_current_window_handle; }
+    String const& current_window_handle() { return m_current_window_handle; }
 
     ErrorOr<void> start();
     ErrorOr<void> stop();
