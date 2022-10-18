@@ -338,6 +338,7 @@ ErrorOr<JsonValue, HttpError> Client::handle_new_session(Vector<StringView> cons
     //           return error with error code session not created.
 
     // FIXME: 4. Let capabilities be the result of trying to process capabilities with parameters as an argument.
+    auto capabilities = JsonObject {};
 
     // FIXME: 5. If capabilities’s is null, return error with error code session not created.
 
@@ -362,11 +363,12 @@ ErrorOr<JsonValue, HttpError> Client::handle_new_session(Vector<StringView> cons
 
     // 11. Let body be a JSON Object initialized with:
     JsonObject body;
-    //     "sessionId"
-    //         session id
+    // "sessionId"
+    //     session id
     body.set("sessionId", String::number(session_id));
-    // FIXME: "capabilities"
-    //         capabilities
+    // "capabilities"
+    //     capabilities
+    body.set("capabilities", move(capabilities));
 
     // FIXME: 12. Initialize the following from capabilities:
     //            NOTE: See spec for steps
