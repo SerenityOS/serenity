@@ -2,6 +2,7 @@
  * Copyright (c) 2022, Florent Castelli <florent.castelli@gmail.com>
  * Copyright (c) 2022, Sam Atkins <atkinssj@serenityos.org>
  * Copyright (c) 2022, Tobias Christiansen <tobyase@serenityos.org>
+ * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -29,6 +30,7 @@ Vector<Client::Route> Client::s_routes = {
     { HTTP::HttpRequest::Method::POST, { "session", ":session_id", "forward" }, &Client::handle_forward },
     { HTTP::HttpRequest::Method::POST, { "session", ":session_id", "refresh" }, &Client::handle_refresh },
     { HTTP::HttpRequest::Method::GET, { "session", ":session_id", "title" }, &Client::handle_get_title },
+    { HTTP::HttpRequest::Method::GET, { "session", ":session_id", "window" }, &Client::handle_get_window_handle },
     { HTTP::HttpRequest::Method::DELETE, { "session", ":session_id", "window" }, &Client::handle_delete_window },
     { HTTP::HttpRequest::Method::POST, { "session", ":session_id", "element" }, &Client::handle_find_element },
     { HTTP::HttpRequest::Method::GET, { "session", ":session_id", "cookie" }, &Client::handle_get_all_cookies },
@@ -489,6 +491,22 @@ ErrorOr<JsonValue, HttpError> Client::handle_get_title(Vector<StringView> const&
     auto result = TRY(session->get_title());
 
     return make_json_value(result);
+}
+
+// 11.1 Get Window Handle, https://w3c.github.io/webdriver/#get-window-handle
+// GET /session/{session id}/window
+ErrorOr<JsonValue, HttpError> Client::handle_get_window_handle(Vector<StringView> const& parameters, JsonValue const&)
+{
+    dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session_id>/window");
+    auto* session = TRY(find_session_with_id(parameters[0]));
+
+    // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
+    auto current_window = session->get_window_object();
+    if (!current_window.has_value())
+        return HttpError { 404, "no such window", "Window not found" };
+
+    // 2. Return success with data being the window handle associated with the current top-level browsing context.
+    return make_json_value(session->current_window_handle());
 }
 
 // 11.2 Close Window, https://w3c.github.io/webdriver/#dfn-close-window
