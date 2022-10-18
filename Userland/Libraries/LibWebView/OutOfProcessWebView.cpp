@@ -515,6 +515,16 @@ OrderedHashMap<String, String> OutOfProcessWebView::get_session_storage_entries(
     return client().get_session_storage_entries();
 }
 
+Optional<i32> OutOfProcessWebView::get_document_element()
+{
+    return client().get_document_element();
+}
+
+Optional<Vector<i32>> OutOfProcessWebView::query_selector_all(i32 start_node_id, String const& selector)
+{
+    return client().query_selector_all(start_node_id, selector);
+}
+
 void OutOfProcessWebView::set_content_filters(Vector<String> filters)
 {
     client().async_set_content_filters(filters);

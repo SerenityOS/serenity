@@ -47,6 +47,8 @@ public:
     virtual Messages::WebDriverSessionClient::GetNamedCookieResponse get_named_cookie(String const& name) override;
     virtual void add_cookie(Web::Cookie::ParsedCookie const&) override;
     virtual void update_cookie(Web::Cookie::Cookie const&) override;
+    virtual Messages::WebDriverSessionClient::GetDocumentElementResponse get_document_element() override;
+    virtual Messages::WebDriverSessionClient::QuerySelectorAllResponse query_selector_all(i32 start_node_id, String const& selector) override;
 
 private:
     WebDriverConnection(NonnullOwnPtr<Core::Stream::LocalSocket> socket, NonnullRefPtr<BrowserWindow> browser_window);

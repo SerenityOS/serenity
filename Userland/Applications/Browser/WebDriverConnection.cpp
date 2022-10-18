@@ -121,4 +121,26 @@ void WebDriverConnection::update_cookie(Web::Cookie::Cookie const& cookie)
     }
 }
 
+Messages::WebDriverSessionClient::GetDocumentElementResponse WebDriverConnection::get_document_element()
+{
+    dbgln("WebDriverConnection: get_document_element");
+    if (auto browser_window = m_browser_window.strong_ref()) {
+        auto& tab = browser_window->active_tab();
+        if (tab.on_get_document_element)
+            return { tab.on_get_document_element() };
+    }
+    return { {} };
+}
+
+Messages::WebDriverSessionClient::QuerySelectorAllResponse WebDriverConnection::query_selector_all(i32 start_node_id, String const& selector)
+{
+    dbgln("WebDriverConnection: query_selector_all");
+    if (auto browser_window = m_browser_window.strong_ref()) {
+        auto& tab = browser_window->active_tab();
+        if (tab.on_query_selector_all)
+            return { tab.on_query_selector_all(start_node_id, selector) };
+    }
+    return { {} };
+}
+
 }
