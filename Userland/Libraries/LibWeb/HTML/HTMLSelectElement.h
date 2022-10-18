@@ -25,6 +25,9 @@ public:
 
     JS::GCPtr<HTMLOptionsCollection> const& options();
 
+    size_t length();
+    DOM::Element* item(size_t index);
+    DOM::Element* named_item(FlyString const& name);
     WebIDL::ExceptionOr<void> add(HTMLOptionOrOptGroupElement element, Optional<HTMLElementOrElementIndex> before = {});
 
     int selected_index() const;
