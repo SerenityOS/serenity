@@ -11,7 +11,7 @@ diff --git a/Makefile b/Makefile
 index c5a27ab..c0e6200 100644
 --- a/Makefile
 +++ b/Makefile
-@@ -1046,12 +1046,12 @@ endif
+@@ -1038,12 +1038,12 @@ endif
  
  ifneq ($(BUILD_CLIENT),0)
    ifneq ($(USE_RENDERER_DLOPEN),0)
@@ -26,7 +26,7 @@ index c5a27ab..c0e6200 100644
      ifneq ($(BUILD_RENDERER_OPENGL2),0)
        TARGETS += $(B)/$(CLIENTBIN)_opengl2$(FULLBINEXT)
      endif
-@@ -2246,7 +2246,7 @@ ifeq ($(USE_MUMBLE),1)
+@@ -2238,7 +2238,7 @@ ifeq ($(USE_MUMBLE),1)
  endif
  
  ifneq ($(USE_RENDERER_DLOPEN),0)
@@ -35,7 +35,7 @@ index c5a27ab..c0e6200 100644
  	$(echo_cmd) "LD $@"
  	$(Q)$(CC) $(CLIENT_CFLAGS) $(CFLAGS) $(CLIENT_LDFLAGS) $(LDFLAGS) $(NOTSHLIBLDFLAGS) \
  		-o $@ $(Q3OBJ) \
-@@ -2262,7 +2262,7 @@ $(B)/renderer_opengl2_$(SHLIBNAME): $(Q3R2OBJ) $(Q3R2STRINGOBJ) $(JPGOBJ)
+@@ -2254,7 +2254,7 @@ $(B)/renderer_opengl2_$(SHLIBNAME): $(Q3R2OBJ) $(Q3R2STRINGOBJ) $(JPGOBJ)
  	$(Q)$(CC) $(CFLAGS) $(SHLIBLDFLAGS) -o $@ $(Q3R2OBJ) $(Q3R2STRINGOBJ) $(JPGOBJ) \
  		$(THREAD_LIBS) $(LIBSDLMAIN) $(RENDERER_LIBS) $(LIBS)
  else
@@ -44,7 +44,7 @@ index c5a27ab..c0e6200 100644
  	$(echo_cmd) "LD $@"
  	$(Q)$(CC) $(CLIENT_CFLAGS) $(CFLAGS) $(CLIENT_LDFLAGS) $(LDFLAGS) $(NOTSHLIBLDFLAGS) \
  		-o $@ $(Q3OBJ) $(Q3ROBJ) $(JPGOBJ) \
-@@ -2945,7 +2945,7 @@ ifneq ($(BUILD_GAME_SO),0)
+@@ -2937,7 +2937,7 @@ ifneq ($(BUILD_GAME_SO),0)
  endif
  
  ifneq ($(BUILD_CLIENT),0)

@@ -11,7 +11,7 @@ diff --git a/Makefile b/Makefile
 index b26ceb7..035fea7 100644
 --- a/Makefile
 +++ b/Makefile
-@@ -868,7 +868,7 @@ ifeq ($(PLATFORM),serenity)
+@@ -860,7 +860,7 @@ ifeq ($(PLATFORM),serenity)
    SHLIBLDFLAGS=-shared $(LDFLAGS)
  
    THREAD_LIBS=-lpthread
