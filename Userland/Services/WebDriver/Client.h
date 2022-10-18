@@ -55,6 +55,7 @@ private:
     ErrorOr<JsonValue, HttpError> handle_forward(Vector<StringView> const&, JsonValue const& payload);
     ErrorOr<JsonValue, HttpError> handle_refresh(Vector<StringView> const&, JsonValue const& payload);
     ErrorOr<JsonValue, HttpError> handle_get_title(Vector<StringView> const&, JsonValue const& payload);
+    ErrorOr<JsonValue, HttpError> handle_get_window_handle(Vector<StringView> const&, JsonValue const& payload);
     ErrorOr<JsonValue, HttpError> handle_delete_window(Vector<StringView> const&, JsonValue const& payload);
     ErrorOr<JsonValue, HttpError> handle_find_element(Vector<StringView> const&, JsonValue const& payload);
     ErrorOr<JsonValue, HttpError> handle_get_all_cookies(Vector<StringView> const&, JsonValue const& payload);
