@@ -73,7 +73,7 @@ ErrorOr<void> Session::stop()
 }
 
 // 10.1 Navigate To, https://w3c.github.io/webdriver/#dfn-navigate-to
-ErrorOr<JsonValue, HttpError> Session::post_url(JsonValue const& payload)
+ErrorOr<JsonValue, HttpError> Session::navigate_to(JsonValue const& payload)
 {
     // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
     auto current_window = get_window_object();
@@ -109,7 +109,7 @@ ErrorOr<JsonValue, HttpError> Session::post_url(JsonValue const& payload)
 }
 
 // 10.2 Get Current URL, https://w3c.github.io/webdriver/#dfn-get-current-url
-ErrorOr<JsonValue, HttpError> Session::get_url()
+ErrorOr<JsonValue, HttpError> Session::get_current_url()
 {
     // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
     auto current_window = get_window_object();
@@ -212,7 +212,7 @@ ErrorOr<JsonValue, HttpError> Session::get_title()
 }
 
 // 11.2 Close Window, https://w3c.github.io/webdriver/#dfn-close-window
-ErrorOr<void, Variant<HttpError, Error>> Session::delete_window()
+ErrorOr<void, Variant<HttpError, Error>> Session::close_window()
 {
     // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
     auto current_window = get_window_object();

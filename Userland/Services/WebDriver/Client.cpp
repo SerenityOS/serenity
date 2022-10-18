@@ -21,17 +21,17 @@ namespace WebDriver {
 Atomic<unsigned> Client::s_next_session_id;
 NonnullOwnPtrVector<Session> Client::s_sessions;
 Vector<Client::Route> Client::s_routes = {
-    { HTTP::HttpRequest::Method::POST, { "session" }, &Client::handle_post_session },
+    { HTTP::HttpRequest::Method::POST, { "session" }, &Client::handle_new_session },
     { HTTP::HttpRequest::Method::DELETE, { "session", ":session_id" }, &Client::handle_delete_session },
     { HTTP::HttpRequest::Method::GET, { "status" }, &Client::handle_get_status },
-    { HTTP::HttpRequest::Method::POST, { "session", ":session_id", "url" }, &Client::handle_post_url },
-    { HTTP::HttpRequest::Method::GET, { "session", ":session_id", "url" }, &Client::handle_get_url },
+    { HTTP::HttpRequest::Method::POST, { "session", ":session_id", "url" }, &Client::handle_navigate_to },
+    { HTTP::HttpRequest::Method::GET, { "session", ":session_id", "url" }, &Client::handle_get_current_url },
     { HTTP::HttpRequest::Method::POST, { "session", ":session_id", "back" }, &Client::handle_back },
     { HTTP::HttpRequest::Method::POST, { "session", ":session_id", "forward" }, &Client::handle_forward },
     { HTTP::HttpRequest::Method::POST, { "session", ":session_id", "refresh" }, &Client::handle_refresh },
     { HTTP::HttpRequest::Method::GET, { "session", ":session_id", "title" }, &Client::handle_get_title },
     { HTTP::HttpRequest::Method::GET, { "session", ":session_id", "window" }, &Client::handle_get_window_handle },
-    { HTTP::HttpRequest::Method::DELETE, { "session", ":session_id", "window" }, &Client::handle_delete_window },
+    { HTTP::HttpRequest::Method::DELETE, { "session", ":session_id", "window" }, &Client::handle_close_window },
     { HTTP::HttpRequest::Method::POST, { "session", ":session_id", "element" }, &Client::handle_find_element },
     { HTTP::HttpRequest::Method::GET, { "session", ":session_id", "cookie" }, &Client::handle_get_all_cookies },
     { HTTP::HttpRequest::Method::GET, { "session", ":session_id", "cookie", ":name" }, &Client::handle_get_named_cookie },
@@ -320,7 +320,7 @@ JsonValue Client::make_json_value(JsonValue const& value)
 
 // 8.1 New Session, https://w3c.github.io/webdriver/#dfn-new-sessions
 // POST /session
-ErrorOr<JsonValue, HttpError> Client::handle_post_session(Vector<StringView> const&, JsonValue const&)
+ErrorOr<JsonValue, HttpError> Client::handle_new_session(Vector<StringView> const&, JsonValue const&)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling POST /session");
 
@@ -422,25 +422,25 @@ ErrorOr<JsonValue, HttpError> Client::handle_get_status(Vector<StringView> const
 
 // 10.1 Navigate To, https://w3c.github.io/webdriver/#dfn-navigate-to
 // POST /session/{session id}/url
-ErrorOr<JsonValue, HttpError> Client::handle_post_url(Vector<StringView> const& parameters, JsonValue const& payload)
+ErrorOr<JsonValue, HttpError> Client::handle_navigate_to(Vector<StringView> const& parameters, JsonValue const& payload)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling POST /session/<session_id>/url");
     auto* session = TRY(find_session_with_id(parameters[0]));
 
-    // NOTE: Spec steps handled in Session::post_url().
-    auto result = TRY(session->post_url(payload));
+    // NOTE: Spec steps handled in Session::navigate_to().
+    auto result = TRY(session->navigate_to(payload));
     return make_json_value(result);
 }
 
 // 10.2 Get Current URL, https://w3c.github.io/webdriver/#dfn-get-current-url
 // GET /session/{session id}/url
-ErrorOr<JsonValue, HttpError> Client::handle_get_url(Vector<StringView> const& parameters, JsonValue const&)
+ErrorOr<JsonValue, HttpError> Client::handle_get_current_url(Vector<StringView> const& parameters, JsonValue const&)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session_id>/url");
     auto* session = TRY(find_session_with_id(parameters[0]));
 
-    // NOTE: Spec steps handled in Session::get_url().
-    auto result = TRY(session->get_url());
+    // NOTE: Spec steps handled in Session::get_current_url().
+    auto result = TRY(session->get_current_url());
     return make_json_value(result);
 }
 
@@ -511,13 +511,13 @@ ErrorOr<JsonValue, HttpError> Client::handle_get_window_handle(Vector<StringView
 
 // 11.2 Close Window, https://w3c.github.io/webdriver/#dfn-close-window
 // DELETE /session/{session id}/window
-ErrorOr<JsonValue, HttpError> Client::handle_delete_window(Vector<StringView> const& parameters, JsonValue const&)
+ErrorOr<JsonValue, HttpError> Client::handle_close_window(Vector<StringView> const& parameters, JsonValue const&)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling DELETE /session/<session_id>/window");
     auto* session = TRY(find_session_with_id(parameters[0]));
 
-    // NOTE: Spec steps handled in Session::delete_window().
-    TRY(unwrap_result(session->delete_window()));
+    // NOTE: Spec steps handled in Session::close_window().
+    TRY(unwrap_result(session->close_window()));
 
     return make_json_value(JsonValue());
 }
