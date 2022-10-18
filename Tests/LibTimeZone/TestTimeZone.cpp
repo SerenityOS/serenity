@@ -128,8 +128,8 @@ static i64 offset(i64 sign, i64 hours, i64 minutes, i64 seconds)
 
 TEST_CASE(get_time_zone_offset)
 {
-    test_offset("America/Chicago"sv, -2717668237, offset(-1, 5, 50, 36), No); // Sunday, November 18, 1883 12:09:23 PM
-    test_offset("America/Chicago"sv, -2717668236, offset(-1, 6, 00, 00), No); // Sunday, November 18, 1883 12:09:24 PM
+    test_offset("America/Chicago"sv, -2717647201, offset(-1, 5, 50, 36), No); // Sunday, November 18, 1883 5:59:59 PM
+    test_offset("America/Chicago"sv, -2717647200, offset(-1, 6, 00, 00), No); // Sunday, November 18, 1883 6:00:00 PM
     test_offset("America/Chicago"sv, -1067810460, offset(-1, 6, 00, 00), No); // Sunday, March 1, 1936 1:59:00 AM
     test_offset("America/Chicago"sv, -1067810400, offset(-1, 5, 00, 00), No); // Sunday, March 1, 1936 2:00:00 AM
     test_offset("America/Chicago"sv, -1045432860, offset(-1, 5, 00, 00), No); // Sunday, November 15, 1936 1:59:00 AM

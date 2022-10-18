@@ -16,8 +16,8 @@ describe("correct behavior", () => {
             expect(actualOffset).toBe(expectedOffset);
         }
 
-        testOffset("America/Chicago", -2717668237, offset(-1, 5, 50, 36)); // Sunday, November 18, 1883 12:09:23 PM
-        testOffset("America/Chicago", -2717668236, offset(-1, 6, 0, 0)); // Sunday, November 18, 1883 12:09:24 PM
+        testOffset("America/Chicago", -2717647201, offset(-1, 5, 50, 36)); // Sunday, November 18, 1883 5:59:59 PM
+        testOffset("America/Chicago", -2717647200, offset(-1, 6, 0, 0)); // Sunday, November 18, 1883 6:00:00 PM
         testOffset("America/Chicago", -1067810460, offset(-1, 6, 0, 0)); // Sunday, March 1, 1936 1:59:00 AM
         testOffset("America/Chicago", -1067810400, offset(-1, 5, 0, 0)); // Sunday, March 1, 1936 2:00:00 AM
         testOffset("America/Chicago", -1045432860, offset(-1, 5, 0, 0)); // Sunday, November 15, 1936 1:59:00 AM
