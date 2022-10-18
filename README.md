@@ -119,6 +119,7 @@ A general guide for contributing can be found in [`CONTRIBUTING.md`](CONTRIBUTIN
 * **networkException** - [networkException](https://github.com/networkException) [![GitHub Sponsors](https://img.shields.io/static/v1?label=Sponsor&message=%E2%9D%A4&logo=GitHub)](https://github.com/sponsors/networkException)
 * **Brandon Jordan** - [electrikmilk](https://github.com/electrikmilk)
 * **Lucas Chollet** - [LucasChollet](https://github.com/LucasChollet)
+* **Timon Kruiper** - [FireFox317](https://github.com/FireFox317)
 
 And many more! [See here](https://github.com/SerenityOS/serenity/graphs/contributors) for a full contributor list. The people listed above have landed more than 100 commits in the project. :^)
 
