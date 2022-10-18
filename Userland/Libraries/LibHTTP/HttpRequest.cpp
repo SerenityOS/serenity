@@ -175,7 +175,7 @@ Optional<HttpRequest> HttpRequest::from_raw_request(ReadonlyBytes raw_request)
             break;
         case State::InBody:
             buffer.append(consume());
-            if (index + 1 == raw_request.size()) {
+            if (index == raw_request.size()) {
                 // End of data, so store the body
                 auto maybe_body = ByteBuffer::copy(buffer);
                 // FIXME: Propagate this error somehow.
