@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+      * {
+          border: 1px solid black;
+          padding: 2px;
+      }
+
+      #withstylefromheader {
+          color: blue;
+      }
+  </style>
+</head>
+<body>
+<h1>WebDriver Tests</h1>
+<div id="foo">
+  <h2>A child of #foo</h2>
+  <a id="find_me" href="#thisisalink">A Link inside a div</a>
+  <a href="#thisisanotherlink">Another Link</a>
+  <input id="dis" type="text" disabled value="disabled text"/>
+  <input id="no-dis" type="text" value=" not disabled text"/>
+</div>
+<p>P number 1</p>
+<p>P number 2</p>
+<div>
+  <p id="withinlinestyle" style="background: red">Background red</p>
+  <p id="withstylefromheader">Color Blue</p>
+</div>
+<ul id="a_ul">
+  <li class="a_li">Some</li>
+  <li>Stuff</li>
+</ul>
+</body>
+</html>
