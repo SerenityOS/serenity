@@ -10,7 +10,7 @@
 #include "Session.h"
 #include "BrowserConnection.h"
 #include "Client.h"
-#include <LibCore/DateTime.h>
+#include <AK/Time.h>
 #include <LibCore/LocalServer.h>
 #include <LibCore/Stream.h>
 #include <LibCore/System.h>
@@ -266,7 +266,7 @@ static JsonObject web_element_reference_object(Session::LocalElement const& elem
 ErrorOr<JsonArray, HttpError> Session::find(Session::LocalElement const& start_node, StringView const& using_, StringView const& value)
 {
     // 1. Let end time be the current time plus the session implicit wait timeout.
-    auto end_time = Core::DateTime::from_timestamp(Core::DateTime::now().timestamp() + m_timeouts_configuration.implicit_wait_timeout / 1000);
+    auto end_time = Time::now_monotonic() + Time::from_milliseconds(static_cast<i64>(m_timeouts_configuration.implicit_wait_timeout));
 
     // 2. Let location strategy be equal to using.
     auto location_strategy = using_;
