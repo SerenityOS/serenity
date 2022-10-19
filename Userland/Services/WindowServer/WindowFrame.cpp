@@ -349,7 +349,7 @@ void WindowFrame::PerScaleRenderedCache::paint(WindowFrame& frame, Gfx::Painter&
         auto top_bottom_height = frame_rect.height() - window_rect.height();
         if (m_bottom_y > 0) {
             // We have a top piece
-            auto src_rect = rect.intersected({ frame_rect.location(), { frame_rect.width(), m_bottom_y } });
+            auto src_rect = rect.intersected(Gfx::Rect { frame_rect.location(), { frame_rect.width(), m_bottom_y } });
             if (!src_rect.is_empty())
                 painter.blit(src_rect.location(), *m_top_bottom, src_rect.translated(-frame_rect.location()), frame.opacity());
         }
