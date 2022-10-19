@@ -83,6 +83,19 @@ JsonObject Session::get_timeouts()
     return timeouts;
 }
 
+// 9.2 Set Timeouts, https://w3c.github.io/webdriver/#dfn-set-timeouts
+ErrorOr<JsonValue, HttpError> Session::set_timeouts(JsonValue const& payload)
+{
+    // 1. Let timeouts be the result of trying to JSON deserialize as a timeouts configuration the request’s parameters.
+    auto timeouts = TRY(json_deserialize_as_a_timeouts_configuration(payload));
+
+    // 2. Make the session timeouts the new timeouts.
+    m_timeouts_configuration = move(timeouts);
+
+    // 3. Return success with data null.
+    return JsonValue {};
+}
+
 // 10.1 Navigate To, https://w3c.github.io/webdriver/#dfn-navigate-to
 ErrorOr<JsonValue, HttpError> Session::navigate_to(JsonValue const& payload)
 {
