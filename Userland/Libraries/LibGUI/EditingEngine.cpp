@@ -87,8 +87,23 @@ bool EditingEngine::on_key(KeyEvent const& event)
         bool const condition_for_up = direction == VerticalDirection::Up && m_editor->cursor().line() > 0;
         bool const condition_for_down = direction == VerticalDirection::Down && m_editor->cursor().line() < (m_editor->line_count() - 1);
 
+        bool const condition_for_up_to_beginning = direction == VerticalDirection::Up && m_editor->cursor().line() == 0;
+        bool const condition_for_down_to_end = direction == VerticalDirection::Down && m_editor->cursor().line() == (m_editor->line_count() - 1);
+
         if (condition_for_up || condition_for_down || m_editor->is_wrapping_enabled())
             m_editor->update_selection(event.shift());
+
+        // Shift + Up on the top line (or only line) selects from the cursor to the start of the line.
+        if (condition_for_up_to_beginning) {
+            m_editor->update_selection(event.shift());
+            move_to_line_beginning();
+        }
+
+        // Shift + Down on the bottom line (or only line) selects from the cursor to the end of the line.
+        if (condition_for_down_to_end) {
+            m_editor->update_selection(event.shift());
+            move_to_line_end();
+        }
 
         move_one_helper(event, direction);
     }
