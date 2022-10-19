@@ -414,6 +414,58 @@ ErrorOr<JsonValue, HttpError> Session::find_element(JsonValue const& payload)
     return JsonValue(result.at(0));
 }
 
+// 12.3.3 Find Elements, https://w3c.github.io/webdriver/#dfn-find-elements
+ErrorOr<JsonValue, HttpError> Session::find_elements(JsonValue const& payload)
+{
+    if (!payload.is_object())
+        return HttpError { 400, "invalid argument", "Payload is not a JSON object" };
+
+    auto const& properties = payload.as_object();
+    // 1. Let location strategy be the result of getting a property called "using".
+    if (!properties.has("using"sv))
+        return HttpError { 400, "invalid argument", "No property called 'using' present" };
+    auto const& maybe_location_strategy = properties.get("using"sv);
+    if (!maybe_location_strategy.is_string())
+        return HttpError { 400, "invalid argument", "Property 'using' is not a String" };
+
+    auto location_strategy = maybe_location_strategy.to_string();
+
+    // 2. If location strategy is not present as a keyword in the table of location strategies, return error with error code invalid argument.
+    if (!s_locator_strategies.first_matching([&](LocatorStrategy const& match) { return match.name == location_strategy; }).has_value())
+        return HttpError { 400, "invalid argument", "No valid location strategy" };
+
+    // 3. Let selector be the result of getting a property called "value".
+    // 4. If selector is undefined, return error with error code invalid argument.
+    if (!properties.has("value"sv))
+        return HttpError { 400, "invalid argument", "No property called 'value' present" };
+    auto const& maybe_selector = properties.get("value"sv);
+    if (!maybe_selector.is_string())
+        return HttpError { 400, "invalid argument", "Property 'value' is not a String" };
+
+    auto selector = maybe_selector.to_string();
+
+    // 5. If the current browsing context is no longer open, return error with error code no such window.
+    auto current_window = get_window_object();
+    if (!current_window.has_value())
+        return HttpError { 404, "no such window", "Window not found" };
+
+    // FIXME: 6. Handle any user prompts and return its value if it is an error.
+
+    // 7. Let start node be the current browsing context’s document element.
+    auto maybe_start_node_id = m_browser_connection->get_document_element();
+
+    // 8. If start node is null, return error with error code no such element.
+    if (!maybe_start_node_id.has_value())
+        return HttpError { 404, "no such element", "document element does not exist" };
+
+    auto start_node_id = maybe_start_node_id.release_value();
+    LocalElement start_node = { start_node_id };
+
+    // 9. Return the result of trying to Find with start node, location strategy, and selector.
+    auto result = TRY(find(start_node, location_strategy, selector));
+    return JsonValue(result);
+}
+
 // https://w3c.github.io/webdriver/#dfn-serialized-cookie
 static JsonObject serialize_cookie(Web::Cookie::Cookie const& cookie)
 {
