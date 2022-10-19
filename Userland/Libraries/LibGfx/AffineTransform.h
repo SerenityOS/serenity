@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/Concepts.h>
 #include <AK/Format.h>
 #include <AK/Forward.h>
 #include <LibGfx/Forward.h>
@@ -29,13 +30,13 @@ public:
 
     void map(float unmapped_x, float unmapped_y, float& mapped_x, float& mapped_y) const;
 
-    template<typename T>
+    template<Arithmetic T>
     Point<T> map(Point<T> const&) const;
 
-    template<typename T>
+    template<Arithmetic T>
     Size<T> map(Size<T> const&) const;
 
-    template<typename T>
+    template<Arithmetic T>
     Rect<T> map(Rect<T> const&) const;
 
     Quad<float> map_to_quad(Rect<float> const&) const;
