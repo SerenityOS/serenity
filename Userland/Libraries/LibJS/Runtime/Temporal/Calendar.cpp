@@ -106,17 +106,16 @@ ThrowCompletionOr<Vector<String>> calendar_fields(VM& vm, Object& calendar, Vect
     // 1. Let fields be ? GetMethod(calendar, "fields").
     auto fields = TRY(Value(&calendar).get_method(vm, vm.names.fields));
 
-    // 2. Let fieldsArray be CreateArrayFromList(fieldNames).
-    auto field_names_values = MarkedVector<Value> { vm.heap() };
-    for (auto& field_name : field_names)
-        field_names_values.append(js_string(vm, field_name));
-    Value fields_array = Array::create_from(realm, field_names_values);
-
-    // 3. If fields is not undefined, then
-    if (fields) {
-        // a. Set fieldsArray to ? Call(fields, calendar, « fieldsArray »).
-        fields_array = TRY(call(vm, *fields, &calendar, fields_array));
+    // 2. If fields is undefined, return fieldNames.
+    if (!fields) {
+        Vector<String> result;
+        for (auto& value : field_names)
+            result.append(value);
+        return result;
     }
+
+    // 3. Let fieldsArray be ? Call(fields, calendar, « CreateArrayFromList(fieldNames) »).
+    auto fields_array = TRY(call(vm, *fields, &calendar, Array::create_from<StringView>(realm, field_names, [&](auto value) { return js_string(vm, value); })));
 
     // 4. Return ? IterableToListOfType(fieldsArray, « String »).
     auto list = TRY(iterable_to_list_of_type(vm, fields_array, { OptionType::String }));
