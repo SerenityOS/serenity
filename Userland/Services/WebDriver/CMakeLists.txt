@@ -7,6 +7,7 @@ set(SOURCES
     BrowserConnection.cpp
     Client.cpp
     Session.cpp
+    TimeoutsConfiguration.cpp
     main.cpp
     )
 

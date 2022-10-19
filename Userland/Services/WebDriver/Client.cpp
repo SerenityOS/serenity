@@ -7,14 +7,15 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "Client.h"
-#include "Session.h"
 #include <AK/Debug.h>
 #include <AK/JsonParser.h>
 #include <LibCore/DateTime.h>
 #include <LibCore/MemoryStream.h>
 #include <LibHTTP/HttpRequest.h>
 #include <LibHTTP/HttpResponse.h>
+#include <WebDriver/Client.h>
+#include <WebDriver/Session.h>
+#include <WebDriver/TimeoutsConfiguration.h>
 
 namespace WebDriver {
 
@@ -24,6 +25,7 @@ Vector<Client::Route> Client::s_routes = {
     { HTTP::HttpRequest::Method::POST, { "session" }, &Client::handle_new_session },
     { HTTP::HttpRequest::Method::DELETE, { "session", ":session_id" }, &Client::handle_delete_session },
     { HTTP::HttpRequest::Method::GET, { "status" }, &Client::handle_get_status },
+    { HTTP::HttpRequest::Method::GET, { "session", ":session_id", "timeouts" }, &Client::handle_get_timeouts },
     { HTTP::HttpRequest::Method::POST, { "session", ":session_id", "url" }, &Client::handle_navigate_to },
     { HTTP::HttpRequest::Method::GET, { "session", ":session_id", "url" }, &Client::handle_get_current_url },
     { HTTP::HttpRequest::Method::POST, { "session", ":session_id", "back" }, &Client::handle_back },
@@ -424,6 +426,18 @@ ErrorOr<JsonValue, HttpError> Client::handle_get_status(Vector<StringView> const
 
     // 2. Return success with data body.
     return body;
+}
+
+// 9.1 Get Timeouts, https://w3c.github.io/webdriver/#dfn-get-timeouts
+// GET /session/{session id}/timeouts
+ErrorOr<JsonValue, HttpError> Client::handle_get_timeouts(Vector<AK::StringView> const& parameters, AK::JsonValue const&)
+{
+    dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session id>/timeouts");
+    auto* session = TRY(find_session_with_id(parameters[0]));
+
+    // NOTE: Spec steps handled in Session::get_timeouts().
+    auto result = session->get_timeouts();
+    return make_json_value(result);
 }
 
 // 10.1 Navigate To, https://w3c.github.io/webdriver/#dfn-navigate-to

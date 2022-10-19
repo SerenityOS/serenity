@@ -73,6 +73,16 @@ ErrorOr<void> Session::stop()
     return {};
 }
 
+// 9.1 Get Timeouts, https://w3c.github.io/webdriver/#dfn-get-timeouts
+JsonObject Session::get_timeouts()
+{
+    // 1. Let timeouts be the timeouts object for session’s timeouts configuration
+    auto timeouts = timeouts_object(m_timeouts_configuration);
+
+    // 2. Return success with data timeouts.
+    return timeouts;
+}
+
 // 10.1 Navigate To, https://w3c.github.io/webdriver/#dfn-navigate-to
 ErrorOr<JsonValue, HttpError> Session::navigate_to(JsonValue const& payload)
 {
