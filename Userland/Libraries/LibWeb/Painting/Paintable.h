@@ -117,6 +117,8 @@ public:
 
     auto const& computed_values() const { return m_layout_node.computed_values(); }
 
+    bool visible_for_hit_testing() const { return computed_values().pointer_events() != CSS::PointerEvents::None; }
+
     HTML::BrowsingContext const& browsing_context() const { return m_layout_node.browsing_context(); }
     HTML::BrowsingContext& browsing_context() { return layout_node().browsing_context(); }
 

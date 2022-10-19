@@ -379,10 +379,6 @@ Optional<HitTestResult> StackingContext::hit_test(Gfx::FloatPoint const& positio
             return {};
     }
 
-    if (paintable().computed_values().pointer_events() == CSS::PointerEvents::None) {
-        return {};
-    }
-
     // NOTE: Hit testing basically happens in reverse painting order.
     // https://www.w3.org/TR/CSS22/visuren.html#z-index
 
@@ -393,7 +389,7 @@ Optional<HitTestResult> StackingContext::hit_test(Gfx::FloatPoint const& positio
         if (child.m_box.computed_values().z_index().value_or(0) < 0)
             break;
         auto result = child.hit_test(transformed_position, type);
-        if (result.has_value())
+        if (result.has_value() && result->paintable->visible_for_hit_testing())
             return result;
     }
 
@@ -413,13 +409,13 @@ Optional<HitTestResult> StackingContext::hit_test(Gfx::FloatPoint const& positio
         }
         return TraversalDecision::Continue;
     });
-    if (result.has_value())
+    if (result.has_value() && result->paintable->visible_for_hit_testing())
         return result;
 
     // 5. the in-flow, inline-level, non-positioned descendants, including inline tables and inline blocks.
     if (m_box.children_are_inline() && is<Layout::BlockContainer>(m_box)) {
         auto result = paintable().hit_test(transformed_position, type);
-        if (result.has_value())
+        if (result.has_value() && result->paintable->visible_for_hit_testing())
             return result;
     }
 
@@ -438,7 +434,7 @@ Optional<HitTestResult> StackingContext::hit_test(Gfx::FloatPoint const& positio
         }
         return TraversalDecision::Continue;
     });
-    if (result.has_value())
+    if (result.has_value() && result->paintable->visible_for_hit_testing())
         return result;
 
     // 3. the in-flow, non-inline-level, non-positioned descendants.
@@ -457,7 +453,7 @@ Optional<HitTestResult> StackingContext::hit_test(Gfx::FloatPoint const& positio
             }
             return TraversalDecision::Continue;
         });
-        if (result.has_value())
+        if (result.has_value() && result->paintable->visible_for_hit_testing())
             return result;
     }
 
@@ -468,7 +464,7 @@ Optional<HitTestResult> StackingContext::hit_test(Gfx::FloatPoint const& positio
         if (child.m_box.computed_values().z_index().value_or(0) >= 0)
             break;
         auto result = child.hit_test(transformed_position, type);
-        if (result.has_value())
+        if (result.has_value() && result->paintable->visible_for_hit_testing())
             return result;
     }
 
