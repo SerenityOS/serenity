@@ -86,3 +86,10 @@ OS ABI for userspace binaries to 3, or GNU/Linux.
 Add SerenityOS to config.guess
 
 
+## `0011-llvm-Prevent-the-use-of-POSIX-shm-on-SerenityOS.patch`
+
+Prevent the use of POSIX shm on SerenityOS
+
+POSIX shm is not supported by SerenityOS yet, so this causes a
+compilation error.
+
