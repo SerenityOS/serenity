@@ -41,6 +41,7 @@ Vector<Client::Route> Client::s_routes = {
     { HTTP::HttpRequest::Method::POST, { "session", ":session_id", "element", ":element_id", "element" }, &Client::handle_find_element_from_element },
     { HTTP::HttpRequest::Method::POST, { "session", ":session_id", "element", ":element_id", "elements" }, &Client::handle_find_elements_from_element },
     { HTTP::HttpRequest::Method::GET, { "session", ":session_id", "element", ":element_id", "attribute", ":name" }, &Client::handle_get_element_attribute },
+    { HTTP::HttpRequest::Method::GET, { "session", ":session_id", "element", ":element_id", "property", ":name" }, &Client::handle_get_element_property },
     { HTTP::HttpRequest::Method::GET, { "session", ":session_id", "cookie" }, &Client::handle_get_all_cookies },
     { HTTP::HttpRequest::Method::GET, { "session", ":session_id", "cookie", ":name" }, &Client::handle_get_named_cookie },
     { HTTP::HttpRequest::Method::POST, { "session", ":session_id", "cookie" }, &Client::handle_add_cookie },
@@ -587,6 +588,16 @@ ErrorOr<JsonValue, HttpError> Client::handle_get_element_attribute(Vector<String
     dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session_id>/element/<element_id>/attribute/<name>");
     auto* session = TRY(find_session_with_id(parameters[0]));
     auto result = TRY(session->get_element_attribute(payload, parameters[1], parameters[2]));
+    return make_json_value(result);
+}
+
+// 12.4.3 Get Element Property, https://w3c.github.io/webdriver/#dfn-get-element-property
+// GET 	/session/{session id}/element/{element id}/property/{name}
+ErrorOr<JsonValue, HttpError> Client::handle_get_element_property(Vector<StringView> const& parameters, JsonValue const& payload)
+{
+    dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session_id>/element/<element_id>/property/<name>");
+    auto* session = TRY(find_session_with_id(parameters[0]));
+    auto result = TRY(session->get_element_property(payload, parameters[1], parameters[2]));
     return make_json_value(result);
 }
 

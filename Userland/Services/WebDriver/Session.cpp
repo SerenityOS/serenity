@@ -663,6 +663,36 @@ ErrorOr<JsonValue, HttpError> Session::get_element_attribute(JsonValue const&, S
     return JsonValue(result.release_value());
 }
 
+// 12.4.3 Get Element Property, https://w3c.github.io/webdriver/#dfn-get-element-property
+ErrorOr<JsonValue, HttpError> Session::get_element_property(JsonValue const&, StringView parameter_element_id, StringView name)
+{
+    // 1. If the current browsing context is no longer open, return error with error code no such window.
+    auto current_window = get_window_object();
+    if (!current_window.has_value())
+        return HttpError { 404, "no such window", "Window not found" };
+
+    // FIXME: 2. Handle any user prompts and return its value if it is an error.
+
+    // FIXME: 3. Let element be the result of trying to get a known connected element with url variable element id.
+    // NOTE: The whole concept of "connected elements" is not implemented yet. See get_or_create_a_web_element_reference()
+    //       For now the element is only represented by its ID
+    auto maybe_element_id = parameter_element_id.to_int();
+    if (!maybe_element_id.has_value())
+        return HttpError { 400, "invalid argument", "Element ID is not an i32" };
+
+    auto element_id = maybe_element_id.release_value();
+
+    // 4. Let property be the result of calling the Object.[[GetProperty]](name) on element.
+    auto property = m_browser_connection->get_element_property(element_id, name);
+
+    // 5. Let result be the value of property if not undefined, or null.
+    if (!property.has_value())
+        return JsonValue();
+
+    // 6. Return success with data result.
+    return JsonValue(property.release_value());
+}
+
 // https://w3c.github.io/webdriver/#dfn-serialized-cookie
 static JsonObject serialize_cookie(Web::Cookie::Cookie const& cookie)
 {
