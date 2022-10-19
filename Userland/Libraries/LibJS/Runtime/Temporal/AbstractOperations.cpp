@@ -1666,41 +1666,30 @@ ThrowCompletionOr<TemporalTime> parse_temporal_time_string(VM& vm, String const&
     return TemporalTime { .hour = result.hour, .minute = result.minute, .second = result.second, .millisecond = result.millisecond, .microsecond = result.microsecond, .nanosecond = result.nanosecond, .calendar = move(result.calendar) };
 }
 
-// 13.38 ParseTemporalTimeZoneString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporaltimezonestring
-ThrowCompletionOr<TemporalTimeZone> parse_temporal_time_zone_string(VM& vm, String const& iso_string)
+// 13.38 ParseTemporalTimeZoneString ( timeZoneString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporaltimezonestring
+ThrowCompletionOr<TemporalTimeZone> parse_temporal_time_zone_string(VM& vm, String const& time_zone_string)
 {
-    // 1. Let parseResult be ParseText(StringToCodePoints(isoString), TemporalTimeZoneString).
-    auto parse_result = parse_iso8601(Production::TemporalTimeZoneString, iso_string);
+    // 1. Let parseResult be ParseText(StringToCodePoints(timeZoneString), TimeZoneIdentifier).
+    auto parse_result = parse_iso8601(Production::TimeZoneIdentifier, time_zone_string);
 
-    // 2. If parseResult is a List of errors, throw a RangeError exception.
-    if (!parse_result.has_value())
-        return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidTimeZoneString, iso_string);
-
-    // 3. Let each of z, offsetString, and name be the source text matched by the respective UTCDesignator, TimeZoneNumericUTCOffset, and TimeZoneIdentifier Parse Nodes contained within parseResult, or an empty sequence of code points if not present.
-    auto z = parse_result->utc_designator;
-    auto offset_string = parse_result->time_zone_numeric_utc_offset;
-    auto name = parse_result->time_zone_identifier;
-
-    // 4. If name is empty, then
-    //     a. Set name to undefined.
-    //  5. Else,
-    //     a. Set name to CodePointsToString(name).
-    //  NOTE: No-op.
-
-    // 6. If z is not empty, then
-    if (z.has_value()) {
-        // a. Return the Record { [[Z]]: true, [[OffsetString]]: undefined, [[Name]]: name }.
-        return TemporalTimeZone { .z = true, .offset_string = {}, .name = Optional<String>(move(name)) };
+    // 2. If parseResult is a Parse Node, then
+    if (parse_result.has_value()) {
+        // a. Return the Record { [[Z]]: false, [[OffsetString]]: undefined, [[Name]]: timeZoneString }.
+        return TemporalTimeZone { .z = false, .offset_string = {}, .name = time_zone_string };
     }
 
-    // 7. If offsetString is empty, then
-    //    a. Set offsetString to undefined.
-    // 8. Else,
-    //    a. Set offsetString to CodePointsToString(offsetString).
-    // NOTE: No-op.
+    // 3. Let result be ? ParseISODateTime(timeZoneString).
+    auto result = TRY(parse_iso_date_time(vm, time_zone_string));
 
-    // 9. Return the Record { [[Z]]: false, [[OffsetString]]: offsetString, [[Name]]: name }.
-    return TemporalTimeZone { .z = false, .offset_string = Optional<String>(move(offset_string)), .name = Optional<String>(move(name)) };
+    // 4. Let timeZoneResult be result.[[TimeZone]].
+    auto const& time_zone_result = result.time_zone;
+
+    // 5. If timeZoneResult.[[Z]] is false, timeZoneResult.[[OffsetString]] is undefined, and timeZoneResult.[[Name]] is undefined, throw a RangeError exception.
+    if (!time_zone_result.z && !time_zone_result.offset_string.has_value() && !time_zone_result.name.has_value())
+        return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidTimeZoneString, time_zone_string);
+
+    // 6. Return timeZoneResult.
+    return time_zone_result;
 }
 
 // 13.39 ParseTemporalYearMonthString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporalyearmonthstring

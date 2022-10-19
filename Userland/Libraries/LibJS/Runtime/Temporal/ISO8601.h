@@ -50,9 +50,9 @@ enum class Production {
     TemporalDurationString,
     TemporalMonthDayString,
     TemporalTimeString,
-    TemporalTimeZoneString,
     TemporalYearMonthString,
     TemporalZonedDateTimeString,
+    TimeZoneIdentifier,
     TimeZoneNumericUTCOffset,
     CalendarName,
     DateMonth,
@@ -165,7 +165,6 @@ public:
     [[nodiscard]] bool parse_temporal_duration_string();
     [[nodiscard]] bool parse_temporal_month_day_string();
     [[nodiscard]] bool parse_temporal_time_string();
-    [[nodiscard]] bool parse_temporal_time_zone_string();
     [[nodiscard]] bool parse_temporal_year_month_string();
     [[nodiscard]] bool parse_temporal_zoned_date_time_string();
 
