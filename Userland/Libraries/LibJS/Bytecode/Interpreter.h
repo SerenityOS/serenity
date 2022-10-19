@@ -66,8 +66,10 @@ public:
     Executable const& current_executable() { return *m_current_executable; }
 
     enum class OptimizationLevel {
-        Default,
+        None,
+        Optimize,
         __Count,
+        Default = None,
     };
     static Bytecode::PassManager& optimization_pipeline(OptimizationLevel = OptimizationLevel::Default);
 

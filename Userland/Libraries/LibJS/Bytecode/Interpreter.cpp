@@ -217,7 +217,9 @@ Bytecode::PassManager& Interpreter::optimization_pipeline(Interpreter::Optimizat
         return *entry;
 
     auto pm = make<PassManager>();
-    if (level == OptimizationLevel::Default) {
+    if (level == OptimizationLevel::None) {
+        // No optimization.
+    } else if (level == OptimizationLevel::Optimize) {
         pm->add<Passes::GenerateCFG>();
         pm->add<Passes::UnifySameBlocks>();
         pm->add<Passes::GenerateCFG>();
