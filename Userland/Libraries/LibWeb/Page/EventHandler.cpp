@@ -569,14 +569,14 @@ bool EventHandler::handle_doubleclick(Gfx::IntPoint position, unsigned button, u
 
     if (button == GUI::MouseButton::Primary) {
         if (auto result = paint_root()->hit_test(position.to_type<float>(), Painting::HitTestType::TextCursor); result.has_value()) {
-            auto paintable = result->paintable;
-            if (!paintable->dom_node())
+            auto hit_paintable = result->paintable;
+            if (!hit_paintable->dom_node())
                 return true;
 
-            auto const& layout_node = paintable->layout_node();
-            if (!layout_node.is_text_node())
+            auto const& hit_layout_node = hit_paintable->layout_node();
+            if (!hit_layout_node.is_text_node())
                 return true;
-            auto const& text_for_rendering = verify_cast<Layout::TextNode>(layout_node).text_for_rendering();
+            auto const& text_for_rendering = verify_cast<Layout::TextNode>(hit_layout_node).text_for_rendering();
 
             int first_word_break_before = [&] {
                 // Start from one before the index position to prevent selecting only spaces between words, caused by the addition below.
