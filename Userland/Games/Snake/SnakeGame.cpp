@@ -18,10 +18,17 @@
 SnakeGame::SnakeGame()
 {
     set_font(Gfx::FontDatabase::default_fixed_width_font().bold_variant());
-    m_fruit_bitmaps.append(*Gfx::Bitmap::try_load_from_file("/res/icons/snake/paprika.png"sv).release_value_but_fixme_should_propagate_errors());
-    m_fruit_bitmaps.append(*Gfx::Bitmap::try_load_from_file("/res/icons/snake/eggplant.png"sv).release_value_but_fixme_should_propagate_errors());
-    m_fruit_bitmaps.append(*Gfx::Bitmap::try_load_from_file("/res/icons/snake/cauliflower.png"sv).release_value_but_fixme_should_propagate_errors());
-    m_fruit_bitmaps.append(*Gfx::Bitmap::try_load_from_file("/res/icons/snake/tomato.png"sv).release_value_but_fixme_should_propagate_errors());
+    m_food_bitmaps.append(*Gfx::Bitmap::try_load_from_file("/res/emoji/U+1F41F.png"sv).release_value_but_fixme_should_propagate_errors());
+    m_food_bitmaps.append(*Gfx::Bitmap::try_load_from_file("/res/emoji/U+1F95A.png"sv).release_value_but_fixme_should_propagate_errors());
+    m_food_bitmaps.append(*Gfx::Bitmap::try_load_from_file("/res/emoji/U+1F99C.png"sv).release_value_but_fixme_should_propagate_errors());
+    m_food_bitmaps.append(*Gfx::Bitmap::try_load_from_file("/res/emoji/U+1F986.png"sv).release_value_but_fixme_should_propagate_errors());
+    m_food_bitmaps.append(*Gfx::Bitmap::try_load_from_file("/res/emoji/U+1FAB2.png"sv).release_value_but_fixme_should_propagate_errors());
+    m_food_bitmaps.append(*Gfx::Bitmap::try_load_from_file("/res/emoji/U+1F426.png"sv).release_value_but_fixme_should_propagate_errors());
+    m_food_bitmaps.append(*Gfx::Bitmap::try_load_from_file("/res/emoji/U+1F424.png"sv).release_value_but_fixme_should_propagate_errors());
+    m_food_bitmaps.append(*Gfx::Bitmap::try_load_from_file("/res/emoji/U+1F40D.png"sv).release_value_but_fixme_should_propagate_errors());
+    m_food_bitmaps.append(*Gfx::Bitmap::try_load_from_file("/res/emoji/U+1F989.png"sv).release_value_but_fixme_should_propagate_errors());
+    m_food_bitmaps.append(*Gfx::Bitmap::try_load_from_file("/res/emoji/U+1F54A.png"sv).release_value_but_fixme_should_propagate_errors());
+    m_food_bitmaps.append(*Gfx::Bitmap::try_load_from_file("/res/emoji/U+1F408.png"sv).release_value_but_fixme_should_propagate_errors());
     reset();
 
     m_high_score = Config::read_i32("Snake"sv, "Snake"sv, "HighScore"sv, 0);
@@ -66,7 +73,7 @@ void SnakeGame::spawn_fruit()
             break;
     }
     m_fruit = coord;
-    m_fruit_type = get_random_uniform(m_fruit_bitmaps.size());
+    m_fruit_type = get_random_uniform(m_food_bitmaps.size());
 }
 
 Gfx::IntRect SnakeGame::score_rect() const
@@ -209,7 +216,7 @@ void SnakeGame::paint_event(GUI::PaintEvent& event)
         painter.fill_rect(bottom_side, Color::from_rgb(0x888800));
     }
 
-    painter.draw_scaled_bitmap(cell_rect(m_fruit), m_fruit_bitmaps[m_fruit_type], m_fruit_bitmaps[m_fruit_type].rect());
+    painter.draw_scaled_bitmap(cell_rect(m_fruit), m_food_bitmaps[m_fruit_type], m_food_bitmaps[m_fruit_type].rect());
 
     painter.draw_text(high_score_rect(), m_high_score_text, Gfx::TextAlignment::TopLeft, Color::from_rgb(0xfafae0));
     painter.draw_text(score_rect(), m_score_text, Gfx::TextAlignment::TopLeft, Color::White);
