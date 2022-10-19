@@ -533,13 +533,9 @@ ErrorOr<JsonValue, HttpError> Client::handle_get_window_handle(Vector<StringView
     dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session_id>/window");
     auto* session = TRY(find_session_with_id(parameters[0]));
 
-    // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
-    auto current_window = session->get_window_object();
-    if (!current_window.has_value())
-        return HttpError { 404, "no such window", "Window not found" };
-
-    // 2. Return success with data being the window handle associated with the current top-level browsing context.
-    return make_json_value(session->current_window_handle());
+    // NOTE: Spec steps handled in Session::get_title().
+    auto result = TRY(session->get_window_handle());
+    return make_json_value(result);
 }
 
 // 11.2 Close Window, https://w3c.github.io/webdriver/#dfn-close-window

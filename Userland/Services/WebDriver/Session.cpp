@@ -235,6 +235,18 @@ ErrorOr<JsonValue, HttpError> Session::get_title()
     return JsonValue(m_browser_connection->get_title());
 }
 
+// 11.1 Get Window Handle, https://w3c.github.io/webdriver/#get-window-handle
+ErrorOr<JsonValue, HttpError> Session::get_window_handle()
+{
+    // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
+    auto current_window = get_window_object();
+    if (!current_window.has_value())
+        return HttpError { 404, "no such window", "Window not found" };
+
+    // 2. Return success with data being the window handle associated with the current top-level browsing context.
+    return m_current_window_handle;
+}
+
 // 11.2 Close Window, https://w3c.github.io/webdriver/#dfn-close-window
 ErrorOr<void, Variant<HttpError, Error>> Session::close_window()
 {

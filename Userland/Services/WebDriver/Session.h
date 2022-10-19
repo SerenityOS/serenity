@@ -47,6 +47,7 @@ public:
     ErrorOr<JsonValue, HttpError> forward();
     ErrorOr<JsonValue, HttpError> refresh();
     ErrorOr<JsonValue, HttpError> get_title();
+    ErrorOr<JsonValue, HttpError> get_window_handle();
     ErrorOr<JsonValue, HttpError> find_element(JsonValue const& payload);
     ErrorOr<JsonValue, HttpError> find_elements(JsonValue const& payload);
     ErrorOr<JsonValue, HttpError> find_element_from_element(JsonValue const& payload, StringView parameter_element_id);
