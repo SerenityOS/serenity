@@ -47,12 +47,12 @@ public:
     ErrorOr<JsonValue, HttpError> refresh();
     ErrorOr<JsonValue, HttpError> get_title();
     ErrorOr<JsonValue, HttpError> get_window_handle();
+    ErrorOr<void, Variant<HttpError, Error>> close_window();
     ErrorOr<JsonValue, HttpError> find_element(JsonValue const& payload);
     ErrorOr<JsonValue, HttpError> find_elements(JsonValue const& payload);
     ErrorOr<JsonValue, HttpError> find_element_from_element(JsonValue const& payload, StringView parameter_element_id);
     ErrorOr<JsonValue, HttpError> find_elements_from_element(JsonValue const& payload, StringView parameter_element_id);
     ErrorOr<JsonValue, HttpError> get_element_attribute(JsonValue const& payload, StringView element_id, StringView name);
-    ErrorOr<void, Variant<HttpError, Error>> close_window();
     ErrorOr<JsonValue, HttpError> get_all_cookies();
     ErrorOr<JsonValue, HttpError> get_named_cookie(String const& name);
     ErrorOr<JsonValue, HttpError> add_cookie(JsonValue const& payload);
