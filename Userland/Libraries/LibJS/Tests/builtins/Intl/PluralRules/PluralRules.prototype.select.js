@@ -41,17 +41,22 @@ describe("correct behavior", () => {
         expect(en.select(3)).toBe("other");
 
         // In "he":
-        // "many" is specified to be integers larger than 10 which are multiples of 10.
+        // "one" is specified to be the integer 1, and non-integers whose integer part is 0.
+        // "two" is specified to be the integer 2.
         const he = new Intl.PluralRules("he", { type: "cardinal" });
         expect(he.select(0)).toBe("other");
         expect(he.select(1)).toBe("one");
-        expect(en.select(2)).toBe("other");
+        expect(he.select(0.1)).toBe("one");
+        expect(he.select(0.2)).toBe("one");
+        expect(he.select(0.8)).toBe("one");
+        expect(he.select(0.9)).toBe("one");
+        expect(he.select(2)).toBe("two");
         expect(he.select(10)).toBe("other");
         expect(he.select(19)).toBe("other");
-        expect(he.select(20)).toBe("many");
+        expect(he.select(20)).toBe("other");
         expect(he.select(21)).toBe("other");
         expect(he.select(29)).toBe("other");
-        expect(he.select(30)).toBe("many");
+        expect(he.select(30)).toBe("other");
         expect(he.select(31)).toBe("other");
 
         // In "pl":

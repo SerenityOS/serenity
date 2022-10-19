@@ -43,8 +43,8 @@ constexpr auto s_currency_list_index_type = "u16"sv;
 using CalendarListIndexType = u8;
 constexpr auto s_calendar_list_index_type = "u8"sv;
 
-using DateFieldListIndexType = u8;
-constexpr auto s_date_field_list_index_type = "u8"sv;
+using DateFieldListIndexType = u16;
+constexpr auto s_date_field_list_index_type = "u16"sv;
 
 using KeywordListIndexType = u8;
 constexpr auto s_keyword_list_index_type = "u8"sv;

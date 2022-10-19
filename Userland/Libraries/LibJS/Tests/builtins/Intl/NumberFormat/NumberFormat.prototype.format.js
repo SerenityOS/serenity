@@ -1153,9 +1153,9 @@ describe("style=currency", () => {
             currency: "USD",
             currencyDisplay: "code",
         });
-        expect(ar1.format(1)).toBe("\u0661\u066b\u0660\u0660\u00a0USD");
-        expect(ar1.format(1.2)).toBe("\u0661\u066b\u0662\u0660\u00a0USD");
-        expect(ar1.format(1.23)).toBe("\u0661\u066b\u0662\u0663\u00a0USD");
+        expect(ar1.format(1)).toBe("\u200f\u0661\u066b\u0660\u0660\u00a0USD");
+        expect(ar1.format(1.2)).toBe("\u200f\u0661\u066b\u0662\u0660\u00a0USD");
+        expect(ar1.format(1.23)).toBe("\u200f\u0661\u066b\u0662\u0663\u00a0USD");
 
         const ar2 = new Intl.NumberFormat("ar", {
             style: "currency",
@@ -1163,9 +1163,9 @@ describe("style=currency", () => {
             currencyDisplay: "code",
             numberingSystem: "latn",
         });
-        expect(ar2.format(1)).toBe("USD\u00a01.00");
-        expect(ar2.format(1.2)).toBe("USD\u00a01.20");
-        expect(ar2.format(1.23)).toBe("USD\u00a01.23");
+        expect(ar2.format(1)).toBe("\u200f1.00\u00a0USD");
+        expect(ar2.format(1.2)).toBe("\u200f1.20\u00a0USD");
+        expect(ar2.format(1.23)).toBe("\u200f1.23\u00a0USD");
     });
 
     test("currencyDisplay=symbol", () => {
@@ -1192,9 +1192,9 @@ describe("style=currency", () => {
             currency: "USD",
             currencyDisplay: "symbol",
         });
-        expect(ar1.format(1)).toBe("\u0661\u066b\u0660\u0660\u00a0US$");
-        expect(ar1.format(1.2)).toBe("\u0661\u066b\u0662\u0660\u00a0US$");
-        expect(ar1.format(1.23)).toBe("\u0661\u066b\u0662\u0663\u00a0US$");
+        expect(ar1.format(1)).toBe("\u200f\u0661\u066b\u0660\u0660\u00a0US$");
+        expect(ar1.format(1.2)).toBe("\u200f\u0661\u066b\u0662\u0660\u00a0US$");
+        expect(ar1.format(1.23)).toBe("\u200f\u0661\u066b\u0662\u0663\u00a0US$");
 
         const ar2 = new Intl.NumberFormat("ar", {
             style: "currency",
@@ -1202,9 +1202,9 @@ describe("style=currency", () => {
             currencyDisplay: "symbol",
             numberingSystem: "latn",
         });
-        expect(ar2.format(1)).toBe("US$\u00a01.00");
-        expect(ar2.format(1.2)).toBe("US$\u00a01.20");
-        expect(ar2.format(1.23)).toBe("US$\u00a01.23");
+        expect(ar2.format(1)).toBe("\u200f1.00\u00a0US$");
+        expect(ar2.format(1.2)).toBe("\u200f1.20\u00a0US$");
+        expect(ar2.format(1.23)).toBe("\u200f1.23\u00a0US$");
     });
 
     test("currencyDisplay=narrowSymbol", () => {
@@ -1231,9 +1231,9 @@ describe("style=currency", () => {
             currency: "USD",
             currencyDisplay: "narrowSymbol",
         });
-        expect(ar1.format(1)).toBe("\u0661\u066b\u0660\u0660\u00a0US$");
-        expect(ar1.format(1.2)).toBe("\u0661\u066b\u0662\u0660\u00a0US$");
-        expect(ar1.format(1.23)).toBe("\u0661\u066b\u0662\u0663\u00a0US$");
+        expect(ar1.format(1)).toBe("\u200f\u0661\u066b\u0660\u0660\u00a0US$");
+        expect(ar1.format(1.2)).toBe("\u200f\u0661\u066b\u0662\u0660\u00a0US$");
+        expect(ar1.format(1.23)).toBe("\u200f\u0661\u066b\u0662\u0663\u00a0US$");
 
         const ar2 = new Intl.NumberFormat("ar", {
             style: "currency",
@@ -1241,9 +1241,9 @@ describe("style=currency", () => {
             currencyDisplay: "narrowSymbol",
             numberingSystem: "latn",
         });
-        expect(ar2.format(1)).toBe("US$\u00a01.00");
-        expect(ar2.format(1.2)).toBe("US$\u00a01.20");
-        expect(ar2.format(1.23)).toBe("US$\u00a01.23");
+        expect(ar2.format(1)).toBe("\u200f1.00\u00a0US$");
+        expect(ar2.format(1.2)).toBe("\u200f1.20\u00a0US$");
+        expect(ar2.format(1.23)).toBe("\u200f1.23\u00a0US$");
     });
 
     test("currencyDisplay=name", () => {
@@ -1308,8 +1308,8 @@ describe("style=currency", () => {
             currency: "USD",
             signDisplay: "never",
         });
-        expect(ar1.format(1)).toBe("\u0661\u066b\u0660\u0660\u00a0US$");
-        expect(ar1.format(-1)).toBe("\u0661\u066b\u0660\u0660\u00a0US$");
+        expect(ar1.format(1)).toBe("\u200f\u0661\u066b\u0660\u0660\u00a0US$");
+        expect(ar1.format(-1)).toBe("\u200f\u0661\u066b\u0660\u0660\u00a0US$");
 
         const ar2 = new Intl.NumberFormat("ar", {
             style: "currency",
@@ -1317,8 +1317,8 @@ describe("style=currency", () => {
             currencySign: "accounting",
             signDisplay: "never",
         });
-        expect(ar2.format(1)).toBe("\u0661\u066b\u0660\u0660\u00a0US$");
-        expect(ar2.format(-1)).toBe("\u0661\u066b\u0660\u0660\u00a0US$");
+        expect(ar2.format(1)).toBe("\u200f\u0661\u066b\u0660\u0660\u00a0US$");
+        expect(ar2.format(-1)).toBe("\u200f\u0661\u066b\u0660\u0660\u00a0US$");
     });
 
     test("signDisplay=auto", () => {
@@ -1348,10 +1348,10 @@ describe("style=currency", () => {
             currency: "USD",
             signDisplay: "auto",
         });
-        expect(ar1.format(0)).toBe("\u0660\u066b\u0660\u0660\u00a0US$");
-        expect(ar1.format(1)).toBe("\u0661\u066b\u0660\u0660\u00a0US$");
-        expect(ar1.format(-0)).toBe("\u061c-\u0660\u066b\u0660\u0660\u00a0US$");
-        expect(ar1.format(-1)).toBe("\u061c-\u0661\u066b\u0660\u0660\u00a0US$");
+        expect(ar1.format(0)).toBe("\u200f\u0660\u066b\u0660\u0660\u00a0US$");
+        expect(ar1.format(1)).toBe("\u200f\u0661\u066b\u0660\u0660\u00a0US$");
+        expect(ar1.format(-0)).toBe("\u061c-\u200f\u0660\u066b\u0660\u0660\u00a0US$");
+        expect(ar1.format(-1)).toBe("\u061c-\u200f\u0661\u066b\u0660\u0660\u00a0US$");
 
         const ar2 = new Intl.NumberFormat("ar", {
             style: "currency",
@@ -1359,10 +1359,10 @@ describe("style=currency", () => {
             currencySign: "accounting",
             signDisplay: "auto",
         });
-        expect(ar2.format(0)).toBe("\u0660\u066b\u0660\u0660\u00a0US$");
-        expect(ar2.format(1)).toBe("\u0661\u066b\u0660\u0660\u00a0US$");
-        expect(ar2.format(-0)).toBe("\u061c-\u0660\u066b\u0660\u0660\u00a0US$");
-        expect(ar2.format(-1)).toBe("\u061c-\u0661\u066b\u0660\u0660\u00a0US$");
+        expect(ar2.format(0)).toBe("\u200f\u0660\u066b\u0660\u0660\u00a0US$");
+        expect(ar2.format(1)).toBe("\u200f\u0661\u066b\u0660\u0660\u00a0US$");
+        expect(ar2.format(-0)).toBe("\u061c-\u200f\u0660\u066b\u0660\u0660\u00a0US$");
+        expect(ar2.format(-1)).toBe("\u061c-\u200f\u0661\u066b\u0660\u0660\u00a0US$");
     });
 
     test("signDisplay=always", () => {
@@ -1392,10 +1392,10 @@ describe("style=currency", () => {
             currency: "USD",
             signDisplay: "always",
         });
-        expect(ar1.format(0)).toBe("\u061c+\u0660\u066b\u0660\u0660\u00a0US$");
-        expect(ar1.format(1)).toBe("\u061c+\u0661\u066b\u0660\u0660\u00a0US$");
-        expect(ar1.format(-0)).toBe("\u061c-\u0660\u066b\u0660\u0660\u00a0US$");
-        expect(ar1.format(-1)).toBe("\u061c-\u0661\u066b\u0660\u0660\u00a0US$");
+        expect(ar1.format(0)).toBe("\u061c+\u200f\u0660\u066b\u0660\u0660\u00a0US$");
+        expect(ar1.format(1)).toBe("\u061c+\u200f\u0661\u066b\u0660\u0660\u00a0US$");
+        expect(ar1.format(-0)).toBe("\u061c-\u200f\u0660\u066b\u0660\u0660\u00a0US$");
+        expect(ar1.format(-1)).toBe("\u061c-\u200f\u0661\u066b\u0660\u0660\u00a0US$");
 
         const ar2 = new Intl.NumberFormat("ar", {
             style: "currency",
@@ -1403,10 +1403,10 @@ describe("style=currency", () => {
             currencySign: "accounting",
             signDisplay: "always",
         });
-        expect(ar2.format(0)).toBe("\u061c+\u0660\u066b\u0660\u0660\u00a0US$");
-        expect(ar2.format(1)).toBe("\u061c+\u0661\u066b\u0660\u0660\u00a0US$");
-        expect(ar2.format(-0)).toBe("\u061c-\u0660\u066b\u0660\u0660\u00a0US$");
-        expect(ar2.format(-1)).toBe("\u061c-\u0661\u066b\u0660\u0660\u00a0US$");
+        expect(ar2.format(0)).toBe("\u061c+\u200f\u0660\u066b\u0660\u0660\u00a0US$");
+        expect(ar2.format(1)).toBe("\u061c+\u200f\u0661\u066b\u0660\u0660\u00a0US$");
+        expect(ar2.format(-0)).toBe("\u061c-\u200f\u0660\u066b\u0660\u0660\u00a0US$");
+        expect(ar2.format(-1)).toBe("\u061c-\u200f\u0661\u066b\u0660\u0660\u00a0US$");
     });
 
     test("signDisplay=exceptZero", () => {
@@ -1436,10 +1436,10 @@ describe("style=currency", () => {
             currency: "USD",
             signDisplay: "exceptZero",
         });
-        expect(ar1.format(0)).toBe("\u0660\u066b\u0660\u0660\u00a0US$");
-        expect(ar1.format(1)).toBe("\u061c+\u0661\u066b\u0660\u0660\u00a0US$");
-        expect(ar1.format(-0)).toBe("\u0660\u066b\u0660\u0660\u00a0US$");
-        expect(ar1.format(-1)).toBe("\u061c-\u0661\u066b\u0660\u0660\u00a0US$");
+        expect(ar1.format(0)).toBe("\u200f\u0660\u066b\u0660\u0660\u00a0US$");
+        expect(ar1.format(1)).toBe("\u061c+\u200f\u0661\u066b\u0660\u0660\u00a0US$");
+        expect(ar1.format(-0)).toBe("\u200f\u0660\u066b\u0660\u0660\u00a0US$");
+        expect(ar1.format(-1)).toBe("\u061c-\u200f\u0661\u066b\u0660\u0660\u00a0US$");
 
         const ar2 = new Intl.NumberFormat("ar", {
             style: "currency",
@@ -1447,10 +1447,10 @@ describe("style=currency", () => {
             currencySign: "accounting",
             signDisplay: "exceptZero",
         });
-        expect(ar2.format(0)).toBe("\u0660\u066b\u0660\u0660\u00a0US$");
-        expect(ar2.format(1)).toBe("\u061c+\u0661\u066b\u0660\u0660\u00a0US$");
-        expect(ar2.format(-0)).toBe("\u0660\u066b\u0660\u0660\u00a0US$");
-        expect(ar2.format(-1)).toBe("\u061c-\u0661\u066b\u0660\u0660\u00a0US$");
+        expect(ar2.format(0)).toBe("\u200f\u0660\u066b\u0660\u0660\u00a0US$");
+        expect(ar2.format(1)).toBe("\u061c+\u200f\u0661\u066b\u0660\u0660\u00a0US$");
+        expect(ar2.format(-0)).toBe("\u200f\u0660\u066b\u0660\u0660\u00a0US$");
+        expect(ar2.format(-1)).toBe("\u061c-\u200f\u0661\u066b\u0660\u0660\u00a0US$");
     });
 
     test("signDisplay=negative", () => {
@@ -1480,10 +1480,10 @@ describe("style=currency", () => {
             currency: "USD",
             signDisplay: "negative",
         });
-        expect(ar1.format(0)).toBe("\u0660\u066b\u0660\u0660\u00a0US$");
-        expect(ar1.format(1)).toBe("\u0661\u066b\u0660\u0660\u00a0US$");
-        expect(ar1.format(-0)).toBe("\u0660\u066b\u0660\u0660\u00a0US$");
-        expect(ar1.format(-1)).toBe("\u061c-\u0661\u066b\u0660\u0660\u00a0US$");
+        expect(ar1.format(0)).toBe("\u200f\u0660\u066b\u0660\u0660\u00a0US$");
+        expect(ar1.format(1)).toBe("\u200f\u0661\u066b\u0660\u0660\u00a0US$");
+        expect(ar1.format(-0)).toBe("\u200f\u0660\u066b\u0660\u0660\u00a0US$");
+        expect(ar1.format(-1)).toBe("\u061c-\u200f\u0661\u066b\u0660\u0660\u00a0US$");
 
         const ar2 = new Intl.NumberFormat("ar", {
             style: "currency",
@@ -1491,10 +1491,10 @@ describe("style=currency", () => {
             currencySign: "accounting",
             signDisplay: "negative",
         });
-        expect(ar2.format(0)).toBe("\u0660\u066b\u0660\u0660\u00a0US$");
-        expect(ar2.format(1)).toBe("\u0661\u066b\u0660\u0660\u00a0US$");
-        expect(ar2.format(-0)).toBe("\u0660\u066b\u0660\u0660\u00a0US$");
-        expect(ar2.format(-1)).toBe("\u061c-\u0661\u066b\u0660\u0660\u00a0US$");
+        expect(ar2.format(0)).toBe("\u200f\u0660\u066b\u0660\u0660\u00a0US$");
+        expect(ar2.format(1)).toBe("\u200f\u0661\u066b\u0660\u0660\u00a0US$");
+        expect(ar2.format(-0)).toBe("\u200f\u0660\u066b\u0660\u0660\u00a0US$");
+        expect(ar2.format(-1)).toBe("\u061c-\u200f\u0661\u066b\u0660\u0660\u00a0US$");
     });
 });
 
