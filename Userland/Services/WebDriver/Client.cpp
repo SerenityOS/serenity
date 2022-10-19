@@ -33,6 +33,7 @@ Vector<Client::Route> Client::s_routes = {
     { HTTP::HttpRequest::Method::GET, { "session", ":session_id", "window" }, &Client::handle_get_window_handle },
     { HTTP::HttpRequest::Method::DELETE, { "session", ":session_id", "window" }, &Client::handle_close_window },
     { HTTP::HttpRequest::Method::POST, { "session", ":session_id", "element" }, &Client::handle_find_element },
+    { HTTP::HttpRequest::Method::POST, { "session", ":session_id", "elements" }, &Client::handle_find_elements },
     { HTTP::HttpRequest::Method::GET, { "session", ":session_id", "cookie" }, &Client::handle_get_all_cookies },
     { HTTP::HttpRequest::Method::GET, { "session", ":session_id", "cookie", ":name" }, &Client::handle_get_named_cookie },
     { HTTP::HttpRequest::Method::POST, { "session", ":session_id", "cookie" }, &Client::handle_add_cookie },
@@ -533,6 +534,19 @@ ErrorOr<JsonValue, HttpError> Client::handle_find_element(Vector<StringView> con
 
     // NOTE: Spec steps handled in Session::find_element().
     auto result = TRY(session->find_element(payload));
+
+    return make_json_value(result);
+}
+
+// 12.3.3 Find Elements, https://w3c.github.io/webdriver/#dfn-find-elements
+// POST /session/{session id}/elements
+ErrorOr<JsonValue, HttpError> Client::handle_find_elements(Vector<StringView> const& parameters, JsonValue const& payload)
+{
+    dbgln_if(WEBDRIVER_DEBUG, "Handling POST /session/<session_id>/elements");
+    auto* session = TRY(find_session_with_id(parameters[0]));
+
+    // NOTE: Spec steps handled in Session::find_elements().
+    auto result = TRY(session->find_elements(payload));
 
     return make_json_value(result);
 }
