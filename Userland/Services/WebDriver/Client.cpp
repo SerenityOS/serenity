@@ -435,8 +435,6 @@ ErrorOr<JsonValue, HttpError> Client::handle_get_timeouts(Vector<AK::StringView>
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session id>/timeouts");
     auto* session = TRY(find_session_with_id(parameters[0]));
-
-    // NOTE: Spec steps handled in Session::get_timeouts().
     auto result = session->get_timeouts();
     return make_json_value(result);
 }
@@ -447,8 +445,6 @@ ErrorOr<JsonValue, HttpError> Client::handle_set_timeouts(Vector<AK::StringView>
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling POST /session/<session id>/timeouts");
     auto* session = TRY(find_session_with_id(parameters[0]));
-
-    // NOTE: Spec steps handled in Session::set_timeouts().
     auto result = TRY(session->set_timeouts(payload));
     return make_json_value(result);
 }
@@ -459,8 +455,6 @@ ErrorOr<JsonValue, HttpError> Client::handle_navigate_to(Vector<StringView> cons
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling POST /session/<session_id>/url");
     auto* session = TRY(find_session_with_id(parameters[0]));
-
-    // NOTE: Spec steps handled in Session::navigate_to().
     auto result = TRY(session->navigate_to(payload));
     return make_json_value(result);
 }
@@ -471,8 +465,6 @@ ErrorOr<JsonValue, HttpError> Client::handle_get_current_url(Vector<StringView> 
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session_id>/url");
     auto* session = TRY(find_session_with_id(parameters[0]));
-
-    // NOTE: Spec steps handled in Session::get_current_url().
     auto result = TRY(session->get_current_url());
     return make_json_value(result);
 }
@@ -483,8 +475,6 @@ ErrorOr<JsonValue, HttpError> Client::handle_back(Vector<StringView> const& para
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling POST /session/<session_id>/back");
     auto* session = TRY(find_session_with_id(parameters[0]));
-
-    // NOTE: Spec steps handled in Session::back().
     auto result = TRY(session->back());
     return make_json_value(result);
 }
@@ -495,8 +485,6 @@ ErrorOr<JsonValue, HttpError> Client::handle_forward(Vector<StringView> const& p
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling POST /session/<session_id>/forward");
     auto* session = TRY(find_session_with_id(parameters[0]));
-
-    // NOTE: Spec steps handled in Session::forward().
     auto result = TRY(session->forward());
     return make_json_value(result);
 }
@@ -507,8 +495,6 @@ ErrorOr<JsonValue, HttpError> Client::handle_refresh(Vector<StringView> const& p
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling POST /session/<session_id>/refresh");
     auto* session = TRY(find_session_with_id(parameters[0]));
-
-    // NOTE: Spec steps handled in Session::refresh().
     auto result = TRY(session->refresh());
     return make_json_value(result);
 }
@@ -519,10 +505,7 @@ ErrorOr<JsonValue, HttpError> Client::handle_get_title(Vector<StringView> const&
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session_id>/title");
     auto* session = TRY(find_session_with_id(parameters[0]));
-
-    // NOTE: Spec steps handled in Session::get_title().
     auto result = TRY(session->get_title());
-
     return make_json_value(result);
 }
 
@@ -532,8 +515,6 @@ ErrorOr<JsonValue, HttpError> Client::handle_get_window_handle(Vector<StringView
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session_id>/window");
     auto* session = TRY(find_session_with_id(parameters[0]));
-
-    // NOTE: Spec steps handled in Session::get_title().
     auto result = TRY(session->get_window_handle());
     return make_json_value(result);
 }
@@ -544,10 +525,7 @@ ErrorOr<JsonValue, HttpError> Client::handle_close_window(Vector<StringView> con
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling DELETE /session/<session_id>/window");
     auto* session = TRY(find_session_with_id(parameters[0]));
-
-    // NOTE: Spec steps handled in Session::close_window().
     TRY(unwrap_result(session->close_window()));
-
     return make_json_value(JsonValue());
 }
 
@@ -557,10 +535,7 @@ ErrorOr<JsonValue, HttpError> Client::handle_find_element(Vector<StringView> con
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling POST /session/<session_id>/element");
     auto* session = TRY(find_session_with_id(parameters[0]));
-
-    // NOTE: Spec steps handled in Session::find_element().
     auto result = TRY(session->find_element(payload));
-
     return make_json_value(result);
 }
 
@@ -570,10 +545,7 @@ ErrorOr<JsonValue, HttpError> Client::handle_find_elements(Vector<StringView> co
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling POST /session/<session_id>/elements");
     auto* session = TRY(find_session_with_id(parameters[0]));
-
-    // NOTE: Spec steps handled in Session::find_elements().
     auto result = TRY(session->find_elements(payload));
-
     return make_json_value(result);
 }
 
@@ -583,10 +555,7 @@ ErrorOr<JsonValue, HttpError> Client::handle_find_element_from_element(Vector<St
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling POST /session/<session_id>/element/<element_id>/element");
     auto* session = TRY(find_session_with_id(parameters[0]));
-
-    // NOTE: Spec steps handled in Session::find_element_from_element().
     auto result = TRY(session->find_element_from_element(payload, parameters[1]));
-
     return make_json_value(result);
 }
 
@@ -596,10 +565,7 @@ ErrorOr<JsonValue, HttpError> Client::handle_find_elements_from_element(Vector<S
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling POST /session/<session_id>/element/<element_id>/elements");
     auto* session = TRY(find_session_with_id(parameters[0]));
-
-    // NOTE: Spec steps handled in Session::find_elements_from_element().
     auto result = TRY(session->find_elements_from_element(payload, parameters[1]));
-
     return make_json_value(result);
 }
 
@@ -609,10 +575,7 @@ ErrorOr<JsonValue, HttpError> Client::handle_get_element_attribute(Vector<String
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session_id>/element/<element_id>/attribute/<name>");
     auto* session = TRY(find_session_with_id(parameters[0]));
-
-    // NOTE: Spec steps handled in Session::get_element_attribute().
     auto result = TRY(session->get_element_attribute(payload, parameters[1], parameters[2]));
-
     return make_json_value(result);
 }
 
@@ -622,10 +585,7 @@ ErrorOr<JsonValue, HttpError> Client::handle_get_all_cookies(Vector<StringView> 
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session_id>/cookie");
     auto* session = TRY(find_session_with_id(parameters[0]));
-
-    // NOTE: Spec steps handled in Session::get_all_cookies().
     auto cookies = TRY(session->get_all_cookies());
-
     return make_json_value(cookies);
 }
 
@@ -635,10 +595,7 @@ ErrorOr<JsonValue, HttpError> Client::handle_get_named_cookie(Vector<StringView>
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session_id>/cookie/<name>");
     auto* session = TRY(find_session_with_id(parameters[0]));
-
-    // NOTE: Spec steps handled in Session::get_all_cookies().
     auto cookies = TRY(session->get_named_cookie(parameters[1]));
-
     return make_json_value(cookies);
 }
 
@@ -648,8 +605,6 @@ ErrorOr<JsonValue, HttpError> Client::handle_add_cookie(Vector<StringView> const
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling POST /session/<session_id>/cookie");
     auto* session = TRY(find_session_with_id(parameters[0]));
-
-    // NOTE: Spec steps handled in Session::add_cookie().
     auto result = TRY(session->add_cookie(payload));
     return make_json_value(result);
 }
@@ -660,8 +615,6 @@ ErrorOr<JsonValue, HttpError> Client::handle_delete_cookie(Vector<StringView> co
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling DELETE /session/<session_id>/cookie/<name>");
     auto* session = TRY(find_session_with_id(parameters[0]));
-
-    // NOTE: Spec steps handled in Session::delete_cookie().
     auto result = TRY(session->delete_cookie(parameters[1]));
     return make_json_value(result);
 }
@@ -672,8 +625,6 @@ ErrorOr<JsonValue, HttpError> Client::handle_delete_all_cookies(Vector<StringVie
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling DELETE /session/<session_id>/cookie");
     auto* session = TRY(find_session_with_id(parameters[0]));
-
-    // NOTE: Spec steps handled in Session::delete_all_cookies().
     auto result = TRY(session->delete_all_cookies());
     return make_json_value(result);
 }
