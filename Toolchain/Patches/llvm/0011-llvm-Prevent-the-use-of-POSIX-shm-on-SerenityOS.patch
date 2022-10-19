@@ -1,0 +1,38 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: sin-ack <sin-ack@users.noreply.github.com>
+Date: Sat, 1 Oct 2022 20:05:52 +0000
+Subject: [PATCH] [llvm] Prevent the use of POSIX shm on SerenityOS
+
+POSIX shm is not supported by SerenityOS yet, so this causes a
+compilation error.
+---
+ llvm/lib/ExecutionEngine/Orc/MemoryMapper.cpp                   | 2 +-
+ .../Orc/TargetProcess/ExecutorSharedMemoryMapperService.cpp     | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/llvm/lib/ExecutionEngine/Orc/MemoryMapper.cpp b/llvm/lib/ExecutionEngine/Orc/MemoryMapper.cpp
+index ee92e5191b507b5f3355a0a4bec494e7c3eb654d..94b90691086e9481f2d99d7354d8ed79947ecfb7 100644
+--- a/llvm/lib/ExecutionEngine/Orc/MemoryMapper.cpp
++++ b/llvm/lib/ExecutionEngine/Orc/MemoryMapper.cpp
+@@ -196,7 +196,7 @@ SharedMemoryMapper::Create(ExecutorProcessControl &EPC, SymbolAddrs SAs) {
+ 
+ void SharedMemoryMapper::reserve(size_t NumBytes,
+                                  OnReservedFunction OnReserved) {
+-#if (defined(LLVM_ON_UNIX) && !defined(__ANDROID__)) || defined(_WIN32)
++#if (defined(LLVM_ON_UNIX) && !(defined(__ANDROID__) || defined(__serenity__))) || defined(_WIN32)
+ 
+   EPC.callSPSWrapperAsync<
+       rt::SPSExecutorSharedMemoryMapperServiceReserveSignature>(
+diff --git a/llvm/lib/ExecutionEngine/Orc/TargetProcess/ExecutorSharedMemoryMapperService.cpp b/llvm/lib/ExecutionEngine/Orc/TargetProcess/ExecutorSharedMemoryMapperService.cpp
+index caa191cea899de4d0729028a62f8e49df1ba8580..a0bb8bbc68b5050aaa725555595c5616524f02e0 100644
+--- a/llvm/lib/ExecutionEngine/Orc/TargetProcess/ExecutorSharedMemoryMapperService.cpp
++++ b/llvm/lib/ExecutionEngine/Orc/TargetProcess/ExecutorSharedMemoryMapperService.cpp
+@@ -52,7 +52,7 @@ namespace rt_bootstrap {
+ 
+ Expected<std::pair<ExecutorAddr, std::string>>
+ ExecutorSharedMemoryMapperService::reserve(uint64_t Size) {
+-#if (defined(LLVM_ON_UNIX) && !defined(__ANDROID__)) || defined(_WIN32)
++#if (defined(LLVM_ON_UNIX) && !(defined(__ANDROID__) || defined(__serenity__))) || defined(_WIN32)
+ 
+ #if defined(LLVM_ON_UNIX)
+ 
