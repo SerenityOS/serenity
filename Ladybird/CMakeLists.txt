@@ -29,6 +29,21 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 include(cmake/EnableLLD.cmake)
 
+if (ENABLE_ADDRESS_SANITIZER)
+    add_compile_options(-fsanitize=address -fno-omit-frame-pointer)
+    add_link_options(-fsanitize=address)
+endif()
+
+if (ENABLE_MEMORY_SANITIZER)
+    add_compile_options(-fsanitize=memory -fsanitize-memory-track-origins -fno-omit-frame-pointer)
+    add_link_options(-fsanitize=memory -fsanitize-memory-track-origins)
+endif()
+
+if (ENABLE_UNDEFINED_SANITIZER)
+    add_compile_options(-fsanitize=undefined -fno-omit-frame-pointer)
+    add_link_options(-fsanitize=undefined)
+endif()
+
 # Lagom
 include(FetchContent)
 include(cmake/FetchLagom.cmake)
