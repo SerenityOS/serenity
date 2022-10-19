@@ -36,6 +36,7 @@ Vector<Client::Route> Client::s_routes = {
     { HTTP::HttpRequest::Method::POST, { "session", ":session_id", "elements" }, &Client::handle_find_elements },
     { HTTP::HttpRequest::Method::POST, { "session", ":session_id", "element", ":element_id", "element" }, &Client::handle_find_element_from_element },
     { HTTP::HttpRequest::Method::POST, { "session", ":session_id", "element", ":element_id", "elements" }, &Client::handle_find_elements_from_element },
+    { HTTP::HttpRequest::Method::GET, { "session", ":session_id", "element", ":element_id", "attribute", ":name" }, &Client::handle_get_element_attribute },
     { HTTP::HttpRequest::Method::GET, { "session", ":session_id", "cookie" }, &Client::handle_get_all_cookies },
     { HTTP::HttpRequest::Method::GET, { "session", ":session_id", "cookie", ":name" }, &Client::handle_get_named_cookie },
     { HTTP::HttpRequest::Method::POST, { "session", ":session_id", "cookie" }, &Client::handle_add_cookie },
@@ -575,6 +576,19 @@ ErrorOr<JsonValue, HttpError> Client::handle_find_elements_from_element(Vector<S
 
     // NOTE: Spec steps handled in Session::find_elements_from_element().
     auto result = TRY(session->find_elements_from_element(payload, parameters[1]));
+
+    return make_json_value(result);
+}
+
+// 12.4.2 Get Element Attribute, https://w3c.github.io/webdriver/#dfn-get-element-attribute
+// GET /session/{session id}/element/{element id}/attribute/{name}
+ErrorOr<JsonValue, HttpError> Client::handle_get_element_attribute(Vector<StringView> const& parameters, JsonValue const& payload)
+{
+    dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session_id>/element/<element_id>/attribute/<name>");
+    auto* session = TRY(find_session_with_id(parameters[0]));
+
+    // NOTE: Spec steps handled in Session::get_element_attribute().
+    auto result = TRY(session->get_element_attribute(payload, parameters[1], parameters[2]));
 
     return make_json_value(result);
 }
