@@ -35,6 +35,7 @@ Vector<Client::Route> Client::s_routes = {
     { HTTP::HttpRequest::Method::GET, { "session", ":session_id", "title" }, &Client::handle_get_title },
     { HTTP::HttpRequest::Method::GET, { "session", ":session_id", "window" }, &Client::handle_get_window_handle },
     { HTTP::HttpRequest::Method::DELETE, { "session", ":session_id", "window" }, &Client::handle_close_window },
+    { HTTP::HttpRequest::Method::GET, { "session", ":session_id", "window", "handles" }, &Client::handle_get_window_handles },
     { HTTP::HttpRequest::Method::POST, { "session", ":session_id", "element" }, &Client::handle_find_element },
     { HTTP::HttpRequest::Method::POST, { "session", ":session_id", "elements" }, &Client::handle_find_elements },
     { HTTP::HttpRequest::Method::POST, { "session", ":session_id", "element", ":element_id", "element" }, &Client::handle_find_element_from_element },
@@ -431,7 +432,7 @@ ErrorOr<JsonValue, HttpError> Client::handle_get_status(Vector<StringView> const
 
 // 9.1 Get Timeouts, https://w3c.github.io/webdriver/#dfn-get-timeouts
 // GET /session/{session id}/timeouts
-ErrorOr<JsonValue, HttpError> Client::handle_get_timeouts(Vector<AK::StringView> const& parameters, AK::JsonValue const&)
+ErrorOr<JsonValue, HttpError> Client::handle_get_timeouts(Vector<StringView> const& parameters, JsonValue const&)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session id>/timeouts");
     auto* session = TRY(find_session_with_id(parameters[0]));
@@ -441,7 +442,7 @@ ErrorOr<JsonValue, HttpError> Client::handle_get_timeouts(Vector<AK::StringView>
 
 // 9.2 Set Timeouts, https://w3c.github.io/webdriver/#dfn-set-timeouts
 // POST /session/{session id}/timeouts
-ErrorOr<JsonValue, HttpError> Client::handle_set_timeouts(Vector<AK::StringView> const& parameters, AK::JsonValue const& payload)
+ErrorOr<JsonValue, HttpError> Client::handle_set_timeouts(Vector<StringView> const& parameters, JsonValue const& payload)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling POST /session/<session id>/timeouts");
     auto* session = TRY(find_session_with_id(parameters[0]));
@@ -527,6 +528,16 @@ ErrorOr<JsonValue, HttpError> Client::handle_close_window(Vector<StringView> con
     auto* session = TRY(find_session_with_id(parameters[0]));
     TRY(unwrap_result(session->close_window()));
     return make_json_value(JsonValue());
+}
+
+// 11.4 Get Window Handles, https://w3c.github.io/webdriver/#dfn-get-window-handles
+// GET /session/{session id}/window/handles
+ErrorOr<JsonValue, HttpError> Client::handle_get_window_handles(Vector<StringView> const& parameters, JsonValue const&)
+{
+    dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session_id>/window/handles");
+    auto* session = TRY(find_session_with_id(parameters[0]));
+    auto result = TRY(session->get_window_handles());
+    return make_json_value(result);
 }
 
 // 12.3.2 Find Element, https://w3c.github.io/webdriver/#dfn-find-element
