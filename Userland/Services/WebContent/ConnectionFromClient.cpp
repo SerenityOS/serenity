@@ -444,7 +444,7 @@ Messages::WebContentServer::GetDocumentElementResponse ConnectionFromClient::get
 {
     auto* document = page().top_level_browsing_context().active_document();
     if (!document)
-        return { {} };
+        return Optional<i32> {};
     return { document->id() };
 }
 
@@ -452,16 +452,16 @@ Messages::WebContentServer::QuerySelectorAllResponse ConnectionFromClient::query
 {
     auto* start_node = Web::DOM::Node::from_id(start_node_id);
     if (!start_node)
-        return { {} };
+        return Optional<Vector<i32>> {};
 
     if (!start_node->is_element() && !start_node->is_document())
-        return { {} };
+        return Optional<Vector<i32>> {};
 
     auto& start_element = verify_cast<Web::DOM::ParentNode>(*start_node);
 
     auto result = start_element.query_selector_all(selector);
     if (result.is_error())
-        return { {} };
+        return Optional<Vector<i32>> {};
 
     auto element_list = result.release_value();
     Vector<i32> return_list;
