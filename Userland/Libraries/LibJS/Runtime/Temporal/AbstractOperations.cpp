@@ -679,38 +679,38 @@ ThrowCompletionOr<Value> to_relative_temporal_object(VM& vm, Object const& optio
         }
     }
 
-    // 8. If timeZone is not undefined, then
-    if (!time_zone.is_undefined()) {
-        double offset_ns;
-
-        // a. If offsetBehaviour is option, then
-        if (offset_behavior == OffsetBehavior::Option) {
-            // i. Set offsetString to ? ToString(offsetString).
-            // NOTE: offsetString is not used after this path, so we don't need to put this into the original offset_string which is of type JS::Value.
-            auto actual_offset_string = TRY(offset_string.to_string(vm));
-
-            // b. If IsTimeZoneOffsetString(offsetString) is false, throw a RangeError exception.
-            if (!is_time_zone_offset_string(actual_offset_string))
-                return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidTimeZoneName, actual_offset_string);
-
-            // c. Let offsetNs be ParseTimeZoneOffsetString(offsetString).
-            offset_ns = parse_time_zone_offset_string(actual_offset_string);
-        }
-        // b. Else,
-        else {
-            // i. Let offsetNs be 0.
-            offset_ns = 0;
-        }
-
-        // c. Let epochNanoseconds be ? InterpretISODateTimeOffset(result.[[Year]], result.[[Month]], result.[[Day]], result.[[Hour]], result.[[Minute]], result.[[Second]], result.[[Millisecond]], result.[[Microsecond]], result.[[Nanosecond]], offsetBehaviour, offsetNs, timeZone, "compatible", "reject", matchBehaviour).
-        auto* epoch_nanoseconds = TRY(interpret_iso_date_time_offset(vm, result.year, result.month, result.day, result.hour, result.minute, result.second, result.millisecond, result.microsecond, result.nanosecond, offset_behavior, offset_ns, time_zone, "compatible"sv, "reject"sv, match_behavior));
-
-        // d. Return ! CreateTemporalZonedDateTime(epochNanoseconds, timeZone, calendar).
-        return MUST(create_temporal_zoned_date_time(vm, *epoch_nanoseconds, time_zone.as_object(), *calendar));
+    // 8. If timeZone is undefined, then
+    if (time_zone.is_undefined()) {
+        // a. Return ? CreateTemporalDate(result.[[Year]], result.[[Month]], result.[[Day]], calendar).
+        return TRY(create_temporal_date(vm, result.year, result.month, result.day, *calendar));
     }
 
-    // 9. Return ? CreateTemporalDate(result.[[Year]], result.[[Month]], result.[[Day]], calendar).
-    return TRY(create_temporal_date(vm, result.year, result.month, result.day, *calendar));
+    double offset_ns;
+
+    // 9. If offsetBehaviour is option, then
+    if (offset_behavior == OffsetBehavior::Option) {
+        // a. Set offsetString to ? ToString(offsetString).
+        // NOTE: offsetString is not used after this path, so we don't need to put this into the original offset_string which is of type JS::Value.
+        auto actual_offset_string = TRY(offset_string.to_string(vm));
+
+        // b. If IsTimeZoneOffsetString(offsetString) is false, throw a RangeError exception.
+        if (!is_time_zone_offset_string(actual_offset_string))
+            return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidTimeZoneName, actual_offset_string);
+
+        // c. Let offsetNs be ParseTimeZoneOffsetString(offsetString).
+        offset_ns = parse_time_zone_offset_string(actual_offset_string);
+    }
+    // 10. Else,
+    else {
+        // a. Let offsetNs be 0.
+        offset_ns = 0;
+    }
+
+    // 11. Let epochNanoseconds be ? InterpretISODateTimeOffset(result.[[Year]], result.[[Month]], result.[[Day]], result.[[Hour]], result.[[Minute]], result.[[Second]], result.[[Millisecond]], result.[[Microsecond]], result.[[Nanosecond]], offsetBehaviour, offsetNs, timeZone, "compatible", "reject", matchBehaviour).
+    auto const* epoch_nanoseconds = TRY(interpret_iso_date_time_offset(vm, result.year, result.month, result.day, result.hour, result.minute, result.second, result.millisecond, result.microsecond, result.nanosecond, offset_behavior, offset_ns, time_zone, "compatible"sv, "reject"sv, match_behavior));
+
+    // 12. Return ! CreateTemporalZonedDateTime(epochNanoseconds, timeZone, calendar).
+    return MUST(create_temporal_zoned_date_time(vm, *epoch_nanoseconds, time_zone.as_object(), *calendar));
 }
 
 // 13.17 LargerOfTwoTemporalUnits ( u1, u2 ), https://tc39.es/proposal-temporal/#sec-temporal-largeroftwotemporalunits
