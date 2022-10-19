@@ -265,7 +265,7 @@ static ThrowCompletionOr<Value> regexp_builtin_exec(VM& vm, RegExpObject& regexp
 
     // 24. Let indices be a new empty List.
     Vector<Optional<Match>> indices;
-    Vector<String> captured_values;
+    Vector<Utf16String> captured_values;
 
     // 25. Let groupNames be a new empty List.
     HashMap<FlyString, Match> group_names;
@@ -300,7 +300,7 @@ static ThrowCompletionOr<Value> regexp_builtin_exec(VM& vm, RegExpObject& regexp
             // ii. Append undefined to indices.
             indices.append({});
             // iii. Append capture to indices.
-            captured_values.append(String::empty());
+            captured_values.append(Utf16String(""sv));
         }
         // c. Else,
         else {
@@ -311,11 +311,12 @@ static ThrowCompletionOr<Value> regexp_builtin_exec(VM& vm, RegExpObject& regexp
             //     2. Set captureEnd to ! GetStringIndex(S, Input, captureEnd).
             // iv. Let capture be the Match { [[StartIndex]]: captureStart, [[EndIndex]: captureEnd }.
             // v. Let capturedValue be ! GetMatchString(S, capture).
-            captured_value = js_string(vm, capture.view.u16_view());
+            auto capture_as_utf16_string = Utf16String(capture.view.u16_view());
+            captured_value = js_string(vm, capture_as_utf16_string);
             // vi. Append capture to indices.
             indices.append(Match::create(capture));
             // vii. Append capturedValue to the end of capturedValues.
-            captured_values.append(capture.view.to_string());
+            captured_values.append(capture_as_utf16_string);
         }
 
         // d. Perform ! CreateDataPropertyOrThrow(A, ! ToString(𝔽(i)), capturedValue).

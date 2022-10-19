@@ -29,7 +29,7 @@ void RegExpLegacyStaticProperties::invalidate()
 }
 
 // GetLegacyRegExpStaticProperty( C, thisValue, internalSlotName ), https://github.com/tc39/proposal-regexp-legacy-features#getlegacyregexpstaticproperty-c-thisvalue-internalslotname-
-ThrowCompletionOr<Value> get_legacy_regexp_static_property(VM& vm, RegExpConstructor& constructor, Value this_value, Optional<String> const& (RegExpLegacyStaticProperties::*property_getter)() const)
+ThrowCompletionOr<Value> get_legacy_regexp_static_property(VM& vm, RegExpConstructor& constructor, Value this_value, Optional<Utf16String> const& (RegExpLegacyStaticProperties::*property_getter)() const)
 {
     // 1. Assert C is an object that has an internal slot named internalSlotName.
 
@@ -49,7 +49,7 @@ ThrowCompletionOr<Value> get_legacy_regexp_static_property(VM& vm, RegExpConstru
 }
 
 // SetLegacyRegExpStaticProperty( C, thisValue, internalSlotName, val ), https://github.com/tc39/proposal-regexp-legacy-features#setlegacyregexpstaticproperty-c-thisvalue-internalslotname-val-
-ThrowCompletionOr<void> set_legacy_regexp_static_property(VM& vm, RegExpConstructor& constructor, Value this_value, void (RegExpLegacyStaticProperties::*property_setter)(String), Value value)
+ThrowCompletionOr<void> set_legacy_regexp_static_property(VM& vm, RegExpConstructor& constructor, Value this_value, void (RegExpLegacyStaticProperties::*property_setter)(Utf16String), Value value)
 {
     // 1. Assert C is an object that has an internal slot named internalSlotName.
 
@@ -58,7 +58,7 @@ ThrowCompletionOr<void> set_legacy_regexp_static_property(VM& vm, RegExpConstruc
         return vm.throw_completion<TypeError>(ErrorType::SetLegacyRegExpStaticPropertyThisValueMismatch);
 
     // 3. Let strVal be ? ToString(val).
-    auto str_value = TRY(value.to_string(vm));
+    auto str_value = TRY(value.to_utf16_string(vm));
 
     // 4. Set the value of the internal slot of C named internalSlotName to strVal.
     (constructor.legacy_static_properties().*property_setter)(str_value);
@@ -67,7 +67,7 @@ ThrowCompletionOr<void> set_legacy_regexp_static_property(VM& vm, RegExpConstruc
 }
 
 // UpdateLegacyRegExpStaticProperties ( C, S, startIndex, endIndex, capturedValues ), https://github.com/tc39/proposal-regexp-legacy-features#updatelegacyregexpstaticproperties--c-s-startindex-endindex-capturedvalues-
-void update_legacy_regexp_static_properties(RegExpConstructor& constructor, Utf16String const& string, size_t start_index, size_t end_index, Vector<String> const& captured_values)
+void update_legacy_regexp_static_properties(RegExpConstructor& constructor, Utf16String const& string, size_t start_index, size_t end_index, Vector<Utf16String> const& captured_values)
 {
     auto& legacy_static_properties = constructor.legacy_static_properties();
 
@@ -87,11 +87,11 @@ void update_legacy_regexp_static_properties(RegExpConstructor& constructor, Utf1
     auto group_count = captured_values.size();
 
     // 7. Set the value of C’s [[RegExpInput]] internal slot to S.
-    legacy_static_properties.set_input(string.to_utf8());
+    legacy_static_properties.set_input(string);
 
     // 8. Set the value of C’s [[RegExpLastMatch]] internal slot to a String whose length is endIndex - startIndex and containing the code units from S with indices startIndex through endIndex - 1, in ascending order.
     auto last_match = string.view().substring_view(start_index, end_index - start_index);
-    legacy_static_properties.set_last_match(last_match.to_utf8());
+    legacy_static_properties.set_last_match(Utf16String(last_match));
 
     // 9. If n > 0, set the value of C’s [[RegExpLastParen]] internal slot to the last element of capturedValues.
     if (group_count > 0) {
@@ -100,20 +100,20 @@ void update_legacy_regexp_static_properties(RegExpConstructor& constructor, Utf1
     }
     // 10. Else, set the value of C’s [[RegExpLastParen]] internal slot to the empty String.
     else {
-        legacy_static_properties.set_last_paren(String::empty());
+        legacy_static_properties.set_last_paren(Utf16String(""sv));
     }
 
     // 11. Set the value of C’s [[RegExpLeftContext]] internal slot to a String whose length is startIndex and containing the code units from S with indices 0 through startIndex - 1, in ascending order.
     auto left_context = string.view().substring_view(0, start_index);
-    legacy_static_properties.set_left_context(left_context.to_utf8());
+    legacy_static_properties.set_left_context(Utf16String(left_context));
 
     // 12. Set the value of C’s [[RegExpRightContext]] internal slot to a String whose length is len - endIndex and containing the code units from S with indices endIndex through len - 1, in ascending order.
     auto right_context = string.view().substring_view(end_index, len - end_index);
-    legacy_static_properties.set_right_context(right_context.to_utf8());
+    legacy_static_properties.set_right_context(Utf16String(right_context));
 
     // 13. For each integer i such that 1 ≤ i ≤ 9
     for (size_t i = 1; i <= 9; i++) {
-        auto value = String::empty();
+        auto value = Utf16String(""sv);
         // If i ≤ n, set the value of C’s [[RegExpPareni]] internal slot to the ith element of capturedValues.
         if (i <= group_count) {
             value = captured_values[i - 1];
@@ -124,23 +124,23 @@ void update_legacy_regexp_static_properties(RegExpConstructor& constructor, Utf1
         }
 
         if (i == 1) {
-            legacy_static_properties.set_$1(value);
+            legacy_static_properties.set_$1(Utf16String(value));
         } else if (i == 2) {
-            legacy_static_properties.set_$2(value);
+            legacy_static_properties.set_$2(Utf16String(value));
         } else if (i == 3) {
-            legacy_static_properties.set_$3(value);
+            legacy_static_properties.set_$3(Utf16String(value));
         } else if (i == 4) {
-            legacy_static_properties.set_$4(value);
+            legacy_static_properties.set_$4(Utf16String(value));
         } else if (i == 5) {
-            legacy_static_properties.set_$5(value);
+            legacy_static_properties.set_$5(Utf16String(value));
         } else if (i == 6) {
-            legacy_static_properties.set_$6(value);
+            legacy_static_properties.set_$6(Utf16String(value));
         } else if (i == 7) {
-            legacy_static_properties.set_$7(value);
+            legacy_static_properties.set_$7(Utf16String(value));
         } else if (i == 8) {
-            legacy_static_properties.set_$8(value);
+            legacy_static_properties.set_$8(Utf16String(value));
         } else if (i == 9) {
-            legacy_static_properties.set_$9(value);
+            legacy_static_properties.set_$9(Utf16String(value));
         }
     }
 }
