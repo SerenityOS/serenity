@@ -2077,6 +2077,7 @@ static Bytecode::CodeGenerationErrorOr<ForInOfHeadEvaluationResult> for_in_of_he
 {
     ForInOfHeadEvaluationResult result {};
 
+    bool entered_lexical_scope = false;
     if (auto* ast_ptr = lhs.get_pointer<NonnullRefPtr<ASTNode>>(); ast_ptr && is<VariableDeclaration>(**ast_ptr)) {
         // Runtime Semantics: ForInOfLoopEvaluation, for any of:
         //  ForInOfStatement : for ( var ForBinding in Expression ) Statement
@@ -2092,7 +2093,7 @@ static Bytecode::CodeGenerationErrorOr<ForInOfHeadEvaluationResult> for_in_of_he
 
         // NOTE: 'uninitializedBoundNames' refers to the lexical bindings (i.e. Const/Let) present in the second and last form.
         // 2. If uninitializedBoundNames is not an empty List, then
-        bool entered_lexical_scope = false;
+
         if (variable_declaration.declaration_kind() != DeclarationKind::Var) {
             entered_lexical_scope = true;
             // a. Assert: uninitializedBoundNames has no duplicate entries.
@@ -2108,66 +2109,46 @@ static Bytecode::CodeGenerationErrorOr<ForInOfHeadEvaluationResult> for_in_of_he
             // d. Set the running execution context's LexicalEnvironment to newEnv.
             // NOTE: Done by CreateEnvironment.
         }
-        // 3. Let exprRef be the result of evaluating expr.
-        TRY(rhs->generate_bytecode(generator));
-
-        // 4. Set the running execution context's LexicalEnvironment to oldEnv.
-        if (entered_lexical_scope)
-            generator.end_variable_scope();
-
-        // 5. Let exprValue be ? GetValue(exprRef).
-        // NOTE: No need to store this anywhere.
-
-        // 6. If iterationKind is enumerate, then
-        if (iteration_kind == IterationKind::Enumerate) {
-            // a. If exprValue is undefined or null, then
-            auto& nullish_block = generator.make_block();
-            auto& continuation_block = generator.make_block();
-            auto& jump = generator.emit<Bytecode::Op::JumpNullish>();
-            jump.set_targets(Bytecode::Label { nullish_block }, Bytecode::Label { continuation_block });
-
-            // i. Return Completion Record { [[Type]]: break, [[Value]]: empty, [[Target]]: empty }.
-            generator.switch_to_basic_block(nullish_block);
-            generator.perform_needed_unwinds<Bytecode::Op::Jump>(true);
-            generator.emit<Bytecode::Op::Jump>().set_targets(generator.nearest_breakable_scope(), {});
-
-            generator.switch_to_basic_block(continuation_block);
-            // b. Let obj be ! ToObject(exprValue).
-            // NOTE: GetObjectPropertyIterator does this.
-            // c. Let iterator be EnumerateObjectProperties(obj).
-            // d. Let nextMethod be ! GetV(iterator, "next").
-            // e. Return the Iterator Record { [[Iterator]]: iterator, [[NextMethod]]: nextMethod, [[Done]]: false }.
-            generator.emit<Bytecode::Op::GetObjectPropertyIterator>();
-        }
-        // 7. Else,
-        else {
-            // a. Assert: iterationKind is iterate or async-iterate.
-            // b. If iterationKind is async-iterate, let iteratorHint be async.
-            if (iteration_kind == IterationKind::AsyncIterate) {
-                return Bytecode::CodeGenerationError {
-                    rhs.ptr(),
-                    "Unimplemented iteration mode: AsyncIterate"sv,
-                };
-            }
-            // c. Else, let iteratorHint be sync.
-
-            // d. Return ? GetIterator(exprValue, iteratorHint).
-            generator.emit<Bytecode::Op::GetIterator>();
-        }
     } else {
         // Runtime Semantics: ForInOfLoopEvaluation, for any of:
         //  ForInOfStatement : for ( LeftHandSideExpression in Expression ) Statement
         //  ForInOfStatement : for ( LeftHandSideExpression of AssignmentExpression ) Statement
-
-        // Skip everything except steps 3, 5 and 7 (see above true branch for listing).
         result.lhs_kind = LHSKind::Assignment;
+    }
 
-        // 3. Let exprRef be the result of evaluating expr.
-        TRY(rhs->generate_bytecode(generator));
+    // 3. Let exprRef be the result of evaluating expr.
+    TRY(rhs->generate_bytecode(generator));
 
-        // 5. Let exprValue be ? GetValue(exprRef).
-        // NOTE: No need to store this anywhere.
+    // 4. Set the running execution context's LexicalEnvironment to oldEnv.
+    if (entered_lexical_scope)
+        generator.end_variable_scope();
 
+    // 5. Let exprValue be ? GetValue(exprRef).
+    // NOTE: No need to store this anywhere.
+
+    // 6. If iterationKind is enumerate, then
+    if (iteration_kind == IterationKind::Enumerate) {
+        // a. If exprValue is undefined or null, then
+        auto& nullish_block = generator.make_block();
+        auto& continuation_block = generator.make_block();
+        auto& jump = generator.emit<Bytecode::Op::JumpNullish>();
+        jump.set_targets(Bytecode::Label { nullish_block }, Bytecode::Label { continuation_block });
+
+        // i. Return Completion Record { [[Type]]: break, [[Value]]: empty, [[Target]]: empty }.
+        generator.switch_to_basic_block(nullish_block);
+        generator.perform_needed_unwinds<Bytecode::Op::Jump>(true);
+        generator.emit<Bytecode::Op::Jump>().set_targets(generator.nearest_breakable_scope(), {});
+
+        generator.switch_to_basic_block(continuation_block);
+        // b. Let obj be ! ToObject(exprValue).
+        // NOTE: GetObjectPropertyIterator does this.
+        // c. Let iterator be EnumerateObjectProperties(obj).
+        // d. Let nextMethod be ! GetV(iterator, "next").
+        // e. Return the Iterator Record { [[Iterator]]: iterator, [[NextMethod]]: nextMethod, [[Done]]: false }.
+        generator.emit<Bytecode::Op::GetObjectPropertyIterator>();
+    }
+    // 7. Else,
+    else {
         // a. Assert: iterationKind is iterate or async-iterate.
         // b. If iterationKind is async-iterate, let iteratorHint be async.
         if (iteration_kind == IterationKind::AsyncIterate) {
