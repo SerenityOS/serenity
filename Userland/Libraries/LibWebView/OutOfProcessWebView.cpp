@@ -530,6 +530,11 @@ Optional<String> OutOfProcessWebView::get_element_attribute(i32 element_id, Stri
     return client().get_element_attribute(element_id, name);
 }
 
+Optional<String> OutOfProcessWebView::get_element_property(i32 element_id, String const& name)
+{
+    return client().get_element_property(element_id, name);
+}
+
 void OutOfProcessWebView::set_content_filters(Vector<String> filters)
 {
     client().async_set_content_filters(filters);

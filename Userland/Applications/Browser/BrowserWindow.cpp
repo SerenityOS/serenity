@@ -594,6 +594,10 @@ void BrowserWindow::create_new_tab(URL url, bool activate)
         return active_tab().view().get_element_attribute(element_id, name);
     };
 
+    new_tab.on_get_element_property = [this](i32 element_id, String const& name) {
+        return active_tab().view().get_element_property(element_id, name);
+    };
+
     new_tab.load(url);
 
     dbgln_if(SPAM_DEBUG, "Added new tab {:p}, loading {}", &new_tab, url);

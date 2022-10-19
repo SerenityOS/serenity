@@ -490,6 +490,33 @@ Messages::WebContentServer::GetElementAttributeResponse ConnectionFromClient::ge
     return { element.get_attribute(name) };
 }
 
+Messages::WebContentServer::GetElementPropertyResponse ConnectionFromClient::get_element_property(i32 element_id, String const& name)
+{
+    auto* node = Web::DOM::Node::from_id(element_id);
+    if (!node)
+        return Optional<String> {};
+
+    if (!node->is_element())
+        return Optional<String> {};
+
+    auto& element = verify_cast<Web::DOM::Element>(*node);
+
+    auto property_or_error = element.get(name);
+    if (property_or_error.is_throw_completion())
+        return Optional<String> {};
+
+    auto property = property_or_error.release_value();
+
+    if (property.is_undefined())
+        return Optional<String> {};
+
+    auto string_or_error = property.to_string(element.vm());
+    if (string_or_error.is_error())
+        return Optional<String> {};
+
+    return { string_or_error.release_value() };
+}
+
 Messages::WebContentServer::GetSelectedTextResponse ConnectionFromClient::get_selected_text()
 {
     return page().focused_context().selected_text();
