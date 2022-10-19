@@ -269,6 +269,20 @@ ErrorOr<void, Variant<HttpError, Error>> Session::close_window()
     return {};
 }
 
+// 11.4 Get Window Handles, https://w3c.github.io/webdriver/#dfn-get-window-handles
+ErrorOr<JsonValue, HttpError> Session::get_window_handles() const
+{
+    // 1. Let handles be a JSON List.
+    auto handles = JsonArray {};
+
+    // 2. For each top-level browsing context in the remote end, push the associated window handle onto handles.
+    for (auto const& window_handle : m_windows.keys())
+        handles.append(window_handle);
+
+    // 3. Return success with data handles.
+    return handles;
+}
+
 // https://w3c.github.io/webdriver/#dfn-get-or-create-a-web-element-reference
 static String get_or_create_a_web_element_reference(Session::LocalElement const& element)
 {
