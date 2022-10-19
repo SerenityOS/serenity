@@ -117,7 +117,7 @@ void GLContext::gl_color_pointer(GLint size, GLenum type, GLsizei stride, void c
         GL_INVALID_ENUM);
     RETURN_WITH_ERROR_IF(stride < 0, GL_INVALID_VALUE);
 
-    m_client_color_pointer = { .size = size, .type = type, .stride = stride, .pointer = pointer };
+    m_client_color_pointer = { .size = size, .type = type, .normalize = true, .stride = stride, .pointer = pointer };
 }
 
 void GLContext::gl_draw_arrays(GLenum mode, GLint first, GLsizei count)
@@ -253,7 +253,18 @@ void GLContext::gl_normal_pointer(GLenum type, GLsizei stride, void const* point
         GL_INVALID_ENUM);
     RETURN_WITH_ERROR_IF(stride < 0, GL_INVALID_VALUE);
 
-    m_client_normal_pointer = { .size = 3, .type = type, .stride = stride, .pointer = pointer };
+    m_client_normal_pointer = { .size = 3, .type = type, .normalize = true, .stride = stride, .pointer = pointer };
+}
+
+void GLContext::gl_tex_coord_pointer(GLint size, GLenum type, GLsizei stride, void const* pointer)
+{
+    RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
+    RETURN_WITH_ERROR_IF(!(size == 1 || size == 2 || size == 3 || size == 4), GL_INVALID_VALUE);
+    RETURN_WITH_ERROR_IF(!(type == GL_SHORT || type == GL_INT || type == GL_FLOAT || type == GL_DOUBLE), GL_INVALID_ENUM);
+    RETURN_WITH_ERROR_IF(stride < 0, GL_INVALID_VALUE);
+
+    auto& tex_coord_pointer = m_client_tex_coord_pointer[m_client_active_texture];
+    tex_coord_pointer = { .size = size, .type = type, .normalize = false, .stride = stride, .pointer = pointer };
 }
 
 void GLContext::gl_vertex(GLdouble x, GLdouble y, GLdouble z, GLdouble w)
@@ -278,7 +289,7 @@ void GLContext::gl_vertex_pointer(GLint size, GLenum type, GLsizei stride, void 
     RETURN_WITH_ERROR_IF(!(type == GL_SHORT || type == GL_INT || type == GL_FLOAT || type == GL_DOUBLE), GL_INVALID_ENUM);
     RETURN_WITH_ERROR_IF(stride < 0, GL_INVALID_VALUE);
 
-    m_client_vertex_pointer = { .size = size, .type = type, .stride = stride, .pointer = pointer };
+    m_client_vertex_pointer = { .size = size, .type = type, .normalize = false, .stride = stride, .pointer = pointer };
 }
 
 }
