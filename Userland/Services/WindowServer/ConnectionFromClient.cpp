@@ -686,7 +686,7 @@ void ConnectionFromClient::invalidate_rect(i32 window_id, Vector<Gfx::IntRect> c
     }
     auto& window = *(*it).value;
     for (size_t i = 0; i < rects.size(); ++i)
-        window.request_update(rects[i].intersected({ {}, window.size() }), ignore_occlusion);
+        window.request_update(rects[i].intersected(Gfx::Rect { {}, window.size() }), ignore_occlusion);
 }
 
 void ConnectionFromClient::did_finish_painting(i32 window_id, Vector<Gfx::IntRect> const& rects)
