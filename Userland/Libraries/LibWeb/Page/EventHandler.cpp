@@ -280,7 +280,6 @@ bool EventHandler::handle_mousedown(Gfx::IntPoint const& position, unsigned butt
     JS::GCPtr<DOM::Node> node;
 
     {
-        // TODO: Allow selecting element behind if one on top has pointer-events set to none.
         RefPtr<Painting::Paintable> paintable;
         if (m_mouse_event_tracking_layout_node) {
             paintable = m_mouse_event_tracking_layout_node->paintable();
@@ -293,8 +292,7 @@ bool EventHandler::handle_mousedown(Gfx::IntPoint const& position, unsigned butt
 
         auto pointer_events = paintable->computed_values().pointer_events();
         // FIXME: Handle other values for pointer-events.
-        if (pointer_events == CSS::PointerEvents::None)
-            return false;
+        VERIFY(pointer_events != CSS::PointerEvents::None);
 
         node = paintable->mouse_event_target();
         if (!node)
@@ -414,8 +412,7 @@ bool EventHandler::handle_mousemove(Gfx::IntPoint const& position, unsigned butt
 
         auto pointer_events = paintable->computed_values().pointer_events();
         // FIXME: Handle other values for pointer-events.
-        if (pointer_events == CSS::PointerEvents::None)
-            return false;
+        VERIFY(pointer_events != CSS::PointerEvents::None);
 
         hovered_node_changed = node.ptr() != document.hovered_node();
         document.set_hovered_node(node);
@@ -497,7 +494,6 @@ bool EventHandler::handle_doubleclick(Gfx::IntPoint const& position, unsigned bu
     if (!paint_root())
         return false;
 
-    // TODO: Allow selecting element behind if one on top has pointer-events set to none.
     RefPtr<Painting::Paintable> paintable;
     if (m_mouse_event_tracking_layout_node) {
         paintable = m_mouse_event_tracking_layout_node->paintable();
