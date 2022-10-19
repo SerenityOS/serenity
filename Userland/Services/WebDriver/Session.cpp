@@ -2,6 +2,7 @@
  * Copyright (c) 2022, Florent Castelli <florent.castelli@gmail.com>
  * Copyright (c) 2022, Sam Atkins <atkinssj@serenityos.org>
  * Copyright (c) 2022, Tobias Christiansen <tobyase@serenityos.org>
+ * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -265,7 +266,7 @@ static JsonObject web_element_reference_object(Session::LocalElement const& elem
 ErrorOr<JsonArray, HttpError> Session::find(Session::LocalElement const& start_node, StringView const& using_, StringView const& value)
 {
     // 1. Let end time be the current time plus the session implicit wait timeout.
-    auto end_time = Core::DateTime::from_timestamp(Core::DateTime::now().timestamp() + s_session_timeouts);
+    auto end_time = Core::DateTime::from_timestamp(Core::DateTime::now().timestamp() + m_timeouts_configuration.implicit_wait_timeout / 1000);
 
     // 2. Let location strategy be equal to using.
     auto location_strategy = using_;

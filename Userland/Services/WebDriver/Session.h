@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2022, Florent Castelli <florent.castelli@gmail.com>
+ * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -11,6 +12,7 @@
 #include <AK/RefPtr.h>
 #include <WebDriver/BrowserConnection.h>
 #include <WebDriver/HttpError.h>
+#include <WebDriver/TimeoutsConfiguration.h>
 #include <unistd.h>
 
 namespace WebDriver {
@@ -55,10 +57,6 @@ public:
     ErrorOr<JsonValue, HttpError> delete_cookie(StringView const& name);
     ErrorOr<JsonValue, HttpError> delete_all_cookies();
 
-    // https://w3c.github.io/webdriver/#dfn-session-script-timeout
-    // NOTE: Hardcoded timeouts to 30 seconds.
-    static int const s_session_timeouts = 30;
-
 private:
     void delete_cookies(Optional<StringView> const& name = {});
     ErrorOr<JsonArray, HttpError> find(LocalElement const& start_node, StringView const& location_strategy, StringView const& selector);
@@ -84,6 +82,9 @@ private:
     String m_current_window_handle;
     RefPtr<Core::LocalServer> m_local_server;
     RefPtr<BrowserConnection> m_browser_connection;
+
+    // https://w3c.github.io/webdriver/#dfn-session-script-timeout
+    TimeoutsConfiguration m_timeouts_configuration;
 };
 
 }
