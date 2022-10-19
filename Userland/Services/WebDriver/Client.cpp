@@ -35,6 +35,7 @@ Vector<Client::Route> Client::s_routes = {
     { HTTP::HttpRequest::Method::POST, { "session", ":session_id", "element" }, &Client::handle_find_element },
     { HTTP::HttpRequest::Method::POST, { "session", ":session_id", "elements" }, &Client::handle_find_elements },
     { HTTP::HttpRequest::Method::POST, { "session", ":session_id", "element", ":element_id", "element" }, &Client::handle_find_element_from_element },
+    { HTTP::HttpRequest::Method::POST, { "session", ":session_id", "element", ":element_id", "elements" }, &Client::handle_find_elements_from_element },
     { HTTP::HttpRequest::Method::GET, { "session", ":session_id", "cookie" }, &Client::handle_get_all_cookies },
     { HTTP::HttpRequest::Method::GET, { "session", ":session_id", "cookie", ":name" }, &Client::handle_get_named_cookie },
     { HTTP::HttpRequest::Method::POST, { "session", ":session_id", "cookie" }, &Client::handle_add_cookie },
@@ -561,6 +562,19 @@ ErrorOr<JsonValue, HttpError> Client::handle_find_element_from_element(Vector<St
 
     // NOTE: Spec steps handled in Session::find_element_from_element().
     auto result = TRY(session->find_element_from_element(payload, parameters[1]));
+
+    return make_json_value(result);
+}
+
+// 12.3.5 Find Elements From Element, https://w3c.github.io/webdriver/#dfn-find-elements-from-element
+// POST /session/{session id}/element/{element id}/elements
+ErrorOr<JsonValue, HttpError> Client::handle_find_elements_from_element(Vector<StringView> const& parameters, JsonValue const& payload)
+{
+    dbgln_if(WEBDRIVER_DEBUG, "Handling POST /session/<session_id>/element/<element_id>/elements");
+    auto* session = TRY(find_session_with_id(parameters[0]));
+
+    // NOTE: Spec steps handled in Session::find_elements_from_element().
+    auto result = TRY(session->find_elements_from_element(payload, parameters[1]));
 
     return make_json_value(result);
 }
