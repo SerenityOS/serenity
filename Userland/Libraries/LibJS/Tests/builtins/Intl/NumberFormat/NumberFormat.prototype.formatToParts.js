@@ -678,6 +678,7 @@ describe("style=currency", () => {
             currencyDisplay: "code",
         });
         expect(ar.formatToParts(1)).toEqual([
+            { type: "literal", value: "\u200f" },
             { type: "integer", value: "\u0661" },
             { type: "decimal", value: "\u066b" },
             { type: "fraction", value: "\u0660\u0660" },
@@ -685,6 +686,7 @@ describe("style=currency", () => {
             { type: "currency", value: "USD" },
         ]);
         expect(ar.formatToParts(1.23)).toEqual([
+            { type: "literal", value: "\u200f" },
             { type: "integer", value: "\u0661" },
             { type: "decimal", value: "\u066b" },
             { type: "fraction", value: "\u0662\u0663" },
@@ -718,6 +720,7 @@ describe("style=currency", () => {
             currencyDisplay: "symbol",
         });
         expect(ar.formatToParts(1)).toEqual([
+            { type: "literal", value: "\u200f" },
             { type: "integer", value: "\u0661" },
             { type: "decimal", value: "\u066b" },
             { type: "fraction", value: "\u0660\u0660" },
@@ -725,6 +728,7 @@ describe("style=currency", () => {
             { type: "currency", value: "US$" },
         ]);
         expect(ar.formatToParts(1.23)).toEqual([
+            { type: "literal", value: "\u200f" },
             { type: "integer", value: "\u0661" },
             { type: "decimal", value: "\u066b" },
             { type: "fraction", value: "\u0662\u0663" },
@@ -758,6 +762,7 @@ describe("style=currency", () => {
             currencyDisplay: "narrowSymbol",
         });
         expect(ar.formatToParts(1)).toEqual([
+            { type: "literal", value: "\u200f" },
             { type: "integer", value: "\u0661" },
             { type: "decimal", value: "\u066b" },
             { type: "fraction", value: "\u0660\u0660" },
@@ -765,6 +770,7 @@ describe("style=currency", () => {
             { type: "currency", value: "US$" },
         ]);
         expect(ar.formatToParts(1.23)).toEqual([
+            { type: "literal", value: "\u200f" },
             { type: "integer", value: "\u0661" },
             { type: "decimal", value: "\u066b" },
             { type: "fraction", value: "\u0662\u0663" },
@@ -840,6 +846,7 @@ describe("style=currency", () => {
             signDisplay: "never",
         });
         expect(ar.formatToParts(1)).toEqual([
+            { type: "literal", value: "\u200f" },
             { type: "integer", value: "\u0661" },
             { type: "decimal", value: "\u066b" },
             { type: "fraction", value: "\u0660\u0660" },
@@ -847,6 +854,7 @@ describe("style=currency", () => {
             { type: "currency", value: "US$" },
         ]);
         expect(ar.formatToParts(-1)).toEqual([
+            { type: "literal", value: "\u200f" },
             { type: "integer", value: "\u0661" },
             { type: "decimal", value: "\u066b" },
             { type: "fraction", value: "\u0660\u0660" },
@@ -913,6 +921,7 @@ describe("style=currency", () => {
             signDisplay: "auto",
         });
         expect(ar.formatToParts(0)).toEqual([
+            { type: "literal", value: "\u200f" },
             { type: "integer", value: "\u0660" },
             { type: "decimal", value: "\u066b" },
             { type: "fraction", value: "\u0660\u0660" },
@@ -920,6 +929,7 @@ describe("style=currency", () => {
             { type: "currency", value: "US$" },
         ]);
         expect(ar.formatToParts(1)).toEqual([
+            { type: "literal", value: "\u200f" },
             { type: "integer", value: "\u0661" },
             { type: "decimal", value: "\u066b" },
             { type: "fraction", value: "\u0660\u0660" },
@@ -928,6 +938,7 @@ describe("style=currency", () => {
         ]);
         expect(ar.formatToParts(-0)).toEqual([
             { type: "minusSign", value: "\u061c-" },
+            { type: "literal", value: "\u200f" },
             { type: "integer", value: "\u0660" },
             { type: "decimal", value: "\u066b" },
             { type: "fraction", value: "\u0660\u0660" },
@@ -936,6 +947,7 @@ describe("style=currency", () => {
         ]);
         expect(ar.formatToParts(-1)).toEqual([
             { type: "minusSign", value: "\u061c-" },
+            { type: "literal", value: "\u200f" },
             { type: "integer", value: "\u0661" },
             { type: "decimal", value: "\u066b" },
             { type: "fraction", value: "\u0660\u0660" },
@@ -1021,6 +1033,7 @@ describe("style=currency", () => {
         });
         expect(ar.formatToParts(0)).toEqual([
             { type: "plusSign", value: "\u061c+" },
+            { type: "literal", value: "\u200f" },
             { type: "integer", value: "\u0660" },
             { type: "decimal", value: "\u066b" },
             { type: "fraction", value: "\u0660\u0660" },
@@ -1029,6 +1042,7 @@ describe("style=currency", () => {
         ]);
         expect(ar.formatToParts(1)).toEqual([
             { type: "plusSign", value: "\u061c+" },
+            { type: "literal", value: "\u200f" },
             { type: "integer", value: "\u0661" },
             { type: "decimal", value: "\u066b" },
             { type: "fraction", value: "\u0660\u0660" },
@@ -1037,6 +1051,7 @@ describe("style=currency", () => {
         ]);
         expect(ar.formatToParts(-0)).toEqual([
             { type: "minusSign", value: "\u061c-" },
+            { type: "literal", value: "\u200f" },
             { type: "integer", value: "\u0660" },
             { type: "decimal", value: "\u066b" },
             { type: "fraction", value: "\u0660\u0660" },
@@ -1045,6 +1060,7 @@ describe("style=currency", () => {
         ]);
         expect(ar.formatToParts(-1)).toEqual([
             { type: "minusSign", value: "\u061c-" },
+            { type: "literal", value: "\u200f" },
             { type: "integer", value: "\u0661" },
             { type: "decimal", value: "\u066b" },
             { type: "fraction", value: "\u0660\u0660" },
@@ -1129,6 +1145,7 @@ describe("style=currency", () => {
             signDisplay: "exceptZero",
         });
         expect(ar.formatToParts(0)).toEqual([
+            { type: "literal", value: "\u200f" },
             { type: "integer", value: "\u0660" },
             { type: "decimal", value: "\u066b" },
             { type: "fraction", value: "\u0660\u0660" },
@@ -1137,6 +1154,7 @@ describe("style=currency", () => {
         ]);
         expect(ar.formatToParts(1)).toEqual([
             { type: "plusSign", value: "\u061c+" },
+            { type: "literal", value: "\u200f" },
             { type: "integer", value: "\u0661" },
             { type: "decimal", value: "\u066b" },
             { type: "fraction", value: "\u0660\u0660" },
@@ -1144,6 +1162,7 @@ describe("style=currency", () => {
             { type: "currency", value: "US$" },
         ]);
         expect(ar.formatToParts(-0)).toEqual([
+            { type: "literal", value: "\u200f" },
             { type: "integer", value: "\u0660" },
             { type: "decimal", value: "\u066b" },
             { type: "fraction", value: "\u0660\u0660" },
@@ -1152,6 +1171,7 @@ describe("style=currency", () => {
         ]);
         expect(ar.formatToParts(-1)).toEqual([
             { type: "minusSign", value: "\u061c-" },
+            { type: "literal", value: "\u200f" },
             { type: "integer", value: "\u0661" },
             { type: "decimal", value: "\u066b" },
             { type: "fraction", value: "\u0660\u0660" },
@@ -1232,6 +1252,7 @@ describe("style=currency", () => {
             signDisplay: "negative",
         });
         expect(ar.formatToParts(0)).toEqual([
+            { type: "literal", value: "\u200f" },
             { type: "integer", value: "\u0660" },
             { type: "decimal", value: "\u066b" },
             { type: "fraction", value: "\u0660\u0660" },
@@ -1239,6 +1260,7 @@ describe("style=currency", () => {
             { type: "currency", value: "US$" },
         ]);
         expect(ar.formatToParts(1)).toEqual([
+            { type: "literal", value: "\u200f" },
             { type: "integer", value: "\u0661" },
             { type: "decimal", value: "\u066b" },
             { type: "fraction", value: "\u0660\u0660" },
@@ -1246,6 +1268,7 @@ describe("style=currency", () => {
             { type: "currency", value: "US$" },
         ]);
         expect(ar.formatToParts(-0)).toEqual([
+            { type: "literal", value: "\u200f" },
             { type: "integer", value: "\u0660" },
             { type: "decimal", value: "\u066b" },
             { type: "fraction", value: "\u0660\u0660" },
@@ -1254,6 +1277,7 @@ describe("style=currency", () => {
         ]);
         expect(ar.formatToParts(-1)).toEqual([
             { type: "minusSign", value: "\u061c-" },
+            { type: "literal", value: "\u200f" },
             { type: "integer", value: "\u0661" },
             { type: "decimal", value: "\u066b" },
             { type: "fraction", value: "\u0660\u0660" },

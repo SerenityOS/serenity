@@ -1,6 +1,6 @@
 include(${CMAKE_CURRENT_LIST_DIR}/utils.cmake)
 
-set(CLDR_VERSION 41.0.0)
+set(CLDR_VERSION 42.0.0)
 set(CLDR_PATH "${CMAKE_BINARY_DIR}/CLDR" CACHE PATH "Download location for CLDR files")
 set(CLDR_VERSION_FILE "${CLDR_PATH}/version.txt")
 

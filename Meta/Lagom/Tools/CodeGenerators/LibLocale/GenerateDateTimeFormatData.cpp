@@ -39,8 +39,8 @@ constexpr auto s_calendar_pattern_list_index_type = "u8"sv;
 using CalendarRangePatternIndexType = u16;
 constexpr auto s_calendar_range_pattern_index_type = "u16"sv;
 
-using CalendarRangePatternListIndexType = u8;
-constexpr auto s_calendar_range_pattern_list_index_type = "u8"sv;
+using CalendarRangePatternListIndexType = u16;
+constexpr auto s_calendar_range_pattern_list_index_type = "u16"sv;
 
 using CalendarFormatIndexType = u8;
 constexpr auto s_calendar_format_index_type = "u8"sv;
@@ -764,32 +764,48 @@ static constexpr auto is_char(char ch)
 // "{hour}:{minute} {ampm} {timeZoneName}" becomes "{hour}:{minute} {timeZoneName}" (remove one of the spaces around {ampm})
 static String remove_period_from_pattern(String pattern)
 {
+    auto is_surrounding_space = [&](auto code_point_iterator) {
+        if (code_point_iterator.done())
+            return false;
+
+        constexpr auto spaces = Array { static_cast<u32>(0x0020), 0x00a0, 0x2009, 0x202f };
+        return spaces.span().contains_slow(*code_point_iterator);
+    };
+
+    auto is_opening = [&](auto code_point_iterator) {
+        if (code_point_iterator.done())
+            return false;
+        return *code_point_iterator == '{';
+    };
+
+    auto is_closing = [&](auto code_point_iterator) {
+        if (code_point_iterator.done())
+            return false;
+        return *code_point_iterator == '}';
+    };
+
     for (auto remove : AK::Array { "({ampm})"sv, "{ampm}"sv, "({dayPeriod})"sv, "{dayPeriod}"sv }) {
         auto index = pattern.find(remove);
         if (!index.has_value())
             continue;
 
-        constexpr u32 space = ' ';
-        constexpr u32 open = '{';
-        constexpr u32 close = '}';
-
         Utf8View utf8_pattern { pattern };
-        Optional<u32> before_removal;
-        Optional<u32> after_removal;
+        Utf8CodePointIterator before_removal;
+        Utf8CodePointIterator after_removal;
 
         for (auto it = utf8_pattern.begin(); utf8_pattern.byte_offset_of(it) < *index; ++it)
-            before_removal = *it;
+            before_removal = it;
         if (auto it = utf8_pattern.iterator_at_byte_offset(*index + remove.length()); it != utf8_pattern.end())
-            after_removal = *it;
+            after_removal = it;
 
-        if ((before_removal == space) && (after_removal != open)) {
+        if (is_surrounding_space(before_removal) && !is_opening(after_removal)) {
             pattern = String::formatted("{}{}",
-                pattern.substring_view(0, *index - 1),
+                pattern.substring_view(0, *index - before_removal.underlying_code_point_length_in_bytes()),
                 pattern.substring_view(*index + remove.length()));
-        } else if ((after_removal == space) && (before_removal != close)) {
+        } else if (is_surrounding_space(after_removal) && !is_closing(before_removal)) {
             pattern = String::formatted("{}{}",
                 pattern.substring_view(0, *index),
-                pattern.substring_view(*index + remove.length() + 1));
+                pattern.substring_view(*index + remove.length() + after_removal.underlying_code_point_length_in_bytes()));
         } else {
             pattern = String::formatted("{}{}",
                 pattern.substring_view(0, *index),
@@ -1466,9 +1482,10 @@ static ErrorOr<void> parse_calendars(String locale_calendars_path, CLDR& cldr, L
         auto const& time_skeletons_object = value.as_object().get("timeSkeletons"sv);
         calendar.time_formats = parse_patterns(time_formats_object.as_object(), time_skeletons_object.as_object(), &time_formats);
 
-        auto const& date_time_formats_object = value.as_object().get("dateTimeFormats"sv);
-        calendar.date_time_formats = parse_patterns(date_time_formats_object.as_object(), JsonObject {}, nullptr);
+        auto const& standard_date_time_formats_object = value.as_object().get("dateTimeFormats-atTime"sv).as_object().get("standard"sv);
+        calendar.date_time_formats = parse_patterns(standard_date_time_formats_object.as_object(), JsonObject {}, nullptr);
 
+        auto const& date_time_formats_object = value.as_object().get("dateTimeFormats"sv);
         auto const& available_formats_object = date_time_formats_object.as_object().get("availableFormats"sv);
         available_formats_object.as_object().for_each_member([&](auto const& skeleton, JsonValue const& pattern) {
             auto pattern_index = parse_date_time_pattern(pattern.as_string(), skeleton, cldr);

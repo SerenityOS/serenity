@@ -99,7 +99,7 @@ describe("second", () => {
     });
 
     test("style=narrow, numeric=always", () => {
-        const en = [ "2 sec. ago", "1 sec. ago", "0 sec. ago", "in 0 sec.", "in 1 sec.", "in 2 sec." ]; // prettier-ignore
+        const en = [ "2s ago", "1s ago", "0s ago", "in 0s", "in 1s", "in 2s" ]; // prettier-ignore
         const ar = [ "قبل ثانيتين", "قبل ثانية واحدة", "قبل ٠ ثانية", "خلال ٠ ثانية", "خلال ثانية واحدة", "خلال ثانيتين" ]; // prettier-ignore
         const pl = [ "2 s temu", "1 s temu", "0 s temu", "za 0 s", "za 1 s", "za 2 s" ]; // prettier-ignore
 
@@ -123,7 +123,7 @@ describe("second", () => {
     });
 
     test("style=narrow, numeric=auto", () => {
-        const en = [ "2 sec. ago", "1 sec. ago", "now", "now", "in 1 sec.", "in 2 sec." ]; // prettier-ignore
+        const en = [ "2s ago", "1s ago", "now", "now", "in 1s", "in 2s" ]; // prettier-ignore
         const ar = [ "قبل ثانيتين", "قبل ثانية واحدة", "الآن", "الآن", "خلال ثانية واحدة", "خلال ثانيتين" ]; // prettier-ignore
         const pl = [ "2 s temu", "1 s temu", "teraz", "teraz", "za 1 s", "za 2 s" ]; // prettier-ignore
 
@@ -149,7 +149,7 @@ describe("minute", () => {
     });
 
     test("style=narrow, numeric=always", () => {
-        const en = [ "2 min. ago", "1 min. ago", "0 min. ago", "in 0 min.", "in 1 min.", "in 2 min." ]; // prettier-ignore
+        const en = [ "2m ago", "1m ago", "0m ago", "in 0m", "in 1m", "in 2m" ]; // prettier-ignore
         const ar = [ "قبل دقيقتين", "قبل دقيقة واحدة", "قبل ٠ دقيقة", "خلال ٠ دقيقة", "خلال دقيقة واحدة", "خلال دقيقتين" ]; // prettier-ignore
         const pl = [ "2 min temu", "1 min temu", "0 min temu", "za 0 min", "za 1 min", "za 2 min" ]; // prettier-ignore
 
@@ -173,7 +173,7 @@ describe("minute", () => {
     });
 
     test("style=narrow, numeric=auto", () => {
-        const en = [ "2 min. ago", "1 min. ago", "this minute", "this minute", "in 1 min.", "in 2 min." ]; // prettier-ignore
+        const en = [ "2m ago", "1m ago", "this minute", "this minute", "in 1m", "in 2m" ]; // prettier-ignore
         const ar = [ "قبل دقيقتين", "قبل دقيقة واحدة", "هذه الدقيقة", "هذه الدقيقة", "خلال دقيقة واحدة", "خلال دقيقتين" ]; // prettier-ignore
         const pl = [ "2 min temu", "1 min temu", "ta minuta", "ta minuta", "za 1 min", "za 2 min" ]; // prettier-ignore
 
@@ -199,7 +199,7 @@ describe("hour", () => {
     });
 
     test("style=narrow, numeric=always", () => {
-        const en = [ "2 hr. ago", "1 hr. ago", "0 hr. ago", "in 0 hr.", "in 1 hr.", "in 2 hr." ]; // prettier-ignore
+        const en = [ "2h ago", "1h ago", "0h ago", "in 0h", "in 1h", "in 2h" ]; // prettier-ignore
         const ar = [ "قبل ساعتين", "قبل ساعة واحدة", "قبل ٠ ساعة", "خلال ٠ ساعة", "خلال ساعة واحدة", "خلال ساعتين" ]; // prettier-ignore
         const pl = [ "2 g. temu", "1 g. temu", "0 g. temu", "za 0 g.", "za 1 g.", "za 2 g." ]; // prettier-ignore
 
@@ -223,7 +223,7 @@ describe("hour", () => {
     });
 
     test("style=narrow, numeric=auto", () => {
-        const en = [ "2 hr. ago", "1 hr. ago", "this hour", "this hour", "in 1 hr.", "in 2 hr." ]; // prettier-ignore
+        const en = [ "2h ago", "1h ago", "this hour", "this hour", "in 1h", "in 2h" ]; // prettier-ignore
         const ar = [ "قبل ساعتين", "قبل ساعة واحدة", "الساعة الحالية", "الساعة الحالية", "خلال ساعة واحدة", "خلال ساعتين" ]; // prettier-ignore
         const pl = [ "2 g. temu", "1 g. temu", "ta godzina", "ta godzina", "za 1 g.", "za 2 g." ]; // prettier-ignore
 
@@ -249,7 +249,7 @@ describe("day", () => {
     });
 
     test("style=narrow, numeric=always", () => {
-        const en = [ "2 days ago", "1 day ago", "0 days ago", "in 0 days", "in 1 day", "in 2 days" ]; // prettier-ignore
+        const en = [ "2d ago", "1d ago", "0d ago", "in 0d", "in 1d", "in 2d" ]; // prettier-ignore
         const ar = [ "قبل يومين", "قبل يوم واحد", "قبل ٠ يوم", "خلال ٠ يوم", "خلال يوم واحد", "خلال يومين" ]; // prettier-ignore
         const pl = [ "2 dni temu", "1 dzień temu", "0 dni temu", "za 0 dni", "za 1 dzień", "za 2 dni" ]; // prettier-ignore
 
@@ -273,7 +273,7 @@ describe("day", () => {
     });
 
     test("style=narrow, numeric=auto", () => {
-        const en = [ "2 days ago", "yesterday", "today", "today", "tomorrow", "in 2 days" ]; // prettier-ignore
+        const en = [ "2d ago", "yesterday", "today", "today", "tomorrow", "in 2d" ]; // prettier-ignore
         const ar = [ "أول أمس", "أمس", "اليوم", "اليوم", "غدًا", "بعد الغد" ]; // prettier-ignore
         const pl = [ "przedwczoraj", "wcz.", "dziś", "dziś", "jutro", "pojutrze" ]; // prettier-ignore
 
@@ -299,7 +299,7 @@ describe("week", () => {
     });
 
     test("style=narrow, numeric=always", () => {
-        const en = [ "2 wk. ago", "1 wk. ago", "0 wk. ago", "in 0 wk.", "in 1 wk.", "in 2 wk." ]; // prettier-ignore
+        const en = [ "2w ago", "1w ago", "0w ago", "in 0w", "in 1w", "in 2w" ]; // prettier-ignore
         const ar = [ "قبل أسبوعين", "قبل أسبوع واحد", "قبل ٠ أسبوع", "خلال ٠ أسبوع", "خلال أسبوع واحد", "خلال أسبوعين" ]; // prettier-ignore
         const pl = [ "2 tyg. temu", "1 tydz. temu", "0 tyg. temu", "za 0 tyg.", "za 1 tydz.", "za 2 tyg." ]; // prettier-ignore
 
@@ -323,7 +323,7 @@ describe("week", () => {
     });
 
     test("style=narrow, numeric=auto", () => {
-        const en = [ "2 wk. ago", "last wk.", "this wk.", "this wk.", "next wk.", "in 2 wk." ]; // prettier-ignore
+        const en = [ "2w ago", "last wk.", "this wk.", "this wk.", "next wk.", "in 2w" ]; // prettier-ignore
         const ar = [ "قبل أسبوعين", "الأسبوع الماضي", "هذا الأسبوع", "هذا الأسبوع", "الأسبوع القادم", "خلال أسبوعين" ]; // prettier-ignore
         const pl = [ "2 tyg. temu", "w zeszłym tyg.", "w tym tyg.", "w tym tyg.", "w przyszłym tyg.", "za 2 tyg." ]; // prettier-ignore
 
@@ -349,7 +349,7 @@ describe("month", () => {
     });
 
     test("style=narrow, numeric=always", () => {
-        const en = [ "2 mo. ago", "1 mo. ago", "0 mo. ago", "in 0 mo.", "in 1 mo.", "in 2 mo." ]; // prettier-ignore
+        const en = [ "2mo ago", "1mo ago", "0mo ago", "in 0mo", "in 1mo", "in 2mo" ]; // prettier-ignore
         const ar = [ "قبل شهرين", "قبل شهر واحد", "قبل ٠ شهر", "خلال ٠ شهر", "خلال شهر واحد", "خلال شهرين" ]; // prettier-ignore
         const pl = [ "2 mies. temu", "1 mies. temu", "0 mies. temu", "za 0 mies.", "za 1 mies.", "za 2 mies." ]; // prettier-ignore
 
@@ -373,7 +373,7 @@ describe("month", () => {
     });
 
     test("style=narrow, numeric=auto", () => {
-        const en = [ "2 mo. ago", "last mo.", "this mo.", "this mo.", "next mo.", "in 2 mo." ]; // prettier-ignore
+        const en = [ "2mo ago", "last mo.", "this mo.", "this mo.", "next mo.", "in 2mo" ]; // prettier-ignore
         const ar = [ "قبل شهرين", "الشهر الماضي", "هذا الشهر", "هذا الشهر", "الشهر القادم", "خلال شهرين" ]; // prettier-ignore
         const pl = [ "2 mies. temu", "w zeszłym mies.", "w tym mies.", "w tym mies.", "w przyszłym mies.", "za 2 mies." ]; // prettier-ignore
 
@@ -399,7 +399,7 @@ describe("quarter", () => {
     });
 
     test("style=narrow, numeric=always", () => {
-        const en = [ "2 qtrs. ago", "1 qtr. ago", "0 qtrs. ago", "in 0 qtrs.", "in 1 qtr.", "in 2 qtrs." ]; // prettier-ignore
+        const en = [ "2q ago", "1q ago", "0q ago", "in 0q", "in 1q", "in 2q" ]; // prettier-ignore
         const ar = [ "قبل ربعي سنة", "قبل ربع سنة واحد", "قبل ٠ ربع سنة", "خلال ٠ ربع سنة", "خلال ربع سنة واحد", "خلال ربعي سنة" ]; // prettier-ignore
         const pl = [ "2 kw. temu", "1 kw. temu", "0 kw. temu", "za 0 kw.", "za 1 kw.", "za 2 kw." ]; // prettier-ignore
 
@@ -423,7 +423,7 @@ describe("quarter", () => {
     });
 
     test("style=narrow, numeric=auto", () => {
-        const en = [ "2 qtrs. ago", "last qtr.", "this qtr.", "this qtr.", "next qtr.", "in 2 qtrs." ]; // prettier-ignore
+        const en = [ "2q ago", "last qtr.", "this qtr.", "this qtr.", "next qtr.", "in 2q" ]; // prettier-ignore
         const ar = [ "قبل ربعي سنة", "الربع الأخير", "هذا الربع", "هذا الربع", "الربع القادم", "خلال ربعي سنة" ]; // prettier-ignore
         const pl = [ "2 kw. temu", "w zeszłym kwartale", "w tym kwartale", "w tym kwartale", "w przyszłym kwartale", "za 2 kw." ]; // prettier-ignore
 
@@ -449,7 +449,7 @@ describe("year", () => {
     });
 
     test("style=narrow, numeric=always", () => {
-        const en = [ "2 yr. ago", "1 yr. ago", "0 yr. ago", "in 0 yr.", "in 1 yr.", "in 2 yr." ]; // prettier-ignore
+        const en = [ "2y ago", "1y ago", "0y ago", "in 0y", "in 1y", "in 2y" ]; // prettier-ignore
         const ar = [ "قبل سنتين", "قبل سنة واحدة", "قبل ٠ سنة", "خلال ٠ سنة", "خلال سنة واحدة", "خلال سنتين" ]; // prettier-ignore
         const pl = [ "2 lata temu", "1 rok temu", "0 lat temu", "za 0 lat", "za 1 rok", "za 2 lata" ]; // prettier-ignore
 
@@ -473,7 +473,7 @@ describe("year", () => {
     });
 
     test("style=narrow, numeric=auto", () => {
-        const en = [ "2 yr. ago", "last yr.", "this yr.", "this yr.", "next yr.", "in 2 yr." ]; // prettier-ignore
+        const en = [ "2y ago", "last yr.", "this yr.", "this yr.", "next yr.", "in 2y" ]; // prettier-ignore
         const ar = [ "قبل سنتين", "السنة الماضية", "السنة الحالية", "السنة الحالية", "السنة القادمة", "خلال سنتين" ]; // prettier-ignore
         const pl = [ "2 lata temu", "w zeszłym roku", "w tym roku", "w tym roku", "w przyszłym roku", "za 2 lata" ]; // prettier-ignore
 
