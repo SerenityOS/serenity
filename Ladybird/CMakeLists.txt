@@ -105,7 +105,7 @@ add_custom_target(run
 )
 
 add_custom_target(debug
-    COMMAND "${CMAKE_COMMAND}" -E env "SERENITY_SOURCE_DIR=${SERENITY_SOURCE_DIR}" gdb "$<TARGET_FILE:ladybird>"
+    COMMAND "${CMAKE_COMMAND}" -E env "SERENITY_SOURCE_DIR=${SERENITY_SOURCE_DIR}" gdb -ex "set follow-fork-mode child" "$<TARGET_FILE:ladybird>"
     USES_TERMINAL
 )
 
