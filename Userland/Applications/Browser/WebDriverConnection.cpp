@@ -91,6 +91,7 @@ Messages::WebDriverSessionClient::GetNamedCookieResponse WebDriverConnection::ge
                 if (cookie.name == name)
                     return { cookie };
             }
+            return Optional<Web::Cookie::Cookie> {};
         }
     }
     return { {} };
