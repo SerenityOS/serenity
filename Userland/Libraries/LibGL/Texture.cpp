@@ -305,17 +305,6 @@ void GLContext::gl_tex_coord(GLfloat s, GLfloat t, GLfloat r, GLfloat q)
     m_current_vertex_tex_coord[0] = { s, t, r, q };
 }
 
-void GLContext::gl_tex_coord_pointer(GLint size, GLenum type, GLsizei stride, void const* pointer)
-{
-    RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
-    RETURN_WITH_ERROR_IF(!(size == 1 || size == 2 || size == 3 || size == 4), GL_INVALID_VALUE);
-    RETURN_WITH_ERROR_IF(!(type == GL_SHORT || type == GL_INT || type == GL_FLOAT || type == GL_DOUBLE), GL_INVALID_ENUM);
-    RETURN_WITH_ERROR_IF(stride < 0, GL_INVALID_VALUE);
-
-    auto& tex_coord_pointer = m_client_tex_coord_pointer[m_client_active_texture];
-    tex_coord_pointer = { .size = size, .type = type, .stride = stride, .pointer = pointer };
-}
-
 void GLContext::gl_tex_env(GLenum target, GLenum pname, GLfloat param)
 {
     APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_tex_env, target, pname, param);
