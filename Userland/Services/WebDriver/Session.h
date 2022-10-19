@@ -45,6 +45,7 @@ public:
     ErrorOr<JsonValue, HttpError> get_title();
     ErrorOr<JsonValue, HttpError> find_element(JsonValue const& payload);
     ErrorOr<JsonValue, HttpError> find_elements(JsonValue const& payload);
+    ErrorOr<JsonValue, HttpError> find_element_from_element(JsonValue const& payload, StringView parameter_element_id);
     ErrorOr<void, Variant<HttpError, Error>> close_window();
     ErrorOr<JsonValue, HttpError> get_all_cookies();
     ErrorOr<JsonValue, HttpError> get_named_cookie(String const& name);
