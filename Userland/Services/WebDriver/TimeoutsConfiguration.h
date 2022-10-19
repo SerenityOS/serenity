@@ -18,4 +18,6 @@ struct TimeoutsConfiguration {
     u64 implicit_wait_timeout { 0 };
 };
 
+JsonObject timeouts_object(TimeoutsConfiguration const&);
+
 }

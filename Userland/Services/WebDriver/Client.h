@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2022, Florent Castelli <florent.castelli@gmail.com>
+ * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -49,6 +50,7 @@ private:
     ErrorOr<JsonValue, HttpError> handle_new_session(Vector<StringView> const&, JsonValue const& payload);
     ErrorOr<JsonValue, HttpError> handle_delete_session(Vector<StringView> const&, JsonValue const& payload);
     ErrorOr<JsonValue, HttpError> handle_get_status(Vector<StringView> const&, JsonValue const& payload);
+    ErrorOr<JsonValue, HttpError> handle_get_timeouts(Vector<StringView> const&, JsonValue const& payload);
     ErrorOr<JsonValue, HttpError> handle_navigate_to(Vector<StringView> const&, JsonValue const& payload);
     ErrorOr<JsonValue, HttpError> handle_get_current_url(Vector<StringView> const&, JsonValue const& payload);
     ErrorOr<JsonValue, HttpError> handle_back(Vector<StringView> const&, JsonValue const& payload);

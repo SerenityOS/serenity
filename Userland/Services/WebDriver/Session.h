@@ -39,6 +39,7 @@ public:
 
     ErrorOr<void> start();
     ErrorOr<void> stop();
+    JsonObject get_timeouts();
     ErrorOr<JsonValue, HttpError> navigate_to(JsonValue const& url);
     ErrorOr<JsonValue, HttpError> get_current_url();
     ErrorOr<JsonValue, HttpError> back();
