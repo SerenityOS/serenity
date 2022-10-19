@@ -40,6 +40,7 @@ endpoint WebContentServer
     get_document_element() => (Optional<i32> node_id)
     query_selector_all(i32 start_node_id, String selector) => (Optional<Vector<i32>> elements_ids)
     get_element_attribute(i32 element_id, String name) => (Optional<String> attribute)
+    get_element_property(i32 element_id, String name) => (Optional<String> property)
 
     run_javascript(String js_source) =|
 
