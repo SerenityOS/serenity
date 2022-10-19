@@ -577,6 +577,42 @@ ErrorOr<JsonValue, HttpError> Session::find_elements_from_element(JsonValue cons
     return JsonValue(result);
 }
 
+// 12.4.2 Get Element Attribute, https://w3c.github.io/webdriver/#dfn-get-element-attribute
+ErrorOr<JsonValue, HttpError> Session::get_element_attribute(JsonValue const&, StringView parameter_element_id, StringView name)
+{
+    // 1. If the current browsing context is no longer open, return error with error code no such window.
+    auto current_window = get_window_object();
+    if (!current_window.has_value())
+        return HttpError { 404, "no such window", "Window not found" };
+
+    // FIXME: 2. Handle any user prompts and return its value if it is an error.
+
+    // FIXME: 3. Let element be the result of trying to get a known connected element with url variable element id.
+    // NOTE: The whole concept of "connected elements" is not implemented yet. See get_or_create_a_web_element_reference()
+    //       For now the element is only represented by its ID
+    auto maybe_element_id = parameter_element_id.to_int();
+    if (!maybe_element_id.has_value())
+        return HttpError { 400, "invalid argument", "Element ID is not an i32" };
+
+    auto element_id = maybe_element_id.release_value();
+
+    // FIXME: The case that the element does not exist is not handled at all and null is returned in that case.
+
+    // 4. Let result be the result of the first matching condition:
+    // -> FIXME: If name is a boolean attribute
+    //    NOTE: LibWeb doesn't know about boolean attributes directly
+    //    "true" (string) if the element has the attribute, otherwise null.
+    // -> Otherwise
+    //    The result of getting an attribute by name name.
+    auto result = m_browser_connection->get_element_attribute(element_id, name);
+
+    if (!result.has_value())
+        return JsonValue(AK::JsonValue::Type::Null);
+
+    // 5. Return success with data result.
+    return JsonValue(result.release_value());
+}
+
 // https://w3c.github.io/webdriver/#dfn-serialized-cookie
 static JsonObject serialize_cookie(Web::Cookie::Cookie const& cookie)
 {

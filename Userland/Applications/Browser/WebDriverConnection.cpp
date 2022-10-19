@@ -144,4 +144,15 @@ Messages::WebDriverSessionClient::QuerySelectorAllResponse WebDriverConnection::
     return { {} };
 }
 
+Messages::WebDriverSessionClient::GetElementAttributeResponse WebDriverConnection::get_element_attribute(i32 element_id, String const& name)
+{
+    dbgln("WebDriverConnection: get_element_attribute");
+    if (auto browser_window = m_browser_window.strong_ref()) {
+        auto& tab = browser_window->active_tab();
+        if (tab.on_get_element_attribute)
+            return { tab.on_get_element_attribute(element_id, name) };
+    }
+    return { {} };
+}
+
 }
