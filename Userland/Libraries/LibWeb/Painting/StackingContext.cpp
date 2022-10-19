@@ -379,6 +379,10 @@ Optional<HitTestResult> StackingContext::hit_test(Gfx::FloatPoint const& positio
             return {};
     }
 
+    if (paintable().computed_values().pointer_events() == CSS::PointerEvents::None) {
+        return {};
+    }
+
     // NOTE: Hit testing basically happens in reverse painting order.
     // https://www.w3.org/TR/CSS22/visuren.html#z-index
 
