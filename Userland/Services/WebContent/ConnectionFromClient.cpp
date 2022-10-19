@@ -473,6 +473,23 @@ Messages::WebContentServer::QuerySelectorAllResponse ConnectionFromClient::query
     return { return_list };
 }
 
+Messages::WebContentServer::GetElementAttributeResponse ConnectionFromClient::get_element_attribute(i32 element_id, String const& name)
+{
+    auto* node = Web::DOM::Node::from_id(element_id);
+    if (!node)
+        return Optional<String> {};
+
+    if (!node->is_element())
+        return Optional<String> {};
+
+    auto& element = verify_cast<Web::DOM::Element>(*node);
+
+    if (!element.has_attribute(name))
+        return Optional<String> {};
+
+    return { element.get_attribute(name) };
+}
+
 Messages::WebContentServer::GetSelectedTextResponse ConnectionFromClient::get_selected_text()
 {
     return page().focused_context().selected_text();

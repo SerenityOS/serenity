@@ -81,6 +81,7 @@ private:
 
     virtual Messages::WebContentServer::GetDocumentElementResponse get_document_element() override;
     virtual Messages::WebContentServer::QuerySelectorAllResponse query_selector_all(i32 start_node_id, String const& selector) override;
+    virtual Messages::WebContentServer::GetElementAttributeResponse get_element_attribute(i32 element_id, String const& name) override;
 
     virtual Messages::WebContentServer::GetLocalStorageEntriesResponse get_local_storage_entries() override;
     virtual Messages::WebContentServer::GetSessionStorageEntriesResponse get_session_storage_entries() override;
