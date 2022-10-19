@@ -100,7 +100,7 @@ ErrorOr<JsonValue, HttpError> Session::set_timeouts(JsonValue const& payload)
 ErrorOr<JsonValue, HttpError> Session::navigate_to(JsonValue const& payload)
 {
     // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
-    auto current_window = get_window_object();
+    auto current_window = this->current_window();
     if (!current_window.has_value())
         return HttpError { 404, "no such window", "Window not found" };
 
@@ -136,7 +136,7 @@ ErrorOr<JsonValue, HttpError> Session::navigate_to(JsonValue const& payload)
 ErrorOr<JsonValue, HttpError> Session::get_current_url()
 {
     // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
-    auto current_window = get_window_object();
+    auto current_window = this->current_window();
     if (!current_window.has_value())
         return HttpError { 404, "no such window", "Window not found" };
 
@@ -153,7 +153,7 @@ ErrorOr<JsonValue, HttpError> Session::get_current_url()
 ErrorOr<JsonValue, HttpError> Session::back()
 {
     // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
-    auto current_window = get_window_object();
+    auto current_window = this->current_window();
     if (!current_window.has_value())
         return HttpError { 404, "no such window", "Window not found" };
 
@@ -176,7 +176,7 @@ ErrorOr<JsonValue, HttpError> Session::back()
 ErrorOr<JsonValue, HttpError> Session::forward()
 {
     // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
-    auto current_window = get_window_object();
+    auto current_window = this->current_window();
     if (!current_window.has_value())
         return HttpError { 404, "no such window", "Window not found" };
 
@@ -199,7 +199,7 @@ ErrorOr<JsonValue, HttpError> Session::forward()
 ErrorOr<JsonValue, HttpError> Session::refresh()
 {
     // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
-    auto current_window = get_window_object();
+    auto current_window = this->current_window();
     if (!current_window.has_value())
         return HttpError { 404, "no such window", "Window not found" };
 
@@ -224,7 +224,7 @@ ErrorOr<JsonValue, HttpError> Session::refresh()
 ErrorOr<JsonValue, HttpError> Session::get_title()
 {
     // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
-    auto current_window = get_window_object();
+    auto current_window = this->current_window();
     if (!current_window.has_value())
         return HttpError { 404, "no such window", "Window not found" };
 
@@ -239,7 +239,7 @@ ErrorOr<JsonValue, HttpError> Session::get_title()
 ErrorOr<JsonValue, HttpError> Session::get_window_handle()
 {
     // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
-    auto current_window = get_window_object();
+    auto current_window = this->current_window();
     if (!current_window.has_value())
         return HttpError { 404, "no such window", "Window not found" };
 
@@ -251,7 +251,7 @@ ErrorOr<JsonValue, HttpError> Session::get_window_handle()
 ErrorOr<void, Variant<HttpError, Error>> Session::close_window()
 {
     // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
-    auto current_window = get_window_object();
+    auto current_window = this->current_window();
     if (!current_window.has_value())
         return Variant<HttpError, Error>(HttpError { 404, "no such window", "Window not found" });
 
@@ -424,7 +424,7 @@ ErrorOr<JsonValue, HttpError> Session::find_element(JsonValue const& payload)
     auto selector = maybe_selector.to_string();
 
     // 5. If the current browsing context is no longer open, return error with error code no such window.
-    auto current_window = get_window_object();
+    auto current_window = this->current_window();
     if (!current_window.has_value())
         return HttpError { 404, "no such window", "Window not found" };
 
@@ -481,7 +481,7 @@ ErrorOr<JsonValue, HttpError> Session::find_elements(JsonValue const& payload)
     auto selector = maybe_selector.to_string();
 
     // 5. If the current browsing context is no longer open, return error with error code no such window.
-    auto current_window = get_window_object();
+    auto current_window = this->current_window();
     if (!current_window.has_value())
         return HttpError { 404, "no such window", "Window not found" };
 
@@ -533,7 +533,7 @@ ErrorOr<JsonValue, HttpError> Session::find_element_from_element(JsonValue const
     auto selector = maybe_selector.to_string();
 
     // 5. If the current browsing context is no longer open, return error with error code no such window.
-    auto current_window = get_window_object();
+    auto current_window = this->current_window();
     if (!current_window.has_value())
         return HttpError { 404, "no such window", "Window not found" };
 
@@ -591,7 +591,7 @@ ErrorOr<JsonValue, HttpError> Session::find_elements_from_element(JsonValue cons
     auto selector = maybe_selector.to_string();
 
     // 5. If the current browsing context is no longer open, return error with error code no such window.
-    auto current_window = get_window_object();
+    auto current_window = this->current_window();
     if (!current_window.has_value())
         return HttpError { 404, "no such window", "Window not found" };
 
@@ -617,7 +617,7 @@ ErrorOr<JsonValue, HttpError> Session::find_elements_from_element(JsonValue cons
 ErrorOr<JsonValue, HttpError> Session::get_element_attribute(JsonValue const&, StringView parameter_element_id, StringView name)
 {
     // 1. If the current browsing context is no longer open, return error with error code no such window.
-    auto current_window = get_window_object();
+    auto current_window = this->current_window();
     if (!current_window.has_value())
         return HttpError { 404, "no such window", "Window not found" };
 
@@ -669,7 +669,7 @@ static JsonObject serialize_cookie(Web::Cookie::Cookie const& cookie)
 ErrorOr<JsonValue, HttpError> Session::get_all_cookies()
 {
     // 1. If the current browsing context is no longer open, return error with error code no such window.
-    auto current_window = get_window_object();
+    auto current_window = this->current_window();
     if (!current_window.has_value())
         return HttpError { 404, "no such window", "Window not found" };
 
@@ -694,9 +694,8 @@ ErrorOr<JsonValue, HttpError> Session::get_all_cookies()
 // 14.2 Get Named Cookie, https://w3c.github.io/webdriver/#dfn-get-named-cookie
 ErrorOr<JsonValue, HttpError> Session::get_named_cookie(String const& name)
 {
-
     // 1. If the current browsing context is no longer open, return error with error code no such window.
-    auto current_window = get_window_object();
+    auto current_window = this->current_window();
     if (!current_window.has_value())
         return HttpError { 404, "no such window", "Window not found" };
 
@@ -736,7 +735,7 @@ ErrorOr<JsonValue, HttpError> Session::add_cookie(JsonValue const& payload)
         return HttpError { 400, "invalid argument", "Cookie-Object doesn't contain all required keys" };
 
     // 3. If the current browsing context is no longer open, return error with error code no such window.
-    auto current_window = get_window_object();
+    auto current_window = this->current_window();
     if (!current_window.has_value())
         return HttpError { 404, "no such window", "Window not found" };
 
@@ -857,7 +856,7 @@ void Session::delete_cookies(Optional<StringView> const& name)
 ErrorOr<JsonValue, HttpError> Session::delete_cookie(StringView const& name)
 {
     // 1. If the current browsing context is no longer open, return error with error code no such window.
-    auto current_window = get_window_object();
+    auto current_window = this->current_window();
     if (!current_window.has_value())
         return HttpError { 404, "no such window", "Window not found" };
 
@@ -874,7 +873,7 @@ ErrorOr<JsonValue, HttpError> Session::delete_cookie(StringView const& name)
 ErrorOr<JsonValue, HttpError> Session::delete_all_cookies()
 {
     // 1. If the current browsing context is no longer open, return error with error code no such window.
-    auto current_window = get_window_object();
+    auto current_window = this->current_window();
     if (!current_window.has_value())
         return HttpError { 404, "no such window", "Window not found" };
 
