@@ -155,4 +155,15 @@ Messages::WebDriverSessionClient::GetElementAttributeResponse WebDriverConnectio
     return { {} };
 }
 
+Messages::WebDriverSessionClient::GetElementPropertyResponse WebDriverConnection::get_element_property(i32 element_id, String const& name)
+{
+    dbgln("WebDriverConnection: get_element_property");
+    if (auto browser_window = m_browser_window.strong_ref()) {
+        auto& tab = browser_window->active_tab();
+        if (tab.on_get_element_property)
+            return { tab.on_get_element_property(element_id, name) };
+    }
+    return { {} };
+}
+
 }
