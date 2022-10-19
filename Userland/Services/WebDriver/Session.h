@@ -33,7 +33,7 @@ public:
         i32 id;
     };
 
-    Optional<Window*> get_window_object() { return m_windows.get(m_current_window_handle); }
+    Optional<Window*> current_window() { return m_windows.get(m_current_window_handle); }
     String const& current_window_handle() { return m_current_window_handle; }
 
     ErrorOr<void> start();
