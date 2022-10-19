@@ -667,7 +667,7 @@ ErrorOr<JsonValue, HttpError> Session::get_element_attribute(JsonValue const&, S
 ErrorOr<JsonValue, HttpError> Session::get_element_property(JsonValue const&, StringView parameter_element_id, StringView name)
 {
     // 1. If the current browsing context is no longer open, return error with error code no such window.
-    auto current_window = get_window_object();
+    auto current_window = this->current_window();
     if (!current_window.has_value())
         return HttpError { 404, "no such window", "Window not found" };
 
