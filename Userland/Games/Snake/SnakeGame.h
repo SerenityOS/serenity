@@ -70,5 +70,5 @@ private:
     String m_high_score_text;
     bool m_is_new_high_score { false };
 
-    NonnullRefPtrVector<Gfx::Bitmap> m_fruit_bitmaps;
+    NonnullRefPtrVector<Gfx::Bitmap> m_food_bitmaps;
 };
