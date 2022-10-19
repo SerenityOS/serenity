@@ -525,6 +525,11 @@ Optional<Vector<i32>> OutOfProcessWebView::query_selector_all(i32 start_node_id,
     return client().query_selector_all(start_node_id, selector);
 }
 
+Optional<String> OutOfProcessWebView::get_element_attribute(i32 element_id, String const& name)
+{
+    return client().get_element_attribute(element_id, name);
+}
+
 void OutOfProcessWebView::set_content_filters(Vector<String> filters)
 {
     client().async_set_content_filters(filters);
