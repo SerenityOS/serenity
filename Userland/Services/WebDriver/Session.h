@@ -33,7 +33,8 @@ public:
         i32 id;
     };
 
-    Optional<Window*> current_window() { return m_windows.get(m_current_window_handle); }
+    ErrorOr<Window*, WebDriverError> current_window();
+    ErrorOr<void, WebDriverError> check_for_open_top_level_browsing_context_or_return_error();
     String const& current_window_handle() { return m_current_window_handle; }
 
     ErrorOr<void> start();
