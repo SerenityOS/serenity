@@ -28,6 +28,7 @@ KernelRng& KernelRng::the()
 
 UNMAP_AFTER_INIT KernelRng::KernelRng()
 {
+#if ARCH(I386) || ARCH(X86_64)
     bool supports_rdseed = Processor::current().has_feature(CPUFeature::RDSEED);
     bool supports_rdrand = Processor::current().has_feature(CPUFeature::RDRAND);
     if (supports_rdseed || supports_rdrand) {
@@ -50,9 +51,7 @@ UNMAP_AFTER_INIT KernelRng::KernelRng()
 
             add_random_event(value, i % 32);
         }
-    }
-#if ARCH(I386) || ARCH(X86_64)
-    else if (TimeManagement::the().can_query_precise_time()) {
+    } else if (TimeManagement::the().can_query_precise_time()) {
         // Add HPET as entropy source if we don't have anything better.
         dmesgln("KernelRng: Using HPET as entropy source");
 
@@ -70,6 +69,8 @@ UNMAP_AFTER_INIT KernelRng::KernelRng()
             current_time += 0x40b2u;
         }
     }
+#else
+    dmesgln("KernelRng: No entropy source available!");
 #endif
 }
 
@@ -121,7 +122,7 @@ bool get_good_random_bytes(Bytes buffer, bool allow_wait, bool fallback_to_fast)
     bool result = false;
     auto& kernel_rng = KernelRng::the();
     // FIXME: What if interrupts are disabled because we're in an interrupt?
-    bool can_wait = are_interrupts_enabled();
+    bool can_wait = Processor::are_interrupts_enabled();
     if (!can_wait && allow_wait) {
         // If we can't wait but the caller would be ok with it, then we
         // need to definitely fallback to *something*, even if it's less
