@@ -159,12 +159,7 @@ void Thread::SleepBlocker::was_unblocked(bool)
     TODO_AARCH64();
 }
 
-}
-
-// WaitQueue
-namespace Kernel {
-
-u32 WaitQueue::wake_all()
+bool Thread::WaitQueueBlocker::unblock()
 {
     TODO_AARCH64();
 }
