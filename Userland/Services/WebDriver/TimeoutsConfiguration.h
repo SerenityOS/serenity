@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "WebDriverError.h"
 #include <AK/Forward.h>
 #include <AK/Optional.h>
 
@@ -19,6 +20,6 @@ struct TimeoutsConfiguration {
 };
 
 JsonObject timeouts_object(TimeoutsConfiguration const&);
-ErrorOr<TimeoutsConfiguration, HttpError> json_deserialize_as_a_timeouts_configuration(JsonValue const&);
+ErrorOr<TimeoutsConfiguration, WebDriverError> json_deserialize_as_a_timeouts_configuration(JsonValue const&);
 
 }

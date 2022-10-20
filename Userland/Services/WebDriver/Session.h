@@ -11,8 +11,8 @@
 #include <AK/JsonValue.h>
 #include <AK/RefPtr.h>
 #include <WebDriver/BrowserConnection.h>
-#include <WebDriver/HttpError.h>
 #include <WebDriver/TimeoutsConfiguration.h>
+#include <WebDriver/WebDriverError.h>
 #include <unistd.h>
 
 namespace WebDriver {
@@ -39,34 +39,34 @@ public:
     ErrorOr<void> start();
     ErrorOr<void> stop();
     JsonObject get_timeouts();
-    ErrorOr<JsonValue, HttpError> set_timeouts(JsonValue const& payload);
-    ErrorOr<JsonValue, HttpError> navigate_to(JsonValue const& url);
-    ErrorOr<JsonValue, HttpError> get_current_url();
-    ErrorOr<JsonValue, HttpError> back();
-    ErrorOr<JsonValue, HttpError> forward();
-    ErrorOr<JsonValue, HttpError> refresh();
-    ErrorOr<JsonValue, HttpError> get_title();
-    ErrorOr<JsonValue, HttpError> get_window_handle();
-    ErrorOr<void, Variant<HttpError, Error>> close_window();
-    ErrorOr<JsonValue, HttpError> get_window_handles() const;
-    ErrorOr<JsonValue, HttpError> find_element(JsonValue const& payload);
-    ErrorOr<JsonValue, HttpError> find_elements(JsonValue const& payload);
-    ErrorOr<JsonValue, HttpError> find_element_from_element(JsonValue const& payload, StringView parameter_element_id);
-    ErrorOr<JsonValue, HttpError> find_elements_from_element(JsonValue const& payload, StringView parameter_element_id);
-    ErrorOr<JsonValue, HttpError> get_element_attribute(JsonValue const& payload, StringView element_id, StringView name);
-    ErrorOr<JsonValue, HttpError> get_element_property(JsonValue const& payload, StringView element_id, StringView name);
-    ErrorOr<JsonValue, HttpError> get_element_css_value(JsonValue const& payload, StringView element_id, StringView property_name);
-    ErrorOr<JsonValue, HttpError> get_all_cookies();
-    ErrorOr<JsonValue, HttpError> get_named_cookie(String const& name);
-    ErrorOr<JsonValue, HttpError> add_cookie(JsonValue const& payload);
-    ErrorOr<JsonValue, HttpError> delete_cookie(StringView const& name);
-    ErrorOr<JsonValue, HttpError> delete_all_cookies();
+    ErrorOr<JsonValue, WebDriverError> set_timeouts(JsonValue const& payload);
+    ErrorOr<JsonValue, WebDriverError> navigate_to(JsonValue const& url);
+    ErrorOr<JsonValue, WebDriverError> get_current_url();
+    ErrorOr<JsonValue, WebDriverError> back();
+    ErrorOr<JsonValue, WebDriverError> forward();
+    ErrorOr<JsonValue, WebDriverError> refresh();
+    ErrorOr<JsonValue, WebDriverError> get_title();
+    ErrorOr<JsonValue, WebDriverError> get_window_handle();
+    ErrorOr<void, Variant<WebDriverError, Error>> close_window();
+    ErrorOr<JsonValue, WebDriverError> get_window_handles() const;
+    ErrorOr<JsonValue, WebDriverError> find_element(JsonValue const& payload);
+    ErrorOr<JsonValue, WebDriverError> find_elements(JsonValue const& payload);
+    ErrorOr<JsonValue, WebDriverError> find_element_from_element(JsonValue const& payload, StringView parameter_element_id);
+    ErrorOr<JsonValue, WebDriverError> find_elements_from_element(JsonValue const& payload, StringView parameter_element_id);
+    ErrorOr<JsonValue, WebDriverError> get_element_attribute(JsonValue const& payload, StringView element_id, StringView name);
+    ErrorOr<JsonValue, WebDriverError> get_element_property(JsonValue const& payload, StringView element_id, StringView name);
+    ErrorOr<JsonValue, WebDriverError> get_element_css_value(JsonValue const& payload, StringView element_id, StringView property_name);
+    ErrorOr<JsonValue, WebDriverError> get_all_cookies();
+    ErrorOr<JsonValue, WebDriverError> get_named_cookie(String const& name);
+    ErrorOr<JsonValue, WebDriverError> add_cookie(JsonValue const& payload);
+    ErrorOr<JsonValue, WebDriverError> delete_cookie(StringView const& name);
+    ErrorOr<JsonValue, WebDriverError> delete_all_cookies();
 
 private:
     void delete_cookies(Optional<StringView> const& name = {});
-    ErrorOr<JsonArray, HttpError> find(LocalElement const& start_node, StringView const& location_strategy, StringView const& selector);
+    ErrorOr<JsonArray, WebDriverError> find(LocalElement const& start_node, StringView const& location_strategy, StringView const& selector);
 
-    using ElementLocationStrategyHandler = ErrorOr<Vector<LocalElement>, HttpError> (Session::*)(LocalElement const&, StringView const&);
+    using ElementLocationStrategyHandler = ErrorOr<Vector<LocalElement>, WebDriverError> (Session::*)(LocalElement const&, StringView const&);
     struct LocatorStrategy {
         String name;
         ElementLocationStrategyHandler handler;
@@ -74,11 +74,11 @@ private:
 
     static Vector<LocatorStrategy> s_locator_strategies;
 
-    ErrorOr<Vector<LocalElement>, HttpError> locator_strategy_css_selectors(LocalElement const&, StringView const&);
-    ErrorOr<Vector<LocalElement>, HttpError> locator_strategy_link_text(LocalElement const&, StringView const&);
-    ErrorOr<Vector<LocalElement>, HttpError> locator_strategy_partial_link_text(LocalElement const&, StringView const&);
-    ErrorOr<Vector<LocalElement>, HttpError> locator_strategy_tag_name(LocalElement const&, StringView const&);
-    ErrorOr<Vector<LocalElement>, HttpError> locator_strategy_x_path(LocalElement const&, StringView const&);
+    ErrorOr<Vector<LocalElement>, WebDriverError> locator_strategy_css_selectors(LocalElement const&, StringView const&);
+    ErrorOr<Vector<LocalElement>, WebDriverError> locator_strategy_link_text(LocalElement const&, StringView const&);
+    ErrorOr<Vector<LocalElement>, WebDriverError> locator_strategy_partial_link_text(LocalElement const&, StringView const&);
+    ErrorOr<Vector<LocalElement>, WebDriverError> locator_strategy_tag_name(LocalElement const&, StringView const&);
+    ErrorOr<Vector<LocalElement>, WebDriverError> locator_strategy_x_path(LocalElement const&, StringView const&);
 
     NonnullRefPtr<Client> m_client;
     bool m_started { false };

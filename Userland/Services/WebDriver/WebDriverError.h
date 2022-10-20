@@ -11,7 +11,7 @@
 
 namespace WebDriver {
 
-struct HttpError {
+struct WebDriverError {
     unsigned http_status;
     String error;
     String message;
@@ -20,8 +20,8 @@ struct HttpError {
 }
 
 template<>
-struct AK::Formatter<WebDriver::HttpError> : Formatter<StringView> {
-    ErrorOr<void> format(FormatBuilder& builder, WebDriver::HttpError const& error)
+struct AK::Formatter<WebDriver::WebDriverError> : Formatter<StringView> {
+    ErrorOr<void> format(FormatBuilder& builder, WebDriver::WebDriverError const& error)
     {
         return Formatter<StringView>::format(builder, String::formatted("Error {}, {}: {}", error.http_status, error.error, error.message));
     }
