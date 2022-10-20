@@ -57,6 +57,7 @@ public:
     ErrorOr<JsonValue, WebDriverError> get_element_attribute(JsonValue const& payload, StringView element_id, StringView name);
     ErrorOr<JsonValue, WebDriverError> get_element_property(JsonValue const& payload, StringView element_id, StringView name);
     ErrorOr<JsonValue, WebDriverError> get_element_css_value(JsonValue const& payload, StringView element_id, StringView property_name);
+    ErrorOr<JsonValue, WebDriverError> get_element_tag_name(JsonValue const& payload, StringView element_id);
     ErrorOr<JsonValue, WebDriverError> get_all_cookies();
     ErrorOr<JsonValue, WebDriverError> get_named_cookie(String const& name);
     ErrorOr<JsonValue, WebDriverError> add_cookie(JsonValue const& payload);
