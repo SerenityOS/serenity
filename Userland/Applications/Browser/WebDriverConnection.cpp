@@ -22,14 +22,14 @@ WebDriverConnection::WebDriverConnection(NonnullOwnPtr<Core::Stream::LocalSocket
 
 void WebDriverConnection::quit()
 {
-    dbgln("WebDriverConnection: quit");
+    dbgln_if(WEBDRIVER_DEBUG, "WebDriverConnection: quit");
     if (auto browser_window = m_browser_window.strong_ref())
         browser_window->close();
 }
 
 Messages::WebDriverSessionClient::GetUrlResponse WebDriverConnection::get_url()
 {
-    dbgln("WebDriverConnection: get_url");
+    dbgln_if(WEBDRIVER_DEBUG, "WebDriverConnection: get_url");
     if (auto browser_window = m_browser_window.strong_ref())
         return { browser_window->active_tab().url() };
     return { URL("") };
@@ -37,14 +37,14 @@ Messages::WebDriverSessionClient::GetUrlResponse WebDriverConnection::get_url()
 
 void WebDriverConnection::set_url(AK::URL const& url)
 {
-    dbgln("WebDriverConnection: set_url {}", url);
+    dbgln_if(WEBDRIVER_DEBUG, "WebDriverConnection: set_url {}", url);
     if (auto browser_window = m_browser_window.strong_ref())
         browser_window->active_tab().load(url);
 }
 
 Messages::WebDriverSessionClient::GetTitleResponse WebDriverConnection::get_title()
 {
-    dbgln("WebDriverConnection: get_title");
+    dbgln_if(WEBDRIVER_DEBUG, "WebDriverConnection: get_title");
     if (auto browser_window = m_browser_window.strong_ref())
         return { browser_window->active_tab().title() };
     return { "" };
@@ -52,28 +52,28 @@ Messages::WebDriverSessionClient::GetTitleResponse WebDriverConnection::get_titl
 
 void WebDriverConnection::refresh()
 {
-    dbgln("WebDriverConnection: refresh");
+    dbgln_if(WEBDRIVER_DEBUG, "WebDriverConnection: refresh");
     if (auto browser_window = m_browser_window.strong_ref())
         browser_window->active_tab().reload();
 }
 
 void WebDriverConnection::back()
 {
-    dbgln("WebDriverConnection: back");
+    dbgln_if(WEBDRIVER_DEBUG, "WebDriverConnection: back");
     if (auto browser_window = m_browser_window.strong_ref())
         browser_window->active_tab().go_back();
 }
 
 void WebDriverConnection::forward()
 {
-    dbgln("WebDriverConnection: forward");
+    dbgln_if(WEBDRIVER_DEBUG, "WebDriverConnection: forward");
     if (auto browser_window = m_browser_window.strong_ref())
         browser_window->active_tab().go_forward();
 }
 
 Messages::WebDriverSessionClient::GetAllCookiesResponse WebDriverConnection::get_all_cookies()
 {
-    dbgln("WebDriverConnection: get_cookies");
+    dbgln_if(WEBDRIVER_DEBUG, "WebDriverConnection: get_cookies");
     if (auto browser_window = m_browser_window.strong_ref()) {
         if (browser_window->active_tab().on_get_cookies_entries) {
             return { browser_window->active_tab().on_get_cookies_entries() };
@@ -84,7 +84,7 @@ Messages::WebDriverSessionClient::GetAllCookiesResponse WebDriverConnection::get
 
 Messages::WebDriverSessionClient::GetNamedCookieResponse WebDriverConnection::get_named_cookie(String const& name)
 {
-    dbgln("WebDriverConnection: get_named_cookie {}", name);
+    dbgln_if(WEBDRIVER_DEBUG, "WebDriverConnection: get_named_cookie {}", name);
     if (auto browser_window = m_browser_window.strong_ref()) {
         if (browser_window->active_tab().on_get_cookies_entries) {
             for (auto cookie : browser_window->active_tab().on_get_cookies_entries()) {
@@ -99,7 +99,7 @@ Messages::WebDriverSessionClient::GetNamedCookieResponse WebDriverConnection::ge
 
 void WebDriverConnection::add_cookie(Web::Cookie::ParsedCookie const& cookie)
 {
-    dbgln("WebDriverConnection: add_cookie {}", cookie.name);
+    dbgln_if(WEBDRIVER_DEBUG, "WebDriverConnection: add_cookie {}", cookie.name);
     if (auto browser_window = m_browser_window.strong_ref()) {
         auto& tab = browser_window->active_tab();
         if (tab.on_set_cookie) {
@@ -113,7 +113,7 @@ void WebDriverConnection::add_cookie(Web::Cookie::ParsedCookie const& cookie)
 
 void WebDriverConnection::update_cookie(Web::Cookie::Cookie const& cookie)
 {
-    dbgln("WebDriverConnection: update_cookie {}", cookie.name);
+    dbgln_if(WEBDRIVER_DEBUG, "WebDriverConnection: update_cookie {}", cookie.name);
     if (auto browser_window = m_browser_window.strong_ref()) {
         auto& tab = browser_window->active_tab();
         if (tab.on_update_cookie) {
@@ -124,7 +124,7 @@ void WebDriverConnection::update_cookie(Web::Cookie::Cookie const& cookie)
 
 Messages::WebDriverSessionClient::GetDocumentElementResponse WebDriverConnection::get_document_element()
 {
-    dbgln("WebDriverConnection: get_document_element");
+    dbgln_if(WEBDRIVER_DEBUG, "WebDriverConnection: get_document_element");
     if (auto browser_window = m_browser_window.strong_ref()) {
         auto& tab = browser_window->active_tab();
         if (tab.webdriver_endpoints().on_get_document_element)
@@ -135,7 +135,7 @@ Messages::WebDriverSessionClient::GetDocumentElementResponse WebDriverConnection
 
 Messages::WebDriverSessionClient::QuerySelectorAllResponse WebDriverConnection::query_selector_all(i32 start_node_id, String const& selector)
 {
-    dbgln("WebDriverConnection: query_selector_all");
+    dbgln_if(WEBDRIVER_DEBUG, "WebDriverConnection: query_selector_all");
     if (auto browser_window = m_browser_window.strong_ref()) {
         auto& tab = browser_window->active_tab();
         if (tab.webdriver_endpoints().on_query_selector_all)
@@ -146,7 +146,7 @@ Messages::WebDriverSessionClient::QuerySelectorAllResponse WebDriverConnection::
 
 Messages::WebDriverSessionClient::GetElementAttributeResponse WebDriverConnection::get_element_attribute(i32 element_id, String const& name)
 {
-    dbgln("WebDriverConnection: get_element_attribute");
+    dbgln_if(WEBDRIVER_DEBUG, "WebDriverConnection: get_element_attribute");
     if (auto browser_window = m_browser_window.strong_ref()) {
         auto& tab = browser_window->active_tab();
         if (tab.webdriver_endpoints().on_get_element_attribute)
@@ -157,7 +157,7 @@ Messages::WebDriverSessionClient::GetElementAttributeResponse WebDriverConnectio
 
 Messages::WebDriverSessionClient::GetElementPropertyResponse WebDriverConnection::get_element_property(i32 element_id, String const& name)
 {
-    dbgln("WebDriverConnection: get_element_property");
+    dbgln_if(WEBDRIVER_DEBUG, "WebDriverConnection: get_element_property");
     if (auto browser_window = m_browser_window.strong_ref()) {
         auto& tab = browser_window->active_tab();
         if (tab.webdriver_endpoints().on_get_element_property)
@@ -168,7 +168,7 @@ Messages::WebDriverSessionClient::GetElementPropertyResponse WebDriverConnection
 
 Messages::WebDriverSessionClient::GetActiveDocumentsTypeResponse WebDriverConnection::get_active_documents_type()
 {
-    dbgln("WebDriverConnection: get_active_documents_type");
+    dbgln_if(WEBDRIVER_DEBUG, "WebDriverConnection: get_active_documents_type");
     if (auto browser_window = m_browser_window.strong_ref()) {
         auto& tab = browser_window->active_tab();
         if (tab.webdriver_endpoints().on_get_active_documents_type)
@@ -179,7 +179,7 @@ Messages::WebDriverSessionClient::GetActiveDocumentsTypeResponse WebDriverConnec
 
 Messages::WebDriverSessionClient::GetComputedValueForElementResponse WebDriverConnection::get_computed_value_for_element(i32 element_id, String const& property_name)
 {
-    dbgln("WebDriverConnection: get_computed_value_for_element");
+    dbgln_if(WEBDRIVER_DEBUG, "WebDriverConnection: get_computed_value_for_element");
     if (auto browser_window = m_browser_window.strong_ref()) {
         auto& tab = browser_window->active_tab();
         if (tab.webdriver_endpoints().on_get_computed_value_for_element)

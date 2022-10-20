@@ -26,9 +26,9 @@ class WebDriverConnection final
 public:
     static ErrorOr<NonnullRefPtr<WebDriverConnection>> connect_to_webdriver(NonnullRefPtr<BrowserWindow> browser_window, String path)
     {
-        dbgln("Trying to connect to {}", path);
+        dbgln_if(WEBDRIVER_DEBUG, "Trying to connect to {}", path);
         auto result = TRY(Core::Stream::LocalSocket::connect(path));
-        dbgln("Connected to WebDriver");
+        dbgln_if(WEBDRIVER_DEBUG, "Connected to WebDriver");
         return TRY(adopt_nonnull_ref_or_enomem(new (nothrow) WebDriverConnection(move(result), browser_window)));
     }
 
