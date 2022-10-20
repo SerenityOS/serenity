@@ -38,6 +38,7 @@ private:
     explicit NodeIterator(Node& root);
 
     virtual void visit_edges(Cell::Visitor&) override;
+    virtual void finalize() override;
 
     enum class Direction {
         Next,

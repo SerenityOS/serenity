@@ -19,8 +19,11 @@ NodeIterator::NodeIterator(Node& root)
     root.document().register_node_iterator({}, *this);
 }
 
-NodeIterator::~NodeIterator()
+NodeIterator::~NodeIterator() = default;
+
+void NodeIterator::finalize()
 {
+    Base::finalize();
     m_root->document().unregister_node_iterator({}, *this);
 }
 
