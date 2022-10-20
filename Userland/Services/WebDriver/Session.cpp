@@ -36,6 +36,20 @@ Session::~Session()
     }
 }
 
+ErrorOr<Session::Window*, WebDriverError> Session::current_window()
+{
+    auto window = m_windows.get(m_current_window_handle);
+    if (!window.has_value())
+        return WebDriverError::from_code(ErrorCode::NoSuchWindow, "Window not found");
+    return window.release_value();
+}
+
+ErrorOr<void, WebDriverError> Session::check_for_open_top_level_browsing_context_or_return_error()
+{
+    (void)TRY(current_window());
+    return {};
+}
+
 ErrorOr<void> Session::start()
 {
     auto socket_path = String::formatted("/tmp/browser_webdriver_{}_{}", getpid(), m_id);
@@ -100,9 +114,7 @@ ErrorOr<JsonValue, WebDriverError> Session::set_timeouts(JsonValue const& payloa
 ErrorOr<JsonValue, WebDriverError> Session::navigate_to(JsonValue const& payload)
 {
     // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
-    auto current_window = this->current_window();
-    if (!current_window.has_value())
-        return WebDriverError::from_code(ErrorCode::NoSuchWindow, "Window not found");
+    TRY(check_for_open_top_level_browsing_context_or_return_error());
 
     // FIXME 2. Handle any user prompts and return its value if it is an error.
 
@@ -136,9 +148,7 @@ ErrorOr<JsonValue, WebDriverError> Session::navigate_to(JsonValue const& payload
 ErrorOr<JsonValue, WebDriverError> Session::get_current_url()
 {
     // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
-    auto current_window = this->current_window();
-    if (!current_window.has_value())
-        return WebDriverError::from_code(ErrorCode::NoSuchWindow, "Window not found");
+    TRY(check_for_open_top_level_browsing_context_or_return_error());
 
     // FIXME: 2. Handle any user prompts and return its value if it is an error.
 
@@ -153,9 +163,7 @@ ErrorOr<JsonValue, WebDriverError> Session::get_current_url()
 ErrorOr<JsonValue, WebDriverError> Session::back()
 {
     // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
-    auto current_window = this->current_window();
-    if (!current_window.has_value())
-        return WebDriverError::from_code(ErrorCode::NoSuchWindow, "Window not found");
+    TRY(check_for_open_top_level_browsing_context_or_return_error());
 
     // FIXME: 2. Handle any user prompts and return its value if it is an error.
 
@@ -176,9 +184,7 @@ ErrorOr<JsonValue, WebDriverError> Session::back()
 ErrorOr<JsonValue, WebDriverError> Session::forward()
 {
     // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
-    auto current_window = this->current_window();
-    if (!current_window.has_value())
-        return WebDriverError::from_code(ErrorCode::NoSuchWindow, "Window not found");
+    TRY(check_for_open_top_level_browsing_context_or_return_error());
 
     // FIXME: 2. Handle any user prompts and return its value if it is an error.
 
@@ -199,9 +205,7 @@ ErrorOr<JsonValue, WebDriverError> Session::forward()
 ErrorOr<JsonValue, WebDriverError> Session::refresh()
 {
     // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
-    auto current_window = this->current_window();
-    if (!current_window.has_value())
-        return WebDriverError::from_code(ErrorCode::NoSuchWindow, "Window not found");
+    TRY(check_for_open_top_level_browsing_context_or_return_error());
 
     // FIXME: 2. Handle any user prompts and return its value if it is an error.
 
@@ -224,9 +228,7 @@ ErrorOr<JsonValue, WebDriverError> Session::refresh()
 ErrorOr<JsonValue, WebDriverError> Session::get_title()
 {
     // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
-    auto current_window = this->current_window();
-    if (!current_window.has_value())
-        return WebDriverError::from_code(ErrorCode::NoSuchWindow, "Window not found");
+    TRY(check_for_open_top_level_browsing_context_or_return_error());
 
     // FIXME: 2. Handle any user prompts and return its value if it is an error.
 
@@ -239,9 +241,7 @@ ErrorOr<JsonValue, WebDriverError> Session::get_title()
 ErrorOr<JsonValue, WebDriverError> Session::get_window_handle()
 {
     // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
-    auto current_window = this->current_window();
-    if (!current_window.has_value())
-        return WebDriverError::from_code(ErrorCode::NoSuchWindow, "Window not found");
+    TRY(check_for_open_top_level_browsing_context_or_return_error());
 
     // 2. Return success with data being the window handle associated with the current top-level browsing context.
     return m_current_window_handle;
@@ -251,9 +251,7 @@ ErrorOr<JsonValue, WebDriverError> Session::get_window_handle()
 ErrorOr<void, Variant<WebDriverError, Error>> Session::close_window()
 {
     // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
-    auto current_window = this->current_window();
-    if (!current_window.has_value())
-        return Variant<WebDriverError, Error>(WebDriverError::from_code(ErrorCode::NoSuchWindow, "Window not found"));
+    TRY(check_for_open_top_level_browsing_context_or_return_error());
 
     // 2. Close the current top-level browsing context.
     m_windows.remove(m_current_window_handle);
@@ -438,9 +436,7 @@ ErrorOr<JsonValue, WebDriverError> Session::find_element(JsonValue const& payloa
     auto selector = maybe_selector.to_string();
 
     // 5. If the current browsing context is no longer open, return error with error code no such window.
-    auto current_window = this->current_window();
-    if (!current_window.has_value())
-        return WebDriverError::from_code(ErrorCode::NoSuchWindow, "Window not found");
+    TRY(check_for_open_top_level_browsing_context_or_return_error());
 
     // FIXME: 6. Handle any user prompts and return its value if it is an error.
 
@@ -495,9 +491,7 @@ ErrorOr<JsonValue, WebDriverError> Session::find_elements(JsonValue const& paylo
     auto selector = maybe_selector.to_string();
 
     // 5. If the current browsing context is no longer open, return error with error code no such window.
-    auto current_window = this->current_window();
-    if (!current_window.has_value())
-        return WebDriverError::from_code(ErrorCode::NoSuchWindow, "Window not found");
+    TRY(check_for_open_top_level_browsing_context_or_return_error());
 
     // FIXME: 6. Handle any user prompts and return its value if it is an error.
 
@@ -547,9 +541,7 @@ ErrorOr<JsonValue, WebDriverError> Session::find_element_from_element(JsonValue 
     auto selector = maybe_selector.to_string();
 
     // 5. If the current browsing context is no longer open, return error with error code no such window.
-    auto current_window = this->current_window();
-    if (!current_window.has_value())
-        return WebDriverError::from_code(ErrorCode::NoSuchWindow, "Window not found");
+    TRY(check_for_open_top_level_browsing_context_or_return_error());
 
     // FIXME: 6. Handle any user prompts and return its value if it is an error.
 
@@ -605,9 +597,7 @@ ErrorOr<JsonValue, WebDriverError> Session::find_elements_from_element(JsonValue
     auto selector = maybe_selector.to_string();
 
     // 5. If the current browsing context is no longer open, return error with error code no such window.
-    auto current_window = this->current_window();
-    if (!current_window.has_value())
-        return WebDriverError::from_code(ErrorCode::NoSuchWindow, "Window not found");
+    TRY(check_for_open_top_level_browsing_context_or_return_error());
 
     // FIXME: 6. Handle any user prompts and return its value if it is an error.
 
@@ -631,9 +621,7 @@ ErrorOr<JsonValue, WebDriverError> Session::find_elements_from_element(JsonValue
 ErrorOr<JsonValue, WebDriverError> Session::get_element_attribute(JsonValue const&, StringView parameter_element_id, StringView name)
 {
     // 1. If the current browsing context is no longer open, return error with error code no such window.
-    auto current_window = this->current_window();
-    if (!current_window.has_value())
-        return WebDriverError::from_code(ErrorCode::NoSuchWindow, "Window not found");
+    TRY(check_for_open_top_level_browsing_context_or_return_error());
 
     // FIXME: 2. Handle any user prompts and return its value if it is an error.
 
@@ -667,9 +655,7 @@ ErrorOr<JsonValue, WebDriverError> Session::get_element_attribute(JsonValue cons
 ErrorOr<JsonValue, WebDriverError> Session::get_element_property(JsonValue const&, StringView parameter_element_id, StringView name)
 {
     // 1. If the current browsing context is no longer open, return error with error code no such window.
-    auto current_window = this->current_window();
-    if (!current_window.has_value())
-        return WebDriverError::from_code(ErrorCode::NoSuchWindow, "Window not found");
+    TRY(check_for_open_top_level_browsing_context_or_return_error());
 
     // FIXME: 2. Handle any user prompts and return its value if it is an error.
 
@@ -697,9 +683,7 @@ ErrorOr<JsonValue, WebDriverError> Session::get_element_property(JsonValue const
 ErrorOr<JsonValue, WebDriverError> Session::get_element_css_value(JsonValue const&, StringView parameter_element_id, StringView property_name)
 {
     // 1. If the current browsing context is no longer open, return error with error code no such window.
-    auto current_window = this->current_window();
-    if (!current_window.has_value())
-        return WebDriverError { 404, "no such window", "Window not found" };
+    TRY(check_for_open_top_level_browsing_context_or_return_error());
 
     // FIXME: 2. Handle any user prompts and return its value if it is an error.
 
@@ -747,9 +731,7 @@ static JsonObject serialize_cookie(Web::Cookie::Cookie const& cookie)
 ErrorOr<JsonValue, WebDriverError> Session::get_all_cookies()
 {
     // 1. If the current browsing context is no longer open, return error with error code no such window.
-    auto current_window = this->current_window();
-    if (!current_window.has_value())
-        return WebDriverError::from_code(ErrorCode::NoSuchWindow, "Window not found");
+    TRY(check_for_open_top_level_browsing_context_or_return_error());
 
     // FIXME: 2. Handle any user prompts, and return its value if it is an error.
 
@@ -773,9 +755,7 @@ ErrorOr<JsonValue, WebDriverError> Session::get_all_cookies()
 ErrorOr<JsonValue, WebDriverError> Session::get_named_cookie(String const& name)
 {
     // 1. If the current browsing context is no longer open, return error with error code no such window.
-    auto current_window = this->current_window();
-    if (!current_window.has_value())
-        return WebDriverError::from_code(ErrorCode::NoSuchWindow, "Window not found");
+    TRY(check_for_open_top_level_browsing_context_or_return_error());
 
     // FIXME: 2. Handle any user prompts, and return its value if it is an error.
 
@@ -813,9 +793,7 @@ ErrorOr<JsonValue, WebDriverError> Session::add_cookie(JsonValue const& payload)
         return WebDriverError::from_code(ErrorCode::InvalidArgument, "Cookie-Object doesn't contain all required keys");
 
     // 3. If the current browsing context is no longer open, return error with error code no such window.
-    auto current_window = this->current_window();
-    if (!current_window.has_value())
-        return WebDriverError::from_code(ErrorCode::NoSuchWindow, "Window not found");
+    TRY(check_for_open_top_level_browsing_context_or_return_error());
 
     // FIXME: 4. Handle any user prompts, and return its value if it is an error.
 
@@ -934,9 +912,7 @@ void Session::delete_cookies(Optional<StringView> const& name)
 ErrorOr<JsonValue, WebDriverError> Session::delete_cookie(StringView const& name)
 {
     // 1. If the current browsing context is no longer open, return error with error code no such window.
-    auto current_window = this->current_window();
-    if (!current_window.has_value())
-        return WebDriverError::from_code(ErrorCode::NoSuchWindow, "Window not found");
+    TRY(check_for_open_top_level_browsing_context_or_return_error());
 
     // FIXME: 2. Handle any user prompts, and return its value if it is an error.
 
@@ -951,9 +927,7 @@ ErrorOr<JsonValue, WebDriverError> Session::delete_cookie(StringView const& name
 ErrorOr<JsonValue, WebDriverError> Session::delete_all_cookies()
 {
     // 1. If the current browsing context is no longer open, return error with error code no such window.
-    auto current_window = this->current_window();
-    if (!current_window.has_value())
-        return WebDriverError::from_code(ErrorCode::NoSuchWindow, "Window not found");
+    TRY(check_for_open_top_level_browsing_context_or_return_error());
 
     // FIXME: 2. Handle any user prompts, and return its value if it is an error.
 
