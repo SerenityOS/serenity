@@ -20,6 +20,7 @@ namespace Web::Layout {
 
 Node::Node(DOM::Document& document, DOM::Node* node)
     : m_dom_node(node ? *node : document)
+    , m_browsing_context(*document.browsing_context())
     , m_anonymous(node == nullptr)
 {
     m_serial_id = document.next_layout_node_serial_id({});
@@ -34,6 +35,7 @@ void Node::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
     visitor.visit(m_dom_node);
+    visitor.visit(m_browsing_context);
     TreeNode::visit_edges(visitor);
 }
 
@@ -105,14 +107,12 @@ bool Node::establishes_stacking_context() const
 
 HTML::BrowsingContext const& Node::browsing_context() const
 {
-    VERIFY(document().browsing_context());
-    return *document().browsing_context();
+    return *m_browsing_context;
 }
 
 HTML::BrowsingContext& Node::browsing_context()
 {
-    VERIFY(document().browsing_context());
-    return *document().browsing_context();
+    return *m_browsing_context;
 }
 
 InitialContainingBlock const& Node::root() const

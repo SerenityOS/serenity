@@ -152,6 +152,8 @@ private:
     JS::NonnullGCPtr<DOM::Node> m_dom_node;
     RefPtr<Painting::Paintable> m_paintable;
 
+    JS::NonnullGCPtr<HTML::BrowsingContext> m_browsing_context;
+
     size_t m_serial_id { 0 };
 
     bool m_anonymous { false };
