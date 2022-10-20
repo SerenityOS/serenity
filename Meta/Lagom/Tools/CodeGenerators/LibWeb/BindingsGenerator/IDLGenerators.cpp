@@ -81,8 +81,12 @@ static String union_type_to_variant(UnionType const& union_type, Interface const
         if (type_index > 0)
             builder.append(", "sv);
 
-        auto cpp_type = idl_type_name_to_cpp_type(type, interface);
-        builder.append(cpp_type.name);
+        if (interface.typedefs.contains(type.name()) && interface.typedefs.get(type.name())->type->is_union()) {
+            builder.append(union_type_to_variant(interface.typedefs.get(type.name())->type->as_union(), interface));
+        } else {
+            auto cpp_type = idl_type_name_to_cpp_type(type, interface);
+            builder.append(cpp_type.name);
+        }
     }
 
     if (union_type.includes_undefined())
@@ -845,7 +849,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
 
         // NOTE: This is handled out here as we need the dictionary conversion code for the {} optional default value.
         // 3. Let types be the flattened member types of the union type.
-        auto types = union_type.flattened_member_types();
+        auto types = union_type.flattened_member_types(interface.typedefs);
 
         RefPtr<Type> dictionary_type;
         for (auto& dictionary : interface.dictionaries) {
@@ -1479,7 +1483,7 @@ static void generate_wrap_statement(SourceGenerator& generator, String const& va
 )~~~");
     } else if (is<IDL::UnionType>(type)) {
         auto& union_type = verify_cast<IDL::UnionType>(type);
-        auto union_types = union_type.flattened_member_types();
+        auto union_types = union_type.flattened_member_types(interface.typedefs);
         auto union_generator = scoped_generator.fork();
 
         union_generator.append(R"~~~(

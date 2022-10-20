@@ -330,7 +330,7 @@ public:
     NonnullRefPtrVector<Type>& member_types() { return m_member_types; }
 
     // https://webidl.spec.whatwg.org/#dfn-flattened-union-member-types
-    NonnullRefPtrVector<Type> flattened_member_types() const
+    NonnullRefPtrVector<Type> flattened_member_types(Optional<HashMap<String, Typedef>> typedefs = {}) const
     {
         // 1. Let T be the union type.
 
@@ -346,6 +346,9 @@ public:
             // 3. If U is a union type, then add to S the flattened member types of U.
             if (type.is_union()) {
                 auto& union_member_type = type.as_union();
+                types.extend(union_member_type.flattened_member_types());
+            } else if (typedefs.has_value() && typedefs->contains(type.name()) && typedefs->get(type.name())->type->is_union()) {
+                auto& union_member_type = typedefs->get(type.name())->type->as_union();
                 types.extend(union_member_type.flattened_member_types());
             } else {
                 // 4. Otherwise, U is not a union type. Add U to S.
