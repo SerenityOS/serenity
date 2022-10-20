@@ -151,9 +151,9 @@ void ConnectionFromClient::flush_pending_paint_requests()
     m_pending_paint_requests.clear();
 }
 
-void ConnectionFromClient::mouse_down(Gfx::IntPoint const& position, unsigned int button, [[maybe_unused]] unsigned int buttons, unsigned int modifiers)
+void ConnectionFromClient::mouse_down(Gfx::IntPoint const& position, unsigned int button, unsigned int buttons, unsigned int modifiers)
 {
-    page().handle_mousedown(position, button, modifiers);
+    page().handle_mousedown(position, button, buttons, modifiers);
 }
 
 void ConnectionFromClient::mouse_move(Gfx::IntPoint const& position, [[maybe_unused]] unsigned int button, unsigned int buttons, unsigned int modifiers)
@@ -161,19 +161,19 @@ void ConnectionFromClient::mouse_move(Gfx::IntPoint const& position, [[maybe_unu
     page().handle_mousemove(position, buttons, modifiers);
 }
 
-void ConnectionFromClient::mouse_up(Gfx::IntPoint const& position, unsigned int button, [[maybe_unused]] unsigned int buttons, unsigned int modifiers)
+void ConnectionFromClient::mouse_up(Gfx::IntPoint const& position, unsigned int button, unsigned int buttons, unsigned int modifiers)
 {
-    page().handle_mouseup(position, button, modifiers);
+    page().handle_mouseup(position, button, buttons, modifiers);
 }
 
-void ConnectionFromClient::mouse_wheel(Gfx::IntPoint const& position, unsigned int button, [[maybe_unused]] unsigned int buttons, unsigned int modifiers, i32 wheel_delta_x, i32 wheel_delta_y)
+void ConnectionFromClient::mouse_wheel(Gfx::IntPoint const& position, unsigned int button, unsigned int buttons, unsigned int modifiers, i32 wheel_delta_x, i32 wheel_delta_y)
 {
-    page().handle_mousewheel(position, button, modifiers, wheel_delta_x, wheel_delta_y);
+    page().handle_mousewheel(position, button, buttons, modifiers, wheel_delta_x, wheel_delta_y);
 }
 
-void ConnectionFromClient::doubleclick(Gfx::IntPoint const& position, unsigned int button, [[maybe_unused]] unsigned int buttons, unsigned int modifiers)
+void ConnectionFromClient::doubleclick(Gfx::IntPoint const& position, unsigned int button, unsigned int buttons, unsigned int modifiers)
 {
-    page().handle_doubleclick(position, button, modifiers);
+    page().handle_doubleclick(position, button, buttons, modifiers);
 }
 
 void ConnectionFromClient::key_down(i32 key, unsigned int modifiers, u32 code_point)

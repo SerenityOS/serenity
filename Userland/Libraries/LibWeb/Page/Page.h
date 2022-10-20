@@ -50,11 +50,11 @@ public:
 
     void load_html(StringView, const AK::URL&);
 
-    bool handle_mouseup(Gfx::IntPoint const&, unsigned button, unsigned modifiers);
-    bool handle_mousedown(Gfx::IntPoint const&, unsigned button, unsigned modifiers);
+    bool handle_mouseup(Gfx::IntPoint const&, unsigned button, unsigned buttons, unsigned modifiers);
+    bool handle_mousedown(Gfx::IntPoint const&, unsigned button, unsigned buttons, unsigned modifiers);
     bool handle_mousemove(Gfx::IntPoint const&, unsigned buttons, unsigned modifiers);
-    bool handle_mousewheel(Gfx::IntPoint const&, unsigned button, unsigned modifiers, int wheel_delta_x, int wheel_delta_y);
-    bool handle_doubleclick(Gfx::IntPoint const&, unsigned buttons, unsigned modifiers);
+    bool handle_mousewheel(Gfx::IntPoint const&, unsigned button, unsigned buttons, unsigned modifiers, int wheel_delta_x, int wheel_delta_y);
+    bool handle_doubleclick(Gfx::IntPoint const&, unsigned button, unsigned buttons, unsigned modifiers);
 
     bool handle_keydown(KeyCode, unsigned modifiers, u32 code_point);
     bool handle_keyup(KeyCode, unsigned modifiers, u32 code_point);

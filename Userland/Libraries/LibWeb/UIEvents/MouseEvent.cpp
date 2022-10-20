@@ -20,6 +20,7 @@ MouseEvent::MouseEvent(JS::Realm& realm, FlyString const& event_name, MouseEvent
     , m_client_x(event_init.client_x)
     , m_client_y(event_init.client_y)
     , m_button(event_init.button)
+    , m_buttons(event_init.buttons)
 {
     set_prototype(&Bindings::cached_web_prototype(realm, "MouseEvent"));
     set_event_characteristics();
@@ -51,7 +52,7 @@ MouseEvent* MouseEvent::create(JS::Realm& realm, FlyString const& event_name, Mo
     return realm.heap().allocate<MouseEvent>(realm, realm, event_name, event_init);
 }
 
-MouseEvent* MouseEvent::create_from_platform_event(JS::Realm& realm, FlyString const& event_name, double offset_x, double offset_y, double client_x, double client_y, unsigned mouse_button)
+MouseEvent* MouseEvent::create_from_platform_event(JS::Realm& realm, FlyString const& event_name, double offset_x, double offset_y, double client_x, double client_y, unsigned buttons, unsigned mouse_button)
 {
     MouseEventInit event_init {};
     event_init.offset_x = offset_x;
@@ -59,6 +60,7 @@ MouseEvent* MouseEvent::create_from_platform_event(JS::Realm& realm, FlyString c
     event_init.client_x = client_x;
     event_init.client_y = client_y;
     event_init.button = determine_button(mouse_button);
+    event_init.buttons = buttons;
     return MouseEvent::create(realm, event_name, event_init);
 }
 

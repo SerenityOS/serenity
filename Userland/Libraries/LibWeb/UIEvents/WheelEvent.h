@@ -30,7 +30,7 @@ class WheelEvent final : public MouseEvent {
 
 public:
     static WheelEvent* create(JS::Realm&, FlyString const& event_name, WheelEventInit const& event_init = {});
-    static WheelEvent* create_from_platform_event(JS::Realm&, FlyString const& event_name, double offset_x, double offset_y, double client_x, double client_y, double delta_x, double delta_y);
+    static WheelEvent* create_from_platform_event(JS::Realm&, FlyString const& event_name, double offset_x, double offset_y, double client_x, double client_y, double delta_x, double delta_y, unsigned buttons, unsigned button);
 
     virtual ~WheelEvent() override;
 
