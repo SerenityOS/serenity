@@ -84,7 +84,7 @@ JsonObject Session::get_timeouts()
 }
 
 // 9.2 Set Timeouts, https://w3c.github.io/webdriver/#dfn-set-timeouts
-ErrorOr<JsonValue, HttpError> Session::set_timeouts(JsonValue const& payload)
+ErrorOr<JsonValue, WebDriverError> Session::set_timeouts(JsonValue const& payload)
 {
     // 1. Let timeouts be the result of trying to JSON deserialize as a timeouts configuration the request’s parameters.
     auto timeouts = TRY(json_deserialize_as_a_timeouts_configuration(payload));
@@ -97,18 +97,18 @@ ErrorOr<JsonValue, HttpError> Session::set_timeouts(JsonValue const& payload)
 }
 
 // 10.1 Navigate To, https://w3c.github.io/webdriver/#dfn-navigate-to
-ErrorOr<JsonValue, HttpError> Session::navigate_to(JsonValue const& payload)
+ErrorOr<JsonValue, WebDriverError> Session::navigate_to(JsonValue const& payload)
 {
     // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
     auto current_window = this->current_window();
     if (!current_window.has_value())
-        return HttpError { 404, "no such window", "Window not found" };
+        return WebDriverError { 404, "no such window", "Window not found" };
 
     // FIXME 2. Handle any user prompts and return its value if it is an error.
 
     // 3. If the url property is missing from the parameters argument or it is not a string, return error with error code invalid argument.
     if (!payload.is_object() || !payload.as_object().has_string("url"sv)) {
-        return HttpError { 400, "invalid argument", "Payload doesn't have a string url" };
+        return WebDriverError { 400, "invalid argument", "Payload doesn't have a string url" };
     }
 
     // 4. Let url be the result of getting a property named url from the parameters argument.
@@ -133,12 +133,12 @@ ErrorOr<JsonValue, HttpError> Session::navigate_to(JsonValue const& payload)
 }
 
 // 10.2 Get Current URL, https://w3c.github.io/webdriver/#dfn-get-current-url
-ErrorOr<JsonValue, HttpError> Session::get_current_url()
+ErrorOr<JsonValue, WebDriverError> Session::get_current_url()
 {
     // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
     auto current_window = this->current_window();
     if (!current_window.has_value())
-        return HttpError { 404, "no such window", "Window not found" };
+        return WebDriverError { 404, "no such window", "Window not found" };
 
     // FIXME: 2. Handle any user prompts and return its value if it is an error.
 
@@ -150,12 +150,12 @@ ErrorOr<JsonValue, HttpError> Session::get_current_url()
 }
 
 // 10.3 Back, https://w3c.github.io/webdriver/#dfn-back
-ErrorOr<JsonValue, HttpError> Session::back()
+ErrorOr<JsonValue, WebDriverError> Session::back()
 {
     // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
     auto current_window = this->current_window();
     if (!current_window.has_value())
-        return HttpError { 404, "no such window", "Window not found" };
+        return WebDriverError { 404, "no such window", "Window not found" };
 
     // FIXME: 2. Handle any user prompts and return its value if it is an error.
 
@@ -173,12 +173,12 @@ ErrorOr<JsonValue, HttpError> Session::back()
 }
 
 // 10.4 Forward, https://w3c.github.io/webdriver/#dfn-forward
-ErrorOr<JsonValue, HttpError> Session::forward()
+ErrorOr<JsonValue, WebDriverError> Session::forward()
 {
     // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
     auto current_window = this->current_window();
     if (!current_window.has_value())
-        return HttpError { 404, "no such window", "Window not found" };
+        return WebDriverError { 404, "no such window", "Window not found" };
 
     // FIXME: 2. Handle any user prompts and return its value if it is an error.
 
@@ -196,12 +196,12 @@ ErrorOr<JsonValue, HttpError> Session::forward()
 }
 
 // 10.5 Refresh, https://w3c.github.io/webdriver/#dfn-refresh
-ErrorOr<JsonValue, HttpError> Session::refresh()
+ErrorOr<JsonValue, WebDriverError> Session::refresh()
 {
     // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
     auto current_window = this->current_window();
     if (!current_window.has_value())
-        return HttpError { 404, "no such window", "Window not found" };
+        return WebDriverError { 404, "no such window", "Window not found" };
 
     // FIXME: 2. Handle any user prompts and return its value if it is an error.
 
@@ -221,12 +221,12 @@ ErrorOr<JsonValue, HttpError> Session::refresh()
 }
 
 // 10.6 Get Title, https://w3c.github.io/webdriver/#dfn-get-title
-ErrorOr<JsonValue, HttpError> Session::get_title()
+ErrorOr<JsonValue, WebDriverError> Session::get_title()
 {
     // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
     auto current_window = this->current_window();
     if (!current_window.has_value())
-        return HttpError { 404, "no such window", "Window not found" };
+        return WebDriverError { 404, "no such window", "Window not found" };
 
     // FIXME: 2. Handle any user prompts and return its value if it is an error.
 
@@ -236,24 +236,24 @@ ErrorOr<JsonValue, HttpError> Session::get_title()
 }
 
 // 11.1 Get Window Handle, https://w3c.github.io/webdriver/#get-window-handle
-ErrorOr<JsonValue, HttpError> Session::get_window_handle()
+ErrorOr<JsonValue, WebDriverError> Session::get_window_handle()
 {
     // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
     auto current_window = this->current_window();
     if (!current_window.has_value())
-        return HttpError { 404, "no such window", "Window not found" };
+        return WebDriverError { 404, "no such window", "Window not found" };
 
     // 2. Return success with data being the window handle associated with the current top-level browsing context.
     return m_current_window_handle;
 }
 
 // 11.2 Close Window, https://w3c.github.io/webdriver/#dfn-close-window
-ErrorOr<void, Variant<HttpError, Error>> Session::close_window()
+ErrorOr<void, Variant<WebDriverError, Error>> Session::close_window()
 {
     // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
     auto current_window = this->current_window();
     if (!current_window.has_value())
-        return Variant<HttpError, Error>(HttpError { 404, "no such window", "Window not found" });
+        return Variant<WebDriverError, Error>(WebDriverError { 404, "no such window", "Window not found" });
 
     // 2. Close the current top-level browsing context.
     m_windows.remove(m_current_window_handle);
@@ -262,7 +262,7 @@ ErrorOr<void, Variant<HttpError, Error>> Session::close_window()
     if (m_windows.is_empty()) {
         auto result = stop();
         if (result.is_error()) {
-            return Variant<HttpError, Error>(result.release_error());
+            return Variant<WebDriverError, Error>(result.release_error());
         }
     }
 
@@ -270,7 +270,7 @@ ErrorOr<void, Variant<HttpError, Error>> Session::close_window()
 }
 
 // 11.4 Get Window Handles, https://w3c.github.io/webdriver/#dfn-get-window-handles
-ErrorOr<JsonValue, HttpError> Session::get_window_handles() const
+ErrorOr<JsonValue, WebDriverError> Session::get_window_handles() const
 {
     // 1. Let handles be a JSON List.
     auto handles = JsonArray {};
@@ -312,7 +312,7 @@ static JsonObject web_element_reference_object(Session::LocalElement const& elem
 }
 
 // https://w3c.github.io/webdriver/#dfn-find
-ErrorOr<JsonArray, HttpError> Session::find(Session::LocalElement const& start_node, StringView const& using_, StringView const& value)
+ErrorOr<JsonArray, WebDriverError> Session::find(Session::LocalElement const& start_node, StringView const& using_, StringView const& value)
 {
     // 1. Let end time be the current time plus the session implicit wait timeout.
     auto end_time = Time::now_monotonic() + Time::from_milliseconds(static_cast<i64>(m_timeouts_configuration.implicit_wait_timeout));
@@ -326,13 +326,13 @@ ErrorOr<JsonArray, HttpError> Session::find(Session::LocalElement const& start_n
     // 4. Let elements returned be the result of trying to call the relevant element location strategy with arguments start node, and selector.
     auto location_strategy_handler = s_locator_strategies.first_matching([&](LocatorStrategy const& match) { return match.name == location_strategy; });
     if (!location_strategy_handler.has_value())
-        return HttpError { 400, "invalid argument", "No valid location strategy" };
+        return WebDriverError { 400, "invalid argument", "No valid location strategy" };
 
     auto elements_or_error = (this->*location_strategy_handler.value().handler)(start_node, selector);
 
     // 5. If a DOMException, SyntaxError, XPathException, or other error occurs during the execution of the element location strategy, return error invalid selector.
     if (elements_or_error.is_error())
-        return HttpError { 400, "invalid selector", String::formatted("The location strategy could not finish: {}", elements_or_error.release_error().message) };
+        return WebDriverError { 400, "invalid selector", String::formatted("The location strategy could not finish: {}", elements_or_error.release_error().message) };
 
     auto elements = elements_or_error.release_value();
 
@@ -361,14 +361,14 @@ Vector<Session::LocatorStrategy> Session::s_locator_strategies = {
 };
 
 // https://w3c.github.io/webdriver/#css-selectors
-ErrorOr<Vector<Session::LocalElement>, HttpError> Session::locator_strategy_css_selectors(Session::LocalElement const& start_node, StringView const& selector)
+ErrorOr<Vector<Session::LocalElement>, WebDriverError> Session::locator_strategy_css_selectors(Session::LocalElement const& start_node, StringView const& selector)
 {
     // 1. Let elements be the result of calling querySelectorAll() with start node as this and selector as the argument.
     //    If this causes an exception to be thrown, return error with error code invalid selector.
     auto elements_ids = m_browser_connection->query_selector_all(start_node.id, selector);
 
     if (!elements_ids.has_value())
-        return HttpError { 400, "invalid selector", "query_selector_all returned failed!" };
+        return WebDriverError { 400, "invalid selector", "query_selector_all returned failed!" };
 
     Vector<Session::LocalElement> elements;
     for (auto id : elements_ids.release_value()) {
@@ -380,67 +380,67 @@ ErrorOr<Vector<Session::LocalElement>, HttpError> Session::locator_strategy_css_
 }
 
 // https://w3c.github.io/webdriver/#link-text
-ErrorOr<Vector<Session::LocalElement>, HttpError> Session::locator_strategy_link_text(Session::LocalElement const&, StringView const&)
+ErrorOr<Vector<Session::LocalElement>, WebDriverError> Session::locator_strategy_link_text(Session::LocalElement const&, StringView const&)
 {
     // FIXME: Implement
-    return HttpError { 501, "not implemented", "locator strategy link text" };
+    return WebDriverError { 501, "not implemented", "locator strategy link text" };
 }
 
 // https://w3c.github.io/webdriver/#partial-link-text
-ErrorOr<Vector<Session::LocalElement>, HttpError> Session::locator_strategy_partial_link_text(Session::LocalElement const&, StringView const&)
+ErrorOr<Vector<Session::LocalElement>, WebDriverError> Session::locator_strategy_partial_link_text(Session::LocalElement const&, StringView const&)
 {
     // FIXME: Implement
-    return HttpError { 501, "not implemented", "locator strategy partial link text" };
+    return WebDriverError { 501, "not implemented", "locator strategy partial link text" };
 }
 
 // https://w3c.github.io/webdriver/#tag-name
-ErrorOr<Vector<Session::LocalElement>, HttpError> Session::locator_strategy_tag_name(Session::LocalElement const&, StringView const&)
+ErrorOr<Vector<Session::LocalElement>, WebDriverError> Session::locator_strategy_tag_name(Session::LocalElement const&, StringView const&)
 {
     // FIXME: Implement
-    return HttpError { 501, "not implemented", "locator strategy tag name" };
+    return WebDriverError { 501, "not implemented", "locator strategy tag name" };
 }
 
 // https://w3c.github.io/webdriver/#xpath
-ErrorOr<Vector<Session::LocalElement>, HttpError> Session::locator_strategy_x_path(Session::LocalElement const&, StringView const&)
+ErrorOr<Vector<Session::LocalElement>, WebDriverError> Session::locator_strategy_x_path(Session::LocalElement const&, StringView const&)
 {
     // FIXME: Implement
-    return HttpError { 501, "not implemented", "locator strategy XPath" };
+    return WebDriverError { 501, "not implemented", "locator strategy XPath" };
 }
 
 // 12.3.2 Find Element, https://w3c.github.io/webdriver/#dfn-find-element
-ErrorOr<JsonValue, HttpError> Session::find_element(JsonValue const& payload)
+ErrorOr<JsonValue, WebDriverError> Session::find_element(JsonValue const& payload)
 {
     if (!payload.is_object())
-        return HttpError { 400, "invalid argument", "Payload is not a JSON object" };
+        return WebDriverError { 400, "invalid argument", "Payload is not a JSON object" };
 
     auto const& properties = payload.as_object();
     // 1. Let location strategy be the result of getting a property called "using".
     if (!properties.has("using"sv))
-        return HttpError { 400, "invalid argument", "No property called 'using' present" };
+        return WebDriverError { 400, "invalid argument", "No property called 'using' present" };
     auto const& maybe_location_strategy = properties.get("using"sv);
     if (!maybe_location_strategy.is_string())
-        return HttpError { 400, "invalid argument", "Property 'using' is not a String" };
+        return WebDriverError { 400, "invalid argument", "Property 'using' is not a String" };
 
     auto location_strategy = maybe_location_strategy.to_string();
 
     // 2. If location strategy is not present as a keyword in the table of location strategies, return error with error code invalid argument.
     if (!s_locator_strategies.first_matching([&](LocatorStrategy const& match) { return match.name == location_strategy; }).has_value())
-        return HttpError { 400, "invalid argument", "No valid location strategy" };
+        return WebDriverError { 400, "invalid argument", "No valid location strategy" };
 
     // 3. Let selector be the result of getting a property called "value".
     // 4. If selector is undefined, return error with error code invalid argument.
     if (!properties.has("value"sv))
-        return HttpError { 400, "invalid argument", "No property called 'value' present" };
+        return WebDriverError { 400, "invalid argument", "No property called 'value' present" };
     auto const& maybe_selector = properties.get("value"sv);
     if (!maybe_selector.is_string())
-        return HttpError { 400, "invalid argument", "Property 'value' is not a String" };
+        return WebDriverError { 400, "invalid argument", "Property 'value' is not a String" };
 
     auto selector = maybe_selector.to_string();
 
     // 5. If the current browsing context is no longer open, return error with error code no such window.
     auto current_window = this->current_window();
     if (!current_window.has_value())
-        return HttpError { 404, "no such window", "Window not found" };
+        return WebDriverError { 404, "no such window", "Window not found" };
 
     // FIXME: 6. Handle any user prompts and return its value if it is an error.
 
@@ -449,7 +449,7 @@ ErrorOr<JsonValue, HttpError> Session::find_element(JsonValue const& payload)
 
     // 8. If start node is null, return error with error code no such element.
     if (!maybe_start_node_id.has_value())
-        return HttpError { 404, "no such element", "document element does not exist" };
+        return WebDriverError { 404, "no such element", "document element does not exist" };
 
     auto start_node_id = maybe_start_node_id.release_value();
     LocalElement start_node = { start_node_id };
@@ -459,45 +459,45 @@ ErrorOr<JsonValue, HttpError> Session::find_element(JsonValue const& payload)
 
     // 10. If result is empty, return error with error code no such element. Otherwise, return the first element of result.
     if (result.is_empty())
-        return HttpError { 404, "no such element", "the requested element does not exist" };
+        return WebDriverError { 404, "no such element", "the requested element does not exist" };
 
     return JsonValue(result.at(0));
 }
 
 // 12.3.3 Find Elements, https://w3c.github.io/webdriver/#dfn-find-elements
-ErrorOr<JsonValue, HttpError> Session::find_elements(JsonValue const& payload)
+ErrorOr<JsonValue, WebDriverError> Session::find_elements(JsonValue const& payload)
 {
     if (!payload.is_object())
-        return HttpError { 400, "invalid argument", "Payload is not a JSON object" };
+        return WebDriverError { 400, "invalid argument", "Payload is not a JSON object" };
 
     auto const& properties = payload.as_object();
     // 1. Let location strategy be the result of getting a property called "using".
     if (!properties.has("using"sv))
-        return HttpError { 400, "invalid argument", "No property called 'using' present" };
+        return WebDriverError { 400, "invalid argument", "No property called 'using' present" };
     auto const& maybe_location_strategy = properties.get("using"sv);
     if (!maybe_location_strategy.is_string())
-        return HttpError { 400, "invalid argument", "Property 'using' is not a String" };
+        return WebDriverError { 400, "invalid argument", "Property 'using' is not a String" };
 
     auto location_strategy = maybe_location_strategy.to_string();
 
     // 2. If location strategy is not present as a keyword in the table of location strategies, return error with error code invalid argument.
     if (!s_locator_strategies.first_matching([&](LocatorStrategy const& match) { return match.name == location_strategy; }).has_value())
-        return HttpError { 400, "invalid argument", "No valid location strategy" };
+        return WebDriverError { 400, "invalid argument", "No valid location strategy" };
 
     // 3. Let selector be the result of getting a property called "value".
     // 4. If selector is undefined, return error with error code invalid argument.
     if (!properties.has("value"sv))
-        return HttpError { 400, "invalid argument", "No property called 'value' present" };
+        return WebDriverError { 400, "invalid argument", "No property called 'value' present" };
     auto const& maybe_selector = properties.get("value"sv);
     if (!maybe_selector.is_string())
-        return HttpError { 400, "invalid argument", "Property 'value' is not a String" };
+        return WebDriverError { 400, "invalid argument", "Property 'value' is not a String" };
 
     auto selector = maybe_selector.to_string();
 
     // 5. If the current browsing context is no longer open, return error with error code no such window.
     auto current_window = this->current_window();
     if (!current_window.has_value())
-        return HttpError { 404, "no such window", "Window not found" };
+        return WebDriverError { 404, "no such window", "Window not found" };
 
     // FIXME: 6. Handle any user prompts and return its value if it is an error.
 
@@ -506,7 +506,7 @@ ErrorOr<JsonValue, HttpError> Session::find_elements(JsonValue const& payload)
 
     // 8. If start node is null, return error with error code no such element.
     if (!maybe_start_node_id.has_value())
-        return HttpError { 404, "no such element", "document element does not exist" };
+        return WebDriverError { 404, "no such element", "document element does not exist" };
 
     auto start_node_id = maybe_start_node_id.release_value();
     LocalElement start_node = { start_node_id };
@@ -517,39 +517,39 @@ ErrorOr<JsonValue, HttpError> Session::find_elements(JsonValue const& payload)
 }
 
 // 12.3.4 Find Element From Element, https://w3c.github.io/webdriver/#dfn-find-element-from-element
-ErrorOr<JsonValue, HttpError> Session::find_element_from_element(JsonValue const& payload, StringView parameter_element_id)
+ErrorOr<JsonValue, WebDriverError> Session::find_element_from_element(JsonValue const& payload, StringView parameter_element_id)
 {
     if (!payload.is_object())
-        return HttpError { 400, "invalid argument", "Payload is not a JSON object" };
+        return WebDriverError { 400, "invalid argument", "Payload is not a JSON object" };
 
     auto const& properties = payload.as_object();
     // 1. Let location strategy be the result of getting a property called "using".
     if (!properties.has("using"sv))
-        return HttpError { 400, "invalid argument", "No property called 'using' present" };
+        return WebDriverError { 400, "invalid argument", "No property called 'using' present" };
     auto const& maybe_location_strategy = properties.get("using"sv);
     if (!maybe_location_strategy.is_string())
-        return HttpError { 400, "invalid argument", "Property 'using' is not a String" };
+        return WebDriverError { 400, "invalid argument", "Property 'using' is not a String" };
 
     auto location_strategy = maybe_location_strategy.to_string();
 
     // 2. If location strategy is not present as a keyword in the table of location strategies, return error with error code invalid argument.
     if (!s_locator_strategies.first_matching([&](LocatorStrategy const& match) { return match.name == location_strategy; }).has_value())
-        return HttpError { 400, "invalid argument", "No valid location strategy" };
+        return WebDriverError { 400, "invalid argument", "No valid location strategy" };
 
     // 3. Let selector be the result of getting a property called "value".
     // 4. If selector is undefined, return error with error code invalid argument.
     if (!properties.has("value"sv))
-        return HttpError { 400, "invalid argument", "No property called 'value' present" };
+        return WebDriverError { 400, "invalid argument", "No property called 'value' present" };
     auto const& maybe_selector = properties.get("value"sv);
     if (!maybe_selector.is_string())
-        return HttpError { 400, "invalid argument", "Property 'value' is not a String" };
+        return WebDriverError { 400, "invalid argument", "Property 'value' is not a String" };
 
     auto selector = maybe_selector.to_string();
 
     // 5. If the current browsing context is no longer open, return error with error code no such window.
     auto current_window = this->current_window();
     if (!current_window.has_value())
-        return HttpError { 404, "no such window", "Window not found" };
+        return WebDriverError { 404, "no such window", "Window not found" };
 
     // FIXME: 6. Handle any user prompts and return its value if it is an error.
 
@@ -559,7 +559,7 @@ ErrorOr<JsonValue, HttpError> Session::find_element_from_element(JsonValue const
 
     auto maybe_element_id = parameter_element_id.to_int();
     if (!maybe_element_id.has_value())
-        return HttpError { 400, "invalid argument", "Element ID is not an i32" };
+        return WebDriverError { 400, "invalid argument", "Element ID is not an i32" };
 
     auto element_id = maybe_element_id.release_value();
     LocalElement start_node = { element_id };
@@ -569,45 +569,45 @@ ErrorOr<JsonValue, HttpError> Session::find_element_from_element(JsonValue const
 
     // 9. If result is empty, return error with error code no such element. Otherwise, return the first element of result.
     if (result.is_empty())
-        return HttpError { 404, "no such element", "the requested element does not exist" };
+        return WebDriverError { 404, "no such element", "the requested element does not exist" };
 
     return JsonValue(result.at(0));
 }
 
 // 12.3.5 Find Elements From Element, https://w3c.github.io/webdriver/#dfn-find-elements-from-element
-ErrorOr<JsonValue, HttpError> Session::find_elements_from_element(JsonValue const& payload, StringView parameter_element_id)
+ErrorOr<JsonValue, WebDriverError> Session::find_elements_from_element(JsonValue const& payload, StringView parameter_element_id)
 {
     if (!payload.is_object())
-        return HttpError { 400, "invalid argument", "Payload is not a JSON object" };
+        return WebDriverError { 400, "invalid argument", "Payload is not a JSON object" };
 
     auto const& properties = payload.as_object();
     // 1. Let location strategy be the result of getting a property called "using".
     if (!properties.has("using"sv))
-        return HttpError { 400, "invalid argument", "No property called 'using' present" };
+        return WebDriverError { 400, "invalid argument", "No property called 'using' present" };
     auto const& maybe_location_strategy = properties.get("using"sv);
     if (!maybe_location_strategy.is_string())
-        return HttpError { 400, "invalid argument", "Property 'using' is not a String" };
+        return WebDriverError { 400, "invalid argument", "Property 'using' is not a String" };
 
     auto location_strategy = maybe_location_strategy.to_string();
 
     // 2. If location strategy is not present as a keyword in the table of location strategies, return error with error code invalid argument.
     if (!s_locator_strategies.first_matching([&](LocatorStrategy const& match) { return match.name == location_strategy; }).has_value())
-        return HttpError { 400, "invalid argument", "No valid location strategy" };
+        return WebDriverError { 400, "invalid argument", "No valid location strategy" };
 
     // 3. Let selector be the result of getting a property called "value".
     // 4. If selector is undefined, return error with error code invalid argument.
     if (!properties.has("value"sv))
-        return HttpError { 400, "invalid argument", "No property called 'value' present" };
+        return WebDriverError { 400, "invalid argument", "No property called 'value' present" };
     auto const& maybe_selector = properties.get("value"sv);
     if (!maybe_selector.is_string())
-        return HttpError { 400, "invalid argument", "Property 'value' is not a String" };
+        return WebDriverError { 400, "invalid argument", "Property 'value' is not a String" };
 
     auto selector = maybe_selector.to_string();
 
     // 5. If the current browsing context is no longer open, return error with error code no such window.
     auto current_window = this->current_window();
     if (!current_window.has_value())
-        return HttpError { 404, "no such window", "Window not found" };
+        return WebDriverError { 404, "no such window", "Window not found" };
 
     // FIXME: 6. Handle any user prompts and return its value if it is an error.
 
@@ -617,7 +617,7 @@ ErrorOr<JsonValue, HttpError> Session::find_elements_from_element(JsonValue cons
 
     auto maybe_element_id = parameter_element_id.to_int();
     if (!maybe_element_id.has_value())
-        return HttpError { 400, "invalid argument", "Element ID is not an i32" };
+        return WebDriverError { 400, "invalid argument", "Element ID is not an i32" };
 
     auto element_id = maybe_element_id.release_value();
     LocalElement start_node = { element_id };
@@ -628,12 +628,12 @@ ErrorOr<JsonValue, HttpError> Session::find_elements_from_element(JsonValue cons
 }
 
 // 12.4.2 Get Element Attribute, https://w3c.github.io/webdriver/#dfn-get-element-attribute
-ErrorOr<JsonValue, HttpError> Session::get_element_attribute(JsonValue const&, StringView parameter_element_id, StringView name)
+ErrorOr<JsonValue, WebDriverError> Session::get_element_attribute(JsonValue const&, StringView parameter_element_id, StringView name)
 {
     // 1. If the current browsing context is no longer open, return error with error code no such window.
     auto current_window = this->current_window();
     if (!current_window.has_value())
-        return HttpError { 404, "no such window", "Window not found" };
+        return WebDriverError { 404, "no such window", "Window not found" };
 
     // FIXME: 2. Handle any user prompts and return its value if it is an error.
 
@@ -642,7 +642,7 @@ ErrorOr<JsonValue, HttpError> Session::get_element_attribute(JsonValue const&, S
     //       For now the element is only represented by its ID
     auto maybe_element_id = parameter_element_id.to_int();
     if (!maybe_element_id.has_value())
-        return HttpError { 400, "invalid argument", "Element ID is not an i32" };
+        return WebDriverError { 400, "invalid argument", "Element ID is not an i32" };
 
     auto element_id = maybe_element_id.release_value();
 
@@ -664,12 +664,12 @@ ErrorOr<JsonValue, HttpError> Session::get_element_attribute(JsonValue const&, S
 }
 
 // 12.4.3 Get Element Property, https://w3c.github.io/webdriver/#dfn-get-element-property
-ErrorOr<JsonValue, HttpError> Session::get_element_property(JsonValue const&, StringView parameter_element_id, StringView name)
+ErrorOr<JsonValue, WebDriverError> Session::get_element_property(JsonValue const&, StringView parameter_element_id, StringView name)
 {
     // 1. If the current browsing context is no longer open, return error with error code no such window.
     auto current_window = this->current_window();
     if (!current_window.has_value())
-        return HttpError { 404, "no such window", "Window not found" };
+        return WebDriverError { 404, "no such window", "Window not found" };
 
     // FIXME: 2. Handle any user prompts and return its value if it is an error.
 
@@ -678,7 +678,7 @@ ErrorOr<JsonValue, HttpError> Session::get_element_property(JsonValue const&, St
     //       For now the element is only represented by its ID
     auto maybe_element_id = parameter_element_id.to_int();
     if (!maybe_element_id.has_value())
-        return HttpError { 400, "invalid argument", "Element ID is not an i32" };
+        return WebDriverError { 400, "invalid argument", "Element ID is not an i32" };
 
     auto element_id = maybe_element_id.release_value();
 
@@ -694,12 +694,12 @@ ErrorOr<JsonValue, HttpError> Session::get_element_property(JsonValue const&, St
 }
 
 // 12.4.4 Get Element CSS Value, https://w3c.github.io/webdriver/#dfn-get-element-css-value
-ErrorOr<JsonValue, HttpError> Session::get_element_css_value(JsonValue const&, StringView parameter_element_id, StringView property_name)
+ErrorOr<JsonValue, WebDriverError> Session::get_element_css_value(JsonValue const&, StringView parameter_element_id, StringView property_name)
 {
     // 1. If the current browsing context is no longer open, return error with error code no such window.
     auto current_window = this->current_window();
     if (!current_window.has_value())
-        return HttpError { 404, "no such window", "Window not found" };
+        return WebDriverError { 404, "no such window", "Window not found" };
 
     // FIXME: 2. Handle any user prompts and return its value if it is an error.
 
@@ -708,7 +708,7 @@ ErrorOr<JsonValue, HttpError> Session::get_element_css_value(JsonValue const&, S
     //       For now the element is only represented by its ID
     auto maybe_element_id = parameter_element_id.to_int();
     if (!maybe_element_id.has_value())
-        return HttpError { 400, "invalid argument", "Element ID is not an i32" };
+        return WebDriverError { 400, "invalid argument", "Element ID is not an i32" };
 
     auto element_id = maybe_element_id.release_value();
 
@@ -744,12 +744,12 @@ static JsonObject serialize_cookie(Web::Cookie::Cookie const& cookie)
 }
 
 // 14.1 Get All Cookies, https://w3c.github.io/webdriver/#dfn-get-all-cookies
-ErrorOr<JsonValue, HttpError> Session::get_all_cookies()
+ErrorOr<JsonValue, WebDriverError> Session::get_all_cookies()
 {
     // 1. If the current browsing context is no longer open, return error with error code no such window.
     auto current_window = this->current_window();
     if (!current_window.has_value())
-        return HttpError { 404, "no such window", "Window not found" };
+        return WebDriverError { 404, "no such window", "Window not found" };
 
     // FIXME: 2. Handle any user prompts, and return its value if it is an error.
 
@@ -770,12 +770,12 @@ ErrorOr<JsonValue, HttpError> Session::get_all_cookies()
 }
 
 // 14.2 Get Named Cookie, https://w3c.github.io/webdriver/#dfn-get-named-cookie
-ErrorOr<JsonValue, HttpError> Session::get_named_cookie(String const& name)
+ErrorOr<JsonValue, WebDriverError> Session::get_named_cookie(String const& name)
 {
     // 1. If the current browsing context is no longer open, return error with error code no such window.
     auto current_window = this->current_window();
     if (!current_window.has_value())
-        return HttpError { 404, "no such window", "Window not found" };
+        return WebDriverError { 404, "no such window", "Window not found" };
 
     // FIXME: 2. Handle any user prompts, and return its value if it is an error.
 
@@ -789,15 +789,15 @@ ErrorOr<JsonValue, HttpError> Session::get_named_cookie(String const& name)
     }
 
     // 4. Otherwise, return error with error code no such cookie.
-    return HttpError { 404, "no such cookie", "Cookie not found" };
+    return WebDriverError { 404, "no such cookie", "Cookie not found" };
 }
 
 // 14.3 Add Cookie, https://w3c.github.io/webdriver/#dfn-adding-a-cookie
-ErrorOr<JsonValue, HttpError> Session::add_cookie(JsonValue const& payload)
+ErrorOr<JsonValue, WebDriverError> Session::add_cookie(JsonValue const& payload)
 {
     // 1. Let data be the result of getting a property named cookie from the parameters argument.
     if (!payload.is_object() || !payload.as_object().has_object("cookie"sv))
-        return HttpError { 400, "invalid argument", "Payload doesn't have a cookie object" };
+        return WebDriverError { 400, "invalid argument", "Payload doesn't have a cookie object" };
 
     auto const& maybe_data = payload.as_object().get("cookie"sv);
 
@@ -805,17 +805,17 @@ ErrorOr<JsonValue, HttpError> Session::add_cookie(JsonValue const& payload)
     //    return error with error code invalid argument.
     // NOTE: Table is here: https://w3c.github.io/webdriver/#dfn-table-for-cookie-conversion
     if (!maybe_data.is_object())
-        return HttpError { 400, "invalid argument", "Value \"cookie\' is not an object" };
+        return WebDriverError { 400, "invalid argument", "Value \"cookie\' is not an object" };
 
     auto const& data = maybe_data.as_object();
 
     if (!data.has("name"sv) || !data.has("value"sv))
-        return HttpError { 400, "invalid argument", "Cookie-Object doesn't contain all required keys" };
+        return WebDriverError { 400, "invalid argument", "Cookie-Object doesn't contain all required keys" };
 
     // 3. If the current browsing context is no longer open, return error with error code no such window.
     auto current_window = this->current_window();
     if (!current_window.has_value())
-        return HttpError { 404, "no such window", "Window not found" };
+        return WebDriverError { 404, "no such window", "Window not found" };
 
     // FIXME: 4. Handle any user prompts, and return its value if it is an error.
 
@@ -828,17 +828,17 @@ ErrorOr<JsonValue, HttpError> Session::add_cookie(JsonValue const& payload)
     //    or cookie expiry time is not an integer type, or it less than 0 or greater than the maximum safe integer,
     //    return error with error code invalid argument.
     if (data.get("name"sv).is_null() || data.get("value"sv).is_null())
-        return HttpError { 400, "invalid argument", "Cookie-Object is malformed: name or value are null" };
+        return WebDriverError { 400, "invalid argument", "Cookie-Object is malformed: name or value are null" };
     if (data.has("secure"sv) && !data.get("secure"sv).is_bool())
-        return HttpError { 400, "invalid argument", "Cookie-Object is malformed: secure is not bool" };
+        return WebDriverError { 400, "invalid argument", "Cookie-Object is malformed: secure is not bool" };
     if (data.has("httpOnly"sv) && !data.get("httpOnly"sv).is_bool())
-        return HttpError { 400, "invalid argument", "Cookie-Object is malformed: httpOnly is not bool" };
+        return WebDriverError { 400, "invalid argument", "Cookie-Object is malformed: httpOnly is not bool" };
     Optional<Core::DateTime> expiry_time;
     if (data.has("expiry"sv)) {
         auto expiry_argument = data.get("expiry"sv);
         if (!expiry_argument.is_u32()) {
             // NOTE: less than 0 or greater than safe integer are handled by the JSON parser
-            return HttpError { 400, "invalid argument", "Cookie-Object is malformed: expiry is not u32" };
+            return WebDriverError { 400, "invalid argument", "Cookie-Object is malformed: expiry is not u32" };
         }
         expiry_time = Core::DateTime::from_timestamp(expiry_argument.as_u32());
     }
@@ -850,12 +850,12 @@ ErrorOr<JsonValue, HttpError> Session::add_cookie(JsonValue const& payload)
     if (auto name_attribute = data.get("name"sv); name_attribute.is_string())
         cookie.name = name_attribute.as_string();
     else
-        return HttpError { 400, "invalid argument", "Expect name attribute to be string" };
+        return WebDriverError { 400, "invalid argument", "Expect name attribute to be string" };
 
     if (auto value_attribute = data.get("value"sv); value_attribute.is_string())
         cookie.value = value_attribute.as_string();
     else
-        return HttpError { 400, "invalid argument", "Expect value attribute to be string" };
+        return WebDriverError { 400, "invalid argument", "Expect value attribute to be string" };
 
     // Cookie path
     //     The value if the entry exists, otherwise "/".
@@ -863,7 +863,7 @@ ErrorOr<JsonValue, HttpError> Session::add_cookie(JsonValue const& payload)
         if (auto path_attribute = data.get("path"sv); path_attribute.is_string())
             cookie.path = path_attribute.as_string();
         else
-            return HttpError { 400, "invalid argument", "Expect path attribute to be string" };
+            return WebDriverError { 400, "invalid argument", "Expect path attribute to be string" };
     } else {
         cookie.path = "/";
     }
@@ -875,7 +875,7 @@ ErrorOr<JsonValue, HttpError> Session::add_cookie(JsonValue const& payload)
         if (auto domain_attribute = data.get("domain"sv); domain_attribute.is_string())
             cookie.domain = domain_attribute.as_string();
         else
-            return HttpError { 400, "invalid argument", "Expect domain attribute to be string" };
+            return WebDriverError { 400, "invalid argument", "Expect domain attribute to be string" };
     }
 
     // Cookie secure only
@@ -931,12 +931,12 @@ void Session::delete_cookies(Optional<StringView> const& name)
 }
 
 // 14.4 Delete Cookie, https://w3c.github.io/webdriver/#dfn-delete-cookie
-ErrorOr<JsonValue, HttpError> Session::delete_cookie(StringView const& name)
+ErrorOr<JsonValue, WebDriverError> Session::delete_cookie(StringView const& name)
 {
     // 1. If the current browsing context is no longer open, return error with error code no such window.
     auto current_window = this->current_window();
     if (!current_window.has_value())
-        return HttpError { 404, "no such window", "Window not found" };
+        return WebDriverError { 404, "no such window", "Window not found" };
 
     // FIXME: 2. Handle any user prompts, and return its value if it is an error.
 
@@ -948,12 +948,12 @@ ErrorOr<JsonValue, HttpError> Session::delete_cookie(StringView const& name)
 }
 
 // 14.5 Delete All Cookies, https://w3c.github.io/webdriver/#dfn-delete-all-cookies
-ErrorOr<JsonValue, HttpError> Session::delete_all_cookies()
+ErrorOr<JsonValue, WebDriverError> Session::delete_all_cookies()
 {
     // 1. If the current browsing context is no longer open, return error with error code no such window.
     auto current_window = this->current_window();
     if (!current_window.has_value())
-        return HttpError { 404, "no such window", "Window not found" };
+        return WebDriverError { 404, "no such window", "Window not found" };
 
     // FIXME: 2. Handle any user prompts, and return its value if it is an error.
 
