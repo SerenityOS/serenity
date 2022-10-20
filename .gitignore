@@ -11,6 +11,7 @@
 *.autosave
 Meta/Lagom/build
 Build
+build
 Toolchain/Tarballs
 Toolchain/Build
 Toolchain/Local
