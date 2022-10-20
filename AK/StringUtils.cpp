@@ -465,9 +465,9 @@ String to_titlecase(StringView str)
 
     for (auto ch : str) {
         if (next_is_upper)
-            builder.append_code_point(to_ascii_uppercase(ch));
+            builder.append(to_ascii_uppercase(ch));
         else
-            builder.append_code_point(to_ascii_lowercase(ch));
+            builder.append(to_ascii_lowercase(ch));
         next_is_upper = ch == ' ';
     }
 

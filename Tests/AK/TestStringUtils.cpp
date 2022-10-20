@@ -387,4 +387,6 @@ TEST_CASE(to_titlecase)
     EXPECT_EQ(AK::StringUtils::to_titlecase("foo  bar"sv), "Foo  Bar"sv);
     EXPECT_EQ(AK::StringUtils::to_titlecase("foo   bar"sv), "Foo   Bar"sv);
     EXPECT_EQ(AK::StringUtils::to_titlecase("   foo   bar   "sv), "   Foo   Bar   "sv);
+    EXPECT_EQ(AK::StringUtils::to_titlecase("\xc3\xa7"sv), "\xc3\xa7"sv);         // U+00E7 LATIN SMALL LETTER C WITH CEDILLA
+    EXPECT_EQ(AK::StringUtils::to_titlecase("\xe1\x80\x80"sv), "\xe1\x80\x80"sv); // U+1000 MYANMAR LETTER KA
 }
