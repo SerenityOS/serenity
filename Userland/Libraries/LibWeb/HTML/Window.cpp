@@ -60,23 +60,6 @@ void run_animation_frame_callbacks(DOM::Document& document, double)
     document.window().animation_frame_callback_driver().run();
 }
 
-class IdleCallback : public RefCounted<IdleCallback> {
-public:
-    explicit IdleCallback(Function<JS::Completion(JS::NonnullGCPtr<RequestIdleCallback::IdleDeadline>)> handler, u32 handle)
-        : m_handler(move(handler))
-        , m_handle(handle)
-    {
-    }
-    ~IdleCallback() = default;
-
-    JS::Completion invoke(JS::NonnullGCPtr<RequestIdleCallback::IdleDeadline> deadline) { return m_handler(deadline); }
-    u32 handle() const { return m_handle; }
-
-private:
-    Function<JS::Completion(JS::NonnullGCPtr<RequestIdleCallback::IdleDeadline>)> m_handler;
-    u32 m_handle { 0 };
-};
-
 JS::NonnullGCPtr<Window> Window::create(JS::Realm& realm)
 {
     return *realm.heap().allocate<Window>(realm, realm);
@@ -99,6 +82,10 @@ void Window::visit_edges(JS::Cell::Visitor& visitor)
     visitor.visit(m_navigator);
     for (auto& it : m_timers)
         visitor.visit(it.value.ptr());
+    for (auto& it : m_idle_request_callbacks)
+        visitor.visit(it.value);
+    for (auto& it : m_runnable_idle_callbacks)
+        visitor.visit(it.value);
 }
 
 Window::~Window() = default;
@@ -609,21 +596,23 @@ bool Window::has_transient_activation() const
 // https://w3c.github.io/requestidlecallback/#start-an-idle-period-algorithm
 void Window::start_an_idle_period()
 {
-    // 1. Optionally, if the user agent determines the idle period should be delayed, return from this algorithm.
+    // FIXME: 1. Optionally, if the user agent determines the idle period should be delayed, return from this algorithm.
 
     // 2. Let pending_list be window's list of idle request callbacks.
     auto& pending_list = m_idle_request_callbacks;
     // 3. Let run_list be window's list of runnable idle callbacks.
     auto& run_list = m_runnable_idle_callbacks;
-    run_list.extend(pending_list);
-    // 4. Clear pending_list.
+    // 4. Append all entries from pending_list into run_list preserving order.
+    for (auto& it : pending_list)
+        run_list.set(it.key, move(it.value));
+    // 5. Clear pending_list.
     pending_list.clear();
 
     // FIXME: This might not agree with the spec, but currently we use 100% CPU if we keep queueing tasks
     if (run_list.is_empty())
         return;
 
-    // 5. Queue a task on the queue associated with the idle-task task source,
+    // 6. Queue a task on the queue associated with the idle-task task source,
     //    which performs the steps defined in the invoke idle callbacks algorithm with window and getDeadline as parameters.
     HTML::queue_global_task(HTML::Task::Source::IdleTask, *this, [this]() mutable {
         invoke_idle_callbacks();
@@ -640,11 +629,12 @@ void Window::invoke_idle_callbacks()
     // 3. If now is less than the result of calling getDeadline and the window's list of runnable idle callbacks is not empty:
     if (now < event_loop.compute_deadline() && !m_runnable_idle_callbacks.is_empty()) {
         // 1. Pop the top callback from window's list of runnable idle callbacks.
-        auto callback = m_runnable_idle_callbacks.take_first();
+        auto callback = (*m_runnable_idle_callbacks.begin()).value;
+        m_runnable_idle_callbacks.remove(m_runnable_idle_callbacks.begin());
         // 2. Let deadlineArg be a new IdleDeadline whose [get deadline time algorithm] is getDeadline.
         auto deadline_arg = RequestIdleCallback::IdleDeadline::create(realm());
         // 3. Call callback with deadlineArg as its argument. If an uncaught runtime script error occurs, then report the exception.
-        auto result = callback->invoke(deadline_arg);
+        auto result = WebIDL::invoke_callback(*callback, {}, deadline_arg);
         if (result.is_error())
             HTML::report_exception(result, realm());
         // 4. If window's list of runnable idle callbacks is not empty, queue a task which performs the steps
@@ -665,10 +655,7 @@ u32 Window::request_idle_callback_impl(WebIDL::CallbackType& callback)
     // 3. Let handle be the current value of window's idle callback identifier.
     auto handle = window.m_idle_callback_identifier;
     // 4. Push callback to the end of window's list of idle request callbacks, associated with handle.
-    auto handler = [callback = JS::make_handle(callback)](JS::NonnullGCPtr<RequestIdleCallback::IdleDeadline> deadline) -> JS::Completion {
-        return WebIDL::invoke_callback(const_cast<WebIDL::CallbackType&>(*callback), {}, deadline.ptr());
-    };
-    window.m_idle_request_callbacks.append(adopt_ref(*new IdleCallback(move(handler), handle)));
+    window.m_idle_request_callbacks.set(handle, callback);
     // 5. Return handle and then continue running this algorithm asynchronously.
     return handle;
     // FIXME: 6. If the timeout property is present in options and has a positive value:
@@ -686,12 +673,8 @@ void Window::cancel_idle_callback_impl(u32 handle)
     // 2. Find the entry in either the window's list of idle request callbacks or list of runnable idle callbacks
     //    that is associated with the value handle.
     // 3. If there is such an entry, remove it from both window's list of idle request callbacks and the list of runnable idle callbacks.
-    window.m_idle_request_callbacks.remove_first_matching([handle](auto& callback) {
-        return callback->handle() == handle;
-    });
-    window.m_runnable_idle_callbacks.remove_first_matching([handle](auto& callback) {
-        return callback->handle() == handle;
-    });
+    window.m_idle_request_callbacks.remove(handle);
+    window.m_runnable_idle_callbacks.remove(handle);
 }
 
 void Window::set_associated_document(DOM::Document& document)
