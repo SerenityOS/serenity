@@ -22,5 +22,6 @@ endpoint WebDriverSessionClient {
     get_element_property(i32 element_id, String name) => (Optional<String> property)
     get_active_documents_type() => (String type)
     get_computed_value_for_element(i32 element_id, String property_name) => (String computed_value)
+    get_element_tag_name(i32 element_id) => (String tag_name)
 
 }
