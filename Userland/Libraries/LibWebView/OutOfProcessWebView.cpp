@@ -545,6 +545,11 @@ String OutOfProcessWebView::get_computed_value_for_element(i32 element_id, Strin
     return client().get_computed_value_for_element(element_id, property_name);
 }
 
+String OutOfProcessWebView::get_element_tag_name(i32 element_id)
+{
+    return client().get_element_tag_name(element_id);
+}
+
 void OutOfProcessWebView::set_content_filters(Vector<String> filters)
 {
     client().async_set_content_filters(filters);
