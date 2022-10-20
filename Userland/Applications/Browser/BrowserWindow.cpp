@@ -582,27 +582,27 @@ void BrowserWindow::create_new_tab(URL url, bool activate)
         return active_tab().view().get_session_storage_entries();
     };
 
-    new_tab.on_get_document_element = [this]() {
+    new_tab.webdriver_endpoints().on_get_document_element = [this]() {
         return active_tab().view().get_document_element();
     };
 
-    new_tab.on_query_selector_all = [this](i32 start_node_id, String const& selector) {
+    new_tab.webdriver_endpoints().on_query_selector_all = [this](i32 start_node_id, String const& selector) {
         return active_tab().view().query_selector_all(start_node_id, selector);
     };
 
-    new_tab.on_get_element_attribute = [this](i32 element_id, String const& name) {
+    new_tab.webdriver_endpoints().on_get_element_attribute = [this](i32 element_id, String const& name) {
         return active_tab().view().get_element_attribute(element_id, name);
     };
 
-    new_tab.on_get_element_property = [this](i32 element_id, String const& name) {
+    new_tab.webdriver_endpoints().on_get_element_property = [this](i32 element_id, String const& name) {
         return active_tab().view().get_element_property(element_id, name);
     };
 
-    new_tab.on_get_active_documents_type = [this]() {
+    new_tab.webdriver_endpoints().on_get_active_documents_type = [this]() {
         return active_tab().view().get_active_documents_type();
     };
 
-    new_tab.on_get_computed_value_for_element = [this](i32 element_id, String const& property_name) {
+    new_tab.webdriver_endpoints().on_get_computed_value_for_element = [this](i32 element_id, String const& property_name) {
         return active_tab().view().get_computed_value_for_element(element_id, property_name);
     };
 

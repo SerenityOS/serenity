@@ -8,6 +8,7 @@
 #pragma once
 
 #include "History.h"
+#include "WebDriverEndpoints.h"
 #include <AK/Optional.h>
 #include <AK/URL.h>
 #include <LibGUI/ActionGroup.h>
@@ -68,12 +69,8 @@ public:
     Function<Vector<Web::Cookie::Cookie>()> on_get_cookies_entries;
     Function<OrderedHashMap<String, String>()> on_get_local_storage_entries;
     Function<OrderedHashMap<String, String>()> on_get_session_storage_entries;
-    Function<Optional<i32>()> on_get_document_element;
-    Function<Optional<Vector<i32>>(i32 start_node_id, String const&)> on_query_selector_all;
-    Function<Optional<String>(i32 element_id, String const&)> on_get_element_attribute;
-    Function<Optional<String>(i32 element_id, String const&)> on_get_element_property;
-    Function<String()> on_get_active_documents_type;
-    Function<String(i32 element_id, String const&)> on_get_computed_value_for_element;
+
+    WebDriverEndpoints& webdriver_endpoints() { return m_webdriver_endpoints; }
 
     enum class InspectorTarget {
         Document,
@@ -140,6 +137,8 @@ private:
     RefPtr<const Gfx::Bitmap> m_icon;
 
     Optional<URL> m_navigating_url;
+
+    WebDriverEndpoints m_webdriver_endpoints {};
 
     bool m_loaded { false };
     bool m_is_history_navigation { false };
