@@ -18,8 +18,14 @@ ImageBox::ImageBox(DOM::Document& document, DOM::Element& element, NonnullRefPtr
     browsing_context().register_viewport_client(*this);
 }
 
-ImageBox::~ImageBox()
+ImageBox::~ImageBox() = default;
+
+void ImageBox::finalize()
 {
+    Base::finalize();
+
+    // NOTE: We unregister from the browsing context in finalize() to avoid trouble
+    //       in the scenario where our BrowsingContext has already been swept by GC.
     browsing_context().unregister_viewport_client(*this);
 }
 
