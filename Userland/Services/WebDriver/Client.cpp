@@ -42,6 +42,7 @@ Vector<Client::Route> Client::s_routes = {
     { HTTP::HttpRequest::Method::POST, { "session", ":session_id", "element", ":element_id", "elements" }, &Client::handle_find_elements_from_element },
     { HTTP::HttpRequest::Method::GET, { "session", ":session_id", "element", ":element_id", "attribute", ":name" }, &Client::handle_get_element_attribute },
     { HTTP::HttpRequest::Method::GET, { "session", ":session_id", "element", ":element_id", "property", ":name" }, &Client::handle_get_element_property },
+    { HTTP::HttpRequest::Method::GET, { "session", ":session_id", "element", ":element_id", "css", ":property_name" }, &Client::handle_get_element_css_value },
     { HTTP::HttpRequest::Method::GET, { "session", ":session_id", "cookie" }, &Client::handle_get_all_cookies },
     { HTTP::HttpRequest::Method::GET, { "session", ":session_id", "cookie", ":name" }, &Client::handle_get_named_cookie },
     { HTTP::HttpRequest::Method::POST, { "session", ":session_id", "cookie" }, &Client::handle_add_cookie },
@@ -598,6 +599,16 @@ ErrorOr<JsonValue, HttpError> Client::handle_get_element_property(Vector<StringV
     dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session_id>/element/<element_id>/property/<name>");
     auto* session = TRY(find_session_with_id(parameters[0]));
     auto result = TRY(session->get_element_property(payload, parameters[1], parameters[2]));
+    return make_json_value(result);
+}
+
+// 12.4.4 Get Element CSS Value, https://w3c.github.io/webdriver/#dfn-get-element-css-value
+// GET /session/{session id}/element/{element id}/css/{property name}
+ErrorOr<JsonValue, HttpError> Client::handle_get_element_css_value(Vector<StringView> const& parameters, JsonValue const& payload)
+{
+    dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session_id>/element/<element_id>/css/<property_name>");
+    auto* session = TRY(find_session_with_id(parameters[0]));
+    auto result = TRY(session->get_element_css_value(payload, parameters[1], parameters[2]));
     return make_json_value(result);
 }
 
