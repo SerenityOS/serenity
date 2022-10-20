@@ -62,6 +62,8 @@ public:
     Optional<Vector<i32>> query_selector_all(i32 start_node_id, String const& selector);
     Optional<String> get_element_attribute(i32 element_id, String const& name);
     Optional<String> get_element_property(i32 element_id, String const& name);
+    String get_active_documents_type();
+    String get_computed_value_for_element(i32 element_id, String const& property_name);
 
     void set_content_filters(Vector<String>);
     void set_proxy_mappings(Vector<String> proxies, HashMap<String, size_t> mappings);

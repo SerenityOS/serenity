@@ -72,6 +72,8 @@ public:
     Function<Optional<Vector<i32>>(i32 start_node_id, String const&)> on_query_selector_all;
     Function<Optional<String>(i32 element_id, String const&)> on_get_element_attribute;
     Function<Optional<String>(i32 element_id, String const&)> on_get_element_property;
+    Function<String()> on_get_active_documents_type;
+    Function<String(i32 element_id, String const&)> on_get_computed_value_for_element;
 
     enum class InspectorTarget {
         Document,

@@ -41,6 +41,8 @@ endpoint WebContentServer
     query_selector_all(i32 start_node_id, String selector) => (Optional<Vector<i32>> elements_ids)
     get_element_attribute(i32 element_id, String name) => (Optional<String> attribute)
     get_element_property(i32 element_id, String name) => (Optional<String> property)
+    get_active_documents_type() => (String type)
+    get_computed_value_for_element(i32 element_id, String property_name) => (String computed_value)
 
     run_javascript(String js_source) =|
 
