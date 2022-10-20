@@ -67,6 +67,7 @@ private:
     ErrorOr<JsonValue, HttpError> handle_find_elements_from_element(Vector<StringView> const&, JsonValue const& payload);
     ErrorOr<JsonValue, HttpError> handle_get_element_attribute(Vector<StringView> const&, JsonValue const& payload);
     ErrorOr<JsonValue, HttpError> handle_get_element_property(Vector<StringView> const&, JsonValue const& payload);
+    ErrorOr<JsonValue, HttpError> handle_get_element_css_value(Vector<StringView> const&, JsonValue const& payload);
     ErrorOr<JsonValue, HttpError> handle_get_all_cookies(Vector<StringView> const&, JsonValue const& payload);
     ErrorOr<JsonValue, HttpError> handle_get_named_cookie(Vector<StringView> const&, JsonValue const& payload);
     ErrorOr<JsonValue, HttpError> handle_add_cookie(Vector<StringView> const&, JsonValue const& payload);
