@@ -26,8 +26,6 @@ stdenv.mkDerivation {
     xlibsWrapper
     qemu
     e2fsprogs
-    fuse2fs
-    # glibc
   ];
 
   hardeningDisable = [ "format" "fortify" ];
