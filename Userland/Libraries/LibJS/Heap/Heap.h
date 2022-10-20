@@ -84,6 +84,7 @@ private:
     void gather_roots(HashTable<Cell*>&);
     void gather_conservative_roots(HashTable<Cell*>&);
     void mark_live_cells(HashTable<Cell*> const& live_cells);
+    void finalize_unmarked_cells();
     void sweep_dead_cells(bool print_report, Core::ElapsedTimer const&);
 
     CellAllocator& allocator_for_size(size_t);

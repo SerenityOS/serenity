@@ -77,6 +77,9 @@ public:
     virtual bool is_environment() const { return false; }
     virtual void visit_edges(Visitor&) { }
 
+    // This will be called on unmarked objects by the garbage collector in a separate pass before destruction.
+    virtual void finalize() { }
+
     Heap& heap() const;
     VM& vm() const;
 

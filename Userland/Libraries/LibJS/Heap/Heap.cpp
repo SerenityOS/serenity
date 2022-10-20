@@ -106,6 +106,7 @@ void Heap::collect_garbage(CollectionType collection_type, bool print_report)
         gather_roots(roots);
         mark_live_cells(roots);
     }
+    finalize_unmarked_cells();
     sweep_dead_cells(print_report, collection_measurement_timer);
 }
 
@@ -229,6 +230,17 @@ void Heap::mark_live_cells(HashTable<Cell*> const& roots)
         inverse_root->set_marked(false);
 
     m_uprooted_cells.clear();
+}
+
+void Heap::finalize_unmarked_cells()
+{
+    for_each_block([&](auto& block) {
+        block.template for_each_cell_in_state<Cell::State::Live>([](Cell* cell) {
+            if (!cell->is_marked())
+                cell->finalize();
+        });
+        return IterationDecision::Continue;
+    });
 }
 
 void Heap::sweep_dead_cells(bool print_report, Core::ElapsedTimer const& measurement_timer)
