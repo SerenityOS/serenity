@@ -66,7 +66,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     if (pid == getpid()) {
         GUI::MessageBox::show(window, "Cannot inspect Inspector itself!"sv, "Error"sv, GUI::MessageBox::Type::Error);
-        return 1;
+        if (gui_mode)
+            goto choose_pid;
+        else
+            return 1;
     }
 
     RemoteProcess remote_process(pid);
