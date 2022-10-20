@@ -4,7 +4,7 @@ which - shows the full path of commands
 
 ## Synopsis
 
-```**sh
+```sh
 $ which [options] executable
 ```
 
