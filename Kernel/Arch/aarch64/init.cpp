@@ -46,7 +46,7 @@ extern "C" void exception_common(Kernel::TrapFrame const* const trap_frame)
         // Special registers
         dbgln("spsr_el1: {:x}", regs->spsr_el1);
         dbgln("elr_el1: {:x}", regs->elr_el1);
-        dbgln("tpidr_el1: {:x}", regs->tpidr_el1);
+        dbgln("tpidr_el0: {:x}", regs->tpidr_el0);
         dbgln("sp_el0: {:x}", regs->sp_el0);
 
         auto esr_el1 = Kernel::Aarch64::ESR_EL1::read();
