@@ -111,11 +111,9 @@ public:
         m_idle_thread = &idle_thread;
     }
 
-    // FIXME: Actually return the current thread once aarch64 supports threading.
     ALWAYS_INLINE static Thread* current_thread()
     {
-        static Thread* current_thread { nullptr };
-        return current_thread;
+        return current().m_current_thread;
     }
 
     ALWAYS_INLINE bool has_nx() const
@@ -204,14 +202,12 @@ public:
 
     ALWAYS_INLINE static void set_current_thread(Thread& current_thread)
     {
-        (void)current_thread;
-        TODO_AARCH64();
+        current().m_current_thread = &current_thread;
     }
 
-    // FIXME: Actually return the idle thread once aarch64 supports threading.
     ALWAYS_INLINE static Thread* idle_thread()
     {
-        return nullptr;
+        return current().m_idle_thread;
     }
 
     ALWAYS_INLINE static Processor& current()
@@ -241,6 +237,7 @@ public:
     static ErrorOr<Vector<FlatPtr, 32>> capture_stack_trace(Thread& thread, size_t max_frames = 0);
 
 private:
+    Thread* m_current_thread;
     Thread* m_idle_thread;
     u32 m_in_critical { 0 };
 
