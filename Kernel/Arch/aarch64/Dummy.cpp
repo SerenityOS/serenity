@@ -17,7 +17,9 @@
 #include <Kernel/Random.h>
 #include <Kernel/Scheduler.h>
 #include <Kernel/Sections.h>
-#include <Kernel/Thread.h>
+#include <Kernel/TTY/TTY.h>
+#include <Kernel/ThreadTracer.h>
+#include <Kernel/TimerQueue.h>
 #include <Kernel/UserOrKernelBuffer.h>
 
 // Random
@@ -58,47 +60,45 @@ LockRefPtr<Thread> Process::create_kernel_thread(void (*)(void*), void*, u32, No
     TODO_AARCH64();
 }
 
+bool Process::add_thread(Thread&)
+{
+    TODO_AARCH64();
 }
 
-// Thread
+Process::~Process()
+{
+    TODO_AARCH64();
+}
+
+void Process::unblock_waiters(Thread::WaitBlocker::UnblockFlags, u8)
+{
+    TODO_AARCH64();
+}
+
+ErrorOr<void> Process::send_signal(u8, Process*)
+{
+    TODO_AARCH64();
+}
+
+void Process::terminate_due_to_signal(u8)
+{
+    TODO_AARCH64();
+}
+
+ProcessID Process::allocate_pid()
+{
+    TODO_AARCH64();
+}
+
+NonnullRefPtr<Credentials> Process::credentials() const
+{
+    TODO_AARCH64();
+}
+
+}
+
+// ThreadBlockers
 namespace Kernel {
-
-class Timer : public AtomicRefCounted<Timer> {
-};
-
-bool Thread::JoinBlocker::unblock(void*, bool)
-{
-    TODO_AARCH64();
-}
-
-Thread::BlockTimeout::BlockTimeout(bool, const AK::Time*, const AK::Time*, clockid_t)
-{
-    TODO_AARCH64();
-}
-
-Thread::SleepBlocker::SleepBlocker(Kernel::Thread::BlockTimeout const&, AK::Time*)
-{
-    TODO_AARCH64();
-}
-
-Thread::BlockTimeout const& Thread::SleepBlocker::override_timeout(Kernel::Thread::BlockTimeout const&)
-{
-    TODO_AARCH64();
-}
-
-void Thread::SleepBlocker::will_unblock_immediately_without_blocking(UnblockImmediatelyReason)
-{
-}
-
-void Thread::SleepBlocker::was_unblocked(bool)
-{
-    TODO_AARCH64();
-}
-
-Thread::BlockResult Thread::SleepBlocker::block_result()
-{
-    TODO_AARCH64();
-}
 
 bool Thread::Blocker::setup_blocker()
 {
@@ -114,66 +114,51 @@ Thread::Blocker::~Blocker()
     TODO_AARCH64();
 }
 
-u32 Thread::unblock_from_mutex(Kernel::Mutex&)
+void Thread::Blocker::begin_blocking(Badge<Thread>)
 {
     TODO_AARCH64();
 }
 
-void Thread::block(Kernel::Mutex&, SpinlockLocker<Kernel::Spinlock>&, u32)
+Thread::BlockTimeout::BlockTimeout(bool, Time const*, Time const*, clockid_t)
 {
     TODO_AARCH64();
 }
 
-SpinlockProtected<Thread::GlobalList>& Thread::all_instances()
+bool Thread::JoinBlocker::unblock(void*, bool)
 {
     TODO_AARCH64();
 }
 
-Thread::~Thread()
+bool Thread::SignalBlocker::check_pending_signals(bool)
 {
     TODO_AARCH64();
 }
 
-void Thread::update_time_scheduled(u64, bool, bool)
+Thread::SleepBlocker::SleepBlocker(BlockTimeout const&, Time*)
 {
     TODO_AARCH64();
 }
 
-void Thread::set_state(State, u8)
+Thread::BlockResult Thread::SleepBlocker::block_result()
 {
     TODO_AARCH64();
 }
 
-DispatchSignalResult Thread::dispatch_one_pending_signal()
+Thread::BlockTimeout const& Thread::SleepBlocker::override_timeout(BlockTimeout const&)
 {
     TODO_AARCH64();
 }
 
-bool Thread::tick()
+void Thread::SleepBlocker::will_unblock_immediately_without_blocking(UnblockImmediatelyReason)
 {
     TODO_AARCH64();
 }
 
-RegisterState& Thread::get_register_dump_from_stack()
+void Thread::SleepBlocker::was_unblocked(bool)
 {
     TODO_AARCH64();
 }
 
-StringView Thread::state_string() const
-{
-    TODO_AARCH64();
-}
-
-ErrorOr<NonnullOwnPtr<KString>> Thread::backtrace()
-{
-    TODO_AARCH64();
-}
-
-}
-
-ErrorOr<void> AK::Formatter<Kernel::Thread>::format(FormatBuilder&, Kernel::Thread const&)
-{
-    TODO_AARCH64();
 }
 
 // WaitQueue

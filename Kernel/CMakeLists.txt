@@ -508,6 +508,7 @@ else()
         StdLib.cpp
         Time/TimeManagement.cpp
         TimerQueue.cpp
+        Thread.cpp
         ThreadTracer.cpp
         UBSanitizer.cpp
         UserOrKernelBuffer.cpp
