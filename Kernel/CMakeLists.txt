@@ -512,6 +512,7 @@ else()
         ThreadTracer.cpp
         UBSanitizer.cpp
         UserOrKernelBuffer.cpp
+        WaitQueue.cpp
 
         Devices/DeviceManagement.cpp
 
