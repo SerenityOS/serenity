@@ -166,4 +166,26 @@ Messages::WebDriverSessionClient::GetElementPropertyResponse WebDriverConnection
     return { {} };
 }
 
+Messages::WebDriverSessionClient::GetActiveDocumentsTypeResponse WebDriverConnection::get_active_documents_type()
+{
+    dbgln("WebDriverConnection: get_active_documents_type");
+    if (auto browser_window = m_browser_window.strong_ref()) {
+        auto& tab = browser_window->active_tab();
+        if (tab.on_get_active_documents_type)
+            return { tab.on_get_active_documents_type() };
+    }
+    return { "" };
+}
+
+Messages::WebDriverSessionClient::GetComputedValueForElementResponse WebDriverConnection::get_computed_value_for_element(i32 element_id, String const& property_name)
+{
+    dbgln("WebDriverConnection: get_computed_value_for_element");
+    if (auto browser_window = m_browser_window.strong_ref()) {
+        auto& tab = browser_window->active_tab();
+        if (tab.on_get_computed_value_for_element)
+            return { tab.on_get_computed_value_for_element(element_id, property_name) };
+    }
+    return { "" };
+}
+
 }

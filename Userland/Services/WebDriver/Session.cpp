@@ -693,6 +693,40 @@ ErrorOr<JsonValue, HttpError> Session::get_element_property(JsonValue const&, St
     return JsonValue(property.release_value());
 }
 
+// 12.4.4 Get Element CSS Value, https://w3c.github.io/webdriver/#dfn-get-element-css-value
+ErrorOr<JsonValue, HttpError> Session::get_element_css_value(JsonValue const&, StringView parameter_element_id, StringView property_name)
+{
+    // 1. If the current browsing context is no longer open, return error with error code no such window.
+    auto current_window = this->current_window();
+    if (!current_window.has_value())
+        return HttpError { 404, "no such window", "Window not found" };
+
+    // FIXME: 2. Handle any user prompts and return its value if it is an error.
+
+    // FIXME: 3. Let element be the result of trying to get a known connected element with url variable element id.
+    // NOTE: The whole concept of "connected elements" is not implemented yet. See get_or_create_a_web_element_reference()
+    //       For now the element is only represented by its ID
+    auto maybe_element_id = parameter_element_id.to_int();
+    if (!maybe_element_id.has_value())
+        return HttpError { 400, "invalid argument", "Element ID is not an i32" };
+
+    auto element_id = maybe_element_id.release_value();
+
+    // 4. Let computed value be the result of the first matching condition:
+    // -> current browsing context’s active document’s type is not "xml"
+    //    computed value of parameter property name from element’s style declarations. property name is obtained from url variables.
+    // -> Otherwise
+    //    "" (empty string)
+    auto active_documents_type = m_browser_connection->get_active_documents_type();
+    if (active_documents_type == "xml")
+        return JsonValue("");
+
+    auto computed_value = m_browser_connection->get_computed_value_for_element(element_id, property_name);
+
+    // 5. Return success with data computed value.
+    return JsonValue(computed_value);
+}
+
 // https://w3c.github.io/webdriver/#dfn-serialized-cookie
 static JsonObject serialize_cookie(Web::Cookie::Cookie const& cookie)
 {
