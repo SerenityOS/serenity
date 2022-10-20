@@ -697,14 +697,6 @@ HTML::BrowsingContext* Window::browsing_context()
     return m_associated_document->browsing_context();
 }
 
-void Window::initialize(JS::Realm& realm)
-{
-    Base::initialize(realm);
-
-    // FIXME: This is a hack..
-    realm.set_global_object(this, this);
-}
-
 void Window::initialize_web_interfaces(Badge<WindowEnvironmentSettingsObject>)
 {
     auto& realm = this->realm();
