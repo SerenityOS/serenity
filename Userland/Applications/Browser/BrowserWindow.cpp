@@ -598,6 +598,14 @@ void BrowserWindow::create_new_tab(URL url, bool activate)
         return active_tab().view().get_element_property(element_id, name);
     };
 
+    new_tab.on_get_active_documents_type = [this]() {
+        return active_tab().view().get_active_documents_type();
+    };
+
+    new_tab.on_get_computed_value_for_element = [this](i32 element_id, String const& property_name) {
+        return active_tab().view().get_computed_value_for_element(element_id, property_name);
+    };
+
     new_tab.load(url);
 
     dbgln_if(SPAM_DEBUG, "Added new tab {:p}, loading {}", &new_tab, url);
