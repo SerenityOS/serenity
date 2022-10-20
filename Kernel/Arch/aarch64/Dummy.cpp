@@ -17,23 +17,12 @@
 #include <Kernel/PhysicalAddress.h>
 #include <Kernel/Process.h>
 #include <Kernel/ProcessExposed.h>
-#include <Kernel/Random.h>
 #include <Kernel/Scheduler.h>
 #include <Kernel/Sections.h>
 #include <Kernel/TTY/TTY.h>
 #include <Kernel/ThreadTracer.h>
 #include <Kernel/TimerQueue.h>
 #include <Kernel/UserOrKernelBuffer.h>
-
-// Random
-namespace Kernel {
-
-void get_fast_random_bytes(Bytes)
-{
-    TODO_AARCH64();
-}
-
-}
 
 // Process
 char const* asm_signal_trampoline = nullptr;
@@ -333,6 +322,22 @@ void Thread::SleepBlocker::was_unblocked(bool)
 }
 
 bool Thread::WaitQueueBlocker::unblock()
+{
+    TODO_AARCH64();
+}
+
+Thread::WaitQueueBlocker::WaitQueueBlocker(WaitQueue& wait_queue, StringView)
+    : m_wait_queue(wait_queue)
+{
+    TODO_AARCH64();
+}
+
+bool Thread::WaitQueueBlocker::setup_blocker()
+{
+    TODO_AARCH64();
+}
+
+Thread::WaitQueueBlocker::~WaitQueueBlocker()
 {
     TODO_AARCH64();
 }

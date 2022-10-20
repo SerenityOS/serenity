@@ -474,6 +474,7 @@ else()
     set(SOURCES
         ${AK_SOURCES}
         ${RPI_SOURCES}
+        ${CRYPTO_SOURCES}
 
         Arch/Processor.cpp
 
@@ -506,6 +507,7 @@ else()
         MiniStdLib.cpp
         Process.cpp
         ProcessProcFSTraits.cpp
+        Random.cpp
         Scheduler.cpp
         StdLib.cpp
         Time/TimeManagement.cpp
