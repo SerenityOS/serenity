@@ -1040,10 +1040,8 @@ JS_DEFINE_NATIVE_FUNCTION(Window::btoa)
 // https://html.spec.whatwg.org/multipage/window-object.html#number-of-document-tree-child-browsing-contexts
 JS::ThrowCompletionOr<size_t> Window::document_tree_child_browsing_context_count() const
 {
-    auto* impl = TRY(impl_from(vm()));
-
     // 1. If W's browsing context is null, then return 0.
-    auto* this_browsing_context = impl->associated_document().browsing_context();
+    auto* this_browsing_context = associated_document().browsing_context();
     if (!this_browsing_context)
         return 0;
 
