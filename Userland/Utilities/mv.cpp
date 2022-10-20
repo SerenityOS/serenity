@@ -19,15 +19,15 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio rpath wpath cpath fattr"));
 
-    // NOTE: The "force" option is a dummy for now, it's just here to silence scripts that use "mv -f"
-    //       In the future, it might be used to cancel out an "-i" interactive option.
     bool force = false;
+    bool no_clobber = false;
     bool verbose = false;
 
     Vector<String> paths;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(force, "Force", "force", 'f');
+    args_parser.add_option(no_clobber, "Do not overwrite existing files", "no-clobber", 'n');
     args_parser.add_option(verbose, "Verbose", "verbose", 'v');
     args_parser.add_positional_argument(paths, "Paths to files being moved followed by target location", "paths");
     args_parser.parse(arguments);
@@ -35,6 +35,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (paths.size() < 2) {
         args_parser.print_usage(stderr, arguments.argv[0]);
         return 1;
+    }
+
+    if (force && no_clobber) {
+        warnln("-f (--force) overrides -n (--no-clobber)");
+        no_clobber = false;
     }
 
     auto original_new_path = paths.take_last();
@@ -63,6 +68,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             combined_new_path = String::formatted("{}/{}", original_new_path, old_basename);
             new_path = combined_new_path.characters();
         }
+
+        if (no_clobber && Core::File::exists(new_path))
+            continue;
 
         rc = rename(old_path.characters(), new_path.characters());
         if (rc < 0) {
