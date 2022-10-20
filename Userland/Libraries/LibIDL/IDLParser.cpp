@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2021, Luke Wilde <lukew@serenityos.org>
  * Copyright (c) 2022, Ali Mohammad Pur <mpfard@serenityos.org>
  *
@@ -835,6 +835,24 @@ static void resolve_typedef(Interface& interface, NonnullRefPtr<Type>& type, Has
         return;
     for (auto& attribute : it->value.extended_attributes)
         extended_attributes->set(attribute.key, attribute.value);
+
+    // Recursively resolve typedefs in unions after we resolved the type itself - e.g. for this:
+    // typedef (A or B) Union1;
+    // typedef (C or D) Union2;
+    // typedef (Union1 or Union2) NestedUnion;
+    // We run:
+    // - resolve_typedef(NestedUnion) -> NestedUnion gets replaced by UnionType(Union1, Union2)
+    //   - resolve_typedef(Union1) -> Union1 gets replaced by UnionType(A, B)
+    //   - resolve_typedef(Union2) -> Union2 gets replaced by UnionType(C, D)
+    // So whatever referenced NestedUnion ends up with the following resolved union:
+    // UnionType(UnionType(A, B), UnionType(C, D))
+    // Note that flattening unions is handled separately as per the spec.
+    if (is<UnionType>(*type)) {
+        auto union_type = static_ptr_cast<UnionType>(type);
+        auto& member_types = static_cast<Vector<NonnullRefPtr<Type>>&>(union_type->member_types());
+        for (auto& member_type : member_types)
+            resolve_typedef(interface, member_type);
+    }
 }
 static void resolve_parameters_typedefs(Interface& interface, Vector<Parameter>& parameters)
 {
