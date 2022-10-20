@@ -561,6 +561,20 @@ Messages::WebContentServer::GetComputedValueForElementResponse ConnectionFromCli
     return { style_value->to_string() };
 }
 
+Messages::WebContentServer::GetElementTagNameResponse ConnectionFromClient::get_element_tag_name(i32 element_id)
+{
+    auto* node = Web::DOM::Node::from_id(element_id);
+    if (!node)
+        return { "" };
+
+    if (!node->is_element())
+        return { "" };
+
+    auto& element = verify_cast<Web::DOM::Element>(*node);
+
+    return { element.tag_name() };
+}
+
 Messages::WebContentServer::GetSelectedTextResponse ConnectionFromClient::get_selected_text()
 {
     return page().focused_context().selected_text();
