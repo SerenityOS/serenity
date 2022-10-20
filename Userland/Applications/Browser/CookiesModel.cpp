@@ -97,4 +97,10 @@ TriState CookiesModel::data_matches(GUI::ModelIndex const& index, GUI::Variant c
     return TriState::False;
 }
 
+Web::Cookie::Cookie const& CookiesModel::get_cookie(GUI::ModelIndex const& index) const
+{
+    VERIFY(index.is_valid());
+    return m_cookies[index.row()];
+}
+
 }

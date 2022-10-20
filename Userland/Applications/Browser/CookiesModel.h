@@ -34,6 +34,8 @@ public:
     virtual GUI::Variant data(GUI::ModelIndex const& index, GUI::ModelRole role = GUI::ModelRole::Display) const override;
     virtual TriState data_matches(GUI::ModelIndex const& index, GUI::Variant const& term) const override;
 
+    Web::Cookie::Cookie const& get_cookie(GUI::ModelIndex const&) const;
+
 private:
     AK::Vector<Web::Cookie::Cookie> m_cookies;
 };
