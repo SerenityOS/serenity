@@ -203,6 +203,10 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(inner_width_getter);
     JS_DECLARE_NATIVE_FUNCTION(inner_height_getter);
 
+    JS_DECLARE_NATIVE_FUNCTION(window_getter);
+    JS_DECLARE_NATIVE_FUNCTION(frames_getter);
+    JS_DECLARE_NATIVE_FUNCTION(self_getter);
+
     JS_DECLARE_NATIVE_FUNCTION(parent_getter);
 
     JS_DECLARE_NATIVE_FUNCTION(device_pixel_ratio_getter);

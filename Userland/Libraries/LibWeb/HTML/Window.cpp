@@ -12,6 +12,7 @@
 #include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/FunctionObject.h>
+#include <LibJS/Runtime/GlobalEnvironment.h>
 #include <LibJS/Runtime/Shape.h>
 #include <LibTextCodec/Decoder.h>
 #include <LibWeb/Bindings/CSSNamespace.h>
@@ -707,10 +708,10 @@ void Window::initialize_web_interfaces(Badge<WindowEnvironmentSettingsObject>)
     m_crypto = Crypto::Crypto::create(realm);
 
     // FIXME: These should be native accessors, not properties
-    define_direct_property("window", this, JS::Attribute::Enumerable);
-    define_direct_property("frames", this, JS::Attribute::Enumerable);
-    define_direct_property("self", this, JS::Attribute::Enumerable);
     define_native_accessor(realm, "top", top_getter, nullptr, JS::Attribute::Enumerable);
+    define_native_accessor(realm, "window", window_getter, {}, JS::Attribute::Enumerable);
+    define_native_accessor(realm, "frames", frames_getter, {}, JS::Attribute::Enumerable);
+    define_native_accessor(realm, "self", self_getter, {}, JS::Attribute::Enumerable);
     define_native_accessor(realm, "parent", parent_getter, {}, JS::Attribute::Enumerable);
     define_native_accessor(realm, "document", document_getter, {}, JS::Attribute::Enumerable);
     define_native_accessor(realm, "frameElement", frame_element_getter, {}, JS::Attribute::Enumerable);
@@ -817,9 +818,13 @@ static JS::ThrowCompletionOr<HTML::Window*> impl_from(JS::VM& vm)
 
     auto* this_object = MUST(this_value.to_object(vm));
 
-    if (!is<Window>(*this_object))
-        return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, "Window");
-    return static_cast<Window*>(this_object);
+    if (is<WindowProxy>(*this_object))
+        return static_cast<WindowProxy*>(this_object)->window().ptr();
+
+    if (is<Window>(*this_object))
+        return static_cast<Window*>(this_object);
+
+    return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, "Window");
 }
 
 JS_DEFINE_NATIVE_FUNCTION(Window::alert)
@@ -1067,6 +1072,30 @@ JS_DEFINE_NATIVE_FUNCTION(Window::top_getter)
 
     // 2. Return this Window object's browsing context's top-level browsing context's WindowProxy object.
     return browsing_context->top_level_browsing_context().window_proxy();
+}
+
+// https://html.spec.whatwg.org/multipage/window-object.html#dom-self
+JS_DEFINE_NATIVE_FUNCTION(Window::self_getter)
+{
+    auto* impl = TRY(impl_from(vm));
+    // The window, frames, and self getter steps are to return this's relevant realm.[[GlobalEnv]].[[GlobalThisValue]].
+    return &relevant_realm(*impl).global_environment().global_this_value();
+}
+
+// https://html.spec.whatwg.org/multipage/window-object.html#dom-window
+JS_DEFINE_NATIVE_FUNCTION(Window::window_getter)
+{
+    auto* impl = TRY(impl_from(vm));
+    // The window, frames, and self getter steps are to return this's relevant realm.[[GlobalEnv]].[[GlobalThisValue]].
+    return &relevant_realm(*impl).global_environment().global_this_value();
+}
+
+// https://html.spec.whatwg.org/multipage/window-object.html#dom-frames
+JS_DEFINE_NATIVE_FUNCTION(Window::frames_getter)
+{
+    auto* impl = TRY(impl_from(vm));
+    // The window, frames, and self getter steps are to return this's relevant realm.[[GlobalEnv]].[[GlobalThisValue]].
+    return &relevant_realm(*impl).global_environment().global_this_value();
 }
 
 JS_DEFINE_NATIVE_FUNCTION(Window::parent_getter)
