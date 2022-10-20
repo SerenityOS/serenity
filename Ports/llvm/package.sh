@@ -1,11 +1,13 @@
 #!/usr/bin/env -S bash ../.port_include.sh
-port=llvm
-useconfigure=true
-version=15.0.0
-workdir=llvm-project-${version}.src
-configopts=("-DCMAKE_TOOLCHAIN_FILE=${SERENITY_BUILD_DIR}/CMakeToolchain.txt")
-files="https://github.com/llvm/llvm-project/releases/download/llvmorg-${version}/llvm-project-${version}.src.tar.xz llvm-project-${version}.src.tar.xz caaf8100365b6ebafc39fea803e902ca3ff38b4d5327b9927097808d32964db7"
-auth_type=sha256
+port='llvm'
+useconfigure='true'
+version='15.0.3'
+workdir="llvm-project-${version}.src"
+configopts=(
+    "-DCMAKE_TOOLCHAIN_FILE=${SERENITY_BUILD_DIR}/CMakeToolchain.txt"
+)
+files="https://github.com/llvm/llvm-project/releases/download/llvmorg-${version}/llvm-project-${version}.src.tar.xz llvm-project-${version}.src.tar.xz dd07bdab557866344d85ae21bbeca5259d37b4b0e2ebf6e0481f42d1ba0fee88"
+auth_type='sha256'
 depends=(
     "ncurses"
     "zlib"
