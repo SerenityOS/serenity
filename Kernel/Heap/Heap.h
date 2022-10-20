@@ -20,7 +20,7 @@ class Heap {
 
     struct AllocationHeader {
         size_t allocation_size_in_chunks;
-#if ARCH(X86_64)
+#if ARCH(X86_64) || ARCH(AARCH64)
         // FIXME: Get rid of this somehow
         size_t alignment_dummy;
 #endif
