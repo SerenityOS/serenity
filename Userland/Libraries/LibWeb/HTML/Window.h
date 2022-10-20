@@ -161,9 +161,9 @@ private:
     AnimationFrameCallbackDriver m_animation_frame_callback_driver;
 
     // https://w3c.github.io/requestidlecallback/#dfn-list-of-idle-request-callbacks
-    NonnullRefPtrVector<IdleCallback> m_idle_request_callbacks;
+    OrderedHashMap<u32, JS::NonnullGCPtr<WebIDL::CallbackType>> m_idle_request_callbacks;
     // https://w3c.github.io/requestidlecallback/#dfn-list-of-runnable-idle-callbacks
-    NonnullRefPtrVector<IdleCallback> m_runnable_idle_callbacks;
+    OrderedHashMap<u32, JS::NonnullGCPtr<WebIDL::CallbackType>> m_runnable_idle_callbacks;
     // https://w3c.github.io/requestidlecallback/#dfn-idle-callback-identifier
     u32 m_idle_callback_identifier = 0;
 
