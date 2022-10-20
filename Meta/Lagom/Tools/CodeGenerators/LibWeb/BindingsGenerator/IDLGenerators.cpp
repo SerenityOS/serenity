@@ -2393,6 +2393,7 @@ void generate_prototype_implementation(IDL::Interface const& interface)
 #include <LibWeb/HTML/Origin.h>
 #include <LibWeb/HTML/Scripting/Environments.h>
 #include <LibWeb/HTML/Window.h>
+#include <LibWeb/HTML/WindowProxy.h>
 #include <LibWeb/WebIDL/OverloadResolution.h>
 
 #if __has_include(<LibWeb/Bindings/@prototype_base_class@.h>)
@@ -2596,6 +2597,9 @@ static JS::ThrowCompletionOr<@fully_qualified_name@*> impl_from(JS::VM& vm)
             generator.append(R"~~~(
     if (is<HTML::Window>(this_object)) {
         return static_cast<HTML::Window*>(this_object);
+    }
+    if (is<HTML::WindowProxy>(this_object)) {
+        return static_cast<HTML::WindowProxy*>(this_object)->window().ptr();
     }
 )~~~");
         }
