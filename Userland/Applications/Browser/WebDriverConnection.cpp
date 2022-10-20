@@ -127,8 +127,8 @@ Messages::WebDriverSessionClient::GetDocumentElementResponse WebDriverConnection
     dbgln("WebDriverConnection: get_document_element");
     if (auto browser_window = m_browser_window.strong_ref()) {
         auto& tab = browser_window->active_tab();
-        if (tab.on_get_document_element)
-            return { tab.on_get_document_element() };
+        if (tab.webdriver_endpoints().on_get_document_element)
+            return { tab.webdriver_endpoints().on_get_document_element() };
     }
     return { {} };
 }
@@ -138,8 +138,8 @@ Messages::WebDriverSessionClient::QuerySelectorAllResponse WebDriverConnection::
     dbgln("WebDriverConnection: query_selector_all");
     if (auto browser_window = m_browser_window.strong_ref()) {
         auto& tab = browser_window->active_tab();
-        if (tab.on_query_selector_all)
-            return { tab.on_query_selector_all(start_node_id, selector) };
+        if (tab.webdriver_endpoints().on_query_selector_all)
+            return { tab.webdriver_endpoints().on_query_selector_all(start_node_id, selector) };
     }
     return { {} };
 }
@@ -149,8 +149,8 @@ Messages::WebDriverSessionClient::GetElementAttributeResponse WebDriverConnectio
     dbgln("WebDriverConnection: get_element_attribute");
     if (auto browser_window = m_browser_window.strong_ref()) {
         auto& tab = browser_window->active_tab();
-        if (tab.on_get_element_attribute)
-            return { tab.on_get_element_attribute(element_id, name) };
+        if (tab.webdriver_endpoints().on_get_element_attribute)
+            return { tab.webdriver_endpoints().on_get_element_attribute(element_id, name) };
     }
     return { {} };
 }
@@ -160,8 +160,8 @@ Messages::WebDriverSessionClient::GetElementPropertyResponse WebDriverConnection
     dbgln("WebDriverConnection: get_element_property");
     if (auto browser_window = m_browser_window.strong_ref()) {
         auto& tab = browser_window->active_tab();
-        if (tab.on_get_element_property)
-            return { tab.on_get_element_property(element_id, name) };
+        if (tab.webdriver_endpoints().on_get_element_property)
+            return { tab.webdriver_endpoints().on_get_element_property(element_id, name) };
     }
     return { {} };
 }
@@ -171,8 +171,8 @@ Messages::WebDriverSessionClient::GetActiveDocumentsTypeResponse WebDriverConnec
     dbgln("WebDriverConnection: get_active_documents_type");
     if (auto browser_window = m_browser_window.strong_ref()) {
         auto& tab = browser_window->active_tab();
-        if (tab.on_get_active_documents_type)
-            return { tab.on_get_active_documents_type() };
+        if (tab.webdriver_endpoints().on_get_active_documents_type)
+            return { tab.webdriver_endpoints().on_get_active_documents_type() };
     }
     return { "" };
 }
@@ -182,8 +182,8 @@ Messages::WebDriverSessionClient::GetComputedValueForElementResponse WebDriverCo
     dbgln("WebDriverConnection: get_computed_value_for_element");
     if (auto browser_window = m_browser_window.strong_ref()) {
         auto& tab = browser_window->active_tab();
-        if (tab.on_get_computed_value_for_element)
-            return { tab.on_get_computed_value_for_element(element_id, property_name) };
+        if (tab.webdriver_endpoints().on_get_computed_value_for_element)
+            return { tab.webdriver_endpoints().on_get_computed_value_for_element(element_id, property_name) };
     }
     return { "" };
 }
