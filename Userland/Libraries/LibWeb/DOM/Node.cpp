@@ -73,7 +73,9 @@ Node::Node(Document& document, NodeType type)
 {
 }
 
-Node::~Node()
+Node::~Node() = default;
+
+void Node::finalize()
 {
     if (layout_node() && layout_node()->parent())
         layout_node()->parent()->remove_child(*layout_node());

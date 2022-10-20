@@ -622,6 +622,7 @@ protected:
     Node(Document&, NodeType);
 
     virtual void visit_edges(Cell::Visitor&) override;
+    virtual void finalize() override;
 
     JS::GCPtr<Document> m_document;
     JS::GCPtr<Layout::Node> m_layout_node;
