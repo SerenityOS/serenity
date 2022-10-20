@@ -19,6 +19,7 @@ struct MouseEventInit : public EventModifierInit {
     double client_y = 0;
 
     i16 button = 0;
+    u16 buttons = 0;
 };
 
 class MouseEvent : public UIEvent {
@@ -26,7 +27,7 @@ class MouseEvent : public UIEvent {
 
 public:
     static MouseEvent* create(JS::Realm&, FlyString const& event_name, MouseEventInit const& event_init = {});
-    static MouseEvent* create_from_platform_event(JS::Realm&, FlyString const& event_name, double offset_x, double offset_y, double client_x, double client_y, unsigned mouse_button = 1);
+    static MouseEvent* create_from_platform_event(JS::Realm&, FlyString const& event_name, double offset_x, double offset_y, double client_x, double client_y, unsigned buttons, unsigned mouse_button = 1);
 
     virtual ~MouseEvent() override;
 
@@ -40,6 +41,7 @@ public:
     double y() const { return client_y(); }
 
     i16 button() const { return m_button; }
+    u16 buttons() const { return m_buttons; }
 
     virtual u32 which() const override { return m_button + 1; }
 
@@ -54,6 +56,7 @@ private:
     double m_client_x { 0 };
     double m_client_y { 0 };
     i16 m_button { 0 };
+    u16 m_buttons { 0 };
 };
 
 }

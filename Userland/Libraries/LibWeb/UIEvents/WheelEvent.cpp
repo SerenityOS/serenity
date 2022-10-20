@@ -28,13 +28,15 @@ WheelEvent* WheelEvent::create(JS::Realm& realm, FlyString const& event_name, Wh
     return realm.heap().allocate<WheelEvent>(realm, realm, event_name, event_init);
 }
 
-WheelEvent* WheelEvent::create_from_platform_event(JS::Realm& realm, FlyString const& event_name, double offset_x, double offset_y, double client_x, double client_y, double delta_x, double delta_y)
+WheelEvent* WheelEvent::create_from_platform_event(JS::Realm& realm, FlyString const& event_name, double offset_x, double offset_y, double client_x, double client_y, double delta_x, double delta_y, unsigned buttons, unsigned button)
 {
     WheelEventInit event_init {};
     event_init.offset_x = offset_x;
     event_init.offset_y = offset_y;
     event_init.client_x = client_x;
     event_init.client_y = client_y;
+    event_init.button = button;
+    event_init.buttons = buttons;
     event_init.delta_x = delta_x;
     event_init.delta_y = delta_y;
     event_init.delta_mode = WheelDeltaMode::DOM_DELTA_PIXEL;

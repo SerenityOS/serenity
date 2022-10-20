@@ -10,7 +10,7 @@ interface MouseEvent : UIEvent {
     readonly attribute double y;
 
     readonly attribute short button;
-
+    readonly attribute unsigned short buttons;
 };
 
 dictionary MouseEventInit : EventModifierInit {
