@@ -6,6 +6,4 @@
 typedef (Blob or BufferSource or URLSearchParams or USVString) XMLHttpRequestBodyInit;
 
 // https://fetch.spec.whatwg.org/#bodyinit
-// FIXME: IDLParser doesn't resolve nested unions properly
-// typedef (ReadableStream or XMLHttpRequestBodyInit) BodyInit;
-typedef (ReadableStream or Blob or BufferSource or URLSearchParams or USVString) BodyInit;
+typedef (ReadableStream or XMLHttpRequestBodyInit) BodyInit;
