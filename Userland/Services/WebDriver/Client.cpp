@@ -249,7 +249,7 @@ ErrorOr<Client::RoutingResult, WebDriverError> Client::match_route(HTTP::HttpReq
 
     // https://w3c.github.io/webdriver/webdriver-spec.html#routing-requests
     if (!resource.starts_with(m_prefix))
-        return WebDriverError { 404, "unknown command", "The resource doesn't start with the prefix." };
+        return WebDriverError::from_code(ErrorCode::UnknownCommand, "The resource doesn't start with the prefix.");
 
     Vector<StringView> resource_split = resource.substring_view(m_prefix.length()).split_view('/', true);
     Vector<StringView> parameters;
@@ -288,25 +288,25 @@ ErrorOr<Client::RoutingResult, WebDriverError> Client::match_route(HTTP::HttpReq
     // Matched a path, but didn't match a known method
     if (matched_path) {
         dbgln_if(WEBDRIVER_DEBUG, "- A path matched, but method didn't. :^(");
-        return WebDriverError { 405, "unknown method", "The command matched a known URL but did not match a method for that URL." };
+        return WebDriverError::from_code(ErrorCode::UnknownMethod, "The command matched a known URL but did not match a method for that URL.");
     }
 
     // Didn't have any match
     dbgln_if(WEBDRIVER_DEBUG, "- No matches. :^(");
-    return WebDriverError { 404, "unknown command", "The command was not recognized." };
+    return WebDriverError::from_code(ErrorCode::UnknownCommand, "The command was not recognized.");
 }
 
 ErrorOr<Session*, WebDriverError> Client::find_session_with_id(StringView session_id)
 {
     auto session_id_or_error = session_id.to_uint<>();
     if (!session_id_or_error.has_value())
-        return WebDriverError { 404, "invalid session id", "Invalid session id" };
+        return WebDriverError::from_code(ErrorCode::InvalidSessionId, "Invalid session id");
 
     for (auto& session : Client::s_sessions) {
         if (session.session_id() == session_id_or_error.value())
             return &session;
     }
-    return WebDriverError { 404, "invalid session id", "Invalid session id" };
+    return WebDriverError::from_code(ErrorCode::InvalidSessionId, "Invalid session id");
 }
 
 void Client::close_session(unsigned session_id)
@@ -360,7 +360,7 @@ ErrorOr<JsonValue, WebDriverError> Client::handle_new_session(Vector<StringView>
     NonnullOwnPtr<Session> session = make<Session>(session_id, *this);
     auto start_result = session->start();
     if (start_result.is_error()) {
-        return WebDriverError { 500, "Failed to start session", start_result.error().string_literal() };
+        return WebDriverError::from_code(ErrorCode::SessionNotCreated, String::formatted("Failed to start session: {}", start_result.error().string_literal()));
     }
 
     // FIXME: 8. Set the current session to session.
@@ -404,9 +404,8 @@ ErrorOr<JsonValue, WebDriverError> Client::handle_delete_session(Vector<StringVi
     auto* session = TRY(find_session_with_id(parameters[0]));
 
     auto stop_result = session->stop();
-    if (stop_result.is_error()) {
-        return WebDriverError { 500, "unsupported operation", stop_result.error().string_literal() };
-    }
+    if (stop_result.is_error())
+        return WebDriverError::from_code(ErrorCode::UnsupportedOperation, stop_result.error().string_literal());
 
     // 2. Return success with data null.
     return make_json_value(JsonValue());

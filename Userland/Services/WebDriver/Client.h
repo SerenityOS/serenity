@@ -84,7 +84,7 @@ private:
             Variant<WebDriverError, Error> error = result.release_error();
             if (error.has<WebDriverError>())
                 return error.get<WebDriverError>();
-            return WebDriverError { 500, "unsupported operation", error.get<Error>().string_literal() };
+            return WebDriverError::from_code(ErrorCode::UnsupportedOperation, error.get<Error>().string_literal());
         }
 
         return result.release_value();
@@ -95,7 +95,7 @@ private:
             Variant<WebDriverError, Error> error = result.release_error();
             if (error.has<WebDriverError>())
                 return error.get<WebDriverError>();
-            return WebDriverError { 500, "unsupported operation", error.get<Error>().string_literal() };
+            return WebDriverError::from_code(ErrorCode::UnsupportedOperation, error.get<Error>().string_literal());
         }
         return {};
     }
