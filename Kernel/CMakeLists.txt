@@ -504,6 +504,8 @@ else()
         KString.cpp
         KSyms.cpp
         MiniStdLib.cpp
+        Process.cpp
+        ProcessProcFSTraits.cpp
         Scheduler.cpp
         StdLib.cpp
         Time/TimeManagement.cpp
