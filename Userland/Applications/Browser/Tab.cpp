@@ -614,6 +614,10 @@ void Tab::show_storage_inspector()
         storage_window->set_title("Storage inspector");
         storage_window->set_icon(g_icon_bag.cookie);
         m_storage_widget = storage_window->set_main_widget<StorageWidget>();
+        m_storage_widget->on_update_cookie = [this](Web::Cookie::Cookie cookie) {
+            if (on_update_cookie)
+                on_update_cookie(url(), move(cookie));
+        };
     }
 
     if (on_get_cookies_entries) {
