@@ -48,7 +48,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto app_icon = GUI::Icon::default_icon("app-magnifier"sv);
 
     // 4px on each side for padding
-    constexpr int window_dimensions = 200 + 4 + 4;
+    constexpr int window_dimensions = 240 + 4 + 4;
     auto window = GUI::Window::construct();
     window->set_title("Magnifier");
     window->resize(window_dimensions, window_dimensions);
