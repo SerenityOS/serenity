@@ -22,6 +22,7 @@ public:
     static USBManagement& the();
 
     void register_driver(NonnullLockRefPtr<Driver> driver);
+    LockRefPtr<Driver> get_driver_by_name(StringView name);
     void unregister_driver(NonnullLockRefPtr<Driver> driver);
 
     Vector<NonnullLockRefPtr<Driver>>& available_drivers() { return m_available_drivers; }

@@ -81,6 +81,12 @@ void USBManagement::register_driver(NonnullLockRefPtr<Driver> driver)
     m_available_drivers.append(driver);
 }
 
+LockRefPtr<Driver> USBManagement::get_driver_by_name(StringView name)
+{
+    auto it = m_available_drivers.find_if([name](auto driver) { return driver->name() == name; });
+    return it.is_end() ? nullptr : LockRefPtr { *it };
+}
+
 void USBManagement::unregister_driver(NonnullLockRefPtr<Driver> driver)
 {
     dbgln_if(USB_DEBUG, "Unregistering driver {}", driver->name());
