@@ -538,7 +538,23 @@ ThrowCompletionOr<NanosecondsToDaysResult> nanoseconds_to_days(VM& vm, Crypto::S
         }
     }
 
-    // 19. Return the Record { [[Days]]: days, [[Nanoseconds]]: nanoseconds, [[DayLength]]: abs(dayLengthNs) }.
+    // 19. If days < 0 and sign = 1, throw a RangeError exception.
+    if (days < 0 && sign == 1)
+        return vm.throw_completion<RangeError>(ErrorType::TemporalNanosecondsConvertedToDaysWithOppositeSign);
+
+    // 20. If days > 0 and sign = -1, throw a RangeError exception.
+    if (days > 0 && sign == -1)
+        return vm.throw_completion<RangeError>(ErrorType::TemporalNanosecondsConvertedToDaysWithOppositeSign);
+
+    // 21. If nanoseconds < 0 and sign = 1, throw a RangeError exception.
+    if (nanoseconds.is_negative() && sign == 1)
+        return vm.throw_completion<RangeError>(ErrorType::TemporalNanosecondsConvertedToRemainderOfNanosecondsWithOppositeSign);
+
+    // 22. If nanoseconds > 0 and sign = -1, throw a RangeError exception.
+    if (nanoseconds.is_positive() && sign == -1)
+        return vm.throw_completion<RangeError>(ErrorType::TemporalNanosecondsConvertedToRemainderOfNanosecondsWithOppositeSign);
+
+    // 23. Return the Record { [[Days]]: days, [[Nanoseconds]]: nanoseconds, [[DayLength]]: abs(dayLengthNs) }.
     return NanosecondsToDaysResult { .days = days, .nanoseconds = move(nanoseconds), .day_length = fabs(day_length_ns.to_double()) };
 }
 
