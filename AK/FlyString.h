@@ -53,16 +53,12 @@ public:
     bool is_null() const { return !m_impl; }
 
     bool operator==(FlyString const& other) const { return m_impl == other.m_impl; }
-    bool operator!=(FlyString const& other) const { return m_impl != other.m_impl; }
 
     bool operator==(String const&) const;
-    bool operator!=(String const& string) const { return !(*this == string); }
 
     bool operator==(StringView) const;
-    bool operator!=(StringView string) const { return !(*this == string); }
 
     bool operator==(char const*) const;
-    bool operator!=(char const* string) const { return !(*this == string); }
 
     StringImpl const* impl() const { return m_impl; }
     char const* characters() const { return m_impl ? m_impl->characters() : nullptr; }

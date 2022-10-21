@@ -109,7 +109,6 @@ public:
     float line_height(Layout::Node const&) const;
 
     bool operator==(StyleProperties const&) const;
-    bool operator!=(StyleProperties const& other) const { return !(*this == other); }
 
     Optional<CSS::Position> position() const;
     Optional<int> z_index() const;

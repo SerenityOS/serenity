@@ -34,7 +34,6 @@ struct FlattenedDeviceTreeReserveEntry {
     BigEndian<u64> size;
 
     bool operator==(FlattenedDeviceTreeReserveEntry const& other) const { return other.address == address && other.size == size; }
-    bool operator!=(FlattenedDeviceTreeReserveEntry const& other) const { return !(operator==(other)); }
 };
 static_assert(sizeof(FlattenedDeviceTreeReserveEntry) == 16, "FDT Memory Reservation entry size must match specification");
 

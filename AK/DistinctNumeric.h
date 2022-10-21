@@ -67,10 +67,6 @@ public:
     {
         return this->m_value == other.m_value;
     }
-    constexpr bool operator!=(Self const& other) const
-    {
-        return this->m_value != other.m_value;
-    }
 
     // Only implemented when `Incr` is true:
     constexpr Self& operator++()

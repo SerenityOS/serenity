@@ -35,11 +35,6 @@ public:
         return m_node.ptr() == other.m_node.ptr() && m_offset == other.m_offset;
     }
 
-    bool operator!=(Position const& other) const
-    {
-        return !(*this == other);
-    }
-
     String to_string() const;
 
 private:

@@ -80,7 +80,6 @@ public:
         T& operator*() { return *m_value; }
         auto operator->() { return m_value; }
         bool operator==(Iterator const& other) const { return other.m_value == m_value; }
-        bool operator!=(Iterator const& other) const { return !(*this == other); }
         Iterator& operator++()
         {
             m_value = IntrusiveList<T, Container, member>::next(m_value);
@@ -108,7 +107,6 @@ public:
         T& operator*() { return *m_value; }
         auto operator->() { return m_value; }
         bool operator==(ReverseIterator const& other) const { return other.m_value == m_value; }
-        bool operator!=(ReverseIterator const& other) const { return !(*this == other); }
         ReverseIterator& operator++()
         {
             m_value = IntrusiveList<T, Container, member>::prev(m_value);
@@ -134,7 +132,6 @@ public:
         T const& operator*() const { return *m_value; }
         auto operator->() const { return m_value; }
         bool operator==(ConstIterator const& other) const { return other.m_value == m_value; }
-        bool operator!=(ConstIterator const& other) const { return !(*this == other); }
         ConstIterator& operator++()
         {
             m_value = IntrusiveList<T, Container, member>::next(m_value);

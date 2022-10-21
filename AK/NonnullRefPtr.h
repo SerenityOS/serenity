@@ -216,10 +216,8 @@ public:
     }
 
     bool operator==(NonnullRefPtr const& other) const { return m_ptr == other.m_ptr; }
-    bool operator!=(NonnullRefPtr const& other) const { return m_ptr != other.m_ptr; }
 
     bool operator==(NonnullRefPtr& other) { return m_ptr == other.m_ptr; }
-    bool operator!=(NonnullRefPtr& other) { return m_ptr != other.m_ptr; }
 
     // clang-format off
 private:

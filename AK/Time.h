@@ -223,7 +223,6 @@ public:
     [[nodiscard]] bool is_negative() const { return m_seconds < 0; }
 
     bool operator==(Time const& other) const { return this->m_seconds == other.m_seconds && this->m_nanoseconds == other.m_nanoseconds; }
-    bool operator!=(Time const& other) const { return !(*this == other); }
     Time operator+(Time const& other) const;
     Time& operator+=(Time const& other);
     Time operator-(Time const& other) const;

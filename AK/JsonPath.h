@@ -75,10 +75,6 @@ public:
         }
         return false;
     }
-    bool operator!=(JsonPathElement const& other) const
-    {
-        return !(*this == other);
-    }
 
 private:
     Kind m_kind;

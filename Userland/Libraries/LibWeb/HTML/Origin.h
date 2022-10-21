@@ -106,7 +106,6 @@ public:
     }
 
     bool operator==(Origin const& other) const { return is_same_origin(other); }
-    bool operator!=(Origin const& other) const { return !is_same_origin(other); }
 
 private:
     String m_scheme;

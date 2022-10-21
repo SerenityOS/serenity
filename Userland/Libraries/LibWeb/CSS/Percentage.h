@@ -37,7 +37,6 @@ public:
     }
 
     bool operator==(Percentage const& other) const { return m_value == other.m_value; }
-    bool operator!=(Percentage const& other) const { return !(*this == other); }
 
 private:
     float m_value;
@@ -147,7 +146,6 @@ public:
             return (m_value.template get<Percentage>() == other.m_value.template get<Percentage>());
         return (m_value.template get<T>() == other.m_value.template get<T>());
     }
-    bool operator!=(PercentageOr<T> const& other) const { return !(*this == other); }
 
 protected:
     bool is_t() const { return m_value.template has<T>(); }

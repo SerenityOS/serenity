@@ -25,10 +25,6 @@ public:
     {
         return m_ptr == other.m_ptr && m_length == other.m_length;
     }
-    bool operator!=(Utf32CodePointIterator const& other) const
-    {
-        return !(*this == other);
-    }
     Utf32CodePointIterator& operator++()
     {
         VERIFY(m_length > 0);

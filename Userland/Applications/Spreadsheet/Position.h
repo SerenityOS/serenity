@@ -37,11 +37,6 @@ struct Position {
         return row == other.row && column == other.column;
     }
 
-    bool operator!=(Position const& other) const
-    {
-        return !(other == *this);
-    }
-
     String to_cell_identifier(Sheet const& sheet) const;
     URL to_url(Sheet const& sheet) const;
 

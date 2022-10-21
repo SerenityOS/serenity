@@ -121,10 +121,6 @@ public:
     // We have a RefPtr<CalculatedStyleValue> member, but can't include the header StyleValue.h as it includes
     // this file already. To break the cyclic dependency, we must move all method definitions out.
     bool operator==(Length const& other) const;
-    bool operator!=(Length const& other) const
-    {
-        return !(*this == other);
-    }
 
     float relative_length_to_px(Gfx::IntRect const& viewport_rect, Gfx::FontPixelMetrics const& font_metrics, float font_size, float root_font_size) const;
 

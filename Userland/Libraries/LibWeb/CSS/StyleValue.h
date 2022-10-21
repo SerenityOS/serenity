@@ -402,7 +402,6 @@ public:
     virtual String to_string() const = 0;
 
     bool operator==(StyleValue const& other) const { return equals(other); }
-    bool operator!=(StyleValue const& other) const { return !(*this == other); }
 
     virtual bool equals(StyleValue const& other) const = 0;
 

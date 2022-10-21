@@ -63,10 +63,6 @@ struct Attribute {
     {
         return foreground_color == other.foreground_color && background_color == other.background_color && flags == other.flags;
     }
-    constexpr bool operator!=(Attribute const& other) const
-    {
-        return !(*this == other);
-    }
 };
 
 }
