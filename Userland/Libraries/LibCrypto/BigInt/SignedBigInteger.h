@@ -69,6 +69,7 @@ public:
 
     [[nodiscard]] UnsignedBigInteger const& unsigned_value() const { return m_unsigned_data; }
     [[nodiscard]] Vector<u32, STARTING_WORD_SIZE> const words() const { return m_unsigned_data.words(); }
+    [[nodiscard]] bool is_positive() const { return !is_negative() && !is_zero(); }
     [[nodiscard]] bool is_negative() const { return m_sign; }
     [[nodiscard]] bool is_zero() const { return m_unsigned_data.is_zero(); }
 
