@@ -22,6 +22,7 @@ public:
         Name,
         Value,
         ExpiryTime,
+        SameSite,
         __Count,
     };
 

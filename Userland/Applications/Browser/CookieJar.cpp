@@ -99,6 +99,7 @@ void CookieJar::dump_cookies() const
         builder.appendff("\t{}HttpOnly{} = {:s}\n", attribute_color, no_color, cookie.value.http_only);
         builder.appendff("\t{}HostOnly{} = {:s}\n", attribute_color, no_color, cookie.value.host_only);
         builder.appendff("\t{}Persistent{} = {:s}\n", attribute_color, no_color, cookie.value.persistent);
+        builder.appendff("\t{}SameSite{} = {:s}\n", attribute_color, no_color, Web::Cookie::same_site_to_string(cookie.value.same_site));
     }
 
     dbgln("{}", builder.build());
@@ -199,7 +200,7 @@ void CookieJar::store_cookie(Web::Cookie::ParsedCookie const& parsed_cookie, con
     // https://tools.ietf.org/html/rfc6265#section-5.3
 
     // 2. Create a new cookie with name cookie-name, value cookie-value. Set the creation-time and the last-access-time to the current date and time.
-    Web::Cookie::Cookie cookie { parsed_cookie.name, parsed_cookie.value };
+    Web::Cookie::Cookie cookie { parsed_cookie.name, parsed_cookie.value, parsed_cookie.same_site_attribute };
     cookie.creation_time = Core::DateTime::now();
     cookie.last_access_time = cookie.creation_time;
 
