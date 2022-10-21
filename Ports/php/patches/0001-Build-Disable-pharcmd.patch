@@ -10,7 +10,7 @@ not try to run phar locally.
  1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/configure.ac b/configure.ac
-index b54abe3..d9a8d0b 100644
+index ee2d248105f6af61540dfde3eb9e7297c515f0ea..6190cfb73f01cc68d439cb99fdfc9f18341a4cd6 100644
 --- a/configure.ac
 +++ b/configure.ac
 @@ -1567,8 +1567,8 @@ CFLAGS="\$(CFLAGS_CLEAN) $standard_libtool_flag"

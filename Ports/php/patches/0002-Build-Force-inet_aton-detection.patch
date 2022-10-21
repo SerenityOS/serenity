@@ -11,7 +11,7 @@ and tries to redefine it with its own implementation in
  1 file changed, 1 insertion(+), 2 deletions(-)
 
 diff --git a/configure.ac b/configure.ac
-index d9a8d0b..687c2d8 100644
+index 6190cfb73f01cc68d439cb99fdfc9f18341a4cd6..b5b8bcc21dd2330adbe81bbc5ad0b6ec256b1ce9 100644
 --- a/configure.ac
 +++ b/configure.ac
 @@ -365,8 +365,7 @@ if test "$ac_cv_func_dlopen" = "yes"; then
