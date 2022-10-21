@@ -263,6 +263,9 @@ ErrorOr<NonnullLockRefPtr<OpenFileDescription>> VirtualFileSystem::open(Credenti
     auto& inode = custody.inode();
     auto metadata = inode.metadata();
 
+    if (metadata.is_regular_file() && (custody.mount_flags() & MS_NOREGULAR))
+        return EACCES;
+
     if ((options & O_DIRECTORY) && !metadata.is_directory())
         return ENOTDIR;
 
@@ -370,6 +373,8 @@ ErrorOr<NonnullLockRefPtr<OpenFileDescription>> VirtualFileSystem::create(Creden
         return EACCES;
     if (parent_custody.is_readonly())
         return EROFS;
+    if (is_regular_file(mode) && (parent_custody.mount_flags() & MS_NOREGULAR))
+        return EACCES;
 
     dbgln_if(VFS_DEBUG, "VirtualFileSystem::create: '{}' in {}", basename, parent_inode.identifier());
     auto uid = owner.has_value() ? owner.value().uid : credentials.euid();

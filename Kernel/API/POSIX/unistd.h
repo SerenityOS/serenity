@@ -29,6 +29,7 @@ extern "C" {
 #define MS_REMOUNT (1 << 5)
 #define MS_WXALLOWED (1 << 6)
 #define MS_AXALLOWED (1 << 7)
+#define MS_NOREGULAR (1 << 8)
 
 enum {
     _SC_MONOTONIC_CLOCK,
