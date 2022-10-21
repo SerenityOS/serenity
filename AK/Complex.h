@@ -211,12 +211,6 @@ public:
         return (this->real() == a.real()) && (this->imag() == a.imag());
     }
 
-    template<AK::Concepts::Arithmetic U>
-    constexpr bool operator!=(Complex<U> const& a) const
-    {
-        return !(*this == a);
-    }
-
     constexpr Complex<T> operator+()
     {
         return *this;

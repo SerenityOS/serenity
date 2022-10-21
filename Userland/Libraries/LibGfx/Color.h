@@ -350,11 +350,6 @@ public:
         return m_value == other.m_value;
     }
 
-    constexpr bool operator!=(Color const& other) const
-    {
-        return m_value != other.m_value;
-    }
-
     String to_string() const;
     String to_string_without_alpha() const;
     static Optional<Color> from_string(StringView);

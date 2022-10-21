@@ -102,8 +102,6 @@ public:
         return !__builtin_memcmp(data(), other.data(), size());
     }
 
-    bool operator!=(ByteBuffer const& other) const { return !(*this == other); }
-
     [[nodiscard]] u8& operator[](size_t i)
     {
         VERIFY(i < m_size);

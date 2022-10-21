@@ -43,11 +43,6 @@ public:
         return m_type == other.m_type && m_value == other.m_value;
     }
 
-    bool operator!=(Angle const& other) const
-    {
-        return !(*this == other);
-    }
-
 private:
     StringView unit_name() const;
 

@@ -245,11 +245,6 @@ public:
         return m_length == 1 && *m_characters == c;
     }
 
-    constexpr bool operator!=(char const* cstring) const
-    {
-        return !(*this == cstring);
-    }
-
 #ifndef KERNEL
     bool operator==(String const&) const;
 #endif

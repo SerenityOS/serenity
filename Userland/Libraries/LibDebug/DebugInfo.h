@@ -50,7 +50,6 @@ public:
         }
 
         bool operator==(SourcePosition const& other) const { return file_path == other.file_path && line_number == other.line_number; }
-        bool operator!=(SourcePosition const& other) const { return !(*this == other); }
 
         static SourcePosition from_line_info(Dwarf::LineProgram::LineInfo const&);
     };

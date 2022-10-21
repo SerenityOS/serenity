@@ -132,12 +132,6 @@ public:
         return x() == other.x() && y() == other.y();
     }
 
-    template<class U>
-    [[nodiscard]] bool operator!=(Point<U> const& other) const
-    {
-        return !(*this == other);
-    }
-
     [[nodiscard]] Point<T> operator+(Point<T> const& other) const { return { m_x + other.m_x, m_y + other.m_y }; }
 
     Point<T>& operator+=(Point<T> const& other)

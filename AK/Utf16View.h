@@ -35,11 +35,6 @@ public:
         return (m_ptr == other.m_ptr) && (m_remaining_code_units == other.m_remaining_code_units);
     }
 
-    bool operator!=(Utf16CodePointIterator const& other) const
-    {
-        return !(*this == other);
-    }
-
     Utf16CodePointIterator& operator++();
     u32 operator*() const;
 

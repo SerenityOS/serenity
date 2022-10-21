@@ -477,12 +477,6 @@ public:
         return location() == other.location() && size() == other.size();
     }
 
-    template<class U>
-    [[nodiscard]] bool operator!=(Rect<U> const& other) const
-    {
-        return !(*this == other);
-    }
-
     [[nodiscard]] Rect<T> operator*(T factor) const { return { m_location * factor, m_size * factor }; }
 
     Rect<T>& operator*=(T factor)

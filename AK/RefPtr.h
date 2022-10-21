@@ -260,29 +260,20 @@ public:
     ALWAYS_INLINE operator bool() { return !is_null(); }
 
     bool operator==(std::nullptr_t) const { return is_null(); }
-    bool operator!=(std::nullptr_t) const { return !is_null(); }
 
     bool operator==(RefPtr const& other) const { return as_ptr() == other.as_ptr(); }
-    bool operator!=(RefPtr const& other) const { return as_ptr() != other.as_ptr(); }
 
     bool operator==(RefPtr& other) { return as_ptr() == other.as_ptr(); }
-    bool operator!=(RefPtr& other) { return as_ptr() != other.as_ptr(); }
 
     template<typename U>
     bool operator==(NonnullRefPtr<U> const& other) const { return as_ptr() == other.m_ptr; }
-    template<typename U>
-    bool operator!=(NonnullRefPtr<U> const& other) const { return as_ptr() != other.m_ptr; }
 
     template<typename U>
     bool operator==(NonnullRefPtr<U>& other) { return as_ptr() == other.m_ptr; }
-    template<typename U>
-    bool operator!=(NonnullRefPtr<U>& other) { return as_ptr() != other.m_ptr; }
 
     bool operator==(T const* other) const { return as_ptr() == other; }
-    bool operator!=(T const* other) const { return as_ptr() != other; }
 
     bool operator==(T* other) { return as_ptr() == other; }
-    bool operator!=(T* other) { return as_ptr() != other; }
 
     ALWAYS_INLINE bool is_null() const { return !m_ptr; }
 

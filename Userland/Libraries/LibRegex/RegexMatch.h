@@ -310,11 +310,6 @@ public:
             [&](StringView view) { return view == cstring; });
     }
 
-    bool operator!=(char const* cstring) const
-    {
-        return !(*this == cstring);
-    }
-
     bool operator==(String const& string) const
     {
         return m_view.visit(
@@ -333,11 +328,6 @@ public:
             [&](StringView view) { return view == string; });
     }
 
-    bool operator!=(StringView other) const
-    {
-        return !(*this == other);
-    }
-
     bool operator==(Utf32View const& other) const
     {
         return m_view.visit(
@@ -349,11 +339,6 @@ public:
             [&](StringView view) { return view == RegexStringView { other }.to_string(); });
     }
 
-    bool operator!=(Utf32View const& other) const
-    {
-        return !(*this == other);
-    }
-
     bool operator==(Utf16View const& other) const
     {
         return m_view.visit(
@@ -363,11 +348,6 @@ public:
             [&](StringView view) { return view == RegexStringView { other }.to_string(); });
     }
 
-    bool operator!=(Utf16View const& other) const
-    {
-        return !(*this == other);
-    }
-
     bool operator==(Utf8View const& other) const
     {
         return m_view.visit(
@@ -375,11 +355,6 @@ public:
             [&](Utf16View) { return to_string() == other.as_string(); },
             [&](Utf8View const& view) { return view.as_string() == other.as_string(); },
             [&](StringView view) { return other.as_string() == view; });
-    }
-
-    bool operator!=(Utf8View const& other) const
-    {
-        return !(*this == other);
     }
 
     bool equals(RegexStringView other) const

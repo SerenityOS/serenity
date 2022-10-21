@@ -62,10 +62,6 @@ struct MaskSpan {
     {
         return start == other.start && length == other.length;
     }
-    bool operator!=(MaskSpan const& other) const
-    {
-        return !(*this == other);
-    }
 };
 
 namespace StringUtils {

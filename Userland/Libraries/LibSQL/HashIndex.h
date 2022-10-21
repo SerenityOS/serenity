@@ -118,9 +118,7 @@ public:
     [[nodiscard]] bool is_end() const { return !m_current; }
 
     bool operator==(HashIndexIterator const& other) const;
-    bool operator!=(HashIndexIterator const& other) const { return !(*this == other); }
     bool operator==(Key const& other) const;
-    bool operator!=(Key const& other) const { return !(*this == other); }
 
     HashIndexIterator operator++()
     {

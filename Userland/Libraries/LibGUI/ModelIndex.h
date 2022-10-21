@@ -33,11 +33,6 @@ public:
         return m_model == other.m_model && m_row == other.m_row && m_column == other.m_column && m_internal_data == other.m_internal_data;
     }
 
-    bool operator!=(ModelIndex const& other) const
-    {
-        return !(*this == other);
-    }
-
     Model const* model() const { return m_model; }
 
     Variant data(ModelRole = ModelRole::Display) const;

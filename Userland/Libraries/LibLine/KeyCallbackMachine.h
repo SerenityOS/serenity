@@ -38,11 +38,6 @@ struct Key {
     {
         return other.key == key && other.modifiers == modifiers;
     }
-
-    bool operator!=(Key const& other) const
-    {
-        return !(*this == other);
-    }
 };
 
 struct KeyCallback {

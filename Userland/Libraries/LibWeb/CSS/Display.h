@@ -35,8 +35,6 @@ public:
         VERIFY_NOT_REACHED();
     }
 
-    bool operator!=(Display const& other) const { return !(*this == other); }
-
     enum class Outside {
         Block,
         Inline,

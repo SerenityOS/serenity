@@ -31,12 +31,7 @@ public:
     UUID(StringView, Endianness endianness = Endianness::Little);
     ~UUID() = default;
 
-    bool operator==(const UUID&) const;
-    bool operator!=(const UUID& other) const { return !(*this == other); }
-    bool operator<=(const UUID&) const = delete;
-    bool operator>=(const UUID&) const = delete;
-    bool operator<(const UUID&) const = delete;
-    bool operator>(const UUID&) const = delete;
+    bool operator==(const UUID&) const = default;
 
 #ifdef KERNEL
     ErrorOr<NonnullOwnPtr<Kernel::KString>> to_string() const;

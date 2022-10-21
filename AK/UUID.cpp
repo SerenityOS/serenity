@@ -113,15 +113,6 @@ String UUID::to_string() const
 }
 #endif
 
-bool UUID::operator==(const UUID& other) const
-{
-    for (size_t index = 0; index < 16; index++) {
-        if (m_uuid_buffer[index] != other.m_uuid_buffer[index])
-            return false;
-    }
-    return true;
-}
-
 bool UUID::is_zero() const
 {
     return all_of(m_uuid_buffer, [](auto const octet) { return octet == 0; });

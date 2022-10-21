@@ -99,12 +99,6 @@ public:
         return width() == other.width() && height() == other.height();
     }
 
-    template<class U>
-    [[nodiscard]] constexpr bool operator!=(Size<U> const& other) const
-    {
-        return !(*this == other);
-    }
-
     constexpr Size<T>& operator-=(Size<T> const& other)
     {
         m_width -= other.m_width;

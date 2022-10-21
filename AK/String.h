@@ -203,13 +203,10 @@ public:
     [[nodiscard]] bool ends_with(char) const;
 
     bool operator==(String const&) const;
-    bool operator!=(String const& other) const { return !(*this == other); }
 
     bool operator==(StringView) const;
-    bool operator!=(StringView other) const { return !(*this == other); }
 
     bool operator==(FlyString const&) const;
-    bool operator!=(FlyString const& other) const { return !(*this == other); }
 
     bool operator<(String const&) const;
     bool operator<(char const*) const;
@@ -222,7 +219,6 @@ public:
     bool operator<=(char const* other) const { return !(*this > other); }
 
     bool operator==(char const* cstring) const;
-    bool operator!=(char const* cstring) const { return !(*this == cstring); }
 
     [[nodiscard]] String isolated_copy() const;
 
