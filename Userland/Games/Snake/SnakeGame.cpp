@@ -29,6 +29,24 @@ SnakeGame::SnakeGame()
     m_food_bitmaps.append(*Gfx::Bitmap::try_load_from_file("/res/emoji/U+1F989.png"sv).release_value_but_fixme_should_propagate_errors());
     m_food_bitmaps.append(*Gfx::Bitmap::try_load_from_file("/res/emoji/U+1F54A.png"sv).release_value_but_fixme_should_propagate_errors());
     m_food_bitmaps.append(*Gfx::Bitmap::try_load_from_file("/res/emoji/U+1F408.png"sv).release_value_but_fixme_should_propagate_errors());
+    m_food_bitmaps.append(*Gfx::Bitmap::try_load_from_file("/res/emoji/U+1F420.png"sv).release_value_but_fixme_should_propagate_errors());
+    m_food_bitmaps.append(*Gfx::Bitmap::try_load_from_file("/res/emoji/U+1F415.png"sv).release_value_but_fixme_should_propagate_errors());
+    m_food_bitmaps.append(*Gfx::Bitmap::try_load_from_file("/res/emoji/U+1F429.png"sv).release_value_but_fixme_should_propagate_errors());
+    m_food_bitmaps.append(*Gfx::Bitmap::try_load_from_file("/res/emoji/U+1F98C.png"sv).release_value_but_fixme_should_propagate_errors());
+    m_food_bitmaps.append(*Gfx::Bitmap::try_load_from_file("/res/emoji/U+1F416.png"sv).release_value_but_fixme_should_propagate_errors());
+    m_food_bitmaps.append(*Gfx::Bitmap::try_load_from_file("/res/emoji/U+1F401.png"sv).release_value_but_fixme_should_propagate_errors());
+    m_food_bitmaps.append(*Gfx::Bitmap::try_load_from_file("/res/emoji/U+1F400.png"sv).release_value_but_fixme_should_propagate_errors());
+    m_food_bitmaps.append(*Gfx::Bitmap::try_load_from_file("/res/emoji/U+1F407.png"sv).release_value_but_fixme_should_propagate_errors());
+    m_food_bitmaps.append(*Gfx::Bitmap::try_load_from_file("/res/emoji/U+1F43F.png"sv).release_value_but_fixme_should_propagate_errors());
+    m_food_bitmaps.append(*Gfx::Bitmap::try_load_from_file("/res/emoji/U+1F9A5.png"sv).release_value_but_fixme_should_propagate_errors());
+    m_food_bitmaps.append(*Gfx::Bitmap::try_load_from_file("/res/emoji/U+1F423.png"sv).release_value_but_fixme_should_propagate_errors());
+    m_food_bitmaps.append(*Gfx::Bitmap::try_load_from_file("/res/emoji/U+1F425.png"sv).release_value_but_fixme_should_propagate_errors());
+    m_food_bitmaps.append(*Gfx::Bitmap::try_load_from_file("/res/emoji/U+1F98E.png"sv).release_value_but_fixme_should_propagate_errors());
+    m_food_bitmaps.append(*Gfx::Bitmap::try_load_from_file("/res/emoji/U+1F997.png"sv).release_value_but_fixme_should_propagate_errors());
+    m_food_bitmaps.append(*Gfx::Bitmap::try_load_from_file("/res/emoji/U+1FAB3.png"sv).release_value_but_fixme_should_propagate_errors());
+    m_food_bitmaps.append(*Gfx::Bitmap::try_load_from_file("/res/emoji/U+1F413.png"sv).release_value_but_fixme_should_propagate_errors());
+    m_food_bitmaps.append(*Gfx::Bitmap::try_load_from_file("/res/emoji/U+1FAB0.png"sv).release_value_but_fixme_should_propagate_errors());
+    m_food_bitmaps.append(*Gfx::Bitmap::try_load_from_file("/res/emoji/U+1FAB1.png"sv).release_value_but_fixme_should_propagate_errors());
     reset();
 
     m_high_score = Config::read_i32("Snake"sv, "Snake"sv, "HighScore"sv, 0);
