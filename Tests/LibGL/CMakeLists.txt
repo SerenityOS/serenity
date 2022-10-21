@@ -4,7 +4,7 @@ set(TEST_SOURCES
 )
 
 foreach(source IN LISTS TEST_SOURCES)
-    serenity_test("${source}" LibGL LIBS LibCore LibGL)
+    serenity_test("${source}" LibGL LIBS LibCore LibGfx LibGL)
 endforeach()
 
 install(DIRECTORY reference-images DESTINATION usr/Tests/LibGL)

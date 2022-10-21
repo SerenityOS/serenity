@@ -3,4 +3,4 @@ set(SOURCES
 )
 
 serenity_bin(DumpLayoutTree)
-target_link_libraries(DumpLayoutTree LibWebView LibWeb)
+target_link_libraries(DumpLayoutTree PRIVATE LibWebView LibWeb)

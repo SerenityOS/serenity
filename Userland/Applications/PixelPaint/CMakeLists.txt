@@ -83,4 +83,4 @@ set(GENERATED_SOURCES
 )
 
 serenity_app(PixelPaint ICON app-pixel-paint)
-target_link_libraries(PixelPaint LibImageDecoderClient LibGUI LibGfx LibFileSystemAccessClient LibConfig LibMain)
+target_link_libraries(PixelPaint PRIVATE LibCore LibImageDecoderClient LibGUI LibGfx LibFileSystemAccessClient LibConfig LibMain LibThreading)

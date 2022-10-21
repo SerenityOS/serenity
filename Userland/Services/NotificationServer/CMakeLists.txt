@@ -19,4 +19,4 @@ set(GENERATED_SOURCES
 )
 
 serenity_bin(NotificationServer)
-target_link_libraries(NotificationServer LibGUI LibIPC LibMain)
+target_link_libraries(NotificationServer PRIVATE LibCore LibGfx LibGUI LibIPC LibMain)

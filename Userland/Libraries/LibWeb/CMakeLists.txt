@@ -469,7 +469,7 @@ set(GENERATED_SOURCES
 serenity_lib(LibWeb web)
 
 # NOTE: We link with LibSoftGPU here instead of lazy loading it via dlopen() so that we do not have to unveil the library and pledge prot_exec.
-target_link_libraries(LibWeb LibCore LibJS LibMarkdown LibGemini LibGL LibGUI LibGfx LibSoftGPU LibTextCodec LibWasm LibXML LibIDL)
+target_link_libraries(LibWeb PRIVATE LibCore LibCrypto LibJS LibMarkdown LibGemini LibGL LibGUI LibGfx LibIPC LibLocale LibRegex LibSoftGPU LibSyntax LibTextCodec LibUnicode LibWasm LibXML LibIDL)
 link_with_locale_data(LibWeb)
 
 generate_js_bindings(LibWeb)

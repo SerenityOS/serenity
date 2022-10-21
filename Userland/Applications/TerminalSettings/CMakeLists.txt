@@ -18,4 +18,4 @@ set(GENERATED_SOURCES
 )
 
 serenity_app(TerminalSettings ICON app-terminal)
-target_link_libraries(TerminalSettings LibGUI LibConfig LibMain LibVT)
+target_link_libraries(TerminalSettings PRIVATE LibCore LibGfx LibGUI LibConfig LibMain LibVT)

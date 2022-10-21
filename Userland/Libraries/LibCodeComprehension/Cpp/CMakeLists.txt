@@ -3,7 +3,7 @@ set(SOURCES
 )
 
 serenity_lib(LibCppComprehension cppcomprehension)
-target_link_libraries(LibCppComprehension LibCodeComprehension)
+target_link_libraries(LibCppComprehension PRIVATE LibCodeComprehension)
 
 serenity_component(
     CppComprehensionTests
@@ -17,4 +17,4 @@ set(SOURCES
 
 serenity_bin(CppComprehensionTests)
 
-target_link_libraries(CppComprehensionTests LibCodeComprehension LibCpp LibRegex LibMain)
+target_link_libraries(CppComprehensionTests PRIVATE LibCodeComprehension LibCore LibCpp LibRegex LibMain)

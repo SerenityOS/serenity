@@ -11,4 +11,4 @@ set(SOURCES
 )
 
 serenity_bin(DHCPClient)
-target_link_libraries(DHCPClient LibCore LibMain)
+target_link_libraries(DHCPClient PRIVATE LibCore LibMain)

@@ -33,4 +33,4 @@ set(SOURCES
 )
 
 serenity_lib(LibCrypto crypto)
-target_link_libraries(LibCrypto LibCore)
+target_link_libraries(LibCrypto PRIVATE LibCore)

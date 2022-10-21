@@ -14,4 +14,4 @@ set(SOURCES
 )
 
 serenity_lib(LibMarkdown markdown)
-target_link_libraries(LibMarkdown LibJS)
+target_link_libraries(LibMarkdown PRIVATE LibJS LibRegex)

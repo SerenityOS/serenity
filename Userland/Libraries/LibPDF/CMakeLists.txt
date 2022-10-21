@@ -19,4 +19,4 @@ set(SOURCES
     )
 
 serenity_lib(LibPDF pdf)
-target_link_libraries(LibPDF LibCore LibIPC LibGfx LibTextCodec LibCrypto)
+target_link_libraries(LibPDF PRIVATE LibCore LibCompress LibIPC LibGfx LibTextCodec LibCrypto)

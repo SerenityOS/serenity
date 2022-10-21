@@ -9,4 +9,4 @@ set(SOURCES
 )
 
 serenity_bin(ResourceGraph.Applet)
-target_link_libraries(ResourceGraph.Applet LibGUI LibCore LibGfx LibMain)
+target_link_libraries(ResourceGraph.Applet PRIVATE LibGUI LibCore LibGfx LibMain)

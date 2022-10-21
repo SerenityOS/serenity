@@ -4,4 +4,4 @@ set(SOURCES
 )
 
 serenity_lib(LibIDL idl)
-target_link_libraries(LibIDL LibCore)
+target_link_libraries(LibIDL PRIVATE LibCore)

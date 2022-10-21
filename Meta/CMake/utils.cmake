@@ -8,7 +8,7 @@ function(serenity_set_implicit_links target_name)
     # The latter is a problem with Clang especially, since we might have the
     # slightly outdated stub in the sysroot, but have not yet installed the freshly
     # built LibC.
-    target_link_libraries(${target_name} LibC)
+    target_link_libraries(${target_name} PRIVATE LibC)
 
     # Same goes for -lssp_nonshared, which is required during build time but is not
     # yet installed in the sysroot. However, we just want to add the link directory
@@ -118,9 +118,9 @@ function(serenity_test test_src sub_dir)
     add_dependencies(ComponentTests ${test_name})
     set_target_properties(${test_name} PROPERTIES EXCLUDE_FROM_ALL TRUE)
     serenity_set_implicit_links(${test_name})
-    target_link_libraries(${test_name} LibTest LibCore)
+    target_link_libraries(${test_name} PRIVATE LibTest LibCore)
     foreach(lib ${SERENITY_TEST_LIBS})
-        target_link_libraries(${test_name} ${lib})
+        target_link_libraries(${test_name} PRIVATE ${lib})
     endforeach()
     install(TARGETS ${test_name} RUNTIME DESTINATION usr/Tests/${sub_dir} OPTIONAL)
 endfunction()
@@ -178,7 +178,7 @@ endfunction()
 
 function(link_with_locale_data target)
     if (ENABLE_UNICODE_DATABASE_DOWNLOAD AND SERENITYOS)
-        target_link_libraries("${target}" LibLocaleData)
+        target_link_libraries("${target}" PRIVATE LibLocaleData)
     endif()
 endfunction()
 

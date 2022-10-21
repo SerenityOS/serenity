@@ -16,4 +16,4 @@ set(GENERATED_SOURCES
 )
 
 serenity_app(Welcome ICON app-welcome)
-target_link_libraries(Welcome LibGUI LibWebView LibWeb LibMain)
+target_link_libraries(Welcome PRIVATE LibConfig LibCore LibGfx LibGUI LibWebView LibWeb LibMain)

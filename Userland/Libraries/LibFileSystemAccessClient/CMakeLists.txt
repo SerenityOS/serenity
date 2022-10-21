@@ -8,5 +8,5 @@ set(GENERATED_SOURCES
 )
 
 serenity_lib(LibFileSystemAccessClient filesystemaccessclient)
-target_link_libraries(LibFileSystemAccessClient LibIPC)
+target_link_libraries(LibFileSystemAccessClient PRIVATE LibCore LibIPC)
 add_dependencies(LibFileSystemAccessClient WindowServer)

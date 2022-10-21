@@ -21,4 +21,4 @@ set(GENERATED_SOURCES
 )
 
 serenity_app(Help ICON app-help)
-target_link_libraries(Help LibWebView LibWeb LibMarkdown LibGUI LibDesktop LibMain)
+target_link_libraries(Help PRIVATE LibCore LibWebView LibWeb LibMarkdown LibGfx LibGUI LibDesktop LibMain)

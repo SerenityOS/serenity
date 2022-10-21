@@ -9,4 +9,4 @@ set(SOURCES
 )
 
 serenity_lib(LibCpp cpp)
-target_link_libraries(LibCpp LibSyntax LibDiff)
+target_link_libraries(LibCpp PRIVATE LibSyntax LibDiff)

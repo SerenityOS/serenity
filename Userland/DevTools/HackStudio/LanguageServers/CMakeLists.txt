@@ -9,7 +9,7 @@ set(GENERATED_SOURCES
         LanguageServerEndpoint.h)
 
 serenity_lib(LibLanguageServer languageserver)
-target_link_libraries(LibLanguageServer LibCodeComprehension)
+target_link_libraries(LibLanguageServer PRIVATE LibCodeComprehension LibCore)
 
 add_subdirectory(Cpp)
 add_subdirectory(Shell)

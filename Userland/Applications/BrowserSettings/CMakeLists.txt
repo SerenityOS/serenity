@@ -19,4 +19,4 @@ set(GENERATED_SOURCES
 )
 
 serenity_app(BrowserSettings ICON app-browser)
-target_link_libraries(BrowserSettings LibGUI LibConfig LibMain)
+target_link_libraries(BrowserSettings PRIVATE LibCore LibGfx LibGUI LibConfig LibMain)

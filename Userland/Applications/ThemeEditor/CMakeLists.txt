@@ -28,4 +28,4 @@ set(GENERATED_SOURCES
 )
 
 serenity_app(ThemeEditor ICON app-theme-editor)
-target_link_libraries(ThemeEditor LibGUI LibFileSystemAccessClient LibMain)
+target_link_libraries(ThemeEditor PRIVATE LibCore LibGfx LibGUI LibFileSystemAccessClient LibIPC LibMain)

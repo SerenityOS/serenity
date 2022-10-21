@@ -9,4 +9,4 @@ set(SOURCES
 )
 
 serenity_app(Audio.Applet ICON audio-volume-high)
-target_link_libraries(Audio.Applet LibGUI LibGfx LibAudio LibCore LibConfig LibMain)
+target_link_libraries(Audio.Applet PRIVATE LibGUI LibGfx LibAudio LibCore LibConfig LibIPC LibMain)

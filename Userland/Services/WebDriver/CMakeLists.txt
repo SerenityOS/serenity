@@ -18,4 +18,4 @@ set(GENERATED_SOURCES
     )
 
 serenity_bin(WebDriver)
-target_link_libraries(WebDriver LibCore LibHTTP LibMain LibIPC LibWeb)
+target_link_libraries(WebDriver PRIVATE LibCore LibHTTP LibMain LibIPC LibWeb)

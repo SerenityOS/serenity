@@ -16,4 +16,4 @@ set(GENERATED_SOURCES
 )
 
 serenity_app(Run ICON app-run)
-target_link_libraries(Run LibCore LibDesktop LibGUI LibMain)
+target_link_libraries(Run PRIVATE LibCore LibDesktop LibGfx LibGUI LibMain)
