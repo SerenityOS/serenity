@@ -11,10 +11,45 @@
 
 namespace WebDriver {
 
+// https://w3c.github.io/webdriver/#dfn-error-code
+enum class ErrorCode {
+    ElementClickIntercepted,
+    ElementNotInteractable,
+    InsecureCertificate,
+    InvalidArgument,
+    InvalidCookieDomain,
+    InvalidElementState,
+    InvalidSelector,
+    InvalidSessionId,
+    JavascriptError,
+    MoveTargetOutOfBounds,
+    NoSuchAlert,
+    NoSuchCookie,
+    NoSuchElement,
+    NoSuchFrame,
+    NoSuchWindow,
+    NoSuchShadowRoot,
+    ScriptTimeoutError,
+    SessionNotCreated,
+    StaleElementReference,
+    DetachedShadowRoot,
+    Timeout,
+    UnableToSetCookie,
+    UnableToCaptureScreen,
+    UnexpectedAlertOpen,
+    UnknownCommand,
+    UnknownError,
+    UnknownMethod,
+    UnsupportedOperation,
+};
+
+// https://w3c.github.io/webdriver/#errors
 struct WebDriverError {
     unsigned http_status;
     String error;
     String message;
+
+    static WebDriverError from_code(ErrorCode, String message);
 };
 
 }
