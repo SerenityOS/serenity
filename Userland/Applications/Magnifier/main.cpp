@@ -107,6 +107,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             magnifier->pause_capture(action.is_checked());
         });
 
+    auto always_on_top_action = GUI::Action::create_checkable(
+        "&Always on Top", [&](auto& action) {
+            window->set_always_on_top(action.is_checked());
+        });
+
     size_action_group->add_action(two_x_action);
     size_action_group->add_action(four_x_action);
     size_action_group->add_action(eight_x_action);
@@ -119,7 +124,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     two_x_action->set_checked(true);
 
     TRY(view_menu->try_add_separator());
+    TRY(view_menu->try_add_action(always_on_top_action));
     TRY(view_menu->try_add_action(pause_action));
+    always_on_top_action->set_checked(true);
 
     auto timeline_menu = TRY(window->try_add_menu("&Timeline"));
     auto previous_frame_action = GUI::Action::create(
