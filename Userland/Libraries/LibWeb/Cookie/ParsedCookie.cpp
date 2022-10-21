@@ -25,6 +25,7 @@ static void on_domain_attribute(ParsedCookie& parsed_cookie, StringView attribut
 static void on_path_attribute(ParsedCookie& parsed_cookie, StringView attribute_value);
 static void on_secure_attribute(ParsedCookie& parsed_cookie);
 static void on_http_only_attribute(ParsedCookie& parsed_cookie);
+static void on_same_site_attribute(ParsedCookie& parsed_cookie, StringView attribute_value);
 static Optional<Core::DateTime> parse_date_time(StringView date_string);
 
 Optional<ParsedCookie> parse_cookie(String const& cookie_string)
@@ -143,6 +144,8 @@ void process_attribute(ParsedCookie& parsed_cookie, StringView attribute_name, S
         on_secure_attribute(parsed_cookie);
     } else if (attribute_name.equals_ignoring_case("HttpOnly"sv)) {
         on_http_only_attribute(parsed_cookie);
+    } else if (attribute_name.equals_ignoring_case("SameSite"sv)) {
+        on_same_site_attribute(parsed_cookie, attribute_value);
     }
 }
 
@@ -220,6 +223,23 @@ void on_http_only_attribute(ParsedCookie& parsed_cookie)
 {
     // https://tools.ietf.org/html/rfc6265#section-5.2.6
     parsed_cookie.http_only_attribute_present = true;
+}
+
+// https://httpwg.org/http-extensions/draft-ietf-httpbis-rfc6265bis.html#name-the-samesite-attribute-2
+void on_same_site_attribute(ParsedCookie& parsed_cookie, StringView attribute_value)
+{
+    // 1. Let enforcement be "Default"
+    // Note: Set as default value in ParsedCookie.h
+
+    // 2. If cookie-av's attribute-value is a case-insensitive match for "None", set enforcement to "None".
+    if (attribute_value.equals_ignoring_case("None"sv))
+        parsed_cookie.same_site_attribute = SameSite::None;
+    // 3. If cookie-av's attribute-value is a case-insensitive match for "Strict", set enforcement to "Strict".
+    else if (attribute_value.equals_ignoring_case("Strict"sv))
+        parsed_cookie.same_site_attribute = SameSite::Strict;
+    // 4. If cookie-av's attribute-value is a case-insensitive match for "Lax", set enforcement to "Lax".
+    else if (attribute_value.equals_ignoring_case("Lax"sv))
+        parsed_cookie.same_site_attribute = SameSite::Lax;
 }
 
 Optional<Core::DateTime> parse_date_time(StringView date_string)
@@ -343,6 +363,7 @@ bool IPC::encode(Encoder& encoder, Web::Cookie::ParsedCookie const& cookie)
     encoder << cookie.path;
     encoder << cookie.secure_attribute_present;
     encoder << cookie.http_only_attribute_present;
+    encoder << cookie.same_site_attribute;
 
     return true;
 }
@@ -357,5 +378,6 @@ ErrorOr<void> IPC::decode(Decoder& decoder, Web::Cookie::ParsedCookie& cookie)
     TRY(decoder.decode(cookie.path));
     TRY(decoder.decode(cookie.secure_attribute_present));
     TRY(decoder.decode(cookie.http_only_attribute_present));
+    TRY(decoder.decode(cookie.same_site_attribute));
     return {};
 }

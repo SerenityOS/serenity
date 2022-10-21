@@ -10,12 +10,14 @@
 #include <AK/String.h>
 #include <LibCore/DateTime.h>
 #include <LibIPC/Forward.h>
+#include <LibWeb/Cookie/Cookie.h>
 
 namespace Web::Cookie {
 
 struct ParsedCookie {
     String name;
     String value;
+    SameSite same_site_attribute { SameSite::Default };
     Optional<Core::DateTime> expiry_time_from_expires_attribute {};
     Optional<Core::DateTime> expiry_time_from_max_age_attribute {};
     Optional<String> domain {};
