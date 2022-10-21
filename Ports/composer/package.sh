@@ -1,9 +1,9 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='composer'
-version='2.3.5'
-files="https://getcomposer.org/download/${version}/composer.phar composer.phar 3b3b5a899c06a46aec280727bdf50aad14334f6bc40436ea76b07b650870d8f4"
+version='2.4.3'
+files="https://getcomposer.org/download/${version}/composer.phar composer.phar 26d72f2790502bc9b22209e1cec1e0e43d33b368606ad227d327cccb388b609a"
 auth_type='sha256'
-depends=("php")
+depends=('php')
 
 build() {
     :
