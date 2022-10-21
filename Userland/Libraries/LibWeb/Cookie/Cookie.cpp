@@ -8,6 +8,25 @@
 #include <LibIPC/Decoder.h>
 #include <LibIPC/Encoder.h>
 
+namespace Web::Cookie {
+
+StringView same_site_to_string(SameSite same_site)
+{
+    switch (same_site) {
+    case SameSite::Default:
+        return "Default"sv;
+    case SameSite::None:
+        return "None"sv;
+    case SameSite::Lax:
+        return "Lax"sv;
+    case SameSite::Strict:
+        return "Strict"sv;
+    }
+    VERIFY_NOT_REACHED();
+}
+
+}
+
 bool IPC::encode(Encoder& encoder, Web::Cookie::Cookie const& cookie)
 {
     encoder << cookie.name;
@@ -21,6 +40,7 @@ bool IPC::encode(Encoder& encoder, Web::Cookie::Cookie const& cookie)
     encoder << cookie.last_access_time;
     encoder << cookie.persistent;
     encoder << cookie.secure;
+    encoder << cookie.same_site;
 
     return true;
 }
@@ -38,5 +58,6 @@ ErrorOr<void> IPC::decode(Decoder& decoder, Web::Cookie::Cookie& cookie)
     TRY(decoder.decode(cookie.last_access_time));
     TRY(decoder.decode(cookie.persistent));
     TRY(decoder.decode(cookie.secure));
+    TRY(decoder.decode(cookie.same_site));
     return {};
 }
