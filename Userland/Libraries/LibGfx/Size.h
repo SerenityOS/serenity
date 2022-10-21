@@ -87,6 +87,12 @@ public:
         return size;
     }
 
+    [[nodiscard]] constexpr float aspect_ratio() const
+    {
+        VERIFY(height() != 0);
+        return static_cast<float>(width()) / static_cast<float>(height());
+    }
+
     template<typename U>
     [[nodiscard]] constexpr bool contains(Size<U> const& other) const
     {
