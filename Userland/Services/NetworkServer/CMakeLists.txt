@@ -9,4 +9,4 @@ set(SOURCES
 )
 
 serenity_bin(NetworkServer)
-target_link_libraries(NetworkServer LibCore LibConfig LibMain)
+target_link_libraries(NetworkServer PRIVATE LibCore LibConfig LibMain)

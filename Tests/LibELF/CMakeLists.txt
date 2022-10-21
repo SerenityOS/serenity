@@ -3,7 +3,7 @@ macro(add_dlopen_lib NAME FUNCTION)
     add_library(${NAME} SHARED Dynlib.cpp)
     target_compile_definitions(${NAME} PRIVATE -DFUNCTION=${FUNCTION})
     # LibLine is not special, just an "external" dependency
-    target_link_libraries(${NAME} LibLine)
+    target_link_libraries(${NAME} PRIVATE LibLine)
     serenity_set_implicit_links(${NAME})
 	 # Avoid execution by the test runner
     install(TARGETS ${NAME}
@@ -16,7 +16,7 @@ add_dlopen_lib(DynlibB dynlibb_function)
 add_dlopen_lib(DynlibC dynlibc_function)
 set(CMAKE_INSTALL_RPATH $ORIGIN)
 add_dlopen_lib(DynlibD dynlibd_function)
-target_link_libraries(DynlibD DynlibC)
+target_link_libraries(DynlibD PRIVATE DynlibC)
 unset(CMAKE_INSTALL_RPATH)
 
 set(TEST_SOURCES

@@ -8,4 +8,4 @@ set(SOURCES
 )
 
 serenity_app(Fire ICON app-fire)
-target_link_libraries(Fire LibGUI LibCore LibGfx LibMain)
+target_link_libraries(Fire PRIVATE LibGUI LibCore LibGfx LibMain)

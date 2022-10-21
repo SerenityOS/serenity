@@ -20,4 +20,4 @@ set(GENERATED_SOURCES
 )
 
 serenity_bin(SQLServer)
-target_link_libraries(SQLServer LibCore LibIPC LibSQL LibMain)
+target_link_libraries(SQLServer PRIVATE LibCore LibIPC LibSQL LibMain)

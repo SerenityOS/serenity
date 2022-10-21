@@ -7,4 +7,4 @@ set(SOURCES
 )
 
 serenity_lib(LibCompress compress)
-target_link_libraries(LibCompress LibCrypto)
+target_link_libraries(LibCompress PRIVATE LibCore LibCrypto)

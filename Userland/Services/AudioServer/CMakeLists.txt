@@ -19,4 +19,4 @@ set(GENERATED_SOURCES
 )
 
 serenity_bin(AudioServer)
-target_link_libraries(AudioServer LibCore LibThreading LibIPC LibMain)
+target_link_libraries(AudioServer PRIVATE LibCore LibThreading LibIPC LibMain)

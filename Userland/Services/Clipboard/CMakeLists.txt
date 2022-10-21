@@ -19,4 +19,4 @@ set(GENERATED_SOURCES
 )
 
 serenity_bin(Clipboard)
-target_link_libraries(Clipboard LibCore LibIPC LibMain)
+target_link_libraries(Clipboard PRIVATE LibCore LibIPC LibMain)

@@ -8,4 +8,4 @@ set(SOURCES
 set(GENERATED_SOURCES)
 
 serenity_lib(LibIMAP imap)
-target_link_libraries(LibIMAP LibCore LibTLS)
+target_link_libraries(LibIMAP PRIVATE LibCore LibCrypto LibTLS)

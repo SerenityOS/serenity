@@ -4,4 +4,4 @@ set(SOURCES
 )
 
 serenity_lib(LibDeviceTree DeviceTree)
-target_link_libraries(LibDeviceTree LibCore)
+target_link_libraries(LibDeviceTree PRIVATE LibCore)

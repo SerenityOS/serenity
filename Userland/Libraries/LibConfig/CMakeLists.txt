@@ -9,4 +9,4 @@ set(GENERATED_SOURCES
 )
 
 serenity_lib(LibConfig config)
-target_link_libraries(LibConfig LibIPC)
+target_link_libraries(LibConfig PRIVATE LibCore LibIPC)

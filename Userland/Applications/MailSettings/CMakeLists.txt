@@ -16,4 +16,4 @@ set(GENERATED_SOURCES
 )
 
 serenity_app(MailSettings ICON app-mail)
-target_link_libraries(MailSettings LibConfig LibGUI LibMain)
+target_link_libraries(MailSettings PRIVATE LibConfig LibCore LibGfx LibGUI LibMain)

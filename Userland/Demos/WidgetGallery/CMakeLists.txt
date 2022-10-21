@@ -30,4 +30,4 @@ set(GENERATED_SOURCES
 )
 
 serenity_app(WidgetGallery ICON app-widget-gallery)
-target_link_libraries(WidgetGallery LibGUI LibMain LibFileSystemAccessClient)
+target_link_libraries(WidgetGallery PRIVATE LibCore LibGfx LibGUI LibMain LibFileSystemAccessClient LibIPC)

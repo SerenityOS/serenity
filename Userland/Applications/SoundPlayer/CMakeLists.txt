@@ -19,4 +19,4 @@ set(SOURCES
 )
 
 serenity_app(SoundPlayer ICON app-sound-player)
-target_link_libraries(SoundPlayer LibAudio LibDSP LibGUI LibMain LibThreading)
+target_link_libraries(SoundPlayer PRIVATE LibAudio LibCore LibDSP LibGfx LibGUI LibIPC LibMain LibThreading)

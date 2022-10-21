@@ -10,4 +10,4 @@ set(SOURCES
 )
 
 serenity_bin(TelnetServer)
-target_link_libraries(TelnetServer LibCore LibMain)
+target_link_libraries(TelnetServer PRIVATE LibCore LibMain)

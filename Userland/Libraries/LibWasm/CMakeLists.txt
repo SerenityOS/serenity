@@ -8,4 +8,4 @@ set(SOURCES
 )
 
 serenity_lib(LibWasm wasm)
-target_link_libraries(LibWasm LibCore)
+target_link_libraries(LibWasm PRIVATE LibCore)

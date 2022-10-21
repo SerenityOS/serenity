@@ -18,4 +18,4 @@ set(GENERATED_SOURCES
 )
 
 serenity_app(GameOfLife ICON app-gameoflife)
-target_link_libraries(GameOfLife LibGUI LibMain LibDesktop)
+target_link_libraries(GameOfLife PRIVATE LibCore LibGfx LibGUI LibMain LibDesktop)

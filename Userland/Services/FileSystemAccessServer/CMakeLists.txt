@@ -18,5 +18,5 @@ set(GENERATED_SOURCES
 )
 
 serenity_bin(FileSystemAccessServer)
-target_link_libraries(FileSystemAccessServer LibCore LibIPC LibGUI LibMain)
+target_link_libraries(FileSystemAccessServer PRIVATE LibCore LibIPC LibGfx LibGUI LibMain)
 add_dependencies(FileSystemAccessServer WindowServer)

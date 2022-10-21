@@ -36,4 +36,4 @@ if (SERENITYOS)
 endif()
 
 serenity_lib(LibSQL sql)
-target_link_libraries(LibSQL LibCore LibSyntax LibRegex)
+target_link_libraries(LibSQL PRIVATE LibCore LibIPC LibSyntax LibRegex)

@@ -16,4 +16,4 @@ set(GENERATED_SOURCES
 )
 
 serenity_bin(LoginServer)
-target_link_libraries(LoginServer LibGUI LibMain)
+target_link_libraries(LoginServer PRIVATE LibCore LibGfx LibGUI LibMain)

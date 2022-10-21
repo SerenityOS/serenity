@@ -18,4 +18,4 @@ set(GENERATED_SOURCES
 )
 
 serenity_bin(ConfigServer)
-target_link_libraries(ConfigServer LibIPC LibMain)
+target_link_libraries(ConfigServer PRIVATE LibCore LibIPC LibMain)

@@ -12,4 +12,4 @@ set(SOURCES
 )
 
 serenity_lib(LibTLS tls)
-target_link_libraries(LibTLS LibCore LibCrypto)
+target_link_libraries(LibTLS PRIVATE LibCore LibCrypto)

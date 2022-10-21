@@ -16,4 +16,4 @@ set(GENERATED_SOURCES
 )
 
 serenity_app(NetworkSettings ICON network)
-target_link_libraries(NetworkSettings LibGUI LibMain)
+target_link_libraries(NetworkSettings PRIVATE LibCore LibGfx LibGUI LibMain)

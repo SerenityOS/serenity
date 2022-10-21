@@ -19,4 +19,4 @@ set(GENERATED_SOURCES
 )
 
 serenity_bin(InspectorServer)
-target_link_libraries(InspectorServer LibIPC LibMain)
+target_link_libraries(InspectorServer PRIVATE LibCore LibIPC LibMain)

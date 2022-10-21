@@ -25,10 +25,12 @@ set(TEST_SOURCES
 foreach(source IN LISTS TEST_SOURCES)
     get_filename_component(test_name "${source}" NAME_WE)
     add_executable("${test_name}" "${source}")
-    target_link_libraries("${test_name}" LibCore)
+    target_link_libraries("${test_name}" PRIVATE LibCore)
     serenity_set_implicit_links("${test_name}")
     install(TARGETS "${test_name}" RUNTIME DESTINATION usr/Tests/Kernel/Legacy)
 endforeach()
+
+target_link_libraries(fuzz-syscalls PRIVATE LibSystem)
 
 serenity_test("crash.cpp" Kernel MAIN_ALREADY_DEFINED)
 

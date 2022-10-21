@@ -16,11 +16,11 @@ set(SOURCES
 )
 
 serenity_lib(LibShell shell)
-target_link_libraries(LibShell LibCore LibLine LibSyntax LibRegex)
+target_link_libraries(LibShell PRIVATE LibCore LibLine LibSyntax LibRegex)
 
 if (SERENITYOS)
     target_sources(LibShell PRIVATE SyntaxHighlighter.cpp)
-    target_link_libraries(LibShell LibCodeComprehension)
+    target_link_libraries(LibShell PRIVATE LibCodeComprehension)
 endif()
 
 if (ENABLE_FUZZERS)
@@ -29,7 +29,7 @@ else()
     set(SOURCES main.cpp)
 
     serenity_bin(Shell)
-    target_link_libraries(Shell LibShell LibMain)
+    target_link_libraries(Shell PRIVATE LibCore LibLine LibShell LibMain)
 
     install(DIRECTORY Tests/ DESTINATION usr/Tests/Shell
             PATTERN "Tests/*"

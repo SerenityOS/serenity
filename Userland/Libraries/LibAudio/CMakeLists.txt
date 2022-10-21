@@ -17,4 +17,4 @@ if (SERENITYOS)
 endif()
 
 serenity_lib(LibAudio audio)
-target_link_libraries(LibAudio LibCore LibIPC LibThreading)
+target_link_libraries(LibAudio PRIVATE LibCore LibIPC LibThreading)

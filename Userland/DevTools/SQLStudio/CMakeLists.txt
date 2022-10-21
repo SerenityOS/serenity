@@ -11,4 +11,4 @@ set(SOURCES
 )
 
 serenity_app(SQLStudio ICON app-sql-studio)
-target_link_libraries(SQLStudio LibCore LibDesktop LibGUI LibMain LibSQL)
+target_link_libraries(SQLStudio PRIVATE LibCore LibDesktop LibGfx LibGUI LibIPC LibMain LibSQL LibSyntax)

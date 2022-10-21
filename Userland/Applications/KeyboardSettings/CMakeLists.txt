@@ -18,4 +18,4 @@ set(GENERATED_SOURCES
 )
 
 serenity_app(KeyboardSettings ICON app-keyboard-settings)
-target_link_libraries(KeyboardSettings LibGUI LibKeyboard LibConfig LibMain)
+target_link_libraries(KeyboardSettings PRIVATE LibCore LibGfx LibGUI LibKeyboard LibConfig LibMain)

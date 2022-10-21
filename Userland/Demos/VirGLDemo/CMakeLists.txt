@@ -10,4 +10,4 @@ set(SOURCES
 )
 
 serenity_app(VirGLDemo ICON app-cube)
-target_link_libraries(VirGLDemo LibMain LibGUI)
+target_link_libraries(VirGLDemo PRIVATE LibCore LibMain LibGfx LibGUI)

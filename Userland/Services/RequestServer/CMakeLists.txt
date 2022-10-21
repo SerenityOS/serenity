@@ -26,4 +26,4 @@ set(GENERATED_SOURCES
 )
 
 serenity_bin(RequestServer)
-target_link_libraries(RequestServer LibCore LibIPC LibGemini LibHTTP LibMain)
+target_link_libraries(RequestServer PRIVATE LibCore LibCrypto LibIPC LibGemini LibHTTP LibMain LibTLS)

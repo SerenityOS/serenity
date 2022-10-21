@@ -19,4 +19,4 @@ set(GENERATED_SOURCES
 )
 
 serenity_app(CharacterMap ICON app-character-map)
-target_link_libraries(CharacterMap LibDesktop LibGUI LibMain LibUnicode)
+target_link_libraries(CharacterMap PRIVATE LibConfig LibCore LibDesktop LibGfx LibGUI LibMain LibUnicode)

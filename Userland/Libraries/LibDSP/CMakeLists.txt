@@ -7,4 +7,4 @@ set(SOURCES
 )
 
 serenity_lib(LibDSP dsp)
-target_link_libraries(LibDSP LibCore)
+target_link_libraries(LibDSP PRIVATE LibCore)

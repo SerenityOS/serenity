@@ -11,4 +11,4 @@ set(SOURCES
 )
 
 serenity_app(KeyboardMapper ICON app-keyboard-mapper)
-target_link_libraries(KeyboardMapper LibGUI LibKeyboard LibMain)
+target_link_libraries(KeyboardMapper PRIVATE LibCore LibGfx LibGUI LibKeyboard LibMain)

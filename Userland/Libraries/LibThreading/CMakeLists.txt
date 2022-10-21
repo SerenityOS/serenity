@@ -4,4 +4,4 @@ set(SOURCES
 )
 
 serenity_lib(LibThreading threading)
-target_link_libraries(LibThreading LibCore)
+target_link_libraries(LibThreading PRIVATE LibCore)

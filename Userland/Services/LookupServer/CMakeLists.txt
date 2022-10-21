@@ -21,4 +21,4 @@ set(GENERATED_SOURCES
 )
 
 serenity_bin(LookupServer)
-target_link_libraries(LookupServer LibCore LibDNS LibIPC LibMain)
+target_link_libraries(LookupServer PRIVATE LibCore LibDNS LibIPC LibMain)

@@ -5,4 +5,4 @@ set(SOURCES
 )
 
 serenity_lib(LibChess chess)
-target_link_libraries(LibChess LibCore)
+target_link_libraries(LibChess PRIVATE LibCore)

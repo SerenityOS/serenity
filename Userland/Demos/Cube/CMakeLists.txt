@@ -8,4 +8,4 @@ set(SOURCES
 )
 
 serenity_app(Cube ICON app-cube)
-target_link_libraries(Cube LibGUI LibMain)
+target_link_libraries(Cube PRIVATE LibCore LibGfx LibGUI LibMain)

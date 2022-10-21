@@ -202,9 +202,9 @@ function(lagom_lib target_name fs_name)
         EXPORT_NAME ${library}
         OUTPUT_NAME lagom-${fs_name}
     )
-    target_link_libraries(${target_name} ${LAGOM_LIBRARY_LIBS})
+    target_link_libraries(${target_name} PRIVATE ${LAGOM_LIBRARY_LIBS})
     if (NOT ${target_name} STREQUAL "LibCore")
-        target_link_libraries(${target_name} LibCore)
+        target_link_libraries(${target_name} PRIVATE LibCore)
     endif()
     install(
         TARGETS ${target_name}
@@ -306,7 +306,7 @@ install(TARGETS LibC LibCrypt LibSystem NoCoverage EXPORT LagomTargets)
 # Note: AK is included in LibCore for the host build instead of LibC per the target build
 add_serenity_subdirectory(AK)
 add_serenity_subdirectory(Userland/Libraries/LibCore)
-target_link_libraries(LibCore Threads::Threads)
+target_link_libraries(LibCore PRIVATE Threads::Threads)
 target_sources(LibCore PRIVATE ${AK_SOURCES})
 
 # LibMain
@@ -385,7 +385,7 @@ if (BUILD_LAGOM)
         set(GENERATED_SOURCES ${LIBWEBVIEW_GENERATED_SOURCES})
         lagom_lib(LibWebView webview
             SOURCES ${LIBWEBVIEW_SOURCES} ${LIBWEBVIEW_GENERATED_SOURCES}
-            LIBS LibGUI LibWeb)
+            LIBS LibGfx LibGUI LibIPC LibWeb)
         unset(GENERATED_SOURCES)
     endif()
 
@@ -425,7 +425,7 @@ if (BUILD_LAGOM)
 
     # FIXME: LibLocaleData is an object lib in Lagom, because the weak symbol trick we use on serenity
     #    straight up isn't supposed to work per ELF rules
-    target_link_libraries(LibLocale LibTimeZone)
+    target_link_libraries(LibLocale PRIVATE LibTimeZone)
     install(TARGETS LibLocaleData EXPORT LagomTargets)
 
     add_serenity_subdirectory(Userland/Shell)
@@ -457,11 +457,11 @@ if (BUILD_LAGOM)
 
         if (ENABLE_LAGOM_LIBWEB)
             add_executable(headless-browser ../../Userland/Utilities/headless-browser.cpp)
-            target_link_libraries(headless-browser LibWeb LibWebSocket LibHTTP LibJS LibGfx LibMain)
+            target_link_libraries(headless-browser LibWeb LibWebSocket LibCrypto LibGemini LibHTTP LibJS LibGfx LibMain LibTLS)
         endif()
 
         add_executable(js ../../Userland/Utilities/js.cpp)
-        target_link_libraries(js LibJS LibLine LibMain LibTextCodec Threads::Threads)
+        target_link_libraries(js LibCrypto LibJS LibLine LibLocale LibMain LibTextCodec Threads::Threads)
 
         add_executable(markdown-check ../../Userland/Utilities/markdown-check.cpp)
         target_link_libraries(markdown-check LibMarkdown LibMain)
@@ -486,7 +486,7 @@ if (BUILD_LAGOM)
             LibTest
             ${LIBTEST_SOURCES}
         )
-        target_link_libraries(LibTest LibCore)
+        target_link_libraries(LibTest PRIVATE LibCore)
         set_target_properties(LibTest PROPERTIES OUTPUT_NAME lagom-test)
         add_library(
             LibTestMain
@@ -527,7 +527,7 @@ if (BUILD_LAGOM)
         file(COPY "${SERENITY_PROJECT_ROOT}/Tests/LibGL/reference-images" DESTINATION "./")
         file(GLOB LIBGL_TESTS CONFIGURE_DEPENDS "../../Tests/LibGL/*.cpp")
         foreach(source ${LIBGL_TESTS})
-            lagom_test(${source} LIBS LibGL LibGPU LibSoftGPU)
+            lagom_test(${source} LIBS LibGfx LibGL LibGPU LibSoftGPU)
         endforeach()
 
         # Locale
@@ -567,7 +567,7 @@ if (BUILD_LAGOM)
         # TLS
         file(GLOB LIBTLS_TESTS CONFIGURE_DEPENDS "../../Tests/LibTLS/*.cpp")
         foreach(source ${LIBTLS_TESTS})
-            lagom_test(${source} LIBS LibTLS
+            lagom_test(${source} LIBS LibCrypto LibTLS
                 WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../../Tests/LibTLS)
         endforeach()
 

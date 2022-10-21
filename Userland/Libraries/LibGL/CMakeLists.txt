@@ -16,4 +16,4 @@ set(SOURCES
 )
 
 serenity_lib(LibGL gl)
-target_link_libraries(LibGL LibCore LibGfx LibGPU)
+target_link_libraries(LibGL PRIVATE LibCore LibGfx LibGPU)
