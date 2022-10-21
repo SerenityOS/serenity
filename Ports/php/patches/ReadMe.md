@@ -15,3 +15,10 @@ For a reason unknown to me, the build system fails to find `inet_aton`
 and tries to redefine it with its own implementation in
 `flock_compat.c`.
 
+## `0003-Build-Patch-Serenity-root-directory-into-libtool.patch`
+
+Build: Patch Serenity root directory into libtool
+
+PHP's libtool does not have sysroot support; this is the minimum change
+to get PHP to build.
+
