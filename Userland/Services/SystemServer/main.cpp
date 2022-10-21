@@ -380,7 +380,7 @@ static ErrorOr<void> prepare_synthetic_filesystems()
     // FIXME: Find a better way to all of this stuff, without hardcoding all of this!
     TRY(Core::System::mount(-1, "/proc"sv, "proc"sv, MS_NOSUID));
     TRY(Core::System::mount(-1, "/sys"sv, "sys"sv, 0));
-    TRY(Core::System::mount(-1, "/dev"sv, "tmp"sv, MS_NOSUID | MS_NOEXEC));
+    TRY(Core::System::mount(-1, "/dev"sv, "tmp"sv, MS_NOSUID | MS_NOEXEC | MS_NOREGULAR));
 
     TRY(Core::System::mkdir("/dev/audio"sv, 0755));
     TRY(Core::System::mkdir("/dev/input"sv, 0755));

@@ -191,6 +191,7 @@ public:
                 check(MS_RDONLY, "ro"sv);
                 check(MS_WXALLOWED, "wxallowed"sv);
                 check(MS_AXALLOWED, "axallowed"sv);
+                check(MS_NOREGULAR, "noregular"sv);
                 if (builder.string_view().is_empty())
                     return String("defaults");
                 return builder.to_string();
