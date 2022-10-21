@@ -47,6 +47,8 @@ String CookiesModel::column_name(int column) const
         return "Value";
     case Column::ExpiryTime:
         return "Expiry time";
+    case Column::SameSite:
+        return "SameSite";
     case Column::__Count:
         return {};
     }
@@ -79,6 +81,8 @@ GUI::Variant CookiesModel::data(GUI::ModelIndex const& index, GUI::ModelRole rol
         return cookie.value;
     case Column::ExpiryTime:
         return cookie.expiry_time.to_string();
+    case Column::SameSite:
+        return Web::Cookie::same_site_to_string(cookie.same_site);
     }
 
     VERIFY_NOT_REACHED();
