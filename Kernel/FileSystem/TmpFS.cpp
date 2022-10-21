@@ -294,11 +294,6 @@ ErrorOr<void> TmpFSInode::chown(UserID uid, GroupID gid)
 ErrorOr<NonnullLockRefPtr<Inode>> TmpFSInode::create_child(StringView name, mode_t mode, dev_t dev, UserID uid, GroupID gid)
 {
     MutexLocker locker(m_inode_lock);
-
-    // TODO: Support creating devices on TmpFS.
-    if (dev != 0)
-        return ENOTSUP;
-
     time_t now = kgettimeofday().to_truncated_seconds();
 
     InodeMetadata metadata;
@@ -308,6 +303,8 @@ ErrorOr<NonnullLockRefPtr<Inode>> TmpFSInode::create_child(StringView name, mode
     metadata.atime = now;
     metadata.ctime = now;
     metadata.mtime = now;
+    metadata.major_device = major_from_encoded_device(dev);
+    metadata.minor_device = minor_from_encoded_device(dev);
 
     auto child = TRY(TmpFSInode::try_create(fs(), metadata, *this));
     TRY(add_child(*child, name, mode));
