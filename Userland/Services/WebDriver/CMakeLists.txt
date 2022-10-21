@@ -8,6 +8,7 @@ set(SOURCES
     Client.cpp
     Session.cpp
     TimeoutsConfiguration.cpp
+    WebDriverError.cpp
     main.cpp
     )
 
