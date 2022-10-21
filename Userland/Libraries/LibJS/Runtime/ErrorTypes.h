@@ -273,6 +273,8 @@
                                                           "the opposite sign")                                                          \
     M(TemporalNanosecondsConvertedToRemainderOfNanosecondsWithOppositeSign, "Time zone or calendar ended up with a remainder of "       \
                                                                             "nanoseconds with the opposite sign")                       \
+    M(TemporalNanosecondsConvertedToRemainderOfNanosecondsLongerThanDayLength, "Time zone or calendar ended up with a remainder of "    \
+                                                                               "nanoseconds longer than the day length")                \
     M(TemporalObjectMustHaveOneOf, "Object must have at least one of the following properties: {}")                                     \
     M(TemporalObjectMustNotHave, "Object must not have a defined {} property")                                                          \
     M(TemporalPropertyMustBeFinite, "Property must not be Infinity")                                                                    \
