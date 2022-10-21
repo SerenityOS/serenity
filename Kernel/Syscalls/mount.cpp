@@ -6,7 +6,6 @@
 
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/DevPtsFS.h>
-#include <Kernel/FileSystem/DevTmpFS.h>
 #include <Kernel/FileSystem/Ext2FileSystem.h>
 #include <Kernel/FileSystem/FATFileSystem.h>
 #include <Kernel/FileSystem/ISO9660FileSystem.h>
@@ -32,7 +31,6 @@ struct FileSystemInitializer {
 static constexpr FileSystemInitializer s_initializers[] = {
     { "proc"sv, "ProcFS"sv, false, false, false, {}, ProcFS::try_create },
     { "devpts"sv, "DevPtsFS"sv, false, false, false, {}, DevPtsFS::try_create },
-    { "dev"sv, "DevTmpFS"sv, false, false, false, {}, DevTmpFS::try_create },
     { "sys"sv, "SysFS"sv, false, false, false, {}, SysFS::try_create },
     { "tmp"sv, "TmpFS"sv, false, false, false, {}, TmpFS::try_create },
     { "ext2"sv, "Ext2FS"sv, true, true, true, Ext2FS::try_create, {} },
