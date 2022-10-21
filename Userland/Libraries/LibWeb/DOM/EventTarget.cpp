@@ -535,11 +535,13 @@ void EventTarget::activate_event_handler(FlyString const& name, HTML::EventHandl
     // 4. Let callback be the result of creating a Web IDL EventListener instance representing a reference to a function of one argument that executes the steps of the event handler processing algorithm, given eventTarget, name, and its argument.
     //    The EventListener's callback context can be arbitrary; it does not impact the steps of the event handler processing algorithm. [DOM]
 
-    // NOTE: We *don't* capture `this` here, since that would create a reference cycle
-    //       between the NativeFunction's SafeFunction captures (always strong)
-    //       and the registered event listener on this EventTarget.
+    // NOTE: The callback must keep `this` alive. For example:
+    //          document.body.onunload = () => { console.log("onunload called!"); }
+    //          document.body.remove();
+    //          location.reload();
+    //       The body element is no longer in the DOM and there is no variable holding onto it. However, the onunload handler is still called, meaning the callback keeps the body element alive.
     auto callback_function = JS::NativeFunction::create(
-        realm, [name](JS::VM& vm) mutable -> JS::ThrowCompletionOr<JS::Value> {
+        realm, [event_target = JS::make_handle(*this), name](JS::VM& vm) mutable -> JS::ThrowCompletionOr<JS::Value> {
             // The event dispatcher should only call this with one argument.
             VERIFY(vm.argument_count() == 1);
 
@@ -548,9 +550,7 @@ void EventTarget::activate_event_handler(FlyString const& name, HTML::EventHandl
             VERIFY(event_wrapper_argument.is_object());
             auto& event = verify_cast<DOM::Event>(event_wrapper_argument.as_object());
 
-            auto& this_value = verify_cast<EventTarget>(vm.this_value().as_object());
-
-            TRY(this_value.process_event_handler_for_event(name, event));
+            TRY(event_target->process_event_handler_for_event(name, event));
             return JS::js_undefined();
         },
         0, "", &realm);
