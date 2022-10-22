@@ -192,8 +192,10 @@ bool EventHandler::handle_mouseup(Gfx::IntPoint const& position, unsigned button
             // "The click event type MUST be dispatched on the topmost event target indicated by the pointer." (https://www.w3.org/TR/uievents/#event-type-click)
             // "The topmost event target MUST be the element highest in the rendering order which is capable of being an event target." (https://www.w3.org/TR/uievents/#topmost-event-target)
             auto* layout_node = &paintable->layout_node();
-            while (layout_node && node && !node->is_element() && layout_node->parent()) {
+            while (layout_node && node && (!node->is_element() || layout_node->is_generated()) && layout_node->parent()) {
                 layout_node = layout_node->parent();
+                if (layout_node->is_anonymous())
+                    continue;
                 node = layout_node->dom_node();
             }
             if (!node || !layout_node) {
@@ -320,8 +322,10 @@ bool EventHandler::handle_mousedown(Gfx::IntPoint const& position, unsigned butt
         // "The click event type MUST be dispatched on the topmost event target indicated by the pointer." (https://www.w3.org/TR/uievents/#event-type-click)
         // "The topmost event target MUST be the element highest in the rendering order which is capable of being an event target." (https://www.w3.org/TR/uievents/#topmost-event-target)
         auto* layout_node = &paintable->layout_node();
-        while (layout_node && node && !node->is_element() && layout_node->parent()) {
+        while (layout_node && node && (!node->is_element() || layout_node->is_generated()) && layout_node->parent()) {
             layout_node = layout_node->parent();
+            if (layout_node->is_anonymous())
+                continue;
             node = layout_node->dom_node();
         }
         if (!node || !layout_node)
@@ -414,6 +418,21 @@ bool EventHandler::handle_mousemove(Gfx::IntPoint const& position, unsigned butt
         // FIXME: Handle other values for pointer-events.
         VERIFY(pointer_events != CSS::PointerEvents::None);
 
+        // Search for the first parent of the hit target that's an element.
+        // "The click event type MUST be dispatched on the topmost event target indicated by the pointer." (https://www.w3.org/TR/uievents/#event-type-click)
+        // "The topmost event target MUST be the element highest in the rendering order which is capable of being an event target." (https://www.w3.org/TR/uievents/#topmost-event-target)
+        auto* layout_node = &paintable->layout_node();
+        while (layout_node && node && (!node->is_element() || layout_node->is_generated()) && layout_node->parent()) {
+            layout_node = layout_node->parent();
+            if (layout_node->is_anonymous())
+                continue;
+            node = layout_node->dom_node();
+        }
+        if (!node || !layout_node) {
+            // FIXME: This is pretty ugly but we need to bail out here.
+            goto after_node_use;
+        }
+
         hovered_node_changed = node.ptr() != document.hovered_node();
         document.set_hovered_node(node);
         if (node) {
@@ -433,19 +452,6 @@ bool EventHandler::handle_mousemove(Gfx::IntPoint const& position, unsigned butt
                     hovered_node_cursor = Gfx::StandardCursor::Arrow;
                 else
                     hovered_node_cursor = cursor_css_to_gfx(cursor);
-            }
-
-            // Search for the first parent of the hit target that's an element.
-            // "The click event type MUST be dispatched on the topmost event target indicated by the pointer." (https://www.w3.org/TR/uievents/#event-type-click)
-            // "The topmost event target MUST be the element highest in the rendering order which is capable of being an event target." (https://www.w3.org/TR/uievents/#topmost-event-target)
-            auto* layout_node = &paintable->layout_node();
-            while (layout_node && node && !node->is_element() && layout_node->parent()) {
-                layout_node = layout_node->parent();
-                node = layout_node->dom_node();
-            }
-            if (!node || !layout_node) {
-                // FIXME: This is pretty ugly but we need to bail out here.
-                goto after_node_use;
             }
 
             auto offset = compute_mouse_event_offset(position, *layout_node);
@@ -529,8 +535,10 @@ bool EventHandler::handle_doubleclick(Gfx::IntPoint const& position, unsigned bu
     // Search for the first parent of the hit target that's an element.
     // "The topmost event target MUST be the element highest in the rendering order which is capable of being an event target." (https://www.w3.org/TR/uievents/#topmost-event-target)
     auto* layout_node = &paintable->layout_node();
-    while (layout_node && node && !node->is_element() && layout_node->parent()) {
+    while (layout_node && node && (!node->is_element() || layout_node->is_generated()) && layout_node->parent()) {
         layout_node = layout_node->parent();
+        if (layout_node->is_anonymous())
+            continue;
         node = layout_node->dom_node();
     }
     if (!node || !layout_node)
