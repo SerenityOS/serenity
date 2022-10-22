@@ -74,6 +74,8 @@ public:
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
     void replace_references_impl(Register, Register) { }
 
+    Register dst() const { return m_dst; }
+
 private:
     Register m_dst;
 };
@@ -271,6 +273,20 @@ public:
         return sizeof(*this) + sizeof(Register) * (m_element_count == 0 ? 0 : 2);
     }
 
+    Register start() const
+    {
+        VERIFY(m_element_count);
+        return m_elements[0];
+    }
+
+    Register end() const
+    {
+        VERIFY(m_element_count);
+        return m_elements[1];
+    }
+
+    size_t element_count() const { return m_element_count; }
+
 private:
     size_t m_element_count { 0 };
     Register m_elements[];
@@ -406,6 +422,8 @@ public:
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
     void replace_references_impl(Register, Register) { }
 
+    IdentifierTableIndex identifier() const { return m_identifier; }
+
 private:
     IdentifierTableIndex m_identifier;
     EnvironmentMode m_mode;
@@ -425,6 +443,8 @@ public:
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
     void replace_references_impl(Register, Register) { }
 
+    IdentifierTableIndex identifier() const { return m_identifier; }
+
 private:
     IdentifierTableIndex m_identifier;
 
@@ -443,6 +463,8 @@ public:
     String to_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
     void replace_references_impl(Register, Register) { }
+
+    IdentifierTableIndex identifier() const { return m_identifier; }
 
 private:
     IdentifierTableIndex m_identifier;
