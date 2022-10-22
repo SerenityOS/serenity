@@ -170,11 +170,16 @@ public:
 
         auto maybe_separator_index = find(separator);
         bool keep_empty = has_flag(split_behavior, SplitBehavior::KeepEmpty);
+        bool keep_separator = has_flag(split_behavior, SplitBehavior::KeepTrailingSeparator);
         while (maybe_separator_index.has_value()) {
             auto separator_index = maybe_separator_index.value();
             auto part_with_separator = view.substring_view(0, separator_index + separator.length());
-            if (keep_empty || separator_index > 0)
-                callback(part_with_separator.substring_view(0, separator_index));
+            if (keep_empty || separator_index > 0) {
+                if (keep_separator)
+                    callback(part_with_separator);
+                else
+                    callback(part_with_separator.substring_view(0, separator_index));
+            }
             view = view.substring_view_starting_after_substring(part_with_separator);
             maybe_separator_index = view.find(separator);
         }

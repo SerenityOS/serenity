@@ -272,12 +272,13 @@ Vector<StringView> StringView::split_view_if(Function<bool(char)> const& predica
     Vector<StringView> v;
     size_t substart = 0;
     bool keep_empty = has_flag(split_behavior, SplitBehavior::KeepEmpty);
+    bool keep_separator = has_flag(split_behavior, SplitBehavior::KeepTrailingSeparator);
     for (size_t i = 0; i < length(); ++i) {
         char ch = characters_without_null_termination()[i];
         if (predicate(ch)) {
             size_t sublen = i - substart;
             if (sublen != 0 || keep_empty)
-                v.append(substring_view(substart, sublen));
+                v.append(substring_view(substart, keep_separator ? sublen + 1 : sublen));
             substart = i + 1;
         }
     }
