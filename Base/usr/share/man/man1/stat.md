@@ -4,7 +4,7 @@ stat
 
 ## Synopsis
 
-```sh
+```**sh**
 $ stat [-L] file
 ```
 
