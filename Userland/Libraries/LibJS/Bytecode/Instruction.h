@@ -109,6 +109,7 @@ public:
     String to_string(Bytecode::Executable const&) const;
     ThrowCompletionOr<void> execute(Bytecode::Interpreter&) const;
     void replace_references(BasicBlock const&, BasicBlock const&);
+    void replace_references(Register, Register);
     static void destroy(Instruction&);
 
 protected:
