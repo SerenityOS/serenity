@@ -136,6 +136,15 @@ private:
     FILE* m_file { nullptr };
 };
 
+class EliminateLoads : public Pass {
+public:
+    EliminateLoads() = default;
+    virtual ~EliminateLoads() override = default;
+
+private:
+    virtual void perform(PassPipelineExecutable&) override;
+};
+
 }
 
 }
