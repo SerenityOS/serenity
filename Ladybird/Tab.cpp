@@ -7,9 +7,9 @@
 
 #include "Tab.h"
 #include "BrowserWindow.h"
-#include "History.h"
 #include "Settings.h"
 #include "Utilities.h"
+#include <Browser/History.h>
 #include <QCoreApplication>
 #include <QFont>
 #include <QFontMetrics>

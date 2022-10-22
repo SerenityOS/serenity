@@ -9,8 +9,8 @@
 
 #define AK_DONT_REPLACE_STD
 
-#include "History.h"
 #include "WebContentView.h"
+#include <Browser/History.h>
 #include <QBoxLayout>
 #include <QLabel>
 #include <QLineEdit>
