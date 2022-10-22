@@ -10,6 +10,7 @@ set(SOURCES
     Bytecode/Op.cpp
     Bytecode/Pass/DumpCFG.cpp
     Bytecode/Pass/GenerateCFG.cpp
+    Bytecode/Pass/LoadElimination.cpp
     Bytecode/Pass/MergeBlocks.cpp
     Bytecode/Pass/PlaceBlocks.cpp
     Bytecode/Pass/UnifySameBlocks.cpp
