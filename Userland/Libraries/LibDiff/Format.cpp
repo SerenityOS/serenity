@@ -12,7 +12,7 @@
 namespace Diff {
 String generate_only_additions(String const& text)
 {
-    auto lines = text.split('\n', true); // Keep empty
+    auto lines = text.split('\n', SplitBehavior::KeepEmpty);
     StringBuilder builder;
     builder.appendff("@@ -0,0 +1,{} @@\n", lines.size());
     for (auto const& line : lines) {

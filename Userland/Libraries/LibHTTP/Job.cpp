@@ -453,7 +453,7 @@ void Job::on_socket_connected()
                         finish_up();
                         break;
                     } else {
-                        auto chunk = size_lines[0].split_view(';', true);
+                        auto chunk = size_lines[0].split_view(';', SplitBehavior::KeepEmpty);
                         String size_string = chunk[0];
                         char* endptr;
                         auto size = strtoul(size_string.characters(), &endptr, 16);

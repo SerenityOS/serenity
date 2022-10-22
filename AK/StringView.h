@@ -8,6 +8,7 @@
 
 #include <AK/Assertions.h>
 #include <AK/Checked.h>
+#include <AK/EnumBits.h>
 #include <AK/Forward.h>
 #include <AK/Optional.h>
 #include <AK/Span.h>
@@ -129,10 +130,10 @@ public:
         return substring_view(start, length() - start);
     }
 
-    [[nodiscard]] Vector<StringView> split_view(char, bool keep_empty = false) const;
-    [[nodiscard]] Vector<StringView> split_view(StringView, bool keep_empty = false) const;
+    [[nodiscard]] Vector<StringView> split_view(char, SplitBehavior = SplitBehavior::Nothing) const;
+    [[nodiscard]] Vector<StringView> split_view(StringView, SplitBehavior = SplitBehavior::Nothing) const;
 
-    [[nodiscard]] Vector<StringView> split_view_if(Function<bool(char)> const& predicate, bool keep_empty = false) const;
+    [[nodiscard]] Vector<StringView> split_view_if(Function<bool(char)> const& predicate, SplitBehavior = SplitBehavior::Nothing) const;
 
     [[nodiscard]] StringView find_last_split_view(char separator) const
     {
@@ -151,14 +152,14 @@ public:
     }
 
     template<VoidFunction<StringView> Callback>
-    void for_each_split_view(char separator, bool keep_empty, Callback callback) const
+    void for_each_split_view(char separator, SplitBehavior split_behavior, Callback callback) const
     {
         StringView seperator_view { &separator, 1 };
-        for_each_split_view(seperator_view, keep_empty, callback);
+        for_each_split_view(seperator_view, split_behavior, callback);
     }
 
     template<VoidFunction<StringView> Callback>
-    void for_each_split_view(StringView separator, bool keep_empty, Callback callback) const
+    void for_each_split_view(StringView separator, SplitBehavior split_behavior, Callback callback) const
     {
         VERIFY(!separator.is_empty());
 
@@ -168,6 +169,7 @@ public:
         StringView view { *this };
 
         auto maybe_separator_index = find(separator);
+        bool keep_empty = has_flag(split_behavior, SplitBehavior::KeepEmpty);
         while (maybe_separator_index.has_value()) {
             auto separator_index = maybe_separator_index.value();
             auto part_with_separator = view.substring_view(0, separator_index + separator.length());

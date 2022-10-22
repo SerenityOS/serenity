@@ -143,26 +143,26 @@ TEST_CASE(split_view)
 {
     StringView test_string_view = "axxbxcxd"sv;
     EXPECT_EQ(test_string_view.split_view('x'), Vector({ "a"sv, "b"sv, "c"sv, "d"sv }));
-    EXPECT_EQ(test_string_view.split_view('x', true), Vector({ "a"sv, ""sv, "b"sv, "c"sv, "d"sv }));
+    EXPECT_EQ(test_string_view.split_view('x', SplitBehavior::KeepEmpty), Vector({ "a"sv, ""sv, "b"sv, "c"sv, "d"sv }));
     EXPECT_EQ(test_string_view.split_view("x"sv), Vector({ "a"sv, "b"sv, "c"sv, "d"sv }));
-    EXPECT_EQ(test_string_view.split_view("x"sv, true), Vector({ "a"sv, ""sv, "b"sv, "c"sv, "d"sv }));
+    EXPECT_EQ(test_string_view.split_view("x"sv, SplitBehavior::KeepEmpty), Vector({ "a"sv, ""sv, "b"sv, "c"sv, "d"sv }));
 
     test_string_view = "axxbx"sv;
     EXPECT_EQ(test_string_view.split_view('x'), Vector({ "a"sv, "b"sv }));
-    EXPECT_EQ(test_string_view.split_view('x', true), Vector({ "a"sv, ""sv, "b"sv, ""sv }));
+    EXPECT_EQ(test_string_view.split_view('x', SplitBehavior::KeepEmpty), Vector({ "a"sv, ""sv, "b"sv, ""sv }));
     EXPECT_EQ(test_string_view.split_view("x"sv), Vector({ "a"sv, "b"sv }));
-    EXPECT_EQ(test_string_view.split_view("x"sv, true), Vector({ "a"sv, ""sv, "b"sv, ""sv }));
+    EXPECT_EQ(test_string_view.split_view("x"sv, SplitBehavior::KeepEmpty), Vector({ "a"sv, ""sv, "b"sv, ""sv }));
 
     test_string_view = "axxbcxxdxx"sv;
     EXPECT_EQ(test_string_view.split_view("xx"sv), Vector({ "a"sv, "bc"sv, "d"sv }));
-    EXPECT_EQ(test_string_view.split_view("xx"sv, true), Vector({ "a"sv, "bc"sv, "d"sv, ""sv }));
+    EXPECT_EQ(test_string_view.split_view("xx"sv, SplitBehavior::KeepEmpty), Vector({ "a"sv, "bc"sv, "d"sv, ""sv }));
 
     test_string_view = "ax_b_cxd"sv;
     Function<bool(char)> predicate = [](char ch) { return ch == 'x' || ch == '_'; };
     EXPECT_EQ(test_string_view.split_view_if(predicate), Vector({ "a"sv, "b"sv, "c"sv, "d"sv }));
-    EXPECT_EQ(test_string_view.split_view_if(predicate, true), Vector({ "a"sv, ""sv, "b"sv, "c"sv, "d"sv }));
+    EXPECT_EQ(test_string_view.split_view_if(predicate, SplitBehavior::KeepEmpty), Vector({ "a"sv, ""sv, "b"sv, "c"sv, "d"sv }));
     EXPECT_EQ(test_string_view.split_view_if(predicate), Vector({ "a"sv, "b"sv, "c"sv, "d"sv }));
-    EXPECT_EQ(test_string_view.split_view_if(predicate, true), Vector({ "a"sv, ""sv, "b"sv, "c"sv, "d"sv }));
+    EXPECT_EQ(test_string_view.split_view_if(predicate, SplitBehavior::KeepEmpty), Vector({ "a"sv, ""sv, "b"sv, "c"sv, "d"sv }));
 }
 
 TEST_CASE(constexpr_stuff)

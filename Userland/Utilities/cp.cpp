@@ -39,7 +39,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
             bool values_ok = true;
 
-            StringView { s, strlen(s) }.for_each_split_view(',', false, [&](StringView value) {
+            StringView { s, strlen(s) }.for_each_split_view(',', SplitBehavior::Nothing, [&](StringView value) {
                 if (value == "mode"sv) {
                     preserve |= Core::File::PreserveMode::Permissions;
                 } else if (value == "ownership"sv) {

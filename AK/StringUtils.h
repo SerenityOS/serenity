@@ -8,6 +8,7 @@
 #pragma once
 
 #include <AK/Concepts.h>
+#include <AK/EnumBits.h>
 #include <AK/Forward.h>
 
 namespace AK {
@@ -37,6 +38,14 @@ enum class TrimWhitespace {
     Yes,
     No,
 };
+
+enum class SplitBehavior : unsigned {
+    Nothing = 0,
+    // If two separators follow each other without any characters
+    // in between, keep a "" in the resulting vector.
+    KeepEmpty = 1,
+};
+AK_ENUM_BITWISE_OPERATORS(SplitBehavior);
 
 struct MaskSpan {
     size_t start;
@@ -99,5 +108,6 @@ size_t count(StringView, StringView needle);
 
 using AK::CaseSensitivity;
 using AK::ReplaceMode;
+using AK::SplitBehavior;
 using AK::TrimMode;
 using AK::TrimWhitespace;

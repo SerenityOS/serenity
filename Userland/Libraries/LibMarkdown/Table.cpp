@@ -138,8 +138,8 @@ OwnPtr<Table> Table::parse(LineIterator& lines)
     if (peek_it.is_end())
         return {};
 
-    auto header_segments = first_line.split_view('|', true);
-    auto header_delimiters = peek_it->split_view('|', true);
+    auto header_segments = first_line.split_view('|', SplitBehavior::KeepEmpty);
+    auto header_delimiters = peek_it->split_view('|', SplitBehavior::KeepEmpty);
 
     if (!header_segments.is_empty())
         header_segments.take_first();
@@ -214,7 +214,7 @@ OwnPtr<Table> Table::parse(LineIterator& lines)
 
         ++lines;
 
-        auto segments = line.split_view('|', true);
+        auto segments = line.split_view('|', SplitBehavior::KeepEmpty);
         segments.take_first();
         if (!segments.is_empty() && segments.last().is_empty())
             segments.take_last();

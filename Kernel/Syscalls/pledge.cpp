@@ -29,7 +29,7 @@ ErrorOr<FlatPtr> Process::sys$pledge(Userspace<Syscall::SC_pledge_params const*>
 
     auto parse_pledge = [&](auto pledge_spec, u32& mask) {
         auto found_invalid_pledge = true;
-        pledge_spec.for_each_split_view(' ', false, [&mask, &found_invalid_pledge](auto const& part) {
+        pledge_spec.for_each_split_view(' ', SplitBehavior::Nothing, [&mask, &found_invalid_pledge](auto const& part) {
 #define __ENUMERATE_PLEDGE_PROMISE(x)   \
     if (part == #x##sv) {               \
         mask |= (1u << (u32)Pledge::x); \

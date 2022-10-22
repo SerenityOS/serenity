@@ -965,7 +965,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_split)
 
     // 19. Repeat, while q < size,
     while (next_search_from < string.length_in_code_units()) {
-        // a. Perform ? Set(splitter, "lastIndex", 𝔽(q), true).
+        // a. Perform ? Set(splitter, "lastIndex", 𝔽(q), SplitBehavior::KeepEmpty).
         TRY(splitter->set(vm.names.lastIndex, Value(next_search_from), Object::ShouldThrowExceptions::Yes));
 
         // b. Let z be ? RegExpExec(splitter, S).

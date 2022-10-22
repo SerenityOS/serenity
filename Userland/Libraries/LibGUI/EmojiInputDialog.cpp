@@ -179,7 +179,7 @@ auto EmojiInputDialog::supported_emoji() -> Vector<Emoji>
         StringBuilder builder;
         Vector<u32> code_points;
 
-        basename.for_each_split_view('_', false, [&](auto segment) {
+        basename.for_each_split_view('_', SplitBehavior::Nothing, [&](auto segment) {
             auto code_point = AK::StringUtils::convert_to_uint_from_hex<u32>(segment.substring_view(2));
             VERIFY(code_point.has_value());
 

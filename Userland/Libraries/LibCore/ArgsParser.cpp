@@ -554,7 +554,7 @@ void ArgsParser::add_option(Vector<size_t>& values, char const* help_string, cha
         [&values, separator](char const* s) {
             bool parsed_all_values = true;
 
-            StringView { s, strlen(s) }.for_each_split_view(separator, false, [&](auto value) {
+            StringView { s, strlen(s) }.for_each_split_view(separator, SplitBehavior::Nothing, [&](auto value) {
                 if (auto maybe_value = AK::StringUtils::convert_to_uint<size_t>(value); maybe_value.has_value())
                     values.append(*maybe_value);
                 else

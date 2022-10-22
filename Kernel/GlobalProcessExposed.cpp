@@ -642,7 +642,7 @@ private:
                     TRY(obj.add("hypervisor_vendor_id"sv, info.hypervisor_vendor_id_string()));
 
                 auto features_array = TRY(obj.add_array("features"sv));
-                auto keep_empty = false;
+                auto keep_empty = SplitBehavior::KeepEmpty;
 
                 ErrorOr<void> result; // FIXME: Make this nicer
                 info.features_string().for_each_split_view(' ', keep_empty, [&](StringView feature) {

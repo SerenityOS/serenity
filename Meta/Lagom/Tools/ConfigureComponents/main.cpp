@@ -195,7 +195,7 @@ static Result<Vector<String>, int> run_whiptail(WhiptailMode mode, Vector<Whipta
     auto file = Core::File::construct();
     file->open(read_fd, Core::OpenMode::ReadOnly, Core::File::ShouldCloseFileDescriptor::Yes);
     auto data = String::copy(file->read_all());
-    return data.split('\n', false);
+    return data.split('\n');
 }
 
 static bool run_system_command(String const& command, StringView command_name)

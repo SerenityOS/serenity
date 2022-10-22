@@ -117,7 +117,7 @@ size_t ShellComprehensionEngine::resolve(ShellComprehensionEngine::DocumentData 
     if (position.line() > 0) {
         auto first = true;
         size_t line = 0;
-        for (auto& line_view : document.text.split_limit('\n', position.line() + 1, true)) {
+        for (auto& line_view : document.text.split_limit('\n', position.line() + 1, SplitBehavior::KeepEmpty)) {
             if (line == position.line())
                 break;
             if (first)

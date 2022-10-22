@@ -213,7 +213,7 @@ UNMAP_AFTER_INIT Array<unsigned, 3> StorageManagement::extract_boot_device_addre
     auto parameters_view = m_boot_argument.substring_view(device_prefix.length()).find_first_split_view(';');
     size_t parts_count = 0;
     bool parse_failure = false;
-    parameters_view.for_each_split_view(':', false, [&](StringView parameter_view) {
+    parameters_view.for_each_split_view(':', SplitBehavior::Nothing, [&](StringView parameter_view) {
         if (parse_failure)
             return;
         if (parts_count > 2)

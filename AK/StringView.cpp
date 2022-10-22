@@ -40,16 +40,16 @@ StringView::StringView(ByteBuffer const& buffer)
 {
 }
 
-Vector<StringView> StringView::split_view(char const separator, bool keep_empty) const
+Vector<StringView> StringView::split_view(char const separator, SplitBehavior split_behavior) const
 {
     StringView seperator_view { &separator, 1 };
-    return split_view(seperator_view, keep_empty);
+    return split_view(seperator_view, split_behavior);
 }
 
-Vector<StringView> StringView::split_view(StringView separator, bool keep_empty) const
+Vector<StringView> StringView::split_view(StringView separator, SplitBehavior split_behavior) const
 {
     Vector<StringView> parts;
-    for_each_split_view(separator, keep_empty, [&](StringView view) {
+    for_each_split_view(separator, split_behavior, [&](StringView view) {
         parts.append(view);
     });
     return parts;
@@ -61,7 +61,7 @@ Vector<StringView> StringView::lines(bool consider_cr) const
         return {};
 
     if (!consider_cr)
-        return split_view('\n', true);
+        return split_view('\n', SplitBehavior::KeepEmpty);
 
     Vector<StringView> v;
     size_t substart = 0;
@@ -264,13 +264,14 @@ Vector<size_t> StringView::find_all(StringView needle) const
     return StringUtils::find_all(*this, needle);
 }
 
-Vector<StringView> StringView::split_view_if(Function<bool(char)> const& predicate, bool keep_empty) const
+Vector<StringView> StringView::split_view_if(Function<bool(char)> const& predicate, SplitBehavior split_behavior) const
 {
     if (is_empty())
         return {};
 
     Vector<StringView> v;
     size_t substart = 0;
+    bool keep_empty = has_flag(split_behavior, SplitBehavior::KeepEmpty);
     for (size_t i = 0; i < length(); ++i) {
         char ch = characters_without_null_termination()[i];
         if (predicate(ch)) {

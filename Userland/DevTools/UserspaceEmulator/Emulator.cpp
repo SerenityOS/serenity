@@ -343,7 +343,7 @@ void Emulator::handle_repl()
         line = m_editor->history().last().entry;
     }
 
-    auto parts = line.split_view(' ', false);
+    auto parts = line.split_view(' ');
     m_editor->add_to_history(line);
 
     if (parts[0].is_one_of("s"sv, "step"sv)) {

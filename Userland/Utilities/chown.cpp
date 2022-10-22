@@ -39,7 +39,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     uid_t new_uid = -1;
     gid_t new_gid = -1;
 
-    auto parts = spec.split_view(':', true);
+    auto parts = spec.split_view(':', SplitBehavior::KeepEmpty);
     if (parts[0].is_empty() || (parts.size() == 2 && parts[1].is_empty()) || parts.size() > 2) {
         warnln("Invalid uid/gid spec");
         return 1;

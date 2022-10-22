@@ -57,7 +57,7 @@ int Shell::builtin_alias(int argc, char const** argv)
 
     bool fail = false;
     for (auto& argument : arguments) {
-        auto parts = argument.split_limit('=', 2, true);
+        auto parts = argument.split_limit('=', 2, SplitBehavior::KeepEmpty);
         if (parts.size() == 1) {
             auto alias = m_aliases.get(parts[0]);
             if (alias.has_value()) {
