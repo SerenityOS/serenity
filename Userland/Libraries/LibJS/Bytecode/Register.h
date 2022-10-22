@@ -25,6 +25,8 @@ public:
     {
     }
 
+    bool operator==(Register reg) const { return m_index == reg.index(); }
+
     u32 index() const { return m_index; }
 
 private:
