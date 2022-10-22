@@ -40,10 +40,17 @@ enum class TrimWhitespace {
 };
 
 enum class SplitBehavior : unsigned {
+    // Neither keep empty substrings nor keep the trailing separator.
+    // This is the default behavior if unspecified.
     Nothing = 0,
+
     // If two separators follow each other without any characters
-    // in between, keep a "" in the resulting vector.
+    // in between, keep a "" in the resulting vector. (or only the
+    // separator if KeepTrailingSeparator is used)
     KeepEmpty = 1,
+
+    // Do not strip off the separator at the end of the string.
+    KeepTrailingSeparator = 2,
 };
 AK_ENUM_BITWISE_OPERATORS(SplitBehavior);
 

@@ -110,12 +110,13 @@ Vector<String> String::split_limit(char separator, size_t limit, SplitBehavior s
     Vector<String> v;
     size_t substart = 0;
     bool keep_empty = has_flag(split_behavior, SplitBehavior::KeepEmpty);
+    bool keep_separator = has_flag(split_behavior, SplitBehavior::KeepTrailingSeparator);
     for (size_t i = 0; i < length() && (v.size() + 1) != limit; ++i) {
         char ch = characters()[i];
         if (ch == separator) {
             size_t sublen = i - substart;
             if (sublen != 0 || keep_empty)
-                v.append(substring(substart, sublen));
+                v.append(substring(substart, keep_separator ? sublen + 1 : sublen));
             substart = i + 1;
         }
     }
@@ -133,12 +134,13 @@ Vector<StringView> String::split_view(Function<bool(char)> separator, SplitBehav
     Vector<StringView> v;
     size_t substart = 0;
     bool keep_empty = has_flag(split_behavior, SplitBehavior::KeepEmpty);
+    bool keep_separator = has_flag(split_behavior, SplitBehavior::KeepTrailingSeparator);
     for (size_t i = 0; i < length(); ++i) {
         char ch = characters()[i];
         if (separator(ch)) {
             size_t sublen = i - substart;
             if (sublen != 0 || keep_empty)
-                v.append(substring_view(substart, sublen));
+                v.append(substring_view(substart, keep_separator ? sublen + 1 : sublen));
             substart = i + 1;
         }
     }

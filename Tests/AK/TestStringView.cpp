@@ -163,6 +163,11 @@ TEST_CASE(split_view)
     EXPECT_EQ(test_string_view.split_view_if(predicate, SplitBehavior::KeepEmpty), Vector({ "a"sv, ""sv, "b"sv, "c"sv, "d"sv }));
     EXPECT_EQ(test_string_view.split_view_if(predicate), Vector({ "a"sv, "b"sv, "c"sv, "d"sv }));
     EXPECT_EQ(test_string_view.split_view_if(predicate, SplitBehavior::KeepEmpty), Vector({ "a"sv, ""sv, "b"sv, "c"sv, "d"sv }));
+
+    test_string_view = "a,,,b"sv;
+    EXPECT_EQ(test_string_view.split_view(","sv, SplitBehavior::KeepEmpty), Vector({ "a"sv, ""sv, ""sv, "b"sv }));
+    EXPECT_EQ(test_string_view.split_view(","sv, SplitBehavior::KeepTrailingSeparator), Vector({ "a,"sv, "b"sv }));
+    EXPECT_EQ(test_string_view.split_view(","sv, SplitBehavior::KeepTrailingSeparator | SplitBehavior::KeepEmpty), Vector({ "a,"sv, ","sv, ","sv, "b"sv }));
 }
 
 TEST_CASE(constexpr_stuff)
