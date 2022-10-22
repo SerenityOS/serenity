@@ -30,6 +30,8 @@ if (( ${#files[@]} )); then
     CLANG_FORMAT=false
     if command -v clang-format-14 >/dev/null 2>&1 ; then
         CLANG_FORMAT=clang-format-14
+    elif command -v brew >/dev/null 2>&1 && command -v "$(brew --prefix llvm@14)"/bin/clang-format >/dev/null 2>&1 ; then
+        CLANG_FORMAT="$(brew --prefix llvm@14)"/bin/clang-format
     elif command -v $TOOLCHAIN_DIR/clang-format >/dev/null 2>&1 && $TOOLCHAIN_DIR/clang-format --version | grep -qF ' 14.' ; then
         CLANG_FORMAT=$TOOLCHAIN_DIR/clang-format
     elif command -v clang-format >/dev/null 2>&1 ; then
