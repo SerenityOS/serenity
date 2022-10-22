@@ -8,7 +8,6 @@
 
 #include "WebContentView.h"
 #include "ConsoleWidget.h"
-#include "CookieJar.h"
 #include "ModelTranslator.h"
 #include "Utilities.h"
 #include <AK/Assertions.h>
@@ -19,6 +18,7 @@
 #include <AK/NonnullOwnPtr.h>
 #include <AK/StringBuilder.h>
 #include <AK/Types.h>
+#include <Browser/CookieJar.h>
 #include <Kernel/API/KeyCode.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/EventLoop.h>

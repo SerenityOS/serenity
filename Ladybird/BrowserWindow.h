@@ -5,8 +5,8 @@
  */
 
 #include "Tab.h"
-#include "CookieJar.h"
 #include <AK/NonnullOwnPtrVector.h>
+#include <Browser/CookieJar.h>
 #include <LibCore/Forward.h>
 #include <QIcon>
 #include <QLineEdit>
