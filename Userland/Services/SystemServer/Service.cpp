@@ -419,10 +419,7 @@ ErrorOr<void> Service::determine_account(int fd)
     socklen_t creds_size = sizeof(creds);
     TRY(Core::System::getsockopt(fd, SOL_SOCKET, SO_PEERCRED, &creds, &creds_size));
 
-    auto const directory_name = String::formatted("/proc/{}/", creds.pid);
-    auto const stat = TRY(Core::System::stat(directory_name));
-
-    m_account = TRY(Core::Account::from_uid(stat.st_uid, Core::Account::Read::PasswdOnly));
+    m_account = TRY(Core::Account::from_uid(creds.uid, Core::Account::Read::PasswdOnly));
     return {};
 }
 
