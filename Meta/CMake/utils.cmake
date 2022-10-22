@@ -2,6 +2,15 @@
 include(${CMAKE_CURRENT_LIST_DIR}/serenity_components.cmake)
 include(${CMAKE_CURRENT_LIST_DIR}/code_generators.cmake)
 
+function(serenity_set_implicit_links target_name)
+    # Make sure that CMake is aware of the implicit LibC dependency, and ensure
+    # that we are choosing the correct and updated LibC.
+    # The latter is a problem with Clang especially, since we might have the
+    # slightly outdated stub in the sysroot, but have not yet installed the freshly
+    # built LibC.
+    target_link_libraries(${target_name} LibC)
+endfunction()
+
 function(serenity_install_headers target_name)
     file(GLOB_RECURSE headers RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "*.h")
     foreach(header ${headers})
@@ -43,6 +52,7 @@ if (NOT COMMAND serenity_lib)
         install(TARGETS ${target_name} DESTINATION ${CMAKE_INSTALL_LIBDIR} OPTIONAL)
         set_target_properties(${target_name} PROPERTIES OUTPUT_NAME ${fs_name})
         serenity_generated_sources(${target_name})
+        serenity_set_implicit_links(${target_name})
     endfunction()
 endif()
 
@@ -56,6 +66,7 @@ if (NOT COMMAND serenity_lib_static)
         install(TARGETS ${target_name} DESTINATION ${CMAKE_INSTALL_LIBDIR} OPTIONAL)
         set_target_properties(${target_name} PROPERTIES OUTPUT_NAME ${fs_name})
         serenity_generated_sources(${target_name})
+        serenity_set_implicit_links(${target_name})
     endfunction()
 endif()
 
@@ -80,6 +91,7 @@ if (NOT COMMAND serenity_bin)
         set_target_properties(${target_name} PROPERTIES EXCLUDE_FROM_ALL TRUE)
         install(TARGETS ${target_name} RUNTIME DESTINATION bin OPTIONAL)
         serenity_generated_sources(${target_name})
+        serenity_set_implicit_links(${target_name})
     endfunction()
 endif()
 
@@ -96,6 +108,7 @@ function(serenity_test test_src sub_dir)
     add_executable(${test_name} ${TEST_SOURCES})
     add_dependencies(ComponentTests ${test_name})
     set_target_properties(${test_name} PROPERTIES EXCLUDE_FROM_ALL TRUE)
+    serenity_set_implicit_links(${test_name})
     target_link_libraries(${test_name} LibTest LibCore)
     foreach(lib ${SERENITY_TEST_LIBS})
         target_link_libraries(${test_name} ${lib})

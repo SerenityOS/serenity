@@ -11,4 +11,4 @@ set(SOURCES
 )
 
 serenity_lib(LibCrypt crypt)
-target_link_libraries(LibCrypt LibC LibCryptSHA2)
+target_link_libraries(LibCrypt LibCryptSHA2)

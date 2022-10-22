@@ -3,7 +3,7 @@ set(SOURCES
 )
 
 serenity_lib(LibCppComprehension cppcomprehension)
-target_link_libraries(LibCppComprehension LibCodeComprehension LibC)
+target_link_libraries(LibCppComprehension LibCodeComprehension)
 
 serenity_component(
     CppComprehensionTests
