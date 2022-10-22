@@ -50,11 +50,11 @@ void BucketTool::on_mousedown(Layer* layer, MouseEvent& event)
     if (!layer->rect().contains(layer_event.position()))
         return;
 
-    GUI::Painter painter(layer->currently_edited_bitmap());
+    GUI::Painter painter(layer->get_scratch_edited_bitmap());
 
-    flood_fill(layer->currently_edited_bitmap(), layer_event.position(), m_editor->color_for(layer_event), m_threshold);
+    flood_fill(layer->get_scratch_edited_bitmap(), layer_event.position(), m_editor->color_for(layer_event), m_threshold);
 
-    layer->did_modify_bitmap();
+    layer->did_modify_bitmap(layer->get_scratch_edited_bitmap().rect());
     m_editor->did_complete_action(tool_name());
 }
 

@@ -76,10 +76,11 @@ void LineTool::on_mouseup(Layer* layer, MouseEvent& event)
 
     auto& layer_event = event.layer_event();
     if (layer_event.button() == m_drawing_button) {
-        GUI::Painter painter(layer->currently_edited_bitmap());
+        GUI::Painter painter(layer->get_scratch_edited_bitmap());
         draw_using(painter, m_line_start_position, m_line_end_position, m_editor->color_for(m_drawing_button), m_thickness);
         m_drawing_button = GUI::MouseButton::None;
-        layer->did_modify_bitmap();
+        auto modified_rect = Gfx::IntRect::from_two_points(m_line_start_position, m_line_end_position).inflated(m_thickness * 2, m_thickness * 2);
+        layer->did_modify_bitmap(modified_rect);
         m_editor->update();
         m_editor->did_complete_action(tool_name());
     }
