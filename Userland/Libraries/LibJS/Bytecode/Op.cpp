@@ -757,6 +757,26 @@ void FinishUnwind::replace_references_impl(BasicBlock const& from, BasicBlock co
         m_next_target = Label { to };
 }
 
+void CopyObjectExcludingProperties::replace_references_impl(Register from, Register to)
+{
+    if (m_from_object == from)
+        m_from_object = to;
+
+    for (size_t i = 0; i < m_excluded_names_count; ++i) {
+        if (m_excluded_names[i] == from)
+            m_excluded_names[i] = to;
+    }
+}
+
+void Call::replace_references_impl(Register from, Register to)
+{
+    if (m_callee == from)
+        m_callee = to;
+
+    if (m_this_value == from)
+        m_this_value = to;
+}
+
 ThrowCompletionOr<void> LeaveEnvironment::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     if (m_mode == EnvironmentMode::Lexical)
