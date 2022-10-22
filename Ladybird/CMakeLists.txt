@@ -67,9 +67,9 @@ set(BROWSER_SOURCE_DIR ${SERENITY_SOURCE_DIR}/Userland/Applications/Browser/)
 
 set(SOURCES
     ${BROWSER_SOURCE_DIR}/CookieJar.cpp
+    ${BROWSER_SOURCE_DIR}/History.cpp
     BrowserWindow.cpp
     ConsoleWidget.cpp
-    History.cpp
     ModelTranslator.cpp
     Settings.cpp
     SettingsDialog.cpp
