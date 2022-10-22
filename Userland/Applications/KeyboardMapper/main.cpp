@@ -111,5 +111,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     window->show();
 
+    window->set_ignore_super_key(true);
+
     return app->exec();
 }
