@@ -730,7 +730,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         if (maybe_section.has_value()) {
             outln("String dump of section \'{}\':", string_dump_section);
             StringView data(maybe_section->raw_data(), maybe_section->size());
-            data.for_each_split_view('\0', false, [&data](auto string) {
+            data.for_each_split_view('\0', SplitBehavior::Nothing, [&data](auto string) {
                 auto offset = string.characters_without_null_termination() - data.characters_without_null_termination();
                 outln("[{:6x}] {}", offset, string);
             });

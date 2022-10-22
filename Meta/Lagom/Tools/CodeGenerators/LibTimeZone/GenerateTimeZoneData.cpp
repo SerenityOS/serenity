@@ -400,7 +400,7 @@ static ErrorOr<void> parse_time_zone_coordinates(Core::Stream::BufferedFile& fil
 
         time_zone_data.time_zone_coordinates.set(zone, { latitude, longitude });
 
-        regions.for_each_split_view(',', false, [&](auto region) {
+        regions.for_each_split_view(',', SplitBehavior::Nothing, [&](auto region) {
             auto index = time_zone_data.unique_strings.ensure(zone);
             time_zone_data.time_zone_regions.ensure(region).append(index);
 

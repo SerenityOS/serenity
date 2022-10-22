@@ -239,7 +239,7 @@ ErrorOr<Client::RoutingResult, HttpError> Client::match_route(HTTP::HttpRequest:
     if (!resource.starts_with(m_prefix))
         return HttpError { 404, "unknown command", "The resource doesn't start with the prefix." };
 
-    Vector<StringView> resource_split = resource.substring_view(m_prefix.length()).split_view('/', true);
+    Vector<StringView> resource_split = resource.substring_view(m_prefix.length()).split_view('/', SplitBehavior::KeepEmpty);
     Vector<StringView> parameters;
 
     bool matched_path = false;

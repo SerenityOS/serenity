@@ -112,7 +112,7 @@ static ErrorOr<void> parse_emoji_serenity_data(Core::Stream::BufferedFile& file,
         emoji.group = Unicode::EmojiGroup::SerenityOS;
         emoji.display_order = display_order++;
 
-        line.for_each_split_view(' ', false, [&](auto segment) {
+        line.for_each_split_view(' ', SplitBehavior::Nothing, [&](auto segment) {
             if (segment.starts_with(code_point_header)) {
                 segment = segment.substring_view(code_point_header.length());
 

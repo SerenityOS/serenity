@@ -349,7 +349,7 @@ RefPtr<AST::Node> Shell::immediate_split(AST::ImmediateExpression& invoking_node
                 builder.clear();
             }
         } else {
-            auto split = StringView { value }.split_view(delimiter_str, options.inline_exec_keep_empty_segments);
+            auto split = StringView { value }.split_view(delimiter_str, options.inline_exec_keep_empty_segments ? SplitBehavior::KeepEmpty : SplitBehavior::Nothing);
             split_strings.ensure_capacity(split.size());
             for (auto& entry : split)
                 split_strings.append(entry);

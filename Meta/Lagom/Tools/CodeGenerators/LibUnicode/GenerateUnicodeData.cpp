@@ -223,7 +223,7 @@ static ErrorOr<void> parse_special_casing(Core::Stream::BufferedFile& file, Unic
         if (auto index = line.find('#'); index.has_value())
             line = line.substring_view(0, *index);
 
-        auto segments = line.split_view(';', true);
+        auto segments = line.split_view(';', SplitBehavior::KeepEmpty);
         VERIFY(segments.size() == 5 || segments.size() == 6);
 
         SpecialCasing casing {};
@@ -233,7 +233,7 @@ static ErrorOr<void> parse_special_casing(Core::Stream::BufferedFile& file, Unic
         casing.uppercase_mapping = parse_code_point_list(segments[3]);
 
         if (auto condition = segments[4].trim_whitespace(); !condition.is_empty()) {
-            auto conditions = condition.split_view(' ', true);
+            auto conditions = condition.split_view(' ', SplitBehavior::KeepEmpty);
             VERIFY(conditions.size() == 1 || conditions.size() == 2);
 
             if (conditions.size() == 2) {
@@ -294,7 +294,7 @@ static ErrorOr<void> parse_prop_list(Core::Stream::BufferedFile& file, PropList&
         if (auto index = line.find('#'); index.has_value())
             line = line.substring_view(0, *index);
 
-        auto segments = line.split_view(';', true);
+        auto segments = line.split_view(';', SplitBehavior::KeepEmpty);
         VERIFY(segments.size() == 2);
 
         auto code_point_range = parse_code_point_range(segments[0].trim_whitespace());
@@ -344,7 +344,7 @@ static ErrorOr<void> parse_alias_list(Core::Stream::BufferedFile& file, PropList
         if (current_property != "Binary Properties"sv)
             continue;
 
-        auto segments = line.split_view(';', true);
+        auto segments = line.split_view(';', SplitBehavior::KeepEmpty);
         VERIFY((segments.size() == 2) || (segments.size() == 3));
 
         auto alias = segments[0].trim_whitespace();
@@ -370,7 +370,7 @@ static ErrorOr<void> parse_name_aliases(Core::Stream::BufferedFile& file, Unicod
         if (line.is_empty() || line.starts_with('#'))
             continue;
 
-        auto segments = line.split_view(';', true);
+        auto segments = line.split_view(';', SplitBehavior::KeepEmpty);
         VERIFY(segments.size() == 3);
 
         auto code_point = AK::StringUtils::convert_to_uint_from_hex<u32>(segments[0].trim_whitespace());
@@ -417,7 +417,7 @@ static ErrorOr<void> parse_value_alias_list(Core::Stream::BufferedFile& file, St
         if (auto index = line.find('#'); index.has_value())
             line = line.substring_view(0, *index);
 
-        auto segments = line.split_view(';', true);
+        auto segments = line.split_view(';', SplitBehavior::KeepEmpty);
         auto category = segments[0].trim_whitespace();
 
         if (category != desired_category)
@@ -450,7 +450,7 @@ static ErrorOr<void> parse_normalization_props(Core::Stream::BufferedFile& file,
         if (auto index = line.find('#'); index.has_value())
             line = line.substring_view(0, *index);
 
-        auto segments = line.split_view(';', true);
+        auto segments = line.split_view(';', SplitBehavior::KeepEmpty);
         VERIFY((segments.size() == 2) || (segments.size() == 3));
 
         auto code_point_range = parse_code_point_range(segments[0].trim_whitespace());
@@ -579,7 +579,7 @@ static ErrorOr<void> parse_block_display_names(Core::Stream::BufferedFile& file,
         if (line.is_empty() || line.starts_with('#'))
             continue;
 
-        auto segments = line.split_view(';', true);
+        auto segments = line.split_view(';', SplitBehavior::KeepEmpty);
         VERIFY(segments.size() == 2);
 
         auto code_point_range = parse_code_point_range(segments[0].trim_whitespace());
@@ -610,7 +610,7 @@ static ErrorOr<void> parse_unicode_data(Core::Stream::BufferedFile& file, Unicod
         if (line.is_empty())
             continue;
 
-        auto segments = line.split_view(';', true);
+        auto segments = line.split_view(';', SplitBehavior::KeepEmpty);
         VERIFY(segments.size() == 15);
 
         CodePointData data {};

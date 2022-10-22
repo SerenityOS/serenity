@@ -258,7 +258,7 @@ static Relation parse_relation(StringView relation)
         parsed.symbol = lhs[0];
     }
 
-    rhs.for_each_split_view(set_operator, false, [&](auto set) {
+    rhs.for_each_split_view(set_operator, SplitBehavior::Nothing, [&](auto set) {
         if (auto index = set.find(range_operator); index.has_value()) {
             auto range_begin = set.substring_view(0, *index).to_uint();
             VERIFY(range_begin.has_value());
@@ -313,10 +313,10 @@ static void parse_condition(StringView category, StringView rule, Conditions& ru
     //     and_condition = relation ('and' relation)*
     //
     // This affords some simplicity in that disjunctions are never embedded within a conjunction.
-    condition.for_each_split_view(disjunction_keyword, false, [&](auto disjunction) {
+    condition.for_each_split_view(disjunction_keyword, SplitBehavior::Nothing, [&](auto disjunction) {
         Vector<Relation> conjunctions;
 
-        disjunction.for_each_split_view(conjunction_keyword, false, [&](auto relation) {
+        disjunction.for_each_split_view(conjunction_keyword, SplitBehavior::Nothing, [&](auto relation) {
             conjunctions.append(parse_relation(relation));
         });
 

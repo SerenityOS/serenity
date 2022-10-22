@@ -3577,7 +3577,7 @@ String StringValue::resolve_as_string(RefPtr<Shell> shell)
 Vector<String> StringValue::resolve_as_list(RefPtr<Shell> shell)
 {
     if (is_list()) {
-        auto parts = StringView(m_string).split_view(m_split, m_keep_empty);
+        auto parts = StringView(m_string).split_view(m_split, m_keep_empty ? SplitBehavior::KeepEmpty : SplitBehavior::Nothing);
         Vector<String> result;
         result.ensure_capacity(parts.size());
         for (auto& part : parts)

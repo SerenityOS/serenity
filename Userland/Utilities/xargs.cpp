@@ -245,7 +245,7 @@ ParsedInitialArguments::ParsedInitialArguments(Vector<String>& arguments, String
         if (placeholder.is_empty()) {
             m_all_parts.append({ arg });
         } else {
-            auto parts = arg.view().split_view(placeholder, true);
+            auto parts = arg.view().split_view(placeholder, SplitBehavior::KeepEmpty);
             some_argument_has_placeholder = some_argument_has_placeholder || parts.size() > 1;
             m_all_parts.append(move(parts));
         }

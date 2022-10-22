@@ -38,7 +38,7 @@ enum Status {
 
 static StringView split_at_equals(StringView argument)
 {
-    auto values = argument.split_view('=', true);
+    auto values = argument.split_view('=', SplitBehavior::KeepEmpty);
     if (values.size() < 2) {
         warnln("Unable to parse: {}", argument);
         return {};

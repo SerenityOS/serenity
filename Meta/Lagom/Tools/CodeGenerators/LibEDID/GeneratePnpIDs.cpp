@@ -91,7 +91,7 @@ static ErrorOr<String> decode_html_entities(StringView const& str)
 
 static ErrorOr<ApprovalDate> parse_approval_date(StringView const& str)
 {
-    auto parts = str.trim_whitespace().split_view('/', true);
+    auto parts = str.trim_whitespace().split_view('/', SplitBehavior::KeepEmpty);
     if (parts.size() != 3)
         return Error::from_string_literal("Failed to parse approval date parts (mm/dd/yyyy)");
 

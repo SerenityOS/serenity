@@ -87,7 +87,7 @@ RefPtr<Mesh> WavefrontOBJLoader::load(Core::File& file)
             auto normal_indices = FixedArray<GLuint>::must_create_but_fixme_should_propagate_errors(number_of_vertices);
 
             for (size_t i = 0; i < number_of_vertices; ++i) {
-                auto vertex_parts = face_line.at(i).split_view('/', true);
+                auto vertex_parts = face_line.at(i).split_view('/', SplitBehavior::KeepEmpty);
                 vertex_indices[i] = get_index_value(vertex_parts[0]);
                 tex_coord_indices[i] = (vertex_parts.size() >= 2) ? get_index_value(vertex_parts[1]) : 0;
                 normal_indices[i] = (vertex_parts.size() >= 3) ? get_index_value(vertex_parts[2]) : 0;

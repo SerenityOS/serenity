@@ -522,7 +522,7 @@ inline void TestRunner::print_file_result(JSFileResult const& file_result) const
 #endif
         outln();
         print_modifiers({ FG_GRAY });
-        for (auto& message : test_error.hint.split('\n', true)) {
+        for (auto& message : test_error.hint.split('\n', SplitBehavior::KeepEmpty)) {
             outln("         {}", message);
         }
         print_modifiers({ FG_RED });

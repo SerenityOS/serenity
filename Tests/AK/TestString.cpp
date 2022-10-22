@@ -233,7 +233,7 @@ TEST_CASE(split)
     EXPECT_EQ(parts[0], "a");
     EXPECT_EQ(parts[1], "b");
 
-    parts = test.split(' ', true);
+    parts = test.split(' ', SplitBehavior::KeepEmpty);
     EXPECT_EQ(parts.size(), 5u);
     EXPECT_EQ(parts[0], "a");
     EXPECT_EQ(parts[1], "");
@@ -243,9 +243,9 @@ TEST_CASE(split)
 
     test = "axxbx";
     EXPECT_EQ(test.split('x').size(), 2u);
-    EXPECT_EQ(test.split('x', true).size(), 4u);
+    EXPECT_EQ(test.split('x', SplitBehavior::KeepEmpty).size(), 4u);
     EXPECT_EQ(test.split_view('x').size(), 2u);
-    EXPECT_EQ(test.split_view('x', true).size(), 4u);
+    EXPECT_EQ(test.split_view('x', SplitBehavior::KeepEmpty).size(), 4u);
 }
 
 TEST_CASE(builder_zero_initial_capacity)

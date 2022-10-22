@@ -65,7 +65,7 @@ UNMAP_AFTER_INIT void CommandLine::add_arguments(Vector<StringView> const& args)
             continue;
         }
 
-        auto pair = str.split_view('=', false);
+        auto pair = str.split_view('=');
         VERIFY(pair.size() == 2 || pair.size() == 1);
 
         if (pair.size() == 1) {

@@ -211,7 +211,7 @@ Optional<HttpRequest> HttpRequest::from_raw_request(ReadonlyBytes raw_request)
         return {};
 
     request.m_headers = move(headers);
-    auto url_parts = resource.split_limit('?', 2, true);
+    auto url_parts = resource.split_limit('?', 2, SplitBehavior::KeepEmpty);
 
     request.m_url.set_cannot_be_a_base_url(true);
     if (url_parts.size() == 2) {

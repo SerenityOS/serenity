@@ -138,7 +138,7 @@ int OptionParser::getopt()
 
 bool OptionParser::lookup_short_option(char option, int& needs_value) const
 {
-    Vector<StringView> parts = m_short_options.split_view(option, true);
+    Vector<StringView> parts = m_short_options.split_view(option, SplitBehavior::KeepEmpty);
 
     VERIFY(parts.size() <= 2);
     if (parts.size() < 2) {

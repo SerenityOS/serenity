@@ -73,7 +73,7 @@ struct group* getgrnam(char const* name)
 
 static bool parse_grpdb_entry(String const& line)
 {
-    auto parts = line.split_view(':', true);
+    auto parts = line.split_view(':', SplitBehavior::KeepEmpty);
     if (parts.size() != 4) {
         warnln("getgrent(): Malformed entry on line {}: '{}' has {} parts", s_line_number, line, parts.size());
         return false;

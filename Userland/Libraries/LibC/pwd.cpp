@@ -73,7 +73,7 @@ struct passwd* getpwnam(char const* name)
 
 static bool parse_pwddb_entry(String const& line)
 {
-    auto parts = line.split_view(':', true);
+    auto parts = line.split_view(':', SplitBehavior::KeepEmpty);
     if (parts.size() != 7) {
         dbgln("getpwent(): Malformed entry on line {}", s_line_number);
         return false;

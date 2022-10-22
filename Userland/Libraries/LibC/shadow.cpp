@@ -64,7 +64,7 @@ struct spwd* getspnam(char const* name)
 
 static bool parse_shadow_entry(String const& line)
 {
-    auto parts = line.split_view(':', true);
+    auto parts = line.split_view(':', SplitBehavior::KeepEmpty);
     if (parts.size() != 9) {
         dbgln("getspent(): Malformed entry on line {}", s_line_number);
         return false;

@@ -125,7 +125,7 @@ public:
         if (string.is_null())
             return {};
 
-        auto const parts = string.split_view(':', true);
+        auto const parts = string.split_view(':', SplitBehavior::KeepEmpty);
         if (parts.is_empty())
             return {};
         if (parts.size() > 9) {

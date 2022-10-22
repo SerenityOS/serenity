@@ -97,18 +97,19 @@ StringView String::substring_view(size_t start) const
     return { characters() + start, length() - start };
 }
 
-Vector<String> String::split(char separator, bool keep_empty) const
+Vector<String> String::split(char separator, SplitBehavior split_behavior) const
 {
-    return split_limit(separator, 0, keep_empty);
+    return split_limit(separator, 0, split_behavior);
 }
 
-Vector<String> String::split_limit(char separator, size_t limit, bool keep_empty) const
+Vector<String> String::split_limit(char separator, size_t limit, SplitBehavior split_behavior) const
 {
     if (is_empty())
         return {};
 
     Vector<String> v;
     size_t substart = 0;
+    bool keep_empty = has_flag(split_behavior, SplitBehavior::KeepEmpty);
     for (size_t i = 0; i < length() && (v.size() + 1) != limit; ++i) {
         char ch = characters()[i];
         if (ch == separator) {
@@ -124,13 +125,14 @@ Vector<String> String::split_limit(char separator, size_t limit, bool keep_empty
     return v;
 }
 
-Vector<StringView> String::split_view(Function<bool(char)> separator, bool keep_empty) const
+Vector<StringView> String::split_view(Function<bool(char)> separator, SplitBehavior split_behavior) const
 {
     if (is_empty())
         return {};
 
     Vector<StringView> v;
     size_t substart = 0;
+    bool keep_empty = has_flag(split_behavior, SplitBehavior::KeepEmpty);
     for (size_t i = 0; i < length(); ++i) {
         char ch = characters()[i];
         if (separator(ch)) {
@@ -146,9 +148,9 @@ Vector<StringView> String::split_view(Function<bool(char)> separator, bool keep_
     return v;
 }
 
-Vector<StringView> String::split_view(char const separator, bool keep_empty) const
+Vector<StringView> String::split_view(char const separator, SplitBehavior split_behavior) const
 {
-    return split_view([separator](char ch) { return ch == separator; }, keep_empty);
+    return split_view([separator](char ch) { return ch == separator; }, split_behavior);
 }
 
 ByteBuffer String::to_byte_buffer() const

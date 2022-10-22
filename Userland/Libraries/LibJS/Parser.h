@@ -192,7 +192,7 @@ public:
             // line terminators to \n is easier than splitting using all different LT characters.
             String source_string = source.replace("\r\n"sv, "\n"sv, ReplaceMode::All).replace("\r"sv, "\n"sv, ReplaceMode::All).replace(LINE_SEPARATOR_STRING, "\n"sv, ReplaceMode::All).replace(PARAGRAPH_SEPARATOR_STRING, "\n"sv, ReplaceMode::All);
             StringBuilder builder;
-            builder.append(source_string.split_view('\n', true)[position.value().line - 1]);
+            builder.append(source_string.split_view('\n', SplitBehavior::KeepEmpty)[position.value().line - 1]);
             builder.append('\n');
             for (size_t i = 0; i < position.value().column - 1; ++i)
                 builder.append(spacer);
