@@ -1415,4 +1415,15 @@ void ConnectionFromClient::notify_about_theme_change()
     async_update_system_theme(Gfx::current_system_theme_buffer());
 }
 
+void ConnectionFromClient::set_ignore_super_key(i32 window_id, bool ignore_super_key)
+{
+    auto* window = window_from_id(window_id);
+    if (!window) {
+        did_misbehave("SetIgnoreSuperKey:: Bad window ID");
+        return;
+    }
+
+    window->set_ignore_super_key(ignore_super_key);
+}
+
 }

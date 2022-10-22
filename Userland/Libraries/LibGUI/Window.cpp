@@ -1062,6 +1062,15 @@ void Window::update_min_size()
     }
 }
 
+void Window::set_ignore_super_key(bool ignore_super_key)
+{
+    if (m_should_ignore_super_key == ignore_super_key)
+        return;
+    m_should_ignore_super_key = ignore_super_key;
+
+    ConnectionToWindowServer::the().async_set_ignore_super_key(m_window_id, ignore_super_key);
+}
+
 void Window::schedule_relayout()
 {
     if (m_layout_pending || !is_visible())

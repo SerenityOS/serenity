@@ -554,6 +554,13 @@ void Window::set_frameless(bool frameless)
     }
 }
 
+void Window::set_ignore_super_key(bool ignore_super_key)
+{
+    if (m_should_ignore_super_key == ignore_super_key)
+        return;
+    m_should_ignore_super_key = ignore_super_key;
+}
+
 void Window::invalidate(bool invalidate_frame, bool re_render_frame)
 {
     m_invalidated = true;

@@ -56,6 +56,9 @@ public:
     bool is_resizable() const { return m_resizable; }
     void set_resizable(bool resizable) { m_resizable = resizable; }
 
+    bool should_ignore_super_key() const { return m_should_ignore_super_key; }
+    void set_ignore_super_key(bool ignore_super_key = false);
+
     bool is_obeying_widget_min_size() { return m_obey_widget_min_size; }
     void set_obey_widget_min_size(bool);
 
@@ -318,6 +321,7 @@ private:
     bool m_visible { false };
     bool m_moved_by_client { false };
     bool m_blocks_emoji_input { false };
+    bool m_should_ignore_super_key { false };
 };
 
 }

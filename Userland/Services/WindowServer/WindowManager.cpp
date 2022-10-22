@@ -1585,7 +1585,7 @@ void WindowManager::process_key_event(KeyEvent& event)
         return;
     }
 
-    if (event.type() == Event::KeyDown && event.key() == Key_Super) {
+    if (event.type() == Event::KeyDown && event.key() == Key_Super && !m_current_window_stack->active_window()->should_ignore_super_key()) {
         m_previous_event_was_super_keydown = true;
     } else if (m_previous_event_was_super_keydown) {
         m_previous_event_was_super_keydown = false;

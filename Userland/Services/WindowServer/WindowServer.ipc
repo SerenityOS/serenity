@@ -187,4 +187,6 @@ endpoint WindowServer
     remove_window_stealing(i32 window_id) => ()
 
     set_always_on_top(i32 window_id, bool always_on_top) => ()
+
+    set_ignore_super_key(i32 window_id, bool ignore_super_key) => ()
 }

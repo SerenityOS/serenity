@@ -317,6 +317,9 @@ public:
 
     bool should_show_menubar() const { return m_should_show_menubar; }
 
+    bool should_ignore_super_key() const { return m_should_ignore_super_key; }
+    void set_ignore_super_key(bool);
+
     Optional<int> progress() const { return m_progress; }
     void set_progress(Optional<int>);
 
@@ -461,6 +464,7 @@ private:
     bool m_should_show_menubar { true };
     WindowStack* m_window_stack { nullptr };
     RefPtr<Animation> m_animation;
+    bool m_should_ignore_super_key { false };
 
 public:
     using List = IntrusiveList<&Window::m_list_node>;
