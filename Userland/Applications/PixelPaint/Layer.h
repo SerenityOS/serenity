@@ -2,6 +2,7 @@
  * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2022, the SerenityOS developers.
  * Copyright (c) 2022, Tobias Christiansen <tobyase@serenityos.org>
+ * Copyright (c) 2022, Timothy Slater <tslater2006@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -45,6 +46,7 @@ public:
     Gfx::Bitmap* mask_bitmap() { return m_mask_bitmap; }
 
     void create_mask();
+    Gfx::Bitmap& get_scratch_edited_bitmap();
 
     Gfx::IntSize size() const { return content_bitmap().size(); }
 
@@ -102,6 +104,7 @@ private:
     String m_name;
     Gfx::IntPoint m_location;
     NonnullRefPtr<Gfx::Bitmap> m_content_bitmap;
+    RefPtr<Gfx::Bitmap> m_scratch_edited_bitmap { nullptr };
     RefPtr<Gfx::Bitmap> m_mask_bitmap { nullptr };
     NonnullRefPtr<Gfx::Bitmap> m_cached_display_bitmap;
 

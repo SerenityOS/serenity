@@ -87,10 +87,11 @@ void RectangleTool::on_mouseup(Layer* layer, MouseEvent& event)
         return;
 
     if (event.layer_event().button() == m_drawing_button) {
-        GUI::Painter painter(layer->currently_edited_bitmap());
+        GUI::Painter painter(layer->get_scratch_edited_bitmap());
         draw_using(painter, m_rectangle_start_position, m_rectangle_end_position, m_thickness, m_corner_radius);
         m_drawing_button = GUI::MouseButton::None;
-        layer->did_modify_bitmap();
+        auto modified_rect = Gfx::IntRect::from_two_points(m_rectangle_start_position, m_rectangle_end_position).inflated(m_thickness * 2, m_thickness * 2);
+        layer->did_modify_bitmap(modified_rect);
         m_editor->update();
         m_editor->did_complete_action(tool_name());
     }
