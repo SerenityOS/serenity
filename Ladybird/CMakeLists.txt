@@ -63,10 +63,12 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 find_package(Qt6 REQUIRED COMPONENTS Core Widgets Network)
 
+set(BROWSER_SOURCE_DIR ${SERENITY_SOURCE_DIR}/Userland/Applications/Browser/)
+
 set(SOURCES
+    ${BROWSER_SOURCE_DIR}/CookieJar.cpp
     BrowserWindow.cpp
     ConsoleWidget.cpp
-    CookieJar.cpp
     History.cpp
     ModelTranslator.cpp
     Settings.cpp
@@ -84,6 +86,7 @@ qt_add_executable(ladybird ${SOURCES}
 target_link_libraries(ladybird PRIVATE Qt::Widgets Qt::Network LibWeb LibWebSocket LibGUI LibWebView LibGL LibSoftGPU LibMain)
 
 target_include_directories(ladybird PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
+target_include_directories(ladybird PRIVATE ${SERENITY_SOURCE_DIR}/Userland/Applications/)
 target_include_directories(ladybird PRIVATE ${SERENITY_SOURCE_DIR}/Userland/Services/)
 
 set_target_properties(ladybird PROPERTIES

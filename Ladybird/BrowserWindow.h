@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "CookieJar.h"
 #include "Tab.h"
 #include <AK/NonnullOwnPtrVector.h>
+#include <Browser/CookieJar.h>
 #include <LibCore/Forward.h>
 #include <QIcon>
 #include <QLineEdit>
