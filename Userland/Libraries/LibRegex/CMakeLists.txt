@@ -11,4 +11,4 @@ if(SERENITYOS)
 endif()
 
 serenity_lib(LibRegex regex)
-target_link_libraries(LibRegex LibC LibCore LibUnicode)
+target_link_libraries(LibRegex LibCore LibUnicode)

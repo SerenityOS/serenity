@@ -6,4 +6,3 @@ set(SOURCES
 )
 
 serenity_lib(LibDiff diff)
-target_link_libraries(LibDiff LibC)

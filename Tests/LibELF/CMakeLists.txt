@@ -4,6 +4,7 @@ macro(add_dlopen_lib NAME FUNCTION)
     target_compile_definitions(${NAME} PRIVATE -DFUNCTION=${FUNCTION})
     # LibLine is not special, just an "external" dependency
     target_link_libraries(${NAME} LibLine)
+    serenity_set_implicit_links(${NAME})
 	 # Avoid execution by the test runner
     install(TARGETS ${NAME}
             DESTINATION usr/Tests/LibELF

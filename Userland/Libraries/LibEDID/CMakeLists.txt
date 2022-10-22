@@ -8,5 +8,4 @@ set(SOURCES
 )
 
 serenity_lib(LibEDID edid)
-target_link_libraries(LibEDID LibC)
 target_compile_definitions(LibEDID PRIVATE ENABLE_PNP_IDS_DATA=$<BOOL:${ENABLE_PNP_IDS_DOWNLOAD}>)

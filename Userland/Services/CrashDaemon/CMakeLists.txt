@@ -9,4 +9,4 @@ set(SOURCES
 )
 
 serenity_bin(CrashDaemon)
-target_link_libraries(CrashDaemon LibC LibCompress LibCore LibCoredump LibMain)
+target_link_libraries(CrashDaemon LibCompress LibCore LibCoredump LibMain)

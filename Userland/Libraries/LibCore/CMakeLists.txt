@@ -45,4 +45,4 @@ if (NOT ANDROID AND NOT WIN32)
 endif()
 
 serenity_lib(LibCore core)
-target_link_libraries(LibCore LibC LibCrypt LibSystem)
+target_link_libraries(LibCore LibCrypt LibSystem)
