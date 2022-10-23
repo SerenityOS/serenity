@@ -40,7 +40,7 @@ static constexpr auto page_size = 64 * KiB;
 // These are not concretely defined by the spec, so the values are only defined by us.
 static constexpr auto minimum_stack_space_to_keep_free = 256 * KiB; // Note: Value is arbitrary and chosen by testing with ASAN
 static constexpr auto max_allowed_executed_instructions_per_call = 256 * 1024 * 1024;
-static constexpr auto max_allowed_vector_size = 2 * MiB;
+static constexpr auto max_allowed_vector_size = 500 * MiB;
 static constexpr auto max_allowed_function_locals_per_type = 42069; // Note: VERY arbitrary.
 
 }
