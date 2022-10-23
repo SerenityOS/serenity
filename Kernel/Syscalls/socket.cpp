@@ -194,8 +194,11 @@ ErrorOr<FlatPtr> Process::sys$sendmsg(int sockfd, Userspace<const struct msghdr*
         return ENOTSOCK;
 
     auto& socket = *description->socket();
-    if (socket.is_shut_down_for_writing())
+    if (socket.is_shut_down_for_writing()) {
+        if ((flags & MSG_NOSIGNAL) == 0)
+            Thread::current()->send_signal(SIGPIPE, &Process::current());
         return EPIPE;
+    }
     auto data_buffer = TRY(UserOrKernelBuffer::for_user_buffer((u8*)iovs[0].iov_base, iovs[0].iov_len));
 
     while (true) {
@@ -211,7 +214,14 @@ ErrorOr<FlatPtr> Process::sys$sendmsg(int sockfd, Userspace<const struct msghdr*
             // TODO: handle exceptions in unblock_flags
         }
 
-        auto bytes_sent = TRY(socket.sendto(*description, data_buffer, iovs[0].iov_len, flags, user_addr, addr_length));
+        auto bytes_sent_or_error = socket.sendto(*description, data_buffer, iovs[0].iov_len, flags, user_addr, addr_length);
+        if (bytes_sent_or_error.is_error()) {
+            if ((flags & MSG_NOSIGNAL) == 0 && bytes_sent_or_error.error().code() == EPIPE)
+                Thread::current()->send_signal(SIGPIPE, &Process::current());
+            return bytes_sent_or_error.release_error();
+        }
+
+        auto bytes_sent = bytes_sent_or_error.release_value();
         if (bytes_sent > 0)
             return bytes_sent;
     }
