@@ -23,6 +23,17 @@
 
 namespace Web {
 
+static JS::GCPtr<DOM::Node> dom_node_for_event_dispatch(Painting::Paintable const& paintable)
+{
+    if (auto node = paintable.mouse_event_target())
+        return node;
+    if (auto node = paintable.dom_node())
+        return node;
+    if (auto* layout_parent = paintable.layout_node().parent())
+        return layout_parent->dom_node();
+    return nullptr;
+}
+
 static Gfx::StandardCursor cursor_css_to_gfx(Optional<CSS::Cursor> cursor)
 {
     if (!cursor.has_value()) {
@@ -147,9 +158,7 @@ bool EventHandler::handle_mousewheel(Gfx::IntPoint const& position, unsigned but
     if (paintable) {
         paintable->handle_mousewheel({}, position, buttons, modifiers, wheel_delta_x, wheel_delta_y);
 
-        JS::GCPtr<DOM::Node> node = paintable->mouse_event_target();
-        if (!node)
-            node = paintable->dom_node();
+        auto node = dom_node_for_event_dispatch(*paintable);
 
         if (node) {
             // FIXME: Support wheel events in nested browsing contexts.
@@ -211,9 +220,7 @@ bool EventHandler::handle_mouseup(Gfx::IntPoint const& position, unsigned button
     }
 
     if (paintable) {
-        JS::GCPtr<DOM::Node> node = paintable->mouse_event_target();
-        if (!node)
-            node = paintable->dom_node();
+        auto node = dom_node_for_event_dispatch(*paintable);
 
         if (node) {
             if (is<HTML::HTMLIFrameElement>(*node)) {
@@ -328,9 +335,7 @@ bool EventHandler::handle_mousedown(Gfx::IntPoint const& position, unsigned butt
         // FIXME: Handle other values for pointer-events.
         VERIFY(pointer_events != CSS::PointerEvents::None);
 
-        node = paintable->mouse_event_target();
-        if (!node)
-            node = paintable->dom_node();
+        node = dom_node_for_event_dispatch(*paintable);
         document->set_hovered_node(node);
 
         if (paintable->wants_mouse_events()) {
@@ -434,9 +439,7 @@ bool EventHandler::handle_mousemove(Gfx::IntPoint const& position, unsigned butt
                 page->client().page_did_request_cursor_change(Gfx::StandardCursor::None);
         }
 
-        JS::GCPtr<DOM::Node> node = paintable->mouse_event_target();
-        if (!node)
-            node = paintable->dom_node();
+        auto node = dom_node_for_event_dispatch(*paintable);
 
         if (node && is<HTML::HTMLIFrameElement>(*node)) {
             if (auto* nested_browsing_context = static_cast<HTML::HTMLIFrameElement&>(*node).nested_browsing_context())
@@ -543,9 +546,7 @@ bool EventHandler::handle_doubleclick(Gfx::IntPoint const& position, unsigned bu
     if (pointer_events == CSS::PointerEvents::None)
         return false;
 
-    JS::GCPtr<DOM::Node> node = paintable->mouse_event_target();
-    if (!node)
-        node = paintable->dom_node();
+    auto node = dom_node_for_event_dispatch(*paintable);
 
     if (paintable->wants_mouse_events()) {
         // FIXME: Handle double clicks.
