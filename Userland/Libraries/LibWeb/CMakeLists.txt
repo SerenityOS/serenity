@@ -3,6 +3,7 @@ include(libweb_generators)
 set(SOURCES
     Bindings/AudioConstructor.cpp
     Bindings/CSSNamespace.cpp
+    Bindings/FetchMethod.cpp
     Bindings/HostDefined.cpp
     Bindings/ImageConstructor.cpp
     Bindings/Intrinsics.cpp
@@ -126,6 +127,7 @@ set(SOURCES
     Fetch/Fetching/Fetching.cpp
     Fetch/Fetching/PendingResponse.cpp
     Fetch/Fetching/RefCountedFlag.cpp
+    Fetch/FetchMethod.cpp
     Fetch/Headers.cpp
     Fetch/HeadersIterator.cpp
     Fetch/Infrastructure/ConnectionTimingInfo.cpp

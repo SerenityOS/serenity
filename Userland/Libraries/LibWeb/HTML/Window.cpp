@@ -17,6 +17,7 @@
 #include <LibTextCodec/Decoder.h>
 #include <LibWeb/Bindings/CSSNamespace.h>
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
+#include <LibWeb/Bindings/FetchMethod.h>
 #include <LibWeb/Bindings/LocationObject.h>
 #include <LibWeb/Bindings/Replaceable.h>
 #include <LibWeb/Bindings/WindowExposedInterfaces.h>
@@ -763,6 +764,8 @@ void Window::initialize_web_interfaces(Badge<WindowEnvironmentSettingsObject>)
     define_native_function(realm, "getSelection", get_selection, 0, attr);
 
     define_native_function(realm, "postMessage", post_message, 1, attr);
+
+    define_native_function(realm, "fetch", Bindings::fetch, 1, attr);
 
     // FIXME: These properties should be [Replaceable] according to the spec, but [Writable+Configurable] is the closest we have.
     define_native_accessor(realm, "scrollX", scroll_x_getter, {}, attr);
