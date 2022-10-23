@@ -148,7 +148,7 @@ private:
     virtual void will_be_destroyed() override;
     virtual void after_inserting() override;
 
-    bool ioctl_requires_ownership(unsigned request) const;
+    ErrorOr<bool> ioctl_requires_ownership(unsigned request) const;
 
     OwnPtr<Memory::Region> m_framebuffer_region;
     OwnPtr<Memory::Region> m_fake_writes_framebuffer_region;
