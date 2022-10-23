@@ -155,17 +155,19 @@ void StackingContext::paint_internal(PaintContext& context) const
     paint_descendants(context, m_box, StackingContextPaintPhase::Foreground);
 
     // Draw positioned descendants with z-index `0` or `auto` in tree order. (step 8)
+    // NOTE: Non-positioned descendants that establish stacking contexts with z-index `0` or `auto` are also painted here.
     // FIXME: There's more to this step that we have yet to understand and implement.
     m_box.paint_box()->for_each_in_subtree_of_type<PaintableBox>([&](PaintableBox const& paint_box) {
-        if (!paint_box.layout_box().is_positioned())
-            return TraversalDecision::Continue;
         auto const& z_index = paint_box.computed_values().z_index();
-        if (z_index.has_value() && z_index.value() != 0)
-            return TraversalDecision::Continue;
         if (auto* child = paint_box.stacking_context()) {
-            paint_child(child);
+            if (!z_index.has_value() || z_index.value() == 0)
+                paint_child(child);
             return TraversalDecision::SkipChildrenAndContinue;
         }
+        if (z_index.has_value() && z_index.value() != 0)
+            return TraversalDecision::Continue;
+        if (!paint_box.layout_box().is_positioned())
+            return TraversalDecision::Continue;
         // At this point, `paint_box` is a positioned descendant with z-index: auto
         // but no stacking context of its own.
         // FIXME: This is basically duplicating logic found elsewhere in this same function. Find a way to make this more elegant.
