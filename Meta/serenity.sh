@@ -189,22 +189,20 @@ find_newest_compiler() {
 
 pick_host_compiler() {
     if is_supported_compiler "$CC" && is_supported_compiler "$CXX"; then
-        CMAKE_ARGS+=("-DCMAKE_C_COMPILER=$CC")
-        CMAKE_ARGS+=("-DCMAKE_CXX_COMPILER=$CXX")
         return
     fi
 
     find_newest_compiler egcc gcc gcc-11 gcc-12 /usr/local/bin/gcc-11 /opt/homebrew/bin/gcc-11
     if is_supported_compiler "$HOST_COMPILER"; then
-        CMAKE_ARGS+=("-DCMAKE_C_COMPILER=$HOST_COMPILER")
-        CMAKE_ARGS+=("-DCMAKE_CXX_COMPILER=${HOST_COMPILER/gcc/g++}")
+        export CC="${HOST_COMPILER}"
+        export CXX="${HOST_COMPILER/gcc/g++}"
         return
     fi
 
     find_newest_compiler clang clang-13 clang-14 clang-15 /opt/homebrew/opt/llvm/bin/clang
     if is_supported_compiler "$HOST_COMPILER"; then
-        CMAKE_ARGS+=("-DCMAKE_C_COMPILER=$HOST_COMPILER")
-        CMAKE_ARGS+=("-DCMAKE_CXX_COMPILER=${HOST_COMPILER/clang/clang++}")
+        export CC="${HOST_COMPILER}"
+        export CXX="${HOST_COMPILER/clang/clang++}"
         return
     fi
 
@@ -213,7 +211,10 @@ pick_host_compiler() {
 
 cmd_with_target() {
     is_valid_target || ( >&2 echo "Unknown target: $TARGET"; usage )
+
     pick_host_compiler
+    CMAKE_ARGS+=("-DCMAKE_C_COMPILER=${CC}")
+    CMAKE_ARGS+=("-DCMAKE_CXX_COMPILER=${CXX}")
 
     if [ ! -d "$SERENITY_SOURCE_DIR" ]; then
         SERENITY_SOURCE_DIR="$(get_top_dir)"
