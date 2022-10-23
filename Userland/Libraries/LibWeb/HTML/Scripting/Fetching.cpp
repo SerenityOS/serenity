@@ -8,6 +8,8 @@
 #include <LibWeb/HTML/Scripting/Environments.h>
 #include <LibWeb/HTML/Scripting/Fetching.h>
 #include <LibWeb/HTML/Scripting/ModuleScript.h>
+#include <LibWeb/HTML/Window.h>
+#include <LibWeb/Infra/Strings.h>
 #include <LibWeb/Loader/LoadRequest.h>
 #include <LibWeb/Loader/ResourceLoader.h>
 #include <LibWeb/MimeSniff/MimeType.h>
@@ -38,32 +40,183 @@ String module_type_from_module_request(JS::ModuleRequest const& module_request)
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#resolve-a-module-specifier
-AK::URL resolve_module_specifier(JS::ModuleRequest const& module_request, AK::URL const& base_url)
+WebIDL::ExceptionOr<AK::URL> resolve_module_specifier(Optional<Script&> referring_script, String const& specifier)
 {
-    auto specifier = module_request.module_specifier;
+    // 1. Let settingsObject and baseURL be null.
+    Optional<EnvironmentSettingsObject&> settings_object;
+    Optional<AK::URL const&> base_url;
 
-    // 1. Apply the URL parser to specifier. If the result is not failure, return the result.
-    auto result = URLParser::parse(specifier);
-    if (result.is_valid())
-        return result;
+    // 2. If referringScript is not null, then:
+    if (referring_script.has_value()) {
+        // 1. Set settingsObject to referringScript's settings object.
+        settings_object = referring_script->settings_object();
 
-    // 2. If specifier does not start with the character U+002F SOLIDUS (/), the two-character sequence U+002E FULL STOP,
-    //    U+002F SOLIDUS (./), or the three-character sequence U+002E FULL STOP, U+002E FULL STOP, U+002F SOLIDUS (../), return failure.
-    if (!specifier.starts_with("/"sv) && !specifier.starts_with("./"sv) && !specifier.starts_with("../"sv))
+        // 2. Set baseURL to referringScript's base URL.
+        base_url = referring_script->base_url();
+    }
+    // 3. Otherwise:
+    else {
+        // 1. Assert: there is a current settings object.
+        // NOTE: This is handled by the current_settings_object() accessor.
+
+        // 2. Set settingsObject to the current settings object.
+        settings_object = current_settings_object();
+
+        // 3. Set baseURL to settingsObject's API base URL.
+        base_url = settings_object->api_base_url();
+    }
+
+    // 4. Let importMap be an empty import map.
+    ImportMap import_map;
+
+    // 5. If settingsObject's global object implements Window, then set importMap to settingsObject's global object's import map.
+    if (is<Window>(settings_object->global_object()))
+        import_map = verify_cast<Window>(settings_object->global_object()).import_map();
+
+    // 6. Let baseURLString be baseURL, serialized.
+    auto base_url_string = base_url->serialize();
+
+    // 7. Let asURL be the result of resolving a URL-like module specifier given specifier and baseURL.
+    auto as_url = resolve_url_like_module_specifier(specifier, *base_url);
+
+    // 8. Let normalizedSpecifier be the serialization of asURL, if asURL is non-null; otherwise, specifier.
+    auto normalized_specifier = as_url.has_value() ? as_url->serialize() : specifier;
+
+    // 9. For each scopePrefix → scopeImports of importMap's scopes:
+    for (auto const& entry : import_map.scopes()) {
+        // FIXME: Clarify if the serialization steps need to be run here. The steps below assume
+        //        scopePrefix to be a string.
+        auto const& scope_prefix = entry.key.serialize();
+        auto const& scope_imports = entry.value;
+
+        // 1. If scopePrefix is baseURLString, or if scopePrefix ends with U+002F (/) and scopePrefix is a code unit prefix of baseURLString, then:
+        if (scope_prefix == base_url_string || (scope_prefix.ends_with("/"sv) && Infra::is_code_unit_prefix(scope_prefix, base_url_string))) {
+            // 1. Let scopeImportsMatch be the result of resolving an imports match given normalizedSpecifier, asURL, and scopeImports.
+            auto scope_imports_match = TRY(resolve_imports_match(normalized_specifier, as_url, scope_imports));
+
+            // 2. If scopeImportsMatch is not null, then return scopeImportsMatch.
+            if (scope_imports_match.has_value())
+                return scope_imports_match.release_value();
+        }
+    }
+
+    // 10. Let topLevelImportsMatch be the result of resolving an imports match given normalizedSpecifier, asURL, and importMap's imports.
+    auto top_level_imports_match = TRY(resolve_imports_match(normalized_specifier, as_url, import_map.imports()));
+
+    // 11. If topLevelImportsMatch is not null, then return topLevelImportsMatch.
+    if (top_level_imports_match.has_value())
+        return top_level_imports_match.release_value();
+
+    // 12. If asURL is not null, then return asURL.
+    if (as_url.has_value())
+        return as_url.release_value();
+
+    // 13. Throw a TypeError indicating that specifier was a bare specifier, but was not remapped to anything by importMap.
+    return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, String::formatted("Failed to resolve non relative module specifier '{}' from an import map.", specifier) };
+}
+
+// https://html.spec.whatwg.org/multipage/webappapis.html#resolving-an-imports-match
+WebIDL::ExceptionOr<Optional<AK::URL>> resolve_imports_match(String const& normalized_specifier, Optional<AK::URL> as_url, ModuleSpecifierMap const& specifier_map)
+{
+    // 1. For each specifierKey → resolutionResult of specifierMap:
+    for (auto const& [specifier_key, resolution_result] : specifier_map) {
+        // 1. If specifierKey is normalizedSpecifier, then:
+        if (specifier_key == normalized_specifier) {
+            // 1. If resolutionResult is null, then throw a TypeError indicating that resolution of specifierKey was blocked by a null entry.
+            if (!resolution_result.has_value())
+                return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, String::formatted("Import resolution of '{}' was blocked by a null entry.", specifier_key) };
+
+            // 2. Assert: resolutionResult is a URL.
+            VERIFY(resolution_result->is_valid());
+
+            // 3. Return resolutionResult.
+            return resolution_result;
+        }
+
+        // 2. If all of the following are true:
+        if (
+            // - specifierKey ends with U+002F (/);
+            specifier_key.ends_with("/"sv) &&
+            // - specifierKey is a code unit prefix of normalizedSpecifier; and
+            Infra::is_code_unit_prefix(specifier_key, normalized_specifier) &&
+            // - either asURL is null, or asURL is special,
+            (!as_url.has_value() || as_url->is_special())
+            // then:
+        ) {
+            // 1. If resolutionResult is null, then throw a TypeError indicating that the resolution of specifierKey was blocked by a null entry.
+            if (!resolution_result.has_value())
+                return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, String::formatted("Import resolution of '{}' was blocked by a null entry.", specifier_key) };
+
+            // 2. Assert: resolutionResult is a URL.
+            VERIFY(resolution_result->is_valid());
+
+            // 3. Let afterPrefix be the portion of normalizedSpecifier after the initial specifierKey prefix.
+            // FIXME: Clarify if this is meant by the portion after the initial specifierKey prefix.
+            auto after_prefix = normalized_specifier.substring(specifier_key.length());
+
+            // 4. Assert: resolutionResult, serialized, ends with U+002F (/), as enforced during parsing.
+            VERIFY(resolution_result->serialize().ends_with("/"sv));
+
+            // 5. Let url be the result of URL parsing afterPrefix with resolutionResult.
+            auto url = URLParser::parse(after_prefix, &*resolution_result);
+
+            // 6. If url is failure, then throw a TypeError indicating that resolution of normalizedSpecifier was blocked since the afterPrefix portion
+            //    could not be URL-parsed relative to the resolutionResult mapped to by the specifierKey prefix.
+            if (!url.is_valid())
+                return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, String::formatted("Could not resolve '{}' as the after prefix portion could not be URL-parsed.", normalized_specifier) };
+
+            // 7. Assert: url is a URL.
+            VERIFY(url.is_valid());
+
+            // 8. If the serialization of resolutionResult is not a code unit prefix of the serialization of url, then throw a TypeError indicating
+            //    that the resolution of normalizedSpecifier was blocked due to it backtracking above its prefix specifierKey.
+            if (!Infra::is_code_unit_prefix(resolution_result->serialize(), url.serialize()))
+                return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, String::formatted("Could not resolve '{}' as it backtracks above its prefix specifierKey.", normalized_specifier) };
+
+            // 9. Return url.
+            return url;
+        }
+    }
+
+    // 2. Return null.
+    return Optional<AK::URL> {};
+}
+
+// https://html.spec.whatwg.org/multipage/webappapis.html#resolving-a-url-like-module-specifier
+Optional<AK::URL> resolve_url_like_module_specifier(String const& specifier, AK::URL const& base_url)
+{
+    // 1. If specifier starts with "/", "./", or "../", then:
+    if (specifier.starts_with("/"sv) || specifier.starts_with("./"sv) || specifier.starts_with("../"sv)) {
+        // 1. Let url be the result of URL parsing specifier with baseURL.
+        auto url = URLParser::parse(specifier, &base_url);
+
+        // 2. If url is failure, then return null.
+        if (!url.is_valid())
+            return {};
+
+        // 3. Return url.
+        return url;
+    }
+
+    // 2. Let url be the result of URL parsing specifier (with no base URL).
+    auto url = URLParser::parse(specifier);
+
+    // 3. If url is failure, then return null.
+    if (!url.is_valid())
         return {};
 
-    // 3. Return the result of applying the URL parser to specifier with base URL.
-    return URLParser::parse(specifier, &base_url);
+    // 4. Return url.
+    return url;
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#internal-module-script-graph-fetching-procedure
-void fetch_internal_module_script_graph(JS::ModuleRequest const& module_request, EnvironmentSettingsObject& fetch_client_settings_object, StringView destination, EnvironmentSettingsObject& module_script_settings_object, HashTable<ModuleLocationTuple> const& visited_set, AK::URL const& referrer, ModuleCallback on_complete)
+void fetch_internal_module_script_graph(JS::ModuleRequest const& module_request, EnvironmentSettingsObject& fetch_client_settings_object, StringView destination, Script& referring_script, HashTable<ModuleLocationTuple> const& visited_set, ModuleCallback on_complete)
 {
-    // 1. Let url be the result of resolving a module specifier given referrer and moduleRequest.[[Specifier]].
-    auto url = resolve_module_specifier(module_request, referrer);
+    // 1. Let url be the result of resolving a module specifier given referringScript and moduleRequest.[[Specifier]].
+    auto url = MUST(resolve_module_specifier(referring_script, module_request.module_specifier));
 
-    // 2. Assert: url is never failure, because resolving a module specifier must have been previously successful with these same two arguments.
-    VERIFY(url.is_valid());
+    // 2. Assert: the previous step never throws an exception, because resolving a module specifier must have been previously successful with these same two arguments.
+    // NOTE: Handled by MUST above.
 
     // 3. Let moduleType be the result of running the module type from module request steps given moduleRequest.
     auto module_type = module_type_from_module_request(module_request);
@@ -71,10 +224,10 @@ void fetch_internal_module_script_graph(JS::ModuleRequest const& module_request,
     // 4. Assert: visited set contains (url, moduleType).
     VERIFY(visited_set.contains({ url, module_type }));
 
-    // 5. Fetch a single module script given url, fetch client settings object, destination, options,module map settings object, referrer,
-    //    moduleRequest, false, and onSingleFetchComplete as defined below. If performFetch was given, pass it along as well.
-    // FIXME: Pass options.
-    fetch_single_module_script(url, fetch_client_settings_object, destination, module_script_settings_object, referrer, module_request, TopLevelModule::No, [on_complete = move(on_complete), &fetch_client_settings_object, destination, visited_set](auto const* result) mutable {
+    // 5. Fetch a single module script given url, fetch client settings object, destination, options, referringScript's settings object,
+    //    referringScript's base URL, moduleRequest, false, and onSingleFetchComplete as defined below. If performFetch was given, pass it along as well.
+    // FIXME: Pass options and performFetch if given.
+    fetch_single_module_script(url, fetch_client_settings_object, destination, referring_script.settings_object(), referring_script.base_url(), module_request, TopLevelModule::No, [on_complete = move(on_complete), &fetch_client_settings_object, destination, visited_set](auto* result) mutable {
         // onSingleFetchComplete given result is the following algorithm:
         // 1. If result is null, run onComplete with null, and abort these steps.
         if (!result) {
@@ -89,7 +242,7 @@ void fetch_internal_module_script_graph(JS::ModuleRequest const& module_request,
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#fetch-the-descendants-of-a-module-script
-void fetch_descendants_of_a_module_script(JavaScriptModuleScript const& module_script, EnvironmentSettingsObject& fetch_client_settings_object, StringView destination, HashTable<ModuleLocationTuple> visited_set, ModuleCallback on_complete)
+void fetch_descendants_of_a_module_script(JavaScriptModuleScript& module_script, EnvironmentSettingsObject& fetch_client_settings_object, StringView destination, HashTable<ModuleLocationTuple> visited_set, ModuleCallback on_complete)
 {
     // 1. If module script's record is null, run onComplete with module script and return.
     if (!module_script.record()) {
@@ -112,11 +265,11 @@ void fetch_descendants_of_a_module_script(JavaScriptModuleScript const& module_s
 
     // 5. For each ModuleRequest Record requested of record.[[RequestedModules]],
     for (auto const& requested : record->requested_modules()) {
-        // 1. Let url be the result of resolving a module specifier given module script's base URL and requested.[[Specifier]].
-        auto url = resolve_module_specifier(requested, module_script.base_url());
+        // 1. Let url be the result of resolving a module specifier given module script and requested.[[Specifier]].
+        auto url = MUST(resolve_module_specifier(module_script, requested.module_specifier));
 
-        // 2. Assert: url is never failure, because resolving a module specifier must have been previously successful with these same two arguments.
-        VERIFY(url.is_valid());
+        // 2. Assert: the previous step never throws an exception, because resolving a module specifier must have been previously successful with these same two arguments.
+        // NOTE: Handled by MUST above.
 
         // 3. Let moduleType be the result of running the module type from module request steps given requested.
         auto module_type = module_type_from_module_request(requested);
@@ -151,11 +304,11 @@ void fetch_descendants_of_a_module_script(JavaScriptModuleScript const& module_s
     context->set_on_complete(move(on_complete));
 
     // 11. For each moduleRequest in moduleRequests, perform the internal module script graph fetching procedure given moduleRequest,
-    //     fetch client settings object, destination, options, module script's settings object, visited set, module script's base URL,
-    //     and onInternalFetchingComplete as defined below. If performFetch was given, pass it along as well.
+    //     fetch client settings object, destination, options, module script, visited set, and onInternalFetchingComplete as defined below.
+    //     If performFetch was given, pass it along as well.
     for (auto const& module_request : module_requests) {
         // FIXME: Pass options and performFetch if given.
-        fetch_internal_module_script_graph(module_request, fetch_client_settings_object, destination, const_cast<JavaScriptModuleScript&>(module_script).settings_object(), visited_set, module_script.base_url(), [context, &module_script](auto const* result) mutable {
+        fetch_internal_module_script_graph(module_request, fetch_client_settings_object, destination, module_script, visited_set, [context, &module_script](auto const* result) mutable {
             // onInternalFetchingComplete given result is the following algorithm:
             // 1. If failed is true, then abort these steps.
             if (context->failed())
@@ -266,7 +419,10 @@ void fetch_single_module_script(AK::URL const& url, EnvironmentSettingsObject&, 
 // https://html.spec.whatwg.org/multipage/webappapis.html#fetch-a-module-script-tree
 void fetch_external_module_script_graph(AK::URL const& url, EnvironmentSettingsObject& settings_object, ModuleCallback on_complete)
 {
-    // 1. Fetch a single module script given url, settings object, "script", options, settings object, "client", true, and with the following steps given result:
+    // 1. Disallow further import maps given settings object.
+    settings_object.disallow_further_import_maps();
+
+    // 2. Fetch a single module script given url, settings object, "script", options, settings object, "client", true, and with the following steps given result:
     // FIXME: Pass options.
     fetch_single_module_script(url, settings_object, "script"sv, settings_object, "client"sv, {}, TopLevelModule::Yes, [&settings_object, on_complete = move(on_complete), url](auto* result) mutable {
         // 1. If result is null, run onComplete given null, and abort these steps.
@@ -287,29 +443,32 @@ void fetch_external_module_script_graph(AK::URL const& url, EnvironmentSettingsO
 // https://html.spec.whatwg.org/multipage/webappapis.html#fetch-an-inline-module-script-graph
 void fetch_inline_module_script_graph(String const& filename, String const& source_text, AK::URL const& base_url, EnvironmentSettingsObject& settings_object, ModuleCallback on_complete)
 {
-    // 1. Let script be the result of creating a JavaScript module script using source text, settings object, base URL, and options.
+    // 1. Disallow further import maps given settings object.
+    settings_object.disallow_further_import_maps();
+
+    // 2. Let script be the result of creating a JavaScript module script using source text, settings object, base URL, and options.
     auto script = JavaScriptModuleScript::create(filename, source_text.view(), settings_object, base_url);
 
-    // 2. If script is null, run onComplete given null, and return.
+    // 3. If script is null, run onComplete given null, and return.
     if (!script) {
         on_complete(nullptr);
         return;
     }
 
-    // 3. Let visited set be an empty set.
+    // 4. Let visited set be an empty set.
     HashTable<ModuleLocationTuple> visited_set;
 
-    // 4. Fetch the descendants of and link script, given settings object, the destination "script", visited set, and onComplete.
+    // 5. Fetch the descendants of and link script, given settings object, the destination "script", visited set, and onComplete.
     fetch_descendants_of_and_link_a_module_script(*script, settings_object, "script"sv, visited_set, move(on_complete));
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#fetch-the-descendants-of-and-link-a-module-script
-void fetch_descendants_of_and_link_a_module_script(JavaScriptModuleScript const& module_script, EnvironmentSettingsObject& fetch_client_settings_object, StringView destination, HashTable<ModuleLocationTuple> const& visited_set, ModuleCallback on_complete)
+void fetch_descendants_of_and_link_a_module_script(JavaScriptModuleScript& module_script, EnvironmentSettingsObject& fetch_client_settings_object, StringView destination, HashTable<ModuleLocationTuple> const& visited_set, ModuleCallback on_complete)
 {
     // 1. Fetch the descendants of module script, given fetch client settings object, destination, visited set, and onFetchDescendantsComplete as defined below.
     //    If performFetch was given, pass it along as well.
     // FIXME: Pass performFetch if given.
-    fetch_descendants_of_a_module_script(module_script, fetch_client_settings_object, destination, visited_set, [&fetch_client_settings_object, on_complete = move(on_complete)](JavaScriptModuleScript const* result) {
+    fetch_descendants_of_a_module_script(module_script, fetch_client_settings_object, destination, visited_set, [on_complete = move(on_complete)](JavaScriptModuleScript* result) {
         // onFetchDescendantsComplete given result is the following algorithm:
         // 1. If result is null, then run onComplete given result, and abort these steps.
         if (!result) {
@@ -324,14 +483,8 @@ void fetch_descendants_of_and_link_a_module_script(JavaScriptModuleScript const&
             // 1. Let record be result's record.
             auto const& record = *result->record();
 
-            // NOTE: Although the spec does not say this we have to have a proper execution context when linking so we modify the stack here.
-            // FIXME: Determine whether we are missing something from the spec or the spec is missing this step.
-            fetch_client_settings_object.realm().vm().push_execution_context(fetch_client_settings_object.realm_execution_context());
-
             // 2. Perform record.Link().
             auto linking_result = const_cast<JS::SourceTextModule&>(record).link(result->vm());
-
-            fetch_client_settings_object.realm().vm().pop_execution_context();
 
             // TODO: If this throws an exception, set result's error to rethrow to that exception.
             if (linking_result.is_error())

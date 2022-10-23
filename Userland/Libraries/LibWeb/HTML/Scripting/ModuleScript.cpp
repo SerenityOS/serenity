@@ -9,6 +9,7 @@
 #include <LibWeb/HTML/Scripting/Fetching.h>
 #include <LibWeb/HTML/Scripting/ModuleScript.h>
 #include <LibWeb/WebIDL/DOMException.h>
+#include <LibWeb/WebIDL/ExceptionOr.h>
 
 namespace Web::HTML {
 
@@ -38,9 +39,11 @@ JS::GCPtr<JavaScriptModuleScript> JavaScriptModuleScript::create(String const& f
     // 2. Let script be a new module script that this algorithm will subsequently initialize.
     auto* script = realm.heap().allocate<JavaScriptModuleScript>(realm, move(base_url), filename, settings_object);
 
-    // 3. Set script's settings object to settings. (NOTE: This was already done when constructing.)
+    // 3. Set script's settings object to settings.
+    // NOTE: This was already done when constructing.
 
-    // 4. Set script's base URL to baseURL. (NOTE: This was already done when constructing.)
+    // 4. Set script's base URL to baseURL.
+    // NOTE: This was already done when constructing.
 
     // FIXME: 5. Set script's fetch options to options.
 
@@ -68,20 +71,28 @@ JS::GCPtr<JavaScriptModuleScript> JavaScriptModuleScript::create(String const& f
         //            because we only asked for "type" assertions in HostGetSupportedImportAssertions.
         VERIFY(all_of(requested.assertions, [](auto const& assertion) { return assertion.key == "type"sv; }));
 
-        // 1. Let url be the result of resolving a module specifier given script's base URL and requested.[[Specifier]].
-        auto url = resolve_module_specifier(requested, script->base_url());
+        // 1. Let url be the result of resolving a module specifier given script and requested.[[Specifier]], catching any exceptions.
+        auto url = resolve_module_specifier(*script, requested.module_specifier);
 
-        // 2. Let moduleType be the result of running the module type from module request steps given requested.
+        // 2. If the previous step threw an exception, then:
+        if (url.is_exception()) {
+            // FIXME: 1. Set script's parse error to that exception.
+
+            // 2. Return script.
+            return script;
+        }
+
+        // 3. Let moduleType be the result of running the module type from module request steps given requested.
         auto module_type = module_type_from_module_request(requested);
 
-        // 3. If url is failure, or if the result of running the module type allowed steps given moduleType and settings is false, then:
-        if (!url.is_valid() || !settings_object.module_type_allowed(module_type)) {
+        // 4. If the result of running the module type allowed steps given moduleType and settings is false, then:
+        if (!settings_object.module_type_allowed(module_type)) {
             // FIXME: 1. Let error be a new TypeError exception.
 
             // FIXME: 2. Set script's parse error to error.
 
-            // FIXME: 3. Return script.
-            TODO();
+            // 3. Return script.
+            return script;
         }
     }
 
