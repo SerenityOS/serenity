@@ -289,12 +289,18 @@ endif()
 # Create mostly empty targets for system libraries we don't need to build for Lagom
 add_library(LibC INTERFACE)
 add_library(LibCrypt INTERFACE)
+add_library(LibSystem INTERFACE)
 if (NOT APPLE AND NOT ANDROID AND NOT ${CMAKE_SYSTEM_NAME} MATCHES "OpenBSD")
     target_link_libraries(LibCrypt INTERFACE crypt) # LibCore::Account uses crypt() but it's not in libcrypt on macOS
 endif()
+if (SERENITYOS)
+    # Serenity only allows syscalls from LibSystem, so if someone asks for that on Lagom,
+    # we need to pass that through to the system's LibSystem.
+    target_link_libraries(LibSystem INTERFACE system)
+endif()
 add_library(NoCoverage INTERFACE)
 # "install" these special targets to placate CMake
-install(TARGETS LibC LibCrypt NoCoverage EXPORT LagomTargets)
+install(TARGETS LibC LibCrypt LibSystem NoCoverage EXPORT LagomTargets)
 
 # AK/LibCore
 # Note: AK is included in LibCore for the host build instead of LibC per the target build
