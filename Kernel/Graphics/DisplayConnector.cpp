@@ -250,16 +250,17 @@ static StringView ioctl_to_stringview(unsigned request)
         if (checker.ioctl_number == request)
             return checker.name;
     }
-    VERIFY_NOT_REACHED();
+    return "unknown"sv;
 }
 
-bool DisplayConnector::ioctl_requires_ownership(unsigned request) const
+ErrorOr<bool> DisplayConnector::ioctl_requires_ownership(unsigned request) const
 {
     for (auto& checker : s_checkers) {
         if (checker.ioctl_number == request)
             return checker.requires_ownership;
     }
-    VERIFY_NOT_REACHED();
+    // Note: In case of unknown ioctl, return EINVAL.
+    return Error::from_errno(EINVAL);
 }
 
 ErrorOr<void> DisplayConnector::ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg)
@@ -269,7 +270,8 @@ ErrorOr<void> DisplayConnector::ioctl(OpenFileDescription&, unsigned request, Us
     // Note: We only allow to set responsibility on a DisplayConnector,
     // get the current ModeSetting or the hardware framebuffer properties without the
     // need of having an established responsibility on a DisplayConnector.
-    if (ioctl_requires_ownership(request)) {
+    auto needs_ownership = TRY(ioctl_requires_ownership(request));
+    if (needs_ownership) {
         auto process = m_responsible_process.strong_ref();
         if (!process || process.ptr() != &Process::current()) {
             dbgln("DisplayConnector::ioctl: {} requires ownership over the device", ioctl_to_stringview(request));
@@ -459,7 +461,10 @@ ErrorOr<void> DisplayConnector::ioctl(OpenFileDescription&, unsigned request, Us
         return {};
     }
     }
-    return EINVAL;
+    // Note: We already verify that the IOCTL is supported and not unknown in
+    // the call to the ioctl_requires_ownership method, so if we reached this
+    // section of the code, this is bug.
+    VERIFY_NOT_REACHED();
 }
 
 }
