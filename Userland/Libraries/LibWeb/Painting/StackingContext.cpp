@@ -78,6 +78,13 @@ void StackingContext::paint_descendants(PaintContext& context, Layout::Node cons
         // If `child` establishes its own stacking context, skip over it.
         if (is<Layout::Box>(child) && child.paintable() && static_cast<Layout::Box const&>(child).paint_box()->stacking_context())
             return;
+        // If `child` is positioned with a z-index of `0` or `auto`, skip over it.
+        if (child.is_positioned()) {
+            auto const& z_index = child.computed_values().z_index();
+            if (!z_index.has_value() || z_index.value() == 0)
+                return;
+        }
+
         bool child_is_inline_or_replaced = child.is_inline() || is<Layout::ReplacedBox>(child);
         switch (phase) {
         case StackingContextPaintPhase::BackgroundAndBorders:
