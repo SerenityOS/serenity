@@ -7,6 +7,7 @@
 #include <AK/ByteReader.h>
 #include <Kernel/Bus/PCI/Access.h>
 #include <Kernel/Bus/PCI/Controller/MemoryBackedHostBridge.h>
+#include <Kernel/Memory/MemoryManager.h>
 
 namespace Kernel::PCI {
 

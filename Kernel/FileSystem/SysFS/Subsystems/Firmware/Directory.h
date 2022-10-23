@@ -7,7 +7,7 @@
 #pragma once
 
 #include <AK/Types.h>
-#include <Kernel/FileSystem/SysFS.h>
+#include <Kernel/FileSystem/SysFS/Component.h>
 
 namespace Kernel {
 
