@@ -9,4 +9,4 @@ set(SOURCES
 )
 
 serenity_app(GMLPlayground ICON app-gml-playground)
-target_link_libraries(GMLPlayground LibDesktop LibGUI LibMain)
+target_link_libraries(GMLPlayground LibDesktop LibFileSystemAccessClient LibGUI LibMain)
