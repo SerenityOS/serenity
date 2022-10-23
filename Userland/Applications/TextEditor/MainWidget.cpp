@@ -64,6 +64,10 @@ MainWidget::MainWidget()
     else
         VERIFY_NOT_REACHED();
 
+    auto font_entry = Config::read_string("TextEditor"sv, "Text"sv, "Font"sv, "default"sv);
+    if (font_entry != "default")
+        m_editor->set_font(Gfx::FontDatabase::the().get_by_name(font_entry));
+
     m_editor->on_change = Core::debounce([this] {
         update_preview();
     },
@@ -436,6 +440,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
             if (picker->exec() == GUI::Dialog::ExecResult::OK) {
                 dbgln("setting font {}", picker->font()->qualified_name());
                 m_editor->set_font(picker->font());
+                Config::write_string("TextEditor"sv, "Text"sv, "Font"sv, picker->font()->qualified_name());
             }
         }));
 
