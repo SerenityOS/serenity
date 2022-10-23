@@ -557,7 +557,7 @@ ThrowCompletionOr<NanosecondsToDaysResult> nanoseconds_to_days(VM& vm, Crypto::S
     // 23. If abs(nanoseconds) ≥ abs(dayLengthNs), throw a RangeError exception.
     auto nanoseconds_absolute = nanoseconds.is_negative() ? nanoseconds.negated_value() : nanoseconds;
     auto compare_result = nanoseconds_absolute.compare_to_double(fabs(day_length_ns.to_double()));
-    if (compare_result == Crypto::SignedBigInteger::CompareResult::DoubleLessThanBigInt || compare_result == Crypto::SignedBigInteger::CompareResult::DoubleEqualsBigInt)
+    if (compare_result == Crypto::UnsignedBigInteger::CompareResult::DoubleLessThanBigInt || compare_result == Crypto::UnsignedBigInteger::CompareResult::DoubleEqualsBigInt)
         return vm.throw_completion<RangeError>(ErrorType::TemporalNanosecondsConvertedToRemainderOfNanosecondsLongerThanDayLength);
 
     // 24. Return the Record { [[Days]]: days, [[Nanoseconds]]: nanoseconds, [[DayLength]]: abs(dayLengthNs) }.
