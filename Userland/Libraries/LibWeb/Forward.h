@@ -189,6 +189,11 @@ class Request;
 class Response;
 }
 
+namespace Web::Fetch::Fetching {
+class PendingResponse;
+class RefCountedFlag;
+}
+
 namespace Web::Fetch::Infrastructure {
 class Body;
 struct BodyWithType;

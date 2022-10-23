@@ -123,6 +123,9 @@ set(SOURCES
     Fetch/BodyInit.cpp
     Fetch/Enums.cpp
     Fetch/Fetching/Checks.cpp
+    Fetch/Fetching/Fetching.cpp
+    Fetch/Fetching/PendingResponse.cpp
+    Fetch/Fetching/RefCountedFlag.cpp
     Fetch/Headers.cpp
     Fetch/HeadersIterator.cpp
     Fetch/Infrastructure/ConnectionTimingInfo.cpp
