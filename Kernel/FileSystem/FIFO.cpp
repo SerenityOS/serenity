@@ -120,10 +120,8 @@ ErrorOr<size_t> FIFO::read(OpenFileDescription& fd, u64, UserOrKernelBuffer& buf
 
 ErrorOr<size_t> FIFO::write(OpenFileDescription& fd, u64, UserOrKernelBuffer const& buffer, size_t size)
 {
-    if (!m_readers) {
-        Thread::current()->send_signal(SIGPIPE, &Process::current());
+    if (!m_readers)
         return EPIPE;
-    }
     if (!fd.is_blocking() && m_buffer->space_for_writing() == 0)
         return EAGAIN;
 
