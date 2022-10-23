@@ -196,6 +196,8 @@ elif ! command -v wslpath >/dev/null && ("${SERENITY_QEMU_BIN}" --display help |
 elif "${SERENITY_QEMU_BIN}" --display help | grep -iq cocoa; then
     # QEMU for OSX seems to only support cocoa
     SERENITY_QEMU_DISPLAY_BACKEND="${SERENITY_QEMU_DISPLAY_BACKEND:-cocoa,gl=off}"
+elif [ "$(uname -s)" = "SerenityOS" ]; then
+    SERENITY_QEMU_DISPLAY_BACKEND="${SERENITY_QEMU_DISPLAY_BACKEND:-sdl,gl=off}"
 else
     SERENITY_QEMU_DISPLAY_BACKEND="${SERENITY_QEMU_DISPLAY_BACKEND:-gtk,gl=off}"
 fi
