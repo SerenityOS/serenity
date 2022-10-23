@@ -325,53 +325,50 @@ JS::VM& main_thread_vm()
             return { "type"sv };
         };
 
-        // 8.1.5.5.3 HostResolveImportedModule(referencingScriptOrModule, moduleRequest), https://html.spec.whatwg.org/multipage/webappapis.html#hostresolveimportedmodule(referencingscriptormodule,-modulerequest)
+        // 8.1.6.5.3 HostResolveImportedModule(referencingScriptOrModule, moduleRequest), https://html.spec.whatwg.org/multipage/webappapis.html#hostresolveimportedmodule(referencingscriptormodule,-modulerequest)
         vm->host_resolve_imported_module = [](JS::ScriptOrModule const& referencing_string_or_module, JS::ModuleRequest const& module_request) -> JS::ThrowCompletionOr<JS::NonnullGCPtr<JS::Module>> {
-            // 1. Let settings object be the current settings object.
-            auto* settings_object = &HTML::current_settings_object();
+            // 1. Let moduleMap and referencingScript be null.
+            Optional<HTML::ModuleMap&> module_map;
+            Optional<HTML::Script&> referencing_script;
 
-            // 2. Let base URL be settings object's API base URL.
-            auto base_url = settings_object->api_base_url();
-
-            // 3. If referencingScriptOrModule is not null, then:
+            // 2. If referencingScriptOrModule is not null, then:
             if (!referencing_string_or_module.has<Empty>()) {
-                // 1. Let referencing script be referencingScriptOrModule.[[HostDefined]].
-                auto const& referencing_script = verify_cast<HTML::Script>(referencing_string_or_module.has<JS::NonnullGCPtr<JS::Script>>() ? referencing_string_or_module.get<JS::NonnullGCPtr<JS::Script>>()->host_defined() : referencing_string_or_module.get<JS::NonnullGCPtr<JS::Module>>()->host_defined());
+                // 1. Set referencingScript to referencingScriptOrModule.[[HostDefined]].
+                referencing_script = verify_cast<HTML::Script>(referencing_string_or_module.has<JS::NonnullGCPtr<JS::Script>>() ? *referencing_string_or_module.get<JS::NonnullGCPtr<JS::Script>>()->host_defined() : *referencing_string_or_module.get<JS::NonnullGCPtr<JS::Module>>()->host_defined());
 
-                // 2. Set settings object to referencing script's settings object.
-                settings_object = &referencing_script->settings_object();
+                // 2. Set moduleMap to referencingScript's settings object's module map.
+                module_map = referencing_script->settings_object().module_map();
+            }
+            // 3. Otherwise:
+            else {
+                // 1. Assert: there is a current settings object.
+                // NOTE: This is handled by the HTML::current_settings_object() accessor.
 
-                // 3. Set base URL to referencing script's base URL.
-                base_url = referencing_script->base_url();
-
-                // 4. Assert: base URL is not null, as referencing script is a classic script or a JavaScript module script.
-                VERIFY(base_url.is_valid());
+                // 2. Set moduleMap to the current settings object's module map.
+                module_map = HTML::current_settings_object().module_map();
             }
 
-            // 4. Let moduleMap be settings object's module map.
-            auto& module_map = settings_object->module_map();
+            // 4. Let url be the result of resolving a module specifier given referencingScript and moduleRequest.[[Specifier]].
+            auto url = MUST(HTML::resolve_module_specifier(referencing_script, module_request.module_specifier));
 
-            // 5. Let url be the result of resolving a module specifier given base URL and moduleRequest.[[Specifier]].
-            auto url = HTML::resolve_module_specifier(module_request, base_url);
-
-            // 6. Assert: url is never failure, because resolving a module specifier must have been previously successful
+            // 5. Assert: the previous step never throws an exception, because resolving a module specifier must have been previously successful
             //    with these same two arguments (either while creating the corresponding module script, or in fetch an import() module script graph).
-            VERIFY(url.is_valid());
+            // NOTE: Handled by MUST above.
 
-            // 7. Let moduleType be the result of running the module type from module request steps given moduleRequest.
+            // 6. Let moduleType be the result of running the module type from module request steps given moduleRequest.
             auto module_type = HTML::module_type_from_module_request(module_request);
 
-            // 8. Let resolved module script be moduleMap[(url, moduleType)]. (This entry must exist for us to have gotten to this point.)
-            auto resolved_module = module_map.get(url, module_type).value();
+            // 7. Let resolvedModuleScript be moduleMap[(url, moduleType)]. (This entry must exist for us to have gotten to this point.)
+            auto resolved_module_script = module_map->get(url, module_type).value();
 
-            // 9. Assert: resolved module script is a module script (i.e., is not null or "fetching").
-            VERIFY(resolved_module.type == HTML::ModuleMap::EntryType::ModuleScript);
+            // 8. Assert: resolvedModuleScript is a module script (i.e., is not null or "fetching").
+            VERIFY(resolved_module_script.type == HTML::ModuleMap::EntryType::ModuleScript);
 
-            // 10. Assert: resolved module script's record is not null.
-            VERIFY(resolved_module.module_script->record());
+            // 9. Assert: resolvedModuleScript's record is not null.
+            VERIFY(resolved_module_script.module_script->record());
 
-            // 11. Return resolved module script's record.
-            return JS::NonnullGCPtr(*resolved_module.module_script->record());
+            // 10. Return resolvedModuleScript's record.
+            return JS::NonnullGCPtr(*resolved_module_script.module_script->record());
         };
 
         // NOTE: We push a dummy execution context onto the JS execution context stack,
