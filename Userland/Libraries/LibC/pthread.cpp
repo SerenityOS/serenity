@@ -121,13 +121,13 @@ static int create_thread(pthread_t* thread, void* (*entry)(void*), void* argumen
 }
 
 // https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_create.html
-int pthread_create(pthread_t* thread, pthread_attr_t* attributes, void* (*start_routine)(void*), void* argument_to_start_routine)
+int pthread_create(pthread_t* thread, pthread_attr_t const* attributes, void* (*start_routine)(void*), void* argument_to_start_routine)
 {
     if (!thread)
         return -EINVAL;
 
     PthreadAttrImpl default_attributes {};
-    PthreadAttrImpl** arg_attributes = reinterpret_cast<PthreadAttrImpl**>(attributes);
+    PthreadAttrImpl* const* arg_attributes = reinterpret_cast<PthreadAttrImpl* const*>(attributes);
 
     PthreadAttrImpl* used_attributes = arg_attributes ? *arg_attributes : &default_attributes;
 

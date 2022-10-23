@@ -15,7 +15,7 @@
 
 __BEGIN_DECLS
 
-int pthread_create(pthread_t*, pthread_attr_t*, void* (*)(void*), void*);
+int pthread_create(pthread_t*, pthread_attr_t const*, void* (*)(void*), void*);
 void pthread_exit(void*) __attribute__((noreturn));
 int pthread_kill(pthread_t, int);
 void pthread_cleanup_push(void (*)(void*), void*);
