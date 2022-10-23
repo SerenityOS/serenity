@@ -132,6 +132,7 @@ set(SOURCES
     Fetch/Infrastructure/HTTP/Responses.cpp
     Fetch/Infrastructure/HTTP/Statuses.cpp
     Fetch/Infrastructure/MimeTypeBlocking.cpp
+    Fetch/Infrastructure/NoSniffBlocking.cpp
     Fetch/Infrastructure/PortBlocking.cpp
     Fetch/Infrastructure/URL.cpp
     Fetch/Request.cpp
