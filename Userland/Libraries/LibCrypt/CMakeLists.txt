@@ -10,5 +10,5 @@ set(SOURCES
     crypt.cpp
 )
 
-serenity_libc(LibCrypt crypt)
+serenity_lib(LibCrypt crypt)
 target_link_libraries(LibCrypt LibC LibCryptSHA2)
