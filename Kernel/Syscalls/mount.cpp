@@ -12,7 +12,7 @@
 #include <Kernel/FileSystem/Plan9FileSystem.h>
 #include <Kernel/FileSystem/ProcFS.h>
 #include <Kernel/FileSystem/SysFS/FileSystem.h>
-#include <Kernel/FileSystem/TmpFS.h>
+#include <Kernel/FileSystem/TmpFS/FileSystem.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/Process.h>
 

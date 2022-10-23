@@ -61,6 +61,7 @@ class TCPSocket;
 class TTY;
 class Thread;
 class ThreadTracer;
+class TmpFSInode;
 class UDPSocket;
 class UserOrKernelBuffer;
 class VirtualFileSystem;
