@@ -69,7 +69,7 @@ static PaintPhase to_paint_phase(StackingContext::StackingContextPaintPhase phas
     }
 }
 
-void StackingContext::paint_descendants(PaintContext& context, Layout::Node& box, StackingContextPaintPhase phase) const
+void StackingContext::paint_descendants(PaintContext& context, Layout::Node const& box, StackingContextPaintPhase phase) const
 {
     if (auto* paintable = box.paintable())
         paintable->before_children_paint(context, to_paint_phase(phase), Paintable::ShouldClipOverflow::Yes);
