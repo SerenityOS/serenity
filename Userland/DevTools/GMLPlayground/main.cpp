@@ -8,12 +8,11 @@
 
 #include <AK/URL.h>
 #include <LibCore/ArgsParser.h>
-#include <LibCore/File.h>
 #include <LibCore/System.h>
 #include <LibDesktop/Launcher.h>
+#include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/Application.h>
-#include <LibGUI/FilePicker.h>
 #include <LibGUI/GML/AutocompleteProvider.h>
 #include <LibGUI/GML/Formatter.h>
 #include <LibGUI/GML/Lexer.h>
@@ -71,8 +70,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Desktop::Launcher::add_allowed_handler_with_only_specific_urls("/bin/Help", { URL::create_with_file_scheme("/usr/share/man/man1/GMLPlayground.md") }));
     TRY(Desktop::Launcher::seal_allowlist());
 
-    TRY(Core::System::pledge("stdio thread recvfd sendfd rpath cpath wpath"));
-
     char const* path = nullptr;
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(path, "GML file to edit", "file", Core::ArgsParser::Required::No);
@@ -128,57 +125,37 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         update_title();
     };
 
-    if (String(path).is_empty()) {
-        editor->set_text(R"~~~(@GUI::Frame {
-    layout: @GUI::VerticalBoxLayout {
-    }
-
-    // Now add some widgets!
-}
-)~~~"sv);
-        editor->set_cursor(4, 28); // after "...widgets!"
-        update_title();
-    } else {
-        auto file = Core::File::construct(path);
-        if (!file->open(Core::OpenMode::ReadOnly)) {
-            GUI::MessageBox::show(window, String::formatted("Opening \"{}\" failed: {}", path, strerror(errno)), "Error"sv, GUI::MessageBox::Type::Error);
-            return 1;
-        }
-        if (file->is_device()) {
-            GUI::MessageBox::show(window, String::formatted("Opening \"{}\" failed: Can't open device files", path), "Error"sv, GUI::MessageBox::Type::Error);
-            return 1;
-        }
-        file_path = path;
-        editor->set_text(file->read_all());
-        update_title();
-    }
-
     auto file_menu = TRY(window->try_add_menu("&File"));
 
     auto save_as_action = GUI::CommonActions::make_save_as_action([&](auto&) {
-        Optional<String> new_save_path = GUI::FilePicker::get_save_filepath(window, "Untitled", "gml");
-        if (!new_save_path.has_value())
+        auto response = FileSystemAccessClient::Client::the().try_save_file(window, "Untitled", "gml");
+        if (response.is_error())
             return;
 
-        if (!editor->write_to_file(new_save_path.value())) {
+        auto file = response.release_value();
+        if (!editor->write_to_file(file)) {
             GUI::MessageBox::show(window, "Unable to save file.\n"sv, "Error"sv, GUI::MessageBox::Type::Error);
             return;
         }
-        file_path = new_save_path.value();
+        file_path = file->filename();
         update_title();
     });
 
     auto save_action = GUI::CommonActions::make_save_action([&](auto&) {
-        if (!file_path.is_empty()) {
-            if (!editor->write_to_file(file_path)) {
-                GUI::MessageBox::show(window, "Unable to save file.\n"sv, "Error"sv, GUI::MessageBox::Type::Error);
-                return;
-            }
-            update_title();
+        if (file_path.is_empty()) {
+            save_as_action->activate();
             return;
         }
+        auto response = FileSystemAccessClient::Client::the().try_request_file(window, file_path, Core::OpenMode::Truncate | Core::OpenMode::WriteOnly);
+        if (response.is_error())
+            return;
 
-        save_as_action->activate();
+        auto file = response.release_value();
+        if (!editor->write_to_file(file)) {
+            GUI::MessageBox::show(window, "Unable to save file.\n"sv, "Error"sv, GUI::MessageBox::Type::Error);
+            return;
+        }
+        update_title();
     });
 
     TRY(file_menu->try_add_action(GUI::CommonActions::make_open_action([&](auto&) {
@@ -190,21 +167,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 return;
         }
 
-        Optional<String> open_path = GUI::FilePicker::get_open_filepath(window);
-        if (!open_path.has_value())
+        auto response = FileSystemAccessClient::Client::the().try_open_file(window);
+        if (response.is_error())
             return;
 
-        auto file = Core::File::construct(open_path.value());
-        if (!file->open(Core::OpenMode::ReadOnly) && file->error() != ENOENT) {
-            GUI::MessageBox::show(window, String::formatted("Opening \"{}\" failed: {}", open_path.value(), strerror(errno)), "Error"sv, GUI::MessageBox::Type::Error);
-            return;
-        }
-
-        if (file->is_device()) {
-            GUI::MessageBox::show(window, String::formatted("Opening \"{}\" failed: Can't open device files", open_path.value()), "Error"sv, GUI::MessageBox::Type::Error);
-            return;
-        }
-        file_path = open_path.value();
+        auto file = response.release_value();
+        file_path = file->filename();
         editor->set_text(file->read_all());
         editor->set_focus(true);
         update_title();
@@ -308,6 +276,25 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
         return GUI::Window::CloseRequestDecision::StayOpen;
     };
+
     window->show();
+
+    if (String(path).is_empty()) {
+        editor->set_text(R"~~~(@GUI::Frame {
+    layout: @GUI::VerticalBoxLayout {
+    }
+
+    // Now add some widgets!
+}
+)~~~"sv);
+        editor->set_cursor(4, 28); // after "...widgets!"
+        update_title();
+    } else {
+        auto file = TRY(FileSystemAccessClient::Client::the().try_request_file_read_only_approved(window, path));
+        file_path = path;
+        editor->set_text(file->read_all());
+        update_title();
+    }
+
     return app->exec();
 }
