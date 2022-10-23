@@ -69,7 +69,7 @@ ErrorOr<NonnullRefPtr<MainWidget>> MainWidget::try_create(GUI::Icon const& icon)
     main_widget->m_editor = main_widget->find_descendant_of_type_named<GUI::TextEditor>("text_editor");
     main_widget->m_preview_frame_widget = main_widget->find_descendant_of_type_named<GUI::Frame>("preview_frame");
 
-    main_widget->m_preview_window = TRY(GUI::Window::try_create());
+    main_widget->m_preview_window = TRY(GUI::Window::try_create(main_widget));
     main_widget->m_preview_window->set_title("Preview - GML Playground");
     main_widget->m_preview_window->set_icon(icon.bitmap_for_size(16));
     main_widget->m_preview_window_widget = TRY(main_widget->m_preview_window->set_main_widget<GUI::Widget>());
