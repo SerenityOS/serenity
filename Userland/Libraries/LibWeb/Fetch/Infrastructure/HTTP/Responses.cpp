@@ -36,17 +36,18 @@ JS::NonnullGCPtr<Response> Response::create(JS::VM& vm)
 
 JS::NonnullGCPtr<Response> Response::aborted_network_error(JS::VM& vm)
 {
-    auto response = network_error(vm);
+    auto response = network_error(vm, "Fetch has been aborted"sv);
     response->set_aborted(true);
     return response;
 }
 
-JS::NonnullGCPtr<Response> Response::network_error(JS::VM& vm)
+JS::NonnullGCPtr<Response> Response::network_error(JS::VM& vm, String message)
 {
     auto response = Response::create(vm);
     response->set_status(0);
     response->set_type(Type::Error);
     VERIFY(!response->body().has_value());
+    response->m_network_error_message = move(message);
     return response;
 }
 
@@ -59,7 +60,7 @@ JS::NonnullGCPtr<Response> Response::appropriate_network_error(JS::VM& vm, Fetch
     // 2. Return an aborted network error if fetchParams is aborted; otherwise return a network error.
     return fetch_params.is_aborted()
         ? aborted_network_error(vm)
-        : network_error(vm);
+        : network_error(vm, "Fetch has been terminated"sv);
 }
 
 // https://fetch.spec.whatwg.org/#concept-aborted-network-error
