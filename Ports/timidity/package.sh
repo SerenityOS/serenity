@@ -10,6 +10,7 @@ use_fresh_config_sub='true'
 config_sub_paths=('autoconf/config.sub')
 depends=()
 configopts=(
+    '--without-x'
     'lib_cv___va_copy=no'
     'lib_cv_va_copy=no'
     'lib_cv_va_val_copy=no'
