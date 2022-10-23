@@ -153,11 +153,40 @@ void StackingContext::paint_internal(PaintContext& context) const
     paint_descendants(context, m_box, StackingContextPaintPhase::BackgroundAndBordersForInlineLevelAndReplaced);
     paint_node(m_box, context, PaintPhase::Foreground);
     paint_descendants(context, m_box, StackingContextPaintPhase::Foreground);
-    // Draw other positioned descendants (steps 8, 9)
+
+    // Draw positioned descendants with z-index `0` or `auto` in tree order. (step 8)
+    // FIXME: There's more to this step that we have yet to understand and implement.
+    m_box.paint_box()->for_each_in_subtree_of_type<PaintableBox>([&](PaintableBox const& paint_box) {
+        if (!paint_box.layout_box().is_positioned())
+            return TraversalDecision::Continue;
+        auto const& z_index = paint_box.computed_values().z_index();
+        if (z_index.has_value() && z_index.value() != 0)
+            return TraversalDecision::Continue;
+        if (auto* child = paint_box.stacking_context()) {
+            paint_child(child);
+            return TraversalDecision::SkipChildrenAndContinue;
+        }
+        // At this point, `paint_box` is a positioned descendant with z-index: auto
+        // but no stacking context of its own.
+        // FIXME: This is basically duplicating logic found elsewhere in this same function. Find a way to make this more elegant.
+        paint_node(paint_box.layout_box(), context, PaintPhase::Background);
+        paint_node(paint_box.layout_box(), context, PaintPhase::Border);
+        paint_descendants(context, paint_box.layout_box(), StackingContextPaintPhase::BackgroundAndBorders);
+        paint_descendants(context, paint_box.layout_box(), StackingContextPaintPhase::Floats);
+        paint_descendants(context, paint_box.layout_box(), StackingContextPaintPhase::BackgroundAndBordersForInlineLevelAndReplaced);
+        paint_node(paint_box.layout_box(), context, PaintPhase::Foreground);
+        paint_descendants(context, paint_box.layout_box(), StackingContextPaintPhase::Foreground);
+        paint_node(paint_box.layout_box(), context, PaintPhase::FocusOutline);
+        paint_node(paint_box.layout_box(), context, PaintPhase::Overlay);
+        paint_descendants(context, paint_box.layout_box(), StackingContextPaintPhase::FocusAndOverlay);
+
+        return TraversalDecision::Continue;
+    });
+
+    // Draw other positioned descendants (step 9)
     for (auto* child : m_children) {
-        if (child->m_box.computed_values().z_index().has_value() && child->m_box.computed_values().z_index().value() < 0)
-            continue;
-        paint_child(child);
+        if (child->m_box.computed_values().z_index().has_value() && child->m_box.computed_values().z_index().value() >= 1)
+            paint_child(child);
     }
 
     paint_node(m_box, context, PaintPhase::FocusOutline);
