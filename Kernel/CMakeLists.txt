@@ -183,7 +183,8 @@ set(KERNEL_SOURCES
     FileSystem/SysFS/Subsystems/Kernel/Variables/Directory.cpp
     FileSystem/SysFS/Subsystems/Kernel/Variables/DumpKmallocStack.cpp
     FileSystem/SysFS/Subsystems/Kernel/Variables/UBSANDeadly.cpp
-    FileSystem/TmpFS.cpp
+    FileSystem/TmpFS/FileSystem.cpp
+    FileSystem/TmpFS/Inode.cpp
     FileSystem/VirtualFileSystem.cpp
     Firmware/BIOS.cpp
     Firmware/ACPI/Initialize.cpp

@@ -5,38 +5,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/FileSystem/TmpFS.h>
+#include <Kernel/FileSystem/TmpFS/Inode.h>
 #include <Kernel/Process.h>
-#include <LibC/limits.h>
 
 namespace Kernel {
-
-ErrorOr<NonnullLockRefPtr<FileSystem>> TmpFS::try_create()
-{
-    return TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) TmpFS));
-}
-
-TmpFS::TmpFS() = default;
-TmpFS::~TmpFS() = default;
-
-ErrorOr<void> TmpFS::initialize()
-{
-    m_root_inode = TRY(TmpFSInode::try_create_root(*this));
-    return {};
-}
-
-Inode& TmpFS::root_inode()
-{
-    VERIFY(!m_root_inode.is_null());
-    return *m_root_inode;
-}
-
-unsigned TmpFS::next_inode_index()
-{
-    MutexLocker locker(m_lock);
-
-    return m_next_inode_index++;
-}
 
 TmpFSInode::TmpFSInode(TmpFS& fs, InodeMetadata const& metadata, LockWeakPtr<TmpFSInode> parent)
     : Inode(fs, fs.next_inode_index())

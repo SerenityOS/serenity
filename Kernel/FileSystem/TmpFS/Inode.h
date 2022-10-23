@@ -7,38 +7,11 @@
 
 #pragma once
 
-#include <Kernel/FileSystem/FileSystem.h>
 #include <Kernel/FileSystem/Inode.h>
-#include <Kernel/KBuffer.h>
-#include <Kernel/Locking/MutexProtected.h>
+#include <Kernel/FileSystem/TmpFS/FileSystem.h>
 #include <Kernel/Memory/AnonymousVMObject.h>
 
 namespace Kernel {
-
-class TmpFSInode;
-
-class TmpFS final : public FileSystem {
-    friend class TmpFSInode;
-
-public:
-    virtual ~TmpFS() override;
-    static ErrorOr<NonnullLockRefPtr<FileSystem>> try_create();
-    virtual ErrorOr<void> initialize() override;
-
-    virtual StringView class_name() const override { return "TmpFS"sv; }
-
-    virtual bool supports_watchers() const override { return true; }
-
-    virtual Inode& root_inode() override;
-
-private:
-    TmpFS();
-
-    LockRefPtr<TmpFSInode> m_root_inode;
-
-    unsigned m_next_inode_index { 1 };
-    unsigned next_inode_index();
-};
 
 class TmpFSInode final : public Inode {
     friend class TmpFS;
