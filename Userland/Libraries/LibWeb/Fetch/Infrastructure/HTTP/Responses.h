@@ -51,6 +51,7 @@ public:
     [[nodiscard]] static JS::NonnullGCPtr<Response> create(JS::VM&);
     [[nodiscard]] static JS::NonnullGCPtr<Response> aborted_network_error(JS::VM&);
     [[nodiscard]] static JS::NonnullGCPtr<Response> network_error(JS::VM&);
+    [[nodiscard]] static JS::NonnullGCPtr<Response> appropriate_network_error(JS::VM&, FetchParams const&);
 
     virtual ~Response() = default;
 

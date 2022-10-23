@@ -7,6 +7,7 @@
 #include <LibJS/Heap/Heap.h>
 #include <LibJS/Runtime/VM.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
+#include <LibWeb/Fetch/Infrastructure/FetchParams.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP/Bodies.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP/Responses.h>
 
@@ -46,6 +47,18 @@ JS::NonnullGCPtr<Response> Response::network_error(JS::VM& vm)
     response->set_type(Type::Error);
     VERIFY(!response->body().has_value());
     return response;
+}
+
+// https://fetch.spec.whatwg.org/#appropriate-network-error
+JS::NonnullGCPtr<Response> Response::appropriate_network_error(JS::VM& vm, FetchParams const& fetch_params)
+{
+    // 1. Assert: fetchParams is canceled.
+    VERIFY(fetch_params.is_canceled());
+
+    // 2. Return an aborted network error if fetchParams is aborted; otherwise return a network error.
+    return fetch_params.is_aborted()
+        ? aborted_network_error(vm)
+        : network_error(vm);
 }
 
 // https://fetch.spec.whatwg.org/#concept-aborted-network-error
