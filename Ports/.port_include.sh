@@ -10,6 +10,20 @@ unset SERENITY_STRIPPED_ENV
 
 export MAKEJOBS="${MAKEJOBS:-$(nproc)}"
 
+buildstep() {
+    local buildstep_name=$1
+    shift
+    if [ -z "$@" ]; then
+        "${buildstep_name}"
+    else
+        "$@"
+    fi 2>&1 | sed $'s|^|\x1b[34m['"${port}/${buildstep_name}"$']\x1b[39m |'
+}
+
+buildstep_intro() {
+    echo -e "\x1b[1;32m=> $@\x1b[0m"
+}
+
 maybe_source() {
     if [ -f "$1" ]; then
         . "$1"
@@ -438,7 +452,7 @@ func_defined install || install() {
     run make DESTDIR=$DESTDIR "${installopts[@]}" install
 }
 func_defined post_install || post_install() {
-    echo
+    :
 }
 clean() {
     rm -rf "${PORT_BUILD_DIR}"
@@ -457,11 +471,11 @@ clean_all() {
     clean_dist
 }
 addtodb() {
+    buildstep_intro "Adding $port $version to database of installed ports..."
     if [ -n "$(package_install_state $port $version)" ]; then
-        echo "Note: $port $version already installed."
+        echo "Note: Skipped because $port $version is already installed."
         return
     fi
-    echo "Adding $port $version to database of installed ports..."
     if [ "${1:-}" = "--auto" ]; then
         echo "auto $port $version" >> "$packagesdb"
     else
@@ -515,65 +529,65 @@ uninstall() {
     mv packages.db.tmp "$packagesdb"
 }
 do_installdepends() {
-    echo "Installing dependencies of $port..."
+    buildstep_intro "Installing dependencies of $port..."
     installdepends
 }
 do_fetch() {
-    echo "Fetching $port..."
-    fetch
+    buildstep_intro "Fetching $port..."
+    buildstep fetch
 }
 do_patch() {
-    echo "Patching $port..."
-    pre_patch
-    patch_internal
+    buildstep_intro "Patching $port..."
+    buildstep pre_patch
+    buildstep patch_internal
 }
 do_configure() {
     ensure_build
     if [ "$useconfigure" = "true" ]; then
-        echo "Configuring $port..."
+        buildstep_intro "Configuring $port..."
         if "$use_fresh_config_sub"; then
-            ensure_new_config_sub
+            buildstep ensure_new_config_sub
         fi
         if "$use_fresh_config_guess"; then
-            ensure_new_config_guess
+            buildstep ensure_new_config_guess
         fi
-        pre_configure
-        configure
-        post_configure
+        buildstep pre_configure
+        buildstep configure
+        buildstep post_configure
     else
-        echo "This port does not use a configure script. Skipping configure step."
+        buildstep configure echo "This port does not use a configure script. Skipping configure step."
     fi
 }
 do_build() {
     ensure_build
-    echo "Building $port..."
-    build
+    buildstep_intro "Building $port..."
+    buildstep build
 }
 do_install() {
     ensure_build
-    pre_install
-    echo "Installing $port..."
-    install
-    install_main_launcher
-    install_main_icon
-    post_install
+    buildstep pre_install
+    buildstep_intro "Installing $port..."
+    buildstep install
+    buildstep install_main_launcher
+    buildstep install_main_icon
+    buildstep post_install
     addtodb "${1:-}"
 }
 do_clean() {
-    echo "Cleaning build directory for $port..."
-    clean
+    buildstep_intro "Cleaning build directory for $port..."
+    buildstep clean
 }
 do_clean_dist() {
-    echo "Cleaning dist files for $port..."
-    clean_dist
+    buildstep_intro "Cleaning dist files for $port..."
+    buildstep clean_dist
 }
 do_clean_all() {
-    echo "Cleaning all for $port..."
-    clean_all
+    buildstep_intro "Cleaning all for $port..."
+    buildstep clean_all
 }
 do_uninstall() {
-    echo "Uninstalling $port..."
-    uninstall
+    buildstep_intro "Uninstalling $port..."
+    buildstep uninstall
 }
 do_showproperty() {
     while [ $# -gt 0 ]; do
