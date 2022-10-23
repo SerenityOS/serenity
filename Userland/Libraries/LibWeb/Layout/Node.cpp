@@ -82,15 +82,30 @@ BlockContainer const* Node::containing_block() const
     return first_ancestor_of_type<BlockContainer>();
 }
 
+// https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Positioning/Understanding_z_index/The_stacking_context
 bool Node::establishes_stacking_context() const
 {
+    // NOTE: While MDN is not authoritative, there isn't a single convenient location
+    //       in the CSS specifications where the rules for stacking contexts is described.
+    //       That's why the "spec link" here points to MDN.
+
     if (!has_style())
         return false;
     if (dom_node() == &document().root())
         return true;
     auto position = computed_values().position();
-    if (position == CSS::Position::Absolute || position == CSS::Position::Relative || position == CSS::Position::Fixed || position == CSS::Position::Sticky)
+
+    // Element with a position value absolute or relative and z-index value other than auto.
+    if (position == CSS::Position::Absolute || position == CSS::Position::Relative) {
+        if (computed_values().z_index().has_value()) {
+            return true;
+        }
+    }
+
+    // Element with a position value fixed or sticky.
+    if (position == CSS::Position::Fixed || position == CSS::Position::Sticky)
         return true;
+
     if (!computed_values().transformations().is_empty())
         return true;
 
