@@ -81,37 +81,31 @@ void StackingContext::paint_descendants(PaintContext& context, Layout::Node cons
         bool child_is_inline_or_replaced = child.is_inline() || is<Layout::ReplacedBox>(child);
         switch (phase) {
         case StackingContextPaintPhase::BackgroundAndBorders:
-            if (!child_is_inline_or_replaced && !child.is_floating() && !child.is_positioned()) {
+            if (!child_is_inline_or_replaced && !child.is_floating()) {
                 paint_node(child, context, PaintPhase::Background);
                 paint_node(child, context, PaintPhase::Border);
                 paint_descendants(context, child, phase);
             }
             break;
         case StackingContextPaintPhase::Floats:
-            if (!child.is_positioned()) {
-                if (child.is_floating()) {
-                    paint_node(child, context, PaintPhase::Background);
-                    paint_node(child, context, PaintPhase::Border);
-                    paint_descendants(context, child, StackingContextPaintPhase::BackgroundAndBorders);
-                }
-                paint_descendants(context, child, phase);
+            if (child.is_floating()) {
+                paint_node(child, context, PaintPhase::Background);
+                paint_node(child, context, PaintPhase::Border);
+                paint_descendants(context, child, StackingContextPaintPhase::BackgroundAndBorders);
             }
+            paint_descendants(context, child, phase);
             break;
         case StackingContextPaintPhase::BackgroundAndBordersForInlineLevelAndReplaced:
-            if (!child.is_positioned()) {
-                if (child_is_inline_or_replaced) {
-                    paint_node(child, context, PaintPhase::Background);
-                    paint_node(child, context, PaintPhase::Border);
-                    paint_descendants(context, child, StackingContextPaintPhase::BackgroundAndBorders);
-                }
-                paint_descendants(context, child, phase);
+            if (child_is_inline_or_replaced) {
+                paint_node(child, context, PaintPhase::Background);
+                paint_node(child, context, PaintPhase::Border);
+                paint_descendants(context, child, StackingContextPaintPhase::BackgroundAndBorders);
             }
+            paint_descendants(context, child, phase);
             break;
         case StackingContextPaintPhase::Foreground:
-            if (!child.is_positioned()) {
-                paint_node(child, context, PaintPhase::Foreground);
-                paint_descendants(context, child, phase);
-            }
+            paint_node(child, context, PaintPhase::Foreground);
+            paint_descendants(context, child, phase);
             break;
         case StackingContextPaintPhase::FocusAndOverlay:
             if (context.has_focus()) {
