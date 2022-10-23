@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Debug.h>
 #include <AK/URLParser.h>
 #include <LibJS/Heap/Heap.h>
 #include <LibJS/Runtime/VM.h>
@@ -43,6 +44,7 @@ JS::NonnullGCPtr<Response> Response::aborted_network_error(JS::VM& vm)
 
 JS::NonnullGCPtr<Response> Response::network_error(JS::VM& vm, String message)
 {
+    dbgln_if(WEB_FETCH_DEBUG, "Fetch: Creating network error response with message: {}", message);
     auto response = Response::create(vm);
     response->set_status(0);
     response->set_type(Type::Error);
