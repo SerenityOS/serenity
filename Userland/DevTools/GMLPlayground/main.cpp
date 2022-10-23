@@ -67,6 +67,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::pledge("stdio thread recvfd sendfd cpath rpath wpath unix"));
     auto app = TRY(GUI::Application::try_create(arguments));
 
+    TRY(Core::System::unveil("/proc/all", "r"));
+    TRY(Core::System::unveil("/res", "r"));
+    TRY(Core::System::unveil("/tmp/session/%sid/portal/launch", "rw"));
+    TRY(Core::System::unveil("/tmp/session/%sid/portal/filesystemaccess", "rw"));
+    TRY(Core::System::unveil(nullptr, nullptr));
+
     TRY(Desktop::Launcher::add_allowed_handler_with_only_specific_urls("/bin/Help", { URL::create_with_file_scheme("/usr/share/man/man1/GMLPlayground.md") }));
     TRY(Desktop::Launcher::seal_allowlist());
 
