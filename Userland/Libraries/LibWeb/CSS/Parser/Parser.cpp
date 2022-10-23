@@ -21,6 +21,7 @@
 #include <LibWeb/CSS/CSSStyleRule.h>
 #include <LibWeb/CSS/CSSStyleSheet.h>
 #include <LibWeb/CSS/CSSSupportsRule.h>
+#include <LibWeb/CSS/MediaList.h>
 #include <LibWeb/CSS/Parser/Block.h>
 #include <LibWeb/CSS/Parser/ComponentValue.h>
 #include <LibWeb/CSS/Parser/DeclarationOrAtRule.h>
@@ -127,7 +128,7 @@ CSSStyleSheet* Parser::parse_as_css_stylesheet(Optional<AK::URL> location)
     }
 
     auto* rule_list = CSSRuleList::create(m_context.realm(), rules);
-    return CSSStyleSheet::create(m_context.realm(), *rule_list, move(location));
+    return CSSStyleSheet::create(m_context.realm(), *rule_list, *MediaList::create(m_context.realm(), {}), move(location));
 }
 
 Optional<SelectorList> Parser::parse_as_selector(SelectorParsingMode parsing_mode)
@@ -7111,7 +7112,7 @@ namespace Web {
 CSS::CSSStyleSheet* parse_css_stylesheet(CSS::Parser::ParsingContext const& context, StringView css, Optional<AK::URL> location)
 {
     if (css.is_empty())
-        return CSS::CSSStyleSheet::create(context.realm(), *CSS::CSSRuleList::create_empty(context.realm()), location);
+        return CSS::CSSStyleSheet::create(context.realm(), *CSS::CSSRuleList::create_empty(context.realm()), *CSS::MediaList::create(context.realm(), {}), location);
     CSS::Parser::Parser parser(context, css);
     return parser.parse_as_css_stylesheet(location);
 }

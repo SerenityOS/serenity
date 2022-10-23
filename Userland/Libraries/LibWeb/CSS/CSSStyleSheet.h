@@ -24,7 +24,7 @@ class CSSStyleSheet final
     WEB_PLATFORM_OBJECT(CSSStyleSheet, StyleSheet);
 
 public:
-    static CSSStyleSheet* create(JS::Realm&, CSSRuleList& rules, Optional<AK::URL> location);
+    static CSSStyleSheet* create(JS::Realm&, CSSRuleList& rules, MediaList& media, Optional<AK::URL> location);
 
     virtual ~CSSStyleSheet() override = default;
 
@@ -50,7 +50,7 @@ public:
     void set_style_sheet_list(Badge<StyleSheetList>, StyleSheetList*);
 
 private:
-    CSSStyleSheet(JS::Realm&, CSSRuleList&, Optional<AK::URL> location);
+    CSSStyleSheet(JS::Realm&, CSSRuleList&, MediaList&, Optional<AK::URL> location);
 
     virtual void visit_edges(Cell::Visitor&) override;
 

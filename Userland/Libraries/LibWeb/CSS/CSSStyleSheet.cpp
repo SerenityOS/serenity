@@ -14,13 +14,13 @@
 
 namespace Web::CSS {
 
-CSSStyleSheet* CSSStyleSheet::create(JS::Realm& realm, CSSRuleList& rules, Optional<AK::URL> location)
+CSSStyleSheet* CSSStyleSheet::create(JS::Realm& realm, CSSRuleList& rules, MediaList& media, Optional<AK::URL> location)
 {
-    return realm.heap().allocate<CSSStyleSheet>(realm, realm, rules, move(location));
+    return realm.heap().allocate<CSSStyleSheet>(realm, realm, rules, media, move(location));
 }
 
-CSSStyleSheet::CSSStyleSheet(JS::Realm& realm, CSSRuleList& rules, Optional<AK::URL> location)
-    : StyleSheet(realm)
+CSSStyleSheet::CSSStyleSheet(JS::Realm& realm, CSSRuleList& rules, MediaList& media, Optional<AK::URL> location)
+    : StyleSheet(realm, media)
     , m_rules(&rules)
 {
     set_prototype(&Bindings::ensure_web_prototype<Bindings::CSSStyleSheetPrototype>(realm, "CSSStyleSheet"));
@@ -99,12 +99,23 @@ WebIDL::ExceptionOr<void> CSSStyleSheet::remove_rule(unsigned index)
 
 void CSSStyleSheet::for_each_effective_style_rule(Function<void(CSSStyleRule const&)> const& callback) const
 {
-    m_rules->for_each_effective_style_rule(callback);
+    if (m_media.matches()) {
+        m_rules->for_each_effective_style_rule(callback);
+    }
 }
 
 bool CSSStyleSheet::evaluate_media_queries(HTML::Window const& window)
 {
-    return m_rules->evaluate_media_queries(window);
+    bool any_media_queries_changed_match_state = false;
+
+    bool did_match = m_media.matches();
+    bool now_matches = m_media.evaluate(window);
+    if (did_match != now_matches)
+        any_media_queries_changed_match_state = true;
+    if (now_matches && m_rules->evaluate_media_queries(window))
+        any_media_queries_changed_match_state = true;
+
+    return any_media_queries_changed_match_state;
 }
 
 void CSSStyleSheet::set_style_sheet_list(Badge<StyleSheetList>, StyleSheetList* list)

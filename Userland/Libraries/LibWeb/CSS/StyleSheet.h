@@ -8,6 +8,7 @@
 #pragma once
 
 #include <LibWeb/Bindings/PlatformObject.h>
+#include <LibWeb/CSS/MediaList.h>
 #include <LibWeb/Forward.h>
 
 namespace Web::CSS {
@@ -32,7 +33,16 @@ public:
     void set_title(String title) { m_title = move(title); }
 
     void set_type(String type) { m_type_string = move(type); }
-    void set_media(String media) { m_media_string = move(media); }
+
+    MediaList* media() const
+    {
+        return &m_media;
+    }
+
+    void set_media(String media)
+    {
+        m_media.set_media_text(media);
+    }
 
     bool is_alternate() const { return m_alternate; }
     void set_alternate(bool alternate) { m_alternate = alternate; }
@@ -46,8 +56,10 @@ public:
     void set_parent_css_style_sheet(CSSStyleSheet*);
 
 protected:
-    explicit StyleSheet(JS::Realm&);
+    explicit StyleSheet(JS::Realm&, MediaList& media);
     virtual void visit_edges(Cell::Visitor&) override;
+
+    MediaList& m_media;
 
 private:
     JS::GCPtr<DOM::Element> m_owner_node;
@@ -56,7 +68,6 @@ private:
     String m_location;
     String m_title;
     String m_type_string;
-    String m_media_string;
 
     bool m_disabled { false };
     bool m_alternate { false };
