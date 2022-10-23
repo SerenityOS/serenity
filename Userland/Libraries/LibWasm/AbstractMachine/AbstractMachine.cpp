@@ -345,7 +345,7 @@ InstantiationResult AbstractMachine::instantiate(Module const& module, Vector<Ex
                     auto address = main_module_instance.memories()[data.index.value()];
                     if (auto instance = m_store.get(address)) {
                         if (auto max = instance->type().limits().max(); max.has_value()) {
-                            if (*max < data.init.size() + offset) {
+                            if (*max * Constants::page_size < data.init.size() + offset) {
                                 instantiation_result = InstantiationError {
                                     String::formatted("Data segment attempted to write to out-of-bounds memory ({}) of max {} bytes",
                                         data.init.size() + offset, instance->type().limits().max().value())
