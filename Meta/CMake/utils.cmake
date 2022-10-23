@@ -33,7 +33,7 @@ function(serenity_install_sources)
     #       https://cmake.org/cmake/help/v3.23/command/cmake_path.html#relative-path
     string(LENGTH ${SerenityOS_SOURCE_DIR} root_source_dir_length)
     string(SUBSTRING ${CMAKE_CURRENT_SOURCE_DIR} ${root_source_dir_length} -1 current_source_dir_relative)
-    file(GLOB_RECURSE sources RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "*.h" "*.cpp")
+    file(GLOB_RECURSE sources RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "*.h" "*.cpp" "*.gml")
     foreach(source ${sources})
         get_filename_component(subdirectory ${source} DIRECTORY)
         install(FILES ${source} DESTINATION usr/src/serenity/${current_source_dir_relative}/${subdirectory} OPTIONAL)
