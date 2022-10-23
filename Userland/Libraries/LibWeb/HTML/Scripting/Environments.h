@@ -113,6 +113,8 @@ struct EnvironmentSettingsObject
 
     bool module_type_allowed(String const& module_type) const;
 
+    void disallow_further_import_maps();
+
 protected:
     explicit EnvironmentSettingsObject(NonnullOwnPtr<JS::ExecutionContext>);
 

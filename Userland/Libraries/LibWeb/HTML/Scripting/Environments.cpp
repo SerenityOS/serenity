@@ -293,6 +293,20 @@ bool EnvironmentSettingsObject::module_type_allowed(AK::String const& module_typ
     return true;
 }
 
+// https://html.spec.whatwg.org/multipage/webappapis.html#disallow-further-import-maps
+void EnvironmentSettingsObject::disallow_further_import_maps()
+{
+    // 1. Let global be settingsObject's global object.
+    auto& global = global_object();
+
+    // 2. If global does not implement Window, then return.
+    if (!is<Window>(global))
+        return;
+
+    // 3. Set global's import maps allowed to false.
+    verify_cast<Window>(global).set_import_maps_allowed(false);
+}
+
 // https://html.spec.whatwg.org/multipage/webappapis.html#incumbent-settings-object
 EnvironmentSettingsObject& incumbent_settings_object()
 {
