@@ -9,7 +9,6 @@
 
 #include <AK/Types.h>
 #include <AK/Vector.h>
-#include <Kernel/FileSystem/SysFS.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/Directory.h>
 #include <Kernel/KBuffer.h>
 #include <Kernel/Library/LockRefPtr.h>

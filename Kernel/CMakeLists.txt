@@ -125,8 +125,11 @@ set(KERNEL_SOURCES
     FileSystem/OpenFileDescription.cpp
     FileSystem/Plan9FileSystem.cpp
     FileSystem/ProcFS.cpp
-    FileSystem/SysFS.cpp
     FileSystem/SysFS/Component.cpp
+    FileSystem/SysFS/DirectoryInode.cpp
+    FileSystem/SysFS/FileSystem.cpp
+    FileSystem/SysFS/Inode.cpp
+    FileSystem/SysFS/LinkInode.cpp
     FileSystem/SysFS/Registry.cpp
     FileSystem/SysFS/RootDirectory.cpp
     FileSystem/SysFS/Subsystems/Bus/PCI/BusDirectory.cpp

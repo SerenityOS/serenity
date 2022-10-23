@@ -7,11 +7,11 @@
 #pragma once
 
 #include <AK/Bitmap.h>
+#include <AK/HashMap.h>
 #include <AK/Try.h>
 #include <AK/Vector.h>
 #include <Kernel/Bus/PCI/Controller/HostController.h>
 #include <Kernel/Bus/PCI/Definitions.h>
-#include <Kernel/FileSystem/SysFS.h>
 #include <Kernel/Locking/Spinlock.h>
 
 namespace Kernel::PCI {
@@ -59,7 +59,7 @@ private:
     mutable RecursiveSpinlock m_access_lock { LockRank::None };
     mutable Spinlock m_scan_lock { LockRank::None };
 
-    HashMap<u32, NonnullOwnPtr<HostController>> m_host_controllers;
+    HashMap<u32, NonnullOwnPtr<PCI::HostController>> m_host_controllers;
     Vector<DeviceIdentifier> m_device_identifiers;
 };
 }

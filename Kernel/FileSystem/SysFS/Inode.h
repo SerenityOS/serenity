@@ -6,31 +6,11 @@
 
 #pragma once
 
-#include <Kernel/FileSystem/FileSystem.h>
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/FileSystem/SysFS/Component.h>
-#include <Kernel/Locking/MutexProtected.h>
+#include <Kernel/FileSystem/SysFS/FileSystem.h>
 
 namespace Kernel {
-
-class SysFS final : public FileSystem {
-    friend class SysFSInode;
-    friend class SysFSDirectoryInode;
-
-public:
-    virtual ~SysFS() override;
-    static ErrorOr<NonnullLockRefPtr<FileSystem>> try_create();
-
-    virtual ErrorOr<void> initialize() override;
-    virtual StringView class_name() const override { return "SysFS"sv; }
-
-    virtual Inode& root_inode() override;
-
-private:
-    SysFS();
-
-    LockRefPtr<SysFSInode> m_root_inode;
-};
 
 class SysFSInode : public Inode {
     friend class SysFS;
@@ -60,37 +40,6 @@ protected:
     virtual void did_seek(OpenFileDescription&, off_t) override final;
 
     NonnullLockRefPtr<SysFSComponent> m_associated_component;
-};
-
-class SysFSLinkInode : public SysFSInode {
-    friend class SysFS;
-
-public:
-    static ErrorOr<NonnullLockRefPtr<SysFSLinkInode>> try_create(SysFS const&, SysFSComponent const&);
-    virtual ~SysFSLinkInode() override;
-
-protected:
-    SysFSLinkInode(SysFS const&, SysFSComponent const&);
-    // ^Inode
-    virtual InodeMetadata metadata() const override;
-};
-
-class SysFSDirectoryInode : public SysFSInode {
-    friend class SysFS;
-
-public:
-    static ErrorOr<NonnullLockRefPtr<SysFSDirectoryInode>> try_create(SysFS const&, SysFSComponent const&);
-    virtual ~SysFSDirectoryInode() override;
-
-    SysFS& fs() { return static_cast<SysFS&>(Inode::fs()); }
-    SysFS const& fs() const { return static_cast<SysFS const&>(Inode::fs()); }
-
-protected:
-    SysFSDirectoryInode(SysFS const&, SysFSComponent const&);
-    // ^Inode
-    virtual InodeMetadata metadata() const override;
-    virtual ErrorOr<void> traverse_as_directory(Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)>) const override;
-    virtual ErrorOr<NonnullLockRefPtr<Inode>> lookup(StringView name) override;
 };
 
 }

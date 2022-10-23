@@ -4,8 +4,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/FileSystem/SysFS.h>
 #include <Kernel/FileSystem/SysFS/Component.h>
+#include <Kernel/FileSystem/SysFS/DirectoryInode.h>
+#include <Kernel/FileSystem/SysFS/Inode.h>
+#include <Kernel/FileSystem/SysFS/LinkInode.h>
 #include <Kernel/FileSystem/SysFS/Registry.h>
 #include <Kernel/KLexicalPath.h>
 
