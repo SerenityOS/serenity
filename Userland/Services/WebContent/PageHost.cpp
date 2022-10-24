@@ -118,7 +118,7 @@ void PageHost::paint(Web::DevicePixelRect const& content_rect, Gfx::Bitmap& targ
         return;
     }
 
-    Web::PaintContext context(painter, palette(), content_rect.top_left().to_type<int>());
+    Web::PaintContext context(painter, palette());
     context.set_should_show_line_box_borders(m_should_show_line_box_borders);
     context.set_viewport_rect(content_rect.to_type<int>());
     context.set_has_focus(m_has_focus);

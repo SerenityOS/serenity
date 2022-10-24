@@ -8,10 +8,9 @@
 
 namespace Web {
 
-PaintContext::PaintContext(Gfx::Painter& painter, Palette const& palette, Gfx::IntPoint scroll_offset)
+PaintContext::PaintContext(Gfx::Painter& painter, Palette const& palette)
     : m_painter(painter)
     , m_palette(palette)
-    , m_scroll_offset(scroll_offset)
 {
 }
 
