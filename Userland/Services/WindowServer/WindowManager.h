@@ -302,6 +302,7 @@ public:
         switch (window_type) {
         case WindowType::Normal:
         case WindowType::Tooltip:
+        case WindowType::Popup:
             return false;
         default:
             return true;
@@ -512,6 +513,8 @@ inline IterationDecision WindowManager::for_each_visible_window_from_back_to_fro
         return IterationDecision::Break;
     if (for_each_window.template operator()<WindowType::Tooltip>() == IterationDecision::Break)
         return IterationDecision::Break;
+    if (for_each_window.template operator()<WindowType::Popup>() == IterationDecision::Break)
+        return IterationDecision::Break;
     if (for_each_window.template operator()<WindowType::Menu>() == IterationDecision::Break)
         return IterationDecision::Break;
     return for_each_window.template operator()<WindowType::WindowSwitcher>();
@@ -540,6 +543,8 @@ inline IterationDecision WindowManager::for_each_visible_window_from_front_to_ba
     if (for_each_window.template operator()<WindowType::Menu>() == IterationDecision::Break)
         return IterationDecision::Break;
     if (for_each_window.template operator()<WindowType::Tooltip>() == IterationDecision::Break)
+        return IterationDecision::Break;
+    if (for_each_window.template operator()<WindowType::Popup>() == IterationDecision::Break)
         return IterationDecision::Break;
     if (for_each_window.template operator()<WindowType::Notification>() == IterationDecision::Break)
         return IterationDecision::Break;
