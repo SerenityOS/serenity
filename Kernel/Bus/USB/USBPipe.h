@@ -83,7 +83,7 @@ class ControlPipe : public Pipe {
 public:
     static ErrorOr<NonnullOwnPtr<ControlPipe>> create(USBController const& controller, u8 endpoint_address, u16 max_packet_size, i8 device_address, size_t buffer_size = PAGE_SIZE);
 
-    ErrorOr<size_t> control_transfer(u8 request_type, u8 request, u16 value, u16 index, size_t length, void* data);
+    ErrorOr<size_t> submit_control_transfer(u8 request_type, u8 request, u16 value, u16 index, size_t length, void* data);
 
 private:
     ControlPipe(USBController const& controller, u8 endpoint_address, u16 max_packet_size, i8 device_address, NonnullOwnPtr<Memory::Region> dma_buffer);
@@ -93,7 +93,7 @@ class BulkInPipe : public Pipe {
 public:
     static ErrorOr<NonnullOwnPtr<BulkInPipe>> create(USBController const& controller, u8 endpoint_address, u16 max_packet_size, i8 device_address, size_t buffer_size = PAGE_SIZE);
 
-    ErrorOr<size_t> bulk_in_transfer(size_t length, void* data);
+    ErrorOr<size_t> submit_bulk_in_transfer(size_t length, void* data);
 
 private:
     BulkInPipe(USBController const& controller, u8 endpoint_address, u16 max_packet_size, i8 device_address, NonnullOwnPtr<Memory::Region> dma_buffer);
@@ -103,7 +103,7 @@ class BulkOutPipe : public Pipe {
 public:
     static ErrorOr<NonnullOwnPtr<BulkOutPipe>> create(USBController const& controller, u8 endpoint_address, u16 max_packet_size, i8 device_address, size_t buffer_size = PAGE_SIZE);
 
-    ErrorOr<size_t> bulk_out_transfer(size_t length, void* data);
+    ErrorOr<size_t> submit_bulk_out_transfer(size_t length, void* data);
 
 private:
     BulkOutPipe(USBController const& controller, u8 endpoint_address, u16 max_packet_size, i8 device_address, NonnullOwnPtr<Memory::Region> dma_buffer);
@@ -113,7 +113,7 @@ class InterruptInPipe : public Pipe {
 public:
     static ErrorOr<NonnullOwnPtr<InterruptInPipe>> create(USBController const& controller, u8 endpoint_address, u16 max_packet_size, i8 device_address, u16 poll_interval, size_t buffer_size = PAGE_SIZE);
 
-    ErrorOr<NonnullLockRefPtr<Transfer>> interrupt_in_transfer(size_t length, u16 ms_interval, USBAsyncCallback callback);
+    ErrorOr<NonnullLockRefPtr<Transfer>> submit_interrupt_in_transfer(size_t length, u16 ms_interval, USBAsyncCallback callback);
 
     u16 poll_interval() const { return m_poll_interval; }
 
