@@ -299,6 +299,7 @@ public:
     [[nodiscard]] WebIDL::ExceptionOr<JS::NonnullGCPtr<Request>> clone(JS::VM&) const;
 
     [[nodiscard]] ErrorOr<void> add_range_header(u64 first, Optional<u64> const& last);
+    [[nodiscard]] ErrorOr<void> add_origin_header();
 
     [[nodiscard]] bool cross_origin_embedder_policy_allows_credentials() const;
 

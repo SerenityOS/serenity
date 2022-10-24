@@ -8,6 +8,7 @@
 #include <LibJS/Heap/Heap.h>
 #include <LibJS/Runtime/Realm.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP/Requests.h>
+#include <LibWeb/URL/URL.h>
 
 namespace Web::Fetch::Infrastructure {
 
@@ -269,6 +270,66 @@ ErrorOr<void> Request::add_range_header(u64 first, Optional<u64> const& last)
         .value = move(range_value),
     };
     TRY(m_header_list->append(move(header)));
+
+    return {};
+}
+
+// https://fetch.spec.whatwg.org/#append-a-request-origin-header
+ErrorOr<void> Request::add_origin_header()
+{
+    // 1. Let serializedOrigin be the result of byte-serializing a request origin with request.
+    auto serialized_origin = TRY(byte_serialize_origin());
+
+    // 2. If request’s response tainting is "cors" or request’s mode is "websocket", then append (`Origin`, serializedOrigin) to request’s header list.
+    if (m_response_tainting == ResponseTainting::CORS || m_mode == Mode::WebSocket) {
+        auto header = Header {
+            .name = MUST(ByteBuffer::copy("Origin"sv.bytes())),
+            .value = move(serialized_origin),
+        };
+        TRY(m_header_list->append(move(header)));
+    }
+    // 3. Otherwise, if request’s method is neither `GET` nor `HEAD`, then:
+    else if (!StringView { m_method }.is_one_of("GET"sv, "HEAD"sv)) {
+        // 1. If request’s mode is not "cors", then switch on request’s referrer policy:
+        if (m_mode != Mode::CORS && m_referrer_policy.has_value()) {
+            switch (*m_referrer_policy) {
+            // -> "no-referrer"
+            case ReferrerPolicy::ReferrerPolicy::NoReferrer:
+                // Set serializedOrigin to `null`.
+                serialized_origin = MUST(ByteBuffer::copy("null"sv.bytes()));
+                break;
+            // -> "no-referrer-when-downgrade"
+            // -> "strict-origin"
+            // -> "strict-origin-when-cross-origin"
+            case ReferrerPolicy::ReferrerPolicy::NoReferrerWhenDowngrade:
+            case ReferrerPolicy::ReferrerPolicy::StrictOrigin:
+            case ReferrerPolicy::ReferrerPolicy::StrictOriginWhenCrossOrigin:
+                // If request’s origin is a tuple origin, its scheme is "https", and request’s current URL’s scheme is
+                // not "https", then set serializedOrigin to `null`.
+                if (m_origin.has<HTML::Origin>() && m_origin.get<HTML::Origin>().scheme() == "https"sv && current_url().scheme() != "https"sv)
+                    serialized_origin = MUST(ByteBuffer::copy("null"sv.bytes()));
+                break;
+            // -> "same-origin"
+            case ReferrerPolicy::ReferrerPolicy::SameOrigin:
+                // If request’s origin is not same origin with request’s current URL’s origin, then set serializedOrigin
+                // to `null`.
+                if (m_origin.has<HTML::Origin>() && !m_origin.get<HTML::Origin>().is_same_origin(URL::url_origin(current_url())))
+                    serialized_origin = MUST(ByteBuffer::copy("null"sv.bytes()));
+                break;
+            // -> Otherwise
+            default:
+                // Do nothing.
+                break;
+            }
+        }
+
+        // 2. Append (`Origin`, serializedOrigin) to request’s header list.
+        auto header = Header {
+            .name = MUST(ByteBuffer::copy("Origin"sv.bytes())),
+            .value = move(serialized_origin),
+        };
+        TRY(m_header_list->append(move(header)));
+    }
 
     return {};
 }
