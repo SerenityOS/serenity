@@ -206,6 +206,9 @@ public:
 
     Action* action_for_shortcut(Shortcut const&);
 
+    void set_in_text_entry(bool in_text_entry) { m_in_text_entry = in_text_entry; }
+    bool is_in_text_entry() { return m_in_text_entry; }
+
     void did_add_widget(Badge<Widget>, Widget&);
     void did_remove_widget(Badge<Widget>, Widget&);
 
@@ -318,6 +321,7 @@ private:
     bool m_moved_by_client { false };
     bool m_blocks_command_palette { false };
     bool m_blocks_emoji_input { false };
+    bool m_in_text_entry { false };
 };
 
 }

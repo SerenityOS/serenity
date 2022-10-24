@@ -42,4 +42,14 @@ String Shortcut::to_string() const
     return builder.to_string();
 }
 
+bool Shortcut::looks_like_text_entry() const
+{
+    if (m_type != Type::Keyboard)
+        return false;
+    if (m_modifiers & Mod_Alt || m_modifiers & Mod_Ctrl || m_modifiers & Mod_Super)
+        return false;
+
+    return (m_keyboard_key >= Key_Space && m_keyboard_key <= Key_Backtick);
+}
+
 }

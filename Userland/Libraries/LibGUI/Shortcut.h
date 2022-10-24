@@ -49,6 +49,7 @@ public:
     String to_string() const;
     Type type() const { return m_type; }
     bool is_valid() const { return m_type == Type::Keyboard ? (m_keyboard_key != Key_Invalid) : (m_mouse_button != MouseButton::None); }
+    bool looks_like_text_entry() const;
     u8 modifiers() const { return m_modifiers; }
 
     KeyCode key() const

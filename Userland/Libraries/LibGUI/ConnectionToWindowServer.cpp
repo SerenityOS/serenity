@@ -149,6 +149,10 @@ static Action* action_for_shortcut(Window& window, Shortcut const& shortcut)
     if (!shortcut.is_valid())
         return nullptr;
 
+    if (window.is_in_text_entry() && shortcut.looks_like_text_entry()) {
+        return nullptr;
+    }
+
     dbgln_if(KEYBOARD_SHORTCUTS_DEBUG, "Looking up action for {}", shortcut.to_string());
 
     for (auto* widget = window.focused_widget(); widget; widget = widget->parent_widget()) {
