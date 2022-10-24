@@ -65,6 +65,7 @@ public:
 
 private:
     virtual void visit_edges(Cell::Visitor&) override;
+    virtual bool must_survive_garbage_collection() const override;
 
     void set_ready_state(ReadyState);
     void set_status(Fetch::Infrastructure::Status status) { m_status = status; }

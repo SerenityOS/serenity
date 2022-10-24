@@ -51,6 +51,7 @@ XMLHttpRequest::XMLHttpRequest(HTML::Window& window)
     , m_window(window)
     , m_response_type(Bindings::XMLHttpRequestResponseType::Empty)
 {
+    set_overrides_must_survive_garbage_collection(true);
     set_prototype(&Bindings::cached_web_prototype(window.realm(), "XMLHttpRequest"));
 }
 
@@ -586,5 +587,38 @@ WebIDL::ExceptionOr<void> XMLHttpRequest::set_timeout(u32 timeout)
 
 // https://xhr.spec.whatwg.org/#dom-xmlhttprequest-timeout
 u32 XMLHttpRequest::timeout() const { return m_timeout; }
+
+// https://xhr.spec.whatwg.org/#garbage-collection
+bool XMLHttpRequest::must_survive_garbage_collection() const
+{
+    // An XMLHttpRequest object must not be garbage collected
+    // if its state is either opened with the send() flag set, headers received, or loading,
+    // and it has one or more event listeners registered whose type is one of
+    // readystatechange, progress, abort, error, load, timeout, and loadend.
+    if ((m_ready_state == ReadyState::Opened && m_send)
+        || m_ready_state == ReadyState::HeadersReceived
+        || m_ready_state == ReadyState::Loading) {
+        if (has_event_listener(EventNames::readystatechange))
+            return true;
+        if (has_event_listener(EventNames::progress))
+            return true;
+        if (has_event_listener(EventNames::abort))
+            return true;
+        if (has_event_listener(EventNames::error))
+            return true;
+        if (has_event_listener(EventNames::load))
+            return true;
+        if (has_event_listener(EventNames::timeout))
+            return true;
+        if (has_event_listener(EventNames::loadend))
+            return true;
+    }
+
+    // FIXME: If an XMLHttpRequest object is garbage collected while its connection is still open,
+    //        the user agent must terminate the XMLHttpRequest object’s fetch controller.
+    // NOTE: This would go in XMLHttpRequest::finalize().
+
+    return false;
+}
 
 }
