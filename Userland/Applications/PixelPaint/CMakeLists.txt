@@ -67,6 +67,7 @@ set(SOURCES
     Tools/RectangleSelectTool.cpp
     Tools/RectangleTool.cpp
     Tools/SprayTool.cpp
+    Tools/TextTool.cpp
     Tools/Tool.cpp
     Tools/WandSelectTool.cpp
     Tools/ZoomTool.cpp

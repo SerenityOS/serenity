@@ -21,6 +21,7 @@
 #include "Tools/RectangleSelectTool.h"
 #include "Tools/RectangleTool.h"
 #include "Tools/SprayTool.h"
+#include "Tools/TextTool.h"
 #include "Tools/WandSelectTool.h"
 #include "Tools/ZoomTool.h"
 #include <LibGUI/Action.h>
@@ -87,6 +88,7 @@ void ToolboxWidget::setup_tools()
     add_tool("line"sv, { Mod_Ctrl | Mod_Shift, Key_L }, make<LineTool>());
     add_tool("rectangle"sv, { Mod_Ctrl | Mod_Shift, Key_R }, make<RectangleTool>());
     add_tool("circle"sv, { Mod_Ctrl | Mod_Shift, Key_E }, make<EllipseTool>());
+    add_tool("text"sv, { Mod_Ctrl | Mod_Shift, Key_T }, make<TextTool>());
     add_tool("zoom"sv, { 0, Key_Z }, make<ZoomTool>());
     add_tool("rectangle-select"sv, { 0, Key_R }, make<RectangleSelectTool>());
     add_tool("wand-select"sv, { 0, Key_W }, make<WandSelectTool>());
