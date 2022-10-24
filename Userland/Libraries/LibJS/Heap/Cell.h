@@ -98,7 +98,7 @@ protected:
 
 private:
     bool m_mark : 1 { false };
-    bool m_overrides_must_survive_garbage_collection { false };
+    bool m_overrides_must_survive_garbage_collection : 1 { false };
     State m_state : 1 { State::Live };
 };
 
