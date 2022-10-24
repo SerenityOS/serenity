@@ -9,6 +9,7 @@
 #include <AK/DeprecatedString.h>
 #include <LibGfx/Forward.h>
 #include <LibWeb/Forward.h>
+#include <LibWeb/PixelUnits.h>
 
 namespace Web::CSS {
 
@@ -40,10 +41,12 @@ public:
     // this file already. To break the cyclic dependency, we must move all method definitions out.
     Length(int value, Type type);
     Length(float value, Type type);
+    Length(CSSPixels value, Type type);
     ~Length();
 
     static Length make_auto();
     static Length make_px(float value);
+    static Length make_px(CSSPixels value);
     static Length make_calculated(NonnullRefPtr<CalculatedStyleValue>);
     Length percentage_of(Percentage const&) const;
 
