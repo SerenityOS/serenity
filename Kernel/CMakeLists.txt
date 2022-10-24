@@ -109,7 +109,8 @@ set(KERNEL_SOURCES
     FileSystem/AnonymousFile.cpp
     FileSystem/BlockBasedFileSystem.cpp
     FileSystem/Custody.cpp
-    FileSystem/DevPtsFS.cpp
+    FileSystem/DevPtsFS/FileSystem.cpp
+    FileSystem/DevPtsFS/Inode.cpp
     FileSystem/Ext2FileSystem.cpp
     FileSystem/FATFS/FileSystem.cpp
     FileSystem/FATFS/Inode.cpp
