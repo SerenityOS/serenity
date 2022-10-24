@@ -122,7 +122,9 @@ set(KERNEL_SOURCES
     FileSystem/InodeFile.cpp
     FileSystem/InodeMetadata.cpp
     FileSystem/InodeWatcher.cpp
-    FileSystem/ISO9660FileSystem.cpp
+    FileSystem/ISO9660FS/DirectoryIterator.cpp
+    FileSystem/ISO9660FS/FileSystem.cpp
+    FileSystem/ISO9660FS/Inode.cpp
     FileSystem/Mount.cpp
     FileSystem/OpenFileDescription.cpp
     FileSystem/Plan9FS/FileSystem.cpp
