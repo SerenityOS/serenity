@@ -95,6 +95,26 @@ WebIDL::ExceptionOr<String> XMLHttpRequest::response_text() const
     return get_text_response();
 }
 
+// https://xhr.spec.whatwg.org/#dom-xmlhttprequest-responsetype
+WebIDL::ExceptionOr<void> XMLHttpRequest::set_response_type(Bindings::XMLHttpRequestResponseType response_type)
+{
+    // 1. If the current global object is not a Window object and the given value is "document", then return.
+    if (!is<HTML::Window>(HTML::current_global_object()) && response_type == Bindings::XMLHttpRequestResponseType::Document)
+        return {};
+
+    // 2. If this’s state is loading or done, then throw an "InvalidStateError" DOMException.
+    if (m_ready_state == ReadyState::Loading || m_ready_state == ReadyState::Done)
+        return WebIDL::InvalidStateError::create(realm(), "Can't readyState when XHR is loading or done");
+
+    // 3. If the current global object is a Window object and this’s synchronous flag is set, then throw an "InvalidAccessError" DOMException.
+    if (is<HTML::Window>(HTML::current_global_object()) && m_synchronous)
+        return WebIDL::InvalidAccessError::create(realm(), "Can't set readyState on synchronous XHR in Window environment");
+
+    // 4. Set this’s response type to the given value.
+    m_response_type = response_type;
+    return {};
+}
+
 // https://xhr.spec.whatwg.org/#response
 WebIDL::ExceptionOr<JS::Value> XMLHttpRequest::response()
 {

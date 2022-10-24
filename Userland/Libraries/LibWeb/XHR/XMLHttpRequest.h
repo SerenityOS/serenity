@@ -50,7 +50,7 @@ public:
     WebIDL::ExceptionOr<void> send(Optional<Fetch::XMLHttpRequestBodyInit> body);
 
     WebIDL::ExceptionOr<void> set_request_header(String const& header, String const& value);
-    void set_response_type(Bindings::XMLHttpRequestResponseType type) { m_response_type = type; }
+    WebIDL::ExceptionOr<void> set_response_type(Bindings::XMLHttpRequestResponseType);
 
     String get_response_header(String const& name) { return m_response_headers.get(name).value_or({}); }
     String get_all_response_headers() const;
