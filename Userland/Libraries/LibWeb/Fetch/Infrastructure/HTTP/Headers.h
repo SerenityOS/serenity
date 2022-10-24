@@ -74,5 +74,6 @@ struct RangeHeaderValue {
 [[nodiscard]] bool is_forbidden_response_header_name(ReadonlyBytes);
 [[nodiscard]] bool is_request_body_header_name(ReadonlyBytes);
 [[nodiscard]] Optional<RangeHeaderValue> parse_single_range_header_value(ReadonlyBytes);
+[[nodiscard]] ErrorOr<ByteBuffer> default_user_agent_value();
 
 }

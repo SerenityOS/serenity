@@ -17,6 +17,7 @@
 #include <LibWeb/Fetch/Infrastructure/HTTP.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP/Headers.h>
 #include <LibWeb/Infra/ByteSequences.h>
+#include <LibWeb/Loader/ResourceLoader.h>
 #include <LibWeb/MimeSniff/MimeType.h>
 
 namespace Web::Fetch::Infrastructure {
@@ -684,6 +685,13 @@ Optional<RangeHeaderValue> parse_single_range_header_value(ReadonlyBytes value)
     // 13. Return (rangeStartValue, rangeEndValue).
     // NOTE: The range end or start can be omitted, e.g., `bytes=0-` or `bytes=-500` are valid ranges.
     return RangeHeaderValue { move(range_start_value), move(range_end_value) };
+}
+
+// https://fetch.spec.whatwg.org/#default-user-agent-value
+ErrorOr<ByteBuffer> default_user_agent_value()
+{
+    // A default `User-Agent` value is an implementation-defined header value for the `User-Agent` header.
+    return ByteBuffer::copy(default_user_agent.bytes());
 }
 
 }
