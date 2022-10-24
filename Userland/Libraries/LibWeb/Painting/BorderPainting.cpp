@@ -77,7 +77,7 @@ void paint_border(PaintContext& context, BorderEdge edge, Gfx::IntRect const& re
 
     auto color = border_data.color;
     auto border_style = border_data.line_style;
-    int int_width = ceil(width);
+    int int_width = ceilf(width);
 
     struct Points {
         Gfx::IntPoint p1;
@@ -257,7 +257,7 @@ void paint_all_borders(PaintContext& context, Gfx::FloatRect const& bordered_rec
         top_right = { 0, 0 };
 
     auto int_width = [&](auto value) -> int {
-        return ceil(value);
+        return ceilf(value);
     };
 
     Gfx::IntRect top_border_rect = {
