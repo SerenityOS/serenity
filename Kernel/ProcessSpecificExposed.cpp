@@ -8,7 +8,7 @@
 #include <AK/JsonObjectSerializer.h>
 #include <AK/JsonValue.h>
 #include <Kernel/FileSystem/Custody.h>
-#include <Kernel/FileSystem/ProcFS.h>
+#include <Kernel/FileSystem/ProcFS/ProcessPropertyInode.h>
 #include <Kernel/InterruptDisabler.h>
 #include <Kernel/KBufferBuilder.h>
 #include <Kernel/Memory/AnonymousVMObject.h>

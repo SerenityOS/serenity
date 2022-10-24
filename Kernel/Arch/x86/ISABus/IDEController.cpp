@@ -8,7 +8,6 @@
 #include <AK/Types.h>
 #include <Kernel/Arch/x86/ISABus/IDEController.h>
 #include <Kernel/Bus/PCI/API.h>
-#include <Kernel/FileSystem/ProcFS.h>
 #include <Kernel/Library/LockRefPtr.h>
 #include <Kernel/Sections.h>
 #include <Kernel/Storage/ATA/ATADiskDevice.h>

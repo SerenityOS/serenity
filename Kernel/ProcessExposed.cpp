@@ -5,9 +5,8 @@
  */
 
 #include <Kernel/Debug.h>
-#include <Kernel/Devices/BlockDevice.h>
-#include <Kernel/FileSystem/ProcFS.h>
-#include <Kernel/FileSystem/VirtualFileSystem.h>
+#include <Kernel/FileSystem/ProcFS/DirectoryInode.h>
+#include <Kernel/FileSystem/ProcFS/LinkInode.h>
 #include <Kernel/KBufferBuilder.h>
 #include <Kernel/PerformanceEventBuffer.h>
 #include <Kernel/Process.h>

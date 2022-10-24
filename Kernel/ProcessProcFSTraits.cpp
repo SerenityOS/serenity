@@ -4,8 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/FileSystem/ProcFS.h>
+#include <Kernel/FileSystem/ProcFS/ProcessDirectoryInode.h>
 #include <Kernel/Process.h>
+#include <Kernel/ProcessExposed.h>
 
 namespace Kernel {
 

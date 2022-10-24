@@ -125,7 +125,16 @@ set(KERNEL_SOURCES
     FileSystem/Mount.cpp
     FileSystem/OpenFileDescription.cpp
     FileSystem/Plan9FileSystem.cpp
-    FileSystem/ProcFS.cpp
+    FileSystem/ProcFS/ComponentRegistry.cpp
+    FileSystem/ProcFS/DirectoryInode.cpp
+    FileSystem/ProcFS/FileSystem.cpp
+    FileSystem/ProcFS/GlobalInode.cpp
+    FileSystem/ProcFS/Inode.cpp
+    FileSystem/ProcFS/LinkInode.cpp
+    FileSystem/ProcFS/ProcessAssociatedInode.cpp
+    FileSystem/ProcFS/ProcessDirectoryInode.cpp
+    FileSystem/ProcFS/ProcessPropertyInode.cpp
+    FileSystem/ProcFS/ProcessSubDirectoryInode.cpp
     FileSystem/SysFS/Component.cpp
     FileSystem/SysFS/DirectoryInode.cpp
     FileSystem/SysFS/FileSystem.cpp
