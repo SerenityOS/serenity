@@ -886,8 +886,6 @@ ErrorOr<void> VirtualFileSystem::validate_path_against_process_veil(StringView p
 {
     if (Process::current().veil_state() == VeilState::None)
         return {};
-    if (options == O_EXEC && path == "/usr/lib/Loader.so")
-        return {};
 
     VERIFY(path.starts_with('/'));
     VERIFY(!path.contains("/../"sv) && !path.ends_with("/.."sv));
