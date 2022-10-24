@@ -2,6 +2,7 @@
  * Copyright (c) 2021-2022, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Luke Wilde <lukew@serenityos.org>
  * Copyright (c) 2022, networkException <networkexception@serenityos.org>
+ * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -11,7 +12,6 @@
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/Environment.h>
 #include <LibJS/Runtime/FinalizationRegistry.h>
-#include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/NativeFunction.h>
 #include <LibJS/Runtime/VM.h>
 #include <LibWeb/Bindings/Intrinsics.h>
@@ -32,25 +32,23 @@
 namespace Web::Bindings {
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#active-script
-HTML::ClassicScript* active_script()
+HTML::Script* active_script()
 {
     // 1. Let record be GetActiveScriptOrModule().
     auto record = main_thread_vm().get_active_script_or_module();
 
     // 2. If record is null, return null.
-    if (record.has<Empty>())
-        return nullptr;
-
     // 3. Return record.[[HostDefined]].
-    if (record.has<JS::NonnullGCPtr<JS::Module>>()) {
-        // FIXME: We don't currently have a module script.
-        TODO();
-    }
-
-    auto js_script = record.get<JS::NonnullGCPtr<JS::Script>>();
-    VERIFY(js_script);
-    VERIFY(js_script->host_defined());
-    return verify_cast<HTML::ClassicScript>(js_script->host_defined());
+    return record.visit(
+        [](JS::NonnullGCPtr<JS::Script>& js_script) -> HTML::Script* {
+            return verify_cast<HTML::ClassicScript>(js_script->host_defined());
+        },
+        [](JS::NonnullGCPtr<JS::Module>& js_module) -> HTML::Script* {
+            return verify_cast<HTML::ModuleScript>(js_module->host_defined());
+        },
+        [](Empty) -> HTML::Script* {
+            return nullptr;
+        });
 }
 
 JS::VM& main_thread_vm()
@@ -86,8 +84,8 @@ JS::VM& main_thread_vm()
                 [&script](JS::NonnullGCPtr<JS::Script>& js_script) {
                     script = verify_cast<HTML::ClassicScript>(js_script->host_defined());
                 },
-                [](JS::NonnullGCPtr<JS::Module>&) {
-                    TODO();
+                [&script](JS::NonnullGCPtr<JS::Module>& js_module) {
+                    script = verify_cast<HTML::ModuleScript>(js_module->host_defined());
                 },
                 [](Empty) {
                 });
@@ -298,8 +296,18 @@ JS::VM& main_thread_vm()
                 script_execution_context = adopt_own(*new JS::ExecutionContext(vm->heap()));
                 script_execution_context->function = nullptr;
                 script_execution_context->realm = &script->settings_object().realm();
-                VERIFY(script->script_record());
-                script_execution_context->script_or_module = JS::NonnullGCPtr<JS::Script>(*script->script_record());
+                if (is<HTML::ClassicScript>(script)) {
+                    script_execution_context->script_or_module = JS::NonnullGCPtr<JS::Script>(*verify_cast<HTML::ClassicScript>(script)->script_record());
+                } else if (is<HTML::ModuleScript>(script)) {
+                    if (is<HTML::JavaScriptModuleScript>(script)) {
+                        script_execution_context->script_or_module = JS::NonnullGCPtr<JS::Module>(*verify_cast<HTML::JavaScriptModuleScript>(script)->record());
+                    } else {
+                        // NOTE: Handle CSS and JSON module scripts once we have those.
+                        VERIFY_NOT_REACHED();
+                    }
+                } else {
+                    VERIFY_NOT_REACHED();
+                }
             }
 
             // 5. Return the JobCallback Record { [[Callback]]: callable, [[HostDefined]]: { [[IncumbentSettings]]: incumbent settings, [[ActiveScriptContext]]: script execution context } }.
