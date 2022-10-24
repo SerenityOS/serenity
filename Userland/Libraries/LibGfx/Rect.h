@@ -374,13 +374,13 @@ public:
 
     void set_right_without_resize(T new_right)
     {
-        int delta = new_right - right();
+        auto delta = new_right - right();
         translate_by(delta, 0);
     }
 
     void set_bottom_without_resize(T new_bottom)
     {
-        int delta = new_bottom - bottom();
+        auto delta = new_bottom - bottom();
         translate_by(0, delta);
     }
 
