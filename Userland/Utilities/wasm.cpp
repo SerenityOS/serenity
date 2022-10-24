@@ -8,6 +8,7 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <LibCore/FileStream.h>
+#include <LibCore/MappedFile.h>
 #include <LibLine/Editor.h>
 #include <LibMain/Main.h>
 #include <LibWasm/AbstractMachine/AbstractMachine.h>
@@ -245,13 +246,13 @@ static bool pre_interpret_hook(Wasm::Configuration& config, Wasm::InstructionPoi
 
 static Optional<Wasm::Module> parse(StringView filename)
 {
-    auto result = Core::File::open(filename, Core::OpenMode::ReadOnly);
+    auto result = Core::MappedFile::map(filename);
     if (result.is_error()) {
         warnln("Failed to open {}: {}", filename, result.error());
         return {};
     }
 
-    auto stream = Core::InputFileStream(result.release_value());
+    InputMemoryStream stream { ReadonlyBytes { result.value()->data(), result.value()->size() } };
     auto parse_result = Wasm::Module::parse(stream);
     if (parse_result.is_error()) {
         warnln("Something went wrong, either the file is invalid, or there's a bug with LibWasm!");
