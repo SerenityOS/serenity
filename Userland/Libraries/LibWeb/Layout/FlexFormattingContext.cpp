@@ -1138,7 +1138,7 @@ void FlexFormattingContext::determine_used_cross_size_of_each_flex_item()
             //  If a flex item has align-self: stretch, its computed cross size property is auto,
             //  and neither of its cross-axis margins are auto, the used outer cross size is the used cross size of its flex line,
             //  clamped according to the item’s used min and max cross sizes.
-            if (alignment_for_item(*flex_item) == CSS::AlignItems::Stretch
+            if (alignment_for_item(flex_item->box) == CSS::AlignItems::Stretch
                 && is_cross_auto(flex_item->box)
                 && !flex_item->margins.cross_before_is_auto
                 && !flex_item->margins.cross_after_is_auto) {
@@ -1290,9 +1290,9 @@ void FlexFormattingContext::dump_items() const
     }
 }
 
-CSS::AlignItems FlexFormattingContext::alignment_for_item(FlexItem const& item) const
+CSS::AlignItems FlexFormattingContext::alignment_for_item(Box const& box) const
 {
-    switch (item.box.computed_values().align_self()) {
+    switch (box.computed_values().align_self()) {
     case CSS::AlignSelf::Auto:
         return flex_container().computed_values().align_items();
     case CSS::AlignSelf::Normal:
@@ -1326,7 +1326,7 @@ void FlexFormattingContext::align_all_flex_items_along_the_cross_axis()
     for (auto& flex_line : m_flex_lines) {
         for (auto* flex_item : flex_line.items) {
             float half_line_size = flex_line.cross_size / 2.0f;
-            switch (alignment_for_item(*flex_item)) {
+            switch (alignment_for_item(flex_item->box)) {
             case CSS::AlignItems::Baseline:
                 // FIXME: Implement this
                 //  Fallthrough
@@ -1797,7 +1797,7 @@ float FlexFormattingContext::calculate_max_content_cross_size(FlexItem const& it
 // https://drafts.csswg.org/css-flexbox-1/#stretched
 bool FlexFormattingContext::flex_item_is_stretched(FlexItem const& item) const
 {
-    auto alignment = alignment_for_item(item);
+    auto alignment = alignment_for_item(item.box);
     if (alignment != CSS::AlignItems::Stretch)
         return false;
     // If the cross size property of the flex item computes to auto, and neither of the cross-axis margins are auto, the flex item is stretched.
@@ -1891,6 +1891,95 @@ void FlexFormattingContext::handle_align_content_stretch()
 
     for (auto& line : m_flex_lines)
         line.cross_size += extra_per_line;
+}
+
+// https://drafts.csswg.org/css-flexbox-1/#abspos-items
+Gfx::FloatPoint FlexFormattingContext::calculate_static_position(Box const& box) const
+{
+    // The cross-axis edges of the static-position rectangle of an absolutely-positioned child
+    // of a flex container are the content edges of the flex container.
+    float cross_offset = 0;
+    float half_line_size = specified_cross_size(flex_container()) / 2;
+
+    auto const& box_state = m_state.get(box);
+    float cross_margin_before = is_row_layout() ? box_state.margin_top : box_state.margin_left;
+    float cross_margin_after = is_row_layout() ? box_state.margin_bottom : box_state.margin_right;
+    float cross_border_before = is_row_layout() ? box_state.border_top : box_state.border_left;
+    float cross_border_after = is_row_layout() ? box_state.border_bottom : box_state.border_right;
+    float cross_padding_before = is_row_layout() ? box_state.padding_top : box_state.padding_left;
+    float cross_padding_after = is_row_layout() ? box_state.padding_bottom : box_state.padding_right;
+
+    switch (alignment_for_item(box)) {
+    case CSS::AlignItems::Baseline:
+        // FIXME: Implement this
+        //  Fallthrough
+    case CSS::AlignItems::FlexStart:
+    case CSS::AlignItems::Stretch:
+        cross_offset = 0 - half_line_size + cross_margin_before + cross_border_before + cross_padding_before;
+        break;
+    case CSS::AlignItems::FlexEnd:
+        cross_offset = half_line_size - specified_cross_size(box) - cross_margin_after - cross_border_after - cross_padding_after;
+        break;
+    case CSS::AlignItems::Center:
+        cross_offset = 0 - (specified_cross_size(box) / 2.0f);
+        break;
+    default:
+        break;
+    }
+
+    cross_offset += specified_cross_size(flex_container()) / 2.0f;
+
+    // The main-axis edges of the static-position rectangle are where the margin edges of the child
+    // would be positioned if it were the sole flex item in the flex container,
+    // assuming both the child and the flex container were fixed-size boxes of their used size.
+    // (For this purpose, auto margins are treated as zero.
+
+    bool pack_from_end = true;
+    float main_offset = 0;
+    switch (flex_container().computed_values().justify_content()) {
+    case CSS::JustifyContent::FlexStart:
+        if (is_direction_reverse()) {
+            pack_from_end = false;
+            main_offset = specified_main_size(flex_container());
+        } else {
+            main_offset = 0;
+        }
+        break;
+    case CSS::JustifyContent::FlexEnd:
+        if (is_direction_reverse()) {
+            main_offset = 0;
+        } else {
+            pack_from_end = false;
+            main_offset = specified_main_size(flex_container());
+        }
+        break;
+    case CSS::JustifyContent::SpaceBetween:
+        main_offset = 0;
+        break;
+    case CSS::JustifyContent::Center:
+    case CSS::JustifyContent::SpaceAround:
+        main_offset = specified_main_size(flex_container()) / 2.0f - specified_main_size(box) / 2.0f;
+        break;
+    }
+
+    // NOTE: Next, we add the flex container's padding since abspos boxes are placed relative to the padding edge
+    //       of their abspos containing block.
+    if (pack_from_end) {
+        main_offset += is_row_layout() ? m_flex_container_state.padding_left : m_flex_container_state.padding_top;
+    } else {
+        main_offset += is_row_layout() ? m_flex_container_state.padding_right : m_flex_container_state.padding_bottom;
+    }
+
+    if (!pack_from_end)
+        main_offset += specified_main_size(flex_container()) - specified_main_size(box);
+
+    auto static_position_offset = is_row_layout() ? Gfx::FloatPoint { main_offset, cross_offset } : Gfx::FloatPoint { cross_offset, main_offset };
+
+    auto absolute_position_of_flex_container = absolute_content_rect(flex_container(), m_state).location();
+    auto absolute_position_of_abspos_containing_block = absolute_content_rect(*box.containing_block(), m_state).location();
+    auto diff = absolute_position_of_flex_container - absolute_position_of_abspos_containing_block;
+
+    return static_position_offset + diff;
 }
 
 }

@@ -27,6 +27,8 @@ public:
     virtual void determine_width_of_child(Box const&, AvailableSpace const&) override;
     virtual void determine_height_of_child(Box const&, AvailableSpace const&) override;
 
+    virtual Gfx::FloatPoint calculate_static_position(Box const&) const override;
+
 private:
     void dump_items() const;
 
@@ -144,7 +146,7 @@ private:
 
     void handle_align_content_stretch();
 
-    CSS::AlignItems alignment_for_item(FlexItem const&) const;
+    CSS::AlignItems alignment_for_item(Box const&) const;
 
     void determine_used_cross_size_of_each_flex_item();
 
