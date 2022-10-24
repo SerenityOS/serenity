@@ -30,7 +30,6 @@ public:
         FocusAndOverlay,
     };
 
-    void paint_descendants(PaintContext&, Layout::Node const&, StackingContextPaintPhase) const;
     void paint(PaintContext&) const;
     Optional<HitTestResult> hit_test(Gfx::FloatPoint const&, HitTestType) const;
 
