@@ -1370,6 +1370,7 @@ void TextEditor::focusin_event(FocusEvent& event)
 {
     if (event.source() == FocusSource::Keyboard)
         select_all();
+    window()->set_in_text_entry(true);
     m_cursor_state = true;
     update_cursor();
     stop_timer();
@@ -1380,6 +1381,7 @@ void TextEditor::focusin_event(FocusEvent& event)
 
 void TextEditor::focusout_event(FocusEvent&)
 {
+    window()->set_in_text_entry(false);
     if (is_displayonly() && has_selection())
         m_selection.clear();
     stop_timer();
