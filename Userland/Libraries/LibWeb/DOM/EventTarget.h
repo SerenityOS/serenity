@@ -54,6 +54,8 @@ public:
     WebIDL::CallbackType* event_handler_attribute(FlyString const& name);
     void set_event_handler_attribute(FlyString const& name, WebIDL::CallbackType*);
 
+    bool has_event_listener(FlyString const& type) const;
+
 protected:
     explicit EventTarget(JS::Realm&);
 
