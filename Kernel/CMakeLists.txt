@@ -124,7 +124,9 @@ set(KERNEL_SOURCES
     FileSystem/ISO9660FileSystem.cpp
     FileSystem/Mount.cpp
     FileSystem/OpenFileDescription.cpp
-    FileSystem/Plan9FileSystem.cpp
+    FileSystem/Plan9FS/FileSystem.cpp
+    FileSystem/Plan9FS/Inode.cpp
+    FileSystem/Plan9FS/Message.cpp
     FileSystem/ProcFS/ComponentRegistry.cpp
     FileSystem/ProcFS/DirectoryInode.cpp
     FileSystem/ProcFS/FileSystem.cpp

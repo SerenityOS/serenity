@@ -9,6 +9,8 @@
 #include <AK/Atomic.h>
 #include <Kernel/FileSystem/FileBackedFileSystem.h>
 #include <Kernel/FileSystem/Inode.h>
+#include <Kernel/FileSystem/Plan9FS/Definitions.h>
+#include <Kernel/FileSystem/Plan9FS/Message.h>
 #include <Kernel/KBufferBuilder.h>
 
 namespace Kernel {
@@ -34,14 +36,6 @@ public:
         v9P2000u,
         v9P2000L
     };
-
-    struct qid {
-        u8 type;
-        u32 version;
-        u64 path;
-    };
-
-    class Message;
 
 private:
     Plan9FS(OpenFileDescription&);
@@ -76,7 +70,7 @@ private:
         mutable Spinlock lock { LockRank::None };
         bool completed { false };
         const u16 tag;
-        OwnPtr<Message> message;
+        OwnPtr<Plan9FSMessage> message;
         ErrorOr<void> result;
 
         ReceiveCompletion(u16 tag);
@@ -85,7 +79,7 @@ private:
 
     class Blocker final : public Thread::Blocker {
     public:
-        Blocker(Plan9FS& fs, Message& message, NonnullLockRefPtr<ReceiveCompletion> completion)
+        Blocker(Plan9FS& fs, Plan9FSMessage& message, NonnullLockRefPtr<ReceiveCompletion> completion)
             : m_fs(fs)
             , m_message(message)
             , m_completion(move(completion))
@@ -110,7 +104,7 @@ private:
 
     private:
         Plan9FS& m_fs;
-        Message& m_message;
+        Plan9FSMessage& m_message;
         NonnullLockRefPtr<ReceiveCompletion> m_completion;
         bool m_did_unblock { false };
     };
@@ -119,11 +113,11 @@ private:
     virtual StringView class_name() const override { return "Plan9FS"sv; }
 
     bool is_complete(ReceiveCompletion const&);
-    ErrorOr<void> post_message(Message&, LockRefPtr<ReceiveCompletion>);
+    ErrorOr<void> post_message(Plan9FSMessage&, LockRefPtr<ReceiveCompletion>);
     ErrorOr<void> do_read(u8* buffer, size_t);
     ErrorOr<void> read_and_dispatch_one_message();
-    ErrorOr<void> post_message_and_wait_for_a_reply(Message&);
-    ErrorOr<void> post_message_and_explicitly_ignore_reply(Message&);
+    ErrorOr<void> post_message_and_wait_for_a_reply(Plan9FSMessage&);
+    ErrorOr<void> post_message_and_explicitly_ignore_reply(Plan9FSMessage&);
 
     ProtocolVersion parse_protocol_version(StringView) const;
     size_t adjust_buffer_size(size_t size) const;
@@ -146,78 +140,6 @@ private:
     LockRefPtr<Thread> m_thread;
     Atomic<bool> m_thread_running { false };
     Atomic<bool, AK::MemoryOrder::memory_order_relaxed> m_thread_shutdown { false };
-};
-
-class Plan9FSInode final : public Inode {
-    friend class Plan9FS;
-
-public:
-    virtual ~Plan9FSInode() override;
-
-    u32 fid() const { return index().value(); }
-
-    // ^Inode
-    virtual InodeMetadata metadata() const override;
-    virtual ErrorOr<void> flush_metadata() override;
-    virtual ErrorOr<void> traverse_as_directory(Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)>) const override;
-    virtual ErrorOr<NonnullLockRefPtr<Inode>> lookup(StringView name) override;
-    virtual ErrorOr<NonnullLockRefPtr<Inode>> create_child(StringView name, mode_t, dev_t, UserID, GroupID) override;
-    virtual ErrorOr<void> add_child(Inode&, StringView name, mode_t) override;
-    virtual ErrorOr<void> remove_child(StringView name) override;
-    virtual ErrorOr<void> chmod(mode_t) override;
-    virtual ErrorOr<void> chown(UserID, GroupID) override;
-    virtual ErrorOr<void> truncate(u64) override;
-
-private:
-    // ^Inode
-    virtual ErrorOr<size_t> read_bytes_locked(off_t, size_t, UserOrKernelBuffer& buffer, OpenFileDescription*) const override;
-    virtual ErrorOr<size_t> write_bytes_locked(off_t, size_t, UserOrKernelBuffer const& data, OpenFileDescription*) override;
-
-    Plan9FSInode(Plan9FS&, u32 fid);
-    static ErrorOr<NonnullLockRefPtr<Plan9FSInode>> try_create(Plan9FS&, u32 fid);
-
-    enum class GetAttrMask : u64 {
-        Mode = 0x1,
-        NLink = 0x2,
-        UID = 0x4,
-        GID = 0x8,
-        RDev = 0x10,
-        ATime = 0x20,
-        MTime = 0x40,
-        CTime = 0x80,
-        Ino = 0x100,
-        Size = 0x200,
-        Blocks = 0x400,
-
-        BTime = 0x800,
-        Gen = 0x1000,
-        DataVersion = 0x2000,
-
-        Basic = 0x7ff,
-        All = 0x3fff
-    };
-
-    enum class SetAttrMask : u64 {
-        Mode = 0x1,
-        UID = 0x2,
-        GID = 0x4,
-        Size = 0x8,
-        ATime = 0x10,
-        MTime = 0x20,
-        CTime = 0x40,
-        ATimeSet = 0x80,
-        MTimeSet = 0x100
-    };
-
-    // Mode in which the file is already open, using SerenityOS constants.
-    int m_open_mode { 0 };
-    ErrorOr<void> ensure_open_for_mode(int mode);
-
-    Plan9FS& fs() { return reinterpret_cast<Plan9FS&>(Inode::fs()); }
-    Plan9FS& fs() const
-    {
-        return const_cast<Plan9FS&>(reinterpret_cast<Plan9FS const&>(Inode::fs()));
-    }
 };
 
 }
