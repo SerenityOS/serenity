@@ -16,7 +16,7 @@ namespace Web {
 
 class PaintContext {
 public:
-    PaintContext(Gfx::Painter& painter, Palette const& palette, Gfx::IntPoint scroll_offset);
+    PaintContext(Gfx::Painter& painter, Palette const& palette);
 
     Gfx::Painter& painter() const { return m_painter; }
     Palette const& palette() const { return m_palette; }
@@ -32,14 +32,12 @@ public:
     Gfx::IntRect viewport_rect() const { return m_viewport_rect; }
     void set_viewport_rect(Gfx::IntRect const& rect) { m_viewport_rect = rect; }
 
-    Gfx::IntPoint scroll_offset() const { return m_scroll_offset; }
-
     bool has_focus() const { return m_focus; }
     void set_has_focus(bool focus) { m_focus = focus; }
 
     PaintContext clone(Gfx::Painter& painter) const
     {
-        auto clone = PaintContext(painter, m_palette, m_scroll_offset);
+        auto clone = PaintContext(painter, m_palette);
         clone.m_viewport_rect = m_viewport_rect;
         clone.m_should_show_line_box_borders = m_should_show_line_box_borders;
         clone.m_focus = m_focus;
@@ -52,7 +50,6 @@ private:
     Palette m_palette;
     Optional<SVGContext> m_svg_context;
     Gfx::IntRect m_viewport_rect;
-    Gfx::IntPoint m_scroll_offset;
     bool m_should_show_line_box_borders { false };
     bool m_focus { false };
 };
