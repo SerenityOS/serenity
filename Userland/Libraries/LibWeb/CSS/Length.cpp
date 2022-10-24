@@ -15,6 +15,7 @@
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/HTMLHtmlElement.h>
+#include <LibWeb/PixelUnits.h>
 
 namespace Web::CSS {
 
@@ -28,6 +29,11 @@ Length::Length(float value, Type type)
     , m_value(value)
 {
 }
+Length::Length(CSSPixels value, Type type)
+    : m_type(type)
+    , m_value(value.value())
+{
+}
 Length::~Length() = default;
 
 Length Length::make_auto()
@@ -38,6 +44,11 @@ Length Length::make_auto()
 Length Length::make_px(float value)
 {
     return Length(value, Type::Px);
+}
+
+Length Length::make_px(CSSPixels value)
+{
+    return Length(value.value(), Type::Px);
 }
 
 Length Length::make_calculated(NonnullRefPtr<CalculatedStyleValue> calculated_style_value)
