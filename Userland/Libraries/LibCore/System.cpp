@@ -81,9 +81,33 @@ ErrorOr<void> pledge(StringView promises, StringView execpromises)
     HANDLE_SYSCALL_RETURN_VALUE("pledge", rc, {});
 }
 
+static ErrorOr<void> unveil_dynamic_loader()
+{
+    static bool dynamic_loader_unveiled { false };
+    if (dynamic_loader_unveiled)
+        return {};
+    // FIXME: Try to find a way to not hardcode the dynamic loader path.
+    constexpr auto dynamic_loader_path = "/usr/lib/Loader.so"sv;
+    constexpr auto dynamic_loader_permissions = "x"sv;
+
+    Syscall::SC_unveil_params params {
+        { dynamic_loader_path.characters_without_null_termination(), dynamic_loader_path.length() },
+        { dynamic_loader_permissions.characters_without_null_termination(), dynamic_loader_permissions.length() },
+    };
+    int rc = syscall(SC_unveil, &params);
+    if (rc < 0) {
+        return Error::from_syscall("unveil (DynamicLoader @ /usr/lib/Loader.so)"sv, rc);
+    }
+    dynamic_loader_unveiled = true;
+    return {};
+}
+
 ErrorOr<void> unveil(StringView path, StringView permissions)
 {
     auto const parsed_path = TRY(Core::SessionManagement::parse_path_with_sid(path));
+
+    if (permissions.contains('x'))
+        TRY(unveil_dynamic_loader());
 
     Syscall::SC_unveil_params params {
         { parsed_path.characters(), parsed_path.length() },
