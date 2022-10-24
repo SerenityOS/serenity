@@ -44,7 +44,7 @@ def should_check_file(filename):
         return False
     if filename.startswith('Base/'):
         return False
-    if filename == 'Kernel/FileSystem/ext2_fs.h':
+    if filename == 'Kernel/FileSystem/Ext2FS/Definitions.h':
         return False
     return True
 

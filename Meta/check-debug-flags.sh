@@ -26,7 +26,7 @@ done < <(
             '*.cpp' \
             '*.h' \
             '*.in' \
-            ':!:Kernel/FileSystem/ext2_fs.h'
+            ':!:Kernel/FileSystem/Ext2FS/Definitions.h'
     else
         # We're in the middle of a pre-commit run, so we should only check the files that have
         # actually changed. The reason is that "git ls-files | grep" on the entire repo takes
@@ -34,7 +34,7 @@ done < <(
         # pre-commit hook. It is unnecessary to check the entire repository on every single
         # commit, so we save some time here.
         for file in "$@"; do
-            if [[ ("${file}" =~ \.cpp || "${file}" =~ \.h || "${file}" =~ \.in) && ! "${file}" == "Kernel/FileSystem/ext2_fs.h" ]]; then
+            if [[ ("${file}" =~ \.cpp || "${file}" =~ \.h || "${file}" =~ \.in) ]]; then
                 echo "$file"
             fi
         done
