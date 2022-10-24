@@ -37,9 +37,11 @@ bool is_builtin_calendar(String const& identifier)
     // 1. Let calendars be AvailableCalendars().
     auto calendars = available_calendars();
 
-    // 2. If calendars contains id, return true.
-    if (calendars.contains_slow(identifier))
-        return true;
+    // 2. If calendars contains the ASCII-lowercase of id, return true.
+    for (auto calendar : calendars) {
+        if (calendar.equals_ignoring_case(identifier))
+            return true;
+    }
 
     // 3. Return false.
     return false;
@@ -73,8 +75,8 @@ ThrowCompletionOr<Calendar*> create_temporal_calendar(VM& vm, String const& iden
         new_target = realm.intrinsics().temporal_calendar_constructor();
 
     // 3. Let object be ? OrdinaryCreateFromConstructor(newTarget, "%Temporal.Calendar.prototype%", « [[InitializedTemporalCalendar]], [[Identifier]] »).
-    // 4. Set object.[[Identifier]] to identifier.
-    auto* object = TRY(ordinary_create_from_constructor<Calendar>(vm, *new_target, &Intrinsics::temporal_calendar_prototype, identifier));
+    // 4. Set object.[[Identifier]] to the ASCII-lowercase of identifier.
+    auto* object = TRY(ordinary_create_from_constructor<Calendar>(vm, *new_target, &Intrinsics::temporal_calendar_prototype, identifier.to_lowercase()));
 
     // 5. Return object.
     return object;
