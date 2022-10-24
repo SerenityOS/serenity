@@ -44,23 +44,26 @@ NonnullRefPtr<Response> Response::network_error()
 bool Response::is_aborted_network_error() const
 {
     // A response whose type is "error" and aborted flag is set is known as an aborted network error.
-    return m_type == Type::Error && m_aborted;
+    // NOTE: We have to use the virtual getter here to not bypass filtered responses.
+    return type() == Type::Error && aborted();
 }
 
 // https://fetch.spec.whatwg.org/#concept-network-error
 bool Response::is_network_error() const
 {
     // A response whose type is "error" is known as a network error.
-    return m_type == Type::Error;
+    // NOTE: We have to use the virtual getter here to not bypass filtered responses.
+    return type() == Type::Error;
 }
 
 // https://fetch.spec.whatwg.org/#concept-response-url
 Optional<AK::URL const&> Response::url() const
 {
     // A response has an associated URL. It is a pointer to the last URL in response’s URL list and null if response’s URL list is empty.
-    if (m_url_list.is_empty())
+    // NOTE: We have to use the virtual getter here to not bypass filtered responses.
+    if (url_list().is_empty())
         return {};
-    return m_url_list.last();
+    return url_list().last();
 }
 
 // https://fetch.spec.whatwg.org/#concept-response-location-url
@@ -69,7 +72,8 @@ ErrorOr<Optional<AK::URL>> Response::location_url(Optional<String> const& reques
     // The location URL of a response response, given null or an ASCII string requestFragment, is the value returned by the following steps. They return null, failure, or a URL.
 
     // 1. If response’s status is not a redirect status, then return null.
-    if (!is_redirect_status(m_status))
+    // NOTE: We have to use the virtual getter here to not bypass filtered responses.
+    if (!is_redirect_status(status()))
         return Optional<AK::URL> {};
 
     // FIXME: 2. Let location be the result of extracting header list values given `Location` and response’s header list.
