@@ -187,10 +187,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Response>> Response::redirect(JS::VM& vm, S
     auto value = parsed_url.serialize();
 
     // 7. Append (`Location`, value) to responseObject’s response’s header list.
-    auto header = Infrastructure::Header {
-        .name = TRY_OR_RETURN_OOM(realm, ByteBuffer::copy("Location"sv.bytes())),
-        .value = TRY_OR_RETURN_OOM(realm, ByteBuffer::copy(value.bytes())),
-    };
+    auto header = TRY_OR_RETURN_OOM(realm, Infrastructure::Header::from_string_pair("Location"sv, value));
     TRY_OR_RETURN_OOM(realm, response_object->response()->header_list()->append(move(header)));
 
     // 8. Return responseObject.

@@ -218,11 +218,8 @@ MimeSniff::MimeType XMLHttpRequest::get_response_mime_type() const
     // FIXME: Use an actual HeaderList for XHR headers.
     auto header_list = make_ref_counted<Fetch::Infrastructure::HeaderList>();
     for (auto const& entry : m_response_headers) {
-        auto header = Fetch::Infrastructure::Header {
-            .name = MUST(ByteBuffer::copy(entry.key.bytes())),
-            .value = MUST(ByteBuffer::copy(entry.value.bytes())),
-        };
-        MUST(header_list->append(move(header)));
+        auto header = Fetch::Infrastructure::Header::from_string_pair(entry.key, entry.value).release_value_but_fixme_should_propagate_errors();
+        header_list->append(move(header)).release_value_but_fixme_should_propagate_errors();
     }
 
     // 1. Let mimeType be the result of extracting a MIME type from xhr’s response’s header list.

@@ -34,6 +34,14 @@ requires(IsSameIgnoringCV<T, u8>) struct CaseInsensitiveBytesTraits : public Tra
     }
 };
 
+ErrorOr<Header> Header::from_string_pair(StringView name, StringView value)
+{
+    return Header {
+        .name = TRY(ByteBuffer::copy(name.bytes())),
+        .value = TRY(ByteBuffer::copy(value.bytes())),
+    };
+}
+
 // https://fetch.spec.whatwg.org/#header-list-contains
 bool HeaderList::contains(ReadonlyBytes name) const
 {

@@ -277,10 +277,7 @@ WebIDL::ExceptionOr<void> Headers::fill(HeadersInit const& object)
                     return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "Array must contain header key/value pair" };
 
                 // 2. Append (header’s first item, header’s second item) to headers.
-                auto header = Fetch::Infrastructure::Header {
-                    .name = TRY_OR_RETURN_OOM(realm(), ByteBuffer::copy(entry[0].bytes())),
-                    .value = TRY_OR_RETURN_OOM(realm(), ByteBuffer::copy(entry[1].bytes())),
-                };
+                auto header = TRY_OR_RETURN_OOM(realm(), Infrastructure::Header::from_string_pair(entry[0], entry[1].bytes()));
                 TRY(append(move(header)));
             }
             return {};
@@ -288,10 +285,7 @@ WebIDL::ExceptionOr<void> Headers::fill(HeadersInit const& object)
         // 2. Otherwise, object is a record, then for each key → value in object, append (key, value) to headers.
         [this](OrderedHashMap<String, String> const& object) -> WebIDL::ExceptionOr<void> {
             for (auto const& entry : object) {
-                auto header = Fetch::Infrastructure::Header {
-                    .name = TRY_OR_RETURN_OOM(realm(), ByteBuffer::copy(entry.key.bytes())),
-                    .value = TRY_OR_RETURN_OOM(realm(), ByteBuffer::copy(entry.value.bytes())),
-                };
+                auto header = TRY_OR_RETURN_OOM(realm(), Infrastructure::Header::from_string_pair(entry.key, entry.value));
                 TRY(append(move(header)));
             }
             return {};

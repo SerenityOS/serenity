@@ -22,6 +22,8 @@ namespace Web::Fetch::Infrastructure {
 struct Header {
     ByteBuffer name;
     ByteBuffer value;
+
+    static ErrorOr<Header> from_string_pair(StringView, StringView);
 };
 
 // https://fetch.spec.whatwg.org/#concept-header-list
