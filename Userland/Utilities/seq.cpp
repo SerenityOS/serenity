@@ -6,6 +6,7 @@
 
 #include <AK/Format.h>
 #include <AK/StdLibExtras.h>
+#include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/System.h>
@@ -48,9 +49,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::pledge("stdio"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
+    StringView separator = "\n"sv;
     Vector<char const*> parameters;
 
     Core::ArgsParser args_parser;
+    args_parser.add_option(separator, "Characters to print after each number (default: \\n)", "separator", 's', "separator");
     args_parser.add_positional_argument(parameters, "1 to 3 parameters, interpreted as LAST, FIRST LAST, or FIRST INCREMENT LAST", "parameters");
     args_parser.parse(arguments);
 
@@ -98,7 +101,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             else if ((dot - buf) + 1 + number_of_decimals < (int)sizeof(buf))
                 dot[1 + number_of_decimals] = '\0';
         }
-        outln("{}", buf);
+        out("{}{}", buf, separator);
         d += step;
     }
 
