@@ -58,7 +58,7 @@ public:
     void set_aborted(bool aborted) { m_aborted = aborted; }
 
     [[nodiscard]] virtual Vector<AK::URL> const& url_list() const { return m_url_list; }
-    [[nodiscard]] Vector<AK::URL>& url_list() { return m_url_list; }
+    [[nodiscard]] virtual Vector<AK::URL>& url_list() { return m_url_list; }
     void set_url_list(Vector<AK::URL> url_list) { m_url_list = move(url_list); }
 
     [[nodiscard]] virtual Status status() const { return m_status; }
@@ -68,18 +68,17 @@ public:
     void set_status_message(ByteBuffer status_message) { m_status_message = move(status_message); }
 
     [[nodiscard]] virtual NonnullRefPtr<HeaderList> const& header_list() const { return m_header_list; }
-    [[nodiscard]] NonnullRefPtr<HeaderList>& header_list() { return m_header_list; }
+    [[nodiscard]] virtual NonnullRefPtr<HeaderList>& header_list() { return m_header_list; }
     void set_header_list(NonnullRefPtr<HeaderList> header_list) { m_header_list = move(header_list); }
 
     [[nodiscard]] virtual Optional<Body> const& body() const { return m_body; }
-    [[nodiscard]] Optional<Body>& body() { return m_body; }
+    [[nodiscard]] virtual Optional<Body>& body() { return m_body; }
     void set_body(Optional<Body> body) { m_body = move(body); }
 
     [[nodiscard]] virtual Optional<CacheState> const& cache_state() const { return m_cache_state; }
     void set_cache_state(Optional<CacheState> cache_state) { m_cache_state = move(cache_state); }
 
     [[nodiscard]] virtual Vector<ByteBuffer> const& cors_exposed_header_name_list() const { return m_cors_exposed_header_name_list; }
-    [[nodiscard]] Vector<ByteBuffer>& cors_exposed_header_name_list() { return m_cors_exposed_header_name_list; }
     void set_cors_exposed_header_name_list(Vector<ByteBuffer> cors_exposed_header_name_list) { m_cors_exposed_header_name_list = move(cors_exposed_header_name_list); }
 
     [[nodiscard]] virtual bool range_requested() const { return m_range_requested; }
@@ -92,7 +91,6 @@ public:
     void set_timing_allow_passed(bool timing_allow_passed) { m_timing_allow_passed = timing_allow_passed; }
 
     [[nodiscard]] virtual BodyInfo const& body_info() const { return m_body_info; }
-    [[nodiscard]] BodyInfo& body_info() { return m_body_info; }
     void set_body_info(BodyInfo body_info) { m_body_info = body_info; }
 
     [[nodiscard]] bool is_aborted_network_error() const;
@@ -172,10 +170,13 @@ public:
     [[nodiscard]] virtual Type type() const override { return m_internal_response->type(); }
     [[nodiscard]] virtual bool aborted() const override { return m_internal_response->aborted(); }
     [[nodiscard]] virtual Vector<AK::URL> const& url_list() const override { return m_internal_response->url_list(); }
+    [[nodiscard]] virtual Vector<AK::URL>& url_list() override { return m_internal_response->url_list(); }
     [[nodiscard]] virtual Status status() const override { return m_internal_response->status(); }
     [[nodiscard]] virtual ReadonlyBytes status_message() const override { return m_internal_response->status_message(); }
     [[nodiscard]] virtual NonnullRefPtr<HeaderList> const& header_list() const override { return m_internal_response->header_list(); }
+    [[nodiscard]] virtual NonnullRefPtr<HeaderList>& header_list() override { return m_internal_response->header_list(); }
     [[nodiscard]] virtual Optional<Body> const& body() const override { return m_internal_response->body(); }
+    [[nodiscard]] virtual Optional<Body>& body() override { return m_internal_response->body(); }
     [[nodiscard]] virtual Optional<CacheState> const& cache_state() const override { return m_internal_response->cache_state(); }
     [[nodiscard]] virtual Vector<ByteBuffer> const& cors_exposed_header_name_list() const override { return m_internal_response->cors_exposed_header_name_list(); }
     [[nodiscard]] virtual bool range_requested() const override { return m_internal_response->range_requested(); }
@@ -197,6 +198,7 @@ public:
 
     [[nodiscard]] virtual Type type() const override { return Type::Basic; }
     [[nodiscard]] virtual NonnullRefPtr<HeaderList> const& header_list() const override { return m_header_list; }
+    [[nodiscard]] virtual NonnullRefPtr<HeaderList>& header_list() override { return m_header_list; }
 
 private:
     BasicFilteredResponse(NonnullRefPtr<Response>, NonnullRefPtr<HeaderList>);
@@ -211,6 +213,7 @@ public:
 
     [[nodiscard]] virtual Type type() const override { return Type::CORS; }
     [[nodiscard]] virtual NonnullRefPtr<HeaderList> const& header_list() const override { return m_header_list; }
+    [[nodiscard]] virtual NonnullRefPtr<HeaderList>& header_list() override { return m_header_list; }
 
 private:
     CORSFilteredResponse(NonnullRefPtr<Response>, NonnullRefPtr<HeaderList>);
@@ -225,10 +228,13 @@ public:
 
     [[nodiscard]] virtual Type type() const override { return Type::Opaque; }
     [[nodiscard]] virtual Vector<AK::URL> const& url_list() const override { return m_url_list; }
+    [[nodiscard]] virtual Vector<AK::URL>& url_list() override { return m_url_list; }
     [[nodiscard]] virtual Status status() const override { return 0; }
     [[nodiscard]] virtual ReadonlyBytes status_message() const override { return {}; }
     [[nodiscard]] virtual NonnullRefPtr<HeaderList> const& header_list() const override { return m_header_list; }
+    [[nodiscard]] virtual NonnullRefPtr<HeaderList>& header_list() override { return m_header_list; }
     [[nodiscard]] virtual Optional<Body> const& body() const override { return m_body; }
+    [[nodiscard]] virtual Optional<Body>& body() override { return m_body; }
 
 private:
     explicit OpaqueFilteredResponse(NonnullRefPtr<Response>);
@@ -247,7 +253,9 @@ public:
     [[nodiscard]] virtual Status status() const override { return 0; }
     [[nodiscard]] virtual ReadonlyBytes status_message() const override { return {}; }
     [[nodiscard]] virtual NonnullRefPtr<HeaderList> const& header_list() const override { return m_header_list; }
+    [[nodiscard]] virtual NonnullRefPtr<HeaderList>& header_list() override { return m_header_list; }
     [[nodiscard]] virtual Optional<Body> const& body() const override { return m_body; }
+    [[nodiscard]] virtual Optional<Body>& body() override { return m_body; }
 
 private:
     explicit OpaqueRedirectFilteredResponse(NonnullRefPtr<Response>);
