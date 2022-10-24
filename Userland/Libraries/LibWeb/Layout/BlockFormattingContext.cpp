@@ -556,8 +556,7 @@ void BlockFormattingContext::layout_floating_box(Box const& box, BlockContainer 
     float width_of_containing_block = available_space.width.to_px();
 
     compute_width(box, available_space, layout_mode);
-    if (auto independent_formatting_context = layout_inside(box, layout_mode, box_state.available_inner_space_or_constraints_from(available_space)))
-        independent_formatting_context->parent_context_did_dimension_child_root_box();
+    auto independent_formatting_context = layout_inside(box, layout_mode, box_state.available_inner_space_or_constraints_from(available_space));
     compute_height(box, available_space);
 
     // First we place the box normally (to get the right y coordinate.)
@@ -674,6 +673,9 @@ void BlockFormattingContext::layout_floating_box(Box const& box, BlockContainer 
 
     if (line_builder)
         line_builder->recalculate_available_space();
+
+    if (independent_formatting_context)
+        independent_formatting_context->parent_context_did_dimension_child_root_box();
 }
 
 void BlockFormattingContext::layout_list_item_marker(ListItemBox const& list_item_box)
