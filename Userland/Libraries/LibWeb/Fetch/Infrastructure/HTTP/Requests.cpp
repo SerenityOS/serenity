@@ -231,7 +231,7 @@ ErrorOr<void> Request::add_range_header(u64 first, Optional<u64> const& last)
     VERIFY(!last.has_value() || first <= last.value());
 
     // 2. Let rangeValue be `bytes=`.
-    auto range_value = TRY(ByteBuffer::copy("bytes"sv.bytes()));
+    auto range_value = MUST(ByteBuffer::copy("bytes"sv.bytes()));
 
     // 3. Serialize and isomorphic encode first, and append the result to rangeValue.
     TRY(range_value.try_append(String::number(first).bytes()));
@@ -245,7 +245,7 @@ ErrorOr<void> Request::add_range_header(u64 first, Optional<u64> const& last)
 
     // 6. Append (`Range`, rangeValue) to request’s header list.
     auto header = Header {
-        .name = TRY(ByteBuffer::copy("Range"sv.bytes())),
+        .name = MUST(ByteBuffer::copy("Range"sv.bytes())),
         .value = move(range_value),
     };
     TRY(m_header_list->append(move(header)));
