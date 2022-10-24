@@ -11,7 +11,7 @@ if [ "$#" -eq "1" ]; then
             '*.cpp' \
             '*.h' \
             ':!:Base' \
-            ':!:Kernel/FileSystem/ext2_fs.h' \
+            ':!:Kernel/FileSystem/Ext2FS/Definitions.h' \
             ':!:Userland/Libraries/LibCodeComprehension/Cpp/Tests/*' \
             ':!:Userland/Libraries/LibCpp/Tests/parser/*' \
             ':!:Userland/Libraries/LibCpp/Tests/preprocessor/*'

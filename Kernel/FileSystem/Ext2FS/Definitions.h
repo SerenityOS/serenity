@@ -16,6 +16,8 @@
 #ifndef _LINUX_EXT2_FS_H
 #define _LINUX_EXT2_FS_H
 
+static constexpr size_t max_block_size = 4096;
+
 #include "ext2_types.h" /* Changed from linux/types.h */
 
 /*
@@ -510,18 +512,18 @@ struct ext2_super_block {
     __u16 s_def_resuid;        /* Default uid for reserved blocks */
     __u16 s_def_resgid;        /* Default gid for reserved blocks */
     /*
-	 * These fields are for EXT2_DYNAMIC_REV superblocks only.
-	 *
-	 * Note: the difference between the compatible feature set and
-	 * the incompatible feature set is that if there is a bit set
-	 * in the incompatible feature set that the kernel doesn't
-	 * know about, it should refuse to mount the filesystem.
-	 *
-	 * e2fsck's requirements are more strict; if it doesn't know
-	 * about a feature in either the compatible or incompatible
-	 * feature set, it must abort and not try to meddle with
-	 * things it doesn't understand...
-	 */
+     * These fields are for EXT2_DYNAMIC_REV superblocks only.
+     *
+     * Note: the difference between the compatible feature set and
+     * the incompatible feature set is that if there is a bit set
+     * in the incompatible feature set that the kernel doesn't
+     * know about, it should refuse to mount the filesystem.
+     *
+     * e2fsck's requirements are more strict; if it doesn't know
+     * about a feature in either the compatible or incompatible
+     * feature set, it must abort and not try to meddle with
+     * things it doesn't understand...
+     */
     __u32 s_first_ino;              /* First non-reserved inode */
     __u16 s_inode_size;             /* size of inode structure */
     __u16 s_block_group_nr;         /* block group # of this superblock */
@@ -533,15 +535,15 @@ struct ext2_super_block {
     char s_last_mounted[64];        /* directory where last mounted */
     __u32 s_algorithm_usage_bitmap; /* For compression */
     /*
-	 * Performance hints.  Directory preallocation should only
-	 * happen if the EXT2_FEATURE_COMPAT_DIR_PREALLOC flag is on.
-	 */
+     * Performance hints.  Directory preallocation should only
+     * happen if the EXT2_FEATURE_COMPAT_DIR_PREALLOC flag is on.
+     */
     __u8 s_prealloc_blocks;      /* Nr of blocks to try to preallocate*/
     __u8 s_prealloc_dir_blocks;  /* Nr to preallocate for dirs */
     __u16 s_reserved_gdt_blocks; /* Per group table for online growth */
     /*
-	 * Journaling support valid if EXT2_FEATURE_COMPAT_HAS_JOURNAL set.
-	 */
+     * Journaling support valid if EXT2_FEATURE_COMPAT_HAS_JOURNAL set.
+     */
     __u8 s_journal_uuid[16]; /* uuid of journal superblock */
     __u32 s_journal_inum;    /* inode number of journal file */
     __u32 s_journal_dev;     /* device number of journal file */
