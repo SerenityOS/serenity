@@ -232,11 +232,18 @@ void Heap::mark_live_cells(HashTable<Cell*> const& roots)
     m_uprooted_cells.clear();
 }
 
+bool Heap::cell_must_survive_garbage_collection(Cell const& cell)
+{
+    if (!cell.overrides_must_survive_garbage_collection({}))
+        return false;
+    return cell.must_survive_garbage_collection();
+}
+
 void Heap::finalize_unmarked_cells()
 {
     for_each_block([&](auto& block) {
         block.template for_each_cell_in_state<Cell::State::Live>([](Cell* cell) {
-            if (!cell->is_marked())
+            if (!cell->is_marked() && !cell_must_survive_garbage_collection(*cell))
                 cell->finalize();
         });
         return IterationDecision::Continue;
@@ -258,7 +265,7 @@ void Heap::sweep_dead_cells(bool print_report, Core::ElapsedTimer const& measure
         bool block_has_live_cells = false;
         bool block_was_full = block.is_full();
         block.template for_each_cell_in_state<Cell::State::Live>([&](Cell* cell) {
-            if (!cell->is_marked()) {
+            if (!cell->is_marked() && !cell_must_survive_garbage_collection(*cell)) {
                 dbgln_if(HEAP_DEBUG, "  ~ {}", cell);
                 block.deallocate(cell);
                 ++collected_cells;

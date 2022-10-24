@@ -79,6 +79,8 @@ public:
     void uproot_cell(Cell* cell);
 
 private:
+    static bool cell_must_survive_garbage_collection(Cell const&);
+
     Cell* allocate_cell(size_t);
 
     void gather_roots(HashTable<Cell*>&);
