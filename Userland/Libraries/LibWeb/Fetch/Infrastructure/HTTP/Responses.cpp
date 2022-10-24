@@ -138,7 +138,7 @@ ErrorOr<NonnullRefPtr<BasicFilteredResponse>> BasicFilteredResponse::create(Nonn
             TRY(header_list->append(header));
     }
 
-    return adopt_ref(*new BasicFilteredResponse(internal_response, move(header_list)));
+    return adopt_ref(*new BasicFilteredResponse(move(internal_response), move(header_list)));
 }
 
 BasicFilteredResponse::BasicFilteredResponse(NonnullRefPtr<Response> internal_response, NonnullRefPtr<HeaderList> header_list)
@@ -162,7 +162,7 @@ ErrorOr<NonnullRefPtr<CORSFilteredResponse>> CORSFilteredResponse::create(Nonnul
             TRY(header_list->append(header));
     }
 
-    return adopt_ref(*new CORSFilteredResponse(internal_response, move(header_list)));
+    return adopt_ref(*new CORSFilteredResponse(move(internal_response), move(header_list)));
 }
 
 CORSFilteredResponse::CORSFilteredResponse(NonnullRefPtr<Response> internal_response, NonnullRefPtr<HeaderList> header_list)
