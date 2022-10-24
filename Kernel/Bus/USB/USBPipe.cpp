@@ -36,7 +36,7 @@ ControlPipe::ControlPipe(USBController const& controller, u8 endpoint_address, u
 {
 }
 
-ErrorOr<size_t> ControlPipe::control_transfer(u8 request_type, u8 request, u16 value, u16 index, size_t length, void* data)
+ErrorOr<size_t> ControlPipe::submit_control_transfer(u8 request_type, u8 request, u16 value, u16 index, size_t length, void* data)
 {
     VERIFY(length <= m_dma_buffer->size());
 
@@ -76,7 +76,7 @@ BulkInPipe::BulkInPipe(USBController const& controller, u8 endpoint_address, u16
 {
 }
 
-ErrorOr<size_t> BulkInPipe::bulk_in_transfer(size_t length, void* data)
+ErrorOr<size_t> BulkInPipe::submit_bulk_in_transfer(size_t length, void* data)
 {
     VERIFY(length <= m_dma_buffer->size());
 
@@ -107,7 +107,7 @@ BulkOutPipe::BulkOutPipe(USBController const& controller, u8 endpoint_address, u
 {
 }
 
-ErrorOr<size_t> BulkOutPipe::bulk_out_transfer(size_t length, void* data)
+ErrorOr<size_t> BulkOutPipe::submit_bulk_out_transfer(size_t length, void* data)
 {
     VERIFY(length <= m_dma_buffer->size());
 
@@ -137,7 +137,7 @@ InterruptInPipe::InterruptInPipe(USBController const& controller, u8 endpoint_ad
 {
 }
 
-ErrorOr<NonnullLockRefPtr<Transfer>> InterruptInPipe::interrupt_in_transfer(size_t length, u16 ms_interval, USBAsyncCallback callback)
+ErrorOr<NonnullLockRefPtr<Transfer>> InterruptInPipe::submit_interrupt_in_transfer(size_t length, u16 ms_interval, USBAsyncCallback callback)
 {
     VERIFY(length <= m_dma_buffer->size());
 

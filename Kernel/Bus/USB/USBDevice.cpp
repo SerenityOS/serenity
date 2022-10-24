@@ -62,7 +62,7 @@ ErrorOr<void> Device::enumerate_device()
 
     // Send 8-bytes to get at least the `max_packet_size` from the device
     constexpr u8 short_device_descriptor_length = 8;
-    auto transfer_length = TRY(m_default_pipe->control_transfer(USB_REQUEST_TRANSFER_DIRECTION_DEVICE_TO_HOST, USB_REQUEST_GET_DESCRIPTOR, (DESCRIPTOR_TYPE_DEVICE << 8), 0, short_device_descriptor_length, &dev_descriptor));
+    auto transfer_length = TRY(m_default_pipe->submit_control_transfer(USB_REQUEST_TRANSFER_DIRECTION_DEVICE_TO_HOST, USB_REQUEST_GET_DESCRIPTOR, (DESCRIPTOR_TYPE_DEVICE << 8), 0, short_device_descriptor_length, &dev_descriptor));
 
     // FIXME: This be "not equal to" instead of "less than", but control transfers report a higher transfer length than expected.
     if (transfer_length < short_device_descriptor_length) {
@@ -85,7 +85,7 @@ ErrorOr<void> Device::enumerate_device()
     VERIFY(dev_descriptor.descriptor_header.descriptor_type == DESCRIPTOR_TYPE_DEVICE);
     m_default_pipe->set_max_packet_size(dev_descriptor.max_packet_size);
 
-    transfer_length = TRY(m_default_pipe->control_transfer(USB_REQUEST_TRANSFER_DIRECTION_DEVICE_TO_HOST, USB_REQUEST_GET_DESCRIPTOR, (DESCRIPTOR_TYPE_DEVICE << 8), 0, sizeof(USBDeviceDescriptor), &dev_descriptor));
+    transfer_length = TRY(m_default_pipe->submit_control_transfer(USB_REQUEST_TRANSFER_DIRECTION_DEVICE_TO_HOST, USB_REQUEST_GET_DESCRIPTOR, (DESCRIPTOR_TYPE_DEVICE << 8), 0, sizeof(USBDeviceDescriptor), &dev_descriptor));
 
     // FIXME: This be "not equal to" instead of "less than", but control transfers report a higher transfer length than expected.
     if (transfer_length < sizeof(USBDeviceDescriptor)) {
@@ -108,7 +108,7 @@ ErrorOr<void> Device::enumerate_device()
     auto new_address = m_controller->allocate_address();
 
     // Attempt to set devices address on the bus
-    transfer_length = TRY(m_default_pipe->control_transfer(USB_REQUEST_TRANSFER_DIRECTION_HOST_TO_DEVICE, USB_REQUEST_SET_ADDRESS, new_address, 0, 0, nullptr));
+    transfer_length = TRY(m_default_pipe->submit_control_transfer(USB_REQUEST_TRANSFER_DIRECTION_HOST_TO_DEVICE, USB_REQUEST_SET_ADDRESS, new_address, 0, 0, nullptr));
 
     // This has to be set after we send out the "Set Address" request because it might be sent to the root hub.
     // The root hub uses the address to intercept requests to itself.
@@ -123,7 +123,7 @@ ErrorOr<void> Device::enumerate_device()
     m_configurations.ensure_capacity(m_device_descriptor.num_configurations);
     for (auto configuration = 0u; configuration < m_device_descriptor.num_configurations; configuration++) {
         USBConfigurationDescriptor configuration_descriptor;
-        transfer_length = TRY(m_default_pipe->control_transfer(USB_REQUEST_TRANSFER_DIRECTION_DEVICE_TO_HOST, USB_REQUEST_GET_DESCRIPTOR, (DESCRIPTOR_TYPE_CONFIGURATION << 8u) | configuration, 0, sizeof(USBConfigurationDescriptor), &configuration_descriptor));
+        transfer_length = TRY(m_default_pipe->submit_control_transfer(USB_REQUEST_TRANSFER_DIRECTION_DEVICE_TO_HOST, USB_REQUEST_GET_DESCRIPTOR, (DESCRIPTOR_TYPE_CONFIGURATION << 8u) | configuration, 0, sizeof(USBConfigurationDescriptor), &configuration_descriptor));
 
         if constexpr (USB_DEBUG) {
             dbgln("USB Configuration Descriptor {}", configuration);
@@ -144,7 +144,7 @@ ErrorOr<void> Device::enumerate_device()
 
 ErrorOr<size_t> Device::control_transfer(u8 request_type, u8 request, u16 value, u16 index, u16 length, void* data)
 {
-    return TRY(m_default_pipe->control_transfer(request_type, request, value, index, length, data));
+    return TRY(m_default_pipe->submit_control_transfer(request_type, request, value, index, length, data));
 }
 
 }
