@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP/Bodies.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP/Responses.h>
 
@@ -92,7 +93,22 @@ WebIDL::ExceptionOr<NonnullRefPtr<Response>> Response::clone() const
 {
     // To clone a response response, run these steps:
 
-    // FIXME: 1. If response is a filtered response, then return a new identical filtered response whose internal response is a clone of response’s internal response.
+    auto& vm = Bindings::main_thread_vm();
+    auto& realm = *vm.current_realm();
+
+    // 1. If response is a filtered response, then return a new identical filtered response whose internal response is a clone of response’s internal response.
+    if (is<FilteredResponse>(*this)) {
+        auto internal_response = TRY(static_cast<FilteredResponse const&>(*this).internal_response()->clone());
+        if (is<BasicFilteredResponse>(*this))
+            return TRY_OR_RETURN_OOM(realm, BasicFilteredResponse::create(move(internal_response)));
+        if (is<CORSFilteredResponse>(*this))
+            return TRY_OR_RETURN_OOM(realm, CORSFilteredResponse::create(move(internal_response)));
+        if (is<OpaqueFilteredResponse>(*this))
+            return OpaqueFilteredResponse::create(move(internal_response));
+        if (is<OpaqueRedirectFilteredResponse>(*this))
+            return OpaqueRedirectFilteredResponse::create(move(internal_response));
+        VERIFY_NOT_REACHED();
+    }
 
     // 2. Let newResponse be a copy of response, except for its body.
     auto new_response = Infrastructure::Response::create();
