@@ -29,6 +29,7 @@
   },
   "backdrop-filter": {
     "affects-layout": false,
+    "affects-stacking-context": true,
     "inherited": false,
     "initial": "none",
     "valid-types": [
