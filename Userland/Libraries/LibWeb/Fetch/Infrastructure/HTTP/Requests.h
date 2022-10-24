@@ -294,7 +294,7 @@ public:
 
     [[nodiscard]] WebIDL::ExceptionOr<NonnullRefPtr<Request>> clone() const;
 
-    [[nodiscard]] ErrorOr<void> add_range_reader(u64 first, Optional<u64> const& last);
+    [[nodiscard]] ErrorOr<void> add_range_header(u64 first, Optional<u64> const& last);
 
     [[nodiscard]] bool cross_origin_embedder_policy_allows_credentials() const;
 

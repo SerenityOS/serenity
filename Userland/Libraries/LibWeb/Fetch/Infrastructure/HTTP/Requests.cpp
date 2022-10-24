@@ -223,7 +223,7 @@ WebIDL::ExceptionOr<NonnullRefPtr<Request>> Request::clone() const
 }
 
 // https://fetch.spec.whatwg.org/#concept-request-add-range-header
-ErrorOr<void> Request::add_range_reader(u64 first, Optional<u64> const& last)
+ErrorOr<void> Request::add_range_header(u64 first, Optional<u64> const& last)
 {
     // To add a range header to a request request, with an integer first, and an optional integer last, run these steps:
 
