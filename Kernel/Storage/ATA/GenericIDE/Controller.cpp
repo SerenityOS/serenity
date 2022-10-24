@@ -7,7 +7,6 @@
 #include <AK/OwnPtr.h>
 #include <AK/Types.h>
 #include <Kernel/Bus/PCI/API.h>
-#include <Kernel/FileSystem/ProcFS.h>
 #include <Kernel/Library/LockRefPtr.h>
 #include <Kernel/Sections.h>
 #include <Kernel/Storage/ATA/ATADiskDevice.h>

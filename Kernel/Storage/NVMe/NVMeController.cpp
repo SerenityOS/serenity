@@ -12,7 +12,6 @@
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/CommandLine.h>
 #include <Kernel/Devices/Device.h>
-#include <Kernel/FileSystem/ProcFS.h>
 #include <Kernel/Library/LockRefPtr.h>
 #include <Kernel/Sections.h>
 #include <Kernel/Storage/NVMe/NVMeController.h>
