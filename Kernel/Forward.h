@@ -20,6 +20,7 @@ class Device;
 class DiskCache;
 class DoubleBuffer;
 class File;
+class FATInode;
 class OpenFileDescription;
 class DisplayConnector;
 class FileSystem;

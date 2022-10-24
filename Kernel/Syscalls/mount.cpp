@@ -7,7 +7,7 @@
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/DevPtsFS.h>
 #include <Kernel/FileSystem/Ext2FileSystem.h>
-#include <Kernel/FileSystem/FATFileSystem.h>
+#include <Kernel/FileSystem/FATFS/FileSystem.h>
 #include <Kernel/FileSystem/ISO9660FileSystem.h>
 #include <Kernel/FileSystem/Plan9FileSystem.h>
 #include <Kernel/FileSystem/ProcFS.h>
