@@ -7,32 +7,11 @@
 #pragma once
 
 #include <AK/Types.h>
-#include <Kernel/FileSystem/FileSystem.h>
+#include <Kernel/FileSystem/DevPtsFS/FileSystem.h>
 #include <Kernel/FileSystem/Inode.h>
+#include <Kernel/TTY/SlavePTY.h>
 
 namespace Kernel {
-
-class SlavePTY;
-class DevPtsFSInode;
-
-class DevPtsFS final : public FileSystem {
-    friend class DevPtsFSInode;
-
-public:
-    virtual ~DevPtsFS() override;
-    static ErrorOr<NonnullLockRefPtr<FileSystem>> try_create();
-
-    virtual ErrorOr<void> initialize() override;
-    virtual StringView class_name() const override { return "DevPtsFS"sv; }
-
-    virtual Inode& root_inode() override;
-
-private:
-    DevPtsFS();
-    ErrorOr<NonnullLockRefPtr<Inode>> get_inode(InodeIdentifier) const;
-
-    LockRefPtr<DevPtsFSInode> m_root_inode;
-};
 
 class DevPtsFSInode final : public Inode {
     friend class DevPtsFS;
