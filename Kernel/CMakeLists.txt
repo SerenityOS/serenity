@@ -111,7 +111,8 @@ set(KERNEL_SOURCES
     FileSystem/Custody.cpp
     FileSystem/DevPtsFS.cpp
     FileSystem/Ext2FileSystem.cpp
-    FileSystem/FATFileSystem.cpp
+    FileSystem/FATFS/FileSystem.cpp
+    FileSystem/FATFS/Inode.cpp
     FileSystem/FIFO.cpp
     FileSystem/File.cpp
     FileSystem/FileBackedFileSystem.cpp
