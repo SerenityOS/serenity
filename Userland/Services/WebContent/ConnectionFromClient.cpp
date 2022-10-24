@@ -256,6 +256,15 @@ void ConnectionFromClient::get_source()
     }
 }
 
+Messages::WebContentServer::GetSourceSyncResponse ConnectionFromClient::get_source_sync()
+{
+    if (auto* doc = page().top_level_browsing_context().active_document()) {
+        return { doc->source() };
+    }
+
+    return { "" };
+}
+
 void ConnectionFromClient::inspect_dom_tree()
 {
     if (auto* doc = page().top_level_browsing_context().active_document()) {

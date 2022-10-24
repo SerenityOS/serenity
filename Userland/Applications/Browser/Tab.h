@@ -69,6 +69,7 @@ public:
     Function<Vector<Web::Cookie::Cookie>()> on_get_cookies_entries;
     Function<OrderedHashMap<String, String>()> on_get_local_storage_entries;
     Function<OrderedHashMap<String, String>()> on_get_session_storage_entries;
+    Function<String()> on_get_page_source;
 
     WebDriverEndpoints& webdriver_endpoints() { return m_webdriver_endpoints; }
 

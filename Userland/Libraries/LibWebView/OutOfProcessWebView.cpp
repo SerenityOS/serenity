@@ -447,6 +447,11 @@ void OutOfProcessWebView::get_source()
     client().async_get_source();
 }
 
+String OutOfProcessWebView::get_source_sync()
+{
+    return client().get_source_sync();
+}
+
 void OutOfProcessWebView::inspect_dom_tree()
 {
     client().async_inspect_dom_tree();

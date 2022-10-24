@@ -33,6 +33,7 @@ public:
 
     void debug_request(String const& request, String const& argument = {});
     void get_source();
+    String get_source_sync();
 
     void inspect_dom_tree();
     struct DOMNodeProperties {

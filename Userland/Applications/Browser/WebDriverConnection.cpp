@@ -199,4 +199,15 @@ Messages::WebDriverSessionClient::GetElementTagNameResponse WebDriverConnection:
     return { "" };
 }
 
+Messages::WebDriverSessionClient::GetPageSourceResponse WebDriverConnection::get_page_source()
+{
+    dbgln("WebDriverConnection: get_page_source");
+    if (auto browser_window = m_browser_window.strong_ref()) {
+        auto& tab = browser_window->active_tab();
+        if (tab.on_get_page_source)
+            return { tab.on_get_page_source() };
+    }
+    return { "" };
+}
+
 }

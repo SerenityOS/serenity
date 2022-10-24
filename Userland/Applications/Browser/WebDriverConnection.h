@@ -54,6 +54,7 @@ public:
     virtual Messages::WebDriverSessionClient::GetActiveDocumentsTypeResponse get_active_documents_type() override;
     virtual Messages::WebDriverSessionClient::GetComputedValueForElementResponse get_computed_value_for_element(i32 element_id, String const& property_name) override;
     virtual Messages::WebDriverSessionClient::GetElementTagNameResponse get_element_tag_name(i32 element_id) override;
+    virtual Messages::WebDriverSessionClient::GetPageSourceResponse get_page_source() override;
 
 private:
     WebDriverConnection(NonnullOwnPtr<Core::Stream::LocalSocket> socket, NonnullRefPtr<BrowserWindow> browser_window);
