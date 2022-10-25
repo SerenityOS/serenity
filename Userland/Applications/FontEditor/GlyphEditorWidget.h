@@ -28,8 +28,7 @@ public:
     bool is_glyph_empty();
 
     void rotate_90(Gfx::RotationDirection);
-    void flip_vertically();
-    void flip_horizontally();
+    void flip(Gfx::Orientation);
 
     int preferred_width() const;
     int preferred_height() const;
