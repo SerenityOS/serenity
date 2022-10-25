@@ -7,6 +7,7 @@
 #include <AK/JsonObjectSerializer.h>
 #include <Kernel/Arch/InterruptManagement.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/Interrupts.h>
+#include <Kernel/Interrupts/GenericInterruptHandler.h>
 #include <Kernel/Sections.h>
 
 namespace Kernel {
