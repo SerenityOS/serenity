@@ -114,14 +114,14 @@ void CloneTool::on_second_paint(Layer const*, GUI::PaintEvent& event)
     painter.draw_ellipse_intersecting(rect, m_marker_color, 1);
 }
 
-void CloneTool::on_keydown(GUI::KeyEvent& event)
+bool CloneTool::on_keydown(GUI::KeyEvent const& event)
 {
-    Tool::on_keydown(event);
     if (event.key() == KeyCode::Key_Alt && !m_is_selecting_location) {
         m_is_selecting_location = true;
         m_editor->update_tool_cursor();
-        return;
+        return true;
     }
+    return Tool::on_keydown(event);
 }
 
 void CloneTool::on_keyup(GUI::KeyEvent& event)

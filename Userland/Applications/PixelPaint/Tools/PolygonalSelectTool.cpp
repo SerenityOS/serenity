@@ -150,9 +150,8 @@ void PolygonalSelectTool::on_second_paint(Layer const* layer, GUI::PaintEvent& e
     painter.draw_line(last_line_start, last_line_stop, Color::Black, AK::max(m_editor->scale(), 1));
 }
 
-void PolygonalSelectTool::on_keydown(GUI::KeyEvent& key_event)
+bool PolygonalSelectTool::on_keydown(GUI::KeyEvent const& key_event)
 {
-    Tool::on_keydown(key_event);
     if (key_event.key() == KeyCode::Key_Escape) {
         if (m_selecting) {
             m_selecting = false;
@@ -160,7 +159,9 @@ void PolygonalSelectTool::on_keydown(GUI::KeyEvent& key_event)
         } else {
             m_editor->image().selection().clear();
         }
+        return true;
     }
+    return Tool::on_keydown(key_event);
 }
 
 GUI::Widget* PolygonalSelectTool::get_properties_widget()
