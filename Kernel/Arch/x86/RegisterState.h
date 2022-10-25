@@ -9,8 +9,8 @@
 #include <AK/Types.h>
 #include <LibC/sys/arch/i386/regs.h>
 
+#include <Kernel/Arch/CPU.h>
 #include <Kernel/Arch/x86/ASM_wrapper.h>
-#include <Kernel/Arch/x86/CPU.h>
 
 #include <AK/Platform.h>
 VALIDATE_IS_X86()
