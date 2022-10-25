@@ -23,6 +23,8 @@ public:
     Vector<NonnullLockRefPtr<IRQController>> const& controllers();
     NonnullLockRefPtr<IRQController> get_responsible_irq_controller(u8 interrupt_vector);
 
+    void enumerate_interrupt_handlers(Function<void(GenericInterruptHandler&)>);
+
 private:
     InterruptManagement() = default;
     void find_controllers();
