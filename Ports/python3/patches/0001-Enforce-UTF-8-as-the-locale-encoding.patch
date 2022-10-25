@@ -10,10 +10,10 @@ we can enforce UTF-8 as the encoding.
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/Include/pyport.h b/Include/pyport.h
-index 6ab0ae4..dffd616 100644
+index 93250f4eb1d7a23ec05a312f97cae4236b64dc7c..33d1ca5f1d21751ca90670eabdc848ad68a12ef1 100644
 --- a/Include/pyport.h
 +++ b/Include/pyport.h
-@@ -843,7 +843,7 @@ extern _invalid_parameter_handler _Py_silent_invalid_parameter_handler;
+@@ -678,7 +678,7 @@ extern char * _getpty(int *, int, mode_t, int);
  #  error "Py_TRACE_REFS ABI is not compatible with release and debug ABI"
  #endif
  

@@ -15,10 +15,10 @@ in the detection code.
  1 file changed, 2 insertions(+)
 
 diff --git a/setup.py b/setup.py
-index acd7b05..6554b1c 100644
+index e651ac7627e8b796f8b9b4d60f592bc9261b6540..c4c4e92309a952a88d9de1b853a9535cb86913cc 100644
 --- a/setup.py
 +++ b/setup.py
-@@ -163,6 +163,8 @@ def sysroot_paths(make_vars, subdirs):
+@@ -166,6 +166,8 @@ def sysroot_paths(make_vars, subdirs):
      for var_name in make_vars:
          var = sysconfig.get_config_var(var_name)
          if var is not None:

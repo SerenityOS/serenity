@@ -10,10 +10,10 @@ the `socket` module.
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/Modules/socketmodule.c b/Modules/socketmodule.c
-index ab8618b..0109d97 100644
+index 14af496a45f4788dc55ec3d959c2de45147725bc..9dcad434af405f0a6f6233f36ef1e1062086050e 100644
 --- a/Modules/socketmodule.c
 +++ b/Modules/socketmodule.c
-@@ -168,7 +168,7 @@ shutdown(how) -- shut down traffic in one or both directions\n\
+@@ -175,7 +175,7 @@ shutdown(how) -- shut down traffic in one or both directions\n\
  # undef HAVE_GETHOSTBYNAME_R_6_ARG
  #endif
  
