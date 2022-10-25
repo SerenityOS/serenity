@@ -1326,4 +1326,25 @@ ErrorOr<void> access(StringView pathname, int mode)
 #endif
 }
 
+ErrorOr<String> readlink(StringView pathname)
+{
+    // FIXME: Try again with a larger buffer.
+    char data[PATH_MAX];
+#ifdef AK_OS_SERENITY
+    Syscall::SC_readlink_params small_params {
+        { pathname.characters_without_null_termination(), pathname.length() },
+        { data, sizeof(data) }
+    };
+    int rc = syscall(SC_readlink, &small_params);
+    HANDLE_SYSCALL_RETURN_VALUE("readlink", rc, String(data, rc));
+#else
+    String path_string = pathname;
+    int rc = ::readlink(path_string.characters(), data, sizeof(data));
+    if (rc == -1)
+        return Error::from_syscall("readlink"sv, -errno);
+
+    return String(data, rc);
+#endif
+}
+
 }
