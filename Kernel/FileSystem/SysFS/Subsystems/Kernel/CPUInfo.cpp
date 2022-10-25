@@ -5,7 +5,9 @@
  */
 
 #include <AK/JsonObjectSerializer.h>
-#include <Kernel/Arch/x86/ProcessorInfo.h>
+#if ARCH(I386) || ARCH(X86_64)
+#    include <Kernel/Arch/x86/ProcessorInfo.h>
+#endif
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/CPUInfo.h>
 #include <Kernel/Sections.h>
 
@@ -23,6 +25,7 @@ UNMAP_AFTER_INIT NonnullLockRefPtr<SysFSCPUInformation> SysFSCPUInformation::mus
 
 ErrorOr<void> SysFSCPUInformation::try_generate(KBufferBuilder& builder)
 {
+#if ARCH(I386) || ARCH(X86_64)
     auto array = TRY(JsonArraySerializer<>::try_create(builder));
     TRY(Processor::try_for_each(
         [&](Processor& proc) -> ErrorOr<void> {
@@ -78,6 +81,13 @@ ErrorOr<void> SysFSCPUInformation::try_generate(KBufferBuilder& builder)
         }));
     TRY(array.finish());
     return {};
+#elif ARCH(AARCH64)
+    (void)builder;
+    dmesgln("TODO: Implement ProcessorInfo for AArch64!");
+    return Error::from_errno(EINVAL);
+#else
+#    error Unknown architecture
+#endif
 }
 
 }
