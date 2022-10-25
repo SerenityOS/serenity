@@ -18,6 +18,11 @@ buildstep() {
     else
         "$@"
     fi 2>&1 | sed $'s|^|\x1b[34m['"${port}/${buildstep_name}"$']\x1b[39m |'
+    local return_code=${PIPESTATUS[0]}
+    if [ ${return_code} != 0 ]; then
+        echo -e "\x1b[1;31mError in step ${port}/${buildstep_name} (status=${return_code})\x1b[0m"
+    fi
+    return ${return_code}
 }
 
 buildstep_intro() {
