@@ -193,5 +193,6 @@ ErrorOr<int> posix_openpt(int flags);
 ErrorOr<void> grantpt(int fildes);
 ErrorOr<void> unlockpt(int fildes);
 ErrorOr<void> access(StringView pathname, int mode);
+ErrorOr<String> readlink(StringView pathname);
 
 }
