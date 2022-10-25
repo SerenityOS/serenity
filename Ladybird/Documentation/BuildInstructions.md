@@ -26,7 +26,7 @@ xcode-select --install
 brew install qt ninja
 ```
 
-For the c++ compiler, gcc-11 or clang-13 are required at a minimum for c++20 support.
+For the C++ compiler, gcc-12 or clang-13 are required at a minimum for c++20 support.
 
 For Ubuntu 20.04 and above, ensure that the Qt6 Wayland packages are available:
 
