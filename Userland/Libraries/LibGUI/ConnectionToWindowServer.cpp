@@ -188,16 +188,6 @@ void ConnectionToWindowServer::key_down(i32 window_id, u32 code_point, u32 key, 
 
     auto key_event = make<KeyEvent>(Event::KeyDown, (KeyCode)key, modifiers, code_point, scancode);
 
-    if (auto* action = action_for_shortcut(*window, Shortcut(key_event->modifiers(), key_event->key()))) {
-        if (action->is_enabled()) {
-            action->flash_menubar_menu(*window);
-            action->activate();
-            return;
-        }
-        if (action->swallow_key_event_when_disabled())
-            return;
-    }
-
     bool focused_widget_accepts_emoji_input = window->focused_widget() && window->focused_widget()->on_emoji_input;
     if (!window->blocks_emoji_input() && focused_widget_accepts_emoji_input && (modifiers == (Mod_Ctrl | Mod_Alt)) && key == Key_Space) {
         auto emoji_input_dialog = EmojiInputDialog::construct(window);

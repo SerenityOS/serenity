@@ -125,6 +125,22 @@ Action::~Action()
     }
 }
 
+void Action::process_event(Window& window, Event& event)
+{
+    if (is_enabled()) {
+        flash_menubar_menu(window);
+        activate();
+        event.accept();
+        return;
+    }
+    if (swallow_key_event_when_disabled()) {
+        event.accept();
+        return;
+    }
+
+    event.ignore();
+}
+
 void Action::activate(Core::Object* activator)
 {
     if (!on_activation)

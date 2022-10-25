@@ -97,6 +97,7 @@ public:
     Function<void(Action&)> on_activation;
 
     void activate(Core::Object* activator = nullptr);
+    void process_event(Window& window, Event& event);
     void flash_menubar_menu(GUI::Window& window);
 
     bool is_enabled() const { return m_enabled; }

@@ -234,6 +234,8 @@ public:
 
     void set_always_on_top(bool always_on_top = true);
 
+    void propagate_shortcuts_up_to_application(KeyEvent& event, Widget* widget);
+
 protected:
     Window(Core::Object* parent = nullptr);
     virtual void wm_event(WMEvent&);
