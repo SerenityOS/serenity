@@ -260,6 +260,7 @@ set(KERNEL_SOURCES
     ProcessProcFSTraits.cpp
     Random.cpp
     Scheduler.cpp
+    ScopedCritical.cpp
     StdLib.cpp
     Syscalls/anon_create.cpp
     Syscalls/alarm.cpp
@@ -390,7 +391,6 @@ if ("${SERENITY_ARCH}" STREQUAL "x86_64")
         Arch/x86_64/VGA/IOArbiter.cpp
 
         Arch/x86_64/RTC.cpp
-        Arch/x86_64/ScopedCritical.cpp
         Arch/x86_64/Shutdown.cpp
         Arch/x86_64/SmapDisabler.cpp
 
@@ -466,7 +466,6 @@ elseif("${SERENITY_ARCH}" STREQUAL "aarch64")
         Arch/aarch64/Panic.cpp
         Arch/aarch64/Processor.cpp
         Arch/aarch64/SafeMem.cpp
-        Arch/aarch64/ScopedCritical.cpp
         Arch/aarch64/SmapDisabler.cpp
         Arch/aarch64/vector_table.S
     )

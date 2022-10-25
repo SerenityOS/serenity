@@ -11,8 +11,8 @@
 #include <AK/AtomicRefCounted.h>
 #include <AK/StdLibExtras.h>
 #include <Kernel/Arch/Processor.h>
-#include <Kernel/Arch/ScopedCritical.h>
 #include <Kernel/Library/LockRefPtr.h>
+#include <Kernel/ScopedCritical.h>
 
 namespace AK {
 

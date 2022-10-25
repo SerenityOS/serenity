@@ -14,7 +14,7 @@
 #include <AK/Types.h>
 #ifdef KERNEL
 #    include <Kernel/Arch/Processor.h>
-#    include <Kernel/Arch/ScopedCritical.h>
+#    include <Kernel/ScopedCritical.h>
 #endif
 
 #define NONNULLLOCKREFPTR_SCRUB_BYTE 0xa1
