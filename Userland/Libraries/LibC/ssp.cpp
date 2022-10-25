@@ -28,9 +28,4 @@ __attribute__((noreturn)) void __stack_chk_fail()
     abort();
 }
 
-__attribute__((noreturn)) void __stack_chk_fail_local()
-{
-    __stack_chk_fail();
-}
-
 } // extern "C"
