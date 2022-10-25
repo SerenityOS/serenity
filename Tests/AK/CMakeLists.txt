@@ -62,6 +62,7 @@ set(AK_TEST_SOURCES
     TestStack.cpp
     TestStdLibExtras.cpp
     TestString.cpp
+    TestStringFloatingPointConversions.cpp
     TestStringUtils.cpp
     TestStringView.cpp
     TestTime.cpp

@@ -16,6 +16,7 @@ set(AK_SOURCES
     StackInfo.cpp
     String.cpp
     StringBuilder.cpp
+    StringFloatingPointConversions.cpp
     StringImpl.cpp
     StringUtils.cpp
     StringView.cpp
