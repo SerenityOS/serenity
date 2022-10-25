@@ -57,6 +57,7 @@ class TarOutputStream {
 public:
     TarOutputStream(OutputStream&);
     void add_file(String const& path, mode_t, ReadonlyBytes);
+    void add_link(String const& path, mode_t, StringView);
     void add_directory(String const& path, mode_t);
     void finish();
 

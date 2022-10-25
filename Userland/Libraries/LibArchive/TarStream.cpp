@@ -165,6 +165,23 @@ void TarOutputStream::add_file(String const& path, mode_t mode, ReadonlyBytes by
     VERIFY(m_stream.write_or_error(ReadonlyBytes { &padding, block_size - (n_written % block_size) }));
 }
 
+void TarOutputStream::add_link(String const& path, mode_t mode, StringView link_name)
+{
+    VERIFY(!m_finished);
+    TarFileHeader header {};
+    header.set_size(0);
+    header.set_filename_and_prefix(path);
+    header.set_type_flag(TarFileType::SymLink);
+    header.set_mode(mode);
+    header.set_magic(gnu_magic);
+    header.set_version(gnu_version);
+    header.set_link_name(link_name);
+    header.calculate_checksum();
+    VERIFY(m_stream.write_or_error(Bytes { &header, sizeof(header) }));
+    u8 padding[block_size] = { 0 };
+    VERIFY(m_stream.write_or_error(Bytes { &padding, block_size - sizeof(header) }));
+}
+
 void TarOutputStream::finish()
 {
     VERIFY(!m_finished);
