@@ -24,11 +24,11 @@
 #include <Kernel/Arch/Interrupts.h>
 #include <Kernel/Arch/Processor.h>
 #include <Kernel/Arch/SafeMem.h>
-#include <Kernel/Arch/ScopedCritical.h>
 #include <Kernel/Arch/TrapFrame.h>
 #include <Kernel/Arch/x86_64/CPUID.h>
 #include <Kernel/Arch/x86_64/MSR.h>
 #include <Kernel/Arch/x86_64/ProcessorInfo.h>
+#include <Kernel/ScopedCritical.h>
 
 #include <Kernel/Memory/PageDirectory.h>
 #include <Kernel/Memory/ScopedAddressSpaceSwitcher.h>
