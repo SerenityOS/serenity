@@ -29,6 +29,7 @@ class Inode;
 class InodeIdentifier;
 class InodeWatcher;
 class KBuffer;
+class KString;
 class LocalSocket;
 class Mutex;
 class MasterPTY;

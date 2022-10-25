@@ -8,6 +8,7 @@
 
 #include <AK/AtomicRefCounted.h>
 #include <AK/IntrusiveList.h>
+#include <Kernel/Forward.h>
 #include <Kernel/Library/LockWeakable.h>
 #include <Kernel/Locking/SpinlockProtected.h>
 #include <Kernel/UnixTypes.h>
