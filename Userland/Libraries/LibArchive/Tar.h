@@ -130,6 +130,8 @@ public:
 
     bool content_is_like_extended_header() const;
 
+    void set_filename_and_prefix(StringView filename);
+
 private:
     char m_filename[100] { 0 };
     char m_mode[8] { 0 };
