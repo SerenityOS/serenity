@@ -9,6 +9,15 @@ function(serenity_set_implicit_links target_name)
     # slightly outdated stub in the sysroot, but have not yet installed the freshly
     # built LibC.
     target_link_libraries(${target_name} LibC)
+
+    # Same goes for -lssp_nonshared, which is required during build time but is not
+    # yet installed in the sysroot. However, we just want to add the link directory
+    # and a dependency here, since actually linking the library is decided on by
+    # passing one of the -fstack-protector options.
+    # -lssp is contained inside LibC, so that case is handled by the above and a linker
+    # script.
+    target_link_directories(${target_name} PRIVATE "$<TARGET_FILE_DIR:ssp_nonshared>")
+    add_dependencies(${target_name} ssp_nonshared)
 endfunction()
 
 function(serenity_install_headers target_name)

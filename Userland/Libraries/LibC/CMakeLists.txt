@@ -46,6 +46,7 @@ set(LIBC_SOURCES
     shadow.cpp
     signal.cpp
     spawn.cpp
+    ssp.cpp
     stat.cpp
     stdio.cpp
     stdlib.cpp
@@ -129,15 +130,10 @@ add_custom_command(
     COMMAND "${CMAKE_COMMAND}" -E copy $<TARGET_OBJECTS:crtn> ${CMAKE_INSTALL_PREFIX}/usr/lib/crtn.o
 )
 
-set_source_files_properties (ssp.cpp PROPERTIES COMPILE_FLAGS
-    "-fno-stack-protector")
-add_library(ssp STATIC ssp.cpp)
-target_link_libraries(ssp PRIVATE NoCoverage)
-add_custom_command(
-    TARGET ssp
-    COMMAND "${CMAKE_COMMAND}" -E copy $<TARGET_OBJECTS:ssp> ${CMAKE_INSTALL_PREFIX}/usr/lib/ssp.o
-)
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/libssp.a DESTINATION ${CMAKE_INSTALL_PREFIX}/usr/lib/)
+set_source_files_properties (ssp_nonshared.cpp PROPERTIES COMPILE_FLAGS "-fno-stack-protector")
+add_library(ssp_nonshared STATIC ssp_nonshared.cpp)
+target_link_libraries(ssp_nonshared PRIVATE NoCoverage)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/libssp_nonshared.a DESTINATION ${CMAKE_INSTALL_PREFIX}/usr/lib/)
 
 set(SOURCES ${LIBC_SOURCES} ${AK_SOURCES} ${ELF_SOURCES} ${ASM_SOURCES})
 
@@ -149,18 +145,19 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     set_source_files_properties(string.cpp wchar.cpp PROPERTIES COMPILE_FLAGS "-fno-tree-loop-distribution -fno-tree-loop-distribute-patterns")
 endif()
 
+set_source_files_properties(ssp.cpp PROPERTIES COMPILE_FLAGS "-fno-stack-protector")
+
 add_library(LibCStaticWithoutDeps STATIC ${SOURCES})
 target_link_libraries(LibCStaticWithoutDeps PUBLIC ssp LibTimeZone PRIVATE NoCoverage)
 add_dependencies(LibCStaticWithoutDeps LibSystem LibUBSanitizer)
 
 add_custom_target(LibCStatic
         COMMAND ${CMAKE_AR} -x $<TARGET_FILE:LibCStaticWithoutDeps>
-        COMMAND ${CMAKE_AR} -x $<TARGET_FILE:ssp>
         COMMAND ${CMAKE_AR} -x $<TARGET_FILE:LibSystemStatic>
         COMMAND ${CMAKE_AR} -x $<TARGET_FILE:LibUBSanitizerStatic>
         COMMAND ${CMAKE_AR} -rcs ${CMAKE_CURRENT_BINARY_DIR}/libc.a *.o
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-        DEPENDS LibCStaticWithoutDeps ssp LibSystemStatic LibUBSanitizerStatic
+        DEPENDS LibCStaticWithoutDeps LibSystemStatic LibUBSanitizerStatic
         )
 
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/libc.a DESTINATION ${CMAKE_INSTALL_PREFIX}/usr/lib/)
@@ -174,7 +171,7 @@ set_property(
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -nolibc")
 serenity_libc(LibC c)
 add_dependencies(LibC crti crt0 crt0_shared crtn)
-target_link_libraries(LibC ssp LibSystem LibTimeZone)
+target_link_libraries(LibC LibSystem LibTimeZone)
 
 # We mark LibCStatic as a dependency of LibC because this triggers the build of the LibCStatic target
 add_dependencies(LibC LibCStatic)
@@ -183,3 +180,4 @@ add_dependencies(LibC LibCStatic)
 file(WRITE "${CMAKE_STAGING_PREFIX}/${CMAKE_INSTALL_LIBDIR}/libpthread.so" "INPUT(libc.so)")
 file(WRITE "${CMAKE_STAGING_PREFIX}/${CMAKE_INSTALL_LIBDIR}/libdl.so" "INPUT(libc.so)")
 file(WRITE "${CMAKE_STAGING_PREFIX}/${CMAKE_INSTALL_LIBDIR}/libm.so" "INPUT(libc.so)")
+file(WRITE "${CMAKE_STAGING_PREFIX}/${CMAKE_INSTALL_LIBDIR}/libssp.so" "INPUT(libc.so)")

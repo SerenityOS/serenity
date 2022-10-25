@@ -26,6 +26,7 @@ add_compile_options(-fno-semantic-interposition)
 add_compile_options(-fsized-deallocation)
 add_compile_options(-fstack-clash-protection)
 add_compile_options(-fstack-protector-strong)
+add_link_options(-fstack-protector-strong)
 add_compile_options(-g1)
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
