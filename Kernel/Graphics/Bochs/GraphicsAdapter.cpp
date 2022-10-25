@@ -45,9 +45,9 @@ UNMAP_AFTER_INIT ErrorOr<void> BochsGraphicsAdapter::initialize_adapter(PCI::Dev
 
     // Note: In non x86-builds, we should never encounter VirtualBox hardware nor Pure Bochs VBE graphics,
     // so just assume we can use the QEMU BochsVBE-compatible graphics adapter only.
+    auto bar0_space_size = PCI::get_BAR_space_size(pci_device_identifier.address(), PCI::HeaderType0BaseRegister::BAR0);
 #if ARCH(I386) || ARCH(X86_64)
     bool virtual_box_hardware = (pci_device_identifier.hardware_id().vendor_id == 0x80ee && pci_device_identifier.hardware_id().device_id == 0xbeef);
-    auto bar0_space_size = PCI::get_BAR_space_size(pci_device_identifier.address(), PCI::HeaderType0BaseRegister::BAR0);
     if (pci_device_identifier.revision_id().value() == 0x0 || virtual_box_hardware) {
         m_display_connector = BochsDisplayConnector::must_create(PhysicalAddress(PCI::get_BAR0(pci_device_identifier.address()) & 0xfffffff0), bar0_space_size, virtual_box_hardware);
     } else {
