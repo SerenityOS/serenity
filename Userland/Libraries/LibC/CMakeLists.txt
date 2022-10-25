@@ -174,10 +174,10 @@ set_property(
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -nolibc")
 serenity_libc(LibC c)
 add_dependencies(LibC crti crt0 crt0_shared crtn)
-target_link_libraries(LibC ssp system LibTimeZone)
+target_link_libraries(LibC ssp LibSystem LibTimeZone)
 
 # We mark LibCStatic as a dependency of LibC because this triggers the build of the LibCStatic target
-add_dependencies(LibC LibSystem LibCStatic)
+add_dependencies(LibC LibCStatic)
 
 # Provide a linker script instead of various other libraries that tells everything to link against LibC.
 file(WRITE "${CMAKE_STAGING_PREFIX}/${CMAKE_INSTALL_LIBDIR}/libpthread.so" "INPUT(libc.so)")
