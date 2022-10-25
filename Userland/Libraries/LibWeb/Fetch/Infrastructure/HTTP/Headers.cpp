@@ -636,8 +636,49 @@ bool is_request_body_header_name(ReadonlyBytes header_name)
         "Content-Type"sv);
 }
 
-// TODO: https://fetch.spec.whatwg.org/#extract-header-values
-// TODO: https://fetch.spec.whatwg.org/#extract-header-list-values
+// https://fetch.spec.whatwg.org/#extract-header-values
+ErrorOr<Optional<Vector<ByteBuffer>>> extract_header_values(Header const& header)
+{
+    // FIXME: 1. If parsing header’s value, per the ABNF for header’s name, fails, then return failure.
+    // FIXME: 2. Return one or more values resulting from parsing header’s value, per the ABNF for header’s name.
+    // This always ignores the ABNF rules for now and returns the header value as a single list item.
+    return Vector { TRY(ByteBuffer::copy(header.value)) };
+}
+
+// https://fetch.spec.whatwg.org/#extract-header-list-values
+ErrorOr<Optional<Vector<ByteBuffer>>> extract_header_list_values(ReadonlyBytes name, HeaderList const& list)
+{
+    // 1. If list does not contain name, then return null.
+    if (!list.contains(name))
+        return Optional<Vector<ByteBuffer>> {};
+
+    // FIXME: 2. If the ABNF for name allows a single header and list contains more than one, then return failure.
+    // NOTE: If different error handling is needed, extract the desired header first.
+
+    // 3. Let values be an empty list.
+    auto values = Vector<ByteBuffer> {};
+
+    // 4. For each header header list contains whose name is name:
+    for (auto const& header : list) {
+        if (!StringView { header.name }.equals_ignoring_case(name))
+            continue;
+
+        // 1. Let extract be the result of extracting header values from header.
+        auto extract = TRY(extract_header_values(header));
+
+        // 2. If extract is failure, then return failure.
+        // FIXME: Currently we treat the null return above and failure return as the same thing,
+        //        ErrorOr already signals OOM to the caller.
+        if (!extract.has_value())
+            return Optional<Vector<ByteBuffer>> {};
+
+        // 3. Append each value in extract, in order, to values.
+        values.extend(extract.release_value());
+    }
+
+    // 5. Return values.
+    return values;
+}
 
 // https://fetch.spec.whatwg.org/#simple-range-header-value
 Optional<RangeHeaderValue> parse_single_range_header_value(ReadonlyBytes value)
