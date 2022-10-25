@@ -957,15 +957,7 @@ bool Widget::is_backmost() const
 
 Action* Widget::action_for_shortcut(Shortcut const& shortcut)
 {
-    Action* found_action = nullptr;
-    for_each_child_of_type<Action>([&](auto& action) {
-        if (action.shortcut() == shortcut || action.alternate_shortcut() == shortcut) {
-            found_action = &action;
-            return IterationDecision::Break;
-        }
-        return IterationDecision::Continue;
-    });
-    return found_action;
+    return Action::find_action_for_shortcut(*this, shortcut);
 }
 
 void Widget::set_updates_enabled(bool enabled)
