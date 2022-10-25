@@ -103,20 +103,26 @@ void RectangleSelectTool::on_mouseup(Layer*, MouseEvent& event)
     m_editor->did_complete_action(tool_name());
 }
 
-void RectangleSelectTool::on_keydown(GUI::KeyEvent& key_event)
+bool RectangleSelectTool::on_keydown(GUI::KeyEvent const& key_event)
 {
-    Tool::on_keydown(key_event);
-    if (key_event.key() == KeyCode::Key_Space)
+    if (key_event.key() == KeyCode::Key_Space) {
         m_moving_mode = MovingMode::MovingOrigin;
-    else if (key_event.key() == KeyCode::Key_Control)
+        return true;
+    }
+    if (key_event.key() == KeyCode::Key_Control) {
         m_moving_mode = MovingMode::AroundCenter;
+        return true;
+    }
 
     if (key_event.key() == KeyCode::Key_Escape) {
         if (m_selecting)
             m_selecting = false;
         else
             m_editor->image().selection().clear();
+        return true;
     }
+
+    return Tool::on_keydown(key_event);
 }
 
 void RectangleSelectTool::on_keyup(GUI::KeyEvent& key_event)

@@ -106,20 +106,20 @@ void MoveTool::on_mouseup(Layer* layer, MouseEvent& event)
     m_editor->did_complete_action(tool_name());
 }
 
-void MoveTool::on_keydown(GUI::KeyEvent& event)
+bool MoveTool::on_keydown(GUI::KeyEvent const& event)
 {
     if (event.key() == Key_Shift)
         m_keep_ascept_ratio = true;
 
     if (m_scaling)
-        return;
+        return true;
 
     if (event.modifiers() != 0)
-        return;
+        return false;
 
     auto* layer = m_editor->active_layer();
     if (!layer)
-        return;
+        return false;
 
     auto new_location = layer->location();
 
@@ -137,11 +137,12 @@ void MoveTool::on_keydown(GUI::KeyEvent& event)
         new_location.translate_by(1, 0);
         break;
     default:
-        return;
+        return false;
     }
 
     layer->set_location(new_location);
     m_editor->layers_did_change();
+    return true;
 }
 
 void MoveTool::on_keyup(GUI::KeyEvent& event)

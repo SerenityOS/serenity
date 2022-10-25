@@ -123,14 +123,14 @@ void EllipseTool::on_second_paint(Layer const* layer, GUI::PaintEvent& event)
     draw_using(painter, preview_start, preview_end, AK::max(m_thickness * m_editor->scale(), 1));
 }
 
-void EllipseTool::on_keydown(GUI::KeyEvent& event)
+bool EllipseTool::on_keydown(GUI::KeyEvent const& event)
 {
-    Tool::on_keydown(event);
     if (event.key() == Key_Escape && m_drawing_button != GUI::MouseButton::None) {
         m_drawing_button = GUI::MouseButton::None;
         m_editor->update();
-        event.accept();
+        return true;
     }
+    return Tool::on_keydown(event);
 }
 
 GUI::Widget* EllipseTool::get_properties_widget()

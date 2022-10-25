@@ -23,28 +23,38 @@ void Tool::set_action(GUI::Action* action)
     m_action = action;
 }
 
-void Tool::on_keydown(GUI::KeyEvent& event)
+bool Tool::on_keydown(GUI::KeyEvent const& event)
 {
     switch (event.key()) {
     case KeyCode::Key_LeftBracket:
-        if (m_primary_slider)
+        if (m_primary_slider) {
             m_primary_slider->decrease_slider_by(1);
+            return true;
+        }
         break;
     case KeyCode::Key_RightBracket:
-        if (m_primary_slider)
+        if (m_primary_slider) {
             m_primary_slider->increase_slider_by(1);
+            return true;
+        }
         break;
     case KeyCode::Key_LeftBrace:
-        if (m_secondary_slider)
+        if (m_secondary_slider) {
             m_secondary_slider->decrease_slider_by(1);
+            return true;
+        }
         break;
     case KeyCode::Key_RightBrace:
-        if (m_secondary_slider)
+        if (m_secondary_slider) {
             m_secondary_slider->increase_slider_by(1);
+            return true;
+        }
         break;
     default:
         break;
     }
+
+    return false;
 }
 
 Gfx::IntPoint Tool::editor_layer_location(Layer const& layer) const
