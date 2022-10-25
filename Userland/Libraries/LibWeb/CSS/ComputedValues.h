@@ -7,8 +7,8 @@
 #pragma once
 
 #include <AK/Optional.h>
-#include <LibWeb/CSS/BackdropFilter.h>
 #include <LibWeb/CSS/Clip.h>
+#include <LibWeb/CSS/FilterList.h>
 #include <LibWeb/CSS/LengthBox.h>
 #include <LibWeb/CSS/Size.h>
 #include <LibWeb/CSS/StyleValue.h>
@@ -34,7 +34,7 @@ public:
     static CSS::TextTransform text_transform() { return CSS::TextTransform::None; }
     static CSS::Display display() { return CSS::Display { CSS::Display::Outside::Inline, CSS::Display::Inside::Flow }; }
     static Color color() { return Color::Black; }
-    static CSS::BackdropFilter backdrop_filter() { return BackdropFilter::make_none(); }
+    static CSS::FilterList backdrop_filter() { return FilterList::make_none(); }
     static Color background_color() { return Color::Transparent; }
     static CSS::ListStyleType list_style_type() { return CSS::ListStyleType::Disc; }
     static CSS::Visibility visibility() { return CSS::Visibility::Visible; }
@@ -172,7 +172,7 @@ public:
     CSS::Visibility visibility() const { return m_inherited.visibility; }
     CSS::ImageRendering image_rendering() const { return m_inherited.image_rendering; }
     CSS::JustifyContent justify_content() const { return m_noninherited.justify_content; }
-    CSS::BackdropFilter const& backdrop_filter() const { return m_noninherited.backdrop_filter; }
+    CSS::FilterList const& backdrop_filter() const { return m_noninherited.backdrop_filter; }
     Vector<ShadowData> const& box_shadow() const { return m_noninherited.box_shadow; }
     CSS::BoxSizing box_sizing() const { return m_noninherited.box_sizing; }
     CSS::Size const& width() const { return m_noninherited.width; }
@@ -273,7 +273,7 @@ protected:
         CSS::LengthBox inset { InitialValues::inset() };
         CSS::LengthBox margin { InitialValues::margin() };
         CSS::LengthBox padding { InitialValues::padding() };
-        CSS::BackdropFilter backdrop_filter { InitialValues::backdrop_filter() };
+        CSS::FilterList backdrop_filter { InitialValues::backdrop_filter() };
         BorderData border_left;
         BorderData border_top;
         BorderData border_right;
@@ -355,7 +355,7 @@ public:
     void set_overflow_y(CSS::Overflow value) { m_noninherited.overflow_y = value; }
     void set_list_style_type(CSS::ListStyleType value) { m_inherited.list_style_type = value; }
     void set_display(CSS::Display value) { m_noninherited.display = value; }
-    void set_backdrop_filter(CSS::BackdropFilter backdrop_filter) { m_noninherited.backdrop_filter = move(backdrop_filter); }
+    void set_backdrop_filter(CSS::FilterList backdrop_filter) { m_noninherited.backdrop_filter = move(backdrop_filter); }
     void set_border_bottom_left_radius(CSS::BorderRadiusData value) { m_noninherited.border_bottom_left_radius = move(value); }
     void set_border_bottom_right_radius(CSS::BorderRadiusData value) { m_noninherited.border_bottom_right_radius = move(value); }
     void set_border_top_left_radius(CSS::BorderRadiusData value) { m_noninherited.border_top_left_radius = move(value); }

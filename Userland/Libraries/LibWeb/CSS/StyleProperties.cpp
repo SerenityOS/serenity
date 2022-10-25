@@ -397,12 +397,12 @@ Optional<CSS::Appearance> StyleProperties::appearance() const
     return appearance;
 }
 
-CSS::BackdropFilter StyleProperties::backdrop_filter() const
+CSS::FilterList StyleProperties::backdrop_filter() const
 {
     auto value = property(CSS::PropertyID::BackdropFilter);
     if (value->is_filter_value_list())
-        return BackdropFilter(value->as_filter_value_list());
-    return BackdropFilter::make_none();
+        return FilterList(value->as_filter_value_list());
+    return FilterList::make_none();
 }
 
 Optional<CSS::Position> StyleProperties::position() const
