@@ -247,10 +247,7 @@ JS::VM& main_thread_vm()
                 } else {
                     // FIXME: We need to setup a dummy execution context in case a JS::NativeFunction is called when processing the job.
                     //        This is because JS::NativeFunction::call excepts something to be on the execution context stack to be able to get the caller context to initialize the environment.
-                    //        Since this requires pushing an execution context onto the stack, it also requires a global object. The only thing we can get a global object from in this case is the script or module.
-                    //        To do this, we must assume script or module is not Empty. We must also assume that it is a Script Record for now as we don't currently run modules.
                     //        Do note that the JS spec gives _no_ guarantee that the execution context stack has something on it if HostEnqueuePromiseJob was called with a null realm: https://tc39.es/ecma262/#job-preparedtoevaluatecode
-                    VERIFY(script_or_module.has<JS::NonnullGCPtr<JS::Script>>());
                     dummy_execution_context = JS::ExecutionContext { vm->heap() };
                     dummy_execution_context->script_or_module = script_or_module;
                     vm->push_execution_context(dummy_execution_context.value());
