@@ -1,0 +1,16 @@
+name: Label PRs with merge conflicts
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  check_conflicts:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Auto label merge conflicts action
+        uses: mschilde/auto-label-merge-conflicts@8c6faa8a252e35ba5e15703b3d747bf726cdb95c
+        with:
+          CONFLICT_LABEL_NAME: '⚠️ pr-has-conflicts'
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
