@@ -215,6 +215,28 @@ public:
         return *g_current_processor;
     }
 
+    template<IteratorFunction<Processor&> Callback>
+    static inline IterationDecision for_each(Callback)
+    {
+        TODO_AARCH64();
+    }
+
+    template<VoidFunction<Processor&> Callback>
+    static inline IterationDecision for_each(Callback)
+    {
+        TODO_AARCH64();
+    }
+
+    u64 time_spent_idle() const
+    {
+        TODO_AARCH64();
+    }
+
+    static u32 count()
+    {
+        TODO_AARCH64();
+    }
+
     // FIXME: Move this into generic Processor class, when there is such a class.
     ALWAYS_INLINE static bool is_bootstrap_processor()
     {

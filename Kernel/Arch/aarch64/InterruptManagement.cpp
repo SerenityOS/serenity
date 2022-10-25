@@ -54,4 +54,9 @@ NonnullLockRefPtr<IRQController> InterruptManagement::get_responsible_irq_contro
     return m_interrupt_controllers[0];
 }
 
+void InterruptManagement::enumerate_interrupt_handlers(Function<void(GenericInterruptHandler&)>)
+{
+    TODO_AARCH64();
+}
+
 }

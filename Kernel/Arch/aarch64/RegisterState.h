@@ -32,6 +32,7 @@ struct RegisterState {
         (void)value;
         TODO_AARCH64();
     }
+    FlatPtr bp() const { TODO_AARCH64(); }
 };
 
 inline void copy_kernel_registers_into_ptrace_registers(PtraceRegisters& ptrace_regs, RegisterState const& kernel_regs)
