@@ -5779,6 +5779,10 @@ Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(Property
         if (auto parsed_value = parse_content_value(component_values))
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
+    case PropertyID::Filter:
+        if (auto parsed_value = parse_filter_value_list_value(component_values))
+            return parsed_value.release_nonnull();
+        return ParseError::SyntaxError;
     case PropertyID::Flex:
         if (auto parsed_value = parse_flex_value(component_values))
             return parsed_value.release_nonnull();

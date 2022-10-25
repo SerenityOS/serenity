@@ -576,6 +576,18 @@
       "none"
     ]
   },
+  "filter": {
+    "affects-layout": false,
+    "affects-stacking-context": true,
+    "inherited": false,
+    "initial": "none",
+    "valid-types": [
+      "filter-value-list"
+    ],
+    "valid-identifiers": [
+      "none"
+    ]
+  },
   "flex": {
     "inherited": false,
     "initial": "0 1 auto",
