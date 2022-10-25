@@ -468,7 +468,10 @@ void HexEditor::keydown_event(GUI::KeyEvent& event)
         } else {
             text_mode_keydown_event(event);
         }
+        return;
     }
+
+    event.ignore();
 }
 
 void HexEditor::hex_mode_keydown_event(GUI::KeyEvent& event)
