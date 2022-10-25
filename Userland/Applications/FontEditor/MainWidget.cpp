@@ -283,11 +283,11 @@ ErrorOr<void> MainWidget::create_actions()
     });
 
     m_flip_horizontal_action = GUI::Action::create("Flip Horizontally", { Mod_Ctrl | Mod_Shift, Key_Q }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-flip-horizontal.png"sv)), [&](auto&) {
-        m_glyph_editor_widget->flip_horizontally();
+        m_glyph_editor_widget->flip(Gfx::Orientation::Horizontal);
     });
 
     m_flip_vertical_action = GUI::Action::create("Flip Vertically", { Mod_Ctrl | Mod_Shift, Key_W }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-flip-vertical.png"sv)), [&](auto&) {
-        m_glyph_editor_widget->flip_vertically();
+        m_glyph_editor_widget->flip(Gfx::Orientation::Vertical);
     });
 
     m_copy_text_action = GUI::Action::create("Copy as Te&xt", { Mod_Ctrl, Key_T }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-copy.png"sv)), [&](auto&) {
