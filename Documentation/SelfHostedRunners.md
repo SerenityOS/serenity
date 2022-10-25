@@ -14,20 +14,19 @@ As for recommended requirements, listed below are the specifications of the curr
 
 ## Setup
 
-These instructions assume the OS installed is Ubuntu 20.04 (Focal), so they might not be compatible with other Linux flavours.
+These instructions assume the OS installed is Ubuntu 22.04 (Jammy), so they might not be compatible with other Linux flavours.
 
 ### Install base dependencies
 ```shell
 sudo add-apt-repository ppa:canonical-server/server-backports
-sudo add-apt-repository ppa:ubuntu-toolchain-r/test
 wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
-sudo add-apt-repository 'deb http://apt.llvm.org/focal/ llvm-toolchain-focal-14 main'
+sudo add-apt-repository 'deb http://apt.llvm.org/jammy/ llvm-toolchain-focal-14 main'
 apt update
-apt install git build-essential make cmake clang-format-14 gcc-11 g++-11 libstdc++-11-dev libgmp-dev ccache libmpfr-dev libmpc-dev ninja-build e2fsprogs qemu-utils qemu-system-i386 wabt
+apt install git build-essential make cmake clang-format-14 gcc-12 g++-12 libstdc++-12-dev libgmp-dev ccache libmpfr-dev libmpc-dev ninja-build e2fsprogs qemu-utils qemu-system-i386 wabt
 ```
-### Force usage of GCC 11
+### Force usage of GCC 12
 ```shell
-update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-11 100 --slave /usr/bin/g++ g++ /usr/bin/g++-11
+update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-12 100 --slave /usr/bin/g++ g++ /usr/bin/g++-12
 ```
 ### Create a new user account named 'runner'
 ```shell

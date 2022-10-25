@@ -102,8 +102,8 @@ jobs:
             -DWASM_SPEC_TEST_SKIP_FORMATTING=ON \
             -DENABLE_UNDEFINED_SANITIZER=ON \
             -DENABLE_ADDRESS_SANITIZER=ON \
-            -DCMAKE_C_COMPILER=gcc-11 \
-            -DCMAKE_CXX_COMPILER=g++-11
+            -DCMAKE_C_COMPILER=gcc-12 \
+            -DCMAKE_CXX_COMPILER=g++-12
         displayName: 'Create Build Environment'
         workingDirectory: $(Build.SourcesDirectory)/Meta/Lagom
         env:
