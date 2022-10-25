@@ -10,21 +10,21 @@ steps:
         wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
         sudo add-apt-repository 'deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-14 main'
         sudo apt-get update
-        sudo apt-get install clang-format-14 ccache e2fsprogs gcc-11 g++-11 libstdc++-11-dev libmpfr-dev libmpc-dev ninja-build qemu-utils qemu-system-i386 unzip lld
+        sudo apt-get install clang-format-14 ccache e2fsprogs gcc-12 g++-12 libstdc++-12-dev libmpfr-dev libmpc-dev ninja-build qemu-utils qemu-system-i386 unzip lld
       displayName: 'Install Dependencies'
 
   - ${{ if eq(parameters.os, 'Linux') }}:
     - script: |
-        sudo apt-get purge -y clang-11 clang-12 gcc-10
+        sudo apt-get purge -y clang-12 gcc-10
         wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
         sudo add-apt-repository 'deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-13 main'
         sudo apt-get update
-        sudo apt-get install ccache gcc-11 g++-11 clang-13 libstdc++-11-dev ninja-build unzip
+        sudo apt-get install ccache gcc-12 g++-12 clang-13 libstdc++-12-dev ninja-build unzip
 
         sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-13 100
         sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-13 100
-        sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-11 100
-        sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-11 100
+        sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-12 100
+        sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-12 100
 
         wget https://github.com/WebAssembly/wabt/releases/download/1.0.23/wabt-1.0.23-ubuntu.tar.gz
         tar -xzf ./wabt-1.0.23-ubuntu.tar.gz

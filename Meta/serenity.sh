@@ -192,7 +192,7 @@ pick_host_compiler() {
         return
     fi
 
-    find_newest_compiler egcc gcc gcc-11 gcc-12 /usr/local/bin/gcc-11 /opt/homebrew/bin/gcc-11
+    find_newest_compiler egcc gcc gcc-12 /usr/local/bin/gcc-12 /opt/homebrew/bin/gcc-12
     if is_supported_compiler "$HOST_COMPILER"; then
         export CC="${HOST_COMPILER}"
         export CXX="${HOST_COMPILER/gcc/g++}"
@@ -206,7 +206,7 @@ pick_host_compiler() {
         return
     fi
 
-    die "Please make sure that GCC version 11, Clang version 13, or higher is installed."
+    die "Please make sure that GCC version 12, Clang version 13, or higher is installed."
 }
 
 cmd_with_target() {

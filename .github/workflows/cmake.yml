@@ -47,7 +47,7 @@ jobs:
           wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
           sudo add-apt-repository 'deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-14 main'
           sudo apt-get update
-          sudo apt-get install -y clang-format-14 ccache e2fsprogs gcc-11 g++-11 libstdc++-11-dev libmpfr-dev libmpc-dev ninja-build optipng qemu-utils qemu-system-i386 unzip
+          sudo apt-get install -y clang-format-14 ccache e2fsprogs gcc-12 g++-12 libstdc++-12-dev libmpfr-dev libmpc-dev ninja-build optipng qemu-utils qemu-system-i386 unzip
       - name: Install JS dependencies
         run: sudo npm install -g prettier@2.7.1
       - name: Install Python dependencies
@@ -56,7 +56,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install flake8 requests
       - name: Check versions
-        run: set +e; g++ --version; g++-11 --version; clang-format --version; clang-format-14 --version; prettier --version; python --version; python3 --version; ninja --version; flake8 --version; ccache --version; qemu-system-i386 --version
+        run: set +e; g++ --version; g++-12 --version; clang-format --version; clang-format-14 --version; prettier --version; python --version; python3 --version; ninja --version; flake8 --version; ccache --version; qemu-system-i386 --version
 
       # === PREPARE FOR BUILDING ===
 
@@ -147,8 +147,8 @@ jobs:
             -DSERENITY_ARCH=${{ matrix.arch }} \
             -DSERENITY_TOOLCHAIN=GNU \
             -DBUILD_LAGOM=ON \
-            -DCMAKE_C_COMPILER=gcc-11 \
-            -DCMAKE_CXX_COMPILER=g++-11 \
+            -DCMAKE_C_COMPILER=gcc-12 \
+            -DCMAKE_CXX_COMPILER=g++-12 \
             -DENABLE_ALL_DEBUG_FACILITIES=ON \
             -DENABLE_PCI_IDS_DOWNLOAD=OFF \
             -DENABLE_USB_IDS_DOWNLOAD=OFF
@@ -161,8 +161,8 @@ jobs:
           cmake -S Meta/CMake/Superbuild -B Build/superbuild -GNinja \
             -DSERENITY_ARCH=${{ matrix.arch }} \
             -DSERENITY_TOOLCHAIN=GNU \
-            -DCMAKE_C_COMPILER=gcc-11 \
-            -DCMAKE_CXX_COMPILER=g++-11 \
+            -DCMAKE_C_COMPILER=gcc-12 \
+            -DCMAKE_CXX_COMPILER=g++-12 \
             -DENABLE_UNDEFINED_SANITIZER=ON \
             -DDUMP_REGIONS_ON_CRASH=ON \
             -DENABLE_PCI_IDS_DOWNLOAD=OFF \

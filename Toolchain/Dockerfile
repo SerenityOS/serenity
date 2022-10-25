@@ -8,8 +8,8 @@ RUN apt-get update -y \
         ccache \
         cmake \
         curl \
-        g++-11 \
-        gcc-11 \
+        g++-12 \
+        gcc-12 \
         e2fsprogs \
         genext2fs \
         git \
@@ -29,4 +29,4 @@ RUN apt-get update -y \
         tzdata \
         unzip \
     && rm -rf /var/lib/apt/lists/ \
-    && update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-11 900 --slave /usr/bin/g++ g++ /usr/bin/g++-11
+    && update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-12 900 --slave /usr/bin/g++ g++ /usr/bin/g++-12
