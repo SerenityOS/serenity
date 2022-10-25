@@ -454,6 +454,37 @@ void Window::handle_multi_paint_event(MultiPaintEvent& event)
         ConnectionToWindowServer::the().async_did_finish_painting(m_window_id, rects);
 }
 
+void Window::propagate_shortcuts_up_to_application(KeyEvent& event, Widget* widget)
+{
+    VERIFY(event.type() == Event::KeyDown);
+    auto shortcut = Shortcut(event.modifiers(), event.key());
+    Action* action = nullptr;
+
+    if (widget) {
+        VERIFY(widget->window() == this);
+
+        do {
+            action = widget->action_for_shortcut(shortcut);
+            if (action)
+                break;
+
+            widget = widget->parent_widget();
+        } while (widget);
+    }
+
+    if (!action)
+        action = action_for_shortcut(shortcut);
+    if (!action)
+        action = Application::the()->action_for_shortcut(shortcut);
+
+    if (action) {
+        action->process_event(*this, event);
+        return;
+    }
+
+    event.ignore();
+}
+
 void Window::handle_key_event(KeyEvent& event)
 {
     if (!m_focused_widget && event.type() == Event::KeyDown && event.key() == Key_Tab && !event.ctrl() && !event.alt() && !event.super()) {
@@ -465,9 +496,16 @@ void Window::handle_key_event(KeyEvent& event)
             return default_return_key_widget()->dispatch_event(event, this);
 
     if (m_focused_widget)
-        return m_focused_widget->dispatch_event(event, this);
-    if (m_main_widget)
-        return m_main_widget->dispatch_event(event, this);
+        m_focused_widget->dispatch_event(event, this);
+    else if (m_main_widget)
+        m_main_widget->dispatch_event(event, this);
+
+    if (event.is_accepted())
+        return;
+
+    // Only process shortcuts if this is a keydown event.
+    if (event.type() == Event::KeyDown)
+        propagate_shortcuts_up_to_application(event, nullptr);
 }
 
 void Window::handle_resize_event(ResizeEvent& event)

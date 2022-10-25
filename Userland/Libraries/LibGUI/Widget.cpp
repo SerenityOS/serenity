@@ -344,10 +344,22 @@ void Widget::event(Core::Event& event)
 void Widget::handle_keydown_event(KeyEvent& event)
 {
     keydown_event(event);
+    if (event.is_accepted())
+        return;
+
+    if (auto action = Action::find_action_for_shortcut(*this, Shortcut(event.modifiers(), event.key()))) {
+        action->process_event(*window(), event);
+        if (event.is_accepted())
+            return;
+    }
+
     if (event.key() == KeyCode::Key_Menu) {
         ContextMenuEvent c_event(window_relative_rect().bottom_right(), screen_relative_rect().bottom_right());
         dispatch_event(c_event);
+        return;
     }
+
+    event.ignore();
 }
 
 void Widget::handle_paint_event(PaintEvent& event)
