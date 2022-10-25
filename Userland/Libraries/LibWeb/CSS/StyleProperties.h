@@ -73,6 +73,7 @@ public:
     Optional<CSS::AlignSelf> align_self() const;
     Optional<CSS::Appearance> appearance() const;
     CSS::FilterList backdrop_filter() const;
+    CSS::FilterList filter() const;
     float opacity() const;
     Optional<CSS::Visibility> visibility() const;
     Optional<CSS::ImageRendering> image_rendering() const;
