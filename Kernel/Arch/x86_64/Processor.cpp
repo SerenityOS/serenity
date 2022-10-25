@@ -1493,7 +1493,7 @@ extern "C" void context_first_init([[maybe_unused]] Thread* from_thread, [[maybe
 
     auto in_critical = to_thread->saved_critical();
     VERIFY(in_critical > 0);
-    Processor::restore_in_critical(in_critical);
+    Processor::restore_critical(in_critical);
 
     // Since we got here and don't have Scheduler::context_switch in the
     // call stack (because this is the first time we switched into this
@@ -1554,7 +1554,7 @@ extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread)
 
     auto in_critical = to_thread->saved_critical();
     VERIFY(in_critical > 0);
-    Processor::restore_in_critical(in_critical);
+    Processor::restore_critical(in_critical);
 
     if (has_xsave_avx_support)
         asm volatile("xrstor %0" ::"m"(to_thread->fpu_state()), "a"(static_cast<u32>(SIMD::StateComponent::AVX | SIMD::StateComponent::SSE | SIMD::StateComponent::X87)), "d"(0u));

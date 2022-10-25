@@ -318,11 +318,6 @@ public:
         return read_gs_ptr(__builtin_offsetof(Processor, m_in_irq));
     }
 
-    ALWAYS_INLINE static void restore_in_critical(u32 critical)
-    {
-        write_gs_ptr(__builtin_offsetof(Processor, m_in_critical), critical);
-    }
-
     ALWAYS_INLINE static void enter_critical()
     {
         write_gs_ptr(__builtin_offsetof(Processor, m_in_critical), in_critical() + 1);
