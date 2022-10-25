@@ -98,29 +98,33 @@ void BoardView::resize()
 
 void BoardView::keydown_event(GUI::KeyEvent& event)
 {
-    if (!on_move)
+    if (!on_move) {
+        event.ignore();
         return;
+    }
 
     switch (event.key()) {
     case KeyCode::Key_A:
     case KeyCode::Key_Left:
         on_move(Game::Direction::Left);
-        break;
+        return;
     case KeyCode::Key_D:
     case KeyCode::Key_Right:
         on_move(Game::Direction::Right);
-        break;
+        return;
     case KeyCode::Key_W:
     case KeyCode::Key_Up:
         on_move(Game::Direction::Up);
-        break;
+        return;
     case KeyCode::Key_S:
     case KeyCode::Key_Down:
         on_move(Game::Direction::Down);
-        break;
-    default:
         return;
+    default:
+        break;
     }
+
+    event.ignore();
 }
 
 Gfx::Color BoardView::background_color_for_cell(u32 value)
