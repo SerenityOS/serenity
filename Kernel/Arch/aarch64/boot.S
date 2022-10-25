@@ -13,7 +13,7 @@ start:
   // Let only core 0 continue, put other cores to sleep.
   mrs x13, MPIDR_EL1
   and x13, x13, 0xff
-  cbnz x13, _ZN6Kernel9Processor4haltEv
+  cbnz x13, halt
 
   // Let stack start before .text for now.
   // 512 kiB (0x80000) of stack are probably not sufficient, especially once we give the other cores some stack too,
@@ -31,3 +31,8 @@ Lbss_clear_loop:
   bne Lbss_clear_loop
 
   b init
+
+halt:
+  msr daifset, #2
+  wfi
+  b halt
