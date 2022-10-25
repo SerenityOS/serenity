@@ -5,8 +5,8 @@
  */
 
 #include <AK/Try.h>
+#include <Kernel/Arch/CPU.h>
 #include <Kernel/Arch/Delay.h>
-#include <Kernel/Arch/x86/CPU.h>
 #include <Kernel/Arch/x86/IO.h>
 #include <Kernel/Arch/x86/VGA/IOArbiter.h>
 

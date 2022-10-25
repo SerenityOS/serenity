@@ -5,7 +5,7 @@
  */
 
 #include <AK/Assertions.h>
-#include <Kernel/Arch/x86/CPU.h>
+#include <Kernel/Arch/CPU.h>
 #include <Kernel/Panic.h>
 #include <Kernel/Process.h>
 
