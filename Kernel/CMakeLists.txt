@@ -187,7 +187,6 @@ set(KERNEL_SOURCES
     Interrupts/GenericInterruptHandler.cpp
     Interrupts/IRQHandler.cpp
     Interrupts/SharedIRQHandler.cpp
-    Interrupts/SpuriousInterruptHandler.cpp
     Interrupts/UnhandledInterruptHandler.cpp
     KBufferBuilder.cpp
     KLexicalPath.cpp
@@ -230,7 +229,6 @@ set(KERNEL_SOURCES
     Net/Socket.cpp
     Net/TCPSocket.cpp
     Net/UDPSocket.cpp
-    Panic.cpp
     PerformanceEventBuffer.cpp
     Process.cpp
     ProcessExposed.cpp
@@ -240,7 +238,6 @@ set(KERNEL_SOURCES
     Random.cpp
     Scheduler.cpp
     StdLib.cpp
-    Syscall.cpp
     Syscalls/anon_create.cpp
     Syscalls/access.cpp
     Syscalls/alarm.cpp
@@ -253,11 +250,9 @@ set(KERNEL_SOURCES
     Syscalls/disown.cpp
     Syscalls/dup2.cpp
     Syscalls/emuctl.cpp
-    Syscalls/execve.cpp
     Syscalls/exit.cpp
     Syscalls/fallocate.cpp
     Syscalls/fcntl.cpp
-    Syscalls/fork.cpp
     Syscalls/fsync.cpp
     Syscalls/ftruncate.cpp
     Syscalls/futex.cpp
@@ -273,7 +268,6 @@ set(KERNEL_SOURCES
     Syscalls/lseek.cpp
     Syscalls/mkdir.cpp
     Syscalls/mknod.cpp
-    Syscalls/mmap.cpp
     Syscalls/mount.cpp
     Syscalls/open.cpp
     Syscalls/perf_event.cpp
@@ -283,7 +277,6 @@ set(KERNEL_SOURCES
     Syscalls/prctl.cpp
     Syscalls/process.cpp
     Syscalls/profiling.cpp
-    Syscalls/ptrace.cpp
     Syscalls/purge.cpp
     Syscalls/read.cpp
     Syscalls/readlink.cpp
@@ -295,7 +288,6 @@ set(KERNEL_SOURCES
     Syscalls/sendfd.cpp
     Syscalls/setpgid.cpp
     Syscalls/setuid.cpp
-    Syscalls/sigaction.cpp
     Syscalls/socket.cpp
     Syscalls/stat.cpp
     Syscalls/statvfs.cpp
@@ -329,7 +321,6 @@ set(KERNEL_SOURCES
     UserOrKernelBuffer.cpp
     WaitQueue.cpp
     WorkQueue.cpp
-    kprintf.cpp
 )
 
 if ("${SERENITY_ARCH}" STREQUAL "i686" OR "${SERENITY_ARCH}" STREQUAL "x86_64")
@@ -375,6 +366,17 @@ if ("${SERENITY_ARCH}" STREQUAL "i686" OR "${SERENITY_ARCH}" STREQUAL "x86_64")
         Arch/x86/Time/RTC.cpp
 
         Arch/x86/VGA/IOArbiter.cpp
+
+        # TODO: Share these with the aarch64 build
+        Interrupts/SpuriousInterruptHandler.cpp
+        kprintf.cpp
+        Panic.cpp
+        Syscall.cpp
+        Syscalls/execve.cpp
+        Syscalls/fork.cpp
+        Syscalls/mmap.cpp
+        Syscalls/ptrace.cpp
+        Syscalls/sigaction.cpp
     )
 
     set(KERNEL_SOURCES
@@ -414,6 +416,48 @@ if ("${SERENITY_ARCH}" STREQUAL "i686" OR "${SERENITY_ARCH}" STREQUAL "x86_64")
             ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/${KERNEL_ARCH}/Atomics.cpp
         )
     endif()
+elseif("${SERENITY_ARCH}" STREQUAL "aarch64")
+    set(RPI_SOURCES
+        Arch/aarch64/RPi/DebugOutput.cpp
+        Arch/aarch64/RPi/Framebuffer.cpp
+        Arch/aarch64/RPi/GPIO.cpp
+        Arch/aarch64/RPi/InterruptController.cpp
+        Arch/aarch64/RPi/Mailbox.cpp
+        Arch/aarch64/RPi/MMIO.cpp
+        Arch/aarch64/RPi/Timer.cpp
+        Arch/aarch64/RPi/UART.cpp
+    )
+    set(KERNEL_SOURCES
+        ${KERNEL_SOURCES}
+        ${RPI_SOURCES}
+        Arch/Processor.cpp
+
+        Arch/aarch64/boot.S
+        Arch/aarch64/BootPPMParser.cpp
+        Arch/aarch64/CrashHandler.cpp
+        Arch/aarch64/CurrentTime.cpp
+        Arch/aarch64/Dummy.cpp
+        Arch/aarch64/Exceptions.cpp
+        Arch/aarch64/init.cpp
+        Arch/aarch64/InterruptManagement.cpp
+        Arch/aarch64/Interrupts.cpp
+        Arch/aarch64/kprintf.cpp
+        Arch/aarch64/MainIdRegister.cpp
+        Arch/aarch64/MMU.cpp
+        Arch/aarch64/PageDirectory.cpp
+        Arch/aarch64/Panic.cpp
+        Arch/aarch64/Processor.cpp
+        Arch/aarch64/SafeMem.cpp
+        Arch/aarch64/ScopedCritical.cpp
+        Arch/aarch64/SmapDisabler.cpp
+        Arch/aarch64/vector_table.S
+    )
+
+    # Otherwise linker errors e.g undefined reference to `__aarch64_cas8_acq_rel'
+    add_compile_options(-mno-outline-atomics -latomic)
+
+    # FIXME: Remove this once compiling MemoryManager.cpp doesn't give the nonnull error anymore.
+    add_compile_options(-Wno-nonnull)
 endif()
 
 set(AK_SOURCES
@@ -472,115 +516,15 @@ set(PARTITION_SOURCES
 )
 
 set(SOURCES
+    ${KERNEL_SOURCES}
+    ${GENERATED_SOURCES}
     ${AK_SOURCES}
-    )
-if (NOT "${SERENITY_ARCH}" STREQUAL "aarch64")
-    set(SOURCES
-        ${KERNEL_SOURCES}
-        ${GENERATED_SOURCES}
-        ${SOURCES}
-        ${EDID_SOURCES}
-        ${ELF_SOURCES}
-        ${VT_SOURCES}
-        ${CRYPTO_SOURCES}
-        ${PARTITION_SOURCES}
-    )
-else()
-    set(RPI_SOURCES
-        Arch/aarch64/RPi/DebugOutput.cpp
-        Arch/aarch64/RPi/Framebuffer.cpp
-        Arch/aarch64/RPi/GPIO.cpp
-        Arch/aarch64/RPi/InterruptController.cpp
-        Arch/aarch64/RPi/Mailbox.cpp
-        Arch/aarch64/RPi/MMIO.cpp
-        Arch/aarch64/RPi/Timer.cpp
-        Arch/aarch64/RPi/UART.cpp
-    )
-    set(SOURCES
-        ${AK_SOURCES}
-        ${RPI_SOURCES}
-        ${CRYPTO_SOURCES}
-
-        Arch/Processor.cpp
-
-        Arch/aarch64/boot.S
-        Arch/aarch64/BootPPMParser.cpp
-        Arch/aarch64/CrashHandler.cpp
-        Arch/aarch64/CurrentTime.cpp
-        Arch/aarch64/Dummy.cpp
-        Arch/aarch64/Exceptions.cpp
-        Arch/aarch64/init.cpp
-        Arch/aarch64/InterruptManagement.cpp
-        Arch/aarch64/Interrupts.cpp
-        Arch/aarch64/kprintf.cpp
-        Arch/aarch64/MainIdRegister.cpp
-        Arch/aarch64/MMU.cpp
-        Arch/aarch64/PageDirectory.cpp
-        Arch/aarch64/Panic.cpp
-        Arch/aarch64/Processor.cpp
-        Arch/aarch64/SafeMem.cpp
-        Arch/aarch64/ScopedCritical.cpp
-        Arch/aarch64/SmapDisabler.cpp
-        Arch/aarch64/vector_table.S
-
-        # Files from base Kernel
-        CommandLine.cpp
-        Credentials.cpp
-        KBufferBuilder.cpp
-        KString.cpp
-        KSyms.cpp
-        MiniStdLib.cpp
-        Process.cpp
-        ProcessProcFSTraits.cpp
-        Random.cpp
-        Scheduler.cpp
-        StdLib.cpp
-        Time/TimeManagement.cpp
-        TimerQueue.cpp
-        Thread.cpp
-        ThreadTracer.cpp
-        UBSanitizer.cpp
-        UserOrKernelBuffer.cpp
-        WaitQueue.cpp
-
-        Devices/DeviceManagement.cpp
-
-        Graphics/Console/BootFramebufferConsole.cpp
-        Graphics/Console/GenericFramebufferConsole.cpp
-
-        Locking/Mutex.cpp
-        Locking/Spinlock.cpp
-
-        Memory/AddressSpace.cpp
-        Memory/AnonymousVMObject.cpp
-        Memory/InodeVMObject.cpp
-        Memory/MemoryManager.cpp
-        Memory/PageDirectory.cpp
-        Memory/PhysicalPage.cpp
-        Memory/PhysicalRegion.cpp
-        Memory/PhysicalZone.cpp
-        Memory/PrivateInodeVMObject.cpp
-        Memory/Region.cpp
-        Memory/RegionTree.cpp
-        Memory/RingBuffer.cpp
-        Memory/ScatterGatherList.cpp
-        Memory/ScopedAddressSpaceSwitcher.cpp
-        Memory/SharedInodeVMObject.cpp
-        Memory/VirtualRange.cpp
-        Memory/VMObject.cpp
-
-        Interrupts/GenericInterruptHandler.cpp
-        Interrupts/IRQHandler.cpp
-        Interrupts/SharedIRQHandler.cpp
-        Interrupts/UnhandledInterruptHandler.cpp
-    )
-
-    # Otherwise linker errors e.g undefined reference to `__aarch64_cas8_acq_rel'
-    add_compile_options(-mno-outline-atomics -latomic)
-
-    # FIXME: Remove this once compiling MemoryManager.cpp doesn't give the nonnull error anymore.
-    add_compile_options(-Wno-nonnull)
-endif()
+    ${EDID_SOURCES}
+    ${ELF_SOURCES}
+    ${VT_SOURCES}
+    ${CRYPTO_SOURCES}
+    ${PARTITION_SOURCES}
+)
 
 add_compile_options(-fsigned-char)
 add_compile_options(-Wno-unknown-warning-option -Wvla -Wnull-dereference)
