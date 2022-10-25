@@ -31,15 +31,15 @@ depends=(
 configopts=(
     '--disable-ipv6'
     '--without-ensurepip'
+    '--with-build-python=python3'
     'ac_cv_file__dev_ptmx=no'
     'ac_cv_file__dev_ptc=no'
 )
 
 export BLDSHARED="${CC} -shared"
 
-pre_configure() {
-    build="$("${workdir}/config.guess")"  # e.g. 'x86_64-pc-linux-gnu'
-    configopts+=("--build=${build}")
+configure() {
+    run ./configure --host="${SERENITY_ARCH}-pc-serenity" --build="$($workdir/config.guess)" "${configopts[@]}"
 }
 
 # Note: The showproperty command is used when linting ports, we don't actually need python at this time.
