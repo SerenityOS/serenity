@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>Filter</title>
+    <style>
+        .image-box {
+          background-image: url(old-computer.png);
+          height: 240px;
+          width: 350px;
+          background-size: cover;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin: 5px;
+          border-radius: 50%;
+        }
+
+        .backdrop-box {
+          background-color: rgba(255, 255, 255, 0.1);
+          width: 50%;
+          height: 50%;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          position: relative;
+          top: -72%;
+          left: 26%;
+          font-size: 1.2em;
+        }
+
+        code {
+          text-shadow: 1px 1px 2px black;
+          color: white;
+        }
+
+        body {
+          display: flex;
+          flex-wrap: wrap;
+        }
+
+        .blur {
+          filter: blur(5px);
+        }
+
+        .invert {
+          filter: invert();
+        }
+
+        .grayscale {
+          filter: grayscale();
+        }
+
+        .brightness {
+          filter: brightness(200%);
+        }
+
+        .contrast {
+          filter: contrast(200%);
+        }
+
+        .sepia {
+          filter: sepia();
+        }
+
+        .grayscale-invert-blur {
+          filter: grayscale() invert() blur(5px);
+        }
+
+        .mixed {
+          filter: grayscale(50%) invert(70%);
+        }
+
+        .hue-rotate {
+          filter: hue-rotate(60deg);
+        }
+
+        .saturate {
+          filter: saturate(4);
+        }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="image-box grayscale-invert-blur"></div>
+      <div class="backdrop-box"></div>
+    </div>
+    <div class="container">
+      <div class="image-box mixed"></div>
+      <div class="backdrop-box"></div>
+    </div>
+    <div class="container">
+      <div class="image-box blur"></div>
+      <div class="backdrop-box"></div>
+    </div>
+    <div class="container">
+      <div class="image-box invert"></div>
+      <div class="backdrop-box"></div>
+    </div>
+    <div class="container">
+      <div class="image-box grayscale"></div>
+      <div class="backdrop-box"></div>
+    </div>
+    <div class="container">
+      <div class="image-box brightness"></div>
+      <div class="backdrop-box"></div>
+    </div>
+    <div class="container">
+      <div class="image-box contrast"></div>
+      <div class="backdrop-box"></div>
+    </div>
+    <div class="container">
+      <div class="image-box sepia"></div>
+      <div class="backdrop-box"></div>
+    </div>
+    <div class="container">
+      <div class="image-box hue-rotate"></div>
+      <div class="backdrop-box"></div>
+    </div>
+    <div class="container">
+      <div class="image-box saturate"></div>
+      <div class="backdrop-box"></div>
+    </div>
+  <script>
+    const boxes = document.querySelectorAll(".backdrop-box");
+    const filterMap = {};
+    for (const rule of document.styleSheets[0].cssRules) {
+      filterMap[rule.selectorText] = rule.style.filter;
+    }
+
+    updateLabels = () => {
+        boxes.forEach(box => {
+            const filter = box.previousElementSibling.classList[1];
+            const cssText = filterMap['.'+filter];
+            let newEl = document.createElement('code');
+            let text = document.createTextNode(box.previousElementSibling.style.filter || cssText);
+            newEl.appendChild(text);
+            newEl.id = filter;
+            box.appendChild(newEl);
+        })
+    }
+
+    updateLabels();
+  </script>
+</html>
