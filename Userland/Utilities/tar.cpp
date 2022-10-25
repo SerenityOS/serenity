@@ -33,6 +33,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool gzip = false;
     bool no_auto_compress = false;
     StringView archive_file;
+    bool dereference;
     StringView directory;
     Vector<String> paths;
 
@@ -45,6 +46,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(no_auto_compress, "Do not use the archive suffix to select the compression algorithm", "no-auto-compress", 0);
     args_parser.add_option(directory, "Directory to extract to/create from", "directory", 'C', "DIRECTORY");
     args_parser.add_option(archive_file, "Archive file", "file", 'f', "FILE");
+    args_parser.add_option(dereference, "Follow symlinks", "dereference", 'h');
     args_parser.add_positional_argument(paths, "Paths", "PATHS", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
 
@@ -230,11 +232,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 return {};
             }
 
-            auto statbuf_or_error = Core::System::lstat(path);
-            if (statbuf_or_error.is_error())
-                return statbuf_or_error.error();
-
-            auto statbuf = statbuf_or_error.value();
+            auto statbuf = TRY(Core::System::lstat(path));
             auto canonicalized_path = LexicalPath::canonicalized_path(path);
             tar_stream.add_file(canonicalized_path, statbuf.st_mode, file->read_all());
             if (verbose)
@@ -243,12 +241,20 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             return {};
         };
 
-        auto add_directory = [&](String path, auto handle_directory) -> ErrorOr<void> {
-            auto statbuf_or_error = Core::System::lstat(path);
-            if (statbuf_or_error.is_error())
-                return statbuf_or_error.error();
+        auto add_link = [&](String path) -> ErrorOr<void> {
+            auto statbuf = TRY(Core::System::lstat(path));
 
-            auto statbuf = statbuf_or_error.value();
+            auto canonicalized_path = LexicalPath::canonicalized_path(path);
+            tar_stream.add_link(canonicalized_path, statbuf.st_mode, TRY(Core::System::readlink(path)));
+            if (verbose)
+                outln("{}", canonicalized_path);
+
+            return {};
+        };
+
+        auto add_directory = [&](String path, auto handle_directory) -> ErrorOr<void> {
+            auto statbuf = TRY(Core::System::lstat(path));
+
             auto canonicalized_path = LexicalPath::canonicalized_path(path);
             tar_stream.add_directory(canonicalized_path, statbuf.st_mode);
             if (verbose)
@@ -257,7 +263,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             Core::DirIterator it(path, Core::DirIterator::Flags::SkipParentAndBaseDir);
             while (it.has_next()) {
                 auto child_path = it.next_full_path();
-                if (!Core::File::is_directory(child_path)) {
+                if (!dereference && Core::File::is_link(child_path)) {
+                    TRY(add_link(child_path));
+                } else if (!Core::File::is_directory(child_path)) {
                     TRY(add_file(child_path));
                 } else {
                     TRY(handle_directory(child_path, handle_directory));
