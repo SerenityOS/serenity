@@ -408,12 +408,12 @@ void E1000NetworkAdapter::send_raw(ReadonlyBytes payload)
     descriptor.cmd = CMD_EOP | CMD_IFCS | CMD_RS;
     dbgln_if(E1000_DEBUG, "E1000: Using tx descriptor {} (head is at {})", tx_current, in32(REG_TXDESCHEAD));
     tx_current = (tx_current + 1) % number_of_tx_descriptors;
-    cli();
+    Processor::disable_interrupts();
     enable_irq();
     out32(REG_TXDESCTAIL, tx_current);
     for (;;) {
         if (descriptor.status) {
-            sti();
+            Processor::enable_interrupts();
             break;
         }
         m_wait_queue.wait_forever("E1000NetworkAdapter"sv);
