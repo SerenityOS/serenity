@@ -8,6 +8,7 @@
 #include <Kernel/Arch/Delay.h>
 #include <Kernel/Devices/Audio/AC97.h>
 #include <Kernel/Devices/DeviceManagement.h>
+#include <Kernel/InterruptDisabler.h>
 #include <Kernel/Memory/AnonymousVMObject.h>
 
 namespace Kernel {
@@ -226,34 +227,34 @@ ErrorOr<void> AC97::write_single_buffer(UserOrKernelBuffer const& data, size_t o
 {
     VERIFY(length <= PAGE_SIZE);
 
-    // Block until we can write into an unused buffer
-    cli();
-    do {
-        auto pcm_out_status = m_pcm_out_channel->io_window().read16(AC97Channel::Register::Status);
-        auto current_index = m_pcm_out_channel->io_window().read8(AC97Channel::Register::CurrentIndexValue);
-        int last_valid_index = m_pcm_out_channel->io_window().read8(AC97Channel::Register::LastValidIndex);
+    {
+        // Block until we can write into an unused buffer
+        InterruptDisabler disabler;
+        do {
+            auto pcm_out_status = m_pcm_out_channel->io_window().read16(AC97Channel::Register::Status);
+            auto current_index = m_pcm_out_channel->io_window().read8(AC97Channel::Register::CurrentIndexValue);
+            int last_valid_index = m_pcm_out_channel->io_window().read8(AC97Channel::Register::LastValidIndex);
 
-        auto head_distance = last_valid_index - current_index;
-        if (head_distance < 0)
-            head_distance += buffer_descriptor_list_max_entries;
-        if (m_pcm_out_channel->dma_running())
-            ++head_distance;
+            auto head_distance = last_valid_index - current_index;
+            if (head_distance < 0)
+                head_distance += buffer_descriptor_list_max_entries;
+            if (m_pcm_out_channel->dma_running())
+                ++head_distance;
 
-        // Current index has _passed_ last valid index - move our list index up
-        if (head_distance > m_output_buffer_page_count) {
-            m_buffer_descriptor_list_index = current_index + 1;
-            break;
-        }
+            // Current index has _passed_ last valid index - move our list index up
+            if (head_distance > m_output_buffer_page_count) {
+                m_buffer_descriptor_list_index = current_index + 1;
+                break;
+            }
 
-        // There is room for our data
-        if (head_distance < m_output_buffer_page_count)
-            break;
+            // There is room for our data
+            if (head_distance < m_output_buffer_page_count)
+                break;
 
-        dbgln_if(AC97_DEBUG, "AC97 @ {}: waiting on interrupt - status: {:#05b} CI: {} LVI: {}", pci_address(), pcm_out_status, current_index, last_valid_index);
-        m_irq_queue.wait_forever("AC97"sv);
-    } while (m_pcm_out_channel->dma_running());
-    sti();
-
+            dbgln_if(AC97_DEBUG, "AC97 @ {}: waiting on interrupt - status: {:#05b} CI: {} LVI: {}", pci_address(), pcm_out_status, current_index, last_valid_index);
+            m_irq_queue.wait_forever("AC97"sv);
+        } while (m_pcm_out_channel->dma_running());
+    }
     // Copy data from userspace into one of our buffers
     TRY(data.read(m_output_buffer->vaddr_from_page_index(m_output_buffer_page_index).as_ptr(), offset, length));
 
