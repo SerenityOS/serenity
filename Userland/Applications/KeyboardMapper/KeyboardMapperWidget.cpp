@@ -216,6 +216,8 @@ void KeyboardMapperWidget::keydown_event(GUI::KeyEvent& event)
     if (m_automatic_modifier && event.modifiers() > 0) {
         update_modifier_radio_buttons(event);
     }
+
+    event.ignore();
 }
 
 void KeyboardMapperWidget::keyup_event(GUI::KeyEvent& event)
