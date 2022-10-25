@@ -97,11 +97,13 @@ ErrorOr<Optional<AK::URL>> Response::location_url(Optional<String> const& reques
     if (!is_redirect_status(status()))
         return Optional<AK::URL> {};
 
-    // FIXME: 2. Let location be the result of extracting header list values given `Location` and response’s header list.
-    auto location_value = ByteBuffer {};
+    // 2. Let location be the result of extracting header list values given `Location` and response’s header list.
+    auto location_values = TRY(extract_header_list_values("Location"sv.bytes(), m_header_list));
+    if (!location_values.has_value() || location_values->size() != 1)
+        return Optional<AK::URL> {};
 
     // 3. If location is a header value, then set location to the result of parsing location with response’s URL.
-    auto location = AK::URL { StringView { location_value } };
+    auto location = AK::URL { StringView { location_values->first() } };
     if (!location.is_valid())
         return Error::from_string_view("Invalid 'Location' header URL"sv);
 
