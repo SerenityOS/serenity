@@ -167,6 +167,15 @@ void PaintableBox::paint(PaintContext& context, PaintPhase phase) const
         paint_border(context);
     }
 
+    if (phase == PaintPhase::Overlay) {
+        // https://drafts.fxtf.org/filter-effects-1/#FilterProperty
+        // Conceptually, any parts of the drawing are effected by filter operations.
+        // This includes any content, background, borders, text decoration, outline and visible scrolling mechanism of the element to which the filter is applied,
+        // and those of its descendants. The filter operations are applied in the element’s local coordinate system.
+        // The compositing model follows the SVG compositing model [SVG11]: first any filter effect is applied, then any clipping, masking and opacity.
+        paint_filter(context);
+    }
+
     if (phase == PaintPhase::Overlay && should_clip_rect)
         context.painter().restore();
 
@@ -235,6 +244,13 @@ void PaintableBox::paint_backdrop_filter(PaintContext& context) const
     auto& backdrop_filter = computed_values().backdrop_filter();
     if (!backdrop_filter.is_none())
         Painting::apply_backdrop_filter(context, layout_node(), absolute_border_box_rect(), normalized_border_radii_data(), backdrop_filter);
+}
+
+void PaintableBox::paint_filter(PaintContext& context) const
+{
+    auto& filter = computed_values().filter();
+    if (!filter.is_none())
+        Painting::apply_filter(context, layout_node(), absolute_border_box_rect(), normalized_border_radii_data(), filter);
 }
 
 void PaintableBox::paint_background(PaintContext& context) const

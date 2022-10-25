@@ -135,4 +135,27 @@ void apply_backdrop_filter(PaintContext& context, Layout::Node const& node, Gfx:
     context.painter().blit(actual_region.location(), *backdrop_bitmap, backdrop_bitmap->rect());
 }
 
+void apply_filter(PaintContext& context, Layout::Node const& node, Gfx::FloatRect const& filter_rect, BorderRadiiData const& border_radii_data, CSS::FilterList const& filter)
+{
+    // FIXME: This is ad-hoc, as the filter effects spec doesn't seem to tell us how to apply the filter. This is basically the backdrop-filter steps, minus the backdrop root image and transform requirements.
+
+    auto backdrop_region = filter_rect.to_rounded<int>();
+
+    // Note: The region bitmap can be smaller than the backdrop_region if it's at the edge of canvas.
+    Gfx::IntRect actual_region {};
+
+    auto maybe_filter_bitmap = context.painter().get_region_bitmap(backdrop_region, Gfx::BitmapFormat::BGRA8888, actual_region);
+    if (actual_region.is_empty())
+        return;
+    if (maybe_filter_bitmap.is_error()) {
+        dbgln("Failed get region bitmap for filter");
+        return;
+    }
+    auto backdrop_bitmap = maybe_filter_bitmap.release_value();
+    apply_filter_list(*backdrop_bitmap, node, filter.filters());
+
+    ScopedCornerRadiusClip corner_clipper { context.painter(), backdrop_region, border_radii_data };
+    context.painter().blit(actual_region.location(), *backdrop_bitmap, backdrop_bitmap->rect());
+}
+
 }

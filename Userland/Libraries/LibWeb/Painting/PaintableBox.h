@@ -124,6 +124,7 @@ protected:
 
     virtual void paint_border(PaintContext&) const;
     virtual void paint_backdrop_filter(PaintContext&) const;
+    virtual void paint_filter(PaintContext&) const;
     virtual void paint_background(PaintContext&) const;
     virtual void paint_box_shadow(PaintContext&) const;
 
