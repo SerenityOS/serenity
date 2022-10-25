@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Peter Elliott <pelliott@serenityos.org>
+ * Copyright (c) 2020-2022, Peter Elliott <pelliott@serenityos.org>
  * Copyright (c) 2021, Idan Horowitz <idan.horowitz@serenityos.org>
  * Copyright (c) 2022, the SerenityOS developers.
  *
@@ -74,12 +74,10 @@ static StringView get_field_as_string_view(char const (&field)[N])
 template<size_t N, class TSource>
 static void set_field(char (&field)[N], TSource&& source)
 {
-    if constexpr (requires { source.characters_without_null_termination(); }) {
-        memcpy(field, source.characters_without_null_termination(), min(N, source.length()));
-    } else {
-        auto success = source.copy_characters_to_buffer(field, N);
-        VERIFY(success);
-    }
+    VERIFY(N >= source.length());
+    memcpy(field, StringView(source).characters_without_null_termination(), source.length());
+    if (N > source.length())
+        field[source.length()] = 0;
 }
 
 template<class TSource, size_t N>
@@ -109,23 +107,23 @@ public:
     // FIXME: support ustar filename prefix
     StringView prefix() const { return get_field_as_string_view(m_prefix); }
 
-    void set_filename(String const& filename) { set_field(m_filename, filename); }
+    void set_filename(StringView filename) { set_field(m_filename, filename); }
     void set_mode(mode_t mode) { set_octal_field(m_mode, mode); }
     void set_uid(uid_t uid) { set_octal_field(m_uid, uid); }
     void set_gid(gid_t gid) { set_octal_field(m_gid, gid); }
     void set_size(size_t size) { set_octal_field(m_size, size); }
     void set_timestamp(time_t timestamp) { set_octal_field(m_timestamp, timestamp); }
     void set_type_flag(TarFileType type) { m_type_flag = to_underlying(type); }
-    void set_link_name(String const& link_name) { set_field(m_link_name, link_name); }
+    void set_link_name(StringView link_name) { set_field(m_link_name, link_name); }
     // magic doesn't necessarily include a null byte
     void set_magic(StringView magic) { set_field(m_magic, magic); }
     // version doesn't necessarily include a null byte
     void set_version(StringView version) { set_field(m_version, version); }
-    void set_owner_name(String const& owner_name) { set_field(m_owner_name, owner_name); }
-    void set_group_name(String const& group_name) { set_field(m_group_name, group_name); }
+    void set_owner_name(StringView owner_name) { set_field(m_owner_name, owner_name); }
+    void set_group_name(StringView group_name) { set_field(m_group_name, group_name); }
     void set_major(int major) { set_octal_field(m_major, major); }
     void set_minor(int minor) { set_octal_field(m_minor, minor); }
-    void set_prefix(String const& prefix) { set_field(m_prefix, prefix); }
+    void set_prefix(StringView prefix) { set_field(m_prefix, prefix); }
 
     unsigned expected_checksum() const;
     void calculate_checksum();
