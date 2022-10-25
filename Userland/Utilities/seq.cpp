@@ -25,10 +25,9 @@ char const* const g_usage = R"(Usage:
 static void print_usage(FILE* stream)
 {
     fputs(g_usage, stream);
-    return;
 }
 
-static double get_double(char const* name, char const* d_string, int* number_of_decimals)
+static double get_double(char const* name, char const* d_string, size_t* number_of_decimals)
 {
     char* end;
     double d = strtod(d_string, &end);
@@ -59,8 +58,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_positional_argument(parameters, "1 to 3 parameters, interpreted as LAST, FIRST LAST, or FIRST INCREMENT LAST", "parameters");
     args_parser.parse(arguments);
 
-    double start = 1, step = 1, end = 1;
-    int number_of_start_decimals = 0, number_of_step_decimals = 0, number_of_end_decimals = 0;
+    double start = 1;
+    double step = 1;
+    double end = 1;
+    size_t number_of_start_decimals = 0;
+    size_t number_of_step_decimals = 0;
+    size_t number_of_end_decimals = 0;
     switch (parameters.size()) {
     case 1:
         end = get_double(arguments.argv[0], parameters[0], &number_of_end_decimals);
@@ -90,9 +93,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return 1;
     }
 
-    int number_of_decimals = max(number_of_start_decimals, max(number_of_step_decimals, number_of_end_decimals));
+    size_t number_of_decimals = max(number_of_start_decimals, max(number_of_step_decimals, number_of_end_decimals));
 
-    int n = (end - start) / step;
+    int n = static_cast<int>((end - start) / step);
     double d = start;
     for (int i = 0; i <= n; ++i) {
         char buf[40];
