@@ -117,6 +117,11 @@ bool Node::establishes_stacking_context() const
     if (parent() && parent()->display().is_grid_inside() && computed_values().z_index().has_value())
         return true;
 
+    // https://drafts.fxtf.org/filter-effects/#FilterProperty
+    // A computed value of other than none results in the creation of a stacking context [CSS21] the same way that CSS opacity does.
+    if (!computed_values().filter().is_none())
+        return true;
+
     // https://drafts.fxtf.org/filter-effects-2/#backdrop-filter-operation
     // A computed value of other than none results in the creation of both a stacking context [CSS21] and a Containing Block for absolute and fixed position descendants,
     // unless the element it applies to is a document root element in the current browsing context.
