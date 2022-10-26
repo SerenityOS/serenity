@@ -5531,7 +5531,13 @@ RefPtr<StyleValue> Parser::parse_transform_value(Vector<ComponentValue> const& c
         NonnullRefPtrVector<StyleValue> values;
         auto argument_tokens = TokenStream { part.function().values() };
         argument_tokens.skip_whitespace();
+        size_t argument_index = 0;
         while (argument_tokens.has_next_token()) {
+            if (argument_index == function_metadata.parameters.size()) {
+                dbgln_if(CSS_PARSER_DEBUG, "Too many arguments to {}. max: {}", part.function().name(), function_metadata.parameters.size());
+                return nullptr;
+            }
+
             auto const& value = argument_tokens.next_token();
             RefPtr<CalculatedStyleValue> maybe_calc_value;
             if (auto maybe_dynamic_value = parse_dynamic_value(value)) {
@@ -5542,7 +5548,7 @@ RefPtr<StyleValue> Parser::parse_transform_value(Vector<ComponentValue> const& c
                 maybe_calc_value = maybe_dynamic_value->as_calculated();
             }
 
-            switch (function_metadata.parameter_type) {
+            switch (function_metadata.parameters[argument_index].type) {
             case TransformFunctionParameterType::Angle: {
                 // These are `<angle> | <zero>` in the spec, so we have to check for both kinds.
                 if (maybe_calc_value && maybe_calc_value->resolves_to_angle()) {
@@ -5596,15 +5602,12 @@ RefPtr<StyleValue> Parser::parse_transform_value(Vector<ComponentValue> const& c
                 if (!argument_tokens.has_next_token())
                     return nullptr;
             }
+
+            argument_index++;
         }
 
-        if (values.size() < function_metadata.min_parameters) {
-            dbgln_if(CSS_PARSER_DEBUG, "Not enough arguments to {}. min: {}, given: {}", part.function().name(), function_metadata.min_parameters, values.size());
-            return nullptr;
-        }
-
-        if (values.size() > function_metadata.max_parameters) {
-            dbgln_if(CSS_PARSER_DEBUG, "Too many arguments to {}. max: {}, given: {}", part.function().name(), function_metadata.max_parameters, values.size());
+        if (argument_index < function_metadata.parameters.size() && function_metadata.parameters[argument_index].required) {
+            dbgln_if(CSS_PARSER_DEBUG, "Required parameter at position {} is missing", argument_index);
             return nullptr;
         }
 

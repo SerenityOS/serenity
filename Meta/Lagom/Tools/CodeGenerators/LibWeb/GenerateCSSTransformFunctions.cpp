@@ -58,6 +58,7 @@ ErrorOr<void> generate_header_file(JsonObject& transforms_data, Core::Stream::Fi
 
 #include <AK/Optional.h>
 #include <AK/StringView.h>
+#include <AK/Vector.h>
 
 namespace Web::CSS {
 
@@ -81,10 +82,13 @@ enum class TransformFunctionParameterType {
     Number,
 };
 
+struct TransformFunctionParameter {
+    TransformFunctionParameterType type;
+    bool required;
+};
+
 struct TransformFunctionMetadata {
-    size_t min_parameters;
-    size_t max_parameters;
-    TransformFunctionParameterType parameter_type;
+    Vector<TransformFunctionParameter> parameters;
 };
 TransformFunctionMetadata transform_function_metadata(TransformFunction);
 )~~~");
@@ -153,48 +157,40 @@ TransformFunctionMetadata transform_function_metadata(TransformFunction transfor
 )~~~");
     transforms_data.for_each_member([&](auto& name, auto& value) {
         VERIFY(value.is_object());
-        auto parameters_string = value.as_object().get("parameters"sv).as_string();
-        GenericLexer lexer { parameters_string };
-
-        VERIFY(lexer.consume_specific('<'));
-        auto parameter_type_name = lexer.consume_until('>');
-        VERIFY(lexer.consume_specific('>'));
-
-        StringView parameter_type = ""sv;
-        if (parameter_type_name == "angle"sv)
-            parameter_type = "Angle"sv;
-        else if (parameter_type_name == "length-percentage"sv)
-            parameter_type = "LengthPercentage"sv;
-        else if (parameter_type_name == "number"sv)
-            parameter_type = "Number"sv;
-        else
-            VERIFY_NOT_REACHED();
-
-        StringView min_parameters = "1"sv;
-        StringView max_parameters = "1"sv;
-        if (!lexer.is_eof()) {
-            VERIFY(lexer.consume_specific('{'));
-            min_parameters = lexer.consume_until([](auto c) { return c == ',' || c == '}'; });
-            if (lexer.consume_specific(','))
-                max_parameters = lexer.consume_until('}');
-            else
-                max_parameters = min_parameters;
-            VERIFY(lexer.consume_specific('}'));
-        }
-        VERIFY(lexer.is_eof());
 
         auto member_generator = generator.fork();
         member_generator.set("name:titlecase", title_casify_transform_function(name));
-        member_generator.set("min_parameters", min_parameters);
-        member_generator.set("max_parameters", max_parameters);
-        member_generator.set("parameter_type", parameter_type);
         member_generator.append(R"~~~(
     case TransformFunction::@name:titlecase@:
         return TransformFunctionMetadata {
-            .min_parameters = @min_parameters@,
-            .max_parameters = @max_parameters@,
-            .parameter_type = TransformFunctionParameterType::@parameter_type@
-        };
+            .parameters = {)~~~");
+
+        const JsonArray& parameters = value.as_object().get("parameters"sv).as_array();
+        bool first = true;
+        parameters.for_each([&](JsonValue const& value) {
+            GenericLexer lexer { value.as_object().get("type"sv).as_string() };
+            VERIFY(lexer.consume_specific('<'));
+            auto parameter_type_name = lexer.consume_until('>');
+            VERIFY(lexer.consume_specific('>'));
+
+            StringView parameter_type = ""sv;
+            if (parameter_type_name == "angle"sv)
+                parameter_type = "Angle"sv;
+            else if (parameter_type_name == "length-percentage"sv)
+                parameter_type = "LengthPercentage"sv;
+            else if (parameter_type_name == "number"sv)
+                parameter_type = "Number"sv;
+            else
+                VERIFY_NOT_REACHED();
+
+            member_generator.append(first ? " "sv : ", "sv);
+            first = false;
+
+            member_generator.append(String::formatted("{{ TransformFunctionParameterType::{}, {}}}", parameter_type, value.as_object().get("required"sv).to_string()));
+        });
+
+        member_generator.append(R"~~~( }
+    };
 )~~~");
     });
     generator.append(R"~~~(
