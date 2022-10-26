@@ -121,7 +121,7 @@ ErrorOr<Optional<Vector<String>>> HeaderList::get_decode_and_split(ReadonlyBytes
             // 2. Otherwise:
             else {
                 // 1. Assert: the code point at position within input is U+002C (,).
-                VERIFY(lexer.peek(1) == ',');
+                VERIFY(lexer.peek() == ',');
 
                 // 2. Advance position by 1.
                 lexer.ignore(1);
