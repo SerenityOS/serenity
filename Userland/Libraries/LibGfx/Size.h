@@ -183,10 +183,10 @@ using FloatSize = Size<float>;
 namespace AK {
 
 template<typename T>
-struct Formatter<Gfx::Size<T>> : Formatter<StringView> {
+struct Formatter<Gfx::Size<T>> : Formatter<FormatString> {
     ErrorOr<void> format(FormatBuilder& builder, Gfx::Size<T> const& value)
     {
-        return Formatter<StringView>::format(builder, value.to_string());
+        return Formatter<FormatString>::format(builder, "[{}x{}]"sv, value.width(), value.height());
     }
 };
 

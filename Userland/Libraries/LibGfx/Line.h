@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/Format.h>
 #include <AK/Optional.h>
 #include <AK/StdLibExtras.h>
 #include <AK/String.h>
@@ -151,5 +152,17 @@ inline String FloatLine::to_string() const
 {
     return String::formatted("[{},{} {}x{}]", m_a.x(), m_a.y(), m_b.x(), m_b.y());
 }
+
+}
+
+namespace AK {
+
+template<typename T>
+struct Formatter<Gfx::Line<T>> : Formatter<FormatString> {
+    ErrorOr<void> format(FormatBuilder& builder, Gfx::Line<T> const& value)
+    {
+        return Formatter<FormatString>::format(builder, "[{},{} -> {},{}]"sv, value.a().x(), value.a().y(), value.b().x(), value.b().y());
+    }
+};
 
 }
