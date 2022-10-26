@@ -469,7 +469,7 @@ void Screen::constrain_pending_flush_rects()
     if (flush_rects.pending_flush_rects.is_empty())
         return;
     Gfx::IntRect screen_rect({}, rect().size());
-    Gfx::DisjointRectSet rects;
+    Gfx::DisjointIntRectSet rects;
     for (auto& fb_rect : flush_rects.pending_flush_rects) {
         Gfx::IntRect rect { (int)fb_rect.x, (int)fb_rect.y, (int)fb_rect.width, (int)fb_rect.height };
         auto intersected_rect = rect.intersected(screen_rect);

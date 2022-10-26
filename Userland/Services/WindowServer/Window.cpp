@@ -322,7 +322,7 @@ void Window::start_minimize_animation()
     }
     m_animation = Animation::create();
     m_animation->set_duration(150);
-    m_animation->on_update = [this](float progress, Gfx::Painter& painter, Screen& screen, Gfx::DisjointRectSet& flush_rects) {
+    m_animation->on_update = [this](float progress, Gfx::Painter& painter, Screen& screen, Gfx::DisjointIntRectSet& flush_rects) {
         Gfx::PainterStateSaver saver(painter);
         painter.set_draw_op(Gfx::Painter::DrawOp::Invert);
 
@@ -350,7 +350,7 @@ void Window::start_launch_animation(Gfx::IntRect const& launch_origin_rect)
 
     m_animation = Animation::create();
     m_animation->set_duration(150);
-    m_animation->on_update = [this, launch_origin_rect](float progress, Gfx::Painter& painter, Screen& screen, Gfx::DisjointRectSet& flush_rects) {
+    m_animation->on_update = [this, launch_origin_rect](float progress, Gfx::Painter& painter, Screen& screen, Gfx::DisjointIntRectSet& flush_rects) {
         Gfx::PainterStateSaver saver(painter);
         painter.set_draw_op(Gfx::Painter::DrawOp::Invert);
 

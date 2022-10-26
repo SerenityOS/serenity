@@ -595,7 +595,7 @@ Gfx::IntRect WindowFrame::unconstrained_render_rect() const
     return inflated_for_shadow(rect());
 }
 
-Gfx::DisjointRectSet WindowFrame::opaque_render_rects() const
+Gfx::DisjointIntRectSet WindowFrame::opaque_render_rects() const
 {
     auto border_radius = WindowManager::the().palette().window_border_radius();
     if (has_alpha_channel() || border_radius > 0) {
@@ -605,17 +605,17 @@ Gfx::DisjointRectSet WindowFrame::opaque_render_rects() const
     }
     if (m_window.is_opaque())
         return constrained_render_rect_to_screen(rect());
-    Gfx::DisjointRectSet opaque_rects;
+    Gfx::DisjointIntRectSet opaque_rects;
     opaque_rects.add_many(constrained_render_rect_to_screen(rect()).shatter(m_window.rect()));
     return opaque_rects;
 }
 
-Gfx::DisjointRectSet WindowFrame::transparent_render_rects() const
+Gfx::DisjointIntRectSet WindowFrame::transparent_render_rects() const
 {
     auto border_radius = WindowManager::the().palette().window_border_radius();
     if (has_alpha_channel() || border_radius > 0) {
         if (m_window.is_opaque()) {
-            Gfx::DisjointRectSet transparent_rects;
+            Gfx::DisjointIntRectSet transparent_rects;
             transparent_rects.add_many(render_rect().shatter(m_window.rect()));
             return transparent_rects;
         }
@@ -623,7 +623,7 @@ Gfx::DisjointRectSet WindowFrame::transparent_render_rects() const
     }
 
     auto total_render_rect = render_rect();
-    Gfx::DisjointRectSet transparent_rects;
+    Gfx::DisjointIntRectSet transparent_rects;
     if (has_shadow())
         transparent_rects.add_many(total_render_rect.shatter(rect()));
     if (!m_window.is_opaque())
