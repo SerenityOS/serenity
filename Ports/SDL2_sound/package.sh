@@ -1,7 +1,7 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='SDL2_sound'
 version='git'
-_commit='df3fc779774c2c5dc1147239da1af858c88f1a74'
+_commit='301135a6d0d9bb77c9da0b7f809e9a10d579610f'
 workdir="SDL_sound-${_commit}"
 useconfigure='true'
 depends=('SDL2')
