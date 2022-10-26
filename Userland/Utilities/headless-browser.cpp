@@ -87,7 +87,7 @@ public:
             return;
         }
 
-        Web::PaintContext context(painter, palette());
+        Web::PaintContext context(painter, palette(), device_pixels_per_css_pixel());
         context.set_should_show_line_box_borders(false);
         context.set_viewport_rect(content_rect.to_type<int>());
         context.set_has_focus(true);
