@@ -144,13 +144,13 @@ private:
 template<>
 inline String IntLine::to_string() const
 {
-    return String::formatted("[{},{} -> {}x{}]", m_a.x(), m_a.y(), m_b.x(), m_b.y());
+    return String::formatted("[{},{} -> {},{}]", m_a.x(), m_a.y(), m_b.x(), m_b.y());
 }
 
 template<>
 inline String FloatLine::to_string() const
 {
-    return String::formatted("[{},{} {}x{}]", m_a.x(), m_a.y(), m_b.x(), m_b.y());
+    return String::formatted("[{},{} -> {},{}]", m_a.x(), m_a.y(), m_b.x(), m_b.y());
 }
 
 }
