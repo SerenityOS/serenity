@@ -385,9 +385,8 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Request>> Request::construct_impl(JS::Realm
     request_object->m_signal = realm.heap().allocate<DOM::AbortSignal>(this_relevant_realm, this_relevant_realm);
 
     // 29. If signal is not null, then make this’s signal follow signal.
-    if (input_signal != nullptr) {
-        // FIXME: Our AbortSignal doesn't support 'following' yet.
-    }
+    if (input_signal != nullptr)
+        request_object->m_signal->follow(*input_signal);
 
     // 30. Set this’s headers to a new Headers object with this’s relevant Realm, whose header list is request’s header list and guard is "request".
     request_object->m_headers = realm.heap().allocate<Headers>(realm, realm);
@@ -635,7 +634,8 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Request>> Request::clone() const
     // 3. Let clonedRequestObject be the result of creating a Request object, given clonedRequest, this’s headers’s guard, and this’s relevant Realm.
     auto cloned_request_object = Request::create(move(cloned_request), m_headers->guard(), HTML::relevant_realm(*this));
 
-    // FIXME: 4. Make clonedRequestObject’s signal follow this’s signal.
+    // 4. Make clonedRequestObject’s signal follow this’s signal.
+    cloned_request_object->m_signal->follow(*m_signal);
 
     // 5. Return clonedRequestObject.
     return cloned_request_object;
