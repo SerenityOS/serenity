@@ -1026,10 +1026,10 @@ using FloatRect = Rect<float>;
 namespace AK {
 
 template<typename T>
-struct Formatter<Gfx::Rect<T>> : Formatter<StringView> {
+struct Formatter<Gfx::Rect<T>> : Formatter<FormatString> {
     ErrorOr<void> format(FormatBuilder& builder, Gfx::Rect<T> const& value)
     {
-        return Formatter<StringView>::format(builder, value.to_string());
+        return Formatter<FormatString>::format(builder, "[{},{} {}x{}]"sv, value.x(), value.y(), value.width(), value.height());
     }
 };
 

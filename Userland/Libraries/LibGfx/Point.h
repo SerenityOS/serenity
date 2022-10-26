@@ -285,10 +285,10 @@ inline Point<T> cubic_interpolate(Point<T> const& p1, Point<T> const& p2, Point<
 namespace AK {
 
 template<typename T>
-struct Formatter<Gfx::Point<T>> : Formatter<StringView> {
+struct Formatter<Gfx::Point<T>> : Formatter<FormatString> {
     ErrorOr<void> format(FormatBuilder& builder, Gfx::Point<T> const& value)
     {
-        return Formatter<StringView>::format(builder, value.to_string());
+        return Formatter<FormatString>::format(builder, "[{},{}]"sv, value.x(), value.y());
     }
 };
 
