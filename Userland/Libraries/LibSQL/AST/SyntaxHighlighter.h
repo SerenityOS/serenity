@@ -19,6 +19,9 @@ public:
     virtual bool is_identifier(u64) const override;
 
     virtual Syntax::Language language() const override { return Syntax::Language::SQL; }
+    virtual Optional<StringView> comment_prefix() const override { return "--"sv; }
+    virtual Optional<StringView> comment_suffix() const override { return {}; }
+
     virtual void rehighlight(Palette const&) override;
 
 protected:

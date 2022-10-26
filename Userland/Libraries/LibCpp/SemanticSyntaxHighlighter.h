@@ -25,6 +25,9 @@ public:
     virtual bool is_navigatable(u64 token) const override;
 
     virtual Syntax::Language language() const override { return Syntax::Language::Cpp; }
+    virtual Optional<StringView> comment_prefix() const override { return "//"sv; }
+    virtual Optional<StringView> comment_suffix() const override { return {}; }
+
     virtual void rehighlight(Palette const&) override;
 
     void update_tokens_info(Vector<CodeComprehension::TokenInfo>);
