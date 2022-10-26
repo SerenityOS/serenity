@@ -8,6 +8,7 @@
 #include <AK/DeprecatedString.h>
 #include <AK/LexicalPath.h>
 #include <AK/ScopeGuard.h>
+#include <AK/StringBuilder.h>
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DirIterator.h>
@@ -33,6 +34,21 @@ void fail(StringView format, Ts... args)
     abort();
 }
 
+constexpr StringView ere_special_characters = ".^$*+?()[{\\|"sv;
+constexpr StringView basic_special_characters = ".^$*[\\"sv;
+
+static DeprecatedString escape_characters(StringView string, StringView characters)
+{
+    StringBuilder builder;
+    for (auto ch : string) {
+        if (characters.contains(ch))
+            builder.append('\\');
+
+        builder.append(ch);
+    }
+    return builder.to_deprecated_string();
+}
+
 ErrorOr<int> serenity_main(Main::Arguments args)
 {
     TRY(Core::System::pledge("stdio rpath"));
@@ -43,6 +59,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
 
     bool recursive = (program_name == "rgrep"sv);
     bool use_ere = (program_name == "egrep"sv);
+    bool fixed_strings = (program_name == "fgrep"sv);
     Vector<DeprecatedString> patterns;
     BinaryFileMode binary_mode { BinaryFileMode::Binary };
     bool case_insensitive = false;
@@ -58,6 +75,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
     Core::ArgsParser args_parser;
     args_parser.add_option(recursive, "Recursively scan files", "recursive", 'r');
     args_parser.add_option(use_ere, "Extended regular expressions", "extended-regexp", 'E');
+    args_parser.add_option(fixed_strings, "Treat pattern as a string, not a regexp", "fixed-strings", 'F');
     args_parser.add_option(Core::ArgsParser::Option {
         .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
         .help_string = "Pattern",
@@ -144,6 +162,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
     auto grep_logic = [&](auto&& regular_expressions) {
         for (auto& re : regular_expressions) {
             if (re.parser_result.error != regex::Error::NoError) {
+                warnln("regex parse error: {}", regex::get_error_string(re.parser_result.error));
                 return 1;
             }
         }
@@ -296,14 +315,17 @@ ErrorOr<int> serenity_main(Main::Arguments args)
     if (use_ere) {
         Vector<Regex<PosixExtended>> regular_expressions;
         for (auto pattern : patterns) {
-            regular_expressions.append(Regex<PosixExtended>(pattern, options));
+            auto escaped_pattern = (fixed_strings) ? escape_characters(pattern, ere_special_characters) : pattern;
+            regular_expressions.append(Regex<PosixExtended>(escaped_pattern, options));
         }
         return grep_logic(regular_expressions);
     }
 
     Vector<Regex<PosixBasic>> regular_expressions;
     for (auto pattern : patterns) {
-        regular_expressions.append(Regex<PosixBasic>(pattern, options));
+        auto escaped_pattern = (fixed_strings) ? escape_characters(pattern, basic_special_characters) : pattern;
+        dbgln("'{}'", escaped_pattern);
+        regular_expressions.append(Regex<PosixBasic>(escaped_pattern, options));
     }
     return grep_logic(regular_expressions);
 }
