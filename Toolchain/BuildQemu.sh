@@ -11,8 +11,8 @@ PREFIX="$DIR/Local/qemu"
 BUILD=$(realpath "$DIR/../Build")
 SYSROOT="$BUILD/Root"
 
-QEMU_VERSION=${QEMU_VERSION:="qemu-7.0.0"}
-QEMU_MD5SUM=${QEMU_MD5SUM:="bfb5b09a0d1f887c8c42a6d5f26971ab"}
+QEMU_VERSION=${QEMU_VERSION:="qemu-7.1.0"}
+QEMU_MD5SUM=${QEMU_MD5SUM:="3be5458a9171b4ec5220c65d5d52bdcf"}
 
 echo PREFIX is "$PREFIX"
 echo SYSROOT is "$SYSROOT"
@@ -41,11 +41,6 @@ pushd "$DIR/Tarballs"
     else
         echo "Skipped extracting qemu"
     fi
-
-    pushd "$QEMU_VERSION"
-        patch -p1 < "$DIR/Patches/qemu-cf-protection-none.patch" > /dev/null
-        md5sum "$DIR/Patches/qemu-cf-protection-none.patch" > .patch.applied
-    popd
 
 popd
 
