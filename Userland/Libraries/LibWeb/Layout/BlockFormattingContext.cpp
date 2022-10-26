@@ -369,8 +369,8 @@ void BlockFormattingContext::layout_block_level_box(Box const& box, BlockContain
 
     compute_width(box, available_space, layout_mode);
 
-    if (is<ReplacedBox>(box) || is<BlockContainer>(box))
-        place_block_level_element_in_normal_flow_vertically(box);
+    place_block_level_element_in_normal_flow_vertically(box);
+    place_block_level_element_in_normal_flow_horizontally(box, available_space);
 
     if (box_state.has_definite_height()) {
         compute_height(box, available_space);
@@ -392,9 +392,6 @@ void BlockFormattingContext::layout_block_level_box(Box const& box, BlockContain
     compute_height(box, available_space);
 
     compute_inset(box);
-
-    if (is<ReplacedBox>(box) || is<BlockContainer>(box))
-        place_block_level_element_in_normal_flow_horizontally(box, available_space);
 
     if (is<ListItemBox>(box)) {
         layout_list_item_marker(static_cast<ListItemBox const&>(box));
