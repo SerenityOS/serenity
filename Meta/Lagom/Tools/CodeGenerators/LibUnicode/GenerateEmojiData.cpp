@@ -11,6 +11,7 @@
 #include <AK/StringUtils.h>
 #include <AK/Types.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/Directory.h>
 #include <LibCore/Stream.h>
 #include <LibUnicode/Emoji.h>
 
@@ -19,10 +20,14 @@ constexpr auto s_string_index_type = "u16"sv;
 
 struct Emoji {
     StringIndexType name { 0 };
+    Optional<String> image_path;
     Unicode::EmojiGroup group;
+    String subgroup;
     u32 display_order { 0 };
-    String code_points_name;
     Vector<u32> code_points;
+    String code_points_name;
+    String encoded_code_points;
+    String status;
 };
 
 struct EmojiData {
@@ -30,13 +35,32 @@ struct EmojiData {
     Vector<Emoji> emojis;
 };
 
+static void set_image_path_for_emoji(StringView emoji_resource_path, Emoji& emoji)
+{
+    StringBuilder builder;
+
+    for (auto code_point : emoji.code_points) {
+        if (code_point == 0xfe0f)
+            continue;
+        if (!builder.is_empty())
+            builder.append('_');
+        builder.appendff("U+{:X}", code_point);
+    }
+
+    auto path = String::formatted("{}/{}.png", emoji_resource_path, builder.build());
+    if (Core::Stream::File::exists(path))
+        emoji.image_path = move(path);
+}
+
 static ErrorOr<void> parse_emoji_test_data(Core::Stream::BufferedFile& file, EmojiData& emoji_data)
 {
     static constexpr auto group_header = "# group: "sv;
+    static constexpr auto subgroup_header = "# subgroup: "sv;
 
     Array<u8, 1024> buffer;
 
     Unicode::EmojiGroup group;
+    String subgroup;
     u32 display_order { 0 };
 
     while (TRY(file.can_read_line())) {
@@ -48,6 +72,8 @@ static ErrorOr<void> parse_emoji_test_data(Core::Stream::BufferedFile& file, Emo
             if (line.starts_with(group_header)) {
                 auto name = line.substring_view(group_header.length());
                 group = Unicode::emoji_group_from_string(name);
+            } else if (line.starts_with(subgroup_header)) {
+                subgroup = line.substring_view(subgroup_header.length());
             }
 
             continue;
@@ -61,6 +87,7 @@ static ErrorOr<void> parse_emoji_test_data(Core::Stream::BufferedFile& file, Emo
 
         Emoji emoji {};
         emoji.group = group;
+        emoji.subgroup = subgroup;
         emoji.display_order = display_order++;
 
         auto code_points = line.substring_view(0, *status_index).split_view(' ');
@@ -81,6 +108,8 @@ static ErrorOr<void> parse_emoji_test_data(Core::Stream::BufferedFile& file, Emo
         auto name = emoji_and_name.substring_view(emoji_and_name_spaces[2]).trim_whitespace();
         emoji.name = emoji_data.unique_strings.ensure(name.to_titlecase_string());
         emoji.code_points_name = String::join('_', code_points);
+        emoji.encoded_code_points = emoji_and_name.substring_view(0, emoji_and_name_spaces[1]).trim_whitespace();
+        emoji.status = line.substring_view(*status_index + 1, *emoji_and_name_index - *status_index - 1).trim_whitespace();
 
         TRY(emoji_data.emojis.try_append(move(emoji)));
     }
@@ -241,24 +270,74 @@ Optional<Emoji> find_emoji_for_code_points(Span<u32 const> code_points)
     return {};
 }
 
+static ErrorOr<void> generate_emoji_installation(Core::Stream::BufferedFile& file, EmojiData const& emoji_data)
+{
+    StringBuilder builder;
+    SourceGenerator generator { builder };
+
+    auto current_group = Unicode::EmojiGroup::Unknown;
+    StringView current_subgroup;
+
+    for (auto const& emoji : emoji_data.emojis) {
+        if (!emoji.image_path.has_value())
+            continue;
+        if (emoji.group == Unicode::EmojiGroup::SerenityOS)
+            continue; // SerenityOS emojis are in emoji-serenity.txt
+
+        if (current_group != emoji.group) {
+            if (!builder.is_empty())
+                generator.append("\n"sv);
+
+            generator.set("group"sv, Unicode::emoji_group_to_string(emoji.group));
+            generator.append("# group: @group@\n");
+
+            current_group = emoji.group;
+        }
+
+        if (current_subgroup != emoji.subgroup) {
+            generator.set("subgroup"sv, emoji.subgroup);
+            generator.append("\n# subgroup: @subgroup@\n");
+
+            current_subgroup = emoji.subgroup;
+        }
+
+        generator.set("emoji"sv, emoji.encoded_code_points);
+        generator.set("name"sv, emoji_data.unique_strings.get(emoji.name));
+        generator.set("status"sv, emoji.status);
+
+        generator.append("@emoji@"sv);
+        generator.append(" - "sv);
+        generator.append(String::join(" "sv, emoji.code_points, "U+{:X}"sv));
+        generator.append(" @name@ (@status@)\n"sv);
+    }
+
+    TRY(file.write(generator.as_string_view().bytes()));
+    return {};
+}
+
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     StringView generated_header_path;
     StringView generated_implementation_path;
+    StringView generated_installation_path;
     StringView emoji_test_path;
     StringView emoji_serenity_path;
+    StringView emoji_resource_path;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(generated_header_path, "Path to the Unicode Data header file to generate", "generated-header-path", 'h', "generated-header-path");
     args_parser.add_option(generated_implementation_path, "Path to the Unicode Data implementation file to generate", "generated-implementation-path", 'c', "generated-implementation-path");
+    args_parser.add_option(generated_installation_path, "Path to the emoji.txt file to generate", "generated-installation-path", 'i', "generated-installation-path");
     args_parser.add_option(emoji_test_path, "Path to emoji-test.txt file", "emoji-test-path", 'e', "emoji-test-path");
     args_parser.add_option(emoji_serenity_path, "Path to emoji-serenity.txt file", "emoji-serenity-path", 's', "emoji-serenity-path");
+    args_parser.add_option(emoji_resource_path, "Path to the /res/emoji directory", "emoji-resource-path", 'r', "emoji-resource-path");
     args_parser.parse(arguments);
 
     auto generated_header_file = TRY(open_file(generated_header_path, Core::Stream::OpenMode::Write));
     auto generated_implementation_file = TRY(open_file(generated_implementation_path, Core::Stream::OpenMode::Write));
     auto emoji_test_file = TRY(open_file(emoji_test_path, Core::Stream::OpenMode::Read));
     auto emoji_serenity_file = TRY(open_file(emoji_serenity_path, Core::Stream::OpenMode::Read));
+    VERIFY(Core::Stream::File::exists(emoji_resource_path));
 
     EmojiData emoji_data {};
     TRY(parse_emoji_test_data(*emoji_test_file, emoji_data));
@@ -266,6 +345,16 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     TRY(generate_emoji_data_header(*generated_header_file, emoji_data));
     TRY(generate_emoji_data_implementation(*generated_implementation_file, emoji_data));
+
+    if (!generated_installation_path.is_empty()) {
+        TRY(Core::Directory::create(LexicalPath { generated_installation_path }.parent(), Core::Directory::CreateDirectories::Yes));
+
+        for (auto& emoji : emoji_data.emojis)
+            set_image_path_for_emoji(emoji_resource_path, emoji);
+
+        auto generated_installation_file = TRY(open_file(generated_installation_path, Core::Stream::OpenMode::Write));
+        TRY(generate_emoji_installation(*generated_installation_file, emoji_data));
+    }
 
     return 0;
 }
