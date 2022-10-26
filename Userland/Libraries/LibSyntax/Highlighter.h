@@ -41,6 +41,8 @@ public:
 
     virtual Language language() const = 0;
     StringView language_string(Language) const;
+    virtual Optional<StringView> comment_prefix() const = 0;
+    virtual Optional<StringView> comment_suffix() const = 0;
     virtual void rehighlight(Palette const&) = 0;
     virtual void highlight_matching_token_pair();
 

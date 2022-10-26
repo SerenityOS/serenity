@@ -17,6 +17,8 @@ public:
     virtual ~GitCommitSyntaxHighlighter() override = default;
 
     virtual Syntax::Language language() const override { return Syntax::Language::GitCommit; }
+    virtual Optional<StringView> comment_prefix() const override { return {}; }
+    virtual Optional<StringView> comment_suffix() const override { return {}; }
     virtual void rehighlight(Palette const&) override;
 
 protected:
