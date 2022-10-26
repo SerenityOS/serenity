@@ -1,47 +1,80 @@
 {
     "matrix": {
-        "parameters": "<number>{6}"
+        "parameters": [
+            { "type": "<number>", "required": true },
+            { "type": "<number>", "required": true },
+            { "type": "<number>", "required": true },
+            { "type": "<number>", "required": true },
+            { "type": "<number>", "required": true },
+            { "type": "<number>", "required": true }
+        ]
     },
     "matrix3d": {
-        "parameters": "<number>{16}"
+        "parameters": [
+            { "type": "<number>", "required": true },
+            { "type": "<number>", "required": true },
+            { "type": "<number>", "required": true },
+            { "type": "<number>", "required": true },
+            { "type": "<number>", "required": true },
+            { "type": "<number>", "required": true },
+            { "type": "<number>", "required": true },
+            { "type": "<number>", "required": true },
+            { "type": "<number>", "required": true },
+            { "type": "<number>", "required": true },
+            { "type": "<number>", "required": true },
+            { "type": "<number>", "required": true },
+            { "type": "<number>", "required": true },
+            { "type": "<number>", "required": true },
+            { "type": "<number>", "required": true },
+            { "type": "<number>", "required": true }
+        ]
     },
     "translate": {
-        "parameters": "<length-percentage>{1,2}"
+        "parameters": [
+            { "type": "<length-percentage>", "required": true },
+            { "type": "<length-percentage>", "required": false }
+        ]
     },
     "translateX": {
-        "parameters": "<length-percentage>"
+        "parameters": [{ "type": "<length-percentage>", "required": true }]
     },
     "translateY": {
-        "parameters": "<length-percentage>"
+        "parameters": [{ "type": "<length-percentage>", "required": true }]
     },
     "scale": {
-        "parameters": "<number>{1,2}"
+        "parameters": [
+            { "type": "<number>", "required": true },
+            { "type": "<number>", "required": false }
+        ]
     },
     "scaleX": {
-        "parameters": "<number>"
+        "parameters": [{ "type": "<number>", "required": true }]
     },
     "scaleY": {
-        "parameters": "<number>"
+        "parameters": [{ "type": "<number>", "required": true }]
     },
     "rotate": {
-        "parameters": "<angle>"
+        "parameters": [{ "type": "<angle>", "required": true }]
     },
     "rotateX": {
-        "parameters": "<angle>"
+        "parameters": [{ "type": "<angle>", "required": true }]
     },
     "rotateY": {
-        "parameters": "<angle>"
+        "parameters": [{ "type": "<angle>", "required": true }]
     },
     "rotateZ": {
-        "parameters": "<angle>"
+        "parameters": [{ "type": "<angle>", "required": true }]
     },
     "skew": {
-        "parameters": "<angle>{1,2}"
+        "parameters": [
+            { "type": "<angle>", "required": true },
+            { "type": "<angle>", "required": false }
+        ]
     },
     "skewX": {
-        "parameters": "<angle>"
+        "parameters": [{ "type": "<angle>", "required": true }]
     },
     "skewY": {
-        "parameters": "<angle>"
+        "parameters": [{ "type": "<angle>", "required": true }]
     }
 }
