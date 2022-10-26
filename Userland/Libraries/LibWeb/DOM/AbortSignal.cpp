@@ -84,4 +84,27 @@ void AbortSignal::visit_edges(JS::Cell::Visitor& visitor)
     visitor.visit(m_abort_reason);
 }
 
+// https://dom.spec.whatwg.org/#abortsignal-follow
+void AbortSignal::follow(JS::NonnullGCPtr<AbortSignal> parent_signal)
+{
+    // A followingSignal (an AbortSignal) is made to follow a parentSignal (an AbortSignal) by running these steps:
+
+    // 1. If followingSignal is aborted, then return.
+    if (aborted())
+        return;
+
+    // 2. If parentSignal is aborted, then signal abort on followingSignal with parentSignal’s abort reason.
+    if (parent_signal->aborted()) {
+        signal_abort(parent_signal->reason());
+        return;
+    }
+
+    // 3. Otherwise, add the following abort steps to parentSignal:
+    // NOTE: `this` and `parent_signal` are protected by AbortSignal using JS::SafeFunction.
+    parent_signal->add_abort_algorithm([this, parent_signal]() mutable {
+        // 1. Signal abort on followingSignal with parentSignal’s abort reason.
+        signal_abort(parent_signal->reason());
+    });
+}
+
 }

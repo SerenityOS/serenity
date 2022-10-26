@@ -38,6 +38,8 @@ public:
 
     JS::ThrowCompletionOr<void> throw_if_aborted() const;
 
+    void follow(JS::NonnullGCPtr<AbortSignal> parent_signal);
+
 private:
     explicit AbortSignal(JS::Realm&);
 
