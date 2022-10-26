@@ -127,7 +127,7 @@ void ImageEditor::paint_event(GUI::PaintEvent& event)
     painter.add_clip_rect(frame_inner_rect());
 
     {
-        Gfx::DisjointRectSet background_rects;
+        Gfx::DisjointIntRectSet background_rects;
         background_rects.add(frame_inner_rect());
         background_rects.shatter(content_rect());
         for (auto& rect : background_rects.rects())

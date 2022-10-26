@@ -227,7 +227,7 @@ public:
 
     void prepare_dirty_rects();
     void clear_dirty_rects();
-    Gfx::DisjointRectSet& dirty_rects() { return m_dirty_rects; }
+    Gfx::DisjointIntRectSet& dirty_rects() { return m_dirty_rects; }
 
     // Only used by WindowType::Applet. Perhaps it could be a Window subclass? I don't know.
     void set_rect_in_applet_area(Gfx::IntRect const& rect) { m_rect_in_applet_area = rect; }
@@ -290,7 +290,7 @@ public:
     void remove_cursor_override() { m_cursor_override = nullptr; }
 
     void request_update(Gfx::IntRect const&, bool ignore_occlusion = false);
-    Gfx::DisjointRectSet take_pending_paint_rects() { return move(m_pending_paint_rects); }
+    Gfx::DisjointIntRectSet take_pending_paint_rects() { return move(m_pending_paint_rects); }
 
     void start_minimize_animation();
 
@@ -335,9 +335,9 @@ public:
         return true;
     }
 
-    Gfx::DisjointRectSet& opaque_rects() { return m_opaque_rects; }
-    Gfx::DisjointRectSet& transparency_rects() { return m_transparency_rects; }
-    Gfx::DisjointRectSet& transparency_wallpaper_rects() { return m_transparency_wallpaper_rects; }
+    Gfx::DisjointIntRectSet& opaque_rects() { return m_opaque_rects; }
+    Gfx::DisjointIntRectSet& transparency_rects() { return m_transparency_rects; }
+    Gfx::DisjointIntRectSet& transparency_wallpaper_rects() { return m_transparency_wallpaper_rects; }
     // The affected transparency rects are the rectangles of other windows (above or below)
     // that also need to be marked dirty whenever a window's dirty rect in a transparency
     // area needs to be rendered
@@ -401,11 +401,11 @@ private:
     Gfx::IntRect m_saved_nonfullscreen_rect;
     Gfx::IntRect m_taskbar_rect;
     Vector<Screen*, default_screen_count> m_screens;
-    Gfx::DisjointRectSet m_dirty_rects;
-    Gfx::DisjointRectSet m_opaque_rects;
-    Gfx::DisjointRectSet m_transparency_rects;
-    Gfx::DisjointRectSet m_transparency_wallpaper_rects;
-    HashMap<Window*, Gfx::DisjointRectSet> m_affected_transparency_rects;
+    Gfx::DisjointIntRectSet m_dirty_rects;
+    Gfx::DisjointIntRectSet m_opaque_rects;
+    Gfx::DisjointIntRectSet m_transparency_rects;
+    Gfx::DisjointIntRectSet m_transparency_wallpaper_rects;
+    HashMap<Window*, Gfx::DisjointIntRectSet> m_affected_transparency_rects;
     WindowType m_type { WindowType::Normal };
     WindowMode m_mode { WindowMode::Modeless };
     bool m_automatic_cursor_tracking_enabled { false };
@@ -448,7 +448,7 @@ private:
     RefPtr<Cursor> m_cursor;
     RefPtr<Cursor> m_cursor_override;
     WindowFrame m_frame;
-    Gfx::DisjointRectSet m_pending_paint_rects;
+    Gfx::DisjointIntRectSet m_pending_paint_rects;
     Gfx::IntRect m_rect_in_applet_area;
     RefPtr<Menu> m_window_menu;
     MenuItem* m_window_menu_minimize_item { nullptr };

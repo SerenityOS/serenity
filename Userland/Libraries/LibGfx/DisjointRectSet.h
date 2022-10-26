@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -12,6 +13,7 @@
 
 namespace Gfx {
 
+template<typename T>
 class DisjointRectSet {
 public:
     DisjointRectSet(DisjointRectSet const&) = delete;
@@ -20,7 +22,7 @@ public:
     DisjointRectSet() = default;
     ~DisjointRectSet() = default;
 
-    DisjointRectSet(IntRect const& rect)
+    DisjointRectSet(Rect<T> const& rect)
     {
         m_rects.append(rect);
     }
@@ -35,17 +37,17 @@ public:
         return rects;
     }
 
-    void move_by(int dx, int dy)
+    void move_by(T dx, T dy)
     {
         for (auto& r : m_rects)
             r.translate_by(dx, dy);
     }
-    void move_by(IntPoint const& delta)
+    void move_by(Point<T> const& delta)
     {
         move_by(delta.x(), delta.y());
     }
 
-    void add(IntRect const& rect)
+    void add(Rect<T> const& rect)
     {
         if (add_no_shatter(rect) && m_rects.size() > 1)
             shatter();
@@ -74,7 +76,7 @@ public:
         }
     }
 
-    DisjointRectSet shatter(IntRect const& hammer) const
+    DisjointRectSet shatter(Rect<T> const& hammer) const
     {
         if (hammer.is_empty())
             return clone();
@@ -107,7 +109,7 @@ public:
         return shards;
     }
 
-    bool contains(IntRect const& rect) const
+    bool contains(Rect<T> const& rect) const
     {
         if (is_empty() || rect.is_empty())
             return false;
@@ -123,7 +125,7 @@ public:
         return false;
     }
 
-    bool intersects(IntRect const& rect) const
+    bool intersects(Rect<T> const& rect) const
     {
         for (auto& r : m_rects) {
             if (r.intersects(rect))
@@ -145,7 +147,7 @@ public:
         return false;
     }
 
-    DisjointRectSet intersected(IntRect const& rect) const
+    DisjointRectSet intersected(Rect<T> const& rect) const
     {
         DisjointRectSet intersected_rects;
         intersected_rects.m_rects.ensure_capacity(m_rects.capacity());
@@ -178,7 +180,7 @@ public:
     }
 
     template<typename Function>
-    IterationDecision for_each_intersected(IntRect const& rect, Function f) const
+    IterationDecision for_each_intersected(Rect<T> const& rect, Function f) const
     {
         if (is_empty() || rect.is_empty())
             return IterationDecision::Continue;
@@ -224,22 +226,22 @@ public:
 
     void clear() { m_rects.clear(); }
     void clear_with_capacity() { m_rects.clear_with_capacity(); }
-    Vector<IntRect, 32> const& rects() const { return m_rects; }
-    Vector<IntRect, 32> take_rects() { return move(m_rects); }
+    Vector<Rect<T>, 32> const& rects() const { return m_rects; }
+    Vector<Rect<T>, 32> take_rects() { return move(m_rects); }
 
-    void translate_by(int dx, int dy)
+    void translate_by(T dx, T dy)
     {
         for (auto& rect : m_rects)
             rect.translate_by(dx, dy);
     }
-    void translate_by(Gfx::IntPoint const& delta)
+    void translate_by(Point<T> const& delta)
     {
         for (auto& rect : m_rects)
             rect.translate_by(delta);
     }
 
 private:
-    bool add_no_shatter(IntRect const& new_rect)
+    bool add_no_shatter(Rect<T> const& new_rect)
     {
         if (new_rect.is_empty())
             return false;
@@ -254,7 +256,7 @@ private:
 
     void shatter()
     {
-        Vector<IntRect, 32> output;
+        Vector<Rect<T>, 32> output;
         output.ensure_capacity(m_rects.size());
         bool pass_had_intersections = false;
         do {
@@ -284,7 +286,7 @@ private:
         } while (pass_had_intersections);
     }
 
-    Vector<IntRect, 32> m_rects;
+    Vector<Rect<T>, 32> m_rects;
 };
 
 }

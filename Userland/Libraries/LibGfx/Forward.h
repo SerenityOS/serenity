@@ -11,7 +11,10 @@ namespace Gfx {
 class Bitmap;
 class CharacterBitmap;
 class Color;
+
+template<typename T>
 class DisjointRectSet;
+
 class Emoji;
 class Font;
 class GlyphBitmap;
@@ -43,6 +46,9 @@ class Rect;
 
 template<typename T>
 class Quad;
+
+using DisjointIntRectSet = DisjointRectSet<int>;
+using DisjointFloatRectSet = DisjointRectSet<float>;
 
 using IntLine = Line<int>;
 using FloatLine = Line<float>;

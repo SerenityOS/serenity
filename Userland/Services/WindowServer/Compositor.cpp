@@ -746,7 +746,7 @@ void Compositor::invalidate_screen(Gfx::IntRect const& screen_rect)
     start_compose_async_timer();
 }
 
-void Compositor::invalidate_screen(Gfx::DisjointRectSet const& rects)
+void Compositor::invalidate_screen(Gfx::DisjointIntRectSet const& rects)
 {
     m_dirty_screen_rects.add(rects.intersected(Screen::bounding_rect()));
 
@@ -1210,7 +1210,7 @@ void Compositor::recompute_occlusions()
         m_opaque_wallpaper_rects.clear();
     }
     if (!fullscreen_window || (fullscreen_window && !fullscreen_window->is_opaque())) {
-        Gfx::DisjointRectSet remaining_visible_screen_rects;
+        Gfx::DisjointIntRectSet remaining_visible_screen_rects;
         remaining_visible_screen_rects.add_many(Screen::rects());
         bool have_transparent = false;
         wm.for_each_visible_window_from_front_to_back([&](Window& w) {
@@ -1264,8 +1264,8 @@ void Compositor::recompute_occlusions()
 
             auto render_rect_on_screen = w.frame().render_rect().translated(transition_offset);
             auto visible_window_rects = remaining_visible_screen_rects.intersected(w.rect().translated(transition_offset));
-            Gfx::DisjointRectSet opaque_covering;
-            Gfx::DisjointRectSet transparent_covering;
+            Gfx::DisjointIntRectSet opaque_covering;
+            Gfx::DisjointIntRectSet transparent_covering;
             bool found_this_window = false;
             wm.for_each_visible_window_from_back_to_front([&](Window& w2) {
                 if (!found_this_window) {
@@ -1412,7 +1412,7 @@ void Compositor::recompute_occlusions()
                 }
 
                 // Figure out the affected transparency rects underneath. First figure out if any transparency is visible at all
-                Gfx::DisjointRectSet transparent_underneath;
+                Gfx::DisjointIntRectSet transparent_underneath;
                 wm.for_each_visible_window_from_back_to_front([&](Window& w2) {
                     if (&w == &w2)
                         return IterationDecision::Break;
@@ -1517,7 +1517,7 @@ void Compositor::unregister_animation(Badge<Animation>, Animation& animation)
     VERIFY(was_removed);
 }
 
-void Compositor::update_animations(Screen& screen, Gfx::DisjointRectSet& flush_rects)
+void Compositor::update_animations(Screen& screen, Gfx::DisjointIntRectSet& flush_rects)
 {
     auto& painter = *screen.compositor_screen_data().m_back_painter;
     // Iterating over the animations using remove_all_matching we can iterate
@@ -1697,7 +1697,7 @@ void Compositor::switch_to_window_stack(WindowStack& new_window_stack, bool show
     VERIFY(!m_window_stack_transition_animation);
     m_window_stack_transition_animation = Animation::create();
     m_window_stack_transition_animation->set_duration(250);
-    m_window_stack_transition_animation->on_update = [this, delta_x, delta_y](float progress, Gfx::Painter&, Screen&, Gfx::DisjointRectSet&) {
+    m_window_stack_transition_animation->on_update = [this, delta_x, delta_y](float progress, Gfx::Painter&, Screen&, Gfx::DisjointIntRectSet&) {
         VERIFY(m_transitioning_to_window_stack);
         VERIFY(m_current_window_stack);
 

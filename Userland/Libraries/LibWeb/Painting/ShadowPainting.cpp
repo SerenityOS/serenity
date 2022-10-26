@@ -39,7 +39,7 @@ void paint_box_shadow(PaintContext& context, Gfx::IntRect const& content_rect, B
             continue;
 
         auto fill_rect_masked = [](auto& painter, auto fill_rect, auto mask_rect, auto color) {
-            Gfx::DisjointRectSet rect_set;
+            Gfx::DisjointIntRectSet rect_set;
             rect_set.add(fill_rect);
             auto shattered = rect_set.shatter(mask_rect);
             for (auto& rect : shattered.rects())
