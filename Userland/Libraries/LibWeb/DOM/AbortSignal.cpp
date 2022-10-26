@@ -24,7 +24,7 @@ AbortSignal::AbortSignal(JS::Realm& realm)
 }
 
 // https://dom.spec.whatwg.org/#abortsignal-add
-void AbortSignal::add_abort_algorithm(Function<void()> abort_algorithm)
+void AbortSignal::add_abort_algorithm(JS::SafeFunction<void()> abort_algorithm)
 {
     // 1. If signal is aborted, then return.
     if (aborted())

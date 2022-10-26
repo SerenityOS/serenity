@@ -22,7 +22,7 @@ public:
 
     virtual ~AbortSignal() override = default;
 
-    void add_abort_algorithm(Function<void()>);
+    void add_abort_algorithm(JS::SafeFunction<void()>);
 
     // https://dom.spec.whatwg.org/#dom-abortsignal-aborted
     // An AbortSignal object is aborted when its abort reason is not undefined.
@@ -49,7 +49,7 @@ private:
 
     // https://dom.spec.whatwg.org/#abortsignal-abort-algorithms
     // FIXME: This should be a set.
-    Vector<Function<void()>> m_abort_algorithms;
+    Vector<JS::SafeFunction<void()>> m_abort_algorithms;
 };
 
 }
