@@ -5,13 +5,14 @@ grep
 ## Synopsis
 
 ```sh
-$ grep [--recursive] [--extended-regexp] [--regexp Pattern] [-i] [--line-numbers] [--invert-match] [--quiet] [--no-messages] [--binary-mode ] [--text] [-I] [--color WHEN] [--count] [file...]
+$ grep [--recursive] [--extended-regexp] [--fixed-strings] [--regexp Pattern] [-i] [--line-numbers] [--invert-match] [--quiet] [--no-messages] [--binary-mode ] [--text] [-I] [--color WHEN] [--count] [file...]
 ```
 
 ## Options:
 
 * `-r`, `--recursive`: Recursively scan files
 * `-E`, `--extended-regexp`: Extended regular expressions
+* `-F`, `--fixed-strings`: Treat pattern as a string, not a regexp
 * `-e Pattern`, `--regexp Pattern`: Pattern
 * `-i`: Make matches case-insensitive
 * `-n`, `--line-numbers`: Output line-numbers
