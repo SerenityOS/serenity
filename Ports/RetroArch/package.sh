@@ -1,8 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=RetroArch
 useconfigure="true"
-version="1.10.3"
-archive_hash="2af44294e55f5636262284d650cb5fff55c9070ac3a700d4fa55c1f152dcb3f2"
+version="1.12.0"
+archive_hash="d5c11c3d704d27104d3688266acf66e253419b8ff0a119450363572f91cef42d"
 files="https://github.com/libretro/${port}/archive/refs/tags/v${version}.tar.gz ${port}-${version}.tar.gz $archive_hash"
 auth_type=sha256
 depends=("freetype" "SDL2" "zlib")
