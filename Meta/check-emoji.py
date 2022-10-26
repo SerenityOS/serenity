@@ -52,6 +52,13 @@ def any_problems_here():
             found_invalid_filenames = True
             break
 
+        code_points = [int(code_point[len('U+'):], 16) for code_point in filename.split('_')]
+
+        if any(code_point > 0x10ffff for code_point in code_points):
+            print(f'Filename {filename}.png contains a code point exceeding U+10FFFF')
+            found_invalid_filenames = True
+            break
+
     return found_invalid_filenames
 
 
