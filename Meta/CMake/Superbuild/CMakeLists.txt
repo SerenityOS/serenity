@@ -44,6 +44,11 @@ if(NOT SERENITY_TOOLCHAIN STREQUAL "GNU")
 endif()
 set(SERENITY_BUILD_DIR "${PROJECT_BINARY_DIR}/../${SERENITY_ARCH}${SERENITY_BUILD_DIR_SUFFIX}")
 
+# Pkgconf incorrectly discards a sysroot if it doesn't match the start of the path to the
+# library file. To avoid that, resolve our sysroot into an absolute and canonical path
+# that matches pkgconf's result for resolving the library file.
+get_filename_component(SERENITY_BUILD_DIR "${SERENITY_BUILD_DIR}" ABSOLUTE)
+
 # TODO: Figure out if and how we can skip this when building on Serenity.
 configure_file("${SERENITY_SOURCE_DIR}/Toolchain/CMake/${SERENITY_TOOLCHAIN}Toolchain.txt.in" "${SERENITY_BUILD_DIR}/CMakeToolchain.txt" @ONLY)
 set(SERENITY_TOOLCHAIN_FILE "${SERENITY_BUILD_DIR}/CMakeToolchain.txt" CACHE PATH "Toolchain file to use for cross-compilation")
