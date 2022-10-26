@@ -521,8 +521,10 @@ void ImageEditor::set_active_tool(Tool* tool)
         return;
     }
 
-    if (m_active_tool)
+    if (m_active_tool) {
+        m_active_tool->on_tool_deactivation();
         m_active_tool->clear();
+    }
 
     m_active_tool = tool;
 

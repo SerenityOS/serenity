@@ -64,6 +64,7 @@ public:
     virtual bool on_keydown(GUI::KeyEvent const&);
     virtual void on_keyup(GUI::KeyEvent&) { }
     virtual void on_tool_activation() { }
+    virtual void on_tool_deactivation() { }
     virtual GUI::Widget* get_properties_widget() { return nullptr; }
     virtual Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> cursor() { return Gfx::StandardCursor::None; }
     virtual Gfx::IntPoint point_position_to_preferred_cell(Gfx::FloatPoint position) const { return position.to_type<int>(); }
