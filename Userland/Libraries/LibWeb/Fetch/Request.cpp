@@ -429,12 +429,12 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Request>> Request::construct_impl(JS::Realm
     }
 
     // 33. Let inputBody be input’s request’s body if input is a Request object; otherwise null.
-    auto const& input_body = input.has<JS::Handle<Request>>()
-        ? input.get<JS::Handle<Request>>()->request()->body().get<Infrastructure::Body>()
-        : Optional<Infrastructure::Body> {};
+    Optional<Infrastructure::Request::BodyType const&> input_body;
+    if (input.has<JS::Handle<Request>>())
+        input_body = input.get<JS::Handle<Request>>()->request()->body();
 
     // 34. If either init["body"] exists and is non-null or inputBody is non-null, and request’s method is `GET` or `HEAD`, then throw a TypeError.
-    if (((init.body.has_value() && (*init.body).has_value()) || input_body.has_value()) && StringView { request->method() }.is_one_of("GET"sv, "HEAD"sv))
+    if (((init.body.has_value() && (*init.body).has_value()) || (input_body.has_value() && !input_body.value().has<Empty>())) && StringView { request->method() }.is_one_of("GET"sv, "HEAD"sv))
         return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "Method must not be GET or HEAD when body is provided"sv };
 
     // 35. Let initBody be null.
@@ -457,10 +457,13 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Request>> Request::construct_impl(JS::Realm
     }
 
     // 37. Let inputOrInitBody be initBody if it is non-null; otherwise inputBody.
-    auto const& input_or_init_body = init_body.has_value() ? init_body : input_body;
+    Optional<Infrastructure::Request::BodyType> input_or_init_body = init_body.has_value()
+        ? Infrastructure::Request::BodyType { init_body.value() }
+        : input_body;
 
     // 38. If inputOrInitBody is non-null and inputOrInitBody’s source is null, then:
-    if (input_or_init_body.has_value() && input_or_init_body->source().has<Empty>()) {
+    // FIXME: The spec doesn't check if inputOrInitBody is a body before accessing source.
+    if (input_or_init_body.has_value() && input_or_init_body->has<Infrastructure::Body>() && input_or_init_body->get<Infrastructure::Body>().source().has<Empty>()) {
         // 1. If initBody is non-null and init["duplex"] does not exist, then throw a TypeError.
         if (init_body.has_value() && !init.duplex.has_value())
             return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "Body without source requires 'duplex' value to be set"sv };
