@@ -10,7 +10,6 @@ set(SOURCES
     Color.cpp
     CursorParams.cpp
     DDSLoader.cpp
-    DisjointRectSet.cpp
     Filters/ColorBlindnessFilter.cpp
     Filters/FastBoxBlurFilter.cpp
     Filters/LumaFilter.cpp
