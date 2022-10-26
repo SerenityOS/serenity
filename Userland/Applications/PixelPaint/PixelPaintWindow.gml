@@ -67,6 +67,7 @@
             @GUI::GroupBox {
                 title: "Histogram"
                 preferred_height: "shrink"
+                visible: false
                 layout: @GUI::VerticalBoxLayout {
                     margins: [6]
                 }
@@ -80,6 +81,7 @@
             @GUI::GroupBox {
                 title: "Vectorscope"
                 min_height: 80
+                visible: false
                 layout: @GUI::VerticalBoxLayout {
                     margins: [6]
                 }
