@@ -27,7 +27,6 @@ for i in ( \
             (ifconfig 1) \
             (nc 1) \
             (netstat 1) \
-            (ntpquery 1) \
             (profile 1) \
             (readelf 1) \
             (sql 1) \
