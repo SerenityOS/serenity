@@ -163,7 +163,7 @@ WebIDL::ExceptionOr<JS::Value> XMLHttpRequest::response()
     // 7. Otherwise, if this’s response type is "document", set a document response for this.
     else if (m_response_type == Bindings::XMLHttpRequestResponseType::Document) {
         // FIXME: Implement this.
-        return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "XHR Document type not implemented" };
+        return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "XHR Document type not implemented"sv };
     }
     // 8. Otherwise:
     else {
