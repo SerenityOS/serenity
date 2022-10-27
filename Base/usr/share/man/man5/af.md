@@ -25,6 +25,7 @@ and launcher information (Launcher group, optional):
 | Key       | Description                           |
 |-----------|---------------------------------------|
 | FileTypes | supported file types separated by ',' |
+| MimeTypes | supported mime types separated by ',' |
 | Protocols | protocols separated by ','            |
 
 All application files are stored in [`/res/apps`](../../../../res/apps).
