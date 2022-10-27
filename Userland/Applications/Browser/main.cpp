@@ -10,6 +10,7 @@
 #include <Applications/Browser/Browser.h>
 #include <Applications/Browser/BrowserWindow.h>
 #include <Applications/Browser/CookieJar.h>
+#include <Applications/Browser/Database.h>
 #include <Applications/Browser/Tab.h>
 #include <Applications/Browser/WindowActions.h>
 #include <LibConfig/Client.h>
@@ -94,6 +95,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/tmp/session/%sid/portal/image", "rw"));
     TRY(Core::System::unveil("/tmp/session/%sid/portal/webcontent", "rw"));
     TRY(Core::System::unveil("/tmp/session/%sid/portal/request", "rw"));
+    TRY(Core::System::unveil("/tmp/session/%sid/portal/sql", "rw"));
     TRY(Core::System::unveil("/home", "rwc"));
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil("/etc/passwd", "r"));
@@ -113,6 +115,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Browser::g_icon_bag = TRY(Browser::IconBag::try_create());
 
+    auto database = TRY(Browser::Database::create());
     TRY(load_content_filters());
 
     for (auto& group : Config::list_groups("Browser"sv)) {
@@ -140,7 +143,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (!specified_urls.is_empty())
         first_url = url_from_argument_string(specified_urls.first());
 
-    Browser::CookieJar cookie_jar;
+    auto cookie_jar = TRY(Browser::CookieJar::create(*database));
     auto window = Browser::BrowserWindow::construct(cookie_jar, first_url);
 
     auto content_filters_watcher = TRY(Core::FileWatcher::create());
