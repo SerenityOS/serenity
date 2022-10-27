@@ -47,15 +47,15 @@ void NestedBrowsingContextPaintable::paint(PaintContext& context, PaintPhase pha
             return;
 
         context.painter().save();
-        auto old_viewport_rect = context.viewport_rect();
+        auto old_viewport_rect = context.device_viewport_rect();
 
         context.painter().add_clip_rect(clip_rect);
         context.painter().translate(absolute_x(), absolute_y());
 
-        context.set_viewport_rect({ {}, layout_box().dom_node().nested_browsing_context()->size() });
+        context.set_device_viewport_rect({ {}, layout_box().dom_node().nested_browsing_context()->size() });
         const_cast<Layout::InitialContainingBlock*>(hosted_layout_tree)->paint_all_phases(context);
 
-        context.set_viewport_rect(old_viewport_rect);
+        context.set_device_viewport_rect(old_viewport_rect);
         context.painter().restore();
 
         if constexpr (HIGHLIGHT_FOCUSED_FRAME_DEBUG) {
