@@ -55,6 +55,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
         s_shell->setup_signals();
 
+        sigset_t blocked;
+        sigemptyset(&blocked);
+        sigaddset(&blocked, SIGTTOU);
+        sigaddset(&blocked, SIGTTIN);
+        pthread_sigmask(SIG_BLOCK, &blocked, nullptr);
+
         shell->termios = editor->termios();
         shell->default_termios = editor->default_termios();
 
