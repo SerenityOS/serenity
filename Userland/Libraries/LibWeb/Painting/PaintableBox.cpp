@@ -243,13 +243,13 @@ void PaintableBox::paint_background(PaintContext& context) const
     if (layout_box().is_body() && document().html_element()->should_use_body_background_properties())
         return;
 
-    Gfx::FloatRect background_rect;
+    CSSPixelRect background_rect;
     Color background_color = computed_values().background_color();
     auto* background_layers = &computed_values().background_layers();
 
     if (layout_box().is_root_element()) {
         // CSS 2.1 Appendix E.2: If the element is a root element, paint the background over the entire canvas.
-        background_rect = context.device_viewport_rect().to_type<int>().to_type<float>();
+        background_rect = context.css_viewport_rect();
 
         // Section 2.11.2: If the computed value of background-image on the root element is none and its background-color is transparent,
         // user agents must instead propagate the computed values of the background properties from that element’s first HTML BODY child element.
@@ -258,13 +258,13 @@ void PaintableBox::paint_background(PaintContext& context) const
             background_color = document().background_color(context.palette());
         }
     } else {
-        background_rect = absolute_padding_box_rect();
+        background_rect = absolute_padding_box_rect().to_type<CSSPixels>();
     }
 
     // HACK: If the Box has a border, use the bordered_rect to paint the background.
     //       This way if we have a border-radius there will be no gap between the filling and actual border.
     if (computed_values().border_top().width || computed_values().border_right().width || computed_values().border_bottom().width || computed_values().border_left().width)
-        background_rect = absolute_border_box_rect();
+        background_rect = absolute_border_box_rect().to_type<CSSPixels>();
 
     Painting::paint_background(context, layout_box(), background_rect, background_color, computed_values().image_rendering(), background_layers, normalized_border_radii_data());
 }
