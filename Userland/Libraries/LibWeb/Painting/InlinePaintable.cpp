@@ -63,13 +63,13 @@ void InlinePaintable::paint(PaintContext& context, Painting::PaintPhase phase) c
                 for (auto const& layer : computed_box_shadow) {
                     resolved_box_shadow_data.empend(
                         layer.color,
-                        static_cast<int>(layer.offset_x.to_px(layout_node())),
-                        static_cast<int>(layer.offset_y.to_px(layout_node())),
-                        static_cast<int>(layer.blur_radius.to_px(layout_node())),
-                        static_cast<int>(layer.spread_distance.to_px(layout_node())),
+                        layer.offset_x.to_px(layout_node()),
+                        layer.offset_y.to_px(layout_node()),
+                        layer.blur_radius.to_px(layout_node()),
+                        layer.spread_distance.to_px(layout_node()),
                         layer.placement == CSS::ShadowPlacement::Outer ? Painting::ShadowPlacement::Outer : Painting::ShadowPlacement::Inner);
                 }
-                Painting::paint_box_shadow(context, enclosing_int_rect(absolute_fragment_rect), border_radii_data, resolved_box_shadow_data);
+                Painting::paint_box_shadow(context, absolute_fragment_rect.to_type<CSSPixels>(), border_radii_data, resolved_box_shadow_data);
             }
 
             return IterationDecision::Continue;
