@@ -23,7 +23,7 @@ public:
     int client_id() const { return m_client_id; }
     RefPtr<SQL::Database> database() { return m_database; }
     void disconnect();
-    int sql_statement(String const& sql);
+    int prepare_statement(String const& sql);
 
 private:
     DatabaseConnection(String database_name, int client_id);

@@ -478,8 +478,8 @@ String MainWidget::read_next_sql_statement_of_editor()
             m_editor_line_level = last_token_ended_statement ? 0 : (m_editor_line_level > 0 ? m_editor_line_level : 1);
     } while ((m_editor_line_level > 0) || piece.is_empty());
 
-    auto statement_id = m_sql_client->sql_statement(m_connection_id, piece.to_string());
-    m_sql_client->async_statement_execute(statement_id);
+    auto statement_id = m_sql_client->prepare_statement(m_connection_id, piece.to_string());
+    m_sql_client->async_execute_statement(statement_id);
 
     return piece.to_string();
 }
