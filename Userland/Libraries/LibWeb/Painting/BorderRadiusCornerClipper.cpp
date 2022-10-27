@@ -10,16 +10,16 @@
 
 namespace Web::Painting {
 
-ErrorOr<BorderRadiusCornerClipper> BorderRadiusCornerClipper::create(Gfx::IntRect const& border_rect, BorderRadiiData const& border_radii, CornerClip corner_clip, UseCachedBitmap use_cached_bitmap)
+ErrorOr<BorderRadiusCornerClipper> BorderRadiusCornerClipper::create(PaintContext& context, DevicePixelRect const& border_rect, BorderRadiiData const& border_radii, CornerClip corner_clip, UseCachedBitmap use_cached_bitmap)
 {
     VERIFY(border_radii.has_any_radius());
 
-    auto top_left = border_radii.top_left.as_corner();
-    auto top_right = border_radii.top_right.as_corner();
-    auto bottom_right = border_radii.bottom_right.as_corner();
-    auto bottom_left = border_radii.bottom_left.as_corner();
+    auto top_left = border_radii.top_left.as_corner(context);
+    auto top_right = border_radii.top_right.as_corner(context);
+    auto bottom_right = border_radii.bottom_right.as_corner(context);
+    auto bottom_left = border_radii.bottom_left.as_corner(context);
 
-    Gfx::IntSize corners_bitmap_size {
+    DevicePixelSize corners_bitmap_size {
         max(
             top_left.horizontal_radius + top_right.horizontal_radius,
             bottom_left.horizontal_radius + bottom_right.horizontal_radius),
@@ -34,7 +34,7 @@ ErrorOr<BorderRadiusCornerClipper> BorderRadiusCornerClipper::create(Gfx::IntRec
         if (!corner_bitmap)
             return Error::from_errno(ENOMEM);
     } else {
-        corner_bitmap = TRY(Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, corners_bitmap_size));
+        corner_bitmap = TRY(Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, corners_bitmap_size.to_type<int>()));
     }
 
     CornerData corner_data {
@@ -60,7 +60,7 @@ void BorderRadiusCornerClipper::sample_under_corners(Gfx::Painter& page_painter)
     corner_aa_painter.fill_rect_with_rounded_corners(corner_rect, Color::NamedColor::Black,
         m_data.corner_radii.top_left, m_data.corner_radii.top_right, m_data.corner_radii.bottom_right, m_data.corner_radii.bottom_left);
 
-    auto copy_page_masked = [&](auto const& mask_src, auto const& page_location) {
+    auto copy_page_masked = [&](Gfx::IntRect const& mask_src, Gfx::IntPoint const& page_location) {
         for (int row = 0; row < mask_src.height(); ++row) {
             for (int col = 0; col < mask_src.width(); ++col) {
                 auto corner_location = mask_src.location().translated(col, row);
@@ -81,13 +81,13 @@ void BorderRadiusCornerClipper::sample_under_corners(Gfx::Painter& page_painter)
 
     // Copy the pixels under the corner mask (using the alpha of the mask):
     if (m_data.corner_radii.top_left)
-        copy_page_masked(m_data.corner_radii.top_left.as_rect().translated(m_data.bitmap_locations.top_left), m_data.page_locations.top_left);
+        copy_page_masked(m_data.corner_radii.top_left.as_rect().translated(m_data.bitmap_locations.top_left.to_type<int>()), m_data.page_locations.top_left.to_type<int>());
     if (m_data.corner_radii.top_right)
-        copy_page_masked(m_data.corner_radii.top_right.as_rect().translated(m_data.bitmap_locations.top_right), m_data.page_locations.top_right);
+        copy_page_masked(m_data.corner_radii.top_right.as_rect().translated(m_data.bitmap_locations.top_right.to_type<int>()), m_data.page_locations.top_right.to_type<int>());
     if (m_data.corner_radii.bottom_right)
-        copy_page_masked(m_data.corner_radii.bottom_right.as_rect().translated(m_data.bitmap_locations.bottom_right), m_data.page_locations.bottom_right);
+        copy_page_masked(m_data.corner_radii.bottom_right.as_rect().translated(m_data.bitmap_locations.bottom_right.to_type<int>()), m_data.page_locations.bottom_right.to_type<int>());
     if (m_data.corner_radii.bottom_left)
-        copy_page_masked(m_data.corner_radii.bottom_left.as_rect().translated(m_data.bitmap_locations.bottom_left), m_data.page_locations.bottom_left);
+        copy_page_masked(m_data.corner_radii.bottom_left.as_rect().translated(m_data.bitmap_locations.bottom_left.to_type<int>()), m_data.page_locations.bottom_left.to_type<int>());
 
     m_has_sampled = true;
 }
@@ -98,13 +98,13 @@ void BorderRadiusCornerClipper::blit_corner_clipping(Gfx::Painter& painter)
 
     // Restore the corners:
     if (m_data.corner_radii.top_left)
-        painter.blit(m_data.page_locations.top_left, *m_corner_bitmap, m_data.corner_radii.top_left.as_rect().translated(m_data.bitmap_locations.top_left));
+        painter.blit(m_data.page_locations.top_left.to_type<int>(), *m_corner_bitmap, m_data.corner_radii.top_left.as_rect().translated(m_data.bitmap_locations.top_left.to_type<int>()));
     if (m_data.corner_radii.top_right)
-        painter.blit(m_data.page_locations.top_right, *m_corner_bitmap, m_data.corner_radii.top_right.as_rect().translated(m_data.bitmap_locations.top_right));
+        painter.blit(m_data.page_locations.top_right.to_type<int>(), *m_corner_bitmap, m_data.corner_radii.top_right.as_rect().translated(m_data.bitmap_locations.top_right.to_type<int>()));
     if (m_data.corner_radii.bottom_right)
-        painter.blit(m_data.page_locations.bottom_right, *m_corner_bitmap, m_data.corner_radii.bottom_right.as_rect().translated(m_data.bitmap_locations.bottom_right));
+        painter.blit(m_data.page_locations.bottom_right.to_type<int>(), *m_corner_bitmap, m_data.corner_radii.bottom_right.as_rect().translated(m_data.bitmap_locations.bottom_right.to_type<int>()));
     if (m_data.corner_radii.bottom_left)
-        painter.blit(m_data.page_locations.bottom_left, *m_corner_bitmap, m_data.corner_radii.bottom_left.as_rect().translated(m_data.bitmap_locations.bottom_left));
+        painter.blit(m_data.page_locations.bottom_left.to_type<int>(), *m_corner_bitmap, m_data.corner_radii.bottom_left.as_rect().translated(m_data.bitmap_locations.bottom_left.to_type<int>()));
 }
 
 }

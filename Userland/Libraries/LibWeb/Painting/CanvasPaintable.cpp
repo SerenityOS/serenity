@@ -31,8 +31,8 @@ void CanvasPaintable::paint(PaintContext& context, PaintPhase phase) const
     PaintableBox::paint(context, phase);
 
     if (phase == PaintPhase::Foreground) {
-        auto canvas_rect = absolute_rect().to_rounded<int>();
-        ScopedCornerRadiusClip corner_clip { context.painter(), canvas_rect, normalized_border_radii_data(ShrinkRadiiForBorders::Yes) };
+        auto canvas_rect = context.rounded_device_rect(absolute_rect().to_type<CSSPixels>());
+        ScopedCornerRadiusClip corner_clip { context, context.painter(), canvas_rect, normalized_border_radii_data(ShrinkRadiiForBorders::Yes) };
 
         // FIXME: This should be done at a different level.
         if (is_out_of_view(context))
@@ -41,7 +41,7 @@ void CanvasPaintable::paint(PaintContext& context, PaintPhase phase) const
         if (layout_box().dom_node().bitmap()) {
             // FIXME: Remove this const_cast.
             const_cast<HTML::HTMLCanvasElement&>(layout_box().dom_node()).present();
-            context.painter().draw_scaled_bitmap(canvas_rect, *layout_box().dom_node().bitmap(), layout_box().dom_node().bitmap()->rect(), 1.0f, to_gfx_scaling_mode(computed_values().image_rendering()));
+            context.painter().draw_scaled_bitmap(canvas_rect.to_type<int>(), *layout_box().dom_node().bitmap(), layout_box().dom_node().bitmap()->rect(), 1.0f, to_gfx_scaling_mode(computed_values().image_rendering()));
         }
     }
 }

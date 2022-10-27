@@ -36,8 +36,8 @@ void NestedBrowsingContextPaintable::paint(PaintContext& context, PaintPhase pha
     PaintableBox::paint(context, phase);
 
     if (phase == PaintPhase::Foreground) {
-        auto clip_rect = absolute_rect().to_rounded<int>();
-        ScopedCornerRadiusClip corner_clip { context.painter(), clip_rect, normalized_border_radii_data(ShrinkRadiiForBorders::Yes) };
+        auto clip_rect = context.rounded_device_rect(absolute_rect().to_type<CSSPixels>());
+        ScopedCornerRadiusClip corner_clip { context, context.painter(), clip_rect, normalized_border_radii_data(ShrinkRadiiForBorders::Yes) };
 
         auto* hosted_document = layout_box().dom_node().content_document_without_origin_check();
         if (!hosted_document)
@@ -49,7 +49,7 @@ void NestedBrowsingContextPaintable::paint(PaintContext& context, PaintPhase pha
         context.painter().save();
         auto old_viewport_rect = context.device_viewport_rect();
 
-        context.painter().add_clip_rect(clip_rect);
+        context.painter().add_clip_rect(clip_rect.to_type<int>());
         context.painter().translate(absolute_x(), absolute_y());
 
         context.set_device_viewport_rect({ {}, layout_box().dom_node().nested_browsing_context()->size() });
