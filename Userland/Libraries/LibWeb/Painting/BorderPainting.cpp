@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2021-2022, Sam Atkins <atkinssj@serenityos.org>
  * Copyright (c) 2022, MacDue <macdue@dueutil.tech>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -14,7 +14,7 @@
 
 namespace Web::Painting {
 
-BorderRadiiData normalized_border_radii_data(Layout::Node const& node, Gfx::FloatRect const& rect, CSS::BorderRadiusData top_left_radius, CSS::BorderRadiusData top_right_radius, CSS::BorderRadiusData bottom_right_radius, CSS::BorderRadiusData bottom_left_radius)
+BorderRadiiData normalized_border_radii_data(Layout::Node const& node, CSSPixelRect const& rect, CSS::BorderRadiusData top_left_radius, CSS::BorderRadiusData top_right_radius, CSS::BorderRadiusData bottom_right_radius, CSS::BorderRadiusData bottom_left_radius)
 {
     BorderRadiusData bottom_left_radius_px {};
     BorderRadiusData bottom_right_radius_px {};
@@ -34,15 +34,15 @@ BorderRadiiData normalized_border_radii_data(Layout::Node const& node, Gfx::Floa
     top_right_radius_px.vertical_radius = top_right_radius.vertical_radius.resolved(node, height_length).to_px(node);
 
     // Scale overlapping curves according to https://www.w3.org/TR/css-backgrounds-3/#corner-overlap
-    auto f = 1.0f;
-    auto width_reciprocal = 1.0f / rect.width();
-    auto height_reciprocal = 1.0f / rect.height();
+    CSSPixels f = 1.0f;
+    auto width_reciprocal = 1.0f / rect.width().value();
+    auto height_reciprocal = 1.0f / rect.height().value();
     f = max(f, width_reciprocal * (top_left_radius_px.horizontal_radius + top_right_radius_px.horizontal_radius));
     f = max(f, height_reciprocal * (top_right_radius_px.vertical_radius + bottom_right_radius_px.vertical_radius));
     f = max(f, width_reciprocal * (bottom_left_radius_px.horizontal_radius + bottom_right_radius_px.horizontal_radius));
     f = max(f, height_reciprocal * (top_left_radius_px.vertical_radius + bottom_left_radius_px.vertical_radius));
 
-    f = 1.0f / f;
+    f = 1.0f / f.value();
 
     top_left_radius_px.horizontal_radius *= f;
     top_left_radius_px.vertical_radius *= f;
@@ -56,7 +56,7 @@ BorderRadiiData normalized_border_radii_data(Layout::Node const& node, Gfx::Floa
     return BorderRadiiData { top_left_radius_px, top_right_radius_px, bottom_right_radius_px, bottom_left_radius_px };
 }
 
-void paint_border(PaintContext& context, BorderEdge edge, Gfx::IntRect const& rect, BorderRadiiData const& border_radii_data, BordersData const& borders_data)
+void paint_border(PaintContext& context, BorderEdge edge, DevicePixelRect const& rect, BorderRadiiData const& border_radii_data, BordersData const& borders_data)
 {
     auto const& border_data = [&] {
         switch (edge) {
@@ -71,20 +71,20 @@ void paint_border(PaintContext& context, BorderEdge edge, Gfx::IntRect const& re
         }
     }();
 
-    float width = border_data.width;
+    CSSPixels width = border_data.width;
     if (width <= 0)
         return;
 
     auto color = border_data.color;
     auto border_style = border_data.line_style;
-    int int_width = ceilf(width);
+    auto device_pixel_width = context.enclosing_device_pixels(width);
 
     struct Points {
-        Gfx::IntPoint p1;
-        Gfx::IntPoint p2;
+        DevicePixelPoint p1;
+        DevicePixelPoint p2;
     };
 
-    auto points_for_edge = [](BorderEdge edge, Gfx::IntRect const& rect) -> Points {
+    auto points_for_edge = [](BorderEdge edge, DevicePixelRect const& rect) -> Points {
         switch (edge) {
         case BorderEdge::Top:
             return { rect.top_left(), rect.top_right() };
@@ -117,28 +117,28 @@ void paint_border(PaintContext& context, BorderEdge edge, Gfx::IntRect const& re
         auto [p1, p2] = points_for_edge(edge, rect);
         switch (edge) {
         case BorderEdge::Top:
-            p1.translate_by(int_width / 2, int_width / 2);
-            p2.translate_by(-int_width / 2, int_width / 2);
+            p1.translate_by(device_pixel_width / 2, device_pixel_width / 2);
+            p2.translate_by(-device_pixel_width / 2, device_pixel_width / 2);
             break;
         case BorderEdge::Right:
-            p1.translate_by(-int_width / 2, int_width / 2);
-            p2.translate_by(-int_width / 2, -int_width / 2);
+            p1.translate_by(-device_pixel_width / 2, device_pixel_width / 2);
+            p2.translate_by(-device_pixel_width / 2, -device_pixel_width / 2);
             break;
         case BorderEdge::Bottom:
-            p1.translate_by(int_width / 2, -int_width / 2);
-            p2.translate_by(-int_width / 2, -int_width / 2);
+            p1.translate_by(device_pixel_width / 2, -device_pixel_width / 2);
+            p2.translate_by(-device_pixel_width / 2, -device_pixel_width / 2);
             break;
         case BorderEdge::Left:
-            p1.translate_by(int_width / 2, int_width / 2);
-            p2.translate_by(int_width / 2, -int_width / 2);
+            p1.translate_by(device_pixel_width / 2, device_pixel_width / 2);
+            p2.translate_by(device_pixel_width / 2, -device_pixel_width / 2);
             break;
         }
         if (border_style == CSS::LineStyle::Dotted) {
             Gfx::AntiAliasingPainter aa_painter { context.painter() };
-            aa_painter.draw_line(p1.to_type<float>(), p2.to_type<float>(), color, int_width, gfx_line_style);
+            aa_painter.draw_line(p1.to_type<int>(), p2.to_type<int>(), color, device_pixel_width.value(), gfx_line_style);
             return;
         }
-        context.painter().draw_line(p1, p2, color, int_width, gfx_line_style);
+        context.painter().draw_line(p1.to_type<int>(), p2.to_type<int>(), color, device_pixel_width.value(), gfx_line_style);
         return;
     }
 
@@ -146,19 +146,17 @@ void paint_border(PaintContext& context, BorderEdge edge, Gfx::IntRect const& re
         // Note: Using fill_rect() here since draw_line() produces some overlapping pixels
         // at the end of a line, which cause issues on borders with transparency.
         p2.translate_by(1, 1);
-        context.painter().fill_rect(Gfx::IntRect::from_two_points(p1, p2), color);
+        context.painter().fill_rect(Gfx::IntRect::from_two_points(p1.template to_type<int>(), p2.template to_type<int>()), color);
     };
 
     auto draw_border = [&](auto const& border, auto const& radius, auto const& opposite_border, auto const& opposite_radius, auto p1_step_translate, auto p2_step_translate) {
         auto [p1, p2] = points_for_edge(edge, rect);
-        auto current_p1 = p1.to_type<float>();
-        auto current_p2 = p2.to_type<float>();
-        auto p1_step = radius ? 0 : border.width / static_cast<float>(int_width);
-        auto p2_step = opposite_radius ? 0 : opposite_border.width / static_cast<float>(int_width);
-        for (int i = 0; i < int_width; ++i) {
-            draw_horizontal_or_vertical_line(current_p1.to_type<int>(), current_p2.to_type<int>());
-            p1_step_translate(current_p1, p1_step);
-            p2_step_translate(current_p2, p2_step);
+        auto p1_step = radius ? 0 : border.width / static_cast<float>(device_pixel_width.value());
+        auto p2_step = opposite_radius ? 0 : opposite_border.width / static_cast<float>(device_pixel_width.value());
+        for (DevicePixels i = 0; i < device_pixel_width; ++i) {
+            draw_horizontal_or_vertical_line(p1, p2);
+            p1_step_translate(p1, p1_step);
+            p2_step_translate(p2, p2_step);
         }
     };
 
@@ -209,10 +207,10 @@ void paint_border(PaintContext& context, BorderEdge edge, Gfx::IntRect const& re
     }
 }
 
-RefPtr<Gfx::Bitmap> get_cached_corner_bitmap(Gfx::IntSize corners_size)
+RefPtr<Gfx::Bitmap> get_cached_corner_bitmap(DevicePixelSize corners_size)
 {
     auto allocate_mask_bitmap = [&]() -> RefPtr<Gfx::Bitmap> {
-        auto bitmap = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, corners_size);
+        auto bitmap = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, corners_size.to_type<int>());
         if (!bitmap.is_error())
             return bitmap.release_value();
         return nullptr;
@@ -221,7 +219,7 @@ RefPtr<Gfx::Bitmap> get_cached_corner_bitmap(Gfx::IntSize corners_size)
     static thread_local auto corner_bitmap = allocate_mask_bitmap();
     // Only reallocate the corner bitmap is the existing one is too small.
     // (should mean no more allocations after the first paint -- amortised zero allocations :^))
-    if (corner_bitmap && corner_bitmap->rect().size().contains(corners_size)) {
+    if (corner_bitmap && corner_bitmap->rect().size().contains(corners_size.to_type<int>())) {
         Gfx::Painter painter { *corner_bitmap };
         painter.clear_rect({ { 0, 0 }, corners_size }, Gfx::Color());
     } else {
@@ -234,17 +232,17 @@ RefPtr<Gfx::Bitmap> get_cached_corner_bitmap(Gfx::IntSize corners_size)
     return corner_bitmap;
 }
 
-void paint_all_borders(PaintContext& context, Gfx::FloatRect const& bordered_rect, BorderRadiiData const& border_radii_data, BordersData const& borders_data)
+void paint_all_borders(PaintContext& context, CSSPixelRect const& bordered_rect, BorderRadiiData const& border_radii_data, BordersData const& borders_data)
 {
     if (borders_data.top.width <= 0 && borders_data.right.width <= 0 && borders_data.left.width <= 0 && borders_data.bottom.width <= 0)
         return;
 
-    Gfx::IntRect border_rect = bordered_rect.to_rounded<int>();
+    auto border_rect = context.rounded_device_rect(bordered_rect);
 
-    auto top_left = border_radii_data.top_left.as_corner();
-    auto top_right = border_radii_data.top_right.as_corner();
-    auto bottom_right = border_radii_data.bottom_right.as_corner();
-    auto bottom_left = border_radii_data.bottom_left.as_corner();
+    auto top_left = border_radii_data.top_left.as_corner(context);
+    auto top_right = border_radii_data.top_right.as_corner(context);
+    auto bottom_right = border_radii_data.bottom_right.as_corner(context);
+    auto bottom_left = border_radii_data.bottom_left.as_corner(context);
 
     // Disable border radii if the corresponding borders don't exist:
     if (borders_data.bottom.width <= 0 && borders_data.left.width <= 0)
@@ -256,32 +254,28 @@ void paint_all_borders(PaintContext& context, Gfx::FloatRect const& bordered_rec
     if (borders_data.top.width <= 0 && borders_data.right.width <= 0)
         top_right = { 0, 0 };
 
-    auto int_width = [&](auto value) -> int {
-        return ceilf(value);
-    };
-
-    Gfx::IntRect top_border_rect = {
+    DevicePixelRect top_border_rect = {
         border_rect.x() + top_left.horizontal_radius,
         border_rect.y(),
         border_rect.width() - top_left.horizontal_radius - top_right.horizontal_radius,
-        int_width(borders_data.top.width)
+        context.enclosing_device_pixels(borders_data.top.width)
     };
-    Gfx::IntRect right_border_rect = {
-        border_rect.x() + (border_rect.width() - int_width(borders_data.right.width)),
+    DevicePixelRect right_border_rect = {
+        border_rect.x() + (border_rect.width() - context.enclosing_device_pixels(borders_data.right.width)),
         border_rect.y() + top_right.vertical_radius,
-        int_width(borders_data.right.width),
+        context.enclosing_device_pixels(borders_data.right.width),
         border_rect.height() - top_right.vertical_radius - bottom_right.vertical_radius
     };
-    Gfx::IntRect bottom_border_rect = {
+    DevicePixelRect bottom_border_rect = {
         border_rect.x() + bottom_left.horizontal_radius,
-        border_rect.y() + (border_rect.height() - int_width(borders_data.bottom.width)),
+        border_rect.y() + (border_rect.height() - context.enclosing_device_pixels(borders_data.bottom.width)),
         border_rect.width() - bottom_left.horizontal_radius - bottom_right.horizontal_radius,
-        int_width(borders_data.bottom.width)
+        context.enclosing_device_pixels(borders_data.bottom.width)
     };
-    Gfx::IntRect left_border_rect = {
+    DevicePixelRect left_border_rect = {
         border_rect.x(),
         border_rect.y() + top_left.vertical_radius,
-        int_width(borders_data.left.width),
+        context.enclosing_device_pixels(borders_data.left.width),
         border_rect.height() - top_left.vertical_radius - bottom_left.vertical_radius
     };
 
@@ -308,16 +302,16 @@ void paint_all_borders(PaintContext& context, Gfx::FloatRect const& bordered_rec
         return;
 
     // Cache the smallest possible bitmap to render just the corners for the border.
-    auto expand_width = abs(int_width(borders_data.left.width) - int_width(borders_data.right.width));
-    auto expand_height = abs(int_width(borders_data.top.width) - int_width(borders_data.bottom.width));
-    Gfx::IntRect corner_mask_rect {
+    auto expand_width = abs(context.enclosing_device_pixels(borders_data.left.width) - context.enclosing_device_pixels(borders_data.right.width));
+    auto expand_height = abs(context.enclosing_device_pixels(borders_data.top.width) - context.enclosing_device_pixels(borders_data.bottom.width));
+    DevicePixelRect corner_mask_rect {
         0, 0,
         max(
-            top_left.horizontal_radius + top_right.horizontal_radius + expand_width,
-            bottom_left.horizontal_radius + bottom_right.horizontal_radius + expand_height),
+            top_left.horizontal_radius + top_right.horizontal_radius + expand_width.value(),
+            bottom_left.horizontal_radius + bottom_right.horizontal_radius + expand_height.value()),
         max(
-            top_left.vertical_radius + bottom_left.vertical_radius + expand_width,
-            top_right.vertical_radius + bottom_right.vertical_radius + expand_height)
+            top_left.vertical_radius + bottom_left.vertical_radius + expand_width.value(),
+            top_right.vertical_radius + bottom_right.vertical_radius + expand_height.value())
     };
 
     auto corner_bitmap = get_cached_corner_bitmap(corner_mask_rect.size());
@@ -331,27 +325,27 @@ void paint_all_borders(PaintContext& context, Gfx::FloatRect const& bordered_rec
     // TODO: Support various line styles on the corners (dotted, dashes, etc)
 
     // Paint the outer (minimal) corner rounded rectangle:
-    aa_painter.fill_rect_with_rounded_corners(corner_mask_rect, border_color_no_alpha, top_left, top_right, bottom_right, bottom_left);
+    aa_painter.fill_rect_with_rounded_corners(corner_mask_rect.to_type<int>(), border_color_no_alpha, top_left, top_right, bottom_right, bottom_left);
 
     // Subtract the inner corner rectangle:
     auto inner_corner_mask_rect = corner_mask_rect.shrunken(
-        int_width(borders_data.top.width),
-        int_width(borders_data.right.width),
-        int_width(borders_data.bottom.width),
-        int_width(borders_data.left.width));
+        context.enclosing_device_pixels(borders_data.top.width),
+        context.enclosing_device_pixels(borders_data.right.width),
+        context.enclosing_device_pixels(borders_data.bottom.width),
+        context.enclosing_device_pixels(borders_data.left.width));
     auto inner_top_left = top_left;
     auto inner_top_right = top_right;
     auto inner_bottom_right = bottom_right;
     auto inner_bottom_left = bottom_left;
-    inner_top_left.horizontal_radius = max(0, inner_top_left.horizontal_radius - int_width(borders_data.left.width));
-    inner_top_left.vertical_radius = max(0, inner_top_left.vertical_radius - int_width(borders_data.top.width));
-    inner_top_right.horizontal_radius = max(0, inner_top_right.horizontal_radius - int_width(borders_data.right.width));
-    inner_top_right.vertical_radius = max(0, inner_top_right.vertical_radius - int_width(borders_data.top.width));
-    inner_bottom_right.horizontal_radius = max(0, inner_bottom_right.horizontal_radius - int_width(borders_data.right.width));
-    inner_bottom_right.vertical_radius = max(0, inner_bottom_right.vertical_radius - int_width(borders_data.bottom.width));
-    inner_bottom_left.horizontal_radius = max(0, inner_bottom_left.horizontal_radius - int_width(borders_data.left.width));
-    inner_bottom_left.vertical_radius = max(0, inner_bottom_left.vertical_radius - int_width(borders_data.bottom.width));
-    aa_painter.fill_rect_with_rounded_corners(inner_corner_mask_rect, border_color_no_alpha, inner_top_left, inner_top_right, inner_bottom_right, inner_bottom_left, Gfx::AntiAliasingPainter::BlendMode::AlphaSubtract);
+    inner_top_left.horizontal_radius = max(0, inner_top_left.horizontal_radius - context.enclosing_device_pixels(borders_data.left.width).value());
+    inner_top_left.vertical_radius = max(0, inner_top_left.vertical_radius - context.enclosing_device_pixels(borders_data.top.width).value());
+    inner_top_right.horizontal_radius = max(0, inner_top_right.horizontal_radius - context.enclosing_device_pixels(borders_data.right.width).value());
+    inner_top_right.vertical_radius = max(0, inner_top_right.vertical_radius - context.enclosing_device_pixels(borders_data.top.width).value());
+    inner_bottom_right.horizontal_radius = max(0, inner_bottom_right.horizontal_radius - context.enclosing_device_pixels(borders_data.right.width).value());
+    inner_bottom_right.vertical_radius = max(0, inner_bottom_right.vertical_radius - context.enclosing_device_pixels(borders_data.bottom.width).value());
+    inner_bottom_left.horizontal_radius = max(0, inner_bottom_left.horizontal_radius - context.enclosing_device_pixels(borders_data.left.width).value());
+    inner_bottom_left.vertical_radius = max(0, inner_bottom_left.vertical_radius - context.enclosing_device_pixels(borders_data.bottom.width).value());
+    aa_painter.fill_rect_with_rounded_corners(inner_corner_mask_rect.to_type<int>(), border_color_no_alpha, inner_top_left, inner_top_right, inner_bottom_right, inner_bottom_left, Gfx::AntiAliasingPainter::BlendMode::AlphaSubtract);
 
     // TODO: Support dual color corners. Other browsers will render a rounded corner between two borders of
     // different colors using both colours, normally split at a 45 degree angle (though the exact angle is interpolated).
@@ -370,16 +364,16 @@ void paint_all_borders(PaintContext& context, Gfx::FloatRect const& bordered_rec
 
     // Blit the corners into to their corresponding locations:
     if (top_left)
-        blit_corner(border_rect.top_left(), top_left.as_rect(), pick_corner_color(borders_data.top, borders_data.left));
+        blit_corner(border_rect.top_left().to_type<int>(), top_left.as_rect(), pick_corner_color(borders_data.top, borders_data.left));
 
     if (top_right)
-        blit_corner(border_rect.top_right().translated(-top_right.horizontal_radius + 1, 0), top_right.as_rect().translated(corner_mask_rect.width() - top_right.horizontal_radius, 0), pick_corner_color(borders_data.top, borders_data.right));
+        blit_corner(border_rect.top_right().to_type<int>().translated(-top_right.horizontal_radius + 1, 0), top_right.as_rect().translated(corner_mask_rect.width().value() - top_right.horizontal_radius, 0), pick_corner_color(borders_data.top, borders_data.right));
 
     if (bottom_right)
-        blit_corner(border_rect.bottom_right().translated(-bottom_right.horizontal_radius + 1, -bottom_right.vertical_radius + 1), bottom_right.as_rect().translated(corner_mask_rect.width() - bottom_right.horizontal_radius, corner_mask_rect.height() - bottom_right.vertical_radius), pick_corner_color(borders_data.bottom, borders_data.right));
+        blit_corner(border_rect.bottom_right().to_type<int>().translated(-bottom_right.horizontal_radius + 1, -bottom_right.vertical_radius + 1), bottom_right.as_rect().translated(corner_mask_rect.width().value() - bottom_right.horizontal_radius, corner_mask_rect.height().value() - bottom_right.vertical_radius), pick_corner_color(borders_data.bottom, borders_data.right));
 
     if (bottom_left)
-        blit_corner(border_rect.bottom_left().translated(0, -bottom_left.vertical_radius + 1), bottom_left.as_rect().translated(0, corner_mask_rect.height() - bottom_left.vertical_radius), pick_corner_color(borders_data.bottom, borders_data.left));
+        blit_corner(border_rect.bottom_left().to_type<int>().translated(0, -bottom_left.vertical_radius + 1), bottom_left.as_rect().translated(0, corner_mask_rect.height().value() - bottom_left.vertical_radius), pick_corner_color(borders_data.bottom, borders_data.left));
 }
 
 }

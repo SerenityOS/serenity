@@ -54,7 +54,7 @@ void InlinePaintable::paint(PaintContext& context, Painting::PaintPhase phase) c
                 absolute_fragment_rect.set_width(absolute_fragment_rect.width() + extra_end_width);
             }
 
-            auto border_radii_data = Painting::normalized_border_radii_data(layout_node(), absolute_fragment_rect, top_left_border_radius, top_right_border_radius, bottom_right_border_radius, bottom_left_border_radius);
+            auto border_radii_data = Painting::normalized_border_radii_data(layout_node(), absolute_fragment_rect.to_type<CSSPixels>(), top_left_border_radius, top_right_border_radius, bottom_right_border_radius, bottom_left_border_radius);
             Painting::paint_background(context, layout_node(), absolute_fragment_rect.to_type<CSSPixels>(), computed_values().background_color(), computed_values().image_rendering(), &computed_values().background_layers(), border_radii_data);
 
             if (auto computed_box_shadow = computed_values().box_shadow(); !computed_box_shadow.is_empty()) {
@@ -92,7 +92,7 @@ void InlinePaintable::paint(PaintContext& context, Painting::PaintPhase phase) c
         auto containing_block_position_in_absolute_coordinates = containing_block()->paint_box()->absolute_position();
 
         for_each_fragment([&](auto const& fragment, bool is_first_fragment, bool is_last_fragment) {
-            Gfx::FloatRect absolute_fragment_rect { containing_block_position_in_absolute_coordinates.translated(fragment.offset()), fragment.size() };
+            CSSPixelRect absolute_fragment_rect { containing_block_position_in_absolute_coordinates.translated(fragment.offset()), fragment.size() };
 
             if (is_first_fragment) {
                 float extra_start_width = box_model().padding.left;
