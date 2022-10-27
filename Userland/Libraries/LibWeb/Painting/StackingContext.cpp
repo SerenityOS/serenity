@@ -209,7 +209,11 @@ Gfx::FloatMatrix4x4 StackingContext::get_transformation_matrix(CSS::Transformati
     auto value = [this, transformation](size_t index, Optional<CSS::Length const&> reference_length = {}) -> float {
         return transformation.values[index].visit(
             [this, reference_length](CSS::LengthPercentage const& value) {
-                return value.resolved(m_box, reference_length.value()).to_px(m_box);
+                if (reference_length.has_value()) {
+                    return value.resolved(m_box, reference_length.value()).to_px(m_box);
+                }
+
+                return value.length().to_px(m_box);
             },
             [](CSS::Angle const& value) {
                 return value.to_degrees() * static_cast<float>(M_DEG2RAD);
@@ -249,6 +253,12 @@ Gfx::FloatMatrix4x4 StackingContext::get_transformation_matrix(CSS::Transformati
                 0, 1, 0, value(1, height),
                 0, 0, 1, 0,
                 0, 0, 0, 1);
+        break;
+    case CSS::TransformFunction::Translate3d:
+        return Gfx::FloatMatrix4x4(1, 0, 0, value(0, width),
+            0, 1, 0, value(1, height),
+            0, 0, 1, value(2),
+            0, 0, 0, 1);
         break;
     case CSS::TransformFunction::TranslateX:
         if (count == 1)
