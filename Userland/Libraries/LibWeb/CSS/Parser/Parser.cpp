@@ -5563,6 +5563,21 @@ RefPtr<StyleValue> Parser::parse_transform_value(Vector<ComponentValue> const& c
                 }
                 break;
             }
+            case TransformFunctionParameterType::Length: {
+                if (maybe_calc_value && maybe_calc_value->resolves_to_length()) {
+                    values.append(LengthStyleValue::create(Length::make_calculated(maybe_calc_value.release_nonnull())));
+                } else {
+                    auto dimension_value = parse_dimension_value(value);
+                    if (!dimension_value)
+                        return nullptr;
+
+                    if (dimension_value->is_length())
+                        values.append(dimension_value.release_nonnull());
+                    else
+                        return nullptr;
+                }
+                break;
+            }
             case TransformFunctionParameterType::LengthPercentage: {
                 if (maybe_calc_value && maybe_calc_value->resolves_to_length()) {
                     values.append(LengthStyleValue::create(Length::make_calculated(maybe_calc_value.release_nonnull())));

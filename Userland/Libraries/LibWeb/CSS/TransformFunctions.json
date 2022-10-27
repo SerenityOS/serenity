@@ -35,6 +35,13 @@
             { "type": "<length-percentage>", "required": false }
         ]
     },
+    "translate3d": {
+        "parameters": [
+            { "type": "<length-percentage>", "required": true },
+            { "type": "<length-percentage>", "required": true },
+            { "type": "<length>", "required": true }
+        ]
+    },
     "translateX": {
         "parameters": [{ "type": "<length-percentage>", "required": true }]
     },

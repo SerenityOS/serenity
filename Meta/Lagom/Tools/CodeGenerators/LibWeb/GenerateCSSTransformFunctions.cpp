@@ -78,6 +78,7 @@ namespace Web::CSS {
     generator.append(R"~~~(
 enum class TransformFunctionParameterType {
     Angle,
+    Length,
     LengthPercentage,
     Number,
 };
@@ -176,6 +177,8 @@ TransformFunctionMetadata transform_function_metadata(TransformFunction transfor
             StringView parameter_type = ""sv;
             if (parameter_type_name == "angle"sv)
                 parameter_type = "Angle"sv;
+            else if (parameter_type_name == "length"sv)
+                parameter_type = "Length"sv;
             else if (parameter_type_name == "length-percentage"sv)
                 parameter_type = "LengthPercentage"sv;
             else if (parameter_type_name == "number"sv)
