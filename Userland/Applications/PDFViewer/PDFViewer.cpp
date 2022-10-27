@@ -189,14 +189,15 @@ void PDFViewer::mousewheel_event(GUI::MouseEvent& event)
     }
 
     auto& scrollbar = event.shift() ? horizontal_scrollbar() : vertical_scrollbar();
+    auto delta = abs(event.wheel_delta_y() * 20);
 
     if (m_page_view_mode == PageViewMode::Multiple) {
         if (scrolled_down) {
             if (scrollbar.value() != scrollbar.max())
-                scrollbar.increase_slider_by(20);
+                scrollbar.increase_slider_by(delta);
         } else {
             if (scrollbar.value() > 0)
-                scrollbar.decrease_slider_by(20);
+                scrollbar.decrease_slider_by(delta);
         }
     } else {
         if (scrolled_down) {
@@ -206,7 +207,7 @@ void PDFViewer::mousewheel_event(GUI::MouseEvent& event)
                     scrollbar.set_value(0);
                 }
             } else {
-                scrollbar.increase_slider_by(20);
+                scrollbar.increase_slider_by(delta);
             }
         } else {
             if (scrollbar.value() == 0) {
@@ -215,7 +216,7 @@ void PDFViewer::mousewheel_event(GUI::MouseEvent& event)
                     scrollbar.set_value(scrollbar.max());
                 }
             } else {
-                scrollbar.decrease_slider_by(20);
+                scrollbar.decrease_slider_by(delta);
             }
         }
     }
