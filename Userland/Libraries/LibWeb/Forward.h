@@ -479,10 +479,6 @@ namespace Web::Bindings {
 class Intrinsics;
 class LocationObject;
 class OptionConstructor;
-class RangePrototype;
-class Wrappable;
-class Wrapper;
-class XMLHttpRequestPrototype;
 enum class CanPlayTypeResult;
 enum class CanvasFillRule;
 enum class EndingType;
