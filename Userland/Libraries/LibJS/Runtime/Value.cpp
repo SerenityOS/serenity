@@ -12,6 +12,7 @@
 #include <AK/FloatingPointStringConversions.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
+#include <AK/StringFloatingPointConversions.h>
 #include <AK/Utf8View.h>
 #include <LibCrypto/BigInt/SignedBigInteger.h>
 #include <LibCrypto/NumberTheory/ModularFunctions.h>
@@ -69,130 +70,129 @@ ALWAYS_INLINE bool both_bigint(Value const& lhs, Value const& rhs)
 }
 
 // 6.1.6.1.20 Number::toString ( x ), https://tc39.es/ecma262/#sec-numeric-types-number-tostring
+// Implementation for radix = 10
 static String double_to_string(double d)
 {
+    auto convert_to_decimal_digits_array = [](auto x, auto& digits, auto& length) {
+        for (; x; x /= 10)
+            digits[length++] = x % 10 | '0';
+        for (i32 i = 0; 2 * i + 1 < length; ++i)
+            swap(digits[i], digits[length - i - 1]);
+    };
+
+    // 1. If x is NaN, return "NaN".
     if (isnan(d))
         return "NaN";
+
+    // 2. If x is +0𝔽 or -0𝔽, return "0".
     if (d == +0.0 || d == -0.0)
         return "0";
-    if (d < +0.0) {
-        StringBuilder builder;
-        builder.append('-');
-        builder.append(double_to_string(-d));
-        return builder.to_string();
+
+    // 4. If x is +∞𝔽, return "Infinity".
+    if (isinf(d)) {
+        if (d > 0)
+            return "Infinity";
+        else
+            return "-Infinity";
     }
-    if (d == static_cast<double>(INFINITY))
-        return "Infinity";
-
-    StringBuilder number_string_builder;
-
-    size_t start_index = 0;
-    size_t end_index = 0;
-    size_t int_part_end = 0;
-
-    // generate integer part (reversed)
-    double int_part;
-    double frac_part;
-    frac_part = modf(d, &int_part);
-    while (int_part > 0) {
-        number_string_builder.append('0' + (int)fmod(int_part, 10));
-        end_index++;
-        int_part = floor(int_part / 10);
-    }
-
-    auto reversed_integer_part = number_string_builder.to_string().reverse();
-    number_string_builder.clear();
-    number_string_builder.append(reversed_integer_part);
-
-    int_part_end = end_index;
-
-    int exponent = 0;
-
-    // generate fractional part
-    while (frac_part > 0) {
-        double old_frac_part = frac_part;
-        frac_part *= 10;
-        frac_part = modf(frac_part, &int_part);
-        if (old_frac_part == frac_part)
-            break;
-        number_string_builder.append('0' + (int)int_part);
-        end_index++;
-        exponent--;
-    }
-
-    auto number_string = number_string_builder.to_string();
-
-    // FIXME: Remove this hack.
-    // FIXME: Instead find the shortest round-trippable representation.
-    // Remove decimals after the 15th position
-    if (end_index > int_part_end + 15) {
-        exponent += end_index - int_part_end - 15;
-        end_index = int_part_end + 15;
-    }
-
-    // remove leading zeroes
-    while (start_index < end_index && number_string[start_index] == '0') {
-        start_index++;
-    }
-
-    // remove trailing zeroes
-    while (end_index > 0 && number_string[end_index - 1] == '0') {
-        end_index--;
-        exponent++;
-    }
-
-    if (end_index <= start_index)
-        return "0";
-
-    auto digits = number_string.substring_view(start_index, end_index - start_index);
-
-    int number_of_digits = end_index - start_index;
-
-    exponent += number_of_digits;
 
     StringBuilder builder;
 
-    if (number_of_digits <= exponent && exponent <= 21) {
-        builder.append(digits);
-        builder.append(String::repeated('0', exponent - number_of_digits));
-        return builder.to_string();
-    }
-    if (0 < exponent && exponent <= 21) {
-        builder.append(digits.substring_view(0, exponent));
-        builder.append('.');
-        builder.append(digits.substring_view(exponent));
-        return builder.to_string();
-    }
-    if (-6 < exponent && exponent <= 0) {
-        builder.append("0."sv);
-        builder.append(String::repeated('0', -exponent));
-        builder.append(digits);
-        return builder.to_string();
-    }
-    if (number_of_digits == 1) {
-        builder.append(digits);
-        builder.append('e');
+    // 5. Let n, k, and s be integers such that k ≥ 1, radix ^ (k - 1) ≤ s < radix ^ k,
+    // 𝔽(s × radix ^ (n - k)) is x, and k is as small as possible. Note that k is the number of
+    // digits in the representation of s using radix radix, that s is not divisible by radix, and
+    // that the least significant digit of s is not necessarily uniquely determined by these criteria.
+    //
+    // Note: guarantees provided by convert_floating_point_to_decimal_exponential_form satisfy
+    //       requirements of NOTE 2.
+    auto [sign, mantissa, exponent] = convert_floating_point_to_decimal_exponential_form(d);
+    i32 k = 0;
+    AK::Array<char, 20> mantissa_digits;
+    convert_to_decimal_digits_array(mantissa, mantissa_digits, k);
 
-        if (exponent - 1 > 0)
-            builder.append('+');
-        else
-            builder.append('-');
+    i32 n = exponent + k; // s = mantissa
 
-        builder.append(String::number(AK::abs(exponent - 1)));
-        return builder.to_string();
-    }
-
-    builder.append(digits[0]);
-    builder.append('.');
-    builder.append(digits.substring_view(1));
-    builder.append('e');
-
-    if (exponent - 1 > 0)
-        builder.append('+');
-    else
+    // 3. If x < -0𝔽, return the string-concatenation of "-" and Number::toString(-x, radix).
+    if (sign)
         builder.append('-');
 
-    builder.append(String::number(AK::abs(exponent - 1)));
+    // 6. If radix ≠ 10 or n is in the inclusive interval from -5 to 21, then
+    if (n >= -5 && n <= 21) {
+        // a. If n ≥ k, then
+        if (n >= k) {
+            // i. Return the string-concatenation of:
+            // the code units of the k digits of the representation of s using radix radix
+            builder.append(mantissa_digits.data(), k);
+            // n - k occurrences of the code unit 0x0030 (DIGIT ZERO)
+            builder.append_repeated('0', n - k);
+            // b. Else if n > 0, then
+        } else if (n > 0) {
+            // i. Return the string-concatenation of:
+            // the code units of the most significant n digits of the representation of s using radix radix
+            builder.append(mantissa_digits.data(), n);
+            // the code unit 0x002E (FULL STOP)
+            builder.append('.');
+            // the code units of the remaining k - n digits of the representation of s using radix radix
+            builder.append(mantissa_digits.data() + n, k - n);
+            // c. Else,
+        } else {
+            // i. Assert: n ≤ 0.
+            VERIFY(n <= 0);
+            // ii. Return the string-concatenation of:
+            // the code unit 0x0030 (DIGIT ZERO)
+            builder.append('0');
+            // the code unit 0x002E (FULL STOP)
+            builder.append('.');
+            // -n occurrences of the code unit 0x0030 (DIGIT ZERO)
+            builder.append_repeated('0', -n);
+            // the code units of the k digits of the representation of s using radix radix
+            builder.append(mantissa_digits.data(), k);
+        }
+
+        return builder.to_string();
+    }
+
+    // 7. NOTE: In this case, the input will be represented using scientific E notation, such as 1.2e+3.
+
+    // 9. If n < 0, then
+    //     a. Let exponentSign be the code unit 0x002D (HYPHEN-MINUS).
+    // 10. Else,
+    //     a. Let exponentSign be the code unit 0x002B (PLUS SIGN).
+    char exponent_sign = n < 0 ? '-' : '+';
+
+    AK::Array<char, 5> exponent_digits;
+    i32 exponent_length = 0;
+    convert_to_decimal_digits_array(abs(n - 1), exponent_digits, exponent_length);
+
+    // 11. If k is 1, then
+    if (k == 1) {
+        // a. Return the string-concatenation of:
+        // the code unit of the single digit of s
+        builder.append(mantissa_digits[0]);
+        // the code unit 0x0065 (LATIN SMALL LETTER E)
+        builder.append('e');
+        // exponentSign
+        builder.append(exponent_sign);
+        // the code units of the decimal representation of abs(n - 1)
+        builder.append(exponent_digits.data(), exponent_length);
+
+        return builder.to_string();
+    }
+
+    // 12. Return the string-concatenation of:
+    // the code unit of the most significant digit of the decimal representation of s
+    builder.append(mantissa_digits[0]);
+    // the code unit 0x002E (FULL STOP)
+    builder.append('.');
+    // the code units of the remaining k - 1 digits of the decimal representation of s
+    builder.append(mantissa_digits.data() + 1, k - 1);
+    // the code unit 0x0065 (LATIN SMALL LETTER E)
+    builder.append('e');
+    // exponentSign
+    builder.append(exponent_sign);
+    // the code units of the decimal representation of abs(n - 1)
+    builder.append(exponent_digits.data(), exponent_length);
+
     return builder.to_string();
 }
 
