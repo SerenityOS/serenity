@@ -77,7 +77,7 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
 
     Gfx::AntiAliasingPainter aa_painter { painter };
     aa_painter.fill_rect_with_rounded_corners(context.rounded_device_rect(color_box.rect).to_type<int>(),
-        background_color, color_box.radii.top_left.as_corner(), color_box.radii.top_right.as_corner(), color_box.radii.bottom_right.as_corner(), color_box.radii.bottom_left.as_corner());
+        background_color, color_box.radii.top_left.as_corner(context), color_box.radii.top_right.as_corner(context), color_box.radii.bottom_right.as_corner(context), color_box.radii.bottom_left.as_corner(context));
 
     if (!has_paintable_layers)
         return;
@@ -114,7 +114,7 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
         CSSPixelRect const& css_clip_rect = clip_box.rect;
         auto clip_rect = context.rounded_device_rect(css_clip_rect);
         painter.add_clip_rect(clip_rect.to_type<int>());
-        ScopedCornerRadiusClip corner_clip { painter, clip_rect.to_type<int>(), clip_box.radii };
+        ScopedCornerRadiusClip corner_clip { context, painter, clip_rect, clip_box.radii };
 
         if (layer.clip == CSS::BackgroundBox::BorderBox) {
             // Shrink the effective clip rect if to account for the bits the borders will definitely paint over

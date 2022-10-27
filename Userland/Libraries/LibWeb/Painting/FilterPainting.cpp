@@ -125,7 +125,7 @@ void apply_backdrop_filter(PaintContext& context, Layout::Node const& node, Gfx:
     // FIXME: 3. If element B has any transforms (between B and the Backdrop Root), apply the inverse of those transforms to the contents of T’.
 
     // 4. Apply a clip to the contents of T’, using the border box of element B, including border-radius if specified. Note that the children of B are not considered for the sizing or location of this clip.
-    ScopedCornerRadiusClip corner_clipper { context.painter(), backdrop_region, border_radii_data };
+    ScopedCornerRadiusClip corner_clipper { context, context.painter(), backdrop_region.to_type<DevicePixels>(), border_radii_data };
 
     // FIXME: 5. Draw all of element B, including its background, border, and any children elements, into T’.
 

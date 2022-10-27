@@ -227,7 +227,7 @@ void PaintableBox::paint_border(PaintContext& context) const
         .bottom = computed_values().border_bottom(),
         .left = computed_values().border_left(),
     };
-    paint_all_borders(context, absolute_border_box_rect(), normalized_border_radii_data(), borders_data);
+    paint_all_borders(context, absolute_border_box_rect().to_type<CSSPixels>(), normalized_border_radii_data(), borders_data);
 }
 
 void PaintableBox::paint_backdrop_filter(PaintContext& context) const
@@ -300,7 +300,8 @@ void PaintableBox::paint_box_shadow(PaintContext& context) const
 
 BorderRadiiData PaintableBox::normalized_border_radii_data(ShrinkRadiiForBorders shrink) const
 {
-    auto border_radius_data = Painting::normalized_border_radii_data(layout_box(), absolute_border_box_rect(),
+    auto border_radius_data = Painting::normalized_border_radii_data(layout_box(),
+        absolute_border_box_rect().to_type<CSSPixels>(),
         computed_values().border_top_left_radius(),
         computed_values().border_top_right_radius(),
         computed_values().border_bottom_right_radius(),
@@ -356,7 +357,7 @@ void PaintableBox::before_children_paint(PaintContext& context, PaintPhase phase
     if (overflow_y == CSS::Overflow::Hidden || overflow_x == CSS::Overflow::Hidden) {
         auto border_radii_data = normalized_border_radii_data(ShrinkRadiiForBorders::Yes);
         if (border_radii_data.has_any_radius()) {
-            auto corner_clipper = BorderRadiusCornerClipper::create(absolute_padding_box_rect().to_rounded<int>(), border_radii_data, CornerClip::Outside, BorderRadiusCornerClipper::UseCachedBitmap::No);
+            auto corner_clipper = BorderRadiusCornerClipper::create(context, absolute_padding_box_rect().to_type<DevicePixels>(), border_radii_data, CornerClip::Outside, BorderRadiusCornerClipper::UseCachedBitmap::No);
             if (corner_clipper.is_error()) {
                 dbgln("Failed to create overflow border-radius corner clipper: {}", corner_clipper.error());
                 return;
@@ -553,7 +554,7 @@ void PaintableWithLines::paint(PaintContext& context, PaintPhase phase) const
 
         auto border_radii = normalized_border_radii_data(ShrinkRadiiForBorders::Yes);
         if (border_radii.has_any_radius()) {
-            auto clipper = BorderRadiusCornerClipper::create(clip_box, border_radii);
+            auto clipper = BorderRadiusCornerClipper::create(context, clip_box.to_type<DevicePixels>(), border_radii);
             if (!clipper.is_error()) {
                 corner_clipper = clipper.release_value();
                 corner_clipper->sample_under_corners(context.painter());

@@ -25,12 +25,12 @@ void paint_box_shadow(PaintContext& context, Gfx::IntRect const& content_rect, B
 
     auto& painter = context.painter();
 
-    auto top_left_corner = border_radii.top_left.as_corner();
-    auto top_right_corner = border_radii.top_right.as_corner();
-    auto bottom_right_corner = border_radii.bottom_right.as_corner();
-    auto bottom_left_corner = border_radii.bottom_left.as_corner();
+    auto top_left_corner = border_radii.top_left.as_corner(context);
+    auto top_right_corner = border_radii.top_right.as_corner(context);
+    auto bottom_right_corner = border_radii.bottom_right.as_corner(context);
+    auto bottom_left_corner = border_radii.bottom_left.as_corner(context);
 
-    ScopedCornerRadiusClip corner_clipper { painter, content_rect, border_radii, CornerClip::Inside };
+    ScopedCornerRadiusClip corner_clipper { context, painter, content_rect.to_type<DevicePixels>(), border_radii, CornerClip::Inside };
 
     // Note: Box-shadow layers are ordered front-to-back, so we paint them in reverse
     for (auto& box_shadow_data : box_shadow_layers.in_reverse()) {

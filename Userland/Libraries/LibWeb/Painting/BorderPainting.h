@@ -13,26 +13,26 @@
 namespace Web::Painting {
 
 struct BorderRadiusData {
-    float horizontal_radius { 0 };
-    float vertical_radius { 0 };
+    CSSPixels horizontal_radius { 0 };
+    CSSPixels vertical_radius { 0 };
 
-    Gfx::AntiAliasingPainter::CornerRadius as_corner() const
+    Gfx::AntiAliasingPainter::CornerRadius as_corner(PaintContext& context) const
     {
         return Gfx::AntiAliasingPainter::CornerRadius {
-            static_cast<int>(horizontal_radius),
-            static_cast<int>(vertical_radius)
+            context.floored_device_pixels(horizontal_radius).value(),
+            context.floored_device_pixels(vertical_radius).value()
         };
     };
 
     inline operator bool() const
     {
-        return static_cast<int>(horizontal_radius) > 0 && static_cast<int>(vertical_radius) > 0;
+        return horizontal_radius > 0 && vertical_radius > 0;
     }
 
-    inline void shrink(float horizontal, float vertical)
+    inline void shrink(CSSPixels horizontal, CSSPixels vertical)
     {
-        horizontal_radius = max(0, horizontal_radius - horizontal);
-        vertical_radius = max(0, vertical_radius - vertical);
+        horizontal_radius = max(CSSPixels(0), horizontal_radius - horizontal);
+        vertical_radius = max(CSSPixels(0), vertical_radius - vertical);
     }
 };
 
@@ -47,7 +47,7 @@ struct BorderRadiiData {
         return top_left || top_right || bottom_right || bottom_left;
     }
 
-    inline void shrink(float top, float right, float bottom, float left)
+    inline void shrink(CSSPixels top, CSSPixels right, CSSPixels bottom, CSSPixels left)
     {
         top_left.shrink(left, top);
         top_right.shrink(right, top);
@@ -56,7 +56,7 @@ struct BorderRadiiData {
     }
 };
 
-BorderRadiiData normalized_border_radii_data(Layout::Node const&, Gfx::FloatRect const&, CSS::BorderRadiusData top_left_radius, CSS::BorderRadiusData top_right_radius, CSS::BorderRadiusData bottom_right_radius, CSS::BorderRadiusData bottom_left_radius);
+BorderRadiiData normalized_border_radii_data(Layout::Node const&, CSSPixelRect const&, CSS::BorderRadiusData top_left_radius, CSS::BorderRadiusData top_right_radius, CSS::BorderRadiusData bottom_right_radius, CSS::BorderRadiusData bottom_left_radius);
 
 enum class BorderEdge {
     Top,
@@ -71,9 +71,9 @@ struct BordersData {
     CSS::BorderData left;
 };
 
-RefPtr<Gfx::Bitmap> get_cached_corner_bitmap(Gfx::IntSize corners_size);
+RefPtr<Gfx::Bitmap> get_cached_corner_bitmap(DevicePixelSize corners_size);
 
-void paint_border(PaintContext& context, BorderEdge edge, Gfx::IntRect const& rect, BorderRadiiData const& border_radii_data, BordersData const& borders_data);
-void paint_all_borders(PaintContext& context, Gfx::FloatRect const& bordered_rect, BorderRadiiData const& border_radii_data, BordersData const&);
+void paint_border(PaintContext& context, BorderEdge edge, DevicePixelRect const& rect, BorderRadiiData const& border_radii_data, BordersData const& borders_data);
+void paint_all_borders(PaintContext& context, CSSPixelRect const& bordered_rect, BorderRadiiData const& border_radii_data, BordersData const&);
 
 }
