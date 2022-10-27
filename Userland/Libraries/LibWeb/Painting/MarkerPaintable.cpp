@@ -31,24 +31,28 @@ void MarkerPaintable::paint(PaintContext& context, PaintPhase phase) const
     if (phase != PaintPhase::Foreground)
         return;
 
-    auto enclosing = enclosing_int_rect(absolute_rect());
+    CSSPixelRect enclosing = absolute_rect().to_rounded<float>().to_type<CSSPixels>();
+    auto device_enclosing = context.enclosing_device_rect(enclosing);
 
-    int marker_width = (int)enclosing.height() / 2;
+    CSSPixels marker_width = enclosing.height() / 2.0f;
 
     if (auto const* list_style_image = layout_box().list_style_image()) {
-        Gfx::IntRect image_rect {
+        CSSPixelRect image_rect {
             0, 0,
-            list_style_image->natural_width().value_or(marker_width),
-            list_style_image->natural_height().value_or(marker_width)
+            list_style_image->natural_width().value_or(marker_width.value()),
+            list_style_image->natural_height().value_or(marker_width.value())
         };
         image_rect.center_within(enclosing);
-        list_style_image->resolve_for_size(layout_box(), image_rect.size().to_type<float>());
-        list_style_image->paint(context, image_rect, computed_values().image_rendering());
+
+        auto device_image_rect = context.enclosing_device_rect(image_rect);
+        list_style_image->resolve_for_size(layout_box(), device_image_rect.size().to_type<int>().to_type<float>());
+        list_style_image->paint(context, device_image_rect.to_type<int>(), computed_values().image_rendering());
         return;
     }
 
-    Gfx::IntRect marker_rect { 0, 0, marker_width, marker_width };
+    CSSPixelRect marker_rect { 0, 0, marker_width, marker_width };
     marker_rect.center_within(enclosing);
+    auto device_marker_rect = context.enclosing_device_rect(marker_rect);
 
     auto color = computed_values().color();
 
@@ -56,13 +60,13 @@ void MarkerPaintable::paint(PaintContext& context, PaintPhase phase) const
 
     switch (layout_box().list_style_type()) {
     case CSS::ListStyleType::Square:
-        context.painter().fill_rect(marker_rect, color);
+        context.painter().fill_rect(device_marker_rect.to_type<int>(), color);
         break;
     case CSS::ListStyleType::Circle:
-        aa_painter.draw_ellipse(marker_rect, color, 1);
+        aa_painter.draw_ellipse(device_marker_rect.to_type<int>(), color, 1);
         break;
     case CSS::ListStyleType::Disc:
-        aa_painter.fill_ellipse(marker_rect, color);
+        aa_painter.fill_ellipse(device_marker_rect.to_type<int>(), color);
         break;
     case CSS::ListStyleType::Decimal:
     case CSS::ListStyleType::DecimalLeadingZero:
@@ -74,7 +78,7 @@ void MarkerPaintable::paint(PaintContext& context, PaintPhase phase) const
     case CSS::ListStyleType::UpperRoman:
         if (layout_box().text().is_null())
             break;
-        context.painter().draw_text(enclosing, layout_box().text(), Gfx::TextAlignment::Center);
+        context.painter().draw_text(device_enclosing.to_type<int>(), layout_box().text(), Gfx::TextAlignment::Center);
         break;
     case CSS::ListStyleType::None:
         return;
