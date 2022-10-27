@@ -201,8 +201,7 @@ Editor::~Editor()
 void Editor::ensure_free_lines_from_origin(size_t count)
 {
     if (count > m_num_lines) {
-        // It's hopeless...
-        TODO();
+        // FIXME: Implement paging
     }
 
     if (m_origin_row + count <= m_num_lines)
@@ -2174,12 +2173,14 @@ size_t StringMetrics::lines_with_addition(StringMetrics const& offset, size_t co
 {
     size_t lines = 0;
 
-    for (size_t i = 0; i < line_metrics.size() - 1; ++i)
-        lines += (line_metrics[i].total_length() + column_width) / column_width;
+    if (!line_metrics.is_empty()) {
+        for (size_t i = 0; i < line_metrics.size() - 1; ++i)
+            lines += (line_metrics[i].total_length() + column_width) / column_width;
 
-    auto last = line_metrics.last().total_length();
-    last += offset.line_metrics.first().total_length();
-    lines += (last + column_width) / column_width;
+        auto last = line_metrics.last().total_length();
+        last += offset.line_metrics.first().total_length();
+        lines += (last + column_width) / column_width;
+    }
 
     for (size_t i = 1; i < offset.line_metrics.size(); ++i)
         lines += (offset.line_metrics[i].total_length() + column_width) / column_width;
@@ -2192,9 +2193,16 @@ size_t StringMetrics::offset_with_addition(StringMetrics const& offset, size_t c
     if (offset.line_metrics.size() > 1)
         return offset.line_metrics.last().total_length() % column_width;
 
-    auto last = line_metrics.last().total_length();
-    last += offset.line_metrics.first().total_length();
-    return last % column_width;
+    if (!line_metrics.is_empty()) {
+        auto last = line_metrics.last().total_length();
+        last += offset.line_metrics.first().total_length();
+        return last % column_width;
+    }
+
+    if (offset.line_metrics.is_empty())
+        return 0;
+
+    return offset.line_metrics.first().total_length() % column_width;
 }
 
 bool Editor::Spans::contains_up_to_offset(Spans const& other, size_t offset) const
