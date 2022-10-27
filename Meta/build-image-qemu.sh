@@ -49,6 +49,7 @@ if [ "$(uname -s)" = "Darwin" ]; then
     export PATH="/opt/homebrew/opt/e2fsprogs/sbin:$PATH"
 
     E2FSCK="e2fsck"
+    RESIZE2FS_PATH="resize2fs"
 elif [ "$(uname -s)" = "SerenityOS" ]; then
     E2FSCK="/usr/local/sbin/e2fsck"
 else
