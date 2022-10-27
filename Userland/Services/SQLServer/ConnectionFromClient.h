@@ -28,8 +28,8 @@ private:
     explicit ConnectionFromClient(NonnullOwnPtr<Core::Stream::LocalSocket>, int client_id);
 
     virtual Messages::SQLServer::ConnectResponse connect(String const&) override;
-    virtual Messages::SQLServer::SqlStatementResponse sql_statement(int, String const&) override;
-    virtual void statement_execute(int) override;
+    virtual Messages::SQLServer::PrepareStatementResponse prepare_statement(int, String const&) override;
+    virtual void execute_statement(int) override;
     virtual void disconnect(int) override;
 };
 

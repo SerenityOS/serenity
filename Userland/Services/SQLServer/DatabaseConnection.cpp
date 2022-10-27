@@ -67,9 +67,9 @@ void DatabaseConnection::disconnect()
     });
 }
 
-int DatabaseConnection::sql_statement(String const& sql)
+int DatabaseConnection::prepare_statement(String const& sql)
 {
-    dbgln_if(SQLSERVER_DEBUG, "DatabaseConnection::sql_statement(connection_id {}, database '{}', sql '{}'", connection_id(), m_database_name, sql);
+    dbgln_if(SQLSERVER_DEBUG, "DatabaseConnection::prepare_statement(connection_id {}, database '{}', sql '{}'", connection_id(), m_database_name, sql);
     auto client_connection = ConnectionFromClient::client_connection_for(client_id());
     if (!client_connection) {
         warnln("Cannot notify client of database disconnection. Client disconnected");

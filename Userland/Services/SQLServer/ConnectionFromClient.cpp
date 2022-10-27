@@ -51,13 +51,13 @@ void ConnectionFromClient::disconnect(int connection_id)
         dbgln("Database connection has disappeared");
 }
 
-Messages::SQLServer::SqlStatementResponse ConnectionFromClient::sql_statement(int connection_id, String const& sql)
+Messages::SQLServer::PrepareStatementResponse ConnectionFromClient::prepare_statement(int connection_id, String const& sql)
 {
-    dbgln_if(SQLSERVER_DEBUG, "ConnectionFromClient::sql_statement(connection_id: {}, sql: '{}')", connection_id, sql);
+    dbgln_if(SQLSERVER_DEBUG, "ConnectionFromClient::prepare_statement(connection_id: {}, sql: '{}')", connection_id, sql);
     auto database_connection = DatabaseConnection::connection_for(connection_id);
     if (database_connection) {
-        auto statement_id = database_connection->sql_statement(sql);
-        dbgln_if(SQLSERVER_DEBUG, "ConnectionFromClient::sql_statement -> statement_id = {}", statement_id);
+        auto statement_id = database_connection->prepare_statement(sql);
+        dbgln_if(SQLSERVER_DEBUG, "ConnectionFromClient::prepare_statement -> statement_id = {}", statement_id);
         return { statement_id };
     } else {
         dbgln("Database connection has disappeared");
@@ -65,9 +65,9 @@ Messages::SQLServer::SqlStatementResponse ConnectionFromClient::sql_statement(in
     }
 }
 
-void ConnectionFromClient::statement_execute(int statement_id)
+void ConnectionFromClient::execute_statement(int statement_id)
 {
-    dbgln_if(SQLSERVER_DEBUG, "ConnectionFromClient::statement_execute_query(statement_id: {})", statement_id);
+    dbgln_if(SQLSERVER_DEBUG, "ConnectionFromClient::execute_query_statement(statement_id: {})", statement_id);
     auto statement = SQLStatement::statement_for(statement_id);
     if (statement && statement->connection()->client_id() == client_id()) {
         statement->execute();
