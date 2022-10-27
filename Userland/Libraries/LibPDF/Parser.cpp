@@ -214,6 +214,7 @@ PDFErrorOr<NonnullRefPtr<NameObject>> Parser::parse_name()
             break;
 
         if (m_reader.matches('#')) {
+            m_reader.consume();
             int hex_value = 0;
             for (int i = 0; i < 2; i++) {
                 auto ch = m_reader.consume();
