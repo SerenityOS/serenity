@@ -476,13 +476,20 @@ PDFErrorOr<NonnullRefPtr<StreamObject>> Parser::parse_stream(NonnullRefPtr<DictO
         m_document->security_handler()->decrypt(stream_object, m_current_reference_stack.last());
 
     if (dict->contains(CommonNames::Filter)) {
-        auto filter_type = MUST(dict->get_name(m_document, CommonNames::Filter))->name();
-        auto maybe_bytes = Filter::decode(stream_object->bytes(), filter_type);
-        if (maybe_bytes.is_error()) {
-            warnln("Failed to decode filter: {}", maybe_bytes.error().string_literal());
-            return error(String::formatted("Failed to decode filter {}", maybe_bytes.error().string_literal()));
+        Vector<FlyString> filters;
+
+        // We may either get a single filter or an array of cascading filters
+        auto filter_object = TRY(dict->get_object(m_document, CommonNames::Filter));
+        if (filter_object->is<ArrayObject>()) {
+            auto filter_array = filter_object->cast<ArrayObject>();
+            for (size_t i = 0; i < filter_array->size(); ++i)
+                filters.append(TRY(filter_array->get_name_at(m_document, i))->name());
+        } else {
+            filters.append(filter_object->cast<NameObject>()->name());
         }
-        stream_object->buffer() = maybe_bytes.release_value();
+
+        for (auto const& filter_type : filters)
+            stream_object->buffer() = TRY(Filter::decode(stream_object->bytes(), filter_type));
     }
 
     return stream_object;
