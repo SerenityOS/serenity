@@ -74,11 +74,11 @@ WebIDL::ExceptionOr<Infrastructure::BodyWithType> extract_body(JS::Realm& realm,
         [&](JS::Handle<Streams::ReadableStream> const& stream) -> WebIDL::ExceptionOr<void> {
             // If keepalive is true, then throw a TypeError.
             if (keepalive)
-                return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "Cannot extract body from stream when keepalive is set" };
+                return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "Cannot extract body from stream when keepalive is set"sv };
 
             // If object is disturbed or locked, then throw a TypeError.
             if (stream->is_disturbed() || stream->is_locked())
-                return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "Cannot extract body from disturbed or locked stream" };
+                return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "Cannot extract body from disturbed or locked stream"sv };
 
             return {};
         }));

@@ -26,7 +26,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<URL>> URL::construct_impl(JS::Realm& realm,
         parsed_base = base;
         // 2. If parsedBase is failure, then throw a TypeError.
         if (!parsed_base->is_valid())
-            return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "Invalid base URL" };
+            return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "Invalid base URL"sv };
     }
     // 3. Let parsedURL be the result of running the basic URL parser on url with parsedBase.
     AK::URL parsed_url;
@@ -36,7 +36,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<URL>> URL::construct_impl(JS::Realm& realm,
         parsed_url = url;
     // 4. If parsedURL is failure, then throw a TypeError.
     if (!parsed_url.is_valid())
-        return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "Invalid URL" };
+        return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "Invalid URL"sv };
     // 5. Let query be parsedURL’s query, if that is non-null, and the empty string otherwise.
     auto& query = parsed_url.query().is_null() ? String::empty() : parsed_url.query();
     // 6. Set this’s URL to parsedURL.
@@ -84,7 +84,7 @@ WebIDL::ExceptionOr<void> URL::set_href(String const& href)
     AK::URL parsed_url = href;
     // 2. If parsedURL is failure, then throw a TypeError.
     if (!parsed_url.is_valid())
-        return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "Invalid URL" };
+        return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "Invalid URL"sv };
     // 3. Set this’s URL to parsedURL.
     m_url = move(parsed_url);
     // 4. Empty this’s query object’s list.

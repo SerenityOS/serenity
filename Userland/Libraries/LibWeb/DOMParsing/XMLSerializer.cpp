@@ -212,7 +212,7 @@ WebIDL::ExceptionOr<String> serialize_node_to_xml_string_impl(JS::NonnullGCPtr<D
 
     // -> Anything else
     //    Throw a TypeError. Only Nodes and Attr objects can be serialized by this algorithm.
-    return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "Can only serialize Nodes or Attributes." };
+    return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "Can only serialize Nodes or Attributes."sv };
 }
 
 // https://w3c.github.io/DOM-Parsing/#dfn-recording-the-namespace-information
