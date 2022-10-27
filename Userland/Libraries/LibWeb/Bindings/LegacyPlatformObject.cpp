@@ -64,8 +64,7 @@ JS::ThrowCompletionOr<bool> LegacyPlatformObject::is_named_property_exposed_on_o
 
 JS::ThrowCompletionOr<Optional<JS::PropertyDescriptor>> LegacyPlatformObject::legacy_platform_object_get_own_property_for_get_own_property_slot(JS::PropertyKey const& property_name) const
 {
-
-    [[maybe_unused]] auto& global_object = this->global_object();
+    auto& vm = this->vm();
 
     if (property_name.is_number()) {
         // 1. Let index be the result of calling ToUint32(P).
@@ -75,7 +74,7 @@ JS::ThrowCompletionOr<Optional<JS::PropertyDescriptor>> LegacyPlatformObject::le
         // FIXME: Can this throw?
         if (is_supported_property_index(index)) {
 
-            auto value = TRY(throw_dom_exception_if_needed(global_object, [&] { return item_value(index); }));
+            auto value = TRY(throw_dom_exception_if_needed(vm, [&] { return item_value(index); }));
 
             // 5. Let desc be a newly created Property Descriptor with no fields.
             JS::PropertyDescriptor descriptor;
@@ -102,7 +101,7 @@ JS::ThrowCompletionOr<Optional<JS::PropertyDescriptor>> LegacyPlatformObject::le
         // FIXME: It's unfortunate that this is done twice, once in is_named_property_exposed_on_object and here.
         auto property_name_string = property_name.to_string();
 
-        auto value = TRY(throw_dom_exception_if_needed(global_object, [&] { return named_item_value(property_name_string); }));
+        auto value = TRY(throw_dom_exception_if_needed(vm, [&] { return named_item_value(property_name_string); }));
 
         // 5. Let desc be a newly created Property Descriptor with no fields.
         JS::PropertyDescriptor descriptor;
