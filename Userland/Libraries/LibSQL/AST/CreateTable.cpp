@@ -35,6 +35,8 @@ ResultOr<ResultSet> CreateTable::execute(ExecutionContext& context) const
             type = SQLType::Integer;
         else if (column.type_name()->name().is_one_of("FLOAT"sv, "NUMBER"sv))
             type = SQLType::Float;
+        else if (column.type_name()->name().is_one_of("BOOL"sv, "BOOLEAN"sv))
+            type = SQLType::Boolean;
         else
             return Result { SQLCommand::Create, SQLErrorCode::InvalidType, column.type_name()->name() };
 
