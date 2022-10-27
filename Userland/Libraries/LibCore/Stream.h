@@ -630,6 +630,8 @@ public:
             }
         }
 
+        auto readable_size = min(m_buffered_size, buffer.size());
+
         // The intention here is to try to match all of the possible
         // delimiter candidates and try to find the longest one we can
         // remove from the buffer after copying up to the delimiter to the
@@ -637,7 +639,7 @@ public:
         Optional<size_t> longest_match;
         size_t match_size = 0;
         for (auto& candidate : candidates) {
-            auto result = AK::memmem_optional(m_buffer.data(), m_buffered_size, candidate.bytes().data(), candidate.bytes().size());
+            auto result = AK::memmem_optional(m_buffer.data(), readable_size, candidate.bytes().data(), candidate.bytes().size());
             if (result.has_value()) {
                 auto previous_match = longest_match.value_or(*result);
                 if ((previous_match < *result) || (previous_match == *result && match_size < candidate.length())) {
@@ -662,7 +664,6 @@ public:
         // If we still haven't found anything, then it's most likely the case
         // that the delimiter ends beyond the length of the caller-passed
         // buffer. Let's just fill the caller's buffer up.
-        auto readable_size = min(m_buffered_size, buffer.size());
         auto buffer_to_take = m_buffer.span().slice(0, readable_size);
         auto buffer_to_shift = m_buffer.span().slice(readable_size);
 
