@@ -271,11 +271,23 @@ PDFErrorOr<NonnullRefPtr<ColorSpace>> ICCBasedColorSpace::create(Document* docum
         return Error { Error::Type::MalformedPDF, "ICCBased color space expects a stream parameter" };
 
     auto dict = param.get<NonnullRefPtr<Object>>()->cast<StreamObject>()->dict();
-    if (!dict->contains(CommonNames::Alternate))
-        TODO();
 
-    auto alternate = TRY(dict->get_name(document, CommonNames::Alternate))->name();
-    return TRY(ColorSpace::create(document, alternate, page));
+    FlyString name;
+    if (!dict->contains(CommonNames::Alternate)) {
+        auto number_of_components = dict->get_value(CommonNames::N).to_int();
+        if (number_of_components == 1)
+            name = CommonNames::DeviceGray;
+        else if (number_of_components == 3)
+            name = CommonNames::DeviceRGB;
+        else if (number_of_components == 4)
+            name = CommonNames::DeviceCMYK;
+        else
+            VERIFY_NOT_REACHED();
+    } else {
+        name = TRY(dict->get_name(document, CommonNames::Alternate))->name();
+    }
+
+    return TRY(ColorSpace::create(document, name, page));
 }
 
 Color ICCBasedColorSpace::color(Vector<Value> const&) const
