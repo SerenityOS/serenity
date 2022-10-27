@@ -66,17 +66,7 @@ ErrorOr<void> Database::open()
     return {};
 }
 
-Database::~Database()
-{
-    // This crashes if the database can't commit. It's recommended to commit
-    // before the Database goes out of scope so the application can handle
-    // errors.
-    // Maybe we should enforce that by having a VERIFY here that there are no
-    // pending writes. But that's a new API on Heap so let's not do that right
-    // now.
-    if (is_open())
-        MUST(commit());
-}
+Database::~Database() = default;
 
 ErrorOr<void> Database::commit()
 {
