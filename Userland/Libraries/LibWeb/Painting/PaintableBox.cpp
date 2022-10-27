@@ -249,7 +249,7 @@ void PaintableBox::paint_background(PaintContext& context) const
 
     if (layout_box().is_root_element()) {
         // CSS 2.1 Appendix E.2: If the element is a root element, paint the background over the entire canvas.
-        background_rect = context.viewport_rect().to_type<float>();
+        background_rect = context.device_viewport_rect().to_type<int>().to_type<float>();
 
         // Section 2.11.2: If the computed value of background-image on the root element is none and its background-color is transparent,
         // user agents must instead propagate the computed values of the background properties from that element’s first HTML BODY child element.

@@ -34,6 +34,16 @@ void PaintContext::clear_svg_context()
     m_svg_context.clear();
 }
 
+CSSPixelRect PaintContext::css_viewport_rect() const
+{
+    return {
+        m_device_viewport_rect.x().value() / m_device_pixels_per_css_pixel,
+        m_device_viewport_rect.y().value() / m_device_pixels_per_css_pixel,
+        m_device_viewport_rect.width().value() / m_device_pixels_per_css_pixel,
+        m_device_viewport_rect.height().value() / m_device_pixels_per_css_pixel
+    };
+}
+
 DevicePixels PaintContext::rounded_device_pixels(CSSPixels css_pixels) const
 {
     return roundf(css_pixels.value() * m_device_pixels_per_css_pixel);

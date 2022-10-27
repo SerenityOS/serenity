@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2021-2022, Sam Atkins <atkinssj@serenityos.org>
  * Copyright (c) 2022, MacDue <macdue@dueutil.tech>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -315,7 +315,7 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
             while (image_x < clip_rect.right()) {
                 image_rect.set_x(image_x);
                 auto int_image_rect = image_rect.to_rounded<int>();
-                if (int_image_rect != last_int_image_rect && int_image_rect.intersects(context.viewport_rect()))
+                if (int_image_rect != last_int_image_rect && int_image_rect.intersects(context.device_viewport_rect().to_type<int>()))
                     image.paint(context, int_image_rect, image_rendering);
                 last_int_image_rect = int_image_rect;
                 if (!repeat_x)

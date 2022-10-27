@@ -120,7 +120,7 @@ void PageHost::paint(Web::DevicePixelRect const& content_rect, Gfx::Bitmap& targ
 
     Web::PaintContext context(painter, palette(), device_pixels_per_css_pixel());
     context.set_should_show_line_box_borders(m_should_show_line_box_borders);
-    context.set_viewport_rect(content_rect.to_type<int>());
+    context.set_device_viewport_rect(content_rect);
     context.set_has_focus(m_has_focus);
     layout_root->paint_all_phases(context);
 }

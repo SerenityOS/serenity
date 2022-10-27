@@ -31,8 +31,9 @@ public:
     bool should_show_line_box_borders() const { return m_should_show_line_box_borders; }
     void set_should_show_line_box_borders(bool value) { m_should_show_line_box_borders = value; }
 
-    Gfx::IntRect viewport_rect() const { return m_viewport_rect; }
-    void set_viewport_rect(Gfx::IntRect const& rect) { m_viewport_rect = rect; }
+    DevicePixelRect device_viewport_rect() const { return m_device_viewport_rect; }
+    void set_device_viewport_rect(DevicePixelRect const& rect) { m_device_viewport_rect = rect; }
+    CSSPixelRect css_viewport_rect() const;
 
     bool has_focus() const { return m_focus; }
     void set_has_focus(bool focus) { m_focus = focus; }
@@ -51,7 +52,7 @@ public:
     PaintContext clone(Gfx::Painter& painter) const
     {
         auto clone = PaintContext(painter, m_palette, m_device_pixels_per_css_pixel);
-        clone.m_viewport_rect = m_viewport_rect;
+        clone.m_device_viewport_rect = m_device_viewport_rect;
         clone.m_should_show_line_box_borders = m_should_show_line_box_borders;
         clone.m_focus = m_focus;
         clone.m_svg_context = m_svg_context;
@@ -63,7 +64,7 @@ private:
     Palette m_palette;
     Optional<SVGContext> m_svg_context;
     float m_device_pixels_per_css_pixel;
-    Gfx::IntRect m_viewport_rect;
+    DevicePixelRect m_device_viewport_rect;
     bool m_should_show_line_box_borders { false };
     bool m_focus { false };
 };
