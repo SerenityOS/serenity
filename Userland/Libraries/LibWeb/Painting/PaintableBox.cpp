@@ -112,8 +112,8 @@ Gfx::FloatRect PaintableBox::compute_absolute_paint_rect() const
     for (auto const& shadow : resolved_box_shadow_data) {
         if (shadow.placement == ShadowPlacement::Inner)
             continue;
-        auto inflate = shadow.spread_distance + shadow.blur_radius;
-        auto shadow_rect = rect.inflated(inflate, inflate, inflate, inflate).translated(shadow.offset_x, shadow.offset_y);
+        auto inflate = shadow.spread_distance.value() + shadow.blur_radius.value();
+        auto shadow_rect = rect.inflated(inflate, inflate, inflate, inflate).translated(shadow.offset_x.value(), shadow.offset_y.value());
         rect = rect.united(shadow_rect);
     }
     return rect;
@@ -280,10 +280,10 @@ Vector<ShadowData> PaintableBox::resolve_box_shadow_data() const
     for (auto const& layer : box_shadow_data) {
         resolved_box_shadow_data.empend(
             layer.color,
-            static_cast<int>(layer.offset_x.to_px(layout_box())),
-            static_cast<int>(layer.offset_y.to_px(layout_box())),
-            static_cast<int>(layer.blur_radius.to_px(layout_box())),
-            static_cast<int>(layer.spread_distance.to_px(layout_box())),
+            layer.offset_x.to_px(layout_box()),
+            layer.offset_y.to_px(layout_box()),
+            layer.blur_radius.to_px(layout_box()),
+            layer.spread_distance.to_px(layout_box()),
             layer.placement == CSS::ShadowPlacement::Outer ? ShadowPlacement::Outer : ShadowPlacement::Inner);
     }
 
@@ -295,7 +295,7 @@ void PaintableBox::paint_box_shadow(PaintContext& context) const
     auto resolved_box_shadow_data = resolve_box_shadow_data();
     if (resolved_box_shadow_data.is_empty())
         return;
-    Painting::paint_box_shadow(context, absolute_border_box_rect().to_rounded<int>(), normalized_border_radii_data(), resolved_box_shadow_data);
+    Painting::paint_box_shadow(context, absolute_border_box_rect().to_type<CSSPixels>(), normalized_border_radii_data(), resolved_box_shadow_data);
 }
 
 BorderRadiiData PaintableBox::normalized_border_radii_data(ShrinkRadiiForBorders shrink) const
@@ -577,10 +577,10 @@ void PaintableWithLines::paint(PaintContext& context, PaintPhase phase) const
                         for (auto const& layer : text_shadow) {
                             resolved_shadow_data.empend(
                                 layer.color,
-                                static_cast<int>(layer.offset_x.to_px(layout_box())),
-                                static_cast<int>(layer.offset_y.to_px(layout_box())),
-                                static_cast<int>(layer.blur_radius.to_px(layout_box())),
-                                static_cast<int>(layer.spread_distance.to_px(layout_box())),
+                                layer.offset_x.to_px(layout_box()),
+                                layer.offset_y.to_px(layout_box()),
+                                layer.blur_radius.to_px(layout_box()),
+                                layer.spread_distance.to_px(layout_box()),
                                 ShadowPlacement::Outer);
                         }
                         context.painter().set_font(fragment.layout_node().font());
