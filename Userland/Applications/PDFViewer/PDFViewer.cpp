@@ -88,19 +88,17 @@ void PDFViewer::paint_event(GUI::PaintEvent& event)
     if (!m_document)
         return;
 
-    auto handle_error = [&]<typename T>(PDF::PDFErrorOr<T> maybe_error) {
-        if (maybe_error.is_error()) {
-            auto error = maybe_error.release_error();
-            GUI::MessageBox::show_error(nullptr, String::formatted("Error rendering page:\n{}", error.message()));
-            return true;
-        }
-        return false;
+    auto handle_error = [&](PDF::Error& error) {
+        GUI::MessageBox::show_error(nullptr, String::formatted("Failed to render page:\n{}", error.message()));
+        m_document.clear();
     };
 
     if (m_page_view_mode == PageViewMode::Single) {
         auto maybe_page = get_rendered_page(m_current_page_index);
-        if (handle_error(maybe_page))
+        if (maybe_page.is_error()) {
+            handle_error(maybe_page.error());
             return;
+        }
 
         auto page = maybe_page.release_value();
         set_content_size(page->size());
@@ -137,8 +135,10 @@ void PDFViewer::paint_event(GUI::PaintEvent& event)
 
     for (size_t page_index = first_page_index; page_index <= last_page_index; page_index++) {
         auto maybe_page = get_rendered_page(page_index);
-        if (handle_error(maybe_page))
+        if (maybe_page.is_error()) {
+            handle_error(maybe_page.error());
             return;
+        }
 
         auto page = maybe_page.release_value();
 
