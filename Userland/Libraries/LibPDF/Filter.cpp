@@ -6,6 +6,7 @@
 
 #include <AK/Hex.h>
 #include <LibCompress/Deflate.h>
+#include <LibGfx/JPGLoader.h>
 #include <LibPDF/CommonNames.h>
 #include <LibPDF/Filter.h>
 
@@ -153,10 +154,11 @@ ErrorOr<ByteBuffer> Filter::decode_jbig2(ReadonlyBytes)
     TODO();
 };
 
-ErrorOr<ByteBuffer> Filter::decode_dct(ReadonlyBytes)
+ErrorOr<ByteBuffer> Filter::decode_dct(ReadonlyBytes bytes)
 {
-    // FIXME: Support dct decoding
-    TODO();
+    Gfx::JPGImageDecoderPlugin decoder(bytes.data(), bytes.size());
+    auto frame = TRY(decoder.frame(0));
+    return frame.image->serialize_to_byte_buffer();
 };
 
 ErrorOr<ByteBuffer> Filter::decode_jpx(ReadonlyBytes)
