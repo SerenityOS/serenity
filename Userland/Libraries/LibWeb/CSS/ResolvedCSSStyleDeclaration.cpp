@@ -520,9 +520,15 @@ Optional<StyleProperty> ResolvedCSSStyleDeclaration::property(PropertyID propert
 
     if (!m_element->layout_node()) {
         auto style = m_element->document().style_computer().compute_style(const_cast<DOM::Element&>(*m_element));
+        // FIXME: This is a stopgap until we implement shorthand -> longhand conversion.
+        auto value = style->maybe_null_property(property_id);
+        if (!value) {
+            dbgln("FIXME: ResolvedCSSStyleDeclaration::property(property_id=0x{:x}) No value for property ID in newly computed style case.", to_underlying(property_id));
+            return {};
+        }
         return StyleProperty {
             .property_id = property_id,
-            .value = style->property(property_id),
+            .value = value.release_nonnull(),
         };
     }
 
