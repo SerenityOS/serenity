@@ -89,12 +89,7 @@ static String get_library_name(String path)
 
 static Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> map_library(String const& filename, int fd, String const& filepath)
 {
-    auto result = ELF::DynamicLoader::try_create(fd, filepath);
-    if (result.is_error()) {
-        return result;
-    }
-
-    auto& loader = result.value();
+    auto loader = TRY(ELF::DynamicLoader::try_create(fd, filepath));
 
     s_loaders.set(get_library_name(filename), *loader);
 
@@ -183,14 +178,8 @@ static Result<void, DlErrorMessage> map_dependencies(String const& name)
         String library_name = get_library_name(needed_name);
 
         if (!s_loaders.contains(library_name) && !s_global_objects.contains(library_name)) {
-            auto result1 = resolve_and_map_library(needed_name, parent_object);
-            if (result1.is_error()) {
-                return result1.error();
-            }
-            auto result2 = map_dependencies(library_name);
-            if (result2.is_error()) {
-                return result2.error();
-            }
+            auto result1 = TRY(resolve_and_map_library(needed_name, parent_object));
+            TRY(map_dependencies(library_name));
         }
     }
     dbgln_if(DYNAMIC_LOAD_DEBUG, "mapped dependencies for {}", name);
@@ -476,24 +465,16 @@ static Result<void*, DlErrorMessage> __dlopen(char const* filename, int flags)
 
     auto const& parent_object = **s_global_objects.get(get_library_name(s_main_program_path));
 
-    auto result1 = resolve_and_map_library(filename, parent_object);
-    if (result1.is_error()) {
-        return result1.error();
-    }
+    auto result1 = TRY(resolve_and_map_library(filename, parent_object));
 
-    if (auto error = verify_tls_for_dlopen(result1.value()); error.has_value())
+    if (auto error = verify_tls_for_dlopen(result1); error.has_value())
         return error.value();
 
-    auto result2 = map_dependencies(library_name);
-    if (result2.is_error()) {
-        return result2.error();
-    }
+    TRY(map_dependencies(library_name));
 
-    auto result = link_main_library(library_name, flags);
-    if (result.is_error())
-        return result.error();
+    TRY(link_main_library(library_name, flags));
 
-    s_total_tls_size += result1.value()->tls_size_of_current_object() + result1.value()->tls_alignment_of_current_object();
+    s_total_tls_size += result1->tls_size_of_current_object() + result1->tls_alignment_of_current_object();
 
     auto object = s_global_objects.get(library_name);
     if (!object.has_value())
