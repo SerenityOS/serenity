@@ -39,6 +39,8 @@ namespace ELF {
 
 Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> DynamicLoader::try_create(int fd, String filename, String filepath)
 {
+    VERIFY(filepath.starts_with('/'));
+
     struct stat stat;
     if (fstat(fd, &stat) < 0) {
         return DlErrorMessage { "DynamicLoader::try_create fstat" };

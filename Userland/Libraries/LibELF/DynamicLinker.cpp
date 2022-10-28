@@ -35,7 +35,7 @@
 namespace ELF {
 
 static HashMap<String, NonnullRefPtr<ELF::DynamicLoader>> s_loaders;
-static String s_main_program_name;
+static String s_main_program_path;
 static OrderedHashMap<String, NonnullRefPtr<ELF::DynamicObject>> s_global_objects;
 
 using EntryPointFunction = int (*)(int, char**, char**);
@@ -459,7 +459,7 @@ static Result<void*, DlErrorMessage> __dlopen(char const* filename, int flags)
 
     dbgln_if(DYNAMIC_LOAD_DEBUG, "__dlopen invoked, filename={}, flags={}", filename, flags);
 
-    auto library_name = get_library_name(filename ? filename : s_main_program_name);
+    auto library_name = get_library_name(filename ? filename : s_main_program_path);
 
     if (pthread_mutex_trylock(&s_loader_lock) != 0)
         return DlErrorMessage { "Nested calls to dlopen() are not permitted." };
@@ -474,7 +474,7 @@ static Result<void*, DlErrorMessage> __dlopen(char const* filename, int flags)
 
     VERIFY(!library_name.is_empty());
 
-    auto const& parent_object = **s_global_objects.get(get_library_name(s_main_program_name));
+    auto const& parent_object = **s_global_objects.get(get_library_name(s_main_program_path));
 
     auto result1 = map_library(filename, parent_object);
     if (result1.is_error()) {
@@ -598,21 +598,23 @@ static void read_environment_variables()
     }
 }
 
-void ELF::DynamicLinker::linker_main(String&& main_program_name, int main_program_fd, bool is_secure, int argc, char** argv, char** envp)
+void ELF::DynamicLinker::linker_main(String&& main_program_path, int main_program_fd, bool is_secure, int argc, char** argv, char** envp)
 {
+    VERIFY(main_program_path.starts_with('/'));
+
     s_envp = envp;
 
     s_allowed_to_check_environment_variables = !is_secure;
     if (s_allowed_to_check_environment_variables)
         read_environment_variables();
 
-    s_main_program_name = main_program_name;
+    s_main_program_path = main_program_path;
 
-    auto library_name = get_library_name(main_program_name);
+    auto library_name = get_library_name(main_program_path);
 
     // NOTE: We always map the main library first, since it may require
     //       placement at a specific address.
-    auto result1 = map_library(main_program_name, main_program_fd, main_program_name);
+    auto result1 = map_library(main_program_path, main_program_fd, main_program_path);
     if (result1.is_error()) {
         warnln("{}", result1.error().text);
         fflush(stderr);
@@ -634,8 +636,8 @@ void ELF::DynamicLinker::linker_main(String&& main_program_name, int main_progra
 
     allocate_tls();
 
-    auto entry_point_function = [&main_program_name] {
-        auto library_name = get_library_name(main_program_name);
+    auto entry_point_function = [&main_program_path] {
+        auto library_name = get_library_name(main_program_path);
         auto result = link_main_library(library_name, RTLD_GLOBAL | RTLD_LAZY);
         if (result.is_error()) {
             warnln("{}", result.error().text);
