@@ -37,7 +37,7 @@ static void* mmap_with_name(void* addr, size_t length, int prot, int flags, int 
 
 namespace ELF {
 
-Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> DynamicLoader::try_create(int fd, String filename, String filepath)
+Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> DynamicLoader::try_create(int fd, String filepath)
 {
     VERIFY(filepath.starts_with('/'));
 
@@ -49,7 +49,7 @@ Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> DynamicLoader::try_create(i
     VERIFY(stat.st_size >= 0);
     auto size = static_cast<size_t>(stat.st_size);
     if (size < sizeof(ElfW(Ehdr)))
-        return DlErrorMessage { String::formatted("File {} has invalid ELF header", filename) };
+        return DlErrorMessage { String::formatted("File {} has invalid ELF header", filepath) };
 
     String file_mmap_name = String::formatted("ELF_DYN: {}", filepath);
     auto* data = mmap_with_name(nullptr, size, PROT_READ, MAP_SHARED, fd, 0, file_mmap_name.characters());
@@ -57,15 +57,14 @@ Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> DynamicLoader::try_create(i
         return DlErrorMessage { "DynamicLoader::try_create mmap" };
     }
 
-    auto loader = adopt_ref(*new DynamicLoader(fd, move(filename), data, size, filepath));
+    auto loader = adopt_ref(*new DynamicLoader(fd, move(filepath), data, size));
     if (!loader->is_valid())
         return DlErrorMessage { "ELF image validation failed" };
     return loader;
 }
 
-DynamicLoader::DynamicLoader(int fd, String filename, void* data, size_t size, String filepath)
-    : m_filename(move(filename))
-    , m_filepath(move(filepath))
+DynamicLoader::DynamicLoader(int fd, String filepath, void* data, size_t size)
+    : m_filepath(move(filepath))
     , m_file_size(size)
     , m_image_fd(fd)
     , m_file_data(data)
@@ -75,7 +74,7 @@ DynamicLoader::DynamicLoader(int fd, String filename, void* data, size_t size, S
     if (m_valid)
         find_tls_size_and_alignment();
     else
-        dbgln("Image validation failed for file {}", m_filename);
+        dbgln("Image validation failed for file {}", m_filepath);
 }
 
 DynamicLoader::~DynamicLoader()
@@ -204,7 +203,7 @@ void DynamicLoader::do_main_relocations()
     auto do_single_relocation = [&](const ELF::DynamicObject::Relocation& relocation) {
         switch (do_relocation(relocation, ShouldInitializeWeak::No)) {
         case RelocationResult::Failed:
-            dbgln("Loader.so: {} unresolved symbol '{}'", m_filename, relocation.symbol().name());
+            dbgln("Loader.so: {} unresolved symbol '{}'", m_filepath, relocation.symbol().name());
             VERIFY_NOT_REACHED();
         case RelocationResult::ResolveLater:
             m_unresolved_relocations.append(relocation);
@@ -264,7 +263,7 @@ void DynamicLoader::do_lazy_relocations()
 {
     for (auto const& relocation : m_unresolved_relocations) {
         if (auto res = do_relocation(relocation, ShouldInitializeWeak::Yes); res != RelocationResult::Success) {
-            dbgln("Loader.so: {} unresolved symbol '{}'", m_filename, relocation.symbol().name());
+            dbgln("Loader.so: {} unresolved symbol '{}'", m_filepath, relocation.symbol().name());
             VERIFY_NOT_REACHED();
         }
     }
