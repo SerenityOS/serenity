@@ -74,20 +74,27 @@ enum class SideOrCorner {
     BottomRight
 };
 
-struct GradientColorStop {
-    Color color;
-    Optional<LengthPercentage> position;
-    Optional<LengthPercentage> second_position = {};
-};
-
-struct GradientColorHint {
-    LengthPercentage value;
-};
-
+template<typename TPosition>
 struct ColorStopListElement {
-    Optional<GradientColorHint> transition_hint;
-    GradientColorStop color_stop;
+    using PositionType = TPosition;
+    struct ColorHint {
+        TPosition value;
+        inline bool operator==(ColorHint const&) const = default;
+    };
+
+    Optional<ColorHint> transition_hint;
+    struct ColorStop {
+        Color color;
+        Optional<TPosition> position;
+        Optional<TPosition> second_position = {};
+        inline bool operator==(ColorStop const&) const = default;
+    } color_stop;
+
+    inline bool operator==(ColorStopListElement const&) const = default;
 };
+
+using LinearColorStopListElement = ColorStopListElement<LengthPercentage>;
+using AngularColorStopListElement = ColorStopListElement<AnglePercentage>;
 
 struct EdgeRect {
     Length top_edge;
@@ -173,6 +180,7 @@ public:
         BorderRadiusShorthand,
         Calculated,
         Color,
+        ConicGradient,
         Content,
         FilterValueList,
         Flex,
@@ -208,7 +216,7 @@ public:
 
     Type type() const { return m_type; }
 
-    bool is_abstract_image() const { return AK::first_is_one_of(type(), Type::Image, Type::LinearGradient); }
+    bool is_abstract_image() const { return AK::first_is_one_of(type(), Type::Image, Type::LinearGradient, Type::ConicGradient); }
     bool is_angle() const { return type() == Type::Angle; }
     bool is_background() const { return type() == Type::Background; }
     bool is_background_repeat() const { return type() == Type::BackgroundRepeat; }
@@ -218,6 +226,7 @@ public:
     bool is_border_radius_shorthand() const { return type() == Type::BorderRadiusShorthand; }
     bool is_calculated() const { return type() == Type::Calculated; }
     bool is_color() const { return type() == Type::Color; }
+    bool is_conic_gradient() const { return type() == Type::ConicGradient; }
     bool is_content() const { return type() == Type::Content; }
     bool is_filter_value_list() const { return type() == Type::FilterValueList; }
     bool is_flex() const { return type() == Type::Flex; }
@@ -261,6 +270,7 @@ public:
     BorderStyleValue const& as_border() const;
     CalculatedStyleValue const& as_calculated() const;
     ColorStyleValue const& as_color() const;
+    ConicGradientStyleValue const& as_conic_gradient() const;
     ContentStyleValue const& as_content() const;
     FilterValueListStyleValue const& as_filter_value_list() const;
     FlexFlowStyleValue const& as_flex_flow() const;
@@ -302,6 +312,7 @@ public:
     BorderStyleValue& as_border() { return const_cast<BorderStyleValue&>(const_cast<StyleValue const&>(*this).as_border()); }
     CalculatedStyleValue& as_calculated() { return const_cast<CalculatedStyleValue&>(const_cast<StyleValue const&>(*this).as_calculated()); }
     ColorStyleValue& as_color() { return const_cast<ColorStyleValue&>(const_cast<StyleValue const&>(*this).as_color()); }
+    ConicGradientStyleValue& as_conic_gradient() { return const_cast<ConicGradientStyleValue&>(const_cast<StyleValue const&>(*this).as_conic_gradient()); }
     ContentStyleValue& as_content() { return const_cast<ContentStyleValue&>(const_cast<StyleValue const&>(*this).as_content()); }
     FilterValueListStyleValue& as_filter_value_list() { return const_cast<FilterValueListStyleValue&>(const_cast<StyleValue const&>(*this).as_filter_value_list()); }
     FlexFlowStyleValue& as_flex_flow() { return const_cast<FlexFlowStyleValue&>(const_cast<StyleValue const&>(*this).as_flex_flow()); }
@@ -1141,6 +1152,50 @@ private:
     RefPtr<Gfx::Bitmap> m_bitmap;
 };
 
+class ConicGradientStyleValue final : public AbstractImageStyleValue {
+public:
+    static NonnullRefPtr<ConicGradientStyleValue> create(Angle from_angle, PositionValue position, Vector<AngularColorStopListElement> color_stop_list)
+    {
+        VERIFY(color_stop_list.size() >= 2);
+        return adopt_ref(*new ConicGradientStyleValue(from_angle, position, move(color_stop_list)));
+    }
+
+    virtual String to_string() const override;
+
+    void paint(PaintContext&, Gfx::IntRect const& dest_rect, CSS::ImageRendering) const override;
+
+    virtual bool equals(StyleValue const& other) const override;
+
+    Vector<AngularColorStopListElement> const& color_stop_list() const
+    {
+        return m_color_stop_list;
+    }
+
+    float angle_degrees() const;
+
+    bool is_paintable() const override { return true; }
+
+    void resolve_for_size(Layout::Node const&, Gfx::FloatSize const&) const override;
+
+    virtual ~ConicGradientStyleValue() override = default;
+
+    Gfx::FloatPoint resolve_position(Layout::Node const&, Gfx::FloatRect const&) const;
+
+private:
+    ConicGradientStyleValue(Angle from_angle, PositionValue position, Vector<AngularColorStopListElement> color_stop_list)
+        : AbstractImageStyleValue(Type::ConicGradient)
+        , m_from_angle(from_angle)
+        , m_position(position)
+        , m_color_stop_list(move(color_stop_list))
+    {
+    }
+
+    // FIXME: Support <color-interpolation-method>
+    Angle m_from_angle;
+    PositionValue m_position;
+    Vector<AngularColorStopListElement> m_color_stop_list;
+};
+
 class LinearGradientStyleValue final : public AbstractImageStyleValue {
 public:
     using GradientDirection = Variant<Angle, SideOrCorner>;
@@ -1155,7 +1210,7 @@ public:
         No
     };
 
-    static NonnullRefPtr<LinearGradientStyleValue> create(GradientDirection direction, Vector<ColorStopListElement> color_stop_list, GradientType type, Repeating repeating)
+    static NonnullRefPtr<LinearGradientStyleValue> create(GradientDirection direction, Vector<LinearColorStopListElement> color_stop_list, GradientType type, Repeating repeating)
     {
         VERIFY(color_stop_list.size() >= 2);
         return adopt_ref(*new LinearGradientStyleValue(direction, move(color_stop_list), type, repeating));
@@ -1165,7 +1220,7 @@ public:
     virtual ~LinearGradientStyleValue() override = default;
     virtual bool equals(StyleValue const& other) const override;
 
-    Vector<ColorStopListElement> const& color_stop_list() const
+    Vector<LinearColorStopListElement> const& color_stop_list() const
     {
         return m_color_stop_list;
     }
@@ -1180,7 +1235,7 @@ public:
     void paint(PaintContext& context, Gfx::IntRect const& dest_rect, CSS::ImageRendering image_rendering) const override;
 
 private:
-    LinearGradientStyleValue(GradientDirection direction, Vector<ColorStopListElement> color_stop_list, GradientType type, Repeating repeating)
+    LinearGradientStyleValue(GradientDirection direction, Vector<LinearColorStopListElement> color_stop_list, GradientType type, Repeating repeating)
         : AbstractImageStyleValue(Type::LinearGradient)
         , m_direction(direction)
         , m_color_stop_list(move(color_stop_list))
@@ -1190,7 +1245,7 @@ private:
     }
 
     GradientDirection m_direction;
-    Vector<ColorStopListElement> m_color_stop_list;
+    Vector<LinearColorStopListElement> m_color_stop_list;
     GradientType m_gradient_type;
     Repeating m_repeating;
 
