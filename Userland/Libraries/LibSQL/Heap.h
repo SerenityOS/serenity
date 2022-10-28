@@ -11,8 +11,8 @@
 #include <AK/HashMap.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
-#include <LibCore/File.h>
 #include <LibCore/Object.h>
+#include <LibCore/Stream.h>
 
 namespace SQL {
 
@@ -40,7 +40,7 @@ public:
     ErrorOr<ByteBuffer> read_block(u32);
     [[nodiscard]] u32 new_record_pointer();
     [[nodiscard]] bool has_block(u32 block) const { return block < size(); }
-    [[nodiscard]] bool valid() const { return m_file != nullptr; }
+    [[nodiscard]] bool valid() const { return static_cast<bool>(m_file); }
 
     u32 schemas_root() const { return m_schemas_root; }
 
@@ -83,11 +83,7 @@ public:
     void add_to_wal(u32 block, ByteBuffer& buffer)
     {
         dbgln_if(SQL_DEBUG, "Adding to WAL: block #{}, size {}", block, buffer.size());
-        dbgln_if(SQL_DEBUG, "{:02x} {:02x} {:02x} {:02x} {:02x} {:02x} {:02x} {:02x}",
-            *buffer.offset_pointer(0), *buffer.offset_pointer(1),
-            *buffer.offset_pointer(2), *buffer.offset_pointer(3),
-            *buffer.offset_pointer(4), *buffer.offset_pointer(5),
-            *buffer.offset_pointer(6), *buffer.offset_pointer(7));
+        dbgln_if(SQL_DEBUG, "{:hex-dump}", buffer.bytes().trim(8));
         m_write_ahead_log.set(block, buffer);
     }
 
@@ -102,7 +98,7 @@ private:
     void initialize_zero_block();
     void update_zero_block();
 
-    RefPtr<Core::File> m_file { nullptr };
+    OwnPtr<Core::Stream::BufferedFile> m_file;
     u32 m_free_list { 0 };
     u32 m_next_block { 1 };
     u32 m_end_of_file { 1 };
