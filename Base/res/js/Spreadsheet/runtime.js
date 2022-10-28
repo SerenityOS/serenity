@@ -907,7 +907,7 @@ max.__documentation = JSON.stringify({
 });
 
 maxIf.__documentation = JSON.stringify({
-    name: "max",
+    name: "maxIf",
     argc: 1,
     argnames: ["condition", "numbers or cell names"],
     doc: "Calculates the largest of all numbers or cell values which evaluate to true when passed to `condition`",
@@ -929,7 +929,7 @@ min.__documentation = JSON.stringify({
 });
 
 minIf.__documentation = JSON.stringify({
-    name: "min",
+    name: "minIf",
     argc: 1,
     argnames: ["condition", "numbers or cell names"],
     doc: "Calculates the smallest of all numbers or cell values which evaluate to true when passed to `condition`",
