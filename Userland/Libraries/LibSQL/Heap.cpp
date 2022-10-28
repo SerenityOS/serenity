@@ -192,17 +192,24 @@ ErrorOr<void> Heap::read_zero_block()
         warnln("{}: Zero page corrupt. This is probably not a {} heap file"sv, name(), FILE_ID);
         return Error::from_string_literal("Heap()::read_zero_block(): Zero page corrupt. This is probably not a SerenitySQL heap file");
     }
+
     dbgln_if(SQL_DEBUG, "Read zero block from {}", name());
+
     memcpy(&m_version, buffer.offset_pointer(VERSION_OFFSET), sizeof(u32));
     dbgln_if(SQL_DEBUG, "Version: {}.{}", (m_version & 0xFFFF0000) >> 16, (m_version & 0x0000FFFF));
+
     memcpy(&m_schemas_root, buffer.offset_pointer(SCHEMAS_ROOT_OFFSET), sizeof(u32));
-    dbgln_if(SQL_DEBUG, "Schemas root node: {}", m_tables_root);
+    dbgln_if(SQL_DEBUG, "Schemas root node: {}", m_schemas_root);
+
     memcpy(&m_tables_root, buffer.offset_pointer(TABLES_ROOT_OFFSET), sizeof(u32));
     dbgln_if(SQL_DEBUG, "Tables root node: {}", m_tables_root);
+
     memcpy(&m_table_columns_root, buffer.offset_pointer(TABLE_COLUMNS_ROOT_OFFSET), sizeof(u32));
     dbgln_if(SQL_DEBUG, "Table columns root node: {}", m_table_columns_root);
+
     memcpy(&m_free_list, buffer.offset_pointer(FREE_LIST_OFFSET), sizeof(u32));
     dbgln_if(SQL_DEBUG, "Free list: {}", m_free_list);
+
     memcpy(m_user_values.data(), buffer.offset_pointer(USER_VALUES_OFFSET), m_user_values.size() * sizeof(u32));
     for (auto ix = 0u; ix < m_user_values.size(); ix++) {
         if (m_user_values[ix]) {
