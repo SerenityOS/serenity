@@ -51,6 +51,7 @@ static size_t s_allocated_tls_block_size = 0;
 static char** s_envp = nullptr;
 static LibCExitFunction s_libc_exit = nullptr;
 static __pthread_mutex_t s_loader_lock = __PTHREAD_MUTEX_INITIALIZER;
+static String s_cwd;
 
 static bool s_allowed_to_check_environment_variables { false };
 static bool s_do_breakpoint_trap_before_entry { false };
@@ -109,6 +110,11 @@ static Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> map_library(String c
 
 static Optional<String> resolve_library(String const& name, DynamicObject const& parent_object)
 {
+    // Absolute and relative (to the current working directory) paths are already considered resolved.
+    // However, ensure that the returned path is absolute and canonical, so pass it through LexicalPath.
+    if (name.contains('/'))
+        return LexicalPath::absolute_path(s_cwd, name);
+
     Vector<StringView> search_paths;
 
     // Search RPATH values indicated by the ELF (only if RUNPATH is not present).
@@ -138,13 +144,6 @@ static Optional<String> resolve_library(String const& name, DynamicObject const&
 
 static Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> resolve_and_map_library(String const& name, DynamicObject const& parent_object)
 {
-    if (name.contains("/"sv)) {
-        int fd = open(name.characters(), O_RDONLY);
-        if (fd < 0)
-            return DlErrorMessage { String::formatted("Could not open shared library: {}", name) };
-        return map_library(name, fd);
-    }
-
     auto resolved_library_name = resolve_library(name, parent_object);
     if (!resolved_library_name.has_value())
         return DlErrorMessage { String::formatted("Could not find required shared library: {}", name) };
@@ -606,6 +605,10 @@ void ELF::DynamicLinker::linker_main(String&& main_program_path, int main_progra
     VERIFY(main_program_path.starts_with('/'));
 
     s_envp = envp;
+
+    char* raw_current_directory = getcwd(nullptr, 0);
+    s_cwd = raw_current_directory;
+    free(raw_current_directory);
 
     s_allowed_to_check_environment_variables = !is_secure;
     if (s_allowed_to_check_environment_variables)
