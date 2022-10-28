@@ -40,6 +40,7 @@ public:
 
     void set_property(CSS::PropertyID, NonnullRefPtr<StyleValue> value);
     NonnullRefPtr<StyleValue> property(CSS::PropertyID) const;
+    RefPtr<StyleValue> maybe_null_property(CSS::PropertyID) const;
 
     CSS::Size size_value(CSS::PropertyID) const;
     Length length_or_fallback(CSS::PropertyID, Length const& fallback) const;

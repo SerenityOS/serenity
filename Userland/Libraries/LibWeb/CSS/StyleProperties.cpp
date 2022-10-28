@@ -44,6 +44,11 @@ NonnullRefPtr<StyleValue> StyleProperties::property(CSS::PropertyID property_id)
     return value.release_nonnull();
 }
 
+RefPtr<StyleValue> StyleProperties::maybe_null_property(CSS::PropertyID property_id) const
+{
+    return m_property_values[to_underlying(property_id)];
+}
+
 CSS::Size StyleProperties::size_value(CSS::PropertyID id) const
 {
     auto value = property(id);
