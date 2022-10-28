@@ -18,4 +18,5 @@ interface HTMLMediaElement : HTMLElement {
     [Reflect] attribute boolean controls;
 
     CanPlayTypeResult canPlayType(DOMString type);
+    undefined load();
 };

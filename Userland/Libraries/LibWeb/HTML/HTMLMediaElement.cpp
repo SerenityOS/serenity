@@ -35,4 +35,9 @@ Bindings::CanPlayTypeResult HTMLMediaElement::can_play_type(String const& type) 
     return Bindings::CanPlayTypeResult::Empty;
 }
 
+void HTMLMediaElement::load() const
+{
+    dbgln("(STUBBED) HTMLMediaElement::load()");
+}
+
 }

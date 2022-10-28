@@ -18,6 +18,8 @@ public:
 
     Bindings::CanPlayTypeResult can_play_type(String const& type) const;
 
+    void load() const;
+
 protected:
     HTMLMediaElement(DOM::Document&, DOM::QualifiedName);
 };
