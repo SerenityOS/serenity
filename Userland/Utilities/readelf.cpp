@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/LexicalPath.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/StringView.h>
@@ -232,7 +233,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio rpath"));
 
-    StringView path {};
+    String path {};
     static bool display_all = false;
     static bool display_elf_header = false;
     static bool display_program_headers = false;
@@ -287,6 +288,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         display_symbol_table = true;
         display_hardening = true;
     }
+
+    path = LexicalPath::absolute_path(TRY(Core::System::getcwd()), path);
 
     auto file_or_error = Core::MappedFile::map(path);
 
