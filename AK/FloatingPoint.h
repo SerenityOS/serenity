@@ -12,6 +12,57 @@
 
 namespace AK {
 
+template<typename T>
+union FloatExtractor;
+
+#if ARCH(I386) || ARCH(X86_64) || ARCH(AARCH64)
+// This assumes long double is 80 bits, which is true with GCC on Intel platforms
+template<>
+union FloatExtractor<long double> {
+    static constexpr int mantissa_bits = 64;
+    static constexpr unsigned long long mantissa_max = ~0u;
+    static constexpr int exponent_bias = 16383;
+    static constexpr int exponent_bits = 15;
+    static constexpr unsigned exponent_max = 32767;
+    struct {
+        unsigned long long mantissa;
+        unsigned exponent : 15;
+        unsigned sign : 1;
+    };
+    long double d;
+};
+#endif
+
+template<>
+union FloatExtractor<double> {
+    static constexpr int mantissa_bits = 52;
+    static constexpr unsigned long long mantissa_max = (1ull << 52) - 1;
+    static constexpr int exponent_bias = 1023;
+    static constexpr int exponent_bits = 11;
+    static constexpr unsigned exponent_max = 2047;
+    struct {
+        unsigned long long mantissa : 52;
+        unsigned exponent : 11;
+        unsigned sign : 1;
+    };
+    double d;
+};
+
+template<>
+union FloatExtractor<float> {
+    static constexpr int mantissa_bits = 23;
+    static constexpr unsigned mantissa_max = (1 << 23) - 1;
+    static constexpr int exponent_bias = 127;
+    static constexpr int exponent_bits = 8;
+    static constexpr unsigned exponent_max = 255;
+    struct {
+        unsigned long long mantissa : 23;
+        unsigned exponent : 8;
+        unsigned sign : 1;
+    };
+    float d;
+};
+
 template<size_t S, size_t E, size_t M>
 requires(S <= 1 && E >= 1 && M >= 1 && (S + E + M) <= 64) class FloatingPointBits final {
 public:
@@ -183,6 +234,7 @@ constexpr float convert_to_native_float(I input) { return float_to_float<SingleF
 }
 
 using AK::DoubleFloatingPointBits;
+using AK::FloatExtractor;
 using AK::FloatingPointBits;
 using AK::SingleFloatingPointBits;
 
