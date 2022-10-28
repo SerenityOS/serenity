@@ -972,11 +972,59 @@ int unveil(char const* path, char const* permissions)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
-// https://pubs.opengroup.org/onlinepubs/9699919799/functions/getpass.html
+// https://pubs.opengroup.org/onlinepubs/7908799/xsh/getpass.html
 char* getpass(char const* prompt)
 {
-    dbgln("FIXME: getpass('{}')", prompt);
-    TODO();
+    int tty = open("/dev/tty", O_RDWR | O_NOCTTY | O_CLOEXEC);
+    if (tty < 0)
+        return nullptr;
+
+    static char password[PASS_MAX];
+    ssize_t chars_read;
+
+    {
+        auto close_tty = ScopeGuard([tty] {
+            close(tty);
+        });
+
+        struct termios backup { };
+        if (tcgetattr(tty, &backup) < 0)
+            return nullptr;
+
+        {
+            auto restore_termios = ScopeGuard([tty, backup] {
+                tcsetattr(tty, TCSAFLUSH, &backup);
+            });
+
+            struct termios noecho = backup;
+            noecho.c_lflag &= ~(ECHO);
+            noecho.c_lflag |= ICANON;
+
+            if (tcsetattr(tty, TCSAFLUSH, &noecho) < 0)
+                return nullptr;
+            if (tcdrain(tty) < 0)
+                return nullptr;
+
+            if (prompt) {
+                if (write(tty, prompt, strlen(prompt)) < 0)
+                    return nullptr;
+            }
+
+            chars_read = read(tty, password, sizeof(password));
+        }
+
+        write(tty, "\n", 1);
+    }
+
+    if (chars_read < 0)
+        return nullptr;
+
+    if (chars_read > 0 && (password[chars_read - 1] == '\n' || chars_read == sizeof(password)))
+        password[chars_read - 1] = '\0';
+    else
+        password[chars_read] = '\0';
+
+    return password;
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/sysconf.html

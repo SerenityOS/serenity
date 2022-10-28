@@ -93,3 +93,5 @@
 #define LINK_MAX 4096
 
 #define TZNAME_MAX 64
+
+#define PASS_MAX 128
