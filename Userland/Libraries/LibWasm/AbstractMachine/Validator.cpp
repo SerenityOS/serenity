@@ -1887,6 +1887,15 @@ VALIDATE_INSTRUCTION(memory_fill)
     return {};
 }
 
+VALIDATE_INSTRUCTION(memory_copy)
+{
+    TRY(validate(MemoryIndex { 0 }));
+
+    TRY((stack.take<ValueType::I32, ValueType::I32, ValueType::I32>()));
+
+    return {};
+}
+
 VALIDATE_INSTRUCTION(memory_init)
 {
     TRY(validate(MemoryIndex { 0 }));
