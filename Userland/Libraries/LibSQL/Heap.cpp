@@ -109,7 +109,7 @@ ErrorOr<void> Heap::write_block(u32 block, ByteBuffer& buffer)
 
     if (auto current_size = buffer.size(); current_size < BLOCKSIZE) {
         TRY(buffer.try_resize(BLOCKSIZE));
-        memset(buffer.offset_pointer((int)current_size), 0, BLOCKSIZE - current_size);
+        memset(buffer.offset_pointer(current_size), 0, BLOCKSIZE - current_size);
     }
 
     dbgln_if(SQL_DEBUG, "{:hex-dump}", buffer.bytes().trim(8));
@@ -175,13 +175,13 @@ ErrorOr<void> Heap::flush()
     return {};
 }
 
-constexpr static StringView FILE_ID = "SerenitySQL "sv;
-constexpr static int VERSION_OFFSET = 12;
-constexpr static int SCHEMAS_ROOT_OFFSET = 16;
-constexpr static int TABLES_ROOT_OFFSET = 20;
-constexpr static int TABLE_COLUMNS_ROOT_OFFSET = 24;
-constexpr static int FREE_LIST_OFFSET = 28;
-constexpr static int USER_VALUES_OFFSET = 32;
+constexpr static auto FILE_ID = "SerenitySQL "sv;
+constexpr static auto VERSION_OFFSET = FILE_ID.length();
+constexpr static auto SCHEMAS_ROOT_OFFSET = VERSION_OFFSET + sizeof(u32);
+constexpr static auto TABLES_ROOT_OFFSET = SCHEMAS_ROOT_OFFSET + sizeof(u32);
+constexpr static auto TABLE_COLUMNS_ROOT_OFFSET = TABLES_ROOT_OFFSET + sizeof(u32);
+constexpr static auto FREE_LIST_OFFSET = TABLE_COLUMNS_ROOT_OFFSET + sizeof(u32);
+constexpr static auto USER_VALUES_OFFSET = FREE_LIST_OFFSET + sizeof(u32);
 
 ErrorOr<void> Heap::read_zero_block()
 {

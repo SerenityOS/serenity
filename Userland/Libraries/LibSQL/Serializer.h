@@ -147,7 +147,7 @@ private:
 
     u8 const* read(size_t sz)
     {
-        auto buffer_ptr = m_buffer.offset_pointer((int)m_current_offset);
+        auto buffer_ptr = m_buffer.offset_pointer(m_current_offset);
         if constexpr (SQL_DEBUG)
             dump(buffer_ptr, sz, "<= (in)");
         m_current_offset += sz;
