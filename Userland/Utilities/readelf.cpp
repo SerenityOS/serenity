@@ -339,7 +339,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
 
         int fd = TRY(Core::System::open(path, O_RDONLY));
-        auto result = ELF::DynamicLoader::try_create(fd, path, path);
+        auto result = ELF::DynamicLoader::try_create(fd, path);
         if (result.is_error()) {
             outln("{}", result.error().text);
             return 1;

@@ -42,10 +42,10 @@ enum class ShouldInitializeWeak {
 
 class DynamicLoader : public RefCounted<DynamicLoader> {
 public:
-    static Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> try_create(int fd, String filename, String filepath);
+    static Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> try_create(int fd, String filepath);
     ~DynamicLoader();
 
-    String const& filename() const { return m_filename; }
+    String const& filepath() const { return m_filepath; }
 
     bool is_valid() const { return m_valid; }
 
@@ -87,7 +87,7 @@ public:
     bool is_fully_initialized() const { return m_fully_initialized; }
 
 private:
-    DynamicLoader(int fd, String filename, void* file_data, size_t file_size, String filepath);
+    DynamicLoader(int fd, String filepath, void* file_data, size_t file_size);
 
     class ProgramHeaderRegion {
     public:
@@ -137,7 +137,6 @@ private:
     void do_relr_relocations();
     void find_tls_size_and_alignment();
 
-    String m_filename;
     String m_filepath;
     size_t m_file_size { 0 };
     int m_image_fd { -1 };

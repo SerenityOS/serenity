@@ -89,7 +89,7 @@ static String get_library_name(String path)
 
 static Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> map_library(String const& filename, int fd, String const& filepath)
 {
-    auto result = ELF::DynamicLoader::try_create(fd, filename, filepath);
+    auto result = ELF::DynamicLoader::try_create(fd, filepath);
     if (result.is_error()) {
         return result;
     }
@@ -373,7 +373,7 @@ static Result<void, DlErrorMessage> link_main_library(String const& name, int fl
     for (auto& loader : loaders) {
         bool success = loader.link(flags);
         if (!success) {
-            return DlErrorMessage { String::formatted("Failed to link library {}", loader.filename()) };
+            return DlErrorMessage { String::formatted("Failed to link library {}", loader.filepath()) };
         }
     }
 
@@ -382,7 +382,7 @@ static Result<void, DlErrorMessage> link_main_library(String const& name, int fl
         VERIFY(!result.is_error());
         auto& object = result.value();
 
-        if (loader.filename() == "libsystem.so"sv) {
+        if (loader.filepath().ends_with("/libsystem.so"sv)) {
             VERIFY(!loader.text_segments().is_empty());
             for (auto const& segment : loader.text_segments()) {
                 if (syscall(SC_msyscall, segment.address().get())) {
@@ -391,7 +391,7 @@ static Result<void, DlErrorMessage> link_main_library(String const& name, int fl
             }
         }
 
-        if (loader.filename() == "libc.so"sv) {
+        if (loader.filepath().ends_with("/libc.so"sv)) {
             initialize_libc(*object);
         }
     }
