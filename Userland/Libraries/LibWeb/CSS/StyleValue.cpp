@@ -90,6 +90,12 @@ ColorStyleValue const& StyleValue::as_color() const
     return static_cast<ColorStyleValue const&>(*this);
 }
 
+ConicGradientStyleValue const& StyleValue::as_conic_gradient() const
+{
+    VERIFY(is_conic_gradient());
+    return static_cast<ConicGradientStyleValue const&>(*this);
+}
+
 ContentStyleValue const& StyleValue::as_content() const
 {
     VERIFY(is_content());
@@ -1697,6 +1703,26 @@ void ImageStyleValue::paint(PaintContext& context, Gfx::IntRect const& dest_rect
         context.painter().draw_scaled_bitmap(dest_rect, *m_bitmap, m_bitmap->rect(), 1.0f, to_gfx_scaling_mode(image_rendering));
 }
 
+static void serialize_color_stop_list(StringBuilder& builder, auto const& color_stop_list)
+{
+    bool first = true;
+    for (auto const& element : color_stop_list) {
+        if (!first)
+            builder.append(", "sv);
+
+        if (element.transition_hint.has_value()) {
+            builder.appendff("{}, "sv, element.transition_hint->value.to_string());
+        }
+
+        serialize_a_srgb_value(builder, element.color_stop.color);
+        for (auto position : Array { &element.color_stop.position, &element.color_stop.second_position }) {
+            if (position->has_value())
+                builder.appendff(" {}"sv, (*position)->to_string());
+        }
+        first = false;
+    }
+}
+
 String LinearGradientStyleValue::to_string() const
 {
     StringBuilder builder;
@@ -1736,22 +1762,7 @@ String LinearGradientStyleValue::to_string() const
             builder.appendff("{}, "sv, angle.to_string());
         });
 
-    bool first = true;
-    for (auto const& element : m_color_stop_list) {
-        if (!first)
-            builder.append(", "sv);
-
-        if (element.transition_hint.has_value()) {
-            builder.appendff("{}, "sv, element.transition_hint->value.to_string());
-        }
-
-        serialize_a_srgb_value(builder, element.color_stop.color);
-        for (auto position : Array { &element.color_stop.position, &element.color_stop.second_position }) {
-            if (position->has_value())
-                builder.appendff(" {}"sv, (*position)->to_string());
-        }
-        first = false;
-    }
+    serialize_color_stop_list(builder, m_color_stop_list);
     builder.append(")"sv);
     return builder.to_string();
 }
@@ -1763,21 +1774,6 @@ static bool operator==(LinearGradientStyleValue::GradientDirection const& a, Lin
     if (a.has<Angle>() && b.has<Angle>())
         return a.get<Angle>() == b.get<Angle>();
     return false;
-}
-
-static bool operator==(GradientColorHint const& a, GradientColorHint const& b)
-{
-    return a.value == b.value;
-}
-
-static bool operator==(GradientColorStop const& a, GradientColorStop const& b)
-{
-    return a.color == b.color && a.position == b.position && a.second_position == b.second_position;
-}
-
-static bool operator==(ColorStopListElement const& a, ColorStopListElement const& b)
-{
-    return a.transition_hint == b.transition_hint && a.color_stop == b.color_stop;
 }
 
 static bool operator==(EdgeRect const& a, EdgeRect const& b)
@@ -1855,6 +1851,45 @@ void LinearGradientStyleValue::paint(PaintContext& context, Gfx::IntRect const& 
 {
     VERIFY(m_resolved.has_value());
     Painting::paint_linear_gradient(context, dest_rect, m_resolved->data);
+}
+
+String ConicGradientStyleValue::to_string() const
+{
+    StringBuilder builder;
+    builder.append("conic-gradient("sv);
+    bool has_from_angle = false;
+    bool has_at_position = false;
+    if ((has_from_angle = m_from_angle.to_degrees() != 0))
+        builder.appendff("from {}", m_from_angle.to_string());
+    if ((has_at_position = m_position != PositionValue::center())) {
+        if (has_from_angle)
+            builder.append(' ');
+        builder.appendff("at "sv);
+        m_position.serialize(builder);
+    }
+    if (has_from_angle || has_at_position)
+        builder.append(", "sv);
+    serialize_color_stop_list(builder, m_color_stop_list);
+    builder.append(')');
+    return builder.to_string();
+}
+
+void ConicGradientStyleValue::resolve_for_size(Layout::Node const&, Gfx::FloatSize const&) const
+{
+}
+
+void ConicGradientStyleValue::paint(PaintContext&, Gfx::IntRect const&, CSS::ImageRendering) const
+{
+}
+
+bool ConicGradientStyleValue::equals(StyleValue const&) const
+{
+    return false;
+}
+
+float ConicGradientStyleValue::angle_degrees() const
+{
+    return m_from_angle.to_degrees();
 }
 
 bool InheritStyleValue::equals(StyleValue const& other) const
