@@ -139,7 +139,7 @@ static Optional<String> resolve_library(String const& name, DynamicObject const&
     return {};
 }
 
-static Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> map_library(String const& name, DynamicObject const& parent_object)
+static Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> resolve_and_map_library(String const& name, DynamicObject const& parent_object)
 {
     if (name.contains("/"sv)) {
         int fd = open(name.characters(), O_RDONLY);
@@ -183,7 +183,7 @@ static Result<void, DlErrorMessage> map_dependencies(String const& name)
         String library_name = get_library_name(needed_name);
 
         if (!s_loaders.contains(library_name) && !s_global_objects.contains(library_name)) {
-            auto result1 = map_library(needed_name, parent_object);
+            auto result1 = resolve_and_map_library(needed_name, parent_object);
             if (result1.is_error()) {
                 return result1.error();
             }
@@ -476,7 +476,7 @@ static Result<void*, DlErrorMessage> __dlopen(char const* filename, int flags)
 
     auto const& parent_object = **s_global_objects.get(get_library_name(s_main_program_path));
 
-    auto result1 = map_library(filename, parent_object);
+    auto result1 = resolve_and_map_library(filename, parent_object);
     if (result1.is_error()) {
         return result1.error();
     }
