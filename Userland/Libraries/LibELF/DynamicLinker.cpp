@@ -87,11 +87,13 @@ static String get_library_name(String path)
     return LexicalPath::basename(move(path));
 }
 
-static Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> map_library(String const& filename, int fd, String const& filepath)
+static Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> map_library(String const& filepath, int fd)
 {
+    VERIFY(filepath.starts_with('/'));
+
     auto loader = TRY(ELF::DynamicLoader::try_create(fd, filepath));
 
-    s_loaders.set(get_library_name(filename), *loader);
+    s_loaders.set(get_library_name(filepath), *loader);
 
     s_current_tls_offset -= loader->tls_size_of_current_object();
     if (loader->tls_alignment_of_current_object())
@@ -100,7 +102,7 @@ static Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> map_library(String c
 
     // This actually maps the library at the intended and final place.
     auto main_library_object = loader->map();
-    s_global_objects.set(get_library_name(filename), *main_library_object);
+    s_global_objects.set(get_library_name(filepath), *main_library_object);
 
     return loader;
 }
@@ -140,7 +142,7 @@ static Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> resolve_and_map_libr
         int fd = open(name.characters(), O_RDONLY);
         if (fd < 0)
             return DlErrorMessage { String::formatted("Could not open shared library: {}", name) };
-        return map_library(name, fd, name);
+        return map_library(name, fd);
     }
 
     auto resolved_library_name = resolve_library(name, parent_object);
@@ -151,11 +153,14 @@ static Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> resolve_and_map_libr
     if (fd < 0)
         return DlErrorMessage { String::formatted("Could not open resolved shared library '{}': {}", resolved_library_name.value(), strerror(errno)) };
 
-    return map_library(name, fd, resolved_library_name.value());
+    return map_library(resolved_library_name.value(), fd);
 }
 
-static Vector<String> get_dependencies(String const& name)
+static Vector<String> get_dependencies(String const& path)
 {
+    VERIFY(path.starts_with('/'));
+
+    auto name = get_library_name(path);
     auto lib = s_loaders.get(name).value();
     Vector<String> dependencies;
 
@@ -167,22 +172,24 @@ static Vector<String> get_dependencies(String const& name)
     return dependencies;
 }
 
-static Result<void, DlErrorMessage> map_dependencies(String const& name)
+static Result<void, DlErrorMessage> map_dependencies(String const& path)
 {
-    dbgln_if(DYNAMIC_LOAD_DEBUG, "mapping dependencies for: {}", name);
+    VERIFY(path.starts_with('/'));
 
-    auto const& parent_object = (*s_loaders.get(name))->dynamic_object();
+    dbgln_if(DYNAMIC_LOAD_DEBUG, "mapping dependencies for: {}", path);
 
-    for (auto const& needed_name : get_dependencies(name)) {
+    auto const& parent_object = (*s_loaders.get(get_library_name(path)))->dynamic_object();
+
+    for (auto const& needed_name : get_dependencies(path)) {
         dbgln_if(DYNAMIC_LOAD_DEBUG, "needed library: {}", needed_name.characters());
         String library_name = get_library_name(needed_name);
 
         if (!s_loaders.contains(library_name) && !s_global_objects.contains(library_name)) {
-            auto result1 = TRY(resolve_and_map_library(needed_name, parent_object));
-            TRY(map_dependencies(library_name));
+            auto loader = TRY(resolve_and_map_library(needed_name, parent_object));
+            TRY(map_dependencies(loader->filepath()));
         }
     }
-    dbgln_if(DYNAMIC_LOAD_DEBUG, "mapped dependencies for {}", name);
+    dbgln_if(DYNAMIC_LOAD_DEBUG, "mapped dependencies for {}", path);
     return {};
 }
 
@@ -292,9 +299,11 @@ static void initialize_libc(DynamicObject& libc)
 }
 
 template<typename Callback>
-static void for_each_unfinished_dependency_of(String const& name, HashTable<String>& seen_names, Callback callback)
+static void for_each_unfinished_dependency_of(String const& path, HashTable<String>& seen_names, Callback callback)
 {
-    auto loader = s_loaders.get(name);
+    VERIFY(path.starts_with('/'));
+
+    auto loader = s_loaders.get(get_library_name(path));
 
     if (!loader.has_value())
         return;
@@ -304,27 +313,38 @@ static void for_each_unfinished_dependency_of(String const& name, HashTable<Stri
             // If we are ending up here, that possibly means that this library either dlopens itself or a library that depends
             // on it while running its initializers. Assuming that this is the only funny thing that the library does, there is
             // a reasonable chance that nothing breaks, so just warn and continue.
-            dbgln("\033[33mWarning:\033[0m Querying for dependencies of '{}' while running its initializers", name);
+            dbgln("\033[33mWarning:\033[0m Querying for dependencies of '{}' while running its initializers", path);
         }
 
         return;
     }
 
-    if (seen_names.contains(name))
+    if (seen_names.contains(path))
         return;
-    seen_names.set(name);
+    seen_names.set(path);
 
-    for (auto const& needed_name : get_dependencies(name))
-        for_each_unfinished_dependency_of(get_library_name(needed_name), seen_names, callback);
+    for (auto const& needed_name : get_dependencies(path)) {
+        auto dependency_loader = s_loaders.get(get_library_name(needed_name));
 
-    callback(*s_loaders.get(name).value());
+        if (!dependency_loader.has_value()) {
+            // Not having a loader here means that the library has already been loaded in at an earlier point,
+            // and the loader itself was cleared during the end of `linker_main`.
+            continue;
+        }
+
+        for_each_unfinished_dependency_of(dependency_loader.value()->filepath(), seen_names, callback);
+    }
+
+    callback(*s_loaders.get(get_library_name(path)).value());
 }
 
-static NonnullRefPtrVector<DynamicLoader> collect_loaders_for_library(String const& name)
+static NonnullRefPtrVector<DynamicLoader> collect_loaders_for_library(String const& path)
 {
+    VERIFY(path.starts_with('/'));
+
     HashTable<String> seen_names;
     NonnullRefPtrVector<DynamicLoader> loaders;
-    for_each_unfinished_dependency_of(name, seen_names, [&](auto& loader) {
+    for_each_unfinished_dependency_of(path, seen_names, [&](auto& loader) {
         loaders.append(loader);
     });
     return loaders;
@@ -349,9 +369,11 @@ static void drop_loader_promise(StringView promise_to_drop)
     }
 }
 
-static Result<void, DlErrorMessage> link_main_library(String const& name, int flags)
+static Result<void, DlErrorMessage> link_main_library(String const& path, int flags)
 {
-    auto loaders = collect_loaders_for_library(name);
+    VERIFY(path.starts_with('/'));
+
+    auto loaders = collect_loaders_for_library(path);
 
     for (auto& loader : loaders) {
         auto dynamic_object = loader.map();
@@ -465,16 +487,16 @@ static Result<void*, DlErrorMessage> __dlopen(char const* filename, int flags)
 
     auto const& parent_object = **s_global_objects.get(get_library_name(s_main_program_path));
 
-    auto result1 = TRY(resolve_and_map_library(filename, parent_object));
+    auto loader = TRY(resolve_and_map_library(filename, parent_object));
 
-    if (auto error = verify_tls_for_dlopen(result1); error.has_value())
+    if (auto error = verify_tls_for_dlopen(loader); error.has_value())
         return error.value();
 
-    TRY(map_dependencies(library_name));
+    TRY(map_dependencies(loader->filepath()));
 
-    TRY(link_main_library(library_name, flags));
+    TRY(link_main_library(loader->filepath(), flags));
 
-    s_total_tls_size += result1->tls_size_of_current_object() + result1->tls_alignment_of_current_object();
+    s_total_tls_size += loader->tls_size_of_current_object() + loader->tls_alignment_of_current_object();
 
     auto object = s_global_objects.get(library_name);
     if (!object.has_value())
@@ -591,11 +613,9 @@ void ELF::DynamicLinker::linker_main(String&& main_program_path, int main_progra
 
     s_main_program_path = main_program_path;
 
-    auto library_name = get_library_name(main_program_path);
-
     // NOTE: We always map the main library first, since it may require
     //       placement at a specific address.
-    auto result1 = map_library(main_program_path, main_program_fd, main_program_path);
+    auto result1 = map_library(main_program_path, main_program_fd);
     if (result1.is_error()) {
         warnln("{}", result1.error().text);
         fflush(stderr);
@@ -603,7 +623,7 @@ void ELF::DynamicLinker::linker_main(String&& main_program_path, int main_progra
     }
     (void)result1.release_value();
 
-    auto result2 = map_dependencies(library_name);
+    auto result2 = map_dependencies(main_program_path);
     if (result2.is_error()) {
         warnln("{}", result2.error().text);
         fflush(stderr);
@@ -618,8 +638,7 @@ void ELF::DynamicLinker::linker_main(String&& main_program_path, int main_progra
     allocate_tls();
 
     auto entry_point_function = [&main_program_path] {
-        auto library_name = get_library_name(main_program_path);
-        auto result = link_main_library(library_name, RTLD_GLOBAL | RTLD_LAZY);
+        auto result = link_main_library(main_program_path, RTLD_GLOBAL | RTLD_LAZY);
         if (result.is_error()) {
             warnln("{}", result.error().text);
             _exit(1);
@@ -627,7 +646,7 @@ void ELF::DynamicLinker::linker_main(String&& main_program_path, int main_progra
 
         drop_loader_promise("rpath"sv);
 
-        auto& main_executable_loader = *s_loaders.get(library_name);
+        auto& main_executable_loader = *s_loaders.get(get_library_name(main_program_path));
         auto entry_point = main_executable_loader->image().entry();
         if (main_executable_loader->is_dynamic())
             entry_point = entry_point.offset(main_executable_loader->base_address().get());
