@@ -137,17 +137,15 @@ static Optional<String> resolve_library(String const& name, DynamicObject const&
     return {};
 }
 
-static Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> resolve_and_map_library(String const& name, DynamicObject const& parent_object)
+static Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> map_library(String const& path)
 {
-    auto resolved_library_name = resolve_library(name, parent_object);
-    if (!resolved_library_name.has_value())
-        return DlErrorMessage { String::formatted("Could not find required shared library: {}", name) };
+    VERIFY(path.starts_with('/'));
 
-    int fd = open(resolved_library_name.value().characters(), O_RDONLY);
+    int fd = open(path.characters(), O_RDONLY);
     if (fd < 0)
-        return DlErrorMessage { String::formatted("Could not open resolved shared library '{}': {}", resolved_library_name.value(), strerror(errno)) };
+        return DlErrorMessage { String::formatted("Could not open shared library '{}': {}", path, strerror(errno)) };
 
-    return map_library(resolved_library_name.value(), fd);
+    return map_library(path, fd);
 }
 
 static Vector<String> get_dependencies(String const& path)
@@ -183,7 +181,7 @@ static Result<void, DlErrorMessage> map_dependencies(String const& path)
             return DlErrorMessage { String::formatted("Could not find required shared library: {}", needed_name) };
 
         if (!s_loaders.contains(dependency_path.value()) && !s_global_objects.contains(dependency_path.value())) {
-            auto loader = TRY(resolve_and_map_library(dependency_path.value(), parent_object));
+            auto loader = TRY(map_library(dependency_path.value()));
             TRY(map_dependencies(loader->filepath()));
         }
     }
@@ -482,7 +480,7 @@ static Result<void*, DlErrorMessage> __dlopen(char const* filename, int flags)
         return *existing_elf_object;
     }
 
-    auto loader = TRY(resolve_and_map_library(library_path.value(), parent_object));
+    auto loader = TRY(map_library(library_path.value()));
 
     if (auto error = verify_tls_for_dlopen(loader); error.has_value())
         return error.value();
