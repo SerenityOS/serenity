@@ -435,14 +435,14 @@ void HexEditor::keydown_event(GUI::KeyEvent& event)
     }
 
     if (event.key() == KeyCode::Key_PageUp) {
-        auto cursor_location_change = min(bytes_per_row() * visible_content_rect().height(), m_position);
+        auto cursor_location_change = min(bytes_per_row() * floor(visible_content_rect().height() / line_height()), m_position);
         if (cursor_location_change > 0)
             move_and_update_cursor_by(-cursor_location_change);
         return;
     }
 
     if (event.key() == KeyCode::Key_PageDown) {
-        auto cursor_location_change = min(bytes_per_row() * visible_content_rect().height(), m_document->size() - m_position);
+        auto cursor_location_change = min(bytes_per_row() * floor(visible_content_rect().height() / line_height()), m_document->size() - m_position);
         if (cursor_location_change > 0)
             move_and_update_cursor_by(cursor_location_change);
         return;
