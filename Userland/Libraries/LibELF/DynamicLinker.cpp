@@ -83,18 +83,13 @@ Optional<DynamicObject::SymbolLookupResult> DynamicLinker::lookup_global_symbol(
     return weak_result;
 }
 
-static String get_library_name(String path)
-{
-    return LexicalPath::basename(move(path));
-}
-
 static Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> map_library(String const& filepath, int fd)
 {
     VERIFY(filepath.starts_with('/'));
 
     auto loader = TRY(ELF::DynamicLoader::try_create(fd, filepath));
 
-    s_loaders.set(get_library_name(filepath), *loader);
+    s_loaders.set(filepath, *loader);
 
     s_current_tls_offset -= loader->tls_size_of_current_object();
     if (loader->tls_alignment_of_current_object())
@@ -103,7 +98,7 @@ static Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> map_library(String c
 
     // This actually maps the library at the intended and final place.
     auto main_library_object = loader->map();
-    s_global_objects.set(get_library_name(filepath), *main_library_object);
+    s_global_objects.set(filepath, *main_library_object);
 
     return loader;
 }
@@ -159,8 +154,8 @@ static Vector<String> get_dependencies(String const& path)
 {
     VERIFY(path.starts_with('/'));
 
-    auto name = get_library_name(path);
-    auto lib = s_loaders.get(name).value();
+    auto name = LexicalPath::basename(path);
+    auto lib = s_loaders.get(path).value();
     Vector<String> dependencies;
 
     lib->for_each_needed_library([&dependencies, &name](auto needed_name) {
@@ -177,14 +172,18 @@ static Result<void, DlErrorMessage> map_dependencies(String const& path)
 
     dbgln_if(DYNAMIC_LOAD_DEBUG, "mapping dependencies for: {}", path);
 
-    auto const& parent_object = (*s_loaders.get(get_library_name(path)))->dynamic_object();
+    auto const& parent_object = (*s_loaders.get(path))->dynamic_object();
 
     for (auto const& needed_name : get_dependencies(path)) {
         dbgln_if(DYNAMIC_LOAD_DEBUG, "needed library: {}", needed_name.characters());
-        String library_name = get_library_name(needed_name);
 
-        if (!s_loaders.contains(library_name) && !s_global_objects.contains(library_name)) {
-            auto loader = TRY(resolve_and_map_library(needed_name, parent_object));
+        auto dependency_path = resolve_library(needed_name, parent_object);
+
+        if (!dependency_path.has_value())
+            return DlErrorMessage { String::formatted("Could not find required shared library: {}", needed_name) };
+
+        if (!s_loaders.contains(dependency_path.value()) && !s_global_objects.contains(dependency_path.value())) {
+            auto loader = TRY(resolve_and_map_library(dependency_path.value(), parent_object));
             TRY(map_dependencies(loader->filepath()));
         }
     }
@@ -302,10 +301,13 @@ static void for_each_unfinished_dependency_of(String const& path, HashTable<Stri
 {
     VERIFY(path.starts_with('/'));
 
-    auto loader = s_loaders.get(get_library_name(path));
+    auto loader = s_loaders.get(path);
 
-    if (!loader.has_value())
+    if (!loader.has_value()) {
+        // Not having a loader here means that the library has already been loaded in at an earlier point,
+        // and the loader itself was cleared during the end of `linker_main`.
         return;
+    }
 
     if (loader.value()->is_fully_relocated()) {
         if (!loader.value()->is_fully_initialized()) {
@@ -323,18 +325,11 @@ static void for_each_unfinished_dependency_of(String const& path, HashTable<Stri
     seen_names.set(path);
 
     for (auto const& needed_name : get_dependencies(path)) {
-        auto dependency_loader = s_loaders.get(get_library_name(needed_name));
-
-        if (!dependency_loader.has_value()) {
-            // Not having a loader here means that the library has already been loaded in at an earlier point,
-            // and the loader itself was cleared during the end of `linker_main`.
-            continue;
-        }
-
-        for_each_unfinished_dependency_of(dependency_loader.value()->filepath(), seen_names, callback);
+        auto dependency_path = *resolve_library(needed_name, loader.value()->dynamic_object());
+        for_each_unfinished_dependency_of(dependency_path, seen_names, callback);
     }
 
-    callback(*s_loaders.get(get_library_name(path)).value());
+    callback(*s_loaders.get(path).value());
 }
 
 static NonnullRefPtrVector<DynamicLoader> collect_loaders_for_library(String const& path)
@@ -377,7 +372,7 @@ static Result<void, DlErrorMessage> link_main_library(String const& path, int fl
     for (auto& loader : loaders) {
         auto dynamic_object = loader.map();
         if (dynamic_object)
-            s_global_objects.set(get_library_name(dynamic_object->filepath()), *dynamic_object);
+            s_global_objects.set(dynamic_object->filepath(), *dynamic_object);
     }
 
     for (auto& loader : loaders) {
@@ -469,24 +464,25 @@ static Result<void*, DlErrorMessage> __dlopen(char const* filename, int flags)
 
     dbgln_if(DYNAMIC_LOAD_DEBUG, "__dlopen invoked, filename={}, flags={}", filename, flags);
 
-    auto library_name = get_library_name(filename ? filename : s_main_program_path);
-
     if (pthread_mutex_trylock(&s_loader_lock) != 0)
         return DlErrorMessage { "Nested calls to dlopen() are not permitted." };
     ScopeGuard unlock_guard = [] { pthread_mutex_unlock(&s_loader_lock); };
 
-    auto existing_elf_object = s_global_objects.get(library_name);
+    auto const& parent_object = **s_global_objects.get(s_main_program_path);
+
+    auto library_path = (filename ? resolve_library(filename, parent_object) : s_main_program_path);
+
+    if (!library_path.has_value())
+        return DlErrorMessage { String::formatted("Could not find required shared library: {}", filename) };
+
+    auto existing_elf_object = s_global_objects.get(library_path.value());
     if (existing_elf_object.has_value()) {
         // It's up to the caller to release the ref with dlclose().
         existing_elf_object.value()->ref();
         return *existing_elf_object;
     }
 
-    VERIFY(!library_name.is_empty());
-
-    auto const& parent_object = **s_global_objects.get(get_library_name(s_main_program_path));
-
-    auto loader = TRY(resolve_and_map_library(filename, parent_object));
+    auto loader = TRY(resolve_and_map_library(library_path.value(), parent_object));
 
     if (auto error = verify_tls_for_dlopen(loader); error.has_value())
         return error.value();
@@ -497,7 +493,7 @@ static Result<void*, DlErrorMessage> __dlopen(char const* filename, int flags)
 
     s_total_tls_size += loader->tls_size_of_current_object() + loader->tls_alignment_of_current_object();
 
-    auto object = s_global_objects.get(library_name);
+    auto object = s_global_objects.get(library_path.value());
     if (!object.has_value())
         return DlErrorMessage { "Could not load ELF object." };
 
@@ -649,7 +645,7 @@ void ELF::DynamicLinker::linker_main(String&& main_program_path, int main_progra
 
         drop_loader_promise("rpath"sv);
 
-        auto& main_executable_loader = *s_loaders.get(get_library_name(main_program_path));
+        auto& main_executable_loader = *s_loaders.get(main_program_path);
         auto entry_point = main_executable_loader->image().entry();
         if (main_executable_loader->is_dynamic())
             entry_point = entry_point.offset(main_executable_loader->base_address().get());
