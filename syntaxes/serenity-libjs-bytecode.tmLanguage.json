@@ -125,7 +125,7 @@
 			"patterns": [
 				{
 					"name": "meta.string-table.entry.libjs.bytecode",
-					"match": "^(\\d)(:) *(.*)$",
+					"match": "^(\\d+)(:) *(.*)$",
 					"captures": {
 						"1": { "name": "constant.numeric.libjs.bytecode" },
 						"2": { "name": "punctuation.colon.libjs.bytecode" },
@@ -133,7 +133,7 @@
 					}
 				}
 			],
-			"end": "^$"
+			"end": "^(?!\\d+:)$"
 		},
 		"identifier-table": {
 			"name": "meta.identifier-table.libjs.bytecode",
@@ -146,7 +146,7 @@
 			"patterns": [
 				{
 					"name": "meta.identifier-table.entry.libjs.bytecode",
-					"match": "^(\\d)(:) *(.*)$",
+					"match": "^(\\d+)(:) *(.*)$",
 					"captures": {
 						"1": { "name": "constant.numeric.libjs.bytecode" },
 						"2": { "name": "punctuation.colon.libjs.bytecode" },
@@ -154,7 +154,7 @@
 					}
 				}
 			],
-			"end": "^$"
+			"end": "^(?!\\d+:)$"
 		}
 	}
 }

@@ -36,3 +36,8 @@
 ## 0.3.0
 
 - Bytecode: Added a new highlighter for LibJS' Bytecode serialization format
+
+## 0.3.1
+
+- Bytecode: Account for more than 10 entries in Identifier- and String-Tables
+- Bytecode: Don't require a newline to terminate Tables
