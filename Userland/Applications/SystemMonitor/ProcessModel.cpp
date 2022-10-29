@@ -12,6 +12,7 @@
 #include <AK/NumberFormat.h>
 #include <LibCore/File.h>
 #include <LibCore/ProcessStatisticsReader.h>
+#include <LibCore/Stream.h>
 #include <LibGUI/FileIconProvider.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/ModelIndex.h>
@@ -133,6 +134,8 @@ String ProcessModel::column_name(int column) const
         return "Pledge";
     case Column::Veil:
         return "Veil";
+    case Column::Command:
+        return "Command";
     default:
         VERIFY_NOT_REACHED();
     }
@@ -150,6 +153,7 @@ GUI::Variant ProcessModel::data(GUI::ModelIndex const& index, GUI::ModelRole rol
         case Column::User:
         case Column::Pledge:
         case Column::Veil:
+        case Column::Command:
             return Gfx::TextAlignment::CenterLeft;
         case Column::PID:
         case Column::TID:
@@ -221,6 +225,8 @@ GUI::Variant ProcessModel::data(GUI::ModelIndex const& index, GUI::ModelRole rol
             return thread.current_state.cpu;
         case Column::Name:
             return thread.current_state.name;
+        case Column::Command:
+            return thread.current_state.command;
         case Column::Syscalls:
             return thread.current_state.syscall_count;
         case Column::InodeFaults:
@@ -289,6 +295,8 @@ GUI::Variant ProcessModel::data(GUI::ModelIndex const& index, GUI::ModelRole rol
             if (thread.current_state.kernel)
                 return String::formatted("{} (*)", thread.current_state.name);
             return thread.current_state.name;
+        case Column::Command:
+            return thread.current_state.command;
         case Column::Syscalls:
             return thread.current_state.syscall_count;
         case Column::InodeFaults:
@@ -400,6 +408,24 @@ Vector<GUI::ModelIndex> ProcessModel::matches(StringView searching, unsigned fla
     return found_indices;
 }
 
+static ErrorOr<String> try_read_command_line(pid_t pid)
+{
+    auto file = TRY(Core::Stream::File::open(String::formatted("/proc/{}/cmdline", pid), Core::Stream::OpenMode::Read));
+    auto data = TRY(file->read_all());
+    auto json = TRY(JsonValue::from_string(StringView { data.bytes() }));
+    auto array = json.as_array().values();
+    return String::join(" "sv, array);
+}
+
+static String read_command_line(pid_t pid)
+{
+    auto string_or_error = try_read_command_line(pid);
+    if (string_or_error.is_error()) {
+        return "";
+    }
+    return string_or_error.release_value();
+}
+
 void ProcessModel::update()
 {
     auto previous_tid_count = m_threads.size();
@@ -442,6 +468,7 @@ void ProcessModel::update()
                 state.kernel = process.kernel;
                 state.executable = process.executable;
                 state.name = thread.name;
+                state.command = read_command_line(process.pid);
                 state.uid = process.uid;
                 state.state = thread.state;
                 state.user = process.username;
