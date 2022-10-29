@@ -333,18 +333,25 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(emoji_resource_path, "Path to the /res/emoji directory", "emoji-resource-path", 'r', "emoji-resource-path");
     args_parser.parse(arguments);
 
-    auto generated_header_file = TRY(open_file(generated_header_path, Core::Stream::OpenMode::Write));
-    auto generated_implementation_file = TRY(open_file(generated_implementation_path, Core::Stream::OpenMode::Write));
     auto emoji_test_file = TRY(open_file(emoji_test_path, Core::Stream::OpenMode::Read));
-    auto emoji_serenity_file = TRY(open_file(emoji_serenity_path, Core::Stream::OpenMode::Read));
-    VERIFY(Core::Stream::File::exists(emoji_resource_path));
+    VERIFY(!emoji_resource_path.is_empty() && Core::Stream::File::exists(emoji_resource_path));
 
     EmojiData emoji_data {};
     TRY(parse_emoji_test_data(*emoji_test_file, emoji_data));
-    TRY(parse_emoji_serenity_data(*emoji_serenity_file, emoji_data));
 
-    TRY(generate_emoji_data_header(*generated_header_file, emoji_data));
-    TRY(generate_emoji_data_implementation(*generated_implementation_file, emoji_data));
+    if (!emoji_serenity_path.is_empty()) {
+        auto emoji_serenity_file = TRY(open_file(emoji_serenity_path, Core::Stream::OpenMode::Read));
+        TRY(parse_emoji_serenity_data(*emoji_serenity_file, emoji_data));
+    }
+
+    if (!generated_header_path.is_empty()) {
+        auto generated_header_file = TRY(open_file(generated_header_path, Core::Stream::OpenMode::Write));
+        TRY(generate_emoji_data_header(*generated_header_file, emoji_data));
+    }
+    if (!generated_implementation_path.is_empty()) {
+        auto generated_implementation_file = TRY(open_file(generated_implementation_path, Core::Stream::OpenMode::Write));
+        TRY(generate_emoji_data_implementation(*generated_implementation_file, emoji_data));
+    }
 
     if (!generated_installation_path.is_empty()) {
         TRY(Core::Directory::create(LexicalPath { generated_installation_path }.parent(), Core::Directory::CreateDirectories::Yes));
