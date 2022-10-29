@@ -36,7 +36,7 @@ class DownPointer {
 public:
     explicit DownPointer(TreeNode*, u32 = 0);
     DownPointer(TreeNode*, TreeNode*);
-    DownPointer(DownPointer const&);
+    DownPointer(DownPointer&&);
     DownPointer(TreeNode*, DownPointer&);
     ~DownPointer() = default;
     [[nodiscard]] u32 pointer() const { return m_pointer; }
