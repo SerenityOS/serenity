@@ -52,6 +52,7 @@ public:
         UnixSocketWriteBytes,
         IPv4SocketReadBytes,
         IPv4SocketWriteBytes,
+        Command,
         __Count
     };
 
@@ -105,6 +106,7 @@ private:
         bool kernel { false };
         String executable { "" };
         String name { "" };
+        String command { "" };
         uid_t uid { 0 };
         String state { "" };
         String user { "" };
@@ -149,6 +151,7 @@ private:
             this->kernel = other.kernel;
             this->executable = other.executable;
             this->name = other.name;
+            this->command = other.command;
             this->uid = other.uid;
             this->state = other.state;
             this->user = other.user;
