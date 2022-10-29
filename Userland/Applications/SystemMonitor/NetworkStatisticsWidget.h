@@ -22,6 +22,7 @@ private:
     void update_models();
 
     RefPtr<GUI::TableView> m_adapter_table_view;
+    RefPtr<GUI::Menu> m_adapter_context_menu;
     RefPtr<GUI::TableView> m_tcp_socket_table_view;
     RefPtr<GUI::TableView> m_udp_socket_table_view;
     RefPtr<GUI::JsonArrayModel> m_adapter_model;
