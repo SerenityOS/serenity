@@ -5,6 +5,7 @@
  */
 
 #include <LibJS/Heap/Heap.h>
+#include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/DocumentFragment.h>
 #include <LibWeb/DOMParsing/InnerHTML.h>
 #include <LibWeb/HTML/Parser/HTMLParser.h>
@@ -46,6 +47,15 @@ WebIDL::ExceptionOr<void> inner_html_setter(JS::NonnullGCPtr<DOM::Node> context_
 
     // 4. Replace all with fragment within the context object.
     context_object->replace_all(fragment);
+
+    // NOTE: We don't invalidate style & layout for <template> elements since they don't affect rendering.
+    if (!is<HTML::HTMLTemplateElement>(*context_object)) {
+        context_object->set_needs_style_update(true);
+
+        // NOTE: Since the DOM has changed, we have to rebuild the layout tree.
+        context_object->document().invalidate_layout();
+        context_object->document().set_needs_layout();
+    }
 
     return {};
 }

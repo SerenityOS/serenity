@@ -488,12 +488,6 @@ WebIDL::ExceptionOr<DOM::Element const*> Element::closest(StringView selectors) 
 WebIDL::ExceptionOr<void> Element::set_inner_html(String const& markup)
 {
     TRY(DOMParsing::inner_html_setter(*this, markup));
-
-    set_needs_style_update(true);
-
-    // NOTE: Since the DOM has changed, we have to rebuild the layout tree.
-    document().invalidate_layout();
-    document().set_needs_layout();
     return {};
 }
 
