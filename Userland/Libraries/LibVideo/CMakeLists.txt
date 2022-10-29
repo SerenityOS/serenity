@@ -4,6 +4,7 @@ set(SOURCES
     Color/TransferCharacteristics.cpp
     MatroskaDemuxer.cpp
     MatroskaReader.cpp
+    PlaybackManager.cpp
     VideoFrame.cpp
     VP9/BitStream.cpp
     VP9/Decoder.cpp
