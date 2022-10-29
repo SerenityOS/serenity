@@ -1694,7 +1694,7 @@ void Document::run_the_resize_steps()
 
     window().dispatch_event(*DOM::Event::create(realm(), UIEvents::EventNames::resize));
 
-    update_layout();
+    schedule_layout_update();
 }
 
 // https://w3c.github.io/csswg-drafts/cssom-view-1/#document-run-the-scroll-steps
