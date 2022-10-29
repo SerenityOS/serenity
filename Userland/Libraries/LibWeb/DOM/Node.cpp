@@ -458,7 +458,8 @@ void Node::insert_before(JS::NonnullGCPtr<Node> node, JS::GCPtr<Node> child, boo
     // 9. Run the children changed steps for parent.
     children_changed();
 
-    document().invalidate_style();
+    // FIXME: This will need to become smarter when we implement the :has() selector.
+    invalidate_style();
 }
 
 // https://dom.spec.whatwg.org/#concept-node-pre-insert
