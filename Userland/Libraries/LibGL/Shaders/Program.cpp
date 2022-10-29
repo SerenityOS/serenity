@@ -86,8 +86,8 @@ ErrorOr<void> Program::link(GPU::Device& device)
 
     m_linked_fragment_shader = linked_fragment_shader_or_error.release_value();
 
-    m_gpu_vertex_shader = TRY(device.create_shader({}));
-    m_gpu_fragment_shader = TRY(device.create_shader({}));
+    m_gpu_vertex_shader = TRY(device.create_shader(m_linked_vertex_shader->intermediate_shader_representation()));
+    m_gpu_fragment_shader = TRY(device.create_shader(m_linked_fragment_shader->intermediate_shader_representation()));
 
     m_link_status = true;
     return {};
