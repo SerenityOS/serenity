@@ -115,10 +115,6 @@ def Settings(**kwargs):
     final_flags = [flag for flag in compilation_info.compiler_flags_ if not startswith_any(flag, ignored_flags)]
     final_flags.extend(serenity_flags)
 
-    with open('/tmp/x', 'w') as fp:
-        import json
-        json.dump(final_flags, fp)
-
     return {
         'flags': final_flags,
         'include_paths_relative_to_dir': DIR_OF_THIS_SCRIPT,
