@@ -67,7 +67,7 @@ if gcc_path:
             continue
         serenity_flags.extend(('-isystem', include_path))
 
-database = ycm_core.CompilationDatabase(f'Build/{serenity_arch}')
+database = ycm_core.CompilationDatabase(os.path.join(DIR_OF_THIS_SCRIPT, f'Build/{serenity_arch}'))
 
 
 def is_header_file(filename):
