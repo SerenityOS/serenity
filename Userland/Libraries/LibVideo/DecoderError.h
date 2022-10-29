@@ -22,6 +22,7 @@ using DecoderErrorOr = ErrorOr<T, DecoderError>;
 enum class DecoderErrorCategory : u32 {
     Unknown,
     IO,
+    EndOfStream,
     Memory,
     // The input is corrupted.
     Corrupted,
