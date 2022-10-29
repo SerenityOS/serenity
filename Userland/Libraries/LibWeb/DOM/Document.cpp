@@ -809,6 +809,10 @@ void Document::update_layout()
     if (!m_needs_layout && m_layout_root)
         return;
 
+    // NOTE: If this is a document hosting <template> contents, layout is unnecessary.
+    if (m_created_for_appropriate_template_contents)
+        return;
+
     if (!browsing_context())
         return;
 
@@ -886,6 +890,11 @@ void Document::update_style()
         return;
     if (!needs_full_style_update() && !needs_style_update() && !child_needs_style_update())
         return;
+
+    // NOTE: If this is a document hosting <template> contents, style update is unnecessary.
+    if (m_created_for_appropriate_template_contents)
+        return;
+
     evaluate_media_rules();
     if (update_style_recursively(*this))
         invalidate_layout();
