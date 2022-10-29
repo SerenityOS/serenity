@@ -73,8 +73,9 @@ enum class MatrixCoefficients : u8 {
 };
 
 enum class ColorRange : u8 {
-    Studio = 0, // Y range 16..235, UV range 16..240
-    Full = 1,   // 0..255
+    Unspecified,
+    Studio, // Y range 16..235, UV range 16..240
+    Full,   // 0..255
 };
 
 // https://en.wikipedia.org/wiki/Coding-independent_code_points
@@ -97,14 +98,28 @@ public:
     constexpr ColorRange color_range() const { return m_color_range; }
     constexpr void set_color_range(ColorRange value) { m_color_range = value; }
 
-    constexpr void default_code_points_if_unspecified(ColorPrimaries cp, TransferCharacteristics tc, MatrixCoefficients mc)
+    constexpr void default_code_points_if_unspecified(CodingIndependentCodePoints cicp)
     {
         if (color_primaries() == ColorPrimaries::Unspecified)
-            set_color_primaries(cp);
+            set_color_primaries(cicp.color_primaries());
         if (transfer_characteristics() == TransferCharacteristics::Unspecified)
-            set_transfer_characteristics(tc);
+            set_transfer_characteristics(cicp.transfer_characteristics());
         if (matrix_coefficients() == MatrixCoefficients::Unspecified)
-            set_matrix_coefficients(mc);
+            set_matrix_coefficients(cicp.matrix_coefficients());
+        if (color_range() == ColorRange::Unspecified)
+            set_color_range(cicp.color_range());
+    }
+
+    constexpr void adopt_specified_values(CodingIndependentCodePoints cicp)
+    {
+        if (cicp.color_primaries() != ColorPrimaries::Unspecified)
+            set_color_primaries(cicp.color_primaries());
+        if (cicp.transfer_characteristics() != TransferCharacteristics::Unspecified)
+            set_transfer_characteristics(cicp.transfer_characteristics());
+        if (cicp.matrix_coefficients() != MatrixCoefficients::Unspecified)
+            set_matrix_coefficients(cicp.matrix_coefficients());
+        if (cicp.color_range() != ColorRange::Unspecified)
+            set_color_range(cicp.color_range());
     }
 
 private:
