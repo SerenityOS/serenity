@@ -173,6 +173,8 @@ protected:
 private:
     void make_html_uppercased_qualified_name();
 
+    void invalidate_style_after_attribute_change(FlyString const& attribute_name);
+
     WebIDL::ExceptionOr<JS::GCPtr<Node>> insert_adjacent(String const& where, JS::NonnullGCPtr<Node> node);
 
     QualifiedName m_qualified_name;

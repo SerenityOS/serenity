@@ -123,8 +123,7 @@ WebIDL::ExceptionOr<void> Element::set_attribute(FlyString const& name, String c
 
     parse_attribute(attribute->local_name(), value);
 
-    // FIXME: Invalidate less.
-    document().invalidate_style();
+    invalidate_style_after_attribute_change(name);
 
     return {};
 }
@@ -191,8 +190,7 @@ void Element::remove_attribute(FlyString const& name)
 
     did_remove_attribute(name);
 
-    // FIXME: Invalidate less.
-    document().invalidate_style();
+    invalidate_style_after_attribute_change(name);
 }
 
 // https://dom.spec.whatwg.org/#dom-element-hasattribute
@@ -225,8 +223,7 @@ WebIDL::ExceptionOr<bool> Element::toggle_attribute(FlyString const& name, Optio
 
             parse_attribute(new_attribute->local_name(), "");
 
-            // FIXME: Invalidate less.
-            document().invalidate_style();
+            invalidate_style_after_attribute_change(name);
 
             return true;
         }
@@ -241,8 +238,7 @@ WebIDL::ExceptionOr<bool> Element::toggle_attribute(FlyString const& name, Optio
 
         did_remove_attribute(name);
 
-        // FIXME: Invalidate less.
-        document().invalidate_style();
+        invalidate_style_after_attribute_change(name);
     }
 
     // 6. Return true.
@@ -978,6 +974,15 @@ void Element::scroll_into_view(Optional<Variant<bool, ScrollIntoViewOptions>> ar
     scroll_an_element_into_view(*this, behavior, block, inline_);
 
     // FIXME: 8. Optionally perform some other action that brings the element to the user’s attention.
+}
+
+void Element::invalidate_style_after_attribute_change(FlyString const& attribute_name)
+{
+    // FIXME: Only invalidate if the attribute can actually affect style.
+    (void)attribute_name;
+
+    // FIXME: This will need to become smarter when we implement the :has() selector.
+    invalidate_style();
 }
 
 }
