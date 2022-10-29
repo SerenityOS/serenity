@@ -171,3 +171,11 @@ inline ErrorOr<T> copy_typed_from_user(Userspace<T const*> user_data)
     TRY(copy_from_user(&data, user_data));
     return data;
 }
+
+template<typename T>
+inline ErrorOr<T> copy_typed_from_user(Userspace<T*> user_data)
+{
+    T data {};
+    TRY(copy_from_user(&data, user_data));
+    return data;
+}
