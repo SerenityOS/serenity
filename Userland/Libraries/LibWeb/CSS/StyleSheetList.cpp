@@ -19,6 +19,11 @@ void StyleSheetList::add_sheet(CSSStyleSheet& sheet)
 
     sort_sheets();
 
+    if (sheet.rules().length() == 0) {
+        // NOTE: If the added sheet has no rules, we don't have to invalidate anything.
+        return;
+    }
+
     m_document.style_computer().invalidate_rule_cache();
     m_document.style_computer().load_fonts_from_sheet(sheet);
     m_document.invalidate_style();
@@ -28,6 +33,11 @@ void StyleSheetList::remove_sheet(CSSStyleSheet& sheet)
 {
     sheet.set_style_sheet_list({}, nullptr);
     m_sheets.remove_first_matching([&](auto& entry) { return entry.ptr() == &sheet; });
+
+    if (sheet.rules().length() == 0) {
+        // NOTE: If the removed sheet had no rules, we don't have to invalidate anything.
+        return;
+    }
 
     sort_sheets();
 
