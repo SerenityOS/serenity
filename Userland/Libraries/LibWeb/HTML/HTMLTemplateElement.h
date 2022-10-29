@@ -27,9 +27,9 @@ private:
     HTMLTemplateElement(DOM::Document&, DOM::QualifiedName);
 
     virtual bool is_html_template_element() const final { return true; }
-    virtual void visit_edges(Cell::Visitor&) override;
 
-    DOM::Document& appropriate_template_contents_owner_document(DOM::Document&);
+    virtual void initialize(JS::Realm&) override;
+    virtual void visit_edges(Cell::Visitor&) override;
 
     JS::GCPtr<DOM::DocumentFragment> m_content;
 };

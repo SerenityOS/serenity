@@ -327,6 +327,7 @@ void Document::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_implementation.ptr());
     visitor.visit(m_current_script.ptr());
     visitor.visit(m_associated_inert_template_document.ptr());
+    visitor.visit(m_appropriate_template_contents_owner_document);
     visitor.visit(m_pending_parsing_blocking_script.ptr());
     visitor.visit(m_history.ptr());
 
@@ -2263,6 +2264,31 @@ void Document::unload(bool recursive_flag, Optional<DocumentUnloadTimingInfo> un
 void Document::did_stop_being_active_document_in_browsing_context(Badge<HTML::BrowsingContext>)
 {
     tear_down_layout_tree();
+}
+
+// https://html.spec.whatwg.org/multipage/scripting.html#appropriate-template-contents-owner-document
+JS::NonnullGCPtr<DOM::Document> Document::appropriate_template_contents_owner_document()
+{
+    // 1. If doc is not a Document created by this algorithm, then:
+    if (!created_for_appropriate_template_contents()) {
+        // 1. If doc does not yet have an associated inert template document, then:
+        if (!m_associated_inert_template_document) {
+            // 1. Let new doc be a new Document (whose browsing context is null). This is "a Document created by this algorithm" for the purposes of the step above.
+            auto new_document = DOM::Document::create(realm());
+            new_document->m_created_for_appropriate_template_contents = true;
+
+            // 2. If doc is an HTML document, mark new doc as an HTML document also.
+            if (document_type() == Type::HTML)
+                new_document->set_document_type(Type::HTML);
+
+            // 3. Let doc's associated inert template document be new doc.
+            m_associated_inert_template_document = new_document;
+        }
+        // 2. Set doc to doc's associated inert template document.
+        return *m_associated_inert_template_document;
+    }
+    // 2. Return doc.
+    return *this;
 }
 
 }

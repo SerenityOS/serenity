@@ -277,11 +277,8 @@ public:
     void set_active_element(Element*);
 
     bool created_for_appropriate_template_contents() const { return m_created_for_appropriate_template_contents; }
-    void set_created_for_appropriate_template_contents(bool value) { m_created_for_appropriate_template_contents = value; }
 
-    Document* associated_inert_template_document() { return m_associated_inert_template_document.ptr(); }
-    Document const* associated_inert_template_document() const { return m_associated_inert_template_document.ptr(); }
-    void set_associated_inert_template_document(Document& document) { m_associated_inert_template_document = &document; }
+    JS::NonnullGCPtr<Document> appropriate_template_contents_owner_document();
 
     String ready_state() const;
     void update_readiness(HTML::DocumentReadyState);
@@ -505,6 +502,7 @@ private:
 
     bool m_created_for_appropriate_template_contents { false };
     JS::GCPtr<Document> m_associated_inert_template_document;
+    JS::GCPtr<Document> m_appropriate_template_contents_owner_document;
 
     HTML::DocumentReadyState m_readiness { HTML::DocumentReadyState::Loading };
     String m_content_type { "application/xml" };

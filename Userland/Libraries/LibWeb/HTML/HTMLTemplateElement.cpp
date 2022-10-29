@@ -14,12 +14,16 @@ HTMLTemplateElement::HTMLTemplateElement(DOM::Document& document, DOM::Qualified
     : HTMLElement(document, move(qualified_name))
 {
     set_prototype(&Bindings::cached_web_prototype(realm(), "HTMLTemplateElement"));
-
-    m_content = heap().allocate<DOM::DocumentFragment>(realm(), appropriate_template_contents_owner_document(document));
-    m_content->set_host(this);
 }
 
 HTMLTemplateElement::~HTMLTemplateElement() = default;
+
+void HTMLTemplateElement::initialize(JS::Realm& realm)
+{
+    Base::initialize(realm);
+    m_content = heap().allocate<DOM::DocumentFragment>(realm, m_document->appropriate_template_contents_owner_document());
+    m_content->set_host(this);
+}
 
 void HTMLTemplateElement::visit_edges(Cell::Visitor& visitor)
 {
@@ -27,29 +31,14 @@ void HTMLTemplateElement::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_content.ptr());
 }
 
-DOM::Document& HTMLTemplateElement::appropriate_template_contents_owner_document(DOM::Document& document)
-{
-    if (!document.created_for_appropriate_template_contents()) {
-        if (!document.associated_inert_template_document()) {
-            auto new_document = DOM::Document::create(realm());
-            new_document->set_created_for_appropriate_template_contents(true);
-            new_document->set_document_type(document.document_type());
-
-            document.set_associated_inert_template_document(new_document);
-        }
-
-        return *document.associated_inert_template_document();
-    }
-
-    return document;
-}
-
 // https://html.spec.whatwg.org/multipage/scripting.html#the-template-element:concept-node-adopt-ext
 void HTMLTemplateElement::adopted_from(DOM::Document&)
 {
-    // NOTE: It seems the spec has been changed since appropriate_template_contents_owner_document was written above.
-    //       That function is now part of document, which ends up returning associated_inert_template_document in the new version anyway.
-    appropriate_template_contents_owner_document(document()).adopt_node(content());
+    // 1. Let doc be node's node document's appropriate template contents owner document.
+    auto doc = document().appropriate_template_contents_owner_document();
+
+    // 2. Adopt node's template contents (a DocumentFragment object) into doc.
+    doc->adopt_node(content());
 }
 
 // https://html.spec.whatwg.org/multipage/scripting.html#the-template-element:concept-node-clone-ext
