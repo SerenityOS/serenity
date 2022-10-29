@@ -5,6 +5,7 @@
  */
 
 #include "LibVideo/Color/CodingIndependentCodePoints.h"
+#include "LibVideo/MatroskaDemuxer.h"
 #include <LibCore/ArgsParser.h>
 #include <LibCore/ElapsedTimer.h>
 #include <LibGUI/Application.h>
@@ -30,19 +31,18 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto app = TRY(GUI::Application::try_create(arguments));
     auto window = TRY(GUI::Window::try_create());
 
-    auto document = Video::MatroskaReader::parse_matroska_from_file(filename);
-    // FIXME: MatroskaReader should use ErrorOr
-    if (!document) {
-        outln("{} could not be read", filename);
+    auto demuxer_result = Video::MatroskaDemuxer::from_file(filename);
+    if (demuxer_result.is_error()) {
+        outln("Error parsing Matroska: {}", demuxer_result.release_error().string_literal());
         return 1;
     }
-    auto const& optional_track = document->track_for_track_type(Video::TrackEntry::TrackType::Video);
-    if (!optional_track.has_value())
+    auto demuxer = demuxer_result.release_value();
+    auto tracks = demuxer->get_tracks_for_type(Video::TrackType::Video);
+    if (tracks.is_empty()) {
+        outln("No video tracks present.");
         return 1;
-    auto const& track = optional_track.value();
-    auto const video_track = track.video_track().value();
-
-    auto image = TRY(Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRx8888, Gfx::IntSize(video_track.pixel_width, video_track.pixel_height)));
+    }
+    auto track = tracks[0];
 
     auto main_widget = TRY(window->try_set_main_widget<GUI::Widget>());
     main_widget->set_fill_with_background_color(true);
@@ -50,33 +50,18 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto image_widget = TRY(main_widget->try_add<GUI::ImageWidget>());
 
     OwnPtr<Video::VideoDecoder> decoder = make<Video::VP9::Decoder>();
-    size_t cluster_index = 0;
-    size_t block_index = 0;
-    size_t frame_index = 0;
     auto frame_number = 0u;
 
-    auto get_next_sample = [&]() -> Optional<ByteBuffer> {
-        for (; cluster_index < document->clusters().size(); cluster_index++) {
-            for (; block_index < document->clusters()[cluster_index].blocks().size(); block_index++) {
-                auto const& candidate_block = document->clusters()[cluster_index].blocks()[block_index];
-                if (candidate_block.track_number() != track.track_number())
-                    continue;
-                if (frame_index < candidate_block.frames().size())
-                    return candidate_block.frame(frame_index);
-                frame_index = 0;
-            }
-            block_index = 0;
-        }
-        return {};
-    };
-
     auto display_next_frame = [&]() {
-        auto optional_sample = get_next_sample();
+        auto sample_result = demuxer->get_next_video_sample_for_track(track);
 
-        if (!optional_sample.has_value())
+        if (sample_result.is_error()) {
+            outln("Error demuxing next sample {}: {}", frame_number, sample_result.release_error().string_literal());
             return;
+        }
 
-        auto result = decoder->receive_sample(optional_sample.release_value());
+        auto sample = sample_result.release_value();
+        auto result = decoder->receive_sample(sample->data());
 
         if (result.is_error()) {
             outln("Error decoding frame {}: {}", frame_number, result.error().string_literal());
@@ -91,23 +76,22 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         auto frame = frame_result.release_value();
 
         auto& cicp = frame->cicp();
-        cicp.adopt_specified_values(video_track.color_format.to_cicp());
+        cicp.adopt_specified_values(sample->container_cicp());
         cicp.default_code_points_if_unspecified({ Video::ColorPrimaries::BT709, Video::TransferCharacteristics::BT709, Video::MatrixCoefficients::BT709, Video::ColorRange::Studio });
 
-        auto convert_result = frame->output_to_bitmap(image);
+        auto convert_result = frame->to_bitmap();
         if (convert_result.is_error()) {
             outln("Error creating bitmap for frame {}: {}", frame_number, convert_result.error().string_literal());
             return;
         }
 
-        image_widget->set_bitmap(image);
+        image_widget->set_bitmap(convert_result.release_value());
+        image_widget->set_fixed_size(frame->size());
         image_widget->update();
 
-        frame_index++;
         frame_number++;
     };
 
-    image_widget->set_fixed_size(video_track.pixel_width, video_track.pixel_height);
     image_widget->on_click = [&]() { display_next_frame(); };
 
     if (benchmark) {

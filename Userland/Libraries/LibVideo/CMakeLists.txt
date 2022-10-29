@@ -2,6 +2,7 @@ set(SOURCES
     Color/ColorConverter.cpp
     Color/ColorPrimaries.cpp
     Color/TransferCharacteristics.cpp
+    MatroskaDemuxer.cpp
     MatroskaReader.cpp
     VideoFrame.cpp
     VP9/BitStream.cpp
