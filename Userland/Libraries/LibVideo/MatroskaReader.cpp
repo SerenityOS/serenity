@@ -26,6 +26,7 @@ constexpr u32 CLUSTER_ELEMENT_ID = 0x1F43B675;
 constexpr u32 TIMESTAMP_SCALE_ID = 0x2AD7B1;
 constexpr u32 MUXING_APP_ID = 0x4D80;
 constexpr u32 WRITING_APP_ID = 0x5741;
+constexpr u32 DURATION_ID = 0x4489;
 
 // Tracks
 constexpr u32 TRACK_ENTRY_ID = 0xAE;
@@ -195,6 +196,11 @@ OwnPtr<SegmentInformation> MatroskaReader::parse_information()
             CHECK_HAS_VALUE(writing_app);
             segment_information->set_writing_app(writing_app.value());
             dbgln_if(MATROSKA_DEBUG, "Read WritingApp attribute: {}", writing_app.value());
+        } else if (element_id == DURATION_ID) {
+            auto duration = read_float_element();
+            CHECK_HAS_VALUE(duration);
+            segment_information->set_duration(duration.value());
+            dbgln_if(MATROSKA_DEBUG, "Read Duration attribute: {}", duration.value());
         } else {
             return read_unknown_element();
         }
@@ -514,6 +520,30 @@ Optional<u64> MatroskaReader::read_u64_element()
         result = (result << 8u) + m_streamer.read_octet();
     }
     return result;
+}
+
+Optional<double> MatroskaReader::read_float_element()
+{
+    auto length = m_streamer.read_variable_size_integer();
+    if (!length.has_value() || m_streamer.remaining() < length.value())
+        return {};
+    if (length != 4u && length != 8u)
+        return {};
+
+    union {
+        u64 value;
+        float float_value;
+        double double_value;
+    } read_data;
+    read_data.value = 0;
+    for (size_t i = 0; i < length.value(); i++) {
+        if (!m_streamer.has_octet())
+            return {};
+        read_data.value = (read_data.value << 8u) + m_streamer.read_octet();
+    }
+    if (length == 4u)
+        return read_data.float_value;
+    return read_data.double_value;
 }
 
 bool MatroskaReader::read_unknown_element()

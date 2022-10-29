@@ -166,6 +166,7 @@ private:
 
     Optional<String> read_string_element();
     Optional<u64> read_u64_element();
+    Optional<double> read_float_element();
     bool read_unknown_element();
 
     Streamer m_streamer;

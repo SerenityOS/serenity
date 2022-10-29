@@ -30,11 +30,14 @@ public:
     void set_muxing_app(String muxing_app) { m_muxing_app = move(muxing_app); }
     Utf8View writing_app() const { return Utf8View(m_writing_app); }
     void set_writing_app(String writing_app) { m_writing_app = move(writing_app); }
+    Optional<double> duration() const { return m_duration; }
+    void set_duration(double duration) { m_duration.emplace(duration); }
 
 private:
     u64 m_timestamp_scale { 1'000'000 };
     String m_muxing_app;
     String m_writing_app;
+    Optional<double> m_duration;
 };
 
 class TrackEntry {
