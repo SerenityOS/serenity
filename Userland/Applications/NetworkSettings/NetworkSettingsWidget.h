@@ -17,6 +17,7 @@ class NetworkSettingsWidget : public GUI::SettingsWindow::Tab {
 
 public:
     virtual void apply_settings() override;
+    void switch_adapter(String const& adapter);
 
 private:
     NetworkSettingsWidget();

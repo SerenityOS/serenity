@@ -5,6 +5,7 @@
  */
 
 #include "NetworkSettingsWidget.h"
+#include <LibCore/ArgsParser.h>
 #include <LibGUI/MessageBox.h>
 #include <unistd.h>
 
@@ -28,6 +29,12 @@ ErrorOr<int> serenity_main(Main::Arguments args)
     TRY(Core::System::unveil("/tmp/portal/window", "rw"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
+    String adapter;
+
+    Core::ArgsParser parser;
+    parser.add_positional_argument(adapter, "Adapter to display settings for", "adapter", Core::ArgsParser::Required::No);
+    parser.parse(args);
+
     auto app = TRY(GUI::Application::try_create(args));
 
     if (getuid() != 0) {
@@ -39,7 +46,10 @@ ErrorOr<int> serenity_main(Main::Arguments args)
 
     auto app_icon = GUI::Icon::default_icon("network"sv);
     auto window = TRY(GUI::SettingsWindow::create("Network Settings", GUI::SettingsWindow::ShowDefaultsButton::No));
-    (void)TRY(window->add_tab<NetworkSettings::NetworkSettingsWidget>("Network"sv, "network"sv));
+    auto network_settings_widget = TRY(window->add_tab<NetworkSettings::NetworkSettingsWidget>("Network"sv, "network"sv));
+    if (!adapter.is_null()) {
+        network_settings_widget->switch_adapter(adapter);
+    }
     window->set_icon(app_icon.bitmap_for_size(16));
 
     window->show();
