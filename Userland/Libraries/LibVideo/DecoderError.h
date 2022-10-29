@@ -55,9 +55,9 @@ public:
         return DecoderError::format(DecoderErrorCategory::NotImplemented, "{} is not implemented", location.function_name());
     }
 
-    DecoderErrorCategory category() { return m_category; }
-    StringView description() { return m_description; }
-    StringView string_literal() { return m_description; }
+    DecoderErrorCategory category() const { return m_category; }
+    StringView description() const { return m_description; }
+    StringView string_literal() const { return m_description; }
 
 private:
     DecoderError(DecoderErrorCategory category, String description)
