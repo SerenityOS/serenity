@@ -158,4 +158,10 @@ void NetworkSettingsWidget::apply_settings()
     GUI::Process::spawn_or_show_error(window(), "/bin/NetworkServer"sv);
 }
 
+void NetworkSettingsWidget::switch_adapter(String const& adapter)
+{
+    m_adapters_combobox->set_text(adapter, GUI::AllowCallback::No);
+    on_switch_adapter(adapter);
+}
+
 }
