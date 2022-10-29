@@ -33,10 +33,10 @@
 		},
 		"block": {
 			"name": "meta.block.$1.libjs.bytecode",
-			"begin": "^(\\d+)(:)$",
+			"begin": "^((?:merge|\\.|\\d+)+)(:)$",
 			"beginCaptures": {
 				"0": { "name": "meta.block.header.libjs.bytecode" },
-				"1": { "name": "constant.numeric.libjs.bytecode" },
+				"1": { "name": "entity.name.tag.label.libjs.bytecode" },
 				"2": { "name": "punctuation.colon.libjs.bytecode" }
 			},
 			"while": "^\\[ *[0-9a-f]+\\] *.+$",
@@ -87,8 +87,8 @@
 		"value": {
 			"patterns": [
 				{
-					"name": "meta.value.block-index.libjs.bytecode",
-					"match": "(@)(\\d+)",
+					"name": "meta.value.label.libjs.bytecode",
+					"match": "(@)((?:merge|\\.|\\d+)+)",
 					"captures": {
 						"0": { "name": "variable.libjs.bytecode" }
 					}

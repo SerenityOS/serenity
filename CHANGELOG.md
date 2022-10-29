@@ -41,3 +41,4 @@
 
 - Bytecode: Account for more than 10 entries in Identifier- and String-Tables
 - Bytecode: Don't require a newline to terminate Tables
+- Bytecode: Account for merged block names as labels
