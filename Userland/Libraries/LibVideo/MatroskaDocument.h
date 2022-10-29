@@ -65,27 +65,26 @@ public:
         u64 bits_per_channel = 0;
         ColorRange range = ColorRange::Unspecified;
 
-        Video::ColorRange full_or_studio_range() const
+        CodingIndependentCodePoints to_cicp() const
         {
-            // FIXME: Figure out what UseCICP should do here. Matroska specification did not
-            //        seem to explain in the 'colour' section. When this is fixed, change
-            //        replace_code_points_if_specified to match.
-            VERIFY(range == ColorRange::Full || range == ColorRange::Broadcast);
-            if (range == ColorRange::Full)
-                return Video::ColorRange::Full;
-            return Video::ColorRange::Studio;
-        }
+            Video::ColorRange color_range;
+            switch (range) {
+            case ColorRange::Full:
+                color_range = Video::ColorRange::Full;
+                break;
+            case ColorRange::Broadcast:
+                color_range = Video::ColorRange::Studio;
+                break;
+            case ColorRange::Unspecified:
+            case ColorRange::UseCICP:
+                // FIXME: Figure out what UseCICP should do here. Matroska specification did not
+                //        seem to explain in the 'colour' section. When this is fixed, change
+                //        replace_code_points_if_specified to match.
+                color_range = Video::ColorRange::Unspecified;
+                break;
+            }
 
-        void replace_code_points_if_specified(CodingIndependentCodePoints& cicp) const
-        {
-            if (color_primaries != ColorPrimaries::Unspecified)
-                cicp.set_color_primaries(color_primaries);
-            if (transfer_characteristics != TransferCharacteristics::Unspecified)
-                cicp.set_transfer_characteristics(transfer_characteristics);
-            if (matrix_coefficients != MatrixCoefficients::Unspecified)
-                cicp.set_matrix_coefficients(matrix_coefficients);
-            if (range != ColorRange::Unspecified && range != ColorRange::UseCICP)
-                cicp.set_color_range(full_or_studio_range());
+            return { color_primaries, transfer_characteristics, matrix_coefficients, color_range };
         }
     };
 

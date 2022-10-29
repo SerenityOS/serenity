@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include "LibVideo/Color/CodingIndependentCodePoints.h"
 #include <LibCore/ArgsParser.h>
 #include <LibCore/ElapsedTimer.h>
 #include <LibGUI/Application.h>
@@ -90,8 +91,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         auto frame = frame_result.release_value();
 
         auto& cicp = frame->cicp();
-        video_track.color_format.replace_code_points_if_specified(cicp);
-        cicp.default_code_points_if_unspecified(Video::ColorPrimaries::BT709, Video::TransferCharacteristics::BT709, Video::MatrixCoefficients::BT709);
+        cicp.adopt_specified_values(video_track.color_format.to_cicp());
+        cicp.default_code_points_if_unspecified({ Video::ColorPrimaries::BT709, Video::TransferCharacteristics::BT709, Video::MatrixCoefficients::BT709, Video::ColorRange::Studio });
 
         auto convert_result = frame->output_to_bitmap(image);
         if (convert_result.is_error()) {
