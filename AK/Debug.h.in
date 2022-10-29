@@ -342,6 +342,10 @@
 #cmakedefine01 PDF_DEBUG
 #endif
 
+#ifndef PLAYBACK_MANAGER_DEBUG
+#cmakedefine01 PLAYBACK_MANAGER_DEBUG
+#endif
+
 #ifndef PNG_DEBUG
 #cmakedefine01 PNG_DEBUG
 #endif
