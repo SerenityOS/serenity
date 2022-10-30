@@ -1171,13 +1171,13 @@ public:
 
     virtual void load_any_resources(DOM::Document&) override;
 
-    Gfx::Bitmap const* bitmap() const { return m_bitmap; }
-
     Optional<int> natural_width() const override;
     Optional<int> natural_height() const override;
 
-    bool is_paintable() const override { return !m_bitmap.is_null(); }
+    bool is_paintable() const override { return bitmap(0) != nullptr; }
     void paint(PaintContext& context, Gfx::IntRect const& dest_rect, CSS::ImageRendering image_rendering) const override;
+
+    Function<void()> on_animate;
 
 private:
     ImageStyleValue(AK::URL const&);
@@ -1185,9 +1185,15 @@ private:
     // ^ResourceClient
     virtual void resource_did_load() override;
 
+    void animate();
+    Gfx::Bitmap const* bitmap(size_t index) const;
+
     AK::URL m_url;
     WeakPtr<DOM::Document> m_document;
-    RefPtr<Gfx::Bitmap> m_bitmap;
+
+    size_t m_current_frame_index { 0 };
+    size_t m_loops_completed { 0 };
+    RefPtr<Platform::Timer> m_timer;
 };
 
 enum class GradientRepeating {

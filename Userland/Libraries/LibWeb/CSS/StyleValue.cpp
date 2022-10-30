@@ -16,6 +16,7 @@
 #include <LibWeb/Loader/ResourceLoader.h>
 #include <LibWeb/Page/Page.h>
 #include <LibWeb/Painting/GradientPainting.h>
+#include <LibWeb/Platform/Timer.h>
 
 namespace Web::CSS {
 
@@ -1650,9 +1651,6 @@ ImageStyleValue::ImageStyleValue(AK::URL const& url)
 
 void ImageStyleValue::load_any_resources(DOM::Document& document)
 {
-    if (m_bitmap)
-        return;
-
     if (resource())
         return;
 
@@ -1665,10 +1663,41 @@ void ImageStyleValue::resource_did_load()
 {
     if (!m_document)
         return;
-    m_bitmap = resource()->bitmap();
     // FIXME: Do less than a full repaint if possible?
     if (m_document && m_document->browsing_context())
         m_document->browsing_context()->set_needs_display();
+
+    if (resource()->is_animated() && resource()->frame_count() > 1) {
+        m_timer = Platform::Timer::create();
+        m_timer->set_interval(resource()->frame_duration(0));
+        m_timer->on_timeout = [this] { animate(); };
+        m_timer->start();
+    }
+}
+
+void ImageStyleValue::animate()
+{
+    m_current_frame_index = (m_current_frame_index + 1) % resource()->frame_count();
+    auto current_frame_duration = resource()->frame_duration(m_current_frame_index);
+
+    if (current_frame_duration != m_timer->interval())
+        m_timer->restart(current_frame_duration);
+
+    if (m_current_frame_index == resource()->frame_count() - 1) {
+        ++m_loops_completed;
+        if (m_loops_completed > 0 && m_loops_completed == resource()->loop_count())
+            m_timer->stop();
+    }
+
+    if (on_animate)
+        on_animate();
+}
+
+Gfx::Bitmap const* ImageStyleValue::bitmap(size_t frame_index) const
+{
+    if (!resource())
+        return nullptr;
+    return resource()->bitmap(frame_index);
 }
 
 String ImageStyleValue::to_string() const
@@ -1685,22 +1714,22 @@ bool ImageStyleValue::equals(StyleValue const& other) const
 
 Optional<int> ImageStyleValue::natural_width() const
 {
-    if (m_bitmap)
-        return m_bitmap->width();
+    if (resource())
+        return bitmap(0)->width();
     return {};
 }
 
 Optional<int> ImageStyleValue::natural_height() const
 {
-    if (m_bitmap)
-        return m_bitmap->height();
+    if (resource())
+        return bitmap(0)->height();
     return {};
 }
 
 void ImageStyleValue::paint(PaintContext& context, Gfx::IntRect const& dest_rect, CSS::ImageRendering image_rendering) const
 {
-    if (m_bitmap)
-        context.painter().draw_scaled_bitmap(dest_rect, *m_bitmap, m_bitmap->rect(), 1.0f, to_gfx_scaling_mode(image_rendering));
+    if (resource())
+        context.painter().draw_scaled_bitmap(dest_rect, *bitmap(m_current_frame_index), bitmap(0)->rect(), 1.0f, to_gfx_scaling_mode(image_rendering));
 }
 
 static void serialize_color_stop_list(StringBuilder& builder, auto const& color_stop_list)

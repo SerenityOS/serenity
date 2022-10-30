@@ -55,6 +55,11 @@ void HTMLBodyElement::parse_attribute(FlyString const& name, String const& value
             document().set_visited_link_color(color.value());
     } else if (name.equals_ignoring_case("background"sv)) {
         m_background_style_value = CSS::ImageStyleValue::create(document().parse_url(value));
+        m_background_style_value->on_animate = [this] {
+            if (layout_node()) {
+                layout_node()->set_needs_display();
+            }
+        };
     }
 
 #undef __ENUMERATE
