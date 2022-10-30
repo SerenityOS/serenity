@@ -64,6 +64,8 @@ public:
     ThrowCompletionOr<void> continue_pending_unwind(Label const& resume_label);
 
     Executable const& current_executable() { return *m_current_executable; }
+    BasicBlock const& current_block() const { return *m_current_block; }
+    size_t pc() const { return m_pc ? m_pc->offset() : 0; }
 
     enum class OptimizationLevel {
         None,
@@ -99,6 +101,8 @@ private:
     Vector<UnwindInfo> m_unwind_contexts;
     Handle<Value> m_saved_exception;
     OwnPtr<JS::Interpreter> m_ast_interpreter;
+    BasicBlock const* m_current_block { nullptr };
+    InstructionStreamIterator* m_pc { nullptr };
 };
 
 extern bool g_dump_bytecode;
