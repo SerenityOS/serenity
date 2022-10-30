@@ -15,6 +15,19 @@ GridTrackPlacement::GridTrackPlacement(int span_count_or_position, bool has_span
 {
 }
 
+GridTrackPlacement::GridTrackPlacement(String line_name, int span_count_or_position, bool has_span)
+    : m_type(has_span ? Type::Span : Type::Position)
+    , m_span_count_or_position(span_count_or_position)
+    , m_line_name(line_name)
+{
+}
+
+GridTrackPlacement::GridTrackPlacement(String line_name, bool has_span)
+    : m_type(has_span ? Type::Span : Type::Position)
+    , m_line_name(line_name)
+{
+}
+
 GridTrackPlacement::GridTrackPlacement()
     : m_type(Type::Auto)
 {
@@ -34,6 +47,9 @@ String GridTrackPlacement::to_string() const
     if (m_span_count_or_position != 0) {
         builder.append(String::number(m_span_count_or_position));
         builder.append(" "sv);
+    }
+    if (has_line_name()) {
+        builder.append(m_line_name);
     }
     return builder.to_string();
 }
