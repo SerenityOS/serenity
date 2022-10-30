@@ -109,14 +109,21 @@ void MergeBlocks::perform(PassPipelineExecutable& executable)
         }
 
         auto blocks_to_merge_copy = blocks_to_merge;
-        for (auto& last : blocks_to_merge) {
-            auto entry = cfg.find(last);
-            if (entry == cfg.end())
-                continue;
-            auto successor = *entry->value.begin();
-            if (auto it = successors.find(successor); !it.is_end()) {
-                successors.insert(it.index(), last);
-                blocks_to_merge_copy.remove(last);
+        // We need to do the following multiple times, due to it not being
+        // guaranteed, that the blocks are in sequential order
+        bool did_prepend = true;
+        while (did_prepend) {
+            did_prepend = false;
+            for (auto const* last : blocks_to_merge) {
+                auto entry = cfg.find(last);
+                if (entry == cfg.end())
+                    continue;
+                auto const* successor = *entry->value.begin();
+                if (successor == successors.first()) {
+                    successors.prepend(last);
+                    blocks_to_merge_copy.remove(last);
+                    did_prepend = true;
+                }
             }
         }
 
