@@ -142,16 +142,24 @@ void MergeBlocks::perform(PassPipelineExecutable& executable)
         for (size_t i = 0; i < successors.size(); ++i) {
             auto& entry = successors[i];
             InstructionStreamIterator it { entry->instruction_stream() };
-            size_t copy_end = 0;
             while (!it.at_end()) {
                 auto& instruction = *it;
                 ++it;
                 if (instruction.is_terminator() && last_successor_index != i)
                     break;
-                copy_end = it.offset();
+                // FIXME: Op::NewBigInt is not trivially copyable, so we cant use
+                //        a simple memcpy to transfer them.
+                //        When this is resolved we can use a single memcpy to copy
+                //        the whole block at once
+                if (instruction.type() == Instruction::Type::NewBigInt) {
+                    new (block.next_slot()) Op::NewBigInt(static_cast<Op::NewBigInt const&>(instruction));
+                    block.grow(sizeof(Op::NewBigInt));
+                } else {
+                    auto instruction_size = instruction.length();
+                    memcpy(block.next_slot(), &instruction, instruction_size);
+                    block.grow(instruction_size);
+                }
             }
-            __builtin_memcpy(block.next_slot(), entry->instruction_stream().data(), copy_end);
-            block.grow(copy_end);
         }
 
         executable.executable.basic_blocks.insert(*first_successor_position, move(new_block));
