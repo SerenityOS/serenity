@@ -5,18 +5,26 @@
  */
 
 #include <AK/Array.h>
+#include <LibJS/Heap/Heap.h>
+#include <LibJS/Runtime/Realm.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP/Requests.h>
 
 namespace Web::Fetch::Infrastructure {
 
-Request::Request()
-    : m_header_list(make_ref_counted<HeaderList>())
+Request::Request(JS::NonnullGCPtr<HeaderList> header_list)
+    : m_header_list(header_list)
 {
 }
 
-NonnullRefPtr<Request> Request::create()
+void Request::visit_edges(JS::Cell::Visitor& visitor)
 {
-    return adopt_ref(*new Request());
+    Base::visit_edges(visitor);
+    visitor.visit(m_header_list);
+}
+
+JS::NonnullGCPtr<Request> Request::create(JS::VM& vm)
+{
+    return { *vm.heap().allocate_without_realm<Request>(HeaderList::create(vm)) };
 }
 
 // https://fetch.spec.whatwg.org/#concept-request-url
@@ -181,12 +189,12 @@ ErrorOr<ByteBuffer> Request::byte_serialize_origin() const
 }
 
 // https://fetch.spec.whatwg.org/#concept-request-clone
-WebIDL::ExceptionOr<NonnullRefPtr<Request>> Request::clone() const
+WebIDL::ExceptionOr<JS::NonnullGCPtr<Request>> Request::clone(JS::VM& vm) const
 {
     // To clone a request request, run these steps:
 
     // 1. Let newRequest be a copy of request, except for its body.
-    auto new_request = Infrastructure::Request::create();
+    auto new_request = Infrastructure::Request::create(vm);
     new_request->set_method(m_method);
     new_request->set_local_urls_only(m_local_urls_only);
     for (auto const& header : *m_header_list)

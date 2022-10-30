@@ -11,6 +11,8 @@
 #include <AK/GenericLexer.h>
 #include <AK/QuickSort.h>
 #include <AK/ScopeGuard.h>
+#include <LibJS/Heap/Heap.h>
+#include <LibJS/Runtime/VM.h>
 #include <LibRegex/Regex.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP/Headers.h>
@@ -40,6 +42,11 @@ ErrorOr<Header> Header::from_string_pair(StringView name, StringView value)
         .name = TRY(ByteBuffer::copy(name.bytes())),
         .value = TRY(ByteBuffer::copy(value.bytes())),
     };
+}
+
+JS::NonnullGCPtr<HeaderList> HeaderList::create(JS::VM& vm)
+{
+    return { *vm.heap().allocate_without_realm<HeaderList>() };
 }
 
 // https://fetch.spec.whatwg.org/#header-list-contains

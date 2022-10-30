@@ -10,11 +10,12 @@
 #include <AK/Error.h>
 #include <AK/Forward.h>
 #include <AK/Optional.h>
-#include <AK/RefCounted.h>
 #include <AK/String.h>
 #include <AK/URL.h>
 #include <AK/Variant.h>
 #include <AK/Vector.h>
+#include <LibJS/Forward.h>
+#include <LibJS/Heap/Cell.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP/Bodies.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP/Headers.h>
 #include <LibWeb/HTML/Origin.h>
@@ -24,7 +25,9 @@
 namespace Web::Fetch::Infrastructure {
 
 // https://fetch.spec.whatwg.org/#concept-request
-class Request final : public RefCounted<Request> {
+class Request final : public JS::Cell {
+    JS_CELL(Request, JS::Cell);
+
 public:
     enum class CacheMode {
         Default,
@@ -156,7 +159,7 @@ public:
     using ReservedClientType = Variant<Empty, HTML::Environment*, HTML::EnvironmentSettingsObject*>;
     using WindowType = Variant<Window, HTML::EnvironmentSettingsObject*>;
 
-    static NonnullRefPtr<Request> create();
+    [[nodiscard]] static JS::NonnullGCPtr<Request> create(JS::VM&);
 
     [[nodiscard]] ReadonlyBytes method() const { return m_method; }
     void set_method(ByteBuffer method) { m_method = move(method); }
@@ -164,9 +167,8 @@ public:
     [[nodiscard]] bool local_urls_only() const { return m_local_urls_only; }
     void set_local_urls_only(bool local_urls_only) { m_local_urls_only = local_urls_only; }
 
-    [[nodiscard]] NonnullRefPtr<HeaderList> const& header_list() const { return m_header_list; }
-    [[nodiscard]] NonnullRefPtr<HeaderList>& header_list() { return m_header_list; }
-    void set_header_list(NonnullRefPtr<HeaderList> header_list) { m_header_list = move(header_list); }
+    [[nodiscard]] JS::NonnullGCPtr<HeaderList> header_list() const { return m_header_list; }
+    void set_header_list(JS::NonnullGCPtr<HeaderList> header_list) { m_header_list = header_list; }
 
     [[nodiscard]] bool unsafe_request() const { return m_unsafe_request; }
     void set_unsafe_request(bool unsafe_request) { m_unsafe_request = unsafe_request; }
@@ -294,14 +296,16 @@ public:
     [[nodiscard]] String serialize_origin() const;
     [[nodiscard]] ErrorOr<ByteBuffer> byte_serialize_origin() const;
 
-    [[nodiscard]] WebIDL::ExceptionOr<NonnullRefPtr<Request>> clone() const;
+    [[nodiscard]] WebIDL::ExceptionOr<JS::NonnullGCPtr<Request>> clone(JS::VM&) const;
 
     [[nodiscard]] ErrorOr<void> add_range_header(u64 first, Optional<u64> const& last);
 
     [[nodiscard]] bool cross_origin_embedder_policy_allows_credentials() const;
 
 private:
-    Request();
+    explicit Request(JS::NonnullGCPtr<HeaderList>);
+
+    virtual void visit_edges(JS::Cell::Visitor&) override;
 
     // https://fetch.spec.whatwg.org/#concept-request-method
     // A request has an associated method (a method). Unless stated otherwise it is `GET`.
@@ -313,7 +317,7 @@ private:
 
     // https://fetch.spec.whatwg.org/#concept-request-header-list
     // A request has an associated header list (a header list). Unless stated otherwise it is empty.
-    NonnullRefPtr<HeaderList> m_header_list;
+    JS::NonnullGCPtr<HeaderList> m_header_list;
 
     // https://fetch.spec.whatwg.org/#unsafe-request-flag
     // A request has an associated unsafe-request flag. Unless stated otherwise it is unset.

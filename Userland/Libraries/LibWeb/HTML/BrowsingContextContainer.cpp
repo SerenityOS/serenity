@@ -169,7 +169,7 @@ void BrowsingContextContainer::shared_attribute_processing_steps_for_iframe_and_
     }
 
     // 5. Let resource be a new request whose URL is url and whose referrer policy is the current state of element's referrerpolicy content attribute.
-    auto resource = Fetch::Infrastructure::Request::create();
+    auto resource = Fetch::Infrastructure::Request::create(vm());
     resource->set_url(url);
     // FIXME: Set the referrer policy.
 
@@ -193,11 +193,11 @@ void BrowsingContextContainer::shared_attribute_processing_steps_for_iframe_and_
     }
 
     // 8. Navigate to the resource: navigate an iframe or frame given element and resource.
-    navigate_an_iframe_or_frame(move(resource));
+    navigate_an_iframe_or_frame(resource);
 }
 
 // https://html.spec.whatwg.org/multipage/iframe-embed-object.html#navigate-an-iframe-or-frame
-void BrowsingContextContainer::navigate_an_iframe_or_frame(NonnullRefPtr<Fetch::Infrastructure::Request> resource)
+void BrowsingContextContainer::navigate_an_iframe_or_frame(JS::NonnullGCPtr<Fetch::Infrastructure::Request> resource)
 {
     // 1. Let historyHandling be "default".
     auto history_handling = HistoryHandlingBehavior::Default;
@@ -220,7 +220,7 @@ void BrowsingContextContainer::navigate_an_iframe_or_frame(NonnullRefPtr<Fetch::
     //    FIXME: and processResponseEndOfBody set to reportFrameTiming.
     auto* source_browsing_context = document().browsing_context();
     VERIFY(source_browsing_context);
-    m_nested_browsing_context->navigate(move(resource), *source_browsing_context, false, history_handling);
+    m_nested_browsing_context->navigate(resource, *source_browsing_context, false, history_handling);
 }
 
 }

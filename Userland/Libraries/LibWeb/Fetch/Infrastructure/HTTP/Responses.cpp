@@ -4,36 +4,44 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibJS/Heap/Heap.h>
+#include <LibJS/Runtime/VM.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP/Bodies.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP/Responses.h>
 
 namespace Web::Fetch::Infrastructure {
 
-Response::Response()
-    : m_header_list(make_ref_counted<HeaderList>())
+Response::Response(JS::NonnullGCPtr<HeaderList> header_list)
+    : m_header_list(header_list)
 {
 }
 
-NonnullRefPtr<Response> Response::create()
+void Response::visit_edges(JS::Cell::Visitor& visitor)
 {
-    return adopt_ref(*new Response());
+    Base::visit_edges(visitor);
+    visitor.visit(m_header_list);
+}
+
+JS::NonnullGCPtr<Response> Response::create(JS::VM& vm)
+{
+    return { *vm.heap().allocate_without_realm<Response>(HeaderList::create(vm)) };
 }
 
 // https://fetch.spec.whatwg.org/#ref-for-concept-network-error%E2%91%A3
 // A network error is a response whose status is always 0, status message is always
 // the empty byte sequence, header list is always empty, and body is always null.
 
-NonnullRefPtr<Response> Response::aborted_network_error()
+JS::NonnullGCPtr<Response> Response::aborted_network_error(JS::VM& vm)
 {
-    auto response = network_error();
+    auto response = network_error(vm);
     response->set_aborted(true);
     return response;
 }
 
-NonnullRefPtr<Response> Response::network_error()
+JS::NonnullGCPtr<Response> Response::network_error(JS::VM& vm)
 {
-    auto response = Response::create();
+    auto response = Response::create(vm);
     response->set_status(0);
     response->set_type(Type::Error);
     VERIFY(!response->body().has_value());
@@ -93,29 +101,28 @@ ErrorOr<Optional<AK::URL>> Response::location_url(Optional<String> const& reques
 }
 
 // https://fetch.spec.whatwg.org/#concept-response-clone
-WebIDL::ExceptionOr<NonnullRefPtr<Response>> Response::clone() const
+WebIDL::ExceptionOr<JS::NonnullGCPtr<Response>> Response::clone(JS::VM& vm) const
 {
     // To clone a response response, run these steps:
 
-    auto& vm = Bindings::main_thread_vm();
     auto& realm = *vm.current_realm();
 
     // 1. If response is a filtered response, then return a new identical filtered response whose internal response is a clone of response’s internal response.
     if (is<FilteredResponse>(*this)) {
-        auto internal_response = TRY(static_cast<FilteredResponse const&>(*this).internal_response()->clone());
+        auto internal_response = TRY(static_cast<FilteredResponse const&>(*this).internal_response()->clone(vm));
         if (is<BasicFilteredResponse>(*this))
-            return TRY_OR_RETURN_OOM(realm, BasicFilteredResponse::create(move(internal_response)));
+            return TRY_OR_RETURN_OOM(realm, BasicFilteredResponse::create(vm, internal_response));
         if (is<CORSFilteredResponse>(*this))
-            return TRY_OR_RETURN_OOM(realm, CORSFilteredResponse::create(move(internal_response)));
+            return TRY_OR_RETURN_OOM(realm, CORSFilteredResponse::create(vm, internal_response));
         if (is<OpaqueFilteredResponse>(*this))
-            return OpaqueFilteredResponse::create(move(internal_response));
+            return OpaqueFilteredResponse::create(vm, internal_response);
         if (is<OpaqueRedirectFilteredResponse>(*this))
-            return OpaqueRedirectFilteredResponse::create(move(internal_response));
+            return OpaqueRedirectFilteredResponse::create(vm, internal_response);
         VERIFY_NOT_REACHED();
     }
 
     // 2. Let newResponse be a copy of response, except for its body.
-    auto new_response = Infrastructure::Response::create();
+    auto new_response = Infrastructure::Response::create(vm);
     new_response->set_type(m_type);
     new_response->set_aborted(m_aborted);
     new_response->set_url_list(m_url_list);
@@ -139,8 +146,9 @@ WebIDL::ExceptionOr<NonnullRefPtr<Response>> Response::clone() const
     return new_response;
 }
 
-FilteredResponse::FilteredResponse(NonnullRefPtr<Response> internal_response)
-    : m_internal_response(move(internal_response))
+FilteredResponse::FilteredResponse(JS::NonnullGCPtr<Response> internal_response, JS::NonnullGCPtr<HeaderList> header_list)
+    : Response(header_list)
+    , m_internal_response(internal_response)
 {
 }
 
@@ -148,26 +156,38 @@ FilteredResponse::~FilteredResponse()
 {
 }
 
-ErrorOr<NonnullRefPtr<BasicFilteredResponse>> BasicFilteredResponse::create(NonnullRefPtr<Response> internal_response)
+void FilteredResponse::visit_edges(JS::Cell::Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    visitor.visit(m_internal_response);
+}
+
+ErrorOr<JS::NonnullGCPtr<BasicFilteredResponse>> BasicFilteredResponse::create(JS::VM& vm, JS::NonnullGCPtr<Response> internal_response)
 {
     // A basic filtered response is a filtered response whose type is "basic" and header list excludes
     // any headers in internal response’s header list whose name is a forbidden response-header name.
-    auto header_list = make_ref_counted<HeaderList>();
+    auto header_list = HeaderList::create(vm);
     for (auto const& header : *internal_response->header_list()) {
         if (!is_forbidden_response_header_name(header.name))
             TRY(header_list->append(header));
     }
 
-    return adopt_ref(*new BasicFilteredResponse(move(internal_response), move(header_list)));
+    return { *vm.heap().allocate_without_realm<BasicFilteredResponse>(internal_response, header_list) };
 }
 
-BasicFilteredResponse::BasicFilteredResponse(NonnullRefPtr<Response> internal_response, NonnullRefPtr<HeaderList> header_list)
-    : FilteredResponse(move(internal_response))
-    , m_header_list(move(header_list))
+BasicFilteredResponse::BasicFilteredResponse(JS::NonnullGCPtr<Response> internal_response, JS::NonnullGCPtr<HeaderList> header_list)
+    : FilteredResponse(internal_response, header_list)
+    , m_header_list(header_list)
 {
 }
 
-ErrorOr<NonnullRefPtr<CORSFilteredResponse>> CORSFilteredResponse::create(NonnullRefPtr<Response> internal_response)
+void BasicFilteredResponse::visit_edges(JS::Cell::Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    visitor.visit(m_header_list);
+}
+
+ErrorOr<JS::NonnullGCPtr<CORSFilteredResponse>> CORSFilteredResponse::create(JS::VM& vm, JS::NonnullGCPtr<Response> internal_response)
 {
     // A CORS filtered response is a filtered response whose type is "cors" and header list excludes
     // any headers in internal response’s header list whose name is not a CORS-safelisted response-header
@@ -176,43 +196,63 @@ ErrorOr<NonnullRefPtr<CORSFilteredResponse>> CORSFilteredResponse::create(Nonnul
     for (auto const& header_name : internal_response->cors_exposed_header_name_list())
         cors_exposed_header_name_list.append(header_name.span());
 
-    auto header_list = make_ref_counted<HeaderList>();
+    auto header_list = HeaderList::create(vm);
     for (auto const& header : *internal_response->header_list()) {
         if (is_cors_safelisted_response_header_name(header.name, cors_exposed_header_name_list))
             TRY(header_list->append(header));
     }
 
-    return adopt_ref(*new CORSFilteredResponse(move(internal_response), move(header_list)));
+    return { *vm.heap().allocate_without_realm<CORSFilteredResponse>(internal_response, header_list) };
 }
 
-CORSFilteredResponse::CORSFilteredResponse(NonnullRefPtr<Response> internal_response, NonnullRefPtr<HeaderList> header_list)
-    : FilteredResponse(move(internal_response))
-    , m_header_list(move(header_list))
+CORSFilteredResponse::CORSFilteredResponse(JS::NonnullGCPtr<Response> internal_response, JS::NonnullGCPtr<HeaderList> header_list)
+    : FilteredResponse(internal_response, header_list)
+    , m_header_list(header_list)
 {
 }
 
-NonnullRefPtr<OpaqueFilteredResponse> OpaqueFilteredResponse::create(NonnullRefPtr<Response> internal_response)
+void CORSFilteredResponse::visit_edges(JS::Cell::Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    visitor.visit(m_header_list);
+}
+
+JS::NonnullGCPtr<OpaqueFilteredResponse> OpaqueFilteredResponse::create(JS::VM& vm, JS::NonnullGCPtr<Response> internal_response)
+{
+    // An opaque filtered response is a filtered response whose type is "opaque", URL list is the empty list,
+    // status is 0, status message is the empty byte sequence, header list is empty, and body is null.
+    return { *vm.heap().allocate_without_realm<OpaqueFilteredResponse>(internal_response, HeaderList::create(vm)) };
+}
+
+OpaqueFilteredResponse::OpaqueFilteredResponse(JS::NonnullGCPtr<Response> internal_response, JS::NonnullGCPtr<HeaderList> header_list)
+    : FilteredResponse(internal_response, header_list)
+    , m_header_list(header_list)
+{
+}
+
+void OpaqueFilteredResponse::visit_edges(JS::Cell::Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    visitor.visit(m_header_list);
+}
+
+JS::NonnullGCPtr<OpaqueRedirectFilteredResponse> OpaqueRedirectFilteredResponse::create(JS::VM& vm, JS::NonnullGCPtr<Response> internal_response)
 {
     // An opaque-redirect filtered response is a filtered response whose type is "opaqueredirect",
     // status is 0, status message is the empty byte sequence, header list is empty, and body is null.
-    return adopt_ref(*new OpaqueFilteredResponse(move(internal_response)));
+    return { *vm.heap().allocate_without_realm<OpaqueRedirectFilteredResponse>(internal_response, HeaderList::create(vm)) };
 }
 
-OpaqueFilteredResponse::OpaqueFilteredResponse(NonnullRefPtr<Response> internal_response)
-    : FilteredResponse(move(internal_response))
-    , m_header_list(make_ref_counted<HeaderList>())
+OpaqueRedirectFilteredResponse::OpaqueRedirectFilteredResponse(JS::NonnullGCPtr<Response> internal_response, JS::NonnullGCPtr<HeaderList> header_list)
+    : FilteredResponse(internal_response, header_list)
+    , m_header_list(header_list)
 {
 }
 
-NonnullRefPtr<OpaqueRedirectFilteredResponse> OpaqueRedirectFilteredResponse::create(NonnullRefPtr<Response> internal_response)
+void OpaqueRedirectFilteredResponse::visit_edges(JS::Cell::Visitor& visitor)
 {
-    return adopt_ref(*new OpaqueRedirectFilteredResponse(move(internal_response)));
-}
-
-OpaqueRedirectFilteredResponse::OpaqueRedirectFilteredResponse(NonnullRefPtr<Response> internal_response)
-    : FilteredResponse(move(internal_response))
-    , m_header_list(make_ref_counted<HeaderList>())
-{
+    Base::visit_edges(visitor);
+    visitor.visit(m_header_list);
 }
 
 }
