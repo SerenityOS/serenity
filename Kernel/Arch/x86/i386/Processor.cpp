@@ -11,6 +11,7 @@
 #include <Kernel/Random.h>
 #include <Kernel/Scheduler.h>
 #include <Kernel/Sections.h>
+#include <Kernel/StackWriter.h>
 #include <Kernel/Thread.h>
 
 namespace Kernel {
@@ -75,43 +76,40 @@ FlatPtr Processor::init_context(Thread& thread, bool leave_crit)
         m_in_critical = 1; // leave it without triggering anything or restoring flags
     }
 
-    u32 kernel_stack_top = thread.kernel_stack_top();
-
-    // Add a random offset between 0-256 (16-byte aligned)
-    kernel_stack_top -= round_up_to_power_of_two(get_fast_random<u8>(), 16);
-
-    u32 stack_top = kernel_stack_top;
-
     // TODO: handle NT?
     VERIFY((cpu_flags() & 0x24000) == 0); // Assume !(NT | VM)
+
+    // Get stack top and add a random offset between 0-256 (16-byte aligned)
+    FlatPtr const kernel_stack_top = thread.kernel_stack_top() - round_up_to_power_of_two(get_fast_random<u8>(), 16);
+
+    StackWriter stack_writer(kernel_stack_top);
+
+    // we want to end up 16-byte aligned, %esp + 4 should be aligned
+    constexpr u32 padding_value { 0 };
+    stack_writer.push(padding_value);
 
     auto& regs = thread.regs();
     bool return_to_user = (regs.cs & 3) != 0;
 
-    // make room for an interrupt frame
+    size_t register_state_offset { 0 };
     if (!return_to_user) {
         // userspace_esp and userspace_ss are not popped off by iret
         // unless we're switching back to user mode
-        stack_top -= sizeof(RegisterState) - 2 * sizeof(u32);
+        constexpr size_t skipped_reg_size = 2 * sizeof(u32);
+        register_state_offset = skipped_reg_size;
 
         // For kernel threads we'll push the thread function argument
         // which should be in regs.esp and exit_kernel_thread as return
         // address.
-        stack_top -= 2 * sizeof(u32);
-        *reinterpret_cast<u32*>(kernel_stack_top - 2 * sizeof(u32)) = regs.esp;
-        *reinterpret_cast<u32*>(kernel_stack_top - 3 * sizeof(u32)) = FlatPtr(&exit_kernel_thread);
-    } else {
-        stack_top -= sizeof(RegisterState);
+        stack_writer.push(regs.esp);
+        stack_writer.push(FlatPtr(&exit_kernel_thread));
     }
 
-    // we want to end up 16-byte aligned, %esp + 4 should be aligned
-    stack_top -= sizeof(u32);
-    *reinterpret_cast<u32*>(kernel_stack_top - sizeof(u32)) = 0;
-
+    // make room for an interrupt frame
     // set up the stack so that after returning from thread_context_first_enter()
     // we will end up either in kernel mode or user mode, depending on how the thread is set up
     // However, the first step is to always start in kernel mode with thread_context_first_enter
-    RegisterState& iretframe = *reinterpret_cast<RegisterState*>(stack_top);
+    auto& iretframe = stack_writer.emplace<RegisterState>(register_state_offset);
     iretframe.ss = regs.ss;
     iretframe.gs = regs.gs;
     iretframe.fs = regs.fs;
@@ -134,14 +132,15 @@ FlatPtr Processor::init_context(Thread& thread, bool leave_crit)
     }
 
     // make space for a trap frame
-    stack_top -= sizeof(TrapFrame);
-    TrapFrame& trap = *reinterpret_cast<TrapFrame*>(stack_top);
+    auto& trap = stack_writer.emplace<TrapFrame>();
     trap.regs = &iretframe;
     trap.prev_irq_level = 0;
     trap.next_trap = nullptr;
 
-    stack_top -= sizeof(u32); // pointer to TrapFrame
-    *reinterpret_cast<u32*>(stack_top) = stack_top + 4;
+    // Add a pointer to the preceding trap frame
+    stack_writer.push(stack_writer.get());
+
+    FlatPtr const stack_top = stack_writer.get();
 
     if constexpr (CONTEXT_SWITCH_DEBUG) {
         if (return_to_user) {
