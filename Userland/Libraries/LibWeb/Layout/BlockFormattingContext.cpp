@@ -107,9 +107,6 @@ void BlockFormattingContext::compute_width(Box const& box, AvailableSpace const&
 
     auto const& computed_values = box.computed_values();
 
-    if (should_treat_width_as_auto(box, available_space) && available_space.width.is_intrinsic_sizing_constraint())
-        return;
-
     float width_of_containing_block = available_space.width.to_px();
     auto width_of_containing_block_as_length_for_resolve = available_space.width.is_definite() ? CSS::Length::make_px(width_of_containing_block) : CSS::Length::make_px(0);
 
