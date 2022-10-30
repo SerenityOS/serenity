@@ -51,24 +51,12 @@ private:
         if (action.group() && action.group()->is_exclusive())
             set_exclusive(true);
         set_action(action);
-        set_tooltip(tooltip(action));
         set_focus_policy(FocusPolicy::NoFocus);
         if (action.icon())
             set_icon(action.icon());
         else
             set_text(action.text());
         set_button_style(Gfx::ButtonStyle::Coolbar);
-    }
-    String tooltip(Action const& action) const
-    {
-        StringBuilder builder;
-        builder.append(action.text());
-        if (action.shortcut().is_valid()) {
-            builder.append(" ("sv);
-            builder.append(action.shortcut().to_string());
-            builder.append(')');
-        }
-        return builder.to_string();
     }
 
     virtual void enter_event(Core::Event& event) override

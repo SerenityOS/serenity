@@ -169,6 +169,25 @@ void Button::set_action(Action& action)
     set_checkable(action.is_checkable());
     if (action.is_checkable())
         set_checked(action.is_checked());
+    set_text_from_action();
+}
+
+static String create_tooltip_for_action(Action const& action)
+{
+    StringBuilder builder;
+    builder.append(action.text());
+    if (action.shortcut().is_valid()) {
+        builder.append(" ("sv);
+        builder.append(action.shortcut().to_string());
+        builder.append(')');
+    }
+    return builder.to_string();
+}
+
+void Button::set_text_from_action()
+{
+    set_text(action()->text());
+    set_tooltip(create_tooltip_for_action(*action()));
 }
 
 void Button::set_icon(RefPtr<Gfx::Bitmap> icon)
