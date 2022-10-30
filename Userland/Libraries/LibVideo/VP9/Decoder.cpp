@@ -42,11 +42,6 @@ DecoderErrorOr<void> Decoder::receive_sample(Span<u8 const> chunk_data)
     return {};
 }
 
-DecoderErrorOr<void> Decoder::receive_sample(ByteBuffer const& chunk_data)
-{
-    return receive_sample(chunk_data.span());
-}
-
 void Decoder::dump_frame_info()
 {
     m_parser->dump_info();

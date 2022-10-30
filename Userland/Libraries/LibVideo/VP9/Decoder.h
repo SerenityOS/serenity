@@ -13,23 +13,24 @@
 #include <AK/Span.h>
 #include <LibVideo/Color/CodingIndependentCodePoints.h>
 #include <LibVideo/DecoderError.h>
+#include <LibVideo/VideoDecoder.h>
 #include <LibVideo/VideoFrame.h>
 
 #include "Parser.h"
 
 namespace Video::VP9 {
 
-class Decoder {
+class Decoder : public VideoDecoder {
     friend class Parser;
 
 public:
     Decoder();
+    ~Decoder() override { }
     /* (8.1) General */
-    DecoderErrorOr<void> receive_sample(Span<u8 const>);
-    DecoderErrorOr<void> receive_sample(ByteBuffer const&);
+    DecoderErrorOr<void> receive_sample(Span<u8 const>) override;
     void dump_frame_info();
 
-    DecoderErrorOr<NonnullOwnPtr<VideoFrame>> get_decoded_frame();
+    DecoderErrorOr<NonnullOwnPtr<VideoFrame>> get_decoded_frame() override;
 
 private:
     typedef i32 Intermediate;

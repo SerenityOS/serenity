@@ -49,7 +49,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     main_widget->set_layout<GUI::VerticalBoxLayout>();
     auto image_widget = TRY(main_widget->try_add<GUI::ImageWidget>());
 
-    Video::VP9::Decoder vp9_decoder;
+    OwnPtr<Video::VideoDecoder> decoder = make<Video::VP9::Decoder>();
     size_t cluster_index = 0;
     size_t block_index = 0;
     size_t frame_index = 0;
@@ -76,14 +76,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         if (!optional_sample.has_value())
             return;
 
-        auto result = vp9_decoder.receive_sample(optional_sample.release_value());
+        auto result = decoder->receive_sample(optional_sample.release_value());
 
         if (result.is_error()) {
             outln("Error decoding frame {}: {}", frame_number, result.error().string_literal());
             return;
         }
 
-        auto frame_result = vp9_decoder.get_decoded_frame();
+        auto frame_result = decoder->get_decoded_frame();
         if (frame_result.is_error()) {
             outln("Error retrieving frame {}: {}", frame_number, frame_result.error().string_literal());
             return;
