@@ -174,7 +174,6 @@ public:
         Calculated,
         Color,
         Content,
-        ExplicitTrackSizing,
         FilterValueList,
         Flex,
         FlexFlow,
@@ -182,6 +181,7 @@ public:
         Frequency,
         GridTrackPlacement,
         GridTrackPlacementShorthand,
+        GridTrackSizeList,
         Identifier,
         Image,
         Inherit,
@@ -226,7 +226,7 @@ public:
     bool is_frequency() const { return type() == Type::Frequency; }
     bool is_grid_track_placement() const { return type() == Type::GridTrackPlacement; }
     bool is_grid_track_placement_shorthand() const { return type() == Type::GridTrackPlacementShorthand; }
-    bool is_explicit_track_sizing() const { return type() == Type::ExplicitTrackSizing; }
+    bool is_grid_track_size_list() const { return type() == Type::GridTrackSizeList; }
     bool is_identifier() const { return type() == Type::Identifier; }
     bool is_image() const { return type() == Type::Image; }
     bool is_inherit() const { return type() == Type::Inherit; }
@@ -269,7 +269,7 @@ public:
     FrequencyStyleValue const& as_frequency() const;
     GridTrackPlacementShorthandStyleValue const& as_grid_track_placement_shorthand() const;
     GridTrackPlacementStyleValue const& as_grid_track_placement() const;
-    GridTrackSizeStyleValue const& as_explicit_track_sizing() const;
+    GridTrackSizeStyleValue const& as_grid_track_size_list() const;
     IdentifierStyleValue const& as_identifier() const;
     ImageStyleValue const& as_image() const;
     InheritStyleValue const& as_inherit() const;
@@ -310,7 +310,7 @@ public:
     FrequencyStyleValue& as_frequency() { return const_cast<FrequencyStyleValue&>(const_cast<StyleValue const&>(*this).as_frequency()); }
     GridTrackPlacementShorthandStyleValue& as_grid_track_placement_shorthand() { return const_cast<GridTrackPlacementShorthandStyleValue&>(const_cast<StyleValue const&>(*this).as_grid_track_placement_shorthand()); }
     GridTrackPlacementStyleValue& as_grid_track_placement() { return const_cast<GridTrackPlacementStyleValue&>(const_cast<StyleValue const&>(*this).as_grid_track_placement()); }
-    GridTrackSizeStyleValue& as_explicit_track_sizing() { return const_cast<GridTrackSizeStyleValue&>(const_cast<StyleValue const&>(*this).as_explicit_track_sizing()); }
+    GridTrackSizeStyleValue& as_grid_track_size_list() { return const_cast<GridTrackSizeStyleValue&>(const_cast<StyleValue const&>(*this).as_grid_track_size_list()); }
     IdentifierStyleValue& as_identifier() { return const_cast<IdentifierStyleValue&>(const_cast<StyleValue const&>(*this).as_identifier()); }
     ImageStyleValue& as_image() { return const_cast<ImageStyleValue&>(const_cast<StyleValue const&>(*this).as_image()); }
     InheritStyleValue& as_inherit() { return const_cast<InheritStyleValue&>(const_cast<StyleValue const&>(*this).as_inherit()); }
@@ -1048,21 +1048,24 @@ private:
 
 class GridTrackSizeStyleValue final : public StyleValue {
 public:
-    static NonnullRefPtr<GridTrackSizeStyleValue> create(CSS::ExplicitTrackSizing explicit_track_sizing);
+    static NonnullRefPtr<GridTrackSizeStyleValue> create(CSS::GridTrackSizeList grid_track_size_list);
     virtual ~GridTrackSizeStyleValue() override = default;
 
-    CSS::ExplicitTrackSizing explicit_track_sizing() const { return m_explicit_track_sizing; }
+    static NonnullRefPtr<GridTrackSizeStyleValue> make_auto();
+
+    CSS::GridTrackSizeList grid_track_size_list() const { return m_grid_track_size_list; }
+
     virtual String to_string() const override;
     virtual bool equals(StyleValue const& other) const override;
 
 private:
-    explicit GridTrackSizeStyleValue(CSS::ExplicitTrackSizing explicit_track_sizing)
-        : StyleValue(Type::ExplicitTrackSizing)
-        , m_explicit_track_sizing(explicit_track_sizing)
+    explicit GridTrackSizeStyleValue(CSS::GridTrackSizeList grid_track_size_list)
+        : StyleValue(Type::GridTrackSizeList)
+        , m_grid_track_size_list(grid_track_size_list)
     {
     }
 
-    CSS::ExplicitTrackSizing m_explicit_track_sizing;
+    CSS::GridTrackSizeList m_grid_track_size_list;
 };
 
 class IdentifierStyleValue final : public StyleValue {

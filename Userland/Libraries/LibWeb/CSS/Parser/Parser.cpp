@@ -5407,221 +5407,267 @@ RefPtr<StyleValue> Parser::parse_as_css_value(PropertyID property_id)
     return parsed_value.release_value();
 }
 
+Optional<CSS::GridSize> Parser::parse_grid_size(ComponentValue const& component_value)
+{
+    // FIXME: Parse calc here if necessary
+    if (component_value.is_function())
+        return {};
+    auto token = component_value.token();
+    if (token.is(Token::Type::Dimension) && token.dimension_unit().equals_ignoring_case("fr"sv)) {
+        float numeric_value = token.dimension_value();
+        if (numeric_value)
+            return GridSize(numeric_value);
+    }
+    if (token.is(Token::Type::Ident) && token.ident().equals_ignoring_case("auto"sv))
+        return GridSize::make_auto();
+    auto dimension = parse_dimension(token);
+    if (!dimension.has_value())
+        return {};
+    if (dimension->is_length())
+        return GridSize(dimension->length());
+    else if (dimension->is_percentage())
+        return GridSize(dimension->percentage());
+    return {};
+}
+
+Optional<CSS::GridMinMax> Parser::parse_min_max(Vector<ComponentValue> const& component_values)
+{
+    // https://www.w3.org/TR/css-grid-2/#valdef-grid-template-columns-minmax
+    // 'minmax(min, max)'
+    // Defines a size range greater than or equal to min and less than or equal to max. If the max is
+    // less than the min, then the max will be floored by the min (essentially yielding minmax(min,
+    // min)). As a maximum, a <flex> value sets the track’s flex factor; it is invalid as a minimum.
+    auto function_tokens = TokenStream(component_values);
+    auto comma_separated_list = parse_a_comma_separated_list_of_component_values(function_tokens);
+    if (comma_separated_list.size() != 2)
+        return {};
+
+    TokenStream part_one_tokens { comma_separated_list[0] };
+    part_one_tokens.skip_whitespace();
+    if (!part_one_tokens.has_next_token())
+        return {};
+    auto current_token = part_one_tokens.next_token();
+    auto min_grid_size = parse_grid_size(current_token);
+
+    TokenStream part_two_tokens { comma_separated_list[1] };
+    part_two_tokens.skip_whitespace();
+    if (!part_two_tokens.has_next_token())
+        return {};
+    current_token = part_two_tokens.next_token();
+    auto max_grid_size = parse_grid_size(current_token);
+
+    if (min_grid_size.has_value() && max_grid_size.has_value()) {
+        // https://www.w3.org/TR/css-grid-2/#valdef-grid-template-columns-minmax
+        // As a maximum, a <flex> value sets the track’s flex factor; it is invalid as a minimum.
+        if (min_grid_size.value().is_flexible_length())
+            return {};
+        return CSS::GridMinMax(min_grid_size.value(), max_grid_size.value());
+    }
+    return {};
+}
+
+Optional<CSS::GridRepeat> Parser::parse_repeat(Vector<ComponentValue> const& component_values)
+{
+    // https://www.w3.org/TR/css-grid-2/#repeat-syntax
+    // 7.2.3.1. Syntax of repeat()
+    // The generic form of the repeat() syntax is, approximately,
+    // repeat( [ <integer [1,∞]> | auto-fill | auto-fit ] , <track-list> )
+    auto is_auto_fill = false;
+    auto is_auto_fit = false;
+    auto function_tokens = TokenStream(component_values);
+    auto comma_separated_list = parse_a_comma_separated_list_of_component_values(function_tokens);
+    if (comma_separated_list.size() != 2)
+        return {};
+    // The first argument specifies the number of repetitions.
+    TokenStream part_one_tokens { comma_separated_list[0] };
+    part_one_tokens.skip_whitespace();
+    if (!part_one_tokens.has_next_token())
+        return {};
+    auto current_token = part_one_tokens.next_token().token();
+
+    auto repeat_count = 0;
+    if (current_token.is(Token::Type::Number) && current_token.number().is_integer() && current_token.number_value() > 0)
+        repeat_count = current_token.number_value();
+    else if (current_token.is(Token::Type::Ident) && current_token.ident().equals_ignoring_case("auto-fill"sv))
+        is_auto_fill = true;
+    else if (current_token.is(Token::Type::Ident) && current_token.ident().equals_ignoring_case("auto-fit"sv))
+        is_auto_fit = true;
+
+    // The second argument is a track list, which is repeated that number of times.
+    TokenStream part_two_tokens { comma_separated_list[1] };
+    part_two_tokens.skip_whitespace();
+    if (!part_two_tokens.has_next_token())
+        return {};
+
+    Vector<CSS::ExplicitGridTrack> repeat_params;
+    while (part_two_tokens.has_next_token()) {
+        auto token = part_two_tokens.next_token();
+        if (token.is_block()) {
+            part_two_tokens.skip_whitespace();
+        } else {
+            auto track_sizing_function = parse_track_sizing_function(token);
+            if (!track_sizing_function.has_value())
+                return {};
+            // However, there are some restrictions:
+            // The repeat() notation can’t be nested.
+            if (track_sizing_function.value().is_repeat())
+                return {};
+            // Automatic repetitions (auto-fill or auto-fit) cannot be combined with intrinsic or flexible sizes.
+            if (track_sizing_function.value().is_default() && track_sizing_function.value().grid_size().is_flexible_length() && (is_auto_fill || is_auto_fit))
+                return {};
+            repeat_params.append(track_sizing_function.value());
+            part_two_tokens.skip_whitespace();
+        }
+    }
+
+    // Thus the precise syntax of the repeat() notation has several forms:
+    // <track-repeat> = repeat( [ <integer [1,∞]> ] , [ <line-names>? <track-size> ]+ <line-names>? )
+    // <auto-repeat>  = repeat( [ auto-fill | auto-fit ] , [ <line-names>? <fixed-size> ]+ <line-names>? )
+    // <fixed-repeat> = repeat( [ <integer [1,∞]> ] , [ <line-names>? <fixed-size> ]+ <line-names>? )
+    // <name-repeat>  = repeat( [ <integer [1,∞]> | auto-fill ], <line-names>+)
+
+    // The <track-repeat> variant can represent the repetition of any <track-size>, but is limited to a
+    // fixed number of repetitions.
+
+    // The <auto-repeat> variant can repeat automatically to fill a space, but requires definite track
+    // sizes so that the number of repetitions can be calculated. It can only appear once in the track
+    // list, but the same track list can also contain <fixed-repeat>s.
+
+    // The <name-repeat> variant is for adding line names to subgrids. It can only be used with the
+    // subgrid keyword and cannot specify track sizes, only line names.
+
+    // If a repeat() function that is not a <name-repeat> ends up placing two <line-names> adjacent to
+    // each other, the name lists are merged. For example, repeat(2, [a] 1fr [b]) is equivalent to [a]
+    // 1fr [b a] 1fr [b].
+    if (is_auto_fill)
+        return CSS::GridRepeat(CSS::GridTrackSizeList(repeat_params), CSS::GridRepeat::Type::AutoFill);
+    else if (is_auto_fit)
+        return CSS::GridRepeat(CSS::GridTrackSizeList(repeat_params), CSS::GridRepeat::Type::AutoFit);
+    else
+        return CSS::GridRepeat(CSS::GridTrackSizeList(repeat_params), repeat_count);
+}
+
+Optional<CSS::ExplicitGridTrack> Parser::parse_track_sizing_function(ComponentValue const& token)
+{
+    if (token.is_function()) {
+        auto const& function_token = token.function();
+        if (function_token.name().equals_ignoring_case("repeat"sv)) {
+            auto maybe_repeat = parse_repeat(function_token.values());
+            if (maybe_repeat.has_value())
+                return CSS::ExplicitGridTrack(maybe_repeat.value());
+            else
+                return {};
+        } else if (function_token.name().equals_ignoring_case("minmax"sv)) {
+            auto maybe_min_max_value = parse_min_max(function_token.values());
+            if (maybe_min_max_value.has_value())
+                return CSS::ExplicitGridTrack(maybe_min_max_value.value());
+            else
+                return {};
+        }
+        return {};
+    } else if (token.is(Token::Type::Ident) && token.token().ident().equals_ignoring_case("auto"sv)) {
+        return CSS::ExplicitGridTrack(GridSize(Length::make_auto()));
+    } else if (token.is_block()) {
+        return {};
+    } else {
+        auto grid_size = parse_grid_size(token);
+        if (!grid_size.has_value())
+            return {};
+        return CSS::ExplicitGridTrack(grid_size.value());
+    }
+}
+
 RefPtr<StyleValue> Parser::parse_grid_track_sizes(Vector<ComponentValue> const& component_values)
 {
-    auto parse_grid_track_size = [&](ComponentValue const& component_value) -> Optional<GridTrackSize> {
-        // FIXME: Parse calc here if necessary
-        if (component_value.is_function())
-            return {};
-        auto token = component_value.token();
-        if (token.is(Token::Type::Dimension) && token.dimension_unit().equals_ignoring_case("fr"sv)) {
-            float numeric_value = token.dimension_value();
-            if (numeric_value)
-                return GridTrackSize(numeric_value);
+    Vector<CSS::ExplicitGridTrack> track_list;
+    TokenStream tokens { component_values };
+    while (tokens.has_next_token()) {
+        auto token = tokens.next_token();
+        if (token.is_block()) {
+
+        } else {
+            auto track_sizing_function = parse_track_sizing_function(token);
+            if (!track_sizing_function.has_value())
+                return GridTrackSizeStyleValue::make_auto();
+            // FIXME: Handle multiple repeat values (should combine them here, or remove
+            // any other ones if the first one is auto-fill, etc.)
+            track_list.append(track_sizing_function.value());
         }
-        if (token.is(Token::Type::Ident) && token.ident().equals_ignoring_case("auto"sv))
-            return GridTrackSize::make_auto();
-        auto dimension = parse_dimension(token);
-        if (!dimension.has_value())
-            return {};
-        if (dimension->is_length())
-            return GridTrackSize(dimension->length());
-        else if (dimension->is_percentage())
-            return GridTrackSize(dimension->percentage());
-        return {};
-    };
-
-    auto parse_min_max = [&](Vector<ComponentValue> const& component_values) -> Optional<MetaGridTrackSize> {
-        // https://www.w3.org/TR/css-grid-2/#valdef-grid-template-columns-minmax
-        // 'minmax(min, max)'
-        // Defines a size range greater than or equal to min and less than or equal to max. If the max is
-        // less than the min, then the max will be floored by the min (essentially yielding minmax(min,
-        // min)). As a maximum, a <flex> value sets the track’s flex factor; it is invalid as a minimum.
-        auto function_tokens = TokenStream(component_values);
-        auto comma_separated_list = parse_a_comma_separated_list_of_component_values(function_tokens);
-        if (comma_separated_list.size() != 2)
-            return MetaGridTrackSize(GridTrackSize::make_auto());
-
-        TokenStream part_one_tokens { comma_separated_list[0] };
-        part_one_tokens.skip_whitespace();
-        if (!part_one_tokens.has_next_token())
-            return MetaGridTrackSize(GridTrackSize::make_auto());
-        auto current_token = part_one_tokens.next_token();
-        auto min_grid_track_size = parse_grid_track_size(current_token);
-
-        TokenStream part_two_tokens { comma_separated_list[1] };
-        part_two_tokens.skip_whitespace();
-        if (!part_two_tokens.has_next_token())
-            return MetaGridTrackSize(GridTrackSize::make_auto());
-        current_token = part_two_tokens.next_token();
-        auto max_grid_track_size = parse_grid_track_size(current_token);
-
-        if (min_grid_track_size.has_value() && max_grid_track_size.has_value()) {
-            // https://www.w3.org/TR/css-grid-2/#valdef-grid-template-columns-minmax
-            // As a maximum, a <flex> value sets the track’s flex factor; it is invalid as a minimum.
-            if (min_grid_track_size.value().is_flexible_length())
-                return {};
-            return MetaGridTrackSize(min_grid_track_size.value(), max_grid_track_size.value());
-        }
-        return MetaGridTrackSize(GridTrackSize::make_auto(), GridTrackSize::make_auto());
-    };
-
-    Vector<CSS::MetaGridTrackSize> params;
-    for (auto const& component_value : component_values) {
-        if (component_value.is_function()) {
-            auto const& function_token = component_value.function();
-            // https://www.w3.org/TR/css-grid-2/#repeat-syntax
-            // 7.2.3.1. Syntax of repeat()
-            // The generic form of the repeat() syntax is, approximately,
-            // repeat( [ <integer [1,∞]> | auto-fill | auto-fit ] , <track-list> )
-            if (function_token.name().equals_ignoring_case("repeat"sv)) {
-                auto is_auto_fill = false;
-                auto is_auto_fit = false;
-                auto function_tokens = TokenStream(function_token.values());
-                auto comma_separated_list = parse_a_comma_separated_list_of_component_values(function_tokens);
-                if (comma_separated_list.size() != 2)
-                    continue;
-                // The first argument specifies the number of repetitions.
-                TokenStream part_one_tokens { comma_separated_list[0] };
-                part_one_tokens.skip_whitespace();
-                if (!part_one_tokens.has_next_token())
-                    continue;
-                auto current_token = part_one_tokens.next_token().token();
-
-                auto repeat_count = 0;
-                if (current_token.is(Token::Type::Number) && current_token.number().is_integer() && current_token.number_value() > 0)
-                    repeat_count = current_token.number_value();
-                else if (current_token.is(Token::Type::Ident) && current_token.ident().equals_ignoring_case("auto-fill"sv))
-                    is_auto_fill = true;
-                else if (current_token.is(Token::Type::Ident) && current_token.ident().equals_ignoring_case("auto-fit"sv))
-                    is_auto_fit = true;
-
-                // The second argument is a track list, which is repeated that number of times.
-                TokenStream part_two_tokens { comma_separated_list[1] };
-                part_two_tokens.skip_whitespace();
-                if (!part_two_tokens.has_next_token())
-                    continue;
-
-                Vector<CSS::MetaGridTrackSize> repeat_params;
-                while (true) {
-                    part_two_tokens.skip_whitespace();
-                    auto current_component_value = part_two_tokens.next_token();
-                    if (current_component_value.is_function()) {
-                        // However, there are some restrictions:
-                        // The repeat() notation can’t be nested.
-                        if (current_component_value.function().name().equals_ignoring_case("repeat"sv))
-                            return GridTrackSizeStyleValue::create({});
-                        if (current_component_value.function().name().equals_ignoring_case("minmax"sv)) {
-                            auto maybe_min_max_value = parse_min_max(current_component_value.function().values());
-                            if (maybe_min_max_value.has_value())
-                                repeat_params.append(maybe_min_max_value.value());
-                            else
-                                return GridTrackSizeStyleValue::create({});
-                        }
-                        // FIXME: Implement other function values possible within repeat
-                    } else if (current_component_value.is_block()) {
-                        // FIXME: Implement things like grid-template-columns: repeat(1, [col-start] 8);
-                    } else {
-                        auto grid_track_size = parse_grid_track_size(current_component_value);
-                        if (!grid_track_size.has_value())
-                            return GridTrackSizeStyleValue::create({});
-                        // Automatic repetitions (auto-fill or auto-fit) cannot be combined with intrinsic or flexible sizes.
-                        if (grid_track_size.value().is_flexible_length() && (is_auto_fill || is_auto_fit))
-                            return GridTrackSizeStyleValue::create({});
-                        repeat_params.append(grid_track_size.value());
-                    }
-                    part_two_tokens.skip_whitespace();
-                    if (!part_two_tokens.has_next_token())
-                        break;
-                }
-
-                // Thus the precise syntax of the repeat() notation has several forms:
-                // <track-repeat> = repeat( [ <integer [1,∞]> ] , [ <line-names>? <track-size> ]+ <line-names>? )
-                // <auto-repeat>  = repeat( [ auto-fill | auto-fit ] , [ <line-names>? <fixed-size> ]+ <line-names>? )
-                // <fixed-repeat> = repeat( [ <integer [1,∞]> ] , [ <line-names>? <fixed-size> ]+ <line-names>? )
-                // <name-repeat>  = repeat( [ <integer [1,∞]> | auto-fill ], <line-names>+)
-
-                // The <track-repeat> variant can represent the repetition of any <track-size>, but is limited to a
-                // fixed number of repetitions.
-
-                // The <auto-repeat> variant can repeat automatically to fill a space, but requires definite track
-                // sizes so that the number of repetitions can be calculated. It can only appear once in the track
-                // list, but the same track list can also contain <fixed-repeat>s.
-
-                // The <name-repeat> variant is for adding line names to subgrids. It can only be used with the
-                // subgrid keyword and cannot specify track sizes, only line names.
-
-                // If a repeat() function that is not a <name-repeat> ends up placing two <line-names> adjacent to
-                // each other, the name lists are merged. For example, repeat(2, [a] 1fr [b]) is equivalent to [a]
-                // 1fr [b a] 1fr [b].
-                if (is_auto_fill)
-                    return GridTrackSizeStyleValue::create(CSS::ExplicitTrackSizing(repeat_params, CSS::ExplicitTrackSizing::Type::AutoFill));
-                if (is_auto_fit)
-                    return GridTrackSizeStyleValue::create(CSS::ExplicitTrackSizing(repeat_params, CSS::ExplicitTrackSizing::Type::AutoFit));
-                return GridTrackSizeStyleValue::create(CSS::ExplicitTrackSizing(repeat_params, repeat_count));
-            } else if (function_token.name().equals_ignoring_case("minmax"sv)) {
-                auto maybe_min_max_value = parse_min_max(function_token.values());
-                if (maybe_min_max_value.has_value())
-                    params.append(maybe_min_max_value.value());
-                else
-                    return GridTrackSizeStyleValue::create({});
-            }
-            continue;
-        }
-        if (component_value.is_block()) {
-            params.append(GridTrackSize(Length::make_auto()));
-            continue;
-        }
-        if (component_value.is(Token::Type::Ident) && component_value.token().ident().equals_ignoring_case("auto"sv)) {
-            params.append(GridTrackSize(Length::make_auto()));
-            continue;
-        }
-        auto grid_track_size = parse_grid_track_size(component_value);
-        if (!grid_track_size.has_value())
-            return GridTrackSizeStyleValue::create({});
-        params.append(grid_track_size.value());
     }
-    return GridTrackSizeStyleValue::create(params);
+    return GridTrackSizeStyleValue::create(CSS::GridTrackSizeList(track_list));
 }
 
 RefPtr<StyleValue> Parser::parse_grid_track_placement(Vector<ComponentValue> const& component_values)
 {
+    // https://www.w3.org/TR/css-grid-2/#line-placement
+    // Line-based Placement: the grid-row-start, grid-column-start, grid-row-end, and grid-column-end properties
+    // <grid-line> =
+    //     auto |
+    //     <custom-ident> |
+    //     [ <integer> && <custom-ident>? ] |
+    //     [ span && [ <integer> || <custom-ident> ] ]
+    auto is_auto = [](Token token) -> bool {
+        if (token.is(Token::Type::Ident) && token.ident().equals_ignoring_case("auto"sv))
+            return true;
+        return false;
+    };
+    auto is_span = [](Token token) -> bool {
+        if (token.is(Token::Type::Ident) && token.ident().equals_ignoring_case("span"sv))
+            return true;
+        return false;
+    };
+    auto is_valid_integer = [](Token token) -> bool {
+        // An <integer> value of zero makes the declaration invalid.
+        if (token.is(Token::Type::Number) && token.number().is_integer() && token.number_value() != 0)
+            return true;
+        return false;
+    };
     auto tokens = TokenStream { component_values };
+    tokens.skip_whitespace();
     auto current_token = tokens.next_token().token();
 
     if (!tokens.has_next_token()) {
-        if (current_token.is(Token::Type::Ident) && current_token.ident().equals_ignoring_case("auto"sv))
+        if (is_auto(current_token))
             return GridTrackPlacementStyleValue::create(CSS::GridTrackPlacement());
-        // https://drafts.csswg.org/css-grid/#grid-placement-span-int
-        // If the <integer> is omitted, it defaults to 1.
-        if (current_token.is(Token::Type::Ident) && current_token.ident().equals_ignoring_case("span"sv))
+        if (is_span(current_token))
             return GridTrackPlacementStyleValue::create(CSS::GridTrackPlacement(1, true));
-        // https://drafts.csswg.org/css-grid/#grid-placement-int
-        // [ <integer [−∞,−1]> | <integer [1,∞]> ] && <custom-ident>?
-        // An <integer> value of zero makes the declaration invalid.
-        if (current_token.is(Token::Type::Number) && current_token.number().is_integer() && current_token.number_value() != 0)
+        if (is_valid_integer(current_token))
             return GridTrackPlacementStyleValue::create(CSS::GridTrackPlacement(static_cast<int>(current_token.number_value())));
         return {};
     }
 
-    auto is_span = false;
-    if (current_token.is(Token::Type::Ident) && current_token.ident().equals_ignoring_case("span"sv)) {
-        is_span = true;
+    auto span_value = false;
+    auto span_or_position_value = 0;
+    while (true) {
+        if (is_auto(current_token))
+            return {};
+        if (is_span(current_token)) {
+            if (span_value == false)
+                span_value = true;
+            else
+                return {};
+        }
+        if (is_valid_integer(current_token)) {
+            if (span_or_position_value == 0)
+                span_or_position_value = static_cast<int>(current_token.number_value());
+            else
+                return {};
+        }
         tokens.skip_whitespace();
-        current_token = tokens.next_token().token();
+        if (tokens.has_next_token())
+            current_token = tokens.next_token().token();
+        else
+            break;
     }
 
-    // https://drafts.csswg.org/css-grid/#grid-placement-int
-    // [ <integer [−∞,−1]> | <integer [1,∞]> ] && <custom-ident>?
-    // An <integer> value of zero makes the declaration invalid.
-    if (current_token.is(Token::Type::Number) && current_token.number().is_integer() && current_token.number_value() != 0 && !tokens.has_next_token()) {
-        // https://drafts.csswg.org/css-grid/#grid-placement-span-int
-        // Negative integers or zero are invalid.
-        if (is_span && static_cast<int>(current_token.number_value()) < 1)
-            return GridTrackPlacementStyleValue::create(CSS::GridTrackPlacement(1, is_span));
-        return GridTrackPlacementStyleValue::create(CSS::GridTrackPlacement(static_cast<int>(current_token.number_value()), is_span));
-    }
-    return {};
+    // Negative integers or zero are invalid.
+    if (span_value && span_or_position_value < 1)
+        return {};
+
+    // If the <integer> is omitted, it defaults to 1.
+    if (span_or_position_value == 0)
+        span_or_position_value = 1;
+    return GridTrackPlacementStyleValue::create(CSS::GridTrackPlacement(span_or_position_value, span_value));
 }
 
 RefPtr<StyleValue> Parser::parse_grid_track_placement_shorthand_value(Vector<ComponentValue> const& component_values)

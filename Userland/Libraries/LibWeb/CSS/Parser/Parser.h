@@ -250,6 +250,10 @@ private:
     Optional<Ratio> parse_ratio(TokenStream<ComponentValue>&);
     Optional<UnicodeRange> parse_unicode_range(TokenStream<ComponentValue>&);
     Optional<UnicodeRange> parse_unicode_range(StringView);
+    Optional<GridSize> parse_grid_size(ComponentValue const&);
+    Optional<GridMinMax> parse_min_max(Vector<ComponentValue> const&);
+    Optional<GridRepeat> parse_repeat(Vector<ComponentValue> const&);
+    Optional<ExplicitGridTrack> parse_track_sizing_function(ComponentValue const&);
 
     enum class AllowedDataUrlType {
         None,
