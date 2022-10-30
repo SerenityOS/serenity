@@ -20,6 +20,8 @@ GridFormattingContext::~GridFormattingContext() = default;
 void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const& available_space)
 {
     auto& box_state = m_state.get_mutable(box);
+    auto grid_template_columns = box.computed_values().grid_template_columns();
+    auto grid_template_rows = box.computed_values().grid_template_rows();
     auto should_skip_is_anonymous_text_run = [&](Box& child_box) -> bool {
         if (child_box.is_anonymous() && !child_box.first_child_of_type<BlockContainer>()) {
             bool contains_only_white_space = true;
@@ -36,16 +38,16 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
         return false;
     };
 
-    auto resolve_definite_track_size = [&](CSS::GridTrackSize const& grid_track_size) -> float {
-        VERIFY(grid_track_size.is_definite());
-        switch (grid_track_size.type()) {
-        case CSS::GridTrackSize::Type::Length:
-            if (grid_track_size.length().is_auto())
+    auto resolve_definite_track_size = [&](CSS::GridSize const& grid_size) -> float {
+        VERIFY(grid_size.is_definite());
+        switch (grid_size.type()) {
+        case CSS::GridSize::Type::Length:
+            if (grid_size.length().is_auto())
                 break;
-            return grid_track_size.length().to_px(box);
+            return grid_size.length().to_px(box);
             break;
-        case CSS::GridTrackSize::Type::Percentage:
-            return grid_track_size.percentage().as_fraction() * box_state.content_width();
+        case CSS::GridSize::Type::Percentage:
+            return grid_size.percentage().as_fraction() * box_state.content_width();
             break;
         default:
             VERIFY_NOT_REACHED();
@@ -75,8 +77,20 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
         boxes_to_place.append(child_box);
         return IterationDecision::Continue;
     });
-    auto column_repeat_count = box.computed_values().grid_template_columns().is_repeat() ? box.computed_values().grid_template_columns().repeat_count() : 1;
-    auto row_repeat_count = box.computed_values().grid_template_rows().is_repeat() ? box.computed_values().grid_template_rows().repeat_count() : 1;
+    auto column_count = 0;
+    for (auto const& explicit_grid_track : grid_template_columns.track_list()) {
+        if (explicit_grid_track.is_repeat() && explicit_grid_track.repeat().is_default())
+            column_count += explicit_grid_track.repeat().repeat_count() * explicit_grid_track.repeat().grid_track_size_list().track_list().size();
+        else
+            column_count += 1;
+    }
+    auto row_count = 0;
+    for (auto const& explicit_grid_track : grid_template_rows.track_list()) {
+        if (explicit_grid_track.is_repeat() && explicit_grid_track.repeat().is_default())
+            row_count += explicit_grid_track.repeat().repeat_count() * explicit_grid_track.repeat().grid_track_size_list().track_list().size();
+        else
+            row_count += 1;
+    }
 
     // https://www.w3.org/TR/css-grid-2/#auto-repeat
     // 7.2.3.2. Repeat-to-fill: auto-fill and auto-fit repetitions
@@ -85,7 +99,9 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
     // the span is already fulfilled).
 
     // Otherwise on a standalone axis, when auto-fill is given as the repetition number
-    if (box.computed_values().grid_template_columns().is_auto_fill() || box.computed_values().grid_template_columns().is_auto_fit()) {
+    if (grid_template_columns.track_list().size() == 1
+        && grid_template_columns.track_list().first().is_repeat()
+        && (grid_template_columns.track_list().first().repeat().is_auto_fill() || grid_template_columns.track_list().first().repeat().is_auto_fit())) {
         // If the grid container has a definite size or max size in the relevant axis, then the number of
         // repetitions is the largest possible positive integer that does not cause the grid to overflow the
         // content box of its grid container
@@ -95,21 +111,28 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
         // function otherwise, flooring the max track sizing function by the min track sizing function if both
         // are definite, and taking gap into account)
         // FIXME: take gap into account
-        for (auto& meta_grid_track : box.computed_values().grid_template_columns().meta_grid_track_sizes()) {
-            if (meta_grid_track.max_grid_track_size().is_definite() && !meta_grid_track.min_grid_track_size().is_definite())
-                sum_of_grid_track_sizes += resolve_definite_track_size(meta_grid_track.max_grid_track_size());
-            else if (meta_grid_track.min_grid_track_size().is_definite() && !meta_grid_track.max_grid_track_size().is_definite())
-                sum_of_grid_track_sizes += resolve_definite_track_size(meta_grid_track.min_grid_track_size());
-            else if (meta_grid_track.min_grid_track_size().is_definite() && meta_grid_track.max_grid_track_size().is_definite())
-                sum_of_grid_track_sizes += min(resolve_definite_track_size(meta_grid_track.min_grid_track_size()), resolve_definite_track_size(meta_grid_track.max_grid_track_size()));
+        for (auto& explicit_grid_track : grid_template_columns.track_list().first().repeat().grid_track_size_list().track_list()) {
+            auto track_sizing_function = explicit_grid_track;
+            if (track_sizing_function.is_minmax()) {
+                if (track_sizing_function.minmax().max_grid_size().is_definite() && !track_sizing_function.minmax().min_grid_size().is_definite())
+                    sum_of_grid_track_sizes += resolve_definite_track_size(track_sizing_function.minmax().max_grid_size());
+                else if (track_sizing_function.minmax().min_grid_size().is_definite() && !track_sizing_function.minmax().max_grid_size().is_definite())
+                    sum_of_grid_track_sizes += resolve_definite_track_size(track_sizing_function.minmax().min_grid_size());
+                else if (track_sizing_function.minmax().min_grid_size().is_definite() && track_sizing_function.minmax().max_grid_size().is_definite())
+                    sum_of_grid_track_sizes += min(resolve_definite_track_size(track_sizing_function.minmax().min_grid_size()), resolve_definite_track_size(track_sizing_function.minmax().max_grid_size()));
+            } else {
+                sum_of_grid_track_sizes += min(resolve_definite_track_size(track_sizing_function.grid_size()), resolve_definite_track_size(track_sizing_function.grid_size()));
+            }
         }
-        column_repeat_count = max(1, static_cast<int>(get_free_space_x(box) / sum_of_grid_track_sizes));
+        column_count = max(1, static_cast<int>(get_free_space_x(box) / sum_of_grid_track_sizes));
 
         // For the purpose of finding the number of auto-repeated tracks in a standalone axis, the UA must
         // floor the track size to a UA-specified value to avoid division by zero. It is suggested that this
         // floor be 1px.
     }
-    if (box.computed_values().grid_template_rows().is_auto_fill() || box.computed_values().grid_template_rows().is_auto_fit()) {
+    if (grid_template_rows.track_list().size() == 1
+        && grid_template_rows.track_list().first().is_repeat()
+        && (grid_template_rows.track_list().first().repeat().is_auto_fill() || grid_template_rows.track_list().first().repeat().is_auto_fit())) {
         // If the grid container has a definite size or max size in the relevant axis, then the number of
         // repetitions is the largest possible positive integer that does not cause the grid to overflow the
         // content box of its grid container
@@ -119,15 +142,20 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
         // function otherwise, flooring the max track sizing function by the min track sizing function if both
         // are definite, and taking gap into account)
         // FIXME: take gap into account
-        for (auto& meta_grid_track : box.computed_values().grid_template_rows().meta_grid_track_sizes()) {
-            if (meta_grid_track.max_grid_track_size().is_definite() && !meta_grid_track.min_grid_track_size().is_definite())
-                sum_of_grid_track_sizes += resolve_definite_track_size(meta_grid_track.max_grid_track_size());
-            else if (meta_grid_track.min_grid_track_size().is_definite() && !meta_grid_track.max_grid_track_size().is_definite())
-                sum_of_grid_track_sizes += resolve_definite_track_size(meta_grid_track.min_grid_track_size());
-            else if (meta_grid_track.min_grid_track_size().is_definite() && meta_grid_track.max_grid_track_size().is_definite())
-                sum_of_grid_track_sizes += min(resolve_definite_track_size(meta_grid_track.min_grid_track_size()), resolve_definite_track_size(meta_grid_track.max_grid_track_size()));
+        for (auto& explicit_grid_track : grid_template_rows.track_list().first().repeat().grid_track_size_list().track_list()) {
+            auto track_sizing_function = explicit_grid_track;
+            if (track_sizing_function.is_minmax()) {
+                if (track_sizing_function.minmax().max_grid_size().is_definite() && !track_sizing_function.minmax().min_grid_size().is_definite())
+                    sum_of_grid_track_sizes += resolve_definite_track_size(track_sizing_function.minmax().max_grid_size());
+                else if (track_sizing_function.minmax().min_grid_size().is_definite() && !track_sizing_function.minmax().max_grid_size().is_definite())
+                    sum_of_grid_track_sizes += resolve_definite_track_size(track_sizing_function.minmax().min_grid_size());
+                else if (track_sizing_function.minmax().min_grid_size().is_definite() && track_sizing_function.minmax().max_grid_size().is_definite())
+                    sum_of_grid_track_sizes += min(resolve_definite_track_size(track_sizing_function.minmax().min_grid_size()), resolve_definite_track_size(track_sizing_function.minmax().max_grid_size()));
+            } else {
+                sum_of_grid_track_sizes += min(resolve_definite_track_size(track_sizing_function.grid_size()), resolve_definite_track_size(track_sizing_function.grid_size()));
+            }
         }
-        row_repeat_count = max(1, static_cast<int>(get_free_space_y(box) / sum_of_grid_track_sizes));
+        row_count = max(1, static_cast<int>(get_free_space_y(box) / sum_of_grid_track_sizes));
 
         // The auto-fit keyword behaves the same as auto-fill, except that after grid item placement any
         // empty repeated tracks are collapsed. An empty track is one with no in-flow grid items placed into
@@ -140,7 +168,7 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
         // floor the track size to a UA-specified value to avoid division by zero. It is suggested that this
         // floor be 1px.
     }
-    auto occupation_grid = OccupationGrid(column_repeat_count * box.computed_values().grid_template_columns().meta_grid_track_sizes().size(), row_repeat_count * box.computed_values().grid_template_rows().meta_grid_track_sizes().size());
+    auto occupation_grid = OccupationGrid(column_count, row_count);
 
     // https://drafts.csswg.org/css-grid/#auto-placement-algo
     // 8.5. Grid Item Placement Algorithm
@@ -594,19 +622,67 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
     // - A flexible sizing function (<flex>).
 
     // The grid sizing algorithm defines how to resolve these sizing constraints into used track sizes.
-    for (int x = 0; x < column_repeat_count; ++x) {
-        for (auto& meta_grid_track_size : box.computed_values().grid_template_columns().meta_grid_track_sizes())
-            m_grid_columns.append({ meta_grid_track_size.min_grid_track_size(), meta_grid_track_size.max_grid_track_size() });
+    for (auto const& track_in_list : grid_template_columns.track_list()) {
+        auto repeat_count = (track_in_list.is_repeat() && track_in_list.repeat().is_default()) ? track_in_list.repeat().repeat_count() : 1;
+        if (track_in_list.is_repeat()) {
+            if (track_in_list.repeat().is_auto_fill() || track_in_list.repeat().is_auto_fit())
+                repeat_count = column_count;
+        }
+        for (auto _ = 0; _ < repeat_count; _++) {
+            switch (track_in_list.type()) {
+            case CSS::ExplicitGridTrack::Type::MinMax:
+                m_grid_columns.append({ track_in_list.minmax().min_grid_size(), track_in_list.minmax().max_grid_size() });
+                break;
+            case CSS::ExplicitGridTrack::Type::Repeat:
+                for (auto& explicit_grid_track : track_in_list.repeat().grid_track_size_list().track_list()) {
+                    auto track_sizing_function = explicit_grid_track;
+                    if (track_sizing_function.is_minmax())
+                        m_grid_columns.append({ track_sizing_function.minmax().min_grid_size(), track_sizing_function.minmax().max_grid_size() });
+                    else
+                        m_grid_columns.append({ track_sizing_function.grid_size(), track_sizing_function.grid_size() });
+                }
+                break;
+            case CSS::ExplicitGridTrack::Type::Default:
+                m_grid_columns.append({ track_in_list.grid_size(), track_in_list.grid_size() });
+                break;
+            default:
+                VERIFY_NOT_REACHED();
+            }
+        }
     }
-    for (int x = 0; x < row_repeat_count; ++x) {
-        for (auto& meta_grid_track_size : box.computed_values().grid_template_rows().meta_grid_track_sizes())
-            m_grid_rows.append({ meta_grid_track_size.min_grid_track_size(), meta_grid_track_size.max_grid_track_size() });
+    for (auto const& track_in_list : grid_template_rows.track_list()) {
+        auto repeat_count = (track_in_list.is_repeat() && track_in_list.repeat().is_default()) ? track_in_list.repeat().repeat_count() : 1;
+        if (track_in_list.is_repeat()) {
+            if (track_in_list.repeat().is_auto_fill() || track_in_list.repeat().is_auto_fit())
+                repeat_count = row_count;
+        }
+        for (auto _ = 0; _ < repeat_count; _++) {
+            switch (track_in_list.type()) {
+            case CSS::ExplicitGridTrack::Type::MinMax:
+                m_grid_rows.append({ track_in_list.minmax().min_grid_size(), track_in_list.minmax().max_grid_size() });
+                break;
+            case CSS::ExplicitGridTrack::Type::Repeat:
+                for (auto& explicit_grid_track : track_in_list.repeat().grid_track_size_list().track_list()) {
+                    auto track_sizing_function = explicit_grid_track;
+                    if (track_sizing_function.is_minmax())
+                        m_grid_rows.append({ track_sizing_function.minmax().min_grid_size(), track_sizing_function.minmax().max_grid_size() });
+                    else
+                        m_grid_rows.append({ track_sizing_function.grid_size(), track_sizing_function.grid_size() });
+                }
+                break;
+            case CSS::ExplicitGridTrack::Type::Default:
+                m_grid_rows.append({ track_in_list.grid_size(), track_in_list.grid_size() });
+                break;
+            default:
+                VERIFY_NOT_REACHED();
+            }
+        }
     }
 
     for (int column_index = m_grid_columns.size(); column_index < occupation_grid.column_count(); column_index++)
-        m_grid_columns.append({ CSS::GridTrackSize::make_auto(), CSS::GridTrackSize::make_auto() });
+        m_grid_columns.append({ CSS::GridSize::make_auto(), CSS::GridSize::make_auto() });
     for (int row_index = m_grid_rows.size(); row_index < occupation_grid.row_count(); row_index++)
-        m_grid_rows.append({ CSS::GridTrackSize::make_auto(), CSS::GridTrackSize::make_auto() });
+        m_grid_rows.append({ CSS::GridSize::make_auto(), CSS::GridSize::make_auto() });
 
     // https://www.w3.org/TR/css-grid-2/#algo-overview
     // 12.1. Grid Sizing Algorithm
@@ -695,16 +771,16 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
         switch (grid_column.min_track_sizing_function.type()) {
         // - A fixed sizing function
         // Resolve to an absolute length and use that size as the track’s initial base size.
-        case CSS::GridTrackSize::Type::Length:
+        case CSS::GridSize::Type::Length:
             if (!grid_column.min_track_sizing_function.length().is_auto())
                 grid_column.base_size = grid_column.min_track_sizing_function.length().to_px(box);
             break;
-        case CSS::GridTrackSize::Type::Percentage:
+        case CSS::GridSize::Type::Percentage:
             grid_column.base_size = grid_column.min_track_sizing_function.percentage().as_fraction() * box_state.content_width();
             break;
         // - An intrinsic sizing function
         // Use an initial base size of zero.
-        case CSS::GridTrackSize::Type::FlexibleLength:
+        case CSS::GridSize::Type::FlexibleLength:
             break;
         default:
             VERIFY_NOT_REACHED();
@@ -714,7 +790,7 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
         switch (grid_column.max_track_sizing_function.type()) {
         // - A fixed sizing function
         // Resolve to an absolute length and use that size as the track’s initial growth limit.
-        case CSS::GridTrackSize::Type::Length:
+        case CSS::GridSize::Type::Length:
             if (!grid_column.max_track_sizing_function.length().is_auto())
                 grid_column.growth_limit = grid_column.max_track_sizing_function.length().to_px(box);
             else
@@ -722,12 +798,12 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
                 // Use an initial growth limit of infinity.
                 grid_column.growth_limit = -1;
             break;
-        case CSS::GridTrackSize::Type::Percentage:
+        case CSS::GridSize::Type::Percentage:
             grid_column.growth_limit = grid_column.max_track_sizing_function.percentage().as_fraction() * box_state.content_width();
             break;
         // - A flexible sizing function
         // Use an initial growth limit of infinity.
-        case CSS::GridTrackSize::Type::FlexibleLength:
+        case CSS::GridSize::Type::FlexibleLength:
             grid_column.growth_limit = -1;
             break;
         default:
@@ -746,16 +822,16 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
         switch (grid_row.min_track_sizing_function.type()) {
         // - A fixed sizing function
         // Resolve to an absolute length and use that size as the track’s initial base size.
-        case CSS::GridTrackSize::Type::Length:
+        case CSS::GridSize::Type::Length:
             if (!grid_row.min_track_sizing_function.length().is_auto())
                 grid_row.base_size = grid_row.min_track_sizing_function.length().to_px(box);
             break;
-        case CSS::GridTrackSize::Type::Percentage:
+        case CSS::GridSize::Type::Percentage:
             grid_row.base_size = grid_row.min_track_sizing_function.percentage().as_fraction() * box_state.content_height();
             break;
         // - An intrinsic sizing function
         // Use an initial base size of zero.
-        case CSS::GridTrackSize::Type::FlexibleLength:
+        case CSS::GridSize::Type::FlexibleLength:
             break;
         default:
             VERIFY_NOT_REACHED();
@@ -765,7 +841,7 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
         switch (grid_row.max_track_sizing_function.type()) {
         // - A fixed sizing function
         // Resolve to an absolute length and use that size as the track’s initial growth limit.
-        case CSS::GridTrackSize::Type::Length:
+        case CSS::GridSize::Type::Length:
             if (!grid_row.max_track_sizing_function.length().is_auto())
                 grid_row.growth_limit = grid_row.max_track_sizing_function.length().to_px(box);
             else
@@ -773,12 +849,12 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
                 // Use an initial growth limit of infinity.
                 grid_row.growth_limit = -1;
             break;
-        case CSS::GridTrackSize::Type::Percentage:
+        case CSS::GridSize::Type::Percentage:
             grid_row.growth_limit = grid_row.max_track_sizing_function.percentage().as_fraction() * box_state.content_height();
             break;
         // - A flexible sizing function
         // Use an initial growth limit of infinity.
-        case CSS::GridTrackSize::Type::FlexibleLength:
+        case CSS::GridSize::Type::FlexibleLength:
             grid_row.growth_limit = -1;
             break;
         default:
@@ -940,7 +1016,9 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
     // The auto-fit keyword behaves the same as auto-fill, except that after grid item placement any
     // empty repeated tracks are collapsed. An empty track is one with no in-flow grid items placed into
     // or spanning across it. (This can result in all tracks being collapsed, if they’re all empty.)
-    if (box.computed_values().grid_template_columns().is_auto_fit()) {
+    if (grid_template_columns.track_list().size() == 1
+        && grid_template_columns.track_list().first().is_repeat()
+        && grid_template_columns.track_list().first().repeat().is_auto_fit()) {
         auto idx = 0;
         for (auto& grid_column : m_grid_columns) {
             // A collapsed track is treated as having a fixed track sizing function of 0px, and the gutters on

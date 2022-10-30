@@ -27,8 +27,8 @@ private:
     bool is_auto_positioned_track(CSS::GridTrackPlacement const&, CSS::GridTrackPlacement const&) const;
 
     struct GridTrackSizeConstraints {
-        CSS::GridTrackSize min_track_sizing_function;
-        CSS::GridTrackSize max_track_sizing_function;
+        CSS::GridSize min_track_sizing_function;
+        CSS::GridSize max_track_sizing_function;
         float base_size { 0 };
         float growth_limit { 0 };
         float space_to_distribute { 0 };
