@@ -61,7 +61,7 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Executable const& e
         pushed_execution_context = true;
     }
 
-    auto block = entry_point ?: &executable.basic_blocks.first();
+    m_current_block = entry_point ?: &executable.basic_blocks.first();
     if (in_frame)
         m_register_windows.append(in_frame);
     else
@@ -70,7 +70,9 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Executable const& e
     registers().resize(executable.number_of_registers);
 
     for (;;) {
-        Bytecode::InstructionStreamIterator pc(block->instruction_stream());
+        Bytecode::InstructionStreamIterator pc(m_current_block->instruction_stream());
+        TemporaryChange temp_change { m_pc, &pc };
+
         bool will_jump = false;
         bool will_return = false;
         while (!pc.at_end()) {
@@ -85,7 +87,7 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Executable const& e
                 if (unwind_context.executable != m_current_executable)
                     break;
                 if (unwind_context.handler) {
-                    block = unwind_context.handler;
+                    m_current_block = unwind_context.handler;
                     unwind_context.handler = nullptr;
 
                     // If there's no finalizer, there's nowhere for the handler block to unwind to, so the unwind context is no longer needed.
@@ -98,7 +100,7 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Executable const& e
                     break;
                 }
                 if (unwind_context.finalizer) {
-                    block = unwind_context.finalizer;
+                    m_current_block = unwind_context.finalizer;
                     m_unwind_contexts.take_last();
                     will_jump = true;
                     break;
@@ -108,7 +110,7 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Executable const& e
                 VERIFY_NOT_REACHED();
             }
             if (m_pending_jump.has_value()) {
-                block = m_pending_jump.release_value();
+                m_current_block = m_pending_jump.release_value();
                 will_jump = true;
                 break;
             }
