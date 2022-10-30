@@ -6,6 +6,7 @@
 
 #include <LibJS/Runtime/PromiseCapability.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
+#include <LibWeb/Fetch/BodyInit.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP/Bodies.h>
 #include <LibWeb/WebIDL/Promise.h>
 
@@ -52,6 +53,14 @@ JS::NonnullGCPtr<JS::PromiseCapability> Body::fully_read_as_promise() const
     }
     // Empty, Blob, FormData
     return WebIDL::create_rejected_promise(realm, JS::InternalError::create(realm, "Reading body isn't fully implemented"sv));
+}
+
+// https://fetch.spec.whatwg.org/#byte-sequence-as-a-body
+WebIDL::ExceptionOr<Body> byte_sequence_as_body(JS::Realm& realm, ReadonlyBytes bytes)
+{
+    // To get a byte sequence bytes as a body, return the body of the result of safely extracting bytes.
+    auto [body, _] = TRY(safely_extract_body(realm, bytes));
+    return body;
 }
 
 }
