@@ -151,13 +151,15 @@ String ExplicitGridTrack::to_string() const
     }
 }
 
-GridTrackSizeList::GridTrackSizeList(Vector<CSS::ExplicitGridTrack> track_list)
+GridTrackSizeList::GridTrackSizeList(Vector<CSS::ExplicitGridTrack> track_list, Vector<Vector<String>> line_names)
     : m_track_list(track_list)
+    , m_line_names(line_names)
 {
 }
 
 GridTrackSizeList::GridTrackSizeList()
     : m_track_list({})
+    , m_line_names({})
 {
 }
 
@@ -169,10 +171,28 @@ GridTrackSizeList GridTrackSizeList::make_auto()
 String GridTrackSizeList::to_string() const
 {
     StringBuilder builder;
+    auto print_line_names = [&](size_t index) -> void {
+        builder.append("["sv);
+        for (size_t y = 0; y < m_line_names[index].size(); ++y) {
+            builder.append(m_line_names[index][y]);
+            if (y != m_line_names[index].size() - 1)
+                builder.append(" "sv);
+        }
+        builder.append("]"sv);
+    };
+
     for (size_t i = 0; i < m_track_list.size(); ++i) {
+        if (m_line_names[i].size() > 0) {
+            print_line_names(i);
+            builder.append(" "sv);
+        }
         builder.append(m_track_list[i].to_string());
         if (i < m_track_list.size() - 1)
             builder.append(" "sv);
+    }
+    if (m_line_names[m_track_list.size()].size() > 0) {
+        builder.append(" "sv);
+        print_line_names(m_track_list.size());
     }
     return builder.to_string();
 }
