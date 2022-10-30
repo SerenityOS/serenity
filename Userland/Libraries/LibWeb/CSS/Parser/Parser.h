@@ -254,6 +254,7 @@ private:
     Optional<GridMinMax> parse_min_max(Vector<ComponentValue> const&);
     Optional<GridRepeat> parse_repeat(Vector<ComponentValue> const&);
     Optional<ExplicitGridTrack> parse_track_sizing_function(ComponentValue const&);
+    Optional<PositionValue> parse_position(TokenStream<ComponentValue>&);
 
     enum class AllowedDataUrlType {
         None,
