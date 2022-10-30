@@ -29,6 +29,8 @@ void UnifySameBlocks::perform(PassPipelineExecutable& executable)
                 continue;
 
             auto candidate_bytes = candidate_block->instruction_stream();
+            // FIXME: NewBigInt's value is not correctly reflected by its encoding in memory,
+            //        this will yield false negatives for blocks containing that
             if (memcmp(candidate_bytes.data(), block_bytes.data(), candidate_block->size()) == 0)
                 equal_blocks.set(&*candidate_block, &block);
         }
