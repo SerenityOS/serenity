@@ -40,6 +40,8 @@ private:
 
     float get_free_space_x(Box const&);
     float get_free_space_y(Box const&);
+
+    int get_line_index_by_line_name(String const& line_name, CSS::GridTrackSizeList);
 };
 
 class OccupationGrid {
