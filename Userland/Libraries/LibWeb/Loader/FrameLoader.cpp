@@ -11,6 +11,7 @@
 #include <LibGemini/Document.h>
 #include <LibGfx/ImageDecoder.h>
 #include <LibMarkdown/Document.h>
+#include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/Cookie/ParsedCookie.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/ElementFactory.h>
@@ -298,12 +299,13 @@ bool FrameLoader::load(const AK::URL& url, Type type)
 
 void FrameLoader::load_html(StringView html, const AK::URL& url)
 {
-    auto response = Fetch::Infrastructure::Response::create();
+    auto& vm = Bindings::main_thread_vm();
+    auto response = Fetch::Infrastructure::Response::create(vm);
     response->url_list().append(url);
     HTML::NavigationParams navigation_params {
         .id = {},
         .request = nullptr,
-        .response = move(response),
+        .response = response,
         .origin = HTML::Origin {},
         .policy_container = HTML::PolicyContainer {},
         .final_sandboxing_flag_set = HTML::SandboxingFlagSet {},
@@ -418,15 +420,16 @@ void FrameLoader::resource_did_load()
     // FIXME: Pass incumbentNavigationOrigin
     auto response_origin = HTML::determine_the_origin(browsing_context(), url, final_sandboxing_flag_set, {});
 
-    auto response = Fetch::Infrastructure::Response::create();
+    auto& vm = Bindings::main_thread_vm();
+    auto response = Fetch::Infrastructure::Response::create(vm);
     response->url_list().append(url);
     HTML::NavigationParams navigation_params {
         .id = {},
         .request = nullptr,
-        .response = move(response),
+        .response = response,
         .origin = move(response_origin),
         .policy_container = HTML::PolicyContainer {},
-        .final_sandboxing_flag_set = move(final_sandboxing_flag_set),
+        .final_sandboxing_flag_set = final_sandboxing_flag_set,
         .cross_origin_opener_policy = HTML::CrossOriginOpenerPolicy {},
         .coop_enforcement_result = HTML::CrossOriginOpenerPolicyEnforcementResult {},
         .reserved_environment = {},

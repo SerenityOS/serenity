@@ -885,14 +885,14 @@ void BrowsingContext::remove()
 
 // https://html.spec.whatwg.org/multipage/browsing-the-web.html#navigate
 WebIDL::ExceptionOr<void> BrowsingContext::navigate(
-    NonnullRefPtr<Fetch::Infrastructure::Request> resource,
+    JS::NonnullGCPtr<Fetch::Infrastructure::Request> resource,
     BrowsingContext& source_browsing_context,
     bool exceptions_enabled,
     HistoryHandlingBehavior history_handling,
     Optional<PolicyContainer> history_policy_container,
     String navigation_type,
     Optional<String> navigation_id,
-    Function<void(NonnullRefPtr<Fetch::Infrastructure::Response>)> process_response_end_of_body)
+    Function<void(JS::NonnullGCPtr<Fetch::Infrastructure::Response>)> process_response_end_of_body)
 {
     // 1. If resource is a URL, then set resource to a new request whose URL is resource.
     // NOTE: This function only accepts resources that are already a request, so this is irrelevant.
@@ -1060,7 +1060,8 @@ WebIDL::ExceptionOr<void> BrowsingContext::traverse_the_history(size_t entry_ind
         VERIFY(history_handling == HistoryHandlingBehavior::Default);
 
         // 2. Let request be a new request whose URL is entry's URL.
-        auto request = Fetch::Infrastructure::Request::create();
+        auto& vm = Bindings::main_thread_vm();
+        auto request = Fetch::Infrastructure::Request::create(vm);
         request->set_url(entry->url);
 
         // 3. If explicitHistoryNavigation is true, then set request's history-navigation flag.
@@ -1071,7 +1072,7 @@ WebIDL::ExceptionOr<void> BrowsingContext::traverse_the_history(size_t entry_ind
         //    and with historyPolicyContainer set to entry's policy container.
         //    The navigation must be done using the same source browsing context as was used the first time entry was created.
         VERIFY(entry->original_source_browsing_context);
-        TRY(navigate(move(request), *entry->original_source_browsing_context, false, HistoryHandlingBehavior::EntryUpdate, entry->policy_container));
+        TRY(navigate(request, *entry->original_source_browsing_context, false, HistoryHandlingBehavior::EntryUpdate, entry->policy_container));
 
         // 5. Return.
         return {};

@@ -13,6 +13,8 @@
 #include <AK/Optional.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
+#include <LibJS/Forward.h>
+#include <LibJS/Heap/Cell.h>
 #include <LibWeb/MimeSniff/MimeType.h>
 
 namespace Web::Fetch::Infrastructure {
@@ -29,12 +31,16 @@ struct Header {
 // https://fetch.spec.whatwg.org/#concept-header-list
 // A header list is a list of zero or more headers. It is initially the empty list.
 class HeaderList final
-    : public RefCounted<HeaderList>
+    : public JS::Cell
     , Vector<Header> {
+    JS_CELL(HeaderList, JS::Cell);
+
 public:
     using Vector::begin;
     using Vector::clear;
     using Vector::end;
+
+    [[nodiscard]] static JS::NonnullGCPtr<HeaderList> create(JS::VM&);
 
     [[nodiscard]] bool contains(ReadonlyBytes) const;
     [[nodiscard]] ErrorOr<Optional<ByteBuffer>> get(ReadonlyBytes) const;

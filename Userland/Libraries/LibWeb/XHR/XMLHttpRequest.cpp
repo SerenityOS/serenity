@@ -236,8 +236,10 @@ MimeSniff::MimeType XMLHttpRequest::get_final_mime_type() const
 // https://xhr.spec.whatwg.org/#response-mime-type
 MimeSniff::MimeType XMLHttpRequest::get_response_mime_type() const
 {
+    auto& vm = this->vm();
+
     // FIXME: Use an actual HeaderList for XHR headers.
-    auto header_list = make_ref_counted<Fetch::Infrastructure::HeaderList>();
+    auto header_list = Fetch::Infrastructure::HeaderList::create(vm);
     for (auto const& entry : m_response_headers) {
         auto header = Fetch::Infrastructure::Header::from_string_pair(entry.key, entry.value).release_value_but_fixme_should_propagate_errors();
         header_list->append(move(header)).release_value_but_fixme_should_propagate_errors();

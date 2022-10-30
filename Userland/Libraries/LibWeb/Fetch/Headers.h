@@ -10,6 +10,7 @@
 #include <AK/String.h>
 #include <AK/Variant.h>
 #include <AK/Vector.h>
+#include <LibJS/Forward.h>
 #include <LibWeb/Bindings/PlatformObject.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP/Headers.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
@@ -35,9 +36,8 @@ public:
 
     virtual ~Headers() override;
 
-    [[nodiscard]] NonnullRefPtr<Infrastructure::HeaderList>& header_list() { return m_header_list; }
-    [[nodiscard]] NonnullRefPtr<Infrastructure::HeaderList> const& header_list() const { return m_header_list; }
-    void set_header_list(NonnullRefPtr<Infrastructure::HeaderList> header_list) { m_header_list = move(header_list); }
+    [[nodiscard]] JS::NonnullGCPtr<Infrastructure::HeaderList> header_list() const { return m_header_list; }
+    void set_header_list(JS::NonnullGCPtr<Infrastructure::HeaderList> header_list) { m_header_list = header_list; }
 
     [[nodiscard]] Guard guard() const { return m_guard; }
     void set_guard(Guard guard) { m_guard = guard; }
@@ -58,13 +58,15 @@ public:
 private:
     friend class HeadersIterator;
 
-    explicit Headers(JS::Realm&);
+    Headers(JS::Realm&, JS::NonnullGCPtr<Infrastructure::HeaderList>);
+
+    virtual void visit_edges(JS::Cell::Visitor&) override;
 
     void remove_privileged_no_cors_headers();
 
     // https://fetch.spec.whatwg.org/#concept-headers-header-list
     // A Headers object has an associated header list (a header list), which is initially empty.
-    NonnullRefPtr<Infrastructure::HeaderList> m_header_list;
+    JS::NonnullGCPtr<Infrastructure::HeaderList> m_header_list;
 
     // https://fetch.spec.whatwg.org/#concept-headers-guard
     // A Headers object also has an associated guard, which is a headers guard. A headers guard is "immutable", "request", "request-no-cors", "response" or "none".

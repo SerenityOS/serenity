@@ -64,7 +64,7 @@ class Request final
     WEB_PLATFORM_OBJECT(Request, Bindings::PlatformObject);
 
 public:
-    static JS::NonnullGCPtr<Request> create(NonnullRefPtr<Infrastructure::Request>, Headers::Guard, JS::Realm&);
+    [[nodiscard]] static JS::NonnullGCPtr<Request> create(JS::Realm&, JS::NonnullGCPtr<Infrastructure::Request>, Headers::Guard);
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<Request>> construct_impl(JS::Realm&, RequestInfo const& input, RequestInit const& init = {});
 
     virtual ~Request() override;
@@ -74,7 +74,7 @@ public:
     virtual Optional<Infrastructure::Body&> body_impl() override;
     virtual Optional<Infrastructure::Body const&> body_impl() const override;
 
-    [[nodiscard]] NonnullRefPtr<Infrastructure::Request> request() const { return m_request; }
+    [[nodiscard]] JS::NonnullGCPtr<Infrastructure::Request> request() const { return m_request; }
 
     // JS API functions
     [[nodiscard]] String method() const;
@@ -96,13 +96,13 @@ public:
     [[nodiscard]] WebIDL::ExceptionOr<JS::NonnullGCPtr<Request>> clone() const;
 
 private:
-    Request(JS::Realm&, NonnullRefPtr<Infrastructure::Request>);
+    Request(JS::Realm&, JS::NonnullGCPtr<Infrastructure::Request>);
 
     virtual void visit_edges(Cell::Visitor&) override;
 
     // https://fetch.spec.whatwg.org/#concept-request-request
     // A Request object has an associated request (a request).
-    NonnullRefPtr<Infrastructure::Request> m_request;
+    JS::NonnullGCPtr<Infrastructure::Request> m_request;
 
     // https://fetch.spec.whatwg.org/#request-headers
     // A Request object also has an associated headers (null or a Headers object), initially null.

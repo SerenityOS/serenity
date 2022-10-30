@@ -13,6 +13,7 @@
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Rect.h>
 #include <LibGfx/Size.h>
+#include <LibJS/Forward.h>
 #include <LibJS/Heap/Cell.h>
 #include <LibWeb/DOM/Position.h>
 #include <LibWeb/HTML/BrowsingContextContainer.h>
@@ -216,14 +217,14 @@ public:
 
     // https://html.spec.whatwg.org/multipage/browsing-the-web.html#navigate
     WebIDL::ExceptionOr<void> navigate(
-        NonnullRefPtr<Fetch::Infrastructure::Request> resource,
+        JS::NonnullGCPtr<Fetch::Infrastructure::Request> resource,
         BrowsingContext& source_browsing_context,
         bool exceptions_enabled = false,
         HistoryHandlingBehavior history_handling = HistoryHandlingBehavior::Default,
         Optional<PolicyContainer> history_policy_container = {},
         String navigation_type = "other",
         Optional<String> navigation_id = {},
-        Function<void(NonnullRefPtr<Fetch::Infrastructure::Response>)> process_response_end_of_body = {});
+        Function<void(JS::NonnullGCPtr<Fetch::Infrastructure::Response>)> process_response_end_of_body = {});
 
     // https://html.spec.whatwg.org/multipage/browsing-the-web.html#navigate-fragid
     WebIDL::ExceptionOr<void> navigate_to_a_fragment(AK::URL const&, HistoryHandlingBehavior, String navigation_id);

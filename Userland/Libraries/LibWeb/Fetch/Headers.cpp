@@ -13,8 +13,10 @@ namespace Web::Fetch {
 // https://fetch.spec.whatwg.org/#dom-headers
 WebIDL::ExceptionOr<JS::NonnullGCPtr<Headers>> Headers::construct_impl(JS::Realm& realm, Optional<HeadersInit> const& init)
 {
+    auto& vm = realm.vm();
+
     // The new Headers(init) constructor steps are:
-    auto* headers = realm.heap().allocate<Headers>(realm, realm);
+    auto* headers = realm.heap().allocate<Headers>(realm, realm, Infrastructure::HeaderList::create(vm));
 
     // 1. Set this’s guard to "none".
     headers->m_guard = Guard::None;
@@ -26,14 +28,20 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Headers>> Headers::construct_impl(JS::Realm
     return JS::NonnullGCPtr(*headers);
 }
 
-Headers::Headers(JS::Realm& realm)
+Headers::Headers(JS::Realm& realm, JS::NonnullGCPtr<Infrastructure::HeaderList> header_list)
     : PlatformObject(realm)
-    , m_header_list(make_ref_counted<Infrastructure::HeaderList>())
+    , m_header_list(header_list)
 {
     set_prototype(&Bindings::cached_web_prototype(realm, "Headers"));
 }
 
 Headers::~Headers() = default;
+
+void Headers::visit_edges(JS::Cell::Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    visitor.visit(m_header_list);
+}
 
 // https://fetch.spec.whatwg.org/#dom-headers-append
 WebIDL::ExceptionOr<void> Headers::append(String const& name_string, String const& value_string)

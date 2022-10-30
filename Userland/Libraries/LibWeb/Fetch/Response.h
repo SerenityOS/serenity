@@ -31,7 +31,7 @@ class Response final
     WEB_PLATFORM_OBJECT(Response, Bindings::PlatformObject);
 
 public:
-    static JS::NonnullGCPtr<Response> create(NonnullRefPtr<Infrastructure::Response>, Headers::Guard, JS::Realm&);
+    static JS::NonnullGCPtr<Response> create(JS::Realm&, JS::NonnullGCPtr<Infrastructure::Response>, Headers::Guard);
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<Response>> construct_impl(JS::Realm&, Optional<BodyInit> const& body = {}, ResponseInit const& init = {});
 
     virtual ~Response() override;
@@ -41,7 +41,7 @@ public:
     virtual Optional<Infrastructure::Body&> body_impl() override;
     virtual Optional<Infrastructure::Body const&> body_impl() const override;
 
-    [[nodiscard]] NonnullRefPtr<Infrastructure::Response> response() const { return m_response; }
+    [[nodiscard]] JS::NonnullGCPtr<Infrastructure::Response> response() const { return m_response; }
 
     // JS API functions
     [[nodiscard]] static JS::NonnullGCPtr<Response> error(JS::VM&);
@@ -60,7 +60,7 @@ public:
     using BodyMixin::json;
 
 private:
-    Response(JS::Realm&, NonnullRefPtr<Infrastructure::Response>);
+    Response(JS::Realm&, JS::NonnullGCPtr<Infrastructure::Response>);
 
     virtual void visit_edges(Cell::Visitor&) override;
 
@@ -68,7 +68,7 @@ private:
 
     // https://fetch.spec.whatwg.org/#concept-response-response
     // A Response object has an associated response (a response).
-    NonnullRefPtr<Infrastructure::Response> m_response;
+    JS::NonnullGCPtr<Infrastructure::Response> m_response;
 
     // https://fetch.spec.whatwg.org/#response-headers
     // A Response object also has an associated headers (null or a Headers object), initially null.
