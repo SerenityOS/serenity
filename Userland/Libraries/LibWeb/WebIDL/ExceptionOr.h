@@ -33,7 +33,7 @@ struct SimpleException {
 };
 
 template<typename ValueType>
-class ExceptionOr {
+class [[nodiscard]] ExceptionOr {
 public:
     ExceptionOr() requires(IsSame<ValueType, Empty>)
         : m_result(Empty {})
@@ -119,7 +119,7 @@ private:
 };
 
 template<>
-class ExceptionOr<void> : public ExceptionOr<Empty> {
+class [[nodiscard]] ExceptionOr<void> : public ExceptionOr<Empty> {
 public:
     using ExceptionOr<Empty>::ExceptionOr;
 };
