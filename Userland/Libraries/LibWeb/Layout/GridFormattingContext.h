@@ -26,7 +26,7 @@ private:
     bool is_auto_positioned_column(CSS::GridTrackPlacement const&, CSS::GridTrackPlacement const&) const;
     bool is_auto_positioned_track(CSS::GridTrackPlacement const&, CSS::GridTrackPlacement const&) const;
 
-    struct GridTrack {
+    struct GridTrackSizeConstraints {
         CSS::GridTrackSize min_track_sizing_function;
         CSS::GridTrackSize max_track_sizing_function;
         float base_size { 0 };
@@ -35,8 +35,8 @@ private:
         float planned_increase { 0 };
     };
 
-    Vector<GridTrack> m_grid_rows;
-    Vector<GridTrack> m_grid_columns;
+    Vector<GridTrackSizeConstraints> m_grid_rows;
+    Vector<GridTrackSizeConstraints> m_grid_columns;
 
     float get_free_space_x(Box const&);
     float get_free_space_y(Box const&);
