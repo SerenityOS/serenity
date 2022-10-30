@@ -95,6 +95,9 @@ public:
     [[nodiscard]] virtual BodyInfo const& body_info() const { return m_body_info; }
     void set_body_info(BodyInfo body_info) { m_body_info = body_info; }
 
+    [[nodiscard]] bool has_cross_origin_redirects() const { return m_has_cross_origin_redirects; }
+    void set_has_cross_origin_redirects(bool has_cross_origin_redirects) { m_has_cross_origin_redirects = has_cross_origin_redirects; }
+
     [[nodiscard]] bool is_aborted_network_error() const;
     [[nodiscard]] bool is_network_error() const;
 
@@ -163,6 +166,10 @@ private:
 
     // https://fetch.spec.whatwg.org/#response-service-worker-timing-info
     // FIXME: A response has an associated service worker timing info (null or a service worker timing info), which is initially null.
+
+    // https://fetch.spec.whatwg.org/#response-has-cross-origin-redirects
+    // A response has an associated has-cross-origin-redirects (a boolean), which is initially false.
+    bool m_has_cross_origin_redirects { false };
 };
 
 // https://fetch.spec.whatwg.org/#concept-filtered-response
