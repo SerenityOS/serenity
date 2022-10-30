@@ -187,23 +187,17 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
         int column_start = child_box.computed_values().grid_column_start().raw_value();
         int column_end = child_box.computed_values().grid_column_end().raw_value();
 
-        // https://drafts.csswg.org/css-grid/#line-placement
+        // https://www.w3.org/TR/css-grid-2/#line-placement
         // 8.3. Line-based Placement: the grid-row-start, grid-column-start, grid-row-end, and grid-column-end properties
 
-        // https://drafts.csswg.org/css-grid/#grid-placement-slot
-        // FIXME: <custom-ident>
+        // https://www.w3.org/TR/css-grid-2/#grid-placement-slot
         // First attempt to match the grid area’s edge to a named grid area: if there is a grid line whose
         // line name is <custom-ident>-start (for grid-*-start) / <custom-ident>-end (for grid-*-end),
         // contributes the first such line to the grid item’s placement.
 
-        // Note: Named grid areas automatically generate implicitly-assigned line names of this form, so
-        // specifying grid-row-start: foo will choose the start edge of that named grid area (unless another
-        // line named foo-start was explicitly specified before it).
-
         // Otherwise, treat this as if the integer 1 had been specified along with the <custom-ident>.
 
-        // https://drafts.csswg.org/css-grid/#grid-placement-int
-        // [ <integer [−∞,−1]> | <integer [1,∞]> ] && <custom-ident>?
+        // https://www.w3.org/TR/css-grid-2/#grid-placement-int
         // Contributes the Nth grid line to the grid item’s placement. If a negative integer is given, it
         // instead counts in reverse, starting from the end edge of the explicit grid.
         if (row_end < 0)
@@ -215,10 +209,7 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
         // lines with that name exist, all implicit grid lines are assumed to have that name for the purpose
         // of finding this position.
 
-        // An <integer> value of zero makes the declaration invalid.
-
-        // https://drafts.csswg.org/css-grid/#grid-placement-span-int
-        // span && [ <integer [1,∞]> || <custom-ident> ]
+        // https://www.w3.org/TR/css-grid-2/#grid-placement-span-int
         // Contributes a grid span to the grid item’s placement such that the corresponding edge of the grid
         // item’s grid area is N lines from its opposite edge in the corresponding direction. For example,
         // grid-column-end: span 2 indicates the second grid line in the endward direction from the
@@ -247,6 +238,13 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
         // auto
         // The property contributes nothing to the grid item’s placement, indicating auto-placement or a
         // default span of one. (See § 8 Placing Grid Items, above.)
+
+        // https://www.w3.org/TR/css-grid-2/#common-uses-named-lines
+        // 8.1.3. Named Lines and Spans
+        // Instead of counting lines by number, lines can be referenced by their line name:
+
+        // If there are multiple lines of the same name, they effectively establish a named set of grid
+        // lines, which can be exclusively indexed by filtering the placement by name:
 
         // https://drafts.csswg.org/css-grid/#grid-placement-errors
         // 8.3.1. Grid Placement Conflict Handling
@@ -296,23 +294,17 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
         int row_start = child_box.computed_values().grid_row_start().raw_value();
         int row_end = child_box.computed_values().grid_row_end().raw_value();
 
-        // https://drafts.csswg.org/css-grid/#line-placement
+        // https://www.w3.org/TR/css-grid-2/#line-placement
         // 8.3. Line-based Placement: the grid-row-start, grid-column-start, grid-row-end, and grid-column-end properties
 
-        // https://drafts.csswg.org/css-grid/#grid-placement-slot
-        // FIXME: <custom-ident>
+        // https://www.w3.org/TR/css-grid-2/#grid-placement-slot
         // First attempt to match the grid area’s edge to a named grid area: if there is a grid line whose
         // line name is <custom-ident>-start (for grid-*-start) / <custom-ident>-end (for grid-*-end),
         // contributes the first such line to the grid item’s placement.
 
-        // Note: Named grid areas automatically generate implicitly-assigned line names of this form, so
-        // specifying grid-row-start: foo will choose the start edge of that named grid area (unless another
-        // line named foo-start was explicitly specified before it).
-
         // Otherwise, treat this as if the integer 1 had been specified along with the <custom-ident>.
 
-        // https://drafts.csswg.org/css-grid/#grid-placement-int
-        // [ <integer [−∞,−1]> | <integer [1,∞]> ] && <custom-ident>?
+        // https://www.w3.org/TR/css-grid-2/#grid-placement-int
         // Contributes the Nth grid line to the grid item’s placement. If a negative integer is given, it
         // instead counts in reverse, starting from the end edge of the explicit grid.
         if (row_end < 0)
@@ -322,10 +314,7 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
         // lines with that name exist, all implicit grid lines are assumed to have that name for the purpose
         // of finding this position.
 
-        // An <integer> value of zero makes the declaration invalid.
-
-        // https://drafts.csswg.org/css-grid/#grid-placement-span-int
-        // span && [ <integer [1,∞]> || <custom-ident> ]
+        // https://www.w3.org/TR/css-grid-2/#grid-placement-span-int
         // Contributes a grid span to the grid item’s placement such that the corresponding edge of the grid
         // item’s grid area is N lines from its opposite edge in the corresponding direction. For example,
         // grid-column-end: span 2 indicates the second grid line in the endward direction from the
@@ -350,6 +339,13 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
         // auto
         // The property contributes nothing to the grid item’s placement, indicating auto-placement or a
         // default span of one. (See § 8 Placing Grid Items, above.)
+
+        // https://www.w3.org/TR/css-grid-2/#common-uses-named-lines
+        // 8.1.3. Named Lines and Spans
+        // Instead of counting lines by number, lines can be referenced by their line name:
+
+        // If there are multiple lines of the same name, they effectively establish a named set of grid
+        // lines, which can be exclusively indexed by filtering the placement by name:
 
         // https://drafts.csswg.org/css-grid/#grid-placement-errors
         // 8.3.1. Grid Placement Conflict Handling
@@ -431,23 +427,17 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
             int column_start = child_box.computed_values().grid_column_start().raw_value();
             int column_end = child_box.computed_values().grid_column_end().raw_value();
 
-            // https://drafts.csswg.org/css-grid/#line-placement
+            // https://www.w3.org/TR/css-grid-2/#line-placement
             // 8.3. Line-based Placement: the grid-row-start, grid-column-start, grid-row-end, and grid-column-end properties
 
-            // https://drafts.csswg.org/css-grid/#grid-placement-slot
-            // FIXME: <custom-ident>
+            // https://www.w3.org/TR/css-grid-2/#grid-placement-slot
             // First attempt to match the grid area’s edge to a named grid area: if there is a grid line whose
             // line name is <custom-ident>-start (for grid-*-start) / <custom-ident>-end (for grid-*-end),
             // contributes the first such line to the grid item’s placement.
 
-            // Note: Named grid areas automatically generate implicitly-assigned line names of this form, so
-            // specifying grid-row-start: foo will choose the start edge of that named grid area (unless another
-            // line named foo-start was explicitly specified before it).
-
             // Otherwise, treat this as if the integer 1 had been specified along with the <custom-ident>.
 
-            // https://drafts.csswg.org/css-grid/#grid-placement-int
-            // [ <integer [−∞,−1]> | <integer [1,∞]> ] && <custom-ident>?
+            // https://www.w3.org/TR/css-grid-2/#grid-placement-int
             // Contributes the Nth grid line to the grid item’s placement. If a negative integer is given, it
             // instead counts in reverse, starting from the end edge of the explicit grid.
             if (column_end < 0)
@@ -457,10 +447,7 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
             // lines with that name exist, all implicit grid lines are assumed to have that name for the purpose
             // of finding this position.
 
-            // An <integer> value of zero makes the declaration invalid.
-
-            // https://drafts.csswg.org/css-grid/#grid-placement-span-int
-            // span && [ <integer [1,∞]> || <custom-ident> ]
+            // https://www.w3.org/TR/css-grid-2/#grid-placement-span-int
             // Contributes a grid span to the grid item’s placement such that the corresponding edge of the grid
             // item’s grid area is N lines from its opposite edge in the corresponding direction. For example,
             // grid-column-end: span 2 indicates the second grid line in the endward direction from the
@@ -489,6 +476,13 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
             // auto
             // The property contributes nothing to the grid item’s placement, indicating auto-placement or a
             // default span of one. (See § 8 Placing Grid Items, above.)
+
+            // https://www.w3.org/TR/css-grid-2/#common-uses-named-lines
+            // 8.1.3. Named Lines and Spans
+            // Instead of counting lines by number, lines can be referenced by their line name:
+
+            // If there are multiple lines of the same name, they effectively establish a named set of grid
+            // lines, which can be exclusively indexed by filtering the placement by name:
 
             // https://drafts.csswg.org/css-grid/#grid-placement-errors
             // 8.3.1. Grid Placement Conflict Handling
