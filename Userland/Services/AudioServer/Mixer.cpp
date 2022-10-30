@@ -45,11 +45,10 @@ Mixer::Mixer(NonnullRefPtr<Core::ConfigFile> config)
 NonnullRefPtr<ClientAudioStream> Mixer::create_queue(ConnectionFromClient& client)
 {
     auto queue = adopt_ref(*new ClientAudioStream(client));
-    m_pending_mutex.lock();
-
-    m_pending_mixing.append(*queue);
-
-    m_pending_mutex.unlock();
+    {
+        Threading::MutexLocker const locker(m_pending_mutex);
+        m_pending_mixing.append(*queue);
+    }
     // Signal the mixer thread to start back up, in case nobody was connected before.
     m_mixing_necessary.signal();
 
@@ -61,14 +60,15 @@ void Mixer::mix()
     decltype(m_pending_mixing) active_mix_queues;
 
     for (;;) {
-        m_pending_mutex.lock();
-        // While we have nothing to mix, wait on the condition.
-        m_mixing_necessary.wait_while([this, &active_mix_queues]() { return m_pending_mixing.is_empty() && active_mix_queues.is_empty(); });
-        if (!m_pending_mixing.is_empty()) {
-            active_mix_queues.extend(move(m_pending_mixing));
-            m_pending_mixing.clear();
+        {
+            Threading::MutexLocker const locker(m_pending_mutex);
+            // While we have nothing to mix, wait on the condition.
+            m_mixing_necessary.wait_while([this, &active_mix_queues]() { return m_pending_mixing.is_empty() && active_mix_queues.is_empty(); });
+            if (!m_pending_mixing.is_empty()) {
+                active_mix_queues.extend(move(m_pending_mixing));
+                m_pending_mixing.clear();
+            }
         }
-        m_pending_mutex.unlock();
 
         active_mix_queues.remove_all_matching([&](auto& entry) { return !entry->client(); });
 

@@ -59,10 +59,8 @@ ErrorOr<void> ImageProcessor::enqueue_command(NonnullRefPtr<ImageProcessingComma
         m_processor_thread->detach();
     }
 
-    m_wakeup_mutex.lock();
+    Threading::MutexLocker const locker(m_wakeup_mutex);
     m_wakeup_variable.signal();
-    m_wakeup_mutex.unlock();
-
     return {};
 }
 
