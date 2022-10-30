@@ -539,7 +539,6 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
                             goto finish;
                         }
                     }
-                    auto_placement_cursor_x = 0;
                 }
                 auto_placement_cursor_x = 0;
                 auto_placement_cursor_y++;
