@@ -72,7 +72,7 @@ String HTMLOptionElement::value() const
 // https://html.spec.whatwg.org/multipage/form-elements.html#dom-option-value
 void HTMLOptionElement::set_value(String value)
 {
-    set_attribute(HTML::AttributeNames::value, value);
+    MUST(set_attribute(HTML::AttributeNames::value, value));
 }
 
 static void concatenate_descendants_text_content(DOM::Node const* node, StringBuilder& builder)

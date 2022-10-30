@@ -415,7 +415,7 @@ WebIDL::ExceptionOr<void> Document::run_the_document_write_steps(String input)
             return {};
 
         // 2. Run the document open steps with document.
-        open();
+        TRY(open());
     }
 
     // 5. Insert input into the input stream just before the insertion point.
@@ -664,11 +664,11 @@ void Document::set_title(String const& title)
     JS::GCPtr<HTML::HTMLTitleElement> title_element = head_element->first_child_of_type<HTML::HTMLTitleElement>();
     if (!title_element) {
         title_element = &static_cast<HTML::HTMLTitleElement&>(*create_element(HTML::TagNames::title).release_value());
-        head_element->append_child(*title_element);
+        MUST(head_element->append_child(*title_element));
     }
 
     title_element->remove_all_children(true);
-    title_element->append_child(*heap().allocate<Text>(realm(), *this, title));
+    MUST(title_element->append_child(*heap().allocate<Text>(realm(), *this, title)));
 
     if (auto* page = this->page()) {
         if (browsing_context() == &page->top_level_browsing_context())

@@ -64,7 +64,7 @@ JS::NonnullGCPtr<DOM::Document> DOMParser::parse_from_string(String const& strin
             auto root = DOM::create_element(*document, "parsererror", "http://www.mozilla.org/newlayout/xml/parsererror.xml");
             // FIXME: 3. Optionally, add attributes or children to root to describe the nature of the parsing error.
             // 4. Append root to document.
-            document->append_child(*root);
+            MUST(document->append_child(*root));
         }
     }
 

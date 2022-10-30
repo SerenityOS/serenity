@@ -5,6 +5,7 @@
  */
 
 #include <LibWeb/Bindings/CSSStyleDeclarationPrototype.h>
+#include <LibWeb/Bindings/ExceptionOrUtils.h>
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/CSS/CSSStyleDeclaration.h>
 #include <LibWeb/CSS/Parser/Parser.h>
@@ -163,7 +164,7 @@ void ElementInlineCSSStyleDeclaration::update_style_attribute()
     m_updating = true;
 
     // 5. Set an attribute value for owner node using "style" and the result of serializing declaration block.
-    m_element->set_attribute(HTML::AttributeNames::style, serialized());
+    MUST(m_element->set_attribute(HTML::AttributeNames::style, serialized()));
 
     // 6. Unset declaration block’s updating flag.
     m_updating = false;
@@ -346,15 +347,16 @@ JS::ThrowCompletionOr<JS::Value> CSSStyleDeclaration::internal_get(JS::PropertyK
 
 JS::ThrowCompletionOr<bool> CSSStyleDeclaration::internal_set(JS::PropertyKey const& name, JS::Value value, JS::Value receiver)
 {
+    auto& vm = this->vm();
     if (!name.is_string())
         return Base::internal_set(name, value, receiver);
     auto property_id = property_id_from_name(name.to_string());
     if (property_id == CSS::PropertyID::Invalid)
         return Base::internal_set(name, value, receiver);
 
-    auto css_text = TRY(value.to_string(vm()));
+    auto css_text = TRY(value.to_string(vm));
 
-    set_property(property_id, css_text);
+    TRY(Bindings::throw_dom_exception_if_needed(vm, [&] { return set_property(property_id, css_text); }));
     return true;
 }
 

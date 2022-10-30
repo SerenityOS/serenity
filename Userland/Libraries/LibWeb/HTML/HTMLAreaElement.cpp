@@ -32,7 +32,7 @@ String HTMLAreaElement::hyperlink_element_utils_href() const
 
 void HTMLAreaElement::set_hyperlink_element_utils_href(String href)
 {
-    set_attribute(HTML::AttributeNames::href, move(href));
+    MUST(set_attribute(HTML::AttributeNames::href, move(href)));
 }
 
 }

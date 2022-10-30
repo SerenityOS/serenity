@@ -70,13 +70,13 @@ void XMLDocumentBuilder::element_start(const XML::Name& name, HashMap<XML::Name,
     }
     if (HTML::TagNames::template_ == m_current_node->node_name()) {
         // When an XML parser would append a node to a template element, it must instead append it to the template element's template contents (a DocumentFragment node).
-        static_cast<HTML::HTMLTemplateElement&>(*m_current_node).content()->append_child(node);
+        MUST(static_cast<HTML::HTMLTemplateElement&>(*m_current_node).content()->append_child(node));
     } else {
-        m_current_node->append_child(node);
+        MUST(m_current_node->append_child(node));
     }
 
     for (auto& attribute : attributes)
-        node->set_attribute(attribute.key, attribute.value);
+        MUST(node->set_attribute(attribute.key, attribute.value));
 
     m_current_node = node.ptr();
 }
@@ -131,7 +131,7 @@ void XMLDocumentBuilder::text(String const& data)
         text_builder.clear();
     } else {
         auto node = m_document.create_text_node(data);
-        m_current_node->append_child(node);
+        MUST(m_current_node->append_child(node));
     }
 }
 
@@ -139,7 +139,7 @@ void XMLDocumentBuilder::comment(String const& data)
 {
     if (m_has_error)
         return;
-    m_document.append_child(m_document.create_comment(data));
+    MUST(m_document.append_child(m_document.create_comment(data)));
 }
 
 void XMLDocumentBuilder::document_end()

@@ -50,7 +50,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<HTMLTableRowElement>> HTMLTableSectionEleme
 
     // 3. If index is −1 or equal to the number of items in the rows collection, then append table row to this element.
     if (index == -1 || index == rows_collection_size)
-        append_child(table_row);
+        TRY(append_child(table_row));
     // 4. Otherwise, insert table row as a child of this element, immediately before the index-th tr element in the rows collection.
     else
         table_row.insert_before(*this, rows_collection->item(index));

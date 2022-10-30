@@ -465,7 +465,7 @@ void HTMLParser::handle_initial(HTMLToken& token)
 
     if (token.is_comment()) {
         auto comment = realm().heap().allocate<DOM::Comment>(realm(), document(), token.comment());
-        document().append_child(*comment);
+        MUST(document().append_child(*comment));
         return;
     }
 
@@ -474,7 +474,7 @@ void HTMLParser::handle_initial(HTMLToken& token)
         doctype->set_name(token.doctype_data().name);
         doctype->set_public_id(token.doctype_data().public_identifier);
         doctype->set_system_id(token.doctype_data().system_identifier);
-        document().append_child(*doctype);
+        MUST(document().append_child(*doctype));
         document().set_quirks_mode(which_quirks_mode(token));
         m_insertion_mode = InsertionMode::BeforeHTML;
         return;
@@ -495,7 +495,7 @@ void HTMLParser::handle_before_html(HTMLToken& token)
 
     if (token.is_comment()) {
         auto comment = realm().heap().allocate<DOM::Comment>(realm(), document(), token.comment());
-        document().append_child(*comment);
+        MUST(document().append_child(*comment));
         return;
     }
 
@@ -505,7 +505,7 @@ void HTMLParser::handle_before_html(HTMLToken& token)
 
     if (token.is_start_tag() && token.tag_name() == HTML::TagNames::html) {
         auto element = create_element_for(token, Namespace::HTML, document());
-        document().append_child(*element);
+        MUST(document().append_child(*element));
         m_stack_of_open_elements.push(move(element));
         m_insertion_mode = InsertionMode::BeforeHead;
         return;
@@ -522,7 +522,7 @@ void HTMLParser::handle_before_html(HTMLToken& token)
 
 AnythingElse:
     auto element = create_element(document(), HTML::TagNames::html, Namespace::HTML);
-    document().append_child(*element);
+    MUST(document().append_child(*element));
     m_stack_of_open_elements.push(element);
     // FIXME: If the Document is being loaded as part of navigation of a browsing context, then: run the application cache selection algorithm with no manifest, passing it the Document object.
     m_insertion_mode = InsertionMode::BeforeHead;
@@ -627,7 +627,7 @@ JS::NonnullGCPtr<DOM::Element> HTMLParser::create_element_for(HTMLToken const& t
     // 10. Append each attribute in the given token to element.
     // FIXME: This isn't the exact `append` the spec is talking about.
     token.for_each_attribute([&](auto& attribute) {
-        element->set_attribute(attribute.local_name, attribute.value);
+        MUST(element->set_attribute(attribute.local_name, attribute.value));
         return IterationDecision::Continue;
     });
 
@@ -930,7 +930,7 @@ DOM::Text* HTMLParser::find_character_insertion_node()
     if (adjusted_insertion_location.parent->last_child() && adjusted_insertion_location.parent->last_child()->is_text())
         return verify_cast<DOM::Text>(adjusted_insertion_location.parent->last_child());
     auto new_text_node = realm().heap().allocate<DOM::Text>(realm(), document(), "");
-    adjusted_insertion_location.parent->append_child(*new_text_node);
+    MUST(adjusted_insertion_location.parent->append_child(*new_text_node));
     return new_text_node;
 }
 
@@ -1055,7 +1055,7 @@ void HTMLParser::handle_after_body(HTMLToken& token)
 
     if (token.is_comment()) {
         auto& insertion_location = m_stack_of_open_elements.first();
-        insertion_location.append_child(*realm().heap().allocate<DOM::Comment>(realm(), document(), token.comment()));
+        MUST(insertion_location.append_child(*realm().heap().allocate<DOM::Comment>(realm(), document(), token.comment())));
         return;
     }
 
@@ -1092,7 +1092,7 @@ void HTMLParser::handle_after_after_body(HTMLToken& token)
 {
     if (token.is_comment()) {
         auto comment = realm().heap().allocate<DOM::Comment>(realm(), document(), token.comment());
-        document().append_child(*comment);
+        MUST(document().append_child(*comment));
         return;
     }
 
@@ -1311,7 +1311,7 @@ HTMLParser::AdoptionAgencyAlgorithmOutcome HTMLParser::run_the_adoption_agency_a
             }
 
             // 8. Append last node to node.
-            node->append_child(*last_node);
+            MUST(node->append_child(*last_node));
 
             // 9. Set last node to node.
             last_node = node;
@@ -1329,10 +1329,10 @@ HTMLParser::AdoptionAgencyAlgorithmOutcome HTMLParser::run_the_adoption_agency_a
 
         // 16. Take all of the child nodes of furthest block and append them to the element created in the last step.
         for (auto& child : furthest_block->children_as_vector())
-            element->append_child(furthest_block->remove_child(*child).release_value());
+            MUST(element->append_child(furthest_block->remove_child(*child).release_value()));
 
         // 17. Append that new element to furthest block.
-        furthest_block->append_child(*element);
+        MUST(furthest_block->append_child(*element));
 
         // 18. Remove formatting element from the list of active formatting elements,
         //     and insert the new element into the list of active formatting elements at the position of the aforementioned bookmark.
@@ -1481,7 +1481,7 @@ void HTMLParser::handle_in_body(HTMLToken& token)
             return;
         token.for_each_attribute([&](auto& attribute) {
             if (!current_node().has_attribute(attribute.local_name))
-                current_node().set_attribute(attribute.local_name, attribute.value);
+                MUST(current_node().set_attribute(attribute.local_name, attribute.value));
             return IterationDecision::Continue;
         });
         return;
@@ -1508,7 +1508,7 @@ void HTMLParser::handle_in_body(HTMLToken& token)
         auto& body_element = m_stack_of_open_elements.elements().at(1);
         token.for_each_attribute([&](auto& attribute) {
             if (!body_element->has_attribute(attribute.local_name))
-                body_element->set_attribute(attribute.local_name, attribute.value);
+                MUST(body_element->set_attribute(attribute.local_name, attribute.value));
             return IterationDecision::Continue;
         });
         return;
@@ -3126,7 +3126,7 @@ void HTMLParser::handle_after_after_frameset(HTMLToken& token)
 {
     if (token.is_comment()) {
         auto* comment = document().heap().allocate<DOM::Comment>(document().realm(), document(), token.comment());
-        document().append_child(*comment);
+        MUST(document().append_child(*comment));
         return;
     }
 
@@ -3446,7 +3446,7 @@ Vector<JS::Handle<DOM::Node>> HTMLParser::parse_html_fragment(DOM::Element& cont
     auto root = create_element(context_element.document(), HTML::TagNames::html, Namespace::HTML);
 
     // 6. Append the element root to the Document node created above.
-    temp_document->append_child(root);
+    MUST(temp_document->append_child(root));
 
     // 7. Set up the parser's stack of open elements so that it contains just the single element root.
     parser->m_stack_of_open_elements.push(root);
@@ -3475,7 +3475,7 @@ Vector<JS::Handle<DOM::Node>> HTMLParser::parse_html_fragment(DOM::Element& cont
     // 14. Return the child nodes of root, in tree order.
     Vector<JS::Handle<DOM::Node>> children;
     while (JS::GCPtr<DOM::Node> child = root->first_child()) {
-        root->remove_child(*child);
+        MUST(root->remove_child(*child));
         context_element.document().adopt_node(*child);
         children.append(JS::make_handle(*child));
     }

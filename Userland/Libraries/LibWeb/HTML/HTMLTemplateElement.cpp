@@ -53,7 +53,7 @@ void HTMLTemplateElement::cloned(Node& copy, bool clone_children)
         auto cloned_child = child.clone_node(&template_clone.content()->document(), true);
 
         // FIXME: Should this use TreeNode::append_child instead?
-        template_clone.content()->append_child(cloned_child);
+        MUST(template_clone.content()->append_child(cloned_child));
     });
 }
 

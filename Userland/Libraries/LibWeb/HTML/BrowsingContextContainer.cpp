@@ -220,7 +220,7 @@ void BrowsingContextContainer::navigate_an_iframe_or_frame(JS::NonnullGCPtr<Fetc
     //    FIXME: and processResponseEndOfBody set to reportFrameTiming.
     auto* source_browsing_context = document().browsing_context();
     VERIFY(source_browsing_context);
-    m_nested_browsing_context->navigate(resource, *source_browsing_context, false, history_handling);
+    MUST(m_nested_browsing_context->navigate(resource, *source_browsing_context, false, history_handling));
 }
 
 }

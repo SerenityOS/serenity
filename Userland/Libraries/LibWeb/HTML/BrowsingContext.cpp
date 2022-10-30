@@ -188,9 +188,9 @@ JS::NonnullGCPtr<BrowsingContext> BrowsingContext::create_a_new_browsing_context
 
     // 18. Ensure that document has a single child html node, which itself has two empty child nodes: a head element, and a body element.
     auto html_node = document->create_element(HTML::TagNames::html).release_value();
-    html_node->append_child(document->create_element(HTML::TagNames::head).release_value());
-    html_node->append_child(document->create_element(HTML::TagNames::body).release_value());
-    document->append_child(html_node);
+    MUST(html_node->append_child(document->create_element(HTML::TagNames::head).release_value()));
+    MUST(html_node->append_child(document->create_element(HTML::TagNames::body).release_value()));
+    MUST(document->append_child(html_node));
 
     // 19. Set the active document of browsingContext to document.
     browsing_context->set_active_document(*document);
@@ -952,7 +952,7 @@ WebIDL::ExceptionOr<void> BrowsingContext::navigate(
         && resource->url().equals(active_document()->url(), AK::URL::ExcludeFragment::Yes)
         && !resource->url().fragment().is_null()) {
         // 1. Navigate to a fragment given browsingContext, resource's URL, historyHandling, and navigationId.
-        navigate_to_a_fragment(resource->url(), history_handling, *navigation_id);
+        TRY(navigate_to_a_fragment(resource->url(), history_handling, *navigation_id));
 
         // 2. Return.
         return {};

@@ -61,7 +61,7 @@ void HTMLTableElement::set_caption(HTMLTableCaptionElement* caption)
     //        Currently the wrapper generator doesn't send us a nullable value
     delete_caption();
 
-    pre_insert(*caption, first_child());
+    MUST(pre_insert(*caption, first_child()));
 }
 
 JS::NonnullGCPtr<HTMLTableCaptionElement> HTMLTableElement::create_caption()
@@ -72,7 +72,7 @@ JS::NonnullGCPtr<HTMLTableCaptionElement> HTMLTableElement::create_caption()
     }
 
     auto caption = DOM::create_element(document(), TagNames::caption, Namespace::HTML);
-    pre_insert(caption, first_child());
+    MUST(pre_insert(caption, first_child()));
     return static_cast<HTMLTableCaptionElement&>(*caption);
 }
 
@@ -127,7 +127,7 @@ WebIDL::ExceptionOr<void> HTMLTableElement::set_t_head(HTMLTableSectionElement* 
         break;
     }
 
-    pre_insert(*thead, child_to_append_after);
+    TRY(pre_insert(*thead, child_to_append_after));
 
     return {};
 }
@@ -158,7 +158,7 @@ JS::NonnullGCPtr<HTMLTableSectionElement> HTMLTableElement::create_t_head()
         break;
     }
 
-    pre_insert(thead, child_to_append_after);
+    MUST(pre_insert(thead, child_to_append_after));
 
     return static_cast<HTMLTableSectionElement&>(*thead);
 }
@@ -197,7 +197,7 @@ WebIDL::ExceptionOr<void> HTMLTableElement::set_t_foot(HTMLTableSectionElement* 
     delete_t_foot();
 
     // We insert the new tfoot at the end of the table
-    append_child(*tfoot);
+    TRY(append_child(*tfoot));
 
     return {};
 }
@@ -209,7 +209,7 @@ JS::NonnullGCPtr<HTMLTableSectionElement> HTMLTableElement::create_t_foot()
         return *maybe_tfoot;
 
     auto tfoot = DOM::create_element(document(), TagNames::tfoot, Namespace::HTML);
-    append_child(tfoot);
+    MUST(append_child(tfoot));
     return static_cast<HTMLTableSectionElement&>(*tfoot);
 }
 
@@ -247,7 +247,7 @@ JS::NonnullGCPtr<HTMLTableSectionElement> HTMLTableElement::create_t_body()
         }
     }
 
-    pre_insert(tbody, child_to_append_after);
+    MUST(pre_insert(tbody, child_to_append_after));
 
     return static_cast<HTMLTableSectionElement&>(*tbody);
 }
@@ -291,14 +291,14 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<HTMLTableRowElement>> HTMLTableElement::ins
     auto& tr = static_cast<HTMLTableRowElement&>(*DOM::create_element(document(), TagNames::tr, Namespace::HTML));
     if (rows_length == 0 && !has_child_of_type<HTMLTableRowElement>()) {
         auto tbody = DOM::create_element(document(), TagNames::tbody, Namespace::HTML);
-        tbody->append_child(tr);
-        append_child(tbody);
+        TRY(tbody->append_child(tr));
+        TRY(append_child(tbody));
     } else if (rows_length == 0) {
         auto tbody = last_child_of_type<HTMLTableRowElement>();
-        tbody->append_child(tr);
+        TRY(tbody->append_child(tr));
     } else if (index == -1 || index == (long)rows_length) {
         auto parent_of_last_tr = rows->item(rows_length - 1)->parent_element();
-        parent_of_last_tr->append_child(tr);
+        TRY(parent_of_last_tr->append_child(tr));
     } else {
         rows->item(index)->parent_element()->insert_before(tr, rows->item(index));
     }

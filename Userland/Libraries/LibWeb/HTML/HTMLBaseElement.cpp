@@ -91,7 +91,7 @@ String HTMLBaseElement::href() const
 void HTMLBaseElement::set_href(String const& href)
 {
     // The href IDL attribute, on setting, must set the href content attribute to the given new value.
-    set_attribute(AttributeNames::href, href);
+    MUST(set_attribute(AttributeNames::href, href));
 }
 
 }

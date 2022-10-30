@@ -340,12 +340,12 @@ void HTMLInputElement::create_shadow_tree_if_needed()
     if (initial_value.is_null())
         initial_value = String::empty();
     auto element = document().create_element(HTML::TagNames::div).release_value();
-    element->set_attribute(HTML::AttributeNames::style, "white-space: pre; padding-top: 1px; padding-bottom: 1px; padding-left: 2px; padding-right: 2px");
+    MUST(element->set_attribute(HTML::AttributeNames::style, "white-space: pre; padding-top: 1px; padding-bottom: 1px; padding-left: 2px; padding-right: 2px"));
     m_text_node = heap().allocate<DOM::Text>(realm(), document(), initial_value);
     m_text_node->set_always_editable(m_type != TypeAttributeState::FileUpload);
     m_text_node->set_owner_input_element({}, *this);
-    element->append_child(*m_text_node);
-    shadow_root->append_child(move(element));
+    MUST(element->append_child(*m_text_node));
+    MUST(shadow_root->append_child(move(element)));
     set_shadow_root(move(shadow_root));
 }
 
@@ -418,7 +418,7 @@ String HTMLInputElement::type() const
 
 void HTMLInputElement::set_type(String const& type)
 {
-    set_attribute(HTML::AttributeNames::type, type);
+    MUST(set_attribute(HTML::AttributeNames::type, type));
 }
 
 // https://html.spec.whatwg.org/multipage/input.html#value-sanitization-algorithm
