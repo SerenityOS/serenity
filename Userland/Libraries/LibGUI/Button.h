@@ -50,6 +50,7 @@ public:
     Action* action() { return m_action; }
     Action const* action() const { return m_action; }
     void set_action(Action&);
+    void set_text_from_action();
 
     virtual bool is_uncheckable() const override;
 
