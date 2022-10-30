@@ -96,7 +96,7 @@ WebIDL::ExceptionOr<void> Response::initialize_response(ResponseInit const& init
 
     // 5. If init["headers"] exists, then fill response’s headers with init["headers"].
     if (init.headers.has_value())
-        m_headers->fill(*init.headers);
+        TRY(m_headers->fill(*init.headers));
 
     // 6. If body was given, then:
     if (body.has_value()) {

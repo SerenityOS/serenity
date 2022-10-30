@@ -1423,7 +1423,9 @@ JS_DEFINE_NATIVE_FUNCTION(Window::post_message)
 {
     auto* impl = TRY(impl_from(vm));
     auto target_origin = TRY(vm.argument(1).to_string(vm));
-    impl->post_message_impl(vm.argument(0), target_origin);
+    TRY(Bindings::throw_dom_exception_if_needed(vm, [&] {
+        return impl->post_message_impl(vm.argument(0), target_origin);
+    }));
     return JS::js_undefined();
 }
 

@@ -104,23 +104,23 @@ static bool build_markdown_document(DOM::Document& document, ByteBuffer const& d
 static bool build_text_document(DOM::Document& document, ByteBuffer const& data)
 {
     auto html_element = document.create_element("html").release_value();
-    document.append_child(html_element);
+    MUST(document.append_child(html_element));
 
     auto head_element = document.create_element("head").release_value();
-    html_element->append_child(head_element);
+    MUST(html_element->append_child(head_element));
     auto title_element = document.create_element("title").release_value();
-    head_element->append_child(title_element);
+    MUST(head_element->append_child(title_element));
 
     auto title_text = document.create_text_node(document.url().basename());
-    title_element->append_child(title_text);
+    MUST(title_element->append_child(title_text));
 
     auto body_element = document.create_element("body").release_value();
-    html_element->append_child(body_element);
+    MUST(html_element->append_child(body_element));
 
     auto pre_element = document.create_element("pre").release_value();
-    body_element->append_child(pre_element);
+    MUST(body_element->append_child(pre_element));
 
-    pre_element->append_child(document.create_text_node(String::copy(data)));
+    MUST(pre_element->append_child(document.create_text_node(String::copy(data))));
     return true;
 }
 
@@ -135,23 +135,23 @@ static bool build_image_document(DOM::Document& document, ByteBuffer const& data
         return false;
 
     auto html_element = document.create_element("html").release_value();
-    document.append_child(html_element);
+    MUST(document.append_child(html_element));
 
     auto head_element = document.create_element("head").release_value();
-    html_element->append_child(head_element);
+    MUST(html_element->append_child(head_element));
     auto title_element = document.create_element("title").release_value();
-    head_element->append_child(title_element);
+    MUST(head_element->append_child(title_element));
 
     auto basename = LexicalPath::basename(document.url().path());
     auto title_text = document.heap().allocate<DOM::Text>(document.realm(), document, String::formatted("{} [{}x{}]", basename, bitmap->width(), bitmap->height()));
-    title_element->append_child(*title_text);
+    MUST(title_element->append_child(*title_text));
 
     auto body_element = document.create_element("body").release_value();
-    html_element->append_child(body_element);
+    MUST(html_element->append_child(body_element));
 
     auto image_element = document.create_element("img").release_value();
-    image_element->set_attribute(HTML::AttributeNames::src, document.url().to_string());
-    body_element->append_child(image_element);
+    MUST(image_element->set_attribute(HTML::AttributeNames::src, document.url().to_string()));
+    MUST(body_element->append_child(image_element));
 
     return true;
 }

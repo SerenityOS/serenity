@@ -578,10 +578,10 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<DocumentFragment>> Range::extract()
         verify_cast<CharacterData>(*clone).set_data(move(result));
 
         // 3. Append clone to fragment.
-        fragment->append_child(clone);
+        TRY(fragment->append_child(clone));
 
         // 4. Replace data with node original start node, offset original start offset, count original end offset minus original start offset, and data the empty string.
-        static_cast<CharacterData&>(*original_start_node).replace_data(original_start_offset, original_end_offset - original_start_offset, "");
+        TRY(static_cast<CharacterData&>(*original_start_node).replace_data(original_start_offset, original_end_offset - original_start_offset, ""));
 
         // 5. Return fragment.
         return JS::NonnullGCPtr(*fragment);
@@ -668,10 +668,10 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<DocumentFragment>> Range::extract()
         verify_cast<CharacterData>(*clone).set_data(move(result));
 
         // 3. Append clone to fragment.
-        fragment->append_child(clone);
+        TRY(fragment->append_child(clone));
 
         // 4. Replace data with node original start node, offset original start offset, count original start node’s length minus original start offset, and data the empty string.
-        static_cast<CharacterData&>(*original_start_node).replace_data(original_start_offset, original_start_node->length() - original_start_offset, "");
+        TRY(static_cast<CharacterData&>(*original_start_node).replace_data(original_start_offset, original_start_node->length() - original_start_offset, ""));
     }
     // 16. Otherwise, if first partially contained child is not null:
     else if (first_partially_contained_child) {
@@ -679,7 +679,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<DocumentFragment>> Range::extract()
         auto clone = first_partially_contained_child->clone_node();
 
         // 2. Append clone to fragment.
-        fragment->append_child(clone);
+        TRY(fragment->append_child(clone));
 
         // 3. Let subrange be a new live range whose start is (original start node, original start offset) and whose end is (first partially contained child, first partially contained child’s length).
         auto subrange = Range::create(original_start_node, original_start_offset, *first_partially_contained_child, first_partially_contained_child->length());
@@ -688,12 +688,12 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<DocumentFragment>> Range::extract()
         auto subfragment = TRY(subrange->extract());
 
         // 5. Append subfragment to clone.
-        clone->append_child(subfragment);
+        TRY(clone->append_child(subfragment));
     }
 
     // 17. For each contained child in contained children, append contained child to fragment.
     for (auto& contained_child : contained_children) {
-        fragment->append_child(contained_child);
+        TRY(fragment->append_child(contained_child));
     }
 
     // 18. If last partially contained child is a CharacterData node, then:
@@ -706,10 +706,10 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<DocumentFragment>> Range::extract()
         verify_cast<CharacterData>(*clone).set_data(move(result));
 
         // 3. Append clone to fragment.
-        fragment->append_child(clone);
+        TRY(fragment->append_child(clone));
 
         // 4. Replace data with node original end node, offset 0, count original end offset, and data the empty string.
-        verify_cast<CharacterData>(*original_end_node).replace_data(0, original_end_offset, "");
+        TRY(verify_cast<CharacterData>(*original_end_node).replace_data(0, original_end_offset, ""));
     }
     // 19. Otherwise, if last partially contained child is not null:
     else if (last_partially_contained_child) {
@@ -717,7 +717,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<DocumentFragment>> Range::extract()
         auto clone = last_partially_contained_child->clone_node();
 
         // 2. Append clone to fragment.
-        fragment->append_child(clone);
+        TRY(fragment->append_child(clone));
 
         // 3. Let subrange be a new live range whose start is (last partially contained child, 0) and whose end is (original end node, original end offset).
         auto subrange = Range::create(*last_partially_contained_child, 0, original_end_node, original_end_offset);
@@ -726,12 +726,12 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<DocumentFragment>> Range::extract()
         auto subfragment = TRY(subrange->extract());
 
         // 5. Append subfragment to clone.
-        clone->append_child(subfragment);
+        TRY(clone->append_child(subfragment));
     }
 
     // 20. Set range’s start and end to (new node, new offset).
-    set_start(*new_node, new_offset);
-    set_end(*new_node, new_offset);
+    TRY(set_start(*new_node, new_offset));
+    TRY(set_end(*new_node, new_offset));
 
     // 21. Return fragment.
     return JS::NonnullGCPtr(*fragment);
@@ -834,7 +834,7 @@ WebIDL::ExceptionOr<void> Range::insert(JS::NonnullGCPtr<Node> node)
 
     // 13. If range is collapsed, then set range’s end to (parent, newOffset).
     if (collapsed())
-        set_end(*parent, new_offset);
+        TRY(set_end(*parent, new_offset));
 
     return {};
 }
@@ -907,7 +907,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<DocumentFragment>> Range::clone_the_content
         verify_cast<CharacterData>(*clone).set_data(move(result));
 
         // 3. Append clone to fragment.
-        fragment->append_child(clone);
+        TRY(fragment->append_child(clone));
 
         // 4. Return fragment.
         return JS::NonnullGCPtr(*fragment);
@@ -972,7 +972,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<DocumentFragment>> Range::clone_the_content
         verify_cast<CharacterData>(*clone).set_data(move(result));
 
         // 3. Append clone to fragment.
-        fragment->append_child(clone);
+        TRY(fragment->append_child(clone));
     }
     // 14. Otherwise, if first partially contained child is not null:
     else if (first_partially_contained_child) {
@@ -980,7 +980,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<DocumentFragment>> Range::clone_the_content
         auto clone = first_partially_contained_child->clone_node();
 
         // 2. Append clone to fragment.
-        fragment->append_child(clone);
+        TRY(fragment->append_child(clone));
 
         // 3. Let subrange be a new live range whose start is (original start node, original start offset) and whose end is (first partially contained child, first partially contained child’s length).
         auto subrange = Range::create(original_start_node, original_start_offset, *first_partially_contained_child, first_partially_contained_child->length());
@@ -989,7 +989,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<DocumentFragment>> Range::clone_the_content
         auto subfragment = TRY(subrange->clone_the_contents());
 
         // 5. Append subfragment to clone.
-        clone->append_child(subfragment);
+        TRY(clone->append_child(subfragment));
     }
 
     // 15. For each contained child in contained children.
@@ -998,7 +998,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<DocumentFragment>> Range::clone_the_content
         auto clone = contained_child->clone_node(nullptr, true);
 
         // 2. Append clone to fragment.
-        fragment->append_child(move(clone));
+        TRY(fragment->append_child(move(clone)));
     }
 
     // 16. If last partially contained child is a CharacterData node, then:
@@ -1011,7 +1011,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<DocumentFragment>> Range::clone_the_content
         verify_cast<CharacterData>(*clone).set_data(move(result));
 
         // 3. Append clone to fragment.
-        fragment->append_child(clone);
+        TRY(fragment->append_child(clone));
     }
     // 17. Otherwise, if last partially contained child is not null:
     else if (last_partially_contained_child) {
@@ -1019,7 +1019,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<DocumentFragment>> Range::clone_the_content
         auto clone = last_partially_contained_child->clone_node();
 
         // 2. Append clone to fragment.
-        fragment->append_child(clone);
+        TRY(fragment->append_child(clone));
 
         // 3. Let subrange be a new live range whose start is (last partially contained child, 0) and whose end is (original end node, original end offset).
         auto subrange = Range::create(*last_partially_contained_child, 0, original_end_node, original_end_offset);
@@ -1028,7 +1028,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<DocumentFragment>> Range::clone_the_content
         auto subfragment = TRY(subrange->clone_the_contents());
 
         // 5. Append subfragment to clone.
-        clone->append_child(subfragment);
+        TRY(clone->append_child(subfragment));
     }
 
     // 18. Return fragment.
@@ -1097,8 +1097,8 @@ WebIDL::ExceptionOr<void> Range::delete_contents()
         TRY(static_cast<CharacterData&>(*original_end_node).replace_data(0, original_end_offset, ""));
 
     // 10. Set start and end to (new node, new offset).
-    set_start(*new_node, new_offset);
-    set_end(*new_node, new_offset);
+    TRY(set_start(*new_node, new_offset));
+    TRY(set_end(*new_node, new_offset));
     return {};
 }
 

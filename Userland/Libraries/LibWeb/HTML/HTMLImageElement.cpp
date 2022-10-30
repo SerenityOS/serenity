@@ -120,7 +120,7 @@ unsigned HTMLImageElement::width() const
 
 void HTMLImageElement::set_width(unsigned width)
 {
-    set_attribute(HTML::AttributeNames::width, String::number(width));
+    MUST(set_attribute(HTML::AttributeNames::width, String::number(width)));
 }
 
 // https://html.spec.whatwg.org/multipage/embedded-content.html#dom-img-height
@@ -148,7 +148,7 @@ unsigned HTMLImageElement::height() const
 
 void HTMLImageElement::set_height(unsigned height)
 {
-    set_attribute(HTML::AttributeNames::height, String::number(height));
+    MUST(set_attribute(HTML::AttributeNames::height, String::number(height)));
 }
 
 // https://html.spec.whatwg.org/multipage/embedded-content.html#dom-img-naturalwidth

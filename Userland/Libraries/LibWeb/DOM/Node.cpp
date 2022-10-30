@@ -399,13 +399,13 @@ void Node::insert_before(JS::NonnullGCPtr<Node> node, JS::GCPtr<Node> child, boo
         // 1. For each live range whose start node is parent and start offset is greater than child’s index, increase its start offset by count.
         for (auto& range : Range::live_ranges()) {
             if (range->start_container() == this && range->start_offset() > child->index())
-                range->set_start(*range->start_container(), range->start_offset() + count);
+                MUST(range->set_start(*range->start_container(), range->start_offset() + count));
         }
 
         // 2. For each live range whose end node is parent and end offset is greater than child’s index, increase its end offset by count.
         for (auto& range : Range::live_ranges()) {
             if (range->end_container() == this && range->end_offset() > child->index())
-                range->set_end(*range->end_container(), range->end_offset() + count);
+                MUST(range->set_end(*range->end_container(), range->end_offset() + count));
         }
     }
 
@@ -525,25 +525,25 @@ void Node::remove(bool suppress_observers)
     // 4. For each live range whose start node is an inclusive descendant of node, set its start to (parent, index).
     for (auto& range : Range::live_ranges()) {
         if (range->start_container()->is_inclusive_descendant_of(*this))
-            range->set_start(*parent, index);
+            MUST(range->set_start(*parent, index));
     }
 
     // 5. For each live range whose end node is an inclusive descendant of node, set its end to (parent, index).
     for (auto& range : Range::live_ranges()) {
         if (range->end_container()->is_inclusive_descendant_of(*this))
-            range->set_end(*parent, index);
+            MUST(range->set_end(*parent, index));
     }
 
     // 6. For each live range whose start node is parent and start offset is greater than index, decrease its start offset by 1.
     for (auto& range : Range::live_ranges()) {
         if (range->start_container() == parent && range->start_offset() > index)
-            range->set_start(*range->start_container(), range->start_offset() - 1);
+            MUST(range->set_start(*range->start_container(), range->start_offset() - 1));
     }
 
     // 7. For each live range whose end node is parent and end offset is greater than index, decrease its end offset by 1.
     for (auto& range : Range::live_ranges()) {
         if (range->end_container() == parent && range->end_offset() > index)
-            range->set_end(*range->end_container(), range->end_offset() - 1);
+            MUST(range->set_end(*range->end_container(), range->end_offset() - 1));
     }
 
     // 8. For each NodeIterator object iterator whose root’s node document is node’s node document, run the NodeIterator pre-removing steps given node and iterator.
@@ -721,7 +721,7 @@ JS::NonnullGCPtr<Node> Node::clone_node(Document* document, bool clone_children)
         element.for_each_attribute([&](auto& name, auto& value) {
             // 1. Let copyAttribute be a clone of attribute.
             // 2. Append copyAttribute to copy.
-            element_copy->set_attribute(name, value);
+            MUST(element_copy->set_attribute(name, value));
         });
         copy = move(element_copy);
 
@@ -790,7 +790,7 @@ JS::NonnullGCPtr<Node> Node::clone_node(Document* document, bool clone_children)
     // 6. If the clone children flag is set, clone all the children of node and append them to copy, with document as specified and the clone children flag being set.
     if (clone_children) {
         for_each_child([&](auto& child) {
-            copy->append_child(child.clone_node(document, true));
+            MUST(copy->append_child(child.clone_node(document, true)));
         });
     }
 

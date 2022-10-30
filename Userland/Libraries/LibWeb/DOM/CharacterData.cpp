@@ -78,25 +78,25 @@ WebIDL::ExceptionOr<void> CharacterData::replace_data(size_t offset, size_t coun
     // 8. For each live range whose start node is node and start offset is greater than offset but less than or equal to offset plus count, set its start offset to offset.
     for (auto& range : Range::live_ranges()) {
         if (range->start_container() == this && range->start_offset() > offset && range->start_offset() <= (offset + count))
-            range->set_start(*range->start_container(), offset);
+            TRY(range->set_start(*range->start_container(), offset));
     }
 
     // 9. For each live range whose end node is node and end offset is greater than offset but less than or equal to offset plus count, set its end offset to offset.
     for (auto& range : Range::live_ranges()) {
         if (range->end_container() == this && range->end_offset() > offset && range->end_offset() <= (offset + count))
-            range->set_end(*range->end_container(), range->end_offset());
+            TRY(range->set_end(*range->end_container(), range->end_offset()));
     }
 
     // 10. For each live range whose start node is node and start offset is greater than offset plus count, increase its start offset by data’s length and decrease it by count.
     for (auto& range : Range::live_ranges()) {
         if (range->start_container() == this && range->start_offset() > (offset + count))
-            range->set_start(*range->start_container(), range->start_offset() + data.length() - count);
+            TRY(range->set_start(*range->start_container(), range->start_offset() + data.length() - count));
     }
 
     // 11. For each live range whose end node is node and end offset is greater than offset plus count, increase its end offset by data’s length and decrease it by count.
     for (auto& range : Range::live_ranges()) {
         if (range->end_container() == this && range->end_offset() > (offset + count))
-            range->set_end(*range->end_container(), range->end_offset() + data.length() - count);
+            TRY(range->set_end(*range->end_container(), range->end_offset() + data.length() - count));
     }
 
     // 12. If node’s parent is non-null, then run the children changed steps for node’s parent.

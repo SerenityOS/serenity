@@ -51,10 +51,10 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Document>> DOMImplementation::create_docume
         element = TRY(xml_document->create_element_ns(namespace_, qualified_name /* FIXME: and an empty dictionary */));
 
     if (doctype)
-        xml_document->append_child(*doctype);
+        TRY(xml_document->append_child(*doctype));
 
     if (element)
-        xml_document->append_child(*element);
+        TRY(xml_document->append_child(*element));
 
     xml_document->set_origin(document().origin());
 
@@ -78,24 +78,24 @@ JS::NonnullGCPtr<Document> DOMImplementation::create_html_document(String const&
 
     auto doctype = heap().allocate<DocumentType>(realm(), html_document);
     doctype->set_name("html");
-    html_document->append_child(*doctype);
+    MUST(html_document->append_child(*doctype));
 
     auto html_element = create_element(html_document, HTML::TagNames::html, Namespace::HTML);
-    html_document->append_child(html_element);
+    MUST(html_document->append_child(html_element));
 
     auto head_element = create_element(html_document, HTML::TagNames::head, Namespace::HTML);
-    html_element->append_child(head_element);
+    MUST(html_element->append_child(head_element));
 
     if (!title.is_null()) {
         auto title_element = create_element(html_document, HTML::TagNames::title, Namespace::HTML);
-        head_element->append_child(title_element);
+        MUST(head_element->append_child(title_element));
 
         auto text_node = heap().allocate<Text>(realm(), html_document, title);
-        title_element->append_child(*text_node);
+        MUST(title_element->append_child(*text_node));
     }
 
     auto body_element = create_element(html_document, HTML::TagNames::body, Namespace::HTML);
-    html_element->append_child(body_element);
+    MUST(html_element->append_child(body_element));
 
     html_document->set_origin(document().origin());
 

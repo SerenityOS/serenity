@@ -2677,14 +2677,14 @@ JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::@attribute.setter_callback@)
             if (attribute.extended_attributes.contains("Reflect")) {
                 if (attribute.type->name() != "boolean") {
                     attribute_generator.append(R"~~~(
-    impl->set_attribute(HTML::AttributeNames::@attribute.reflect_name@, cpp_value);
+    MUST(impl->set_attribute(HTML::AttributeNames::@attribute.reflect_name@, cpp_value));
 )~~~");
                 } else {
                     attribute_generator.append(R"~~~(
     if (!cpp_value)
         impl->remove_attribute(HTML::AttributeNames::@attribute.reflect_name@);
     else
-        impl->set_attribute(HTML::AttributeNames::@attribute.reflect_name@, String::empty());
+        MUST(impl->set_attribute(HTML::AttributeNames::@attribute.reflect_name@, String::empty()));
 )~~~");
                 }
             } else {

@@ -36,7 +36,7 @@ String HTMLAnchorElement::hyperlink_element_utils_href() const
 
 void HTMLAnchorElement::set_hyperlink_element_utils_href(String href)
 {
-    set_attribute(HTML::AttributeNames::href, move(href));
+    MUST(set_attribute(HTML::AttributeNames::href, move(href)));
 }
 
 void HTMLAnchorElement::run_activation_behavior(Web::DOM::Event const&)

@@ -211,16 +211,16 @@ WebIDL::ExceptionOr<void> Selection::extend(JS::NonnullGCPtr<DOM::Node> node, un
 
     // 5. If node's root is not the same as the this's range's root, set the start newRange's start and end to newFocus.
     if (&node->root() != &m_range->start_container()->root()) {
-        new_range->set_start(new_focus_node, new_focus_offset);
+        TRY(new_range->set_start(new_focus_node, new_focus_offset));
     }
     // 6. Otherwise, if oldAnchor is before or equal to newFocus, set the start newRange's start to oldAnchor, then set its end to newFocus.
     else if (old_anchor_node.is_before(new_focus_node) || &old_anchor_node == new_focus_node.ptr()) {
-        new_range->set_end(new_focus_node, new_focus_offset);
+        TRY(new_range->set_end(new_focus_node, new_focus_offset));
     }
     // 7. Otherwise, set the start newRange's start to newFocus, then set its end to oldAnchor.
     else {
-        new_range->set_start(new_focus_node, new_focus_offset);
-        new_range->set_end(old_anchor_node, old_anchor_offset);
+        TRY(new_range->set_start(new_focus_node, new_focus_offset));
+        TRY(new_range->set_end(old_anchor_node, old_anchor_offset));
     }
 
     // 8. Set this's range to newRange.

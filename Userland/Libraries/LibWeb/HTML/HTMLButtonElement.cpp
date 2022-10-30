@@ -83,7 +83,7 @@ HTMLButtonElement::TypeAttributeState HTMLButtonElement::type_state() const
 
 void HTMLButtonElement::set_type(String const& type)
 {
-    set_attribute(HTML::AttributeNames::type, type);
+    MUST(set_attribute(HTML::AttributeNames::type, type));
 }
 
 }

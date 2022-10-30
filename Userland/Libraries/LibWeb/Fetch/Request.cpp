@@ -420,7 +420,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Request>> Request::construct_impl(JS::Realm
         }
         // 5. Otherwise, fill this’s headers with headers.
         else {
-            request_object->headers()->fill(headers.get<HeadersInit>());
+            TRY(request_object->headers()->fill(headers.get<HeadersInit>()));
         }
     }
 

@@ -101,11 +101,11 @@ WebIDL::ExceptionOr<void> HTMLElement::set_content_editable(String const& conten
         return {};
     }
     if (content_editable.equals_ignoring_case("true"sv)) {
-        set_attribute(HTML::AttributeNames::contenteditable, "true");
+        MUST(set_attribute(HTML::AttributeNames::contenteditable, "true"));
         return {};
     }
     if (content_editable.equals_ignoring_case("false"sv)) {
-        set_attribute(HTML::AttributeNames::contenteditable, "false");
+        MUST(set_attribute(HTML::AttributeNames::contenteditable, "false"));
         return {};
     }
     return WebIDL::SyntaxError::create(realm(), "Invalid contentEditable value, must be 'true', 'false', or 'inherit'");
@@ -114,7 +114,7 @@ WebIDL::ExceptionOr<void> HTMLElement::set_content_editable(String const& conten
 void HTMLElement::set_inner_text(StringView text)
 {
     remove_all_children();
-    append_child(document().create_text_node(text));
+    MUST(append_child(document().create_text_node(text)));
 
     set_needs_style_update(true);
 }

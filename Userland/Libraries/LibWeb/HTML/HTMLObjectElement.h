@@ -35,7 +35,7 @@ public:
     virtual void parse_attribute(FlyString const& name, String const& value) override;
 
     String data() const;
-    void set_data(String const& data) { set_attribute(HTML::AttributeNames::data, data); }
+    void set_data(String const& data) { MUST(set_attribute(HTML::AttributeNames::data, data)); }
 
     String type() const { return attribute(HTML::AttributeNames::type); }
 
