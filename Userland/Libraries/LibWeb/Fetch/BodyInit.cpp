@@ -16,27 +16,43 @@ namespace Web::Fetch {
 // https://fetch.spec.whatwg.org/#concept-bodyinit-extract
 WebIDL::ExceptionOr<Infrastructure::BodyWithType> extract_body(JS::Realm& realm, BodyInitOrReadbleBytes const& object, bool keepalive)
 {
-    // 1. Let stream be object if object is a ReadableStream object. Otherwise, let stream be a new ReadableStream, and set up stream.
-    Streams::ReadableStream* stream;
-    if (auto const* handle = object.get_pointer<JS::Handle<Streams::ReadableStream>>()) {
-        stream = const_cast<Streams::ReadableStream*>(handle->cell());
-    } else {
+    // 1. Let stream be null.
+    JS::GCPtr<Streams::ReadableStream> stream;
+
+    // 2. If object is a ReadableStream object, then set stream to object.
+    if (auto const* stream_handle = object.get_pointer<JS::Handle<Streams::ReadableStream>>()) {
+        stream = const_cast<Streams::ReadableStream*>(stream_handle->cell());
+    }
+    // 3. Otherwise, if object is a Blob object, set stream to the result of running object’s get stream.
+    else if (auto const* blob_handle = object.get_pointer<JS::Handle<FileAPI::Blob>>()) {
+        // FIXME: "set stream to the result of running object’s get stream"
+        (void)blob_handle;
+        stream = realm.heap().allocate<Streams::ReadableStream>(realm, realm);
+    }
+    // 4. Otherwise, set stream to a new ReadableStream object, and set up stream.
+    else {
+        // FIXME: "set up stream"
         stream = realm.heap().allocate<Streams::ReadableStream>(realm, realm);
     }
 
-    // FIXME: 2. Let action be null.
-    // 3. Let source be null.
+    // 5. Assert: stream is a ReadableStream object.
+    VERIFY(stream);
+
+    // FIXME: 6. Let action be null.
+
+    // 7. Let source be null.
     Infrastructure::Body::SourceType source {};
-    // 4. Let length be null.
+
+    // 8. Let length be null.
     Optional<u64> length {};
-    // 5. Let type be null.
+
+    // 9. Let type be null.
     Optional<ByteBuffer> type {};
 
-    // 6. Switch on object.
+    // 10. Switch on object.
     // FIXME: Still need to support BufferSource and FormData
     TRY(object.visit(
         [&](JS::Handle<FileAPI::Blob> const& blob) -> WebIDL::ExceptionOr<void> {
-            // FIXME: Set action to this step: read object.
             // Set source to object.
             source = blob;
             // Set length to object’s size.
@@ -83,12 +99,13 @@ WebIDL::ExceptionOr<Infrastructure::BodyWithType> extract_body(JS::Realm& realm,
             return {};
         }));
 
-    // FIXME: 7. If source is a byte sequence, then set action to a step that returns source and length to source’s length.
-    // FIXME: 8. If action is non-null, then run these steps in in parallel:
+    // FIXME: 11. If source is a byte sequence, then set action to a step that returns source and length to source’s length.
+    // FIXME: 12. If action is non-null, then run these steps in in parallel:
 
-    // 9. Let body be a body whose stream is stream, source is source, and length is length.
-    auto body = Infrastructure::Body { JS::make_handle(stream), move(source), move(length) };
-    // 10. Return (body, type).
+    // 13. Let body be a body whose stream is stream, source is source, and length is length.
+    auto body = Infrastructure::Body { JS::make_handle(*stream), move(source), move(length) };
+
+    // 14. Return (body, type).
     return Infrastructure::BodyWithType { .body = move(body), .type = move(type) };
 }
 
