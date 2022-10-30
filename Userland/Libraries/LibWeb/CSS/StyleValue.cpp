@@ -1976,12 +1976,17 @@ String ConicGradientStyleValue::to_string() const
     return builder.to_string();
 }
 
-void ConicGradientStyleValue::resolve_for_size(Layout::Node const&, Gfx::FloatSize const&) const
+void ConicGradientStyleValue::resolve_for_size(Layout::Node const& node, Gfx::FloatSize const& size) const
 {
+    if (!m_resolved.has_value())
+        m_resolved = ResolvedData { Painting::resolve_conic_gradient_data(node, *this), {} };
+    m_resolved->position = m_position.resolved(node, Gfx::FloatRect { { 0, 0 }, size });
 }
 
-void ConicGradientStyleValue::paint(PaintContext&, Gfx::IntRect const&, CSS::ImageRendering) const
+void ConicGradientStyleValue::paint(PaintContext& context, Gfx::IntRect const& dest_rect, CSS::ImageRendering) const
 {
+    VERIFY(m_resolved.has_value());
+    Painting::paint_conic_gradient(context, dest_rect, m_resolved->data, m_resolved->position.to_rounded<int>());
 }
 
 bool ConicGradientStyleValue::equals(StyleValue const&) const
