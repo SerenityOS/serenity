@@ -164,7 +164,7 @@ ALWAYS_INLINE int print_decimal(PutChFunc putch, CharType*& bufptr, u64 number, 
 }
 #ifndef KERNEL
 template<typename PutChFunc, typename CharType>
-ALWAYS_INLINE int print_double(PutChFunc putch, CharType*& bufptr, double number, bool always_sign, bool left_pad, bool zero_pad, u32 field_width, u32 precision)
+ALWAYS_INLINE int print_double(PutChFunc putch, CharType*& bufptr, double number, bool always_sign, bool left_pad, bool zero_pad, u32 field_width, u32 precision, bool trailing_zeros)
 {
     int length = 0;
 
@@ -200,14 +200,22 @@ ALWAYS_INLINE int print_double(PutChFunc putch, CharType*& bufptr, double number
 
     length = print_decimal(putch, bufptr, (i64)number, sign, always_sign, left_pad, zero_pad, whole_width, false, 1);
     if (precision > 0) {
-        putch(bufptr, '.');
-        length++;
         double fraction = number - (i64)number;
 
         for (u32 i = 0; i < precision; ++i)
             fraction = fraction * 10;
+        if (trailing_zeros || fraction) {
+            length++;
+            putch(bufptr, '.');
 
-        return length + print_decimal(putch, bufptr, (i64)fraction, false, false, false, true, precision, false, 1);
+            i64 ifraction = fraction;
+            while (!trailing_zeros && ifraction % 10 == 0) {
+                ifraction /= 10;
+                precision--;
+            }
+
+            return length + print_decimal(putch, bufptr, ifraction, false, false, false, true, precision, false, 1);
+        }
     }
 
     return length;
@@ -393,11 +401,12 @@ struct PrintfImpl {
 #ifndef KERNEL
     ALWAYS_INLINE int format_g(ModifierState const& state, ArgumentListRefT ap) const
     {
-        return format_f(state, ap);
+        // FIXME: Exponent notation
+        return print_double(m_putch, m_bufptr, NextArgument<double>()(ap), state.always_sign, state.left_pad, state.zero_pad, state.field_width, state.precision, false);
     }
     ALWAYS_INLINE int format_f(ModifierState const& state, ArgumentListRefT ap) const
     {
-        return print_double(m_putch, m_bufptr, NextArgument<double>()(ap), state.always_sign, state.left_pad, state.zero_pad, state.field_width, state.precision);
+        return print_double(m_putch, m_bufptr, NextArgument<double>()(ap), state.always_sign, state.left_pad, state.zero_pad, state.field_width, state.precision, true);
     }
 #endif
     ALWAYS_INLINE int format_o(ModifierState const& state, ArgumentListRefT ap) const

@@ -325,3 +325,11 @@ TEST_CASE(truncation)
     EXPECT(test_single<unsigned long long int>({ LITERAL("xxxxxxxxxxxxxxxxxxx"), "|%llx|", ULLONG_MAX, 18, LITERAL("|ffffffffffffffff|\0") }));
     EXPECT(test_single<unsigned long long int>({ LITERAL("xxxxxxxxxxxxxxxxxxx"), "|%llX|", ULLONG_MAX, 18, LITERAL("|FFFFFFFFFFFFFFFF|\0") }));
 }
+
+TEST_CASE(g_format)
+{
+    EXPECT(test_single<double>({ LITERAL("xxxx"), "|%g|", 0.0, 3, LITERAL("|0|\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxxx"), "|%g|", 1.0, 3, LITERAL("|1|\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxxxxx"), "|%g|", 1.1, 5, LITERAL("|1.1|\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxxxxxxx"), "|%g|", -1.12, 7, LITERAL("|-1.12|\0") }));
+}
