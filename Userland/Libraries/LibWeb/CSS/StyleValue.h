@@ -1233,6 +1233,13 @@ private:
     Angle m_from_angle;
     PositionValue m_position;
     Vector<AngularColorStopListElement> m_color_stop_list;
+
+    struct ResolvedData {
+        Painting::ConicGradientData data;
+        Gfx::FloatPoint position;
+    };
+
+    mutable Optional<ResolvedData> m_resolved;
 };
 
 class LinearGradientStyleValue final : public AbstractImageStyleValue {
