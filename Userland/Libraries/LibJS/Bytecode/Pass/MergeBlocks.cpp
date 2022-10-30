@@ -33,13 +33,12 @@ void MergeBlocks::perform(PassPipelineExecutable& executable)
         {
             InstructionStreamIterator it { entry.key->instruction_stream() };
             auto& first_instruction = *it;
-            if (first_instruction.is_terminator()) {
-                if (first_instruction.type() == Instruction::Type::Jump) {
-                    auto replacing_block = &static_cast<Op::Jump const&>(first_instruction).true_target()->block();
-                    if (replacing_block != entry.key)
-                        blocks_to_replace.set(entry.key, replacing_block);
-                    continue;
+            if (first_instruction.type() == Instruction::Type::Jump) {
+                auto const* replacing_block = &static_cast<Op::Jump const&>(first_instruction).true_target()->block();
+                if (replacing_block != entry.key) {
+                    blocks_to_replace.set(entry.key, replacing_block);
                 }
+                continue;
             }
         }
 
@@ -54,7 +53,7 @@ void MergeBlocks::perform(PassPipelineExecutable& executable)
     }
 
     for (auto& entry : blocks_to_replace) {
-        auto replacement = entry.value;
+        auto const* replacement = entry.value;
         for (;;) {
             auto lookup = blocks_to_replace.get(replacement);
             if (!lookup.has_value())
@@ -94,20 +93,19 @@ void MergeBlocks::perform(PassPipelineExecutable& executable)
 
     while (!blocks_to_merge.is_empty()) {
         auto it = blocks_to_merge.begin();
-        auto current_block = *it;
+        auto const* current_block = *it;
         blocks_to_merge.remove(it);
         Vector<BasicBlock const*> successors { current_block };
         for (;;) {
-            auto last = successors.last();
+            auto const* last = successors.last();
             auto entry = cfg.find(last);
             if (entry == cfg.end())
                 break;
-            auto& successor = *entry->value.begin();
+            auto const* successor = *entry->value.begin();
             successors.append(successor);
-            auto it = blocks_to_merge.find(successor);
-            if (it == blocks_to_merge.end())
+
+            if (!blocks_to_merge.remove(successor))
                 break;
-            blocks_to_merge.remove(it);
         }
 
         auto blocks_to_merge_copy = blocks_to_merge;
