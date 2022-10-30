@@ -569,6 +569,12 @@ static MarkedVector<Value> argument_list_evaluation(Bytecode::Interpreter& inter
     MarkedVector<Value> argument_values { vm.heap() };
     auto arguments = interpreter.accumulator();
 
+    if (!(arguments.is_object() && is<Array>(arguments.as_object()))) {
+        dbgln("Call arguments are not an array, but: {}", arguments.to_string_without_side_effects());
+        dbgln("PC: {}[{:4x}]", interpreter.current_block().name(), interpreter.pc());
+        interpreter.current_executable().dump();
+        VERIFY_NOT_REACHED();
+    }
     auto& argument_array = arguments.as_array();
     auto array_length = argument_array.indexed_properties().array_like_size();
 
