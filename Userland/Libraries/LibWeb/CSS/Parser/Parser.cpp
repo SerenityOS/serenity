@@ -5655,6 +5655,13 @@ RefPtr<StyleValue> Parser::parse_grid_track_placement(Vector<ComponentValue> con
             return true;
         return false;
     };
+    auto is_line_name = [](Token token) -> bool {
+        // The <custom-ident> additionally excludes the keywords span and auto.
+        if (token.is(Token::Type::Ident) && !token.ident().equals_ignoring_case("span"sv) && !token.ident().equals_ignoring_case("auto"sv))
+            return true;
+        return false;
+    };
+
     auto tokens = TokenStream { component_values };
     tokens.skip_whitespace();
     auto current_token = tokens.next_token().token();
@@ -5666,11 +5673,14 @@ RefPtr<StyleValue> Parser::parse_grid_track_placement(Vector<ComponentValue> con
             return GridTrackPlacementStyleValue::create(CSS::GridTrackPlacement(1, true));
         if (is_valid_integer(current_token))
             return GridTrackPlacementStyleValue::create(CSS::GridTrackPlacement(static_cast<int>(current_token.number_value())));
+        if (is_line_name(current_token))
+            return GridTrackPlacementStyleValue::create(CSS::GridTrackPlacement(current_token.ident()));
         return {};
     }
 
     auto span_value = false;
     auto span_or_position_value = 0;
+    String line_name_value;
     while (true) {
         if (is_auto(current_token))
             return {};
@@ -5683,6 +5693,12 @@ RefPtr<StyleValue> Parser::parse_grid_track_placement(Vector<ComponentValue> con
         if (is_valid_integer(current_token)) {
             if (span_or_position_value == 0)
                 span_or_position_value = static_cast<int>(current_token.number_value());
+            else
+                return {};
+        }
+        if (is_line_name(current_token)) {
+            if (line_name_value.is_empty())
+                line_name_value = current_token.ident();
             else
                 return {};
         }
@@ -5700,6 +5716,9 @@ RefPtr<StyleValue> Parser::parse_grid_track_placement(Vector<ComponentValue> con
     // If the <integer> is omitted, it defaults to 1.
     if (span_or_position_value == 0)
         span_or_position_value = 1;
+
+    if (!line_name_value.is_empty())
+        return GridTrackPlacementStyleValue::create(CSS::GridTrackPlacement(line_name_value, span_or_position_value, span_value));
     return GridTrackPlacementStyleValue::create(CSS::GridTrackPlacement(span_or_position_value, span_value));
 }
 
