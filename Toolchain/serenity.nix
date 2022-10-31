@@ -18,7 +18,7 @@ stdenv.mkDerivation {
     unzip
     texinfo
     # Example Build-time Additional Dependencies
-    pkgconfig
+    pkg-config
   ];
   buildInputs = [
     # Example Run-time Additional Dependencies
