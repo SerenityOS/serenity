@@ -53,6 +53,7 @@ for i in ( \
     echo -e "\n<!-- Auto-generated through ArgsParser -->"  >> "$filename" 2> "$ERROR_FILE" || exit_for_error
 }
 
+rm -f "$ERROR_FILE"
 echo "Successful."
 
 if test $DO_SHUTDOWN_AFTER_GENERATE {
