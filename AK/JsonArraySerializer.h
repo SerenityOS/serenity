@@ -43,11 +43,6 @@ public:
 
     JsonArraySerializer(JsonArraySerializer const&) = delete;
 
-    ~JsonArraySerializer()
-    {
-        VERIFY(m_finished);
-    }
-
 #ifndef KERNEL
     ErrorOr<void> add(JsonValue const& value)
     {

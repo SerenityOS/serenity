@@ -38,11 +38,6 @@ public:
 
     JsonObjectSerializer(JsonObjectSerializer const&) = delete;
 
-    ~JsonObjectSerializer()
-    {
-        VERIFY(m_finished);
-    }
-
 #ifndef KERNEL
     ErrorOr<void> add(StringView key, JsonValue const& value)
     {
