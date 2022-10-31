@@ -54,9 +54,20 @@ export SERENITY_KERNEL_CMDLINE="graphics_subsystem_mode=off panic=shutdown syste
 ninja -C "$BUILD_DIR" -- run | sed -re 's,''c,,'
 echo
 
-echo "Extracting generated manpages ..."
 mkdir fsmount
 sudo mount -t ext2 -o loop,rw "$BUILD_DIR"/_disk_image fsmount
+
+if sudo test -f "fsmount/root/generate_manpages_error.log"; then
+    echo ":^( Generating manpages failed, error log:"
+    sudo cat fsmount/root/generate_manpages_error.log
+
+    sudo umount fsmount
+    rmdir fsmount
+
+    exit 1
+fi
+
+echo "Extracting generated manpages ..."
 # 'cp' would create the new files as root, but we don't want that.
 sudo tar -C fsmount/root/generated_manpages --create . | tar -C Base/usr/share/man/ --extract
 sudo umount fsmount
