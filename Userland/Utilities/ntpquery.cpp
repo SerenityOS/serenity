@@ -93,9 +93,6 @@ static String format_ntp_timestamp(NtpTimestamp ntp_timestamp)
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio inet unix settime wpath rpath"));
-    TRY(Core::System::unveil("/tmp/portal/lookup", "rw"));
-    TRY(Core::System::unveil("/etc/timezone", "r"));
-    TRY(Core::System::unveil(nullptr, nullptr));
 
     bool adjust_time = false;
     bool set_time = false;
@@ -117,6 +114,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(verbose, "Verbose output", "verbose", 'v');
     args_parser.add_positional_argument(host, "NTP server", "host", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
+
+    TRY(Core::System::unveil("/tmp/portal/lookup", "rw"));
+    TRY(Core::System::unveil("/etc/timezone", "r"));
+    TRY(Core::System::unveil(nullptr, nullptr));
 
     if (adjust_time && set_time) {
         warnln("-a and -s are mutually exclusive");
