@@ -227,15 +227,15 @@ void LineBuilder::update_last_line()
     for (size_t i = 0; i < line_box.fragments().size(); ++i) {
         auto& fragment = line_box.fragments()[i];
 
-        float new_fragment_x = roundf(x_offset + fragment.offset().x());
+        float new_fragment_x = roundf(x_offset + fragment.offset().x().value());
         float new_fragment_y = 0;
 
         auto y_value_for_alignment = [&](CSS::VerticalAlign vertical_align) {
             switch (vertical_align) {
             case CSS::VerticalAlign::Baseline:
-                return m_current_y + line_box_baseline - fragment.baseline() + fragment.border_box_top();
+                return m_current_y + line_box_baseline - fragment.baseline().value() + fragment.border_box_top().value();
             case CSS::VerticalAlign::Top:
-                return m_current_y + fragment.border_box_top();
+                return m_current_y + fragment.border_box_top().value();
             case CSS::VerticalAlign::Middle:
             case CSS::VerticalAlign::Bottom:
             case CSS::VerticalAlign::Sub:
@@ -243,7 +243,7 @@ void LineBuilder::update_last_line()
             case CSS::VerticalAlign::TextBottom:
             case CSS::VerticalAlign::TextTop:
                 // FIXME: These are all 'baseline'
-                return m_current_y + line_box_baseline - fragment.baseline() + fragment.border_box_top();
+                return m_current_y + line_box_baseline - fragment.baseline().value() + fragment.border_box_top().value();
             }
             VERIFY_NOT_REACHED();
         };
@@ -266,15 +266,15 @@ void LineBuilder::update_last_line()
             // FIXME: Support inline-table elements.
             if (fragment.layout_node().is_replaced_box() || (fragment.layout_node().display().is_inline_outside() && !fragment.layout_node().display().is_flow_inside())) {
                 auto const& fragment_box_state = m_layout_state.get(static_cast<Box const&>(fragment.layout_node()));
-                top_of_inline_box = fragment.offset().y() - fragment_box_state.margin_box_top();
-                bottom_of_inline_box = fragment.offset().y() + fragment_box_state.content_height() + fragment_box_state.margin_box_bottom();
+                top_of_inline_box = (fragment.offset().y() - fragment_box_state.margin_box_top()).value();
+                bottom_of_inline_box = (fragment.offset().y() + fragment_box_state.content_height() + fragment_box_state.margin_box_bottom()).value();
             } else {
                 auto font_metrics = fragment.layout_node().font().pixel_metrics();
                 auto typographic_height = font_metrics.ascent + font_metrics.descent;
                 auto leading = fragment.layout_node().line_height() - typographic_height;
                 auto half_leading = leading / 2;
-                top_of_inline_box = fragment.offset().y() + fragment.baseline() - font_metrics.ascent - half_leading;
-                bottom_of_inline_box = fragment.offset().y() + fragment.baseline() + font_metrics.descent + half_leading;
+                top_of_inline_box = (fragment.offset().y() + fragment.baseline() - font_metrics.ascent - half_leading).value();
+                bottom_of_inline_box = (fragment.offset().y() + fragment.baseline() + font_metrics.descent + half_leading).value();
             }
             if (auto length_percentage = fragment.layout_node().computed_values().vertical_align().template get_pointer<CSS::LengthPercentage>(); length_percentage && length_percentage->is_length())
                 bottom_of_inline_box += length_percentage->length().to_px(fragment.layout_node());

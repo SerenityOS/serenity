@@ -202,7 +202,7 @@ void InlineFormattingContext::apply_justification_to_fragments(CSS::TextJustify 
     for (auto& fragment : line_box.fragments()) {
         if (fragment.is_justifiable_whitespace()) {
             ++whitespace_count;
-            excess_horizontal_space_including_whitespace += fragment.width();
+            excess_horizontal_space_including_whitespace += fragment.width().value();
         }
     }
 
@@ -221,7 +221,7 @@ void InlineFormattingContext::apply_justification_to_fragments(CSS::TextJustify 
 
         if (fragment.is_justifiable_whitespace()
             && fragment.width() != justified_space_width) {
-            running_diff += justified_space_width - fragment.width();
+            running_diff += justified_space_width - fragment.width().value();
             fragment.set_width(justified_space_width);
         }
     }

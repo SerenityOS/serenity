@@ -30,10 +30,13 @@ void ProgressPaintable::paint(PaintContext& context, PaintPhase phase) const
         return;
 
     if (phase == PaintPhase::Foreground) {
-        auto progress_rect = absolute_rect().to_rounded<int>();
-        auto frame_thickness = min(min(progress_rect.width(), progress_rect.height()) / 6, 3);
-        Gfx::StylePainter::paint_progressbar(context.painter(), progress_rect.shrunken(frame_thickness, frame_thickness), context.palette(), 0, round_to<int>(layout_box().dom_node().max()), round_to<int>(layout_box().dom_node().value()), ""sv);
-        Gfx::StylePainter::paint_frame(context.painter(), progress_rect, context.palette(), Gfx::FrameShape::Box, Gfx::FrameShadow::Raised, frame_thickness);
+        auto progress_rect = context.rounded_device_rect(absolute_rect());
+        auto min_frame_thickness = context.rounded_device_pixels(3);
+        auto frame_thickness = min(min(progress_rect.width(), progress_rect.height()) / 6, min_frame_thickness);
+
+        Gfx::StylePainter::paint_progressbar(context.painter(), progress_rect.shrunken(frame_thickness, frame_thickness).to_type<int>(), context.palette(), 0, round_to<int>(layout_box().dom_node().max()), round_to<int>(layout_box().dom_node().value()), ""sv);
+
+        Gfx::StylePainter::paint_frame(context.painter(), progress_rect.to_type<int>(), context.palette(), Gfx::FrameShape::Box, Gfx::FrameShadow::Raised, frame_thickness.value());
     }
 }
 

@@ -51,7 +51,7 @@ LabelablePaintable::DispatchEventOfSameName LabelablePaintable::handle_mouseup(B
     if (!m_tracking_mouse || button != GUI::MouseButton::Primary || !layout_box().dom_node().enabled())
         return DispatchEventOfSameName::No;
 
-    bool is_inside_node_or_label = absolute_rect().to_type<CSSPixels>().contains(position);
+    bool is_inside_node_or_label = absolute_rect().contains(position);
     if (!is_inside_node_or_label)
         is_inside_node_or_label = Layout::Label::is_inside_associated_label(layout_box(), position);
 
@@ -66,7 +66,7 @@ LabelablePaintable::DispatchEventOfSameName LabelablePaintable::handle_mousemove
     if (!m_tracking_mouse || !layout_box().dom_node().enabled())
         return DispatchEventOfSameName::No;
 
-    bool is_inside_node_or_label = absolute_rect().to_type<CSSPixels>().contains(position);
+    bool is_inside_node_or_label = absolute_rect().contains(position);
     if (!is_inside_node_or_label)
         is_inside_node_or_label = Layout::Label::is_inside_associated_label(layout_box(), position);
 

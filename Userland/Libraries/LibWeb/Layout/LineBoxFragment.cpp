@@ -33,15 +33,15 @@ StringView LineBoxFragment::text() const
     return verify_cast<TextNode>(layout_node()).text_for_rendering().substring_view(m_start, m_length);
 }
 
-const Gfx::FloatRect LineBoxFragment::absolute_rect() const
+CSSPixelRect const LineBoxFragment::absolute_rect() const
 {
-    Gfx::FloatRect rect { {}, size() };
+    CSSPixelRect rect { {}, size() };
     rect.set_location(m_layout_node.containing_block()->paint_box()->absolute_position());
     rect.translate_by(offset());
     return rect;
 }
 
-int LineBoxFragment::text_index_at(float x) const
+int LineBoxFragment::text_index_at(CSSPixels x) const
 {
     if (!is<TextNode>(layout_node()))
         return 0;
@@ -49,15 +49,15 @@ int LineBoxFragment::text_index_at(float x) const
     auto& font = layout_text.font();
     Utf8View view(text());
 
-    float relative_x = x - absolute_x();
+    CSSPixels relative_x = x - absolute_x();
     float glyph_spacing = font.glyph_spacing();
 
     if (relative_x < 0)
         return 0;
 
-    float width_so_far = 0;
+    CSSPixels width_so_far = 0;
     for (auto it = view.begin(); it != view.end(); ++it) {
-        float glyph_width = font.glyph_or_emoji_width(*it);
+        CSSPixels glyph_width = font.glyph_or_emoji_width(*it);
         if ((width_so_far + (glyph_width + glyph_spacing) / 2) > relative_x)
             return m_start + view.byte_offset_of(it);
         width_so_far += glyph_width + glyph_spacing;
@@ -65,7 +65,7 @@ int LineBoxFragment::text_index_at(float x) const
     return m_start + m_length;
 }
 
-Gfx::FloatRect LineBoxFragment::selection_rect(Gfx::Font const& font) const
+CSSPixelRect LineBoxFragment::selection_rect(Gfx::Font const& font) const
 {
     if (layout_node().selection_state() == Node::SelectionState::None)
         return {};

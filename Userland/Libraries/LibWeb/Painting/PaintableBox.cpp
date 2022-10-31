@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2022, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -39,7 +40,8 @@ void PaintableBox::invalidate_stacking_context()
 
 bool PaintableBox::is_out_of_view(PaintContext& context) const
 {
-    return !enclosing_int_rect(absolute_paint_rect())
+    return !context.enclosing_device_rect(absolute_paint_rect())
+                .to_type<int>()
                 .translated(context.painter().translation())
                 .intersects(context.painter().clip_rect());
 }
@@ -53,23 +55,23 @@ PaintableWithLines::~PaintableWithLines()
 {
 }
 
-void PaintableBox::set_offset(Gfx::FloatPoint offset)
+void PaintableBox::set_offset(CSSPixelPoint offset)
 {
     m_offset = offset;
     // FIXME: This const_cast is gross.
     const_cast<Layout::Box&>(layout_box()).did_set_rect();
 }
 
-void PaintableBox::set_content_size(Gfx::FloatSize size)
+void PaintableBox::set_content_size(CSSPixelSize size)
 {
     m_content_size = size;
     // FIXME: This const_cast is gross.
     const_cast<Layout::Box&>(layout_box()).did_set_rect();
 }
 
-Gfx::FloatPoint PaintableBox::effective_offset() const
+CSSPixelPoint PaintableBox::effective_offset() const
 {
-    Gfx::FloatPoint offset;
+    CSSPixelPoint offset;
     if (m_containing_line_box_fragment.has_value()) {
 
         // FIXME: This is a hack to deal with situations where the layout tree has been garbage collected.
@@ -89,22 +91,22 @@ Gfx::FloatPoint PaintableBox::effective_offset() const
     return offset;
 }
 
-Gfx::FloatRect PaintableBox::compute_absolute_rect() const
+CSSPixelRect PaintableBox::compute_absolute_rect() const
 {
-    Gfx::FloatRect rect { effective_offset(), content_size() };
+    CSSPixelRect rect { effective_offset(), content_size() };
     for (auto const* block = containing_block(); block && block->paintable(); block = block->paintable()->containing_block())
         rect.translate_by(block->paint_box()->effective_offset());
     return rect;
 }
 
-Gfx::FloatRect PaintableBox::absolute_rect() const
+CSSPixelRect PaintableBox::absolute_rect() const
 {
     if (!m_absolute_rect.has_value())
         m_absolute_rect = compute_absolute_rect();
     return *m_absolute_rect;
 }
 
-Gfx::FloatRect PaintableBox::compute_absolute_paint_rect() const
+CSSPixelRect PaintableBox::compute_absolute_paint_rect() const
 {
     // FIXME: This likely incomplete:
     auto rect = absolute_border_box_rect();
@@ -112,14 +114,14 @@ Gfx::FloatRect PaintableBox::compute_absolute_paint_rect() const
     for (auto const& shadow : resolved_box_shadow_data) {
         if (shadow.placement == ShadowPlacement::Inner)
             continue;
-        auto inflate = shadow.spread_distance.value() + shadow.blur_radius.value();
-        auto shadow_rect = rect.inflated(inflate, inflate, inflate, inflate).translated(shadow.offset_x.value(), shadow.offset_y.value());
+        auto inflate = shadow.spread_distance + shadow.blur_radius;
+        auto shadow_rect = rect.inflated(inflate, inflate, inflate, inflate).translated(shadow.offset_x, shadow.offset_y);
         rect = rect.united(shadow_rect);
     }
     return rect;
 }
 
-Gfx::FloatRect PaintableBox::absolute_paint_rect() const
+CSSPixelRect PaintableBox::absolute_paint_rect() const
 {
     if (!m_absolute_paint_rect.has_value())
         m_absolute_paint_rect = compute_absolute_paint_rect();
@@ -156,7 +158,7 @@ void PaintableBox::paint(PaintContext& context, PaintPhase phase) const
         if (should_clip_rect) {
             context.painter().save();
             auto border_box = absolute_border_box_rect();
-            context.painter().add_clip_rect(context.rounded_device_rect(clip_rect.to_rect().resolved(Paintable::layout_node(), border_box).to_type<CSSPixels>()).to_type<int>());
+            context.painter().add_clip_rect(context.rounded_device_rect(clip_rect.to_rect().resolved(Paintable::layout_node(), border_box.to_type<float>()).to_type<CSSPixels>()).to_type<int>());
         }
         paint_backdrop_filter(context);
         paint_background(context);
@@ -171,7 +173,7 @@ void PaintableBox::paint(PaintContext& context, PaintPhase phase) const
         context.painter().restore();
 
     if (phase == PaintPhase::Overlay && layout_box().dom_node() && layout_box().document().inspected_node() == layout_box().dom_node()) {
-        auto content_rect = absolute_rect().to_type<CSSPixels>();
+        auto content_rect = absolute_rect();
 
         auto margin_box = box_model().margin_box();
         CSSPixelRect margin_rect;
@@ -180,8 +182,8 @@ void PaintableBox::paint(PaintContext& context, PaintPhase phase) const
         margin_rect.set_y(absolute_y() - margin_box.top);
         margin_rect.set_height(content_height() + margin_box.top + margin_box.bottom);
 
-        auto border_rect = absolute_border_box_rect().to_type<CSSPixels>();
-        auto padding_rect = absolute_padding_box_rect().to_type<CSSPixels>();
+        auto border_rect = absolute_border_box_rect();
+        auto padding_rect = absolute_padding_box_rect();
 
         auto paint_inspector_rect = [&](CSSPixelRect const& rect, Color color) {
             auto device_rect = context.enclosing_device_rect(rect).to_type<int>();
@@ -216,7 +218,7 @@ void PaintableBox::paint(PaintContext& context, PaintPhase phase) const
 
     if (phase == PaintPhase::FocusOutline && layout_box().dom_node() && layout_box().dom_node()->is_element() && verify_cast<DOM::Element>(*layout_box().dom_node()).is_focused()) {
         // FIXME: Implement this as `outline` using :focus-visible in the default UA stylesheet to make it possible to override/disable.
-        auto focus_outline_rect = context.enclosing_device_rect(absolute_border_box_rect().to_type<CSSPixels>()).inflated(4, 4);
+        auto focus_outline_rect = context.enclosing_device_rect(absolute_border_box_rect()).inflated(4, 4);
         context.painter().draw_focus_rect(focus_outline_rect.to_type<int>(), context.palette().focus_outline());
     }
 }
@@ -229,14 +231,14 @@ void PaintableBox::paint_border(PaintContext& context) const
         .bottom = computed_values().border_bottom(),
         .left = computed_values().border_left(),
     };
-    paint_all_borders(context, absolute_border_box_rect().to_type<CSSPixels>(), normalized_border_radii_data(), borders_data);
+    paint_all_borders(context, absolute_border_box_rect(), normalized_border_radii_data(), borders_data);
 }
 
 void PaintableBox::paint_backdrop_filter(PaintContext& context) const
 {
     auto& backdrop_filter = computed_values().backdrop_filter();
     if (!backdrop_filter.is_none())
-        Painting::apply_backdrop_filter(context, layout_node(), absolute_border_box_rect().to_type<CSSPixels>(), normalized_border_radii_data(), backdrop_filter);
+        Painting::apply_backdrop_filter(context, layout_node(), absolute_border_box_rect(), normalized_border_radii_data(), backdrop_filter);
 }
 
 void PaintableBox::paint_background(PaintContext& context) const
@@ -260,13 +262,13 @@ void PaintableBox::paint_background(PaintContext& context) const
             background_color = document().background_color(context.palette());
         }
     } else {
-        background_rect = absolute_padding_box_rect().to_type<CSSPixels>();
+        background_rect = absolute_padding_box_rect();
     }
 
     // HACK: If the Box has a border, use the bordered_rect to paint the background.
     //       This way if we have a border-radius there will be no gap between the filling and actual border.
     if (computed_values().border_top().width || computed_values().border_right().width || computed_values().border_bottom().width || computed_values().border_left().width)
-        background_rect = absolute_border_box_rect().to_type<CSSPixels>();
+        background_rect = absolute_border_box_rect();
 
     Painting::paint_background(context, layout_box(), background_rect, background_color, computed_values().image_rendering(), background_layers, normalized_border_radii_data());
 }
@@ -297,13 +299,13 @@ void PaintableBox::paint_box_shadow(PaintContext& context) const
     auto resolved_box_shadow_data = resolve_box_shadow_data();
     if (resolved_box_shadow_data.is_empty())
         return;
-    Painting::paint_box_shadow(context, absolute_border_box_rect().to_type<CSSPixels>(), normalized_border_radii_data(), resolved_box_shadow_data);
+    Painting::paint_box_shadow(context, absolute_border_box_rect(), normalized_border_radii_data(), resolved_box_shadow_data);
 }
 
 BorderRadiiData PaintableBox::normalized_border_radii_data(ShrinkRadiiForBorders shrink) const
 {
     auto border_radius_data = Painting::normalized_border_radii_data(layout_box(),
-        absolute_border_box_rect().to_type<CSSPixels>(),
+        absolute_border_box_rect(),
         computed_values().border_top_left_radius(),
         computed_values().border_top_right_radius(),
         computed_values().border_bottom_right_radius(),
@@ -324,9 +326,9 @@ Optional<Gfx::IntRect> PaintableBox::clip_rect() const
 
         if (overflow_x == CSS::Overflow::Hidden && overflow_y == CSS::Overflow::Hidden) {
             if (m_clip_rect.has_value()) {
-                m_clip_rect->intersect(absolute_padding_box_rect().to_rounded<int>());
+                m_clip_rect->intersect(absolute_padding_box_rect().to_type<float>().to_rounded<int>());
             } else {
-                m_clip_rect = absolute_padding_box_rect().to_rounded<int>();
+                m_clip_rect = absolute_padding_box_rect().to_type<float>().to_rounded<int>();
             }
         }
     }
@@ -407,7 +409,7 @@ static void paint_cursor_if_needed(PaintContext& context, Layout::TextNode const
     if (!fragment.layout_node().dom_node() || !fragment.layout_node().dom_node()->is_editable())
         return;
 
-    auto fragment_rect = fragment.absolute_rect().to_type<CSSPixels>();
+    auto fragment_rect = fragment.absolute_rect();
 
     CSSPixelRect cursor_rect {
         fragment_rect.x() + text_node.font().width(fragment.text().substring_view(0, text_node.browsing_context().cursor_position().offset() - fragment.start())),
@@ -424,7 +426,7 @@ static void paint_cursor_if_needed(PaintContext& context, Layout::TextNode const
 static void paint_text_decoration(PaintContext& context, Gfx::Painter& painter, Layout::Node const& text_node, Layout::LineBoxFragment const& fragment)
 {
     auto& font = fragment.layout_node().font();
-    auto fragment_box = fragment.absolute_rect().to_type<CSSPixels>();
+    auto fragment_box = fragment.absolute_rect();
     CSSPixels glyph_height = font.pixel_size();
     auto baseline = fragment_box.height() / 2 - (glyph_height + 4) / 2 + glyph_height;
 
@@ -507,7 +509,7 @@ static void paint_text_fragment(PaintContext& context, Layout::TextNode const& t
     auto& painter = context.painter();
 
     if (phase == Painting::PaintPhase::Foreground) {
-        auto fragment_absolute_rect = fragment.absolute_rect().to_type<CSSPixels>();
+        auto fragment_absolute_rect = fragment.absolute_rect();
         auto fragment_absolute_device_rect = context.enclosing_device_rect(fragment_absolute_rect);
 
         if (text_node.document().inspected_node() == &text_node.dom_node())
@@ -521,16 +523,16 @@ static void paint_text_fragment(PaintContext& context, Layout::TextNode const& t
         if (text_transform == CSS::TextTransform::Lowercase)
             text = Unicode::to_unicode_lowercase_full(text_node.text_for_rendering());
 
-        DevicePixelPoint baseline_start { fragment_absolute_device_rect.x(), fragment_absolute_device_rect.y() + fragment.baseline() };
+        DevicePixelPoint baseline_start { fragment_absolute_device_rect.x(), fragment_absolute_device_rect.y() + context.rounded_device_pixels(fragment.baseline()) };
         Utf8View view { text.substring_view(fragment.start(), fragment.length()) };
 
         painter.draw_text_run(baseline_start.to_type<int>(), view, fragment.layout_node().font(), text_node.computed_values().color());
 
-        auto selection_rect = fragment.selection_rect(text_node.font());
+        auto selection_rect = context.enclosing_device_rect(fragment.selection_rect(text_node.font())).to_type<int>();
         if (!selection_rect.is_empty()) {
-            painter.fill_rect(enclosing_int_rect(selection_rect), context.palette().selection());
+            painter.fill_rect(selection_rect, context.palette().selection());
             Gfx::PainterStateSaver saver(painter);
-            painter.add_clip_rect(enclosing_int_rect(selection_rect));
+            painter.add_clip_rect(selection_rect);
             painter.draw_text_run(baseline_start.to_type<int>(), view, fragment.layout_node().font(), context.palette().selection_text());
         }
 
@@ -555,7 +557,7 @@ void PaintableWithLines::paint(PaintContext& context, PaintPhase phase) const
     if (should_clip_overflow) {
         context.painter().save();
         // FIXME: Handle overflow-x and overflow-y being different values.
-        auto clip_box = context.rounded_device_rect(absolute_padding_box_rect().to_type<CSSPixels>());
+        auto clip_box = context.rounded_device_rect(absolute_padding_box_rect());
         context.painter().add_clip_rect(clip_box.to_type<int>());
         auto scroll_offset = static_cast<Layout::BlockContainer const&>(layout_box()).scroll_offset();
         context.painter().translate(-scroll_offset.to_type<int>());
@@ -603,10 +605,10 @@ void PaintableWithLines::paint(PaintContext& context, PaintPhase phase) const
         for (auto& fragment : line_box.fragments()) {
             if (context.should_show_line_box_borders()) {
                 auto fragment_absolute_rect = fragment.absolute_rect();
-                context.painter().draw_rect(enclosing_int_rect(fragment_absolute_rect), Color::Green);
+                context.painter().draw_rect(context.enclosing_device_rect(fragment_absolute_rect).to_type<int>(), Color::Green);
                 context.painter().draw_line(
-                    fragment_absolute_rect.top_left().translated(0, fragment.baseline()).to_rounded<int>(),
-                    fragment_absolute_rect.top_right().translated(0, fragment.baseline()).to_rounded<int>(), Color::Red);
+                    context.rounded_device_point(fragment_absolute_rect.top_left().translated(0, fragment.baseline())).to_type<int>(),
+                    context.rounded_device_point(fragment_absolute_rect.top_right().translated(0, fragment.baseline())).to_type<int>(), Color::Red);
             }
             if (is<Layout::TextNode>(fragment.layout_node()))
                 paint_text_fragment(context, static_cast<Layout::TextNode const&>(fragment.layout_node()), fragment, phase);
@@ -631,7 +633,7 @@ void PaintableWithLines::paint(PaintContext& context, PaintPhase phase) const
                     continue;
                 if (parent->is_focused()) {
                     // FIXME: Implement this as `outline` using :focus-visible in the default UA stylesheet to make it possible to override/disable.
-                    auto focus_outline_rect = enclosing_int_rect(fragment.absolute_rect()).inflated(4, 4);
+                    auto focus_outline_rect = context.enclosing_device_rect(fragment.absolute_rect()).to_type<int>().inflated(4, 4);
                     context.painter().draw_focus_rect(focus_outline_rect, context.palette().focus_outline());
                 }
             }
@@ -674,7 +676,7 @@ Optional<HitTestResult> PaintableBox::hit_test(CSSPixelPoint position, HitTestTy
         return stacking_context()->hit_test(position, type);
     }
 
-    if (!absolute_border_box_rect().contains(position.x().value(), position.y().value()))
+    if (!absolute_border_box_rect().contains(position.x(), position.y()))
         return {};
 
     for (auto* child = first_child(); child; child = child->next_sibling()) {
@@ -702,11 +704,11 @@ Optional<HitTestResult> PaintableWithLines::hit_test(CSSPixelPoint position, Hit
                 dbgln("FIXME: PaintableWithLines::hit_test(): Missing containing block on {}", fragment.layout_node().debug_description());
                 continue;
             }
-            auto fragment_absolute_rect = fragment.absolute_rect().to_type<CSSPixels>();
+            auto fragment_absolute_rect = fragment.absolute_rect();
             if (fragment_absolute_rect.contains(position)) {
                 if (is<Layout::BlockContainer>(fragment.layout_node()) && fragment.layout_node().paintable())
                     return fragment.layout_node().paintable()->hit_test(position, type);
-                return HitTestResult { *fragment.layout_node().paintable(), fragment.text_index_at(position.x().value()) };
+                return HitTestResult { *fragment.layout_node().paintable(), fragment.text_index_at(position.x()) };
             }
 
             // If we reached this point, the position is not within the fragment. However, the fragment start or end might be the place to place the cursor.
@@ -730,7 +732,7 @@ Optional<HitTestResult> PaintableWithLines::hit_test(CSSPixelPoint position, Hit
 
     if (type == HitTestType::TextCursor && last_good_candidate.has_value())
         return last_good_candidate;
-    if (is_visible() && absolute_border_box_rect().contains(position.x().value(), position.y().value()))
+    if (is_visible() && absolute_border_box_rect().contains(position.x(), position.y()))
         return HitTestResult { *this };
     return {};
 }

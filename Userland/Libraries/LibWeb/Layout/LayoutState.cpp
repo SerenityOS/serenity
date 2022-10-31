@@ -76,7 +76,7 @@ void LayoutState::commit()
         if (is<Layout::Box>(node)) {
             auto& box = static_cast<Layout::Box const&>(node);
             auto& paint_box = const_cast<Painting::PaintableBox&>(*box.paint_box());
-            paint_box.set_offset(used_values.offset);
+            paint_box.set_offset(used_values.offset.to_type<CSSPixels>());
             paint_box.set_content_size(used_values.content_width(), used_values.content_height());
             paint_box.set_overflow_data(move(used_values.overflow_data));
             paint_box.set_containing_line_box_fragment(used_values.containing_line_box_fragment);
