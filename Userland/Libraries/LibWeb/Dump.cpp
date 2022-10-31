@@ -264,7 +264,7 @@ void dump_tree(StringBuilder& builder, Layout::Node const& layout_node, bool sho
                 builder.appendff("start: {}, length: {}, rect: {}\n",
                     fragment.start(),
                     fragment.length(),
-                    fragment.absolute_rect().to_deprecated_string());
+                    fragment.absolute_rect());
                 if (is<Layout::TextNode>(fragment.layout_node())) {
                     for (size_t i = 0; i < indent; ++i)
                         builder.append("  "sv);

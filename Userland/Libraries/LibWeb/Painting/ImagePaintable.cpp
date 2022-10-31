@@ -42,14 +42,15 @@ void ImagePaintable::paint(PaintContext& context, PaintPhase phase) const
     if (phase == PaintPhase::Foreground) {
         if (layout_box().renders_as_alt_text()) {
             auto& image_element = verify_cast<HTML::HTMLImageElement>(*dom_node());
+            auto enclosing_rect = context.enclosing_device_rect(absolute_rect()).to_type<int>();
             context.painter().set_font(Platform::FontPlugin::the().default_font());
-            Gfx::StylePainter::paint_frame(context.painter(), enclosing_int_rect(absolute_rect()), context.palette(), Gfx::FrameShape::Container, Gfx::FrameShadow::Sunken, 2);
+            Gfx::StylePainter::paint_frame(context.painter(), enclosing_rect, context.palette(), Gfx::FrameShape::Container, Gfx::FrameShadow::Sunken, 2);
             auto alt = image_element.alt();
             if (alt.is_empty())
                 alt = image_element.src();
-            context.painter().draw_text(enclosing_int_rect(absolute_rect()), alt, Gfx::TextAlignment::Center, computed_values().color(), Gfx::TextElision::Right);
+            context.painter().draw_text(enclosing_rect, alt, Gfx::TextAlignment::Center, computed_values().color(), Gfx::TextElision::Right);
         } else if (auto bitmap = layout_box().image_loader().bitmap(layout_box().image_loader().current_frame_index())) {
-            auto image_rect = context.rounded_device_rect(absolute_rect().to_type<CSSPixels>());
+            auto image_rect = context.rounded_device_rect(absolute_rect());
             ScopedCornerRadiusClip corner_clip { context, context.painter(), image_rect, normalized_border_radii_data(ShrinkRadiiForBorders::Yes) };
             context.painter().draw_scaled_bitmap(image_rect.to_type<int>(), *bitmap, bitmap->rect(), 1.0f, to_gfx_scaling_mode(computed_values().image_rendering()));
         }

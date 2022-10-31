@@ -28,29 +28,29 @@ public:
     auto const& box_model() const { return layout_box().box_model(); }
 
     struct OverflowData {
-        Gfx::FloatRect scrollable_overflow_rect;
-        Gfx::FloatPoint scroll_offset;
+        CSSPixelRect scrollable_overflow_rect;
+        CSSPixelPoint scroll_offset;
     };
 
-    Gfx::FloatRect absolute_rect() const;
-    Gfx::FloatPoint effective_offset() const;
+    CSSPixelRect absolute_rect() const;
+    CSSPixelPoint effective_offset() const;
 
-    void set_offset(Gfx::FloatPoint);
+    void set_offset(CSSPixelPoint);
     void set_offset(float x, float y) { set_offset({ x, y }); }
 
-    Gfx::FloatSize content_size() const { return m_content_size; }
-    void set_content_size(Gfx::FloatSize);
-    void set_content_size(float width, float height) { set_content_size({ width, height }); }
+    CSSPixelSize const& content_size() const { return m_content_size; }
+    void set_content_size(CSSPixelSize);
+    void set_content_size(CSSPixels width, CSSPixels height) { set_content_size({ width, height }); }
 
-    void set_content_width(float width) { set_content_size(width, content_height()); }
-    void set_content_height(float height) { set_content_size(content_width(), height); }
-    float content_width() const { return m_content_size.width(); }
-    float content_height() const { return m_content_size.height(); }
+    void set_content_width(CSSPixels width) { set_content_size(width, content_height()); }
+    void set_content_height(CSSPixels height) { set_content_size(content_width(), height); }
+    CSSPixels content_width() const { return m_content_size.width(); }
+    CSSPixels content_height() const { return m_content_size.height(); }
 
-    Gfx::FloatRect absolute_padding_box_rect() const
+    CSSPixelRect absolute_padding_box_rect() const
     {
         auto absolute_rect = this->absolute_rect();
-        Gfx::FloatRect rect;
+        CSSPixelRect rect;
         rect.set_x(absolute_rect.x() - box_model().padding.left);
         rect.set_width(content_width() + box_model().padding.left + box_model().padding.right);
         rect.set_y(absolute_rect.y() - box_model().padding.top);
@@ -58,10 +58,10 @@ public:
         return rect;
     }
 
-    Gfx::FloatRect absolute_border_box_rect() const
+    CSSPixelRect absolute_border_box_rect() const
     {
         auto padded_rect = this->absolute_padding_box_rect();
-        Gfx::FloatRect rect;
+        CSSPixelRect rect;
         rect.set_x(padded_rect.x() - box_model().border.left);
         rect.set_width(padded_rect.width() + box_model().border.left + box_model().border.right);
         rect.set_y(padded_rect.y() - box_model().border.top);
@@ -69,27 +69,27 @@ public:
         return rect;
     }
 
-    Gfx::FloatRect absolute_paint_rect() const;
+    CSSPixelRect absolute_paint_rect() const;
 
-    float border_box_width() const
+    CSSPixels border_box_width() const
     {
         auto border_box = box_model().border_box();
         return content_width() + border_box.left + border_box.right;
     }
 
-    float border_box_height() const
+    CSSPixels border_box_height() const
     {
         auto border_box = box_model().border_box();
         return content_height() + border_box.top + border_box.bottom;
     }
 
-    float absolute_x() const { return absolute_rect().x(); }
-    float absolute_y() const { return absolute_rect().y(); }
-    Gfx::FloatPoint absolute_position() const { return absolute_rect().location(); }
+    CSSPixels absolute_x() const { return absolute_rect().x(); }
+    CSSPixels absolute_y() const { return absolute_rect().y(); }
+    CSSPixelPoint absolute_position() const { return absolute_rect().location(); }
 
     bool has_overflow() const { return m_overflow_data.has_value(); }
 
-    Optional<Gfx::FloatRect> scrollable_overflow_rect() const
+    Optional<CSSPixelRect> scrollable_overflow_rect() const
     {
         if (!m_overflow_data.has_value())
             return {};
@@ -129,8 +129,8 @@ protected:
     virtual void paint_background(PaintContext&) const;
     virtual void paint_box_shadow(PaintContext&) const;
 
-    virtual Gfx::FloatRect compute_absolute_rect() const;
-    virtual Gfx::FloatRect compute_absolute_paint_rect() const;
+    virtual CSSPixelRect compute_absolute_rect() const;
+    virtual CSSPixelRect compute_absolute_paint_rect() const;
 
     enum class ShrinkRadiiForBorders {
         Yes,
@@ -144,16 +144,16 @@ protected:
 private:
     Optional<OverflowData> m_overflow_data;
 
-    Gfx::FloatPoint m_offset;
-    Gfx::FloatSize m_content_size;
+    CSSPixelPoint m_offset;
+    CSSPixelSize m_content_size;
 
     // Some boxes hang off of line box fragments. (inline-block, inline-table, replaced, etc)
     Optional<Layout::LineBoxFragmentCoordinate> m_containing_line_box_fragment;
 
     OwnPtr<Painting::StackingContext> m_stacking_context;
 
-    Optional<Gfx::FloatRect> mutable m_absolute_rect;
-    Optional<Gfx::FloatRect> mutable m_absolute_paint_rect;
+    Optional<CSSPixelRect> mutable m_absolute_rect;
+    Optional<CSSPixelRect> mutable m_absolute_paint_rect;
 
     Optional<Gfx::IntRect> mutable m_clip_rect;
 

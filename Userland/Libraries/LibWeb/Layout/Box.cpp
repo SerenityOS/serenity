@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2021-2022, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -31,8 +31,9 @@ Box::~Box()
 
 void Box::set_needs_display()
 {
+    // FIXME: Make `set_needs_display` take CSSPixels
     if (paint_box())
-        browsing_context().set_needs_display(enclosing_int_rect(paint_box()->absolute_rect()));
+        browsing_context().set_needs_display(enclosing_int_rect(paint_box()->absolute_rect().to_type<float>()));
 }
 
 bool Box::is_body() const

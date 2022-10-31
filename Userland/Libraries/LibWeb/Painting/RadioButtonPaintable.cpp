@@ -34,7 +34,7 @@ void RadioButtonPaintable::paint(PaintContext& context, PaintPhase phase) const
 
     auto const& radio_box = static_cast<HTML::HTMLInputElement const&>(layout_box().dom_node());
     if (phase == PaintPhase::Foreground)
-        Gfx::StylePainter::paint_radio_button(context.painter(), enclosing_int_rect(absolute_rect()), context.palette(), radio_box.checked(), being_pressed());
+        Gfx::StylePainter::paint_radio_button(context.painter(), context.enclosing_device_rect(absolute_rect()).to_type<int>(), context.palette(), radio_box.checked(), being_pressed());
 }
 
 }

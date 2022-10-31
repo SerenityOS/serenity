@@ -355,8 +355,8 @@ Messages::WebContentServer::InspectDomNodeResponse ConnectionFromClient::inspect
             MUST(serializer.add("border_bottom"sv, box_model.border.bottom));
             MUST(serializer.add("border_left"sv, box_model.border.left));
             if (auto* paint_box = box->paint_box()) {
-                MUST(serializer.add("content_width"sv, paint_box->content_width()));
-                MUST(serializer.add("content_height"sv, paint_box->content_height()));
+                MUST(serializer.add("content_width"sv, paint_box->content_width().value()));
+                MUST(serializer.add("content_height"sv, paint_box->content_height().value()));
             } else {
                 MUST(serializer.add("content_width"sv, 0));
                 MUST(serializer.add("content_height"sv, 0));

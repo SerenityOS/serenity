@@ -31,7 +31,7 @@ void CanvasPaintable::paint(PaintContext& context, PaintPhase phase) const
     PaintableBox::paint(context, phase);
 
     if (phase == PaintPhase::Foreground) {
-        auto canvas_rect = context.rounded_device_rect(absolute_rect().to_type<CSSPixels>());
+        auto canvas_rect = context.rounded_device_rect(absolute_rect());
         ScopedCornerRadiusClip corner_clip { context, context.painter(), canvas_rect, normalized_border_radii_data(ShrinkRadiiForBorders::Yes) };
 
         // FIXME: This should be done at a different level.

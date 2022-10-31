@@ -593,7 +593,7 @@ JS::NonnullGCPtr<Geometry::DOMRect> Element::get_bounding_client_rect() const
     VERIFY(document().browsing_context());
     auto viewport_offset = document().browsing_context()->viewport_scroll_offset();
 
-    return Geometry::DOMRect::create(realm(), paint_box->absolute_rect().translated(-viewport_offset.x(), -viewport_offset.y()));
+    return Geometry::DOMRect::create(realm(), paint_box->absolute_rect().translated(-viewport_offset.x(), -viewport_offset.y()).to_type<float>());
 }
 
 // https://drafts.csswg.org/cssom-view/#dom-element-getclientrects
@@ -676,7 +676,7 @@ int Element::client_width() const
 
     // 3. Return the width of the padding edge excluding the width of any rendered scrollbar between the padding edge and the border edge,
     // ignoring any transforms that apply to the element and its ancestors.
-    return paint_box()->absolute_padding_box_rect().width();
+    return paint_box()->absolute_padding_box_rect().width().value();
 }
 
 // https://drafts.csswg.org/cssom-view/#dom-element-clientheight
@@ -701,7 +701,7 @@ int Element::client_height() const
 
     // 3. Return the height of the padding edge excluding the height of any rendered scrollbar between the padding edge and the border edge,
     //    ignoring any transforms that apply to the element and its ancestors.
-    return paint_box()->absolute_padding_box_rect().height();
+    return paint_box()->absolute_padding_box_rect().height().value();
 }
 
 void Element::children_changed()
@@ -1212,7 +1212,7 @@ static void scroll_an_element_into_view(DOM::Element& element, Bindings::ScrollB
     if (!layout_node)
         return;
 
-    page->client().page_did_request_scroll_into_view(verify_cast<Layout::Box>(*layout_node).paint_box()->absolute_padding_box_rect().to_type<CSSPixels>());
+    page->client().page_did_request_scroll_into_view(verify_cast<Layout::Box>(*layout_node).paint_box()->absolute_padding_box_rect());
 }
 
 // https://w3c.github.io/csswg-drafts/cssom-view-1/#dom-element-scrollintoview

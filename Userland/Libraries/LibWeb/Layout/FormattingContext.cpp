@@ -919,7 +919,7 @@ Gfx::FloatPoint FormattingContext::calculate_static_position(Box const& box) con
                 }
             }
             if (last_fragment) {
-                y = last_fragment->offset().y() + last_fragment->height();
+                y = (last_fragment->offset().y() + last_fragment->height()).value();
             }
         } else {
             // Easy case: no previous sibling, we're at the top of the containing block.
