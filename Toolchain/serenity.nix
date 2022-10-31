@@ -4,7 +4,7 @@ with pkgs;
 stdenv.mkDerivation {
   name = "cpp-env";
   nativeBuildInputs = [
-    gcc11
+    gcc12
     curl
     cmake
     mpfr
