@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/StringView.h>
 #include <LibCore/Stream.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
@@ -14,10 +15,10 @@ ErrorOr<int> serenity_main(Main::Arguments)
 
     auto file_or_error = Core::Stream::File::open("/etc/nologin"sv, Core::Stream::OpenMode::Read);
     if (file_or_error.is_error()) {
-        outln("This account is currently not available."sv);
+        outln("This account is currently not available.");
     } else {
         auto message_from_file = TRY(file_or_error.value()->read_all());
-        out(message_from_file);
+        out("{}", StringView { message_from_file });
     }
 
     return 1;
