@@ -159,9 +159,11 @@ bool Request::has_redirect_tainted_origin() const
         }
 
         // 2. If url’s origin is not same origin with lastURL’s origin and request’s origin is not same origin with lastURL’s origin, then return true.
-        // FIXME: Actually use the given origins once we have https://url.spec.whatwg.org/#concept-url-origin.
-        if (!HTML::Origin().is_same_origin(HTML::Origin()) && HTML::Origin().is_same_origin(HTML::Origin()))
+        auto const* request_origin = m_origin.get_pointer<HTML::Origin>();
+        if (!URL::url_origin(url).is_same_origin(URL::url_origin(*last_url))
+            && (request_origin == nullptr || !request_origin->is_same_origin(URL::url_origin(*last_url)))) {
             return true;
+        }
 
         // 3. Set lastURL to url.
         last_url = url;
