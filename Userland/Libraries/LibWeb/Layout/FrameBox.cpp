@@ -33,7 +33,8 @@ void FrameBox::did_set_rect()
     ReplacedBox::did_set_rect();
 
     VERIFY(dom_node().nested_browsing_context());
-    dom_node().nested_browsing_context()->set_size(paint_box()->content_size().to_type<int>());
+    // FIXME: Pass CSSPixels here instead of int.
+    dom_node().nested_browsing_context()->set_size(paint_box()->content_size().to_type<float>().to_type<int>());
 }
 
 RefPtr<Painting::Paintable> FrameBox::create_paintable() const

@@ -27,10 +27,10 @@ float SVGGeometryBox::viewbox_scaling() const
     auto view_box = svg_box->view_box().value();
 
     bool has_specified_width = svg_box->has_attribute(HTML::AttributeNames::width);
-    auto specified_width = paint_box()->content_width();
+    auto specified_width = paint_box()->content_width().value();
 
     bool has_specified_height = svg_box->has_attribute(HTML::AttributeNames::height);
-    auto specified_height = paint_box()->content_height();
+    auto specified_height = paint_box()->content_height().value();
 
     auto scale_width = has_specified_width ? specified_width / view_box.width : 1;
     auto scale_height = has_specified_height ? specified_height / view_box.height : 1;

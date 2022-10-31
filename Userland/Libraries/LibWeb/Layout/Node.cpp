@@ -158,7 +158,7 @@ void Node::set_needs_display()
         return;
     containing_block->paint_box()->for_each_fragment([&](auto& fragment) {
         if (&fragment.layout_node() == this || is_ancestor_of(fragment.layout_node())) {
-            browsing_context().set_needs_display(enclosing_int_rect(fragment.absolute_rect()));
+            browsing_context().set_needs_display(fragment.absolute_rect().template to_type<float>().template to_type<int>());
         }
         return IterationDecision::Continue;
     });
@@ -167,13 +167,13 @@ void Node::set_needs_display()
 Gfx::FloatPoint Node::box_type_agnostic_position() const
 {
     if (is<Box>(*this))
-        return verify_cast<Box>(*this).paint_box()->absolute_position();
+        return verify_cast<Box>(*this).paint_box()->absolute_position().to_type<float>();
     VERIFY(is_inline());
     Gfx::FloatPoint position;
     if (auto* block = containing_block()) {
         block->paint_box()->for_each_fragment([&](auto& fragment) {
             if (&fragment.layout_node() == this || is_ancestor_of(fragment.layout_node())) {
-                position = fragment.absolute_rect().location();
+                position = fragment.absolute_rect().location().template to_type<float>();
                 return IterationDecision::Break;
             }
             return IterationDecision::Continue;

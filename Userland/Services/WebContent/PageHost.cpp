@@ -152,9 +152,9 @@ void PageHost::page_did_layout()
     auto* layout_root = this->layout_root();
     VERIFY(layout_root);
     if (layout_root->paint_box()->has_overflow())
-        m_content_size = page().enclosing_device_rect(layout_root->paint_box()->scrollable_overflow_rect().value().to_type<Web::CSSPixels>()).size();
+        m_content_size = page().enclosing_device_rect(layout_root->paint_box()->scrollable_overflow_rect().value()).size();
     else
-        m_content_size = page().enclosing_device_rect(layout_root->paint_box()->absolute_rect().to_type<Web::CSSPixels>()).size();
+        m_content_size = page().enclosing_device_rect(layout_root->paint_box()->absolute_rect()).size();
     m_client.async_did_layout(m_content_size.to_type<int>());
 }
 

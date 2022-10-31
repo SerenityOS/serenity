@@ -26,7 +26,7 @@ void LineBox::add_fragment(Node const& layout_node, int start, int length, float
     } else {
         float x_offset = leading_margin + leading_size + m_width;
         float y_offset = 0.0f;
-        m_fragments.append(LineBoxFragment { layout_node, start, length, Gfx::FloatPoint(x_offset, y_offset), Gfx::FloatSize(content_width, content_height), border_box_top, border_box_bottom, fragment_type });
+        m_fragments.append(LineBoxFragment { layout_node, start, length, CSSPixelPoint(x_offset, y_offset), CSSPixelSize(content_width, content_height), border_box_top, border_box_bottom, fragment_type });
     }
     m_width += leading_margin + leading_size + content_width + trailing_size + trailing_margin;
 }
@@ -35,7 +35,7 @@ void LineBox::trim_trailing_whitespace()
 {
     while (!m_fragments.is_empty() && m_fragments.last().is_justifiable_whitespace()) {
         auto fragment = m_fragments.take_last();
-        m_width -= fragment.width();
+        m_width -= fragment.width().value();
     }
 
     if (m_fragments.is_empty())

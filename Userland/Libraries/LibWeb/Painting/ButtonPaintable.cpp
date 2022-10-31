@@ -42,10 +42,12 @@ void ButtonPaintable::paint(PaintContext& context, PaintPhase phase) const
 
     auto const& dom_node = layout_box().dom_node();
     if (is<HTML::HTMLInputElement>(dom_node) && phase == PaintPhase::Foreground) {
-        auto text_rect = enclosing_int_rect(absolute_rect());
-        if (being_pressed())
-            text_rect.translate_by(1, 1);
-        context.painter().draw_text(text_rect, static_cast<HTML::HTMLInputElement const&>(dom_node).value(), layout_box().font(), Gfx::TextAlignment::Center, computed_values().color());
+        auto text_rect = context.enclosing_device_rect(absolute_rect());
+        if (being_pressed()) {
+            auto offset = context.rounded_device_pixels(1);
+            text_rect.translate_by(offset, offset);
+        }
+        context.painter().draw_text(text_rect.to_type<int>(), static_cast<HTML::HTMLInputElement const&>(dom_node).value(), layout_box().font(), Gfx::TextAlignment::Center, computed_values().color());
     }
 }
 
