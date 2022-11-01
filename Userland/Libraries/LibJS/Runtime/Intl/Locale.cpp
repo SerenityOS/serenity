@@ -102,7 +102,7 @@ Array* collations_of_locale(VM& vm, Locale const& locale_object)
     // 3. Assert: locale matches the unicode_locale_id production.
     VERIFY(::Locale::parse_unicode_locale_id(locale).has_value());
 
-    // 4. Let list be a List of 1 or more unique canonical collation identifiers, which must be lower case String values conforming to the type sequence from UTS 35 Unicode Locale Identifier, section 3.2, sorted in descending preference of those in common use for string comparison in locale. The values "standard" and "search" must be excluded from list.
+    // 4. Let list be a List of 1 or more unique canonical collation identifiers, which must be lower case String values conforming to the type sequence from UTS 35 Unicode Locale Identifier, section 3.2, ordered as if an Array of the same values had been sorted, using %Array.prototype.sort% using undefined as comparefn, of those in common use for string comparison in locale. The values "standard" and "search" must be excluded from list.
     auto list = ::Locale::get_keywords_for_locale(locale, "co"sv);
 
     // 5. Return ! CreateArrayFromListOrRestricted( list, restricted ).
