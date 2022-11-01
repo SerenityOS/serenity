@@ -60,11 +60,21 @@ public:
     }
 
     template<typename U = T>
+    ErrorOr<void> try_append(U&& value)
+    {
+        auto result = List::try_append(forward<T>(value));
+        if (!result.is_error())
+            m_count++;
+        return result;
+    }
+
+#ifndef KERNEL
+    template<typename U = T>
     void append(U&& value)
     {
-        m_count++;
-        return List::append(forward<T>(value));
+        MUST(try_append(forward<T>(value)));
     }
+#endif
 
     bool contains_slow(const T& value) const
     {

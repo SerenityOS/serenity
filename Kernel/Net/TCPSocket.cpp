@@ -274,19 +274,28 @@ ErrorOr<void> TCPSocket::send_tcp_packet(u16 flags, UserOrKernelBuffer const* pa
 
     tcp_packet.set_checksum(compute_tcp_checksum(local_address(), peer_address(), tcp_packet, payload_size));
 
-    routing_decision.adapter->send_packet(packet->bytes());
-
-    m_packets_out++;
-    m_bytes_out += buffer_size;
-    if (tcp_packet.has_syn() || payload_size > 0) {
+    bool expect_ack { tcp_packet.has_syn() || payload_size > 0 };
+    if (expect_ack) {
+        bool append_failed { false };
         m_unacked_packets.with_exclusive([&](auto& unacked_packets) {
-            unacked_packets.packets.append({ m_sequence_number, move(packet), ipv4_payload_offset, *routing_decision.adapter });
+            auto result = unacked_packets.packets.try_append({ m_sequence_number, packet, ipv4_payload_offset, *routing_decision.adapter });
+            if (result.is_error()) {
+                dbgln("TCPSocket: Dropped outbound packet because try_append() failed");
+                append_failed = true;
+                return;
+            }
             unacked_packets.size += payload_size;
             enqueue_for_retransmit();
         });
-    } else {
-        routing_decision.adapter->release_packet_buffer(*packet);
+        if (append_failed)
+            return set_so_error(ENOMEM);
     }
+
+    m_packets_out++;
+    m_bytes_out += buffer_size;
+    routing_decision.adapter->send_packet(packet->bytes());
+    if (!expect_ack)
+        routing_decision.adapter->release_packet_buffer(*packet);
 
     return {};
 }

@@ -449,7 +449,11 @@ bool IPv4Socket::did_receive(IPv4Address const& source_address, u16 source_port,
             dbgln("IPv4Socket: did_receive unable to allocate storage for incoming packet.");
             return false;
         }
-        m_receive_queue.append({ source_address, source_port, packet_timestamp, data_or_error.release_value() });
+        auto result = m_receive_queue.try_append({ source_address, source_port, packet_timestamp, data_or_error.release_value() });
+        if (result.is_error()) {
+            dbgln("IPv4Socket: Dropped incoming packet because appending to the receive queue failed.");
+            return false;
+        }
         set_can_read(true);
     }
     m_bytes_received += packet_size;
