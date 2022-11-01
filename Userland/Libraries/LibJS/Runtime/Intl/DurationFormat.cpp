@@ -510,8 +510,8 @@ Vector<PatternPartition> partition_duration_format_pattern(VM& vm, DurationForma
 
     // 7. If listStyle is "digital", then
     if (list_style == DurationFormat::Style::Digital) {
-        // a. Set listStyle to "narrow".
-        list_style = DurationFormat::Style::Narrow;
+        // a. Set listStyle to "short".
+        list_style = DurationFormat::Style::Short;
     }
 
     auto unicode_list_style = ::Locale::style_to_string(static_cast<::Locale::Style>(list_style));
