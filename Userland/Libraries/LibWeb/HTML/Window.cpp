@@ -509,6 +509,8 @@ int Window::screen_x() const
 {
     // The screenX and screenLeft attributes must return the x-coordinate, relative to the origin of the Web-exposed screen area,
     // of the left of the client window as number of CSS pixels, or zero if there is no such thing.
+    if (auto* page = this->page())
+        return page->window_position().x();
     return 0;
 }
 
@@ -517,6 +519,8 @@ int Window::screen_y() const
 {
     // The screenY and screenTop attributes must return the y-coordinate, relative to the origin of the screen of the Web-exposed screen area,
     // of the top of the client window as number of CSS pixels, or zero if there is no such thing.
+    if (auto* page = this->page())
+        return page->window_position().y();
     return 0;
 }
 
