@@ -190,5 +190,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     window->show();
 
+    window->broadcast_window_position(window->position());
+    window->broadcast_window_size(window->size());
+
     return app->exec();
 }

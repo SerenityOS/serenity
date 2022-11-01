@@ -682,4 +682,36 @@ void BrowserWindow::config_bool_did_change(String const& domain, String const& g
     // NOTE: CloseDownloadWidgetOnFinish is read each time in DownloadWindow
 }
 
+void BrowserWindow::broadcast_window_position(Gfx::IntPoint const& position)
+{
+    tab_widget().for_each_child_of_type<Browser::Tab>([&](auto& tab) {
+        tab.window_position_changed(position);
+        return IterationDecision::Continue;
+    });
+}
+
+void BrowserWindow::broadcast_window_size(Gfx::IntSize const& size)
+{
+    tab_widget().for_each_child_of_type<Browser::Tab>([&](auto& tab) {
+        tab.window_size_changed(size);
+        return IterationDecision::Continue;
+    });
+}
+
+void BrowserWindow::event(Core::Event& event)
+{
+    switch (event.type()) {
+    case GUI::Event::Move:
+        broadcast_window_position(static_cast<GUI::MoveEvent&>(event).position());
+        break;
+    case GUI::Event::Resize:
+        broadcast_window_size(static_cast<GUI::ResizeEvent&>(event).size());
+        break;
+    default:
+        break;
+    }
+
+    Window::event(event);
+}
+
 }

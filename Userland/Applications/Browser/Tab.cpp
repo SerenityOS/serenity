@@ -545,6 +545,16 @@ void Tab::action_left(GUI::Action&)
     m_statusbar->set_override_text({});
 }
 
+void Tab::window_position_changed(Gfx::IntPoint const& position)
+{
+    m_web_content_view->set_window_position(position);
+}
+
+void Tab::window_size_changed(Gfx::IntSize const& size)
+{
+    m_web_content_view->set_window_size(size);
+}
+
 BrowserWindow const& Tab::window() const
 {
     return static_cast<BrowserWindow const&>(*Widget::window());
