@@ -128,7 +128,7 @@ private:
     DecoderErrorOr<i32> read_coef(Token token);
 
     /* (6.5) Motion Vector Prediction */
-    void find_mv_refs(ReferenceFrame, i32 block);
+    void find_mv_refs(ReferenceFrameType, i32 block);
     void find_best_ref_mvs(u8 ref_list);
     bool use_mv_hp(MotionVector const& delta_mv);
     void append_sub8x8_mvs(i32 block, u8 ref_list);
@@ -137,9 +137,9 @@ private:
     MotionVector clamp_mv(MotionVector mvec, i32 border);
     size_t get_image_index(u32 row, u32 column);
     void get_block_mv(u32 candidate_row, u32 candidate_column, u8 ref_list, bool use_prev);
-    void if_same_ref_frame_add_mv(u32 candidate_row, u32 candidate_column, ReferenceFrame ref_frame, bool use_prev);
-    void if_diff_ref_frame_add_mv(u32 candidate_row, u32 candidate_column, ReferenceFrame ref_frame, bool use_prev);
-    void scale_mv(u8 ref_list, ReferenceFrame ref_frame);
+    void if_same_ref_frame_add_mv(u32 candidate_row, u32 candidate_column, ReferenceFrameType ref_frame, bool use_prev);
+    void if_diff_ref_frame_add_mv(u32 candidate_row, u32 candidate_column, ReferenceFrameType ref_frame, bool use_prev);
+    void scale_mv(u8 ref_list, ReferenceFrameType ref_frame);
     void add_mv_ref_list(u8 ref_list);
 
     Gfx::Point<size_t> get_decoded_point_for_plane(u32 row, u32 column, u8 plane);
@@ -234,7 +234,7 @@ private:
     // The column to use for getting partition tree probability lookups.
     u32 m_col { 0 };
     TXSize m_tx_size { TX_4x4 };
-    ReferenceFrame m_ref_frame[2];
+    ReferenceFrameType m_ref_frame[2];
     bool m_is_inter { false };
     bool m_is_compound { false };
     IntraMode m_default_intra_mode { DcPred };
@@ -244,8 +244,8 @@ private:
     u8 m_num_4x4_h { 0 };
     u8 m_uv_mode { 0 }; // FIXME: Is u8 the right size?
     Vector<Array<IntraMode, 4>> m_sub_modes;
-    ReferenceFrame m_left_ref_frame[2];
-    ReferenceFrame m_above_ref_frame[2];
+    ReferenceFrameType m_left_ref_frame[2];
+    ReferenceFrameType m_above_ref_frame[2];
     bool m_left_intra { false };
     bool m_above_intra { false };
     bool m_left_single { false };
@@ -272,8 +272,8 @@ private:
     bool m_use_hp { false };
     TXMode m_tx_mode;
     ReferenceMode m_reference_mode;
-    ReferenceFrame m_comp_fixed_ref;
-    ReferenceFrame m_comp_var_ref[2];
+    ReferenceFrameType m_comp_fixed_ref;
+    ReferenceFrameType m_comp_var_ref[2];
     MotionVector m_block_mvs[2][4];
     Vector<u8> m_prev_segment_ids;
 
@@ -282,12 +282,12 @@ private:
     Vector<u32> m_mi_sizes;
     Vector<u8> m_y_modes;
     Vector<u8> m_segment_ids;
-    Vector<Array<ReferenceFrame, 2>> m_ref_frames;
-    Vector<Array<ReferenceFrame, 2>> m_prev_ref_frames;
+    Vector<Array<ReferenceFrameType, 2>> m_ref_frames;
+    Vector<Array<ReferenceFrameType, 2>> m_prev_ref_frames;
     Vector<Array<MotionVector, 2>> m_mvs;
     Vector<Array<MotionVector, 2>> m_prev_mvs;
     MotionVector m_candidate_mv[2];
-    ReferenceFrame m_candidate_frame[2];
+    ReferenceFrameType m_candidate_frame[2];
     Vector<Array<Array<MotionVector, 4>, 2>> m_sub_mvs;
     u8 m_ref_mv_count { 0 };
     MotionVector m_ref_list_mv[2];
