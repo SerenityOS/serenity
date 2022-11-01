@@ -2,6 +2,7 @@ serenity_install_sources("Userland/Libraries/LibTest")
 
 set(SOURCES
     TestSuite.cpp
+    Command.cpp
     CrashTest.cpp
 )
 
