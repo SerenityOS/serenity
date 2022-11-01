@@ -233,6 +233,8 @@ void Window::update_window_menu_items()
     m_window_menu_close_item->set_enabled(m_closeable);
 
     m_window_menu_move_item->set_enabled(m_minimized_state == WindowMinimizedState::None && !is_maximized() && !m_fullscreen);
+
+    m_window_menu->update_alt_shortcuts_for_items();
 }
 
 void Window::set_minimized(bool minimized)
