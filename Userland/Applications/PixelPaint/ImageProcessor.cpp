@@ -16,7 +16,7 @@ FilterApplicationCommand::FilterApplicationCommand(NonnullRefPtr<Filter> filter,
 
 void FilterApplicationCommand::execute()
 {
-    m_filter->apply(m_target_layer->content_bitmap(), m_target_layer->content_bitmap());
+    m_filter->apply(m_target_layer->get_scratch_edited_bitmap(), m_target_layer->get_scratch_edited_bitmap());
     m_filter->m_editor->gui_event_loop().deferred_invoke([strong_this = NonnullRefPtr(*this)]() {
         // HACK: we can't tell strong_this to not be const
         (*const_cast<NonnullRefPtr<Layer>*>(&strong_this->m_target_layer))->did_modify_bitmap(strong_this->m_target_layer->rect());

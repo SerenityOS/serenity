@@ -21,6 +21,11 @@ FilterPreviewWidget::~FilterPreviewWidget()
 {
 }
 
+void FilterPreviewWidget::set_layer(RefPtr<PixelPaint::Layer> layer)
+{
+    m_layer = layer;
+}
+
 void FilterPreviewWidget::set_bitmap(RefPtr<Gfx::Bitmap> const& bitmap)
 {
     m_bitmap = bitmap;
@@ -29,10 +34,24 @@ void FilterPreviewWidget::set_bitmap(RefPtr<Gfx::Bitmap> const& bitmap)
 
 void FilterPreviewWidget::set_filter(Filter* filter)
 {
-    if (filter)
+    if (filter) {
         filter->apply(*m_filtered_bitmap, *m_bitmap);
-    else
+
+        // If we have a layer set and the image has an active selection we only want the filter to apply to the
+        // selected region. This will walk the image and for every pixel that is outside the selection, restore it
+        // from the original bitmap.
+        if (m_layer && !m_layer->image().selection().is_empty()) {
+            for (int y = 0; y < m_filtered_bitmap->height(); ++y) {
+                for (int x = 0; x < m_filtered_bitmap->width(); ++x) {
+                    if (!m_layer->image().selection().is_selected(m_layer->location().translated(x, y))) {
+                        m_filtered_bitmap->set_pixel(x, y, m_bitmap->get_pixel(x, y));
+                    }
+                }
+            }
+        }
+    } else {
         m_filtered_bitmap = m_bitmap->clone().release_value();
+    }
     repaint();
 }
 

@@ -19,6 +19,7 @@ class FilterPreviewWidget final : public GUI::Frame {
 
 public:
     virtual ~FilterPreviewWidget() override;
+    void set_layer(RefPtr<Layer> layer);
     void set_bitmap(RefPtr<Gfx::Bitmap> const& bitmap);
     void set_filter(Filter* filter);
     void clear_filter();
@@ -26,6 +27,7 @@ public:
 private:
     explicit FilterPreviewWidget();
 
+    RefPtr<Layer> m_layer;
     RefPtr<Gfx::Bitmap> m_bitmap;
     RefPtr<Gfx::Bitmap> m_filtered_bitmap;
 
