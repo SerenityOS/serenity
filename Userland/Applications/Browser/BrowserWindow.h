@@ -43,6 +43,9 @@ public:
     void content_filters_changed();
     void proxy_mappings_changed();
 
+    void broadcast_window_position(Gfx::IntPoint const&);
+    void broadcast_window_size(Gfx::IntSize const&);
+
 private:
     explicit BrowserWindow(CookieJar&, URL);
 
@@ -52,6 +55,8 @@ private:
 
     virtual void config_string_did_change(String const& domain, String const& group, String const& key, String const& value) override;
     virtual void config_bool_did_change(String const& domain, String const& group, String const& key, bool value) override;
+
+    virtual void event(Core::Event&) override;
 
     RefPtr<GUI::Action> m_go_back_action;
     RefPtr<GUI::Action> m_go_forward_action;
