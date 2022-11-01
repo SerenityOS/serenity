@@ -1252,7 +1252,7 @@ DecoderErrorOr<void> Parser::inter_block_mode_info()
 DecoderErrorOr<void> Parser::read_ref_frames()
 {
     if (seg_feature_active(SEG_LVL_REF_FRAME)) {
-        m_ref_frame[0] = static_cast<ReferenceFrame>(m_feature_data[m_segment_id][SEG_LVL_REF_FRAME]);
+        m_ref_frame[0] = static_cast<ReferenceFrameType>(m_feature_data[m_segment_id][SEG_LVL_REF_FRAME]);
         m_ref_frame[1] = None;
         return {};
     }
@@ -1547,7 +1547,7 @@ void Parser::get_block_mv(u32 candidate_row, u32 candidate_column, u8 ref_list, 
     }
 }
 
-void Parser::if_same_ref_frame_add_mv(u32 candidate_row, u32 candidate_column, ReferenceFrame ref_frame, bool use_prev)
+void Parser::if_same_ref_frame_add_mv(u32 candidate_row, u32 candidate_column, ReferenceFrameType ref_frame, bool use_prev)
 {
     for (auto ref_list = 0u; ref_list < 2; ref_list++) {
         get_block_mv(candidate_row, candidate_column, ref_list, use_prev);
@@ -1558,23 +1558,23 @@ void Parser::if_same_ref_frame_add_mv(u32 candidate_row, u32 candidate_column, R
     }
 }
 
-void Parser::scale_mv(u8 ref_list, ReferenceFrame ref_frame)
+void Parser::scale_mv(u8 ref_list, ReferenceFrameType ref_frame)
 {
     auto candidate_frame = m_candidate_frame[ref_list];
     if (m_ref_frame_sign_bias[candidate_frame] != m_ref_frame_sign_bias[ref_frame])
         m_candidate_mv[ref_list] *= -1;
 }
 
-void Parser::if_diff_ref_frame_add_mv(u32 candidate_row, u32 candidate_column, ReferenceFrame ref_frame, bool use_prev)
+void Parser::if_diff_ref_frame_add_mv(u32 candidate_row, u32 candidate_column, ReferenceFrameType ref_frame, bool use_prev)
 {
     for (auto ref_list = 0u; ref_list < 2; ref_list++)
         get_block_mv(candidate_row, candidate_column, ref_list, use_prev);
     auto mvs_are_same = m_candidate_mv[0] == m_candidate_mv[1];
-    if (m_candidate_frame[0] > ReferenceFrame::IntraFrame && m_candidate_frame[0] != ref_frame) {
+    if (m_candidate_frame[0] > ReferenceFrameType::IntraFrame && m_candidate_frame[0] != ref_frame) {
         scale_mv(0, ref_frame);
         add_mv_ref_list(0);
     }
-    if (m_candidate_frame[1] > ReferenceFrame::IntraFrame && m_candidate_frame[1] != ref_frame && !mvs_are_same) {
+    if (m_candidate_frame[1] > ReferenceFrameType::IntraFrame && m_candidate_frame[1] != ref_frame && !mvs_are_same) {
         scale_mv(1, ref_frame);
         add_mv_ref_list(1);
     }
@@ -1604,7 +1604,7 @@ void Parser::clamp_mv_ref(u8 i)
 }
 
 // 6.5.1 Find MV refs syntax
-void Parser::find_mv_refs(ReferenceFrame reference_frame, i32 block)
+void Parser::find_mv_refs(ReferenceFrameType reference_frame, i32 block)
 {
     m_ref_mv_count = 0;
     bool different_ref_found = false;
