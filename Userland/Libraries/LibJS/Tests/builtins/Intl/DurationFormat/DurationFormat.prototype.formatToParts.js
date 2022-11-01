@@ -124,13 +124,13 @@ describe("correct behavior", () => {
         expect(new Intl.DurationFormat("en", { style: "digital" }).formatToParts(duration)).toEqual(
             [
                 { type: "element", value: "1 yr" },
-                { type: "literal", value: " " },
+                { type: "literal", value: ", " },
                 { type: "element", value: "2 mths" },
-                { type: "literal", value: " " },
+                { type: "literal", value: ", " },
                 { type: "element", value: "3 wks" },
-                { type: "literal", value: " " },
+                { type: "literal", value: ", " },
                 { type: "element", value: "3 days" },
-                { type: "literal", value: " " },
+                { type: "literal", value: ", " },
                 { type: "element", value: "4:05:06" },
             ]
         );
