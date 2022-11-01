@@ -213,13 +213,18 @@ private:
     {
         VERIFY(m_call_nesting_level == 0);
         using WrapperType = CallableWrapper<Callable>;
+#ifndef KERNEL
         if constexpr (sizeof(WrapperType) > inline_capacity) {
             *bit_cast<CallableWrapperBase**>(&m_storage) = new WrapperType(forward<Callable>(callable));
             m_kind = FunctionKind::Outline;
         } else {
+#endif
+            static_assert(sizeof(WrapperType) <= inline_capacity);
             new (m_storage) WrapperType(forward<Callable>(callable));
             m_kind = FunctionKind::Inline;
+#ifndef KERNEL
         }
+#endif
     }
 
     void move_from(Function&& other)
@@ -246,8 +251,13 @@ private:
     FunctionKind m_kind { FunctionKind::NullPointer };
     bool m_deferred_clear { false };
     mutable Atomic<u16> m_call_nesting_level { 0 };
+#ifndef KERNEL
     // Empirically determined to fit most lambdas and functions.
     static constexpr size_t inline_capacity = 4 * sizeof(void*);
+#else
+    // FIXME: Try to decrease this.
+    static constexpr size_t inline_capacity = 6 * sizeof(void*);
+#endif
     alignas(max(alignof(CallableWrapperBase), alignof(CallableWrapperBase*))) u8 m_storage[inline_capacity];
 };
 
