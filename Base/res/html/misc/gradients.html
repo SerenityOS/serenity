@@ -139,6 +139,24 @@
         .grad-double-position {
             background-image: linear-gradient(to right,red 20%, orange 20% 40%, yellow 40% 60%, green 60% 80%, blue 80%)
         }
+
+        .grad-conic-1 {
+            background-image: conic-gradient(red, orange, yellow, green, blue);
+        }
+
+        .grad-conic-2 {
+            background-image: conic-gradient(from 0.25turn at 50% 30%, #f69d3c, 10deg, #3f87a6, 350deg, #ebf8e1);
+        }
+
+        .grad-conic-3 {
+            background-image: conic-gradient(from 3.1416rad at 10% 50%, #e66465, #9198e5);
+        }
+
+        .grad-conic-4 {
+            background-image: conic-gradient(
+                red 6deg, orange 6deg 18deg, yellow 18deg 45deg,
+                green 45deg 110deg, blue 110deg 200deg, purple 200deg);
+        }
     </style>
   </head>
   <body>
@@ -179,6 +197,11 @@
     <div class="box grad-repeat-3"></div>
     <b>Double-position color stops</b><br>
     <div class="box grad-double-position"></div>
+    <b>Conic gradients</b><br>
+    <div class="box grad-conic-1"></div>
+    <div class="box grad-conic-2"></div>
+    <div class="box grad-conic-3"></div>
+    <div class="box grad-conic-4"></div>
   </body>
   <script>
     const boxes = document.querySelectorAll(".box, .rect");
