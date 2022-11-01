@@ -108,6 +108,9 @@ public:
     int screen_x() const;
     int screen_y() const;
 
+    int outer_width() const;
+    int outer_height() const;
+
     JS::NonnullGCPtr<HTML::Storage> local_storage();
     JS::NonnullGCPtr<HTML::Storage> session_storage();
 
@@ -232,6 +235,9 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(screen_y_getter);
     JS_DECLARE_NATIVE_FUNCTION(screen_left_getter);
     JS_DECLARE_NATIVE_FUNCTION(screen_top_getter);
+
+    JS_DECLARE_NATIVE_FUNCTION(outer_width_getter);
+    JS_DECLARE_NATIVE_FUNCTION(outer_height_getter);
 
     JS_DECLARE_NATIVE_FUNCTION(post_message);
 
