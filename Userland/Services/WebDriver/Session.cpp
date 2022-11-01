@@ -711,6 +711,29 @@ ErrorOr<JsonValue, WebDriverError> Session::get_element_css_value(JsonValue cons
     return JsonValue(computed_value);
 }
 
+// 12.4.5 Get Element Text, https://w3c.github.io/webdriver/#dfn-get-element-text
+ErrorOr<JsonValue, WebDriverError> Session::get_element_text(JsonValue const&, StringView parameter_element_id)
+{
+    // 1. If the current browsing context is no longer open, return error with error code no such window.
+    TRY(check_for_open_top_level_browsing_context_or_return_error());
+
+    // FIXME: 2. Handle any user prompts and return its value if it is an error.
+
+    // FIXME: 3. Let element be the result of trying to get a known connected element with url variable element id.
+    auto maybe_element_id = parameter_element_id.to_int();
+    if (!maybe_element_id.has_value())
+        return WebDriverError::from_code(ErrorCode::InvalidArgument, "Element ID is not an i32");
+
+    auto element_id = maybe_element_id.release_value();
+
+    // 4. Let rendered text be the result of performing implementation-specific steps whose result is exactly the
+    //    same as the result of a Function.[[Call]](null, element) with bot.dom.getVisibleText as the this value.
+    auto rendered_text = m_browser_connection->get_element_text(element_id);
+
+    // 5. Return success with data rendered text.
+    return JsonValue(rendered_text);
+}
+
 // 12.4.6 Get Element Tag Name, https://w3c.github.io/webdriver/#dfn-get-element-tag-name
 ErrorOr<JsonValue, WebDriverError> Session::get_element_tag_name(JsonValue const&, StringView parameter_element_id)
 {
