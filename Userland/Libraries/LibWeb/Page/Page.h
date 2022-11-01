@@ -16,6 +16,8 @@
 #include <Kernel/API/KeyCode.h>
 #include <LibGfx/Forward.h>
 #include <LibGfx/Palette.h>
+#include <LibGfx/Point.h>
+#include <LibGfx/Size.h>
 #include <LibGfx/StandardCursor.h>
 #include <LibJS/Heap/Handle.h>
 #include <LibWeb/CSS/PreferredColorScheme.h>
@@ -72,6 +74,12 @@ public:
     bool is_webdriver_active() const { return m_is_webdriver_active; }
     void set_is_webdriver_active(bool b) { m_is_webdriver_active = b; }
 
+    Gfx::IntPoint const& window_position() const { return m_window_position; }
+    void set_window_position(Gfx::IntPoint const& position) { m_window_position = position; }
+
+    Gfx::IntSize const& window_size() const { return m_window_size; }
+    void set_window_size(Gfx::IntSize const& size) { m_window_size = size; }
+
 private:
     PageClient& m_client;
 
@@ -86,6 +94,9 @@ private:
     // https://w3c.github.io/webdriver/#dfn-webdriver-active-flag
     // The webdriver-active flag is set to true when the user agent is under remote control. It is initially false.
     bool m_is_webdriver_active { false };
+
+    Gfx::IntPoint m_window_position {};
+    Gfx::IntSize m_window_size {};
 };
 
 class PageClient {

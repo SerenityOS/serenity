@@ -60,6 +60,9 @@ endpoint WebContentServer
     set_is_scripting_enabled(bool is_scripting_enabled) =|
     set_is_webdriver_active(bool is_webdriver_active) =|
 
+    set_window_position(Gfx::IntPoint position) =|
+    set_window_size(Gfx::IntSize size) =|
+
     get_local_storage_entries() => (OrderedHashMap<String,String> entries)
     get_session_storage_entries() => (OrderedHashMap<String,String> entries)
 

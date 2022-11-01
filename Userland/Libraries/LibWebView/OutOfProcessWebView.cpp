@@ -575,6 +575,16 @@ void OutOfProcessWebView::set_is_webdriver_active(bool is_webdriver_enabled)
     client().async_set_is_webdriver_active(is_webdriver_enabled);
 }
 
+void OutOfProcessWebView::set_window_position(Gfx::IntPoint const& position)
+{
+    client().async_set_window_position(position);
+}
+
+void OutOfProcessWebView::set_window_size(Gfx::IntSize const& size)
+{
+    client().async_set_window_size(size);
+}
+
 void OutOfProcessWebView::focusin_event(GUI::FocusEvent&)
 {
     client().async_set_has_focus(true);

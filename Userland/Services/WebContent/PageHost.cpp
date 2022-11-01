@@ -76,6 +76,16 @@ void PageHost::set_is_webdriver_active(bool is_webdriver_active)
     page().set_is_webdriver_active(is_webdriver_active);
 }
 
+void PageHost::set_window_position(Gfx::IntPoint const& position)
+{
+    page().set_window_position(position);
+}
+
+void PageHost::set_window_size(Gfx::IntSize const& size)
+{
+    page().set_window_size(size);
+}
+
 Web::Layout::InitialContainingBlock* PageHost::layout_root()
 {
     auto* document = page().top_level_browsing_context().active_document();
