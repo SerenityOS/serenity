@@ -7,7 +7,6 @@
 #pragma once
 
 #include <AK/CircularQueue.h>
-#include <AK/DoublyLinkedList.h>
 #include <AK/Types.h>
 #include <Kernel/API/KeyCode.h>
 #include <Kernel/Arch/x86/ISABus/I8042Controller.h>
