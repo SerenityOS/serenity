@@ -36,40 +36,45 @@ UNMAP_AFTER_INIT bool APICTimer::calibrate(HardwareTimerBase& calibration_source
 
     dmesgln("APICTimer: Using {} as calibration source", calibration_source.model());
 
-    auto& apic = APIC::the();
+    struct {
 #ifdef APIC_TIMER_MEASURE_CPU_CLOCK
-    bool supports_tsc = Processor::current().has_feature(CPUFeature::TSC);
+        bool supports_tsc { Processor::current().has_feature(CPUFeature::TSC) };
 #endif
+        APIC& apic { APIC::the() };
+        size_t ticks_in_100ms { 0 };
+        Atomic<size_t, AK::memory_order_relaxed> calibration_ticks { 0 };
+#ifdef APIC_TIMER_MEASURE_CPU_CLOCK
+        volatile u64 start_tsc { 0 }, end_tsc { 0 };
+#endif
+        volatile u64 start_reference { 0 }, end_reference { 0 };
+        volatile u32 start_apic_count { 0 }, end_apic_count { 0 };
+        bool query_reference { false };
+    } state;
+
+    state.ticks_in_100ms = calibration_source.ticks_per_second() / 10;
+    state.query_reference = calibration_source.can_query_raw();
 
     // temporarily replace the timer callbacks
-    const size_t ticks_in_100ms = calibration_source.ticks_per_second() / 10;
-    Atomic<size_t, AK::memory_order_relaxed> calibration_ticks = 0;
+    auto original_source_callback = calibration_source.set_callback([&state, &calibration_source](RegisterState const&) {
+        u32 current_timer_count = state.apic.get_timer_current_count();
 #ifdef APIC_TIMER_MEASURE_CPU_CLOCK
-    volatile u64 start_tsc = 0, end_tsc = 0;
+        u64 current_tsc = state.supports_tsc ? read_tsc() : 0;
 #endif
-    volatile u64 start_reference = 0, end_reference = 0;
-    volatile u32 start_apic_count = 0, end_apic_count = 0;
-    bool query_reference = calibration_source.can_query_raw();
-    auto original_source_callback = calibration_source.set_callback([&](RegisterState const&) {
-        u32 current_timer_count = apic.get_timer_current_count();
-#ifdef APIC_TIMER_MEASURE_CPU_CLOCK
-        u64 current_tsc = supports_tsc ? read_tsc() : 0;
-#endif
-        u64 current_reference = query_reference ? calibration_source.current_raw() : 0;
+        u64 current_reference = state.query_reference ? calibration_source.current_raw() : 0;
 
-        auto prev_tick = calibration_ticks.fetch_add(1);
+        auto prev_tick = state.calibration_ticks.fetch_add(1);
         if (prev_tick == 0) {
 #ifdef APIC_TIMER_MEASURE_CPU_CLOCK
-            start_tsc = current_tsc;
+            state.start_tsc = current_tsc;
 #endif
-            start_apic_count = current_timer_count;
-            start_reference = current_reference;
-        } else if (prev_tick + 1 == ticks_in_100ms + 1) {
+            state.start_apic_count = current_timer_count;
+            state.start_reference = current_reference;
+        } else if (prev_tick + 1 == state.ticks_in_100ms + 1) {
 #ifdef APIC_TIMER_MEASURE_CPU_CLOCK
-            end_tsc = current_tsc;
+            state.end_tsc = current_tsc;
 #endif
-            end_apic_count = current_timer_count;
-            end_reference = current_reference;
+            state.end_apic_count = current_timer_count;
+            state.end_reference = current_reference;
         }
     });
 
@@ -81,11 +86,11 @@ UNMAP_AFTER_INIT bool APICTimer::calibrate(HardwareTimerBase& calibration_source
         // TODO: How should we handle this?
         PANIC("APICTimer: Timer fired during calibration!");
     });
-    apic.setup_local_timer(0xffffffff, APIC::TimerMode::Periodic, true);
+    state.apic.setup_local_timer(0xffffffff, APIC::TimerMode::Periodic, true);
 
     sti();
     // Loop for about 100 ms
-    while (calibration_ticks.load() <= ticks_in_100ms)
+    while (state.calibration_ticks.load() <= state.ticks_in_100ms)
         ;
     cli();
 
@@ -95,8 +100,8 @@ UNMAP_AFTER_INIT bool APICTimer::calibrate(HardwareTimerBase& calibration_source
 
     disable_local_timer();
 
-    if (query_reference) {
-        u64 one_tick_ns = calibration_source.raw_to_ns((end_reference - start_reference) / ticks_in_100ms);
+    if (state.query_reference) {
+        u64 one_tick_ns = calibration_source.raw_to_ns((state.end_reference - state.start_reference) / state.ticks_in_100ms);
         m_frequency = (u32)(1000000000ull / one_tick_ns);
         dmesgln("APICTimer: Ticks per second: {} ({}.{}ms)", m_frequency, one_tick_ns / 1000000, one_tick_ns % 1000000);
     } else {
@@ -105,10 +110,10 @@ UNMAP_AFTER_INIT bool APICTimer::calibrate(HardwareTimerBase& calibration_source
         dmesgln("APICTimer: Ticks per second: {} (assume same frequency as reference clock)", m_frequency);
     }
 
-    auto delta_apic_count = start_apic_count - end_apic_count; // The APIC current count register decrements!
-    m_timer_period = (delta_apic_count * apic.get_timer_divisor()) / ticks_in_100ms;
+    auto delta_apic_count = state.start_apic_count - state.end_apic_count; // The APIC current count register decrements!
+    m_timer_period = (delta_apic_count * state.apic.get_timer_divisor()) / state.ticks_in_100ms;
 
-    u64 apic_freq = delta_apic_count * apic.get_timer_divisor() * 10;
+    u64 apic_freq = delta_apic_count * state.apic.get_timer_divisor() * 10;
     dmesgln("APICTimer: Bus clock speed: {}.{} MHz", apic_freq / 1000000, apic_freq % 1000000);
     if (apic_freq < 1000000) {
         dmesgln("APICTimer: Frequency too slow!");
@@ -116,8 +121,8 @@ UNMAP_AFTER_INIT bool APICTimer::calibrate(HardwareTimerBase& calibration_source
     }
 
 #ifdef APIC_TIMER_MEASURE_CPU_CLOCK
-    if (supports_tsc) {
-        auto delta_tsc = (end_tsc - start_tsc) * 10;
+    if (state.supports_tsc) {
+        auto delta_tsc = (state.end_tsc - state.start_tsc) * 10;
         dmesgln("APICTimer: CPU clock speed: {}.{} MHz", delta_tsc / 1000000, delta_tsc % 1000000);
     }
 #endif
