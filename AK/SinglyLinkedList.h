@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Assertions.h>
+#include <AK/Error.h>
 #include <AK/Find.h>
 #include <AK/StdLibExtras.h>
 #include <AK/Traits.h>
@@ -148,30 +149,50 @@ public:
     }
 
     template<typename U = T>
-    void append(U&& value)
+    ErrorOr<void> try_append(U&& value)
     {
-        auto* node = new Node(forward<U>(value));
+        auto* node = new (nothrow) Node(forward<U>(value));
+        if (!node)
+            return Error::from_errno(ENOMEM);
         if (!m_head) {
             m_head = node;
             m_tail = node;
-            return;
+            return {};
         }
         m_tail->next = node;
         m_tail = node;
+        return {};
+    }
+
+    template<typename U = T>
+    ErrorOr<void> try_prepend(U&& value)
+    {
+        auto* node = new (nothrow) Node(forward<U>(value));
+        if (!node)
+            return Error::from_errno(ENOMEM);
+        if (!m_head) {
+            m_head = node;
+            m_tail = node;
+            return {};
+        }
+        node->next = m_head;
+        m_head = node;
+        return {};
+    }
+
+#ifndef KERNEL
+    template<typename U = T>
+    void append(U&& value)
+    {
+        MUST(try_append(forward<U>(value)));
     }
 
     template<typename U = T>
     void prepend(U&& value)
     {
-        auto* node = new Node(forward<U>(value));
-        if (!m_head) {
-            m_head = node;
-            m_tail = node;
-            return;
-        }
-        node->next = m_head;
-        m_head = node;
+        MUST(try_prepend(forward<U>(value)));
     }
+#endif
 
     bool contains_slow(const T& value) const
     {
@@ -211,32 +232,50 @@ public:
     }
 
     template<typename U = T>
-    void insert_before(Iterator iterator, U&& value)
+    ErrorOr<void> try_insert_before(Iterator iterator, U&& value)
     {
-        auto* node = new Node(forward<U>(value));
+        auto* node = new (nothrow) Node(forward<U>(value));
+        if (!node)
+            return Error::from_errno(ENOMEM);
         node->next = iterator.m_node;
         if (m_head == iterator.m_node)
             m_head = node;
         if (iterator.m_prev)
             iterator.m_prev->next = node;
+        return {};
     }
 
     template<typename U = T>
-    void insert_after(Iterator iterator, U&& value)
+    ErrorOr<void> try_insert_after(Iterator iterator, U&& value)
     {
-        if (iterator.is_end()) {
-            append(value);
-            return;
-        }
+        if (iterator.is_end())
+            return try_append(value);
 
-        auto* node = new Node(forward<U>(value));
+        auto* node = new (nothrow) Node(forward<U>(value));
+        if (!node)
+            return Error::from_errno(ENOMEM);
         node->next = iterator.m_node->next;
 
         iterator.m_node->next = node;
 
         if (m_tail == iterator.m_node)
             m_tail = node;
+        return {};
     }
+
+#ifndef KERNEL
+    template<typename U = T>
+    void insert_before(Iterator iterator, U&& value)
+    {
+        MUST(try_insert_before(iterator, forward<U>(value)));
+    }
+
+    template<typename U = T>
+    void insert_after(Iterator iterator, U&& value)
+    {
+        MUST(try_insert_after(iterator, forward<U>(value)));
+    }
+#endif
 
     void remove(Iterator& iterator)
     {
