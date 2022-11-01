@@ -524,6 +524,24 @@ int Window::screen_y() const
     return 0;
 }
 
+// https://drafts.csswg.org/cssom-view/#dom-window-outerwidth
+int Window::outer_width() const
+{
+    // The outerWidth attribute must return the width of the client window. If there is no client window this attribute must return zero.
+    if (auto* page = this->page())
+        return page->window_size().width();
+    return 0;
+}
+
+// https://drafts.csswg.org/cssom-view/#dom-window-screeny
+int Window::outer_height() const
+{
+    // The outerHeight attribute must return the height of the client window. If there is no client window this attribute must return zero.
+    if (auto* page = this->page())
+        return page->window_size().height();
+    return 0;
+}
+
 // https://html.spec.whatwg.org/multipage/webstorage.html#dom-localstorage
 JS::NonnullGCPtr<HTML::Storage> Window::local_storage()
 {
@@ -786,6 +804,9 @@ void Window::initialize_web_interfaces(Badge<WindowEnvironmentSettingsObject>)
     define_native_accessor(realm, "screenY", screen_y_getter, {}, attr);
     define_native_accessor(realm, "screenLeft", screen_left_getter, {}, attr);
     define_native_accessor(realm, "screenTop", screen_top_getter, {}, attr);
+
+    define_native_accessor(realm, "outerWidth", outer_width_getter, {}, attr);
+    define_native_accessor(realm, "outerHeight", outer_height_getter, {}, attr);
 
     define_direct_property("CSS", heap().allocate<Bindings::CSSNamespace>(realm, realm), 0);
 
@@ -1421,6 +1442,18 @@ JS_DEFINE_NATIVE_FUNCTION(Window::screen_y_getter)
 {
     auto* impl = TRY(impl_from(vm));
     return JS::Value(impl->screen_y());
+}
+
+JS_DEFINE_NATIVE_FUNCTION(Window::outer_width_getter)
+{
+    auto* impl = TRY(impl_from(vm));
+    return JS::Value(impl->outer_width());
+}
+
+JS_DEFINE_NATIVE_FUNCTION(Window::outer_height_getter)
+{
+    auto* impl = TRY(impl_from(vm));
+    return JS::Value(impl->outer_height());
 }
 
 JS_DEFINE_NATIVE_FUNCTION(Window::post_message)
