@@ -56,6 +56,7 @@ public:
         return found_item;
     }
 
+    void update_alt_shortcuts_for_items();
     void add_item(NonnullOwnPtr<MenuItem>);
 
     String const& name() const { return m_name; }

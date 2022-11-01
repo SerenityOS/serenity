@@ -692,12 +692,22 @@ void Menu::set_visible(bool visible)
         m_client->async_menu_visibility_did_change(m_menu_id, visible);
 }
 
+void Menu::update_alt_shortcuts_for_items()
+{
+    m_alt_shortcut_character_to_item_indices.clear();
+    int i = 0;
+    for (auto& item : m_items) {
+        if (auto alt_shortcut = find_ampersand_shortcut_character(item.text())) {
+            m_alt_shortcut_character_to_item_indices.ensure(to_ascii_lowercase(alt_shortcut)).append(i);
+        }
+        ++i;
+    }
+}
+
 void Menu::add_item(NonnullOwnPtr<MenuItem> item)
 {
-    if (auto alt_shortcut = find_ampersand_shortcut_character(item->text())) {
-        m_alt_shortcut_character_to_item_indices.ensure(to_ascii_lowercase(alt_shortcut)).append(m_items.size());
-    }
     m_items.append(move(item));
+    update_alt_shortcuts_for_items();
 }
 
 Vector<size_t> const* Menu::items_with_alt_shortcut(u32 alt_shortcut) const
