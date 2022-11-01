@@ -71,7 +71,7 @@ public:
         None,
         Optimize,
         __Count,
-        Default = Optimize,
+        Default = None,
     };
     static Bytecode::PassManager& optimization_pipeline(OptimizationLevel = OptimizationLevel::Default);
 
