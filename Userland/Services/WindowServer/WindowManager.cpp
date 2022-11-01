@@ -742,6 +742,7 @@ bool WindowManager::process_ongoing_window_move(MouseEvent& event)
         if (!m_move_window->is_tiled())
             m_move_window->set_floating_rect(m_move_window->rect());
 
+        Core::EventLoop::current().post_event(*m_move_window, make<MoveEvent>(m_move_window->rect()));
         m_move_window->invalidate(true, true);
         if (m_move_window->is_resizable()) {
             process_event_for_doubleclick(*m_move_window, event);
@@ -816,6 +817,7 @@ bool WindowManager::process_ongoing_window_move(MouseEvent& event)
             m_geometry_overlay->window_rect_changed();
         }
     }
+    Core::EventLoop::current().post_event(*m_move_window, make<MoveEvent>(m_move_window->rect()));
     return true;
 }
 

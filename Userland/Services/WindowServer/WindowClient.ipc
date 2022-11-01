@@ -23,6 +23,7 @@ endpoint WindowClient
     window_input_preempted(i32 window_id, i32 preemptor) =|
     window_close_request(i32 window_id) =|
     window_resized(i32 window_id, Gfx::IntRect new_rect) =|
+    window_moved(i32 window_id, Gfx::IntRect new_rect) =|
 
     menu_item_activated(i32 menu_id, u32 identifier) =|
     menu_item_entered(i32 menu_id, u32 identifier) =|

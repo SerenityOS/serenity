@@ -28,6 +28,7 @@ public:
         Paint,
         MultiPaint,
         Resize,
+        Move,
         MouseMove,
         MouseDown,
         MouseDoubleClick,
@@ -308,6 +309,20 @@ public:
 
 private:
     Gfx::IntSize m_size;
+};
+
+class MoveEvent final : public Event {
+public:
+    explicit MoveEvent(Gfx::IntPoint const& size)
+        : Event(Event::Move)
+        , m_position(size)
+    {
+    }
+
+    Gfx::IntPoint const& position() const { return m_position; }
+
+private:
+    Gfx::IntPoint m_position;
 };
 
 class ContextMenuEvent final : public Event {

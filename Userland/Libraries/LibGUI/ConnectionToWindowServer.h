@@ -41,6 +41,7 @@ private:
     virtual void window_input_left(i32) override;
     virtual void window_close_request(i32) override;
     virtual void window_resized(i32, Gfx::IntRect const&) override;
+    virtual void window_moved(i32, Gfx::IntRect const&) override;
     virtual void menu_item_activated(i32, u32) override;
     virtual void menu_item_entered(i32, u32) override;
     virtual void menu_item_left(i32, u32) override;

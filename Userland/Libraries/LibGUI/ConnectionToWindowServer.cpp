@@ -102,6 +102,12 @@ void ConnectionToWindowServer::window_resized(i32 window_id, Gfx::IntRect const&
     }
 }
 
+void ConnectionToWindowServer::window_moved(i32 window_id, Gfx::IntRect const& new_rect)
+{
+    if (auto* window = Window::from_window_id(window_id))
+        Core::EventLoop::current().post_event(*window, make<MoveEvent>(new_rect.location()));
+}
+
 void ConnectionToWindowServer::window_activated(i32 window_id)
 {
     if (auto* window = Window::from_window_id(window_id))

@@ -35,6 +35,7 @@ public:
         WindowInputLeft,
         WindowCloseRequest,
         WindowResized,
+        WindowMoved,
     };
 
     Event() = default;
@@ -147,6 +148,20 @@ class ResizeEvent final : public Event {
 public:
     ResizeEvent(Gfx::IntRect const& rect)
         : Event(Event::WindowResized)
+        , m_rect(rect)
+    {
+    }
+
+    Gfx::IntRect const& rect() const { return m_rect; }
+
+private:
+    Gfx::IntRect m_rect;
+};
+
+class MoveEvent final : public Event {
+public:
+    MoveEvent(Gfx::IntRect const& rect)
+        : Event(Event::WindowMoved)
         , m_rect(rect)
     {
     }

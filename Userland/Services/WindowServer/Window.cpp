@@ -408,6 +408,7 @@ void Window::set_maximized(bool maximized)
         set_rect(m_floating_rect);
     m_frame.did_set_maximized({}, maximized);
     Core::EventLoop::current().post_event(*this, make<ResizeEvent>(m_rect));
+    Core::EventLoop::current().post_event(*this, make<MoveEvent>(m_rect));
     set_default_positioned(false);
 
     WindowManager::the().notify_minimization_state_changed(*this);
@@ -485,6 +486,9 @@ void Window::event(Core::Event& event)
         break;
     case Event::WindowResized:
         m_client->async_window_resized(m_window_id, static_cast<ResizeEvent const&>(event).rect());
+        break;
+    case Event::WindowMoved:
+        m_client->async_window_moved(m_window_id, static_cast<MoveEvent const&>(event).rect());
         break;
     default:
         break;
@@ -826,6 +830,7 @@ void Window::set_fullscreen(bool fullscreen)
     }
 
     Core::EventLoop::current().post_event(*this, make<ResizeEvent>(new_window_rect));
+    Core::EventLoop::current().post_event(*this, make<MoveEvent>(new_window_rect));
     set_rect(new_window_rect);
 }
 
@@ -896,6 +901,7 @@ bool Window::set_untiled()
     set_rect(m_floating_rect);
 
     Core::EventLoop::current().post_event(*this, make<ResizeEvent>(m_rect));
+    Core::EventLoop::current().post_event(*this, make<MoveEvent>(m_rect));
 
     return true;
 }
@@ -917,6 +923,7 @@ void Window::set_tiled(WindowTileType tile_type)
 
     set_rect(WindowManager::the().tiled_window_rect(*this, tile_type));
     Core::EventLoop::current().post_event(*this, make<ResizeEvent>(m_rect));
+    Core::EventLoop::current().post_event(*this, make<MoveEvent>(m_rect));
 }
 
 void Window::detach_client(Badge<ConnectionFromClient>)
