@@ -655,6 +655,16 @@ void ConnectionFromClient::set_is_webdriver_active(bool is_webdriver_active)
     m_page_host->set_is_webdriver_active(is_webdriver_active);
 }
 
+void ConnectionFromClient::set_window_position(Gfx::IntPoint const& position)
+{
+    m_page_host->set_window_position(position);
+}
+
+void ConnectionFromClient::set_window_size(Gfx::IntSize const& size)
+{
+    m_page_host->set_window_size(size);
+}
+
 Messages::WebContentServer::GetLocalStorageEntriesResponse ConnectionFromClient::get_local_storage_entries()
 {
     auto* document = page().top_level_browsing_context().active_document();

@@ -72,6 +72,9 @@ public:
     void set_preferred_color_scheme(Web::CSS::PreferredColorScheme);
     void set_is_webdriver_active(bool);
 
+    void set_window_position(Gfx::IntPoint const&);
+    void set_window_size(Gfx::IntSize const&);
+
     Function<void(Gfx::IntPoint const& screen_position)> on_context_menu_request;
     Function<void(const AK::URL&, String const& target, unsigned modifiers)> on_link_click;
     Function<void(const AK::URL&, Gfx::IntPoint const& screen_position)> on_link_context_menu_request;
