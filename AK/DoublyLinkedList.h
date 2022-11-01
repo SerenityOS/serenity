@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Assertions.h>
+#include <AK/Error.h>
 #include <AK/Find.h>
 #include <AK/StdLibExtras.h>
 
@@ -91,41 +92,61 @@ public:
     }
 
     template<typename U>
-    void append(U&& value)
+    ErrorOr<void> try_append(U&& value)
     {
         static_assert(
             requires { T(value); }, "Conversion operator is missing.");
-        auto* node = new Node(forward<U>(value));
+        auto* node = new (nothrow) Node(forward<U>(value));
+        if (!node)
+            return Error::from_errno(ENOMEM);
         if (!m_head) {
             VERIFY(!m_tail);
             m_head = node;
             m_tail = node;
-            return;
+            return {};
         }
         VERIFY(m_tail);
         VERIFY(!node->next);
         m_tail->next = node;
         node->prev = m_tail;
         m_tail = node;
+        return {};
     }
 
     template<typename U>
-    void prepend(U&& value)
+    ErrorOr<void> try_prepend(U&& value)
     {
         static_assert(IsSame<T, U>);
-        auto* node = new Node(forward<U>(value));
+        auto* node = new (nothrow) Node(forward<U>(value));
+        if (!node)
+            return Error::from_errno(ENOMEM);
         if (!m_head) {
             VERIFY(!m_tail);
             m_head = node;
             m_tail = node;
-            return;
+            return {};
         }
         VERIFY(m_tail);
         VERIFY(!node->prev);
         m_head->prev = node;
         node->next = m_head;
         m_head = node;
+        return {};
     }
+
+#ifndef KERNEL
+    template<typename U>
+    void append(U&& value)
+    {
+        MUST(try_append(forward<U>(value)));
+    }
+
+    template<typename U>
+    void prepend(U&& value)
+    {
+        MUST(try_prepend(forward<U>(value)));
+    }
+#endif
 
     [[nodiscard]] bool contains_slow(const T& value) const
     {

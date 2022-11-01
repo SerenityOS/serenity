@@ -58,7 +58,7 @@ public:
         auto request = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) AsyncRequestType(*this, forward<Args>(args)...)));
         SpinlockLocker lock(m_requests_lock);
         bool was_empty = m_requests.is_empty();
-        m_requests.append(request);
+        TRY(m_requests.try_append(request));
         if (was_empty)
             request->do_start(move(lock));
         return request;
