@@ -303,6 +303,18 @@ public:
 
     [[nodiscard]] bool cross_origin_embedder_policy_allows_credentials() const;
 
+    // Non-standard
+    void add_pending_response(Badge<Fetching::PendingResponse>, JS::NonnullGCPtr<Fetching::PendingResponse> pending_response)
+    {
+        VERIFY(!m_pending_responses.contains_slow(pending_response));
+        m_pending_responses.append(pending_response);
+    }
+
+    void remove_pending_response(Badge<Fetching::PendingResponse>, JS::NonnullGCPtr<Fetching::PendingResponse> pending_response)
+    {
+        m_pending_responses.remove_first_matching([&](auto gc_ptr) { return gc_ptr == pending_response; });
+    }
+
 private:
     explicit Request(JS::NonnullGCPtr<HeaderList>);
 
@@ -486,6 +498,9 @@ private:
     // https://fetch.spec.whatwg.org/#timing-allow-failed
     // A request has an associated timing allow failed flag. Unless stated otherwise, it is unset.
     bool m_timing_allow_failed { false };
+
+    // Non-standard
+    Vector<JS::NonnullGCPtr<Fetching::PendingResponse>> m_pending_responses;
 };
 
 }

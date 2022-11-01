@@ -7,28 +7,32 @@
 #include <LibJS/Heap/Heap.h>
 #include <LibJS/Runtime/VM.h>
 #include <LibWeb/Fetch/Fetching/PendingResponse.h>
+#include <LibWeb/Fetch/Infrastructure/HTTP/Requests.h>
 #include <LibWeb/Platform/EventLoopPlugin.h>
 
 namespace Web::Fetch::Fetching {
 
-JS::NonnullGCPtr<PendingResponse> PendingResponse::create(JS::VM& vm)
+JS::NonnullGCPtr<PendingResponse> PendingResponse::create(JS::VM& vm, JS::NonnullGCPtr<Infrastructure::Request> request)
 {
-    return { *vm.heap().allocate_without_realm<PendingResponse>() };
+    return { *vm.heap().allocate_without_realm<PendingResponse>(request) };
 }
 
-JS::NonnullGCPtr<PendingResponse> PendingResponse::create(JS::VM& vm, JS::NonnullGCPtr<Infrastructure::Response> response)
+JS::NonnullGCPtr<PendingResponse> PendingResponse::create(JS::VM& vm, JS::NonnullGCPtr<Infrastructure::Request> request, JS::NonnullGCPtr<Infrastructure::Response> response)
 {
-    return { *vm.heap().allocate_without_realm<PendingResponse>(response) };
+    return { *vm.heap().allocate_without_realm<PendingResponse>(request, response) };
 }
 
-PendingResponse::PendingResponse(JS::NonnullGCPtr<Infrastructure::Response> response)
-    : m_response(response)
+PendingResponse::PendingResponse(JS::NonnullGCPtr<Infrastructure::Request> request, JS::GCPtr<Infrastructure::Response> response)
+    : m_request(request)
+    , m_response(response)
 {
+    m_request->add_pending_response({}, *this);
 }
 
 void PendingResponse::visit_edges(JS::Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
+    visitor.visit(m_request);
     visitor.visit(m_response);
 }
 
@@ -52,8 +56,9 @@ void PendingResponse::run_callback() const
 {
     VERIFY(m_callback);
     VERIFY(m_response);
-    Platform::EventLoopPlugin::the().deferred_invoke([strong_this = JS::make_handle(const_cast<PendingResponse&>(*this))]() {
+    Platform::EventLoopPlugin::the().deferred_invoke([strong_this = JS::make_handle(const_cast<PendingResponse&>(*this))]() mutable {
         strong_this->m_callback(*strong_this->m_response);
+        strong_this->m_request->remove_pending_response({}, *strong_this.ptr());
     });
 }
 

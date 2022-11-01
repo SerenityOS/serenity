@@ -7,6 +7,7 @@
 #include <AK/Array.h>
 #include <LibJS/Heap/Heap.h>
 #include <LibJS/Runtime/Realm.h>
+#include <LibWeb/Fetch/Fetching/PendingResponse.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP/Requests.h>
 #include <LibWeb/URL/URL.h>
 
@@ -21,6 +22,8 @@ void Request::visit_edges(JS::Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
     visitor.visit(m_header_list);
+    for (auto pending_response : m_pending_responses)
+        visitor.visit(pending_response);
 }
 
 JS::NonnullGCPtr<Request> Request::create(JS::VM& vm)
