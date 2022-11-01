@@ -101,10 +101,22 @@ TriState CookiesModel::data_matches(GUI::ModelIndex const& index, GUI::Variant c
     return TriState::False;
 }
 
-Web::Cookie::Cookie const& CookiesModel::get_cookie(GUI::ModelIndex const& index) const
+Web::Cookie::Cookie CookiesModel::take_cookie(GUI::ModelIndex const& index)
 {
     VERIFY(index.is_valid());
-    return m_cookies[index.row()];
+
+    auto cookie = m_cookies.take(index.row());
+    did_update(InvalidateAllIndices);
+
+    return cookie;
+}
+
+AK::Vector<Web::Cookie::Cookie> CookiesModel::take_all_cookies()
+{
+    auto cookies = move(m_cookies);
+    did_update(InvalidateAllIndices);
+
+    return cookies;
 }
 
 }

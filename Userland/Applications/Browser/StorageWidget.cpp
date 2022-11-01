@@ -41,18 +41,16 @@ StorageWidget::StorageWidget()
     auto delete_cookie_action = GUI::Action::create(
         "&Delete Cookie", { Key_Delete }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/delete.png"sv).release_value_but_fixme_should_propagate_errors(), [&](auto const&) {
             auto cookie_index = m_cookies_table_view->selection().first();
-            delete_cookie(m_cookies_model->get_cookie(cookie_index));
+            delete_cookie(m_cookies_model->take_cookie(cookie_index));
         },
         m_cookies_table_view);
 
     auto delete_all_cookies_action = GUI::Action::create(
         "Delete &All Cookies", [&](auto const&) {
-            auto cookie_count = m_cookies_model->row_count({});
-            for (auto i = 0; i < cookie_count; ++i) {
-                auto cookie_index = m_cookies_model->index(i);
-                if (cookie_index.is_valid())
-                    delete_cookie(m_cookies_model->get_cookie(cookie_index));
-            }
+            auto cookies = m_cookies_model->take_all_cookies();
+
+            for (auto& cookie : cookies)
+                delete_cookie(move(cookie));
         },
         m_cookies_table_view);
 
