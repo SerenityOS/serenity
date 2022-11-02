@@ -1212,7 +1212,7 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
     regs.set_flags(2 | (regs.rflags & ~safe_eflags_mask));
 #endif
 
-    dbgln_if(SIGNAL_DEBUG, "Thread in state '{}' has been primed with signal handler {:#04x}:{:p} to deliver {}", state_string(), m_regs.cs, m_regs.ip(), signal);
+    dbgln_if(SIGNAL_DEBUG, "Thread in state '{}' has been primed with signal handler {:p} to deliver {}", state_string(), m_regs.ip(), signal);
 
     return DispatchSignalResult::Continue;
 }
