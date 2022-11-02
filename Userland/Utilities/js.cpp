@@ -234,7 +234,7 @@ static ErrorOr<bool> parse_and_run(JS::Interpreter& interpreter, StringView sour
             auto executable = executable_result.release_value();
             executable->name = source_name;
             if (s_opt_bytecode) {
-                auto& passes = JS::Bytecode::Interpreter::optimization_pipeline();
+                auto& passes = JS::Bytecode::Interpreter::optimization_pipeline(JS::Bytecode::Interpreter::OptimizationLevel::Optimize);
                 passes.perform(*executable);
                 dbgln("Optimisation passes took {}us", passes.elapsed());
             }
