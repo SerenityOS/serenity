@@ -183,8 +183,8 @@ public:
     HTML::BrowsingContextContainer* container() { return m_container; }
     HTML::BrowsingContextContainer const* container() const { return m_container; }
 
-    Gfx::IntPoint to_top_level_position(Gfx::IntPoint);
-    Gfx::IntRect to_top_level_rect(Gfx::IntRect const&);
+    CSSPixelPoint to_top_level_position(CSSPixelPoint);
+    CSSPixelRect to_top_level_rect(CSSPixelRect const&);
 
     DOM::Position const& cursor_position() const { return m_cursor_position; }
     void set_cursor_position(DOM::Position);

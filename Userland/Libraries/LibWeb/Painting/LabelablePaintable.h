@@ -21,9 +21,9 @@ public:
     Layout::FormAssociatedLabelableNode& layout_box();
 
     virtual bool wants_mouse_events() const override { return true; }
-    virtual DispatchEventOfSameName handle_mousedown(Badge<EventHandler>, Gfx::IntPoint, unsigned button, unsigned modifiers) override;
-    virtual DispatchEventOfSameName handle_mouseup(Badge<EventHandler>, Gfx::IntPoint, unsigned button, unsigned modifiers) override;
-    virtual DispatchEventOfSameName handle_mousemove(Badge<EventHandler>, Gfx::IntPoint, unsigned buttons, unsigned modifiers) override;
+    virtual DispatchEventOfSameName handle_mousedown(Badge<EventHandler>, CSSPixelPoint, unsigned button, unsigned modifiers) override;
+    virtual DispatchEventOfSameName handle_mouseup(Badge<EventHandler>, CSSPixelPoint, unsigned button, unsigned modifiers) override;
+    virtual DispatchEventOfSameName handle_mousemove(Badge<EventHandler>, CSSPixelPoint, unsigned buttons, unsigned modifiers) override;
 
     void handle_associated_label_mousedown(Badge<Layout::Label>);
     void handle_associated_label_mouseup(Badge<Layout::Label>);

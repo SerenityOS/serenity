@@ -18,15 +18,15 @@ public:
     Label(DOM::Document&, HTML::HTMLLabelElement*, NonnullRefPtr<CSS::StyleProperties>);
     virtual ~Label() override;
 
-    static bool is_inside_associated_label(LabelableNode const&, Gfx::IntPoint);
+    static bool is_inside_associated_label(LabelableNode const&, CSSPixelPoint);
     static bool is_associated_label_hovered(LabelableNode const&);
 
     const HTML::HTMLLabelElement& dom_node() const { return static_cast<const HTML::HTMLLabelElement&>(*BlockContainer::dom_node()); }
     HTML::HTMLLabelElement& dom_node() { return static_cast<HTML::HTMLLabelElement&>(*BlockContainer::dom_node()); }
 
-    void handle_mousedown_on_label(Badge<Painting::TextPaintable>, Gfx::IntPoint, unsigned button);
-    void handle_mouseup_on_label(Badge<Painting::TextPaintable>, Gfx::IntPoint, unsigned button);
-    void handle_mousemove_on_label(Badge<Painting::TextPaintable>, Gfx::IntPoint, unsigned button);
+    void handle_mousedown_on_label(Badge<Painting::TextPaintable>, CSSPixelPoint, unsigned button);
+    void handle_mouseup_on_label(Badge<Painting::TextPaintable>, CSSPixelPoint, unsigned button);
+    void handle_mousemove_on_label(Badge<Painting::TextPaintable>, CSSPixelPoint, unsigned button);
 
     LabelableNode* labeled_control();
 

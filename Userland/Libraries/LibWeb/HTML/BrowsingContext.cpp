@@ -375,7 +375,7 @@ void BrowsingContext::set_needs_display(Gfx::IntRect const& rect)
 
     if (is_top_level()) {
         if (m_page)
-            m_page->client().page_did_invalidate(to_top_level_rect(rect));
+            m_page->client().page_did_invalidate(to_top_level_rect(rect.to_type<CSSPixels>()));
         return;
     }
 
@@ -389,7 +389,7 @@ void BrowsingContext::scroll_to(Gfx::IntPoint position)
         active_document()->force_layout();
 
     if (m_page)
-        m_page->client().page_did_request_scroll_to(position);
+        m_page->client().page_did_request_scroll_to(position.to_type<CSSPixels>());
 }
 
 void BrowsingContext::scroll_to_anchor(DeprecatedString const& fragment)
@@ -427,17 +427,17 @@ void BrowsingContext::scroll_to_anchor(DeprecatedString const& fragment)
     }
 
     if (m_page)
-        m_page->client().page_did_request_scroll_into_view(enclosing_int_rect(float_rect));
+        m_page->client().page_did_request_scroll_into_view(float_rect.to_type<CSSPixels>());
 }
 
-Gfx::IntRect BrowsingContext::to_top_level_rect(Gfx::IntRect const& a_rect)
+CSSPixelRect BrowsingContext::to_top_level_rect(CSSPixelRect const& a_rect)
 {
     auto rect = a_rect;
     rect.set_location(to_top_level_position(a_rect.location()));
     return rect;
 }
 
-Gfx::IntPoint BrowsingContext::to_top_level_position(Gfx::IntPoint a_position)
+CSSPixelPoint BrowsingContext::to_top_level_position(CSSPixelPoint a_position)
 {
     auto position = a_position;
     for (auto ancestor = parent(); ancestor; ancestor = ancestor->parent()) {
@@ -447,7 +447,7 @@ Gfx::IntPoint BrowsingContext::to_top_level_position(Gfx::IntPoint a_position)
             return {};
         if (!ancestor->container()->layout_node())
             return {};
-        position.translate_by(ancestor->container()->layout_node()->box_type_agnostic_position().to_type<int>());
+        position.translate_by(ancestor->container()->layout_node()->box_type_agnostic_position().to_type<CSSPixels>());
     }
     return position;
 }

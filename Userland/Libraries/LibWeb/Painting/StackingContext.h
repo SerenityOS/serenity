@@ -32,7 +32,7 @@ public:
 
     void paint_descendants(PaintContext&, Layout::Node const&, StackingContextPaintPhase) const;
     void paint(PaintContext&) const;
-    Optional<HitTestResult> hit_test(Gfx::FloatPoint, HitTestType) const;
+    Optional<HitTestResult> hit_test(CSSPixelPoint, HitTestType) const;
 
     Gfx::FloatMatrix4x4 const& transform_matrix() const { return m_transform; }
     Gfx::AffineTransform affine_transform_matrix() const;

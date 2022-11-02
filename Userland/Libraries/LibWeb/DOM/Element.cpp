@@ -1210,7 +1210,7 @@ static void scroll_an_element_into_view(DOM::Element& element, Bindings::ScrollB
     if (!layout_node)
         return;
 
-    page->client().page_did_request_scroll_into_view(verify_cast<Layout::Box>(*layout_node).paint_box()->absolute_padding_box_rect().to_rounded<int>());
+    page->client().page_did_request_scroll_into_view(verify_cast<Layout::Box>(*layout_node).paint_box()->absolute_padding_box_rect().to_type<CSSPixels>());
 }
 
 // https://w3c.github.io/csswg-drafts/cssom-view-1/#dom-element-scrollintoview

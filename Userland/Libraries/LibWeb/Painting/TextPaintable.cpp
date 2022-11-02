@@ -36,7 +36,7 @@ DOM::Node* TextPaintable::mouse_event_target() const
     return nullptr;
 }
 
-TextPaintable::DispatchEventOfSameName TextPaintable::handle_mousedown(Badge<EventHandler>, Gfx::IntPoint position, unsigned button, unsigned)
+TextPaintable::DispatchEventOfSameName TextPaintable::handle_mousedown(Badge<EventHandler>, CSSPixelPoint position, unsigned button, unsigned)
 {
     auto* label = layout_node().first_ancestor_of_type<Layout::Label>();
     if (!label)
@@ -46,7 +46,7 @@ TextPaintable::DispatchEventOfSameName TextPaintable::handle_mousedown(Badge<Eve
     return DispatchEventOfSameName::Yes;
 }
 
-TextPaintable::DispatchEventOfSameName TextPaintable::handle_mouseup(Badge<EventHandler>, Gfx::IntPoint position, unsigned button, unsigned)
+TextPaintable::DispatchEventOfSameName TextPaintable::handle_mouseup(Badge<EventHandler>, CSSPixelPoint position, unsigned button, unsigned)
 {
     auto* label = layout_node().first_ancestor_of_type<Layout::Label>();
     if (!label)
@@ -57,7 +57,7 @@ TextPaintable::DispatchEventOfSameName TextPaintable::handle_mouseup(Badge<Event
     return DispatchEventOfSameName::Yes;
 }
 
-TextPaintable::DispatchEventOfSameName TextPaintable::handle_mousemove(Badge<EventHandler>, Gfx::IntPoint position, unsigned button, unsigned)
+TextPaintable::DispatchEventOfSameName TextPaintable::handle_mousemove(Badge<EventHandler>, CSSPixelPoint position, unsigned button, unsigned)
 {
     auto* label = layout_node().first_ancestor_of_type<Layout::Label>();
     if (!label)

@@ -630,7 +630,7 @@ void PaintableWithLines::paint(PaintContext& context, PaintPhase phase) const
     }
 }
 
-bool PaintableWithLines::handle_mousewheel(Badge<EventHandler>, Gfx::IntPoint, unsigned, unsigned, int wheel_delta_x, int wheel_delta_y)
+bool PaintableWithLines::handle_mousewheel(Badge<EventHandler>, CSSPixelPoint, unsigned, unsigned, int wheel_delta_x, int wheel_delta_y)
 {
     if (!layout_box().is_scrollable())
         return false;
@@ -655,7 +655,7 @@ void PaintableBox::set_stacking_context(NonnullOwnPtr<StackingContext> stacking_
     m_stacking_context = move(stacking_context);
 }
 
-Optional<HitTestResult> PaintableBox::hit_test(Gfx::FloatPoint position, HitTestType type) const
+Optional<HitTestResult> PaintableBox::hit_test(CSSPixelPoint position, HitTestType type) const
 {
     if (!is_visible())
         return {};
@@ -665,7 +665,7 @@ Optional<HitTestResult> PaintableBox::hit_test(Gfx::FloatPoint position, HitTest
         return stacking_context()->hit_test(position, type);
     }
 
-    if (!absolute_border_box_rect().contains(position.x(), position.y()))
+    if (!absolute_border_box_rect().contains(position.x().value(), position.y().value()))
         return {};
 
     for (auto* child = first_child(); child; child = child->next_sibling()) {
@@ -679,7 +679,7 @@ Optional<HitTestResult> PaintableBox::hit_test(Gfx::FloatPoint position, HitTest
     return HitTestResult { *this };
 }
 
-Optional<HitTestResult> PaintableWithLines::hit_test(Gfx::FloatPoint position, HitTestType type) const
+Optional<HitTestResult> PaintableWithLines::hit_test(CSSPixelPoint position, HitTestType type) const
 {
     if (!layout_box().children_are_inline())
         return PaintableBox::hit_test(position, type);
@@ -693,11 +693,11 @@ Optional<HitTestResult> PaintableWithLines::hit_test(Gfx::FloatPoint position, H
                 dbgln("FIXME: PaintableWithLines::hit_test(): Missing containing block on {}", fragment.layout_node().debug_description());
                 continue;
             }
-            auto fragment_absolute_rect = fragment.absolute_rect();
+            auto fragment_absolute_rect = fragment.absolute_rect().to_type<CSSPixels>();
             if (fragment_absolute_rect.contains(position)) {
                 if (is<Layout::BlockContainer>(fragment.layout_node()) && fragment.layout_node().paintable())
                     return fragment.layout_node().paintable()->hit_test(position, type);
-                return HitTestResult { *fragment.layout_node().paintable(), fragment.text_index_at(position.x()) };
+                return HitTestResult { *fragment.layout_node().paintable(), fragment.text_index_at(position.x().value()) };
             }
             if (fragment_absolute_rect.top() <= position.y())
                 last_good_candidate = HitTestResult { *fragment.layout_node().paintable(), fragment.length() + 1 };
@@ -706,7 +706,7 @@ Optional<HitTestResult> PaintableWithLines::hit_test(Gfx::FloatPoint position, H
 
     if (type == HitTestType::TextCursor && last_good_candidate.has_value())
         return last_good_candidate;
-    if (is_visible() && absolute_border_box_rect().contains(position.x(), position.y()))
+    if (is_visible() && absolute_border_box_rect().contains(position.x().value(), position.y().value()))
         return HitTestResult { *this };
     return {};
 }
