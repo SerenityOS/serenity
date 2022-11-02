@@ -343,8 +343,11 @@ ThrowCompletionOr<String> temporal_zoned_date_time_to_string(VM& vm, ZonedDateTi
         // a. Let timeZoneID be ? ToString(timeZone).
         auto time_zone_id = TRY(Value(&time_zone).to_string(vm));
 
-        // b. Let timeZoneString be the string-concatenation of the code unit 0x005B (LEFT SQUARE BRACKET), timeZoneID, and the code unit 0x005D (RIGHT SQUARE BRACKET).
-        time_zone_string = String::formatted("[{}]", time_zone_id);
+        // b. If showTimeZone is "critical", let flag be "!"; else let flag be the empty String.
+        auto flag = show_time_zone == "critical"sv ? "!"sv : ""sv;
+
+        // c. Let timeZoneString be the string-concatenation of the code unit 0x005B (LEFT SQUARE BRACKET), flag, timeZoneID, and the code unit 0x005D (RIGHT SQUARE BRACKET).
+        time_zone_string = String::formatted("[{}{}]", flag, time_zone_id);
     }
 
     // 14. Let calendarString be ? MaybeFormatCalendarAnnotation(zonedDateTime.[[Calendar]], showCalendar).
