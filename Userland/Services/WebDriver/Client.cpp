@@ -50,6 +50,7 @@ Vector<Client::Route> Client::s_routes = {
     { HTTP::HttpRequest::Method::GET, { "session", ":session_id", "element", ":element_id", "text" }, &Client::handle_get_element_text },
     { HTTP::HttpRequest::Method::GET, { "session", ":session_id", "element", ":element_id", "name" }, &Client::handle_get_element_tag_name },
     { HTTP::HttpRequest::Method::POST, { "session", ":session_id", "execute", "sync" }, &Client::handle_execute_script },
+    { HTTP::HttpRequest::Method::POST, { "session", ":session_id", "execute", "async" }, &Client::handle_execute_async_script },
     { HTTP::HttpRequest::Method::GET, { "session", ":session_id", "cookie" }, &Client::handle_get_all_cookies },
     { HTTP::HttpRequest::Method::GET, { "session", ":session_id", "cookie", ":name" }, &Client::handle_get_named_cookie },
     { HTTP::HttpRequest::Method::POST, { "session", ":session_id", "cookie" }, &Client::handle_add_cookie },
@@ -693,6 +694,16 @@ ErrorOr<JsonValue, WebDriverError> Client::handle_execute_script(Vector<StringVi
     dbgln_if(WEBDRIVER_DEBUG, "Handling POST /session/<session_id>/execute/sync");
     auto* session = TRY(find_session_with_id(parameters[0]));
     auto result = TRY(session->execute_script(payload));
+    return make_json_value(result);
+}
+
+// 13.2.2 Execute Async Script, https://w3c.github.io/webdriver/#dfn-execute-async-script
+// POST /session/{session id}/execute/async
+ErrorOr<JsonValue, WebDriverError> Client::handle_execute_async_script(Vector<StringView> const& parameters, JsonValue const& payload)
+{
+    dbgln_if(WEBDRIVER_DEBUG, "Handling POST /session/<session_id>/execute/async");
+    auto* session = TRY(find_session_with_id(parameters[0]));
+    auto result = TRY(session->execute_async_script(payload));
     return make_json_value(result);
 }
 
