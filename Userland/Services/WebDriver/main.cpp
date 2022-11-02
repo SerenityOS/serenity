@@ -35,7 +35,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return 1;
     }
 
-    TRY(Core::System::pledge("stdio accept rpath inet unix proc exec fattr"));
+    TRY(Core::System::pledge("stdio accept rpath recvfd inet unix proc exec fattr"));
 
     Core::EventLoop loop;
 
@@ -70,6 +70,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/tmp", "rwc"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
-    TRY(Core::System::pledge("stdio accept rpath unix proc exec fattr"));
+    TRY(Core::System::pledge("stdio accept rpath recvfd unix proc exec fattr"));
     return loop.exec();
 }

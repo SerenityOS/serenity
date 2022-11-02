@@ -255,4 +255,16 @@ Messages::WebDriverSessionClient::GetElementTagNameResponse WebDriverConnection:
     return { "" };
 }
 
+Messages::WebDriverSessionClient::TakeScreenshotResponse WebDriverConnection::take_screenshot()
+{
+    dbgln_if(WEBDRIVER_DEBUG, "WebDriverConnection: take_screenshot");
+    if (auto browser_window = m_browser_window.strong_ref()) {
+        auto& tab = browser_window->active_tab();
+        if (tab.on_take_screenshot)
+            return { tab.on_take_screenshot() };
+    }
+
+    return { {} };
+}
+
 }

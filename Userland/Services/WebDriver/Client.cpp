@@ -54,6 +54,7 @@ Vector<Client::Route> Client::s_routes = {
     { HTTP::HttpRequest::Method::POST, { "session", ":session_id", "cookie" }, &Client::handle_add_cookie },
     { HTTP::HttpRequest::Method::DELETE, { "session", ":session_id", "cookie", ":name" }, &Client::handle_delete_cookie },
     { HTTP::HttpRequest::Method::DELETE, { "session", ":session_id", "cookie" }, &Client::handle_delete_all_cookies },
+    { HTTP::HttpRequest::Method::GET, { "session", ":session_id", "screenshot" }, &Client::handle_take_screenshot },
 };
 
 Client::Client(NonnullOwnPtr<Core::Stream::BufferedTCPSocket> socket, Core::Object* parent)
@@ -729,6 +730,16 @@ ErrorOr<JsonValue, WebDriverError> Client::handle_delete_all_cookies(Vector<Stri
     dbgln_if(WEBDRIVER_DEBUG, "Handling DELETE /session/<session_id>/cookie");
     auto* session = TRY(find_session_with_id(parameters[0]));
     auto result = TRY(session->delete_all_cookies());
+    return make_json_value(result);
+}
+
+// 17.1 Take Screenshot, https://w3c.github.io/webdriver/#take-screenshot
+// GET /session/{session id}/screenshot
+ErrorOr<JsonValue, WebDriverError> Client::handle_take_screenshot(Vector<StringView> const& parameters, JsonValue const&)
+{
+    dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session_id>/screenshot");
+    auto* session = TRY(find_session_with_id(parameters[0]));
+    auto result = TRY(session->take_screenshot());
     return make_json_value(result);
 }
 

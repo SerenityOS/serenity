@@ -68,6 +68,7 @@ public:
     ErrorOr<JsonValue, WebDriverError> add_cookie(JsonValue const& payload);
     ErrorOr<JsonValue, WebDriverError> delete_cookie(StringView const& name);
     ErrorOr<JsonValue, WebDriverError> delete_all_cookies();
+    ErrorOr<JsonValue, WebDriverError> take_screenshot();
 
 private:
     void delete_cookies(Optional<StringView> const& name = {});
