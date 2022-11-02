@@ -47,13 +47,14 @@ static Vector<ErrorCodeData> const s_error_code_data = {
     { ErrorCode::UnsupportedOperation, 500, "unsupported operation" },
 };
 
-WebDriverError WebDriverError::from_code(ErrorCode code, String message)
+WebDriverError WebDriverError::from_code(ErrorCode code, String message, Optional<JsonValue> data)
 {
-    auto& data = s_error_code_data[to_underlying(code)];
+    auto const& error_code_data = s_error_code_data[to_underlying(code)];
     return {
-        .http_status = data.http_status,
-        .error = data.json_error_code,
-        .message = move(message)
+        .http_status = error_code_data.http_status,
+        .error = error_code_data.json_error_code,
+        .message = move(message),
+        .data = move(data)
     };
 }
 
