@@ -583,6 +583,10 @@ void BrowserWindow::create_new_tab(URL url, bool activate)
         return active_tab().view().get_session_storage_entries();
     };
 
+    new_tab.on_take_screenshot = [this]() {
+        return active_tab().view().take_screenshot();
+    };
+
     new_tab.webdriver_endpoints().on_get_document_element = [this]() {
         return active_tab().view().get_document_element();
     };
