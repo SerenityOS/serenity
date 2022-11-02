@@ -269,6 +269,14 @@ bool ISO8601Parser::parse_utc_designator()
     return true;
 }
 
+// https://tc39.es/proposal-temporal/#prod-AnnotationCriticalFlag
+bool ISO8601Parser::parse_annotation_critical_flag()
+{
+    // AnnotationCriticalFlag :
+    //     !
+    return m_state.lexer.consume_specific('!');
+}
+
 // https://tc39.es/proposal-temporal/#prod-DateYear
 bool ISO8601Parser::parse_date_year()
 {
@@ -822,10 +830,11 @@ bool ISO8601Parser::parse_time_zone_identifier()
 bool ISO8601Parser::parse_time_zone_bracketed_annotation()
 {
     // TimeZoneBracketedAnnotation :
-    //     [ TimeZoneIdentifier ]
+    //     [ AnnotationCriticalFlag[opt] TimeZoneIdentifier ]
     StateTransaction transaction { *this };
     if (!m_state.lexer.consume_specific('['))
         return false;
+    (void)parse_annotation_critical_flag();
     if (!parse_time_zone_identifier())
         return false;
     if (!m_state.lexer.consume_specific(']'))
@@ -876,50 +885,163 @@ bool ISO8601Parser::parse_time_zone()
     return true;
 }
 
-// https://tc39.es/proposal-temporal/#prod-CalendarName
-bool ISO8601Parser::parse_calendar_name()
+// https://tc39.es/proposal-temporal/#prod-AKeyLeadingChar
+bool ISO8601Parser::parse_a_key_leading_char()
 {
-    // CalChar :
+    // AKeyLeadingChar :
+    //     LowercaseAlpha
+    //     _
+    if (m_state.lexer.next_is(is_ascii_lower_alpha)) {
+        m_state.lexer.consume();
+        return true;
+    }
+    return m_state.lexer.consume_specific('_');
+}
+
+// https://tc39.es/proposal-temporal/#prod-AKeyChar
+bool ISO8601Parser::parse_a_key_char()
+{
+    // AKeyChar :
+    //     AKeyLeadingChar
+    //     DecimalDigit
+    //     -
+    if (parse_a_key_leading_char())
+        return true;
+    if (parse_decimal_digit())
+        return true;
+    return m_state.lexer.consume_specific('-');
+}
+
+// https://tc39.es/proposal-temporal/#prod-AValChar
+bool ISO8601Parser::parse_a_val_char()
+{
+    // AValChar :
     //     Alpha
     //     DecimalDigit
-    // CalendarNameComponent :
-    //     CalChar CalChar CalChar CalChar[opt] CalChar[opt] CalChar[opt] CalChar[opt] CalChar[opt]
-    // CalendarNameTail :
-    //     CalendarNameComponent
-    //     CalendarNameComponent - CalendarNameTail
-    // CalendarName :
-    //     CalendarNameTail
-    auto parse_calendar_name_component = [&] {
-        for (size_t i = 0; i < 8; ++i) {
-            if (!m_state.lexer.next_is(is_ascii_alphanumeric))
-                return i > 2;
-            m_state.lexer.consume();
-        }
+    if (m_state.lexer.next_is(is_ascii_alpha)) {
+        m_state.lexer.consume();
         return true;
-    };
+    }
+    return parse_decimal_digit();
+}
+
+// https://tc39.es/proposal-temporal/#prod-AnnotationKeyTail
+bool ISO8601Parser::parse_annotation_key_tail()
+{
+    // AnnotationKeyTail :
+    //     AKeyChar AnnotationKeyTail[opt]
+    if (!parse_a_key_char())
+        return false;
+    // This is implemented without recursion to prevent stack overflow with annotation key tails that have many characters.
+    while (parse_a_key_char())
+        ;
+    return true;
+}
+
+// https://tc39.es/proposal-temporal/#prod-AnnotationKey
+bool ISO8601Parser::parse_annotation_key()
+{
+    // AnnotationKey :
+    //     AKeyLeadingChar AnnotationKeyTail[opt]
     StateTransaction transaction { *this };
-    do {
-        if (!parse_calendar_name_component())
-            return false;
-    } while (m_state.lexer.consume_specific('-'));
-    m_state.parse_result.calendar_name = transaction.parsed_string_view();
+    if (!parse_a_key_leading_char()) {
+        m_state.parse_result.annotation_key = Optional<StringView> {};
+        return false;
+    }
+    (void)parse_annotation_key_tail();
+    m_state.parse_result.annotation_key = transaction.parsed_string_view();
     transaction.commit();
     return true;
 }
 
-// https://tc39.es/proposal-temporal/#prod-Calendar
-bool ISO8601Parser::parse_calendar()
+// https://tc39.es/proposal-temporal/#prod-AnnotationValueComponent
+bool ISO8601Parser::parse_annotation_value_component()
 {
-    // Calendar :
-    //     [u-ca= CalendarName ]
+    // AnnotationValueComponent :
+    //     AValChar AnnotationValueComponent[opt]
+    if (!parse_a_val_char())
+        return false;
+    // This is implemented without recursion to prevent stack overflow with annotation value components that have many characters.
+    while (parse_a_val_char())
+        ;
+    return true;
+}
+
+// https://tc39.es/proposal-temporal/#prod-AnnotationValueTail
+bool ISO8601Parser::parse_annotation_value_tail()
+{
+    // AnnotationValueTail :
+    //     AnnotationValueComponent
+    //     AnnotationValueComponent - AnnotationValueTail
+    // This is implemented without recursion to prevent stack overflow with annotation values that have many dashes.
+    for (;;) {
+        if (!parse_annotation_value_component())
+            return false;
+
+        if (!m_state.lexer.consume_specific('-'))
+            break;
+    }
+
+    return true;
+}
+
+// https://tc39.es/proposal-temporal/#prod-AnnotationValue
+bool ISO8601Parser::parse_annotation_value()
+{
+    // AnnotationValue :
+    //     AnnotationValueTail
     StateTransaction transaction { *this };
-    if (!m_state.lexer.consume_specific("[u-ca="sv))
+    if (!parse_annotation_value_tail()) {
+        m_state.parse_result.annotation_value = Optional<StringView> {};
         return false;
-    if (!parse_calendar_name())
+    }
+    m_state.parse_result.annotation_value = transaction.parsed_string_view();
+    transaction.commit();
+    return true;
+}
+
+// https://tc39.es/proposal-temporal/#prod-Annotation
+bool ISO8601Parser::parse_annotation()
+{
+    // Annotation :
+    //     [ AnnotationCriticalFlag[opt] AnnotationKey = AnnotationValue ]
+    StateTransaction transaction { *this };
+    if (!m_state.lexer.consume_specific('['))
         return false;
+
+    Annotation annotation;
+
+    annotation.critical = parse_annotation_critical_flag();
+
+    if (!parse_annotation_key())
+        return false;
+    annotation.key = m_state.parse_result.annotation_key.value();
+
+    if (!m_state.lexer.consume_specific('='))
+        return false;
+
+    if (!parse_annotation_value())
+        return false;
+    annotation.value = m_state.parse_result.annotation_value.value();
+
     if (!m_state.lexer.consume_specific(']'))
         return false;
+
+    m_state.parse_result.annotations.append(annotation);
     transaction.commit();
+    return true;
+}
+
+// https://tc39.es/proposal-temporal/#prod-Annotations
+bool ISO8601Parser::parse_annotations()
+{
+    // Annotations :
+    //     Annotation Annotations[opt]
+    if (!parse_annotation())
+        return false;
+    // This is implemented without recursion to prevent stack overflow with ISO strings that have many annotations.
+    while (parse_annotation())
+        ;
     return true;
 }
 
@@ -995,17 +1117,17 @@ bool ISO8601Parser::parse_date_time()
     return true;
 }
 
-// https://tc39.es/proposal-temporal/#prod-CalendarTime
-bool ISO8601Parser::parse_calendar_time()
+// https://tc39.es/proposal-temporal/#prod-AnnotatedTime
+bool ISO8601Parser::parse_annotated_time()
 {
-    // CalendarTime :
-    //     TimeDesignator TimeSpec TimeZone[opt] Calendar[opt]
-    //     TimeSpecWithOptionalTimeZoneNotAmbiguous Calendar[opt]
+    // AnnotatedTime :
+    //     TimeDesignator TimeSpec TimeZone[opt] Annotations[opt]
+    //     TimeSpecWithOptionalTimeZoneNotAmbiguous Annotations[opt]
     {
         StateTransaction transaction { *this };
         if (parse_time_designator() && parse_time_spec()) {
             (void)parse_time_zone();
-            (void)parse_calendar();
+            (void)parse_annotations();
             transaction.commit();
             return true;
         }
@@ -1013,34 +1135,34 @@ bool ISO8601Parser::parse_calendar_time()
     StateTransaction transaction { *this };
     if (!parse_time_spec_with_optional_time_zone_not_ambiguous())
         return false;
-    (void)parse_calendar();
+    (void)parse_annotations();
     transaction.commit();
     return true;
 }
 
-// https://tc39.es/proposal-temporal/#prod-CalendarDateTime
-bool ISO8601Parser::parse_calendar_date_time()
+// https://tc39.es/proposal-temporal/#prod-AnnotatedDateTime
+bool ISO8601Parser::parse_annotated_date_time()
 {
-    // CalendarDateTime :
-    //     DateTime Calendar[opt]
+    // AnnotatedDateTime :
+    //     DateTime Annotations[opt]
     if (!parse_date_time())
         return false;
-    (void)parse_calendar();
+    (void)parse_annotations();
     return true;
 }
 
-// https://tc39.es/proposal-temporal/#prod-CalendarDateTimeTimeRequired
-bool ISO8601Parser::parse_calendar_date_time_time_required()
+// https://tc39.es/proposal-temporal/#prod-AnnotatedDateTimeTimeRequired
+bool ISO8601Parser::parse_annotated_date_time_time_required()
 {
-    // CalendarDateTimeTimeRequired :
-    //     Date TimeSpecSeparator TimeZone[opt] Calendar[opt]
+    // AnnotatedDateTimeTimeRequired :
+    //     Date TimeSpecSeparator TimeZone[opt] Annotations[opt]
     StateTransaction transaction { *this };
     if (!parse_date())
         return false;
     if (!parse_time_spec_separator())
         return false;
     (void)parse_time_zone();
-    (void)parse_calendar();
+    (void)parse_annotations();
     transaction.commit();
     return true;
 }
@@ -1348,14 +1470,14 @@ bool ISO8601Parser::parse_duration()
 bool ISO8601Parser::parse_temporal_instant_string()
 {
     // TemporalInstantString :
-    //     Date TimeSpecSeparator[opt] TimeZoneOffsetRequired Calendar[opt]
+    //     Date TimeSpecSeparator[opt] TimeZoneOffsetRequired Annotations[opt]
     StateTransaction transaction { *this };
     if (!parse_date())
         return false;
     (void)parse_time_spec_separator();
     if (!parse_time_zone_offset_required())
         return false;
-    (void)parse_calendar();
+    (void)parse_annotations();
     transaction.commit();
     return true;
 }
@@ -1364,8 +1486,8 @@ bool ISO8601Parser::parse_temporal_instant_string()
 bool ISO8601Parser::parse_temporal_date_time_string()
 {
     // TemporalDateTimeString :
-    //     CalendarDateTime
-    return parse_calendar_date_time();
+    //     AnnotatedDateTime
+    return parse_annotated_date_time();
 }
 
 // https://tc39.es/proposal-temporal/#prod-TemporalDurationString
@@ -1381,10 +1503,10 @@ bool ISO8601Parser::parse_temporal_month_day_string()
 {
     // TemporalMonthDayString :
     //     DateSpecMonthDay
-    //     CalendarDateTime
-    // NOTE: Reverse order here because `DateSpecMonthDay` can be a subset of `CalendarDateTime`,
+    //     AnnotatedDateTime
+    // NOTE: Reverse order here because `DateSpecMonthDay` can be a subset of `AnnotatedDateTime`,
     // so we'd not attempt to parse that but may not exhaust the input string.
-    return parse_calendar_date_time()
+    return parse_annotated_date_time()
         || parse_date_spec_month_day();
 }
 
@@ -1392,12 +1514,12 @@ bool ISO8601Parser::parse_temporal_month_day_string()
 bool ISO8601Parser::parse_temporal_time_string()
 {
     // TemporalTimeString :
-    //     CalendarTime
-    //     CalendarDateTimeTimeRequired
-    // NOTE: Reverse order here because `Time` can be a subset of `CalendarDateTimeTimeRequired`,
+    //     AnnotatedTime
+    //     AnnotatedDateTimeTimeRequired
+    // NOTE: Reverse order here because `AnnotatedTime` can be a subset of `AnnotatedDateTimeTimeRequired`,
     // so we'd not attempt to parse that but may not exhaust the input string.
-    return parse_calendar_date_time_time_required()
-        || parse_calendar_time();
+    return parse_annotated_date_time_time_required()
+        || parse_annotated_time();
 }
 
 // https://tc39.es/proposal-temporal/#prod-TemporalYearMonthString
@@ -1405,10 +1527,10 @@ bool ISO8601Parser::parse_temporal_year_month_string()
 {
     // TemporalYearMonthString :
     //     DateSpecYearMonth
-    //     CalendarDateTime
-    // NOTE: Reverse order here because `DateSpecYearMonth` can be a subset of `CalendarDateTime`,
+    //     AnnotatedDateTime
+    // NOTE: Reverse order here because `DateSpecYearMonth` can be a subset of `AnnotatedDateTime`,
     // so we'd not attempt to parse that but may not exhaust the input string.
-    return parse_calendar_date_time()
+    return parse_annotated_date_time()
         || parse_date_spec_year_month();
 }
 
@@ -1416,14 +1538,14 @@ bool ISO8601Parser::parse_temporal_year_month_string()
 bool ISO8601Parser::parse_temporal_zoned_date_time_string()
 {
     // TemporalZonedDateTimeString :
-    //     Date TimeSpecSeparator[opt] TimeZoneNameRequired Calendar[opt]
+    //     Date TimeSpecSeparator[opt] TimeZoneNameRequired Annotations[opt]
     StateTransaction transaction { *this };
     if (!parse_date())
         return false;
     (void)parse_time_spec_separator();
     if (!parse_time_zone_name_required())
         return false;
-    (void)parse_calendar();
+    (void)parse_annotations();
     transaction.commit();
     return true;
 }
@@ -1440,7 +1562,7 @@ bool ISO8601Parser::parse_temporal_zoned_date_time_string()
     __JS_ENUMERATE(TemporalZonedDateTimeString, parse_temporal_zoned_date_time_string) \
     __JS_ENUMERATE(TimeZoneIdentifier, parse_time_zone_identifier)                     \
     __JS_ENUMERATE(TimeZoneNumericUTCOffset, parse_time_zone_numeric_utc_offset)       \
-    __JS_ENUMERATE(CalendarName, parse_calendar_name)                                  \
+    __JS_ENUMERATE(AnnotationValue, parse_annotation_value)                            \
     __JS_ENUMERATE(DateMonth, parse_date_month)
 
 Optional<ParseResult> parse_iso8601(Production production, StringView input)

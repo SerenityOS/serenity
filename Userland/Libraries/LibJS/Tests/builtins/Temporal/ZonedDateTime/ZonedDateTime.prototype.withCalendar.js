@@ -31,11 +31,11 @@ describe("errors", () => {
         }).toThrowWithMessage(TypeError, "Not an object of type Temporal.ZonedDateTime");
     });
 
-    test("from invalid calendar string", () => {
+    test("from invalid calendar identifier", () => {
         const zonedDateTime = new Temporal.ZonedDateTime(1n, {}, {});
 
         expect(() => {
             zonedDateTime.withCalendar("iso8602foobar");
-        }).toThrowWithMessage(RangeError, "Invalid calendar string 'iso8602foobar'");
+        }).toThrowWithMessage(RangeError, "Invalid calendar identifier 'iso8602foobar'");
     });
 });
