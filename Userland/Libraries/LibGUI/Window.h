@@ -45,6 +45,9 @@ public:
     bool is_maximized() const { return m_maximized; }
     void set_maximized(bool);
 
+    bool is_minimized() const { return m_minimized; }
+    void set_minimized(bool);
+
     bool is_frameless() const { return m_frameless; }
     void set_frameless(bool);
 
@@ -306,6 +309,7 @@ private:
     bool m_minimizable { true };
     bool m_closeable { true };
     bool m_maximized { false };
+    bool m_minimized { false };
     bool m_fullscreen { false };
     bool m_frameless { false };
     bool m_forced_shadow { false };

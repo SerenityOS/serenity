@@ -414,6 +414,26 @@ void ConnectionFromClient::set_maximized(i32 window_id, bool maximized)
     it->value->set_maximized(maximized);
 }
 
+Messages::WindowServer::IsMinimizedResponse ConnectionFromClient::is_minimized(i32 window_id)
+{
+    auto it = m_windows.find(window_id);
+    if (it == m_windows.end()) {
+        did_misbehave("IsMinimized: Bad window ID");
+        return nullptr;
+    }
+    return it->value->is_minimized();
+}
+
+void ConnectionFromClient::set_minimized(i32 window_id, bool minimized)
+{
+    auto it = m_windows.find(window_id);
+    if (it == m_windows.end()) {
+        did_misbehave("SetMinimized: Bad window ID");
+        return;
+    }
+    it->value->set_minimized(minimized);
+}
+
 void ConnectionFromClient::set_window_icon_bitmap(i32 window_id, Gfx::ShareableBitmap const& icon)
 {
     auto it = m_windows.find(window_id);
