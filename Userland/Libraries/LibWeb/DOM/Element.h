@@ -117,7 +117,7 @@ public:
 
     CSS::CSSStyleDeclaration* style_for_bindings();
 
-    String inner_html() const;
+    WebIDL::ExceptionOr<String> inner_html() const;
     WebIDL::ExceptionOr<void> set_inner_html(String const&);
 
     WebIDL::ExceptionOr<void> insert_adjacent_html(String position, String text);

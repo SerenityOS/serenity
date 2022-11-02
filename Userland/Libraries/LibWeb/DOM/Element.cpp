@@ -492,9 +492,9 @@ WebIDL::ExceptionOr<void> Element::set_inner_html(String const& markup)
 }
 
 // https://w3c.github.io/DOM-Parsing/#dom-innerhtml-innerhtml
-String Element::inner_html() const
+WebIDL::ExceptionOr<String> Element::inner_html() const
 {
-    return serialize_fragment(/* FIXME: Providing true for the require well-formed flag (which may throw) */);
+    return serialize_fragment(DOMParsing::RequireWellFormed::Yes);
 }
 
 bool Element::is_focused() const
