@@ -172,6 +172,11 @@ ErrorOr<void> exec_command(Vector<StringView>& command, bool preserve_env);
 
 ErrorOr<void> exec(StringView filename, Span<StringView> arguments, SearchInPath, Optional<Span<StringView>> environment = {});
 
+#ifdef AK_OS_SERENITY
+ErrorOr<void> join_jail(u64 jail_index);
+ErrorOr<u64> create_jail(StringView jail_name);
+#endif
+
 ErrorOr<int> socket(int domain, int type, int protocol);
 ErrorOr<void> bind(int sockfd, struct sockaddr const*, socklen_t);
 ErrorOr<void> listen(int sockfd, int backlog);

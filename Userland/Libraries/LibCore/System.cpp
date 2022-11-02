@@ -1000,6 +1000,20 @@ ErrorOr<void> exec_command(Vector<StringView>& command, bool preserve_env)
     TRY(Core::System::exec(command.at(0), command, Core::System::SearchInPath::Yes, exec_environment));
     return {};
 }
+
+ErrorOr<void> join_jail(u64 jail_index)
+{
+    Syscall::SC_jail_attach_params params { jail_index };
+    int rc = syscall(SC_jail_attach, &params);
+    HANDLE_SYSCALL_RETURN_VALUE("jail_attach", rc, {});
+}
+
+ErrorOr<u64> create_jail(StringView jail_name)
+{
+    Syscall::SC_jail_create_params params { 0, { jail_name.characters_without_null_termination(), jail_name.length() } };
+    int rc = syscall(SC_jail_create, &params);
+    HANDLE_SYSCALL_RETURN_VALUE("jail_create", rc, static_cast<u64>(params.index));
+}
 #endif
 
 ErrorOr<void> exec(StringView filename, Span<StringView> arguments, SearchInPath search_in_path, Optional<Span<StringView>> environment)
