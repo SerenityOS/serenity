@@ -65,12 +65,12 @@ describe("errors", () => {
         );
     });
 
-    test("calendar annotation must match calendar grammar even though it's ignored", () => {
+    test("annotations must match annotation grammar even though they're ignored", () => {
         expect(() => {
-            Temporal.Instant.from("1970-01-01T00:00Z[u-ca=SerenityOS]");
+            Temporal.Instant.from("1970-01-01T00:00Z[SerenityOS=cool]");
         }).toThrowWithMessage(
             RangeError,
-            "Invalid instant string '1970-01-01T00:00Z[u-ca=SerenityOS]'"
+            "Invalid instant string '1970-01-01T00:00Z[SerenityOS=cool]'"
         );
     });
 });

@@ -1215,7 +1215,7 @@ ThrowCompletionOr<ISODateTime> parse_iso_date_time(VM& vm, StringView iso_string
 // 13.28 ParseISODateTime ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parseisodatetime
 ThrowCompletionOr<ISODateTime> parse_iso_date_time(VM& vm, ParseResult const& parse_result)
 {
-    // 4. Let each of year, month, day, hour, minute, second, fSeconds, and calendar be the source text matched by the respective DateYear, DateMonth, DateDay, TimeHour, TimeMinute, TimeSecond, TimeFraction, and CalendarName Parse Node contained within parseResult, or an empty sequence of code points if not present.
+    // 4. Let each of year, month, day, hour, minute, second, and fSeconds be the source text matched by the respective DateYear, DateMonth, DateDay, TimeHour, TimeMinute, TimeSecond, and TimeFraction Parse Node contained within parseResult, or an empty sequence of code points if not present.
     auto year = parse_result.date_year;
     auto month = parse_result.date_month;
     auto day = parse_result.date_day;
@@ -1223,7 +1223,6 @@ ThrowCompletionOr<ISODateTime> parse_iso_date_time(VM& vm, ParseResult const& pa
     auto minute = parse_result.time_minute;
     auto second = parse_result.time_second;
     auto f_seconds = parse_result.time_fraction;
-    auto calendar = parse_result.calendar_name;
 
     // 5. If the first code point of year is U+2212 (MINUS SIGN), replace the first code point with U+002D (HYPHEN-MINUS).
     Optional<String> normalized_year;
@@ -1342,22 +1341,35 @@ ThrowCompletionOr<ISODateTime> parse_iso_date_time(VM& vm, ParseResult const& pa
         }
     }
 
-    Optional<String> calendar_val;
+    // 23. Let calendar be undefined.
+    Optional<String> calendar;
 
-    // 23. If calendar is empty, then
-    if (!calendar.has_value()) {
-        // a. Let calendarVal be undefined.
-        calendar_val = {};
-    }
-    // 24. Else,
-    else {
-        // a. Let calendarVal be CodePointsToString(calendar).
-        // NOTE: This turns the StringView into a String.
-        calendar_val = *calendar;
+    // 24. For each Annotation Parse Node annotation contained within parseResult, do
+    for (auto const& annotation : parse_result.annotations) {
+        // a. Let key be the source text matched by the AnnotationKey Parse Node contained within annotation.
+        auto const& key = annotation.key;
+
+        // b. If CodePointsToString(key) is "u-ca", then
+        if (key == "u-ca"sv) {
+            // i. If calendar is undefined, then
+            if (!calendar.has_value()) {
+                // 1. Let value be the source text matched by the AnnotationValue Parse Node contained within annotation.
+                auto const& value = annotation.value;
+
+                // 2. Let calendar be CodePointsToString(value).
+                calendar = value;
+            }
+        }
+        // c. Else,
+        else {
+            // i. If annotation contains an AnnotationCriticalFlag Parse Node, throw a RangeError exception.
+            if (annotation.critical)
+                return vm.throw_completion<RangeError>(ErrorType::TemporalUnknownCriticalAnnotation, key);
+        }
     }
 
-    // 25. Return the Record { [[Year]]: yearMV, [[Month]]: monthMV, [[Day]]: dayMV, [[Hour]]: hourMV, [[Minute]]: minuteMV, [[Second]]: secondMV, [[Millisecond]]: millisecondMV, [[Microsecond]]: microsecondMV, [[Nanosecond]]: nanosecondMV, [[TimeZone]]: timeZoneResult, [[Calendar]]: calendarVal, }.
-    return ISODateTime { .year = year_mv, .month = month_mv, .day = day_mv, .hour = hour_mv, .minute = minute_mv, .second = second_mv, .millisecond = millisecond_mv, .microsecond = microsecond_mv, .nanosecond = nanosecond_mv, .time_zone = move(time_zone_result), .calendar = move(calendar_val) };
+    // 25. Return the Record { [[Year]]: yearMV, [[Month]]: monthMV, [[Day]]: dayMV, [[Hour]]: hourMV, [[Minute]]: minuteMV, [[Second]]: secondMV, [[Millisecond]]: millisecondMV, [[Microsecond]]: microsecondMV, [[Nanosecond]]: nanosecondMV, [[TimeZone]]: timeZoneResult, [[Calendar]]: calendar }.
+    return ISODateTime { .year = year_mv, .month = month_mv, .day = day_mv, .hour = hour_mv, .minute = minute_mv, .second = second_mv, .millisecond = millisecond_mv, .microsecond = microsecond_mv, .nanosecond = nanosecond_mv, .time_zone = move(time_zone_result), .calendar = move(calendar) };
 }
 
 // 13.29 ParseTemporalInstantString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporalinstantstring
@@ -1419,8 +1431,8 @@ ThrowCompletionOr<String> parse_temporal_calendar_string(VM& vm, String const& i
     }
     // 3. Else,
     else {
-        // a. Set parseResult to ParseText(StringToCodePoints(isoString), CalendarName).
-        auto parse_result = parse_iso8601(Production::CalendarName, iso_string);
+        // a. Set parseResult to ParseText(StringToCodePoints(isoString), AnnotationValue).
+        auto parse_result = parse_iso8601(Production::AnnotationValue, iso_string);
 
         // b. If parseResult is a List of errors, throw a RangeError exception.
         if (!parse_result.has_value())
