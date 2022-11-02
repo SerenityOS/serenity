@@ -74,6 +74,7 @@ private:
     ErrorOr<JsonValue, WebDriverError> handle_get_element_css_value(Vector<StringView> const&, JsonValue const& payload);
     ErrorOr<JsonValue, WebDriverError> handle_get_element_text(Vector<StringView> const&, JsonValue const& payload);
     ErrorOr<JsonValue, WebDriverError> handle_get_element_tag_name(Vector<StringView> const&, JsonValue const& payload);
+    ErrorOr<JsonValue, WebDriverError> handle_execute_script(Vector<StringView> const&, JsonValue const& payload);
     ErrorOr<JsonValue, WebDriverError> handle_get_all_cookies(Vector<StringView> const&, JsonValue const& payload);
     ErrorOr<JsonValue, WebDriverError> handle_get_named_cookie(Vector<StringView> const&, JsonValue const& payload);
     ErrorOr<JsonValue, WebDriverError> handle_add_cookie(Vector<StringView> const&, JsonValue const& payload);
