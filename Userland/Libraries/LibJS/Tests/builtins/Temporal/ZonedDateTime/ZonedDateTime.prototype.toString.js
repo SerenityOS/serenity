@@ -72,6 +72,7 @@ describe("correct behavior", () => {
         const values = [
             ["auto", "2021-11-03T01:33:05.1002003+00:00[UTC]"],
             ["never", "2021-11-03T01:33:05.1002003+00:00"],
+            ["critical", "2021-11-03T01:33:05.1002003+00:00[!UTC]"],
         ];
 
         for (const [timeZoneName, expected] of values) {
