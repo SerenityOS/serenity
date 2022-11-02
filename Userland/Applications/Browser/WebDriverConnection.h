@@ -43,6 +43,7 @@ public:
     virtual void refresh() override;
     virtual void back() override;
     virtual void forward() override;
+    virtual Messages::WebDriverSessionClient::GetWindowRectResponse get_window_rect() override;
     virtual Messages::WebDriverSessionClient::GetAllCookiesResponse get_all_cookies() override;
     virtual Messages::WebDriverSessionClient::GetNamedCookieResponse get_named_cookie(String const& name) override;
     virtual void add_cookie(Web::Cookie::ParsedCookie const&) override;

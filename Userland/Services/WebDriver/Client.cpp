@@ -36,6 +36,7 @@ Vector<Client::Route> Client::s_routes = {
     { HTTP::HttpRequest::Method::GET, { "session", ":session_id", "window" }, &Client::handle_get_window_handle },
     { HTTP::HttpRequest::Method::DELETE, { "session", ":session_id", "window" }, &Client::handle_close_window },
     { HTTP::HttpRequest::Method::GET, { "session", ":session_id", "window", "handles" }, &Client::handle_get_window_handles },
+    { HTTP::HttpRequest::Method::GET, { "session", ":session_id", "window", "rect" }, &Client::handle_get_window_rect },
     { HTTP::HttpRequest::Method::POST, { "session", ":session_id", "element" }, &Client::handle_find_element },
     { HTTP::HttpRequest::Method::POST, { "session", ":session_id", "elements" }, &Client::handle_find_elements },
     { HTTP::HttpRequest::Method::POST, { "session", ":session_id", "element", ":element_id", "element" }, &Client::handle_find_element_from_element },
@@ -540,6 +541,16 @@ ErrorOr<JsonValue, WebDriverError> Client::handle_get_window_handles(Vector<Stri
     dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session_id>/window/handles");
     auto* session = TRY(find_session_with_id(parameters[0]));
     auto result = TRY(session->get_window_handles());
+    return make_json_value(result);
+}
+
+// 11.8.1 Get Window Rect, https://w3c.github.io/webdriver/#dfn-get-window-rect
+// GET /session/{session id}/window/rect
+ErrorOr<JsonValue, WebDriverError> Client::handle_get_window_rect(Vector<StringView> const& parameters, JsonValue const&)
+{
+    dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session_id>/window/rect");
+    auto* session = TRY(find_session_with_id(parameters[0]));
+    auto result = TRY(session->get_window_rect());
     return make_json_value(result);
 }
 
