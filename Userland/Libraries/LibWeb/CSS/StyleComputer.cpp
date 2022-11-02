@@ -682,6 +682,27 @@ bool StyleComputer::expand_unresolved_values(DOM::Element& element, StringView p
                 return false;
             }
 
+            if (value.function().name().equals_ignoring_case("calc"sv)) {
+                auto const& calc_function = value.function();
+                if (auto calc_value = CSS::Parser::Parser::parse_calculated_value({}, Parser::ParsingContext { document() }, calc_function.values())) {
+                    switch (calc_value->resolved_type()) {
+                    case CalculatedStyleValue::ResolvedType::Integer: {
+                        auto resolved_value = calc_value->resolve_integer();
+                        dest.empend(Parser::Token::create_number(resolved_value.value()));
+                        continue;
+                    }
+                    case CalculatedStyleValue::ResolvedType::Percentage: {
+                        auto resolved_value = calc_value->resolve_percentage();
+                        dest.empend(Parser::Token::create_percentage(resolved_value.value().value()));
+                        continue;
+                    }
+                    default:
+                        dbgln("FIXME: Unimplement calc() expansion in StyleComputer");
+                        break;
+                    }
+                }
+            }
+
             auto const& source_function = value.function();
             Vector<Parser::ComponentValue> function_values;
             Parser::TokenStream source_function_contents { source_function.values() };
