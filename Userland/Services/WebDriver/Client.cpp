@@ -564,7 +564,7 @@ ErrorOr<JsonValue, WebDriverError> Client::handle_find_elements(Vector<StringVie
 }
 
 // 12.3.4 Find Element From Element, https://w3c.github.io/webdriver/#dfn-find-element-from-element
-// POST	/session/{session id}/element/{element id}/element
+// POST /session/{session id}/element/{element id}/element
 ErrorOr<JsonValue, WebDriverError> Client::handle_find_element_from_element(Vector<StringView> const& parameters, JsonValue const& payload)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling POST /session/<session_id>/element/<element_id>/element");
@@ -594,7 +594,7 @@ ErrorOr<JsonValue, WebDriverError> Client::handle_get_element_attribute(Vector<S
 }
 
 // 12.4.3 Get Element Property, https://w3c.github.io/webdriver/#dfn-get-element-property
-// GET 	/session/{session id}/element/{element id}/property/{name}
+// GET /session/{session id}/element/{element id}/property/{name}
 ErrorOr<JsonValue, WebDriverError> Client::handle_get_element_property(Vector<StringView> const& parameters, JsonValue const& payload)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session_id>/element/<element_id>/property/<name>");
