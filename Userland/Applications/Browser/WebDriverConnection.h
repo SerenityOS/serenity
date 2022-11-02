@@ -48,6 +48,7 @@ public:
     virtual void set_window_size(Gfx::IntSize const&) override;
     virtual void set_window_position(Gfx::IntPoint const&) override;
     virtual void maximize_window() override;
+    virtual void minimize_window() override;
     virtual Messages::WebDriverSessionClient::GetAllCookiesResponse get_all_cookies() override;
     virtual Messages::WebDriverSessionClient::GetNamedCookieResponse get_named_cookie(String const& name) override;
     virtual void add_cookie(Web::Cookie::ParsedCookie const&) override;
