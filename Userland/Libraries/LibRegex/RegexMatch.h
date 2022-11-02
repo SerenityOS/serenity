@@ -12,6 +12,7 @@
 #include <AK/FlyString.h>
 #include <AK/HashMap.h>
 #include <AK/MemMem.h>
+#include <AK/RedBlackTree.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/StringView.h>
@@ -22,6 +23,135 @@
 #include <AK/Vector.h>
 
 namespace regex {
+
+template<typename T>
+class COWVector {
+    struct Detail : RefCounted<Detail> {
+        Vector<T> m_members;
+    };
+
+public:
+    COWVector()
+        : m_detail(make_ref_counted<Detail>())
+    {
+    }
+
+    COWVector(COWVector const&) = default;
+    COWVector(COWVector&&) = default;
+
+    COWVector& operator=(COWVector const&) = default;
+    COWVector& operator=(COWVector&&) = default;
+
+    Vector<T> release() &&
+    {
+        if (m_detail->ref_count() == 1)
+            return exchange(m_detail->m_members, Vector<T>());
+
+        return m_detail->m_members;
+    }
+
+    void append(T const& value)
+    {
+        return append(T { value });
+    }
+
+    void append(T&& value)
+    {
+        copy();
+        m_detail->m_members.append(move(value));
+    }
+
+    void resize(size_t size)
+    {
+        copy();
+        m_detail->m_members.resize(size);
+    }
+
+    void ensure_capacity(size_t capacity)
+    {
+        if (m_detail->m_members.capacity() >= capacity)
+            return;
+
+        copy();
+        m_detail->m_members.ensure_capacity(capacity);
+    }
+
+    template<typename... Args>
+    void empend(Args&&... args)
+    {
+        copy();
+        m_detail->m_members.empend(forward<Args>(args)...);
+    }
+
+    void clear()
+    {
+        if (m_detail->ref_count() > 1)
+            m_detail = make_ref_counted<Detail>();
+        else
+            m_detail->m_members.clear();
+    }
+
+    T& at(size_t index)
+    {
+        // We're handing out a mutable reference, so make sure we own the data exclusively.
+        copy();
+        return m_detail->m_members.at(index);
+    }
+
+    T const& at(size_t index) const
+    {
+        return m_detail->m_members.at(index);
+    }
+
+    T& operator[](size_t index)
+    {
+        // We're handing out a mutable reference, so make sure we own the data exclusively.
+        copy();
+        return m_detail->m_members[index];
+    }
+
+    T const& operator[](size_t index) const
+    {
+        return m_detail->m_members[index];
+    }
+
+    size_t capacity() const
+    {
+        return m_detail->m_members.capacity();
+    }
+
+    size_t size() const
+    {
+        return m_detail->m_members.size();
+    }
+
+    bool is_empty() const
+    {
+        return m_detail->m_members.is_empty();
+    }
+
+    T const& first() const
+    {
+        return m_detail->m_members.first();
+    }
+
+    T const& last() const
+    {
+        return m_detail->m_members.last();
+    }
+
+private:
+    void copy()
+    {
+        if (m_detail->ref_count() <= 1)
+            return;
+        auto new_detail = make_ref_counted<Detail>();
+        new_detail->m_members = m_detail->m_members;
+        m_detail = new_detail;
+    }
+
+    NonnullRefPtr<Detail> m_detail;
+};
 
 class RegexStringView {
 public:
@@ -510,9 +640,9 @@ struct MatchState {
     size_t fork_at_position { 0 };
     size_t forks_since_last_save { 0 };
     Optional<size_t> initiating_fork;
-    Vector<Match> matches;
-    Vector<Vector<Match>> capture_group_matches;
-    Vector<u64> repetition_marks;
+    COWVector<Match> matches;
+    COWVector<Vector<Match>> capture_group_matches;
+    COWVector<u64> repetition_marks;
 };
 
 }

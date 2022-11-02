@@ -156,7 +156,7 @@ RegexResult Matcher<Parser>::match(Vector<RegexStringView> const& views, Optiona
 
         for (size_t j = 0; j < c_match_preallocation_count; ++j) {
             state.matches.empend();
-            state.capture_group_matches.unchecked_append({});
+            state.capture_group_matches.empend();
             state.capture_group_matches.at(j).ensure_capacity(capture_groups_count);
             for (size_t k = 0; k < capture_groups_count; ++k)
                 state.capture_group_matches.at(j).unchecked_append({});
@@ -306,8 +306,8 @@ RegexResult Matcher<Parser>::match(Vector<RegexStringView> const& views, Optiona
     RegexResult result {
         match_count != 0,
         match_count,
-        move(state.matches),
-        move(state.capture_group_matches),
+        move(state.matches).release(),
+        move(state.capture_group_matches).release(),
         operations,
         m_pattern->parser_result.capture_groups_count,
         m_pattern->parser_result.named_capture_groups_count,

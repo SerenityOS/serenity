@@ -1060,9 +1060,11 @@ ALWAYS_INLINE ExecutionResult OpCode_Checkpoint::execute(MatchInput const& input
 
 ALWAYS_INLINE ExecutionResult OpCode_JumpNonEmpty::execute(MatchInput const& input, MatchState& state) const
 {
-    auto current_position = state.string_position;
+    u64 current_position = state.string_position;
     auto checkpoint_ip = state.instruction_position + size() + checkpoint();
-    if (input.checkpoints.get(checkpoint_ip).value_or(current_position) != current_position) {
+    auto checkpoint_position = input.checkpoints.find(checkpoint_ip);
+
+    if (checkpoint_position != input.checkpoints.end() && checkpoint_position->value != current_position) {
         auto form = this->form();
 
         if (form == OpCodeId::Jump) {
