@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <AK/JsonValue.h>
 #include <AK/String.h>
 
 namespace WebDriver {
@@ -48,8 +49,9 @@ struct WebDriverError {
     unsigned http_status;
     String error;
     String message;
+    Optional<JsonValue> data;
 
-    static WebDriverError from_code(ErrorCode, String message);
+    static WebDriverError from_code(ErrorCode, String message, Optional<JsonValue> data = {});
 };
 
 }

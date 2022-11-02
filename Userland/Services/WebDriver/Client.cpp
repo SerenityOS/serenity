@@ -229,6 +229,8 @@ ErrorOr<void> Client::send_error_response(WebDriverError const& error, HTTP::Htt
     result.set("error", error.error);
     result.set("message", error.message);
     result.set("stacktrace", "");
+    if (error.data.has_value())
+        result.set("data", *error.data);
 
     StringBuilder content_builder;
     result.serialize(content_builder);
