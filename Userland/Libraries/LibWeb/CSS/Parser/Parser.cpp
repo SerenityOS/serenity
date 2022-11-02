@@ -3038,7 +3038,7 @@ RefPtr<StyleValue> Parser::parse_builtin_value(ComponentValue const& component_v
     return {};
 }
 
-RefPtr<StyleValue> Parser::parse_calculated_value(Vector<ComponentValue> const& component_values)
+RefPtr<CalculatedStyleValue> Parser::parse_calculated_value(Vector<ComponentValue> const& component_values)
 {
     auto calc_expression = parse_calc_expression(component_values);
     if (calc_expression == nullptr)
@@ -6958,6 +6958,15 @@ bool Parser::is_builtin(StringView name)
     return name.equals_ignoring_case("inherit"sv)
         || name.equals_ignoring_case("initial"sv)
         || name.equals_ignoring_case("unset"sv);
+}
+
+RefPtr<CalculatedStyleValue> Parser::parse_calculated_value(Badge<StyleComputer>, ParsingContext const& context, Vector<ComponentValue> const& tokens)
+{
+    if (tokens.is_empty())
+        return {};
+
+    Parser parser(context, ""sv);
+    return parser.parse_calculated_value(tokens);
 }
 
 RefPtr<StyleValue> Parser::parse_css_value(Badge<StyleComputer>, ParsingContext const& context, PropertyID property_id, Vector<ComponentValue> const& tokens)

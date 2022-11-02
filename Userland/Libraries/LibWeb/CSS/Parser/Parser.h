@@ -86,6 +86,7 @@ public:
     RefPtr<StyleValue> parse_as_css_value(PropertyID);
 
     static RefPtr<StyleValue> parse_css_value(Badge<StyleComputer>, ParsingContext const&, PropertyID, Vector<ComponentValue> const&);
+    static RefPtr<CalculatedStyleValue> parse_calculated_value(Badge<StyleComputer>, ParsingContext const&, Vector<ComponentValue> const&);
 
 private:
     enum class ParseError {
@@ -270,7 +271,7 @@ private:
     RefPtr<StyleValue> parse_css_value(ComponentValue const&);
     RefPtr<StyleValue> parse_builtin_value(ComponentValue const&);
     RefPtr<StyleValue> parse_dynamic_value(ComponentValue const&);
-    RefPtr<StyleValue> parse_calculated_value(Vector<ComponentValue> const&);
+    RefPtr<CalculatedStyleValue> parse_calculated_value(Vector<ComponentValue> const&);
     RefPtr<StyleValue> parse_dimension_value(ComponentValue const&);
     RefPtr<StyleValue> parse_numeric_value(ComponentValue const&);
     RefPtr<StyleValue> parse_identifier_value(ComponentValue const&);
