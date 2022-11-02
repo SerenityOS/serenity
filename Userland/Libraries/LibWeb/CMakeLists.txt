@@ -437,6 +437,7 @@ set(SOURCES
     WebAssembly/WebAssemblyTableConstructor.cpp
     WebAssembly/WebAssemblyTableObject.cpp
     WebAssembly/WebAssemblyTablePrototype.cpp
+    WebDriver/ExecuteScript.cpp
     WebGL/WebGLContextAttributes.cpp
     WebGL/WebGLContextEvent.cpp
     WebGL/WebGLRenderingContext.cpp
