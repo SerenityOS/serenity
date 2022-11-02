@@ -31,9 +31,9 @@ EventTarget* ShadowRoot::get_parent(Event const& event)
 }
 
 // https://w3c.github.io/DOM-Parsing/#dom-innerhtml-innerhtml
-String ShadowRoot::inner_html() const
+WebIDL::ExceptionOr<String> ShadowRoot::inner_html() const
 {
-    return serialize_fragment(/* FIXME: Providing true for the require well-formed flag (which may throw) */);
+    return serialize_fragment(DOMParsing::RequireWellFormed::Yes);
 }
 
 // https://w3c.github.io/DOM-Parsing/#dom-innerhtml-innerhtml

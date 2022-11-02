@@ -254,6 +254,9 @@ public:
     Type document_type() const { return m_type; }
     void set_document_type(Type type) { m_type = type; }
 
+    // https://dom.spec.whatwg.org/#html-document
+    bool is_html_document() const { return m_type == Type::HTML; }
+
     // https://dom.spec.whatwg.org/#xml-document
     bool is_xml_document() const { return m_type == Type::XML; }
 
