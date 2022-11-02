@@ -608,7 +608,8 @@ Vector<CSS::TextDecorationLine> StyleProperties::text_decoration_line() const
     if (value->is_identifier() && value->to_identifier() == ValueID::None)
         return {};
 
-    VERIFY_NOT_REACHED();
+    dbgln("FIXME: Unsupported value for text-decoration-line: {}", value->to_string());
+    return {};
 }
 
 Optional<CSS::TextDecorationStyle> StyleProperties::text_decoration_style() const
