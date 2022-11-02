@@ -585,6 +585,13 @@ void OutOfProcessWebView::set_window_size(Gfx::IntSize const& size)
     client().async_set_window_size(size);
 }
 
+Gfx::ShareableBitmap OutOfProcessWebView::take_screenshot() const
+{
+    if (auto* bitmap = m_client_state.has_usable_bitmap ? m_client_state.front_bitmap.bitmap.ptr() : m_backup_bitmap.ptr())
+        return bitmap->to_shareable_bitmap();
+    return {};
+}
+
 void OutOfProcessWebView::focusin_event(GUI::FocusEvent&)
 {
     client().async_set_has_focus(true);
