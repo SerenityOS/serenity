@@ -11,12 +11,14 @@ describe("correct behavior", () => {
         expect(plainDate.toString({ calendarName: "auto" })).toBe("2021-07-06");
         expect(plainDate.toString({ calendarName: "always" })).toBe("2021-07-06[u-ca=iso8601]");
         expect(plainDate.toString({ calendarName: "never" })).toBe("2021-07-06");
+        expect(plainDate.toString({ calendarName: "critical" })).toBe("2021-07-06[!u-ca=iso8601]");
 
         plainDate = new Temporal.PlainDate(2021, 7, 6, { toString: () => "foo" });
         expect(plainDate.toString()).toBe("2021-07-06[u-ca=foo]");
         expect(plainDate.toString({ calendarName: "auto" })).toBe("2021-07-06[u-ca=foo]");
         expect(plainDate.toString({ calendarName: "always" })).toBe("2021-07-06[u-ca=foo]");
         expect(plainDate.toString({ calendarName: "never" })).toBe("2021-07-06");
+        expect(plainDate.toString({ calendarName: "critical" })).toBe("2021-07-06[!u-ca=foo]");
 
         plainDate = new Temporal.PlainDate(0, 1, 1);
         expect(plainDate.toString()).toBe("0000-01-01");
@@ -62,7 +64,7 @@ describe("errors", () => {
         }).toThrowWithMessage(TypeError, "Not an object of type Temporal.PlainDate");
     });
 
-    test("calendarName option must be one of 'auto', 'always', 'never'", () => {
+    test("calendarName option must be one of 'auto', 'always', 'never', 'critical'", () => {
         const plainDate = new Temporal.PlainDate(2021, 7, 6);
         expect(() => {
             plainDate.toString({ calendarName: "foo" });

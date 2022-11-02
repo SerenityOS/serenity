@@ -246,8 +246,8 @@ ThrowCompletionOr<String> to_temporal_offset(VM& vm, Object const* options, Stri
 // 13.9 ToShowCalendarOption ( normalizedOptions ), https://tc39.es/proposal-temporal/#sec-temporal-toshowcalendaroption
 ThrowCompletionOr<String> to_show_calendar_option(VM& vm, Object const& normalized_options)
 {
-    // 1. Return ? GetOption(normalizedOptions, "calendarName", "string", « "auto", "always", "never" », "auto").
-    auto option = TRY(get_option(vm, normalized_options, vm.names.calendarName, OptionType::String, { "auto"sv, "always"sv, "never"sv }, "auto"sv));
+    // 1. Return ? GetOption(normalizedOptions, "calendarName", "string", « "auto", "always", "never", "critical" », "auto").
+    auto option = TRY(get_option(vm, normalized_options, vm.names.calendarName, OptionType::String, { "auto"sv, "always"sv, "never"sv, "critical"sv }, "auto"sv));
 
     VERIFY(option.is_string());
     return option.as_string().string();
