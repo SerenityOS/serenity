@@ -197,7 +197,12 @@ ErrorOr<void> Client::send_response(StringView content, HTTP::HttpRequest const&
 
     auto builder_contents = builder.to_byte_buffer();
     TRY(m_socket->write(builder_contents));
-    TRY(m_socket->write(content.bytes()));
+
+    while (!content.is_empty()) {
+        auto bytes_sent = TRY(m_socket->write(content.bytes()));
+        content = content.substring_view(bytes_sent);
+    }
+
     log_response(200, request);
 
     auto keep_alive = false;
