@@ -746,7 +746,7 @@ public:
     ALWAYS_INLINE size_t arguments_count() const { return argument(0); }
     ALWAYS_INLINE size_t arguments_size() const { return argument(1); }
     String arguments_string() const override;
-    Vector<String> variable_arguments_to_string(Optional<MatchInput> input = {}) const;
+    Vector<String> variable_arguments_to_string(Optional<MatchInput const&> input = {}) const;
     Vector<CompareTypeAndValuePair> flat_compares() const;
     static bool matches_character_class(CharClass, u32, bool insensitive);
 
