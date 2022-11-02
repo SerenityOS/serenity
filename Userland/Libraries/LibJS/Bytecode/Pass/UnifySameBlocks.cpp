@@ -24,6 +24,8 @@ void UnifySameBlocks::perform(PassPipelineExecutable& executable)
         auto& block = executable.executable.basic_blocks[i];
         auto block_bytes = block.instruction_stream();
         for (auto& candidate_block : executable.executable.basic_blocks.span().slice(i + 1)) {
+            if (equal_blocks.contains(&*candidate_block))
+                continue;
             // FIXME: This can probably be relaxed a bit...
             if (candidate_block->size() != block.size())
                 continue;
