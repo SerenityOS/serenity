@@ -26,7 +26,7 @@ PageHost::PageHost(ConnectionFromClient& client)
 {
     setup_palette();
     m_invalidation_coalescing_timer = Web::Platform::Timer::create_single_shot(0, [this] {
-        m_client.async_did_invalidate_content_rect(m_invalidation_rect);
+        m_client.async_did_invalidate_content_rect({ m_invalidation_rect.x().value(), m_invalidation_rect.y().value(), m_invalidation_rect.width().value(), m_invalidation_rect.height().value() });
         m_invalidation_rect = {};
     });
 }
@@ -130,9 +130,9 @@ void PageHost::set_viewport_rect(Gfx::IntRect const& rect)
     page().top_level_browsing_context().set_viewport_rect(rect);
 }
 
-void PageHost::page_did_invalidate(Gfx::IntRect const& content_rect)
+void PageHost::page_did_invalidate(Web::CSSPixelRect const& content_rect)
 {
-    m_invalidation_rect = m_invalidation_rect.united(content_rect);
+    m_invalidation_rect = m_invalidation_rect.united(page().enclosing_device_rect(content_rect));
     if (!m_invalidation_coalescing_timer->is_active())
         m_invalidation_coalescing_timer->start();
 }
@@ -213,19 +213,23 @@ void PageHost::page_did_request_scroll(i32 x_delta, i32 y_delta)
     m_client.async_did_request_scroll(x_delta, y_delta);
 }
 
-void PageHost::page_did_request_scroll_to(Gfx::IntPoint const& scroll_position)
+void PageHost::page_did_request_scroll_to(Web::CSSPixelPoint const& scroll_position)
 {
-    m_client.async_did_request_scroll_to(scroll_position);
+    m_client.async_did_request_scroll_to({ scroll_position.x().value(), scroll_position.y().value() });
 }
 
-void PageHost::page_did_request_scroll_into_view(Gfx::IntRect const& rect)
+void PageHost::page_did_request_scroll_into_view(Web::CSSPixelRect const& rect)
 {
-    m_client.async_did_request_scroll_into_view(rect);
+    auto device_pixel_rect = page().enclosing_device_rect(rect);
+    m_client.async_did_request_scroll_into_view({ device_pixel_rect.x().value(),
+        device_pixel_rect.y().value(),
+        device_pixel_rect.width().value(),
+        device_pixel_rect.height().value() });
 }
 
-void PageHost::page_did_enter_tooltip_area(Gfx::IntPoint const& content_position, String const& title)
+void PageHost::page_did_enter_tooltip_area(Web::CSSPixelPoint const& content_position, String const& title)
 {
-    m_client.async_did_enter_tooltip_area(content_position, title);
+    m_client.async_did_enter_tooltip_area({ content_position.x().value(), content_position.y().value() }, title);
 }
 
 void PageHost::page_did_leave_tooltip_area()
@@ -268,14 +272,14 @@ void PageHost::page_did_finish_loading(const URL& url)
     m_client.async_did_finish_loading(url);
 }
 
-void PageHost::page_did_request_context_menu(Gfx::IntPoint const& content_position)
+void PageHost::page_did_request_context_menu(Web::CSSPixelPoint const& content_position)
 {
-    m_client.async_did_request_context_menu(content_position);
+    m_client.async_did_request_context_menu(page().css_to_device_point(content_position).to_type<int>());
 }
 
-void PageHost::page_did_request_link_context_menu(Gfx::IntPoint const& content_position, const URL& url, String const& target, unsigned modifiers)
+void PageHost::page_did_request_link_context_menu(Web::CSSPixelPoint const& content_position, const URL& url, String const& target, unsigned modifiers)
 {
-    m_client.async_did_request_link_context_menu(content_position, url, target, modifiers);
+    m_client.async_did_request_link_context_menu(page().css_to_device_point(content_position).to_type<int>(), url, target, modifiers);
 }
 
 void PageHost::page_did_request_alert(String const& message)
@@ -328,10 +332,10 @@ void PageHost::page_did_change_favicon(Gfx::Bitmap const& favicon)
     m_client.async_did_change_favicon(favicon.to_shareable_bitmap());
 }
 
-void PageHost::page_did_request_image_context_menu(Gfx::IntPoint const& content_position, const URL& url, String const& target, unsigned modifiers, Gfx::Bitmap const* bitmap_pointer)
+void PageHost::page_did_request_image_context_menu(Web::CSSPixelPoint const& content_position, const URL& url, String const& target, unsigned modifiers, Gfx::Bitmap const* bitmap_pointer)
 {
     auto bitmap = bitmap_pointer ? bitmap_pointer->to_shareable_bitmap() : Gfx::ShareableBitmap();
-    m_client.async_did_request_image_context_menu(content_position, url, target, modifiers, bitmap);
+    m_client.async_did_request_image_context_menu({ content_position.x().value(), content_position.y().value() }, url, target, modifiers, bitmap);
 }
 
 Vector<Web::Cookie::Cookie> PageHost::page_did_request_all_cookies(URL const& url)

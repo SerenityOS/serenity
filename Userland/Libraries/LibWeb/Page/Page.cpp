@@ -122,29 +122,29 @@ DevicePixelRect Page::rounded_device_rect(CSSPixelRect rect) const
     };
 }
 
-bool Page::handle_mousewheel(Gfx::IntPoint const& position, unsigned button, unsigned buttons, unsigned modifiers, int wheel_delta_x, int wheel_delta_y)
+bool Page::handle_mousewheel(DevicePixelPoint const& position, unsigned button, unsigned buttons, unsigned modifiers, int wheel_delta_x, int wheel_delta_y)
 {
-    return top_level_browsing_context().event_handler().handle_mousewheel(position, button, buttons, modifiers, wheel_delta_x, wheel_delta_y);
+    return top_level_browsing_context().event_handler().handle_mousewheel(device_to_css_point(position), button, buttons, modifiers, wheel_delta_x, wheel_delta_y);
 }
 
-bool Page::handle_mouseup(Gfx::IntPoint const& position, unsigned button, unsigned buttons, unsigned modifiers)
+bool Page::handle_mouseup(DevicePixelPoint const& position, unsigned button, unsigned buttons, unsigned modifiers)
 {
-    return top_level_browsing_context().event_handler().handle_mouseup(position, button, buttons, modifiers);
+    return top_level_browsing_context().event_handler().handle_mouseup(device_to_css_point(position), button, buttons, modifiers);
 }
 
-bool Page::handle_mousedown(Gfx::IntPoint const& position, unsigned button, unsigned buttons, unsigned modifiers)
+bool Page::handle_mousedown(DevicePixelPoint const& position, unsigned button, unsigned buttons, unsigned modifiers)
 {
-    return top_level_browsing_context().event_handler().handle_mousedown(position, button, buttons, modifiers);
+    return top_level_browsing_context().event_handler().handle_mousedown(device_to_css_point(position), button, buttons, modifiers);
 }
 
-bool Page::handle_mousemove(Gfx::IntPoint const& position, unsigned buttons, unsigned modifiers)
+bool Page::handle_mousemove(DevicePixelPoint const& position, unsigned buttons, unsigned modifiers)
 {
-    return top_level_browsing_context().event_handler().handle_mousemove(position, buttons, modifiers);
+    return top_level_browsing_context().event_handler().handle_mousemove(device_to_css_point(position), buttons, modifiers);
 }
 
-bool Page::handle_doubleclick(Gfx::IntPoint const& position, unsigned button, unsigned buttons, unsigned modifiers)
+bool Page::handle_doubleclick(DevicePixelPoint const& position, unsigned button, unsigned buttons, unsigned modifiers)
 {
-    return top_level_browsing_context().event_handler().handle_doubleclick(position, button, buttons, modifiers);
+    return top_level_browsing_context().event_handler().handle_doubleclick(device_to_css_point(position), button, buttons, modifiers);
 }
 
 bool Page::handle_keydown(KeyCode key, unsigned modifiers, u32 code_point)

@@ -55,7 +55,7 @@ private:
     virtual Web::DevicePixelRect screen_rect() const override { return m_screen_rect; }
     virtual float device_pixels_per_css_pixel() const override { return m_screen_display_scale; }
     virtual Web::CSS::PreferredColorScheme preferred_color_scheme() const override { return m_preferred_color_scheme; }
-    virtual void page_did_invalidate(Gfx::IntRect const&) override;
+    virtual void page_did_invalidate(Web::CSSPixelRect const&) override;
     virtual void page_did_change_selection() override;
     virtual void page_did_request_cursor_change(Gfx::StandardCursor) override;
     virtual void page_did_layout() override;
@@ -70,16 +70,16 @@ private:
     virtual Gfx::IntRect page_did_request_minimize_window() override;
     virtual Gfx::IntRect page_did_request_fullscreen_window() override;
     virtual void page_did_request_scroll(i32, i32) override;
-    virtual void page_did_request_scroll_to(Gfx::IntPoint const&) override;
-    virtual void page_did_request_scroll_into_view(Gfx::IntRect const&) override;
-    virtual void page_did_enter_tooltip_area(Gfx::IntPoint const&, String const&) override;
+    virtual void page_did_request_scroll_to(Web::CSSPixelPoint const&) override;
+    virtual void page_did_request_scroll_into_view(Web::CSSPixelRect const&) override;
+    virtual void page_did_enter_tooltip_area(Web::CSSPixelPoint const&, String const&) override;
     virtual void page_did_leave_tooltip_area() override;
     virtual void page_did_hover_link(const URL&) override;
     virtual void page_did_unhover_link() override;
     virtual void page_did_click_link(const URL&, String const& target, unsigned modifiers) override;
     virtual void page_did_middle_click_link(const URL&, String const& target, unsigned modifiers) override;
-    virtual void page_did_request_context_menu(Gfx::IntPoint const&) override;
-    virtual void page_did_request_link_context_menu(Gfx::IntPoint const&, const URL&, String const& target, unsigned modifiers) override;
+    virtual void page_did_request_context_menu(Web::CSSPixelPoint const&) override;
+    virtual void page_did_request_link_context_menu(Web::CSSPixelPoint const&, const URL&, String const& target, unsigned modifiers) override;
     virtual void page_did_start_loading(const URL&) override;
     virtual void page_did_create_main_document() override;
     virtual void page_did_finish_loading(const URL&) override;
@@ -90,7 +90,7 @@ private:
     virtual void page_did_request_accept_dialog() override;
     virtual void page_did_request_dismiss_dialog() override;
     virtual void page_did_change_favicon(Gfx::Bitmap const&) override;
-    virtual void page_did_request_image_context_menu(Gfx::IntPoint const&, const URL&, String const& target, unsigned modifiers, Gfx::Bitmap const*) override;
+    virtual void page_did_request_image_context_menu(Web::CSSPixelPoint const&, const URL&, String const& target, unsigned modifiers, Gfx::Bitmap const*) override;
     virtual Vector<Web::Cookie::Cookie> page_did_request_all_cookies(URL const&) override;
     virtual Optional<Web::Cookie::Cookie> page_did_request_named_cookie(URL const&, String const&) override;
     virtual String page_did_request_cookie(const URL&, Web::Cookie::Source) override;
@@ -115,7 +115,7 @@ private:
     bool m_has_focus { false };
 
     RefPtr<Web::Platform::Timer> m_invalidation_coalescing_timer;
-    Gfx::IntRect m_invalidation_rect;
+    Web::DevicePixelRect m_invalidation_rect;
     Web::CSS::PreferredColorScheme m_preferred_color_scheme { Web::CSS::PreferredColorScheme::Auto };
 
     RefPtr<WebDriverConnection> m_webdriver;

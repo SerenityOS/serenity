@@ -62,11 +62,11 @@ public:
     DevicePixelRect enclosing_device_rect(CSSPixelRect) const;
     DevicePixelRect rounded_device_rect(CSSPixelRect) const;
 
-    bool handle_mouseup(Gfx::IntPoint const&, unsigned button, unsigned buttons, unsigned modifiers);
-    bool handle_mousedown(Gfx::IntPoint const&, unsigned button, unsigned buttons, unsigned modifiers);
-    bool handle_mousemove(Gfx::IntPoint const&, unsigned buttons, unsigned modifiers);
-    bool handle_mousewheel(Gfx::IntPoint const&, unsigned button, unsigned buttons, unsigned modifiers, int wheel_delta_x, int wheel_delta_y);
-    bool handle_doubleclick(Gfx::IntPoint const&, unsigned button, unsigned buttons, unsigned modifiers);
+    bool handle_mouseup(DevicePixelPoint const&, unsigned button, unsigned buttons, unsigned modifiers);
+    bool handle_mousedown(DevicePixelPoint const&, unsigned button, unsigned buttons, unsigned modifiers);
+    bool handle_mousemove(DevicePixelPoint const&, unsigned buttons, unsigned modifiers);
+    bool handle_mousewheel(DevicePixelPoint const&, unsigned button, unsigned buttons, unsigned modifiers, int wheel_delta_x, int wheel_delta_y);
+    bool handle_doubleclick(DevicePixelPoint const&, unsigned button, unsigned buttons, unsigned modifiers);
 
     bool handle_keydown(KeyCode, unsigned modifiers, u32 code_point);
     bool handle_keyup(KeyCode, unsigned modifiers, u32 code_point);
@@ -166,21 +166,21 @@ public:
     virtual void page_did_finish_loading(const AK::URL&) { }
     virtual void page_did_change_selection() { }
     virtual void page_did_request_cursor_change(Gfx::StandardCursor) { }
-    virtual void page_did_request_context_menu(Gfx::IntPoint const&) { }
-    virtual void page_did_request_link_context_menu(Gfx::IntPoint const&, const AK::URL&, [[maybe_unused]] String const& target, [[maybe_unused]] unsigned modifiers) { }
-    virtual void page_did_request_image_context_menu(Gfx::IntPoint const&, const AK::URL&, [[maybe_unused]] String const& target, [[maybe_unused]] unsigned modifiers, Gfx::Bitmap const*) { }
+    virtual void page_did_request_context_menu(CSSPixelPoint const&) { }
+    virtual void page_did_request_link_context_menu(CSSPixelPoint const&, const AK::URL&, [[maybe_unused]] String const& target, [[maybe_unused]] unsigned modifiers) { }
+    virtual void page_did_request_image_context_menu(CSSPixelPoint const&, const AK::URL&, [[maybe_unused]] String const& target, [[maybe_unused]] unsigned modifiers, Gfx::Bitmap const*) { }
     virtual void page_did_click_link(const AK::URL&, [[maybe_unused]] String const& target, [[maybe_unused]] unsigned modifiers) { }
     virtual void page_did_middle_click_link(const AK::URL&, [[maybe_unused]] String const& target, [[maybe_unused]] unsigned modifiers) { }
-    virtual void page_did_enter_tooltip_area(Gfx::IntPoint const&, String const&) { }
+    virtual void page_did_enter_tooltip_area(CSSPixelPoint const&, String const&) { }
     virtual void page_did_leave_tooltip_area() { }
     virtual void page_did_hover_link(const AK::URL&) { }
     virtual void page_did_unhover_link() { }
-    virtual void page_did_invalidate(Gfx::IntRect const&) { }
+    virtual void page_did_invalidate(CSSPixelRect const&) { }
     virtual void page_did_change_favicon(Gfx::Bitmap const&) { }
     virtual void page_did_layout() { }
     virtual void page_did_request_scroll(i32, i32) { }
-    virtual void page_did_request_scroll_to(Gfx::IntPoint const&) { }
-    virtual void page_did_request_scroll_into_view(Gfx::IntRect const&) { }
+    virtual void page_did_request_scroll_to(CSSPixelPoint const&) { }
+    virtual void page_did_request_scroll_into_view(CSSPixelRect const&) { }
     virtual void page_did_request_alert(String const&) { }
     virtual void page_did_request_confirm(String const&) { }
     virtual void page_did_request_prompt(String const&, String const&) { }
