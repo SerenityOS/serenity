@@ -109,6 +109,13 @@ void WebDriverConnection::maximize_window()
         browser_window->set_maximized(true);
 }
 
+void WebDriverConnection::minimize_window()
+{
+    dbgln_if(WEBDRIVER_DEBUG, "WebDriverConnection: minimize_window");
+    if (auto browser_window = m_browser_window.strong_ref())
+        browser_window->set_minimized(true);
+}
+
 Messages::WebDriverSessionClient::GetAllCookiesResponse WebDriverConnection::get_all_cookies()
 {
     dbgln_if(WEBDRIVER_DEBUG, "WebDriverConnection: get_cookies");
