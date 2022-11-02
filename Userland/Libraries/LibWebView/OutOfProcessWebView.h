@@ -13,6 +13,10 @@
 #include <LibWeb/Page/Page.h>
 #include <LibWebView/ViewImplementation.h>
 
+namespace Messages::WebContentServer {
+class WebdriverExecuteScriptResponse;
+}
+
 namespace WebView {
 
 class WebContentClient;
@@ -76,6 +80,8 @@ public:
     void set_window_size(Gfx::IntSize const&);
 
     Gfx::ShareableBitmap take_screenshot() const;
+
+    Messages::WebContentServer::WebdriverExecuteScriptResponse webdriver_execute_script(String const& body, Vector<String> const& json_arguments, Optional<u64> const& timeout, bool async);
 
     Function<void(Gfx::IntPoint const& screen_position)> on_context_menu_request;
     Function<void(const AK::URL&, String const& target, unsigned modifiers)> on_link_click;

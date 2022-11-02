@@ -11,6 +11,7 @@
 #include <AK/Vector.h>
 #include <LibWeb/Cookie/Cookie.h>
 #include <LibWeb/Cookie/ParsedCookie.h>
+#include <LibWebView/WebContentClient.h>
 
 namespace Browser {
 
@@ -114,6 +115,21 @@ void WebDriverConnection::minimize_window()
     dbgln_if(WEBDRIVER_DEBUG, "WebDriverConnection: minimize_window");
     if (auto browser_window = m_browser_window.strong_ref())
         browser_window->set_minimized(true);
+}
+
+Messages::WebDriverSessionClient::ExecuteScriptResponse WebDriverConnection::execute_script(String const& body, Vector<String> const& json_arguments, Optional<u64> const& timeout, bool async)
+{
+    dbgln("WebDriverConnection: execute_script");
+    if (auto browser_window = m_browser_window.strong_ref()) {
+        auto& tab = browser_window->active_tab();
+        if (tab.webdriver_endpoints().on_execute_script) {
+            auto response = tab.webdriver_endpoints().on_execute_script(body, json_arguments, timeout, async);
+            // WebContentServer's and WebDriverSessionClient's ExecuteScriptResponse have an identical
+            // structure but are distinct types, so we have to convert here.
+            return { response.result_type(), response.json_result() };
+        }
+    }
+    return { {} };
 }
 
 Messages::WebDriverSessionClient::GetAllCookiesResponse WebDriverConnection::get_all_cookies()
