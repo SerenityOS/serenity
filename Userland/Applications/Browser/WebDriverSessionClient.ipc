@@ -2,6 +2,7 @@
 #include <AK/Vector.h>
 #include <LibGfx/Point.h>
 #include <LibGfx/Rect.h>
+#include <LibGfx/ShareableBitmap.h>
 #include <LibGfx/Size.h>
 #include <LibWeb/Cookie/Cookie.h>
 #include <LibWeb/Cookie/ParsedCookie.h>
@@ -33,5 +34,5 @@ endpoint WebDriverSessionClient {
     get_computed_value_for_element(i32 element_id, String property_name) => (String computed_value)
     get_element_text(i32 element_id) => (String text)
     get_element_tag_name(i32 element_id) => (String tag_name)
-
+    take_screenshot() => (Gfx::ShareableBitmap data)
 }
