@@ -783,6 +783,8 @@ public:
 
 class FinishUnwind final : public Instruction {
 public:
+    constexpr static bool IsTerminator = true;
+
     FinishUnwind(Label next)
         : Instruction(Type::FinishUnwind)
         , m_next_target(move(next))
