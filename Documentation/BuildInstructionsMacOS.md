@@ -13,7 +13,7 @@ Make sure you also have all the following dependencies installed:
 
 ```console
 # core
-brew install coreutils e2fsprogs qemu bash gcc@11 imagemagick ninja cmake ccache rsync zstd
+brew install coreutils e2fsprogs qemu bash gcc@12 imagemagick ninja cmake ccache rsync zstd
 
 # (option 1) fuse + ext2
 brew install m4 autoconf automake libtool
