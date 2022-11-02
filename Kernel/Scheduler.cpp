@@ -222,10 +222,10 @@ void Scheduler::pick_next()
 
     auto& thread_to_schedule = pull_next_runnable_thread();
     if constexpr (SCHEDULER_DEBUG) {
-        dbgln("Scheduler[{}]: Switch to {} @ {:#04x}:{:p}",
+        dbgln("Scheduler[{}]: Switch to {} @ {:p}",
             Processor::current_id(),
             thread_to_schedule,
-            thread_to_schedule.regs().cs, thread_to_schedule.regs().ip());
+            thread_to_schedule.regs().ip());
     }
 
     // We need to leave our first critical section before switching context,
@@ -270,11 +270,11 @@ void Scheduler::context_switch(Thread* thread)
         from_thread->set_state(Thread::State::Runnable);
 
 #ifdef LOG_EVERY_CONTEXT_SWITCH
-    auto const msg = "Scheduler[{}]: {} -> {} [prio={}] {:#04x}:{:p}";
+    auto const msg = "Scheduler[{}]: {} -> {} [prio={}] {:p}";
 
     dbgln(msg,
         Processor::current_id(), from_thread->tid().value(),
-        thread->tid().value(), thread->priority(), thread->regs().cs, thread->regs().ip());
+        thread->tid().value(), thread->priority(), thread->regs().ip());
 #endif
 
     auto& proc = Processor::current();
@@ -507,19 +507,6 @@ void dump_thread_list(bool with_stack_traces)
 {
     dbgln("Scheduler thread list for processor {}:", Processor::current_id());
 
-    auto get_cs = [](Thread& thread) -> u16 {
-#if ARCH(X86_64)
-        if (!thread.current_trap())
-            return thread.regs().cs;
-        return thread.get_register_dump_from_stack().cs;
-#elif ARCH(AARCH64)
-        (void)thread;
-        return 0;
-#else
-#    error Unknown architecture
-#endif
-    };
-
     auto get_eip = [](Thread& thread) -> u32 {
         if (!thread.current_trap())
             return thread.regs().ip();
@@ -530,20 +517,18 @@ void dump_thread_list(bool with_stack_traces)
         auto color = thread.process().is_kernel_process() ? "\x1b[34;1m"sv : "\x1b[33;1m"sv;
         switch (thread.state()) {
         case Thread::State::Dying:
-            dmesgln("  {}{:30}\x1b[0m @ {:04x}:{:08x} is {:14} (Finalizable: {}, nsched: {})",
+            dmesgln("  {}{:30}\x1b[0m @ {:08x} is {:14} (Finalizable: {}, nsched: {})",
                 color,
                 thread,
-                get_cs(thread),
                 get_eip(thread),
                 thread.state_string(),
                 thread.is_finalizable(),
                 thread.times_scheduled());
             break;
         default:
-            dmesgln("  {}{:30}\x1b[0m @ {:04x}:{:08x} is {:14} (Pr:{:2}, nsched: {})",
+            dmesgln("  {}{:30}\x1b[0m @ {:08x} is {:14} (Pr:{:2}, nsched: {})",
                 color,
                 thread,
-                get_cs(thread),
                 get_eip(thread),
                 thread.state_string(),
                 thread.priority(),
