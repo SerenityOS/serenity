@@ -102,6 +102,13 @@ void WebDriverConnection::set_window_position(Gfx::IntPoint const& position)
         browser_window->move_to(position);
 }
 
+void WebDriverConnection::maximize_window()
+{
+    dbgln_if(WEBDRIVER_DEBUG, "WebDriverConnection: maximize_window");
+    if (auto browser_window = m_browser_window.strong_ref())
+        browser_window->set_maximized(true);
+}
+
 Messages::WebDriverSessionClient::GetAllCookiesResponse WebDriverConnection::get_all_cookies()
 {
     dbgln_if(WEBDRIVER_DEBUG, "WebDriverConnection: get_cookies");

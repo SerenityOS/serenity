@@ -380,6 +380,27 @@ ErrorOr<JsonValue, WebDriverError> Session::set_window_rect(JsonValue const& pay
     return serialize_window_rect(m_browser_connection->get_window_rect());
 }
 
+// 11.8.3 Maximize Window, https://w3c.github.io/webdriver/#dfn-maximize-window
+ErrorOr<JsonValue, WebDriverError> Session::maximize_window()
+{
+    // 1. If the remote end does not support the Maximize Window command for the current top-level browsing context for any reason, return error with error code unsupported operation.
+
+    // 2. If the current top-level browsing context is no longer open, return error with error code no such window.
+    TRY(check_for_open_top_level_browsing_context_or_return_error());
+
+    // FIXME: 3. Handle any user prompts and return its value if it is an error.
+    // FIXME: 4. Fully exit fullscreen.
+
+    // 5. Restore the window.
+    m_browser_connection->async_restore_window();
+
+    // 6. Maximize the window of the current top-level browsing context.
+    m_browser_connection->async_maximize_window();
+
+    // 7. Return success with data set to the WindowRect object for the current top-level browsing context.
+    return serialize_window_rect(m_browser_connection->get_window_rect());
+}
+
 // https://w3c.github.io/webdriver/#dfn-get-or-create-a-web-element-reference
 static String get_or_create_a_web_element_reference(Session::LocalElement const& element)
 {
