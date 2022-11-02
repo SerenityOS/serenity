@@ -927,12 +927,12 @@ Vector<CompareTypeAndValuePair> OpCode_Compare::flat_compares() const
     return result;
 }
 
-Vector<String> OpCode_Compare::variable_arguments_to_string(Optional<MatchInput> input) const
+Vector<String> OpCode_Compare::variable_arguments_to_string(Optional<MatchInput const&> input) const
 {
     Vector<String> result;
 
     size_t offset { state().instruction_position + 3 };
-    RegexStringView view = ((input.has_value()) ? input.value().view : StringView {});
+    RegexStringView const& view = ((input.has_value()) ? input.value().view : StringView {});
 
     for (size_t i = 0; i < arguments_count(); ++i) {
         auto compare_type = (CharacterCompareType)m_bytecode->at(offset++);
