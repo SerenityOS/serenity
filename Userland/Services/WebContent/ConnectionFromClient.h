@@ -96,6 +96,8 @@ private:
     virtual Messages::WebContentServer::GetSelectedTextResponse get_selected_text() override;
     virtual void select_all() override;
 
+    virtual Messages::WebContentServer::WebdriverExecuteScriptResponse webdriver_execute_script(String const& body, Vector<String> const& json_arguments, Optional<u64> const& timeout, bool async) override;
+
     void flush_pending_paint_requests();
 
     NonnullOwnPtr<PageHost> m_page_host;
