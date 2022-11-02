@@ -973,6 +973,46 @@ ErrorOr<JsonValue, WebDriverError> Session::execute_script(JsonValue const& payl
     }
 }
 
+// 13.2.2 Execute Async Script, https://w3c.github.io/webdriver/#dfn-execute-async-script
+ErrorOr<JsonValue, WebDriverError> Session::execute_async_script(JsonValue const& parameters)
+{
+    // 1. Let body and arguments by the result of trying to extract the script arguments from a request with argument parameters.
+    auto [body, arguments] = TRY(extract_the_script_arguments_from_a_request(parameters));
+
+    // 2. If the current browsing context is no longer open, return error with error code no such window.
+    TRY(check_for_open_top_level_browsing_context_or_return_error());
+
+    // FIXME: 3. Handle any user prompts, and return its value if it is an error.
+
+    // 4., 5.1-5.11.
+    Vector<String> json_arguments;
+    arguments.for_each([&](JsonValue const& json_value) {
+        // NOTE: serialized() instead of to_string() ensures proper quoting.
+        json_arguments.append(json_value.serialized<StringBuilder>());
+    });
+
+    dbgln("Executing async script with 'args': [{}] / 'body':\n{}", String::join(", "sv, json_arguments), body);
+    auto execute_script_response = m_browser_connection->execute_script(body, json_arguments, m_timeouts_configuration.script_timeout, true);
+    dbgln("Executing async script returned: {}", execute_script_response.json_result());
+
+    // NOTE: This is assumed to be a valid JSON value.
+    auto result = MUST(JsonValue::from_string(execute_script_response.json_result()));
+
+    switch (execute_script_response.result_type()) {
+    // 6. If promise is still pending and the session script timeout is reached, return error with error code script timeout.
+    case Web::WebDriver::ExecuteScriptResultType::Timeout:
+        return WebDriverError::from_code(ErrorCode::ScriptTimeoutError, "Script timed out");
+    // 7. Upon fulfillment of promise with value v, let result be a JSON clone of v, and return success with data result.
+    case Web::WebDriver::ExecuteScriptResultType::PromiseResolved:
+        return result;
+    // 8. Upon rejection of promise with reason r, let result be a JSON clone of r, and return error with error code javascript error and data result.
+    case Web::WebDriver::ExecuteScriptResultType::PromiseRejected:
+        return WebDriverError::from_code(ErrorCode::JavascriptError, "Script returned an error", move(result));
+    default:
+        VERIFY_NOT_REACHED();
+    }
+}
+
 // https://w3c.github.io/webdriver/#dfn-serialized-cookie
 static JsonObject serialize_cookie(Web::Cookie::Cookie const& cookie)
 {
