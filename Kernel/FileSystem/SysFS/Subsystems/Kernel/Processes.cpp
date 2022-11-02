@@ -141,10 +141,10 @@ ErrorOr<void> SysFSOverallProcesses::try_generate(KBufferBuilder& builder)
 
     {
         auto array = TRY(json.add_array("processes"sv));
+        // FIXME: Do we actually want to expose the colonel process in a Jail environment?
         TRY(build_process(array, *Scheduler::colonel()));
-        TRY(Process::all_instances().with([&](auto& processes) -> ErrorOr<void> {
-            for (auto& process : processes)
-                TRY(build_process(array, process));
+        TRY(Process::for_each_in_same_jail([&](Process& process) -> ErrorOr<void> {
+            TRY(build_process(array, process));
             return {};
         }));
         TRY(array.finish());

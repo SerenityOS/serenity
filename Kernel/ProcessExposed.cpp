@@ -206,14 +206,12 @@ ErrorOr<void> ProcFSRootDirectory::traverse_as_directory(FileSystemID fsid, Func
         TRY(callback({ component.name(), identifier, 0 }));
     }
 
-    return Process::all_instances().with([&](auto& list) -> ErrorOr<void> {
-        for (auto& process : list) {
-            VERIFY(!(process.pid() < 0));
-            u64 process_id = (u64)process.pid().value();
-            InodeIdentifier identifier = { fsid, static_cast<InodeIndex>(process_id << 36) };
-            auto process_id_string = TRY(KString::formatted("{:d}", process_id));
-            TRY(callback({ process_id_string->view(), identifier, 0 }));
-        }
+    return Process::for_each_in_same_jail([&](Process& process) -> ErrorOr<void> {
+        VERIFY(!(process.pid() < 0));
+        u64 process_id = (u64)process.pid().value();
+        InodeIdentifier identifier = { fsid, static_cast<InodeIndex>(process_id << 36) };
+        auto process_id_string = TRY(KString::formatted("{:d}", process_id));
+        TRY(callback({ process_id_string->view(), identifier, 0 }));
         return {};
     });
 }
@@ -234,7 +232,7 @@ ErrorOr<NonnullLockRefPtr<ProcFSExposedComponent>> ProcFSRootDirectory::lookup(S
         return ESRCH;
     auto actual_pid = pid.value();
 
-    if (auto maybe_process = Process::from_pid(actual_pid))
+    if (auto maybe_process = Process::from_pid_in_same_jail(actual_pid))
         return maybe_process->procfs_traits();
 
     return ENOENT;

@@ -13,6 +13,7 @@
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/DiskUsage.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/GlobalInformation.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/Interrupts.h>
+#include <Kernel/FileSystem/SysFS/Subsystems/Kernel/Jails.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/Keymap.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/LoadBase.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/Log.h>
@@ -46,6 +47,7 @@ UNMAP_AFTER_INIT NonnullLockRefPtr<SysFSGlobalKernelStatsDirectory> SysFSGlobalK
         list.append(SysFSProfile::must_create(*global_kernel_stats_directory));
         list.append(SysFSKernelLoadBase::must_create(*global_kernel_stats_directory));
         list.append(SysFSPowerStateSwitchNode::must_create(*global_kernel_stats_directory));
+        list.append(SysFSJails::must_create(*global_kernel_stats_directory));
 
         list.append(SysFSGlobalNetworkStatsDirectory::must_create(*global_kernel_stats_directory));
         list.append(SysFSGlobalKernelVariablesDirectory::must_create(*global_kernel_stats_directory));

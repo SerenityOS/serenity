@@ -22,12 +22,12 @@ UNMAP_AFTER_INIT NonnullLockRefPtr<SysFSCapsLockRemap> SysFSCapsLockRemap::must_
 
 bool SysFSCapsLockRemap::value() const
 {
-    MutexLocker locker(m_lock);
+    SpinlockLocker locker(m_lock);
     return g_caps_lock_remapped_to_ctrl.load();
 }
 void SysFSCapsLockRemap::set_value(bool new_value)
 {
-    MutexLocker locker(m_lock);
+    SpinlockLocker locker(m_lock);
     g_caps_lock_remapped_to_ctrl.exchange(new_value);
 }
 

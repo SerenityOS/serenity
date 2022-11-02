@@ -129,6 +129,7 @@ extern "C" [[noreturn]] void init()
     dmesgln("Initialize MMU");
     Memory::MemoryManager::initialize(0);
     DeviceManagement::initialize();
+    JailManagement::the();
 
     // Invoke all static global constructors in the kernel.
     // Note that we want to do this as early as possible.

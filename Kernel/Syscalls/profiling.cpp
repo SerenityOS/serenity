@@ -53,15 +53,15 @@ ErrorOr<FlatPtr> Process::profiling_enable(pid_t pid, u64 event_mask)
             return ENOTSUP;
         g_profiling_all_threads = true;
         PerformanceManager::add_process_created_event(*Scheduler::colonel());
-        Process::for_each([](auto& process) {
+        TRY(Process::for_each_in_same_jail([](auto& process) -> ErrorOr<void> {
             PerformanceManager::add_process_created_event(process);
-            return IterationDecision::Continue;
-        });
+            return {};
+        }));
         g_profiling_event_mask = event_mask;
         return 0;
     }
 
-    auto process = Process::from_pid(pid);
+    auto process = Process::from_pid_in_same_jail(pid);
     if (!process)
         return ESRCH;
     if (process->is_dead())
@@ -101,7 +101,7 @@ ErrorOr<FlatPtr> Process::sys$profiling_disable(pid_t pid)
         return 0;
     }
 
-    auto process = Process::from_pid(pid);
+    auto process = Process::from_pid_in_same_jail(pid);
     if (!process)
         return ESRCH;
     auto credentials = this->credentials();
@@ -140,7 +140,7 @@ ErrorOr<FlatPtr> Process::sys$profiling_free_buffer(pid_t pid)
         return 0;
     }
 
-    auto process = Process::from_pid(pid);
+    auto process = Process::from_pid_in_same_jail(pid);
     if (!process)
         return ESRCH;
     auto credentials = this->credentials();
