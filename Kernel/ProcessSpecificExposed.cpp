@@ -85,13 +85,11 @@ ErrorOr<void> Process::traverse_children_directory(FileSystemID fsid, Function<E
 {
     TRY(callback({ "."sv, { fsid, SegmentedProcFSIndex::build_segmented_index_for_sub_directory(pid(), SegmentedProcFSIndex::ProcessSubDirectory::Children) }, 0 }));
     TRY(callback({ ".."sv, { fsid, m_procfs_traits->component_index() }, 0 }));
-    return Process::all_instances().with([&](auto& processes) -> ErrorOr<void> {
-        for (auto& process : processes) {
-            if (process.ppid() == pid()) {
-                StringBuilder builder;
-                builder.appendff("{}", process.pid());
-                TRY(callback({ builder.string_view(), { fsid, SegmentedProcFSIndex::build_segmented_index_for_children(pid(), process.pid()) }, DT_LNK }));
-            }
+    return Process::for_each_in_same_jail([&](Process& process) -> ErrorOr<void> {
+        if (process.ppid() == pid()) {
+            StringBuilder builder;
+            builder.appendff("{}", process.pid());
+            TRY(callback({ builder.string_view(), { fsid, SegmentedProcFSIndex::build_segmented_index_for_children(pid(), process.pid()) }, DT_LNK }));
         }
         return {};
     });
@@ -103,7 +101,7 @@ ErrorOr<NonnullLockRefPtr<Inode>> Process::lookup_children_directory(ProcFS cons
     if (!maybe_pid.has_value())
         return ENOENT;
 
-    auto child_process = Process::from_pid(*maybe_pid);
+    auto child_process = Process::from_pid_in_same_jail(*maybe_pid);
     if (!child_process || child_process->ppid() != pid())
         return ENOENT;
 

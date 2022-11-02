@@ -12,7 +12,7 @@ ErrorOr<FlatPtr> Process::sys$disown(ProcessID pid)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     TRY(require_promise(Pledge::proc));
-    auto process = Process::from_pid(pid);
+    auto process = Process::from_pid_in_same_jail(pid);
     if (!process)
         return ESRCH;
     if (process->ppid() != this->pid())

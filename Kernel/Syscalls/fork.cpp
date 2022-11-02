@@ -42,6 +42,26 @@ ErrorOr<FlatPtr> Process::sys$fork(RegisterState& regs)
         });
     }));
 
+    // Note: We take the spinlock of Process::all_instances list because we need
+    // to ensure that when we take the jail spinlock of two processes that we don't
+    // run into a deadlock situation because both processes compete over each other Jail's
+    // spinlock. Such pattern of taking 3 spinlocks in the same order happens in
+    // Process::for_each* methods.
+    TRY(Process::all_instances().with([&](auto const&) -> ErrorOr<void> {
+        TRY(m_attached_jail.with([&](auto& parent_jail) -> ErrorOr<void> {
+            return child->m_attached_jail.with([&](auto& child_jail) -> ErrorOr<void> {
+                child_jail = parent_jail;
+                if (child_jail) {
+                    child_jail->attach_count().with([&](auto& attach_count) {
+                        attach_count++;
+                    });
+                }
+                return {};
+            });
+        }));
+        return {};
+    }));
+
     TRY(child->m_fds.with_exclusive([&](auto& child_fds) {
         return m_fds.with_exclusive([&](auto& parent_fds) {
             return child_fds.try_clone(parent_fds);

@@ -38,7 +38,7 @@ ErrorOr<NonnullRefPtr<Thread>> Process::get_thread_from_pid_or_tid(pid_t pid_or_
     case Syscall::SchedulerParametersMode::Process: {
         auto* searched_process = this;
         if (pid_or_tid != 0)
-            searched_process = Process::from_pid(pid_or_tid);
+            searched_process = Process::from_pid_in_same_jail(pid_or_tid);
 
         if (searched_process == nullptr)
             return ESRCH;

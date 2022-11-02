@@ -978,7 +978,7 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
 
     auto& action = m_process->m_signal_action_data[signal];
     auto sender_pid = m_signal_senders[signal];
-    auto sender = Process::from_pid(sender_pid);
+    auto sender = Process::from_pid_ignoring_jails(sender_pid);
 
     if (!current_trap() && !action.handler_or_sigaction.is_null()) {
         // We're trying dispatch a handled signal to a user process that was scheduled
@@ -1303,7 +1303,7 @@ void Thread::set_state(State new_state, u8 stop_signal)
             });
             process.unblock_waiters(Thread::WaitBlocker::UnblockFlags::Continued);
             // Tell the parent process (if any) about this change.
-            if (auto parent = Process::from_pid(process.ppid())) {
+            if (auto parent = Process::from_pid_ignoring_jails(process.ppid())) {
                 [[maybe_unused]] auto result = parent->send_signal(SIGCHLD, &process);
             }
         }
@@ -1327,7 +1327,7 @@ void Thread::set_state(State new_state, u8 stop_signal)
             });
             process.unblock_waiters(Thread::WaitBlocker::UnblockFlags::Stopped, stop_signal);
             // Tell the parent process (if any) about this change.
-            if (auto parent = Process::from_pid(process.ppid())) {
+            if (auto parent = Process::from_pid_ignoring_jails(process.ppid())) {
                 [[maybe_unused]] auto result = parent->send_signal(SIGCHLD, &process);
             }
         }

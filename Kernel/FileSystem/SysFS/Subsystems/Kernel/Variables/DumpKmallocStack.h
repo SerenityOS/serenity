@@ -9,6 +9,7 @@
 #include <AK/Types.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/Variables/BooleanVariable.h>
 #include <Kernel/Library/LockRefPtr.h>
+#include <Kernel/Locking/Spinlock.h>
 #include <Kernel/UserOrKernelBuffer.h>
 
 namespace Kernel {
@@ -24,7 +25,7 @@ private:
 
     explicit SysFSDumpKmallocStacks(SysFSDirectory const&);
 
-    mutable Mutex m_lock;
+    mutable Spinlock m_lock { LockRank::None };
 };
 
 }

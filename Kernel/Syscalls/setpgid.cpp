@@ -16,7 +16,7 @@ ErrorOr<FlatPtr> Process::sys$getsid(pid_t pid)
     TRY(require_promise(Pledge::stdio));
     if (pid == 0)
         return sid().value();
-    auto process = Process::from_pid(pid);
+    auto process = Process::from_pid_in_same_jail(pid);
     if (!process)
         return ESRCH;
     if (sid() != process->sid())
@@ -30,10 +30,10 @@ ErrorOr<FlatPtr> Process::sys$setsid()
     TRY(require_promise(Pledge::proc));
     InterruptDisabler disabler;
     bool found_process_with_same_pgid_as_my_pid = false;
-    Process::for_each_in_pgrp(pid().value(), [&](auto&) {
+    TRY(Process::for_each_in_pgrp_in_same_jail(pid().value(), [&](auto&) -> ErrorOr<void> {
         found_process_with_same_pgid_as_my_pid = true;
-        return IterationDecision::Break;
-    });
+        return {};
+    }));
     if (found_process_with_same_pgid_as_my_pid)
         return EPERM;
     // Create a new Session and a new ProcessGroup.
@@ -52,7 +52,7 @@ ErrorOr<FlatPtr> Process::sys$getpgid(pid_t pid)
     TRY(require_promise(Pledge::stdio));
     if (pid == 0)
         return pgid().value();
-    auto process = Process::from_pid(pid);
+    auto process = Process::from_pid_in_same_jail(pid);
     if (!process)
         return ESRCH;
     return process->pgid().value();
@@ -70,10 +70,10 @@ SessionID Process::get_sid_from_pgid(ProcessGroupID pgid)
     // FIXME: This xor sys$setsid() uses the wrong locking mechanism.
 
     SessionID sid { -1 };
-    Process::for_each_in_pgrp(pgid, [&](auto& process) {
+    MUST(Process::current().for_each_in_pgrp_in_same_jail(pgid, [&](auto& process) -> ErrorOr<void> {
         sid = process.sid();
-        return IterationDecision::Break;
-    });
+        return {};
+    }));
 
     return sid;
 }
@@ -87,7 +87,7 @@ ErrorOr<FlatPtr> Process::sys$setpgid(pid_t specified_pid, pid_t specified_pgid)
         // The value of the pgid argument is less than 0, or is not a value supported by the implementation.
         return EINVAL;
     }
-    auto process = Process::from_pid(pid);
+    auto process = Process::from_pid_in_same_jail(pid);
     if (!process)
         return ESRCH;
     if (process != this && process->ppid() != this->pid()) {

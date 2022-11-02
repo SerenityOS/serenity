@@ -84,6 +84,8 @@ set(KERNEL_SOURCES
     Graphics/VirtIOGPU/GPU3DDevice.cpp
     Graphics/VirtIOGPU/GraphicsAdapter.cpp
     IOWindow.cpp
+    Jail.cpp
+    JailManagement.cpp
     SanCov.cpp
     Storage/ATA/AHCI/Controller.cpp
     Storage/ATA/AHCI/Port.cpp
@@ -153,6 +155,7 @@ set(KERNEL_SOURCES
     FileSystem/SysFS/Subsystems/Kernel/Interrupts.cpp
     FileSystem/SysFS/Subsystems/Kernel/Processes.cpp
     FileSystem/SysFS/Subsystems/Kernel/CPUInfo.cpp
+    FileSystem/SysFS/Subsystems/Kernel/Jails.cpp
     FileSystem/SysFS/Subsystems/Kernel/Keymap.cpp
     FileSystem/SysFS/Subsystems/Kernel/Profile.cpp
     FileSystem/SysFS/Subsystems/Kernel/Directory.cpp
@@ -262,6 +265,7 @@ set(KERNEL_SOURCES
     Syscalls/getuid.cpp
     Syscalls/hostname.cpp
     Syscalls/ioctl.cpp
+    Syscalls/jail.cpp
     Syscalls/keymap.cpp
     Syscalls/kill.cpp
     Syscalls/link.cpp

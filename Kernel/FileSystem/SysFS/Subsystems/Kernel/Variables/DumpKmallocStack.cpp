@@ -22,13 +22,13 @@ UNMAP_AFTER_INIT NonnullLockRefPtr<SysFSDumpKmallocStacks> SysFSDumpKmallocStack
 
 bool SysFSDumpKmallocStacks::value() const
 {
-    MutexLocker locker(m_lock);
+    SpinlockLocker locker(m_lock);
     return g_dump_kmalloc_stacks;
 }
 
 void SysFSDumpKmallocStacks::set_value(bool new_value)
 {
-    MutexLocker locker(m_lock);
+    SpinlockLocker locker(m_lock);
     g_dump_kmalloc_stacks = new_value;
 }
 

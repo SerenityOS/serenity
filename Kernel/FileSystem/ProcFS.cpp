@@ -256,7 +256,7 @@ ErrorOr<void> ProcFSProcessDirectoryInode::attach(OpenFileDescription&)
 InodeMetadata ProcFSProcessDirectoryInode::metadata() const
 {
     MutexLocker locker(m_inode_lock);
-    auto process = Process::from_pid(associated_pid());
+    auto process = Process::from_pid_in_same_jail(associated_pid());
     if (!process)
         return {};
 
@@ -279,7 +279,7 @@ ErrorOr<size_t> ProcFSProcessDirectoryInode::read_bytes_locked(off_t, size_t, Us
 ErrorOr<void> ProcFSProcessDirectoryInode::traverse_as_directory(Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)> callback) const
 {
     MutexLocker locker(procfs().m_lock);
-    auto process = Process::from_pid(associated_pid());
+    auto process = Process::from_pid_in_same_jail(associated_pid());
     if (!process)
         return EINVAL;
     return process->procfs_traits()->traverse_as_directory(procfs().fsid(), move(callback));
@@ -288,7 +288,7 @@ ErrorOr<void> ProcFSProcessDirectoryInode::traverse_as_directory(Function<ErrorO
 ErrorOr<NonnullLockRefPtr<Inode>> ProcFSProcessDirectoryInode::lookup(StringView name)
 {
     MutexLocker locker(procfs().m_lock);
-    auto process = Process::from_pid(associated_pid());
+    auto process = Process::from_pid_in_same_jail(associated_pid());
     if (!process)
         return ESRCH;
     if (name == "fd"sv)
@@ -345,7 +345,7 @@ void ProcFSProcessSubDirectoryInode::did_seek(OpenFileDescription&, off_t)
 InodeMetadata ProcFSProcessSubDirectoryInode::metadata() const
 {
     MutexLocker locker(m_inode_lock);
-    auto process = Process::from_pid(associated_pid());
+    auto process = Process::from_pid_in_same_jail(associated_pid());
     if (!process)
         return {};
 
@@ -363,7 +363,7 @@ InodeMetadata ProcFSProcessSubDirectoryInode::metadata() const
 ErrorOr<void> ProcFSProcessSubDirectoryInode::traverse_as_directory(Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)> callback) const
 {
     MutexLocker locker(procfs().m_lock);
-    auto process = Process::from_pid(associated_pid());
+    auto process = Process::from_pid_in_same_jail(associated_pid());
     if (!process)
         return EINVAL;
     switch (m_sub_directory_type) {
@@ -382,7 +382,7 @@ ErrorOr<void> ProcFSProcessSubDirectoryInode::traverse_as_directory(Function<Err
 ErrorOr<NonnullLockRefPtr<Inode>> ProcFSProcessSubDirectoryInode::lookup(StringView name)
 {
     MutexLocker locker(procfs().m_lock);
-    auto process = Process::from_pid(associated_pid());
+    auto process = Process::from_pid_in_same_jail(associated_pid());
     if (!process)
         return ESRCH;
     switch (m_sub_directory_type) {
@@ -472,7 +472,7 @@ static mode_t determine_procfs_process_inode_mode(SegmentedProcFSIndex::ProcessS
 InodeMetadata ProcFSProcessPropertyInode::metadata() const
 {
     MutexLocker locker(m_inode_lock);
-    auto process = Process::from_pid(associated_pid());
+    auto process = Process::from_pid_in_same_jail(associated_pid());
     if (!process)
         return {};
 
@@ -499,7 +499,7 @@ ErrorOr<size_t> ProcFSProcessPropertyInode::read_bytes_locked(off_t offset, size
 
     if (!description) {
         auto builder = TRY(KBufferBuilder::try_create());
-        auto process = Process::from_pid(associated_pid());
+        auto process = Process::from_pid_in_same_jail(associated_pid());
         if (!process)
             return Error::from_errno(ESRCH);
         TRY(try_to_acquire_data(*process, builder));
@@ -585,7 +585,7 @@ ErrorOr<void> ProcFSProcessPropertyInode::refresh_data(OpenFileDescription& desc
     // For process-specific inodes, hold the process's ptrace lock across refresh
     // and refuse to load data if the process is not dumpable.
     // Without this, files opened before a process went non-dumpable could still be used for dumping.
-    auto process = Process::from_pid(associated_pid());
+    auto process = Process::from_pid_in_same_jail(associated_pid());
     if (!process)
         return Error::from_errno(ESRCH);
     process->ptrace_lock().lock();

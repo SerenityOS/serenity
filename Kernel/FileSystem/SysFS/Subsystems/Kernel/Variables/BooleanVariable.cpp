@@ -5,6 +5,7 @@
  */
 
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/Variables/BooleanVariable.h>
+#include <Kernel/Process.h>
 #include <Kernel/Sections.h>
 
 namespace Kernel {
@@ -16,18 +17,26 @@ ErrorOr<void> SysFSSystemBoolean::try_generate(KBufferBuilder& builder)
 
 ErrorOr<size_t> SysFSSystemBoolean::write_bytes(off_t, size_t count, UserOrKernelBuffer const& buffer, OpenFileDescription*)
 {
-    if (count != 1)
-        return EINVAL;
     MutexLocker locker(m_refresh_lock);
+    // Note: We do all of this code before taking the spinlock because then we disable
+    // interrupts so page faults will not work.
     char value = 0;
     TRY(buffer.read(&value, 1));
-    if (value == '0')
-        set_value(false);
-    else if (value == '1')
-        set_value(true);
-    else
-        return EINVAL;
-    return 1;
+
+    return Process::current().jail().with([&](auto& my_jail) -> ErrorOr<size_t> {
+        // Note: If we are in a jail, don't let the current process to change the variable.
+        if (my_jail)
+            return Error::from_errno(EPERM);
+        if (count != 1)
+            return Error::from_errno(EINVAL);
+        if (value == '0')
+            set_value(false);
+        else if (value == '1')
+            set_value(true);
+        else
+            return Error::from_errno(EINVAL);
+        return 1;
+    });
 }
 
 ErrorOr<void> SysFSSystemBoolean::truncate(u64 size)
