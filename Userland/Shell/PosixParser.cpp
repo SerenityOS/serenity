@@ -1654,7 +1654,7 @@ RefPtr<AST::Node> Parser::parse_simple_command()
         if (!nodes.is_empty()) {
             Vector<AST::VariableDeclarations::Variable> variables;
             for (auto& definition : definitions) {
-                auto parts = definition.split_limit('=', 2, true);
+                auto parts = definition.split_limit('=', 2, SplitBehavior::KeepEmpty);
                 auto name = make_ref_counted<AST::BarewordLiteral>(
                     empty_position(),
                     parts[0]);
