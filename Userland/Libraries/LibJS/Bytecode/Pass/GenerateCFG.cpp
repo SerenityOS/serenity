@@ -45,38 +45,39 @@ void GenerateCFG::perform(PassPipelineExecutable& executable)
             iterators.take_last();
             continue;
         }
-        auto& instruction = *iterators.last();
+        auto const& instruction = *iterators.last();
         ++iterators.last();
         if (!instruction.is_terminator())
             continue;
 
-        auto& current_block = entered_blocks.last();
+        auto const& current_block = entered_blocks.last();
 
-        if (instruction.type() == Instruction::Type::Jump) {
-            auto& true_target = static_cast<Op::Jump const&>(instruction).true_target();
+        using enum Instruction::Type;
+        switch (instruction.type()) {
+        case Jump: {
+            auto const& true_target = static_cast<Op::Jump const&>(instruction).true_target();
             enter_label(true_target, current_block);
             continue;
         }
-
-        if (instruction.type() == Instruction::Type::JumpConditional || instruction.type() == Instruction::Type::JumpNullish || instruction.type() == Instruction::Type::JumpUndefined) {
-            auto& true_target = static_cast<Op::Jump const&>(instruction).true_target();
+        case JumpConditional:
+        case JumpNullish:
+        case JumpUndefined: {
+            auto const& true_target = static_cast<Op::Jump const&>(instruction).true_target();
             enter_label(true_target, current_block);
-            auto& false_target = static_cast<Op::Jump const&>(instruction).false_target();
+            auto const& false_target = static_cast<Op::Jump const&>(instruction).false_target();
             enter_label(false_target, current_block);
             continue;
         }
-
-        if (instruction.type() == Instruction::Type::Yield) {
-            auto& continuation = static_cast<Op::Yield const&>(instruction).continuation();
+        case Yield: {
+            auto const& continuation = static_cast<Op::Yield const&>(instruction).continuation();
             if (continuation.has_value())
                 enter_label(continuation, current_block, true);
             continue;
         }
-
-        if (instruction.type() == Instruction::Type::EnterUnwindContext) {
-            auto& entry_point = static_cast<Op::EnterUnwindContext const&>(instruction).entry_point();
-            auto& handler_target = static_cast<Op::EnterUnwindContext const&>(instruction).handler_target();
-            auto& finalizer_target = static_cast<Op::EnterUnwindContext const&>(instruction).finalizer_target();
+        case EnterUnwindContext: {
+            auto const& entry_point = static_cast<Op::EnterUnwindContext const&>(instruction).entry_point();
+            auto const& handler_target = static_cast<Op::EnterUnwindContext const&>(instruction).handler_target();
+            auto const& finalizer_target = static_cast<Op::EnterUnwindContext const&>(instruction).finalizer_target();
             enter_label(&entry_point, current_block);
             if (handler_target.has_value())
                 enter_label(handler_target, current_block);
@@ -84,16 +85,17 @@ void GenerateCFG::perform(PassPipelineExecutable& executable)
                 enter_label(finalizer_target, current_block);
             continue;
         }
-
-        if (instruction.type() == Instruction::Type::ContinuePendingUnwind) {
-            auto& resume_target = static_cast<Op::ContinuePendingUnwind const&>(instruction).resume_target();
+        case ContinuePendingUnwind: {
+            auto const& resume_target = static_cast<Op::ContinuePendingUnwind const&>(instruction).resume_target();
             enter_label(&resume_target, current_block);
             continue;
         }
-
-        // Otherwise, pop the current block off, it doesn't jump anywhere.
-        iterators.take_last();
-        entered_blocks.take_last();
+        default:
+            // Otherwise, pop the current block off, it doesn't jump anywhere.
+            iterators.take_last();
+            entered_blocks.take_last();
+            continue;
+        }
     }
 
     finished();
