@@ -795,6 +795,8 @@ public:
     String to_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&);
 
+    Label next_target() const { return m_next_target; }
+
 private:
     Label m_next_target;
 };
