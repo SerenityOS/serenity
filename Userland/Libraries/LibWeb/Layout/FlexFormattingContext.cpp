@@ -1209,6 +1209,7 @@ void FlexFormattingContext::distribute_any_remaining_free_space()
         };
 
         auto flex_region_render_cursor = FlexRegionRenderCursor::Left;
+        bool justification_is_centered = false;
 
         switch (flex_container().computed_values().justify_content()) {
         case CSS::JustifyContent::FlexStart:
@@ -1229,6 +1230,7 @@ void FlexFormattingContext::distribute_any_remaining_free_space()
             break;
         case CSS::JustifyContent::Center:
             initial_offset = (specified_main_size(flex_container()) - used_main_space) / 2.0f;
+            justification_is_centered = true;
             break;
         case CSS::JustifyContent::SpaceBetween:
             space_between_items = flex_line.remaining_free_space / (number_of_items - 1);
@@ -1236,6 +1238,7 @@ void FlexFormattingContext::distribute_any_remaining_free_space()
         case CSS::JustifyContent::SpaceAround:
             space_between_items = flex_line.remaining_free_space / number_of_items;
             initial_offset = space_between_items / 2.0f;
+            justification_is_centered = true;
             break;
         }
 
@@ -1244,35 +1247,49 @@ void FlexFormattingContext::distribute_any_remaining_free_space()
         // Otherwise the cursor offset is the 'start' of the region or initial offset
         float cursor_offset = initial_offset;
 
-        auto place_item = [&](FlexItem& item) {
+        auto place_item = [&](FlexItem& item, bool is_first_item, bool is_last_item) {
+            // NOTE: For centered justifications (`center` and `space-around`) we ignore any margin
+            //       before the first item, and after the last item.
+
+            float item_margin_before = item.margins.main_before;
+            float item_margin_after = item.margins.main_after;
+            if (justification_is_centered) {
+                if (is_first_item)
+                    item_margin_before = 0;
+                if (is_last_item)
+                    item_margin_after = 0;
+            }
+
             auto amount_of_main_size_used = item.main_size
-                + item.margins.main_before
+                + item_margin_before
                 + item.borders.main_before
                 + item.padding.main_before
-                + item.margins.main_after
+                + item_margin_after
                 + item.borders.main_after
                 + item.padding.main_after
                 + space_between_items;
 
             if (is_direction_reverse()) {
-                item.main_offset = cursor_offset - item.main_size - item.margins.main_after - item.borders.main_after - item.padding.main_after;
+                item.main_offset = cursor_offset - item.main_size - item_margin_after - item.borders.main_after - item.padding.main_after;
                 cursor_offset -= amount_of_main_size_used;
             } else if (flex_region_render_cursor == FlexRegionRenderCursor::Right) {
                 cursor_offset -= amount_of_main_size_used;
-                item.main_offset = cursor_offset + item.margins.main_before + item.borders.main_before + item.padding.main_before;
+                item.main_offset = cursor_offset + item_margin_before + item.borders.main_before + item.padding.main_before;
             } else {
-                item.main_offset = cursor_offset + item.margins.main_before + item.borders.main_before + item.padding.main_before;
+                item.main_offset = cursor_offset + item_margin_before + item.borders.main_before + item.padding.main_before;
                 cursor_offset += amount_of_main_size_used;
             }
         };
 
         if (is_direction_reverse() || flex_region_render_cursor == FlexRegionRenderCursor::Right) {
-            for (auto& item : flex_line.items.in_reverse()) {
-                place_item(*item);
+            for (ssize_t i = flex_line.items.size() - 1; i >= 0; --i) {
+                auto& item = flex_line.items[i];
+                place_item(*item, i == static_cast<ssize_t>(flex_line.items.size()) - 1, i == 0);
             }
         } else {
-            for (auto& item : flex_line.items) {
-                place_item(*item);
+            for (size_t i = 0; i < flex_line.items.size(); ++i) {
+                auto& item = flex_line.items[i];
+                place_item(*item, i == 0, i == flex_line.items.size() - 1);
             }
         }
     }
