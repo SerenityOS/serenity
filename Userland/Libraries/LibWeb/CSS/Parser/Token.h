@@ -159,6 +159,22 @@ public:
         return token;
     }
 
+    static Token create_number(float value)
+    {
+        Token token;
+        token.m_type = Type::Number;
+        token.m_number_value = Number(Number::Type::Number, value);
+        return token;
+    }
+
+    static Token create_percentage(float value)
+    {
+        Token token;
+        token.m_type = Type::Percentage;
+        token.m_number_value = Number(Number::Type::Number, value);
+        return token;
+    }
+
 private:
     Type m_type { Type::Invalid };
 
