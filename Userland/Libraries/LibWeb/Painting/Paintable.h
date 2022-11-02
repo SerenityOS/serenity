@@ -89,7 +89,7 @@ public:
     virtual void before_children_paint(PaintContext&, PaintPhase) const { }
     virtual void after_children_paint(PaintContext&, PaintPhase) const { }
 
-    virtual Optional<HitTestResult> hit_test(Gfx::FloatPoint, HitTestType) const;
+    virtual Optional<HitTestResult> hit_test(CSSPixelPoint, HitTestType) const;
 
     virtual bool wants_mouse_events() const { return false; }
 
@@ -100,12 +100,12 @@ public:
     // When these methods return true, the DOM event with the same name will be
     // dispatch at the mouse_event_target if it returns a valid DOM::Node, or
     // the layout node's associated DOM node if it doesn't.
-    virtual DispatchEventOfSameName handle_mousedown(Badge<EventHandler>, Gfx::IntPoint, unsigned button, unsigned modifiers);
-    virtual DispatchEventOfSameName handle_mouseup(Badge<EventHandler>, Gfx::IntPoint, unsigned button, unsigned modifiers);
-    virtual DispatchEventOfSameName handle_mousemove(Badge<EventHandler>, Gfx::IntPoint, unsigned buttons, unsigned modifiers);
+    virtual DispatchEventOfSameName handle_mousedown(Badge<EventHandler>, CSSPixelPoint, unsigned button, unsigned modifiers);
+    virtual DispatchEventOfSameName handle_mouseup(Badge<EventHandler>, CSSPixelPoint, unsigned button, unsigned modifiers);
+    virtual DispatchEventOfSameName handle_mousemove(Badge<EventHandler>, CSSPixelPoint, unsigned buttons, unsigned modifiers);
     virtual DOM::Node* mouse_event_target() const { return nullptr; }
 
-    virtual bool handle_mousewheel(Badge<EventHandler>, Gfx::IntPoint, unsigned buttons, unsigned modifiers, int wheel_delta_x, int wheel_delta_y);
+    virtual bool handle_mousewheel(Badge<EventHandler>, CSSPixelPoint, unsigned buttons, unsigned modifiers, int wheel_delta_x, int wheel_delta_y);
 
     Layout::Node const& layout_node() const { return m_layout_node; }
     Layout::Node& layout_node() { return const_cast<Layout::Node&>(m_layout_node); }

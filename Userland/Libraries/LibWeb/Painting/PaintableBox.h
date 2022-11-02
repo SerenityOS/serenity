@@ -115,7 +115,7 @@ public:
     virtual void before_children_paint(PaintContext&, PaintPhase) const override;
     virtual void after_children_paint(PaintContext&, PaintPhase) const override;
 
-    virtual Optional<HitTestResult> hit_test(Gfx::FloatPoint, HitTestType) const override;
+    virtual Optional<HitTestResult> hit_test(CSSPixelPoint, HitTestType) const override;
 
     void invalidate_stacking_context();
 
@@ -188,9 +188,9 @@ public:
 
     virtual void paint(PaintContext&, PaintPhase) const override;
     virtual bool wants_mouse_events() const override { return false; }
-    virtual bool handle_mousewheel(Badge<EventHandler>, Gfx::IntPoint, unsigned buttons, unsigned modifiers, int wheel_delta_x, int wheel_delta_y) override;
+    virtual bool handle_mousewheel(Badge<EventHandler>, CSSPixelPoint, unsigned buttons, unsigned modifiers, int wheel_delta_x, int wheel_delta_y) override;
 
-    virtual Optional<HitTestResult> hit_test(Gfx::FloatPoint, HitTestType) const override;
+    virtual Optional<HitTestResult> hit_test(CSSPixelPoint, HitTestType) const override;
 
 protected:
     PaintableWithLines(Layout::BlockContainer const&);

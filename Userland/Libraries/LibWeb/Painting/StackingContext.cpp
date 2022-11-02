@@ -439,17 +439,22 @@ static TraversalDecision for_each_in_subtree_of_type_within_same_stacking_contex
     return TraversalDecision::Continue;
 }
 
-Optional<HitTestResult> StackingContext::hit_test(Gfx::FloatPoint position, HitTestType type) const
+Optional<HitTestResult> StackingContext::hit_test(CSSPixelPoint position, HitTestType type) const
 {
     if (!m_box.is_visible())
         return {};
 
-    auto transform_origin = this->transform_origin();
-    auto transformed_position = affine_transform_matrix().inverse().value_or({}).map(position - transform_origin) + transform_origin;
+    auto transform_origin = this->transform_origin().to_type<CSSPixels>();
+    // NOTE: This CSSPixels -> Float -> CSSPixels conversion is because we can't AffineTransform::map() a CSSPixelPoint.
+    Gfx::FloatPoint offset_position {
+        position.x().value() - transform_origin.x().value(),
+        position.y().value() - transform_origin.y().value()
+    };
+    auto transformed_position = affine_transform_matrix().inverse().value_or({}).map(offset_position).to_type<CSSPixels>() + transform_origin;
 
     // FIXME: Support more overflow variations.
     if (paintable().computed_values().overflow_x() == CSS::Overflow::Hidden && paintable().computed_values().overflow_y() == CSS::Overflow::Hidden) {
-        if (!paintable().absolute_border_box_rect().contains(transformed_position.x(), transformed_position.y()))
+        if (!paintable().absolute_border_box_rect().contains(transformed_position.x().value(), transformed_position.y().value()))
             return {};
     }
 
@@ -473,7 +478,7 @@ Optional<HitTestResult> StackingContext::hit_test(Gfx::FloatPoint position, HitT
     for_each_in_subtree_of_type_within_same_stacking_context_in_reverse<PaintableBox>(paintable(), [&](PaintableBox const& paint_box) {
         // FIXME: Support more overflow variations.
         if (paint_box.computed_values().overflow_x() == CSS::Overflow::Hidden && paint_box.computed_values().overflow_y() == CSS::Overflow::Hidden) {
-            if (!paint_box.absolute_border_box_rect().contains(transformed_position.x(), transformed_position.y()))
+            if (!paint_box.absolute_border_box_rect().contains(transformed_position.x().value(), transformed_position.y().value()))
                 return TraversalDecision::SkipChildrenAndContinue;
         }
 
@@ -521,7 +526,7 @@ Optional<HitTestResult> StackingContext::hit_test(Gfx::FloatPoint position, HitT
     for_each_in_subtree_of_type_within_same_stacking_context_in_reverse<PaintableBox>(paintable(), [&](auto const& paint_box) {
         // FIXME: Support more overflow variations.
         if (paint_box.computed_values().overflow_x() == CSS::Overflow::Hidden && paint_box.computed_values().overflow_y() == CSS::Overflow::Hidden) {
-            if (!paint_box.absolute_border_box_rect().contains(transformed_position.x(), transformed_position.y()))
+            if (!paint_box.absolute_border_box_rect().contains(transformed_position.x().value(), transformed_position.y().value()))
                 return TraversalDecision::SkipChildrenAndContinue;
         }
 
@@ -542,7 +547,7 @@ Optional<HitTestResult> StackingContext::hit_test(Gfx::FloatPoint position, HitT
         for_each_in_subtree_of_type_within_same_stacking_context_in_reverse<PaintableBox>(paintable(), [&](auto const& paint_box) {
             // FIXME: Support more overflow variations.
             if (paint_box.computed_values().overflow_x() == CSS::Overflow::Hidden && paint_box.computed_values().overflow_y() == CSS::Overflow::Hidden) {
-                if (!paint_box.absolute_border_box_rect().contains(transformed_position.x(), transformed_position.y()))
+                if (!paint_box.absolute_border_box_rect().contains(transformed_position.x().value(), transformed_position.y().value()))
                     return TraversalDecision::SkipChildrenAndContinue;
             }
 
@@ -571,7 +576,7 @@ Optional<HitTestResult> StackingContext::hit_test(Gfx::FloatPoint position, HitT
     }
 
     // 1. the background and borders of the element forming the stacking context.
-    if (paintable().absolute_border_box_rect().contains(transformed_position)) {
+    if (paintable().absolute_border_box_rect().contains(transformed_position.x().value(), transformed_position.y().value())) {
         return HitTestResult {
             .paintable = paintable(),
         };

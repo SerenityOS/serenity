@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/TypeCasts.h>
+#include <LibWeb/PixelUnits.h>
 #include <LibWeb/UIEvents/EventModifier.h>
 #include <LibWeb/UIEvents/UIEvent.h>
 
@@ -27,7 +28,7 @@ class MouseEvent : public UIEvent {
 
 public:
     static MouseEvent* create(JS::Realm&, FlyString const& event_name, MouseEventInit const& event_init = {});
-    static MouseEvent* create_from_platform_event(JS::Realm&, FlyString const& event_name, double offset_x, double offset_y, double client_x, double client_y, unsigned buttons, unsigned mouse_button = 1);
+    static MouseEvent* create_from_platform_event(JS::Realm&, FlyString const& event_name, CSSPixels offset_x, CSSPixels offset_y, CSSPixels client_x, CSSPixels client_y, unsigned buttons, unsigned mouse_button = 1);
 
     virtual ~MouseEvent() override;
 

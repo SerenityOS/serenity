@@ -14,6 +14,7 @@
 #include <LibGfx/Forward.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/Page/EditEventHandler.h>
+#include <LibWeb/PixelUnits.h>
 
 namespace Web {
 
@@ -22,11 +23,11 @@ public:
     explicit EventHandler(Badge<HTML::BrowsingContext>, HTML::BrowsingContext&);
     ~EventHandler();
 
-    bool handle_mouseup(Gfx::IntPoint, unsigned button, unsigned buttons, unsigned modifiers);
-    bool handle_mousedown(Gfx::IntPoint, unsigned button, unsigned buttons, unsigned modifiers);
-    bool handle_mousemove(Gfx::IntPoint, unsigned buttons, unsigned modifiers);
-    bool handle_mousewheel(Gfx::IntPoint, unsigned button, unsigned buttons, unsigned modifiers, int wheel_delta_x, int wheel_delta_y);
-    bool handle_doubleclick(Gfx::IntPoint, unsigned button, unsigned buttons, unsigned modifiers);
+    bool handle_mouseup(CSSPixelPoint, unsigned button, unsigned buttons, unsigned modifiers);
+    bool handle_mousedown(CSSPixelPoint, unsigned button, unsigned buttons, unsigned modifiers);
+    bool handle_mousemove(CSSPixelPoint, unsigned buttons, unsigned modifiers);
+    bool handle_mousewheel(CSSPixelPoint, unsigned button, unsigned buttons, unsigned modifiers, int wheel_delta_x, int wheel_delta_y);
+    bool handle_doubleclick(CSSPixelPoint, unsigned button, unsigned buttons, unsigned modifiers);
 
     bool handle_keydown(KeyCode, unsigned modifiers, u32 code_point);
     bool handle_keyup(KeyCode, unsigned modifiers, u32 code_point);

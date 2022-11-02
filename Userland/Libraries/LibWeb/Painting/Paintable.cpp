@@ -10,22 +10,22 @@
 
 namespace Web::Painting {
 
-Paintable::DispatchEventOfSameName Paintable::handle_mousedown(Badge<EventHandler>, Gfx::IntPoint, unsigned, unsigned)
+Paintable::DispatchEventOfSameName Paintable::handle_mousedown(Badge<EventHandler>, CSSPixelPoint, unsigned, unsigned)
 {
     return DispatchEventOfSameName::Yes;
 }
 
-Paintable::DispatchEventOfSameName Paintable::handle_mouseup(Badge<EventHandler>, Gfx::IntPoint, unsigned, unsigned)
+Paintable::DispatchEventOfSameName Paintable::handle_mouseup(Badge<EventHandler>, CSSPixelPoint, unsigned, unsigned)
 {
     return DispatchEventOfSameName::Yes;
 }
 
-Paintable::DispatchEventOfSameName Paintable::handle_mousemove(Badge<EventHandler>, Gfx::IntPoint, unsigned, unsigned)
+Paintable::DispatchEventOfSameName Paintable::handle_mousemove(Badge<EventHandler>, CSSPixelPoint, unsigned, unsigned)
 {
     return DispatchEventOfSameName::Yes;
 }
 
-bool Paintable::handle_mousewheel(Badge<EventHandler>, Gfx::IntPoint, unsigned, unsigned, int wheel_delta_x, int wheel_delta_y)
+bool Paintable::handle_mousewheel(Badge<EventHandler>, CSSPixelPoint, unsigned, unsigned, int wheel_delta_x, int wheel_delta_y)
 {
     if (auto* containing_block = this->containing_block()) {
         if (!containing_block->is_scrollable())
@@ -41,7 +41,7 @@ bool Paintable::handle_mousewheel(Badge<EventHandler>, Gfx::IntPoint, unsigned, 
     return false;
 }
 
-Optional<HitTestResult> Paintable::hit_test(Gfx::FloatPoint, HitTestType) const
+Optional<HitTestResult> Paintable::hit_test(CSSPixelPoint, HitTestType) const
 {
     return {};
 }

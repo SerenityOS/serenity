@@ -76,21 +76,20 @@ public:
     virtual void paint(Web::DevicePixelRect const& content_rect, Gfx::Bitmap& target) override
     {
         Gfx::Painter painter(target);
-        Gfx::IntRect int_content_rect { content_rect.x().value(), content_rect.y().value(), content_rect.width().value(), content_rect.height().value() };
 
         if (auto* document = page().top_level_browsing_context().active_document())
             document->update_layout();
 
-        painter.fill_rect({ {}, int_content_rect.size() }, palette().base());
+        painter.fill_rect({ {}, content_rect.size().to_type<int>() }, palette().base());
 
         auto* layout_root = this->layout_root();
         if (!layout_root) {
             return;
         }
 
-        Web::PaintContext context(painter, palette(), int_content_rect.top_left());
+        Web::PaintContext context(painter, palette(), content_rect.top_left().to_type<int>());
         context.set_should_show_line_box_borders(false);
-        context.set_viewport_rect(int_content_rect);
+        context.set_viewport_rect(content_rect.to_type<int>());
         context.set_has_focus(true);
         layout_root->paint_all_phases(context);
     }
@@ -177,15 +176,15 @@ public:
     {
     }
 
-    virtual void page_did_request_context_menu(Gfx::IntPoint) override
+    virtual void page_did_request_context_menu(Web::CSSPixelPoint) override
     {
     }
 
-    virtual void page_did_request_link_context_menu(Gfx::IntPoint, AK::URL const&, DeprecatedString const&, unsigned) override
+    virtual void page_did_request_link_context_menu(Web::CSSPixelPoint, AK::URL const&, DeprecatedString const&, unsigned) override
     {
     }
 
-    virtual void page_did_request_image_context_menu(Gfx::IntPoint, AK::URL const&, DeprecatedString const&, unsigned, Gfx::Bitmap const*) override
+    virtual void page_did_request_image_context_menu(Web::CSSPixelPoint, AK::URL const&, DeprecatedString const&, unsigned, Gfx::Bitmap const*) override
     {
     }
 
@@ -197,7 +196,7 @@ public:
     {
     }
 
-    virtual void page_did_enter_tooltip_area(Gfx::IntPoint, DeprecatedString const&) override
+    virtual void page_did_enter_tooltip_area(Web::CSSPixelPoint, DeprecatedString const&) override
     {
     }
 
@@ -213,7 +212,7 @@ public:
     {
     }
 
-    virtual void page_did_invalidate(Gfx::IntRect const&) override
+    virtual void page_did_invalidate(Web::CSSPixelRect const&) override
     {
     }
 
@@ -225,7 +224,7 @@ public:
     {
     }
 
-    virtual void page_did_request_scroll_into_view(Gfx::IntRect const&) override
+    virtual void page_did_request_scroll_into_view(Web::CSSPixelRect const&) override
     {
     }
 
