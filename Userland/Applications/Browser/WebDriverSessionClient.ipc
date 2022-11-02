@@ -19,6 +19,7 @@ endpoint WebDriverSessionClient {
     restore_window() =|
     set_window_size(Gfx::IntSize size) =|
     set_window_position(Gfx::IntPoint position) =|
+    maximize_window() =|
     get_all_cookies() => (Vector<Web::Cookie::Cookie> cookies)
     get_named_cookie(String name) => (Optional<Web::Cookie::Cookie> cookie)
     add_cookie(Web::Cookie::ParsedCookie cookie) =|
