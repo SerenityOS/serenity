@@ -80,6 +80,21 @@ describe("correct behavior", () => {
         expect(plainDateTime.toString(options)).toBe("2022-08-08T14:38:40.1002003");
         expect(calledToString).toBeFalse();
     });
+
+    test("calendarName option", () => {
+        const plainDateTime = new Temporal.PlainDateTime(2022, 11, 2, 19, 4, 35, 100, 200, 300);
+        const values = [
+            ["auto", "2022-11-02T19:04:35.1002003"],
+            ["always", "2022-11-02T19:04:35.1002003[u-ca=iso8601]"],
+            ["never", "2022-11-02T19:04:35.1002003"],
+            ["critical", "2022-11-02T19:04:35.1002003[!u-ca=iso8601]"],
+        ];
+
+        for (const [calendarName, expected] of values) {
+            const options = { calendarName };
+            expect(plainDateTime.toString(options)).toBe(expected);
+        }
+    });
 });
 
 describe("errors", () => {
@@ -87,5 +102,12 @@ describe("errors", () => {
         expect(() => {
             Temporal.PlainDateTime.prototype.toString.call("foo");
         }).toThrowWithMessage(TypeError, "Not an object of type Temporal.PlainDateTime");
+    });
+
+    test("calendarName option must be one of 'auto', 'always', 'never', 'critical'", () => {
+        const plainDateTime = new Temporal.PlainDateTime(2022, 11, 2, 19, 5, 40, 100, 200, 300);
+        expect(() => {
+            plainDateTime.toString({ calendarName: "foo" });
+        }).toThrowWithMessage(RangeError, "foo is not a valid value for option calendarName");
     });
 });

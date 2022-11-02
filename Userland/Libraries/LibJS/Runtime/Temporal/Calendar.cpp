@@ -579,19 +579,21 @@ ThrowCompletionOr<String> maybe_format_calendar_annotation(VM& vm, Object const*
 // 12.2.27 FormatCalendarAnnotation ( id, showCalendar ), https://tc39.es/proposal-temporal/#sec-temporal-formatcalendarannotation
 String format_calendar_annotation(StringView id, StringView show_calendar)
 {
-    // 1. Assert: showCalendar is "auto", "always", or "never".
-    VERIFY(show_calendar == "auto"sv || show_calendar == "always"sv || show_calendar == "never"sv);
+    VERIFY(show_calendar == "auto"sv || show_calendar == "always"sv || show_calendar == "never"sv || show_calendar == "critical"sv);
 
-    // 2. If showCalendar is "never", return the empty String.
+    // 1. If showCalendar is "never", return the empty String.
     if (show_calendar == "never"sv)
         return String::empty();
 
-    // 3. If showCalendar is "auto" and id is "iso8601", return the empty String.
+    // 2. If showCalendar is "auto" and id is "iso8601", return the empty String.
     if (show_calendar == "auto"sv && id == "iso8601"sv)
         return String::empty();
 
-    // 4. Return the string-concatenation of "[u-ca=", id, and "]".
-    return String::formatted("[u-ca={}]", id);
+    // 3. If showCalendar is "critical", let flag be "!"; else, let flag be the empty String.
+    auto flag = show_calendar == "critical"sv ? "!"sv : ""sv;
+
+    // 4. Return the string-concatenation of "[", flag, "u-ca=", id, and "]".
+    return String::formatted("[{}u-ca={}]", flag, id);
 }
 
 // 12.2.28 CalendarEquals ( one, two ), https://tc39.es/proposal-temporal/#sec-temporal-calendarequals

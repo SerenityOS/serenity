@@ -213,8 +213,8 @@ ThrowCompletionOr<String> temporal_year_month_to_string(VM& vm, PlainYearMonth& 
     // 6. Let calendarID be ? ToString(yearMonth.[[Calendar]]).
     auto calendar_id = TRY(Value(&year_month.calendar()).to_string(vm));
 
-    // 7. If showCalendar is "always" or if calendarID is not "iso8601", then
-    if (show_calendar == "always"sv || calendar_id != "iso8601") {
+    // 7. If showCalendar is one of "always" or "critical", or if calendarID is not "iso8601", then
+    if (show_calendar.is_one_of("always"sv, "critical"sv) || calendar_id != "iso8601") {
         // a. Let day be ToZeroPaddedDecimalString(yearMonth.[[ISODay]], 2).
         // b. Set result to the string-concatenation of result, the code unit 0x002D (HYPHEN-MINUS), and day.
         result = String::formatted("{}-{:02}", result, year_month.iso_day());

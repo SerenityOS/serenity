@@ -186,8 +186,8 @@ ThrowCompletionOr<String> temporal_month_day_to_string(VM& vm, PlainMonthDay& mo
     // 6. Let calendarID be ? ToString(monthDay.[[Calendar]]).
     auto calendar_id = TRY(Value(&month_day.calendar()).to_string(vm));
 
-    // 7. If showCalendar is "always" or if calendarID is not "iso8601", then
-    if (show_calendar == "always"sv || calendar_id != "iso8601"sv) {
+    // 7. If showCalendar is one of "always" or "critical", or if calendarID is not "iso8601", then
+    if (show_calendar.is_one_of("always"sv, "critical"sv) || calendar_id != "iso8601"sv) {
         // a. Let year be ! PadISOYear(monthDay.[[ISOYear]]).
         // b. Set result to the string-concatenation of year, the code unit 0x002D (HYPHEN-MINUS), and result.
         result = String::formatted("{}-{}", pad_iso_year(month_day.iso_year()), result);
