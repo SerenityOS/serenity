@@ -6,6 +6,7 @@
 #include <LibGfx/Size.h>
 #include <LibWeb/Cookie/Cookie.h>
 #include <LibWeb/Cookie/ParsedCookie.h>
+#include <LibWeb/WebDriver/ExecuteScript.h>
 
 endpoint WebDriverSessionClient {
     quit() =|
@@ -22,6 +23,7 @@ endpoint WebDriverSessionClient {
     set_window_position(Gfx::IntPoint position) =|
     maximize_window() =|
     minimize_window() =|
+    execute_script(String body, Vector<String> json_arguments, Optional<u64> timeout, bool async) => (Web::WebDriver::ExecuteScriptResultType result_type, String json_result)
     get_all_cookies() => (Vector<Web::Cookie::Cookie> cookies)
     get_named_cookie(String name) => (Optional<Web::Cookie::Cookie> cookie)
     add_cookie(Web::Cookie::ParsedCookie cookie) =|
