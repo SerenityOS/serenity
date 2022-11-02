@@ -109,6 +109,8 @@ private:
     virtual Messages::WindowServer::GetWindowTitleResponse get_window_title(i32) override;
     virtual Messages::WindowServer::IsMaximizedResponse is_maximized(i32) override;
     virtual void set_maximized(i32, bool) override;
+    virtual Messages::WindowServer::IsMinimizedResponse is_minimized(i32) override;
+    virtual void set_minimized(i32, bool) override;
     virtual void start_window_resize(i32, i32) override;
     virtual Messages::WindowServer::SetWindowRectResponse set_window_rect(i32, Gfx::IntRect const&) override;
     virtual Messages::WindowServer::GetWindowRectResponse get_window_rect(i32) override;

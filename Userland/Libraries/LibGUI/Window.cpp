@@ -1036,6 +1036,18 @@ void Window::set_maximized(bool maximized)
     ConnectionToWindowServer::the().async_set_maximized(m_window_id, maximized);
 }
 
+void Window::set_minimized(bool minimized)
+{
+    if (!is_minimizable())
+        return;
+
+    m_minimized = minimized;
+    if (!is_visible())
+        return;
+
+    ConnectionToWindowServer::the().async_set_minimized(m_window_id, minimized);
+}
+
 void Window::update_min_size()
 {
     if (main_widget()) {
