@@ -71,6 +71,14 @@ void WebDriverConnection::forward()
         browser_window->active_tab().go_forward();
 }
 
+Messages::WebDriverSessionClient::GetWindowRectResponse WebDriverConnection::get_window_rect()
+{
+    dbgln_if(WEBDRIVER_DEBUG, "WebDriverConnection: get_window_rect");
+    if (auto browser_window = m_browser_window.strong_ref())
+        return { browser_window->rect() };
+    return { {} };
+}
+
 Messages::WebDriverSessionClient::GetAllCookiesResponse WebDriverConnection::get_all_cookies()
 {
     dbgln_if(WEBDRIVER_DEBUG, "WebDriverConnection: get_cookies");

@@ -14,6 +14,7 @@
 #include <LibCore/LocalServer.h>
 #include <LibCore/Stream.h>
 #include <LibCore/System.h>
+#include <LibGfx/Rect.h>
 #include <LibWeb/Cookie/Cookie.h>
 #include <LibWeb/Cookie/ParsedCookie.h>
 #include <unistd.h>
@@ -279,6 +280,29 @@ ErrorOr<JsonValue, WebDriverError> Session::get_window_handles() const
 
     // 3. Return success with data handles.
     return handles;
+}
+
+static JsonObject serialize_window_rect(Gfx::IntRect const& rect)
+{
+    JsonObject serialized_rect = {};
+    serialized_rect.set("x", rect.x());
+    serialized_rect.set("y", rect.y());
+    serialized_rect.set("width", rect.width());
+    serialized_rect.set("height", rect.height());
+
+    return serialized_rect;
+}
+
+// 11.8.1 Get Window Rect, https://w3c.github.io/webdriver/#dfn-get-window-rect
+ErrorOr<JsonValue, WebDriverError> Session::get_window_rect()
+{
+    // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
+    TRY(check_for_open_top_level_browsing_context_or_return_error());
+
+    // FIXME: 2. Handle any user prompts and return its value if it is an error.
+
+    // 3. Return success with data set to the WindowRect object for the current top-level browsing context.
+    return serialize_window_rect(m_browser_connection->get_window_rect());
 }
 
 // https://w3c.github.io/webdriver/#dfn-get-or-create-a-web-element-reference
