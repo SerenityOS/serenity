@@ -23,6 +23,7 @@
 #include <LibGfx/Size.h>
 #include <LibWeb/Cookie/Cookie.h>
 #include <LibWeb/Cookie/ParsedCookie.h>
+#include <LibWeb/WebDriver/ExecuteScript.h>
 #include <unistd.h>
 
 namespace WebDriver {
@@ -897,6 +898,79 @@ ErrorOr<JsonValue, WebDriverError> Session::get_element_tag_name(JsonValue const
 
     // 5. Return success with data qualified name.
     return JsonValue(qualified_name);
+}
+
+struct ScriptArguments {
+    String script;
+    JsonArray const& arguments;
+};
+
+// https://w3c.github.io/webdriver/#dfn-extract-the-script-arguments-from-a-request
+static ErrorOr<ScriptArguments, WebDriverError> extract_the_script_arguments_from_a_request(JsonValue const& payload)
+{
+    if (!payload.is_object())
+        return WebDriverError::from_code(ErrorCode::InvalidArgument, "Payload is not a JSON object");
+
+    auto const& properties = payload.as_object();
+
+    // 1. Let script be the result of getting a property named script from the parameters.
+    // 2. If script is not a String, return error with error code invalid argument.
+    if (!properties.has_string("script"sv))
+        return WebDriverError::from_code(ErrorCode::InvalidArgument, "Payload doesn't have a 'script' string property");
+    auto script = properties.get("script"sv).as_string();
+
+    // 3. Let args be the result of getting a property named args from the parameters.
+    // 4. If args is not an Array return error with error code invalid argument.
+    if (!properties.has_array("args"sv))
+        return WebDriverError::from_code(ErrorCode::InvalidArgument, "Payload doesn't have an 'args' string property");
+    auto const& args = properties.get("args"sv).as_array();
+
+    // 5. Let arguments be the result of calling the JSON deserialize algorithm with arguments args.
+    // NOTE: We forward the JSON array to the Browser and then WebContent process over IPC, so this is not necessary.
+
+    // 6. Return success with data script and arguments.
+    return ScriptArguments { script, args };
+}
+
+// 13.2.1 Execute Script, https://w3c.github.io/webdriver/#dfn-execute-script
+ErrorOr<JsonValue, WebDriverError> Session::execute_script(JsonValue const& payload)
+{
+    // 1. Let body and arguments be the result of trying to extract the script arguments from a request with argument parameters.
+    auto const& [body, arguments] = TRY(extract_the_script_arguments_from_a_request(payload));
+
+    // 2. If the current browsing context is no longer open, return error with error code no such window.
+    TRY(check_for_open_top_level_browsing_context_or_return_error());
+
+    // FIXME: 3. Handle any user prompts, and return its value if it is an error.
+
+    // 4., 5.1-5.3.
+    Vector<String> json_arguments;
+    arguments.for_each([&](JsonValue const& json_value) {
+        // NOTE: serialized() instead of to_string() ensures proper quoting.
+        json_arguments.append(json_value.serialized<StringBuilder>());
+    });
+
+    dbgln("Executing script with 'args': [{}] / 'body':\n{}", String::join(", "sv, json_arguments), body);
+    auto execute_script_response = m_browser_connection->execute_script(body, json_arguments, m_timeouts_configuration.script_timeout, false);
+    dbgln("Executing script returned: {}", execute_script_response.json_result());
+
+    // NOTE: This is assumed to be a valid JSON value.
+    auto result = MUST(JsonValue::from_string(execute_script_response.json_result()));
+
+    switch (execute_script_response.result_type()) {
+    // 6. If promise is still pending and the session script timeout is reached, return error with error code script timeout.
+    case Web::WebDriver::ExecuteScriptResultType::Timeout:
+        return WebDriverError::from_code(ErrorCode::ScriptTimeoutError, "Script timed out");
+    // 7. Upon fulfillment of promise with value v, let result be a JSON clone of v, and return success with data result.
+    case Web::WebDriver::ExecuteScriptResultType::PromiseResolved:
+        return result;
+    // 8. Upon rejection of promise with reason r, let result be a JSON clone of r, and return error with error code javascript error and data result.
+    case Web::WebDriver::ExecuteScriptResultType::PromiseRejected:
+    case Web::WebDriver::ExecuteScriptResultType::JavaScriptError:
+        return WebDriverError::from_code(ErrorCode::JavascriptError, "Script returned an error", move(result));
+    default:
+        VERIFY_NOT_REACHED();
+    }
 }
 
 // https://w3c.github.io/webdriver/#dfn-serialized-cookie
