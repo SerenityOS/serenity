@@ -51,6 +51,7 @@ public:
     ErrorOr<void, Variant<WebDriverError, Error>> close_window();
     ErrorOr<JsonValue, WebDriverError> get_window_handles() const;
     ErrorOr<JsonValue, WebDriverError> get_window_rect();
+    ErrorOr<JsonValue, WebDriverError> set_window_rect(JsonValue const& payload);
     ErrorOr<JsonValue, WebDriverError> find_element(JsonValue const& payload);
     ErrorOr<JsonValue, WebDriverError> find_elements(JsonValue const& payload);
     ErrorOr<JsonValue, WebDriverError> find_element_from_element(JsonValue const& payload, StringView parameter_element_id);
