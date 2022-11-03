@@ -165,9 +165,6 @@ void dump_tree(StringBuilder& builder, Layout::Node const& layout_node, bool sho
             color_off,
             identifier.characters());
 
-        if (interactive)
-            builder.appendff("@{:p} ", &layout_node);
-
         if (auto const* paint_box = box.paint_box()) {
             builder.appendff("at ({},{}) content-size {}x{}",
                 paint_box->absolute_x(),
