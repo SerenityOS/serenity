@@ -8,6 +8,7 @@
 
 #include <AK/Forward.h>
 #include <AK/Function.h>
+#include <LibGfx/Rect.h>
 #include <LibWeb/Forward.h>
 
 namespace Messages::WebContentServer {
@@ -29,6 +30,7 @@ public:
     Function<String(i32 element_id, String const&)> on_get_computed_value_for_element;
     Function<String(i32 element_id)> on_get_element_text;
     Function<String(i32 element_id)> on_get_element_tag_name;
+    Function<Gfx::IntRect(i32 element_id)> on_get_element_rect;
     Function<String()> on_serialize_source;
     Function<Messages::WebContentServer::WebdriverExecuteScriptResponse(String const& body, Vector<String> const& json_arguments, Optional<u64> const& timeout, bool async)> on_execute_script;
 };

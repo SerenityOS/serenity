@@ -900,6 +900,42 @@ ErrorOr<JsonValue, WebDriverError> Session::get_element_tag_name(JsonValue const
     return JsonValue(qualified_name);
 }
 
+// 12.4.7 Get Element Rect, https://w3c.github.io/webdriver/#dfn-get-element-rect
+ErrorOr<JsonValue, WebDriverError> Session::get_element_rect(StringView parameter_element_id)
+{
+    // 1. If the current browsing context is no longer open, return error with error code no such window.
+    TRY(check_for_open_top_level_browsing_context_or_return_error());
+
+    // FIXME: 2. Handle any user prompts and return its value if it is an error.
+
+    // 3. Let element be the result of trying to get a known connected element with url variable element id.
+    // NOTE: The whole concept of "connected elements" is not implemented yet. See get_or_create_a_web_element_reference()
+    //       For now the element is only represented by its ID
+    auto maybe_element_id = parameter_element_id.to_int();
+    if (!maybe_element_id.has_value())
+        return WebDriverError::from_code(ErrorCode::InvalidArgument, "Element ID is not an i32");
+
+    auto element_id = maybe_element_id.release_value();
+
+    // 4. Calculate the absolute position of element and let it be coordinates.
+    // 5. Let rect be element’s bounding rectangle.
+    auto rect = m_browser_connection->get_element_rect(element_id);
+
+    // 6. Let body be a new JSON Object initialized with:
+    // "x"
+    //     The first value of coordinates.
+    // "y"
+    //     The second value of coordinates.
+    // "width"
+    //     Value of rect’s width dimension.
+    // "height"
+    //     Value of rect’s height dimension.
+    auto body = serialize_rect(rect);
+
+    // 7. Return success with data body.
+    return body;
+}
+
 // 13.1 Get Page Source, https://w3c.github.io/webdriver/#dfn-get-page-source
 ErrorOr<JsonValue, WebDriverError> Session::get_source()
 {
