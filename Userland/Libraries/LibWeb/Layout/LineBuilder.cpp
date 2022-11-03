@@ -110,8 +110,8 @@ float LineBuilder::y_for_float_to_be_inserted_here(Box const& box)
     // FIXME: This is super dumb, we move 1px downwards per iteration and stop
     //        when we find an Y value where we don't collide with other floats.
     while (true) {
-        auto space_at_y_top = m_context.available_space_for_line(candidate_y);
-        auto space_at_y_bottom = m_context.available_space_for_line(candidate_y + height);
+        auto space_at_y_top = m_context.available_space_for_line(candidate_y).value();
+        auto space_at_y_bottom = m_context.available_space_for_line(candidate_y + height).value();
         if (width > space_at_y_top || width > space_at_y_bottom) {
             if (!m_context.any_floats_intrude_at_y(candidate_y) && !m_context.any_floats_intrude_at_y(candidate_y + height)) {
                 return candidate_y;
@@ -154,8 +154,8 @@ void LineBuilder::update_last_line()
     auto text_align = m_context.containing_block().computed_values().text_align();
 
     auto current_line_height = max(m_max_height_on_current_line, m_context.containing_block().line_height());
-    float x_offset_top = m_context.leftmost_x_offset_at(m_current_y);
-    float x_offset_bottom = m_context.leftmost_x_offset_at(m_current_y + current_line_height - 1);
+    float x_offset_top = m_context.leftmost_x_offset_at(m_current_y).value();
+    float x_offset_bottom = m_context.leftmost_x_offset_at(m_current_y + current_line_height - 1).value();
     float x_offset = max(x_offset_top, x_offset_bottom);
 
     float excess_horizontal_space = m_available_width_for_current_line - line_box.width();
@@ -306,7 +306,7 @@ void LineBuilder::recalculate_available_space()
     auto current_line_height = max(m_max_height_on_current_line, m_context.containing_block().line_height());
     auto available_at_top_of_line_box = m_context.available_space_for_line(m_current_y);
     auto available_at_bottom_of_line_box = m_context.available_space_for_line(m_current_y + current_line_height - 1);
-    m_available_width_for_current_line = min(available_at_bottom_of_line_box, available_at_top_of_line_box);
+    m_available_width_for_current_line = min(available_at_bottom_of_line_box, available_at_top_of_line_box).value();
 }
 
 }
