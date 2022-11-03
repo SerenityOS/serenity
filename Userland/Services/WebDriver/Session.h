@@ -63,6 +63,7 @@ public:
     ErrorOr<JsonValue, WebDriverError> get_element_css_value(JsonValue const& payload, StringView element_id, StringView property_name);
     ErrorOr<JsonValue, WebDriverError> get_element_text(JsonValue const& payload, StringView element_id);
     ErrorOr<JsonValue, WebDriverError> get_element_tag_name(JsonValue const& payload, StringView element_id);
+    ErrorOr<JsonValue, WebDriverError> get_source();
     ErrorOr<JsonValue, WebDriverError> execute_script(JsonValue const& payload);
     ErrorOr<JsonValue, WebDriverError> execute_async_script(JsonValue const& payload);
     ErrorOr<JsonValue, WebDriverError> get_all_cookies();

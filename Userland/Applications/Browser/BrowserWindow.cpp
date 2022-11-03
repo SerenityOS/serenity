@@ -631,6 +631,10 @@ void BrowserWindow::create_new_tab(URL url, bool activate)
         return active_tab().view().get_element_tag_name(element_id);
     };
 
+    new_tab.webdriver_endpoints().on_serialize_source = [this]() {
+        return active_tab().view().serialize_source();
+    };
+
     new_tab.webdriver_endpoints().on_execute_script = [this](String const& body, Vector<String> const& json_arguments, Optional<u64> const& timeout, bool async) {
         return active_tab().view().webdriver_execute_script(body, json_arguments, timeout, async);
     };

@@ -29,6 +29,7 @@ public:
     Function<String(i32 element_id, String const&)> on_get_computed_value_for_element;
     Function<String(i32 element_id)> on_get_element_text;
     Function<String(i32 element_id)> on_get_element_tag_name;
+    Function<String()> on_serialize_source;
     Function<Messages::WebContentServer::WebdriverExecuteScriptResponse(String const& body, Vector<String> const& json_arguments, Optional<u64> const& timeout, bool async)> on_execute_script;
 };
 
