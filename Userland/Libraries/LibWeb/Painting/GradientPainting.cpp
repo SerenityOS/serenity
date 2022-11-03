@@ -33,7 +33,7 @@ static float calulate_gradient_length(Gfx::IntSize const& gradient_size, float g
     return calulate_gradient_length(gradient_size, sin_angle, cos_angle);
 }
 
-static ColorStopList resolve_color_stop_positions(auto const& color_stop_list, float gradient_length, auto resolve_position_to_float)
+static ColorStopList resolve_color_stop_positions(auto const& color_stop_list, auto resolve_position_to_float)
 {
     VERIFY(color_stop_list.size() >= 2);
     ColorStopList resolved_color_stops;
@@ -56,7 +56,7 @@ static ColorStopList resolve_color_stop_positions(auto const& color_stop_list, f
     // 1. If the first color stop does not have a position, set its position to 0%.
     resolved_color_stops.first().position = 0;
     //    If the last color stop does not have a position, set its position to 100%
-    resolved_color_stops.last().position = gradient_length;
+    resolved_color_stops.last().position = 1.0f;
 
     // 2. If a color stop or transition hint has a position that is less than the
     //    specified position of any color stop or transition hint before it in the list,
@@ -131,8 +131,8 @@ LinearGradientData resolve_linear_gradient_data(Layout::Node const& node, Gfx::F
     auto gradient_length_px = calulate_gradient_length(gradient_size.to_rounded<int>(), gradient_angle);
     auto gradient_length = CSS::Length::make_px(gradient_length_px);
 
-    auto resolved_color_stops = resolve_color_stop_positions(linear_gradient.color_stop_list(), gradient_length_px, [&](auto const& length_percentage) {
-        return length_percentage.resolved(node, gradient_length).to_px(node);
+    auto resolved_color_stops = resolve_color_stop_positions(linear_gradient.color_stop_list(), [&](auto const& length_percentage) {
+        return length_percentage.resolved(node, gradient_length).to_px(node) / gradient_length_px;
     });
 
     Optional<float> repeat_length = {};
@@ -145,8 +145,8 @@ LinearGradientData resolve_linear_gradient_data(Layout::Node const& node, Gfx::F
 ConicGradientData resolve_conic_gradient_data(Layout::Node const& node, CSS::ConicGradientStyleValue const& conic_gradient)
 {
     CSS::Angle one_turn(360.0f, CSS::Angle::Type::Deg);
-    auto resolved_color_stops = resolve_color_stop_positions(conic_gradient.color_stop_list(), one_turn.to_degrees(), [&](auto const& angle_percentage) {
-        return angle_percentage.resolved(node, one_turn).to_degrees();
+    auto resolved_color_stops = resolve_color_stop_positions(conic_gradient.color_stop_list(), [&](auto const& angle_percentage) {
+        return angle_percentage.resolved(node, one_turn).to_degrees() / one_turn.to_degrees();
     });
     return { conic_gradient.angle_degrees(), resolved_color_stops };
 }
@@ -180,36 +180,62 @@ static float color_stop_step(ColorStop const& previous_stop, ColorStop const& ne
 
 class GradientLine {
 public:
-    GradientLine(int length, int start_offset, Span<ColorStop const> color_stops)
+    GradientLine(int color_count, Span<ColorStop const> color_stops)
+        : GradientLine(color_count, color_count, 0, false, color_stops) {};
+
+    GradientLine(int color_count, int gradient_length, int start_offset, bool repeating, Span<ColorStop const> color_stops)
+        : m_start_offset { start_offset }
+        , m_repeating { repeating }
     {
-        m_gradient_line_colors.resize(length);
+        // Note: color_count will be < gradient_length for repeating gradients.
+        m_gradient_line_colors.resize(color_count);
         // Note: color.mixed_with() performs premultiplied alpha mixing when necessary as defined in:
         // https://drafts.csswg.org/css-images/#coloring-gradient-line
-        for (int loc = 0; loc < length; loc++) {
+        for (int loc = 0; loc < color_count; loc++) {
+            auto relative_loc = float(loc + start_offset) / gradient_length;
             Gfx::Color gradient_color = color_stops[0].color.mixed_with(
                 color_stops[1].color,
-                color_stop_step(
-                    color_stops[0],
-                    color_stops[1],
-                    loc + start_offset));
+                color_stop_step(color_stops[0], color_stops[1], relative_loc));
             for (size_t i = 1; i < color_stops.size() - 1; i++) {
                 gradient_color = gradient_color.mixed_with(
                     color_stops[i + 1].color,
-                    color_stop_step(
-                        color_stops[i],
-                        color_stops[i + 1],
-                        loc + start_offset));
+                    color_stop_step(color_stops[i], color_stops[i + 1], relative_loc));
             }
             m_gradient_line_colors[loc] = gradient_color;
         }
     }
 
-    Gfx::Color lookup_color(int loc) const
+    Gfx::Color get_color(int index) const
     {
-        return m_gradient_line_colors[clamp(loc, 0, m_gradient_line_colors.size() - 1)];
+        return m_gradient_line_colors[clamp(index, 0, m_gradient_line_colors.size() - 1)];
+    }
+
+    Gfx::Color sample_color(float loc) const
+    {
+        auto repeat_wrap_if_required = [&](int loc) {
+            if (m_repeating)
+                return (loc + m_start_offset) % static_cast<int>(m_gradient_line_colors.size());
+            return loc;
+        };
+        auto int_loc = static_cast<int>(loc);
+        auto blend = loc - int_loc;
+        // Blend between the two neighbouring colors (this fixes some nasty aliasing issues at small angles)
+        return get_color(repeat_wrap_if_required(int_loc)).mixed_with(get_color(repeat_wrap_if_required(int_loc + 1)), blend);
+    }
+
+    void paint_into_rect(Gfx::Painter& painter, Gfx::IntRect const& rect, auto location_transform)
+    {
+        for (int y = 0; y < rect.height(); y++) {
+            for (int x = 0; x < rect.width(); x++) {
+                auto gradient_color = sample_color(location_transform(x, y));
+                painter.set_pixel(rect.x() + x, rect.y() + y, gradient_color, gradient_color.alpha() < 255);
+            }
+        }
     }
 
 private:
+    int m_start_offset;
+    bool m_repeating;
     Vector<Gfx::Color, 1024> m_gradient_line_colors;
 };
 
@@ -220,9 +246,9 @@ void paint_linear_gradient(PaintContext& context, Gfx::IntRect const& gradient_r
     AK::sincos(angle, sin_angle, cos_angle);
 
     // Full length of the gradient
-    auto length = calulate_gradient_length(gradient_rect.size(), sin_angle, cos_angle);
+    auto gradient_length_px = round_to<int>(calulate_gradient_length(gradient_rect.size(), sin_angle, cos_angle));
 
-    Gfx::FloatPoint offset { cos_angle * (length / 2), sin_angle * (length / 2) };
+    Gfx::FloatPoint offset { cos_angle * (gradient_length_px / 2), sin_angle * (gradient_length_px / 2) };
 
     auto center = gradient_rect.translated(-gradient_rect.location()).center();
     auto start_point = center.to_type<float>() - offset;
@@ -230,44 +256,28 @@ void paint_linear_gradient(PaintContext& context, Gfx::IntRect const& gradient_r
     // Rotate gradient line to be horizontal
     auto rotated_start_point_x = start_point.x() * cos_angle - start_point.y() * -sin_angle;
 
-    auto gradient_color_count = round_to<int>(data.repeat_length.value_or(length));
+    bool repeating = data.repeat_length.has_value();
+    auto gradient_color_count = round_to<int>(data.repeat_length.value_or(1.0f) * gradient_length_px);
     auto& color_stops = data.color_stops;
-    auto start_offset = data.repeat_length.has_value() ? color_stops.first().position : 0.0f;
+    auto start_offset = repeating ? color_stops.first().position : 0.0f;
+    auto start_offset_px = round_to<int>(start_offset * gradient_length_px);
 
-    GradientLine gradient_line(gradient_color_count, round_to<int>(start_offset), color_stops);
-
-    auto repeat_wrap_if_required = [&](float loc) {
-        if (data.repeat_length.has_value())
-            loc = AK::fmod(loc + length, *data.repeat_length);
-        return loc;
-    };
-
-    for (int y = 0; y < gradient_rect.height(); y++) {
-        for (int x = 0; x < gradient_rect.width(); x++) {
-            auto loc = repeat_wrap_if_required((x * cos_angle - (gradient_rect.height() - y) * -sin_angle) - rotated_start_point_x - start_offset);
-            auto blend = loc - static_cast<int>(loc);
-            // Blend between the two neighbouring colors (this fixes some nasty aliasing issues at small angles)
-            auto gradient_color = gradient_line.lookup_color(loc).mixed_with(gradient_line.lookup_color(repeat_wrap_if_required(loc + 1)), blend);
-            context.painter().set_pixel(gradient_rect.x() + x, gradient_rect.y() + y, gradient_color, gradient_color.alpha() < 255);
-        }
-    }
+    GradientLine gradient_line(gradient_color_count, gradient_length_px, start_offset_px, repeating, color_stops);
+    gradient_line.paint_into_rect(context.painter(), gradient_rect, [&](int x, int y) {
+        return (x * cos_angle - (gradient_rect.height() - y) * -sin_angle) - rotated_start_point_x;
+    });
 }
 
 void paint_conic_gradient(PaintContext& context, Gfx::IntRect const& gradient_rect, ConicGradientData const& data, Gfx::IntPoint position)
 {
     // FIXME: Do we need/want sub-degree accuracy for the gradient line?
-    GradientLine gradient_line(360, 0, data.color_stops);
+    GradientLine gradient_line(360, data.color_stops);
     float start_angle = (360.0f - data.start_angle) + 90.0f;
-    for (int y = 0; y < gradient_rect.height(); y++) {
-        for (int x = 0; x < gradient_rect.width(); x++) {
-            auto point = Gfx::IntPoint { x, y } - position;
-            // FIXME: We could probably get away with some approximation here:
-            float loc = fmod((AK::atan2(float(point.y()), float(point.x())) * 180.0f / AK::Pi<float> + 360.0f + start_angle), 360.0f);
-            auto blend = loc - static_cast<int>(loc);
-            auto gradient_color = gradient_line.lookup_color(loc).mixed_with(gradient_line.lookup_color(loc + 1), blend);
-            context.painter().set_pixel(gradient_rect.x() + x, gradient_rect.y() + y, gradient_color, gradient_color.alpha() < 255);
-        }
-    }
+    gradient_line.paint_into_rect(context.painter(), gradient_rect, [&](int x, int y) {
+        auto point = Gfx::IntPoint { x, y } - position;
+        // FIXME: We could probably get away with some approximation here:
+        return fmod((AK::atan2(float(point.y()), float(point.x())) * 180.0f / AK::Pi<float> + 360.0f + start_angle), 360.0f);
+    });
 }
 
 }
