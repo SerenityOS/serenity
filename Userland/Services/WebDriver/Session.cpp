@@ -289,7 +289,7 @@ ErrorOr<JsonValue, WebDriverError> Session::get_window_handles() const
     return handles;
 }
 
-static JsonObject serialize_window_rect(Gfx::IntRect const& rect)
+static JsonObject serialize_rect(Gfx::IntRect const& rect)
 {
     JsonObject serialized_rect = {};
     serialized_rect.set("x", rect.x());
@@ -309,7 +309,7 @@ ErrorOr<JsonValue, WebDriverError> Session::get_window_rect()
     // FIXME: 2. Handle any user prompts and return its value if it is an error.
 
     // 3. Return success with data set to the WindowRect object for the current top-level browsing context.
-    return serialize_window_rect(m_browser_connection->get_window_rect());
+    return serialize_rect(m_browser_connection->get_window_rect());
 }
 
 // 11.8.2 Set Window Rect, https://w3c.github.io/webdriver/#dfn-set-window-rect
@@ -381,7 +381,7 @@ ErrorOr<JsonValue, WebDriverError> Session::set_window_rect(JsonValue const& pay
     }
 
     // 14. Return success with data set to the WindowRect object for the current top-level browsing context.
-    return serialize_window_rect(m_browser_connection->get_window_rect());
+    return serialize_rect(m_browser_connection->get_window_rect());
 }
 
 // 11.8.3 Maximize Window, https://w3c.github.io/webdriver/#dfn-maximize-window
@@ -402,7 +402,7 @@ ErrorOr<JsonValue, WebDriverError> Session::maximize_window()
     m_browser_connection->async_maximize_window();
 
     // 7. Return success with data set to the WindowRect object for the current top-level browsing context.
-    return serialize_window_rect(m_browser_connection->get_window_rect());
+    return serialize_rect(m_browser_connection->get_window_rect());
 }
 
 // 11.8.4 Minimize Window, https://w3c.github.io/webdriver/#minimize-window
@@ -420,7 +420,7 @@ ErrorOr<JsonValue, WebDriverError> Session::minimize_window()
     m_browser_connection->async_minimize_window();
 
     // 6. Return success with data set to the WindowRect object for the current top-level browsing context.
-    return serialize_window_rect(m_browser_connection->get_window_rect());
+    return serialize_rect(m_browser_connection->get_window_rect());
 }
 
 // https://w3c.github.io/webdriver/#dfn-get-or-create-a-web-element-reference
