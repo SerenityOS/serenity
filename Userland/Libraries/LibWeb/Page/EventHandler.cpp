@@ -799,7 +799,7 @@ CSSPixelPoint EventHandler::compute_mouse_event_client_offset(CSSPixelPoint even
     // The clientX attribute must return the x-coordinate of the position where the event occurred relative to the origin of the viewport.
 
     auto scroll_offset = m_browsing_context.viewport_scroll_offset();
-    return event_page_position.translated(-scroll_offset.to_rounded<CSSPixels>());
+    return event_page_position.translated(-scroll_offset);
 }
 
 CSSPixelPoint EventHandler::compute_mouse_event_page_offset(CSSPixelPoint event_client_offset) const
@@ -811,6 +811,6 @@ CSSPixelPoint EventHandler::compute_mouse_event_page_offset(CSSPixelPoint event_
     auto scroll_offset = m_browsing_context.viewport_scroll_offset();
 
     // 3. Return the sum of offset and the value of the event’s clientX attribute.
-    return event_client_offset.translated(scroll_offset.to_rounded<CSSPixels>());
+    return event_client_offset.translated(scroll_offset);
 }
 }

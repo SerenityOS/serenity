@@ -108,7 +108,7 @@ public:
     class ViewportClient {
     public:
         virtual ~ViewportClient() = default;
-        virtual void browsing_context_did_set_viewport_rect(Gfx::IntRect const&) = 0;
+        virtual void browsing_context_did_set_viewport_rect(CSSPixelRect const&) = 0;
     };
     void register_viewport_client(ViewportClient&);
     void unregister_viewport_client(ViewportClient&);
@@ -134,15 +134,15 @@ public:
     Page* page() { return m_page; }
     Page const* page() const { return m_page; }
 
-    Gfx::IntSize size() const { return m_size; }
-    void set_size(Gfx::IntSize);
+    CSSPixelSize size() const { return m_size; }
+    void set_size(CSSPixelSize);
 
     void set_needs_display();
-    void set_needs_display(Gfx::IntRect const&);
+    void set_needs_display(CSSPixelRect const&);
 
-    Gfx::IntPoint viewport_scroll_offset() const { return m_viewport_scroll_offset; }
-    Gfx::IntRect viewport_rect() const { return { m_viewport_scroll_offset, m_size }; }
-    void set_viewport_rect(Gfx::IntRect const&);
+    CSSPixelPoint viewport_scroll_offset() const { return m_viewport_scroll_offset; }
+    CSSPixelRect viewport_rect() const { return { m_viewport_scroll_offset, m_size }; }
+    void set_viewport_rect(CSSPixelRect const&);
 
     FrameLoader& loader() { return m_loader; }
     FrameLoader const& loader() const { return m_loader; }
@@ -150,7 +150,7 @@ public:
     Web::EventHandler& event_handler() { return m_event_handler; }
     Web::EventHandler const& event_handler() const { return m_event_handler; }
 
-    void scroll_to(Gfx::IntPoint);
+    void scroll_to(CSSPixelPoint);
     void scroll_to_anchor(DeprecatedString const&);
 
     BrowsingContext& top_level_browsing_context()
@@ -297,8 +297,8 @@ private:
     Optional<HTML::Origin> m_creator_origin;
 
     JS::GCPtr<HTML::BrowsingContextContainer> m_container;
-    Gfx::IntSize m_size;
-    Gfx::IntPoint m_viewport_scroll_offset;
+    CSSPixelSize m_size;
+    CSSPixelPoint m_viewport_scroll_offset;
 
     // https://html.spec.whatwg.org/multipage/browsers.html#browsing-context
     JS::GCPtr<HTML::WindowProxy> m_window_proxy;

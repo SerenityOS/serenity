@@ -87,11 +87,11 @@ public:
     bool is_webdriver_active() const { return m_is_webdriver_active; }
     void set_is_webdriver_active(bool b) { m_is_webdriver_active = b; }
 
-    Gfx::IntPoint window_position() const { return m_window_position; }
-    void set_window_position(Gfx::IntPoint position) { m_window_position = position; }
+    DevicePixelPoint window_position() const { return m_window_position; }
+    void set_window_position(DevicePixelPoint position) { m_window_position = position; }
 
-    Gfx::IntSize window_size() const { return m_window_size; }
-    void set_window_size(Gfx::IntSize size) { m_window_size = size; }
+    DevicePixelSize window_size() const { return m_window_size; }
+    void set_window_size(DevicePixelSize size) { m_window_size = size; }
 
     void did_request_alert(DeprecatedString const& message);
     void alert_closed();
@@ -131,8 +131,8 @@ private:
     // The webdriver-active flag is set to true when the user agent is under remote control. It is initially false.
     bool m_is_webdriver_active { false };
 
-    Gfx::IntPoint m_window_position {};
-    Gfx::IntSize m_window_size {};
+    DevicePixelPoint m_window_position {};
+    DevicePixelSize m_window_size {};
 
     PendingDialog m_pending_dialog { PendingDialog::None };
     Optional<DeprecatedString> m_pending_dialog_text;

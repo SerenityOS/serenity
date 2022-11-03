@@ -101,7 +101,7 @@ public:
 
     void set_viewport_rect(Gfx::IntRect viewport_rect)
     {
-        page().top_level_browsing_context().set_viewport_rect(viewport_rect);
+        page().top_level_browsing_context().set_viewport_rect(page().device_to_css_rect(viewport_rect.to_type<Web::DevicePixels>()));
     }
 
     void set_screen_rect(Web::DevicePixelRect screen_rect)

@@ -1440,7 +1440,7 @@ void StyleComputer::invalidate_rule_cache()
 Gfx::IntRect StyleComputer::viewport_rect() const
 {
     if (auto const* browsing_context = document().browsing_context())
-        return browsing_context->viewport_rect();
+        return browsing_context->viewport_rect().to_type<float>().to_type<int>();
     return {};
 }
 

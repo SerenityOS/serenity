@@ -112,7 +112,7 @@ void ConnectionFromClient::load_html(DeprecatedString const& html, const URL& ur
 void ConnectionFromClient::set_viewport_rect(Gfx::IntRect const& rect)
 {
     dbgln_if(SPAM_DEBUG, "handle: WebContentServer::SetViewportRect: rect={}", rect);
-    m_page_host->set_viewport_rect(rect);
+    m_page_host->set_viewport_rect(rect.to_type<Web::DevicePixels>());
 }
 
 void ConnectionFromClient::add_backing_store(i32 backing_store_id, Gfx::ShareableBitmap const& bitmap)
@@ -532,12 +532,12 @@ void ConnectionFromClient::set_is_scripting_enabled(bool is_scripting_enabled)
 
 void ConnectionFromClient::set_window_position(Gfx::IntPoint position)
 {
-    m_page_host->set_window_position(position);
+    m_page_host->set_window_position(position.to_type<Web::DevicePixels>());
 }
 
 void ConnectionFromClient::set_window_size(Gfx::IntSize size)
 {
-    m_page_host->set_window_size(size);
+    m_page_host->set_window_size(size.to_type<Web::DevicePixels>());
 }
 
 Messages::WebContentServer::GetLocalStorageEntriesResponse ConnectionFromClient::get_local_storage_entries()

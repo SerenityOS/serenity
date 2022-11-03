@@ -30,15 +30,15 @@ public:
     virtual void paint(Web::DevicePixelRect const& content_rect, Gfx::Bitmap&) override;
 
     void set_palette_impl(Gfx::PaletteImpl const&);
-    void set_viewport_rect(Gfx::IntRect const&);
+    void set_viewport_rect(Web::DevicePixelRect const&);
     void set_screen_rects(Vector<Gfx::IntRect, 4> const& rects, size_t main_screen_index) { m_screen_rect = rects[main_screen_index].to_type<Web::DevicePixels>(); }
     void set_screen_display_scale(float device_pixels_per_css_pixel) { m_screen_display_scale = device_pixels_per_css_pixel; }
     void set_preferred_color_scheme(Web::CSS::PreferredColorScheme);
     void set_should_show_line_box_borders(bool b) { m_should_show_line_box_borders = b; }
     void set_has_focus(bool);
     void set_is_scripting_enabled(bool);
-    void set_window_position(Gfx::IntPoint);
-    void set_window_size(Gfx::IntSize);
+    void set_window_position(Web::DevicePixelPoint);
+    void set_window_size(Web::DevicePixelSize);
 
     Web::DevicePixelSize content_size() const { return m_content_size; }
 

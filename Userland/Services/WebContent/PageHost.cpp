@@ -79,12 +79,12 @@ void PageHost::set_is_scripting_enabled(bool is_scripting_enabled)
     page().set_is_scripting_enabled(is_scripting_enabled);
 }
 
-void PageHost::set_window_position(Gfx::IntPoint position)
+void PageHost::set_window_position(Web::DevicePixelPoint position)
 {
     page().set_window_position(position);
 }
 
-void PageHost::set_window_size(Gfx::IntSize size)
+void PageHost::set_window_size(Web::DevicePixelSize size)
 {
     page().set_window_size(size);
 }
@@ -125,9 +125,9 @@ void PageHost::paint(Web::DevicePixelRect const& content_rect, Gfx::Bitmap& targ
     layout_root->paint_all_phases(context);
 }
 
-void PageHost::set_viewport_rect(Gfx::IntRect const& rect)
+void PageHost::set_viewport_rect(Web::DevicePixelRect const& rect)
 {
-    page().top_level_browsing_context().set_viewport_rect(rect);
+    page().top_level_browsing_context().set_viewport_rect(page().device_to_css_rect(rect));
 }
 
 void PageHost::page_did_invalidate(Web::CSSPixelRect const& content_rect)

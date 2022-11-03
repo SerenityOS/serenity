@@ -664,7 +664,7 @@ int Element::client_width() const
     //    return the viewport width excluding the size of a rendered scroll bar (if any).
     if ((is<HTML::HTMLHtmlElement>(*this) && !document().in_quirks_mode())
         || (is<HTML::HTMLBodyElement>(*this) && document().in_quirks_mode())) {
-        return document().browsing_context()->viewport_rect().width();
+        return document().browsing_context()->viewport_rect().width().value();
     }
 
     // NOTE: Ensure that layout is up-to-date before looking at metrics.
@@ -689,7 +689,7 @@ int Element::client_height() const
     //    return the viewport height excluding the size of a rendered scroll bar (if any).
     if ((is<HTML::HTMLHtmlElement>(*this) && !document().in_quirks_mode())
         || (is<HTML::HTMLBodyElement>(*this) && document().in_quirks_mode())) {
-        return document().browsing_context()->viewport_rect().height();
+        return document().browsing_context()->viewport_rect().height().value();
     }
 
     // NOTE: Ensure that layout is up-to-date before looking at metrics.

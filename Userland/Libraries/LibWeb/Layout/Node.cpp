@@ -158,7 +158,7 @@ void Node::set_needs_display()
         return;
     containing_block->paint_box()->for_each_fragment([&](auto& fragment) {
         if (&fragment.layout_node() == this || is_ancestor_of(fragment.layout_node())) {
-            browsing_context().set_needs_display(fragment.absolute_rect().template to_type<float>().template to_type<int>());
+            browsing_context().set_needs_display(fragment.absolute_rect());
         }
         return IterationDecision::Continue;
     });

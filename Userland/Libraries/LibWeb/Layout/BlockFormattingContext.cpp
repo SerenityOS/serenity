@@ -676,7 +676,7 @@ static void measure_scrollable_overflow(LayoutState const& state, Box const& box
 
 void BlockFormattingContext::layout_initial_containing_block(LayoutMode layout_mode, AvailableSpace const& available_space)
 {
-    auto viewport_rect = root().browsing_context().viewport_rect();
+    auto viewport_rect = root().browsing_context().viewport_rect().to_type<float>();
 
     auto& icb = verify_cast<Layout::InitialContainingBlock>(root());
     auto& icb_state = m_state.get_mutable(icb);
