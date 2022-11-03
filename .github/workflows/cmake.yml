@@ -33,7 +33,9 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       # Set default Python to python 3.x, and set Python path such that pip install works properly
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
 
       # === OS SETUP ===
 
