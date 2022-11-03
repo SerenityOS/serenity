@@ -284,8 +284,8 @@ ErrorOr<void> DisplayConnector::ioctl(OpenFileDescription&, unsigned request, Us
         SpinlockLocker locker(m_responsible_process_lock);
         auto process = m_responsible_process.strong_ref();
         // Note: If there's already a process being responsible, just return an error.
-        // We could technically return 0 if the the requesting process is already
-        // was set to be responsible for this DisplayConnector, but it servicing no
+        // We could technically return 0 if the requesting process was already
+        // set to be responsible for this DisplayConnector, but it services
         // no good purpose and should be considered a bug if this happens anyway.
         if (process)
             return Error::from_errno(EPERM);

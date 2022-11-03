@@ -29,7 +29,7 @@ will not create a corrupted data from that data node, a read operation alone wil
 not inquire the kernel to refresh the data.
 To keep data output being refreshed, the userland has to re-open the data node with a
 new file descriptor, or to perform the `lseek` syscall on the open file descriptor to
-reset the the offset to 0.
+reset the offset to 0.
 
 ## See also
 
