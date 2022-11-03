@@ -565,6 +565,11 @@ Gfx::IntRect OutOfProcessWebView::get_element_rect(i32 element_id)
     return client().get_element_rect(element_id);
 }
 
+bool OutOfProcessWebView::is_element_enabled(i32 element_id)
+{
+    return client().is_element_enabled(element_id);
+}
+
 void OutOfProcessWebView::set_content_filters(Vector<String> filters)
 {
     client().async_set_content_filters(filters);

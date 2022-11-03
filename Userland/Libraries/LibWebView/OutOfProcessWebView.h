@@ -72,6 +72,7 @@ public:
     String get_element_text(i32 element_id);
     String get_element_tag_name(i32 element_id);
     Gfx::IntRect get_element_rect(i32 element_id);
+    bool is_element_enabled(i32 element_id);
 
     void set_content_filters(Vector<String>);
     void set_proxy_mappings(Vector<String> proxies, HashMap<String, size_t> mappings);

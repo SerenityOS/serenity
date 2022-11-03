@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2022, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -91,6 +92,7 @@ private:
     virtual Messages::WebContentServer::GetElementTextResponse get_element_text(i32 element_id) override;
     virtual Messages::WebContentServer::GetElementTagNameResponse get_element_tag_name(i32 element_id) override;
     virtual Messages::WebContentServer::GetElementRectResponse get_element_rect(i32 element_id) override;
+    virtual Messages::WebContentServer::IsElementEnabledResponse is_element_enabled(i32 element_id) override;
 
     virtual Messages::WebContentServer::GetLocalStorageEntriesResponse get_local_storage_entries() override;
     virtual Messages::WebContentServer::GetSessionStorageEntriesResponse get_session_storage_entries() override;

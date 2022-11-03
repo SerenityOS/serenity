@@ -3,6 +3,7 @@
  * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
  * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2022, Tobias Christiansen <tobyase@serenityos.org>
+ * Copyright (c) 2022, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -26,6 +27,7 @@
 #include <LibWeb/Dump.h>
 #include <LibWeb/Geometry/DOMRect.h>
 #include <LibWeb/HTML/BrowsingContext.h>
+#include <LibWeb/HTML/FormAssociatedElement.h>
 #include <LibWeb/HTML/Scripting/ClassicScript.h>
 #include <LibWeb/HTML/Storage.h>
 #include <LibWeb/HTML/Window.h>
@@ -614,6 +616,26 @@ Messages::WebContentServer::GetElementRectResponse ConnectionFromClient::get_ele
     auto coordinates = calculate_absolute_position_of_element(page(), bounding_rect);
 
     return { { coordinates.x(), coordinates.y(), static_cast<int>(bounding_rect->width()), static_cast<int>(bounding_rect->height()) } };
+}
+
+Messages::WebContentServer::IsElementEnabledResponse ConnectionFromClient::is_element_enabled(i32 element_id)
+{
+    auto element = find_element_by_id(element_id);
+    if (!element.has_value())
+        return { false };
+
+    auto* document = page().top_level_browsing_context().active_document();
+    if (!document)
+        return { false };
+
+    bool enabled = !document->is_xml_document();
+
+    if (enabled && is<Web::HTML::FormAssociatedElement>(*element)) {
+        auto& form_associated_element = dynamic_cast<Web::HTML::FormAssociatedElement&>(*element);
+        enabled = form_associated_element.enabled();
+    }
+
+    return { enabled };
 }
 
 Messages::WebContentServer::GetSelectedTextResponse ConnectionFromClient::get_selected_text()
