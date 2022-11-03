@@ -31,6 +31,7 @@ endpoint WebDriverSessionClient {
     update_cookie(Web::Cookie::Cookie cookie) =|
     get_document_element() => (Optional<i32> document_element_id)
     query_selector_all(i32 start_node_id, String selector) => (Optional<Vector<i32>> elements_ids)
+    is_element_selected(i32 element_id) => (bool selected)
     get_element_attribute(i32 element_id, String name) => (Optional<String> atttibute)
     get_element_property(i32 element_id, String name) => (Optional<String> property)
     get_active_documents_type() => (String type)

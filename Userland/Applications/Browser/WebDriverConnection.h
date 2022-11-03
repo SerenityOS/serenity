@@ -58,6 +58,7 @@ public:
     virtual void update_cookie(Web::Cookie::Cookie const&) override;
     virtual Messages::WebDriverSessionClient::GetDocumentElementResponse get_document_element() override;
     virtual Messages::WebDriverSessionClient::QuerySelectorAllResponse query_selector_all(i32 start_node_id, String const& selector) override;
+    virtual Messages::WebDriverSessionClient::IsElementSelectedResponse is_element_selected(i32 element_id) override;
     virtual Messages::WebDriverSessionClient::GetElementAttributeResponse get_element_attribute(i32 element_id, String const& name) override;
     virtual Messages::WebDriverSessionClient::GetElementPropertyResponse get_element_property(i32 element_id, String const& name) override;
     virtual Messages::WebDriverSessionClient::GetActiveDocumentsTypeResponse get_active_documents_type() override;

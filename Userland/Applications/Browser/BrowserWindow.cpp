@@ -607,6 +607,10 @@ void BrowserWindow::create_new_tab(URL url, bool activate)
         return active_tab().view().query_selector_all(start_node_id, selector);
     };
 
+    new_tab.webdriver_endpoints().on_is_element_selected = [this](i32 element_id) {
+        return active_tab().view().is_element_selected(element_id);
+    };
+
     new_tab.webdriver_endpoints().on_get_element_attribute = [this](i32 element_id, String const& name) {
         return active_tab().view().get_element_attribute(element_id, name);
     };

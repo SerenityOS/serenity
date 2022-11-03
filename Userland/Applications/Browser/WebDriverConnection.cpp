@@ -218,6 +218,17 @@ Messages::WebDriverSessionClient::QuerySelectorAllResponse WebDriverConnection::
     return { {} };
 }
 
+Messages::WebDriverSessionClient::IsElementSelectedResponse WebDriverConnection::is_element_selected(i32 element_id)
+{
+    dbgln("WebDriverConnection: is_element_selected {}", element_id);
+    if (auto browser_window = m_browser_window.strong_ref()) {
+        auto& tab = browser_window->active_tab();
+        if (tab.webdriver_endpoints().on_is_element_selected)
+            return { tab.webdriver_endpoints().on_is_element_selected(element_id) };
+    }
+    return { false };
+}
+
 Messages::WebDriverSessionClient::GetElementAttributeResponse WebDriverConnection::get_element_attribute(i32 element_id, String const& name)
 {
     dbgln_if(WEBDRIVER_DEBUG, "WebDriverConnection: get_element_attribute");

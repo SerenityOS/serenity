@@ -758,6 +758,30 @@ ErrorOr<JsonValue, WebDriverError> Session::find_elements_from_element(JsonValue
     return JsonValue(result);
 }
 
+// 12.4.1 Is Element Selected, https://w3c.github.io/webdriver/#dfn-is-element-selected
+ErrorOr<JsonValue, WebDriverError> Session::is_element_selected(StringView parameter_element_id)
+{
+    // 1. If the current browsing context is no longer open, return error with error code no such window.
+    TRY(check_for_open_top_level_browsing_context_or_return_error());
+
+    // FIXME: 2. Handle any user prompts and return its value if it is an error.
+
+    // 3. Let element be the result of trying to get a known connected element with url variable element id.
+    auto element_id = TRY(get_known_connected_element(parameter_element_id));
+
+    // 4. Let selected be the value corresponding to the first matching statement:
+    //    element is an input element with a type attribute in the Checkbox- or Radio Button state
+    //      -> The result of element’s checkedness.
+    //    element is an option element
+    //      -> The result of element’s selectedness.
+    //    Otherwise
+    //      -> False.
+    auto selected = m_browser_connection->is_element_selected(element_id);
+
+    // 5. Return success with data selected.
+    return selected;
+}
+
 // 12.4.2 Get Element Attribute, https://w3c.github.io/webdriver/#dfn-get-element-attribute
 ErrorOr<JsonValue, WebDriverError> Session::get_element_attribute(JsonValue const&, StringView parameter_element_id, StringView name)
 {

@@ -70,6 +70,7 @@ private:
     ErrorOr<JsonValue, WebDriverError> handle_find_elements(Vector<StringView> const&, JsonValue const& payload);
     ErrorOr<JsonValue, WebDriverError> handle_find_element_from_element(Vector<StringView> const&, JsonValue const& payload);
     ErrorOr<JsonValue, WebDriverError> handle_find_elements_from_element(Vector<StringView> const&, JsonValue const& payload);
+    ErrorOr<JsonValue, WebDriverError> handle_is_element_selected(Vector<StringView> const& parameters, JsonValue const& payload);
     ErrorOr<JsonValue, WebDriverError> handle_get_element_attribute(Vector<StringView> const&, JsonValue const& payload);
     ErrorOr<JsonValue, WebDriverError> handle_get_element_property(Vector<StringView> const&, JsonValue const& payload);
     ErrorOr<JsonValue, WebDriverError> handle_get_element_css_value(Vector<StringView> const&, JsonValue const& payload);
