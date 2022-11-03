@@ -73,10 +73,8 @@ public:
     {
         if constexpr (inline_capacity > 0) {
             if (!m_outline_buffer) {
-                for (size_t i = 0; i < m_size; ++i) {
-                    new (&inline_buffer()[i]) StorageType(move(other.inline_buffer()[i]));
-                    other.inline_buffer()[i].~StorageType();
-                }
+                TypedTransfer<T>::move(inline_buffer(), other.inline_buffer(), m_size);
+                TypedTransfer<T>::delete_(other.inline_buffer(), m_size);
             }
         }
         other.m_outline_buffer = nullptr;

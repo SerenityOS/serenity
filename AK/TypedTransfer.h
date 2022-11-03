@@ -31,7 +31,7 @@ public:
         }
     }
 
-    static size_t copy(T* destination, const T* source, size_t count)
+    static size_t copy(T* destination, T const* source, size_t count)
     {
         if (count == 0)
             return 0;
@@ -54,7 +54,7 @@ public:
         return count;
     }
 
-    static bool compare(const T* a, const T* b, size_t count)
+    static bool compare(T const* a, T const* b, size_t count)
     {
         if (count == 0)
             return true;
@@ -68,6 +68,19 @@ public:
         }
 
         return true;
+    }
+
+    static void delete_(T* ptr, size_t count)
+    {
+        if (count == 0)
+            return;
+
+        if constexpr (Traits<T>::is_trivial()) {
+            return;
+        }
+
+        for (size_t i = 0; i < count; ++i)
+            ptr[i].~T();
     }
 };
 
