@@ -20,4 +20,4 @@ set(GENERATED_SOURCES
 )
 
 serenity_app(Flood ICON app-flood)
-target_link_libraries(Flood LibConfig LibGUI LibMain LibDesktop)
+target_link_libraries(Flood PRIVATE LibConfig LibCore LibDesktop LibGfx LibGUI LibMain)
