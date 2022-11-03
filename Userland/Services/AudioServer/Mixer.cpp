@@ -96,19 +96,15 @@ void Mixer::mix()
             }
         }
 
-        if (m_muted) {
+        // Even though it's not realistic, the user expects no sound at 0%.
+        if (m_muted || m_main_volume < 0.01) {
             m_device->write(m_zero_filled_buffer.data(), static_cast<int>(m_zero_filled_buffer.size()));
         } else {
             Array<u8, HARDWARE_BUFFER_SIZE_BYTES> buffer;
             OutputMemoryStream stream { buffer };
 
             for (auto& mixed_sample : mixed_buffer) {
-
-                // Even though it's not realistic, the user expects no sound at 0%.
-                if (m_main_volume < 0.01)
-                    mixed_sample = Audio::Sample { 0 };
-                else
-                    mixed_sample.log_multiply(static_cast<float>(m_main_volume));
+                mixed_sample.log_multiply(static_cast<float>(m_main_volume));
                 mixed_sample.clip();
 
                 LittleEndian<i16> out_sample;
