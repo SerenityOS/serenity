@@ -16,6 +16,9 @@
 #include <AK/Badge.h>
 #include <AK/CharacterTypes.h>
 #include <AK/Debug.h>
+#include <LibCore/Account.h>
+#include <LibCore/ProcessStatisticsReader.h>
+#include <LibCore/SessionManagement.h>
 
 namespace WindowServer {
 
@@ -107,6 +110,8 @@ Window::Window(ConnectionFromClient& client, WindowType window_type, WindowMode 
 {
     if (parent_window)
         set_parent_window(*parent_window);
+    if (auto title_username_maybe = compute_title_username(&client); !title_username_maybe.is_error())
+        m_title_username = title_username_maybe.release_value();
     WindowManager::the().add_window(*this);
     frame().window_was_constructed({});
 }
@@ -1060,9 +1065,31 @@ void Window::set_modified(bool modified)
 String Window::computed_title() const
 {
     String title = m_title.replace("[*]"sv, is_modified() ? " (*)"sv : ""sv, ReplaceMode::FirstOnly);
+    if (m_title_username.has_value())
+        title = String::formatted("{} [{}]", title, m_title_username.value());
     if (client() && client()->is_unresponsive())
         return String::formatted("{} (Not responding)", title);
     return title;
+}
+
+ErrorOr<Optional<String>> Window::compute_title_username(ConnectionFromClient* client)
+{
+    if (!client)
+        return Error::from_string_literal("Tried to compute title username without a client");
+    auto stats = Core::ProcessStatisticsReader::get_all(true);
+    if (!stats.has_value())
+        return Error::from_string_literal("Failed to get all process statistics");
+    pid_t client_pid = TRY(client->socket().peer_pid());
+    auto client_stat = stats.value().processes.first_matching([&](auto& stat) { return stat.pid == client_pid; });
+    if (!client_stat.has_value())
+        return Error::from_string_literal("Failed to find client process stat");
+    pid_t login_session_pid = TRY(Core::SessionManagement::root_session_id(client_pid));
+    auto login_session_stat = stats.value().processes.first_matching([&](auto& stat) { return stat.pid == login_session_pid; });
+    if (!login_session_stat.has_value())
+        return Error::from_string_literal("Failed to find login process stat");
+    if (login_session_stat.value().uid == client_stat.value().uid)
+        return Optional<String> {};
+    return client_stat.value().username;
 }
 
 }

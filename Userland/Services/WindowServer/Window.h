@@ -388,6 +388,7 @@ private:
     void ensure_window_menu();
     void update_window_menu_items();
     void modal_unparented();
+    ErrorOr<Optional<String>> compute_title_username(ConnectionFromClient* client);
 
     ConnectionFromClient* m_client { nullptr };
 
@@ -397,6 +398,7 @@ private:
     Menubar m_menubar;
 
     String m_title;
+    Optional<String> m_title_username;
     Gfx::IntRect m_rect;
     Gfx::IntRect m_saved_nonfullscreen_rect;
     Gfx::IntRect m_taskbar_rect;
