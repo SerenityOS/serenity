@@ -72,15 +72,15 @@ public:
     ErrorOr<JsonValue, WebDriverError> get_all_cookies();
     ErrorOr<JsonValue, WebDriverError> get_named_cookie(String const& name);
     ErrorOr<JsonValue, WebDriverError> add_cookie(JsonValue const& payload);
-    ErrorOr<JsonValue, WebDriverError> delete_cookie(StringView const& name);
+    ErrorOr<JsonValue, WebDriverError> delete_cookie(StringView name);
     ErrorOr<JsonValue, WebDriverError> delete_all_cookies();
     ErrorOr<JsonValue, WebDriverError> take_screenshot();
 
 private:
     void delete_cookies(Optional<StringView> const& name = {});
-    ErrorOr<JsonArray, WebDriverError> find(LocalElement const& start_node, StringView const& location_strategy, StringView const& selector);
+    ErrorOr<JsonArray, WebDriverError> find(LocalElement const& start_node, StringView location_strategy, StringView selector);
 
-    using ElementLocationStrategyHandler = ErrorOr<Vector<LocalElement>, WebDriverError> (Session::*)(LocalElement const&, StringView const&);
+    using ElementLocationStrategyHandler = ErrorOr<Vector<LocalElement>, WebDriverError> (Session::*)(LocalElement const&, StringView);
     struct LocatorStrategy {
         String name;
         ElementLocationStrategyHandler handler;
@@ -88,11 +88,11 @@ private:
 
     static Vector<LocatorStrategy> s_locator_strategies;
 
-    ErrorOr<Vector<LocalElement>, WebDriverError> locator_strategy_css_selectors(LocalElement const&, StringView const&);
-    ErrorOr<Vector<LocalElement>, WebDriverError> locator_strategy_link_text(LocalElement const&, StringView const&);
-    ErrorOr<Vector<LocalElement>, WebDriverError> locator_strategy_partial_link_text(LocalElement const&, StringView const&);
-    ErrorOr<Vector<LocalElement>, WebDriverError> locator_strategy_tag_name(LocalElement const&, StringView const&);
-    ErrorOr<Vector<LocalElement>, WebDriverError> locator_strategy_x_path(LocalElement const&, StringView const&);
+    ErrorOr<Vector<LocalElement>, WebDriverError> locator_strategy_css_selectors(LocalElement const&, StringView);
+    ErrorOr<Vector<LocalElement>, WebDriverError> locator_strategy_link_text(LocalElement const&, StringView);
+    ErrorOr<Vector<LocalElement>, WebDriverError> locator_strategy_partial_link_text(LocalElement const&, StringView);
+    ErrorOr<Vector<LocalElement>, WebDriverError> locator_strategy_tag_name(LocalElement const&, StringView);
+    ErrorOr<Vector<LocalElement>, WebDriverError> locator_strategy_x_path(LocalElement const&, StringView);
 
     NonnullRefPtr<Client> m_client;
     bool m_started { false };

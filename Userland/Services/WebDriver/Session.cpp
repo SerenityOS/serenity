@@ -465,7 +465,7 @@ static ErrorOr<i32, WebDriverError> get_known_connected_element(StringView eleme
 }
 
 // https://w3c.github.io/webdriver/#dfn-find
-ErrorOr<JsonArray, WebDriverError> Session::find(Session::LocalElement const& start_node, StringView const& using_, StringView const& value)
+ErrorOr<JsonArray, WebDriverError> Session::find(Session::LocalElement const& start_node, StringView using_, StringView value)
 {
     // 1. Let end time be the current time plus the session implicit wait timeout.
     auto end_time = Time::now_monotonic() + Time::from_milliseconds(static_cast<i64>(m_timeouts_configuration.implicit_wait_timeout));
@@ -514,7 +514,7 @@ Vector<Session::LocatorStrategy> Session::s_locator_strategies = {
 };
 
 // https://w3c.github.io/webdriver/#css-selectors
-ErrorOr<Vector<Session::LocalElement>, WebDriverError> Session::locator_strategy_css_selectors(Session::LocalElement const& start_node, StringView const& selector)
+ErrorOr<Vector<Session::LocalElement>, WebDriverError> Session::locator_strategy_css_selectors(Session::LocalElement const& start_node, StringView selector)
 {
     // 1. Let elements be the result of calling querySelectorAll() with start node as this and selector as the argument.
     //    If this causes an exception to be thrown, return error with error code invalid selector.
@@ -533,28 +533,28 @@ ErrorOr<Vector<Session::LocalElement>, WebDriverError> Session::locator_strategy
 }
 
 // https://w3c.github.io/webdriver/#link-text
-ErrorOr<Vector<Session::LocalElement>, WebDriverError> Session::locator_strategy_link_text(Session::LocalElement const&, StringView const&)
+ErrorOr<Vector<Session::LocalElement>, WebDriverError> Session::locator_strategy_link_text(Session::LocalElement const&, StringView)
 {
     // FIXME: Implement
     return WebDriverError::from_code(ErrorCode::UnsupportedOperation, "Not implemented: locator strategy link text");
 }
 
 // https://w3c.github.io/webdriver/#partial-link-text
-ErrorOr<Vector<Session::LocalElement>, WebDriverError> Session::locator_strategy_partial_link_text(Session::LocalElement const&, StringView const&)
+ErrorOr<Vector<Session::LocalElement>, WebDriverError> Session::locator_strategy_partial_link_text(Session::LocalElement const&, StringView)
 {
     // FIXME: Implement
     return WebDriverError::from_code(ErrorCode::UnsupportedOperation, "Not implemented: locator strategy partial link text");
 }
 
 // https://w3c.github.io/webdriver/#tag-name
-ErrorOr<Vector<Session::LocalElement>, WebDriverError> Session::locator_strategy_tag_name(Session::LocalElement const&, StringView const&)
+ErrorOr<Vector<Session::LocalElement>, WebDriverError> Session::locator_strategy_tag_name(Session::LocalElement const&, StringView)
 {
     // FIXME: Implement
     return WebDriverError::from_code(ErrorCode::UnsupportedOperation, "Not implemented: locator strategy tag name");
 }
 
 // https://w3c.github.io/webdriver/#xpath
-ErrorOr<Vector<Session::LocalElement>, WebDriverError> Session::locator_strategy_x_path(Session::LocalElement const&, StringView const&)
+ErrorOr<Vector<Session::LocalElement>, WebDriverError> Session::locator_strategy_x_path(Session::LocalElement const&, StringView)
 {
     // FIXME: Implement
     return WebDriverError::from_code(ErrorCode::UnsupportedOperation, "Not implemented: locator strategy XPath");
@@ -1253,7 +1253,7 @@ void Session::delete_cookies(Optional<StringView> const& name)
 }
 
 // 14.4 Delete Cookie, https://w3c.github.io/webdriver/#dfn-delete-cookie
-ErrorOr<JsonValue, WebDriverError> Session::delete_cookie(StringView const& name)
+ErrorOr<JsonValue, WebDriverError> Session::delete_cookie(StringView name)
 {
     // 1. If the current browsing context is no longer open, return error with error code no such window.
     TRY(check_for_open_top_level_browsing_context_or_return_error());
