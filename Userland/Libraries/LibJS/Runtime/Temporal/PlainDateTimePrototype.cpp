@@ -59,7 +59,7 @@ void PlainDateTimePrototype::initialize(Realm& realm)
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(realm, vm.names.with, with, 1, attr);
-    define_native_function(realm, vm.names.withPlainTime, with_plain_time, 1, attr);
+    define_native_function(realm, vm.names.withPlainTime, with_plain_time, 0, attr);
     define_native_function(realm, vm.names.withPlainDate, with_plain_date, 1, attr);
     define_native_function(realm, vm.names.withCalendar, with_calendar, 1, attr);
     define_native_function(realm, vm.names.add, add, 1, attr);
