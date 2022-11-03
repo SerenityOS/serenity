@@ -49,6 +49,7 @@ Vector<Client::Route> Client::s_routes = {
     { HTTP::HttpRequest::Method::GET, { "session", ":session_id", "element", ":element_id", "css", ":property_name" }, &Client::handle_get_element_css_value },
     { HTTP::HttpRequest::Method::GET, { "session", ":session_id", "element", ":element_id", "text" }, &Client::handle_get_element_text },
     { HTTP::HttpRequest::Method::GET, { "session", ":session_id", "element", ":element_id", "name" }, &Client::handle_get_element_tag_name },
+    { HTTP::HttpRequest::Method::GET, { "session", ":session_id", "element", ":element_id", "rect" }, &Client::handle_get_element_rect },
     { HTTP::HttpRequest::Method::GET, { "session", ":session_id", "source" }, &Client::handle_get_source },
     { HTTP::HttpRequest::Method::POST, { "session", ":session_id", "execute", "sync" }, &Client::handle_execute_script },
     { HTTP::HttpRequest::Method::POST, { "session", ":session_id", "execute", "async" }, &Client::handle_execute_async_script },
@@ -685,6 +686,16 @@ ErrorOr<JsonValue, WebDriverError> Client::handle_get_element_tag_name(Vector<St
     dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session_id>/element/<element_id>/name");
     auto* session = TRY(find_session_with_id(parameters[0]));
     auto result = TRY(session->get_element_tag_name(payload, parameters[1]));
+    return make_json_value(result);
+}
+
+// 12.4.7 Get Element Rect, https://w3c.github.io/webdriver/#dfn-get-element-rect
+// GET /session/{session id}/element/{element id}/rect
+ErrorOr<JsonValue, WebDriverError> Client::handle_get_element_rect(Vector<StringView> const& parameters, JsonValue const&)
+{
+    dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session_id>/element/<element_id>/rect");
+    auto* session = TRY(find_session_with_id(parameters[0]));
+    auto result = TRY(session->get_element_rect(parameters[1]));
     return make_json_value(result);
 }
 

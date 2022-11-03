@@ -74,6 +74,7 @@ private:
     ErrorOr<JsonValue, WebDriverError> handle_get_element_css_value(Vector<StringView> const&, JsonValue const& payload);
     ErrorOr<JsonValue, WebDriverError> handle_get_element_text(Vector<StringView> const&, JsonValue const& payload);
     ErrorOr<JsonValue, WebDriverError> handle_get_element_tag_name(Vector<StringView> const&, JsonValue const& payload);
+    ErrorOr<JsonValue, WebDriverError> handle_get_element_rect(Vector<StringView> const&, JsonValue const& payload);
     ErrorOr<JsonValue, WebDriverError> handle_get_source(Vector<StringView> const&, JsonValue const& payload);
     ErrorOr<JsonValue, WebDriverError> handle_execute_script(Vector<StringView> const&, JsonValue const& payload);
     ErrorOr<JsonValue, WebDriverError> handle_execute_async_script(Vector<StringView> const&, JsonValue const& payload);

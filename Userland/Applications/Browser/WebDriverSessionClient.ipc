@@ -37,5 +37,6 @@ endpoint WebDriverSessionClient {
     get_computed_value_for_element(i32 element_id, String property_name) => (String computed_value)
     get_element_text(i32 element_id) => (String text)
     get_element_tag_name(i32 element_id) => (String tag_name)
+    get_element_rect(i32 element_id) => (Gfx::IntRect rect)
     take_screenshot() => (Gfx::ShareableBitmap data)
 }

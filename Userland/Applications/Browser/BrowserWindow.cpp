@@ -631,6 +631,10 @@ void BrowserWindow::create_new_tab(URL url, bool activate)
         return active_tab().view().get_element_tag_name(element_id);
     };
 
+    new_tab.webdriver_endpoints().on_get_element_rect = [this](i32 element_id) {
+        return active_tab().view().get_element_rect(element_id);
+    };
+
     new_tab.webdriver_endpoints().on_serialize_source = [this]() {
         return active_tab().view().serialize_source();
     };
