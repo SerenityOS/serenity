@@ -282,9 +282,9 @@ ErrorOr<void, ParseError> Parser::parse_prolog()
     auto rollback = rollback_point();
     auto rule = enter_rule();
 
-    // 	prolog ::= XMLDecl Misc* (doctypedecl Misc*)?
+    // prolog ::= XMLDecl Misc* (doctypedecl Misc*)?
     // The following is valid in XML 1.0.
-    // 	prolog ::= XMLDecl? Misc* (doctypedecl Misc*)?
+    // prolog ::= XMLDecl? Misc* (doctypedecl Misc*)?
     if (auto result = parse_xml_decl(); result.is_error()) {
         m_version = Version::Version10;
         m_in_compatibility_mode = true;
@@ -425,7 +425,7 @@ ErrorOr<void, ParseError> Parser::parse_misc()
     auto rollback = rollback_point();
     auto rule = enter_rule();
 
-    // 	Misc ::= Comment | PI | S
+    // Misc ::= Comment | PI | S
     if (auto result = parse_comment(); !result.is_error()) {
         rollback.disarm();
         return {};
@@ -510,7 +510,7 @@ ErrorOr<Name, ParseError> Parser::parse_processing_instruction_target()
     auto rollback = rollback_point();
     auto rule = enter_rule();
 
-    // PITarget	::= Name - (('X' | 'x') ('M' | 'm') ('L' | 'l'))
+    // PITarget ::= Name - (('X' | 'x') ('M' | 'm') ('L' | 'l'))
     auto target = TRY(parse_name());
     auto accept = accept_rule();
 
@@ -645,7 +645,7 @@ ErrorOr<NonnullOwnPtr<Node>, ParseError> Parser::parse_empty_element_tag()
     auto rollback = rollback_point();
     auto rule = enter_rule();
 
-    // 	EmptyElemTag ::= '<' Name (S Attribute)* S? '/>'
+    // EmptyElemTag ::= '<' Name (S Attribute)* S? '/>'
     TRY(expect("<"sv));
     auto accept = accept_rule();
 
@@ -677,7 +677,7 @@ ErrorOr<Attribute, ParseError> Parser::parse_attribute()
     auto rollback = rollback_point();
     auto rule = enter_rule();
 
-    // 	Attribute ::= Name Eq AttValue
+    // Attribute ::= Name Eq AttValue
     auto name = TRY(parse_name());
     auto accept = accept_rule();
 
@@ -828,7 +828,7 @@ ErrorOr<Name, ParseError> Parser::parse_end_tag()
     auto rollback = rollback_point();
     auto rule = enter_rule();
 
-    // 	ETag ::= '</' Name S? '>'
+    // ETag ::= '</' Name S? '>'
     TRY(expect("</"sv));
     auto accept = accept_rule();
 
@@ -1098,17 +1098,17 @@ ErrorOr<AttributeListDeclaration::Definition, ParseError> Parser::parse_attribut
     TRY(skip_whitespace(Required::Yes));
 
     // AttType ::= StringType | TokenizedType | EnumeratedType
-    // 	StringType ::= 'CDATA'
-    //  TokenizedType ::= 'ID'
+    // StringType ::= 'CDATA'
+    // TokenizedType ::= 'ID'
     //                  | 'IDREF'
     //                  | 'IDREFS'
     //                  | 'ENTITY'
     //                  | 'ENTITIES'
     //                  | 'NMTOKEN'
     //                  | 'NMTOKENS'
-    //  EnumeratedType ::= NotationType | Enumeration
-    //  NotationType ::= 'NOTATION' S '(' S? Name (S? '|' S? Name)* S? ')'
-    //  Enumeration ::= '(' S? Nmtoken (S? '|' S? Nmtoken)* S? ')'
+    // EnumeratedType ::= NotationType | Enumeration
+    // NotationType ::= 'NOTATION' S '(' S? Name (S? '|' S? Name)* S? ')'
+    // Enumeration ::= '(' S? Nmtoken (S? '|' S? Nmtoken)* S? ')'
     if (m_lexer.consume_specific("CDATA")) {
         type = AttributeListDeclaration::StringType::CData;
     } else if (m_lexer.consume_specific("IDREFS")) {
