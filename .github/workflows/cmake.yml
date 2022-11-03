@@ -31,7 +31,17 @@ jobs:
             arch: 'x86_64'
 
     steps:
+      # Pull requests can trail behind `master` and can cause breakage if merging before running the CI checks on an updated branch.
+      # Luckily, GitHub creates and maintains a merge branch that is updated whenever the target or source branch is modified. By
+      # checking this branch out, we gain a stabler `master` at the cost of reproducibility.
       - uses: actions/checkout@v3
+        if: ${{ github.event_name != 'pull_request' }}
+
+      - uses: actions/checkout@v3
+        if: ${{ github.event_name == 'pull_request' }}
+        with:
+          ref: refs/pull/${{ github.event.pull_request.number }}/merge
+
       # Set default Python to python 3.x, and set Python path such that pip install works properly
       - uses: actions/setup-python@v4
         with:
