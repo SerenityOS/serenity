@@ -15,7 +15,7 @@ jobs:
       SONAR_SERVER_URL: "https://sonarcloud.io"
       SONAR_ANALYSIS_ARCH: i686
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
 

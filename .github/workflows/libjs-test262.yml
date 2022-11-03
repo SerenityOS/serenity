@@ -19,28 +19,28 @@ jobs:
           rm -rf "${{ github.workspace }}/*"
 
       - name: Checkout SerenityOS/serenity
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Checkout linusg/libjs-test262
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           repository: linusg/libjs-test262
           path: libjs-test262
 
       - name: Checkout linusg/libjs-website
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           repository: linusg/libjs-website
           path: libjs-website
 
       - name: Checkout tc39/test262
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           repository: tc39/test262
           path: test262
 
       - name: Checkout tc39/test262-parser-tests
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           repository: tc39/test262-parser-tests
           path: test262-parser-tests
