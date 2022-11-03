@@ -82,6 +82,9 @@ public:
 protected:
     FormattingContext(Type, LayoutState&, Box const&, FormattingContext* parent = nullptr);
 
+    static bool should_treat_width_as_auto(Box const&, AvailableSpace const&);
+    static bool should_treat_height_as_auto(Box const&, AvailableSpace const&);
+
     float calculate_fit_content_size(float min_content_size, float max_content_size, AvailableSize const&) const;
 
     OwnPtr<FormattingContext> layout_inside(Box const&, LayoutMode, AvailableSpace const&);

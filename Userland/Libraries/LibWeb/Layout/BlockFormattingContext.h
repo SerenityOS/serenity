@@ -48,9 +48,6 @@ public:
 
     void layout_block_level_box(Box const&, BlockContainer const&, LayoutMode, float& bottom_of_lowest_margin_box, AvailableSpace const&);
 
-    static bool should_treat_width_as_auto(Box const&, AvailableSpace const&);
-    static bool should_treat_height_as_auto(Box const&, AvailableSpace const&);
-
     virtual bool can_determine_size_of_child() const override { return true; }
     virtual void determine_width_of_child(Box const&, AvailableSpace const&) override;
     virtual void determine_height_of_child(Box const&, AvailableSpace const&) override;

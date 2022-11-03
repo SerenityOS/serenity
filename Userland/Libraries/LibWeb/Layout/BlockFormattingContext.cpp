@@ -775,18 +775,6 @@ float BlockFormattingContext::greatest_child_width(Box const& box)
     return max_width;
 }
 
-bool BlockFormattingContext::should_treat_width_as_auto(Box const& box, AvailableSpace const& available_space)
-{
-    return box.computed_values().width().is_auto()
-        || (box.computed_values().width().contains_percentage() && !available_space.width.is_definite());
-}
-
-bool BlockFormattingContext::should_treat_height_as_auto(Box const& box, AvailableSpace const& available_space)
-{
-    return box.computed_values().height().is_auto()
-        || (box.computed_values().height().contains_percentage() && !available_space.height.is_definite());
-}
-
 void BlockFormattingContext::determine_width_of_child(Box const& box, AvailableSpace const& available_space)
 {
     compute_width(box, available_space);

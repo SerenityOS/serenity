@@ -1399,4 +1399,16 @@ float FormattingContext::calculate_stretch_fit_height(Box const& box, AvailableS
         - box_state.border_bottom;
 }
 
+bool FormattingContext::should_treat_width_as_auto(Box const& box, AvailableSpace const& available_space)
+{
+    return box.computed_values().width().is_auto()
+        || (box.computed_values().width().contains_percentage() && !available_space.width.is_definite());
+}
+
+bool FormattingContext::should_treat_height_as_auto(Box const& box, AvailableSpace const& available_space)
+{
+    return box.computed_values().height().is_auto()
+        || (box.computed_values().height().contains_percentage() && !available_space.height.is_definite());
+}
+
 }
