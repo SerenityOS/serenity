@@ -217,7 +217,7 @@ public:
     JS::NonnullGCPtr<HTMLCollection> all();
 
     String const& source() const { return m_source; }
-    void set_source(String const& source) { m_source = source; }
+    void set_source(String source) { m_source = move(source); }
 
     HTML::EnvironmentSettingsObject& relevant_settings_object();
 
