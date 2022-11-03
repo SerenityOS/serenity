@@ -179,6 +179,7 @@ public:
     void truncate(TextDocument&, size_t length);
     void clear(TextDocument&);
     void remove_range(TextDocument&, size_t start, size_t length);
+    void keep_range(TextDocument&, size_t start_index, size_t end_index);
 
     size_t first_non_whitespace_column() const;
     Optional<size_t> last_non_whitespace_column() const;
