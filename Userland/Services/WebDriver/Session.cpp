@@ -452,6 +452,18 @@ static JsonObject web_element_reference_object(Session::LocalElement const& elem
     return object;
 }
 
+// https://w3c.github.io/webdriver/#dfn-get-a-known-connected-element
+static ErrorOr<i32, WebDriverError> get_known_connected_element(StringView element_id)
+{
+    // NOTE: The whole concept of "connected elements" is not implemented yet. See get_or_create_a_web_element_reference().
+    //       For now the element is only represented by its ID.
+    auto maybe_element_id = element_id.to_int();
+    if (!maybe_element_id.has_value())
+        return WebDriverError::from_code(ErrorCode::InvalidArgument, "Element ID is not an integer");
+
+    return maybe_element_id.release_value();
+}
+
 // https://w3c.github.io/webdriver/#dfn-find
 ErrorOr<JsonArray, WebDriverError> Session::find(Session::LocalElement const& start_node, StringView const& using_, StringView const& value)
 {
@@ -688,15 +700,8 @@ ErrorOr<JsonValue, WebDriverError> Session::find_element_from_element(JsonValue 
 
     // FIXME: 6. Handle any user prompts and return its value if it is an error.
 
-    // FIXME: 7. Let start node be the result of trying to get a known connected element with url variable element id.
-    // NOTE: The whole concept of "connected elements" is not implemented yet. See get_or_create_a_web_element_reference()
-    //       For now the element is only represented by its ID
-
-    auto maybe_element_id = parameter_element_id.to_int();
-    if (!maybe_element_id.has_value())
-        return WebDriverError::from_code(ErrorCode::InvalidArgument, "Element ID is not an i32");
-
-    auto element_id = maybe_element_id.release_value();
+    // 7. Let start node be the result of trying to get a known connected element with url variable element id.
+    auto element_id = TRY(get_known_connected_element(parameter_element_id));
     LocalElement start_node = { element_id };
 
     // 8. Let result be the value of trying to Find with start node, location strategy, and selector.
@@ -744,15 +749,8 @@ ErrorOr<JsonValue, WebDriverError> Session::find_elements_from_element(JsonValue
 
     // FIXME: 6. Handle any user prompts and return its value if it is an error.
 
-    // FIXME: 7. Let start node be the result of trying to get a known connected element with url variable element id.
-    // NOTE: The whole concept of "connected elements" is not implemented yet. See get_or_create_a_web_element_reference()
-    //       For now the element is only represented by its ID
-
-    auto maybe_element_id = parameter_element_id.to_int();
-    if (!maybe_element_id.has_value())
-        return WebDriverError::from_code(ErrorCode::InvalidArgument, "Element ID is not an i32");
-
-    auto element_id = maybe_element_id.release_value();
+    // 7. Let start node be the result of trying to get a known connected element with url variable element id.
+    auto element_id = TRY(get_known_connected_element(parameter_element_id));
     LocalElement start_node = { element_id };
 
     // 8. Return the result of trying to Find with start node, location strategy, and selector.
@@ -768,14 +766,8 @@ ErrorOr<JsonValue, WebDriverError> Session::get_element_attribute(JsonValue cons
 
     // FIXME: 2. Handle any user prompts and return its value if it is an error.
 
-    // FIXME: 3. Let element be the result of trying to get a known connected element with url variable element id.
-    // NOTE: The whole concept of "connected elements" is not implemented yet. See get_or_create_a_web_element_reference()
-    //       For now the element is only represented by its ID
-    auto maybe_element_id = parameter_element_id.to_int();
-    if (!maybe_element_id.has_value())
-        return WebDriverError::from_code(ErrorCode::InvalidArgument, "Element ID is not an i32");
-
-    auto element_id = maybe_element_id.release_value();
+    // 3. Let element be the result of trying to get a known connected element with url variable element id.
+    auto element_id = TRY(get_known_connected_element(parameter_element_id));
 
     // FIXME: The case that the element does not exist is not handled at all and null is returned in that case.
 
@@ -802,14 +794,8 @@ ErrorOr<JsonValue, WebDriverError> Session::get_element_property(JsonValue const
 
     // FIXME: 2. Handle any user prompts and return its value if it is an error.
 
-    // FIXME: 3. Let element be the result of trying to get a known connected element with url variable element id.
-    // NOTE: The whole concept of "connected elements" is not implemented yet. See get_or_create_a_web_element_reference()
-    //       For now the element is only represented by its ID
-    auto maybe_element_id = parameter_element_id.to_int();
-    if (!maybe_element_id.has_value())
-        return WebDriverError::from_code(ErrorCode::InvalidArgument, "Element ID is not an i32");
-
-    auto element_id = maybe_element_id.release_value();
+    // 3. Let element be the result of trying to get a known connected element with url variable element id.
+    auto element_id = TRY(get_known_connected_element(parameter_element_id));
 
     // 4. Let property be the result of calling the Object.[[GetProperty]](name) on element.
     auto property = m_browser_connection->get_element_property(element_id, name);
@@ -830,14 +816,8 @@ ErrorOr<JsonValue, WebDriverError> Session::get_element_css_value(JsonValue cons
 
     // FIXME: 2. Handle any user prompts and return its value if it is an error.
 
-    // FIXME: 3. Let element be the result of trying to get a known connected element with url variable element id.
-    // NOTE: The whole concept of "connected elements" is not implemented yet. See get_or_create_a_web_element_reference()
-    //       For now the element is only represented by its ID
-    auto maybe_element_id = parameter_element_id.to_int();
-    if (!maybe_element_id.has_value())
-        return WebDriverError::from_code(ErrorCode::InvalidArgument, "Element ID is not an i32");
-
-    auto element_id = maybe_element_id.release_value();
+    // 3. Let element be the result of trying to get a known connected element with url variable element id.
+    auto element_id = TRY(get_known_connected_element(parameter_element_id));
 
     // 4. Let computed value be the result of the first matching condition:
     // -> current browsing context’s active document’s type is not "xml"
@@ -885,14 +865,8 @@ ErrorOr<JsonValue, WebDriverError> Session::get_element_tag_name(JsonValue const
 
     // FIXME: 2. Handle any user prompts and return its value if it is an error.
 
-    // FIXME: 3. Let element be the result of trying to get a known connected element with url variable element id.
-    // NOTE: The whole concept of "connected elements" is not implemented yet. See get_or_create_a_web_element_reference()
-    //       For now the element is only represented by its ID
-    auto maybe_element_id = parameter_element_id.to_int();
-    if (!maybe_element_id.has_value())
-        return WebDriverError::from_code(ErrorCode::InvalidArgument, "Element ID is not an i32");
-
-    auto element_id = maybe_element_id.release_value();
+    // 3. Let element be the result of trying to get a known connected element with url variable element id.
+    auto element_id = TRY(get_known_connected_element(parameter_element_id));
 
     // 4. Let qualified name be the result of getting element’s tagName IDL attribute.
     auto qualified_name = m_browser_connection->get_element_tag_name(element_id);
@@ -910,13 +884,7 @@ ErrorOr<JsonValue, WebDriverError> Session::get_element_rect(StringView paramete
     // FIXME: 2. Handle any user prompts and return its value if it is an error.
 
     // 3. Let element be the result of trying to get a known connected element with url variable element id.
-    // NOTE: The whole concept of "connected elements" is not implemented yet. See get_or_create_a_web_element_reference()
-    //       For now the element is only represented by its ID
-    auto maybe_element_id = parameter_element_id.to_int();
-    if (!maybe_element_id.has_value())
-        return WebDriverError::from_code(ErrorCode::InvalidArgument, "Element ID is not an i32");
-
-    auto element_id = maybe_element_id.release_value();
+    auto element_id = TRY(get_known_connected_element(parameter_element_id));
 
     // 4. Calculate the absolute position of element and let it be coordinates.
     // 5. Let rect be element’s bounding rectangle.
@@ -946,13 +914,7 @@ ErrorOr<JsonValue, WebDriverError> Session::is_element_enabled(StringView parame
     // FIXME: 2. Handle any user prompts and return its value if it is an error.
 
     // 3. Let element be the result of trying to get a known connected element with url variable element id.
-    // NOTE: The whole concept of "connected elements" is not implemented yet. See get_or_create_a_web_element_reference()
-    //       For now the element is only represented by its ID
-    auto maybe_element_id = parameter_element_id.to_int();
-    if (!maybe_element_id.has_value())
-        return WebDriverError::from_code(ErrorCode::InvalidArgument, "Element ID is not an i32");
-
-    auto element_id = maybe_element_id.release_value();
+    auto element_id = TRY(get_known_connected_element(parameter_element_id));
 
     // 4. Let enabled be a boolean initially set to true if the current browsing context’s active document’s type is not "xml".
     // 5. Otherwise, let enabled to false and jump to the last step of this algorithm.
