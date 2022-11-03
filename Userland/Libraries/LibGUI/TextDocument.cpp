@@ -1011,6 +1011,78 @@ void UnindentSelection::undo()
     m_document.set_all_cursors(m_range.start());
 }
 
+CommentSelection::CommentSelection(TextDocument& document, StringView prefix, StringView suffix, TextRange const& range)
+    : TextDocumentUndoCommand(document)
+    , m_prefix(prefix)
+    , m_suffix(suffix)
+    , m_range(range)
+{
+}
+
+void CommentSelection::undo()
+{
+    for (size_t i = m_range.start().line(); i <= m_range.end().line(); i++) {
+        if (m_document.line(i).is_empty())
+            continue;
+        auto line = m_document.line(i).to_utf8();
+        auto prefix_start = line.find(m_prefix).value_or(0);
+        m_document.line(i).keep_range(
+            m_document,
+            prefix_start + m_prefix.length(),
+            m_document.line(i).last_non_whitespace_column().value_or(line.length()) - prefix_start - m_prefix.length() - m_suffix.length());
+    }
+    m_document.set_all_cursors(m_range.start());
+}
+
+void CommentSelection::redo()
+{
+    for (size_t i = m_range.start().line(); i <= m_range.end().line(); i++) {
+        if (m_document.line(i).is_empty())
+            continue;
+        m_document.insert_at({ i, 0 }, m_prefix, m_client);
+        for (auto const& b : m_suffix.bytes()) {
+            m_document.line(i).append(m_document, b);
+        }
+    }
+    m_document.set_all_cursors(m_range.start());
+}
+
+UncommentSelection::UncommentSelection(TextDocument& document, StringView prefix, StringView suffix, TextRange const& range)
+    : TextDocumentUndoCommand(document)
+    , m_prefix(prefix)
+    , m_suffix(suffix)
+    , m_range(range)
+{
+}
+
+void UncommentSelection::undo()
+{
+    for (size_t i = m_range.start().line(); i <= m_range.end().line(); i++) {
+        if (m_document.line(i).is_empty())
+            continue;
+        m_document.insert_at({ i, 0 }, m_prefix, m_client);
+        for (auto const& b : m_suffix.bytes()) {
+            m_document.line(i).append(m_document, b);
+        }
+    }
+    m_document.set_all_cursors(m_range.start());
+}
+
+void UncommentSelection::redo()
+{
+    for (size_t i = m_range.start().line(); i <= m_range.end().line(); i++) {
+        if (m_document.line(i).is_empty())
+            continue;
+        auto line = m_document.line(i).to_utf8();
+        auto prefix_start = line.find(m_prefix).value_or(0);
+        m_document.line(i).keep_range(
+            m_document,
+            prefix_start + m_prefix.length(),
+            m_document.line(i).last_non_whitespace_column().value_or(line.length()) - prefix_start - m_prefix.length() - m_suffix.length());
+    }
+    m_document.set_all_cursors(m_range.start());
+}
+
 TextPosition TextDocument::insert_at(TextPosition const& position, StringView text, Client const* client)
 {
     TextPosition cursor = position;
