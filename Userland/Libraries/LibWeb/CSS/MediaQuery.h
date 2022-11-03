@@ -223,6 +223,7 @@ public:
         All,
         Print,
         Screen,
+        Unknown,
 
         // Deprecated, must never match:
         TTY,
@@ -258,7 +259,7 @@ String serialize_a_media_query_list(NonnullRefPtrVector<MediaQuery> const&);
 
 bool is_media_feature_name(StringView name);
 
-Optional<MediaQuery::MediaType> media_type_from_string(StringView);
+MediaQuery::MediaType media_type_from_string(StringView);
 StringView to_string(MediaQuery::MediaType);
 
 }

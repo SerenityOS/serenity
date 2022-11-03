@@ -350,6 +350,8 @@ bool MediaQuery::evaluate(HTML::Window const& window)
         case MediaType::Screen:
             // FIXME: Disable for printing, when we have printing!
             return MatchResult::True;
+        case MediaType::Unknown:
+            return MatchResult::False;
         // Deprecated, must never match:
         case MediaType::TTY:
         case MediaType::TV:
@@ -444,7 +446,7 @@ bool is_media_feature_name(StringView name)
     return false;
 }
 
-Optional<MediaQuery::MediaType> media_type_from_string(StringView name)
+MediaQuery::MediaType media_type_from_string(StringView name)
 {
     if (name.equals_ignoring_case("all"sv))
         return MediaQuery::MediaType::All;
@@ -468,7 +470,7 @@ Optional<MediaQuery::MediaType> media_type_from_string(StringView name)
         return MediaQuery::MediaType::TTY;
     if (name.equals_ignoring_case("tv"sv))
         return MediaQuery::MediaType::TV;
-    return {};
+    return MediaQuery::MediaType::Unknown;
 }
 
 StringView to_string(MediaQuery::MediaType media_type)
@@ -496,6 +498,8 @@ StringView to_string(MediaQuery::MediaType media_type)
         return "tty"sv;
     case MediaQuery::MediaType::TV:
         return "tv"sv;
+    case MediaQuery::MediaType::Unknown:
+        return "unknown"sv;
     }
     VERIFY_NOT_REACHED();
 }

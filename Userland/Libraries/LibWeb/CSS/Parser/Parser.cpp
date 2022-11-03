@@ -1142,13 +1142,10 @@ Optional<MediaQuery::MediaType> Parser::parse_media_type(TokenStream<ComponentVa
     if (!token.is(Token::Type::Ident))
         return {};
 
-    auto ident = token.token().ident();
-    if (auto media_type = media_type_from_string(ident); media_type.has_value()) {
-        transaction.commit();
-        return media_type.release_value();
-    }
+    transaction.commit();
 
-    return {};
+    auto ident = token.token().ident();
+    return media_type_from_string(ident);
 }
 
 // `<media-in-parens>`, https://www.w3.org/TR/mediaqueries-4/#typedef-media-in-parens
