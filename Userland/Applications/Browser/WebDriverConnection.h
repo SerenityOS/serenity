@@ -49,6 +49,7 @@ public:
     virtual void set_window_position(Gfx::IntPoint const&) override;
     virtual void maximize_window() override;
     virtual void minimize_window() override;
+    virtual Messages::WebDriverSessionClient::SerializeSourceResponse serialize_source() override;
     virtual Messages::WebDriverSessionClient::ExecuteScriptResponse execute_script(String const& body, Vector<String> const& json_arguments, Optional<u64> const& timeout, bool async) override;
     virtual Messages::WebDriverSessionClient::GetAllCookiesResponse get_all_cookies() override;
     virtual Messages::WebDriverSessionClient::GetNamedCookieResponse get_named_cookie(String const& name) override;
