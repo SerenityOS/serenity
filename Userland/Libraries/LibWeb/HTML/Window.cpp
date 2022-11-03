@@ -615,7 +615,7 @@ int Window::inner_width() const
     // The innerWidth attribute must return the viewport width including the size of a rendered scroll bar (if any),
     // or zero if there is no viewport.
     if (auto const* browsing_context = associated_document().browsing_context())
-        return browsing_context->viewport_rect().width();
+        return browsing_context->viewport_rect().width().value();
     return 0;
 }
 
@@ -625,7 +625,7 @@ int Window::inner_height() const
     // The innerHeight attribute must return the viewport height including the size of a rendered scroll bar (if any),
     // or zero if there is no viewport.
     if (auto const* browsing_context = associated_document().browsing_context())
-        return browsing_context->viewport_rect().height();
+        return browsing_context->viewport_rect().height().value();
     return 0;
 }
 
@@ -766,7 +766,7 @@ Optional<CSS::MediaFeatureValue> Window::query_media_feature(CSS::MediaFeatureID
 float Window::scroll_x() const
 {
     if (auto* page = this->page())
-        return page->top_level_browsing_context().viewport_scroll_offset().x();
+        return page->top_level_browsing_context().viewport_scroll_offset().x().value();
     return 0;
 }
 
@@ -774,7 +774,7 @@ float Window::scroll_x() const
 float Window::scroll_y() const
 {
     if (auto* page = this->page())
-        return page->top_level_browsing_context().viewport_scroll_offset().y();
+        return page->top_level_browsing_context().viewport_scroll_offset().y().value();
     return 0;
 }
 
@@ -822,7 +822,7 @@ int Window::screen_x() const
     // The screenX and screenLeft attributes must return the x-coordinate, relative to the origin of the Web-exposed screen area,
     // of the left of the client window as number of CSS pixels, or zero if there is no such thing.
     if (auto* page = this->page())
-        return page->window_position().x();
+        return page->window_position().x().value();
     return 0;
 }
 
@@ -832,7 +832,7 @@ int Window::screen_y() const
     // The screenY and screenTop attributes must return the y-coordinate, relative to the origin of the screen of the Web-exposed screen area,
     // of the top of the client window as number of CSS pixels, or zero if there is no such thing.
     if (auto* page = this->page())
-        return page->window_position().y();
+        return page->window_position().y().value();
     return 0;
 }
 
@@ -841,7 +841,7 @@ int Window::outer_width() const
 {
     // The outerWidth attribute must return the width of the client window. If there is no client window this attribute must return zero.
     if (auto* page = this->page())
-        return page->window_size().width();
+        return page->window_size().width().value();
     return 0;
 }
 
@@ -850,7 +850,7 @@ int Window::outer_height() const
 {
     // The outerHeight attribute must return the height of the client window. If there is no client window this attribute must return zero.
     if (auto* page = this->page())
-        return page->window_size().height();
+        return page->window_size().height().value();
     return 0;
 }
 
@@ -1680,7 +1680,7 @@ JS_DEFINE_NATIVE_FUNCTION(Window::scroll)
         return JS::js_undefined();
     auto& page = *impl->page();
 
-    auto viewport_rect = page.top_level_browsing_context().viewport_rect();
+    auto viewport_rect = page.top_level_browsing_context().viewport_rect().to_type<float>();
     auto x_value = JS::Value(viewport_rect.x());
     auto y_value = JS::Value(viewport_rect.y());
     String behavior_string = "auto";
@@ -1755,9 +1755,9 @@ JS_DEFINE_NATIVE_FUNCTION(Window::scroll_by)
     left = JS::Value(left).is_finite_number() ? left : 0.0;
     top = JS::Value(top).is_finite_number() ? top : 0.0;
 
-    auto current_scroll_position = page.top_level_browsing_context().viewport_scroll_offset();
-    left = left + current_scroll_position.x();
-    top = top + current_scroll_position.y();
+    auto current_scroll_position = page.top_level_browsing_context().viewport_scroll_offset().to_type<float>();
+    left = left + static_cast<double>(current_scroll_position.x());
+    top = top + static_cast<double>(current_scroll_position.y());
 
     auto behavior_string_value = TRY(options->get("behavior"));
     auto behavior_string = behavior_string_value.is_undefined() ? "auto" : TRY(behavior_string_value.to_string(vm));

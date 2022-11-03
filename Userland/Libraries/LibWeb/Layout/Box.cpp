@@ -31,9 +31,8 @@ Box::~Box()
 
 void Box::set_needs_display()
 {
-    // FIXME: Make `set_needs_display` take CSSPixels
     if (paint_box())
-        browsing_context().set_needs_display(enclosing_int_rect(paint_box()->absolute_rect().to_type<float>()));
+        browsing_context().set_needs_display(paint_box()->absolute_rect());
 }
 
 bool Box::is_body() const

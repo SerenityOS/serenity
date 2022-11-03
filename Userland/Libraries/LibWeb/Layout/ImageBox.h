@@ -35,7 +35,7 @@ public:
 
 private:
     // ^BrowsingContext::ViewportClient
-    virtual void browsing_context_did_set_viewport_rect(Gfx::IntRect const&) final;
+    virtual void browsing_context_did_set_viewport_rect(CSSPixelRect const&) final;
 
     // ^JS::Cell
     virtual void finalize() override;

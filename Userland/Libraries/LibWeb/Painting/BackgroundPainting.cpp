@@ -128,7 +128,7 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
         // Attachment and Origin
         switch (layer.attachment) {
         case CSS::BackgroundAttachment::Fixed:
-            background_positioning_area = layout_node.root().browsing_context().viewport_rect().to_type<CSSPixels>();
+            background_positioning_area = layout_node.root().browsing_context().viewport_rect();
             break;
         case CSS::BackgroundAttachment::Local:
         case CSS::BackgroundAttachment::Scroll:
