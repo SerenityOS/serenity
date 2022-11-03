@@ -174,6 +174,7 @@ ErrorOr<void, ParseError> Parser::parse_with_listener(Listener& listener)
 {
     m_listener = &listener;
     ScopeGuard unset_listener { [this] { m_listener = nullptr; } };
+    m_listener->set_source(m_source);
     m_listener->document_start();
     auto result = parse_internal();
     if (result.is_error())
