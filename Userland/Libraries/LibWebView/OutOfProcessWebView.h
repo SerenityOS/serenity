@@ -37,6 +37,7 @@ public:
 
     void debug_request(String const& request, String const& argument = {});
     void get_source();
+    String serialize_source();
 
     void inspect_dom_tree();
     struct DOMNodeProperties {
