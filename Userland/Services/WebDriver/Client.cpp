@@ -3,6 +3,7 @@
  * Copyright (c) 2022, Sam Atkins <atkinssj@serenityos.org>
  * Copyright (c) 2022, Tobias Christiansen <tobyase@serenityos.org>
  * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2022, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -50,6 +51,7 @@ Vector<Client::Route> Client::s_routes = {
     { HTTP::HttpRequest::Method::GET, { "session", ":session_id", "element", ":element_id", "text" }, &Client::handle_get_element_text },
     { HTTP::HttpRequest::Method::GET, { "session", ":session_id", "element", ":element_id", "name" }, &Client::handle_get_element_tag_name },
     { HTTP::HttpRequest::Method::GET, { "session", ":session_id", "element", ":element_id", "rect" }, &Client::handle_get_element_rect },
+    { HTTP::HttpRequest::Method::GET, { "session", ":session_id", "element", ":element_id", "enabled" }, &Client::handle_is_element_enabled },
     { HTTP::HttpRequest::Method::GET, { "session", ":session_id", "source" }, &Client::handle_get_source },
     { HTTP::HttpRequest::Method::POST, { "session", ":session_id", "execute", "sync" }, &Client::handle_execute_script },
     { HTTP::HttpRequest::Method::POST, { "session", ":session_id", "execute", "async" }, &Client::handle_execute_async_script },
@@ -696,6 +698,16 @@ ErrorOr<JsonValue, WebDriverError> Client::handle_get_element_rect(Vector<String
     dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session_id>/element/<element_id>/rect");
     auto* session = TRY(find_session_with_id(parameters[0]));
     auto result = TRY(session->get_element_rect(parameters[1]));
+    return make_json_value(result);
+}
+
+// 12.4.8 Is Element Enabled, https://w3c.github.io/webdriver/#dfn-is-element-enabled
+// GET /session/{session id}/element/{element id}/enabled
+ErrorOr<JsonValue, WebDriverError> Client::handle_is_element_enabled(Vector<StringView> const& parameters, JsonValue const&)
+{
+    dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session_id>/element/<element_id>/enabled");
+    auto* session = TRY(find_session_with_id(parameters[0]));
+    auto result = TRY(session->is_element_enabled(parameters[1]));
     return make_json_value(result);
 }
 

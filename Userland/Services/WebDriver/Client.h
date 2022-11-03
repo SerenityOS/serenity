@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2022, Florent Castelli <florent.castelli@gmail.com>
  * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2022, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -75,6 +76,7 @@ private:
     ErrorOr<JsonValue, WebDriverError> handle_get_element_text(Vector<StringView> const&, JsonValue const& payload);
     ErrorOr<JsonValue, WebDriverError> handle_get_element_tag_name(Vector<StringView> const&, JsonValue const& payload);
     ErrorOr<JsonValue, WebDriverError> handle_get_element_rect(Vector<StringView> const&, JsonValue const& payload);
+    ErrorOr<JsonValue, WebDriverError> handle_is_element_enabled(Vector<StringView> const&, JsonValue const& payload);
     ErrorOr<JsonValue, WebDriverError> handle_get_source(Vector<StringView> const&, JsonValue const& payload);
     ErrorOr<JsonValue, WebDriverError> handle_execute_script(Vector<StringView> const&, JsonValue const& payload);
     ErrorOr<JsonValue, WebDriverError> handle_execute_async_script(Vector<StringView> const&, JsonValue const& payload);

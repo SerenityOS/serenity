@@ -2,6 +2,7 @@
  * Copyright (c) 2022, Florent Castelli <florent.castelli@gmail.com>
  * Copyright (c) 2022, Sam Atkins <atkinssj@serenityos.org>
  * Copyright (c) 2022, Tobias Christiansen <tobyase@serenityos.org>
+ * Copyright (c) 2022, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -64,6 +65,7 @@ public:
     virtual Messages::WebDriverSessionClient::GetElementTextResponse get_element_text(i32 element_id) override;
     virtual Messages::WebDriverSessionClient::GetElementTagNameResponse get_element_tag_name(i32 element_id) override;
     virtual Messages::WebDriverSessionClient::GetElementRectResponse get_element_rect(i32 element_id) override;
+    virtual Messages::WebDriverSessionClient::IsElementEnabledResponse is_element_enabled(i32 element_id) override;
     virtual Messages::WebDriverSessionClient::TakeScreenshotResponse take_screenshot() override;
 
 private:
