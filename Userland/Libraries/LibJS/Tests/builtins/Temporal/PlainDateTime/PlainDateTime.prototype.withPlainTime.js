@@ -1,6 +1,6 @@
 describe("correct behavior", () => {
-    test("length is 1", () => {
-        expect(Temporal.PlainDateTime.prototype.withPlainTime).toHaveLength(1);
+    test("length is 0", () => {
+        expect(Temporal.PlainDateTime.prototype.withPlainTime).toHaveLength(0);
     });
 
     test("basic functionality", () => {
