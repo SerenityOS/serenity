@@ -1008,6 +1008,30 @@ void TextEditor::keydown_event(KeyEvent& event)
         return;
     }
 
+    if (event.ctrl() && event.key() == KeyCode::Key_Slash) {
+        if (m_highlighter != nullptr) {
+            auto prefix = m_highlighter->comment_prefix().value_or(""sv);
+            auto suffix = m_highlighter->comment_suffix().value_or(""sv);
+            auto range = has_selection() ? selection() : TextRange { { m_cursor.line(), m_cursor.column() }, { m_cursor.line(), m_cursor.column() } };
+
+            auto is_already_commented = true;
+            for (size_t i = range.start().line(); i <= range.end().line(); i++) {
+                auto text = m_document->line(i).to_utf8().trim_whitespace();
+                if (!(text.starts_with(prefix) && text.ends_with(suffix))) {
+                    is_already_commented = false;
+                    break;
+                }
+            }
+
+            if (is_already_commented)
+                execute<UncommentSelection>(prefix, suffix, range);
+            else
+                execute<CommentSelection>(prefix, suffix, range);
+
+            return;
+        }
+    }
+
     event.ignore();
 }
 
