@@ -32,6 +32,8 @@ ErrorOr<int> serenity_main(Main::Arguments)
     TRY(Core::System::unveil("/dev/input/", "rw"));
     TRY(Core::System::unveil("/bin/keymap", "x"));
     TRY(Core::System::unveil("/sys/kernel/keymap", "r"));
+    TRY(Core::System::unveil("/sys/kernel/processes", "r"));
+    TRY(Core::System::unveil("/etc/passwd", "r"));
 
     struct sigaction act = {};
     act.sa_flags = SA_NOCLDWAIT;
@@ -65,7 +67,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
 
     WindowServer::EventLoop loop;
 
-    TRY(Core::System::pledge("stdio video thread sendfd recvfd accept rpath wpath cpath proc exec"));
+    TRY(Core::System::pledge("stdio video thread sendfd recvfd accept rpath wpath cpath unix proc exec"));
 
     // First check which screens are explicitly configured
     {
