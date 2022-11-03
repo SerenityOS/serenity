@@ -155,7 +155,7 @@
 
     @GUI::GroupBox {
         title: "Button Configuration"
-        fixed_height: 68
+        fixed_height: 136
         layout: @GUI::VerticalBoxLayout {
             margins: [16, 8, 8]
             spacing: 2
@@ -175,6 +175,34 @@
             @GUI::CheckBox {
                 name: "switch_buttons_input"
                 text: "Switch primary and secondary buttons"
+            }
+        }
+
+        @GUI::Widget {
+            layout: @GUI::HorizontalBoxLayout {
+                spacing: 16
+            }
+
+            @GUI::Label {
+                fixed_width: 32
+                fixed_height: 32
+                icon: "/res/graphics/emulate-middle-mouse.png"
+            }
+
+            @GUI::Widget {
+                layout: @GUI::HorizontalBoxLayout {
+                    spacing: 4
+                }
+
+                @GUI::CheckBox {
+                    name: "emulate_middle_mouse"
+                    fixed_width: 16
+                }
+
+                @GUI::Label {
+                    text: "Simulate middle mouse button press with Alt+[secondary mouse button]"
+                    text_alignment: "CenterLeft"
+                }
             }
         }
     }

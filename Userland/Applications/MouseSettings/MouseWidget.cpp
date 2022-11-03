@@ -57,6 +57,12 @@ MouseWidget::MouseWidget()
         set_modified(true);
     };
 
+    m_emulate_middle_mouse_checkbox = *find_descendant_of_type_named<GUI::CheckBox>("emulate_middle_mouse");
+    m_emulate_middle_mouse_checkbox->set_checked(GUI::ConnectionToWindowServer::the().get_emulate_middle_mouse(), GUI::AllowCallback::No);
+    m_emulate_middle_mouse_checkbox->on_checked = [&](auto) {
+        set_modified(true);
+    };
+
     update_speed_label();
     update_double_click_speed_label();
     m_double_click_arrow_widget->set_double_click_speed(m_double_click_speed_slider->value());
@@ -69,6 +75,7 @@ void MouseWidget::apply_settings()
     GUI::ConnectionToWindowServer::the().async_set_scroll_step_size(m_scroll_length_spinbox->value());
     GUI::ConnectionToWindowServer::the().async_set_double_click_speed(m_double_click_speed_slider->value());
     GUI::ConnectionToWindowServer::the().async_set_buttons_switched(m_switch_buttons_checkbox->is_checked());
+    GUI::ConnectionToWindowServer::the().async_set_emulate_middle_mouse(m_emulate_middle_mouse_checkbox->is_checked());
 }
 
 void MouseWidget::reset_default_values()
@@ -77,6 +84,7 @@ void MouseWidget::reset_default_values()
     m_scroll_length_spinbox->set_value(default_scroll_length);
     m_double_click_speed_slider->set_value(double_click_speed_default);
     m_switch_buttons_checkbox->set_checked(false);
+    m_emulate_middle_mouse_checkbox->set_checked(false);
 }
 
 void MouseWidget::update_speed_label()
