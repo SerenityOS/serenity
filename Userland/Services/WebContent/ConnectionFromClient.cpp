@@ -489,35 +489,31 @@ Messages::WebContentServer::QuerySelectorAllResponse ConnectionFromClient::query
     return { return_list };
 }
 
-Messages::WebContentServer::GetElementAttributeResponse ConnectionFromClient::get_element_attribute(i32 element_id, String const& name)
+static Optional<Web::DOM::Element&> find_element_by_id(i32 element_id)
 {
     auto* node = Web::DOM::Node::from_id(element_id);
-    if (!node)
+    if (!node || !node->is_element())
+        return {};
+
+    return verify_cast<Web::DOM::Element>(*node);
+}
+
+Messages::WebContentServer::GetElementAttributeResponse ConnectionFromClient::get_element_attribute(i32 element_id, String const& name)
+{
+    auto element = find_element_by_id(element_id);
+    if (!element.has_value())
         return Optional<String> {};
 
-    if (!node->is_element())
-        return Optional<String> {};
-
-    auto& element = verify_cast<Web::DOM::Element>(*node);
-
-    if (!element.has_attribute(name))
-        return Optional<String> {};
-
-    return { element.get_attribute(name) };
+    return { element->get_attribute(name) };
 }
 
 Messages::WebContentServer::GetElementPropertyResponse ConnectionFromClient::get_element_property(i32 element_id, String const& name)
 {
-    auto* node = Web::DOM::Node::from_id(element_id);
-    if (!node)
+    auto element = find_element_by_id(element_id);
+    if (!element.has_value())
         return Optional<String> {};
 
-    if (!node->is_element())
-        return Optional<String> {};
-
-    auto& element = verify_cast<Web::DOM::Element>(*node);
-
-    auto property_or_error = element.get(name);
+    auto property_or_error = element->get(name);
     if (property_or_error.is_throw_completion())
         return Optional<String> {};
 
@@ -526,7 +522,7 @@ Messages::WebContentServer::GetElementPropertyResponse ConnectionFromClient::get
     if (property.is_undefined())
         return Optional<String> {};
 
-    auto string_or_error = property.to_string(element.vm());
+    auto string_or_error = property.to_string(element->vm());
     if (string_or_error.is_error())
         return Optional<String> {};
 
@@ -556,18 +552,13 @@ Messages::WebContentServer::GetActiveDocumentsTypeResponse ConnectionFromClient:
 
 Messages::WebContentServer::GetComputedValueForElementResponse ConnectionFromClient::get_computed_value_for_element(i32 element_id, String const& property_name)
 {
-    auto* node = Web::DOM::Node::from_id(element_id);
-    if (!node)
+    auto element = find_element_by_id(element_id);
+    if (!element.has_value())
         return { "" };
-
-    if (!node->is_element())
-        return { "" };
-
-    auto& element = verify_cast<Web::DOM::Element>(*node);
 
     auto property_id = Web::CSS::property_id_from_string(property_name);
 
-    auto computed_values = element.computed_css_values();
+    auto computed_values = element->computed_css_values();
     if (!computed_values)
         return { "" };
 
@@ -578,30 +569,20 @@ Messages::WebContentServer::GetComputedValueForElementResponse ConnectionFromCli
 
 Messages::WebContentServer::GetElementTextResponse ConnectionFromClient::get_element_text(i32 element_id)
 {
-    auto* node = Web::DOM::Node::from_id(element_id);
-    if (!node)
+    auto element = find_element_by_id(element_id);
+    if (!element.has_value())
         return { "" };
 
-    if (!node->is_element())
-        return { "" };
-
-    auto& element = verify_cast<Web::DOM::Element>(*node);
-
-    return { element.layout_node()->dom_node()->text_content() };
+    return { element->layout_node()->dom_node()->text_content() };
 }
 
 Messages::WebContentServer::GetElementTagNameResponse ConnectionFromClient::get_element_tag_name(i32 element_id)
 {
-    auto* node = Web::DOM::Node::from_id(element_id);
-    if (!node)
+    auto element = find_element_by_id(element_id);
+    if (!element.has_value())
         return { "" };
 
-    if (!node->is_element())
-        return { "" };
-
-    auto& element = verify_cast<Web::DOM::Element>(*node);
-
-    return { element.tag_name() };
+    return { element->tag_name() };
 }
 
 Messages::WebContentServer::GetSelectedTextResponse ConnectionFromClient::get_selected_text()
