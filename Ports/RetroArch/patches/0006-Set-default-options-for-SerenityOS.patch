@@ -659,7 +659,7 @@ index 0000000..088e883
 +# Alternatively, all hotkeys for keyboard could be disabled by the user.
 +# input_enable_hotkey_btn =
 +
-+# Adds a delay in frames before the assigned hotkey blocks input.  Useful if the the
++# Adds a delay in frames before the assigned hotkey blocks input.  Useful if the
 +# hotkey input is mapped to another action.
 +# input_hotkey_block_delay = "5"
 +

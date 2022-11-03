@@ -301,7 +301,7 @@ ThrowCompletionOr<DurationUnitOptions> get_duration_unit_options(VM& vm, String 
 
 // FIXME: LibUnicode currently only exposes unit patterns converted to an ECMA402 NumberFormat-specific format,
 //  since DurationFormat only needs a tiny subset of it, it's much easier to just convert it to the expected format
-//  here, but at some point we should split the the NumberFormat exporter to export both formats of the data.
+//  here, but at some point we should split the NumberFormat exporter to export both formats of the data.
 static String convert_number_format_pattern_to_duration_format_template(::Locale::NumberFormat const& number_format)
 {
     auto result = number_format.zero_format.replace("{number}"sv, "{0}"sv, ReplaceMode::FirstOnly);

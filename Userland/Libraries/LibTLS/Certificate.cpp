@@ -192,7 +192,7 @@ Optional<Certificate> Certificate::parse_asn1(ReadonlyBytes buffer, bool)
         // AttributeType ::= ObjectIdentifier
         // AttributeValue ::= Any
         while (!decoder.eof()) {
-            // Parse only the the required fields, and ignore the rest.
+            // Parse only the required fields, and ignore the rest.
             ENTER_SCOPE_OR_FAIL(Set, "Certificate::TBSCertificate::issuer/subject::$::RelativeDistinguishedName");
             while (!decoder.eof()) {
                 ENTER_SCOPE_OR_FAIL(Sequence, "Certificate::TBSCertificate::issuer/subject::$::RelativeDistinguishedName::$::AttributeTypeAndValue");

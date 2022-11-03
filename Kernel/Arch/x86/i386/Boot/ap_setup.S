@@ -8,8 +8,8 @@
   will boot the AP from in real mode. This code also contains space for
   special variables that *must* remain here. When initializing the APIC,
   the code here gets copied to P0x00008000, the variables in here get
-  populated and then the the boot of the APs will be triggered. Having
-  the variables here allows us to access them from real mode. Also, the
+  populated and then the boot of the APs will be triggered.
+  Having the variables here allows us to access them from real mode. Also, the
   code here avoids the need for relocation entries.
 
   Basically, the variables between apic_ap_start and end_apic_ap_start
