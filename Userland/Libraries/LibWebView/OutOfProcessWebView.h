@@ -65,6 +65,7 @@ public:
 
     Optional<i32> get_document_element();
     Optional<Vector<i32>> query_selector_all(i32 start_node_id, String const& selector);
+    bool is_element_selected(i32 element_id);
     Optional<String> get_element_attribute(i32 element_id, String const& name);
     Optional<String> get_element_property(i32 element_id, String const& name);
     String get_active_documents_type();
