@@ -162,6 +162,8 @@ public:
     int double_click_speed() const;
     void set_buttons_switched(bool);
     bool get_buttons_switched() const;
+    void set_emulate_middle_mouse(bool);
+    bool get_emulate_middle_mouse() const;
 
     Window* set_active_input_window(Window*);
     void restore_active_input_window(Window*);
@@ -436,6 +438,7 @@ private:
     int m_max_distance_for_double_click { 4 };
     bool m_previous_event_was_super_keydown { false };
     bool m_buttons_switched { false };
+    bool m_emulate_middle_mouse { false };
     bool m_theme_overridden { false };
 
     WeakPtr<Window> m_hovered_window;

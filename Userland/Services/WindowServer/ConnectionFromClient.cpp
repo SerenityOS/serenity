@@ -1105,6 +1105,16 @@ Messages::WindowServer::GetButtonsSwitchedResponse ConnectionFromClient::get_but
     return WindowManager::the().get_buttons_switched();
 }
 
+void ConnectionFromClient::set_emulate_middle_mouse(bool emulate_middle_mouse)
+{
+    WindowManager::the().set_emulate_middle_mouse(emulate_middle_mouse);
+}
+
+Messages::WindowServer::GetEmulateMiddleMouseResponse ConnectionFromClient::get_emulate_middle_mouse()
+{
+    return WindowManager::the().get_emulate_middle_mouse();
+}
+
 void ConnectionFromClient::set_unresponsive(bool unresponsive)
 {
     if (m_unresponsive == unresponsive)

@@ -426,13 +426,26 @@ void ScreenInput::on_receive_mouse_data(MousePacket const& packet)
     }
 
     unsigned buttons = packet.buttons;
-    unsigned prev_buttons = m_mouse_button_state;
+    unsigned const prev_buttons = m_mouse_button_state;
+    auto modifiers = m_modifiers;
+
+    if (WindowManager::the().get_emulate_middle_mouse()) {
+        if ((buttons & MouseButton::Secondary) != 0u) {
+            if (modifiers == KeyModifier::Mod_Alt || (prev_buttons & MouseButton::Middle) != 0u) {
+                modifiers &= ~KeyModifier::Mod_Alt;
+                buttons &= ~MouseButton::Secondary;
+                buttons |= MouseButton::Middle;
+            }
+        }
+    }
+
     m_mouse_button_state = buttons;
     unsigned changed_buttons = prev_buttons ^ buttons;
+
     auto post_mousedown_or_mouseup_if_needed = [&](MouseButton button) {
         if (!(changed_buttons & (unsigned)button))
             return;
-        auto message = make<MouseEvent>(buttons & (unsigned)button ? Event::MouseDown : Event::MouseUp, m_cursor_location, buttons, button, m_modifiers);
+        auto message = make<MouseEvent>(buttons & (unsigned)button ? Event::MouseDown : Event::MouseUp, m_cursor_location, buttons, button, modifiers);
         Core::EventLoop::current().post_event(WindowManager::the(), move(message));
     };
     post_mousedown_or_mouseup_if_needed(MouseButton::Primary);
@@ -441,7 +454,7 @@ void ScreenInput::on_receive_mouse_data(MousePacket const& packet)
     post_mousedown_or_mouseup_if_needed(MouseButton::Backward);
     post_mousedown_or_mouseup_if_needed(MouseButton::Forward);
     if (m_cursor_location != prev_location) {
-        auto message = make<MouseEvent>(Event::MouseMove, m_cursor_location, buttons, MouseButton::None, m_modifiers);
+        auto message = make<MouseEvent>(Event::MouseMove, m_cursor_location, buttons, MouseButton::None, modifiers);
         if (WindowManager::the().dnd_client())
             message->set_mime_data(WindowManager::the().dnd_mime_data());
         Core::EventLoop::current().post_event(WindowManager::the(), move(message));
