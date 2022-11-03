@@ -257,6 +257,8 @@ struct Traits<Span<T>> : public GenericTraits<Span<T>> {
         }
         return hash;
     }
+
+    constexpr static bool is_trivial() { return true; }
 };
 
 using ReadonlyBytes = Span<u8 const>;
