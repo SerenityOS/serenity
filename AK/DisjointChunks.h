@@ -316,6 +316,11 @@ public:
     {
         Vector<Span<T>, InlineSize> spans;
         spans.ensure_capacity(m_chunks.size());
+        if (m_chunks.size() == 1) {
+            spans.append(const_cast<ChunkType&>(m_chunks[0]).span());
+            return DisjointSpans<T, Vector<Span<T>, InlineSize>> { move(spans) };
+        }
+
         for (auto& chunk : m_chunks)
             spans.unchecked_append(const_cast<ChunkType&>(chunk).span());
         return DisjointSpans<T, Vector<Span<T>, InlineSize>> { move(spans) };
