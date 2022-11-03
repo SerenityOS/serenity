@@ -16,7 +16,10 @@ template<typename T>
 union FloatExtractor;
 
 #if ARCH(I386) || ARCH(X86_64) || ARCH(AARCH64)
-// This assumes long double is 80 bits, which is true with GCC on Intel platforms
+// FIXME: There is no straightforward way, I can think of, to check
+// in compile time that long double is really an 80-bit IEEE574 floating point number.
+static_assert(__LDBL_MAX__ == 1.189731495357231765e4932L);
+
 template<>
 union FloatExtractor<long double> {
     static constexpr int mantissa_bits = 64;
