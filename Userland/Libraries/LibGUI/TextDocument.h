@@ -288,4 +288,30 @@ private:
     TextRange m_range;
 };
 
+class CommentSelection : public TextDocumentUndoCommand {
+public:
+    CommentSelection(TextDocument&, StringView, StringView, TextRange const&);
+    virtual void undo() override;
+    virtual void redo() override;
+    TextRange const& range() const { return m_range; }
+
+private:
+    StringView m_prefix;
+    StringView m_suffix;
+    TextRange m_range;
+};
+
+class UncommentSelection : public TextDocumentUndoCommand {
+public:
+    UncommentSelection(TextDocument&, StringView, StringView, TextRange const&);
+    virtual void undo() override;
+    virtual void redo() override;
+    TextRange const& range() const { return m_range; }
+
+private:
+    StringView m_prefix;
+    StringView m_suffix;
+    TextRange m_range;
+};
+
 }
