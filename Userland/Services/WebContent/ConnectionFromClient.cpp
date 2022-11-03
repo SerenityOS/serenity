@@ -24,6 +24,7 @@
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/NodeList.h>
 #include <LibWeb/Dump.h>
+#include <LibWeb/Geometry/DOMRect.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/Scripting/ClassicScript.h>
 #include <LibWeb/HTML/Storage.h>
@@ -583,6 +584,36 @@ Messages::WebContentServer::GetElementTagNameResponse ConnectionFromClient::get_
         return { "" };
 
     return { element->tag_name() };
+}
+
+// https://w3c.github.io/webdriver/#dfn-calculate-the-absolute-position
+static Gfx::IntPoint calculate_absolute_position_of_element(Web::Page const& page, JS::NonnullGCPtr<Web::Geometry::DOMRect> rect)
+{
+    // 1. Let rect be the value returned by calling getBoundingClientRect().
+
+    // 2. Let window be the associated window of current top-level browsing context.
+    auto const* window = page.top_level_browsing_context().active_window();
+
+    // 3. Let x be (scrollX of window + rect’s x coordinate).
+    auto x = (window ? static_cast<int>(window->scroll_x()) : 0) + static_cast<int>(rect->x());
+
+    // 4. Let y be (scrollY of window + rect’s y coordinate).
+    auto y = (window ? static_cast<int>(window->scroll_y()) : 0) + static_cast<int>(rect->y());
+
+    // 5. Return a pair of (x, y).
+    return { x, y };
+}
+
+Messages::WebContentServer::GetElementRectResponse ConnectionFromClient::get_element_rect(i32 element_id)
+{
+    auto element = find_element_by_id(element_id);
+    if (!element.has_value())
+        return { {} };
+
+    auto bounding_rect = element->get_bounding_client_rect();
+    auto coordinates = calculate_absolute_position_of_element(page(), bounding_rect);
+
+    return { { coordinates.x(), coordinates.y(), static_cast<int>(bounding_rect->width()), static_cast<int>(bounding_rect->height()) } };
 }
 
 Messages::WebContentServer::GetSelectedTextResponse ConnectionFromClient::get_selected_text()
