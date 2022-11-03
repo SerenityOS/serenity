@@ -26,7 +26,7 @@ Size Size::make_auto()
     return Size { Type::Auto, Length::make_auto() };
 }
 
-Size Size::make_px(float px)
+Size Size::make_px(CSSPixels px)
 {
     return make_length(CSS::Length::make_px(px));
 }
