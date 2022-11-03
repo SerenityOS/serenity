@@ -367,8 +367,16 @@ Optional<CSS::MediaFeatureValue> Window::query_media_feature(CSS::MediaFeatureID
     case CSS::MediaFeatureID::ColorIndex:
         return CSS::MediaFeatureValue(0);
     // FIXME: device-aspect-ratio
-    // FIXME: device-height
-    // FIXME: device-width
+    case CSS::MediaFeatureID::DeviceHeight:
+        if (auto* page = this->page()) {
+            return CSS::MediaFeatureValue(CSS::Length::make_px(page->screen_rect().height()));
+        }
+        return CSS::MediaFeatureValue(0);
+    case CSS::MediaFeatureID::DeviceWidth:
+        if (auto* page = this->page()) {
+            return CSS::MediaFeatureValue(CSS::Length::make_px(page->screen_rect().width()));
+        }
+        return CSS::MediaFeatureValue(0);
     case CSS::MediaFeatureID::DisplayMode:
         // FIXME: Detect if window is fullscreen
         return CSS::MediaFeatureValue(CSS::ValueID::Browser);
