@@ -31,7 +31,7 @@ jobs:
             arch: 'x86_64'
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       # Set default Python to python 3.x, and set Python path such that pip install works properly
       - uses: actions/setup-python@v4
         with:
