@@ -2,7 +2,7 @@ parameters:
   os: 'Linux'
 
 steps:
-  - checkout: self
+  - checkout: refs/pull/$(System.PullRequest.PullRequestNumber)/merge
     persistCredentials: true
 
   - ${{ if eq(parameters.os, 'Serenity') }}:
