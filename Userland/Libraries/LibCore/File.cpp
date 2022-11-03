@@ -572,8 +572,9 @@ Optional<String> File::resolve_executable_from_environment(StringView filename)
     }
 
     auto const* path_str = getenv("PATH");
-    StringView path { path_str, strlen(path_str) };
-
+    StringView path;
+    if (path_str)
+        path = { path_str, strlen(path_str) };
     if (path.is_empty())
         path = DEFAULT_PATH_SV;
 
