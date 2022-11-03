@@ -76,8 +76,8 @@ JS_DEFINE_NATIVE_FUNCTION(Intl::get_canonical_locales)
     return Array::create_from(realm, marked_locale_list);
 }
 
-// 1.4.4 AvailableTimeZones (), https://tc39.es/proposal-intl-enumeration/#sec-availablecurrencies
-static Vector<StringView> available_time_zones()
+// 1.4.4 AvailableCanonicalTimeZones (), https://tc39.es/proposal-intl-enumeration/#sec-availablecanonicaltimezones
+static Vector<StringView> available_canonical_time_zones()
 {
     // 1. Let names be a List of all supported Zone and Link names in the IANA Time Zone Database.
     auto names = TimeZone::all_time_zones();
@@ -117,33 +117,33 @@ JS_DEFINE_NATIVE_FUNCTION(Intl::supported_values_of)
 
     // 2. If key is "calendar", then
     if (key == "calendar"sv) {
-        // a. Let list be ! AvailableCalendars( ).
+        // a. Let list be ! AvailableCanonicalCalendars( ).
         list = ::Locale::get_available_calendars();
     }
     // 3. Else if key is "collation", then
     else if (key == "collation"sv) {
-        // a. Let list be ! AvailableCollations( ).
+        // a. Let list be ! AvailableCanonicalCollations( ).
         list = ::Locale::get_available_collation_types();
     }
     // 4. Else if key is "currency", then
     else if (key == "currency"sv) {
-        // a. Let list be ! AvailableCurrencies( ).
+        // a. Let list be ! AvailableCanonicalCurrencies( ).
         list = ::Locale::get_available_currencies();
     }
     // 5. Else if key is "numberingSystem", then
     else if (key == "numberingSystem"sv) {
-        // a. Let list be ! AvailableNumberingSystems( ).
+        // a. Let list be ! AvailableCanonicalNumberingSystems( ).
         list = ::Locale::get_available_number_systems();
     }
     // 6. Else if key is "timeZone", then
     else if (key == "timeZone"sv) {
-        // a. Let list be ! AvailableTimeZones( ).
-        static auto time_zones = available_time_zones();
+        // a. Let list be ! AvailableCanonicalTimeZones( ).
+        static auto time_zones = available_canonical_time_zones();
         list = time_zones.span();
     }
     // 7. Else if key is "unit", then
     else if (key == "unit"sv) {
-        // a. Let list be ! AvailableUnits( ).
+        // a. Let list be ! AvailableCanonicalUnits( ).
         static auto units = sanctioned_single_unit_identifiers();
         list = units.span();
     }
