@@ -144,7 +144,7 @@ The following three example tasks should suffice in most situations, and allow y
 Note: The Assertion und KUBSan Problem matchers will only run after you have closed qemu.
 
 <details>
-<summary>tasks.json</summary>
+<summary>.vscode/tasks.json</summary>
 
 ```json
 {
