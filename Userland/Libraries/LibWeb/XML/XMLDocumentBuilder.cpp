@@ -46,6 +46,11 @@ XMLDocumentBuilder::XMLDocumentBuilder(DOM::Document& document, XMLScriptingSupp
 {
 }
 
+void XMLDocumentBuilder::set_source(String source)
+{
+    m_document.set_source(move(source));
+}
+
 void XMLDocumentBuilder::element_start(const XML::Name& name, HashMap<XML::Name, String> const& attributes)
 {
     if (m_has_error)

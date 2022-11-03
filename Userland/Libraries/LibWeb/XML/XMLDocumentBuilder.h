@@ -29,6 +29,7 @@ public:
     bool has_error() const { return m_has_error; }
 
 private:
+    virtual void set_source(String) override;
     virtual void element_start(XML::Name const& name, HashMap<XML::Name, String> const& attributes) override;
     virtual void element_end(XML::Name const& name) override;
     virtual void text(String const& data) override;

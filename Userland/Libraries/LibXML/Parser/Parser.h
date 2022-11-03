@@ -29,6 +29,7 @@ struct ParseError {
 struct Listener {
     virtual ~Listener() { }
 
+    virtual void set_source(String) { }
     virtual void document_start() { }
     virtual void document_end() { }
     virtual void element_start(Name const&, HashMap<Name, String> const&) { }
