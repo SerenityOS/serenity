@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2022, Tobias Christiansen <tobyase@serenityos.org>
+ * Copyright (c) 2022, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -31,6 +32,7 @@ public:
     Function<String(i32 element_id)> on_get_element_text;
     Function<String(i32 element_id)> on_get_element_tag_name;
     Function<Gfx::IntRect(i32 element_id)> on_get_element_rect;
+    Function<bool(i32 element_id)> on_is_element_enabled;
     Function<String()> on_serialize_source;
     Function<Messages::WebContentServer::WebdriverExecuteScriptResponse(String const& body, Vector<String> const& json_arguments, Optional<u64> const& timeout, bool async)> on_execute_script;
 };

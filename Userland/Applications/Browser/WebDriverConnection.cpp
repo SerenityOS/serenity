@@ -2,6 +2,7 @@
  * Copyright (c) 2022, Florent Castelli <florent.castelli@gmail.com>
  * Copyright (c) 2022, Sam Atkins <atkinssj@serenityos.org>
  * Copyright (c) 2022, Tobias Christiansen <tobyase@serenityos.org>
+ * Copyright (c) 2022, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -292,6 +293,17 @@ Messages::WebDriverSessionClient::GetElementRectResponse WebDriverConnection::ge
             return { tab.webdriver_endpoints().on_get_element_rect(element_id) };
     }
     return { {} };
+}
+
+Messages::WebDriverSessionClient::IsElementEnabledResponse WebDriverConnection::is_element_enabled(i32 element_id)
+{
+    dbgln("WebDriverConnection: is_element_enabled {}", element_id);
+    if (auto browser_window = m_browser_window.strong_ref()) {
+        auto& tab = browser_window->active_tab();
+        if (tab.webdriver_endpoints().on_is_element_enabled)
+            return { tab.webdriver_endpoints().on_is_element_enabled(element_id) };
+    }
+    return { false };
 }
 
 Messages::WebDriverSessionClient::TakeScreenshotResponse WebDriverConnection::take_screenshot()

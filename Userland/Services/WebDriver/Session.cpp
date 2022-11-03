@@ -3,6 +3,7 @@
  * Copyright (c) 2022, Sam Atkins <atkinssj@serenityos.org>
  * Copyright (c) 2022, Tobias Christiansen <tobyase@serenityos.org>
  * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2022, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -934,6 +935,32 @@ ErrorOr<JsonValue, WebDriverError> Session::get_element_rect(StringView paramete
 
     // 7. Return success with data body.
     return body;
+}
+
+// 12.4.8 Is Element Enabled, https://w3c.github.io/webdriver/#dfn-is-element-enabled
+ErrorOr<JsonValue, WebDriverError> Session::is_element_enabled(StringView parameter_element_id)
+{
+    // 1. If the current browsing context is no longer open, return error with error code no such window.
+    TRY(check_for_open_top_level_browsing_context_or_return_error());
+
+    // FIXME: 2. Handle any user prompts and return its value if it is an error.
+
+    // 3. Let element be the result of trying to get a known connected element with url variable element id.
+    // NOTE: The whole concept of "connected elements" is not implemented yet. See get_or_create_a_web_element_reference()
+    //       For now the element is only represented by its ID
+    auto maybe_element_id = parameter_element_id.to_int();
+    if (!maybe_element_id.has_value())
+        return WebDriverError::from_code(ErrorCode::InvalidArgument, "Element ID is not an i32");
+
+    auto element_id = maybe_element_id.release_value();
+
+    // 4. Let enabled be a boolean initially set to true if the current browsing context’s active document’s type is not "xml".
+    // 5. Otherwise, let enabled to false and jump to the last step of this algorithm.
+    // 6. Set enabled to false if a form control is disabled.
+    auto enabled = m_browser_connection->is_element_enabled(element_id);
+
+    // 7. Return success with data enabled.
+    return enabled;
 }
 
 // 13.1 Get Page Source, https://w3c.github.io/webdriver/#dfn-get-page-source
