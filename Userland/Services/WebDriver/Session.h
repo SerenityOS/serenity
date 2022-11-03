@@ -59,6 +59,7 @@ public:
     ErrorOr<JsonValue, WebDriverError> find_elements(JsonValue const& payload);
     ErrorOr<JsonValue, WebDriverError> find_element_from_element(JsonValue const& payload, StringView parameter_element_id);
     ErrorOr<JsonValue, WebDriverError> find_elements_from_element(JsonValue const& payload, StringView parameter_element_id);
+    ErrorOr<JsonValue, WebDriverError> is_element_selected(StringView element_id);
     ErrorOr<JsonValue, WebDriverError> get_element_attribute(JsonValue const& payload, StringView element_id, StringView name);
     ErrorOr<JsonValue, WebDriverError> get_element_property(JsonValue const& payload, StringView element_id, StringView name);
     ErrorOr<JsonValue, WebDriverError> get_element_css_value(JsonValue const& payload, StringView element_id, StringView property_name);

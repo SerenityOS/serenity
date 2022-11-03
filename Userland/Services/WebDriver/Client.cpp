@@ -45,6 +45,7 @@ Vector<Client::Route> Client::s_routes = {
     { HTTP::HttpRequest::Method::POST, { "session", ":session_id", "elements" }, &Client::handle_find_elements },
     { HTTP::HttpRequest::Method::POST, { "session", ":session_id", "element", ":element_id", "element" }, &Client::handle_find_element_from_element },
     { HTTP::HttpRequest::Method::POST, { "session", ":session_id", "element", ":element_id", "elements" }, &Client::handle_find_elements_from_element },
+    { HTTP::HttpRequest::Method::GET, { "session", ":session_id", "element", ":element_id", "selected" }, &Client::handle_is_element_selected },
     { HTTP::HttpRequest::Method::GET, { "session", ":session_id", "element", ":element_id", "attribute", ":name" }, &Client::handle_get_element_attribute },
     { HTTP::HttpRequest::Method::GET, { "session", ":session_id", "element", ":element_id", "property", ":name" }, &Client::handle_get_element_property },
     { HTTP::HttpRequest::Method::GET, { "session", ":session_id", "element", ":element_id", "css", ":property_name" }, &Client::handle_get_element_css_value },
@@ -638,6 +639,16 @@ ErrorOr<JsonValue, WebDriverError> Client::handle_find_elements_from_element(Vec
     dbgln_if(WEBDRIVER_DEBUG, "Handling POST /session/<session_id>/element/<element_id>/elements");
     auto* session = TRY(find_session_with_id(parameters[0]));
     auto result = TRY(session->find_elements_from_element(payload, parameters[1]));
+    return make_json_value(result);
+}
+
+// 12.4.1 Is Element Selected, https://w3c.github.io/webdriver/#dfn-is-element-selected
+// GET /session/{session id}/element/{element id}/selected
+ErrorOr<JsonValue, WebDriverError> Client::handle_is_element_selected(Vector<StringView> const& parameters, JsonValue const&)
+{
+    dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session_id>/element/<element_id>/selected");
+    auto* session = TRY(find_session_with_id(parameters[0]));
+    auto result = TRY(session->is_element_selected(parameters[1]));
     return make_json_value(result);
 }
 
