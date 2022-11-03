@@ -387,7 +387,7 @@ float FormattingContext::tentative_width_for_replaced_element(LayoutState const&
         return 0;
 
     auto height_of_containing_block = CSS::Length::make_px(containing_block_height_for(box, state));
-    auto const& computed_height = box.computed_values().height();
+    auto computed_height = should_treat_height_as_auto(box, available_space) ? CSS::Size::make_auto() : box.computed_values().height();
 
     float used_width = computed_width.resolved(box, CSS::Length::make_px(available_space.width.to_px())).to_px(box);
 
@@ -457,7 +457,7 @@ float FormattingContext::compute_width_for_replaced_element(LayoutState const& s
     if (margin_right.is_auto())
         margin_right = zero_value;
 
-    auto computed_width = box.computed_values().width();
+    auto computed_width = should_treat_width_as_auto(box, available_space) ? CSS::Size::make_auto() : box.computed_values().width();
 
     // 1. The tentative used width is calculated (without 'min-width' and 'max-width')
     auto used_width = tentative_width_for_replaced_element(state, box, computed_width, available_space);
@@ -487,15 +487,9 @@ float FormattingContext::compute_width_for_replaced_element(LayoutState const& s
 // https://www.w3.org/TR/CSS22/visudet.html#inline-replaced-height
 float FormattingContext::tentative_height_for_replaced_element(LayoutState const& state, ReplacedBox const& box, CSS::Size const& computed_height, AvailableSpace const& available_space)
 {
-    // Treat percentages of indefinite containing block heights as 0 (the initial height).
-    if (computed_height.is_percentage() && !state.get(*box.containing_block()).has_definite_height())
-        return 0;
-
-    auto const& computed_width = box.computed_values().width();
-
     // If 'height' and 'width' both have computed values of 'auto' and the element also has
     // an intrinsic height, then that intrinsic height is the used value of 'height'.
-    if (computed_width.is_auto() && computed_height.is_auto() && box.has_intrinsic_height())
+    if (should_treat_width_as_auto(box, available_space) && should_treat_height_as_auto(box, available_space) && box.has_intrinsic_height())
         return box.intrinsic_height().value();
 
     // Otherwise, if 'height' has a computed value of 'auto', and the element has an intrinsic ratio then the used value of 'height' is:
@@ -524,8 +518,8 @@ float FormattingContext::compute_height_for_replaced_element(LayoutState const& 
 
     auto width_of_containing_block_as_length = CSS::Length::make_px(available_space.width.to_px());
     auto height_of_containing_block_as_length = CSS::Length::make_px(available_space.height.to_px());
-    auto computed_width = box.computed_values().width();
-    auto computed_height = box.computed_values().height();
+    auto computed_width = should_treat_width_as_auto(box, available_space) ? CSS::Size::make_auto() : box.computed_values().width();
+    auto computed_height = should_treat_height_as_auto(box, available_space) ? CSS::Size::make_auto() : box.computed_values().height();
 
     float used_height = tentative_height_for_replaced_element(state, box, computed_height, available_space);
 
