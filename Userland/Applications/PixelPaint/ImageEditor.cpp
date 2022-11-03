@@ -490,8 +490,11 @@ ErrorOr<void> ImageEditor::add_new_layer_from_selection()
 
 void ImageEditor::set_active_tool(Tool* tool)
 {
-    if (m_active_tool == tool)
+    if (m_active_tool == tool) {
+        if (m_active_tool)
+            m_active_tool->setup(*this);
         return;
+    }
 
     if (m_active_tool)
         m_active_tool->clear();
