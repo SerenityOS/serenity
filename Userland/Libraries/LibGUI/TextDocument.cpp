@@ -246,6 +246,19 @@ void TextDocumentLine::remove_range(TextDocument& document, size_t start, size_t
     document.update_views({});
 }
 
+void TextDocumentLine::keep_range(TextDocument& document, size_t start_index, size_t length)
+{
+    VERIFY(start_index + length < m_text.size());
+
+    Vector<u32> new_data;
+    new_data.ensure_capacity(m_text.size());
+    for (size_t i = start_index; i <= (start_index + length); i++)
+        new_data.append(m_text[i]);
+
+    m_text = move(new_data);
+    document.update_views({});
+}
+
 void TextDocumentLine::truncate(TextDocument& document, size_t length)
 {
     m_text.resize(length);
