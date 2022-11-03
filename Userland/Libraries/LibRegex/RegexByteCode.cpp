@@ -546,7 +546,7 @@ ALWAYS_INLINE ExecutionResult OpCode_Compare::execute(MatchInput const& input, M
                 return ExecutionResult::Failed_ExecuteLowPrioForks;
 
             auto count = m_bytecode->at(offset++);
-            auto range_data = m_bytecode->spans().slice(offset, count);
+            auto range_data = m_bytecode->template spans<4>().slice(offset, count);
             offset += count;
 
             auto ch = input.view.substring_view(state.string_position, 1)[0];
