@@ -70,7 +70,7 @@ private:
     ReferenceType m_chunks;
 };
 
-template<typename T>
+template<typename T, typename SpanContainer = Vector<Span<T>>>
 class DisjointSpans {
 public:
     DisjointSpans() = default;
@@ -78,7 +78,7 @@ public:
     DisjointSpans(DisjointSpans const&) = default;
     DisjointSpans(DisjointSpans&&) = default;
 
-    explicit DisjointSpans(Vector<Span<T>> spans)
+    explicit DisjointSpans(SpanContainer spans)
         : m_spans(move(spans))
     {
     }
@@ -185,7 +185,7 @@ private:
         return { m_spans.last(), index - (offset - m_spans.last().size()) };
     }
 
-    Vector<Span<T>> m_spans;
+    SpanContainer m_spans;
 };
 
 namespace Detail {
@@ -311,13 +311,14 @@ public:
         return all_of(m_chunks, [](auto& chunk) { return chunk.is_empty(); });
     }
 
-    DisjointSpans<T> spans() const&
+    template<size_t InlineSize = 0>
+    DisjointSpans<T, Vector<Span<T>, InlineSize>> spans() const&
     {
-        Vector<Span<T>> spans;
+        Vector<Span<T>, InlineSize> spans;
         spans.ensure_capacity(m_chunks.size());
         for (auto& chunk : m_chunks)
             spans.unchecked_append(const_cast<ChunkType&>(chunk).span());
-        return DisjointSpans<T> { move(spans) };
+        return DisjointSpans<T, Vector<Span<T>, InlineSize>> { move(spans) };
     }
 
     bool operator==(DisjointChunks const& other) const
