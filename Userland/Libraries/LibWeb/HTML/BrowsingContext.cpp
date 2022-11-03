@@ -316,7 +316,7 @@ void BrowsingContext::set_active_document(JS::NonnullGCPtr<DOM::Document> docume
         previously_active_document->did_stop_being_active_document_in_browsing_context({});
 }
 
-void BrowsingContext::set_viewport_rect(Gfx::IntRect const& rect)
+void BrowsingContext::set_viewport_rect(CSSPixelRect const& rect)
 {
     bool did_change = false;
 
@@ -345,7 +345,7 @@ void BrowsingContext::set_viewport_rect(Gfx::IntRect const& rect)
     HTML::main_thread_event_loop().schedule();
 }
 
-void BrowsingContext::set_size(Gfx::IntSize size)
+void BrowsingContext::set_size(CSSPixelSize size)
 {
     if (m_size == size)
         return;
@@ -368,14 +368,14 @@ void BrowsingContext::set_needs_display()
     set_needs_display(viewport_rect());
 }
 
-void BrowsingContext::set_needs_display(Gfx::IntRect const& rect)
+void BrowsingContext::set_needs_display(CSSPixelRect const& rect)
 {
     if (!viewport_rect().intersects(rect))
         return;
 
     if (is_top_level()) {
         if (m_page)
-            m_page->client().page_did_invalidate(to_top_level_rect(rect.to_type<CSSPixels>()));
+            m_page->client().page_did_invalidate(to_top_level_rect(rect));
         return;
     }
 
@@ -383,13 +383,13 @@ void BrowsingContext::set_needs_display(Gfx::IntRect const& rect)
         container()->layout_node()->set_needs_display();
 }
 
-void BrowsingContext::scroll_to(Gfx::IntPoint position)
+void BrowsingContext::scroll_to(CSSPixelPoint position)
 {
     if (active_document())
         active_document()->force_layout();
 
     if (m_page)
-        m_page->client().page_did_request_scroll_to(position.to_type<CSSPixels>());
+        m_page->client().page_did_request_scroll_to(position);
 }
 
 void BrowsingContext::scroll_to_anchor(DeprecatedString const& fragment)
@@ -419,15 +419,15 @@ void BrowsingContext::scroll_to_anchor(DeprecatedString const& fragment)
 
     auto& layout_node = *element->layout_node();
 
-    Gfx::FloatRect float_rect { layout_node.box_type_agnostic_position(), { (float)viewport_rect().width(), (float)viewport_rect().height() } };
+    CSSPixelRect target_rect { layout_node.box_type_agnostic_position(), { viewport_rect().width(), viewport_rect().height() } };
     if (is<Layout::Box>(layout_node)) {
         auto& layout_box = verify_cast<Layout::Box>(layout_node);
         auto padding_box = layout_box.box_model().padding_box();
-        float_rect.translate_by(-padding_box.left, -padding_box.top);
+        target_rect.translate_by(-padding_box.left, -padding_box.top);
     }
 
     if (m_page)
-        m_page->client().page_did_request_scroll_into_view(float_rect.to_type<CSSPixels>());
+        m_page->client().page_did_request_scroll_into_view(target_rect);
 }
 
 CSSPixelRect BrowsingContext::to_top_level_rect(CSSPixelRect const& a_rect)

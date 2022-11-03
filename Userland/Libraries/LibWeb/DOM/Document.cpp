@@ -833,7 +833,7 @@ void Document::update_layout()
     if (!browsing_context())
         return;
 
-    auto viewport_rect = browsing_context()->viewport_rect();
+    auto viewport_rect = browsing_context()->viewport_rect().to_type<float>();
 
     if (!m_layout_root) {
         m_next_layout_node_serial_id = 0;
@@ -1724,7 +1724,7 @@ void Document::run_the_resize_steps()
     if (!browsing_context())
         return;
 
-    auto viewport_size = browsing_context()->viewport_rect().size();
+    auto viewport_size = browsing_context()->viewport_rect().size().to_type<float>().to_type<int>();
     if (m_last_viewport_size == viewport_size)
         return;
     m_last_viewport_size = viewport_size;

@@ -55,7 +55,7 @@ Response capture_element_screenshot(Painter const& painter, Page& page, DOM::Ele
 
     element.document().window().animation_frame_callback_driver().add([&](auto) {
         auto viewport_rect = page.top_level_browsing_context().viewport_rect();
-        rect.intersect(viewport_rect);
+        rect.intersect(page.enclosing_device_rect(viewport_rect).to_type<int>());
 
         auto canvas_element = DOM::create_element(element.document(), HTML::TagNames::canvas, Namespace::HTML);
         auto& canvas = verify_cast<HTML::HTMLCanvasElement>(*canvas_element);

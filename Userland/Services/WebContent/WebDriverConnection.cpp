@@ -606,7 +606,7 @@ Messages::WebDriverClient::SetWindowRectResponse WebDriverConnection::set_window
         auto size = m_page_client.page_did_request_resize_window({ *width, *height });
         window_rect.set_size(size);
     } else {
-        window_rect.set_size(m_page_client.page().window_size());
+        window_rect.set_size(m_page_client.page().window_size().to_type<int>());
     }
 
     // 12. If x and y are not null:
@@ -615,7 +615,7 @@ Messages::WebDriverClient::SetWindowRectResponse WebDriverConnection::set_window
         auto position = m_page_client.page_did_request_reposition_window({ *x, *y });
         window_rect.set_location(position);
     } else {
-        window_rect.set_location(m_page_client.page().window_position());
+        window_rect.set_location(m_page_client.page().window_position().to_type<int>());
     }
 
     // 14. Return success with data set to the WindowRect object for the current top-level browsing context.
