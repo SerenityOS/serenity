@@ -27,6 +27,8 @@ float SVGFormattingContext::automatic_content_height() const
 
 void SVGFormattingContext::run(Box const& box, LayoutMode, [[maybe_unused]] AvailableSpace const& available_space)
 {
+    // FIXME: This entire thing is an ad-hoc hack.
+
     auto& svg_svg_element = verify_cast<SVG::SVGSVGElement>(*box.dom_node());
 
     box.for_each_in_subtree_of_type<SVGBox>([&](SVGBox const& descendant) {
@@ -37,14 +39,12 @@ void SVGFormattingContext::run(Box const& box, LayoutMode, [[maybe_unused]] Avai
 
             auto& dom_node = const_cast<SVGGeometryBox&>(geometry_box).dom_node();
 
-            if (svg_svg_element.has_attribute(HTML::AttributeNames::width) && svg_svg_element.has_attribute(HTML::AttributeNames::height)) {
+            auto& svg_svg_state = m_state.get(static_cast<Box const&>(*svg_svg_element.layout_node()));
+
+            if (svg_svg_state.has_definite_width() && svg_svg_state.has_definite_height()) {
                 geometry_box_state.set_content_offset({ 0, 0 });
-                auto& layout_node = *svg_svg_element.layout_node();
-
-                // FIXME: Allow for relative lengths here
-                geometry_box_state.set_content_width(layout_node.computed_values().width().resolved(layout_node, { 0, CSS::Length::Type::Px }).to_px(layout_node));
-                geometry_box_state.set_content_height(layout_node.computed_values().height().resolved(layout_node, { 0, CSS::Length::Type::Px }).to_px(layout_node));
-
+                geometry_box_state.set_content_width(svg_svg_state.content_width());
+                geometry_box_state.set_content_height(svg_svg_state.content_height());
                 return IterationDecision::Continue;
             }
 
