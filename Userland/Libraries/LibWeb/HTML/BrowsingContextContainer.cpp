@@ -109,13 +109,11 @@ const DOM::Document* BrowsingContextContainer::get_svg_document() const
     return nullptr;
 }
 
-HTML::Window* BrowsingContextContainer::content_window() const
+HTML::WindowProxy* BrowsingContextContainer::content_window()
 {
-    // FIXME: This should return the WindowProxy
-    auto* document = content_document();
-    if (!document)
+    if (!m_nested_browsing_context)
         return nullptr;
-    return const_cast<HTML::Window*>(&document->window());
+    return m_nested_browsing_context->window_proxy();
 }
 
 // https://html.spec.whatwg.org/multipage/urls-and-fetching.html#matches-about:blank
