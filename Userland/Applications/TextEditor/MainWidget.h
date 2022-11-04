@@ -54,6 +54,7 @@ private:
     WebView::OutOfProcessWebView& ensure_web_view();
     void set_web_view_visible(bool);
 
+    virtual void drag_enter_event(GUI::DragEvent&) override;
     virtual void drop_event(GUI::DropEvent&) override;
 
     enum class ShowMessageIfNoResults {

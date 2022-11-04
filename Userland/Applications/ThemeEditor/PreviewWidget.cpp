@@ -134,6 +134,13 @@ void PreviewWidget::resize_event(GUI::ResizeEvent&)
     update_preview_window_locations();
 }
 
+void PreviewWidget::drag_enter_event(GUI::DragEvent& event)
+{
+    auto const& mime_types = event.mime_types();
+    if (mime_types.contains_slow("text/uri-list"))
+        event.accept();
+}
+
 void PreviewWidget::drop_event(GUI::DropEvent& event)
 {
     event.accept();

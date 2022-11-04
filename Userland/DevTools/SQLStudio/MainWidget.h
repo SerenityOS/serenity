@@ -36,6 +36,7 @@ private:
     void update_statusbar(ScriptEditor*);
     void update_editor_actions(ScriptEditor*);
 
+    virtual void drag_enter_event(GUI::DragEvent&) override;
     virtual void drop_event(GUI::DropEvent&) override;
 
     RefPtr<GUI::Action> m_new_action;

@@ -564,6 +564,13 @@ void HexEditorWidget::set_value_inspector_visible(bool visible)
     m_side_panel_container->set_visible(visible || m_search_results_container->is_visible());
 }
 
+void HexEditorWidget::drag_enter_event(GUI::DragEvent& event)
+{
+    auto const& mime_types = event.mime_types();
+    if (mime_types.contains_slow("text/uri-list"))
+        event.accept();
+}
+
 void HexEditorWidget::drop_event(GUI::DropEvent& event)
 {
     event.accept();

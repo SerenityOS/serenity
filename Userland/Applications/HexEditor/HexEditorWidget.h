@@ -36,6 +36,8 @@ private:
     void set_search_results_visible(bool visible);
     void set_value_inspector_visible(bool visible);
     void update_inspector_values(size_t position);
+
+    virtual void drag_enter_event(GUI::DragEvent&) override;
     virtual void drop_event(GUI::DropEvent&) override;
 
     RefPtr<HexEditor> m_editor;
