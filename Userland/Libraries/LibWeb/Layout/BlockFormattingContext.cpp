@@ -295,7 +295,7 @@ void BlockFormattingContext::compute_width_for_floating_box(Box const& box, Avai
 
 void BlockFormattingContext::compute_width_for_block_level_replaced_element_in_normal_flow(ReplacedBox const& box, AvailableSpace const& available_space)
 {
-    m_state.get_mutable(box).set_content_width(compute_width_for_replaced_element(m_state, box, available_space).value());
+    m_state.get_mutable(box).set_content_width(compute_width_for_replaced_element(m_state, box, available_space));
 }
 
 void BlockFormattingContext::compute_height(Box const& box, AvailableSpace const& available_space)
@@ -326,7 +326,7 @@ void BlockFormattingContext::compute_height(Box const& box, AvailableSpace const
         height = max(height, calculate_inner_height(box, available_space.height, computed_values.min_height()).to_px(box));
     }
 
-    m_state.get_mutable(box).set_content_height(height.value());
+    m_state.get_mutable(box).set_content_height(height);
 }
 
 void BlockFormattingContext::layout_inline_children(BlockContainer const& block_container, LayoutMode layout_mode, AvailableSpace const& available_space)
@@ -342,9 +342,9 @@ void BlockFormattingContext::layout_inline_children(BlockContainer const& block_
         available_space);
 
     if (!block_container_state.has_definite_width())
-        block_container_state.set_content_width(context.automatic_content_width().value());
+        block_container_state.set_content_width(context.automatic_content_width());
     if (!block_container_state.has_definite_height())
-        block_container_state.set_content_height(context.automatic_content_height().value());
+        block_container_state.set_content_height(context.automatic_content_height());
 }
 
 void BlockFormattingContext::layout_block_level_box(Box const& box, BlockContainer const& block_container, LayoutMode layout_mode, CSSPixels& bottom_of_lowest_margin_box, AvailableSpace const& available_space)
@@ -416,9 +416,9 @@ void BlockFormattingContext::layout_block_level_children(BlockContainer const& b
     if (layout_mode == LayoutMode::IntrinsicSizing) {
         auto& block_container_state = m_state.get_mutable(block_container);
         if (!block_container_state.has_definite_width())
-            block_container_state.set_content_width(greatest_child_width(block_container).value());
+            block_container_state.set_content_width(greatest_child_width(block_container));
         if (!block_container_state.has_definite_height())
-            block_container_state.set_content_height(bottom_of_lowest_margin_box.value());
+            block_container_state.set_content_height(bottom_of_lowest_margin_box);
     }
 }
 
@@ -476,7 +476,7 @@ void BlockFormattingContext::place_block_level_element_in_normal_flow_vertically
     if ((computed_values.clear() == CSS::Clear::Right || computed_values.clear() == CSS::Clear::Both) && !child_box.is_flex_item())
         clear_floating_boxes(m_right_floats);
 
-    box_state.set_content_offset(Gfx::FloatPoint { box_state.offset.x(), y.value() });
+    box_state.set_content_offset(CSSPixelPoint { box_state.offset.x(), y.value() });
 }
 
 void BlockFormattingContext::place_block_level_element_in_normal_flow_horizontally(Box const& child_box, AvailableSpace const& available_space)
@@ -558,7 +558,7 @@ void BlockFormattingContext::layout_floating_box(Box const& box, BlockContainer 
     // First we place the box normally (to get the right y coordinate.)
     // If we have a LineBuilder, we're in the middle of inline layout, otherwise this is block layout.
     if (line_builder) {
-        auto y = line_builder->y_for_float_to_be_inserted_here(box).value();
+        auto y = line_builder->y_for_float_to_be_inserted_here(box);
         box_state.set_content_y(y + box_state.margin_box_top());
     } else {
         place_block_level_element_in_normal_flow_vertically(box);
@@ -598,7 +598,7 @@ void BlockFormattingContext::layout_floating_box(Box const& box, BlockContainer 
             }
 
             if (fits_on_line) {
-                auto const previous_rect = margin_box_rect_in_ancestor_coordinate_space(previous_box.box, root(), m_state).to_type<CSSPixels>();
+                auto const previous_rect = margin_box_rect_in_ancestor_coordinate_space(previous_box.box, root(), m_state);
                 if (previous_rect.contains_vertically(y_in_root + side_data.y_offset)) {
                     // This box touches another already floating box. Stack after others.
                     offset_from_edge = wanted_offset_from_edge;
@@ -701,8 +701,8 @@ void BlockFormattingContext::layout_list_item_marker(ListItemBox const& list_ite
 
     marker_state.set_content_height(max(image_height, marker.font().glyph_height() + 1).value());
 
-    marker_state.set_content_offset({ -(marker_state.content_width() + default_marker_width.value()),
-        max(0.f, (marker.line_height() - marker_state.content_height()) / 2.f) });
+    marker_state.set_content_offset({ -(marker_state.content_width() + default_marker_width),
+        max(CSSPixels(0.f), (CSSPixels(marker.line_height()) - marker_state.content_height()) / 2.f) });
 
     if (marker_state.content_height() > list_item_state.content_height())
         list_item_state.set_content_height(marker_state.content_height());
