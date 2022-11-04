@@ -376,8 +376,8 @@ pushd "$DIR/Build/$ARCH"
             popd
         fi
         echo "XXX build binutils"
-        buildstep "binutils/build" "$MAKE" -j "$MAKEJOBS" || exit 1
-        buildstep "binutils/install" "$MAKE" install || exit 1
+        buildstep "binutils/build" "$MAKE" MAKEINFO=true -j "$MAKEJOBS" || exit 1
+        buildstep "binutils/install" "$MAKE" MAKEINFO=true install || exit 1
     popd
 
     echo "XXX serenity libc headers"
