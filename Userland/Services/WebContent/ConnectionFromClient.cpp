@@ -629,16 +629,26 @@ static Gfx::IntPoint calculate_absolute_position_of_element(Web::Page const& pag
     return { x, y };
 }
 
+static Gfx::IntRect calculate_absolute_rect_of_element(Web::Page const& page, Web::DOM::Element const& element)
+{
+    auto bounding_rect = element.get_bounding_client_rect();
+    auto coordinates = calculate_absolute_position_of_element(page, bounding_rect);
+
+    return Gfx::IntRect {
+        coordinates.x(),
+        coordinates.y(),
+        static_cast<int>(bounding_rect->width()),
+        static_cast<int>(bounding_rect->height())
+    };
+}
+
 Messages::WebContentServer::GetElementRectResponse ConnectionFromClient::get_element_rect(i32 element_id)
 {
     auto element = find_element_by_id(element_id);
     if (!element.has_value())
         return { {} };
 
-    auto bounding_rect = element->get_bounding_client_rect();
-    auto coordinates = calculate_absolute_position_of_element(page(), bounding_rect);
-
-    return { { coordinates.x(), coordinates.y(), static_cast<int>(bounding_rect->width()), static_cast<int>(bounding_rect->height()) } };
+    return { calculate_absolute_rect_of_element(page(), *element) };
 }
 
 Messages::WebContentServer::IsElementEnabledResponse ConnectionFromClient::is_element_enabled(i32 element_id)
