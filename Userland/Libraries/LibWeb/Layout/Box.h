@@ -27,8 +27,8 @@ public:
 
     bool is_body() const;
 
-    virtual Optional<float> intrinsic_width() const { return {}; }
-    virtual Optional<float> intrinsic_height() const { return {}; }
+    virtual Optional<CSSPixels> intrinsic_width() const { return {}; }
+    virtual Optional<CSSPixels> intrinsic_height() const { return {}; }
     virtual Optional<float> intrinsic_aspect_ratio() const { return {}; }
 
     bool has_intrinsic_width() const { return intrinsic_width().has_value(); }
