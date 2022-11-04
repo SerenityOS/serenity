@@ -8,6 +8,7 @@
 
 #include <AK/Array.h>
 #include <AK/Function.h>
+#include <AK/StringFloatingPointConversions.h>
 #include <AK/TypeCasts.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Completion.h>
@@ -35,53 +36,6 @@ static constexpr AK::Array<char, 36> digits = {
     'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
     'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'
 };
-
-static String decimal_digits_to_string(double number)
-{
-    StringBuilder builder;
-
-    double integral_part = 0;
-    (void)modf(number, &integral_part);
-
-    while (integral_part > 0) {
-        auto index = static_cast<size_t>(fmod(integral_part, 10));
-        builder.append(digits[index]);
-
-        integral_part = floor(integral_part / 10.0);
-    }
-
-    return builder.build().reverse();
-}
-
-static size_t compute_fraction_digits(double number, int exponent)
-{
-    double integral_part = 0;
-    double fraction_part = modf(number, &integral_part);
-
-    auto fraction = String::number(fraction_part);
-    size_t fraction_digits = 0;
-
-    if (integral_part != 0)
-        fraction_digits = exponent;
-
-    if (auto decimal_index = fraction.find('.'); decimal_index.has_value()) {
-        fraction_digits += fraction.length() - *decimal_index - 1;
-
-        if (integral_part == 0) {
-            --fraction_digits;
-
-            for (size_t i = *decimal_index + 1; (i < fraction.length()) && (fraction[i] == '0'); ++i)
-                --fraction_digits;
-        }
-    } else if (integral_part != 0) {
-        auto integral = decimal_digits_to_string(integral_part);
-
-        for (size_t i = integral.length(); (i > 0) && (integral[i - 1] == '0'); --i)
-            --fraction_digits;
-    }
-
-    return fraction_digits;
-}
 
 NumberPrototype::NumberPrototype(Realm& realm)
     : NumberObject(0, *realm.intrinsics().object_prototype())
@@ -170,10 +124,6 @@ JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_exponential)
     }
     // 10. Else,
     else {
-        // FIXME: The computations below fall apart for large values of 'f'. A double typically has 52 mantissa bits, which gives us
-        //        up to 2^52 before loss of precision. However, the largest value of 'f' may be 100, resulting in numbers on the order
-        //        of 10^100, thus we lose precision in these computations.
-
         // a. If fractionDigits is not undefined, then
         //     i. Let e and n be integers such that 10^f ≤ n < 10^(f+1) and for which n × 10^(e-f) - x is as close to zero as possible.
         //        If there are two such sets of e and n, pick the e and n for which n × 10^(e-f) is larger.
@@ -182,13 +132,20 @@ JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_exponential)
         //        Note that the decimal representation of n has f + 1 digits, n is not divisible by 10, and the least significant digit of n is not necessarily uniquely determined by these criteria.
         exponent = static_cast<int>(floor(log10(number)));
 
-        if (fraction_digits_value.is_undefined())
-            fraction_digits = compute_fraction_digits(number, exponent);
+        if (fraction_digits_value.is_undefined()) {
+            auto mantissa = convert_floating_point_to_decimal_exponential_form(number).fraction;
+
+            auto mantissa_length = 0;
+            for (; mantissa; mantissa /= 10)
+                ++mantissa_length;
+
+            fraction_digits = mantissa_length - 1;
+        }
 
         number = round(number / pow(10, exponent - fraction_digits));
 
         // c. Let m be the String value consisting of the digits of the decimal representation of n (in order, with no leading zeroes).
-        number_string = decimal_digits_to_string(number);
+        number_string = number_to_string(number, NumberToStringMode::WithoutExponent);
     }
 
     // 11. If f ≠ 0, then

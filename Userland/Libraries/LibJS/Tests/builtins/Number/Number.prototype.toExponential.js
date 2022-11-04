@@ -48,6 +48,9 @@ describe("correct behavior", () => {
             [1, 0, "1e+0"],
             [5, 1, "5.0e+0"],
             [9, 3, "9.000e+0"],
+
+            // Disabled for now due to: https://github.com/SerenityOS/serenity/issues/15924
+            // [3, 100, "3." + "0".repeat(100) + "e+0"],
         ].forEach(test => {
             expect(test[0].toExponential(test[1])).toBe(test[2]);
         });
@@ -83,6 +86,8 @@ describe("correct behavior", () => {
             [0.13, "1.3e-1"],
             [0.0345, "3.45e-2"],
             [0.006789, "6.789e-3"],
+            [1.1e-32, "1.1e-32"],
+            [123.456, "1.23456e+2"],
         ].forEach(test => {
             expect(test[0].toExponential()).toBe(test[1]);
         });
