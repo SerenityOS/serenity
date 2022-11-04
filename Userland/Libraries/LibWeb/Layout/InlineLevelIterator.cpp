@@ -121,7 +121,7 @@ void InlineLevelIterator::skip_to_next()
     compute_next();
 }
 
-Optional<InlineLevelIterator::Item> InlineLevelIterator::next(float available_width)
+Optional<InlineLevelIterator::Item> InlineLevelIterator::next(CSSPixels available_width)
 {
     if (!m_current_node)
         return {};
@@ -144,7 +144,7 @@ Optional<InlineLevelIterator::Item> InlineLevelIterator::next(float available_wi
             m_text_node_context->is_last_chunk = true;
 
         auto& chunk = chunk_opt.value();
-        float chunk_width = text_node.font().width(chunk.view) + text_node.font().glyph_spacing();
+        CSSPixels chunk_width = text_node.font().width(chunk.view) + text_node.font().glyph_spacing();
 
         if (m_text_node_context->do_respect_linebreaks && chunk.has_breaking_newline) {
             return Item {

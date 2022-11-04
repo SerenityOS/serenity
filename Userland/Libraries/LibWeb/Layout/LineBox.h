@@ -15,12 +15,12 @@ class LineBox {
 public:
     LineBox() = default;
 
-    float width() const { return m_width; }
-    float height() const { return m_height; }
-    float bottom() const { return m_bottom; }
-    float baseline() const { return m_baseline; }
+    CSSPixels width() const { return m_width; }
+    CSSPixels height() const { return m_height; }
+    CSSPixels bottom() const { return m_bottom; }
+    CSSPixels baseline() const { return m_baseline; }
 
-    void add_fragment(Node const& layout_node, int start, int length, float leading_size, float trailing_size, float leading_margin, float trailing_margin, float content_width, float content_height, float border_box_top, float border_box_bottom, LineBoxFragment::Type = LineBoxFragment::Type::Normal);
+    void add_fragment(Node const& layout_node, int start, int length, CSSPixels leading_size, CSSPixels trailing_size, CSSPixels leading_margin, CSSPixels trailing_margin, CSSPixels content_width, CSSPixels content_height, CSSPixels border_box_top, CSSPixels border_box_bottom, LineBoxFragment::Type = LineBoxFragment::Type::Normal);
 
     Vector<LineBoxFragment> const& fragments() const { return m_fragments; }
     Vector<LineBoxFragment>& fragments() { return m_fragments; }
@@ -36,10 +36,10 @@ private:
     friend class LineBuilder;
 
     Vector<LineBoxFragment> m_fragments;
-    float m_width { 0 };
-    float m_height { 0 };
-    float m_bottom { 0 };
-    float m_baseline { 0 };
+    CSSPixels m_width { 0 };
+    CSSPixels m_height { 0 };
+    CSSPixels m_bottom { 0 };
+    CSSPixels m_baseline { 0 };
 };
 
 }

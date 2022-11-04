@@ -123,7 +123,7 @@ float box_baseline(LayoutState const& state, Box const& box)
     }
 
     if (!box_state.line_boxes.is_empty())
-        return box_state.border_box_top() + box_state.offset.y() + box_state.line_boxes.last().baseline();
+        return box_state.border_box_top() + box_state.offset.y() + box_state.line_boxes.last().baseline().value();
     if (box.has_children() && !box.children_are_inline()) {
         auto const* child_box = box.last_child_of_type<Box>();
         VERIFY(child_box);

@@ -34,16 +34,16 @@ public:
         Layout::Node const* node { nullptr };
         size_t offset_in_node { 0 };
         size_t length_in_node { 0 };
-        float width { 0.0f };
-        float padding_start { 0.0f };
-        float padding_end { 0.0f };
-        float border_start { 0.0f };
-        float border_end { 0.0f };
-        float margin_start { 0.0f };
-        float margin_end { 0.0f };
+        CSSPixels width { 0.0f };
+        CSSPixels padding_start { 0.0f };
+        CSSPixels padding_end { 0.0f };
+        CSSPixels border_start { 0.0f };
+        CSSPixels border_end { 0.0f };
+        CSSPixels margin_start { 0.0f };
+        CSSPixels margin_end { 0.0f };
         bool is_collapsible_whitespace { false };
 
-        float border_box_width() const
+        CSSPixels border_box_width() const
         {
             return border_start + padding_start + width + padding_end + border_end;
         }
@@ -51,7 +51,7 @@ public:
 
     InlineLevelIterator(Layout::InlineFormattingContext&, LayoutState&, Layout::BlockContainer const&, LayoutMode);
 
-    Optional<Item> next(float available_width);
+    Optional<Item> next(CSSPixels available_width);
 
 private:
     void skip_to_next();
@@ -87,9 +87,9 @@ private:
     Optional<TextNodeContext> m_text_node_context;
 
     struct ExtraBoxMetrics {
-        float margin { 0 };
-        float border { 0 };
-        float padding { 0 };
+        CSSPixels margin { 0 };
+        CSSPixels border { 0 };
+        CSSPixels padding { 0 };
     };
 
     Optional<ExtraBoxMetrics> m_extra_leading_metrics;
