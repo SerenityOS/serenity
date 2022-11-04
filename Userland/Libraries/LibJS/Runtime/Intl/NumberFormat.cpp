@@ -1032,11 +1032,6 @@ RawFormatResult to_raw_precision(MathematicalValue const& number, int min_precis
     }
     // 3. Else,
     else {
-        // FIXME: The result of these steps isn't entirely accurate for large values of 'p' (which
-        //        defaults to 21, resulting in numbers on the order of 10^21). Either AK::format or
-        //        our Number::toString AO (double_to_string in Value.cpp) will need to be improved
-        //        to produce more accurate results.
-
         // a. Let n1 and e1 each be an integer and r1 a mathematical value, with r1 = ToRawPrecisionFn(n1, e1, p), such that r1 ≤ x and r1 is maximized.
         auto [number1, exponent1, rounded1] = to_raw_precision_function(number, precision, PreferredResult::LessThanNumber);
 

@@ -135,6 +135,12 @@ describe("style=decimal", () => {
         expect(en.format(1.23456)).toBe("1.23456");
         expect(en.format(1.234567)).toBe("1.23457");
         expect(en.format(1.234561)).toBe("1.23456");
+        expect(en.format("12344501000000000000000000000000000")).toBe(
+            "12,344,501,000,000,000,000,000,000,000,000,000.000"
+        );
+        expect(en.format("-12344501000000000000000000000000000")).toBe(
+            "-12,344,501,000,000,000,000,000,000,000,000,000.000"
+        );
 
         const ar = new Intl.NumberFormat("ar", {
             minimumFractionDigits: 3,
@@ -149,6 +155,13 @@ describe("style=decimal", () => {
         expect(ar.format(1.23456)).toBe("\u0661\u066b\u0662\u0663\u0664\u0665\u0666");
         expect(ar.format(1.234567)).toBe("\u0661\u066b\u0662\u0663\u0664\u0665\u0667");
         expect(ar.format(1.234561)).toBe("\u0661\u066b\u0662\u0663\u0664\u0665\u0666");
+
+        let digits = "\u0661\u0662\u066c\u0663\u0664\u0664\u066c\u0665\u0660\u0661";
+        digits += "\u066c\u0660\u0660\u0660".repeat(9);
+        digits += "\u066b\u0660\u0660\u0660";
+
+        expect(ar.format("12344501000000000000000000000000000")).toBe(digits);
+        expect(ar.format("-12344501000000000000000000000000000")).toBe("\u061c-" + digits);
     });
 
     test("notation=scientific", () => {
