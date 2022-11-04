@@ -25,6 +25,7 @@
 #include <unistd.h>
 
 #ifdef AK_OS_SERENITY
+#    include <Kernel/API/Unveil.h>
 #    include <LibCore/Account.h>
 #    include <LibSystem/syscall.h>
 #    include <serenity.h>
@@ -91,6 +92,7 @@ static ErrorOr<void> unveil_dynamic_loader()
     constexpr auto dynamic_loader_permissions = "x"sv;
 
     Syscall::SC_unveil_params params {
+        static_cast<int>(UnveilFlags::CurrentProgram),
         { dynamic_loader_path.characters_without_null_termination(), dynamic_loader_path.length() },
         { dynamic_loader_permissions.characters_without_null_termination(), dynamic_loader_permissions.length() },
     };
@@ -110,6 +112,20 @@ ErrorOr<void> unveil(StringView path, StringView permissions)
         TRY(unveil_dynamic_loader());
 
     Syscall::SC_unveil_params params {
+        static_cast<int>(UnveilFlags::CurrentProgram),
+        { parsed_path.characters(), parsed_path.length() },
+        { permissions.characters_without_null_termination(), permissions.length() },
+    };
+    int rc = syscall(SC_unveil, &params);
+    HANDLE_SYSCALL_RETURN_VALUE("unveil", rc, {});
+}
+
+ErrorOr<void> unveil_after_exec(StringView path, StringView permissions)
+{
+    auto const parsed_path = TRY(Core::SessionManagement::parse_path_with_sid(path));
+
+    Syscall::SC_unveil_params params {
+        static_cast<int>(UnveilFlags::AfterExec),
         { parsed_path.characters(), parsed_path.length() },
         { permissions.characters_without_null_termination(), permissions.length() },
     };

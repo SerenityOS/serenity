@@ -7,6 +7,7 @@
 
 #include <AK/RefPtr.h>
 #include <AK/StringView.h>
+#include <Kernel/API/Unveil.h>
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/KLexicalPath.h>
@@ -25,6 +26,55 @@ static void update_intermediate_node_permissions(UnveilNode& root_node, UnveilAc
     }
 }
 
+static ErrorOr<void> update_unveil_data(Process::UnveilData& locked_unveil_data, StringView unveiled_path, UnveilAccess new_permissions)
+{
+    auto path_parts = KLexicalPath::parts(unveiled_path);
+    auto it = path_parts.begin();
+    // Note: For the sake of completence, we check if the locked state was inherited
+    // by an execve'd sequence. If that is the case, just silently ignore this.
+    if (locked_unveil_data.state == VeilState::LockedInherited)
+        return {};
+    // NOTE: We have to check again, since the veil may have been locked by another thread
+    //       while we were parsing the arguments.
+    if (locked_unveil_data.state == VeilState::Locked)
+        return EPERM;
+
+    auto& matching_node = locked_unveil_data.paths.traverse_until_last_accessible_node(it, path_parts.end());
+    if (it.is_end()) {
+        // If the path has already been explicitly unveiled, do not allow elevating its permissions.
+        if (matching_node.was_explicitly_unveiled()) {
+            if (new_permissions & ~matching_node.permissions())
+                return EPERM;
+        }
+
+        // It is possible that nodes that are "grandchildren" of the matching node have already been unveiled.
+        // This means that there may be intermediate nodes between this one and the unveiled "grandchildren"
+        // that inherited the current node's previous permissions. Those nodes now need their permissions
+        // updated to match the current node.
+        if (matching_node.permissions() != new_permissions)
+            update_intermediate_node_permissions(matching_node, new_permissions);
+
+        matching_node.metadata_value().explicitly_unveiled = true;
+        matching_node.metadata_value().permissions = new_permissions;
+        locked_unveil_data.state = VeilState::Dropped;
+        return {};
+    }
+
+    auto new_unveiled_path = TRY(KString::try_create(unveiled_path));
+    TRY(matching_node.insert(
+        it,
+        path_parts.end(),
+        { move(new_unveiled_path), new_permissions, true },
+        [](auto& parent, auto& it) -> ErrorOr<Optional<UnveilMetadata>> {
+            auto path = TRY(KString::formatted("{}/{}", parent.path(), *it));
+            return UnveilMetadata(move(path), parent.permissions(), false);
+        }));
+
+    VERIFY(locked_unveil_data.state != VeilState::Locked);
+    locked_unveil_data.state = VeilState::Dropped;
+    return {};
+}
+
 ErrorOr<FlatPtr> Process::sys$unveil(Userspace<Syscall::SC_unveil_params const*> user_params)
 {
     VERIFY_NO_PROCESS_BIG_LOCK(this);
@@ -35,7 +85,17 @@ ErrorOr<FlatPtr> Process::sys$unveil(Userspace<Syscall::SC_unveil_params const*>
         return 0;
     }
 
-    if (veil_state() == VeilState::Locked)
+    if (!((params.flags & to_underlying(UnveilFlags::CurrentProgram)) || (params.flags & to_underlying(UnveilFlags::AfterExec))))
+        return EINVAL;
+
+    // Note: If we inherited a locked state, then silently ignore the unveil request,
+    // and let the user program potentially deal with an ENOENT error later on.
+    if ((params.flags & static_cast<unsigned>(UnveilFlags::CurrentProgram)) && veil_state() == VeilState::LockedInherited)
+        return 0;
+
+    // Note: We only lock the unveil state for current program, while allowing adding
+    // indefinitely unveil data before doing the actual exec().
+    if ((params.flags & static_cast<unsigned>(UnveilFlags::CurrentProgram)) && veil_state() == VeilState::Locked)
         return EPERM;
 
     if (!params.path.characters || !params.permissions.characters)
@@ -93,48 +153,24 @@ ErrorOr<FlatPtr> Process::sys$unveil(Userspace<Syscall::SC_unveil_params const*>
         return custody_or_error.release_error();
     }
 
-    auto path_parts = KLexicalPath::parts(new_unveiled_path->view());
-    auto it = path_parts.begin();
-    return m_unveil_data.with([&](auto& unveil_data) -> ErrorOr<FlatPtr> {
-        // NOTE: We have to check again, since the veil may have been locked by another thread
-        //       while we were parsing the arguments.
-        if (unveil_data.state == VeilState::Locked)
-            return EPERM;
+    if (params.flags & static_cast<unsigned>(UnveilFlags::CurrentProgram)) {
+        TRY(unveil_data().with([&](auto& data) -> ErrorOr<void> {
+            TRY(update_unveil_data(data, new_unveiled_path->view(), static_cast<UnveilAccess>(new_permissions)));
+            return {};
+        }));
+    }
 
-        auto& matching_node = unveil_data.paths.traverse_until_last_accessible_node(it, path_parts.end());
-        if (it.is_end()) {
-            // If the path has already been explicitly unveiled, do not allow elevating its permissions.
-            if (matching_node.was_explicitly_unveiled()) {
-                if (new_permissions & ~matching_node.permissions())
-                    return EPERM;
-            }
-
-            // It is possible that nodes that are "grandchildren" of the matching node have already been unveiled.
-            // This means that there may be intermediate nodes between this one and the unveiled "grandchildren"
-            // that inherited the current node's previous permissions. Those nodes now need their permissions
-            // updated to match the current node.
-            if (matching_node.permissions() != new_permissions)
-                update_intermediate_node_permissions(matching_node, (UnveilAccess)new_permissions);
-
-            matching_node.metadata_value().explicitly_unveiled = true;
-            matching_node.metadata_value().permissions = (UnveilAccess)new_permissions;
-            unveil_data.state = VeilState::Dropped;
-            return 0;
-        }
-
-        TRY(matching_node.insert(
-            it,
-            path_parts.end(),
-            { new_unveiled_path.release_nonnull(), (UnveilAccess)new_permissions, true },
-            [](auto& parent, auto& it) -> ErrorOr<Optional<UnveilMetadata>> {
-                auto path = TRY(KString::formatted("{}/{}", parent.path(), *it));
-                return UnveilMetadata(move(path), parent.permissions(), false);
-            }));
-
-        VERIFY(unveil_data.state != VeilState::Locked);
-        unveil_data.state = VeilState::Dropped;
-        return 0;
-    });
+    if (params.flags & static_cast<unsigned>(UnveilFlags::AfterExec)) {
+        TRY(exec_unveil_data().with([&](auto& data) -> ErrorOr<void> {
+            // Note: The only valid way to get into this state is by using unveil before doing
+            // an actual exec with the UnveilFlags::AfterExec flag. Then this state is applied on
+            // the actual new program unveil data, and never on the m_exec_unveil_data.
+            VERIFY(data.state != VeilState::LockedInherited);
+            TRY(update_unveil_data(data, new_unveiled_path->view(), static_cast<UnveilAccess>(new_permissions)));
+            return {};
+        }));
+    }
+    return 0;
 }
 
 }

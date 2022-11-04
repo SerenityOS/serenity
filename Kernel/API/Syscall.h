@@ -433,6 +433,7 @@ struct SC_pledge_params {
 };
 
 struct SC_unveil_params {
+    int flags;
     StringArgument path;
     StringArgument permissions;
 };

@@ -42,6 +42,14 @@ ErrorOr<FlatPtr> Process::sys$fork(RegisterState& regs)
         });
     }));
 
+    TRY(m_exec_unveil_data.with([&](auto& parent_exec_unveil_data) -> ErrorOr<void> {
+        return child->m_exec_unveil_data.with([&](auto& child_exec_unveil_data) -> ErrorOr<void> {
+            child_exec_unveil_data.state = parent_exec_unveil_data.state;
+            child_exec_unveil_data.paths = TRY(parent_exec_unveil_data.paths.deep_copy());
+            return {};
+        });
+    }));
+
     // Note: We take the spinlock of Process::all_instances list because we need
     // to ensure that when we take the jail spinlock of two processes that we don't
     // run into a deadlock situation because both processes compete over each other Jail's

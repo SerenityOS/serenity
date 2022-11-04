@@ -320,13 +320,14 @@ ErrorOr<NonnullLockRefPtr<Process>> Process::try_create(LockRefPtr<Thread>& firs
         new_address_space = TRY(Memory::AddressSpace::try_create(nullptr));
     }
     auto unveil_tree = UnveilNode { TRY(KString::try_create("/"sv)), UnveilMetadata(TRY(KString::try_create("/"sv))) };
+    auto exec_unveil_tree = UnveilNode { TRY(KString::try_create("/"sv)), UnveilMetadata(TRY(KString::try_create("/"sv))) };
     auto credentials = TRY(Credentials::create(uid, gid, uid, gid, uid, gid, {}));
-    auto process = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) Process(move(name), move(credentials), ppid, is_kernel_process, move(current_directory), move(executable), tty, move(unveil_tree))));
+    auto process = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) Process(move(name), move(credentials), ppid, is_kernel_process, move(current_directory), move(executable), tty, move(unveil_tree), move(exec_unveil_tree))));
     TRY(process->attach_resources(new_address_space.release_nonnull(), first_thread, fork_parent));
     return process;
 }
 
-Process::Process(NonnullOwnPtr<KString> name, NonnullRefPtr<Credentials> credentials, ProcessID ppid, bool is_kernel_process, RefPtr<Custody> current_directory, RefPtr<Custody> executable, TTY* tty, UnveilNode unveil_tree)
+Process::Process(NonnullOwnPtr<KString> name, NonnullRefPtr<Credentials> credentials, ProcessID ppid, bool is_kernel_process, RefPtr<Custody> current_directory, RefPtr<Custody> executable, TTY* tty, UnveilNode unveil_tree, UnveilNode exec_unveil_tree)
     : m_name(move(name))
     , m_space(LockRank::None)
     , m_protected_data_lock(LockRank::None)
@@ -335,6 +336,7 @@ Process::Process(NonnullOwnPtr<KString> name, NonnullRefPtr<Credentials> credent
     , m_current_directory(LockRank::None, move(current_directory))
     , m_tty(tty)
     , m_unveil_data(LockRank::None, move(unveil_tree))
+    , m_exec_unveil_data(LockRank::None, move(exec_unveil_tree))
     , m_wait_blocker_set(*this)
 {
     // Ensure that we protect the process data when exiting the constructor.
