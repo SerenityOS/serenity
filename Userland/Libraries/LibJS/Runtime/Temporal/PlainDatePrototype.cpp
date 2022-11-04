@@ -595,8 +595,8 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::to_string)
     // 3. Set options to ? GetOptionsObject(options).
     auto* options = TRY(get_options_object(vm, vm.argument(0)));
 
-    // 4. Let showCalendar be ? ToShowCalendarOption(options).
-    auto show_calendar = TRY(to_show_calendar_option(vm, *options));
+    // 4. Let showCalendar be ? ToCalendarNameOption(options).
+    auto show_calendar = TRY(to_calendar_name_option(vm, *options));
 
     // 5. Return ? TemporalDateToString(temporalDate, showCalendar).
     return js_string(vm, TRY(temporal_date_to_string(vm, *temporal_date, show_calendar)));
