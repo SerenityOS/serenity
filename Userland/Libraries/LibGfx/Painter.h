@@ -106,9 +106,11 @@ public:
 
     static void for_each_line_segment_on_bezier_curve(FloatPoint const& control_point, FloatPoint const& p1, FloatPoint const& p2, Function<void(FloatPoint const&, FloatPoint const&)>&);
     static void for_each_line_segment_on_bezier_curve(FloatPoint const& control_point, FloatPoint const& p1, FloatPoint const& p2, Function<void(FloatPoint const&, FloatPoint const&)>&&);
+    static bool can_approximate_bezier_curve(FloatPoint const& p1, FloatPoint const& p2, FloatPoint const& control, float tolerance = 0.0015f);
 
     static void for_each_line_segment_on_cubic_bezier_curve(FloatPoint const& control_point_0, FloatPoint const& control_point_1, FloatPoint const& p1, FloatPoint const& p2, Function<void(FloatPoint const&, FloatPoint const&)>&);
     static void for_each_line_segment_on_cubic_bezier_curve(FloatPoint const& control_point_0, FloatPoint const& control_point_1, FloatPoint const& p1, FloatPoint const& p2, Function<void(FloatPoint const&, FloatPoint const&)>&&);
+    static bool can_approximate_cubic_bezier_curve(FloatPoint const& p1, FloatPoint const& p2, FloatPoint const& control_0, FloatPoint const& control_1, float tolerance = 0.0015f);
 
     static void for_each_line_segment_on_elliptical_arc(FloatPoint const& p1, FloatPoint const& p2, FloatPoint const& center, FloatPoint const radii, float x_axis_rotation, float theta_1, float theta_delta, Function<void(FloatPoint const&, FloatPoint const&)>&);
     static void for_each_line_segment_on_elliptical_arc(FloatPoint const& p1, FloatPoint const& p2, FloatPoint const& center, FloatPoint const radii, float x_axis_rotation, float theta_1, float theta_delta, Function<void(FloatPoint const&, FloatPoint const&)>&&);

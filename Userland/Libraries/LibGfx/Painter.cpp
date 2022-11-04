@@ -2041,10 +2041,8 @@ void Painter::draw_triangle_wave(IntPoint const& a_p1, IntPoint const& a_p2, Col
     }
 }
 
-static bool can_approximate_bezier_curve(FloatPoint const& p1, FloatPoint const& p2, FloatPoint const& control)
+bool Painter::can_approximate_bezier_curve(FloatPoint const& p1, FloatPoint const& p2, FloatPoint const& control, float tolerance)
 {
-    constexpr float tolerance = 0.0015f;
-
     auto p1x = 3 * control.x() - 2 * p1.x() - p2.x();
     auto p1y = 3 * control.y() - 2 * p1.y() - p2.y();
     auto p2x = 3 * control.x() - 2 * p2.x() - p1.x();
@@ -2115,10 +2113,8 @@ void Painter::for_each_line_segment_on_cubic_bezier_curve(FloatPoint const& cont
     for_each_line_segment_on_cubic_bezier_curve(control_point_0, control_point_1, p1, p2, callback);
 }
 
-static bool can_approximate_cubic_bezier_curve(FloatPoint const& p1, FloatPoint const& p2, FloatPoint const& control_0, FloatPoint const& control_1)
+bool Painter::can_approximate_cubic_bezier_curve(FloatPoint const& p1, FloatPoint const& p2, FloatPoint const& control_0, FloatPoint const& control_1, float tolerance)
 {
-    constexpr float tolerance = 0.0015f;
-
     auto ax = 3 * control_0.x() - 2 * p1.x() - p2.x();
     auto ay = 3 * control_0.y() - 2 * p1.y() - p2.y();
     auto bx = 3 * control_1.x() - p1.x() - 2 * p2.x();

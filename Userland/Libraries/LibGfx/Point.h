@@ -255,6 +255,16 @@ public:
 
     [[nodiscard]] String to_string() const;
 
+    [[nodiscard]] T cross(Point<T> const& other) const
+    {
+        return x() * other.y() - y() * other.x();
+    }
+
+    [[nodiscard]] T dot(Point<T> const& other) const
+    {
+        return x() * other.x() + y() * other.y();
+    }
+
 private:
     T m_x { 0 };
     T m_y { 0 };

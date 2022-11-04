@@ -21,6 +21,16 @@ public:
 
 protected:
     SVGGeometryPaintable(Layout::SVGGeometryBox const&);
+
+private:
+    void paint_internal(
+        Gfx::Color fill_color,
+        Gfx::Color stroke_color,
+        float stroke_width,
+        Gfx::AffineTransform const& transform,
+        Gfx::IntRect clip_rect,
+        Gfx::Path const& path,
+        Gfx::Bitmap& bitmap) const;
 };
 
 }

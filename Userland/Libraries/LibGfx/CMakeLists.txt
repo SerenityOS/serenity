@@ -47,6 +47,8 @@ set(SOURCES
     TextLayout.cpp
     Triangle.cpp
     WindowTheme.cpp
+    Rasterizer.cpp
+    PathPainter.cpp
 )
 
 serenity_lib(LibGfx gfx)
