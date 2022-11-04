@@ -53,7 +53,7 @@ TabWidget::TabWidget()
 
 ErrorOr<void> TabWidget::try_add_widget(Widget& widget)
 {
-    m_tabs.append({ widget.title(), nullptr, &widget });
+    m_tabs.append({ widget.title(), nullptr, &widget, false });
     add_child(widget);
     update_focus_policy();
     if (on_tab_count_change)
@@ -601,6 +601,32 @@ void TabWidget::set_tab_icon(Widget& tab, Gfx::Bitmap const* icon)
             return;
         }
     }
+}
+
+bool TabWidget::is_tab_modified(Widget& tab_input)
+{
+    auto it = m_tabs.find_if([&](auto t) { return t.widget == &tab_input; });
+    if (it.is_end())
+        return false;
+    auto& tab = *it;
+    return tab.modified;
+}
+
+void TabWidget::set_tab_modified(Widget& tab_input, bool modified)
+{
+    auto it = m_tabs.find_if([&](auto t) { return t.widget == &tab_input; });
+    if (it.is_end())
+        return;
+    auto& tab = *it;
+    if (tab.modified != modified) {
+        tab.modified = modified;
+        update();
+    }
+}
+
+bool TabWidget::is_any_tab_modified()
+{
+    return any_of(m_tabs, [](auto& t) { return t.modified; });
 }
 
 void TabWidget::activate_next_tab()
