@@ -84,6 +84,7 @@ enum class VeilState {
     None,
     Dropped,
     Locked,
+    LockedInherited,
 };
 
 static constexpr FlatPtr futex_key_private_flag = 0b1;
@@ -523,6 +524,9 @@ public:
     auto& unveil_data() { return m_unveil_data; }
     auto const& unveil_data() const { return m_unveil_data; }
 
+    auto& exec_unveil_data() { return m_exec_unveil_data; }
+    auto const& exec_unveil_data() const { return m_exec_unveil_data; }
+
     bool wait_for_tracer_at_next_execve() const
     {
         return m_wait_for_tracer_at_next_execve;
@@ -584,7 +588,7 @@ private:
     bool add_thread(Thread&);
     bool remove_thread(Thread&);
 
-    Process(NonnullOwnPtr<KString> name, NonnullRefPtr<Credentials>, ProcessID ppid, bool is_kernel_process, RefPtr<Custody> current_directory, RefPtr<Custody> executable, TTY* tty, UnveilNode unveil_tree);
+    Process(NonnullOwnPtr<KString> name, NonnullRefPtr<Credentials>, ProcessID ppid, bool is_kernel_process, RefPtr<Custody> current_directory, RefPtr<Custody> executable, TTY* tty, UnveilNode unveil_tree, UnveilNode exec_unveil_tree);
     static ErrorOr<NonnullLockRefPtr<Process>> try_create(LockRefPtr<Thread>& first_thread, NonnullOwnPtr<KString> name, UserID, GroupID, ProcessID ppid, bool is_kernel_process, RefPtr<Custody> current_directory = nullptr, RefPtr<Custody> executable = nullptr, TTY* = nullptr, Process* fork_parent = nullptr);
     ErrorOr<void> attach_resources(NonnullOwnPtr<Memory::AddressSpace>&&, LockRefPtr<Thread>& first_thread, Process* fork_parent);
     static ProcessID allocate_pid();
@@ -878,6 +882,7 @@ private:
     LockRefPtr<Timer> m_alarm_timer;
 
     SpinlockProtected<UnveilData> m_unveil_data;
+    SpinlockProtected<UnveilData> m_exec_unveil_data;
 
     OwnPtr<PerformanceEventBuffer> m_perf_event_buffer;
 

@@ -36,6 +36,7 @@ namespace Core::System {
 ErrorOr<void> beep();
 ErrorOr<void> pledge(StringView promises, StringView execpromises = {});
 ErrorOr<void> unveil(StringView path, StringView permissions);
+ErrorOr<void> unveil_after_exec(StringView path, StringView permissions);
 ErrorOr<void> sendfd(int sockfd, int fd);
 ErrorOr<int> recvfd(int sockfd, int options);
 ErrorOr<void> ptrace_peekbuf(pid_t tid, void const* tracee_addr, Bytes destination_buf);

@@ -53,6 +53,11 @@ ErrorOr<void> SysFSOverallProcesses::try_generate(KBufferBuilder& builder)
             case VeilState::Locked:
                 TRY(process_object.add("veil"sv, "Locked"));
                 break;
+            case VeilState::LockedInherited:
+                // Note: We don't reveal if the locked state is either by our choice
+                // or someone else applied it.
+                TRY(process_object.add("veil"sv, "Locked"));
+                break;
             }
         } else {
             TRY(process_object.add("pledge"sv, ""sv));

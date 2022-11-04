@@ -8,6 +8,7 @@
 #include <AK/ScopedValueRollback.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
+#include <Kernel/API/Unveil.h>
 #include <LibCore/File.h>
 #include <alloca.h>
 #include <assert.h>
@@ -965,6 +966,7 @@ int pledge(char const* promises, char const* execpromises)
 int unveil(char const* path, char const* permissions)
 {
     Syscall::SC_unveil_params params {
+        static_cast<int>(UnveilFlags::CurrentProgram),
         { path, path ? strlen(path) : 0 },
         { permissions, permissions ? strlen(permissions) : 0 }
     };
