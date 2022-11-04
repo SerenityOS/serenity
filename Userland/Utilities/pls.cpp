@@ -45,27 +45,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(as_user.login());
 
     TRY(Core::System::pledge("stdio rpath exec"));
-
-    Vector<StringView> exec_environment;
-    for (size_t i = 0; environ[i]; ++i) {
-        StringView env_view { environ[i], strlen(environ[i]) };
-        auto maybe_needle = env_view.find('=');
-
-        if (!maybe_needle.has_value())
-            continue;
-
-        // FIXME: Allow a custom selection of variables once ArgsParser supports options with optional parameters.
-        if (!preserve_env && env_view.substring_view(0, maybe_needle.value()) != "TERM"sv)
-            continue;
-
-        exec_environment.append(env_view);
-    }
-
-    Vector<String> exec_arguments;
-    exec_arguments.ensure_capacity(command.size());
-    for (auto const& it : command)
-        exec_arguments.append(it.to_string());
-
-    TRY(Core::System::exec(command.at(0), command, Core::System::SearchInPath::Yes, exec_environment));
+    TRY(Core::System::exec_command(command, preserve_env));
     return 0;
 }
