@@ -28,7 +28,7 @@ public:
     Decoder();
     ~Decoder() override { }
     /* (8.1) General */
-    DecoderErrorOr<void> receive_sample(Span<u8 const>) override;
+    DecoderErrorOr<void> receive_sample(ReadonlyBytes) override;
     void dump_frame_info();
 
     DecoderErrorOr<NonnullOwnPtr<VideoFrame>> get_decoded_frame() override;
@@ -36,7 +36,7 @@ public:
 private:
     typedef i32 Intermediate;
 
-    DecoderErrorOr<void> decode_frame(Span<u8 const>);
+    DecoderErrorOr<void> decode_frame(ReadonlyBytes);
     DecoderErrorOr<void> create_video_frame();
 
     DecoderErrorOr<void> allocate_buffers();

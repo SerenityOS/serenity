@@ -28,7 +28,7 @@ Parser::~Parser()
 {
 }
 
-Vector<size_t> Parser::parse_superframe_sizes(Span<const u8> frame_data)
+Vector<size_t> Parser::parse_superframe_sizes(ReadonlyBytes frame_data)
 {
     if (frame_data.size() < 1)
         return {};
@@ -76,7 +76,7 @@ Vector<size_t> Parser::parse_superframe_sizes(Span<const u8> frame_data)
 }
 
 /* (6.1) */
-DecoderErrorOr<void> Parser::parse_frame(Span<const u8> frame_data)
+DecoderErrorOr<void> Parser::parse_frame(ReadonlyBytes frame_data)
 {
     m_bit_stream = make<BitStream>(frame_data.data(), frame_data.size());
     m_syntax_element_counter = make<SyntaxElementCounter>();

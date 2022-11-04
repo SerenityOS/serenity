@@ -18,7 +18,7 @@ public:
     // FIXME: We should instead accept some abstract data streaming type so that the demuxer
     //        can work with non-contiguous data.
     static DecoderErrorOr<NonnullOwnPtr<MatroskaDemuxer>> from_file(StringView filename);
-    static DecoderErrorOr<NonnullOwnPtr<MatroskaDemuxer>> from_data(Span<u8 const> data);
+    static DecoderErrorOr<NonnullOwnPtr<MatroskaDemuxer>> from_data(ReadonlyBytes data);
 
     MatroskaDemuxer(NonnullOwnPtr<MatroskaDocument>& document)
         : m_document(move(document))

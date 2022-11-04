@@ -19,7 +19,7 @@ Decoder::Decoder()
 {
 }
 
-DecoderErrorOr<void> Decoder::receive_sample(Span<u8 const> chunk_data)
+DecoderErrorOr<void> Decoder::receive_sample(ReadonlyBytes chunk_data)
 {
     auto superframe_sizes = m_parser->parse_superframe_sizes(chunk_data);
 
@@ -52,7 +52,7 @@ inline size_t index_from_row_and_column(u32 row, u32 column, u32 stride)
     return row * stride + column;
 }
 
-DecoderErrorOr<void> Decoder::decode_frame(Span<u8 const> frame_data)
+DecoderErrorOr<void> Decoder::decode_frame(ReadonlyBytes frame_data)
 {
     // 1. The syntax elements for the coded frame are extracted as specified in sections 6 and 7. The syntax
     // tables include function calls indicating when the block decode processes should be triggered.

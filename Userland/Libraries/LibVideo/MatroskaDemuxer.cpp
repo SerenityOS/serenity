@@ -18,7 +18,7 @@ DecoderErrorOr<NonnullOwnPtr<MatroskaDemuxer>> MatroskaDemuxer::from_file(String
     return make<MatroskaDemuxer>(document);
 }
 
-DecoderErrorOr<NonnullOwnPtr<MatroskaDemuxer>> MatroskaDemuxer::from_data(Span<u8 const> data)
+DecoderErrorOr<NonnullOwnPtr<MatroskaDemuxer>> MatroskaDemuxer::from_data(ReadonlyBytes data)
 {
     // FIXME: MatroskaReader should return errors.
     auto nullable_document = MatroskaReader::parse_matroska_from_data(data.data(), data.size());
