@@ -15,13 +15,9 @@ namespace AK {
 template<typename T>
 union FloatExtractor;
 
-#if ARCH(I386) || ARCH(X86_64) || ARCH(AARCH64)
-// FIXME: There is no straightforward way, I can think of, to check
-// in compile time that long double is really an 80-bit IEEE574 floating point number.
-static_assert(__LDBL_MAX__ == 1.189731495357231765e4932L);
-
+#ifdef AK_HAS_FLOAT_80
 template<>
-union FloatExtractor<long double> {
+union FloatExtractor<f80> {
     static constexpr int mantissa_bits = 64;
     static constexpr unsigned long long mantissa_max = ~0u;
     static constexpr int exponent_bias = 16383;
@@ -32,12 +28,12 @@ union FloatExtractor<long double> {
         unsigned exponent : 15;
         unsigned sign : 1;
     };
-    long double d;
+    f80 d;
 };
 #endif
 
 template<>
-union FloatExtractor<double> {
+union FloatExtractor<f64> {
     static constexpr int mantissa_bits = 52;
     static constexpr unsigned long long mantissa_max = (1ull << 52) - 1;
     static constexpr int exponent_bias = 1023;
@@ -48,11 +44,11 @@ union FloatExtractor<double> {
         unsigned exponent : 11;
         unsigned sign : 1;
     };
-    double d;
+    f64 d;
 };
 
 template<>
-union FloatExtractor<float> {
+union FloatExtractor<f32> {
     static constexpr int mantissa_bits = 23;
     static constexpr unsigned mantissa_max = (1 << 23) - 1;
     static constexpr int exponent_bias = 127;
@@ -63,7 +59,7 @@ union FloatExtractor<float> {
         unsigned exponent : 8;
         unsigned sign : 1;
     };
-    float d;
+    f32 d;
 };
 
 template<size_t S, size_t E, size_t M>
