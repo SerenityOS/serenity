@@ -140,6 +140,55 @@ template<class Ret, class... Args>
 inline constexpr bool IsFunction<Ret(Args...) const volatile&&> = true;
 template<class Ret, class... Args>
 inline constexpr bool IsFunction<Ret(Args..., ...) const volatile&&> = true;
+    
+template<class Ret, class... Args>
+inline constexpr bool IsFunction<Ret(Args...) noexcept> = true;
+template<class Ret, class... Args>
+inline constexpr bool IsFunction<Ret(Args..., ...) noexcept> = true;
+template<class Ret, class... Args>
+inline constexpr bool IsFunction < Ret(Args...) const noexcept = true;
+template<class Ret, class... Args>
+inline constexpr bool IsFunction<Ret(Args..., ...) const noexcept> = true;
+template<class Ret, class... Args>
+inline constexpr bool IsFunction<Ret(Args...) volatile noexcept> = true;
+template<class Ret, class... Args>
+inline constexpr bool IsFunction<Ret(Args..., ...) volatile noexcept> = true;
+template<class Ret, class... Args>
+inline constexpr bool IsFunction<Ret(Args...) const volatile noexcept> = true;
+template<class Ret, class... Args>
+inline constexpr bool IsFunction<Ret(Args..., ...) const volatile noexcept> = true;
+template<class Ret, class... Args>
+inline constexpr bool IsFunction<Ret(Args...)& noexcept> = true;
+template<class Ret, class... Args>
+inline constexpr bool IsFunction<Ret(Args..., ...)& noexcept> = true;
+template<class Ret, class... Args>
+inline constexpr bool IsFunction<Ret(Args...) const& noexcept> = true;
+template<class Ret, class... Args>
+inline constexpr bool IsFunction<Ret(Args..., ...) const& noexcept> = true;
+template<class Ret, class... Args>
+inline constexpr bool IsFunction<Ret(Args...) volatile& noexcept> = true;
+template<class Ret, class... Args>
+inline constexpr bool IsFunction<Ret(Args..., ...) volatile& noexcept> = true;
+template<class Ret, class... Args>
+inline constexpr bool IsFunction<Ret(Args...) const volatile& noexcept> = true;
+template<class Ret, class... Args>
+inline constexpr bool IsFunction<Ret(Args..., ...) const volatile& noexcept> = true;
+template<class Ret, class... Args>
+inline constexpr bool IsFunction<Ret(Args...)&& noexcept> = true;
+template<class Ret, class... Args>
+inline constexpr bool IsFunction<Ret(Args..., ...)&& noexcept> = true;
+template<class Ret, class... Args>
+inline constexpr bool IsFunction<Ret(Args...) const&& noexcept> = true;
+template<class Ret, class... Args>
+inline constexpr bool IsFunction<Ret(Args..., ...) const&& noexcept> = true;
+template<class Ret, class... Args>
+inline constexpr bool IsFunction<Ret(Args...) volatile&& noexcept> = true;
+template<class Ret, class... Args>
+inline constexpr bool IsFunction<Ret(Args..., ...) volatile&& noexcept> = true;
+template<class Ret, class... Args>
+inline constexpr bool IsFunction<Ret(Args...) const volatile&& noexcept> = true;
+template<class Ret, class... Args>
+inline constexpr bool IsFunction<Ret(Args..., ...) const volatile&& noexcept> = true;
 
 template<class T>
 inline constexpr bool IsRvalueReference = false;
