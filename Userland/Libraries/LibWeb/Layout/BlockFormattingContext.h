@@ -40,13 +40,13 @@ public:
 
     void add_absolutely_positioned_box(Box const& box) { m_absolutely_positioned_boxes.append(box); }
 
-    SpaceUsedByFloats space_used_by_floats(float y) const;
+    SpaceUsedByFloats space_used_by_floats(CSSPixels y) const;
 
     virtual CSSPixels greatest_child_width(Box const&) override;
 
-    void layout_floating_box(Box const& child, BlockContainer const& containing_block, LayoutMode, AvailableSpace const&, float y, LineBuilder* = nullptr);
+    void layout_floating_box(Box const& child, BlockContainer const& containing_block, LayoutMode, AvailableSpace const&, CSSPixels y, LineBuilder* = nullptr);
 
-    void layout_block_level_box(Box const&, BlockContainer const&, LayoutMode, float& bottom_of_lowest_margin_box, AvailableSpace const&, float& current_y);
+    void layout_block_level_box(Box const&, BlockContainer const&, LayoutMode, CSSPixels& bottom_of_lowest_margin_box, AvailableSpace const&, CSSPixels& current_y);
 
     virtual bool can_determine_size_of_child() const override { return true; }
     virtual void determine_width_of_child(Box const&, AvailableSpace const&) override;
@@ -55,7 +55,7 @@ public:
 private:
     virtual bool is_block_formatting_context() const final { return true; }
 
-    float compute_auto_height_for_block_level_element(Box const&, AvailableSpace const&);
+    CSSPixels compute_auto_height_for_block_level_element(Box const&, AvailableSpace const&);
 
     void compute_width_for_floating_box(Box const&, AvailableSpace const&);
 
@@ -68,7 +68,7 @@ private:
 
     static void resolve_vertical_box_model_metrics(Box const& box, LayoutState&);
     void place_block_level_element_in_normal_flow_horizontally(Box const& child_box, AvailableSpace const&);
-    void place_block_level_element_in_normal_flow_vertically(Box const&, float y);
+    void place_block_level_element_in_normal_flow_vertically(Box const&, CSSPixels y);
 
     void layout_list_item_marker(ListItemBox const&);
 
@@ -80,13 +80,13 @@ private:
     struct FloatingBox {
         Box const& box;
         // Offset from left/right edge to the left content edge of `box`.
-        float offset_from_edge { 0 };
+        CSSPixels offset_from_edge { 0 };
 
         // Top margin edge of `box`.
-        float top_margin_edge { 0 };
+        CSSPixels top_margin_edge { 0 };
 
         // Bottom margin edge of `box`.
-        float bottom_margin_edge { 0 };
+        CSSPixels bottom_margin_edge { 0 };
     };
 
     struct FloatSideData {
@@ -95,16 +95,16 @@ private:
 
         // Combined width of boxes currently accumulating on this side.
         // This is the innermost margin of the innermost floating box.
-        float current_width { 0 };
+        CSSPixels current_width { 0 };
 
         // Highest value of `m_current_width` we've seen.
-        float max_width { 0 };
+        CSSPixels max_width { 0 };
 
         // All floating boxes encountered thus far within this BFC.
         Vector<NonnullOwnPtr<FloatingBox>> all_boxes;
 
         // Current Y offset from BFC root top.
-        float y_offset { 0 };
+        CSSPixels y_offset { 0 };
 
         void clear()
         {
@@ -114,21 +114,21 @@ private:
     };
 
     struct BlockMarginState {
-        Vector<float> current_collapsible_margins;
-        Function<void(float)> block_container_y_position_update_callback;
+        Vector<CSSPixels> current_collapsible_margins;
+        Function<void(CSSPixels)> block_container_y_position_update_callback;
         bool box_last_in_flow_child_margin_bottom_collapsed { false };
 
-        void add_margin(float margin)
+        void add_margin(CSSPixels margin)
         {
             current_collapsible_margins.append(margin);
         }
 
-        void register_block_container_y_position_update_callback(Function<void(float)> callback)
+        void register_block_container_y_position_update_callback(Function<void(CSSPixels)> callback)
         {
             block_container_y_position_update_callback = move(callback);
         }
 
-        float current_collapsed_margin() const;
+        CSSPixels current_collapsed_margin() const;
 
         bool has_block_container_waiting_for_final_y_position() const
         {
@@ -138,7 +138,7 @@ private:
         void update_block_waiting_for_final_y_position() const
         {
             if (block_container_y_position_update_callback) {
-                float collapsed_margin = current_collapsed_margin();
+                CSSPixels collapsed_margin = current_collapsed_margin();
                 block_container_y_position_update_callback(collapsed_margin);
             }
         }
