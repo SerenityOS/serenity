@@ -530,6 +530,11 @@ Optional<Vector<i32>> OutOfProcessWebView::query_selector_all(i32 start_node_id,
     return client().query_selector_all(start_node_id, selector);
 }
 
+void OutOfProcessWebView::scroll_element_into_view(i32 element_id)
+{
+    return client().scroll_element_into_view(element_id);
+}
+
 bool OutOfProcessWebView::is_element_selected(i32 element_id)
 {
     return client().is_element_selected(element_id);
