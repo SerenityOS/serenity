@@ -1083,8 +1083,8 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::to_string)
     // 5. Let roundingMode be ? ToTemporalRoundingMode(options, "trunc").
     auto rounding_mode = TRY(to_temporal_rounding_mode(vm, *options, "trunc"));
 
-    // 6. Let showCalendar be ? ToShowCalendarOption(options).
-    auto show_calendar = TRY(to_show_calendar_option(vm, *options));
+    // 6. Let showCalendar be ? ToCalendarNameOption(options).
+    auto show_calendar = TRY(to_calendar_name_option(vm, *options));
 
     // 7. Let showTimeZone be ? ToShowTimeZoneNameOption(options).
     auto show_time_zone = TRY(to_show_time_zone_name_option(vm, *options));
