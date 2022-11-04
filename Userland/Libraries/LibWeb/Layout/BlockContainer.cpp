@@ -27,7 +27,7 @@ bool BlockContainer::is_scrollable() const
     return computed_values().overflow_y() == CSS::Overflow::Scroll;
 }
 
-void BlockContainer::set_scroll_offset(Gfx::FloatPoint offset)
+void BlockContainer::set_scroll_offset(CSSPixelPoint offset)
 {
     // FIXME: If there is horizontal and vertical scroll ignore only part of the new offset
     if (offset.y() < 0 || m_scroll_offset == offset)

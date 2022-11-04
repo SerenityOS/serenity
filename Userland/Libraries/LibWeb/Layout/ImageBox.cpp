@@ -66,7 +66,7 @@ void ImageBox::prepare_for_replaced_layout()
         if (alt.is_empty())
             alt = image_element.src();
 
-        float alt_text_width = 0;
+        CSSPixels alt_text_width = 0;
         if (!m_cached_alt_text_width.has_value())
             m_cached_alt_text_width = font.width(alt);
         alt_text_width = m_cached_alt_text_width.value();

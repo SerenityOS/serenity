@@ -829,7 +829,7 @@ double Element::scroll_top() const
 
     // 9. Return the y-coordinate of the scrolling area at the alignment point with the top of the padding edge of the element.
     // FIXME: Is this correct?
-    return block_container->scroll_offset().y();
+    return block_container->scroll_offset().y().value();
 }
 
 double Element::scroll_left() const
@@ -871,7 +871,7 @@ double Element::scroll_left() const
 
     // 9. Return the x-coordinate of the scrolling area at the alignment point with the left of the padding edge of the element.
     // FIXME: Is this correct?
-    return block_container->scroll_offset().x();
+    return block_container->scroll_offset().x().value();
 }
 
 // https://drafts.csswg.org/cssom-view/#dom-element-scrollleft

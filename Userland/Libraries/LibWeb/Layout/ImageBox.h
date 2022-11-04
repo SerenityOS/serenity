@@ -45,7 +45,7 @@ private:
 
     ImageLoader const& m_image_loader;
 
-    Optional<float> m_cached_alt_text_width;
+    Optional<CSSPixels> m_cached_alt_text_width;
 };
 
 }
