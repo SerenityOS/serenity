@@ -503,6 +503,26 @@ static Optional<Web::DOM::Element&> find_element_by_id(i32 element_id)
     return verify_cast<Web::DOM::Element>(*node);
 }
 
+// https://w3c.github.io/webdriver/#dfn-scrolls-into-view
+void ConnectionFromClient::scroll_element_into_view(i32 element_id)
+{
+    auto element = find_element_by_id(element_id);
+    if (!element.has_value())
+        return;
+
+    // 1. Let options be the following ScrollIntoViewOptions:
+    Web::DOM::ScrollIntoViewOptions options {};
+    // Logical scroll position "block"
+    //     "end"
+    options.block = Web::Bindings::ScrollLogicalPosition::End;
+    // Logical scroll position "inline"
+    //     "nearest"
+    options.inline_ = Web::Bindings::ScrollLogicalPosition::Nearest;
+
+    // 2. Run Function.[[Call]](scrollIntoView, options) with element as the this value.
+    element->scroll_into_view(options);
+}
+
 Messages::WebContentServer::IsElementSelectedResponse ConnectionFromClient::is_element_selected(i32 element_id)
 {
     auto element = find_element_by_id(element_id);
