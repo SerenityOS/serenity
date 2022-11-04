@@ -124,7 +124,8 @@ private:
     bool prepare_next_frame();
     void update_presented_frame();
 
-    // Runs off the main thread
+    // May run off the main thread
+    void post_decoder_error(DecoderError error);
     bool decode_and_queue_one_sample();
     void on_decode_timer();
 

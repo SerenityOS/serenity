@@ -10,6 +10,7 @@
 #include <AK/ByteBuffer.h>
 #include <AK/Error.h>
 #include <AK/NonnullOwnPtr.h>
+#include <AK/Queue.h>
 #include <AK/Span.h>
 #include <LibVideo/Color/CodingIndependentCodePoints.h>
 #include <LibVideo/DecoderError.h>
@@ -36,6 +37,7 @@ private:
     typedef i32 Intermediate;
 
     DecoderErrorOr<void> decode_frame(Span<u8 const>);
+    DecoderErrorOr<void> create_video_frame();
 
     DecoderErrorOr<void> allocate_buffers();
     Vector<Intermediate>& get_temp_buffer(u8 plane);
@@ -167,6 +169,8 @@ private:
         Vector<Intermediate> intermediate[3];
         Vector<u16> output[3];
     } m_buffers;
+
+    Queue<NonnullOwnPtr<VideoFrame>, 1> m_video_frame_queue;
 };
 
 }
