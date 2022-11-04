@@ -121,7 +121,7 @@ namespace Web::HTML {
     if (current_input_character.has_value() && is_ascii_hex_digit(current_input_character.value()))
 
 #define ON_WHITESPACE \
-    if (current_input_character.has_value() && is_ascii(current_input_character.value()) && "\t\n\f "sv.contains(current_input_character.value()))
+    if (current_input_character.has_value() && is_ascii(*current_input_character) && first_is_one_of(static_cast<char>(*current_input_character), '\t', '\n', '\f', ' '))
 
 #define ANYTHING_ELSE if (1)
 
