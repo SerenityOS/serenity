@@ -11,7 +11,7 @@
 #include <AK/OwnPtr.h>
 #include <AK/Span.h>
 #include <AK/Vector.h>
-#include <LibGfx/Forward.h>
+#include <LibGfx/Size.h>
 #include <LibVideo/Color/CodingIndependentCodePoints.h>
 #include <LibVideo/DecoderError.h>
 
@@ -60,9 +60,10 @@ private:
     DecoderErrorOr<void> uncompressed_header();
     DecoderErrorOr<void> frame_sync_code();
     DecoderErrorOr<void> color_config();
-    DecoderErrorOr<void> frame_size();
-    DecoderErrorOr<void> render_size();
-    DecoderErrorOr<void> frame_size_with_refs();
+    DecoderErrorOr<void> set_frame_size_and_compute_image_size();
+    DecoderErrorOr<Gfx::Size<u32>> frame_size();
+    DecoderErrorOr<Gfx::Size<u32>> frame_size_with_refs();
+    DecoderErrorOr<Gfx::Size<u32>> render_size(Gfx::Size<u32> frame_size);
     void compute_image_size();
     DecoderErrorOr<void> read_interpolation_filter();
     DecoderErrorOr<void> loop_filter_params();
@@ -171,10 +172,8 @@ private:
     ColorRange m_color_range;
     bool m_subsampling_x { false };
     bool m_subsampling_y { false };
-    u32 m_frame_width { 0 };
-    u32 m_frame_height { 0 };
-    u16 m_render_width { 0 };
-    u16 m_render_height { 0 };
+    Gfx::Size<u32> m_frame_size { 0, 0 };
+    Gfx::Size<u32> m_render_size { 0, 0 };
     bool m_render_and_frame_size_different { false };
     u32 m_mi_cols { 0 };
     u32 m_mi_rows { 0 };
@@ -257,8 +256,7 @@ private:
     MotionVector m_nearest_mv[2];
     MotionVector m_best_mv[2];
     // FIXME: Move these to a struct to store together in one array.
-    u32 m_ref_frame_width[NUM_REF_FRAMES];
-    u32 m_ref_frame_height[NUM_REF_FRAMES];
+    Gfx::Size<u32> m_ref_frame_size[NUM_REF_FRAMES];
     bool m_ref_subsampling_x[NUM_REF_FRAMES];
     bool m_ref_subsampling_y[NUM_REF_FRAMES];
     u8 m_ref_bit_depth[NUM_REF_FRAMES];
