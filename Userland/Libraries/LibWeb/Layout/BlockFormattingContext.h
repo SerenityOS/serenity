@@ -40,13 +40,13 @@ public:
 
     void add_absolutely_positioned_box(Box const& box) { m_absolutely_positioned_boxes.append(box); }
 
-    SpaceUsedByFloats space_used_by_floats(float y) const;
+    SpaceUsedByFloats space_used_by_floats(CSSPixels y) const;
 
     virtual CSSPixels greatest_child_width(Box const&) override;
 
     void layout_floating_box(Box const& child, BlockContainer const& containing_block, LayoutMode, AvailableSpace const&, LineBuilder* = nullptr);
 
-    void layout_block_level_box(Box const&, BlockContainer const&, LayoutMode, float& bottom_of_lowest_margin_box, AvailableSpace const&);
+    void layout_block_level_box(Box const&, BlockContainer const&, LayoutMode, CSSPixels& bottom_of_lowest_margin_box, AvailableSpace const&);
 
     virtual bool can_determine_size_of_child() const override { return true; }
     virtual void determine_width_of_child(Box const&, AvailableSpace const&) override;
@@ -78,13 +78,13 @@ private:
     struct FloatingBox {
         Box const& box;
         // Offset from left/right edge to the left content edge of `box`.
-        float offset_from_edge { 0 };
+        CSSPixels offset_from_edge { 0 };
 
         // Top margin edge of `box`.
-        float top_margin_edge { 0 };
+        CSSPixels top_margin_edge { 0 };
 
         // Bottom margin edge of `box`.
-        float bottom_margin_edge { 0 };
+        CSSPixels bottom_margin_edge { 0 };
     };
 
     struct FloatSideData {
@@ -93,16 +93,16 @@ private:
 
         // Combined width of boxes currently accumulating on this side.
         // This is the innermost margin of the innermost floating box.
-        float current_width { 0 };
+        CSSPixels current_width { 0 };
 
         // Highest value of `m_current_width` we've seen.
-        float max_width { 0 };
+        CSSPixels max_width { 0 };
 
         // All floating boxes encountered thus far within this BFC.
         Vector<NonnullOwnPtr<FloatingBox>> all_boxes;
 
         // Current Y offset from BFC root top.
-        float y_offset { 0 };
+        CSSPixels y_offset { 0 };
 
         void clear()
         {
