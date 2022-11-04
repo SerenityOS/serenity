@@ -73,26 +73,8 @@ JS::NonnullGCPtr<JS::Promise> fetch_impl(JS::VM& vm, RequestInfo const& input, R
     // 10. Let controller be null.
     JS::GCPtr<Infrastructure::FetchController> controller;
 
-    // 11. Add the following abort steps to requestObject’s signal:
-    request_object->signal()->add_abort_algorithm([&vm, locally_aborted, request, controller, promise_capability_handle = JS::make_handle(*promise_capability), request_object_handle = JS::make_handle(*request_object), response_object_handle]() mutable {
-        dbgln_if(WEB_FETCH_DEBUG, "Fetch: Request object signal's abort algorithm called");
-
-        auto& promise_capability = *promise_capability_handle;
-        auto& request_object = *request_object_handle;
-        auto& response_object = *response_object_handle;
-
-        // 1. Set locallyAborted to true.
-        locally_aborted->set_value(true);
-
-        // 2. Assert: controller is non-null.
-        VERIFY(controller);
-
-        // 3. Abort controller with requestObject’s signal’s abort reason.
-        controller->abort(vm, request_object.signal()->reason());
-
-        // 4. Abort the fetch() call with p, request, responseObject, and requestObject’s signal’s abort reason.
-        abort_fetch(vm, promise_capability, request, response_object, request_object.signal()->reason());
-    });
+    // NOTE: Step 11 is done out of order so that the controller is non-null when we capture the GCPtr by copy in the abort algorithm lambda.
+    //       This is not observable, AFAICT.
 
     // 12. Set controller to the result of calling fetch given request and processResponse given response being these
     //     steps:
@@ -141,6 +123,27 @@ JS::NonnullGCPtr<JS::Promise> fetch_impl(JS::VM& vm, RequestInfo const& input, R
                 .process_response_end_of_body = {},
                 .process_response_consume_body = {},
             })));
+
+    // 11. Add the following abort steps to requestObject’s signal:
+    request_object->signal()->add_abort_algorithm([&vm, locally_aborted, request, controller, promise_capability_handle = JS::make_handle(*promise_capability), request_object_handle = JS::make_handle(*request_object), response_object_handle]() mutable {
+        dbgln_if(WEB_FETCH_DEBUG, "Fetch: Request object signal's abort algorithm called");
+
+        auto& promise_capability = *promise_capability_handle;
+        auto& request_object = *request_object_handle;
+        auto& response_object = *response_object_handle;
+
+        // 1. Set locallyAborted to true.
+        locally_aborted->set_value(true);
+
+        // 2. Assert: controller is non-null.
+        VERIFY(controller);
+
+        // 3. Abort controller with requestObject’s signal’s abort reason.
+        controller->abort(vm, request_object.signal()->reason());
+
+        // 4. Abort the fetch() call with p, request, responseObject, and requestObject’s signal’s abort reason.
+        abort_fetch(vm, promise_capability, request, response_object, request_object.signal()->reason());
+    });
 
     // 13. Return p.
     return verify_cast<JS::Promise>(*promise_capability->promise().ptr());
