@@ -33,13 +33,13 @@ class Parser {
 public:
     explicit Parser(Decoder&);
     ~Parser();
-    DecoderErrorOr<void> parse_frame(Span<const u8>);
+    DecoderErrorOr<void> parse_frame(ReadonlyBytes);
     void dump_info();
 
 private:
     /* Annex B: Superframes are a method of storing multiple coded frames into a single chunk
      * See also section 5.26. */
-    Vector<size_t> parse_superframe_sizes(Span<const u8>);
+    Vector<size_t> parse_superframe_sizes(ReadonlyBytes);
 
     DecoderErrorOr<FrameType> read_frame_type();
     DecoderErrorOr<ColorRange> read_color_range();
