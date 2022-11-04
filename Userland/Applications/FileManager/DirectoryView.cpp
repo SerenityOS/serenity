@@ -507,15 +507,18 @@ void DirectoryView::launch(URL const&, LauncherHandler const& launcher_handler) 
         posix_spawn_file_actions_addchdir(&spawn_actions, path().characters());
 
         char const* argv[] = { launcher_handler.details().name.characters(), nullptr };
-        posix_spawn(&child, launcher_handler.details().executable.characters(), &spawn_actions, &spawn_attributes, const_cast<char**>(argv), environ);
-        if (disown(child) < 0)
+        errno = posix_spawn(&child, launcher_handler.details().executable.characters(), &spawn_actions, &spawn_attributes, const_cast<char**>(argv), environ);
+        if (errno) {
+            perror("posix_spawn");
+        } else if (disown(child) < 0) {
             perror("disown");
-
+        }
         posix_spawn_file_actions_destroy(&spawn_actions);
     } else {
         for (auto& path : selected_file_paths()) {
             char const* argv[] = { launcher_handler.details().name.characters(), path.characters(), nullptr };
-            posix_spawn(&child, launcher_handler.details().executable.characters(), nullptr, &spawn_attributes, const_cast<char**>(argv), environ);
+            if ((errno = posix_spawn(&child, launcher_handler.details().executable.characters(), nullptr, &spawn_attributes, const_cast<char**>(argv), environ)))
+                continue;
             if (disown(child) < 0)
                 perror("disown");
         }
