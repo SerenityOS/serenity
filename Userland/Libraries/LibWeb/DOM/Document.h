@@ -107,6 +107,7 @@ public:
     AK::URL fallback_base_url() const;
     AK::URL base_url() const;
 
+    void update_base_element(Badge<HTML::HTMLBaseElement>);
     JS::GCPtr<HTML::HTMLBaseElement> first_base_element_with_href_in_tree_order() const;
 
     String url_string() const { return m_url.to_string(); }
@@ -601,6 +602,9 @@ private:
 
     // https://w3c.github.io/selection-api/#dfn-selection
     JS::GCPtr<Selection::Selection> m_selection;
+
+    // NOTE: This is a cache to make finding the first <base href> element O(1).
+    JS::GCPtr<HTML::HTMLBaseElement> m_first_base_element_with_href_in_tree_order;
 };
 
 }

@@ -342,7 +342,7 @@ void Document::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_scripts);
     visitor.visit(m_all);
     visitor.visit(m_selection);
-
+    visitor.visit(m_first_base_element_with_href_in_tree_order);
     visitor.visit(m_parser);
 
     for (auto& script : m_scripts_to_execute_when_parsing_has_finished)
@@ -732,7 +732,7 @@ Vector<CSS::BackgroundLayerData> const* Document::background_layers() const
     return &body_layout_node->background_layers();
 }
 
-JS::GCPtr<HTML::HTMLBaseElement> Document::first_base_element_with_href_in_tree_order() const
+void Document::update_base_element(Badge<HTML::HTMLBaseElement>)
 {
     JS::GCPtr<HTML::HTMLBaseElement> base_element;
 
@@ -745,7 +745,12 @@ JS::GCPtr<HTML::HTMLBaseElement> Document::first_base_element_with_href_in_tree_
         return IterationDecision::Continue;
     });
 
-    return base_element;
+    m_first_base_element_with_href_in_tree_order = base_element;
+}
+
+JS::GCPtr<HTML::HTMLBaseElement> Document::first_base_element_with_href_in_tree_order() const
+{
+    return m_first_base_element_with_href_in_tree_order;
 }
 
 // https://html.spec.whatwg.org/multipage/urls-and-fetching.html#fallback-base-url

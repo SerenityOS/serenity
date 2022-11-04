@@ -22,6 +22,7 @@ public:
     AK::URL const& frozen_base_url() const { return m_frozen_base_url; }
 
     virtual void inserted() override;
+    virtual void removed_from(Node*) override;
     virtual void parse_attribute(FlyString const& name, String const& value) override;
 
 private:
