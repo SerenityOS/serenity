@@ -165,6 +165,11 @@ enum class SearchInPath {
     No,
     Yes,
 };
+
+#ifdef AK_OS_SERENITY
+ErrorOr<void> exec_command(Vector<StringView>& command, bool preserve_env);
+#endif
+
 ErrorOr<void> exec(StringView filename, Span<StringView> arguments, SearchInPath, Optional<Span<StringView>> environment = {});
 
 ErrorOr<int> socket(int domain, int type, int protocol);

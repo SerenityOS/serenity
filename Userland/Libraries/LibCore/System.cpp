@@ -979,6 +979,29 @@ ErrorOr<void> adjtime(const struct timeval* delta, struct timeval* old_delta)
 }
 #endif
 
+#ifdef AK_OS_SERENITY
+ErrorOr<void> exec_command(Vector<StringView>& command, bool preserve_env)
+{
+    Vector<StringView> exec_environment;
+    for (size_t i = 0; environ[i]; ++i) {
+        StringView env_view { environ[i], strlen(environ[i]) };
+        auto maybe_needle = env_view.find('=');
+
+        if (!maybe_needle.has_value())
+            continue;
+
+        // FIXME: Allow a custom selection of variables once ArgsParser supports options with optional parameters.
+        if (!preserve_env && env_view.substring_view(0, maybe_needle.value()) != "TERM"sv)
+            continue;
+
+        exec_environment.append(env_view);
+    }
+
+    TRY(Core::System::exec(command.at(0), command, Core::System::SearchInPath::Yes, exec_environment));
+    return {};
+}
+#endif
+
 ErrorOr<void> exec(StringView filename, Span<StringView> arguments, SearchInPath search_in_path, Optional<Span<StringView>> environment)
 {
 #ifdef AK_OS_SERENITY
