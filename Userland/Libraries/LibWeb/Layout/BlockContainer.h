@@ -26,8 +26,8 @@ public:
     BlockContainer const* next_sibling() const { return verify_cast<BlockContainer>(Node::next_sibling()); }
 
     bool is_scrollable() const;
-    Gfx::FloatPoint scroll_offset() const { return m_scroll_offset; }
-    void set_scroll_offset(Gfx::FloatPoint);
+    CSSPixelPoint scroll_offset() const { return m_scroll_offset; }
+    void set_scroll_offset(CSSPixelPoint);
 
     Painting::PaintableWithLines const* paint_box() const;
 
@@ -36,7 +36,7 @@ public:
 private:
     virtual bool is_block_container() const final { return true; }
 
-    Gfx::FloatPoint m_scroll_offset;
+    CSSPixelPoint m_scroll_offset;
 };
 
 template<>

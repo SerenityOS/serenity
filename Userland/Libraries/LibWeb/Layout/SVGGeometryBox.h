@@ -22,7 +22,7 @@ public:
     SVG::SVGGeometryElement const& dom_node() const { return verify_cast<SVG::SVGGeometryElement>(SVGGraphicsBox::dom_node()); }
 
     float viewbox_scaling() const;
-    Gfx::FloatPoint viewbox_origin() const;
+    CSSPixelPoint viewbox_origin() const;
 
     virtual RefPtr<Painting::Paintable> create_paintable() const override;
 

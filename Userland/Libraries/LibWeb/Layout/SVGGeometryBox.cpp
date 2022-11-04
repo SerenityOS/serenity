@@ -37,7 +37,8 @@ float SVGGeometryBox::viewbox_scaling() const
 
     return min(scale_width, scale_height);
 }
-Gfx::FloatPoint SVGGeometryBox::viewbox_origin() const
+
+CSSPixelPoint SVGGeometryBox::viewbox_origin() const
 {
     auto* svg_box = dom_node().first_ancestor_of_type<SVG::SVGSVGElement>();
     if (!svg_box || !svg_box->view_box().has_value())

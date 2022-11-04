@@ -551,7 +551,7 @@ void PaintableWithLines::paint(PaintContext& context, PaintPhase phase) const
         // FIXME: Handle overflow-x and overflow-y being different values.
         auto clip_box = context.rounded_device_rect(absolute_padding_box_rect());
         context.painter().add_clip_rect(clip_box.to_type<int>());
-        auto scroll_offset = static_cast<Layout::BlockContainer const&>(layout_box()).scroll_offset();
+        auto scroll_offset = context.rounded_device_point(static_cast<Layout::BlockContainer const&>(layout_box()).scroll_offset());
         context.painter().translate(-scroll_offset.to_type<int>());
 
         auto border_radii = normalized_border_radii_data(ShrinkRadiiForBorders::Yes);
