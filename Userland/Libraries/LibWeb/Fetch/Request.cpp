@@ -174,12 +174,12 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Request>> Request::construct_impl(JS::Realm
 
     // method
     //     request’s method.
-    request->set_method(TRY_OR_RETURN_OOM(realm, ByteBuffer::copy(request->method())));
+    request->set_method(TRY_OR_RETURN_OOM(realm, ByteBuffer::copy(input_request->method())));
 
     // header list
     //     A copy of request’s header list.
     auto header_list_copy = Infrastructure::HeaderList::create(vm);
-    for (auto& header : *request->header_list())
+    for (auto& header : *input_request->header_list())
         TRY_OR_RETURN_OOM(realm, header_list_copy->append(header));
     request->set_header_list(header_list_copy);
 
