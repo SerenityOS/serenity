@@ -77,12 +77,52 @@ DecoderErrorOr<void> Decoder::decode_frame(Span<u8 const> frame_data)
     }
 
     // 4. The output process as specified in section 8.9 is invoked.
-    // FIXME: Create a struct to store an output frame along with all information needed to display
-    //        it. This function will need to append the images to a vector to ensure that if a superframe
-    //        with multiple output frames is encountered, all of them can be displayed.
+    if (m_parser->m_show_frame)
+        TRY(create_video_frame());
 
     // 5. The reference frame update process as specified in section 8.10 is invoked.
     TRY(update_reference_frames());
+    return {};
+}
+
+DecoderErrorOr<void> Decoder::create_video_frame()
+{
+    size_t decoded_y_width = m_parser->m_mi_cols * 8;
+    Gfx::Size<size_t> output_y_size = {
+        m_parser->m_frame_width,
+        m_parser->m_frame_height,
+    };
+    auto decoded_uv_width = decoded_y_width >> m_parser->m_subsampling_x;
+    Gfx::Size<size_t> output_uv_size = {
+        output_y_size.width() >> m_parser->m_subsampling_x,
+        output_y_size.height() >> m_parser->m_subsampling_y,
+    };
+    Array<FixedArray<u16>, 3> output_buffers = {
+        DECODER_TRY_ALLOC(FixedArray<u16>::try_create(output_y_size.width() * output_y_size.height())),
+        DECODER_TRY_ALLOC(FixedArray<u16>::try_create(output_uv_size.width() * output_uv_size.height())),
+        DECODER_TRY_ALLOC(FixedArray<u16>::try_create(output_uv_size.width() * output_uv_size.height())),
+    };
+    for (u8 plane = 0; plane < 3; plane++) {
+        auto& buffer = output_buffers[plane];
+        auto decoded_width = plane == 0 ? decoded_y_width : decoded_uv_width;
+        auto output_size = plane == 0 ? output_y_size : output_uv_size;
+        auto const& decoded_buffer = get_output_buffer(plane);
+
+        for (u32 row = 0; row < output_size.height(); row++) {
+            memcpy(
+                buffer.data() + row * output_size.width(),
+                decoded_buffer.data() + row * decoded_width,
+                output_size.width() * sizeof(*buffer.data()));
+        }
+    }
+
+    auto frame = DECODER_TRY_ALLOC(adopt_nonnull_own_or_enomem(new (nothrow) SubsampledYUVFrame(
+        { output_y_size.width(), output_y_size.height() },
+        m_parser->m_bit_depth, get_cicp_color_space(),
+        m_parser->m_subsampling_x, m_parser->m_subsampling_y,
+        output_buffers[0], output_buffers[1], output_buffers[2])));
+    m_video_frame_queue.enqueue(move(frame));
+
     return {};
 }
 
@@ -186,40 +226,10 @@ inline CodingIndependentCodePoints Decoder::get_cicp_color_space()
 
 DecoderErrorOr<NonnullOwnPtr<VideoFrame>> Decoder::get_decoded_frame()
 {
-    size_t decoded_y_width = m_parser->m_mi_cols * 8;
-    Gfx::Size<size_t> output_y_size = {
-        m_parser->m_frame_width,
-        m_parser->m_frame_height,
-    };
-    auto decoded_uv_width = decoded_y_width >> m_parser->m_subsampling_x;
-    Gfx::Size<size_t> output_uv_size = {
-        output_y_size.width() >> m_parser->m_subsampling_x,
-        output_y_size.height() >> m_parser->m_subsampling_y,
-    };
-    Array<FixedArray<u16>, 3> output_buffers = {
-        DECODER_TRY_ALLOC(FixedArray<u16>::try_create(output_y_size.width() * output_y_size.height())),
-        DECODER_TRY_ALLOC(FixedArray<u16>::try_create(output_uv_size.width() * output_uv_size.height())),
-        DECODER_TRY_ALLOC(FixedArray<u16>::try_create(output_uv_size.width() * output_uv_size.height())),
-    };
-    for (u8 plane = 0; plane < 3; plane++) {
-        auto& buffer = output_buffers[plane];
-        auto decoded_width = plane == 0 ? decoded_y_width : decoded_uv_width;
-        auto output_size = plane == 0 ? output_y_size : output_uv_size;
-        auto const& decoded_buffer = get_output_buffer(plane);
+    if (m_video_frame_queue.is_empty())
+        return DecoderError::format(DecoderErrorCategory::NeedsMoreInput, "No video frame in queue.");
 
-        for (u32 row = 0; row < output_size.height(); row++) {
-            memcpy(
-                buffer.data() + row * output_size.width(),
-                decoded_buffer.data() + row * decoded_width,
-                output_size.width() * sizeof(*buffer.data()));
-        }
-    }
-
-    return DECODER_TRY_ALLOC(adopt_nonnull_own_or_enomem(new (nothrow) SubsampledYUVFrame(
-        { output_y_size.width(), output_y_size.height() },
-        m_parser->m_bit_depth, get_cicp_color_space(),
-        m_parser->m_subsampling_x, m_parser->m_subsampling_y,
-        output_buffers[0], output_buffers[1], output_buffers[2])));
+    return m_video_frame_queue.dequeue();
 }
 
 u8 Decoder::merge_prob(u8 pre_prob, u8 count_0, u8 count_1, u8 count_sat, u8 max_update_factor)

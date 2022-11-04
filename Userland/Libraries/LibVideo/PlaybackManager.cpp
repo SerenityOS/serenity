@@ -195,6 +195,11 @@ void PlaybackManager::restart_playback()
         on_decoder_error(result.release_error());
 }
 
+void PlaybackManager::post_decoder_error(DecoderError error)
+{
+    m_main_loop.post_event(*this, make<DecoderErrorEvent>(error));
+}
+
 bool PlaybackManager::decode_and_queue_one_sample()
 {
     if (m_frame_queue->size() >= FRAME_BUFFER_COUNT)
@@ -215,9 +220,25 @@ bool PlaybackManager::decode_and_queue_one_sample()
     })
 
     auto frame_sample = TRY_OR_ENQUEUE_ERROR(m_demuxer->get_next_video_sample_for_track(m_selected_video_track));
+    OwnPtr<VideoFrame> decoded_frame = nullptr;
+    while (!decoded_frame) {
+        TRY_OR_ENQUEUE_ERROR(m_decoder->receive_sample(frame_sample->data()));
 
-    TRY_OR_ENQUEUE_ERROR(m_decoder->receive_sample(frame_sample->data()));
-    auto decoded_frame = TRY_OR_ENQUEUE_ERROR(m_decoder->get_decoded_frame());
+        while (true) {
+            auto frame_result = m_decoder->get_decoded_frame();
+
+            if (frame_result.is_error()) {
+                if (frame_result.error().category() == DecoderErrorCategory::NeedsMoreInput)
+                    break;
+
+                post_decoder_error(frame_result.release_error());
+                return false;
+            }
+
+            decoded_frame = frame_result.release_value();
+            VERIFY(decoded_frame);
+        }
+    }
 
     auto& cicp = decoded_frame->cicp();
     cicp.adopt_specified_values(frame_sample->container_cicp());
