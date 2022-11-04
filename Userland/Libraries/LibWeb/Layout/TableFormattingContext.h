@@ -12,9 +12,9 @@
 namespace Web::Layout {
 
 struct ColumnWidth {
-    float min { 0 };
-    float max { 0 };
-    float used { 0 };
+    CSSPixels min { 0 };
+    CSSPixels max { 0 };
+    CSSPixels used { 0 };
     bool is_auto { true };
 };
 
@@ -30,7 +30,7 @@ private:
     void calculate_column_widths(Box const& row, CSS::Length const& table_width, Vector<ColumnWidth>& column_widths, AvailableSpace const&);
     void layout_row(Box const& row, Vector<ColumnWidth>& column_widths, AvailableSpace const&);
 
-    float m_automatic_content_height { 0 };
+    CSSPixels m_automatic_content_height { 0 };
 };
 
 }
