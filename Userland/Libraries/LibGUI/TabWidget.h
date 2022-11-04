@@ -79,6 +79,10 @@ public:
     void set_tab_title(Widget& tab, StringView title);
     void set_tab_icon(Widget& tab, Gfx::Bitmap const*);
 
+    bool is_tab_modified(Widget& tab);
+    void set_tab_modified(Widget& tab, bool modified);
+    bool is_any_tab_modified();
+
     void activate_next_tab();
     void activate_previous_tab();
     void activate_last_tab();
@@ -139,6 +143,7 @@ private:
         DeprecatedString title;
         RefPtr<Gfx::Bitmap> icon;
         Widget* widget { nullptr };
+        bool modified { false };
     };
     Vector<TabData> m_tabs;
     TabPosition m_tab_position { TabPosition::Top };
