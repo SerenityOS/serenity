@@ -691,6 +691,23 @@ Messages::WebContentServer::IsElementEnabledResponse ConnectionFromClient::is_el
     return { enabled };
 }
 
+Messages::WebContentServer::TakeElementScreenshotResponse ConnectionFromClient::take_element_screenshot(i32 element_id)
+{
+    auto element = find_element_by_id(element_id);
+    if (!element.has_value())
+        return { {} };
+
+    auto viewport_rect = page().top_level_browsing_context().viewport_rect();
+
+    auto rect = calculate_absolute_rect_of_element(page(), *element);
+    rect.intersect(viewport_rect);
+
+    auto bitmap = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, rect.size()).release_value_but_fixme_should_propagate_errors();
+    m_page_host->paint(rect, *bitmap);
+
+    return { bitmap->to_shareable_bitmap() };
+}
+
 Messages::WebContentServer::GetSelectedTextResponse ConnectionFromClient::get_selected_text()
 {
     return page().focused_context().selected_text();
