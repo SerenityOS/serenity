@@ -381,8 +381,13 @@ WebIDL::ExceptionOr<void> XMLHttpRequest::open(String const& method_string, Stri
             parsed_url.set_password(password);
     }
 
-    // FIXME: 10. If async is false, the current global object is a Window object, and either this’s timeout is
-    //        not 0 or this’s response type is not the empty string, then throw an "InvalidAccessError" DOMException.
+    // 10. If async is false, the current global object is a Window object, and either this’s timeout is
+    //     not 0 or this’s response type is not the empty string, then throw an "InvalidAccessError" DOMException.
+    if (!async
+        && is<HTML::Window>(HTML::current_global_object())
+        && (m_timeout != 0 || m_response_type != Bindings::XMLHttpRequestResponseType::Empty)) {
+        return WebIDL::InvalidAccessError::create(realm(), "synchronous XMLHttpRequests do not support timeout and responseType");
+    }
 
     // FIXME: 11. Terminate the ongoing fetch operated by the XMLHttpRequest object.
 
