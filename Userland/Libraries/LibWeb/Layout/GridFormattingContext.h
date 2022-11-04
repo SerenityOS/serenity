@@ -40,7 +40,7 @@ public:
     virtual CSSPixels automatic_content_height() const override;
 
 private:
-    float m_automatic_content_height { 0 };
+    CSSPixels m_automatic_content_height { 0 };
     bool is_auto_positioned_row(CSS::GridTrackPlacement const&, CSS::GridTrackPlacement const&) const;
     bool is_auto_positioned_column(CSS::GridTrackPlacement const&, CSS::GridTrackPlacement const&) const;
     bool is_auto_positioned_track(CSS::GridTrackPlacement const&, CSS::GridTrackPlacement const&) const;
@@ -56,10 +56,10 @@ private:
     struct TemporaryTrack {
         CSS::GridSize min_track_sizing_function;
         CSS::GridSize max_track_sizing_function;
-        float base_size { 0 };
-        float growth_limit { 0 };
-        float space_to_distribute { 0 };
-        float planned_increase { 0 };
+        CSSPixels base_size { 0 };
+        CSSPixels growth_limit { 0 };
+        CSSPixels space_to_distribute { 0 };
+        CSSPixels planned_increase { 0 };
         bool is_gap { false };
 
         TemporaryTrack(CSS::GridSize min_track_sizing_function, CSS::GridSize max_track_sizing_function)
@@ -74,10 +74,10 @@ private:
         {
         }
 
-        TemporaryTrack(float size_in_px, bool is_gap)
-            : min_track_sizing_function(CSS::GridSize(CSS::Length(size_in_px, CSS::Length::Type::Px)))
-            , max_track_sizing_function(CSS::GridSize(CSS::Length(size_in_px, CSS::Length::Type::Px)))
-            , base_size(size_in_px)
+        TemporaryTrack(CSSPixels size, bool is_gap)
+            : min_track_sizing_function(CSS::GridSize(CSS::Length::make_px(size)))
+            , max_track_sizing_function(CSS::GridSize(CSS::Length::make_px(size)))
+            , base_size(size)
             , is_gap(is_gap)
         {
         }
@@ -96,14 +96,14 @@ private:
     Vector<PositionedBox> m_positioned_boxes;
     Vector<Box const&> m_boxes_to_place;
 
-    float get_free_space_x(AvailableSpace const& available_space);
-    float get_free_space_y(Box const&);
+    CSSPixels get_free_space_x(AvailableSpace const& available_space);
+    CSSPixels get_free_space_y(Box const&);
 
     int get_line_index_by_line_name(DeprecatedString const& line_name, CSS::GridTrackSizeList);
-    float resolve_definite_track_size(CSS::GridSize const&, AvailableSpace const&, Box const&);
+    CSSPixels resolve_definite_track_size(CSS::GridSize const&, AvailableSpace const&, Box const&);
     size_t count_of_gap_columns();
     size_t count_of_gap_rows();
-    float resolve_size(CSS::Size const&, AvailableSize const&, Box const&);
+    CSSPixels resolve_size(CSS::Size const&, AvailableSize const&, Box const&);
     int count_of_repeated_auto_fill_or_fit_tracks(Vector<CSS::ExplicitGridTrack> const& track_list, AvailableSpace const&, Box const&);
     int get_count_of_tracks(Vector<CSS::ExplicitGridTrack> const&, AvailableSpace const&, Box const&);
 
