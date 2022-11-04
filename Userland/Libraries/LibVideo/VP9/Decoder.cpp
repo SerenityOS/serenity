@@ -87,13 +87,10 @@ DecoderErrorOr<void> Decoder::decode_frame(ReadonlyBytes frame_data)
 
 DecoderErrorOr<void> Decoder::create_video_frame()
 {
-    size_t decoded_y_width = m_parser->m_mi_cols * 8;
-    Gfx::Size<size_t> output_y_size = {
-        m_parser->m_frame_width,
-        m_parser->m_frame_height,
-    };
+    u32 decoded_y_width = m_parser->m_mi_cols * 8;
+    Gfx::Size<u32> output_y_size = m_parser->m_frame_size;
     auto decoded_uv_width = decoded_y_width >> m_parser->m_subsampling_x;
-    Gfx::Size<size_t> output_uv_size = {
+    Gfx::Size<u32> output_uv_size = {
         output_y_size.width() >> m_parser->m_subsampling_x,
         output_y_size.height() >> m_parser->m_subsampling_y,
     };
@@ -816,11 +813,11 @@ DecoderErrorOr<void> Decoder::predict_inter_block(u8 plane, u8 ref_list, u32 x, 
     // − FrameHeight <= 16 * RefFrameHeight[ refIdx ]
     if (m_parser->m_frame_store[reference_frame_index][plane].is_empty())
         return DecoderError::format(DecoderErrorCategory::Corrupted, "Attempted to use reference frame {} that has not been saved", reference_frame_index);
-    if (2 * m_parser->m_frame_width < m_parser->m_ref_frame_width[reference_frame_index]
-        || 2 * m_parser->m_frame_height < m_parser->m_ref_frame_height[reference_frame_index])
+    auto ref_frame_size = m_parser->m_ref_frame_size[reference_frame_index];
+    auto double_frame_size = m_parser->m_frame_size.scaled_by(2);
+    if (double_frame_size.width() < ref_frame_size.width() || double_frame_size.height() < ref_frame_size.height())
         return DecoderError::format(DecoderErrorCategory::Corrupted, "Inter frame size is too small relative to reference frame {}", reference_frame_index);
-    if (m_parser->m_frame_width > 16 * m_parser->m_ref_frame_width[reference_frame_index]
-        || m_parser->m_frame_height > 16 * m_parser->m_ref_frame_height[reference_frame_index])
+    if (!ref_frame_size.scaled_by(16).contains(m_parser->m_frame_size))
         return DecoderError::format(DecoderErrorCategory::Corrupted, "Inter frame size is too large relative to reference frame {}", reference_frame_index);
 
     // FIXME: Convert all the operations in this function to vector operations supported by
@@ -830,8 +827,8 @@ DecoderErrorOr<void> Decoder::predict_inter_block(u8 plane, u8 ref_list, u32 x, 
     // A variable yScale is set equal to (RefFrameHeight[ refIdx ] << REF_SCALE_SHIFT) / FrameHeight.
     // (xScale and yScale specify the size of the reference frame relative to the current frame in units where 16 is
     // equivalent to the reference frame having the same size.)
-    i32 x_scale = (m_parser->m_ref_frame_width[reference_frame_index] << REF_SCALE_SHIFT) / m_parser->m_frame_width;
-    i32 y_scale = (m_parser->m_ref_frame_height[reference_frame_index] << REF_SCALE_SHIFT) / m_parser->m_frame_height;
+    i32 x_scale = (ref_frame_size.width() << REF_SCALE_SHIFT) / m_parser->m_frame_size.width();
+    i32 y_scale = (ref_frame_size.height() << REF_SCALE_SHIFT) / m_parser->m_frame_size.height();
 
     // The variable baseX is set equal to (x * xScale) >> REF_SCALE_SHIFT.
     // The variable baseY is set equal to (y * yScale) >> REF_SCALE_SHIFT.
@@ -885,7 +882,7 @@ DecoderErrorOr<void> Decoder::predict_inter_block(u8 plane, u8 ref_list, u32 x, 
 
     // A variable ref specifying the reference frame contents is set equal to FrameStore[ refIdx ].
     auto& reference_frame_buffer = m_parser->m_frame_store[reference_frame_index][plane];
-    auto reference_frame_width = m_parser->m_ref_frame_width[reference_frame_index] >> subsampling_x;
+    auto reference_frame_width = m_parser->m_ref_frame_size[reference_frame_index].width() >> subsampling_x;
     auto reference_frame_buffer_at = [&](u32 row, u32 column) -> u16& {
         return reference_frame_buffer[row * reference_frame_width + column];
     };
@@ -898,8 +895,8 @@ DecoderErrorOr<void> Decoder::predict_inter_block(u8 plane, u8 ref_list, u32 x, 
     // The variable lastX is set equal to ( (RefFrameWidth[ refIdx ] + subX) >> subX) - 1.
     // The variable lastY is set equal to ( (RefFrameHeight[ refIdx ] + subY) >> subY) - 1.
     // (lastX and lastY specify the coordinates of the bottom right sample of the reference plane.)
-    i32 scaled_right = ((m_parser->m_ref_frame_width[reference_frame_index] + subsampling_x) >> subsampling_x) - 1;
-    i32 scaled_bottom = ((m_parser->m_ref_frame_height[reference_frame_index] + subsampling_y) >> subsampling_y) - 1;
+    i32 scaled_right = ((m_parser->m_ref_frame_size[reference_frame_index].width() + subsampling_x) >> subsampling_x) - 1;
+    i32 scaled_bottom = ((m_parser->m_ref_frame_size[reference_frame_index].height() + subsampling_y) >> subsampling_y) - 1;
 
     // The variable intermediateHeight specifying the height required for the intermediate array is set equal to (((h -
     // 1) * yStep + 15) >> 4) + 8.
@@ -1779,9 +1776,8 @@ DecoderErrorOr<void> Decoder::update_reference_frames()
     for (auto i = 0; i < NUM_REF_FRAMES; i++) {
         if ((refresh_flags & 1) != 0) {
             // − RefFrameWidth[ i ] is set equal to FrameWidth.
-            m_parser->m_ref_frame_width[i] = m_parser->m_frame_width;
             // − RefFrameHeight[ i ] is set equal to FrameHeight.
-            m_parser->m_ref_frame_height[i] = m_parser->m_frame_height;
+            m_parser->m_ref_frame_size[i] = m_parser->m_frame_size;
             // − RefSubsamplingX[ i ] is set equal to subsampling_x.
             m_parser->m_ref_subsampling_x[i] = m_parser->m_subsampling_x;
             // − RefSubsamplingY[ i ] is set equal to subsampling_y.
@@ -1798,8 +1794,8 @@ DecoderErrorOr<void> Decoder::update_reference_frames()
             // FIXME: Frame width is not equal to the buffer's stride. If we store the stride of the buffer with the reference
             //        frame, we can just copy the framebuffer data instead. Alternatively, we should crop the output framebuffer.
             for (auto plane = 0u; plane < 3; plane++) {
-                auto width = m_parser->m_frame_width;
-                auto height = m_parser->m_frame_height;
+                auto width = m_parser->m_frame_size.width();
+                auto height = m_parser->m_frame_size.height();
                 auto stride = m_parser->m_mi_cols * 8;
 
                 if (plane > 0) {

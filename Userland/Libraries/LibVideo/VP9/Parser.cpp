@@ -168,8 +168,8 @@ DecoderErrorOr<void> Parser::uncompressed_header()
     if (m_frame_type == KeyFrame) {
         TRY(frame_sync_code());
         TRY(color_config());
-        TRY(frame_size());
-        TRY(render_size());
+        m_frame_size = TRY(frame_size());
+        m_render_size = TRY(render_size(m_frame_size));
         m_refresh_frame_flags = 0xFF;
         m_frame_is_intra = true;
     } else {
@@ -193,19 +193,22 @@ DecoderErrorOr<void> Parser::uncompressed_header()
             }
 
             m_refresh_frame_flags = TRY_READ(m_bit_stream->read_f8());
-            TRY(frame_size());
-            TRY(render_size());
+            m_frame_size = TRY(frame_size());
+            m_render_size = TRY(render_size(m_frame_size));
         } else {
             m_refresh_frame_flags = TRY_READ(m_bit_stream->read_f8());
             for (auto i = 0; i < 3; i++) {
                 m_ref_frame_idx[i] = TRY_READ(m_bit_stream->read_bits(3));
                 m_ref_frame_sign_bias[LastFrame + i] = TRY_READ(m_bit_stream->read_bit());
             }
-            TRY(frame_size_with_refs());
+            m_frame_size = TRY(frame_size_with_refs());
+            m_render_size = TRY(render_size(m_frame_size));
             m_allow_high_precision_mv = TRY_READ(m_bit_stream->read_bit());
             TRY(read_interpolation_filter());
         }
     }
+
+    compute_image_size();
 
     if (!m_error_resilient_mode) {
         m_refresh_frame_context = TRY_READ(m_bit_stream->read_bit());
@@ -284,51 +287,38 @@ DecoderErrorOr<void> Parser::color_config()
     return {};
 }
 
-DecoderErrorOr<void> Parser::frame_size()
+DecoderErrorOr<Gfx::Size<u32>> Parser::frame_size()
 {
-    m_frame_width = TRY_READ(m_bit_stream->read_f16()) + 1;
-    m_frame_height = TRY_READ(m_bit_stream->read_f16()) + 1;
-    compute_image_size();
-    return {};
+    return Gfx::Size<u32> { TRY_READ(m_bit_stream->read_f16()) + 1, TRY_READ(m_bit_stream->read_f16()) + 1 };
 }
 
-DecoderErrorOr<void> Parser::render_size()
+DecoderErrorOr<Gfx::Size<u32>> Parser::render_size(Gfx::Size<u32> frame_size)
 {
-    if (TRY_READ(m_bit_stream->read_bit())) {
-        m_render_width = TRY_READ(m_bit_stream->read_f16()) + 1;
-        m_render_height = TRY_READ(m_bit_stream->read_f16()) + 1;
-    } else {
-        m_render_width = m_frame_width;
-        m_render_height = m_frame_height;
-    }
-    return {};
+    if (!TRY_READ(m_bit_stream->read_bit()))
+        return frame_size;
+    return Gfx::Size<u32> { TRY_READ(m_bit_stream->read_f16()) + 1, TRY_READ(m_bit_stream->read_f16()) + 1 };
 }
 
-DecoderErrorOr<void> Parser::frame_size_with_refs()
+DecoderErrorOr<Gfx::Size<u32>> Parser::frame_size_with_refs()
 {
-    bool found_ref;
+    Optional<Gfx::Size<u32>> size;
     for (auto frame_index : m_ref_frame_idx) {
-        found_ref = TRY_READ(m_bit_stream->read_bit());
-        if (found_ref) {
-            m_frame_width = m_ref_frame_width[frame_index];
-            m_frame_height = m_ref_frame_height[frame_index];
+        if (TRY_READ(m_bit_stream->read_bit())) {
+            size.emplace(m_ref_frame_size[frame_index]);
             break;
         }
     }
 
-    if (!found_ref) {
-        TRY(frame_size());
-    } else {
-        compute_image_size();
-    }
+    if (size.has_value())
+        return size.value();
 
-    return render_size();
+    return TRY(frame_size());
 }
 
 void Parser::compute_image_size()
 {
-    auto new_cols = (m_frame_width + 7u) >> 3u;
-    auto new_rows = (m_frame_height + 7u) >> 3u;
+    auto new_cols = (m_frame_size.width() + 7u) >> 3u;
+    auto new_rows = (m_frame_size.height() + 7u) >> 3u;
 
     // 7.2.6 Compute image size semantics
     // When compute_image_size is invoked, the following ordered steps occur:
@@ -1728,8 +1718,8 @@ void Parser::append_sub8x8_mvs(i32 block, u8 ref_list)
 
 void Parser::dump_info()
 {
-    outln("Frame dimensions: {}x{}", m_frame_width, m_frame_height);
-    outln("Render dimensions: {}x{}", m_render_width, m_render_height);
+    outln("Frame dimensions: {}x{}", m_frame_size.width(), m_frame_size.height());
+    outln("Render dimensions: {}x{}", m_render_size.width(), m_render_size.height());
     outln("Bit depth: {}", m_bit_depth);
     outln("Show frame: {}", m_show_frame);
 }
