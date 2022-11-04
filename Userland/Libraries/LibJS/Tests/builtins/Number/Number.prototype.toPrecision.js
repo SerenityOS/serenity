@@ -87,6 +87,9 @@ describe("correct behavior", () => {
             [1, 4, "1.000"],
             [123, 4, "123.0"],
             [123.45, 4, "123.5"],
+
+            // Disabled for now due to: https://github.com/SerenityOS/serenity/issues/15924
+            // [3, 100, "3." + "0".repeat(99)],
         ].forEach(test => {
             expect(test[0].toPrecision(test[1])).toBe(test[2]);
         });

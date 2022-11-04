@@ -386,17 +386,13 @@ JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_precision)
     }
     // 10. Else,
     else {
-        // FIXME: The computations below fall apart for large values of 'p'. A double typically has 52 mantissa bits, which gives us
-        //        up to 2^52 before loss of precision. However, the largest value of 'p' may be 100, resulting in numbers on the order
-        //        of 10^100, thus we lose precision in these computations.
-
         // a. Let e and n be integers such that 10^(p-1) ≤ n < 10^p and for which n × 10^(e-p+1) - x is as close to zero as possible.
         //    If there are two such sets of e and n, pick the e and n for which n × 10^(e-p+1) is larger.
         exponent = static_cast<int>(floor(log10(number)));
         number = round(number / pow(10, exponent - precision + 1));
 
         // b. Let m be the String value consisting of the digits of the decimal representation of n (in order, with no leading zeroes).
-        number_string = decimal_digits_to_string(number);
+        number_string = number_to_string(number, NumberToStringMode::WithoutExponent);
 
         // c. If e < -6 or e ≥ p, then
         if ((exponent < -6) || (exponent >= precision)) {
