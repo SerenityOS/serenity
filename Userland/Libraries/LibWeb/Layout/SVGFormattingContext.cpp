@@ -70,18 +70,18 @@ void SVGFormattingContext::run(Box const& box, LayoutMode, [[maybe_unused]] Avai
             }
 
             auto& path = dom_node.get_path();
-            auto path_bounding_box = path.bounding_box();
+            auto path_bounding_box = path.bounding_box().to_type<CSSPixels>();
 
             // Stroke increases the path's size by stroke_width/2 per side.
-            auto stroke_width = geometry_box.dom_node().stroke_width().value_or(0);
+            CSSPixels stroke_width = geometry_box.dom_node().stroke_width().value_or(0);
             path_bounding_box.inflate(stroke_width, stroke_width);
 
             auto& maybe_view_box = svg_svg_element.view_box();
 
             if (maybe_view_box.has_value()) {
                 auto view_box = maybe_view_box.value();
-                Gfx::FloatPoint viewbox_offset = { view_box.min_x, view_box.min_y };
-                geometry_box_state.set_content_offset(path_bounding_box.top_left() + viewbox_offset);
+                CSSPixelPoint viewbox_offset = { view_box.min_x, view_box.min_y };
+                geometry_box_state.set_content_offset((path_bounding_box.top_left() + viewbox_offset).to_type<float>());
 
                 geometry_box_state.set_content_width(view_box.width);
                 geometry_box_state.set_content_height(view_box.height);
@@ -89,9 +89,9 @@ void SVGFormattingContext::run(Box const& box, LayoutMode, [[maybe_unused]] Avai
                 return IterationDecision::Continue;
             }
 
-            geometry_box_state.set_content_offset(path_bounding_box.top_left());
-            geometry_box_state.set_content_width(path_bounding_box.width());
-            geometry_box_state.set_content_height(path_bounding_box.height());
+            geometry_box_state.set_content_offset(path_bounding_box.top_left().to_type<float>());
+            geometry_box_state.set_content_width(path_bounding_box.width().value());
+            geometry_box_state.set_content_height(path_bounding_box.height().value());
         }
 
         return IterationDecision::Continue;
