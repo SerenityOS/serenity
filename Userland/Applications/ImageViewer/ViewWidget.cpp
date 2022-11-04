@@ -198,6 +198,13 @@ void ViewWidget::load_from_file(String const& path)
     reset_view();
 }
 
+void ViewWidget::drag_enter_event(GUI::DragEvent& event)
+{
+    auto const& mime_types = event.mime_types();
+    if (mime_types.contains_slow("text/uri-list"))
+        event.accept();
+}
+
 void ViewWidget::drop_event(GUI::DropEvent& event)
 {
     event.accept();

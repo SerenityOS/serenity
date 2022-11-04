@@ -57,6 +57,7 @@ private:
 
     void sync_previous_next_actions();
 
+    void drag_enter_event(GUI::DragEvent& event) override;
     void drop_event(GUI::DropEvent& event) override;
     GUI::Window& m_window;
 

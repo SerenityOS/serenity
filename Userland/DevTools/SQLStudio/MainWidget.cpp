@@ -397,6 +397,13 @@ void MainWidget::update_editor_actions(ScriptEditor* editor)
     m_redo_action->set_enabled(editor->redo_action().is_enabled());
 }
 
+void MainWidget::drag_enter_event(GUI::DragEvent& event)
+{
+    auto const& mime_types = event.mime_types();
+    if (mime_types.contains_slow("text/uri-list"))
+        event.accept();
+}
+
 void MainWidget::drop_event(GUI::DropEvent& drop_event)
 {
     drop_event.accept();

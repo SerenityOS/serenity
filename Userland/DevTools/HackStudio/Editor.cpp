@@ -348,6 +348,13 @@ void Editor::mousedown_event(GUI::MouseEvent& event)
     GUI::TextEditor::mousedown_event(event);
 }
 
+void Editor::drag_enter_event(GUI::DragEvent& event)
+{
+    auto const& mime_types = event.mime_types();
+    if (mime_types.contains_slow("text/uri-list"))
+        event.accept();
+}
+
 void Editor::drop_event(GUI::DropEvent& event)
 {
     event.accept();

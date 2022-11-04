@@ -62,6 +62,7 @@ private:
     ErrorOr<void> create_undo_stack();
     ErrorOr<RefPtr<GUI::Window>> create_preview_window();
 
+    virtual void drag_enter_event(GUI::DragEvent&) override;
     virtual void drop_event(GUI::DropEvent&) override;
 
     void undo();

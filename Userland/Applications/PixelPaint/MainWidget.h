@@ -56,6 +56,7 @@ private:
 
     void set_actions_enabled(bool enabled);
 
+    virtual void drag_enter_event(GUI::DragEvent&) override;
     virtual void drop_event(GUI::DropEvent&) override;
 
     ProjectLoader m_loader;

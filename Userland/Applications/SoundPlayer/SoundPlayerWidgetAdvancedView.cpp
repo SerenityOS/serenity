@@ -119,6 +119,13 @@ void SoundPlayerWidgetAdvancedView::set_nonlinear_volume_slider(bool nonlinear)
     m_nonlinear_volume_slider = nonlinear;
 }
 
+void SoundPlayerWidgetAdvancedView::drag_enter_event(GUI::DragEvent& event)
+{
+    auto const& mime_types = event.mime_types();
+    if (mime_types.contains_slow("text/uri-list"))
+        event.accept();
+}
+
 void SoundPlayerWidgetAdvancedView::drop_event(GUI::DropEvent& event)
 {
     event.accept();

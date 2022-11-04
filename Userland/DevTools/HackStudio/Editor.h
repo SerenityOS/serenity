@@ -65,6 +65,7 @@ private:
     virtual void paint_event(GUI::PaintEvent&) override;
     virtual void mousemove_event(GUI::MouseEvent&) override;
     virtual void mousedown_event(GUI::MouseEvent&) override;
+    virtual void drag_enter_event(GUI::DragEvent&) override;
     virtual void drop_event(GUI::DropEvent&) override;
     virtual void enter_event(Core::Event&) override;
     virtual void leave_event(Core::Event&) override;

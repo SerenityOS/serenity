@@ -872,6 +872,13 @@ void MainWidget::update_preview()
         m_font_preview_window->update();
 }
 
+void MainWidget::drag_enter_event(GUI::DragEvent& event)
+{
+    auto const& mime_types = event.mime_types();
+    if (mime_types.contains_slow("text/uri-list"))
+        event.accept();
+}
+
 void MainWidget::drop_event(GUI::DropEvent& event)
 {
     event.accept();

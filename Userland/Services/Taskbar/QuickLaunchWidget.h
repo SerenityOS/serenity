@@ -83,6 +83,7 @@ public:
     virtual void config_key_was_removed(String const&, String const&, String const&) override;
     virtual void config_string_did_change(String const&, String const&, String const&, String const&) override;
 
+    virtual void drag_enter_event(GUI::DragEvent&) override;
     virtual void drop_event(GUI::DropEvent&) override;
 
 private:

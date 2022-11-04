@@ -91,6 +91,7 @@ private:
         glEndList();
     }
 
+    virtual void drag_enter_event(GUI::DragEvent&) override;
     virtual void drop_event(GUI::DropEvent&) override;
     virtual void paint_event(GUI::PaintEvent&) override;
     virtual void resize_event(GUI::ResizeEvent&) override;
@@ -124,6 +125,13 @@ private:
     GLint m_mag_filter = GL_NEAREST;
     float m_zoom = 1;
 };
+
+void GLContextWidget::drag_enter_event(GUI::DragEvent& event)
+{
+    auto const& mime_types = event.mime_types();
+    if (mime_types.contains_slow("text/uri-list"))
+        event.accept();
+}
 
 void GLContextWidget::drop_event(GUI::DropEvent& event)
 {
