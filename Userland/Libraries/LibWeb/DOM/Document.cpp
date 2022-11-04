@@ -833,7 +833,7 @@ void Document::update_layout()
     if (!browsing_context())
         return;
 
-    auto viewport_rect = browsing_context()->viewport_rect().to_type<float>();
+    auto viewport_rect = browsing_context()->viewport_rect();
 
     if (!m_layout_root) {
         m_next_layout_node_serial_id = 0;

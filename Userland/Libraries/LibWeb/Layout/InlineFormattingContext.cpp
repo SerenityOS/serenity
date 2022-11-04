@@ -41,7 +41,7 @@ BlockFormattingContext const& InlineFormattingContext::parent() const
 CSSPixels InlineFormattingContext::leftmost_x_offset_at(CSSPixels y) const
 {
     // NOTE: Floats are relative to the BFC root box, not necessarily the containing block of this IFC.
-    auto box_in_root_rect = content_box_rect_in_ancestor_coordinate_space(containing_block(), parent().root(), m_state).to_type<CSSPixels>();
+    auto box_in_root_rect = content_box_rect_in_ancestor_coordinate_space(containing_block(), parent().root(), m_state);
     CSSPixels y_in_root = box_in_root_rect.y() + y;
     auto space = parent().space_used_by_floats(y_in_root);
     return space.left;
@@ -51,7 +51,7 @@ CSSPixels InlineFormattingContext::available_space_for_line(CSSPixels y) const
 {
     // NOTE: Floats are relative to the BFC root box, not necessarily the containing block of this IFC.
     auto& root_block = parent().root();
-    auto box_in_root_rect = content_box_rect_in_ancestor_coordinate_space(containing_block(), root_block, m_state).to_type<CSSPixels>();
+    auto box_in_root_rect = content_box_rect_in_ancestor_coordinate_space(containing_block(), root_block, m_state);
     CSSPixels y_in_root = box_in_root_rect.y() + y;
     auto space = parent().space_used_by_floats(y_in_root);
 
@@ -117,8 +117,8 @@ void InlineFormattingContext::dimension_box_on_line(Box const& box, LayoutMode l
         if (is<SVGSVGBox>(box))
             (void)layout_inside(replaced, layout_mode, *m_available_space);
 
-        box_state.set_content_width(compute_width_for_replaced_element(m_state, replaced, *m_available_space).value());
-        box_state.set_content_height(compute_height_for_replaced_element(m_state, replaced, *m_available_space).value());
+        box_state.set_content_width(compute_width_for_replaced_element(m_state, replaced, *m_available_space));
+        box_state.set_content_height(compute_height_for_replaced_element(m_state, replaced, *m_available_space));
         return;
     }
 
@@ -161,7 +161,7 @@ void InlineFormattingContext::dimension_box_on_line(Box const& box, LayoutMode l
         width = max(width, min_width);
     }
 
-    box_state.set_content_width(width.value());
+    box_state.set_content_width(width);
 
     auto independent_formatting_context = layout_inside(box, layout_mode, box_state.available_inner_space_or_constraints_from(*m_available_space));
 
@@ -317,7 +317,7 @@ void InlineFormattingContext::generate_line_boxes(LayoutMode layout_mode)
 
 bool InlineFormattingContext::any_floats_intrude_at_y(CSSPixels y) const
 {
-    auto box_in_root_rect = content_box_rect_in_ancestor_coordinate_space(containing_block(), parent().root(), m_state).to_type<CSSPixels>();
+    auto box_in_root_rect = content_box_rect_in_ancestor_coordinate_space(containing_block(), parent().root(), m_state);
     CSSPixels y_in_root = box_in_root_rect.y() + y;
     auto space = parent().space_used_by_floats(y_in_root);
     return space.left > 0 || space.right > 0;
@@ -325,7 +325,7 @@ bool InlineFormattingContext::any_floats_intrude_at_y(CSSPixels y) const
 
 bool InlineFormattingContext::can_fit_new_line_at_y(CSSPixels y) const
 {
-    auto box_in_root_rect = content_box_rect_in_ancestor_coordinate_space(containing_block(), parent().root(), m_state).to_type<CSSPixels>();
+    auto box_in_root_rect = content_box_rect_in_ancestor_coordinate_space(containing_block(), parent().root(), m_state);
     CSSPixels y_in_root = box_in_root_rect.y() + y;
     auto space_top = parent().space_used_by_floats(y_in_root);
     auto space_bottom = parent().space_used_by_floats(y_in_root + containing_block().line_height() - 1);

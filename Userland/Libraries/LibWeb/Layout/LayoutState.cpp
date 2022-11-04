@@ -65,10 +65,10 @@ void LayoutState::commit()
         auto& node = const_cast<NodeWithStyleAndBoxModelMetrics&>(used_values.node());
 
         // Transfer box model metrics.
-        node.box_model().inset = { used_values.inset_top, used_values.inset_right, used_values.inset_bottom, used_values.inset_left };
-        node.box_model().padding = { used_values.padding_top, used_values.padding_right, used_values.padding_bottom, used_values.padding_left };
-        node.box_model().border = { used_values.border_top, used_values.border_right, used_values.border_bottom, used_values.border_left };
-        node.box_model().margin = { used_values.margin_top, used_values.margin_right, used_values.margin_bottom, used_values.margin_left };
+        node.box_model().inset = { used_values.inset_top.value(), used_values.inset_right.value(), used_values.inset_bottom.value(), used_values.inset_left.value() };
+        node.box_model().padding = { used_values.padding_top.value(), used_values.padding_right.value(), used_values.padding_bottom.value(), used_values.padding_left.value() };
+        node.box_model().border = { used_values.border_top.value(), used_values.border_right.value(), used_values.border_bottom.value(), used_values.border_left.value() };
+        node.box_model().margin = { used_values.margin_top.value(), used_values.margin_right.value(), used_values.margin_bottom.value(), used_values.margin_left.value() };
 
         node.set_paintable(node.create_paintable());
 
@@ -76,7 +76,7 @@ void LayoutState::commit()
         if (is<Layout::Box>(node)) {
             auto& box = static_cast<Layout::Box const&>(node);
             auto& paint_box = const_cast<Painting::PaintableBox&>(*box.paint_box());
-            paint_box.set_offset(used_values.offset.to_type<CSSPixels>());
+            paint_box.set_offset(used_values.offset);
             paint_box.set_content_size(used_values.content_width(), used_values.content_height());
             paint_box.set_overflow_data(move(used_values.overflow_data));
             paint_box.set_containing_line_box_fragment(used_values.containing_line_box_fragment);
@@ -97,7 +97,7 @@ void LayoutState::commit()
         text_node->set_paintable(text_node->create_paintable());
 }
 
-float box_baseline(LayoutState const& state, Box const& box)
+CSSPixels box_baseline(LayoutState const& state, Box const& box)
 {
     auto const& box_state = state.get(box);
 
@@ -123,7 +123,7 @@ float box_baseline(LayoutState const& state, Box const& box)
     }
 
     if (!box_state.line_boxes.is_empty())
-        return box_state.border_box_top() + box_state.offset.y() + box_state.line_boxes.last().baseline().value();
+        return box_state.border_box_top() + box_state.offset.y() + box_state.line_boxes.last().baseline();
     if (box.has_children() && !box.children_are_inline()) {
         auto const* child_box = box.last_child_of_type<Box>();
         VERIFY(child_box);
@@ -132,10 +132,10 @@ float box_baseline(LayoutState const& state, Box const& box)
     return box_state.border_box_height();
 }
 
-Gfx::FloatRect margin_box_rect(Box const& box, LayoutState const& state)
+CSSPixelRect margin_box_rect(Box const& box, LayoutState const& state)
 {
     auto const& box_state = state.get(box);
-    auto rect = Gfx::FloatRect { box_state.offset, { box_state.content_width(), box_state.content_height() } };
+    auto rect = CSSPixelRect { box_state.offset, { box_state.content_width(), box_state.content_height() } };
     rect.set_x(rect.x() - box_state.margin_box_left());
     rect.set_width(rect.width() + box_state.margin_box_left() + box_state.margin_box_right());
     rect.set_y(rect.y() - box_state.margin_box_top());
@@ -143,10 +143,10 @@ Gfx::FloatRect margin_box_rect(Box const& box, LayoutState const& state)
     return rect;
 }
 
-Gfx::FloatRect border_box_rect(Box const& box, LayoutState const& state)
+CSSPixelRect border_box_rect(Box const& box, LayoutState const& state)
 {
     auto const& box_state = state.get(box);
-    auto rect = Gfx::FloatRect { box_state.offset, { box_state.content_width(), box_state.content_height() } };
+    auto rect = CSSPixelRect { box_state.offset, { box_state.content_width(), box_state.content_height() } };
     rect.set_x(rect.x() - box_state.border_box_left());
     rect.set_width(rect.width() + box_state.border_box_left() + box_state.border_box_right());
     rect.set_y(rect.y() - box_state.border_box_top());
@@ -154,7 +154,7 @@ Gfx::FloatRect border_box_rect(Box const& box, LayoutState const& state)
     return rect;
 }
 
-Gfx::FloatRect border_box_rect_in_ancestor_coordinate_space(Box const& box, Box const& ancestor_box, LayoutState const& state)
+CSSPixelRect border_box_rect_in_ancestor_coordinate_space(Box const& box, Box const& ancestor_box, LayoutState const& state)
 {
     auto rect = border_box_rect(box, state);
     if (&box == &ancestor_box)
@@ -169,13 +169,13 @@ Gfx::FloatRect border_box_rect_in_ancestor_coordinate_space(Box const& box, Box 
     VERIFY_NOT_REACHED();
 }
 
-Gfx::FloatRect content_box_rect(Box const& box, LayoutState const& state)
+CSSPixelRect content_box_rect(Box const& box, LayoutState const& state)
 {
     auto const& box_state = state.get(box);
-    return Gfx::FloatRect { box_state.offset, { box_state.content_width(), box_state.content_height() } };
+    return CSSPixelRect { box_state.offset, { box_state.content_width(), box_state.content_height() } };
 }
 
-Gfx::FloatRect content_box_rect_in_ancestor_coordinate_space(Box const& box, Box const& ancestor_box, LayoutState const& state)
+CSSPixelRect content_box_rect_in_ancestor_coordinate_space(Box const& box, Box const& ancestor_box, LayoutState const& state)
 {
     auto rect = content_box_rect(box, state);
     if (&box == &ancestor_box)
@@ -190,7 +190,7 @@ Gfx::FloatRect content_box_rect_in_ancestor_coordinate_space(Box const& box, Box
     VERIFY_NOT_REACHED();
 }
 
-Gfx::FloatRect margin_box_rect_in_ancestor_coordinate_space(Box const& box, Box const& ancestor_box, LayoutState const& state)
+CSSPixelRect margin_box_rect_in_ancestor_coordinate_space(Box const& box, Box const& ancestor_box, LayoutState const& state)
 {
     auto rect = margin_box_rect(box, state);
     if (&box == &ancestor_box)
@@ -205,10 +205,10 @@ Gfx::FloatRect margin_box_rect_in_ancestor_coordinate_space(Box const& box, Box 
     VERIFY_NOT_REACHED();
 }
 
-Gfx::FloatRect absolute_content_rect(Box const& box, LayoutState const& state)
+CSSPixelRect absolute_content_rect(Box const& box, LayoutState const& state)
 {
     auto const& box_state = state.get(box);
-    Gfx::FloatRect rect { box_state.offset, { box_state.content_width(), box_state.content_height() } };
+    CSSPixelRect rect { box_state.offset, { box_state.content_width(), box_state.content_height() } };
     for (auto* block = box.containing_block(); block; block = block->containing_block())
         rect.translate_by(state.get(*block).offset);
     return rect;
@@ -229,7 +229,7 @@ void LayoutState::UsedValues::set_node(NodeWithStyleAndBoxModelMetrics& node, Us
 
     auto const& computed_values = node.computed_values();
 
-    auto is_definite_size = [&](CSS::Size const& size, float& resolved_definite_size, bool width) {
+    auto is_definite_size = [&](CSS::Size const& size, CSSPixels& resolved_definite_size, bool width) {
         // A size that can be determined without performing layout; that is,
         // a <length>,
         // a measure of text (without consideration of line-wrapping),
@@ -248,7 +248,7 @@ void LayoutState::UsedValues::set_node(NodeWithStyleAndBoxModelMetrics& node, Us
                 && (node.parent()->display().is_flow_root_inside()
                     || node.parent()->display().is_flow_inside())) {
                 if (containing_block_has_definite_size) {
-                    float available_width = containing_block_used_values->content_width();
+                    CSSPixels available_width = containing_block_used_values->content_width();
                     resolved_definite_size = available_width
                         - margin_left
                         - margin_right
@@ -296,14 +296,14 @@ void LayoutState::UsedValues::set_node(NodeWithStyleAndBoxModelMetrics& node, Us
         return false;
     };
 
-    float min_width = 0;
+    CSSPixels min_width = 0;
     bool has_definite_min_width = is_definite_size(computed_values.min_width(), min_width, true);
-    float max_width = 0;
+    CSSPixels max_width = 0;
     bool has_definite_max_width = is_definite_size(computed_values.max_width(), max_width, true);
 
-    float min_height = 0;
+    CSSPixels min_height = 0;
     bool has_definite_min_height = is_definite_size(computed_values.min_height(), min_height, false);
-    float max_height = 0;
+    CSSPixels max_height = 0;
     bool has_definite_max_height = is_definite_size(computed_values.max_height(), max_height, false);
 
     m_has_definite_width = is_definite_size(computed_values.width(), m_content_width, true);
@@ -324,34 +324,34 @@ void LayoutState::UsedValues::set_node(NodeWithStyleAndBoxModelMetrics& node, Us
     }
 }
 
-void LayoutState::UsedValues::set_content_width(float width)
+void LayoutState::UsedValues::set_content_width(CSSPixels width)
 {
     m_content_width = width;
     m_has_definite_width = true;
 }
 
-void LayoutState::UsedValues::set_content_height(float height)
+void LayoutState::UsedValues::set_content_height(CSSPixels height)
 {
     m_content_height = height;
     m_has_definite_height = true;
 }
 
-void LayoutState::UsedValues::set_temporary_content_width(float width)
+void LayoutState::UsedValues::set_temporary_content_width(CSSPixels width)
 {
     m_content_width = width;
 }
 
-void LayoutState::UsedValues::set_temporary_content_height(float height)
+void LayoutState::UsedValues::set_temporary_content_height(CSSPixels height)
 {
     m_content_height = height;
 }
 
-float LayoutState::resolved_definite_width(Box const& box) const
+CSSPixels LayoutState::resolved_definite_width(Box const& box) const
 {
     return get(box).content_width();
 }
 
-float LayoutState::resolved_definite_height(Box const& box) const
+CSSPixels LayoutState::resolved_definite_height(Box const& box) const
 {
     return get(box).content_height();
 }
@@ -390,18 +390,18 @@ AvailableSpace LayoutState::UsedValues::available_inner_space_or_constraints_fro
     return AvailableSpace(inner_width, inner_height);
 }
 
-void LayoutState::UsedValues::set_content_offset(Gfx::FloatPoint offset)
+void LayoutState::UsedValues::set_content_offset(CSSPixelPoint new_offset)
 {
-    set_content_x(offset.x());
-    set_content_y(offset.y());
+    set_content_x(new_offset.x());
+    set_content_y(new_offset.y());
 }
 
-void LayoutState::UsedValues::set_content_x(float x)
+void LayoutState::UsedValues::set_content_x(CSSPixels x)
 {
     offset.set_x(x);
 }
 
-void LayoutState::UsedValues::set_content_y(float y)
+void LayoutState::UsedValues::set_content_y(CSSPixels y)
 {
     offset.set_y(y);
 }

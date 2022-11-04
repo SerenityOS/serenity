@@ -1732,8 +1732,8 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
             y_start += m_grid_rows[i].base_size;
         for (int i = 0; i < row_end; i++)
             y_end += m_grid_rows[i].base_size;
-        child_box_state.set_content_width((x_end - x_start).value());
-        child_box_state.set_content_height((y_end - y_start).value());
+        child_box_state.set_content_width((x_end - x_start));
+        child_box_state.set_content_height((y_end - y_start));
         child_box_state.offset = { x_start, y_start };
 
         auto available_space_for_children = AvailableSpace(AvailableSize::make_definite(child_box_state.content_width()), AvailableSize::make_definite(child_box_state.content_height()));

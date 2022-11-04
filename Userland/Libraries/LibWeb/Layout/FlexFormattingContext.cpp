@@ -442,43 +442,43 @@ bool FlexFormattingContext::is_cross_auto(Box const& box) const
 void FlexFormattingContext::set_main_size(Box const& box, CSSPixels size)
 {
     if (is_row_layout())
-        m_state.get_mutable(box).set_content_width(size.value());
+        m_state.get_mutable(box).set_content_width(size);
     else
-        m_state.get_mutable(box).set_content_height(size.value());
+        m_state.get_mutable(box).set_content_height(size);
 }
 
 void FlexFormattingContext::set_cross_size(Box const& box, CSSPixels size)
 {
     if (is_row_layout())
-        m_state.get_mutable(box).set_content_height(size.value());
+        m_state.get_mutable(box).set_content_height(size);
     else
-        m_state.get_mutable(box).set_content_width(size.value());
+        m_state.get_mutable(box).set_content_width(size);
 }
 
 void FlexFormattingContext::set_offset(Box const& box, CSSPixels main_offset, CSSPixels cross_offset)
 {
     if (is_row_layout())
-        m_state.get_mutable(box).offset = Gfx::FloatPoint { main_offset, cross_offset };
+        m_state.get_mutable(box).offset = CSSPixelPoint { main_offset, cross_offset };
     else
-        m_state.get_mutable(box).offset = Gfx::FloatPoint { cross_offset, main_offset };
+        m_state.get_mutable(box).offset = CSSPixelPoint { cross_offset, main_offset };
 }
 
 void FlexFormattingContext::set_main_axis_first_margin(FlexItem& item, CSSPixels margin)
 {
     item.margins.main_before = margin;
     if (is_row_layout())
-        m_state.get_mutable(item.box).margin_left = margin.value();
+        m_state.get_mutable(item.box).margin_left = margin;
     else
-        m_state.get_mutable(item.box).margin_top = margin.value();
+        m_state.get_mutable(item.box).margin_top = margin;
 }
 
 void FlexFormattingContext::set_main_axis_second_margin(FlexItem& item, CSSPixels margin)
 {
     item.margins.main_after = margin;
     if (is_row_layout())
-        m_state.get_mutable(item.box).margin_right = margin.value();
+        m_state.get_mutable(item.box).margin_right = margin;
     else
-        m_state.get_mutable(item.box).margin_bottom = margin.value();
+        m_state.get_mutable(item.box).margin_bottom = margin;
 }
 
 // https://drafts.csswg.org/css-flexbox-1/#algo-available
@@ -581,10 +581,10 @@ CSSPixels FlexFormattingContext::calculate_indefinite_main_size(FlexItem const& 
         // NOTE: Flex items should always create an independent formatting context!
         VERIFY(independent_formatting_context);
 
-        box_state.set_content_width(fit_content_cross_size.value());
+        box_state.set_content_width(fit_content_cross_size);
         independent_formatting_context->run(item.box, LayoutMode::Normal, m_available_space_for_items->space);
 
-        return independent_formatting_context->automatic_content_height().value();
+        return independent_formatting_context->automatic_content_height();
     }
 
     return calculate_fit_content_main_size(item);
@@ -708,9 +708,9 @@ void FlexFormattingContext::determine_flex_base_size_and_hypothetical_main_size(
     //       The spec just barely hand-waves about this, but it seems to *roughly* match what other engines do.
     //       See "Note" section here: https://drafts.csswg.org/css-flexbox-1/#definite-sizes
     if (is_row_layout())
-        m_state.get_mutable(flex_item.box).set_temporary_content_width(flex_item.hypothetical_main_size.value());
+        m_state.get_mutable(flex_item.box).set_temporary_content_width(flex_item.hypothetical_main_size);
     else
-        m_state.get_mutable(flex_item.box).set_temporary_content_height(flex_item.hypothetical_main_size.value());
+        m_state.get_mutable(flex_item.box).set_temporary_content_height(flex_item.hypothetical_main_size);
 }
 
 // https://drafts.csswg.org/css-flexbox-1/#min-size-auto
@@ -825,13 +825,13 @@ void FlexFormattingContext::determine_main_size_of_flex_container()
 
     if (is_row_layout()) {
         if (!flex_container().is_out_of_flow(*parent()) && m_state.get(*flex_container().containing_block()).has_definite_width()) {
-            set_main_size(flex_container(), calculate_stretch_fit_width(flex_container(), m_available_space_for_flex_container->space.width).value());
+            set_main_size(flex_container(), calculate_stretch_fit_width(flex_container(), m_available_space_for_flex_container->space.width));
         } else {
-            set_main_size(flex_container(), calculate_max_content_width(flex_container()).value());
+            set_main_size(flex_container(), calculate_max_content_width(flex_container()));
         }
     } else {
         if (!has_definite_main_size(flex_container()))
-            set_main_size(flex_container(), calculate_max_content_height(flex_container(), m_available_space_for_flex_container->space.width).value());
+            set_main_size(flex_container(), calculate_max_content_height(flex_container(), m_available_space_for_flex_container->space.width));
     }
 }
 
@@ -1091,9 +1091,9 @@ void FlexFormattingContext::determine_hypothetical_cross_size_of_item(FlexItem& 
 
     auto& containing_block_state = throwaway_state.get_mutable(flex_container());
     if (is_row_layout()) {
-        containing_block_state.set_content_width(item.main_size.value());
+        containing_block_state.set_content_width(item.main_size);
     } else {
-        containing_block_state.set_content_height(item.main_size.value());
+        containing_block_state.set_content_height(item.main_size);
     }
 
     auto& box_state = throwaway_state.get_mutable(item.box);
@@ -2054,13 +2054,13 @@ CSSPixelPoint FlexFormattingContext::calculate_static_position(Box const& box) c
     if (!pack_from_end)
         main_offset += specified_main_size(flex_container()) - specified_main_size(box);
 
-    auto static_position_offset = is_row_layout() ? Gfx::FloatPoint { main_offset, cross_offset } : Gfx::FloatPoint { cross_offset, main_offset };
+    auto static_position_offset = is_row_layout() ? CSSPixelPoint { main_offset, cross_offset } : CSSPixelPoint { cross_offset, main_offset };
 
     auto absolute_position_of_flex_container = absolute_content_rect(flex_container(), m_state).location();
     auto absolute_position_of_abspos_containing_block = absolute_content_rect(*box.containing_block(), m_state).location();
     auto diff = absolute_position_of_flex_container - absolute_position_of_abspos_containing_block;
 
-    return (static_position_offset + diff).to_type<CSSPixels>();
+    return static_position_offset + diff;
 }
 
 }

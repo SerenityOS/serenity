@@ -81,7 +81,7 @@ void SVGFormattingContext::run(Box const& box, LayoutMode, [[maybe_unused]] Avai
             if (maybe_view_box.has_value()) {
                 auto view_box = maybe_view_box.value();
                 CSSPixelPoint viewbox_offset = { view_box.min_x, view_box.min_y };
-                geometry_box_state.set_content_offset((path_bounding_box.top_left() + viewbox_offset).to_type<float>());
+                geometry_box_state.set_content_offset(path_bounding_box.top_left() + viewbox_offset);
 
                 geometry_box_state.set_content_width(view_box.width);
                 geometry_box_state.set_content_height(view_box.height);
@@ -89,9 +89,9 @@ void SVGFormattingContext::run(Box const& box, LayoutMode, [[maybe_unused]] Avai
                 return IterationDecision::Continue;
             }
 
-            geometry_box_state.set_content_offset(path_bounding_box.top_left().to_type<float>());
-            geometry_box_state.set_content_width(path_bounding_box.width().value());
-            geometry_box_state.set_content_height(path_bounding_box.height().value());
+            geometry_box_state.set_content_offset(path_bounding_box.top_left());
+            geometry_box_state.set_content_width(path_bounding_box.width());
+            geometry_box_state.set_content_height(path_bounding_box.height());
         }
 
         return IterationDecision::Continue;

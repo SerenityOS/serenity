@@ -48,15 +48,15 @@ struct LayoutState {
         NodeWithStyleAndBoxModelMetrics const& node() const { return *m_node; }
         void set_node(NodeWithStyleAndBoxModelMetrics&, UsedValues const* containing_block_used_values);
 
-        float content_width() const { return m_content_width; }
-        float content_height() const { return m_content_height; }
-        void set_content_width(float);
-        void set_content_height(float);
+        CSSPixels content_width() const { return m_content_width; }
+        CSSPixels content_height() const { return m_content_height; }
+        void set_content_width(CSSPixels);
+        void set_content_height(CSSPixels);
 
         // NOTE: These are used by FlexFormattingContext to assign a temporary main size to items
         //       early on, so that descendants have something to resolve percentages against.
-        void set_temporary_content_width(float);
-        void set_temporary_content_height(float);
+        void set_temporary_content_width(CSSPixels);
+        void set_temporary_content_height(CSSPixels);
 
         bool has_definite_width() const { return m_has_definite_width && width_constraint == SizeConstraint::None; }
         bool has_definite_height() const { return m_has_definite_height && height_constraint == SizeConstraint::None; }
@@ -66,52 +66,52 @@ struct LayoutState {
         // the constraint is used in that axis instead.
         AvailableSpace available_inner_space_or_constraints_from(AvailableSpace const& outer_space) const;
 
-        void set_content_offset(Gfx::FloatPoint);
-        void set_content_x(float);
-        void set_content_y(float);
+        void set_content_offset(CSSPixelPoint);
+        void set_content_x(CSSPixels);
+        void set_content_y(CSSPixels);
 
-        Gfx::FloatPoint offset;
+        CSSPixelPoint offset;
 
         SizeConstraint width_constraint { SizeConstraint::None };
         SizeConstraint height_constraint { SizeConstraint::None };
 
-        float margin_left { 0 };
-        float margin_right { 0 };
-        float margin_top { 0 };
-        float margin_bottom { 0 };
+        CSSPixels margin_left { 0 };
+        CSSPixels margin_right { 0 };
+        CSSPixels margin_top { 0 };
+        CSSPixels margin_bottom { 0 };
 
-        float border_left { 0 };
-        float border_right { 0 };
-        float border_top { 0 };
-        float border_bottom { 0 };
+        CSSPixels border_left { 0 };
+        CSSPixels border_right { 0 };
+        CSSPixels border_top { 0 };
+        CSSPixels border_bottom { 0 };
 
-        float padding_left { 0 };
-        float padding_right { 0 };
-        float padding_top { 0 };
-        float padding_bottom { 0 };
+        CSSPixels padding_left { 0 };
+        CSSPixels padding_right { 0 };
+        CSSPixels padding_top { 0 };
+        CSSPixels padding_bottom { 0 };
 
-        float inset_left { 0 };
-        float inset_right { 0 };
-        float inset_top { 0 };
-        float inset_bottom { 0 };
+        CSSPixels inset_left { 0 };
+        CSSPixels inset_right { 0 };
+        CSSPixels inset_top { 0 };
+        CSSPixels inset_bottom { 0 };
 
         Vector<LineBox> line_boxes;
 
-        float margin_box_left() const { return margin_left + border_left + padding_left; }
-        float margin_box_right() const { return margin_right + border_right + padding_right; }
-        float margin_box_top() const { return margin_top + border_top + padding_top; }
-        float margin_box_bottom() const { return margin_bottom + border_bottom + padding_bottom; }
+        CSSPixels margin_box_left() const { return margin_left + border_left + padding_left; }
+        CSSPixels margin_box_right() const { return margin_right + border_right + padding_right; }
+        CSSPixels margin_box_top() const { return margin_top + border_top + padding_top; }
+        CSSPixels margin_box_bottom() const { return margin_bottom + border_bottom + padding_bottom; }
 
-        float margin_box_width() const { return margin_box_left() + content_width() + margin_box_right(); }
-        float margin_box_height() const { return margin_box_top() + content_height() + margin_box_bottom(); }
+        CSSPixels margin_box_width() const { return margin_box_left() + content_width() + margin_box_right(); }
+        CSSPixels margin_box_height() const { return margin_box_top() + content_height() + margin_box_bottom(); }
 
-        float border_box_left() const { return border_left + padding_left; }
-        float border_box_right() const { return border_right + padding_right; }
-        float border_box_top() const { return border_top + padding_top; }
-        float border_box_bottom() const { return border_bottom + padding_bottom; }
+        CSSPixels border_box_left() const { return border_left + padding_left; }
+        CSSPixels border_box_right() const { return border_right + padding_right; }
+        CSSPixels border_box_top() const { return border_top + padding_top; }
+        CSSPixels border_box_bottom() const { return border_bottom + padding_bottom; }
 
-        float border_box_width() const { return border_box_left() + content_width() + border_box_right(); }
-        float border_box_height() const { return border_box_top() + content_height() + border_box_bottom(); }
+        CSSPixels border_box_width() const { return border_box_left() + content_width() + border_box_right(); }
+        CSSPixels border_box_height() const { return border_box_top() + content_height() + border_box_bottom(); }
 
         Optional<Painting::PaintableBox::OverflowData> overflow_data;
 
@@ -133,8 +133,8 @@ struct LayoutState {
 
         Layout::NodeWithStyleAndBoxModelMetrics* m_node { nullptr };
 
-        float m_content_width { 0 };
-        float m_content_height { 0 };
+        CSSPixels m_content_width { 0 };
+        CSSPixels m_content_height { 0 };
 
         bool m_has_definite_width { false };
         bool m_has_definite_height { false };
@@ -142,8 +142,8 @@ struct LayoutState {
         HashTable<Box const*> m_floating_descendants;
     };
 
-    float resolved_definite_width(Box const&) const;
-    float resolved_definite_height(Box const&) const;
+    CSSPixels resolved_definite_width(Box const&) const;
+    CSSPixels resolved_definite_height(Box const&) const;
 
     void commit();
 
@@ -158,17 +158,17 @@ struct LayoutState {
     // We cache intrinsic sizes once determined, as they will not change over the course of a full layout.
     // This avoids computing them several times while performing flex layout.
     struct IntrinsicSizes {
-        Optional<float> min_content_width;
-        Optional<float> max_content_width;
+        Optional<CSSPixels> min_content_width;
+        Optional<CSSPixels> max_content_width;
 
         // NOTE: Since intrinsic heights depend on the amount of available width, we have to cache
         //       three separate kinds of results, depending on the available width at the time of calculation.
-        HashMap<float, Optional<float>> min_content_height_with_definite_available_width;
-        HashMap<float, Optional<float>> max_content_height_with_definite_available_width;
-        Optional<float> min_content_height_with_min_content_available_width;
-        Optional<float> max_content_height_with_min_content_available_width;
-        Optional<float> min_content_height_with_max_content_available_width;
-        Optional<float> max_content_height_with_max_content_available_width;
+        HashMap<CSSPixels, Optional<CSSPixels>> min_content_height_with_definite_available_width;
+        HashMap<CSSPixels, Optional<CSSPixels>> max_content_height_with_definite_available_width;
+        Optional<CSSPixels> min_content_height_with_min_content_available_width;
+        Optional<CSSPixels> max_content_height_with_min_content_available_width;
+        Optional<CSSPixels> min_content_height_with_max_content_available_width;
+        Optional<CSSPixels> max_content_height_with_max_content_available_width;
     };
 
     HashMap<NodeWithStyleAndBoxModelMetrics const*, NonnullOwnPtr<IntrinsicSizes>> mutable intrinsic_sizes;
@@ -177,13 +177,13 @@ struct LayoutState {
     LayoutState const& m_root;
 };
 
-Gfx::FloatRect absolute_content_rect(Box const&, LayoutState const&);
-Gfx::FloatRect margin_box_rect(Box const&, LayoutState const&);
-Gfx::FloatRect margin_box_rect_in_ancestor_coordinate_space(Box const& box, Box const& ancestor_box, LayoutState const&);
-Gfx::FloatRect border_box_rect(Box const&, LayoutState const&);
-Gfx::FloatRect border_box_rect_in_ancestor_coordinate_space(Box const& box, Box const& ancestor_box, LayoutState const&);
-Gfx::FloatRect content_box_rect(Box const&, LayoutState const&);
-Gfx::FloatRect content_box_rect_in_ancestor_coordinate_space(Box const& box, Box const& ancestor_box, LayoutState const&);
-float box_baseline(LayoutState const& state, Box const& box);
+CSSPixelRect absolute_content_rect(Box const&, LayoutState const&);
+CSSPixelRect margin_box_rect(Box const&, LayoutState const&);
+CSSPixelRect margin_box_rect_in_ancestor_coordinate_space(Box const& box, Box const& ancestor_box, LayoutState const&);
+CSSPixelRect border_box_rect(Box const&, LayoutState const&);
+CSSPixelRect border_box_rect_in_ancestor_coordinate_space(Box const& box, Box const& ancestor_box, LayoutState const&);
+CSSPixelRect content_box_rect(Box const&, LayoutState const&);
+CSSPixelRect content_box_rect_in_ancestor_coordinate_space(Box const& box, Box const& ancestor_box, LayoutState const&);
+CSSPixels box_baseline(LayoutState const& state, Box const& box);
 
 }

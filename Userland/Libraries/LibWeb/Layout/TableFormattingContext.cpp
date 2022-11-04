@@ -174,14 +174,14 @@ void TableFormattingContext::compute_table_width(CSSPixels& extra_width)
         // If the table-root has 'width: auto', the used width is the greater of
         // min(GRIDMAX, the table’s containing block width), the used min-width of the table.
         used_width = max(min(grid_max, width_of_table_containing_block), used_min_width);
-        table_box_state.set_content_width(used_width.value());
+        table_box_state.set_content_width(used_width);
     } else {
         // If the table-root’s width property has a computed value (resolving to
         // resolved-table-width) other than auto, the used width is the greater
         // of resolved-table-width, and the used min-width of the table.
         CSSPixels resolved_table_width = computed_values.width().resolved(table_box, CSS::Length::make_px(width_of_table_containing_block)).to_px(table_box);
         used_width = max(resolved_table_width, used_min_width);
-        table_box_state.set_content_width(used_width.value());
+        table_box_state.set_content_width(used_width);
     }
 
     if (used_width > grid_min) {
@@ -212,7 +212,7 @@ void TableFormattingContext::determine_intrisic_size_of_table_container(Availabl
         CSSPixels grid_min = 0.0f;
         for (auto& column : m_columns)
             grid_min += column.min_width;
-        table_box_state.set_content_width(grid_min.value());
+        table_box_state.set_content_width(grid_min);
     }
 
     if (available_space.width.is_max_content()) {
@@ -220,7 +220,7 @@ void TableFormattingContext::determine_intrisic_size_of_table_container(Availabl
         CSSPixels grid_max = 0.0f;
         for (auto& column : m_columns)
             grid_max += column.max_width;
-        table_box_state.set_content_width(grid_max.value());
+        table_box_state.set_content_width(grid_max);
     }
 }
 
@@ -278,10 +278,10 @@ void TableFormattingContext::run(Box const& box, LayoutMode, AvailableSpace cons
         cell_state.border_left = (should_hide_borders && is_left_most_cell) ? 0 : cell.box.computed_values().border_left().width;
         cell_state.border_right = (should_hide_borders && is_right_most_cell) ? 0 : cell.box.computed_values().border_right().width;
 
-        cell_state.set_content_width((span_width - cell_state.border_box_left() - cell_state.border_box_right()).value());
+        cell_state.set_content_width((span_width - cell_state.border_box_left() - cell_state.border_box_right()));
         auto independent_formatting_context = layout_inside(cell.box, LayoutMode::Normal, cell_state.available_inner_space_or_constraints_from(available_space));
         VERIFY(independent_formatting_context);
-        cell_state.set_content_height(independent_formatting_context->automatic_content_height().value());
+        cell_state.set_content_height(independent_formatting_context->automatic_content_height());
         independent_formatting_context->parent_context_did_dimension_child_root_box();
 
         cell.baseline = box_baseline(m_state, cell.box);
@@ -300,9 +300,9 @@ void TableFormattingContext::run(Box const& box, LayoutMode, AvailableSpace cons
             row_width += column.used_width;
         }
 
-        row_state.set_content_height(row.used_width.value());
-        row_state.set_content_width(row_width.value());
-        row_state.set_content_y(row_top_offset.value());
+        row_state.set_content_height(row.used_width);
+        row_state.set_content_width(row_width);
+        row_state.set_content_y(row_top_offset);
         row_top_offset += row_state.content_height();
     }
 
@@ -312,12 +312,12 @@ void TableFormattingContext::run(Box const& box, LayoutMode, AvailableSpace cons
         CSSPixels row_group_width = 0.0f;
 
         auto& row_group_box_state = m_state.get_mutable(row_group_box);
-        row_group_box_state.set_content_y(row_group_top_offset.value());
+        row_group_box_state.set_content_y(row_group_top_offset);
 
         CSSPixels row_top_offset = 0.0f;
         row_group_box.template for_each_child_of_type<TableRowBox>([&](auto& row) {
             auto& row_state = m_state.get_mutable(row);
-            row_state.set_content_y(row_top_offset.value());
+            row_state.set_content_y(row_top_offset);
             row_group_height += row_state.border_box_height();
             row_group_width = max(row_group_width, row_state.border_box_width());
             row_top_offset += row_state.border_box_height();
@@ -325,8 +325,8 @@ void TableFormattingContext::run(Box const& box, LayoutMode, AvailableSpace cons
 
         row_group_top_offset += row_top_offset;
 
-        row_group_box_state.set_content_height(row_group_height.value());
-        row_group_box_state.set_content_width(row_group_width.value());
+        row_group_box_state.set_content_height(row_group_height);
+        row_group_box_state.set_content_width(row_group_width);
     });
 
     for (auto& cell : m_cells) {
@@ -338,16 +338,16 @@ void TableFormattingContext::run(Box const& box, LayoutMode, AvailableSpace cons
         if (vertical_align.has<CSS::VerticalAlign>()) {
             switch (vertical_align.get<CSS::VerticalAlign>()) {
             case CSS::VerticalAlign::Middle: {
-                cell_state.padding_top += ((row_content_height - cell_border_box_height) / 2).value();
-                cell_state.padding_bottom += ((row_content_height - cell_border_box_height) / 2).value();
+                cell_state.padding_top += (row_content_height - cell_border_box_height) / 2;
+                cell_state.padding_bottom += (row_content_height - cell_border_box_height) / 2;
                 break;
             }
             // FIXME: implement actual 'top' and 'bottom' support instead of fall back to 'baseline'
             case CSS::VerticalAlign::Top:
             case CSS::VerticalAlign::Bottom:
             case CSS::VerticalAlign::Baseline: {
-                cell_state.padding_top += (m_rows[cell.row_index].baseline - cell.baseline).value();
-                cell_state.padding_bottom += (row_content_height - cell_border_box_height).value();
+                cell_state.padding_top += m_rows[cell.row_index].baseline - cell.baseline;
+                cell_state.padding_bottom += row_content_height - cell_border_box_height;
                 break;
             }
             default:
@@ -355,10 +355,10 @@ void TableFormattingContext::run(Box const& box, LayoutMode, AvailableSpace cons
             }
         }
 
-        cell_state.offset = row_state.offset.translated(cell_state.border_box_left() + m_columns[cell.column_index].left_offset.value(), cell_state.border_box_top());
+        cell_state.offset = row_state.offset.translated(cell_state.border_box_left() + m_columns[cell.column_index].left_offset, cell_state.border_box_top());
     }
 
-    m_state.get_mutable(context_box()).set_content_height(total_content_height.value());
+    m_state.get_mutable(context_box()).set_content_height(total_content_height);
 
     // FIXME: This is a total hack, we should respect the 'height' property.
     m_automatic_content_height = total_content_height;
