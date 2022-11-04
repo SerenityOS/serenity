@@ -617,6 +617,11 @@ Gfx::ShareableBitmap OutOfProcessWebView::take_screenshot() const
     return {};
 }
 
+Gfx::ShareableBitmap OutOfProcessWebView::take_element_screenshot(i32 element_id)
+{
+    return client().take_element_screenshot(element_id);
+}
+
 Messages::WebContentServer::WebdriverExecuteScriptResponse OutOfProcessWebView::webdriver_execute_script(String const& body, Vector<String> const& json_arguments, Optional<u64> const& timeout, bool async)
 {
     return client().webdriver_execute_script(body, json_arguments, timeout, async);

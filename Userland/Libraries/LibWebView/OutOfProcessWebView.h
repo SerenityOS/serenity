@@ -85,6 +85,7 @@ public:
     void set_window_size(Gfx::IntSize const&);
 
     Gfx::ShareableBitmap take_screenshot() const;
+    Gfx::ShareableBitmap take_element_screenshot(i32 element_id);
 
     Messages::WebContentServer::WebdriverExecuteScriptResponse webdriver_execute_script(String const& body, Vector<String> const& json_arguments, Optional<u64> const& timeout, bool async);
 
