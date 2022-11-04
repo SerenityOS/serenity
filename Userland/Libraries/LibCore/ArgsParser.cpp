@@ -569,6 +569,25 @@ void ArgsParser::add_option(Vector<size_t>& values, char const* help_string, cha
     add_option(move(option));
 }
 
+void ArgsParser::add_option(Vector<String>& values, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode)
+{
+    Option option {
+        OptionArgumentMode::Optional,
+        help_string,
+        long_name,
+        short_name,
+        value_name,
+        [&values](char const* s) {
+            String value = s;
+            values.append(value);
+            return true;
+        },
+        hide_mode
+    };
+
+    add_option(move(option));
+}
+
 void ArgsParser::add_positional_argument(Arg&& arg)
 {
     m_positional_args.append(move(arg));
