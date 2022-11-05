@@ -152,7 +152,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
         // The first tab is created with the BrowserWindow above, so we have to do this
         // manually once after establishing the connection.
-        window->active_tab().view().set_is_webdriver_active(true);
+        window->active_tab().enable_webdriver_mode();
     }
 
     auto content_filters_watcher = TRY(Core::FileWatcher::create());

@@ -75,6 +75,7 @@ public:
     Function<Gfx::ShareableBitmap()> on_take_screenshot;
 
     WebDriverEndpoints& webdriver_endpoints() { return m_webdriver_endpoints; }
+    void enable_webdriver_mode();
 
     enum class InspectorTarget {
         Document,

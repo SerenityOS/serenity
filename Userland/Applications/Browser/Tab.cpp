@@ -128,7 +128,7 @@ Tab::Tab(BrowserWindow& window)
     m_web_content_view->set_proxy_mappings(g_proxies, g_proxy_mappings);
 
     if (!g_web_driver_connection.is_null())
-        m_web_content_view->set_is_webdriver_active(true);
+        enable_webdriver_mode();
 
     auto& go_back_button = toolbar.add_action(window.go_back_action());
     go_back_button.on_context_menu_request = [&](auto&) {
@@ -663,6 +663,11 @@ void Tab::show_event(GUI::ShowEvent&)
 void Tab::hide_event(GUI::HideEvent&)
 {
     m_web_content_view->set_visible(false);
+}
+
+void Tab::enable_webdriver_mode()
+{
+    m_web_content_view->set_is_webdriver_active(true);
 }
 
 }
