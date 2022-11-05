@@ -5,11 +5,13 @@
  */
 
 #include <LibWeb/Bindings/Intrinsics.h>
+#include <LibWeb/DOM/ElementFactory.h>
 #include <LibWeb/DOM/HTMLCollection.h>
 #include <LibWeb/HTML/HTMLTableCellElement.h>
 #include <LibWeb/HTML/HTMLTableElement.h>
 #include <LibWeb/HTML/HTMLTableRowElement.h>
 #include <LibWeb/HTML/HTMLTableSectionElement.h>
+#include <LibWeb/Namespace.h>
 
 namespace Web::HTML {
 
@@ -83,6 +85,31 @@ int HTMLTableRowElement::section_row_index() const
             return i;
     }
     return -1;
+}
+
+// https://html.spec.whatwg.org/multipage/tables.html#dom-tr-insertcell
+WebIDL::ExceptionOr<JS::NonnullGCPtr<HTMLTableCellElement>> HTMLTableRowElement::insert_cell(i32 index)
+{
+    auto cells_collection = cells();
+    auto cells_collection_size = static_cast<i32>(cells_collection->length());
+
+    // 1. If index is less than −1 or greater than the number of elements in the cells collection, then throw an "IndexSizeError" DOMException.
+    if (index < -1 || index > cells_collection_size)
+        return WebIDL::IndexSizeError::create(realm(), "Index is negative or greater than the number of cells");
+
+    // 2. Let table cell be the result of creating an element given this tr element's node document, td, and the HTML namespace.
+    auto& table_cell = static_cast<HTMLTableCellElement&>(*DOM::create_element(document(), HTML::TagNames::td, Namespace::HTML));
+
+    // 3. If index is equal to −1 or equal to the number of items in cells collection, then append table cell to this tr element.
+    if (index == -1 || index == cells_collection_size)
+        TRY(append_child(table_cell));
+
+    // 4. Otherwise, insert table cell as a child of this tr element, immediately before the indexth td or th element in the cells collection.
+    else
+        insert_before(table_cell, cells_collection->item(index));
+
+    // 5. Return table cell.
+    return JS::NonnullGCPtr(table_cell);
 }
 
 }
