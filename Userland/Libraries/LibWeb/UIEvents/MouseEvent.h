@@ -37,6 +37,10 @@ public:
     double client_x() const { return m_client_x; }
     double client_y() const { return m_client_y; }
 
+    // FIXME: Make these actually different from clientX and clientY.
+    double screen_x() const { return m_client_x; }
+    double screen_y() const { return m_client_y; }
+
     double x() const { return client_x(); }
     double y() const { return client_y(); }
 
