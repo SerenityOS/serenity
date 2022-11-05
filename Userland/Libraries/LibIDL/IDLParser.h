@@ -20,6 +20,8 @@ public:
     Parser(String filename, StringView contents, String import_base_path);
     Interface& parse();
 
+    Vector<String> imported_files() const;
+
 private:
     // https://webidl.spec.whatwg.org/#dfn-special-operation
     // A special operation is a getter, setter or deleter.

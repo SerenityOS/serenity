@@ -1055,4 +1055,8 @@ HashTable<NonnullOwnPtr<Interface>>& Parser::top_level_interfaces()
     return top_level_parser()->interfaces;
 }
 
+Vector<String> Parser::imported_files() const
+{
+    return const_cast<Parser*>(this)->top_level_resolved_imports().keys();
+}
 }
