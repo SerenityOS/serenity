@@ -39,7 +39,7 @@ public:
     GUI::Action& view_source_action() { return *m_view_source_action; }
     GUI::Action& inspect_dom_tree_action() { return *m_inspect_dom_tree_action; }
     GUI::Action& inspect_dom_node_action() { return *m_inspect_dom_node_action; }
-    GUI::Action& take_screenshot_action() { return *m_take_screenshot_action; }
+    GUI::Action& take_visible_screenshot_action() { return *m_take_visible_screenshot_action; }
 
     void content_filters_changed();
     void proxy_mappings_changed();
@@ -70,7 +70,7 @@ private:
     RefPtr<GUI::Action> m_view_source_action;
     RefPtr<GUI::Action> m_inspect_dom_tree_action;
     RefPtr<GUI::Action> m_inspect_dom_node_action;
-    RefPtr<GUI::Action> m_take_screenshot_action;
+    RefPtr<GUI::Action> m_take_visible_screenshot_action;
 
     CookieJar& m_cookie_jar;
     WindowActions m_window_actions;
