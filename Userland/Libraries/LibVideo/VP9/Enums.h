@@ -89,7 +89,7 @@ enum Partition : u8 {
     PartitionSplit = 3,
 };
 
-enum IntraMode : u8 {
+enum class PredictionMode : u8 {
     DcPred = 0,
     VPred = 1,
     HPred = 2,
@@ -100,9 +100,6 @@ enum IntraMode : u8 {
     D207Pred = 7,
     D63Pred = 8,
     TmPred = 9,
-};
-
-enum InterMode : u8 {
     NearestMv = 10,
     NearMv = 11,
     ZeroMv = 12,

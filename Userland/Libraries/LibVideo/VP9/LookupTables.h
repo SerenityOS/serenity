@@ -107,15 +107,15 @@ static constexpr int partition_tree[6] = {
 static constexpr int cols_partition_tree[2] = { -PartitionHorizontal, -PartitionSplit };
 static constexpr int rows_partition_tree[2] = { -PartitionVertical, -PartitionSplit };
 static constexpr int intra_mode_tree[18] = {
-    -DcPred, 2,
-    -TmPred, 4,
-    -VPred, 6,
+    -to_underlying(PredictionMode::DcPred), 2,
+    -to_underlying(PredictionMode::TmPred), 4,
+    -to_underlying(PredictionMode::VPred), 6,
     8, 12,
-    -HPred, 10,
-    -D135Pred, -D117Pred,
-    -D45Pred, 14,
-    -D63Pred, 16,
-    -D153Pred, -D207Pred
+    -to_underlying(PredictionMode::HPred), 10,
+    -to_underlying(PredictionMode::D135Pred), -to_underlying(PredictionMode::D117Pred),
+    -to_underlying(PredictionMode::D45Pred), 14,
+    -to_underlying(PredictionMode::D63Pred), 16,
+    -to_underlying(PredictionMode::D153Pred), -to_underlying(PredictionMode::D207Pred)
 };
 static constexpr int segment_tree[14] = {
     2, 4, 6, 8, 10, 12,
@@ -133,9 +133,9 @@ static constexpr int tx_size_16_tree[4] = {
 };
 static constexpr int tx_size_8_tree[2] = { -TX_4x4, -TX_8x8 };
 static constexpr int inter_mode_tree[6] = {
-    -(ZeroMv - NearestMv), 2,
-    -(NearestMv - NearestMv), 4,
-    -(NearMv - NearestMv), -(NewMv - NearestMv)
+    -to_underlying(PredictionMode::ZeroMv), 2,
+    -to_underlying(PredictionMode::NearestMv), 4,
+    -to_underlying(PredictionMode::NearMv), -to_underlying(PredictionMode::NewMv)
 };
 static constexpr int interp_filter_tree[4] = {
     -EightTap, 2,

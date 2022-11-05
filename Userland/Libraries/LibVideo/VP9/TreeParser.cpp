@@ -5,9 +5,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "TreeParser.h"
+#include "Enums.h"
 #include "LookupTables.h"
 #include "Parser.h"
+#include "TreeParser.h"
 
 namespace Video::VP9 {
 
@@ -34,7 +35,7 @@ template ErrorOr<int> TreeParser::parse_tree(SyntaxElementType);
 template ErrorOr<bool> TreeParser::parse_tree(SyntaxElementType);
 template ErrorOr<u8> TreeParser::parse_tree(SyntaxElementType);
 template ErrorOr<u32> TreeParser::parse_tree(SyntaxElementType);
-template ErrorOr<IntraMode> TreeParser::parse_tree(SyntaxElementType);
+template ErrorOr<PredictionMode> TreeParser::parse_tree(SyntaxElementType);
 template ErrorOr<TXSize> TreeParser::parse_tree(SyntaxElementType);
 template ErrorOr<InterpolationFilter> TreeParser::parse_tree(SyntaxElementType);
 template ErrorOr<ReferenceMode> TreeParser::parse_tree(SyntaxElementType);
@@ -214,21 +215,21 @@ u8 TreeParser::calculate_partition_probability(u8 node)
 
 u8 TreeParser::calculate_default_intra_mode_probability(u8 node)
 {
-    u32 above_mode, left_mode;
+    PredictionMode above_mode, left_mode;
     if (m_decoder.m_mi_size >= Block_8x8) {
         above_mode = AVAIL_U
             ? m_decoder.m_sub_modes[m_decoder.get_image_index(m_decoder.m_mi_row - 1, m_decoder.m_mi_col)][2]
-            : DcPred;
+            : PredictionMode::DcPred;
         left_mode = AVAIL_L
             ? m_decoder.m_sub_modes[m_decoder.get_image_index(m_decoder.m_mi_row, m_decoder.m_mi_col - 1)][1]
-            : DcPred;
+            : PredictionMode::DcPred;
     } else {
         if (m_idy) {
             above_mode = m_decoder.m_block_sub_modes[m_idx];
         } else {
             above_mode = AVAIL_U
                 ? m_decoder.m_sub_modes[m_decoder.get_image_index(m_decoder.m_mi_row - 1, m_decoder.m_mi_col)][2 + m_idx]
-                : DcPred;
+                : PredictionMode::DcPred;
         }
 
         if (m_idx) {
@@ -236,15 +237,15 @@ u8 TreeParser::calculate_default_intra_mode_probability(u8 node)
         } else {
             left_mode = AVAIL_L
                 ? m_decoder.m_sub_modes[m_decoder.get_image_index(m_decoder.m_mi_row, m_decoder.m_mi_col - 1)][1 + m_idy * 2]
-                : DcPred;
+                : PredictionMode::DcPred;
         }
     }
-    return m_decoder.m_probability_tables->kf_y_mode_probs()[above_mode][left_mode][node];
+    return m_decoder.m_probability_tables->kf_y_mode_probs()[to_underlying(above_mode)][to_underlying(left_mode)][node];
 }
 
 u8 TreeParser::calculate_default_uv_mode_probability(u8 node)
 {
-    return m_decoder.m_probability_tables->kf_uv_mode_prob()[m_decoder.m_y_mode][node];
+    return m_decoder.m_probability_tables->kf_uv_mode_prob()[to_underlying(m_decoder.m_y_mode)][node];
 }
 
 u8 TreeParser::calculate_intra_mode_probability(u8 node)
@@ -261,7 +262,7 @@ u8 TreeParser::calculate_sub_intra_mode_probability(u8 node)
 
 u8 TreeParser::calculate_uv_mode_probability(u8 node)
 {
-    m_ctx = m_decoder.m_y_mode;
+    m_ctx = to_underlying(m_decoder.m_y_mode);
     return m_decoder.m_probability_tables->uv_mode_probs()[m_ctx][node];
 }
 
