@@ -764,6 +764,255 @@ void Element::set_tab_index(i32 tab_index)
     MUST(set_attribute(HTML::AttributeNames::tabindex, String::number(tab_index)));
 }
 
+// https://drafts.csswg.org/cssom-view/#potentially-scrollable
+bool Element::is_potentially_scrollable() const
+{
+    // NOTE: Ensure that layout is up-to-date before looking at metrics.
+    const_cast<Document&>(document()).update_layout();
+
+    // An element body (which will be the body element) is potentially scrollable if all of the following conditions are true:
+    VERIFY(is<HTML::HTMLBodyElement>(this) || is<HTML::HTMLFrameSetElement>(this));
+
+    // Since this should always be the body element, the body element must have a <html> element parent. See Document::body().
+    VERIFY(parent());
+
+    // - body has an associated box.
+    // - body’s parent element’s computed value of the overflow-x or overflow-y properties is neither visible nor clip.
+    // - body’s computed value of the overflow-x or overflow-y properties is neither visible nor clip.
+    return layout_node()
+        && (parent()->layout_node()
+            && parent()->layout_node()->computed_values().overflow_x() != CSS::Overflow::Visible && parent()->layout_node()->computed_values().overflow_x() != CSS::Overflow::Clip
+            && parent()->layout_node()->computed_values().overflow_y() != CSS::Overflow::Visible && parent()->layout_node()->computed_values().overflow_y() != CSS::Overflow::Clip)
+        && (layout_node()->computed_values().overflow_x() != CSS::Overflow::Visible && layout_node()->computed_values().overflow_x() != CSS::Overflow::Clip
+            && layout_node()->computed_values().overflow_y() != CSS::Overflow::Visible && layout_node()->computed_values().overflow_y() != CSS::Overflow::Clip);
+}
+
+// https://drafts.csswg.org/cssom-view/#dom-element-scrolltop
+double Element::scroll_top() const
+{
+    // 1. Let document be the element’s node document.
+    auto& document = this->document();
+
+    // 2. If document is not the active document, return zero and terminate these steps.
+    if (!document.is_active())
+        return 0.0;
+
+    // 3. Let window be the value of document’s defaultView attribute.
+    auto* window = document.default_view();
+
+    // 4. If window is null, return zero and terminate these steps.
+    if (!window)
+        return 0.0;
+
+    // 5. If the element is the root element and document is in quirks mode, return zero and terminate these steps.
+    if (document.document_element() == this && document.in_quirks_mode())
+        return 0.0;
+
+    // NOTE: Ensure that layout is up-to-date before looking at metrics.
+    const_cast<Document&>(document).update_layout();
+
+    // 6. If the element is the root element return the value of scrollY on window.
+    if (document.document_element() == this)
+        return window->scroll_y();
+
+    // 7. If the element is the body element, document is in quirks mode, and the element is not potentially scrollable, return the value of scrollY on window.
+    if (document.body() == this && document.in_quirks_mode() && !is_potentially_scrollable())
+        return window->scroll_y();
+
+    // 8. If the element does not have any associated box, return zero and terminate these steps.
+    if (!layout_node() || !is<Layout::BlockContainer>(layout_node()))
+        return 0.0;
+
+    auto const* block_container = static_cast<Layout::BlockContainer const*>(layout_node());
+
+    // 9. Return the y-coordinate of the scrolling area at the alignment point with the top of the padding edge of the element.
+    // FIXME: Is this correct?
+    return block_container->scroll_offset().y();
+}
+
+double Element::scroll_left() const
+{
+    // 1. Let document be the element’s node document.
+    auto& document = this->document();
+
+    // 2. If document is not the active document, return zero and terminate these steps.
+    if (!document.is_active())
+        return 0.0;
+
+    // 3. Let window be the value of document’s defaultView attribute.
+    auto* window = document.default_view();
+
+    // 4. If window is null, return zero and terminate these steps.
+    if (!window)
+        return 0.0;
+
+    // 5. If the element is the root element and document is in quirks mode, return zero and terminate these steps.
+    if (document.document_element() == this && document.in_quirks_mode())
+        return 0.0;
+
+    // NOTE: Ensure that layout is up-to-date before looking at metrics.
+    const_cast<Document&>(document).update_layout();
+
+    // 6. If the element is the root element return the value of scrollX on window.
+    if (document.document_element() == this)
+        return window->scroll_x();
+
+    // 7. If the element is the body element, document is in quirks mode, and the element is not potentially scrollable, return the value of scrollX on window.
+    if (document.body() == this && document.in_quirks_mode() && !is_potentially_scrollable())
+        return window->scroll_x();
+
+    // 8. If the element does not have any associated box, return zero and terminate these steps.
+    if (!layout_node() || !is<Layout::BlockContainer>(layout_node()))
+        return 0.0;
+
+    auto const* block_container = static_cast<Layout::BlockContainer const*>(layout_node());
+
+    // 9. Return the x-coordinate of the scrolling area at the alignment point with the left of the padding edge of the element.
+    // FIXME: Is this correct?
+    return block_container->scroll_offset().x();
+}
+
+// https://drafts.csswg.org/cssom-view/#dom-element-scrollleft
+void Element::set_scroll_left(double x)
+{
+    // 1. Let x be the given value.
+
+    // 2. Normalize non-finite values for x.
+    if (!isfinite(x))
+        x = 0.0;
+
+    // 3. Let document be the element’s node document.
+    auto& document = this->document();
+
+    // 4. If document is not the active document, terminate these steps.
+    if (!document.is_active())
+        return;
+
+    // 5. Let window be the value of document’s defaultView attribute.
+    auto* window = document.default_view();
+
+    // 6. If window is null, terminate these steps.
+    if (!window)
+        return;
+
+    // 7. If the element is the root element and document is in quirks mode, terminate these steps.
+    if (document.document_element() == this && document.in_quirks_mode())
+        return;
+
+    // NOTE: Ensure that layout is up-to-date before looking at metrics or scrolling the page.
+    const_cast<Document&>(document).update_layout();
+
+    // 8. If the element is the root element invoke scroll() on window with x as first argument and scrollY on window as second argument, and terminate these steps.
+    if (document.document_element() == this) {
+        // FIXME: Implement this in terms of invoking scroll() on window.
+        if (auto* page = document.page())
+            page->client().page_did_request_scroll_to({ static_cast<float>(x), window->scroll_y() });
+
+        return;
+    }
+
+    // 9. If the element is the body element, document is in quirks mode, and the element is not potentially scrollable, invoke scroll() on window with x as first argument and scrollY on window as second argument, and terminate these steps.
+    if (document.body() == this && document.in_quirks_mode() && !is_potentially_scrollable()) {
+        // FIXME: Implement this in terms of invoking scroll() on window.
+        if (auto* page = document.page())
+            page->client().page_did_request_scroll_to({ static_cast<float>(x), window->scroll_y() });
+
+        return;
+    }
+
+    // 10. If the element does not have any associated box, the element has no associated scrolling box, or the element has no overflow, terminate these steps.
+    if (!layout_node() || !is<Layout::BlockContainer>(layout_node()))
+        return;
+
+    auto* block_container = static_cast<Layout::BlockContainer*>(layout_node());
+    if (!block_container->is_scrollable())
+        return;
+
+    // FIXME: or the element has no overflow.
+
+    // 11. Scroll the element to x,scrollTop, with the scroll behavior being "auto".
+    // FIXME: Implement this in terms of calling "scroll the element".
+    auto scroll_offset = block_container->scroll_offset();
+    scroll_offset.set_x(static_cast<float>(x));
+    block_container->set_scroll_offset(scroll_offset);
+}
+
+void Element::set_scroll_top(double y)
+{
+    // 1. Let y be the given value.
+
+    // 2. Normalize non-finite values for y.
+    if (!isfinite(y))
+        y = 0.0;
+
+    // 3. Let document be the element’s node document.
+    auto& document = this->document();
+
+    // 4. If document is not the active document, terminate these steps.
+    if (!document.is_active())
+        return;
+
+    // 5. Let window be the value of document’s defaultView attribute.
+    auto* window = document.default_view();
+
+    // 6. If window is null, terminate these steps.
+    if (!window)
+        return;
+
+    // 7. If the element is the root element and document is in quirks mode, terminate these steps.
+    if (document.document_element() == this && document.in_quirks_mode())
+        return;
+
+    // NOTE: Ensure that layout is up-to-date before looking at metrics or scrolling the page.
+    const_cast<Document&>(document).update_layout();
+
+    // 8. If the element is the root element invoke scroll() on window with scrollX on window as first argument and y as second argument, and terminate these steps.
+    if (document.document_element() == this) {
+        // FIXME: Implement this in terms of invoking scroll() on window.
+        if (auto* page = document.page())
+            page->client().page_did_request_scroll_to({ window->scroll_x(), static_cast<float>(y) });
+
+        return;
+    }
+
+    // 9. If the element is the body element, document is in quirks mode, and the element is not potentially scrollable, invoke scroll() on window with scrollX as first argument and y as second argument, and terminate these steps.
+    if (document.body() == this && document.in_quirks_mode() && !is_potentially_scrollable()) {
+        // FIXME: Implement this in terms of invoking scroll() on window.
+        if (auto* page = document.page())
+            page->client().page_did_request_scroll_to({ window->scroll_x(), static_cast<float>(y) });
+
+        return;
+    }
+
+    // 10. If the element does not have any associated box, the element has no associated scrolling box, or the element has no overflow, terminate these steps.
+    if (!layout_node() || !is<Layout::BlockContainer>(layout_node()))
+        return;
+
+    auto* block_container = static_cast<Layout::BlockContainer*>(layout_node());
+    if (!block_container->is_scrollable())
+        return;
+
+    // FIXME: or the element has no overflow.
+
+    // 11. Scroll the element to scrollLeft,y, with the scroll behavior being "auto".
+    // FIXME: Implement this in terms of calling "scroll the element".
+    auto scroll_offset = block_container->scroll_offset();
+    scroll_offset.set_y(static_cast<float>(y));
+    block_container->set_scroll_offset(scroll_offset);
+}
+
+int Element::scroll_width() const
+{
+    dbgln("FIXME: Implement Element::scroll_width() (called on element: {})", debug_description());
+    return 0;
+}
+
+int Element::scroll_height() const
+{
+    dbgln("FIXME: Implement Element::scroll_height() (called on element: {})", debug_description());
+    return 0;
+}
+
 // https://html.spec.whatwg.org/multipage/semantics-other.html#concept-element-disabled
 bool Element::is_actually_disabled() const
 {
