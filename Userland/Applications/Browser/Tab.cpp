@@ -668,6 +668,8 @@ void Tab::hide_event(GUI::HideEvent&)
 void Tab::enable_webdriver_mode()
 {
     m_web_content_view->set_is_webdriver_active(true);
+    auto& webdriver_banner = *find_descendant_of_type_named<GUI::Widget>("webdriver_banner");
+    webdriver_banner.set_visible(true);
 }
 
 }

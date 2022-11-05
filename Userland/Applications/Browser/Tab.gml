@@ -11,6 +11,26 @@
         }
     }
 
+    @GUI::Frame {
+        name: "webdriver_banner"
+        shape: "Box"
+        shadow: "Sunken"
+        thickness: 1
+        preferred_height: "shrink"
+        foreground_role: "TooltipText"
+        background_role: "Tooltip"
+        fill_with_background_color: true
+        visible: false
+        layout: @GUI::HorizontalBoxLayout {
+            margins: [0, 4]
+        }
+
+        @GUI::Label {
+            text: "This Browser window is controlled by WebDriver."
+            text_alignment: "CenterLeft"
+        }
+    }
+
     @GUI::Widget {
         name: "webview_container"
         layout: @GUI::VerticalBoxLayout {}
