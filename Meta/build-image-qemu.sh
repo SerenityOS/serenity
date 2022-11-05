@@ -50,13 +50,14 @@ if [ "$(uname -s)" = "Darwin" ]; then
 
     E2FSCK="e2fsck"
     RESIZE2FS_PATH="resize2fs"
-elif [ "$(uname -s)" = "SerenityOS" ]; then
-    E2FSCK="/usr/local/sbin/e2fsck"
-else
-    E2FSCK="/usr/sbin/e2fsck"
+elif [ ! -f "$E2FSCK" ]; then
+    E2FSCK="$(command -v e2fsck)"
 
     if [ ! -f "$E2FSCK" ]; then
-        E2FSCK=/sbin/e2fsck
+        E2FSCK="/usr/sbin/e2fsck"
+        if [ ! -f "$E2FSCK" ]; then
+            E2FSCK="/sbin/e2fsck"
+        fi
     fi
 fi
 
