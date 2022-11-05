@@ -12,25 +12,27 @@
 #include <AK/LexicalPath.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
+#include <LibCore/Stream.h>
 #include <LibIDL/IDLParser.h>
 #include <LibIDL/Types.h>
 
 extern Vector<StringView> s_header_search_paths;
 
 namespace IDL {
-void generate_constructor_header(IDL::Interface const&);
-void generate_constructor_implementation(IDL::Interface const&);
-void generate_prototype_header(IDL::Interface const&);
-void generate_prototype_implementation(IDL::Interface const&);
-void generate_iterator_prototype_header(IDL::Interface const&);
-void generate_iterator_prototype_implementation(IDL::Interface const&);
+void generate_constructor_header(IDL::Interface const&, StringBuilder&);
+void generate_constructor_implementation(IDL::Interface const&, StringBuilder&);
+void generate_prototype_header(IDL::Interface const&, StringBuilder&);
+void generate_prototype_implementation(IDL::Interface const&, StringBuilder&);
+void generate_iterator_prototype_header(IDL::Interface const&, StringBuilder&);
+void generate_iterator_prototype_implementation(IDL::Interface const&, StringBuilder&);
 }
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     Core::ArgsParser args_parser;
     StringView path;
     StringView import_base_path;
+    StringView output_path = "-"sv;
     bool constructor_header_mode = false;
     bool constructor_implementation_mode = false;
     bool prototype_header_mode = false;
@@ -54,23 +56,22 @@ int main(int argc, char** argv)
             return true;
         },
     });
+    args_parser.add_option(output_path, "Path to output generated file into", "output-path", 'o', "output-path");
     args_parser.add_positional_argument(path, "IDL file", "idl-file");
     args_parser.add_positional_argument(import_base_path, "Import base path", "import-base-path", Core::ArgsParser::Required::No);
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
-    auto file_or_error = Core::File::open(path, Core::OpenMode::ReadOnly);
-    if (file_or_error.is_error()) {
-        warnln("Failed to open {}: {}", path, file_or_error.error());
-        return 1;
-    }
+    auto file = TRY(Core::Stream::File::open(path, Core::Stream::OpenMode::Read));
 
     LexicalPath lexical_path(path);
     auto& namespace_ = lexical_path.parts_view().at(lexical_path.parts_view().size() - 2);
 
-    auto data = file_or_error.value()->read_all();
+    auto data = TRY(file->read_all());
 
     if (import_base_path.is_null())
         import_base_path = lexical_path.dirname();
+
+    auto output_file = TRY(Core::Stream::File::open_file_or_standard_stream(output_path, Core::Stream::OpenMode::Write));
 
     IDL::Parser parser(path, data, import_base_path);
     auto& interface = parser.parse();
@@ -125,23 +126,25 @@ int main(int argc, char** argv)
         }
     }
 
+    StringBuilder output_builder;
     if (constructor_header_mode)
-        IDL::generate_constructor_header(interface);
+        IDL::generate_constructor_header(interface, output_builder);
 
     if (constructor_implementation_mode)
-        IDL::generate_constructor_implementation(interface);
+        IDL::generate_constructor_implementation(interface, output_builder);
 
     if (prototype_header_mode)
-        IDL::generate_prototype_header(interface);
+        IDL::generate_prototype_header(interface, output_builder);
 
     if (prototype_implementation_mode)
-        IDL::generate_prototype_implementation(interface);
+        IDL::generate_prototype_implementation(interface, output_builder);
 
     if (iterator_prototype_header_mode)
-        IDL::generate_iterator_prototype_header(interface);
+        IDL::generate_iterator_prototype_header(interface, output_builder);
 
     if (iterator_prototype_implementation_mode)
-        IDL::generate_iterator_prototype_implementation(interface);
+        IDL::generate_iterator_prototype_implementation(interface, output_builder);
 
+    TRY(output_file->write(output_builder.string_view().bytes()));
     return 0;
 }

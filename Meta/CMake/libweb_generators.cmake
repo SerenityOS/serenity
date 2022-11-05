@@ -113,7 +113,7 @@ function (generate_js_bindings target)
             list(TRANSFORM include_paths PREPEND -i)
             add_custom_command(
                 OUTPUT "${bindings_src}"
-                COMMAND "$<TARGET_FILE:Lagom::BindingsGenerator>" "--${bindings_type}" ${include_paths} "${LIBWEB_INPUT_FOLDER}/${class}.idl" "${LIBWEB_INPUT_FOLDER}" > "${bindings_src}.tmp"
+                COMMAND "$<TARGET_FILE:Lagom::BindingsGenerator>" "--${bindings_type}" -o "${bindings_src}.tmp" ${include_paths} "${LIBWEB_INPUT_FOLDER}/${class}.idl" "${LIBWEB_INPUT_FOLDER}"
                 COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${bindings_src}.tmp" "${bindings_src}"
                 COMMAND "${CMAKE_COMMAND}" -E remove "${bindings_src}.tmp"
                 VERBATIM
