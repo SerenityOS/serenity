@@ -43,6 +43,7 @@ public:
 protected:
     TreeView();
 
+    virtual void mousedown_event(MouseEvent&) override;
     virtual void paint_event(PaintEvent&) override;
     virtual void doubleclick_event(MouseEvent&) override;
     virtual void keydown_event(KeyEvent&) override;
