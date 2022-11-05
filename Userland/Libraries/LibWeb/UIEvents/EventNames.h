@@ -17,6 +17,7 @@ namespace Web::UIEvents::EventNames {
     __ENUMERATE_UI_EVENT(click)      \
     __ENUMERATE_UI_EVENT(dblclick)   \
     __ENUMERATE_UI_EVENT(keydown)    \
+    __ENUMERATE_UI_EVENT(keypress)   \
     __ENUMERATE_UI_EVENT(keyup)      \
     __ENUMERATE_UI_EVENT(mousedown)  \
     __ENUMERATE_UI_EVENT(mouseenter) \
