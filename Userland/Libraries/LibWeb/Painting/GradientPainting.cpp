@@ -273,10 +273,13 @@ void paint_conic_gradient(PaintContext& context, Gfx::IntRect const& gradient_re
     // FIXME: Do we need/want sub-degree accuracy for the gradient line?
     GradientLine gradient_line(360, data.color_stops);
     float start_angle = (360.0f - data.start_angle) + 90.0f;
+    // Translate position/center to the center of the pixel (avoids some funky painting)
+    auto center_point = Gfx::FloatPoint { position }.translated(0.5, 0.5);
     gradient_line.paint_into_rect(context.painter(), gradient_rect, [&](int x, int y) {
-        auto point = Gfx::IntPoint { x, y } - position;
+        auto point = Gfx::FloatPoint { x, y } - center_point;
         // FIXME: We could probably get away with some approximation here:
-        return fmod((AK::atan2(float(point.y()), float(point.x())) * 180.0f / AK::Pi<float> + 360.0f + start_angle), 360.0f);
+        // Note: We need too floor the angle here or the colors will start to diverge as you get further from the center.
+        return floor(fmod((AK::atan2(point.y(), point.x()) * 180.0f / AK::Pi<float> + 360.0f + start_angle), 360.0f));
     });
 }
 
