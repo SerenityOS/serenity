@@ -246,11 +246,19 @@ void BrowserWindow::build_menus()
 
     m_take_visible_screenshot_action = GUI::Action::create(
         "Take &Visible Screenshot"sv, g_icon_bag.filetype_image, [this](auto&) {
-            if (auto result = take_screenshot(); result.is_error())
+            if (auto result = take_screenshot(ScreenshotType::Visible); result.is_error())
                 GUI::MessageBox::show_error(this, String::formatted("{}", result.error()));
         },
         this);
     m_take_visible_screenshot_action->set_status_tip("Save a screenshot of the visible portion of the current tab to the Downloads directory"sv);
+
+    m_take_full_screenshot_action = GUI::Action::create(
+        "Take &Full Screenshot"sv, g_icon_bag.filetype_image, [this](auto&) {
+            if (auto result = take_screenshot(ScreenshotType::Full); result.is_error())
+                GUI::MessageBox::show_error(this, String::formatted("{}", result.error()));
+        },
+        this);
+    m_take_full_screenshot_action->set_status_tip("Save a screenshot of the entirety of the current tab to the Downloads directory"sv);
 
     auto& inspect_menu = add_menu("&Inspect");
     inspect_menu.add_action(*m_view_source_action);
@@ -758,12 +766,22 @@ void BrowserWindow::event(Core::Event& event)
     Window::event(event);
 }
 
-ErrorOr<void> BrowserWindow::take_screenshot()
+ErrorOr<void> BrowserWindow::take_screenshot(ScreenshotType type)
 {
     if (!active_tab().on_take_screenshot)
         return {};
 
-    auto bitmap = active_tab().on_take_screenshot();
+    Gfx::ShareableBitmap bitmap;
+
+    switch (type) {
+    case ScreenshotType::Visible:
+        bitmap = active_tab().on_take_screenshot();
+        break;
+    case ScreenshotType::Full:
+        bitmap = active_tab().view().take_document_screenshot();
+        break;
+    }
+
     if (!bitmap.is_valid())
         return Error::from_string_view("Failed to take a screenshot of the current tab"sv);
 

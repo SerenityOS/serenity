@@ -406,6 +406,7 @@ Tab::Tab(BrowserWindow& window)
     m_page_context_menu->add_action(window.inspect_dom_node_action());
     m_page_context_menu->add_separator();
     m_page_context_menu->add_action(window.take_visible_screenshot_action());
+    m_page_context_menu->add_action(window.take_full_screenshot_action());
     view().on_context_menu_request = [&](auto& screen_position) {
         m_page_context_menu->popup(screen_position);
     };
