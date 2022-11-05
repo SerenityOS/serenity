@@ -2617,7 +2617,7 @@ RefPtr<StyleValue> Parser::parse_conic_gradient_function(ComponentValue const& c
     tokens.skip_whitespace();
     if (!tokens.has_next_token())
         return {};
-    if ((got_from_angle || got_color_interpolation_method) && !tokens.next_token().is(Token::Type::Comma))
+    if ((got_from_angle || got_at_position || got_color_interpolation_method) && !tokens.next_token().is(Token::Type::Comma))
         return {};
 
     // <angular-color-stop-list> =
