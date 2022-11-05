@@ -1086,8 +1086,8 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::to_string)
     // 6. Let showCalendar be ? ToCalendarNameOption(options).
     auto show_calendar = TRY(to_calendar_name_option(vm, *options));
 
-    // 7. Let showTimeZone be ? ToShowTimeZoneNameOption(options).
-    auto show_time_zone = TRY(to_show_time_zone_name_option(vm, *options));
+    // 7. Let showTimeZone be ? ToTimeZoneNameOption(options).
+    auto show_time_zone = TRY(to_time_zone_name_option(vm, *options));
 
     // 8. Let showOffset be ? ToShowOffsetOption(options).
     auto show_offset = TRY(to_show_offset_option(vm, *options));
