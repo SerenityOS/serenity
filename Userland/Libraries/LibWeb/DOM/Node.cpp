@@ -872,6 +872,19 @@ ParentNode* Node::parent_or_shadow_host()
     return verify_cast<ParentNode>(parent());
 }
 
+Element* Node::parent_or_shadow_host_element()
+{
+    if (is<ShadowRoot>(*this))
+        return static_cast<ShadowRoot&>(*this).host();
+    if (!parent())
+        return nullptr;
+    if (is<Element>(*parent()))
+        return static_cast<Element*>(parent());
+    if (is<ShadowRoot>(*parent()))
+        return static_cast<ShadowRoot&>(*parent()).host();
+    return nullptr;
+}
+
 JS::NonnullGCPtr<NodeList> Node::child_nodes()
 {
     if (!m_child_nodes) {

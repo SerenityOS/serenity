@@ -45,6 +45,9 @@ public:
     ParentNode* parent_or_shadow_host();
     ParentNode const* parent_or_shadow_host() const { return const_cast<Node*>(this)->parent_or_shadow_host(); }
 
+    Element* parent_or_shadow_host_element();
+    Element const* parent_or_shadow_host_element() const { return const_cast<Node*>(this)->parent_or_shadow_host_element(); }
+
     virtual ~Node();
 
     // FIXME: Move cleanup to the regular destructor.
