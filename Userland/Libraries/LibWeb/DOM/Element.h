@@ -72,6 +72,8 @@ public:
     NamedNodeMap const* attributes() const { return m_attributes.ptr(); }
     Vector<String> get_attribute_names() const;
 
+    JS::GCPtr<Attr> get_attribute_node(FlyString const& name) const;
+
     DOMTokenList* class_list();
 
     WebIDL::ExceptionOr<bool> matches(StringView selectors) const;

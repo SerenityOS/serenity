@@ -93,6 +93,13 @@ String Element::get_attribute(FlyString const& name) const
     return attribute->value();
 }
 
+// https://dom.spec.whatwg.org/#dom-element-getattributenode
+JS::GCPtr<Attr> Element::get_attribute_node(FlyString const& name) const
+{
+    // The getAttributeNode(qualifiedName) method steps are to return the result of getting an attribute given qualifiedName and this.
+    return m_attributes->get_attribute(name);
+}
+
 // https://dom.spec.whatwg.org/#dom-element-setattribute
 WebIDL::ExceptionOr<void> Element::set_attribute(FlyString const& name, String const& value)
 {
