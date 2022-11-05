@@ -2,6 +2,11 @@
 # Options common for the Serenity (target) and Lagom (host) builds
 #
 
+# Make relative paths in depfiles be relative to CMAKE_CURRENT_BINARY_DIR rather than to CMAKE_BINARY_DIR
+if (POLICY CMP0116)
+    cmake_policy(SET CMP0116 NEW)
+endif()
+
 serenity_option(ENABLE_COMPILETIME_FORMAT_CHECK ON CACHE BOOL "Enable compiletime format string checks")
 serenity_option(ENABLE_UNDEFINED_SANITIZER OFF CACHE BOOL "Enable undefined behavior sanitizer testing in gcc/clang")
 
