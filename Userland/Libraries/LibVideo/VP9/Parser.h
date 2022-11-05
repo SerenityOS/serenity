@@ -236,13 +236,13 @@ private:
     ReferenceFrameType m_ref_frame[2];
     bool m_is_inter { false };
     bool m_is_compound { false };
-    IntraMode m_default_intra_mode { DcPred };
-    u8 m_y_mode { 0 };
-    u8 m_block_sub_modes[4];
+    PredictionMode m_default_intra_mode { PredictionMode::DcPred };
+    PredictionMode m_y_mode { 0 };
+    PredictionMode m_block_sub_modes[4];
     u8 m_num_4x4_w { 0 };
     u8 m_num_4x4_h { 0 };
-    u8 m_uv_mode { 0 }; // FIXME: Is u8 the right size?
-    Vector<Array<IntraMode, 4>> m_sub_modes;
+    PredictionMode m_uv_mode { 0 }; // FIXME: Is u8 the right size?
+    Vector<Array<PredictionMode, 4>> m_sub_modes;
     ReferenceFrameType m_left_ref_frame[2];
     ReferenceFrameType m_above_ref_frame[2];
     bool m_left_intra { false };
@@ -278,7 +278,7 @@ private:
     Vector<bool> m_skips;
     Vector<TXSize> m_tx_sizes;
     Vector<u32> m_mi_sizes;
-    Vector<u8> m_y_modes;
+    Vector<PredictionMode> m_y_modes;
     Vector<u8> m_segment_ids;
     Vector<Array<ReferenceFrameType, 2>> m_ref_frames;
     Vector<Array<ReferenceFrameType, 2>> m_prev_ref_frames;

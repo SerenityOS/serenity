@@ -363,13 +363,13 @@ DecoderErrorOr<void> Decoder::predict_intra(u8 plane, u32 x, u32 y, bool have_le
     //     1. If plane is greater than 0, mode is set equal to uv_mode.
     //     2. Otherwise, if MiSize is greater than or equal to BLOCK_8X8, mode is set equal to y_mode.
     //     3. Otherwise, mode is set equal to sub_modes[ blockIdx ].
-    IntraMode mode;
+    PredictionMode mode;
     if (plane > 0)
-        mode = static_cast<IntraMode>(m_parser->m_uv_mode);
+        mode = m_parser->m_uv_mode;
     else if (m_parser->m_mi_size >= Block_8x8)
-        mode = static_cast<IntraMode>(m_parser->m_y_mode);
+        mode = m_parser->m_y_mode;
     else
-        mode = static_cast<IntraMode>(m_parser->m_block_sub_modes[block_index]);
+        mode = m_parser->m_block_sub_modes[block_index];
 
     // The variable log2Size specifying the base 2 logarithm of the width of the transform block is set equal to txSz + 2.
     u8 log2_of_block_size = tx_size + 2;
@@ -473,7 +473,7 @@ DecoderErrorOr<void> Decoder::predict_intra(u8 plane, u32 x, u32 y, bool have_le
 
     // FIXME: One of the two below should be a simple memcpy of 1D arrays.
     switch (mode) {
-    case IntraMode::VPred:
+    case PredictionMode::VPred:
         // − If mode is equal to V_PRED, pred[ i ][ j ] is set equal to aboveRow[ j ] with j = 0..size-1 and i = 0..size-1
         // (each row of the block is filled with a copy of aboveRow).
         for (auto j = 0u; j < block_size; j++) {
@@ -481,7 +481,7 @@ DecoderErrorOr<void> Decoder::predict_intra(u8 plane, u32 x, u32 y, bool have_le
                 predicted_sample_at(i, j) = above_row_at(j);
         }
         break;
-    case IntraMode::HPred:
+    case PredictionMode::HPred:
         // − Otherwise if mode is equal to H_PRED, pred[ i ][ j ] is set equal to leftCol[ i ] with j = 0..size-1 and i =
         // 0..size-1 (each column of the block is filled with a copy of leftCol).
         for (auto j = 0u; j < block_size; j++) {
@@ -489,7 +489,7 @@ DecoderErrorOr<void> Decoder::predict_intra(u8 plane, u32 x, u32 y, bool have_le
                 predicted_sample_at(i, j) = left_column[i];
         }
         break;
-    case IntraMode::D207Pred:
+    case PredictionMode::D207Pred:
         // − Otherwise if mode is equal to D207_PRED, the following applies:
         // 1. pred[ size - 1 ][ j ] = leftCol[ size - 1] for j = 0..size-1
         for (auto j = 0u; j < block_size; j++)
@@ -512,7 +512,7 @@ DecoderErrorOr<void> Decoder::predict_intra(u8 plane, u32 x, u32 y, bool have_le
             i--;
         }
         break;
-    case IntraMode::D45Pred:
+    case PredictionMode::D45Pred:
         // Otherwise if mode is equal to D45_PRED,
         // for i = 0..size-1, for j = 0..size-1.
         for (auto i = 0u; i < block_size; i++) {
@@ -527,7 +527,7 @@ DecoderErrorOr<void> Decoder::predict_intra(u8 plane, u32 x, u32 y, bool have_le
             }
         }
         break;
-    case IntraMode::D63Pred:
+    case PredictionMode::D63Pred:
         // Otherwise if mode is equal to D63_PRED,
         for (auto i = 0u; i < block_size; i++) {
             for (auto j = 0u; j < block_size; j++) {
@@ -543,7 +543,7 @@ DecoderErrorOr<void> Decoder::predict_intra(u8 plane, u32 x, u32 y, bool have_le
             }
         }
         break;
-    case IntraMode::D117Pred:
+    case PredictionMode::D117Pred:
         // Otherwise if mode is equal to D117_PRED, the following applies:
         // 1. pred[ 0 ][ j ] = Round2( aboveRow[ j - 1 ] + aboveRow[ j ], 1 ) for j = 0..size-1
         for (auto j = 0; j < block_size; j++)
@@ -564,7 +564,7 @@ DecoderErrorOr<void> Decoder::predict_intra(u8 plane, u32 x, u32 y, bool have_le
                 predicted_sample_at(i, j) = predicted_sample_at(i - 2, j - 1);
         }
         break;
-    case IntraMode::D135Pred:
+    case PredictionMode::D135Pred:
         // Otherwise if mode is equal to D135_PRED, the following applies:
         // 1. pred[ 0 ][ 0 ] = Round2( leftCol[ 0 ] + 2 * aboveRow[ -1 ] + aboveRow[ 0 ], 2 )
         predicted_sample_at(0, 0) = round_2(left_column[0] + 2 * above_row_at(-1) + above_row_at(0), 2);
@@ -582,7 +582,7 @@ DecoderErrorOr<void> Decoder::predict_intra(u8 plane, u32 x, u32 y, bool have_le
                 predicted_sample_at(i, j) = predicted_sample_at(i - 1, j - 1);
         }
         break;
-    case IntraMode::D153Pred:
+    case PredictionMode::D153Pred:
         // Otherwise if mode is equal to D153_PRED, the following applies:
         // 1. pred[ 0 ][ 0 ] = Round2( leftCol[ 0 ] + aboveRow[ -1 ], 1 )
         predicted_sample_at(0, 0) = round_2(left_column[0] + above_row_at(-1), 1);
@@ -605,7 +605,7 @@ DecoderErrorOr<void> Decoder::predict_intra(u8 plane, u32 x, u32 y, bool have_le
                 predicted_sample_at(i, j) = predicted_sample_at(i - 1, j - 2);
         }
         break;
-    case IntraMode::TmPred:
+    case PredictionMode::TmPred:
         // Otherwise if mode is equal to TM_PRED,
         // pred[ i ][ j ] is set equal to Clip1( aboveRow[ j ] + leftCol[ i ] - aboveRow[ -1 ] )
         // for i = 0..size-1, for j = 0..size-1.
@@ -614,7 +614,7 @@ DecoderErrorOr<void> Decoder::predict_intra(u8 plane, u32 x, u32 y, bool have_le
                 predicted_sample_at(i, j) = clip_1(m_parser->m_bit_depth, above_row_at(j) + left_column[i] - above_row_at(-1));
         }
         break;
-    case IntraMode::DcPred: {
+    case PredictionMode::DcPred: {
         // FIXME: All indices are set equally below, use memset.
         Intermediate average = 0;
 

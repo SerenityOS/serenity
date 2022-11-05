@@ -993,7 +993,7 @@ DecoderErrorOr<void> Parser::decode_block(u32 row, u32 col, BlockSubsize subsize
                 }
             } else {
                 for (size_t b = 0; b < 4; b++)
-                    m_sub_modes[pos][b] = static_cast<IntraMode>(m_block_sub_modes[b]);
+                    m_sub_modes[pos][b] = static_cast<PredictionMode>(m_block_sub_modes[b]);
             }
         }
     }
@@ -1018,7 +1018,7 @@ DecoderErrorOr<void> Parser::intra_frame_mode_info()
     m_ref_frame[1] = None;
     m_is_inter = false;
     if (m_mi_size >= Block_8x8) {
-        m_default_intra_mode = TRY_READ(m_tree_parser->parse_tree<IntraMode>(SyntaxElementType::DefaultIntraMode));
+        m_default_intra_mode = TRY_READ(m_tree_parser->parse_tree<PredictionMode>(SyntaxElementType::DefaultIntraMode));
         m_y_mode = m_default_intra_mode;
         for (auto& block_sub_mode : m_block_sub_modes)
             block_sub_mode = m_y_mode;
@@ -1028,7 +1028,7 @@ DecoderErrorOr<void> Parser::intra_frame_mode_info()
         for (auto idy = 0; idy < 2; idy += m_num_4x4_h) {
             for (auto idx = 0; idx < 2; idx += m_num_4x4_w) {
                 m_tree_parser->set_default_intra_mode_variables(idx, idy);
-                m_default_intra_mode = TRY_READ(m_tree_parser->parse_tree<IntraMode>(SyntaxElementType::DefaultIntraMode));
+                m_default_intra_mode = TRY_READ(m_tree_parser->parse_tree<PredictionMode>(SyntaxElementType::DefaultIntraMode));
                 for (auto y = 0; y < m_num_4x4_h; y++) {
                     for (auto x = 0; x < m_num_4x4_w; x++) {
                         auto index = (idy + y) * 2 + idx + x;
@@ -1039,7 +1039,7 @@ DecoderErrorOr<void> Parser::intra_frame_mode_info()
         }
         m_y_mode = m_default_intra_mode;
     }
-    m_uv_mode = TRY_READ(m_tree_parser->parse_tree<u8>(SyntaxElementType::DefaultUVMode));
+    m_uv_mode = TRY_READ(m_tree_parser->parse_tree<PredictionMode>(SyntaxElementType::DefaultUVMode));
     return {};
 }
 
@@ -1164,16 +1164,16 @@ DecoderErrorOr<void> Parser::intra_block_mode_info()
     m_ref_frame[0] = IntraFrame;
     m_ref_frame[1] = None;
     if (m_mi_size >= Block_8x8) {
-        m_y_mode = TRY_READ(m_tree_parser->parse_tree<u8>(SyntaxElementType::IntraMode));
+        m_y_mode = TRY_READ(m_tree_parser->parse_tree<PredictionMode>(SyntaxElementType::IntraMode));
         for (auto& block_sub_mode : m_block_sub_modes)
             block_sub_mode = m_y_mode;
     } else {
         m_num_4x4_w = num_4x4_blocks_wide_lookup[m_mi_size];
         m_num_4x4_h = num_4x4_blocks_high_lookup[m_mi_size];
-        u8 sub_intra_mode;
+        PredictionMode sub_intra_mode;
         for (auto idy = 0; idy < 2; idy += m_num_4x4_h) {
             for (auto idx = 0; idx < 2; idx += m_num_4x4_w) {
-                sub_intra_mode = TRY_READ(m_tree_parser->parse_tree<u8>(SyntaxElementType::SubIntraMode));
+                sub_intra_mode = TRY_READ(m_tree_parser->parse_tree<PredictionMode>(SyntaxElementType::SubIntraMode));
                 for (auto y = 0; y < m_num_4x4_h; y++) {
                     for (auto x = 0; x < m_num_4x4_w; x++)
                         m_block_sub_modes[(idy + y) * 2 + idx + x] = sub_intra_mode;
@@ -1182,7 +1182,7 @@ DecoderErrorOr<void> Parser::intra_block_mode_info()
         }
         m_y_mode = sub_intra_mode;
     }
-    m_uv_mode = TRY_READ(m_tree_parser->parse_tree<u8>(SyntaxElementType::UVMode));
+    m_uv_mode = TRY_READ(m_tree_parser->parse_tree<PredictionMode>(SyntaxElementType::UVMode));
     return {};
 }
 
@@ -1197,10 +1197,9 @@ DecoderErrorOr<void> Parser::inter_block_mode_info()
     }
     auto is_compound = m_ref_frame[1] > IntraFrame;
     if (seg_feature_active(SEG_LVL_SKIP)) {
-        m_y_mode = ZeroMv;
+        m_y_mode = PredictionMode::ZeroMv;
     } else if (m_mi_size >= Block_8x8) {
-        auto inter_mode = TRY_READ(m_tree_parser->parse_tree(SyntaxElementType::InterMode));
-        m_y_mode = NearestMv + inter_mode;
+        m_y_mode = TRY_READ(m_tree_parser->parse_tree<PredictionMode>(SyntaxElementType::InterMode));
     }
     if (m_interpolation_filter == Switchable)
         m_interp_filter = TRY_READ(m_tree_parser->parse_tree<InterpolationFilter>(SyntaxElementType::InterpFilter));
@@ -1211,9 +1210,8 @@ DecoderErrorOr<void> Parser::inter_block_mode_info()
         m_num_4x4_h = num_4x4_blocks_high_lookup[m_mi_size];
         for (auto idy = 0; idy < 2; idy += m_num_4x4_h) {
             for (auto idx = 0; idx < 2; idx += m_num_4x4_w) {
-                auto inter_mode = TRY_READ(m_tree_parser->parse_tree(SyntaxElementType::InterMode));
-                m_y_mode = NearestMv + inter_mode;
-                if (m_y_mode == NearestMv || m_y_mode == NearMv) {
+                m_y_mode = TRY_READ(m_tree_parser->parse_tree<PredictionMode>(SyntaxElementType::InterMode));
+                if (m_y_mode == PredictionMode::NearestMv || m_y_mode == PredictionMode::NearMv) {
                     for (auto j = 0; j < 1 + is_compound; j++)
                         append_sub8x8_mvs(idy * 2 + idx, j);
                 }
@@ -1273,11 +1271,11 @@ DecoderErrorOr<void> Parser::assign_mv(bool is_compound)
 {
     m_mv[1] = {};
     for (auto i = 0; i < 1 + is_compound; i++) {
-        if (m_y_mode == NewMv) {
+        if (m_y_mode == PredictionMode::NewMv) {
             TRY(read_mv(i));
-        } else if (m_y_mode == NearestMv) {
+        } else if (m_y_mode == PredictionMode::NearestMv) {
             m_mv[i] = m_nearest_mv[i];
-        } else if (m_y_mode == NearMv) {
+        } else if (m_y_mode == PredictionMode::NearMv) {
             m_mv[i] = m_near_mv[i];
         } else {
             m_mv[i] = {};
@@ -1457,9 +1455,9 @@ u32 const* Parser::get_scan(size_t plane, TXSize tx_size, u32 block_index)
         if (m_lossless || m_is_inter)
             m_tx_type = DCT_DCT;
         else
-            m_tx_type = mode_to_txfm_map[m_mi_size < Block_8x8 ? m_block_sub_modes[block_index] : m_y_mode];
+            m_tx_type = mode_to_txfm_map[to_underlying(m_mi_size < Block_8x8 ? m_block_sub_modes[block_index] : m_y_mode)];
     } else {
-        m_tx_type = mode_to_txfm_map[m_y_mode];
+        m_tx_type = mode_to_txfm_map[to_underlying(m_y_mode)];
     }
     if (tx_size == TX_4x4) {
         if (m_tx_type == ADST_DCT)
@@ -1613,7 +1611,7 @@ void Parser::find_mv_refs(ReferenceFrameType reference_frame, i32 block)
             auto candidate_index = get_image_index(candidate.row(), candidate.column());
             auto index = get_image_index(candidate.row(), candidate.column());
             different_ref_found = true;
-            context_counter += mode_2_counter[m_y_modes[index]];
+            context_counter += mode_2_counter[to_underlying(m_y_modes[index])];
 
             for (auto ref_list = 0u; ref_list < 2; ref_list++) {
                 if (m_ref_frames[candidate_index][ref_list] == reference_frame) {
