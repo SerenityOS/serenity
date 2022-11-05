@@ -89,12 +89,21 @@ struct ip_mreq_source {
 #define IPV6_V6ONLY 9
 #define IPV6_JOIN_GROUP 5
 #define IPV6_LEAVE_GROUP 6
+#define IPV6_RECVPKTINFO 10
+#define IPV6_PKTINFO 11
+#define IPV6_RECVHOPLIMIT 12
+#define IPV6_HOPLIMIT 13
 
 struct in6_addr {
     union {
         uint8_t s6_addr[16];
         uint32_t s6_addr32[4];
     };
+};
+
+struct in6_pktinfo {
+    struct in6_addr ipi6_addr;
+    uint32_t ipi6_ifindex;
 };
 
 /* clang-format off */
