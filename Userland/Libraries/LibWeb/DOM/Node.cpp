@@ -291,7 +291,7 @@ Node& Node::shadow_including_root()
     // if the object’s root is a shadow root; otherwise its root.
     auto& node_root = root();
     if (is<ShadowRoot>(node_root))
-        return verify_cast<ShadowRoot>(node_root).host()->shadow_including_root();
+        return static_cast<ShadowRoot&>(node_root).host()->shadow_including_root();
     return node_root;
 }
 
@@ -868,7 +868,7 @@ void Node::inserted()
 ParentNode* Node::parent_or_shadow_host()
 {
     if (is<ShadowRoot>(*this))
-        return verify_cast<ShadowRoot>(*this).host();
+        return static_cast<ShadowRoot&>(*this).host();
     return verify_cast<ParentNode>(parent());
 }
 
