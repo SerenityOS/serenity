@@ -35,6 +35,12 @@ static bool is_all_whitespace(StringView string)
 void TextNode::compute_text_for_rendering(bool collapse)
 {
     auto& data = dom_node().data();
+
+    if (dom_node().is_password_input()) {
+        m_text_for_rendering = String::repeated('*', data.length());
+        return;
+    }
+
     if (!collapse || data.is_empty()) {
         m_text_for_rendering = data;
         return;

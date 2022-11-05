@@ -344,6 +344,10 @@ void HTMLInputElement::create_shadow_tree_if_needed()
     m_text_node = heap().allocate<DOM::Text>(realm(), document(), initial_value);
     m_text_node->set_always_editable(m_type != TypeAttributeState::FileUpload);
     m_text_node->set_owner_input_element({}, *this);
+
+    if (m_type == TypeAttributeState::Password)
+        m_text_node->set_is_password_input({}, true);
+
     MUST(element->append_child(*m_text_node));
     MUST(shadow_root->append_child(move(element)));
     set_shadow_root(move(shadow_root));

@@ -31,6 +31,9 @@ public:
 
     WebIDL::ExceptionOr<JS::NonnullGCPtr<Text>> split_text(size_t offset);
 
+    bool is_password_input() const { return m_is_password_input; }
+    void set_is_password_input(Badge<HTML::HTMLInputElement>, bool b) { m_is_password_input = b; }
+
 protected:
     Text(Document&, String const&);
     Text(Document&, NodeType, String const&);
@@ -41,6 +44,7 @@ private:
     JS::GCPtr<HTML::HTMLInputElement> m_owner_input_element;
 
     bool m_always_editable { false };
+    bool m_is_password_input { false };
 };
 
 template<>
