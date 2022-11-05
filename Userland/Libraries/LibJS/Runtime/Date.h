@@ -62,7 +62,6 @@ u8 min_from_time(double);
 u8 sec_from_time(double);
 u16 ms_from_time(double);
 u8 week_day(double);
-double local_tza(double time, bool is_utc, Optional<StringView> time_zone_override = {});
 Crypto::SignedBigInteger get_utc_epoch_nanoseconds(i32 year, u8 month, u8 day, u8 hour, u8 minute, u8 second, u16 millisecond, u16 microsecond, u16 nanosecond);
 Vector<Crypto::SignedBigInteger> get_named_time_zone_epoch_nanoseconds(StringView time_zone_identifier, i32 year, u8 month, u8 day, u8 hour, u8 minute, u8 second, u16 millisecond, u16 microsecond, u16 nanosecond);
 i64 get_named_time_zone_offset_nanoseconds(StringView time_zone_identifier, Crypto::SignedBigInteger const& epoch_nanoseconds);
