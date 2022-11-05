@@ -1963,7 +1963,10 @@ void Document::check_favicon_after_loading_link_resource()
 {
     // https://html.spec.whatwg.org/multipage/links.html#rel-icon
     // NOTE: firefox also load favicons outside the head tag, which is against spec (see table 4.6.7)
-    auto head_element = head();
+    auto* head_element = head();
+    if (!head_element)
+        return;
+
     auto favicon_link_elements = HTMLCollection::create(*head_element, [](Element const& element) {
         if (!is<HTML::HTMLLinkElement>(element))
             return false;
