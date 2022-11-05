@@ -1970,9 +1970,8 @@ JS_DEFINE_NATIVE_FUNCTION(@class_name@::@function.name:snakecase@)
 )~~~");
 }
 
-void generate_constructor_header(IDL::Interface const& interface)
+void generate_constructor_header(IDL::Interface const& interface, StringBuilder& builder)
 {
-    StringBuilder builder;
     SourceGenerator generator { builder };
 
     generator.set("name", interface.name);
@@ -2022,13 +2021,10 @@ private:
 
 } // namespace Web::Bindings
 )~~~");
-
-    outln("{}", generator.as_string_view());
 }
 
-void generate_constructor_implementation(IDL::Interface const& interface)
+void generate_constructor_implementation(IDL::Interface const& interface, StringBuilder& builder)
 {
-    StringBuilder builder;
     SourceGenerator generator { builder };
 
     generator.set("name", interface.name);
@@ -2226,13 +2222,10 @@ void @constructor_class@::initialize(JS::Realm& realm)
     generator.append(R"~~~(
 } // namespace Web::Bindings
 )~~~");
-
-    outln("{}", generator.as_string_view());
 }
 
-void generate_prototype_header(IDL::Interface const& interface)
+void generate_prototype_header(IDL::Interface const& interface, StringBuilder& builder)
 {
-    StringBuilder builder;
     SourceGenerator generator { builder };
 
     generator.set("name", interface.name);
@@ -2346,13 +2339,10 @@ inline String idl_enum_to_string(@enum.type.name@ value) {
     generator.append(R"~~~(
 } // namespace Web::Bindings
     )~~~");
-
-    outln("{}", generator.as_string_view());
 }
 
-void generate_prototype_implementation(IDL::Interface const& interface)
+void generate_prototype_implementation(IDL::Interface const& interface, StringBuilder& builder)
 {
-    StringBuilder builder;
     SourceGenerator generator { builder };
 
     generator.set("name", interface.name);
@@ -2789,14 +2779,11 @@ JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::values)
     generator.append(R"~~~(
 } // namespace Web::Bindings
 )~~~");
-
-    outln("{}", generator.as_string_view());
 }
 
-void generate_iterator_prototype_header(IDL::Interface const& interface)
+void generate_iterator_prototype_header(IDL::Interface const& interface, StringBuilder& builder)
 {
     VERIFY(interface.pair_iterator_types.has_value());
-    StringBuilder builder;
     SourceGenerator generator { builder };
 
     generator.set("prototype_class", String::formatted("{}IteratorPrototype", interface.name));
@@ -2821,14 +2808,11 @@ private:
 
 } // namespace Web::Bindings
     )~~~");
-
-    outln("{}", generator.as_string_view());
 }
 
-void generate_iterator_prototype_implementation(IDL::Interface const& interface)
+void generate_iterator_prototype_implementation(IDL::Interface const& interface, StringBuilder& builder)
 {
     VERIFY(interface.pair_iterator_types.has_value());
-    StringBuilder builder;
     SourceGenerator generator { builder };
 
     generator.set("name", String::formatted("{}Iterator", interface.name));
@@ -2909,7 +2893,5 @@ JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::next)
 
 } // namespace Web::Bindings
 )~~~");
-
-    outln("{}", generator.as_string_view());
 }
 }
