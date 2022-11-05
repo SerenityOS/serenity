@@ -510,15 +510,24 @@ void MainWidget::initialize_menubar(GUI::Window& window)
     m_view_menu->add_action(*m_show_active_layer_boundary_action);
 
     m_view_menu->add_separator();
-    auto& scopes_menu = m_view_menu->add_submenu("&Scopes");
 
-    scopes_menu.add_action(GUI::Action::create_checkable("&Histogram", [&](auto& action) {
+    auto histogram_action = GUI::Action::create_checkable("&Histogram", [&](auto& action) {
+        Config::write_bool("PixelPaint"sv, "Scopes"sv, "ShowHistogram"sv, action.is_checked());
         m_histogram_widget->parent_widget()->set_visible(action.is_checked());
-    }));
+    });
+    histogram_action->set_checked(Config::read_bool("PixelPaint"sv, "Scopes"sv, "ShowHistogram"sv, false));
+    m_histogram_widget->parent_widget()->set_visible(histogram_action->is_checked());
 
-    scopes_menu.add_action(GUI::Action::create_checkable("&Vectorscope", [&](auto& action) {
+    auto vectorscope_action = GUI::Action::create_checkable("&Vectorscope", [&](auto& action) {
+        Config::write_bool("PixelPaint"sv, "Scopes"sv, "ShowVectorscope"sv, action.is_checked());
         m_vectorscope_widget->parent_widget()->set_visible(action.is_checked());
-    }));
+    });
+    vectorscope_action->set_checked(Config::read_bool("PixelPaint"sv, "Scopes"sv, "ShowVectorscope"sv, false));
+    m_vectorscope_widget->parent_widget()->set_visible(vectorscope_action->is_checked());
+
+    auto& scopes_menu = m_view_menu->add_submenu("&Scopes");
+    scopes_menu.add_action(histogram_action);
+    scopes_menu.add_action(vectorscope_action);
 
     m_tool_menu = window.add_menu("&Tool");
     m_toolbox->for_each_tool([&](auto& tool) {
