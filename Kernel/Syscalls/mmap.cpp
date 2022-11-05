@@ -563,7 +563,7 @@ ErrorOr<FlatPtr> Process::sys$allocate_tls(Userspace<char const*> initial_data, 
 
 ErrorOr<FlatPtr> Process::sys$msyscall(Userspace<void*> address)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
+    VERIFY_NO_PROCESS_BIG_LOCK(this);
 
     return address_space().with([&](auto& space) -> ErrorOr<FlatPtr> {
         if (space->enforces_syscall_regions())
