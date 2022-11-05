@@ -159,6 +159,16 @@ public:
     i32 tab_index() const;
     void set_tab_index(i32 tab_index);
 
+    bool is_potentially_scrollable() const;
+
+    double scroll_top() const;
+    double scroll_left() const;
+    void set_scroll_top(double y);
+    void set_scroll_left(double x);
+
+    int scroll_width() const;
+    int scroll_height() const;
+
     bool is_actually_disabled() const;
 
     WebIDL::ExceptionOr<JS::GCPtr<Element>> insert_adjacent_element(String const& where, JS::NonnullGCPtr<Element> element);

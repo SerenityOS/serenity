@@ -298,6 +298,7 @@ public:
     WebIDL::ExceptionOr<void> close();
 
     HTML::Window* default_view() { return m_window.ptr(); }
+    HTML::Window const* default_view() const { return m_window.ptr(); }
 
     String const& content_type() const { return m_content_type; }
     void set_content_type(String const& content_type) { m_content_type = content_type; }
