@@ -38,6 +38,8 @@ public:
     void set_window_position(Gfx::IntPoint const&);
     void set_window_size(Gfx::IntSize const&);
 
+    Gfx::IntSize const& content_size() const { return m_content_size; }
+
 private:
     // ^PageClient
     virtual Gfx::Palette palette() const override;
@@ -81,6 +83,7 @@ private:
     NonnullOwnPtr<Web::Page> m_page;
     RefPtr<Gfx::PaletteImpl> m_palette_impl;
     Gfx::IntRect m_screen_rect;
+    Gfx::IntSize m_content_size;
     bool m_should_show_line_box_borders { false };
     bool m_has_focus { false };
 
