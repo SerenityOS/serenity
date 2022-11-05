@@ -2280,6 +2280,13 @@ void Document::did_stop_being_active_document_in_browsing_context(Badge<HTML::Br
     tear_down_layout_tree();
 }
 
+// https://w3c.github.io/editing/docs/execCommand/#querycommandsupported()
+bool Document::query_command_supported(String const& command) const
+{
+    dbgln("(STUBBED) Document::query_command_supported(command='{}')", command);
+    return false;
+}
+
 // https://html.spec.whatwg.org/multipage/scripting.html#appropriate-template-contents-owner-document
 JS::NonnullGCPtr<DOM::Document> Document::appropriate_template_contents_owner_document()
 {
