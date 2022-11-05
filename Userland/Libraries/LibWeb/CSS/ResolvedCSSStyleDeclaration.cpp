@@ -570,4 +570,11 @@ String ResolvedCSSStyleDeclaration::serialized() const
     return String::empty();
 }
 
+// https://drafts.csswg.org/cssom/#dom-cssstyledeclaration-csstext
+WebIDL::ExceptionOr<void> ResolvedCSSStyleDeclaration::set_css_text(StringView)
+{
+    // 1. If the computed flag is set, then throw a NoModificationAllowedError exception.
+    return WebIDL::NoModificationAllowedError::create(realm(), "Cannot modify properties in result of getComputedStyle()");
+}
+
 }
