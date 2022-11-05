@@ -20,6 +20,8 @@ public:
     Parser(DeprecatedString filename, StringView contents, DeprecatedString import_base_path);
     Interface& parse();
 
+    Vector<DeprecatedString> imported_files() const;
+
 private:
     // https://webidl.spec.whatwg.org/#dfn-special-operation
     // A special operation is a getter, setter or deleter.

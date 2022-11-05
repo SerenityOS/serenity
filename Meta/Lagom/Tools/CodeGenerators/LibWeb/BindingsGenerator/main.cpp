@@ -33,6 +33,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     StringView path;
     StringView import_base_path;
     StringView output_path = "-"sv;
+    StringView depfile_path;
+    StringView depfile_target;
     bool constructor_header_mode = false;
     bool constructor_implementation_mode = false;
     bool prototype_header_mode = false;
@@ -57,6 +59,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         },
     });
     args_parser.add_option(output_path, "Path to output generated file into", "output-path", 'o', "output-path");
+    args_parser.add_option(depfile_path, "Path to write dependency file to", "depfile", 'd', "depfile-path");
+    args_parser.add_option(depfile_target, "Name of target in the depfile (default: output path)", "depfile-target", 't', "target");
     args_parser.add_positional_argument(path, "IDL file", "idl-file");
     args_parser.add_positional_argument(import_base_path, "Import base path", "import-base-path", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
@@ -66,7 +70,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     LexicalPath lexical_path(path);
     auto& namespace_ = lexical_path.parts_view().at(lexical_path.parts_view().size() - 2);
 
-    auto data = TRY(file->read_all());
+    auto data = TRY(file->read_until_eof());
 
     if (import_base_path.is_null())
         import_base_path = lexical_path.dirname();
@@ -146,5 +150,19 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         IDL::generate_iterator_prototype_implementation(interface, output_builder);
 
     TRY(output_file->write(output_builder.string_view().bytes()));
+
+    if (!depfile_path.is_null()) {
+        auto depfile = TRY(Core::Stream::File::open_file_or_standard_stream(depfile_path, Core::Stream::OpenMode::Write));
+
+        StringBuilder depfile_builder;
+        depfile_builder.append(depfile_target.is_null() ? output_path : depfile_target);
+        depfile_builder.append(':');
+        for (auto const& path : parser.imported_files()) {
+            depfile_builder.append(" \\\n "sv);
+            depfile_builder.append(path);
+        }
+        depfile_builder.append('\n');
+        TRY(depfile->write(depfile_builder.string_view().bytes()));
+    }
     return 0;
 }

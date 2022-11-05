@@ -111,14 +111,27 @@ function (generate_js_bindings target)
             list(GET BINDINGS_TYPES ${iter} bindings_type)
             get_property(include_paths DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY INCLUDE_DIRECTORIES)
             list(TRANSFORM include_paths PREPEND -i)
+
+            # Ninja expects the target name in depfiles to be relative to CMAKE_BINARY_DIR, but ${bindings_src} is
+            # relative to CMAKE_CURRENT_BINARY_DIR. CMake >= 3.20 can do the rewriting transparently (CMP0116).
+            if(CMAKE_GENERATOR MATCHES "^Ninja" AND NOT POLICY CMP0116)
+                # FIXME: Drop this branch for cmake_minimum_required(3.20)
+                get_filename_component(full_path ${bindings_src} ABSOLUTE BASE_DIR ${CMAKE_CURRENT_BINARY_DIR})
+                file(RELATIVE_PATH depfile_target ${CMAKE_BINARY_DIR} ${full_path})
+            else()
+                set(depfile_target ${bindings_src})
+            endif()
+
             add_custom_command(
                 OUTPUT "${bindings_src}"
-                COMMAND "$<TARGET_FILE:Lagom::BindingsGenerator>" "--${bindings_type}" -o "${bindings_src}.tmp" ${include_paths} "${LIBWEB_INPUT_FOLDER}/${class}.idl" "${LIBWEB_INPUT_FOLDER}"
+                COMMAND "$<TARGET_FILE:Lagom::BindingsGenerator>" "--${bindings_type}" -o "${bindings_src}.tmp" --depfile "${bindings_src}.d"
+                        --depfile-target "${depfile_target}" ${include_paths} "${LIBWEB_INPUT_FOLDER}/${class}.idl" "${LIBWEB_INPUT_FOLDER}"
                 COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${bindings_src}.tmp" "${bindings_src}"
                 COMMAND "${CMAKE_COMMAND}" -E remove "${bindings_src}.tmp"
                 VERBATIM
                 DEPENDS Lagom::BindingsGenerator
                 MAIN_DEPENDENCY ${class}.idl
+                DEPFILE ${CMAKE_CURRENT_BINARY_DIR}/${bindings_src}.d
             )
         endforeach()
 
