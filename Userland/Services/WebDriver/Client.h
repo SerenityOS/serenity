@@ -87,6 +87,7 @@ private:
     ErrorOr<JsonValue, WebDriverError> handle_delete_cookie(Vector<StringView> const&, JsonValue const& payload);
     ErrorOr<JsonValue, WebDriverError> handle_delete_all_cookies(Vector<StringView> const&, JsonValue const& payload);
     ErrorOr<JsonValue, WebDriverError> handle_take_screenshot(Vector<StringView> const&, JsonValue const& payload);
+    ErrorOr<JsonValue, WebDriverError> handle_take_element_screenshot(Vector<StringView> const&, JsonValue const& payload);
 
     ErrorOr<Session*, WebDriverError> find_session_with_id(StringView session_id);
     JsonValue make_json_value(JsonValue const&);

@@ -218,6 +218,16 @@ Messages::WebDriverSessionClient::QuerySelectorAllResponse WebDriverConnection::
     return { {} };
 }
 
+void WebDriverConnection::scroll_element_into_view(i32 element_id)
+{
+    dbgln("WebDriverConnection: scroll_element_into_view {}", element_id);
+    if (auto browser_window = m_browser_window.strong_ref()) {
+        auto& tab = browser_window->active_tab();
+        if (tab.webdriver_endpoints().on_scroll_element_into_view)
+            tab.webdriver_endpoints().on_scroll_element_into_view(element_id);
+    }
+}
+
 Messages::WebDriverSessionClient::IsElementSelectedResponse WebDriverConnection::is_element_selected(i32 element_id)
 {
     dbgln("WebDriverConnection: is_element_selected {}", element_id);
@@ -324,6 +334,18 @@ Messages::WebDriverSessionClient::TakeScreenshotResponse WebDriverConnection::ta
         auto& tab = browser_window->active_tab();
         if (tab.on_take_screenshot)
             return { tab.on_take_screenshot() };
+    }
+
+    return { {} };
+}
+
+Messages::WebDriverSessionClient::TakeElementScreenshotResponse WebDriverConnection::take_element_screenshot(i32 element_id)
+{
+    dbgln_if(WEBDRIVER_DEBUG, "WebDriverConnection: take_element_screenshot {}", element_id);
+    if (auto browser_window = m_browser_window.strong_ref()) {
+        auto& tab = browser_window->active_tab();
+        if (tab.webdriver_endpoints().on_take_element_screenshot)
+            return { tab.webdriver_endpoints().on_take_element_screenshot(element_id) };
     }
 
     return { {} };
