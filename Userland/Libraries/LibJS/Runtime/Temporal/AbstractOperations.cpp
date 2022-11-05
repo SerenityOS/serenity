@@ -253,8 +253,8 @@ ThrowCompletionOr<String> to_calendar_name_option(VM& vm, Object const& normaliz
     return option.as_string().string();
 }
 
-// 13.10 ToShowTimeZoneNameOption ( normalizedOptions ), https://tc39.es/proposal-temporal/#sec-temporal-toshowtimezonenameoption
-ThrowCompletionOr<String> to_show_time_zone_name_option(VM& vm, Object const& normalized_options)
+// 13.10 ToTimeZoneNameOption ( normalizedOptions ), https://tc39.es/proposal-temporal/#sec-temporal-totimezonenameoption
+ThrowCompletionOr<String> to_time_zone_name_option(VM& vm, Object const& normalized_options)
 {
     // 1. Return ? GetOption(normalizedOptions, "timeZoneName", "string", « "auto", "never", "critical" », "auto").
     auto option = TRY(get_option(vm, normalized_options, vm.names.timeZoneName, OptionType::String, { "auto"sv, "never"sv, "critical"sv }, "auto"sv));
