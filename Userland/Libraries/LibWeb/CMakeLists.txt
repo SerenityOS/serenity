@@ -178,6 +178,7 @@ set(SOURCES
     HTML/EventLoop/Task.cpp
     HTML/EventLoop/TaskQueue.cpp
     HTML/EventNames.cpp
+    HTML/Focus.cpp
     HTML/FormAssociatedElement.cpp
     HTML/GlobalEventHandlers.cpp
     HTML/History.cpp
