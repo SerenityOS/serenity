@@ -46,7 +46,7 @@ public:
     String get_property_priority(StringView property) const;
 
     String css_text() const;
-    void set_css_text(StringView);
+    virtual WebIDL::ExceptionOr<void> set_css_text(StringView) = 0;
 
     virtual String serialized() const = 0;
 
@@ -81,11 +81,15 @@ public:
     size_t custom_property_count() const { return m_custom_properties.size(); }
 
     virtual String serialized() const final override;
+    virtual WebIDL::ExceptionOr<void> set_css_text(StringView) override;
 
 protected:
     PropertyOwningCSSStyleDeclaration(JS::Realm&, Vector<StyleProperty>, HashMap<String, StyleProperty>);
 
     virtual void update_style_attribute() { }
+
+    void empty_the_declarations();
+    void set_the_declarations(Vector<StyleProperty> properties, HashMap<String, StyleProperty> custom_properties);
 
 private:
     bool set_a_css_declaration(PropertyID, NonnullRefPtr<StyleValue>, Important);
@@ -106,6 +110,8 @@ public:
     const DOM::Element* element() const { return m_element.ptr(); }
 
     bool is_updating() const { return m_updating; }
+
+    virtual WebIDL::ExceptionOr<void> set_css_text(StringView) override;
 
 private:
     ElementInlineCSSStyleDeclaration(DOM::Element&, Vector<StyleProperty> properties, HashMap<String, StyleProperty> custom_properties);

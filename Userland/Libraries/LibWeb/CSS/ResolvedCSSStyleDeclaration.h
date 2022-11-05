@@ -25,6 +25,7 @@ public:
     virtual WebIDL::ExceptionOr<String> remove_property(PropertyID) override;
 
     virtual String serialized() const override;
+    virtual WebIDL::ExceptionOr<void> set_css_text(StringView) override;
 
 private:
     explicit ResolvedCSSStyleDeclaration(DOM::Element&);

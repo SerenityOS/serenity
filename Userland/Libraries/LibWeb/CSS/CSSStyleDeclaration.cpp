@@ -232,15 +232,14 @@ WebIDL::ExceptionOr<String> CSSStyleDeclaration::remove_property(StringView prop
     return remove_property(property_id);
 }
 
+// https://drafts.csswg.org/cssom/#dom-cssstyledeclaration-csstext
 String CSSStyleDeclaration::css_text() const
 {
-    TODO();
-    return "";
-}
+    // 1. If the computed flag is set, then return the empty string.
+    // NOTE: See ResolvedCSSStyleDeclaration::serialized()
 
-void CSSStyleDeclaration::set_css_text(StringView)
-{
-    TODO();
+    // 2. Return the result of serializing the declarations.
+    return serialized();
 }
 
 // https://www.w3.org/TR/cssom/#serialize-a-css-declaration
@@ -358,6 +357,49 @@ JS::ThrowCompletionOr<bool> CSSStyleDeclaration::internal_set(JS::PropertyKey co
 
     TRY(Bindings::throw_dom_exception_if_needed(vm, [&] { return set_property(property_id, css_text); }));
     return true;
+}
+
+WebIDL::ExceptionOr<void> PropertyOwningCSSStyleDeclaration::set_css_text(StringView css_text)
+{
+    dbgln("(STUBBED) PropertyOwningCSSStyleDeclaration::set_css_text(css_text='{}')", css_text);
+    return {};
+}
+
+void PropertyOwningCSSStyleDeclaration::empty_the_declarations()
+{
+    m_properties.clear();
+    m_custom_properties.clear();
+}
+
+void PropertyOwningCSSStyleDeclaration::set_the_declarations(Vector<StyleProperty> properties, HashMap<String, StyleProperty> custom_properties)
+{
+    m_properties = move(properties);
+    m_custom_properties = move(custom_properties);
+}
+
+// https://drafts.csswg.org/cssom/#dom-cssstyledeclaration-csstext
+WebIDL::ExceptionOr<void> ElementInlineCSSStyleDeclaration::set_css_text(StringView css_text)
+{
+    // FIXME: What do we do if the element is null?
+    if (!m_element) {
+        dbgln("FIXME: Returning from ElementInlineCSSStyleDeclaration::set_css_text as m_element is null.");
+        return {};
+    }
+
+    // 1. If the computed flag is set, then throw a NoModificationAllowedError exception.
+    // NOTE: See ResolvedCSSStyleDeclaration.
+
+    // 2. Empty the declarations.
+    empty_the_declarations();
+
+    // 3. Parse the given value and, if the return value is not the empty list, insert the items in the list into the declarations, in specified order.
+    auto style = parse_css_style_attribute(CSS::Parser::ParsingContext(m_element->document()), css_text, *m_element.ptr());
+    set_the_declarations(style->properties(), style->custom_properties());
+
+    // 4. Update style attribute for the CSS declaration block.
+    update_style_attribute();
+
+    return {};
 }
 
 }
