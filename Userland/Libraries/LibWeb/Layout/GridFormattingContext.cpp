@@ -67,7 +67,6 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
         int row_span { 1 };
         int column { 0 };
         int column_span { 1 };
-        float computed_height { 0 };
     };
     Vector<PositionedBox> positioned_boxes;
     Vector<Box const&> boxes_to_place;
@@ -655,16 +654,6 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
         i--;
 
         // FIXME: 4.2. For dense packing:
-    }
-
-    for (auto& positioned_box : positioned_boxes) {
-        auto& child_box_state = m_state.get_mutable(positioned_box.box);
-        if (child_box_state.content_height() > positioned_box.computed_height)
-            positioned_box.computed_height = child_box_state.content_height();
-        if (child_box_state.content_height() > positioned_box.computed_height)
-            positioned_box.computed_height = child_box_state.content_height();
-        if (auto min_content_height = calculate_min_content_height(positioned_box.box, available_space.width); min_content_height > positioned_box.computed_height)
-            positioned_box.computed_height = min_content_height;
     }
 
     // https://drafts.csswg.org/css-grid/#overview-sizing
@@ -1370,7 +1359,7 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
         // the size of the item’s content, it is considered a type of intrinsic size contribution.
         float grid_row_height = 0;
         for (auto& positioned_box : positioned_boxes_of_row)
-            grid_row_height = max(grid_row_height, positioned_box.computed_height);
+            grid_row_height = max(grid_row_height, calculate_min_content_height(positioned_box.box, AvailableSize::make_definite(m_grid_columns[positioned_box.column].base_size)));
         grid_row.base_size = grid_row_height;
 
         // - For min-content maximums:
