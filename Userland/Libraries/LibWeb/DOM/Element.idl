@@ -1,4 +1,5 @@
 #import <CSS/CSSStyleDeclaration.idl>
+#import <DOM/Attr.idl>
 #import <DOM/ChildNode.idl>
 #import <DOM/DOMTokenList.idl>
 #import <DOM/InnerHTML.idl>
@@ -37,6 +38,8 @@ interface Element : Node {
     boolean hasAttributes();
     [SameObject] readonly attribute NamedNodeMap attributes;
     sequence<DOMString> getAttributeNames();
+
+    Attr? getAttributeNode(DOMString qualifiedName);
 
     HTMLCollection getElementsByTagName(DOMString tagName);
     HTMLCollection getElementsByTagNameNS(DOMString? namespace, DOMString localName);
