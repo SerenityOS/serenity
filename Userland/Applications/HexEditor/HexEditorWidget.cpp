@@ -573,6 +573,8 @@ void HexEditorWidget::drop_event(GUI::DropEvent& event)
         if (urls.is_empty())
             return;
         window()->move_to_front();
+        if (!request_close())
+            return;
 
         // TODO: A drop event should be considered user consent for opening a file
         auto response = FileSystemAccessClient::Client::the().try_request_file(window(), urls.first().path(), Core::OpenMode::ReadOnly);
