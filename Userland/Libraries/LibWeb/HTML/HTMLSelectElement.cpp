@@ -129,4 +129,17 @@ i32 HTMLSelectElement::default_tab_index_value() const
     return 0;
 }
 
+// https://html.spec.whatwg.org/multipage/form-elements.html#dom-select-type
+String const& HTMLSelectElement::type() const
+{
+    // The type IDL attribute, on getting, must return the string "select-one" if the multiple attribute is absent, and the string "select-multiple" if the multiple attribute is present.
+    static String select_one = "select-one"sv;
+    static String select_multiple = "select-multiple"sv;
+
+    if (!has_attribute(AttributeNames::multiple))
+        return select_one;
+
+    return select_multiple;
+}
+
 }
