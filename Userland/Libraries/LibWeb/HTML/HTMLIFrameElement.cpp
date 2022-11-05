@@ -48,7 +48,6 @@ void HTMLIFrameElement::inserted()
 
         // 3. Process the iframe attributes for element, with initialInsertion set to true.
         process_the_iframe_attributes(true);
-        load_src(attribute(HTML::AttributeNames::src));
     }
 }
 
