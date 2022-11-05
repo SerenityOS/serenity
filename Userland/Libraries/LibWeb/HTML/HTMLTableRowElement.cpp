@@ -112,4 +112,28 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<HTMLTableCellElement>> HTMLTableRowElement:
     return JS::NonnullGCPtr(table_cell);
 }
 
+// https://html.spec.whatwg.org/multipage/tables.html#dom-tr-deletecell
+WebIDL::ExceptionOr<void> HTMLTableRowElement::delete_cell(i32 index)
+{
+    auto cells_collection = cells();
+    auto cells_collection_size = static_cast<i32>(cells_collection->length());
+
+    // 1. If index is less than −1 or greater than or equal to the number of elements in the cells collection, then throw an "IndexSizeError" DOMException.
+    if (index < -1 || index >= cells_collection_size)
+        return WebIDL::IndexSizeError::create(realm(), "Index is negative or greater than or equal to the number of cells");
+
+    // 2. If index is −1, then remove the last element in the cells collection from its parent, or do nothing if the cells collection is empty.
+    if (index == -1) {
+        if (cells_collection_size > 0)
+            cells_collection->item(cells_collection_size - 1)->remove();
+    }
+
+    // 3. Otherwise, remove the indexth element in the cells collection from its parent.
+    else {
+        cells_collection->item(index)->remove();
+    }
+
+    return {};
+}
+
 }

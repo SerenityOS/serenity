@@ -18,4 +18,5 @@ interface HTMLTableRowElement : HTMLElement {
 
     [SameObject] readonly attribute HTMLCollection cells;
     HTMLTableCellElement insertCell(optional long index = -1);
+    [CEReactions] undefined deleteCell(long index);
 };
