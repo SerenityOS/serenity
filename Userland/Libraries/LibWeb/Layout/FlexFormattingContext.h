@@ -30,6 +30,9 @@ public:
     virtual Gfx::FloatPoint calculate_static_position(Box const&) const override;
 
 private:
+    [[nodiscard]] bool should_treat_main_size_as_auto(Box const&) const;
+    [[nodiscard]] bool should_treat_cross_size_as_auto(Box const&) const;
+
     void dump_items() const;
 
     struct DirectionAgnosticMargins {
