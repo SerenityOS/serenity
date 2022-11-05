@@ -55,6 +55,7 @@ namespace AttributeNames {
     __ENUMERATE_HTML_ATTRIBUTE(declare)                    \
     __ENUMERATE_HTML_ATTRIBUTE(default_)                   \
     __ENUMERATE_HTML_ATTRIBUTE(defer)                      \
+    __ENUMERATE_HTML_ATTRIBUTE(dir)                        \
     __ENUMERATE_HTML_ATTRIBUTE(direction)                  \
     __ENUMERATE_HTML_ATTRIBUTE(dirname)                    \
     __ENUMERATE_HTML_ATTRIBUTE(disabled)                   \

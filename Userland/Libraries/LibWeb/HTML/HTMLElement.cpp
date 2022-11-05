@@ -53,6 +53,24 @@ void HTMLElement::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_dataset.ptr());
 }
 
+// https://html.spec.whatwg.org/multipage/dom.html#dom-dir
+String HTMLElement::dir() const
+{
+    auto dir = attribute(HTML::AttributeNames::dir);
+#define __ENUMERATE_HTML_ELEMENT_DIR_ATTRIBUTE(keyword) \
+    if (dir.equals_ignoring_case(#keyword##sv))         \
+        return #keyword##sv;
+    ENUMERATE_HTML_ELEMENT_DIR_ATTRIBUTES
+#undef __ENUMERATE_HTML_ELEMENT_DIR_ATTRIBUTE
+
+    return {};
+}
+
+void HTMLElement::set_dir(String const& dir)
+{
+    MUST(set_attribute(HTML::AttributeNames::dir, dir));
+}
+
 HTMLElement::ContentEditableState HTMLElement::content_editable_state() const
 {
     auto contenteditable = attribute(HTML::AttributeNames::contenteditable);
