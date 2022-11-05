@@ -18,6 +18,8 @@ if [ -z "${HOST_CC:=}" ]; then
     export HOST_PKG_CONFIG_DIR="${PKG_CONFIG_DIR:=}"
     export HOST_PKG_CONFIG_SYSROOT_DIR="${PKG_CONFIG_SYSROOT_DIR:=}"
     export HOST_PKG_CONFIG_LIBDIR="${PKG_CONFIG_LIBDIR:=}"
+    unset CARGO_BUILD_TARGET
+    export HOST_CARGO_HOME="${CARGO_HOME:=}"
 fi
 
 export SERENITY_SOURCE_DIR="$(realpath "${SCRIPT}/../")"
@@ -33,6 +35,9 @@ if [ "$SERENITY_TOOLCHAIN" = "Clang" ]; then
     export OBJCOPY="llvm-objcopy"
     export STRIP="llvm-strip"
     export CXXFILT="llvm-cxxfilt"
+    export SERENITY_RUST_DIR="${SERENITY_SOURCE_DIR}/Toolchain/Local/rust"
+    export CARGO_BUILD_TARGET="${SERENITY_ARCH}-unknown-serenity"
+    export CARGO_HOME="${SERENITY_RUST_DIR}/.cargo"
 else
     export SERENITY_BUILD_DIR="${SERENITY_SOURCE_DIR}/Build/${SERENITY_ARCH}"
     export SERENITY_TOOLCHAIN_BINDIR="${SERENITY_SOURCE_DIR}/Toolchain/Local/${SERENITY_ARCH}/bin"
@@ -47,6 +52,10 @@ else
 fi
 
 export PATH="${SERENITY_TOOLCHAIN_BINDIR}:${HOST_PATH}"
+
+if [ ! -z "${SERENITY_RUST_DIR+x}" ]; then
+    export PATH="${SERENITY_RUST_DIR}/bin:${PATH}"
+fi
 
 export PKG_CONFIG_DIR=""
 export PKG_CONFIG_SYSROOT_DIR="${SERENITY_BUILD_DIR}/Root"
