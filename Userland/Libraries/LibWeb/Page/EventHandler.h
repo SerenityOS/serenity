@@ -39,6 +39,8 @@ private:
     bool focus_next_element();
     bool focus_previous_element();
 
+    bool fire_keyboard_event(FlyString const& event_name, HTML::BrowsingContext& browsing_context, KeyCode key, unsigned modifiers, u32 code_point);
+
     Layout::InitialContainingBlock* layout_root();
     Layout::InitialContainingBlock const* layout_root() const;
 

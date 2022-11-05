@@ -657,6 +657,32 @@ constexpr bool should_ignore_keydown_event(u32 code_point)
     return code_point == 0 || code_point == 27;
 }
 
+bool EventHandler::fire_keyboard_event(FlyString const& event_name, HTML::BrowsingContext& browsing_context, KeyCode key, unsigned int modifiers, u32 code_point)
+{
+    JS::NonnullGCPtr<DOM::Document> document = *browsing_context.active_document();
+    if (!document)
+        return false;
+
+    if (JS::GCPtr<DOM::Element> focused_element = document->focused_element()) {
+        if (is<HTML::BrowsingContextContainer>(*focused_element)) {
+            auto& browsing_context_container = verify_cast<HTML::BrowsingContextContainer>(*focused_element);
+            if (browsing_context_container.nested_browsing_context())
+                return fire_keyboard_event(event_name, *browsing_context_container.nested_browsing_context(), key, modifiers, code_point);
+        }
+
+        auto event = UIEvents::KeyboardEvent::create_from_platform_event(document->realm(), event_name, key, modifiers, code_point);
+        return focused_element->dispatch_event(*event);
+    }
+
+    // FIXME: De-duplicate this. This is just to prevent wasting a KeyboardEvent alloction when recursing into an (i)frame.
+    auto event = UIEvents::KeyboardEvent::create_from_platform_event(document->realm(), event_name, key, modifiers, code_point);
+
+    if (JS::GCPtr<HTML::HTMLElement> body = document->body())
+        return body->dispatch_event(*event);
+
+    return document->root().dispatch_event(*event);
+}
+
 bool EventHandler::handle_keydown(KeyCode key, unsigned modifiers, u32 code_point)
 {
     if (!m_browsing_context.active_document())
@@ -745,32 +771,12 @@ bool EventHandler::handle_keydown(KeyCode key, unsigned modifiers, u32 code_poin
         return true;
     }
 
-    auto event = UIEvents::KeyboardEvent::create_from_platform_event(document->realm(), UIEvents::EventNames::keydown, key, modifiers, code_point);
-
-    if (JS::GCPtr<DOM::Element> focused_element = document->focused_element())
-        return focused_element->dispatch_event(*event);
-
-    if (JS::GCPtr<HTML::HTMLElement> body = m_browsing_context.active_document()->body())
-        return body->dispatch_event(*event);
-
-    return document->root().dispatch_event(*event);
+    return fire_keyboard_event(UIEvents::EventNames::keydown, m_browsing_context, key, modifiers, code_point);
 }
 
 bool EventHandler::handle_keyup(KeyCode key, unsigned modifiers, u32 code_point)
 {
-    JS::GCPtr<DOM::Document> document = m_browsing_context.active_document();
-    if (!document)
-        return false;
-
-    auto event = UIEvents::KeyboardEvent::create_from_platform_event(document->realm(), UIEvents::EventNames::keyup, key, modifiers, code_point);
-
-    if (JS::GCPtr<DOM::Element> focused_element = document->focused_element())
-        return document->focused_element()->dispatch_event(*event);
-
-    if (JS::GCPtr<HTML::HTMLElement> body = document->body())
-        return body->dispatch_event(*event);
-
-    return document->root().dispatch_event(*event);
+    return fire_keyboard_event(UIEvents::EventNames::keyup, m_browsing_context, key, modifiers, code_point);
 }
 
 void EventHandler::set_mouse_event_tracking_layout_node(Layout::Node* layout_node)
