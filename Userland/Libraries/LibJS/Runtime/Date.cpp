@@ -364,6 +364,7 @@ i64 get_named_time_zone_offset_nanoseconds(StringView time_zone_identifier, Cryp
 }
 
 // 21.4.1.10 DefaultTimeZone ( ), https://tc39.es/ecma262/#sec-defaulttimezone
+// 6.4.3 DefaultTimeZone ( ), https://tc39.es/ecma402/#sup-defaulttimezone
 StringView default_time_zone()
 {
     return TimeZone::current_time_zone();
