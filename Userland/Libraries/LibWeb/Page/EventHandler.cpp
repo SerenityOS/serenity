@@ -9,6 +9,7 @@
 #include <LibWeb/DOM/Range.h>
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/HTML/BrowsingContext.h>
+#include <LibWeb/HTML/Focus.h>
 #include <LibWeb/HTML/HTMLAnchorElement.h>
 #include <LibWeb/HTML/HTMLIFrameElement.h>
 #include <LibWeb/HTML/HTMLImageElement.h>
@@ -382,7 +383,9 @@ bool EventHandler::handle_mousedown(Gfx::IntPoint const& position, unsigned butt
                 bool did_focus_something = false;
                 for (auto candidate = node; candidate; candidate = candidate->parent()) {
                     if (candidate->is_focusable()) {
-                        document->set_focused_element(verify_cast<DOM::Element>(candidate.ptr()));
+                        // When a user activates a click focusable focusable area, the user agent must run the focusing steps on the focusable area with focus trigger set to "click".
+                        // Spec Note: Note that focusing is not an activation behavior, i.e. calling the click() method on an element or dispatching a synthetic click event on it won't cause the element to get focused.
+                        HTML::run_focusing_steps(candidate.ptr(), nullptr, "click"sv);
                         did_focus_something = true;
                         break;
                     }
