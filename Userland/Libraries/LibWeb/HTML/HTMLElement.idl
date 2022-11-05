@@ -33,5 +33,6 @@ HTMLElement includes HTMLOrSVGElement;
 interface mixin HTMLOrSVGElement {
     [SameObject] readonly attribute DOMStringMap dataset;
 
+    [CEReactions, Reflect] attribute boolean autofocus;
     [CEReactions] attribute long tabIndex;
 };
