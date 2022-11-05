@@ -661,8 +661,6 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
         auto& child_box_state = m_state.get_mutable(positioned_box.box);
         if (child_box_state.content_height() > positioned_box.computed_height)
             positioned_box.computed_height = child_box_state.content_height();
-        if (auto independent_formatting_context = layout_inside(positioned_box.box, LayoutMode::Normal, available_space))
-            independent_formatting_context->parent_context_did_dimension_child_root_box();
         if (child_box_state.content_height() > positioned_box.computed_height)
             positioned_box.computed_height = child_box_state.content_height();
         if (auto min_content_height = calculate_min_content_height(positioned_box.box, available_space.width); min_content_height > positioned_box.computed_height)
@@ -1470,6 +1468,10 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
         child_box_state.set_content_width(x_end - x_start);
         child_box_state.set_content_height(y_end - y_start);
         child_box_state.offset = { x_start, y_start };
+
+        auto available_space_for_children = AvailableSpace(AvailableSize::make_definite(child_box_state.content_width()), AvailableSize::make_definite(child_box_state.content_height()));
+        if (auto independent_formatting_context = layout_inside(child_box, LayoutMode::Normal, available_space_for_children))
+            independent_formatting_context->parent_context_did_dimension_child_root_box();
     };
 
     for (auto& positioned_box : positioned_boxes) {
