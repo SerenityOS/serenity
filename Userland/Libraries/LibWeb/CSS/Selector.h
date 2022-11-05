@@ -27,7 +27,8 @@ public:
         FirstLetter,
         Marker,
         ProgressValue,
-        ProgressBar
+        ProgressBar,
+        Placeholder,
     };
     static auto constexpr PseudoElementCount = to_underlying(PseudoElement::ProgressBar) + 1;
 
@@ -224,6 +225,8 @@ constexpr StringView pseudo_element_name(Selector::PseudoElement pseudo_element)
         return "-webkit-progress-bar"sv;
     case Selector::PseudoElement::ProgressValue:
         return "-webkit-progress-value"sv;
+    case Selector::PseudoElement::Placeholder:
+        return "placeholder"sv;
     }
     VERIFY_NOT_REACHED();
 }

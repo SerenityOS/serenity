@@ -356,6 +356,8 @@ Optional<Selector::PseudoElement> pseudo_element_from_string(StringView name)
         return Selector::PseudoElement::ProgressBar;
     } else if (name.equals_ignoring_case("-webkit-progress-value"sv)) {
         return Selector::PseudoElement::ProgressValue;
+    } else if (name.equals_ignoring_case("placeholder"sv)) {
+        return Selector::PseudoElement::Placeholder;
     }
     return {};
 }
