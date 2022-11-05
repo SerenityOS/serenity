@@ -244,13 +244,13 @@ void BrowserWindow::build_menus()
         this);
     m_inspect_dom_node_action->set_status_tip("Open inspector for this element");
 
-    m_take_screenshot_action = GUI::Action::create(
-        "&Take Screenshot"sv, g_icon_bag.filetype_image, [this](auto&) {
+    m_take_visible_screenshot_action = GUI::Action::create(
+        "Take &Visible Screenshot"sv, g_icon_bag.filetype_image, [this](auto&) {
             if (auto result = take_screenshot(); result.is_error())
                 GUI::MessageBox::show_error(this, String::formatted("{}", result.error()));
         },
         this);
-    m_take_screenshot_action->set_status_tip("Save a screenshot of the current tab to the Downloads directory"sv);
+    m_take_visible_screenshot_action->set_status_tip("Save a screenshot of the visible portion of the current tab to the Downloads directory"sv);
 
     auto& inspect_menu = add_menu("&Inspect");
     inspect_menu.add_action(*m_view_source_action);
