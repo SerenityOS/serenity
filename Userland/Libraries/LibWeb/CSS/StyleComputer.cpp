@@ -848,21 +848,21 @@ void StyleComputer::compute_cascaded_values(StyleProperties& style, DOM::Element
     // FIXME: Transition declarations [css-transitions-1]
 }
 
-static DOM::Element const* get_parent_element(DOM::Element const* element, Optional<CSS::Selector::PseudoElement> pseudo_element)
+static DOM::Element const* element_to_inherit_style_from(DOM::Element const* element, Optional<CSS::Selector::PseudoElement> pseudo_element)
 {
     // Pseudo-elements treat their originating element as their parent.
     DOM::Element const* parent_element = nullptr;
     if (pseudo_element.has_value()) {
         parent_element = element;
     } else if (element) {
-        parent_element = element->parent_element();
+        parent_element = element->parent_or_shadow_host_element();
     }
     return parent_element;
 }
 
 static NonnullRefPtr<StyleValue> get_inherit_value(CSS::PropertyID property_id, DOM::Element const* element, Optional<CSS::Selector::PseudoElement> pseudo_element)
 {
-    auto* parent_element = get_parent_element(element, pseudo_element);
+    auto* parent_element = element_to_inherit_style_from(element, pseudo_element);
 
     if (!parent_element || !parent_element->computed_css_values())
         return property_initial_value(property_id);
@@ -943,7 +943,7 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
     compute_defaulted_property_value(style, element, CSS::PropertyID::FontStyle, pseudo_element);
     compute_defaulted_property_value(style, element, CSS::PropertyID::FontWeight, pseudo_element);
 
-    auto* parent_element = get_parent_element(element, pseudo_element);
+    auto* parent_element = element_to_inherit_style_from(element, pseudo_element);
 
     auto font_size = style.property(CSS::PropertyID::FontSize);
     auto font_style = style.property(CSS::PropertyID::FontStyle);
