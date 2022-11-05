@@ -76,6 +76,7 @@ public:
     ErrorOr<JsonValue, WebDriverError> delete_cookie(StringView name);
     ErrorOr<JsonValue, WebDriverError> delete_all_cookies();
     ErrorOr<JsonValue, WebDriverError> take_screenshot();
+    ErrorOr<JsonValue, WebDriverError> take_element_screenshot(StringView element_id);
 
 private:
     void delete_cookies(Optional<StringView> const& name = {});

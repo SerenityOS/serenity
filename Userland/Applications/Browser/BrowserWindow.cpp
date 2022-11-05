@@ -607,6 +607,10 @@ void BrowserWindow::create_new_tab(URL url, bool activate)
         return active_tab().view().query_selector_all(start_node_id, selector);
     };
 
+    new_tab.webdriver_endpoints().on_scroll_element_into_view = [this](i32 element_id) {
+        active_tab().view().scroll_element_into_view(element_id);
+    };
+
     new_tab.webdriver_endpoints().on_is_element_selected = [this](i32 element_id) {
         return active_tab().view().is_element_selected(element_id);
     };
@@ -649,6 +653,10 @@ void BrowserWindow::create_new_tab(URL url, bool activate)
 
     new_tab.webdriver_endpoints().on_execute_script = [this](String const& body, Vector<String> const& json_arguments, Optional<u64> const& timeout, bool async) {
         return active_tab().view().webdriver_execute_script(body, json_arguments, timeout, async);
+    };
+
+    new_tab.webdriver_endpoints().on_take_element_screenshot = [this](i32 element_id) {
+        return active_tab().view().take_element_screenshot(element_id);
     };
 
     new_tab.load(url);

@@ -1354,4 +1354,34 @@ ErrorOr<JsonValue, WebDriverError> Session::take_screenshot()
     return encoded_string;
 }
 
+// 17.2 Take Element Screenshot, https://w3c.github.io/webdriver/#dfn-take-element-screenshot
+ErrorOr<JsonValue, WebDriverError> Session::take_element_screenshot(StringView parameter_element_id)
+{
+    // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
+    TRY(check_for_open_top_level_browsing_context_or_return_error());
+
+    // FIXME: 2. Handle any user prompts and return its value if it is an error.
+
+    // 3. Let element be the result of trying to get a known connected element with url variable element id.
+    auto element_id = TRY(get_known_connected_element(parameter_element_id));
+
+    // 4. Scroll into view the element.
+    m_browser_connection->scroll_element_into_view(element_id);
+
+    // 5. When the user agent is next to run the animation frame callbacks:
+    //     a. Let element rect be element’s rectangle.
+    //     b. Let screenshot result be the result of trying to call draw a bounding box from the framebuffer, given element rect as an argument.
+    auto screenshot = m_browser_connection->take_element_screenshot(element_id);
+    if (!screenshot.is_valid())
+        return WebDriverError::from_code(ErrorCode::UnableToCaptureScreen, "Unable to capture screenshot"sv);
+
+    //     c. Let canvas be a canvas element of screenshot result’s data.
+    //     d. Let encoding result be the result of trying encoding a canvas as Base64 canvas.
+    //     e. Let encoded string be encoding result’s data.
+    auto encoded_string = TRY(encode_bitmap_as_canvas_element(*screenshot.bitmap()));
+
+    // 6. Return success with data encoded string.
+    return encoded_string;
+}
+
 }
