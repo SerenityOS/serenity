@@ -34,6 +34,7 @@ interface XMLHttpRequest : XMLHttpRequestEventTarget {
     undefined open(ByteString method, USVString url, boolean async, optional USVString? username = {}, optional USVString? password = {});
     undefined setRequestHeader(DOMString name, DOMString value);
     undefined send(optional XMLHttpRequestBodyInit? body = null);
+    undefined abort();
 
     ByteString? getResponseHeader(ByteString name);
     ByteString getAllResponseHeaders();
