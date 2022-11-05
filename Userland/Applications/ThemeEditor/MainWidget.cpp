@@ -208,6 +208,8 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
 {
     auto file_menu = TRY(window.try_add_menu("&File"));
     TRY(file_menu->try_add_action(GUI::CommonActions::make_open_action([&](auto&) {
+        if (request_close() == GUI::Window::CloseRequestDecision::StayOpen)
+            return;
         auto response = FileSystemAccessClient::Client::the().try_open_file(&window, "Select theme file", "/res/themes"sv);
         if (response.is_error())
             return;
