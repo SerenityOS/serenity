@@ -505,6 +505,9 @@ void dump_selector(StringBuilder& builder, CSS::Selector const& selector)
                 case CSS::Selector::PseudoElement::ProgressValue:
                     pseudo_element_description = "-webkit-progress-value";
                     break;
+                case CSS::Selector::PseudoElement::Placeholder:
+                    pseudo_element_description = "placeholder";
+                    break;
                 }
 
                 builder.appendff(" pseudo_element={}", pseudo_element_description);
