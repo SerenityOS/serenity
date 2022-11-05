@@ -154,6 +154,9 @@ public:
     void clear_pseudo_element_nodes(Badge<Layout::TreeBuilder>);
     void serialize_pseudo_elements_as_json(JsonArraySerializer<StringBuilder>& children_array) const;
 
+    i32 tab_index() const;
+    void set_tab_index(i32 tab_index);
+
     bool is_actually_disabled() const;
 
     WebIDL::ExceptionOr<JS::GCPtr<Element>> insert_adjacent_element(String const& where, JS::NonnullGCPtr<Element> element);
@@ -167,6 +170,7 @@ protected:
     virtual void initialize(JS::Realm&) override;
 
     virtual void children_changed() override;
+    virtual i32 default_tab_index_value() const;
 
     virtual void visit_edges(Cell::Visitor&) override;
 

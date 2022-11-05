@@ -32,4 +32,6 @@ HTMLElement includes HTMLOrSVGElement;
 
 interface mixin HTMLOrSVGElement {
     [SameObject] readonly attribute DOMStringMap dataset;
+
+    [CEReactions] attribute long tabIndex;
 };

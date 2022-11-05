@@ -62,6 +62,9 @@ private:
     virtual void resource_did_load() override;
     virtual void resource_did_fail() override;
 
+    // ^DOM::Element
+    virtual i32 default_tab_index_value() const override;
+
     Representation m_representation { Representation::Unknown };
     Optional<ImageLoader> m_image_loader;
 };

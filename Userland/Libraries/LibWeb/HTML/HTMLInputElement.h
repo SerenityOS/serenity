@@ -123,6 +123,9 @@ private:
     virtual void legacy_cancelled_activation_behavior() override;
     virtual void legacy_cancelled_activation_behavior_was_not_called() override;
 
+    // ^DOM::Element
+    virtual i32 default_tab_index_value() const override;
+
     virtual void visit_edges(Cell::Visitor&) override;
 
     static TypeAttributeState parse_type_attribute(StringView);

@@ -122,4 +122,11 @@ void HTMLSelectElement::set_selected_index(int index)
     selected_option->m_dirty = true;
 }
 
+// https://html.spec.whatwg.org/multipage/interaction.html#dom-tabindex
+i32 HTMLSelectElement::default_tab_index_value() const
+{
+    // See the base function for the spec comments.
+    return 0;
+}
+
 }

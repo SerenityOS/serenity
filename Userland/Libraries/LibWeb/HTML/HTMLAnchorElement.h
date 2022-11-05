@@ -35,6 +35,7 @@ private:
 
     // ^DOM::Element
     virtual void parse_attribute(FlyString const& name, String const& value) override;
+    virtual i32 default_tab_index_value() const override;
 
     // ^HTML::HTMLHyperlinkElementUtils
     virtual DOM::Document& hyperlink_element_utils_document() override { return document(); }

@@ -731,6 +731,32 @@ void Element::serialize_pseudo_elements_as_json(JsonArraySerializer<StringBuilde
     }
 }
 
+// https://html.spec.whatwg.org/multipage/interaction.html#dom-tabindex
+i32 Element::default_tab_index_value() const
+{
+    // The default value is 0 if the element is an a, area, button, frame, iframe, input, object, select, textarea, or SVG a element, or is a summary element that is a summary for its parent details.
+    // The default value is −1 otherwise.
+    // Note: The varying default value based on element type is a historical artifact.
+    // FIXME: We currently do not have the SVG a element.
+    return -1;
+}
+
+// https://html.spec.whatwg.org/multipage/interaction.html#dom-tabindex
+i32 Element::tab_index() const
+{
+    // FIXME: I'm not sure if "to_int" exactly matches the specs "rules for parsing integers"
+    auto maybe_table_index = attribute(HTML::AttributeNames::tabindex).to_int<i32>();
+    if (!maybe_table_index.has_value())
+        return default_tab_index_value();
+    return maybe_table_index.value();
+}
+
+// https://html.spec.whatwg.org/multipage/interaction.html#dom-tabindex
+void Element::set_tab_index(i32 tab_index)
+{
+    MUST(set_attribute(HTML::AttributeNames::tabindex, String::number(tab_index)));
+}
+
 // https://html.spec.whatwg.org/multipage/semantics-other.html#concept-element-disabled
 bool Element::is_actually_disabled() const
 {

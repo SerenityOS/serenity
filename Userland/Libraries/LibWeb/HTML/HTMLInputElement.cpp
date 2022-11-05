@@ -555,4 +555,11 @@ void HTMLInputElement::legacy_cancelled_activation_behavior_was_not_called()
     m_legacy_pre_activation_behavior_checked_element_in_group = nullptr;
 }
 
+// https://html.spec.whatwg.org/multipage/interaction.html#dom-tabindex
+i32 HTMLInputElement::default_tab_index_value() const
+{
+    // See the base function for the spec comments.
+    return 0;
+}
+
 }
