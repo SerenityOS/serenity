@@ -553,6 +553,12 @@ int pthread_cancel(pthread_t thread)
     return pthread_kill(thread, SIGCANCEL);
 }
 
+// https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_testcancel.html
+void pthread_testcancel(void)
+{
+    __pthread_maybe_cancel();
+}
+
 int pthread_setname_np(pthread_t thread, char const* name)
 {
     if (!name)
