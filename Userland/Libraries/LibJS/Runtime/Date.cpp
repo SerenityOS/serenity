@@ -269,28 +269,6 @@ u8 week_day(double t)
     return static_cast<u8>(modulo(day(t) + 4, 7));
 }
 
-// 21.4.1.7 LocalTZA ( t, isUTC ), https://tc39.es/ecma262/#sec-local-time-zone-adjustment
-// FIXME: Remove this when ECMA-402 is synced with https://github.com/tc39/ecma262/commit/43fd5f25357333d8340bfb486b8f0738e6d0d0cb.
-double local_tza(double time, [[maybe_unused]] bool is_utc, Optional<StringView> time_zone_override)
-{
-    // The time_zone_override parameter is non-standard, but allows callers to override the system
-    // time zone with a specific value without setting environment variables.
-    auto time_zone = time_zone_override.value_or(TimeZone::current_time_zone());
-
-    // When isUTC is true, LocalTZA( tUTC, true ) should return the offset of the local time zone from
-    // UTC measured in milliseconds at time represented by time value tUTC. When the result is added to
-    // tUTC, it should yield the corresponding Number tlocal.
-
-    // When isUTC is false, LocalTZA( tlocal, false ) should return the offset of the local time zone from
-    // UTC measured in milliseconds at local time represented by Number tlocal. When the result is subtracted
-    // from tlocal, it should yield the corresponding time value tUTC.
-
-    auto time_since_epoch = Value(time).is_finite_number() ? AK::Time::from_milliseconds(time) : AK::Time::max();
-    auto maybe_offset = TimeZone::get_time_zone_offset(time_zone, time_since_epoch);
-
-    return maybe_offset.has_value() ? static_cast<double>(maybe_offset->seconds) * 1000 : 0;
-}
-
 // 21.4.1.7 GetUTCEpochNanoseconds ( year, month, day, hour, minute, second, millisecond, microsecond, nanosecond ), https://tc39.es/ecma262/#sec-getutcepochnanoseconds
 Crypto::SignedBigInteger get_utc_epoch_nanoseconds(i32 year, u8 month, u8 day, u8 hour, u8 minute, u8 second, u16 millisecond, u16 microsecond, u16 nanosecond)
 {
