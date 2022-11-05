@@ -430,6 +430,33 @@ void TreeView::did_update_selection()
         activate(index);
 }
 
+void TreeView::mousedown_event(MouseEvent& event)
+{
+    if (!model())
+        return AbstractView::mousedown_event(event);
+
+    if (event.button() != MouseButton::Primary)
+        return AbstractView::mousedown_event(event);
+
+    bool is_toggle;
+    auto index = index_at_event_position(event.position(), is_toggle);
+
+    if (index.is_valid() && is_toggle && model()->row_count(index)) {
+        if (event.alt()) {
+            if (is_toggled(index)) {
+                collapse_tree(index);
+            } else {
+                expand_tree(index);
+            }
+            return;
+        }
+        toggle_index(index);
+        return;
+    }
+
+    AbstractView::mousedown_event(event);
+}
+
 void TreeView::keydown_event(KeyEvent& event)
 {
     if (!model())
