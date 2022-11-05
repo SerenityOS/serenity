@@ -96,6 +96,7 @@ private:
     virtual Messages::WebContentServer::GetElementRectResponse get_element_rect(i32 element_id) override;
     virtual Messages::WebContentServer::IsElementEnabledResponse is_element_enabled(i32 element_id) override;
     virtual Messages::WebContentServer::TakeElementScreenshotResponse take_element_screenshot(i32 element_id) override;
+    virtual Messages::WebContentServer::TakeDocumentScreenshotResponse take_document_screenshot() override;
 
     virtual Messages::WebContentServer::GetLocalStorageEntriesResponse get_local_storage_entries() override;
     virtual Messages::WebContentServer::GetSessionStorageEntriesResponse get_session_storage_entries() override;

@@ -708,6 +708,20 @@ Messages::WebContentServer::TakeElementScreenshotResponse ConnectionFromClient::
     return { bitmap->to_shareable_bitmap() };
 }
 
+Messages::WebContentServer::TakeDocumentScreenshotResponse ConnectionFromClient::take_document_screenshot()
+{
+    auto* document = page().top_level_browsing_context().active_document();
+    if (!document || !document->document_element())
+        return { {} };
+
+    auto rect = calculate_absolute_rect_of_element(page(), *document->document_element());
+
+    auto bitmap = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, rect.size()).release_value_but_fixme_should_propagate_errors();
+    m_page_host->paint(rect, *bitmap);
+
+    return { bitmap->to_shareable_bitmap() };
+}
+
 Messages::WebContentServer::GetSelectedTextResponse ConnectionFromClient::get_selected_text()
 {
     return page().focused_context().selected_text();
