@@ -98,6 +98,7 @@ interface Document : Node {
 
     attribute DOMString title;
 
+    boolean queryCommandSupported(DOMString commandId);
     readonly boolean hidden;
     readonly DOMString visibilityState;
 

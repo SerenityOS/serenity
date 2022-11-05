@@ -443,6 +443,8 @@ public:
 
     void did_stop_being_active_document_in_browsing_context(Badge<HTML::BrowsingContext>);
 
+    bool query_command_supported(String const&) const;
+
 protected:
     virtual void visit_edges(Cell::Visitor&) override;
 
