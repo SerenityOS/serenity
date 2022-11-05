@@ -50,6 +50,7 @@ void LocationObject::initialize(JS::Realm& realm)
     define_native_accessor(realm, "search", search_getter, {}, attr);
     define_native_accessor(realm, "protocol", protocol_getter, {}, attr);
     define_native_accessor(realm, "port", port_getter, {}, attr);
+    define_native_accessor(realm, "origin", origin_getter, {}, attr);
 
     define_native_function(realm, "reload", reload, 0, JS::Attribute::Enumerable);
     define_native_function(realm, "replace", replace, 1, JS::Attribute::Enumerable);
@@ -220,6 +221,17 @@ JS_DEFINE_NATIVE_FUNCTION(LocationObject::port_getter)
 
     // 3. Return this's url's port, serialized.
     return JS::js_string(vm, String::number(*location_object->url().port()));
+}
+
+// https://html.spec.whatwg.org/multipage/nav-history-apis.html#dom-location-origin
+JS_DEFINE_NATIVE_FUNCTION(LocationObject::origin_getter)
+{
+    auto* location_object = TRY(typed_this_value(vm));
+
+    // FIXME: 1. If this's relevant Document is non-null and its origin is not same origin-domain with the entry settings object's origin, then throw a "SecurityError" DOMException.
+
+    // 2. Return the serialization of this's url's origin.
+    return JS::js_string(vm, location_object->url().serialize_origin());
 }
 
 // https://html.spec.whatwg.org/multipage/history.html#dom-location-reload
