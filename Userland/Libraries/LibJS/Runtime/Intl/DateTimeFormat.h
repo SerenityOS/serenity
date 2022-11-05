@@ -159,7 +159,7 @@ enum class OptionDefaults {
     Time,
 };
 
-// Table 7: Record returned by ToLocalTime, https://tc39.es/ecma402/#table-datetimeformat-tolocaltime-record
+// Table 8: Record returned by ToLocalTime, https://tc39.es/ecma402/#table-datetimeformat-tolocaltime-record
 // Note: [[InDST]] is not included here - it is handled by LibUnicode / LibTimeZone.
 struct LocalTime {
     AK::Time time_since_epoch() const
@@ -191,7 +191,7 @@ ThrowCompletionOr<Array*> format_date_time_to_parts(VM&, DateTimeFormat&, double
 ThrowCompletionOr<Vector<PatternPartitionWithSource>> partition_date_time_range_pattern(VM&, DateTimeFormat&, double start, double end);
 ThrowCompletionOr<String> format_date_time_range(VM&, DateTimeFormat&, double start, double end);
 ThrowCompletionOr<Array*> format_date_time_range_to_parts(VM&, DateTimeFormat&, double start, double end);
-ThrowCompletionOr<LocalTime> to_local_time(VM&, double time, StringView calendar, StringView time_zone);
+ThrowCompletionOr<LocalTime> to_local_time(VM&, Crypto::SignedBigInteger const& epoch_ns, StringView calendar, StringView time_zone);
 
 template<typename Callback>
 ThrowCompletionOr<void> for_each_calendar_field(VM& vm, ::Locale::CalendarPattern& pattern, Callback&& callback)
