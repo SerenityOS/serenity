@@ -59,6 +59,7 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(search_getter);
     JS_DECLARE_NATIVE_FUNCTION(protocol_getter);
     JS_DECLARE_NATIVE_FUNCTION(port_getter);
+    JS_DECLARE_NATIVE_FUNCTION(origin_getter);
 
     // [[CrossOriginPropertyDescriptorMap]], https://html.spec.whatwg.org/multipage/browsers.html#crossoriginpropertydescriptormap
     HTML::CrossOriginPropertyDescriptorMap m_cross_origin_property_descriptor_map;
