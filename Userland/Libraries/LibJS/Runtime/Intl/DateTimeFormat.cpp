@@ -21,6 +21,8 @@
 
 namespace JS::Intl {
 
+static Crypto::SignedBigInteger const s_one_million_bigint { 1'000'000 };
+
 // 11 DateTimeFormat Objects, https://tc39.es/ecma402/#datetimeformat-objects
 DateTimeFormat::DateTimeFormat(Object& prototype)
     : Object(prototype)
@@ -591,8 +593,9 @@ ThrowCompletionOr<Vector<PatternPartition>> format_date_time_pattern(VM& vm, Dat
         number_format3 = TRY(construct_number_format(number_format_options3));
     }
 
-    // 13. Let tm be ToLocalTime(x, dateTimeFormat.[[Calendar]], dateTimeFormat.[[TimeZone]]).
-    auto local_time = TRY(to_local_time(vm, time, date_time_format.calendar(), date_time_format.time_zone()));
+    // 13. Let tm be ToLocalTime(ℤ(ℝ(x) × 10^6), dateTimeFormat.[[Calendar]], dateTimeFormat.[[TimeZone]]).
+    auto time_bigint = Crypto::SignedBigInteger { time }.multiplied_by(s_one_million_bigint);
+    auto local_time = TRY(to_local_time(vm, time_bigint, date_time_format.calendar(), date_time_format.time_zone()));
 
     // 14. Let result be a new empty List.
     Vector<PatternPartition> result;
@@ -932,11 +935,13 @@ ThrowCompletionOr<Vector<PatternPartitionWithSource>> partition_date_time_range_
     if (isnan(end))
         return vm.throw_completion<RangeError>(ErrorType::IntlInvalidTime);
 
-    // 5. Let tm1 be ToLocalTime(x, dateTimeFormat.[[Calendar]], dateTimeFormat.[[TimeZone]]).
-    auto start_local_time = TRY(to_local_time(vm, start, date_time_format.calendar(), date_time_format.time_zone()));
+    // 5. Let tm1 be ToLocalTime(ℤ(ℝ(x) × 10^6), dateTimeFormat.[[Calendar]], dateTimeFormat.[[TimeZone]]).
+    auto start_bigint = Crypto::SignedBigInteger { start }.multiplied_by(s_one_million_bigint);
+    auto start_local_time = TRY(to_local_time(vm, start_bigint, date_time_format.calendar(), date_time_format.time_zone()));
 
-    // 6. Let tm2 be ToLocalTime(y, dateTimeFormat.[[Calendar]], dateTimeFormat.[[TimeZone]]).
-    auto end_local_time = TRY(to_local_time(vm, end, date_time_format.calendar(), date_time_format.time_zone()));
+    // 6. Let tm2 be ToLocalTime(ℤ(ℝ(y) × 10^6), dateTimeFormat.[[Calendar]], dateTimeFormat.[[TimeZone]]).
+    auto end_bigint = Crypto::SignedBigInteger { end }.multiplied_by(s_one_million_bigint);
+    auto end_local_time = TRY(to_local_time(vm, end_bigint, date_time_format.calendar(), date_time_format.time_zone()));
 
     // 7. Let rangePatterns be dateTimeFormat.[[RangePatterns]].
     auto range_patterns = date_time_format.range_patterns();
@@ -1197,50 +1202,55 @@ ThrowCompletionOr<Array*> format_date_time_range_to_parts(VM& vm, DateTimeFormat
     return result;
 }
 
-// 11.5.13 ToLocalTime ( t, calendar, timeZone ), https://tc39.es/ecma402/#sec-tolocaltime
-ThrowCompletionOr<LocalTime> to_local_time(VM& vm, double time, StringView calendar, StringView time_zone)
+// 11.5.13 ToLocalTime ( epochNs, calendar, timeZone ), https://tc39.es/ecma402/#sec-tolocaltime
+ThrowCompletionOr<LocalTime> to_local_time(VM& vm, Crypto::SignedBigInteger const& epoch_ns, StringView calendar, StringView time_zone)
 {
-    // 1. Assert: Type(t) is Number.
+    // 1. Let offsetNs be GetNamedTimeZoneOffsetNanoseconds(timeZone, epochNs).
+    auto offset_ns = get_named_time_zone_offset_nanoseconds(time_zone, epoch_ns);
 
-    // 2. If calendar is "gregory", then
+    // NOTE: Unlike the spec, we still perform the below computations with BigInts until we are ready
+    //       to divide the number by 10^6. The spec expects an MV here. If we try to use i64, we will
+    //       overflow; if we try to use a double, we lose quite a bit of accuracy.
+
+    // 2. Let tz be ℝ(epochNs) + offsetNs.
+    auto zoned_time_ns = epoch_ns.plus(Crypto::SignedBigInteger { offset_ns });
+
+    // 3. If calendar is "gregory", then
     if (calendar == "gregory"sv) {
-        // a. Let timeZoneOffset be the value calculated according to LocalTZA(t, true) where the local time zone is replaced with timezone timeZone.
-        double time_zone_offset = local_tza(time, true, time_zone);
-
-        // b. Let tz be the time value t + timeZoneOffset.
-        double zoned_time = time + time_zone_offset;
+        auto zoned_time_ms = zoned_time_ns.divided_by(s_one_million_bigint).quotient;
+        auto zoned_time = floor(zoned_time_ms.to_double(Crypto::UnsignedBigInteger::RoundingMode::ECMAScriptNumberValueFor));
 
         auto year = year_from_time(zoned_time);
 
-        // c. Return a record with fields calculated from tz according to Table 7.
+        // a. Return a record with fields calculated from tz according to Table 8.
         return LocalTime {
-            // WeekDay(tz) specified in es2022's Week Day.
+            // WeekDay(𝔽(floor(tz / 10^6)))
             .weekday = week_day(zoned_time),
-            // Let year be YearFromTime(tz) specified in es2022's Year Number. If year is less than 0, return 'BC', else, return 'AD'.
+            // Let year be YearFromTime(𝔽(floor(tz / 10^6))). If year < -0𝔽, return "BC", else return "AD".
             .era = year < 0 ? ::Locale::Era::BC : ::Locale::Era::AD,
-            // YearFromTime(tz) specified in es2022's Year Number.
+            // YearFromTime(𝔽(floor(tz / 10^6)))
             .year = year,
             // undefined.
             .related_year = js_undefined(),
             // undefined.
             .year_name = js_undefined(),
-            // MonthFromTime(tz) specified in es2022's Month Number.
+            // MonthFromTime(𝔽(floor(tz / 10^6)))
             .month = month_from_time(zoned_time),
-            // DateFromTime(tz) specified in es2022's Date Number.
+            // DateFromTime(𝔽(floor(tz / 10^6)))
             .day = date_from_time(zoned_time),
-            // HourFromTime(tz) specified in es2022's Hours, Minutes, Second, and Milliseconds.
+            // HourFromTime(𝔽(floor(tz / 10^6)))
             .hour = hour_from_time(zoned_time),
-            // MinFromTime(tz) specified in es2022's Hours, Minutes, Second, and Milliseconds.
+            // MinFromTime(𝔽(floor(tz / 10^6)))
             .minute = min_from_time(zoned_time),
-            // SecFromTime(tz) specified in es2022's Hours, Minutes, Second, and Milliseconds.
+            // SecFromTime(𝔽(floor(tz / 10^6)))
             .second = sec_from_time(zoned_time),
-            // msFromTime(tz) specified in es2022's Hours, Minutes, Second, and Milliseconds.
+            // msFromTime(𝔽(floor(tz / 10^6)))
             .millisecond = ms_from_time(zoned_time),
         };
     }
 
-    // 3. Else,
-    //     a. Return a record with the fields of Column 1 of Table 7 calculated from t for the given calendar and timeZone. The calculations should use best available information about the specified calendar and timeZone, including current and historical information about time zone offsets from UTC and daylight saving time rules.
+    // 4. Else,
+    //     a. Return a record with the fields of Column 1 of Table 8 calculated from tz for the given calendar. The calculations should use best available information about the specified calendar.
     // FIXME: Implement this when non-Gregorian calendars are supported by LibUnicode.
     return vm.throw_completion<InternalError>(ErrorType::NotImplemented, "Non-Gregorian calendars"sv);
 }
