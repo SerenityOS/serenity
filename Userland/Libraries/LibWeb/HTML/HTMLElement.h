@@ -12,6 +12,12 @@
 
 namespace Web::HTML {
 
+// https://html.spec.whatwg.org/multipage/dom.html#attr-dir
+#define ENUMERATE_HTML_ELEMENT_DIR_ATTRIBUTES   \
+    __ENUMERATE_HTML_ELEMENT_DIR_ATTRIBUTE(ltr) \
+    __ENUMERATE_HTML_ELEMENT_DIR_ATTRIBUTE(rtl) \
+    __ENUMERATE_HTML_ELEMENT_DIR_ATTRIBUTE(auto)
+
 class HTMLElement
     : public DOM::Element
     , public HTML::GlobalEventHandlers {
@@ -21,6 +27,9 @@ public:
     virtual ~HTMLElement() override;
 
     String title() const { return attribute(HTML::AttributeNames::title); }
+
+    String dir() const;
+    void set_dir(String const&);
 
     virtual bool is_editable() const final;
     String content_editable() const;
