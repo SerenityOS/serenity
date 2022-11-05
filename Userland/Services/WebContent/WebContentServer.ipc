@@ -53,6 +53,7 @@ endpoint WebContentServer
     get_element_rect(i32 element_id) => (Gfx::IntRect rect)
     is_element_enabled(i32 element_id) => (bool enabled)
     take_element_screenshot(i32 element_id) => (Gfx::ShareableBitmap data)
+    take_document_screenshot() => (Gfx::ShareableBitmap data)
 
     webdriver_execute_script(String body, Vector<String> json_arguments, Optional<u64> timeout, bool async) => (Web::WebDriver::ExecuteScriptResultType result_type, String json_result)
 
