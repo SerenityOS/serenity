@@ -55,6 +55,9 @@ public:
 
 private:
     HTMLButtonElement(DOM::Document&, DOM::QualifiedName);
+
+    // ^DOM::Element
+    virtual i32 default_tab_index_value() const override;
 };
 
 }

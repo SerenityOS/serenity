@@ -61,6 +61,9 @@ private:
 
     virtual void visit_edges(Cell::Visitor&) override;
 
+    // ^DOM::Element
+    virtual i32 default_tab_index_value() const override;
+
     JS::GCPtr<HTMLOptionsCollection> m_options;
 };
 

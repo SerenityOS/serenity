@@ -164,4 +164,11 @@ void run_iframe_load_event_steps(HTML::HTMLIFrameElement& element)
     // FIXME: 6. Unset childDocument's iframe load in progress flag.
 }
 
+// https://html.spec.whatwg.org/multipage/interaction.html#dom-tabindex
+i32 HTMLIFrameElement::default_tab_index_value() const
+{
+    // See the base function for the spec comments.
+    return 0;
+}
+
 }

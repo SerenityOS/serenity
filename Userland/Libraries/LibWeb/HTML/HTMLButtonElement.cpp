@@ -86,4 +86,11 @@ void HTMLButtonElement::set_type(String const& type)
     MUST(set_attribute(HTML::AttributeNames::type, type));
 }
 
+// https://html.spec.whatwg.org/multipage/interaction.html#dom-tabindex
+i32 HTMLButtonElement::default_tab_index_value() const
+{
+    // See the base function for the spec comments.
+    return 0;
+}
+
 }

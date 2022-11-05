@@ -77,4 +77,11 @@ void HTMLAnchorElement::run_activation_behavior(Web::DOM::Event const&)
     follow_the_hyperlink(hyperlink_suffix);
 }
 
+// https://html.spec.whatwg.org/multipage/interaction.html#dom-tabindex
+i32 HTMLAnchorElement::default_tab_index_value() const
+{
+    // See the base function for the spec comments.
+    return 0;
+}
+
 }

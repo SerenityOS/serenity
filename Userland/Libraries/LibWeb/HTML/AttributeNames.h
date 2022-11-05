@@ -24,6 +24,7 @@ namespace AttributeNames {
     __ENUMERATE_HTML_ATTRIBUTE(alt)                        \
     __ENUMERATE_HTML_ATTRIBUTE(archive)                    \
     __ENUMERATE_HTML_ATTRIBUTE(async)                      \
+    __ENUMERATE_HTML_ATTRIBUTE(autofocus)                  \
     __ENUMERATE_HTML_ATTRIBUTE(autoplay)                   \
     __ENUMERATE_HTML_ATTRIBUTE(axis)                       \
     __ENUMERATE_HTML_ATTRIBUTE(background)                 \
@@ -208,6 +209,7 @@ namespace AttributeNames {
     __ENUMERATE_HTML_ATTRIBUTE(step)                       \
     __ENUMERATE_HTML_ATTRIBUTE(style)                      \
     __ENUMERATE_HTML_ATTRIBUTE(summary)                    \
+    __ENUMERATE_HTML_ATTRIBUTE(tabindex)                   \
     __ENUMERATE_HTML_ATTRIBUTE(target)                     \
     __ENUMERATE_HTML_ATTRIBUTE(text)                       \
     __ENUMERATE_HTML_ATTRIBUTE(title)                      \
