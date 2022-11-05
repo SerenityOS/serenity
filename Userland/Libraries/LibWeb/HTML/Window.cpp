@@ -33,6 +33,7 @@
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/EventHandler.h>
 #include <LibWeb/HTML/EventLoop/EventLoop.h>
+#include <LibWeb/HTML/Focus.h>
 #include <LibWeb/HTML/MessageEvent.h>
 #include <LibWeb/HTML/Navigator.h>
 #include <LibWeb/HTML/Origin.h>
@@ -775,6 +776,7 @@ void Window::initialize_web_interfaces(Badge<WindowEnvironmentSettingsObject>)
     define_native_function(realm, "cancelAnimationFrame", cancel_animation_frame, 1, attr);
     define_native_function(realm, "atob", atob, 1, attr);
     define_native_function(realm, "btoa", btoa, 1, attr);
+    define_native_function(realm, "focus", focus, 0, attr);
 
     define_native_function(realm, "queueMicrotask", queue_microtask, 1, attr);
 
@@ -1080,6 +1082,28 @@ JS_DEFINE_NATIVE_FUNCTION(Window::btoa)
 
     auto encoded = encode_base64(byte_string.span());
     return JS::js_string(vm, move(encoded));
+}
+
+// https://html.spec.whatwg.org/multipage/interaction.html#dom-window-focus
+JS_DEFINE_NATIVE_FUNCTION(Window::focus)
+{
+    auto* impl = TRY(impl_from(vm));
+
+    // 1. Let current be this Window object's browsing context.
+    auto* current = impl->browsing_context();
+
+    // 2. If current is null, then return.
+    if (!current)
+        return JS::js_undefined();
+
+    // 3. Run the focusing steps with current.
+    // FIXME: We should pass in the browsing context itself instead of the active document, however the focusing steps don't currently accept browsing contexts.
+    //        Passing in a browsing context always makes it resolve to its active document for focus, so this is fine for now.
+    run_focusing_steps(current->active_document());
+
+    // FIXME: 4. If current is a top-level browsing context, user agents are encouraged to trigger some sort of notification to indicate to the user that the page is attempting to gain focus.
+
+    return JS::js_undefined();
 }
 
 // https://html.spec.whatwg.org/multipage/window-object.html#number-of-document-tree-child-browsing-contexts

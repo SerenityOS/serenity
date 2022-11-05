@@ -256,6 +256,7 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(cancel_animation_frame);
     JS_DECLARE_NATIVE_FUNCTION(atob);
     JS_DECLARE_NATIVE_FUNCTION(btoa);
+    JS_DECLARE_NATIVE_FUNCTION(focus);
 
     JS_DECLARE_NATIVE_FUNCTION(get_computed_style);
     JS_DECLARE_NATIVE_FUNCTION(match_media);
