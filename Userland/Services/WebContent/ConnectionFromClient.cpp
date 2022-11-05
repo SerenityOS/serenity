@@ -714,7 +714,16 @@ Messages::WebContentServer::TakeDocumentScreenshotResponse ConnectionFromClient:
     if (!document || !document->document_element())
         return { {} };
 
-    auto rect = calculate_absolute_rect_of_element(page(), *document->document_element());
+    auto bounding_rect = document->document_element()->get_bounding_client_rect();
+    auto position = calculate_absolute_position_of_element(page(), bounding_rect);
+    auto const& content_size = m_page_host->content_size();
+
+    Gfx::IntRect rect {
+        position.x(),
+        position.y(),
+        content_size.width() - position.x(),
+        content_size.height() - position.y(),
+    };
 
     auto bitmap = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, rect.size()).release_value_but_fixme_should_propagate_errors();
     m_page_host->paint(rect, *bitmap);
