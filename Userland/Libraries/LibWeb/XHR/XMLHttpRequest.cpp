@@ -648,4 +648,9 @@ bool XMLHttpRequest::must_survive_garbage_collection() const
     return false;
 }
 
+void XMLHttpRequest::abort()
+{
+    dbgln("(STUBBED) XMLHttpRequest::abort()");
+}
+
 }

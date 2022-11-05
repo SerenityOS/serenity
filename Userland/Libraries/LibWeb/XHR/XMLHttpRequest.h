@@ -63,6 +63,8 @@ public:
     WebIDL::ExceptionOr<void> set_timeout(u32 timeout);
     u32 timeout() const;
 
+    void abort();
+
 private:
     virtual void visit_edges(Cell::Visitor&) override;
     virtual bool must_survive_garbage_collection() const override;
