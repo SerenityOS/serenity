@@ -164,6 +164,7 @@ void BrowsingContextContainer::shared_attribute_processing_steps_for_iframe_and_
         }
 
         // 3. Return.
+        return;
     }
 
     // 5. Let resource be a new request whose URL is url and whose referrer policy is the current state of element's referrerpolicy content attribute.
