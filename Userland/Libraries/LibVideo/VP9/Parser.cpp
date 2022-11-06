@@ -905,7 +905,7 @@ void Parser::clear_left_context()
     clear_context(m_left_partition_context, m_sb64_rows * 8);
 }
 
-DecoderErrorOr<void> Parser::decode_partition(u32 row, u32 col, u8 block_subsize)
+DecoderErrorOr<void> Parser::decode_partition(u32 row, u32 col, BlockSubsize block_subsize)
 {
     if (row >= m_mi_rows || col >= m_mi_cols)
         return {};

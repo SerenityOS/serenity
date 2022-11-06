@@ -103,7 +103,7 @@ private:
     u32 get_tile_offset(u32 tile_num, u32 mis, u32 tile_size_log2);
     DecoderErrorOr<void> decode_tile();
     void clear_left_context();
-    DecoderErrorOr<void> decode_partition(u32 row, u32 col, u8 block_subsize);
+    DecoderErrorOr<void> decode_partition(u32 row, u32 col, BlockSubsize block_subsize);
     DecoderErrorOr<void> decode_block(u32 row, u32 col, BlockSubsize subsize);
     DecoderErrorOr<void> mode_info();
     DecoderErrorOr<void> intra_frame_mode_info();
@@ -227,7 +227,7 @@ private:
     bool m_has_rows { false };
     bool m_has_cols { false };
     TXSize m_max_tx_size { TX_4x4 };
-    u8 m_block_subsize { 0 };
+    BlockSubsize m_block_subsize { BlockSubsize::Block_4x4 };
     // The row to use for getting partition tree probability lookups.
     u32 m_row { 0 };
     // The column to use for getting partition tree probability lookups.
