@@ -1,6 +1,7 @@
 add_subdirectory(2048)
 add_subdirectory(BrickGame)
 add_subdirectory(Chess)
+add_subdirectory(ColorLines)
 add_subdirectory(FlappyBug)
 add_subdirectory(Flood)
 add_subdirectory(GameOfLife)
