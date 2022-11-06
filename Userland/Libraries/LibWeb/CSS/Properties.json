@@ -512,6 +512,20 @@
       "hashless-hex-color"
     ]
   },
+  "column-gap": {
+    "inherited": false,
+    "initial": "auto",
+    "valid-types": [
+      "length [0,∞]",
+      "percentage [0,∞]"
+    ],
+    "valid-identifiers": [
+      "auto"
+    ],
+    "quirks": [
+      "unitless-length"
+    ]
+  },
   "content": {
     "inherited": false,
     "initial": "normal",
@@ -713,6 +727,25 @@
       "normal"
     ]
   },
+  "gap": {
+    "inherited": false,
+    "initial": "auto",
+    "valid-types": [
+      "length [0,∞]",
+      "percentage [0,∞]"
+    ],
+    "max-values": 2,
+    "valid-identifiers": [
+      "auto"
+    ],
+    "quirks": [
+      "unitless-length"
+    ],
+    "longhands": [
+      "row-gap",
+      "column-gap"
+    ]
+  },
   "grid-column": {
     "inherited": false,
     "initial": "auto",
@@ -737,6 +770,20 @@
       "string"
     ]
   },
+  "grid-column-gap": {
+    "inherited": false,
+    "initial": "auto",
+    "valid-types": [
+      "length [0,∞]",
+      "percentage [0,∞]"
+    ],
+    "valid-identifiers": [
+      "auto"
+    ],
+    "quirks": [
+      "unitless-length"
+    ]
+  },
   "grid-column-start": {
     "inherited": false,
     "initial": "auto",
@@ -745,6 +792,25 @@
     ],
     "valid-types": [
       "string"
+    ]
+  },
+  "grid-gap": {
+    "inherited": false,
+    "initial": "auto",
+    "valid-types": [
+      "length [0,∞]",
+      "percentage [0,∞]"
+    ],
+    "max-values": 2,
+    "valid-identifiers": [
+      "auto"
+    ],
+    "quirks": [
+      "unitless-length"
+    ],
+    "longhands": [
+      "grid-row-gap",
+      "grid-column-gap"
     ]
   },
   "grid-row": {
@@ -769,6 +835,20 @@
     ],
     "valid-types": [
       "string"
+    ]
+  },
+  "grid-row-gap": {
+    "inherited": false,
+    "initial": "auto",
+    "valid-types": [
+      "length [0,∞]",
+      "percentage [0,∞]"
+    ],
+    "valid-identifiers": [
+      "auto"
+    ],
+    "quirks": [
+      "unitless-length"
     ]
   },
   "grid-row-start": {
@@ -1208,6 +1288,20 @@
     "valid-types": [
       "length",
       "percentage"
+    ],
+    "valid-identifiers": [
+      "auto"
+    ],
+    "quirks": [
+      "unitless-length"
+    ]
+  },
+  "row-gap": {
+    "inherited": false,
+    "initial": "auto",
+    "valid-types": [
+      "length [0,∞]",
+      "percentage [0,∞]"
     ],
     "valid-identifiers": [
       "auto"
