@@ -55,6 +55,45 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
         return 0;
     };
 
+    auto count_of_gap_columns = [&]() -> size_t {
+        size_t count = 0;
+        for (auto& grid_column : m_grid_columns) {
+            if (grid_column.is_gap)
+                count++;
+        }
+        return count;
+    };
+
+    auto count_of_gap_rows = [&]() -> size_t {
+        size_t count = 0;
+        for (auto& grid_row : m_grid_rows) {
+            if (grid_row.is_gap)
+                count++;
+        }
+        return count;
+    };
+
+    auto resolve_size = [&](CSS::Size const& size, AvailableSize const& available_size) -> float {
+        if (size.is_length() && size.length().is_calculated()) {
+            if (size.length().calculated_style_value()->contains_percentage()) {
+                if (!available_size.is_definite())
+                    return 0;
+                auto& calc_value = *size.length().calculated_style_value();
+                return calc_value.resolve_length_percentage(box, CSS::Length::make_px(available_size.to_px())).value_or(CSS::Length::make_auto()).to_px(box);
+            }
+            return size.length().to_px(box);
+        }
+        if (size.is_length()) {
+            return size.length().to_px(box);
+        }
+        if (size.is_percentage()) {
+            if (!available_size.is_definite())
+                return 0;
+            return available_size.to_px() * size.percentage().as_fraction();
+        }
+        return 0;
+    };
+
     // https://drafts.csswg.org/css-grid/#overview-placement
     // 2.2. Placing Items
     // The contents of the grid container are organized into individual grid items (analogous to
@@ -737,6 +776,20 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
     for (int row_index = m_grid_rows.size(); row_index < occupation_grid.row_count(); row_index++)
         m_grid_rows.append(TemporaryTrack());
 
+    // https://www.w3.org/TR/css-grid-2/#gutters
+    // 11.1. Gutters: the row-gap, column-gap, and gap properties
+    // For the purpose of track sizing, each gutter is treated as an extra, empty, fixed-size track of
+    // the specified size, which is spanned by any grid items that span across its corresponding grid
+    // line.
+    if (!box.computed_values().column_gap().is_auto()) {
+        for (int column_index = 1; column_index < (occupation_grid.column_count() * 2) - 1; column_index += 2)
+            m_grid_columns.insert(column_index, TemporaryTrack(resolve_size(box.computed_values().column_gap(), available_space.width), true));
+    }
+    if (!box.computed_values().row_gap().is_auto()) {
+        for (int row_index = 1; row_index < (occupation_grid.row_count() * 2) - 1; row_index += 2)
+            m_grid_rows.insert(row_index, TemporaryTrack(resolve_size(box.computed_values().row_gap(), available_space.height), true));
+    }
+
     // https://www.w3.org/TR/css-grid-2/#algo-overview
     // 12.1. Grid Sizing Algorithm
 
@@ -775,6 +828,8 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
 
     // Initialize each track’s base size and growth limit.
     for (auto& grid_column : m_grid_columns) {
+        if (grid_column.is_gap)
+            continue;
         // For each track, if the track’s min track sizing function is:
         switch (grid_column.min_track_sizing_function.type()) {
         // - A fixed sizing function
@@ -846,6 +901,8 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
     // not a flexible sizing function, consider the items in it with a span of 1:
     int index = 0;
     for (auto& grid_column : m_grid_columns) {
+        if (grid_column.is_gap)
+            continue;
         if (!grid_column.min_track_sizing_function.is_intrinsic_track_sizing()) {
             ++index;
             continue;
@@ -1005,8 +1062,11 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
     // a growth limit and the track is not marked infinitely growable, then each item-incurred increase
     // will be zero.
     // extra-space = max(0, size-contribution - ∑track-sizes)
-    for (auto& grid_column : m_grid_columns)
+    for (auto& grid_column : m_grid_columns) {
+        if (grid_column.is_gap)
+            continue;
         grid_column.space_to_distribute = max(0, (grid_column.growth_limit == -1 ? grid_column.base_size : grid_column.growth_limit) - grid_column.base_size);
+    }
 
     auto remaining_free_space = available_space.width.is_definite() ? available_space.width.to_px() - sum_of_track_sizes : 0;
     // 2.2. Distribute space up to limits: Find the item-incurred increase for each spanned track with an
@@ -1081,8 +1141,10 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
     // tracks as they reach their growth limits (and continuing to grow the unfrozen tracks as needed).
     auto free_space = get_free_space_x(available_space);
     while (free_space > 0) {
-        auto free_space_to_distribute_per_track = free_space / m_grid_columns.size();
+        auto free_space_to_distribute_per_track = free_space / (m_grid_columns.size() - count_of_gap_columns());
         for (auto& grid_column : m_grid_columns) {
+            if (grid_column.is_gap)
+                continue;
             if (grid_column.growth_limit != -1)
                 grid_column.base_size = min(grid_column.growth_limit, grid_column.base_size + free_space_to_distribute_per_track);
             else
@@ -1250,6 +1312,8 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
 
     // Initialize each track’s base size and growth limit.
     for (auto& grid_row : m_grid_rows) {
+        if (grid_row.is_gap)
+            continue;
         // For each track, if the track’s min track sizing function is:
         switch (grid_row.min_track_sizing_function.type()) {
         // - A fixed sizing function
@@ -1319,6 +1383,8 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
     // not a flexible sizing function, consider the items in it with a span of 1:
     index = 0;
     for (auto& grid_row : m_grid_rows) {
+        if (grid_row.is_gap)
+            continue;
         if (!grid_row.min_track_sizing_function.is_intrinsic_track_sizing()) {
             ++index;
             continue;
@@ -1499,15 +1565,20 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
 
     free_space = get_free_space_y(box);
     while (free_space > 0) {
-        auto free_space_to_distribute_per_track = free_space / m_grid_rows.size();
-        for (auto& grid_row : m_grid_rows)
+        auto free_space_to_distribute_per_track = free_space / (m_grid_rows.size() - count_of_gap_rows());
+        for (auto& grid_row : m_grid_rows) {
+            if (grid_row.is_gap)
+                continue;
             grid_row.base_size = min(grid_row.growth_limit, grid_row.base_size + free_space_to_distribute_per_track);
+        }
         if (get_free_space_y(box) == free_space)
             break;
         free_space = get_free_space_y(box);
     }
     if (free_space == -1) {
         for (auto& grid_row : m_grid_rows) {
+            if (grid_row.is_gap)
+                continue;
             if (grid_row.growth_limit != -1)
                 grid_row.base_size = grid_row.growth_limit;
         }
@@ -1678,8 +1749,22 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
     };
 
     for (auto& positioned_box : positioned_boxes) {
-        auto resolved_span = positioned_box.row + positioned_box.row_span > static_cast<int>(m_grid_rows.size()) ? static_cast<int>(m_grid_rows.size()) - positioned_box.row : positioned_box.row_span;
-        layout_box(positioned_box.row, positioned_box.row + resolved_span, positioned_box.column, positioned_box.column + positioned_box.column_span, positioned_box.box);
+        auto row_span_without_overflows = positioned_box.row + positioned_box.row_span > static_cast<int>(m_grid_rows.size()) ? static_cast<int>(m_grid_rows.size()) - positioned_box.row : positioned_box.row_span;
+
+        auto resolved_row_start = box.computed_values().row_gap().is_auto() ? positioned_box.row : positioned_box.row * 2;
+        auto resolved_row_end = ((positioned_box.row + row_span_without_overflows) * 2) - 1;
+        auto resolved_row_span = box.computed_values().row_gap().is_auto() ? row_span_without_overflows : resolved_row_end - resolved_row_start;
+
+        auto resolved_column_start = box.computed_values().column_gap().is_auto() ? positioned_box.column : positioned_box.column * 2;
+        auto resolved_column_end = ((positioned_box.column + positioned_box.column_span) * 2) - 1;
+        auto resolved_column_span = box.computed_values().column_gap().is_auto() ? positioned_box.column_span : resolved_column_end - resolved_column_start;
+
+        layout_box(
+            resolved_row_start,
+            resolved_row_start + resolved_row_span,
+            resolved_column_start,
+            resolved_column_start + resolved_column_span,
+            positioned_box.box);
     }
 
     float total_y = 0;
