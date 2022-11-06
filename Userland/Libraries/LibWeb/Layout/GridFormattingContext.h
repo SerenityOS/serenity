@@ -33,6 +33,7 @@ private:
         float growth_limit { 0 };
         float space_to_distribute { 0 };
         float planned_increase { 0 };
+        bool is_gap { false };
 
         TemporaryTrack(CSS::GridSize min_track_sizing_function, CSS::GridSize max_track_sizing_function)
             : min_track_sizing_function(min_track_sizing_function)
@@ -43,6 +44,14 @@ private:
         TemporaryTrack(CSS::GridSize track_sizing_function)
             : min_track_sizing_function(track_sizing_function)
             , max_track_sizing_function(track_sizing_function)
+        {
+        }
+
+        TemporaryTrack(float size, bool is_gap)
+            : min_track_sizing_function(CSS::GridSize(size))
+            , max_track_sizing_function(CSS::GridSize(size))
+            , base_size(size)
+            , is_gap(is_gap)
         {
         }
 
