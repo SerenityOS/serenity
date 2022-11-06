@@ -108,6 +108,19 @@ that I don't quite understand. -->
   <div class="grid-item" style="grid-row: notfound;">1</div>
 </div>
 
+<!-- Percentage gap in vertical orientation (Not yet implemented) -->
+<div 
+  class="grid-container"
+  style="
+    grid-template-columns: auto auto;
+    gap: calc(4% + 2px);
+  ">
+  <div class="grid-item">1</div>
+  <div class="grid-item">2</div>
+  <div class="grid-item">3</div>  
+  <div class="grid-item">4</div>
+</div>
+
 <p>End of crash tests</p>
 
 <!-- Different column sizes -->
@@ -351,4 +364,31 @@ length value, and as a minimum two lengths with an auto. -->
       MCS1OEOJV8mBz9Z05yfW8iSx7p4j+jA1aD6Wj7ZMzstsfvAas4UyRHvjrAkC9KhpLMClQntlqFc2
       X1gUj4viwVObKrddH9YDoHvuujAEuNV+bLwFS8XxdSr+Cq3Vf+4F5RgQl6ZR2p1eAzU/HX80YBYy
       JLCuexwJCO2O1bwCRidAfWBSctswbI12GAJT3yiwFR7+MBjGK2g/WAJR3FdF84E2rK5VR0YH/9k=">
+  </div>
+</div>
+
+<!-- Gap basics -->
+<p>There should be a large (50px) column gap and small (10px) row gap</p>
+<div 
+  class="grid-container"
+  style="
+    grid-template-columns: auto auto;
+    gap: 10px 50px;
+  ">
+  <div class="grid-item">1</div>
+  <div class="grid-item">2</div>
+  <div class="grid-item">3</div>  
+  <div class="grid-item">4</div>
+</div>
+
+<!-- Gap basics -->
+<p>There should be a Z-shaped gap (with both vertical and horizontal gap)</p>
+<div 
+  class="grid-container"
+  style="
+    grid-template-columns: auto auto;
+    gap: calc(1vh + 10px) calc(10% - 10px);
+  ">
+  <div class="grid-item" style="grid-column: 2 / span 1">1</div>
+  <div class="grid-item">2</div>
 </div>
