@@ -673,6 +673,10 @@ Optional<HitTestResult> PaintableWithLines::hit_test(Gfx::FloatPoint const& posi
         for (auto& fragment : line_box.fragments()) {
             if (is<Layout::Box>(fragment.layout_node()) && static_cast<Layout::Box const&>(fragment.layout_node()).paint_box()->stacking_context())
                 continue;
+            if (!fragment.layout_node().containing_block()) {
+                dbgln("FIXME: PaintableWithLines::hit_test(): Missing containing block on {}", fragment.layout_node().debug_description());
+                continue;
+            }
             auto fragment_absolute_rect = fragment.absolute_rect();
             if (fragment_absolute_rect.contains(position)) {
                 if (is<Layout::BlockContainer>(fragment.layout_node()) && fragment.layout_node().paintable())
