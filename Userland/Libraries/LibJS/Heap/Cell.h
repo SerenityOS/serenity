@@ -30,7 +30,12 @@ class Cell {
     AK_MAKE_NONMOVABLE(Cell);
 
 public:
+    // Post-construction initialization for cells that are part of a realm.
     virtual void initialize(Realm&) { }
+
+    // Post-construction initialization for cells that aren't part of a realm.
+    virtual void initialize_without_realm() { }
+
     virtual ~Cell() = default;
 
     bool is_marked() const { return m_mark; }
