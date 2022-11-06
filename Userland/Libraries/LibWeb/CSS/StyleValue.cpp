@@ -1751,7 +1751,7 @@ String LinearGradientStyleValue::to_string() const
 
     if (m_gradient_type == GradientType::WebKit)
         builder.append("-webkit-"sv);
-    if (m_repeating == Repeating::Yes)
+    if (is_repeating())
         builder.append("repeating-"sv);
     builder.append("linear-gradient("sv);
     m_direction.visit(
@@ -1958,6 +1958,8 @@ bool PositionValue::operator==(PositionValue const& other) const
 String ConicGradientStyleValue::to_string() const
 {
     StringBuilder builder;
+    if (is_repeating())
+        builder.append("repeating-"sv);
     builder.append("conic-gradient("sv);
     bool has_from_angle = false;
     bool has_at_position = false;

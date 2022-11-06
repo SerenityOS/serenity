@@ -2388,23 +2388,23 @@ static Optional<Vector<TElement>> parse_color_stop_list(auto& tokens, auto is_po
     return color_stops;
 }
 
+static StringView consume_if_starts_with(StringView str, StringView start, auto found_callback)
+{
+    if (str.starts_with(start, CaseSensitivity::CaseInsensitive)) {
+        found_callback();
+        return str.substring_view(start.length());
+    }
+    return str;
+};
+
 RefPtr<StyleValue> Parser::parse_linear_gradient_function(ComponentValue const& component_value)
 {
     using GradientType = LinearGradientStyleValue::GradientType;
-    using Repeating = LinearGradientStyleValue::Repeating;
 
     if (!component_value.is_function())
         return {};
 
-    auto consume_if_starts_with = [](StringView str, StringView start, auto found_callback) {
-        if (str.starts_with(start, CaseSensitivity::CaseInsensitive)) {
-            found_callback();
-            return str.substring_view(start.length());
-        }
-        return str;
-    };
-
-    Repeating repeating_gradient = Repeating::No;
+    GradientRepeating repeating_gradient = GradientRepeating::No;
     GradientType gradient_type { GradientType::Standard };
 
     auto function_name = component_value.function().name();
@@ -2414,7 +2414,7 @@ RefPtr<StyleValue> Parser::parse_linear_gradient_function(ComponentValue const& 
     });
 
     function_name = consume_if_starts_with(function_name, "repeating-"sv, [&] {
-        repeating_gradient = Repeating::Yes;
+        repeating_gradient = GradientRepeating::Yes;
     });
 
     if (!function_name.equals_ignoring_case("linear-gradient"sv))
@@ -2541,7 +2541,14 @@ RefPtr<StyleValue> Parser::parse_conic_gradient_function(ComponentValue const& c
 {
     if (!component_value.is_function())
         return {};
+
+    GradientRepeating repeating_gradient = GradientRepeating::No;
+
     auto function_name = component_value.function().name();
+
+    function_name = consume_if_starts_with(function_name, "repeating-"sv, [&] {
+        repeating_gradient = GradientRepeating::Yes;
+    });
 
     if (!function_name.equals_ignoring_case("conic-gradient"sv))
         return {};
@@ -2636,7 +2643,7 @@ RefPtr<StyleValue> Parser::parse_conic_gradient_function(ComponentValue const& c
     if (!color_stops.has_value())
         return {};
 
-    return ConicGradientStyleValue::create(from_angle, at_position, move(*color_stops));
+    return ConicGradientStyleValue::create(from_angle, at_position, move(*color_stops), repeating_gradient);
 }
 
 Optional<PositionValue> Parser::parse_position(TokenStream<ComponentValue>& tokens)
