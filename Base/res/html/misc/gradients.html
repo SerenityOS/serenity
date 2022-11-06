@@ -157,6 +157,14 @@
                 red 6deg, orange 6deg 18deg, yellow 18deg 45deg,
                 green 45deg 110deg, blue 110deg 200deg, purple 200deg);
         }
+
+        .grad-conic-5 {
+            background-image: conic-gradient(at 60% 45%, red, yellow, green);
+        }
+
+        .grad-conic-6 {
+            background-image: conic-gradient(red 0deg, red 90deg, yellow 90deg, yellow 180deg, green 180deg, green 270deg, blue 270deg);
+        }
     </style>
   </head>
   <body>
@@ -202,6 +210,8 @@
     <div class="box grad-conic-2"></div>
     <div class="box grad-conic-3"></div>
     <div class="box grad-conic-4"></div>
+    <div class="box grad-conic-5"></div>
+    <div class="box grad-conic-6"></div>
   </body>
   <script>
     const boxes = document.querySelectorAll(".box, .rect");
