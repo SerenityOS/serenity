@@ -27,6 +27,7 @@ alias sl=Solitaire
 alias ue=UserspaceEmulator
 alias fe=FontEditor
 alias ss=Spreadsheet
+alias vp=VideoPlayer
 
 alias ll='ls -l'
 
