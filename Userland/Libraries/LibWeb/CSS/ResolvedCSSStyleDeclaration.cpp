@@ -299,6 +299,8 @@ RefPtr<StyleValue> ResolvedCSSStyleDeclaration::style_value_for_property(Layout:
         return RectStyleValue::create(layout_node.computed_values().clip().to_rect());
     case CSS::PropertyID::Color:
         return ColorStyleValue::create(layout_node.computed_values().color());
+    case CSS::PropertyID::ColumnGap:
+        return style_value_for_size(layout_node.computed_values().column_gap());
     case CSS::PropertyID::Cursor:
         return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().cursor()));
     case CSS::PropertyID::Display:
@@ -425,6 +427,8 @@ RefPtr<StyleValue> ResolvedCSSStyleDeclaration::style_value_for_property(Layout:
         return style_value_for_length_percentage(layout_node.computed_values().padding().top());
     case CSS::PropertyID::Position:
         return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().position()));
+    case CSS::PropertyID::RowGap:
+        return style_value_for_size(layout_node.computed_values().row_gap());
     case CSS::PropertyID::TextAlign:
         return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().text_align()));
     case CSS::PropertyID::TextDecorationLine: {

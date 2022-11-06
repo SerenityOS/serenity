@@ -544,6 +544,28 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
         return;
     }
 
+    if (property_id == CSS::PropertyID::Gap || property_id == CSS::PropertyID::GridGap) {
+        if (value.is_value_list()) {
+            auto const& values_list = value.as_value_list();
+            style.set_property(CSS::PropertyID::RowGap, values_list.values()[0]);
+            style.set_property(CSS::PropertyID::ColumnGap, values_list.values()[1]);
+            return;
+        }
+        style.set_property(CSS::PropertyID::RowGap, value);
+        style.set_property(CSS::PropertyID::ColumnGap, value);
+        return;
+    }
+
+    if (property_id == CSS::PropertyID::RowGap || property_id == CSS::PropertyID::GridRowGap) {
+        style.set_property(CSS::PropertyID::RowGap, value);
+        return;
+    }
+
+    if (property_id == CSS::PropertyID::ColumnGap || property_id == CSS::PropertyID::GridColumnGap) {
+        style.set_property(CSS::PropertyID::ColumnGap, value);
+        return;
+    }
+
     style.set_property(property_id, value);
 }
 

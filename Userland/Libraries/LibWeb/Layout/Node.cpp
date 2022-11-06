@@ -573,6 +573,9 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
         computed_values.set_stroke_width(CSS::Length::make_px(stroke_width->to_number()));
     else
         computed_values.set_stroke_width(stroke_width->to_length());
+
+    computed_values.set_column_gap(computed_style.size_value(CSS::PropertyID::ColumnGap));
+    computed_values.set_row_gap(computed_style.size_value(CSS::PropertyID::RowGap));
 }
 
 bool Node::is_root_element() const
