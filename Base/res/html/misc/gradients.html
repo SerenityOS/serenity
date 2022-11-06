@@ -165,6 +165,23 @@
         .grad-conic-6 {
             background-image: conic-gradient(red 0deg, red 90deg, yellow 90deg, yellow 180deg, green 180deg, green 270deg, blue 270deg);
         }
+
+        .grad-conic-repeat-1 {
+            background-image: repeating-conic-gradient(
+                red 0%,
+                yellow 15%,
+                red 33%
+            );
+        }
+
+        .grad-conic-repeat-2 {
+            background-image: repeating-conic-gradient(
+                from 45deg at 10% 50%,
+                brown 0deg 10deg,
+                darkgoldenrod 10deg 20deg,
+                chocolate 20deg 30deg
+            );
+        }
     </style>
   </head>
   <body>
@@ -212,6 +229,9 @@
     <div class="box grad-conic-4"></div>
     <div class="box grad-conic-5"></div>
     <div class="box grad-conic-6"></div>
+    <b>Repeating conic gradients</b><br>
+    <div class="box grad-conic-repeat-1"></div>
+    <div class="box grad-conic-repeat-2"></div>
   </body>
   <script>
     const boxes = document.querySelectorAll(".box, .rect");
