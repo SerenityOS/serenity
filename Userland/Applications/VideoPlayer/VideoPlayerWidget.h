@@ -27,6 +27,8 @@ public:
     void pause_playback();
     void toggle_pause();
 
+    void update_title();
+
 private:
     VideoPlayerWidget(GUI::Window&);
 
@@ -39,6 +41,8 @@ private:
     void event(Core::Event&) override;
 
     GUI::Window& m_window;
+
+    String m_path;
 
     RefPtr<VideoFrameWidget> m_video_display;
     RefPtr<GUI::HorizontalSlider> m_seek_slider;

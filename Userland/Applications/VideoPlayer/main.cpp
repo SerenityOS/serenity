@@ -25,11 +25,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto app = TRY(GUI::Application::try_create(arguments));
     auto window = TRY(GUI::Window::try_create());
-    window->set_title("Video Player");
     window->resize(640, 480);
     window->set_resizable(true);
 
     auto main_widget = TRY(window->try_set_main_widget<VideoPlayer::VideoPlayerWidget>(window));
+    main_widget->update_title();
 
     if (!filename.is_empty())
         main_widget->open_file(filename);
