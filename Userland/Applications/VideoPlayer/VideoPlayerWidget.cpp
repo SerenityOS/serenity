@@ -77,6 +77,9 @@ void VideoPlayerWidget::open_file(StringView filename)
         return;
     }
 
+    m_path = filename;
+    update_title();
+
     m_playback_manager = load_file_result.release_value();
     resume_playback();
 }
@@ -182,6 +185,19 @@ void VideoPlayerWidget::cycle_sizing_modes()
     sizing_mode = static_cast<VideoSizingMode>((to_underlying(sizing_mode) + 1) % to_underlying(VideoSizingMode::Sentinel));
     m_video_display->set_sizing_mode(sizing_mode);
     m_video_display->update();
+}
+
+void VideoPlayerWidget::update_title()
+{
+    StringBuilder string_builder;
+    if (m_path.is_empty()) {
+        string_builder.append("No video"sv);
+    } else {
+        string_builder.append(m_path.view());
+    }
+
+    string_builder.append("[*] - Video Player"sv);
+    window()->set_title(string_builder.to_string());
 }
 
 }
