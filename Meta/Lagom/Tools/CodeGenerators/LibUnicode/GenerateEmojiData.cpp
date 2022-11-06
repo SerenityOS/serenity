@@ -25,9 +25,9 @@ struct Emoji {
     String subgroup;
     u32 display_order { 0 };
     Vector<u32> code_points;
-    String code_points_name;
     String encoded_code_points;
     String status;
+    size_t code_point_array_index { 0 };
 };
 
 struct EmojiData {
@@ -107,7 +107,6 @@ static ErrorOr<void> parse_emoji_test_data(Core::Stream::BufferedFile& file, Emo
 
         auto name = emoji_and_name.substring_view(emoji_and_name_spaces[2]).trim_whitespace();
         emoji.name = emoji_data.unique_strings.ensure(name.to_titlecase_string());
-        emoji.code_points_name = String::join('_', code_points);
         emoji.encoded_code_points = emoji_and_name.substring_view(0, emoji_and_name_spaces[1]).trim_whitespace();
         emoji.status = line.substring_view(*status_index + 1, *emoji_and_name_index - *status_index - 1).trim_whitespace();
 
@@ -161,7 +160,6 @@ static ErrorOr<void> parse_emoji_serenity_data(Core::Stream::BufferedFile& file,
             name = name.to_titlecase();
 
         emoji.name = emoji_data.unique_strings.ensure(move(name));
-        emoji.code_points_name = String::join('_', emoji.code_points);
         TRY(emoji_data.emojis.try_append(move(emoji)));
     }
 
@@ -199,6 +197,26 @@ namespace Unicode {
 
     emoji_data.unique_strings.generate(generator);
 
+    size_t total_code_point_count { 0 };
+    for (auto const& emoji : emoji_data.emojis) {
+        total_code_point_count += emoji.code_points.size();
+    }
+    generator.set("total_code_point_count", String::number(total_code_point_count));
+
+    generator.append(R"~~~(
+static constexpr Array<u32, @total_code_point_count@> s_emoji_code_points { {)~~~");
+
+    bool first = true;
+    for (auto const& emoji : emoji_data.emojis) {
+        for (auto code_point : emoji.code_points) {
+            generator.append(first ? " "sv : ", "sv);
+            generator.append(String::formatted("{:#x}", code_point));
+            first = false;
+        }
+    }
+
+    generator.append(" } };"sv);
+
     generator.append(R"~~~(
 struct EmojiData {
     constexpr Emoji to_unicode_emoji() const
@@ -207,34 +225,23 @@ struct EmojiData {
         emoji.name = decode_string(name);
         emoji.group = static_cast<EmojiGroup>(group);
         emoji.display_order = display_order;
-        emoji.code_points = code_points;
+        emoji.code_points = code_points();
 
         return emoji;
+    }
+
+    constexpr Span<u32 const> code_points() const
+    {
+        return Span<u32 const>(s_emoji_code_points.data() + code_point_start, code_point_count);
     }
 
     @string_index_type@ name { 0 };
     u8 group { 0 };
     u32 display_order { 0 };
-    Span<u32 const> code_points;
+    size_t code_point_start { 0 };
+    size_t code_point_count { 0 };
 };
 )~~~");
-
-    for (auto const& emoji : emoji_data.emojis) {
-        generator.set("name"sv, emoji.code_points_name);
-        generator.set("size"sv, String::number(emoji.code_points.size()));
-
-        generator.append(R"~~~(
-static constexpr Array<u32, @size@> s_@name@ { {)~~~");
-
-        bool first = true;
-        for (auto code_point : emoji.code_points) {
-            generator.append(first ? " "sv : ", "sv);
-            generator.append(String::formatted("{:#x}", code_point));
-            first = false;
-        }
-
-        generator.append(" } };"sv);
-    }
 
     generator.append(R"~~~(
 
@@ -244,10 +251,11 @@ static constexpr Array<EmojiData, @emojis_size@> s_emojis { {)~~~");
         generator.set("name"sv, String::number(emoji.name));
         generator.set("group"sv, String::number(to_underlying(emoji.group)));
         generator.set("display_order"sv, String::number(emoji.display_order));
-        generator.set("code_points_name"sv, emoji.code_points_name);
+        generator.set("code_point_start"sv, String::number(emoji.code_point_array_index));
+        generator.set("code_point_count"sv, String::number(emoji.code_points.size()));
 
         generator.append(R"~~~(
-    { @name@, @group@, @display_order@, s_@code_points_name@ },)~~~");
+    { @name@, @group@, @display_order@, @code_point_start@, @code_point_count@ },)~~~");
     }
 
     generator.append(R"~~~(
@@ -256,7 +264,7 @@ static constexpr Array<EmojiData, @emojis_size@> s_emojis { {)~~~");
 Optional<Emoji> find_emoji_for_code_points(Span<u32 const> code_points)
 {
     for (auto& emoji : s_emojis) {
-        if (emoji.code_points == code_points)
+        if (emoji.code_points() == code_points)
             return emoji.to_unicode_emoji();
     }
 
@@ -342,6 +350,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (!emoji_serenity_path.is_empty()) {
         auto emoji_serenity_file = TRY(open_file(emoji_serenity_path, Core::Stream::OpenMode::Read));
         TRY(parse_emoji_serenity_data(*emoji_serenity_file, emoji_data));
+    }
+
+    size_t code_point_array_index { 0 };
+    for (auto& emoji : emoji_data.emojis) {
+        emoji.code_point_array_index = code_point_array_index;
+        code_point_array_index += emoji.code_points.size();
     }
 
     if (!generated_header_path.is_empty()) {
