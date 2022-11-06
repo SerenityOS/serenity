@@ -22,15 +22,19 @@ struct ColorStop {
 
 using ColorStopList = Vector<ColorStop, 4>;
 
+struct ColorStopData {
+    ColorStopList list;
+    Optional<float> repeat_length;
+};
+
 struct LinearGradientData {
     float gradient_angle;
-    ColorStopList color_stops;
-    Optional<float> repeat_length;
+    ColorStopData color_stops;
 };
 
 struct ConicGradientData {
     float start_angle;
-    ColorStopList color_stops;
+    ColorStopData color_stops;
 };
 
 LinearGradientData resolve_linear_gradient_data(Layout::Node const&, Gfx::FloatSize const&, CSS::LinearGradientStyleValue const&);
