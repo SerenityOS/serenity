@@ -66,6 +66,12 @@ void SprayTool::on_mousedown(Layer* layer, MouseEvent& event)
         return;
 
     auto& layer_event = event.layer_event();
+
+    if (m_is_selecting_color) {
+        m_editor->set_editor_color_to_color_at_mouse_position(layer_event, true);
+        return;
+    }
+
     m_color = m_editor->color_for(layer_event);
     m_last_pos = layer_event.position();
     m_timer->start();
@@ -77,6 +83,9 @@ void SprayTool::on_mousemove(Layer* layer, MouseEvent& event)
     if (!layer)
         return;
 
+    if (m_is_selecting_color)
+        return;
+
     m_last_pos = event.layer_event().position();
     if (m_timer->is_active()) {
         paint_it();
@@ -86,10 +95,40 @@ void SprayTool::on_mousemove(Layer* layer, MouseEvent& event)
 
 void SprayTool::on_mouseup(Layer*, MouseEvent&)
 {
+    if (m_is_selecting_color)
+        return;
+
     if (m_timer->is_active()) {
         m_timer->stop();
         m_editor->did_complete_action(tool_name());
     }
+}
+
+void SprayTool::on_keyup(GUI::KeyEvent& event)
+{
+    if (event.key() == KeyCode::Key_Alt && m_is_selecting_color) {
+        m_is_selecting_color = false;
+        m_editor->update_tool_cursor();
+        return;
+    }
+}
+
+bool SprayTool::on_keydown(GUI::KeyEvent& event)
+{
+    if (event.key() == KeyCode::Key_Alt && !m_is_selecting_color) {
+        m_is_selecting_color = true;
+        m_editor->update_tool_cursor();
+        return true;
+    }
+
+    return Tool::on_keydown(event);
+}
+
+Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> SprayTool::cursor()
+{
+    if (m_is_selecting_color)
+        return Gfx::StandardCursor::Eyedropper;
+    return Gfx::StandardCursor::Crosshair;
 }
 
 GUI::Widget* SprayTool::get_properties_widget()

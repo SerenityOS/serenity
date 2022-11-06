@@ -22,8 +22,10 @@ public:
     virtual void on_mousedown(Layer*, MouseEvent&) override;
     virtual void on_mouseup(Layer*, MouseEvent&) override;
     virtual void on_mousemove(Layer*, MouseEvent&) override;
+    virtual void on_keyup(GUI::KeyEvent&) override;
+    virtual bool on_keydown(GUI::KeyEvent&) override;
     virtual GUI::Widget* get_properties_widget() override;
-    virtual Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> cursor() override { return Gfx::StandardCursor::Crosshair; }
+    virtual Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> cursor() override;
 
 private:
     virtual StringView tool_name() const override { return "Spray Tool"sv; }
@@ -36,6 +38,7 @@ private:
     Color m_color;
     int m_thickness { 10 };
     int m_density { 40 };
+    bool m_is_selecting_color { false };
 };
 
 }

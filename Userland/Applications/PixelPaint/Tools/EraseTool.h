@@ -17,7 +17,11 @@ namespace PixelPaint {
 
 class EraseTool final : public BrushTool {
 public:
-    EraseTool() = default;
+    EraseTool()
+        : BrushTool()
+    {
+        m_is_color_selection_enabled = false;
+    }
     virtual ~EraseTool() override = default;
 
     virtual GUI::Widget* get_properties_widget() override;

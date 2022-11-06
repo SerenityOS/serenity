@@ -34,6 +34,12 @@ void BrushTool::on_mousedown(Layer* layer, MouseEvent& event)
         return;
 
     auto& layer_event = event.layer_event();
+
+    if (m_is_selecting_color) {
+        m_editor->set_editor_color_to_color_at_mouse_position(layer_event, true);
+        return;
+    }
+
     if (layer_event.button() != GUI::MouseButton::Primary && layer_event.button() != GUI::MouseButton::Secondary)
         return;
 
@@ -56,6 +62,9 @@ void BrushTool::on_mousedown(Layer* layer, MouseEvent& event)
 
 void BrushTool::on_mousemove(Layer* layer, MouseEvent& event)
 {
+    if (m_is_selecting_color)
+        return;
+
     if (!layer)
         return;
 
@@ -74,10 +83,49 @@ void BrushTool::on_mousemove(Layer* layer, MouseEvent& event)
 
 void BrushTool::on_mouseup(Layer*, MouseEvent&)
 {
+    if (m_is_selecting_color)
+        return;
+
     if (m_was_drawing) {
         m_editor->did_complete_action(tool_name());
         m_was_drawing = false;
     }
+}
+
+bool BrushTool::on_keydown(GUI::KeyEvent& event)
+{
+    if (!m_is_color_selection_enabled)
+        return true;
+
+    Tool::on_keydown(event);
+    if (event.key() == KeyCode::Key_Alt && !m_is_selecting_color) {
+        m_is_selecting_color = true;
+        m_editor->update_tool_cursor();
+        return true;
+    }
+    return Tool::on_keydown(event);
+}
+
+void BrushTool::on_keyup(GUI::KeyEvent& event)
+{
+    if (!m_is_color_selection_enabled)
+        return;
+
+    if (event.key() == KeyCode::Key_Alt && m_is_selecting_color) {
+        m_is_selecting_color = false;
+        m_editor->update_tool_cursor();
+        return;
+    }
+}
+
+Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> BrushTool::cursor()
+{
+    if (m_is_selecting_color)
+        return Gfx::StandardCursor::Eyedropper;
+
+    if (m_editor && m_editor->scale() != m_scale_last_created_cursor)
+        refresh_editor_cursor();
+    return m_cursor;
 }
 
 Color BrushTool::color_for(GUI::MouseEvent const& event)

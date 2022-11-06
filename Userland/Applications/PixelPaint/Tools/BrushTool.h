@@ -22,13 +22,10 @@ public:
     virtual void on_mousedown(Layer*, MouseEvent&) override;
     virtual void on_mousemove(Layer*, MouseEvent&) override;
     virtual void on_mouseup(Layer*, MouseEvent&) override;
+    virtual bool on_keydown(GUI::KeyEvent&) override;
+    virtual void on_keyup(GUI::KeyEvent&) override;
     virtual GUI::Widget* get_properties_widget() override;
-    virtual Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> cursor() override
-    {
-        if (m_editor && m_editor->scale() != m_scale_last_created_cursor)
-            refresh_editor_cursor();
-        return m_cursor;
-    }
+    virtual Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> cursor() override;
 
     void set_size(int size);
     int size() const { return m_size; }
@@ -51,6 +48,9 @@ protected:
     virtual NonnullRefPtr<Gfx::Bitmap> build_cursor();
     void refresh_editor_cursor();
     float m_scale_last_created_cursor = 0;
+
+    bool m_is_color_selection_enabled { true };
+    bool m_is_selecting_color { false };
 
 private:
     RefPtr<GUI::Widget> m_properties_widget;

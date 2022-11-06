@@ -27,6 +27,7 @@ private:
 
     RefPtr<GUI::Widget> m_properties_widget;
     bool m_sample_all_layers { false };
+    bool m_is_selecting_color { false };
 };
 
 }

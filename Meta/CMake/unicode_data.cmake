@@ -59,7 +59,7 @@ set(SENTENCE_BREAK_PROP_SOURCE "auxiliary/SentenceBreakProperty.txt")
 set(SENTENCE_BREAK_PROP_PATH "${UCD_PATH}/${SENTENCE_BREAK_PROP_SOURCE}")
 
 string(REGEX REPLACE "([0-9]+\\.[0-9]+)\\.[0-9]+" "\\1" EMOJI_VERSION "${UCD_VERSION}")
-set(EMOJI_TEST_URL "https://unicode.org/Public/emoji/${EMOJI_VERSION}/emoji-test.txt")
+set(EMOJI_TEST_URL "https://www.unicode.org/Public/emoji/${EMOJI_VERSION}/emoji-test.txt")
 set(EMOJI_TEST_PATH "${UCD_PATH}/emoji-test.txt")
 set(EMOJI_RES_PATH "${SerenityOS_SOURCE_DIR}/Base/res/emoji")
 set(EMOJI_SERENITY_PATH "${SerenityOS_SOURCE_DIR}/Base/home/anon/Documents/emoji-serenity.txt")

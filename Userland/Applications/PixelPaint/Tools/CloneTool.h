@@ -12,7 +12,11 @@ namespace PixelPaint {
 
 class CloneTool : public BrushTool {
 public:
-    CloneTool() = default;
+    CloneTool()
+        : BrushTool()
+    {
+        m_is_color_selection_enabled = false;
+    }
     virtual ~CloneTool() override = default;
 
     virtual GUI::Widget* get_properties_widget() override;

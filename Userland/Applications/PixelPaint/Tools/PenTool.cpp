@@ -62,4 +62,11 @@ GUI::Widget* PenTool::get_properties_widget()
     return m_properties_widget.ptr();
 }
 
+Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> PenTool::cursor()
+{
+    if (m_is_selecting_color)
+        return Gfx::StandardCursor::Eyedropper;
+    return Gfx::StandardCursor::Crosshair;
+}
+
 }
