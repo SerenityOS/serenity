@@ -23,6 +23,7 @@ public:
     {
     }
 
+    // FIXME: Move or remove this class once it is unused in the header.
     class TreeSelection {
     public:
         union TreeSelectionValue {
@@ -43,8 +44,8 @@ public:
         }
 
         bool is_single_value() const { return m_is_single_value; }
-        int get_single_value() const { return m_value.m_value; }
-        int const* get_tree_value() const { return m_value.m_tree; }
+        int single_value() const { return m_value.m_value; }
+        int const* tree() const { return m_value.m_tree; }
 
     private:
         bool m_is_single_value;
@@ -60,6 +61,8 @@ public:
     u8 select_tree_probability(SyntaxElementType type, u8 node);
     /* (9.3.4) */
     void count_syntax_element(SyntaxElementType type, int value);
+
+    static ErrorOr<Partition> parse_partition(BitStream&, ProbabilityTables const&, SyntaxElementCounter&, bool has_rows, bool has_columns, BlockSubsize block_subsize, u8 num_8x8, Vector<u8> const& above_partition_context, Vector<u8> const& left_partition_context, u32 row, u32 column, bool frame_is_intra);
 
     void set_default_intra_mode_variables(u8 idx, u8 idy)
     {
@@ -93,7 +96,6 @@ public:
     }
 
 private:
-    u8 calculate_partition_probability(u8 node);
     u8 calculate_default_intra_mode_probability(u8 node);
     u8 calculate_default_uv_mode_probability(u8 node);
     u8 calculate_intra_mode_probability(u8 node);
@@ -135,6 +137,18 @@ private:
     // 0xFF indicates the value has not been set.
     // parse_mv_class0_fr should be called to set this.
     u8 m_mv_class0_bit { 0xFF };
+};
+
+struct PartitionTreeContext {
+    bool has_rows;
+    bool has_columns;
+    BlockSubsize block_subsize;
+    u8 num_8x8;
+    Vector<u8> const& above_partition_context;
+    Vector<u8> const& left_partition_context;
+    u32 row;
+    u32 column;
+    bool frame_is_intra;
 };
 
 }
