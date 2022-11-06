@@ -916,7 +916,7 @@ DecoderErrorOr<void> Parser::decode_partition(u32 row, u32 col, BlockSubsize blo
     m_has_cols = (col + half_block_8x8) < m_mi_cols;
     m_row = row;
     m_col = col;
-    auto partition = TRY_READ(m_tree_parser->parse_tree(SyntaxElementType::Partition));
+    auto partition = TRY_READ(TreeParser::parse_partition(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter, m_has_rows, m_has_cols, m_block_subsize, m_num_8x8, m_above_partition_context, m_left_partition_context, row, col, m_frame_is_intra));
 
     auto subsize = subsize_lookup[partition][block_subsize];
     if (subsize < Block_8x8 || partition == PartitionNone) {
