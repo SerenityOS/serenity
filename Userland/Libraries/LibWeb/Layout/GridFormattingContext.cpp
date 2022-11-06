@@ -45,9 +45,9 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
             if (grid_size.length().is_auto())
                 break;
             return grid_size.length().to_px(box);
-            break;
         case CSS::GridSize::Type::Percentage:
-            return grid_size.percentage().as_fraction() * box_state.content_width();
+            if (available_space.width.is_definite())
+                return grid_size.percentage().as_fraction() * available_space.width.to_px();
             break;
         default:
             VERIFY_NOT_REACHED();
@@ -124,7 +124,7 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
                 sum_of_grid_track_sizes += min(resolve_definite_track_size(track_sizing_function.grid_size()), resolve_definite_track_size(track_sizing_function.grid_size()));
             }
         }
-        column_count = max(1, static_cast<int>(get_free_space_x(box) / sum_of_grid_track_sizes));
+        column_count = max(1, static_cast<int>(get_free_space_x(available_space) / sum_of_grid_track_sizes));
 
         // For the purpose of finding the number of auto-repeated tracks in a standalone axis, the UA must
         // floor the track size to a UA-specified value to avoid division by zero. It is suggested that this
@@ -795,7 +795,8 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
                 grid_column.base_size = grid_column.min_track_sizing_function.length().to_px(box);
             break;
         case CSS::GridSize::Type::Percentage:
-            grid_column.base_size = grid_column.min_track_sizing_function.percentage().as_fraction() * box_state.content_width();
+            if (available_space.width.is_definite())
+                grid_column.base_size = grid_column.min_track_sizing_function.percentage().as_fraction() * available_space.width.to_px();
             break;
         // - An intrinsic sizing function
         // Use an initial base size of zero.
@@ -818,7 +819,8 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
                 grid_column.growth_limit = -1;
             break;
         case CSS::GridSize::Type::Percentage:
-            grid_column.growth_limit = grid_column.max_track_sizing_function.percentage().as_fraction() * box_state.content_width();
+            if (available_space.width.is_definite())
+                grid_column.growth_limit = grid_column.max_track_sizing_function.percentage().as_fraction() * available_space.width.to_px();
             break;
         // - A flexible sizing function
         // Use an initial growth limit of infinity.
@@ -1017,7 +1019,7 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
     for (auto& grid_column : m_grid_columns)
         grid_column.space_to_distribute = max(0, (grid_column.growth_limit == -1 ? grid_column.base_size : grid_column.growth_limit) - grid_column.base_size);
 
-    auto remaining_free_space = box_state.content_width() - sum_of_track_sizes;
+    auto remaining_free_space = available_space.width.is_definite() ? available_space.width.to_px() - sum_of_track_sizes : 0;
     // 2.2. Distribute space up to limits: Find the item-incurred increase for each spanned track with an
     // affected size by: distributing the space equally among such tracks, freezing a track’s
     // item-incurred increase as its affected size + item-incurred increase reaches its limit (and
@@ -1088,7 +1090,7 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
 
     // If the free space is positive, distribute it equally to the base sizes of all tracks, freezing
     // tracks as they reach their growth limits (and continuing to grow the unfrozen tracks as needed).
-    auto free_space = get_free_space_x(box);
+    auto free_space = get_free_space_x(available_space);
     while (free_space > 0) {
         auto free_space_to_distribute_per_track = free_space / m_grid_columns.size();
         for (auto& grid_column : m_grid_columns) {
@@ -1097,9 +1099,9 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
             else
                 grid_column.base_size = grid_column.base_size + free_space_to_distribute_per_track;
         }
-        if (get_free_space_x(box) == free_space)
+        if (get_free_space_x(available_space) == free_space)
             break;
-        free_space = get_free_space_x(box);
+        free_space = get_free_space_x(available_space);
     }
 
     // For the purpose of this step: if sizing the grid container under a max-content constraint, the
@@ -1133,7 +1135,7 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
             sized_column_widths += grid_column.base_size;
     }
     // Let leftover space be the space to fill minus the base sizes of the non-flexible grid tracks.
-    double free_horizontal_space = box_state.content_width() - sized_column_widths;
+    double free_horizontal_space = available_space.width.is_definite() ? available_space.width.to_px() - sized_column_widths : 0;
 
     // If the free space is zero or if sizing the grid container under a min-content constraint:
     // The used flex fraction is zero.
@@ -1206,7 +1208,7 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
             used_horizontal_space += grid_column.base_size;
     }
 
-    float remaining_horizontal_space = box_state.content_width() - used_horizontal_space;
+    float remaining_horizontal_space = available_space.width.is_definite() ? available_space.width.to_px() - used_horizontal_space : 0;
     auto count_of_auto_max_column_tracks = 0;
     for (auto& grid_column : m_grid_columns) {
         if (grid_column.max_track_sizing_function.is_length() && grid_column.max_track_sizing_function.length().is_auto())
@@ -1717,18 +1719,19 @@ bool GridFormattingContext::is_auto_positioned_track(CSS::GridTrackPlacement con
     return grid_track_start.is_auto_positioned() && grid_track_end.is_auto_positioned();
 }
 
-float GridFormattingContext::get_free_space_x(Box const& box)
+float GridFormattingContext::get_free_space_x(AvailableSpace const& available_space)
 {
     // https://www.w3.org/TR/css-grid-2/#algo-terms
     // free space: Equal to the available grid space minus the sum of the base sizes of all the grid
     // tracks (including gutters), floored at zero. If available grid space is indefinite, the free
     // space is indefinite as well.
     // FIXME: do indefinite space
+    if (!available_space.width.is_definite())
+        return 0;
     auto sum_base_sizes = 0;
     for (auto& grid_column : m_grid_columns)
         sum_base_sizes += grid_column.base_size;
-    auto& box_state = m_state.get_mutable(box);
-    return max(0, box_state.content_width() - sum_base_sizes);
+    return max(0, available_space.width.to_px() - sum_base_sizes);
 }
 
 float GridFormattingContext::get_free_space_y(Box const& box)
