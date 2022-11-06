@@ -39,6 +39,8 @@ static bool parent_element_for_event_dispatch(Painting::Paintable const& paintab
     layout_node = &paintable.layout_node();
     while (layout_node && node && !node->is_element() && layout_node->parent()) {
         layout_node = layout_node->parent();
+        if (layout_node->is_anonymous())
+            continue;
         node = layout_node->dom_node();
     }
     return node && layout_node;
