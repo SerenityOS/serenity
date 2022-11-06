@@ -16,6 +16,7 @@
 #include <LibVideo/DecoderError.h>
 
 #include "BitStream.h"
+#include "Context.h"
 #include "LookupTables.h"
 #include "MotionVector.h"
 #include "ProbabilityTables.h"
@@ -233,7 +234,7 @@ private:
     // The column to use for getting partition tree probability lookups.
     u32 m_col { 0 };
     TXSize m_tx_size { TX_4x4 };
-    ReferenceFrameType m_ref_frame[2];
+    ReferenceFramePair m_ref_frame;
     bool m_is_inter { false };
     bool m_is_compound { false };
     PredictionMode m_default_intra_mode { PredictionMode::DcPred };
@@ -243,18 +244,18 @@ private:
     u8 m_num_4x4_h { 0 };
     PredictionMode m_uv_mode { 0 }; // FIXME: Is u8 the right size?
     Vector<Array<PredictionMode, 4>> m_sub_modes;
-    ReferenceFrameType m_left_ref_frame[2];
-    ReferenceFrameType m_above_ref_frame[2];
+    ReferenceFramePair m_left_ref_frame;
+    ReferenceFramePair m_above_ref_frame;
     bool m_left_intra { false };
     bool m_above_intra { false };
     bool m_left_single { false };
     bool m_above_single { false };
     // The current block's interpolation filter.
     InterpolationFilter m_interp_filter { EightTap };
-    MotionVector m_mv[2];
-    MotionVector m_near_mv[2];
-    MotionVector m_nearest_mv[2];
-    MotionVector m_best_mv[2];
+    MotionVectorPair m_mv;
+    MotionVectorPair m_near_mv;
+    MotionVectorPair m_nearest_mv;
+    MotionVectorPair m_best_mv;
     // FIXME: Move these to a struct to store together in one array.
     Gfx::Size<u32> m_ref_frame_size[NUM_REF_FRAMES];
     bool m_ref_subsampling_x[NUM_REF_FRAMES];
@@ -271,7 +272,7 @@ private:
     TXMode m_tx_mode;
     ReferenceMode m_reference_mode;
     ReferenceFrameType m_comp_fixed_ref;
-    ReferenceFrameType m_comp_var_ref[2];
+    ReferenceFramePair m_comp_var_ref;
     MotionVector m_block_mvs[2][4];
     Vector<u8> m_prev_segment_ids;
 
@@ -280,15 +281,15 @@ private:
     Vector<u32> m_mi_sizes;
     Vector<PredictionMode> m_y_modes;
     Vector<u8> m_segment_ids;
-    Vector<Array<ReferenceFrameType, 2>> m_ref_frames;
-    Vector<Array<ReferenceFrameType, 2>> m_prev_ref_frames;
-    Vector<Array<MotionVector, 2>> m_mvs;
-    Vector<Array<MotionVector, 2>> m_prev_mvs;
-    MotionVector m_candidate_mv[2];
-    ReferenceFrameType m_candidate_frame[2];
+    Vector<ReferenceFramePair> m_ref_frames;
+    Vector<ReferenceFramePair> m_prev_ref_frames;
+    Vector<MotionVectorPair> m_mvs;
+    Vector<MotionVectorPair> m_prev_mvs;
+    MotionVectorPair m_candidate_mv;
+    ReferenceFramePair m_candidate_frame;
     Vector<Array<Array<MotionVector, 4>, 2>> m_sub_mvs;
     u8 m_ref_mv_count { 0 };
-    MotionVector m_ref_list_mv[2];
+    MotionVectorPair m_ref_list_mv;
     bool m_use_prev_frame_mvs;
     Vector<InterpolationFilter> m_interp_filters;
     // Indexed by ReferenceFrame enum.
