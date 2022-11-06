@@ -8,11 +8,8 @@
 #include "LibVideo/MatroskaDemuxer.h"
 #include <LibCore/ArgsParser.h>
 #include <LibGUI/Application.h>
-#include <LibGUI/FilePicker.h>
-#include <LibGUI/Menu.h>
 #include <LibGUI/Window.h>
 #include <LibMain/Main.h>
-#include <LibVideo/PlaybackManager.h>
 
 #include "VideoPlayerWidget.h"
 
@@ -30,16 +27,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto main_widget = TRY(window->try_set_main_widget<VideoPlayer::VideoPlayerWidget>(window));
     main_widget->update_title();
+    main_widget->initialize_menubar(window);
 
     if (!filename.is_empty())
         main_widget->open_file(filename);
-
-    auto file_menu = TRY(window->try_add_menu("&File"));
-    TRY(file_menu->try_add_action(GUI::CommonActions::make_open_action([&](auto&) {
-        Optional<String> path = GUI::FilePicker::get_open_filepath(window, "Open video file...");
-        if (path.has_value())
-            main_widget->open_file(path.value());
-    })));
 
     window->show();
     return app->exec();

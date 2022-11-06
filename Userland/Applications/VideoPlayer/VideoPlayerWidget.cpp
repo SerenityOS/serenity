@@ -6,6 +6,7 @@
 
 #include <LibGUI/Action.h>
 #include <LibGUI/BoxLayout.h>
+#include <LibGUI/FilePicker.h>
 #include <LibGUI/ImageWidget.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/MessageBox.h>
@@ -198,6 +199,23 @@ void VideoPlayerWidget::update_title()
 
     string_builder.append("[*] - Video Player"sv);
     window()->set_title(string_builder.to_string());
+}
+
+void VideoPlayerWidget::initialize_menubar(GUI::Window& window)
+{
+    auto& file_menu = window.add_menu("&File");
+    file_menu.add_action(GUI::CommonActions::make_open_action([&](auto&) {
+        Optional<String> path = GUI::FilePicker::get_open_filepath(&window, "Open video file...");
+        if (path.has_value())
+            open_file(path.value());
+    }));
+    file_menu.add_separator();
+    file_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) {
+        window.close();
+    }));
+
+    auto& help_menu = window.add_menu("&Help");
+    help_menu.add_action(GUI::CommonActions::make_about_action("Video Player", GUI::Icon::default_icon("window"sv), &window));
 }
 
 }
