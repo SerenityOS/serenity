@@ -8,6 +8,7 @@
 #include "LibVideo/MatroskaDemuxer.h"
 #include <LibCore/ArgsParser.h>
 #include <LibGUI/Application.h>
+#include <LibGUI/Icon.h>
 #include <LibGUI/Window.h>
 #include <LibMain/Main.h>
 
@@ -33,5 +34,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         main_widget->open_file(filename);
 
     window->show();
+    window->set_icon(GUI::Icon::default_icon("app-video-player"sv).bitmap_for_size(16));
+
     return app->exec();
 }

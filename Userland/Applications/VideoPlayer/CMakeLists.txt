@@ -10,5 +10,5 @@ set(SOURCES
     VideoPlayerWidget.cpp
 )
 
-serenity_bin(VideoPlayer)
+serenity_app(VideoPlayer ICON app-video-player)
 target_link_libraries(VideoPlayer PRIVATE LibVideo LibAudio LibCore LibGfx LibGUI LibMain)

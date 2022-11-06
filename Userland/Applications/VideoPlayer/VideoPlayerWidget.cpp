@@ -215,7 +215,7 @@ void VideoPlayerWidget::initialize_menubar(GUI::Window& window)
     }));
 
     auto& help_menu = window.add_menu("&Help");
-    help_menu.add_action(GUI::CommonActions::make_about_action("Video Player", GUI::Icon::default_icon("window"sv), &window));
+    help_menu.add_action(GUI::CommonActions::make_about_action("Video Player", GUI::Icon::default_icon("app-video-player"sv), &window));
 }
 
 }
