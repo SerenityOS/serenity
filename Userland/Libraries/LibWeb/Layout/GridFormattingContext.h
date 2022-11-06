@@ -26,17 +26,35 @@ private:
     bool is_auto_positioned_column(CSS::GridTrackPlacement const&, CSS::GridTrackPlacement const&) const;
     bool is_auto_positioned_track(CSS::GridTrackPlacement const&, CSS::GridTrackPlacement const&) const;
 
-    struct GridTrackSizeConstraints {
+    struct TemporaryTrack {
         CSS::GridSize min_track_sizing_function;
         CSS::GridSize max_track_sizing_function;
         float base_size { 0 };
         float growth_limit { 0 };
         float space_to_distribute { 0 };
         float planned_increase { 0 };
+
+        TemporaryTrack(CSS::GridSize min_track_sizing_function, CSS::GridSize max_track_sizing_function)
+            : min_track_sizing_function(min_track_sizing_function)
+            , max_track_sizing_function(max_track_sizing_function)
+        {
+        }
+
+        TemporaryTrack(CSS::GridSize track_sizing_function)
+            : min_track_sizing_function(track_sizing_function)
+            , max_track_sizing_function(track_sizing_function)
+        {
+        }
+
+        TemporaryTrack()
+            : min_track_sizing_function(CSS::GridSize::make_auto())
+            , max_track_sizing_function(CSS::GridSize::make_auto())
+        {
+        }
     };
 
-    Vector<GridTrackSizeConstraints> m_grid_rows;
-    Vector<GridTrackSizeConstraints> m_grid_columns;
+    Vector<TemporaryTrack> m_grid_rows;
+    Vector<TemporaryTrack> m_grid_columns;
 
     float get_free_space_x(AvailableSpace const& available_space);
     float get_free_space_y(Box const&);

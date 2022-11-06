@@ -684,19 +684,19 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
         for (auto _ = 0; _ < repeat_count; _++) {
             switch (track_in_list.type()) {
             case CSS::ExplicitGridTrack::Type::MinMax:
-                m_grid_columns.append({ track_in_list.minmax().min_grid_size(), track_in_list.minmax().max_grid_size() });
+                m_grid_columns.append(TemporaryTrack(track_in_list.minmax().min_grid_size(), track_in_list.minmax().max_grid_size()));
                 break;
             case CSS::ExplicitGridTrack::Type::Repeat:
                 for (auto& explicit_grid_track : track_in_list.repeat().grid_track_size_list().track_list()) {
                     auto track_sizing_function = explicit_grid_track;
                     if (track_sizing_function.is_minmax())
-                        m_grid_columns.append({ track_sizing_function.minmax().min_grid_size(), track_sizing_function.minmax().max_grid_size() });
+                        m_grid_columns.append(TemporaryTrack(track_sizing_function.minmax().min_grid_size(), track_sizing_function.minmax().max_grid_size()));
                     else
-                        m_grid_columns.append({ track_sizing_function.grid_size(), track_sizing_function.grid_size() });
+                        m_grid_columns.append(TemporaryTrack(track_sizing_function.grid_size()));
                 }
                 break;
             case CSS::ExplicitGridTrack::Type::Default:
-                m_grid_columns.append({ track_in_list.grid_size(), track_in_list.grid_size() });
+                m_grid_columns.append(TemporaryTrack(track_in_list.grid_size()));
                 break;
             default:
                 VERIFY_NOT_REACHED();
@@ -712,19 +712,19 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
         for (auto _ = 0; _ < repeat_count; _++) {
             switch (track_in_list.type()) {
             case CSS::ExplicitGridTrack::Type::MinMax:
-                m_grid_rows.append({ track_in_list.minmax().min_grid_size(), track_in_list.minmax().max_grid_size() });
+                m_grid_rows.append(TemporaryTrack(track_in_list.minmax().min_grid_size(), track_in_list.minmax().max_grid_size()));
                 break;
             case CSS::ExplicitGridTrack::Type::Repeat:
                 for (auto& explicit_grid_track : track_in_list.repeat().grid_track_size_list().track_list()) {
                     auto track_sizing_function = explicit_grid_track;
                     if (track_sizing_function.is_minmax())
-                        m_grid_rows.append({ track_sizing_function.minmax().min_grid_size(), track_sizing_function.minmax().max_grid_size() });
+                        m_grid_rows.append(TemporaryTrack(track_sizing_function.minmax().min_grid_size(), track_sizing_function.minmax().max_grid_size()));
                     else
-                        m_grid_rows.append({ track_sizing_function.grid_size(), track_sizing_function.grid_size() });
+                        m_grid_rows.append(TemporaryTrack(track_sizing_function.grid_size()));
                 }
                 break;
             case CSS::ExplicitGridTrack::Type::Default:
-                m_grid_rows.append({ track_in_list.grid_size(), track_in_list.grid_size() });
+                m_grid_rows.append(TemporaryTrack(track_in_list.grid_size()));
                 break;
             default:
                 VERIFY_NOT_REACHED();
@@ -733,9 +733,9 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
     }
 
     for (int column_index = m_grid_columns.size(); column_index < occupation_grid.column_count(); column_index++)
-        m_grid_columns.append({ CSS::GridSize::make_auto(), CSS::GridSize::make_auto() });
+        m_grid_columns.append(TemporaryTrack());
     for (int row_index = m_grid_rows.size(); row_index < occupation_grid.row_count(); row_index++)
-        m_grid_rows.append({ CSS::GridSize::make_auto(), CSS::GridSize::make_auto() });
+        m_grid_rows.append(TemporaryTrack());
 
     // https://www.w3.org/TR/css-grid-2/#algo-overview
     // 12.1. Grid Sizing Algorithm
