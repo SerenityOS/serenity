@@ -1753,9 +1753,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 auto const& variable = interpreter->realm().global_object();
                 list_all_properties(variable.shape(), variable_name);
 
-                for (auto const& name : global_environment.declarative_record().bindings()) {
-                    if (name.starts_with(variable_name)) {
-                        results.empend(name);
+                for (auto const& binding : global_environment.declarative_record().bindings()->bindings()) {
+                    if (binding.name.starts_with(variable_name)) {
+                        results.empend(binding.name);
                         results.last().invariant_offset = variable_name.length();
                     }
                 }

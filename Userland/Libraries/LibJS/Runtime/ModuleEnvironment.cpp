@@ -119,7 +119,6 @@ Optional<ModuleEnvironment::BindingAndIndex> ModuleEnvironment::find_binding_and
         Binding copy_binding = result->binding();
         copy_binding.mutable_ = false;
         copy_binding.can_be_deleted = false;
-        copy_binding.initialized = true;
         return BindingAndIndex { copy_binding };
     }
 

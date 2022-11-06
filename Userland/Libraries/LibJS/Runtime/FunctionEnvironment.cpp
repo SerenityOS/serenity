@@ -11,8 +11,8 @@
 
 namespace JS {
 
-FunctionEnvironment::FunctionEnvironment(Environment* parent_environment)
-    : DeclarativeEnvironment(parent_environment)
+FunctionEnvironment::FunctionEnvironment(JS::GCPtr<Environment> parent_environment, JS::GCPtr<DeclarativeEnvironmentBindings> shared_bindings)
+    : DeclarativeEnvironment(parent_environment, shared_bindings)
 {
 }
 

@@ -156,6 +156,7 @@ struct ClassFieldDefinition;
 class Completion;
 class Console;
 class DeclarativeEnvironment;
+class DeclarativeEnvironmentBindings;
 class DeferGC;
 class ECMAScriptFunctionObject;
 class Environment;

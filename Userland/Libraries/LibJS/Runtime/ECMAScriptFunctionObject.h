@@ -132,6 +132,8 @@ private:
     bool m_is_arrow_function : 1 { false };
     bool m_has_simple_parameter_list : 1 { false };
     FunctionKind m_kind : 3 { FunctionKind::Normal };
+
+    JS::GCPtr<DeclarativeEnvironmentBindings> m_cached_var_bindings;
 };
 
 template<>

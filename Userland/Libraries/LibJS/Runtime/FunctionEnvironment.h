@@ -46,7 +46,7 @@ public:
     ThrowCompletionOr<Value> bind_this_value(VM&, Value);
 
 private:
-    explicit FunctionEnvironment(Environment* parent_environment);
+    FunctionEnvironment(JS::GCPtr<Environment> parent_environment, JS::GCPtr<DeclarativeEnvironmentBindings> shared_bindings);
 
     virtual bool is_function_environment() const override { return true; }
     virtual void visit_edges(Visitor&) override;

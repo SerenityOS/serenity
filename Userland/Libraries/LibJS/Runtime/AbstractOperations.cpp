@@ -396,12 +396,12 @@ ObjectEnvironment* new_object_environment(Object& object, bool is_with_environme
 }
 
 // 9.1.2.4 NewFunctionEnvironment ( F, newTarget ), https://tc39.es/ecma262/#sec-newfunctionenvironment
-FunctionEnvironment* new_function_environment(ECMAScriptFunctionObject& function, Object* new_target)
+FunctionEnvironment* new_function_environment(ECMAScriptFunctionObject& function, Object* new_target, DeclarativeEnvironmentBindings* cached_bindings)
 {
     auto& heap = function.heap();
 
     // 1. Let env be a new function Environment Record containing no bindings.
-    auto* env = heap.allocate_without_realm<FunctionEnvironment>(function.environment());
+    auto* env = heap.allocate_without_realm<FunctionEnvironment>(function.environment(), cached_bindings);
 
     // 2. Set env.[[FunctionObject]] to F.
     env->set_function_object(function);

@@ -299,6 +299,8 @@ void ECMAScriptFunctionObject::visit_edges(Visitor& visitor)
     visitor.visit(m_realm);
     visitor.visit(m_home_object);
 
+    visitor.visit(m_cached_var_bindings);
+
     for (auto& field : m_fields) {
         if (auto* property_key_ptr = field.name.get_pointer<PropertyKey>(); property_key_ptr && property_key_ptr->is_symbol())
             visitor.visit(property_key_ptr->as_symbol());
@@ -325,8 +327,35 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
 {
     auto& vm = this->vm();
     auto& realm = *vm.current_realm();
-
     auto& callee_context = vm.running_execution_context();
+    auto& execution_context_arguments = callee_context.arguments;
+
+    if (m_cached_var_bindings) {
+        auto* var_environment = verify_cast<DeclarativeEnvironment>(callee_context.variable_environment);
+        for (auto& value : var_environment->values())
+            value = js_undefined();
+
+        for (size_t i = 0; i < m_formal_parameters.size(); ++i) {
+            auto& parameter = m_formal_parameters[i];
+            VERIFY(!parameter.is_rest);
+            VERIFY(!parameter.default_value);
+            TRY(parameter.binding.visit(
+                [&](FlyString const& param) -> ThrowCompletionOr<void> {
+                    Value argument_value = js_undefined();
+                    if (i < execution_context_arguments.size()) {
+                        argument_value = execution_context_arguments[i];
+                    }
+
+                    TRY(var_environment->initialize_binding(vm, param, argument_value));
+                    return {};
+                },
+                [](auto&) -> ThrowCompletionOr<void> {
+                    VERIFY_NOT_REACHED();
+                }));
+        }
+
+        return {};
+    }
 
     // Needed to extract declarations and functions
     ScopeNode const* scope_body = nullptr;
@@ -427,9 +456,7 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
     }
 
     // We now treat parameterBindings as parameterNames.
-
     // The spec makes an iterator here to do IteratorBindingInitialization but we just do it manually
-    auto& execution_context_arguments = vm.running_execution_context().arguments;
 
     size_t default_parameter_index = 0;
     for (size_t i = 0; i < m_formal_parameters.size(); ++i) {
@@ -577,6 +604,17 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
         MUST(var_environment->set_mutable_binding(vm, declaration.name(), function, false));
     }
 
+    if (m_has_simple_parameter_list
+        && !m_contains_direct_call_to_eval
+        && !arguments_object_needed
+        && !has_duplicates
+        && var_environment
+        && lex_environment == var_environment
+        && !scope_body->has_lexical_declarations()
+        && functions_to_initialize.is_empty()) {
+        m_cached_var_bindings = verify_cast<DeclarativeEnvironment>(*var_environment).bindings();
+    }
+
     return {};
 }
 
@@ -617,7 +655,7 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::prepare_for_ordinary_call(Exec
     callee_context.script_or_module = m_script_or_module;
 
     // 7. Let localEnv be NewFunctionEnvironment(F, newTarget).
-    auto* local_environment = new_function_environment(*this, new_target);
+    auto* local_environment = new_function_environment(*this, new_target, m_cached_var_bindings);
 
     // 8. Set the LexicalEnvironment of calleeContext to localEnv.
     callee_context.lexical_environment = local_environment;

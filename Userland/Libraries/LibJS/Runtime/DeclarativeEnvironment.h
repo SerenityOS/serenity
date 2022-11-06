@@ -15,19 +15,42 @@
 
 namespace JS {
 
-class DeclarativeEnvironment : public Environment {
-    JS_ENVIRONMENT(DeclarativeEnvironment, Environment);
+// This holds the list of bindings in a DeclarativeEnvironment object, along with their metadata.
+// As an optimization, the same DeclarativeEnvironmentBindings may be used by multiple
+// DeclarativeEnvironment objects simultaneously, if we've determined that it's safe to do so.
+class DeclarativeEnvironmentBindings final : public Cell {
+    JS_CELL(DeclarativeEnvironmentBindings, Cell);
+
+public:
+    virtual ~DeclarativeEnvironmentBindings() override;
 
     struct Binding {
         FlyString name;
-        Value value;
         bool strict { false };
         bool mutable_ { false };
         bool can_be_deleted { false };
-        bool initialized { false };
     };
 
+    // Returns true if these bindings are shareable.
+    bool is_shared() const { return m_shared; }
+
+    // Returns a newly-allocated copy of these bindings with sharing turned off.
+    JS::NonnullGCPtr<DeclarativeEnvironmentBindings> make_unshared_copy();
+
+    auto& bindings() { return m_bindings; }
+    auto const& bindings() const { return m_bindings; }
+
+private:
+    bool m_shared { false };
+    Vector<Binding> m_bindings;
+};
+
+class DeclarativeEnvironment : public Environment {
+    JS_ENVIRONMENT(DeclarativeEnvironment, Environment);
+
 public:
+    using Binding = DeclarativeEnvironmentBindings::Binding;
+
     static DeclarativeEnvironment* create_for_per_iteration_bindings(Badge<ForStatement>, DeclarativeEnvironment& other, size_t bindings_size);
 
     virtual ~DeclarativeEnvironment() override = default;
@@ -43,31 +66,20 @@ public:
     void initialize_or_set_mutable_binding(Badge<ScopeNode>, VM&, FlyString const& name, Value value);
     ThrowCompletionOr<void> initialize_or_set_mutable_binding(VM&, FlyString const& name, Value value);
 
-    // This is not a method defined in the spec! Do not use this in any LibJS (or other spec related) code.
-    [[nodiscard]] Vector<FlyString> bindings() const
-    {
-        Vector<FlyString> names;
-        names.ensure_capacity(m_bindings.size());
-
-        for (auto const& binding : m_bindings)
-            names.unchecked_append(binding.name);
-
-        return names;
-    }
+    JS::NonnullGCPtr<DeclarativeEnvironmentBindings> bindings() { return *m_bindings; }
+    Vector<Optional<Value>>& values() { return m_values; }
 
     ThrowCompletionOr<void> set_mutable_binding_direct(VM&, size_t index, Value, bool strict);
     ThrowCompletionOr<Value> get_binding_value_direct(VM&, size_t index, bool strict);
 
 private:
-    ThrowCompletionOr<void> initialize_binding_direct(VM&, Binding&, Value);
-    ThrowCompletionOr<Value> get_binding_value_direct(VM&, Binding&, bool strict);
-    ThrowCompletionOr<void> set_mutable_binding_direct(VM&, Binding&, Value, bool strict);
+    ThrowCompletionOr<void> initialize_binding_direct(VM&, size_t index, Value);
 
 protected:
     DeclarativeEnvironment();
-    explicit DeclarativeEnvironment(Environment* parent_environment);
-    DeclarativeEnvironment(Environment* parent_environment, Span<Binding const> bindings);
+    DeclarativeEnvironment(JS::GCPtr<Environment> parent_environment, JS::GCPtr<DeclarativeEnvironmentBindings> cached_bindings = nullptr);
 
+    virtual void initialize_without_realm() override;
     virtual void visit_edges(Visitor&) override;
 
     class BindingAndIndex {
@@ -100,22 +112,15 @@ protected:
 
     friend class ModuleEnvironment;
 
-    virtual Optional<BindingAndIndex> find_binding_and_index(FlyString const& name) const
-    {
-        auto it = m_bindings.find_if([&](auto const& binding) {
-            return binding.name == name;
-        });
-
-        if (it == m_bindings.end())
-            return {};
-
-        return BindingAndIndex { const_cast<Binding*>(&(*it)), it.index() };
-    }
+    virtual Optional<BindingAndIndex> find_binding_and_index(FlyString const& name) const;
 
 private:
     virtual bool is_declarative_environment() const override { return true; }
 
-    Vector<Binding> m_bindings;
+    void unshare_bindings_if_needed();
+
+    JS::GCPtr<DeclarativeEnvironmentBindings> m_bindings;
+    Vector<Optional<Value>> m_values;
 };
 
 template<>
