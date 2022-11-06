@@ -14,8 +14,8 @@
 
 namespace Unicode {
 
-Optional<CodePointDecomposition const&> __attribute__((weak)) code_point_decomposition(u32) { return {}; }
-Span<CodePointDecomposition const> __attribute__((weak)) code_point_decompositions() { return {}; }
+Optional<CodePointDecomposition const> __attribute__((weak)) code_point_decomposition(u32) { return {}; }
+Optional<CodePointDecomposition const> __attribute__((weak)) code_point_decomposition_by_index(size_t) { return {}; }
 
 NormalizationForm normalization_form_from_string(StringView form)
 {
@@ -122,7 +122,11 @@ static u32 combine_code_points(u32 a, u32 b)
 {
     Array<u32, 2> const points { a, b };
     // FIXME: Do something better than linear search to find reverse mappings.
-    for (auto const& mapping : Unicode::code_point_decompositions()) {
+    for (size_t index = 0;; ++index) {
+        auto mapping_maybe = Unicode::code_point_decomposition_by_index(index);
+        if (!mapping_maybe.has_value())
+            break;
+        auto& mapping = mapping_maybe.value();
         if (mapping.tag == CompatibilityFormattingTag::Canonical && mapping.decomposition == points) {
             if (code_point_has_property(mapping.code_point, Property::Full_Composition_Exclusion))
                 continue;

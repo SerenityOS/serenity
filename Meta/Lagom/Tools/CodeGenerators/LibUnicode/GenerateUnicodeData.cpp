@@ -768,6 +768,13 @@ struct SpecialCasing {
     Condition condition { Condition::None };
 };
 
+struct CodePointDecompositionRaw {
+    u32 code_point { 0 };
+    CompatibilityFormattingTag tag { CompatibilityFormattingTag::Canonical };
+    size_t decomposition_index { 0 };
+    size_t decomposition_count { 0 };
+};
+
 struct CodePointDecomposition {
     u32 code_point { 0 };
     CompatibilityFormattingTag tag { CompatibilityFormattingTag::Canonical };
@@ -947,7 +954,7 @@ static constexpr Array<@mapping_type@, @size@> s_@name@_mappings { {
                 generator.set("tag", mapping->tag);
                 generator.set("start", String::number(mapping->decomposition_index));
                 generator.set("size", String::number(mapping->decomposition_size));
-                generator.append(", CompatibilityFormattingTag::@tag@, Span<u32 const> { s_decomposition_mappings_data.data() + @start@, @size@ } },");
+                generator.append(", CompatibilityFormattingTag::@tag@, @start@, @size@ },");
             } else {
                 append_list_and_size(data.special_casing_indices, "&s_special_casing[{}]"sv);
                 generator.append(" },");
@@ -974,7 +981,7 @@ static constexpr Array<@mapping_type@, @size@> s_@name@_mappings { {
     append_code_point_mappings("special_case"sv, "SpecialCaseMapping"sv, unicode_data.code_points_with_special_casing, [](auto const& data) { return data.special_casing_indices; });
     append_code_point_mappings("abbreviation"sv, "CodePointAbbreviation"sv, unicode_data.code_point_abbreviations.size(), [](auto const& data) { return data.abbreviation; });
 
-    append_code_point_mappings("decomposition"sv, "CodePointDecomposition"sv, unicode_data.code_points_with_decomposition_mapping,
+    append_code_point_mappings("decomposition"sv, "CodePointDecompositionRaw"sv, unicode_data.code_points_with_decomposition_mapping,
         [](auto const& data) {
             return data.decomposition_mapping;
         });
@@ -1153,17 +1160,20 @@ Optional<StringView> code_point_abbreviation(u32 code_point)
     return decode_string(mapping->abbreviation);
 }
 
-Optional<CodePointDecomposition const&> code_point_decomposition(u32 code_point)
+Optional<CodePointDecomposition const> code_point_decomposition(u32 code_point)
 {
-    auto const* mapping = binary_search(s_decomposition_mappings, code_point, nullptr, CodePointComparator<CodePointDecomposition> {});
+    auto const* mapping = binary_search(s_decomposition_mappings, code_point, nullptr, CodePointComparator<CodePointDecompositionRaw> {});
     if (mapping == nullptr)
         return {};
-    return *mapping;
+    return CodePointDecomposition { mapping->code_point, mapping->tag, Span<u32 const> { s_decomposition_mappings_data.data() + mapping->decomposition_index, mapping->decomposition_count } };
 }
 
-Span<CodePointDecomposition const> code_point_decompositions()
+Optional<CodePointDecomposition const> code_point_decomposition_by_index(size_t index)
 {
-    return s_decomposition_mappings;
+    if (index >= s_decomposition_mappings.size())
+        return {};
+    auto const& mapping = s_decomposition_mappings[index];
+    return CodePointDecomposition { mapping.code_point, mapping.tag, Span<u32 const> { s_decomposition_mappings_data.data() + mapping.decomposition_index, mapping.decomposition_count } };
 }
 )~~~");
 
