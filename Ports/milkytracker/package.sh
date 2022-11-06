@@ -8,7 +8,7 @@ auth_type=sha256
 configopts=("-DCMAKE_TOOLCHAIN_FILE=${SERENITY_BUILD_DIR}/CMakeToolchain.txt")
 depends=("SDL2" "zlib")
 launcher_name="MilkyTracker"
-launcher_category=Sound
+launcher_category=Media
 launcher_command=/usr/local/bin/milkytracker
 
 configure() {
