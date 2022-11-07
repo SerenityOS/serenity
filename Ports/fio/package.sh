@@ -1,7 +1,7 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='fio'
-version='3.30'
-files="https://brick.kernel.dk/snaps/${port}-${version}.tar.gz ${port}-${version}.tar.gz 93998f838f72f871b36d60da132fcc3abaadd7b14c628ec95ee4092f2d277aed"
+version='3.33'
+files="https://brick.kernel.dk/snaps/${port}-${version}.tar.gz ${port}-${version}.tar.gz d2410e13e0f379d061d077cc5ae325835bb7c6186aa7bafc1df954cbc9b014fc"
 auth_type='sha256'
 depends=("zlib")
 
