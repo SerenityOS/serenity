@@ -134,6 +134,19 @@ ErrorOr<PredictionMode> TreeParser::parse_default_intra_mode(BitStream& bit_stre
     return value;
 }
 
+ErrorOr<PredictionMode> TreeParser::parse_default_uv_mode(BitStream& bit_stream, ProbabilityTables const& probability_table, PredictionMode y_mode)
+{
+    // Tree
+    TreeParser::TreeSelection tree = { intra_mode_tree };
+
+    // Probabilities
+    u8 const* probabilities = probability_table.kf_uv_mode_prob()[to_underlying(y_mode)];
+
+    auto value = TRY(parse_tree_new<PredictionMode>(bit_stream, tree, [&](u8 node) { return probabilities[node]; }));
+    // Default UV mode is not counted.
+    return value;
+}
+
 /*
  * Select a tree value based on the type of syntax element being parsed, as well as some parser state, as specified in section 9.3.1
  */
@@ -195,8 +208,6 @@ TreeParser::TreeSelection TreeParser::select_tree(SyntaxElementType type)
 u8 TreeParser::select_tree_probability(SyntaxElementType type, u8 node)
 {
     switch (type) {
-    case SyntaxElementType::DefaultUVMode:
-        return calculate_default_uv_mode_probability(node);
     case SyntaxElementType::IntraMode:
         return calculate_intra_mode_probability(node);
     case SyntaxElementType::SubIntraMode:
@@ -267,11 +278,6 @@ u8 TreeParser::select_tree_probability(SyntaxElementType type, u8 node)
 #define LEFT_INTRA m_decoder.m_left_intra
 #define ABOVE_SINGLE m_decoder.m_above_single
 #define LEFT_SINGLE m_decoder.m_left_single
-
-u8 TreeParser::calculate_default_uv_mode_probability(u8 node)
-{
-    return m_decoder.m_probability_tables->kf_uv_mode_prob()[to_underlying(m_decoder.m_y_mode)][node];
-}
 
 u8 TreeParser::calculate_intra_mode_probability(u8 node)
 {

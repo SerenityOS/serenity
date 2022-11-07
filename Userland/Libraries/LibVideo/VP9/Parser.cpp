@@ -1057,7 +1057,7 @@ DecoderErrorOr<void> Parser::intra_frame_mode_info()
         }
         m_y_mode = m_default_intra_mode;
     }
-    m_uv_mode = TRY_READ(m_tree_parser->parse_tree<PredictionMode>(SyntaxElementType::DefaultUVMode));
+    m_uv_mode = TRY_READ(TreeParser::parse_default_uv_mode(*m_bit_stream, *m_probability_tables, m_y_mode));
     return {};
 }
 
