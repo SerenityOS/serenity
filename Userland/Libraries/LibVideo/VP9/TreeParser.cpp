@@ -200,6 +200,35 @@ ErrorOr<PredictionMode> TreeParser::parse_inter_mode(BitStream& bit_stream, Prob
     return value;
 }
 
+ErrorOr<InterpolationFilter> TreeParser::parse_interpolation_filter(BitStream& bit_stream, ProbabilityTables const& probability_table, SyntaxElementCounter& counter, Optional<ReferenceFrameType> above_ref_frame, Optional<ReferenceFrameType> left_ref_frame, Optional<InterpolationFilter> above_interpolation_filter, Optional<InterpolationFilter> left_interpolation_filter)
+{
+    // FIXME: Above and left context should be provided by a struct.
+
+    // Tree
+    TreeParser::TreeSelection tree = { interp_filter_tree };
+
+    // Probabilities
+    // NOTE: SWITCHABLE_FILTERS is not used in the spec for this function. Therefore, the number
+    //       was demystified by referencing the reference codec libvpx:
+    //       https://github.com/webmproject/libvpx/blob/705bf9de8c96cfe5301451f1d7e5c90a41c64e5f/vp9/common/vp9_pred_common.h#L69
+    u8 left_interp = (left_ref_frame.has_value() && left_ref_frame.value() > IntraFrame)
+        ? left_interpolation_filter.value()
+        : SWITCHABLE_FILTERS;
+    u8 above_interp = (above_ref_frame.has_value() && above_ref_frame.value() > IntraFrame)
+        ? above_interpolation_filter.value()
+        : SWITCHABLE_FILTERS;
+    u8 context = SWITCHABLE_FILTERS;
+    if (above_interp == left_interp || above_interp == SWITCHABLE_FILTERS)
+        context = left_interp;
+    else if (left_interp == SWITCHABLE_FILTERS)
+        context = above_interp;
+    u8 const* probabilities = probability_table.interp_filter_probs()[context];
+
+    auto value = TRY(parse_tree_new<InterpolationFilter>(bit_stream, tree, [&](u8 node) { return probabilities[node]; }));
+    increment_counter(counter.m_counts_interp_filter[context][to_underlying(value)]);
+    return value;
+}
+
 /*
  * Select a tree value based on the type of syntax element being parsed, as well as some parser state, as specified in section 9.3.1
  */
@@ -226,8 +255,6 @@ TreeParser::TreeSelection TreeParser::select_tree(SyntaxElementType type)
         if (m_decoder.m_max_tx_size == TX_16x16)
             return { tx_size_16_tree };
         return { tx_size_8_tree };
-    case SyntaxElementType::InterpFilter:
-        return { interp_filter_tree };
     case SyntaxElementType::MVJoint:
         return { mv_joint_tree };
     case SyntaxElementType::MVClass:
@@ -279,8 +306,6 @@ u8 TreeParser::select_tree_probability(SyntaxElementType type, u8 node)
         return m_decoder.m_probability_tables->mv_bits_prob()[m_mv_component][m_mv_bit];
     case SyntaxElementType::TXSize:
         return calculate_tx_size_probability(node);
-    case SyntaxElementType::InterpFilter:
-        return calculate_interp_filter_probability(node);
     case SyntaxElementType::MVJoint:
         return m_decoder.m_probability_tables->mv_joint_probs()[node];
     case SyntaxElementType::MVClass:
@@ -619,28 +644,6 @@ u8 TreeParser::calculate_tx_size_probability(u8 node)
     return m_decoder.m_probability_tables->tx_probs()[m_decoder.m_max_tx_size][m_ctx][node];
 }
 
-u8 TreeParser::calculate_interp_filter_probability(u8 node)
-{
-    // NOTE: SWITCHABLE_FILTERS is not used in the spec for this function. Therefore, the number
-    //       was demystified by referencing the reference codec libvpx:
-    //       https://github.com/webmproject/libvpx/blob/705bf9de8c96cfe5301451f1d7e5c90a41c64e5f/vp9/common/vp9_pred_common.h#L69
-    auto left_interp = (AVAIL_L && m_decoder.m_left_ref_frame[0] > IntraFrame)
-        ? m_decoder.m_interp_filters[m_decoder.get_image_index(m_decoder.m_mi_row, m_decoder.m_mi_col - 1)]
-        : SWITCHABLE_FILTERS;
-    auto above_interp = (AVAIL_U && m_decoder.m_above_ref_frame[0] > IntraFrame)
-        ? m_decoder.m_interp_filters[m_decoder.get_image_index(m_decoder.m_mi_row - 1, m_decoder.m_mi_col)]
-        : SWITCHABLE_FILTERS;
-    if (left_interp == above_interp)
-        m_ctx = left_interp;
-    else if (left_interp == SWITCHABLE_FILTERS)
-        m_ctx = above_interp;
-    else if (above_interp == SWITCHABLE_FILTERS)
-        m_ctx = left_interp;
-    else
-        m_ctx = SWITCHABLE_FILTERS;
-    return m_decoder.m_probability_tables->interp_filter_probs()[m_ctx][node];
-}
-
 void TreeParser::set_tokens_variables(u8 band, u32 c, u32 plane, TXSize tx_size, u32 pos)
 {
     m_band = band;
@@ -749,9 +752,6 @@ void TreeParser::count_syntax_element(SyntaxElementType type, int value)
         return;
     case SyntaxElementType::TXSize:
         increment(m_decoder.m_syntax_element_counter->m_counts_tx_size[m_decoder.m_max_tx_size][m_ctx][value]);
-        return;
-    case SyntaxElementType::InterpFilter:
-        increment(m_decoder.m_syntax_element_counter->m_counts_interp_filter[m_ctx][value]);
         return;
     case SyntaxElementType::MVJoint:
         increment(m_decoder.m_syntax_element_counter->m_counts_mv_joint[value]);

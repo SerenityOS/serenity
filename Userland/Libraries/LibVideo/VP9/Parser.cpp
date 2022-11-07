@@ -1219,10 +1219,15 @@ DecoderErrorOr<void> Parser::inter_block_mode_info()
     } else if (m_mi_size >= Block_8x8) {
         m_y_mode = TRY_READ(TreeParser::parse_inter_mode(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter, m_mode_context[m_ref_frame[0]]));
     }
-    if (m_interpolation_filter == Switchable)
-        m_interp_filter = TRY_READ(m_tree_parser->parse_tree<InterpolationFilter>(SyntaxElementType::InterpFilter));
-    else
+    if (m_interpolation_filter == Switchable) {
+        Optional<ReferenceFrameType> above_ref_frame = m_available_u ? m_ref_frames[get_image_index(m_mi_row - 1, m_mi_col)][0] : Optional<ReferenceFrameType>();
+        Optional<ReferenceFrameType> left_ref_frame = m_available_l ? m_ref_frames[get_image_index(m_mi_row, m_mi_col - 1)][0] : Optional<ReferenceFrameType>();
+        Optional<InterpolationFilter> above_interpolation_filter = m_available_u ? m_interp_filters[get_image_index(m_mi_row - 1, m_mi_col)] : Optional<InterpolationFilter>();
+        Optional<InterpolationFilter> left_interpolation_filter = m_available_l ? m_interp_filters[get_image_index(m_mi_row, m_mi_col - 1)] : Optional<InterpolationFilter>();
+        m_interp_filter = TRY_READ(TreeParser::parse_interpolation_filter(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter, above_ref_frame, left_ref_frame, above_interpolation_filter, left_interpolation_filter));
+    } else {
         m_interp_filter = m_interpolation_filter;
+    }
     if (m_mi_size < Block_8x8) {
         m_num_4x4_w = num_4x4_blocks_wide_lookup[m_mi_size];
         m_num_4x4_h = num_4x4_blocks_high_lookup[m_mi_size];
