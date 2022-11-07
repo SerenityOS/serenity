@@ -272,11 +272,21 @@ void paint_conic_gradient(PaintContext& context, Gfx::IntRect const& gradient_re
     float start_angle = (360.0f - data.start_angle) + 90.0f;
     // Translate position/center to the center of the pixel (avoids some funky painting)
     auto center_point = Gfx::FloatPoint { position }.translated(0.5, 0.5);
+    // The flooring can make gradients that want soft edges look worse, so only floor if we have hard edges.
+    // Which makes sure the hard edge stay hard edges :^)
+    bool should_floor_angles = false;
+    auto& color_stops = data.color_stops.list;
+    for (size_t i = 0; i < color_stops.size() - 1; i++) {
+        if (color_stops[i + 1].position - color_stops[i].position <= 0.01f) {
+            should_floor_angles = true;
+            break;
+        }
+    }
     gradient_line.paint_into_rect(context.painter(), gradient_rect, [&](int x, int y) {
         auto point = Gfx::FloatPoint { x, y } - center_point;
         // FIXME: We could probably get away with some approximation here:
-        // Note: We need too floor the angle here or the colors will start to diverge as you get further from the center.
-        return floor(fmod((AK::atan2(point.y(), point.x()) * 180.0f / AK::Pi<float> + 360.0f + start_angle), 360.0f));
+        auto loc = fmod((AK::atan2(point.y(), point.x()) * 180.0f / AK::Pi<float> + 360.0f + start_angle), 360.0f);
+        return should_floor_angles ? floor(loc) : loc;
     });
 }
 
