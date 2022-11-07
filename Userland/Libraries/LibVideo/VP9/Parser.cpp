@@ -1200,7 +1200,7 @@ DecoderErrorOr<void> Parser::intra_block_mode_info()
         }
         m_y_mode = sub_intra_mode;
     }
-    m_uv_mode = TRY_READ(m_tree_parser->parse_tree<PredictionMode>(SyntaxElementType::UVMode));
+    m_uv_mode = TRY_READ(TreeParser::parse_uv_mode(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter, m_y_mode));
     return {};
 }
 

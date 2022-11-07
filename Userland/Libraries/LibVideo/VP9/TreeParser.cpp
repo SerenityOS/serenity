@@ -174,14 +174,25 @@ ErrorOr<PredictionMode> TreeParser::parse_sub_intra_mode(BitStream& bit_stream, 
     return value;
 }
 
+ErrorOr<PredictionMode> TreeParser::parse_uv_mode(BitStream& bit_stream, ProbabilityTables const& probability_table, SyntaxElementCounter& counter, PredictionMode y_mode)
+{
+    // Tree
+    TreeParser::TreeSelection tree = { intra_mode_tree };
+
+    // Probabilities
+    u8 const* probabilities = probability_table.uv_mode_probs()[to_underlying(y_mode)];
+
+    auto value = TRY(parse_tree_new<PredictionMode>(bit_stream, tree, [&](u8 node) { return probabilities[node]; }));
+    increment_counter(counter.m_counts_uv_mode[to_underlying(y_mode)][to_underlying(value)]);
+    return value;
+}
+
 /*
  * Select a tree value based on the type of syntax element being parsed, as well as some parser state, as specified in section 9.3.1
  */
 TreeParser::TreeSelection TreeParser::select_tree(SyntaxElementType type)
 {
     switch (type) {
-    case SyntaxElementType::UVMode:
-        return { intra_mode_tree };
     case SyntaxElementType::SegmentID:
         return { segment_tree };
     case SyntaxElementType::Skip:
@@ -232,8 +243,6 @@ TreeParser::TreeSelection TreeParser::select_tree(SyntaxElementType type)
 u8 TreeParser::select_tree_probability(SyntaxElementType type, u8 node)
 {
     switch (type) {
-    case SyntaxElementType::UVMode:
-        return calculate_uv_mode_probability(node);
     case SyntaxElementType::SegmentID:
         return calculate_segment_id_probability(node);
     case SyntaxElementType::Skip:
@@ -298,12 +307,6 @@ u8 TreeParser::select_tree_probability(SyntaxElementType type, u8 node)
 #define LEFT_INTRA m_decoder.m_left_intra
 #define ABOVE_SINGLE m_decoder.m_above_single
 #define LEFT_SINGLE m_decoder.m_left_single
-
-u8 TreeParser::calculate_uv_mode_probability(u8 node)
-{
-    m_ctx = to_underlying(m_decoder.m_y_mode);
-    return m_decoder.m_probability_tables->uv_mode_probs()[m_ctx][node];
-}
 
 u8 TreeParser::calculate_segment_id_probability(u8 node)
 {
@@ -712,9 +715,6 @@ void TreeParser::count_syntax_element(SyntaxElementType type, int value)
         increment_counter(count);
     };
     switch (type) {
-    case SyntaxElementType::UVMode:
-        increment(m_decoder.m_syntax_element_counter->m_counts_uv_mode[m_ctx][value]);
-        return;
     case SyntaxElementType::Skip:
         increment(m_decoder.m_syntax_element_counter->m_counts_skip[m_ctx][value]);
         return;
