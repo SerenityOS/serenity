@@ -301,7 +301,6 @@ private:
     OwnPtr<BitStream> m_bit_stream;
     OwnPtr<ProbabilityTables> m_probability_tables;
     OwnPtr<SyntaxElementCounter> m_syntax_element_counter;
-    NonnullOwnPtr<TreeParser> m_tree_parser;
     Decoder& m_decoder;
 };
 

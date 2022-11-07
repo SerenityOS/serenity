@@ -11,37 +11,6 @@
 
 namespace Video::VP9 {
 
-enum class SyntaxElementType {
-    Partition,
-    DefaultIntraMode,
-    DefaultUVMode,
-    IntraMode,
-    SubIntraMode,
-    UVMode,
-    SegmentID,
-    Skip,
-    SegIDPredicted,
-    IsInter,
-    CompMode,
-    CompRef,
-    SingleRefP1,
-    SingleRefP2,
-    MVSign,
-    MVClass0Bit,
-    MVBit,
-    TXSize,
-    InterMode,
-    InterpFilter,
-    MVJoint,
-    MVClass,
-    MVClass0FR,
-    MVClass0HP,
-    MVFR,
-    MVHP,
-    Token,
-    MoreCoefs,
-};
-
 class SyntaxElementCounter final {
 public:
     /* (8.3) Clear Counts Process */

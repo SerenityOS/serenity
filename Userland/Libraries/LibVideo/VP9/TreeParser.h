@@ -19,11 +19,6 @@ class Parser;
 
 class TreeParser {
 public:
-    explicit TreeParser(Parser& decoder)
-        : m_decoder(decoder)
-    {
-    }
-
     // FIXME: Move or remove this class once it is unused in the header.
     class TreeSelection {
     public:
@@ -53,16 +48,6 @@ public:
         TreeSelectionValue m_value;
     };
 
-    /* (9.3.3) */
-    template<typename T = int>
-    ErrorOr<T> parse_tree(SyntaxElementType type);
-    /* (9.3.1) */
-    TreeSelection select_tree(SyntaxElementType type);
-    /* (9.3.2) */
-    u8 select_tree_probability(SyntaxElementType type, u8 node);
-    /* (9.3.4) */
-    void count_syntax_element(SyntaxElementType type, int value);
-
     static ErrorOr<Partition> parse_partition(BitStream&, ProbabilityTables const&, SyntaxElementCounter&, bool has_rows, bool has_columns, BlockSubsize block_subsize, u8 num_8x8, Vector<u8> const& above_partition_context, Vector<u8> const& left_partition_context, u32 row, u32 column, bool frame_is_intra);
     static ErrorOr<PredictionMode> parse_default_intra_mode(BitStream&, ProbabilityTables const&, BlockSubsize mi_size, Optional<Array<PredictionMode, 4> const&> above_context, Optional<Array<PredictionMode, 4> const&> left_context, PredictionMode block_sub_modes[4], u8 index_x, u8 index_y);
     static ErrorOr<PredictionMode> parse_default_uv_mode(BitStream&, ProbabilityTables const&, PredictionMode y_mode);
@@ -91,46 +76,9 @@ public:
     static ErrorOr<u8> parse_motion_vector_fr(BitStream&, ProbabilityTables const&, SyntaxElementCounter&, u8 component);
     static ErrorOr<bool> parse_motion_vector_hp(BitStream&, ProbabilityTables const&, SyntaxElementCounter&, u8 component, bool use_hp);
 
-    void set_default_intra_mode_variables(u8 idx, u8 idy)
-    {
-        m_idx = idx;
-        m_idy = idy;
-    }
-
-    void set_tokens_variables(u8 band, u32 c, u32 plane, TXSize tx_size, u32 pos);
-
-    void set_start_x_and_y(u32 start_x, u32 start_y)
-    {
-        m_start_x = start_x;
-        m_start_y = start_y;
-    }
-
-private:
-    u8 calculate_token_probability(u8 node);
-    u8 calculate_more_coefs_probability();
-
-    Parser& m_decoder;
-    // m_ctx is a member variable because it is required for syntax element counting (section 9.3.4)
-    u8 m_ctx { 0 };
-
-    // These are variables necessary for parsing tree data, but aren't useful otherwise, so they're
-    // not stored in the Decoder itself.
-    u8 m_idx { 0 };
-    u8 m_idy { 0 };
-    u8 m_band { 0 };
-    u32 m_start_x { 0 };
-    u32 m_start_y { 0 };
-    u32 m_c { 0 };
-    u32 m_plane { 0 };
-    TXSize m_tx_size;
-    u32 m_pos { 0 };
-    u8 m_mv_component { 0 };
-    // 0xFF indicates the value has not been set.
-    // parse_mv_bit should be called to set this.
-    u8 m_mv_bit { 0xFF };
-    // 0xFF indicates the value has not been set.
-    // parse_mv_class0_fr should be called to set this.
-    u8 m_mv_class0_bit { 0xFF };
+    static TokensContext get_tokens_context(bool subsampling_x, bool subsampling_y, u32 rows, u32 columns, Array<Vector<bool>, 3> const& above_nonzero_context, Array<Vector<bool>, 3> const& left_nonzero_context, u8 token_cache[1024], TXSize tx_size, u8 tx_type, u8 plane, u32 start_x, u32 start_y, u32 position, bool is_inter, u8 band, u32 c);
+    static ErrorOr<bool> parse_more_coefficients(BitStream&, ProbabilityTables const&, SyntaxElementCounter&, TokensContext const& context);
+    static ErrorOr<Token> parse_token(BitStream&, ProbabilityTables const&, SyntaxElementCounter&, TokensContext const& context);
 };
 
 struct PartitionTreeContext {

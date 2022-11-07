@@ -30,4 +30,12 @@ struct Pair {
 typedef Pair<ReferenceFrameType> ReferenceFramePair;
 typedef Pair<MotionVector> MotionVectorPair;
 
+struct TokensContext {
+    TXSize m_tx_size;
+    bool m_is_uv_plane;
+    bool m_is_inter;
+    u8 m_band;
+    u8 m_context_index;
+};
+
 }

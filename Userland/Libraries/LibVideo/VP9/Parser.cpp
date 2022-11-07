@@ -19,7 +19,6 @@ namespace Video::VP9 {
 
 Parser::Parser(Decoder& decoder)
     : m_probability_tables(make<ProbabilityTables>())
-    , m_tree_parser(make<TreeParser>(*this))
     , m_decoder(decoder)
 {
 }
@@ -1463,21 +1462,20 @@ BlockSubsize Parser::get_plane_block_size(u32 subsize, u8 plane)
 
 DecoderErrorOr<bool> Parser::tokens(size_t plane, u32 start_x, u32 start_y, TXSize tx_size, u32 block_index)
 {
-    m_tree_parser->set_start_x_and_y(start_x, start_y);
-    size_t segment_eob = 16 << (tx_size << 1);
+    u32 segment_eob = 16 << (tx_size << 1);
     auto scan = get_scan(plane, tx_size, block_index);
     auto check_eob = true;
-    size_t c = 0;
+    u32 c = 0;
     for (; c < segment_eob; c++) {
         auto pos = scan[c];
         auto band = (tx_size == TX_4x4) ? coefband_4x4[c] : coefband_8x8plus[c];
-        m_tree_parser->set_tokens_variables(band, c, plane, tx_size, pos);
+        auto tokens_context = TreeParser::get_tokens_context(m_subsampling_x, m_subsampling_y, m_mi_rows, m_mi_cols, m_above_nonzero_context, m_left_nonzero_context, m_token_cache, tx_size, m_tx_type, plane, start_x, start_y, pos, m_is_inter, band, c);
         if (check_eob) {
-            auto more_coefs = TRY_READ(m_tree_parser->parse_tree<bool>(SyntaxElementType::MoreCoefs));
+            auto more_coefs = TRY_READ(TreeParser::parse_more_coefficients(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter, tokens_context));
             if (!more_coefs)
                 break;
         }
-        auto token = TRY_READ(m_tree_parser->parse_tree<Token>(SyntaxElementType::Token));
+        auto token = TRY_READ(TreeParser::parse_token(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter, tokens_context));
         m_token_cache[pos] = energy_class[token];
         if (token == ZeroToken) {
             m_tokens[pos] = 0;
@@ -1491,7 +1489,7 @@ DecoderErrorOr<bool> Parser::tokens(size_t plane, u32 start_x, u32 start_y, TXSi
     }
     auto non_zero = c > 0;
     m_eob_total += non_zero;
-    for (size_t i = c; i < segment_eob; i++)
+    for (u32 i = c; i < segment_eob; i++)
         m_tokens[scan[i]] = 0;
     return non_zero;
 }
