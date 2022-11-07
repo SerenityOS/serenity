@@ -7,10 +7,10 @@
 
 #include <AK/Function.h>
 
-#include "TreeParser.h"
 #include "Enums.h"
 #include "LookupTables.h"
 #include "Parser.h"
+#include "TreeParser.h"
 
 namespace Video::VP9 {
 
@@ -104,13 +104,42 @@ ErrorOr<Partition> TreeParser::parse_partition(BitStream& bit_stream, Probabilit
     return value;
 }
 
+ErrorOr<PredictionMode> TreeParser::parse_default_intra_mode(BitStream& bit_stream, ProbabilityTables const& probability_table, BlockSubsize mi_size, Optional<Array<PredictionMode, 4> const&> above_context, Optional<Array<PredictionMode, 4> const&> left_context, PredictionMode block_sub_modes[4], u8 index_x, u8 index_y)
+{
+    // FIXME: This should use a struct for the above and left contexts.
+
+    // Tree
+    TreeParser::TreeSelection tree = { intra_mode_tree };
+
+    // Probabilities
+    PredictionMode above_mode, left_mode;
+    if (mi_size >= Block_8x8) {
+        above_mode = above_context.has_value() ? above_context.value()[2] : PredictionMode::DcPred;
+        left_mode = left_context.has_value() ? left_context.value()[1] : PredictionMode::DcPred;
+    } else {
+        if (index_y > 0)
+            above_mode = block_sub_modes[index_x];
+        else
+            above_mode = above_context.has_value() ? above_context.value()[2 + index_x] : PredictionMode::DcPred;
+
+        if (index_x > 0)
+            left_mode = block_sub_modes[index_y << 1];
+        else
+            left_mode = left_context.has_value() ? left_context.value()[1 + (index_y << 1)] : PredictionMode::DcPred;
+    }
+    u8 const* probabilities = probability_table.kf_y_mode_probs()[to_underlying(above_mode)][to_underlying(left_mode)];
+
+    auto value = TRY(parse_tree_new<PredictionMode>(bit_stream, tree, [&](u8 node) { return probabilities[node]; }));
+    // Default intra mode is not counted.
+    return value;
+}
+
 /*
  * Select a tree value based on the type of syntax element being parsed, as well as some parser state, as specified in section 9.3.1
  */
 TreeParser::TreeSelection TreeParser::select_tree(SyntaxElementType type)
 {
     switch (type) {
-    case SyntaxElementType::DefaultIntraMode:
     case SyntaxElementType::DefaultUVMode:
     case SyntaxElementType::IntraMode:
     case SyntaxElementType::SubIntraMode:
@@ -166,8 +195,6 @@ TreeParser::TreeSelection TreeParser::select_tree(SyntaxElementType type)
 u8 TreeParser::select_tree_probability(SyntaxElementType type, u8 node)
 {
     switch (type) {
-    case SyntaxElementType::DefaultIntraMode:
-        return calculate_default_intra_mode_probability(node);
     case SyntaxElementType::DefaultUVMode:
         return calculate_default_uv_mode_probability(node);
     case SyntaxElementType::IntraMode:
@@ -240,36 +267,6 @@ u8 TreeParser::select_tree_probability(SyntaxElementType type, u8 node)
 #define LEFT_INTRA m_decoder.m_left_intra
 #define ABOVE_SINGLE m_decoder.m_above_single
 #define LEFT_SINGLE m_decoder.m_left_single
-
-u8 TreeParser::calculate_default_intra_mode_probability(u8 node)
-{
-    PredictionMode above_mode, left_mode;
-    if (m_decoder.m_mi_size >= Block_8x8) {
-        above_mode = AVAIL_U
-            ? m_decoder.m_sub_modes[m_decoder.get_image_index(m_decoder.m_mi_row - 1, m_decoder.m_mi_col)][2]
-            : PredictionMode::DcPred;
-        left_mode = AVAIL_L
-            ? m_decoder.m_sub_modes[m_decoder.get_image_index(m_decoder.m_mi_row, m_decoder.m_mi_col - 1)][1]
-            : PredictionMode::DcPred;
-    } else {
-        if (m_idy) {
-            above_mode = m_decoder.m_block_sub_modes[m_idx];
-        } else {
-            above_mode = AVAIL_U
-                ? m_decoder.m_sub_modes[m_decoder.get_image_index(m_decoder.m_mi_row - 1, m_decoder.m_mi_col)][2 + m_idx]
-                : PredictionMode::DcPred;
-        }
-
-        if (m_idx) {
-            left_mode = m_decoder.m_block_sub_modes[m_idy * 2];
-        } else {
-            left_mode = AVAIL_L
-                ? m_decoder.m_sub_modes[m_decoder.get_image_index(m_decoder.m_mi_row, m_decoder.m_mi_col - 1)][1 + m_idy * 2]
-                : PredictionMode::DcPred;
-        }
-    }
-    return m_decoder.m_probability_tables->kf_y_mode_probs()[to_underlying(above_mode)][to_underlying(left_mode)][node];
-}
 
 u8 TreeParser::calculate_default_uv_mode_probability(u8 node)
 {
@@ -772,7 +769,6 @@ void TreeParser::count_syntax_element(SyntaxElementType type, int value)
     case SyntaxElementType::MoreCoefs:
         increment(m_decoder.m_syntax_element_counter->m_counts_more_coefs[m_tx_size][m_plane > 0][m_decoder.m_is_inter][m_band][m_ctx][value]);
         return;
-    case SyntaxElementType::DefaultIntraMode:
     case SyntaxElementType::DefaultUVMode:
     case SyntaxElementType::SegmentID:
     case SyntaxElementType::SegIDPredicted:

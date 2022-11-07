@@ -243,6 +243,9 @@ private:
     u8 m_num_4x4_w { 0 };
     u8 m_num_4x4_h { 0 };
     PredictionMode m_uv_mode { 0 }; // FIXME: Is u8 the right size?
+    // FIXME: From spec: NOTE – We are using a 2D array to store the SubModes for clarity. It is possible to reduce memory
+    // consumption by only storing one intra mode for each 8x8 horizontal and vertical position, i.e. to use two 1D
+    // arrays instead.
     Vector<Array<PredictionMode, 4>> m_sub_modes;
     ReferenceFramePair m_left_ref_frame;
     ReferenceFramePair m_above_ref_frame;
