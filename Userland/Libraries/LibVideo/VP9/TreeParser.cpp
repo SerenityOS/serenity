@@ -244,13 +244,25 @@ ErrorOr<InterpolationFilter> TreeParser::parse_interpolation_filter(BitStream& b
     return value;
 }
 
+ErrorOr<bool> TreeParser::parse_skip(BitStream& bit_stream, ProbabilityTables const& probability_table, SyntaxElementCounter& counter, Optional<bool> const& above_skip, Optional<bool> const& left_skip)
+{
+    // Probabilities
+    u8 context = 0;
+    context += static_cast<u8>(above_skip.value_or(false));
+    context += static_cast<u8>(left_skip.value_or(false));
+    u8 probability = probability_table.skip_prob()[context];
+
+    auto value = TRY(parse_tree_new<bool>(bit_stream, { binary_tree }, [&](u8) { return probability; }));
+    increment_counter(counter.m_counts_skip[context][value]);
+    return value;
+}
+
 /*
  * Select a tree value based on the type of syntax element being parsed, as well as some parser state, as specified in section 9.3.1
  */
 TreeParser::TreeSelection TreeParser::select_tree(SyntaxElementType type)
 {
     switch (type) {
-    case SyntaxElementType::Skip:
     case SyntaxElementType::IsInter:
     case SyntaxElementType::CompMode:
     case SyntaxElementType::CompRef:
@@ -293,8 +305,6 @@ TreeParser::TreeSelection TreeParser::select_tree(SyntaxElementType type)
 u8 TreeParser::select_tree_probability(SyntaxElementType type, u8 node)
 {
     switch (type) {
-    case SyntaxElementType::Skip:
-        return calculate_skip_probability();
     case SyntaxElementType::IsInter:
         return calculate_is_inter_probability();
     case SyntaxElementType::CompMode:
@@ -349,16 +359,6 @@ u8 TreeParser::select_tree_probability(SyntaxElementType type, u8 node)
 #define LEFT_INTRA m_decoder.m_left_intra
 #define ABOVE_SINGLE m_decoder.m_above_single
 #define LEFT_SINGLE m_decoder.m_left_single
-
-u8 TreeParser::calculate_skip_probability()
-{
-    m_ctx = 0;
-    if (AVAIL_U)
-        m_ctx += m_decoder.m_skips[(m_decoder.m_mi_row - 1) * m_decoder.m_mi_cols + m_decoder.m_mi_col];
-    if (AVAIL_L)
-        m_ctx += m_decoder.m_skips[m_decoder.m_mi_row * m_decoder.m_mi_cols + m_decoder.m_mi_col - 1];
-    return m_decoder.m_probability_tables->skip_prob()[m_ctx];
-}
 
 u8 TreeParser::calculate_is_inter_probability()
 {
@@ -718,9 +718,6 @@ void TreeParser::count_syntax_element(SyntaxElementType type, int value)
         increment_counter(count);
     };
     switch (type) {
-    case SyntaxElementType::Skip:
-        increment(m_decoder.m_syntax_element_counter->m_counts_skip[m_ctx][value]);
-        return;
     case SyntaxElementType::IsInter:
         increment(m_decoder.m_syntax_element_counter->m_counts_is_inter[m_ctx][value]);
         return;
