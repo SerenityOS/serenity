@@ -187,6 +187,19 @@ ErrorOr<PredictionMode> TreeParser::parse_uv_mode(BitStream& bit_stream, Probabi
     return value;
 }
 
+ErrorOr<PredictionMode> TreeParser::parse_inter_mode(BitStream& bit_stream, ProbabilityTables const& probability_table, SyntaxElementCounter& counter, u8 mode_context_for_ref_frame_0)
+{
+    // Tree
+    TreeParser::TreeSelection tree = { inter_mode_tree };
+
+    // Probabilities
+    u8 const* probabilities = probability_table.inter_mode_probs()[mode_context_for_ref_frame_0];
+
+    auto value = TRY(parse_tree_new<PredictionMode>(bit_stream, tree, [&](u8 node) { return probabilities[node]; }));
+    increment_counter(counter.m_counts_inter_mode[mode_context_for_ref_frame_0][to_underlying(value) - to_underlying(PredictionMode::NearestMv)]);
+    return value;
+}
+
 /*
  * Select a tree value based on the type of syntax element being parsed, as well as some parser state, as specified in section 9.3.1
  */
@@ -213,8 +226,6 @@ TreeParser::TreeSelection TreeParser::select_tree(SyntaxElementType type)
         if (m_decoder.m_max_tx_size == TX_16x16)
             return { tx_size_16_tree };
         return { tx_size_8_tree };
-    case SyntaxElementType::InterMode:
-        return { inter_mode_tree };
     case SyntaxElementType::InterpFilter:
         return { interp_filter_tree };
     case SyntaxElementType::MVJoint:
@@ -268,8 +279,6 @@ u8 TreeParser::select_tree_probability(SyntaxElementType type, u8 node)
         return m_decoder.m_probability_tables->mv_bits_prob()[m_mv_component][m_mv_bit];
     case SyntaxElementType::TXSize:
         return calculate_tx_size_probability(node);
-    case SyntaxElementType::InterMode:
-        return calculate_inter_mode_probability(node);
     case SyntaxElementType::InterpFilter:
         return calculate_interp_filter_probability(node);
     case SyntaxElementType::MVJoint:
@@ -610,12 +619,6 @@ u8 TreeParser::calculate_tx_size_probability(u8 node)
     return m_decoder.m_probability_tables->tx_probs()[m_decoder.m_max_tx_size][m_ctx][node];
 }
 
-u8 TreeParser::calculate_inter_mode_probability(u8 node)
-{
-    m_ctx = m_decoder.m_mode_context[m_decoder.m_ref_frame[0]];
-    return m_decoder.m_probability_tables->inter_mode_probs()[m_ctx][node];
-}
-
 u8 TreeParser::calculate_interp_filter_probability(u8 node)
 {
     // NOTE: SWITCHABLE_FILTERS is not used in the spec for this function. Therefore, the number
@@ -746,9 +749,6 @@ void TreeParser::count_syntax_element(SyntaxElementType type, int value)
         return;
     case SyntaxElementType::TXSize:
         increment(m_decoder.m_syntax_element_counter->m_counts_tx_size[m_decoder.m_max_tx_size][m_ctx][value]);
-        return;
-    case SyntaxElementType::InterMode:
-        increment(m_decoder.m_syntax_element_counter->m_counts_inter_mode[m_ctx][value]);
         return;
     case SyntaxElementType::InterpFilter:
         increment(m_decoder.m_syntax_element_counter->m_counts_interp_filter[m_ctx][value]);

@@ -1217,7 +1217,7 @@ DecoderErrorOr<void> Parser::inter_block_mode_info()
     if (seg_feature_active(SEG_LVL_SKIP)) {
         m_y_mode = PredictionMode::ZeroMv;
     } else if (m_mi_size >= Block_8x8) {
-        m_y_mode = TRY_READ(m_tree_parser->parse_tree<PredictionMode>(SyntaxElementType::InterMode));
+        m_y_mode = TRY_READ(TreeParser::parse_inter_mode(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter, m_mode_context[m_ref_frame[0]]));
     }
     if (m_interpolation_filter == Switchable)
         m_interp_filter = TRY_READ(m_tree_parser->parse_tree<InterpolationFilter>(SyntaxElementType::InterpFilter));
@@ -1228,7 +1228,7 @@ DecoderErrorOr<void> Parser::inter_block_mode_info()
         m_num_4x4_h = num_4x4_blocks_high_lookup[m_mi_size];
         for (auto idy = 0; idy < 2; idy += m_num_4x4_h) {
             for (auto idx = 0; idx < 2; idx += m_num_4x4_w) {
-                m_y_mode = TRY_READ(m_tree_parser->parse_tree<PredictionMode>(SyntaxElementType::InterMode));
+                m_y_mode = TRY_READ(TreeParser::parse_inter_mode(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter, m_mode_context[m_ref_frame[0]]));
                 if (m_y_mode == PredictionMode::NearestMv || m_y_mode == PredictionMode::NearMv) {
                     for (auto j = 0; j < 1 + is_compound; j++)
                         append_sub8x8_mvs(idy * 2 + idx, j);
