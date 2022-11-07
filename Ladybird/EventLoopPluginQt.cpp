@@ -21,7 +21,7 @@ EventLoopPluginQt::~EventLoopPluginQt() = default;
 void EventLoopPluginQt::spin_until(Function<bool()> goal_condition)
 {
     while (!goal_condition())
-        QCoreApplication::processEvents();
+        QCoreApplication::processEvents(QEventLoop::ProcessEventsFlag::AllEvents | QEventLoop::ProcessEventsFlag::WaitForMoreEvents);
 }
 
 void EventLoopPluginQt::deferred_invoke(Function<void()> function)
