@@ -45,6 +45,7 @@ public:
     Encoder& operator<<(StringView);
     Encoder& operator<<(String const&);
     Encoder& operator<<(ByteBuffer const&);
+    Encoder& operator<<(JsonValue const&);
     Encoder& operator<<(URL const&);
     Encoder& operator<<(Dictionary const&);
     Encoder& operator<<(File const&);

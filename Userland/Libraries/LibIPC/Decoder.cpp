@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/JsonValue.h>
 #include <AK/MemoryStream.h>
 #include <AK/URL.h>
 #include <LibCore/AnonymousBuffer.h>
@@ -126,6 +127,14 @@ ErrorOr<void> Decoder::decode(ByteBuffer& value)
 
     m_stream >> value.bytes();
     return m_stream.try_handle_any_error();
+}
+
+ErrorOr<void> Decoder::decode(JsonValue& value)
+{
+    String string;
+    TRY(decode(string));
+    value = TRY(JsonValue::from_string(string));
+    return {};
 }
 
 ErrorOr<void> Decoder::decode(URL& value)

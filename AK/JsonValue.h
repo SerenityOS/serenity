@@ -35,7 +35,8 @@ public:
 
     static ErrorOr<JsonValue> from_string(StringView);
 
-    explicit JsonValue(Type = Type::Null);
+    JsonValue() = default;
+    explicit JsonValue(Type);
     ~JsonValue() { clear(); }
 
     JsonValue(JsonValue const&);
