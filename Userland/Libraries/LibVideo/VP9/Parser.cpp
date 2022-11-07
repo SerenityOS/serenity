@@ -1072,10 +1072,13 @@ DecoderErrorOr<void> Parser::intra_segment_id()
 
 DecoderErrorOr<void> Parser::read_skip()
 {
-    if (seg_feature_active(SEG_LVL_SKIP))
+    if (seg_feature_active(SEG_LVL_SKIP)) {
         m_skip = true;
-    else
-        m_skip = TRY_READ(m_tree_parser->parse_tree<bool>(SyntaxElementType::Skip));
+    } else {
+        Optional<bool> above_skip = m_available_u ? m_skips[get_image_index(m_mi_row - 1, m_mi_col)] : Optional<bool>();
+        Optional<bool> left_skip = m_available_l ? m_skips[get_image_index(m_mi_row, m_mi_col - 1)] : Optional<bool>();
+        m_skip = TRY_READ(TreeParser::parse_skip(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter, above_skip, left_skip));
+    }
     return {};
 }
 

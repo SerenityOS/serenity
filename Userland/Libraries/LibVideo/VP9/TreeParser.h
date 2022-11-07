@@ -72,6 +72,7 @@ public:
     static ErrorOr<bool> parse_segment_id_predicted(BitStream&, u8 const probabilities[3], u8 above_seg_pred_context, u8 left_seg_pred_context);
     static ErrorOr<PredictionMode> parse_inter_mode(BitStream&, ProbabilityTables const&, SyntaxElementCounter&, u8 mode_context_for_ref_frame_0);
     static ErrorOr<InterpolationFilter> parse_interpolation_filter(BitStream&, ProbabilityTables const&, SyntaxElementCounter&, Optional<ReferenceFrameType> above_ref_frame, Optional<ReferenceFrameType> left_ref_frame, Optional<InterpolationFilter> above_interpolation_filter, Optional<InterpolationFilter> left_interpolation_filter);
+    static ErrorOr<bool> parse_skip(BitStream&, ProbabilityTables const&, SyntaxElementCounter&, Optional<bool> const& above_skip, Optional<bool> const& left_skip);
 
     void set_default_intra_mode_variables(u8 idx, u8 idy)
     {
@@ -105,7 +106,6 @@ public:
     }
 
 private:
-    u8 calculate_skip_probability();
     u8 calculate_is_inter_probability();
     u8 calculate_comp_mode_probability();
     u8 calculate_comp_ref_probability();
