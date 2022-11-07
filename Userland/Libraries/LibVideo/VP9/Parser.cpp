@@ -1182,7 +1182,7 @@ DecoderErrorOr<void> Parser::intra_block_mode_info()
     m_ref_frame[0] = IntraFrame;
     m_ref_frame[1] = None;
     if (m_mi_size >= Block_8x8) {
-        m_y_mode = TRY_READ(m_tree_parser->parse_tree<PredictionMode>(SyntaxElementType::IntraMode));
+        m_y_mode = TRY_READ(TreeParser::parse_intra_mode(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter, m_mi_size));
         for (auto& block_sub_mode : m_block_sub_modes)
             block_sub_mode = m_y_mode;
     } else {
@@ -1191,7 +1191,7 @@ DecoderErrorOr<void> Parser::intra_block_mode_info()
         PredictionMode sub_intra_mode;
         for (auto idy = 0; idy < 2; idy += m_num_4x4_h) {
             for (auto idx = 0; idx < 2; idx += m_num_4x4_w) {
-                sub_intra_mode = TRY_READ(m_tree_parser->parse_tree<PredictionMode>(SyntaxElementType::SubIntraMode));
+                sub_intra_mode = TRY_READ(TreeParser::parse_sub_intra_mode(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter));
                 for (auto y = 0; y < m_num_4x4_h; y++) {
                     for (auto x = 0; x < m_num_4x4_w; x++)
                         m_block_sub_modes[(idy + y) * 2 + idx + x] = sub_intra_mode;

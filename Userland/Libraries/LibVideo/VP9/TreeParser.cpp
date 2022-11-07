@@ -147,15 +147,39 @@ ErrorOr<PredictionMode> TreeParser::parse_default_uv_mode(BitStream& bit_stream,
     return value;
 }
 
+ErrorOr<PredictionMode> TreeParser::parse_intra_mode(BitStream& bit_stream, ProbabilityTables const& probability_table, SyntaxElementCounter& counter, BlockSubsize mi_size)
+{
+    // Tree
+    TreeParser::TreeSelection tree = { intra_mode_tree };
+
+    // Probabilities
+    auto context = size_group_lookup[mi_size];
+    u8 const* probabilities = probability_table.y_mode_probs()[context];
+
+    auto value = TRY(parse_tree_new<PredictionMode>(bit_stream, tree, [&](u8 node) { return probabilities[node]; }));
+    increment_counter(counter.m_counts_intra_mode[context][to_underlying(value)]);
+    return value;
+}
+
+ErrorOr<PredictionMode> TreeParser::parse_sub_intra_mode(BitStream& bit_stream, ProbabilityTables const& probability_table, SyntaxElementCounter& counter)
+{
+    // Tree
+    TreeParser::TreeSelection tree = { intra_mode_tree };
+
+    // Probabilities
+    u8 const* probabilities = probability_table.y_mode_probs()[0];
+
+    auto value = TRY(parse_tree_new<PredictionMode>(bit_stream, tree, [&](u8 node) { return probabilities[node]; }));
+    increment_counter(counter.m_counts_intra_mode[0][to_underlying(value)]);
+    return value;
+}
+
 /*
  * Select a tree value based on the type of syntax element being parsed, as well as some parser state, as specified in section 9.3.1
  */
 TreeParser::TreeSelection TreeParser::select_tree(SyntaxElementType type)
 {
     switch (type) {
-    case SyntaxElementType::DefaultUVMode:
-    case SyntaxElementType::IntraMode:
-    case SyntaxElementType::SubIntraMode:
     case SyntaxElementType::UVMode:
         return { intra_mode_tree };
     case SyntaxElementType::SegmentID:
@@ -208,10 +232,6 @@ TreeParser::TreeSelection TreeParser::select_tree(SyntaxElementType type)
 u8 TreeParser::select_tree_probability(SyntaxElementType type, u8 node)
 {
     switch (type) {
-    case SyntaxElementType::IntraMode:
-        return calculate_intra_mode_probability(node);
-    case SyntaxElementType::SubIntraMode:
-        return calculate_sub_intra_mode_probability(node);
     case SyntaxElementType::UVMode:
         return calculate_uv_mode_probability(node);
     case SyntaxElementType::SegmentID:
@@ -278,18 +298,6 @@ u8 TreeParser::select_tree_probability(SyntaxElementType type, u8 node)
 #define LEFT_INTRA m_decoder.m_left_intra
 #define ABOVE_SINGLE m_decoder.m_above_single
 #define LEFT_SINGLE m_decoder.m_left_single
-
-u8 TreeParser::calculate_intra_mode_probability(u8 node)
-{
-    m_ctx = size_group_lookup[m_decoder.m_mi_size];
-    return m_decoder.m_probability_tables->y_mode_probs()[m_ctx][node];
-}
-
-u8 TreeParser::calculate_sub_intra_mode_probability(u8 node)
-{
-    m_ctx = 0;
-    return m_decoder.m_probability_tables->y_mode_probs()[m_ctx][node];
-}
 
 u8 TreeParser::calculate_uv_mode_probability(u8 node)
 {
@@ -704,10 +712,6 @@ void TreeParser::count_syntax_element(SyntaxElementType type, int value)
         increment_counter(count);
     };
     switch (type) {
-    case SyntaxElementType::IntraMode:
-    case SyntaxElementType::SubIntraMode:
-        increment(m_decoder.m_syntax_element_counter->m_counts_intra_mode[m_ctx][value]);
-        return;
     case SyntaxElementType::UVMode:
         increment(m_decoder.m_syntax_element_counter->m_counts_uv_mode[m_ctx][value]);
         return;
@@ -775,7 +779,6 @@ void TreeParser::count_syntax_element(SyntaxElementType type, int value)
     case SyntaxElementType::MoreCoefs:
         increment(m_decoder.m_syntax_element_counter->m_counts_more_coefs[m_tx_size][m_plane > 0][m_decoder.m_is_inter][m_band][m_ctx][value]);
         return;
-    case SyntaxElementType::DefaultUVMode:
     case SyntaxElementType::SegmentID:
     case SyntaxElementType::SegIDPredicted:
         // No counting required
