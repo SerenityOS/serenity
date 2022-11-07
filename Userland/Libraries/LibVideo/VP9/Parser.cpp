@@ -1017,8 +1017,19 @@ DecoderErrorOr<void> Parser::intra_frame_mode_info()
     m_ref_frame[0] = IntraFrame;
     m_ref_frame[1] = None;
     m_is_inter = false;
+    // FIXME: This if statement is also present in parse_default_intra_mode. The selection of parameters for
+    //        the probability table lookup should be inlined here.
     if (m_mi_size >= Block_8x8) {
-        m_default_intra_mode = TRY_READ(m_tree_parser->parse_tree<PredictionMode>(SyntaxElementType::DefaultIntraMode));
+        // FIXME: This context should be available in the block setup. Make a struct to store the context
+        //        that is needed to call the tree parses and set it in decode_block().
+        auto above_context = Optional<Array<PredictionMode, 4> const&>();
+        auto left_context = Optional<Array<PredictionMode, 4> const&>();
+        if (m_available_u)
+            above_context = m_sub_modes[get_image_index(m_mi_row - 1, m_mi_col)];
+        if (m_available_l)
+            left_context = m_sub_modes[get_image_index(m_mi_row, m_mi_col - 1)];
+        m_default_intra_mode = TRY_READ(TreeParser::parse_default_intra_mode(*m_bit_stream, *m_probability_tables, m_mi_size, above_context, left_context, m_block_sub_modes, 0, 0));
+
         m_y_mode = m_default_intra_mode;
         for (auto& block_sub_mode : m_block_sub_modes)
             block_sub_mode = m_y_mode;
@@ -1027,8 +1038,15 @@ DecoderErrorOr<void> Parser::intra_frame_mode_info()
         m_num_4x4_h = num_4x4_blocks_high_lookup[m_mi_size];
         for (auto idy = 0; idy < 2; idy += m_num_4x4_h) {
             for (auto idx = 0; idx < 2; idx += m_num_4x4_w) {
-                m_tree_parser->set_default_intra_mode_variables(idx, idy);
-                m_default_intra_mode = TRY_READ(m_tree_parser->parse_tree<PredictionMode>(SyntaxElementType::DefaultIntraMode));
+                // FIXME: See the FIXME above.
+                auto above_context = Optional<Array<PredictionMode, 4> const&>();
+                auto left_context = Optional<Array<PredictionMode, 4> const&>();
+                if (m_available_u)
+                    above_context = m_sub_modes[get_image_index(m_mi_row - 1, m_mi_col)];
+                if (m_available_l)
+                    left_context = m_sub_modes[get_image_index(m_mi_row, m_mi_col - 1)];
+                m_default_intra_mode = TRY_READ(TreeParser::parse_default_intra_mode(*m_bit_stream, *m_probability_tables, m_mi_size, above_context, left_context, m_block_sub_modes, idx, idy));
+
                 for (auto y = 0; y < m_num_4x4_h; y++) {
                     for (auto x = 0; x < m_num_4x4_w; x++) {
                         auto index = (idy + y) * 2 + idx + x;
