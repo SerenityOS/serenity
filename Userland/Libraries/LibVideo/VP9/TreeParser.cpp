@@ -306,13 +306,52 @@ ErrorOr<bool> TreeParser::parse_is_inter(BitStream& bit_stream, ProbabilityTable
     return value;
 }
 
+ErrorOr<ReferenceMode> TreeParser::parse_comp_mode(BitStream& bit_stream, ProbabilityTables const& probability_table, SyntaxElementCounter& counter, ReferenceFrameType comp_fixed_ref, Optional<bool> above_single, Optional<bool> left_single, Optional<bool> above_intra, Optional<bool> left_intra, Optional<ReferenceFrameType> above_ref_frame_0, Optional<ReferenceFrameType> left_ref_frame_0)
+{
+    // FIXME: Above and left contexts should be in structs.
+
+    // Probabilities
+    u8 context;
+    if (above_single.has_value() && left_single.has_value()) {
+        if (above_single.value() && left_single.value()) {
+            auto is_above_fixed = above_ref_frame_0.value() == comp_fixed_ref;
+            auto is_left_fixed = left_ref_frame_0.value() == comp_fixed_ref;
+            context = is_above_fixed ^ is_left_fixed;
+        } else if (above_single.value()) {
+            auto is_above_fixed = above_ref_frame_0.value() == comp_fixed_ref;
+            context = 2 + static_cast<u8>(is_above_fixed || above_intra.value());
+        } else if (left_single.value()) {
+            auto is_left_fixed = left_ref_frame_0.value() == comp_fixed_ref;
+            context = 2 + static_cast<u8>(is_left_fixed || left_intra.value());
+        } else {
+            context = 4;
+        }
+    } else if (above_single.has_value()) {
+        if (above_single.value())
+            context = above_ref_frame_0.value() == comp_fixed_ref;
+        else
+            context = 3;
+    } else if (left_single.has_value()) {
+        if (left_single.value())
+            context = static_cast<u8>(left_ref_frame_0.value() == comp_fixed_ref);
+        else
+            context = 3;
+    } else {
+        context = 1;
+    }
+    u8 probability = probability_table.comp_mode_prob()[context];
+
+    auto value = TRY(parse_tree_new<ReferenceMode>(bit_stream, { binary_tree }, [&](u8) { return probability; }));
+    increment_counter(counter.m_counts_comp_mode[context][value]);
+    return value;
+}
+
 /*
  * Select a tree value based on the type of syntax element being parsed, as well as some parser state, as specified in section 9.3.1
  */
 TreeParser::TreeSelection TreeParser::select_tree(SyntaxElementType type)
 {
     switch (type) {
-    case SyntaxElementType::CompMode:
     case SyntaxElementType::CompRef:
     case SyntaxElementType::SingleRefP1:
     case SyntaxElementType::SingleRefP2:
@@ -347,8 +386,6 @@ TreeParser::TreeSelection TreeParser::select_tree(SyntaxElementType type)
 u8 TreeParser::select_tree_probability(SyntaxElementType type, u8 node)
 {
     switch (type) {
-    case SyntaxElementType::CompMode:
-        return calculate_comp_mode_probability();
     case SyntaxElementType::CompRef:
         return calculate_comp_ref_probability();
     case SyntaxElementType::SingleRefP1:
@@ -397,40 +434,6 @@ u8 TreeParser::select_tree_probability(SyntaxElementType type, u8 node)
 #define LEFT_INTRA m_decoder.m_left_intra
 #define ABOVE_SINGLE m_decoder.m_above_single
 #define LEFT_SINGLE m_decoder.m_left_single
-
-u8 TreeParser::calculate_comp_mode_probability()
-{
-    if (AVAIL_U && AVAIL_L) {
-        if (ABOVE_SINGLE && LEFT_SINGLE) {
-            auto is_above_fixed = ABOVE_FRAME_0 == m_decoder.m_comp_fixed_ref;
-            auto is_left_fixed = LEFT_FRAME_0 == m_decoder.m_comp_fixed_ref;
-            m_ctx = is_above_fixed ^ is_left_fixed;
-        } else if (ABOVE_SINGLE) {
-            auto is_above_fixed = ABOVE_FRAME_0 == m_decoder.m_comp_fixed_ref;
-            m_ctx = 2 + (is_above_fixed || ABOVE_INTRA);
-        } else if (LEFT_SINGLE) {
-            auto is_left_fixed = LEFT_FRAME_0 == m_decoder.m_comp_fixed_ref;
-            m_ctx = 2 + (is_left_fixed || LEFT_INTRA);
-        } else {
-            m_ctx = 4;
-        }
-    } else if (AVAIL_U) {
-        if (ABOVE_SINGLE) {
-            m_ctx = ABOVE_FRAME_0 == m_decoder.m_comp_fixed_ref;
-        } else {
-            m_ctx = 3;
-        }
-    } else if (AVAIL_L) {
-        if (LEFT_SINGLE) {
-            m_ctx = LEFT_FRAME_0 == m_decoder.m_comp_fixed_ref;
-        } else {
-            m_ctx = 3;
-        }
-    } else {
-        m_ctx = 1;
-    }
-    return m_decoder.m_probability_tables->comp_mode_prob()[m_ctx];
-}
 
 u8 TreeParser::calculate_comp_ref_probability()
 {
@@ -722,9 +725,6 @@ void TreeParser::count_syntax_element(SyntaxElementType type, int value)
         increment_counter(count);
     };
     switch (type) {
-    case SyntaxElementType::CompMode:
-        increment(m_decoder.m_syntax_element_counter->m_counts_comp_mode[m_ctx][value]);
-        return;
     case SyntaxElementType::CompRef:
         increment(m_decoder.m_syntax_element_counter->m_counts_comp_ref[m_ctx][value]);
         return;

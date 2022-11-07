@@ -75,6 +75,7 @@ public:
     static ErrorOr<bool> parse_skip(BitStream&, ProbabilityTables const&, SyntaxElementCounter&, Optional<bool> const& above_skip, Optional<bool> const& left_skip);
     static ErrorOr<TXSize> parse_tx_size(BitStream&, ProbabilityTables const&, SyntaxElementCounter&, TXSize max_tx_size, Optional<bool> above_skip, Optional<bool> left_skip, Optional<TXSize> above_tx_size, Optional<TXSize> left_tx_size);
     static ErrorOr<bool> parse_is_inter(BitStream&, ProbabilityTables const&, SyntaxElementCounter&, Optional<bool> above_intra, Optional<bool> left_intra);
+    static ErrorOr<ReferenceMode> parse_comp_mode(BitStream&, ProbabilityTables const&, SyntaxElementCounter&, ReferenceFrameType comp_fixed_ref, Optional<bool> above_single, Optional<bool> left_single, Optional<bool> above_intra, Optional<bool> left_intra, Optional<ReferenceFrameType> above_ref_frame_0, Optional<ReferenceFrameType> left_ref_frame_0);
 
     void set_default_intra_mode_variables(u8 idx, u8 idy)
     {
@@ -108,7 +109,6 @@ public:
     }
 
 private:
-    u8 calculate_comp_mode_probability();
     u8 calculate_comp_ref_probability();
     u8 calculate_single_ref_p1_probability();
     u8 calculate_single_ref_p2_probability();

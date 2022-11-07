@@ -1279,10 +1279,17 @@ DecoderErrorOr<void> Parser::read_ref_frames()
         return {};
     }
     ReferenceMode comp_mode;
-    if (m_reference_mode == ReferenceModeSelect)
-        comp_mode = TRY_READ(m_tree_parser->parse_tree<ReferenceMode>(SyntaxElementType::CompMode));
-    else
+    if (m_reference_mode == ReferenceModeSelect) {
+        Optional<bool> above_single = m_available_u ? m_above_single : Optional<bool>();
+        Optional<bool> left_single = m_available_l ? m_left_single : Optional<bool>();
+        Optional<bool> above_intra = m_available_u ? m_above_intra : Optional<bool>();
+        Optional<bool> left_intra = m_available_l ? m_left_intra : Optional<bool>();
+        Optional<ReferenceFrameType> above_ref_frame_0 = m_available_u ? m_above_ref_frame[0] : Optional<ReferenceFrameType>();
+        Optional<ReferenceFrameType> left_ref_frame_0 = m_available_l ? m_left_ref_frame[0] : Optional<ReferenceFrameType>();
+        comp_mode = TRY_READ(TreeParser::parse_comp_mode(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter, m_comp_fixed_ref, above_single, left_single, above_intra, left_intra, above_ref_frame_0, left_ref_frame_0));
+    } else {
         comp_mode = m_reference_mode;
+    }
     if (comp_mode == CompoundReference) {
         auto idx = m_ref_frame_sign_bias[m_comp_fixed_ref];
         auto comp_ref = TRY_READ(m_tree_parser->parse_tree(SyntaxElementType::CompRef));
