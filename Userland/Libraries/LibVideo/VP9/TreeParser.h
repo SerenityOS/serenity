@@ -67,6 +67,7 @@ public:
     static ErrorOr<PredictionMode> parse_default_uv_mode(BitStream&, ProbabilityTables const&, PredictionMode y_mode);
     static ErrorOr<PredictionMode> parse_intra_mode(BitStream&, ProbabilityTables const&, SyntaxElementCounter&, BlockSubsize mi_size);
     static ErrorOr<PredictionMode> parse_sub_intra_mode(BitStream&, ProbabilityTables const&, SyntaxElementCounter&);
+    static ErrorOr<PredictionMode> parse_uv_mode(BitStream&, ProbabilityTables const&, SyntaxElementCounter&, PredictionMode y_mode);
 
     void set_default_intra_mode_variables(u8 idx, u8 idy)
     {
@@ -100,7 +101,6 @@ public:
     }
 
 private:
-    u8 calculate_uv_mode_probability(u8 node);
     u8 calculate_segment_id_probability(u8 node);
     u8 calculate_skip_probability();
     u8 calculate_seg_id_predicted_probability();
