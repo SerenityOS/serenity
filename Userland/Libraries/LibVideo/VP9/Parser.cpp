@@ -1338,7 +1338,7 @@ DecoderErrorOr<void> Parser::read_mv(u8 ref)
 {
     m_use_hp = m_allow_high_precision_mv && use_mv_hp(m_best_mv[ref]);
     MotionVector diff_mv;
-    auto mv_joint = TRY_READ(m_tree_parser->parse_tree<MvJoint>(SyntaxElementType::MVJoint));
+    auto mv_joint = TRY_READ(TreeParser::parse_motion_vector_joint(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter));
     if (mv_joint == MvJointHzvnz || mv_joint == MvJointHnzvnz)
         diff_mv.set_row(TRY(read_mv_component(0)));
     if (mv_joint == MvJointHnzvz || mv_joint == MvJointHnzvnz)
@@ -1352,27 +1352,26 @@ DecoderErrorOr<void> Parser::read_mv(u8 ref)
 
 DecoderErrorOr<i32> Parser::read_mv_component(u8 component)
 {
-    m_tree_parser->set_mv_component(component);
-    auto mv_sign = TRY_READ(m_tree_parser->parse_tree<bool>(SyntaxElementType::MVSign));
-    auto mv_class = TRY_READ(m_tree_parser->parse_tree<MvClass>(SyntaxElementType::MVClass));
-    u32 mag;
+    auto mv_sign = TRY_READ(TreeParser::parse_motion_vector_sign(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter, component));
+    auto mv_class = TRY_READ(TreeParser::parse_motion_vector_class(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter, component));
+    u32 magnitude;
     if (mv_class == MvClass0) {
-        u32 mv_class0_bit = TRY_READ(m_tree_parser->parse_tree<bool>(SyntaxElementType::MVClass0Bit));
-        u32 mv_class0_fr = TRY_READ(m_tree_parser->parse_mv_class0_fr(mv_class0_bit));
-        u32 mv_class0_hp = TRY_READ(m_tree_parser->parse_tree<bool>(SyntaxElementType::MVClass0HP));
-        mag = ((mv_class0_bit << 3) | (mv_class0_fr << 1) | mv_class0_hp) + 1;
+        auto mv_class0_bit = TRY_READ(TreeParser::parse_motion_vector_class0_bit(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter, component));
+        auto mv_class0_fr = TRY_READ(TreeParser::parse_motion_vector_class0_fr(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter, component, mv_class0_bit));
+        auto mv_class0_hp = TRY_READ(TreeParser::parse_motion_vector_class0_hp(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter, component, m_use_hp));
+        magnitude = ((mv_class0_bit << 3) | (mv_class0_fr << 1) | mv_class0_hp) + 1;
     } else {
-        u32 d = 0;
+        u32 bits = 0;
         for (u8 i = 0; i < mv_class; i++) {
-            u32 mv_bit = TRY_READ(m_tree_parser->parse_mv_bit(i));
-            d |= mv_bit << i;
+            auto mv_bit = TRY_READ(TreeParser::parse_motion_vector_bit(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter, component, i));
+            bits |= mv_bit << i;
         }
-        mag = CLASS0_SIZE << (mv_class + 2);
-        u32 mv_fr = TRY_READ(m_tree_parser->parse_tree<u8>(SyntaxElementType::MVFR));
-        u32 mv_hp = TRY_READ(m_tree_parser->parse_tree<bool>(SyntaxElementType::MVHP));
-        mag += ((d << 3) | (mv_fr << 1) | mv_hp) + 1;
+        magnitude = CLASS0_SIZE << (mv_class + 2);
+        auto mv_fr = TRY_READ(TreeParser::parse_motion_vector_fr(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter, component));
+        auto mv_hp = TRY_READ(TreeParser::parse_motion_vector_hp(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter, component, m_use_hp));
+        magnitude += ((bits << 3) | (mv_fr << 1) | mv_hp) + 1;
     }
-    return (mv_sign ? -1 : 1) * static_cast<i32>(mag);
+    return (mv_sign ? -1 : 1) * static_cast<i32>(magnitude);
 }
 
 Gfx::Point<size_t> Parser::get_decoded_point_for_plane(u32 column, u32 row, u8 plane)

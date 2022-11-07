@@ -81,6 +81,16 @@ public:
     static ErrorOr<bool> parse_single_ref_part_1(BitStream&, ProbabilityTables const&, SyntaxElementCounter&, Optional<bool> above_single, Optional<bool> left_single, Optional<bool> above_intra, Optional<bool> left_intra, Optional<ReferenceFramePair> above_ref_frame, Optional<ReferenceFramePair> left_ref_frame);
     static ErrorOr<bool> parse_single_ref_part_2(BitStream&, ProbabilityTables const&, SyntaxElementCounter&, Optional<bool> above_single, Optional<bool> left_single, Optional<bool> above_intra, Optional<bool> left_intra, Optional<ReferenceFramePair> above_ref_frame, Optional<ReferenceFramePair> left_ref_frame);
 
+    static ErrorOr<MvJoint> parse_motion_vector_joint(BitStream&, ProbabilityTables const&, SyntaxElementCounter&);
+    static ErrorOr<bool> parse_motion_vector_sign(BitStream&, ProbabilityTables const&, SyntaxElementCounter&, u8 component);
+    static ErrorOr<MvClass> parse_motion_vector_class(BitStream&, ProbabilityTables const&, SyntaxElementCounter&, u8 component);
+    static ErrorOr<bool> parse_motion_vector_class0_bit(BitStream&, ProbabilityTables const&, SyntaxElementCounter&, u8 component);
+    static ErrorOr<u8> parse_motion_vector_class0_fr(BitStream&, ProbabilityTables const&, SyntaxElementCounter&, u8 component, bool class_0_bit);
+    static ErrorOr<bool> parse_motion_vector_class0_hp(BitStream&, ProbabilityTables const&, SyntaxElementCounter&, u8 component, bool use_hp);
+    static ErrorOr<bool> parse_motion_vector_bit(BitStream&, ProbabilityTables const&, SyntaxElementCounter&, u8 component, u8 bit_index);
+    static ErrorOr<u8> parse_motion_vector_fr(BitStream&, ProbabilityTables const&, SyntaxElementCounter&, u8 component);
+    static ErrorOr<bool> parse_motion_vector_hp(BitStream&, ProbabilityTables const&, SyntaxElementCounter&, u8 component, bool use_hp);
+
     void set_default_intra_mode_variables(u8 idx, u8 idy)
     {
         m_idx = idx;
@@ -93,23 +103,6 @@ public:
     {
         m_start_x = start_x;
         m_start_y = start_y;
-    }
-
-    void set_mv_component(u8 component)
-    {
-        m_mv_component = component;
-    }
-
-    ErrorOr<bool> parse_mv_bit(u8 bit)
-    {
-        m_mv_bit = bit;
-        return parse_tree<bool>(SyntaxElementType::MVBit);
-    }
-
-    ErrorOr<u8> parse_mv_class0_fr(bool mv_class0_bit)
-    {
-        m_mv_class0_bit = mv_class0_bit;
-        return parse_tree<u8>(SyntaxElementType::MVClass0FR);
     }
 
 private:
