@@ -1064,7 +1064,7 @@ DecoderErrorOr<void> Parser::intra_frame_mode_info()
 DecoderErrorOr<void> Parser::intra_segment_id()
 {
     if (m_segmentation_enabled && m_segmentation_update_map)
-        m_segment_id = TRY_READ(m_tree_parser->parse_tree<u8>(SyntaxElementType::SegmentID));
+        m_segment_id = TRY_READ(TreeParser::parse_segment_id(*m_bit_stream, m_segmentation_tree_probs));
     else
         m_segment_id = 0;
     return {};
@@ -1128,15 +1128,15 @@ DecoderErrorOr<void> Parser::inter_segment_id()
         return {};
     }
     if (!m_segmentation_temporal_update) {
-        m_segment_id = TRY_READ(m_tree_parser->parse_tree<u8>(SyntaxElementType::SegmentID));
+        m_segment_id = TRY_READ(TreeParser::parse_segment_id(*m_bit_stream, m_segmentation_tree_probs));
         return {};
     }
 
-    auto seg_id_predicted = TRY_READ(m_tree_parser->parse_tree<bool>(SyntaxElementType::SegIDPredicted));
+    auto seg_id_predicted = TRY_READ(TreeParser::parse_segment_id_predicted(*m_bit_stream, m_segmentation_pred_prob, m_left_seg_pred_context[m_mi_row], m_above_seg_pred_context[m_mi_col]));
     if (seg_id_predicted)
         m_segment_id = predicted_segment_id;
     else
-        m_segment_id = TRY_READ(m_tree_parser->parse_tree<u8>(SyntaxElementType::SegmentID));
+        m_segment_id = TRY_READ(TreeParser::parse_segment_id(*m_bit_stream, m_segmentation_tree_probs));
 
     for (size_t i = 0; i < num_8x8_blocks_wide_lookup[m_mi_size]; i++) {
         auto index = m_mi_col + i;
