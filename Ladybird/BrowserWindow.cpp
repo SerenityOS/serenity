@@ -334,10 +334,12 @@ void BrowserWindow::tab_title_changed(int index, QString const& title)
 {
     if (title.isEmpty()) {
         m_tabs_container->setTabText(index, "...");
-        setWindowTitle("Ladybird");
+        if (m_tabs_container->currentIndex() == index)
+            setWindowTitle("Ladybird");
     } else {
         m_tabs_container->setTabText(index, title);
-        setWindowTitle(QString("%1 - Ladybird").arg(title));
+        if (m_tabs_container->currentIndex() == index)
+            setWindowTitle(QString("%1 - Ladybird").arg(title));
     }
 }
 
