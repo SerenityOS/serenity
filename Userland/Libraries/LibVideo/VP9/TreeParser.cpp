@@ -346,13 +346,94 @@ ErrorOr<ReferenceMode> TreeParser::parse_comp_mode(BitStream& bit_stream, Probab
     return value;
 }
 
+ErrorOr<bool> TreeParser::parse_comp_ref(BitStream& bit_stream, ProbabilityTables const& probability_table, SyntaxElementCounter& counter, ReferenceFrameType comp_fixed_ref, ReferenceFramePair comp_var_ref, Optional<bool> above_single, Optional<bool> left_single, Optional<bool> above_intra, Optional<bool> left_intra, Optional<ReferenceFrameType> above_ref_frame_0, Optional<ReferenceFrameType> left_ref_frame_0, Optional<ReferenceFrameType> above_ref_frame_biased, Optional<ReferenceFrameType> left_ref_frame_biased)
+{
+    // FIXME: Above and left contexts should be in structs.
+
+    // Probabilities
+    u8 context;
+    if (above_intra.has_value() && left_intra.has_value()) {
+        if (above_intra.value() && left_intra.value()) {
+            context = 2;
+        } else if (left_intra.value()) {
+            if (above_single.value()) {
+                context = 1 + 2 * (above_ref_frame_0.value() != comp_var_ref[1]);
+            } else {
+                context = 1 + 2 * (above_ref_frame_biased.value() != comp_var_ref[1]);
+            }
+        } else if (above_intra.value()) {
+            if (left_single.value()) {
+                context = 1 + 2 * (left_ref_frame_0.value() != comp_var_ref[1]);
+            } else {
+                context = 1 + 2 * (left_ref_frame_biased != comp_var_ref[1]);
+            }
+        } else {
+            auto var_ref_above = above_single.value() ? above_ref_frame_0 : above_ref_frame_biased;
+            auto var_ref_left = left_single.value() ? left_ref_frame_0 : left_ref_frame_biased;
+            if (var_ref_above == var_ref_left && comp_var_ref[1] == var_ref_above) {
+                context = 0;
+            } else if (left_single.value() && above_single.value()) {
+                if ((var_ref_above == comp_fixed_ref && var_ref_left == comp_var_ref[0])
+                    || (var_ref_left == comp_fixed_ref && var_ref_above == comp_var_ref[0])) {
+                    context = 4;
+                } else if (var_ref_above == var_ref_left) {
+                    context = 3;
+                } else {
+                    context = 1;
+                }
+            } else if (left_single.value() || above_single.value()) {
+                auto vrfc = left_single.value() ? var_ref_above : var_ref_left;
+                auto rfs = above_single.value() ? var_ref_above : var_ref_left;
+                if (vrfc == comp_var_ref[1] && rfs != comp_var_ref[1]) {
+                    context = 1;
+                } else if (rfs == comp_var_ref[1] && vrfc != comp_var_ref[1]) {
+                    context = 2;
+                } else {
+                    context = 4;
+                }
+            } else if (var_ref_above == var_ref_left) {
+                context = 4;
+            } else {
+                context = 2;
+            }
+        }
+    } else if (above_intra.has_value()) {
+        if (above_intra.value()) {
+            context = 2;
+        } else {
+            if (above_single.value()) {
+                context = 3 * static_cast<u8>(above_ref_frame_0.value() != comp_var_ref[1]);
+            } else {
+                context = 4 * static_cast<u8>(above_ref_frame_biased.value() != comp_var_ref[1]);
+            }
+        }
+    } else if (left_intra.has_value()) {
+        if (left_intra.value()) {
+            context = 2;
+        } else {
+            if (left_single.value()) {
+                context = 3 * static_cast<u8>(left_ref_frame_0.value() != comp_var_ref[1]);
+            } else {
+                context = 4 * static_cast<u8>(left_ref_frame_biased != comp_var_ref[1]);
+            }
+        }
+    } else {
+        context = 2;
+    }
+
+    u8 probability = probability_table.comp_ref_prob()[context];
+
+    auto value = TRY(parse_tree_new<bool>(bit_stream, { binary_tree }, [&](u8) { return probability; }));
+    increment_counter(counter.m_counts_comp_ref[context][value]);
+    return value;
+}
+
 /*
  * Select a tree value based on the type of syntax element being parsed, as well as some parser state, as specified in section 9.3.1
  */
 TreeParser::TreeSelection TreeParser::select_tree(SyntaxElementType type)
 {
     switch (type) {
-    case SyntaxElementType::CompRef:
     case SyntaxElementType::SingleRefP1:
     case SyntaxElementType::SingleRefP2:
     case SyntaxElementType::MVSign:
@@ -386,8 +467,6 @@ TreeParser::TreeSelection TreeParser::select_tree(SyntaxElementType type)
 u8 TreeParser::select_tree_probability(SyntaxElementType type, u8 node)
 {
     switch (type) {
-    case SyntaxElementType::CompRef:
-        return calculate_comp_ref_probability();
     case SyntaxElementType::SingleRefP1:
         return calculate_single_ref_p1_probability();
     case SyntaxElementType::SingleRefP2:
@@ -434,82 +513,6 @@ u8 TreeParser::select_tree_probability(SyntaxElementType type, u8 node)
 #define LEFT_INTRA m_decoder.m_left_intra
 #define ABOVE_SINGLE m_decoder.m_above_single
 #define LEFT_SINGLE m_decoder.m_left_single
-
-u8 TreeParser::calculate_comp_ref_probability()
-{
-    auto fix_ref_idx = m_decoder.m_ref_frame_sign_bias[m_decoder.m_comp_fixed_ref];
-    auto var_ref_idx = !fix_ref_idx;
-    if (AVAIL_U && AVAIL_L) {
-        if (ABOVE_INTRA && LEFT_INTRA) {
-            m_ctx = 2;
-        } else if (LEFT_INTRA) {
-            if (ABOVE_SINGLE) {
-                m_ctx = 1 + 2 * (ABOVE_FRAME_0 != m_decoder.m_comp_var_ref[1]);
-            } else {
-                m_ctx = 1 + 2 * (m_decoder.m_above_ref_frame[var_ref_idx] != m_decoder.m_comp_var_ref[1]);
-            }
-        } else if (ABOVE_INTRA) {
-            if (LEFT_SINGLE) {
-                m_ctx = 1 + 2 * (LEFT_FRAME_0 != m_decoder.m_comp_var_ref[1]);
-            } else {
-                m_ctx = 1 + 2 * (m_decoder.m_left_ref_frame[var_ref_idx] != m_decoder.m_comp_var_ref[1]);
-            }
-        } else {
-            auto var_ref_above = m_decoder.m_above_ref_frame[ABOVE_SINGLE ? 0 : var_ref_idx];
-            auto var_ref_left = m_decoder.m_left_ref_frame[LEFT_SINGLE ? 0 : var_ref_idx];
-            if (var_ref_above == var_ref_left && m_decoder.m_comp_var_ref[1] == var_ref_above) {
-                m_ctx = 0;
-            } else if (LEFT_SINGLE && ABOVE_SINGLE) {
-                if ((var_ref_above == m_decoder.m_comp_fixed_ref && var_ref_left == m_decoder.m_comp_var_ref[0])
-                    || (var_ref_left == m_decoder.m_comp_fixed_ref && var_ref_above == m_decoder.m_comp_var_ref[0])) {
-                    m_ctx = 4;
-                } else if (var_ref_above == var_ref_left) {
-                    m_ctx = 3;
-                } else {
-                    m_ctx = 1;
-                }
-            } else if (LEFT_SINGLE || ABOVE_SINGLE) {
-                auto vrfc = LEFT_SINGLE ? var_ref_above : var_ref_left;
-                auto rfs = ABOVE_SINGLE ? var_ref_above : var_ref_left;
-                if (vrfc == m_decoder.m_comp_var_ref[1] && rfs != m_decoder.m_comp_var_ref[1]) {
-                    m_ctx = 1;
-                } else if (rfs == m_decoder.m_comp_var_ref[1] && vrfc != m_decoder.m_comp_var_ref[1]) {
-                    m_ctx = 2;
-                } else {
-                    m_ctx = 4;
-                }
-            } else if (var_ref_above == var_ref_left) {
-                m_ctx = 4;
-            } else {
-                m_ctx = 2;
-            }
-        }
-    } else if (AVAIL_U) {
-        if (ABOVE_INTRA) {
-            m_ctx = 2;
-        } else {
-            if (ABOVE_SINGLE) {
-                m_ctx = 3 * (ABOVE_FRAME_0 != m_decoder.m_comp_var_ref[1]);
-            } else {
-                m_ctx = 4 * (m_decoder.m_above_ref_frame[var_ref_idx] != m_decoder.m_comp_var_ref[1]);
-            }
-        }
-    } else if (AVAIL_L) {
-        if (LEFT_INTRA) {
-            m_ctx = 2;
-        } else {
-            if (LEFT_SINGLE) {
-                m_ctx = 3 * (LEFT_FRAME_0 != m_decoder.m_comp_var_ref[1]);
-            } else {
-                m_ctx = 4 * (m_decoder.m_left_ref_frame[var_ref_idx] != m_decoder.m_comp_var_ref[1]);
-            }
-        }
-    } else {
-        m_ctx = 2;
-    }
-
-    return m_decoder.m_probability_tables->comp_ref_prob()[m_ctx];
-}
 
 u8 TreeParser::calculate_single_ref_p1_probability()
 {
@@ -725,9 +728,6 @@ void TreeParser::count_syntax_element(SyntaxElementType type, int value)
         increment_counter(count);
     };
     switch (type) {
-    case SyntaxElementType::CompRef:
-        increment(m_decoder.m_syntax_element_counter->m_counts_comp_ref[m_ctx][value]);
-        return;
     case SyntaxElementType::SingleRefP1:
         increment(m_decoder.m_syntax_element_counter->m_counts_single_ref[m_ctx][0][value]);
         return;

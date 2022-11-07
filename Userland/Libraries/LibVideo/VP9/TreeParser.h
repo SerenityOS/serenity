@@ -8,6 +8,7 @@
 #pragma once
 
 #include "BitStream.h"
+#include "Context.h"
 #include "Enums.h"
 #include "ProbabilityTables.h"
 #include "SyntaxElementCounter.h"
@@ -76,6 +77,7 @@ public:
     static ErrorOr<TXSize> parse_tx_size(BitStream&, ProbabilityTables const&, SyntaxElementCounter&, TXSize max_tx_size, Optional<bool> above_skip, Optional<bool> left_skip, Optional<TXSize> above_tx_size, Optional<TXSize> left_tx_size);
     static ErrorOr<bool> parse_is_inter(BitStream&, ProbabilityTables const&, SyntaxElementCounter&, Optional<bool> above_intra, Optional<bool> left_intra);
     static ErrorOr<ReferenceMode> parse_comp_mode(BitStream&, ProbabilityTables const&, SyntaxElementCounter&, ReferenceFrameType comp_fixed_ref, Optional<bool> above_single, Optional<bool> left_single, Optional<bool> above_intra, Optional<bool> left_intra, Optional<ReferenceFrameType> above_ref_frame_0, Optional<ReferenceFrameType> left_ref_frame_0);
+    static ErrorOr<bool> parse_comp_ref(BitStream&, ProbabilityTables const&, SyntaxElementCounter&, ReferenceFrameType comp_fixed_ref, ReferenceFramePair comp_var_ref, Optional<bool> above_single, Optional<bool> left_single, Optional<bool> above_intra, Optional<bool> left_intra, Optional<ReferenceFrameType> above_ref_frame_0, Optional<ReferenceFrameType> left_ref_frame_0, Optional<ReferenceFrameType> above_ref_frame_biased, Optional<ReferenceFrameType> left_ref_frame_biased);
 
     void set_default_intra_mode_variables(u8 idx, u8 idy)
     {
@@ -109,7 +111,6 @@ public:
     }
 
 private:
-    u8 calculate_comp_ref_probability();
     u8 calculate_single_ref_p1_probability();
     u8 calculate_single_ref_p2_probability();
     u8 calculate_token_probability(u8 node);

@@ -1279,22 +1279,28 @@ DecoderErrorOr<void> Parser::read_ref_frames()
         return {};
     }
     ReferenceMode comp_mode;
+    Optional<bool> above_single = m_available_u ? m_above_single : Optional<bool>();
+    Optional<bool> left_single = m_available_l ? m_left_single : Optional<bool>();
+    Optional<bool> above_intra = m_available_u ? m_above_intra : Optional<bool>();
+    Optional<bool> left_intra = m_available_l ? m_left_intra : Optional<bool>();
+    Optional<ReferenceFrameType> above_ref_frame_0 = m_available_u ? m_above_ref_frame[0] : Optional<ReferenceFrameType>();
+    Optional<ReferenceFrameType> left_ref_frame_0 = m_available_l ? m_left_ref_frame[0] : Optional<ReferenceFrameType>();
     if (m_reference_mode == ReferenceModeSelect) {
-        Optional<bool> above_single = m_available_u ? m_above_single : Optional<bool>();
-        Optional<bool> left_single = m_available_l ? m_left_single : Optional<bool>();
-        Optional<bool> above_intra = m_available_u ? m_above_intra : Optional<bool>();
-        Optional<bool> left_intra = m_available_l ? m_left_intra : Optional<bool>();
-        Optional<ReferenceFrameType> above_ref_frame_0 = m_available_u ? m_above_ref_frame[0] : Optional<ReferenceFrameType>();
-        Optional<ReferenceFrameType> left_ref_frame_0 = m_available_l ? m_left_ref_frame[0] : Optional<ReferenceFrameType>();
         comp_mode = TRY_READ(TreeParser::parse_comp_mode(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter, m_comp_fixed_ref, above_single, left_single, above_intra, left_intra, above_ref_frame_0, left_ref_frame_0));
     } else {
         comp_mode = m_reference_mode;
     }
     if (comp_mode == CompoundReference) {
-        auto idx = m_ref_frame_sign_bias[m_comp_fixed_ref];
-        auto comp_ref = TRY_READ(m_tree_parser->parse_tree(SyntaxElementType::CompRef));
-        m_ref_frame[idx] = m_comp_fixed_ref;
-        m_ref_frame[!idx] = m_comp_var_ref[comp_ref];
+        auto biased_reference_index = m_ref_frame_sign_bias[m_comp_fixed_ref];
+        auto inverse_biased_reference_index = biased_reference_index == 0 ? 1 : 0;
+
+        Optional<ReferenceFrameType> above_ref_frame_biased = m_available_u ? m_above_ref_frame[inverse_biased_reference_index] : Optional<ReferenceFrameType>();
+        Optional<ReferenceFrameType> left_ref_frame_biased = m_available_l ? m_left_ref_frame[inverse_biased_reference_index] : Optional<ReferenceFrameType>();
+        // FIXME: Create an enum for compound frame references using names Primary and Secondary.
+        auto comp_ref = TRY_READ(TreeParser::parse_comp_ref(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter, m_comp_fixed_ref, m_comp_var_ref, above_single, left_single, above_intra, left_intra, above_ref_frame_0, left_ref_frame_0, above_ref_frame_biased, left_ref_frame_biased));
+
+        m_ref_frame[biased_reference_index] = m_comp_fixed_ref;
+        m_ref_frame[inverse_biased_reference_index] = m_comp_var_ref[comp_ref];
         return {};
     }
     auto single_ref_p1 = TRY_READ(m_tree_parser->parse_tree<bool>(SyntaxElementType::SingleRefP1));
