@@ -14,40 +14,16 @@
 
 namespace Video::VP9 {
 
-template<typename T>
-ErrorOr<T> TreeParser::parse_tree(SyntaxElementType type)
-{
-    auto tree_selection = select_tree(type);
-    int value;
-    if (tree_selection.is_single_value()) {
-        value = tree_selection.single_value();
-    } else {
-        auto tree = tree_selection.tree();
-        int n = 0;
-        do {
-            n = tree[n + TRY(m_decoder.m_bit_stream->read_bool(select_tree_probability(type, n >> 1)))];
-        } while (n > 0);
-        value = -n;
-    }
-    count_syntax_element(type, value);
-    return static_cast<T>(value);
-}
-
-template ErrorOr<int> TreeParser::parse_tree(SyntaxElementType);
-template ErrorOr<bool> TreeParser::parse_tree(SyntaxElementType);
-template ErrorOr<u8> TreeParser::parse_tree(SyntaxElementType);
-template ErrorOr<u32> TreeParser::parse_tree(SyntaxElementType);
-template ErrorOr<PredictionMode> TreeParser::parse_tree(SyntaxElementType);
-template ErrorOr<TXSize> TreeParser::parse_tree(SyntaxElementType);
-template ErrorOr<InterpolationFilter> TreeParser::parse_tree(SyntaxElementType);
-template ErrorOr<ReferenceMode> TreeParser::parse_tree(SyntaxElementType);
-template ErrorOr<Token> TreeParser::parse_tree(SyntaxElementType);
-template ErrorOr<MvClass> TreeParser::parse_tree(SyntaxElementType);
-template ErrorOr<MvJoint> TreeParser::parse_tree(SyntaxElementType);
+// Parsing of binary trees is handled here, as defined in sections 9.3.
+// Each syntax element is defined in its own section for each overarching section listed here:
+// - 9.3.1: Selection of the binary tree to be used.
+// - 9.3.2: Probability selection based on context and often the node of the tree.
+// - 9.3.4: Counting each syntax element when it is read.
 
 template<typename OutputType>
 inline ErrorOr<OutputType> parse_tree_new(BitStream& bit_stream, TreeParser::TreeSelection tree_selection, Function<u8(u8)> const& probability_getter)
 {
+    // 9.3.3: The tree decoding function.
     if (tree_selection.is_single_value())
         return static_cast<OutputType>(tree_selection.single_value());
 
@@ -652,86 +628,38 @@ ErrorOr<bool> TreeParser::parse_motion_vector_hp(BitStream& bit_stream, Probabil
     return value;
 }
 
-/*
- * Select a tree value based on the type of syntax element being parsed, as well as some parser state, as specified in section 9.3.1
- */
-TreeParser::TreeSelection TreeParser::select_tree(SyntaxElementType type)
+TokensContext TreeParser::get_tokens_context(bool subsampling_x, bool subsampling_y, u32 rows, u32 columns, Array<Vector<bool>, 3> const& above_nonzero_context, Array<Vector<bool>, 3> const& left_nonzero_context, u8 token_cache[1024], TXSize tx_size, u8 tx_type, u8 plane, u32 start_x, u32 start_y, u32 position, bool is_inter, u8 band, u32 c)
 {
-    switch (type) {
-    case SyntaxElementType::MoreCoefs:
-        return { binary_tree };
-    case SyntaxElementType::Token:
-        return { token_tree };
-    default:
-        break;
-    }
-    VERIFY_NOT_REACHED();
-}
-
-/*
- * Select a probability with which to read a boolean when decoding a tree, as specified in section 9.3.2
- */
-u8 TreeParser::select_tree_probability(SyntaxElementType type, u8 node)
-{
-    switch (type) {
-    case SyntaxElementType::Token:
-        return calculate_token_probability(node);
-    case SyntaxElementType::MoreCoefs:
-        return calculate_more_coefs_probability();
-    default:
-        break;
-    }
-    VERIFY_NOT_REACHED();
-}
-
-#define ABOVE_FRAME_0 m_decoder.m_above_ref_frame[0]
-#define ABOVE_FRAME_1 m_decoder.m_above_ref_frame[1]
-#define LEFT_FRAME_0 m_decoder.m_left_ref_frame[0]
-#define LEFT_FRAME_1 m_decoder.m_left_ref_frame[1]
-#define AVAIL_U m_decoder.m_available_u
-#define AVAIL_L m_decoder.m_available_l
-#define ABOVE_INTRA m_decoder.m_above_intra
-#define LEFT_INTRA m_decoder.m_left_intra
-#define ABOVE_SINGLE m_decoder.m_above_single
-#define LEFT_SINGLE m_decoder.m_left_single
-
-void TreeParser::set_tokens_variables(u8 band, u32 c, u32 plane, TXSize tx_size, u32 pos)
-{
-    m_band = band;
-    m_c = c;
-    m_plane = plane;
-    m_tx_size = tx_size;
-    m_pos = pos;
-
-    if (m_c == 0) {
-        auto sx = m_plane > 0 ? m_decoder.m_subsampling_x : 0;
-        auto sy = m_plane > 0 ? m_decoder.m_subsampling_y : 0;
-        auto max_x = (2 * m_decoder.m_mi_cols) >> sx;
-        auto max_y = (2 * m_decoder.m_mi_rows) >> sy;
-        u8 numpts = 1 << m_tx_size;
-        auto x4 = m_start_x >> 2;
-        auto y4 = m_start_y >> 2;
+    u8 context;
+    if (c == 0) {
+        auto sx = plane > 0 ? subsampling_x : false;
+        auto sy = plane > 0 ? subsampling_y : false;
+        auto max_x = (2 * columns) >> sx;
+        auto max_y = (2 * rows) >> sy;
+        u8 numpts = 1 << tx_size;
+        auto x4 = start_x >> 2;
+        auto y4 = start_y >> 2;
         u32 above = 0;
         u32 left = 0;
         for (size_t i = 0; i < numpts; i++) {
             if (x4 + i < max_x)
-                above |= m_decoder.m_above_nonzero_context[m_plane][x4 + i];
+                above |= above_nonzero_context[plane][x4 + i];
             if (y4 + i < max_y)
-                left |= m_decoder.m_left_nonzero_context[m_plane][y4 + i];
+                left |= left_nonzero_context[plane][y4 + i];
         }
-        m_ctx = above + left;
+        context = above + left;
     } else {
         u32 neighbor_0, neighbor_1;
-        auto n = 4 << m_tx_size;
-        auto i = m_pos / n;
-        auto j = m_pos % n;
+        auto n = 4 << tx_size;
+        auto i = position / n;
+        auto j = position % n;
         auto a = i > 0 ? (i - 1) * n + j : 0;
         auto a2 = i * n + j - 1;
         if (i > 0 && j > 0) {
-            if (m_decoder.m_tx_type == DCT_ADST) {
+            if (tx_type == DCT_ADST) {
                 neighbor_0 = a;
                 neighbor_1 = a;
-            } else if (m_decoder.m_tx_type == ADST_DCT) {
+            } else if (tx_type == ADST_DCT) {
                 neighbor_0 = a2;
                 neighbor_1 = a2;
             } else {
@@ -745,43 +673,36 @@ void TreeParser::set_tokens_variables(u8 band, u32 c, u32 plane, TXSize tx_size,
             neighbor_0 = a2;
             neighbor_1 = a2;
         }
-        m_ctx = (1 + m_decoder.m_token_cache[neighbor_0] + m_decoder.m_token_cache[neighbor_1]) >> 1;
+        context = (1 + token_cache[neighbor_0] + token_cache[neighbor_1]) >> 1;
     }
+
+    return TokensContext { tx_size, plane > 0, is_inter, band, context };
 }
 
-u8 TreeParser::calculate_more_coefs_probability()
+ErrorOr<bool> TreeParser::parse_more_coefficients(BitStream& bit_stream, ProbabilityTables const& probability_table, SyntaxElementCounter& counter, TokensContext const& context)
 {
-    return m_decoder.m_probability_tables->coef_probs()[m_tx_size][m_plane > 0][m_decoder.m_is_inter][m_band][m_ctx][0];
+    auto probability = probability_table.coef_probs()[context.m_tx_size][context.m_is_uv_plane][context.m_is_inter][context.m_band][context.m_context_index][0];
+    auto value = TRY(parse_tree_new<u8>(bit_stream, { binary_tree }, [&](u8) { return probability; }));
+    increment_counter(counter.m_counts_more_coefs[context.m_tx_size][context.m_is_uv_plane][context.m_is_inter][context.m_band][context.m_context_index][value]);
+    return value;
 }
 
-u8 TreeParser::calculate_token_probability(u8 node)
+ErrorOr<Token> TreeParser::parse_token(BitStream& bit_stream, ProbabilityTables const& probability_table, SyntaxElementCounter& counter, TokensContext const& context)
 {
-    auto prob = m_decoder.m_probability_tables->coef_probs()[m_tx_size][m_plane > 0][m_decoder.m_is_inter][m_band][m_ctx][min(2, 1 + node)];
-    if (node < 2)
-        return prob;
-    auto x = (prob - 1) / 2;
-    auto& pareto_table = m_decoder.m_probability_tables->pareto_table();
-    if (prob & 1)
-        return pareto_table[x][node - 2];
-    return (pareto_table[x][node - 2] + pareto_table[x + 1][node - 2]) >> 1;
-}
-
-void TreeParser::count_syntax_element(SyntaxElementType type, int value)
-{
-    auto increment = [](u8& count) {
-        increment_counter(count);
+    Function<u8(u8)> probability_getter = [&](u8 node) -> u8 {
+        auto prob = probability_table.coef_probs()[context.m_tx_size][context.m_is_uv_plane][context.m_is_inter][context.m_band][context.m_context_index][min(2, 1 + node)];
+        if (node < 2)
+            return prob;
+        auto x = (prob - 1) / 2;
+        auto const& pareto_table = probability_table.pareto_table();
+        if ((prob & 1) != 0)
+            return pareto_table[x][node - 2];
+        return (pareto_table[x][node - 2] + pareto_table[x + 1][node - 2]) >> 1;
     };
-    switch (type) {
-    case SyntaxElementType::Token:
-        increment(m_decoder.m_syntax_element_counter->m_counts_token[m_tx_size][m_plane > 0][m_decoder.m_is_inter][m_band][m_ctx][min(2, value)]);
-        return;
-    case SyntaxElementType::MoreCoefs:
-        increment(m_decoder.m_syntax_element_counter->m_counts_more_coefs[m_tx_size][m_plane > 0][m_decoder.m_is_inter][m_band][m_ctx][value]);
-        return;
-    default:
-        break;
-    }
-    VERIFY_NOT_REACHED();
+
+    auto value = TRY(parse_tree_new<Token>(bit_stream, { token_tree }, probability_getter));
+    increment_counter(counter.m_counts_token[context.m_tx_size][context.m_is_uv_plane][context.m_is_inter][context.m_band][context.m_context_index][min(2, value)]);
+    return value;
 }
 
 }
