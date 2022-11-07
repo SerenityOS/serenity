@@ -428,14 +428,165 @@ ErrorOr<bool> TreeParser::parse_comp_ref(BitStream& bit_stream, ProbabilityTable
     return value;
 }
 
+ErrorOr<bool> TreeParser::parse_single_ref_part_1(BitStream& bit_stream, ProbabilityTables const& probability_table, SyntaxElementCounter& counter, Optional<bool> above_single, Optional<bool> left_single, Optional<bool> above_intra, Optional<bool> left_intra, Optional<ReferenceFramePair> above_ref_frame, Optional<ReferenceFramePair> left_ref_frame)
+{
+    // FIXME: Above and left contexts should be in structs.
+
+    // Probabilities
+    u8 context;
+    if (above_single.has_value() && left_single.has_value()) {
+        if (above_intra.value() && left_intra.value()) {
+            context = 2;
+        } else if (left_intra.value()) {
+            if (above_single.value()) {
+                context = 4 * (above_ref_frame.value()[0] == LastFrame);
+            } else {
+                context = 1 + (above_ref_frame.value()[0] == LastFrame || above_ref_frame.value()[1] == LastFrame);
+            }
+        } else if (above_intra.value()) {
+            if (left_single.value()) {
+                context = 4 * (left_ref_frame.value()[0] == LastFrame);
+            } else {
+                context = 1 + (left_ref_frame.value()[0] == LastFrame || left_ref_frame.value()[1] == LastFrame);
+            }
+        } else {
+            if (left_single.value() && above_single.value()) {
+                context = 2 * (above_ref_frame.value()[0] == LastFrame) + 2 * (left_ref_frame.value()[0] == LastFrame);
+            } else if (!left_single.value() && !above_single.value()) {
+                auto above_is_last = above_ref_frame.value()[0] == LastFrame || above_ref_frame.value()[1] == LastFrame;
+                auto left_is_last = left_ref_frame.value()[0] == LastFrame || left_ref_frame.value()[1] == LastFrame;
+                context = 1 + (above_is_last || left_is_last);
+            } else {
+                auto rfs = above_single.value() ? above_ref_frame.value()[0] : left_ref_frame.value()[0];
+                auto crf1 = above_single.value() ? left_ref_frame.value()[0] : above_ref_frame.value()[0];
+                auto crf2 = above_single.value() ? left_ref_frame.value()[1] : above_ref_frame.value()[1];
+                context = crf1 == LastFrame || crf2 == LastFrame;
+                if (rfs == LastFrame)
+                    context += 3;
+            }
+        }
+    } else if (above_single.has_value()) {
+        if (above_intra.value()) {
+            context = 2;
+        } else {
+            if (above_single.value()) {
+                context = 4 * (above_ref_frame.value()[0] == LastFrame);
+            } else {
+                context = 1 + (above_ref_frame.value()[0] == LastFrame || above_ref_frame.value()[1] == LastFrame);
+            }
+        }
+    } else if (left_single.has_value()) {
+        if (left_intra.value()) {
+            context = 2;
+        } else {
+            if (left_single.value()) {
+                context = 4 * (left_ref_frame.value()[0] == LastFrame);
+            } else {
+                context = 1 + (left_ref_frame.value()[0] == LastFrame || left_ref_frame.value()[1] == LastFrame);
+            }
+        }
+    } else {
+        context = 2;
+    }
+    u8 probability = probability_table.single_ref_prob()[context][0];
+
+    auto value = TRY(parse_tree_new<bool>(bit_stream, { binary_tree }, [&](u8) { return probability; }));
+    increment_counter(counter.m_counts_single_ref[context][0][value]);
+    return value;
+}
+
+ErrorOr<bool> TreeParser::parse_single_ref_part_2(BitStream& bit_stream, ProbabilityTables const& probability_table, SyntaxElementCounter& counter, Optional<bool> above_single, Optional<bool> left_single, Optional<bool> above_intra, Optional<bool> left_intra, Optional<ReferenceFramePair> above_ref_frame, Optional<ReferenceFramePair> left_ref_frame)
+{
+    // FIXME: Above and left contexts should be in structs.
+
+    // Probabilities
+    u8 context;
+    if (above_single.has_value() && left_single.has_value()) {
+        if (above_intra.value() && left_intra.value()) {
+            context = 2;
+        } else if (left_intra.value()) {
+            if (above_single.value()) {
+                if (above_ref_frame.value()[0] == LastFrame) {
+                    context = 3;
+                } else {
+                    context = 4 * (above_ref_frame.value()[0] == GoldenFrame);
+                }
+            } else {
+                context = 1 + 2 * (above_ref_frame.value()[0] == GoldenFrame || above_ref_frame.value()[1] == GoldenFrame);
+            }
+        } else if (above_intra.value()) {
+            if (left_single.value()) {
+                if (left_ref_frame.value()[0] == LastFrame) {
+                    context = 3;
+                } else {
+                    context = 4 * (left_ref_frame.value()[0] == GoldenFrame);
+                }
+            } else {
+                context = 1 + 2 * (left_ref_frame.value()[0] == GoldenFrame || left_ref_frame.value()[1] == GoldenFrame);
+            }
+        } else {
+            if (left_single.value() && above_single.value()) {
+                auto above_last = above_ref_frame.value()[0] == LastFrame;
+                auto left_last = left_ref_frame.value()[0] == LastFrame;
+                if (above_last && left_last) {
+                    context = 3;
+                } else if (above_last) {
+                    context = 4 * (left_ref_frame.value()[0] == GoldenFrame);
+                } else if (left_last) {
+                    context = 4 * (above_ref_frame.value()[0] == GoldenFrame);
+                } else {
+                    context = 2 * (above_ref_frame.value()[0] == GoldenFrame) + 2 * (left_ref_frame.value()[0] == GoldenFrame);
+                }
+            } else if (!left_single.value() && !above_single.value()) {
+                if (above_ref_frame.value()[0] == left_ref_frame.value()[0] && above_ref_frame.value()[1] == left_ref_frame.value()[1]) {
+                    context = 3 * (above_ref_frame.value()[0] == GoldenFrame || above_ref_frame.value()[1] == GoldenFrame);
+                } else {
+                    context = 2;
+                }
+            } else {
+                auto rfs = above_single.value() ? above_ref_frame.value()[0] : left_ref_frame.value()[0];
+                auto crf1 = above_single.value() ? left_ref_frame.value()[0] : above_ref_frame.value()[0];
+                auto crf2 = above_single.value() ? left_ref_frame.value()[1] : above_ref_frame.value()[1];
+                context = crf1 == GoldenFrame || crf2 == GoldenFrame;
+                if (rfs == GoldenFrame) {
+                    context += 3;
+                } else if (rfs != AltRefFrame) {
+                    context = 1 + (2 * context);
+                }
+            }
+        }
+    } else if (above_single.has_value()) {
+        if (above_intra.value() || (above_ref_frame.value()[0] == LastFrame && above_single.value())) {
+            context = 2;
+        } else if (above_single.value()) {
+            context = 4 * (above_ref_frame.value()[0] == GoldenFrame);
+        } else {
+            context = 3 * (above_ref_frame.value()[0] == GoldenFrame || above_ref_frame.value()[1] == GoldenFrame);
+        }
+    } else if (left_single.has_value()) {
+        if (left_intra.value() || (left_ref_frame.value()[0] == LastFrame && left_single.value())) {
+            context = 2;
+        } else if (left_single.value()) {
+            context = 4 * (left_ref_frame.value()[0] == GoldenFrame);
+        } else {
+            context = 3 * (left_ref_frame.value()[0] == GoldenFrame || left_ref_frame.value()[1] == GoldenFrame);
+        }
+    } else {
+        context = 2;
+    }
+    u8 probability = probability_table.single_ref_prob()[context][1];
+
+    auto value = TRY(parse_tree_new<bool>(bit_stream, { binary_tree }, [&](u8) { return probability; }));
+    increment_counter(counter.m_counts_single_ref[context][1][value]);
+    return value;
+}
+
 /*
  * Select a tree value based on the type of syntax element being parsed, as well as some parser state, as specified in section 9.3.1
  */
 TreeParser::TreeSelection TreeParser::select_tree(SyntaxElementType type)
 {
     switch (type) {
-    case SyntaxElementType::SingleRefP1:
-    case SyntaxElementType::SingleRefP2:
     case SyntaxElementType::MVSign:
     case SyntaxElementType::MVClass0Bit:
     case SyntaxElementType::MVBit:
@@ -467,10 +618,6 @@ TreeParser::TreeSelection TreeParser::select_tree(SyntaxElementType type)
 u8 TreeParser::select_tree_probability(SyntaxElementType type, u8 node)
 {
     switch (type) {
-    case SyntaxElementType::SingleRefP1:
-        return calculate_single_ref_p1_probability();
-    case SyntaxElementType::SingleRefP2:
-        return calculate_single_ref_p2_probability();
     case SyntaxElementType::MVSign:
         return m_decoder.m_probability_tables->mv_sign_prob()[m_mv_component];
     case SyntaxElementType::MVClass0Bit:
@@ -513,143 +660,6 @@ u8 TreeParser::select_tree_probability(SyntaxElementType type, u8 node)
 #define LEFT_INTRA m_decoder.m_left_intra
 #define ABOVE_SINGLE m_decoder.m_above_single
 #define LEFT_SINGLE m_decoder.m_left_single
-
-u8 TreeParser::calculate_single_ref_p1_probability()
-{
-    if (AVAIL_U && AVAIL_L) {
-        if (ABOVE_INTRA && LEFT_INTRA) {
-            m_ctx = 2;
-        } else if (LEFT_INTRA) {
-            if (ABOVE_SINGLE) {
-                m_ctx = 4 * (ABOVE_FRAME_0 == LastFrame);
-            } else {
-                m_ctx = 1 + (ABOVE_FRAME_0 == LastFrame || ABOVE_FRAME_1 == LastFrame);
-            }
-        } else if (ABOVE_INTRA) {
-            if (LEFT_SINGLE) {
-                m_ctx = 4 * (LEFT_FRAME_0 == LastFrame);
-            } else {
-                m_ctx = 1 + (LEFT_FRAME_0 == LastFrame || LEFT_FRAME_1 == LastFrame);
-            }
-        } else {
-            if (LEFT_SINGLE && ABOVE_SINGLE) {
-                m_ctx = 2 * (ABOVE_FRAME_0 == LastFrame) + 2 * (LEFT_FRAME_0 == LastFrame);
-            } else if (!LEFT_SINGLE && !ABOVE_SINGLE) {
-                auto above_is_last = ABOVE_FRAME_0 == LastFrame || ABOVE_FRAME_1 == LastFrame;
-                auto left_is_last = LEFT_FRAME_0 == LastFrame || LEFT_FRAME_1 == LastFrame;
-                m_ctx = 1 + (above_is_last || left_is_last);
-            } else {
-                auto rfs = ABOVE_SINGLE ? ABOVE_FRAME_0 : LEFT_FRAME_0;
-                auto crf1 = ABOVE_SINGLE ? LEFT_FRAME_0 : ABOVE_FRAME_0;
-                auto crf2 = ABOVE_SINGLE ? LEFT_FRAME_1 : ABOVE_FRAME_1;
-                m_ctx = crf1 == LastFrame || crf2 == LastFrame;
-                if (rfs == LastFrame)
-                    m_ctx += 3;
-            }
-        }
-    } else if (AVAIL_U) {
-        if (ABOVE_INTRA) {
-            m_ctx = 2;
-        } else {
-            if (ABOVE_SINGLE) {
-                m_ctx = 4 * (ABOVE_FRAME_0 == LastFrame);
-            } else {
-                m_ctx = 1 + (ABOVE_FRAME_0 == LastFrame || ABOVE_FRAME_1 == LastFrame);
-            }
-        }
-    } else if (AVAIL_L) {
-        if (LEFT_INTRA) {
-            m_ctx = 2;
-        } else {
-            if (LEFT_SINGLE) {
-                m_ctx = 4 * (LEFT_FRAME_0 == LastFrame);
-            } else {
-                m_ctx = 1 + (LEFT_FRAME_0 == LastFrame || LEFT_FRAME_1 == LastFrame);
-            }
-        }
-    } else {
-        m_ctx = 2;
-    }
-    return m_decoder.m_probability_tables->single_ref_prob()[m_ctx][0];
-}
-
-u8 TreeParser::calculate_single_ref_p2_probability()
-{
-    if (AVAIL_U && AVAIL_L) {
-        if (ABOVE_INTRA && LEFT_INTRA) {
-            m_ctx = 2;
-        } else if (LEFT_INTRA) {
-            if (ABOVE_SINGLE) {
-                if (ABOVE_FRAME_0 == LastFrame) {
-                    m_ctx = 3;
-                } else {
-                    m_ctx = 4 * (ABOVE_FRAME_0 == GoldenFrame);
-                }
-            } else {
-                m_ctx = 1 + 2 * (ABOVE_FRAME_0 == GoldenFrame || ABOVE_FRAME_1 == GoldenFrame);
-            }
-        } else if (ABOVE_INTRA) {
-            if (LEFT_SINGLE) {
-                if (LEFT_FRAME_0 == LastFrame) {
-                    m_ctx = 3;
-                } else {
-                    m_ctx = 4 * (LEFT_FRAME_0 == GoldenFrame);
-                }
-            } else {
-                m_ctx = 1 + 2 * (LEFT_FRAME_0 == GoldenFrame || LEFT_FRAME_1 == GoldenFrame);
-            }
-        } else {
-            if (LEFT_SINGLE && ABOVE_SINGLE) {
-                auto above_last = ABOVE_FRAME_0 == LastFrame;
-                auto left_last = LEFT_FRAME_0 == LastFrame;
-                if (above_last && left_last) {
-                    m_ctx = 3;
-                } else if (above_last) {
-                    m_ctx = 4 * (LEFT_FRAME_0 == GoldenFrame);
-                } else if (left_last) {
-                    m_ctx = 4 * (ABOVE_FRAME_0 == GoldenFrame);
-                } else {
-                    m_ctx = 2 * (ABOVE_FRAME_0 == GoldenFrame) + 2 * (LEFT_FRAME_0 == GoldenFrame);
-                }
-            } else if (!LEFT_SINGLE && !ABOVE_SINGLE) {
-                if (ABOVE_FRAME_0 == LEFT_FRAME_0 && ABOVE_FRAME_1 == LEFT_FRAME_1) {
-                    m_ctx = 3 * (ABOVE_FRAME_0 == GoldenFrame || ABOVE_FRAME_1 == GoldenFrame);
-                } else {
-                    m_ctx = 2;
-                }
-            } else {
-                auto rfs = ABOVE_SINGLE ? ABOVE_FRAME_0 : LEFT_FRAME_0;
-                auto crf1 = ABOVE_SINGLE ? LEFT_FRAME_0 : ABOVE_FRAME_0;
-                auto crf2 = ABOVE_SINGLE ? LEFT_FRAME_1 : ABOVE_FRAME_1;
-                m_ctx = crf1 == GoldenFrame || crf2 == GoldenFrame;
-                if (rfs == GoldenFrame) {
-                    m_ctx += 3;
-                } else if (rfs != AltRefFrame) {
-                    m_ctx = 1 + (2 * m_ctx);
-                }
-            }
-        }
-    } else if (AVAIL_U) {
-        if (ABOVE_INTRA || (ABOVE_FRAME_0 == LastFrame && ABOVE_SINGLE)) {
-            m_ctx = 2;
-        } else if (ABOVE_SINGLE) {
-            m_ctx = 4 * (ABOVE_FRAME_0 == GoldenFrame);
-        } else {
-            m_ctx = 3 * (ABOVE_FRAME_0 == GoldenFrame || ABOVE_FRAME_1 == GoldenFrame);
-        }
-    } else if (AVAIL_L) {
-        if (LEFT_INTRA || (LEFT_FRAME_0 == LastFrame && LEFT_SINGLE)) {
-            m_ctx = 2;
-        } else if (LEFT_SINGLE) {
-            m_ctx = 4 * (LEFT_FRAME_0 == GoldenFrame);
-        } else {
-            m_ctx = 3 * (LEFT_FRAME_0 == GoldenFrame || LEFT_FRAME_1 == GoldenFrame);
-        }
-    } else {
-        m_ctx = 2;
-    }
-    return m_decoder.m_probability_tables->single_ref_prob()[m_ctx][1];
-}
 
 void TreeParser::set_tokens_variables(u8 band, u32 c, u32 plane, TXSize tx_size, u32 pos)
 {
@@ -728,12 +738,6 @@ void TreeParser::count_syntax_element(SyntaxElementType type, int value)
         increment_counter(count);
     };
     switch (type) {
-    case SyntaxElementType::SingleRefP1:
-        increment(m_decoder.m_syntax_element_counter->m_counts_single_ref[m_ctx][0][value]);
-        return;
-    case SyntaxElementType::SingleRefP2:
-        increment(m_decoder.m_syntax_element_counter->m_counts_single_ref[m_ctx][1][value]);
-        return;
     case SyntaxElementType::MVSign:
         increment(m_decoder.m_syntax_element_counter->m_counts_mv_sign[m_mv_component][value]);
         return;
