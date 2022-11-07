@@ -187,6 +187,21 @@ ErrorOr<PredictionMode> TreeParser::parse_uv_mode(BitStream& bit_stream, Probabi
     return value;
 }
 
+ErrorOr<u8> TreeParser::parse_segment_id(BitStream& bit_stream, u8 const probabilities[7])
+{
+    auto value = TRY(parse_tree_new<u8>(bit_stream, { segment_tree }, [&](u8 node) { return probabilities[node]; }));
+    // Segment ID is not counted.
+    return value;
+}
+
+ErrorOr<bool> TreeParser::parse_segment_id_predicted(BitStream& bit_stream, u8 const probabilities[3], u8 above_seg_pred_context, u8 left_seg_pred_context)
+{
+    auto context = left_seg_pred_context + above_seg_pred_context;
+    auto value = TRY(parse_tree_new<bool>(bit_stream, { binary_tree }, [&](u8) { return probabilities[context]; }));
+    // Segment ID prediction is not counted.
+    return value;
+}
+
 ErrorOr<PredictionMode> TreeParser::parse_inter_mode(BitStream& bit_stream, ProbabilityTables const& probability_table, SyntaxElementCounter& counter, u8 mode_context_for_ref_frame_0)
 {
     // Tree
@@ -235,10 +250,7 @@ ErrorOr<InterpolationFilter> TreeParser::parse_interpolation_filter(BitStream& b
 TreeParser::TreeSelection TreeParser::select_tree(SyntaxElementType type)
 {
     switch (type) {
-    case SyntaxElementType::SegmentID:
-        return { segment_tree };
     case SyntaxElementType::Skip:
-    case SyntaxElementType::SegIDPredicted:
     case SyntaxElementType::IsInter:
     case SyntaxElementType::CompMode:
     case SyntaxElementType::CompRef:
@@ -281,12 +293,8 @@ TreeParser::TreeSelection TreeParser::select_tree(SyntaxElementType type)
 u8 TreeParser::select_tree_probability(SyntaxElementType type, u8 node)
 {
     switch (type) {
-    case SyntaxElementType::SegmentID:
-        return calculate_segment_id_probability(node);
     case SyntaxElementType::Skip:
         return calculate_skip_probability();
-    case SyntaxElementType::SegIDPredicted:
-        return calculate_seg_id_predicted_probability();
     case SyntaxElementType::IsInter:
         return calculate_is_inter_probability();
     case SyntaxElementType::CompMode:
@@ -342,11 +350,6 @@ u8 TreeParser::select_tree_probability(SyntaxElementType type, u8 node)
 #define ABOVE_SINGLE m_decoder.m_above_single
 #define LEFT_SINGLE m_decoder.m_left_single
 
-u8 TreeParser::calculate_segment_id_probability(u8 node)
-{
-    return m_decoder.m_segmentation_tree_probs[node];
-}
-
 u8 TreeParser::calculate_skip_probability()
 {
     m_ctx = 0;
@@ -355,12 +358,6 @@ u8 TreeParser::calculate_skip_probability()
     if (AVAIL_L)
         m_ctx += m_decoder.m_skips[m_decoder.m_mi_row * m_decoder.m_mi_cols + m_decoder.m_mi_col - 1];
     return m_decoder.m_probability_tables->skip_prob()[m_ctx];
-}
-
-u8 TreeParser::calculate_seg_id_predicted_probability()
-{
-    m_ctx = m_decoder.m_left_seg_pred_context[m_decoder.m_mi_row] + m_decoder.m_above_seg_pred_context[m_decoder.m_mi_col];
-    return m_decoder.m_segmentation_pred_prob[m_ctx];
 }
 
 u8 TreeParser::calculate_is_inter_probability()
@@ -778,10 +775,6 @@ void TreeParser::count_syntax_element(SyntaxElementType type, int value)
         return;
     case SyntaxElementType::MoreCoefs:
         increment(m_decoder.m_syntax_element_counter->m_counts_more_coefs[m_tx_size][m_plane > 0][m_decoder.m_is_inter][m_band][m_ctx][value]);
-        return;
-    case SyntaxElementType::SegmentID:
-    case SyntaxElementType::SegIDPredicted:
-        // No counting required
         return;
     default:
         break;

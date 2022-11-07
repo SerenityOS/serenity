@@ -68,6 +68,8 @@ public:
     static ErrorOr<PredictionMode> parse_intra_mode(BitStream&, ProbabilityTables const&, SyntaxElementCounter&, BlockSubsize mi_size);
     static ErrorOr<PredictionMode> parse_sub_intra_mode(BitStream&, ProbabilityTables const&, SyntaxElementCounter&);
     static ErrorOr<PredictionMode> parse_uv_mode(BitStream&, ProbabilityTables const&, SyntaxElementCounter&, PredictionMode y_mode);
+    static ErrorOr<u8> parse_segment_id(BitStream&, u8 const probabilities[7]);
+    static ErrorOr<bool> parse_segment_id_predicted(BitStream&, u8 const probabilities[3], u8 above_seg_pred_context, u8 left_seg_pred_context);
     static ErrorOr<PredictionMode> parse_inter_mode(BitStream&, ProbabilityTables const&, SyntaxElementCounter&, u8 mode_context_for_ref_frame_0);
     static ErrorOr<InterpolationFilter> parse_interpolation_filter(BitStream&, ProbabilityTables const&, SyntaxElementCounter&, Optional<ReferenceFrameType> above_ref_frame, Optional<ReferenceFrameType> left_ref_frame, Optional<InterpolationFilter> above_interpolation_filter, Optional<InterpolationFilter> left_interpolation_filter);
 
@@ -103,9 +105,7 @@ public:
     }
 
 private:
-    u8 calculate_segment_id_probability(u8 node);
     u8 calculate_skip_probability();
-    u8 calculate_seg_id_predicted_probability();
     u8 calculate_is_inter_probability();
     u8 calculate_comp_mode_probability();
     u8 calculate_comp_ref_probability();
