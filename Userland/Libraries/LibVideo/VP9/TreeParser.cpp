@@ -581,29 +581,85 @@ ErrorOr<bool> TreeParser::parse_single_ref_part_2(BitStream& bit_stream, Probabi
     return value;
 }
 
+ErrorOr<MvJoint> TreeParser::parse_motion_vector_joint(BitStream& bit_stream, ProbabilityTables const& probability_table, SyntaxElementCounter& counter)
+{
+    auto value = TRY(parse_tree_new<MvJoint>(bit_stream, { mv_joint_tree }, [&](u8 node) { return probability_table.mv_joint_probs()[node]; }));
+    increment_counter(counter.m_counts_mv_joint[value]);
+    return value;
+}
+
+ErrorOr<bool> TreeParser::parse_motion_vector_sign(BitStream& bit_stream, ProbabilityTables const& probability_table, SyntaxElementCounter& counter, u8 component)
+{
+    auto value = TRY(parse_tree_new<bool>(bit_stream, { binary_tree }, [&](u8) { return probability_table.mv_sign_prob()[component]; }));
+    increment_counter(counter.m_counts_mv_sign[component][value]);
+    return value;
+}
+
+ErrorOr<MvClass> TreeParser::parse_motion_vector_class(BitStream& bit_stream, ProbabilityTables const& probability_table, SyntaxElementCounter& counter, u8 component)
+{
+    // Spec doesn't mention node, but the probabilities table has an extra dimension
+    // so we will use node for that.
+    auto value = TRY(parse_tree_new<MvClass>(bit_stream, { mv_class_tree }, [&](u8 node) { return probability_table.mv_class_probs()[component][node]; }));
+    increment_counter(counter.m_counts_mv_class[component][value]);
+    return value;
+}
+
+ErrorOr<bool> TreeParser::parse_motion_vector_class0_bit(BitStream& bit_stream, ProbabilityTables const& probability_table, SyntaxElementCounter& counter, u8 component)
+{
+    auto value = TRY(parse_tree_new<bool>(bit_stream, { binary_tree }, [&](u8) { return probability_table.mv_class0_bit_prob()[component]; }));
+    increment_counter(counter.m_counts_mv_class0_bit[component][value]);
+    return value;
+}
+
+ErrorOr<u8> TreeParser::parse_motion_vector_class0_fr(BitStream& bit_stream, ProbabilityTables const& probability_table, SyntaxElementCounter& counter, u8 component, bool class_0_bit)
+{
+    auto value = TRY(parse_tree_new<u8>(bit_stream, { mv_fr_tree }, [&](u8 node) { return probability_table.mv_class0_fr_probs()[component][class_0_bit][node]; }));
+    increment_counter(counter.m_counts_mv_class0_fr[component][class_0_bit][value]);
+    return value;
+}
+
+ErrorOr<bool> TreeParser::parse_motion_vector_class0_hp(BitStream& bit_stream, ProbabilityTables const& probability_table, SyntaxElementCounter& counter, u8 component, bool use_hp)
+{
+    TreeParser::TreeSelection tree { 1 };
+    if (use_hp)
+        tree = { binary_tree };
+    auto value = TRY(parse_tree_new<bool>(bit_stream, tree, [&](u8) { return probability_table.mv_class0_hp_prob()[component]; }));
+    increment_counter(counter.m_counts_mv_class0_hp[component][value]);
+    return value;
+}
+
+ErrorOr<bool> TreeParser::parse_motion_vector_bit(BitStream& bit_stream, ProbabilityTables const& probability_table, SyntaxElementCounter& counter, u8 component, u8 bit_index)
+{
+    auto value = TRY(parse_tree_new<bool>(bit_stream, { binary_tree }, [&](u8) { return probability_table.mv_bits_prob()[component][bit_index]; }));
+    increment_counter(counter.m_counts_mv_bits[component][bit_index][value]);
+    return value;
+}
+
+ErrorOr<u8> TreeParser::parse_motion_vector_fr(BitStream& bit_stream, ProbabilityTables const& probability_table, SyntaxElementCounter& counter, u8 component)
+{
+    auto value = TRY(parse_tree_new<u8>(bit_stream, { mv_fr_tree }, [&](u8 node) { return probability_table.mv_fr_probs()[component][node]; }));
+    increment_counter(counter.m_counts_mv_fr[component][value]);
+    return value;
+}
+
+ErrorOr<bool> TreeParser::parse_motion_vector_hp(BitStream& bit_stream, ProbabilityTables const& probability_table, SyntaxElementCounter& counter, u8 component, bool use_hp)
+{
+    TreeParser::TreeSelection tree { 1 };
+    if (use_hp)
+        tree = { binary_tree };
+    auto value = TRY(parse_tree_new<u8>(bit_stream, tree, [&](u8) { return probability_table.mv_hp_prob()[component]; }));
+    increment_counter(counter.m_counts_mv_hp[component][value]);
+    return value;
+}
+
 /*
  * Select a tree value based on the type of syntax element being parsed, as well as some parser state, as specified in section 9.3.1
  */
 TreeParser::TreeSelection TreeParser::select_tree(SyntaxElementType type)
 {
     switch (type) {
-    case SyntaxElementType::MVSign:
-    case SyntaxElementType::MVClass0Bit:
-    case SyntaxElementType::MVBit:
     case SyntaxElementType::MoreCoefs:
         return { binary_tree };
-    case SyntaxElementType::MVJoint:
-        return { mv_joint_tree };
-    case SyntaxElementType::MVClass:
-        return { mv_class_tree };
-    case SyntaxElementType::MVClass0FR:
-    case SyntaxElementType::MVFR:
-        return { mv_fr_tree };
-    case SyntaxElementType::MVClass0HP:
-    case SyntaxElementType::MVHP:
-        if (m_decoder.m_use_hp)
-            return { binary_tree };
-        return { 1 };
     case SyntaxElementType::Token:
         return { token_tree };
     default:
@@ -618,28 +674,6 @@ TreeParser::TreeSelection TreeParser::select_tree(SyntaxElementType type)
 u8 TreeParser::select_tree_probability(SyntaxElementType type, u8 node)
 {
     switch (type) {
-    case SyntaxElementType::MVSign:
-        return m_decoder.m_probability_tables->mv_sign_prob()[m_mv_component];
-    case SyntaxElementType::MVClass0Bit:
-        return m_decoder.m_probability_tables->mv_class0_bit_prob()[m_mv_component];
-    case SyntaxElementType::MVBit:
-        VERIFY(m_mv_bit < MV_OFFSET_BITS);
-        return m_decoder.m_probability_tables->mv_bits_prob()[m_mv_component][m_mv_bit];
-    case SyntaxElementType::MVJoint:
-        return m_decoder.m_probability_tables->mv_joint_probs()[node];
-    case SyntaxElementType::MVClass:
-        // Spec doesn't mention node, but the probabilities table has an extra dimension
-        // so we will use node for that.
-        return m_decoder.m_probability_tables->mv_class_probs()[m_mv_component][node];
-    case SyntaxElementType::MVClass0FR:
-        VERIFY(m_mv_class0_bit < CLASS0_SIZE);
-        return m_decoder.m_probability_tables->mv_class0_fr_probs()[m_mv_component][m_mv_class0_bit][node];
-    case SyntaxElementType::MVClass0HP:
-        return m_decoder.m_probability_tables->mv_class0_hp_prob()[m_mv_component];
-    case SyntaxElementType::MVFR:
-        return m_decoder.m_probability_tables->mv_fr_probs()[m_mv_component][node];
-    case SyntaxElementType::MVHP:
-        return m_decoder.m_probability_tables->mv_hp_prob()[m_mv_component];
     case SyntaxElementType::Token:
         return calculate_token_probability(node);
     case SyntaxElementType::MoreCoefs:
@@ -738,37 +772,6 @@ void TreeParser::count_syntax_element(SyntaxElementType type, int value)
         increment_counter(count);
     };
     switch (type) {
-    case SyntaxElementType::MVSign:
-        increment(m_decoder.m_syntax_element_counter->m_counts_mv_sign[m_mv_component][value]);
-        return;
-    case SyntaxElementType::MVClass0Bit:
-        increment(m_decoder.m_syntax_element_counter->m_counts_mv_class0_bit[m_mv_component][value]);
-        return;
-    case SyntaxElementType::MVBit:
-        VERIFY(m_mv_bit < MV_OFFSET_BITS);
-        increment(m_decoder.m_syntax_element_counter->m_counts_mv_bits[m_mv_component][m_mv_bit][value]);
-        m_mv_bit = 0xFF;
-        return;
-    case SyntaxElementType::MVJoint:
-        increment(m_decoder.m_syntax_element_counter->m_counts_mv_joint[value]);
-        return;
-    case SyntaxElementType::MVClass:
-        increment(m_decoder.m_syntax_element_counter->m_counts_mv_class[m_mv_component][value]);
-        return;
-    case SyntaxElementType::MVClass0FR:
-        VERIFY(m_mv_class0_bit < CLASS0_SIZE);
-        increment(m_decoder.m_syntax_element_counter->m_counts_mv_class0_fr[m_mv_component][m_mv_class0_bit][value]);
-        m_mv_class0_bit = 0xFF;
-        return;
-    case SyntaxElementType::MVClass0HP:
-        increment(m_decoder.m_syntax_element_counter->m_counts_mv_class0_hp[m_mv_component][value]);
-        return;
-    case SyntaxElementType::MVFR:
-        increment(m_decoder.m_syntax_element_counter->m_counts_mv_fr[m_mv_component][value]);
-        return;
-    case SyntaxElementType::MVHP:
-        increment(m_decoder.m_syntax_element_counter->m_counts_mv_hp[m_mv_component][value]);
-        return;
     case SyntaxElementType::Token:
         increment(m_decoder.m_syntax_element_counter->m_counts_token[m_tx_size][m_plane > 0][m_decoder.m_is_inter][m_band][m_ctx][min(2, value)]);
         return;
