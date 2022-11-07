@@ -1178,10 +1178,13 @@ u8 Parser::get_segment_id()
 
 DecoderErrorOr<void> Parser::read_is_inter()
 {
-    if (seg_feature_active(SEG_LVL_REF_FRAME))
+    if (seg_feature_active(SEG_LVL_REF_FRAME)) {
         m_is_inter = m_feature_data[m_segment_id][SEG_LVL_REF_FRAME] != IntraFrame;
-    else
-        m_is_inter = TRY_READ(m_tree_parser->parse_tree<bool>(SyntaxElementType::IsInter));
+    } else {
+        Optional<bool> above_intra = m_available_u ? m_above_intra : Optional<bool>();
+        Optional<bool> left_intra = m_available_l ? m_left_intra : Optional<bool>();
+        m_is_inter = TRY_READ(TreeParser::parse_is_inter(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter, above_intra, left_intra));
+    }
     return {};
 }
 

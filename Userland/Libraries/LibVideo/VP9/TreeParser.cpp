@@ -289,13 +289,29 @@ ErrorOr<TXSize> TreeParser::parse_tx_size(BitStream& bit_stream, ProbabilityTabl
     return value;
 }
 
+ErrorOr<bool> TreeParser::parse_is_inter(BitStream& bit_stream, ProbabilityTables const& probability_table, SyntaxElementCounter& counter, Optional<bool> above_intra, Optional<bool> left_intra)
+{
+    // FIXME: Above and left contexts should be in structs.
+
+    // Probabilities
+    u8 context = 0;
+    if (above_intra.has_value() && left_intra.has_value())
+        context = (left_intra.value() && above_intra.value()) ? 3 : static_cast<u8>(above_intra.value() || left_intra.value());
+    else if (above_intra.has_value() || left_intra.has_value())
+        context = 2 * static_cast<u8>(above_intra.has_value() ? above_intra.value() : left_intra.value());
+    u8 probability = probability_table.is_inter_prob()[context];
+
+    auto value = TRY(parse_tree_new<bool>(bit_stream, { binary_tree }, [&](u8) { return probability; }));
+    increment_counter(counter.m_counts_is_inter[context][value]);
+    return value;
+}
+
 /*
  * Select a tree value based on the type of syntax element being parsed, as well as some parser state, as specified in section 9.3.1
  */
 TreeParser::TreeSelection TreeParser::select_tree(SyntaxElementType type)
 {
     switch (type) {
-    case SyntaxElementType::IsInter:
     case SyntaxElementType::CompMode:
     case SyntaxElementType::CompRef:
     case SyntaxElementType::SingleRefP1:
@@ -331,8 +347,6 @@ TreeParser::TreeSelection TreeParser::select_tree(SyntaxElementType type)
 u8 TreeParser::select_tree_probability(SyntaxElementType type, u8 node)
 {
     switch (type) {
-    case SyntaxElementType::IsInter:
-        return calculate_is_inter_probability();
     case SyntaxElementType::CompMode:
         return calculate_comp_mode_probability();
     case SyntaxElementType::CompRef:
@@ -383,18 +397,6 @@ u8 TreeParser::select_tree_probability(SyntaxElementType type, u8 node)
 #define LEFT_INTRA m_decoder.m_left_intra
 #define ABOVE_SINGLE m_decoder.m_above_single
 #define LEFT_SINGLE m_decoder.m_left_single
-
-u8 TreeParser::calculate_is_inter_probability()
-{
-    if (AVAIL_U && AVAIL_L) {
-        m_ctx = (LEFT_INTRA && ABOVE_INTRA) ? 3 : LEFT_INTRA || ABOVE_INTRA;
-    } else if (AVAIL_U || AVAIL_L) {
-        m_ctx = 2 * (AVAIL_U ? ABOVE_INTRA : LEFT_INTRA);
-    } else {
-        m_ctx = 0;
-    }
-    return m_decoder.m_probability_tables->is_inter_prob()[m_ctx];
-}
 
 u8 TreeParser::calculate_comp_mode_probability()
 {
@@ -720,9 +722,6 @@ void TreeParser::count_syntax_element(SyntaxElementType type, int value)
         increment_counter(count);
     };
     switch (type) {
-    case SyntaxElementType::IsInter:
-        increment(m_decoder.m_syntax_element_counter->m_counts_is_inter[m_ctx][value]);
-        return;
     case SyntaxElementType::CompMode:
         increment(m_decoder.m_syntax_element_counter->m_counts_comp_mode[m_ctx][value]);
         return;
