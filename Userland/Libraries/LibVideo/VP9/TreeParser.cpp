@@ -257,6 +257,38 @@ ErrorOr<bool> TreeParser::parse_skip(BitStream& bit_stream, ProbabilityTables co
     return value;
 }
 
+ErrorOr<TXSize> TreeParser::parse_tx_size(BitStream& bit_stream, ProbabilityTables const& probability_table, SyntaxElementCounter& counter, TXSize max_tx_size, Optional<bool> above_skip, Optional<bool> left_skip, Optional<TXSize> above_tx_size, Optional<TXSize> left_tx_size)
+{
+    // FIXME: Above and left contexts should be in structs.
+
+    // Tree
+    TreeParser::TreeSelection tree { tx_size_8_tree };
+    if (max_tx_size == TX_16x16)
+        tree = { tx_size_16_tree };
+    if (max_tx_size == TX_32x32)
+        tree = { tx_size_32_tree };
+
+    // Probabilities
+    auto above = max_tx_size;
+    auto left = max_tx_size;
+    if (above_skip.has_value() && !above_skip.value()) {
+        above = above_tx_size.value();
+    }
+    if (left_skip.has_value() && !left_skip.value()) {
+        left = left_tx_size.value();
+    }
+    if (!left_skip.has_value())
+        left = above;
+    if (!above_skip.has_value())
+        above = left;
+    auto context = (above + left) > max_tx_size;
+    u8 const* probabilities = probability_table.tx_probs()[max_tx_size][context];
+
+    auto value = TRY(parse_tree_new<TXSize>(bit_stream, tree, [&](u8 node) { return probabilities[node]; }));
+    increment_counter(counter.m_counts_tx_size[max_tx_size][context][value]);
+    return value;
+}
+
 /*
  * Select a tree value based on the type of syntax element being parsed, as well as some parser state, as specified in section 9.3.1
  */
@@ -273,12 +305,6 @@ TreeParser::TreeSelection TreeParser::select_tree(SyntaxElementType type)
     case SyntaxElementType::MVBit:
     case SyntaxElementType::MoreCoefs:
         return { binary_tree };
-    case SyntaxElementType::TXSize:
-        if (m_decoder.m_max_tx_size == TX_32x32)
-            return { tx_size_32_tree };
-        if (m_decoder.m_max_tx_size == TX_16x16)
-            return { tx_size_16_tree };
-        return { tx_size_8_tree };
     case SyntaxElementType::MVJoint:
         return { mv_joint_tree };
     case SyntaxElementType::MVClass:
@@ -322,8 +348,6 @@ u8 TreeParser::select_tree_probability(SyntaxElementType type, u8 node)
     case SyntaxElementType::MVBit:
         VERIFY(m_mv_bit < MV_OFFSET_BITS);
         return m_decoder.m_probability_tables->mv_bits_prob()[m_mv_component][m_mv_bit];
-    case SyntaxElementType::TXSize:
-        return calculate_tx_size_probability(node);
     case SyntaxElementType::MVJoint:
         return m_decoder.m_probability_tables->mv_joint_probs()[node];
     case SyntaxElementType::MVClass:
@@ -619,28 +643,6 @@ u8 TreeParser::calculate_single_ref_p2_probability()
     return m_decoder.m_probability_tables->single_ref_prob()[m_ctx][1];
 }
 
-u8 TreeParser::calculate_tx_size_probability(u8 node)
-{
-    auto above = m_decoder.m_max_tx_size;
-    auto left = m_decoder.m_max_tx_size;
-    if (AVAIL_U) {
-        auto u_pos = (m_decoder.m_mi_row - 1) * m_decoder.m_mi_cols + m_decoder.m_mi_col;
-        if (!m_decoder.m_skips[u_pos])
-            above = m_decoder.m_tx_sizes[u_pos];
-    }
-    if (AVAIL_L) {
-        auto l_pos = m_decoder.m_mi_row * m_decoder.m_mi_cols + m_decoder.m_mi_col - 1;
-        if (!m_decoder.m_skips[l_pos])
-            left = m_decoder.m_tx_sizes[l_pos];
-    }
-    if (!AVAIL_L)
-        left = above;
-    if (!AVAIL_U)
-        above = left;
-    m_ctx = (above + left) > m_decoder.m_max_tx_size;
-    return m_decoder.m_probability_tables->tx_probs()[m_decoder.m_max_tx_size][m_ctx][node];
-}
-
 void TreeParser::set_tokens_variables(u8 band, u32 c, u32 plane, TXSize tx_size, u32 pos)
 {
     m_band = band;
@@ -743,9 +745,6 @@ void TreeParser::count_syntax_element(SyntaxElementType type, int value)
         VERIFY(m_mv_bit < MV_OFFSET_BITS);
         increment(m_decoder.m_syntax_element_counter->m_counts_mv_bits[m_mv_component][m_mv_bit][value]);
         m_mv_bit = 0xFF;
-        return;
-    case SyntaxElementType::TXSize:
-        increment(m_decoder.m_syntax_element_counter->m_counts_tx_size[m_decoder.m_max_tx_size][m_ctx][value]);
         return;
     case SyntaxElementType::MVJoint:
         increment(m_decoder.m_syntax_element_counter->m_counts_mv_joint[value]);
