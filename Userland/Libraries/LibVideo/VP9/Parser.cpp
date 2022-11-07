@@ -1090,10 +1090,15 @@ bool Parser::seg_feature_active(u8 feature)
 DecoderErrorOr<void> Parser::read_tx_size(bool allow_select)
 {
     m_max_tx_size = max_txsize_lookup[m_mi_size];
-    if (allow_select && m_tx_mode == TXModeSelect && m_mi_size >= Block_8x8)
-        m_tx_size = TRY_READ(m_tree_parser->parse_tree<TXSize>(SyntaxElementType::TXSize));
-    else
+    if (allow_select && m_tx_mode == TXModeSelect && m_mi_size >= Block_8x8) {
+        Optional<bool> above_skip = m_available_u ? m_skips[get_image_index(m_mi_row - 1, m_mi_col)] : Optional<bool>();
+        Optional<bool> left_skip = m_available_l ? m_skips[get_image_index(m_mi_row, m_mi_col - 1)] : Optional<bool>();
+        Optional<TXSize> above_tx_size = m_available_u ? m_tx_sizes[get_image_index(m_mi_row - 1, m_mi_col)] : Optional<TXSize>();
+        Optional<TXSize> left_tx_size = m_available_l ? m_tx_sizes[get_image_index(m_mi_row, m_mi_col - 1)] : Optional<TXSize>();
+        m_tx_size = TRY_READ(TreeParser::parse_tx_size(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter, m_max_tx_size, above_skip, left_skip, above_tx_size, left_tx_size));
+    } else {
         m_tx_size = min(m_max_tx_size, tx_mode_to_biggest_tx_size[m_tx_mode]);
+    }
     return {};
 }
 
