@@ -1285,6 +1285,8 @@ DecoderErrorOr<void> Parser::read_ref_frames()
     Optional<bool> left_intra = m_available_l ? m_left_intra : Optional<bool>();
     Optional<ReferenceFrameType> above_ref_frame_0 = m_available_u ? m_above_ref_frame[0] : Optional<ReferenceFrameType>();
     Optional<ReferenceFrameType> left_ref_frame_0 = m_available_l ? m_left_ref_frame[0] : Optional<ReferenceFrameType>();
+    Optional<ReferenceFramePair> above_ref_frame = m_available_u ? m_above_ref_frame : Optional<ReferenceFramePair>();
+    Optional<ReferenceFramePair> left_ref_frame = m_available_l ? m_left_ref_frame : Optional<ReferenceFramePair>();
     if (m_reference_mode == ReferenceModeSelect) {
         comp_mode = TRY_READ(TreeParser::parse_comp_mode(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter, m_comp_fixed_ref, above_single, left_single, above_intra, left_intra, above_ref_frame_0, left_ref_frame_0));
     } else {
@@ -1303,9 +1305,10 @@ DecoderErrorOr<void> Parser::read_ref_frames()
         m_ref_frame[inverse_biased_reference_index] = m_comp_var_ref[comp_ref];
         return {};
     }
-    auto single_ref_p1 = TRY_READ(m_tree_parser->parse_tree<bool>(SyntaxElementType::SingleRefP1));
+    // FIXME: Maybe consolidate this into a tree. Context is different between part 1 and 2 but still, it would look nice here.
+    auto single_ref_p1 = TRY_READ(TreeParser::parse_single_ref_part_1(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter, above_single, left_single, above_intra, left_intra, above_ref_frame, left_ref_frame));
     if (single_ref_p1) {
-        auto single_ref_p2 = TRY_READ(m_tree_parser->parse_tree<bool>(SyntaxElementType::SingleRefP2));
+        auto single_ref_p2 = TRY_READ(TreeParser::parse_single_ref_part_2(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter, above_single, left_single, above_intra, left_intra, above_ref_frame, left_ref_frame));
         m_ref_frame[0] = single_ref_p2 ? AltRefFrame : GoldenFrame;
     } else {
         m_ref_frame[0] = LastFrame;
