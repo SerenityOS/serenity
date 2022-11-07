@@ -68,11 +68,12 @@ void MenuManager::event(Core::Event& event)
 
             if (auto* shortcut_item_indices = m_current_menu->items_with_alt_shortcut(key_event.code_point())) {
                 VERIFY(!shortcut_item_indices->is_empty());
-                // FIXME: If there are multiple items with the same Alt shortcut, we should cycle through them
-                //        with each keypress instead of activating immediately.
-                auto index = shortcut_item_indices->at(0);
+                auto it = shortcut_item_indices->find_if([&](int const& i) { return i > m_current_menu->hovered_item_index(); });
+                auto index = shortcut_item_indices->at(it.is_end() ? 0 : it.index());
                 auto& item = m_current_menu->item(index);
                 m_current_menu->set_hovered_index(index);
+                if (shortcut_item_indices->size() > 1)
+                    return;
                 if (item.is_submenu())
                     m_current_menu->descend_into_submenu_at_hovered_item();
                 else
