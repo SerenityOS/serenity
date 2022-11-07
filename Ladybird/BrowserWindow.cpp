@@ -346,7 +346,8 @@ void BrowserWindow::tab_title_changed(int index, QString const& title)
 void BrowserWindow::tab_favicon_changed(int index, QIcon icon)
 {
     m_tabs_container->setTabIcon(index, icon);
-    setWindowIcon(icon);
+    if (m_tabs_container->currentIndex() == index)
+        setWindowIcon(icon);
 }
 
 void BrowserWindow::open_next_tab()
