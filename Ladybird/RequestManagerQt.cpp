@@ -42,6 +42,9 @@ ErrorOr<NonnullRefPtr<RequestManagerQt::Request>> RequestManagerQt::Request::cre
     request.setAttribute(QNetworkRequest::RedirectPolicyAttribute, QNetworkRequest::ManualRedirectPolicy);
     request.setAttribute(QNetworkRequest::HttpPipeliningAllowedAttribute, true);
 
+    // NOTE: We disable HTTP2 as it's significantly slower (up to 5x, possibly more)
+    request.setAttribute(QNetworkRequest::Http2AllowedAttribute, false);
+
     QNetworkReply* reply = nullptr;
 
     for (auto& it : request_headers) {
