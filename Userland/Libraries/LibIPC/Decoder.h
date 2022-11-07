@@ -49,6 +49,7 @@ public:
     ErrorOr<void> decode(double&);
     ErrorOr<void> decode(String&);
     ErrorOr<void> decode(ByteBuffer&);
+    ErrorOr<void> decode(JsonValue&);
     ErrorOr<void> decode(URL&);
     ErrorOr<void> decode(Dictionary&);
     ErrorOr<void> decode(File&);

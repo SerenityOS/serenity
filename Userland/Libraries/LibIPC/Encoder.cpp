@@ -7,6 +7,8 @@
 
 #include <AK/BitCast.h>
 #include <AK/ByteBuffer.h>
+#include <AK/JsonObject.h>
+#include <AK/JsonValue.h>
 #include <AK/String.h>
 #include <AK/URL.h>
 #include <LibCore/AnonymousBuffer.h>
@@ -156,6 +158,12 @@ Encoder& Encoder::operator<<(ByteBuffer const& value)
 {
     *this << static_cast<i32>(value.size());
     m_buffer.data.append(value.data(), value.size());
+    return *this;
+}
+
+Encoder& Encoder::operator<<(JsonValue const& value)
+{
+    *this << value.serialized<StringBuilder>();
     return *this;
 }
 
