@@ -9,6 +9,7 @@
 
 #include <LibGfx/Rect.h>
 #include <LibWeb/Page/Page.h>
+#include <WebContent/Forward.h>
 
 namespace WebContent {
 
@@ -20,7 +21,7 @@ class PageHost final : public Web::PageClient {
 
 public:
     static NonnullOwnPtr<PageHost> create(ConnectionFromClient& client) { return adopt_own(*new PageHost(client)); }
-    virtual ~PageHost() = default;
+    virtual ~PageHost();
 
     Web::Page& page() { return *m_page; }
     Web::Page const& page() const { return *m_page; }
@@ -39,6 +40,8 @@ public:
     void set_window_size(Gfx::IntSize const&);
 
     Gfx::IntSize const& content_size() const { return m_content_size; }
+
+    ErrorOr<void> connect_to_webdriver(String const& webdriver_ipc_path);
 
 private:
     // ^PageClient
@@ -90,6 +93,8 @@ private:
     RefPtr<Web::Platform::Timer> m_invalidation_coalescing_timer;
     Gfx::IntRect m_invalidation_rect;
     Web::CSS::PreferredColorScheme m_preferred_color_scheme { Web::CSS::PreferredColorScheme::Auto };
+
+    RefPtr<WebDriverConnection> m_webdriver;
 };
 
 }

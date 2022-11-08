@@ -45,6 +45,7 @@ private:
     Web::Page& page();
     Web::Page const& page() const;
 
+    virtual void connect_to_webdriver(String const& webdriver_ipc_path) override;
     virtual void update_system_theme(Core::AnonymousBuffer const&) override;
     virtual void update_system_fonts(String const&, String const&, String const&) override;
     virtual void update_screen_rects(Vector<Gfx::IntRect> const&, u32) override;

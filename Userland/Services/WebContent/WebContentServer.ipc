@@ -9,6 +9,8 @@
 
 endpoint WebContentServer
 {
+    connect_to_webdriver(String webdriver_ipc_path) =|
+
     update_system_theme(Core::AnonymousBuffer theme_buffer) =|
     update_system_fonts(String default_font_query, String fixed_width_font_query, String window_title_font_query) =|
     update_screen_rects(Vector<Gfx::IntRect> rects, u32 main_screen_index) =|

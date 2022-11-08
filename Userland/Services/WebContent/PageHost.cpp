@@ -16,6 +16,7 @@
 #include <LibWeb/Painting/PaintableBox.h>
 #include <LibWeb/Platform/Timer.h>
 #include <WebContent/WebContentClientEndpoint.h>
+#include <WebContent/WebDriverConnection.h>
 
 namespace WebContent {
 
@@ -29,6 +30,8 @@ PageHost::PageHost(ConnectionFromClient& client)
         m_invalidation_rect = {};
     });
 }
+
+PageHost::~PageHost() = default;
 
 void PageHost::set_has_focus(bool has_focus)
 {
@@ -84,6 +87,13 @@ void PageHost::set_window_position(Gfx::IntPoint const& position)
 void PageHost::set_window_size(Gfx::IntSize const& size)
 {
     page().set_window_size(size);
+}
+
+ErrorOr<void> PageHost::connect_to_webdriver(String const& webdriver_ipc_path)
+{
+    VERIFY(!m_webdriver);
+    m_webdriver = TRY(WebDriverConnection::connect(*this, webdriver_ipc_path));
+    return {};
 }
 
 Web::Layout::InitialContainingBlock* PageHost::layout_root()
