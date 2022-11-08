@@ -106,6 +106,8 @@ private:
 
     ConnectionInfo m_connection;
     RefPtr<WebSocketImpl> m_impl;
+
+    Vector<u8> m_buffered_data;
 };
 
 }
