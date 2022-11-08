@@ -170,7 +170,7 @@ int HTMLElement::offset_top() const
         return 0;
     auto position = layout_node()->box_type_agnostic_position();
     auto parent_position = parent_element()->layout_node()->box_type_agnostic_position();
-    return position.y() - parent_position.y();
+    return position.y().value() - parent_position.y().value();
 }
 
 // https://drafts.csswg.org/cssom-view/#dom-htmlelement-offsetleft
@@ -183,7 +183,7 @@ int HTMLElement::offset_left() const
         return 0;
     auto position = layout_node()->box_type_agnostic_position();
     auto parent_position = parent_element()->layout_node()->box_type_agnostic_position();
-    return position.x() - parent_position.x();
+    return position.x().value() - parent_position.x().value();
 }
 
 // https://drafts.csswg.org/cssom-view/#dom-htmlelement-offsetwidth

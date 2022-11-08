@@ -164,16 +164,16 @@ void Node::set_needs_display()
     });
 }
 
-Gfx::FloatPoint Node::box_type_agnostic_position() const
+CSSPixelPoint Node::box_type_agnostic_position() const
 {
     if (is<Box>(*this))
-        return verify_cast<Box>(*this).paint_box()->absolute_position().to_type<float>();
+        return verify_cast<Box>(*this).paint_box()->absolute_position();
     VERIFY(is_inline());
-    Gfx::FloatPoint position;
+    CSSPixelPoint position;
     if (auto* block = containing_block()) {
         block->paint_box()->for_each_fragment([&](auto& fragment) {
             if (&fragment.layout_node() == this || is_ancestor_of(fragment.layout_node())) {
-                position = fragment.absolute_rect().location().template to_type<float>();
+                position = fragment.absolute_rect().location();
                 return IterationDecision::Break;
             }
             return IterationDecision::Continue;

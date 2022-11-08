@@ -181,7 +181,7 @@ void LineBuilder::update_last_line()
         auto const typographic_height = font_metrics.ascent + font_metrics.descent;
         auto const leading = line_height - typographic_height;
         auto const half_leading = leading / 2;
-        return font_metrics.ascent + half_leading;
+        return CSSPixels(font_metrics.ascent) + half_leading;
     }();
 
     auto line_box_baseline = [&] {
@@ -190,7 +190,7 @@ void LineBuilder::update_last_line()
             auto const& font = fragment.layout_node().font();
             auto const line_height = fragment.layout_node().line_height();
             auto const font_metrics = font.pixel_metrics();
-            auto const typographic_height = font_metrics.ascent + font_metrics.descent;
+            auto const typographic_height = CSSPixels(font_metrics.ascent + font_metrics.descent);
             auto const leading = line_height - typographic_height;
             auto const half_leading = leading / 2;
 
@@ -198,7 +198,7 @@ void LineBuilder::update_last_line()
 
             CSSPixels fragment_baseline = 0;
             if (fragment.layout_node().is_text_node()) {
-                fragment_baseline = font_metrics.ascent + half_leading;
+                fragment_baseline = CSSPixels(font_metrics.ascent) + half_leading;
             } else {
                 auto const& box = verify_cast<Layout::Box>(fragment.layout_node());
                 fragment_baseline = box_baseline(m_layout_state, box);

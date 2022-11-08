@@ -138,7 +138,7 @@ NonnullRefPtr<Gfx::Font> StyleProperties::font_fallback(bool monospace, bool bol
     return Platform::FontPlugin::the().default_font();
 }
 
-float StyleProperties::line_height(Layout::Node const& layout_node) const
+CSSPixels StyleProperties::line_height(Layout::Node const& layout_node) const
 {
     auto line_height = property(CSS::PropertyID::LineHeight);
 
