@@ -159,7 +159,8 @@ void Tab::home()
 
 void Tab::reload()
 {
-    view().reload();
+    m_is_history_navigation = true;
+    view().load(m_history.current().url.to_string());
 }
 
 void Tab::location_edit_return_pressed()

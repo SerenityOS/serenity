@@ -53,7 +53,6 @@ public:
 
     void load(AK::URL const&);
     void load_html(StringView html, AK::URL const&);
-    void reload();
 
     Function<void(Gfx::IntPoint const& screen_position)> on_context_menu_request;
     Function<void(const AK::URL&, String const& target, unsigned modifiers)> on_link_click;
