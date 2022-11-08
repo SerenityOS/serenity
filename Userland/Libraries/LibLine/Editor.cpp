@@ -1779,7 +1779,7 @@ enum VTState {
     BracketArgsSemi = 7,
     Title = 9,
 };
-static VTState actual_rendered_string_length_step(StringMetrics& metrics, size_t index, StringMetrics::LineMetrics& current_line, u32 c, u32 next_c, VTState state, Optional<Style::Mask> const& mask);
+static VTState actual_rendered_string_length_step(StringMetrics& metrics, size_t index, StringMetrics::LineMetrics& current_line, u32 c, u32 next_c, VTState state, Optional<Style::Mask> const& mask, Optional<size_t> const& maximum_line_width = {}, Optional<size_t&> last_return = {});
 
 enum class MaskedSelectionDecision {
     Skip,
@@ -1813,12 +1813,13 @@ static MaskedSelectionDecision resolve_masked_selection(Optional<Style::Mask>& m
     return MaskedSelectionDecision::Continue;
 }
 
-StringMetrics Editor::actual_rendered_string_metrics(StringView string, RedBlackTree<u32, Optional<Style::Mask>> const& masks)
+StringMetrics Editor::actual_rendered_string_metrics(StringView string, RedBlackTree<u32, Optional<Style::Mask>> const& masks, Optional<size_t> maximum_line_width)
 {
     StringMetrics metrics;
     StringMetrics::LineMetrics current_line;
     VTState state { Free };
     Utf8View view { string };
+    size_t last_return {};
     auto it = view.begin();
     Optional<Style::Mask> mask;
     size_t i = 0;
@@ -1835,7 +1836,7 @@ StringMetrics Editor::actual_rendered_string_metrics(StringView string, RedBlack
             continue;
 
         auto next_c = it_copy == view.end() ? 0 : *it_copy;
-        state = actual_rendered_string_length_step(metrics, view.iterator_offset(it), current_line, c, next_c, state, mask);
+        state = actual_rendered_string_length_step(metrics, view.iterator_offset(it), current_line, c, next_c, state, mask, maximum_line_width, last_return);
         if (!mask_it.is_end() && mask_it.key() <= i) {
             auto mask_it_peek = mask_it;
             ++mask_it_peek;
@@ -1890,8 +1891,31 @@ StringMetrics Editor::actual_rendered_string_metrics(Utf32View const& view, RedB
     return metrics;
 }
 
-VTState actual_rendered_string_length_step(StringMetrics& metrics, size_t index, StringMetrics::LineMetrics& current_line, u32 c, u32 next_c, VTState state, Optional<Style::Mask> const& mask)
+VTState actual_rendered_string_length_step(StringMetrics& metrics, size_t index, StringMetrics::LineMetrics& current_line, u32 c, u32 next_c, VTState state, Optional<Style::Mask> const& mask, Optional<size_t> const& maximum_line_width, Optional<size_t&> last_return)
 {
+    auto const save_line = [&metrics, &current_line, &last_return, &index]() {
+        if (last_return.has_value()) {
+            auto const last_index = index - 1;
+            current_line.bit_length = last_index - *last_return + 1;
+            last_return.value() = last_index + 1;
+        }
+        metrics.line_metrics.append(current_line);
+
+        current_line.masked_chars = {};
+        current_line.length = 0;
+        current_line.visible_length = 0;
+        current_line.bit_length = {};
+    };
+
+    // FIXME: current_line.visible_length can go above maximum_line_width when using masks
+    if (maximum_line_width.has_value() && maximum_line_width.value() >= current_line.visible_length)
+        save_line();
+
+    ScopeGuard bit_length_update { [&last_return, &current_line, &index]() {
+        if (last_return.has_value())
+            current_line.bit_length = index - *last_return + 1;
+    } };
+
     switch (state) {
     case Free: {
         if (c == '\x1b') { // escape
@@ -1900,14 +1924,19 @@ VTState actual_rendered_string_length_step(StringMetrics& metrics, size_t index,
         if (c == '\r') { // carriage return
             current_line.masked_chars = {};
             current_line.length = 0;
+            current_line.visible_length = 0;
             if (!metrics.line_metrics.is_empty())
                 metrics.line_metrics.last() = { {}, 0 };
             return state;
         }
         if (c == '\n') { // return
-            metrics.line_metrics.append(current_line);
-            current_line.masked_chars = {};
-            current_line.length = 0;
+            save_line();
+            return state;
+        }
+        if (c == '\t') {
+            // Tabs are a special case, because their width is variable.
+            ++current_line.length;
+            current_line.visible_length += (8 - (current_line.visible_length % 8));
             return state;
         }
         auto is_control = is_ascii_control(c);
@@ -1920,12 +1949,15 @@ VTState actual_rendered_string_length_step(StringMetrics& metrics, size_t index,
         // FIXME: This will not support anything sophisticated
         if (mask.has_value()) {
             current_line.length += mask->replacement_view.length();
+            current_line.visible_length += mask->replacement_view.length();
             metrics.total_length += mask->replacement_view.length();
         } else if (is_control) {
             current_line.length += current_line.masked_chars.last().masked_length;
+            current_line.visible_length += current_line.masked_chars.last().masked_length;
             metrics.total_length += current_line.masked_chars.last().masked_length;
         } else {
             ++current_line.length;
+            ++current_line.visible_length;
             ++metrics.total_length;
         }
         return state;
