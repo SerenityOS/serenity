@@ -19,7 +19,6 @@ extern "C" {
 
 static FILE* s_stream = nullptr;
 static unsigned s_line_number = 0;
-static struct passwd s_passwd_entry;
 
 static String s_name;
 static String s_passwd;
@@ -71,21 +70,30 @@ struct passwd* getpwnam(char const* name)
     return nullptr;
 }
 
-static bool parse_pwddb_entry(String const& line)
+static bool parse_pwddb_entry(char* raw_line, struct passwd& passwd_entry)
 {
-    auto parts = line.split_view(':', SplitBehavior::KeepEmpty);
+    size_t line_length = strlen(raw_line);
+    for (size_t i = 0; i < line_length; ++i) {
+        auto& ch = raw_line[i];
+        if (ch == '\r' || ch == '\n')
+            line_length = i;
+        if (ch == ':' || ch == '\r' || ch == '\n')
+            ch = '\0';
+    }
+    auto line = StringView { raw_line, line_length };
+    auto parts = line.split_view('\0', SplitBehavior::KeepEmpty);
     if (parts.size() != 7) {
         dbgln("getpwent(): Malformed entry on line {}", s_line_number);
         return false;
     }
 
-    s_name = parts[0];
-    s_passwd = parts[1];
+    auto& name = parts[0];
+    auto& passwd = parts[1];
     auto& uid_string = parts[2];
     auto& gid_string = parts[3];
-    s_gecos = parts[4];
-    s_dir = parts[5];
-    s_shell = parts[6];
+    auto& gecos = parts[4];
+    auto& dir = parts[5];
+    auto& shell = parts[6];
 
     auto uid = uid_string.to_uint();
     if (!uid.has_value()) {
@@ -98,42 +106,62 @@ static bool parse_pwddb_entry(String const& line)
         return false;
     }
 
-    s_passwd_entry.pw_name = const_cast<char*>(s_name.characters());
-    s_passwd_entry.pw_passwd = const_cast<char*>(s_passwd.characters());
-    s_passwd_entry.pw_uid = uid.value();
-    s_passwd_entry.pw_gid = gid.value();
-    s_passwd_entry.pw_gecos = const_cast<char*>(s_gecos.characters());
-    s_passwd_entry.pw_dir = const_cast<char*>(s_dir.characters());
-    s_passwd_entry.pw_shell = const_cast<char*>(s_shell.characters());
+    passwd_entry.pw_name = const_cast<char*>(name.characters_without_null_termination());
+    passwd_entry.pw_passwd = const_cast<char*>(passwd.characters_without_null_termination());
+    passwd_entry.pw_uid = uid.value();
+    passwd_entry.pw_gid = gid.value();
+    passwd_entry.pw_gecos = const_cast<char*>(gecos.characters_without_null_termination());
+    passwd_entry.pw_dir = const_cast<char*>(dir.characters_without_null_termination());
+    passwd_entry.pw_shell = const_cast<char*>(shell.characters_without_null_termination());
 
     return true;
 }
 
 struct passwd* getpwent()
 {
+    static struct passwd passwd_entry;
+    static char buffer[1024];
+    struct passwd* result;
+    if (getpwent_r(&passwd_entry, buffer, sizeof(buffer), &result) < 0)
+        return nullptr;
+    return result;
+}
+
+int getpwent_r(struct passwd* passwd_buf, char* buffer, size_t buffer_size, struct passwd** passwd_entry_ptr)
+{
     if (!s_stream)
         setpwent();
 
     while (true) {
-        if (!s_stream || feof(s_stream))
-            return nullptr;
+        if (!s_stream || feof(s_stream)) {
+            errno = EIO;
+            return -1;
+        }
 
         if (ferror(s_stream)) {
             dbgln("getpwent(): Read error: {}", strerror(ferror(s_stream)));
-            return nullptr;
+            errno = EIO;
+            return -1;
         }
 
-        char buffer[1024];
         ++s_line_number;
-        char* s = fgets(buffer, sizeof(buffer), s_stream);
+        char* s = fgets(buffer, buffer_size, s_stream);
 
         // Silently tolerate an empty line at the end.
-        if ((!s || !s[0]) && feof(s_stream))
-            return nullptr;
+        if ((!s || !s[0]) && feof(s_stream)) {
+            *passwd_entry_ptr = nullptr;
+            return 0;
+        }
 
-        String line(s, Chomp);
-        if (parse_pwddb_entry(line))
-            return &s_passwd_entry;
+        if (strlen(s) == buffer_size - 1) {
+            errno = ERANGE;
+            return -1;
+        }
+
+        if (parse_pwddb_entry(buffer, *passwd_buf)) {
+            *passwd_entry_ptr = passwd_buf;
+            return 0;
+        }
         // Otherwise, proceed to the next line.
     }
 }

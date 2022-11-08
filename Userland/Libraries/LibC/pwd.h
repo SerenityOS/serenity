@@ -23,6 +23,7 @@ struct passwd {
 };
 
 struct passwd* getpwent(void);
+int getpwent_r(struct passwd*, char*, size_t, struct passwd**);
 void setpwent(void);
 void endpwent(void);
 struct passwd* getpwnam(char const* name);
