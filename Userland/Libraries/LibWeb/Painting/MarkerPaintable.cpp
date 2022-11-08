@@ -46,8 +46,8 @@ void MarkerPaintable::paint(PaintContext& context, PaintPhase phase) const
         image_rect.center_within(enclosing);
 
         auto device_image_rect = context.enclosing_device_rect(image_rect);
-        list_style_image->resolve_for_size(layout_box(), device_image_rect.size().to_type<int>().to_type<float>());
-        list_style_image->paint(context, device_image_rect.to_type<int>(), computed_values().image_rendering());
+        list_style_image->resolve_for_size(layout_box(), image_rect.size());
+        list_style_image->paint(context, device_image_rect, computed_values().image_rendering());
         return;
     }
 

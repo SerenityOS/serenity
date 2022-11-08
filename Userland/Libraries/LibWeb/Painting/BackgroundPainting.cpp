@@ -307,7 +307,7 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
         CSSPixels image_y = image_rect.y();
         Optional<DevicePixelRect> last_image_device_rect;
 
-        image.resolve_for_size(layout_node, image_rect.size().to_type<float>());
+        image.resolve_for_size(layout_node, image_rect.size());
 
         while (image_y <= css_clip_rect.bottom()) {
             image_rect.set_y(image_y);
@@ -317,7 +317,7 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
                 image_rect.set_x(image_x);
                 auto image_device_rect = context.rounded_device_rect(image_rect);
                 if (image_device_rect != last_image_device_rect && image_device_rect.intersects(context.device_viewport_rect()))
-                    image.paint(context, image_device_rect.to_type<int>(), image_rendering);
+                    image.paint(context, image_device_rect, image_rendering);
                 last_image_device_rect = image_device_rect;
                 if (!repeat_x)
                     break;
