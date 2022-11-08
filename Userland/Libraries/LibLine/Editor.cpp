@@ -1778,6 +1778,7 @@ enum VTState {
     Bracket = 5,
     BracketArgsSemi = 7,
     Title = 9,
+    URL = 11,
 };
 static VTState actual_rendered_string_length_step(StringMetrics& metrics, size_t index, StringMetrics::LineMetrics& current_line, u32 c, u32 next_c, VTState state, Optional<Style::Mask> const& mask, Optional<size_t> const& maximum_line_width = {}, Optional<size_t&> last_return = {});
 
@@ -1966,6 +1967,8 @@ VTState actual_rendered_string_length_step(StringMetrics& metrics, size_t index,
         if (c == ']') {
             if (next_c == '0')
                 state = Title;
+            if (next_c == '8')
+                state = URL;
             return state;
         }
         if (c == '[') {
@@ -1987,6 +1990,10 @@ VTState actual_rendered_string_length_step(StringMetrics& metrics, size_t index,
         return state;
     case Title:
         if (c == 7)
+            state = Free;
+        return state;
+    case URL:
+        if (c == '\\')
             state = Free;
         return state;
     }
