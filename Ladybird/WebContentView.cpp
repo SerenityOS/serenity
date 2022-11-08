@@ -308,6 +308,13 @@ void WebContentView::mouseReleaseEvent(QMouseEvent* event)
 {
     Gfx::IntPoint position(event->position().x() / m_inverse_pixel_scaling_ratio, event->position().y() / m_inverse_pixel_scaling_ratio);
     auto button = get_button_from_qt_event(*event);
+
+    if (event->button() & Qt::MouseButton::BackButton) {
+        emit back_mouse_button();
+    } else if (event->button() & Qt::MouseButton::ForwardButton) {
+        emit forward_mouse_button();
+    }
+
     if (button == 0) {
         // We could not convert Qt buttons to something that Lagom can
         // recognize - don't even bother propagating this to the web engine
