@@ -160,7 +160,7 @@ public:
     void register_key_input_callback(Vector<Key> keys, Function<bool(Editor&)> callback) { m_callback_machine.register_key_input_callback(move(keys), move(callback)); }
     void register_key_input_callback(Key key, Function<bool(Editor&)> callback) { register_key_input_callback(Vector<Key> { key }, move(callback)); }
 
-    static StringMetrics actual_rendered_string_metrics(StringView, RedBlackTree<u32, Optional<Style::Mask>> const& masks = {});
+    static StringMetrics actual_rendered_string_metrics(StringView, RedBlackTree<u32, Optional<Style::Mask>> const& masks = {}, Optional<size_t> maximum_line_width = {});
     static StringMetrics actual_rendered_string_metrics(Utf32View const&, RedBlackTree<u32, Optional<Style::Mask>> const& masks = {});
 
     Function<Vector<CompletionSuggestion>(Editor const&)> on_tab_complete;
