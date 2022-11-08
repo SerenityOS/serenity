@@ -50,6 +50,16 @@ WebDriverConnection::WebDriverConnection(NonnullOwnPtr<Core::Stream::LocalSocket
 {
 }
 
+// https://w3c.github.io/webdriver/#dfn-close-the-session
+void WebDriverConnection::close_session()
+{
+    // 1. Set the webdriver-active flag to false.
+    set_is_webdriver_active(false);
+
+    // 2. An endpoint node must close any top-level browsing contexts associated with the session, without prompting to unload.
+    m_page_host.page().top_level_browsing_context().close();
+}
+
 void WebDriverConnection::set_is_webdriver_active(bool is_webdriver_active)
 {
     m_page_host.set_is_webdriver_active(is_webdriver_active);

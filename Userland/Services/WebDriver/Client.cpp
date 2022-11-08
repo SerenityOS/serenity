@@ -331,6 +331,21 @@ ErrorOr<Session*, Web::WebDriver::Error> Client::find_session_with_id(StringView
     return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidSessionId, "Invalid session id");
 }
 
+ErrorOr<NonnullOwnPtr<Session>, Web::WebDriver::Error> Client::take_session_with_id(StringView session_id)
+{
+    auto session_id_or_error = session_id.to_uint<>();
+    if (!session_id_or_error.has_value())
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidSessionId, "Invalid session id");
+
+    for (size_t i = 0; i < Client::s_sessions.size(); ++i) {
+        if (Client::s_sessions[i].session_id() == session_id_or_error.value()) {
+            return Client::s_sessions.take(i);
+        }
+    }
+
+    return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidSessionId, "Invalid session id");
+}
+
 void Client::close_session(unsigned session_id)
 {
     bool found = Client::s_sessions.remove_first_matching([&](auto const& it) {
@@ -426,11 +441,8 @@ Web::WebDriver::Response Client::handle_delete_session(Vector<StringView> const&
     dbgln_if(WEBDRIVER_DEBUG, "Handling DELETE /session/<session_id>");
 
     // 1. If the current session is an active session, try to close the session.
-    auto* session = TRY(find_session_with_id(parameters[0]));
-
-    auto stop_result = session->stop();
-    if (stop_result.is_error())
-        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::UnsupportedOperation, stop_result.error().string_literal());
+    auto session = TRY(take_session_with_id(parameters[0]));
+    TRY(session->stop());
 
     // 2. Return success with data null.
     return make_json_value(JsonValue());

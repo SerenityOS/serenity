@@ -48,7 +48,7 @@ public:
     }
 
     ErrorOr<void> start();
-    ErrorOr<void> stop();
+    Web::WebDriver::Response stop();
     JsonObject get_timeouts();
     Web::WebDriver::Response set_timeouts(JsonValue const& payload);
     Web::WebDriver::Response back();

@@ -91,6 +91,7 @@ private:
     Web::WebDriver::Response handle_take_element_screenshot(Vector<StringView> const&, JsonValue const& payload);
 
     ErrorOr<Session*, Web::WebDriver::Error> find_session_with_id(StringView session_id);
+    ErrorOr<NonnullOwnPtr<Session>, Web::WebDriver::Error> take_session_with_id(StringView session_id);
     JsonValue make_json_value(JsonValue const&);
 
     template<typename T>
