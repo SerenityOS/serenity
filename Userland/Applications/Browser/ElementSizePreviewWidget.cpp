@@ -26,11 +26,11 @@ void ElementSizePreviewWidget::paint_event(GUI::PaintEvent& event)
     int inner_content_width = max(100, font().width(content_size_text) + 2 * content_width_padding);
     int inner_content_height = max(15, font().glyph_height() + 2 * content_height_padding);
 
-    auto format_size_text = [&](float size) {
+    auto format_size_text = [&](Web::CSSPixels size) {
         return DeprecatedString::formatted("{:.4f}", size);
     };
 
-    auto compute_text_string_width = [&](float size) {
+    auto compute_text_string_width = [&](Web::CSSPixels size) {
         return font().width(format_size_text(size)) + 2 * text_width_padding;
     };
 
