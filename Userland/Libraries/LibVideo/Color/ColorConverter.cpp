@@ -165,21 +165,6 @@ DecoderErrorOr<ColorConverter> ColorConverter::create(u8 bit_depth, CodingIndepe
     //    should apply tonemapping as well.
     //    Use a lookup table as with step 3.
     TransferCharacteristics output_tc = TransferCharacteristics::SRGB;
-    switch (cicp.transfer_characteristics()) {
-    case TransferCharacteristics::Unspecified:
-        break;
-    case TransferCharacteristics::BT709:
-    case TransferCharacteristics::BT601:
-    case TransferCharacteristics::BT2020BitDepth10:
-    case TransferCharacteristics::BT2020BitDepth12:
-        // BT.601, BT.709 and BT.2020 have a similar transfer function to sRGB, and other applications
-        // (Chromium, VLC) seem to keep video output in those transfer characteristics.
-        output_tc = TransferCharacteristics::BT709;
-        break;
-    default:
-        break;
-    }
-
     auto to_non_linear_lookup_table = InterpolatedLookupTable<to_non_linear_size>::create(
         [&](float value) {
             return TransferCharacteristicsConversion::to_non_linear_luminance(value, output_tc);
