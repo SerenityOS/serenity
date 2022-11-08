@@ -69,6 +69,15 @@ Web::Page const& ConnectionFromClient::page() const
     return m_page_host->page();
 }
 
+void ConnectionFromClient::connect_to_webdriver(String const& webdriver_ipc_path)
+{
+    // FIXME: Propogate this error back to the browser.
+    if (auto result = m_page_host->connect_to_webdriver(webdriver_ipc_path); result.is_error())
+        dbgln("Unable to connect to the WebDriver process: {}", result.error());
+    else
+        set_is_webdriver_active(true);
+}
+
 void ConnectionFromClient::update_system_theme(Core::AnonymousBuffer const& theme_buffer)
 {
     Gfx::set_system_theme(theme_buffer);

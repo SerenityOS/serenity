@@ -7,18 +7,24 @@ serenity_component(
 compile_ipc(WebContentServer.ipc WebContentServerEndpoint.h)
 compile_ipc(WebContentClient.ipc WebContentClientEndpoint.h)
 
+compile_ipc(WebDriverClient.ipc WebDriverClientEndpoint.h)
+compile_ipc(WebDriverServer.ipc WebDriverServerEndpoint.h)
+
 set(SOURCES
     ConnectionFromClient.cpp
     ConsoleGlobalObject.cpp
     ImageCodecPluginSerenity.cpp
     PageHost.cpp
     WebContentConsoleClient.cpp
+    WebDriverConnection.cpp
     main.cpp
 )
 
 set(GENERATED_SOURCES
     WebContentClientEndpoint.h
     WebContentServerEndpoint.h
+    WebDriverClientEndpoint.h
+    WebDriverServerEndpoint.h
 )
 
 serenity_bin(WebContent)

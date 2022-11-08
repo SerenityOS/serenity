@@ -12,5 +12,6 @@ class ConnectionFromClient;
 class ConsoleGlobalObject;
 class PageHost;
 class WebContentConsoleClient;
+class WebDriverConnection;
 
 }
