@@ -72,8 +72,8 @@ Optional<float> SVGGraphicsElement::stroke_width() const
         float viewport_height = 0;
         if (auto* svg_svg_element = first_ancestor_of_type<SVGSVGElement>()) {
             if (auto* svg_svg_layout_node = svg_svg_element->layout_node()) {
-                viewport_width = svg_svg_layout_node->computed_values().width().resolved(*svg_svg_layout_node, { 0, CSS::Length::Type::Px }).to_px(*svg_svg_layout_node);
-                viewport_height = svg_svg_layout_node->computed_values().height().resolved(*svg_svg_layout_node, { 0, CSS::Length::Type::Px }).to_px(*svg_svg_layout_node);
+                viewport_width = svg_svg_layout_node->computed_values().width().resolved(*svg_svg_layout_node, CSS::Length::make_px(0)).to_px(*svg_svg_layout_node);
+                viewport_height = svg_svg_layout_node->computed_values().height().resolved(*svg_svg_layout_node, CSS::Length::make_px(0)).to_px(*svg_svg_layout_node);
             }
         }
         auto scaled_viewport_size = CSS::Length::make_px((viewport_width + viewport_height) * 0.5f);

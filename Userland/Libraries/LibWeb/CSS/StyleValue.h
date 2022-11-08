@@ -1508,7 +1508,7 @@ public:
     }
 
     virtual bool has_length() const override { return to_number() == 0; }
-    virtual Length to_length() const override { return Length(0, Length::Type::Px); }
+    virtual Length to_length() const override { return Length::make_px(0); }
 
     virtual bool has_number() const override { return true; }
     virtual float to_number() const override
