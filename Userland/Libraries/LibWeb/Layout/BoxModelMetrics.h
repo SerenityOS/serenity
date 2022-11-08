@@ -7,14 +7,15 @@
 #pragma once
 
 #include <LibGfx/Size.h>
+#include <LibWeb/PixelUnits.h>
 
 namespace Web::Layout {
 
 struct PixelBox {
-    float top { 0 };
-    float right { 0 };
-    float bottom { 0 };
-    float left { 0 };
+    CSSPixels top { 0 };
+    CSSPixels right { 0 };
+    CSSPixels bottom { 0 };
+    CSSPixels left { 0 };
 };
 
 struct BoxModelMetrics {
