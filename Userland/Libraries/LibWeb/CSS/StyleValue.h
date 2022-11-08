@@ -130,7 +130,7 @@ struct PositionValue {
     HorizontalEdge x_relative_to { HorizontalEdge::Left };
     VerticalEdge y_relative_to { VerticalEdge::Top };
 
-    Gfx::FloatPoint resolved(Layout::Node const&, Gfx::FloatRect const&) const;
+    CSSPixelPoint resolved(Layout::Node const& node, CSSPixelRect const& rect) const;
     void serialize(StringBuilder&) const;
     bool operator==(PositionValue const&) const;
 };
@@ -1149,14 +1149,14 @@ class AbstractImageStyleValue : public StyleValue {
 public:
     using StyleValue::StyleValue;
 
-    virtual Optional<int> natural_width() const { return {}; }
-    virtual Optional<int> natural_height() const { return {}; }
+    virtual Optional<CSSPixels> natural_width() const { return {}; }
+    virtual Optional<CSSPixels> natural_height() const { return {}; }
 
     virtual void load_any_resources(DOM::Document&) {};
-    virtual void resolve_for_size(Layout::Node const&, Gfx::FloatSize const&) const {};
+    virtual void resolve_for_size(Layout::Node const&, CSSPixelSize const&) const {};
 
     virtual bool is_paintable() const = 0;
-    virtual void paint(PaintContext& context, Gfx::IntRect const& dest_rect, CSS::ImageRendering image_rendering) const = 0;
+    virtual void paint(PaintContext& context, DevicePixelRect const& dest_rect, CSS::ImageRendering image_rendering) const = 0;
 };
 
 class ImageStyleValue final
@@ -1171,11 +1171,11 @@ public:
 
     virtual void load_any_resources(DOM::Document&) override;
 
-    Optional<int> natural_width() const override;
-    Optional<int> natural_height() const override;
+    Optional<CSSPixels> natural_width() const override;
+    Optional<CSSPixels> natural_height() const override;
 
     bool is_paintable() const override { return bitmap(0) != nullptr; }
-    void paint(PaintContext& context, Gfx::IntRect const& dest_rect, CSS::ImageRendering image_rendering) const override;
+    void paint(PaintContext& context, DevicePixelRect const& dest_rect, CSS::ImageRendering image_rendering) const override;
 
     Function<void()> on_animate;
 
@@ -1211,7 +1211,7 @@ public:
 
     virtual String to_string() const override;
 
-    void paint(PaintContext&, Gfx::IntRect const& dest_rect, CSS::ImageRendering) const override;
+    void paint(PaintContext&, DevicePixelRect const& dest_rect, CSS::ImageRendering) const override;
 
     virtual bool equals(StyleValue const& other) const override;
 
@@ -1224,11 +1224,11 @@ public:
 
     bool is_paintable() const override { return true; }
 
-    void resolve_for_size(Layout::Node const&, Gfx::FloatSize const&) const override;
+    void resolve_for_size(Layout::Node const&, CSSPixelSize const&) const override;
 
     virtual ~ConicGradientStyleValue() override = default;
 
-    Gfx::FloatPoint resolve_position(Layout::Node const&, Gfx::FloatRect const&) const;
+    CSSPixelPoint resolve_position(Layout::Node const&, CSSPixelRect const&) const;
 
     bool is_repeating() const { return m_repeating == GradientRepeating::Yes; }
 
@@ -1250,7 +1250,7 @@ private:
 
     struct ResolvedData {
         Painting::ConicGradientData data;
-        Gfx::FloatPoint position;
+        CSSPixelPoint position;
     };
 
     mutable Optional<ResolvedData> m_resolved;
@@ -1282,12 +1282,12 @@ public:
 
     bool is_repeating() const { return m_repeating == GradientRepeating::Yes; }
 
-    float angle_degrees(Gfx::FloatSize const& gradient_size) const;
+    float angle_degrees(CSSPixelSize const& gradient_size) const;
 
-    void resolve_for_size(Layout::Node const&, Gfx::FloatSize const&) const override;
+    void resolve_for_size(Layout::Node const&, CSSPixelSize const&) const override;
 
     bool is_paintable() const override { return true; }
-    void paint(PaintContext& context, Gfx::IntRect const& dest_rect, CSS::ImageRendering image_rendering) const override;
+    void paint(PaintContext& context, DevicePixelRect const& dest_rect, CSS::ImageRendering image_rendering) const override;
 
 private:
     LinearGradientStyleValue(GradientDirection direction, Vector<LinearColorStopListElement> color_stop_list, GradientType type, GradientRepeating repeating)
@@ -1306,7 +1306,7 @@ private:
 
     struct ResolvedData {
         Painting::LinearGradientData data;
-        Gfx::FloatSize size;
+        CSSPixelSize size;
     };
 
     mutable Optional<ResolvedData> m_resolved;
