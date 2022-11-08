@@ -496,17 +496,58 @@ void Painter::draw_ellipse_intersecting(IntRect const& rect, Color color, int th
     if (thickness <= 0)
         return;
 
-    constexpr int number_samples = 100; // FIXME: dynamically work out the number of samples based upon the rect size
-    float increment = AK::Pi<float> / number_samples;
+    auto const center = rect.center();
 
-    auto ellipse_xy = [&rect](float theta) -> IntPoint {
-        float s, c;
-        AK::sincos(theta, s, c);
-        return IntPoint { (c * rect.width() * AK::Sqrt1_2<float>), (s * rect.height() * AK::Sqrt1_2<float>)} + rect.center();
+    auto const draw_real_world_x4 = [this, &color, thickness, center](int x, int y) {
+        IntPoint const directions[4] = { { x, y }, { x, -y }, { -x, y }, { -x, -y } };
+        for (auto const& delta : directions) {
+            auto const point = center + delta;
+            draw_line(point, point, color, thickness);
+        }
     };
 
-    for (auto theta = 0.f; theta < 2 * AK::Pi<float>; theta += increment) {
-        draw_line(ellipse_xy(theta), ellipse_xy(theta + increment), color, thickness);
+    // Note: This is an implementation of the Midpoint Ellipse Algorithm:
+    double const a = rect.width() / 2;
+    double const a_square = a * a;
+    double const b = rect.height() / 2;
+    double const b_square = b * b;
+
+    int x = 0;
+    auto y = static_cast<int>(b);
+
+    double dx = 2 * b_square * x;
+    double dy = 2 * a_square * y;
+
+    // For region 1:
+    auto decision_parameter = b_square - a_square * b + .25 * a_square;
+
+    while (dx < dy) {
+        draw_real_world_x4(x, y);
+
+        if (decision_parameter >= 0) {
+            y--;
+            dy -= 2 * a_square;
+            decision_parameter -= dy;
+        }
+        x++;
+        dx += 2 * b_square;
+        decision_parameter += dx + b_square;
+    }
+
+    // For region 2:
+    decision_parameter = b_square * ((x + 0.5) * (x + 0.5)) + a_square * ((y - 1) * (y - 1)) - a_square * b_square;
+
+    while (y >= 0) {
+        draw_real_world_x4(x, y);
+
+        if (decision_parameter <= 0) {
+            x++;
+            dx += 2 * b_square;
+            decision_parameter += dx;
+        }
+        y--;
+        dy -= 2 * a_square;
+        decision_parameter += a_square - dy;
     }
 }
 
