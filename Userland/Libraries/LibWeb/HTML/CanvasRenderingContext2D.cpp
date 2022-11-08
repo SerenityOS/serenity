@@ -226,7 +226,8 @@ void CanvasRenderingContext2D::stroke_internal(Gfx::Path const& path)
 
 void CanvasRenderingContext2D::stroke()
 {
-    stroke_internal(path());
+    auto transformed_path = path().copy_transformed(drawing_state().transform);
+    stroke_internal(transformed_path);
 }
 
 void CanvasRenderingContext2D::stroke(Path2D const& path)
