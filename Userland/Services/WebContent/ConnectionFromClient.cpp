@@ -74,8 +74,6 @@ void ConnectionFromClient::connect_to_webdriver(String const& webdriver_ipc_path
     // FIXME: Propogate this error back to the browser.
     if (auto result = m_page_host->connect_to_webdriver(webdriver_ipc_path); result.is_error())
         dbgln("Unable to connect to the WebDriver process: {}", result.error());
-    else
-        set_is_webdriver_active(true);
 }
 
 void ConnectionFromClient::update_system_theme(Core::AnonymousBuffer const& theme_buffer)
@@ -799,11 +797,6 @@ void ConnectionFromClient::set_has_focus(bool has_focus)
 void ConnectionFromClient::set_is_scripting_enabled(bool is_scripting_enabled)
 {
     m_page_host->set_is_scripting_enabled(is_scripting_enabled);
-}
-
-void ConnectionFromClient::set_is_webdriver_active(bool is_webdriver_active)
-{
-    m_page_host->set_is_webdriver_active(is_webdriver_active);
 }
 
 void ConnectionFromClient::set_window_position(Gfx::IntPoint const& position)

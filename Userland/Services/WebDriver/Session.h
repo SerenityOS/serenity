@@ -41,6 +41,12 @@ public:
     ErrorOr<void, Web::WebDriver::Error> check_for_open_top_level_browsing_context_or_return_error();
     String const& current_window_handle() { return m_current_window_handle; }
 
+    WebContentConnection& web_content_connection()
+    {
+        VERIFY(m_web_content_connection);
+        return *m_web_content_connection;
+    }
+
     ErrorOr<void> start();
     ErrorOr<void> stop();
     JsonObject get_timeouts();

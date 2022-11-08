@@ -385,6 +385,8 @@ Web::WebDriver::Response Client::handle_new_session(Vector<StringView> const&, J
         return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::SessionNotCreated, String::formatted("Failed to start session: {}", start_result.error().string_literal()));
     }
 
+    auto& web_content_connection = session->web_content_connection();
+
     // FIXME: 8. Set the current session to session.
 
     // FIXME: 9. Run any WebDriver new session algorithm defined in external specifications,
@@ -405,7 +407,8 @@ Web::WebDriver::Response Client::handle_new_session(Vector<StringView> const&, J
     // FIXME: 12. Initialize the following from capabilities:
     //            NOTE: See spec for steps
 
-    // FIXME: 13. Set the webdriver-active flag to true.
+    // 13. Set the webdriver-active flag to true.
+    web_content_connection.async_set_is_webdriver_active(true);
 
     // FIXME: 14. Set the current top-level browsing context for session with the top-level browsing context
     //            of the UA’s current browsing context.
