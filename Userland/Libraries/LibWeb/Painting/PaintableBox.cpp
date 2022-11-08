@@ -435,7 +435,7 @@ static void paint_text_decoration(PaintContext& context, Gfx::Painter& painter, 
         if (computed_thickness.is_auto())
             return max(glyph_height * 0.1f, 1.f);
 
-        return CSSPixels(computed_thickness.to_px(text_node));
+        return computed_thickness.to_px(text_node);
     }();
     auto device_line_thickness = context.rounded_device_pixels(css_line_thickness);
 

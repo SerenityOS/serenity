@@ -15,7 +15,6 @@
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/HTMLHtmlElement.h>
-#include <LibWeb/PixelUnits.h>
 
 namespace Web::CSS {
 
@@ -71,7 +70,7 @@ Length Length::resolved(Layout::Node const& layout_node) const
     return *this;
 }
 
-float Length::relative_length_to_px(Gfx::IntRect const& viewport_rect, Gfx::FontPixelMetrics const& font_metrics, float font_size, float root_font_size) const
+CSSPixels Length::relative_length_to_px(Gfx::IntRect const& viewport_rect, Gfx::FontPixelMetrics const& font_metrics, CSSPixels font_size, CSSPixels root_font_size) const
 {
     switch (m_type) {
     case Type::Ex:
@@ -96,7 +95,7 @@ float Length::relative_length_to_px(Gfx::IntRect const& viewport_rect, Gfx::Font
     }
 }
 
-float Length::to_px(Layout::Node const& layout_node) const
+CSSPixels Length::to_px(Layout::Node const& layout_node) const
 {
     if (is_calculated())
         return m_calculated_style->resolve_length(layout_node)->to_px(layout_node);
