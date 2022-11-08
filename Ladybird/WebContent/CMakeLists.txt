@@ -13,6 +13,7 @@ set(WEBCONTENT_SOURCES
     ../Utilities.cpp
     ../WebSocketClientManagerLadybird.cpp
     ../WebSocketLadybird.cpp
+    ../WebSocketImplQt.cpp
     main.cpp
 )
 
