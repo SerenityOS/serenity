@@ -243,6 +243,7 @@ public:
 
     // https://html.spec.whatwg.org/multipage/window-object.html#a-browsing-context-is-discarded
     void discard();
+    bool has_been_discarded() const { return m_has_been_discarded; }
 
     // https://html.spec.whatwg.org/multipage/window-object.html#close-a-browsing-context
     void close();
@@ -305,6 +306,8 @@ private:
     JS::GCPtr<BrowsingContext> m_last_child;
     JS::GCPtr<BrowsingContext> m_next_sibling;
     JS::GCPtr<BrowsingContext> m_previous_sibling;
+
+    bool m_has_been_discarded { false };
 };
 
 HTML::Origin determine_the_origin(BrowsingContext const& browsing_context, Optional<AK::URL> url, SandboxingFlagSet sandbox_flags, Optional<HTML::Origin> invocation_origin);

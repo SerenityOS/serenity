@@ -1329,6 +1329,8 @@ void BrowsingContext::set_system_visibility_state(VisibilityState visibility_sta
 // https://html.spec.whatwg.org/multipage/window-object.html#a-browsing-context-is-discarded
 void BrowsingContext::discard()
 {
+    m_has_been_discarded = true;
+
     // 1. Discard all Document objects for all the entries in browsingContext's session history.
     for (auto& entry : m_session_history) {
         if (entry.document)
