@@ -10,7 +10,7 @@
 #include <AK/JsonValue.h>
 #include <AK/String.h>
 
-namespace WebDriver {
+namespace Web::WebDriver {
 
 // https://w3c.github.io/webdriver/#dfn-error-code
 enum class ErrorCode {
@@ -45,20 +45,20 @@ enum class ErrorCode {
 };
 
 // https://w3c.github.io/webdriver/#errors
-struct WebDriverError {
+struct Error {
     unsigned http_status;
     String error;
     String message;
     Optional<JsonValue> data;
 
-    static WebDriverError from_code(ErrorCode, String message, Optional<JsonValue> data = {});
+    static Error from_code(ErrorCode, String message, Optional<JsonValue> data = {});
 };
 
 }
 
 template<>
-struct AK::Formatter<WebDriver::WebDriverError> : Formatter<StringView> {
-    ErrorOr<void> format(FormatBuilder& builder, WebDriver::WebDriverError const& error)
+struct AK::Formatter<Web::WebDriver::Error> : Formatter<StringView> {
+    ErrorOr<void> format(FormatBuilder& builder, Web::WebDriver::Error const& error)
     {
         return Formatter<StringView>::format(builder, String::formatted("Error {}, {}: {}", error.http_status, error.error, error.message));
     }

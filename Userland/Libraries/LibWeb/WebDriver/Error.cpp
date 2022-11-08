@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "WebDriverError.h"
 #include <AK/Vector.h>
+#include <LibWeb/WebDriver/Error.h>
 
-namespace WebDriver {
+namespace Web::WebDriver {
 
 struct ErrorCodeData {
     ErrorCode error_code;
@@ -47,7 +47,7 @@ static Vector<ErrorCodeData> const s_error_code_data = {
     { ErrorCode::UnsupportedOperation, 500, "unsupported operation" },
 };
 
-WebDriverError WebDriverError::from_code(ErrorCode code, String message, Optional<JsonValue> data)
+Error Error::from_code(ErrorCode code, String message, Optional<JsonValue> data)
 {
     auto const& error_code_data = s_error_code_data[to_underlying(code)];
     return {

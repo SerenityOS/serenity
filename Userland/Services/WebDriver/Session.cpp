@@ -45,15 +45,15 @@ Session::~Session()
     }
 }
 
-ErrorOr<Session::Window*, WebDriverError> Session::current_window()
+ErrorOr<Session::Window*, Web::WebDriver::Error> Session::current_window()
 {
     auto window = m_windows.get(m_current_window_handle);
     if (!window.has_value())
-        return WebDriverError::from_code(ErrorCode::NoSuchWindow, "Window not found");
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::NoSuchWindow, "Window not found");
     return window.release_value();
 }
 
-ErrorOr<void, WebDriverError> Session::check_for_open_top_level_browsing_context_or_return_error()
+ErrorOr<void, Web::WebDriver::Error> Session::check_for_open_top_level_browsing_context_or_return_error()
 {
     (void)TRY(current_window());
     return {};
@@ -107,7 +107,7 @@ JsonObject Session::get_timeouts()
 }
 
 // 9.2 Set Timeouts, https://w3c.github.io/webdriver/#dfn-set-timeouts
-ErrorOr<JsonValue, WebDriverError> Session::set_timeouts(JsonValue const& payload)
+ErrorOr<JsonValue, Web::WebDriver::Error> Session::set_timeouts(JsonValue const& payload)
 {
     // 1. Let timeouts be the result of trying to JSON deserialize as a timeouts configuration the request’s parameters.
     auto timeouts = TRY(json_deserialize_as_a_timeouts_configuration(payload));
@@ -120,7 +120,7 @@ ErrorOr<JsonValue, WebDriverError> Session::set_timeouts(JsonValue const& payloa
 }
 
 // 10.1 Navigate To, https://w3c.github.io/webdriver/#dfn-navigate-to
-ErrorOr<JsonValue, WebDriverError> Session::navigate_to(JsonValue const& payload)
+ErrorOr<JsonValue, Web::WebDriver::Error> Session::navigate_to(JsonValue const& payload)
 {
     // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
     TRY(check_for_open_top_level_browsing_context_or_return_error());
@@ -129,7 +129,7 @@ ErrorOr<JsonValue, WebDriverError> Session::navigate_to(JsonValue const& payload
 
     // 3. If the url property is missing from the parameters argument or it is not a string, return error with error code invalid argument.
     if (!payload.is_object() || !payload.as_object().has_string("url"sv)) {
-        return WebDriverError::from_code(ErrorCode::InvalidArgument, "Payload doesn't have a string url");
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, "Payload doesn't have a string url");
     }
 
     // 4. Let url be the result of getting a property named url from the parameters argument.
@@ -154,7 +154,7 @@ ErrorOr<JsonValue, WebDriverError> Session::navigate_to(JsonValue const& payload
 }
 
 // 10.2 Get Current URL, https://w3c.github.io/webdriver/#dfn-get-current-url
-ErrorOr<JsonValue, WebDriverError> Session::get_current_url()
+ErrorOr<JsonValue, Web::WebDriver::Error> Session::get_current_url()
 {
     // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
     TRY(check_for_open_top_level_browsing_context_or_return_error());
@@ -169,7 +169,7 @@ ErrorOr<JsonValue, WebDriverError> Session::get_current_url()
 }
 
 // 10.3 Back, https://w3c.github.io/webdriver/#dfn-back
-ErrorOr<JsonValue, WebDriverError> Session::back()
+ErrorOr<JsonValue, Web::WebDriver::Error> Session::back()
 {
     // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
     TRY(check_for_open_top_level_browsing_context_or_return_error());
@@ -190,7 +190,7 @@ ErrorOr<JsonValue, WebDriverError> Session::back()
 }
 
 // 10.4 Forward, https://w3c.github.io/webdriver/#dfn-forward
-ErrorOr<JsonValue, WebDriverError> Session::forward()
+ErrorOr<JsonValue, Web::WebDriver::Error> Session::forward()
 {
     // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
     TRY(check_for_open_top_level_browsing_context_or_return_error());
@@ -211,7 +211,7 @@ ErrorOr<JsonValue, WebDriverError> Session::forward()
 }
 
 // 10.5 Refresh, https://w3c.github.io/webdriver/#dfn-refresh
-ErrorOr<JsonValue, WebDriverError> Session::refresh()
+ErrorOr<JsonValue, Web::WebDriver::Error> Session::refresh()
 {
     // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
     TRY(check_for_open_top_level_browsing_context_or_return_error());
@@ -234,7 +234,7 @@ ErrorOr<JsonValue, WebDriverError> Session::refresh()
 }
 
 // 10.6 Get Title, https://w3c.github.io/webdriver/#dfn-get-title
-ErrorOr<JsonValue, WebDriverError> Session::get_title()
+ErrorOr<JsonValue, Web::WebDriver::Error> Session::get_title()
 {
     // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
     TRY(check_for_open_top_level_browsing_context_or_return_error());
@@ -247,7 +247,7 @@ ErrorOr<JsonValue, WebDriverError> Session::get_title()
 }
 
 // 11.1 Get Window Handle, https://w3c.github.io/webdriver/#get-window-handle
-ErrorOr<JsonValue, WebDriverError> Session::get_window_handle()
+ErrorOr<JsonValue, Web::WebDriver::Error> Session::get_window_handle()
 {
     // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
     TRY(check_for_open_top_level_browsing_context_or_return_error());
@@ -257,7 +257,7 @@ ErrorOr<JsonValue, WebDriverError> Session::get_window_handle()
 }
 
 // 11.2 Close Window, https://w3c.github.io/webdriver/#dfn-close-window
-ErrorOr<void, Variant<WebDriverError, Error>> Session::close_window()
+ErrorOr<void, Variant<Web::WebDriver::Error, Error>> Session::close_window()
 {
     // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
     TRY(check_for_open_top_level_browsing_context_or_return_error());
@@ -269,7 +269,7 @@ ErrorOr<void, Variant<WebDriverError, Error>> Session::close_window()
     if (m_windows.is_empty()) {
         auto result = stop();
         if (result.is_error()) {
-            return Variant<WebDriverError, Error>(result.release_error());
+            return Variant<Web::WebDriver::Error, Error>(result.release_error());
         }
     }
 
@@ -277,7 +277,7 @@ ErrorOr<void, Variant<WebDriverError, Error>> Session::close_window()
 }
 
 // 11.4 Get Window Handles, https://w3c.github.io/webdriver/#dfn-get-window-handles
-ErrorOr<JsonValue, WebDriverError> Session::get_window_handles() const
+ErrorOr<JsonValue, Web::WebDriver::Error> Session::get_window_handles() const
 {
     // 1. Let handles be a JSON List.
     auto handles = JsonArray {};
@@ -302,7 +302,7 @@ static JsonObject serialize_rect(Gfx::IntRect const& rect)
 }
 
 // 11.8.1 Get Window Rect, https://w3c.github.io/webdriver/#dfn-get-window-rect
-ErrorOr<JsonValue, WebDriverError> Session::get_window_rect()
+ErrorOr<JsonValue, Web::WebDriver::Error> Session::get_window_rect()
 {
     // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
     TRY(check_for_open_top_level_browsing_context_or_return_error());
@@ -314,25 +314,25 @@ ErrorOr<JsonValue, WebDriverError> Session::get_window_rect()
 }
 
 // 11.8.2 Set Window Rect, https://w3c.github.io/webdriver/#dfn-set-window-rect
-ErrorOr<JsonValue, WebDriverError> Session::set_window_rect(JsonValue const& payload)
+ErrorOr<JsonValue, Web::WebDriver::Error> Session::set_window_rect(JsonValue const& payload)
 {
     if (!payload.is_object())
-        return WebDriverError::from_code(ErrorCode::InvalidArgument, "Payload is not a JSON object");
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, "Payload is not a JSON object");
 
     auto const& properties = payload.as_object();
 
-    auto resolve_property = [](auto name, auto const* property, auto min, auto max) -> ErrorOr<Optional<i32>, WebDriverError> {
+    auto resolve_property = [](auto name, auto const* property, auto min, auto max) -> ErrorOr<Optional<i32>, Web::WebDriver::Error> {
         if (!property)
             return Optional<i32> {};
         if (!property->is_number())
-            return WebDriverError::from_code(ErrorCode::InvalidArgument, String::formatted("Property '{}' is not a Number", name));
+            return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, String::formatted("Property '{}' is not a Number", name));
 
         auto number = property->template to_number<i64>();
 
         if (number < min)
-            return WebDriverError::from_code(ErrorCode::InvalidArgument, String::formatted("Property '{}' value {} exceeds the minimum allowed value {}", name, number, min));
+            return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, String::formatted("Property '{}' value {} exceeds the minimum allowed value {}", name, number, min));
         if (number > max)
-            return WebDriverError::from_code(ErrorCode::InvalidArgument, String::formatted("Property '{}' value {} exceeds the maximum allowed value {}", name, number, max));
+            return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, String::formatted("Property '{}' value {} exceeds the maximum allowed value {}", name, number, max));
 
         return static_cast<i32>(number);
     };
@@ -386,7 +386,7 @@ ErrorOr<JsonValue, WebDriverError> Session::set_window_rect(JsonValue const& pay
 }
 
 // 11.8.3 Maximize Window, https://w3c.github.io/webdriver/#dfn-maximize-window
-ErrorOr<JsonValue, WebDriverError> Session::maximize_window()
+ErrorOr<JsonValue, Web::WebDriver::Error> Session::maximize_window()
 {
     // 1. If the remote end does not support the Maximize Window command for the current top-level browsing context for any reason, return error with error code unsupported operation.
 
@@ -407,7 +407,7 @@ ErrorOr<JsonValue, WebDriverError> Session::maximize_window()
 }
 
 // 11.8.4 Minimize Window, https://w3c.github.io/webdriver/#minimize-window
-ErrorOr<JsonValue, WebDriverError> Session::minimize_window()
+ErrorOr<JsonValue, Web::WebDriver::Error> Session::minimize_window()
 {
     // 1. If the remote end does not support the Minimize Window command for the current top-level browsing context for any reason, return error with error code unsupported operation.
 
@@ -453,19 +453,19 @@ static JsonObject web_element_reference_object(Session::LocalElement const& elem
 }
 
 // https://w3c.github.io/webdriver/#dfn-get-a-known-connected-element
-static ErrorOr<i32, WebDriverError> get_known_connected_element(StringView element_id)
+static ErrorOr<i32, Web::WebDriver::Error> get_known_connected_element(StringView element_id)
 {
     // NOTE: The whole concept of "connected elements" is not implemented yet. See get_or_create_a_web_element_reference().
     //       For now the element is only represented by its ID.
     auto maybe_element_id = element_id.to_int();
     if (!maybe_element_id.has_value())
-        return WebDriverError::from_code(ErrorCode::InvalidArgument, "Element ID is not an integer");
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, "Element ID is not an integer");
 
     return maybe_element_id.release_value();
 }
 
 // https://w3c.github.io/webdriver/#dfn-find
-ErrorOr<JsonArray, WebDriverError> Session::find(Session::LocalElement const& start_node, StringView using_, StringView value)
+ErrorOr<JsonArray, Web::WebDriver::Error> Session::find(Session::LocalElement const& start_node, StringView using_, StringView value)
 {
     // 1. Let end time be the current time plus the session implicit wait timeout.
     auto end_time = Time::now_monotonic() + Time::from_milliseconds(static_cast<i64>(m_timeouts_configuration.implicit_wait_timeout));
@@ -479,13 +479,13 @@ ErrorOr<JsonArray, WebDriverError> Session::find(Session::LocalElement const& st
     // 4. Let elements returned be the result of trying to call the relevant element location strategy with arguments start node, and selector.
     auto location_strategy_handler = s_locator_strategies.first_matching([&](LocatorStrategy const& match) { return match.name == location_strategy; });
     if (!location_strategy_handler.has_value())
-        return WebDriverError::from_code(ErrorCode::InvalidArgument, "No valid location strategy");
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, "No valid location strategy");
 
     auto elements_or_error = (this->*location_strategy_handler.value().handler)(start_node, selector);
 
     // 5. If a DOMException, SyntaxError, XPathException, or other error occurs during the execution of the element location strategy, return error invalid selector.
     if (elements_or_error.is_error())
-        return WebDriverError::from_code(ErrorCode::InvalidSelector, String::formatted("The location strategy could not finish: {}", elements_or_error.release_error().message));
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidSelector, String::formatted("The location strategy could not finish: {}", elements_or_error.release_error().message));
 
     auto elements = elements_or_error.release_value();
 
@@ -514,14 +514,14 @@ Vector<Session::LocatorStrategy> Session::s_locator_strategies = {
 };
 
 // https://w3c.github.io/webdriver/#css-selectors
-ErrorOr<Vector<Session::LocalElement>, WebDriverError> Session::locator_strategy_css_selectors(Session::LocalElement const& start_node, StringView selector)
+ErrorOr<Vector<Session::LocalElement>, Web::WebDriver::Error> Session::locator_strategy_css_selectors(Session::LocalElement const& start_node, StringView selector)
 {
     // 1. Let elements be the result of calling querySelectorAll() with start node as this and selector as the argument.
     //    If this causes an exception to be thrown, return error with error code invalid selector.
     auto elements_ids = m_browser_connection->query_selector_all(start_node.id, selector);
 
     if (!elements_ids.has_value())
-        return WebDriverError::from_code(ErrorCode::InvalidSelector, "query_selector_all returned failed!");
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidSelector, "query_selector_all returned failed!");
 
     Vector<Session::LocalElement> elements;
     for (auto id : elements_ids.release_value()) {
@@ -533,60 +533,60 @@ ErrorOr<Vector<Session::LocalElement>, WebDriverError> Session::locator_strategy
 }
 
 // https://w3c.github.io/webdriver/#link-text
-ErrorOr<Vector<Session::LocalElement>, WebDriverError> Session::locator_strategy_link_text(Session::LocalElement const&, StringView)
+ErrorOr<Vector<Session::LocalElement>, Web::WebDriver::Error> Session::locator_strategy_link_text(Session::LocalElement const&, StringView)
 {
     // FIXME: Implement
-    return WebDriverError::from_code(ErrorCode::UnsupportedOperation, "Not implemented: locator strategy link text");
+    return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::UnsupportedOperation, "Not implemented: locator strategy link text");
 }
 
 // https://w3c.github.io/webdriver/#partial-link-text
-ErrorOr<Vector<Session::LocalElement>, WebDriverError> Session::locator_strategy_partial_link_text(Session::LocalElement const&, StringView)
+ErrorOr<Vector<Session::LocalElement>, Web::WebDriver::Error> Session::locator_strategy_partial_link_text(Session::LocalElement const&, StringView)
 {
     // FIXME: Implement
-    return WebDriverError::from_code(ErrorCode::UnsupportedOperation, "Not implemented: locator strategy partial link text");
+    return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::UnsupportedOperation, "Not implemented: locator strategy partial link text");
 }
 
 // https://w3c.github.io/webdriver/#tag-name
-ErrorOr<Vector<Session::LocalElement>, WebDriverError> Session::locator_strategy_tag_name(Session::LocalElement const&, StringView)
+ErrorOr<Vector<Session::LocalElement>, Web::WebDriver::Error> Session::locator_strategy_tag_name(Session::LocalElement const&, StringView)
 {
     // FIXME: Implement
-    return WebDriverError::from_code(ErrorCode::UnsupportedOperation, "Not implemented: locator strategy tag name");
+    return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::UnsupportedOperation, "Not implemented: locator strategy tag name");
 }
 
 // https://w3c.github.io/webdriver/#xpath
-ErrorOr<Vector<Session::LocalElement>, WebDriverError> Session::locator_strategy_x_path(Session::LocalElement const&, StringView)
+ErrorOr<Vector<Session::LocalElement>, Web::WebDriver::Error> Session::locator_strategy_x_path(Session::LocalElement const&, StringView)
 {
     // FIXME: Implement
-    return WebDriverError::from_code(ErrorCode::UnsupportedOperation, "Not implemented: locator strategy XPath");
+    return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::UnsupportedOperation, "Not implemented: locator strategy XPath");
 }
 
 // 12.3.2 Find Element, https://w3c.github.io/webdriver/#dfn-find-element
-ErrorOr<JsonValue, WebDriverError> Session::find_element(JsonValue const& payload)
+ErrorOr<JsonValue, Web::WebDriver::Error> Session::find_element(JsonValue const& payload)
 {
     if (!payload.is_object())
-        return WebDriverError::from_code(ErrorCode::InvalidArgument, "Payload is not a JSON object");
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, "Payload is not a JSON object");
 
     auto const& properties = payload.as_object();
     // 1. Let location strategy be the result of getting a property called "using".
     if (!properties.has("using"sv))
-        return WebDriverError::from_code(ErrorCode::InvalidArgument, "No property called 'using' present");
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, "No property called 'using' present");
     auto const& maybe_location_strategy = properties.get("using"sv);
     if (!maybe_location_strategy.is_string())
-        return WebDriverError::from_code(ErrorCode::InvalidArgument, "Property 'using' is not a String");
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, "Property 'using' is not a String");
 
     auto location_strategy = maybe_location_strategy.to_string();
 
     // 2. If location strategy is not present as a keyword in the table of location strategies, return error with error code invalid argument.
     if (!s_locator_strategies.first_matching([&](LocatorStrategy const& match) { return match.name == location_strategy; }).has_value())
-        return WebDriverError::from_code(ErrorCode::InvalidArgument, "No valid location strategy");
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, "No valid location strategy");
 
     // 3. Let selector be the result of getting a property called "value".
     // 4. If selector is undefined, return error with error code invalid argument.
     if (!properties.has("value"sv))
-        return WebDriverError::from_code(ErrorCode::InvalidArgument, "No property called 'value' present");
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, "No property called 'value' present");
     auto const& maybe_selector = properties.get("value"sv);
     if (!maybe_selector.is_string())
-        return WebDriverError::from_code(ErrorCode::InvalidArgument, "Property 'value' is not a String");
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, "Property 'value' is not a String");
 
     auto selector = maybe_selector.to_string();
 
@@ -600,7 +600,7 @@ ErrorOr<JsonValue, WebDriverError> Session::find_element(JsonValue const& payloa
 
     // 8. If start node is null, return error with error code no such element.
     if (!maybe_start_node_id.has_value())
-        return WebDriverError::from_code(ErrorCode::NoSuchElement, "document element does not exist");
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::NoSuchElement, "document element does not exist");
 
     auto start_node_id = maybe_start_node_id.release_value();
     LocalElement start_node = { start_node_id };
@@ -610,38 +610,38 @@ ErrorOr<JsonValue, WebDriverError> Session::find_element(JsonValue const& payloa
 
     // 10. If result is empty, return error with error code no such element. Otherwise, return the first element of result.
     if (result.is_empty())
-        return WebDriverError::from_code(ErrorCode::NoSuchElement, "The requested element does not exist");
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::NoSuchElement, "The requested element does not exist");
 
     return JsonValue(result.at(0));
 }
 
 // 12.3.3 Find Elements, https://w3c.github.io/webdriver/#dfn-find-elements
-ErrorOr<JsonValue, WebDriverError> Session::find_elements(JsonValue const& payload)
+ErrorOr<JsonValue, Web::WebDriver::Error> Session::find_elements(JsonValue const& payload)
 {
     if (!payload.is_object())
-        return WebDriverError::from_code(ErrorCode::InvalidArgument, "Payload is not a JSON object");
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, "Payload is not a JSON object");
 
     auto const& properties = payload.as_object();
     // 1. Let location strategy be the result of getting a property called "using".
     if (!properties.has("using"sv))
-        return WebDriverError::from_code(ErrorCode::InvalidArgument, "No property called 'using' present");
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, "No property called 'using' present");
     auto const& maybe_location_strategy = properties.get("using"sv);
     if (!maybe_location_strategy.is_string())
-        return WebDriverError::from_code(ErrorCode::InvalidArgument, "Property 'using' is not a String");
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, "Property 'using' is not a String");
 
     auto location_strategy = maybe_location_strategy.to_string();
 
     // 2. If location strategy is not present as a keyword in the table of location strategies, return error with error code invalid argument.
     if (!s_locator_strategies.first_matching([&](LocatorStrategy const& match) { return match.name == location_strategy; }).has_value())
-        return WebDriverError::from_code(ErrorCode::InvalidArgument, "No valid location strategy");
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, "No valid location strategy");
 
     // 3. Let selector be the result of getting a property called "value".
     // 4. If selector is undefined, return error with error code invalid argument.
     if (!properties.has("value"sv))
-        return WebDriverError::from_code(ErrorCode::InvalidArgument, "No property called 'value' present");
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, "No property called 'value' present");
     auto const& maybe_selector = properties.get("value"sv);
     if (!maybe_selector.is_string())
-        return WebDriverError::from_code(ErrorCode::InvalidArgument, "Property 'value' is not a String");
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, "Property 'value' is not a String");
 
     auto selector = maybe_selector.to_string();
 
@@ -655,7 +655,7 @@ ErrorOr<JsonValue, WebDriverError> Session::find_elements(JsonValue const& paylo
 
     // 8. If start node is null, return error with error code no such element.
     if (!maybe_start_node_id.has_value())
-        return WebDriverError::from_code(ErrorCode::NoSuchElement, "document element does not exist");
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::NoSuchElement, "document element does not exist");
 
     auto start_node_id = maybe_start_node_id.release_value();
     LocalElement start_node = { start_node_id };
@@ -666,32 +666,32 @@ ErrorOr<JsonValue, WebDriverError> Session::find_elements(JsonValue const& paylo
 }
 
 // 12.3.4 Find Element From Element, https://w3c.github.io/webdriver/#dfn-find-element-from-element
-ErrorOr<JsonValue, WebDriverError> Session::find_element_from_element(JsonValue const& payload, StringView parameter_element_id)
+ErrorOr<JsonValue, Web::WebDriver::Error> Session::find_element_from_element(JsonValue const& payload, StringView parameter_element_id)
 {
     if (!payload.is_object())
-        return WebDriverError::from_code(ErrorCode::InvalidArgument, "Payload is not a JSON object");
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, "Payload is not a JSON object");
 
     auto const& properties = payload.as_object();
     // 1. Let location strategy be the result of getting a property called "using".
     if (!properties.has("using"sv))
-        return WebDriverError::from_code(ErrorCode::InvalidArgument, "No property called 'using' present");
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, "No property called 'using' present");
     auto const& maybe_location_strategy = properties.get("using"sv);
     if (!maybe_location_strategy.is_string())
-        return WebDriverError::from_code(ErrorCode::InvalidArgument, "Property 'using' is not a String");
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, "Property 'using' is not a String");
 
     auto location_strategy = maybe_location_strategy.to_string();
 
     // 2. If location strategy is not present as a keyword in the table of location strategies, return error with error code invalid argument.
     if (!s_locator_strategies.first_matching([&](LocatorStrategy const& match) { return match.name == location_strategy; }).has_value())
-        return WebDriverError::from_code(ErrorCode::InvalidArgument, "No valid location strategy");
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, "No valid location strategy");
 
     // 3. Let selector be the result of getting a property called "value".
     // 4. If selector is undefined, return error with error code invalid argument.
     if (!properties.has("value"sv))
-        return WebDriverError::from_code(ErrorCode::InvalidArgument, "No property called 'value' present");
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, "No property called 'value' present");
     auto const& maybe_selector = properties.get("value"sv);
     if (!maybe_selector.is_string())
-        return WebDriverError::from_code(ErrorCode::InvalidArgument, "Property 'value' is not a String");
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, "Property 'value' is not a String");
 
     auto selector = maybe_selector.to_string();
 
@@ -709,38 +709,38 @@ ErrorOr<JsonValue, WebDriverError> Session::find_element_from_element(JsonValue 
 
     // 9. If result is empty, return error with error code no such element. Otherwise, return the first element of result.
     if (result.is_empty())
-        return WebDriverError::from_code(ErrorCode::NoSuchElement, "The requested element does not exist");
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::NoSuchElement, "The requested element does not exist");
 
     return JsonValue(result.at(0));
 }
 
 // 12.3.5 Find Elements From Element, https://w3c.github.io/webdriver/#dfn-find-elements-from-element
-ErrorOr<JsonValue, WebDriverError> Session::find_elements_from_element(JsonValue const& payload, StringView parameter_element_id)
+ErrorOr<JsonValue, Web::WebDriver::Error> Session::find_elements_from_element(JsonValue const& payload, StringView parameter_element_id)
 {
     if (!payload.is_object())
-        return WebDriverError::from_code(ErrorCode::InvalidArgument, "Payload is not a JSON object");
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, "Payload is not a JSON object");
 
     auto const& properties = payload.as_object();
     // 1. Let location strategy be the result of getting a property called "using".
     if (!properties.has("using"sv))
-        return WebDriverError::from_code(ErrorCode::InvalidArgument, "No property called 'using' present");
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, "No property called 'using' present");
     auto const& maybe_location_strategy = properties.get("using"sv);
     if (!maybe_location_strategy.is_string())
-        return WebDriverError::from_code(ErrorCode::InvalidArgument, "Property 'using' is not a String");
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, "Property 'using' is not a String");
 
     auto location_strategy = maybe_location_strategy.to_string();
 
     // 2. If location strategy is not present as a keyword in the table of location strategies, return error with error code invalid argument.
     if (!s_locator_strategies.first_matching([&](LocatorStrategy const& match) { return match.name == location_strategy; }).has_value())
-        return WebDriverError::from_code(ErrorCode::InvalidArgument, "No valid location strategy");
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, "No valid location strategy");
 
     // 3. Let selector be the result of getting a property called "value".
     // 4. If selector is undefined, return error with error code invalid argument.
     if (!properties.has("value"sv))
-        return WebDriverError::from_code(ErrorCode::InvalidArgument, "No property called 'value' present");
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, "No property called 'value' present");
     auto const& maybe_selector = properties.get("value"sv);
     if (!maybe_selector.is_string())
-        return WebDriverError::from_code(ErrorCode::InvalidArgument, "Property 'value' is not a String");
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, "Property 'value' is not a String");
 
     auto selector = maybe_selector.to_string();
 
@@ -759,7 +759,7 @@ ErrorOr<JsonValue, WebDriverError> Session::find_elements_from_element(JsonValue
 }
 
 // 12.4.1 Is Element Selected, https://w3c.github.io/webdriver/#dfn-is-element-selected
-ErrorOr<JsonValue, WebDriverError> Session::is_element_selected(StringView parameter_element_id)
+ErrorOr<JsonValue, Web::WebDriver::Error> Session::is_element_selected(StringView parameter_element_id)
 {
     // 1. If the current browsing context is no longer open, return error with error code no such window.
     TRY(check_for_open_top_level_browsing_context_or_return_error());
@@ -783,7 +783,7 @@ ErrorOr<JsonValue, WebDriverError> Session::is_element_selected(StringView param
 }
 
 // 12.4.2 Get Element Attribute, https://w3c.github.io/webdriver/#dfn-get-element-attribute
-ErrorOr<JsonValue, WebDriverError> Session::get_element_attribute(JsonValue const&, StringView parameter_element_id, StringView name)
+ErrorOr<JsonValue, Web::WebDriver::Error> Session::get_element_attribute(JsonValue const&, StringView parameter_element_id, StringView name)
 {
     // 1. If the current browsing context is no longer open, return error with error code no such window.
     TRY(check_for_open_top_level_browsing_context_or_return_error());
@@ -811,7 +811,7 @@ ErrorOr<JsonValue, WebDriverError> Session::get_element_attribute(JsonValue cons
 }
 
 // 12.4.3 Get Element Property, https://w3c.github.io/webdriver/#dfn-get-element-property
-ErrorOr<JsonValue, WebDriverError> Session::get_element_property(JsonValue const&, StringView parameter_element_id, StringView name)
+ErrorOr<JsonValue, Web::WebDriver::Error> Session::get_element_property(JsonValue const&, StringView parameter_element_id, StringView name)
 {
     // 1. If the current browsing context is no longer open, return error with error code no such window.
     TRY(check_for_open_top_level_browsing_context_or_return_error());
@@ -833,7 +833,7 @@ ErrorOr<JsonValue, WebDriverError> Session::get_element_property(JsonValue const
 }
 
 // 12.4.4 Get Element CSS Value, https://w3c.github.io/webdriver/#dfn-get-element-css-value
-ErrorOr<JsonValue, WebDriverError> Session::get_element_css_value(JsonValue const&, StringView parameter_element_id, StringView property_name)
+ErrorOr<JsonValue, Web::WebDriver::Error> Session::get_element_css_value(JsonValue const&, StringView parameter_element_id, StringView property_name)
 {
     // 1. If the current browsing context is no longer open, return error with error code no such window.
     TRY(check_for_open_top_level_browsing_context_or_return_error());
@@ -859,7 +859,7 @@ ErrorOr<JsonValue, WebDriverError> Session::get_element_css_value(JsonValue cons
 }
 
 // 12.4.5 Get Element Text, https://w3c.github.io/webdriver/#dfn-get-element-text
-ErrorOr<JsonValue, WebDriverError> Session::get_element_text(JsonValue const&, StringView parameter_element_id)
+ErrorOr<JsonValue, Web::WebDriver::Error> Session::get_element_text(JsonValue const&, StringView parameter_element_id)
 {
     // 1. If the current browsing context is no longer open, return error with error code no such window.
     TRY(check_for_open_top_level_browsing_context_or_return_error());
@@ -869,7 +869,7 @@ ErrorOr<JsonValue, WebDriverError> Session::get_element_text(JsonValue const&, S
     // FIXME: 3. Let element be the result of trying to get a known connected element with url variable element id.
     auto maybe_element_id = parameter_element_id.to_int();
     if (!maybe_element_id.has_value())
-        return WebDriverError::from_code(ErrorCode::InvalidArgument, "Element ID is not an i32");
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, "Element ID is not an i32");
 
     auto element_id = maybe_element_id.release_value();
 
@@ -882,7 +882,7 @@ ErrorOr<JsonValue, WebDriverError> Session::get_element_text(JsonValue const&, S
 }
 
 // 12.4.6 Get Element Tag Name, https://w3c.github.io/webdriver/#dfn-get-element-tag-name
-ErrorOr<JsonValue, WebDriverError> Session::get_element_tag_name(JsonValue const&, StringView parameter_element_id)
+ErrorOr<JsonValue, Web::WebDriver::Error> Session::get_element_tag_name(JsonValue const&, StringView parameter_element_id)
 {
     // 1. If the current browsing context is no longer open, return error with error code no such window.
     TRY(check_for_open_top_level_browsing_context_or_return_error());
@@ -900,7 +900,7 @@ ErrorOr<JsonValue, WebDriverError> Session::get_element_tag_name(JsonValue const
 }
 
 // 12.4.7 Get Element Rect, https://w3c.github.io/webdriver/#dfn-get-element-rect
-ErrorOr<JsonValue, WebDriverError> Session::get_element_rect(StringView parameter_element_id)
+ErrorOr<JsonValue, Web::WebDriver::Error> Session::get_element_rect(StringView parameter_element_id)
 {
     // 1. If the current browsing context is no longer open, return error with error code no such window.
     TRY(check_for_open_top_level_browsing_context_or_return_error());
@@ -930,7 +930,7 @@ ErrorOr<JsonValue, WebDriverError> Session::get_element_rect(StringView paramete
 }
 
 // 12.4.8 Is Element Enabled, https://w3c.github.io/webdriver/#dfn-is-element-enabled
-ErrorOr<JsonValue, WebDriverError> Session::is_element_enabled(StringView parameter_element_id)
+ErrorOr<JsonValue, Web::WebDriver::Error> Session::is_element_enabled(StringView parameter_element_id)
 {
     // 1. If the current browsing context is no longer open, return error with error code no such window.
     TRY(check_for_open_top_level_browsing_context_or_return_error());
@@ -950,7 +950,7 @@ ErrorOr<JsonValue, WebDriverError> Session::is_element_enabled(StringView parame
 }
 
 // 13.1 Get Page Source, https://w3c.github.io/webdriver/#dfn-get-page-source
-ErrorOr<JsonValue, WebDriverError> Session::get_source()
+ErrorOr<JsonValue, Web::WebDriver::Error> Session::get_source()
 {
     // 1. If the current browsing context is no longer open, return error with error code no such window.
     TRY(check_for_open_top_level_browsing_context_or_return_error());
@@ -972,23 +972,23 @@ struct ScriptArguments {
 };
 
 // https://w3c.github.io/webdriver/#dfn-extract-the-script-arguments-from-a-request
-static ErrorOr<ScriptArguments, WebDriverError> extract_the_script_arguments_from_a_request(JsonValue const& payload)
+static ErrorOr<ScriptArguments, Web::WebDriver::Error> extract_the_script_arguments_from_a_request(JsonValue const& payload)
 {
     if (!payload.is_object())
-        return WebDriverError::from_code(ErrorCode::InvalidArgument, "Payload is not a JSON object");
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, "Payload is not a JSON object");
 
     auto const& properties = payload.as_object();
 
     // 1. Let script be the result of getting a property named script from the parameters.
     // 2. If script is not a String, return error with error code invalid argument.
     if (!properties.has_string("script"sv))
-        return WebDriverError::from_code(ErrorCode::InvalidArgument, "Payload doesn't have a 'script' string property");
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, "Payload doesn't have a 'script' string property");
     auto script = properties.get("script"sv).as_string();
 
     // 3. Let args be the result of getting a property named args from the parameters.
     // 4. If args is not an Array return error with error code invalid argument.
     if (!properties.has_array("args"sv))
-        return WebDriverError::from_code(ErrorCode::InvalidArgument, "Payload doesn't have an 'args' string property");
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, "Payload doesn't have an 'args' string property");
     auto const& args = properties.get("args"sv).as_array();
 
     // 5. Let arguments be the result of calling the JSON deserialize algorithm with arguments args.
@@ -999,7 +999,7 @@ static ErrorOr<ScriptArguments, WebDriverError> extract_the_script_arguments_fro
 }
 
 // 13.2.1 Execute Script, https://w3c.github.io/webdriver/#dfn-execute-script
-ErrorOr<JsonValue, WebDriverError> Session::execute_script(JsonValue const& payload)
+ErrorOr<JsonValue, Web::WebDriver::Error> Session::execute_script(JsonValue const& payload)
 {
     // 1. Let body and arguments be the result of trying to extract the script arguments from a request with argument parameters.
     auto const& [body, arguments] = TRY(extract_the_script_arguments_from_a_request(payload));
@@ -1026,21 +1026,21 @@ ErrorOr<JsonValue, WebDriverError> Session::execute_script(JsonValue const& payl
     switch (execute_script_response.result_type()) {
     // 6. If promise is still pending and the session script timeout is reached, return error with error code script timeout.
     case Web::WebDriver::ExecuteScriptResultType::Timeout:
-        return WebDriverError::from_code(ErrorCode::ScriptTimeoutError, "Script timed out");
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::ScriptTimeoutError, "Script timed out");
     // 7. Upon fulfillment of promise with value v, let result be a JSON clone of v, and return success with data result.
     case Web::WebDriver::ExecuteScriptResultType::PromiseResolved:
         return result;
     // 8. Upon rejection of promise with reason r, let result be a JSON clone of r, and return error with error code javascript error and data result.
     case Web::WebDriver::ExecuteScriptResultType::PromiseRejected:
     case Web::WebDriver::ExecuteScriptResultType::JavaScriptError:
-        return WebDriverError::from_code(ErrorCode::JavascriptError, "Script returned an error", move(result));
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::JavascriptError, "Script returned an error", move(result));
     default:
         VERIFY_NOT_REACHED();
     }
 }
 
 // 13.2.2 Execute Async Script, https://w3c.github.io/webdriver/#dfn-execute-async-script
-ErrorOr<JsonValue, WebDriverError> Session::execute_async_script(JsonValue const& parameters)
+ErrorOr<JsonValue, Web::WebDriver::Error> Session::execute_async_script(JsonValue const& parameters)
 {
     // 1. Let body and arguments by the result of trying to extract the script arguments from a request with argument parameters.
     auto [body, arguments] = TRY(extract_the_script_arguments_from_a_request(parameters));
@@ -1067,13 +1067,13 @@ ErrorOr<JsonValue, WebDriverError> Session::execute_async_script(JsonValue const
     switch (execute_script_response.result_type()) {
     // 6. If promise is still pending and the session script timeout is reached, return error with error code script timeout.
     case Web::WebDriver::ExecuteScriptResultType::Timeout:
-        return WebDriverError::from_code(ErrorCode::ScriptTimeoutError, "Script timed out");
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::ScriptTimeoutError, "Script timed out");
     // 7. Upon fulfillment of promise with value v, let result be a JSON clone of v, and return success with data result.
     case Web::WebDriver::ExecuteScriptResultType::PromiseResolved:
         return result;
     // 8. Upon rejection of promise with reason r, let result be a JSON clone of r, and return error with error code javascript error and data result.
     case Web::WebDriver::ExecuteScriptResultType::PromiseRejected:
-        return WebDriverError::from_code(ErrorCode::JavascriptError, "Script returned an error", move(result));
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::JavascriptError, "Script returned an error", move(result));
     default:
         VERIFY_NOT_REACHED();
     }
@@ -1096,7 +1096,7 @@ static JsonObject serialize_cookie(Web::Cookie::Cookie const& cookie)
 }
 
 // 14.1 Get All Cookies, https://w3c.github.io/webdriver/#dfn-get-all-cookies
-ErrorOr<JsonValue, WebDriverError> Session::get_all_cookies()
+ErrorOr<JsonValue, Web::WebDriver::Error> Session::get_all_cookies()
 {
     // 1. If the current browsing context is no longer open, return error with error code no such window.
     TRY(check_for_open_top_level_browsing_context_or_return_error());
@@ -1120,7 +1120,7 @@ ErrorOr<JsonValue, WebDriverError> Session::get_all_cookies()
 }
 
 // 14.2 Get Named Cookie, https://w3c.github.io/webdriver/#dfn-get-named-cookie
-ErrorOr<JsonValue, WebDriverError> Session::get_named_cookie(String const& name)
+ErrorOr<JsonValue, Web::WebDriver::Error> Session::get_named_cookie(String const& name)
 {
     // 1. If the current browsing context is no longer open, return error with error code no such window.
     TRY(check_for_open_top_level_browsing_context_or_return_error());
@@ -1137,15 +1137,15 @@ ErrorOr<JsonValue, WebDriverError> Session::get_named_cookie(String const& name)
     }
 
     // 4. Otherwise, return error with error code no such cookie.
-    return WebDriverError::from_code(ErrorCode::NoSuchCookie, "Cookie not found");
+    return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::NoSuchCookie, "Cookie not found");
 }
 
 // 14.3 Add Cookie, https://w3c.github.io/webdriver/#dfn-adding-a-cookie
-ErrorOr<JsonValue, WebDriverError> Session::add_cookie(JsonValue const& payload)
+ErrorOr<JsonValue, Web::WebDriver::Error> Session::add_cookie(JsonValue const& payload)
 {
     // 1. Let data be the result of getting a property named cookie from the parameters argument.
     if (!payload.is_object() || !payload.as_object().has_object("cookie"sv))
-        return WebDriverError::from_code(ErrorCode::InvalidArgument, "Payload doesn't have a cookie object");
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, "Payload doesn't have a cookie object");
 
     auto const& maybe_data = payload.as_object().get("cookie"sv);
 
@@ -1153,12 +1153,12 @@ ErrorOr<JsonValue, WebDriverError> Session::add_cookie(JsonValue const& payload)
     //    return error with error code invalid argument.
     // NOTE: Table is here: https://w3c.github.io/webdriver/#dfn-table-for-cookie-conversion
     if (!maybe_data.is_object())
-        return WebDriverError::from_code(ErrorCode::InvalidArgument, "Value \"cookie\' is not an object");
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, "Value \"cookie\' is not an object");
 
     auto const& data = maybe_data.as_object();
 
     if (!data.has("name"sv) || !data.has("value"sv))
-        return WebDriverError::from_code(ErrorCode::InvalidArgument, "Cookie-Object doesn't contain all required keys");
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, "Cookie-Object doesn't contain all required keys");
 
     // 3. If the current browsing context is no longer open, return error with error code no such window.
     TRY(check_for_open_top_level_browsing_context_or_return_error());
@@ -1174,17 +1174,17 @@ ErrorOr<JsonValue, WebDriverError> Session::add_cookie(JsonValue const& payload)
     //    or cookie expiry time is not an integer type, or it less than 0 or greater than the maximum safe integer,
     //    return error with error code invalid argument.
     if (data.get("name"sv).is_null() || data.get("value"sv).is_null())
-        return WebDriverError::from_code(ErrorCode::InvalidArgument, "Cookie-Object is malformed: name or value are null");
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, "Cookie-Object is malformed: name or value are null");
     if (data.has("secure"sv) && !data.get("secure"sv).is_bool())
-        return WebDriverError::from_code(ErrorCode::InvalidArgument, "Cookie-Object is malformed: secure is not bool");
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, "Cookie-Object is malformed: secure is not bool");
     if (data.has("httpOnly"sv) && !data.get("httpOnly"sv).is_bool())
-        return WebDriverError::from_code(ErrorCode::InvalidArgument, "Cookie-Object is malformed: httpOnly is not bool");
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, "Cookie-Object is malformed: httpOnly is not bool");
     Optional<Core::DateTime> expiry_time;
     if (data.has("expiry"sv)) {
         auto expiry_argument = data.get("expiry"sv);
         if (!expiry_argument.is_u32()) {
             // NOTE: less than 0 or greater than safe integer are handled by the JSON parser
-            return WebDriverError::from_code(ErrorCode::InvalidArgument, "Cookie-Object is malformed: expiry is not u32");
+            return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, "Cookie-Object is malformed: expiry is not u32");
         }
         expiry_time = Core::DateTime::from_timestamp(expiry_argument.as_u32());
     }
@@ -1196,12 +1196,12 @@ ErrorOr<JsonValue, WebDriverError> Session::add_cookie(JsonValue const& payload)
     if (auto name_attribute = data.get("name"sv); name_attribute.is_string())
         cookie.name = name_attribute.as_string();
     else
-        return WebDriverError::from_code(ErrorCode::InvalidArgument, "Expect name attribute to be string");
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, "Expect name attribute to be string");
 
     if (auto value_attribute = data.get("value"sv); value_attribute.is_string())
         cookie.value = value_attribute.as_string();
     else
-        return WebDriverError::from_code(ErrorCode::InvalidArgument, "Expect value attribute to be string");
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, "Expect value attribute to be string");
 
     // Cookie path
     //     The value if the entry exists, otherwise "/".
@@ -1209,7 +1209,7 @@ ErrorOr<JsonValue, WebDriverError> Session::add_cookie(JsonValue const& payload)
         if (auto path_attribute = data.get("path"sv); path_attribute.is_string())
             cookie.path = path_attribute.as_string();
         else
-            return WebDriverError::from_code(ErrorCode::InvalidArgument, "Expect path attribute to be string");
+            return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, "Expect path attribute to be string");
     } else {
         cookie.path = "/";
     }
@@ -1221,7 +1221,7 @@ ErrorOr<JsonValue, WebDriverError> Session::add_cookie(JsonValue const& payload)
         if (auto domain_attribute = data.get("domain"sv); domain_attribute.is_string())
             cookie.domain = domain_attribute.as_string();
         else
-            return WebDriverError::from_code(ErrorCode::InvalidArgument, "Expect domain attribute to be string");
+            return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, "Expect domain attribute to be string");
     }
 
     // Cookie secure only
@@ -1277,7 +1277,7 @@ void Session::delete_cookies(Optional<StringView> const& name)
 }
 
 // 14.4 Delete Cookie, https://w3c.github.io/webdriver/#dfn-delete-cookie
-ErrorOr<JsonValue, WebDriverError> Session::delete_cookie(StringView name)
+ErrorOr<JsonValue, Web::WebDriver::Error> Session::delete_cookie(StringView name)
 {
     // 1. If the current browsing context is no longer open, return error with error code no such window.
     TRY(check_for_open_top_level_browsing_context_or_return_error());
@@ -1292,7 +1292,7 @@ ErrorOr<JsonValue, WebDriverError> Session::delete_cookie(StringView name)
 }
 
 // 14.5 Delete All Cookies, https://w3c.github.io/webdriver/#dfn-delete-all-cookies
-ErrorOr<JsonValue, WebDriverError> Session::delete_all_cookies()
+ErrorOr<JsonValue, Web::WebDriver::Error> Session::delete_all_cookies()
 {
     // 1. If the current browsing context is no longer open, return error with error code no such window.
     TRY(check_for_open_top_level_browsing_context_or_return_error());
@@ -1307,13 +1307,13 @@ ErrorOr<JsonValue, WebDriverError> Session::delete_all_cookies()
 }
 
 // https://w3c.github.io/webdriver/#dfn-encoding-a-canvas-as-base64
-static ErrorOr<String, WebDriverError> encode_bitmap_as_canvas_element(Gfx::Bitmap const& bitmap)
+static ErrorOr<String, Web::WebDriver::Error> encode_bitmap_as_canvas_element(Gfx::Bitmap const& bitmap)
 {
     // FIXME: 1. If the canvas element’s bitmap’s origin-clean flag is set to false, return error with error code unable to capture screen.
 
     // 2. If the canvas element’s bitmap has no pixels (i.e. either its horizontal dimension or vertical dimension is zero) then return error with error code unable to capture screen.
     if (bitmap.width() == 0 || bitmap.height() == 0)
-        return WebDriverError::from_code(ErrorCode::UnableToCaptureScreen, "Captured screenshot is empty"sv);
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::UnableToCaptureScreen, "Captured screenshot is empty"sv);
 
     // 3. Let file be a serialization of the canvas element’s bitmap as a file, using "image/png" as an argument.
     auto file = Gfx::PNGWriter::encode(bitmap);
@@ -1333,7 +1333,7 @@ static ErrorOr<String, WebDriverError> encode_bitmap_as_canvas_element(Gfx::Bitm
 }
 
 // 17.1 Take Screenshot, https://w3c.github.io/webdriver/#take-screenshot
-ErrorOr<JsonValue, WebDriverError> Session::take_screenshot()
+ErrorOr<JsonValue, Web::WebDriver::Error> Session::take_screenshot()
 {
     // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
     TRY(check_for_open_top_level_browsing_context_or_return_error());
@@ -1343,7 +1343,7 @@ ErrorOr<JsonValue, WebDriverError> Session::take_screenshot()
     //     b. Let screenshot result be the result of trying to call draw a bounding box from the framebuffer, given root rect as an argument.
     auto screenshot = m_browser_connection->take_screenshot();
     if (!screenshot.is_valid())
-        return WebDriverError::from_code(ErrorCode::UnableToCaptureScreen, "Unable to capture screenshot"sv);
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::UnableToCaptureScreen, "Unable to capture screenshot"sv);
 
     //     c. Let canvas be a canvas element of screenshot result’s data.
     //     d. Let encoding result be the result of trying encoding a canvas as Base64 canvas.
@@ -1355,7 +1355,7 @@ ErrorOr<JsonValue, WebDriverError> Session::take_screenshot()
 }
 
 // 17.2 Take Element Screenshot, https://w3c.github.io/webdriver/#dfn-take-element-screenshot
-ErrorOr<JsonValue, WebDriverError> Session::take_element_screenshot(StringView parameter_element_id)
+ErrorOr<JsonValue, Web::WebDriver::Error> Session::take_element_screenshot(StringView parameter_element_id)
 {
     // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
     TRY(check_for_open_top_level_browsing_context_or_return_error());
@@ -1373,7 +1373,7 @@ ErrorOr<JsonValue, WebDriverError> Session::take_element_screenshot(StringView p
     //     b. Let screenshot result be the result of trying to call draw a bounding box from the framebuffer, given element rect as an argument.
     auto screenshot = m_browser_connection->take_element_screenshot(element_id);
     if (!screenshot.is_valid())
-        return WebDriverError::from_code(ErrorCode::UnableToCaptureScreen, "Unable to capture screenshot"sv);
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::UnableToCaptureScreen, "Unable to capture screenshot"sv);
 
     //     c. Let canvas be a canvas element of screenshot result’s data.
     //     d. Let encoding result be the result of trying encoding a canvas as Base64 canvas.

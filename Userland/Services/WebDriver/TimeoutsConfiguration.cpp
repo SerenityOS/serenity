@@ -6,7 +6,6 @@
 
 #include <AK/JsonObject.h>
 #include <WebDriver/TimeoutsConfiguration.h>
-#include <WebDriver/WebDriverError.h>
 
 namespace WebDriver {
 
@@ -35,7 +34,7 @@ JsonObject timeouts_object(TimeoutsConfiguration const& timeouts)
 }
 
 // https://w3c.github.io/webdriver/#ref-for-dfn-json-deserialize-3
-ErrorOr<TimeoutsConfiguration, WebDriverError> json_deserialize_as_a_timeouts_configuration(JsonValue const& value)
+ErrorOr<TimeoutsConfiguration, Web::WebDriver::Error> json_deserialize_as_a_timeouts_configuration(JsonValue const& value)
 {
     constexpr i64 max_safe_integer = 9007199254740991;
 
@@ -44,7 +43,7 @@ ErrorOr<TimeoutsConfiguration, WebDriverError> json_deserialize_as_a_timeouts_co
 
     // 2. If value is not a JSON Object, return error with error code invalid argument.
     if (!value.is_object())
-        return WebDriverError::from_code(ErrorCode::InvalidArgument, "Payload is not a JSON object");
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, "Payload is not a JSON object");
 
     // 3. If value has a property with the key "script":
     if (value.as_object().has("script"sv)) {
@@ -53,7 +52,7 @@ ErrorOr<TimeoutsConfiguration, WebDriverError> json_deserialize_as_a_timeouts_co
 
         // 2. If script duration is a number and less than 0 or greater than maximum safe integer, or it is not null, return error with error code invalid argument.
         if ((script_duration.is_number() && (script_duration.to_i64() < 0 || script_duration.to_i64() > max_safe_integer)) || !script_duration.is_null())
-            return WebDriverError::from_code(ErrorCode::InvalidArgument, "Invalid script duration");
+            return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, "Invalid script duration");
 
         // 3. Set timeouts’s script timeout to script duration.
         timeouts.script_timeout = script_duration.is_null() ? Optional<u64> {} : script_duration.to_u64();
@@ -66,7 +65,7 @@ ErrorOr<TimeoutsConfiguration, WebDriverError> json_deserialize_as_a_timeouts_co
 
         // 2. If page load duration is less than 0 or greater than maximum safe integer, return error with error code invalid argument.
         if (!page_load_duration.is_number() || page_load_duration.to_i64() < 0 || page_load_duration.to_i64() > max_safe_integer)
-            return WebDriverError::from_code(ErrorCode::InvalidArgument, "Invalid page load duration");
+            return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, "Invalid page load duration");
 
         // 3. Set timeouts’s page load timeout to page load duration.
         timeouts.page_load_timeout = page_load_duration.to_u64();
@@ -79,7 +78,7 @@ ErrorOr<TimeoutsConfiguration, WebDriverError> json_deserialize_as_a_timeouts_co
 
         // 2. If implicit duration is less than 0 or greater than maximum safe integer, return error with error code invalid argument.
         if (!implicit_duration.is_number() || implicit_duration.to_i64() < 0 || implicit_duration.to_i64() > max_safe_integer)
-            return WebDriverError::from_code(ErrorCode::InvalidArgument, "Invalid implicit duration");
+            return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, "Invalid implicit duration");
 
         // 3. Set timeouts’s implicit wait timeout to implicit duration.
         timeouts.implicit_wait_timeout = implicit_duration.to_u64();
