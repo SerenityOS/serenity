@@ -29,21 +29,11 @@ Length::Length(float value, Type type)
     , m_value(value)
 {
 }
-Length::Length(CSSPixels value, Type type)
-    : m_type(type)
-    , m_value(value.value())
-{
-}
 Length::~Length() = default;
 
 Length Length::make_auto()
 {
     return Length(0, Type::Auto);
-}
-
-Length Length::make_px(float value)
-{
-    return Length(value, Type::Px);
 }
 
 Length Length::make_px(CSSPixels value)
