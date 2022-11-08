@@ -4,19 +4,12 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Format.h>
-#include <AK/HashMap.h>
 #include <AK/LexicalPath.h>
-#include <AK/String.h>
-#include <AK/StringBuilder.h>
-#include <AK/Utf8View.h>
-#include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/System.h>
+#include <LibLine/Editor.h>
 #include <LibMain/Main.h>
 #include <csignal>
-#include <ctype.h>
-#include <fcntl.h>
 #include <stdio.h>
 #include <sys/ioctl.h>
 #include <termios.h>
@@ -59,41 +52,15 @@ static ErrorOr<void> teardown_tty(bool switch_buffer)
 
 static Vector<StringView> wrap_line(String const& string, size_t width)
 {
-    Utf8View utf8(string);
-    Vector<size_t> splits;
-
-    size_t offset = 0;
-
-    bool in_ansi = false;
-    // for (auto codepoint : string) {
-    for (auto it = utf8.begin(); it != utf8.end(); ++it) {
-        if (offset >= width) {
-            splits.append(utf8.byte_offset_of(it));
-            offset = 0;
-        }
-
-        if (*it == '\e')
-            in_ansi = true;
-
-        if (!in_ansi) {
-            if (*it == '\t') {
-                // Tabs are a special case, because their width is variable.
-                offset += (8 - (offset % 8));
-            } else {
-                // FIXME: calculate the printed width of the character.
-                offset++;
-            }
-        }
-
-        if (isalpha(*it))
-            in_ansi = false;
-    }
+    auto const result = Line::Editor::actual_rendered_string_metrics(string, {}, width);
 
     Vector<StringView> spans;
     size_t span_start = 0;
-    for (auto split : splits) {
-        spans.append(string.substring_view(span_start, split - span_start));
-        span_start = split;
+    for (auto const& line_metric : result.line_metrics) {
+        VERIFY(line_metric.bit_length.has_value());
+        auto const bit_length = line_metric.bit_length.value();
+        spans.append(string.substring_view(span_start, bit_length));
+        span_start += bit_length;
     }
     spans.append(string.substring_view(span_start));
 
