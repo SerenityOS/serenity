@@ -11,41 +11,29 @@
 #include <AK/ByteBuffer.h>
 #include <AK/Span.h>
 #include <AK/String.h>
-#include <LibCore/Object.h>
 #include <LibWebSocket/ConnectionInfo.h>
 
 namespace WebSocket {
 
-class WebSocketImpl : public Core::Object {
-    C_OBJECT(WebSocketImpl);
-
+class WebSocketImpl : public RefCounted<WebSocketImpl> {
 public:
-    virtual ~WebSocketImpl() override = default;
-    explicit WebSocketImpl(Core::Object* parent = nullptr);
+    virtual ~WebSocketImpl();
 
-    void connect(ConnectionInfo const&);
-
-    bool can_read_line() { return MUST(m_socket->can_read_line()); }
-    ErrorOr<String> read_line(size_t size);
-
-    bool can_read() { return MUST(m_socket->can_read_without_blocking()); }
-    ErrorOr<ByteBuffer> read(int max_size);
-
-    bool send(ReadonlyBytes bytes) { return m_socket->write_or_error(bytes); }
-
-    bool eof() { return m_socket->is_eof(); }
-
-    void discard_connection()
-    {
-        m_socket.clear();
-    }
+    virtual void connect(ConnectionInfo const&) = 0;
+    virtual bool can_read_line() = 0;
+    virtual ErrorOr<String> read_line(size_t) = 0;
+    virtual bool can_read() = 0;
+    virtual ErrorOr<ByteBuffer> read(int max_size) = 0;
+    virtual bool send(ReadonlyBytes) = 0;
+    virtual bool eof() = 0;
+    virtual void discard_connection() = 0;
 
     Function<void()> on_connected;
     Function<void()> on_connection_error;
     Function<void()> on_ready_to_read;
 
-private:
-    OwnPtr<Core::Stream::BufferedSocketBase> m_socket;
+protected:
+    WebSocketImpl();
 };
 
 }

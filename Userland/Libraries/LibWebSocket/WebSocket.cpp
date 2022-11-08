@@ -8,6 +8,7 @@
 #include <AK/Base64.h>
 #include <AK/Random.h>
 #include <LibCrypto/Hash/HashManager.h>
+#include <LibWebSocket/Impl/WebSocketImplSerenity.h>
 #include <LibWebSocket/WebSocket.h>
 #include <unistd.h>
 
@@ -30,7 +31,7 @@ void WebSocket::start()
 {
     VERIFY(m_state == WebSocket::InternalState::NotStarted);
     VERIFY(!m_impl);
-    m_impl = WebSocketImpl::construct();
+    m_impl = adopt_ref(*new WebSocketImplSerenity);
 
     m_impl->on_connection_error = [this] {
         dbgln("WebSocket: Connection error (underlying socket)");

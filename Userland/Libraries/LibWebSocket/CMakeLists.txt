@@ -1,6 +1,7 @@
 set(SOURCES
     ConnectionInfo.cpp
     Impl/WebSocketImpl.cpp
+    Impl/WebSocketImplSerenity.cpp
     WebSocket.cpp
 )
 
