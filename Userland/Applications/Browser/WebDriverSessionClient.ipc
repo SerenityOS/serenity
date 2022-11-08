@@ -8,6 +8,9 @@
 #include <LibWeb/Cookie/ParsedCookie.h>
 #include <LibWeb/WebDriver/ExecuteScript.h>
 
+// FIXME: This isn't used here, but the generated IPC fails to compile without this include.
+#include <LibWeb/WebDriver/Response.h>
+
 endpoint WebDriverSessionClient {
     quit() =|
 
