@@ -19,11 +19,6 @@ bool WebSocketImplSerenity::can_read_line()
     return MUST(m_socket->can_read_line());
 }
 
-bool WebSocketImplSerenity::can_read()
-{
-    return MUST(m_socket->can_read_without_blocking());
-}
-
 bool WebSocketImplSerenity::send(ReadonlyBytes bytes)
 {
     return m_socket->write_or_error(bytes);
