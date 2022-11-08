@@ -83,7 +83,13 @@ Tab::Tab(BrowserWindow* window)
 
     QObject::connect(m_view, &WebContentView::load_started, [this](const URL& url) {
         m_location_edit->setText(url.to_string().characters());
-        m_history.push(url, m_title.toUtf8().data());
+
+        // Don't add to history if back or forward is pressed
+        if (!m_is_history_navigation) {
+            m_history.push(url, m_title.toUtf8().data());
+        }
+        m_is_history_navigation = false;
+
         m_back_action->setEnabled(m_history.can_go_back());
         m_forward_action->setEnabled(m_history.can_go_forward());
     });
@@ -129,6 +135,7 @@ void Tab::back()
     if (!m_history.can_go_back())
         return;
 
+    m_is_history_navigation = true;
     m_history.go_back();
     view().load(m_history.current().url.to_string());
 }
@@ -138,6 +145,7 @@ void Tab::forward()
     if (!m_history.can_go_forward())
         return;
 
+    m_is_history_navigation = true;
     m_history.go_forward();
     view().load(m_history.current().url.to_string());
 }
