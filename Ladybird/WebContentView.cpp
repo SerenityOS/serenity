@@ -79,11 +79,6 @@ WebContentView::~WebContentView()
 {
 }
 
-void WebContentView::reload()
-{
-    load(m_url);
-}
-
 void WebContentView::load(AK::URL const& url)
 {
     m_url = url;
