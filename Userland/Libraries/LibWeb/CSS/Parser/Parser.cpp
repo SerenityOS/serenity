@@ -2644,7 +2644,7 @@ RefPtr<StyleValue> Parser::parse_conic_gradient_function(ComponentValue const& c
     return ConicGradientStyleValue::create(from_angle, at_position, move(*color_stops), repeating_gradient);
 }
 
-Optional<PositionValue> Parser::parse_position(TokenStream<ComponentValue>& tokens)
+Optional<PositionValue> Parser::parse_position(TokenStream<ComponentValue>& tokens, PositionValue initial_value)
 {
     auto transaction = tokens.begin_transaction();
     tokens.skip_whitespace();
@@ -2700,7 +2700,7 @@ Optional<PositionValue> Parser::parse_position(TokenStream<ComponentValue>& toke
     // [ left | center | right ] || [ top | center | bottom ]
     auto alternation_1 = [&]() -> Optional<PositionValue> {
         auto transaction = tokens.begin_transaction();
-        PositionValue position {};
+        PositionValue position = initial_value;
         auto& first_token = tokens.next_token();
         if (!first_token.is(Token::Type::Ident))
             return {};
@@ -2709,15 +2709,17 @@ Optional<PositionValue> Parser::parse_position(TokenStream<ComponentValue>& toke
         auto horizontal_position = parse_horizontal_preset(ident);
         if (horizontal_position.has_value()) {
             position.horizontal_position = *horizontal_position;
+            auto transaction_optional_parse = tokens.begin_transaction();
             tokens.skip_whitespace();
             if (tokens.has_next_token()) {
                 auto& second_token = tokens.next_token();
-                if (!second_token.is(Token::Type::Ident))
-                    return {};
-                auto vertical_position = parse_vertical_preset(second_token.token().ident());
-                if (!vertical_position.has_value())
-                    return {};
-                position.vertical_position = *vertical_position;
+                if (second_token.is(Token::Type::Ident)) {
+                    auto vertical_position = parse_vertical_preset(second_token.token().ident());
+                    if (vertical_position.has_value()) {
+                        transaction_optional_parse.commit();
+                        position.vertical_position = *vertical_position;
+                    }
+                }
             }
         } else {
             // <vertical-position> <horizontal-position>?
@@ -2725,14 +2727,17 @@ Optional<PositionValue> Parser::parse_position(TokenStream<ComponentValue>& toke
             if (!vertical_position.has_value())
                 return {};
             position.vertical_position = *vertical_position;
+            auto transaction_optional_parse = tokens.begin_transaction();
+            tokens.skip_whitespace();
             if (tokens.has_next_token()) {
                 auto& second_token = tokens.next_token();
-                if (!second_token.is(Token::Type::Ident))
-                    return {};
-                auto horizontal_position = parse_horizontal_preset(second_token.token().ident());
-                if (!horizontal_position.has_value())
-                    return {};
-                position.horizontal_position = *horizontal_position;
+                if (second_token.is(Token::Type::Ident)) {
+                    auto horizontal_position = parse_horizontal_preset(second_token.token().ident());
+                    if (horizontal_position.has_value()) {
+                        transaction_optional_parse.commit();
+                        position.horizontal_position = *horizontal_position;
+                    }
+                }
             }
         }
         transaction.commit();
@@ -2743,7 +2748,7 @@ Optional<PositionValue> Parser::parse_position(TokenStream<ComponentValue>& toke
     // [ top | center | bottom | <length-percentage> ]?
     auto alternation_2 = [&]() -> Optional<PositionValue> {
         auto transaction = tokens.begin_transaction();
-        PositionValue position {};
+        PositionValue position = initial_value;
         auto& first_token = tokens.next_token();
         if (first_token.is(Token::Type::Ident)) {
             auto horizontal_position = parse_horizontal_preset(first_token.token().ident());
@@ -2756,19 +2761,22 @@ Optional<PositionValue> Parser::parse_position(TokenStream<ComponentValue>& toke
                 return {};
             position.horizontal_position = dimension->length_percentage();
         }
+        auto transaction_optional_parse = tokens.begin_transaction();
         tokens.skip_whitespace();
         if (tokens.has_next_token()) {
             auto& second_token = tokens.next_token();
             if (second_token.is(Token::Type::Ident)) {
                 auto vertical_position = parse_vertical_preset(second_token.token().ident());
-                if (!vertical_position.has_value())
-                    return {};
-                position.vertical_position = *vertical_position;
+                if (vertical_position.has_value()) {
+                    transaction_optional_parse.commit();
+                    position.vertical_position = *vertical_position;
+                }
             } else {
                 auto dimension = parse_dimension(second_token);
-                if (!dimension.has_value() || !dimension->is_length_percentage())
-                    return {};
-                position.vertical_position = dimension->length_percentage();
+                if (dimension.has_value() && dimension->is_length_percentage()) {
+                    transaction_optional_parse.commit();
+                    position.vertical_position = dimension->length_percentage();
+                }
             }
         }
         transaction.commit();
