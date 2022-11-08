@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2021-2022, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2021-2023, Sam Atkins <atkinssj@serenityos.org>
  * Copyright (c) 2021, Tobias Christiansen <tobyase@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -1718,24 +1718,24 @@ bool ImageStyleValue::equals(StyleValue const& other) const
     return m_url == other.as_image().m_url;
 }
 
-Optional<int> ImageStyleValue::natural_width() const
+Optional<CSSPixels> ImageStyleValue::natural_width() const
 {
     if (auto* b = bitmap(0); b != nullptr)
         return b->width();
     return {};
 }
 
-Optional<int> ImageStyleValue::natural_height() const
+Optional<CSSPixels> ImageStyleValue::natural_height() const
 {
     if (auto* b = bitmap(0); b != nullptr)
         return b->height();
     return {};
 }
 
-void ImageStyleValue::paint(PaintContext& context, Gfx::IntRect const& dest_rect, CSS::ImageRendering image_rendering) const
+void ImageStyleValue::paint(PaintContext& context, DevicePixelRect const& dest_rect, CSS::ImageRendering image_rendering) const
 {
     if (auto* b = bitmap(m_current_frame_index); b != nullptr)
-        context.painter().draw_scaled_bitmap(dest_rect, *b, bitmap(0)->rect(), 1.0f, to_gfx_scaling_mode(image_rendering));
+        context.painter().draw_scaled_bitmap(dest_rect.to_type<int>(), *b, bitmap(0)->rect(), 1.0f, to_gfx_scaling_mode(image_rendering));
 }
 
 static void serialize_color_stop_list(StringBuilder& builder, auto const& color_stop_list)
@@ -1827,10 +1827,10 @@ bool LinearGradientStyleValue::equals(StyleValue const& other_) const
         && m_color_stop_list == other.m_color_stop_list);
 }
 
-float LinearGradientStyleValue::angle_degrees(Gfx::FloatSize gradient_size) const
+float LinearGradientStyleValue::angle_degrees(CSSPixelSize gradient_size) const
 {
     auto corner_angle_degrees = [&] {
-        return static_cast<float>(atan2(gradient_size.height(), gradient_size.width())) * 180 / AK::Pi<float>;
+        return static_cast<float>(atan2(gradient_size.height().value(), gradient_size.width().value())) * 180 / AK::Pi<float>;
     };
     return m_direction.visit(
         [&](SideOrCorner side_or_corner) {
@@ -1866,24 +1866,24 @@ float LinearGradientStyleValue::angle_degrees(Gfx::FloatSize gradient_size) cons
         });
 }
 
-void LinearGradientStyleValue::resolve_for_size(Layout::Node const& node, Gfx::FloatSize size) const
+void LinearGradientStyleValue::resolve_for_size(Layout::Node const& node, CSSPixelSize size) const
 {
     if (m_resolved.has_value() && m_resolved->size == size)
         return;
-    m_resolved = ResolvedData { Painting::resolve_linear_gradient_data(node, size.to_type<CSSPixels>(), *this), size };
+    m_resolved = ResolvedData { Painting::resolve_linear_gradient_data(node, size, *this), size };
 }
 
-void LinearGradientStyleValue::paint(PaintContext& context, Gfx::IntRect const& dest_rect, CSS::ImageRendering) const
+void LinearGradientStyleValue::paint(PaintContext& context, DevicePixelRect const& dest_rect, CSS::ImageRendering) const
 {
     VERIFY(m_resolved.has_value());
-    Painting::paint_linear_gradient(context, dest_rect.to_type<DevicePixels>(), m_resolved->data);
+    Painting::paint_linear_gradient(context, dest_rect, m_resolved->data);
 }
 
-Gfx::FloatPoint PositionValue::resolved(Layout::Node const& node, Gfx::FloatRect const& rect) const
+CSSPixelPoint PositionValue::resolved(Layout::Node const& node, CSSPixelRect const& rect) const
 {
     // Note: A preset + a none default x/y_relative_to is impossible in the syntax (and makes little sense)
-    float x = horizontal_position.visit(
-        [&](HorizontalPreset preset) {
+    CSSPixels x = horizontal_position.visit(
+        [&](HorizontalPreset preset) -> CSSPixels {
             return rect.width() * [&] {
                 switch (preset) {
                 case HorizontalPreset::Left:
@@ -1897,11 +1897,11 @@ Gfx::FloatPoint PositionValue::resolved(Layout::Node const& node, Gfx::FloatRect
                 }
             }();
         },
-        [&](LengthPercentage length_percentage) {
+        [&](LengthPercentage length_percentage) -> CSSPixels {
             return length_percentage.resolved(node, Length::make_px(rect.width())).to_px(node);
         });
-    float y = vertical_position.visit(
-        [&](VerticalPreset preset) {
+    CSSPixels y = vertical_position.visit(
+        [&](VerticalPreset preset) -> CSSPixels {
             return rect.height() * [&] {
                 switch (preset) {
                 case VerticalPreset::Top:
@@ -1915,14 +1915,14 @@ Gfx::FloatPoint PositionValue::resolved(Layout::Node const& node, Gfx::FloatRect
                 }
             }();
         },
-        [&](LengthPercentage length_percentage) {
+        [&](LengthPercentage length_percentage) -> CSSPixels {
             return length_percentage.resolved(node, Length::make_px(rect.height())).to_px(node);
         });
     if (x_relative_to == HorizontalEdge::Right)
         x = rect.width() - x;
     if (y_relative_to == VerticalEdge::Bottom)
         y = rect.height() - y;
-    return Gfx::FloatPoint { rect.x() + x, rect.y() + y };
+    return CSSPixelPoint { rect.x() + x, rect.y() + y };
 }
 
 void PositionValue::serialize(StringBuilder& builder) const
@@ -2150,11 +2150,11 @@ Gfx::FloatSize RadialGradientStyleValue::resolve_size(Layout::Node const& node, 
     return resolved_size;
 }
 
-void RadialGradientStyleValue::resolve_for_size(Layout::Node const& node, Gfx::FloatSize paint_size) const
+void RadialGradientStyleValue::resolve_for_size(Layout::Node const& node, CSSPixelSize paint_size) const
 {
-    Gfx::FloatRect gradient_box { { 0, 0 }, paint_size };
-    auto center = m_position.resolved(node, gradient_box);
-    auto gradient_size = resolve_size(node, center, gradient_box);
+    CSSPixelRect gradient_box { { 0, 0 }, paint_size };
+    auto center = m_position.resolved(node, gradient_box).to_type<float>();
+    auto gradient_size = resolve_size(node, center, gradient_box.to_type<float>());
     if (m_resolved.has_value() && m_resolved->gradient_size == gradient_size)
         return;
     m_resolved = ResolvedData {
@@ -2175,10 +2175,10 @@ bool RadialGradientStyleValue::equals(StyleValue const& other) const
         && m_color_stop_list == other_gradient.m_color_stop_list);
 }
 
-void RadialGradientStyleValue::paint(PaintContext& context, Gfx::IntRect const& dest_rect, CSS::ImageRendering) const
+void RadialGradientStyleValue::paint(PaintContext& context, DevicePixelRect const& dest_rect, CSS::ImageRendering) const
 {
     VERIFY(m_resolved.has_value());
-    Painting::paint_radial_gradient(context, dest_rect.to_type<DevicePixels>(), m_resolved->data,
+    Painting::paint_radial_gradient(context, dest_rect, m_resolved->data,
         context.rounded_device_point(m_resolved->center.to_type<CSSPixels>()),
         context.rounded_device_size(m_resolved->gradient_size.to_type<CSSPixels>()));
 }
@@ -2206,17 +2206,17 @@ DeprecatedString ConicGradientStyleValue::to_deprecated_string() const
     return builder.to_deprecated_string();
 }
 
-void ConicGradientStyleValue::resolve_for_size(Layout::Node const& node, Gfx::FloatSize size) const
+void ConicGradientStyleValue::resolve_for_size(Layout::Node const& node, CSSPixelSize size) const
 {
     if (!m_resolved.has_value())
         m_resolved = ResolvedData { Painting::resolve_conic_gradient_data(node, *this), {} };
-    m_resolved->position = m_position.resolved(node, Gfx::FloatRect { { 0, 0 }, size });
+    m_resolved->position = m_position.resolved(node, CSSPixelRect { { 0, 0 }, size });
 }
 
-void ConicGradientStyleValue::paint(PaintContext& context, Gfx::IntRect const& dest_rect, CSS::ImageRendering) const
+void ConicGradientStyleValue::paint(PaintContext& context, DevicePixelRect const& dest_rect, CSS::ImageRendering) const
 {
     VERIFY(m_resolved.has_value());
-    Painting::paint_conic_gradient(context, dest_rect.to_type<DevicePixels>(), m_resolved->data, context.rounded_device_point(m_resolved->position.to_type<CSSPixels>()));
+    Painting::paint_conic_gradient(context, dest_rect, m_resolved->data, context.rounded_device_point(m_resolved->position));
 }
 
 bool ConicGradientStyleValue::equals(StyleValue const& other) const

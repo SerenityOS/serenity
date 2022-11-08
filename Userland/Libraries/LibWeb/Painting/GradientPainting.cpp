@@ -132,7 +132,7 @@ static ColorStopData resolve_color_stop_positions(auto const& color_stop_list, a
 
 LinearGradientData resolve_linear_gradient_data(Layout::Node const& node, CSSPixelSize gradient_size, CSS::LinearGradientStyleValue const& linear_gradient)
 {
-    auto gradient_angle = linear_gradient.angle_degrees(gradient_size.to_type<float>());
+    auto gradient_angle = linear_gradient.angle_degrees(gradient_size);
     auto gradient_length_px = calculate_gradient_length(gradient_size, gradient_angle);
     auto gradient_length = CSS::Length::make_px(gradient_length_px);
 
