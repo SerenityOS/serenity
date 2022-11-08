@@ -74,7 +74,6 @@ private:
     virtual void set_preferred_color_scheme(Web::CSS::PreferredColorScheme const&) override;
     virtual void set_has_focus(bool) override;
     virtual void set_is_scripting_enabled(bool) override;
-    virtual void set_is_webdriver_active(bool) override;
     virtual void set_window_position(Gfx::IntPoint const&) override;
     virtual void set_window_size(Gfx::IntSize const&) override;
     virtual void handle_file_return(i32 error, Optional<IPC::File> const& file, i32 request_id) override;

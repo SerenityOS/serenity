@@ -1,2 +1,3 @@
 endpoint WebDriverClient {
+    set_is_webdriver_active(bool active) =|
 }

@@ -34,4 +34,9 @@ WebDriverConnection::WebDriverConnection(NonnullOwnPtr<Core::Stream::LocalSocket
 {
 }
 
+void WebDriverConnection::set_is_webdriver_active(bool is_webdriver_active)
+{
+    m_page_host.set_is_webdriver_active(is_webdriver_active);
+}
+
 }

@@ -28,6 +28,7 @@ private:
     WebDriverConnection(NonnullOwnPtr<Core::Stream::LocalSocket> socket, PageHost& page_host);
 
     virtual void die() override { }
+    virtual void set_is_webdriver_active(bool) override;
 
     PageHost& m_page_host;
 };
