@@ -126,8 +126,7 @@ Tab::Tab(BrowserWindow& window)
         m_web_content_view->set_content_filters({});
 
     m_web_content_view->set_proxy_mappings(g_proxies, g_proxy_mappings);
-
-    if (!g_web_driver_connection.is_null())
+    if (!g_webdriver_content_ipc_path.is_empty())
         enable_webdriver_mode();
 
     auto& go_back_button = toolbar.add_action(window.go_back_action());
@@ -668,7 +667,7 @@ void Tab::hide_event(GUI::HideEvent&)
 
 void Tab::enable_webdriver_mode()
 {
-    m_web_content_view->set_is_webdriver_active(true);
+    m_web_content_view->connect_to_webdriver(Browser::g_webdriver_content_ipc_path);
     auto& webdriver_banner = *find_descendant_of_type_named<GUI::Widget>("webdriver_banner");
     webdriver_banner.set_visible(true);
 }
