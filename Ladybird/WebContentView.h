@@ -143,6 +143,8 @@ public:
 signals:
     void link_hovered(QString, int timeout = 0);
     void link_unhovered();
+    void back_mouse_button();
+    void forward_mouse_button();
     void load_started(const URL&);
     void title_changed(QString);
     void favicon_changed(QIcon);

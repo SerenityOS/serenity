@@ -73,6 +73,14 @@ Tab::Tab(BrowserWindow* window)
         m_hover_label->hide();
     });
 
+    QObject::connect(m_view, &WebContentView::back_mouse_button, [this] {
+        back();
+    });
+
+    QObject::connect(m_view, &WebContentView::forward_mouse_button, [this] {
+        forward();
+    });
+
     QObject::connect(m_view, &WebContentView::load_started, [this](const URL& url) {
         m_location_edit->setText(url.to_string().characters());
         m_history.push(url, m_title.toUtf8().data());
