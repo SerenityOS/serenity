@@ -64,4 +64,6 @@ private:
     OwnPtr<QAction> m_reload_action;
 
     int tab_index();
+
+    bool m_is_history_navigation { false };
 };
