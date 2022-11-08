@@ -165,40 +165,6 @@ Web::WebDriver::Response Session::set_timeouts(JsonValue const& payload)
     return JsonValue {};
 }
 
-// 10.1 Navigate To, https://w3c.github.io/webdriver/#dfn-navigate-to
-Web::WebDriver::Response Session::navigate_to(JsonValue const& payload)
-{
-    // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
-    TRY(check_for_open_top_level_browsing_context_or_return_error());
-
-    // FIXME 2. Handle any user prompts and return its value if it is an error.
-
-    // 3. If the url property is missing from the parameters argument or it is not a string, return error with error code invalid argument.
-    if (!payload.is_object() || !payload.as_object().has_string("url"sv)) {
-        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, "Payload doesn't have a string url");
-    }
-
-    // 4. Let url be the result of getting a property named url from the parameters argument.
-    URL url(payload.as_object().get_ptr("url"sv)->as_string());
-
-    // FIXME: 5. If url is not an absolute URL or an absolute URL with fragment, return error with error code invalid argument. [URL]
-
-    // 6. Let url be the result of getting a property named url from the parameters argument.
-    // Duplicate step?
-
-    // 7. Navigate the current top-level browsing context to url.
-    m_browser_connection->async_set_url(url);
-
-    // FIXME: 8. Run the post-navigation checks and return its value if it is an error.
-
-    // FIXME: 9. Wait for navigation to complete and return its value if it is an error.
-
-    // FIXME: 10. Set the current browsing context to the current top-level browsing context.
-
-    // 11. Return success with data null.
-    return JsonValue();
-}
-
 // 10.2 Get Current URL, https://w3c.github.io/webdriver/#dfn-get-current-url
 Web::WebDriver::Response Session::get_current_url()
 {
