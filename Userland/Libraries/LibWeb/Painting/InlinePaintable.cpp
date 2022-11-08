@@ -44,13 +44,13 @@ void InlinePaintable::paint(PaintContext& context, Painting::PaintPhase phase) c
             CSSPixelRect absolute_fragment_rect { containing_block_position_in_absolute_coordinates.translated(fragment.offset()), fragment.size() };
 
             if (is_first_fragment) {
-                float extra_start_width = box_model().padding.left;
+                auto extra_start_width = box_model().padding.left;
                 absolute_fragment_rect.translate_by(-extra_start_width, 0);
                 absolute_fragment_rect.set_width(absolute_fragment_rect.width() + extra_start_width);
             }
 
             if (is_last_fragment) {
-                float extra_end_width = box_model().padding.right;
+                auto extra_end_width = box_model().padding.right;
                 absolute_fragment_rect.set_width(absolute_fragment_rect.width() + extra_end_width);
             }
 
@@ -95,13 +95,13 @@ void InlinePaintable::paint(PaintContext& context, Painting::PaintPhase phase) c
             CSSPixelRect absolute_fragment_rect { containing_block_position_in_absolute_coordinates.translated(fragment.offset()), fragment.size() };
 
             if (is_first_fragment) {
-                float extra_start_width = box_model().padding.left;
+                auto extra_start_width = box_model().padding.left;
                 absolute_fragment_rect.translate_by(-extra_start_width, 0);
                 absolute_fragment_rect.set_width(absolute_fragment_rect.width() + extra_start_width);
             }
 
             if (is_last_fragment) {
-                float extra_end_width = box_model().padding.right;
+                auto extra_end_width = box_model().padding.right;
                 absolute_fragment_rect.set_width(absolute_fragment_rect.width() + extra_end_width);
             }
 
