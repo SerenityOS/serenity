@@ -447,7 +447,7 @@ CSSPixelPoint BrowsingContext::to_top_level_position(CSSPixelPoint a_position)
             return {};
         if (!ancestor->container()->layout_node())
             return {};
-        position.translate_by(ancestor->container()->layout_node()->box_type_agnostic_position().to_type<CSSPixels>());
+        position.translate_by(ancestor->container()->layout_node()->box_type_agnostic_position());
     }
     return position;
 }
