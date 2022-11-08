@@ -61,7 +61,8 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Executable const& e
         pushed_execution_context = true;
     }
 
-    m_current_block = entry_point ?: &executable.basic_blocks.first();
+    TemporaryChange restore_current_block { m_current_block, entry_point ?: &executable.basic_blocks.first() };
+
     if (in_frame)
         m_register_windows.append(in_frame);
     else
