@@ -14,6 +14,7 @@
 #include <LibHTTP/Forward.h>
 #include <LibHTTP/HttpRequest.h>
 #include <LibWeb/WebDriver/Error.h>
+#include <LibWeb/WebDriver/Response.h>
 #include <WebDriver/Session.h>
 
 namespace WebDriver {
@@ -35,7 +36,7 @@ private:
     void die();
     void log_response(unsigned code, HTTP::HttpRequest const&);
 
-    using RouteHandler = ErrorOr<JsonValue, Web::WebDriver::Error> (Client::*)(Vector<StringView> const&, JsonValue const&);
+    using RouteHandler = Web::WebDriver::Response (Client::*)(Vector<StringView> const&, JsonValue const&);
     struct Route {
         HTTP::HttpRequest::Method method;
         Vector<String> path;
@@ -48,46 +49,46 @@ private:
     };
 
     ErrorOr<RoutingResult, Web::WebDriver::Error> match_route(HTTP::HttpRequest::Method method, String const& resource);
-    ErrorOr<JsonValue, Web::WebDriver::Error> handle_new_session(Vector<StringView> const&, JsonValue const& payload);
-    ErrorOr<JsonValue, Web::WebDriver::Error> handle_delete_session(Vector<StringView> const&, JsonValue const& payload);
-    ErrorOr<JsonValue, Web::WebDriver::Error> handle_get_status(Vector<StringView> const&, JsonValue const& payload);
-    ErrorOr<JsonValue, Web::WebDriver::Error> handle_get_timeouts(Vector<StringView> const&, JsonValue const& payload);
-    ErrorOr<JsonValue, Web::WebDriver::Error> handle_set_timeouts(Vector<StringView> const&, JsonValue const& payload);
-    ErrorOr<JsonValue, Web::WebDriver::Error> handle_navigate_to(Vector<StringView> const&, JsonValue const& payload);
-    ErrorOr<JsonValue, Web::WebDriver::Error> handle_get_current_url(Vector<StringView> const&, JsonValue const& payload);
-    ErrorOr<JsonValue, Web::WebDriver::Error> handle_back(Vector<StringView> const&, JsonValue const& payload);
-    ErrorOr<JsonValue, Web::WebDriver::Error> handle_forward(Vector<StringView> const&, JsonValue const& payload);
-    ErrorOr<JsonValue, Web::WebDriver::Error> handle_refresh(Vector<StringView> const&, JsonValue const& payload);
-    ErrorOr<JsonValue, Web::WebDriver::Error> handle_get_title(Vector<StringView> const&, JsonValue const& payload);
-    ErrorOr<JsonValue, Web::WebDriver::Error> handle_get_window_handle(Vector<StringView> const&, JsonValue const& payload);
-    ErrorOr<JsonValue, Web::WebDriver::Error> handle_close_window(Vector<StringView> const&, JsonValue const& payload);
-    ErrorOr<JsonValue, Web::WebDriver::Error> handle_get_window_handles(Vector<StringView> const&, JsonValue const& payload);
-    ErrorOr<JsonValue, Web::WebDriver::Error> handle_get_window_rect(Vector<StringView> const&, JsonValue const& payload);
-    ErrorOr<JsonValue, Web::WebDriver::Error> handle_set_window_rect(Vector<StringView> const&, JsonValue const& payload);
-    ErrorOr<JsonValue, Web::WebDriver::Error> handle_maximize_window(Vector<StringView> const&, JsonValue const& payload);
-    ErrorOr<JsonValue, Web::WebDriver::Error> handle_minimize_window(Vector<StringView> const&, JsonValue const& payload);
-    ErrorOr<JsonValue, Web::WebDriver::Error> handle_find_element(Vector<StringView> const&, JsonValue const& payload);
-    ErrorOr<JsonValue, Web::WebDriver::Error> handle_find_elements(Vector<StringView> const&, JsonValue const& payload);
-    ErrorOr<JsonValue, Web::WebDriver::Error> handle_find_element_from_element(Vector<StringView> const&, JsonValue const& payload);
-    ErrorOr<JsonValue, Web::WebDriver::Error> handle_find_elements_from_element(Vector<StringView> const&, JsonValue const& payload);
-    ErrorOr<JsonValue, Web::WebDriver::Error> handle_is_element_selected(Vector<StringView> const& parameters, JsonValue const& payload);
-    ErrorOr<JsonValue, Web::WebDriver::Error> handle_get_element_attribute(Vector<StringView> const&, JsonValue const& payload);
-    ErrorOr<JsonValue, Web::WebDriver::Error> handle_get_element_property(Vector<StringView> const&, JsonValue const& payload);
-    ErrorOr<JsonValue, Web::WebDriver::Error> handle_get_element_css_value(Vector<StringView> const&, JsonValue const& payload);
-    ErrorOr<JsonValue, Web::WebDriver::Error> handle_get_element_text(Vector<StringView> const&, JsonValue const& payload);
-    ErrorOr<JsonValue, Web::WebDriver::Error> handle_get_element_tag_name(Vector<StringView> const&, JsonValue const& payload);
-    ErrorOr<JsonValue, Web::WebDriver::Error> handle_get_element_rect(Vector<StringView> const&, JsonValue const& payload);
-    ErrorOr<JsonValue, Web::WebDriver::Error> handle_is_element_enabled(Vector<StringView> const&, JsonValue const& payload);
-    ErrorOr<JsonValue, Web::WebDriver::Error> handle_get_source(Vector<StringView> const&, JsonValue const& payload);
-    ErrorOr<JsonValue, Web::WebDriver::Error> handle_execute_script(Vector<StringView> const&, JsonValue const& payload);
-    ErrorOr<JsonValue, Web::WebDriver::Error> handle_execute_async_script(Vector<StringView> const&, JsonValue const& payload);
-    ErrorOr<JsonValue, Web::WebDriver::Error> handle_get_all_cookies(Vector<StringView> const&, JsonValue const& payload);
-    ErrorOr<JsonValue, Web::WebDriver::Error> handle_get_named_cookie(Vector<StringView> const&, JsonValue const& payload);
-    ErrorOr<JsonValue, Web::WebDriver::Error> handle_add_cookie(Vector<StringView> const&, JsonValue const& payload);
-    ErrorOr<JsonValue, Web::WebDriver::Error> handle_delete_cookie(Vector<StringView> const&, JsonValue const& payload);
-    ErrorOr<JsonValue, Web::WebDriver::Error> handle_delete_all_cookies(Vector<StringView> const&, JsonValue const& payload);
-    ErrorOr<JsonValue, Web::WebDriver::Error> handle_take_screenshot(Vector<StringView> const&, JsonValue const& payload);
-    ErrorOr<JsonValue, Web::WebDriver::Error> handle_take_element_screenshot(Vector<StringView> const&, JsonValue const& payload);
+    Web::WebDriver::Response handle_new_session(Vector<StringView> const&, JsonValue const& payload);
+    Web::WebDriver::Response handle_delete_session(Vector<StringView> const&, JsonValue const& payload);
+    Web::WebDriver::Response handle_get_status(Vector<StringView> const&, JsonValue const& payload);
+    Web::WebDriver::Response handle_get_timeouts(Vector<StringView> const&, JsonValue const& payload);
+    Web::WebDriver::Response handle_set_timeouts(Vector<StringView> const&, JsonValue const& payload);
+    Web::WebDriver::Response handle_navigate_to(Vector<StringView> const&, JsonValue const& payload);
+    Web::WebDriver::Response handle_get_current_url(Vector<StringView> const&, JsonValue const& payload);
+    Web::WebDriver::Response handle_back(Vector<StringView> const&, JsonValue const& payload);
+    Web::WebDriver::Response handle_forward(Vector<StringView> const&, JsonValue const& payload);
+    Web::WebDriver::Response handle_refresh(Vector<StringView> const&, JsonValue const& payload);
+    Web::WebDriver::Response handle_get_title(Vector<StringView> const&, JsonValue const& payload);
+    Web::WebDriver::Response handle_get_window_handle(Vector<StringView> const&, JsonValue const& payload);
+    Web::WebDriver::Response handle_close_window(Vector<StringView> const&, JsonValue const& payload);
+    Web::WebDriver::Response handle_get_window_handles(Vector<StringView> const&, JsonValue const& payload);
+    Web::WebDriver::Response handle_get_window_rect(Vector<StringView> const&, JsonValue const& payload);
+    Web::WebDriver::Response handle_set_window_rect(Vector<StringView> const&, JsonValue const& payload);
+    Web::WebDriver::Response handle_maximize_window(Vector<StringView> const&, JsonValue const& payload);
+    Web::WebDriver::Response handle_minimize_window(Vector<StringView> const&, JsonValue const& payload);
+    Web::WebDriver::Response handle_find_element(Vector<StringView> const&, JsonValue const& payload);
+    Web::WebDriver::Response handle_find_elements(Vector<StringView> const&, JsonValue const& payload);
+    Web::WebDriver::Response handle_find_element_from_element(Vector<StringView> const&, JsonValue const& payload);
+    Web::WebDriver::Response handle_find_elements_from_element(Vector<StringView> const&, JsonValue const& payload);
+    Web::WebDriver::Response handle_is_element_selected(Vector<StringView> const& parameters, JsonValue const& payload);
+    Web::WebDriver::Response handle_get_element_attribute(Vector<StringView> const&, JsonValue const& payload);
+    Web::WebDriver::Response handle_get_element_property(Vector<StringView> const&, JsonValue const& payload);
+    Web::WebDriver::Response handle_get_element_css_value(Vector<StringView> const&, JsonValue const& payload);
+    Web::WebDriver::Response handle_get_element_text(Vector<StringView> const&, JsonValue const& payload);
+    Web::WebDriver::Response handle_get_element_tag_name(Vector<StringView> const&, JsonValue const& payload);
+    Web::WebDriver::Response handle_get_element_rect(Vector<StringView> const&, JsonValue const& payload);
+    Web::WebDriver::Response handle_is_element_enabled(Vector<StringView> const&, JsonValue const& payload);
+    Web::WebDriver::Response handle_get_source(Vector<StringView> const&, JsonValue const& payload);
+    Web::WebDriver::Response handle_execute_script(Vector<StringView> const&, JsonValue const& payload);
+    Web::WebDriver::Response handle_execute_async_script(Vector<StringView> const&, JsonValue const& payload);
+    Web::WebDriver::Response handle_get_all_cookies(Vector<StringView> const&, JsonValue const& payload);
+    Web::WebDriver::Response handle_get_named_cookie(Vector<StringView> const&, JsonValue const& payload);
+    Web::WebDriver::Response handle_add_cookie(Vector<StringView> const&, JsonValue const& payload);
+    Web::WebDriver::Response handle_delete_cookie(Vector<StringView> const&, JsonValue const& payload);
+    Web::WebDriver::Response handle_delete_all_cookies(Vector<StringView> const&, JsonValue const& payload);
+    Web::WebDriver::Response handle_take_screenshot(Vector<StringView> const&, JsonValue const& payload);
+    Web::WebDriver::Response handle_take_element_screenshot(Vector<StringView> const&, JsonValue const& payload);
 
     ErrorOr<Session*, Web::WebDriver::Error> find_session_with_id(StringView session_id);
     JsonValue make_json_value(JsonValue const&);

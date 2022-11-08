@@ -107,7 +107,7 @@ JsonObject Session::get_timeouts()
 }
 
 // 9.2 Set Timeouts, https://w3c.github.io/webdriver/#dfn-set-timeouts
-ErrorOr<JsonValue, Web::WebDriver::Error> Session::set_timeouts(JsonValue const& payload)
+Web::WebDriver::Response Session::set_timeouts(JsonValue const& payload)
 {
     // 1. Let timeouts be the result of trying to JSON deserialize as a timeouts configuration the request’s parameters.
     auto timeouts = TRY(json_deserialize_as_a_timeouts_configuration(payload));
@@ -120,7 +120,7 @@ ErrorOr<JsonValue, Web::WebDriver::Error> Session::set_timeouts(JsonValue const&
 }
 
 // 10.1 Navigate To, https://w3c.github.io/webdriver/#dfn-navigate-to
-ErrorOr<JsonValue, Web::WebDriver::Error> Session::navigate_to(JsonValue const& payload)
+Web::WebDriver::Response Session::navigate_to(JsonValue const& payload)
 {
     // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
     TRY(check_for_open_top_level_browsing_context_or_return_error());
@@ -154,7 +154,7 @@ ErrorOr<JsonValue, Web::WebDriver::Error> Session::navigate_to(JsonValue const& 
 }
 
 // 10.2 Get Current URL, https://w3c.github.io/webdriver/#dfn-get-current-url
-ErrorOr<JsonValue, Web::WebDriver::Error> Session::get_current_url()
+Web::WebDriver::Response Session::get_current_url()
 {
     // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
     TRY(check_for_open_top_level_browsing_context_or_return_error());
@@ -169,7 +169,7 @@ ErrorOr<JsonValue, Web::WebDriver::Error> Session::get_current_url()
 }
 
 // 10.3 Back, https://w3c.github.io/webdriver/#dfn-back
-ErrorOr<JsonValue, Web::WebDriver::Error> Session::back()
+Web::WebDriver::Response Session::back()
 {
     // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
     TRY(check_for_open_top_level_browsing_context_or_return_error());
@@ -190,7 +190,7 @@ ErrorOr<JsonValue, Web::WebDriver::Error> Session::back()
 }
 
 // 10.4 Forward, https://w3c.github.io/webdriver/#dfn-forward
-ErrorOr<JsonValue, Web::WebDriver::Error> Session::forward()
+Web::WebDriver::Response Session::forward()
 {
     // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
     TRY(check_for_open_top_level_browsing_context_or_return_error());
@@ -211,7 +211,7 @@ ErrorOr<JsonValue, Web::WebDriver::Error> Session::forward()
 }
 
 // 10.5 Refresh, https://w3c.github.io/webdriver/#dfn-refresh
-ErrorOr<JsonValue, Web::WebDriver::Error> Session::refresh()
+Web::WebDriver::Response Session::refresh()
 {
     // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
     TRY(check_for_open_top_level_browsing_context_or_return_error());
@@ -234,7 +234,7 @@ ErrorOr<JsonValue, Web::WebDriver::Error> Session::refresh()
 }
 
 // 10.6 Get Title, https://w3c.github.io/webdriver/#dfn-get-title
-ErrorOr<JsonValue, Web::WebDriver::Error> Session::get_title()
+Web::WebDriver::Response Session::get_title()
 {
     // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
     TRY(check_for_open_top_level_browsing_context_or_return_error());
@@ -247,13 +247,13 @@ ErrorOr<JsonValue, Web::WebDriver::Error> Session::get_title()
 }
 
 // 11.1 Get Window Handle, https://w3c.github.io/webdriver/#get-window-handle
-ErrorOr<JsonValue, Web::WebDriver::Error> Session::get_window_handle()
+Web::WebDriver::Response Session::get_window_handle()
 {
     // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
     TRY(check_for_open_top_level_browsing_context_or_return_error());
 
     // 2. Return success with data being the window handle associated with the current top-level browsing context.
-    return m_current_window_handle;
+    return JsonValue { m_current_window_handle };
 }
 
 // 11.2 Close Window, https://w3c.github.io/webdriver/#dfn-close-window
@@ -277,7 +277,7 @@ ErrorOr<void, Variant<Web::WebDriver::Error, Error>> Session::close_window()
 }
 
 // 11.4 Get Window Handles, https://w3c.github.io/webdriver/#dfn-get-window-handles
-ErrorOr<JsonValue, Web::WebDriver::Error> Session::get_window_handles() const
+Web::WebDriver::Response Session::get_window_handles() const
 {
     // 1. Let handles be a JSON List.
     auto handles = JsonArray {};
@@ -287,10 +287,10 @@ ErrorOr<JsonValue, Web::WebDriver::Error> Session::get_window_handles() const
         handles.append(window_handle);
 
     // 3. Return success with data handles.
-    return handles;
+    return JsonValue { handles };
 }
 
-static JsonObject serialize_rect(Gfx::IntRect const& rect)
+static JsonValue serialize_rect(Gfx::IntRect const& rect)
 {
     JsonObject serialized_rect = {};
     serialized_rect.set("x", rect.x());
@@ -302,7 +302,7 @@ static JsonObject serialize_rect(Gfx::IntRect const& rect)
 }
 
 // 11.8.1 Get Window Rect, https://w3c.github.io/webdriver/#dfn-get-window-rect
-ErrorOr<JsonValue, Web::WebDriver::Error> Session::get_window_rect()
+Web::WebDriver::Response Session::get_window_rect()
 {
     // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
     TRY(check_for_open_top_level_browsing_context_or_return_error());
@@ -314,7 +314,7 @@ ErrorOr<JsonValue, Web::WebDriver::Error> Session::get_window_rect()
 }
 
 // 11.8.2 Set Window Rect, https://w3c.github.io/webdriver/#dfn-set-window-rect
-ErrorOr<JsonValue, Web::WebDriver::Error> Session::set_window_rect(JsonValue const& payload)
+Web::WebDriver::Response Session::set_window_rect(JsonValue const& payload)
 {
     if (!payload.is_object())
         return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, "Payload is not a JSON object");
@@ -386,7 +386,7 @@ ErrorOr<JsonValue, Web::WebDriver::Error> Session::set_window_rect(JsonValue con
 }
 
 // 11.8.3 Maximize Window, https://w3c.github.io/webdriver/#dfn-maximize-window
-ErrorOr<JsonValue, Web::WebDriver::Error> Session::maximize_window()
+Web::WebDriver::Response Session::maximize_window()
 {
     // 1. If the remote end does not support the Maximize Window command for the current top-level browsing context for any reason, return error with error code unsupported operation.
 
@@ -407,7 +407,7 @@ ErrorOr<JsonValue, Web::WebDriver::Error> Session::maximize_window()
 }
 
 // 11.8.4 Minimize Window, https://w3c.github.io/webdriver/#minimize-window
-ErrorOr<JsonValue, Web::WebDriver::Error> Session::minimize_window()
+Web::WebDriver::Response Session::minimize_window()
 {
     // 1. If the remote end does not support the Minimize Window command for the current top-level browsing context for any reason, return error with error code unsupported operation.
 
@@ -561,7 +561,7 @@ ErrorOr<Vector<Session::LocalElement>, Web::WebDriver::Error> Session::locator_s
 }
 
 // 12.3.2 Find Element, https://w3c.github.io/webdriver/#dfn-find-element
-ErrorOr<JsonValue, Web::WebDriver::Error> Session::find_element(JsonValue const& payload)
+Web::WebDriver::Response Session::find_element(JsonValue const& payload)
 {
     if (!payload.is_object())
         return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, "Payload is not a JSON object");
@@ -616,7 +616,7 @@ ErrorOr<JsonValue, Web::WebDriver::Error> Session::find_element(JsonValue const&
 }
 
 // 12.3.3 Find Elements, https://w3c.github.io/webdriver/#dfn-find-elements
-ErrorOr<JsonValue, Web::WebDriver::Error> Session::find_elements(JsonValue const& payload)
+Web::WebDriver::Response Session::find_elements(JsonValue const& payload)
 {
     if (!payload.is_object())
         return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, "Payload is not a JSON object");
@@ -666,7 +666,7 @@ ErrorOr<JsonValue, Web::WebDriver::Error> Session::find_elements(JsonValue const
 }
 
 // 12.3.4 Find Element From Element, https://w3c.github.io/webdriver/#dfn-find-element-from-element
-ErrorOr<JsonValue, Web::WebDriver::Error> Session::find_element_from_element(JsonValue const& payload, StringView parameter_element_id)
+Web::WebDriver::Response Session::find_element_from_element(JsonValue const& payload, StringView parameter_element_id)
 {
     if (!payload.is_object())
         return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, "Payload is not a JSON object");
@@ -715,7 +715,7 @@ ErrorOr<JsonValue, Web::WebDriver::Error> Session::find_element_from_element(Jso
 }
 
 // 12.3.5 Find Elements From Element, https://w3c.github.io/webdriver/#dfn-find-elements-from-element
-ErrorOr<JsonValue, Web::WebDriver::Error> Session::find_elements_from_element(JsonValue const& payload, StringView parameter_element_id)
+Web::WebDriver::Response Session::find_elements_from_element(JsonValue const& payload, StringView parameter_element_id)
 {
     if (!payload.is_object())
         return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, "Payload is not a JSON object");
@@ -759,7 +759,7 @@ ErrorOr<JsonValue, Web::WebDriver::Error> Session::find_elements_from_element(Js
 }
 
 // 12.4.1 Is Element Selected, https://w3c.github.io/webdriver/#dfn-is-element-selected
-ErrorOr<JsonValue, Web::WebDriver::Error> Session::is_element_selected(StringView parameter_element_id)
+Web::WebDriver::Response Session::is_element_selected(StringView parameter_element_id)
 {
     // 1. If the current browsing context is no longer open, return error with error code no such window.
     TRY(check_for_open_top_level_browsing_context_or_return_error());
@@ -779,11 +779,11 @@ ErrorOr<JsonValue, Web::WebDriver::Error> Session::is_element_selected(StringVie
     auto selected = m_browser_connection->is_element_selected(element_id);
 
     // 5. Return success with data selected.
-    return selected;
+    return JsonValue { selected };
 }
 
 // 12.4.2 Get Element Attribute, https://w3c.github.io/webdriver/#dfn-get-element-attribute
-ErrorOr<JsonValue, Web::WebDriver::Error> Session::get_element_attribute(JsonValue const&, StringView parameter_element_id, StringView name)
+Web::WebDriver::Response Session::get_element_attribute(JsonValue const&, StringView parameter_element_id, StringView name)
 {
     // 1. If the current browsing context is no longer open, return error with error code no such window.
     TRY(check_for_open_top_level_browsing_context_or_return_error());
@@ -811,7 +811,7 @@ ErrorOr<JsonValue, Web::WebDriver::Error> Session::get_element_attribute(JsonVal
 }
 
 // 12.4.3 Get Element Property, https://w3c.github.io/webdriver/#dfn-get-element-property
-ErrorOr<JsonValue, Web::WebDriver::Error> Session::get_element_property(JsonValue const&, StringView parameter_element_id, StringView name)
+Web::WebDriver::Response Session::get_element_property(JsonValue const&, StringView parameter_element_id, StringView name)
 {
     // 1. If the current browsing context is no longer open, return error with error code no such window.
     TRY(check_for_open_top_level_browsing_context_or_return_error());
@@ -833,7 +833,7 @@ ErrorOr<JsonValue, Web::WebDriver::Error> Session::get_element_property(JsonValu
 }
 
 // 12.4.4 Get Element CSS Value, https://w3c.github.io/webdriver/#dfn-get-element-css-value
-ErrorOr<JsonValue, Web::WebDriver::Error> Session::get_element_css_value(JsonValue const&, StringView parameter_element_id, StringView property_name)
+Web::WebDriver::Response Session::get_element_css_value(JsonValue const&, StringView parameter_element_id, StringView property_name)
 {
     // 1. If the current browsing context is no longer open, return error with error code no such window.
     TRY(check_for_open_top_level_browsing_context_or_return_error());
@@ -859,7 +859,7 @@ ErrorOr<JsonValue, Web::WebDriver::Error> Session::get_element_css_value(JsonVal
 }
 
 // 12.4.5 Get Element Text, https://w3c.github.io/webdriver/#dfn-get-element-text
-ErrorOr<JsonValue, Web::WebDriver::Error> Session::get_element_text(JsonValue const&, StringView parameter_element_id)
+Web::WebDriver::Response Session::get_element_text(JsonValue const&, StringView parameter_element_id)
 {
     // 1. If the current browsing context is no longer open, return error with error code no such window.
     TRY(check_for_open_top_level_browsing_context_or_return_error());
@@ -882,7 +882,7 @@ ErrorOr<JsonValue, Web::WebDriver::Error> Session::get_element_text(JsonValue co
 }
 
 // 12.4.6 Get Element Tag Name, https://w3c.github.io/webdriver/#dfn-get-element-tag-name
-ErrorOr<JsonValue, Web::WebDriver::Error> Session::get_element_tag_name(JsonValue const&, StringView parameter_element_id)
+Web::WebDriver::Response Session::get_element_tag_name(JsonValue const&, StringView parameter_element_id)
 {
     // 1. If the current browsing context is no longer open, return error with error code no such window.
     TRY(check_for_open_top_level_browsing_context_or_return_error());
@@ -900,7 +900,7 @@ ErrorOr<JsonValue, Web::WebDriver::Error> Session::get_element_tag_name(JsonValu
 }
 
 // 12.4.7 Get Element Rect, https://w3c.github.io/webdriver/#dfn-get-element-rect
-ErrorOr<JsonValue, Web::WebDriver::Error> Session::get_element_rect(StringView parameter_element_id)
+Web::WebDriver::Response Session::get_element_rect(StringView parameter_element_id)
 {
     // 1. If the current browsing context is no longer open, return error with error code no such window.
     TRY(check_for_open_top_level_browsing_context_or_return_error());
@@ -930,7 +930,7 @@ ErrorOr<JsonValue, Web::WebDriver::Error> Session::get_element_rect(StringView p
 }
 
 // 12.4.8 Is Element Enabled, https://w3c.github.io/webdriver/#dfn-is-element-enabled
-ErrorOr<JsonValue, Web::WebDriver::Error> Session::is_element_enabled(StringView parameter_element_id)
+Web::WebDriver::Response Session::is_element_enabled(StringView parameter_element_id)
 {
     // 1. If the current browsing context is no longer open, return error with error code no such window.
     TRY(check_for_open_top_level_browsing_context_or_return_error());
@@ -946,11 +946,11 @@ ErrorOr<JsonValue, Web::WebDriver::Error> Session::is_element_enabled(StringView
     auto enabled = m_browser_connection->is_element_enabled(element_id);
 
     // 7. Return success with data enabled.
-    return enabled;
+    return JsonValue { enabled };
 }
 
 // 13.1 Get Page Source, https://w3c.github.io/webdriver/#dfn-get-page-source
-ErrorOr<JsonValue, Web::WebDriver::Error> Session::get_source()
+Web::WebDriver::Response Session::get_source()
 {
     // 1. If the current browsing context is no longer open, return error with error code no such window.
     TRY(check_for_open_top_level_browsing_context_or_return_error());
@@ -963,7 +963,7 @@ ErrorOr<JsonValue, Web::WebDriver::Error> Session::get_source()
     auto source = m_browser_connection->serialize_source();
 
     // 5. Return success with data source.
-    return source;
+    return JsonValue { source };
 }
 
 struct ScriptArguments {
@@ -999,7 +999,7 @@ static ErrorOr<ScriptArguments, Web::WebDriver::Error> extract_the_script_argume
 }
 
 // 13.2.1 Execute Script, https://w3c.github.io/webdriver/#dfn-execute-script
-ErrorOr<JsonValue, Web::WebDriver::Error> Session::execute_script(JsonValue const& payload)
+Web::WebDriver::Response Session::execute_script(JsonValue const& payload)
 {
     // 1. Let body and arguments be the result of trying to extract the script arguments from a request with argument parameters.
     auto const& [body, arguments] = TRY(extract_the_script_arguments_from_a_request(payload));
@@ -1040,7 +1040,7 @@ ErrorOr<JsonValue, Web::WebDriver::Error> Session::execute_script(JsonValue cons
 }
 
 // 13.2.2 Execute Async Script, https://w3c.github.io/webdriver/#dfn-execute-async-script
-ErrorOr<JsonValue, Web::WebDriver::Error> Session::execute_async_script(JsonValue const& parameters)
+Web::WebDriver::Response Session::execute_async_script(JsonValue const& parameters)
 {
     // 1. Let body and arguments by the result of trying to extract the script arguments from a request with argument parameters.
     auto [body, arguments] = TRY(extract_the_script_arguments_from_a_request(parameters));
@@ -1096,7 +1096,7 @@ static JsonObject serialize_cookie(Web::Cookie::Cookie const& cookie)
 }
 
 // 14.1 Get All Cookies, https://w3c.github.io/webdriver/#dfn-get-all-cookies
-ErrorOr<JsonValue, Web::WebDriver::Error> Session::get_all_cookies()
+Web::WebDriver::Response Session::get_all_cookies()
 {
     // 1. If the current browsing context is no longer open, return error with error code no such window.
     TRY(check_for_open_top_level_browsing_context_or_return_error());
@@ -1120,7 +1120,7 @@ ErrorOr<JsonValue, Web::WebDriver::Error> Session::get_all_cookies()
 }
 
 // 14.2 Get Named Cookie, https://w3c.github.io/webdriver/#dfn-get-named-cookie
-ErrorOr<JsonValue, Web::WebDriver::Error> Session::get_named_cookie(String const& name)
+Web::WebDriver::Response Session::get_named_cookie(String const& name)
 {
     // 1. If the current browsing context is no longer open, return error with error code no such window.
     TRY(check_for_open_top_level_browsing_context_or_return_error());
@@ -1141,7 +1141,7 @@ ErrorOr<JsonValue, Web::WebDriver::Error> Session::get_named_cookie(String const
 }
 
 // 14.3 Add Cookie, https://w3c.github.io/webdriver/#dfn-adding-a-cookie
-ErrorOr<JsonValue, Web::WebDriver::Error> Session::add_cookie(JsonValue const& payload)
+Web::WebDriver::Response Session::add_cookie(JsonValue const& payload)
 {
     // 1. Let data be the result of getting a property named cookie from the parameters argument.
     if (!payload.is_object() || !payload.as_object().has_object("cookie"sv))
@@ -1277,7 +1277,7 @@ void Session::delete_cookies(Optional<StringView> const& name)
 }
 
 // 14.4 Delete Cookie, https://w3c.github.io/webdriver/#dfn-delete-cookie
-ErrorOr<JsonValue, Web::WebDriver::Error> Session::delete_cookie(StringView name)
+Web::WebDriver::Response Session::delete_cookie(StringView name)
 {
     // 1. If the current browsing context is no longer open, return error with error code no such window.
     TRY(check_for_open_top_level_browsing_context_or_return_error());
@@ -1292,7 +1292,7 @@ ErrorOr<JsonValue, Web::WebDriver::Error> Session::delete_cookie(StringView name
 }
 
 // 14.5 Delete All Cookies, https://w3c.github.io/webdriver/#dfn-delete-all-cookies
-ErrorOr<JsonValue, Web::WebDriver::Error> Session::delete_all_cookies()
+Web::WebDriver::Response Session::delete_all_cookies()
 {
     // 1. If the current browsing context is no longer open, return error with error code no such window.
     TRY(check_for_open_top_level_browsing_context_or_return_error());
@@ -1333,7 +1333,7 @@ static ErrorOr<String, Web::WebDriver::Error> encode_bitmap_as_canvas_element(Gf
 }
 
 // 17.1 Take Screenshot, https://w3c.github.io/webdriver/#take-screenshot
-ErrorOr<JsonValue, Web::WebDriver::Error> Session::take_screenshot()
+Web::WebDriver::Response Session::take_screenshot()
 {
     // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
     TRY(check_for_open_top_level_browsing_context_or_return_error());
@@ -1351,11 +1351,11 @@ ErrorOr<JsonValue, Web::WebDriver::Error> Session::take_screenshot()
     auto encoded_string = TRY(encode_bitmap_as_canvas_element(*screenshot.bitmap()));
 
     // 3. Return success with data encoded string.
-    return encoded_string;
+    return JsonValue { encoded_string };
 }
 
 // 17.2 Take Element Screenshot, https://w3c.github.io/webdriver/#dfn-take-element-screenshot
-ErrorOr<JsonValue, Web::WebDriver::Error> Session::take_element_screenshot(StringView parameter_element_id)
+Web::WebDriver::Response Session::take_element_screenshot(StringView parameter_element_id)
 {
     // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
     TRY(check_for_open_top_level_browsing_context_or_return_error());
@@ -1381,7 +1381,7 @@ ErrorOr<JsonValue, Web::WebDriver::Error> Session::take_element_screenshot(Strin
     auto encoded_string = TRY(encode_bitmap_as_canvas_element(*screenshot.bitmap()));
 
     // 6. Return success with data encoded string.
-    return encoded_string;
+    return JsonValue { encoded_string };
 }
 
 }

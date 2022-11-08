@@ -12,6 +12,7 @@
 #include <AK/JsonValue.h>
 #include <AK/RefPtr.h>
 #include <LibWeb/WebDriver/Error.h>
+#include <LibWeb/WebDriver/Response.h>
 #include <WebDriver/BrowserConnection.h>
 #include <WebDriver/TimeoutsConfiguration.h>
 #include <unistd.h>
@@ -41,42 +42,42 @@ public:
     ErrorOr<void> start();
     ErrorOr<void> stop();
     JsonObject get_timeouts();
-    ErrorOr<JsonValue, Web::WebDriver::Error> set_timeouts(JsonValue const& payload);
-    ErrorOr<JsonValue, Web::WebDriver::Error> navigate_to(JsonValue const& url);
-    ErrorOr<JsonValue, Web::WebDriver::Error> get_current_url();
-    ErrorOr<JsonValue, Web::WebDriver::Error> back();
-    ErrorOr<JsonValue, Web::WebDriver::Error> forward();
-    ErrorOr<JsonValue, Web::WebDriver::Error> refresh();
-    ErrorOr<JsonValue, Web::WebDriver::Error> get_title();
-    ErrorOr<JsonValue, Web::WebDriver::Error> get_window_handle();
+    Web::WebDriver::Response set_timeouts(JsonValue const& payload);
+    Web::WebDriver::Response navigate_to(JsonValue const& url);
+    Web::WebDriver::Response get_current_url();
+    Web::WebDriver::Response back();
+    Web::WebDriver::Response forward();
+    Web::WebDriver::Response refresh();
+    Web::WebDriver::Response get_title();
+    Web::WebDriver::Response get_window_handle();
     ErrorOr<void, Variant<Web::WebDriver::Error, Error>> close_window();
-    ErrorOr<JsonValue, Web::WebDriver::Error> get_window_handles() const;
-    ErrorOr<JsonValue, Web::WebDriver::Error> get_window_rect();
-    ErrorOr<JsonValue, Web::WebDriver::Error> set_window_rect(JsonValue const& payload);
-    ErrorOr<JsonValue, Web::WebDriver::Error> maximize_window();
-    ErrorOr<JsonValue, Web::WebDriver::Error> minimize_window();
-    ErrorOr<JsonValue, Web::WebDriver::Error> find_element(JsonValue const& payload);
-    ErrorOr<JsonValue, Web::WebDriver::Error> find_elements(JsonValue const& payload);
-    ErrorOr<JsonValue, Web::WebDriver::Error> find_element_from_element(JsonValue const& payload, StringView parameter_element_id);
-    ErrorOr<JsonValue, Web::WebDriver::Error> find_elements_from_element(JsonValue const& payload, StringView parameter_element_id);
-    ErrorOr<JsonValue, Web::WebDriver::Error> is_element_selected(StringView element_id);
-    ErrorOr<JsonValue, Web::WebDriver::Error> get_element_attribute(JsonValue const& payload, StringView element_id, StringView name);
-    ErrorOr<JsonValue, Web::WebDriver::Error> get_element_property(JsonValue const& payload, StringView element_id, StringView name);
-    ErrorOr<JsonValue, Web::WebDriver::Error> get_element_css_value(JsonValue const& payload, StringView element_id, StringView property_name);
-    ErrorOr<JsonValue, Web::WebDriver::Error> get_element_text(JsonValue const& payload, StringView element_id);
-    ErrorOr<JsonValue, Web::WebDriver::Error> get_element_tag_name(JsonValue const& payload, StringView element_id);
-    ErrorOr<JsonValue, Web::WebDriver::Error> get_element_rect(StringView element_id);
-    ErrorOr<JsonValue, Web::WebDriver::Error> is_element_enabled(StringView element_id);
-    ErrorOr<JsonValue, Web::WebDriver::Error> get_source();
-    ErrorOr<JsonValue, Web::WebDriver::Error> execute_script(JsonValue const& payload);
-    ErrorOr<JsonValue, Web::WebDriver::Error> execute_async_script(JsonValue const& payload);
-    ErrorOr<JsonValue, Web::WebDriver::Error> get_all_cookies();
-    ErrorOr<JsonValue, Web::WebDriver::Error> get_named_cookie(String const& name);
-    ErrorOr<JsonValue, Web::WebDriver::Error> add_cookie(JsonValue const& payload);
-    ErrorOr<JsonValue, Web::WebDriver::Error> delete_cookie(StringView name);
-    ErrorOr<JsonValue, Web::WebDriver::Error> delete_all_cookies();
-    ErrorOr<JsonValue, Web::WebDriver::Error> take_screenshot();
-    ErrorOr<JsonValue, Web::WebDriver::Error> take_element_screenshot(StringView element_id);
+    Web::WebDriver::Response get_window_handles() const;
+    Web::WebDriver::Response get_window_rect();
+    Web::WebDriver::Response set_window_rect(JsonValue const& payload);
+    Web::WebDriver::Response maximize_window();
+    Web::WebDriver::Response minimize_window();
+    Web::WebDriver::Response find_element(JsonValue const& payload);
+    Web::WebDriver::Response find_elements(JsonValue const& payload);
+    Web::WebDriver::Response find_element_from_element(JsonValue const& payload, StringView parameter_element_id);
+    Web::WebDriver::Response find_elements_from_element(JsonValue const& payload, StringView parameter_element_id);
+    Web::WebDriver::Response is_element_selected(StringView element_id);
+    Web::WebDriver::Response get_element_attribute(JsonValue const& payload, StringView element_id, StringView name);
+    Web::WebDriver::Response get_element_property(JsonValue const& payload, StringView element_id, StringView name);
+    Web::WebDriver::Response get_element_css_value(JsonValue const& payload, StringView element_id, StringView property_name);
+    Web::WebDriver::Response get_element_text(JsonValue const& payload, StringView element_id);
+    Web::WebDriver::Response get_element_tag_name(JsonValue const& payload, StringView element_id);
+    Web::WebDriver::Response get_element_rect(StringView element_id);
+    Web::WebDriver::Response is_element_enabled(StringView element_id);
+    Web::WebDriver::Response get_source();
+    Web::WebDriver::Response execute_script(JsonValue const& payload);
+    Web::WebDriver::Response execute_async_script(JsonValue const& payload);
+    Web::WebDriver::Response get_all_cookies();
+    Web::WebDriver::Response get_named_cookie(String const& name);
+    Web::WebDriver::Response add_cookie(JsonValue const& payload);
+    Web::WebDriver::Response delete_cookie(StringView name);
+    Web::WebDriver::Response delete_all_cookies();
+    Web::WebDriver::Response take_screenshot();
+    Web::WebDriver::Response take_element_screenshot(StringView element_id);
 
 private:
     void delete_cookies(Optional<StringView> const& name = {});
