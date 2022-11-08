@@ -947,7 +947,7 @@ void StyleComputer::compute_defaulted_values(StyleProperties& style, DOM::Elemen
     }
 }
 
-float StyleComputer::root_element_font_size() const
+CSSPixels StyleComputer::root_element_font_size() const
 {
     constexpr float default_root_element_font_size = 16;
 
@@ -1048,7 +1048,7 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
         font_size_in_px *= multiplier;
 
     } else {
-        float root_font_size = root_element_font_size();
+        auto root_font_size = root_element_font_size();
 
         Gfx::FontPixelMetrics font_metrics;
         if (parent_element && parent_element->computed_css_values())
@@ -1056,7 +1056,7 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
         else
             font_metrics = Platform::FontPlugin::the().default_font().pixel_metrics();
 
-        auto parent_font_size = [&]() -> float {
+        auto parent_font_size = [&]() -> CSSPixels {
             if (!parent_element || !parent_element->computed_css_values())
                 return font_size_in_px;
             auto value = parent_element->computed_css_values()->property(CSS::PropertyID::FontSize);
@@ -1083,7 +1083,7 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
             // FIXME: Support font-size: calc(...)
             //        Theoretically we can do this now, but to resolve it we need a layout_node which we might not have. :^(
             if (!maybe_length->is_calculated()) {
-                auto px = maybe_length.value().to_px(viewport_rect(), font_metrics, parent_font_size(), root_font_size);
+                auto px = maybe_length.value().to_px(viewport_rect(), font_metrics, parent_font_size(), root_font_size).value();
                 if (px != 0)
                     font_size_in_px = px;
             }
@@ -1207,14 +1207,14 @@ Gfx::Font const& StyleComputer::initial_font() const
 void StyleComputer::absolutize_values(StyleProperties& style, DOM::Element const*, Optional<CSS::Selector::PseudoElement>) const
 {
     auto font_metrics = style.computed_font().pixel_metrics();
-    float root_font_size = root_element_font_size();
-    float font_size = style.property(CSS::PropertyID::FontSize)->to_length().to_px(viewport_rect(), font_metrics, root_font_size, root_font_size);
+    auto root_font_size = root_element_font_size();
+    auto font_size = style.property(CSS::PropertyID::FontSize)->to_length().to_px(viewport_rect(), font_metrics, root_font_size, root_font_size);
 
     for (size_t i = 0; i < style.m_property_values.size(); ++i) {
         auto& value_slot = style.m_property_values[i];
         if (!value_slot)
             continue;
-        value_slot = value_slot->absolutized(viewport_rect(), font_metrics, font_size, root_font_size);
+        value_slot = value_slot->absolutized(viewport_rect(), font_metrics, font_size.value(), root_font_size.value());
     }
 }
 

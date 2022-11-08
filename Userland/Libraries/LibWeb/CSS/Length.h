@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021-2022, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -80,9 +81,9 @@ public:
     float raw_value() const { return m_value; }
     NonnullRefPtr<CalculatedStyleValue> calculated_style_value() const;
 
-    float to_px(Layout::Node const&) const;
+    CSSPixels to_px(Layout::Node const&) const;
 
-    ALWAYS_INLINE float to_px(Gfx::IntRect const& viewport_rect, Gfx::FontPixelMetrics const& font_metrics, float font_size, float root_font_size) const
+    ALWAYS_INLINE CSSPixels to_px(Gfx::IntRect const& viewport_rect, Gfx::FontPixelMetrics const& font_metrics, CSSPixels font_size, CSSPixels root_font_size) const
     {
         if (is_auto())
             return 0;
@@ -93,7 +94,7 @@ public:
         return absolute_length_to_px();
     }
 
-    ALWAYS_INLINE float absolute_length_to_px() const
+    ALWAYS_INLINE CSSPixels absolute_length_to_px() const
     {
         constexpr float inch_pixels = 96.0f;
         constexpr float centimeter_pixels = (inch_pixels / 2.54f);
@@ -123,7 +124,7 @@ public:
     // this file already. To break the cyclic dependency, we must move all method definitions out.
     bool operator==(Length const& other) const;
 
-    float relative_length_to_px(Gfx::IntRect const& viewport_rect, Gfx::FontPixelMetrics const& font_metrics, float font_size, float root_font_size) const;
+    CSSPixels relative_length_to_px(Gfx::IntRect const& viewport_rect, Gfx::FontPixelMetrics const& font_metrics, CSSPixels font_size, CSSPixels root_font_size) const;
 
 private:
     char const* unit_name() const;

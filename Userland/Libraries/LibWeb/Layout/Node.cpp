@@ -236,7 +236,7 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
     //       m_font is used by Length::to_px() when resolving sizes against this layout node.
     //       That's why it has to be set before everything else.
     m_font = computed_style.computed_font();
-    computed_values.set_font_size(computed_style.property(CSS::PropertyID::FontSize)->to_length().to_px(*this));
+    computed_values.set_font_size(computed_style.property(CSS::PropertyID::FontSize)->to_length().to_px(*this).value());
     computed_values.set_font_weight(computed_style.property(CSS::PropertyID::FontWeight)->to_integer());
     m_line_height = computed_style.line_height(*this);
 
@@ -555,9 +555,9 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
             auto resolve_border_width = [&]() {
                 auto value = computed_style.property(width_property);
                 if (value->is_calculated())
-                    return CSS::Length::make_calculated(value->as_calculated()).to_px(*this);
+                    return CSS::Length::make_calculated(value->as_calculated()).to_px(*this).value();
                 if (value->has_length())
-                    return value->to_length().to_px(*this);
+                    return value->to_length().to_px(*this).value();
                 if (value->is_identifier()) {
                     // FIXME: These values should depend on something, e.g. a font size.
                     switch (value->to_identifier()) {

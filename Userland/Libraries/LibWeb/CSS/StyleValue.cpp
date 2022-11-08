@@ -893,10 +893,10 @@ Gfx::FloatRect EdgeRect::resolved(Layout::Node const& layout_node, Gfx::FloatRec
     // widths for <bottom>, and the same as the used value of the width plus the sum of the
     // horizontal padding and border widths for <right>, such that four 'auto' values result in the
     // clipping region being the same as the element's border box).
-    auto left = border_box.left() + (left_edge.is_auto() ? 0 : left_edge.to_px(layout_node));
-    auto top = border_box.top() + (top_edge.is_auto() ? 0 : top_edge.to_px(layout_node));
-    auto right = border_box.left() + (right_edge.is_auto() ? border_box.width() : right_edge.to_px(layout_node));
-    auto bottom = border_box.top() + (bottom_edge.is_auto() ? border_box.height() : bottom_edge.to_px(layout_node));
+    auto left = border_box.left() + (left_edge.is_auto() ? 0 : left_edge.to_px(layout_node)).value();
+    auto top = border_box.top() + (top_edge.is_auto() ? 0 : top_edge.to_px(layout_node)).value();
+    auto right = border_box.left() + (right_edge.is_auto() ? border_box.width() : right_edge.to_px(layout_node)).value();
+    auto bottom = border_box.top() + (bottom_edge.is_auto() ? border_box.height() : bottom_edge.to_px(layout_node)).value();
     return Gfx::FloatRect {
         left,
         top,
@@ -1187,7 +1187,7 @@ float Filter::Blur::resolved_radius(Layout::Node const& node) const
     // Default value when omitted is 0px.
     auto sigma = 0;
     if (radius.has_value())
-        sigma = radius->resolved(node).to_px(node);
+        sigma = radius->resolved(node).to_px(node).value();
     // Note: The radius/sigma of the blur needs to be doubled for LibGfx's blur functions.
     return sigma * 2;
 }
@@ -1197,9 +1197,9 @@ Filter::DropShadow::Resolved Filter::DropShadow::resolved(Layout::Node const& no
     // The default value for omitted values is missing length values set to 0
     // and the missing used color is taken from the color property.
     return Resolved {
-        offset_x.resolved(node).to_px(node),
-        offset_y.resolved(node).to_px(node),
-        radius.has_value() ? radius->resolved(node).to_px(node) : 0.0f,
+        offset_x.resolved(node).to_px(node).value(),
+        offset_y.resolved(node).to_px(node).value(),
+        radius.has_value() ? radius->resolved(node).to_px(node).value() : 0.0f,
         color.has_value() ? *color : node.computed_values().color()
     };
 }

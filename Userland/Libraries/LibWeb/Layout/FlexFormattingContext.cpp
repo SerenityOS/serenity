@@ -42,10 +42,10 @@ CSSPixels FlexFormattingContext::get_pixel_width(Box const& box, Optional<CSS::S
     if (!size.has_value())
         return 0;
     auto inner_width = CSS::Length::make_px(containing_block_width_for(box));
-    float border_left = box.computed_values().border_left().width;
-    float border_right = box.computed_values().border_right().width;
-    float padding_left = box.computed_values().padding().left().resolved(box, inner_width).to_px(box);
-    float padding_right = box.computed_values().padding().right().resolved(box, inner_width).to_px(box);
+    auto border_left = box.computed_values().border_left().width;
+    auto border_right = box.computed_values().border_right().width;
+    auto padding_left = box.computed_values().padding().left().resolved(box, inner_width).to_px(box);
+    auto padding_right = box.computed_values().padding().right().resolved(box, inner_width).to_px(box);
     if (box.computed_values().box_sizing() == CSS::BoxSizing::BorderBox) {
         return size->resolved(box, inner_width).to_px(box) - border_left - border_right - padding_left - padding_right;
     }
@@ -58,10 +58,10 @@ CSSPixels FlexFormattingContext::get_pixel_height(Box const& box, Optional<CSS::
     if (!length_percentage.has_value())
         return 0;
     auto inner_height = CSS::Length::make_px(containing_block_height_for(box));
-    float border_top = box.computed_values().border_top().width;
-    float border_bottom = box.computed_values().border_bottom().width;
-    float padding_top = box.computed_values().padding().top().resolved(box, inner_height).to_px(box);
-    float padding_bottom = box.computed_values().padding().bottom().resolved(box, inner_height).to_px(box);
+    auto border_top = box.computed_values().border_top().width;
+    auto border_bottom = box.computed_values().border_bottom().width;
+    auto padding_top = box.computed_values().padding().top().resolved(box, inner_height).to_px(box);
+    auto padding_bottom = box.computed_values().padding().bottom().resolved(box, inner_height).to_px(box);
     if (box.computed_values().box_sizing() == CSS::BoxSizing::BorderBox) {
         return length_percentage->resolved(box, inner_height).to_px(box) - border_top - border_bottom - padding_top - padding_bottom;
     }

@@ -66,7 +66,7 @@ static ColorStopData resolve_color_stop_positions(auto const& color_stop_list, a
     //    or transition hint before it.
     auto max_previous_color_stop_or_hint = resolved_color_stops[0].position;
     auto resolve_stop_position = [&](auto& position) {
-        float value = resolve_position_to_float(position);
+        float value = static_cast<float>(resolve_position_to_float(position));
         value = max(value, max_previous_color_stop_or_hint);
         max_previous_color_stop_or_hint = value;
         return value;

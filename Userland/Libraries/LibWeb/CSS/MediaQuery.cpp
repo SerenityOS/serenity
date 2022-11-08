@@ -156,8 +156,8 @@ bool MediaFeature::compare(HTML::Window const& window, MediaFeatureValue left, C
     }
 
     if (left.is_length()) {
-        float left_px;
-        float right_px;
+        CSSPixels left_px;
+        CSSPixels right_px;
         // Save ourselves some work if neither side is a relative length.
         if (left.length().is_absolute() && right.length().is_absolute()) {
             left_px = left.length().absolute_length_to_px();

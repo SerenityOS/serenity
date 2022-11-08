@@ -121,7 +121,7 @@ void TableFormattingContext::compute_table_measures()
         auto min_content_width = calculate_min_content_width(cell.box);
         auto max_content_width = calculate_max_content_width(cell.box);
 
-        CSSPixels min_width = min_content_width.value();
+        CSSPixels min_width = min_content_width;
         if (!computed_values.min_width().is_auto())
             min_width = max(min_width, computed_values.min_width().resolved(cell.box, width_of_containing_block_as_length).to_px(cell.box));
 
