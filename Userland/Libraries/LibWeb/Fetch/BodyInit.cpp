@@ -113,7 +113,7 @@ WebIDL::ExceptionOr<Infrastructure::BodyWithType> extract_body(JS::Realm& realm,
         }));
 
     // FIXME: 11. If source is a byte sequence, then set action to a step that returns source and length to source’s length.
-    // FIXME: 12. If action is non-null, then run these steps in in parallel:
+    // FIXME: 12. If action is non-null, then run these steps in parallel:
 
     // 13. Let body be a body whose stream is stream, source is source, and length is length.
     auto body = Infrastructure::Body { JS::make_handle(*stream), move(source), move(length) };
