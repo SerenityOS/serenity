@@ -1,6 +1,7 @@
 #include <LibWeb/WebDriver/Response.h>
 
 endpoint WebDriverClient {
+    close_session() => ()
     set_is_webdriver_active(bool active) =|
     navigate_to(JsonValue payload) => (Web::WebDriver::Response response)
     get_current_url() => (Web::WebDriver::Response response)

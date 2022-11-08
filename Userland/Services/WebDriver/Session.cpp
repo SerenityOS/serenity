@@ -136,10 +136,23 @@ ErrorOr<void> Session::start()
     return {};
 }
 
-ErrorOr<void> Session::stop()
+// https://w3c.github.io/webdriver/#dfn-close-the-session
+Web::WebDriver::Response Session::stop()
 {
+    // 1. Perform the following substeps based on the remote end’s type:
+    // NOTE: We perform the "Remote end is an endpoint node" steps in the WebContent process.
+    m_web_content_connection->close_session();
+    m_web_content_connection = nullptr;
+
+    // 2. Remove the current session from active sessions.
+    // NOTE: Handled by WebDriver::Client.
+
+    // 3. Perform any implementation-specific cleanup steps.
     m_browser_connection->async_quit();
-    return {};
+    m_started = false;
+
+    // 4. If an error has occurred in any of the steps above, return the error, otherwise return success with data null.
+    return JsonValue {};
 }
 
 // 9.1 Get Timeouts, https://w3c.github.io/webdriver/#dfn-get-timeouts

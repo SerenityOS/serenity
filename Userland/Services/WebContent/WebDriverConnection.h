@@ -28,6 +28,8 @@ private:
     WebDriverConnection(NonnullOwnPtr<Core::Stream::LocalSocket> socket, PageHost& page_host);
 
     virtual void die() override { }
+
+    virtual void close_session() override;
     virtual void set_is_webdriver_active(bool) override;
     virtual Messages::WebDriverClient::NavigateToResponse navigate_to(JsonValue const& payload) override;
     virtual Messages::WebDriverClient::GetCurrentUrlResponse get_current_url() override;
