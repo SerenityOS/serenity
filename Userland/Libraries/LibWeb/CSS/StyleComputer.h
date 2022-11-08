@@ -94,7 +94,7 @@ private:
     void for_each_stylesheet(CascadeOrigin, Callback) const;
 
     Gfx::IntRect viewport_rect() const;
-    float root_element_font_size() const;
+    CSSPixels root_element_font_size() const;
 
     struct MatchingRuleSet {
         Vector<MatchingRule> user_agent_rules;

@@ -68,8 +68,8 @@ Optional<float> SVGGraphicsElement::stroke_width() const
     if (auto width = layout_node()->computed_values().stroke_width(); width.has_value()) {
         // Resolved relative to the "Scaled viewport size": https://www.w3.org/TR/2017/WD-fill-stroke-3-20170413/#scaled-viewport-size
         // FIXME: This isn't right, but it's something.
-        float viewport_width = 0;
-        float viewport_height = 0;
+        CSSPixels viewport_width = 0;
+        CSSPixels viewport_height = 0;
         if (auto* svg_svg_element = first_ancestor_of_type<SVGSVGElement>()) {
             if (auto* svg_svg_layout_node = svg_svg_element->layout_node()) {
                 viewport_width = svg_svg_layout_node->computed_values().width().resolved(*svg_svg_layout_node, CSS::Length::make_px(0)).to_px(*svg_svg_layout_node);
@@ -77,7 +77,7 @@ Optional<float> SVGGraphicsElement::stroke_width() const
             }
         }
         auto scaled_viewport_size = CSS::Length::make_px((viewport_width + viewport_height) * 0.5f);
-        return width->resolved(*layout_node(), scaled_viewport_size).to_px(*layout_node());
+        return width->resolved(*layout_node(), scaled_viewport_size).to_px(*layout_node()).value();
     }
     return {};
 }

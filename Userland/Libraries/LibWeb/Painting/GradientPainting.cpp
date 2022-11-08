@@ -139,7 +139,7 @@ LinearGradientData resolve_linear_gradient_data(Layout::Node const& node, CSSPix
 
     auto resolved_color_stops = resolve_color_stop_positions(
         linear_gradient.color_stop_list(), [&](auto const& length_percentage) {
-            return length_percentage.resolved(node, gradient_length).to_px(node) / gradient_length_px.value();
+            return length_percentage.resolved(node, gradient_length).to_px(node).value() / gradient_length_px.value();
         },
         linear_gradient.is_repeating());
 
