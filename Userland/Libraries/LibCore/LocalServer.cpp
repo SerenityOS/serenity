@@ -54,7 +54,9 @@ void LocalServer::setup_notifier()
         if (on_accept) {
             auto maybe_client_socket = accept();
             if (maybe_client_socket.is_error()) {
-                dbgln("LocalServer::on_ready_to_read: Error accepting a connection: {} (FIXME: should propagate!)", maybe_client_socket.error());
+                dbgln("LocalServer::on_ready_to_read: Error accepting a connection: {}", maybe_client_socket.error());
+                if (on_accept_error)
+                    on_accept_error(maybe_client_socket.release_error());
                 return;
             }
 

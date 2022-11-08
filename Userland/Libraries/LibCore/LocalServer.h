@@ -24,6 +24,7 @@ public:
     ErrorOr<NonnullOwnPtr<Stream::LocalSocket>> accept();
 
     Function<void(NonnullOwnPtr<Stream::LocalSocket>)> on_accept;
+    Function<void(Error)> on_accept_error;
 
 private:
     explicit LocalServer(Object* parent = nullptr);
