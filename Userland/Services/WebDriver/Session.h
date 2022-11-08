@@ -51,7 +51,6 @@ public:
     ErrorOr<void> stop();
     JsonObject get_timeouts();
     Web::WebDriver::Response set_timeouts(JsonValue const& payload);
-    Web::WebDriver::Response get_current_url();
     Web::WebDriver::Response back();
     Web::WebDriver::Response forward();
     Web::WebDriver::Response refresh();

@@ -491,8 +491,7 @@ Web::WebDriver::Response Client::handle_get_current_url(Vector<StringView> const
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session_id>/url");
     auto* session = TRY(find_session_with_id(parameters[0]));
-    auto result = TRY(session->get_current_url());
-    return make_json_value(result);
+    return session->web_content_connection().get_current_url();
 }
 
 // 10.3 Back, https://w3c.github.io/webdriver/#dfn-back

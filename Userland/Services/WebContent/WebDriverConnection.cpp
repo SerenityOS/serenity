@@ -11,6 +11,7 @@
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
 #include <AK/Vector.h>
+#include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/Page/Page.h>
 #include <LibWeb/Platform/Timer.h>
@@ -84,6 +85,23 @@ Messages::WebDriverClient::NavigateToResponse WebDriverConnection::navigate_to(J
 
     // 11. Return success with data null.
     return { make_success_response({}) };
+}
+
+// 10.2 Get Current URL, https://w3c.github.io/webdriver/#get-current-url
+Messages::WebDriverClient::GetCurrentUrlResponse WebDriverConnection::get_current_url()
+{
+    dbgln_if(WEBDRIVER_DEBUG, "WebDriverConnection::get_current_url");
+
+    // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
+    DRIVER_TRY(ensure_open_top_level_browsing_context());
+
+    // FIXME: 2. Handle any user prompts and return its value if it is an error.
+
+    // 3. Let url be the serialization of the current top-level browsing context’s active document’s document URL.
+    auto url = m_page_host.page().top_level_browsing_context().active_document()->url().to_string();
+
+    // 4. Return success with data url.
+    return { make_success_response(url) };
 }
 
 // https://w3c.github.io/webdriver/#dfn-no-longer-open

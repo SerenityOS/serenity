@@ -30,6 +30,7 @@ private:
     virtual void die() override { }
     virtual void set_is_webdriver_active(bool) override;
     virtual Messages::WebDriverClient::NavigateToResponse navigate_to(JsonValue const& payload) override;
+    virtual Messages::WebDriverClient::GetCurrentUrlResponse get_current_url() override;
 
     ErrorOr<void, Web::WebDriver::Error> ensure_open_top_level_browsing_context();
 
