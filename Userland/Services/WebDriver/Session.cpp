@@ -165,21 +165,6 @@ Web::WebDriver::Response Session::set_timeouts(JsonValue const& payload)
     return JsonValue {};
 }
 
-// 10.2 Get Current URL, https://w3c.github.io/webdriver/#dfn-get-current-url
-Web::WebDriver::Response Session::get_current_url()
-{
-    // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
-    TRY(check_for_open_top_level_browsing_context_or_return_error());
-
-    // FIXME: 2. Handle any user prompts and return its value if it is an error.
-
-    // 3. Let url be the serialization of the current top-level browsing context’s active document’s document URL.
-    auto url = m_browser_connection->get_url().to_string();
-
-    // 4. Return success with data url.
-    return JsonValue(url);
-}
-
 // 10.3 Back, https://w3c.github.io/webdriver/#dfn-back
 Web::WebDriver::Response Session::back()
 {
