@@ -216,7 +216,22 @@ bool PlaybackManager::decode_and_queue_one_sample()
 
     auto& cicp = decoded_frame->cicp();
     cicp.adopt_specified_values(frame_sample->container_cicp());
-    cicp.default_code_points_if_unspecified({ Video::ColorPrimaries::BT709, Video::TransferCharacteristics::BT709, Video::MatrixCoefficients::BT709, Video::ColorRange::Studio });
+    cicp.default_code_points_if_unspecified({ ColorPrimaries::BT709, TransferCharacteristics::BT709, MatrixCoefficients::BT709, ColorRange::Studio });
+
+    // BT.601, BT.709 and BT.2020 have a similar transfer function to sRGB, so other applications
+    // (Chromium, VLC) forgo transfer characteristics conversion. We will emulate that behavior by
+    // handling those as sRGB instead, which causes no transfer function change in the output,
+    // unless display color management is later implemented.
+    switch (cicp.transfer_characteristics()) {
+    case TransferCharacteristics::BT601:
+    case TransferCharacteristics::BT709:
+    case TransferCharacteristics::BT2020BitDepth10:
+    case TransferCharacteristics::BT2020BitDepth12:
+        cicp.set_transfer_characteristics(TransferCharacteristics::SRGB);
+        break;
+    default:
+        break;
+    }
 
     auto bitmap = TRY_OR_POST_ERROR_AND_RETURN(decoded_frame->to_bitmap(), false);
     m_frame_queue->enqueue(FrameQueueItem { bitmap, frame_sample->timestamp() });
