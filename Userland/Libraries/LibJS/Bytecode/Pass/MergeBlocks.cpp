@@ -30,6 +30,9 @@ void MergeBlocks::perform(PassPipelineExecutable& executable)
         if (executable.exported_blocks->contains(*entry.value.begin()))
             continue;
 
+        if (entry.key->terminator()->type() != Instruction::Type::Jump)
+            continue;
+
         {
             InstructionStreamIterator it { entry.key->instruction_stream() };
             auto& first_instruction = *it;
@@ -95,6 +98,7 @@ void MergeBlocks::perform(PassPipelineExecutable& executable)
         auto it = blocks_to_merge.begin();
         auto const* current_block = *it;
         blocks_to_merge.remove(it);
+
         Vector<BasicBlock const*> successors { current_block };
         for (;;) {
             auto const* last = successors.last();
