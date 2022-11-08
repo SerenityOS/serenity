@@ -87,14 +87,28 @@ void WebSocket::send(Message const& message)
 
 void WebSocket::close(u16 code, String const& message)
 {
-    // Calling close on a socket that is not opened is not allowed
-    VERIFY(m_state == WebSocket::InternalState::Open);
     VERIFY(m_impl);
-    auto message_bytes = message.bytes();
-    auto close_payload = ByteBuffer::create_uninitialized(message_bytes.size() + 2).release_value_but_fixme_should_propagate_errors(); // FIXME: Handle possible OOM situation.
-    close_payload.overwrite(0, (u8*)&code, 2);
-    close_payload.overwrite(2, message_bytes.data(), message_bytes.size());
-    send_frame(WebSocket::OpCode::ConnectionClose, close_payload, true);
+
+    switch (m_state) {
+    case InternalState::NotStarted:
+    case InternalState::EstablishingProtocolConnection:
+    case InternalState::SendingClientHandshake:
+    case InternalState::WaitingForServerHandshake:
+        // FIXME: Fail the connection.
+        m_state = InternalState::Closing;
+        break;
+    case InternalState::Open: {
+        auto message_bytes = message.bytes();
+        auto close_payload = ByteBuffer::create_uninitialized(message_bytes.size() + 2).release_value_but_fixme_should_propagate_errors(); // FIXME: Handle possible OOM situation.
+        close_payload.overwrite(0, (u8*)&code, 2);
+        close_payload.overwrite(2, message_bytes.data(), message_bytes.size());
+        send_frame(WebSocket::OpCode::ConnectionClose, close_payload, true);
+        m_state = InternalState::Closing;
+        break;
+    }
+    default:
+        break;
+    }
 }
 
 void WebSocket::drain_read()
