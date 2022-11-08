@@ -39,7 +39,7 @@ Dialog::ExecResult Dialog::exec()
         if (parent() && is<Window>(parent())) {
             auto& parent_window = *static_cast<Window*>(parent());
             if (parent_window.is_visible()) {
-                // Check the dialog's positiom against the Desktop's rect and reposition it to be entirely visible.
+                // Check the dialog's position against the Desktop's rect and reposition it to be entirely visible.
                 // If the dialog is larger than the desktop's rect just center it.
                 window_rect.center_within(parent_window.rect());
                 if (window_rect.size().width() < desktop_rect.size().width() && window_rect.size().height() < desktop_rect.size().height()) {
