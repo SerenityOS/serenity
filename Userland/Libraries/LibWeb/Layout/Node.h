@@ -110,8 +110,8 @@ public:
     bool can_contain_boxes_with_position_absolute() const;
 
     Gfx::Font const& font() const;
-    const CSS::ImmutableComputedValues& computed_values() const;
-    float line_height() const;
+    CSS::ImmutableComputedValues const& computed_values() const;
+    CSSPixels line_height() const;
 
     NodeWithStyle* parent();
     NodeWithStyle const* parent() const;
@@ -128,7 +128,7 @@ public:
     bool children_are_inline() const { return m_children_are_inline; }
     void set_children_are_inline(bool value) { m_children_are_inline = value; }
 
-    Gfx::FloatPoint box_type_agnostic_position() const;
+    CSSPixelPoint box_type_agnostic_position() const;
 
     enum class SelectionState {
         None,        // No selection
@@ -177,7 +177,7 @@ public:
     void apply_style(const CSS::StyleProperties&);
 
     Gfx::Font const& font() const { return *m_font; }
-    float line_height() const { return m_line_height; }
+    CSSPixels line_height() const { return m_line_height; }
     Vector<CSS::BackgroundLayerData> const& background_layers() const { return computed_values().background_layers(); }
     const CSS::AbstractImageStyleValue* list_style_image() const { return m_list_style_image; }
 
@@ -190,7 +190,7 @@ protected:
 private:
     CSS::ComputedValues m_computed_values;
     RefPtr<Gfx::Font> m_font;
-    float m_line_height { 0 };
+    CSSPixels m_line_height { 0 };
     RefPtr<CSS::AbstractImageStyleValue> m_list_style_image;
 };
 
@@ -230,7 +230,7 @@ inline const CSS::ImmutableComputedValues& Node::computed_values() const
     return parent()->computed_values();
 }
 
-inline float Node::line_height() const
+inline CSSPixels Node::line_height() const
 {
     if (m_has_style)
         return static_cast<NodeWithStyle const*>(this)->line_height();

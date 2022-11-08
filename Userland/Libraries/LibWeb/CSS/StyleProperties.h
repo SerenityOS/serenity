@@ -106,7 +106,7 @@ public:
         m_font = move(font);
     }
 
-    float line_height(Layout::Node const&) const;
+    CSSPixels line_height(Layout::Node const&) const;
 
     bool operator==(StyleProperties const&) const;
 
