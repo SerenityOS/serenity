@@ -11,10 +11,12 @@
 #include <AK/Error.h>
 #include <AK/JsonValue.h>
 #include <AK/RefPtr.h>
+#include <LibCore/Promise.h>
 #include <LibWeb/WebDriver/Error.h>
 #include <LibWeb/WebDriver/Response.h>
 #include <WebDriver/BrowserConnection.h>
 #include <WebDriver/TimeoutsConfiguration.h>
+#include <WebDriver/WebContentConnection.h>
 #include <unistd.h>
 
 namespace WebDriver {
@@ -97,13 +99,20 @@ private:
     ErrorOr<Vector<LocalElement>, Web::WebDriver::Error> locator_strategy_tag_name(LocalElement const&, StringView);
     ErrorOr<Vector<LocalElement>, Web::WebDriver::Error> locator_strategy_x_path(LocalElement const&, StringView);
 
+    enum class ServerType {
+        Browser,
+        WebContent,
+    };
+    using ServerPromise = Core::Promise<ErrorOr<void>>;
+    ErrorOr<NonnullRefPtr<Core::LocalServer>> create_server(String const& socket_path, ServerType type, NonnullRefPtr<ServerPromise> promise);
+
     NonnullRefPtr<Client> m_client;
     bool m_started { false };
     unsigned m_id { 0 };
     HashMap<String, NonnullOwnPtr<Window>> m_windows;
     String m_current_window_handle;
-    RefPtr<Core::LocalServer> m_local_server;
     RefPtr<BrowserConnection> m_browser_connection;
+    RefPtr<WebContentConnection> m_web_content_connection;
 
     // https://w3c.github.io/webdriver/#dfn-session-script-timeout
     TimeoutsConfiguration m_timeouts_configuration;

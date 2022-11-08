@@ -595,9 +595,9 @@ void OutOfProcessWebView::set_preferred_color_scheme(Web::CSS::PreferredColorSch
     client().async_set_preferred_color_scheme(color_scheme);
 }
 
-void OutOfProcessWebView::set_is_webdriver_active(bool is_webdriver_enabled)
+void OutOfProcessWebView::connect_to_webdriver(String const& webdriver_ipc_path)
 {
-    client().async_set_is_webdriver_active(is_webdriver_enabled);
+    client().async_connect_to_webdriver(webdriver_ipc_path);
 }
 
 void OutOfProcessWebView::set_window_position(Gfx::IntPoint const& position)

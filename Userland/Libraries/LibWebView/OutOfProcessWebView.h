@@ -79,7 +79,7 @@ public:
     void set_content_filters(Vector<String>);
     void set_proxy_mappings(Vector<String> proxies, HashMap<String, size_t> mappings);
     void set_preferred_color_scheme(Web::CSS::PreferredColorScheme);
-    void set_is_webdriver_active(bool);
+    void connect_to_webdriver(String const& webdriver_ipc_path);
 
     void set_window_position(Gfx::IntPoint const&);
     void set_window_size(Gfx::IntSize const&);

@@ -59,29 +59,75 @@ ErrorOr<void, Web::WebDriver::Error> Session::check_for_open_top_level_browsing_
     return {};
 }
 
-ErrorOr<void> Session::start()
+ErrorOr<NonnullRefPtr<Core::LocalServer>> Session::create_server(String const& socket_path, ServerType type, NonnullRefPtr<ServerPromise> promise)
 {
-    auto socket_path = String::formatted("/tmp/browser_webdriver_{}_{}", getpid(), m_id);
     dbgln("Listening for WebDriver connection on {}", socket_path);
 
-    // FIXME: Use Core::LocalServer
-    struct sockaddr_un addr;
-    int listen_socket = TRY(Core::System::socket(AF_UNIX, SOCK_STREAM, 0));
-    ::memset(&addr, 0, sizeof(struct sockaddr_un));
-    addr.sun_family = AF_UNIX;
-    ::strncpy(addr.sun_path, socket_path.characters(), sizeof(addr.sun_path) - 1);
+    auto server = TRY(Core::LocalServer::try_create());
+    server->listen(socket_path);
 
-    TRY(Core::System::bind(listen_socket, (const struct sockaddr*)&addr, sizeof(struct sockaddr_un)));
-    TRY(Core::System::listen(listen_socket, 1));
+    server->on_accept = [this, type, promise](auto client_socket) mutable {
+        switch (type) {
+        case ServerType::Browser: {
+            auto maybe_connection = adopt_nonnull_ref_or_enomem(new (nothrow) BrowserConnection(move(client_socket), m_client, session_id()));
+            if (maybe_connection.is_error()) {
+                promise->resolve(maybe_connection.release_error());
+                return;
+            }
 
-    char const* argv[] = { "/bin/Browser", "--webdriver", socket_path.characters(), nullptr };
+            dbgln("WebDriver is connected to Browser socket");
+            m_browser_connection = maybe_connection.release_value();
+            break;
+        }
+
+        case ServerType::WebContent: {
+            auto maybe_connection = adopt_nonnull_ref_or_enomem(new (nothrow) WebContentConnection(move(client_socket), m_client, session_id()));
+            if (maybe_connection.is_error()) {
+                promise->resolve(maybe_connection.release_error());
+                return;
+            }
+
+            dbgln("WebDriver is connected to WebContent socket");
+            m_web_content_connection = maybe_connection.release_value();
+            break;
+        }
+        }
+
+        if (m_browser_connection && m_web_content_connection)
+            promise->resolve({});
+    };
+
+    server->on_accept_error = [promise](auto error) mutable {
+        promise->resolve(move(error));
+    };
+
+    return server;
+}
+
+ErrorOr<void> Session::start()
+{
+    auto promise = TRY(ServerPromise::try_create());
+
+    auto browser_socket_path = String::formatted("/tmp/webdriver/browser_{}_{}", getpid(), m_id);
+    auto browser_server = TRY(create_server(browser_socket_path, ServerType::Browser, promise));
+
+    auto web_content_socket_path = String::formatted("/tmp/webdriver/content_{}_{}", getpid(), m_id);
+    auto web_content_server = TRY(create_server(web_content_socket_path, ServerType::WebContent, promise));
+
+    char const* argv[] = {
+        "/bin/Browser",
+        "--webdriver-browser-path",
+        browser_socket_path.characters(),
+        "--webdriver-content-path",
+        web_content_socket_path.characters(),
+        nullptr,
+    };
+
     TRY(Core::System::posix_spawn("/bin/Browser"sv, nullptr, nullptr, const_cast<char**>(argv), environ));
 
-    int data_socket = TRY(Core::System::accept(listen_socket, nullptr, nullptr));
-    auto socket = TRY(Core::Stream::LocalSocket::adopt_fd(data_socket));
-    TRY(socket->set_blocking(true));
-    m_browser_connection = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) BrowserConnection(move(socket), m_client, session_id())));
-    dbgln("Browser is connected");
+    // FIXME: Allow this to be more asynchronous. For now, this at least allows us to propogate
+    //        errors received while accepting the Browser and WebContent sockets.
+    TRY(promise->await());
 
     m_started = true;
     m_windows.set("main", make<Session::Window>("main", true));

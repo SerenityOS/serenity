@@ -5,6 +5,7 @@
  */
 
 #include <LibCore/ArgsParser.h>
+#include <LibCore/Directory.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/System.h>
 #include <LibCore/TCPServer.h>
@@ -35,6 +36,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return 1;
     }
 
+    TRY(Core::System::pledge("stdio accept cpath rpath recvfd inet unix proc exec fattr"));
+
+    TRY(Core::Directory::create("/tmp/webdriver"sv, Core::Directory::CreateDirectories::Yes));
     TRY(Core::System::pledge("stdio accept rpath recvfd inet unix proc exec fattr"));
 
     Core::EventLoop loop;
@@ -67,7 +71,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/bin/Browser", "rx"));
     TRY(Core::System::unveil("/etc/timezone", "r"));
     TRY(Core::System::unveil("/res/icons", "r"));
-    TRY(Core::System::unveil("/tmp", "rwc"));
+    TRY(Core::System::unveil("/tmp/webdriver", "rwc"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
     TRY(Core::System::pledge("stdio accept rpath recvfd unix proc exec fattr"));
