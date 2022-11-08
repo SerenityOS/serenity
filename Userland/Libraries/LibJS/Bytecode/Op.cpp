@@ -577,8 +577,7 @@ static MarkedVector<Value> argument_list_evaluation(Bytecode::Interpreter& inter
     auto arguments = interpreter.accumulator();
 
     if (!(arguments.is_object() && is<Array>(arguments.as_object()))) {
-        dbgln("Call arguments are not an array, but: {}", arguments.to_string_without_side_effects());
-        dbgln("PC: {}[{:4x}]", interpreter.current_block().name(), interpreter.pc());
+        dbgln("[{}] Call arguments are not an array, but: {}", interpreter.debug_position(), arguments.to_string_without_side_effects());
         interpreter.current_executable().dump();
         VERIFY_NOT_REACHED();
     }
