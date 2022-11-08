@@ -226,7 +226,7 @@ ErrorOr<void> Client::send_response(StringView content, HTTP::HttpRequest const&
 }
 
 // https://w3c.github.io/webdriver/#dfn-send-an-error
-ErrorOr<void> Client::send_error_response(WebDriverError const& error, HTTP::HttpRequest const& request)
+ErrorOr<void> Client::send_error_response(Web::WebDriver::Error const& error, HTTP::HttpRequest const& request)
 {
     // FIXME: Implement to spec.
 
@@ -263,7 +263,7 @@ void Client::log_response(unsigned code, HTTP::HttpRequest const& request)
 }
 
 // https://w3c.github.io/webdriver/#dfn-match-a-request
-ErrorOr<Client::RoutingResult, WebDriverError> Client::match_route(HTTP::HttpRequest::Method method, String const& resource)
+ErrorOr<Client::RoutingResult, Web::WebDriver::Error> Client::match_route(HTTP::HttpRequest::Method method, String const& resource)
 {
     // FIXME: Implement to spec.
 
@@ -271,7 +271,7 @@ ErrorOr<Client::RoutingResult, WebDriverError> Client::match_route(HTTP::HttpReq
 
     // https://w3c.github.io/webdriver/webdriver-spec.html#routing-requests
     if (!resource.starts_with(m_prefix))
-        return WebDriverError::from_code(ErrorCode::UnknownCommand, "The resource doesn't start with the prefix.");
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::UnknownCommand, "The resource doesn't start with the prefix.");
 
     Vector<StringView> resource_split = resource.substring_view(m_prefix.length()).split_view('/', SplitBehavior::KeepEmpty);
     Vector<StringView> parameters;
@@ -310,25 +310,25 @@ ErrorOr<Client::RoutingResult, WebDriverError> Client::match_route(HTTP::HttpReq
     // Matched a path, but didn't match a known method
     if (matched_path) {
         dbgln_if(WEBDRIVER_DEBUG, "- A path matched, but method didn't. :^(");
-        return WebDriverError::from_code(ErrorCode::UnknownMethod, "The command matched a known URL but did not match a method for that URL.");
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::UnknownMethod, "The command matched a known URL but did not match a method for that URL.");
     }
 
     // Didn't have any match
     dbgln_if(WEBDRIVER_DEBUG, "- No matches. :^(");
-    return WebDriverError::from_code(ErrorCode::UnknownCommand, "The command was not recognized.");
+    return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::UnknownCommand, "The command was not recognized.");
 }
 
-ErrorOr<Session*, WebDriverError> Client::find_session_with_id(StringView session_id)
+ErrorOr<Session*, Web::WebDriver::Error> Client::find_session_with_id(StringView session_id)
 {
     auto session_id_or_error = session_id.to_uint<>();
     if (!session_id_or_error.has_value())
-        return WebDriverError::from_code(ErrorCode::InvalidSessionId, "Invalid session id");
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidSessionId, "Invalid session id");
 
     for (auto& session : Client::s_sessions) {
         if (session.session_id() == session_id_or_error.value())
             return &session;
     }
-    return WebDriverError::from_code(ErrorCode::InvalidSessionId, "Invalid session id");
+    return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidSessionId, "Invalid session id");
 }
 
 void Client::close_session(unsigned session_id)
@@ -352,7 +352,7 @@ JsonValue Client::make_json_value(JsonValue const& value)
 
 // 8.1 New Session, https://w3c.github.io/webdriver/#dfn-new-sessions
 // POST /session
-ErrorOr<JsonValue, WebDriverError> Client::handle_new_session(Vector<StringView> const&, JsonValue const&)
+ErrorOr<JsonValue, Web::WebDriver::Error> Client::handle_new_session(Vector<StringView> const&, JsonValue const&)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling POST /session");
 
@@ -382,7 +382,7 @@ ErrorOr<JsonValue, WebDriverError> Client::handle_new_session(Vector<StringView>
     NonnullOwnPtr<Session> session = make<Session>(session_id, *this);
     auto start_result = session->start();
     if (start_result.is_error()) {
-        return WebDriverError::from_code(ErrorCode::SessionNotCreated, String::formatted("Failed to start session: {}", start_result.error().string_literal()));
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::SessionNotCreated, String::formatted("Failed to start session: {}", start_result.error().string_literal()));
     }
 
     // FIXME: 8. Set the current session to session.
@@ -418,7 +418,7 @@ ErrorOr<JsonValue, WebDriverError> Client::handle_new_session(Vector<StringView>
 
 // 8.2 Delete Session, https://w3c.github.io/webdriver/#dfn-delete-session
 // DELETE /session/{session id}
-ErrorOr<JsonValue, WebDriverError> Client::handle_delete_session(Vector<StringView> const& parameters, JsonValue const&)
+ErrorOr<JsonValue, Web::WebDriver::Error> Client::handle_delete_session(Vector<StringView> const& parameters, JsonValue const&)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling DELETE /session/<session_id>");
 
@@ -427,7 +427,7 @@ ErrorOr<JsonValue, WebDriverError> Client::handle_delete_session(Vector<StringVi
 
     auto stop_result = session->stop();
     if (stop_result.is_error())
-        return WebDriverError::from_code(ErrorCode::UnsupportedOperation, stop_result.error().string_literal());
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::UnsupportedOperation, stop_result.error().string_literal());
 
     // 2. Return success with data null.
     return make_json_value(JsonValue());
@@ -435,7 +435,7 @@ ErrorOr<JsonValue, WebDriverError> Client::handle_delete_session(Vector<StringVi
 
 // 8.3 Status, https://w3c.github.io/webdriver/#dfn-status
 // GET /status
-ErrorOr<JsonValue, WebDriverError> Client::handle_get_status(Vector<StringView> const&, JsonValue const&)
+ErrorOr<JsonValue, Web::WebDriver::Error> Client::handle_get_status(Vector<StringView> const&, JsonValue const&)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling GET /status");
 
@@ -455,7 +455,7 @@ ErrorOr<JsonValue, WebDriverError> Client::handle_get_status(Vector<StringView> 
 
 // 9.1 Get Timeouts, https://w3c.github.io/webdriver/#dfn-get-timeouts
 // GET /session/{session id}/timeouts
-ErrorOr<JsonValue, WebDriverError> Client::handle_get_timeouts(Vector<StringView> const& parameters, JsonValue const&)
+ErrorOr<JsonValue, Web::WebDriver::Error> Client::handle_get_timeouts(Vector<StringView> const& parameters, JsonValue const&)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session id>/timeouts");
     auto* session = TRY(find_session_with_id(parameters[0]));
@@ -465,7 +465,7 @@ ErrorOr<JsonValue, WebDriverError> Client::handle_get_timeouts(Vector<StringView
 
 // 9.2 Set Timeouts, https://w3c.github.io/webdriver/#dfn-set-timeouts
 // POST /session/{session id}/timeouts
-ErrorOr<JsonValue, WebDriverError> Client::handle_set_timeouts(Vector<StringView> const& parameters, JsonValue const& payload)
+ErrorOr<JsonValue, Web::WebDriver::Error> Client::handle_set_timeouts(Vector<StringView> const& parameters, JsonValue const& payload)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling POST /session/<session id>/timeouts");
     auto* session = TRY(find_session_with_id(parameters[0]));
@@ -475,7 +475,7 @@ ErrorOr<JsonValue, WebDriverError> Client::handle_set_timeouts(Vector<StringView
 
 // 10.1 Navigate To, https://w3c.github.io/webdriver/#dfn-navigate-to
 // POST /session/{session id}/url
-ErrorOr<JsonValue, WebDriverError> Client::handle_navigate_to(Vector<StringView> const& parameters, JsonValue const& payload)
+ErrorOr<JsonValue, Web::WebDriver::Error> Client::handle_navigate_to(Vector<StringView> const& parameters, JsonValue const& payload)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling POST /session/<session_id>/url");
     auto* session = TRY(find_session_with_id(parameters[0]));
@@ -485,7 +485,7 @@ ErrorOr<JsonValue, WebDriverError> Client::handle_navigate_to(Vector<StringView>
 
 // 10.2 Get Current URL, https://w3c.github.io/webdriver/#dfn-get-current-url
 // GET /session/{session id}/url
-ErrorOr<JsonValue, WebDriverError> Client::handle_get_current_url(Vector<StringView> const& parameters, JsonValue const&)
+ErrorOr<JsonValue, Web::WebDriver::Error> Client::handle_get_current_url(Vector<StringView> const& parameters, JsonValue const&)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session_id>/url");
     auto* session = TRY(find_session_with_id(parameters[0]));
@@ -495,7 +495,7 @@ ErrorOr<JsonValue, WebDriverError> Client::handle_get_current_url(Vector<StringV
 
 // 10.3 Back, https://w3c.github.io/webdriver/#dfn-back
 // POST /session/{session id}/back
-ErrorOr<JsonValue, WebDriverError> Client::handle_back(Vector<StringView> const& parameters, JsonValue const&)
+ErrorOr<JsonValue, Web::WebDriver::Error> Client::handle_back(Vector<StringView> const& parameters, JsonValue const&)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling POST /session/<session_id>/back");
     auto* session = TRY(find_session_with_id(parameters[0]));
@@ -505,7 +505,7 @@ ErrorOr<JsonValue, WebDriverError> Client::handle_back(Vector<StringView> const&
 
 // 10.4 Forward, https://w3c.github.io/webdriver/#dfn-forward
 // POST /session/{session id}/forward
-ErrorOr<JsonValue, WebDriverError> Client::handle_forward(Vector<StringView> const& parameters, JsonValue const&)
+ErrorOr<JsonValue, Web::WebDriver::Error> Client::handle_forward(Vector<StringView> const& parameters, JsonValue const&)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling POST /session/<session_id>/forward");
     auto* session = TRY(find_session_with_id(parameters[0]));
@@ -515,7 +515,7 @@ ErrorOr<JsonValue, WebDriverError> Client::handle_forward(Vector<StringView> con
 
 // 10.5 Refresh, https://w3c.github.io/webdriver/#dfn-refresh
 // POST /session/{session id}/refresh
-ErrorOr<JsonValue, WebDriverError> Client::handle_refresh(Vector<StringView> const& parameters, JsonValue const&)
+ErrorOr<JsonValue, Web::WebDriver::Error> Client::handle_refresh(Vector<StringView> const& parameters, JsonValue const&)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling POST /session/<session_id>/refresh");
     auto* session = TRY(find_session_with_id(parameters[0]));
@@ -525,7 +525,7 @@ ErrorOr<JsonValue, WebDriverError> Client::handle_refresh(Vector<StringView> con
 
 // 10.6 Get Title, https://w3c.github.io/webdriver/#dfn-get-title
 // GET /session/{session id}/title
-ErrorOr<JsonValue, WebDriverError> Client::handle_get_title(Vector<StringView> const& parameters, JsonValue const&)
+ErrorOr<JsonValue, Web::WebDriver::Error> Client::handle_get_title(Vector<StringView> const& parameters, JsonValue const&)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session_id>/title");
     auto* session = TRY(find_session_with_id(parameters[0]));
@@ -535,7 +535,7 @@ ErrorOr<JsonValue, WebDriverError> Client::handle_get_title(Vector<StringView> c
 
 // 11.1 Get Window Handle, https://w3c.github.io/webdriver/#get-window-handle
 // GET /session/{session id}/window
-ErrorOr<JsonValue, WebDriverError> Client::handle_get_window_handle(Vector<StringView> const& parameters, JsonValue const&)
+ErrorOr<JsonValue, Web::WebDriver::Error> Client::handle_get_window_handle(Vector<StringView> const& parameters, JsonValue const&)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session_id>/window");
     auto* session = TRY(find_session_with_id(parameters[0]));
@@ -545,7 +545,7 @@ ErrorOr<JsonValue, WebDriverError> Client::handle_get_window_handle(Vector<Strin
 
 // 11.2 Close Window, https://w3c.github.io/webdriver/#dfn-close-window
 // DELETE /session/{session id}/window
-ErrorOr<JsonValue, WebDriverError> Client::handle_close_window(Vector<StringView> const& parameters, JsonValue const&)
+ErrorOr<JsonValue, Web::WebDriver::Error> Client::handle_close_window(Vector<StringView> const& parameters, JsonValue const&)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling DELETE /session/<session_id>/window");
     auto* session = TRY(find_session_with_id(parameters[0]));
@@ -555,7 +555,7 @@ ErrorOr<JsonValue, WebDriverError> Client::handle_close_window(Vector<StringView
 
 // 11.4 Get Window Handles, https://w3c.github.io/webdriver/#dfn-get-window-handles
 // GET /session/{session id}/window/handles
-ErrorOr<JsonValue, WebDriverError> Client::handle_get_window_handles(Vector<StringView> const& parameters, JsonValue const&)
+ErrorOr<JsonValue, Web::WebDriver::Error> Client::handle_get_window_handles(Vector<StringView> const& parameters, JsonValue const&)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session_id>/window/handles");
     auto* session = TRY(find_session_with_id(parameters[0]));
@@ -565,7 +565,7 @@ ErrorOr<JsonValue, WebDriverError> Client::handle_get_window_handles(Vector<Stri
 
 // 11.8.1 Get Window Rect, https://w3c.github.io/webdriver/#dfn-get-window-rect
 // GET /session/{session id}/window/rect
-ErrorOr<JsonValue, WebDriverError> Client::handle_get_window_rect(Vector<StringView> const& parameters, JsonValue const&)
+ErrorOr<JsonValue, Web::WebDriver::Error> Client::handle_get_window_rect(Vector<StringView> const& parameters, JsonValue const&)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session_id>/window/rect");
     auto* session = TRY(find_session_with_id(parameters[0]));
@@ -575,7 +575,7 @@ ErrorOr<JsonValue, WebDriverError> Client::handle_get_window_rect(Vector<StringV
 
 // 11.8.2 Set Window Rect, https://w3c.github.io/webdriver/#dfn-set-window-rect
 // POST /session/{session id}/window/rect
-ErrorOr<JsonValue, WebDriverError> Client::handle_set_window_rect(Vector<StringView> const& parameters, JsonValue const& payload)
+ErrorOr<JsonValue, Web::WebDriver::Error> Client::handle_set_window_rect(Vector<StringView> const& parameters, JsonValue const& payload)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling POST /session/<session_id>/window/rect");
     auto* session = TRY(find_session_with_id(parameters[0]));
@@ -585,7 +585,7 @@ ErrorOr<JsonValue, WebDriverError> Client::handle_set_window_rect(Vector<StringV
 
 // 11.8.3 Maximize Window, https://w3c.github.io/webdriver/#dfn-maximize-window
 // POST /session/{session id}/window/maximize
-ErrorOr<JsonValue, WebDriverError> Client::handle_maximize_window(Vector<StringView> const& parameters, JsonValue const&)
+ErrorOr<JsonValue, Web::WebDriver::Error> Client::handle_maximize_window(Vector<StringView> const& parameters, JsonValue const&)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling POST /session/<session_id>/window/maximize");
     auto* session = TRY(find_session_with_id(parameters[0]));
@@ -595,7 +595,7 @@ ErrorOr<JsonValue, WebDriverError> Client::handle_maximize_window(Vector<StringV
 
 // 11.8.4 Minimize Window, https://w3c.github.io/webdriver/#minimize-window
 // POST /session/{session id}/window/minimize
-ErrorOr<JsonValue, WebDriverError> Client::handle_minimize_window(Vector<StringView> const& parameters, JsonValue const&)
+ErrorOr<JsonValue, Web::WebDriver::Error> Client::handle_minimize_window(Vector<StringView> const& parameters, JsonValue const&)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling POST /session/<session_id>/window/minimize");
     auto* session = TRY(find_session_with_id(parameters[0]));
@@ -605,7 +605,7 @@ ErrorOr<JsonValue, WebDriverError> Client::handle_minimize_window(Vector<StringV
 
 // 12.3.2 Find Element, https://w3c.github.io/webdriver/#dfn-find-element
 // POST /session/{session id}/element
-ErrorOr<JsonValue, WebDriverError> Client::handle_find_element(Vector<StringView> const& parameters, JsonValue const& payload)
+ErrorOr<JsonValue, Web::WebDriver::Error> Client::handle_find_element(Vector<StringView> const& parameters, JsonValue const& payload)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling POST /session/<session_id>/element");
     auto* session = TRY(find_session_with_id(parameters[0]));
@@ -615,7 +615,7 @@ ErrorOr<JsonValue, WebDriverError> Client::handle_find_element(Vector<StringView
 
 // 12.3.3 Find Elements, https://w3c.github.io/webdriver/#dfn-find-elements
 // POST /session/{session id}/elements
-ErrorOr<JsonValue, WebDriverError> Client::handle_find_elements(Vector<StringView> const& parameters, JsonValue const& payload)
+ErrorOr<JsonValue, Web::WebDriver::Error> Client::handle_find_elements(Vector<StringView> const& parameters, JsonValue const& payload)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling POST /session/<session_id>/elements");
     auto* session = TRY(find_session_with_id(parameters[0]));
@@ -625,7 +625,7 @@ ErrorOr<JsonValue, WebDriverError> Client::handle_find_elements(Vector<StringVie
 
 // 12.3.4 Find Element From Element, https://w3c.github.io/webdriver/#dfn-find-element-from-element
 // POST /session/{session id}/element/{element id}/element
-ErrorOr<JsonValue, WebDriverError> Client::handle_find_element_from_element(Vector<StringView> const& parameters, JsonValue const& payload)
+ErrorOr<JsonValue, Web::WebDriver::Error> Client::handle_find_element_from_element(Vector<StringView> const& parameters, JsonValue const& payload)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling POST /session/<session_id>/element/<element_id>/element");
     auto* session = TRY(find_session_with_id(parameters[0]));
@@ -635,7 +635,7 @@ ErrorOr<JsonValue, WebDriverError> Client::handle_find_element_from_element(Vect
 
 // 12.3.5 Find Elements From Element, https://w3c.github.io/webdriver/#dfn-find-elements-from-element
 // POST /session/{session id}/element/{element id}/elements
-ErrorOr<JsonValue, WebDriverError> Client::handle_find_elements_from_element(Vector<StringView> const& parameters, JsonValue const& payload)
+ErrorOr<JsonValue, Web::WebDriver::Error> Client::handle_find_elements_from_element(Vector<StringView> const& parameters, JsonValue const& payload)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling POST /session/<session_id>/element/<element_id>/elements");
     auto* session = TRY(find_session_with_id(parameters[0]));
@@ -645,7 +645,7 @@ ErrorOr<JsonValue, WebDriverError> Client::handle_find_elements_from_element(Vec
 
 // 12.4.1 Is Element Selected, https://w3c.github.io/webdriver/#dfn-is-element-selected
 // GET /session/{session id}/element/{element id}/selected
-ErrorOr<JsonValue, WebDriverError> Client::handle_is_element_selected(Vector<StringView> const& parameters, JsonValue const&)
+ErrorOr<JsonValue, Web::WebDriver::Error> Client::handle_is_element_selected(Vector<StringView> const& parameters, JsonValue const&)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session_id>/element/<element_id>/selected");
     auto* session = TRY(find_session_with_id(parameters[0]));
@@ -655,7 +655,7 @@ ErrorOr<JsonValue, WebDriverError> Client::handle_is_element_selected(Vector<Str
 
 // 12.4.2 Get Element Attribute, https://w3c.github.io/webdriver/#dfn-get-element-attribute
 // GET /session/{session id}/element/{element id}/attribute/{name}
-ErrorOr<JsonValue, WebDriverError> Client::handle_get_element_attribute(Vector<StringView> const& parameters, JsonValue const& payload)
+ErrorOr<JsonValue, Web::WebDriver::Error> Client::handle_get_element_attribute(Vector<StringView> const& parameters, JsonValue const& payload)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session_id>/element/<element_id>/attribute/<name>");
     auto* session = TRY(find_session_with_id(parameters[0]));
@@ -665,7 +665,7 @@ ErrorOr<JsonValue, WebDriverError> Client::handle_get_element_attribute(Vector<S
 
 // 12.4.3 Get Element Property, https://w3c.github.io/webdriver/#dfn-get-element-property
 // GET /session/{session id}/element/{element id}/property/{name}
-ErrorOr<JsonValue, WebDriverError> Client::handle_get_element_property(Vector<StringView> const& parameters, JsonValue const& payload)
+ErrorOr<JsonValue, Web::WebDriver::Error> Client::handle_get_element_property(Vector<StringView> const& parameters, JsonValue const& payload)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session_id>/element/<element_id>/property/<name>");
     auto* session = TRY(find_session_with_id(parameters[0]));
@@ -675,7 +675,7 @@ ErrorOr<JsonValue, WebDriverError> Client::handle_get_element_property(Vector<St
 
 // 12.4.4 Get Element CSS Value, https://w3c.github.io/webdriver/#dfn-get-element-css-value
 // GET /session/{session id}/element/{element id}/css/{property name}
-ErrorOr<JsonValue, WebDriverError> Client::handle_get_element_css_value(Vector<StringView> const& parameters, JsonValue const& payload)
+ErrorOr<JsonValue, Web::WebDriver::Error> Client::handle_get_element_css_value(Vector<StringView> const& parameters, JsonValue const& payload)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session_id>/element/<element_id>/css/<property_name>");
     auto* session = TRY(find_session_with_id(parameters[0]));
@@ -685,7 +685,7 @@ ErrorOr<JsonValue, WebDriverError> Client::handle_get_element_css_value(Vector<S
 
 // 12.4.5 Get Element Text, https://w3c.github.io/webdriver/#dfn-get-element-text
 // GET /session/{session id}/element/{element id}/text
-ErrorOr<JsonValue, WebDriverError> Client::handle_get_element_text(Vector<StringView> const& parameters, JsonValue const& payload)
+ErrorOr<JsonValue, Web::WebDriver::Error> Client::handle_get_element_text(Vector<StringView> const& parameters, JsonValue const& payload)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session_id>/element/<element_id>/text");
     auto* session = TRY(find_session_with_id(parameters[0]));
@@ -695,7 +695,7 @@ ErrorOr<JsonValue, WebDriverError> Client::handle_get_element_text(Vector<String
 
 // 12.4.6 Get Element Tag Name, https://w3c.github.io/webdriver/#dfn-get-element-tag-name
 // GET /session/{session id}/element/{element id}/name
-ErrorOr<JsonValue, WebDriverError> Client::handle_get_element_tag_name(Vector<StringView> const& parameters, JsonValue const& payload)
+ErrorOr<JsonValue, Web::WebDriver::Error> Client::handle_get_element_tag_name(Vector<StringView> const& parameters, JsonValue const& payload)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session_id>/element/<element_id>/name");
     auto* session = TRY(find_session_with_id(parameters[0]));
@@ -705,7 +705,7 @@ ErrorOr<JsonValue, WebDriverError> Client::handle_get_element_tag_name(Vector<St
 
 // 12.4.7 Get Element Rect, https://w3c.github.io/webdriver/#dfn-get-element-rect
 // GET /session/{session id}/element/{element id}/rect
-ErrorOr<JsonValue, WebDriverError> Client::handle_get_element_rect(Vector<StringView> const& parameters, JsonValue const&)
+ErrorOr<JsonValue, Web::WebDriver::Error> Client::handle_get_element_rect(Vector<StringView> const& parameters, JsonValue const&)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session_id>/element/<element_id>/rect");
     auto* session = TRY(find_session_with_id(parameters[0]));
@@ -715,7 +715,7 @@ ErrorOr<JsonValue, WebDriverError> Client::handle_get_element_rect(Vector<String
 
 // 12.4.8 Is Element Enabled, https://w3c.github.io/webdriver/#dfn-is-element-enabled
 // GET /session/{session id}/element/{element id}/enabled
-ErrorOr<JsonValue, WebDriverError> Client::handle_is_element_enabled(Vector<StringView> const& parameters, JsonValue const&)
+ErrorOr<JsonValue, Web::WebDriver::Error> Client::handle_is_element_enabled(Vector<StringView> const& parameters, JsonValue const&)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session_id>/element/<element_id>/enabled");
     auto* session = TRY(find_session_with_id(parameters[0]));
@@ -725,7 +725,7 @@ ErrorOr<JsonValue, WebDriverError> Client::handle_is_element_enabled(Vector<Stri
 
 // 13.1 Get Page Source, https://w3c.github.io/webdriver/#dfn-get-page-source
 // GET /session/{session id}/source
-ErrorOr<JsonValue, WebDriverError> Client::handle_get_source(Vector<StringView> const& parameters, JsonValue const&)
+ErrorOr<JsonValue, Web::WebDriver::Error> Client::handle_get_source(Vector<StringView> const& parameters, JsonValue const&)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session_id>/source");
     auto* session = TRY(find_session_with_id(parameters[0]));
@@ -735,7 +735,7 @@ ErrorOr<JsonValue, WebDriverError> Client::handle_get_source(Vector<StringView> 
 
 // 13.2.1 Execute Script, https://w3c.github.io/webdriver/#dfn-execute-script
 // POST /session/{session id}/execute/sync
-ErrorOr<JsonValue, WebDriverError> Client::handle_execute_script(Vector<StringView> const& parameters, JsonValue const& payload)
+ErrorOr<JsonValue, Web::WebDriver::Error> Client::handle_execute_script(Vector<StringView> const& parameters, JsonValue const& payload)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling POST /session/<session_id>/execute/sync");
     auto* session = TRY(find_session_with_id(parameters[0]));
@@ -745,7 +745,7 @@ ErrorOr<JsonValue, WebDriverError> Client::handle_execute_script(Vector<StringVi
 
 // 13.2.2 Execute Async Script, https://w3c.github.io/webdriver/#dfn-execute-async-script
 // POST /session/{session id}/execute/async
-ErrorOr<JsonValue, WebDriverError> Client::handle_execute_async_script(Vector<StringView> const& parameters, JsonValue const& payload)
+ErrorOr<JsonValue, Web::WebDriver::Error> Client::handle_execute_async_script(Vector<StringView> const& parameters, JsonValue const& payload)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling POST /session/<session_id>/execute/async");
     auto* session = TRY(find_session_with_id(parameters[0]));
@@ -755,7 +755,7 @@ ErrorOr<JsonValue, WebDriverError> Client::handle_execute_async_script(Vector<St
 
 // 14.1 Get All Cookies, https://w3c.github.io/webdriver/#dfn-get-all-cookies
 // GET /session/{session id}/cookie
-ErrorOr<JsonValue, WebDriverError> Client::handle_get_all_cookies(Vector<StringView> const& parameters, JsonValue const&)
+ErrorOr<JsonValue, Web::WebDriver::Error> Client::handle_get_all_cookies(Vector<StringView> const& parameters, JsonValue const&)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session_id>/cookie");
     auto* session = TRY(find_session_with_id(parameters[0]));
@@ -765,7 +765,7 @@ ErrorOr<JsonValue, WebDriverError> Client::handle_get_all_cookies(Vector<StringV
 
 // 14.2 Get Named Cookie, https://w3c.github.io/webdriver/#dfn-get-named-cookie
 // GET /session/{session id}/cookie/{name}
-ErrorOr<JsonValue, WebDriverError> Client::handle_get_named_cookie(Vector<StringView> const& parameters, JsonValue const&)
+ErrorOr<JsonValue, Web::WebDriver::Error> Client::handle_get_named_cookie(Vector<StringView> const& parameters, JsonValue const&)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session_id>/cookie/<name>");
     auto* session = TRY(find_session_with_id(parameters[0]));
@@ -775,7 +775,7 @@ ErrorOr<JsonValue, WebDriverError> Client::handle_get_named_cookie(Vector<String
 
 // 14.3 Add Cookie, https://w3c.github.io/webdriver/#dfn-adding-a-cookie
 // POST /session/{session id}/cookie
-ErrorOr<JsonValue, WebDriverError> Client::handle_add_cookie(Vector<StringView> const& parameters, JsonValue const& payload)
+ErrorOr<JsonValue, Web::WebDriver::Error> Client::handle_add_cookie(Vector<StringView> const& parameters, JsonValue const& payload)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling POST /session/<session_id>/cookie");
     auto* session = TRY(find_session_with_id(parameters[0]));
@@ -785,7 +785,7 @@ ErrorOr<JsonValue, WebDriverError> Client::handle_add_cookie(Vector<StringView> 
 
 // 14.4 Delete Cookie, https://w3c.github.io/webdriver/#dfn-delete-cookie
 // DELETE /session/{session id}/cookie/{name}
-ErrorOr<JsonValue, WebDriverError> Client::handle_delete_cookie(Vector<StringView> const& parameters, JsonValue const&)
+ErrorOr<JsonValue, Web::WebDriver::Error> Client::handle_delete_cookie(Vector<StringView> const& parameters, JsonValue const&)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling DELETE /session/<session_id>/cookie/<name>");
     auto* session = TRY(find_session_with_id(parameters[0]));
@@ -795,7 +795,7 @@ ErrorOr<JsonValue, WebDriverError> Client::handle_delete_cookie(Vector<StringVie
 
 // 14.5 Delete All Cookies, https://w3c.github.io/webdriver/#dfn-delete-all-cookies
 // DELETE /session/{session id}/cookie
-ErrorOr<JsonValue, WebDriverError> Client::handle_delete_all_cookies(Vector<StringView> const& parameters, JsonValue const&)
+ErrorOr<JsonValue, Web::WebDriver::Error> Client::handle_delete_all_cookies(Vector<StringView> const& parameters, JsonValue const&)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling DELETE /session/<session_id>/cookie");
     auto* session = TRY(find_session_with_id(parameters[0]));
@@ -805,7 +805,7 @@ ErrorOr<JsonValue, WebDriverError> Client::handle_delete_all_cookies(Vector<Stri
 
 // 17.1 Take Screenshot, https://w3c.github.io/webdriver/#take-screenshot
 // GET /session/{session id}/screenshot
-ErrorOr<JsonValue, WebDriverError> Client::handle_take_screenshot(Vector<StringView> const& parameters, JsonValue const&)
+ErrorOr<JsonValue, Web::WebDriver::Error> Client::handle_take_screenshot(Vector<StringView> const& parameters, JsonValue const&)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session_id>/screenshot");
     auto* session = TRY(find_session_with_id(parameters[0]));
@@ -815,7 +815,7 @@ ErrorOr<JsonValue, WebDriverError> Client::handle_take_screenshot(Vector<StringV
 
 // 17.2 Take Element Screenshot, https://w3c.github.io/webdriver/#dfn-take-element-screenshot
 // GET /session/{session id}/element/{element id}/screenshot
-ErrorOr<JsonValue, WebDriverError> Client::handle_take_element_screenshot(Vector<StringView> const& parameters, JsonValue const&)
+ErrorOr<JsonValue, Web::WebDriver::Error> Client::handle_take_element_screenshot(Vector<StringView> const& parameters, JsonValue const&)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session_id>/element/<element_id>/screenshot");
     auto* session = TRY(find_session_with_id(parameters[0]));
