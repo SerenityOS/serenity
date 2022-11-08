@@ -8,6 +8,8 @@
 #pragma once
 
 namespace Web {
+class CSSPixels;
+class DevicePixels;
 class XMLDocumentBuilder;
 }
 
