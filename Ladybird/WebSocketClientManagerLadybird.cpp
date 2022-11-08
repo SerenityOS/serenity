@@ -6,6 +6,7 @@
  */
 
 #include "WebSocketClientManagerLadybird.h"
+#include "WebSocketImplQt.h"
 #include "WebSocketLadybird.h"
 
 namespace Ladybird {
@@ -23,8 +24,10 @@ RefPtr<Web::WebSockets::WebSocketClientSocket> WebSocketClientManagerLadybird::c
     WebSocket::ConnectionInfo connection_info(url);
     connection_info.set_origin(origin);
 
-    auto connection = WebSocketLadybird::create(WebSocket::WebSocket::create(move(connection_info)));
-    return connection;
+    auto impl = adopt_ref(*new WebSocketImplQt);
+    auto web_socket = WebSocket::WebSocket::create(move(connection_info), move(impl));
+    web_socket->start();
+    return WebSocketLadybird::create(web_socket);
 }
 
 }
