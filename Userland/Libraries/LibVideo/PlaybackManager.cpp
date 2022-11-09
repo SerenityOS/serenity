@@ -14,20 +14,6 @@
 
 namespace Video {
 
-// We post DecoderErrors to the event queue to be handled, since some will occur off the main thread.
-#define TRY_OR_POST_ERROR_AND_RETURN(expression, return_value)                                         \
-    ({                                                                                                 \
-        auto _temporary_result = ((expression));                                                       \
-        if (_temporary_result.is_error()) {                                                            \
-            dbgln("Playback error encountered: {}", _temporary_result.error().string_literal());       \
-            m_main_loop.post_event(*this, make<DecoderErrorEvent>(_temporary_result.release_error())); \
-            return return_value;                                                                       \
-        }                                                                                              \
-        _temporary_result.release_value();                                                             \
-    })
-
-#define TRY_OR_POST_ERROR(expression) TRY_OR_POST_ERROR_AND_RETURN(expression, )
-
 DecoderErrorOr<NonnullRefPtr<PlaybackManager>> PlaybackManager::from_file(Object* event_handler, StringView filename)
 {
     NonnullOwnPtr<Demuxer> demuxer = TRY(MatroskaDemuxer::from_file(filename));
@@ -69,7 +55,7 @@ void PlaybackManager::set_playback_status(PlaybackStatus status)
         dbgln_if(PLAYBACK_MANAGER_DEBUG, "Set playback status from {} to {}", playback_status_to_string(old_status), playback_status_to_string(m_status));
 
         if (status == PlaybackStatus::Playing) {
-            if (old_status == PlaybackStatus::Stopped) {
+            if (old_status == PlaybackStatus::Stopped || old_status == PlaybackStatus::Corrupted) {
                 restart_playback();
                 m_frame_queue->clear();
                 m_skipped_frames = 0;
@@ -91,6 +77,7 @@ void PlaybackManager::event(Core::Event& event)
     if (event.type() == DecoderErrorOccurred) {
         auto& error_event = static_cast<DecoderErrorEvent&>(event);
         VERIFY(error_event.error().category() != DecoderErrorCategory::EndOfStream);
+        set_playback_status(PlaybackStatus::Corrupted);
     }
 
     // Allow events to bubble up in all cases.
@@ -114,7 +101,7 @@ bool PlaybackManager::prepare_next_frame()
     if (m_frame_queue->is_empty())
         return false;
     auto frame_item = m_frame_queue->dequeue();
-    m_next_frame.emplace(frame_item);
+    m_next_frame.emplace(move(frame_item));
     m_decode_timer->start();
     return true;
 }
@@ -131,6 +118,20 @@ Time PlaybackManager::duration()
     return m_demuxer->duration();
 }
 
+void PlaybackManager::on_decoder_error(DecoderError error)
+{
+    dbgln("Playback error encountered: {}", error.string_literal());
+    switch (error.category()) {
+    case DecoderErrorCategory::EndOfStream:
+        set_playback_status(PlaybackStatus::Stopped);
+        break;
+    default:
+        set_playback_status(PlaybackStatus::Corrupted);
+        m_main_loop.post_event(*this, make<DecoderErrorEvent>(move(error)));
+        break;
+    }
+}
+
 void PlaybackManager::update_presented_frame()
 {
     bool out_of_queued_frames = false;
@@ -141,18 +142,18 @@ void PlaybackManager::update_presented_frame()
         if (out_of_queued_frames)
             break;
         VERIFY(m_next_frame.has_value());
-        if (m_next_frame->timestamp > current_playback_time() || m_next_frame->is_eos_marker())
+        if (m_next_frame->is_error() || m_next_frame->timestamp() > current_playback_time())
             break;
 
         if (frame_item_to_display.has_value()) {
-            dbgln_if(PLAYBACK_MANAGER_DEBUG, "At {}ms: Dropped frame with timestamp {}ms for the next at {}ms", current_playback_time().to_milliseconds(), frame_item_to_display->timestamp.to_milliseconds(), m_next_frame->timestamp.to_milliseconds());
+            dbgln_if(PLAYBACK_MANAGER_DEBUG, "At {}ms: Dropped {} in favor of {}", current_playback_time().to_milliseconds(), frame_item_to_display->debug_string(), m_next_frame->debug_string());
             m_skipped_frames++;
         }
         frame_item_to_display = m_next_frame.release_value();
     }
 
     if (!out_of_queued_frames && frame_item_to_display.has_value()) {
-        m_main_loop.post_event(*this, make<VideoFramePresentEvent>(frame_item_to_display->bitmap));
+        m_main_loop.post_event(*this, make<VideoFramePresentEvent>(frame_item_to_display->bitmap()));
         m_last_present_in_media_time = current_playback_time();
         m_last_present_in_real_time = Time::now_monotonic();
         frame_item_to_display.clear();
@@ -161,20 +162,20 @@ void PlaybackManager::update_presented_frame()
     if (frame_item_to_display.has_value()) {
         VERIFY(!m_next_frame.has_value());
         m_next_frame = frame_item_to_display;
-        dbgln_if(PLAYBACK_MANAGER_DEBUG, "Set next frame back to dequeued item at timestamp {}ms", m_next_frame->timestamp.to_milliseconds());
+        dbgln_if(PLAYBACK_MANAGER_DEBUG, "Set next frame back to dequeued item {}", m_next_frame->debug_string());
     }
 
     if (!is_playing())
         return;
 
     if (!out_of_queued_frames) {
-        if (m_next_frame->is_eos_marker()) {
-            set_playback_status(PlaybackStatus::Stopped);
+        if (m_next_frame->is_error()) {
+            on_decoder_error(m_next_frame->release_error());
             m_next_frame.clear();
             return;
         }
 
-        auto frame_time_ms = (m_next_frame.value().timestamp - current_playback_time()).to_milliseconds();
+        auto frame_time_ms = (m_next_frame->timestamp() - current_playback_time()).to_milliseconds();
         VERIFY(frame_time_ms <= NumericLimits<int>::max());
         dbgln_if(PLAYBACK_MANAGER_DEBUG, "Time until next frame is {}ms", frame_time_ms);
         m_present_timer->start(max(static_cast<int>(frame_time_ms), 0));
@@ -189,7 +190,9 @@ void PlaybackManager::restart_playback()
 {
     m_last_present_in_media_time = Time::zero();
     m_last_present_in_real_time = Time::zero();
-    TRY_OR_POST_ERROR(m_demuxer->seek_to_most_recent_keyframe(m_selected_video_track, 0));
+    auto result = m_demuxer->seek_to_most_recent_keyframe(m_selected_video_track, 0);
+    if (result.is_error())
+        on_decoder_error(result.release_error());
 }
 
 bool PlaybackManager::decode_and_queue_one_sample()
@@ -200,26 +203,28 @@ bool PlaybackManager::decode_and_queue_one_sample()
     auto start_time = Time::now_monotonic();
 #endif
 
-    auto frame_sample_result = m_demuxer->get_next_video_sample_for_track(m_selected_video_track);
-    if (frame_sample_result.is_error()) {
-        if (frame_sample_result.error().category() == DecoderErrorCategory::EndOfStream) {
-            m_frame_queue->enqueue(FrameQueueItem::eos_marker());
-            return false;
-        }
-        m_main_loop.post_event(*this, make<DecoderErrorEvent>(frame_sample_result.release_error()));
-        return false;
-    }
-    auto frame_sample = frame_sample_result.release_value();
+#define TRY_OR_ENQUEUE_ERROR(expression)                                                             \
+    ({                                                                                               \
+        auto _temporary_result = ((expression));                                                     \
+        if (_temporary_result.is_error()) {                                                          \
+            dbgln("Enqueued decoder error: {}", _temporary_result.error().string_literal());         \
+            m_frame_queue->enqueue(FrameQueueItem::error_marker(_temporary_result.release_error())); \
+            return false;                                                                            \
+        }                                                                                            \
+        _temporary_result.release_value();                                                           \
+    })
 
-    TRY_OR_POST_ERROR_AND_RETURN(m_decoder->receive_sample(frame_sample->data()), false);
-    auto decoded_frame = TRY_OR_POST_ERROR_AND_RETURN(m_decoder->get_decoded_frame(), false);
+    auto frame_sample = TRY_OR_ENQUEUE_ERROR(m_demuxer->get_next_video_sample_for_track(m_selected_video_track));
+
+    TRY_OR_ENQUEUE_ERROR(m_decoder->receive_sample(frame_sample->data()));
+    auto decoded_frame = TRY_OR_ENQUEUE_ERROR(m_decoder->get_decoded_frame());
 
     auto& cicp = decoded_frame->cicp();
     cicp.adopt_specified_values(frame_sample->container_cicp());
     cicp.default_code_points_if_unspecified({ Video::ColorPrimaries::BT709, Video::TransferCharacteristics::BT709, Video::MatrixCoefficients::BT709, Video::ColorRange::Studio });
 
-    auto bitmap = TRY_OR_POST_ERROR_AND_RETURN(decoded_frame->to_bitmap(), false);
-    m_frame_queue->enqueue(FrameQueueItem { bitmap, frame_sample->timestamp() });
+    auto bitmap = TRY_OR_ENQUEUE_ERROR(decoded_frame->to_bitmap());
+    m_frame_queue->enqueue(FrameQueueItem::frame(bitmap, frame_sample->timestamp()));
 
 #if PLAYBACK_MANAGER_DEBUG
     auto end_time = Time::now_monotonic();

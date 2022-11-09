@@ -30,18 +30,62 @@ enum class PlaybackStatus {
     Buffering,
     Seeking,
     Stopped,
+    Corrupted,
 };
 
 struct FrameQueueItem {
-    static FrameQueueItem eos_marker()
+    enum class Type {
+        Frame,
+        Error,
+    };
+
+    static FrameQueueItem frame(RefPtr<Gfx::Bitmap> bitmap, Time timestamp)
     {
-        return { nullptr, Time::max() };
+        return FrameQueueItem(move(bitmap), timestamp);
     }
 
-    RefPtr<Gfx::Bitmap> bitmap;
-    Time timestamp;
+    static FrameQueueItem error_marker(DecoderError&& error)
+    {
+        return FrameQueueItem(move(error));
+    }
 
-    bool is_eos_marker() const { return !bitmap; }
+    bool is_frame() const { return m_data.has<FrameData>(); }
+    RefPtr<Gfx::Bitmap> bitmap() const { return m_data.get<FrameData>().bitmap; }
+    Time timestamp() const { return m_data.get<FrameData>().timestamp; }
+
+    bool is_error() const { return m_data.has<DecoderError>(); }
+    DecoderError const& error() const { return m_data.get<DecoderError>(); }
+    DecoderError release_error()
+    {
+        auto error = move(m_data.get<DecoderError>());
+        m_data.set(Empty());
+        return error;
+    }
+
+    String debug_string() const
+    {
+        if (is_error())
+            return error().string_literal();
+        return String::formatted("frame at {}ms", timestamp().to_milliseconds());
+    }
+
+private:
+    struct FrameData {
+        RefPtr<Gfx::Bitmap> bitmap;
+        Time timestamp;
+    };
+
+    FrameQueueItem(RefPtr<Gfx::Bitmap> bitmap, Time timestamp)
+        : m_data(FrameData { move(bitmap), timestamp })
+    {
+    }
+
+    FrameQueueItem(DecoderError&& error)
+        : m_data(move(error))
+    {
+    }
+
+    Variant<Empty, FrameData, DecoderError> m_data;
 };
 
 static constexpr size_t FRAME_BUFFER_COUNT = 4;
@@ -67,6 +111,7 @@ public:
     u64 number_of_skipped_frames() const { return m_skipped_frames; }
 
     void event(Core::Event& event) override;
+    void on_decoder_error(DecoderError error);
 
     Time current_playback_time();
     Time duration();
@@ -119,7 +164,7 @@ public:
     }
     virtual ~DecoderErrorEvent() = default;
 
-    DecoderError error() { return m_error; }
+    DecoderError const& error() { return m_error; }
 
 private:
     DecoderError m_error;
@@ -173,6 +218,8 @@ inline StringView playback_status_to_string(PlaybackStatus status)
         return "Seeking"sv;
     case PlaybackStatus::Stopped:
         return "Stopped"sv;
+    case PlaybackStatus::Corrupted:
+        return "Corrupted"sv;
     }
     return "Unknown"sv;
 };
