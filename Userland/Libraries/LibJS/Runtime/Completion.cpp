@@ -120,4 +120,10 @@ ThrowCompletionOr<Value> await(VM& vm, Value value)
     return throw_completion(result);
 }
 
+// 6.2.3.3 ThrowCompletion ( value ), https://tc39.es/ecma262/#sec-throwcompletion
+Completion throw_completion(Value value)
+{
+    return { Completion::Type::Throw, value, {} };
+}
+
 }

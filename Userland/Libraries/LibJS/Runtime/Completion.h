@@ -302,9 +302,6 @@ inline Completion normal_completion(Optional<Value> value)
 }
 
 // 6.2.3.3 ThrowCompletion ( value ), https://tc39.es/ecma262/#sec-throwcompletion
-inline Completion throw_completion(Value value)
-{
-    return { Completion::Type::Throw, value, {} };
-}
+Completion throw_completion(Value);
 
 }
