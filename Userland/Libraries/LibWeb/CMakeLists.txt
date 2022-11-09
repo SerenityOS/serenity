@@ -438,6 +438,7 @@ set(SOURCES
     WebAssembly/WebAssemblyTableConstructor.cpp
     WebAssembly/WebAssemblyTableObject.cpp
     WebAssembly/WebAssemblyTablePrototype.cpp
+    WebDriver/ElementLocationStrategies.cpp
     WebDriver/Error.cpp
     WebDriver/ExecuteScript.cpp
     WebDriver/Response.cpp
