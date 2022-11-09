@@ -13,7 +13,7 @@
 namespace AK {
 
 // This entire algorithm is an implementation of the paper: Ryu: Fast Float-to-String Conversion
-// by Ulf Adams, available at https://dl.acm.org/doi/pdf/10.1145/3192366.3192369 and an implemenetation
+// by Ulf Adams, available at https://dl.acm.org/doi/pdf/10.1145/3192366.3192369 and an implementation
 // at https://github.com/ulfjack/ryu . A lot of possible mistakes from the article were corrected, see
 // discussion at https://github.com/SerenityOS/serenity/pull/15796 .
 //

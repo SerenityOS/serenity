@@ -14,7 +14,7 @@
 namespace JS {
 
 // https://github.com/tc39/proposal-regexp-legacy-features#regexp
-// The %RegExp% instrinsic object, which is the builtin RegExp constructor, has the following additional internal slots:
+// The %RegExp% intrinsic object, which is the builtin RegExp constructor, has the following additional internal slots:
 // [[RegExpInput]]
 // [[RegExpLastMatch]]
 // [[RegExpLastParen]]

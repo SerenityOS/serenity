@@ -669,7 +669,7 @@ bool EventHandler::fire_keyboard_event(FlyString const& event_name, HTML::Browsi
         return focused_element->dispatch_event(*event);
     }
 
-    // FIXME: De-duplicate this. This is just to prevent wasting a KeyboardEvent alloction when recursing into an (i)frame.
+    // FIXME: De-duplicate this. This is just to prevent wasting a KeyboardEvent allocation when recursing into an (i)frame.
     auto event = UIEvents::KeyboardEvent::create_from_platform_event(document->realm(), event_name, key, modifiers, code_point);
 
     if (JS::GCPtr<HTML::HTMLElement> body = document->body())

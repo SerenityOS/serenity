@@ -125,7 +125,7 @@ ErrorOr<void> Session::start()
 
     TRY(Core::System::posix_spawn("/bin/Browser"sv, nullptr, nullptr, const_cast<char**>(argv), environ));
 
-    // FIXME: Allow this to be more asynchronous. For now, this at least allows us to propogate
+    // FIXME: Allow this to be more asynchronous. For now, this at least allows us to propagate
     //        errors received while accepting the Browser and WebContent sockets.
     TRY(promise->await());
 

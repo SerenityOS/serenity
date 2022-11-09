@@ -71,7 +71,7 @@ Web::Page const& ConnectionFromClient::page() const
 
 void ConnectionFromClient::connect_to_webdriver(String const& webdriver_ipc_path)
 {
-    // FIXME: Propogate this error back to the browser.
+    // FIXME: Propagate this error back to the browser.
     if (auto result = m_page_host->connect_to_webdriver(webdriver_ipc_path); result.is_error())
         dbgln("Unable to connect to the WebDriver process: {}", result.error());
 }
