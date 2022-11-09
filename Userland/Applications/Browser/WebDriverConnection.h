@@ -38,8 +38,6 @@ public:
     virtual void die() override { }
 
     virtual void quit() override;
-    virtual Messages::WebDriverSessionClient::GetUrlResponse get_url() override;
-    virtual void set_url(AK::URL const& url) override;
     virtual Messages::WebDriverSessionClient::GetTitleResponse get_title() override;
     virtual void refresh() override;
     virtual void back() override;

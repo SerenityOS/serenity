@@ -29,21 +29,6 @@ void WebDriverConnection::quit()
         browser_window->close();
 }
 
-Messages::WebDriverSessionClient::GetUrlResponse WebDriverConnection::get_url()
-{
-    dbgln_if(WEBDRIVER_DEBUG, "WebDriverConnection: get_url");
-    if (auto browser_window = m_browser_window.strong_ref())
-        return { browser_window->active_tab().url() };
-    return { URL("") };
-}
-
-void WebDriverConnection::set_url(AK::URL const& url)
-{
-    dbgln_if(WEBDRIVER_DEBUG, "WebDriverConnection: set_url {}", url);
-    if (auto browser_window = m_browser_window.strong_ref())
-        browser_window->active_tab().load(url);
-}
-
 Messages::WebDriverSessionClient::GetTitleResponse WebDriverConnection::get_title()
 {
     dbgln_if(WEBDRIVER_DEBUG, "WebDriverConnection: get_title");
