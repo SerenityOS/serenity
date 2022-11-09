@@ -607,14 +607,6 @@ void BrowserWindow::create_new_tab(URL url, bool activate)
         return active_tab().view().take_screenshot();
     };
 
-    new_tab.webdriver_endpoints().on_get_document_element = [this]() {
-        return active_tab().view().get_document_element();
-    };
-
-    new_tab.webdriver_endpoints().on_query_selector_all = [this](i32 start_node_id, String const& selector) {
-        return active_tab().view().query_selector_all(start_node_id, selector);
-    };
-
     new_tab.webdriver_endpoints().on_scroll_element_into_view = [this](i32 element_id) {
         active_tab().view().scroll_element_into_view(element_id);
     };

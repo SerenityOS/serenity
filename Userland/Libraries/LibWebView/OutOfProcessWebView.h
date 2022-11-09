@@ -63,8 +63,6 @@ public:
     OrderedHashMap<String, String> get_local_storage_entries();
     OrderedHashMap<String, String> get_session_storage_entries();
 
-    Optional<i32> get_document_element();
-    Optional<Vector<i32>> query_selector_all(i32 start_node_id, String const& selector);
     void scroll_element_into_view(i32 element_id);
     bool is_element_selected(i32 element_id);
     Optional<String> get_element_attribute(i32 element_id, String const& name);

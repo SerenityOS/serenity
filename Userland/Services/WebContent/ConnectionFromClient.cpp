@@ -468,39 +468,6 @@ void ConnectionFromClient::js_console_request_messages(i32 start_index)
         m_console_client->send_messages(start_index);
 }
 
-Messages::WebContentServer::GetDocumentElementResponse ConnectionFromClient::get_document_element()
-{
-    auto* document = page().top_level_browsing_context().active_document();
-    if (!document)
-        return Optional<i32> {};
-    return { document->id() };
-}
-
-Messages::WebContentServer::QuerySelectorAllResponse ConnectionFromClient::query_selector_all(i32 start_node_id, String const& selector)
-{
-    auto* start_node = Web::DOM::Node::from_id(start_node_id);
-    if (!start_node)
-        return Optional<Vector<i32>> {};
-
-    if (!start_node->is_element() && !start_node->is_document())
-        return Optional<Vector<i32>> {};
-
-    auto& start_element = verify_cast<Web::DOM::ParentNode>(*start_node);
-
-    auto result = start_element.query_selector_all(selector);
-    if (result.is_error())
-        return Optional<Vector<i32>> {};
-
-    auto element_list = result.release_value();
-    Vector<i32> return_list;
-    for (u32 i = 0; i < element_list->length(); i++) {
-        auto node = element_list->item(i);
-        return_list.append(node->id());
-    }
-
-    return { return_list };
-}
-
 static Optional<Web::DOM::Element&> find_element_by_id(i32 element_id)
 {
     auto* node = Web::DOM::Node::from_id(element_id);
