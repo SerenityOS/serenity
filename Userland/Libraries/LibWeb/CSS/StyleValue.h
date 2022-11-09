@@ -395,7 +395,7 @@ public:
     virtual bool has_number() const { return false; }
     virtual bool has_integer() const { return false; }
 
-    virtual NonnullRefPtr<StyleValue> absolutized(Gfx::IntRect const& viewport_rect, Gfx::FontPixelMetrics const& font_metrics, float font_size, float root_font_size) const;
+    virtual NonnullRefPtr<StyleValue> absolutized(CSSPixelRect const& viewport_rect, Gfx::FontPixelMetrics const& font_metrics, CSSPixels font_size, CSSPixels root_font_size) const;
 
     virtual Color to_color(Layout::NodeWithStyle const&) const { return {}; }
     virtual EdgeRect to_rect() const { VERIFY_NOT_REACHED(); }
@@ -610,7 +610,7 @@ private:
         m_is_elliptical = (m_horizontal_radius != m_vertical_radius);
     }
 
-    virtual NonnullRefPtr<StyleValue> absolutized(Gfx::IntRect const& viewport_rect, Gfx::FontPixelMetrics const& font_metrics, float font_size, float root_font_size) const override;
+    virtual NonnullRefPtr<StyleValue> absolutized(CSSPixelRect const& viewport_rect, Gfx::FontPixelMetrics const& font_metrics, CSSPixels font_size, CSSPixels root_font_size) const override;
 
     bool m_is_elliptical;
     LengthPercentage m_horizontal_radius;
@@ -1447,7 +1447,7 @@ public:
     virtual DeprecatedString to_deprecated_string() const override { return m_length.to_deprecated_string(); }
     virtual Length to_length() const override { return m_length; }
     virtual ValueID to_identifier() const override { return has_auto() ? ValueID::Auto : ValueID::Invalid; }
-    virtual NonnullRefPtr<StyleValue> absolutized(Gfx::IntRect const& viewport_rect, Gfx::FontPixelMetrics const& font_metrics, float font_size, float root_font_size) const override;
+    virtual NonnullRefPtr<StyleValue> absolutized(CSSPixelRect const& viewport_rect, Gfx::FontPixelMetrics const& font_metrics, CSSPixels font_size, CSSPixels root_font_size) const override;
     virtual bool equals(StyleValue const& other) const override;
 
 private:
@@ -1670,7 +1670,7 @@ private:
     {
     }
 
-    virtual NonnullRefPtr<StyleValue> absolutized(Gfx::IntRect const& viewport_rect, Gfx::FontPixelMetrics const& font_metrics, float font_size, float root_font_size) const override;
+    virtual NonnullRefPtr<StyleValue> absolutized(CSSPixelRect const& viewport_rect, Gfx::FontPixelMetrics const& font_metrics, CSSPixels font_size, CSSPixels root_font_size) const override;
 
     Color m_color;
     Length m_offset_x;
