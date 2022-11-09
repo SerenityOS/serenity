@@ -80,6 +80,25 @@ static JsonObject web_element_reference_object(Web::DOM::Node const& element)
     return object;
 }
 
+// https://w3c.github.io/webdriver/#dfn-get-a-known-connected-element
+static ErrorOr<Web::DOM::ParentNode*, Web::WebDriver::Error> get_known_connected_element(StringView element_id)
+{
+    // NOTE: The whole concept of "connected elements" is not implemented yet. See get_or_create_a_web_element_reference().
+    //       For now the element is only represented by its ID.
+    auto element = element_id.to_int();
+    if (!element.has_value())
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, "Element ID is not an integer");
+
+    auto* node = Web::DOM::Node::from_id(*element);
+
+    if (!node)
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::NoSuchElement, String::formatted("Could not find element with ID: {}", element_id));
+    if (!is<Web::DOM::ParentNode>(node))
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::NoSuchElement, String::formatted("Element with ID is not a parent node: {}", element_id));
+
+    return static_cast<Web::DOM::ParentNode*>(node);
+}
+
 static ErrorOr<String, Web::WebDriver::Error> get_property(JsonValue const& payload, StringView key)
 {
     if (!payload.is_object())
@@ -373,6 +392,39 @@ Messages::WebDriverClient::FindElementsResponse WebDriverConnection::find_elemen
     // 9. Return the result of trying to Find with start node, location strategy, and selector.
     auto result = TRY(find(*start_node, *location_strategy, selector));
     return make_success_response(move(result));
+}
+
+// 12.3.4 Find Element From Element, https://w3c.github.io/webdriver/#dfn-find-element-from-element
+Messages::WebDriverClient::FindElementFromElementResponse WebDriverConnection::find_element_from_element(JsonValue const& payload, String const& element_id)
+{
+    // 1. Let location strategy be the result of getting a property called "using".
+    auto location_strategy_string = TRY(get_property(payload, "using"sv));
+    auto location_strategy = Web::WebDriver::location_strategy_from_string(location_strategy_string);
+
+    // 2. If location strategy is not present as a keyword in the table of location strategies, return error with error code invalid argument.
+    if (!location_strategy.has_value())
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, String::formatted("Location strategy '{}' is invalid", location_strategy_string));
+
+    // 3. Let selector be the result of getting a property called "value".
+    // 4. If selector is undefined, return error with error code invalid argument.
+    auto selector = TRY(get_property(payload, "value"sv));
+
+    // 5. If the current browsing context is no longer open, return error with error code no such window.
+    TRY(ensure_open_top_level_browsing_context());
+
+    // FIXME: 6. Handle any user prompts and return its value if it is an error.
+
+    // 7. Let start node be the result of trying to get a known connected element with url variable element id.
+    auto* start_node = TRY(get_known_connected_element(element_id));
+
+    // 8. Let result be the value of trying to Find with start node, location strategy, and selector.
+    auto result = TRY(find(*start_node, *location_strategy, selector));
+
+    // 9. If result is empty, return error with error code no such element. Otherwise, return the first element of result.
+    if (result.is_empty())
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::NoSuchElement, "The requested element does not exist"sv);
+
+    return make_success_response(result.at(0));
 }
 
 // https://w3c.github.io/webdriver/#dfn-no-longer-open
