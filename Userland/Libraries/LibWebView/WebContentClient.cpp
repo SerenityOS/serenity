@@ -215,6 +215,16 @@ Messages::WebContentClient::DidRequestResizeWindowResponse WebContentClient::did
     return m_view.notify_server_did_request_resize_window(size);
 }
 
+Messages::WebContentClient::DidRequestMaximizeWindowResponse WebContentClient::did_request_maximize_window()
+{
+    return m_view.notify_server_did_request_maximize_window();
+}
+
+Messages::WebContentClient::DidRequestMinimizeWindowResponse WebContentClient::did_request_minimize_window()
+{
+    return m_view.notify_server_did_request_minimize_window();
+}
+
 void WebContentClient::did_request_file(String const& path, i32 request_id)
 {
     m_view.notify_server_did_request_file({}, path, request_id);

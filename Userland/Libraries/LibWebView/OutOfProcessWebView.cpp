@@ -421,6 +421,20 @@ Gfx::IntSize OutOfProcessWebView::notify_server_did_request_resize_window(Gfx::I
     return {};
 }
 
+Gfx::IntRect OutOfProcessWebView::notify_server_did_request_maximize_window()
+{
+    if (on_maximize_window)
+        return on_maximize_window();
+    return {};
+}
+
+Gfx::IntRect OutOfProcessWebView::notify_server_did_request_minimize_window()
+{
+    if (on_minimize_window)
+        return on_minimize_window();
+    return {};
+}
+
 void OutOfProcessWebView::notify_server_did_request_file(Badge<WebContentClient>, String const& path, i32 request_id)
 {
     auto file = FileSystemAccessClient::Client::the().try_request_file_read_only_approved(window(), path);
