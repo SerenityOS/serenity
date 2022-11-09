@@ -20,14 +20,6 @@
 
 namespace WebContent {
 
-#define DRIVER_TRY(expression)                            \
-    ({                                                    \
-        auto _temporary_result = (expression);            \
-        if (_temporary_result.is_error()) [[unlikely]]    \
-            return { _temporary_result.release_error() }; \
-        _temporary_result.release_value();                \
-    })
-
 static JsonValue make_success_response(JsonValue value)
 {
     JsonObject result;
@@ -71,11 +63,11 @@ Messages::WebDriverClient::NavigateToResponse WebDriverConnection::navigate_to(J
     dbgln_if(WEBDRIVER_DEBUG, "WebDriverConnection::navigate_to {}", payload);
 
     // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
-    DRIVER_TRY(ensure_open_top_level_browsing_context());
+    TRY(ensure_open_top_level_browsing_context());
 
     // 2. Let url be the result of getting the property url from the parameters argument.
     if (!payload.is_object() || !payload.as_object().has_string("url"sv))
-        return { Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, "Payload doesn't have a string `url`"sv) };
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, "Payload doesn't have a string `url`"sv);
     URL url(payload.as_object().get_ptr("url"sv)->as_string());
 
     // FIXME: 3. If url is not an absolute URL or is not an absolute URL with fragment or not a local scheme, return error with error code invalid argument.
@@ -94,7 +86,7 @@ Messages::WebDriverClient::NavigateToResponse WebDriverConnection::navigate_to(J
     // FIXME: 10. If the current top-level browsing context contains a refresh state pragma directive of time 1 second or less, wait until the refresh timeout has elapsed, a new navigate has begun, and return to the first step of this algorithm.
 
     // 11. Return success with data null.
-    return { make_success_response({}) };
+    return make_success_response({});
 }
 
 // 10.2 Get Current URL, https://w3c.github.io/webdriver/#get-current-url
@@ -103,7 +95,7 @@ Messages::WebDriverClient::GetCurrentUrlResponse WebDriverConnection::get_curren
     dbgln_if(WEBDRIVER_DEBUG, "WebDriverConnection::get_current_url");
 
     // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
-    DRIVER_TRY(ensure_open_top_level_browsing_context());
+    TRY(ensure_open_top_level_browsing_context());
 
     // FIXME: 2. Handle any user prompts and return its value if it is an error.
 
@@ -111,7 +103,7 @@ Messages::WebDriverClient::GetCurrentUrlResponse WebDriverConnection::get_curren
     auto url = m_page_host.page().top_level_browsing_context().active_document()->url().to_string();
 
     // 4. Return success with data url.
-    return { make_success_response(url) };
+    return make_success_response(url);
 }
 
 // https://w3c.github.io/webdriver/#dfn-no-longer-open
