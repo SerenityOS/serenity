@@ -72,6 +72,7 @@ private:
     virtual Messages::WebContentClient::DidRequestResizeWindowResponse did_request_resize_window(Gfx::IntSize const&) override;
     virtual Messages::WebContentClient::DidRequestMaximizeWindowResponse did_request_maximize_window() override;
     virtual Messages::WebContentClient::DidRequestMinimizeWindowResponse did_request_minimize_window() override;
+    virtual Messages::WebContentClient::DidRequestFullscreenWindowResponse did_request_fullscreen_window() override;
     virtual void did_request_file(String const& path, i32) override;
 
     ViewImplementation& m_view;

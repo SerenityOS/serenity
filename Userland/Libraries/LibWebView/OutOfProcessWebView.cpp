@@ -473,6 +473,13 @@ Gfx::IntRect OutOfProcessWebView::notify_server_did_request_minimize_window()
     return {};
 }
 
+Gfx::IntRect OutOfProcessWebView::notify_server_did_request_fullscreen_window()
+{
+    if (on_fullscreen_window)
+        return on_fullscreen_window();
+    return {};
+}
+
 void OutOfProcessWebView::notify_server_did_request_file(Badge<WebContentClient>, String const& path, i32 request_id)
 {
     auto file = FileSystemAccessClient::Client::the().try_request_file_read_only_approved(window(), path);

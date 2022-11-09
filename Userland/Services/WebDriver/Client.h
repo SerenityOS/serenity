@@ -67,6 +67,7 @@ private:
     Web::WebDriver::Response handle_set_window_rect(Vector<StringView> const&, JsonValue const& payload);
     Web::WebDriver::Response handle_maximize_window(Vector<StringView> const&, JsonValue const& payload);
     Web::WebDriver::Response handle_minimize_window(Vector<StringView> const&, JsonValue const& payload);
+    Web::WebDriver::Response handle_fullscreen_window(Vector<StringView> const&, JsonValue const& payload);
     Web::WebDriver::Response handle_find_element(Vector<StringView> const&, JsonValue const& payload);
     Web::WebDriver::Response handle_find_elements(Vector<StringView> const&, JsonValue const& payload);
     Web::WebDriver::Response handle_find_element_from_element(Vector<StringView> const&, JsonValue const& payload);

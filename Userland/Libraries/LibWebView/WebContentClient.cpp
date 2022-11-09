@@ -255,6 +255,11 @@ Messages::WebContentClient::DidRequestMinimizeWindowResponse WebContentClient::d
     return m_view.notify_server_did_request_minimize_window();
 }
 
+Messages::WebContentClient::DidRequestFullscreenWindowResponse WebContentClient::did_request_fullscreen_window()
+{
+    return m_view.notify_server_did_request_fullscreen_window();
+}
+
 void WebContentClient::did_request_file(String const& path, i32 request_id)
 {
     m_view.notify_server_did_request_file({}, path, request_id);

@@ -48,6 +48,7 @@ private:
     virtual Messages::WebDriverClient::SetWindowRectResponse set_window_rect(JsonValue const& payload) override;
     virtual Messages::WebDriverClient::MaximizeWindowResponse maximize_window() override;
     virtual Messages::WebDriverClient::MinimizeWindowResponse minimize_window() override;
+    virtual Messages::WebDriverClient::FullscreenWindowResponse fullscreen_window() override;
     virtual Messages::WebDriverClient::FindElementResponse find_element(JsonValue const& payload) override;
     virtual Messages::WebDriverClient::FindElementsResponse find_elements(JsonValue const& payload) override;
     virtual Messages::WebDriverClient::FindElementFromElementResponse find_element_from_element(JsonValue const& payload, String const& element_id) override;
