@@ -46,9 +46,14 @@ public:
         return DecoderError::with_description(category, String::vformatted(format_string.view(), variadic_format_params));
     }
 
+    static DecoderError from_source_location(DecoderErrorCategory category, StringView description, SourceLocation location = SourceLocation::current())
+    {
+        return DecoderError::format(category, "[{} @ {}:{}]: {}", location.function_name(), location.filename(), location.line_number(), description);
+    }
+
     static DecoderError corrupted(StringView description, SourceLocation location = SourceLocation::current())
     {
-        return DecoderError::format(DecoderErrorCategory::Corrupted, "{}: {}", location, description);
+        return DecoderError::from_source_location(DecoderErrorCategory::Corrupted, description, location);
     }
 
     static DecoderError not_implemented(SourceLocation location = SourceLocation::current())
@@ -76,9 +81,8 @@ private:
         auto _result = ((expression));                                     \
         if (_result.is_error()) [[unlikely]] {                             \
             auto _error_string = _result.release_error().string_literal(); \
-            return DecoderError::format(                                   \
-                ((category)), "{}: {}",                                    \
-                SourceLocation::current(), _error_string);                 \
+            return DecoderError::from_source_location(                     \
+                ((category)), _error_string, SourceLocation::current());   \
         }                                                                  \
         _result.release_value();                                           \
     })
