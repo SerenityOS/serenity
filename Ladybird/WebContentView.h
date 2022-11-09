@@ -138,6 +138,11 @@ public:
     virtual String notify_server_did_request_cookie(Badge<WebContentClient>, const AK::URL& url, Web::Cookie::Source source) override;
     virtual void notify_server_did_set_cookie(Badge<WebContentClient>, const AK::URL& url, Web::Cookie::ParsedCookie const& cookie, Web::Cookie::Source source) override;
     virtual void notify_server_did_update_resource_count(i32 count_waiting) override;
+    virtual void notify_server_did_request_restore_window() override;
+    virtual Gfx::IntPoint notify_server_did_request_reposition_window(Gfx::IntPoint const&) override;
+    virtual Gfx::IntSize notify_server_did_request_resize_window(Gfx::IntSize const&) override;
+    virtual Gfx::IntRect notify_server_did_request_maximize_window() override;
+    virtual Gfx::IntRect notify_server_did_request_minimize_window() override;
     virtual void notify_server_did_request_file(Badge<WebContentClient>, String const& path, i32) override;
 
 signals:
