@@ -133,7 +133,7 @@ private:
     NonnullRefPtr<Core::ConfigFile> m_config;
     RefPtr<Core::Timer> m_config_write_timer;
 
-    Array<u8, HARDWARE_BUFFER_SIZE_BYTES> m_zero_filled_buffer;
+    Array<u8, HARDWARE_BUFFER_SIZE_BYTES> const m_zero_filled_buffer {};
 
     void mix();
 };
