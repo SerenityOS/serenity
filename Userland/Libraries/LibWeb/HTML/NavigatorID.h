@@ -32,13 +32,13 @@ public:
     String product() const { return "Gecko"sv; }
 
     // https://html.spec.whatwg.org/multipage/system-state.html#dom-navigator-productsub
-    String product_sub() const { return "20030107"sv; } // Compatability mode "Chrome"
+    String product_sub() const { return "20030107"sv; } // Compatibility mode "Chrome"
 
     // https://html.spec.whatwg.org/multipage/system-state.html#dom-navigator-useragent
     String user_agent() const;
 
     // https://html.spec.whatwg.org/multipage/system-state.html#dom-navigator-vendor
-    String vendor() const { return "Google Inc."sv; } // Compatability mode "Chrome"
+    String vendor() const { return "Google Inc."sv; } // Compatibility mode "Chrome"
 
     // https://html.spec.whatwg.org/multipage/system-state.html#dom-navigator-vendorsub
     String vendor_sub() const { return ""sv; }

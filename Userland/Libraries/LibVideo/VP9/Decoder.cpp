@@ -396,7 +396,7 @@ DecoderErrorOr<void> Decoder::predict_intra(u8 plane, u32 x, u32 y, bool have_le
     //           - [0]
     //           - [1 .. block_size]
     //           - [block_size + 1 .. block_size * 2]
-    //       The array indices must be offset by 1 to accomodate index -1.
+    //       The array indices must be offset by 1 to accommodate index -1.
     Vector<Intermediate>& above_row = m_buffers.above_row;
     DECODER_TRY_ALLOC(above_row.try_resize_and_keep_capacity(block_size * 2 + 1));
     auto above_row_at = [&](i32 index) -> Intermediate& {

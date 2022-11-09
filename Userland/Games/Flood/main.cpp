@@ -66,7 +66,7 @@ static ErrorOr<Vector<Color>> get_color_scheme_from_string(StringView name)
 }
 
 // FIXME: Improve this AI.
-// Currently, this AI always chooses a move that gets the most cells flooded immidiately.
+// Currently, this AI always chooses a move that gets the most cells flooded immediately.
 // This far from being able to generate an optimal solution, and is something that needs to be improved
 // if a user-facing auto-solver is implemented or a harder difficulty is wanted.
 // A fairly simple way to improve this would be to test deeper moves and then choose the most efficient sequence.
