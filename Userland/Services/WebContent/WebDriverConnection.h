@@ -41,6 +41,7 @@ private:
     virtual Messages::WebDriverClient::MinimizeWindowResponse minimize_window() override;
     virtual Messages::WebDriverClient::FindElementResponse find_element(JsonValue const& payload) override;
     virtual Messages::WebDriverClient::FindElementsResponse find_elements(JsonValue const& payload) override;
+    virtual Messages::WebDriverClient::FindElementFromElementResponse find_element_from_element(JsonValue const& payload, String const& element_id) override;
 
     ErrorOr<void, Web::WebDriver::Error> ensure_open_top_level_browsing_context();
     void restore_the_window();

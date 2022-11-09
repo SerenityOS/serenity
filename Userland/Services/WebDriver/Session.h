@@ -58,7 +58,6 @@ public:
     Web::WebDriver::Response get_window_handle();
     ErrorOr<void, Variant<Web::WebDriver::Error, Error>> close_window();
     Web::WebDriver::Response get_window_handles() const;
-    Web::WebDriver::Response find_element_from_element(JsonValue const& payload, StringView parameter_element_id);
     Web::WebDriver::Response find_elements_from_element(JsonValue const& payload, StringView parameter_element_id);
     Web::WebDriver::Response is_element_selected(StringView element_id);
     Web::WebDriver::Response get_element_attribute(JsonValue const& payload, StringView element_id, StringView name);
