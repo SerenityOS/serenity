@@ -46,7 +46,7 @@ public:
 
     Memory::VMObject* vmobject() { return m_vmobject; }
 
-    Spinlock& spinlock() { return m_lock; }
+    Spinlock<LockRank::None>& spinlock() { return m_lock; }
 
 private:
     ProcessID m_pid { 0 };
@@ -58,7 +58,7 @@ private:
     // Here to ensure it's not garbage collected at the end of open()
     OwnPtr<Memory::Region> m_kernel_region;
 
-    Spinlock m_lock { LockRank::None };
+    Spinlock<LockRank::None> m_lock {};
 };
 
 }

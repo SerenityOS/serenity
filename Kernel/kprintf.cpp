@@ -29,7 +29,7 @@ extern Atomic<Graphics::Console*> g_boot_console;
 static bool s_serial_debug_enabled;
 // A recursive spinlock allows us to keep writing in the case where a
 // page fault happens in the middle of a dbgln(), etc
-static RecursiveSpinlock s_log_lock { LockRank::None };
+static RecursiveSpinlock<LockRank::None> s_log_lock {};
 
 void set_serial_debug_enabled(bool desired_state)
 {

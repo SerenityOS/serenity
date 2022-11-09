@@ -111,7 +111,7 @@ private:
 
     PacketList m_packet_queue;
     size_t m_packet_queue_size { 0 };
-    SpinlockProtected<PacketList> m_unused_packets { LockRank::None };
+    SpinlockProtected<PacketList, LockRank::None> m_unused_packets {};
     NonnullOwnPtr<KString> m_name;
     u32 m_packets_in { 0 };
     u32 m_bytes_in { 0 };

@@ -36,7 +36,7 @@ const nothrow_t nothrow;
 }
 
 // FIXME: Figure out whether this can be MemoryManager.
-static RecursiveSpinlock s_lock { LockRank::None }; // needs to be recursive because of dump_backtrace()
+static RecursiveSpinlock<LockRank::None> s_lock {}; // needs to be recursive because of dump_backtrace()
 
 struct KmallocSubheap {
     KmallocSubheap(u8* base, size_t size)

@@ -211,7 +211,7 @@ void Mutex::unlock()
     }
 }
 
-void Mutex::block(Thread& current_thread, Mode mode, SpinlockLocker<Spinlock>& lock, u32 requested_locks)
+void Mutex::block(Thread& current_thread, Mode mode, SpinlockLocker<Spinlock<LockRank::None>>& lock, u32 requested_locks)
 {
     if constexpr (LOCK_IN_CRITICAL_DEBUG) {
         // There are no interrupts enabled in early boot.

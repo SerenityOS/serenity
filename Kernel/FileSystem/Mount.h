@@ -40,7 +40,7 @@ public:
 private:
     NonnullLockRefPtr<Inode> m_guest;
     NonnullLockRefPtr<FileSystem> m_guest_fs;
-    SpinlockProtected<RefPtr<Custody>> m_host_custody;
+    SpinlockProtected<RefPtr<Custody>, LockRank::None> m_host_custody;
     int m_flags;
 
     IntrusiveListNode<Mount> m_vfs_list_node;

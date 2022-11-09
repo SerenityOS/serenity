@@ -100,8 +100,8 @@ private:
 
     NonnullOwnPtr<IOWindow> m_registers_io_window;
 
-    Spinlock m_async_lock;
-    Spinlock m_schedule_lock;
+    Spinlock<LockRank::None> m_async_lock {};
+    Spinlock<LockRank::None> m_schedule_lock {};
 
     OwnPtr<UHCIRootHub> m_root_hub;
     OwnPtr<UHCIDescriptorPool<QueueHead>> m_queue_head_pool;

@@ -16,7 +16,7 @@
 
 namespace Kernel {
 
-Spinlock g_console_lock { LockRank::None };
+Spinlock<LockRank::None> g_console_lock {};
 
 UNMAP_AFTER_INIT NonnullLockRefPtr<ConsoleDevice> ConsoleDevice::must_create()
 {

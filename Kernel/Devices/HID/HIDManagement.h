@@ -47,7 +47,7 @@ public:
         Keyboard::CharacterMapData character_map;
     };
 
-    SpinlockProtected<KeymapData>& keymap_data() { return m_keymap_data; }
+    SpinlockProtected<KeymapData, LockRank::None>& keymap_data() { return m_keymap_data; }
 
     u32 get_char_from_character_map(KeyEvent) const;
 
@@ -58,7 +58,7 @@ private:
     size_t generate_minor_device_number_for_mouse();
     size_t generate_minor_device_number_for_keyboard();
 
-    SpinlockProtected<KeymapData> m_keymap_data { LockRank::None };
+    SpinlockProtected<KeymapData, LockRank::None> m_keymap_data {};
     size_t m_mouse_minor_number { 0 };
     size_t m_keyboard_minor_number { 0 };
     KeyboardClient* m_client { nullptr };
@@ -66,7 +66,7 @@ private:
     LockRefPtr<I8042Controller> m_i8042_controller;
 #endif
     NonnullLockRefPtrVector<HIDDevice> m_hid_devices;
-    Spinlock m_client_lock { LockRank::None };
+    Spinlock<LockRank::None> m_client_lock {};
 };
 
 class KeyboardClient {

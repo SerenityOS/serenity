@@ -51,8 +51,8 @@ private:
     Memory::TypedMapping<VMWareDisplayFIFORegisters volatile> m_fifo_registers;
     LockRefPtr<VMWareDisplayConnector> m_display_connector;
     mutable NonnullOwnPtr<IOWindow> m_registers_io_window;
-    mutable Spinlock m_io_access_lock { LockRank::None };
-    mutable RecursiveSpinlock m_operation_lock { LockRank::None };
+    mutable Spinlock<LockRank::None> m_io_access_lock {};
+    mutable RecursiveSpinlock<LockRank::None> m_operation_lock {};
 };
 
 }

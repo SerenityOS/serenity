@@ -238,7 +238,7 @@ public:
         return with_protected_data([](auto& protected_data) { return protected_data.ppid; });
     }
 
-    SpinlockProtected<RefPtr<Jail>>& jail() { return m_attached_jail; }
+    SpinlockProtected<RefPtr<Jail>, LockRank::Process>& jail() { return m_attached_jail; }
 
     NonnullRefPtr<Credentials> credentials() const;
 
@@ -568,8 +568,8 @@ public:
     PerformanceEventBuffer* perf_events() { return m_perf_event_buffer; }
     PerformanceEventBuffer const* perf_events() const { return m_perf_event_buffer; }
 
-    SpinlockProtected<OwnPtr<Memory::AddressSpace>>& address_space() { return m_space; }
-    SpinlockProtected<OwnPtr<Memory::AddressSpace>> const& address_space() const { return m_space; }
+    SpinlockProtected<OwnPtr<Memory::AddressSpace>, LockRank::None>& address_space() { return m_space; }
+    SpinlockProtected<OwnPtr<Memory::AddressSpace>, LockRank::None> const& address_space() const { return m_space; }
 
     VirtualAddress signal_trampoline() const
     {
@@ -666,11 +666,11 @@ private:
 
     NonnullOwnPtr<KString> m_name;
 
-    SpinlockProtected<OwnPtr<Memory::AddressSpace>> m_space;
+    SpinlockProtected<OwnPtr<Memory::AddressSpace>, LockRank::None> m_space;
 
     LockRefPtr<ProcessGroup> m_pg;
 
-    RecursiveSpinlock mutable m_protected_data_lock;
+    RecursiveSpinlock<LockRank::None> mutable m_protected_data_lock;
     AtomicEdgeAction<u32> m_protected_data_refs;
     void protect_data();
     void unprotect_data();
@@ -849,12 +849,12 @@ public:
 private:
     ErrorOr<NonnullRefPtr<Custody>> custody_for_dirfd(int dirfd);
 
-    SpinlockProtected<Thread::ListInProcess>& thread_list() { return m_thread_list; }
-    SpinlockProtected<Thread::ListInProcess> const& thread_list() const { return m_thread_list; }
+    SpinlockProtected<Thread::ListInProcess, LockRank::None>& thread_list() { return m_thread_list; }
+    SpinlockProtected<Thread::ListInProcess, LockRank::None> const& thread_list() const { return m_thread_list; }
 
     ErrorOr<NonnullRefPtr<Thread>> get_thread_from_pid_or_tid(pid_t pid_or_tid, Syscall::SchedulerParametersMode mode);
 
-    SpinlockProtected<Thread::ListInProcess> m_thread_list { LockRank::None };
+    SpinlockProtected<Thread::ListInProcess, LockRank::None> m_thread_list {};
 
     MutexProtected<OpenFileDescriptions> m_fds;
 
@@ -864,9 +864,9 @@ private:
     Atomic<bool, AK::MemoryOrder::memory_order_relaxed> m_is_stopped { false };
     bool m_should_generate_coredump { false };
 
-    SpinlockProtected<RefPtr<Custody>> m_executable;
+    SpinlockProtected<RefPtr<Custody>, LockRank::None> m_executable;
 
-    SpinlockProtected<RefPtr<Custody>> m_current_directory;
+    SpinlockProtected<RefPtr<Custody>, LockRank::None> m_current_directory;
 
     NonnullOwnPtrVector<KString> m_arguments;
     NonnullOwnPtrVector<KString> m_environment;
@@ -876,7 +876,7 @@ private:
     LockWeakPtr<Memory::Region> m_master_tls_region;
 
     IntrusiveListNode<Process> m_jail_list_node;
-    SpinlockProtected<RefPtr<Jail>> m_attached_jail { LockRank::Process };
+    SpinlockProtected<RefPtr<Jail>, LockRank::Process> m_attached_jail {};
 
     size_t m_master_tls_size { 0 };
     size_t m_master_tls_alignment { 0 };
@@ -886,8 +886,8 @@ private:
 
     LockRefPtr<Timer> m_alarm_timer;
 
-    SpinlockProtected<UnveilData> m_unveil_data;
-    SpinlockProtected<UnveilData> m_exec_unveil_data;
+    SpinlockProtected<UnveilData, LockRank::None> m_unveil_data;
+    SpinlockProtected<UnveilData, LockRank::None> m_exec_unveil_data;
 
     OwnPtr<PerformanceEventBuffer> m_perf_event_buffer;
 
@@ -903,7 +903,7 @@ private:
         OwnPtr<KString> value;
     };
 
-    SpinlockProtected<Array<CoredumpProperty, 4>> m_coredump_properties { LockRank::None };
+    SpinlockProtected<Array<CoredumpProperty, 4>, LockRank::None> m_coredump_properties {};
     NonnullLockRefPtrVector<Thread> m_threads_for_coredump;
 
     mutable LockRefPtr<ProcessProcFSTraits> m_procfs_traits;
@@ -920,7 +920,7 @@ private:
 
 public:
     using List = IntrusiveListRelaxedConst<&Process::m_list_node>;
-    static SpinlockProtected<Process::List>& all_instances();
+    static SpinlockProtected<Process::List, LockRank::None>& all_instances();
 };
 
 // Note: Process object should be 2 pages of 4096 bytes each.
@@ -929,7 +929,7 @@ public:
 // The second page is being used exclusively for write-protected values.
 static_assert(AssertSize<Process, (PAGE_SIZE * 2)>());
 
-extern RecursiveSpinlock g_profiling_lock;
+extern RecursiveSpinlock<LockRank::None> g_profiling_lock;
 
 template<IteratorFunction<Thread&> Callback>
 inline IterationDecision Process::for_each_thread(Callback callback)

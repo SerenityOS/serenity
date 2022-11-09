@@ -10,7 +10,7 @@
 
 namespace Kernel {
 
-template<typename T>
+template<typename T, LockRank Rank>
 class SpinlockProtected {
     AK_MAKE_NONCOPYABLE(SpinlockProtected);
     AK_MAKE_NONMOVABLE(SpinlockProtected);
@@ -22,7 +22,7 @@ private:
         AK_MAKE_NONMOVABLE(Locked);
 
     public:
-        Locked(U& value, RecursiveSpinlock& spinlock)
+        Locked(U& value, RecursiveSpinlock<Rank>& spinlock)
             : m_value(value)
             , m_locker(spinlock)
         {
@@ -39,7 +39,7 @@ private:
 
     private:
         U& m_value;
-        SpinlockLocker<RecursiveSpinlock> m_locker;
+        SpinlockLocker<RecursiveSpinlock<Rank>> m_locker;
     };
 
     auto lock_const() const { return Locked<T const>(m_value, m_spinlock); }
@@ -47,9 +47,8 @@ private:
 
 public:
     template<typename... Args>
-    SpinlockProtected(LockRank rank, Args&&... args)
+    SpinlockProtected(Args&&... args)
         : m_value(forward<Args>(args)...)
-        , m_spinlock(rank)
     {
     }
 
@@ -87,7 +86,8 @@ public:
 
 private:
     T m_value;
-    RecursiveSpinlock mutable m_spinlock;
+    RecursiveSpinlock<Rank> mutable m_spinlock;
+    static constexpr LockRank const m_rank { Rank };
 };
 
 }

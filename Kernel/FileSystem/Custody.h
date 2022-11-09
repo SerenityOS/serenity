@@ -44,7 +44,7 @@ private:
 
 public:
     using AllCustodiesList = IntrusiveList<&Custody::m_all_custodies_list_node>;
-    static SpinlockProtected<Custody::AllCustodiesList>& all_instances();
+    static SpinlockProtected<Custody::AllCustodiesList, LockRank::None>& all_instances();
 };
 
 }

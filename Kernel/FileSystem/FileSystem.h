@@ -61,7 +61,7 @@ public:
     // Converts file types that are used internally by the filesystem to DT_* types
     virtual u8 internal_file_type_to_directory_entry_type(DirectoryEntryView const& entry) const { return entry.file_type; }
 
-    SpinlockProtected<size_t>& mounted_count(Badge<VirtualFileSystem>) { return m_attach_count; }
+    SpinlockProtected<size_t, LockRank::FileSystem>& mounted_count(Badge<VirtualFileSystem>) { return m_attach_count; }
 
 protected:
     FileSystem();
@@ -79,7 +79,7 @@ private:
     size_t m_fragment_size { 0 };
     bool m_readonly { false };
 
-    SpinlockProtected<size_t> m_attach_count { LockRank::FileSystem, 0 };
+    SpinlockProtected<size_t, LockRank::FileSystem> m_attach_count { 0 };
     IntrusiveListNode<FileSystem> m_file_system_node;
 };
 

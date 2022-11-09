@@ -14,9 +14,9 @@
 
 namespace Kernel {
 
-static Singleton<SpinlockProtected<Custody::AllCustodiesList>> s_all_instances;
+static Singleton<SpinlockProtected<Custody::AllCustodiesList, LockRank::None>> s_all_instances;
 
-SpinlockProtected<Custody::AllCustodiesList>& Custody::all_instances()
+SpinlockProtected<Custody::AllCustodiesList, LockRank::None>& Custody::all_instances()
 {
     return s_all_instances;
 }

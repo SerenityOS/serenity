@@ -78,7 +78,7 @@ private:
         void uncommit_one();
 
     private:
-        Spinlock m_lock { LockRank::None };
+        Spinlock<LockRank::None> m_lock {};
         CommittedPhysicalPageSet m_committed_pages;
     };
 

@@ -22,7 +22,7 @@ struct RegisterState;
 extern Thread* g_finalizer;
 extern WaitQueue* g_finalizer_wait_queue;
 extern Atomic<bool> g_finalizer_has_work;
-extern RecursiveSpinlock g_scheduler_lock;
+extern RecursiveSpinlock<LockRank::None> g_scheduler_lock;
 
 struct TotalTimeScheduled {
     u64 total { 0 };

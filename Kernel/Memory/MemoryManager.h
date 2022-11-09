@@ -89,7 +89,7 @@ struct PhysicalMemoryRange {
 struct MemoryManagerData {
     static ProcessorSpecificDataID processor_specific_data_id() { return ProcessorSpecificDataID::MemoryManager; }
 
-    Spinlock m_quickmap_in_use { LockRank::None };
+    Spinlock<LockRank::None> m_quickmap_in_use {};
     InterruptsState m_quickmap_previous_interrupts_state;
 };
 
@@ -304,7 +304,7 @@ private:
         Vector<ContiguousReservedMemoryRange> reserved_memory_ranges;
     };
 
-    SpinlockProtected<GlobalData> m_global_data;
+    SpinlockProtected<GlobalData, LockRank::None> m_global_data;
 };
 
 inline bool is_user_address(VirtualAddress vaddr)

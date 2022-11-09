@@ -33,7 +33,7 @@ private:
     void disable_vga_text_mode_console_cursor();
     void enable_vga_text_mode_console_cursor();
 
-    RecursiveSpinlock m_main_vga_lock { LockRank::None };
+    RecursiveSpinlock<LockRank::None> m_main_vga_lock {};
     bool m_vga_access_is_disabled { false };
 };
 

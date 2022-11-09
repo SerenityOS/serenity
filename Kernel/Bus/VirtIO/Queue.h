@@ -47,7 +47,7 @@ public:
     QueueChain pop_used_buffer_chain(size_t& used);
     void discard_used_buffers();
 
-    Spinlock& lock() { return m_lock; }
+    Spinlock<LockRank::None>& lock() { return m_lock; }
 
     bool should_notify() const;
 
@@ -96,7 +96,7 @@ private:
     QueueDriver* m_driver { nullptr };
     QueueDevice* m_device { nullptr };
     NonnullOwnPtr<Memory::Region> m_queue_region;
-    Spinlock m_lock { LockRank::None };
+    Spinlock<LockRank::None> m_lock {};
 
     friend class QueueChain;
 };

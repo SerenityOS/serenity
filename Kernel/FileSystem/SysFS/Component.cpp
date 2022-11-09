@@ -13,7 +13,7 @@
 
 namespace Kernel {
 
-static Spinlock s_index_lock { LockRank::None };
+static Spinlock<LockRank::None> s_index_lock {};
 static InodeIndex s_next_inode_index { 0 };
 
 static size_t allocate_inode_index()
