@@ -58,7 +58,6 @@ public:
     Web::WebDriver::Response get_window_handle();
     ErrorOr<void, Variant<Web::WebDriver::Error, Error>> close_window();
     Web::WebDriver::Response get_window_handles() const;
-    Web::WebDriver::Response find_elements_from_element(JsonValue const& payload, StringView parameter_element_id);
     Web::WebDriver::Response is_element_selected(StringView element_id);
     Web::WebDriver::Response get_element_attribute(JsonValue const& payload, StringView element_id, StringView name);
     Web::WebDriver::Response get_element_property(JsonValue const& payload, StringView element_id, StringView name);
@@ -80,21 +79,6 @@ public:
 
 private:
     void delete_cookies(Optional<StringView> const& name = {});
-    ErrorOr<JsonArray, Web::WebDriver::Error> find(LocalElement const& start_node, StringView location_strategy, StringView selector);
-
-    using ElementLocationStrategyHandler = ErrorOr<Vector<LocalElement>, Web::WebDriver::Error> (Session::*)(LocalElement const&, StringView);
-    struct LocatorStrategy {
-        String name;
-        ElementLocationStrategyHandler handler;
-    };
-
-    static Vector<LocatorStrategy> s_locator_strategies;
-
-    ErrorOr<Vector<LocalElement>, Web::WebDriver::Error> locator_strategy_css_selectors(LocalElement const&, StringView);
-    ErrorOr<Vector<LocalElement>, Web::WebDriver::Error> locator_strategy_link_text(LocalElement const&, StringView);
-    ErrorOr<Vector<LocalElement>, Web::WebDriver::Error> locator_strategy_partial_link_text(LocalElement const&, StringView);
-    ErrorOr<Vector<LocalElement>, Web::WebDriver::Error> locator_strategy_tag_name(LocalElement const&, StringView);
-    ErrorOr<Vector<LocalElement>, Web::WebDriver::Error> locator_strategy_x_path(LocalElement const&, StringView);
 
     enum class ServerType {
         Browser,

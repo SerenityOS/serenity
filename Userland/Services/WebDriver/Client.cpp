@@ -645,8 +645,7 @@ Web::WebDriver::Response Client::handle_find_elements_from_element(Vector<String
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling POST /session/<session_id>/element/<element_id>/elements");
     auto* session = TRY(find_session_with_id(parameters[0]));
-    auto result = TRY(session->find_elements_from_element(payload, parameters[1]));
-    return make_json_value(result);
+    return session->web_content_connection().find_elements_from_element(payload, parameters[1]);
 }
 
 // 12.4.1 Is Element Selected, https://w3c.github.io/webdriver/#dfn-is-element-selected

@@ -23,8 +23,6 @@ public:
     WebDriverEndpoints() = default;
     ~WebDriverEndpoints() = default;
 
-    Function<Optional<i32>()> on_get_document_element;
-    Function<Optional<Vector<i32>>(i32 start_node_id, String const&)> on_query_selector_all;
     Function<void(i32 element_id)> on_scroll_element_into_view;
     Function<bool(i32 element_id)> on_is_element_selected;
     Function<Optional<String>(i32 element_id, String const&)> on_get_element_attribute;
