@@ -58,37 +58,6 @@ void WebDriverConnection::forward()
         browser_window->active_tab().go_forward();
 }
 
-Messages::WebDriverSessionClient::GetWindowRectResponse WebDriverConnection::get_window_rect()
-{
-    dbgln_if(WEBDRIVER_DEBUG, "WebDriverConnection: get_window_rect");
-    if (auto browser_window = m_browser_window.strong_ref())
-        return { browser_window->rect() };
-    return { {} };
-}
-
-void WebDriverConnection::restore_window()
-{
-    dbgln_if(WEBDRIVER_DEBUG, "WebDriverConnection: restore_window");
-    if (auto browser_window = m_browser_window.strong_ref()) {
-        browser_window->show();
-        browser_window->move_to_front();
-    }
-}
-
-void WebDriverConnection::maximize_window()
-{
-    dbgln_if(WEBDRIVER_DEBUG, "WebDriverConnection: maximize_window");
-    if (auto browser_window = m_browser_window.strong_ref())
-        browser_window->set_maximized(true);
-}
-
-void WebDriverConnection::minimize_window()
-{
-    dbgln_if(WEBDRIVER_DEBUG, "WebDriverConnection: minimize_window");
-    if (auto browser_window = m_browser_window.strong_ref())
-        browser_window->set_minimized(true);
-}
-
 Messages::WebDriverSessionClient::SerializeSourceResponse WebDriverConnection::serialize_source()
 {
     dbgln_if(WEBDRIVER_DEBUG, "WebDriverConnection: serialize_source");

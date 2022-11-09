@@ -42,10 +42,6 @@ public:
     virtual void refresh() override;
     virtual void back() override;
     virtual void forward() override;
-    virtual Messages::WebDriverSessionClient::GetWindowRectResponse get_window_rect() override;
-    virtual void restore_window() override;
-    virtual void maximize_window() override;
-    virtual void minimize_window() override;
     virtual Messages::WebDriverSessionClient::SerializeSourceResponse serialize_source() override;
     virtual Messages::WebDriverSessionClient::ExecuteScriptResponse execute_script(String const& body, Vector<String> const& json_arguments, Optional<u64> const& timeout, bool async) override;
     virtual Messages::WebDriverSessionClient::GetAllCookiesResponse get_all_cookies() override;

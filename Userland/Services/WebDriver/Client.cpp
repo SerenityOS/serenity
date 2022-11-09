@@ -600,8 +600,7 @@ Web::WebDriver::Response Client::handle_maximize_window(Vector<StringView> const
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling POST /session/<session_id>/window/maximize");
     auto* session = TRY(find_session_with_id(parameters[0]));
-    auto result = TRY(session->maximize_window());
-    return make_json_value(result);
+    return session->web_content_connection().maximize_window();
 }
 
 // 11.8.4 Minimize Window, https://w3c.github.io/webdriver/#minimize-window
@@ -610,8 +609,7 @@ Web::WebDriver::Response Client::handle_minimize_window(Vector<StringView> const
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling POST /session/<session_id>/window/minimize");
     auto* session = TRY(find_session_with_id(parameters[0]));
-    auto result = TRY(session->minimize_window());
-    return make_json_value(result);
+    return session->web_content_connection().minimize_window();
 }
 
 // 12.3.2 Find Element, https://w3c.github.io/webdriver/#dfn-find-element
