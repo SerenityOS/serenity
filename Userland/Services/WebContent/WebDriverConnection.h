@@ -9,6 +9,8 @@
 #pragma once
 
 #include <LibIPC/ConnectionToServer.h>
+#include <LibWeb/Forward.h>
+#include <LibWeb/WebDriver/ElementLocationStrategies.h>
 #include <LibWeb/WebDriver/Response.h>
 #include <WebContent/Forward.h>
 #include <WebContent/WebDriverClientEndpoint.h>
@@ -37,11 +39,13 @@ private:
     virtual Messages::WebDriverClient::SetWindowRectResponse set_window_rect(JsonValue const& payload) override;
     virtual Messages::WebDriverClient::MaximizeWindowResponse maximize_window() override;
     virtual Messages::WebDriverClient::MinimizeWindowResponse minimize_window() override;
+    virtual Messages::WebDriverClient::FindElementResponse find_element(JsonValue const& payload) override;
 
     ErrorOr<void, Web::WebDriver::Error> ensure_open_top_level_browsing_context();
     void restore_the_window();
     Gfx::IntRect maximize_the_window();
     Gfx::IntRect iconify_the_window();
+    ErrorOr<JsonArray, Web::WebDriver::Error> find(Web::DOM::ParentNode& start_node, Web::WebDriver::LocationStrategy using_, StringView value);
 
     ConnectionFromClient& m_web_content_client;
     PageHost& m_page_host;
