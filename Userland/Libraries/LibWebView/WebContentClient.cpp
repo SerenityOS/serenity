@@ -200,6 +200,21 @@ void WebContentClient::did_update_resource_count(i32 count_waiting)
     m_view.notify_server_did_update_resource_count(count_waiting);
 }
 
+void WebContentClient::did_request_restore_window()
+{
+    m_view.notify_server_did_request_restore_window();
+}
+
+Messages::WebContentClient::DidRequestRepositionWindowResponse WebContentClient::did_request_reposition_window(Gfx::IntPoint const& position)
+{
+    return m_view.notify_server_did_request_reposition_window(position);
+}
+
+Messages::WebContentClient::DidRequestResizeWindowResponse WebContentClient::did_request_resize_window(Gfx::IntSize const& size)
+{
+    return m_view.notify_server_did_request_resize_window(size);
+}
+
 void WebContentClient::did_request_file(String const& path, i32 request_id)
 {
     m_view.notify_server_did_request_file({}, path, request_id);
