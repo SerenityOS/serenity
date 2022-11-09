@@ -131,9 +131,9 @@ void WebContentClient::did_middle_click_link(AK::URL const& url, String const& t
     m_view.notify_server_did_middle_click_link({}, url, target, modifiers);
 }
 
-void WebContentClient::did_start_loading(AK::URL const& url)
+void WebContentClient::did_start_loading(AK::URL const& url, bool is_redirect)
 {
-    m_view.notify_server_did_start_loading({}, url);
+    m_view.notify_server_did_start_loading({}, url, is_redirect);
 }
 
 void WebContentClient::did_request_context_menu(Gfx::IntPoint const& content_position)

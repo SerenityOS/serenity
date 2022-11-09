@@ -6,7 +6,7 @@
 
 endpoint WebContentClient
 {
-    did_start_loading(URL url) =|
+    did_start_loading(URL url, bool is_redirect) =|
     did_finish_loading(URL url) =|
     did_request_navigate_back() =|
     did_request_navigate_forward() =|

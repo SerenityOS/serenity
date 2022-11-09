@@ -33,7 +33,7 @@ public:
     virtual void notify_server_did_unhover_link(Badge<WebContentClient>) = 0;
     virtual void notify_server_did_click_link(Badge<WebContentClient>, const AK::URL&, String const& target, unsigned modifiers) = 0;
     virtual void notify_server_did_middle_click_link(Badge<WebContentClient>, const AK::URL&, String const& target, unsigned modifiers) = 0;
-    virtual void notify_server_did_start_loading(Badge<WebContentClient>, const AK::URL&) = 0;
+    virtual void notify_server_did_start_loading(Badge<WebContentClient>, const AK::URL&, bool is_redirect) = 0;
     virtual void notify_server_did_finish_loading(Badge<WebContentClient>, const AK::URL&) = 0;
     virtual void notify_server_did_request_navigate_back(Badge<WebContentClient>) = 0;
     virtual void notify_server_did_request_navigate_forward(Badge<WebContentClient>) = 0;

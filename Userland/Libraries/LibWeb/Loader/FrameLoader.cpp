@@ -215,10 +215,10 @@ bool FrameLoader::load(LoadRequest& request, Type type)
 
     auto& url = request.url();
 
-    if (type == Type::Navigation || type == Type::Reload) {
+    if (type == Type::Navigation || type == Type::Reload || type == Type::Redirect) {
         if (auto* page = browsing_context().page()) {
             if (&page->top_level_browsing_context() == &m_browsing_context)
-                page->client().page_did_start_loading(url);
+                page->client().page_did_start_loading(url, type == Type::Redirect);
         }
     }
 
@@ -401,7 +401,7 @@ void FrameLoader::resource_did_load()
                 return;
             }
             m_redirects_count++;
-            load(url.complete_url(location.value()), FrameLoader::Type::Navigation);
+            load(url.complete_url(location.value()), Type::Redirect);
             return;
         }
     }

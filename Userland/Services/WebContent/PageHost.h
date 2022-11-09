@@ -77,7 +77,7 @@ private:
     virtual void page_did_middle_click_link(const URL&, String const& target, unsigned modifiers) override;
     virtual void page_did_request_context_menu(Gfx::IntPoint const&) override;
     virtual void page_did_request_link_context_menu(Gfx::IntPoint const&, const URL&, String const& target, unsigned modifiers) override;
-    virtual void page_did_start_loading(const URL&) override;
+    virtual void page_did_start_loading(const URL&, bool) override;
     virtual void page_did_create_main_document() override;
     virtual void page_did_finish_loading(const URL&) override;
     virtual void page_did_request_alert(String const&) override;

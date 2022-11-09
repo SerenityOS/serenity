@@ -47,7 +47,7 @@ private:
     virtual void did_unhover_link() override;
     virtual void did_click_link(AK::URL const&, String const&, unsigned) override;
     virtual void did_middle_click_link(AK::URL const&, String const&, unsigned) override;
-    virtual void did_start_loading(AK::URL const&) override;
+    virtual void did_start_loading(AK::URL const&, bool) override;
     virtual void did_request_context_menu(Gfx::IntPoint const&) override;
     virtual void did_request_link_context_menu(Gfx::IntPoint const&, AK::URL const&, String const&, unsigned) override;
     virtual void did_request_image_context_menu(Gfx::IntPoint const&, AK::URL const&, String const&, unsigned, Gfx::ShareableBitmap const&) override;
