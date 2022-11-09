@@ -21,7 +21,7 @@
 
 namespace Kernel {
 
-RecursiveSpinlock g_scheduler_lock { LockRank::None };
+RecursiveSpinlock<LockRank::None> g_scheduler_lock {};
 
 static u32 time_slice_for(Thread const& thread)
 {
@@ -46,9 +46,9 @@ struct ThreadReadyQueues {
     Array<ThreadReadyQueue, count> queues;
 };
 
-static Singleton<SpinlockProtected<ThreadReadyQueues>> g_ready_queues;
+static Singleton<SpinlockProtected<ThreadReadyQueues, LockRank::None>> g_ready_queues;
 
-static SpinlockProtected<TotalTimeScheduled> g_total_time_scheduled { LockRank::None };
+static SpinlockProtected<TotalTimeScheduled, LockRank::None> g_total_time_scheduled {};
 
 static void dump_thread_list(bool = false);
 

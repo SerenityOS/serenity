@@ -114,14 +114,14 @@ protected:
 
     ErrorOr<void> initialize_edid_for_generic_monitor(Optional<Array<u8, 3>> manufacturer_id_string);
 
-    mutable Spinlock m_control_lock { LockRank::None };
+    mutable Spinlock<LockRank::None> m_control_lock {};
     mutable Mutex m_flushing_lock;
 
     bool m_console_mode { false };
 
     bool m_vertical_offsetted { false };
 
-    mutable Spinlock m_modeset_lock { LockRank::None };
+    mutable Spinlock<LockRank::None> m_modeset_lock {};
     ModeSetting m_current_mode_setting {};
 
     Optional<EDID::Parser> m_edid_parser;
@@ -165,7 +165,7 @@ private:
     LockRefPtr<Memory::SharedFramebufferVMObject> m_shared_framebuffer_vmobject;
 
     LockWeakPtr<Process> m_responsible_process;
-    Spinlock m_responsible_process_lock { LockRank::None };
+    Spinlock<LockRank::None> m_responsible_process_lock {};
 
     IntrusiveListNode<DisplayConnector, LockRefPtr<DisplayConnector>> m_list_node;
 };

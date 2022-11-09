@@ -270,7 +270,7 @@ void Region::unmap(ShouldFlushTLB should_flush_tlb)
     unmap_with_locks_held(should_flush_tlb, pd_locker);
 }
 
-void Region::unmap_with_locks_held(ShouldFlushTLB should_flush_tlb, SpinlockLocker<RecursiveSpinlock>&)
+void Region::unmap_with_locks_held(ShouldFlushTLB should_flush_tlb, SpinlockLocker<RecursiveSpinlock<LockRank::None>>&)
 {
     if (!m_page_directory)
         return;

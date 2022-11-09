@@ -39,7 +39,6 @@ VirtualFileSystem& VirtualFileSystem::the()
 }
 
 UNMAP_AFTER_INIT VirtualFileSystem::VirtualFileSystem()
-    : m_root_custody(LockRank::None)
 {
 }
 

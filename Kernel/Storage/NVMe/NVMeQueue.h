@@ -56,10 +56,10 @@ private:
     }
 
 protected:
-    Spinlock m_cq_lock { LockRank::Interrupts };
+    Spinlock<LockRank::Interrupts> m_cq_lock {};
     LockRefPtr<AsyncBlockDeviceRequest> m_current_request;
     NonnullOwnPtr<Memory::Region> m_rw_dma_region;
-    Spinlock m_request_lock { LockRank::None };
+    Spinlock<LockRank::None> m_request_lock {};
 
 private:
     u16 m_qid {};
@@ -69,7 +69,7 @@ private:
     u16 m_cq_head {};
     bool m_admin_queue { false };
     u32 m_qdepth {};
-    Spinlock m_sq_lock { LockRank::Interrupts };
+    Spinlock<LockRank::Interrupts> m_sq_lock {};
     OwnPtr<Memory::Region> m_cq_dma_region;
     NonnullRefPtrVector<Memory::PhysicalPage> m_cq_dma_page;
     Span<NVMeSubmission> m_sqe_array;

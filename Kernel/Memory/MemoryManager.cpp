@@ -88,7 +88,6 @@ MemoryManager::GlobalData::GlobalData()
 }
 
 UNMAP_AFTER_INIT MemoryManager::MemoryManager()
-    : m_global_data(LockRank::None)
 {
     s_the = this;
 

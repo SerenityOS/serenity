@@ -107,7 +107,7 @@ private:
 
     EntropySource m_entropy_source;
     LockRefPtr<AsyncBlockDeviceRequest> m_current_request;
-    Spinlock m_hard_lock { LockRank::None };
+    Spinlock<LockRank::None> m_hard_lock {};
     Mutex m_lock { "AHCIPort"sv };
 
     mutable bool m_wait_for_completion { false };

@@ -34,13 +34,13 @@ public:
     NonnullLockRefPtr<VirtualConsole> first_tty() const { return m_consoles[0]; }
     NonnullLockRefPtr<VirtualConsole> debug_tty() const { return m_consoles[1]; }
 
-    RecursiveSpinlock& tty_write_lock() { return m_tty_write_lock; }
+    RecursiveSpinlock<LockRank::None>& tty_write_lock() { return m_tty_write_lock; }
 
 private:
     NonnullLockRefPtrVector<VirtualConsole, s_max_virtual_consoles> m_consoles;
     VirtualConsole* m_active_console { nullptr };
-    Spinlock m_lock { LockRank::None };
-    RecursiveSpinlock m_tty_write_lock { LockRank::None };
+    Spinlock<LockRank::None> m_lock {};
+    RecursiveSpinlock<LockRank::None> m_tty_write_lock {};
 };
 
 };

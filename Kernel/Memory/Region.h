@@ -13,6 +13,7 @@
 #include <Kernel/Forward.h>
 #include <Kernel/KString.h>
 #include <Kernel/Library/LockWeakable.h>
+#include <Kernel/Locking/LockRank.h>
 #include <Kernel/Memory/PageFaultResponse.h>
 #include <Kernel/Memory/VirtualRange.h>
 #include <Kernel/Sections.h>
@@ -192,7 +193,7 @@ public:
     void set_page_directory(PageDirectory&);
     ErrorOr<void> map(PageDirectory&, ShouldFlushTLB = ShouldFlushTLB::Yes);
     void unmap(ShouldFlushTLB = ShouldFlushTLB::Yes);
-    void unmap_with_locks_held(ShouldFlushTLB, SpinlockLocker<RecursiveSpinlock>& pd_locker);
+    void unmap_with_locks_held(ShouldFlushTLB, SpinlockLocker<RecursiveSpinlock<LockRank::None>>& pd_locker);
 
     void remap();
 

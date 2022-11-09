@@ -41,8 +41,8 @@ public:
     u32 read32_field(Address address, u32 field);
     DeviceIdentifier get_device_identifier(Address address) const;
 
-    Spinlock const& scan_lock() const { return m_scan_lock; }
-    RecursiveSpinlock const& access_lock() const { return m_access_lock; }
+    Spinlock<LockRank::None> const& scan_lock() const { return m_scan_lock; }
+    RecursiveSpinlock<LockRank::None> const& access_lock() const { return m_access_lock; }
 
     ErrorOr<void> add_host_controller_and_enumerate_attached_devices(NonnullOwnPtr<HostController>, Function<void(DeviceIdentifier const&)> callback);
 
@@ -57,8 +57,8 @@ private:
     Vector<Capability> get_capabilities(Address);
     Optional<u8> get_capabilities_pointer(Address address);
 
-    mutable RecursiveSpinlock m_access_lock { LockRank::None };
-    mutable Spinlock m_scan_lock { LockRank::None };
+    mutable RecursiveSpinlock<LockRank::None> m_access_lock {};
+    mutable Spinlock<LockRank::None> m_scan_lock {};
 
     HashMap<u32, NonnullOwnPtr<PCI::HostController>> m_host_controllers;
     Vector<DeviceIdentifier> m_device_identifiers;

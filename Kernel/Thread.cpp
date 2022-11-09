@@ -33,9 +33,9 @@
 
 namespace Kernel {
 
-static Singleton<SpinlockProtected<Thread::GlobalList>> s_list;
+static Singleton<SpinlockProtected<Thread::GlobalList, LockRank::None>> s_list;
 
-SpinlockProtected<Thread::GlobalList>& Thread::all_instances()
+SpinlockProtected<Thread::GlobalList, LockRank::None>& Thread::all_instances()
 {
     return *s_list;
 }
@@ -215,7 +215,7 @@ Thread::BlockResult Thread::block_impl(BlockTimeout const& timeout, Blocker& blo
     return result;
 }
 
-void Thread::block(Kernel::Mutex& lock, SpinlockLocker<Spinlock>& lock_lock, u32 lock_count)
+void Thread::block(Kernel::Mutex& lock, SpinlockLocker<Spinlock<LockRank::None>>& lock_lock, u32 lock_count)
 {
     VERIFY(!Processor::current_in_irq());
     VERIFY(this == Thread::current());

@@ -22,7 +22,7 @@ public:
     void reclaim_space(PhysicalAddress chunk_start, size_t chunk_size);
     PhysicalAddress start_of_used() const;
 
-    Spinlock& lock() { return m_lock; }
+    Spinlock<LockRank::None>& lock() { return m_lock; }
     size_t used_bytes() const { return m_num_used_bytes; }
     PhysicalAddress start_of_region() const { return m_region->physical_page(0)->paddr(); }
     VirtualAddress vaddr() const { return m_region->vaddr(); }
@@ -32,7 +32,7 @@ private:
     RingBuffer(NonnullOwnPtr<Memory::Region> region, size_t capacity);
 
     NonnullOwnPtr<Memory::Region> m_region;
-    Spinlock m_lock { LockRank::None };
+    Spinlock<LockRank::None> m_lock {};
     size_t m_start_of_used {};
     size_t m_num_used_bytes {};
     size_t m_capacity_in_bytes {};

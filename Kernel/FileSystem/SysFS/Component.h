@@ -80,14 +80,14 @@ public:
 
     virtual ErrorOr<NonnullLockRefPtr<SysFSInode>> to_inode(SysFS const& sysfs_instance) const override final;
 
-    using ChildList = SpinlockProtected<IntrusiveList<&SysFSComponent::m_list_node>>;
+    using ChildList = SpinlockProtected<IntrusiveList<&SysFSComponent::m_list_node>, LockRank::None>;
 
 protected:
     virtual bool is_root_directory() const { return false; }
 
     SysFSDirectory() {};
     explicit SysFSDirectory(SysFSDirectory const& parent_directory);
-    ChildList m_child_components { LockRank::None };
+    ChildList m_child_components {};
 };
 
 }

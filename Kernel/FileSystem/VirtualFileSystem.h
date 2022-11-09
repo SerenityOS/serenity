@@ -113,11 +113,11 @@ private:
 
     LockRefPtr<Inode> m_root_inode;
 
-    SpinlockProtected<RefPtr<Custody>> m_root_custody;
+    SpinlockProtected<RefPtr<Custody>, LockRank::None> m_root_custody {};
 
-    SpinlockProtected<IntrusiveList<&Mount::m_vfs_list_node>> m_mounts { LockRank::None };
-    SpinlockProtected<IntrusiveList<&FileBackedFileSystem::m_file_backed_file_system_node>> m_file_backed_file_systems_list { LockRank::None };
-    SpinlockProtected<IntrusiveList<&FileSystem::m_file_system_node>> m_file_systems_list { LockRank::FileSystem };
+    SpinlockProtected<IntrusiveList<&Mount::m_vfs_list_node>, LockRank::None> m_mounts {};
+    SpinlockProtected<IntrusiveList<&FileBackedFileSystem::m_file_backed_file_system_node>, LockRank::None> m_file_backed_file_systems_list {};
+    SpinlockProtected<IntrusiveList<&FileSystem::m_file_system_node>, LockRank::FileSystem> m_file_systems_list {};
 };
 
 }

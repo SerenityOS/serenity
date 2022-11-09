@@ -45,7 +45,7 @@ public:
 
 protected:
     KeyboardDevice();
-    mutable Spinlock m_queue_lock { LockRank::None };
+    mutable Spinlock<LockRank::None> m_queue_lock {};
     CircularQueue<Event, 16> m_queue;
     // ^CharacterDevice
     virtual StringView class_name() const override { return "KeyboardDevice"sv; }

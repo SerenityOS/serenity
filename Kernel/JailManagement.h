@@ -36,7 +36,7 @@ public:
 private:
     JailIndex generate_jail_id();
 
-    SpinlockProtected<IntrusiveList<&Jail::m_jail_list_node>> m_jails { LockRank::None };
+    SpinlockProtected<IntrusiveList<&Jail::m_jail_list_node>, LockRank::None> m_jails {};
 };
 
 }

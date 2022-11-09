@@ -25,7 +25,7 @@ private:
 
     explicit SysFSCapsLockRemap(SysFSDirectory const&);
 
-    mutable Spinlock m_lock { LockRank::None };
+    mutable Spinlock<LockRank::None> m_lock {};
 };
 
 }

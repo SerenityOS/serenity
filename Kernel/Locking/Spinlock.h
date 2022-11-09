@@ -13,18 +13,34 @@
 
 namespace Kernel {
 
+template<LockRank Rank>
 class Spinlock {
     AK_MAKE_NONCOPYABLE(Spinlock);
     AK_MAKE_NONMOVABLE(Spinlock);
 
 public:
-    Spinlock(LockRank rank)
-        : m_rank(rank)
+    Spinlock() = default;
+
+    InterruptsState lock()
     {
+        InterruptsState previous_interrupts_state = processor_interrupts_state();
+        Processor::enter_critical();
+        Processor::disable_interrupts();
+        while (m_lock.exchange(1, AK::memory_order_acquire) != 0)
+            Processor::wait_check();
+        track_lock_acquire(m_rank);
+        return previous_interrupts_state;
     }
 
-    InterruptsState lock();
-    void unlock(InterruptsState);
+    void unlock(InterruptsState previous_interrupts_state)
+    {
+        VERIFY(is_locked());
+        track_lock_release(m_rank);
+        m_lock.store(0, AK::memory_order_release);
+
+        Processor::leave_critical();
+        restore_processor_interrupts_state(previous_interrupts_state);
+    }
 
     [[nodiscard]] ALWAYS_INLINE bool is_locked() const
     {
@@ -38,21 +54,50 @@ public:
 
 private:
     Atomic<u8> m_lock { 0 };
-    const LockRank m_rank;
+    static constexpr LockRank const m_rank { Rank };
 };
 
+template<LockRank Rank>
 class RecursiveSpinlock {
     AK_MAKE_NONCOPYABLE(RecursiveSpinlock);
     AK_MAKE_NONMOVABLE(RecursiveSpinlock);
 
 public:
-    RecursiveSpinlock(LockRank rank)
-        : m_rank(rank)
+    RecursiveSpinlock() = default;
+
+    InterruptsState lock()
     {
+        InterruptsState previous_interrupts_state = processor_interrupts_state();
+        Processor::disable_interrupts();
+        Processor::enter_critical();
+        auto& proc = Processor::current();
+        FlatPtr cpu = FlatPtr(&proc);
+        FlatPtr expected = 0;
+        while (!m_lock.compare_exchange_strong(expected, cpu, AK::memory_order_acq_rel)) {
+            if (expected == cpu)
+                break;
+            Processor::wait_check();
+            expected = 0;
+        }
+        if (m_recursions == 0)
+            track_lock_acquire(m_rank);
+        m_recursions++;
+        return previous_interrupts_state;
     }
 
-    InterruptsState lock();
-    void unlock(InterruptsState);
+    void unlock(InterruptsState previous_interrupts_state)
+    {
+        VERIFY_INTERRUPTS_DISABLED();
+        VERIFY(m_recursions > 0);
+        VERIFY(m_lock.load(AK::memory_order_relaxed) == FlatPtr(&Processor::current()));
+        if (--m_recursions == 0) {
+            track_lock_release(m_rank);
+            m_lock.store(0, AK::memory_order_release);
+        }
+
+        Processor::leave_critical();
+        restore_processor_interrupts_state(previous_interrupts_state);
+    }
 
     [[nodiscard]] ALWAYS_INLINE bool is_locked() const
     {
@@ -72,7 +117,7 @@ public:
 private:
     Atomic<FlatPtr> m_lock { 0 };
     u32 m_recursions { 0 };
-    const LockRank m_rank;
+    static constexpr LockRank const m_rank { Rank };
 };
 
 template<typename LockType>

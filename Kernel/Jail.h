@@ -34,7 +34,7 @@ public:
     JailIndex index() const { return m_index; }
 
     void detach(Badge<Process>);
-    SpinlockProtected<size_t>& attach_count() { return m_attach_count; }
+    SpinlockProtected<size_t, LockRank::None>& attach_count() { return m_attach_count; }
 
 private:
     Jail(NonnullOwnPtr<KString>, JailIndex);
@@ -43,7 +43,7 @@ private:
     JailIndex const m_index;
 
     IntrusiveListNode<Jail, NonnullLockRefPtr<Jail>> m_jail_list_node;
-    SpinlockProtected<size_t> m_attach_count { LockRank::None, 0 };
+    SpinlockProtected<size_t, LockRank::None> m_attach_count { 0 };
 };
 
 }

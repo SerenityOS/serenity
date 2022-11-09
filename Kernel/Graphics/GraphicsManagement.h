@@ -64,7 +64,7 @@ private:
 
     unsigned m_current_minor_number { 0 };
 
-    SpinlockProtected<IntrusiveList<&DisplayConnector::m_list_node>> m_display_connector_nodes { LockRank::None };
+    SpinlockProtected<IntrusiveList<&DisplayConnector::m_list_node>, LockRank::None> m_display_connector_nodes {};
 #if ARCH(X86_64)
     OwnPtr<VGAIOArbiter> m_vga_arbiter;
 #endif

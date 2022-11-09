@@ -298,7 +298,7 @@ public:
         void set_blocker_set_raw_locked(BlockerSet* blocker_set) { m_blocker_set = blocker_set; }
 
         // FIXME: Figure out whether this can be Thread.
-        mutable RecursiveSpinlock m_lock { LockRank::None };
+        mutable RecursiveSpinlock<LockRank::None> m_lock {};
 
     private:
         BlockerSet* m_blocker_set { nullptr };
@@ -417,7 +417,7 @@ public:
         }
 
         // FIXME: Check whether this can be Thread.
-        mutable Spinlock m_lock { LockRank::None };
+        mutable Spinlock<LockRank::None> m_lock {};
 
     private:
         Vector<BlockerInfo, 4> m_blockers;
@@ -812,7 +812,7 @@ public:
         }
     }
 
-    void block(Kernel::Mutex&, SpinlockLocker<Spinlock>&, u32);
+    void block(Kernel::Mutex&, SpinlockLocker<Spinlock<LockRank::None>>&, u32);
 
     template<typename BlockerType, class... Args>
     BlockResult block(BlockTimeout const& timeout, Args&&... args)
@@ -1003,7 +1003,7 @@ public:
     TrapFrame*& current_trap() { return m_current_trap; }
     TrapFrame const* const& current_trap() const { return m_current_trap; }
 
-    RecursiveSpinlock& get_lock() const { return m_lock; }
+    RecursiveSpinlock<LockRank::Thread>& get_lock() const { return m_lock; }
 
 #if LOCK_DEBUG
     void holding_lock(Mutex& lock, int refs_delta, LockLocation const& location)
@@ -1164,8 +1164,8 @@ private:
     void relock_process(LockMode, u32);
     void reset_fpu_state();
 
-    mutable RecursiveSpinlock m_lock { LockRank::Thread };
-    mutable RecursiveSpinlock m_block_lock { LockRank::None };
+    mutable RecursiveSpinlock<LockRank::Thread> m_lock {};
+    mutable RecursiveSpinlock<LockRank::None> m_block_lock {};
     NonnullLockRefPtr<Process> m_process;
     ThreadID m_tid { -1 };
     ThreadRegisters m_regs {};
@@ -1199,7 +1199,7 @@ private:
     Kernel::Mutex* m_blocking_mutex { nullptr };
     u32 m_lock_requested_count { 0 };
     IntrusiveListNode<Thread> m_blocked_threads_list_node;
-    LockRank m_lock_rank_mask { LockRank::None };
+    LockRank m_lock_rank_mask {};
     bool m_allocation_enabled { true };
 
     // FIXME: remove this after annihilating Process::m_big_lock
@@ -1207,7 +1207,7 @@ private:
 
 #if LOCK_DEBUG
     Atomic<u32> m_holding_locks { 0 };
-    Spinlock m_holding_locks_lock { LockRank::None };
+    Spinlock<LockRank::None> m_holding_locks_lock {};
     Vector<HoldingLockInfo> m_holding_locks_list;
 #endif
 
@@ -1267,7 +1267,7 @@ public:
     using ListInProcess = IntrusiveList<&Thread::m_process_thread_list_node>;
     using GlobalList = IntrusiveList<&Thread::m_global_thread_list_node>;
 
-    static SpinlockProtected<GlobalList>& all_instances();
+    static SpinlockProtected<GlobalList, LockRank::None>& all_instances();
 };
 
 AK_ENUM_BITWISE_OPERATORS(Thread::FileBlocker::BlockFlags);

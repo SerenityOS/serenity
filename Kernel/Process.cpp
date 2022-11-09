@@ -46,9 +46,9 @@ static void create_signal_trampoline();
 
 extern ProcessID g_init_pid;
 
-RecursiveSpinlock g_profiling_lock { LockRank::None };
+RecursiveSpinlock<LockRank::None> g_profiling_lock {};
 static Atomic<pid_t> next_pid;
-static Singleton<SpinlockProtected<Process::List>> s_all_instances;
+static Singleton<SpinlockProtected<Process::List, LockRank::None>> s_all_instances;
 READONLY_AFTER_INIT Memory::Region* g_signal_trampoline_region;
 
 static Singleton<MutexProtected<OwnPtr<KString>>> s_hostname;
@@ -58,7 +58,7 @@ MutexProtected<OwnPtr<KString>>& hostname()
     return *s_hostname;
 }
 
-SpinlockProtected<Process::List>& Process::all_instances()
+SpinlockProtected<Process::List, LockRank::None>& Process::all_instances()
 {
     return *s_all_instances;
 }
@@ -319,14 +319,12 @@ ErrorOr<NonnullLockRefPtr<Process>> Process::try_create(LockRefPtr<Thread>& firs
 
 Process::Process(NonnullOwnPtr<KString> name, NonnullRefPtr<Credentials> credentials, ProcessID ppid, bool is_kernel_process, RefPtr<Custody> current_directory, RefPtr<Custody> executable, TTY* tty, UnveilNode unveil_tree, UnveilNode exec_unveil_tree)
     : m_name(move(name))
-    , m_space(LockRank::None)
-    , m_protected_data_lock(LockRank::None)
     , m_is_kernel_process(is_kernel_process)
-    , m_executable(LockRank::None, move(executable))
-    , m_current_directory(LockRank::None, move(current_directory))
+    , m_executable(move(executable))
+    , m_current_directory(move(current_directory))
     , m_tty(tty)
-    , m_unveil_data(LockRank::None, move(unveil_tree))
-    , m_exec_unveil_data(LockRank::None, move(exec_unveil_tree))
+    , m_unveil_data(move(unveil_tree))
+    , m_exec_unveil_data(move(exec_unveil_tree))
     , m_wait_blocker_set(*this)
 {
     // Ensure that we protect the process data when exiting the constructor.

@@ -13,7 +13,7 @@
 
 namespace Kernel {
 
-static Singleton<SpinlockProtected<HashMap<GlobalFutexKey, NonnullLockRefPtr<FutexQueue>>>> s_global_futex_queues;
+static Singleton<SpinlockProtected<HashMap<GlobalFutexKey, NonnullLockRefPtr<FutexQueue>>, LockRank::None>> s_global_futex_queues;
 
 void Process::clear_futex_queues_on_exec()
 {

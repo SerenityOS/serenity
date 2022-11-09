@@ -70,7 +70,6 @@ private:
     UHCIDescriptorPool(NonnullOwnPtr<Memory::Region> pool_memory_block, StringView name)
         : m_pool_name(name)
         , m_pool_region(move(pool_memory_block))
-        , m_pool_lock(LockRank::None)
     {
         // Go through the number of descriptors to create in the pool, and create a virtual/physical address mapping
         for (size_t i = 0; i < PAGE_SIZE / sizeof(T); i++) {
@@ -84,7 +83,7 @@ private:
     StringView m_pool_name;                                   // Name of this pool
     NonnullOwnPtr<Memory::Region> m_pool_region;              // Memory region where descriptors actually reside
     Stack<T*, PAGE_SIZE / sizeof(T)> m_free_descriptor_stack; // Stack of currently free descriptor pointers
-    Spinlock m_pool_lock;
+    Spinlock<LockRank::None> m_pool_lock;
 };
 
 }

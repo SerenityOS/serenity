@@ -82,7 +82,8 @@ private:
     // FIXME: remove this after annihilating Process::m_big_lock
     using BigLockBlockedThreadList = IntrusiveList<&Thread::m_big_lock_blocked_threads_list_node>;
 
-    void block(Thread&, Mode, SpinlockLocker<Spinlock>&, u32);
+    // FIXME: Allow any lock rank.
+    void block(Thread&, Mode, SpinlockLocker<Spinlock<LockRank::None>>&, u32);
     void unblock_waiters(Mode);
 
     StringView m_name;
@@ -117,10 +118,10 @@ private:
         }
     };
     // FIXME: Use a specific lock rank passed by constructor.
-    SpinlockProtected<BlockedThreadLists> m_blocked_thread_lists { LockRank::None };
+    SpinlockProtected<BlockedThreadLists, LockRank::None> m_blocked_thread_lists {};
 
     // FIXME: See above.
-    mutable Spinlock m_lock { LockRank::None };
+    mutable Spinlock<LockRank::None> m_lock {};
 
 #if LOCK_SHARED_UPGRADE_DEBUG
     HashMap<Thread*, u32> m_shared_holders_map;

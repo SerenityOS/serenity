@@ -90,8 +90,6 @@ UNMAP_AFTER_INIT UHCIController::UHCIController(PCI::DeviceIdentifier const& pci
     : PCI::Device(pci_device_identifier.address())
     , IRQHandler(pci_device_identifier.interrupt_line().value())
     , m_registers_io_window(move(registers_io_window))
-    , m_async_lock(LockRank::None)
-    , m_schedule_lock(LockRank::None)
 {
 }
 

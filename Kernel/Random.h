@@ -82,7 +82,7 @@ public:
         return is_seeded() || m_p0_len >= reseed_threshold;
     }
 
-    Spinlock& get_lock() { return m_lock; }
+    Spinlock<LockRank::None>& get_lock() { return m_lock; }
 
 private:
     void reseed()
@@ -117,7 +117,7 @@ private:
     size_t m_p0_len { 0 };
     ByteBuffer m_key;
     HashType m_pools[pool_count];
-    Spinlock m_lock { LockRank::None };
+    Spinlock<LockRank::None> m_lock {};
 };
 
 class KernelRng : public FortunaPRNG<Crypto::Cipher::AESCipher, Crypto::Hash::SHA256, 256> {

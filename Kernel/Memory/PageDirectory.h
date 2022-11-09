@@ -52,7 +52,7 @@ public:
 
     void set_space(Badge<AddressSpace>, AddressSpace& space) { m_space = &space; }
 
-    RecursiveSpinlock& get_lock() { return m_lock; }
+    RecursiveSpinlock<LockRank::None>& get_lock() { return m_lock; }
 
     // This has to be public to let the global singleton access the member pointer
     IntrusiveRedBlackTreeNode<FlatPtr, PageDirectory, RawPtr<PageDirectory>> m_tree_node;
@@ -72,7 +72,7 @@ private:
 #else
     RefPtr<PhysicalPage> m_directory_pages[4];
 #endif
-    RecursiveSpinlock m_lock { LockRank::None };
+    RecursiveSpinlock<LockRank::None> m_lock {};
 };
 
 void activate_kernel_page_directory(PageDirectory const& pgd);

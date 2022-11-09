@@ -44,6 +44,6 @@ public:
     using List = IntrusiveList<&ProcessGroup::m_list_node>;
 };
 
-SpinlockProtected<ProcessGroup::List>& process_groups();
+SpinlockProtected<ProcessGroup::List, LockRank::None>& process_groups();
 
 }
