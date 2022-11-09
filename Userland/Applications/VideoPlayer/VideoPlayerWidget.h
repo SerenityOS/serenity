@@ -35,7 +35,7 @@ private:
     VideoPlayerWidget(GUI::Window&);
 
     void update_play_pause_icon();
-    void on_decoding_error(Video::DecoderError);
+    void on_decoding_error(Video::DecoderError const&);
     void display_next_frame();
 
     void cycle_sizing_modes();

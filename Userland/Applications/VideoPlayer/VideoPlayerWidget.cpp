@@ -127,7 +127,7 @@ void VideoPlayerWidget::toggle_pause()
         resume_playback();
 }
 
-void VideoPlayerWidget::on_decoding_error(Video::DecoderError error)
+void VideoPlayerWidget::on_decoding_error(Video::DecoderError const& error)
 {
     StringView text_format;
 
