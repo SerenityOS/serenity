@@ -939,7 +939,7 @@ void FormattingContext::layout_absolutely_positioned_element(Box const& box, Ava
 
     // NOTE: We compute height before *and* after doing inside layout.
     //       This is done so that inside layout can resolve percentage heights.
-    //       In a situation like
+    //       In some situations, e.g with non-auto top & bottom values, the height can be determined early.
     compute_height_for_absolutely_positioned_element(box, available_space);
 
     auto independent_formatting_context = layout_inside(box, LayoutMode::Normal, box_state.available_inner_space_or_constraints_from(available_space));
