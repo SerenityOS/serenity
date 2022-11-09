@@ -2557,7 +2557,7 @@ NonnullRefPtr<LengthStyleValue> LengthStyleValue::create(Length const& length)
     return adopt_ref(*new LengthStyleValue(length));
 }
 
-static Optional<CSS::Length> absolutized_length(CSS::Length const& length, Gfx::IntRect const& viewport_rect, Gfx::FontPixelMetrics const& font_metrics, float font_size, float root_font_size)
+static Optional<CSS::Length> absolutized_length(CSS::Length const& length, CSSPixelRect const& viewport_rect, Gfx::FontPixelMetrics const& font_metrics, CSSPixels font_size, CSSPixels root_font_size)
 {
     if (length.is_px())
         return {};
@@ -2568,19 +2568,19 @@ static Optional<CSS::Length> absolutized_length(CSS::Length const& length, Gfx::
     return {};
 }
 
-NonnullRefPtr<StyleValue> StyleValue::absolutized(Gfx::IntRect const&, Gfx::FontPixelMetrics const&, float, float) const
+NonnullRefPtr<StyleValue> StyleValue::absolutized(CSSPixelRect const&, Gfx::FontPixelMetrics const&, CSSPixels, CSSPixels) const
 {
     return *this;
 }
 
-NonnullRefPtr<StyleValue> LengthStyleValue::absolutized(Gfx::IntRect const& viewport_rect, Gfx::FontPixelMetrics const& font_metrics, float font_size, float root_font_size) const
+NonnullRefPtr<StyleValue> LengthStyleValue::absolutized(CSSPixelRect const& viewport_rect, Gfx::FontPixelMetrics const& font_metrics, CSSPixels font_size, CSSPixels root_font_size) const
 {
     if (auto length = absolutized_length(m_length, viewport_rect, font_metrics, font_size, root_font_size); length.has_value())
         return LengthStyleValue::create(length.release_value());
     return *this;
 }
 
-NonnullRefPtr<StyleValue> ShadowStyleValue::absolutized(Gfx::IntRect const& viewport_rect, Gfx::FontPixelMetrics const& font_metrics, float font_size, float root_font_size) const
+NonnullRefPtr<StyleValue> ShadowStyleValue::absolutized(CSSPixelRect const& viewport_rect, Gfx::FontPixelMetrics const& font_metrics, CSSPixels font_size, CSSPixels root_font_size) const
 {
     auto absolutized_offset_x = absolutized_length(m_offset_x, viewport_rect, font_metrics, font_size, root_font_size).value_or(m_offset_x);
     auto absolutized_offset_y = absolutized_length(m_offset_y, viewport_rect, font_metrics, font_size, root_font_size).value_or(m_offset_y);
@@ -2589,7 +2589,7 @@ NonnullRefPtr<StyleValue> ShadowStyleValue::absolutized(Gfx::IntRect const& view
     return ShadowStyleValue::create(m_color, absolutized_offset_x, absolutized_offset_y, absolutized_blur_radius, absolutized_spread_distance, m_placement);
 }
 
-NonnullRefPtr<StyleValue> BorderRadiusStyleValue::absolutized(Gfx::IntRect const& viewport_rect, Gfx::FontPixelMetrics const& font_metrics, float font_size, float root_font_size) const
+NonnullRefPtr<StyleValue> BorderRadiusStyleValue::absolutized(CSSPixelRect const& viewport_rect, Gfx::FontPixelMetrics const& font_metrics, CSSPixels font_size, CSSPixels root_font_size) const
 {
     if (m_horizontal_radius.is_percentage() && m_vertical_radius.is_percentage())
         return *this;

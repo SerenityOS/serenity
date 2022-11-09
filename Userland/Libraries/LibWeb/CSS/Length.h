@@ -83,7 +83,7 @@ public:
 
     CSSPixels to_px(Layout::Node const&) const;
 
-    ALWAYS_INLINE CSSPixels to_px(Gfx::IntRect const& viewport_rect, Gfx::FontPixelMetrics const& font_metrics, CSSPixels font_size, CSSPixels root_font_size) const
+    ALWAYS_INLINE CSSPixels to_px(CSSPixelRect const& viewport_rect, Gfx::FontPixelMetrics const& font_metrics, CSSPixels font_size, CSSPixels root_font_size) const
     {
         if (is_auto())
             return 0;
@@ -124,7 +124,7 @@ public:
     // this file already. To break the cyclic dependency, we must move all method definitions out.
     bool operator==(Length const& other) const;
 
-    CSSPixels relative_length_to_px(Gfx::IntRect const& viewport_rect, Gfx::FontPixelMetrics const& font_metrics, CSSPixels font_size, CSSPixels root_font_size) const;
+    CSSPixels relative_length_to_px(CSSPixelRect const& viewport_rect, Gfx::FontPixelMetrics const& font_metrics, CSSPixels font_size, CSSPixels root_font_size) const;
 
 private:
     char const* unit_name() const;
