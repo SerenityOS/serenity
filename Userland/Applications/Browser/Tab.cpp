@@ -248,6 +248,22 @@ Tab::Tab(BrowserWindow& window)
         update_status({}, count_waiting);
     };
 
+    view().on_restore_window = [this]() {
+        this->window().show();
+        this->window().move_to_front();
+        m_web_content_view->set_system_visibility_state(true);
+    };
+
+    view().on_reposition_window = [this](Gfx::IntPoint const& position) {
+        this->window().move_to(position);
+        return this->window().position();
+    };
+
+    view().on_resize_window = [this](Gfx::IntSize const& size) {
+        this->window().resize(size);
+        return this->window().size();
+    };
+
     m_link_context_menu = GUI::Menu::construct();
     auto link_default_action = GUI::Action::create("&Open", g_icon_bag.go_to, [this](auto&) {
         view().on_link_click(m_link_context_menu_url, "", 0);

@@ -84,6 +84,8 @@ public:
     void set_window_position(Gfx::IntPoint const&);
     void set_window_size(Gfx::IntSize const&);
 
+    void set_system_visibility_state(bool visible);
+
     Gfx::ShareableBitmap take_screenshot() const;
     Gfx::ShareableBitmap take_element_screenshot(i32 element_id);
     Gfx::ShareableBitmap take_document_screenshot();
@@ -110,6 +112,9 @@ public:
     Function<String(const AK::URL& url, Web::Cookie::Source source)> on_get_cookie;
     Function<void(const AK::URL& url, Web::Cookie::ParsedCookie const& cookie, Web::Cookie::Source source)> on_set_cookie;
     Function<void(i32 count_waiting)> on_resource_status_change;
+    Function<void()> on_restore_window;
+    Function<Gfx::IntPoint(Gfx::IntPoint const&)> on_reposition_window;
+    Function<Gfx::IntSize(Gfx::IntSize const&)> on_resize_window;
 
 private:
     OutOfProcessWebView();
@@ -167,6 +172,9 @@ private:
     virtual String notify_server_did_request_cookie(Badge<WebContentClient>, const AK::URL& url, Web::Cookie::Source source) override;
     virtual void notify_server_did_set_cookie(Badge<WebContentClient>, const AK::URL& url, Web::Cookie::ParsedCookie const& cookie, Web::Cookie::Source source) override;
     virtual void notify_server_did_update_resource_count(i32 count_waiting) override;
+    virtual void notify_server_did_request_restore_window() override;
+    virtual Gfx::IntPoint notify_server_did_request_reposition_window(Gfx::IntPoint const&) override;
+    virtual Gfx::IntSize notify_server_did_request_resize_window(Gfx::IntSize const&) override;
     virtual void notify_server_did_request_file(Badge<WebContentClient>, String const& path, i32) override;
 
     void request_repaint();

@@ -401,6 +401,26 @@ void OutOfProcessWebView::notify_server_did_update_resource_count(i32 count_wait
         on_resource_status_change(count_waiting);
 }
 
+void OutOfProcessWebView::notify_server_did_request_restore_window()
+{
+    if (on_restore_window)
+        on_restore_window();
+}
+
+Gfx::IntPoint OutOfProcessWebView::notify_server_did_request_reposition_window(Gfx::IntPoint const& position)
+{
+    if (on_reposition_window)
+        return on_reposition_window(position);
+    return {};
+}
+
+Gfx::IntSize OutOfProcessWebView::notify_server_did_request_resize_window(Gfx::IntSize const& size)
+{
+    if (on_resize_window)
+        return on_resize_window(size);
+    return {};
+}
+
 void OutOfProcessWebView::notify_server_did_request_file(Badge<WebContentClient>, String const& path, i32 request_id)
 {
     auto file = FileSystemAccessClient::Client::the().try_request_file_read_only_approved(window(), path);
@@ -642,14 +662,19 @@ void OutOfProcessWebView::focusout_event(GUI::FocusEvent&)
     client().async_set_has_focus(false);
 }
 
+void OutOfProcessWebView::set_system_visibility_state(bool visible)
+{
+    client().async_set_system_visibility_state(visible);
+}
+
 void OutOfProcessWebView::show_event(GUI::ShowEvent&)
 {
-    client().async_set_system_visibility_state(true);
+    set_system_visibility_state(true);
 }
 
 void OutOfProcessWebView::hide_event(GUI::HideEvent&)
 {
-    client().async_set_system_visibility_state(false);
+    set_system_visibility_state(false);
 }
 
 }
