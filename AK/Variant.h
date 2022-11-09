@@ -225,8 +225,9 @@ IsLvalueReference<T>;
 template<NotLvalueReference... Ts>
 struct Variant
     : public Detail::MergeAndDeduplicatePacks<Detail::VariantConstructors<Ts, Variant<Ts...>>...> {
-private:
+public:
     using IndexType = Conditional<sizeof...(Ts) < 255, u8, size_t>; // Note: size+1 reserved for internal value checks
+private:
     static constexpr IndexType invalid_index = sizeof...(Ts);
 
     template<typename T>
