@@ -12,6 +12,8 @@
 #include <AK/NumericLimits.h>
 #include <AK/StdLibExtras.h>
 #include <AK/Try.h>
+#include <AK/TypeList.h>
+#include <AK/Variant.h>
 #include <LibCore/SharedCircularQueue.h>
 #include <LibCore/Stream.h>
 #include <LibIPC/File.h>
@@ -53,6 +55,7 @@ public:
     ErrorOr<void> decode(URL&);
     ErrorOr<void> decode(Dictionary&);
     ErrorOr<void> decode(File&);
+    ErrorOr<void> decode(AK::Empty&);
     template<typename K, typename V>
     ErrorOr<void> decode(HashMap<K, V>& hashmap)
     {
@@ -133,6 +136,18 @@ public:
         return {};
     }
 
+    template<typename... VariantTypes>
+    ErrorOr<void> decode(Variant<VariantTypes...>& variant)
+    {
+        typename AK::Variant<VariantTypes...>::IndexType type_index;
+        TRY(decode(type_index));
+        if (type_index >= sizeof...(VariantTypes))
+            return Error::from_string_literal("IPC: Invalid variant index");
+
+        TRY((decode_variant<0, sizeof...(VariantTypes), VariantTypes...>(type_index, variant)));
+        return {};
+    }
+
     template<typename T>
     ErrorOr<void> decode(Optional<T>& optional)
     {
@@ -149,6 +164,22 @@ public:
     }
 
 private:
+    template<size_t CurrentIndex, size_t Max, typename... VariantTypes>
+    ErrorOr<void> decode_variant(size_t index, Variant<VariantTypes...>& variant)
+    {
+        if constexpr (CurrentIndex < Max) {
+            if (index == CurrentIndex) {
+                typename TypeList<VariantTypes...>::template Type<CurrentIndex> element;
+                TRY(decode(element));
+                variant.set(move(element));
+                return {};
+            }
+            return decode_variant<CurrentIndex + 1, Max, VariantTypes...>(index, variant);
+        } else {
+            VERIFY_NOT_REACHED();
+        }
+    }
+
     InputMemoryStream& m_stream;
     Core::Stream::LocalSocket& m_socket;
 };
