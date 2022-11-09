@@ -43,6 +43,7 @@ Vector<Client::Route> Client::s_routes = {
     { HTTP::HttpRequest::Method::POST, { "session", ":session_id", "window", "rect" }, &Client::handle_set_window_rect },
     { HTTP::HttpRequest::Method::POST, { "session", ":session_id", "window", "maximize" }, &Client::handle_maximize_window },
     { HTTP::HttpRequest::Method::POST, { "session", ":session_id", "window", "minimize" }, &Client::handle_minimize_window },
+    { HTTP::HttpRequest::Method::POST, { "session", ":session_id", "window", "fullscreen" }, &Client::handle_fullscreen_window },
     { HTTP::HttpRequest::Method::POST, { "session", ":session_id", "element" }, &Client::handle_find_element },
     { HTTP::HttpRequest::Method::POST, { "session", ":session_id", "elements" }, &Client::handle_find_elements },
     { HTTP::HttpRequest::Method::POST, { "session", ":session_id", "element", ":element_id", "element" }, &Client::handle_find_element_from_element },
@@ -606,6 +607,15 @@ Web::WebDriver::Response Client::handle_minimize_window(Vector<StringView> const
     dbgln_if(WEBDRIVER_DEBUG, "Handling POST /session/<session_id>/window/minimize");
     auto* session = TRY(find_session_with_id(parameters[0]));
     return session->web_content_connection().minimize_window();
+}
+
+// 11.8.5 Fullscreen Window, https://w3c.github.io/webdriver/#dfn-fullscreen-window
+// POST /session/{session id}/window/fullscreen
+Web::WebDriver::Response Client::handle_fullscreen_window(Vector<StringView> const& parameters, JsonValue const&)
+{
+    dbgln_if(WEBDRIVER_DEBUG, "Handling POST /session/<session_id>/window/fullscreen");
+    auto* session = TRY(find_session_with_id(parameters[0]));
+    return session->web_content_connection().fullscreen_window();
 }
 
 // 12.3.2 Find Element, https://w3c.github.io/webdriver/#dfn-find-element

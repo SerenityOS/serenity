@@ -287,6 +287,11 @@ Tab::Tab(BrowserWindow& window)
         return this->window().rect();
     };
 
+    view().on_fullscreen_window = [this]() {
+        this->window().set_fullscreen(true);
+        return this->window().rect();
+    };
+
     m_link_context_menu = GUI::Menu::construct();
     auto link_default_action = GUI::Action::create("&Open", g_icon_bag.go_to, [this](auto&) {
         view().on_link_click(m_link_context_menu_url, "", 0);

@@ -515,6 +515,28 @@ Messages::WebDriverClient::MinimizeWindowResponse WebDriverConnection::minimize_
     return serialize_rect(window_rect);
 }
 
+// 11.8.5 Fullscreen Window, https://w3c.github.io/webdriver/#dfn-fullscreen-window
+Messages::WebDriverClient::FullscreenWindowResponse WebDriverConnection::fullscreen_window()
+{
+    // 1. If the remote end does not support fullscreen return error with error code unsupported operation.
+
+    // 2. If the current top-level browsing context is no longer open, return error with error code no such window.
+    TRY(ensure_open_top_level_browsing_context());
+
+    // FIXME: 3. Handle any user prompts and return its value if it is an error.
+
+    // 4. Restore the window.
+    restore_the_window();
+
+    // 5. FIXME: Call fullscreen an element with the current top-level browsing context’s active document’s document element.
+    //           As described in https://fullscreen.spec.whatwg.org/#fullscreen-an-element
+    //    NOTE: What we do here is basically `requestFullscreen(options)` with options["navigationUI"]="show"
+    auto rect = m_web_content_client.did_request_fullscreen_window();
+
+    // 6. Return success with data set to the WindowRect object for the current top-level browsing context.
+    return serialize_rect(rect);
+}
+
 // 12.3.2 Find Element, https://w3c.github.io/webdriver/#dfn-find-element
 Messages::WebDriverClient::FindElementResponse WebDriverConnection::find_element(JsonValue const& payload)
 {
