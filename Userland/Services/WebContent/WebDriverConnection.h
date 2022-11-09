@@ -35,9 +35,13 @@ private:
     virtual Messages::WebDriverClient::GetCurrentUrlResponse get_current_url() override;
     virtual Messages::WebDriverClient::GetWindowRectResponse get_window_rect() override;
     virtual Messages::WebDriverClient::SetWindowRectResponse set_window_rect(JsonValue const& payload) override;
+    virtual Messages::WebDriverClient::MaximizeWindowResponse maximize_window() override;
+    virtual Messages::WebDriverClient::MinimizeWindowResponse minimize_window() override;
 
     ErrorOr<void, Web::WebDriver::Error> ensure_open_top_level_browsing_context();
     void restore_the_window();
+    Gfx::IntRect maximize_the_window();
+    Gfx::IntRect iconify_the_window();
 
     ConnectionFromClient& m_web_content_client;
     PageHost& m_page_host;

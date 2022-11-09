@@ -18,10 +18,6 @@ endpoint WebDriverSessionClient {
     refresh() =|
     back() =|
     forward() =|
-    get_window_rect() => (Gfx::IntRect rect)
-    restore_window() =|
-    maximize_window() =|
-    minimize_window() =|
     serialize_source() => (String source)
     execute_script(String body, Vector<String> json_arguments, Optional<u64> timeout, bool async) => (Web::WebDriver::ExecuteScriptResultType result_type, String json_result)
     get_all_cookies() => (Vector<Web::Cookie::Cookie> cookies)

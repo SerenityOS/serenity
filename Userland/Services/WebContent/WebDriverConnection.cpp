@@ -222,6 +222,45 @@ Messages::WebDriverClient::SetWindowRectResponse WebDriverConnection::set_window
     return serialize_rect(window_rect);
 }
 
+// 11.8.3 Maximize Window, https://w3c.github.io/webdriver/#dfn-maximize-window
+Messages::WebDriverClient::MaximizeWindowResponse WebDriverConnection::maximize_window()
+{
+    // 1. If the remote end does not support the Maximize Window command for the current top-level browsing context for any reason, return error with error code unsupported operation.
+
+    // 2. If the current top-level browsing context is no longer open, return error with error code no such window.
+    TRY(ensure_open_top_level_browsing_context());
+
+    // FIXME: 3. Handle any user prompts and return its value if it is an error.
+    // FIXME: 4. Fully exit fullscreen.
+
+    // 5. Restore the window.
+    restore_the_window();
+
+    // 6. Maximize the window of the current top-level browsing context.
+    auto window_rect = maximize_the_window();
+
+    // 7. Return success with data set to the WindowRect object for the current top-level browsing context.
+    return serialize_rect(window_rect);
+}
+
+// 11.8.4 Minimize Window, https://w3c.github.io/webdriver/#minimize-window
+Messages::WebDriverClient::MinimizeWindowResponse WebDriverConnection::minimize_window()
+{
+    // 1. If the remote end does not support the Minimize Window command for the current top-level browsing context for any reason, return error with error code unsupported operation.
+
+    // 2. If the current top-level browsing context is no longer open, return error with error code no such window.
+    TRY(ensure_open_top_level_browsing_context());
+
+    // FIXME: 3. Handle any user prompts and return its value if it is an error.
+    // FIXME: 4. Fully exit fullscreen.
+
+    // 5. Iconify the window.
+    auto window_rect = iconify_the_window();
+
+    // 6. Return success with data set to the WindowRect object for the current top-level browsing context.
+    return serialize_rect(window_rect);
+}
+
 // https://w3c.github.io/webdriver/#dfn-no-longer-open
 ErrorOr<void, Web::WebDriver::Error> WebDriverConnection::ensure_open_top_level_browsing_context()
 {
@@ -240,9 +279,35 @@ void WebDriverConnection::restore_the_window()
     // Do not return from this operation until the visibility state of the top-level browsing context’s active document has reached the visible state, or until the operation times out.
     // FIXME: Implement timeouts.
     Web::Platform::EventLoopPlugin::the().spin_until([this]() {
-        auto state = m_page_host.page().top_level_browsing_context().active_document()->visibility_state();
-        return state == "visible"sv;
+        auto state = m_page_host.page().top_level_browsing_context().system_visibility_state();
+        return state == Web::HTML::VisibilityState::Visible;
     });
+}
+
+// https://w3c.github.io/webdriver/#dfn-maximize-the-window
+Gfx::IntRect WebDriverConnection::maximize_the_window()
+{
+    // To maximize the window, given an operating system level window with an associated top-level browsing context, run the implementation-specific steps to transition the operating system level window into the maximized window state.
+    auto rect = m_web_content_client.did_request_maximize_window();
+
+    // Return when the window has completed the transition, or within an implementation-defined timeout.
+    return rect;
+}
+
+// https://w3c.github.io/webdriver/#dfn-iconify-the-window
+Gfx::IntRect WebDriverConnection::iconify_the_window()
+{
+    // To iconify the window, given an operating system level window with an associated top-level browsing context, run implementation-specific steps to iconify, minimize, or hide the window from the visible screen.
+    auto rect = m_web_content_client.did_request_minimize_window();
+
+    // Do not return from this operation until the visibility state of the top-level browsing context’s active document has reached the hidden state, or until the operation times out.
+    // FIXME: Implement timeouts.
+    Web::Platform::EventLoopPlugin::the().spin_until([this]() {
+        auto state = m_page_host.page().top_level_browsing_context().system_visibility_state();
+        return state == Web::HTML::VisibilityState::Hidden;
+    });
+
+    return rect;
 }
 
 }
