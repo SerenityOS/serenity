@@ -44,8 +44,6 @@ public:
     virtual void forward() override;
     virtual Messages::WebDriverSessionClient::GetWindowRectResponse get_window_rect() override;
     virtual void restore_window() override;
-    virtual void set_window_size(Gfx::IntSize const&) override;
-    virtual void set_window_position(Gfx::IntPoint const&) override;
     virtual void maximize_window() override;
     virtual void minimize_window() override;
     virtual Messages::WebDriverSessionClient::SerializeSourceResponse serialize_source() override;

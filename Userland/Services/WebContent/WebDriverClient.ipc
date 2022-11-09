@@ -5,4 +5,6 @@ endpoint WebDriverClient {
     set_is_webdriver_active(bool active) =|
     navigate_to(JsonValue payload) => (Web::WebDriver::Response response)
     get_current_url() => (Web::WebDriver::Response response)
+    get_window_rect() => (Web::WebDriver::Response response)
+    set_window_rect(JsonValue payload) => (Web::WebDriver::Response response)
 }

@@ -14,7 +14,9 @@
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/Page/Page.h>
+#include <LibWeb/Platform/EventLoopPlugin.h>
 #include <LibWeb/Platform/Timer.h>
+#include <WebContent/ConnectionFromClient.h>
 #include <WebContent/PageHost.h>
 #include <WebContent/WebDriverConnection.h>
 
@@ -27,17 +29,39 @@ static JsonValue make_success_response(JsonValue value)
     return result;
 }
 
-ErrorOr<NonnullRefPtr<WebDriverConnection>> WebDriverConnection::connect(PageHost& page_host, String const& webdriver_ipc_path)
+static JsonValue serialize_rect(Gfx::IntRect const& rect)
+{
+    JsonObject serialized_rect = {};
+    serialized_rect.set("x", rect.x());
+    serialized_rect.set("y", rect.y());
+    serialized_rect.set("width", rect.width());
+    serialized_rect.set("height", rect.height());
+
+    return make_success_response(move(serialized_rect));
+}
+
+static Gfx::IntRect compute_window_rect(Web::Page const& page)
+{
+    return {
+        page.window_position().x(),
+        page.window_position().y(),
+        page.window_size().width(),
+        page.window_size().height()
+    };
+}
+
+ErrorOr<NonnullRefPtr<WebDriverConnection>> WebDriverConnection::connect(ConnectionFromClient& web_content_client, PageHost& page_host, String const& webdriver_ipc_path)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Trying to connect to {}", webdriver_ipc_path);
     auto socket = TRY(Core::Stream::LocalSocket::connect(webdriver_ipc_path));
 
     dbgln_if(WEBDRIVER_DEBUG, "Connected to WebDriver");
-    return adopt_nonnull_ref_or_enomem(new (nothrow) WebDriverConnection(move(socket), page_host));
+    return adopt_nonnull_ref_or_enomem(new (nothrow) WebDriverConnection(move(socket), web_content_client, page_host));
 }
 
-WebDriverConnection::WebDriverConnection(NonnullOwnPtr<Core::Stream::LocalSocket> socket, PageHost& page_host)
+WebDriverConnection::WebDriverConnection(NonnullOwnPtr<Core::Stream::LocalSocket> socket, ConnectionFromClient& web_content_client, PageHost& page_host)
     : IPC::ConnectionToServer<WebDriverClientEndpoint, WebDriverServerEndpoint>(*this, move(socket))
+    , m_web_content_client(web_content_client)
     , m_page_host(page_host)
 {
 }
@@ -106,6 +130,98 @@ Messages::WebDriverClient::GetCurrentUrlResponse WebDriverConnection::get_curren
     return make_success_response(url);
 }
 
+// 11.8.1 Get Window Rect, https://w3c.github.io/webdriver/#dfn-get-window-rect
+Messages::WebDriverClient::GetWindowRectResponse WebDriverConnection::get_window_rect()
+{
+    // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
+    TRY(ensure_open_top_level_browsing_context());
+
+    // FIXME: 2. Handle any user prompts and return its value if it is an error.
+
+    // 3. Return success with data set to the WindowRect object for the current top-level browsing context.
+    return serialize_rect(compute_window_rect(m_page_host.page()));
+}
+
+// 11.8.2 Set Window Rect, https://w3c.github.io/webdriver/#dfn-set-window-rect
+Messages::WebDriverClient::SetWindowRectResponse WebDriverConnection::set_window_rect(JsonValue const& payload)
+{
+    if (!payload.is_object())
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, "Payload is not a JSON object");
+
+    auto const& properties = payload.as_object();
+
+    auto resolve_property = [](auto name, auto const* property, auto min, auto max) -> ErrorOr<Optional<i32>, Web::WebDriver::Error> {
+        if (!property)
+            return Optional<i32> {};
+        if (!property->is_number())
+            return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, String::formatted("Property '{}' is not a Number", name));
+
+        auto number = property->template to_number<i64>();
+
+        if (number < min)
+            return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, String::formatted("Property '{}' value {} exceeds the minimum allowed value {}", name, number, min));
+        if (number > max)
+            return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, String::formatted("Property '{}' value {} exceeds the maximum allowed value {}", name, number, max));
+
+        return static_cast<i32>(number);
+    };
+
+    // 1. Let width be the result of getting a property named width from the parameters argument, else let it be null.
+    auto const* width_property = properties.get_ptr("width"sv);
+
+    // 2. Let height be the result of getting a property named height from the parameters argument, else let it be null.
+    auto const* height_property = properties.get_ptr("height"sv);
+
+    // 3. Let x be the result of getting a property named x from the parameters argument, else let it be null.
+    auto const* x_property = properties.get_ptr("x"sv);
+
+    // 4. Let y be the result of getting a property named y from the parameters argument, else let it be null.
+    auto const* y_property = properties.get_ptr("y"sv);
+
+    // 5. If width or height is neither null nor a Number from 0 to 2^31 − 1, return error with error code invalid argument.
+    auto width = TRY(resolve_property("width"sv, width_property, 0, NumericLimits<i32>::max()));
+    auto height = TRY(resolve_property("height"sv, height_property, 0, NumericLimits<i32>::max()));
+
+    // 6. If x or y is neither null nor a Number from −(2^31) to 2^31 − 1, return error with error code invalid argument.
+    auto x = TRY(resolve_property("x"sv, x_property, NumericLimits<i32>::min(), NumericLimits<i32>::max()));
+    auto y = TRY(resolve_property("y"sv, y_property, NumericLimits<i32>::min(), NumericLimits<i32>::max()));
+
+    // 7. If the remote end does not support the Set Window Rect command for the current top-level browsing context for any reason, return error with error code unsupported operation.
+
+    // 8. If the current top-level browsing context is no longer open, return error with error code no such window.
+    TRY(ensure_open_top_level_browsing_context());
+
+    // FIXME: 9. Handle any user prompts and return its value if it is an error.
+    // FIXME: 10. Fully exit fullscreen.
+
+    // 11. Restore the window.
+    restore_the_window();
+
+    Gfx::IntRect window_rect;
+
+    // 11. If width and height are not null:
+    if (width.has_value() && height.has_value()) {
+        // a. Set the width, in CSS pixels, of the operating system window containing the current top-level browsing context, including any browser chrome and externally drawn window decorations to a value that is as close as possible to width.
+        // b. Set the height, in CSS pixels, of the operating system window containing the current top-level browsing context, including any browser chrome and externally drawn window decorations to a value that is as close as possible to height.
+        auto size = m_web_content_client.did_request_resize_window({ *width, *height });
+        window_rect.set_size(size);
+    } else {
+        window_rect.set_size(m_page_host.page().window_size());
+    }
+
+    // 12. If x and y are not null:
+    if (x.has_value() && y.has_value()) {
+        // a. Run the implementation-specific steps to set the position of the operating system level window containing the current top-level browsing context to the position given by the x and y coordinates.
+        auto position = m_web_content_client.did_request_reposition_window({ *x, *y });
+        window_rect.set_location(position);
+    } else {
+        window_rect.set_location(m_page_host.page().window_position());
+    }
+
+    // 14. Return success with data set to the WindowRect object for the current top-level browsing context.
+    return serialize_rect(window_rect);
+}
+
 // https://w3c.github.io/webdriver/#dfn-no-longer-open
 ErrorOr<void, Web::WebDriver::Error> WebDriverConnection::ensure_open_top_level_browsing_context()
 {
@@ -113,6 +229,20 @@ ErrorOr<void, Web::WebDriver::Error> WebDriverConnection::ensure_open_top_level_
     if (m_page_host.page().top_level_browsing_context().has_been_discarded())
         return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::NoSuchWindow, "Window not found"sv);
     return {};
+}
+
+// https://w3c.github.io/webdriver/#dfn-restore-the-window
+void WebDriverConnection::restore_the_window()
+{
+    // To restore the window, given an operating system level window with an associated top-level browsing context, run implementation-specific steps to restore or unhide the window to the visible screen.
+    m_web_content_client.async_did_request_restore_window();
+
+    // Do not return from this operation until the visibility state of the top-level browsing context’s active document has reached the visible state, or until the operation times out.
+    // FIXME: Implement timeouts.
+    Web::Platform::EventLoopPlugin::the().spin_until([this]() {
+        auto state = m_page_host.page().top_level_browsing_context().active_document()->visibility_state();
+        return state == "visible"sv;
+    });
 }
 
 }

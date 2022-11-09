@@ -75,20 +75,6 @@ void WebDriverConnection::restore_window()
     }
 }
 
-void WebDriverConnection::set_window_size(Gfx::IntSize const& size)
-{
-    dbgln_if(WEBDRIVER_DEBUG, "WebDriverConnection: set_window_size {}", size);
-    if (auto browser_window = m_browser_window.strong_ref())
-        browser_window->resize(size);
-}
-
-void WebDriverConnection::set_window_position(Gfx::IntPoint const& position)
-{
-    dbgln_if(WEBDRIVER_DEBUG, "WebDriverConnection: set_window_position {}", position);
-    if (auto browser_window = m_browser_window.strong_ref())
-        browser_window->move_to(position);
-}
-
 void WebDriverConnection::maximize_window()
 {
     dbgln_if(WEBDRIVER_DEBUG, "WebDriverConnection: maximize_window");

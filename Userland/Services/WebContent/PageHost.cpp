@@ -92,7 +92,7 @@ void PageHost::set_window_size(Gfx::IntSize const& size)
 ErrorOr<void> PageHost::connect_to_webdriver(String const& webdriver_ipc_path)
 {
     VERIFY(!m_webdriver);
-    m_webdriver = TRY(WebDriverConnection::connect(*this, webdriver_ipc_path));
+    m_webdriver = TRY(WebDriverConnection::connect(m_client, *this, webdriver_ipc_path));
     return {};
 }
 

@@ -582,8 +582,7 @@ Web::WebDriver::Response Client::handle_get_window_rect(Vector<StringView> const
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session_id>/window/rect");
     auto* session = TRY(find_session_with_id(parameters[0]));
-    auto result = TRY(session->get_window_rect());
-    return make_json_value(result);
+    return session->web_content_connection().get_window_rect();
 }
 
 // 11.8.2 Set Window Rect, https://w3c.github.io/webdriver/#dfn-set-window-rect
@@ -592,8 +591,7 @@ Web::WebDriver::Response Client::handle_set_window_rect(Vector<StringView> const
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling POST /session/<session_id>/window/rect");
     auto* session = TRY(find_session_with_id(parameters[0]));
-    auto result = TRY(session->set_window_rect(payload));
-    return make_json_value(result);
+    return session->web_content_connection().set_window_rect(payload);
 }
 
 // 11.8.3 Maximize Window, https://w3c.github.io/webdriver/#dfn-maximize-window
