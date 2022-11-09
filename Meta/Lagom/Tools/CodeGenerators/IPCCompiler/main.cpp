@@ -303,7 +303,23 @@ public:)~~~");
     @message.pascal_name@(@message.pascal_name@ const&) = default;
     @message.pascal_name@(@message.pascal_name@&&) = default;
     @message.pascal_name@& operator=(@message.pascal_name@ const&) = default;
-    @message.constructor@
+    @message.constructor@)~~~");
+
+    if (parameters.size() == 1) {
+        auto const& parameter = parameters[0];
+        message_generator.set("parameter.type"sv, parameter.type);
+        message_generator.set("parameter.name"sv, parameter.name);
+
+        message_generator.appendln(R"~~~(
+    template <typename WrappedReturnType>
+    requires(!SameAs<WrappedReturnType, @parameter.type@>)
+    @message.pascal_name@(WrappedReturnType&& value)
+        : m_@parameter.name@(forward<WrappedReturnType>(value))
+    {
+    })~~~");
+    }
+
+    message_generator.appendln(R"~~~(
     virtual ~@message.pascal_name@() override {}
 
     virtual u32 endpoint_magic() const override { return @endpoint.magic@; }
