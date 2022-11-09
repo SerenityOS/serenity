@@ -618,8 +618,7 @@ Web::WebDriver::Response Client::handle_find_element(Vector<StringView> const& p
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling POST /session/<session_id>/element");
     auto* session = TRY(find_session_with_id(parameters[0]));
-    auto result = TRY(session->find_element(payload));
-    return make_json_value(result);
+    return session->web_content_connection().find_element(payload);
 }
 
 // 12.3.3 Find Elements, https://w3c.github.io/webdriver/#dfn-find-elements

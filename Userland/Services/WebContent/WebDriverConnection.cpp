@@ -50,6 +50,51 @@ static Gfx::IntRect compute_window_rect(Web::Page const& page)
     };
 }
 
+// https://w3c.github.io/webdriver/#dfn-get-or-create-a-web-element-reference
+static String get_or_create_a_web_element_reference(Web::DOM::Node const& element)
+{
+    // FIXME: 1. For each known element of the current browsing context’s list of known elements:
+    // FIXME:     1. If known element equals element, return success with known element’s web element reference.
+    // FIXME: 2. Add element to the list of known elements of the current browsing context.
+    // FIXME: 3. Return success with the element’s web element reference.
+
+    return String::number(element.id());
+}
+
+// https://w3c.github.io/webdriver/#dfn-web-element-reference-object
+static JsonObject web_element_reference_object(Web::DOM::Node const& element)
+{
+    // https://w3c.github.io/webdriver/#dfn-web-element-identifier
+    static String const web_element_identifier = "element-6066-11e4-a52e-4f735466cecf"sv;
+
+    // 1. Let identifier be the web element identifier.
+    auto identifier = web_element_identifier;
+
+    // 2. Let reference be the result of get or create a web element reference given element.
+    auto reference = get_or_create_a_web_element_reference(element);
+
+    // 3. Return a JSON Object initialized with a property with name identifier and value reference.
+    JsonObject object;
+    object.set("name"sv, identifier);
+    object.set("value"sv, reference);
+    return object;
+}
+
+static ErrorOr<String, Web::WebDriver::Error> get_property(JsonValue const& payload, StringView key)
+{
+    if (!payload.is_object())
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, "Payload is not a JSON object");
+
+    auto const* property = payload.as_object().get_ptr(key);
+
+    if (!property)
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, String::formatted("No property called '{}' present", key));
+    if (!property->is_string())
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, String::formatted("Property '{}' is not a String", key));
+
+    return property->as_string();
+}
+
 ErrorOr<NonnullRefPtr<WebDriverConnection>> WebDriverConnection::connect(ConnectionFromClient& web_content_client, PageHost& page_host, String const& webdriver_ipc_path)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Trying to connect to {}", webdriver_ipc_path);
@@ -261,6 +306,43 @@ Messages::WebDriverClient::MinimizeWindowResponse WebDriverConnection::minimize_
     return serialize_rect(window_rect);
 }
 
+// 12.3.2 Find Element, https://w3c.github.io/webdriver/#dfn-find-element
+Messages::WebDriverClient::FindElementResponse WebDriverConnection::find_element(JsonValue const& payload)
+{
+    // 1. Let location strategy be the result of getting a property called "using".
+    auto location_strategy_string = TRY(get_property(payload, "using"sv));
+    auto location_strategy = Web::WebDriver::location_strategy_from_string(location_strategy_string);
+
+    // 2. If location strategy is not present as a keyword in the table of location strategies, return error with error code invalid argument.
+    if (!location_strategy.has_value())
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, String::formatted("Location strategy '{}' is invalid", location_strategy_string));
+
+    // 3. Let selector be the result of getting a property called "value".
+    // 4. If selector is undefined, return error with error code invalid argument.
+    auto selector = TRY(get_property(payload, "value"sv));
+
+    // 5. If the current browsing context is no longer open, return error with error code no such window.
+    TRY(ensure_open_top_level_browsing_context());
+
+    // FIXME: 6. Handle any user prompts and return its value if it is an error.
+
+    // 7. Let start node be the current browsing context’s document element.
+    auto* start_node = m_page_host.page().top_level_browsing_context().active_document();
+
+    // 8. If start node is null, return error with error code no such element.
+    if (!start_node)
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::NoSuchElement, "document element does not exist"sv);
+
+    // 9. Let result be the result of trying to Find with start node, location strategy, and selector.
+    auto result = TRY(find(*start_node, *location_strategy, selector));
+
+    // 10. If result is empty, return error with error code no such element. Otherwise, return the first element of result.
+    if (result.is_empty())
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::NoSuchElement, "The requested element does not exist"sv);
+
+    return make_success_response(result.at(0));
+}
+
 // https://w3c.github.io/webdriver/#dfn-no-longer-open
 ErrorOr<void, Web::WebDriver::Error> WebDriverConnection::ensure_open_top_level_browsing_context()
 {
@@ -308,6 +390,38 @@ Gfx::IntRect WebDriverConnection::iconify_the_window()
     });
 
     return rect;
+}
+
+// https://w3c.github.io/webdriver/#dfn-find
+ErrorOr<JsonArray, Web::WebDriver::Error> WebDriverConnection::find(Web::DOM::ParentNode& start_node, Web::WebDriver::LocationStrategy using_, StringView value)
+{
+    // FIXME: 1. Let end time be the current time plus the session implicit wait timeout.
+
+    // 2. Let location strategy be equal to using.
+    auto location_strategy = using_;
+
+    // 3. Let selector be equal to value.
+    auto selector = value;
+
+    // 4. Let elements returned be the result of trying to call the relevant element location strategy with arguments start node, and selector.
+    auto elements = Web::WebDriver::invoke_location_strategy(location_strategy, start_node, selector);
+
+    // 5. If a DOMException, SyntaxError, XPathException, or other error occurs during the execution of the element location strategy, return error invalid selector.
+    if (elements.is_error())
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidSelector, String::formatted("The location strategy could not finish: {}", elements.error().message));
+
+    // FIXME: 6. If elements returned is empty and the current time is less than end time return to step 4. Otherwise, continue to the next step.
+
+    // 7. Let result be an empty JSON List.
+    JsonArray result;
+    result.ensure_capacity(elements.value()->length());
+
+    // 8. For each element in elements returned, append the web element reference object for element, to result.
+    for (size_t i = 0; i < elements.value()->length(); ++i)
+        result.append(web_element_reference_object(*elements.value()->item(i)));
+
+    // 9. Return success with data result.
+    return result;
 }
 
 }
