@@ -1067,6 +1067,12 @@ TEST_CASE(negative_lookahead)
         EXPECT_EQ(re.match(":1"sv).success, false);
         EXPECT_EQ(re.match(":foobar"sv).success, true);
     }
+    {
+        // Correctly count forks with nested groups and optimised loops
+        Regex<ECMA262> re("^((?:[^\\n]|\\n(?! *\\n))+)(?:\\n *)+\\n");
+        EXPECT_EQ(re.match("foo\n\n"sv).success, true);
+        EXPECT_EQ(re.match("foo\n"sv).success, false);
+    }
 }
 
 TEST_CASE(single_match_flag)
