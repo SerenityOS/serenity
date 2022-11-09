@@ -163,7 +163,7 @@ bool MediaFeature::compare(HTML::Window const& window, MediaFeatureValue left, C
             left_px = left.length().absolute_length_to_px();
             right_px = right.length().absolute_length_to_px();
         } else {
-            Gfx::IntRect viewport_rect { 0, 0, window.inner_width(), window.inner_height() };
+            auto viewport_rect = window.page()->web_exposed_screen_area();
 
             auto const& initial_font = window.associated_document().style_computer().initial_font();
             Gfx::FontPixelMetrics const& initial_font_metrics = initial_font.pixel_metrics();

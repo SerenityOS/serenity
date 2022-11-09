@@ -93,7 +93,7 @@ private:
     template<typename Callback>
     void for_each_stylesheet(CascadeOrigin, Callback) const;
 
-    Gfx::IntRect viewport_rect() const;
+    CSSPixelRect viewport_rect() const;
     CSSPixels root_element_font_size() const;
 
     struct MatchingRuleSet {
