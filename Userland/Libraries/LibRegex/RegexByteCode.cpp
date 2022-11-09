@@ -267,7 +267,6 @@ ALWAYS_INLINE ExecutionResult OpCode_ForkReplaceStay::execute(MatchInput const& 
 {
     state.fork_at_position = state.instruction_position + size() + offset();
     input.fork_to_replace = state.instruction_position;
-    state.forks_since_last_save++;
     return ExecutionResult::Fork_PrioLow;
 }
 
@@ -384,8 +383,10 @@ ALWAYS_INLINE ExecutionResult OpCode_SaveRightCaptureGroup::execute(MatchInput c
 {
     auto& match = state.capture_group_matches.at(input.match_index).at(id());
     auto start_position = match.left_column;
-    if (state.string_position < start_position)
+    if (state.string_position < start_position) {
+        dbgln("Right capture group {} is before left capture group {}!", state.string_position, start_position);
         return ExecutionResult::Failed_ExecuteLowPrioForks;
+    }
 
     auto length = state.string_position - start_position;
 
@@ -1071,11 +1072,15 @@ ALWAYS_INLINE ExecutionResult OpCode_JumpNonEmpty::execute(MatchInput const& inp
 
         state.fork_at_position = state.instruction_position + size() + offset();
 
-        if (form == OpCodeId::ForkJump)
+        if (form == OpCodeId::ForkJump) {
+            state.forks_since_last_save++;
             return ExecutionResult::Fork_PrioHigh;
+        }
 
-        if (form == OpCodeId::ForkStay)
+        if (form == OpCodeId::ForkStay) {
+            state.forks_since_last_save++;
             return ExecutionResult::Fork_PrioLow;
+        }
 
         if (form == OpCodeId::ForkReplaceStay) {
             input.fork_to_replace = state.instruction_position;
