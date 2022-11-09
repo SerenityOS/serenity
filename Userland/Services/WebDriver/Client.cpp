@@ -627,8 +627,7 @@ Web::WebDriver::Response Client::handle_find_elements(Vector<StringView> const& 
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling POST /session/<session_id>/elements");
     auto* session = TRY(find_session_with_id(parameters[0]));
-    auto result = TRY(session->find_elements(payload));
-    return make_json_value(result);
+    return session->web_content_connection().find_elements(payload);
 }
 
 // 12.3.4 Find Element From Element, https://w3c.github.io/webdriver/#dfn-find-element-from-element

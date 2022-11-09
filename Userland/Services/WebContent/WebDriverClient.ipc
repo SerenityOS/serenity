@@ -10,4 +10,5 @@ endpoint WebDriverClient {
     maximize_window() => (Web::WebDriver::Response response)
     minimize_window() => (Web::WebDriver::Response response)
     find_element(JsonValue payload) => (Web::WebDriver::Response response)
+    find_elements(JsonValue payload) => (Web::WebDriver::Response response)
 }
