@@ -21,11 +21,11 @@ class WebDriverConnection final
     C_OBJECT_ABSTRACT(WebDriverConnection)
 
 public:
-    static ErrorOr<NonnullRefPtr<WebDriverConnection>> connect(PageHost& page_host, String const& webdriver_ipc_path);
+    static ErrorOr<NonnullRefPtr<WebDriverConnection>> connect(ConnectionFromClient& web_content_client, PageHost& page_host, String const& webdriver_ipc_path);
     virtual ~WebDriverConnection() = default;
 
 private:
-    WebDriverConnection(NonnullOwnPtr<Core::Stream::LocalSocket> socket, PageHost& page_host);
+    WebDriverConnection(NonnullOwnPtr<Core::Stream::LocalSocket> socket, ConnectionFromClient& web_content_client, PageHost& page_host);
 
     virtual void die() override { }
 
@@ -33,9 +33,13 @@ private:
     virtual void set_is_webdriver_active(bool) override;
     virtual Messages::WebDriverClient::NavigateToResponse navigate_to(JsonValue const& payload) override;
     virtual Messages::WebDriverClient::GetCurrentUrlResponse get_current_url() override;
+    virtual Messages::WebDriverClient::GetWindowRectResponse get_window_rect() override;
+    virtual Messages::WebDriverClient::SetWindowRectResponse set_window_rect(JsonValue const& payload) override;
 
     ErrorOr<void, Web::WebDriver::Error> ensure_open_top_level_browsing_context();
+    void restore_the_window();
 
+    ConnectionFromClient& m_web_content_client;
     PageHost& m_page_host;
 };
 

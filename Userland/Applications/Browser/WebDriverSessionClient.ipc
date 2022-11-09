@@ -20,8 +20,6 @@ endpoint WebDriverSessionClient {
     forward() =|
     get_window_rect() => (Gfx::IntRect rect)
     restore_window() =|
-    set_window_size(Gfx::IntSize size) =|
-    set_window_position(Gfx::IntPoint position) =|
     maximize_window() =|
     minimize_window() =|
     serialize_source() => (String source)

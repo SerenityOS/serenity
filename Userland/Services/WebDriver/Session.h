@@ -58,8 +58,6 @@ public:
     Web::WebDriver::Response get_window_handle();
     ErrorOr<void, Variant<Web::WebDriver::Error, Error>> close_window();
     Web::WebDriver::Response get_window_handles() const;
-    Web::WebDriver::Response get_window_rect();
-    Web::WebDriver::Response set_window_rect(JsonValue const& payload);
     Web::WebDriver::Response maximize_window();
     Web::WebDriver::Response minimize_window();
     Web::WebDriver::Response find_element(JsonValue const& payload);
