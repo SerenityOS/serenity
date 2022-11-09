@@ -114,6 +114,8 @@ Tab::Tab(BrowserWindow* window)
 
     // FIXME: This is a hack to make the JS console usable in new windows.
     //        Something else should ensure that there's an initial about:blank document loaded in the view.
+    //        We set m_is_history_navigation = true so that the initial about:blank doesn't get added to the history.
+    m_is_history_navigation = true;
     m_view->load("about:blank"sv);
 }
 
