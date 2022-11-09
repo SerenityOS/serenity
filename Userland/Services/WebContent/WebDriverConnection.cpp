@@ -343,6 +343,38 @@ Messages::WebDriverClient::FindElementResponse WebDriverConnection::find_element
     return make_success_response(result.at(0));
 }
 
+// 12.3.3 Find Elements, https://w3c.github.io/webdriver/#dfn-find-elements
+Messages::WebDriverClient::FindElementsResponse WebDriverConnection::find_elements(JsonValue const& payload)
+{
+    // 1. Let location strategy be the result of getting a property called "using".
+    auto location_strategy_string = TRY(get_property(payload, "using"sv));
+    auto location_strategy = Web::WebDriver::location_strategy_from_string(location_strategy_string);
+
+    // 2. If location strategy is not present as a keyword in the table of location strategies, return error with error code invalid argument.
+    if (!location_strategy.has_value())
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, String::formatted("Location strategy '{}' is invalid", location_strategy_string));
+
+    // 3. Let selector be the result of getting a property called "value".
+    // 4. If selector is undefined, return error with error code invalid argument.
+    auto selector = TRY(get_property(payload, "value"sv));
+
+    // 5. If the current browsing context is no longer open, return error with error code no such window.
+    TRY(ensure_open_top_level_browsing_context());
+
+    // FIXME: 6. Handle any user prompts and return its value if it is an error.
+
+    // 7. Let start node be the current browsing context’s document element.
+    auto* start_node = m_page_host.page().top_level_browsing_context().active_document();
+
+    // 8. If start node is null, return error with error code no such element.
+    if (!start_node)
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::NoSuchElement, "document element does not exist"sv);
+
+    // 9. Return the result of trying to Find with start node, location strategy, and selector.
+    auto result = TRY(find(*start_node, *location_strategy, selector));
+    return make_success_response(move(result));
+}
+
 // https://w3c.github.io/webdriver/#dfn-no-longer-open
 ErrorOr<void, Web::WebDriver::Error> WebDriverConnection::ensure_open_top_level_browsing_context()
 {

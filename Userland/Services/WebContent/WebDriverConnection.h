@@ -40,6 +40,7 @@ private:
     virtual Messages::WebDriverClient::MaximizeWindowResponse maximize_window() override;
     virtual Messages::WebDriverClient::MinimizeWindowResponse minimize_window() override;
     virtual Messages::WebDriverClient::FindElementResponse find_element(JsonValue const& payload) override;
+    virtual Messages::WebDriverClient::FindElementsResponse find_elements(JsonValue const& payload) override;
 
     ErrorOr<void, Web::WebDriver::Error> ensure_open_top_level_browsing_context();
     void restore_the_window();
