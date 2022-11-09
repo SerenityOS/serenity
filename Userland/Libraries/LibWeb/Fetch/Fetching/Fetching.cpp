@@ -1018,10 +1018,10 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> http_redirect_fetch(JS::R
     // NOTE: request’s body’s source’s nullity has already been checked.
     if (!request->body().has<Empty>()) {
         auto const& source = request->body().get<Infrastructure::Body>().source();
-        // NOTE: BodyInitOrReadbleBytes is a superset of Body::SourceType
+        // NOTE: BodyInitOrReadableBytes is a superset of Body::SourceType
         auto converted_source = source.has<ByteBuffer>()
-            ? BodyInitOrReadbleBytes { source.get<ByteBuffer>() }
-            : BodyInitOrReadbleBytes { source.get<JS::Handle<FileAPI::Blob>>() };
+            ? BodyInitOrReadableBytes { source.get<ByteBuffer>() }
+            : BodyInitOrReadableBytes { source.get<JS::Handle<FileAPI::Blob>>() };
         auto [body, _] = TRY(safely_extract_body(realm, converted_source));
         request->set_body(move(body));
     }
@@ -1432,10 +1432,10 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> http_network_or_cache_fet
 
                 // 2. Set request’s body to the body of the result of safely extracting request’s body’s source.
                 auto const& source = request->body().get<Infrastructure::Body>().source();
-                // NOTE: BodyInitOrReadbleBytes is a superset of Body::SourceType
+                // NOTE: BodyInitOrReadableBytes is a superset of Body::SourceType
                 auto converted_source = source.has<ByteBuffer>()
-                    ? BodyInitOrReadbleBytes { source.get<ByteBuffer>() }
-                    : BodyInitOrReadbleBytes { source.get<JS::Handle<FileAPI::Blob>>() };
+                    ? BodyInitOrReadableBytes { source.get<ByteBuffer>() }
+                    : BodyInitOrReadableBytes { source.get<JS::Handle<FileAPI::Blob>>() };
                 auto [body, _] = TRY_OR_IGNORE(safely_extract_body(realm, converted_source));
                 request->set_body(move(body));
             }

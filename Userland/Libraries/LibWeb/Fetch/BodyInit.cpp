@@ -14,7 +14,7 @@
 namespace Web::Fetch {
 
 // https://fetch.spec.whatwg.org/#bodyinit-safely-extract
-WebIDL::ExceptionOr<Infrastructure::BodyWithType> safely_extract_body(JS::Realm& realm, BodyInitOrReadbleBytes const& object)
+WebIDL::ExceptionOr<Infrastructure::BodyWithType> safely_extract_body(JS::Realm& realm, BodyInitOrReadableBytes const& object)
 {
     // 1. If object is a ReadableStream object, then:
     if (auto const* stream = object.get_pointer<JS::Handle<Streams::ReadableStream>>()) {
@@ -27,7 +27,7 @@ WebIDL::ExceptionOr<Infrastructure::BodyWithType> safely_extract_body(JS::Realm&
 }
 
 // https://fetch.spec.whatwg.org/#concept-bodyinit-extract
-WebIDL::ExceptionOr<Infrastructure::BodyWithType> extract_body(JS::Realm& realm, BodyInitOrReadbleBytes const& object, bool keepalive)
+WebIDL::ExceptionOr<Infrastructure::BodyWithType> extract_body(JS::Realm& realm, BodyInitOrReadableBytes const& object, bool keepalive)
 {
     // 1. Let stream be null.
     JS::GCPtr<Streams::ReadableStream> stream;
