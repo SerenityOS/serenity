@@ -208,4 +208,10 @@ ErrorOr<void> decode(Decoder& decoder, Core::ProxyData& data)
     return {};
 }
 
+// No-op.
+ErrorOr<void> Decoder::decode(AK::Empty&)
+{
+    return {};
+}
+
 }

@@ -196,6 +196,12 @@ Encoder& Encoder::operator<<(File const& file)
     return *this;
 }
 
+// No-op.
+Encoder& Encoder::operator<<(AK::Empty const&)
+{
+    return *this;
+}
+
 template<>
 bool encode(Encoder& encoder, Core::AnonymousBuffer const& buffer)
 {
