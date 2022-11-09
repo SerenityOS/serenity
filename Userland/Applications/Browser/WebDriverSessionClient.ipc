@@ -14,8 +14,6 @@
 endpoint WebDriverSessionClient {
     quit() =|
 
-    get_url() => (URL url)
-    set_url(URL url) =|
     get_title() => (String title)
     refresh() =|
     back() =|
