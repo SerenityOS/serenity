@@ -152,7 +152,7 @@ public:
     virtual Gfx::IntRect page_did_request_maximize_window() { return {}; }
     virtual Gfx::IntRect page_did_request_minimize_window() { return {}; }
     virtual Gfx::IntRect page_did_request_fullscreen_window() { return {}; }
-    virtual void page_did_start_loading(const AK::URL&) { }
+    virtual void page_did_start_loading(const AK::URL&, bool is_redirect) { (void)is_redirect; }
     virtual void page_did_create_main_document() { }
     virtual void page_did_finish_loading(const AK::URL&) { }
     virtual void page_did_change_selection() { }

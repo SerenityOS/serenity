@@ -298,7 +298,7 @@ void OutOfProcessWebView::notify_server_did_middle_click_link(Badge<WebContentCl
         on_link_middle_click(url, target, modifiers);
 }
 
-void OutOfProcessWebView::notify_server_did_start_loading(Badge<WebContentClient>, const AK::URL& url)
+void OutOfProcessWebView::notify_server_did_start_loading(Badge<WebContentClient>, const AK::URL& url, bool)
 {
     m_url = url;
     if (on_load_start)

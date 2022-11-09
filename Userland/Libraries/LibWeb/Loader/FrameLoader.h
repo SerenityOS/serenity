@@ -21,6 +21,7 @@ public:
         Navigation,
         Reload,
         IFrame,
+        Redirect,
     };
 
     static void set_default_favicon_path(String);

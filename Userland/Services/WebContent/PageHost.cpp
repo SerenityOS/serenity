@@ -253,9 +253,9 @@ void PageHost::page_did_middle_click_link(const URL& url, [[maybe_unused]] Strin
     m_client.async_did_middle_click_link(url, target, modifiers);
 }
 
-void PageHost::page_did_start_loading(const URL& url)
+void PageHost::page_did_start_loading(const URL& url, bool is_redirect)
 {
-    m_client.async_did_start_loading(url);
+    m_client.async_did_start_loading(url, is_redirect);
 }
 
 void PageHost::page_did_create_main_document()
