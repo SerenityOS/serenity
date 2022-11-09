@@ -936,6 +936,12 @@ void FormattingContext::layout_absolutely_positioned_element(Box const& box, Ava
     auto specified_width = box.computed_values().width().resolved(box, width_of_containing_block_as_length).resolved(box);
 
     compute_width_for_absolutely_positioned_element(box, available_space);
+
+    // NOTE: We compute height before *and* after doing inside layout.
+    //       This is done so that inside layout can resolve percentage heights.
+    //       In a situation like
+    compute_height_for_absolutely_positioned_element(box, available_space);
+
     auto independent_formatting_context = layout_inside(box, LayoutMode::Normal, box_state.available_inner_space_or_constraints_from(available_space));
     compute_height_for_absolutely_positioned_element(box, available_space);
 
