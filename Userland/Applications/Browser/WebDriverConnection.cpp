@@ -146,18 +146,6 @@ void WebDriverConnection::scroll_element_into_view(i32 element_id)
     }
 }
 
-Messages::WebDriverSessionClient::TakeScreenshotResponse WebDriverConnection::take_screenshot()
-{
-    dbgln_if(WEBDRIVER_DEBUG, "WebDriverConnection: take_screenshot");
-    if (auto browser_window = m_browser_window.strong_ref()) {
-        auto& tab = browser_window->active_tab();
-        if (tab.on_take_screenshot)
-            return { tab.on_take_screenshot() };
-    }
-
-    return { {} };
-}
-
 Messages::WebDriverSessionClient::TakeElementScreenshotResponse WebDriverConnection::take_element_screenshot(i32 element_id)
 {
     dbgln_if(WEBDRIVER_DEBUG, "WebDriverConnection: take_element_screenshot {}", element_id);
