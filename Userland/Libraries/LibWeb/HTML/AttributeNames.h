@@ -232,5 +232,8 @@ ENUMERATE_HTML_ATTRIBUTES
 #undef __ENUMERATE_HTML_ATTRIBUTE
 
 }
+
+bool is_boolean_attribute(FlyString const& attribute);
+
 }
 }
