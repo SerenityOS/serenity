@@ -17,9 +17,9 @@
 #include <LibThreading/ConditionVariable.h>
 #include <LibThreading/Mutex.h>
 #include <LibThreading/Thread.h>
+#include <LibVideo/Containers/Demuxer.h>
+#include <LibVideo/Containers/Matroska/Document.h>
 
-#include "Demuxer.h"
-#include "MatroskaDocument.h"
 #include "VideoDecoder.h"
 
 namespace Video {

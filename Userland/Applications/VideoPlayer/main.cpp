@@ -4,8 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "LibVideo/Color/CodingIndependentCodePoints.h"
-#include "LibVideo/MatroskaDemuxer.h"
 #include <LibCore/ArgsParser.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Icon.h>

@@ -6,12 +6,12 @@
 
 #include "MatroskaDemuxer.h"
 
-namespace Video {
+namespace Video::Matroska {
 
 DecoderErrorOr<NonnullOwnPtr<MatroskaDemuxer>> MatroskaDemuxer::from_file(StringView filename)
 {
     // FIXME: MatroskaReader should return errors.
-    auto nullable_document = MatroskaReader::parse_matroska_from_file(filename);
+    auto nullable_document = Reader::parse_matroska_from_file(filename);
     if (!nullable_document)
         return DecoderError::format(DecoderErrorCategory::IO, "Failed to open matroska from file '{}'", filename);
     auto document = nullable_document.release_nonnull();
@@ -21,7 +21,7 @@ DecoderErrorOr<NonnullOwnPtr<MatroskaDemuxer>> MatroskaDemuxer::from_file(String
 DecoderErrorOr<NonnullOwnPtr<MatroskaDemuxer>> MatroskaDemuxer::from_data(ReadonlyBytes data)
 {
     // FIXME: MatroskaReader should return errors.
-    auto nullable_document = MatroskaReader::parse_matroska_from_data(data.data(), data.size());
+    auto nullable_document = Reader::parse_matroska_from_data(data.data(), data.size());
     if (!nullable_document)
         return DecoderError::format(DecoderErrorCategory::IO, "Failed to open matroska from data");
     auto document = nullable_document.release_nonnull();
@@ -30,17 +30,17 @@ DecoderErrorOr<NonnullOwnPtr<MatroskaDemuxer>> MatroskaDemuxer::from_data(Readon
 
 Vector<Track> MatroskaDemuxer::get_tracks_for_type(TrackType type)
 {
-    Video::TrackEntry::TrackType matroska_track_type;
+    TrackEntry::TrackType matroska_track_type;
 
     switch (type) {
     case TrackType::Video:
-        matroska_track_type = Video::TrackEntry::TrackType::Video;
+        matroska_track_type = TrackEntry::TrackType::Video;
         break;
     case TrackType::Audio:
-        matroska_track_type = Video::TrackEntry::TrackType::Audio;
+        matroska_track_type = TrackEntry::TrackType::Audio;
         break;
     case TrackType::Subtitles:
-        matroska_track_type = Video::TrackEntry::TrackType::Subtitle;
+        matroska_track_type = TrackEntry::TrackType::Subtitle;
         break;
     }
 
