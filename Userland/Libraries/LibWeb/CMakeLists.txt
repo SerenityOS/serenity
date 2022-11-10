@@ -442,6 +442,7 @@ set(SOURCES
     WebDriver/Error.cpp
     WebDriver/ExecuteScript.cpp
     WebDriver/Response.cpp
+    WebDriver/Screenshot.cpp
     WebGL/WebGLContextAttributes.cpp
     WebGL/WebGLContextEvent.cpp
     WebGL/WebGLRenderingContext.cpp
