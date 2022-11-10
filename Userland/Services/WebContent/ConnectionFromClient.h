@@ -83,8 +83,6 @@ private:
     virtual void run_javascript(String const&) override;
     virtual void js_console_request_messages(i32) override;
 
-    virtual void scroll_element_into_view(i32 element_id) override;
-    virtual Messages::WebContentServer::TakeElementScreenshotResponse take_element_screenshot(i32 element_id) override;
     virtual Messages::WebContentServer::TakeDocumentScreenshotResponse take_document_screenshot() override;
 
     virtual Messages::WebContentServer::GetLocalStorageEntriesResponse get_local_storage_entries() override;

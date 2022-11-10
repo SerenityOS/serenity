@@ -464,35 +464,6 @@ void ConnectionFromClient::js_console_request_messages(i32 start_index)
         m_console_client->send_messages(start_index);
 }
 
-static Optional<Web::DOM::Element&> find_element_by_id(i32 element_id)
-{
-    auto* node = Web::DOM::Node::from_id(element_id);
-    if (!node || !node->is_element())
-        return {};
-
-    return verify_cast<Web::DOM::Element>(*node);
-}
-
-// https://w3c.github.io/webdriver/#dfn-scrolls-into-view
-void ConnectionFromClient::scroll_element_into_view(i32 element_id)
-{
-    auto element = find_element_by_id(element_id);
-    if (!element.has_value())
-        return;
-
-    // 1. Let options be the following ScrollIntoViewOptions:
-    Web::DOM::ScrollIntoViewOptions options {};
-    // Logical scroll position "block"
-    //     "end"
-    options.block = Web::Bindings::ScrollLogicalPosition::End;
-    // Logical scroll position "inline"
-    //     "nearest"
-    options.inline_ = Web::Bindings::ScrollLogicalPosition::Nearest;
-
-    // 2. Run Function.[[Call]](scrollIntoView, options) with element as the this value.
-    element->scroll_into_view(options);
-}
-
 // https://w3c.github.io/webdriver/#dfn-calculate-the-absolute-position
 static Gfx::IntPoint calculate_absolute_position_of_element(Web::Page const& page, JS::NonnullGCPtr<Web::Geometry::DOMRect> rect)
 {
@@ -509,36 +480,6 @@ static Gfx::IntPoint calculate_absolute_position_of_element(Web::Page const& pag
 
     // 5. Return a pair of (x, y).
     return { x, y };
-}
-
-static Gfx::IntRect calculate_absolute_rect_of_element(Web::Page const& page, Web::DOM::Element const& element)
-{
-    auto bounding_rect = element.get_bounding_client_rect();
-    auto coordinates = calculate_absolute_position_of_element(page, bounding_rect);
-
-    return Gfx::IntRect {
-        coordinates.x(),
-        coordinates.y(),
-        static_cast<int>(bounding_rect->width()),
-        static_cast<int>(bounding_rect->height())
-    };
-}
-
-Messages::WebContentServer::TakeElementScreenshotResponse ConnectionFromClient::take_element_screenshot(i32 element_id)
-{
-    auto element = find_element_by_id(element_id);
-    if (!element.has_value())
-        return { {} };
-
-    auto viewport_rect = page().top_level_browsing_context().viewport_rect();
-
-    auto rect = calculate_absolute_rect_of_element(page(), *element);
-    rect.intersect(viewport_rect);
-
-    auto bitmap = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, rect.size()).release_value_but_fixme_should_propagate_errors();
-    m_page_host->paint(rect, *bitmap);
-
-    return { bitmap->to_shareable_bitmap() };
 }
 
 Messages::WebContentServer::TakeDocumentScreenshotResponse ConnectionFromClient::take_document_screenshot()

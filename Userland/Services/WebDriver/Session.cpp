@@ -11,14 +11,11 @@
 #include "Session.h"
 #include "BrowserConnection.h"
 #include "Client.h"
-#include <AK/Base64.h>
 #include <AK/NumericLimits.h>
 #include <AK/Time.h>
-#include <AK/URL.h>
 #include <LibCore/LocalServer.h>
 #include <LibCore/Stream.h>
 #include <LibCore/System.h>
-#include <LibGfx/PNGWriter.h>
 #include <LibGfx/Point.h>
 #include <LibGfx/Rect.h>
 #include <LibGfx/Size.h>
@@ -298,18 +295,6 @@ Web::WebDriver::Response Session::get_window_handles() const
 
     // 3. Return success with data handles.
     return JsonValue { handles };
-}
-
-// https://w3c.github.io/webdriver/#dfn-get-a-known-connected-element
-static ErrorOr<i32, Web::WebDriver::Error> get_known_connected_element(StringView element_id)
-{
-    // NOTE: The whole concept of "connected elements" is not implemented yet. See get_or_create_a_web_element_reference().
-    //       For now the element is only represented by its ID.
-    auto maybe_element_id = element_id.to_int();
-    if (!maybe_element_id.has_value())
-        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, "Element ID is not an integer");
-
-    return maybe_element_id.release_value();
 }
 
 // 13.1 Get Page Source, https://w3c.github.io/webdriver/#dfn-get-page-source
@@ -667,62 +652,6 @@ Web::WebDriver::Response Session::delete_all_cookies()
 
     // 4. Return success with data null.
     return JsonValue();
-}
-
-// https://w3c.github.io/webdriver/#dfn-encoding-a-canvas-as-base64
-static ErrorOr<String, Web::WebDriver::Error> encode_bitmap_as_canvas_element(Gfx::Bitmap const& bitmap)
-{
-    // FIXME: 1. If the canvas element’s bitmap’s origin-clean flag is set to false, return error with error code unable to capture screen.
-
-    // 2. If the canvas element’s bitmap has no pixels (i.e. either its horizontal dimension or vertical dimension is zero) then return error with error code unable to capture screen.
-    if (bitmap.width() == 0 || bitmap.height() == 0)
-        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::UnableToCaptureScreen, "Captured screenshot is empty"sv);
-
-    // 3. Let file be a serialization of the canvas element’s bitmap as a file, using "image/png" as an argument.
-    auto file = Gfx::PNGWriter::encode(bitmap);
-
-    // 4. Let data url be a data: URL representing file. [RFC2397]
-    auto data_url = AK::URL::create_with_data("image/png"sv, encode_base64(file), true).to_string();
-
-    // 5. Let index be the index of "," in data url.
-    auto index = data_url.find(',');
-    VERIFY(index.has_value());
-
-    // 6. Let encoded string be a substring of data url using (index + 1) as the start argument.
-    auto encoded_string = data_url.substring(*index + 1);
-
-    // 7. Return success with data encoded string.
-    return encoded_string;
-}
-
-// 17.2 Take Element Screenshot, https://w3c.github.io/webdriver/#dfn-take-element-screenshot
-Web::WebDriver::Response Session::take_element_screenshot(StringView parameter_element_id)
-{
-    // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
-    TRY(check_for_open_top_level_browsing_context_or_return_error());
-
-    // FIXME: 2. Handle any user prompts and return its value if it is an error.
-
-    // 3. Let element be the result of trying to get a known connected element with url variable element id.
-    auto element_id = TRY(get_known_connected_element(parameter_element_id));
-
-    // 4. Scroll into view the element.
-    m_browser_connection->scroll_element_into_view(element_id);
-
-    // 5. When the user agent is next to run the animation frame callbacks:
-    //     a. Let element rect be element’s rectangle.
-    //     b. Let screenshot result be the result of trying to call draw a bounding box from the framebuffer, given element rect as an argument.
-    auto screenshot = m_browser_connection->take_element_screenshot(element_id);
-    if (!screenshot.is_valid())
-        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::UnableToCaptureScreen, "Unable to capture screenshot"sv);
-
-    //     c. Let canvas be a canvas element of screenshot result’s data.
-    //     d. Let encoding result be the result of trying encoding a canvas as Base64 canvas.
-    //     e. Let encoded string be encoding result’s data.
-    auto encoded_string = TRY(encode_bitmap_as_canvas_element(*screenshot.bitmap()));
-
-    // 6. Return success with data encoded string.
-    return JsonValue { encoded_string };
 }
 
 }
