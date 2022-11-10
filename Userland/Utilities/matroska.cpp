@@ -1,15 +1,16 @@
 /*
  * Copyright (c) 2021, Hunter Salyer <thefalsehonesty@gmail.com>
+ * Copyright (c) 2022, Gregory Bertilson <zaggy1024@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <LibMain/Main.h>
-#include <LibVideo/MatroskaReader.h>
+#include <LibVideo/Containers/Matroska/Reader.h>
 
 ErrorOr<int> serenity_main(Main::Arguments)
 {
-    auto document = Video::MatroskaReader::parse_matroska_from_file("/home/anon/Videos/test-webm.webm"sv);
+    auto document = Video::Matroska::Reader::parse_matroska_from_file("/home/anon/Videos/test-webm.webm"sv);
     if (!document) {
         return Error::from_string_literal("Failed to parse :(");
     }
@@ -30,10 +31,10 @@ ErrorOr<int> serenity_main(Main::Arguments)
         outln("\tTrack has Language \"{}\"", track.language().characters());
         outln("\tTrack has CodecID \"{}\"", track.codec_id().characters());
 
-        if (track.track_type() == Video::TrackEntry::TrackType::Video) {
+        if (track.track_type() == Video::Matroska::TrackEntry::TrackType::Video) {
             auto const video_track = track.video_track().value();
             outln("\t\tVideo is {} pixels wide by {} pixels tall", video_track.pixel_width, video_track.pixel_height);
-        } else if (track.track_type() == Video::TrackEntry::TrackType::Audio) {
+        } else if (track.track_type() == Video::Matroska::TrackEntry::TrackType::Audio) {
             auto const audio_track = track.audio_track().value();
             outln("\t\tAudio has {} channels with a bit depth of {}", audio_track.channels, audio_track.bit_depth);
         }

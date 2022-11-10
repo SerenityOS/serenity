@@ -15,7 +15,7 @@
 #include <AK/Utf8View.h>
 #include <LibVideo/Color/CodingIndependentCodePoints.h>
 
-namespace Video {
+namespace Video::Matroska {
 
 struct EBMLHeader {
     String doc_type;

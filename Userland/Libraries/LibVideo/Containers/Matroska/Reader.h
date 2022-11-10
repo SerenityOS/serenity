@@ -6,18 +6,18 @@
 
 #pragma once
 
-#include "MatroskaDocument.h"
+#include "Document.h"
 #include <AK/Debug.h>
 #include <AK/IntegralMath.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/Optional.h>
 #include <AK/OwnPtr.h>
 
-namespace Video {
+namespace Video::Matroska {
 
-class MatroskaReader {
+class Reader {
 public:
-    MatroskaReader(u8 const* data, size_t size)
+    Reader(u8 const* data, size_t size)
         : m_streamer(data, size)
     {
     }

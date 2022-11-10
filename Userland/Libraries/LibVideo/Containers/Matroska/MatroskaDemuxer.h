@@ -7,11 +7,11 @@
 #pragma once
 
 #include <AK/HashMap.h>
+#include <LibVideo/Containers/Demuxer.h>
 
-#include "Demuxer.h"
-#include "MatroskaReader.h"
+#include "Reader.h"
 
-namespace Video {
+namespace Video::Matroska {
 
 class MatroskaDemuxer final : public Demuxer {
 public:

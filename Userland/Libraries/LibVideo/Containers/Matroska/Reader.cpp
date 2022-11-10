@@ -4,13 +4,14 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "MatroskaReader.h"
 #include <AK/Function.h>
 #include <AK/Optional.h>
 #include <AK/Utf8View.h>
 #include <LibCore/MappedFile.h>
 
-namespace Video {
+#include "Reader.h"
+
+namespace Video::Matroska {
 
 #define CHECK_HAS_VALUE(x) \
     if (!(x).has_value())  \
@@ -55,7 +56,7 @@ constexpr u32 BIT_DEPTH_ID = 0x6264;
 constexpr u32 SIMPLE_BLOCK_ID = 0xA3;
 constexpr u32 TIMESTAMP_ID = 0xE7;
 
-OwnPtr<MatroskaDocument> MatroskaReader::parse_matroska_from_file(StringView path)
+OwnPtr<MatroskaDocument> Reader::parse_matroska_from_file(StringView path)
 {
     auto mapped_file_result = Core::MappedFile::map(path);
     if (mapped_file_result.is_error())
@@ -65,13 +66,13 @@ OwnPtr<MatroskaDocument> MatroskaReader::parse_matroska_from_file(StringView pat
     return parse_matroska_from_data((u8*)mapped_file->data(), mapped_file->size());
 }
 
-OwnPtr<MatroskaDocument> MatroskaReader::parse_matroska_from_data(u8 const* data, size_t size)
+OwnPtr<MatroskaDocument> Reader::parse_matroska_from_data(u8 const* data, size_t size)
 {
-    MatroskaReader reader(data, size);
+    Reader reader(data, size);
     return reader.parse();
 }
 
-OwnPtr<MatroskaDocument> MatroskaReader::parse()
+OwnPtr<MatroskaDocument> Reader::parse()
 {
     auto first_element_id = m_streamer.read_variable_size_integer(false);
     dbgln_if(MATROSKA_TRACE_DEBUG, "First element ID is {:#010x}\n", first_element_id.value());
@@ -97,7 +98,7 @@ OwnPtr<MatroskaDocument> MatroskaReader::parse()
     return matroska_document;
 }
 
-bool MatroskaReader::parse_master_element([[maybe_unused]] StringView element_name, Function<bool(u64)> element_consumer)
+bool Reader::parse_master_element([[maybe_unused]] StringView element_name, Function<bool(u64)> element_consumer)
 {
     auto element_data_size = m_streamer.read_variable_size_integer();
     CHECK_HAS_VALUE(element_data_size);
@@ -124,7 +125,7 @@ bool MatroskaReader::parse_master_element([[maybe_unused]] StringView element_na
     return true;
 }
 
-Optional<EBMLHeader> MatroskaReader::parse_ebml_header()
+Optional<EBMLHeader> Reader::parse_ebml_header()
 {
     EBMLHeader header;
     auto success = parse_master_element("Header"sv, [&](u64 element_id) {
@@ -150,7 +151,7 @@ Optional<EBMLHeader> MatroskaReader::parse_ebml_header()
     return header;
 }
 
-bool MatroskaReader::parse_segment_elements(MatroskaDocument& matroska_document)
+bool Reader::parse_segment_elements(MatroskaDocument& matroska_document)
 {
     dbgln_if(MATROSKA_DEBUG, "Parsing segment elements");
     auto success = parse_master_element("Segment"sv, [&](u64 element_id) {
@@ -177,7 +178,7 @@ bool MatroskaReader::parse_segment_elements(MatroskaDocument& matroska_document)
     return success;
 }
 
-OwnPtr<SegmentInformation> MatroskaReader::parse_information()
+OwnPtr<SegmentInformation> Reader::parse_information()
 {
     auto segment_information = make<SegmentInformation>();
     auto success = parse_master_element("Segment Information"sv, [&](u64 element_id) {
@@ -213,7 +214,7 @@ OwnPtr<SegmentInformation> MatroskaReader::parse_information()
     return segment_information;
 }
 
-bool MatroskaReader::parse_tracks(MatroskaDocument& matroska_document)
+bool Reader::parse_tracks(MatroskaDocument& matroska_document)
 {
     auto success = parse_master_element("Tracks"sv, [&](u64 element_id) {
         if (element_id == TRACK_ENTRY_ID) {
@@ -234,7 +235,7 @@ bool MatroskaReader::parse_tracks(MatroskaDocument& matroska_document)
     return success;
 }
 
-OwnPtr<TrackEntry> MatroskaReader::parse_track_entry()
+OwnPtr<TrackEntry> Reader::parse_track_entry()
 {
     auto track_entry = make<TrackEntry>();
     auto success = parse_master_element("Track"sv, [&](u64 element_id) {
@@ -283,7 +284,7 @@ OwnPtr<TrackEntry> MatroskaReader::parse_track_entry()
     return track_entry;
 }
 
-Optional<TrackEntry::ColorFormat> MatroskaReader::parse_video_color_information()
+Optional<TrackEntry::ColorFormat> Reader::parse_video_color_information()
 {
     TrackEntry::ColorFormat color_format {};
 
@@ -328,7 +329,7 @@ Optional<TrackEntry::ColorFormat> MatroskaReader::parse_video_color_information(
     return color_format;
 }
 
-Optional<TrackEntry::VideoTrack> MatroskaReader::parse_video_track_information()
+Optional<TrackEntry::VideoTrack> Reader::parse_video_track_information()
 {
     TrackEntry::VideoTrack video_track {};
 
@@ -359,7 +360,7 @@ Optional<TrackEntry::VideoTrack> MatroskaReader::parse_video_track_information()
     return video_track;
 }
 
-Optional<TrackEntry::AudioTrack> MatroskaReader::parse_audio_track_information()
+Optional<TrackEntry::AudioTrack> Reader::parse_audio_track_information()
 {
     TrackEntry::AudioTrack audio_track {};
 
@@ -386,7 +387,7 @@ Optional<TrackEntry::AudioTrack> MatroskaReader::parse_audio_track_information()
     return audio_track;
 }
 
-OwnPtr<Cluster> MatroskaReader::parse_cluster()
+OwnPtr<Cluster> Reader::parse_cluster()
 {
     auto cluster = make<Cluster>();
 
@@ -415,7 +416,7 @@ OwnPtr<Cluster> MatroskaReader::parse_cluster()
     return cluster;
 }
 
-OwnPtr<Block> MatroskaReader::parse_simple_block()
+OwnPtr<Block> Reader::parse_simple_block()
 {
     auto block = make<Block>();
 
@@ -498,7 +499,7 @@ OwnPtr<Block> MatroskaReader::parse_simple_block()
     return block;
 }
 
-Optional<String> MatroskaReader::read_string_element()
+Optional<String> Reader::read_string_element()
 {
     auto string_length = m_streamer.read_variable_size_integer();
     if (!string_length.has_value() || m_streamer.remaining() < string_length.value())
@@ -508,7 +509,7 @@ Optional<String> MatroskaReader::read_string_element()
     return string_value;
 }
 
-Optional<u64> MatroskaReader::read_u64_element()
+Optional<u64> Reader::read_u64_element()
 {
     auto integer_length = m_streamer.read_variable_size_integer();
     if (!integer_length.has_value() || m_streamer.remaining() < integer_length.value())
@@ -522,7 +523,7 @@ Optional<u64> MatroskaReader::read_u64_element()
     return result;
 }
 
-Optional<double> MatroskaReader::read_float_element()
+Optional<double> Reader::read_float_element()
 {
     auto length = m_streamer.read_variable_size_integer();
     if (!length.has_value() || m_streamer.remaining() < length.value())
@@ -546,7 +547,7 @@ Optional<double> MatroskaReader::read_float_element()
     return read_data.double_value;
 }
 
-bool MatroskaReader::read_unknown_element()
+bool Reader::read_unknown_element()
 {
     auto element_length = m_streamer.read_variable_size_integer();
     if (!element_length.has_value() || m_streamer.remaining() < element_length.value())

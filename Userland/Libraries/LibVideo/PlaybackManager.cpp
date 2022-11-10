@@ -6,17 +6,16 @@
 
 #include <AK/Format.h>
 #include <LibCore/Timer.h>
-#include <LibVideo/MatroskaReader.h>
+#include <LibVideo/Containers/Matroska/MatroskaDemuxer.h>
 #include <LibVideo/VP9/Decoder.h>
 
-#include "MatroskaDemuxer.h"
 #include "PlaybackManager.h"
 
 namespace Video {
 
 DecoderErrorOr<NonnullOwnPtr<PlaybackManager>> PlaybackManager::from_file(Core::Object& event_handler, StringView filename)
 {
-    NonnullOwnPtr<Demuxer> demuxer = TRY(MatroskaDemuxer::from_file(filename));
+    NonnullOwnPtr<Demuxer> demuxer = TRY(Matroska::MatroskaDemuxer::from_file(filename));
     auto video_tracks = demuxer->get_tracks_for_type(TrackType::Video);
     if (video_tracks.is_empty())
         return DecoderError::with_description(DecoderErrorCategory::Invalid, "No video track is present"sv);
