@@ -146,28 +146,6 @@ void WebDriverConnection::scroll_element_into_view(i32 element_id)
     }
 }
 
-Messages::WebDriverSessionClient::GetActiveDocumentsTypeResponse WebDriverConnection::get_active_documents_type()
-{
-    dbgln_if(WEBDRIVER_DEBUG, "WebDriverConnection: get_active_documents_type");
-    if (auto browser_window = m_browser_window.strong_ref()) {
-        auto& tab = browser_window->active_tab();
-        if (tab.webdriver_endpoints().on_get_active_documents_type)
-            return { tab.webdriver_endpoints().on_get_active_documents_type() };
-    }
-    return { "" };
-}
-
-Messages::WebDriverSessionClient::GetComputedValueForElementResponse WebDriverConnection::get_computed_value_for_element(i32 element_id, String const& property_name)
-{
-    dbgln_if(WEBDRIVER_DEBUG, "WebDriverConnection: get_computed_value_for_element");
-    if (auto browser_window = m_browser_window.strong_ref()) {
-        auto& tab = browser_window->active_tab();
-        if (tab.webdriver_endpoints().on_get_computed_value_for_element)
-            return { tab.webdriver_endpoints().on_get_computed_value_for_element(element_id, property_name) };
-    }
-    return { "" };
-}
-
 Messages::WebDriverSessionClient::GetElementTextResponse WebDriverConnection::get_element_text(i32 element_id)
 {
     dbgln_if(WEBDRIVER_DEBUG, "WebDriverConnection: get_element_text");

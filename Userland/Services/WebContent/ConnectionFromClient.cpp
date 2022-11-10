@@ -20,7 +20,6 @@
 #include <LibJS/Runtime/ConsoleObject.h>
 #include <LibJS/Runtime/JSONObject.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
-#include <LibWeb/CSS/PropertyID.h>
 #include <LibWeb/Cookie/ParsedCookie.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/NodeList.h>
@@ -493,44 +492,6 @@ void ConnectionFromClient::scroll_element_into_view(i32 element_id)
 
     // 2. Run Function.[[Call]](scrollIntoView, options) with element as the this value.
     element->scroll_into_view(options);
-}
-
-Messages::WebContentServer::GetActiveDocumentsTypeResponse ConnectionFromClient::get_active_documents_type()
-{
-    auto* active_document = page().top_level_browsing_context().active_document();
-
-    if (!active_document)
-        return { "" };
-
-    auto type = active_document->document_type();
-
-    switch (type) {
-    case Web::DOM::Document::Type::HTML:
-        return { "html" };
-        break;
-    case Web::DOM::Document::Type::XML:
-        return { "xml" };
-        break;
-    }
-
-    return { "" };
-}
-
-Messages::WebContentServer::GetComputedValueForElementResponse ConnectionFromClient::get_computed_value_for_element(i32 element_id, String const& property_name)
-{
-    auto element = find_element_by_id(element_id);
-    if (!element.has_value())
-        return { "" };
-
-    auto property_id = Web::CSS::property_id_from_string(property_name);
-
-    auto computed_values = element->computed_css_values();
-    if (!computed_values)
-        return { "" };
-
-    auto style_value = computed_values->property(property_id);
-
-    return { style_value->to_string() };
 }
 
 Messages::WebContentServer::GetElementTextResponse ConnectionFromClient::get_element_text(i32 element_id)

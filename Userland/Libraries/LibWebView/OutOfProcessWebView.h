@@ -64,8 +64,6 @@ public:
     OrderedHashMap<String, String> get_session_storage_entries();
 
     void scroll_element_into_view(i32 element_id);
-    String get_active_documents_type();
-    String get_computed_value_for_element(i32 element_id, String const& property_name);
     String get_element_text(i32 element_id);
     String get_element_tag_name(i32 element_id);
     Gfx::IntRect get_element_rect(i32 element_id);
