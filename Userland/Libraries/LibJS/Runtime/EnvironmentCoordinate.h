@@ -14,6 +14,8 @@ namespace JS {
 struct EnvironmentCoordinate {
     size_t hops { 0 };
     size_t index { 0 };
+
+    static constexpr size_t global_marker = 0xffffffff;
 };
 
 }

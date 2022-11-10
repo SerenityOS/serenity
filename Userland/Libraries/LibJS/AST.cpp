@@ -1376,11 +1376,16 @@ ThrowCompletionOr<Reference> Expression::to_reference(Interpreter&) const
 ThrowCompletionOr<Reference> Identifier::to_reference(Interpreter& interpreter) const
 {
     if (m_cached_environment_coordinate.has_value()) {
-        auto* environment = interpreter.vm().running_execution_context().lexical_environment;
-        for (size_t i = 0; i < m_cached_environment_coordinate->hops; ++i)
-            environment = environment->outer_environment();
-        VERIFY(environment);
-        VERIFY(environment->is_declarative_environment());
+        Environment* environment = nullptr;
+        if (m_cached_environment_coordinate->index == EnvironmentCoordinate::global_marker) {
+            environment = &interpreter.vm().current_realm()->global_environment();
+        } else {
+            environment = interpreter.vm().running_execution_context().lexical_environment;
+            for (size_t i = 0; i < m_cached_environment_coordinate->hops; ++i)
+                environment = environment->outer_environment();
+            VERIFY(environment);
+            VERIFY(environment->is_declarative_environment());
+        }
         if (!environment->is_permanently_screwed_by_eval()) {
             return Reference { *environment, string(), interpreter.vm().in_strict_mode(), m_cached_environment_coordinate };
         }
