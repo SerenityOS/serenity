@@ -298,23 +298,23 @@ PDFErrorOr<NonnullRefPtr<XRefTable>> DocumentParser::parse_xref_stream()
     if (field_sizes->size() != 3)
         return error("Malformed xref dictionary");
 
-    auto object_count = dict->get_value("Size").get<int>();
+    auto highest_object_number = dict->get_value("Size").get<int>() - 1;
 
-    Vector<Tuple<int, int>> subsection_indices;
+    Vector<Tuple<int, int>> subsections;
     if (dict->contains(CommonNames::Index)) {
         auto index_array = TRY(dict->get_array(m_document, CommonNames::Index));
         if (index_array->size() % 2 != 0)
             return error("Malformed xref dictionary");
 
         for (size_t i = 0; i < index_array->size(); i += 2)
-            subsection_indices.append({ index_array->at(i).get<int>(), index_array->at(i + 1).get<int>() - 1 });
+            subsections.append({ index_array->at(i).get<int>(), index_array->at(i + 1).get<int>() - 1 });
     } else {
-        subsection_indices.append({ 0, object_count - 1 });
+        subsections.append({ 0, highest_object_number });
     }
     auto stream = TRY(parse_stream(dict));
     auto table = adopt_ref(*new XRefTable());
 
-    auto field_to_long = [](Span<const u8> field) -> long {
+    auto field_to_long = [](Span<u8 const> field) -> long {
         long value = 0;
         const u8 max = (field.size() - 1) * 8;
         for (size_t i = 0; i < field.size(); ++i) {
@@ -328,7 +328,7 @@ PDFErrorOr<NonnullRefPtr<XRefTable>> DocumentParser::parse_xref_stream()
 
     Vector<XRefEntry> entries;
 
-    for (int entry_index = 0; entry_index < object_count; ++entry_index) {
+    for (int entry_index = 0; entry_index < highest_object_number; ++entry_index) {
         Array<long, 3> fields;
         for (size_t field_index = 0; field_index < 3; ++field_index) {
             auto field_size = field_sizes->at(field_index).get_u32();
@@ -343,9 +343,12 @@ PDFErrorOr<NonnullRefPtr<XRefTable>> DocumentParser::parse_xref_stream()
 
         entries.append({ fields[1], static_cast<u16>(fields[2]), type != 0, type == 2 });
 
-        auto indices = subsection_indices[subsection_index];
-        if (entry_index >= indices.get<1>()) {
-            table->add_section({ indices.get<0>(), indices.get<1>(), entries });
+        if (subsection_index >= subsections.size())
+            break;
+
+        auto subsection = subsections[subsection_index];
+        if (entry_index >= subsection.get<1>()) {
+            table->add_section({ subsection.get<0>(), subsection.get<1>(), entries });
             entries.clear();
             subsection_index++;
         }
