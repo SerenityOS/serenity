@@ -176,7 +176,8 @@ void PDFViewerWidget::open_file(Core::File& file)
     auto handle_error = [&]<typename T>(PDF::PDFErrorOr<T> maybe_error) {
         if (maybe_error.is_error()) {
             auto error = maybe_error.release_error();
-            GUI::MessageBox::show_error(nullptr, String::formatted("Couldn't load PDF {}:\n{}", file.filename(), error.message()));
+            warnln("{}", error.message());
+            GUI::MessageBox::show_error(nullptr, "Failed to load the document."sv);
             return true;
         }
         return false;

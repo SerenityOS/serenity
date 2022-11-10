@@ -89,7 +89,8 @@ void PDFViewer::paint_event(GUI::PaintEvent& event)
         return;
 
     auto handle_error = [&](PDF::Error& error) {
-        GUI::MessageBox::show_error(nullptr, String::formatted("Failed to render page:\n{}", error.message()));
+        warnln("{}", error.message());
+        GUI::MessageBox::show_error(nullptr, "Failed to render the page."sv);
         m_document.clear();
     };
 
