@@ -611,14 +611,6 @@ void BrowserWindow::create_new_tab(URL url, bool activate)
         active_tab().view().scroll_element_into_view(element_id);
     };
 
-    new_tab.webdriver_endpoints().on_get_active_documents_type = [this]() {
-        return active_tab().view().get_active_documents_type();
-    };
-
-    new_tab.webdriver_endpoints().on_get_computed_value_for_element = [this](i32 element_id, String const& property_name) {
-        return active_tab().view().get_computed_value_for_element(element_id, property_name);
-    };
-
     new_tab.webdriver_endpoints().on_get_element_text = [this](i32 element_id) {
         return active_tab().view().get_element_text(element_id);
     };

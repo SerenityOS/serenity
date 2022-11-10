@@ -559,16 +559,6 @@ void OutOfProcessWebView::scroll_element_into_view(i32 element_id)
     return client().scroll_element_into_view(element_id);
 }
 
-String OutOfProcessWebView::get_active_documents_type()
-{
-    return client().get_active_documents_type();
-}
-
-String OutOfProcessWebView::get_computed_value_for_element(i32 element_id, String const& property_name)
-{
-    return client().get_computed_value_for_element(element_id, property_name);
-}
-
 String OutOfProcessWebView::get_element_text(i32 element_id)
 {
     return client().get_element_text(element_id);

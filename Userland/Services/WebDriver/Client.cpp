@@ -677,12 +677,11 @@ Web::WebDriver::Response Client::handle_get_element_property(Vector<StringView> 
 
 // 12.4.4 Get Element CSS Value, https://w3c.github.io/webdriver/#dfn-get-element-css-value
 // GET /session/{session id}/element/{element id}/css/{property name}
-Web::WebDriver::Response Client::handle_get_element_css_value(Vector<StringView> const& parameters, JsonValue const& payload)
+Web::WebDriver::Response Client::handle_get_element_css_value(Vector<StringView> const& parameters, JsonValue const&)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session_id>/element/<element_id>/css/<property_name>");
     auto* session = TRY(find_session_with_id(parameters[0]));
-    auto result = TRY(session->get_element_css_value(payload, parameters[1], parameters[2]));
-    return make_json_value(result);
+    return session->web_content_connection().get_element_css_value(parameters[1], parameters[2]);
 }
 
 // 12.4.5 Get Element Text, https://w3c.github.io/webdriver/#dfn-get-element-text

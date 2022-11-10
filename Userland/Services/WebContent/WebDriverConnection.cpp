@@ -12,6 +12,9 @@
 #include <AK/JsonValue.h>
 #include <AK/Vector.h>
 #include <LibJS/Runtime/Value.h>
+#include <LibWeb/CSS/PropertyID.h>
+#include <LibWeb/CSS/StyleProperties.h>
+#include <LibWeb/CSS/StyleValue.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/HTML/AttributeNames.h>
@@ -553,6 +556,38 @@ Messages::WebDriverClient::GetElementPropertyResponse WebDriverConnection::get_e
     if (result.has_value())
         return make_success_response(result.release_value());
     return make_success_response({});
+}
+
+// 12.4.4 Get Element CSS Value, https://w3c.github.io/webdriver/#dfn-get-element-css-value
+Messages::WebDriverClient::GetElementCssValueResponse WebDriverConnection::get_element_css_value(String const& element_id, String const& name)
+{
+    // 1. If the current browsing context is no longer open, return error with error code no such window.
+    TRY(ensure_open_top_level_browsing_context());
+
+    // FIXME: 2. Handle any user prompts and return its value if it is an error.
+
+    // 3. Let element be the result of trying to get a known connected element with url variable element id.
+    auto* element = TRY(get_known_connected_element(element_id));
+
+    // 4. Let computed value be the result of the first matching condition:
+    String computed_value;
+
+    // -> current browsing context’s active document’s type is not "xml"
+    if (!m_page_host.page().top_level_browsing_context().active_document()->is_xml_document()) {
+        // computed value of parameter property name from element’s style declarations. property name is obtained from url variables.
+        auto property = Web::CSS::property_id_from_string(name);
+
+        if (auto* computed_values = element->computed_css_values())
+            computed_value = computed_values->property(property)->to_string();
+    }
+    // -> Otherwise
+    else {
+        // "" (empty string)
+        computed_value = String::empty();
+    }
+
+    // 5. Return success with data computed value.
+    return make_success_response(move(computed_value));
 }
 
 // https://w3c.github.io/webdriver/#dfn-no-longer-open
