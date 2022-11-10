@@ -17,6 +17,7 @@
 #include <LibWeb/CSS/StyleValue.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Element.h>
+#include <LibWeb/Geometry/DOMRect.h>
 #include <LibWeb/HTML/AttributeNames.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/HTMLInputElement.h>
@@ -55,6 +56,37 @@ static Gfx::IntRect compute_window_rect(Web::Page const& page)
         page.window_position().y(),
         page.window_size().width(),
         page.window_size().height()
+    };
+}
+
+// https://w3c.github.io/webdriver/#dfn-calculate-the-absolute-position
+static Gfx::IntPoint calculate_absolute_position_of_element(Web::Page const& page, JS::NonnullGCPtr<Web::Geometry::DOMRect> rect)
+{
+    // 1. Let rect be the value returned by calling getBoundingClientRect().
+
+    // 2. Let window be the associated window of current top-level browsing context.
+    auto const* window = page.top_level_browsing_context().active_window();
+
+    // 3. Let x be (scrollX of window + rect’s x coordinate).
+    auto x = (window ? static_cast<int>(window->scroll_x()) : 0) + static_cast<int>(rect->x());
+
+    // 4. Let y be (scrollY of window + rect’s y coordinate).
+    auto y = (window ? static_cast<int>(window->scroll_y()) : 0) + static_cast<int>(rect->y());
+
+    // 5. Return a pair of (x, y).
+    return { x, y };
+}
+
+static Gfx::IntRect calculate_absolute_rect_of_element(Web::Page const& page, Web::DOM::Element const& element)
+{
+    auto bounding_rect = element.get_bounding_client_rect();
+    auto coordinates = calculate_absolute_position_of_element(page, bounding_rect);
+
+    return {
+        coordinates.x(),
+        coordinates.y(),
+        static_cast<int>(bounding_rect->width()),
+        static_cast<int>(bounding_rect->height())
     };
 }
 
@@ -624,6 +656,36 @@ Messages::WebDriverClient::GetElementTagNameResponse WebDriverConnection::get_el
 
     // 5. Return success with data qualified name.
     return make_success_response(move(qualified_name));
+}
+
+// 12.4.7 Get Element Rect, https://w3c.github.io/webdriver/#dfn-get-element-rect
+Messages::WebDriverClient::GetElementRectResponse WebDriverConnection::get_element_rect(String const& element_id)
+{
+    // 1. If the current browsing context is no longer open, return error with error code no such window.
+    TRY(ensure_open_top_level_browsing_context());
+
+    // FIXME: 2. Handle any user prompts and return its value if it is an error.
+
+    // 3. Let element be the result of trying to get a known connected element with url variable element id.
+    auto* element = TRY(get_known_connected_element(element_id));
+
+    // 4. Calculate the absolute position of element and let it be coordinates.
+    // 5. Let rect be element’s bounding rectangle.
+    auto rect = calculate_absolute_rect_of_element(m_page_host.page(), *element);
+
+    // 6. Let body be a new JSON Object initialized with:
+    // "x"
+    //     The first value of coordinates.
+    // "y"
+    //     The second value of coordinates.
+    // "width"
+    //     Value of rect’s width dimension.
+    // "height"
+    //     Value of rect’s height dimension.
+    auto body = serialize_rect(rect);
+
+    // 7. Return success with data body.
+    return body;
 }
 
 // https://w3c.github.io/webdriver/#dfn-no-longer-open

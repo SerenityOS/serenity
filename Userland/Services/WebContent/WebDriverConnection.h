@@ -49,6 +49,7 @@ private:
     virtual Messages::WebDriverClient::GetElementCssValueResponse get_element_css_value(String const& element_id, String const& name) override;
     virtual Messages::WebDriverClient::GetElementTextResponse get_element_text(String const& element_id) override;
     virtual Messages::WebDriverClient::GetElementTagNameResponse get_element_tag_name(String const& element_id) override;
+    virtual Messages::WebDriverClient::GetElementRectResponse get_element_rect(String const& element_id) override;
 
     ErrorOr<void, Web::WebDriver::Error> ensure_open_top_level_browsing_context();
     void restore_the_window();

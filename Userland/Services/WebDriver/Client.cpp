@@ -708,8 +708,7 @@ Web::WebDriver::Response Client::handle_get_element_rect(Vector<StringView> cons
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session_id>/element/<element_id>/rect");
     auto* session = TRY(find_session_with_id(parameters[0]));
-    auto result = TRY(session->get_element_rect(parameters[1]));
-    return make_json_value(result);
+    return session->web_content_connection().get_element_rect(parameters[1]);
 }
 
 // 12.4.8 Is Element Enabled, https://w3c.github.io/webdriver/#dfn-is-element-enabled

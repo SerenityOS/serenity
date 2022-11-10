@@ -146,17 +146,6 @@ void WebDriverConnection::scroll_element_into_view(i32 element_id)
     }
 }
 
-Messages::WebDriverSessionClient::GetElementRectResponse WebDriverConnection::get_element_rect(i32 element_id)
-{
-    dbgln("WebDriverConnection: get_element_rect {}", element_id);
-    if (auto browser_window = m_browser_window.strong_ref()) {
-        auto& tab = browser_window->active_tab();
-        if (tab.webdriver_endpoints().on_get_element_rect)
-            return { tab.webdriver_endpoints().on_get_element_rect(element_id) };
-    }
-    return { {} };
-}
-
 Messages::WebDriverSessionClient::IsElementEnabledResponse WebDriverConnection::is_element_enabled(i32 element_id)
 {
     dbgln("WebDriverConnection: is_element_enabled {}", element_id);
