@@ -494,15 +494,6 @@ void ConnectionFromClient::scroll_element_into_view(i32 element_id)
     element->scroll_into_view(options);
 }
 
-Messages::WebContentServer::GetElementTagNameResponse ConnectionFromClient::get_element_tag_name(i32 element_id)
-{
-    auto element = find_element_by_id(element_id);
-    if (!element.has_value())
-        return { "" };
-
-    return { element->tag_name() };
-}
-
 // https://w3c.github.io/webdriver/#dfn-calculate-the-absolute-position
 static Gfx::IntPoint calculate_absolute_position_of_element(Web::Page const& page, JS::NonnullGCPtr<Web::Geometry::DOMRect> rect)
 {

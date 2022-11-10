@@ -84,7 +84,6 @@ private:
     virtual void js_console_request_messages(i32) override;
 
     virtual void scroll_element_into_view(i32 element_id) override;
-    virtual Messages::WebContentServer::GetElementTagNameResponse get_element_tag_name(i32 element_id) override;
     virtual Messages::WebContentServer::GetElementRectResponse get_element_rect(i32 element_id) override;
     virtual Messages::WebContentServer::IsElementEnabledResponse is_element_enabled(i32 element_id) override;
     virtual Messages::WebContentServer::TakeElementScreenshotResponse take_element_screenshot(i32 element_id) override;

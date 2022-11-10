@@ -559,11 +559,6 @@ void OutOfProcessWebView::scroll_element_into_view(i32 element_id)
     return client().scroll_element_into_view(element_id);
 }
 
-String OutOfProcessWebView::get_element_tag_name(i32 element_id)
-{
-    return client().get_element_tag_name(element_id);
-}
-
 Gfx::IntRect OutOfProcessWebView::get_element_rect(i32 element_id)
 {
     return client().get_element_rect(element_id);
