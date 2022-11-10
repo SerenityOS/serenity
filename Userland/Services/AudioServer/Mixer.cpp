@@ -100,8 +100,7 @@ void Mixer::mix()
         if (m_muted || m_main_volume < 0.01) {
             m_device->write(m_zero_filled_buffer.data(), static_cast<int>(m_zero_filled_buffer.size()));
         } else {
-            Array<u8, HARDWARE_BUFFER_SIZE_BYTES> buffer;
-            OutputMemoryStream stream { buffer };
+            OutputMemoryStream stream { m_stream_buffer };
 
             for (auto& mixed_sample : mixed_buffer) {
                 mixed_sample.log_multiply(static_cast<float>(m_main_volume));
