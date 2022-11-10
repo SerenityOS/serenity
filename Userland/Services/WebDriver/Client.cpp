@@ -726,8 +726,7 @@ Web::WebDriver::Response Client::handle_get_source(Vector<StringView> const& par
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session_id>/source");
     auto* session = TRY(find_session_with_id(parameters[0]));
-    auto result = TRY(session->get_source());
-    return make_json_value(result);
+    return session->web_content_connection().get_source();
 }
 
 // 13.2.1 Execute Script, https://w3c.github.io/webdriver/#dfn-execute-script

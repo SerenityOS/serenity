@@ -64,7 +64,6 @@ private:
     virtual void remove_backing_store(i32) override;
     virtual void debug_request(String const&, String const&) override;
     virtual void get_source() override;
-    virtual Messages::WebContentServer::SerializeSourceResponse serialize_source() override;
     virtual void inspect_dom_tree() override;
     virtual Messages::WebContentServer::InspectDomNodeResponse inspect_dom_node(i32 node_id, Optional<Web::CSS::Selector::PseudoElement> const& pseudo_element) override;
     virtual Messages::WebContentServer::GetHoveredNodeIdResponse get_hovered_node_id() override;

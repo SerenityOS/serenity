@@ -263,20 +263,6 @@ void ConnectionFromClient::get_source()
     }
 }
 
-Messages::WebContentServer::SerializeSourceResponse ConnectionFromClient::serialize_source()
-{
-    if (auto* doc = page().top_level_browsing_context().active_document()) {
-        auto result = doc->serialize_fragment(Web::DOMParsing::RequireWellFormed::Yes);
-        if (!result.is_error())
-            return { result.release_value() };
-
-        auto source = MUST(doc->serialize_fragment(Web::DOMParsing::RequireWellFormed::No));
-        return { move(source) };
-    }
-
-    return { {} };
-}
-
 void ConnectionFromClient::inspect_dom_tree()
 {
     if (auto* doc = page().top_level_browsing_context().active_document()) {

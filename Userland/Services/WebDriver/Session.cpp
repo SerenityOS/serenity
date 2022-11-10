@@ -297,23 +297,6 @@ Web::WebDriver::Response Session::get_window_handles() const
     return JsonValue { handles };
 }
 
-// 13.1 Get Page Source, https://w3c.github.io/webdriver/#dfn-get-page-source
-Web::WebDriver::Response Session::get_source()
-{
-    // 1. If the current browsing context is no longer open, return error with error code no such window.
-    TRY(check_for_open_top_level_browsing_context_or_return_error());
-
-    // FIXME: 2. Handle any user prompts and return its value if it is an error.
-
-    // 3. Let source be the result of invoking the fragment serializing algorithm on a fictional node whose only child is the document element providing true for the require well-formed flag. If this causes an exception to be thrown, let source be null.
-    // 4. Let source be the result of serializing to string the current browsing context active document, if source is null.
-    // NOTE: Both of the above cases are handled in the remote WebContent process.
-    auto source = m_browser_connection->serialize_source();
-
-    // 5. Return success with data source.
-    return JsonValue { source };
-}
-
 struct ScriptArguments {
     String script;
     JsonArray const& arguments;

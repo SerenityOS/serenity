@@ -23,7 +23,6 @@ public:
     WebDriverEndpoints() = default;
     ~WebDriverEndpoints() = default;
 
-    Function<String()> on_serialize_source;
     Function<Messages::WebContentServer::WebdriverExecuteScriptResponse(String const& body, Vector<String> const& json_arguments, Optional<u64> const& timeout, bool async)> on_execute_script;
 };
 
