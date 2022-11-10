@@ -495,28 +495,6 @@ void ConnectionFromClient::scroll_element_into_view(i32 element_id)
     element->scroll_into_view(options);
 }
 
-Messages::WebContentServer::GetElementPropertyResponse ConnectionFromClient::get_element_property(i32 element_id, String const& name)
-{
-    auto element = find_element_by_id(element_id);
-    if (!element.has_value())
-        return Optional<String> {};
-
-    auto property_or_error = element->get(name);
-    if (property_or_error.is_throw_completion())
-        return Optional<String> {};
-
-    auto property = property_or_error.release_value();
-
-    if (property.is_undefined())
-        return Optional<String> {};
-
-    auto string_or_error = property.to_string(element->vm());
-    if (string_or_error.is_error())
-        return Optional<String> {};
-
-    return { string_or_error.release_value() };
-}
-
 Messages::WebContentServer::GetActiveDocumentsTypeResponse ConnectionFromClient::get_active_documents_type()
 {
     auto* active_document = page().top_level_browsing_context().active_document();
