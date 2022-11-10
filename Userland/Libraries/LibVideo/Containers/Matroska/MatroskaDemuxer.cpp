@@ -15,7 +15,7 @@ DecoderErrorOr<NonnullOwnPtr<MatroskaDemuxer>> MatroskaDemuxer::from_file(String
 
 DecoderErrorOr<NonnullOwnPtr<MatroskaDemuxer>> MatroskaDemuxer::from_data(ReadonlyBytes data)
 {
-    return make<MatroskaDemuxer>(TRY(Reader::parse_matroska_from_data(data.data(), data.size())));
+    return make<MatroskaDemuxer>(TRY(Reader::parse_matroska_from_data(data)));
 }
 
 Vector<Track> MatroskaDemuxer::get_tracks_for_type(TrackType type)

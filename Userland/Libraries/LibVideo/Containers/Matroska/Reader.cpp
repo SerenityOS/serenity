@@ -58,12 +58,12 @@ constexpr u32 TIMESTAMP_ID = 0xE7;
 DecoderErrorOr<NonnullOwnPtr<MatroskaDocument>> Reader::parse_matroska_from_file(StringView path)
 {
     auto mapped_file = DECODER_TRY(DecoderErrorCategory::IO, Core::MappedFile::map(path));
-    return parse_matroska_from_data((u8*)mapped_file->data(), mapped_file->size());
+    return parse_matroska_from_data(mapped_file->bytes());
 }
 
-DecoderErrorOr<NonnullOwnPtr<MatroskaDocument>> Reader::parse_matroska_from_data(u8 const* data, size_t size)
+DecoderErrorOr<NonnullOwnPtr<MatroskaDocument>> Reader::parse_matroska_from_data(ReadonlyBytes data)
 {
-    Reader reader(data, size);
+    Reader reader(data);
     return reader.parse();
 }
 
@@ -426,9 +426,10 @@ ErrorOr<u8> Reader::Streamer::read_octet()
         dbgln_if(MATROSKA_TRACE_DEBUG, "Ran out of stream data");
         return Error::from_string_literal("Stream is out of data");
     }
-    m_size_remaining--;
+    u8 byte = *data();
     m_octets_read.last()++;
-    return *(m_data_ptr++);
+    m_position++;
+    return byte;
 }
 
 ErrorOr<i16> Reader::Streamer::read_i16()
@@ -438,7 +439,7 @@ ErrorOr<i16> Reader::Streamer::read_i16()
 
 ErrorOr<u64> Reader::Streamer::read_variable_size_integer(bool mask_length)
 {
-    dbgln_if(MATROSKA_TRACE_DEBUG, "Reading from offset {:p}", m_data_ptr);
+    dbgln_if(MATROSKA_TRACE_DEBUG, "Reading from offset {:p}", data());
     auto length_descriptor = TRY(read_octet());
     dbgln_if(MATROSKA_TRACE_DEBUG, "Reading VINT, first byte is {:#02x}", length_descriptor);
     if (length_descriptor == 0)
@@ -495,9 +496,8 @@ ErrorOr<void> Reader::Streamer::drop_octets(size_t num_octets)
 {
     if (remaining() < num_octets)
         return Error::from_string_literal("Tried to drop octets past the end of the stream");
-    m_size_remaining -= num_octets;
+    m_position += num_octets;
     m_octets_read.last() += num_octets;
-    m_data_ptr += num_octets;
     return {};
 }
 
