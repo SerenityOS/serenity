@@ -421,7 +421,7 @@ WebIDL::ExceptionOr<void> XMLHttpRequest::open(String const& method_string, Stri
 }
 
 // https://xhr.spec.whatwg.org/#dom-xmlhttprequest-send
-WebIDL::ExceptionOr<void> XMLHttpRequest::send(Optional<Fetch::XMLHttpRequestBodyInit> body)
+WebIDL::ExceptionOr<void> XMLHttpRequest::send(Optional<DocumentOrXMLHttpRequestBodyInit> body)
 {
     auto& vm = this->vm();
     auto& realm = *vm.current_realm();
@@ -436,7 +436,14 @@ WebIDL::ExceptionOr<void> XMLHttpRequest::send(Optional<Fetch::XMLHttpRequestBod
     if (m_method.is_one_of("GET"sv, "HEAD"sv))
         body = {};
 
-    auto body_with_type = body.has_value() ? TRY(Fetch::extract_body(realm, body.value())) : Optional<Fetch::Infrastructure::BodyWithType> {};
+    Optional<Fetch::Infrastructure::BodyWithType> body_with_type {};
+    Optional<String> serialized_document {};
+    if (body.has_value()) {
+        if (body->has<JS::Handle<DOM::Document>>())
+            serialized_document = TRY(body->get<JS::Handle<DOM::Document>>().cell()->serialize_fragment(DOMParsing::RequireWellFormed::No));
+        else
+            body_with_type = TRY(Fetch::extract_body(realm, body->downcast<Fetch::BodyInitOrReadableBytes>()));
+    }
 
     AK::URL request_url = m_window->associated_document().parse_url(m_url.to_string());
     dbgln("XHR send from {} to {}", m_window->associated_document().url(), request_url);
@@ -457,7 +464,9 @@ WebIDL::ExceptionOr<void> XMLHttpRequest::send(Optional<Fetch::XMLHttpRequestBod
 
     auto request = LoadRequest::create_for_url_on_page(request_url, m_window->page());
     request.set_method(m_method);
-    if (body_with_type.has_value()) {
+    if (serialized_document.has_value()) {
+        request.set_body(serialized_document->to_byte_buffer());
+    } else if (body_with_type.has_value()) {
         TRY(body_with_type->body.source().visit(
             [&](ByteBuffer const& buffer) -> WebIDL::ExceptionOr<void> {
                 auto byte_buffer = TRY_OR_RETURN_OOM(realm, ByteBuffer::copy(buffer));
@@ -472,10 +481,14 @@ WebIDL::ExceptionOr<void> XMLHttpRequest::send(Optional<Fetch::XMLHttpRequestBod
             [](auto&) -> WebIDL::ExceptionOr<void> {
                 return {};
             }));
-        if (body_with_type->type.has_value()) {
-            // If type is non-null and this’s headers’s header list does not contain `Content-Type`, then append (`Content-Type`, type) to this’s headers.
-            if (!m_request_headers.contains("Content-Type"sv))
-                request.set_header("Content-Type", String { body_with_type->type->span() });
+    }
+
+    // If this’s headers’s header list does not contain `Content-Type`, then append (`Content-Type`, type) to this’s headers.
+    if (!m_request_headers.contains("Content-Type"sv)) {
+        if (body_with_type.has_value() && body_with_type->type.has_value()) {
+            request.set_header("Content-Type", String { body_with_type->type->span() });
+        } else if (body.has_value() && body->has<JS::Handle<DOM::Document>>()) {
+            request.set_header("Content-Type", "text/html;charset=UTF-8");
         }
     }
     for (auto& it : m_request_headers)

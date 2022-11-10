@@ -23,6 +23,9 @@
 
 namespace Web::XHR {
 
+// https://fetch.spec.whatwg.org/#typedefdef-xmlhttprequestbodyinit
+using DocumentOrXMLHttpRequestBodyInit = Variant<JS::Handle<Web::DOM::Document>, JS::Handle<Web::FileAPI::Blob>, JS::Handle<JS::Object>, JS::Handle<Web::URL::URLSearchParams>, AK::String>;
+
 class XMLHttpRequest final : public XMLHttpRequestEventTarget {
     WEB_PLATFORM_OBJECT(XMLHttpRequest, XMLHttpRequestEventTarget);
 
@@ -47,7 +50,7 @@ public:
 
     WebIDL::ExceptionOr<void> open(String const& method, String const& url);
     WebIDL::ExceptionOr<void> open(String const& method, String const& url, bool async, String const& username = {}, String const& password = {});
-    WebIDL::ExceptionOr<void> send(Optional<Fetch::XMLHttpRequestBodyInit> body);
+    WebIDL::ExceptionOr<void> send(Optional<DocumentOrXMLHttpRequestBodyInit> body);
 
     WebIDL::ExceptionOr<void> set_request_header(String const& header, String const& value);
     WebIDL::ExceptionOr<void> set_response_type(Bindings::XMLHttpRequestResponseType);
