@@ -13,6 +13,7 @@
 #include <AK/Vector.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Element.h>
+#include <LibWeb/HTML/AttributeNames.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/HTMLInputElement.h>
 #include <LibWeb/HTML/HTMLOptionElement.h>
@@ -489,6 +490,38 @@ Messages::WebDriverClient::IsElementSelectedResponse WebDriverConnection::is_ele
 
     // 5. Return success with data selected.
     return make_success_response(selected);
+}
+
+// 12.4.2 Get Element Attribute, https://w3c.github.io/webdriver/#dfn-get-element-attribute
+Messages::WebDriverClient::GetElementAttributeResponse WebDriverConnection::get_element_attribute(String const& element_id, String const& name)
+{
+    // 1. If the current browsing context is no longer open, return error with error code no such window.
+    TRY(ensure_open_top_level_browsing_context());
+
+    // FIXME: 2. Handle any user prompts and return its value if it is an error.
+
+    // 3. Let element be the result of trying to get a known connected element with url variable element id.
+    auto* element = TRY(get_known_connected_element(element_id));
+
+    // 4. Let result be the result of the first matching condition:
+    Optional<String> result;
+
+    // -> If name is a boolean attribute
+    if (Web::HTML::is_boolean_attribute(name)) {
+        // "true" (string) if the element has the attribute, otherwise null.
+        if (element->has_attribute(name))
+            result = "true"sv;
+    }
+    // -> Otherwise
+    else {
+        // The result of getting an attribute by name name.
+        result = element->get_attribute(name);
+    }
+
+    // 5. Return success with data result.
+    if (result.has_value())
+        return make_success_response(result.release_value());
+    return make_success_response({});
 }
 
 // https://w3c.github.io/webdriver/#dfn-no-longer-open

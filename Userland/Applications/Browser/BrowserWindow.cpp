@@ -611,10 +611,6 @@ void BrowserWindow::create_new_tab(URL url, bool activate)
         active_tab().view().scroll_element_into_view(element_id);
     };
 
-    new_tab.webdriver_endpoints().on_get_element_attribute = [this](i32 element_id, String const& name) {
-        return active_tab().view().get_element_attribute(element_id, name);
-    };
-
     new_tab.webdriver_endpoints().on_get_element_property = [this](i32 element_id, String const& name) {
         return active_tab().view().get_element_property(element_id, name);
     };
