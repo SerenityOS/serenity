@@ -39,5 +39,38 @@ ENUMERATE_HTML_ATTRIBUTES
 }
 
 }
+
+// https://html.spec.whatwg.org/#boolean-attribute
+bool is_boolean_attribute(FlyString const& attribute)
+{
+    // NOTE: This is the list of attributes from https://html.spec.whatwg.org/#attributes-3
+    //       with a Value column value of "Boolean attribute".
+    return attribute.is_one_of(
+        AttributeNames::allowfullscreen,
+        AttributeNames::async,
+        AttributeNames::autofocus,
+        AttributeNames::autoplay,
+        AttributeNames::checked,
+        AttributeNames::controls,
+        AttributeNames::default_,
+        AttributeNames::defer,
+        AttributeNames::disabled,
+        AttributeNames::formnovalidate,
+        AttributeNames::inert,
+        AttributeNames::ismap,
+        AttributeNames::itemscope,
+        AttributeNames::loop,
+        AttributeNames::multiple,
+        AttributeNames::muted,
+        AttributeNames::nomodule,
+        AttributeNames::novalidate,
+        AttributeNames::open,
+        AttributeNames::playsinline,
+        AttributeNames::readonly,
+        AttributeNames::required,
+        AttributeNames::reversed,
+        AttributeNames::selected);
+}
+
 }
 }
