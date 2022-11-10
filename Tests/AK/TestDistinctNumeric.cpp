@@ -41,7 +41,8 @@ AK_TYPEDEF_DISTINCT_NUMERIC_GENERAL(int, BoolNumeric, CastToBool);
 AK_TYPEDEF_DISTINCT_NUMERIC_GENERAL(int, FlagsNumeric, Flags);
 AK_TYPEDEF_DISTINCT_NUMERIC_GENERAL(int, ShiftNumeric, Shift);
 AK_TYPEDEF_DISTINCT_NUMERIC_GENERAL(int, ArithNumeric, Arithmetic);
-AK_TYPEDEF_DISTINCT_NUMERIC_GENERAL(int, GeneralNumeric, Arithmetic, CastToBool, Comparison, Flags, Increment, Shift);
+AK_TYPEDEF_DISTINCT_NUMERIC_GENERAL(int, UnderlyingNumeric, CastToUnderlying);
+AK_TYPEDEF_DISTINCT_NUMERIC_GENERAL(int, GeneralNumeric, Arithmetic, CastToBool, CastToUnderlying, Comparison, Flags, Increment, Shift);
 
 TEST_CASE(address_identity)
 {
@@ -103,6 +104,14 @@ TEST_CASE(operator_bool)
     EXPECT_EQ(!a, true);
     EXPECT_EQ(!b, false);
     EXPECT_EQ(!c, false);
+}
+
+TEST_CASE(operator_underlying)
+{
+    UnderlyingNumeric a = 0;
+    UnderlyingNumeric b = 42;
+    EXPECT_EQ(static_cast<int>(a), 0);
+    EXPECT_EQ(static_cast<int>(b), 42);
 }
 
 TEST_CASE(operator_flags)
@@ -216,6 +225,9 @@ TEST_CASE(composability)
     EXPECT_EQ(-b, GeneralNumeric(-1));
     EXPECT_EQ(a + b, b);
     EXPECT_EQ(b * GeneralNumeric(42), GeneralNumeric(42));
+    // Underlying
+    EXPECT_EQ(static_cast<int>(a), 0);
+    EXPECT_EQ(static_cast<int>(b), 1);
 }
 
 /*
@@ -266,6 +278,13 @@ TEST_CASE(negative_arith)
     BareNumeric a = 12;
     [[maybe_unused]] auto res = (a + a);
     // error: static assertion failed: 'a+b' is only available for DistinctNumeric types with 'Arithmetic'.
+}
+
+TEST_CASE(negative_underlying)
+{
+    BareNumeric a = 12;
+    [[maybe_unused]] int res = static_cast<int>(a);
+    // error: static assertion failed: Cast to underlying type is only available for DistinctNumeric types with 'CastToUnderlying'.
 }
 
 TEST_CASE(negative_incompatible)
