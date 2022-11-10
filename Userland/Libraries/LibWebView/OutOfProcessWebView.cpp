@@ -559,11 +559,6 @@ void OutOfProcessWebView::scroll_element_into_view(i32 element_id)
     return client().scroll_element_into_view(element_id);
 }
 
-Optional<String> OutOfProcessWebView::get_element_attribute(i32 element_id, String const& name)
-{
-    return client().get_element_attribute(element_id, name);
-}
-
 Optional<String> OutOfProcessWebView::get_element_property(i32 element_id, String const& name)
 {
     return client().get_element_property(element_id, name);

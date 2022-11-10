@@ -84,7 +84,6 @@ private:
     virtual void js_console_request_messages(i32) override;
 
     virtual void scroll_element_into_view(i32 element_id) override;
-    virtual Messages::WebContentServer::GetElementAttributeResponse get_element_attribute(i32 element_id, String const& name) override;
     virtual Messages::WebContentServer::GetElementPropertyResponse get_element_property(i32 element_id, String const& name) override;
     virtual Messages::WebContentServer::GetActiveDocumentsTypeResponse get_active_documents_type() override;
     virtual Messages::WebContentServer::GetComputedValueForElementResponse get_computed_value_for_element(i32 element_id, String const& property_name) override;

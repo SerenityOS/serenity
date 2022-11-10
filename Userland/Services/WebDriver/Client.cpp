@@ -659,12 +659,11 @@ Web::WebDriver::Response Client::handle_is_element_selected(Vector<StringView> c
 
 // 12.4.2 Get Element Attribute, https://w3c.github.io/webdriver/#dfn-get-element-attribute
 // GET /session/{session id}/element/{element id}/attribute/{name}
-Web::WebDriver::Response Client::handle_get_element_attribute(Vector<StringView> const& parameters, JsonValue const& payload)
+Web::WebDriver::Response Client::handle_get_element_attribute(Vector<StringView> const& parameters, JsonValue const&)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session_id>/element/<element_id>/attribute/<name>");
     auto* session = TRY(find_session_with_id(parameters[0]));
-    auto result = TRY(session->get_element_attribute(payload, parameters[1], parameters[2]));
-    return make_json_value(result);
+    return session->web_content_connection().get_element_attribute(parameters[1], parameters[2]);
 }
 
 // 12.4.3 Get Element Property, https://w3c.github.io/webdriver/#dfn-get-element-property

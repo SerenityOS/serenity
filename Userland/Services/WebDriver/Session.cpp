@@ -323,34 +323,6 @@ static ErrorOr<i32, Web::WebDriver::Error> get_known_connected_element(StringVie
     return maybe_element_id.release_value();
 }
 
-// 12.4.2 Get Element Attribute, https://w3c.github.io/webdriver/#dfn-get-element-attribute
-Web::WebDriver::Response Session::get_element_attribute(JsonValue const&, StringView parameter_element_id, StringView name)
-{
-    // 1. If the current browsing context is no longer open, return error with error code no such window.
-    TRY(check_for_open_top_level_browsing_context_or_return_error());
-
-    // FIXME: 2. Handle any user prompts and return its value if it is an error.
-
-    // 3. Let element be the result of trying to get a known connected element with url variable element id.
-    auto element_id = TRY(get_known_connected_element(parameter_element_id));
-
-    // FIXME: The case that the element does not exist is not handled at all and null is returned in that case.
-
-    // 4. Let result be the result of the first matching condition:
-    // -> FIXME: If name is a boolean attribute
-    //    NOTE: LibWeb doesn't know about boolean attributes directly
-    //    "true" (string) if the element has the attribute, otherwise null.
-    // -> Otherwise
-    //    The result of getting an attribute by name name.
-    auto result = m_browser_connection->get_element_attribute(element_id, name);
-
-    if (!result.has_value())
-        return JsonValue(AK::JsonValue::Type::Null);
-
-    // 5. Return success with data result.
-    return JsonValue(result.release_value());
-}
-
 // 12.4.3 Get Element Property, https://w3c.github.io/webdriver/#dfn-get-element-property
 Web::WebDriver::Response Session::get_element_property(JsonValue const&, StringView parameter_element_id, StringView name)
 {

@@ -495,15 +495,6 @@ void ConnectionFromClient::scroll_element_into_view(i32 element_id)
     element->scroll_into_view(options);
 }
 
-Messages::WebContentServer::GetElementAttributeResponse ConnectionFromClient::get_element_attribute(i32 element_id, String const& name)
-{
-    auto element = find_element_by_id(element_id);
-    if (!element.has_value())
-        return Optional<String> {};
-
-    return { element->get_attribute(name) };
-}
-
 Messages::WebContentServer::GetElementPropertyResponse ConnectionFromClient::get_element_property(i32 element_id, String const& name)
 {
     auto element = find_element_by_id(element_id);
