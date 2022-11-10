@@ -2131,6 +2131,7 @@ void HTMLParser::adjust_svg_tag_names(HTMLToken& token)
     token.adjust_tag_name("fepointlight", "fePointLight");
     token.adjust_tag_name("fespecularlighting", "feSpecularLighting");
     token.adjust_tag_name("fespotlight", "feSpotlight");
+    token.adjust_tag_name("foreignobject", "foreignObject");
     token.adjust_tag_name("glyphref", "glyphRef");
     token.adjust_tag_name("lineargradient", "linearGradient");
     token.adjust_tag_name("radialgradient", "radialGradient");
