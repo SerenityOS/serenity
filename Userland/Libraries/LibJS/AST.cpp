@@ -2543,7 +2543,8 @@ Completion Identifier::execute(Interpreter& interpreter) const
     auto& vm = interpreter.vm();
 
     // 1. Return ? ResolveBinding(StringValue of Identifier).
-    auto reference = TRY(vm.resolve_binding(m_string));
+    // OPTIMIZATION: We call Identifier::to_reference() here, which acts as a caching layer around ResolveBinding.
+    auto reference = TRY(to_reference(interpreter));
 
     // NOTE: The spec wants us to return the reference directly; this is not possible with ASTNode::execute() (short of letting it return a variant).
     // So, instead of calling GetValue at the call site, we do it here.
