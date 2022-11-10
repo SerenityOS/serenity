@@ -831,10 +831,10 @@ static void resolve_typedef(Interface& interface, NonnullRefPtr<Type>& type, Has
     bool nullable = type->is_nullable();
     type = it->value.type;
     type->set_nullable(nullable);
-    if (!extended_attributes)
-        return;
-    for (auto& attribute : it->value.extended_attributes)
-        extended_attributes->set(attribute.key, attribute.value);
+    if (extended_attributes) {
+        for (auto& attribute : it->value.extended_attributes)
+            extended_attributes->set(attribute.key, attribute.value);
+    }
 
     // Recursively resolve typedefs in unions after we resolved the type itself - e.g. for this:
     // typedef (A or B) Union1;
