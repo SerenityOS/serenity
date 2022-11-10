@@ -300,17 +300,6 @@ Web::WebDriver::Response Session::get_window_handles() const
     return JsonValue { handles };
 }
 
-static JsonValue serialize_rect(Gfx::IntRect const& rect)
-{
-    JsonObject serialized_rect = {};
-    serialized_rect.set("x", rect.x());
-    serialized_rect.set("y", rect.y());
-    serialized_rect.set("width", rect.width());
-    serialized_rect.set("height", rect.height());
-
-    return serialized_rect;
-}
-
 // https://w3c.github.io/webdriver/#dfn-get-a-known-connected-element
 static ErrorOr<i32, Web::WebDriver::Error> get_known_connected_element(StringView element_id)
 {
@@ -321,36 +310,6 @@ static ErrorOr<i32, Web::WebDriver::Error> get_known_connected_element(StringVie
         return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, "Element ID is not an integer");
 
     return maybe_element_id.release_value();
-}
-
-// 12.4.7 Get Element Rect, https://w3c.github.io/webdriver/#dfn-get-element-rect
-Web::WebDriver::Response Session::get_element_rect(StringView parameter_element_id)
-{
-    // 1. If the current browsing context is no longer open, return error with error code no such window.
-    TRY(check_for_open_top_level_browsing_context_or_return_error());
-
-    // FIXME: 2. Handle any user prompts and return its value if it is an error.
-
-    // 3. Let element be the result of trying to get a known connected element with url variable element id.
-    auto element_id = TRY(get_known_connected_element(parameter_element_id));
-
-    // 4. Calculate the absolute position of element and let it be coordinates.
-    // 5. Let rect be element’s bounding rectangle.
-    auto rect = m_browser_connection->get_element_rect(element_id);
-
-    // 6. Let body be a new JSON Object initialized with:
-    // "x"
-    //     The first value of coordinates.
-    // "y"
-    //     The second value of coordinates.
-    // "width"
-    //     Value of rect’s width dimension.
-    // "height"
-    //     Value of rect’s height dimension.
-    auto body = serialize_rect(rect);
-
-    // 7. Return success with data body.
-    return body;
 }
 
 // 12.4.8 Is Element Enabled, https://w3c.github.io/webdriver/#dfn-is-element-enabled

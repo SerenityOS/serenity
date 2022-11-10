@@ -525,15 +525,6 @@ static Gfx::IntRect calculate_absolute_rect_of_element(Web::Page const& page, We
     };
 }
 
-Messages::WebContentServer::GetElementRectResponse ConnectionFromClient::get_element_rect(i32 element_id)
-{
-    auto element = find_element_by_id(element_id);
-    if (!element.has_value())
-        return { {} };
-
-    return { calculate_absolute_rect_of_element(page(), *element) };
-}
-
 Messages::WebContentServer::IsElementEnabledResponse ConnectionFromClient::is_element_enabled(i32 element_id)
 {
     auto element = find_element_by_id(element_id);
