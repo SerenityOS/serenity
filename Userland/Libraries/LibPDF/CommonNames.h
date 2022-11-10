@@ -18,6 +18,7 @@
     A(BM)                         \
     A(BaseEncoding)               \
     A(BaseFont)                   \
+    A(BitsPerComponent)           \
     A(BlackPoint)                 \
     A(C)                          \
     A(CA)                         \
@@ -25,7 +26,9 @@
     A(CalRGB)                     \
     A(CIDSystemInfo)              \
     A(CIDToGIDMap)                \
+    A(Colors)                     \
     A(ColorSpace)                 \
+    A(Columns)                    \
     A(Contents)                   \
     A(Count)                      \
     A(CropBox)                    \
@@ -33,6 +36,7 @@
     A(D)                          \
     A(DW)                         \
     A(DCTDecode)                  \
+    A(DecodeParms)                \
     A(DescendantFonts)            \
     A(Dest)                       \
     A(Dests)                      \
@@ -101,6 +105,7 @@
     A(Pages)                      \
     A(Parent)                     \
     A(Pattern)                    \
+    A(Predictor)                  \
     A(Prev)                       \
     A(R)                          \
     A(RI)                         \
