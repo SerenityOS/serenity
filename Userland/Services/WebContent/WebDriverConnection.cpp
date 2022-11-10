@@ -608,6 +608,24 @@ Messages::WebDriverClient::GetElementTextResponse WebDriverConnection::get_eleme
     return make_success_response(move(rendered_text));
 }
 
+// 12.4.6 Get Element Tag Name, https://w3c.github.io/webdriver/#dfn-get-element-tag-name
+Messages::WebDriverClient::GetElementTagNameResponse WebDriverConnection::get_element_tag_name(String const& element_id)
+{
+    // 1. If the current browsing context is no longer open, return error with error code no such window.
+    TRY(ensure_open_top_level_browsing_context());
+
+    // FIXME: 2. Handle any user prompts and return its value if it is an error.
+
+    // 3. Let element be the result of trying to get a known connected element with url variable element id.
+    auto* element = TRY(get_known_connected_element(element_id));
+
+    // 4. Let qualified name be the result of getting element’s tagName IDL attribute.
+    auto qualified_name = element->tag_name();
+
+    // 5. Return success with data qualified name.
+    return make_success_response(move(qualified_name));
+}
+
 // https://w3c.github.io/webdriver/#dfn-no-longer-open
 ErrorOr<void, Web::WebDriver::Error> WebDriverConnection::ensure_open_top_level_browsing_context()
 {

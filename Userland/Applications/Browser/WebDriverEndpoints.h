@@ -24,7 +24,6 @@ public:
     ~WebDriverEndpoints() = default;
 
     Function<void(i32 element_id)> on_scroll_element_into_view;
-    Function<String(i32 element_id)> on_get_element_tag_name;
     Function<Gfx::IntRect(i32 element_id)> on_get_element_rect;
     Function<bool(i32 element_id)> on_is_element_enabled;
     Function<Gfx::ShareableBitmap(i32 element_id)> on_take_element_screenshot;

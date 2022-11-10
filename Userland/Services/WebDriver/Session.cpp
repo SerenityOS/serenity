@@ -323,24 +323,6 @@ static ErrorOr<i32, Web::WebDriver::Error> get_known_connected_element(StringVie
     return maybe_element_id.release_value();
 }
 
-// 12.4.6 Get Element Tag Name, https://w3c.github.io/webdriver/#dfn-get-element-tag-name
-Web::WebDriver::Response Session::get_element_tag_name(JsonValue const&, StringView parameter_element_id)
-{
-    // 1. If the current browsing context is no longer open, return error with error code no such window.
-    TRY(check_for_open_top_level_browsing_context_or_return_error());
-
-    // FIXME: 2. Handle any user prompts and return its value if it is an error.
-
-    // 3. Let element be the result of trying to get a known connected element with url variable element id.
-    auto element_id = TRY(get_known_connected_element(parameter_element_id));
-
-    // 4. Let qualified name be the result of getting element’s tagName IDL attribute.
-    auto qualified_name = m_browser_connection->get_element_tag_name(element_id);
-
-    // 5. Return success with data qualified name.
-    return JsonValue(qualified_name);
-}
-
 // 12.4.7 Get Element Rect, https://w3c.github.io/webdriver/#dfn-get-element-rect
 Web::WebDriver::Response Session::get_element_rect(StringView parameter_element_id)
 {
