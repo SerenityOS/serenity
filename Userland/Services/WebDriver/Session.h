@@ -66,7 +66,6 @@ public:
     Web::WebDriver::Response add_cookie(JsonValue const& payload);
     Web::WebDriver::Response delete_cookie(StringView name);
     Web::WebDriver::Response delete_all_cookies();
-    Web::WebDriver::Response take_screenshot();
     Web::WebDriver::Response take_element_screenshot(StringView element_id);
 
 private:

@@ -695,28 +695,6 @@ static ErrorOr<String, Web::WebDriver::Error> encode_bitmap_as_canvas_element(Gf
     return encoded_string;
 }
 
-// 17.1 Take Screenshot, https://w3c.github.io/webdriver/#take-screenshot
-Web::WebDriver::Response Session::take_screenshot()
-{
-    // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
-    TRY(check_for_open_top_level_browsing_context_or_return_error());
-
-    // 2. When the user agent is next to run the animation frame callbacks:
-    //     a. Let root rect be the current top-level browsing context’s document element’s rectangle.
-    //     b. Let screenshot result be the result of trying to call draw a bounding box from the framebuffer, given root rect as an argument.
-    auto screenshot = m_browser_connection->take_screenshot();
-    if (!screenshot.is_valid())
-        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::UnableToCaptureScreen, "Unable to capture screenshot"sv);
-
-    //     c. Let canvas be a canvas element of screenshot result’s data.
-    //     d. Let encoding result be the result of trying encoding a canvas as Base64 canvas.
-    //     e. Let encoded string be encoding result’s data.
-    auto encoded_string = TRY(encode_bitmap_as_canvas_element(*screenshot.bitmap()));
-
-    // 3. Return success with data encoded string.
-    return JsonValue { encoded_string };
-}
-
 // 17.2 Take Element Screenshot, https://w3c.github.io/webdriver/#dfn-take-element-screenshot
 Web::WebDriver::Response Session::take_element_screenshot(StringView parameter_element_id)
 {

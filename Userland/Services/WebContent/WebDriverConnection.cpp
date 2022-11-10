@@ -26,6 +26,7 @@
 #include <LibWeb/Page/Page.h>
 #include <LibWeb/Platform/EventLoopPlugin.h>
 #include <LibWeb/Platform/Timer.h>
+#include <LibWeb/WebDriver/Screenshot.h>
 #include <WebContent/ConnectionFromClient.h>
 #include <WebContent/PageHost.h>
 #include <WebContent/WebDriverConnection.h>
@@ -712,6 +713,31 @@ Messages::WebDriverClient::IsElementEnabledResponse WebDriverConnection::is_elem
 
     // 7. Return success with data enabled.
     return make_success_response(enabled);
+}
+
+// 17.1 Take Screenshot, https://w3c.github.io/webdriver/#take-screenshot
+Messages::WebDriverClient::TakeScreenshotResponse WebDriverConnection::take_screenshot()
+{
+    // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
+    TRY(ensure_open_top_level_browsing_context());
+
+    // 2. When the user agent is next to run the animation frame callbacks:
+    //     a. Let root rect be the current top-level browsing context’s document element’s rectangle.
+    //     b. Let screenshot result be the result of trying to call draw a bounding box from the framebuffer, given root rect as an argument.
+    //     c. Let canvas be a canvas element of screenshot result’s data.
+    //     d. Let encoding result be the result of trying encoding a canvas as Base64 canvas.
+    //     e. Let encoded string be encoding result’s data.
+    auto* document = m_page_host.page().top_level_browsing_context().active_document();
+    auto root_rect = calculate_absolute_rect_of_element(m_page_host.page(), *document->document_element());
+
+    auto encoded_string = TRY(Web::WebDriver::capture_element_screenshot(
+        [&](auto const& rect, auto& bitmap) { m_page_host.paint(rect, bitmap); },
+        m_page_host.page(),
+        *document->document_element(),
+        root_rect));
+
+    // 3. Return success with data encoded string.
+    return make_success_response(move(encoded_string));
 }
 
 // https://w3c.github.io/webdriver/#dfn-no-longer-open

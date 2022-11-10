@@ -806,8 +806,7 @@ Web::WebDriver::Response Client::handle_take_screenshot(Vector<StringView> const
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session_id>/screenshot");
     auto* session = TRY(find_session_with_id(parameters[0]));
-    auto result = TRY(session->take_screenshot());
-    return make_json_value(result);
+    return session->web_content_connection().take_screenshot();
 }
 
 // 17.2 Take Element Screenshot, https://w3c.github.io/webdriver/#dfn-take-element-screenshot
