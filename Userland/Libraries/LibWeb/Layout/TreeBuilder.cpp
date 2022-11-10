@@ -24,6 +24,7 @@
 #include <LibWeb/Layout/TableRowBox.h>
 #include <LibWeb/Layout/TextNode.h>
 #include <LibWeb/Layout/TreeBuilder.h>
+#include <LibWeb/SVG/SVGForeignObjectElement.h>
 
 namespace Web::Layout {
 
@@ -129,6 +130,8 @@ void TreeBuilder::insert_node_into_inline_or_block_ancestor(Layout::Node& node, 
                 if (!ancestor.display().is_inline_outside())
                     return ancestor;
                 if (!ancestor.display().is_flow_inside())
+                    return ancestor;
+                if (ancestor.dom_node() && is<SVG::SVGForeignObjectElement>(*ancestor.dom_node()))
                     return ancestor;
             }
             VERIFY_NOT_REACHED();

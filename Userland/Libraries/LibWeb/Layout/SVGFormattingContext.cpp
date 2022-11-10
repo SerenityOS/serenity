@@ -7,8 +7,10 @@
  */
 
 #include <AK/Format.h>
+#include <LibWeb/Layout/BlockFormattingContext.h>
 #include <LibWeb/Layout/SVGFormattingContext.h>
 #include <LibWeb/Layout/SVGGeometryBox.h>
+#include <LibWeb/SVG/SVGForeignObjectElement.h>
 #include <LibWeb/SVG/SVGSVGElement.h>
 
 namespace Web::Layout {
@@ -30,6 +32,19 @@ void SVGFormattingContext::run(Box const& box, LayoutMode, [[maybe_unused]] Avai
     // FIXME: This entire thing is an ad-hoc hack.
 
     auto& svg_svg_element = verify_cast<SVG::SVGSVGElement>(*box.dom_node());
+
+    auto root_offset = m_state.get(box).offset;
+
+    box.for_each_child_of_type<BlockContainer>([&](BlockContainer const& child_box) {
+        if (is<SVG::SVGForeignObjectElement>(child_box.dom_node())) {
+            Layout::BlockFormattingContext bfc(m_state, child_box, this);
+            bfc.run(child_box, LayoutMode::Normal, available_space);
+
+            auto& child_state = m_state.get_mutable(child_box);
+            child_state.set_content_offset(child_state.offset.translated(root_offset));
+        }
+        return IterationDecision::Continue;
+    });
 
     box.for_each_in_subtree_of_type<SVGBox>([&](SVGBox const& descendant) {
         if (is<SVGGeometryBox>(descendant)) {
