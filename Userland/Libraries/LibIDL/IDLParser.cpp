@@ -818,8 +818,8 @@ void Parser::parse_non_interface_entities(bool allow_interface, Interface& inter
 static void resolve_typedef(Interface& interface, NonnullRefPtr<Type>& type, HashMap<String, String>* extended_attributes = {})
 {
     if (is<ParameterizedType>(*type)) {
-        auto parameterized_type = static_ptr_cast<ParameterizedType>(type);
-        auto& parameters = static_cast<Vector<NonnullRefPtr<Type>>&>(parameterized_type->parameters());
+        auto& parameterized_type = type->as_parameterized();
+        auto& parameters = static_cast<Vector<NonnullRefPtr<Type>>&>(parameterized_type.parameters());
         for (auto& parameter : parameters)
             resolve_typedef(interface, parameter);
         return;
@@ -848,8 +848,8 @@ static void resolve_typedef(Interface& interface, NonnullRefPtr<Type>& type, Has
     // UnionType(UnionType(A, B), UnionType(C, D))
     // Note that flattening unions is handled separately as per the spec.
     if (is<UnionType>(*type)) {
-        auto union_type = static_ptr_cast<UnionType>(type);
-        auto& member_types = static_cast<Vector<NonnullRefPtr<Type>>&>(union_type->member_types());
+        auto& union_type = type->as_union();
+        auto& member_types = static_cast<Vector<NonnullRefPtr<Type>>&>(union_type.member_types());
         for (auto& member_type : member_types)
             resolve_typedef(interface, member_type);
     }
