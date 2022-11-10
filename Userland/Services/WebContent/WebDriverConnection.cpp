@@ -731,6 +731,29 @@ Messages::WebDriverClient::IsElementEnabledResponse WebDriverConnection::is_elem
     return make_success_response(enabled);
 }
 
+// 13.1 Get Page Source, https://w3c.github.io/webdriver/#dfn-get-page-source
+Messages::WebDriverClient::GetSourceResponse WebDriverConnection::get_source()
+{
+    // 1. If the current browsing context is no longer open, return error with error code no such window.
+    TRY(ensure_open_top_level_browsing_context());
+
+    // FIXME: 2. Handle any user prompts and return its value if it is an error.
+
+    auto* document = m_page_host.page().top_level_browsing_context().active_document();
+    Optional<String> source;
+
+    // 3. Let source be the result of invoking the fragment serializing algorithm on a fictional node whose only child is the document element providing true for the require well-formed flag. If this causes an exception to be thrown, let source be null.
+    if (auto result = document->serialize_fragment(Web::DOMParsing::RequireWellFormed::Yes); !result.is_error())
+        source = result.release_value();
+
+    // 4. Let source be the result of serializing to string the current browsing context active document, if source is null.
+    if (!source.has_value())
+        source = MUST(document->serialize_fragment(Web::DOMParsing::RequireWellFormed::No));
+
+    // 5. Return success with data source.
+    return make_success_response(source.release_value());
+}
+
 // 17.1 Take Screenshot, https://w3c.github.io/webdriver/#take-screenshot
 Messages::WebDriverClient::TakeScreenshotResponse WebDriverConnection::take_screenshot()
 {

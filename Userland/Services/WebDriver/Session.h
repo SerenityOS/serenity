@@ -58,7 +58,6 @@ public:
     Web::WebDriver::Response get_window_handle();
     ErrorOr<void, Variant<Web::WebDriver::Error, Error>> close_window();
     Web::WebDriver::Response get_window_handles() const;
-    Web::WebDriver::Response get_source();
     Web::WebDriver::Response execute_script(JsonValue const& payload);
     Web::WebDriver::Response execute_async_script(JsonValue const& payload);
     Web::WebDriver::Response get_all_cookies();

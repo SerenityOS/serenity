@@ -58,18 +58,6 @@ void WebDriverConnection::forward()
         browser_window->active_tab().go_forward();
 }
 
-Messages::WebDriverSessionClient::SerializeSourceResponse WebDriverConnection::serialize_source()
-{
-    dbgln_if(WEBDRIVER_DEBUG, "WebDriverConnection: serialize_source");
-    if (auto browser_window = m_browser_window.strong_ref()) {
-        auto& tab = browser_window->active_tab();
-        if (tab.webdriver_endpoints().on_serialize_source)
-            return { tab.webdriver_endpoints().on_serialize_source() };
-    }
-
-    return { {} };
-}
-
 Messages::WebDriverSessionClient::ExecuteScriptResponse WebDriverConnection::execute_script(String const& body, Vector<String> const& json_arguments, Optional<u64> const& timeout, bool async)
 {
     dbgln("WebDriverConnection: execute_script");
