@@ -20,7 +20,7 @@ public:
     static DecoderErrorOr<NonnullOwnPtr<MatroskaDemuxer>> from_file(StringView filename);
     static DecoderErrorOr<NonnullOwnPtr<MatroskaDemuxer>> from_data(ReadonlyBytes data);
 
-    MatroskaDemuxer(NonnullOwnPtr<MatroskaDocument>& document)
+    MatroskaDemuxer(NonnullOwnPtr<MatroskaDocument>&& document)
         : m_document(move(document))
     {
     }

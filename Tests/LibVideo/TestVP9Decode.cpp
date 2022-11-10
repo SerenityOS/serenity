@@ -11,8 +11,7 @@
 
 static void decode_video(StringView path, size_t expected_frame_count)
 {
-    auto matroska_document = Video::Matroska::Reader::parse_matroska_from_file(path);
-    VERIFY(matroska_document);
+    auto matroska_document = MUST(Video::Matroska::Reader::parse_matroska_from_file(path));
     auto video_track_optional = matroska_document->track_for_track_type(Video::Matroska::TrackEntry::TrackType::Video);
     VERIFY(video_track_optional.has_value());
     auto video_track_entry = video_track_optional.value();
