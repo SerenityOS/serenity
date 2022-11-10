@@ -43,6 +43,7 @@ private:
     virtual Messages::WebDriverClient::FindElementsResponse find_elements(JsonValue const& payload) override;
     virtual Messages::WebDriverClient::FindElementFromElementResponse find_element_from_element(JsonValue const& payload, String const& element_id) override;
     virtual Messages::WebDriverClient::FindElementsFromElementResponse find_elements_from_element(JsonValue const& payload, String const& element_id) override;
+    virtual Messages::WebDriverClient::IsElementSelectedResponse is_element_selected(String const& element_id) override;
 
     ErrorOr<void, Web::WebDriver::Error> ensure_open_top_level_browsing_context();
     void restore_the_window();

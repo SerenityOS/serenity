@@ -13,6 +13,8 @@
 #include <AK/Vector.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/BrowsingContext.h>
+#include <LibWeb/HTML/HTMLInputElement.h>
+#include <LibWeb/HTML/HTMLOptionElement.h>
 #include <LibWeb/Page/Page.h>
 #include <LibWeb/Platform/EventLoopPlugin.h>
 #include <LibWeb/Platform/Timer.h>
@@ -453,6 +455,41 @@ Messages::WebDriverClient::FindElementsFromElementResponse WebDriverConnection::
     // 8. Return the result of trying to Find with start node, location strategy, and selector.
     auto result = TRY(find(*start_node, *location_strategy, selector));
     return make_success_response(move(result));
+}
+
+// 12.4.1 Is Element Selected, https://w3c.github.io/webdriver/#dfn-is-element-selected
+Messages::WebDriverClient::IsElementSelectedResponse WebDriverConnection::is_element_selected(String const& element_id)
+{
+    // 1. If the current browsing context is no longer open, return error with error code no such window.
+    TRY(ensure_open_top_level_browsing_context());
+
+    // FIXME: 2. Handle any user prompts and return its value if it is an error.
+
+    // 3. Let element be the result of trying to get a known connected element with url variable element id.
+    auto* element = TRY(get_known_connected_element(element_id));
+
+    // 4. Let selected be the value corresponding to the first matching statement:
+    bool selected = false;
+
+    // element is an input element with a type attribute in the Checkbox- or Radio Button state
+    if (is<Web::HTML::HTMLInputElement>(*element)) {
+        // -> The result of element’s checkedness.
+        auto& input = static_cast<Web::HTML::HTMLInputElement&>(*element);
+        using enum Web::HTML::HTMLInputElement::TypeAttributeState;
+
+        if (input.type_state() == Checkbox || input.type_state() == RadioButton)
+            selected = input.checked();
+    }
+    // element is an option element
+    else if (is<Web::HTML::HTMLOptionElement>(*element)) {
+        // -> The result of element’s selectedness.
+        selected = static_cast<Web::HTML::HTMLOptionElement&>(*element).selected();
+    }
+    // Otherwise
+    //   -> False.
+
+    // 5. Return success with data selected.
+    return make_success_response(selected);
 }
 
 // https://w3c.github.io/webdriver/#dfn-no-longer-open

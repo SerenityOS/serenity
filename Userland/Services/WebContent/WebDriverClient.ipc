@@ -13,4 +13,5 @@ endpoint WebDriverClient {
     find_elements(JsonValue payload) => (Web::WebDriver::Response response)
     find_element_from_element(JsonValue payload, String element_id) => (Web::WebDriver::Response response)
     find_elements_from_element(JsonValue payload, String element_id) => (Web::WebDriver::Response response)
+    is_element_selected(String element_id) => (Web::WebDriver::Response response)
 }
