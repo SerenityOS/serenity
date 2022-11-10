@@ -12,17 +12,16 @@
 
 namespace AK {
 
-/* This is a dual pivot quick sort. It is quite a bit faster than the single
- * pivot quick_sort below. The other quick_sort below should only be used when
- * you are stuck with simple iterators to a container and you don't have access
- * to the container itself.
- *
- * We use a cutoff to insertion sort for partitions of size 7 or smaller.
- * The idea is to avoid recursion for small partitions.
- * The value 7 here is a magic number. According to princeton's CS algorithm class
- * a value between 5 and 15 should work well in most situations:
- * https://algs4.cs.princeton.edu/23quicksort/
- */
+// This is a dual pivot quick sort. It is quite a bit faster than the single
+// pivot quick_sort below. The other quick_sort below should only be used when
+// you are stuck with simple iterators to a container and you don't have access
+// to the container itself.
+//
+// We use a cutoff to insertion sort for partitions of size 7 or smaller.
+// The idea is to avoid recursion for small partitions.
+// The value 7 here is a magic number. According to princeton's CS algorithm class
+// a value between 5 and 15 should work well in most situations:
+// https://algs4.cs.princeton.edu/23quicksort/
 
 static constexpr int INSERTION_SORT_CUTOFF = 7;
 
