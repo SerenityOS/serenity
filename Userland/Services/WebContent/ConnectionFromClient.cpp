@@ -22,9 +22,7 @@
 #include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/Cookie/ParsedCookie.h>
 #include <LibWeb/DOM/Document.h>
-#include <LibWeb/DOM/NodeList.h>
 #include <LibWeb/Dump.h>
-#include <LibWeb/Geometry/DOMRect.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/Scripting/ClassicScript.h>
 #include <LibWeb/HTML/Storage.h>
@@ -464,40 +462,14 @@ void ConnectionFromClient::js_console_request_messages(i32 start_index)
         m_console_client->send_messages(start_index);
 }
 
-// https://w3c.github.io/webdriver/#dfn-calculate-the-absolute-position
-static Gfx::IntPoint calculate_absolute_position_of_element(Web::Page const& page, JS::NonnullGCPtr<Web::Geometry::DOMRect> rect)
-{
-    // 1. Let rect be the value returned by calling getBoundingClientRect().
-
-    // 2. Let window be the associated window of current top-level browsing context.
-    auto const* window = page.top_level_browsing_context().active_window();
-
-    // 3. Let x be (scrollX of window + rect’s x coordinate).
-    auto x = (window ? static_cast<int>(window->scroll_x()) : 0) + static_cast<int>(rect->x());
-
-    // 4. Let y be (scrollY of window + rect’s y coordinate).
-    auto y = (window ? static_cast<int>(window->scroll_y()) : 0) + static_cast<int>(rect->y());
-
-    // 5. Return a pair of (x, y).
-    return { x, y };
-}
-
 Messages::WebContentServer::TakeDocumentScreenshotResponse ConnectionFromClient::take_document_screenshot()
 {
     auto* document = page().top_level_browsing_context().active_document();
     if (!document || !document->document_element())
         return { {} };
 
-    auto bounding_rect = document->document_element()->get_bounding_client_rect();
-    auto position = calculate_absolute_position_of_element(page(), bounding_rect);
     auto const& content_size = m_page_host->content_size();
-
-    Gfx::IntRect rect {
-        position.x(),
-        position.y(),
-        content_size.width() - position.x(),
-        content_size.height() - position.y(),
-    };
+    Gfx::IntRect rect { { 0, 0 }, content_size };
 
     auto bitmap = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, rect.size()).release_value_but_fixme_should_propagate_errors();
     m_page_host->paint(rect, *bitmap);
