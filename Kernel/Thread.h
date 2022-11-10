@@ -824,7 +824,12 @@ public:
             return EDEADLK;
 
         SpinlockLocker lock(m_lock);
-        if (!m_is_joinable || state() == Thread::State::Dead)
+
+        // Joining dead threads is allowed for two main reasons:
+        // - Thread join behavior should not be racy when a thread is joined and exiting at roughly the same time.
+        //   This is common behavior when threads are given a signal to end (meaning they are going to exit ASAP) and then joined.
+        // - POSIX requires that exited threads are joinable (at least, there is no language in the specification forbidding it).
+        if (!m_is_joinable || state() == Thread::State::Invalid)
             return EINVAL;
 
         add_blocker();
