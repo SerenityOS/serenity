@@ -51,6 +51,7 @@ namespace AK {
 namespace DistinctNumericFeature {
 enum Arithmetic {};
 enum CastToBool {};
+enum CastToUnderlying {};
 enum Comparison {};
 enum Flags {};
 enum Increment {};
@@ -73,6 +74,7 @@ class DistinctNumeric {
 
         constexpr void set(DistinctNumericFeature::Arithmetic const&) { arithmetic = true; }
         constexpr void set(DistinctNumericFeature::CastToBool const&) { cast_to_bool = true; }
+        constexpr void set(DistinctNumericFeature::CastToUnderlying const&) { cast_to_underlying = true; }
         constexpr void set(DistinctNumericFeature::Comparison const&) { comparisons = true; }
         constexpr void set(DistinctNumericFeature::Flags const&) { flags = true; }
         constexpr void set(DistinctNumericFeature::Increment const&) { increment = true; }
@@ -80,6 +82,7 @@ class DistinctNumeric {
 
         bool arithmetic { false };
         bool cast_to_bool { false };
+        bool cast_to_underlying { false };
         bool comparisons { false };
         bool flags { false };
         bool increment { false };
@@ -103,6 +106,13 @@ public:
     constexpr bool operator==(Self const& other) const
     {
         return this->m_value == other.m_value;
+    }
+
+    // Only implemented when `CastToUnderlying` is true:
+    constexpr explicit operator T() const
+    {
+        static_assert(options.cast_to_underlying, "Cast to underlying type is only available for DistinctNumeric types with 'CastToUnderlying'.");
+        return value();
     }
 
     // Only implemented when `Increment` is true:
@@ -316,6 +326,7 @@ struct Formatter<DistinctNumeric<T, X, Opts...>> : Formatter<T> {
     struct NAME##_decl {                                                                        \
         using Arithmetic [[maybe_unused]] = AK::DistinctNumericFeature::Arithmetic;             \
         using CastToBool [[maybe_unused]] = AK::DistinctNumericFeature::CastToBool;             \
+        using CastToUnderlying [[maybe_unused]] = AK::DistinctNumericFeature::CastToUnderlying; \
         using Comparison [[maybe_unused]] = AK::DistinctNumericFeature::Comparison;             \
         using Flags [[maybe_unused]] = AK::DistinctNumericFeature::Flags;                       \
         using Increment [[maybe_unused]] = AK::DistinctNumericFeature::Increment;               \
