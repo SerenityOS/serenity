@@ -1909,7 +1909,7 @@ VTState actual_rendered_string_length_step(StringMetrics& metrics, size_t index,
     };
 
     // FIXME: current_line.visible_length can go above maximum_line_width when using masks
-    if (maximum_line_width.has_value() && maximum_line_width.value() >= current_line.visible_length)
+    if (maximum_line_width.has_value() && current_line.visible_length >= maximum_line_width.value())
         save_line();
 
     ScopeGuard bit_length_update { [&last_return, &current_line, &index]() {
