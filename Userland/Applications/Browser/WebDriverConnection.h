@@ -49,7 +49,6 @@ public:
     virtual void add_cookie(Web::Cookie::ParsedCookie const&) override;
     virtual void update_cookie(Web::Cookie::Cookie const&) override;
     virtual void scroll_element_into_view(i32 element_id) override;
-    virtual Messages::WebDriverSessionClient::IsElementEnabledResponse is_element_enabled(i32 element_id) override;
     virtual Messages::WebDriverSessionClient::TakeScreenshotResponse take_screenshot() override;
     virtual Messages::WebDriverSessionClient::TakeElementScreenshotResponse take_element_screenshot(i32 element_id) override;
 

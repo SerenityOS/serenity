@@ -717,8 +717,7 @@ Web::WebDriver::Response Client::handle_is_element_enabled(Vector<StringView> co
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session_id>/element/<element_id>/enabled");
     auto* session = TRY(find_session_with_id(parameters[0]));
-    auto result = TRY(session->is_element_enabled(parameters[1]));
-    return make_json_value(result);
+    return session->web_content_connection().is_element_enabled(parameters[1]);
 }
 
 // 13.1 Get Page Source, https://w3c.github.io/webdriver/#dfn-get-page-source

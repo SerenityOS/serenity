@@ -64,7 +64,6 @@ public:
     OrderedHashMap<String, String> get_session_storage_entries();
 
     void scroll_element_into_view(i32 element_id);
-    bool is_element_enabled(i32 element_id);
 
     void set_content_filters(Vector<String>);
     void set_proxy_mappings(Vector<String> proxies, HashMap<String, size_t> mappings);

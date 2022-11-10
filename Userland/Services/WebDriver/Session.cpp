@@ -312,26 +312,6 @@ static ErrorOr<i32, Web::WebDriver::Error> get_known_connected_element(StringVie
     return maybe_element_id.release_value();
 }
 
-// 12.4.8 Is Element Enabled, https://w3c.github.io/webdriver/#dfn-is-element-enabled
-Web::WebDriver::Response Session::is_element_enabled(StringView parameter_element_id)
-{
-    // 1. If the current browsing context is no longer open, return error with error code no such window.
-    TRY(check_for_open_top_level_browsing_context_or_return_error());
-
-    // FIXME: 2. Handle any user prompts and return its value if it is an error.
-
-    // 3. Let element be the result of trying to get a known connected element with url variable element id.
-    auto element_id = TRY(get_known_connected_element(parameter_element_id));
-
-    // 4. Let enabled be a boolean initially set to true if the current browsing context’s active document’s type is not "xml".
-    // 5. Otherwise, let enabled to false and jump to the last step of this algorithm.
-    // 6. Set enabled to false if a form control is disabled.
-    auto enabled = m_browser_connection->is_element_enabled(element_id);
-
-    // 7. Return success with data enabled.
-    return JsonValue { enabled };
-}
-
 // 13.1 Get Page Source, https://w3c.github.io/webdriver/#dfn-get-page-source
 Web::WebDriver::Response Session::get_source()
 {

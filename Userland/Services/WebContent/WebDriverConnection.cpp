@@ -20,6 +20,7 @@
 #include <LibWeb/Geometry/DOMRect.h>
 #include <LibWeb/HTML/AttributeNames.h>
 #include <LibWeb/HTML/BrowsingContext.h>
+#include <LibWeb/HTML/FormAssociatedElement.h>
 #include <LibWeb/HTML/HTMLInputElement.h>
 #include <LibWeb/HTML/HTMLOptionElement.h>
 #include <LibWeb/Page/Page.h>
@@ -686,6 +687,31 @@ Messages::WebDriverClient::GetElementRectResponse WebDriverConnection::get_eleme
 
     // 7. Return success with data body.
     return body;
+}
+
+// 12.4.8 Is Element Enabled, https://w3c.github.io/webdriver/#dfn-is-element-enabled
+Messages::WebDriverClient::IsElementEnabledResponse WebDriverConnection::is_element_enabled(String const& element_id)
+{
+    // 1. If the current browsing context is no longer open, return error with error code no such window.
+    TRY(ensure_open_top_level_browsing_context());
+
+    // FIXME: 2. Handle any user prompts and return its value if it is an error.
+
+    // 3. Let element be the result of trying to get a known connected element with url variable element id.
+    auto* element = TRY(get_known_connected_element(element_id));
+
+    // 4. Let enabled be a boolean initially set to true if the current browsing context’s active document’s type is not "xml".
+    // 5. Otherwise, let enabled to false and jump to the last step of this algorithm.
+    bool enabled = !m_page_host.page().top_level_browsing_context().active_document()->is_xml_document();
+
+    // 6. Set enabled to false if a form control is disabled.
+    if (enabled && is<Web::HTML::FormAssociatedElement>(*element)) {
+        auto& form_associated_element = dynamic_cast<Web::HTML::FormAssociatedElement&>(*element);
+        enabled = form_associated_element.enabled();
+    }
+
+    // 7. Return success with data enabled.
+    return make_success_response(enabled);
 }
 
 // https://w3c.github.io/webdriver/#dfn-no-longer-open

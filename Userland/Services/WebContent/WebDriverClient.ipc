@@ -20,4 +20,5 @@ endpoint WebDriverClient {
     get_element_text(String element_id) => (Web::WebDriver::Response response)
     get_element_tag_name(String element_id) => (Web::WebDriver::Response response)
     get_element_rect(String element_id) => (Web::WebDriver::Response response)
+    is_element_enabled(String element_id) => (Web::WebDriver::Response response)
 }
