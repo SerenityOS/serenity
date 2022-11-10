@@ -12,6 +12,7 @@
 #include <AK/JsonValue.h>
 #include <AK/Vector.h>
 #include <LibWeb/DOM/Document.h>
+#include <LibWeb/DOM/Element.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/HTMLInputElement.h>
 #include <LibWeb/HTML/HTMLOptionElement.h>
@@ -83,7 +84,7 @@ static JsonObject web_element_reference_object(Web::DOM::Node const& element)
 }
 
 // https://w3c.github.io/webdriver/#dfn-get-a-known-connected-element
-static ErrorOr<Web::DOM::ParentNode*, Web::WebDriver::Error> get_known_connected_element(StringView element_id)
+static ErrorOr<Web::DOM::Element*, Web::WebDriver::Error> get_known_connected_element(StringView element_id)
 {
     // NOTE: The whole concept of "connected elements" is not implemented yet. See get_or_create_a_web_element_reference().
     //       For now the element is only represented by its ID.
@@ -93,12 +94,10 @@ static ErrorOr<Web::DOM::ParentNode*, Web::WebDriver::Error> get_known_connected
 
     auto* node = Web::DOM::Node::from_id(*element);
 
-    if (!node)
+    if (!node || !node->is_element())
         return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::NoSuchElement, String::formatted("Could not find element with ID: {}", element_id));
-    if (!is<Web::DOM::ParentNode>(node))
-        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::NoSuchElement, String::formatted("Element with ID is not a parent node: {}", element_id));
 
-    return static_cast<Web::DOM::ParentNode*>(node);
+    return static_cast<Web::DOM::Element*>(node);
 }
 
 static ErrorOr<String, Web::WebDriver::Error> get_property(JsonValue const& payload, StringView key)
