@@ -403,6 +403,7 @@ class SVGClipPathElement;
 class SVGDefsElement;
 class SVGElement;
 class SVGEllipseElement;
+class SVGForeignObjectElement;
 class SVGGeometryElement;
 class SVGGraphicsElement;
 class SVGLength;

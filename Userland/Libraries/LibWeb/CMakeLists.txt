@@ -408,6 +408,7 @@ set(SOURCES
     SVG/SVGPathElement.cpp
     SVG/SVGCircleElement.cpp
     SVG/SVGEllipseElement.cpp
+    SVG/SVGForeignObjectElement.cpp
     SVG/SVGLength.cpp
     SVG/SVGLineElement.cpp
     SVG/SVGPolygonElement.cpp

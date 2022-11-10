@@ -81,6 +81,7 @@
 #include <LibWeb/SVG/SVGClipPathElement.h>
 #include <LibWeb/SVG/SVGDefsElement.h>
 #include <LibWeb/SVG/SVGEllipseElement.h>
+#include <LibWeb/SVG/SVGForeignObjectElement.h>
 #include <LibWeb/SVG/SVGGElement.h>
 #include <LibWeb/SVG/SVGLineElement.h>
 #include <LibWeb/SVG/SVGPathElement.h>
@@ -273,6 +274,8 @@ JS::NonnullGCPtr<Element> create_element(Document& document, FlyString local_nam
         return *realm.heap().allocate<SVG::SVGDefsElement>(realm, document, move(qualified_name));
     if (lowercase_tag_name == SVG::TagNames::ellipse)
         return *realm.heap().allocate<SVG::SVGEllipseElement>(realm, document, move(qualified_name));
+    if (lowercase_tag_name.equals_ignoring_case(SVG::TagNames::foreignObject))
+        return *realm.heap().allocate<SVG::SVGForeignObjectElement>(realm, document, move(qualified_name));
     if (lowercase_tag_name == SVG::TagNames::line)
         return *realm.heap().allocate<SVG::SVGLineElement>(realm, document, move(qualified_name));
     if (lowercase_tag_name == SVG::TagNames::path)
