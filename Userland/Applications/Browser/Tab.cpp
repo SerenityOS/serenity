@@ -445,6 +445,16 @@ Tab::Tab(BrowserWindow& window)
         load(url);
     };
 
+    view().on_back_button = [this] {
+        if (m_history.can_go_back())
+            go_back();
+    };
+
+    view().on_forward_button = [this] {
+        if (m_history.can_go_forward())
+            go_forward();
+    };
+
     m_tab_context_menu = GUI::Menu::construct();
     m_tab_context_menu->add_action(GUI::CommonActions::make_reload_action([this](auto&) {
         reload();
