@@ -10,22 +10,12 @@ namespace Video::Matroska {
 
 DecoderErrorOr<NonnullOwnPtr<MatroskaDemuxer>> MatroskaDemuxer::from_file(StringView filename)
 {
-    // FIXME: MatroskaReader should return errors.
-    auto nullable_document = Reader::parse_matroska_from_file(filename);
-    if (!nullable_document)
-        return DecoderError::format(DecoderErrorCategory::IO, "Failed to open matroska from file '{}'", filename);
-    auto document = nullable_document.release_nonnull();
-    return make<MatroskaDemuxer>(document);
+    return make<MatroskaDemuxer>(TRY(Reader::parse_matroska_from_file(filename)));
 }
 
 DecoderErrorOr<NonnullOwnPtr<MatroskaDemuxer>> MatroskaDemuxer::from_data(ReadonlyBytes data)
 {
-    // FIXME: MatroskaReader should return errors.
-    auto nullable_document = Reader::parse_matroska_from_data(data.data(), data.size());
-    if (!nullable_document)
-        return DecoderError::format(DecoderErrorCategory::IO, "Failed to open matroska from data");
-    auto document = nullable_document.release_nonnull();
-    return make<MatroskaDemuxer>(document);
+    return make<MatroskaDemuxer>(TRY(Reader::parse_matroska_from_data(data.data(), data.size())));
 }
 
 Vector<Track> MatroskaDemuxer::get_tracks_for_type(TrackType type)

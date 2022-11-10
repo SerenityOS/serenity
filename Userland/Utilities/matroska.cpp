@@ -10,10 +10,12 @@
 
 ErrorOr<int> serenity_main(Main::Arguments)
 {
-    auto document = Video::Matroska::Reader::parse_matroska_from_file("/home/anon/Videos/test-webm.webm"sv);
-    if (!document) {
+    auto document_result = Video::Matroska::Reader::parse_matroska_from_file("/home/anon/Videos/test-webm.webm"sv);
+    if (document_result.is_error()) {
+        outln("Encountered an error during parsing: {}", document_result.release_error().string_literal());
         return Error::from_string_literal("Failed to parse :(");
     }
+    auto document = document_result.release_value();
 
     outln("DocType is {}", document->header().doc_type.characters());
     outln("DocTypeVersion is {}", document->header().doc_type_version);
