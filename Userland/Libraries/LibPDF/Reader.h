@@ -38,7 +38,7 @@ public:
             return 0;
 
         if (m_forwards)
-            return bytes().size() - offset() - 1;
+            return bytes().size() - offset();
         return offset() + 1;
     }
 
