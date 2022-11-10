@@ -25,9 +25,17 @@ ErrorOr<FlatPtr> Process::sys$jail_create(Userspace<Syscall::SC_jail_create_para
     if (jail_name->length() > jail_name_max_size)
         return ENAMETOOLONG;
 
-    auto jail = TRY(JailManagement::the().create_jail(move(jail_name)));
-    params.index = jail->index().value();
-
+    params.index = TRY(m_attached_jail.with([&](auto& my_jail) -> ErrorOr<u64> {
+        // Note: If we are already in a jail, don't let the process to be able to create other jails
+        // even if it will not be able to join them later on. The reason for this is to prevent as much as possible
+        // any info leak about the "outside world" jail metadata.
+        if (my_jail)
+            return Error::from_errno(EPERM);
+        auto jail = TRY(JailManagement::the().create_jail(move(jail_name)));
+        return jail->index().value();
+    }));
+    // Note: We do the copy_to_user outside of the m_attached_jail Spinlock locked scope because
+    // we rely on page faults to work properly.
     TRY(copy_to_user(user_params, &params));
     return 0;
 }
