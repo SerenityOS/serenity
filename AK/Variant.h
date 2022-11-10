@@ -406,30 +406,50 @@ public:
     }
 
     template<typename... NewTs>
-    Variant<NewTs...> downcast() &&
+    decltype(auto) downcast() &&
     {
-        Variant<NewTs...> instance { Variant<NewTs...>::invalid_index, Detail::VariantConstructTag {} };
-        visit([&](auto& value) {
-            if constexpr (Variant<NewTs...>::template can_contain<RemoveCVReference<decltype(value)>>())
-                instance.set(move(value), Detail::VariantNoClearTag {});
-        });
-        VERIFY(instance.m_index != instance.invalid_index);
-        return instance;
+        if constexpr (sizeof...(NewTs) == 1 && (IsSpecializationOf<NewTs, Variant> && ...)) {
+            return move(*this).template downcast_variant<NewTs...>();
+        } else {
+            Variant<NewTs...> instance { Variant<NewTs...>::invalid_index, Detail::VariantConstructTag {} };
+            visit([&](auto& value) {
+                if constexpr (Variant<NewTs...>::template can_contain<RemoveCVReference<decltype(value)>>())
+                    instance.set(move(value), Detail::VariantNoClearTag {});
+            });
+            VERIFY(instance.m_index != instance.invalid_index);
+            return instance;
+        }
     }
 
     template<typename... NewTs>
-    Variant<NewTs...> downcast() const&
+    decltype(auto) downcast() const&
     {
-        Variant<NewTs...> instance { Variant<NewTs...>::invalid_index, Detail::VariantConstructTag {} };
-        visit([&](auto const& value) {
-            if constexpr (Variant<NewTs...>::template can_contain<RemoveCVReference<decltype(value)>>())
-                instance.set(value, Detail::VariantNoClearTag {});
-        });
-        VERIFY(instance.m_index != instance.invalid_index);
-        return instance;
+        if constexpr (sizeof...(NewTs) == 1 && (IsSpecializationOf<NewTs, Variant> && ...)) {
+            return (*this).template downcast_variant(TypeWrapper<NewTs...> {});
+        } else {
+            Variant<NewTs...> instance { Variant<NewTs...>::invalid_index, Detail::VariantConstructTag {} };
+            visit([&](auto const& value) {
+                if constexpr (Variant<NewTs...>::template can_contain<RemoveCVReference<decltype(value)>>())
+                    instance.set(value, Detail::VariantNoClearTag {});
+            });
+            VERIFY(instance.m_index != instance.invalid_index);
+            return instance;
+        }
     }
 
 private:
+    template<typename... NewTs>
+    Variant<NewTs...> downcast_variant(TypeWrapper<Variant<NewTs...>>) &&
+    {
+        return move(*this).template downcast<NewTs...>();
+    }
+
+    template<typename... NewTs>
+    Variant<NewTs...> downcast_variant(TypeWrapper<Variant<NewTs...>>) const&
+    {
+        return (*this).template downcast<NewTs...>();
+    }
+
     static constexpr auto data_size = Detail::integer_sequence_generate_array<size_t>(0, IntegerSequence<size_t, sizeof(Ts)...>()).max();
     static constexpr auto data_alignment = Detail::integer_sequence_generate_array<size_t>(0, IntegerSequence<size_t, alignof(Ts)...>()).max();
     using Helper = Detail::Variant<IndexType, 0, Ts...>;
