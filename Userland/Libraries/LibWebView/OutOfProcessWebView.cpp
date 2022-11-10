@@ -559,11 +559,6 @@ void OutOfProcessWebView::scroll_element_into_view(i32 element_id)
     return client().scroll_element_into_view(element_id);
 }
 
-bool OutOfProcessWebView::is_element_enabled(i32 element_id)
-{
-    return client().is_element_enabled(element_id);
-}
-
 void OutOfProcessWebView::set_content_filters(Vector<String> filters)
 {
     client().async_set_content_filters(filters);

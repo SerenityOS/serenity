@@ -26,7 +26,6 @@
 #include <LibWeb/Dump.h>
 #include <LibWeb/Geometry/DOMRect.h>
 #include <LibWeb/HTML/BrowsingContext.h>
-#include <LibWeb/HTML/FormAssociatedElement.h>
 #include <LibWeb/HTML/Scripting/ClassicScript.h>
 #include <LibWeb/HTML/Storage.h>
 #include <LibWeb/HTML/Window.h>
@@ -523,26 +522,6 @@ static Gfx::IntRect calculate_absolute_rect_of_element(Web::Page const& page, We
         static_cast<int>(bounding_rect->width()),
         static_cast<int>(bounding_rect->height())
     };
-}
-
-Messages::WebContentServer::IsElementEnabledResponse ConnectionFromClient::is_element_enabled(i32 element_id)
-{
-    auto element = find_element_by_id(element_id);
-    if (!element.has_value())
-        return { false };
-
-    auto* document = page().top_level_browsing_context().active_document();
-    if (!document)
-        return { false };
-
-    bool enabled = !document->is_xml_document();
-
-    if (enabled && is<Web::HTML::FormAssociatedElement>(*element)) {
-        auto& form_associated_element = dynamic_cast<Web::HTML::FormAssociatedElement&>(*element);
-        enabled = form_associated_element.enabled();
-    }
-
-    return { enabled };
 }
 
 Messages::WebContentServer::TakeElementScreenshotResponse ConnectionFromClient::take_element_screenshot(i32 element_id)

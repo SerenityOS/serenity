@@ -146,17 +146,6 @@ void WebDriverConnection::scroll_element_into_view(i32 element_id)
     }
 }
 
-Messages::WebDriverSessionClient::IsElementEnabledResponse WebDriverConnection::is_element_enabled(i32 element_id)
-{
-    dbgln("WebDriverConnection: is_element_enabled {}", element_id);
-    if (auto browser_window = m_browser_window.strong_ref()) {
-        auto& tab = browser_window->active_tab();
-        if (tab.webdriver_endpoints().on_is_element_enabled)
-            return { tab.webdriver_endpoints().on_is_element_enabled(element_id) };
-    }
-    return { false };
-}
-
 Messages::WebDriverSessionClient::TakeScreenshotResponse WebDriverConnection::take_screenshot()
 {
     dbgln_if(WEBDRIVER_DEBUG, "WebDriverConnection: take_screenshot");
