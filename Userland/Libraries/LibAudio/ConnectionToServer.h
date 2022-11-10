@@ -81,7 +81,7 @@ private:
     NonnullOwnPtr<UserSampleQueue> m_user_queue;
 
     NonnullRefPtr<Threading::Thread> m_background_audio_enqueuer;
-    Core::EventLoop* m_enqueuer_loop;
+    Core::EventLoop* m_enqueuer_loop { nullptr };
     Threading::Mutex m_enqueuer_loop_destruction;
 
     // A good amount of time to sleep when the queue is full.
