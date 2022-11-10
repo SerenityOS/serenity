@@ -494,15 +494,6 @@ void ConnectionFromClient::scroll_element_into_view(i32 element_id)
     element->scroll_into_view(options);
 }
 
-Messages::WebContentServer::GetElementTextResponse ConnectionFromClient::get_element_text(i32 element_id)
-{
-    auto element = find_element_by_id(element_id);
-    if (!element.has_value())
-        return { "" };
-
-    return { element->layout_node()->dom_node()->text_content() };
-}
-
 Messages::WebContentServer::GetElementTagNameResponse ConnectionFromClient::get_element_tag_name(i32 element_id)
 {
     auto element = find_element_by_id(element_id);

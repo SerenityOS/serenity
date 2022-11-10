@@ -17,4 +17,5 @@ endpoint WebDriverClient {
     get_element_attribute(String element_id, String name) => (Web::WebDriver::Response response)
     get_element_property(String element_id, String name) => (Web::WebDriver::Response response)
     get_element_css_value(String element_id, String name) => (Web::WebDriver::Response response)
+    get_element_text(String element_id) => (Web::WebDriver::Response response)
 }

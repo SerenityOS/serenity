@@ -590,6 +590,24 @@ Messages::WebDriverClient::GetElementCssValueResponse WebDriverConnection::get_e
     return make_success_response(move(computed_value));
 }
 
+// 12.4.5 Get Element Text, https://w3c.github.io/webdriver/#dfn-get-element-text
+Messages::WebDriverClient::GetElementTextResponse WebDriverConnection::get_element_text(String const& element_id)
+{
+    // 1. If the current browsing context is no longer open, return error with error code no such window.
+    TRY(ensure_open_top_level_browsing_context());
+
+    // FIXME: 2. Handle any user prompts and return its value if it is an error.
+
+    // 3. Let element be the result of trying to get a known connected element with url variable element id.
+    auto* element = TRY(get_known_connected_element(element_id));
+
+    // 4. Let rendered text be the result of performing implementation-specific steps whose result is exactly the same as the result of a Function.[[Call]](null, element) with bot.dom.getVisibleText as the this value.
+    auto rendered_text = element->text_content();
+
+    // 5. Return success with data rendered text.
+    return make_success_response(move(rendered_text));
+}
+
 // https://w3c.github.io/webdriver/#dfn-no-longer-open
 ErrorOr<void, Web::WebDriver::Error> WebDriverConnection::ensure_open_top_level_browsing_context()
 {
