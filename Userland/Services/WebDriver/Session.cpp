@@ -323,28 +323,6 @@ static ErrorOr<i32, Web::WebDriver::Error> get_known_connected_element(StringVie
     return maybe_element_id.release_value();
 }
 
-// 12.4.3 Get Element Property, https://w3c.github.io/webdriver/#dfn-get-element-property
-Web::WebDriver::Response Session::get_element_property(JsonValue const&, StringView parameter_element_id, StringView name)
-{
-    // 1. If the current browsing context is no longer open, return error with error code no such window.
-    TRY(check_for_open_top_level_browsing_context_or_return_error());
-
-    // FIXME: 2. Handle any user prompts and return its value if it is an error.
-
-    // 3. Let element be the result of trying to get a known connected element with url variable element id.
-    auto element_id = TRY(get_known_connected_element(parameter_element_id));
-
-    // 4. Let property be the result of calling the Object.[[GetProperty]](name) on element.
-    auto property = m_browser_connection->get_element_property(element_id, name);
-
-    // 5. Let result be the value of property if not undefined, or null.
-    if (!property.has_value())
-        return JsonValue();
-
-    // 6. Return success with data result.
-    return JsonValue(property.release_value());
-}
-
 // 12.4.4 Get Element CSS Value, https://w3c.github.io/webdriver/#dfn-get-element-css-value
 Web::WebDriver::Response Session::get_element_css_value(JsonValue const&, StringView parameter_element_id, StringView property_name)
 {

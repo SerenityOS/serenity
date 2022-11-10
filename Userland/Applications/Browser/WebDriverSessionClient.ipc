@@ -25,7 +25,6 @@ endpoint WebDriverSessionClient {
     add_cookie(Web::Cookie::ParsedCookie cookie) =|
     update_cookie(Web::Cookie::Cookie cookie) =|
     scroll_element_into_view(i32 element_id) => ()
-    get_element_property(i32 element_id, String name) => (Optional<String> property)
     get_active_documents_type() => (String type)
     get_computed_value_for_element(i32 element_id, String property_name) => (String computed_value)
     get_element_text(i32 element_id) => (String text)
