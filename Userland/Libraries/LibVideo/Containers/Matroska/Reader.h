@@ -20,28 +20,27 @@ namespace Video::Matroska {
 
 class Reader {
 public:
-    Reader(u8 const* data, size_t size)
-        : m_streamer(data, size)
+    Reader(ReadonlyBytes data)
+        : m_streamer(data)
     {
     }
 
     static DecoderErrorOr<NonnullOwnPtr<MatroskaDocument>> parse_matroska_from_file(StringView path);
-    static DecoderErrorOr<NonnullOwnPtr<MatroskaDocument>> parse_matroska_from_data(u8 const*, size_t);
+    static DecoderErrorOr<NonnullOwnPtr<MatroskaDocument>> parse_matroska_from_data(ReadonlyBytes data);
 
     DecoderErrorOr<NonnullOwnPtr<MatroskaDocument>> parse();
 
 private:
     class Streamer {
     public:
-        Streamer(u8 const* data, size_t size)
-            : m_data_ptr(data)
-            , m_size_remaining(size)
+        Streamer(ReadonlyBytes data)
+            : m_data(data)
         {
         }
 
-        u8 const* data() { return m_data_ptr; }
+        u8 const* data() { return m_data.data() + m_position; }
 
-        char const* data_as_chars() { return reinterpret_cast<char const*>(m_data_ptr); }
+        char const* data_as_chars() { return reinterpret_cast<char const*>(data()); }
 
         size_t octets_read() { return m_octets_read.last(); }
 
@@ -70,15 +69,14 @@ private:
 
         ErrorOr<void> drop_octets(size_t num_octets);
 
-        bool at_end() const { return m_size_remaining == 0; }
-        bool has_octet() const { return m_size_remaining >= 1; }
+        bool at_end() const { return remaining() == 0; }
+        bool has_octet() const { return remaining() >= 1; }
 
-        size_t remaining() const { return m_size_remaining; }
-        void set_remaining(size_t remaining) { m_size_remaining = remaining; }
+        size_t remaining() const { return m_data.size() - m_position; }
 
     private:
-        u8 const* m_data_ptr { nullptr };
-        size_t m_size_remaining { 0 };
+        ReadonlyBytes m_data;
+        size_t m_position { 0 };
         Vector<size_t> m_octets_read { 0 };
     };
 
