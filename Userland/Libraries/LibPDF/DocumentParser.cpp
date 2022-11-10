@@ -328,10 +328,14 @@ PDFErrorOr<NonnullRefPtr<XRefTable>> DocumentParser::parse_xref_stream()
 
     Vector<XRefEntry> entries;
 
-    for (int entry_index = 0; entry_index < highest_object_number; ++entry_index) {
+    for (int entry_index = 0; subsection_index < subsections.size(); ++entry_index) {
         Array<long, 3> fields;
         for (size_t field_index = 0; field_index < 3; ++field_index) {
             auto field_size = field_sizes->at(field_index).get_u32();
+
+            if (byte_index + field_size > stream->bytes().size())
+                return error("The xref stream data cut off early");
+
             auto field = stream->bytes().slice(byte_index, field_size);
             fields[field_index] = field_to_long(field);
             byte_index += field_size;
@@ -342,9 +346,6 @@ PDFErrorOr<NonnullRefPtr<XRefTable>> DocumentParser::parse_xref_stream()
             type = 1;
 
         entries.append({ fields[1], static_cast<u16>(fields[2]), type != 0, type == 2 });
-
-        if (subsection_index >= subsections.size())
-            break;
 
         auto subsection = subsections[subsection_index];
         if (entry_index >= subsection.get<1>()) {
