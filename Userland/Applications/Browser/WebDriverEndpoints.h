@@ -24,7 +24,6 @@ public:
     ~WebDriverEndpoints() = default;
 
     Function<void(i32 element_id)> on_scroll_element_into_view;
-    Function<bool(i32 element_id)> on_is_element_selected;
     Function<Optional<String>(i32 element_id, String const&)> on_get_element_attribute;
     Function<Optional<String>(i32 element_id, String const&)> on_get_element_property;
     Function<String()> on_get_active_documents_type;

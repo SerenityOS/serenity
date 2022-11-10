@@ -28,8 +28,6 @@
 #include <LibWeb/Geometry/DOMRect.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/FormAssociatedElement.h>
-#include <LibWeb/HTML/HTMLInputElement.h>
-#include <LibWeb/HTML/HTMLOptionElement.h>
 #include <LibWeb/HTML/Scripting/ClassicScript.h>
 #include <LibWeb/HTML/Storage.h>
 #include <LibWeb/HTML/Window.h>
@@ -495,27 +493,6 @@ void ConnectionFromClient::scroll_element_into_view(i32 element_id)
 
     // 2. Run Function.[[Call]](scrollIntoView, options) with element as the this value.
     element->scroll_into_view(options);
-}
-
-Messages::WebContentServer::IsElementSelectedResponse ConnectionFromClient::is_element_selected(i32 element_id)
-{
-    auto element = find_element_by_id(element_id);
-    if (!element.has_value())
-        return { false };
-
-    bool selected = false;
-
-    if (is<Web::HTML::HTMLInputElement>(*element)) {
-        auto& input = dynamic_cast<Web::HTML::HTMLInputElement&>(*element);
-        using enum Web::HTML::HTMLInputElement::TypeAttributeState;
-
-        if (input.type_state() == Checkbox || input.type_state() == RadioButton)
-            selected = input.checked();
-    } else if (is<Web::HTML::HTMLOptionElement>(*element)) {
-        selected = dynamic_cast<Web::HTML::HTMLOptionElement&>(*element).selected();
-    }
-
-    return { selected };
 }
 
 Messages::WebContentServer::GetElementAttributeResponse ConnectionFromClient::get_element_attribute(i32 element_id, String const& name)

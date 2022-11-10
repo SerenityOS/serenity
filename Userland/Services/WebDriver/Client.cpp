@@ -654,8 +654,7 @@ Web::WebDriver::Response Client::handle_is_element_selected(Vector<StringView> c
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session_id>/element/<element_id>/selected");
     auto* session = TRY(find_session_with_id(parameters[0]));
-    auto result = TRY(session->is_element_selected(parameters[1]));
-    return make_json_value(result);
+    return session->web_content_connection().is_element_selected(parameters[1]);
 }
 
 // 12.4.2 Get Element Attribute, https://w3c.github.io/webdriver/#dfn-get-element-attribute

@@ -64,7 +64,6 @@ public:
     OrderedHashMap<String, String> get_session_storage_entries();
 
     void scroll_element_into_view(i32 element_id);
-    bool is_element_selected(i32 element_id);
     Optional<String> get_element_attribute(i32 element_id, String const& name);
     Optional<String> get_element_property(i32 element_id, String const& name);
     String get_active_documents_type();
