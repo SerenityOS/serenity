@@ -686,12 +686,11 @@ Web::WebDriver::Response Client::handle_get_element_css_value(Vector<StringView>
 
 // 12.4.5 Get Element Text, https://w3c.github.io/webdriver/#dfn-get-element-text
 // GET /session/{session id}/element/{element id}/text
-Web::WebDriver::Response Client::handle_get_element_text(Vector<StringView> const& parameters, JsonValue const& payload)
+Web::WebDriver::Response Client::handle_get_element_text(Vector<StringView> const& parameters, JsonValue const&)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session_id>/element/<element_id>/text");
     auto* session = TRY(find_session_with_id(parameters[0]));
-    auto result = TRY(session->get_element_text(payload, parameters[1]));
-    return make_json_value(result);
+    return session->web_content_connection().get_element_text(parameters[1]);
 }
 
 // 12.4.6 Get Element Tag Name, https://w3c.github.io/webdriver/#dfn-get-element-tag-name
