@@ -77,8 +77,10 @@ namespace AttributeNames {
     __ENUMERATE_HTML_ATTRIBUTE(id)                         \
     __ENUMERATE_HTML_ATTRIBUTE(imagesizes)                 \
     __ENUMERATE_HTML_ATTRIBUTE(imagesrcset)                \
+    __ENUMERATE_HTML_ATTRIBUTE(inert)                      \
     __ENUMERATE_HTML_ATTRIBUTE(integrity)                  \
     __ENUMERATE_HTML_ATTRIBUTE(ismap)                      \
+    __ENUMERATE_HTML_ATTRIBUTE(itemscope)                  \
     __ENUMERATE_HTML_ATTRIBUTE(label)                      \
     __ENUMERATE_HTML_ATTRIBUTE(lang)                       \
     __ENUMERATE_HTML_ATTRIBUTE(language)                   \
@@ -92,6 +94,7 @@ namespace AttributeNames {
     __ENUMERATE_HTML_ATTRIBUTE(method)                     \
     __ENUMERATE_HTML_ATTRIBUTE(min)                        \
     __ENUMERATE_HTML_ATTRIBUTE(multiple)                   \
+    __ENUMERATE_HTML_ATTRIBUTE(muted)                      \
     __ENUMERATE_HTML_ATTRIBUTE(name)                       \
     __ENUMERATE_HTML_ATTRIBUTE(nohref)                     \
     __ENUMERATE_HTML_ATTRIBUTE(nomodule)                   \
