@@ -125,6 +125,13 @@ TEST_CASE(verify_cast)
     EXPECT(one_integer_to_rule_them_all.has<i8>());
     EXPECT_EQ(fake_integer.get<i8>(), 60);
     EXPECT_EQ(one_integer_to_rule_them_all.get<i8>(), 60);
+
+    using SomeFancyType = Variant<i8, i16>;
+    one_integer_to_rule_them_all = fake_integer.downcast<SomeFancyType>();
+    EXPECT(fake_integer.has<i8>());
+    EXPECT(one_integer_to_rule_them_all.has<i8>());
+    EXPECT_EQ(fake_integer.get<i8>(), 60);
+    EXPECT_EQ(one_integer_to_rule_them_all.get<i8>(), 60);
 }
 
 TEST_CASE(moved_from_state)
