@@ -13,7 +13,7 @@ class ForType {
 public:
     static void check_size()
     {
-        AK_TYPEDEF_DISTINCT_NUMERIC_GENERAL(T, false, false, false, false, false, false, TheNumeric);
+        AK_TYPEDEF_DISTINCT_NUMERIC_GENERAL(T, TheNumeric);
         EXPECT_EQ(sizeof(T), sizeof(TheNumeric));
     }
 };
@@ -34,14 +34,14 @@ TEST_CASE(check_size)
     ForType<double>::check_size();
 }
 
-AK_TYPEDEF_DISTINCT_NUMERIC_GENERAL(int, false, false, false, false, false, false, BareNumeric);
-AK_TYPEDEF_DISTINCT_NUMERIC_GENERAL(int, true, false, false, false, false, false, IncrNumeric);
-AK_TYPEDEF_DISTINCT_NUMERIC_GENERAL(int, false, true, false, false, false, false, CmpNumeric);
-AK_TYPEDEF_DISTINCT_NUMERIC_GENERAL(int, false, false, true, false, false, false, BoolNumeric);
-AK_TYPEDEF_DISTINCT_NUMERIC_GENERAL(int, false, false, false, true, false, false, FlagsNumeric);
-AK_TYPEDEF_DISTINCT_NUMERIC_GENERAL(int, false, false, false, false, true, false, ShiftNumeric);
-AK_TYPEDEF_DISTINCT_NUMERIC_GENERAL(int, false, false, false, false, false, true, ArithNumeric);
-AK_TYPEDEF_DISTINCT_NUMERIC_GENERAL(int, true, true, true, true, true, true, GeneralNumeric);
+AK_TYPEDEF_DISTINCT_NUMERIC_GENERAL(int, BareNumeric);
+AK_TYPEDEF_DISTINCT_NUMERIC_GENERAL(int, IncrNumeric, Increment);
+AK_TYPEDEF_DISTINCT_NUMERIC_GENERAL(int, CmpNumeric, Comparison);
+AK_TYPEDEF_DISTINCT_NUMERIC_GENERAL(int, BoolNumeric, CastToBool);
+AK_TYPEDEF_DISTINCT_NUMERIC_GENERAL(int, FlagsNumeric, Flags);
+AK_TYPEDEF_DISTINCT_NUMERIC_GENERAL(int, ShiftNumeric, Shift);
+AK_TYPEDEF_DISTINCT_NUMERIC_GENERAL(int, ArithNumeric, Arithmetic);
+AK_TYPEDEF_DISTINCT_NUMERIC_GENERAL(int, GeneralNumeric, Arithmetic, CastToBool, Comparison, Flags, Increment, Shift);
 
 TEST_CASE(address_identity)
 {
@@ -230,21 +230,21 @@ TEST_CASE(negative_incr)
 {
     BareNumeric a = 12;
     a++;
-    // error: static assertion failed: 'a++' is only available for DistinctNumeric types with 'Incr'.
+    // error: static assertion failed: 'a++' is only available for DistinctNumeric types with 'Increment'.
 }
 
 TEST_CASE(negative_cmp)
 {
     BareNumeric a = 12;
     [[maybe_unused]] auto res = (a < a);
-    // error: static assertion failed: 'a<b' is only available for DistinctNumeric types with 'Cmp'.
+    // error: static assertion failed: 'a<b' is only available for DistinctNumeric types with 'Comparison'.
 }
 
 TEST_CASE(negative_bool)
 {
     BareNumeric a = 12;
     [[maybe_unused]] auto res = !a;
-    // error: static assertion failed: '!a', 'a&&b', 'a||b' and similar operators are only available for DistinctNumeric types with 'Bool'.
+    // error: static assertion failed: '!a', 'a&&b', 'a||b' and similar operators are only available for DistinctNumeric types with 'CastToBool'.
 }
 
 TEST_CASE(negative_flags)
@@ -265,7 +265,7 @@ TEST_CASE(negative_arith)
 {
     BareNumeric a = 12;
     [[maybe_unused]] auto res = (a + a);
-    // error: static assertion failed: 'a+b' is only available for DistinctNumeric types with 'Arith'.
+    // error: static assertion failed: 'a+b' is only available for DistinctNumeric types with 'Arithmetic'.
 }
 
 TEST_CASE(negative_incompatible)

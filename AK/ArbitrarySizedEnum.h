@@ -113,13 +113,12 @@ struct ArbitrarySizedEnum : public T {
     }
 };
 
-#define AK_MAKE_ARBITRARY_SIZED_ENUM(EnumName, T, ...)                               \
-    namespace EnumName {                                                             \
-    using EnumName = ArbitrarySizedEnum<DistinctNumeric<T, struct __##EnumName##Tag, \
-        false, true, false, false, false, false>>;                                   \
-    using Type = EnumName;                                                           \
-    using UnderlyingType = T;                                                        \
-    inline constexpr static EnumName __VA_ARGS__;                                    \
+#define AK_MAKE_ARBITRARY_SIZED_ENUM(EnumName, T, ...)                                                                         \
+    namespace EnumName {                                                                                                       \
+    using EnumName = ArbitrarySizedEnum<DistinctNumeric<T, struct __##EnumName##Tag, AK::DistinctNumericFeature::Comparison>>; \
+    using Type = EnumName;                                                                                                     \
+    using UnderlyingType = T;                                                                                                  \
+    inline constexpr static EnumName __VA_ARGS__;                                                                              \
     }
 
 }
