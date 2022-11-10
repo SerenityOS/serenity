@@ -815,6 +815,8 @@ void Parser::parse_non_interface_entities(bool allow_interface, Interface& inter
     consume_whitespace();
 }
 
+static void resolve_union_typedefs(Interface& interface, UnionType& union_);
+
 static void resolve_typedef(Interface& interface, NonnullRefPtr<Type>& type, HashMap<String, String>* extended_attributes = {})
 {
     if (is<ParameterizedType>(*type)) {
@@ -822,6 +824,12 @@ static void resolve_typedef(Interface& interface, NonnullRefPtr<Type>& type, Has
         auto& parameters = static_cast<Vector<NonnullRefPtr<Type>>&>(parameterized_type.parameters());
         for (auto& parameter : parameters)
             resolve_typedef(interface, parameter);
+        return;
+    }
+
+    // Resolve anonymous union types until we get named types that can be resolved in the next step.
+    if (is<UnionType>(*type) && type->name().is_empty()) {
+        resolve_union_typedefs(interface, type->as_union());
         return;
     }
 
@@ -847,18 +855,23 @@ static void resolve_typedef(Interface& interface, NonnullRefPtr<Type>& type, Has
     // So whatever referenced NestedUnion ends up with the following resolved union:
     // UnionType(UnionType(A, B), UnionType(C, D))
     // Note that flattening unions is handled separately as per the spec.
-    if (is<UnionType>(*type)) {
-        auto& union_type = type->as_union();
-        auto& member_types = static_cast<Vector<NonnullRefPtr<Type>>&>(union_type.member_types());
-        for (auto& member_type : member_types)
-            resolve_typedef(interface, member_type);
-    }
+    if (is<UnionType>(*type))
+        resolve_union_typedefs(interface, type->as_union());
 }
+
+static void resolve_union_typedefs(Interface& interface, UnionType& union_)
+{
+    auto& member_types = static_cast<Vector<NonnullRefPtr<Type>>&>(union_.member_types());
+    for (auto& member_type : member_types)
+        resolve_typedef(interface, member_type);
+}
+
 static void resolve_parameters_typedefs(Interface& interface, Vector<Parameter>& parameters)
 {
     for (auto& parameter : parameters)
         resolve_typedef(interface, parameter.type, &parameter.extended_attributes);
 }
+
 template<typename FunctionType>
 void resolve_function_typedefs(Interface& interface, FunctionType& function)
 {
