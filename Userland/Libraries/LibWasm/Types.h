@@ -57,7 +57,7 @@ AK_TYPEDEF_DISTINCT_ORDERED_ID(size_t, LocalIndex);
 AK_TYPEDEF_DISTINCT_ORDERED_ID(size_t, GlobalIndex);
 AK_TYPEDEF_DISTINCT_ORDERED_ID(size_t, LabelIndex);
 AK_TYPEDEF_DISTINCT_ORDERED_ID(size_t, DataIndex);
-AK_TYPEDEF_DISTINCT_NUMERIC_GENERAL(u64, true, true, false, true, false, true, InstructionPointer);
+AK_TYPEDEF_DISTINCT_NUMERIC_GENERAL(u64, InstructionPointer, Arithmetic, Comparison, Flags, Increment);
 
 ParseError with_eof_check(InputStream const& stream, ParseError error_if_not_eof);
 
