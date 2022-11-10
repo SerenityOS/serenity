@@ -139,6 +139,22 @@ static ErrorOr<Web::DOM::Element*, Web::WebDriver::Error> get_known_connected_el
     return static_cast<Web::DOM::Element*>(node);
 }
 
+// https://w3c.github.io/webdriver/#dfn-scrolls-into-view
+static void scroll_element_into_view(Web::DOM::Element& element)
+{
+    // 1. Let options be the following ScrollIntoViewOptions:
+    Web::DOM::ScrollIntoViewOptions options {};
+    // Logical scroll position "block"
+    //     "end"
+    options.block = Web::Bindings::ScrollLogicalPosition::End;
+    // Logical scroll position "inline"
+    //     "nearest"
+    options.inline_ = Web::Bindings::ScrollLogicalPosition::Nearest;
+
+    // 2. Run Function.[[Call]](scrollIntoView, options) with element as the this value.
+    element.scroll_into_view(options);
+}
+
 static ErrorOr<String, Web::WebDriver::Error> get_property(JsonValue const& payload, StringView key)
 {
     if (!payload.is_object())
@@ -737,6 +753,38 @@ Messages::WebDriverClient::TakeScreenshotResponse WebDriverConnection::take_scre
         root_rect));
 
     // 3. Return success with data encoded string.
+    return make_success_response(move(encoded_string));
+}
+
+// 17.2 Take Element Screenshot, https://w3c.github.io/webdriver/#dfn-take-element-screenshot
+Messages::WebDriverClient::TakeElementScreenshotResponse WebDriverConnection::take_element_screenshot(String const& element_id)
+{
+    // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
+    TRY(ensure_open_top_level_browsing_context());
+
+    // FIXME: 2. Handle any user prompts and return its value if it is an error.
+
+    // 3. Let element be the result of trying to get a known connected element with url variable element id.
+    auto* element = TRY(get_known_connected_element(element_id));
+
+    // 4. Scroll into view the element.
+    scroll_element_into_view(*element);
+
+    // 5. When the user agent is next to run the animation frame callbacks:
+    //     a. Let element rect be element’s rectangle.
+    //     b. Let screenshot result be the result of trying to call draw a bounding box from the framebuffer, given element rect as an argument.
+    //     c. Let canvas be a canvas element of screenshot result’s data.
+    //     d. Let encoding result be the result of trying encoding a canvas as Base64 canvas.
+    //     e. Let encoded string be encoding result’s data.
+    auto element_rect = calculate_absolute_rect_of_element(m_page_host.page(), *element);
+
+    auto encoded_string = TRY(Web::WebDriver::capture_element_screenshot(
+        [&](auto const& rect, auto& bitmap) { m_page_host.paint(rect, bitmap); },
+        m_page_host.page(),
+        *element,
+        element_rect));
+
+    // 6. Return success with data encoded string.
     return make_success_response(move(encoded_string));
 }
 

@@ -52,6 +52,7 @@ private:
     virtual Messages::WebDriverClient::GetElementRectResponse get_element_rect(String const& element_id) override;
     virtual Messages::WebDriverClient::IsElementEnabledResponse is_element_enabled(String const& element_id) override;
     virtual Messages::WebDriverClient::TakeScreenshotResponse take_screenshot() override;
+    virtual Messages::WebDriverClient::TakeElementScreenshotResponse take_element_screenshot(String const& element_id) override;
 
     ErrorOr<void, Web::WebDriver::Error> ensure_open_top_level_browsing_context();
     void restore_the_window();

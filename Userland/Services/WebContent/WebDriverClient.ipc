@@ -22,4 +22,5 @@ endpoint WebDriverClient {
     get_element_rect(String element_id) => (Web::WebDriver::Response response)
     is_element_enabled(String element_id) => (Web::WebDriver::Response response)
     take_screenshot() => (Web::WebDriver::Response response)
+    take_element_screenshot(String element_id) => (Web::WebDriver::Response response)
 }

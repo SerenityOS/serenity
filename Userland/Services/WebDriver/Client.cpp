@@ -815,8 +815,7 @@ Web::WebDriver::Response Client::handle_take_element_screenshot(Vector<StringVie
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session_id>/element/<element_id>/screenshot");
     auto* session = TRY(find_session_with_id(parameters[0]));
-    auto result = TRY(session->take_element_screenshot(parameters[1]));
-    return make_json_value(result);
+    return session->web_content_connection().take_element_screenshot(parameters[1]);
 }
 
 }

@@ -63,8 +63,6 @@ public:
     OrderedHashMap<String, String> get_local_storage_entries();
     OrderedHashMap<String, String> get_session_storage_entries();
 
-    void scroll_element_into_view(i32 element_id);
-
     void set_content_filters(Vector<String>);
     void set_proxy_mappings(Vector<String> proxies, HashMap<String, size_t> mappings);
     void set_preferred_color_scheme(Web::CSS::PreferredColorScheme);
@@ -76,7 +74,6 @@ public:
     void set_system_visibility_state(bool visible);
 
     Gfx::ShareableBitmap take_screenshot() const;
-    Gfx::ShareableBitmap take_element_screenshot(i32 element_id);
     Gfx::ShareableBitmap take_document_screenshot();
 
     Messages::WebContentServer::WebdriverExecuteScriptResponse webdriver_execute_script(String const& body, Vector<String> const& json_arguments, Optional<u64> const& timeout, bool async);

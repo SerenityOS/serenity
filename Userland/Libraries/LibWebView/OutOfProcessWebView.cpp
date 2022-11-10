@@ -554,11 +554,6 @@ OrderedHashMap<String, String> OutOfProcessWebView::get_session_storage_entries(
     return client().get_session_storage_entries();
 }
 
-void OutOfProcessWebView::scroll_element_into_view(i32 element_id)
-{
-    return client().scroll_element_into_view(element_id);
-}
-
 void OutOfProcessWebView::set_content_filters(Vector<String> filters)
 {
     client().async_set_content_filters(filters);
@@ -594,11 +589,6 @@ Gfx::ShareableBitmap OutOfProcessWebView::take_screenshot() const
     if (auto* bitmap = m_client_state.has_usable_bitmap ? m_client_state.front_bitmap.bitmap.ptr() : m_backup_bitmap.ptr())
         return bitmap->to_shareable_bitmap();
     return {};
-}
-
-Gfx::ShareableBitmap OutOfProcessWebView::take_element_screenshot(i32 element_id)
-{
-    return client().take_element_screenshot(element_id);
 }
 
 Gfx::ShareableBitmap OutOfProcessWebView::take_document_screenshot()
