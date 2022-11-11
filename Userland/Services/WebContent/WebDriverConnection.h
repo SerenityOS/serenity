@@ -9,6 +9,8 @@
 #pragma once
 
 #include <LibIPC/ConnectionToServer.h>
+#include <LibJS/Forward.h>
+#include <LibJS/Heap/MarkedVector.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/WebDriver/ElementLocationStrategies.h>
 #include <LibWeb/WebDriver/Response.h>
@@ -52,6 +54,7 @@ private:
     virtual Messages::WebDriverClient::GetElementRectResponse get_element_rect(String const& element_id) override;
     virtual Messages::WebDriverClient::IsElementEnabledResponse is_element_enabled(String const& element_id) override;
     virtual Messages::WebDriverClient::GetSourceResponse get_source() override;
+    virtual Messages::WebDriverClient::ExecuteScriptResponse execute_script(JsonValue const& payload) override;
     virtual Messages::WebDriverClient::TakeScreenshotResponse take_screenshot() override;
     virtual Messages::WebDriverClient::TakeElementScreenshotResponse take_element_screenshot(String const& element_id) override;
 
@@ -60,6 +63,12 @@ private:
     Gfx::IntRect maximize_the_window();
     Gfx::IntRect iconify_the_window();
     ErrorOr<JsonArray, Web::WebDriver::Error> find(Web::DOM::ParentNode& start_node, Web::WebDriver::LocationStrategy using_, StringView value);
+
+    struct ScriptArguments {
+        String script;
+        JS::MarkedVector<JS::Value> arguments;
+    };
+    ErrorOr<ScriptArguments, Web::WebDriver::Error> extract_the_script_arguments_from_a_request(JsonValue const& payload);
 
     ConnectionFromClient& m_web_content_client;
     PageHost& m_page_host;
