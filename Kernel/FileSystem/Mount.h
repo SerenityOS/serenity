@@ -8,6 +8,8 @@
 
 #include <AK/RefPtr.h>
 #include <Kernel/FileSystem/Custody.h>
+#include <Kernel/FileSystem/FileSystem.h>
+#include <Kernel/FileSystem/Inode.h>
 #include <Kernel/Forward.h>
 #include <Kernel/Library/NonnullLockRefPtr.h>
 
