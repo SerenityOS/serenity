@@ -885,6 +885,16 @@ void WebContentView::notify_server_did_change_favicon(Gfx::Bitmap const& bitmap)
     emit favicon_changed(QIcon(qpixmap));
 }
 
+Vector<Web::Cookie::Cookie> WebContentView::notify_server_did_request_all_cookies(Badge<WebContentClient>, AK::URL const&)
+{
+    return {};
+}
+
+Optional<Web::Cookie::Cookie> WebContentView::notify_server_did_request_named_cookie(Badge<WebContentClient>, AK::URL const&, String const&)
+{
+    return {};
+}
+
 String WebContentView::notify_server_did_request_cookie(Badge<WebContentClient>, AK::URL const& url, Web::Cookie::Source source)
 {
     if (on_get_cookie)
@@ -896,6 +906,10 @@ void WebContentView::notify_server_did_set_cookie(Badge<WebContentClient>, AK::U
 {
     if (on_set_cookie)
         on_set_cookie(url, cookie, source);
+}
+
+void WebContentView::notify_server_did_update_cookie(Badge<WebContentClient>, AK::URL const&, Web::Cookie::Cookie const&)
+{
 }
 
 void WebContentView::notify_server_did_update_resource_count(i32 count_waiting)
