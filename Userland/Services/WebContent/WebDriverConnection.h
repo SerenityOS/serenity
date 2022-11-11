@@ -40,6 +40,7 @@ private:
     virtual Messages::WebDriverClient::BackResponse back() override;
     virtual Messages::WebDriverClient::ForwardResponse forward() override;
     virtual Messages::WebDriverClient::RefreshResponse refresh() override;
+    virtual Messages::WebDriverClient::GetTitleResponse get_title() override;
     virtual Messages::WebDriverClient::GetWindowRectResponse get_window_rect() override;
     virtual Messages::WebDriverClient::SetWindowRectResponse set_window_rect(JsonValue const& payload) override;
     virtual Messages::WebDriverClient::MaximizeWindowResponse maximize_window() override;

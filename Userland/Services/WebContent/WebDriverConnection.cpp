@@ -346,6 +346,21 @@ Messages::WebDriverClient::RefreshResponse WebDriverConnection::refresh()
     return make_success_response({});
 }
 
+// 10.6 Get Title, https://w3c.github.io/webdriver/#dfn-get-title
+Messages::WebDriverClient::GetTitleResponse WebDriverConnection::get_title()
+{
+    // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
+    TRY(ensure_open_top_level_browsing_context());
+
+    // FIXME: 2. Handle any user prompts and return its value if it is an error.
+
+    // 3. Let title be the initial value of the title IDL attribute of the current top-level browsing context's active document.
+    auto title = m_page_host.page().top_level_browsing_context().active_document()->title();
+
+    // 4. Return success with data title.
+    return make_success_response(move(title));
+}
+
 // 11.8.1 Get Window Rect, https://w3c.github.io/webdriver/#dfn-get-window-rect
 Messages::WebDriverClient::GetWindowRectResponse WebDriverConnection::get_window_rect()
 {

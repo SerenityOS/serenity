@@ -539,8 +539,7 @@ Web::WebDriver::Response Client::handle_get_title(Vector<StringView> const& para
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session_id>/title");
     auto* session = TRY(find_session_with_id(parameters[0]));
-    auto result = TRY(session->get_title());
-    return make_json_value(result);
+    return session->web_content_connection().get_title();
 }
 
 // 11.1 Get Window Handle, https://w3c.github.io/webdriver/#get-window-handle
