@@ -34,7 +34,7 @@ private:
 class TarInputStream {
 public:
     TarInputStream(InputStream&);
-    void advance();
+    ErrorOr<void> advance();
     bool finished() const { return m_finished; }
     bool valid() const;
     TarFileHeader const& header() const { return m_header; }
