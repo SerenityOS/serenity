@@ -188,10 +188,22 @@ static ErrorOr<PropertyType, Web::WebDriver::Error> get_property(JsonValue const
         if (!property->is_string())
             return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, String::formatted("Property '{}' is not a String", key));
         return property->as_string();
+    } else if constexpr (IsSame<PropertyType, bool>) {
+        if (!property->is_bool())
+            return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, String::formatted("Property '{}' is not a Boolean", key));
+        return property->as_bool();
+    } else if constexpr (IsSame<PropertyType, u32>) {
+        if (!property->is_u32())
+            return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, String::formatted("Property '{}' is not a Number", key));
+        return property->as_u32();
     } else if constexpr (IsSame<PropertyType, JsonArray const*>) {
         if (!property->is_array())
             return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, String::formatted("Property '{}' is not an Array", key));
         return &property->as_array();
+    } else if constexpr (IsSame<PropertyType, JsonObject const*>) {
+        if (!property->is_object())
+            return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, String::formatted("Property '{}' is not an Object", key));
+        return &property->as_object();
     } else {
         static_assert(DependentFalse<PropertyType>, "get_property invoked with unknown property type");
         VERIFY_NOT_REACHED();
@@ -890,6 +902,77 @@ Messages::WebDriverClient::GetNamedCookieResponse WebDriverConnection::get_named
 
     // 4. Otherwise, return error with error code no such cookie.
     return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::NoSuchCookie, String::formatted("Cookie '{}' not found", name));
+}
+
+// 14.3 Add Cookie, https://w3c.github.io/webdriver/#dfn-adding-a-cookie
+Messages::WebDriverClient::AddCookieResponse WebDriverConnection::add_cookie(JsonValue const& payload)
+{
+    // 1. Let data be the result of getting a property named cookie from the parameters argument.
+    auto const& data = *TRY(get_property<JsonObject const*>(payload, "cookie"sv));
+
+    // 2. If data is not a JSON Object with all the required (non-optional) JSON keys listed in the table for cookie conversion, return error with error code invalid argument.
+    // NOTE: This validation is performed in subsequent steps.
+
+    // 3. If the current browsing context is no longer open, return error with error code no such window.
+    TRY(ensure_open_top_level_browsing_context());
+
+    // FIXME: 4. Handle any user prompts, and return its value if it is an error.
+    // FIXME: 5. If the current browsing context’s document element is a cookie-averse Document object, return error with error code invalid cookie domain.
+
+    // 6. If cookie name or cookie value is null, cookie domain is not equal to the current browsing context’s active document’s domain, cookie secure only or cookie HTTP only are not boolean types, or cookie expiry time is not an integer type, or it less than 0 or greater than the maximum safe integer, return error with error code invalid argument.
+    // NOTE: This validation is either performed in subsequent steps, or is performed by the CookieJar (namely domain matching).
+
+    // 7. Create a cookie in the cookie store associated with the active document’s address using cookie name name, cookie value value, and an attribute-value list of the following cookie concepts listed in the table for cookie conversion from data:
+    Web::Cookie::ParsedCookie cookie {};
+    cookie.name = TRY(get_property(data, "name"sv));
+    cookie.value = TRY(get_property(data, "value"sv));
+
+    // Cookie path
+    //     The value if the entry exists, otherwise "/".
+    if (data.has("path"sv))
+        cookie.path = TRY(get_property(data, "path"sv));
+    else
+        cookie.path = "/";
+
+    // Cookie domain
+    //     The value if the entry exists, otherwise the current browsing context’s active document’s URL domain.
+    // NOTE: The otherwise case is handled by the CookieJar
+    if (data.has("domain"sv))
+        cookie.domain = TRY(get_property(data, "domain"sv));
+
+    // Cookie secure only
+    //     The value if the entry exists, otherwise false.
+    if (data.has("secure"sv))
+        cookie.secure_attribute_present = TRY(get_property<bool>(data, "secure"sv));
+
+    // Cookie HTTP only
+    //     The value if the entry exists, otherwise false.
+    if (data.has("httpOnly"sv))
+        cookie.http_only_attribute_present = TRY(get_property<bool>(data, "httpOnly"sv));
+
+    // Cookie expiry time
+    //     The value if the entry exists, otherwise leave unset to indicate that this is a session cookie.
+    if (data.has("expiry"sv)) {
+        // NOTE: less than 0 or greater than safe integer are handled by the JSON parser
+        auto expiry = TRY(get_property<u32>(data, "expiry"sv));
+        cookie.expiry_time_from_expires_attribute = Core::DateTime::from_timestamp(expiry);
+    }
+
+    // Cookie same site
+    //     The value if the entry exists, otherwise leave unset to indicate that no same site policy is defined.
+    if (data.has("sameSite"sv)) {
+        auto same_site = TRY(get_property(data, "sameSite"sv));
+        cookie.same_site_attribute = Web::Cookie::same_site_from_string(same_site);
+    }
+
+    auto* document = m_page_host.page().top_level_browsing_context().active_document();
+    m_web_content_client.async_did_set_cookie(document->url(), cookie, to_underlying(Web::Cookie::Source::Http));
+
+    // If there is an error during this step, return error with error code unable to set cookie.
+    // NOTE: This probably should only apply to the actual setting of the cookie in the Browser, which cannot fail in our case.
+
+    // 8. Return success with data null.
+    return make_success_response({});
 }
 
 // 17.1 Take Screenshot, https://w3c.github.io/webdriver/#take-screenshot

@@ -58,6 +58,7 @@ private:
     virtual Messages::WebDriverClient::ExecuteAsyncScriptResponse execute_async_script(JsonValue const& payload) override;
     virtual Messages::WebDriverClient::GetAllCookiesResponse get_all_cookies() override;
     virtual Messages::WebDriverClient::GetNamedCookieResponse get_named_cookie(String const& name) override;
+    virtual Messages::WebDriverClient::AddCookieResponse add_cookie(JsonValue const& payload) override;
     virtual Messages::WebDriverClient::TakeScreenshotResponse take_screenshot() override;
     virtual Messages::WebDriverClient::TakeElementScreenshotResponse take_element_screenshot(String const& element_id) override;
 

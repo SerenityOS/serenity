@@ -43,7 +43,6 @@ public:
     virtual void back() override;
     virtual void forward() override;
     virtual Messages::WebDriverSessionClient::GetAllCookiesResponse get_all_cookies() override;
-    virtual void add_cookie(Web::Cookie::ParsedCookie const&) override;
     virtual void update_cookie(Web::Cookie::Cookie const&) override;
 
 private:
