@@ -10,8 +10,6 @@
 #include "WebDriverConnection.h"
 #include "BrowserWindow.h"
 #include <AK/Vector.h>
-#include <LibWeb/Cookie/Cookie.h>
-#include <LibWeb/Cookie/ParsedCookie.h>
 #include <LibWebView/WebContentClient.h>
 
 namespace Browser {
@@ -56,28 +54,6 @@ void WebDriverConnection::forward()
     dbgln_if(WEBDRIVER_DEBUG, "WebDriverConnection: forward");
     if (auto browser_window = m_browser_window.strong_ref())
         browser_window->active_tab().go_forward();
-}
-
-Messages::WebDriverSessionClient::GetAllCookiesResponse WebDriverConnection::get_all_cookies()
-{
-    dbgln_if(WEBDRIVER_DEBUG, "WebDriverConnection: get_cookies");
-    if (auto browser_window = m_browser_window.strong_ref()) {
-        if (browser_window->active_tab().on_get_cookies_entries) {
-            return { browser_window->active_tab().on_get_cookies_entries() };
-        }
-    }
-    return { {} };
-}
-
-void WebDriverConnection::update_cookie(Web::Cookie::Cookie const& cookie)
-{
-    dbgln_if(WEBDRIVER_DEBUG, "WebDriverConnection: update_cookie {}", cookie.name);
-    if (auto browser_window = m_browser_window.strong_ref()) {
-        auto& tab = browser_window->active_tab();
-        if (tab.on_update_cookie) {
-            tab.on_update_cookie(tab.url(), cookie);
-        }
-    }
 }
 
 }

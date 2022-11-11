@@ -42,8 +42,6 @@ public:
     virtual void refresh() override;
     virtual void back() override;
     virtual void forward() override;
-    virtual Messages::WebDriverSessionClient::GetAllCookiesResponse get_all_cookies() override;
-    virtual void update_cookie(Web::Cookie::Cookie const&) override;
 
 private:
     WebDriverConnection(NonnullOwnPtr<Core::Stream::LocalSocket> socket, NonnullRefPtr<BrowserWindow> browser_window);
