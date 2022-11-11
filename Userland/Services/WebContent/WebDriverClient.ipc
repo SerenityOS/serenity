@@ -22,6 +22,7 @@ endpoint WebDriverClient {
     get_element_rect(String element_id) => (Web::WebDriver::Response response)
     is_element_enabled(String element_id) => (Web::WebDriver::Response response)
     get_source() => (Web::WebDriver::Response response)
+    execute_script(JsonValue payload) => (Web::WebDriver::Response response)
     take_screenshot() => (Web::WebDriver::Response response)
     take_element_screenshot(String element_id) => (Web::WebDriver::Response response)
 }

@@ -11,6 +11,7 @@
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
 #include <AK/Vector.h>
+#include <LibJS/Runtime/JSONObject.h>
 #include <LibJS/Runtime/Value.h>
 #include <LibWeb/CSS/PropertyID.h>
 #include <LibWeb/CSS/StyleProperties.h>
@@ -155,7 +156,8 @@ static void scroll_element_into_view(Web::DOM::Element& element)
     element.scroll_into_view(options);
 }
 
-static ErrorOr<String, Web::WebDriver::Error> get_property(JsonValue const& payload, StringView key)
+template<typename PropertyType = String>
+static ErrorOr<PropertyType, Web::WebDriver::Error> get_property(JsonValue const& payload, StringView key)
 {
     if (!payload.is_object())
         return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, "Payload is not a JSON object");
@@ -164,10 +166,19 @@ static ErrorOr<String, Web::WebDriver::Error> get_property(JsonValue const& payl
 
     if (!property)
         return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, String::formatted("No property called '{}' present", key));
-    if (!property->is_string())
-        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, String::formatted("Property '{}' is not a String", key));
 
-    return property->as_string();
+    if constexpr (IsSame<PropertyType, String>) {
+        if (!property->is_string())
+            return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, String::formatted("Property '{}' is not a String", key));
+        return property->as_string();
+    } else if constexpr (IsSame<PropertyType, JsonArray const*>) {
+        if (!property->is_array())
+            return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, String::formatted("Property '{}' is not an Array", key));
+        return &property->as_array();
+    } else {
+        static_assert(DependentFalse<PropertyType>, "get_property invoked with unknown property type");
+        VERIFY_NOT_REACHED();
+    }
 }
 
 ErrorOr<NonnullRefPtr<WebDriverConnection>> WebDriverConnection::connect(ConnectionFromClient& web_content_client, PageHost& page_host, String const& webdriver_ipc_path)
@@ -754,6 +765,38 @@ Messages::WebDriverClient::GetSourceResponse WebDriverConnection::get_source()
     return make_success_response(source.release_value());
 }
 
+// 13.2.1 Execute Script, https://w3c.github.io/webdriver/#dfn-execute-script
+Messages::WebDriverClient::ExecuteScriptResponse WebDriverConnection::execute_script(JsonValue const& payload)
+{
+    // 1. Let body and arguments be the result of trying to extract the script arguments from a request with argument parameters.
+    auto const& [body, arguments] = TRY(extract_the_script_arguments_from_a_request(payload));
+
+    // 2. If the current browsing context is no longer open, return error with error code no such window.
+    TRY(ensure_open_top_level_browsing_context());
+
+    // FIXME: 3. Handle any user prompts, and return its value if it is an error.
+
+    // 4., 5.1-5.3.
+    // FIXME: Move timeouts from WebDriver to WebContent and pass the script timeout through here.
+    auto result = Web::WebDriver::execute_script(m_page_host.page(), body, move(arguments), {});
+    dbgln_if(WEBDRIVER_DEBUG, "Executing script returned: {}", result.value);
+
+    switch (result.type) {
+    // 6. If promise is still pending and the session script timeout is reached, return error with error code script timeout.
+    case Web::WebDriver::ExecuteScriptResultType::Timeout:
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::ScriptTimeoutError, "Script timed out");
+    // 7. Upon fulfillment of promise with value v, let result be a JSON clone of v, and return success with data result.
+    case Web::WebDriver::ExecuteScriptResultType::PromiseResolved:
+        return make_success_response(move(result.value));
+    // 8. Upon rejection of promise with reason r, let result be a JSON clone of r, and return error with error code javascript error and data result.
+    case Web::WebDriver::ExecuteScriptResultType::PromiseRejected:
+    case Web::WebDriver::ExecuteScriptResultType::JavaScriptError:
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::JavascriptError, "Script returned an error", move(result.value));
+    }
+
+    VERIFY_NOT_REACHED();
+}
+
 // 17.1 Take Screenshot, https://w3c.github.io/webdriver/#take-screenshot
 Messages::WebDriverClient::TakeScreenshotResponse WebDriverConnection::take_screenshot()
 {
@@ -890,6 +933,31 @@ ErrorOr<JsonArray, Web::WebDriver::Error> WebDriverConnection::find(Web::DOM::Pa
 
     // 9. Return success with data result.
     return result;
+}
+
+// https://w3c.github.io/webdriver/#dfn-extract-the-script-arguments-from-a-request
+ErrorOr<WebDriverConnection::ScriptArguments, Web::WebDriver::Error> WebDriverConnection::extract_the_script_arguments_from_a_request(JsonValue const& payload)
+{
+    auto* window = m_page_host.page().top_level_browsing_context().active_window();
+    auto& vm = window->vm();
+
+    // 1. Let script be the result of getting a property named script from the parameters.
+    // 2. If script is not a String, return error with error code invalid argument.
+    auto script = TRY(get_property(payload, "script"sv));
+
+    // 3. Let args be the result of getting a property named args from the parameters.
+    // 4. If args is not an Array return error with error code invalid argument.
+    auto const& args = *TRY(get_property<JsonArray const*>(payload, "args"sv));
+
+    // 5. Let arguments be the result of calling the JSON deserialize algorithm with arguments args.
+    auto arguments = JS::MarkedVector<JS::Value> { vm.heap() };
+
+    args.for_each([&](auto const& arg) {
+        arguments.append(JS::JSONObject::parse_json_value(vm, arg));
+    });
+
+    // 6. Return success with data script and arguments.
+    return ScriptArguments { move(script), move(arguments) };
 }
 
 }

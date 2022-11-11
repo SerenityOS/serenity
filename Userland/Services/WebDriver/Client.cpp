@@ -735,8 +735,7 @@ Web::WebDriver::Response Client::handle_execute_script(Vector<StringView> const&
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling POST /session/<session_id>/execute/sync");
     auto* session = TRY(find_session_with_id(parameters[0]));
-    auto result = TRY(session->execute_script(payload));
-    return make_json_value(result);
+    return session->web_content_connection().execute_script(payload);
 }
 
 // 13.2.2 Execute Async Script, https://w3c.github.io/webdriver/#dfn-execute-async-script
