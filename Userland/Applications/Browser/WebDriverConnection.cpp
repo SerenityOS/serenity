@@ -27,12 +27,4 @@ void WebDriverConnection::quit()
         browser_window->close();
 }
 
-Messages::WebDriverSessionClient::GetTitleResponse WebDriverConnection::get_title()
-{
-    dbgln_if(WEBDRIVER_DEBUG, "WebDriverConnection: get_title");
-    if (auto browser_window = m_browser_window.strong_ref())
-        return { browser_window->active_tab().title() };
-    return { "" };
-}
-
 }

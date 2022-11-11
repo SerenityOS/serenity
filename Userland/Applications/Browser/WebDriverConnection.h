@@ -38,7 +38,6 @@ public:
     virtual void die() override { }
 
     virtual void quit() override;
-    virtual Messages::WebDriverSessionClient::GetTitleResponse get_title() override;
 
 private:
     WebDriverConnection(NonnullOwnPtr<Core::Stream::LocalSocket> socket, NonnullRefPtr<BrowserWindow> browser_window);

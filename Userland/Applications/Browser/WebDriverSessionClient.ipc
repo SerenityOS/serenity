@@ -13,6 +13,4 @@
 
 endpoint WebDriverSessionClient {
     quit() =|
-
-    get_title() => (String title)
 }
