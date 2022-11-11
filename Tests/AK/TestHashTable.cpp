@@ -309,3 +309,12 @@ TEST_CASE(reinsertion)
     map.remove("__sak");
     map.set("__sak");
 }
+
+TEST_CASE(clear_with_capacity_when_empty)
+{
+    HashTable<int> map;
+    map.clear_with_capacity();
+    map.set(0);
+    map.set(1);
+    VERIFY(map.size() == 2);
+}

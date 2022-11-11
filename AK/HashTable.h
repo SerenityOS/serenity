@@ -291,6 +291,8 @@ public:
     }
     void clear_with_capacity()
     {
+        if (m_capacity == 0)
+            return;
         if constexpr (!Detail::IsTriviallyDestructible<T>) {
             for (auto* bucket : *this)
                 bucket->~T();
