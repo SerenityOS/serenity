@@ -92,6 +92,7 @@ public:
     Function<void(i32 node_id, String const& specified_style, String const& computed_style, String const& custom_properties, String const& node_box_sizing)> on_get_dom_node_properties;
     Function<void(i32 message_id)> on_js_console_new_message;
     Function<void(i32 start_index, Vector<String> const& message_types, Vector<String> const& messages)> on_get_js_console_messages;
+    Function<Vector<Web::Cookie::Cookie>(AK::URL const& url)> on_get_all_cookies;
     Function<String(const AK::URL& url, Web::Cookie::Source source)> on_get_cookie;
     Function<void(const AK::URL& url, Web::Cookie::ParsedCookie const& cookie, Web::Cookie::Source source)> on_set_cookie;
     Function<void(i32 count_waiting)> on_resource_status_change;
@@ -154,6 +155,7 @@ private:
     virtual void notify_server_did_output_js_console_message(i32 message_index) override;
     virtual void notify_server_did_get_js_console_messages(i32 start_index, Vector<String> const& message_types, Vector<String> const& messages) override;
     virtual void notify_server_did_change_favicon(Gfx::Bitmap const& favicon) override;
+    virtual Vector<Web::Cookie::Cookie> notify_server_did_request_all_cookies(Badge<WebContentClient>, AK::URL const& url) override;
     virtual String notify_server_did_request_cookie(Badge<WebContentClient>, const AK::URL& url, Web::Cookie::Source source) override;
     virtual void notify_server_did_set_cookie(Badge<WebContentClient>, const AK::URL& url, Web::Cookie::ParsedCookie const& cookie, Web::Cookie::Source source) override;
     virtual void notify_server_did_update_resource_count(i32 count_waiting) override;
