@@ -797,6 +797,38 @@ Messages::WebDriverClient::ExecuteScriptResponse WebDriverConnection::execute_sc
     VERIFY_NOT_REACHED();
 }
 
+// 13.2.2 Execute Async Script, https://w3c.github.io/webdriver/#dfn-execute-async-script
+Messages::WebDriverClient::ExecuteAsyncScriptResponse WebDriverConnection::execute_async_script(JsonValue const& payload)
+{
+    // 1. Let body and arguments by the result of trying to extract the script arguments from a request with argument parameters.
+    auto const& [body, arguments] = TRY(extract_the_script_arguments_from_a_request(payload));
+
+    // 2. If the current browsing context is no longer open, return error with error code no such window.
+    TRY(ensure_open_top_level_browsing_context());
+
+    // FIXME: 3. Handle any user prompts, and return its value if it is an error.
+
+    // 4., 5.1-5.11.
+    // FIXME: Move timeouts from WebDriver to WebContent and pass the script timeout through here.
+    auto result = Web::WebDriver::execute_async_script(m_page_host.page(), body, move(arguments), {});
+    dbgln_if(WEBDRIVER_DEBUG, "Executing async script returned: {}", result.value);
+
+    switch (result.type) {
+    // 6. If promise is still pending and the session script timeout is reached, return error with error code script timeout.
+    case Web::WebDriver::ExecuteScriptResultType::Timeout:
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::ScriptTimeoutError, "Script timed out");
+    // 7. Upon fulfillment of promise with value v, let result be a JSON clone of v, and return success with data result.
+    case Web::WebDriver::ExecuteScriptResultType::PromiseResolved:
+        return make_success_response(move(result.value));
+    // 8. Upon rejection of promise with reason r, let result be a JSON clone of r, and return error with error code javascript error and data result.
+    case Web::WebDriver::ExecuteScriptResultType::PromiseRejected:
+    case Web::WebDriver::ExecuteScriptResultType::JavaScriptError:
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::JavascriptError, "Script returned an error", move(result.value));
+    }
+
+    VERIFY_NOT_REACHED();
+}
+
 // 17.1 Take Screenshot, https://w3c.github.io/webdriver/#take-screenshot
 Messages::WebDriverClient::TakeScreenshotResponse WebDriverConnection::take_screenshot()
 {

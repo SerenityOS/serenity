@@ -43,8 +43,6 @@ endpoint WebContentServer
 
     take_document_screenshot() => (Gfx::ShareableBitmap data)
 
-    webdriver_execute_script(String body, Vector<String> json_arguments, Optional<u64> timeout, bool async) => (Web::WebDriver::ExecuteScriptResultType result_type, String json_result)
-
     run_javascript(String js_source) =|
 
     dump_layout_tree() => (String dump)

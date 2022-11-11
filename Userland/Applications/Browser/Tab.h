@@ -8,7 +8,6 @@
 #pragma once
 
 #include "History.h"
-#include "WebDriverEndpoints.h"
 #include <AK/Optional.h>
 #include <AK/URL.h>
 #include <LibGUI/ActionGroup.h>
@@ -74,7 +73,6 @@ public:
     Function<OrderedHashMap<String, String>()> on_get_session_storage_entries;
     Function<Gfx::ShareableBitmap()> on_take_screenshot;
 
-    WebDriverEndpoints& webdriver_endpoints() { return m_webdriver_endpoints; }
     void enable_webdriver_mode();
 
     enum class InspectorTarget {
@@ -142,8 +140,6 @@ private:
     RefPtr<const Gfx::Bitmap> m_icon;
 
     Optional<URL> m_navigating_url;
-
-    WebDriverEndpoints m_webdriver_endpoints {};
 
     bool m_loaded { false };
     bool m_is_history_navigation { false };

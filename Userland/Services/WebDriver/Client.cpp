@@ -744,8 +744,7 @@ Web::WebDriver::Response Client::handle_execute_async_script(Vector<StringView> 
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling POST /session/<session_id>/execute/async");
     auto* session = TRY(find_session_with_id(parameters[0]));
-    auto result = TRY(session->execute_async_script(payload));
-    return make_json_value(result);
+    return session->web_content_connection().execute_async_script(payload);
 }
 
 // 14.1 Get All Cookies, https://w3c.github.io/webdriver/#dfn-get-all-cookies

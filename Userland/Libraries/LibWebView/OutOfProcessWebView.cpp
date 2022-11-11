@@ -591,11 +591,6 @@ Gfx::ShareableBitmap OutOfProcessWebView::take_document_screenshot()
     return client().take_document_screenshot();
 }
 
-Messages::WebContentServer::WebdriverExecuteScriptResponse OutOfProcessWebView::webdriver_execute_script(String const& body, Vector<String> const& json_arguments, Optional<u64> const& timeout, bool async)
-{
-    return client().webdriver_execute_script(body, json_arguments, timeout, async);
-}
-
 void OutOfProcessWebView::focusin_event(GUI::FocusEvent&)
 {
     client().async_set_has_focus(true);
