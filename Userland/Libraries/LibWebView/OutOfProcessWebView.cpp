@@ -382,6 +382,13 @@ void OutOfProcessWebView::notify_server_did_change_favicon(Gfx::Bitmap const& fa
         on_favicon_change(favicon);
 }
 
+Vector<Web::Cookie::Cookie> OutOfProcessWebView::notify_server_did_request_all_cookies(Badge<WebContentClient>, AK::URL const& url)
+{
+    if (on_get_all_cookies)
+        return on_get_all_cookies(url);
+    return {};
+}
+
 String OutOfProcessWebView::notify_server_did_request_cookie(Badge<WebContentClient>, const AK::URL& url, Web::Cookie::Source source)
 {
     if (on_get_cookie)

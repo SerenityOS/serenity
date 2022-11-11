@@ -1,6 +1,7 @@
 #include <AK/URL.h>
 #include <LibCore/AnonymousBuffer.h>
 #include <LibGfx/ShareableBitmap.h>
+#include <LibWeb/Cookie/Cookie.h>
 #include <LibWeb/Cookie/ParsedCookie.h>
 
 // FIXME: This isn't used here, but the generated IPC fails to compile without this include.
@@ -35,6 +36,7 @@ endpoint WebContentClient
     did_get_dom_tree(String dom_tree) =|
     did_get_dom_node_properties(i32 node_id, String specified_style, String computed_style, String custom_properties, String node_box_sizing_json) =|
     did_change_favicon(Gfx::ShareableBitmap favicon) =|
+    did_request_all_cookies(URL url) => (Vector<Web::Cookie::Cookie> cookies)
     did_request_cookie(URL url, u8 source) => (String cookie)
     did_set_cookie(URL url, Web::Cookie::ParsedCookie cookie, u8 source) =|
     did_update_resource_count(i32 count_waiting) =|
