@@ -194,12 +194,10 @@ PDFErrorOr<Value> Parser::parse_number()
     m_reader.consume_whitespace();
 
     auto string = String(m_reader.bytes().slice(start_offset, m_reader.offset() - start_offset));
-    float f = strtof(string.characters(), nullptr);
     if (is_float)
-        return Value(f);
+        return Value(strtof(string.characters(), nullptr));
 
-    VERIFY(floorf(f) == f);
-    return Value(static_cast<int>(f));
+    return Value(atoi(string.characters()));
 }
 
 PDFErrorOr<NonnullRefPtr<NameObject>> Parser::parse_name()
