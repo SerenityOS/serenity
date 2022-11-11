@@ -762,8 +762,7 @@ Web::WebDriver::Response Client::handle_get_named_cookie(Vector<StringView> cons
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session_id>/cookie/<name>");
     auto* session = TRY(find_session_with_id(parameters[0]));
-    auto cookies = TRY(session->get_named_cookie(parameters[1]));
-    return make_json_value(cookies);
+    return session->web_content_connection().get_named_cookie(parameters[1]);
 }
 
 // 14.3 Add Cookie, https://w3c.github.io/webdriver/#dfn-adding-a-cookie

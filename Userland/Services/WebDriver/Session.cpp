@@ -297,43 +297,6 @@ Web::WebDriver::Response Session::get_window_handles() const
     return JsonValue { handles };
 }
 
-// https://w3c.github.io/webdriver/#dfn-serialized-cookie
-static JsonObject serialize_cookie(Web::Cookie::Cookie const& cookie)
-{
-    JsonObject serialized_cookie = {};
-    serialized_cookie.set("name", cookie.name);
-    serialized_cookie.set("value", cookie.value);
-    serialized_cookie.set("path", cookie.path);
-    serialized_cookie.set("domain", cookie.domain);
-    serialized_cookie.set("secure", cookie.secure);
-    serialized_cookie.set("httpOnly", cookie.http_only);
-    serialized_cookie.set("expiry", cookie.expiry_time.timestamp());
-    // FIXME: Add sameSite to Cookie and serialize it here too.
-
-    return serialized_cookie;
-}
-
-// 14.2 Get Named Cookie, https://w3c.github.io/webdriver/#dfn-get-named-cookie
-Web::WebDriver::Response Session::get_named_cookie(String const& name)
-{
-    // 1. If the current browsing context is no longer open, return error with error code no such window.
-    TRY(check_for_open_top_level_browsing_context_or_return_error());
-
-    // FIXME: 2. Handle any user prompts, and return its value if it is an error.
-
-    // 3. If the url variable name is equal to a cookie’s cookie name amongst all associated cookies of the
-    //    current browsing context’s active document, return success with the serialized cookie as data.
-    auto maybe_cookie = m_browser_connection->get_named_cookie(name);
-    if (maybe_cookie.has_value()) {
-        auto cookie = maybe_cookie.release_value();
-        auto serialized_cookie = serialize_cookie(cookie);
-        return JsonValue(serialized_cookie);
-    }
-
-    // 4. Otherwise, return error with error code no such cookie.
-    return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::NoSuchCookie, "Cookie not found");
-}
-
 // 14.3 Add Cookie, https://w3c.github.io/webdriver/#dfn-adding-a-cookie
 Web::WebDriver::Response Session::add_cookie(JsonValue const& payload)
 {
