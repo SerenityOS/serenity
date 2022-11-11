@@ -409,6 +409,12 @@ void OutOfProcessWebView::notify_server_did_set_cookie(Badge<WebContentClient>, 
         on_set_cookie(url, cookie, source);
 }
 
+void OutOfProcessWebView::notify_server_did_update_cookie(Badge<WebContentClient>, AK::URL const& url, Web::Cookie::Cookie const& cookie)
+{
+    if (on_update_cookie)
+        on_update_cookie(url, cookie);
+}
+
 void OutOfProcessWebView::notify_server_did_update_resource_count(i32 count_waiting)
 {
     if (on_resource_status_change)
