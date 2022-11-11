@@ -122,6 +122,9 @@ public:
     virtual void notify_server_did_middle_click_link(Badge<WebContentClient>, const AK::URL&, String const& target, unsigned modifiers) override;
     virtual void notify_server_did_start_loading(Badge<WebContentClient>, const AK::URL&) override;
     virtual void notify_server_did_finish_loading(Badge<WebContentClient>, const AK::URL&) override;
+    virtual void notify_server_did_request_navigate_back(Badge<WebContentClient>) override;
+    virtual void notify_server_did_request_navigate_forward(Badge<WebContentClient>) override;
+    virtual void notify_server_did_request_refresh(Badge<WebContentClient>) override;
     virtual void notify_server_did_request_context_menu(Badge<WebContentClient>, Gfx::IntPoint const&) override;
     virtual void notify_server_did_request_link_context_menu(Badge<WebContentClient>, Gfx::IntPoint const&, const AK::URL&, String const& target, unsigned modifiers) override;
     virtual void notify_server_did_request_image_context_menu(Badge<WebContentClient>, Gfx::IntPoint const&, const AK::URL&, String const& target, unsigned modifiers, Gfx::ShareableBitmap const&) override;
