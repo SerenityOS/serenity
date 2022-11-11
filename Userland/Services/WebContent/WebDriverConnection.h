@@ -55,6 +55,7 @@ private:
     virtual Messages::WebDriverClient::IsElementEnabledResponse is_element_enabled(String const& element_id) override;
     virtual Messages::WebDriverClient::GetSourceResponse get_source() override;
     virtual Messages::WebDriverClient::ExecuteScriptResponse execute_script(JsonValue const& payload) override;
+    virtual Messages::WebDriverClient::ExecuteAsyncScriptResponse execute_async_script(JsonValue const& payload) override;
     virtual Messages::WebDriverClient::TakeScreenshotResponse take_screenshot() override;
     virtual Messages::WebDriverClient::TakeElementScreenshotResponse take_element_screenshot(String const& element_id) override;
 

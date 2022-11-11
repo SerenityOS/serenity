@@ -75,8 +75,6 @@ public:
     Gfx::ShareableBitmap take_screenshot() const;
     Gfx::ShareableBitmap take_document_screenshot();
 
-    Messages::WebContentServer::WebdriverExecuteScriptResponse webdriver_execute_script(String const& body, Vector<String> const& json_arguments, Optional<u64> const& timeout, bool async);
-
     Function<void(Gfx::IntPoint const& screen_position)> on_context_menu_request;
     Function<void(const AK::URL&, String const& target, unsigned modifiers)> on_link_click;
     Function<void(const AK::URL&, Gfx::IntPoint const& screen_position)> on_link_context_menu_request;

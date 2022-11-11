@@ -18,7 +18,6 @@ endpoint WebDriverSessionClient {
     refresh() =|
     back() =|
     forward() =|
-    execute_script(String body, Vector<String> json_arguments, Optional<u64> timeout, bool async) => (Web::WebDriver::ExecuteScriptResultType result_type, String json_result)
     get_all_cookies() => (Vector<Web::Cookie::Cookie> cookies)
     get_named_cookie(String name) => (Optional<Web::Cookie::Cookie> cookie)
     add_cookie(Web::Cookie::ParsedCookie cookie) =|

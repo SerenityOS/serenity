@@ -18,7 +18,6 @@
 #include <LibJS/Heap/Heap.h>
 #include <LibJS/Parser.h>
 #include <LibJS/Runtime/ConsoleObject.h>
-#include <LibJS/Runtime/JSONObject.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/Cookie/ParsedCookie.h>
 #include <LibWeb/DOM/Document.h>
@@ -572,26 +571,6 @@ void ConnectionFromClient::set_system_visibility_state(bool visible)
         visible
             ? Web::HTML::VisibilityState::Visible
             : Web::HTML::VisibilityState::Hidden);
-}
-
-Messages::WebContentServer::WebdriverExecuteScriptResponse ConnectionFromClient::webdriver_execute_script(String const& body, Vector<String> const& json_arguments, Optional<u64> const& timeout, bool async)
-{
-    auto& page = m_page_host->page();
-
-    auto* window = page.top_level_browsing_context().active_window();
-    auto& vm = window->vm();
-
-    auto arguments = JS::MarkedVector<JS::Value> { vm.heap() };
-    for (auto const& argument_string : json_arguments) {
-        // NOTE: These are assumed to be valid JSON values.
-        auto json_value = MUST(JsonValue::from_string(argument_string));
-        arguments.append(JS::JSONObject::parse_json_value(vm, json_value));
-    }
-
-    auto result = async
-        ? Web::WebDriver::execute_async_script(page, body, move(arguments), timeout)
-        : Web::WebDriver::execute_script(page, body, move(arguments), timeout);
-    return { result.type, result.value.serialized<StringBuilder>() };
 }
 
 }
