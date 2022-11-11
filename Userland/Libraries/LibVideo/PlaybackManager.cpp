@@ -14,7 +14,7 @@
 
 namespace Video {
 
-DecoderErrorOr<NonnullRefPtr<PlaybackManager>> PlaybackManager::from_file(Object* event_handler, StringView filename)
+DecoderErrorOr<NonnullOwnPtr<PlaybackManager>> PlaybackManager::from_file(Core::Object& event_handler, StringView filename)
 {
     NonnullOwnPtr<Demuxer> demuxer = TRY(MatroskaDemuxer::from_file(filename));
     auto video_tracks = demuxer->get_tracks_for_type(TrackType::Video);
@@ -24,12 +24,11 @@ DecoderErrorOr<NonnullRefPtr<PlaybackManager>> PlaybackManager::from_file(Object
 
     dbgln_if(PLAYBACK_MANAGER_DEBUG, "Selecting video track number {}", track.identifier());
 
-    NonnullOwnPtr<VideoDecoder> decoder = make<VP9::Decoder>();
-    return PlaybackManager::construct(event_handler, demuxer, track, decoder);
+    return make<PlaybackManager>(event_handler, demuxer, track, make<VP9::Decoder>());
 }
 
-PlaybackManager::PlaybackManager(Object* event_handler, NonnullOwnPtr<Demuxer>& demuxer, Track video_track, NonnullOwnPtr<VideoDecoder>& decoder)
-    : Object(event_handler)
+PlaybackManager::PlaybackManager(Core::Object& event_handler, NonnullOwnPtr<Demuxer>& demuxer, Track video_track, NonnullOwnPtr<VideoDecoder>&& decoder)
+    : m_event_handler(event_handler)
     , m_main_loop(Core::EventLoop::current())
     , m_demuxer(move(demuxer))
     , m_selected_video_track(video_track)
@@ -68,20 +67,8 @@ void PlaybackManager::set_playback_status(PlaybackStatus status)
             m_present_timer->stop();
         }
 
-        m_main_loop.post_event(*this, make<PlaybackStatusChangeEvent>(status, old_status));
+        m_main_loop.post_event(m_event_handler, make<PlaybackStatusChangeEvent>(status, old_status));
     }
-}
-
-void PlaybackManager::event(Core::Event& event)
-{
-    if (event.type() == DecoderErrorOccurred) {
-        auto& error_event = static_cast<DecoderErrorEvent&>(event);
-        VERIFY(error_event.error().category() != DecoderErrorCategory::EndOfStream);
-        set_playback_status(PlaybackStatus::Corrupted);
-    }
-
-    // Allow events to bubble up in all cases.
-    event.ignore();
 }
 
 void PlaybackManager::resume_playback()
@@ -127,7 +114,7 @@ void PlaybackManager::on_decoder_error(DecoderError error)
         break;
     default:
         set_playback_status(PlaybackStatus::Corrupted);
-        m_main_loop.post_event(*this, make<DecoderErrorEvent>(move(error)));
+        m_main_loop.post_event(m_event_handler, make<DecoderErrorEvent>(move(error)));
         break;
     }
 }
@@ -153,7 +140,7 @@ void PlaybackManager::update_presented_frame()
     }
 
     if (!out_of_queued_frames && frame_item_to_display.has_value()) {
-        m_main_loop.post_event(*this, make<VideoFramePresentEvent>(frame_item_to_display->bitmap()));
+        m_main_loop.post_event(m_event_handler, make<VideoFramePresentEvent>(frame_item_to_display->bitmap()));
         m_last_present_in_media_time = current_playback_time();
         m_last_present_in_real_time = Time::now_monotonic();
         frame_item_to_display.clear();
@@ -197,7 +184,7 @@ void PlaybackManager::restart_playback()
 
 void PlaybackManager::post_decoder_error(DecoderError error)
 {
-    m_main_loop.post_event(*this, make<DecoderErrorEvent>(error));
+    m_main_loop.post_event(m_event_handler, make<DecoderErrorEvent>(error));
 }
 
 bool PlaybackManager::decode_and_queue_one_sample()
