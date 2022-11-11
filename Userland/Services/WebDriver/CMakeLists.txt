@@ -7,7 +7,6 @@ serenity_component(
 set(SOURCES
     Client.cpp
     Session.cpp
-    TimeoutsConfiguration.cpp
     WebContentConnection.cpp
     main.cpp
 )
