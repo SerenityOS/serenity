@@ -771,8 +771,7 @@ Web::WebDriver::Response Client::handle_add_cookie(Vector<StringView> const& par
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling POST /session/<session_id>/cookie");
     auto* session = TRY(find_session_with_id(parameters[0]));
-    auto result = TRY(session->add_cookie(payload));
-    return make_json_value(result);
+    return session->web_content_connection().add_cookie(payload);
 }
 
 // 14.4 Delete Cookie, https://w3c.github.io/webdriver/#dfn-delete-cookie

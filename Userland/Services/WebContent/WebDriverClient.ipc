@@ -26,6 +26,7 @@ endpoint WebDriverClient {
     execute_async_script(JsonValue payload) => (Web::WebDriver::Response response)
     get_all_cookies() => (Web::WebDriver::Response response)
     get_named_cookie(String name) => (Web::WebDriver::Response response)
+    add_cookie(JsonValue payload) => (Web::WebDriver::Response response)
     take_screenshot() => (Web::WebDriver::Response response)
     take_element_screenshot(String element_id) => (Web::WebDriver::Response response)
 }
