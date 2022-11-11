@@ -9,7 +9,9 @@
  */
 
 #include <AK/Debug.h>
+#include <AK/JsonObject.h>
 #include <AK/JsonParser.h>
+#include <AK/JsonValue.h>
 #include <LibCore/DateTime.h>
 #include <LibCore/MemoryStream.h>
 #include <LibHTTP/HttpRequest.h>

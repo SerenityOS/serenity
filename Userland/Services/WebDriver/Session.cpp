@@ -11,6 +11,8 @@
 #include "Session.h"
 #include "BrowserConnection.h"
 #include "Client.h"
+#include <AK/JsonObject.h>
+#include <AK/JsonParser.h>
 #include <AK/NumericLimits.h>
 #include <AK/Time.h>
 #include <LibCore/LocalServer.h>
