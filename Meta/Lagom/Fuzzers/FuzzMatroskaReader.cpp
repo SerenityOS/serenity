@@ -9,8 +9,12 @@
 
 extern "C" int LLVMFuzzerTestOneInput(u8 const* data, size_t size)
 {
-    auto matroska_document = Video::Matroska::Reader::parse_matroska_from_data(data, size);
-    if (!matroska_document)
+    auto matroska_reader_result = Video::Matroska::Reader::from_data({ data, size });
+    if (matroska_reader_result.is_error())
+        return -1;
+    if (auto result = matroska_reader_result.value().segment_information(); result.is_error())
+        return -1;
+    if (auto result = matroska_reader_result.value().track_count(); result.is_error())
         return -1;
     return 0;
 }

@@ -7,16 +7,100 @@
 
 #pragma once
 
+#include <AK/Concepts.h>
 #include <AK/Debug.h>
 #include <AK/IntegralMath.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/Optional.h>
 #include <AK/OwnPtr.h>
+#include <LibCore/MappedFile.h>
 #include <LibVideo/DecoderError.h>
 
 #include "Document.h"
 
 namespace Video::Matroska {
+
+class SampleIterator;
+class Streamer;
+
+class Reader {
+public:
+    typedef Function<DecoderErrorOr<IterationDecision>(TrackEntry const&)> TrackEntryCallback;
+
+    static DecoderErrorOr<Reader> from_file(StringView path);
+    static DecoderErrorOr<Reader> from_data(ReadonlyBytes data);
+
+    EBMLHeader const& header() const { return m_header.value(); }
+
+    DecoderErrorOr<SegmentInformation> segment_information();
+
+    DecoderErrorOr<void> for_each_track(TrackEntryCallback);
+    DecoderErrorOr<void> for_each_track_of_type(TrackEntry::TrackType, TrackEntryCallback);
+    DecoderErrorOr<TrackEntry> track_for_track_number(u64);
+    DecoderErrorOr<size_t> track_count();
+
+    DecoderErrorOr<SampleIterator> create_sample_iterator(u64 track_number);
+    DecoderErrorOr<void> seek_to_random_access_point(SampleIterator&, Time);
+
+private:
+    Reader(ReadonlyBytes data)
+        : m_data(data)
+    {
+    }
+
+    DecoderErrorOr<void> parse_initial_data();
+
+    DecoderErrorOr<Optional<size_t>> find_first_top_level_element_with_id([[maybe_unused]] StringView element_name, u32 element_id);
+
+    DecoderErrorOr<void> ensure_tracks_are_parsed();
+    DecoderErrorOr<void> parse_tracks(Streamer&);
+
+    RefPtr<Core::MappedFile> m_mapped_file;
+    ReadonlyBytes m_data;
+
+    Optional<EBMLHeader> m_header;
+
+    size_t m_segment_contents_position { 0 };
+    size_t m_segment_contents_size { 0 };
+
+    HashMap<u32, size_t> m_seek_entries;
+    size_t m_last_top_level_element_position { 0 };
+
+    Optional<SegmentInformation> m_segment_information;
+
+    OrderedHashMap<u64, TrackEntry> m_tracks;
+};
+
+class SampleIterator {
+public:
+    DecoderErrorOr<Block> next_block();
+    Cluster const& current_cluster() { return *m_current_cluster; }
+
+private:
+    friend class Reader;
+
+    SampleIterator(RefPtr<Core::MappedFile> file, ReadonlyBytes data, u64 track_id, size_t position, u64 timestamp_scale)
+        : m_file(move(file))
+        , m_data(data)
+        , m_track_id(track_id)
+        , m_position(position)
+        , m_timestamp_scale(timestamp_scale)
+    {
+    }
+
+    DecoderErrorOr<void> set_position(size_t position);
+
+    RefPtr<Core::MappedFile> m_file;
+    ReadonlyBytes m_data;
+    u64 m_track_id;
+
+    // Must always point to an element ID or the end of the stream.
+    size_t m_position { 0 };
+
+    u64 m_timestamp_scale { 0 };
+
+    Optional<Cluster> m_current_cluster;
+};
 
 class Streamer {
 public:
@@ -54,33 +138,20 @@ public:
 
     ErrorOr<void> read_unknown_element();
 
-    ErrorOr<void> drop_octets(size_t num_octets);
+    ErrorOr<ReadonlyBytes> read_raw_octets(size_t num_octets);
+
+    size_t position() const { return m_position; }
+    size_t remaining() const { return m_data.size() - position(); }
 
     bool at_end() const { return remaining() == 0; }
     bool has_octet() const { return remaining() >= 1; }
 
-    size_t remaining() const { return m_data.size() - m_position; }
+    ErrorOr<void> seek_to_position(size_t position);
 
 private:
     ReadonlyBytes m_data;
     size_t m_position { 0 };
     Vector<size_t> m_octets_read { 0 };
-};
-
-class Reader {
-public:
-    Reader(ReadonlyBytes data)
-        : m_streamer(data)
-    {
-    }
-
-    static DecoderErrorOr<NonnullOwnPtr<MatroskaDocument>> parse_matroska_from_file(StringView path);
-    static DecoderErrorOr<NonnullOwnPtr<MatroskaDocument>> parse_matroska_from_data(ReadonlyBytes data);
-
-    DecoderErrorOr<NonnullOwnPtr<MatroskaDocument>> parse();
-
-private:
-    Streamer m_streamer;
 };
 
 }

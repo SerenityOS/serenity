@@ -21,7 +21,7 @@ public:
 
 class VideoSample : public Sample {
 public:
-    VideoSample(ByteBuffer const& data, CodingIndependentCodePoints container_cicp, Time timestamp)
+    VideoSample(ReadonlyBytes data, CodingIndependentCodePoints container_cicp, Time timestamp)
         : m_data(data)
         , m_container_cicp(container_cicp)
         , m_timestamp(timestamp)
@@ -29,12 +29,12 @@ public:
     }
 
     bool is_video_sample() const override { return true; }
-    ByteBuffer const& data() const { return m_data; }
+    ReadonlyBytes const& data() const { return m_data; }
     CodingIndependentCodePoints container_cicp() const { return m_container_cicp; }
     Time timestamp() const { return m_timestamp; }
 
 private:
-    ByteBuffer m_data;
+    ReadonlyBytes m_data;
     CodingIndependentCodePoints m_container_cicp;
     Time m_timestamp;
 };

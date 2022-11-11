@@ -18,7 +18,7 @@ class Demuxer {
 public:
     virtual ~Demuxer() = default;
 
-    virtual Vector<Track> get_tracks_for_type(TrackType type) = 0;
+    virtual DecoderErrorOr<Vector<Track>> get_tracks_for_type(TrackType type) = 0;
 
     DecoderErrorOr<NonnullOwnPtr<VideoSample>> get_next_video_sample_for_track(Track track)
     {
@@ -30,7 +30,7 @@ public:
 
     virtual DecoderErrorOr<void> seek_to_most_recent_keyframe(Track track, size_t timestamp) = 0;
 
-    virtual Time duration() = 0;
+    virtual DecoderErrorOr<Time> duration() = 0;
 
 protected:
     virtual DecoderErrorOr<NonnullOwnPtr<Sample>> get_next_sample_for_track(Track track) = 0;

@@ -16,7 +16,7 @@ namespace Video {
 DecoderErrorOr<NonnullOwnPtr<PlaybackManager>> PlaybackManager::from_file(Core::Object& event_handler, StringView filename)
 {
     NonnullOwnPtr<Demuxer> demuxer = TRY(Matroska::MatroskaDemuxer::from_file(filename));
-    auto video_tracks = demuxer->get_tracks_for_type(TrackType::Video);
+    auto video_tracks = TRY(demuxer->get_tracks_for_type(TrackType::Video));
     if (video_tracks.is_empty())
         return DecoderError::with_description(DecoderErrorCategory::Invalid, "No video track is present"sv);
     auto track = video_tracks[0];
@@ -101,7 +101,10 @@ Time PlaybackManager::current_playback_time()
 
 Time PlaybackManager::duration()
 {
-    return m_demuxer->duration();
+    auto duration_result = m_demuxer->duration();
+    if (duration_result.is_error())
+        on_decoder_error(duration_result.release_error());
+    return duration_result.release_value();
 }
 
 void PlaybackManager::on_decoder_error(DecoderError error)
