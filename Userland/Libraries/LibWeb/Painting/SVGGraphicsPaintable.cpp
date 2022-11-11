@@ -19,9 +19,9 @@ Layout::SVGGraphicsBox const& SVGGraphicsPaintable::layout_box() const
     return static_cast<Layout::SVGGraphicsBox const&>(layout_node());
 }
 
-void SVGGraphicsPaintable::before_children_paint(PaintContext& context, PaintPhase phase, ShouldClipOverflow should_clip_overflow) const
+void SVGGraphicsPaintable::before_children_paint(PaintContext& context, PaintPhase phase) const
 {
-    SVGPaintable::before_children_paint(context, phase, should_clip_overflow);
+    SVGPaintable::before_children_paint(context, phase);
     if (phase != PaintPhase::Foreground)
         return;
 

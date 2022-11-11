@@ -96,6 +96,8 @@ public:
         return m_overflow_data->scrollable_overflow_rect;
     }
 
+    Optional<Gfx::IntRect> clip_rect() const;
+
     void set_overflow_data(Optional<OverflowData> data) { m_overflow_data = move(data); }
     void set_containing_line_box_fragment(Optional<Layout::LineBoxFragmentCoordinate>);
 
@@ -110,8 +112,8 @@ public:
     DOM::Document const& document() const { return layout_box().document(); }
     DOM::Document& document() { return layout_box().document(); }
 
-    virtual void before_children_paint(PaintContext&, PaintPhase, ShouldClipOverflow) const override;
-    virtual void after_children_paint(PaintContext&, PaintPhase, ShouldClipOverflow) const override;
+    virtual void before_children_paint(PaintContext&, PaintPhase) const override;
+    virtual void after_children_paint(PaintContext&, PaintPhase) const override;
 
     virtual Optional<HitTestResult> hit_test(Gfx::FloatPoint const&, HitTestType) const override;
 
@@ -152,6 +154,8 @@ private:
 
     Optional<Gfx::FloatRect> mutable m_absolute_rect;
     Optional<Gfx::FloatRect> mutable m_absolute_paint_rect;
+
+    Optional<Gfx::IntRect> mutable m_clip_rect;
 
     mutable bool m_clipping_overflow { false };
     Optional<BorderRadiusCornerClipper> mutable m_overflow_corner_radius_clipper;
