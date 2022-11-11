@@ -91,15 +91,12 @@ private:
 static constexpr size_t FRAME_BUFFER_COUNT = 4;
 using VideoFrameQueue = Queue<FrameQueueItem, FRAME_BUFFER_COUNT>;
 
-class PlaybackManager : public Core::Object {
-    C_OBJECT(PlaybackManager)
-
+class PlaybackManager {
 public:
-    static DecoderErrorOr<NonnullRefPtr<PlaybackManager>> from_file(Object* event_handler, StringView file);
-    static DecoderErrorOr<NonnullRefPtr<PlaybackManager>> from_data(Object* event_handler, Span<u8> data);
+    static DecoderErrorOr<NonnullOwnPtr<PlaybackManager>> from_file(Core::Object& event_handler, StringView file);
+    static DecoderErrorOr<NonnullOwnPtr<PlaybackManager>> from_data(Core::Object& event_handler, Span<u8> data);
 
-    PlaybackManager(Object* event_handler, NonnullOwnPtr<Demuxer>& demuxer, Track video_track, NonnullOwnPtr<VideoDecoder>& decoder);
-    ~PlaybackManager() override = default;
+    PlaybackManager(Core::Object& event_handler, NonnullOwnPtr<Demuxer>& demuxer, Track video_track, NonnullOwnPtr<VideoDecoder>&& decoder);
 
     void resume_playback();
     void pause_playback();
@@ -110,7 +107,6 @@ public:
 
     u64 number_of_skipped_frames() const { return m_skipped_frames; }
 
-    void event(Core::Event& event) override;
     void on_decoder_error(DecoderError error);
 
     Time current_playback_time();
@@ -129,6 +125,7 @@ private:
     bool decode_and_queue_one_sample();
     void on_decode_timer();
 
+    Core::Object& m_event_handler;
     Core::EventLoop& m_main_loop;
 
     PlaybackStatus m_status { PlaybackStatus::Stopped };

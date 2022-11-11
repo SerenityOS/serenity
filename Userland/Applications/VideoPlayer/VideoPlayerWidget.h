@@ -22,6 +22,7 @@ class VideoPlayerWidget final : public GUI::Widget {
     C_OBJECT(VideoPlayerWidget)
 
 public:
+    void close_file();
     void open_file(StringView filename);
     void resume_playback();
     void pause_playback();
@@ -59,7 +60,7 @@ private:
     RefPtr<GUI::Action> m_cycle_sizing_modes_action;
     RefPtr<GUI::HorizontalSlider> m_volume_slider;
 
-    RefPtr<Video::PlaybackManager> m_playback_manager;
+    OwnPtr<Video::PlaybackManager> m_playback_manager;
 };
 
 }

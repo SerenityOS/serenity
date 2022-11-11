@@ -69,9 +69,15 @@ VideoPlayerWidget::VideoPlayerWidget(GUI::Window& window)
     m_volume_slider->set_fixed_width(100);
 }
 
+void VideoPlayerWidget::close_file()
+{
+    if (m_playback_manager)
+        m_playback_manager = nullptr;
+}
+
 void VideoPlayerWidget::open_file(StringView filename)
 {
-    auto load_file_result = Video::PlaybackManager::from_file(this, filename);
+    auto load_file_result = Video::PlaybackManager::from_file(*this, filename);
 
     if (load_file_result.is_error()) {
         on_decoding_error(load_file_result.release_error());
@@ -81,6 +87,7 @@ void VideoPlayerWidget::open_file(StringView filename)
     m_path = filename;
     update_title();
 
+    close_file();
     m_playback_manager = load_file_result.release_value();
     resume_playback();
 }
