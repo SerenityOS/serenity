@@ -290,6 +290,62 @@ Messages::WebDriverClient::GetCurrentUrlResponse WebDriverConnection::get_curren
     return make_success_response(url);
 }
 
+// 10.3 Back, https://w3c.github.io/webdriver/#dfn-back
+Messages::WebDriverClient::BackResponse WebDriverConnection::back()
+{
+    // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
+    TRY(ensure_open_top_level_browsing_context());
+
+    // FIXME: 2. Handle any user prompts and return its value if it is an error.
+
+    // 3. Traverse the history by a delta –1 for the current browsing context.
+    m_web_content_client.async_did_request_navigate_back();
+
+    // FIXME: 4. If the previous step completed results in a pageHide event firing, wait until pageShow event fires or for the session page load timeout milliseconds to pass, whichever occurs sooner.
+    // FIXME: 5. If the previous step completed by the session page load timeout being reached, and user prompts have been handled, return error with error code timeout.
+
+    // 6. Return success with data null.
+    return make_success_response({});
+}
+
+// 10.4 Forward, https://w3c.github.io/webdriver/#dfn-forward
+Messages::WebDriverClient::ForwardResponse WebDriverConnection::forward()
+{
+    // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
+    TRY(ensure_open_top_level_browsing_context());
+
+    // FIXME: 2. Handle any user prompts and return its value if it is an error.
+
+    // 3. Traverse the history by a delta 1 for the current browsing context.
+    m_web_content_client.async_did_request_navigate_forward();
+
+    // FIXME: 4. If the previous step completed results in a pageHide event firing, wait until pageShow event fires or for the session page load timeout milliseconds to pass, whichever occurs sooner.
+    // FIXME: 5. If the previous step completed by the session page load timeout being reached, and user prompts have been handled, return error with error code timeout.
+
+    // 6. Return success with data null.
+    return make_success_response({});
+}
+
+// 10.5 Refresh, https://w3c.github.io/webdriver/#dfn-refresh
+Messages::WebDriverClient::RefreshResponse WebDriverConnection::refresh()
+{
+    // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
+    TRY(ensure_open_top_level_browsing_context());
+
+    // FIXME: 2. Handle any user prompts and return its value if it is an error.
+
+    // 3. Initiate an overridden reload of the current top-level browsing context’s active document.
+    m_web_content_client.async_did_request_refresh();
+
+    // FIXME: 4. If url is special except for file:
+    // FIXME:     1. Try to wait for navigation to complete.
+    // FIXME:     2. Try to run the post-navigation checks.
+    // FIXME: 5. Set the current browsing context with current top-level browsing context.
+
+    // 6. Return success with data null.
+    return make_success_response({});
+}
+
 // 11.8.1 Get Window Rect, https://w3c.github.io/webdriver/#dfn-get-window-rect
 Messages::WebDriverClient::GetWindowRectResponse WebDriverConnection::get_window_rect()
 {

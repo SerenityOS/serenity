@@ -512,8 +512,7 @@ Web::WebDriver::Response Client::handle_back(Vector<StringView> const& parameter
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling POST /session/<session_id>/back");
     auto* session = TRY(find_session_with_id(parameters[0]));
-    auto result = TRY(session->back());
-    return make_json_value(result);
+    return session->web_content_connection().back();
 }
 
 // 10.4 Forward, https://w3c.github.io/webdriver/#dfn-forward
@@ -522,8 +521,7 @@ Web::WebDriver::Response Client::handle_forward(Vector<StringView> const& parame
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling POST /session/<session_id>/forward");
     auto* session = TRY(find_session_with_id(parameters[0]));
-    auto result = TRY(session->forward());
-    return make_json_value(result);
+    return session->web_content_connection().forward();
 }
 
 // 10.5 Refresh, https://w3c.github.io/webdriver/#dfn-refresh
@@ -532,8 +530,7 @@ Web::WebDriver::Response Client::handle_refresh(Vector<StringView> const& parame
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling POST /session/<session_id>/refresh");
     auto* session = TRY(find_session_with_id(parameters[0]));
-    auto result = TRY(session->refresh());
-    return make_json_value(result);
+    return session->web_content_connection().refresh();
 }
 
 // 10.6 Get Title, https://w3c.github.io/webdriver/#dfn-get-title

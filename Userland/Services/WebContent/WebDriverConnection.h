@@ -37,6 +37,9 @@ private:
     virtual void set_is_webdriver_active(bool) override;
     virtual Messages::WebDriverClient::NavigateToResponse navigate_to(JsonValue const& payload) override;
     virtual Messages::WebDriverClient::GetCurrentUrlResponse get_current_url() override;
+    virtual Messages::WebDriverClient::BackResponse back() override;
+    virtual Messages::WebDriverClient::ForwardResponse forward() override;
+    virtual Messages::WebDriverClient::RefreshResponse refresh() override;
     virtual Messages::WebDriverClient::GetWindowRectResponse get_window_rect() override;
     virtual Messages::WebDriverClient::SetWindowRectResponse set_window_rect(JsonValue const& payload) override;
     virtual Messages::WebDriverClient::MaximizeWindowResponse maximize_window() override;
