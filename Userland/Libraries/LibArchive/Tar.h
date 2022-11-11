@@ -51,14 +51,15 @@ constexpr StringView posix1_tar_magic = ""sv;   // POSIX.1-1988 format magic
 constexpr StringView posix1_tar_version = ""sv; // POSIX.1-1988 format version
 
 template<size_t N>
-static size_t get_field_as_integral(char const (&field)[N])
+static ErrorOr<size_t> get_field_as_integral(char const (&field)[N])
 {
     size_t value = 0;
     for (size_t i = 0; i < N; ++i) {
         if (field[i] == 0 || field[i] == ' ')
             break;
 
-        VERIFY(field[i] >= '0' && field[i] <= '7');
+        if (field[i] < '0' || field[i] > '7')
+            return Error::from_string_literal("Passed a non-octal value");
         value *= 8;
         value += field[i] - '0';
     }
@@ -89,21 +90,21 @@ static void set_octal_field(char (&field)[N], TSource&& source)
 class [[gnu::packed]] TarFileHeader {
 public:
     StringView filename() const { return get_field_as_string_view(m_filename); }
-    mode_t mode() const { return get_field_as_integral(m_mode); }
-    uid_t uid() const { return get_field_as_integral(m_uid); }
-    gid_t gid() const { return get_field_as_integral(m_gid); }
+    ErrorOr<mode_t> mode() const { return TRY(get_field_as_integral(m_mode)); }
+    ErrorOr<uid_t> uid() const { return TRY(get_field_as_integral(m_uid)); }
+    ErrorOr<gid_t> gid() const { return TRY(get_field_as_integral(m_gid)); }
     // FIXME: support 2001-star size encoding
-    size_t size() const { return get_field_as_integral(m_size); }
-    time_t timestamp() const { return get_field_as_integral(m_timestamp); }
-    unsigned checksum() const { return get_field_as_integral(m_checksum); }
+    ErrorOr<size_t> size() const { return TRY(get_field_as_integral(m_size)); }
+    ErrorOr<time_t> timestamp() const { return TRY(get_field_as_integral(m_timestamp)); }
+    ErrorOr<unsigned> checksum() const { return TRY(get_field_as_integral(m_checksum)); }
     TarFileType type_flag() const { return TarFileType(m_type_flag); }
     StringView link_name() const { return { m_link_name, strlen(m_link_name) }; }
     StringView magic() const { return get_field_as_string_view(m_magic); }
     StringView version() const { return get_field_as_string_view(m_version); }
     StringView owner_name() const { return get_field_as_string_view(m_owner_name); }
     StringView group_name() const { return get_field_as_string_view(m_group_name); }
-    int major() const { return get_field_as_integral(m_major); }
-    int minor() const { return get_field_as_integral(m_minor); }
+    ErrorOr<int> major() const { return TRY(get_field_as_integral(m_major)); }
+    ErrorOr<int> minor() const { return TRY(get_field_as_integral(m_minor)); }
     // FIXME: support ustar filename prefix
     StringView prefix() const { return get_field_as_string_view(m_prefix); }
 
