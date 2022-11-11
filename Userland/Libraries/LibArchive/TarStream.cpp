@@ -71,7 +71,7 @@ TarInputStream::TarInputStream(InputStream& stream)
 {
     if (!m_stream.read_or_error(Bytes(&m_header, sizeof(m_header)))) {
         m_finished = true;
-        m_stream.handle_any_error(); // clear out errors so we dont assert
+        m_stream.handle_any_error(); // clear out errors so we don't assert
         return;
     }
     VERIFY(m_stream.discard_or_error(block_size - sizeof(TarFileHeader)));
@@ -82,10 +82,10 @@ static constexpr unsigned long block_ceiling(unsigned long offset)
     return block_size * (1 + ((offset - 1) / block_size));
 }
 
-void TarInputStream::advance()
+ErrorOr<void> TarInputStream::advance()
 {
     if (m_finished)
-        return;
+        return Error::from_string_literal("Attempted to read a finished stream");
 
     m_generation++;
     VERIFY(m_stream.discard_or_error(block_ceiling(m_header.size()) - m_file_offset));
@@ -93,14 +93,16 @@ void TarInputStream::advance()
 
     if (!m_stream.read_or_error(Bytes(&m_header, sizeof(m_header)))) {
         m_finished = true;
-        return;
+        m_stream.handle_any_error(); // clear out errors so we don't assert
+        return Error::from_string_literal("Failed to read the header");
     }
     if (!valid()) {
         m_finished = true;
-        return;
+        return {};
     }
 
     VERIFY(m_stream.discard_or_error(block_size - sizeof(TarFileHeader)));
+    return {};
 }
 
 bool TarInputStream::valid() const

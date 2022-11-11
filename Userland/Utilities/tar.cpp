@@ -98,7 +98,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             return {};
         };
 
-        for (; !tar_stream.finished(); tar_stream.advance()) {
+        while (!tar_stream.finished()) {
             Archive::TarFileHeader const& header = tar_stream.header();
 
             // Handle meta-entries earlier to avoid consuming the file content stream.
@@ -198,6 +198,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
             // Non-global headers should be cleared after every file.
             local_overrides.clear();
+
+            auto maybe_error = tar_stream.advance();
+            if (maybe_error.is_error())
+                return maybe_error.error();
         }
         file_stream.close();
 

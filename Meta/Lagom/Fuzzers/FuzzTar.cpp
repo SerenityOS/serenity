@@ -16,7 +16,7 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* data, size_t size)
     if (!tar_stream.valid())
         return 0;
 
-    for (; !tar_stream.finished(); tar_stream.advance()) {
+    while (!tar_stream.finished()) {
         auto const& header = tar_stream.header();
 
         if (!header.content_is_like_extended_header())
@@ -33,6 +33,10 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* data, size_t size)
         default:
             return 0;
         }
+
+        auto maybe_error = tar_stream.advance();
+        if (maybe_error.is_error())
+            return 0;
     }
 
     return 0;
