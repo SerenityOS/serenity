@@ -90,6 +90,28 @@ Date:   Mon Jan 20 22:12:04 2020 +0100
 Kernel: Add a basic implementation of unveil()
 ```
 
+### Jails
+`jails` is a mitigation originating from FreeBSD.
+It allows a program to be placed inside a lightweight OS-level virtualisation environment.
+
+Currently the only isolation is Process ID restricted view of only other processes in the same jail.
+The `/proc` filesystem only exports PID subdirectories of other processes in the same jail, and the same
+happens for exported information in `/sys/kernel/processes`.
+Jailed processes are forbidden write access to kernel variables (which are located in `/sys/kernel/variables`).
+
+It was first added in the following [commit](https://github.com/SerenityOS/serenity/commit/5e062414c11df31ed595c363990005eef00fa263),
+for kernel support, and the following commits added basic userspace utilities:
+
+```
+commit 5e062414c11df31ed595c363990005eef00fa263
+Author: Liav A <liavalb@gmail.com>
+Date:   Wed Nov 2 22:26:02 2022 +0200
+
+Kernel: Add support for jails
+
+...
+```
+
 ### Readonly atexit
 
 [Readonly atexit](https://isopenbsdsecu.re/mitigations/atexit_hardening/) is a mitigation originating from OpenBSD.
