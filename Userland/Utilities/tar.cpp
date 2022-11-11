@@ -160,12 +160,17 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 String absolute_path = Core::File::absolute_path(filename);
                 auto parent_path = LexicalPath(absolute_path).parent();
 
+                auto header_mode_or_error = header.mode();
+                if (header_mode_or_error.is_error())
+                    return header_mode_or_error.release_error();
+                auto header_mode = header_mode_or_error.release_value();
+
                 switch (header.type_flag()) {
                 case Archive::TarFileType::NormalFile:
                 case Archive::TarFileType::AlternateNormalFile: {
                     MUST(Core::Directory::create(parent_path, Core::Directory::CreateDirectories::Yes));
 
-                    int fd = TRY(Core::System::open(absolute_path, O_CREAT | O_WRONLY, header.mode()));
+                    int fd = TRY(Core::System::open(absolute_path, O_CREAT | O_WRONLY, header_mode));
 
                     Array<u8, buffer_size> buffer;
                     size_t bytes_read;
@@ -184,7 +189,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 case Archive::TarFileType::Directory: {
                     MUST(Core::Directory::create(parent_path, Core::Directory::CreateDirectories::Yes));
 
-                    auto result_or_error = Core::System::mkdir(absolute_path, header.mode());
+                    auto result_or_error = Core::System::mkdir(absolute_path, header_mode);
                     if (result_or_error.is_error() && result_or_error.error().code() != EEXIST)
                         return result_or_error.error();
                     break;
