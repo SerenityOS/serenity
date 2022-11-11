@@ -798,6 +798,18 @@ void WebContentView::notify_server_did_finish_loading(Badge<WebContentClient>, A
     (void)url;
 }
 
+void WebContentView::notify_server_did_request_navigate_back(Badge<WebContentClient>)
+{
+}
+
+void WebContentView::notify_server_did_request_navigate_forward(Badge<WebContentClient>)
+{
+}
+
+void WebContentView::notify_server_did_request_refresh(Badge<WebContentClient>)
+{
+}
+
 void WebContentView::notify_server_did_request_context_menu(Badge<WebContentClient>, Gfx::IntPoint const& content_position)
 {
     // FIXME
