@@ -33,6 +33,21 @@ void WebContentClient::did_finish_loading(AK::URL const& url)
     m_view.notify_server_did_finish_loading({}, url);
 }
 
+void WebContentClient::did_request_navigate_back()
+{
+    m_view.notify_server_did_request_navigate_back({});
+}
+
+void WebContentClient::did_request_navigate_forward()
+{
+    m_view.notify_server_did_request_navigate_forward({});
+}
+
+void WebContentClient::did_request_refresh()
+{
+    m_view.notify_server_did_request_refresh({});
+}
+
 void WebContentClient::did_invalidate_content_rect(Gfx::IntRect const& content_rect)
 {
     dbgln_if(SPAM_DEBUG, "handle: WebContentClient::DidInvalidateContentRect! content_rect={}", content_rect);
