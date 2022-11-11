@@ -55,6 +55,8 @@ jobs:
           cmake -GNinja -B tools-build \
             -DBUILD_LAGOM=OFF \
             -DENABLE_LAGOM_CCACHE=ON \
+            -DCMAKE_C_COMPILER=gcc-12 \
+            -DCMAKE_CXX_COMPILER=g++-12 \
             -DCMAKE_INSTALL_PREFIX=tool-install \
             -Dpackage=LagomTools
           ninja -C tools-build install
