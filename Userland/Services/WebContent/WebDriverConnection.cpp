@@ -241,6 +241,29 @@ void WebDriverConnection::set_is_webdriver_active(bool is_webdriver_active)
     m_page_host.set_is_webdriver_active(is_webdriver_active);
 }
 
+// 9.1 Get Timeouts, https://w3c.github.io/webdriver/#dfn-get-timeouts
+Messages::WebDriverClient::GetTimeoutsResponse WebDriverConnection::get_timeouts()
+{
+    // 1. Let timeouts be the timeouts object for session’s timeouts configuration
+    auto timeouts = Web::WebDriver::timeouts_object(m_timeouts_configuration);
+
+    // 2. Return success with data timeouts.
+    return timeouts;
+}
+
+// 9.2 Set Timeouts, https://w3c.github.io/webdriver/#dfn-set-timeouts
+Messages::WebDriverClient::SetTimeoutsResponse WebDriverConnection::set_timeouts(JsonValue const& payload)
+{
+    // 1. Let timeouts be the result of trying to JSON deserialize as a timeouts configuration the request’s parameters.
+    auto timeouts = TRY(Web::WebDriver::json_deserialize_as_a_timeouts_configuration(payload));
+
+    // 2. Make the session timeouts the new timeouts.
+    m_timeouts_configuration = move(timeouts);
+
+    // 3. Return success with data null.
+    return JsonValue {};
+}
+
 // 10.1 Navigate To, https://w3c.github.io/webdriver/#navigate-to
 Messages::WebDriverClient::NavigateToResponse WebDriverConnection::navigate_to(JsonValue const& payload)
 {
