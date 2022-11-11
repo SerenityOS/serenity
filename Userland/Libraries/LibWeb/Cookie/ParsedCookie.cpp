@@ -229,17 +229,11 @@ void on_http_only_attribute(ParsedCookie& parsed_cookie)
 void on_same_site_attribute(ParsedCookie& parsed_cookie, StringView attribute_value)
 {
     // 1. Let enforcement be "Default"
-    // Note: Set as default value in ParsedCookie.h
 
     // 2. If cookie-av's attribute-value is a case-insensitive match for "None", set enforcement to "None".
-    if (attribute_value.equals_ignoring_case("None"sv))
-        parsed_cookie.same_site_attribute = SameSite::None;
     // 3. If cookie-av's attribute-value is a case-insensitive match for "Strict", set enforcement to "Strict".
-    else if (attribute_value.equals_ignoring_case("Strict"sv))
-        parsed_cookie.same_site_attribute = SameSite::Strict;
     // 4. If cookie-av's attribute-value is a case-insensitive match for "Lax", set enforcement to "Lax".
-    else if (attribute_value.equals_ignoring_case("Lax"sv))
-        parsed_cookie.same_site_attribute = SameSite::Lax;
+    parsed_cookie.same_site_attribute = same_site_from_string(attribute_value);
 }
 
 Optional<Core::DateTime> parse_date_time(StringView date_string)
