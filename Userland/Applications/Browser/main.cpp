@@ -11,7 +11,6 @@
 #include <Applications/Browser/BrowserWindow.h>
 #include <Applications/Browser/CookieJar.h>
 #include <Applications/Browser/Tab.h>
-#include <Applications/Browser/WebDriverConnection.h>
 #include <Applications/Browser/WindowActions.h>
 #include <LibConfig/Client.h>
 #include <LibCore/ArgsParser.h>
@@ -40,7 +39,6 @@ bool g_content_filters_enabled { true };
 Vector<String> g_proxies;
 HashMap<String, size_t> g_proxy_mappings;
 IconBag g_icon_bag;
-RefPtr<Browser::WebDriverConnection> g_web_driver_connection;
 String g_webdriver_content_ipc_path;
 
 }
@@ -69,11 +67,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::pledge("stdio recvfd sendfd unix fattr cpath rpath wpath proc exec"));
 
     Vector<String> specified_urls;
-    String webdriver_browser_ipc_path;
 
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(specified_urls, "URLs to open", "url", Core::ArgsParser::Required::No);
-    args_parser.add_option(webdriver_browser_ipc_path, "Path to WebDriver IPC file for Browser", "webdriver-browser-path", 0, "path");
     args_parser.add_option(Browser::g_webdriver_content_ipc_path, "Path to WebDriver IPC for WebContent", "webdriver-content-path", 0, "path");
 
     args_parser.parse(arguments);
@@ -89,10 +85,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Desktop::Launcher::add_allowed_url(URL::create_with_file_scheme(Core::StandardPaths::downloads_directory())));
     TRY(Desktop::Launcher::seal_allowlist());
 
-    if (!webdriver_browser_ipc_path.is_empty()) {
+    if (!Browser::g_webdriver_content_ipc_path.is_empty())
         specified_urls.empend("about:blank");
-        TRY(Core::System::unveil(webdriver_browser_ipc_path, "rw"sv));
-    }
 
     TRY(Core::System::unveil("/sys/kernel/processes", "r"));
     TRY(Core::System::unveil("/tmp/session/%sid/portal/filesystemaccess", "rw"));
@@ -148,9 +142,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Browser::CookieJar cookie_jar;
     auto window = Browser::BrowserWindow::construct(cookie_jar, first_url);
-
-    if (!webdriver_browser_ipc_path.is_empty())
-        Browser::g_web_driver_connection = TRY(Browser::WebDriverConnection::connect_to_webdriver(window, webdriver_browser_ipc_path));
 
     auto content_filters_watcher = TRY(Core::FileWatcher::create());
     content_filters_watcher->on_change = [&](Core::FileWatcherEvent const&) {

@@ -14,7 +14,6 @@
 #include <LibCore/Promise.h>
 #include <LibWeb/WebDriver/Error.h>
 #include <LibWeb/WebDriver/Response.h>
-#include <WebDriver/BrowserConnection.h>
 #include <WebDriver/TimeoutsConfiguration.h>
 #include <WebDriver/WebContentConnection.h>
 #include <unistd.h>
@@ -57,20 +56,16 @@ public:
     Web::WebDriver::Response take_element_screenshot(StringView element_id);
 
 private:
-    enum class ServerType {
-        Browser,
-        WebContent,
-    };
     using ServerPromise = Core::Promise<ErrorOr<void>>;
-    ErrorOr<NonnullRefPtr<Core::LocalServer>> create_server(String const& socket_path, ServerType type, NonnullRefPtr<ServerPromise> promise);
+    ErrorOr<NonnullRefPtr<Core::LocalServer>> create_server(String const& socket_path, NonnullRefPtr<ServerPromise> promise);
 
     NonnullRefPtr<Client> m_client;
     bool m_started { false };
     unsigned m_id { 0 };
     HashMap<String, NonnullOwnPtr<Window>> m_windows;
     String m_current_window_handle;
-    RefPtr<BrowserConnection> m_browser_connection;
     RefPtr<WebContentConnection> m_web_content_connection;
+    Optional<pid_t> m_browser_pid;
 
     // https://w3c.github.io/webdriver/#dfn-session-script-timeout
     TimeoutsConfiguration m_timeouts_configuration;

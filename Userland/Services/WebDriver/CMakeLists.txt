@@ -5,7 +5,6 @@ serenity_component(
 )
 
 set(SOURCES
-    BrowserConnection.cpp
     Client.cpp
     Session.cpp
     TimeoutsConfiguration.cpp
@@ -14,8 +13,6 @@ set(SOURCES
 )
 
 set(GENERATED_SOURCES
-    ../../Applications/Browser/WebDriverSessionClientEndpoint.h
-    ../../Applications/Browser/WebDriverSessionServerEndpoint.h
     ../../Services/WebContent/WebDriverClientEndpoint.h
     ../../Services/WebContent/WebDriverServerEndpoint.h
 )

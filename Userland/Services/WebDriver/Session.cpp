@@ -9,7 +9,6 @@
  */
 
 #include "Session.h"
-#include "BrowserConnection.h"
 #include "Client.h"
 #include <AK/JsonObject.h>
 #include <AK/JsonParser.h>
@@ -55,42 +54,24 @@ ErrorOr<void, Web::WebDriver::Error> Session::check_for_open_top_level_browsing_
     return {};
 }
 
-ErrorOr<NonnullRefPtr<Core::LocalServer>> Session::create_server(String const& socket_path, ServerType type, NonnullRefPtr<ServerPromise> promise)
+ErrorOr<NonnullRefPtr<Core::LocalServer>> Session::create_server(String const& socket_path, NonnullRefPtr<ServerPromise> promise)
 {
     dbgln("Listening for WebDriver connection on {}", socket_path);
 
     auto server = TRY(Core::LocalServer::try_create());
     server->listen(socket_path);
 
-    server->on_accept = [this, type, promise](auto client_socket) mutable {
-        switch (type) {
-        case ServerType::Browser: {
-            auto maybe_connection = adopt_nonnull_ref_or_enomem(new (nothrow) BrowserConnection(move(client_socket), m_client, session_id()));
-            if (maybe_connection.is_error()) {
-                promise->resolve(maybe_connection.release_error());
-                return;
-            }
-
-            dbgln("WebDriver is connected to Browser socket");
-            m_browser_connection = maybe_connection.release_value();
-            break;
+    server->on_accept = [this, promise](auto client_socket) mutable {
+        auto maybe_connection = adopt_nonnull_ref_or_enomem(new (nothrow) WebContentConnection(move(client_socket), m_client, session_id()));
+        if (maybe_connection.is_error()) {
+            promise->resolve(maybe_connection.release_error());
+            return;
         }
 
-        case ServerType::WebContent: {
-            auto maybe_connection = adopt_nonnull_ref_or_enomem(new (nothrow) WebContentConnection(move(client_socket), m_client, session_id()));
-            if (maybe_connection.is_error()) {
-                promise->resolve(maybe_connection.release_error());
-                return;
-            }
+        dbgln("WebDriver is connected to WebContent socket");
+        m_web_content_connection = maybe_connection.release_value();
 
-            dbgln("WebDriver is connected to WebContent socket");
-            m_web_content_connection = maybe_connection.release_value();
-            break;
-        }
-        }
-
-        if (m_browser_connection && m_web_content_connection)
-            promise->resolve({});
+        promise->resolve({});
     };
 
     server->on_accept_error = [promise](auto error) mutable {
@@ -104,22 +85,17 @@ ErrorOr<void> Session::start()
 {
     auto promise = TRY(ServerPromise::try_create());
 
-    auto browser_socket_path = String::formatted("/tmp/webdriver/browser_{}_{}", getpid(), m_id);
-    auto browser_server = TRY(create_server(browser_socket_path, ServerType::Browser, promise));
-
-    auto web_content_socket_path = String::formatted("/tmp/webdriver/content_{}_{}", getpid(), m_id);
-    auto web_content_server = TRY(create_server(web_content_socket_path, ServerType::WebContent, promise));
+    auto web_content_socket_path = String::formatted("/tmp/webdriver/session_{}_{}", getpid(), m_id);
+    auto web_content_server = TRY(create_server(web_content_socket_path, promise));
 
     char const* argv[] = {
         "/bin/Browser",
-        "--webdriver-browser-path",
-        browser_socket_path.characters(),
         "--webdriver-content-path",
         web_content_socket_path.characters(),
         nullptr,
     };
 
-    TRY(Core::System::posix_spawn("/bin/Browser"sv, nullptr, nullptr, const_cast<char**>(argv), environ));
+    m_browser_pid = TRY(Core::System::posix_spawn("/bin/Browser"sv, nullptr, nullptr, const_cast<char**>(argv), environ));
 
     // FIXME: Allow this to be more asynchronous. For now, this at least allows us to propagate
     //        errors received while accepting the Browser and WebContent sockets.
@@ -144,7 +120,11 @@ Web::WebDriver::Response Session::stop()
     // NOTE: Handled by WebDriver::Client.
 
     // 3. Perform any implementation-specific cleanup steps.
-    m_browser_connection->async_quit();
+    if (m_browser_pid.has_value()) {
+        MUST(Core::System::kill(*m_browser_pid, SIGTERM));
+        m_browser_pid = {};
+    }
+
     m_started = false;
 
     // 4. If an error has occurred in any of the steps above, return the error, otherwise return success with data null.
