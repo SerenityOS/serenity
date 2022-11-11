@@ -2579,8 +2579,8 @@ RefPtr<StyleValue> Parser::parse_conic_gradient_function(ComponentValue const& c
     bool got_color_interpolation_method = false;
     bool got_at_position = false;
     while (token.is(Token::Type::Ident)) {
-        auto token_string = token.token().ident();
         auto consume_identifier = [&](auto identifier) {
+            auto token_string = token.token().ident();
             if (token_string.equals_ignoring_case(identifier)) {
                 (void)tokens.next_token();
                 tokens.skip_whitespace();
@@ -2642,6 +2642,151 @@ RefPtr<StyleValue> Parser::parse_conic_gradient_function(ComponentValue const& c
         return {};
 
     return ConicGradientStyleValue::create(from_angle, at_position, move(*color_stops), repeating_gradient);
+}
+
+RefPtr<StyleValue> Parser::parse_radial_gradient_function(ComponentValue const& component_value)
+{
+    using EndingShape = RadialGradientStyleValue::EndingShape;
+    using Extent = RadialGradientStyleValue::Extent;
+    using CircleSize = RadialGradientStyleValue::CircleSize;
+    using EllipseSize = RadialGradientStyleValue::EllipseSize;
+    using Size = RadialGradientStyleValue::Size;
+
+    if (!component_value.is_function())
+        return {};
+
+    auto function_name = component_value.function().name();
+
+    if (!function_name.equals_ignoring_case("radial-gradient"sv))
+        return {};
+
+    TokenStream tokens { component_value.function().values() };
+    tokens.skip_whitespace();
+    if (!tokens.has_next_token())
+        return {};
+
+    bool expect_comma = false;
+
+    auto commit_value = [&]<typename... T>(auto value, T&... transactions) {
+        (transactions.commit(), ...);
+        return value;
+    };
+
+    // radial-gradient( [ <ending-shape> || <size> ]? [ at <position> ]? , <color-stop-list> )
+
+    Size size = Extent::FarthestCorner;
+    EndingShape ending_shape = EndingShape::Circle;
+    PositionValue at_position = PositionValue::center();
+
+    auto parse_ending_shape = [&]() -> Optional<EndingShape> {
+        auto transaction = tokens.begin_transaction();
+        tokens.skip_whitespace();
+        auto& token = tokens.next_token();
+        if (!token.is(Token::Type::Ident))
+            return {};
+        auto ident = token.token().ident();
+        if (ident.equals_ignoring_case("circle"sv))
+            return commit_value(EndingShape::Circle, transaction);
+        if (ident.equals_ignoring_case("ellipse"sv))
+            return commit_value(EndingShape::Ellipse, transaction);
+        return {};
+    };
+
+    auto parse_extent_keyword = [](StringView keyword) -> Optional<Extent> {
+        if (keyword.equals_ignoring_case("closest-corner"sv))
+            return Extent::ClosestCorner;
+        if (keyword.equals_ignoring_case("closest-side"sv))
+            return Extent::ClosestSide;
+        if (keyword.equals_ignoring_case("farthest-corner"sv))
+            return Extent::FarthestCorner;
+        if (keyword.equals_ignoring_case("farthest-side"sv))
+            return Extent::FarthestSide;
+        return {};
+    };
+
+    auto parse_size = [&]() -> Optional<Size> {
+        // <size> =
+        //      <extent-keyword>              |
+        //      <length [0,∞]>                |
+        //      <length-percentage [0,∞]>{2}
+        auto transaction_size = tokens.begin_transaction();
+        tokens.skip_whitespace();
+        if (!tokens.has_next_token())
+            return {};
+        auto& token = tokens.next_token();
+        if (token.is(Token::Type::Ident)) {
+            auto extent = parse_extent_keyword(token.token().ident());
+            if (!extent.has_value())
+                return {};
+            return commit_value(*extent, transaction_size);
+        }
+        auto first_dimension = parse_dimension(token);
+        if (!first_dimension.has_value())
+            return {};
+        if (!first_dimension->is_length_percentage())
+            return {};
+        auto transaction_second_dimension = tokens.begin_transaction();
+        tokens.skip_whitespace();
+        if (tokens.has_next_token()) {
+            auto& second_token = tokens.next_token();
+            auto second_dimension = parse_dimension(second_token);
+            if (second_dimension.has_value() && second_dimension->is_length_percentage())
+                return commit_value(EllipseSize { first_dimension->length_percentage(), second_dimension->length_percentage() },
+                    transaction_size, transaction_second_dimension);
+        }
+        if (first_dimension->is_length())
+            return commit_value(CircleSize { first_dimension->length() }, transaction_size);
+        return {};
+    };
+
+    {
+        // [ <ending-shape> || <size> ]?
+        auto maybe_ending_shape = parse_ending_shape();
+        auto maybe_size = parse_size();
+        if (!maybe_ending_shape.has_value() && maybe_size.has_value())
+            maybe_ending_shape = parse_ending_shape();
+        if (maybe_size.has_value()) {
+            size = *maybe_size;
+            expect_comma = true;
+        }
+        if (maybe_ending_shape.has_value()) {
+            expect_comma = true;
+            ending_shape = *maybe_ending_shape;
+            if (ending_shape == EndingShape::Circle && size.has<EllipseSize>())
+                return {};
+            if (ending_shape == EndingShape::Ellipse && size.has<CircleSize>())
+                return {};
+        } else {
+            ending_shape = size.has<CircleSize>() ? EndingShape::Circle : EndingShape::Ellipse;
+        }
+    }
+
+    tokens.skip_whitespace();
+    if (!tokens.has_next_token())
+        return {};
+
+    auto& token = tokens.peek_token();
+    if (token.is(Token::Type::Ident) && token.token().ident().equals_ignoring_case("at"sv)) {
+        (void)tokens.next_token();
+        auto position = parse_position(tokens);
+        if (!position.has_value())
+            return {};
+        at_position = *position;
+        expect_comma = true;
+    }
+
+    tokens.skip_whitespace();
+    if (!tokens.has_next_token())
+        return {};
+    if (expect_comma && !tokens.next_token().is(Token::Type::Comma))
+        return {};
+
+    // <color-stop-list>
+    auto color_stops = parse_linear_color_stop_list(tokens);
+    if (!color_stops.has_value())
+        return {};
+
+    return RadialGradientStyleValue::create(ending_shape, size, at_position, move(*color_stops));
 }
 
 Optional<PositionValue> Parser::parse_position(TokenStream<ComponentValue>& tokens, PositionValue initial_value)
@@ -3825,11 +3970,13 @@ RefPtr<StyleValue> Parser::parse_image_value(ComponentValue const& component_val
     auto url = parse_url_function(component_value, AllowedDataUrlType::Image);
     if (url.has_value())
         return ImageStyleValue::create(url.value());
-    // FIXME: Implement other kinds of gradient
     auto linear_gradient = parse_linear_gradient_function(component_value);
     if (linear_gradient)
         return linear_gradient;
-    return parse_conic_gradient_function(component_value);
+    auto conic_gradient = parse_conic_gradient_function(component_value);
+    if (conic_gradient)
+        return conic_gradient;
+    return parse_radial_gradient_function(component_value);
 }
 
 template<typename ParseFunction>
