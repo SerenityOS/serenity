@@ -345,8 +345,8 @@ pushd "$DIR/Build/$ARCH"
             fi
 
             echo "XXX build gdb"
-            buildstep "gdb/build" "$MAKE" -j "$MAKEJOBS" || exit 1
-            buildstep "gdb/install" "$MAKE" install || exit 1
+            buildstep "gdb/build" "$MAKE" MAKEINFO=true -j "$MAKEJOBS" || exit 1
+            buildstep "gdb/install" "$MAKE" MAKEINFO=true install || exit 1
         popd
     fi
 
