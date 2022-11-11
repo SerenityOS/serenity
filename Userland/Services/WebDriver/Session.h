@@ -58,12 +58,9 @@ public:
     Web::WebDriver::Response get_window_handle();
     ErrorOr<void, Variant<Web::WebDriver::Error, Error>> close_window();
     Web::WebDriver::Response get_window_handles() const;
-    Web::WebDriver::Response delete_all_cookies();
     Web::WebDriver::Response take_element_screenshot(StringView element_id);
 
 private:
-    void delete_cookies(Optional<StringView> const& name = {});
-
     enum class ServerType {
         Browser,
         WebContent,

@@ -18,6 +18,4 @@ endpoint WebDriverSessionClient {
     refresh() =|
     back() =|
     forward() =|
-    get_all_cookies() => (Vector<Web::Cookie::Cookie> cookies)
-    update_cookie(Web::Cookie::Cookie cookie) =|
 }

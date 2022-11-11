@@ -990,6 +990,21 @@ Messages::WebDriverClient::DeleteCookieResponse WebDriverConnection::delete_cook
     return make_success_response({});
 }
 
+// 14.5 Delete All Cookies, https://w3c.github.io/webdriver/#dfn-delete-all-cookies
+Messages::WebDriverClient::DeleteAllCookiesResponse WebDriverConnection::delete_all_cookies()
+{
+    // 1. If the current browsing context is no longer open, return error with error code no such window.
+    TRY(ensure_open_top_level_browsing_context());
+
+    // FIXME: 2. Handle any user prompts, and return its value if it is an error.
+
+    // 3. Delete cookies, giving no filtering argument.
+    delete_cookies();
+
+    // 4. Return success with data null.
+    return make_success_response({});
+}
+
 // 17.1 Take Screenshot, https://w3c.github.io/webdriver/#take-screenshot
 Messages::WebDriverClient::TakeScreenshotResponse WebDriverConnection::take_screenshot()
 {

@@ -19,9 +19,6 @@
 #include <LibGfx/Point.h>
 #include <LibGfx/Rect.h>
 #include <LibGfx/Size.h>
-#include <LibWeb/Cookie/Cookie.h>
-#include <LibWeb/Cookie/ParsedCookie.h>
-#include <LibWeb/WebDriver/ExecuteScript.h>
 #include <unistd.h>
 
 namespace WebDriver {
@@ -295,39 +292,6 @@ Web::WebDriver::Response Session::get_window_handles() const
 
     // 3. Return success with data handles.
     return JsonValue { handles };
-}
-
-// https://w3c.github.io/webdriver/#dfn-delete-cookies
-void Session::delete_cookies(Optional<StringView> const& name)
-{
-    // For each cookie among all associated cookies of the current browsing context’s active document,
-    // run the substeps of the first matching condition:
-    for (auto& cookie : m_browser_connection->get_all_cookies()) {
-        // -> name is undefined
-        // -> name is equal to cookie name
-        if (!name.has_value() || name.value() == cookie.name) {
-            // Set the cookie expiry time to a Unix timestamp in the past.
-            cookie.expiry_time = Core::DateTime::from_timestamp(0);
-            m_browser_connection->async_update_cookie(cookie);
-        }
-        // -> Otherwise
-        //    Do nothing.
-    }
-}
-
-// 14.5 Delete All Cookies, https://w3c.github.io/webdriver/#dfn-delete-all-cookies
-Web::WebDriver::Response Session::delete_all_cookies()
-{
-    // 1. If the current browsing context is no longer open, return error with error code no such window.
-    TRY(check_for_open_top_level_browsing_context_or_return_error());
-
-    // FIXME: 2. Handle any user prompts, and return its value if it is an error.
-
-    // 3. Delete cookies, giving no filtering argument.
-    delete_cookies();
-
-    // 4. Return success with data null.
-    return JsonValue();
 }
 
 }
