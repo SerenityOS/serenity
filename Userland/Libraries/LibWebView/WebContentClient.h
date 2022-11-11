@@ -59,6 +59,7 @@ private:
     virtual Messages::WebContentClient::DidRequestConfirmResponse did_request_confirm(String const&) override;
     virtual Messages::WebContentClient::DidRequestPromptResponse did_request_prompt(String const&, String const&) override;
     virtual Messages::WebContentClient::DidRequestAllCookiesResponse did_request_all_cookies(AK::URL const&) override;
+    virtual Messages::WebContentClient::DidRequestNamedCookieResponse did_request_named_cookie(AK::URL const&, String const&) override;
     virtual Messages::WebContentClient::DidRequestCookieResponse did_request_cookie(AK::URL const&, u8) override;
     virtual void did_set_cookie(AK::URL const&, Web::Cookie::ParsedCookie const&, u8) override;
     virtual void did_update_resource_count(i32 count_waiting) override;

@@ -190,6 +190,11 @@ Messages::WebContentClient::DidRequestAllCookiesResponse WebContentClient::did_r
     return m_view.notify_server_did_request_all_cookies({}, url);
 }
 
+Messages::WebContentClient::DidRequestNamedCookieResponse WebContentClient::did_request_named_cookie(AK::URL const& url, String const& name)
+{
+    return m_view.notify_server_did_request_named_cookie({}, url, name);
+}
+
 Messages::WebContentClient::DidRequestCookieResponse WebContentClient::did_request_cookie(AK::URL const& url, u8 source)
 {
     return m_view.notify_server_did_request_cookie({}, url, static_cast<Web::Cookie::Source>(source));
