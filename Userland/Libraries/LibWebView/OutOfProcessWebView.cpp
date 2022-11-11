@@ -309,6 +309,24 @@ void OutOfProcessWebView::notify_server_did_finish_loading(Badge<WebContentClien
         on_load_finish(url);
 }
 
+void OutOfProcessWebView::notify_server_did_request_navigate_back(Badge<WebContentClient>)
+{
+    if (on_navigate_back)
+        on_navigate_back();
+}
+
+void OutOfProcessWebView::notify_server_did_request_navigate_forward(Badge<WebContentClient>)
+{
+    if (on_navigate_forward)
+        on_navigate_forward();
+}
+
+void OutOfProcessWebView::notify_server_did_request_refresh(Badge<WebContentClient>)
+{
+    if (on_refresh)
+        on_refresh();
+}
+
 void OutOfProcessWebView::notify_server_did_request_context_menu(Badge<WebContentClient>, Gfx::IntPoint const& content_position)
 {
     if (on_context_menu_request)

@@ -84,6 +84,9 @@ public:
     Function<void(String const&)> on_title_change;
     Function<void(const AK::URL&)> on_load_start;
     Function<void(const AK::URL&)> on_load_finish;
+    Function<void()> on_navigate_back;
+    Function<void()> on_navigate_forward;
+    Function<void()> on_refresh;
     Function<void(Gfx::Bitmap const&)> on_favicon_change;
     Function<void(const AK::URL&)> on_url_drop;
     Function<void(Web::DOM::Document*)> on_set_document;
@@ -145,6 +148,9 @@ private:
     virtual void notify_server_did_middle_click_link(Badge<WebContentClient>, const AK::URL&, String const& target, unsigned modifiers) override;
     virtual void notify_server_did_start_loading(Badge<WebContentClient>, const AK::URL&) override;
     virtual void notify_server_did_finish_loading(Badge<WebContentClient>, const AK::URL&) override;
+    virtual void notify_server_did_request_navigate_back(Badge<WebContentClient>) override;
+    virtual void notify_server_did_request_navigate_forward(Badge<WebContentClient>) override;
+    virtual void notify_server_did_request_refresh(Badge<WebContentClient>) override;
     virtual void notify_server_did_request_context_menu(Badge<WebContentClient>, Gfx::IntPoint const&) override;
     virtual void notify_server_did_request_link_context_menu(Badge<WebContentClient>, Gfx::IntPoint const&, const AK::URL&, String const& target, unsigned modifiers) override;
     virtual void notify_server_did_request_image_context_menu(Badge<WebContentClient>, Gfx::IntPoint const&, const AK::URL&, String const& target, unsigned modifiers, Gfx::ShareableBitmap const&) override;
