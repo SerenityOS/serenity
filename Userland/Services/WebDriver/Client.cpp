@@ -16,9 +16,9 @@
 #include <LibCore/MemoryStream.h>
 #include <LibHTTP/HttpRequest.h>
 #include <LibHTTP/HttpResponse.h>
+#include <LibWeb/WebDriver/TimeoutsConfiguration.h>
 #include <WebDriver/Client.h>
 #include <WebDriver/Session.h>
-#include <WebDriver/TimeoutsConfiguration.h>
 
 namespace WebDriver {
 

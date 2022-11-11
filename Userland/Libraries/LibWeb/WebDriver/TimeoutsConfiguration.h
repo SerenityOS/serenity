@@ -10,7 +10,7 @@
 #include <AK/Optional.h>
 #include <LibWeb/WebDriver/Error.h>
 
-namespace WebDriver {
+namespace Web::WebDriver {
 
 // https://w3c.github.io/webdriver/#dfn-timeouts-configuration
 struct TimeoutsConfiguration {
@@ -20,6 +20,6 @@ struct TimeoutsConfiguration {
 };
 
 JsonObject timeouts_object(TimeoutsConfiguration const&);
-ErrorOr<TimeoutsConfiguration, Web::WebDriver::Error> json_deserialize_as_a_timeouts_configuration(JsonValue const&);
+ErrorOr<TimeoutsConfiguration, Error> json_deserialize_as_a_timeouts_configuration(JsonValue const&);
 
 }

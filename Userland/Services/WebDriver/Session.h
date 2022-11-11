@@ -14,7 +14,7 @@
 #include <LibCore/Promise.h>
 #include <LibWeb/WebDriver/Error.h>
 #include <LibWeb/WebDriver/Response.h>
-#include <WebDriver/TimeoutsConfiguration.h>
+#include <LibWeb/WebDriver/TimeoutsConfiguration.h>
 #include <WebDriver/WebContentConnection.h>
 #include <unistd.h>
 
@@ -68,7 +68,7 @@ private:
     Optional<pid_t> m_browser_pid;
 
     // https://w3c.github.io/webdriver/#dfn-session-script-timeout
-    TimeoutsConfiguration m_timeouts_configuration;
+    Web::WebDriver::TimeoutsConfiguration m_timeouts_configuration;
 };
 
 }
