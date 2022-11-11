@@ -374,6 +374,11 @@ Tab::Tab(BrowserWindow& window)
             on_set_cookie(url, cookie, source);
     };
 
+    view().on_update_cookie = [this](auto& url, auto& cookie) {
+        if (on_update_cookie)
+            on_update_cookie(url, cookie);
+    };
+
     view().on_get_source = [this](auto& url, auto& source) {
         view_source(url, source);
     };

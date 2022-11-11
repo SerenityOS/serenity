@@ -59,6 +59,7 @@ private:
     virtual Messages::WebDriverClient::GetAllCookiesResponse get_all_cookies() override;
     virtual Messages::WebDriverClient::GetNamedCookieResponse get_named_cookie(String const& name) override;
     virtual Messages::WebDriverClient::AddCookieResponse add_cookie(JsonValue const& payload) override;
+    virtual Messages::WebDriverClient::DeleteCookieResponse delete_cookie(String const& name) override;
     virtual Messages::WebDriverClient::TakeScreenshotResponse take_screenshot() override;
     virtual Messages::WebDriverClient::TakeElementScreenshotResponse take_element_screenshot(String const& element_id) override;
 
@@ -73,6 +74,7 @@ private:
         JS::MarkedVector<JS::Value> arguments;
     };
     ErrorOr<ScriptArguments, Web::WebDriver::Error> extract_the_script_arguments_from_a_request(JsonValue const& payload);
+    void delete_cookies(Optional<StringView> const& name = {});
 
     ConnectionFromClient& m_web_content_client;
     PageHost& m_page_host;
