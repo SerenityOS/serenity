@@ -241,6 +241,7 @@ public:
         Overflow,
         Percentage,
         Position,
+        RadialGradient,
         Rect,
         Resolution,
         Shadow,
@@ -255,7 +256,7 @@ public:
 
     Type type() const { return m_type; }
 
-    bool is_abstract_image() const { return AK::first_is_one_of(type(), Type::Image, Type::LinearGradient, Type::ConicGradient); }
+    bool is_abstract_image() const { return AK::first_is_one_of(type(), Type::Image, Type::LinearGradient, Type::ConicGradient, Type::RadialGradient); }
     bool is_angle() const { return type() == Type::Angle; }
     bool is_background() const { return type() == Type::Background; }
     bool is_background_repeat() const { return type() == Type::BackgroundRepeat; }
@@ -286,6 +287,7 @@ public:
     bool is_overflow() const { return type() == Type::Overflow; }
     bool is_percentage() const { return type() == Type::Percentage; }
     bool is_position() const { return type() == Type::Position; }
+    bool is_radial_gradient() const { return type() == Type::RadialGradient; }
     bool is_rect() const { return type() == Type::Rect; }
     bool is_resolution() const { return type() == Type::Resolution; }
     bool is_shadow() const { return type() == Type::Shadow; }
@@ -330,6 +332,7 @@ public:
     OverflowStyleValue const& as_overflow() const;
     PercentageStyleValue const& as_percentage() const;
     PositionStyleValue const& as_position() const;
+    RadialGradientStyleValue const& as_radial_gradient() const;
     RectStyleValue const& as_rect() const;
     ResolutionStyleValue const& as_resolution() const;
     ShadowStyleValue const& as_shadow() const;
@@ -372,6 +375,7 @@ public:
     OverflowStyleValue& as_overflow() { return const_cast<OverflowStyleValue&>(const_cast<StyleValue const&>(*this).as_overflow()); }
     PercentageStyleValue& as_percentage() { return const_cast<PercentageStyleValue&>(const_cast<StyleValue const&>(*this).as_percentage()); }
     PositionStyleValue& as_position() { return const_cast<PositionStyleValue&>(const_cast<StyleValue const&>(*this).as_position()); }
+    RadialGradientStyleValue& as_radial_gradient() { return const_cast<RadialGradientStyleValue&>(const_cast<StyleValue const&>(*this).as_radial_gradient()); }
     RectStyleValue& as_rect() { return const_cast<RectStyleValue&>(const_cast<StyleValue const&>(*this).as_rect()); }
     ResolutionStyleValue& as_resolution() { return const_cast<ResolutionStyleValue&>(const_cast<StyleValue const&>(*this).as_resolution()); }
     ShadowStyleValue& as_shadow() { return const_cast<ShadowStyleValue&>(const_cast<StyleValue const&>(*this).as_shadow()); }
@@ -1199,6 +1203,74 @@ private:
 enum class GradientRepeating {
     Yes,
     No
+};
+
+class RadialGradientStyleValue final : public AbstractImageStyleValue {
+public:
+    enum class EndingShape {
+        Circle,
+        Ellipse
+    };
+
+    enum class Extent {
+        ClosestCorner,
+        ClosestSide,
+        FarthestCorner,
+        FarthestSide
+    };
+
+    struct CircleSize {
+        Length radius;
+        bool operator==(CircleSize const&) const = default;
+    };
+
+    struct EllipseSize {
+        LengthPercentage radius_a;
+        LengthPercentage radius_b;
+        bool operator==(EllipseSize const&) const = default;
+    };
+
+    using Size = Variant<Extent, CircleSize, EllipseSize>;
+
+    static NonnullRefPtr<RadialGradientStyleValue> create(EndingShape ending_shape, Size size, PositionValue position, Vector<LinearColorStopListElement> color_stop_list)
+    {
+        VERIFY(color_stop_list.size() >= 2);
+        return adopt_ref(*new RadialGradientStyleValue(ending_shape, size, position, move(color_stop_list)));
+    }
+
+    virtual String to_string() const override;
+
+    void paint(PaintContext&, Gfx::IntRect const& dest_rect, CSS::ImageRendering) const override;
+
+    virtual bool equals(StyleValue const& other) const override;
+
+    Vector<LinearColorStopListElement> const& color_stop_list() const
+    {
+        return m_color_stop_list;
+    }
+
+    bool is_paintable() const override { return true; }
+
+    void resolve_for_size(Layout::Node const&, Gfx::FloatSize const&) const override;
+
+    Gfx::FloatSize resolve_size(Layout::Node const&, Gfx::FloatPoint, Gfx::FloatRect const&) const;
+
+    virtual ~RadialGradientStyleValue() override = default;
+
+private:
+    RadialGradientStyleValue(EndingShape ending_shape, Size size, PositionValue position, Vector<LinearColorStopListElement> color_stop_list)
+        : AbstractImageStyleValue(Type::RadialGradient)
+        , m_ending_shape(ending_shape)
+        , m_size(size)
+        , m_position(position)
+        , m_color_stop_list(move(color_stop_list))
+    {
+    }
+
+    EndingShape m_ending_shape;
+    Size m_size;
+    PositionValue m_position;
+    Vector<LinearColorStopListElement> m_color_stop_list;
 };
 
 class ConicGradientStyleValue final : public AbstractImageStyleValue {

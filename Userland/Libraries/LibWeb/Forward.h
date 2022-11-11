@@ -90,6 +90,7 @@ class Percentage;
 class PercentageStyleValue;
 class PositionStyleValue;
 class PropertyOwningCSSStyleDeclaration;
+class RadialGradientStyleValue;
 class RectStyleValue;
 class Resolution;
 class ResolutionStyleValue;

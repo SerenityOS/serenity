@@ -217,6 +217,12 @@ PositionStyleValue const& StyleValue::as_position() const
     return static_cast<PositionStyleValue const&>(*this);
 }
 
+RadialGradientStyleValue const& StyleValue::as_radial_gradient() const
+{
+    VERIFY(is_radial_gradient());
+    return static_cast<RadialGradientStyleValue const&>(*this);
+}
+
 RectStyleValue const& StyleValue::as_rect() const
 {
     VERIFY(is_rect());
@@ -1982,6 +1988,163 @@ bool PositionValue::operator==(PositionValue const& other) const
         && y_relative_to == other.y_relative_to
         && variant_equals(horizontal_position, other.horizontal_position)
         && variant_equals(vertical_position, other.vertical_position));
+}
+
+String RadialGradientStyleValue::to_string() const
+{
+    StringBuilder builder;
+    builder.appendff("radial-gradient({} "sv,
+        m_ending_shape == EndingShape::Circle ? "circle"sv : "ellipse"sv);
+
+    m_size.visit(
+        [&](Extent extent) {
+            builder.append([&] {
+                switch (extent) {
+                case Extent::ClosestCorner:
+                    return "closest-corner"sv;
+                case Extent::ClosestSide:
+                    return "closest-side"sv;
+                case Extent::FarthestCorner:
+                    return "farthest-corner"sv;
+                case Extent::FarthestSide:
+                    return "farthest-side"sv;
+                default:
+                    VERIFY_NOT_REACHED();
+                }
+            }());
+        },
+        [&](CircleSize const& circle_size) { builder.append(circle_size.radius.to_string()); },
+        [&](EllipseSize const& ellipse_size) { builder.appendff("{} {}", ellipse_size.radius_a.to_string(), ellipse_size.radius_b.to_string()); });
+
+    if (m_position != PositionValue::center()) {
+        builder.appendff(" at "sv);
+        m_position.serialize(builder);
+    }
+
+    builder.append(", "sv);
+    serialize_color_stop_list(builder, m_color_stop_list);
+    builder.append(')');
+    return builder.to_string();
+}
+
+Gfx::FloatSize RadialGradientStyleValue::resolve_size(Layout::Node const& node, Gfx::FloatPoint center, Gfx::FloatRect const& size) const
+{
+    auto const side_shape = [&](auto distance_function) {
+        auto const distance_from = [&](float v, float a, float b, auto distance_function) {
+            return distance_function(fabs(a - v), fabs(b - v));
+        };
+        auto x_dist = distance_from(center.x(), size.left(), size.right(), distance_function);
+        auto y_dist = distance_from(center.y(), size.top(), size.bottom(), distance_function);
+        if (m_ending_shape == EndingShape::Circle) {
+            auto dist = distance_function(x_dist, y_dist);
+            return Gfx::FloatSize { dist, dist };
+        } else {
+            return Gfx::FloatSize { x_dist, y_dist };
+        }
+    };
+
+    auto const closest_side_shape = [&] {
+        return side_shape(AK::min<float>);
+    };
+
+    auto const farthest_side_shape = [&] {
+        return side_shape(AK::max<float>);
+    };
+
+    auto const corner_distance = [&](auto distance_compare, Gfx::FloatPoint& corner) {
+        auto top_left_distance = size.top_left().distance_from(center);
+        auto top_right_distance = size.top_right().distance_from(center);
+        auto bottom_right_distance = size.bottom_right().distance_from(center);
+        auto bottom_left_distance = size.bottom_left().distance_from(center);
+        auto distance = top_left_distance;
+        if (distance_compare(top_right_distance, distance)) {
+            corner = size.top_right();
+            distance = top_right_distance;
+        }
+        if (distance_compare(bottom_right_distance, distance)) {
+            corner = size.top_right();
+            distance = bottom_right_distance;
+        }
+        if (distance_compare(bottom_left_distance, distance)) {
+            corner = size.top_right();
+            distance = bottom_left_distance;
+        }
+        return distance;
+    };
+
+    auto const closest_corner_distance = [&](Gfx::FloatPoint& corner) {
+        return corner_distance([](float a, float b) { return a < b; }, corner);
+    };
+
+    auto const farthest_corner_distance = [&](Gfx::FloatPoint& corner) {
+        return corner_distance([](float a, float b) { return a > b; }, corner);
+    };
+
+    auto const corner_shape = [&](auto corner_distance, auto get_shape) {
+        Gfx::FloatPoint corner {};
+        auto distance = corner_distance(corner);
+        if (m_ending_shape == EndingShape::Ellipse) {
+            auto shape = get_shape();
+            auto aspect_ratio = shape.width() / shape.height();
+            auto p = corner - center;
+            auto radius_a = AK::sqrt(p.y() * p.y() * aspect_ratio * aspect_ratio + p.x() * p.x());
+            auto radius_b = radius_a / aspect_ratio;
+            return Gfx::FloatSize { radius_a, radius_b };
+        }
+        return Gfx::FloatSize { distance, distance };
+    };
+
+    // https://w3c.github.io/csswg-drafts/css-images/#radial-gradient-syntax
+    return m_size.visit(
+        [&](Extent extent) {
+            switch (extent) {
+            case Extent::ClosestSide:
+                // The ending shape is sized so that it exactly meets the side of the gradient box closest to the gradient’s center.
+                // If the shape is an ellipse, it exactly meets the closest side in each dimension.
+                return closest_side_shape();
+            case Extent::ClosestCorner:
+                // The ending shape is sized so that it passes through the corner of the gradient box closest to the gradient’s center.
+                // If the shape is an ellipse, the ending shape is given the same aspect-ratio it would have if closest-side were specified
+                return corner_shape(closest_corner_distance, closest_side_shape);
+            case Extent::FarthestCorner:
+                // Same as closest-corner, except the ending shape is sized based on the farthest corner.
+                // If the shape is an ellipse, the ending shape is given the same aspect ratio it would have if farthest-side were specified.
+                return corner_shape(farthest_corner_distance, farthest_side_shape);
+            case Extent::FarthestSide:
+                // Same as closest-side, except the ending shape is sized based on the farthest side(s).
+                return farthest_side_shape();
+            default:
+                VERIFY_NOT_REACHED();
+            }
+        },
+        [&](CircleSize const& circle_size) {
+            auto radius = circle_size.radius.to_px(node);
+            return Gfx::FloatSize { radius, radius };
+        },
+        [&](EllipseSize const& ellipse_size) {
+            auto radius_a = ellipse_size.radius_a.resolved(node, CSS::Length::make_px(size.width())).to_px(node);
+            auto radius_b = ellipse_size.radius_b.resolved(node, CSS::Length::make_px(size.height())).to_px(node);
+            return Gfx::FloatSize { radius_a, radius_b };
+        });
+}
+
+void RadialGradientStyleValue::resolve_for_size(Layout::Node const&, Gfx::FloatSize const&) const
+{
+}
+
+bool RadialGradientStyleValue::equals(StyleValue const& other) const
+{
+    if (type() != other.type())
+        return false;
+    auto& other_gradient = other.as_radial_gradient();
+    return (m_ending_shape == other_gradient.m_ending_shape
+        && variant_equals(m_size, other_gradient.m_size)
+        && m_position == other_gradient.m_position
+        && m_color_stop_list == other_gradient.m_color_stop_list);
+}
+
+void RadialGradientStyleValue::paint(PaintContext&, Gfx::IntRect const&, CSS::ImageRendering) const
+{
 }
 
 String ConicGradientStyleValue::to_string() const
