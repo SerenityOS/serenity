@@ -150,8 +150,6 @@ public:
         EBML = 0b11,
     };
 
-    Block() = default;
-
     u64 track_number() const { return m_track_number; }
     void set_track_number(u64 track_number) { m_track_number = track_number; }
     i16 timestamp() const { return m_timestamp; }
@@ -164,10 +162,11 @@ public:
     void set_lacing(Lacing lacing) { m_lacing = lacing; }
     bool discardable() const { return m_discardable; }
     void set_discardable(bool discardable) { m_discardable = discardable; }
+
+    void set_frames(Vector<ReadonlyBytes>&& frames) { m_frames = move(frames); }
+    ReadonlyBytes const& frame(size_t index) const { return frames()[index]; }
     u64 frame_count() const { return m_frames.size(); }
-    Vector<ByteBuffer> const& frames() const { return m_frames; }
-    ByteBuffer const& frame(size_t index) const { return frames()[index]; }
-    void add_frame(ByteBuffer frame) { m_frames.append(move(frame)); }
+    Vector<ReadonlyBytes> const& frames() const { return m_frames; }
 
 private:
     u64 m_track_number { 0 };
@@ -176,64 +175,16 @@ private:
     bool m_invisible { false };
     Lacing m_lacing { None };
     bool m_discardable { true };
-    Vector<ByteBuffer> m_frames;
+    Vector<ReadonlyBytes> m_frames;
 };
 
 class Cluster {
 public:
     u64 timestamp() const { return m_timestamp; }
     void set_timestamp(u64 timestamp) { m_timestamp = timestamp; }
-    NonnullOwnPtrVector<Block>& blocks() { return m_blocks; }
-    NonnullOwnPtrVector<Block> const& blocks() const { return m_blocks; }
 
 private:
-    u64 m_timestamp { 0 };
-    NonnullOwnPtrVector<Block> m_blocks;
-};
-
-class MatroskaDocument {
-public:
-    explicit MatroskaDocument(EBMLHeader m_header)
-        : m_header(move(m_header))
-    {
-    }
-
-    EBMLHeader const& header() const { return m_header; }
-
-    Optional<SegmentInformation> segment_information() const
-    {
-        if (!m_segment_information)
-            return {};
-        return *m_segment_information;
-    }
-    void set_segment_information(OwnPtr<SegmentInformation> segment_information) { m_segment_information = move(segment_information); }
-    HashMap<u64, NonnullOwnPtr<TrackEntry>> const& tracks() const { return m_tracks; }
-    Optional<TrackEntry> track_for_track_number(u64 track_number) const
-    {
-        auto track = m_tracks.get(track_number);
-        if (!track.has_value())
-            return {};
-        return *track.value();
-    }
-    Optional<TrackEntry> track_for_track_type(TrackEntry::TrackType type) const
-    {
-        for (auto& track_entry : m_tracks) {
-            if (track_entry.value->track_type() == type)
-                return *track_entry.value;
-        }
-        return {};
-    }
-    void add_track(u64 track_number, NonnullOwnPtr<TrackEntry> track)
-    {
-        m_tracks.set(track_number, move(track));
-    }
-    NonnullOwnPtrVector<Cluster>& clusters() { return m_clusters; }
-
-private:
-    EBMLHeader m_header;
-    OwnPtr<SegmentInformation> m_segment_information;
-    HashMap<u64, NonnullOwnPtr<TrackEntry>> m_tracks;
-    NonnullOwnPtrVector<Cluster> m_clusters;
+    u64 m_timestamp;
 };
 
 }

@@ -10,15 +10,15 @@ namespace Video::Matroska {
 
 DecoderErrorOr<NonnullOwnPtr<MatroskaDemuxer>> MatroskaDemuxer::from_file(StringView filename)
 {
-    return make<MatroskaDemuxer>(TRY(Reader::parse_matroska_from_file(filename)));
+    return make<MatroskaDemuxer>(TRY(Reader::from_file(filename)));
 }
 
 DecoderErrorOr<NonnullOwnPtr<MatroskaDemuxer>> MatroskaDemuxer::from_data(ReadonlyBytes data)
 {
-    return make<MatroskaDemuxer>(TRY(Reader::parse_matroska_from_data(data)));
+    return make<MatroskaDemuxer>(TRY(Reader::from_data(data)));
 }
 
-Vector<Track> MatroskaDemuxer::get_tracks_for_type(TrackType type)
+DecoderErrorOr<Vector<Track>> MatroskaDemuxer::get_tracks_for_type(TrackType type)
 {
     TrackEntry::TrackType matroska_track_type;
 
@@ -35,21 +35,20 @@ Vector<Track> MatroskaDemuxer::get_tracks_for_type(TrackType type)
     }
 
     Vector<Track> tracks;
-
-    for (auto const& track_table_entry : m_document->tracks()) {
-        auto const& track_entry = track_table_entry.value;
-        if (matroska_track_type == track_entry->track_type())
-            tracks.append(Track(type, track_entry->track_number()));
-    }
-
-    // FIXME: Sort the vector, presumably the hashtable will not have a consistent order.
+    TRY(m_reader.for_each_track_of_type(matroska_track_type, [&](TrackEntry const& track_entry) -> DecoderErrorOr<IterationDecision> {
+        VERIFY(track_entry.track_type() == matroska_track_type);
+        DECODER_TRY_ALLOC(tracks.try_append(Track(type, track_entry.track_number())));
+        return IterationDecision::Continue;
+    }));
     return tracks;
 }
 
-ErrorOr<MatroskaDemuxer::TrackStatus*> MatroskaDemuxer::get_track_status(Track track)
+DecoderErrorOr<MatroskaDemuxer::TrackStatus*> MatroskaDemuxer::get_track_status(Track track)
 {
-    if (!m_track_statuses.contains(track))
-        TRY(m_track_statuses.try_set(track, TrackStatus()));
+    if (!m_track_statuses.contains(track)) {
+        auto iterator = TRY(m_reader.create_sample_iterator(track.identifier()));
+        DECODER_TRY_ALLOC(m_track_statuses.try_set(track, { iterator }));
+    }
 
     return &m_track_statuses.get(track).release_value();
 }
@@ -57,10 +56,8 @@ ErrorOr<MatroskaDemuxer::TrackStatus*> MatroskaDemuxer::get_track_status(Track t
 DecoderErrorOr<void> MatroskaDemuxer::seek_to_most_recent_keyframe(Track track, size_t timestamp)
 {
     if (timestamp == 0) {
-        auto track_status = DECODER_TRY_ALLOC(get_track_status(track));
-        track_status->m_cluster_index = 0;
-        track_status->m_block_index = 0;
-        track_status->m_frame_index = 0;
+        // Removing the track status will cause us to start from the beginning.
+        m_track_statuses.remove(track);
         return {};
     }
 
@@ -69,41 +66,26 @@ DecoderErrorOr<void> MatroskaDemuxer::seek_to_most_recent_keyframe(Track track, 
 
 DecoderErrorOr<NonnullOwnPtr<Sample>> MatroskaDemuxer::get_next_sample_for_track(Track track)
 {
-    auto track_status = DECODER_TRY_ALLOC(get_track_status(track));
+    // FIXME: This makes a copy of the sample, which shouldn't be necessary.
+    //        Matroska should make a RefPtr<ByteBuffer>, probably.
+    auto& status = *TRY(get_track_status(track));
 
-    for (; track_status->m_cluster_index < m_document->clusters().size(); track_status->m_cluster_index++) {
-        auto const& cluster = m_document->clusters()[track_status->m_cluster_index];
-        for (; track_status->m_block_index < cluster.blocks().size(); track_status->m_block_index++) {
-            auto const& block = cluster.blocks()[track_status->m_block_index];
-            if (block.track_number() != track.identifier())
-                continue;
-            if (track_status->m_frame_index < block.frame_count()) {
-                switch (track.type()) {
-                case TrackType::Video: {
-                    // FIXME: This makes a copy of the sample, which shouldn't be necessary.
-                    //        Matroska should make a RefPtr<ByteBuffer>, probably.
-                    auto cicp = m_document->track_for_track_number(track.identifier())->video_track()->color_format.to_cicp();
-                    Time timestamp = Time::from_nanoseconds((cluster.timestamp() + block.timestamp()) * m_document->segment_information()->timestamp_scale());
-                    return make<VideoSample>(block.frame(track_status->m_frame_index++), cicp, timestamp);
-                }
-                default:
-                    return DecoderError::not_implemented();
-                }
-            }
-            track_status->m_frame_index = 0;
-        }
-        track_status->m_block_index = 0;
+    if (!status.block.has_value() || status.frame_index >= status.block->frame_count()) {
+        status.block = TRY(status.iterator.next_block());
+        status.frame_index = 0;
     }
-    return DecoderError::with_description(DecoderErrorCategory::EndOfStream, "End of stream reached."sv);
+    auto const& cluster = status.iterator.current_cluster();
+    Time timestamp = Time::from_nanoseconds((cluster.timestamp() + status.block->timestamp()) * TRY(m_reader.segment_information()).timestamp_scale());
+    auto cicp = TRY(m_reader.track_for_track_number(track.identifier())).video_track()->color_format.to_cicp();
+    return make<VideoSample>(status.block->frame(status.frame_index++), cicp, timestamp);
 }
 
-Time MatroskaDemuxer::duration()
+DecoderErrorOr<Time> MatroskaDemuxer::duration()
 {
-    if (!m_document->segment_information().has_value())
+    auto segment_information = TRY(m_reader.segment_information());
+    if (!segment_information.duration().has_value())
         return Time::zero();
-    if (!m_document->segment_information()->duration().has_value())
-        return Time::zero();
-    return Time::from_nanoseconds(m_document->segment_information()->duration().value() * m_document->segment_information()->timestamp_scale());
+    return Time::from_nanoseconds(static_cast<i64>(segment_information.duration().value() * segment_information.timestamp_scale()));
 }
 
 }

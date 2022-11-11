@@ -11,29 +11,33 @@
 
 static void decode_video(StringView path, size_t expected_frame_count)
 {
-    auto matroska_document = MUST(Video::Matroska::Reader::parse_matroska_from_file(path));
-    auto video_track_optional = matroska_document->track_for_track_type(Video::Matroska::TrackEntry::TrackType::Video);
-    VERIFY(video_track_optional.has_value());
-    auto video_track_entry = video_track_optional.value();
+    auto matroska_reader = MUST(Video::Matroska::Reader::from_file(path));
+    u64 video_track = 0;
+    MUST(matroska_reader.for_each_track_of_type(Video::Matroska::TrackEntry::TrackType::Video, [&](Video::Matroska::TrackEntry const& track_entry) -> Video::DecoderErrorOr<IterationDecision> {
+        video_track = track_entry.track_number();
+        return IterationDecision::Break;
+    }));
+    VERIFY(video_track != 0);
 
+    auto iterator = MUST(matroska_reader.create_sample_iterator(video_track));
     size_t frame_count = 0;
-    size_t cluster_index, block_index, frame_index;
     Video::VP9::Decoder vp9_decoder;
 
-    for (cluster_index = 0; cluster_index < matroska_document->clusters().size(); cluster_index++) {
-        auto const& cluster = matroska_document->clusters()[cluster_index];
-        for (block_index = 0; block_index < cluster.blocks().size(); block_index++) {
-            auto const& block = cluster.blocks()[block_index];
-            if (block.track_number() != video_track_entry.track_number())
-                continue;
+    while (frame_count <= expected_frame_count) {
+        auto block_result = iterator.next_block();
+        if (block_result.is_error() && block_result.error().category() == Video::DecoderErrorCategory::EndOfStream) {
+            VERIFY(frame_count == expected_frame_count);
+            return;
+        }
 
-            for (frame_index = 0; frame_index < block.frames().size(); frame_index++) {
-                MUST(vp9_decoder.receive_sample(block.frames()[frame_index]));
-                frame_count++;
-            }
+        auto block = block_result.release_value();
+        for (auto const& frame : block.frames()) {
+            MUST(vp9_decoder.receive_sample(frame));
+            frame_count++;
         }
     }
-    VERIFY(frame_count == expected_frame_count);
+
+    VERIFY_NOT_REACHED();
 }
 
 TEST_CASE(webm_in_vp9)
