@@ -900,8 +900,7 @@ Messages::WebDriverClient::ExecuteScriptResponse WebDriverConnection::execute_sc
     // FIXME: 3. Handle any user prompts, and return its value if it is an error.
 
     // 4., 5.1-5.3.
-    // FIXME: Move timeouts from WebDriver to WebContent and pass the script timeout through here.
-    auto result = Web::WebDriver::execute_script(m_page_host.page(), body, move(arguments), {});
+    auto result = Web::WebDriver::execute_script(m_page_host.page(), body, move(arguments), m_timeouts_configuration.script_timeout);
     dbgln_if(WEBDRIVER_DEBUG, "Executing script returned: {}", result.value);
 
     switch (result.type) {
@@ -932,8 +931,7 @@ Messages::WebDriverClient::ExecuteAsyncScriptResponse WebDriverConnection::execu
     // FIXME: 3. Handle any user prompts, and return its value if it is an error.
 
     // 4., 5.1-5.11.
-    // FIXME: Move timeouts from WebDriver to WebContent and pass the script timeout through here.
-    auto result = Web::WebDriver::execute_async_script(m_page_host.page(), body, move(arguments), {});
+    auto result = Web::WebDriver::execute_async_script(m_page_host.page(), body, move(arguments), m_timeouts_configuration.script_timeout);
     dbgln_if(WEBDRIVER_DEBUG, "Executing async script returned: {}", result.value);
 
     switch (result.type) {
