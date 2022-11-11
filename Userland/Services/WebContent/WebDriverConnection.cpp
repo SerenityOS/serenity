@@ -16,6 +16,7 @@
 #include <LibWeb/CSS/PropertyID.h>
 #include <LibWeb/CSS/StyleProperties.h>
 #include <LibWeb/CSS/StyleValue.h>
+#include <LibWeb/Cookie/Cookie.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/Geometry/DOMRect.h>
@@ -39,6 +40,22 @@ static JsonValue make_success_response(JsonValue value)
     JsonObject result;
     result.set("value", move(value));
     return result;
+}
+
+// https://w3c.github.io/webdriver/#dfn-serialized-cookie
+static JsonValue serialize_cookie(Web::Cookie::Cookie const& cookie)
+{
+    JsonObject serialized_cookie;
+    serialized_cookie.set("name"sv, cookie.name);
+    serialized_cookie.set("value"sv, cookie.value);
+    serialized_cookie.set("path"sv, cookie.path);
+    serialized_cookie.set("domain"sv, cookie.domain);
+    serialized_cookie.set("secure"sv, cookie.secure);
+    serialized_cookie.set("httpOnly"sv, cookie.http_only);
+    serialized_cookie.set("expiry"sv, cookie.expiry_time.timestamp());
+    serialized_cookie.set("sameSite"sv, Web::Cookie::same_site_to_string(cookie.same_site));
+
+    return serialized_cookie;
 }
 
 static JsonValue serialize_rect(Gfx::IntRect const& rect)
@@ -827,6 +844,32 @@ Messages::WebDriverClient::ExecuteAsyncScriptResponse WebDriverConnection::execu
     }
 
     VERIFY_NOT_REACHED();
+}
+
+// 14.1 Get All Cookies, https://w3c.github.io/webdriver/#dfn-get-all-cookies
+Messages::WebDriverClient::GetAllCookiesResponse WebDriverConnection::get_all_cookies()
+{
+    // 1. If the current browsing context is no longer open, return error with error code no such window.
+    TRY(ensure_open_top_level_browsing_context());
+
+    // FIXME: 2. Handle any user prompts, and return its value if it is an error.
+
+    // 3. Let cookies be a new JSON List.
+    JsonArray cookies;
+
+    // 4. For each cookie in all associated cookies of the current browsing context’s active document:
+    auto* document = m_page_host.page().top_level_browsing_context().active_document();
+
+    for (auto const& cookie : m_web_content_client.did_request_all_cookies(document->url())) {
+        // 1. Let serialized cookie be the result of serializing cookie.
+        auto serialized_cookie = serialize_cookie(cookie);
+
+        // 2. Append serialized cookie to cookies
+        cookies.append(move(serialized_cookie));
+    }
+
+    // 5. Return success with data cookies.
+    return make_success_response(move(cookies));
 }
 
 // 17.1 Take Screenshot, https://w3c.github.io/webdriver/#take-screenshot

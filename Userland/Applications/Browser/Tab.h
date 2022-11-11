@@ -64,6 +64,7 @@ public:
     Function<void(Tab&)> on_tab_close_request;
     Function<void(Tab&)> on_tab_close_other_request;
     Function<void(Gfx::Bitmap const&)> on_favicon_change;
+    Function<Vector<Web::Cookie::Cookie>(AK::URL const& url)> on_get_all_cookies;
     Function<String(const URL&, Web::Cookie::Source source)> on_get_cookie;
     Function<void(const URL&, Web::Cookie::ParsedCookie const& cookie, Web::Cookie::Source source)> on_set_cookie;
     Function<void()> on_dump_cookies;
