@@ -975,6 +975,21 @@ Messages::WebDriverClient::AddCookieResponse WebDriverConnection::add_cookie(Jso
     return make_success_response({});
 }
 
+// 14.4 Delete Cookie, https://w3c.github.io/webdriver/#dfn-delete-cookie
+Messages::WebDriverClient::DeleteCookieResponse WebDriverConnection::delete_cookie(String const& name)
+{
+    // 1. If the current browsing context is no longer open, return error with error code no such window.
+    TRY(ensure_open_top_level_browsing_context());
+
+    // FIXME: 2. Handle any user prompts, and return its value if it is an error.
+
+    // 3. Delete cookies using the url variable name parameter as the filter argument.
+    delete_cookies(name);
+
+    // 4. Return success with data null.
+    return make_success_response({});
+}
+
 // 17.1 Take Screenshot, https://w3c.github.io/webdriver/#take-screenshot
 Messages::WebDriverClient::TakeScreenshotResponse WebDriverConnection::take_screenshot()
 {
@@ -1136,6 +1151,25 @@ ErrorOr<WebDriverConnection::ScriptArguments, Web::WebDriver::Error> WebDriverCo
 
     // 6. Return success with data script and arguments.
     return ScriptArguments { move(script), move(arguments) };
+}
+
+// https://w3c.github.io/webdriver/#dfn-delete-cookies
+void WebDriverConnection::delete_cookies(Optional<StringView> const& name)
+{
+    // For each cookie among all associated cookies of the current browsing context’s active document, un the substeps of the first matching condition:
+    auto* document = m_page_host.page().top_level_browsing_context().active_document();
+
+    for (auto& cookie : m_web_content_client.did_request_all_cookies(document->url())) {
+        // -> name is undefined
+        // -> name is equal to cookie name
+        if (!name.has_value() || name.value() == cookie.name) {
+            // Set the cookie expiry time to a Unix timestamp in the past.
+            cookie.expiry_time = Core::DateTime::from_timestamp(0);
+            m_web_content_client.async_did_update_cookie(document->url(), cookie);
+        }
+        // -> Otherwise
+        //    Do nothing.
+    }
 }
 
 }

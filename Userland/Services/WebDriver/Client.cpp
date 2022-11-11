@@ -780,8 +780,7 @@ Web::WebDriver::Response Client::handle_delete_cookie(Vector<StringView> const& 
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling DELETE /session/<session_id>/cookie/<name>");
     auto* session = TRY(find_session_with_id(parameters[0]));
-    auto result = TRY(session->delete_cookie(parameters[1]));
-    return make_json_value(result);
+    return session->web_content_connection().delete_cookie(parameters[1]);
 }
 
 // 14.5 Delete All Cookies, https://w3c.github.io/webdriver/#dfn-delete-all-cookies

@@ -315,21 +315,6 @@ void Session::delete_cookies(Optional<StringView> const& name)
     }
 }
 
-// 14.4 Delete Cookie, https://w3c.github.io/webdriver/#dfn-delete-cookie
-Web::WebDriver::Response Session::delete_cookie(StringView name)
-{
-    // 1. If the current browsing context is no longer open, return error with error code no such window.
-    TRY(check_for_open_top_level_browsing_context_or_return_error());
-
-    // FIXME: 2. Handle any user prompts, and return its value if it is an error.
-
-    // 3. Delete cookies using the url variable name parameter as the filter argument.
-    delete_cookies(name);
-
-    // 4. Return success with data null.
-    return JsonValue();
-}
-
 // 14.5 Delete All Cookies, https://w3c.github.io/webdriver/#dfn-delete-all-cookies
 Web::WebDriver::Response Session::delete_all_cookies()
 {
