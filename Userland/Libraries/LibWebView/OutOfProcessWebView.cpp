@@ -389,6 +389,13 @@ Vector<Web::Cookie::Cookie> OutOfProcessWebView::notify_server_did_request_all_c
     return {};
 }
 
+Optional<Web::Cookie::Cookie> OutOfProcessWebView::notify_server_did_request_named_cookie(Badge<WebContentClient>, AK::URL const& url, String const& name)
+{
+    if (on_get_named_cookie)
+        return on_get_named_cookie(url, name);
+    return {};
+}
+
 String OutOfProcessWebView::notify_server_did_request_cookie(Badge<WebContentClient>, const AK::URL& url, Web::Cookie::Source source)
 {
     if (on_get_cookie)

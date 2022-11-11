@@ -37,6 +37,7 @@ endpoint WebContentClient
     did_get_dom_node_properties(i32 node_id, String specified_style, String computed_style, String custom_properties, String node_box_sizing_json) =|
     did_change_favicon(Gfx::ShareableBitmap favicon) =|
     did_request_all_cookies(URL url) => (Vector<Web::Cookie::Cookie> cookies)
+    did_request_named_cookie(URL url, String name) => (Optional<Web::Cookie::Cookie> cookie)
     did_request_cookie(URL url, u8 source) => (String cookie)
     did_set_cookie(URL url, Web::Cookie::ParsedCookie cookie, u8 source) =|
     did_update_resource_count(i32 count_waiting) =|
