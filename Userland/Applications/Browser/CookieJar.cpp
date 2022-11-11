@@ -116,6 +116,24 @@ Vector<Web::Cookie::Cookie> CookieJar::get_all_cookies() const
     return cookies;
 }
 
+// https://w3c.github.io/webdriver/#dfn-associated-cookies
+Vector<Web::Cookie::Cookie> CookieJar::get_all_cookies(URL const& url)
+{
+    auto domain = canonicalize_domain(url);
+    if (!domain.has_value())
+        return {};
+
+    auto cookie_list = get_matching_cookies(url, domain.value(), Web::Cookie::Source::Http, MatchingCookiesSpecMode::WebDriver);
+
+    Vector<Web::Cookie::Cookie> cookies;
+    cookies.ensure_capacity(cookie_list.size());
+
+    for (auto const& cookie : cookie_list)
+        cookies.unchecked_append(cookie);
+
+    return cookies;
+}
+
 Optional<String> CookieJar::canonicalize_domain(const URL& url)
 {
     // https://tools.ietf.org/html/rfc6265#section-5.1.2
@@ -281,7 +299,7 @@ void CookieJar::store_cookie(Web::Cookie::ParsedCookie const& parsed_cookie, con
     m_cookies.set(key, move(cookie));
 }
 
-Vector<Web::Cookie::Cookie&> CookieJar::get_matching_cookies(const URL& url, String const& canonicalized_domain, Web::Cookie::Source source)
+Vector<Web::Cookie::Cookie&> CookieJar::get_matching_cookies(const URL& url, String const& canonicalized_domain, Web::Cookie::Source source, MatchingCookiesSpecMode mode)
 {
     // https://tools.ietf.org/html/rfc6265#section-5.4
 
@@ -309,6 +327,12 @@ Vector<Web::Cookie::Cookie&> CookieJar::get_matching_cookies(const URL& url, Str
         // If the cookie's http-only-flag is true, then exclude the cookie if the cookie-string is being generated for a "non-HTTP" API.
         if (cookie.value.http_only && (source != Web::Cookie::Source::Http))
             continue;
+
+        // NOTE: The WebDriver spec expects only step 1 above to be executed to match cookies.
+        if (mode == MatchingCookiesSpecMode::WebDriver) {
+            cookie_list.append(cookie.value);
+            continue;
+        }
 
         // 2.  The user agent SHOULD sort the cookie-list in the following order:
         //   - Cookies with longer paths are listed before cookies with shorter paths.

@@ -351,6 +351,12 @@ Tab::Tab(BrowserWindow& window)
             on_favicon_change(icon);
     };
 
+    view().on_get_all_cookies = [this](auto& url) -> Vector<Web::Cookie::Cookie> {
+        if (on_get_all_cookies)
+            return on_get_all_cookies(url);
+        return {};
+    };
+
     view().on_get_cookie = [this](auto& url, auto source) -> String {
         if (on_get_cookie)
             return on_get_cookie(url, source);

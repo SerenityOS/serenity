@@ -313,30 +313,6 @@ static JsonObject serialize_cookie(Web::Cookie::Cookie const& cookie)
     return serialized_cookie;
 }
 
-// 14.1 Get All Cookies, https://w3c.github.io/webdriver/#dfn-get-all-cookies
-Web::WebDriver::Response Session::get_all_cookies()
-{
-    // 1. If the current browsing context is no longer open, return error with error code no such window.
-    TRY(check_for_open_top_level_browsing_context_or_return_error());
-
-    // FIXME: 2. Handle any user prompts, and return its value if it is an error.
-
-    // 3. Let cookies be a new JSON List.
-    JsonArray cookies = {};
-
-    // 4. For each cookie in all associated cookies of the current browsing context’s active document:
-    for (auto const& cookie : m_browser_connection->get_all_cookies()) {
-        // 1. Let serialized cookie be the result of serializing cookie.
-        auto serialized_cookie = serialize_cookie(cookie);
-
-        // 2. Append serialized cookie to cookies
-        cookies.append(serialized_cookie);
-    }
-
-    // 5. Return success with data cookies.
-    return JsonValue(cookies);
-}
-
 // 14.2 Get Named Cookie, https://w3c.github.io/webdriver/#dfn-get-named-cookie
 Web::WebDriver::Response Session::get_named_cookie(String const& name)
 {
