@@ -14,6 +14,8 @@
 #include <LibGUI/Widget.h>
 #include <LibGfx/ShareableBitmap.h>
 #include <LibHTTP/Job.h>
+#include <LibWeb/Cookie/Cookie.h>
+#include <LibWeb/Cookie/ParsedCookie.h>
 #include <LibWeb/Forward.h>
 
 namespace WebView {
