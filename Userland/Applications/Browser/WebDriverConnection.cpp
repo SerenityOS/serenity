@@ -69,21 +69,6 @@ Messages::WebDriverSessionClient::GetAllCookiesResponse WebDriverConnection::get
     return { {} };
 }
 
-Messages::WebDriverSessionClient::GetNamedCookieResponse WebDriverConnection::get_named_cookie(String const& name)
-{
-    dbgln_if(WEBDRIVER_DEBUG, "WebDriverConnection: get_named_cookie {}", name);
-    if (auto browser_window = m_browser_window.strong_ref()) {
-        if (browser_window->active_tab().on_get_cookies_entries) {
-            for (auto cookie : browser_window->active_tab().on_get_cookies_entries()) {
-                if (cookie.name == name)
-                    return { cookie };
-            }
-            return Optional<Web::Cookie::Cookie> {};
-        }
-    }
-    return { {} };
-}
-
 void WebDriverConnection::add_cookie(Web::Cookie::ParsedCookie const& cookie)
 {
     dbgln_if(WEBDRIVER_DEBUG, "WebDriverConnection: add_cookie {}", cookie.name);

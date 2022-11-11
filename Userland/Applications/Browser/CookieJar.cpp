@@ -134,6 +134,22 @@ Vector<Web::Cookie::Cookie> CookieJar::get_all_cookies(URL const& url)
     return cookies;
 }
 
+Optional<Web::Cookie::Cookie> CookieJar::get_named_cookie(URL const& url, String const& name)
+{
+    auto domain = canonicalize_domain(url);
+    if (!domain.has_value())
+        return {};
+
+    auto cookie_list = get_matching_cookies(url, domain.value(), Web::Cookie::Source::Http, MatchingCookiesSpecMode::WebDriver);
+
+    for (auto const& cookie : cookie_list) {
+        if (cookie.name == name)
+            return cookie;
+    }
+
+    return {};
+}
+
 Optional<String> CookieJar::canonicalize_domain(const URL& url)
 {
     // https://tools.ietf.org/html/rfc6265#section-5.1.2

@@ -32,6 +32,7 @@ public:
     void dump_cookies() const;
     Vector<Web::Cookie::Cookie> get_all_cookies() const;
     Vector<Web::Cookie::Cookie> get_all_cookies(URL const& url);
+    Optional<Web::Cookie::Cookie> get_named_cookie(URL const& url, String const& name);
 
 private:
     static Optional<String> canonicalize_domain(const URL& url);

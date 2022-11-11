@@ -357,6 +357,12 @@ Tab::Tab(BrowserWindow& window)
         return {};
     };
 
+    view().on_get_named_cookie = [this](auto& url, auto& name) -> Optional<Web::Cookie::Cookie> {
+        if (on_get_named_cookie)
+            return on_get_named_cookie(url, name);
+        return {};
+    };
+
     view().on_get_cookie = [this](auto& url, auto source) -> String {
         if (on_get_cookie)
             return on_get_cookie(url, source);

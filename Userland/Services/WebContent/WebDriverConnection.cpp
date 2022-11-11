@@ -872,6 +872,26 @@ Messages::WebDriverClient::GetAllCookiesResponse WebDriverConnection::get_all_co
     return make_success_response(move(cookies));
 }
 
+// 14.2 Get Named Cookie, https://w3c.github.io/webdriver/#dfn-get-named-cookie
+Messages::WebDriverClient::GetNamedCookieResponse WebDriverConnection::get_named_cookie(String const& name)
+{
+    // 1. If the current browsing context is no longer open, return error with error code no such window.
+    TRY(ensure_open_top_level_browsing_context());
+
+    // FIXME: 2. Handle any user prompts, and return its value if it is an error.
+
+    // 3. If the url variable name is equal to a cookie’s cookie name amongst all associated cookies of the current browsing context’s active document, return success with the serialized cookie as data.
+    auto* document = m_page_host.page().top_level_browsing_context().active_document();
+
+    if (auto cookie = m_web_content_client.did_request_named_cookie(document->url(), name); cookie.has_value()) {
+        auto serialized_cookie = serialize_cookie(*cookie);
+        return make_success_response(move(serialized_cookie));
+    }
+
+    // 4. Otherwise, return error with error code no such cookie.
+    return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::NoSuchCookie, String::formatted("Cookie '{}' not found", name));
+}
+
 // 17.1 Take Screenshot, https://w3c.github.io/webdriver/#take-screenshot
 Messages::WebDriverClient::TakeScreenshotResponse WebDriverConnection::take_screenshot()
 {

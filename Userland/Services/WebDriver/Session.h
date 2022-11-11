@@ -58,7 +58,6 @@ public:
     Web::WebDriver::Response get_window_handle();
     ErrorOr<void, Variant<Web::WebDriver::Error, Error>> close_window();
     Web::WebDriver::Response get_window_handles() const;
-    Web::WebDriver::Response get_named_cookie(String const& name);
     Web::WebDriver::Response add_cookie(JsonValue const& payload);
     Web::WebDriver::Response delete_cookie(StringView name);
     Web::WebDriver::Response delete_all_cookies();
