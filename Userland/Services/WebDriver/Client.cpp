@@ -476,8 +476,7 @@ Web::WebDriver::Response Client::handle_get_timeouts(Vector<StringView> const& p
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session id>/timeouts");
     auto* session = TRY(find_session_with_id(parameters[0]));
-    auto result = session->get_timeouts();
-    return make_json_value(result);
+    return session->web_content_connection().get_timeouts();
 }
 
 // 9.2 Set Timeouts, https://w3c.github.io/webdriver/#dfn-set-timeouts
@@ -486,8 +485,7 @@ Web::WebDriver::Response Client::handle_set_timeouts(Vector<StringView> const& p
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling POST /session/<session id>/timeouts");
     auto* session = TRY(find_session_with_id(parameters[0]));
-    auto result = TRY(session->set_timeouts(payload));
-    return make_json_value(result);
+    return session->web_content_connection().set_timeouts(payload);
 }
 
 // 10.1 Navigate To, https://w3c.github.io/webdriver/#dfn-navigate-to

@@ -14,7 +14,6 @@
 #include <LibCore/Promise.h>
 #include <LibWeb/WebDriver/Error.h>
 #include <LibWeb/WebDriver/Response.h>
-#include <LibWeb/WebDriver/TimeoutsConfiguration.h>
 #include <WebDriver/WebContentConnection.h>
 #include <unistd.h>
 
@@ -48,8 +47,6 @@ public:
 
     ErrorOr<void> start();
     Web::WebDriver::Response stop();
-    JsonObject get_timeouts();
-    Web::WebDriver::Response set_timeouts(JsonValue const& payload);
     Web::WebDriver::Response get_window_handle();
     ErrorOr<void, Variant<Web::WebDriver::Error, Error>> close_window();
     Web::WebDriver::Response get_window_handles() const;
@@ -66,9 +63,6 @@ private:
     String m_current_window_handle;
     RefPtr<WebContentConnection> m_web_content_connection;
     Optional<pid_t> m_browser_pid;
-
-    // https://w3c.github.io/webdriver/#dfn-session-script-timeout
-    Web::WebDriver::TimeoutsConfiguration m_timeouts_configuration;
 };
 
 }

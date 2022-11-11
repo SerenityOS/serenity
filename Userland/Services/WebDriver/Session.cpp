@@ -131,29 +131,6 @@ Web::WebDriver::Response Session::stop()
     return JsonValue {};
 }
 
-// 9.1 Get Timeouts, https://w3c.github.io/webdriver/#dfn-get-timeouts
-JsonObject Session::get_timeouts()
-{
-    // 1. Let timeouts be the timeouts object for session’s timeouts configuration
-    auto timeouts = Web::WebDriver::timeouts_object(m_timeouts_configuration);
-
-    // 2. Return success with data timeouts.
-    return timeouts;
-}
-
-// 9.2 Set Timeouts, https://w3c.github.io/webdriver/#dfn-set-timeouts
-Web::WebDriver::Response Session::set_timeouts(JsonValue const& payload)
-{
-    // 1. Let timeouts be the result of trying to JSON deserialize as a timeouts configuration the request’s parameters.
-    auto timeouts = TRY(Web::WebDriver::json_deserialize_as_a_timeouts_configuration(payload));
-
-    // 2. Make the session timeouts the new timeouts.
-    m_timeouts_configuration = move(timeouts);
-
-    // 3. Return success with data null.
-    return JsonValue {};
-}
-
 // 11.1 Get Window Handle, https://w3c.github.io/webdriver/#get-window-handle
 Web::WebDriver::Response Session::get_window_handle()
 {

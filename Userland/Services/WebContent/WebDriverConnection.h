@@ -14,6 +14,7 @@
 #include <LibWeb/Forward.h>
 #include <LibWeb/WebDriver/ElementLocationStrategies.h>
 #include <LibWeb/WebDriver/Response.h>
+#include <LibWeb/WebDriver/TimeoutsConfiguration.h>
 #include <WebContent/Forward.h>
 #include <WebContent/WebDriverClientEndpoint.h>
 #include <WebContent/WebDriverServerEndpoint.h>
@@ -35,6 +36,8 @@ private:
 
     virtual void close_session() override;
     virtual void set_is_webdriver_active(bool) override;
+    virtual Messages::WebDriverClient::GetTimeoutsResponse get_timeouts() override;
+    virtual Messages::WebDriverClient::SetTimeoutsResponse set_timeouts(JsonValue const& payload) override;
     virtual Messages::WebDriverClient::NavigateToResponse navigate_to(JsonValue const& payload) override;
     virtual Messages::WebDriverClient::GetCurrentUrlResponse get_current_url() override;
     virtual Messages::WebDriverClient::BackResponse back() override;
@@ -83,6 +86,9 @@ private:
 
     ConnectionFromClient& m_web_content_client;
     PageHost& m_page_host;
+
+    // https://w3c.github.io/webdriver/#dfn-session-script-timeout
+    Web::WebDriver::TimeoutsConfiguration m_timeouts_configuration;
 };
 
 }

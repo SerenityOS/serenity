@@ -3,6 +3,8 @@
 endpoint WebDriverClient {
     close_session() => ()
     set_is_webdriver_active(bool active) =|
+    get_timeouts() => (Web::WebDriver::Response response)
+    set_timeouts(JsonValue payload) => (Web::WebDriver::Response response)
     navigate_to(JsonValue payload) => (Web::WebDriver::Response response)
     get_current_url() => (Web::WebDriver::Response response)
     back() => (Web::WebDriver::Response response)
