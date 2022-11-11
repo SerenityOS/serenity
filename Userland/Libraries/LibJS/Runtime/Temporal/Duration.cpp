@@ -1236,67 +1236,64 @@ ThrowCompletionOr<RoundedDuration> round_duration(VM& vm, double years, double m
         // h. Let days be days + monthsWeeksInDays.
         days += months_weeks_in_days;
 
-        // i. Assert: days is an integer.
-        VERIFY(trunc(days) == days);
-
-        // j. Let daysDuration be ? CreateTemporalDuration(0, 0, 0, days, 0, 0, 0, 0, 0, 0).
+        // i. Let daysDuration be ? CreateTemporalDuration(0, 0, 0, days, 0, 0, 0, 0, 0, 0).
         auto* days_duration = TRY(create_temporal_duration(vm, 0, 0, 0, days, 0, 0, 0, 0, 0, 0));
 
-        // k. Let daysLater be ? CalendarDateAdd(calendar, relativeTo, daysDuration, undefined, dateAdd).
+        // j. Let daysLater be ? CalendarDateAdd(calendar, relativeTo, daysDuration, undefined, dateAdd).
         auto* days_later = TRY(calendar_date_add(vm, *calendar, relative_to, *days_duration, nullptr, date_add));
 
-        // l. Let untilOptions be OrdinaryObjectCreate(null).
+        // k. Let untilOptions be OrdinaryObjectCreate(null).
         auto* until_options = Object::create(realm, nullptr);
 
-        // m. Perform ! CreateDataPropertyOrThrow(untilOptions, "largestUnit", "year").
+        // l. Perform ! CreateDataPropertyOrThrow(untilOptions, "largestUnit", "year").
         MUST(until_options->create_data_property_or_throw(vm.names.largestUnit, js_string(vm, "year"sv)));
 
-        // n. Let timePassed be ? CalendarDateUntil(calendar, relativeTo, daysLater, untilOptions).
+        // m. Let timePassed be ? CalendarDateUntil(calendar, relativeTo, daysLater, untilOptions).
         auto* time_passed = TRY(calendar_date_until(vm, *calendar, relative_to, days_later, *until_options));
 
-        // o. Let yearsPassed be timePassed.[[Years]].
+        // n. Let yearsPassed be timePassed.[[Years]].
         auto years_passed = time_passed->years();
 
-        // p. Set years to years + yearsPassed.
+        // o. Set years to years + yearsPassed.
         years += years_passed;
 
-        // q. Let oldRelativeTo be relativeTo.
+        // p. Let oldRelativeTo be relativeTo.
         auto* old_relative_to = relative_to;
 
-        // r. Let yearsDuration be ! CreateTemporalDuration(yearsPassed, 0, 0, 0, 0, 0, 0, 0, 0, 0).
+        // q. Let yearsDuration be ! CreateTemporalDuration(yearsPassed, 0, 0, 0, 0, 0, 0, 0, 0, 0).
         years_duration = MUST(create_temporal_duration(vm, years_passed, 0, 0, 0, 0, 0, 0, 0, 0, 0));
 
-        // s. Set relativeTo to ? CalendarDateAdd(calendar, relativeTo, yearsDuration, undefined, dateAdd).
+        // r. Set relativeTo to ? CalendarDateAdd(calendar, relativeTo, yearsDuration, undefined, dateAdd).
         relative_to = TRY(calendar_date_add(vm, *calendar, relative_to, *years_duration, nullptr, date_add));
 
-        // t. Let daysPassed be DaysUntil(oldRelativeTo, relativeTo).
+        // s. Let daysPassed be DaysUntil(oldRelativeTo, relativeTo).
         auto days_passed = days_until(*old_relative_to, *relative_to);
 
-        // u. Set days to days - daysPassed.
+        // t. Set days to days - daysPassed.
         days -= days_passed;
 
-        // v. If days < 0, let sign be -1; else, let sign be 1.
+        // u. If days < 0, let sign be -1; else, let sign be 1.
         auto sign = days < 0 ? -1 : 1;
 
-        // w. Let oneYear be ! CreateTemporalDuration(sign, 0, 0, 0, 0, 0, 0, 0, 0, 0).
+        // v. Let oneYear be ! CreateTemporalDuration(sign, 0, 0, 0, 0, 0, 0, 0, 0, 0).
         auto* one_year = MUST(create_temporal_duration(vm, sign, 0, 0, 0, 0, 0, 0, 0, 0, 0));
 
-        // x. Let moveResult be ? MoveRelativeDate(calendar, relativeTo, oneYear, dateAdd).
+        // w. Let moveResult be ? MoveRelativeDate(calendar, relativeTo, oneYear, dateAdd).
         auto move_result = TRY(move_relative_date(vm, *calendar, *relative_to, *one_year, date_add));
 
-        // y. Let oneYearDays be moveResult.[[Days]].
+        // x. Let oneYearDays be moveResult.[[Days]].
         auto one_year_days = move_result.days;
 
-        // z. Let fractionalYears be years + days / abs(oneYearDays).
+        // y. Let fractionalYears be years + days / abs(oneYearDays).
         auto fractional_years = years + days / fabs(one_year_days);
 
-        // aa. Set years to RoundNumberToIncrement(fractionalYears, increment, roundingMode).
+        // z. Set years to RoundNumberToIncrement(fractionalYears, increment, roundingMode).
         years = round_number_to_increment(fractional_years, increment, rounding_mode);
 
-        // ab. Set remainder to fractionalYears - years.
+        // aa. Set remainder to fractionalYears - years.
         remainder = fractional_years - years;
 
-        // ac. Set months, weeks, and days to 0.
+        // ab. Set months, weeks, and days to 0.
         months = 0;
         weeks = 0;
         days = 0;
@@ -1530,13 +1527,10 @@ ThrowCompletionOr<RoundedDuration> round_duration(VM& vm, double years, double m
         remainder -= nanoseconds;
     }
 
-    // 19. Assert: days is an integer.
-    VERIFY(trunc(days) == days);
-
-    // 20. Let duration be ? CreateDurationRecord(years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds).
+    // 19. Let duration be ? CreateDurationRecord(years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds).
     auto duration = TRY(create_duration_record(vm, years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds));
 
-    // 21. Return the Record { [[DurationRecord]]: duration, [[Remainder]]: remainder }.
+    // 20. Return the Record { [[DurationRecord]]: duration, [[Remainder]]: remainder }.
     return RoundedDuration { .duration_record = duration, .remainder = remainder };
 }
 
