@@ -40,6 +40,7 @@ struct Cookie {
 };
 
 StringView same_site_to_string(SameSite same_site_mode);
+SameSite same_site_from_string(StringView same_site_mode);
 
 }
 
