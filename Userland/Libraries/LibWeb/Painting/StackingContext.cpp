@@ -72,7 +72,7 @@ static PaintPhase to_paint_phase(StackingContext::StackingContextPaintPhase phas
 void StackingContext::paint_descendants(PaintContext& context, Layout::Node const& box, StackingContextPaintPhase phase) const
 {
     if (auto* paintable = box.paintable())
-        paintable->before_children_paint(context, to_paint_phase(phase), Paintable::ShouldClipOverflow::Yes);
+        paintable->before_children_paint(context, to_paint_phase(phase));
 
     box.for_each_child([&](auto& child) {
         // If `child` establishes its own stacking context, skip over it.
@@ -125,7 +125,7 @@ void StackingContext::paint_descendants(PaintContext& context, Layout::Node cons
     });
 
     if (auto* paintable = box.paintable())
-        paintable->after_children_paint(context, to_paint_phase(phase), Paintable::ShouldClipOverflow::Yes);
+        paintable->after_children_paint(context, to_paint_phase(phase));
 }
 
 void StackingContext::paint_internal(PaintContext& context) const
@@ -137,13 +137,12 @@ void StackingContext::paint_internal(PaintContext& context) const
 
     auto paint_child = [&](auto* child) {
         auto parent = child->m_box.parent();
-        auto should_clip_overflow = child->m_box.is_absolutely_positioned() ? Paintable::ShouldClipOverflow::No : Paintable::ShouldClipOverflow::Yes;
         auto* paintable = parent ? parent->paintable() : nullptr;
         if (paintable)
-            paintable->before_children_paint(context, PaintPhase::Foreground, should_clip_overflow);
+            paintable->before_children_paint(context, PaintPhase::Foreground);
         child->paint(context);
         if (paintable)
-            paintable->after_children_paint(context, PaintPhase::Foreground, should_clip_overflow);
+            paintable->after_children_paint(context, PaintPhase::Foreground);
     };
 
     // Draw positioned descendants with negative z-indices (step 3)
