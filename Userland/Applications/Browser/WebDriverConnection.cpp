@@ -35,25 +35,4 @@ Messages::WebDriverSessionClient::GetTitleResponse WebDriverConnection::get_titl
     return { "" };
 }
 
-void WebDriverConnection::refresh()
-{
-    dbgln_if(WEBDRIVER_DEBUG, "WebDriverConnection: refresh");
-    if (auto browser_window = m_browser_window.strong_ref())
-        browser_window->active_tab().reload();
-}
-
-void WebDriverConnection::back()
-{
-    dbgln_if(WEBDRIVER_DEBUG, "WebDriverConnection: back");
-    if (auto browser_window = m_browser_window.strong_ref())
-        browser_window->active_tab().go_back();
-}
-
-void WebDriverConnection::forward()
-{
-    dbgln_if(WEBDRIVER_DEBUG, "WebDriverConnection: forward");
-    if (auto browser_window = m_browser_window.strong_ref())
-        browser_window->active_tab().go_forward();
-}
-
 }

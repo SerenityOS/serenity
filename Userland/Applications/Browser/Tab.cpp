@@ -236,6 +236,18 @@ Tab::Tab(BrowserWindow& window)
             m_web_content_view->inspect_dom_tree();
     };
 
+    view().on_navigate_back = [this]() {
+        go_back(1);
+    };
+
+    view().on_navigate_forward = [this]() {
+        go_forward(1);
+    };
+
+    view().on_refresh = [this]() {
+        reload();
+    };
+
     view().on_link_click = [this](auto& url, auto& target, unsigned modifiers) {
         if (target == "_blank" || modifiers == Mod_Ctrl) {
             on_tab_open_request(url);
