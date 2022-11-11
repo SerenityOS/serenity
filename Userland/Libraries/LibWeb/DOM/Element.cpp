@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include "LibWeb/Layout/LayoutState.h"
 #include <AK/AnyOf.h>
 #include <AK/Debug.h>
 #include <AK/StringBuilder.h>
@@ -1004,15 +1005,84 @@ void Element::set_scroll_top(double y)
     block_container->set_scroll_offset(scroll_offset);
 }
 
+// https://w3c.github.io/csswg-drafts/cssom-view/#dom-element-scrollwidth
 int Element::scroll_width() const
 {
-    dbgln("FIXME: Implement Element::scroll_width() (called on element: {})", debug_description());
+    // 1. Let document be the element's node document.
+    auto const& document = this->document();
+
+    // 2. If document is not the active document, return zero and terminate these steps.
+    if (!document.is_active())
+        return 0;
+
+    // 3. Let viewport width be the width of the viewport excluding the width of the scroll bar,
+    //    if any, or zero if there is no viewport.
+    auto const* browsing_context = document.browsing_context();
+    auto const viewport_width = browsing_context == nullptr ? 0 : browsing_context->viewport_rect().width();
+
+    // 4. If the element is the root element and document is not in quirks mode
+    //    return max(viewport scrolling area width, viewport width).
+    Layout::LayoutState layout_state;
+    layout_state.used_values_per_layout_node.resize(document.layout_node_count());
+    auto const* icb = document.layout_node();
+    auto const& icb_state = layout_state.get_mutable(*icb);
+
+    if (is<HTML::HTMLHtmlElement>(*this) && !document.in_quirks_mode()) {
+        return max(icb_state.overflow_data->scrollable_overflow_rect.width(), viewport_width);
+    }
+
+    // 5. If the element is the body element, document is in quirks mode
+    //    and the element is not potentially scrollable,
+    //    return max(viewport scrolling area width, viewport width).
+    if (is<HTML::HTMLBodyElement>(*this) && document.in_quirks_mode() && !this->is_potentially_scrollable())
+        return max(icb_state.overflow_data->scrollable_overflow_rect.width(), viewport_width);
+
+    // 6. If the element does not have any associated box return zero and terminate these steps.
+    if (!this->layout_node() || !is<Layout::BlockContainer>(this->layout_node()))
+        return 0;
+
+    // FIXME: 7. Return the width of the element's scrolling area.
+    //        This will require CSS overflow to be implemented.
     return 0;
 }
 
+// https://w3c.github.io/csswg-drafts/cssom-view/#dom-element-scrollheight
 int Element::scroll_height() const
 {
-    dbgln("FIXME: Implement Element::scroll_height() (called on element: {})", debug_description());
+    // 1. Let document be the element's node document.
+    auto const& document = this->document();
+
+    // 2. If document is not the active document, return zero and terminate these steps.
+    if (!document.is_active())
+        return 0;
+
+    // 3. Let viewport height be the height of the viewport excluding the height of the scroll bar,
+    //    if any, or zero if there is no viewport.
+    auto const* browsing_context = document.browsing_context();
+    auto const viewport_height = browsing_context == nullptr ? 0 : browsing_context->viewport_rect().height();
+
+    // 4. If the element is the root element and document is not in quirks mode
+    //    return max(viewport scrolling area height, viewport height).
+    Layout::LayoutState layout_state;
+    layout_state.used_values_per_layout_node.resize(document.layout_node_count());
+    auto const* icb = document.layout_node();
+    auto const& icb_state = layout_state.get_mutable(*icb);
+
+    if (is<HTML::HTMLHtmlElement>(*this) && !document.in_quirks_mode())
+        return max(icb_state.overflow_data->scrollable_overflow_rect.height(), viewport_height);
+
+    // 5. If the element is the body element, document is in quirks mode
+    //    and the element is not potentially scrollable,
+    //    return max(viewport scrolling area height, viewport height).
+    if (is<HTML::HTMLBodyElement>(*this) && document.in_quirks_mode() && !this->is_potentially_scrollable())
+        return max(icb_state.overflow_data->scrollable_overflow_rect.height(), viewport_height);
+
+    // 6. If the element does not have any associated box return zero and terminate these steps.
+    if (!this->layout_node() || !is<Layout::BlockContainer>(this->layout_node()))
+        return 0;
+
+    // FIXME: 7. Return the width of the element's scrolling area.
+    //        This will require CSS overflow to be implemented.
     return 0;
 }
 
