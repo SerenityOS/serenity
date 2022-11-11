@@ -16,6 +16,7 @@
 #include <Kernel/Process.h>
 #include <Kernel/Sections.h>
 #include <Kernel/TTY/ConsoleManagement.h>
+#include <Kernel/WorkQueue.h>
 
 namespace Kernel {
 
@@ -45,18 +46,25 @@ ErrorOr<void> SysFSPowerStateSwitchNode::truncate(u64 size)
 
 ErrorOr<size_t> SysFSPowerStateSwitchNode::write_bytes(off_t offset, size_t count, UserOrKernelBuffer const& data, OpenFileDescription*)
 {
+    TRY(Process::current().jail().with([&](auto const& my_jail) -> ErrorOr<void> {
+        // Note: If we are in a jail, don't let the current process to change the power state.
+        if (my_jail)
+            return Error::from_errno(EPERM);
+        return {};
+    }));
     if (Checked<off_t>::addition_would_overflow(offset, count))
-        return EOVERFLOW;
+        return Error::from_errno(EOVERFLOW);
     if (offset > 0)
-        return EINVAL;
+        return Error::from_errno(EINVAL);
     if (count > 1)
-        return EINVAL;
-
+        return Error::from_errno(EINVAL);
     char buf[1];
     TRY(data.read(buf, 1));
+    if (buf[0] == '0')
+        return Error::from_errno(EINVAL);
     switch (buf[0]) {
     case '0':
-        return EINVAL;
+        VERIFY_NOT_REACHED();
     case '1':
         reboot();
         VERIFY_NOT_REACHED();
@@ -64,9 +72,8 @@ ErrorOr<size_t> SysFSPowerStateSwitchNode::write_bytes(off_t offset, size_t coun
         poweroff();
         VERIFY_NOT_REACHED();
     default:
-        return EINVAL;
+        VERIFY_NOT_REACHED();
     }
-    VERIFY_NOT_REACHED();
 }
 
 void SysFSPowerStateSwitchNode::reboot()
