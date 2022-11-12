@@ -156,9 +156,11 @@ is_supported_compiler() {
     if $COMPILER --version 2>&1 | grep "Apple clang" >/dev/null; then
         return 1
     elif $COMPILER --version 2>&1 | grep "clang" >/dev/null; then
-        [ "$MAJOR_VERSION" -gt 12 ] && return 0
+        # Clang version check
+        [ "$MAJOR_VERSION" -ge 13 ] && return 0
     else
-        [ "$MAJOR_VERSION" -gt 10 ] && return 0
+        # GCC version check
+        [ "$MAJOR_VERSION" -ge 12 ] && return 0
     fi
     return 1
 }
