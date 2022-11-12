@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <AK/Assertions.h>
 #include <AK/DeprecatedString.h>
 #include <AK/DistinctNumeric.h>
 #include <AK/Function.h>
@@ -49,35 +50,46 @@ public:
     ErrorOr<void> set_priority(int priority);
     ErrorOr<int> get_priority() const;
 
+    // Only callable in the Startable state.
     void start();
+    // Only callable in the Running state.
     void detach();
 
+    // Only callable in the Running or Exited states.
     template<typename T = void>
     Result<T, ThreadError> join();
 
     DeprecatedString thread_name() const;
     pthread_t tid() const;
+    ThreadState state() const;
     bool is_started() const;
+    bool needs_to_be_joined() const;
+    bool has_exited() const;
 
 private:
     explicit Thread(Function<intptr_t()> action, StringView thread_name = {});
     Function<intptr_t()> m_action;
     pthread_t m_tid { 0 };
     DeprecatedString m_thread_name;
-    bool m_detached { false };
-    bool m_started { false };
+    Atomic<ThreadState> m_state { ThreadState::Startable };
 };
 
 template<typename T>
 Result<T, ThreadError> Thread::join()
 {
+    VERIFY(needs_to_be_joined());
+
     void* thread_return = nullptr;
     int rc = pthread_join(m_tid, &thread_return);
     if (rc != 0) {
         return ThreadError { rc };
     }
 
-    m_tid = 0;
+    // The other thread has now stopped running, so a TOCTOU bug is not possible.
+    // (If you call join from two different threads, you're doing something *very* wrong anyways.)
+    VERIFY(m_state == ThreadState::Exited);
+    m_state = ThreadState::Joined;
+
     if constexpr (IsVoid<T>)
         return {};
     else
@@ -98,7 +110,7 @@ template<>
 struct AK::Formatter<Threading::ThreadState> : AK::Formatter<FormatString> {
     ErrorOr<void> format(FormatBuilder& builder, Threading::ThreadState state)
     {
-        String name = "";
+        DeprecatedString name = "";
         switch (state) {
         case Threading::ThreadState::Detached:
             name = "Detached";
