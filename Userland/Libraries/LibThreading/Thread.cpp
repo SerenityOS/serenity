@@ -9,7 +9,9 @@
 #include <string.h>
 #include <unistd.h>
 
-Threading::Thread::Thread(Function<intptr_t()> action, StringView thread_name)
+namespace Threading {
+
+Thread::Thread(Function<intptr_t()> action, StringView thread_name)
     : Core::Object(nullptr)
     , m_action(move(action))
     , m_thread_name(thread_name.is_null() ? ""sv : thread_name)
@@ -21,7 +23,7 @@ Threading::Thread::Thread(Function<intptr_t()> action, StringView thread_name)
 #endif
 }
 
-Threading::Thread::~Thread()
+Thread::~Thread()
 {
     if (m_tid && !m_detached) {
         dbgln("Destroying thread \"{}\"({}) while it is still running!", m_thread_name, m_tid);
@@ -29,7 +31,7 @@ Threading::Thread::~Thread()
     }
 }
 
-ErrorOr<void> Threading::Thread::set_priority(int priority)
+ErrorOr<void> Thread::set_priority(int priority)
 {
     // MacOS has an extra __opaque field, so list initialization will not compile on MacOS Lagom.
     sched_param scheduling_parameters {};
@@ -40,7 +42,7 @@ ErrorOr<void> Threading::Thread::set_priority(int priority)
     return {};
 }
 
-ErrorOr<int> Threading::Thread::get_priority() const
+ErrorOr<int> Thread::get_priority() const
 {
     sched_param scheduling_parameters {};
     int policy;
@@ -50,7 +52,7 @@ ErrorOr<int> Threading::Thread::get_priority() const
     return scheduling_parameters.sched_priority;
 }
 
-void Threading::Thread::start()
+void Thread::start()
 {
     int rc = pthread_create(
         &m_tid,
@@ -74,7 +76,7 @@ void Threading::Thread::start()
     m_started = true;
 }
 
-void Threading::Thread::detach()
+void Thread::detach()
 {
     VERIFY(!m_detached);
 
@@ -82,4 +84,6 @@ void Threading::Thread::detach()
     VERIFY(rc == 0);
 
     m_detached = true;
+}
+
 }
