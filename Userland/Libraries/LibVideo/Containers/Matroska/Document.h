@@ -12,6 +12,7 @@
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/OwnPtr.h>
 #include <AK/String.h>
+#include <AK/Time.h>
 #include <AK/Utf8View.h>
 #include <LibVideo/Color/CodingIndependentCodePoints.h>
 
@@ -152,8 +153,8 @@ public:
 
     u64 track_number() const { return m_track_number; }
     void set_track_number(u64 track_number) { m_track_number = track_number; }
-    i16 timestamp() const { return m_timestamp; }
-    void set_timestamp(i16 timestamp) { m_timestamp = timestamp; }
+    Time timestamp() const { return m_timestamp; }
+    void set_timestamp(Time timestamp) { m_timestamp = timestamp; }
     bool only_keyframes() const { return m_only_keyframes; }
     void set_only_keyframes(bool only_keyframes) { m_only_keyframes = only_keyframes; }
     bool invisible() const { return m_invisible; }
@@ -170,7 +171,7 @@ public:
 
 private:
     u64 m_track_number { 0 };
-    i16 m_timestamp { 0 };
+    Time m_timestamp { Time::zero() };
     bool m_only_keyframes { false };
     bool m_invisible { false };
     Lacing m_lacing { None };
@@ -180,11 +181,11 @@ private:
 
 class Cluster {
 public:
-    u64 timestamp() const { return m_timestamp; }
-    void set_timestamp(u64 timestamp) { m_timestamp = timestamp; }
+    Time timestamp() const { return m_timestamp; }
+    void set_timestamp(Time timestamp) { m_timestamp = timestamp; }
 
 private:
-    u64 m_timestamp;
+    Time m_timestamp { Time::zero() };
 };
 
 }

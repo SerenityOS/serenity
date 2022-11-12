@@ -487,7 +487,7 @@ constexpr size_t get_element_id_size(u32 element_id)
     return sizeof(element_id) - (count_leading_zeroes(element_id) / 8);
 }
 
-static DecoderErrorOr<Cluster> parse_cluster(Streamer& streamer)
+static DecoderErrorOr<Cluster> parse_cluster(Streamer& streamer, u64 timestamp_scale)
 {
     Optional<u64> timestamp;
     size_t first_element_position = 0;
@@ -516,11 +516,11 @@ static DecoderErrorOr<Cluster> parse_cluster(Streamer& streamer)
     TRY_READ(streamer.seek_to_position(first_element_position));
 
     Cluster cluster;
-    cluster.set_timestamp(timestamp.release_value());
+    cluster.set_timestamp(Time::from_nanoseconds(timestamp.release_value() * timestamp_scale));
     return cluster;
 }
 
-static DecoderErrorOr<Block> parse_simple_block(Streamer& streamer)
+static DecoderErrorOr<Block> parse_simple_block(Streamer& streamer, Time cluster_timestamp, u64 timestamp_scale)
 {
     Block block;
 
@@ -529,7 +529,7 @@ static DecoderErrorOr<Block> parse_simple_block(Streamer& streamer)
     auto position_before_track_number = streamer.position();
     block.set_track_number(TRY_READ(streamer.read_variable_size_integer()));
 
-    block.set_timestamp(TRY_READ(streamer.read_i16()));
+    block.set_timestamp(cluster_timestamp + Time::from_nanoseconds(TRY_READ(streamer.read_i16()) * timestamp_scale));
 
     auto flags = TRY_READ(streamer.read_octet());
     block.set_only_keyframes((flags & (1u << 7u)) != 0);
@@ -627,10 +627,10 @@ DecoderErrorOr<Block> SampleIterator::next_block()
 
         if (element_id == CLUSTER_ELEMENT_ID) {
             dbgln_if(MATROSKA_DEBUG, "  Iterator is parsing new cluster.");
-            m_current_cluster = TRY(parse_cluster(streamer));
+            m_current_cluster = TRY(parse_cluster(streamer, m_timestamp_scale));
         } else if (element_id == SIMPLE_BLOCK_ID) {
             dbgln_if(MATROSKA_TRACE_DEBUG, "  Iterator is parsing new block.");
-            auto candidate_block = TRY(parse_simple_block(streamer));
+            auto candidate_block = TRY(parse_simple_block(streamer, m_current_cluster->timestamp(), m_timestamp_scale));
             if (candidate_block.track_number() == m_track_id)
                 block = move(candidate_block);
         } else {
