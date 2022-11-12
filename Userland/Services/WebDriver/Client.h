@@ -95,29 +95,6 @@ private:
     ErrorOr<NonnullOwnPtr<Session>, Web::WebDriver::Error> take_session_with_id(StringView session_id);
     JsonValue make_json_value(JsonValue const&);
 
-    template<typename T>
-    static ErrorOr<T, Web::WebDriver::Error> unwrap_result(ErrorOr<T, Variant<Web::WebDriver::Error, Error>> result)
-    {
-        if (result.is_error()) {
-            Variant<Web::WebDriver::Error, Error> error = result.release_error();
-            if (error.has<Web::WebDriver::Error>())
-                return error.get<Web::WebDriver::Error>();
-            return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::UnsupportedOperation, error.get<Error>().string_literal());
-        }
-
-        return result.release_value();
-    }
-    static ErrorOr<void, Web::WebDriver::Error> unwrap_result(ErrorOr<void, Variant<Web::WebDriver::Error, Error>> result)
-    {
-        if (result.is_error()) {
-            Variant<Web::WebDriver::Error, Error> error = result.release_error();
-            if (error.has<Web::WebDriver::Error>())
-                return error.get<Web::WebDriver::Error>();
-            return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::UnsupportedOperation, error.get<Error>().string_literal());
-        }
-        return {};
-    }
-
     NonnullOwnPtr<Core::Stream::BufferedTCPSocket> m_socket;
     static Vector<Route> s_routes;
     String m_prefix = "/";

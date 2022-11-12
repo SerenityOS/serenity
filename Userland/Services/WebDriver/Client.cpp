@@ -559,8 +559,8 @@ Web::WebDriver::Response Client::handle_close_window(Vector<StringView> const& p
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling DELETE /session/<session_id>/window");
     auto* session = TRY(find_session_with_id(parameters[0]));
-    TRY(unwrap_result(session->close_window()));
-    return make_json_value(JsonValue());
+    auto result = TRY(session->close_window());
+    return make_json_value(result);
 }
 
 // 11.4 Get Window Handles, https://w3c.github.io/webdriver/#dfn-get-window-handles

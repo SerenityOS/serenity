@@ -48,7 +48,7 @@ public:
     ErrorOr<void> start();
     Web::WebDriver::Response stop();
     Web::WebDriver::Response get_window_handle();
-    ErrorOr<void, Variant<Web::WebDriver::Error, Error>> close_window();
+    Web::WebDriver::Response close_window();
     Web::WebDriver::Response get_window_handles() const;
     Web::WebDriver::Response take_element_screenshot(StringView element_id);
 
