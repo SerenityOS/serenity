@@ -63,3 +63,11 @@ Result<T, ThreadError> Thread::join()
 }
 
 }
+
+template<>
+struct AK::Formatter<Threading::Thread> : AK::Formatter<FormatString> {
+    ErrorOr<void> format(FormatBuilder& builder, Threading::Thread const& thread)
+    {
+        return Formatter<FormatString>::format(builder, "Thread \"{}\"({})"sv, thread.thread_name(), thread.tid());
+    }
+};
