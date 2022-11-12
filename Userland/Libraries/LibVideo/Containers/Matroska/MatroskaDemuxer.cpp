@@ -72,10 +72,8 @@ DecoderErrorOr<NonnullOwnPtr<Sample>> MatroskaDemuxer::get_next_sample_for_track
         status.block = TRY(status.iterator.next_block());
         status.frame_index = 0;
     }
-    auto const& cluster = status.iterator.current_cluster();
-    Time timestamp = Time::from_nanoseconds((cluster.timestamp() + status.block->timestamp()) * TRY(m_reader.segment_information()).timestamp_scale());
     auto cicp = TRY(m_reader.track_for_track_number(track.identifier())).video_track()->color_format.to_cicp();
-    return make<VideoSample>(status.block->frame(status.frame_index++), cicp, timestamp);
+    return make<VideoSample>(status.block->frame(status.frame_index++), cicp, status.block->timestamp());
 }
 
 DecoderErrorOr<Time> MatroskaDemuxer::duration()

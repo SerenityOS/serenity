@@ -56,7 +56,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
                 return block_result.release_error();
             }
             auto block = block_result.release_value();
-            outln("\t\tBlock at timestamp {}:", iterator.current_cluster().timestamp() + block.timestamp());
+            outln("\t\tBlock at timestamp {}ms:", block.timestamp().to_milliseconds());
             outln("\t\t\tContains {} frames", block.frame_count());
             outln("\t\t\tLacing is {}", static_cast<u8>(block.lacing()));
         }
