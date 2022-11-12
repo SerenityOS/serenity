@@ -23,6 +23,7 @@ stdenv.mkDerivation {
   buildInputs = [
     # Example Run-time Additional Dependencies
     openssl
+    libxcrypt
     xlibsWrapper
     qemu
     e2fsprogs
