@@ -142,23 +142,22 @@ Web::WebDriver::Response Session::get_window_handle()
 }
 
 // 11.2 Close Window, https://w3c.github.io/webdriver/#dfn-close-window
-ErrorOr<void, Variant<Web::WebDriver::Error, Error>> Session::close_window()
+Web::WebDriver::Response Session::close_window()
 {
     // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
     TRY(check_for_open_top_level_browsing_context_or_return_error());
 
-    // 2. Close the current top-level browsing context.
+    // FIXME: 2. Handle any user prompts and return its value if it is an error.
+
+    // 3. Close the current top-level browsing context.
     m_windows.remove(m_current_window_handle);
 
-    // 3. If there are no more open top-level browsing contexts, then close the session.
-    if (m_windows.is_empty()) {
-        auto result = stop();
-        if (result.is_error()) {
-            return Variant<Web::WebDriver::Error, Error>(result.release_error());
-        }
-    }
+    // 4. If there are no more open top-level browsing contexts, then close the session.
+    if (m_windows.is_empty())
+        TRY(stop());
 
-    return {};
+    // 5. Return the result of running the remote end steps for the Get Window Handles command.
+    return get_window_handles();
 }
 
 // 11.4 Get Window Handles, https://w3c.github.io/webdriver/#dfn-get-window-handles
