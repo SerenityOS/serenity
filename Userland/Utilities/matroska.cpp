@@ -36,6 +36,8 @@ ErrorOr<int> serenity_main(Main::Arguments)
         outln("\tTrack has TrackType {}", static_cast<u8>(track_entry.track_type()));
         outln("\tTrack has Language \"{}\"", track_entry.language().characters());
         outln("\tTrack has CodecID \"{}\"", track_entry.codec_id().characters());
+        outln("\tTrack has TrackTimestampScale {}", track_entry.timestamp_scale());
+        outln("\tTrack has CodecDelay {}", track_entry.codec_delay());
 
         if (track_entry.track_type() == Video::Matroska::TrackEntry::TrackType::Video) {
             auto const video_track = track_entry.video_track().value();

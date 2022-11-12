@@ -80,12 +80,12 @@ public:
 private:
     friend class Reader;
 
-    SampleIterator(RefPtr<Core::MappedFile> file, ReadonlyBytes data, u64 track_id, size_t position, u64 timestamp_scale)
+    SampleIterator(RefPtr<Core::MappedFile> file, ReadonlyBytes data, TrackEntry track, u64 timestamp_scale, size_t position)
         : m_file(move(file))
         , m_data(data)
-        , m_track_id(track_id)
+        , m_track(move(track))
+        , m_segment_timestamp_scale(timestamp_scale)
         , m_position(position)
-        , m_timestamp_scale(timestamp_scale)
     {
     }
 
@@ -93,12 +93,12 @@ private:
 
     RefPtr<Core::MappedFile> m_file;
     ReadonlyBytes m_data;
-    u64 m_track_id;
+    TrackEntry m_track;
+    u64 m_segment_timestamp_scale { 0 };
 
     // Must always point to an element ID or the end of the stream.
     size_t m_position { 0 };
 
-    u64 m_timestamp_scale { 0 };
     Time m_last_timestamp { Time::min() };
 
     Optional<Cluster> m_current_cluster;
