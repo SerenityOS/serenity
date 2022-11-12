@@ -28,6 +28,8 @@ protected:
     virtual ErrorOr<void> refresh_data(OpenFileDescription&) const override;
     virtual ErrorOr<void> try_generate(KBufferBuilder&) = 0;
 
+    virtual bool is_readable_by_jailed_processes() const { return false; }
+
     mutable Mutex m_refresh_lock;
 };
 
