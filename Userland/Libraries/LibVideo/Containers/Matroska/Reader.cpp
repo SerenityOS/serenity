@@ -599,11 +599,62 @@ DecoderErrorOr<SampleIterator> Reader::create_sample_iterator(u64 track_number)
     return SampleIterator(this->m_mapped_file, segment_view, track_number, position, TRY(segment_information()).timestamp_scale());
 }
 
+static DecoderErrorOr<bool> find_keyframe_before_timestamp(SampleIterator& iterator, Time const& timestamp)
+{
+#if MATROSKA_DEBUG
+    size_t inter_frames_count;
+#endif
+    Optional<SampleIterator> last_keyframe;
+
+    while (true) {
+        SampleIterator rewind_iterator = iterator;
+        auto block = TRY(iterator.next_block());
+
+        if (block.only_keyframes()) {
+            last_keyframe.emplace(rewind_iterator);
+#if MATROSKA_DEBUG
+            inter_frames_count = 0;
+#endif
+        }
+
+        if (block.timestamp() > timestamp)
+            break;
+
+#if MATROSKA_DEBUG
+        inter_frames_count++;
+#endif
+    }
+
+    if (last_keyframe.has_value()) {
+#if MATROSKA_DEBUG
+        dbgln("Seeked to a keyframe with {} inter frames to skip", inter_frames_count);
+#endif
+        iterator = last_keyframe.release_value();
+        return true;
+    }
+
+    return false;
+}
+
 DecoderErrorOr<void> Reader::seek_to_random_access_point(SampleIterator& iterator, Time timestamp)
 {
-    (void)iterator;
-    (void)timestamp;
-    return DecoderError::not_implemented();
+    // FIXME: Use Cues to look these up if the element is present.
+
+    // FIXME: This could cache the keyframes it finds. Is it worth doing? Probably not, most files will have Cues :^)
+    if (timestamp < iterator.last_timestamp() || iterator.last_timestamp().is_negative()) {
+        // If the timestamp is before the iterator's current position, then we need to start from the beginning of the Segment.
+        iterator = TRY(create_sample_iterator(iterator.m_track_id));
+        if (!TRY(find_keyframe_before_timestamp(iterator, timestamp)))
+            return DecoderError::corrupted("No random access points found"sv);
+
+        return {};
+    }
+
+    auto seeked_iterator = iterator;
+    if (TRY(find_keyframe_before_timestamp(seeked_iterator, timestamp)))
+        iterator = seeked_iterator;
+    VERIFY(iterator.last_timestamp() <= timestamp);
+    return {};
 }
 
 DecoderErrorOr<Block> SampleIterator::next_block()
@@ -639,8 +690,10 @@ DecoderErrorOr<Block> SampleIterator::next_block()
         }
 
         m_position = streamer.position();
-        if (block.has_value())
+        if (block.has_value()) {
+            m_last_timestamp = block->timestamp();
             return block.release_value();
+        }
     }
 
     m_current_cluster.clear();

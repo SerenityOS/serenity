@@ -75,6 +75,7 @@ class SampleIterator {
 public:
     DecoderErrorOr<Block> next_block();
     Cluster const& current_cluster() { return *m_current_cluster; }
+    Time const& last_timestamp() { return m_last_timestamp; }
 
 private:
     friend class Reader;
@@ -98,6 +99,7 @@ private:
     size_t m_position { 0 };
 
     u64 m_timestamp_scale { 0 };
+    Time m_last_timestamp { Time::min() };
 
     Optional<Cluster> m_current_cluster;
 };
