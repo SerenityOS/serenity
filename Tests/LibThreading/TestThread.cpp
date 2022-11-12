@@ -8,9 +8,6 @@
 #include <LibThreading/Thread.h>
 #include <unistd.h>
 
-// FIXME: Enable these tests once they work reliably.
-
-#if 0
 TEST_CASE(threads_can_detach)
 {
     int should_be_42 = 0;
@@ -29,10 +26,32 @@ TEST_CASE(threads_can_detach)
 
 TEST_CASE(joining_detached_thread_errors)
 {
-    auto thread = Threading::Thread::construct([]() { return 0; });
+    Atomic<bool> should_exit { false };
+    auto thread = Threading::Thread::construct([&]() {
+        while (!should_exit.load())
+            usleep(10 * 1000);
+        return 0;
+    });
     thread->start();
     thread->detach();
 
-    EXPECT(thread->join().is_error());
+    // Because of how the crash test forks and removes the thread, we can't use that to verify that join() crashes. Instead, we check the join crash condition ourselves.
+    EXPECT(!thread->needs_to_be_joined());
+
+    // FIXME: Dropping a running thread crashes because of the Function destructor. For now, force the detached thread to exit.
+    should_exit.store(true);
+    usleep(20 * 1000);
 }
-#endif
+
+TEST_CASE(join_dead_thread)
+{
+    auto thread = Threading::Thread::construct([&]() { return 0 /*nullptr*/; });
+    thread->start();
+    // The thread should have exited by then.
+    usleep(40 * 1000);
+
+    auto join_result = thread->join<int*>();
+
+    EXPECT(!join_result.is_error());
+    EXPECT_EQ(join_result.value(), static_cast<int*>(0));
+}
