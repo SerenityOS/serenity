@@ -67,59 +67,40 @@ DecoderErrorOr<NonnullOwnPtr<MatroskaDocument>> Reader::parse_matroska_from_data
     return reader.parse();
 }
 
-DecoderErrorOr<NonnullOwnPtr<MatroskaDocument>> Reader::parse()
+static DecoderErrorOr<void> parse_master_element(Streamer& streamer, [[maybe_unused]] StringView element_name, Function<DecoderErrorOr<void>(u64)> element_consumer)
 {
-    auto first_element_id = TRY_READ(m_streamer.read_variable_size_integer(false));
-    dbgln_if(MATROSKA_TRACE_DEBUG, "First element ID is {:#010x}\n", first_element_id);
-    if (first_element_id != EBML_MASTER_ELEMENT_ID)
-        return DecoderError::corrupted("First element was not an EBML header"sv);
-
-    auto header = TRY(parse_ebml_header());
-    dbgln_if(MATROSKA_DEBUG, "Parsed EBML header");
-
-    auto root_element_id = TRY_READ(m_streamer.read_variable_size_integer(false));
-    if (root_element_id != SEGMENT_ELEMENT_ID)
-        return DecoderError::corrupted("Second element was not a segment element"sv);
-
-    auto matroska_document = make<MatroskaDocument>(header);
-    TRY(parse_segment_elements(*matroska_document));
-    return matroska_document;
-}
-
-DecoderErrorOr<void> Reader::parse_master_element([[maybe_unused]] StringView element_name, Function<DecoderErrorOr<void>(u64)> element_consumer)
-{
-    auto element_data_size = TRY_READ(m_streamer.read_variable_size_integer());
+    auto element_data_size = TRY_READ(streamer.read_variable_size_integer());
     dbgln_if(MATROSKA_DEBUG, "{} has {} octets of data.", element_name, element_data_size);
 
-    m_streamer.push_octets_read();
-    while (m_streamer.octets_read() < element_data_size) {
+    streamer.push_octets_read();
+    while (streamer.octets_read() < element_data_size) {
         dbgln_if(MATROSKA_TRACE_DEBUG, "====== Reading  element ======");
-        auto element_id = TRY_READ(m_streamer.read_variable_size_integer(false));
+        auto element_id = TRY_READ(streamer.read_variable_size_integer(false));
         dbgln_if(MATROSKA_TRACE_DEBUG, "{:s} element ID is {:#010x}\n", element_name, element_id);
 
         TRY(element_consumer(element_id));
-        dbgln_if(MATROSKA_TRACE_DEBUG, "Read {} octets of the {} so far.", m_streamer.octets_read(), element_name);
+        dbgln_if(MATROSKA_TRACE_DEBUG, "Read {} octets of the {} so far.", streamer.octets_read(), element_name);
     }
-    m_streamer.pop_octets_read();
+    streamer.pop_octets_read();
 
     return {};
 }
 
-DecoderErrorOr<EBMLHeader> Reader::parse_ebml_header()
+static DecoderErrorOr<EBMLHeader> parse_ebml_header(Streamer& streamer)
 {
     EBMLHeader header;
-    TRY(parse_master_element("Header"sv, [&](u64 element_id) -> DecoderErrorOr<void> {
+    TRY(parse_master_element(streamer, "Header"sv, [&](u64 element_id) -> DecoderErrorOr<void> {
         switch (element_id) {
         case DOCTYPE_ELEMENT_ID:
-            header.doc_type = TRY_READ(m_streamer.read_string());
+            header.doc_type = TRY_READ(streamer.read_string());
             dbgln_if(MATROSKA_DEBUG, "Read DocType attribute: {}", header.doc_type);
             break;
         case DOCTYPE_VERSION_ELEMENT_ID:
-            header.doc_type_version = TRY_READ(m_streamer.read_u64());
+            header.doc_type_version = TRY_READ(streamer.read_u64());
             dbgln_if(MATROSKA_DEBUG, "Read DocTypeVersion attribute: {}", header.doc_type_version);
             break;
         default:
-            TRY_READ(m_streamer.read_unknown_element());
+            TRY_READ(streamer.read_unknown_element());
         }
 
         return {};
@@ -128,51 +109,74 @@ DecoderErrorOr<EBMLHeader> Reader::parse_ebml_header()
     return header;
 }
 
-DecoderErrorOr<void> Reader::parse_segment_elements(MatroskaDocument& matroska_document)
+static DecoderErrorOr<NonnullOwnPtr<SegmentInformation>> parse_information(Streamer& streamer);
+static DecoderErrorOr<void> parse_tracks(Streamer& streamer, MatroskaDocument& matroska_document);
+static DecoderErrorOr<NonnullOwnPtr<Cluster>> parse_cluster(Streamer& streamer);
+
+static DecoderErrorOr<void> parse_segment_elements(Streamer& streamer, MatroskaDocument& matroska_document)
 {
     dbgln_if(MATROSKA_DEBUG, "Parsing segment elements");
-    return parse_master_element("Segment"sv, [&](u64 element_id) -> DecoderErrorOr<void> {
+    return parse_master_element(streamer, "Segment"sv, [&](u64 element_id) -> DecoderErrorOr<void> {
         switch (element_id) {
         case SEGMENT_INFORMATION_ELEMENT_ID:
-            matroska_document.set_segment_information(TRY(parse_information()));
+            matroska_document.set_segment_information(TRY(parse_information(streamer)));
             break;
         case TRACK_ELEMENT_ID:
-            TRY(parse_tracks(matroska_document));
+            TRY(parse_tracks(streamer, matroska_document));
             break;
         case CLUSTER_ELEMENT_ID:
-            matroska_document.clusters().append(TRY(parse_cluster()));
+            matroska_document.clusters().append(TRY(parse_cluster(streamer)));
             break;
         default:
-            TRY_READ(m_streamer.read_unknown_element());
+            TRY_READ(streamer.read_unknown_element());
         }
 
         return {};
     });
 }
 
-DecoderErrorOr<NonnullOwnPtr<SegmentInformation>> Reader::parse_information()
+DecoderErrorOr<NonnullOwnPtr<MatroskaDocument>> Reader::parse()
+{
+    auto first_element_id = TRY_READ(m_streamer.read_variable_size_integer(false));
+    dbgln_if(MATROSKA_TRACE_DEBUG, "First element ID is {:#010x}\n", first_element_id);
+    if (first_element_id != EBML_MASTER_ELEMENT_ID)
+        return DecoderError::corrupted("First element was not an EBML header"sv);
+
+    auto header = TRY(parse_ebml_header(m_streamer));
+    dbgln_if(MATROSKA_DEBUG, "Parsed EBML header");
+
+    auto root_element_id = TRY_READ(m_streamer.read_variable_size_integer(false));
+    if (root_element_id != SEGMENT_ELEMENT_ID)
+        return DecoderError::corrupted("Second element was not a segment element"sv);
+
+    auto matroska_document = make<MatroskaDocument>(header);
+    TRY(parse_segment_elements(m_streamer, *matroska_document));
+    return matroska_document;
+}
+
+static DecoderErrorOr<NonnullOwnPtr<SegmentInformation>> parse_information(Streamer& streamer)
 {
     auto segment_information = make<SegmentInformation>();
-    TRY(parse_master_element("Segment Information"sv, [&](u64 element_id) -> DecoderErrorOr<void> {
+    TRY(parse_master_element(streamer, "Segment Information"sv, [&](u64 element_id) -> DecoderErrorOr<void> {
         switch (element_id) {
         case TIMESTAMP_SCALE_ID:
-            segment_information->set_timestamp_scale(TRY_READ(m_streamer.read_u64()));
+            segment_information->set_timestamp_scale(TRY_READ(streamer.read_u64()));
             dbgln_if(MATROSKA_DEBUG, "Read TimestampScale attribute: {}", segment_information->timestamp_scale());
             break;
         case MUXING_APP_ID:
-            segment_information->set_muxing_app(TRY_READ(m_streamer.read_string()));
+            segment_information->set_muxing_app(TRY_READ(streamer.read_string()));
             dbgln_if(MATROSKA_DEBUG, "Read MuxingApp attribute: {}", segment_information->muxing_app().as_string());
             break;
         case WRITING_APP_ID:
-            segment_information->set_writing_app(TRY_READ(m_streamer.read_string()));
+            segment_information->set_writing_app(TRY_READ(streamer.read_string()));
             dbgln_if(MATROSKA_DEBUG, "Read WritingApp attribute: {}", segment_information->writing_app().as_string());
             break;
         case DURATION_ID:
-            segment_information->set_duration(TRY_READ(m_streamer.read_float()));
+            segment_information->set_duration(TRY_READ(streamer.read_float()));
             dbgln_if(MATROSKA_DEBUG, "Read Duration attribute: {}", segment_information->duration().value());
             break;
         default:
-            TRY_READ(m_streamer.read_unknown_element());
+            TRY_READ(streamer.read_unknown_element());
         }
 
         return {};
@@ -181,88 +185,30 @@ DecoderErrorOr<NonnullOwnPtr<SegmentInformation>> Reader::parse_information()
     return segment_information;
 }
 
-DecoderErrorOr<void> Reader::parse_tracks(MatroskaDocument& matroska_document)
-{
-    return parse_master_element("Tracks"sv, [&](u64 element_id) -> DecoderErrorOr<void> {
-        if (element_id == TRACK_ENTRY_ID) {
-            dbgln_if(MATROSKA_DEBUG, "Parsing track");
-            auto track_entry = TRY(parse_track_entry());
-            auto track_number = track_entry->track_number();
-            dbgln_if(MATROSKA_DEBUG, "Adding track {} to document", track_number);
-            matroska_document.add_track(track_number, track_entry.release_nonnull<TrackEntry>());
-        } else {
-            TRY_READ(m_streamer.read_unknown_element());
-        }
-
-        return {};
-    });
-}
-
-DecoderErrorOr<NonnullOwnPtr<TrackEntry>> Reader::parse_track_entry()
-{
-    auto track_entry = make<TrackEntry>();
-    TRY(parse_master_element("Track"sv, [&](u64 element_id) -> DecoderErrorOr<void> {
-        switch (element_id) {
-        case TRACK_NUMBER_ID:
-            track_entry->set_track_number(TRY_READ(m_streamer.read_u64()));
-            dbgln_if(MATROSKA_TRACE_DEBUG, "Read TrackNumber attribute: {}", track_entry->track_number());
-            break;
-        case TRACK_UID_ID:
-            track_entry->set_track_uid(TRY_READ(m_streamer.read_u64()));
-            dbgln_if(MATROSKA_TRACE_DEBUG, "Read TrackUID attribute: {}", track_entry->track_uid());
-            break;
-        case TRACK_TYPE_ID:
-            track_entry->set_track_type(static_cast<TrackEntry::TrackType>(TRY_READ(m_streamer.read_u64())));
-            dbgln_if(MATROSKA_TRACE_DEBUG, "Read TrackType attribute: {}", track_entry->track_type());
-            break;
-        case TRACK_LANGUAGE_ID:
-            track_entry->set_language(TRY_READ(m_streamer.read_string()));
-            dbgln_if(MATROSKA_TRACE_DEBUG, "Read Track's Language attribute: {}", track_entry->language());
-            break;
-        case TRACK_CODEC_ID:
-            track_entry->set_codec_id(TRY_READ(m_streamer.read_string()));
-            dbgln_if(MATROSKA_TRACE_DEBUG, "Read Track's CodecID attribute: {}", track_entry->codec_id());
-            break;
-        case TRACK_VIDEO_ID:
-            track_entry->set_video_track(TRY(parse_video_track_information()));
-            break;
-        case TRACK_AUDIO_ID:
-            track_entry->set_audio_track(TRY(parse_audio_track_information()));
-            break;
-        default:
-            TRY_READ(m_streamer.read_unknown_element());
-        }
-
-        return {};
-    }));
-
-    return track_entry;
-}
-
-DecoderErrorOr<TrackEntry::ColorFormat> Reader::parse_video_color_information()
+static DecoderErrorOr<TrackEntry::ColorFormat> parse_video_color_information(Streamer& streamer)
 {
     TrackEntry::ColorFormat color_format {};
 
-    TRY(parse_master_element("Colour"sv, [&](u64 element_id) -> DecoderErrorOr<void> {
+    TRY(parse_master_element(streamer, "Colour"sv, [&](u64 element_id) -> DecoderErrorOr<void> {
         switch (element_id) {
         case PRIMARIES_ID:
-            color_format.color_primaries = static_cast<ColorPrimaries>(TRY_READ(m_streamer.read_u64()));
+            color_format.color_primaries = static_cast<ColorPrimaries>(TRY_READ(streamer.read_u64()));
             dbgln_if(MATROSKA_TRACE_DEBUG, "Read Colour's Primaries attribute: {}", color_primaries_to_string(color_format.color_primaries));
             break;
         case TRANSFER_CHARACTERISTICS_ID:
-            color_format.transfer_characteristics = static_cast<TransferCharacteristics>(TRY_READ(m_streamer.read_u64()));
+            color_format.transfer_characteristics = static_cast<TransferCharacteristics>(TRY_READ(streamer.read_u64()));
             dbgln_if(MATROSKA_TRACE_DEBUG, "Read Colour's TransferCharacteristics attribute: {}", transfer_characteristics_to_string(color_format.transfer_characteristics));
             break;
         case MATRIX_COEFFICIENTS_ID:
-            color_format.matrix_coefficients = static_cast<MatrixCoefficients>(TRY_READ(m_streamer.read_u64()));
+            color_format.matrix_coefficients = static_cast<MatrixCoefficients>(TRY_READ(streamer.read_u64()));
             dbgln_if(MATROSKA_TRACE_DEBUG, "Read Colour's MatrixCoefficients attribute: {}", matrix_coefficients_to_string(color_format.matrix_coefficients));
             break;
         case BITS_PER_CHANNEL_ID:
-            color_format.bits_per_channel = TRY_READ(m_streamer.read_u64());
+            color_format.bits_per_channel = TRY_READ(streamer.read_u64());
             dbgln_if(MATROSKA_TRACE_DEBUG, "Read Colour's BitsPerChannel attribute: {}", color_format.bits_per_channel);
             break;
         default:
-            TRY_READ(m_streamer.read_unknown_element());
+            TRY_READ(streamer.read_unknown_element());
         }
 
         return {};
@@ -271,25 +217,25 @@ DecoderErrorOr<TrackEntry::ColorFormat> Reader::parse_video_color_information()
     return color_format;
 }
 
-DecoderErrorOr<TrackEntry::VideoTrack> Reader::parse_video_track_information()
+static DecoderErrorOr<TrackEntry::VideoTrack> parse_video_track_information(Streamer& streamer)
 {
     TrackEntry::VideoTrack video_track {};
 
-    TRY(parse_master_element("VideoTrack"sv, [&](u64 element_id) -> DecoderErrorOr<void> {
+    TRY(parse_master_element(streamer, "VideoTrack"sv, [&](u64 element_id) -> DecoderErrorOr<void> {
         switch (element_id) {
         case PIXEL_WIDTH_ID:
-            video_track.pixel_width = TRY_READ(m_streamer.read_u64());
+            video_track.pixel_width = TRY_READ(streamer.read_u64());
             dbgln_if(MATROSKA_TRACE_DEBUG, "Read VideoTrack's PixelWidth attribute: {}", video_track.pixel_width);
             break;
         case PIXEL_HEIGHT_ID:
-            video_track.pixel_height = TRY_READ(m_streamer.read_u64());
+            video_track.pixel_height = TRY_READ(streamer.read_u64());
             dbgln_if(MATROSKA_TRACE_DEBUG, "Read VideoTrack's PixelHeight attribute: {}", video_track.pixel_height);
             break;
         case COLOR_ENTRY_ID:
-            video_track.color_format = TRY(parse_video_color_information());
+            video_track.color_format = TRY(parse_video_color_information(streamer));
             break;
         default:
-            TRY_READ(m_streamer.read_unknown_element());
+            TRY_READ(streamer.read_unknown_element());
         }
 
         return {};
@@ -298,22 +244,22 @@ DecoderErrorOr<TrackEntry::VideoTrack> Reader::parse_video_track_information()
     return video_track;
 }
 
-DecoderErrorOr<TrackEntry::AudioTrack> Reader::parse_audio_track_information()
+static DecoderErrorOr<TrackEntry::AudioTrack> parse_audio_track_information(Streamer& streamer)
 {
     TrackEntry::AudioTrack audio_track {};
 
-    TRY(parse_master_element("AudioTrack"sv, [&](u64 element_id) -> DecoderErrorOr<void> {
+    TRY(parse_master_element(streamer, "AudioTrack"sv, [&](u64 element_id) -> DecoderErrorOr<void> {
         switch (element_id) {
         case CHANNELS_ID:
-            audio_track.channels = TRY_READ(m_streamer.read_u64());
+            audio_track.channels = TRY_READ(streamer.read_u64());
             dbgln_if(MATROSKA_TRACE_DEBUG, "Read AudioTrack's Channels attribute: {}", audio_track.channels);
             break;
         case BIT_DEPTH_ID:
-            audio_track.bit_depth = TRY_READ(m_streamer.read_u64());
+            audio_track.bit_depth = TRY_READ(streamer.read_u64());
             dbgln_if(MATROSKA_TRACE_DEBUG, "Read AudioTrack's BitDepth attribute: {}", audio_track.bit_depth);
             break;
         default:
-            TRY_READ(m_streamer.read_unknown_element());
+            TRY_READ(streamer.read_unknown_element());
         }
 
         return {};
@@ -322,20 +268,80 @@ DecoderErrorOr<TrackEntry::AudioTrack> Reader::parse_audio_track_information()
     return audio_track;
 }
 
-DecoderErrorOr<NonnullOwnPtr<Cluster>> Reader::parse_cluster()
+static DecoderErrorOr<NonnullOwnPtr<TrackEntry>> parse_track_entry(Streamer& streamer)
+{
+    auto track_entry = make<TrackEntry>();
+    TRY(parse_master_element(streamer, "Track"sv, [&](u64 element_id) -> DecoderErrorOr<void> {
+        switch (element_id) {
+        case TRACK_NUMBER_ID:
+            track_entry->set_track_number(TRY_READ(streamer.read_u64()));
+            dbgln_if(MATROSKA_TRACE_DEBUG, "Read TrackNumber attribute: {}", track_entry->track_number());
+            break;
+        case TRACK_UID_ID:
+            track_entry->set_track_uid(TRY_READ(streamer.read_u64()));
+            dbgln_if(MATROSKA_TRACE_DEBUG, "Read TrackUID attribute: {}", track_entry->track_uid());
+            break;
+        case TRACK_TYPE_ID:
+            track_entry->set_track_type(static_cast<TrackEntry::TrackType>(TRY_READ(streamer.read_u64())));
+            dbgln_if(MATROSKA_TRACE_DEBUG, "Read TrackType attribute: {}", track_entry->track_type());
+            break;
+        case TRACK_LANGUAGE_ID:
+            track_entry->set_language(TRY_READ(streamer.read_string()));
+            dbgln_if(MATROSKA_TRACE_DEBUG, "Read Track's Language attribute: {}", track_entry->language());
+            break;
+        case TRACK_CODEC_ID:
+            track_entry->set_codec_id(TRY_READ(streamer.read_string()));
+            dbgln_if(MATROSKA_TRACE_DEBUG, "Read Track's CodecID attribute: {}", track_entry->codec_id());
+            break;
+        case TRACK_VIDEO_ID:
+            track_entry->set_video_track(TRY(parse_video_track_information(streamer)));
+            break;
+        case TRACK_AUDIO_ID:
+            track_entry->set_audio_track(TRY(parse_audio_track_information(streamer)));
+            break;
+        default:
+            TRY_READ(streamer.read_unknown_element());
+        }
+
+        return {};
+    }));
+
+    return track_entry;
+}
+
+static DecoderErrorOr<void> parse_tracks(Streamer& streamer, MatroskaDocument& matroska_document)
+{
+    return parse_master_element(streamer, "Tracks"sv, [&](u64 element_id) -> DecoderErrorOr<void> {
+        if (element_id == TRACK_ENTRY_ID) {
+            dbgln_if(MATROSKA_DEBUG, "Parsing track");
+            auto track_entry = TRY(parse_track_entry(streamer));
+            auto track_number = track_entry->track_number();
+            dbgln_if(MATROSKA_DEBUG, "Adding track {} to document", track_number);
+            matroska_document.add_track(track_number, track_entry.release_nonnull<TrackEntry>());
+        } else {
+            TRY_READ(streamer.read_unknown_element());
+        }
+
+        return {};
+    });
+}
+
+static DecoderErrorOr<NonnullOwnPtr<Block>> parse_simple_block(Streamer& streamer);
+
+static DecoderErrorOr<NonnullOwnPtr<Cluster>> parse_cluster(Streamer& streamer)
 {
     auto cluster = make<Cluster>();
 
-    TRY(parse_master_element("Cluster"sv, [&](u64 element_id) -> DecoderErrorOr<void> {
+    TRY(parse_master_element(streamer, "Cluster"sv, [&](u64 element_id) -> DecoderErrorOr<void> {
         switch (element_id) {
         case SIMPLE_BLOCK_ID:
-            cluster->blocks().append(TRY(parse_simple_block()));
+            cluster->blocks().append(TRY(parse_simple_block(streamer)));
             break;
         case TIMESTAMP_ID:
-            cluster->set_timestamp(TRY_READ(m_streamer.read_u64()));
+            cluster->set_timestamp(TRY_READ(streamer.read_u64()));
             break;
         default:
-            TRY_READ(m_streamer.read_unknown_element());
+            TRY_READ(streamer.read_unknown_element());
         }
 
         return {};
@@ -344,40 +350,40 @@ DecoderErrorOr<NonnullOwnPtr<Cluster>> Reader::parse_cluster()
     return cluster;
 }
 
-DecoderErrorOr<NonnullOwnPtr<Block>> Reader::parse_simple_block()
+static DecoderErrorOr<NonnullOwnPtr<Block>> parse_simple_block(Streamer& streamer)
 {
     auto block = make<Block>();
 
-    auto content_size = TRY_READ(m_streamer.read_variable_size_integer());
+    auto content_size = TRY_READ(streamer.read_variable_size_integer());
 
-    auto octets_read_before_track_number = m_streamer.octets_read();
-    auto track_number = TRY_READ(m_streamer.read_variable_size_integer());
+    auto octets_read_before_track_number = streamer.octets_read();
+    auto track_number = TRY_READ(streamer.read_variable_size_integer());
     block->set_track_number(track_number);
 
-    block->set_timestamp(TRY_READ(m_streamer.read_i16()));
+    block->set_timestamp(TRY_READ(streamer.read_i16()));
 
-    auto flags = TRY_READ(m_streamer.read_octet());
-    block->set_only_keyframes(flags & (1u << 7u));
-    block->set_invisible(flags & (1u << 3u));
+    auto flags = TRY_READ(streamer.read_octet());
+    block->set_only_keyframes((flags & (1u << 7u)) != 0);
+    block->set_invisible((flags & (1u << 3u)) != 0);
     block->set_lacing(static_cast<Block::Lacing>((flags & 0b110u) >> 1u));
-    block->set_discardable(flags & 1u);
+    block->set_discardable((flags & 1u) != 0);
 
-    auto total_frame_content_size = content_size - (m_streamer.octets_read() - octets_read_before_track_number);
+    auto total_frame_content_size = content_size - (streamer.octets_read() - octets_read_before_track_number);
     if (block->lacing() == Block::Lacing::EBML) {
-        auto octets_read_before_frame_sizes = m_streamer.octets_read();
-        auto frame_count = TRY_READ(m_streamer.read_octet()) + 1;
+        auto octets_read_before_frame_sizes = streamer.octets_read();
+        auto frame_count = TRY_READ(streamer.read_octet()) + 1;
         Vector<u64> frame_sizes;
         frame_sizes.ensure_capacity(frame_count);
 
         u64 frame_size_sum = 0;
         u64 previous_frame_size;
-        auto first_frame_size = TRY_READ(m_streamer.read_variable_size_integer());
+        auto first_frame_size = TRY_READ(streamer.read_variable_size_integer());
         frame_sizes.append(first_frame_size);
         frame_size_sum += first_frame_size;
         previous_frame_size = first_frame_size;
 
         for (int i = 0; i < frame_count - 2; i++) {
-            auto frame_size_difference = TRY_READ(m_streamer.read_variable_size_signed_integer());
+            auto frame_size_difference = TRY_READ(streamer.read_variable_size_signed_integer());
             u64 frame_size;
             // FIXME: x - (-y) == x + y??
             if (frame_size_difference < 0)
@@ -388,29 +394,29 @@ DecoderErrorOr<NonnullOwnPtr<Block>> Reader::parse_simple_block()
             frame_size_sum += frame_size;
             previous_frame_size = frame_size;
         }
-        frame_sizes.append(total_frame_content_size - frame_size_sum - (m_streamer.octets_read() - octets_read_before_frame_sizes));
+        frame_sizes.append(total_frame_content_size - frame_size_sum - (streamer.octets_read() - octets_read_before_frame_sizes));
 
         for (int i = 0; i < frame_count; i++) {
             // FIXME: ReadonlyBytes instead of copying the frame data?
             auto current_frame_size = frame_sizes.at(i);
-            block->add_frame(DECODER_TRY_ALLOC(ByteBuffer::copy(m_streamer.data(), current_frame_size)));
-            TRY_READ(m_streamer.drop_octets(current_frame_size));
+            block->add_frame(DECODER_TRY_ALLOC(ByteBuffer::copy(streamer.data(), current_frame_size)));
+            TRY_READ(streamer.drop_octets(current_frame_size));
         }
     } else if (block->lacing() == Block::Lacing::FixedSize) {
-        auto frame_count = TRY_READ(m_streamer.read_octet()) + 1;
+        auto frame_count = TRY_READ(streamer.read_octet()) + 1;
         auto individual_frame_size = total_frame_content_size / frame_count;
         for (int i = 0; i < frame_count; i++) {
-            block->add_frame(DECODER_TRY_ALLOC(ByteBuffer::copy(m_streamer.data(), individual_frame_size)));
-            TRY_READ(m_streamer.drop_octets(individual_frame_size));
+            block->add_frame(DECODER_TRY_ALLOC(ByteBuffer::copy(streamer.data(), individual_frame_size)));
+            TRY_READ(streamer.drop_octets(individual_frame_size));
         }
     } else {
-        block->add_frame(DECODER_TRY_ALLOC(ByteBuffer::copy(m_streamer.data(), total_frame_content_size)));
-        TRY_READ(m_streamer.drop_octets(total_frame_content_size));
+        block->add_frame(DECODER_TRY_ALLOC(ByteBuffer::copy(streamer.data(), total_frame_content_size)));
+        TRY_READ(streamer.drop_octets(total_frame_content_size));
     }
     return block;
 }
 
-ErrorOr<String> Reader::Streamer::read_string()
+ErrorOr<String> Streamer::read_string()
 {
     auto string_length = TRY(read_variable_size_integer());
     if (remaining() < string_length)
@@ -420,7 +426,7 @@ ErrorOr<String> Reader::Streamer::read_string()
     return string_value;
 }
 
-ErrorOr<u8> Reader::Streamer::read_octet()
+ErrorOr<u8> Streamer::read_octet()
 {
     if (!has_octet()) {
         dbgln_if(MATROSKA_TRACE_DEBUG, "Ran out of stream data");
@@ -432,12 +438,12 @@ ErrorOr<u8> Reader::Streamer::read_octet()
     return byte;
 }
 
-ErrorOr<i16> Reader::Streamer::read_i16()
+ErrorOr<i16> Streamer::read_i16()
 {
     return (TRY(read_octet()) << 8) | TRY(read_octet());
 }
 
-ErrorOr<u64> Reader::Streamer::read_variable_size_integer(bool mask_length)
+ErrorOr<u64> Streamer::read_variable_size_integer(bool mask_length)
 {
     dbgln_if(MATROSKA_TRACE_DEBUG, "Reading from offset {:p}", data());
     auto length_descriptor = TRY(read_octet());
@@ -469,7 +475,7 @@ ErrorOr<u64> Reader::Streamer::read_variable_size_integer(bool mask_length)
     return result;
 }
 
-ErrorOr<i64> Reader::Streamer::read_variable_size_signed_integer()
+ErrorOr<i64> Streamer::read_variable_size_signed_integer()
 {
     auto length_descriptor = TRY(read_octet());
     if (length_descriptor == 0)
@@ -492,7 +498,7 @@ ErrorOr<i64> Reader::Streamer::read_variable_size_signed_integer()
     return result;
 }
 
-ErrorOr<void> Reader::Streamer::drop_octets(size_t num_octets)
+ErrorOr<void> Streamer::drop_octets(size_t num_octets)
 {
     if (remaining() < num_octets)
         return Error::from_string_literal("Tried to drop octets past the end of the stream");
@@ -501,7 +507,7 @@ ErrorOr<void> Reader::Streamer::drop_octets(size_t num_octets)
     return {};
 }
 
-ErrorOr<u64> Reader::Streamer::read_u64()
+ErrorOr<u64> Streamer::read_u64()
 {
     auto integer_length = TRY(read_variable_size_integer());
     u64 result = 0;
@@ -511,7 +517,7 @@ ErrorOr<u64> Reader::Streamer::read_u64()
     return result;
 }
 
-ErrorOr<double> Reader::Streamer::read_float()
+ErrorOr<double> Streamer::read_float()
 {
     auto length = TRY(read_variable_size_integer());
     if (length != 4u && length != 8u)
@@ -531,7 +537,7 @@ ErrorOr<double> Reader::Streamer::read_float()
     return read_data.double_value;
 }
 
-ErrorOr<void> Reader::Streamer::read_unknown_element()
+ErrorOr<void> Streamer::read_unknown_element()
 {
     auto element_length = TRY(read_variable_size_integer());
     return drop_octets(element_length);
