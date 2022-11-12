@@ -55,8 +55,6 @@ void PlaybackManager::set_playback_status(PlaybackStatus status)
         if (status == PlaybackStatus::Playing) {
             if (old_status == PlaybackStatus::Stopped || old_status == PlaybackStatus::Corrupted) {
                 restart_playback();
-                m_frame_queue->clear();
-                m_skipped_frames = 0;
             }
             m_last_present_in_real_time = Time::now_monotonic();
             m_present_timer->start(0);
@@ -94,6 +92,8 @@ bool PlaybackManager::prepare_next_frame()
 
 Time PlaybackManager::current_playback_time()
 {
+    if (m_last_present_in_media_time.is_negative())
+        return Time::zero();
     if (is_playing())
         return m_last_present_in_media_time + (Time::now_monotonic() - m_last_present_in_real_time);
     return m_last_present_in_media_time;
@@ -165,6 +165,11 @@ void PlaybackManager::update_presented_frame()
             return;
         }
 
+        if (m_last_present_in_media_time.is_negative()) {
+            m_last_present_in_media_time = m_next_frame->timestamp();
+            dbgln_if(PLAYBACK_MANAGER_DEBUG, "We've seeked, set last media time to the next frame {}ms", m_last_present_in_media_time.to_milliseconds());
+        }
+
         auto frame_time_ms = (m_next_frame->timestamp() - current_playback_time()).to_milliseconds();
         VERIFY(frame_time_ms <= NumericLimits<int>::max());
         dbgln_if(PLAYBACK_MANAGER_DEBUG, "Time until next frame is {}ms", frame_time_ms);
@@ -176,13 +181,24 @@ void PlaybackManager::update_presented_frame()
     m_decode_timer->start(0);
 }
 
-void PlaybackManager::restart_playback()
+void PlaybackManager::seek_to_timestamp(Time timestamp)
 {
-    m_last_present_in_media_time = Time::zero();
+    dbgln_if(PLAYBACK_MANAGER_DEBUG, "Seeking to {}ms", timestamp.to_milliseconds());
+    m_last_present_in_media_time = Time::min();
     m_last_present_in_real_time = Time::zero();
-    auto result = m_demuxer->seek_to_most_recent_keyframe(m_selected_video_track, 0);
+    m_frame_queue->clear();
+    m_next_frame.clear();
+    m_skipped_frames = 0;
+    // FIXME: When the demuxer is getting samples off the main thread in the future, this needs to
+    //        mutex so that seeking can't happen while that thread is getting a sample.
+    auto result = m_demuxer->seek_to_most_recent_keyframe(m_selected_video_track, timestamp);
     if (result.is_error())
         on_decoder_error(result.release_error());
+}
+
+void PlaybackManager::restart_playback()
+{
+    seek_to_timestamp(Time::zero());
 }
 
 void PlaybackManager::post_decoder_error(DecoderError error)
