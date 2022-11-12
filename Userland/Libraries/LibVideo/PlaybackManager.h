@@ -101,6 +101,7 @@ public:
     void resume_playback();
     void pause_playback();
     void restart_playback();
+    void seek_to_timestamp(Time);
     bool is_playing() const { return m_status == PlaybackStatus::Playing; }
     bool is_buffering() const { return m_status == PlaybackStatus::Buffering; }
     bool is_stopped() const { return m_status == PlaybackStatus::Stopped; }

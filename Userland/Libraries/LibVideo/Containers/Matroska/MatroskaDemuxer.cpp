@@ -53,9 +53,9 @@ DecoderErrorOr<MatroskaDemuxer::TrackStatus*> MatroskaDemuxer::get_track_status(
     return &m_track_statuses.get(track).release_value();
 }
 
-DecoderErrorOr<void> MatroskaDemuxer::seek_to_most_recent_keyframe(Track track, size_t timestamp)
+DecoderErrorOr<void> MatroskaDemuxer::seek_to_most_recent_keyframe(Track track, Time timestamp)
 {
-    if (timestamp == 0) {
+    if (timestamp.is_zero()) {
         // Removing the track status will cause us to start from the beginning.
         m_track_statuses.remove(track);
         return {};

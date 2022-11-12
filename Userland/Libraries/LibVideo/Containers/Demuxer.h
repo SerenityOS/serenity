@@ -28,7 +28,7 @@ public:
         return sample.release_nonnull<VideoSample>();
     }
 
-    virtual DecoderErrorOr<void> seek_to_most_recent_keyframe(Track track, size_t timestamp) = 0;
+    virtual DecoderErrorOr<void> seek_to_most_recent_keyframe(Track track, Time timestamp) = 0;
 
     virtual DecoderErrorOr<Time> duration() = 0;
 

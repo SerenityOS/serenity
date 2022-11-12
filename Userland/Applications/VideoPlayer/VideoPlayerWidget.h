@@ -36,6 +36,9 @@ private:
     VideoPlayerWidget(GUI::Window&);
 
     void update_play_pause_icon();
+    void update_seek_slider_max();
+    void set_current_timestamp(Time);
+    void set_time_label(Time);
     void on_decoding_error(Video::DecoderError const&);
     void display_next_frame();
 
