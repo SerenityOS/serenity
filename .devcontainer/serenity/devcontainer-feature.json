@@ -1,0 +1,28 @@
+{
+    "name": "Serenity Development",
+    "id": "serenity",
+    "version": "1.0.0",
+    "description": "Enable development of Serenity and Lagom libraries and applications",
+    "options": {
+        "llvm_version": {
+            "type": "string",
+            "proposals": [
+                14,
+                15,
+                "trunk"
+            ],
+            "default": 15,
+            "description": "Select LLVM compiler version to use"
+        },
+        "enable_ladybird": {
+            "type": "boolean",
+            "default": true,
+            "description": "Install Qt6 packages for Ladybird development"
+        },
+        "enable_serenity": {
+            "type": "boolean",
+            "default": true,
+            "description": "Install packages for SerenityOS development"
+        }
+    }
+}
