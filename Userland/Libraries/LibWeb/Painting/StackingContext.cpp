@@ -177,6 +177,10 @@ void StackingContext::paint_internal(PaintContext& context) const
         // At this point, `paint_box` is a positioned descendant with z-index: auto
         // but no stacking context of its own.
         // FIXME: This is basically duplicating logic found elsewhere in this same function. Find a way to make this more elegant.
+        auto parent = paint_box.layout_node().parent();
+        auto* paintable = parent ? parent->paintable() : nullptr;
+        if (paintable)
+            paintable->before_children_paint(context, PaintPhase::Foreground);
         paint_node(paint_box.layout_box(), context, PaintPhase::Background);
         paint_node(paint_box.layout_box(), context, PaintPhase::Border);
         paint_descendants(context, paint_box.layout_box(), StackingContextPaintPhase::BackgroundAndBorders);
@@ -187,6 +191,8 @@ void StackingContext::paint_internal(PaintContext& context) const
         paint_node(paint_box.layout_box(), context, PaintPhase::FocusOutline);
         paint_node(paint_box.layout_box(), context, PaintPhase::Overlay);
         paint_descendants(context, paint_box.layout_box(), StackingContextPaintPhase::FocusAndOverlay);
+        if (paintable)
+            paintable->after_children_paint(context, PaintPhase::Foreground);
 
         return TraversalDecision::Continue;
     });
