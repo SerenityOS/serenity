@@ -53,13 +53,16 @@ DecoderErrorOr<MatroskaDemuxer::TrackStatus*> MatroskaDemuxer::get_track_status(
     return &m_track_statuses.get(track).release_value();
 }
 
-DecoderErrorOr<void> MatroskaDemuxer::seek_to_most_recent_keyframe(Track track, Time)
+DecoderErrorOr<void> MatroskaDemuxer::seek_to_most_recent_keyframe(Track track, Time timestamp)
 {
     // Removing the track status will cause us to start from the beginning.
-    // FIXME: We just go back to the beginning always, so that the PlaybackManager seeking
-    //        technology can be tested.
-    m_track_statuses.remove(track);
-    return {};
+    if (timestamp.is_zero()) {
+        m_track_statuses.remove(track);
+        return {};
+    }
+
+    auto& track_status = *TRY(get_track_status(track));
+    return m_reader.seek_to_random_access_point(track_status.iterator, timestamp);
 }
 
 DecoderErrorOr<NonnullOwnPtr<Sample>> MatroskaDemuxer::get_next_sample_for_track(Track track)
