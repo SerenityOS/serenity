@@ -44,6 +44,8 @@ constexpr u32 TRACK_UID_ID = 0x73C5;
 constexpr u32 TRACK_TYPE_ID = 0x83;
 constexpr u32 TRACK_LANGUAGE_ID = 0x22B59C;
 constexpr u32 TRACK_CODEC_ID = 0x86;
+constexpr u32 TRACK_TIMESTAMP_SCALE_ID = 0x23314F;
+constexpr u32 TRACK_OFFSET_ID = 0x537F;
 constexpr u32 TRACK_VIDEO_ID = 0xE0;
 constexpr u32 TRACK_AUDIO_ID = 0xE1;
 
@@ -416,6 +418,14 @@ static DecoderErrorOr<TrackEntry> parse_track_entry(Streamer& streamer)
             track_entry.set_codec_id(TRY_READ(streamer.read_string()));
             dbgln_if(MATROSKA_TRACE_DEBUG, "Read Track's CodecID attribute: {}", track_entry.codec_id());
             break;
+        case TRACK_TIMESTAMP_SCALE_ID:
+            track_entry.set_timestamp_scale(TRY_READ(streamer.read_float()));
+            dbgln_if(MATROSKA_TRACE_DEBUG, "Read Track's TrackTimestampScale attribute: {}", track_entry.timestamp_scale());
+            break;
+        case TRACK_OFFSET_ID:
+            track_entry.set_timestamp_offset(TRY_READ(streamer.read_variable_size_signed_integer()));
+            dbgln_if(MATROSKA_TRACE_DEBUG, "Read Track's TrackOffset attribute: {}", track_entry.timestamp_offset());
+            break;
         case TRACK_VIDEO_ID:
             track_entry.set_video_track(TRY(parse_video_track_information(streamer)));
             break;
@@ -520,7 +530,7 @@ static DecoderErrorOr<Cluster> parse_cluster(Streamer& streamer, u64 timestamp_s
     return cluster;
 }
 
-static DecoderErrorOr<Block> parse_simple_block(Streamer& streamer, Time cluster_timestamp, u64 timestamp_scale)
+static DecoderErrorOr<Block> parse_simple_block(Streamer& streamer, Time cluster_timestamp, u64 segment_timestamp_scale, TrackEntry track)
 {
     Block block;
 
@@ -529,7 +539,23 @@ static DecoderErrorOr<Block> parse_simple_block(Streamer& streamer, Time cluster
     auto position_before_track_number = streamer.position();
     block.set_track_number(TRY_READ(streamer.read_variable_size_integer()));
 
-    block.set_timestamp(cluster_timestamp + Time::from_nanoseconds(TRY_READ(streamer.read_i16()) * timestamp_scale));
+    // https://www.matroska.org/technical/notes.html
+    // Block Timestamps:
+    //     The Block Element and SimpleBlock Element store their timestamps as signed integers,
+    //     relative to the Cluster\Timestamp value of the Cluster they are stored in. To get the
+    //     timestamp of a Block or SimpleBlock in nanoseconds you have to use the following formula:
+    //         `( Cluster\Timestamp + ( block timestamp * TrackTimestampScale ) ) * TimestampScale`
+    //
+    //     When a CodecDelay Element is set, its value MUST be substracted from each Block timestamp
+    //     of that track. To get the timestamp in nanoseconds of the first frame in a Block or
+    //     SimpleBlock, the formula becomes:
+    //         `( ( Cluster\Timestamp + ( block timestamp * TrackTimestampScale ) ) * TimestampScale ) - CodecDelay`
+    Time timestamp_offset = Time::from_nanoseconds(static_cast<i64>(static_cast<double>(TRY_READ(streamer.read_i16()) * segment_timestamp_scale) * track.timestamp_scale()));
+    timestamp_offset -= Time::from_nanoseconds(static_cast<i64>(track.codec_delay()));
+    // This is only mentioned in the elements specification under TrackOffset.
+    // https://www.matroska.org/technical/elements.html
+    timestamp_offset += Time::from_nanoseconds(static_cast<i64>(track.timestamp_offset()));
+    block.set_timestamp(cluster_timestamp + timestamp_offset);
 
     auto flags = TRY_READ(streamer.read_octet());
     block.set_only_keyframes((flags & (1u << 7u)) != 0);
@@ -596,7 +622,7 @@ DecoderErrorOr<SampleIterator> Reader::create_sample_iterator(u64 track_number)
     auto position = optional_position.value() - get_element_id_size(CLUSTER_ELEMENT_ID) - m_segment_contents_position;
 
     dbgln_if(MATROSKA_DEBUG, "Creating sample iterator starting at {} relative to segment at {}", position, m_segment_contents_position);
-    return SampleIterator(this->m_mapped_file, segment_view, track_number, position, TRY(segment_information()).timestamp_scale());
+    return SampleIterator(this->m_mapped_file, segment_view, TRY(track_for_track_number(track_number)), TRY(segment_information()).timestamp_scale(), position);
 }
 
 static DecoderErrorOr<bool> find_keyframe_before_timestamp(SampleIterator& iterator, Time const& timestamp)
@@ -643,7 +669,7 @@ DecoderErrorOr<void> Reader::seek_to_random_access_point(SampleIterator& iterato
     // FIXME: This could cache the keyframes it finds. Is it worth doing? Probably not, most files will have Cues :^)
     if (timestamp < iterator.last_timestamp() || iterator.last_timestamp().is_negative()) {
         // If the timestamp is before the iterator's current position, then we need to start from the beginning of the Segment.
-        iterator = TRY(create_sample_iterator(iterator.m_track_id));
+        iterator = TRY(create_sample_iterator(iterator.m_track.track_number()));
         if (!TRY(find_keyframe_before_timestamp(iterator, timestamp)))
             return DecoderError::corrupted("No random access points found"sv);
 
@@ -678,11 +704,11 @@ DecoderErrorOr<Block> SampleIterator::next_block()
 
         if (element_id == CLUSTER_ELEMENT_ID) {
             dbgln_if(MATROSKA_DEBUG, "  Iterator is parsing new cluster.");
-            m_current_cluster = TRY(parse_cluster(streamer, m_timestamp_scale));
+            m_current_cluster = TRY(parse_cluster(streamer, m_segment_timestamp_scale));
         } else if (element_id == SIMPLE_BLOCK_ID) {
             dbgln_if(MATROSKA_TRACE_DEBUG, "  Iterator is parsing new block.");
-            auto candidate_block = TRY(parse_simple_block(streamer, m_current_cluster->timestamp(), m_timestamp_scale));
-            if (candidate_block.track_number() == m_track_id)
+            auto candidate_block = TRY(parse_simple_block(streamer, m_current_cluster->timestamp(), m_segment_timestamp_scale, m_track));
+            if (candidate_block.track_number() == m_track.track_number())
                 block = move(candidate_block);
         } else {
             dbgln_if(MATROSKA_TRACE_DEBUG, "  Iterator is skipping unknown element with ID {:#010x}.", element_id);

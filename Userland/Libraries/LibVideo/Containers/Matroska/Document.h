@@ -114,6 +114,12 @@ public:
     void set_language(FlyString const& language) { m_language = language; }
     FlyString codec_id() const { return m_codec_id; }
     void set_codec_id(FlyString const& codec_id) { m_codec_id = codec_id; }
+    double timestamp_scale() const { return m_timestamp_scale; }
+    void set_timestamp_scale(double timestamp_scale) { m_timestamp_scale = timestamp_scale; }
+    u64 codec_delay() const { return m_codec_delay; }
+    void set_codec_delay(u64 codec_delay) { m_codec_delay = codec_delay; }
+    u64 timestamp_offset() const { return m_timestamp_offset; }
+    void set_timestamp_offset(u64 timestamp_offset) { m_timestamp_offset = timestamp_offset; }
     Optional<VideoTrack> video_track() const
     {
         if (track_type() != Video)
@@ -135,6 +141,9 @@ private:
     TrackType m_track_type { Invalid };
     FlyString m_language = "eng";
     FlyString m_codec_id;
+    double m_timestamp_scale { 1 };
+    u64 m_codec_delay { 0 };
+    u64 m_timestamp_offset { 0 };
 
     union {
         VideoTrack m_video_track {};
