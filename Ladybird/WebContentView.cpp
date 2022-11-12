@@ -954,6 +954,11 @@ Gfx::IntRect WebContentView::notify_server_did_request_minimize_window()
     return {};
 }
 
+Gfx::IntRect WebContentView::notify_server_did_request_fullscreen_window()
+{
+    return {};
+}
+
 void WebContentView::notify_server_did_request_file(Badge<WebContentClient>, String const& path, i32 request_id)
 {
     auto file = Core::File::open(path, Core::OpenMode::ReadOnly);
