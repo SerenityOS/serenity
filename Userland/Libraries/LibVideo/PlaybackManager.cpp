@@ -109,12 +109,13 @@ Time PlaybackManager::duration()
 
 void PlaybackManager::on_decoder_error(DecoderError error)
 {
-    dbgln("Playback error encountered: {}", error.string_literal());
     switch (error.category()) {
     case DecoderErrorCategory::EndOfStream:
+        dbgln_if(PLAYBACK_MANAGER_DEBUG, "{}", error.string_literal());
         set_playback_status(PlaybackStatus::Stopped);
         break;
     default:
+        dbgln("Playback error encountered: {}", error.string_literal());
         set_playback_status(PlaybackStatus::Corrupted);
         m_main_loop.post_event(m_event_handler, make<DecoderErrorEvent>(move(error)));
         break;
@@ -197,15 +198,15 @@ bool PlaybackManager::decode_and_queue_one_sample()
     auto start_time = Time::now_monotonic();
 #endif
 
-#define TRY_OR_ENQUEUE_ERROR(expression)                                                             \
-    ({                                                                                               \
-        auto _temporary_result = ((expression));                                                     \
-        if (_temporary_result.is_error()) {                                                          \
-            dbgln("Enqueued decoder error: {}", _temporary_result.error().string_literal());         \
-            m_frame_queue->enqueue(FrameQueueItem::error_marker(_temporary_result.release_error())); \
-            return false;                                                                            \
-        }                                                                                            \
-        _temporary_result.release_value();                                                           \
+#define TRY_OR_ENQUEUE_ERROR(expression)                                                                                \
+    ({                                                                                                                  \
+        auto _temporary_result = ((expression));                                                                        \
+        if (_temporary_result.is_error()) {                                                                             \
+            dbgln_if(PLAYBACK_MANAGER_DEBUG, "Enqueued decoder error: {}", _temporary_result.error().string_literal()); \
+            m_frame_queue->enqueue(FrameQueueItem::error_marker(_temporary_result.release_error()));                    \
+            return false;                                                                                               \
+        }                                                                                                               \
+        _temporary_result.release_value();                                                                              \
     })
 
     auto frame_sample = TRY_OR_ENQUEUE_ERROR(m_demuxer->get_next_video_sample_for_track(m_selected_video_track));
