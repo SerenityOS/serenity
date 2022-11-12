@@ -33,9 +33,9 @@ public:
     template<typename T = void>
     Result<T, ThreadError> join();
 
-    DeprecatedString thread_name() const { return m_thread_name; }
-    pthread_t tid() const { return m_tid; }
-    bool is_started() const { return m_started; }
+    DeprecatedString thread_name() const;
+    pthread_t tid() const;
+    bool is_started() const;
 
 private:
     explicit Thread(Function<intptr_t()> action, StringView thread_name = {});
