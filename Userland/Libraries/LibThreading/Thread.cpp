@@ -52,6 +52,12 @@ ErrorOr<int> Thread::get_priority() const
     return scheduling_parameters.sched_priority;
 }
 
+DeprecatedString Thread::thread_name() const { return m_thread_name; }
+
+pthread_t Thread::tid() const { return m_tid; }
+
+bool Thread::is_started() const { return m_started; }
+
 void Thread::start()
 {
     int rc = pthread_create(
