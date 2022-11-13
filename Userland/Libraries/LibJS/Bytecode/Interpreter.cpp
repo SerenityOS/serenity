@@ -91,10 +91,6 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Executable const& e
                     m_current_block = unwind_context.handler;
                     unwind_context.handler = nullptr;
 
-                    // If there's no finalizer, there's nowhere for the handler block to unwind to, so the unwind context is no longer needed.
-                    if (!unwind_context.finalizer)
-                        unwind_contexts().take_last();
-
                     accumulator() = exception_value;
                     m_saved_exception = {};
                     will_jump = true;
@@ -102,7 +98,6 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Executable const& e
                 }
                 if (unwind_context.finalizer) {
                     m_current_block = unwind_context.finalizer;
-                    unwind_contexts().take_last();
                     will_jump = true;
                     break;
                 }
