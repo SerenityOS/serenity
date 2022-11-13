@@ -140,6 +140,7 @@ public:
         TypographicAscender = 68,
         TypographicDescender = 70,
         TypographicLineGap = 72,
+        End = 78,
     };
 
     u16 weight_class() const;
