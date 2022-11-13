@@ -11,6 +11,7 @@
 #include "Tools/CloneTool.h"
 #include "Tools/EllipseTool.h"
 #include "Tools/EraseTool.h"
+#include "Tools/GradientTool.h"
 #include "Tools/GuideTool.h"
 #include "Tools/LassoSelectTool.h"
 #include "Tools/LineTool.h"
@@ -96,6 +97,7 @@ void ToolboxWidget::setup_tools()
     add_tool("lasso-select"sv, { 0, Key_L }, make<LassoSelectTool>());
     add_tool("guides"sv, { 0, Key_G }, make<GuideTool>());
     add_tool("clone"sv, { 0, Key_C }, make<CloneTool>());
+    add_tool("gradients"sv, { Mod_Ctrl, Key_G }, make<GradientTool>());
 }
 
 }
