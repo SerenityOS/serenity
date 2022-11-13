@@ -161,6 +161,7 @@ private:
     // https://xhr.spec.whatwg.org/#response-object
     // response object
     //     An object, failure, or null, initially null.
+    //     NOTE: This needs to be a JS::Value as the JSON response might not actually be an object.
     Variant<JS::Value, Failure, Empty> m_response_object;
 
     // FIXME: https://xhr.spec.whatwg.org/#xmlhttprequest-fetch-controller
