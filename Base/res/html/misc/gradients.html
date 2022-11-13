@@ -182,6 +182,22 @@
                 chocolate 20deg 30deg
             );
         }
+
+        .grad-radial-1 {
+            background-image: radial-gradient(#e66465, #9198e5);
+        }
+
+        .grad-radial-2 {
+            background-image: radial-gradient(closest-side, #3f87a6, #ebf8e1, #f69d3c);
+        }
+
+        .grad-radial-3 {
+            background-image: radial-gradient(circle at 100px, #333, #333 50%, #eee 75%, #333 75%);
+        }
+
+        .grad-radial-4 {
+            background-image: radial-gradient(200px 100px ellipse at 25% 50%, yellow, #009966, purple);
+        }
     </style>
   </head>
   <body>
@@ -232,6 +248,11 @@
     <b>Repeating conic gradients</b><br>
     <div class="box grad-conic-repeat-1"></div>
     <div class="box grad-conic-repeat-2"></div>
+    <b>Radial gradients</b><br>
+    <div class="rect grad-radial-1"></div>
+    <div class="rect grad-radial-2"></div>
+    <div class="rect grad-radial-3"></div>
+    <div class="rect grad-radial-4"></div>
   </body>
   <script>
     const boxes = document.querySelectorAll(".box, .rect");
