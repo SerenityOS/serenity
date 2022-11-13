@@ -34,10 +34,14 @@ public:
 
     Vector<String>& members() { return m_members; }
 
+    ErrorOr<void> sync();
+
 private:
     static ErrorOr<bool> name_exists(StringView name);
     static ErrorOr<bool> id_exists(gid_t id);
     ErrorOr<struct group> to_libc_group();
+
+    ErrorOr<String> generate_group_file() const;
 
     String m_name;
     gid_t m_id { 0 };
