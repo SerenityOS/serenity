@@ -1927,6 +1927,7 @@ Bytecode::CodeGenerationErrorOr<void> TryStatement::generate_bytecode(Bytecode::
     if (m_finalizer) {
         auto& finalizer_block = generator.make_block();
         generator.switch_to_basic_block(finalizer_block);
+        generator.emit<Bytecode::Op::LeaveUnwindContext>();
         TRY(m_finalizer->generate_bytecode(generator));
         if (!generator.is_current_block_terminated()) {
             next_block = &generator.make_block();
@@ -1964,7 +1965,6 @@ Bytecode::CodeGenerationErrorOr<void> TryStatement::generate_bytecode(Bytecode::
 
         if (!generator.is_current_block_terminated()) {
             if (m_finalizer) {
-                generator.emit<Bytecode::Op::LeaveUnwindContext>();
                 generator.emit<Bytecode::Op::Jump>(finalizer_target);
             } else {
                 VERIFY(!next_block);
