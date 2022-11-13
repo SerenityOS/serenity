@@ -32,7 +32,6 @@ private:
 
     ErrorOr<Session*, Web::WebDriver::Error> find_session_with_id(StringView session_id);
     ErrorOr<NonnullOwnPtr<Session>, Web::WebDriver::Error> take_session_with_id(StringView session_id);
-    JsonValue make_json_value(JsonValue const&);
 
     virtual Web::WebDriver::Response new_session(Web::WebDriver::Parameters parameters, JsonValue payload) override;
     virtual Web::WebDriver::Response delete_session(Web::WebDriver::Parameters parameters, JsonValue payload) override;
