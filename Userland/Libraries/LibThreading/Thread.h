@@ -24,6 +24,9 @@ class Thread final : public Core::Object {
 public:
     virtual ~Thread();
 
+    ErrorOr<void> set_priority(int priority);
+    ErrorOr<int> get_priority() const;
+
     void start();
     void detach();
 

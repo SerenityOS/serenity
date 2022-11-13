@@ -29,6 +29,27 @@ Threading::Thread::~Thread()
     }
 }
 
+ErrorOr<void> Threading::Thread::set_priority(int priority)
+{
+    // MacOS has an extra __opaque field, so list initialization will not compile on MacOS Lagom.
+    sched_param scheduling_parameters {};
+    scheduling_parameters.sched_priority = priority;
+    int result = pthread_setschedparam(m_tid, 0, &scheduling_parameters);
+    if (result != 0)
+        return Error::from_errno(result);
+    return {};
+}
+
+ErrorOr<int> Threading::Thread::get_priority() const
+{
+    sched_param scheduling_parameters {};
+    int policy;
+    int result = pthread_getschedparam(m_tid, &policy, &scheduling_parameters);
+    if (result != 0)
+        return Error::from_errno(result);
+    return scheduling_parameters.sched_priority;
+}
+
 void Threading::Thread::start()
 {
     int rc = pthread_create(
