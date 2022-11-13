@@ -57,9 +57,10 @@ ConnectionBase::ConnectionBase(IPC::Stub& local_stub, NonnullOwnPtr<Core::Stream
 {
 }
 
-void ConnectionBase::set_deferred_invoker(NonnullOwnPtr<DeferredInvoker> deferred_invoker)
+DeferredInvoker& ConnectionBase::set_deferred_invoker(NonnullOwnPtr<DeferredInvoker> deferred_invoker)
 {
     m_deferred_invoker = move(deferred_invoker);
+    return *m_deferred_invoker;
 }
 
 ResponsivenessTimer& ConnectionBase::set_responsiveness_timer(NonnullOwnPtr<ResponsivenessTimer> timer)

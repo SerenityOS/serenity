@@ -62,7 +62,7 @@ public:
     virtual ~ConnectionBase() override = default;
 
     void set_fd_passing_socket(NonnullOwnPtr<Core::Stream::LocalSocket>);
-    void set_deferred_invoker(NonnullOwnPtr<DeferredInvoker>);
+    DeferredInvoker& set_deferred_invoker(NonnullOwnPtr<DeferredInvoker>);
     ResponsivenessTimer& set_responsiveness_timer(NonnullOwnPtr<ResponsivenessTimer>);
 
     bool is_open() const { return m_socket->is_open(); }
