@@ -10,6 +10,7 @@
 #include "AudioPlayerLoop.h"
 #include "MainWidget.h"
 #include "TrackManager.h"
+#include <AK/Atomic.h>
 #include <AK/Queue.h>
 #include <LibAudio/ConnectionToServer.h>
 #include <LibAudio/WavWriter.h>
@@ -23,18 +24,19 @@
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Window.h>
 #include <LibMain/Main.h>
+#include <LibThreading/MutexProtected.h>
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio thread rpath cpath wpath recvfd sendfd unix proc"));
+    TRY(Core::System::pledge("stdio thread proc rpath cpath wpath recvfd sendfd unix"));
 
     auto app = TRY(GUI::Application::try_create(arguments));
 
     TrackManager track_manager;
 
-    Audio::WavWriter wav_writer;
+    Threading::MutexProtected<Audio::WavWriter> wav_writer;
     Optional<DeprecatedString> save_path;
-    bool need_to_write_wav = false;
+    Atomic<bool> need_to_write_wav = false;
 
     auto audio_loop = AudioPlayerLoop::construct(track_manager, need_to_write_wav, wav_writer);
 
@@ -45,8 +47,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->resize(840, 600);
     window->set_icon(app_icon.bitmap_for_size(16));
 
-    auto main_widget_updater = Core::Timer::construct(static_cast<int>((1 / 60.0) * 1000), [&] {
-        Core::EventLoop::current().post_event(main_widget, make<Core::CustomEvent>(0));
+    auto main_widget_updater = Core::Timer::construct(static_cast<int>((1 / 30.0) * 1000), [&] {
+        if (window->is_active())
+            Core::EventLoop::current().post_event(main_widget, make<Core::CustomEvent>(0));
     });
     main_widget_updater->start();
 
@@ -55,10 +58,16 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         save_path = GUI::FilePicker::get_save_filepath(window, "Untitled", "wav");
         if (!save_path.has_value())
             return;
-        wav_writer.set_file(save_path.value());
-        if (wav_writer.has_error()) {
-            GUI::MessageBox::show(window, DeprecatedString::formatted("Failed to export WAV file: {}", wav_writer.error_string()), "Error"sv, GUI::MessageBox::Type::Error);
-            wav_writer.clear_error();
+        DeprecatedString error;
+        wav_writer.with_locked([&](auto& wav_writer) {
+            wav_writer.set_file(save_path.value());
+            if (wav_writer.has_error()) {
+                error = DeprecatedString::formatted("Failed to export WAV file: {}", wav_writer.error_string());
+                wav_writer.clear_error();
+            }
+        });
+        if (!error.is_empty()) {
+            GUI::MessageBox::show_error(window, error);
             return;
         }
         need_to_write_wav = true;
