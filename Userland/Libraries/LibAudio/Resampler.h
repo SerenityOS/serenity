@@ -52,10 +52,10 @@ public:
     }
 
     template<ArrayLike<SampleType> Samples>
-    Vector<SampleType> resample(Samples&& to_resample)
+    ErrorOr<Vector<SampleType>> try_resample(Samples&& to_resample)
     {
         Vector<SampleType> resampled;
-        resampled.ensure_capacity(to_resample.size() * ceil_div(m_source, m_target));
+        TRY(resampled.try_ensure_capacity(to_resample.size() * ceil_div(m_source, m_target)));
         for (auto sample : to_resample) {
             process_sample(sample, sample);
 
@@ -64,6 +64,12 @@ public:
         }
 
         return resampled;
+    }
+
+    template<ArrayLike<SampleType> Samples>
+    Vector<SampleType> resample(Samples&& to_resample)
+    {
+        return MUST(try_resample(forward<Samples>(to_resample)));
     }
 
     void reset()
