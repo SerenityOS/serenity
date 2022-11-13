@@ -624,6 +624,32 @@ WebIDL::ExceptionOr<void> XMLHttpRequest::set_timeout(u32 timeout)
 // https://xhr.spec.whatwg.org/#dom-xmlhttprequest-timeout
 u32 XMLHttpRequest::timeout() const { return m_timeout; }
 
+// https://xhr.spec.whatwg.org/#dom-xmlhttprequest-withcredentials
+bool XMLHttpRequest::with_credentials() const
+{
+    // The withCredentials getter steps are to return this’s cross-origin credentials.
+    return m_cross_origin_credentials;
+}
+
+// https://xhr.spec.whatwg.org/#dom-xmlhttprequest-withcredentials
+WebIDL::ExceptionOr<void> XMLHttpRequest::set_with_credentials(bool with_credentials)
+{
+    auto& realm = this->realm();
+
+    // 1. If this’s state is not unsent or opened, then throw an "InvalidStateError" DOMException.
+    if (m_state != State::Unsent && m_state != State::Opened)
+        return WebIDL::InvalidStateError::create(realm, "XHR readyState is not UNSENT or OPENED");
+
+    // 2. If this’s send() flag is set, then throw an "InvalidStateError" DOMException.
+    if (m_send)
+        return WebIDL::InvalidStateError::create(realm, "XHR send() flag is already set");
+
+    // 3. Set this’s cross-origin credentials to the given value.
+    m_cross_origin_credentials = with_credentials;
+
+    return {};
+}
+
 // https://xhr.spec.whatwg.org/#garbage-collection
 bool XMLHttpRequest::must_survive_garbage_collection() const
 {

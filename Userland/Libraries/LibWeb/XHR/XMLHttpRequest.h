@@ -63,8 +63,11 @@ public:
 
     WebIDL::ExceptionOr<void> override_mime_type(String const& mime);
 
-    WebIDL::ExceptionOr<void> set_timeout(u32 timeout);
     u32 timeout() const;
+    WebIDL::ExceptionOr<void> set_timeout(u32 timeout);
+
+    bool with_credentials() const;
+    WebIDL::ExceptionOr<void> set_with_credentials(bool);
 
     void abort();
 
@@ -103,7 +106,10 @@ private:
     //     An unsigned integer, initially 0.
     u32 m_timeout { 0 };
 
-    // FIXME: https://xhr.spec.whatwg.org/#cross-origin-credentials
+    // https://xhr.spec.whatwg.org/#cross-origin-credentials
+    // cross-origin credentials
+    //     A boolean, initially false.
+    bool m_cross_origin_credentials { false };
 
     // https://xhr.spec.whatwg.org/#request-method
     // request method
