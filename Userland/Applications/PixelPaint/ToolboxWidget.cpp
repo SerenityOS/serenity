@@ -52,7 +52,7 @@ ToolboxWidget::ToolboxWidget()
 
 void ToolboxWidget::setup_tools()
 {
-    auto add_tool = [&](StringView icon_name, GUI::Shortcut const& shortcut, NonnullOwnPtr<Tool> tool) {
+    auto add_tool = [&](StringView icon_name, GUI::Shortcut const& shortcut, NonnullOwnPtr<Tool> tool, bool is_default_tool = false) {
         auto action = GUI::Action::create_checkable(tool->tool_name(), shortcut, Gfx::Bitmap::try_load_from_file(String::formatted("/res/icons/pixelpaint/{}.png", icon_name)).release_value_but_fixme_should_propagate_errors(),
             [this, tool = tool.ptr()](auto& action) {
                 if (action.is_checked()) {
@@ -70,10 +70,15 @@ void ToolboxWidget::setup_tools()
         };
         tool->set_action(action);
         m_tools.append(move(tool));
+        if (is_default_tool) {
+            VERIFY(m_active_tool == nullptr);
+            m_active_tool = &m_tools[m_tools.size() - 1];
+            action->set_checked(true);
+        }
     };
 
     add_tool("move"sv, { 0, Key_M }, make<MoveTool>());
-    add_tool("pen"sv, { 0, Key_N }, make<PenTool>());
+    add_tool("pen"sv, { 0, Key_N }, make<PenTool>(), true);
     add_tool("brush"sv, { 0, Key_P }, make<BrushTool>());
     add_tool("bucket"sv, { Mod_Shift, Key_B }, make<BucketTool>());
     add_tool("spray"sv, { Mod_Shift, Key_S }, make<SprayTool>());
