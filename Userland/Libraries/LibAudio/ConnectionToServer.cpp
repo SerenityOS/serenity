@@ -11,6 +11,7 @@
 #include <AK/Time.h>
 #include <AK/Types.h>
 #include <LibAudio/ConnectionToServer.h>
+#include <LibAudio/Queue.h>
 #include <LibAudio/UserSampleQueue.h>
 #include <LibCore/Event.h>
 #include <LibThreading/Mutex.h>
@@ -114,6 +115,11 @@ void ConnectionToServer::custom_event(Core::CustomEvent&)
 ErrorOr<void, AudioQueue::QueueStatus> ConnectionToServer::realtime_enqueue(Array<Sample, AUDIO_BUFFER_SIZE> samples)
 {
     return m_buffer->try_enqueue(samples);
+}
+
+ErrorOr<void> ConnectionToServer::blocking_realtime_enqueue(Array<Sample, AUDIO_BUFFER_SIZE> samples, Function<void()> wait_function)
+{
+    return m_buffer->try_blocking_enqueue(samples, move(wait_function));
 }
 
 unsigned ConnectionToServer::total_played_samples() const
