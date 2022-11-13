@@ -26,7 +26,7 @@ MaybeLoaderError LoaderPlugin::initialize()
     if (m_backing_memory.has_value())
         m_stream = LOADER_TRY(Core::Stream::MemoryStream::construct(m_backing_memory.value()));
     else
-        m_stream = LOADER_TRY(Core::Stream::File::open(m_path, Core::Stream::OpenMode::Read));
+        m_stream = LOADER_TRY(Core::Stream::BufferedFile::create(LOADER_TRY(Core::Stream::File::open(m_path, Core::Stream::OpenMode::Read))));
 
     return {};
 }
