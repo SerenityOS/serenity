@@ -876,27 +876,6 @@ public:
     void replace_references_impl(Register, Register) { }
 };
 
-class FinishUnwind final : public Instruction {
-public:
-    constexpr static bool IsTerminator = true;
-
-    FinishUnwind(Label next)
-        : Instruction(Type::FinishUnwind)
-        , m_next_target(move(next))
-    {
-    }
-
-    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
-    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
-    void replace_references_impl(BasicBlock const&, BasicBlock const&);
-    void replace_references_impl(Register, Register) { }
-
-    Label next_target() const { return m_next_target; }
-
-private:
-    Label m_next_target;
-};
-
 class ContinuePendingUnwind final : public Instruction {
 public:
     constexpr static bool IsTerminator = true;
