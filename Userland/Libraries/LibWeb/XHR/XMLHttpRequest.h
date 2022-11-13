@@ -81,7 +81,7 @@ private:
 
     String get_text_response() const;
 
-    explicit XMLHttpRequest(HTML::Window&);
+    XMLHttpRequest(HTML::Window&, Fetch::Infrastructure::HeaderList&);
 
     // Non-standard
     JS::NonnullGCPtr<HTML::Window> m_window;
@@ -118,7 +118,7 @@ private:
     // https://xhr.spec.whatwg.org/#author-request-headers
     // author request headers
     //     A header list, initially empty.
-    HashMap<String, String, CaseInsensitiveStringTraits> m_author_request_headers;
+    JS::NonnullGCPtr<Fetch::Infrastructure::HeaderList> m_author_request_headers;
 
     // FIXME: https://xhr.spec.whatwg.org/#request-body
 

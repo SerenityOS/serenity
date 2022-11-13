@@ -43,12 +43,14 @@ namespace Web::XHR {
 JS::NonnullGCPtr<XMLHttpRequest> XMLHttpRequest::construct_impl(JS::Realm& realm)
 {
     auto& window = verify_cast<HTML::Window>(realm.global_object());
-    return *realm.heap().allocate<XMLHttpRequest>(realm, window);
+    auto author_request_headers = Fetch::Infrastructure::HeaderList::create(realm.vm());
+    return *realm.heap().allocate<XMLHttpRequest>(realm, window, *author_request_headers);
 }
 
-XMLHttpRequest::XMLHttpRequest(HTML::Window& window)
+XMLHttpRequest::XMLHttpRequest(HTML::Window& window, Fetch::Infrastructure::HeaderList& author_request_headers)
     : XMLHttpRequestEventTarget(window.realm())
     , m_window(window)
+    , m_author_request_headers(author_request_headers)
     , m_response_type(Bindings::XMLHttpRequestResponseType::Empty)
 {
     set_overrides_must_survive_garbage_collection(true);
@@ -61,6 +63,7 @@ void XMLHttpRequest::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
     visitor.visit(m_window.ptr());
+    visitor.visit(m_author_request_headers);
 
     if (auto* value = m_response_object.get_pointer<JS::Value>())
         visitor.visit(*value);
@@ -286,42 +289,37 @@ Optional<StringView> XMLHttpRequest::get_final_encoding() const
 // https://xhr.spec.whatwg.org/#dom-xmlhttprequest-setrequestheader
 WebIDL::ExceptionOr<void> XMLHttpRequest::set_request_header(String const& name_string, String const& value_string)
 {
+    auto& realm = this->realm();
     auto name = name_string.to_byte_buffer();
     auto value = value_string.to_byte_buffer();
 
     // 1. If this’s state is not opened, then throw an "InvalidStateError" DOMException.
     if (m_state != State::Opened)
-        return WebIDL::InvalidStateError::create(realm(), "XHR readyState is not OPENED");
+        return WebIDL::InvalidStateError::create(realm, "XHR readyState is not OPENED");
 
     // 2. If this’s send() flag is set, then throw an "InvalidStateError" DOMException.
     if (m_send)
-        return WebIDL::InvalidStateError::create(realm(), "XHR send() flag is already set");
+        return WebIDL::InvalidStateError::create(realm, "XHR send() flag is already set");
 
     // 3. Normalize value.
     value = MUST(Fetch::Infrastructure::normalize_header_value(value));
 
     // 4. If name is not a header name or value is not a header value, then throw a "SyntaxError" DOMException.
     if (!Fetch::Infrastructure::is_header_name(name))
-        return WebIDL::SyntaxError::create(realm(), "Header name contains invalid characters.");
+        return WebIDL::SyntaxError::create(realm, "Header name contains invalid characters.");
     if (!Fetch::Infrastructure::is_header_value(value))
-        return WebIDL::SyntaxError::create(realm(), "Header value contains invalid characters.");
+        return WebIDL::SyntaxError::create(realm, "Header value contains invalid characters.");
 
     // 5. If name is a forbidden header name, then return.
     if (Fetch::Infrastructure::is_forbidden_header_name(name))
         return {};
 
     // 6. Combine (name, value) in this’s author request headers.
-    // FIXME: The header name look-up should be case-insensitive.
-    // FIXME: Headers should be stored as raw byte sequences, not Strings.
-    if (m_author_request_headers.contains(StringView { name })) {
-        // 1. If list contains name, then set the value of the first such header to its value,
-        //    followed by 0x2C 0x20, followed by value.
-        auto maybe_header_value = m_author_request_headers.get(StringView { name });
-        m_author_request_headers.set(StringView { name }, String::formatted("{}, {}", maybe_header_value.release_value(), StringView { name }));
-    } else {
-        // 2. Otherwise, append (name, value) to list.
-        m_author_request_headers.set(StringView { name }, StringView { value });
-    }
+    auto header = Fetch::Infrastructure::Header {
+        .name = move(name),
+        .value = move(value),
+    };
+    TRY_OR_RETURN_OOM(realm, m_author_request_headers->combine(move(header)));
 
     return {};
 }
@@ -397,7 +395,7 @@ WebIDL::ExceptionOr<void> XMLHttpRequest::open(String const& method_string, Stri
     // Set this’s synchronous flag if async is false; otherwise unset this’s synchronous flag.
     m_synchronous = !async;
     // Empty this’s author request headers.
-    m_author_request_headers.clear();
+    m_author_request_headers->clear();
     // FIXME: Set this’s response to a network error.
     // Set this’s received bytes to the empty byte sequence.
     m_received_bytes = {};
@@ -481,15 +479,15 @@ WebIDL::ExceptionOr<void> XMLHttpRequest::send(Optional<DocumentOrXMLHttpRequest
     }
 
     // If this’s headers’s header list does not contain `Content-Type`, then append (`Content-Type`, type) to this’s headers.
-    if (!m_author_request_headers.contains("Content-Type"sv)) {
+    if (!m_author_request_headers->contains("Content-Type"sv.bytes())) {
         if (body_with_type.has_value() && body_with_type->type.has_value()) {
             request.set_header("Content-Type", String { body_with_type->type->span() });
         } else if (body.has_value() && body->has<JS::Handle<DOM::Document>>()) {
             request.set_header("Content-Type", "text/html;charset=UTF-8");
         }
     }
-    for (auto& it : m_author_request_headers)
-        request.set_header(it.key, it.value);
+    for (auto& it : *m_author_request_headers)
+        request.set_header(String::copy(it.name), String::copy(it.value));
 
     m_upload_complete = false;
     m_timed_out = false;
