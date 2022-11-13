@@ -35,13 +35,6 @@
 
 namespace WebContent {
 
-static JsonValue make_success_response(JsonValue value)
-{
-    JsonObject result;
-    result.set("value", move(value));
-    return result;
-}
-
 // https://w3c.github.io/webdriver/#dfn-serialized-cookie
 static JsonValue serialize_cookie(Web::Cookie::Cookie const& cookie)
 {
@@ -66,7 +59,7 @@ static JsonValue serialize_rect(Gfx::IntRect const& rect)
     serialized_rect.set("width", rect.width());
     serialized_rect.set("height", rect.height());
 
-    return make_success_response(move(serialized_rect));
+    return serialized_rect;
 }
 
 static Gfx::IntRect compute_window_rect(Web::Page const& page)
@@ -293,7 +286,7 @@ Messages::WebDriverClient::NavigateToResponse WebDriverConnection::navigate_to(J
     // FIXME: 10. If the current top-level browsing context contains a refresh state pragma directive of time 1 second or less, wait until the refresh timeout has elapsed, a new navigate has begun, and return to the first step of this algorithm.
 
     // 11. Return success with data null.
-    return make_success_response({});
+    return JsonValue {};
 }
 
 // 10.2 Get Current URL, https://w3c.github.io/webdriver/#get-current-url
@@ -310,7 +303,7 @@ Messages::WebDriverClient::GetCurrentUrlResponse WebDriverConnection::get_curren
     auto url = m_page_host.page().top_level_browsing_context().active_document()->url().to_string();
 
     // 4. Return success with data url.
-    return make_success_response(url);
+    return url;
 }
 
 // 10.3 Back, https://w3c.github.io/webdriver/#dfn-back
@@ -328,7 +321,7 @@ Messages::WebDriverClient::BackResponse WebDriverConnection::back()
     // FIXME: 5. If the previous step completed by the session page load timeout being reached, and user prompts have been handled, return error with error code timeout.
 
     // 6. Return success with data null.
-    return make_success_response({});
+    return JsonValue {};
 }
 
 // 10.4 Forward, https://w3c.github.io/webdriver/#dfn-forward
@@ -346,7 +339,7 @@ Messages::WebDriverClient::ForwardResponse WebDriverConnection::forward()
     // FIXME: 5. If the previous step completed by the session page load timeout being reached, and user prompts have been handled, return error with error code timeout.
 
     // 6. Return success with data null.
-    return make_success_response({});
+    return JsonValue {};
 }
 
 // 10.5 Refresh, https://w3c.github.io/webdriver/#dfn-refresh
@@ -366,7 +359,7 @@ Messages::WebDriverClient::RefreshResponse WebDriverConnection::refresh()
     // FIXME: 5. Set the current browsing context with current top-level browsing context.
 
     // 6. Return success with data null.
-    return make_success_response({});
+    return JsonValue {};
 }
 
 // 10.6 Get Title, https://w3c.github.io/webdriver/#dfn-get-title
@@ -381,7 +374,7 @@ Messages::WebDriverClient::GetTitleResponse WebDriverConnection::get_title()
     auto title = m_page_host.page().top_level_browsing_context().active_document()->title();
 
     // 4. Return success with data title.
-    return make_success_response(move(title));
+    return title;
 }
 
 // 11.8.1 Get Window Rect, https://w3c.github.io/webdriver/#dfn-get-window-rect
@@ -571,7 +564,7 @@ Messages::WebDriverClient::FindElementResponse WebDriverConnection::find_element
     if (result.is_empty())
         return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::NoSuchElement, "The requested element does not exist"sv);
 
-    return make_success_response(result.at(0));
+    return result.take(0);
 }
 
 // 12.3.3 Find Elements, https://w3c.github.io/webdriver/#dfn-find-elements
@@ -602,8 +595,7 @@ Messages::WebDriverClient::FindElementsResponse WebDriverConnection::find_elemen
         return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::NoSuchElement, "document element does not exist"sv);
 
     // 9. Return the result of trying to Find with start node, location strategy, and selector.
-    auto result = TRY(find(*start_node, *location_strategy, selector));
-    return make_success_response(move(result));
+    return TRY(find(*start_node, *location_strategy, selector));
 }
 
 // 12.3.4 Find Element From Element, https://w3c.github.io/webdriver/#dfn-find-element-from-element
@@ -636,7 +628,7 @@ Messages::WebDriverClient::FindElementFromElementResponse WebDriverConnection::f
     if (result.is_empty())
         return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::NoSuchElement, "The requested element does not exist"sv);
 
-    return make_success_response(result.at(0));
+    return result.take(0);
 }
 
 // 12.3.5 Find Elements From Element, https://w3c.github.io/webdriver/#dfn-find-elements-from-element
@@ -663,8 +655,7 @@ Messages::WebDriverClient::FindElementsFromElementResponse WebDriverConnection::
     auto* start_node = TRY(get_known_connected_element(element_id));
 
     // 8. Return the result of trying to Find with start node, location strategy, and selector.
-    auto result = TRY(find(*start_node, *location_strategy, selector));
-    return make_success_response(move(result));
+    return TRY(find(*start_node, *location_strategy, selector));
 }
 
 // 12.4.1 Is Element Selected, https://w3c.github.io/webdriver/#dfn-is-element-selected
@@ -699,7 +690,7 @@ Messages::WebDriverClient::IsElementSelectedResponse WebDriverConnection::is_ele
     //   -> False.
 
     // 5. Return success with data selected.
-    return make_success_response(selected);
+    return selected;
 }
 
 // 12.4.2 Get Element Attribute, https://w3c.github.io/webdriver/#dfn-get-element-attribute
@@ -730,8 +721,8 @@ Messages::WebDriverClient::GetElementAttributeResponse WebDriverConnection::get_
 
     // 5. Return success with data result.
     if (result.has_value())
-        return make_success_response(result.release_value());
-    return make_success_response({});
+        return result.release_value();
+    return JsonValue {};
 }
 
 // 12.4.3 Get Element Property, https://w3c.github.io/webdriver/#dfn-get-element-property
@@ -760,8 +751,8 @@ Messages::WebDriverClient::GetElementPropertyResponse WebDriverConnection::get_e
 
     // 6. Return success with data result.
     if (result.has_value())
-        return make_success_response(result.release_value());
-    return make_success_response({});
+        return result.release_value();
+    return JsonValue {};
 }
 
 // 12.4.4 Get Element CSS Value, https://w3c.github.io/webdriver/#dfn-get-element-css-value
@@ -793,7 +784,7 @@ Messages::WebDriverClient::GetElementCssValueResponse WebDriverConnection::get_e
     }
 
     // 5. Return success with data computed value.
-    return make_success_response(move(computed_value));
+    return computed_value;
 }
 
 // 12.4.5 Get Element Text, https://w3c.github.io/webdriver/#dfn-get-element-text
@@ -811,7 +802,7 @@ Messages::WebDriverClient::GetElementTextResponse WebDriverConnection::get_eleme
     auto rendered_text = element->text_content();
 
     // 5. Return success with data rendered text.
-    return make_success_response(move(rendered_text));
+    return rendered_text;
 }
 
 // 12.4.6 Get Element Tag Name, https://w3c.github.io/webdriver/#dfn-get-element-tag-name
@@ -829,7 +820,7 @@ Messages::WebDriverClient::GetElementTagNameResponse WebDriverConnection::get_el
     auto qualified_name = element->tag_name();
 
     // 5. Return success with data qualified name.
-    return make_success_response(move(qualified_name));
+    return qualified_name;
 }
 
 // 12.4.7 Get Element Rect, https://w3c.github.io/webdriver/#dfn-get-element-rect
@@ -884,7 +875,7 @@ Messages::WebDriverClient::IsElementEnabledResponse WebDriverConnection::is_elem
     }
 
     // 7. Return success with data enabled.
-    return make_success_response(enabled);
+    return enabled;
 }
 
 // 13.1 Get Page Source, https://w3c.github.io/webdriver/#dfn-get-page-source
@@ -907,7 +898,7 @@ Messages::WebDriverClient::GetSourceResponse WebDriverConnection::get_source()
         source = MUST(document->serialize_fragment(Web::DOMParsing::RequireWellFormed::No));
 
     // 5. Return success with data source.
-    return make_success_response(source.release_value());
+    return source.release_value();
 }
 
 // 13.2.1 Execute Script, https://w3c.github.io/webdriver/#dfn-execute-script
@@ -931,7 +922,7 @@ Messages::WebDriverClient::ExecuteScriptResponse WebDriverConnection::execute_sc
         return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::ScriptTimeoutError, "Script timed out");
     // 7. Upon fulfillment of promise with value v, let result be a JSON clone of v, and return success with data result.
     case Web::WebDriver::ExecuteScriptResultType::PromiseResolved:
-        return make_success_response(move(result.value));
+        return move(result.value);
     // 8. Upon rejection of promise with reason r, let result be a JSON clone of r, and return error with error code javascript error and data result.
     case Web::WebDriver::ExecuteScriptResultType::PromiseRejected:
     case Web::WebDriver::ExecuteScriptResultType::JavaScriptError:
@@ -962,7 +953,7 @@ Messages::WebDriverClient::ExecuteAsyncScriptResponse WebDriverConnection::execu
         return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::ScriptTimeoutError, "Script timed out");
     // 7. Upon fulfillment of promise with value v, let result be a JSON clone of v, and return success with data result.
     case Web::WebDriver::ExecuteScriptResultType::PromiseResolved:
-        return make_success_response(move(result.value));
+        return move(result.value);
     // 8. Upon rejection of promise with reason r, let result be a JSON clone of r, and return error with error code javascript error and data result.
     case Web::WebDriver::ExecuteScriptResultType::PromiseRejected:
     case Web::WebDriver::ExecuteScriptResultType::JavaScriptError:
@@ -995,7 +986,7 @@ Messages::WebDriverClient::GetAllCookiesResponse WebDriverConnection::get_all_co
     }
 
     // 5. Return success with data cookies.
-    return make_success_response(move(cookies));
+    return cookies;
 }
 
 // 14.2 Get Named Cookie, https://w3c.github.io/webdriver/#dfn-get-named-cookie
@@ -1011,7 +1002,7 @@ Messages::WebDriverClient::GetNamedCookieResponse WebDriverConnection::get_named
 
     if (auto cookie = m_web_content_client.did_request_named_cookie(document->url(), name); cookie.has_value()) {
         auto serialized_cookie = serialize_cookie(*cookie);
-        return make_success_response(move(serialized_cookie));
+        return serialized_cookie;
     }
 
     // 4. Otherwise, return error with error code no such cookie.
@@ -1086,7 +1077,7 @@ Messages::WebDriverClient::AddCookieResponse WebDriverConnection::add_cookie(Jso
     // NOTE: This probably should only apply to the actual setting of the cookie in the Browser, which cannot fail in our case.
 
     // 8. Return success with data null.
-    return make_success_response({});
+    return JsonValue {};
 }
 
 // 14.4 Delete Cookie, https://w3c.github.io/webdriver/#dfn-delete-cookie
@@ -1101,7 +1092,7 @@ Messages::WebDriverClient::DeleteCookieResponse WebDriverConnection::delete_cook
     delete_cookies(name);
 
     // 4. Return success with data null.
-    return make_success_response({});
+    return JsonValue {};
 }
 
 // 14.5 Delete All Cookies, https://w3c.github.io/webdriver/#dfn-delete-all-cookies
@@ -1116,7 +1107,7 @@ Messages::WebDriverClient::DeleteAllCookiesResponse WebDriverConnection::delete_
     delete_cookies();
 
     // 4. Return success with data null.
-    return make_success_response({});
+    return JsonValue {};
 }
 
 // 17.1 Take Screenshot, https://w3c.github.io/webdriver/#take-screenshot
@@ -1141,7 +1132,7 @@ Messages::WebDriverClient::TakeScreenshotResponse WebDriverConnection::take_scre
         root_rect));
 
     // 3. Return success with data encoded string.
-    return make_success_response(move(encoded_string));
+    return encoded_string;
 }
 
 // 17.2 Take Element Screenshot, https://w3c.github.io/webdriver/#dfn-take-element-screenshot
@@ -1173,7 +1164,7 @@ Messages::WebDriverClient::TakeElementScreenshotResponse WebDriverConnection::ta
         element_rect));
 
     // 6. Return success with data encoded string.
-    return make_success_response(move(encoded_string));
+    return encoded_string;
 }
 
 // https://w3c.github.io/webdriver/#dfn-no-longer-open

@@ -71,13 +71,6 @@ void Client::close_session(unsigned session_id)
         dbgln_if(WEBDRIVER_DEBUG, "Unable to shut down session {}: Not found", session_id);
 }
 
-JsonValue Client::make_json_value(JsonValue const& value)
-{
-    JsonObject result;
-    result.set("value", value);
-    return result;
-}
-
 // 8.1 New Session, https://w3c.github.io/webdriver/#dfn-new-sessions
 // POST /session
 Web::WebDriver::Response Client::new_session(Web::WebDriver::Parameters, JsonValue)
@@ -144,7 +137,7 @@ Web::WebDriver::Response Client::new_session(Web::WebDriver::Parameters, JsonVal
     // FIXME: 15. Set the request queue to a new queue.
 
     // 16. Return success with data body.
-    return make_json_value(body);
+    return JsonValue { move(body) };
 }
 
 // 8.2 Delete Session, https://w3c.github.io/webdriver/#dfn-delete-session
@@ -158,7 +151,7 @@ Web::WebDriver::Response Client::delete_session(Web::WebDriver::Parameters param
     TRY(session->stop());
 
     // 2. Return success with data null.
-    return make_json_value(JsonValue());
+    return JsonValue {};
 }
 
 // 8.3 Status, https://w3c.github.io/webdriver/#dfn-status
@@ -259,8 +252,7 @@ Web::WebDriver::Response Client::get_window_handle(Web::WebDriver::Parameters pa
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session_id>/window");
     auto* session = TRY(find_session_with_id(parameters[0]));
-    auto result = TRY(session->get_window_handle());
-    return make_json_value(result);
+    return session->get_window_handle();
 }
 
 // 11.2 Close Window, https://w3c.github.io/webdriver/#dfn-close-window
@@ -269,8 +261,7 @@ Web::WebDriver::Response Client::close_window(Web::WebDriver::Parameters paramet
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling DELETE /session/<session_id>/window");
     auto* session = TRY(find_session_with_id(parameters[0]));
-    auto result = TRY(session->close_window());
-    return make_json_value(result);
+    return session->close_window();
 }
 
 // 11.4 Get Window Handles, https://w3c.github.io/webdriver/#dfn-get-window-handles
@@ -279,8 +270,7 @@ Web::WebDriver::Response Client::get_window_handles(Web::WebDriver::Parameters p
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session_id>/window/handles");
     auto* session = TRY(find_session_with_id(parameters[0]));
-    auto result = TRY(session->get_window_handles());
-    return make_json_value(result);
+    return session->get_window_handles();
 }
 
 // 11.8.1 Get Window Rect, https://w3c.github.io/webdriver/#dfn-get-window-rect

@@ -150,6 +150,13 @@ static ErrorOr<MatchedRoute, Error> match_route(HTTP::HttpRequest const& request
     return Error::from_code(ErrorCode::UnknownCommand, "The command was not recognized.");
 }
 
+static JsonValue make_success_response(JsonValue value)
+{
+    JsonObject result;
+    result.set("value", move(value));
+    return result;
+}
+
 Client::Client(NonnullOwnPtr<Core::Stream::BufferedTCPSocket> socket, Core::Object* parent)
     : Core::Object(parent)
     , m_socket(move(socket))
@@ -244,6 +251,7 @@ ErrorOr<void, Client::WrappedError> Client::handle_request(JsonValue body)
 
 ErrorOr<void, Client::WrappedError> Client::send_success_response(JsonValue result)
 {
+    result = make_success_response(move(result));
     auto content = result.serialized<StringBuilder>();
 
     StringBuilder builder;
