@@ -117,23 +117,6 @@ struct TemporalDurationRecordField {
     PropertyKey property_name;
 };
 
-template<typename StructT, typename ValueT>
-auto temporal_duration_record_fields = [](VM& vm) {
-    using FieldT = TemporalDurationRecordField<StructT, ValueT>;
-    return AK::Array {
-        FieldT { &StructT::days, vm.names.days },
-        FieldT { &StructT::hours, vm.names.hours },
-        FieldT { &StructT::microseconds, vm.names.microseconds },
-        FieldT { &StructT::milliseconds, vm.names.milliseconds },
-        FieldT { &StructT::minutes, vm.names.minutes },
-        FieldT { &StructT::months, vm.names.months },
-        FieldT { &StructT::nanoseconds, vm.names.nanoseconds },
-        FieldT { &StructT::seconds, vm.names.seconds },
-        FieldT { &StructT::weeks, vm.names.weeks },
-        FieldT { &StructT::years, vm.names.years },
-    };
-};
-
 DurationRecord create_duration_record(double years, double months, double weeks, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds);
 ThrowCompletionOr<DurationRecord> create_duration_record(VM&, double years, double months, double weeks, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds);
 DateDurationRecord create_date_duration_record(double years, double months, double weeks, double days);

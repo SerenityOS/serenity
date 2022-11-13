@@ -162,32 +162,53 @@ ThrowCompletionOr<DurationRecord> to_temporal_duration_record(VM& vm, Value temp
     // 4. Let partial be ? ToTemporalPartialDurationRecord(temporalDurationLike).
     auto partial = TRY(to_temporal_partial_duration_record(vm, temporal_duration_like));
 
-    auto duration_record_fields = temporal_duration_record_fields<DurationRecord, double>(vm);
-    auto partial_duration_record_fields = temporal_duration_record_fields<PartialDurationRecord, Optional<double>>(vm);
+    // 5. If partial.[[Years]] is not undefined, set result.[[Years]] to partial.[[Years]].
+    if (partial.years.has_value())
+        result.years = partial.years.value();
 
-    // 5. For each row of Table 8, except the header row, do
-    for (size_t i = 0; i < duration_record_fields.size(); ++i) {
-        // a. Let fieldName be the Field Name value of the current row.
-        auto field_name = duration_record_fields[i].field_name;
-        auto partial_field_name = partial_duration_record_fields[i].field_name;
+    // 6. If partial.[[Months]] is not undefined, set result.[[Months]] to partial.[[Months]].
+    if (partial.months.has_value())
+        result.months = partial.months.value();
 
-        // b. Let value be the value of the field of partial whose name is fieldName.
-        auto value = partial.*partial_field_name;
+    // 7. If partial.[[Weeks]] is not undefined, set result.[[Weeks]] to partial.[[Weeks]].
+    if (partial.weeks.has_value())
+        result.weeks = partial.weeks.value();
 
-        // c. If value is not undefined, then
-        if (value.has_value()) {
-            // i. Set the field of result whose name is fieldName to value.
-            result.*field_name = *value;
-        }
-    }
+    // 8. If partial.[[Days]] is not undefined, set result.[[Days]] to partial.[[Days]].
+    if (partial.days.has_value())
+        result.days = partial.days.value();
 
-    // 6. If ! IsValidDuration(result.[[Years]], result.[[Months]], result.[[Weeks]], result.[[Days]], result.[[Hours]], result.[[Minutes]], result.[[Seconds]], result.[[Milliseconds]], result.[[Microseconds]], result.[[Nanoseconds]]) is false, then
+    // 9. If partial.[[Hours]] is not undefined, set result.[[Hours]] to partial.[[Hours]].
+    if (partial.hours.has_value())
+        result.hours = partial.hours.value();
+
+    // 10. If partial.[[Minutes]] is not undefined, set result.[[Minutes]] to partial.[[Minutes]].
+    if (partial.minutes.has_value())
+        result.minutes = partial.minutes.value();
+
+    // 11. If partial.[[Seconds]] is not undefined, set result.[[Seconds]] to partial.[[Seconds]].
+    if (partial.seconds.has_value())
+        result.seconds = partial.seconds.value();
+
+    // 12. If partial.[[Milliseconds]] is not undefined, set result.[[Milliseconds]] to partial.[[Milliseconds]].
+    if (partial.milliseconds.has_value())
+        result.milliseconds = partial.milliseconds.value();
+
+    // 13. If partial.[[Microseconds]] is not undefined, set result.[[Microseconds]] to partial.[[Microseconds]].
+    if (partial.microseconds.has_value())
+        result.microseconds = partial.microseconds.value();
+
+    // 14. If partial.[[Nanoseconds]] is not undefined, set result.[[Nanoseconds]] to partial.[[Nanoseconds]].
+    if (partial.nanoseconds.has_value())
+        result.nanoseconds = partial.nanoseconds.value();
+
+    // 15. If ! IsValidDuration(result.[[Years]], result.[[Months]], result.[[Weeks]], result.[[Days]], result.[[Hours]], result.[[Minutes]], result.[[Seconds]], result.[[Milliseconds]], result.[[Microseconds]], result.[[Nanoseconds]]) is false, then
     if (!is_valid_duration(result.years, result.months, result.weeks, result.days, result.hours, result.minutes, result.seconds, result.milliseconds, result.microseconds, result.nanoseconds)) {
         // a. Throw a RangeError exception.
         return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidDuration);
     }
 
-    // 7. Return result.
+    // 16. Return result.
     return result;
 }
 
