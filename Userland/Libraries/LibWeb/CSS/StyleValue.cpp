@@ -2119,8 +2119,18 @@ Gfx::FloatSize RadialGradientStyleValue::resolve_size(Layout::Node const& node, 
         });
 }
 
-void RadialGradientStyleValue::resolve_for_size(Layout::Node const&, Gfx::FloatSize const&) const
+void RadialGradientStyleValue::resolve_for_size(Layout::Node const& node, Gfx::FloatSize const& paint_size) const
 {
+    Gfx::FloatRect gradient_box { { 0, 0 }, paint_size };
+    auto center = m_position.resolved(node, gradient_box);
+    auto gradient_size = resolve_size(node, center, gradient_box);
+    if (m_resolved.has_value() && m_resolved->gradient_size == gradient_size)
+        return;
+    m_resolved = ResolvedData {
+        Painting::resolve_radial_gradient_data(node, gradient_size, *this),
+        gradient_size,
+        center,
+    };
 }
 
 bool RadialGradientStyleValue::equals(StyleValue const& other) const
@@ -2134,8 +2144,10 @@ bool RadialGradientStyleValue::equals(StyleValue const& other) const
         && m_color_stop_list == other_gradient.m_color_stop_list);
 }
 
-void RadialGradientStyleValue::paint(PaintContext&, Gfx::IntRect const&, CSS::ImageRendering) const
+void RadialGradientStyleValue::paint(PaintContext& context, Gfx::IntRect const& dest_rect, CSS::ImageRendering) const
 {
+    VERIFY(m_resolved.has_value());
+    Painting::paint_radial_gradient(context, dest_rect, m_resolved->data, m_resolved->center.to_rounded<int>(), m_resolved->gradient_size);
 }
 
 String ConicGradientStyleValue::to_string() const

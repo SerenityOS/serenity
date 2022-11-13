@@ -1271,6 +1271,14 @@ private:
     Size m_size;
     PositionValue m_position;
     Vector<LinearColorStopListElement> m_color_stop_list;
+
+    struct ResolvedData {
+        Painting::RadialGradientData data;
+        Gfx::FloatSize gradient_size;
+        Gfx::FloatPoint center;
+    };
+
+    mutable Optional<ResolvedData> m_resolved;
 };
 
 class ConicGradientStyleValue final : public AbstractImageStyleValue {

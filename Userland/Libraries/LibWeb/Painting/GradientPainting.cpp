@@ -155,6 +155,18 @@ ConicGradientData resolve_conic_gradient_data(Layout::Node const& node, CSS::Con
     return { conic_gradient.angle_degrees(), resolved_color_stops };
 }
 
+RadialGradientData resolve_radial_gradient_data(Layout::Node const& node, Gfx::FloatSize const& gradient_size, CSS::RadialGradientStyleValue const& radial_gradient)
+{
+    // Start center, goes right to ending point, where the gradient line intersects the ending shape
+    auto gradient_length = CSS::Length::make_px(gradient_size.width());
+    auto resolved_color_stops = resolve_color_stop_positions(
+        radial_gradient.color_stop_list(), [&](auto const& length_percentage) {
+            return length_percentage.resolved(node, gradient_length).to_px(node) / gradient_size.width();
+        },
+        false);
+    return { resolved_color_stops };
+}
+
 static float color_stop_step(ColorStop const& previous_stop, ColorStop const& next_stop, float position)
 {
     if (position < previous_stop.position)
@@ -229,7 +241,7 @@ public:
         return color;
     }
 
-    void paint_into_rect(Gfx::Painter& painter, Gfx::IntRect const& rect, auto location_transform)
+    ALWAYS_INLINE void paint_into_rect(Gfx::Painter& painter, Gfx::IntRect const& rect, auto location_transform)
     {
         for (int y = 0; y < rect.height(); y++) {
             for (int x = 0; x < rect.width(); x++) {
@@ -287,6 +299,22 @@ void paint_conic_gradient(PaintContext& context, Gfx::IntRect const& gradient_re
         // FIXME: We could probably get away with some approximation here:
         auto loc = fmod((AK::atan2(point.y(), point.x()) * 180.0f / AK::Pi<float> + 360.0f + start_angle), 360.0f);
         return should_floor_angles ? floor(loc) : loc;
+    });
+}
+
+void paint_radial_gradient(PaintContext& context, Gfx::IntRect const& gradient_rect, RadialGradientData const& data, Gfx::IntPoint center, Gfx::FloatSize const& size)
+{
+    // A conservative guesstimate on how many colors we need to generate:
+    auto max_dimension = max(gradient_rect.width(), gradient_rect.height());
+    int max_visible_gradient = max(max_dimension / 2, min(size.width(), max_dimension));
+    GradientLine gradient_line(max_visible_gradient, data.color_stops);
+    auto center_point = Gfx::FloatPoint { center }.translated(0.5, 0.5);
+    gradient_line.paint_into_rect(context.painter(), gradient_rect, [&](int x, int y) {
+        // FIXME: See if there's a more efficient calculation we do there :^)
+        auto point = (Gfx::FloatPoint { x, y } - center_point);
+        auto gradient_x = point.x() / size.width();
+        auto gradient_y = point.y() / size.height();
+        return AK::sqrt(gradient_x * gradient_x + gradient_y * gradient_y) * size.width();
     });
 }
 
