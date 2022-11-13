@@ -379,7 +379,7 @@ ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_externally_owned_memory(Readonl
     if (tag == tag_from_str("OTTO"))
         return Error::from_string_literal("CFF fonts not supported yet");
 
-    if (tag != 0x00010000)
+    if (tag != 0x00010000 && tag != tag_from_str("true"))
         return Error::from_string_literal("Not a valid font");
 
     return try_load_from_offset(buffer, 0);
