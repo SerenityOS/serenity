@@ -393,7 +393,7 @@ WebIDL::ExceptionOr<void> XMLHttpRequest::open(String const& method_string, Stri
     // Set this’s request method to method.
     m_request_method = move(method);
     // Set this’s request URL to parsedURL.
-    m_url = parsed_url;
+    m_request_url = parsed_url;
     // Set this’s synchronous flag if async is false; otherwise unset this’s synchronous flag.
     m_synchronous = !async;
     // Empty this’s author request headers.
@@ -441,7 +441,7 @@ WebIDL::ExceptionOr<void> XMLHttpRequest::send(Optional<DocumentOrXMLHttpRequest
             body_with_type = TRY(Fetch::extract_body(realm, body->downcast<Fetch::BodyInitOrReadableBytes>()));
     }
 
-    AK::URL request_url = m_window->associated_document().parse_url(m_url.to_string());
+    AK::URL request_url = m_window->associated_document().parse_url(m_request_url.to_string());
     dbgln("XHR send from {} to {}", m_window->associated_document().url(), request_url);
 
     // TODO: Add support for preflight requests to support CORS requests
