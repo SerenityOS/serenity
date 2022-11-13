@@ -220,19 +220,19 @@ public:
         }
     }
 
-    Gfx::Color get_color(int index) const
+    Gfx::Color get_color(uint64_t index) const
     {
         return m_gradient_line_colors[clamp(index, 0, m_gradient_line_colors.size() - 1)];
     }
 
     Gfx::Color sample_color(float loc) const
     {
-        auto repeat_wrap_if_required = [&](int loc) {
+        auto repeat_wrap_if_required = [&](uint64_t loc) {
             if (m_repeating)
-                return (loc + m_start_offset) % static_cast<int>(m_gradient_line_colors.size());
+                return (loc + m_start_offset) % m_gradient_line_colors.size();
             return loc;
         };
-        auto int_loc = static_cast<int>(floor(loc));
+        auto int_loc = static_cast<uint64_t>(floor(loc));
         auto blend = loc - int_loc;
         auto color = get_color(repeat_wrap_if_required(int_loc));
         // Blend between the two neighbouring colors (this fixes some nasty aliasing issues at small angles)
@@ -314,7 +314,7 @@ void paint_radial_gradient(PaintContext& context, Gfx::IntRect const& gradient_r
         auto point = (Gfx::FloatPoint { x, y } - center_point);
         auto gradient_x = point.x() / size.width();
         auto gradient_y = point.y() / size.height();
-        return AK::sqrt(gradient_x * gradient_x + gradient_y * gradient_y) * size.width();
+        return AK::sqrt(gradient_x * gradient_x + gradient_y * gradient_y) * max_visible_gradient;
     });
 }
 
