@@ -165,7 +165,7 @@ ThrowCompletionOr<DurationRecord> to_temporal_duration_record(VM& vm, Value temp
     auto duration_record_fields = temporal_duration_record_fields<DurationRecord, double>(vm);
     auto partial_duration_record_fields = temporal_duration_record_fields<PartialDurationRecord, Optional<double>>(vm);
 
-    // 5. For each row of Table 8, except the header row, in table order, do
+    // 5. For each row of Table 8, except the header row, do
     for (size_t i = 0; i < duration_record_fields.size(); ++i) {
         // a. Let fieldName be the Field Name value of the current row.
         auto field_name = duration_record_fields[i].field_name;
@@ -292,7 +292,14 @@ ThrowCompletionOr<PartialDurationRecord> to_temporal_partial_duration_record(VM&
     // 3. Let any be false.
     auto any = false;
 
-    // 4. For each row of Table 7, except the header row, in table order, do
+    // 4. Let propertyNames be a new empty List.
+
+    // 5. For each row of Table 7, except the header row, do
+    // a. Append the property name in the Property Name column of the row to propertyNames.
+    // 6. Let sortedPropertyNames be SortStringListByCodeUnit(propertyNames).
+    // 7. For each property name property of sortedPropertyNames, do
+
+    // 8. For each row of Table 7, except the header row, in table order, do
     for (auto& [field_name, property] : temporal_duration_record_fields<PartialDurationRecord, Optional<double>>(vm)) {
         // a. Let property be the Property Name value of the current row.
 
@@ -307,19 +314,19 @@ ThrowCompletionOr<PartialDurationRecord> to_temporal_partial_duration_record(VM&
             // ii. Set value to ? ToIntegerWithoutRounding(value).
             auto value_integer = TRY(to_integer_without_rounding(vm, value, ErrorType::TemporalInvalidDurationPropertyValueNonIntegral, property.as_string(), value.to_string_without_side_effects()));
 
-            // iii. Let fieldName be the Field Name value of the current row.
+            // iii. Let fieldName be the field name named in the Field Name column in Table 7 for Property Name property.
             // iv. Set the field of result whose name is fieldName to value.
             result.*field_name = value_integer;
         }
     }
 
-    // 5. If any is false, then
+    // 9. If any is false, then
     if (!any) {
         // a. Throw a TypeError exception.
         return vm.throw_completion<TypeError>(ErrorType::TemporalInvalidDurationLikeObject);
     }
 
-    // 6. Return result.
+    // 10. Return result.
     return result;
 }
 

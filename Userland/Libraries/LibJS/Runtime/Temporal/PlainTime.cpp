@@ -347,7 +347,7 @@ ThrowCompletionOr<TemporalTimeLikeRecord> to_temporal_time_record(VM& vm, Object
     // 3. Let result be a new TemporalTimeLike Record with each field set to undefined.
     auto result = TemporalTimeLikeRecord {};
 
-    // 4. For each row of Table 4, except the header row, in table order, do
+    // 4. For each row of Table 4, except the header row, do
     for (auto& [field, property_name] : temporal_time_like_record_fields<TemporalTimeLikeRecord, Optional<double>>(vm)) {
         // a. Let field be the Field Name value of the current row.
         // b. Let propertyName be the Property Name value of the current row.

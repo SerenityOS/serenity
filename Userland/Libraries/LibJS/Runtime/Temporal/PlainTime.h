@@ -77,11 +77,11 @@ auto temporal_time_like_record_fields = [](VM& vm) {
     using FieldT = TemporalTimeLikeRecordField<StructT, ValueT>;
     return AK::Array {
         FieldT { &StructT::hour, vm.names.hour },
-        FieldT { &StructT::microsecond, vm.names.microsecond },
-        FieldT { &StructT::millisecond, vm.names.millisecond },
         FieldT { &StructT::minute, vm.names.minute },
-        FieldT { &StructT::nanosecond, vm.names.nanosecond },
         FieldT { &StructT::second, vm.names.second },
+        FieldT { &StructT::millisecond, vm.names.millisecond },
+        FieldT { &StructT::microsecond, vm.names.microsecond },
+        FieldT { &StructT::nanosecond, vm.names.nanosecond },
     };
 };
 
