@@ -15,6 +15,7 @@
 #include <AK/Tuple.h>
 #include <AK/Variant.h>
 #include <AK/Vector.h>
+#include <LibGL/Buffer/Buffer.h>
 #include <LibGL/NameAllocator.h>
 #include <LibGL/Tex/Texture.h>
 #include <LibGL/Tex/TextureUnit.h>
@@ -543,6 +544,12 @@ private:
 
     // GL Extension string
     String m_extensions;
+
+    // Buffer objects
+    NameAllocator m_buffer_name_allocator;
+    HashMap<GLuint, RefPtr<Buffer>> m_allocated_buffers;
+    RefPtr<Buffer> m_array_buffer;
+    RefPtr<Buffer> m_element_array_buffer;
 };
 
 ErrorOr<NonnullOwnPtr<GLContext>> create_context(Gfx::Bitmap&);

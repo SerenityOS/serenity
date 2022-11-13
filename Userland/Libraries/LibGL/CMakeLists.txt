@@ -1,4 +1,5 @@
 set(SOURCES
+    Buffer/Buffer.cpp
     Buffer.cpp
     ClipPlane.cpp
     ContextParameter.cpp
