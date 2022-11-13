@@ -108,7 +108,7 @@ private:
     // https://xhr.spec.whatwg.org/#request-method
     // request method
     //     A method.
-    String m_method;
+    String m_request_method;
 
     // https://xhr.spec.whatwg.org/#request-url
     // request URL

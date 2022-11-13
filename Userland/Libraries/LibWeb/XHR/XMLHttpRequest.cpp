@@ -391,7 +391,7 @@ WebIDL::ExceptionOr<void> XMLHttpRequest::open(String const& method_string, Stri
     // Unset this’s upload listener flag.
     m_upload_listener = false;
     // Set this’s request method to method.
-    m_method = move(method);
+    m_request_method = move(method);
     // Set this’s request URL to parsedURL.
     m_url = parsed_url;
     // Set this’s synchronous flag if async is false; otherwise unset this’s synchronous flag.
@@ -429,7 +429,7 @@ WebIDL::ExceptionOr<void> XMLHttpRequest::send(Optional<DocumentOrXMLHttpRequest
         return WebIDL::InvalidStateError::create(realm, "XHR send() flag is already set");
 
     // If this’s request method is `GET` or `HEAD`, then set body to null.
-    if (m_method.is_one_of("GET"sv, "HEAD"sv))
+    if (m_request_method.is_one_of("GET"sv, "HEAD"sv))
         body = {};
 
     Optional<Fetch::Infrastructure::BodyWithType> body_with_type {};
@@ -460,7 +460,7 @@ WebIDL::ExceptionOr<void> XMLHttpRequest::send(Optional<DocumentOrXMLHttpRequest
     }
 
     auto request = LoadRequest::create_for_url_on_page(request_url, m_window->page());
-    request.set_method(m_method);
+    request.set_method(m_request_method);
     if (serialized_document.has_value()) {
         request.set_body(serialized_document->to_byte_buffer());
     } else if (body_with_type.has_value()) {
