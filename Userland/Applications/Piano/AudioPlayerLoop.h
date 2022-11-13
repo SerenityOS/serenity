@@ -15,31 +15,41 @@
 #include <LibCore/Event.h>
 #include <LibCore/Object.h>
 #include <LibDSP/Music.h>
+#include <LibThreading/Thread.h>
 
 class TrackManager;
+struct AudioLoopResponsivenessTimer;
 
 // Wrapper class accepting custom events to advance the track playing and forward audio data to the system.
 // This does not run on a separate thread, preventing IPC multithreading madness.
 class AudioPlayerLoop final : public Core::Object {
     C_OBJECT(AudioPlayerLoop)
 public:
+    virtual ~AudioPlayerLoop() override;
+
     void enqueue_audio();
 
     void toggle_paused();
     bool is_playing() { return m_should_play_audio; }
 
 private:
-    AudioPlayerLoop(TrackManager& track_manager, bool& need_to_write_wav, Audio::WavWriter& wav_writer);
+    AudioPlayerLoop(TrackManager& track_manager, Atomic<bool>& need_to_write_wav, Threading::MutexProtected<Audio::WavWriter>& wav_writer);
 
-    virtual void timer_event(Core::TimerEvent&) override;
+    intptr_t pipeline_thread_main();
+    ErrorOr<void> send_audio_to_server();
+    void write_wav_if_needed();
 
     TrackManager& m_track_manager;
     FixedArray<DSP::Sample> m_buffer;
     Optional<Audio::ResampleHelper<DSP::Sample>> m_resampler;
     RefPtr<Audio::ConnectionToServer> m_audio_client;
+    AudioLoopResponsivenessTimer* m_audio_timer;
+    NonnullRefPtr<Threading::Thread> m_pipeline_thread;
+    Vector<Audio::Sample, Audio::AUDIO_BUFFER_SIZE> m_remaining_samples {};
 
-    bool m_should_play_audio = true;
+    Atomic<bool> m_should_play_audio { true };
+    Atomic<bool> m_exit_requested { false };
 
-    bool& m_need_to_write_wav;
-    Audio::WavWriter& m_wav_writer;
+    Atomic<bool>& m_need_to_write_wav;
+    Threading::MutexProtected<Audio::WavWriter>& m_wav_writer;
 };
