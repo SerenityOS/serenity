@@ -2086,7 +2086,7 @@ Gfx::FloatSize RadialGradientStyleValue::resolve_size(Layout::Node const& node, 
     };
 
     // https://w3c.github.io/csswg-drafts/css-images/#radial-gradient-syntax
-    return m_size.visit(
+    auto resolved_size = m_size.visit(
         [&](Extent extent) {
             switch (extent) {
             case Extent::ClosestSide:
@@ -2117,6 +2117,35 @@ Gfx::FloatSize RadialGradientStyleValue::resolve_size(Layout::Node const& node, 
             auto radius_b = ellipse_size.radius_b.resolved(node, CSS::Length::make_px(size.height())).to_px(node);
             return Gfx::FloatSize { radius_a, radius_b };
         });
+
+    // Handle degenerate cases
+    // https://w3c.github.io/csswg-drafts/css-images/#degenerate-radials
+
+    constexpr auto arbitrary_small_number = 1e-10;
+    constexpr auto arbitrary_large_number = 1e10;
+
+    // If the ending shape is a circle with zero radius:
+    if (m_ending_shape == EndingShape::Circle && resolved_size.is_empty()) {
+        // Render as if the ending shape was a circle whose radius was an arbitrary very small number greater than zero.
+        // This will make the gradient continue to look like a circle.
+        return Gfx::FloatSize { arbitrary_small_number, arbitrary_small_number };
+    }
+    // If the ending shape has zero width (regardless of the height):
+    if (resolved_size.width() <= 0) {
+        // Render as if the ending shape was an ellipse whose height was an arbitrary very large number
+        // and whose width was an arbitrary very small number greater than zero.
+        // This will make the gradient look similar to a horizontal linear gradient that is mirrored across the center of the ellipse.
+        // It also means that all color-stop positions specified with a percentage resolve to 0px.
+        return Gfx::FloatSize { arbitrary_small_number, arbitrary_large_number };
+    }
+    // Otherwise, if the ending shape has zero height:
+    if (resolved_size.height() <= 0) {
+        // Render as if the ending shape was an ellipse whose width was an arbitrary very large number and whose height
+        // was an arbitrary very small number greater than zero. This will make the gradient look like a solid-color image equal
+        // to the color of the last color-stop, or equal to the average color of the gradient if it’s repeating.
+        return Gfx::FloatSize { arbitrary_large_number, arbitrary_small_number };
+    }
+    return resolved_size;
 }
 
 void RadialGradientStyleValue::resolve_for_size(Layout::Node const& node, Gfx::FloatSize const& paint_size) const
