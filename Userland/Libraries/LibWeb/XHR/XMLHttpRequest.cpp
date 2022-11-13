@@ -313,14 +313,14 @@ WebIDL::ExceptionOr<void> XMLHttpRequest::set_request_header(String const& name_
     // 6. Combine (name, value) in this’s author request headers.
     // FIXME: The header name look-up should be case-insensitive.
     // FIXME: Headers should be stored as raw byte sequences, not Strings.
-    if (m_request_headers.contains(StringView { name })) {
+    if (m_author_request_headers.contains(StringView { name })) {
         // 1. If list contains name, then set the value of the first such header to its value,
         //    followed by 0x2C 0x20, followed by value.
-        auto maybe_header_value = m_request_headers.get(StringView { name });
-        m_request_headers.set(StringView { name }, String::formatted("{}, {}", maybe_header_value.release_value(), StringView { name }));
+        auto maybe_header_value = m_author_request_headers.get(StringView { name });
+        m_author_request_headers.set(StringView { name }, String::formatted("{}, {}", maybe_header_value.release_value(), StringView { name }));
     } else {
         // 2. Otherwise, append (name, value) to list.
-        m_request_headers.set(StringView { name }, StringView { value });
+        m_author_request_headers.set(StringView { name }, StringView { value });
     }
 
     return {};
@@ -397,7 +397,7 @@ WebIDL::ExceptionOr<void> XMLHttpRequest::open(String const& method_string, Stri
     // Set this’s synchronous flag if async is false; otherwise unset this’s synchronous flag.
     m_synchronous = !async;
     // Empty this’s author request headers.
-    m_request_headers.clear();
+    m_author_request_headers.clear();
     // FIXME: Set this’s response to a network error.
     // Set this’s received bytes to the empty byte sequence.
     m_received_bytes = {};
@@ -481,14 +481,14 @@ WebIDL::ExceptionOr<void> XMLHttpRequest::send(Optional<DocumentOrXMLHttpRequest
     }
 
     // If this’s headers’s header list does not contain `Content-Type`, then append (`Content-Type`, type) to this’s headers.
-    if (!m_request_headers.contains("Content-Type"sv)) {
+    if (!m_author_request_headers.contains("Content-Type"sv)) {
         if (body_with_type.has_value() && body_with_type->type.has_value()) {
             request.set_header("Content-Type", String { body_with_type->type->span() });
         } else if (body.has_value() && body->has<JS::Handle<DOM::Document>>()) {
             request.set_header("Content-Type", "text/html;charset=UTF-8");
         }
     }
-    for (auto& it : m_request_headers)
+    for (auto& it : m_author_request_headers)
         request.set_header(it.key, it.value);
 
     m_upload_complete = false;
