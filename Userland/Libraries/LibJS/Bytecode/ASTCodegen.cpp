@@ -1987,7 +1987,8 @@ Bytecode::CodeGenerationErrorOr<void> TryStatement::generate_bytecode(Bytecode::
             generator.emit<Bytecode::Op::Jump>(finalizer_target);
         } else {
             auto& block = generator.make_block();
-            generator.emit<Bytecode::Op::FinishUnwind>(Bytecode::Label { block });
+            generator.emit<Bytecode::Op::LeaveUnwindContext>();
+            generator.emit<Bytecode::Op::Jump>(Bytecode::Label { block });
             next_block = &block;
         }
     }

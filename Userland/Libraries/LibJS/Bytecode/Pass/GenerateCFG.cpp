@@ -90,11 +90,6 @@ void GenerateCFG::perform(PassPipelineExecutable& executable)
             enter_label(&resume_target, current_block);
             continue;
         }
-        case FinishUnwind: {
-            auto const& next_target = static_cast<Op::FinishUnwind const&>(instruction).next_target();
-            enter_label(&next_target, current_block);
-            continue;
-        }
         default:
             // Otherwise, pop the current block off, it doesn't jump anywhere.
             iterators.take_last();

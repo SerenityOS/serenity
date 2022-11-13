@@ -744,19 +744,6 @@ void EnterUnwindContext::replace_references_impl(BasicBlock const& from, BasicBl
         m_finalizer_target = Label { to };
 }
 
-ThrowCompletionOr<void> FinishUnwind::execute_impl(Bytecode::Interpreter& interpreter) const
-{
-    interpreter.leave_unwind_context();
-    interpreter.jump(m_next_target);
-    return {};
-}
-
-void FinishUnwind::replace_references_impl(BasicBlock const& from, BasicBlock const& to)
-{
-    if (&m_next_target.block() == &from)
-        m_next_target = Label { to };
-}
-
 void CopyObjectExcludingProperties::replace_references_impl(Register from, Register to)
 {
     if (m_from_object == from)
@@ -1227,11 +1214,6 @@ DeprecatedString EnterUnwindContext::to_deprecated_string_impl(Bytecode::Executa
     auto handler_string = m_handler_target.has_value() ? DeprecatedString::formatted("{}", *m_handler_target) : "<empty>";
     auto finalizer_string = m_finalizer_target.has_value() ? DeprecatedString::formatted("{}", *m_finalizer_target) : "<empty>";
     return DeprecatedString::formatted("EnterUnwindContext handler:{} finalizer:{} entry:{}", handler_string, finalizer_string, m_entry_point);
-}
-
-DeprecatedString FinishUnwind::to_deprecated_string_impl(Bytecode::Executable const&) const
-{
-    return DeprecatedString::formatted("FinishUnwind next:{}", m_next_target);
 }
 
 DeprecatedString LeaveEnvironment::to_deprecated_string_impl(Bytecode::Executable const&) const
