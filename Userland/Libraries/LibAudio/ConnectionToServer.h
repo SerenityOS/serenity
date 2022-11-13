@@ -45,6 +45,7 @@ public:
 
     // Returns immediately with the appropriate status if the buffer is full; use in conjunction with remaining_buffers to get low latency.
     ErrorOr<void, AudioQueue::QueueStatus> realtime_enqueue(Array<Sample, AUDIO_BUFFER_SIZE> samples);
+    ErrorOr<void> blocking_realtime_enqueue(Array<Sample, AUDIO_BUFFER_SIZE> samples, Function<void()> wait_function);
 
     // This information can be deducted from the shared audio buffer.
     unsigned total_played_samples() const;
