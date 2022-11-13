@@ -489,9 +489,9 @@ ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_offset(ReadonlyBytes buffer, u3
         return Error::from_string_literal("Could not load Glyf");
     auto glyf = Glyf(opt_glyf_slice.value());
 
-    if (!opt_os2_slice.has_value())
-        return Error::from_string_literal("Could not load OS/2");
-    auto os2 = OS2(opt_os2_slice.value());
+    OS2 os2(TRY(ByteBuffer::create_zeroed(static_cast<size_t>(OS2::Offsets::End))));
+    if (opt_os2_slice.has_value())
+        os2 = OS2(opt_os2_slice.value());
 
     Optional<Kern> kern {};
     if (opt_kern_slice.has_value())
