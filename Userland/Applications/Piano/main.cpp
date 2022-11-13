@@ -8,6 +8,7 @@
  */
 
 #include "AudioPlayerLoop.h"
+#include "ExportProgressWindow.h"
 #include "MainWidget.h"
 #include "TrackManager.h"
 #include <AK/Atomic.h>
@@ -37,8 +38,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Threading::MutexProtected<Audio::WavWriter> wav_writer;
     Optional<DeprecatedString> save_path;
     Atomic<bool> need_to_write_wav = false;
+    Atomic<int> wav_percent_written = 0;
 
-    auto audio_loop = AudioPlayerLoop::construct(track_manager, need_to_write_wav, wav_writer);
+    auto audio_loop = AudioPlayerLoop::construct(track_manager, need_to_write_wav, wav_percent_written, wav_writer);
 
     auto app_icon = GUI::Icon::default_icon("app-piano"sv);
     auto window = TRY(GUI::Window::try_create());
@@ -46,6 +48,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_title("Piano");
     window->resize(840, 600);
     window->set_icon(app_icon.bitmap_for_size(16));
+
+    auto wav_progress_window = ExportProgressWindow::construct(*window, wav_percent_written);
+    TRY(wav_progress_window->initialize_fallibles());
 
     auto main_widget_updater = TRY(Core::Timer::create_repeating(static_cast<int>((1 / 30.0) * 1000), [&] {
         if (window->is_active())
@@ -71,6 +76,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             return;
         }
         need_to_write_wav = true;
+        wav_progress_window->set_filename(save_path.value());
+        wav_progress_window->show();
     })));
     TRY(file_menu->try_add_separator());
     TRY(file_menu->try_add_action(GUI::CommonActions::make_quit_action([](auto&) {
