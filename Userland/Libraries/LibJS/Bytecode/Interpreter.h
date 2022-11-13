@@ -103,6 +103,7 @@ private:
     Vector<Variant<NonnullOwnPtr<RegisterWindow>, RegisterWindow*>> m_register_windows;
     Optional<BasicBlock const*> m_pending_jump;
     Value m_return_value;
+    Handle<Value> m_saved_return_value;
     Executable const* m_current_executable { nullptr };
     Handle<Value> m_saved_exception;
     OwnPtr<JS::Interpreter> m_ast_interpreter;
