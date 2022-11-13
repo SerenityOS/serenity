@@ -45,6 +45,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto server = TRY(Core::TCPServer::try_create());
 
+    // FIXME: Propagate errors
     server->on_ready_to_accept = [&] {
         auto maybe_client_socket = server->accept();
         if (maybe_client_socket.is_error()) {
@@ -58,10 +59,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             return;
         }
 
-        // FIXME: Propagate errors
-        MUST(maybe_buffered_socket.value()->set_blocking(true));
-        auto client = WebDriver::Client::construct(maybe_buffered_socket.release_value(), server);
-        client->start();
+        auto maybe_client = WebDriver::Client::try_create(maybe_buffered_socket.release_value(), server);
+        if (maybe_client.is_error()) {
+            warnln("Could not create a WebDriver client: {}", maybe_client.error());
+            return;
+        }
     };
 
     TRY(server->listen(ipv4_address.value(), port));
