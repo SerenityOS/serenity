@@ -169,6 +169,7 @@ public:
         Break,
         Continue,
         Unwind,
+        ReturnToFinally,
         LeaveLexicalEnvironment,
         LeaveVariableEnvironment,
     };
@@ -188,12 +189,27 @@ public:
             auto boundary = m_boundaries[i - 1];
             if (boundary_to_stop_at.has_value() && boundary == *boundary_to_stop_at)
                 break;
-            if (boundary == BlockBoundaryType::Unwind)
+            using enum BlockBoundaryType;
+            switch (boundary) {
+            case Unwind:
                 emit<Bytecode::Op::LeaveUnwindContext>();
-            else if (boundary == BlockBoundaryType::LeaveLexicalEnvironment)
+                break;
+            case LeaveLexicalEnvironment:
                 emit<Bytecode::Op::LeaveEnvironment>(Bytecode::Op::EnvironmentMode::Lexical);
-            else if (boundary == BlockBoundaryType::LeaveVariableEnvironment)
+                break;
+            case LeaveVariableEnvironment:
                 emit<Bytecode::Op::LeaveEnvironment>(Bytecode::Op::EnvironmentMode::Var);
+                break;
+            case Break:
+            case Continue:
+                break;
+            case ReturnToFinally:
+                // FIXME: In the case of breaks/continues we need to tell the `finally` to break/continue
+                //        For now let's ignore the finally to avoid a crash
+                if (IsSame<OpType, Bytecode::Op::Jump>)
+                    break;
+                return;
+            };
         }
     }
 

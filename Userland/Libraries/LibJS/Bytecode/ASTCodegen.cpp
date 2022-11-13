@@ -1707,6 +1707,9 @@ Bytecode::CodeGenerationErrorOr<void> IfStatement::generate_bytecode(Bytecode::G
 
 Bytecode::CodeGenerationErrorOr<void> ContinueStatement::generate_bytecode(Bytecode::Generator& generator) const
 {
+    // FIXME: Handle finally blocks in a graceful manner
+    //        We need to execute the finally block, but tell it to resume
+    //        execution at the designated block
     if (m_target_label.is_null()) {
         generator.perform_needed_unwinds<Bytecode::Op::Jump>();
         generator.emit<Bytecode::Op::Jump>().set_targets(
@@ -1900,6 +1903,9 @@ Bytecode::CodeGenerationErrorOr<void> ThrowStatement::generate_bytecode(Bytecode
 
 Bytecode::CodeGenerationErrorOr<void> BreakStatement::generate_bytecode(Bytecode::Generator& generator) const
 {
+    // FIXME: Handle finally blocks in a graceful manner
+    //        We need to execute the finally block, but tell it to resume
+    //        execution at the designated block
     if (m_target_label.is_null()) {
         generator.perform_needed_unwinds<Bytecode::Op::Jump>(true);
         generator.emit<Bytecode::Op::Jump>().set_targets(
@@ -1937,9 +1943,15 @@ Bytecode::CodeGenerationErrorOr<void> TryStatement::generate_bytecode(Bytecode::
         finalizer_target = Bytecode::Label { finalizer_block };
     }
 
+    if (m_finalizer)
+        generator.start_boundary(Bytecode::Generator::BlockBoundaryType::ReturnToFinally);
     if (m_handler) {
         auto& handler_block = generator.make_block();
         generator.switch_to_basic_block(handler_block);
+
+        if (!m_finalizer)
+            generator.emit<Bytecode::Op::LeaveUnwindContext>();
+
         generator.begin_variable_scope(Bytecode::Generator::BindingMode::Lexical, Bytecode::Generator::SurroundingScopeKind::Block);
         TRY(m_handler->parameter().visit(
             [&](FlyString const& parameter) -> Bytecode::CodeGenerationErrorOr<void> {
@@ -1974,11 +1986,15 @@ Bytecode::CodeGenerationErrorOr<void> TryStatement::generate_bytecode(Bytecode::
             }
         }
     }
+    if (m_finalizer)
+        generator.end_boundary(Bytecode::Generator::BlockBoundaryType::ReturnToFinally);
 
     auto& target_block = generator.make_block();
     generator.switch_to_basic_block(saved_block);
     generator.emit<Bytecode::Op::EnterUnwindContext>(Bytecode::Label { target_block }, handler_target, finalizer_target);
     generator.start_boundary(Bytecode::Generator::BlockBoundaryType::Unwind);
+    if (m_finalizer)
+        generator.start_boundary(Bytecode::Generator::BlockBoundaryType::ReturnToFinally);
 
     generator.switch_to_basic_block(target_block);
     TRY(m_block->generate_bytecode(generator));
@@ -1992,6 +2008,9 @@ Bytecode::CodeGenerationErrorOr<void> TryStatement::generate_bytecode(Bytecode::
             next_block = &block;
         }
     }
+
+    if (m_finalizer)
+        generator.end_boundary(Bytecode::Generator::BlockBoundaryType::ReturnToFinally);
     generator.end_boundary(Bytecode::Generator::BlockBoundaryType::Unwind);
 
     generator.switch_to_basic_block(next_block ? *next_block : saved_block);
