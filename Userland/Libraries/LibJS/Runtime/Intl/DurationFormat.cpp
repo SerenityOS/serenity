@@ -161,8 +161,8 @@ ThrowCompletionOr<Temporal::DurationRecord> to_duration_record(VM& vm, Value inp
             // i. Set any to true.
             any = true;
 
-            // ii. Set value to ? ToIntegerWithoutRounding(value).
-            auto value_number = TRY(Temporal::to_integer_without_rounding(vm, value, ErrorType::TemporalInvalidDurationPropertyValueNonIntegral, unit, value));
+            // ii. Set value to ? ToIntegerIfIntegral(value).
+            auto value_number = TRY(Temporal::to_integer_if_integral(vm, value, ErrorType::TemporalInvalidDurationPropertyValueNonIntegral, unit, value));
 
             // iii. Set result.[[<valueSlot>]] to value.
             result.*value_slot = value_number;
