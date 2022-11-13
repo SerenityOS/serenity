@@ -55,6 +55,8 @@ public:
     [[nodiscard]] JsonValue const& at(size_t index) const { return m_values.at(index); }
     [[nodiscard]] JsonValue const& operator[](size_t index) const { return at(index); }
 
+    [[nodiscard]] JsonValue take(size_t index) { return m_values.take(index); }
+
     void clear() { m_values.clear(); }
     void append(JsonValue value) { m_values.append(move(value)); }
     void set(size_t index, JsonValue value) { m_values[index] = move(value); }
