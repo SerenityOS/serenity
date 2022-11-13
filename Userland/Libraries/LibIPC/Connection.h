@@ -10,6 +10,7 @@
 #include <AK/ByteBuffer.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/Try.h>
+#include <AK/Types.h>
 #include <LibCore/Event.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/Notifier.h>
@@ -27,21 +28,42 @@
 
 namespace IPC {
 
-// NOTE: This is an abstraction to allow using IPC::Connection without a Core::EventLoop.
+class ConnectionBase;
+
+// NOTE: These are abstractions to allow using IPC::Connection without a Core::EventLoop.
 // FIXME: It's not particularly nice, think of something nicer.
 struct DeferredInvoker {
     virtual ~DeferredInvoker() = default;
     virtual void schedule(Function<void()>) = 0;
 };
 
+constexpr i64 const RESPONSIVENESS_TIMEOUT_MS = 3000;
+
+// The timer must call may_have_become_unresponsive() on the owning Connection once it runs out.
+struct ResponsivenessTimer {
+    friend class ConnectionBase;
+    ResponsivenessTimer(ConnectionBase&);
+    virtual ~ResponsivenessTimer() = default;
+    virtual void start() = 0;
+    virtual void stop() = 0;
+
+    // Implementors call this function once the timer has expired.
+    void timer_expired();
+
+    NonnullRefPtr<ConnectionBase> parent;
+};
+
 class ConnectionBase : public Core::Object {
     C_OBJECT_ABSTRACT(ConnectionBase);
+
+    friend ResponsivenessTimer;
 
 public:
     virtual ~ConnectionBase() override = default;
 
     void set_fd_passing_socket(NonnullOwnPtr<Core::Stream::LocalSocket>);
     void set_deferred_invoker(NonnullOwnPtr<DeferredInvoker>);
+    ResponsivenessTimer& set_responsiveness_timer(NonnullOwnPtr<ResponsivenessTimer>);
 
     bool is_open() const { return m_socket->is_open(); }
     ErrorOr<void> post_message(Message const&);
@@ -73,7 +95,7 @@ protected:
     NonnullOwnPtr<Core::Stream::LocalSocket> m_socket;
     OwnPtr<Core::Stream::LocalSocket> m_fd_passing_socket;
 
-    RefPtr<Core::Timer> m_responsiveness_timer;
+    NonnullOwnPtr<ResponsivenessTimer> m_responsiveness_timer;
 
     NonnullOwnPtrVector<Message> m_unprocessed_messages;
     ByteBuffer m_unprocessed_bytes;

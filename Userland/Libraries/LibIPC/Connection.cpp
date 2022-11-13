@@ -5,12 +5,24 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include "AK/NonnullRefPtr.h"
+#include <LibCore/EventLoop.h>
 #include <LibCore/System.h>
 #include <LibIPC/Connection.h>
 #include <LibIPC/Stub.h>
 #include <sys/select.h>
 
 namespace IPC {
+
+ResponsivenessTimer::ResponsivenessTimer(ConnectionBase& parent)
+    : parent(parent)
+{
+}
+
+void ResponsivenessTimer::timer_expired()
+{
+    parent->may_have_become_unresponsive();
+}
 
 struct CoreEventLoopDeferredInvoker final : public DeferredInvoker {
     virtual ~CoreEventLoopDeferredInvoker() = default;
@@ -21,18 +33,39 @@ struct CoreEventLoopDeferredInvoker final : public DeferredInvoker {
     }
 };
 
+struct CoreTimerResponsivenessTimer final : public ResponsivenessTimer {
+    CoreTimerResponsivenessTimer(ConnectionBase& parent)
+        : ResponsivenessTimer(parent)
+        , timer(Core::Timer::create_single_shot(RESPONSIVENESS_TIMEOUT_MS, [this]() { this->timer_expired(); }))
+    {
+    }
+
+    virtual ~CoreTimerResponsivenessTimer() = default;
+
+    virtual void start() override { timer->start(); }
+    virtual void stop() override { timer->stop(); }
+
+    NonnullRefPtr<Core::Timer> timer;
+};
+
 ConnectionBase::ConnectionBase(IPC::Stub& local_stub, NonnullOwnPtr<Core::Stream::LocalSocket> socket, u32 local_endpoint_magic)
     : m_local_stub(local_stub)
     , m_socket(move(socket))
+    , m_responsiveness_timer(make<CoreTimerResponsivenessTimer>(*this))
     , m_local_endpoint_magic(local_endpoint_magic)
     , m_deferred_invoker(make<CoreEventLoopDeferredInvoker>())
 {
-    m_responsiveness_timer = Core::Timer::create_single_shot(3000, [this] { may_have_become_unresponsive(); });
 }
 
 void ConnectionBase::set_deferred_invoker(NonnullOwnPtr<DeferredInvoker> deferred_invoker)
 {
     m_deferred_invoker = move(deferred_invoker);
+}
+
+ResponsivenessTimer& ConnectionBase::set_responsiveness_timer(NonnullOwnPtr<ResponsivenessTimer> timer)
+{
+    m_responsiveness_timer = move(timer);
+    return *m_responsiveness_timer;
 }
 
 void ConnectionBase::set_fd_passing_socket(NonnullOwnPtr<Core::Stream::LocalSocket> socket)
@@ -112,6 +145,7 @@ ErrorOr<void> ConnectionBase::post_message(MessageBuffer buffer)
 void ConnectionBase::shutdown()
 {
     m_socket->close();
+    m_responsiveness_timer->stop();
     die();
 }
 
