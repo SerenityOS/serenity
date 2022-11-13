@@ -289,44 +289,81 @@ ThrowCompletionOr<PartialDurationRecord> to_temporal_partial_duration_record(VM&
     // 2. Let result be a new partial Duration Record with each field set to undefined.
     auto result = PartialDurationRecord {};
 
-    // 3. Let any be false.
-    auto any = false;
+    // 3. Let days be ? Get(temporalDurationLike, "days").
+    auto days = TRY(temporal_duration_like.as_object().get(vm.names.days));
 
-    // 4. Let propertyNames be a new empty List.
+    // 4. If days is not undefined, set result.[[Days]] to ? ToIntegerIfIntegral(days).
+    if (!days.is_undefined())
+        result.days = TRY(to_integer_if_integral(vm, days, ErrorType::TemporalInvalidDurationPropertyValueNonIntegral, "days"sv, days));
 
-    // 5. For each row of Table 7, except the header row, do
-    // a. Append the property name in the Property Name column of the row to propertyNames.
-    // 6. Let sortedPropertyNames be SortStringListByCodeUnit(propertyNames).
-    // 7. For each property name property of sortedPropertyNames, do
+    // 5. Let hours be ? Get(temporalDurationLike, "hours").
+    auto hours = TRY(temporal_duration_like.as_object().get(vm.names.hours));
 
-    // 8. For each row of Table 7, except the header row, in table order, do
-    for (auto& [field_name, property] : temporal_duration_record_fields<PartialDurationRecord, Optional<double>>(vm)) {
-        // a. Let property be the Property Name value of the current row.
+    // 6. If hours is not undefined, set result.[[Hours]] to ? ToIntegerIfIntegral(hours).
+    if (!hours.is_undefined())
+        result.hours = TRY(to_integer_if_integral(vm, hours, ErrorType::TemporalInvalidDurationPropertyValueNonIntegral, "hours"sv, hours));
 
-        // b. Let value be ? Get(temporalDurationLike, property).
-        auto value = TRY(temporal_duration_like.as_object().get(property));
+    // 7. Let microseconds be ? Get(temporalDurationLike, "microseconds").
+    auto microseconds = TRY(temporal_duration_like.as_object().get(vm.names.microseconds));
 
-        // c. If value is not undefined, then
-        if (!value.is_undefined()) {
-            // i. Set any to true.
-            any = true;
+    // 8. If microseconds is not undefined, set result.[[Microseconds]] to ? ToIntegerIfIntegral(microseconds).
+    if (!microseconds.is_undefined())
+        result.microseconds = TRY(to_integer_if_integral(vm, microseconds, ErrorType::TemporalInvalidDurationPropertyValueNonIntegral, "microseconds"sv, microseconds));
 
-            // ii. Set value to ? ToIntegerWithoutRounding(value).
-            auto value_integer = TRY(to_integer_without_rounding(vm, value, ErrorType::TemporalInvalidDurationPropertyValueNonIntegral, property.as_string(), value.to_string_without_side_effects()));
+    // 9. Let milliseconds be ? Get(temporalDurationLike, "milliseconds").
+    auto milliseconds = TRY(temporal_duration_like.as_object().get(vm.names.milliseconds));
 
-            // iii. Let fieldName be the field name named in the Field Name column in Table 7 for Property Name property.
-            // iv. Set the field of result whose name is fieldName to value.
-            result.*field_name = value_integer;
-        }
-    }
+    // 10. If milliseconds is not undefined, set result.[[Milliseconds]] to ? ToIntegerIfIntegral(milliseconds).
+    if (!milliseconds.is_undefined())
+        result.milliseconds = TRY(to_integer_if_integral(vm, milliseconds, ErrorType::TemporalInvalidDurationPropertyValueNonIntegral, "milliseconds"sv, milliseconds));
 
-    // 9. If any is false, then
-    if (!any) {
-        // a. Throw a TypeError exception.
+    // 11. Let minutes be ? Get(temporalDurationLike, "minutes").
+    auto minutes = TRY(temporal_duration_like.as_object().get(vm.names.minutes));
+
+    // 12. If minutes is not undefined, set result.[[Minutes]] to ? ToIntegerIfIntegral(minutes).
+    if (!minutes.is_undefined())
+        result.minutes = TRY(to_integer_if_integral(vm, minutes, ErrorType::TemporalInvalidDurationPropertyValueNonIntegral, "minutes"sv, minutes));
+
+    // 13. Let months be ? Get(temporalDurationLike, "months").
+    auto months = TRY(temporal_duration_like.as_object().get(vm.names.months));
+
+    // 14. If months is not undefined, set result.[[Months]] to ? ToIntegerIfIntegral(months).
+    if (!months.is_undefined())
+        result.months = TRY(to_integer_if_integral(vm, months, ErrorType::TemporalInvalidDurationPropertyValueNonIntegral, "months"sv, months));
+
+    // 15. Let nanoseconds be ? Get(temporalDurationLike, "nanoseconds").
+    auto nanoseconds = TRY(temporal_duration_like.as_object().get(vm.names.nanoseconds));
+
+    // 16. If nanoseconds is not undefined, set result.[[Nanoseconds]] to ? ToIntegerIfIntegral(nanoseconds).
+    if (!nanoseconds.is_undefined())
+        result.nanoseconds = TRY(to_integer_if_integral(vm, nanoseconds, ErrorType::TemporalInvalidDurationPropertyValueNonIntegral, "nanoseconds"sv, nanoseconds));
+
+    // 17. Let seconds be ? Get(temporalDurationLike, "seconds").
+    auto seconds = TRY(temporal_duration_like.as_object().get(vm.names.seconds));
+
+    // 18. If seconds is not undefined, set result.[[Seconds]] to ? ToIntegerIfIntegral(seconds).
+    if (!seconds.is_undefined())
+        result.seconds = TRY(to_integer_if_integral(vm, seconds, ErrorType::TemporalInvalidDurationPropertyValueNonIntegral, "seconds"sv, seconds));
+
+    // 19. Let weeks be ? Get(temporalDurationLike, "weeks").
+    auto weeks = TRY(temporal_duration_like.as_object().get(vm.names.weeks));
+
+    // 20. If weeks is not undefined, set result.[[Weeks]] to ? ToIntegerIfIntegral(weeks).
+    if (!weeks.is_undefined())
+        result.weeks = TRY(to_integer_if_integral(vm, weeks, ErrorType::TemporalInvalidDurationPropertyValueNonIntegral, "weeks"sv, weeks));
+
+    // 21. Let years be ? Get(temporalDurationLike, "years").
+    auto years = TRY(temporal_duration_like.as_object().get(vm.names.years));
+
+    // 22. If years is not undefined, set result.[[Years]] to ? ToIntegerIfIntegral(years).
+    if (!years.is_undefined())
+        result.years = TRY(to_integer_if_integral(vm, years, ErrorType::TemporalInvalidDurationPropertyValueNonIntegral, "years"sv, years));
+
+    // 23. If years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, and nanoseconds are all undefined, throw a TypeError exception.
+    if (years.is_undefined() && months.is_undefined() && weeks.is_undefined() && days.is_undefined() && hours.is_undefined() && minutes.is_undefined() && seconds.is_undefined() && milliseconds.is_undefined() && microseconds.is_undefined() && nanoseconds.is_undefined())
         return vm.throw_completion<TypeError>(ErrorType::TemporalInvalidDurationLikeObject);
-    }
 
-    // 10. Return result.
+    // 24. Return result.
     return result;
 }
 
