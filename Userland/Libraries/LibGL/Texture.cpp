@@ -190,7 +190,7 @@ void GLContext::gl_delete_textures(GLsizei n, GLuint const* textures)
         if (texture_object == m_allocated_textures.end() || texture_object->value.is_null())
             continue;
 
-        m_name_allocator.free(name);
+        m_texture_name_allocator.free(name);
 
         auto texture = texture_object->value;
 
@@ -211,7 +211,7 @@ void GLContext::gl_gen_textures(GLsizei n, GLuint* textures)
     RETURN_WITH_ERROR_IF(n < 0, GL_INVALID_VALUE);
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
 
-    m_name_allocator.allocate(n, textures);
+    m_texture_name_allocator.allocate(n, textures);
 
     // Initialize all texture names with a nullptr
     for (auto i = 0; i < n; ++i) {

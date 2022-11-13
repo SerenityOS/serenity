@@ -15,7 +15,7 @@
 #include <AK/Tuple.h>
 #include <AK/Variant.h>
 #include <AK/Vector.h>
-#include <LibGL/Tex/NameAllocator.h>
+#include <LibGL/NameAllocator.h>
 #include <LibGL/Tex/Texture.h>
 #include <LibGL/Tex/TextureUnit.h>
 #include <LibGPU/Device.h>
@@ -373,7 +373,7 @@ private:
         return static_cast<T*>(default_texture.value());
     }
 
-    TextureNameAllocator m_name_allocator;
+    NameAllocator m_texture_name_allocator;
     HashMap<GLuint, RefPtr<Texture>> m_allocated_textures;
     HashMap<GLenum, RefPtr<Texture>> m_default_textures;
     Vector<TextureUnit> m_texture_units;
