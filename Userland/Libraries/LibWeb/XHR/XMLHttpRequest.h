@@ -30,7 +30,7 @@ class XMLHttpRequest final : public XMLHttpRequestEventTarget {
     WEB_PLATFORM_OBJECT(XMLHttpRequest, XMLHttpRequestEventTarget);
 
 public:
-    enum class ReadyState : u16 {
+    enum class State : u16 {
         Unsent = 0,
         Opened = 1,
         HeadersReceived = 2,
@@ -42,7 +42,7 @@ public:
 
     virtual ~XMLHttpRequest() override;
 
-    ReadyState ready_state() const { return m_ready_state; };
+    State ready_state() const { return m_state; };
     Fetch::Infrastructure::Status status() const { return m_status; };
     WebIDL::ExceptionOr<String> response_text() const;
     WebIDL::ExceptionOr<JS::Value> response();
@@ -72,7 +72,6 @@ private:
     virtual void visit_edges(Cell::Visitor&) override;
     virtual bool must_survive_garbage_collection() const override;
 
-    void set_ready_state(ReadyState);
     void set_status(Fetch::Infrastructure::Status status) { m_status = status; }
     void fire_progress_event(String const&, u64, u64);
 
@@ -86,7 +85,7 @@ private:
 
     JS::NonnullGCPtr<HTML::Window> m_window;
 
-    ReadyState m_ready_state { ReadyState::Unsent };
+    State m_state { State::Unsent };
     Fetch::Infrastructure::Status m_status { 0 };
     bool m_send { false };
     u32 m_timeout { 0 };

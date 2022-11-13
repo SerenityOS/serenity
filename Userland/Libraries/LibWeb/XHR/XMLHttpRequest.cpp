@@ -66,12 +66,6 @@ void XMLHttpRequest::visit_edges(Cell::Visitor& visitor)
         visitor.visit(*value);
 }
 
-void XMLHttpRequest::set_ready_state(ReadyState ready_state)
-{
-    m_ready_state = ready_state;
-    dispatch_event(*DOM::Event::create(realm(), EventNames::readystatechange));
-}
-
 void XMLHttpRequest::fire_progress_event(String const& event_name, u64 transmitted, u64 length)
 {
     ProgressEventInit event_init {};
@@ -89,7 +83,7 @@ WebIDL::ExceptionOr<String> XMLHttpRequest::response_text() const
         return WebIDL::InvalidStateError::create(realm(), "XHR responseText can only be used for responseType \"\" or \"text\"");
 
     // 2. If this’s state is not loading or done, then return the empty string.
-    if (m_ready_state != ReadyState::Loading && m_ready_state != ReadyState::Done)
+    if (m_state != State::Loading && m_state != State::Done)
         return String::empty();
 
     return get_text_response();
@@ -103,7 +97,7 @@ WebIDL::ExceptionOr<void> XMLHttpRequest::set_response_type(Bindings::XMLHttpReq
         return {};
 
     // 2. If this’s state is loading or done, then throw an "InvalidStateError" DOMException.
-    if (m_ready_state == ReadyState::Loading || m_ready_state == ReadyState::Done)
+    if (m_state == State::Loading || m_state == State::Done)
         return WebIDL::InvalidStateError::create(realm(), "Can't readyState when XHR is loading or done");
 
     // 3. If the current global object is a Window object and this’s synchronous flag is set, then throw an "InvalidAccessError" DOMException.
@@ -123,14 +117,14 @@ WebIDL::ExceptionOr<JS::Value> XMLHttpRequest::response()
     // 1. If this’s response type is the empty string or "text", then:
     if (m_response_type == Bindings::XMLHttpRequestResponseType::Empty || m_response_type == Bindings::XMLHttpRequestResponseType::Text) {
         // 1. If this’s state is not loading or done, then return the empty string.
-        if (m_ready_state != ReadyState::Loading && m_ready_state != ReadyState::Done)
+        if (m_state != State::Loading && m_state != State::Done)
             return JS::js_string(vm, "");
 
         // 2. Return the result of getting a text response for this.
         return JS::js_string(vm, get_text_response());
     }
     // 2. If this’s state is not done, then return null.
-    if (m_ready_state != ReadyState::Done)
+    if (m_state != State::Done)
         return JS::js_null();
 
     // 3. If this’s response object is failure, then return null.
@@ -296,7 +290,7 @@ WebIDL::ExceptionOr<void> XMLHttpRequest::set_request_header(String const& name_
     auto value = value_string.to_byte_buffer();
 
     // 1. If this’s state is not opened, then throw an "InvalidStateError" DOMException.
-    if (m_ready_state != ReadyState::Opened)
+    if (m_state != State::Opened)
         return WebIDL::InvalidStateError::create(realm(), "XHR readyState is not OPENED");
 
     // 2. If this’s send() flag is set, then throw an "InvalidStateError" DOMException.
@@ -411,10 +405,12 @@ WebIDL::ExceptionOr<void> XMLHttpRequest::open(String const& method_string, Stri
     m_response_object = {};
 
     // 13. If this’s state is not opened, then:
-    if (m_ready_state != ReadyState::Opened) {
+    if (m_state != State::Opened) {
         // 1. Set this’s state to opened.
+        m_state = State::Opened;
+
         // 2. Fire an event named readystatechange at this.
-        set_ready_state(ReadyState::Opened);
+        dispatch_event(*DOM::Event::create(realm(), EventNames::readystatechange));
     }
 
     return {};
@@ -426,7 +422,7 @@ WebIDL::ExceptionOr<void> XMLHttpRequest::send(Optional<DocumentOrXMLHttpRequest
     auto& vm = this->vm();
     auto& realm = *vm.current_realm();
 
-    if (m_ready_state != ReadyState::Opened)
+    if (m_state != State::Opened)
         return WebIDL::InvalidStateError::create(realm, "XHR readyState is not OPENED");
 
     if (m_send)
@@ -457,7 +453,8 @@ WebIDL::ExceptionOr<void> XMLHttpRequest::send(Optional<DocumentOrXMLHttpRequest
 
     if (should_enforce_same_origin_policy && !m_window->associated_document().origin().is_same_origin(request_url_origin)) {
         dbgln("XHR failed to load: Same-Origin Policy violation: {} may not load {}", m_window->associated_document().url(), request_url);
-        set_ready_state(ReadyState::Done);
+        m_state = State::Done;
+        dispatch_event(*DOM::Event::create(realm, EventNames::readystatechange));
         dispatch_event(*DOM::Event::create(realm, HTML::EventNames::error));
         return {};
     }
@@ -508,10 +505,10 @@ WebIDL::ExceptionOr<void> XMLHttpRequest::send(Optional<DocumentOrXMLHttpRequest
         // FIXME: If this’s upload complete flag is unset and this’s upload listener flag is set,
         //        then fire a progress event named loadstart at this’s upload object with 0 and req’s body’s total bytes.
 
-        if (m_ready_state != ReadyState::Opened || !m_send)
+        if (m_state != State::Opened || !m_send)
             return {};
 
-        // FIXME: in order to properly set ReadyState::HeadersReceived and ReadyState::Loading,
+        // FIXME: in order to properly set State::HeadersReceived and State::Loading,
         // we need to make ResourceLoader give us more detailed updates than just "done" and "error".
         // FIXME: In the Fetch spec, which XHR gets its definition of `status` from, the status code is 0-999.
         //        We could clamp, wrap around (current browser behavior!), or error out.
@@ -534,7 +531,7 @@ WebIDL::ExceptionOr<void> XMLHttpRequest::send(Optional<DocumentOrXMLHttpRequest
                     xhr.fire_progress_event(EventNames::progress, transmitted, length);
                 }
 
-                xhr.m_ready_state = ReadyState::Done;
+                xhr.m_state = State::Done;
                 xhr.m_status = status_code.value_or(0);
                 xhr.m_response_headers = move(response_headers);
                 xhr.m_send = false;
@@ -548,8 +545,9 @@ WebIDL::ExceptionOr<void> XMLHttpRequest::send(Optional<DocumentOrXMLHttpRequest
                 if (!strong_this)
                     return;
                 auto& xhr = const_cast<XMLHttpRequest&>(*strong_this);
-                xhr.set_ready_state(ReadyState::Done);
+                xhr.m_state = State::Done;
                 xhr.set_status(status_code.value_or(0));
+                xhr.dispatch_event(*DOM::Event::create(xhr.realm(), EventNames::readystatechange));
                 xhr.dispatch_event(*DOM::Event::create(xhr.realm(), HTML::EventNames::error));
             },
             m_timeout,
@@ -598,7 +596,7 @@ String XMLHttpRequest::get_all_response_headers() const
 WebIDL::ExceptionOr<void> XMLHttpRequest::override_mime_type(String const& mime)
 {
     // 1. If this’s state is loading or done, then throw an "InvalidStateError" DOMException.
-    if (m_ready_state == ReadyState::Loading || m_ready_state == ReadyState::Done)
+    if (m_state == State::Loading || m_state == State::Done)
         return WebIDL::InvalidStateError::create(realm(), "Cannot override MIME type when state is Loading or Done.");
 
     // 2. Set this’s override MIME type to the result of parsing mime.
@@ -635,9 +633,9 @@ bool XMLHttpRequest::must_survive_garbage_collection() const
     // if its state is either opened with the send() flag set, headers received, or loading,
     // and it has one or more event listeners registered whose type is one of
     // readystatechange, progress, abort, error, load, timeout, and loadend.
-    if ((m_ready_state == ReadyState::Opened && m_send)
-        || m_ready_state == ReadyState::HeadersReceived
-        || m_ready_state == ReadyState::Loading) {
+    if ((m_state == State::Opened && m_send)
+        || m_state == State::HeadersReceived
+        || m_state == State::Loading) {
         if (has_event_listener(EventNames::readystatechange))
             return true;
         if (has_event_listener(EventNames::progress))
