@@ -39,6 +39,9 @@ public:
 
     Optional<int> fd() { return socket().fd(); }
 
+    PageHost& page_host() { return *m_page_host; }
+    PageHost const& page_host() const { return *m_page_host; }
+
 private:
     explicit ConnectionFromClient(NonnullOwnPtr<Core::Stream::LocalSocket>);
 
