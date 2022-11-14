@@ -13,11 +13,13 @@
 #include "../Utilities.h"
 #include "../WebSocketClientManagerLadybird.h"
 #include <AK/LexicalPath.h>
+#include <LibCore/ArgsParser.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
 #include <LibCore/LocalServer.h>
 #include <LibCore/System.h>
-#include <LibIPC/SingleServer.h>
+#include <LibCore/SystemServerTakeover.h>
+#include <LibIPC/ConnectionFromClient.h>
 #include <LibMain/Main.h>
 #include <LibWeb/Loader/ContentFilter.h>
 #include <LibWeb/Loader/FrameLoader.h>
@@ -31,6 +33,34 @@
 static ErrorOr<void> load_content_filters();
 
 extern String s_serenity_resource_root;
+
+struct DeferredInvokerQt final : IPC::DeferredInvoker {
+    virtual ~DeferredInvokerQt() = default;
+    virtual void schedule(Function<void()> callback) override
+    {
+        QTimer::singleShot(0, move(callback));
+    }
+};
+
+template<typename ConnectionType, typename... Args>
+static ErrorOr<NonnullRefPtr<ConnectionType>> create_connection_from_passed_socket(int passing_socket_fd, StringView socket_name, QSocketNotifier& notifier, Args&&... args)
+{
+    auto socket = TRY(Core::take_over_socket_from_system_server(socket_name));
+    auto client = TRY(ConnectionType::try_create(move(socket), std::forward<Args>(args)...));
+
+    VERIFY(passing_socket_fd >= 0);
+    client->set_fd_passing_socket(TRY(Core::Stream::LocalSocket::adopt_fd(passing_socket_fd)));
+
+    notifier.setSocket(client->socket().fd().value());
+    notifier.setEnabled(true);
+
+    QObject::connect(&notifier, &QSocketNotifier::activated, [client]() mutable {
+        client->socket().notifier()->on_ready_to_read();
+    });
+
+    client->set_deferred_invoker(make<DeferredInvokerQt>());
+    return client;
+}
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
@@ -58,30 +88,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (maybe_content_filter_error.is_error())
         dbgln("Failed to load content filters: {}", maybe_content_filter_error.error());
 
-    auto client = TRY(IPC::take_over_accepted_client_from_system_server<WebContent::ConnectionFromClient>());
+    int webcontent_fd_passing_socket { -1 };
 
-    auto* fd_passing_socket_spec = getenv("FD_PASSING_SOCKET");
-    VERIFY(fd_passing_socket_spec);
-    auto fd_passing_socket_spec_string = String(fd_passing_socket_spec);
-    auto maybe_fd_passing_socket = fd_passing_socket_spec_string.to_int();
-    VERIFY(maybe_fd_passing_socket.has_value());
+    Core::ArgsParser args_parser;
+    args_parser.add_option(webcontent_fd_passing_socket, "File descriptor of the passing socket for the WebContent connection", "webcontent-fd-passing-socket", 'c', "webcontent_fd_passing_socket");
+    args_parser.parse(arguments);
 
-    client->set_fd_passing_socket(TRY(Core::Stream::LocalSocket::adopt_fd(maybe_fd_passing_socket.value())));
-
-    QSocketNotifier notifier(client->socket().fd().value(), QSocketNotifier::Type::Read);
-    QObject::connect(&notifier, &QSocketNotifier::activated, [&] {
-        client->socket().notifier()->on_ready_to_read();
-    });
-
-    struct DeferredInvokerQt final : IPC::DeferredInvoker {
-        virtual ~DeferredInvokerQt() = default;
-        virtual void schedule(Function<void()> callback) override
-        {
-            QTimer::singleShot(0, move(callback));
-        }
-    };
-
-    client->set_deferred_invoker(make<DeferredInvokerQt>());
+    QSocketNotifier webcontent_notifier(QSocketNotifier::Type::Read);
+    auto webcontent_client = TRY(create_connection_from_passed_socket<WebContent::ConnectionFromClient>(webcontent_fd_passing_socket, "WebContent"sv, webcontent_notifier));
 
     return app.exec();
 }

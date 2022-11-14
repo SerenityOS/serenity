@@ -589,14 +589,20 @@ void WebContentView::create_client()
         auto takeover_string = String::formatted("WebContent:{}", wc_fd);
         MUST(Core::System::setenv("SOCKET_TAKEOVER"sv, takeover_string, true));
 
-        auto fd_passing_socket_string = String::formatted("{}", wc_fd_passing_fd);
-        MUST(Core::System::setenv("FD_PASSING_SOCKET"sv, fd_passing_socket_string, true));
+        auto fd_passing_socket_string = String::number(wc_fd_passing_fd);
 
-        auto rc = execlp("./WebContent/WebContent", "WebContent", nullptr);
+        char const* argv[] = {
+            "WebContent",
+            "--webcontent-fd-passing-socket",
+            fd_passing_socket_string.characters(),
+            nullptr,
+        };
+
+        auto rc = execvp("./WebContent/WebContent", const_cast<char**>(argv));
         if (rc < 0)
-            rc = execlp((QCoreApplication::applicationDirPath() + "/WebContent").toStdString().c_str(), "WebContent", nullptr);
+            rc = execvp((QCoreApplication::applicationDirPath() + "/WebContent").toStdString().c_str(), const_cast<char**>(argv));
         if (rc < 0)
-            perror("execlp");
+            perror("execvp");
         VERIFY_NOT_REACHED();
     }
 
