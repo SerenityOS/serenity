@@ -111,7 +111,6 @@ JS::Completion ClassicScript::run(RethrowErrors rethrow_errors)
             // 1. Clean up after running script with settings.
             settings.clean_up_after_running_script();
 
-            dbgln("rethrow");
             // 2. Rethrow evaluationStatus.[[Value]].
             return JS::throw_completion(*evaluation_status.value());
         }
@@ -121,16 +120,12 @@ JS::Completion ClassicScript::run(RethrowErrors rethrow_errors)
             // 1. Clean up after running script with settings.
             settings.clean_up_after_running_script();
 
-            dbgln("network error");
-
             // 2. Throw a "NetworkError" DOMException.
             return throw_completion(WebIDL::NetworkError::create(settings.realm(), "Script error."));
         }
 
         // 3. Otherwise, rethrow errors is false. Perform the following steps:
         VERIFY(rethrow_errors == RethrowErrors::No);
-
-        dbgln("no rethrow, stat: {}", evaluation_status.value().value().to_string_without_side_effects());
 
         // 1. Report the exception given by evaluationStatus.[[Value]] for script.
         report_exception(evaluation_status, settings_object().realm());
