@@ -238,6 +238,10 @@ if [ -z "$SERENITY_HOST_IP" ]; then
     SERENITY_HOST_IP="127.0.0.1"
 fi
 
+if command -v wslpath >/dev/null; then
+   SERENITY_DISABLE_GDB_SOCKET=1
+fi
+
 if [ -z "$SERENITY_DISABLE_GDB_SOCKET" ]; then
     SERENITY_EXTRA_QEMU_ARGS="$SERENITY_EXTRA_QEMU_ARGS -gdb tcp:${SERENITY_HOST_IP}:1234"
 fi
