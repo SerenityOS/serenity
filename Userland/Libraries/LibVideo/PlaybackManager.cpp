@@ -60,7 +60,7 @@ void PlaybackManager::set_playback_status(PlaybackStatus status)
                 m_skipped_frames = 0;
             }
             m_last_present_in_real_time = Time::now_monotonic();
-            m_present_timer->start();
+            m_present_timer->start(0);
         } else {
             m_last_present_in_media_time = current_playback_time();
             m_last_present_in_real_time = Time::zero();
@@ -89,7 +89,7 @@ bool PlaybackManager::prepare_next_frame()
         return false;
     auto frame_item = m_frame_queue->dequeue();
     m_next_frame.emplace(move(frame_item));
-    m_decode_timer->start();
+    m_decode_timer->start(0);
     return true;
 }
 
@@ -170,7 +170,7 @@ void PlaybackManager::update_presented_frame()
     }
 
     set_playback_status(PlaybackStatus::Buffering);
-    m_decode_timer->start();
+    m_decode_timer->start(0);
 }
 
 void PlaybackManager::restart_playback()
@@ -266,7 +266,7 @@ void PlaybackManager::on_decode_timer()
 
     // Continually decode until buffering is complete
     if (is_buffering())
-        m_decode_timer->start();
+        m_decode_timer->start(0);
 }
 
 }
