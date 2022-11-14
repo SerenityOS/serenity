@@ -293,7 +293,7 @@ public:
     {
         if (m_capacity == 0)
             return;
-        if constexpr (!Detail::IsTriviallyDestructible<T>) {
+        if constexpr (!IsTriviallyDestructible<T>) {
             for (auto* bucket : *this)
                 bucket->~T();
         }

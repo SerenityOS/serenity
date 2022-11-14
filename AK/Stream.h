@@ -60,7 +60,7 @@ private:
 
 namespace AK {
 
-class InputStream : public virtual AK::Detail::Stream {
+class InputStream : public virtual Detail::Stream {
 public:
     // Reads at least one byte unless none are requested or none are available. Does nothing
     // and returns zero if there is already an error.
@@ -81,7 +81,7 @@ public:
     virtual bool discard_or_error(size_t count) = 0;
 };
 
-class OutputStream : public virtual AK::Detail::Stream {
+class OutputStream : public virtual Detail::Stream {
 public:
     virtual size_t write(ReadonlyBytes) = 0;
     virtual bool write_or_error(ReadonlyBytes) = 0;

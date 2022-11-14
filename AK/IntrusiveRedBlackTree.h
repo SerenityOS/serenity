@@ -24,7 +24,7 @@ struct ExtractIntrusiveRedBlackTreeTypes {
 };
 
 template<Integral K, typename V, typename Container = RawPtr<V>>
-using SubstitutedIntrusiveRedBlackTreeNode = IntrusiveRedBlackTreeNode<K, V, typename Detail::SubstituteIntrusiveContainerType<V, Container>::Type>;
+using SubstitutedIntrusiveRedBlackTreeNode = IntrusiveRedBlackTreeNode<K, V, typename SubstituteIntrusiveContainerType<V, Container>::Type>;
 
 template<Integral K, typename V, typename Container, SubstitutedIntrusiveRedBlackTreeNode<K, V, Container> V::*member>
 class IntrusiveRedBlackTree : public BaseRedBlackTree<K> {
