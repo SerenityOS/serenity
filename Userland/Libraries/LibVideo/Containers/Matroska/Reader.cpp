@@ -66,6 +66,17 @@ constexpr u32 BIT_DEPTH_ID = 0x6264;
 constexpr u32 SIMPLE_BLOCK_ID = 0xA3;
 constexpr u32 TIMESTAMP_ID = 0xE7;
 
+// Cues
+constexpr u32 CUES_ID = 0x1C53BB6B;
+constexpr u32 CUE_POINT_ID = 0xBB;
+constexpr u32 CUE_TIME_ID = 0xB3;
+constexpr u32 CUE_TRACK_POSITIONS_ID = 0xB7;
+constexpr u32 CUE_TRACK_ID = 0xF7;
+constexpr u32 CUE_CLUSTER_POSITION_ID = 0xF1;
+constexpr u32 CUE_RELATIVE_POSITION_ID = 0xF0;
+constexpr u32 CUE_CODEC_STATE_ID = 0xEA;
+constexpr u32 CUE_REFERENCE_ID = 0xDB;
+
 DecoderErrorOr<Reader> Reader::from_file(StringView path)
 {
     auto mapped_file = DECODER_TRY(DecoderErrorCategory::IO, Core::MappedFile::map(path));
@@ -625,6 +636,175 @@ DecoderErrorOr<SampleIterator> Reader::create_sample_iterator(u64 track_number)
     return SampleIterator(this->m_mapped_file, segment_view, TRY(track_for_track_number(track_number)), TRY(segment_information()).timestamp_scale(), position);
 }
 
+static DecoderErrorOr<CueTrackPosition> parse_cue_track_position(Streamer& streamer)
+{
+    CueTrackPosition track_position;
+
+    bool had_cluster_position = false;
+
+    TRY_READ(parse_master_element(streamer, "CueTrackPositions"sv, [&](u64 element_id, size_t) -> DecoderErrorOr<IterationDecision> {
+        switch (element_id) {
+        case CUE_TRACK_ID:
+            track_position.set_track_number(TRY_READ(streamer.read_u64()));
+            dbgln_if(MATROSKA_TRACE_DEBUG, "Read CueTrackPositions track number {}", track_position.track_number());
+            break;
+        case CUE_CLUSTER_POSITION_ID:
+            track_position.set_cluster_position(TRY_READ(streamer.read_u64()));
+            dbgln_if(MATROSKA_TRACE_DEBUG, "Read CueTrackPositions cluster position {}", track_position.cluster_position());
+            had_cluster_position = true;
+            break;
+        case CUE_RELATIVE_POSITION_ID:
+            track_position.set_block_offset(TRY_READ(streamer.read_u64()));
+            dbgln_if(MATROSKA_TRACE_DEBUG, "Read CueTrackPositions relative position {}", track_position.block_offset());
+            break;
+        case CUE_CODEC_STATE_ID:
+            // Mandatory in spec, but not present in files? 0 means use TrackEntry's codec state.
+            // FIXME: Do something with this value.
+            dbgln_if(MATROSKA_DEBUG, "Found CodecState, skipping");
+            TRY_READ(streamer.read_unknown_element());
+            break;
+        case CUE_REFERENCE_ID:
+            return DecoderError::not_implemented();
+        default:
+            TRY_READ(streamer.read_unknown_element());
+            break;
+        }
+
+        return IterationDecision::Continue;
+    }));
+
+    if (track_position.track_number() == 0)
+        return DecoderError::corrupted("Track number was not present or 0"sv);
+
+    if (!had_cluster_position)
+        return DecoderError::corrupted("Cluster was missing the cluster position"sv);
+
+    return track_position;
+}
+
+static DecoderErrorOr<CuePoint> parse_cue_point(Streamer& streamer, u64 timestamp_scale)
+{
+    CuePoint cue_point;
+
+    TRY(parse_master_element(streamer, "CuePoint"sv, [&](u64 element_id, size_t) -> DecoderErrorOr<IterationDecision> {
+        switch (element_id) {
+        case CUE_TIME_ID: {
+            // On https://www.matroska.org/technical/elements.html, spec says of the CueTime element:
+            // > Absolute timestamp of the seek point, expressed in Matroska Ticks -- ie in nanoseconds; see timestamp-ticks.
+            // Matroska Ticks are specified in https://www.matroska.org/technical/notes.html:
+            // > For such elements, the timestamp value is stored directly in nanoseconds.
+            // However, my test files appear to use Segment Ticks, which uses the segment's timestamp scale, and Mozilla's nestegg parser agrees:
+            // https://github.com/mozilla/nestegg/tree/ec6adfbbf979678e3058cc4695257366f39e290b/src/nestegg.c#L1941
+            // https://github.com/mozilla/nestegg/tree/ec6adfbbf979678e3058cc4695257366f39e290b/src/nestegg.c#L2411-L2416
+            // https://github.com/mozilla/nestegg/tree/ec6adfbbf979678e3058cc4695257366f39e290b/src/nestegg.c#L1383-L1392
+            // Other fields that specify Matroska Ticks may also use Segment Ticks instead, who knows :^(
+            auto timestamp = Time::from_nanoseconds(static_cast<i64>(TRY_READ(streamer.read_u64()) * timestamp_scale));
+            cue_point.set_timestamp(timestamp);
+            dbgln_if(MATROSKA_DEBUG, "Read CuePoint timestamp {}ms", cue_point.timestamp().to_milliseconds());
+            break;
+        }
+        case CUE_TRACK_POSITIONS_ID: {
+            auto track_position = TRY_READ(parse_cue_track_position(streamer));
+            DECODER_TRY_ALLOC(cue_point.track_positions().try_set(track_position.track_number(), track_position));
+            break;
+        }
+        default:
+            TRY_READ(streamer.read_unknown_element());
+            break;
+        }
+
+        return IterationDecision::Continue;
+    }));
+
+    if (cue_point.timestamp().is_negative())
+        return DecoderError::corrupted("CuePoint was missing a timestamp"sv);
+
+    if (cue_point.track_positions().is_empty())
+        return DecoderError::corrupted("CuePoint was missing track positions"sv);
+
+    return cue_point;
+}
+
+DecoderErrorOr<void> Reader::parse_cues(Streamer& streamer)
+{
+    m_cues.clear();
+
+    TRY(parse_master_element(streamer, "Cues"sv, [&](u64 element_id, size_t) -> DecoderErrorOr<IterationDecision> {
+        switch (element_id) {
+        case CUE_POINT_ID: {
+            auto cue_point = TRY(parse_cue_point(streamer, TRY(segment_information()).timestamp_scale()));
+
+            // FIXME: Verify that these are already in order of timestamp. If they are not, return a corrupted error for now,
+            //        but if it turns out that Matroska files with out-of-order cue points are valid, sort them instead.
+
+            for (auto track_position_entry : cue_point.track_positions()) {
+                if (!m_cues.contains(track_position_entry.key))
+                    DECODER_TRY_ALLOC(m_cues.try_set(track_position_entry.key, Vector<CuePoint>()));
+                Vector<CuePoint>& cue_points_for_track = m_cues.get(track_position_entry.key).release_value();
+                cue_points_for_track.append(cue_point);
+            }
+            break;
+        }
+        default:
+            return DecoderError::format(DecoderErrorCategory::Corrupted, "Unknown Cues child ID {:#010x}", element_id);
+        }
+
+        return IterationDecision::Continue;
+    }));
+
+    return {};
+}
+
+DecoderErrorOr<void> Reader::ensure_cues_are_parsed()
+{
+    if (m_cues_have_been_parsed)
+        return {};
+    auto position = TRY(find_first_top_level_element_with_id("Cues"sv, CUES_ID));
+    if (!position.has_value())
+        return DecoderError::corrupted("No Tracks element found"sv);
+    Streamer streamer { m_data };
+    TRY_READ(streamer.seek_to_position(position.release_value()));
+    TRY(parse_cues(streamer));
+    m_cues_have_been_parsed = true;
+    return {};
+}
+
+DecoderErrorOr<void> Reader::seek_to_cue_for_timestamp(SampleIterator& iterator, Time const& timestamp)
+{
+    auto const& cue_points = MUST(cue_points_for_track(iterator.m_track.track_number())).release_value();
+
+    // Take a guess at where in the cues the timestamp will be and correct from there.
+    auto duration = TRY(segment_information()).duration();
+    size_t index = 0;
+    if (duration.has_value())
+        index = clamp(((timestamp.to_nanoseconds() * cue_points.size()) / TRY(segment_information()).duration()->to_nanoseconds()), 0, cue_points.size() - 1);
+
+    CuePoint const* prev_cue_point = &cue_points[index];
+
+    if (prev_cue_point->timestamp() == timestamp) {
+        TRY(iterator.seek_to_cue_point(*prev_cue_point));
+        return {};
+    }
+
+    if (prev_cue_point->timestamp() > timestamp) {
+        while (index > 0 && prev_cue_point->timestamp() > timestamp)
+            prev_cue_point = &cue_points[--index];
+        TRY(iterator.seek_to_cue_point(*prev_cue_point));
+        return {};
+    }
+
+    while (index < cue_points.size()) {
+        auto const& cue_point = cue_points[index++];
+        if (cue_point.timestamp() > timestamp)
+            break;
+        prev_cue_point = &cue_point;
+        index++;
+    }
+
+    TRY(iterator.seek_to_cue_point(*prev_cue_point));
+    return {};
+}
+
 static DecoderErrorOr<bool> find_keyframe_before_timestamp(SampleIterator& iterator, Time const& timestamp)
 {
 #if MATROSKA_DEBUG
@@ -662,9 +842,27 @@ static DecoderErrorOr<bool> find_keyframe_before_timestamp(SampleIterator& itera
     return false;
 }
 
+DecoderErrorOr<bool> Reader::has_cues_for_track(u64 track_number)
+{
+    TRY(ensure_cues_are_parsed());
+    return m_cues.contains(track_number);
+}
+
 DecoderErrorOr<void> Reader::seek_to_random_access_point(SampleIterator& iterator, Time timestamp)
 {
-    // FIXME: Use Cues to look these up if the element is present.
+    if (iterator.m_last_timestamp == timestamp)
+        return {};
+
+    if (TRY(has_cues_for_track(iterator.m_track.track_number()))) {
+        auto seeked_iterator = iterator;
+        TRY(seek_to_cue_for_timestamp(seeked_iterator, timestamp));
+        VERIFY(seeked_iterator.m_last_timestamp <= timestamp);
+
+        // We only need to seek to a keyframe if it's not faster to continue from the current position.
+        if (timestamp < iterator.m_last_timestamp || seeked_iterator.m_last_timestamp > iterator.m_last_timestamp)
+            iterator = seeked_iterator;
+        return {};
+    }
 
     // FIXME: This could cache the keyframes it finds. Is it worth doing? Probably not, most files will have Cues :^)
     if (timestamp < iterator.last_timestamp() || iterator.last_timestamp().is_negative()) {
@@ -681,6 +879,12 @@ DecoderErrorOr<void> Reader::seek_to_random_access_point(SampleIterator& iterato
         iterator = seeked_iterator;
     VERIFY(iterator.last_timestamp() <= timestamp);
     return {};
+}
+
+DecoderErrorOr<Optional<Vector<CuePoint> const&>> Reader::cue_points_for_track(u64 track_number)
+{
+    TRY(ensure_cues_are_parsed());
+    return m_cues.get(track_number);
 }
 
 DecoderErrorOr<Block> SampleIterator::next_block()
@@ -724,6 +928,25 @@ DecoderErrorOr<Block> SampleIterator::next_block()
 
     m_current_cluster.clear();
     return DecoderError::with_description(DecoderErrorCategory::EndOfStream, "End of stream"sv);
+}
+
+DecoderErrorOr<void> SampleIterator::seek_to_cue_point(CuePoint const& cue_point)
+{
+    // This is a private function. The position getter can return optional, but the caller should already know that this track has a position.
+    auto const& cue_position = cue_point.position_for_track(m_track.track_number()).release_value();
+    Streamer streamer { m_data };
+    TRY_READ(streamer.seek_to_position(cue_position.cluster_position()));
+
+    auto element_id = TRY_READ(streamer.read_variable_size_integer(false));
+    if (element_id != CLUSTER_ELEMENT_ID)
+        return DecoderError::corrupted("Cue point's cluster position didn't point to a cluster"sv);
+
+    m_current_cluster = TRY(parse_cluster(streamer, m_segment_timestamp_scale));
+    dbgln_if(MATROSKA_DEBUG, "SampleIterator set to cue point at timestamp {}ms", m_current_cluster->timestamp().to_milliseconds());
+
+    m_position = streamer.position() + cue_position.block_offset();
+    m_last_timestamp = cue_point.timestamp();
+    return {};
 }
 
 ErrorOr<String> Streamer::read_string()

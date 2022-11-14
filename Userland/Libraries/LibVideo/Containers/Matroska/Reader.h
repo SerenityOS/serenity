@@ -41,6 +41,8 @@ public:
 
     DecoderErrorOr<SampleIterator> create_sample_iterator(u64 track_number);
     DecoderErrorOr<void> seek_to_random_access_point(SampleIterator&, Time);
+    DecoderErrorOr<Optional<Vector<CuePoint> const&>> cue_points_for_track(u64 track_number);
+    DecoderErrorOr<bool> has_cues_for_track(u64 track_number);
 
 private:
     Reader(ReadonlyBytes data)
@@ -54,6 +56,10 @@ private:
 
     DecoderErrorOr<void> ensure_tracks_are_parsed();
     DecoderErrorOr<void> parse_tracks(Streamer&);
+
+    DecoderErrorOr<void> parse_cues(Streamer&);
+    DecoderErrorOr<void> ensure_cues_are_parsed();
+    DecoderErrorOr<void> seek_to_cue_for_timestamp(SampleIterator&, Time const&);
 
     RefPtr<Core::MappedFile> m_mapped_file;
     ReadonlyBytes m_data;
@@ -69,6 +75,10 @@ private:
     Optional<SegmentInformation> m_segment_information;
 
     OrderedHashMap<u64, TrackEntry> m_tracks;
+
+    // The vectors must be sorted by timestamp at all times.
+    HashMap<u64, Vector<CuePoint>> m_cues;
+    bool m_cues_have_been_parsed { false };
 };
 
 class SampleIterator {
@@ -90,6 +100,7 @@ private:
     }
 
     DecoderErrorOr<void> set_position(size_t position);
+    DecoderErrorOr<void> seek_to_cue_point(CuePoint const& cue_point);
 
     RefPtr<Core::MappedFile> m_file;
     ReadonlyBytes m_data;
