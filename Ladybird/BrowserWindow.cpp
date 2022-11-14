@@ -248,6 +248,15 @@ BrowserWindow::BrowserWindow(int webdriver_fd_passing_socket)
         debug_request("scripting", state ? "on" : "off");
     });
 
+    auto* block_pop_ups_action = new QAction("Block Pop-ups", this);
+    block_pop_ups_action->setCheckable(true);
+    block_pop_ups_action->setChecked(true);
+    debug_menu->addAction(block_pop_ups_action);
+    QObject::connect(block_pop_ups_action, &QAction::triggered, this, [this, block_pop_ups_action] {
+        bool state = block_pop_ups_action->isChecked();
+        debug_request("block-pop-ups", state ? "on" : "off");
+    });
+
     auto* enable_same_origin_policy_action = new QAction("Enable Same-Origin Policy", this);
     enable_same_origin_policy_action->setCheckable(true);
     debug_menu->addAction(enable_same_origin_policy_action);
