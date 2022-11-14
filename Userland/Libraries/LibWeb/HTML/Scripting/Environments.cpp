@@ -393,6 +393,32 @@ JS::Object& relevant_global_object(JS::Object const& object)
     return relevant_realm(object).global_object();
 }
 
+// https://html.spec.whatwg.org/multipage/webappapis.html#concept-entry-realm
+JS::Realm& entry_realm()
+{
+    auto& event_loop = HTML::main_thread_event_loop();
+    auto& vm = event_loop.vm();
+
+    // With this in hand, we define the entry execution context to be the most recently pushed item in the JavaScript execution context stack that is a realm execution context.
+    // The entry realm is the entry execution context's Realm component.
+    // NOTE: Currently all execution contexts in LibJS are realm execution contexts
+    return *vm.running_execution_context().realm;
+}
+
+// https://html.spec.whatwg.org/multipage/webappapis.html#entry-settings-object
+EnvironmentSettingsObject& entry_settings_object()
+{
+    // Then, the entry settings object is the environment settings object of the entry realm.
+    return Bindings::host_defined_environment_settings_object(entry_realm());
+}
+
+// https://html.spec.whatwg.org/multipage/webappapis.html#entry-global-object
+JS::Object& entry_global_object()
+{
+    // Similarly, the entry global object is the global object of the entry realm.
+    return entry_realm().global_object();
+}
+
 // https://html.spec.whatwg.org/multipage/webappapis.html#secure-context
 bool is_secure_context(Environment const& environment)
 {
