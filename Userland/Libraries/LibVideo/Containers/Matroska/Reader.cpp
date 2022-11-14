@@ -270,8 +270,8 @@ static DecoderErrorOr<SegmentInformation> parse_information(Streamer& streamer)
             dbgln_if(MATROSKA_DEBUG, "Read WritingApp attribute: {}", segment_information.writing_app().as_string());
             break;
         case DURATION_ID:
-            segment_information.set_duration(TRY_READ(streamer.read_float()));
-            dbgln_if(MATROSKA_DEBUG, "Read Duration attribute: {}", segment_information.duration().value());
+            segment_information.set_duration_unscaled(TRY_READ(streamer.read_float()));
+            dbgln_if(MATROSKA_DEBUG, "Read Duration attribute: {}", segment_information.duration_unscaled().value());
             break;
         default:
             TRY_READ(streamer.read_unknown_element());

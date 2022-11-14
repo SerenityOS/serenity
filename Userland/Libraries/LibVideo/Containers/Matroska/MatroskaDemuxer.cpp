@@ -82,10 +82,8 @@ DecoderErrorOr<NonnullOwnPtr<Sample>> MatroskaDemuxer::get_next_sample_for_track
 
 DecoderErrorOr<Time> MatroskaDemuxer::duration()
 {
-    auto segment_information = TRY(m_reader.segment_information());
-    if (!segment_information.duration().has_value())
-        return Time::zero();
-    return Time::from_nanoseconds(static_cast<i64>(segment_information.duration().value() * segment_information.timestamp_scale()));
+    auto duration = TRY(m_reader.segment_information()).duration();
+    return duration.value_or(Time::zero());
 }
 
 }
