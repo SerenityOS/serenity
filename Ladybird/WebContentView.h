@@ -71,8 +71,11 @@ public:
     Function<void(i32 node_id, String const& specified_style, String const& computed_style, String const& custom_properties, String const& node_box_sizing)> on_get_dom_node_properties;
     Function<void(i32 message_id)> on_js_console_new_message;
     Function<void(i32 start_index, Vector<String> const& message_types, Vector<String> const& messages)> on_get_js_console_messages;
+    Function<Vector<Web::Cookie::Cookie>(AK::URL const& url)> on_get_all_cookies;
+    Function<Optional<Web::Cookie::Cookie>(AK::URL const& url, String const& name)> on_get_named_cookie;
     Function<String(const AK::URL& url, Web::Cookie::Source source)> on_get_cookie;
     Function<void(const AK::URL& url, Web::Cookie::ParsedCookie const& cookie, Web::Cookie::Source source)> on_set_cookie;
+    Function<void(AK::URL const& url, Web::Cookie::Cookie const& cookie)> on_update_cookie;
     Function<void(i32 count_waiting)> on_resource_status_change;
 
     virtual void paintEvent(QPaintEvent*) override;
