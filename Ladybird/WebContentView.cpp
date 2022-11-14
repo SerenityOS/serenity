@@ -810,14 +810,17 @@ void WebContentView::notify_server_did_finish_loading(Badge<WebContentClient>, A
 
 void WebContentView::notify_server_did_request_navigate_back(Badge<WebContentClient>)
 {
+    emit navigate_back();
 }
 
 void WebContentView::notify_server_did_request_navigate_forward(Badge<WebContentClient>)
 {
+    emit navigate_forward();
 }
 
 void WebContentView::notify_server_did_request_refresh(Badge<WebContentClient>)
 {
+    emit refresh();
 }
 
 void WebContentView::notify_server_did_request_context_menu(Badge<WebContentClient>, Gfx::IntPoint const& content_position)
@@ -942,31 +945,32 @@ void WebContentView::notify_server_did_update_resource_count(i32 count_waiting)
 
 void WebContentView::notify_server_did_request_restore_window()
 {
+    emit restore_window();
 }
 
-Gfx::IntPoint WebContentView::notify_server_did_request_reposition_window(Gfx::IntPoint const&)
+Gfx::IntPoint WebContentView::notify_server_did_request_reposition_window(Gfx::IntPoint const& position)
 {
-    return {};
+    return emit reposition_window(position);
 }
 
-Gfx::IntSize WebContentView::notify_server_did_request_resize_window(Gfx::IntSize const&)
+Gfx::IntSize WebContentView::notify_server_did_request_resize_window(Gfx::IntSize const& size)
 {
-    return {};
+    return emit resize_window(size);
 }
 
 Gfx::IntRect WebContentView::notify_server_did_request_maximize_window()
 {
-    return {};
+    return emit maximize_window();
 }
 
 Gfx::IntRect WebContentView::notify_server_did_request_minimize_window()
 {
-    return {};
+    return emit minimize_window();
 }
 
 Gfx::IntRect WebContentView::notify_server_did_request_fullscreen_window()
 {
-    return {};
+    return emit fullscreen_window();
 }
 
 void WebContentView::notify_server_did_request_file(Badge<WebContentClient>, String const& path, i32 request_id)
