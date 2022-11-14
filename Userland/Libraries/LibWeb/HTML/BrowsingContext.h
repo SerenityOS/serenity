@@ -124,6 +124,10 @@ public:
     HTML::WindowProxy* window_proxy();
     HTML::WindowProxy const* window_proxy() const;
 
+    JS::GCPtr<BrowsingContext> opener_browsing_context() const { return m_opener_browsing_context; }
+
+    void set_opener_browsing_context(JS::GCPtr<BrowsingContext> browsing_context) { m_opener_browsing_context = browsing_context; }
+
     HTML::Window* active_window();
     HTML::Window const* active_window() const;
 
@@ -287,6 +291,9 @@ private:
 
     // https://html.spec.whatwg.org/multipage/browsers.html#browsing-context
     JS::GCPtr<HTML::WindowProxy> m_window_proxy;
+
+    // https://html.spec.whatwg.org/multipage/browsers.html#opener-browsing-context
+    JS::GCPtr<BrowsingContext> m_opener_browsing_context;
 
     DOM::Position m_cursor_position;
     RefPtr<Platform::Timer> m_cursor_blink_timer;
