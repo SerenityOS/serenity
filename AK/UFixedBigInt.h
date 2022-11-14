@@ -25,9 +25,9 @@ requires(sizeof(T) >= sizeof(u64) && IsUnsigned<T>) class UFixedBigInt;
 // constexpr inline bool Detail::IsIntegral<UFixedBigInt<T>> = true;
 
 template<typename T>
-constexpr inline bool Detail::IsUnsigned<UFixedBigInt<T>> = true;
+constexpr inline bool IsUnsigned<UFixedBigInt<T>> = true;
 template<typename T>
-constexpr inline bool Detail::IsSigned<UFixedBigInt<T>> = false;
+constexpr inline bool IsSigned<UFixedBigInt<T>> = false;
 
 template<typename T>
 struct NumericLimits<UFixedBigInt<T>> {

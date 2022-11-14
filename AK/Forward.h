@@ -16,7 +16,7 @@ class ByteBuffer;
 }
 
 class Bitmap;
-using ByteBuffer = AK::Detail::ByteBuffer<32>;
+using ByteBuffer = Detail::ByteBuffer<32>;
 class Error;
 class GenericLexer;
 class IPv4Address;

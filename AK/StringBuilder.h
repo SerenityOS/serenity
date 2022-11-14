@@ -93,7 +93,7 @@ private:
     u8 const* data() const { return m_buffer.data(); }
 
     static constexpr size_t inline_capacity = 256;
-    AK::Detail::ByteBuffer<inline_capacity> m_buffer;
+    Detail::ByteBuffer<inline_capacity> m_buffer;
 };
 
 }

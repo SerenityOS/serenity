@@ -582,7 +582,7 @@ inline constexpr bool IsSpecializationOf<U<Us...>, U> = true;
 
 template<typename T>
 struct __Decay {
-    typedef Detail::RemoveCVReference<T> type;
+    typedef RemoveCVReference<T> type;
 };
 template<typename T>
 struct __Decay<T[]> {

@@ -46,7 +46,7 @@ template<typename T, template<typename...> typename S>
 concept SpecializationOf = IsSpecializationOf<T, S>;
 
 template<typename T>
-concept AnyString = Detail::IsConstructible<StringView, T>;
+concept AnyString = IsConstructible<StringView, T>;
 
 template<typename T, typename U>
 concept HashCompatible = IsHashCompatible<Detail::Decay<T>, Detail::Decay<U>>;
