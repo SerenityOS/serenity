@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Services/WebDriver/Client.h>
-#include <Services/WebDriver/WebContentConnection.h>
+#include <WebDriver/Client.h>
+#include <WebDriver/WebContentConnection.h>
 
 namespace WebDriver {
 
