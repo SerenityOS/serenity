@@ -10,6 +10,7 @@
 #include "RegexMatch.h"
 #include "RegexOptions.h"
 
+#include <AK/Concepts.h>
 #include <AK/DisjointChunks.h>
 #include <AK/Format.h>
 #include <AK/Forward.h>
@@ -339,9 +340,8 @@ public:
         Optimizer::append_alternation(*this, move(left), move(right));
     }
 
-    template<typename T>
+    template<Integral T>
     static void transform_bytecode_repetition_min_max(ByteCode& bytecode_to_repeat, T minimum, Optional<T> maximum, size_t min_repetition_mark_id, size_t max_repetition_mark_id, bool greedy = true)
-    requires(IsIntegral<T>)
     {
         if (!maximum.has_value()) {
             if (minimum == 0)
@@ -410,9 +410,8 @@ public:
         bytecode_to_repeat = move(new_bytecode);
     }
 
-    template<typename T>
+    template<Integral T>
     void insert_bytecode_repetition_n(ByteCode& bytecode_to_repeat, T n, size_t repetition_mark_id)
-    requires(IsIntegral<T>)
     {
         // LABEL _LOOP
         // REGEXP

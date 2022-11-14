@@ -6,6 +6,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Concepts.h>
 #include <AK/DeprecatedString.h>
 #include <LibJS/Print.h>
 #include <LibJS/Runtime/Array.h>
@@ -362,9 +363,8 @@ ErrorOr<void> print_async_generator(JS::PrintContext& print_context, JS::AsyncGe
     return {};
 }
 
-template<typename T>
+template<Arithmetic T>
 ErrorOr<void> print_number(JS::PrintContext& print_context, T number)
-requires IsArithmetic<T>
 {
     TRY(js_out(print_context, "\033[35;1m"));
     TRY(js_out(print_context, "{}", number));

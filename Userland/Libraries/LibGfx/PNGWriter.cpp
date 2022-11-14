@@ -44,8 +44,8 @@ public:
     u32 crc();
 
 private:
-    template<typename T>
-    requires(IsUnsigned<T>) ErrorOr<void> add(T);
+    template<Unsigned T>
+    ErrorOr<void> add(T);
 
     ByteBuffer m_data;
     DeprecatedString m_type;
@@ -77,8 +77,8 @@ u32 PNGChunk::crc()
     return crc;
 }
 
-template<typename T>
-requires(IsUnsigned<T>) ErrorOr<void> PNGChunk::add(T data)
+template<Unsigned T>
+ErrorOr<void> PNGChunk::add(T data)
 {
     TRY(m_data.try_append(&data, sizeof(T)));
     return {};

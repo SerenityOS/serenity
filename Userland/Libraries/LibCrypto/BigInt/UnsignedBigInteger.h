@@ -9,6 +9,7 @@
 #pragma once
 
 #include <AK/ByteBuffer.h>
+#include <AK/Concepts.h>
 #include <AK/DeprecatedString.h>
 #include <AK/Span.h>
 #include <AK/Types.h>
@@ -25,8 +26,8 @@ public:
     static constexpr size_t BITS_IN_WORD = 32;
 
     // This constructor accepts any unsigned with size up to Word.
-    template<typename T>
-    requires(IsIntegral<T> && sizeof(T) <= sizeof(Word))
+    template<Integral T>
+    requires(sizeof(T) <= sizeof(Word))
     UnsignedBigInteger(T value)
     {
         m_words.append(static_cast<Word>(value));

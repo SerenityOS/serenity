@@ -460,9 +460,8 @@ void ArgsParser::add_option(StringView& value, char const* help_string, char con
     add_option(move(option));
 }
 
-template<typename Integral>
-void ArgsParser::add_option(Integral& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode)
-requires(IsIntegral<Integral>)
+template<Integral I>
+void ArgsParser::add_option(I& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode)
 {
     Option option {
         OptionArgumentMode::Required,
@@ -472,11 +471,11 @@ requires(IsIntegral<Integral>)
         value_name,
         [&value](char const* s) {
             auto view = StringView { s, strlen(s) };
-            Optional<Integral> opt;
-            if constexpr (IsSigned<Integral>)
-                opt = view.to_int<Integral>();
+            Optional<I> opt;
+            if constexpr (IsSigned<I>)
+                opt = view.to_int<I>();
             else
-                opt = view.to_uint<Integral>();
+                opt = view.to_uint<I>();
             value = opt.value_or(0);
             return opt.has_value();
         },
