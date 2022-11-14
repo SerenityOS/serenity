@@ -151,6 +151,22 @@ void EnvironmentSettingsObject::prepare_to_run_callback()
         context->skip_when_determining_incumbent_counter++;
 }
 
+// https://html.spec.whatwg.org/multipage/urls-and-fetching.html#parse-a-url
+AK::URL EnvironmentSettingsObject::parse_url(StringView url)
+{
+    // 1. Let encoding be document's character encoding, if document was given, and environment settings object's API URL character encoding otherwise.
+    // FIXME: Pass in environment settings object's API URL character encoding.
+
+    // 2. Let baseURL be document's base URL, if document was given, and environment settings object's API base URL otherwise.
+    auto base_url = api_base_url();
+
+    // 3. Let urlRecord be the result of applying the URL parser to url, with baseURL and encoding.
+    // 4. If urlRecord is failure, then return failure.
+    // 5. Let urlString be the result of applying the URL serializer to urlRecord.
+    // 6. Return urlString as the resulting URL string and urlRecord as the resulting URL record.
+    return base_url.complete_url(url);
+}
+
 // https://html.spec.whatwg.org/multipage/webappapis.html#clean-up-after-running-a-callback
 void EnvironmentSettingsObject::clean_up_after_running_callback()
 {
