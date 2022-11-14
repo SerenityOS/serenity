@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/Concepts.h>
 #include <AK/Format.h>
 #include <AK/Forward.h>
 #include <AK/RefCounted.h>
@@ -74,9 +75,8 @@ public:
 
     [[nodiscard]] u32 hash() const;
 
-    template<typename T>
+    template<Arithmetic T>
     static ErrorOr<String> number(T value)
-    requires IsArithmetic<T>
     {
         return formatted("{}", value);
     }

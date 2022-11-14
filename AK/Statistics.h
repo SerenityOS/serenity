@@ -6,15 +6,15 @@
 
 #pragma once
 
+#include <AK/Concepts.h>
 #include <AK/Math.h>
 #include <AK/QuickSort.h>
-#include <AK/StdLibExtraDetails.h>
 #include <AK/Vector.h>
 
 namespace AK {
 
-template<typename T = float>
-requires(IsArithmetic<T>) class Statistics {
+template<Arithmetic T = float>
+class Statistics {
 public:
     Statistics() = default;
     ~Statistics() = default;

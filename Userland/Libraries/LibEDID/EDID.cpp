@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Concepts.h>
 #include <AK/Function.h>
 #include <AK/QuickSort.h>
 #include <LibEDID/EDID.h>
@@ -165,16 +166,16 @@ T Parser::read_host(T const* field) const
     return value;
 }
 
-template<typename T>
-requires(IsIntegral<T> && sizeof(T) > 1)
+template<Integral T>
+requires(sizeof(T) > 1)
 T Parser::read_le(T const* field) const
 {
     static_assert(sizeof(T) > 1);
     return AK::convert_between_host_and_little_endian(read_host(field));
 }
 
-template<typename T>
-requires(IsIntegral<T> && sizeof(T) > 1)
+template<Integral T>
+requires(sizeof(T) > 1)
 T Parser::read_be(T const* field) const
 {
     static_assert(sizeof(T) > 1);

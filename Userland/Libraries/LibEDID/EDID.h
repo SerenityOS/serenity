@@ -8,6 +8,7 @@
 
 #include <AK/ByteBuffer.h>
 #include <AK/ByteReader.h>
+#include <AK/Concepts.h>
 #include <AK/Endian.h>
 #include <AK/Error.h>
 #include <AK/FixedPoint.h>
@@ -437,12 +438,12 @@ private:
     template<typename T>
     T read_host(T const*) const;
 
-    template<typename T>
-    requires(IsIntegral<T> && sizeof(T) > 1)
+    template<Integral T>
+    requires(sizeof(T) > 1)
     T read_le(T const*) const;
 
-    template<typename T>
-    requires(IsIntegral<T> && sizeof(T) > 1)
+    template<Integral T>
+    requires(sizeof(T) > 1)
     T read_be(T const*) const;
 
     Definitions::EDID const& raw_edid() const;

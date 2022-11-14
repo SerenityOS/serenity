@@ -7,6 +7,7 @@
 #pragma once
 
 #include "WidgetWithLabel.h"
+#include <AK/Concepts.h>
 #include <AK/Vector.h>
 #include <LibDSP/ProcessorParameter.h>
 #include <LibGUI/ComboBox.h>
@@ -14,8 +15,8 @@
 #include <LibGUI/Label.h>
 #include <LibGUI/ModelIndex.h>
 
-template<typename EnumT>
-requires(IsEnum<EnumT>) class ProcessorParameterDropdown : public GUI::ComboBox {
+template<Enum EnumT>
+class ProcessorParameterDropdown : public GUI::ComboBox {
     C_OBJECT(ProcessorParameterDropdown);
 
 public:

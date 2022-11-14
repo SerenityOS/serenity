@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/Concepts.h>
 #include <AK/DeprecatedString.h>
 #include <AK/FixedPoint.h>
 #include <AK/Format.h>
@@ -146,8 +147,8 @@ private:
     Logarithmic const m_logarithmic;
 };
 
-template<typename EnumT>
-requires(IsEnum<EnumT>) class ProcessorEnumParameter final : public Detail::ProcessorParameterSingleValue<EnumT> {
+template<Enum EnumT>
+class ProcessorEnumParameter final : public Detail::ProcessorParameterSingleValue<EnumT> {
 public:
     ProcessorEnumParameter(DeprecatedString name, EnumT initial_value)
         : Detail::ProcessorParameterSingleValue<EnumT>(move(name), ParameterType::Enum, initial_value)

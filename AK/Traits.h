@@ -29,8 +29,8 @@ template<typename T>
 struct Traits : public GenericTraits<T> {
 };
 
-template<typename T>
-requires(IsIntegral<T>) struct Traits<T> : public GenericTraits<T> {
+template<Integral T>
+struct Traits<T> : public GenericTraits<T> {
     static constexpr bool is_trivial() { return true; }
     static constexpr unsigned hash(T value)
     {
@@ -42,8 +42,8 @@ requires(IsIntegral<T>) struct Traits<T> : public GenericTraits<T> {
 };
 
 #ifndef KERNEL
-template<typename T>
-requires(IsFloatingPoint<T>) struct Traits<T> : public GenericTraits<T> {
+template<FloatingPoint T>
+struct Traits<T> : public GenericTraits<T> {
     static constexpr bool is_trivial() { return true; }
     static constexpr unsigned hash(T value)
     {

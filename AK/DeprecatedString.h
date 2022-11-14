@@ -282,9 +282,8 @@ public:
         return vformatted(fmtstr.view(), variadic_format_parameters);
     }
 
-    template<typename T>
+    template<Arithmetic T>
     [[nodiscard]] static DeprecatedString number(T value)
-    requires IsArithmetic<T>
     {
         return formatted("{}", value);
     }
