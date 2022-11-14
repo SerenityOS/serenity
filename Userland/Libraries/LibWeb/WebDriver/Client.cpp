@@ -68,6 +68,7 @@ static constexpr auto s_webdriver_endpoints = Array {
     ROUTE(POST, "/session/:session_id/window/rect"sv, set_window_rect),
     ROUTE(POST, "/session/:session_id/window/maximize"sv, maximize_window),
     ROUTE(POST, "/session/:session_id/window/minimize"sv, minimize_window),
+    ROUTE(POST, "/session/:session_id/window/fullscreen"sv, fullscreen_window),
     ROUTE(POST, "/session/:session_id/element"sv, find_element),
     ROUTE(POST, "/session/:session_id/elements"sv, find_elements),
     ROUTE(POST, "/session/:session_id/element/:element_id/element"sv, find_element_from_element),
