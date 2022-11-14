@@ -293,6 +293,8 @@ RefPtr<StyleValue> ResolvedCSSStyleDeclaration::style_value_for_property(Layout:
     }
     case CSS::PropertyID::BoxSizing:
         return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().box_sizing()));
+    case CSS::PropertyID::Bottom:
+        return style_value_for_length_percentage(layout_node.computed_values().inset().bottom());
     case CSS::PropertyID::Clear:
         return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().clear()));
     case CSS::PropertyID::Clip:
@@ -373,6 +375,8 @@ RefPtr<StyleValue> ResolvedCSSStyleDeclaration::style_value_for_property(Layout:
         return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().image_rendering()));
     case CSS::PropertyID::JustifyContent:
         return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().justify_content()));
+    case CSS::PropertyID::Left:
+        return style_value_for_length_percentage(layout_node.computed_values().inset().left());
     case CSS::PropertyID::ListStyleType:
         return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().list_style_type()));
     case CSS::PropertyID::Margin: {
@@ -427,6 +431,8 @@ RefPtr<StyleValue> ResolvedCSSStyleDeclaration::style_value_for_property(Layout:
         return style_value_for_length_percentage(layout_node.computed_values().padding().top());
     case CSS::PropertyID::Position:
         return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().position()));
+    case CSS::PropertyID::Right:
+        return style_value_for_length_percentage(layout_node.computed_values().inset().right());
     case CSS::PropertyID::RowGap:
         return style_value_for_size(layout_node.computed_values().row_gap());
     case CSS::PropertyID::TextAlign:
@@ -445,6 +451,8 @@ RefPtr<StyleValue> ResolvedCSSStyleDeclaration::style_value_for_property(Layout:
         return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().text_decoration_style()));
     case CSS::PropertyID::TextTransform:
         return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().text_transform()));
+    case CSS::PropertyID::Top:
+        return style_value_for_length_percentage(layout_node.computed_values().inset().top());
     case CSS::PropertyID::Transform: {
         // NOTE: The computed value for `transform` serializes as a single `matrix(...)` value, instead of
         //       the original list of transform functions. So, we produce a StyleValue for that.
