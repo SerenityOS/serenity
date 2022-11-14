@@ -972,15 +972,19 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
     if (grid_template_columns.track_list().size() == 1
         && grid_template_columns.track_list().first().is_repeat()
         && grid_template_columns.track_list().first().repeat().is_auto_fit()) {
-        auto idx = 0;
-        for (auto& grid_column : m_grid_columns) {
-            // A collapsed track is treated as having a fixed track sizing function of 0px, and the gutters on
-            // either side of it—including any space allotted through distributed alignment—collapse.
-            if (!occupation_grid.is_occupied(idx, 0)) {
-                grid_column.base_size = 0;
-                grid_column.growth_limit = 0;
-            }
-            idx++;
+        for (size_t idx = 0; idx < m_grid_columns.size(); idx++) {
+            auto column_to_check = box.computed_values().column_gap().is_auto() ? idx : idx / 2;
+            if (occupation_grid.is_occupied(column_to_check, 0))
+                continue;
+            if (!box.computed_values().column_gap().is_auto() && idx % 2 != 0)
+                continue;
+
+            // A collapsed track is treated as having a fixed track sizing function of 0px
+            m_grid_columns[idx].base_size = 0;
+            m_grid_columns[idx].growth_limit = 0;
+
+            // FIXME: And the gutters on either side of it—including any space allotted through distributed
+            // alignment—collapse.
         }
     }
 
