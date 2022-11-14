@@ -31,14 +31,20 @@ public:
     void set_muxing_app(String muxing_app) { m_muxing_app = move(muxing_app); }
     Utf8View writing_app() const { return Utf8View(m_writing_app); }
     void set_writing_app(String writing_app) { m_writing_app = move(writing_app); }
-    Optional<double> duration() const { return m_duration; }
-    void set_duration(double duration) { m_duration.emplace(duration); }
+    Optional<double> duration_unscaled() const { return m_duration_unscaled; }
+    void set_duration_unscaled(double duration) { m_duration_unscaled.emplace(duration); }
+    Optional<Time> duration() const
+    {
+        if (!duration_unscaled().has_value())
+            return {};
+        return Time::from_nanoseconds(static_cast<i64>(static_cast<double>(timestamp_scale()) * duration_unscaled().value()));
+    }
 
 private:
     u64 m_timestamp_scale { 1'000'000 };
     String m_muxing_app;
     String m_writing_app;
-    Optional<double> m_duration;
+    Optional<double> m_duration_unscaled;
 };
 
 class TrackEntry {
