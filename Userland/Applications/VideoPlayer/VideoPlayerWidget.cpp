@@ -114,7 +114,7 @@ void VideoPlayerWidget::update_play_pause_icon()
 
     m_play_pause_action->set_enabled(true);
 
-    if (m_playback_manager->is_playing() || m_playback_manager->is_buffering())
+    if (m_playback_manager->is_playing())
         m_play_pause_action->set_icon(m_pause_icon);
     else
         m_play_pause_action->set_icon(m_play_icon);
@@ -140,7 +140,7 @@ void VideoPlayerWidget::toggle_pause()
 {
     if (!m_playback_manager)
         return;
-    if (m_playback_manager->is_playing() || m_playback_manager->is_buffering())
+    if (m_playback_manager->is_playing())
         pause_playback();
     else
         resume_playback();
