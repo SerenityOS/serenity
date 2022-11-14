@@ -8,8 +8,8 @@
 
 #include <LibCore/Stream.h>
 #include <LibIPC/ConnectionFromClient.h>
-#include <Services/WebContent/WebDriverClientEndpoint.h>
-#include <Services/WebContent/WebDriverServerEndpoint.h>
+#include <WebContent/WebDriverClientEndpoint.h>
+#include <WebContent/WebDriverServerEndpoint.h>
 
 namespace WebDriver {
 
