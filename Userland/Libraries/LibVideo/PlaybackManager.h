@@ -28,7 +28,8 @@ enum class PlaybackStatus {
     Playing,
     Paused,
     Buffering,
-    Seeking,
+    SeekingPlaying,
+    SeekingPaused,
     Stopped,
     Corrupted,
 };
@@ -102,7 +103,8 @@ public:
     void pause_playback();
     void restart_playback();
     void seek_to_timestamp(Time);
-    bool is_playing() const { return m_status == PlaybackStatus::Playing || m_status == PlaybackStatus::Buffering; }
+    bool is_playing() const { return m_status == PlaybackStatus::Playing || m_status == PlaybackStatus::SeekingPlaying || m_status == PlaybackStatus::Buffering; }
+    bool is_seeking() const { return m_status == PlaybackStatus::SeekingPlaying || m_status == PlaybackStatus::SeekingPaused; }
     bool is_buffering() const { return m_status == PlaybackStatus::Buffering; }
     bool is_stopped() const { return m_status == PlaybackStatus::Stopped || m_status == PlaybackStatus::Corrupted; }
 
@@ -118,7 +120,7 @@ public:
 private:
     void set_playback_status(PlaybackStatus status);
 
-    bool prepare_next_frame();
+    void end_seek();
     void update_presented_frame();
 
     // May run off the main thread
@@ -132,6 +134,8 @@ private:
     PlaybackStatus m_status { PlaybackStatus::Stopped };
     Time m_last_present_in_media_time = Time::zero();
     Time m_last_present_in_real_time = Time::zero();
+
+    Time m_seek_to_media_time = Time::min();
 
     NonnullOwnPtr<Demuxer> m_demuxer;
     Track m_selected_video_track;
@@ -213,8 +217,10 @@ inline StringView playback_status_to_string(PlaybackStatus status)
         return "Paused"sv;
     case PlaybackStatus::Buffering:
         return "Buffering"sv;
-    case PlaybackStatus::Seeking:
-        return "Seeking"sv;
+    case PlaybackStatus::SeekingPlaying:
+        return "SeekingPlaying"sv;
+    case PlaybackStatus::SeekingPaused:
+        return "SeekingPaused"sv;
     case PlaybackStatus::Stopped:
         return "Stopped"sv;
     case PlaybackStatus::Corrupted:
