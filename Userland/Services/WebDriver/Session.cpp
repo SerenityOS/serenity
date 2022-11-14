@@ -10,16 +10,9 @@
 
 #include "Session.h"
 #include "Client.h"
-#include <AK/JsonObject.h>
-#include <AK/JsonParser.h>
-#include <AK/NumericLimits.h>
-#include <AK/Time.h>
 #include <LibCore/LocalServer.h>
 #include <LibCore/Stream.h>
 #include <LibCore/System.h>
-#include <LibGfx/Point.h>
-#include <LibGfx/Rect.h>
-#include <LibGfx/Size.h>
 #include <unistd.h>
 
 namespace WebDriver {
@@ -32,26 +25,8 @@ Session::Session(unsigned session_id, NonnullRefPtr<Client> client)
 
 Session::~Session()
 {
-    if (m_started) {
-        auto error = stop();
-        if (error.is_error()) {
-            warnln("Failed to stop session {}: {}", m_id, error.error());
-        }
-    }
-}
-
-ErrorOr<Session::Window*, Web::WebDriver::Error> Session::current_window()
-{
-    auto window = m_windows.get(m_current_window_handle);
-    if (!window.has_value())
-        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::NoSuchWindow, "Window not found");
-    return window.release_value();
-}
-
-ErrorOr<void, Web::WebDriver::Error> Session::check_for_open_top_level_browsing_context_or_return_error()
-{
-    (void)TRY(current_window());
-    return {};
+    if (auto error = stop(); error.is_error())
+        warnln("Failed to stop session {}: {}", m_id, error.error());
 }
 
 ErrorOr<NonnullRefPtr<Core::LocalServer>> Session::create_server(String const& socket_path, NonnullRefPtr<ServerPromise> promise)
@@ -102,19 +77,18 @@ ErrorOr<void> Session::start()
     TRY(promise->await());
 
     m_started = true;
-    m_windows.set("main", make<Session::Window>("main", true));
-    m_current_window_handle = "main";
-
     return {};
 }
 
 // https://w3c.github.io/webdriver/#dfn-close-the-session
 Web::WebDriver::Response Session::stop()
 {
+    if (!m_started)
+        return JsonValue {};
+
     // 1. Perform the following substeps based on the remote end’s type:
     // NOTE: We perform the "Remote end is an endpoint node" steps in the WebContent process.
     m_web_content_connection->close_session();
-    m_web_content_connection = nullptr;
 
     // 2. Remove the current session from active sessions.
     // NOTE: Handled by WebDriver::Client.
@@ -129,49 +103,6 @@ Web::WebDriver::Response Session::stop()
 
     // 4. If an error has occurred in any of the steps above, return the error, otherwise return success with data null.
     return JsonValue {};
-}
-
-// 11.1 Get Window Handle, https://w3c.github.io/webdriver/#get-window-handle
-Web::WebDriver::Response Session::get_window_handle()
-{
-    // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
-    TRY(check_for_open_top_level_browsing_context_or_return_error());
-
-    // 2. Return success with data being the window handle associated with the current top-level browsing context.
-    return JsonValue { m_current_window_handle };
-}
-
-// 11.2 Close Window, https://w3c.github.io/webdriver/#dfn-close-window
-Web::WebDriver::Response Session::close_window()
-{
-    // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
-    TRY(check_for_open_top_level_browsing_context_or_return_error());
-
-    // FIXME: 2. Handle any user prompts and return its value if it is an error.
-
-    // 3. Close the current top-level browsing context.
-    m_windows.remove(m_current_window_handle);
-
-    // 4. If there are no more open top-level browsing contexts, then close the session.
-    if (m_windows.is_empty())
-        TRY(stop());
-
-    // 5. Return the result of running the remote end steps for the Get Window Handles command.
-    return get_window_handles();
-}
-
-// 11.4 Get Window Handles, https://w3c.github.io/webdriver/#dfn-get-window-handles
-Web::WebDriver::Response Session::get_window_handles() const
-{
-    // 1. Let handles be a JSON List.
-    auto handles = JsonArray {};
-
-    // 2. For each top-level browsing context in the remote end, push the associated window handle onto handles.
-    for (auto const& window_handle : m_windows.keys())
-        handles.append(window_handle);
-
-    // 3. Return success with data handles.
-    return JsonValue { handles };
 }
 
 }

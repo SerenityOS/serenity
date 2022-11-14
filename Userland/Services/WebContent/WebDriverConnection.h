@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include <AK/HashMap.h>
+#include <AK/String.h>
 #include <LibIPC/ConnectionToServer.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Heap/MarkedVector.h>
@@ -44,6 +46,9 @@ private:
     virtual Messages::WebDriverClient::ForwardResponse forward() override;
     virtual Messages::WebDriverClient::RefreshResponse refresh() override;
     virtual Messages::WebDriverClient::GetTitleResponse get_title() override;
+    virtual Messages::WebDriverClient::GetWindowHandleResponse get_window_handle() override;
+    virtual Messages::WebDriverClient::CloseWindowResponse close_window() override;
+    virtual Messages::WebDriverClient::GetWindowHandlesResponse get_window_handles() override;
     virtual Messages::WebDriverClient::GetWindowRectResponse get_window_rect() override;
     virtual Messages::WebDriverClient::SetWindowRectResponse set_window_rect(JsonValue const& payload) override;
     virtual Messages::WebDriverClient::MaximizeWindowResponse maximize_window() override;
@@ -90,6 +95,13 @@ private:
 
     // https://w3c.github.io/webdriver/#dfn-session-script-timeout
     Web::WebDriver::TimeoutsConfiguration m_timeouts_configuration;
+
+    struct Window {
+        String handle;
+        bool is_open { false };
+    };
+    HashMap<String, Window> m_windows;
+    String m_current_window_handle;
 };
 
 }
