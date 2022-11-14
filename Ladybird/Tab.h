@@ -22,7 +22,7 @@ class BrowserWindow;
 class Tab final : public QWidget {
     Q_OBJECT
 public:
-    explicit Tab(BrowserWindow* window);
+    Tab(BrowserWindow* window, int webdriver_fd_passing_socket);
 
     WebContentView& view() { return *m_view; }
 

@@ -21,7 +21,8 @@
 extern String s_serenity_resource_root;
 extern Browser::Settings* s_settings;
 
-BrowserWindow::BrowserWindow()
+BrowserWindow::BrowserWindow(int webdriver_fd_passing_socket)
+    : m_webdriver_fd_passing_socket(webdriver_fd_passing_socket)
 {
     m_tabs_container = new QTabWidget(this);
     m_tabs_container->setElideMode(Qt::TextElideMode::ElideRight);
@@ -282,7 +283,7 @@ void BrowserWindow::debug_request(String const& request, String const& argument)
 
 void BrowserWindow::new_tab()
 {
-    auto tab = make<Tab>(this);
+    auto tab = make<Tab>(this, m_webdriver_fd_passing_socket);
     auto tab_ptr = tab.ptr();
     m_tabs.append(std::move(tab));
 

@@ -29,6 +29,7 @@
 #include <QSocketNotifier>
 #include <QTimer>
 #include <WebContent/ConnectionFromClient.h>
+#include <WebContent/WebDriverConnection.h>
 
 static ErrorOr<void> load_content_filters();
 
@@ -89,13 +90,20 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         dbgln("Failed to load content filters: {}", maybe_content_filter_error.error());
 
     int webcontent_fd_passing_socket { -1 };
+    int webdriver_fd_passing_socket { -1 };
 
     Core::ArgsParser args_parser;
     args_parser.add_option(webcontent_fd_passing_socket, "File descriptor of the passing socket for the WebContent connection", "webcontent-fd-passing-socket", 'c', "webcontent_fd_passing_socket");
+    args_parser.add_option(webdriver_fd_passing_socket, "File descriptor of the passing socket for the WebDriver connection", "webdriver-fd-passing-socket", 'd', "webdriver_fd_passing_socket");
     args_parser.parse(arguments);
 
     QSocketNotifier webcontent_notifier(QSocketNotifier::Type::Read);
     auto webcontent_client = TRY(create_connection_from_passed_socket<WebContent::ConnectionFromClient>(webcontent_fd_passing_socket, "WebContent"sv, webcontent_notifier));
+
+    QSocketNotifier webdriver_notifier(QSocketNotifier::Type::Read);
+    RefPtr<WebContent::WebDriverConnection> webdriver_client;
+    if (webdriver_fd_passing_socket >= 0)
+        webdriver_client = TRY(create_connection_from_passed_socket<WebContent::WebDriverConnection>(webdriver_fd_passing_socket, "WebDriver"sv, webdriver_notifier, *webcontent_client, webcontent_client->page_host()));
 
     return app.exec();
 }

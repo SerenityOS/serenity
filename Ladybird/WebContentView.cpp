@@ -54,7 +54,8 @@
 #include <QTreeView>
 #include <QVBoxLayout>
 
-WebContentView::WebContentView()
+WebContentView::WebContentView(int webdriver_fd_passing_socket)
+    : m_webdriver_fd_passing_socket(webdriver_fd_passing_socket)
 {
     setMouseTracking(true);
 
@@ -589,12 +590,15 @@ void WebContentView::create_client()
         auto takeover_string = String::formatted("WebContent:{}", wc_fd);
         MUST(Core::System::setenv("SOCKET_TAKEOVER"sv, takeover_string, true));
 
-        auto fd_passing_socket_string = String::number(wc_fd_passing_fd);
+        auto webcontent_fd_passing_socket_string = String::number(wc_fd_passing_fd);
+        auto webdriver_fd_passing_socket_string = String::number(m_webdriver_fd_passing_socket);
 
         char const* argv[] = {
             "WebContent",
             "--webcontent-fd-passing-socket",
-            fd_passing_socket_string.characters(),
+            webcontent_fd_passing_socket_string.characters(),
+            "--webdriver-fd-passing-socket",
+            webdriver_fd_passing_socket_string.characters(),
             nullptr,
         };
 

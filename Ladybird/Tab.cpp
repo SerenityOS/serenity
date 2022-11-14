@@ -20,7 +20,7 @@
 extern String s_serenity_resource_root;
 extern Browser::Settings* s_settings;
 
-Tab::Tab(BrowserWindow* window)
+Tab::Tab(BrowserWindow* window, int webdriver_fd_passing_socket)
     : QWidget(window)
     , m_window(window)
 {
@@ -28,7 +28,7 @@ Tab::Tab(BrowserWindow* window)
     m_layout->setSpacing(0);
     m_layout->setContentsMargins(0, 0, 0, 0);
 
-    m_view = new WebContentView;
+    m_view = new WebContentView(webdriver_fd_passing_socket);
     m_toolbar = new QToolBar(this);
     m_location_edit = new QLineEdit(this);
 
@@ -115,8 +115,13 @@ Tab::Tab(BrowserWindow* window)
     // FIXME: This is a hack to make the JS console usable in new windows.
     //        Something else should ensure that there's an initial about:blank document loaded in the view.
     //        We set m_is_history_navigation = true so that the initial about:blank doesn't get added to the history.
-    m_is_history_navigation = true;
-    m_view->load("about:blank"sv);
+    //
+    //        Note we *don't* do this if we are connected to a WebDriver, as the Set URL command may come in very
+    //        quickly, and become replaced by this load.
+    if (webdriver_fd_passing_socket == -1) {
+        m_is_history_navigation = true;
+        m_view->load("about:blank"sv);
+    }
 }
 
 void Tab::focus_location_editor()

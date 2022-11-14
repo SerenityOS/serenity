@@ -61,12 +61,15 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Gfx::FontDatabase::set_fixed_width_font_query("Csilla 10 400 0");
 
     StringView raw_url;
+    int webdriver_fd_passing_socket { -1 };
+
     Core::ArgsParser args_parser;
     args_parser.set_general_help("The Ladybird web browser :^)");
     args_parser.add_positional_argument(raw_url, "URL to open", "url", Core::ArgsParser::Required::No);
+    args_parser.add_option(webdriver_fd_passing_socket, "File descriptor of the passing socket for the WebDriver connection", "webdriver-fd-passing-socket", 'd', "webdriver_fd_passing_socket");
     args_parser.parse(arguments);
 
-    BrowserWindow window;
+    BrowserWindow window(webdriver_fd_passing_socket);
     s_settings = new Browser::Settings(&window);
     window.setWindowTitle("Ladybird");
     window.resize(800, 600);

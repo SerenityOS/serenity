@@ -22,7 +22,7 @@ class WebContentView;
 class BrowserWindow : public QMainWindow {
     Q_OBJECT
 public:
-    explicit BrowserWindow();
+    explicit BrowserWindow(int webdriver_fd_passing_socket);
 
     WebContentView& view() const { return m_current_tab->view(); }
 
@@ -48,4 +48,6 @@ private:
     Tab* m_current_tab { nullptr };
 
     Browser::CookieJar m_cookie_jar;
+
+    int m_webdriver_fd_passing_socket { -1 };
 };
