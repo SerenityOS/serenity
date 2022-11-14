@@ -24,10 +24,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     StringView filename;
     bool blocks = false;
+    bool cues = false;
     u64 track_number = 0;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(blocks, "Print blocks for each track.", "blocks", 'b');
+    args_parser.add_option(cues, "Print cue points for each track.", "cues", 'c');
     args_parser.add_option<u64>(track_number, "Specify a track number to print info for, omit to print all of them.", "track", 't', "tracknumber");
     args_parser.add_positional_argument(filename, "The video file to display.", "filename", Core::ArgsParser::Required::Yes);
     args_parser.parse(arguments);
@@ -59,6 +61,28 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         } else if (track_entry.track_type() == Video::Matroska::TrackEntry::TrackType::Audio) {
             auto const audio_track = track_entry.audio_track().value();
             outln("\t\tAudio has {} channels with a bit depth of {}", audio_track.channels, audio_track.bit_depth);
+        }
+
+        if (cues) {
+            auto const& cue_points = TRY(reader.cue_points_for_track(track_entry.track_number()));
+
+            if (cue_points.has_value()) {
+                outln("\tCues points:");
+
+                for (auto const& cue_point : cue_points.value()) {
+                    outln("\t\tCue point at {}ms:", cue_point.timestamp().to_milliseconds());
+                    auto const& track_position = cue_point.position_for_track(track_entry.track_number());
+
+                    if (!track_position.has_value()) {
+                        outln("\t\t\tCue point has no positions for this track, this should not happen");
+                        continue;
+                    }
+                    outln("\t\t\tCluster position {}", track_position->cluster_position());
+                    outln("\t\t\tBlock offset {}", track_position->block_offset());
+                }
+            } else {
+                outln("\tNo cue points exist for this track");
+            }
         }
 
         if (blocks) {

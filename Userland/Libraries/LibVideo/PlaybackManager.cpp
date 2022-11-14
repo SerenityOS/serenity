@@ -121,7 +121,7 @@ void PlaybackManager::on_decoder_error(DecoderError error)
 
 void PlaybackManager::end_seek()
 {
-    dbgln_if(PLAYBACK_MANAGER_DEBUG, "We've finished seeking, reset seek target and play");
+    dbgln_if(PLAYBACK_MANAGER_DEBUG, "We've finished seeking, set media time to seek time at {}ms and change status", m_seek_to_media_time.to_milliseconds());
     VERIFY(!m_seek_to_media_time.is_negative());
     m_last_present_in_media_time = m_seek_to_media_time;
     m_seek_to_media_time = Time::min();

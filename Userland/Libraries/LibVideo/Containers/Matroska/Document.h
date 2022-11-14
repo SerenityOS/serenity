@@ -203,4 +203,32 @@ private:
     Time m_timestamp { Time::zero() };
 };
 
+class CueTrackPosition {
+public:
+    u64 track_number() const { return m_track_number; }
+    void set_track_number(u64 track_number) { m_track_number = track_number; }
+    size_t cluster_position() const { return m_cluster_position; }
+    void set_cluster_position(size_t cluster_position) { m_cluster_position = cluster_position; }
+    size_t block_offset() const { return m_block_offset; }
+    void set_block_offset(size_t block_offset) { m_block_offset = block_offset; }
+
+private:
+    u64 m_track_number { 0 };
+    size_t m_cluster_position { 0 };
+    size_t m_block_offset { 0 };
+};
+
+class CuePoint {
+public:
+    Time timestamp() const { return m_timestamp; }
+    void set_timestamp(Time timestamp) { m_timestamp = timestamp; }
+    OrderedHashMap<u64, CueTrackPosition>& track_positions() { return m_track_positions; }
+    OrderedHashMap<u64, CueTrackPosition> const& track_positions() const { return m_track_positions; }
+    Optional<CueTrackPosition const&> position_for_track(u64 track_number) const { return m_track_positions.get(track_number); }
+
+private:
+    Time m_timestamp = Time::min();
+    OrderedHashMap<u64, CueTrackPosition> m_track_positions;
+};
+
 }
