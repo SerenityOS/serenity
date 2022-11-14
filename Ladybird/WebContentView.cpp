@@ -914,13 +914,17 @@ void WebContentView::notify_server_did_change_favicon(Gfx::Bitmap const& bitmap)
     emit favicon_changed(QIcon(qpixmap));
 }
 
-Vector<Web::Cookie::Cookie> WebContentView::notify_server_did_request_all_cookies(Badge<WebContentClient>, AK::URL const&)
+Vector<Web::Cookie::Cookie> WebContentView::notify_server_did_request_all_cookies(Badge<WebContentClient>, AK::URL const& url)
 {
+    if (on_get_all_cookies)
+        return on_get_all_cookies(url);
     return {};
 }
 
-Optional<Web::Cookie::Cookie> WebContentView::notify_server_did_request_named_cookie(Badge<WebContentClient>, AK::URL const&, String const&)
+Optional<Web::Cookie::Cookie> WebContentView::notify_server_did_request_named_cookie(Badge<WebContentClient>, AK::URL const& url, String const& name)
 {
+    if (on_get_named_cookie)
+        return on_get_named_cookie(url, name);
     return {};
 }
 
@@ -937,8 +941,10 @@ void WebContentView::notify_server_did_set_cookie(Badge<WebContentClient>, AK::U
         on_set_cookie(url, cookie, source);
 }
 
-void WebContentView::notify_server_did_update_cookie(Badge<WebContentClient>, AK::URL const&, Web::Cookie::Cookie const&)
+void WebContentView::notify_server_did_update_cookie(Badge<WebContentClient>, AK::URL const& url, Web::Cookie::Cookie const& cookie)
 {
+    if (on_update_cookie)
+        on_update_cookie(url, cookie);
 }
 
 void WebContentView::notify_server_did_update_resource_count(i32 count_waiting)

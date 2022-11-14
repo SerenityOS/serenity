@@ -297,12 +297,24 @@ void BrowserWindow::new_tab()
     QObject::connect(tab_ptr, &Tab::title_changed, this, &BrowserWindow::tab_title_changed);
     QObject::connect(tab_ptr, &Tab::favicon_changed, this, &BrowserWindow::tab_favicon_changed);
 
+    tab_ptr->view().on_get_all_cookies = [this](auto const& url) {
+        return m_cookie_jar.get_all_cookies(url);
+    };
+
+    tab_ptr->view().on_get_named_cookie = [this](auto const& url, auto const& name) {
+        return m_cookie_jar.get_named_cookie(url, name);
+    };
+
     tab_ptr->view().on_get_cookie = [this](auto& url, auto source) -> String {
         return m_cookie_jar.get_cookie(url, source);
     };
 
     tab_ptr->view().on_set_cookie = [this](auto& url, auto& cookie, auto source) {
         m_cookie_jar.set_cookie(url, cookie, source);
+    };
+
+    tab_ptr->view().on_update_cookie = [this](auto const& url, auto const& cookie) {
+        m_cookie_jar.update_cookie(url, cookie);
     };
 
     tab_ptr->focus_location_editor();
