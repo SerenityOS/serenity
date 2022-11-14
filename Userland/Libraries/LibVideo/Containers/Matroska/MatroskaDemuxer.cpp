@@ -53,16 +53,17 @@ DecoderErrorOr<MatroskaDemuxer::TrackStatus*> MatroskaDemuxer::get_track_status(
     return &m_track_statuses.get(track).release_value();
 }
 
-DecoderErrorOr<void> MatroskaDemuxer::seek_to_most_recent_keyframe(Track track, Time timestamp)
+DecoderErrorOr<Time> MatroskaDemuxer::seek_to_most_recent_keyframe(Track track, Time timestamp)
 {
     // Removing the track status will cause us to start from the beginning.
     if (timestamp.is_zero()) {
         m_track_statuses.remove(track);
-        return {};
+        return timestamp;
     }
 
     auto& track_status = *TRY(get_track_status(track));
-    return m_reader.seek_to_random_access_point(track_status.iterator, timestamp);
+    TRY(m_reader.seek_to_random_access_point(track_status.iterator, timestamp));
+    return track_status.iterator.last_timestamp();
 }
 
 DecoderErrorOr<NonnullOwnPtr<Sample>> MatroskaDemuxer::get_next_sample_for_track(Track track)

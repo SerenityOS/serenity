@@ -94,6 +94,13 @@ using VideoFrameQueue = Queue<FrameQueueItem, FRAME_BUFFER_COUNT>;
 
 class PlaybackManager {
 public:
+    enum class SeekMode {
+        Accurate,
+        Fast,
+    };
+
+    static constexpr SeekMode DEFAULT_SEEK_MODE = SeekMode::Accurate;
+
     static DecoderErrorOr<NonnullOwnPtr<PlaybackManager>> from_file(Core::Object& event_handler, StringView file);
     static DecoderErrorOr<NonnullOwnPtr<PlaybackManager>> from_data(Core::Object& event_handler, Span<u8> data);
 
@@ -107,6 +114,9 @@ public:
     bool is_seeking() const { return m_status == PlaybackStatus::SeekingPlaying || m_status == PlaybackStatus::SeekingPaused; }
     bool is_buffering() const { return m_status == PlaybackStatus::Buffering; }
     bool is_stopped() const { return m_status == PlaybackStatus::Stopped || m_status == PlaybackStatus::Corrupted; }
+
+    SeekMode seek_mode() { return m_seek_mode; }
+    void set_seek_mode(SeekMode mode) { m_seek_mode = mode; }
 
     u64 number_of_skipped_frames() const { return m_skipped_frames; }
 
@@ -136,6 +146,7 @@ private:
     Time m_last_present_in_real_time = Time::zero();
 
     Time m_seek_to_media_time = Time::min();
+    SeekMode m_seek_mode = DEFAULT_SEEK_MODE;
 
     NonnullOwnPtr<Demuxer> m_demuxer;
     Track m_selected_video_track;
