@@ -39,13 +39,19 @@ TCPServer::~TCPServer()
     MUST(Core::System::close(m_fd));
 }
 
-ErrorOr<void> TCPServer::listen(IPv4Address const& address, u16 port)
+ErrorOr<void> TCPServer::listen(IPv4Address const& address, u16 port, AllowAddressReuse allow_address_reuse)
 {
     if (m_listening)
         return Error::from_errno(EADDRINUSE);
 
     auto socket_address = SocketAddress(address, port);
     auto in = socket_address.to_sockaddr_in();
+
+    if (allow_address_reuse == AllowAddressReuse::Yes) {
+        int option = 1;
+        TRY(Core::System::setsockopt(m_fd, SOL_SOCKET, SO_REUSEADDR, &option, sizeof(option)));
+    }
+
     TRY(Core::System::bind(m_fd, (sockaddr const*)&in, sizeof(in)));
     TRY(Core::System::listen(m_fd, 5));
     m_listening = true;
