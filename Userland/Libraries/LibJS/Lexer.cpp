@@ -610,8 +610,15 @@ Token Lexer::next()
             consume();
             m_template_states.last().in_expr = true;
         } else {
+            // TemplateCharacter ::
+            //     $ [lookahead ≠ {]
+            //     \ TemplateEscapeSequence
+            //     \ NotEscapeSequence
+            //     LineContinuation
+            //     LineTerminatorSequence
+            //     SourceCharacter but not one of ` or \ or $ or LineTerminator
             while (!match('$', '{') && m_current_char != '`' && !is_eof()) {
-                if (match('\\', '$') || match('\\', '`'))
+                if (match('\\', '$') || match('\\', '`') || match('\\', '\\'))
                     consume();
                 consume();
             }

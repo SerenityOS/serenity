@@ -7,6 +7,9 @@ test("plain literals with expression-like characters", () => {
 
 test("plain literals with escaped special characters", () => {
     expect(`foo\``).toBe("foo`");
+    expect(`foo\\`).toBe("foo\\");
+    expect(`foo\\\``).toBe("foo\\`");
+    expect(`foo\\\\`).toBe("foo\\\\");
     expect(`foo\$`).toBe("foo$");
     expect(`foo \${"bar"}`).toBe('foo ${"bar"}');
 });
