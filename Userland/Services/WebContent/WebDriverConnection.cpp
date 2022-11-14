@@ -216,7 +216,9 @@ WebDriverConnection::WebDriverConnection(NonnullOwnPtr<Core::Stream::LocalSocket
     : IPC::ConnectionToServer<WebDriverClientEndpoint, WebDriverServerEndpoint>(*this, move(socket))
     , m_web_content_client(web_content_client)
     , m_page_host(page_host)
+    , m_current_window_handle("main"sv)
 {
+    m_windows.set(m_current_window_handle, { m_current_window_handle, true });
 }
 
 // https://w3c.github.io/webdriver/#dfn-close-the-session
@@ -226,7 +228,8 @@ void WebDriverConnection::close_session()
     set_is_webdriver_active(false);
 
     // 2. An endpoint node must close any top-level browsing contexts associated with the session, without prompting to unload.
-    m_page_host.page().top_level_browsing_context().close();
+    if (!m_page_host.page().top_level_browsing_context().has_been_discarded())
+        m_page_host.page().top_level_browsing_context().close();
 }
 
 void WebDriverConnection::set_is_webdriver_active(bool is_webdriver_active)
@@ -375,6 +378,50 @@ Messages::WebDriverClient::GetTitleResponse WebDriverConnection::get_title()
 
     // 4. Return success with data title.
     return title;
+}
+
+// 11.1 Get Window Handle, https://w3c.github.io/webdriver/#get-window-handle
+Messages::WebDriverClient::GetWindowHandleResponse WebDriverConnection::get_window_handle()
+{
+    // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
+    TRY(ensure_open_top_level_browsing_context());
+
+    // 2. Return success with data being the window handle associated with the current top-level browsing context.
+    return m_current_window_handle;
+}
+
+// 11.2 Close Window, https://w3c.github.io/webdriver/#dfn-close-window
+Messages::WebDriverClient::CloseWindowResponse WebDriverConnection::close_window()
+{
+    // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
+    TRY(ensure_open_top_level_browsing_context());
+
+    // FIXME: 2. Handle any user prompts and return its value if it is an error.
+
+    // 3. Close the current top-level browsing context.
+    m_page_host.page().top_level_browsing_context().close();
+    m_windows.remove(m_current_window_handle);
+
+    // 4. If there are no more open top-level browsing contexts, then close the session.
+    if (m_windows.is_empty())
+        close_session();
+
+    // 5. Return the result of running the remote end steps for the Get Window Handles command.
+    return get_window_handles().take_response();
+}
+
+// 11.4 Get Window Handles, https://w3c.github.io/webdriver/#dfn-get-window-handles
+Messages::WebDriverClient::GetWindowHandlesResponse WebDriverConnection::get_window_handles()
+{
+    // 1. Let handles be a JSON List.
+    JsonArray handles {};
+
+    // 2. For each top-level browsing context in the remote end, push the associated window handle onto handles.
+    for (auto const& window_handle : m_windows.keys())
+        handles.append(window_handle);
+
+    // 3. Return success with data handles.
+    return handles;
 }
 
 // 11.8.1 Get Window Rect, https://w3c.github.io/webdriver/#dfn-get-window-rect

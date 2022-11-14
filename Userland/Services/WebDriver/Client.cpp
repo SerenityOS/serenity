@@ -252,7 +252,7 @@ Web::WebDriver::Response Client::get_window_handle(Web::WebDriver::Parameters pa
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session_id>/window");
     auto* session = TRY(find_session_with_id(parameters[0]));
-    return session->get_window_handle();
+    return session->web_content_connection().get_window_handle();
 }
 
 // 11.2 Close Window, https://w3c.github.io/webdriver/#dfn-close-window
@@ -261,7 +261,12 @@ Web::WebDriver::Response Client::close_window(Web::WebDriver::Parameters paramet
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling DELETE /session/<session_id>/window");
     auto* session = TRY(find_session_with_id(parameters[0]));
-    return session->close_window();
+
+    auto open_windows = TRY(session->web_content_connection().close_window());
+    if (open_windows.is_array() && open_windows.as_array().is_empty())
+        TRY(session->stop());
+
+    return open_windows;
 }
 
 // 11.4 Get Window Handles, https://w3c.github.io/webdriver/#dfn-get-window-handles
@@ -270,7 +275,7 @@ Web::WebDriver::Response Client::get_window_handles(Web::WebDriver::Parameters p
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session_id>/window/handles");
     auto* session = TRY(find_session_with_id(parameters[0]));
-    return session->get_window_handles();
+    return session->web_content_connection().get_window_handles();
 }
 
 // 11.8.1 Get Window Rect, https://w3c.github.io/webdriver/#dfn-get-window-rect
