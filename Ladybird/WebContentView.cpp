@@ -587,7 +587,11 @@ void WebContentView::create_client()
         MUST(Core::System::close(ui_fd_passing_fd));
         MUST(Core::System::close(ui_fd));
 
-        auto takeover_string = String::formatted("WebContent:{}", wc_fd);
+        String takeover_string;
+        if (auto* socket_takeover = getenv("SOCKET_TAKEOVER"))
+            takeover_string = String::formatted("{} WebContent:{}", socket_takeover, wc_fd);
+        else
+            takeover_string = String::formatted("WebContent:{}", wc_fd);
         MUST(Core::System::setenv("SOCKET_TAKEOVER"sv, takeover_string, true));
 
         auto webcontent_fd_passing_socket_string = String::number(wc_fd_passing_fd);

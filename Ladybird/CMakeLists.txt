@@ -114,7 +114,8 @@ add_custom_target(debug
 qt_finalize_executable(ladybird)
 
 add_subdirectory(WebContent)
-add_dependencies(ladybird WebContent)
+add_subdirectory(WebDriver)
+add_dependencies(ladybird WebContent WebDriver)
 
 if(NOT CMAKE_SKIP_INSTALL_RULES)
     include(cmake/InstallRules.cmake)
