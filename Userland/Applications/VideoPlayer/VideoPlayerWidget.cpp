@@ -101,6 +101,7 @@ void VideoPlayerWidget::open_file(StringView filename)
     close_file();
     m_playback_manager = load_file_result.release_value();
     update_seek_slider_max();
+    update_seek_mode();
     resume_playback();
 }
 
@@ -259,8 +260,30 @@ void VideoPlayerWidget::update_title()
     window()->set_title(string_builder.to_string());
 }
 
+Video::PlaybackManager::SeekMode VideoPlayerWidget::seek_mode()
+{
+    if (m_use_fast_seeking->is_checked())
+        return Video::PlaybackManager::SeekMode::Fast;
+    return Video::PlaybackManager::SeekMode::Accurate;
+}
+
+void VideoPlayerWidget::set_seek_mode(Video::PlaybackManager::SeekMode seek_mode)
+{
+    m_use_fast_seeking->set_checked(seek_mode == Video::PlaybackManager::SeekMode::Fast);
+}
+
+void VideoPlayerWidget::update_seek_mode()
+{
+    if (!m_playback_manager)
+        return;
+    m_playback_manager->set_seek_mode(seek_mode());
+}
+
 void VideoPlayerWidget::initialize_menubar(GUI::Window& window)
 {
+    // FIXME: This should return ErrorOr and use try_... functions.
+
+    // File menu
     auto& file_menu = window.add_menu("&File");
     file_menu.add_action(GUI::CommonActions::make_open_action([&](auto&) {
         Optional<String> path = GUI::FilePicker::get_open_filepath(&window, "Open video file...");
@@ -272,6 +295,18 @@ void VideoPlayerWidget::initialize_menubar(GUI::Window& window)
         window.close();
     }));
 
+    // Playback menu
+    auto& playback_menu = window.add_menu("&Playback");
+
+    // FIXME: Maybe seek mode should be in an options dialog instead. The playback menu may get crowded.
+    //        For now, leave it here for convenience.
+    m_use_fast_seeking = GUI::Action::create_checkable("&Fast Seeking", [&](auto&) {
+        update_seek_mode();
+    });
+    playback_menu.add_action(*m_use_fast_seeking);
+    set_seek_mode(Video::PlaybackManager::DEFAULT_SEEK_MODE);
+
+    // Help menu
     auto& help_menu = window.add_menu("&Help");
     help_menu.add_action(GUI::CommonActions::make_about_action("Video Player", GUI::Icon::default_icon("app-video-player"sv), &window));
 }
