@@ -112,6 +112,33 @@ Tab::Tab(BrowserWindow* window, int webdriver_fd_passing_socket)
         text_edit->show();
     });
 
+    QObject::connect(m_view, &WebContentView::navigate_back, this, &Tab::back);
+    QObject::connect(m_view, &WebContentView::navigate_forward, this, &Tab::forward);
+    QObject::connect(m_view, &WebContentView::refresh, this, &Tab::reload);
+    QObject::connect(m_view, &WebContentView::restore_window, this, [this]() {
+        m_window->showNormal();
+    });
+    QObject::connect(m_view, &WebContentView::reposition_window, this, [this](auto const& position) {
+        m_window->move(position.x(), position.y());
+        return Gfx::IntPoint { m_window->x(), m_window->y() };
+    });
+    QObject::connect(m_view, &WebContentView::resize_window, this, [this](auto const& size) {
+        m_window->resize(size.width(), size.height());
+        return Gfx::IntSize { m_window->width(), m_window->height() };
+    });
+    QObject::connect(m_view, &WebContentView::maximize_window, this, [this]() {
+        m_window->showMaximized();
+        return Gfx::IntRect { m_window->x(), m_window->y(), m_window->width(), m_window->height() };
+    });
+    QObject::connect(m_view, &WebContentView::minimize_window, this, [this]() {
+        m_window->showMinimized();
+        return Gfx::IntRect { m_window->x(), m_window->y(), m_window->width(), m_window->height() };
+    });
+    QObject::connect(m_view, &WebContentView::fullscreen_window, this, [this]() {
+        m_window->showFullScreen();
+        return Gfx::IntRect { m_window->x(), m_window->y(), m_window->width(), m_window->height() };
+    });
+
     // FIXME: This is a hack to make the JS console usable in new windows.
     //        Something else should ensure that there's an initial about:blank document loaded in the view.
     //        We set m_is_history_navigation = true so that the initial about:blank doesn't get added to the history.

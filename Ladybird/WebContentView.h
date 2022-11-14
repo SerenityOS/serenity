@@ -160,6 +160,15 @@ signals:
     void title_changed(QString);
     void favicon_changed(QIcon);
     void got_source(URL, QString);
+    void navigate_back();
+    void navigate_forward();
+    void refresh();
+    void restore_window();
+    Gfx::IntPoint reposition_window(Gfx::IntPoint const&);
+    Gfx::IntSize resize_window(Gfx::IntSize const&);
+    Gfx::IntRect maximize_window();
+    Gfx::IntRect minimize_window();
+    Gfx::IntRect fullscreen_window();
 
 private:
     void request_repaint();
