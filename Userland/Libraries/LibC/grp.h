@@ -21,6 +21,7 @@ struct group {
 };
 
 struct group* getgrent(void);
+int getgrent_r(struct group* group_buf, char* buffer, size_t buffer_size, struct group** group_entry_ptr);
 void setgrent(void);
 void endgrent(void);
 struct group* getgrnam(char const* name);
