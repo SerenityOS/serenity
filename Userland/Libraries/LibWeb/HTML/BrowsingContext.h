@@ -241,6 +241,8 @@ public:
     VisibilityState system_visibility_state() const;
     void set_system_visibility_state(VisibilityState);
 
+    void set_is_popup(bool is_popup) { m_is_popup = is_popup; }
+
     // https://html.spec.whatwg.org/multipage/window-object.html#a-browsing-context-is-discarded
     void discard();
     bool has_been_discarded() const { return m_has_been_discarded; }
@@ -297,6 +299,9 @@ private:
 
     // https://html.spec.whatwg.org/multipage/browsers.html#tlbc-group
     JS::GCPtr<BrowsingContextGroup> m_group;
+
+    // https://html.spec.whatwg.org/multipage/browsers.html#is-popup
+    bool m_is_popup { false };
 
     // https://html.spec.whatwg.org/multipage/interaction.html#system-visibility-state
     VisibilityState m_system_visibility_state { VisibilityState::Hidden };
