@@ -102,9 +102,9 @@ public:
     void pause_playback();
     void restart_playback();
     void seek_to_timestamp(Time);
-    bool is_playing() const { return m_status == PlaybackStatus::Playing; }
+    bool is_playing() const { return m_status == PlaybackStatus::Playing || m_status == PlaybackStatus::Buffering; }
     bool is_buffering() const { return m_status == PlaybackStatus::Buffering; }
-    bool is_stopped() const { return m_status == PlaybackStatus::Stopped; }
+    bool is_stopped() const { return m_status == PlaybackStatus::Stopped || m_status == PlaybackStatus::Corrupted; }
 
     u64 number_of_skipped_frames() const { return m_skipped_frames; }
 
