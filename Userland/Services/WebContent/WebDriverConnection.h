@@ -23,7 +23,7 @@ namespace WebContent {
 
 class WebDriverConnection final
     : public IPC::ConnectionToServer<WebDriverClientEndpoint, WebDriverServerEndpoint> {
-    C_OBJECT_ABSTRACT(WebDriverConnection)
+    C_OBJECT(WebDriverConnection)
 
 public:
     static ErrorOr<NonnullRefPtr<WebDriverConnection>> connect(ConnectionFromClient& web_content_client, PageHost& page_host, String const& webdriver_ipc_path);
