@@ -236,7 +236,10 @@ void PlaybackManager::seek_to_timestamp(Time timestamp)
     m_frame_queue->clear();
     m_next_frame.clear();
     m_skipped_frames = 0;
-    m_seek_to_media_time = timestamp;
+    if (m_seek_mode == SeekMode::Accurate)
+        m_seek_to_media_time = timestamp;
+    else
+        m_seek_to_media_time = result.release_value();
     m_last_present_in_media_time = Time::min();
     m_last_present_in_real_time = Time::zero();
     m_present_timer->stop();
