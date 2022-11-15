@@ -19,6 +19,7 @@
 #include <LibWeb/Cookie/Cookie.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Element.h>
+#include <LibWeb/DOM/ShadowRoot.h>
 #include <LibWeb/Geometry/DOMRect.h>
 #include <LibWeb/HTML/AttributeNames.h>
 #include <LibWeb/HTML/BrowsingContext.h>
@@ -148,6 +149,36 @@ static ErrorOr<Web::DOM::Element*, Web::WebDriver::Error> get_known_connected_el
         return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::NoSuchElement, String::formatted("Could not find element with ID: {}", element_id));
 
     return static_cast<Web::DOM::Element*>(node);
+}
+
+// https://w3c.github.io/webdriver/#dfn-get-or-create-a-shadow-root-reference
+static String get_or_create_a_shadow_root_reference(Web::DOM::ShadowRoot const& shadow_root)
+{
+    // FIXME: 1. For each known shadow root of the current browsing context’s list of known shadow roots:
+    // FIXME:     1. If known shadow root equals shadow root, return success with known shadow root’s shadow root reference.
+    // FIXME: 2. Add shadow to the list of known shadow roots of the current browsing context.
+    // FIXME: 3. Return success with the shadow’s shadow root reference.
+
+    return String::number(shadow_root.id());
+}
+
+// https://w3c.github.io/webdriver/#dfn-shadow-root-reference-object
+static JsonObject shadow_root_reference_object(Web::DOM::ShadowRoot const& shadow_root)
+{
+    // https://w3c.github.io/webdriver/#dfn-shadow-root-identifier
+    static String const shadow_root_identifier = "shadow-6066-11e4-a52e-4f735466cecf"sv;
+
+    // 1. Let identifier be the shadow root identifier.
+    auto identifier = shadow_root_identifier;
+
+    // 2. Let reference be the result of get or create a shadow root reference given shadow root.
+    auto reference = get_or_create_a_shadow_root_reference(shadow_root);
+
+    // 3. Return a JSON Object initialized with a property with name identifier and value reference.
+    JsonObject object;
+    object.set("name"sv, move(identifier));
+    object.set("value"sv, move(reference));
+    return object;
 }
 
 // https://w3c.github.io/webdriver/#dfn-scrolls-into-view
@@ -722,6 +753,31 @@ Messages::WebDriverClient::GetActiveElementResponse WebDriverConnection::get_act
         return String::number(active_element->id());
 
     return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::NoSuchElement, "The current document does not have an active element"sv);
+}
+
+// 12.3.9 Get Element Shadow Root, https://w3c.github.io/webdriver/#get-element-shadow-root
+Messages::WebDriverClient::GetElementShadowRootResponse WebDriverConnection::get_element_shadow_root(String const& element_id)
+{
+    // 1. If the current browsing context is no longer open, return error with error code no such window.
+    TRY(ensure_open_top_level_browsing_context());
+
+    // FIXME: 2. Handle any user prompts and return its value if it is an error.
+
+    // 3. Let element be the result of trying to get a known connected element with url variable element id.
+    auto* element = TRY(get_known_connected_element(element_id));
+
+    // 4. Let shadow root be element's shadow root.
+    auto* shadow_root = element->shadow_root();
+
+    // 5. If shadow root is null, return error with error code no such shadow root.
+    if (!shadow_root)
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::NoSuchShadowRoot, String::formatted("Element with ID '{}' does not have a shadow root", element_id));
+
+    // 6. Let serialized be the shadow root reference object for shadow root.
+    auto serialized = shadow_root_reference_object(*shadow_root);
+
+    // 7. Return success with data serialized.
+    return serialized;
 }
 
 // 12.4.1 Is Element Selected, https://w3c.github.io/webdriver/#dfn-is-element-selected

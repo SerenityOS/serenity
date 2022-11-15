@@ -24,6 +24,7 @@ endpoint WebDriverClient {
     find_element_from_element(JsonValue payload, String element_id) => (Web::WebDriver::Response response)
     find_elements_from_element(JsonValue payload, String element_id) => (Web::WebDriver::Response response)
     get_active_element() => (Web::WebDriver::Response response)
+    get_element_shadow_root(String element_id) => (Web::WebDriver::Response response)
     is_element_selected(String element_id) => (Web::WebDriver::Response response)
     get_element_attribute(String element_id, String name) => (Web::WebDriver::Response response)
     get_element_property(String element_id, String name) => (Web::WebDriver::Response response)

@@ -368,6 +368,15 @@ Web::WebDriver::Response Client::get_active_element(Web::WebDriver::Parameters p
     return session->web_content_connection().get_active_element();
 }
 
+// 12.3.9 Get Element Shadow Root, https://w3c.github.io/webdriver/#get-element-shadow-root
+// GET /session/{session id}/element/{element id}/shadow
+Web::WebDriver::Response Client::get_element_shadow_root(Web::WebDriver::Parameters parameters, JsonValue)
+{
+    dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session_id>/element/<element_id>/shadow");
+    auto* session = TRY(find_session_with_id(parameters[0]));
+    return session->web_content_connection().get_element_shadow_root(parameters[1]);
+}
+
 // 12.4.1 Is Element Selected, https://w3c.github.io/webdriver/#dfn-is-element-selected
 // GET /session/{session id}/element/{element id}/selected
 Web::WebDriver::Response Client::is_element_selected(Web::WebDriver::Parameters parameters, JsonValue)
