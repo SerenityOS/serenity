@@ -7,12 +7,10 @@
 
 #include <AK/Badge.h>
 #include <AK/TemporaryChange.h>
+#include <LibConfig/Client.h>
 #include <LibGUI/ConnectionToWindowServer.h>
 #include <LibGUI/Desktop.h>
 #include <string.h>
-
-// Including this after to avoid LibIPC errors
-#include <LibConfig/Client.h>
 
 namespace GUI {
 

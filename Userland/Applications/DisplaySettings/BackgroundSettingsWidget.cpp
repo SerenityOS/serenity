@@ -9,6 +9,7 @@
 #include "BackgroundSettingsWidget.h"
 #include <AK/StringBuilder.h>
 #include <Applications/DisplaySettings/BackgroundSettingsGML.h>
+#include <LibConfig/Client.h>
 #include <LibCore/ConfigFile.h>
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/Application.h>
@@ -25,9 +26,6 @@
 #include <LibGUI/MessageBox.h>
 #include <LibGfx/Palette.h>
 #include <LibGfx/SystemTheme.h>
-
-// Including this after to avoid LibIPC errors
-#include <LibConfig/Client.h>
 
 namespace DisplaySettings {
 

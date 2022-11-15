@@ -4,9 +4,6 @@
 #include <LibWeb/Cookie/Cookie.h>
 #include <LibWeb/Cookie/ParsedCookie.h>
 
-// FIXME: This isn't used here, but the generated IPC fails to compile without this include.
-#include <LibWeb/WebDriver/Response.h>
-
 endpoint WebContentClient
 {
     did_start_loading(URL url) =|

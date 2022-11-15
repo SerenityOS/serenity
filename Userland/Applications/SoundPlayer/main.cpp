@@ -5,9 +5,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-// FIXME: LibIPC Decoder and Encoder are sensitive to include order here
-#include <LibImageDecoderClient/Client.h>
-
 #include "AlbumCoverVisualizationWidget.h"
 #include "BarsVisualizationWidget.h"
 #include "Player.h"
@@ -24,6 +21,7 @@
 #include <LibGUI/Menubar.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/CharacterBitmap.h>
+#include <LibImageDecoderClient/Client.h>
 #include <LibMain/Main.h>
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
