@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <LibWeb/CSS/Length.h>
 #include <LibWeb/Layout/BlockFormattingContext.h>
 #include <LibWeb/Layout/Box.h>
 #include <LibWeb/Layout/FormattingContext.h>
@@ -47,10 +48,10 @@ private:
         {
         }
 
-        TemporaryTrack(float size, bool is_gap)
-            : min_track_sizing_function(CSS::GridSize(size))
-            , max_track_sizing_function(CSS::GridSize(size))
-            , base_size(size)
+        TemporaryTrack(float size_in_px, bool is_gap)
+            : min_track_sizing_function(CSS::GridSize(CSS::Length(size_in_px, CSS::Length::Type::Px)))
+            , max_track_sizing_function(CSS::GridSize(CSS::Length(size_in_px, CSS::Length::Type::Px)))
+            , base_size(size_in_px)
             , is_gap(is_gap)
         {
         }
