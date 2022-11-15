@@ -1112,23 +1112,30 @@ DecoderErrorOr<void> Decoder::reconstruct(u8 plane, u32 transform_block_x, u32 t
     Vector<Intermediate>& dequantized = m_buffers.dequantized;
     DECODER_TRY_ALLOC(dequantized.try_resize_and_keep_capacity(buffer_size(block_size, block_size)));
     Intermediate ac_quant = get_ac_quant(plane);
+
+    // It is a requirement of bitstream conformance that the values written into the Dequant array in steps 1 and 2
+    // are representable by a signed integer with 8 + BitDepth bits.
+    Intermediate minimum_value = get_minimum_bound<Intermediate>(m_parser->m_bit_depth + 8) * dq_denominator;
+    Intermediate minimum_ac_token = minimum_value / ac_quant;
+
     for (auto i = 0u; i < block_size; i++) {
         for (auto j = 0u; j < block_size; j++) {
             auto index = index_from_row_and_column(i, j, block_size);
             if (index == 0)
                 continue;
-            dequantized[index] = (m_parser->m_tokens[index] * ac_quant) / dq_denominator;
+            auto token = m_parser->m_tokens[index];
+            if (token < minimum_ac_token || token > ~minimum_ac_token)
+                return DecoderError::corrupted("Token exceeded the valid bounds"sv);
+            dequantized[index] = (token * ac_quant) / dq_denominator;
         }
     }
 
     // 2. Dequant[ 0 ][ 0 ] is set equal to ( Tokens[ 0 ] * get_dc_quant( plane ) ) / dqDenom
-    dequantized[0] = (m_parser->m_tokens[0] * get_dc_quant(plane)) / dq_denominator;
-
-    // It is a requirement of bitstream conformance that the values written into the Dequant array in steps 1 and 2
-    // are representable by a signed integer with 8 + BitDepth bits.
-    for (auto i = 0u; i < block_size * block_size; i++)
-        if (!check_intermediate_bounds(dequantized[i], m_parser->m_bit_depth))
-            return DecoderError::corrupted("Intermediate bounds exceeded"sv);
+    Intermediate minimum_dc_token = minimum_value / ac_quant;
+    auto token = m_parser->m_tokens[0];
+    if (token < minimum_dc_token || token > ~minimum_dc_token)
+        return DecoderError::corrupted("Token exceeded the valid bounds"sv);
+    dequantized[0] = (token * get_dc_quant(plane)) / dq_denominator;
 
     // 3. Invoke the 2D inverse transform block process defined in section 8.7.2 with the variable n as input.
     //    The inverse transform outputs are stored back to the Dequant buffer.
