@@ -61,6 +61,7 @@ public:
     bool import_maps_allowed() const { return m_import_maps_allowed; }
     void set_import_maps_allowed(bool import_maps_allowed) { m_import_maps_allowed = import_maps_allowed; }
 
+    WebIDL::ExceptionOr<JS::GCPtr<HTML::WindowProxy>> open_impl(StringView url, StringView target, StringView features);
     void alert_impl(String const&);
     bool confirm_impl(String const&);
     String prompt_impl(String const&, String const&);
@@ -245,6 +246,7 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(session_storage_getter);
     JS_DECLARE_NATIVE_FUNCTION(origin_getter);
 
+    JS_DECLARE_NATIVE_FUNCTION(open);
     JS_DECLARE_NATIVE_FUNCTION(alert);
     JS_DECLARE_NATIVE_FUNCTION(confirm);
     JS_DECLARE_NATIVE_FUNCTION(prompt);
