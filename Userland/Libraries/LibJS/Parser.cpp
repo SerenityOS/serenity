@@ -22,29 +22,46 @@ namespace JS {
 
 class ScopePusher {
 
+    // NOTE: We really only need ModuleTopLevel and NotModuleTopLevel as the only
+    //       difference seems to be in https://tc39.es/ecma262/#sec-static-semantics-varscopeddeclarations
+    //       where ModuleItemList only does the VarScopedDeclaration and not the
+    //       TopLevelVarScopedDeclarations.
+    enum class ScopeLevel {
+        NotTopLevel,
+        ScriptTopLevel,
+        ModuleTopLevel,
+        FunctionTopLevel,
+        StaticInitTopLevel
+    };
+
 private:
-    ScopePusher(Parser& parser, ScopeNode* node, bool is_top_level)
+    ScopePusher(Parser& parser, ScopeNode* node, ScopeLevel scope_level)
         : m_parser(parser)
-        , m_is_top_level(is_top_level)
+        , m_scope_level(scope_level)
     {
         m_parent_scope = exchange(m_parser.m_state.current_scope_pusher, this);
-        VERIFY(node || (m_parent_scope && !is_top_level));
+        VERIFY(node || (m_parent_scope && scope_level == ScopeLevel::NotTopLevel));
         if (!node)
             m_node = m_parent_scope->m_node;
         else
             m_node = node;
         VERIFY(m_node);
 
-        if (!is_top_level)
+        if (!is_top_level())
             m_top_level_scope = m_parent_scope->m_top_level_scope;
         else
             m_top_level_scope = this;
     }
 
+    bool is_top_level()
+    {
+        return m_scope_level != ScopeLevel::NotTopLevel;
+    }
+
 public:
     static ScopePusher function_scope(Parser& parser, FunctionBody& function_body, Vector<FunctionDeclaration::Parameter> const& parameters)
     {
-        ScopePusher scope_pusher(parser, &function_body, true);
+        ScopePusher scope_pusher(parser, &function_body, ScopeLevel::FunctionTopLevel);
         scope_pusher.m_function_parameters = parameters;
         for (auto& parameter : parameters) {
             parameter.binding.visit(
@@ -62,17 +79,17 @@ public:
 
     static ScopePusher program_scope(Parser& parser, Program& program)
     {
-        return ScopePusher(parser, &program, true);
+        return ScopePusher(parser, &program, program.type() == Program::Type::Script ? ScopeLevel::ScriptTopLevel : ScopeLevel::ModuleTopLevel);
     }
 
     static ScopePusher block_scope(Parser& parser, ScopeNode& node)
     {
-        return ScopePusher(parser, &node, false);
+        return ScopePusher(parser, &node, ScopeLevel::NotTopLevel);
     }
 
     static ScopePusher for_loop_scope(Parser& parser, RefPtr<ASTNode> const& init)
     {
-        ScopePusher scope_pusher(parser, nullptr, false);
+        ScopePusher scope_pusher(parser, nullptr, ScopeLevel::NotTopLevel);
         if (init && is<VariableDeclaration>(*init)) {
             auto& variable_declaration = static_cast<VariableDeclaration const&>(*init);
             if (variable_declaration.declaration_kind() != DeclarationKind::Var) {
@@ -87,7 +104,7 @@ public:
 
     static ScopePusher catch_scope(Parser& parser, RefPtr<BindingPattern> const& pattern, FlyString const& parameter)
     {
-        ScopePusher scope_pusher(parser, nullptr, false);
+        ScopePusher scope_pusher(parser, nullptr, ScopeLevel::NotTopLevel);
         if (pattern) {
             pattern->for_each_bound_name([&](auto const& name) {
                 scope_pusher.m_forbidden_var_names.set(name);
@@ -100,12 +117,12 @@ public:
 
     static ScopePusher static_init_block_scope(Parser& parser, ScopeNode& node)
     {
-        return ScopePusher(parser, &node, true);
+        return ScopePusher(parser, &node, ScopeLevel::StaticInitTopLevel);
     }
 
     static ScopePusher class_field_scope(Parser& parser)
     {
-        return ScopePusher(parser, nullptr, false);
+        return ScopePusher(parser, nullptr, ScopeLevel::NotTopLevel);
     }
 
     void add_declaration(NonnullRefPtr<Declaration> declaration)
@@ -130,20 +147,21 @@ public:
                         throw_identifier_declared(name, declaration);
 
                     pusher->m_var_names.set(name);
-                    if (pusher->m_is_top_level)
+                    if (pusher->is_top_level())
                         break;
 
                     VERIFY(pusher->m_parent_scope != nullptr);
                     pusher = pusher->m_parent_scope;
                 }
-                VERIFY(pusher->m_is_top_level && pusher->m_node);
+                VERIFY(pusher->is_top_level() && pusher->m_node);
                 pusher->m_node->add_var_scoped_declaration(declaration);
             });
 
             VERIFY(m_top_level_scope);
             m_top_level_scope->m_node->add_var_scoped_declaration(move(declaration));
         } else {
-            if (m_is_top_level && m_parser.m_program_type == Program::Type::Script) {
+            if (m_scope_level != ScopeLevel::NotTopLevel && m_scope_level != ScopeLevel::ModuleTopLevel) {
+                // Only non-top levels and Module don't var declare the top functions
                 declaration->for_each_bound_name([&](auto const& name) {
                     m_var_names.set(name);
                 });
@@ -202,7 +220,7 @@ public:
 
     ~ScopePusher()
     {
-        VERIFY(m_is_top_level || m_parent_scope);
+        VERIFY(is_top_level() || m_parent_scope);
 
         if (!m_contains_access_to_arguments_object) {
             for (auto& it : m_identifier_and_argument_index_associations) {
@@ -217,7 +235,7 @@ public:
             auto const& function_declaration = m_functions_to_hoist[i];
             if (m_lexical_names.contains(function_declaration.name()) || m_forbidden_var_names.contains(function_declaration.name()))
                 continue;
-            if (m_is_top_level)
+            if (is_top_level())
                 m_node->add_hoisted_function(move(m_functions_to_hoist[i]));
             else
                 m_parent_scope->m_functions_to_hoist.append(move(m_functions_to_hoist[i]));
@@ -255,7 +273,7 @@ private:
 
     Parser& m_parser;
     ScopeNode* m_node { nullptr };
-    bool m_is_top_level { false };
+    ScopeLevel m_scope_level { ScopeLevel::NotTopLevel };
 
     ScopePusher* m_parent_scope { nullptr };
     ScopePusher* m_top_level_scope { nullptr };
