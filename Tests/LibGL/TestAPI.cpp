@@ -53,3 +53,11 @@ TEST_CASE(0002_gl_cull_face_does_not_accept_left_and_right)
     glCullFace(GL_RIGHT);
     EXPECT_EQ(glGetError(), static_cast<GLenum>(GL_INVALID_ENUM));
 }
+
+TEST_CASE(0003_gl_bind_buffer_names_must_be_allocated)
+{
+    auto context = create_testing_context();
+
+    glBindBuffer(GL_ARRAY_BUFFER, 123);
+    EXPECT_EQ(glGetError(), static_cast<GLenum>(GL_INVALID_VALUE));
+}
