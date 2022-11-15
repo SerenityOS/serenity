@@ -368,6 +368,15 @@ Web::WebDriver::Response Client::find_element_from_shadow_root(Web::WebDriver::P
     return session->web_content_connection().find_element_from_shadow_root(payload, parameters[1]);
 }
 
+// 12.3.7 Find Elements From Shadow Root, https://w3c.github.io/webdriver/#find-elements-from-shadow-root
+// POST /session/{session id}/shadow/{shadow id}/elements
+Web::WebDriver::Response Client::find_elements_from_shadow_root(Web::WebDriver::Parameters parameters, JsonValue payload)
+{
+    dbgln_if(WEBDRIVER_DEBUG, "Handling POST /session/<session_id>/shadow/<shadow_id>/elements");
+    auto* session = TRY(find_session_with_id(parameters[0]));
+    return session->web_content_connection().find_elements_from_shadow_root(payload, parameters[1]);
+}
+
 // 12.3.8 Get Active Element, https://w3c.github.io/webdriver/#get-active-element
 // GET /session/{session id}/element/active
 Web::WebDriver::Response Client::get_active_element(Web::WebDriver::Parameters parameters, JsonValue)

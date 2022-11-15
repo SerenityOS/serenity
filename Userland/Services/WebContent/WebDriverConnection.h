@@ -59,6 +59,7 @@ private:
     virtual Messages::WebDriverClient::FindElementFromElementResponse find_element_from_element(JsonValue const& payload, String const& element_id) override;
     virtual Messages::WebDriverClient::FindElementsFromElementResponse find_elements_from_element(JsonValue const& payload, String const& element_id) override;
     virtual Messages::WebDriverClient::FindElementFromShadowRootResponse find_element_from_shadow_root(JsonValue const& payload, String const& shadow_id) override;
+    virtual Messages::WebDriverClient::FindElementsFromShadowRootResponse find_elements_from_shadow_root(JsonValue const& payload, String const& shadow_id) override;
     virtual Messages::WebDriverClient::GetActiveElementResponse get_active_element() override;
     virtual Messages::WebDriverClient::GetElementShadowRootResponse get_element_shadow_root(String const& element_id) override;
     virtual Messages::WebDriverClient::IsElementSelectedResponse is_element_selected(String const& element_id) override;
