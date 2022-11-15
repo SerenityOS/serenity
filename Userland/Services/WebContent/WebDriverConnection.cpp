@@ -181,6 +181,23 @@ static JsonObject shadow_root_reference_object(Web::DOM::ShadowRoot const& shado
     return object;
 }
 
+// https://w3c.github.io/webdriver/#dfn-get-a-known-shadow-root
+static ErrorOr<Web::DOM::ShadowRoot*, Web::WebDriver::Error> get_known_shadow_root(StringView shadow_id)
+{
+    // NOTE: The whole concept of "known shadow roots" is not implemented yet. See get_or_create_a_shadow_root_reference().
+    //       For now the shadow root is only represented by its ID.
+    auto shadow_root = shadow_id.to_int();
+    if (!shadow_root.has_value())
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, "Shadow ID is not an integer");
+
+    auto* node = Web::DOM::Node::from_id(*shadow_root);
+
+    if (!node || !node->is_shadow_root())
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::NoSuchElement, String::formatted("Could not find shadow root with ID: {}", shadow_id));
+
+    return static_cast<Web::DOM::ShadowRoot*>(node);
+}
+
 // https://w3c.github.io/webdriver/#dfn-scrolls-into-view
 static void scroll_element_into_view(Web::DOM::Element& element)
 {
@@ -734,6 +751,39 @@ Messages::WebDriverClient::FindElementsFromElementResponse WebDriverConnection::
 
     // 8. Return the result of trying to Find with start node, location strategy, and selector.
     return TRY(find(*start_node, *location_strategy, selector));
+}
+
+// 12.3.6 Find Element From Shadow Root, https://w3c.github.io/webdriver/#find-element-from-shadow-root
+Messages::WebDriverClient::FindElementFromShadowRootResponse WebDriverConnection::find_element_from_shadow_root(JsonValue const& payload, String const& shadow_id)
+{
+    // 1. Let location strategy be the result of getting a property called "using".
+    auto location_strategy_string = TRY(get_property(payload, "using"sv));
+    auto location_strategy = Web::WebDriver::location_strategy_from_string(location_strategy_string);
+
+    // 2. If location strategy is not present as a keyword in the table of location strategies, return error with error code invalid argument.
+    if (!location_strategy.has_value())
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, String::formatted("Location strategy '{}' is invalid", location_strategy_string));
+
+    // 3. Let selector be the result of getting a property called "value".
+    // 4. If selector is undefined, return error with error code invalid argument.
+    auto selector = TRY(get_property(payload, "value"sv));
+
+    // 5. If the current browsing context is no longer open, return error with error code no such window.
+    TRY(ensure_open_top_level_browsing_context());
+
+    // FIXME: 6. Handle any user prompts and return its value if it is an error.
+
+    // 7. Let start node be the result of trying to get a known shadow root with url variable shadow id.
+    auto* start_node = TRY(get_known_shadow_root(shadow_id));
+
+    // 8. Let result be the value of trying to Find with start node, location strategy, and selector.
+    auto result = TRY(find(*start_node, *location_strategy, selector));
+
+    // 9. If result is empty, return error with error code no such element. Otherwise, return the first element of result.
+    if (result.is_empty())
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::NoSuchElement, "The requested element does not exist"sv);
+
+    return result.take(0);
 }
 
 // 12.3.8 Get Active Element, https://w3c.github.io/webdriver/#get-active-element

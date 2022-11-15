@@ -61,6 +61,7 @@ public:
     virtual Response find_elements(Parameters parameters, JsonValue payload) = 0;
     virtual Response find_element_from_element(Parameters parameters, JsonValue payload) = 0;
     virtual Response find_elements_from_element(Parameters parameters, JsonValue payload) = 0;
+    virtual Response find_element_from_shadow_root(Parameters parameters, JsonValue payload) = 0;
     virtual Response get_active_element(Parameters parameters, JsonValue payload) = 0;
     virtual Response get_element_shadow_root(Parameters parameters, JsonValue payload) = 0;
     virtual Response is_element_selected(Parameters parameters, JsonValue payload) = 0;
