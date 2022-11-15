@@ -16,7 +16,7 @@
 namespace IPC {
 
 template<typename T>
-bool encode(Encoder&, T&)
+bool encode(Encoder&, T const&)
 {
     static_assert(DependentFalse<T>, "Base IPC::encode() was instantiated");
     VERIFY_NOT_REACHED();
