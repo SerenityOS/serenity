@@ -493,7 +493,7 @@ void HTMLHyperlinkElementUtils::follow_the_hyperlink(Optional<String> hyperlink_
     // 7. Let target be the first return value of applying the rules for
     // choosing a browsing context given targetAttributeValue, source, and
     // noopener.
-    auto* target = source->choose_a_browsing_context(target_attribute_value, noopener);
+    auto target = source->choose_a_browsing_context(target_attribute_value, noopener).browsing_context;
 
     // 8. If target is null, then return.
     if (!target)
@@ -534,7 +534,7 @@ void HTMLHyperlinkElementUtils::follow_the_hyperlink(Optional<String> hyperlink_
     // set to source.
     // FIXME: "navigate" means implementing the navigation algorithm here:
     //        https://html.spec.whatwg.org/multipage/browsing-the-web.html#navigate
-    hyperlink_element_utils_queue_an_element_task(Task::Source::DOMManipulation, [url_string, target] {
+    hyperlink_element_utils_queue_an_element_task(Task::Source::DOMManipulation, [url_string, &target] {
         target->loader().load(url_string, FrameLoader::Type::Navigation);
     });
 }
