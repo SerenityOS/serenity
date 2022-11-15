@@ -33,6 +33,7 @@
 #include <LibWeb/HTML/Scripting/Environments.h>
 #include <LibWeb/HTML/VisibilityState.h>
 #include <LibWeb/HTML/Window.h>
+#include <LibWeb/HTML/WindowProxy.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
 
 namespace Web::DOM {
@@ -295,6 +296,7 @@ public:
     WebIDL::ExceptionOr<void> writeln(Vector<String> const& strings);
 
     WebIDL::ExceptionOr<Document*> open(String const& = "", String const& = "");
+    WebIDL::ExceptionOr<JS::GCPtr<HTML::WindowProxy>> open(String const& url, String const& name, String const& features);
     WebIDL::ExceptionOr<void> close();
 
     HTML::Window* default_view() { return m_window.ptr(); }
