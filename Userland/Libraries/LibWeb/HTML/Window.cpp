@@ -31,6 +31,7 @@
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/EventDispatcher.h>
+#include <LibWeb/Fetch/Infrastructure/HTTP/Requests.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/EventHandler.h>
 #include <LibWeb/HTML/EventLoop/EventLoop.h>
@@ -295,6 +296,131 @@ static bool check_if_a_popup_window_is_requested(OrderedHashMap<String, String> 
 
     // 14. Return false.
     return false;
+}
+
+// FIXME: This is based on the old 'browsing context' concept, which was replaced with 'navigable'
+// https://html.spec.whatwg.org/multipage/window-object.html#window-open-steps
+WebIDL::ExceptionOr<JS::GCPtr<HTML::WindowProxy>> Window::open_impl(StringView url, StringView target, StringView features)
+{
+    auto& vm = this->vm();
+
+    // 1. If the event loop's termination nesting level is nonzero, return null.
+    if (HTML::main_thread_event_loop().termination_nesting_level() != 0)
+        return nullptr;
+
+    // 2. Let source browsing context be the entry global object's browsing context.
+    auto* source_browsing_context = verify_cast<Window>(entry_global_object()).browsing_context();
+
+    // 3. If target is the empty string, then set target to "_blank".
+    if (target.is_empty())
+        target = "_blank"sv;
+
+    // 4. Let tokenizedFeatures be the result of tokenizing features.
+    auto tokenized_features = tokenize_open_features(features);
+
+    // 5. Let noopener and noreferrer be false.
+    auto no_opener = false;
+    auto no_referrer = false;
+
+    // 6. If tokenizedFeatures["noopener"] exists, then:
+    if (auto no_opener_feature = tokenized_features.get("noopener"sv); no_opener_feature.has_value()) {
+        // 1. Set noopener to the result of parsing tokenizedFeatures["noopener"] as a boolean feature.
+        no_opener = parse_boolean_feature(*no_opener_feature);
+
+        // 2. Remove tokenizedFeatures["noopener"].
+        tokenized_features.remove("noopener"sv);
+    }
+
+    // 7. If tokenizedFeatures["noreferrer"] exists, then:
+    if (auto no_referrer_feature = tokenized_features.get("noreferrer"sv); no_referrer_feature.has_value()) {
+        // 1. Set noreferrer to the result of parsing tokenizedFeatures["noreferrer"] as a boolean feature.
+        no_referrer = parse_boolean_feature(*no_referrer_feature);
+
+        // 2. Remove tokenizedFeatures["noreferrer"].
+        tokenized_features.remove("noreferrer"sv);
+    }
+
+    // 8. If noreferrer is true, then set noopener to true.
+    if (no_referrer)
+        no_opener = true;
+
+    // 9. Let target browsing context and windowType be the result of applying the rules for choosing a browsing context given target, source browsing context, and noopener.
+    auto [target_browsing_context, window_type] = source_browsing_context->choose_a_browsing_context(target, no_opener);
+
+    // 10. If target browsing context is null, then return null.
+    if (target_browsing_context == nullptr)
+        return nullptr;
+
+    // 11. If windowType is either "new and unrestricted" or "new with no opener", then:
+    if (window_type == BrowsingContext::WindowType::NewAndUnrestricted || window_type == BrowsingContext::WindowType::NewWithNoOpener) {
+        // 1. Set the target browsing context's is popup to the result of checking if a popup window is requested, given tokenizedFeatures.
+        target_browsing_context->set_is_popup(check_if_a_popup_window_is_requested(tokenized_features));
+
+        // FIXME: 2. Set up browsing context features for target browsing context given tokenizedFeatures. [CSSOMVIEW]
+        // NOTE: While this is not implemented yet, all of observable actions taken by this operation are optional (implementation-defined).
+
+        // 3. Let urlRecord be the URL record about:blank.
+        auto url_record = AK::URL("about:blank"sv);
+
+        // 4. If url is not the empty string, then parse url relative to the entry settings object, and set urlRecord to the resulting URL record, if any. If the parse a URL algorithm failed, then throw a "SyntaxError" DOMException.
+        if (!url.is_empty()) {
+            url_record = entry_settings_object().parse_url(url);
+            if (!url_record.is_valid())
+                return WebIDL::SyntaxError::create(realm(), "URL is not valid");
+        }
+
+        // FIXME: 5. If urlRecord matches about:blank, then perform the URL and history update steps given target browsing context's active document and urlRecord.
+
+        // 6. Otherwise:
+        else {
+            // 1. Let request be a new request whose URL is urlRecord.
+            auto request = Fetch::Infrastructure::Request::create(vm);
+            request->set_url(url_record);
+
+            // 2. If noreferrer is true, then set request's referrer to "no-referrer".
+            if (no_referrer)
+                request->set_referrer(Fetch::Infrastructure::Request::Referrer::NoReferrer);
+
+            // 3. Navigate target browsing context to request, with exceptionsEnabled set to true and the source browsing context set to source browsing context.
+            TRY(target_browsing_context->navigate(request, *source_browsing_context, true));
+        }
+    }
+
+    // 12. Otherwise:
+    else {
+        // 1. If url is not the empty string, then:
+        if (!url.is_empty()) {
+            // 1. Let urlRecord be the URL record about:blank.
+            auto url_record = AK::URL("about:blank"sv);
+
+            // 2. Parse url relative to the entry settings object, and set urlRecord to the resulting URL record, if any. If the parse a URL algorithm failed, then throw a "SyntaxError" DOMException.
+            url_record = entry_settings_object().parse_url(url);
+            if (!url_record.is_valid())
+                return WebIDL::SyntaxError::create(realm(), "URL is not valid");
+
+            // 3. Let request be a new request whose URL is urlRecord.
+            auto request = Fetch::Infrastructure::Request::create(vm);
+            request->set_url(url_record);
+
+            // 4. If noreferrer is true, then set request's referrer to "noreferrer".
+            if (no_referrer)
+                request->set_referrer(Fetch::Infrastructure::Request::Referrer::NoReferrer);
+
+            // 5. Navigate target browsing context to request, with exceptionsEnabled set to true and the source browsing context set to source browsing context.
+            TRY(target_browsing_context->navigate(request, *source_browsing_context, true));
+        }
+
+        // 2. If noopener is false, then set target browsing context's opener browsing context to source browsing context.
+        if (!no_opener)
+            target_browsing_context->set_opener_browsing_context(source_browsing_context);
+    }
+
+    // 13. If noopener is true or windowType is "new with no opener", then return null.
+    if (no_opener || window_type == BrowsingContext::WindowType::NewWithNoOpener)
+        return nullptr;
+
+    // 14. Return target browsing context's WindowProxy object.
+    return target_browsing_context->window_proxy();
 }
 
 void Window::alert_impl(String const& message)
@@ -950,6 +1076,7 @@ void Window::initialize_web_interfaces(Badge<WindowEnvironmentSettingsObject>)
     define_native_accessor(realm, "innerHeight", inner_height_getter, {}, JS::Attribute::Enumerable);
     define_native_accessor(realm, "devicePixelRatio", device_pixel_ratio_getter, {}, JS::Attribute::Enumerable | JS::Attribute::Configurable);
     u8 attr = JS::Attribute::Writable | JS::Attribute::Enumerable | JS::Attribute::Configurable;
+    define_native_function(realm, "open", open, 0, attr);
     define_native_function(realm, "alert", alert, 0, attr);
     define_native_function(realm, "confirm", confirm, 0, attr);
     define_native_function(realm, "prompt", prompt, 0, attr);
@@ -1057,6 +1184,28 @@ static JS::ThrowCompletionOr<HTML::Window*> impl_from(JS::VM& vm)
         return static_cast<Window*>(this_object);
 
     return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, "Window");
+}
+
+JS_DEFINE_NATIVE_FUNCTION(Window::open)
+{
+    auto* impl = TRY(impl_from(vm));
+
+    // optional USVString url = ""
+    String url = "";
+    if (!vm.argument(0).is_undefined())
+        url = TRY(vm.argument(0).to_string(vm));
+
+    // optional DOMString target = "_blank"
+    String target = "_blank";
+    if (!vm.argument(1).is_undefined())
+        target = TRY(vm.argument(1).to_string(vm));
+
+    // optional [LegacyNullToEmptyString] DOMString features = "")
+    String features = "";
+    if (!vm.argument(2).is_nullish())
+        features = TRY(vm.argument(2).to_string(vm));
+
+    return TRY(Bindings::throw_dom_exception_if_needed(vm, [&] { return impl->open_impl(url, target, features); }));
 }
 
 JS_DEFINE_NATIVE_FUNCTION(Window::alert)
