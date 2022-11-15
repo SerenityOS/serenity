@@ -15,11 +15,11 @@
 
 namespace AK {
 
-template<typename ChunkType, bool IsConst>
+template<typename ChunkType, bool IsConst, size_t InlineCapacity = 0>
 struct DisjointIterator {
     struct EndTag {
     };
-    using ReferenceType = Conditional<IsConst, AddConst<Vector<ChunkType>>, Vector<ChunkType>>&;
+    using ReferenceType = Conditional<IsConst, AddConst<Vector<ChunkType, InlineCapacity>>, Vector<ChunkType, InlineCapacity>>&;
 
     DisjointIterator(ReferenceType chunks)
         : m_chunks(chunks)
@@ -232,6 +232,9 @@ FixedArray<T> shatter_chunk(FixedArray<T>& source_chunk, size_t start, size_t sl
 
 template<typename T, typename ChunkType = Vector<T>>
 class DisjointChunks {
+private:
+    constexpr static auto InlineCapacity = IsCopyConstructible<ChunkType> ? 1 : 0;
+
 public:
     DisjointChunks() = default;
     ~DisjointChunks() = default;
@@ -397,10 +400,10 @@ public:
         m_chunks.remove(1, m_chunks.size() - 1);
     }
 
-    DisjointIterator<ChunkType, false> begin() { return { m_chunks }; }
-    DisjointIterator<ChunkType, false> end() { return { m_chunks, {} }; }
-    DisjointIterator<ChunkType, true> begin() const { return { m_chunks }; }
-    DisjointIterator<ChunkType, true> end() const { return { m_chunks, {} }; }
+    DisjointIterator<ChunkType, false, InlineCapacity> begin() { return { m_chunks }; }
+    DisjointIterator<ChunkType, false, InlineCapacity> end() { return { m_chunks, {} }; }
+    DisjointIterator<ChunkType, true, InlineCapacity> begin() const { return { m_chunks }; }
+    DisjointIterator<ChunkType, true, InlineCapacity> end() const { return { m_chunks, {} }; }
 
 private:
     struct ChunkAndOffset {
@@ -428,7 +431,7 @@ private:
         return { &m_chunks.last(), index - (offset - m_chunks.last().size()) };
     }
 
-    Vector<ChunkType> m_chunks;
+    Vector<ChunkType, InlineCapacity> m_chunks;
 };
 
 }
