@@ -71,6 +71,9 @@ public:
     bool is_scripting_enabled() const { return m_is_scripting_enabled; }
     void set_is_scripting_enabled(bool b) { m_is_scripting_enabled = b; }
 
+    bool should_block_pop_ups() const { return m_should_block_pop_ups; }
+    void set_should_block_pop_ups(bool b) { m_should_block_pop_ups = b; }
+
     bool is_webdriver_active() const { return m_is_webdriver_active; }
     void set_is_webdriver_active(bool b) { m_is_webdriver_active = b; }
 
@@ -90,6 +93,8 @@ private:
     bool m_same_origin_policy_enabled { false };
 
     bool m_is_scripting_enabled { true };
+
+    bool m_should_block_pop_ups { true };
 
     // https://w3c.github.io/webdriver/#dfn-webdriver-active-flag
     // The webdriver-active flag is set to true when the user agent is under remote control. It is initially false.
