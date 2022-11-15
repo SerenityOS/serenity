@@ -30,12 +30,14 @@ String FloatRect::to_string() const
 
 namespace IPC {
 
+template<>
 bool encode(Encoder& encoder, Gfx::IntRect const& rect)
 {
     encoder << rect.location() << rect.size();
     return true;
 }
 
+template<>
 ErrorOr<void> decode(Decoder& decoder, Gfx::IntRect& rect)
 {
     Gfx::IntPoint point;

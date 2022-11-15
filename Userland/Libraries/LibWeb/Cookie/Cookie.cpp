@@ -38,6 +38,7 @@ SameSite same_site_from_string(StringView same_site_mode)
 
 }
 
+template<>
 bool IPC::encode(Encoder& encoder, Web::Cookie::Cookie const& cookie)
 {
     encoder << cookie.name;
@@ -56,6 +57,7 @@ bool IPC::encode(Encoder& encoder, Web::Cookie::Cookie const& cookie)
     return true;
 }
 
+template<>
 ErrorOr<void> IPC::decode(Decoder& decoder, Web::Cookie::Cookie& cookie)
 {
     TRY(decoder.decode(cookie.name));

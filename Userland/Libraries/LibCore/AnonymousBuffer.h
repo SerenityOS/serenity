@@ -74,7 +74,10 @@ private:
 
 namespace IPC {
 
+template<>
 bool encode(Encoder&, Core::AnonymousBuffer const&);
+
+template<>
 ErrorOr<void> decode(Decoder&, Core::AnonymousBuffer&);
 
 }

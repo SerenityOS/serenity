@@ -22,6 +22,7 @@ ShareableBitmap::ShareableBitmap(NonnullRefPtr<Bitmap> bitmap, Tag)
 
 namespace IPC {
 
+template<>
 bool encode(Encoder& encoder, Gfx::ShareableBitmap const& shareable_bitmap)
 {
     encoder << shareable_bitmap.is_valid();
@@ -39,6 +40,7 @@ bool encode(Encoder& encoder, Gfx::ShareableBitmap const& shareable_bitmap)
     return true;
 }
 
+template<>
 ErrorOr<void> decode(Decoder& decoder, Gfx::ShareableBitmap& shareable_bitmap)
 {
     bool valid = false;

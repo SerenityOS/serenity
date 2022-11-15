@@ -27,12 +27,14 @@ String FloatSize::to_string() const
 
 namespace IPC {
 
+template<>
 bool encode(Encoder& encoder, Gfx::IntSize const& size)
 {
     encoder << size.width() << size.height();
     return true;
 }
 
+template<>
 ErrorOr<void> decode(Decoder& decoder, Gfx::IntSize& size)
 {
     int width = 0;

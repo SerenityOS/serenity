@@ -196,6 +196,7 @@ Encoder& Encoder::operator<<(File const& file)
     return *this;
 }
 
+template<>
 bool encode(Encoder& encoder, Core::AnonymousBuffer const& buffer)
 {
     encoder << buffer.is_valid();
@@ -206,12 +207,14 @@ bool encode(Encoder& encoder, Core::AnonymousBuffer const& buffer)
     return true;
 }
 
+template<>
 bool encode(Encoder& encoder, Core::DateTime const& datetime)
 {
     encoder << static_cast<i64>(datetime.timestamp());
     return true;
 }
 
+template<>
 bool encode(Encoder& encoder, Core::ProxyData const& proxy)
 {
     encoder << to_underlying(proxy.type);

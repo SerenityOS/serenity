@@ -46,7 +46,10 @@ private:
 
 namespace IPC {
 
+template<>
 bool encode(Encoder&, Web::WebDriver::Response const&);
+
+template<>
 ErrorOr<void> decode(Decoder&, Web::WebDriver::Response&);
 
 }

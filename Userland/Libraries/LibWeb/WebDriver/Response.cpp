@@ -27,6 +27,7 @@ Response::Response(Error&& error)
 
 }
 
+template<>
 bool IPC::encode(Encoder& encoder, Web::WebDriver::Response const& response)
 {
     response.visit(
@@ -46,6 +47,7 @@ bool IPC::encode(Encoder& encoder, Web::WebDriver::Response const& response)
     return true;
 }
 
+template<>
 ErrorOr<void> IPC::decode(Decoder& decoder, Web::WebDriver::Response& response)
 {
     ResponseType type {};

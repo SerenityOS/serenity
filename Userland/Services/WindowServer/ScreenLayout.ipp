@@ -394,12 +394,14 @@ bool ScreenLayout::try_auto_add_display_connector(String const& device_path)
 
 namespace IPC {
 
-bool encode(Encoder& encoder, const WindowServer::ScreenLayout::Screen& screen)
+template<>
+bool encode(Encoder& encoder, WindowServer::ScreenLayout::Screen const& screen)
 {
     encoder << screen.mode << screen.device << screen.location << screen.resolution << screen.scale_factor;
     return true;
 }
 
+template<>
 ErrorOr<void> decode(Decoder& decoder, WindowServer::ScreenLayout::Screen& screen)
 {
     WindowServer::ScreenLayout::Screen::Mode mode;
@@ -416,12 +418,14 @@ ErrorOr<void> decode(Decoder& decoder, WindowServer::ScreenLayout::Screen& scree
     return {};
 }
 
-bool encode(Encoder& encoder, const WindowServer::ScreenLayout& screen_layout)
+template<>
+bool encode(Encoder& encoder, WindowServer::ScreenLayout const& screen_layout)
 {
     encoder << screen_layout.screens << screen_layout.main_screen_index;
     return true;
 }
 
+template<>
 ErrorOr<void> decode(Decoder& decoder, WindowServer::ScreenLayout& screen_layout)
 {
     Vector<WindowServer::ScreenLayout::Screen> screens;

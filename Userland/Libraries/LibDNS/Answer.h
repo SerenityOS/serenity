@@ -94,7 +94,10 @@ struct AK::Formatter<DNS::RecordClass> : StandardFormatter {
 
 namespace IPC {
 
+template<>
 bool encode(Encoder&, DNS::Answer const&);
+
+template<>
 ErrorOr<void> decode(Decoder&, DNS::Answer&);
 
 }

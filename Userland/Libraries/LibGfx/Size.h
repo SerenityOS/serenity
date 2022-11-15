@@ -188,7 +188,10 @@ struct Formatter<Gfx::Size<T>> : Formatter<FormatString> {
 
 namespace IPC {
 
+template<>
 bool encode(Encoder&, Gfx::IntSize const&);
+
+template<>
 ErrorOr<void> decode(Decoder&, Gfx::IntSize&);
 
 }
