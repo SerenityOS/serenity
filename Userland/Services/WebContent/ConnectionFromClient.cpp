@@ -248,6 +248,10 @@ void ConnectionFromClient::debug_request(String const& request, String const& ar
         m_page_host->page().set_is_scripting_enabled(argument == "on");
     }
 
+    if (request == "block-pop-ups") {
+        m_page_host->page().set_should_block_pop_ups(argument == "on");
+    }
+
     if (request == "dump-local-storage") {
         if (auto* doc = page().top_level_browsing_context().active_document())
             doc->window().local_storage()->dump();
