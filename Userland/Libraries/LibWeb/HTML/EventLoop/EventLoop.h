@@ -73,6 +73,10 @@ public:
 
     double compute_deadline() const;
 
+    // https://html.spec.whatwg.org/multipage/webappapis.html#pause
+    void set_execution_paused(bool execution_paused) { m_execution_paused = execution_paused; }
+    bool execution_paused() const { return m_execution_paused; }
+
 private:
     Type m_type { Type::Window };
 
@@ -104,6 +108,8 @@ private:
 
     // https://html.spec.whatwg.org/multipage/browsing-the-web.html#termination-nesting-level
     size_t m_termination_nesting_level { 0 };
+
+    bool m_execution_paused { false };
 };
 
 EventLoop& main_thread_event_loop();
