@@ -84,6 +84,10 @@ private:
     virtual void run_javascript(String const&) override;
     virtual void js_console_request_messages(i32) override;
 
+    virtual void alert_closed() override;
+    virtual void confirm_closed(bool accepted) override;
+    virtual void prompt_closed(String const& response) override;
+
     virtual Messages::WebContentServer::TakeDocumentScreenshotResponse take_document_screenshot() override;
 
     virtual Messages::WebContentServer::GetLocalStorageEntriesResponse get_local_storage_entries() override;

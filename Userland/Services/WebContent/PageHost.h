@@ -43,6 +43,19 @@ public:
 
     ErrorOr<void> connect_to_webdriver(String const& webdriver_ipc_path);
 
+    void alert_closed();
+    void confirm_closed(bool accepted);
+    void prompt_closed(String response);
+
+    enum class PendingDialog {
+        None,
+        Alert,
+        Confirm,
+        Prompt,
+    };
+    bool has_pending_dialog() const { return m_pending_dialog != PendingDialog::None; }
+    PendingDialog pending_dialog() const { return m_pending_dialog; }
+
 private:
     // ^PageClient
     virtual Gfx::Palette palette() const override;
@@ -95,6 +108,11 @@ private:
     Web::CSS::PreferredColorScheme m_preferred_color_scheme { Web::CSS::PreferredColorScheme::Auto };
 
     RefPtr<WebDriverConnection> m_webdriver;
+
+    PendingDialog m_pending_dialog { PendingDialog::None };
+    Optional<Empty> m_pending_alert_response;
+    Optional<bool> m_pending_confirm_response;
+    Optional<String> m_pending_prompt_response;
 };
 
 }

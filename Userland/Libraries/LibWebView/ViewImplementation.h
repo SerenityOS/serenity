@@ -42,8 +42,8 @@ public:
     virtual void notify_server_did_request_link_context_menu(Badge<WebContentClient>, Gfx::IntPoint const&, const AK::URL&, String const& target, unsigned modifiers) = 0;
     virtual void notify_server_did_request_image_context_menu(Badge<WebContentClient>, Gfx::IntPoint const&, const AK::URL&, String const& target, unsigned modifiers, Gfx::ShareableBitmap const&) = 0;
     virtual void notify_server_did_request_alert(Badge<WebContentClient>, String const& message) = 0;
-    virtual bool notify_server_did_request_confirm(Badge<WebContentClient>, String const& message) = 0;
-    virtual String notify_server_did_request_prompt(Badge<WebContentClient>, String const& message, String const& default_) = 0;
+    virtual void notify_server_did_request_confirm(Badge<WebContentClient>, String const& message) = 0;
+    virtual void notify_server_did_request_prompt(Badge<WebContentClient>, String const& message, String const& default_) = 0;
     virtual void notify_server_did_get_source(const AK::URL& url, String const& source) = 0;
     virtual void notify_server_did_get_dom_tree(String const& dom_tree) = 0;
     virtual void notify_server_did_get_dom_node_properties(i32 node_id, String const& specified_style, String const& computed_style, String const& custom_properties, String const& node_box_sizing) = 0;

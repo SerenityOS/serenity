@@ -181,14 +181,14 @@ void WebContentClient::did_request_alert(String const& message)
     m_view.notify_server_did_request_alert({}, message);
 }
 
-Messages::WebContentClient::DidRequestConfirmResponse WebContentClient::did_request_confirm(String const& message)
+void WebContentClient::did_request_confirm(String const& message)
 {
-    return m_view.notify_server_did_request_confirm({}, message);
+    m_view.notify_server_did_request_confirm({}, message);
 }
 
-Messages::WebContentClient::DidRequestPromptResponse WebContentClient::did_request_prompt(String const& message, String const& default_)
+void WebContentClient::did_request_prompt(String const& message, String const& default_)
 {
-    return m_view.notify_server_did_request_prompt({}, message, default_);
+    m_view.notify_server_did_request_prompt({}, message, default_);
 }
 
 void WebContentClient::did_change_favicon(Gfx::ShareableBitmap const& favicon)

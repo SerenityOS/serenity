@@ -29,9 +29,9 @@ endpoint WebContentClient
     did_request_context_menu(Gfx::IntPoint content_position) =|
     did_request_link_context_menu(Gfx::IntPoint content_position, URL url, String target, unsigned modifiers) =|
     did_request_image_context_menu(Gfx::IntPoint content_position, URL url, String target, unsigned modifiers, Gfx::ShareableBitmap bitmap) =|
-    did_request_alert(String message) => ()
-    did_request_confirm(String message) => (bool result)
-    did_request_prompt(String message, String default_) => (String response)
+    did_request_alert(String message) =|
+    did_request_confirm(String message) =|
+    did_request_prompt(String message, String default_) =|
     did_get_source(URL url, String source) =|
     did_get_dom_tree(String dom_tree) =|
     did_get_dom_node_properties(i32 node_id, String specified_style, String computed_style, String custom_properties, String node_box_sizing_json) =|

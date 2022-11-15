@@ -65,4 +65,8 @@ endpoint WebContentServer
     handle_file_return(i32 error, Optional<IPC::File> file, i32 request_id) =|
 
     set_system_visibility_state(bool visible) =|
+
+    alert_closed() =|
+    confirm_closed(bool accepted) =|
+    prompt_closed(String response) =|
 }
