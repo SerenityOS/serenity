@@ -705,6 +705,25 @@ Messages::WebDriverClient::FindElementsFromElementResponse WebDriverConnection::
     return TRY(find(*start_node, *location_strategy, selector));
 }
 
+// 12.3.8 Get Active Element, https://w3c.github.io/webdriver/#get-active-element
+Messages::WebDriverClient::GetActiveElementResponse WebDriverConnection::get_active_element()
+{
+    // 1. If the current browsing context is no longer open, return error with error code no such window.
+    TRY(ensure_open_top_level_browsing_context());
+
+    // FIXME: 2. Handle any user prompts and return its value if it is an error.
+
+    // 3. Let active element be the active element of the current browsing context’s document element.
+    auto* active_element = m_page_host.page().top_level_browsing_context().active_document()->active_element();
+
+    // 4. If active element is a non-null element, return success with data set to web element reference object for active element.
+    //    Otherwise, return error with error code no such element.
+    if (active_element)
+        return String::number(active_element->id());
+
+    return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::NoSuchElement, "The current document does not have an active element"sv);
+}
+
 // 12.4.1 Is Element Selected, https://w3c.github.io/webdriver/#dfn-is-element-selected
 Messages::WebDriverClient::IsElementSelectedResponse WebDriverConnection::is_element_selected(String const& element_id)
 {

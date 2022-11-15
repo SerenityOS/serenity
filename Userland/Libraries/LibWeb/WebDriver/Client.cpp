@@ -73,6 +73,7 @@ static constexpr auto s_webdriver_endpoints = Array {
     ROUTE(POST, "/session/:session_id/elements"sv, find_elements),
     ROUTE(POST, "/session/:session_id/element/:element_id/element"sv, find_element_from_element),
     ROUTE(POST, "/session/:session_id/element/:element_id/elements"sv, find_elements_from_element),
+    ROUTE(GET, "/session/:session_id/element/active"sv, get_active_element),
     ROUTE(GET, "/session/:session_id/element/:element_id/selected"sv, is_element_selected),
     ROUTE(GET, "/session/:session_id/element/:element_id/attribute/:name"sv, get_element_attribute),
     ROUTE(GET, "/session/:session_id/element/:element_id/property/:name"sv, get_element_property),
