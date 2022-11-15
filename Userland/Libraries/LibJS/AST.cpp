@@ -3627,13 +3627,32 @@ Completion TaggedTemplateLiteral::execute(Interpreter& interpreter) const
     // NOTE: This is both
     //  MemberExpression : MemberExpression TemplateLiteral
     //  CallExpression : CallExpression TemplateLiteral
-    // As the only difference is the first step.
 
     // 1. Let tagRef be ? Evaluation of MemberExpression.
     // 1. Let tagRef be ? Evaluation of CallExpression.
-
     // 2. Let tagFunc be ? GetValue(tagRef).
-    auto tag = TRY(m_tag->execute(interpreter)).release_value();
+    // NOTE: This is much more complicated than the spec because we have to
+    //       handle every type of reference. If we handle evaluation closer
+    //       to the spec this could be improved.
+    Value tag_this_value;
+    Value tag;
+    if (auto tag_reference = TRY(m_tag->to_reference(interpreter)); tag_reference.is_valid_reference()) {
+        tag = TRY(tag_reference.get_value(vm));
+        if (tag_reference.is_environment_reference()) {
+            auto& environment = tag_reference.base_environment();
+            if (environment.has_this_binding())
+                tag_this_value = TRY(environment.get_this_binding(vm));
+            else
+                tag_this_value = js_undefined();
+        } else {
+            tag_this_value = tag_reference.get_this_value();
+        }
+    } else {
+        auto result = TRY(m_tag->execute(interpreter));
+        VERIFY(result.has_value());
+        tag = result.release_value();
+        tag_this_value = js_undefined();
+    }
 
     // 3. Let thisCall be this CallExpression.
     // 3. Let thisCall be this MemberExpression.
@@ -3655,7 +3674,7 @@ Completion TaggedTemplateLiteral::execute(Interpreter& interpreter) const
         arguments.append(TRY(expressions[i].execute(interpreter)).release_value());
 
     // 5. Return ? EvaluateCall(tagFunc, tagRef, TemplateLiteral, tailCall).
-    return call(vm, tag, js_undefined(), move(arguments));
+    return call(vm, tag, tag_this_value, move(arguments));
 }
 
 // 13.2.8.3 GetTemplateObject ( templateLiteral ), https://tc39.es/ecma262/#sec-gettemplateobject

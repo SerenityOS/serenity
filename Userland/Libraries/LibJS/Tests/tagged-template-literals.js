@@ -163,4 +163,17 @@ describe("tagged template literal functionality", () => {
         let secondResult = call(value => value, 2);
         expect(firstResult).toBe(secondResult);
     });
+
+    test("this value of call comes from reference", () => {
+        let thisValue = null;
+        const obj = {
+            func() {
+                thisValue = this;
+            },
+        };
+
+        obj.func``;
+
+        expect(thisValue).toBe(obj);
+    });
 });
