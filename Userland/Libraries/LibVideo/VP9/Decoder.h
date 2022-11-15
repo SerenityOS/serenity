@@ -90,9 +90,9 @@ private:
     inline i32 cos64(u8 angle);
     inline i32 sin64(u8 angle);
     // The function B( a, b, angle, 0 ) performs a butterfly rotation.
-    inline void butterfly_rotation_in_place(Vector<Intermediate>& data, size_t index_a, size_t index_b, u8 angle, bool flip);
+    inline DecoderErrorOr<void> butterfly_rotation_in_place(Vector<Intermediate>& data, size_t index_a, size_t index_b, u8 angle, bool flip);
     // The function H( a, b, 0 ) performs a Hadamard rotation.
-    inline void hadamard_rotation_in_place(Vector<Intermediate>& data, size_t index_a, size_t index_b, bool flip);
+    inline DecoderErrorOr<void> hadamard_rotation_in_place(Vector<Intermediate>& data, size_t index_a, size_t index_b, bool flip);
     // The function SB( a, b, angle, 0 ) performs a butterfly rotation.
     // Spec defines the source as array T, and the destination array as S.
     template<typename S, typename D>
@@ -104,9 +104,6 @@ private:
 
     template<typename T>
     inline i32 round_2(T value, u8 bits);
-
-    // Checks whether the value is representable by a signed integer with (8 + bit_depth) bits.
-    inline bool check_intermediate_bounds(Intermediate value);
 
     // (8.7.1.10) This process does an in-place Walsh-Hadamard transform of the array T (of length 4).
     inline DecoderErrorOr<void> inverse_walsh_hadamard_transform(Vector<Intermediate>& data, u8 log2_of_block_size, u8 shift);
@@ -124,7 +121,7 @@ private:
     inline void inverse_asymmetric_discrete_sine_transform_output_array_permutation(Vector<Intermediate>& data, Vector<Intermediate>& temp, u8 log2_of_block_size);
 
     // (8.7.1.6) This process does an in-place transform of the array T to perform an inverse ADST.
-    inline void inverse_asymmetric_discrete_sine_transform_4(Vector<Intermediate>& data);
+    inline DecoderErrorOr<void> inverse_asymmetric_discrete_sine_transform_4(Vector<Intermediate>& data);
     // (8.7.1.7) This process does an in-place transform of the array T using a higher precision array S for intermediate
     // results.
     inline DecoderErrorOr<void> inverse_asymmetric_discrete_sine_transform_8(Vector<Intermediate>& data);

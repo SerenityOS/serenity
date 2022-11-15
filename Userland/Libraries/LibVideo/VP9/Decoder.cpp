@@ -33,7 +33,7 @@ DecoderErrorOr<void> Decoder::receive_sample(ReadonlyBytes chunk_data)
         auto checked_size = Checked<size_t>(superframe_size);
         checked_size += offset;
         if (checked_size.has_overflow() || checked_size.value() > chunk_data.size())
-            return DecoderError::with_description(DecoderErrorCategory::Corrupted, "Superframe size invalid"sv);
+            return DecoderError::corrupted("Superframe size invalid"sv);
         auto frame_data = chunk_data.slice(offset, superframe_size);
         TRY(decode_frame(frame_data));
         offset = checked_size.value();
@@ -1076,6 +1076,26 @@ u16 Decoder::get_ac_quant(u8 plane)
     return ac_q(static_cast<u8>(get_qindex() + offset));
 }
 
+template<typename T>
+constexpr T get_minimum_bound(u8 bits)
+{
+    return -(1LL << (static_cast<T>(bits) - 1LL));
+}
+
+template<typename T>
+constexpr bool check_bounds(T value, u8 bits)
+{
+    T minimum = get_minimum_bound<T>(bits);
+    return value >= minimum && value <= ~minimum;
+}
+
+// Checks whether the value is representable by a signed integer with (8 + bit_depth) bits.
+template<typename T>
+constexpr bool check_intermediate_bounds(T value, u8 bit_depth)
+{
+    return check_bounds(value, bit_depth + 8);
+}
+
 DecoderErrorOr<void> Decoder::reconstruct(u8 plane, u32 transform_block_x, u32 transform_block_y, TXSize transform_block_size)
 {
     // 8.6.2 Reconstruct process
@@ -1107,7 +1127,8 @@ DecoderErrorOr<void> Decoder::reconstruct(u8 plane, u32 transform_block_x, u32 t
     // It is a requirement of bitstream conformance that the values written into the Dequant array in steps 1 and 2
     // are representable by a signed integer with 8 + BitDepth bits.
     for (auto i = 0u; i < block_size * block_size; i++)
-        VERIFY(check_intermediate_bounds(dequantized[i]));
+        if (!check_intermediate_bounds(dequantized[i], m_parser->m_bit_depth))
+            return DecoderError::corrupted("Intermediate bounds exceeded"sv);
 
     // 3. Invoke the 2D inverse transform block process defined in section 8.7.2 with the variable n as input.
     //    The inverse transform outputs are stored back to the Dequant buffer.
@@ -1179,20 +1200,8 @@ inline i32 Decoder::round_2(T value, u8 bits)
     return static_cast<i32>(value);
 }
 
-inline bool check_bounds(i64 value, u8 bits)
-{
-    i64 const maximum = (1ll << (bits - 1ll)) - 1ll;
-    return value >= ~maximum && value <= maximum;
-}
-
-inline bool Decoder::check_intermediate_bounds(Intermediate value)
-{
-    i32 maximum = (1 << (8 + m_parser->m_bit_depth - 1)) - 1;
-    return value >= ~maximum && value <= maximum;
-}
-
 // (8.7.1.1) The function B( a, b, angle, 0 ) performs a butterfly rotation.
-inline void Decoder::butterfly_rotation_in_place(Vector<Intermediate>& data, size_t index_a, size_t index_b, u8 angle, bool flip)
+inline DecoderErrorOr<void> Decoder::butterfly_rotation_in_place(Vector<Intermediate>& data, size_t index_a, size_t index_b, u8 angle, bool flip)
 {
     auto cos = cos64(angle);
     auto sin = sin64(angle);
@@ -1213,12 +1222,14 @@ inline void Decoder::butterfly_rotation_in_place(Vector<Intermediate>& data, siz
 
     // It is a requirement of bitstream conformance that the values saved into the array T by this function are
     // representable by a signed integer using 8 + BitDepth bits of precision.
-    VERIFY(check_intermediate_bounds(data[index_a]));
-    VERIFY(check_intermediate_bounds(data[index_b]));
+    if (!check_intermediate_bounds(data[index_a], m_parser->m_bit_depth)
+        || !check_intermediate_bounds(data[index_b], m_parser->m_bit_depth))
+        return DecoderError::corrupted("Intermediate bounds exceeded"sv);
+    return {};
 }
 
 // (8.7.1.1) The function H( a, b, 0 ) performs a Hadamard rotation.
-inline void Decoder::hadamard_rotation_in_place(Vector<Intermediate>& data, size_t index_a, size_t index_b, bool flip)
+inline DecoderErrorOr<void> Decoder::hadamard_rotation_in_place(Vector<Intermediate>& data, size_t index_a, size_t index_b, bool flip)
 {
     // The function H( a, b, 1 ) performs a Hadamard rotation with flipped indices and is specified as follows:
     // 1. The function H( b, a, 0 ) is invoked.
@@ -1238,8 +1249,10 @@ inline void Decoder::hadamard_rotation_in_place(Vector<Intermediate>& data, size
 
     // It is a requirement of bitstream conformance that the values saved into the array T by this function are
     // representable by a signed integer using 8 + BitDepth bits of precision.
-    VERIFY(check_intermediate_bounds(data[index_a]));
-    VERIFY(check_intermediate_bounds(data[index_b]));
+    if (!check_intermediate_bounds(data[index_a], m_parser->m_bit_depth)
+        || !check_intermediate_bounds(data[index_b], m_parser->m_bit_depth))
+        return DecoderError::corrupted("Intermediate bounds exceeded"sv);
+    return {};
 }
 
 inline DecoderErrorOr<void> Decoder::inverse_discrete_cosine_transform_array_permutation(Vector<Intermediate>& data, u8 log2_of_block_size)
@@ -1281,14 +1294,14 @@ inline DecoderErrorOr<void> Decoder::inverse_discrete_cosine_transform(Vector<In
     // 2.5 If n is equal to 2, invoke B( 0, 1, 16, 1 ), otherwise recursively invoke the inverse DCT defined in this
     // section with the variable n set equal to n - 1.
     if (log2_of_block_size == 2)
-        butterfly_rotation_in_place(data, 0, 1, 16, true);
+        TRY(butterfly_rotation_in_place(data, 0, 1, 16, true));
     else
         TRY(inverse_discrete_cosine_transform(data, log2_of_block_size - 1));
 
     // 2.6 Invoke B( n1+i, n0-1-i, 32-brev( 5, n1+i), 0 ) for i = 0..(n2-1).
     for (auto i = 0u; i < quarter_block_size; i++) {
         auto index = half_block_size + i;
-        butterfly_rotation_in_place(data, index, block_size - 1 - i, 32 - brev(5, index), false);
+        TRY(butterfly_rotation_in_place(data, index, block_size - 1 - i, 32 - brev(5, index), false));
     }
 
     // 2.7 If n is greater than or equal to 3:
@@ -1297,7 +1310,7 @@ inline DecoderErrorOr<void> Decoder::inverse_discrete_cosine_transform(Vector<In
         for (auto i = 0u; i < eighth_block_size; i++) {
             for (auto j = 0u; j < 2; j++) {
                 auto index = half_block_size + (4 * i) + (2 * j);
-                hadamard_rotation_in_place(data, index, index + 1, j);
+                TRY(hadamard_rotation_in_place(data, index, index + 1, j));
             }
         }
     }
@@ -1310,7 +1323,7 @@ inline DecoderErrorOr<void> Decoder::inverse_discrete_cosine_transform(Vector<In
                 auto index_a = block_size - log2_of_block_size + 3 - (quarter_block_size * j) - (4 * i);
                 auto index_b = half_block_size + log2_of_block_size - 4 + (quarter_block_size * j) + (4 * i);
                 auto angle = 28 - (16 * i) + (56 * j);
-                butterfly_rotation_in_place(data, index_a, index_b, angle, true);
+                TRY(butterfly_rotation_in_place(data, index_a, index_b, angle, true));
             }
         }
 
@@ -1319,7 +1332,7 @@ inline DecoderErrorOr<void> Decoder::inverse_discrete_cosine_transform(Vector<In
             for (auto j = 0u; j < 4; j++) {
                 auto index_a = half_block_size + (eighth_block_size * j) + i;
                 auto index_b = half_block_size + quarter_block_size - 5 + (eighth_block_size * j) - i;
-                hadamard_rotation_in_place(data, index_a, index_b, (j & 1) != 0);
+                TRY(hadamard_rotation_in_place(data, index_a, index_b, (j & 1) != 0));
             }
         }
     }
@@ -1331,7 +1344,7 @@ inline DecoderErrorOr<void> Decoder::inverse_discrete_cosine_transform(Vector<In
             for (auto j = 0u; j < 2; j++) {
                 auto index_a = block_size - log2_of_block_size + 2 - i - (quarter_block_size * j);
                 auto index_b = half_block_size + log2_of_block_size - 3 + i + (quarter_block_size * j);
-                butterfly_rotation_in_place(data, index_a, index_b, 24 + (48 * j), true);
+                TRY(butterfly_rotation_in_place(data, index_a, index_b, 24 + (48 * j), true));
             }
         }
 
@@ -1340,7 +1353,7 @@ inline DecoderErrorOr<void> Decoder::inverse_discrete_cosine_transform(Vector<In
             for (auto j = 0u; j < 2; j++) {
                 auto index_a = half_block_size + (quarter_block_size * j) + i;
                 auto index_b = half_block_size + quarter_block_size - 1 + (quarter_block_size * j) - i;
-                hadamard_rotation_in_place(data, index_a, index_b, (j & 1) != 0);
+                TRY(hadamard_rotation_in_place(data, index_a, index_b, (j & 1) != 0));
             }
         }
     }
@@ -1351,13 +1364,13 @@ inline DecoderErrorOr<void> Decoder::inverse_discrete_cosine_transform(Vector<In
         for (auto i = 0u; i < eighth_block_size; i++) {
             auto index_a = block_size - eighth_block_size - 1 - i;
             auto index_b = half_block_size + eighth_block_size + i;
-            butterfly_rotation_in_place(data, index_a, index_b, 16, true);
+            TRY(butterfly_rotation_in_place(data, index_a, index_b, 16, true));
         }
     }
 
     // 7. Invoke H( i, n0-1-i, 0 ) for i = 0..(n1-1).
     for (auto i = 0u; i < half_block_size; i++)
-        hadamard_rotation_in_place(data, i, block_size - 1 - i, false);
+        TRY(hadamard_rotation_in_place(data, i, block_size - 1 - i, false));
 
     return {};
 }
@@ -1407,7 +1420,7 @@ inline void Decoder::inverse_asymmetric_discrete_sine_transform_output_array_per
     }
 }
 
-inline void Decoder::inverse_asymmetric_discrete_sine_transform_4(Vector<Intermediate>& data)
+inline DecoderErrorOr<void> Decoder::inverse_asymmetric_discrete_sine_transform_4(Vector<Intermediate>& data)
 {
     VERIFY(data.size() == 4);
     const i64 sinpi_1_9 = 5283;
@@ -1461,14 +1474,7 @@ inline void Decoder::inverse_asymmetric_discrete_sine_transform_4(Vector<Interme
     // T[ 3 ] = Round2( s3, 14 )
     data[3] = round_2(s3, 14);
 
-    // (8.7.1.1) The inverse asymmetric discrete sine transforms also make use of an intermediate array named S.
-    // The values in this array require higher precision to avoid overflow. Using signed integers with 24 +
-    // BitDepth bits of precision is enough to avoid overflow.
-    const u8 bits = 24 + m_parser->m_bit_depth;
-    VERIFY(check_bounds(data[0], bits));
-    VERIFY(check_bounds(data[1], bits));
-    VERIFY(check_bounds(data[2], bits));
-    VERIFY(check_bounds(data[3], bits));
+    return {};
 }
 
 // The function SB( a, b, angle, 0 ) performs a butterfly rotation.
@@ -1531,8 +1537,10 @@ inline DecoderErrorOr<void> Decoder::inverse_asymmetric_discrete_sine_transform_
     // (8.7.1.1) NOTE - The values in array S require higher precision to avoid overflow. Using signed integers with
     // 24 + BitDepth bits of precision is enough to avoid overflow.
     const u8 bits = 24 + m_parser->m_bit_depth;
-    for (auto i = 0u; i < 8; i++)
-        VERIFY(check_bounds(high_precision_temp[i], bits));
+    for (auto i = 0u; i < 8; i++) {
+        if (!check_bounds(high_precision_temp[i], bits))
+            return DecoderError::corrupted("Intermediate exceeded valid bounds"sv);
+    }
     // 3. Invoke SH( i, 4+i ) for i = 0..3.
     for (auto i = 0u; i < 4; i++)
         hadamard_rotation(high_precision_temp, data, i, 4 + i);
@@ -1541,19 +1549,21 @@ inline DecoderErrorOr<void> Decoder::inverse_asymmetric_discrete_sine_transform_
     for (auto i = 0u; i < 2; i++)
         butterfly_rotation(data, high_precision_temp, 4 + (3 * i), 5 + i, 24 - (16 * i), true);
     // Check again that we haven't exceeded the integer bounds.
-    for (auto i = 0u; i < 8; i++)
-        VERIFY(check_bounds(high_precision_temp[i], bits));
+    for (auto i = 0u; i < 8; i++) {
+        if (!check_bounds(high_precision_temp[i], bits))
+            return DecoderError::corrupted("Intermediate exceeded valid bounds"sv);
+    }
     // 5. Invoke SH( 4+i, 6+i ) for i = 0..1.
     for (auto i = 0u; i < 2; i++)
         hadamard_rotation(high_precision_temp, data, 4 + i, 6 + i);
 
     // 6. Invoke H( i, 2+i, 0 ) for i = 0..1.
     for (auto i = 0u; i < 2; i++)
-        hadamard_rotation_in_place(data, i, 2 + i, false);
+        TRY(hadamard_rotation_in_place(data, i, 2 + i, false));
 
     // 7. Invoke B( 2+4*i, 3+4*i, 16, 1 ) for i = 0..1.
     for (auto i = 0u; i < 2; i++)
-        butterfly_rotation_in_place(data, 2 + (4 * i), 3 + (4 * i), 16, true);
+        TRY(butterfly_rotation_in_place(data, 2 + (4 * i), 3 + (4 * i), 16, true));
 
     // 8. Invoke the ADST output array permutation process specified in section 8.7.1.5 with the input variable n
     //    set equal to 3.
@@ -1590,8 +1600,10 @@ inline DecoderErrorOr<void> Decoder::inverse_asymmetric_discrete_sine_transform_
     // The values in this array require higher precision to avoid overflow. Using signed integers with 24 +
     // BitDepth bits of precision is enough to avoid overflow.
     const u8 bits = 24 + m_parser->m_bit_depth;
-    for (auto i = 0u; i < 16; i++)
-        VERIFY(check_bounds(data[i], bits));
+    for (auto i = 0u; i < 16; i++) {
+        if (!check_bounds(high_precision_temp[i], bits))
+            return DecoderError::corrupted("Intermediate exceeded valid bounds"sv);
+    }
     // 3. Invoke SH( i, 8+i ) for i = 0..7.
     for (auto i = 0u; i < 8; i++)
         hadamard_rotation(high_precision_temp, data, i, 8 + i);
@@ -1600,23 +1612,27 @@ inline DecoderErrorOr<void> Decoder::inverse_asymmetric_discrete_sine_transform_
     for (auto i = 0u; i < 4; i++)
         butterfly_rotation(data, high_precision_temp, 8 + (2 * i), 9 + (2 * i), 128 + 28 - (16 * i), true);
     // Check again that we haven't exceeded the integer bounds.
-    for (auto i = 0u; i < 16; i++)
-        VERIFY(check_bounds(data[i], bits));
+    for (auto i = 0u; i < 16; i++) {
+        if (!check_bounds(high_precision_temp[i], bits))
+            return DecoderError::corrupted("Intermediate exceeded valid bounds"sv);
+    }
     // 5. Invoke SH( 8+i, 12+i ) for i = 0..3.
     for (auto i = 0u; i < 4; i++)
         hadamard_rotation(high_precision_temp, data, 8 + i, 12 + i);
 
     // 6. Invoke H( i, 4+i, 0 ) for i = 0..3.
     for (auto i = 0u; i < 4; i++)
-        hadamard_rotation_in_place(data, i, 4 + i, false);
+        TRY(hadamard_rotation_in_place(data, i, 4 + i, false));
 
     // 7. Invoke SB( 4+8*i+3*j, 5+8*i+j, 24-16*j, 1 ) for i = 0..1, for j = 0..1.
     for (auto i = 0u; i < 2; i++)
         for (auto j = 0u; j < 2; j++)
             butterfly_rotation(data, high_precision_temp, 4 + (8 * i) + (3 * j), 5 + (8 * i) + j, 24 - (16 * j), true);
     // Check again that we haven't exceeded the integer bounds.
-    for (auto i = 0u; i < 16; i++)
-        VERIFY(check_bounds(data[i], bits));
+    for (auto i = 0u; i < 16; i++) {
+        if (!check_bounds(high_precision_temp[i], bits))
+            return DecoderError::corrupted("Intermediate exceeded valid bounds"sv);
+    }
     // 8. Invoke SH( 4+8*j+i, 6+8*j+i ) for i = 0..1, j = 0..1.
     for (auto i = 0u; i < 2; i++)
         for (auto j = 0u; j < 2; j++)
@@ -1625,11 +1641,11 @@ inline DecoderErrorOr<void> Decoder::inverse_asymmetric_discrete_sine_transform_
     // 9. Invoke H( 8*j+i, 2+8*j+i, 0 ) for i = 0..1, for j = 0..1.
     for (auto i = 0u; i < 2; i++)
         for (auto j = 0u; j < 2; j++)
-            hadamard_rotation_in_place(data, (8 * j) + i, 2 + (8 * j) + i, false);
+            TRY(hadamard_rotation_in_place(data, (8 * j) + i, 2 + (8 * j) + i, false));
     // 10. Invoke B( 2+4*j+8*i, 3+4*j+8*i, 48+64*(i^j), 0 ) for i = 0..1, for j = 0..1.
     for (auto i = 0u; i < 2; i++)
         for (auto j = 0u; j < 2; j++)
-            butterfly_rotation_in_place(data, 2 + (4 * j) + (8 * i), 3 + (4 * j) + (8 * i), 48 + (64 * (i ^ j)), false);
+            TRY(butterfly_rotation_in_place(data, 2 + (4 * j) + (8 * i), 3 + (4 * j) + (8 * i), 48 + (64 * (i ^ j)), false));
 
     // 11. Invoke the ADST output array permutation process specified in section 8.7.1.5 with the input variable n
     // set equal to 4.
@@ -1656,9 +1672,9 @@ inline DecoderErrorOr<void> Decoder::inverse_asymmetric_discrete_sine_transform(
     // The process to invoke depends on n as follows:
     if (log2_of_block_size == 2) {
         // − If n is equal to 2, invoke the Inverse ADST4 process specified in section 8.7.1.6.
-        inverse_asymmetric_discrete_sine_transform_4(data);
-        return {};
-    } else if (log2_of_block_size == 3) {
+        return inverse_asymmetric_discrete_sine_transform_4(data);
+    }
+    if (log2_of_block_size == 3) {
         // − Otherwise if n is equal to 3, invoke the Inverse ADST8 process specified in section 8.7.1.7.
         return inverse_asymmetric_discrete_sine_transform_8(data);
     }
