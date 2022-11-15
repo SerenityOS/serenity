@@ -499,6 +499,17 @@ WebIDL::ExceptionOr<Document*> Document::open(String const&, String const&)
     return this;
 }
 
+// https://html.spec.whatwg.org/multipage/dynamic-markup-insertion.html#dom-document-open-window
+WebIDL::ExceptionOr<JS::GCPtr<HTML::WindowProxy>> Document::open(String const& url, String const& name, String const& features)
+{
+    // 1. If this is not fully active, then throw an "InvalidAccessError" DOMException exception.
+    if (!is_fully_active())
+        return WebIDL::InvalidAccessError::create(realm(), "Cannot perform open on a document that isn't fully active."sv);
+
+    // 2. Return the result of running the window open steps with url, name, and features.
+    return window().open_impl(url, name, features);
+}
+
 // https://html.spec.whatwg.org/multipage/dynamic-markup-insertion.html#closing-the-input-stream
 WebIDL::ExceptionOr<void> Document::close()
 {
