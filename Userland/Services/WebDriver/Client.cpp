@@ -359,6 +359,15 @@ Web::WebDriver::Response Client::find_elements_from_element(Web::WebDriver::Para
     return session->web_content_connection().find_elements_from_element(payload, parameters[1]);
 }
 
+// 12.3.8 Get Active Element, https://w3c.github.io/webdriver/#get-active-element
+// GET /session/{session id}/element/active
+Web::WebDriver::Response Client::get_active_element(Web::WebDriver::Parameters parameters, JsonValue)
+{
+    dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session_id>/element/active");
+    auto* session = TRY(find_session_with_id(parameters[0]));
+    return session->web_content_connection().get_active_element();
+}
+
 // 12.4.1 Is Element Selected, https://w3c.github.io/webdriver/#dfn-is-element-selected
 // GET /session/{session id}/element/{element id}/selected
 Web::WebDriver::Response Client::is_element_selected(Web::WebDriver::Parameters parameters, JsonValue)

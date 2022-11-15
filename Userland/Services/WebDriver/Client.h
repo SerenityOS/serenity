@@ -56,6 +56,7 @@ private:
     virtual Web::WebDriver::Response find_elements(Web::WebDriver::Parameters parameters, JsonValue payload) override;
     virtual Web::WebDriver::Response find_element_from_element(Web::WebDriver::Parameters parameters, JsonValue payload) override;
     virtual Web::WebDriver::Response find_elements_from_element(Web::WebDriver::Parameters parameters, JsonValue payload) override;
+    virtual Web::WebDriver::Response get_active_element(Web::WebDriver::Parameters parameters, JsonValue payload) override;
     virtual Web::WebDriver::Response is_element_selected(Web::WebDriver::Parameters parameters, JsonValue payload) override;
     virtual Web::WebDriver::Response get_element_attribute(Web::WebDriver::Parameters parameters, JsonValue payload) override;
     virtual Web::WebDriver::Response get_element_property(Web::WebDriver::Parameters parameters, JsonValue payload) override;
