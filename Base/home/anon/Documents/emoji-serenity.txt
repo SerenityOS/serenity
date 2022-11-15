@@ -114,6 +114,12 @@ Emoji Tag Sequence Flags (limited cross-platform support)
 🏴󠁩󠁥󠁬󠁿 - U+1F3F4 U+E0069 U+E0065 U+E006C U+E007F         IE-L Leinster
 🏴󠁩󠁥󠁭󠁿 - U+1F3F4 U+E0069 U+E0065 U+E006D U+E007F         IE-M Munster
 🏴󠁩󠁥󠁵󠁿 - U+1F3F4 U+E0069 U+E0065 U+E0075 U+E007F         IE-U Ulster
+🏴󠁮󠁯󠀰󠀲󠁿 - U+1F3F4 U+E006E U+E006F U+E0030 U+E0032 U+E007F NO-02 Akershus
+🏴󠁮󠁯󠀰󠀷󠁿 - U+1F3F4 U+E006E U+E006F U+E0030 U+E0037 U+E007F NO-07 Vestfold
+🏴󠁮󠁯󠀰󠀸󠁿 - U+1F3F4 U+E006E U+E006F U+E0030 U+E0038 U+E007F NO-08 Telemark
+🏴󠁮󠁯󠀱󠀱󠁿 - U+1F3F4 U+E006E U+E006F U+E0031 U+E0031 U+E007F NO-11 Rogaland
+🏴󠁮󠁯󠀲󠀰󠁿 - U+1F3F4 U+E006E U+E006F U+E0032 U+E0030 U+E007F NO-20 Finnmark
+🏴󠁮󠁯󠀳󠀸󠁿 - U+1F3F4 U+E006E U+E006F U+E0033 U+E0038 U+E007F NO-38 Vestfold og Telemark
 🏴󠁳󠁥󠁭󠁿 - U+1F3F4 U+E0073 U+E0065 U+E006D U+E007F         SE-M  Skåne
 🏴󠁳󠁫󠁢󠁣󠁿 - U+1F3F4 U+E0073 U+E006B U+E0062 U+E0063 U+E007F SK-BC Banská Bystrica
 🏴󠁳󠁫󠁢󠁬󠁿 - U+1F3F4 U+E0073 U+E006B U+E0062 U+E006C U+E007F SK-BL Bratislava
@@ -150,3 +156,4 @@ Emoji Tag Sequence Flags (limited cross-platform support)
 🏴󠁵󠁡󠀷󠀱󠁿 - U+1F3F4 U+E0075 U+E0061 U+E0037 U+E0031 U+E007F UA-71 Cherkashchyna
 🏴󠁵󠁡󠀷󠀴󠁿 - U+1F3F4 U+E0075 U+E0061 U+E0037 U+E0034 U+E007F UA-74 Chernihivshchyna
 🏴󠁵󠁡󠀷󠀷󠁿 - U+1F3F4 U+E0075 U+E0061 U+E0037 U+E0037 U+E007F UA-77 Chernivtsi Oblast
+🏴󠁺󠁷󠁨󠁡󠁿 - U+1F3F4 U+E007A U+E0077 U+E0068 U+E0061 U+E007F ZW-HA Harare
