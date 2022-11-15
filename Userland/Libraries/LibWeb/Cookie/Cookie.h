@@ -46,7 +46,10 @@ SameSite same_site_from_string(StringView same_site_mode);
 
 namespace IPC {
 
+template<>
 bool encode(Encoder&, Web::Cookie::Cookie const&);
+
+template<>
 ErrorOr<void> decode(Decoder&, Web::Cookie::Cookie&);
 
 }

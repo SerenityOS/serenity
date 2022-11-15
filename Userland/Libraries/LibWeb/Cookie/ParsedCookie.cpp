@@ -347,6 +347,7 @@ Optional<Core::DateTime> parse_date_time(StringView date_string)
 
 }
 
+template<>
 bool IPC::encode(Encoder& encoder, Web::Cookie::ParsedCookie const& cookie)
 {
     encoder << cookie.name;
@@ -362,6 +363,7 @@ bool IPC::encode(Encoder& encoder, Web::Cookie::ParsedCookie const& cookie)
     return true;
 }
 
+template<>
 ErrorOr<void> IPC::decode(Decoder& decoder, Web::Cookie::ParsedCookie& cookie)
 {
     TRY(decoder.decode(cookie.name));

@@ -290,7 +290,10 @@ struct Formatter<Gfx::Point<T>> : Formatter<FormatString> {
 
 namespace IPC {
 
+template<>
 bool encode(Encoder&, Gfx::IntPoint const&);
+
+template<>
 ErrorOr<void> decode(Decoder&, Gfx::IntPoint&);
 
 }

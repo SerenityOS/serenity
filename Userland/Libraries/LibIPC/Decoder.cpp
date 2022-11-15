@@ -170,6 +170,7 @@ ErrorOr<void> Decoder::decode([[maybe_unused]] File& file)
     return {};
 }
 
+template<>
 ErrorOr<void> decode(Decoder& decoder, Core::AnonymousBuffer& buffer)
 {
     bool valid;
@@ -187,6 +188,7 @@ ErrorOr<void> decode(Decoder& decoder, Core::AnonymousBuffer& buffer)
     return {};
 }
 
+template<>
 ErrorOr<void> decode(Decoder& decoder, Core::DateTime& datetime)
 {
     i64 timestamp;
@@ -195,6 +197,7 @@ ErrorOr<void> decode(Decoder& decoder, Core::DateTime& datetime)
     return {};
 }
 
+template<>
 ErrorOr<void> decode(Decoder& decoder, Core::ProxyData& data)
 {
     UnderlyingType<decltype(data.type)> type;

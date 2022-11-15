@@ -100,12 +100,14 @@ ErrorOr<void> AK::Formatter<DNS::RecordClass>::format(AK::FormatBuilder& builder
 
 namespace IPC {
 
+template<>
 bool encode(Encoder& encoder, DNS::Answer const& answer)
 {
     encoder << answer.name().as_string() << (u16)answer.type() << (u16)answer.class_code() << answer.ttl() << answer.record_data() << answer.mdns_cache_flush();
     return true;
 }
 
+template<>
 ErrorOr<void> decode(Decoder& decoder, DNS::Answer& answer)
 {
     String name;

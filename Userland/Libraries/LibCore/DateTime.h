@@ -54,7 +54,10 @@ private:
 
 namespace IPC {
 
+template<>
 bool encode(Encoder&, Core::DateTime const&);
+
+template<>
 ErrorOr<void> decode(Decoder&, Core::DateTime&);
 
 }

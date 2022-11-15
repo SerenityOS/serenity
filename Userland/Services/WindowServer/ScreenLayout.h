@@ -73,9 +73,16 @@ public:
 
 namespace IPC {
 
+template<>
 bool encode(Encoder&, WindowServer::ScreenLayout::Screen const&);
+
+template<>
 ErrorOr<void> decode(Decoder&, WindowServer::ScreenLayout::Screen&);
+
+template<>
 bool encode(Encoder&, WindowServer::ScreenLayout const&);
+
+template<>
 ErrorOr<void> decode(Decoder&, WindowServer::ScreenLayout&);
 
 }

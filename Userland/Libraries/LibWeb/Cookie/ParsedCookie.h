@@ -32,7 +32,10 @@ Optional<ParsedCookie> parse_cookie(String const& cookie_string);
 
 namespace IPC {
 
+template<>
 bool encode(Encoder&, Web::Cookie::ParsedCookie const&);
+
+template<>
 ErrorOr<void> decode(Decoder&, Web::Cookie::ParsedCookie&);
 
 }
