@@ -239,3 +239,9 @@ describe("failing modules cascade", () => {
         );
     });
 });
+
+describe("scoping in modules", () => {
+    test("functions within functions", () => {
+        expectModulePassed("./function-in-function.mjs");
+    });
+});
