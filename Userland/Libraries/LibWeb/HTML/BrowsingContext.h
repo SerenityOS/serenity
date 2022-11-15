@@ -163,7 +163,18 @@ public:
 
     BrowsingContext const& top_level_browsing_context() const { return const_cast<BrowsingContext*>(this)->top_level_browsing_context(); }
 
-    BrowsingContext* choose_a_browsing_context(StringView name, bool noopener);
+    enum class WindowType {
+        ExistingOrNone,
+        NewAndUnrestricted,
+        NewWithNoOpener,
+    };
+
+    struct ChosenBrowsingContext {
+        JS::GCPtr<BrowsingContext> browsing_context;
+        WindowType window_type;
+    };
+
+    ChosenBrowsingContext choose_a_browsing_context(StringView name, bool no_opener);
 
     size_t document_tree_child_browsing_context_count() const;
 
