@@ -24,6 +24,9 @@ void TaskQueue::add(NonnullOwnPtr<Task> task)
 
 OwnPtr<Task> TaskQueue::take_first_runnable()
 {
+    if (m_event_loop.execution_paused())
+        return nullptr;
+
     for (size_t i = 0; i < m_tasks.size(); ++i) {
         if (m_tasks[i]->is_runnable())
             return m_tasks.take(i);
@@ -33,6 +36,9 @@ OwnPtr<Task> TaskQueue::take_first_runnable()
 
 bool TaskQueue::has_runnable_tasks() const
 {
+    if (m_event_loop.execution_paused())
+        return false;
+
     for (auto& task : m_tasks) {
         if (task->is_runnable())
             return true;
