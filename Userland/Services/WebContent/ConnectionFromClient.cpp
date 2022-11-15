@@ -19,7 +19,6 @@
 #include <LibJS/Parser.h>
 #include <LibJS/Runtime/ConsoleObject.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
-#include <LibWeb/Cookie/ParsedCookie.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/Dump.h>
 #include <LibWeb/HTML/BrowsingContext.h>

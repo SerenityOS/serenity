@@ -5,15 +5,13 @@
  */
 
 #include "TerminalSettingsWidget.h"
+#include <LibConfig/Client.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/System.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/ConnectionToWindowServer.h>
 #include <LibGUI/SettingsWindow.h>
 #include <LibMain/Main.h>
-
-// Including this after to avoid LibIPC errors
-#include <LibConfig/Client.h>
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {

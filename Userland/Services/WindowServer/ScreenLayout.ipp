@@ -6,14 +6,12 @@
 
 #include <AK/ScopeGuard.h>
 #include <Kernel/API/Graphics.h>
+#include <LibIPC/Decoder.h>
+#include <LibIPC/Encoder.h>
 #include <Services/WindowServer/ScreenLayout.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <string.h>
-
-// Must be included after LibIPC/Forward.h
-#include <LibIPC/Decoder.h>
-#include <LibIPC/Encoder.h>
 
 namespace WindowServer {
 

@@ -7,8 +7,6 @@
 #pragma once
 
 #include <AK/HashMap.h>
-// Need to include this before RequestClientEndpoint.h as that one includes LibIPC/(De En)coder.h, which would bomb if included before this.
-#include <LibCore/Proxy.h>
 #include <LibIPC/ConnectionFromClient.h>
 #include <RequestServer/Forward.h>
 #include <RequestServer/RequestClientEndpoint.h>

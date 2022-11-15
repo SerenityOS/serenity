@@ -5,13 +5,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-// FIXME: LibIPC Decoder and Encoder are sensitive to include order here
-// clang-format off
-#include <LibGUI/ConnectionToWindowServer.h>
-// clang-format on
 #include <AK/LexicalPath.h>
 #include <LibCore/File.h>
 #include <LibFileSystemAccessClient/Client.h>
+#include <LibGUI/ConnectionToWindowServer.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Window.h>
 

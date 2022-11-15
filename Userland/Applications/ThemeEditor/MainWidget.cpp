@@ -15,15 +15,12 @@
 #include <Applications/ThemeEditor/MetricPropertyGML.h>
 #include <Applications/ThemeEditor/PathPropertyGML.h>
 #include <Applications/ThemeEditor/ThemeEditorGML.h>
-// FIXME: LibIPC Decoder and Encoder are sensitive to include order here
-// clang-format off
-#include <LibGUI/ConnectionToWindowServer.h>
-// clang-format on
 #include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
+#include <LibGUI/ConnectionToWindowServer.h>
 #include <LibGUI/FilePicker.h>
 #include <LibGUI/Frame.h>
 #include <LibGUI/GroupBox.h>

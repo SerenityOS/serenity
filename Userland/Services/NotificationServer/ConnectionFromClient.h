@@ -7,11 +7,9 @@
 #pragma once
 
 #include <LibIPC/ConnectionFromClient.h>
-#include <WindowServer/ScreenLayout.h>
-
-// Must be included after WindowServer/ScreenLayout.h
 #include <NotificationServer/NotificationClientEndpoint.h>
 #include <NotificationServer/NotificationServerEndpoint.h>
+#include <WindowServer/ScreenLayout.h>
 
 namespace NotificationServer {
 

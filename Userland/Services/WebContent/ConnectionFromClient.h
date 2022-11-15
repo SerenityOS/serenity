@@ -13,7 +13,6 @@
 #include <LibJS/Forward.h>
 #include <LibJS/Heap/Handle.h>
 #include <LibWeb/CSS/PreferredColorScheme.h>
-#include <LibWeb/Cookie/ParsedCookie.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/Loader/FileRequest.h>
 #include <LibWeb/Platform/Timer.h>
