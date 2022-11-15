@@ -576,4 +576,19 @@ void ConnectionFromClient::set_system_visibility_state(bool visible)
             : Web::HTML::VisibilityState::Hidden);
 }
 
+void ConnectionFromClient::alert_closed()
+{
+    m_page_host->alert_closed();
+}
+
+void ConnectionFromClient::confirm_closed(bool accepted)
+{
+    m_page_host->confirm_closed(accepted);
+}
+
+void ConnectionFromClient::prompt_closed(String const& response)
+{
+    m_page_host->prompt_closed(response);
+}
+
 }

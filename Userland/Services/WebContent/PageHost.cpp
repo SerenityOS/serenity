@@ -7,13 +7,17 @@
 
 #include "PageHost.h"
 #include "ConnectionFromClient.h"
+#include <AK/SourceLocation.h>
 #include <LibGfx/Painter.h>
 #include <LibGfx/ShareableBitmap.h>
 #include <LibGfx/SystemTheme.h>
 #include <LibWeb/Cookie/ParsedCookie.h>
 #include <LibWeb/HTML/BrowsingContext.h>
+#include <LibWeb/HTML/EventLoop/EventLoop.h>
+#include <LibWeb/HTML/Scripting/Environments.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
 #include <LibWeb/Painting/PaintableBox.h>
+#include <LibWeb/Platform/EventLoopPlugin.h>
 #include <LibWeb/Platform/Timer.h>
 #include <WebContent/WebContentClientEndpoint.h>
 #include <WebContent/WebDriverConnection.h>
@@ -233,33 +237,72 @@ void PageHost::page_did_request_link_context_menu(Gfx::IntPoint const& content_p
     m_client.async_did_request_link_context_menu(content_position, url, target, modifiers);
 }
 
+template<typename ResponseType>
+static ResponseType spin_event_loop_until_dialog_closed(ConnectionFromClient& client, Optional<ResponseType>& response, SourceLocation location = SourceLocation::current())
+{
+    auto& event_loop = Web::HTML::current_settings_object().responsible_event_loop();
+
+    ScopeGuard guard { [&] { event_loop.set_execution_paused(false); } };
+    event_loop.set_execution_paused(true);
+
+    Web::Platform::EventLoopPlugin::the().spin_until([&]() {
+        return response.has_value() || !client.is_open();
+    });
+
+    if (!client.is_open()) {
+        dbgln("WebContent client disconnected during {}. Exiting peacefully.", location.function_name());
+        exit(0);
+    }
+
+    return response.release_value();
+}
+
 void PageHost::page_did_request_alert(String const& message)
 {
-    auto response = m_client.send_sync_but_allow_failure<Messages::WebContentClient::DidRequestAlert>(message);
-    if (!response) {
-        dbgln("WebContent client disconnected during DidRequestAlert. Exiting peacefully.");
-        exit(0);
+    m_pending_dialog = PendingDialog::Alert;
+    m_client.async_did_request_alert(message);
+
+    spin_event_loop_until_dialog_closed(m_client, m_pending_alert_response);
+}
+
+void PageHost::alert_closed()
+{
+    if (m_pending_dialog == PendingDialog::Alert) {
+        m_pending_dialog = PendingDialog::None;
+        m_pending_alert_response = Empty {};
     }
 }
 
 bool PageHost::page_did_request_confirm(String const& message)
 {
-    auto response = m_client.send_sync_but_allow_failure<Messages::WebContentClient::DidRequestConfirm>(message);
-    if (!response) {
-        dbgln("WebContent client disconnected during DidRequestConfirm. Exiting peacefully.");
-        exit(0);
+    m_pending_dialog = PendingDialog::Confirm;
+    m_client.async_did_request_confirm(message);
+
+    return spin_event_loop_until_dialog_closed(m_client, m_pending_confirm_response);
+}
+
+void PageHost::confirm_closed(bool accepted)
+{
+    if (m_pending_dialog == PendingDialog::Confirm) {
+        m_pending_dialog = PendingDialog::None;
+        m_pending_confirm_response = accepted;
     }
-    return response->take_result();
 }
 
 String PageHost::page_did_request_prompt(String const& message, String const& default_)
 {
-    auto response = m_client.send_sync_but_allow_failure<Messages::WebContentClient::DidRequestPrompt>(message, default_);
-    if (!response) {
-        dbgln("WebContent client disconnected during DidRequestPrompt. Exiting peacefully.");
-        exit(0);
+    m_pending_dialog = PendingDialog::Prompt;
+    m_client.async_did_request_prompt(message, default_);
+
+    return spin_event_loop_until_dialog_closed(m_client, m_pending_prompt_response);
+}
+
+void PageHost::prompt_closed(String response)
+{
+    if (m_pending_dialog == PendingDialog::Prompt) {
+        m_pending_dialog = PendingDialog::None;
+        m_pending_prompt_response = move(response);
     }
-    return response->take_response();
 }
 
 void PageHost::page_did_change_favicon(Gfx::Bitmap const& favicon)

@@ -348,20 +348,22 @@ void OutOfProcessWebView::notify_server_did_request_image_context_menu(Badge<Web
 void OutOfProcessWebView::notify_server_did_request_alert(Badge<WebContentClient>, String const& message)
 {
     GUI::MessageBox::show(window(), message, "Alert"sv, GUI::MessageBox::Type::Information);
+    client().async_alert_closed();
 }
 
-bool OutOfProcessWebView::notify_server_did_request_confirm(Badge<WebContentClient>, String const& message)
+void OutOfProcessWebView::notify_server_did_request_confirm(Badge<WebContentClient>, String const& message)
 {
     auto confirm_result = GUI::MessageBox::show(window(), message, "Confirm"sv, GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::OKCancel);
-    return confirm_result == GUI::Dialog::ExecResult::OK;
+    client().async_confirm_closed(confirm_result == GUI::Dialog::ExecResult::OK);
 }
 
-String OutOfProcessWebView::notify_server_did_request_prompt(Badge<WebContentClient>, String const& message, String const& default_)
+void OutOfProcessWebView::notify_server_did_request_prompt(Badge<WebContentClient>, String const& message, String const& default_)
 {
     String response { default_ };
     if (GUI::InputBox::show(window(), response, message, "Prompt"sv) == GUI::InputBox::ExecResult::OK)
-        return response;
-    return {};
+        client().async_prompt_closed(move(response));
+    else
+        client().async_prompt_closed({});
 }
 
 void OutOfProcessWebView::notify_server_did_get_source(const AK::URL& url, String const& source)

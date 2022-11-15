@@ -58,8 +58,8 @@ private:
     virtual void did_get_js_console_messages(i32 start_index, Vector<String> const& message_types, Vector<String> const& messages) override;
     virtual void did_change_favicon(Gfx::ShareableBitmap const&) override;
     virtual void did_request_alert(String const&) override;
-    virtual Messages::WebContentClient::DidRequestConfirmResponse did_request_confirm(String const&) override;
-    virtual Messages::WebContentClient::DidRequestPromptResponse did_request_prompt(String const&, String const&) override;
+    virtual void did_request_confirm(String const&) override;
+    virtual void did_request_prompt(String const&, String const&) override;
     virtual Messages::WebContentClient::DidRequestAllCookiesResponse did_request_all_cookies(AK::URL const&) override;
     virtual Messages::WebContentClient::DidRequestNamedCookieResponse did_request_named_cookie(AK::URL const&, String const&) override;
     virtual Messages::WebContentClient::DidRequestCookieResponse did_request_cookie(AK::URL const&, u8) override;
