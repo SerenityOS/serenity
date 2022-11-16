@@ -986,6 +986,12 @@ void Editor::handle_read_event()
             case 'F': // ^[[F: end
                 go_end();
                 continue;
+            case 127:
+                if (modifiers == CSIMod::Ctrl)
+                    erase_alnum_word_backwards();
+                else
+                    erase_character_backwards();
+                continue;
             case '~':
                 if (param1 == 3) { // ^[[3~: delete
                     if (modifiers == CSIMod::Ctrl)
