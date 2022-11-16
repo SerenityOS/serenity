@@ -384,66 +384,114 @@ ErrorOr<NonnullRefPtr<Gfx::Bitmap>> Bitmap::scaled(float sx, float sy) const
     auto new_width = new_bitmap->physical_width();
     auto new_height = new_bitmap->physical_height();
 
-    // The interpolation goes out of bounds on the bottom- and right-most edges.
-    // We handle those in two specialized loops not only to make them faster, but
-    // also to avoid four branch checks for every pixel.
+    if (old_width == 1 && old_height == 1) {
+        new_bitmap->fill(get_pixel(0, 0));
+        return new_bitmap;
+    }
 
-    for (int y = 0; y < new_height - 1; y++) {
+    if (old_width > 1 && old_height > 1) {
+        // The interpolation goes out of bounds on the bottom- and right-most edges.
+        // We handle those in two specialized loops not only to make them faster, but
+        // also to avoid four branch checks for every pixel.
+        for (int y = 0; y < new_height - 1; y++) {
+            for (int x = 0; x < new_width - 1; x++) {
+                auto p = static_cast<float>(x) * static_cast<float>(old_width - 1) / static_cast<float>(new_width - 1);
+                auto q = static_cast<float>(y) * static_cast<float>(old_height - 1) / static_cast<float>(new_height - 1);
+
+                int i = floorf(p);
+                int j = floorf(q);
+                float u = p - static_cast<float>(i);
+                float v = q - static_cast<float>(j);
+
+                auto a = get_pixel(i, j);
+                auto b = get_pixel(i + 1, j);
+                auto c = get_pixel(i, j + 1);
+                auto d = get_pixel(i + 1, j + 1);
+
+                auto e = a.mixed_with(b, u);
+                auto f = c.mixed_with(d, u);
+                auto color = e.mixed_with(f, v);
+                new_bitmap->set_pixel(x, y, color);
+            }
+        }
+
+        // Bottom strip (excluding last pixel)
+        auto old_bottom_y = old_height - 1;
+        auto new_bottom_y = new_height - 1;
         for (int x = 0; x < new_width - 1; x++) {
             auto p = static_cast<float>(x) * static_cast<float>(old_width - 1) / static_cast<float>(new_width - 1);
-            auto q = static_cast<float>(y) * static_cast<float>(old_height - 1) / static_cast<float>(new_height - 1);
 
             int i = floorf(p);
-            int j = floorf(q);
             float u = p - static_cast<float>(i);
+
+            auto a = get_pixel(i, old_bottom_y);
+            auto b = get_pixel(i + 1, old_bottom_y);
+            auto color = a.mixed_with(b, u);
+            new_bitmap->set_pixel(x, new_bottom_y, color);
+        }
+
+        // Right strip (excluding last pixel)
+        auto old_right_x = old_width - 1;
+        auto new_right_x = new_width - 1;
+        for (int y = 0; y < new_height - 1; y++) {
+            auto q = static_cast<float>(y) * static_cast<float>(old_height - 1) / static_cast<float>(new_height - 1);
+
+            int j = floorf(q);
             float v = q - static_cast<float>(j);
 
-            auto a = get_pixel(i, j);
-            auto b = get_pixel(i + 1, j);
-            auto c = get_pixel(i, j + 1);
-            auto d = get_pixel(i + 1, j + 1);
+            auto c = get_pixel(old_right_x, j);
+            auto d = get_pixel(old_right_x, j + 1);
 
-            auto e = a.mixed_with(b, u);
-            auto f = c.mixed_with(d, u);
-            auto color = e.mixed_with(f, v);
-            new_bitmap->set_pixel(x, y, color);
+            auto color = c.mixed_with(d, v);
+            new_bitmap->set_pixel(new_right_x, y, color);
+        }
+
+        // Bottom-right pixel
+        new_bitmap->set_pixel(new_width - 1, new_height - 1, get_pixel(physical_width() - 1, physical_height() - 1));
+        return new_bitmap;
+    } else if (old_height == 1) {
+        // Copy horizontal strip multiple times (excluding last pixel to out of bounds).
+        auto old_bottom_y = old_height - 1;
+        for (int x = 0; x < new_width - 1; x++) {
+            auto p = static_cast<float>(x) * static_cast<float>(old_width - 1) / static_cast<float>(new_width - 1);
+            int i = floorf(p);
+            float u = p - static_cast<float>(i);
+
+            auto a = get_pixel(i, old_bottom_y);
+            auto b = get_pixel(i + 1, old_bottom_y);
+            auto color = a.mixed_with(b, u);
+            for (int new_bottom_y = 0; new_bottom_y < new_height; new_bottom_y++) {
+                // Interpolate color only once and then copy into all columns.
+                new_bitmap->set_pixel(x, new_bottom_y, color);
+            }
+        }
+        for (int new_bottom_y = 0; new_bottom_y < new_height; new_bottom_y++) {
+            // Copy last pixel of horizontal strip
+            new_bitmap->set_pixel(new_width - 1, new_bottom_y, get_pixel(physical_width() - 1, old_bottom_y));
+        }
+        return new_bitmap;
+    } else if (old_width == 1) {
+        // Copy vertical strip multiple times (excluding last pixel to avoid out of bounds).
+        auto old_right_x = old_width - 1;
+        for (int y = 0; y < new_height - 1; y++) {
+            auto q = static_cast<float>(y) * static_cast<float>(old_height - 1) / static_cast<float>(new_height - 1);
+            int j = floorf(q);
+            float v = q - static_cast<float>(j);
+
+            auto c = get_pixel(old_right_x, j);
+            auto d = get_pixel(old_right_x, j + 1);
+
+            auto color = c.mixed_with(d, v);
+            for (int new_right_x = 0; new_right_x < new_width; new_right_x++) {
+                // Interpolate color only once and copy into all rows.
+                new_bitmap->set_pixel(new_right_x, y, color);
+            }
+        }
+        for (int new_right_x = 0; new_right_x < new_width; new_right_x++) {
+            // Copy last pixel of vertical strip
+            new_bitmap->set_pixel(new_right_x, new_height - 1, get_pixel(old_right_x, physical_height() - 1));
         }
     }
-
-    // Bottom strip (excluding last pixel)
-    auto old_bottom_y = old_height - 1;
-    auto new_bottom_y = new_height - 1;
-    for (int x = 0; x < new_width - 1; x++) {
-        auto p = static_cast<float>(x) * static_cast<float>(old_width - 1) / static_cast<float>(new_width - 1);
-
-        int i = floorf(p);
-        float u = p - static_cast<float>(i);
-
-        auto a = get_pixel(i, old_bottom_y);
-        auto b = get_pixel(i + 1, old_bottom_y);
-        auto color = a.mixed_with(b, u);
-        new_bitmap->set_pixel(x, new_bottom_y, color);
-    }
-
-    // Right strip (excluding last pixel)
-    auto old_right_x = old_width - 1;
-    auto new_right_x = new_width - 1;
-    for (int y = 0; y < new_height - 1; y++) {
-        auto q = static_cast<float>(y) * static_cast<float>(old_height - 1) / static_cast<float>(new_height - 1);
-
-        int j = floorf(q);
-        float v = q - static_cast<float>(j);
-
-        auto c = get_pixel(old_right_x, j);
-        auto d = get_pixel(old_right_x, j + 1);
-
-        auto color = c.mixed_with(d, v);
-        new_bitmap->set_pixel(new_right_x, y, color);
-    }
-
-    // Bottom-right pixel
-    new_bitmap->set_pixel(new_width - 1, new_height - 1, get_pixel(physical_width() - 1, physical_height() - 1));
-
     return new_bitmap;
 }
 
