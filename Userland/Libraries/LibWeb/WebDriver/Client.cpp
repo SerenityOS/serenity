@@ -94,6 +94,7 @@ static constexpr auto s_webdriver_endpoints = Array {
     ROUTE(DELETE, "/session/:session_id/cookie/:name"sv, delete_cookie),
     ROUTE(DELETE, "/session/:session_id/cookie"sv, delete_all_cookies),
     ROUTE(POST, "/session/:session_id/alert/dismiss"sv, dismiss_alert),
+    ROUTE(POST, "/session/:session_id/alert/accept"sv, accept_alert),
     ROUTE(GET, "/session/:session_id/screenshot"sv, take_screenshot),
     ROUTE(GET, "/session/:session_id/element/:element_id/screenshot"sv, take_element_screenshot),
 };

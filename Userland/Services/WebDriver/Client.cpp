@@ -548,6 +548,15 @@ Web::WebDriver::Response Client::dismiss_alert(Web::WebDriver::Parameters parame
     return session->web_content_connection().dismiss_alert();
 }
 
+// 16.2 Accept Alert, https://w3c.github.io/webdriver/#accept-alert
+// POST /session/{session id}/alert/accept
+Web::WebDriver::Response Client::accept_alert(Web::WebDriver::Parameters parameters, JsonValue)
+{
+    dbgln_if(WEBDRIVER_DEBUG, "Handling POST /session/<session_id>/alert/accept");
+    auto* session = TRY(find_session_with_id(parameters[0]));
+    return session->web_content_connection().accept_alert();
+}
+
 // 17.1 Take Screenshot, https://w3c.github.io/webdriver/#take-screenshot
 // GET /session/{session id}/screenshot
 Web::WebDriver::Response Client::take_screenshot(Web::WebDriver::Parameters parameters, JsonValue)
