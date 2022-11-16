@@ -61,7 +61,7 @@ public:
     virtual void on_context_menu(Layer*, GUI::ContextMenuEvent&) { }
     virtual void on_tool_button_contextmenu(GUI::ContextMenuEvent&) { }
     virtual void on_second_paint(Layer const*, GUI::PaintEvent&) { }
-    virtual bool on_keydown(GUI::KeyEvent const&);
+    virtual bool on_keydown(GUI::KeyEvent&);
     virtual void on_keyup(GUI::KeyEvent&) { }
     virtual void on_tool_activation() { }
     virtual void on_tool_deactivation() { }

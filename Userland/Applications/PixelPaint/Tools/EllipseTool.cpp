@@ -116,7 +116,7 @@ void EllipseTool::on_second_paint(Layer const* layer, GUI::PaintEvent& event)
     draw_using(painter, preview_start, preview_end, AK::max(m_thickness * m_editor->scale(), 1));
 }
 
-bool EllipseTool::on_keydown(GUI::KeyEvent const& event)
+bool EllipseTool::on_keydown(GUI::KeyEvent& event)
 {
     if (event.key() == Key_Escape && m_drawing_button != GUI::MouseButton::None) {
         m_drawing_button = GUI::MouseButton::None;

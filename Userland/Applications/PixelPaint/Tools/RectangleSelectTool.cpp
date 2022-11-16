@@ -103,7 +103,7 @@ void RectangleSelectTool::on_mouseup(Layer*, MouseEvent& event)
     m_editor->did_complete_action(tool_name());
 }
 
-bool RectangleSelectTool::on_keydown(GUI::KeyEvent const& key_event)
+bool RectangleSelectTool::on_keydown(GUI::KeyEvent& key_event)
 {
     if (key_event.key() == KeyCode::Key_Space) {
         m_moving_mode = MovingMode::MovingOrigin;
