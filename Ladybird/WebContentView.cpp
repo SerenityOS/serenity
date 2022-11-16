@@ -41,6 +41,7 @@
 #include <QApplication>
 #include <QCursor>
 #include <QIcon>
+#include <QInputDialog>
 #include <QLineEdit>
 #include <QMessageBox>
 #include <QMouseEvent>
@@ -850,23 +851,55 @@ void WebContentView::notify_server_did_request_image_context_menu(Badge<WebConte
 
 void WebContentView::notify_server_did_request_alert(Badge<WebContentClient>, String const& message)
 {
-    QMessageBox::warning(this, "Ladybird", qstring_from_akstring(message));
+    m_dialog = new QMessageBox(QMessageBox::Icon::Warning, "Ladybird", qstring_from_akstring(message), QMessageBox::StandardButton::Ok, this);
+    m_dialog->exec();
+
+    client().async_alert_closed();
+    m_dialog = nullptr;
 }
 
-bool WebContentView::notify_server_did_request_confirm(Badge<WebContentClient>, String const& message)
+void WebContentView::notify_server_did_request_confirm(Badge<WebContentClient>, String const& message)
 {
-    auto result = QMessageBox::question(this, "Ladybird", qstring_from_akstring(message),
-        QMessageBox::StandardButton::Ok | QMessageBox::StandardButton::Cancel);
+    m_dialog = new QMessageBox(QMessageBox::Icon::Question, "Ladybird", qstring_from_akstring(message), QMessageBox::StandardButton::Ok | QMessageBox::StandardButton::Cancel, this);
+    auto result = m_dialog->exec();
 
-    return result == QMessageBox::StandardButton::Ok;
+    client().async_confirm_closed(result == QMessageBox::StandardButton::Ok || result == QDialog::Accepted);
+    m_dialog = nullptr;
 }
 
-String WebContentView::notify_server_did_request_prompt(Badge<WebContentClient>, String const& message, String const& default_)
+void WebContentView::notify_server_did_request_prompt(Badge<WebContentClient>, String const& message, String const& default_)
 {
-    // FIXME
-    (void)message;
-    (void)default_;
-    return String::empty();
+    m_dialog = new QInputDialog(this);
+    auto& dialog = static_cast<QInputDialog&>(*m_dialog);
+
+    dialog.setWindowTitle("Ladybird");
+    dialog.setLabelText(qstring_from_akstring(message));
+    dialog.setTextValue(qstring_from_akstring(default_));
+
+    if (dialog.exec() == QDialog::Accepted)
+        client().async_prompt_closed(akstring_from_qstring(dialog.textValue()));
+    else
+        client().async_prompt_closed({});
+
+    m_dialog = nullptr;
+}
+
+void WebContentView::notify_server_did_request_set_prompt_text(Badge<WebContentClient>, String const& message)
+{
+    if (m_dialog && is<QInputDialog>(*m_dialog))
+        static_cast<QInputDialog&>(*m_dialog).setTextValue(qstring_from_akstring(message));
+}
+
+void WebContentView::notify_server_did_request_accept_dialog(Badge<WebContentClient>)
+{
+    if (m_dialog)
+        m_dialog->accept();
+}
+
+void WebContentView::notify_server_did_request_dismiss_dialog(Badge<WebContentClient>)
+{
+    if (m_dialog)
+        m_dialog->reject();
 }
 
 void WebContentView::get_source()
