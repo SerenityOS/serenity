@@ -115,6 +115,8 @@ void Dialog::done(ExecResult result)
     if (!m_event_loop)
         return;
     m_result = result;
+    on_done(m_result);
+
     dbgln("{}: Quit event loop with result {}", *this, to_underlying(result));
     m_event_loop->quit(to_underlying(result));
 }

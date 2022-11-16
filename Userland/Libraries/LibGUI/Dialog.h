@@ -52,6 +52,8 @@ public:
 protected:
     explicit Dialog(Window* parent_window, ScreenPosition = ScreenPosition::CenterWithinParent);
 
+    virtual void on_done(ExecResult) { }
+
 private:
     OwnPtr<Core::EventLoop> m_event_loop;
     ExecResult m_result { ExecResult::Aborted };
