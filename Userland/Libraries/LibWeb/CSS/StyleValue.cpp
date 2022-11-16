@@ -1720,22 +1720,22 @@ bool ImageStyleValue::equals(StyleValue const& other) const
 
 Optional<int> ImageStyleValue::natural_width() const
 {
-    if (resource())
-        return bitmap(0)->width();
+    if (auto* b = bitmap(0); b != nullptr)
+        return b->width();
     return {};
 }
 
 Optional<int> ImageStyleValue::natural_height() const
 {
-    if (resource())
-        return bitmap(0)->height();
+    if (auto* b = bitmap(0); b != nullptr)
+        return b->height();
     return {};
 }
 
 void ImageStyleValue::paint(PaintContext& context, Gfx::IntRect const& dest_rect, CSS::ImageRendering image_rendering) const
 {
-    if (resource())
-        context.painter().draw_scaled_bitmap(dest_rect, *bitmap(m_current_frame_index), bitmap(0)->rect(), 1.0f, to_gfx_scaling_mode(image_rendering));
+    if (auto* b = bitmap(m_current_frame_index); b != nullptr)
+        context.painter().draw_scaled_bitmap(dest_rect, *b, bitmap(0)->rect(), 1.0f, to_gfx_scaling_mode(image_rendering));
 }
 
 static void serialize_color_stop_list(StringBuilder& builder, auto const& color_stop_list)
