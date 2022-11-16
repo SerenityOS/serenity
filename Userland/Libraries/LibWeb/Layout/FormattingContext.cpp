@@ -595,9 +595,9 @@ void FormattingContext::compute_width_for_absolutely_positioned_non_replaced_ele
         //    then the width is shrink-to-fit. Then solve for 'left'
         if (left.is_auto() && width.is_auto() && !right.is_auto()) {
             auto result = calculate_shrink_to_fit_widths(box);
-            left = solve_for_left();
             auto available_width = solve_for_width();
             width = CSS::Length(min(max(result.preferred_minimum_width, available_width.to_px(box)), result.preferred_width), CSS::Length::Type::Px);
+            left = solve_for_left();
         }
 
         // 2. 'left' and 'right' are 'auto' and 'width' is not 'auto',
