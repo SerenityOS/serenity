@@ -423,6 +423,11 @@ void ImageEditor::keydown_event(GUI::KeyEvent& event)
     if (m_active_tool && m_active_tool->on_keydown(event))
         return;
 
+    if (event.key() == Key_Escape && !m_image->selection().is_empty()) {
+        m_image->selection().clear();
+        return;
+    }
+
     event.ignore();
 }
 
