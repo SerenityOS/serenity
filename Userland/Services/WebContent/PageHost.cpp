@@ -320,6 +320,19 @@ void PageHost::dismiss_dialog()
     }
 }
 
+void PageHost::accept_dialog()
+{
+    switch (m_pending_dialog) {
+    case PendingDialog::None:
+        break;
+    case PendingDialog::Alert:
+    case PendingDialog::Confirm:
+    case PendingDialog::Prompt:
+        m_client.async_did_request_accept_dialog();
+        break;
+    }
+}
+
 void PageHost::page_did_change_favicon(Gfx::Bitmap const& favicon)
 {
     m_client.async_did_change_favicon(favicon.to_shareable_bitmap());

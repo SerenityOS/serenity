@@ -44,6 +44,7 @@ endpoint WebDriverClient {
     delete_cookie(String name) => (Web::WebDriver::Response response)
     delete_all_cookies() => (Web::WebDriver::Response response)
     dismiss_alert() => (Web::WebDriver::Response response)
+    accept_alert() => (Web::WebDriver::Response response)
     take_screenshot() => (Web::WebDriver::Response response)
     take_element_screenshot(String element_id) => (Web::WebDriver::Response response)
 }
