@@ -539,6 +539,15 @@ Web::WebDriver::Response Client::delete_all_cookies(Web::WebDriver::Parameters p
     return session->web_content_connection().delete_all_cookies();
 }
 
+// 16.1 Dismiss Alert, https://w3c.github.io/webdriver/#dismiss-alert
+// POST /session/{session id}/alert/dismiss
+Web::WebDriver::Response Client::dismiss_alert(Web::WebDriver::Parameters parameters, JsonValue)
+{
+    dbgln_if(WEBDRIVER_DEBUG, "Handling POST /session/<session_id>/alert/dismiss");
+    auto* session = TRY(find_session_with_id(parameters[0]));
+    return session->web_content_connection().dismiss_alert();
+}
+
 // 17.1 Take Screenshot, https://w3c.github.io/webdriver/#take-screenshot
 // GET /session/{session id}/screenshot
 Web::WebDriver::Response Client::take_screenshot(Web::WebDriver::Parameters parameters, JsonValue)
