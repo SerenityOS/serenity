@@ -235,10 +235,12 @@ public:
             auto const& function_declaration = m_functions_to_hoist[i];
             if (m_lexical_names.contains(function_declaration.name()) || m_forbidden_var_names.contains(function_declaration.name()))
                 continue;
-            if (is_top_level())
+            if (is_top_level()) {
                 m_node->add_hoisted_function(move(m_functions_to_hoist[i]));
-            else
-                m_parent_scope->m_functions_to_hoist.append(move(m_functions_to_hoist[i]));
+            } else {
+                if (!m_parent_scope->m_lexical_names.contains(function_declaration.name()) && !m_parent_scope->m_function_names.contains(function_declaration.name()))
+                    m_parent_scope->m_functions_to_hoist.append(move(m_functions_to_hoist[i]));
+            }
         }
 
         if (m_parent_scope && !m_function_parameters.has_value()) {
