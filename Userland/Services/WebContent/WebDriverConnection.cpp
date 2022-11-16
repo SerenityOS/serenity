@@ -1377,6 +1377,25 @@ Messages::WebDriverClient::AcceptAlertResponse WebDriverConnection::accept_alert
     return JsonValue {};
 }
 
+// 16.3 Get Alert Text, https://w3c.github.io/webdriver/#get-alert-text
+Messages::WebDriverClient::GetAlertTextResponse WebDriverConnection::get_alert_text()
+{
+    // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
+    TRY(ensure_open_top_level_browsing_context());
+
+    // 2. If there is no current user prompt, return error with error code no such alert.
+    if (!m_page_host.has_pending_dialog())
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::NoSuchAlert, "No user dialog is currently open"sv);
+
+    // 3. Let message be the text message associated with the current user prompt, or otherwise be null.
+    auto const& message = m_page_host.pending_dialog_text();
+
+    // 4. Return success with data message.
+    if (message.has_value())
+        return *message;
+    return JsonValue {};
+}
+
 // 17.1 Take Screenshot, https://w3c.github.io/webdriver/#take-screenshot
 Messages::WebDriverClient::TakeScreenshotResponse WebDriverConnection::take_screenshot()
 {
