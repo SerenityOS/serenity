@@ -55,6 +55,7 @@ public:
     };
     bool has_pending_dialog() const { return m_pending_dialog != PendingDialog::None; }
     PendingDialog pending_dialog() const { return m_pending_dialog; }
+    void dismiss_dialog();
 
 private:
     // ^PageClient

@@ -32,6 +32,8 @@ endpoint WebContentClient
     did_request_alert(String message) =|
     did_request_confirm(String message) =|
     did_request_prompt(String message, String default_) =|
+    did_request_accept_dialog() =|
+    did_request_dismiss_dialog() =|
     did_get_source(URL url, String source) =|
     did_get_dom_tree(String dom_tree) =|
     did_get_dom_node_properties(i32 node_id, String specified_style, String computed_style, String custom_properties, String node_box_sizing_json) =|

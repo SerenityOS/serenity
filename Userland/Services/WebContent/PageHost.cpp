@@ -305,6 +305,21 @@ void PageHost::prompt_closed(String response)
     }
 }
 
+void PageHost::dismiss_dialog()
+{
+    switch (m_pending_dialog) {
+    case PendingDialog::None:
+        break;
+    case PendingDialog::Alert:
+        m_client.async_did_request_accept_dialog();
+        break;
+    case PendingDialog::Confirm:
+    case PendingDialog::Prompt:
+        m_client.async_did_request_dismiss_dialog();
+        break;
+    }
+}
+
 void PageHost::page_did_change_favicon(Gfx::Bitmap const& favicon)
 {
     m_client.async_did_change_favicon(favicon.to_shareable_bitmap());
