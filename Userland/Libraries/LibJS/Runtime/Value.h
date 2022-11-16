@@ -292,7 +292,7 @@ public:
     {
         VERIFY(is_number());
         if (is_int32())
-            return static_cast<i32>(m_value.encoded);
+            return as_i32();
         return m_value.as_double;
     }
 
