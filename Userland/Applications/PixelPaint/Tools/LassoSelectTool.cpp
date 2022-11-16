@@ -147,7 +147,7 @@ void LassoSelectTool::on_second_paint(Layer const* layer, GUI::PaintEvent& event
     painter.stroke_path(m_preview_path, Gfx::Color::Black, 1);
 }
 
-bool LassoSelectTool::on_keydown(GUI::KeyEvent const& key_event)
+bool LassoSelectTool::on_keydown(GUI::KeyEvent& key_event)
 {
     Tool::on_keydown(key_event);
     if (key_event.key() == KeyCode::Key_Escape) {

@@ -23,7 +23,7 @@ void Tool::set_action(GUI::Action* action)
     m_action = action;
 }
 
-bool Tool::on_keydown(GUI::KeyEvent const& event)
+bool Tool::on_keydown(GUI::KeyEvent& event)
 {
     switch (event.key()) {
     case KeyCode::Key_LeftBracket:

@@ -106,7 +106,7 @@ void MoveTool::on_mouseup(Layer* layer, MouseEvent& event)
     m_editor->did_complete_action(tool_name());
 }
 
-bool MoveTool::on_keydown(GUI::KeyEvent const& event)
+bool MoveTool::on_keydown(GUI::KeyEvent& event)
 {
     if (event.key() == Key_Shift)
         m_keep_ascept_ratio = true;

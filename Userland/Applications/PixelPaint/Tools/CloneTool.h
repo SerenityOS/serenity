@@ -27,7 +27,7 @@ protected:
     virtual void on_mousedown(Layer*, MouseEvent&) override;
     virtual void on_mousemove(Layer*, MouseEvent&) override;
     virtual void on_second_paint(Layer const*, GUI::PaintEvent&) override;
-    virtual bool on_keydown(GUI::KeyEvent const&) override;
+    virtual bool on_keydown(GUI::KeyEvent&) override;
     virtual void on_keyup(GUI::KeyEvent&) override;
 
 private:

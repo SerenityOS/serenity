@@ -130,7 +130,7 @@ void RectangleTool::on_second_paint(Layer const* layer, GUI::PaintEvent& event)
     draw_using(painter, start_position, end_position, AK::max(m_thickness * m_editor->scale(), 1), m_corner_radius * m_editor->scale());
 }
 
-bool RectangleTool::on_keydown(GUI::KeyEvent const& event)
+bool RectangleTool::on_keydown(GUI::KeyEvent& event)
 {
     if (event.key() == Key_Escape && m_drawing_button != GUI::MouseButton::None) {
         m_drawing_button = GUI::MouseButton::None;
