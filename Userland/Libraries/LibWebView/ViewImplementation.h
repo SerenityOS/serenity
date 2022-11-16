@@ -44,6 +44,7 @@ public:
     virtual void notify_server_did_request_alert(Badge<WebContentClient>, String const& message) = 0;
     virtual void notify_server_did_request_confirm(Badge<WebContentClient>, String const& message) = 0;
     virtual void notify_server_did_request_prompt(Badge<WebContentClient>, String const& message, String const& default_) = 0;
+    virtual void notify_server_did_request_set_prompt_text(Badge<WebContentClient>, String const& message) = 0;
     virtual void notify_server_did_request_accept_dialog(Badge<WebContentClient>) = 0;
     virtual void notify_server_did_request_dismiss_dialog(Badge<WebContentClient>) = 0;
     virtual void notify_server_did_get_source(const AK::URL& url, String const& source) = 0;

@@ -1396,6 +1396,47 @@ Messages::WebDriverClient::GetAlertTextResponse WebDriverConnection::get_alert_t
     return JsonValue {};
 }
 
+// 16.4 Send Alert Text, https://w3c.github.io/webdriver/#send-alert-text
+Messages::WebDriverClient::SendAlertTextResponse WebDriverConnection::send_alert_text(JsonValue const& payload)
+{
+    // 1. Let text be the result of getting the property "text" from parameters.
+    // 2. If text is not a String, return error with error code invalid argument.
+    auto text = TRY(get_property(payload, "text"sv));
+
+    // 3. If the current top-level browsing context is no longer open, return error with error code no such window.
+    TRY(ensure_open_top_level_browsing_context());
+
+    // 4. If there is no current user prompt, return error with error code no such alert.
+    if (!m_page_host.has_pending_dialog())
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::NoSuchAlert, "No user dialog is currently open"sv);
+
+    // 5. Run the substeps of the first matching current user prompt:
+    switch (m_page_host.pending_dialog()) {
+    // -> alert
+    // -> confirm
+    case PageHost::PendingDialog::Alert:
+    case PageHost::PendingDialog::Confirm:
+        // Return error with error code element not interactable.
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::ElementNotInteractable, "Only prompt dialogs may receive text"sv);
+
+    // -> prompt
+    case PageHost::PendingDialog::Prompt:
+        // Do nothing.
+        break;
+
+    // -> Otherwise
+    default:
+        // Return error with error code unsupported operation.
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::UnsupportedOperation, "Unknown dialog type"sv);
+    }
+
+    // 6. Perform user agent dependent steps to set the value of current user prompt’s text field to text.
+    m_web_content_client.async_did_request_set_prompt_text(move(text));
+
+    // 7. Return success with data null.
+    return JsonValue {};
+}
+
 // 17.1 Take Screenshot, https://w3c.github.io/webdriver/#take-screenshot
 Messages::WebDriverClient::TakeScreenshotResponse WebDriverConnection::take_screenshot()
 {

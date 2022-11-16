@@ -81,6 +81,7 @@ private:
     virtual Messages::WebDriverClient::DismissAlertResponse dismiss_alert() override;
     virtual Messages::WebDriverClient::AcceptAlertResponse accept_alert() override;
     virtual Messages::WebDriverClient::GetAlertTextResponse get_alert_text() override;
+    virtual Messages::WebDriverClient::SendAlertTextResponse send_alert_text(JsonValue const& payload) override;
     virtual Messages::WebDriverClient::TakeScreenshotResponse take_screenshot() override;
     virtual Messages::WebDriverClient::TakeElementScreenshotResponse take_element_screenshot(String const& element_id) override;
 

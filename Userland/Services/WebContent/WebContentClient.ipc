@@ -32,6 +32,7 @@ endpoint WebContentClient
     did_request_alert(String message) =|
     did_request_confirm(String message) =|
     did_request_prompt(String message, String default_) =|
+    did_request_set_prompt_text(String message) =|
     did_request_accept_dialog() =|
     did_request_dismiss_dialog() =|
     did_get_source(URL url, String source) =|

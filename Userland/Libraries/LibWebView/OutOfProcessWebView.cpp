@@ -378,6 +378,12 @@ void OutOfProcessWebView::notify_server_did_request_prompt(Badge<WebContentClien
     m_dialog = nullptr;
 }
 
+void OutOfProcessWebView::notify_server_did_request_set_prompt_text(Badge<WebContentClient>, String const& message)
+{
+    if (m_dialog && is<GUI::InputBox>(*m_dialog))
+        static_cast<GUI::InputBox&>(*m_dialog).set_text_value(message);
+}
+
 void OutOfProcessWebView::notify_server_did_request_accept_dialog(Badge<WebContentClient>)
 {
     if (m_dialog)
