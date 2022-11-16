@@ -74,7 +74,7 @@ public:
     virtual Response get_element_rect(Parameters parameters, JsonValue payload) = 0;
     virtual Response is_element_enabled(Parameters parameters, JsonValue payload) = 0;
 
-    // 13. https://w3c.github.io/webdriver/#document, https://w3c.github.io/webdriver/#get-page-source
+    // 13. Document, https://w3c.github.io/webdriver/#document
     virtual Response get_source(Parameters parameters, JsonValue payload) = 0;
     virtual Response execute_script(Parameters parameters, JsonValue payload) = 0;
     virtual Response execute_async_script(Parameters parameters, JsonValue payload) = 0;
