@@ -3,6 +3,7 @@ set(TEST_SOURCES
     BenchmarkJPEGLoader.cpp
     TestDeltaE.cpp
     TestFontHandling.cpp
+    TestGfxBitmap.cpp
     TestICCProfile.cpp
     TestImageDecoder.cpp
     TestRect.cpp
