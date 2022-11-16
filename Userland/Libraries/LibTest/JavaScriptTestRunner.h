@@ -373,6 +373,7 @@ inline JSFileResult TestRunner::run_file_test(String const& test_path)
     }
 
     auto file_script = parse_script(test_path, interpreter->realm());
+    JS::ThrowCompletionOr<JS::Value> top_level_result { JS::js_undefined() };
     if (file_script.is_error())
         return { test_path, file_script.error() };
     if (g_run_bytecode) {
@@ -383,11 +384,11 @@ inline JSFileResult TestRunner::run_file_test(String const& test_path)
             if (JS::Bytecode::g_dump_bytecode)
                 executable->dump();
             JS::Bytecode::Interpreter bytecode_interpreter(interpreter->realm());
-            (void)bytecode_interpreter.run(*executable);
+            top_level_result = bytecode_interpreter.run(*executable);
         }
     } else {
         g_vm->push_execution_context(global_execution_context);
-        (void)interpreter->run(file_script.value());
+        top_level_result = interpreter->run(file_script.value());
         g_vm->pop_execution_context();
     }
 
@@ -458,6 +459,46 @@ inline JSFileResult TestRunner::run_file_test(String const& test_path)
 
         file_result.suites.append(suite);
     });
+
+    if (top_level_result.is_error()) {
+        Test::Suite suite { test_path, "<top-level>" };
+        suite.most_severe_test_result = Result::Crashed;
+
+        Test::Case test_case { "<top-level>", Test::Result::Fail, "", 0 };
+        auto error = top_level_result.release_error().release_value().release_value();
+        if (error.is_object()) {
+            StringBuilder detail_builder;
+
+            auto& error_object = error.as_object();
+            auto name = error_object.get_without_side_effects(g_vm->names.name).value_or(JS::js_undefined());
+            auto message = error_object.get_without_side_effects(g_vm->names.message).value_or(JS::js_undefined());
+
+            if (name.is_accessor() || message.is_accessor()) {
+                detail_builder.append(error.to_string_without_side_effects());
+            } else {
+                detail_builder.append(name.to_string_without_side_effects());
+                detail_builder.append(": "sv);
+                detail_builder.append(message.to_string_without_side_effects());
+            }
+
+            if (is<JS::Error>(error_object)) {
+                auto& error_as_error = static_cast<JS::Error&>(error_object);
+                detail_builder.append('\n');
+                detail_builder.append(error_as_error.stack_string());
+            }
+
+            test_case.details = detail_builder.to_string();
+        } else {
+            test_case.details = error.to_string_without_side_effects();
+        }
+
+        suite.tests.append(move(test_case));
+
+        file_result.suites.append(suite);
+
+        m_counts.suites_failed++;
+        file_result.most_severe_test_result = Test::Result::Fail;
+    }
 
     m_counts.files_total++;
 
