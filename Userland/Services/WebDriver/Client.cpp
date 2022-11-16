@@ -557,6 +557,15 @@ Web::WebDriver::Response Client::accept_alert(Web::WebDriver::Parameters paramet
     return session->web_content_connection().accept_alert();
 }
 
+// 16.3 Get Alert Text, https://w3c.github.io/webdriver/#get-alert-text
+// GET /session/{session id}/alert/text
+Web::WebDriver::Response Client::get_alert_text(Web::WebDriver::Parameters parameters, JsonValue)
+{
+    dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session_id>/alert/text");
+    auto* session = TRY(find_session_with_id(parameters[0]));
+    return session->web_content_connection().get_alert_text();
+}
+
 // 17.1 Take Screenshot, https://w3c.github.io/webdriver/#take-screenshot
 // GET /session/{session id}/screenshot
 Web::WebDriver::Response Client::take_screenshot(Web::WebDriver::Parameters parameters, JsonValue)

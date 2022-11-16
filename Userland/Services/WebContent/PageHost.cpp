@@ -262,6 +262,9 @@ void PageHost::page_did_request_alert(String const& message)
     m_pending_dialog = PendingDialog::Alert;
     m_client.async_did_request_alert(message);
 
+    if (!message.is_empty())
+        m_pending_dialog_text = message;
+
     spin_event_loop_until_dialog_closed(m_client, m_pending_alert_response);
 }
 
@@ -270,6 +273,7 @@ void PageHost::alert_closed()
     if (m_pending_dialog == PendingDialog::Alert) {
         m_pending_dialog = PendingDialog::None;
         m_pending_alert_response = Empty {};
+        m_pending_dialog_text.clear();
     }
 }
 
@@ -277,6 +281,9 @@ bool PageHost::page_did_request_confirm(String const& message)
 {
     m_pending_dialog = PendingDialog::Confirm;
     m_client.async_did_request_confirm(message);
+
+    if (!message.is_empty())
+        m_pending_dialog_text = message;
 
     return spin_event_loop_until_dialog_closed(m_client, m_pending_confirm_response);
 }
@@ -286,6 +293,7 @@ void PageHost::confirm_closed(bool accepted)
     if (m_pending_dialog == PendingDialog::Confirm) {
         m_pending_dialog = PendingDialog::None;
         m_pending_confirm_response = accepted;
+        m_pending_dialog_text.clear();
     }
 }
 
@@ -293,6 +301,9 @@ String PageHost::page_did_request_prompt(String const& message, String const& de
 {
     m_pending_dialog = PendingDialog::Prompt;
     m_client.async_did_request_prompt(message, default_);
+
+    if (!message.is_empty())
+        m_pending_dialog_text = message;
 
     return spin_event_loop_until_dialog_closed(m_client, m_pending_prompt_response);
 }
@@ -302,6 +313,7 @@ void PageHost::prompt_closed(String response)
     if (m_pending_dialog == PendingDialog::Prompt) {
         m_pending_dialog = PendingDialog::None;
         m_pending_prompt_response = move(response);
+        m_pending_dialog_text.clear();
     }
 }
 

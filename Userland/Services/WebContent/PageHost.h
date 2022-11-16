@@ -55,6 +55,7 @@ public:
     };
     bool has_pending_dialog() const { return m_pending_dialog != PendingDialog::None; }
     PendingDialog pending_dialog() const { return m_pending_dialog; }
+    Optional<String> const& pending_dialog_text() const { return m_pending_dialog_text; }
     void dismiss_dialog();
     void accept_dialog();
 
@@ -112,6 +113,7 @@ private:
     RefPtr<WebDriverConnection> m_webdriver;
 
     PendingDialog m_pending_dialog { PendingDialog::None };
+    Optional<String> m_pending_dialog_text;
     Optional<Empty> m_pending_alert_response;
     Optional<bool> m_pending_confirm_response;
     Optional<String> m_pending_prompt_response;
