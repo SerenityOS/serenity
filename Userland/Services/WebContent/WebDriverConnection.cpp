@@ -322,7 +322,10 @@ Messages::WebDriverClient::NavigateToResponse WebDriverConnection::navigate_to(J
     URL url(payload.as_object().get_ptr("url"sv)->as_string());
 
     // FIXME: 3. If url is not an absolute URL or is not an absolute URL with fragment or not a local scheme, return error with error code invalid argument.
-    // FIXME: 4. Handle any user prompts and return its value if it is an error.
+
+    // 4. Handle any user prompts and return its value if it is an error.
+    TRY(handle_any_user_prompts());
+
     // FIXME: 5. Let current URL be the current top-level browsing context’s active document’s URL.
     // FIXME: 6. If current URL and url do not have the same absolute URL:
     // FIXME:     a. If timer has not been started, start a timer. If this algorithm has not completed before timer reaches the session’s session page load timeout in milliseconds, return an error with error code timeout.
@@ -348,7 +351,8 @@ Messages::WebDriverClient::GetCurrentUrlResponse WebDriverConnection::get_curren
     // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
     TRY(ensure_open_top_level_browsing_context());
 
-    // FIXME: 2. Handle any user prompts and return its value if it is an error.
+    // 2. Handle any user prompts and return its value if it is an error.
+    TRY(handle_any_user_prompts());
 
     // 3. Let url be the serialization of the current top-level browsing context’s active document’s document URL.
     auto url = m_page_host.page().top_level_browsing_context().active_document()->url().to_string();
@@ -363,7 +367,8 @@ Messages::WebDriverClient::BackResponse WebDriverConnection::back()
     // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
     TRY(ensure_open_top_level_browsing_context());
 
-    // FIXME: 2. Handle any user prompts and return its value if it is an error.
+    // 2. Handle any user prompts and return its value if it is an error.
+    TRY(handle_any_user_prompts());
 
     // 3. Traverse the history by a delta –1 for the current browsing context.
     m_web_content_client.async_did_request_navigate_back();
@@ -381,7 +386,8 @@ Messages::WebDriverClient::ForwardResponse WebDriverConnection::forward()
     // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
     TRY(ensure_open_top_level_browsing_context());
 
-    // FIXME: 2. Handle any user prompts and return its value if it is an error.
+    // 2. Handle any user prompts and return its value if it is an error.
+    TRY(handle_any_user_prompts());
 
     // 3. Traverse the history by a delta 1 for the current browsing context.
     m_web_content_client.async_did_request_navigate_forward();
@@ -399,7 +405,8 @@ Messages::WebDriverClient::RefreshResponse WebDriverConnection::refresh()
     // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
     TRY(ensure_open_top_level_browsing_context());
 
-    // FIXME: 2. Handle any user prompts and return its value if it is an error.
+    // 2. Handle any user prompts and return its value if it is an error.
+    TRY(handle_any_user_prompts());
 
     // 3. Initiate an overridden reload of the current top-level browsing context’s active document.
     m_web_content_client.async_did_request_refresh();
@@ -419,7 +426,8 @@ Messages::WebDriverClient::GetTitleResponse WebDriverConnection::get_title()
     // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
     TRY(ensure_open_top_level_browsing_context());
 
-    // FIXME: 2. Handle any user prompts and return its value if it is an error.
+    // 2. Handle any user prompts and return its value if it is an error.
+    TRY(handle_any_user_prompts());
 
     // 3. Let title be the initial value of the title IDL attribute of the current top-level browsing context's active document.
     auto title = m_page_host.page().top_level_browsing_context().active_document()->title();
@@ -444,7 +452,8 @@ Messages::WebDriverClient::CloseWindowResponse WebDriverConnection::close_window
     // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
     TRY(ensure_open_top_level_browsing_context());
 
-    // FIXME: 2. Handle any user prompts and return its value if it is an error.
+    // 2. Handle any user prompts and return its value if it is an error.
+    TRY(handle_any_user_prompts());
 
     // 3. Close the current top-level browsing context.
     m_page_host.page().top_level_browsing_context().close();
@@ -478,7 +487,8 @@ Messages::WebDriverClient::GetWindowRectResponse WebDriverConnection::get_window
     // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
     TRY(ensure_open_top_level_browsing_context());
 
-    // FIXME: 2. Handle any user prompts and return its value if it is an error.
+    // 2. Handle any user prompts and return its value if it is an error.
+    TRY(handle_any_user_prompts());
 
     // 3. Return success with data set to the WindowRect object for the current top-level browsing context.
     return serialize_rect(compute_window_rect(m_page_host.page()));
@@ -533,7 +543,9 @@ Messages::WebDriverClient::SetWindowRectResponse WebDriverConnection::set_window
     // 8. If the current top-level browsing context is no longer open, return error with error code no such window.
     TRY(ensure_open_top_level_browsing_context());
 
-    // FIXME: 9. Handle any user prompts and return its value if it is an error.
+    // 9. Handle any user prompts and return its value if it is an error.
+    TRY(handle_any_user_prompts());
+
     // FIXME: 10. Fully exit fullscreen.
 
     // 11. Restore the window.
@@ -572,7 +584,9 @@ Messages::WebDriverClient::MaximizeWindowResponse WebDriverConnection::maximize_
     // 2. If the current top-level browsing context is no longer open, return error with error code no such window.
     TRY(ensure_open_top_level_browsing_context());
 
-    // FIXME: 3. Handle any user prompts and return its value if it is an error.
+    // 3. Handle any user prompts and return its value if it is an error.
+    TRY(handle_any_user_prompts());
+
     // FIXME: 4. Fully exit fullscreen.
 
     // 5. Restore the window.
@@ -593,7 +607,9 @@ Messages::WebDriverClient::MinimizeWindowResponse WebDriverConnection::minimize_
     // 2. If the current top-level browsing context is no longer open, return error with error code no such window.
     TRY(ensure_open_top_level_browsing_context());
 
-    // FIXME: 3. Handle any user prompts and return its value if it is an error.
+    // 3. Handle any user prompts and return its value if it is an error.
+    TRY(handle_any_user_prompts());
+
     // FIXME: 4. Fully exit fullscreen.
 
     // 5. Iconify the window.
@@ -611,7 +627,8 @@ Messages::WebDriverClient::FullscreenWindowResponse WebDriverConnection::fullscr
     // 2. If the current top-level browsing context is no longer open, return error with error code no such window.
     TRY(ensure_open_top_level_browsing_context());
 
-    // FIXME: 3. Handle any user prompts and return its value if it is an error.
+    // 3. Handle any user prompts and return its value if it is an error.
+    TRY(handle_any_user_prompts());
 
     // 4. Restore the window.
     restore_the_window();
@@ -643,7 +660,8 @@ Messages::WebDriverClient::FindElementResponse WebDriverConnection::find_element
     // 5. If the current browsing context is no longer open, return error with error code no such window.
     TRY(ensure_open_top_level_browsing_context());
 
-    // FIXME: 6. Handle any user prompts and return its value if it is an error.
+    // 6. Handle any user prompts and return its value if it is an error.
+    TRY(handle_any_user_prompts());
 
     // 7. Let start node be the current browsing context’s document element.
     auto* start_node = m_page_host.page().top_level_browsing_context().active_document();
@@ -680,7 +698,8 @@ Messages::WebDriverClient::FindElementsResponse WebDriverConnection::find_elemen
     // 5. If the current browsing context is no longer open, return error with error code no such window.
     TRY(ensure_open_top_level_browsing_context());
 
-    // FIXME: 6. Handle any user prompts and return its value if it is an error.
+    // 6. Handle any user prompts and return its value if it is an error.
+    TRY(handle_any_user_prompts());
 
     // 7. Let start node be the current browsing context’s document element.
     auto* start_node = m_page_host.page().top_level_browsing_context().active_document();
@@ -711,7 +730,8 @@ Messages::WebDriverClient::FindElementFromElementResponse WebDriverConnection::f
     // 5. If the current browsing context is no longer open, return error with error code no such window.
     TRY(ensure_open_top_level_browsing_context());
 
-    // FIXME: 6. Handle any user prompts and return its value if it is an error.
+    // 6. Handle any user prompts and return its value if it is an error.
+    TRY(handle_any_user_prompts());
 
     // 7. Let start node be the result of trying to get a known connected element with url variable element id.
     auto* start_node = TRY(get_known_connected_element(element_id));
@@ -744,7 +764,8 @@ Messages::WebDriverClient::FindElementsFromElementResponse WebDriverConnection::
     // 5. If the current browsing context is no longer open, return error with error code no such window.
     TRY(ensure_open_top_level_browsing_context());
 
-    // FIXME: 6. Handle any user prompts and return its value if it is an error.
+    // 6. Handle any user prompts and return its value if it is an error.
+    TRY(handle_any_user_prompts());
 
     // 7. Let start node be the result of trying to get a known connected element with url variable element id.
     auto* start_node = TRY(get_known_connected_element(element_id));
@@ -771,7 +792,8 @@ Messages::WebDriverClient::FindElementFromShadowRootResponse WebDriverConnection
     // 5. If the current browsing context is no longer open, return error with error code no such window.
     TRY(ensure_open_top_level_browsing_context());
 
-    // FIXME: 6. Handle any user prompts and return its value if it is an error.
+    // 6. Handle any user prompts and return its value if it is an error.
+    TRY(handle_any_user_prompts());
 
     // 7. Let start node be the result of trying to get a known shadow root with url variable shadow id.
     auto* start_node = TRY(get_known_shadow_root(shadow_id));
@@ -804,7 +826,8 @@ Messages::WebDriverClient::FindElementsFromShadowRootResponse WebDriverConnectio
     // 5. If the current browsing context is no longer open, return error with error code no such window.
     TRY(ensure_open_top_level_browsing_context());
 
-    // FIXME: 6. Handle any user prompts and return its value if it is an error.
+    // 6. Handle any user prompts and return its value if it is an error.
+    TRY(handle_any_user_prompts());
 
     // 7. Let start node be the result of trying to get a known shadow root with url variable shadow id.
     auto* start_node = TRY(get_known_shadow_root(shadow_id));
@@ -819,7 +842,8 @@ Messages::WebDriverClient::GetActiveElementResponse WebDriverConnection::get_act
     // 1. If the current browsing context is no longer open, return error with error code no such window.
     TRY(ensure_open_top_level_browsing_context());
 
-    // FIXME: 2. Handle any user prompts and return its value if it is an error.
+    // 2. Handle any user prompts and return its value if it is an error.
+    TRY(handle_any_user_prompts());
 
     // 3. Let active element be the active element of the current browsing context’s document element.
     auto* active_element = m_page_host.page().top_level_browsing_context().active_document()->active_element();
@@ -838,7 +862,8 @@ Messages::WebDriverClient::GetElementShadowRootResponse WebDriverConnection::get
     // 1. If the current browsing context is no longer open, return error with error code no such window.
     TRY(ensure_open_top_level_browsing_context());
 
-    // FIXME: 2. Handle any user prompts and return its value if it is an error.
+    // 2. Handle any user prompts and return its value if it is an error.
+    TRY(handle_any_user_prompts());
 
     // 3. Let element be the result of trying to get a known connected element with url variable element id.
     auto* element = TRY(get_known_connected_element(element_id));
@@ -863,7 +888,8 @@ Messages::WebDriverClient::IsElementSelectedResponse WebDriverConnection::is_ele
     // 1. If the current browsing context is no longer open, return error with error code no such window.
     TRY(ensure_open_top_level_browsing_context());
 
-    // FIXME: 2. Handle any user prompts and return its value if it is an error.
+    // 2. Handle any user prompts and return its value if it is an error.
+    TRY(handle_any_user_prompts());
 
     // 3. Let element be the result of trying to get a known connected element with url variable element id.
     auto* element = TRY(get_known_connected_element(element_id));
@@ -898,7 +924,8 @@ Messages::WebDriverClient::GetElementAttributeResponse WebDriverConnection::get_
     // 1. If the current browsing context is no longer open, return error with error code no such window.
     TRY(ensure_open_top_level_browsing_context());
 
-    // FIXME: 2. Handle any user prompts and return its value if it is an error.
+    // 2. Handle any user prompts and return its value if it is an error.
+    TRY(handle_any_user_prompts());
 
     // 3. Let element be the result of trying to get a known connected element with url variable element id.
     auto* element = TRY(get_known_connected_element(element_id));
@@ -930,7 +957,8 @@ Messages::WebDriverClient::GetElementPropertyResponse WebDriverConnection::get_e
     // 1. If the current browsing context is no longer open, return error with error code no such window.
     TRY(ensure_open_top_level_browsing_context());
 
-    // FIXME: 2. Handle any user prompts and return its value if it is an error.
+    // 2. Handle any user prompts and return its value if it is an error.
+    TRY(handle_any_user_prompts());
 
     // 3. Let element be the result of trying to get a known connected element with url variable element id.
     auto* element = TRY(get_known_connected_element(element_id));
@@ -960,7 +988,8 @@ Messages::WebDriverClient::GetElementCssValueResponse WebDriverConnection::get_e
     // 1. If the current browsing context is no longer open, return error with error code no such window.
     TRY(ensure_open_top_level_browsing_context());
 
-    // FIXME: 2. Handle any user prompts and return its value if it is an error.
+    // 2. Handle any user prompts and return its value if it is an error.
+    TRY(handle_any_user_prompts());
 
     // 3. Let element be the result of trying to get a known connected element with url variable element id.
     auto* element = TRY(get_known_connected_element(element_id));
@@ -992,7 +1021,8 @@ Messages::WebDriverClient::GetElementTextResponse WebDriverConnection::get_eleme
     // 1. If the current browsing context is no longer open, return error with error code no such window.
     TRY(ensure_open_top_level_browsing_context());
 
-    // FIXME: 2. Handle any user prompts and return its value if it is an error.
+    // 2. Handle any user prompts and return its value if it is an error.
+    TRY(handle_any_user_prompts());
 
     // 3. Let element be the result of trying to get a known connected element with url variable element id.
     auto* element = TRY(get_known_connected_element(element_id));
@@ -1010,7 +1040,8 @@ Messages::WebDriverClient::GetElementTagNameResponse WebDriverConnection::get_el
     // 1. If the current browsing context is no longer open, return error with error code no such window.
     TRY(ensure_open_top_level_browsing_context());
 
-    // FIXME: 2. Handle any user prompts and return its value if it is an error.
+    // 2. Handle any user prompts and return its value if it is an error.
+    TRY(handle_any_user_prompts());
 
     // 3. Let element be the result of trying to get a known connected element with url variable element id.
     auto* element = TRY(get_known_connected_element(element_id));
@@ -1028,7 +1059,8 @@ Messages::WebDriverClient::GetElementRectResponse WebDriverConnection::get_eleme
     // 1. If the current browsing context is no longer open, return error with error code no such window.
     TRY(ensure_open_top_level_browsing_context());
 
-    // FIXME: 2. Handle any user prompts and return its value if it is an error.
+    // 2. Handle any user prompts and return its value if it is an error.
+    TRY(handle_any_user_prompts());
 
     // 3. Let element be the result of trying to get a known connected element with url variable element id.
     auto* element = TRY(get_known_connected_element(element_id));
@@ -1058,7 +1090,8 @@ Messages::WebDriverClient::IsElementEnabledResponse WebDriverConnection::is_elem
     // 1. If the current browsing context is no longer open, return error with error code no such window.
     TRY(ensure_open_top_level_browsing_context());
 
-    // FIXME: 2. Handle any user prompts and return its value if it is an error.
+    // 2. Handle any user prompts and return its value if it is an error.
+    TRY(handle_any_user_prompts());
 
     // 3. Let element be the result of trying to get a known connected element with url variable element id.
     auto* element = TRY(get_known_connected_element(element_id));
@@ -1083,7 +1116,8 @@ Messages::WebDriverClient::GetSourceResponse WebDriverConnection::get_source()
     // 1. If the current browsing context is no longer open, return error with error code no such window.
     TRY(ensure_open_top_level_browsing_context());
 
-    // FIXME: 2. Handle any user prompts and return its value if it is an error.
+    // 2. Handle any user prompts and return its value if it is an error.
+    TRY(handle_any_user_prompts());
 
     auto* document = m_page_host.page().top_level_browsing_context().active_document();
     Optional<String> source;
@@ -1340,7 +1374,8 @@ Messages::WebDriverClient::TakeElementScreenshotResponse WebDriverConnection::ta
     // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
     TRY(ensure_open_top_level_browsing_context());
 
-    // FIXME: 2. Handle any user prompts and return its value if it is an error.
+    // 2. Handle any user prompts and return its value if it is an error.
+    TRY(handle_any_user_prompts());
 
     // 3. Let element be the result of trying to get a known connected element with url variable element id.
     auto* element = TRY(get_known_connected_element(element_id));
@@ -1372,6 +1407,40 @@ ErrorOr<void, Web::WebDriver::Error> WebDriverConnection::ensure_open_top_level_
     // A browsing context is said to be no longer open if it has been discarded.
     if (m_page_host.page().top_level_browsing_context().has_been_discarded())
         return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::NoSuchWindow, "Window not found"sv);
+    return {};
+}
+
+// https://w3c.github.io/webdriver/#dfn-handle-any-user-prompts
+ErrorOr<void, Web::WebDriver::Error> WebDriverConnection::handle_any_user_prompts()
+{
+    // 1. If there is no current user prompt, abort these steps and return success.
+    if (!m_page_host.has_pending_dialog())
+        return {};
+
+    // 2. Perform the following substeps based on the current session’s user prompt handler:
+
+    // FIXME: The user prompt handler is a capability-level configuration, which we have no support
+    //        for yet. It defaults to "dismiss and notify", so that is all that is handled here.
+
+    // -> dismiss state
+    //    Dismiss the current user prompt.
+    // -> accept state
+    //    Accept the current user prompt.
+    // -> dismiss and notify state
+    if (true) {
+        // Dismiss the current user prompt.
+        m_page_host.dismiss_dialog();
+
+        // Return an annotated unexpected alert open error.
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::UnexpectedAlertOpen, "A user dialog is open"sv);
+    }
+    // -> accept and notify state
+    //    Accept the current user prompt.
+    //    Return an annotated unexpected alert open error.
+    // -> ignore state
+    //     Return an annotated unexpected alert open error.
+
+    // 3. Return success.
     return {};
 }
 
