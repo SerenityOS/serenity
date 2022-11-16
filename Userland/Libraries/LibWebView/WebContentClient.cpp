@@ -191,6 +191,11 @@ void WebContentClient::did_request_prompt(String const& message, String const& d
     m_view.notify_server_did_request_prompt({}, message, default_);
 }
 
+void WebContentClient::did_request_set_prompt_text(String const& message)
+{
+    m_view.notify_server_did_request_set_prompt_text({}, message);
+}
+
 void WebContentClient::did_request_accept_dialog()
 {
     m_view.notify_server_did_request_accept_dialog({});

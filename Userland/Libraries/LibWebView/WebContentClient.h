@@ -60,6 +60,7 @@ private:
     virtual void did_request_alert(String const&) override;
     virtual void did_request_confirm(String const&) override;
     virtual void did_request_prompt(String const&, String const&) override;
+    virtual void did_request_set_prompt_text(String const& message) override;
     virtual void did_request_accept_dialog() override;
     virtual void did_request_dismiss_dialog() override;
     virtual Messages::WebContentClient::DidRequestAllCookiesResponse did_request_all_cookies(AK::URL const&) override;
