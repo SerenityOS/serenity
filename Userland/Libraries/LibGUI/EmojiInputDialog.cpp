@@ -98,7 +98,8 @@ EmojiInputDialog::EmojiInputDialog(Window* parent_window)
     if (!main_widget.load_from_gml(emoji_input_dialog_gml))
         VERIFY_NOT_REACHED();
 
-    set_frameless(true);
+    set_window_type(GUI::WindowType::Popup);
+    set_window_mode(GUI::WindowMode::Modeless);
     set_blocks_emoji_input(true);
     resize(400, 300);
 

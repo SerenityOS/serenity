@@ -175,7 +175,8 @@ private:
 CommandPalette::CommandPalette(GUI::Window& parent_window, ScreenPosition screen_position)
     : GUI::Dialog(&parent_window, screen_position)
 {
-    set_frameless(true);
+    set_window_type(GUI::WindowType::Popup);
+    set_window_mode(GUI::WindowMode::Modeless);
     set_blocks_emoji_input(true);
     resize(450, 300);
 
