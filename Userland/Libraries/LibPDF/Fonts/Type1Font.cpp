@@ -122,11 +122,22 @@ float Type1Font::get_char_width(u16 char_code, float) const
 
 void Type1Font::draw_glyph(Gfx::Painter& painter, Gfx::IntPoint const& point, float width, u32 code_point, Color color)
 {
-    // FIXME: Make a glyph cache
-    if (m_data.font_program) {
-        auto path = m_data.font_program->build_char(code_point, { point.x(), point.y() }, width);
-        Gfx::AntiAliasingPainter aa_painter(painter);
-        aa_painter.fill_path(path, color, Gfx::Painter::WindingRule::EvenOdd);
+    if (!m_data.font_program)
+        return;
+
+    RefPtr<Gfx::Bitmap> bitmap;
+
+    auto maybe_bitmap = m_glyph_cache.get(code_point);
+    if (maybe_bitmap.has_value()) {
+        bitmap = maybe_bitmap.value();
+    } else {
+        bitmap = m_data.font_program->rasterize_glyph(code_point, width);
+        m_glyph_cache.set(code_point, bitmap);
     }
+
+    auto translation = m_data.font_program->glyph_translation(code_point, width);
+    painter.blit_filtered(point.translated(translation.to_rounded<int>()), *bitmap, bitmap->rect(), [color](Color pixel) -> Color {
+        return pixel.multiply(color);
+    });
 }
 }

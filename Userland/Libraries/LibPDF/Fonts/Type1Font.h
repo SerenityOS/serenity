@@ -40,6 +40,7 @@ public:
 
 private:
     Data m_data;
+    HashMap<u32, RefPtr<Gfx::Bitmap>> m_glyph_cache;
 };
 
 }

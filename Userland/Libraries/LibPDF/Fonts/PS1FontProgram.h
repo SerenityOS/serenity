@@ -20,9 +20,11 @@ class PS1FontProgram : public RefCounted<PS1FontProgram> {
 public:
     PDFErrorOr<void> parse(ReadonlyBytes const&, size_t cleartext_length, size_t encrypted_length);
 
-    Gfx::Path build_char(u32 code_point, Gfx::FloatPoint const& point, float width);
+    RefPtr<Gfx::Bitmap> rasterize_glyph(u32 code_point, float width);
+    Gfx::Path build_char(u32 code_point, float width);
 
     RefPtr<Encoding> encoding() const { return m_encoding; }
+    Gfx::FloatPoint glyph_translation(u32 code_point, float width) const;
 
 private:
     struct Glyph {
@@ -45,6 +47,8 @@ private:
         size_t postscript_sp { 0 };
         Array<float, 24> postscript_stack;
     };
+
+    Gfx::AffineTransform glyph_transform_to_device_space(Glyph const&, float width) const;
 
     PDFErrorOr<Glyph> parse_glyph(ReadonlyBytes const&, GlyphParserState&);
     PDFErrorOr<void> parse_encrypted_portion(ByteBuffer const&);
