@@ -16,7 +16,7 @@
 
 #define PAGE_ROUND_UP(x) ((((size_t)(x)) + PAGE_SIZE - 1) & (~(PAGE_SIZE - 1)))
 
-static constexpr unsigned short size_classes[] = { 16, 32, 64, 128, 256, 496, 1008, 2032, 4080, 8176, 16368, 32752, 0 };
+static constexpr unsigned short size_classes[] = { 16, 32, 64, 128, 256, 496, 1008, 2032, 4080, 8176, 16368, 32736, 0 };
 static constexpr size_t num_size_classes = (sizeof(size_classes) / sizeof(unsigned short)) - 1;
 
 consteval bool check_size_classes_alignment()
