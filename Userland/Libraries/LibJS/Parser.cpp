@@ -1520,10 +1520,10 @@ Parser::PrimaryExpressionParseResult Parser::parse_primary_expression()
             goto read_as_identifier;
         return { parse_await_expression() };
     case TokenType::PrivateIdentifier:
-        if (next_token().type() != TokenType::In)
-            syntax_error("Cannot have a private identifier in expression if not followed by 'in'");
         if (!is_private_identifier_valid())
             syntax_error(String::formatted("Reference to undeclared private field or method '{}'", m_state.current_token.value()));
+        if (next_token().type() != TokenType::In)
+            syntax_error("Cannot have a private identifier in expression if not followed by 'in'");
         return { create_ast_node<PrivateIdentifier>({ m_state.current_token.filename(), rule_start.position(), position() }, consume().value()) };
     default:
         if (match_identifier_name())
