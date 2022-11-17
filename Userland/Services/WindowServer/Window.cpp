@@ -110,8 +110,10 @@ Window::Window(ConnectionFromClient& client, WindowType window_type, WindowMode 
 {
     if (parent_window)
         set_parent_window(*parent_window);
-    if (auto title_username_maybe = compute_title_username(&client); !title_username_maybe.is_error())
-        m_title_username = title_username_maybe.release_value();
+    if (!is_frameless() && type() == WindowType::Normal) {
+        if (auto title_username_maybe = compute_title_username(&client); !title_username_maybe.is_error())
+            m_title_username = title_username_maybe.release_value();
+    }
     WindowManager::the().add_window(*this);
     frame().window_was_constructed({});
 }
