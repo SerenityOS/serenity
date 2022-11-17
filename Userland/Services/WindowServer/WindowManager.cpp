@@ -2374,4 +2374,18 @@ bool WindowManager::sync_config_to_disk()
     return true;
 }
 
+Window* WindowManager::foremost_popup_window(WindowStack& stack)
+{
+    Window* popup_window = nullptr;
+    for_each_visible_window_from_front_to_back([&](Window& window) {
+        if (window.type() == WindowType::Popup) {
+            popup_window = &window;
+            return IterationDecision::Break;
+        }
+        return IterationDecision::Continue;
+    },
+        &stack);
+    return popup_window;
+}
+
 }

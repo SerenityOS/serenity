@@ -98,6 +98,7 @@ public:
         return m_current_window_stack->active_window();
     }
 
+    Window* foremost_popup_window(WindowStack& stack = WindowManager::the().current_window_stack());
     Window* active_input_window()
     {
         VERIFY(m_current_window_stack);
