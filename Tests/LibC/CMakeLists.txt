@@ -20,6 +20,7 @@ set(TEST_SOURCES
     TestPThreadPriority.cpp
     TestPthreadSpinLocks.cpp
     TestPthreadRWLocks.cpp
+    TestPwd.cpp
     TestQsort.cpp
     TestRaise.cpp
     TestRealpath.cpp
