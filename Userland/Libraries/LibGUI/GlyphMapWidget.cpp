@@ -259,11 +259,9 @@ void GlyphMapWidget::doubleclick_event(MouseEvent& event)
 
 void GlyphMapWidget::keydown_event(KeyEvent& event)
 {
-    Widget::keydown_event(event);
-
     int range_offset = m_active_range.first;
 
-    if (!event.ctrl() && !event.shift()) {
+    if (!event.ctrl() && !event.shift() && event.key() != KeyCode::Key_Delete) {
         m_selection.set_size(1);
         m_selection.set_start(m_active_glyph);
     }
@@ -335,6 +333,8 @@ void GlyphMapWidget::keydown_event(KeyEvent& event)
         set_active_glyph(end_of_row);
         return;
     }
+
+    event.ignore();
 }
 
 void GlyphMapWidget::did_change_font()
