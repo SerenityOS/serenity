@@ -3174,6 +3174,9 @@ NonnullRefPtr<OptionalChain> Parser::parse_optional_chain(NonnullRefPtr<Expressi
         } else if (match(TokenType::Period)) {
             consume();
             if (match(TokenType::PrivateIdentifier)) {
+                if (!is_private_identifier_valid())
+                    syntax_error(String::formatted("Reference to undeclared private field or method '{}'", m_state.current_token.value()));
+
                 auto start = position();
                 auto private_identifier = consume();
                 chain.append(OptionalChain::PrivateMemberReference {

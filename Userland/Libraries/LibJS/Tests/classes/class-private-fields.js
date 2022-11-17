@@ -148,3 +148,38 @@ test("using 'arguments' via indirect eval throws at runtime instead of parse tim
         }
     }).toThrowWithMessage(ReferenceError, "'arguments' is not defined");
 });
+
+test("unknown private name gives SyntaxError", () => {
+    expect(`#n`).not.toEval();
+    expect(`obj.#n`).not.toEval();
+    expect(`this.#n`).not.toEval();
+    expect(`if (#n) 1;`).not.toEval();
+    expect(`1?.#n`).not.toEval();
+    expect(`1?.n.#n`).not.toEval();
+});
+
+// OSS-FUZZ Issue 53363: top level unknown private names seg faults
+expect(() => eval(`#n`)).toThrowWithMessage(
+    SyntaxError,
+    "Reference to undeclared private field or method '#n'"
+);
+expect(() => eval(`obj.#n`)).toThrowWithMessage(
+    SyntaxError,
+    "Reference to undeclared private field or method '#n'"
+);
+expect(() => eval(`this.#n`)).toThrowWithMessage(
+    SyntaxError,
+    "Reference to undeclared private field or method '#n'"
+);
+expect(() => eval(`if (#n) 1;`)).toThrowWithMessage(
+    SyntaxError,
+    "Reference to undeclared private field or method '#n'"
+);
+expect(() => eval(`1?.#n`)).toThrowWithMessage(
+    SyntaxError,
+    "Reference to undeclared private field or method '#n'"
+);
+expect(() => eval(`1?.n.#n`)).toThrowWithMessage(
+    SyntaxError,
+    "Reference to undeclared private field or method '#n'"
+);
