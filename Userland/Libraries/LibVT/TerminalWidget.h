@@ -96,6 +96,8 @@ public:
 
     void set_color_scheme(StringView);
 
+    void set_logical_focus(bool);
+
     VT::CursorShape cursor_shape() { return m_cursor_shape; }
     virtual void set_cursor_blinking(bool) override;
     virtual void set_cursor_shape(CursorShape) override;
@@ -135,8 +137,6 @@ private:
 
     // ^GUI::Clipboard::ClipboardClient
     virtual void clipboard_content_did_change(String const&) override { update_paste_action(); }
-
-    void set_logical_focus(bool);
 
     void send_non_user_input(ReadonlyBytes);
 
