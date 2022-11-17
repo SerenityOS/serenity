@@ -99,6 +99,7 @@ public:
     }
 
     Window* foremost_popup_window(WindowStack& stack = WindowManager::the().current_window_stack());
+    void request_close_fragile_windows(WindowStack& stack = WindowManager::the().current_window_stack());
     Window* active_input_window()
     {
         VERIFY(m_current_window_stack);
@@ -301,11 +302,21 @@ public:
     {
         switch (window_type) {
         case WindowType::Normal:
-        case WindowType::Tooltip:
-        case WindowType::Popup:
             return false;
         default:
             return true;
+        }
+    }
+
+    static constexpr bool is_fragile_window_type(WindowType window_type)
+    {
+        switch (window_type) {
+        case WindowType::Autocomplete:
+        case WindowType::Popup:
+        case WindowType::Tooltip:
+            return true;
+        default:
+            return false;
         }
     }
 

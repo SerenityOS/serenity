@@ -2388,4 +2388,14 @@ Window* WindowManager::foremost_popup_window(WindowStack& stack)
     return popup_window;
 }
 
+void WindowManager::request_close_fragile_windows(WindowStack& stack)
+{
+    for_each_visible_window_from_back_to_front([&](Window& window) {
+        if (is_fragile_window_type(window.type()))
+            window.request_close();
+        return IterationDecision::Continue;
+    },
+        &stack);
+}
+
 }
