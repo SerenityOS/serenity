@@ -452,7 +452,7 @@ void Window::event(Core::Event& event)
 
     if (blocking_modal_window()) {
         // Allow windows to process their inactivity after being blocked
-        if (event.type() != Event::WindowDeactivated && event.type() != Event::WindowInputLeft)
+        if (event.type() != Event::WindowDeactivated && event.type() != Event::WindowInputPreempted)
             return;
     }
 
@@ -482,11 +482,11 @@ void Window::event(Core::Event& event)
     case Event::WindowDeactivated:
         m_client->async_window_deactivated(m_window_id);
         break;
-    case Event::WindowInputEntered:
-        m_client->async_window_input_entered(m_window_id);
+    case Event::WindowInputPreempted:
+        m_client->async_window_input_preempted(m_window_id);
         break;
-    case Event::WindowInputLeft:
-        m_client->async_window_input_left(m_window_id);
+    case Event::WindowInputRestored:
+        m_client->async_window_input_restored(m_window_id);
         break;
     case Event::WindowCloseRequest:
         m_client->async_window_close_request(m_window_id);

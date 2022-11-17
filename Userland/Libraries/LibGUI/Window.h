@@ -97,6 +97,7 @@ public:
     Function<void()> on_close;
     Function<CloseRequestDecision()> on_close_request;
     Function<void(bool is_active_input)> on_active_input_change;
+    Function<void(bool is_preempted)> on_input_preemption_change;
     Function<void(bool is_active_window)> on_active_window_change;
     Function<void(InputPreemptor)> on_input_preemption;
 
@@ -259,7 +260,7 @@ private:
     void handle_multi_paint_event(MultiPaintEvent&);
     void handle_key_event(KeyEvent&);
     void handle_resize_event(ResizeEvent&);
-    void handle_input_entered_or_left_event(Core::Event&);
+    void handle_input_preemption_event(Core::Event&);
     void handle_became_active_or_inactive_event(Core::Event&);
     void handle_close_request();
     void handle_theme_change_event(ThemeChangeEvent&);

@@ -522,15 +522,14 @@ void Window::handle_resize_event(ResizeEvent& event)
         m_main_widget->set_relative_rect({ {}, new_size });
 }
 
-void Window::handle_input_entered_or_left_event(Core::Event& event)
+void Window::handle_input_preemption_event(Core::Event& event)
 {
-    m_is_active_input = event.type() == Event::WindowInputEntered;
-    if (on_active_input_change)
-        on_active_input_change(m_is_active_input);
-    if (m_main_widget)
-        m_main_widget->dispatch_event(event, this);
-    if (m_focused_widget)
-        m_focused_widget->update();
+    if (on_input_preemption_change)
+        on_input_preemption_change(event.type() == Event::WindowInputPreempted);
+    if (!m_focused_widget)
+        return;
+    m_focused_widget->set_focus_preempted(event.type() == Event::WindowInputPreempted);
+    m_focused_widget->update();
 }
 
 void Window::handle_became_active_or_inactive_event(Core::Event& event)
@@ -543,8 +542,11 @@ void Window::handle_became_active_or_inactive_event(Core::Event& event)
         on_active_window_change(event.type() == Event::WindowBecameActive);
     if (m_main_widget)
         m_main_widget->dispatch_event(event, this);
-    if (m_focused_widget)
+    if (m_focused_widget) {
+        if (event.type() == Event::WindowBecameActive)
+            m_focused_widget->set_focus_preempted(false);
         m_focused_widget->update();
+    }
 }
 
 void Window::handle_close_request()
@@ -678,8 +680,8 @@ void Window::event(Core::Event& event)
     if (event.type() == Event::WindowBecameActive || event.type() == Event::WindowBecameInactive)
         return handle_became_active_or_inactive_event(event);
 
-    if (event.type() == Event::WindowInputEntered || event.type() == Event::WindowInputLeft)
-        return handle_input_entered_or_left_event(event);
+    if (event.type() == Event::WindowInputPreempted || event.type() == Event::WindowInputRestored)
+        return handle_input_preemption_event(event);
 
     if (event.type() == Event::WindowCloseRequest)
         return handle_close_request();

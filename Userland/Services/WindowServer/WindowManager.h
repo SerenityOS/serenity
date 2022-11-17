@@ -341,9 +341,9 @@ private:
     explicit WindowManager(Gfx::PaletteImpl const&);
 
     void notify_new_active_window(Window&);
-    void notify_new_active_input_window(Window&);
     void notify_previous_active_window(Window&);
-    void notify_previous_active_input_window(Window&);
+    void notify_active_window_input_preempted();
+    void notify_active_window_input_restored();
 
     void process_mouse_event(MouseEvent&);
     void process_event_for_doubleclick(Window& window, MouseEvent& event);
