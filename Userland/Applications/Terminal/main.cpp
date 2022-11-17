@@ -423,6 +423,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return GUI::Window::CloseRequestDecision::StayOpen;
     };
 
+    window->on_input_preemption_change = [&](bool is_preempted) {
+        terminal->set_logical_focus(!is_preempted);
+    };
+
     TRY(Core::System::unveil("/sys/kernel/processes", "r"));
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil("/bin", "r"));
