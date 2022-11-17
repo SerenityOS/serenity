@@ -7,6 +7,8 @@
 
 #pragma once
 
+#include <AK/Concepts.h>
+#include <AK/Error.h>
 #include <AK/HashMap.h>
 #include <AK/JsonArray.h>
 #include <AK/JsonObjectSerializer.h>
@@ -16,6 +18,9 @@
 namespace AK {
 
 class JsonObject {
+    template<typename Callback>
+    using CallbackErrorType = decltype(declval<Callback>()(declval<String const&>(), declval<JsonValue const&>()).release_error());
+
 public:
     JsonObject() = default;
     ~JsonObject() = default;
@@ -140,6 +145,14 @@ public:
     {
         for (auto const& member : m_members)
             callback(member.key, member.value);
+    }
+
+    template<FallibleFunction<String const&, JsonValue const&> Callback>
+    ErrorOr<void, CallbackErrorType<Callback>> try_for_each_member(Callback&& callback) const
+    {
+        for (auto const& member : m_members)
+            TRY(callback(member.key, member.value));
+        return {};
     }
 
     bool remove(StringView key)
