@@ -503,6 +503,9 @@ void Window::handle_key_event(KeyEvent& event)
     if (event.is_accepted())
         return;
 
+    if (is_blocking() || is_popup())
+        return;
+
     // Only process shortcuts if this is a keydown event.
     if (event.type() == Event::KeyDown)
         propagate_shortcuts_up_to_application(event, nullptr);
