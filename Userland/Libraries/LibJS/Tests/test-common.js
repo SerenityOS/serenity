@@ -381,7 +381,7 @@ class ExpectationError extends Error {
             this.__expect(
                 this.inverted ? !success : success,
                 () =>
-                    `Expected _${valueToString(this.target)}_` +
+                    `Expected _${valueToString(this.target)}_ ` +
                     (this.inverted ? "not to eval but it did" : "to eval but it didn't")
             );
         }
