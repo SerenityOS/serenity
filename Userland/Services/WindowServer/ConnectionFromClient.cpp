@@ -599,6 +599,11 @@ void ConnectionFromClient::create_window(i32 window_id, Gfx::IntRect const& rect
             did_misbehave("CreateWindow with bad parent_window_id");
             return;
         }
+
+        if (auto* blocker = parent_window->blocking_modal_window(); blocker && mode == (i32)WindowMode::Blocking) {
+            did_misbehave("CreateWindow with illegal mode: reciprocally blocked");
+            return;
+        }
     }
 
     if (type < 0 || type >= (i32)WindowType::_Count) {
