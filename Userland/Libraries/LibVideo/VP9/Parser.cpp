@@ -908,41 +908,38 @@ void Parser::clear_left_context()
     clear_context(m_left_partition_context, m_sb64_rows * 8);
 }
 
-DecoderErrorOr<void> Parser::decode_partition(u32 row, u32 col, BlockSubsize block_subsize)
+DecoderErrorOr<void> Parser::decode_partition(u32 row, u32 column, BlockSubsize subsize)
 {
-    if (row >= m_mi_rows || col >= m_mi_cols)
+    if (row >= m_mi_rows || column >= m_mi_cols)
         return {};
-    m_block_subsize = block_subsize;
-    m_num_8x8 = num_8x8_blocks_wide_lookup[block_subsize];
-    auto half_block_8x8 = m_num_8x8 >> 1;
-    m_has_rows = (row + half_block_8x8) < m_mi_rows;
-    m_has_cols = (col + half_block_8x8) < m_mi_cols;
-    m_row = row;
-    m_col = col;
-    auto partition = TRY_READ(TreeParser::parse_partition(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter, m_has_rows, m_has_cols, m_block_subsize, m_num_8x8, m_above_partition_context, m_left_partition_context, row, col, m_frame_is_intra));
+    u8 num_8x8 = num_8x8_blocks_wide_lookup[subsize];
+    auto half_block_8x8 = num_8x8 >> 1;
+    bool has_rows = (row + half_block_8x8) < m_mi_rows;
+    bool has_cols = (column + half_block_8x8) < m_mi_cols;
+    auto partition = TRY_READ(TreeParser::parse_partition(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter, has_rows, has_cols, subsize, num_8x8, m_above_partition_context, m_left_partition_context, row, column, m_frame_is_intra));
 
-    auto subsize = subsize_lookup[partition][block_subsize];
-    if (subsize < Block_8x8 || partition == PartitionNone) {
-        TRY(decode_block(row, col, subsize));
+    auto child_subsize = subsize_lookup[partition][subsize];
+    if (child_subsize < Block_8x8 || partition == PartitionNone) {
+        TRY(decode_block(row, column, child_subsize));
     } else if (partition == PartitionHorizontal) {
-        TRY(decode_block(row, col, subsize));
-        if (m_has_rows)
-            TRY(decode_block(row + half_block_8x8, col, subsize));
+        TRY(decode_block(row, column, child_subsize));
+        if (has_rows)
+            TRY(decode_block(row + half_block_8x8, column, child_subsize));
     } else if (partition == PartitionVertical) {
-        TRY(decode_block(row, col, subsize));
-        if (m_has_cols)
-            TRY(decode_block(row, col + half_block_8x8, subsize));
+        TRY(decode_block(row, column, child_subsize));
+        if (has_cols)
+            TRY(decode_block(row, column + half_block_8x8, child_subsize));
     } else {
-        TRY(decode_partition(row, col, subsize));
-        TRY(decode_partition(row, col + half_block_8x8, subsize));
-        TRY(decode_partition(row + half_block_8x8, col, subsize));
-        TRY(decode_partition(row + half_block_8x8, col + half_block_8x8, subsize));
+        TRY(decode_partition(row, column, child_subsize));
+        TRY(decode_partition(row, column + half_block_8x8, child_subsize));
+        TRY(decode_partition(row + half_block_8x8, column, child_subsize));
+        TRY(decode_partition(row + half_block_8x8, column + half_block_8x8, child_subsize));
     }
-    if (block_subsize == Block_8x8 || partition != PartitionSplit) {
-        auto above_context = 15 >> b_width_log2_lookup[subsize];
-        auto left_context = 15 >> b_height_log2_lookup[subsize];
-        for (size_t i = 0; i < m_num_8x8; i++) {
-            m_above_partition_context[col + i] = above_context;
+    if (subsize == Block_8x8 || partition != PartitionSplit) {
+        auto above_context = 15 >> b_width_log2_lookup[child_subsize];
+        auto left_context = 15 >> b_height_log2_lookup[child_subsize];
+        for (size_t i = 0; i < num_8x8; i++) {
+            m_above_partition_context[column + i] = above_context;
             m_left_partition_context[row + i] = left_context;
         }
     }

@@ -104,7 +104,7 @@ private:
     u32 get_tile_offset(u32 tile_num, u32 mis, u32 tile_size_log2);
     DecoderErrorOr<void> decode_tile();
     void clear_left_context();
-    DecoderErrorOr<void> decode_partition(u32 row, u32 col, BlockSubsize block_subsize);
+    DecoderErrorOr<void> decode_partition(u32 row, u32 column, BlockSubsize subsize);
     DecoderErrorOr<void> decode_block(u32 row, u32 col, BlockSubsize subsize);
     DecoderErrorOr<void> mode_info();
     DecoderErrorOr<void> intra_frame_mode_info();
@@ -224,15 +224,8 @@ private:
     //
     // skip may be set to 0 even if transform blocks contain immediate end of block markers.
     bool m_skip { false };
-    u8 m_num_8x8 { 0 };
-    bool m_has_rows { false };
-    bool m_has_cols { false };
     TXSize m_max_tx_size { TX_4x4 };
     BlockSubsize m_block_subsize { BlockSubsize::Block_4x4 };
-    // The row to use for getting partition tree probability lookups.
-    u32 m_row { 0 };
-    // The column to use for getting partition tree probability lookups.
-    u32 m_col { 0 };
     TXSize m_tx_size { TX_4x4 };
     ReferenceFramePair m_ref_frame;
     bool m_is_inter { false };
