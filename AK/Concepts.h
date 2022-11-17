@@ -111,12 +111,20 @@ concept IterableContainer = requires
     { declval<T>().begin() } -> IteratorPairWith<decltype(declval<T>().end())>;
 };
 
+template<typename Func, typename... Args>
+concept FallibleFunction = requires(Func&& func, Args&&... args) {
+    func(forward<Args>(args)...).is_error();
+    func(forward<Args>(args)...).release_error();
+    func(forward<Args>(args)...).release_value();
+};
+
 // clang-format on
 }
 
 using AK::Concepts::Arithmetic;
 using AK::Concepts::ArrayLike;
 using AK::Concepts::Enum;
+using AK::Concepts::FallibleFunction;
 using AK::Concepts::FloatingPoint;
 using AK::Concepts::Fundamental;
 using AK::Concepts::Integral;
