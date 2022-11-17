@@ -160,30 +160,12 @@ void AutocompleteBox::close()
 
 void AutocompleteBox::next_suggestion()
 {
-    GUI::ModelIndex new_index = m_suggestion_view->selection().first();
-    if (new_index.is_valid())
-        new_index = m_suggestion_view->model()->index(new_index.row() + 1);
-    else
-        new_index = m_suggestion_view->model()->index(0);
-
-    if (m_suggestion_view->model()->is_within_range(new_index)) {
-        m_suggestion_view->selection().set(new_index);
-        m_suggestion_view->scroll_into_view(new_index, Orientation::Vertical);
-    }
+    m_suggestion_view->move_cursor(GUI::AbstractView::CursorMovement::Down, GUI::AbstractView::SelectionUpdate::Set);
 }
 
 void AutocompleteBox::previous_suggestion()
 {
-    GUI::ModelIndex new_index = m_suggestion_view->selection().first();
-    if (new_index.is_valid())
-        new_index = m_suggestion_view->model()->index(new_index.row() - 1);
-    else
-        new_index = m_suggestion_view->model()->index(0);
-
-    if (m_suggestion_view->model()->is_within_range(new_index)) {
-        m_suggestion_view->selection().set(new_index);
-        m_suggestion_view->scroll_into_view(new_index, Orientation::Vertical);
-    }
+    m_suggestion_view->move_cursor(GUI::AbstractView::CursorMovement::Up, GUI::AbstractView::SelectionUpdate::Set);
 }
 
 CodeComprehension::AutocompleteResultEntry::HideAutocompleteAfterApplying AutocompleteBox::apply_suggestion()
