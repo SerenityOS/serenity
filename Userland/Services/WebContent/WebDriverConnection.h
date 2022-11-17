@@ -37,6 +37,9 @@ private:
     virtual void die() override { }
 
     virtual void close_session() override;
+    virtual void set_page_load_strategy(Web::WebDriver::PageLoadStrategy const& page_load_strategy) override;
+    virtual void set_unhandled_prompt_behavior(Web::WebDriver::UnhandledPromptBehavior const& unhandled_prompt_behavior) override;
+    virtual void set_strict_file_interactability(bool strict_file_interactability) override;
     virtual void set_is_webdriver_active(bool) override;
     virtual Messages::WebDriverClient::GetTimeoutsResponse get_timeouts() override;
     virtual Messages::WebDriverClient::SetTimeoutsResponse set_timeouts(JsonValue const& payload) override;
@@ -101,6 +104,15 @@ private:
 
     ConnectionFromClient& m_web_content_client;
     PageHost& m_page_host;
+
+    // https://w3c.github.io/webdriver/#dfn-page-load-strategy
+    Web::WebDriver::PageLoadStrategy m_page_load_strategy { Web::WebDriver::PageLoadStrategy::Normal };
+
+    // https://w3c.github.io/webdriver/#dfn-unhandled-prompt-behavior
+    Web::WebDriver::UnhandledPromptBehavior m_unhandled_prompt_behavior { Web::WebDriver::UnhandledPromptBehavior::DismissAndNotify };
+
+    // https://w3c.github.io/webdriver/#dfn-strict-file-interactability
+    bool m_strict_file_interactability { false };
 
     // https://w3c.github.io/webdriver/#dfn-session-script-timeout
     Web::WebDriver::TimeoutsConfiguration m_timeouts_configuration;
