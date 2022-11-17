@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibGfx/Font/PathRasterizer.h>
 #include <LibPDF/CommonNames.h>
 #include <LibPDF/Encoding.h>
 #include <LibPDF/Fonts/PS1FontProgram.h>
@@ -86,20 +87,61 @@ PDFErrorOr<void> PS1FontProgram::parse(ReadonlyBytes const& bytes, size_t cleart
     return parse_encrypted_portion(decrypted);
 }
 
-Gfx::Path PS1FontProgram::build_char(u32 code_point, Gfx::FloatPoint const& point, float width)
+RefPtr<Gfx::Bitmap> PS1FontProgram::rasterize_glyph(u32 code_point, float width)
 {
-    if (!m_glyph_map.contains(code_point))
+    auto path = build_char(code_point, width);
+    auto bounding_box = path.bounding_box().size();
+
+    u32 w = (u32)ceilf(bounding_box.width()) + 1;
+    u32 h = (u32)ceilf(bounding_box.height()) + 1;
+
+    Gfx::PathRasterizer rasterizer(Gfx::IntSize(w, h));
+    rasterizer.draw_path(path);
+    return rasterizer.accumulate();
+}
+
+Gfx::Path PS1FontProgram::build_char(u32 code_point, float width)
+{
+    auto maybe_glyph = m_glyph_map.get(code_point);
+    if (!maybe_glyph.has_value())
         return {};
 
-    auto glyph = m_glyph_map.get(code_point).value();
+    auto& glyph = maybe_glyph.value();
+    auto transform = glyph_transform_to_device_space(glyph, width);
+
+    // Translate such that the top-left point is at [0, 0].
+    auto bounding_box = glyph.path.bounding_box();
+    Gfx::FloatPoint translation(-bounding_box.x(), -(bounding_box.y() + bounding_box.height()));
+    transform.translate(translation);
+
+    return glyph.path.copy_transformed(transform);
+}
+
+Gfx::FloatPoint PS1FontProgram::glyph_translation(u32 code_point, float width) const
+{
+    auto maybe_glyph = m_glyph_map.get(code_point);
+    if (!maybe_glyph.has_value())
+        return {};
+
+    auto& glyph = maybe_glyph.value();
+    auto transform = glyph_transform_to_device_space(glyph, width);
+
+    // Undo the translation we applied earlier.
+    auto bounding_box = glyph.path.bounding_box();
+    Gfx::FloatPoint translation(bounding_box.x(), bounding_box.y() + bounding_box.height());
+
+    return transform.map(translation);
+}
+
+Gfx::AffineTransform PS1FontProgram::glyph_transform_to_device_space(Glyph const& glyph, float width) const
+{
     auto scale = width / (m_font_matrix.a() * glyph.width + m_font_matrix.e());
     auto transform = m_font_matrix;
 
     // Convert character space to device space.
     transform.scale(scale, -scale);
-    transform.set_translation(point);
 
-    return glyph.path.copy_transformed(transform);
+    return transform;
 }
 
 PDFErrorOr<PS1FontProgram::Glyph> PS1FontProgram::parse_glyph(ReadonlyBytes const& data, GlyphParserState& state)
