@@ -219,6 +219,22 @@ void Window::handle_mouse_event(MouseEvent const& event)
     }
 }
 
+bool Window::has_non_movable_child()
+{
+    bool value = false;
+    if (m_child_windows.is_empty())
+        return value;
+    for (auto& child : m_child_windows) {
+        if (!child)
+            continue;
+        if (!child->is_movable() && child->is_visible()) {
+            child->request_close();
+            value = true;
+        }
+    }
+    return value;
+}
+
 void Window::update_window_menu_items()
 {
     if (!m_window_menu)

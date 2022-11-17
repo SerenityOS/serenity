@@ -134,6 +134,7 @@ public:
     bool is_occluded() const { return m_occluded; }
     void set_occluded(bool);
 
+    bool has_non_movable_child();
     bool is_movable() const { return m_type == WindowType::Normal; }
 
     WindowFrame& frame() { return m_frame; }

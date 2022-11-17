@@ -1223,7 +1223,7 @@ void WindowManager::process_mouse_event_for_window(HitTestResult& result, MouseE
     // First check if we should initiate a move or resize (Super+LMB or Super+RMB).
     // In those cases, the event is swallowed by the window manager.
     if (!blocking_modal_window && window.is_movable()) {
-        if (!window.is_fullscreen() && m_keyboard_modifiers == Mod_Super && event.type() == Event::MouseDown && event.button() == MouseButton::Primary) {
+        if (!window.is_fullscreen() && m_keyboard_modifiers == Mod_Super && event.type() == Event::MouseDown && event.button() == MouseButton::Primary && !window.has_non_movable_child()) {
             start_window_move(window, event);
             return;
         }
