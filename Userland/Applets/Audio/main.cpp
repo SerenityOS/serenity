@@ -78,9 +78,7 @@ private:
     ErrorOr<void> try_initialize_graphical_elements()
     {
         m_slider_window = add<GUI::Window>(window());
-        m_slider_window->set_frameless(true);
-        m_slider_window->set_resizable(false);
-        m_slider_window->set_minimizable(false);
+        m_slider_window->set_window_type(GUI::WindowType::Popup);
 
         m_root_container = TRY(m_slider_window->try_set_main_widget<GUI::Frame>());
         m_root_container->set_fill_with_background_color(true);

@@ -37,10 +37,8 @@ ClockWidget::ClockWidget()
     });
 
     m_calendar_window = add<GUI::Window>(window());
+    m_calendar_window->set_window_type(GUI::WindowType::Popup);
     m_calendar_window->resize(m_window_size.width(), m_window_size.height());
-    m_calendar_window->set_frameless(true);
-    m_calendar_window->set_resizable(false);
-    m_calendar_window->set_minimizable(false);
 
     auto& root_container = m_calendar_window->set_main_widget<GUI::Frame>();
     root_container.set_fill_with_background_color(true);

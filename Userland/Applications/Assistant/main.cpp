@@ -315,7 +315,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         update_ui_timer->restart();
     };
 
-    window->set_frameless(true);
+    window->set_window_type(GUI::WindowType::Popup);
+    window->set_obey_widget_min_size(false);
     window->set_forced_shadow(true);
     window->resize(GUI::Desktop::the().rect().width() / 3, 46);
     window->center_on_screen();
