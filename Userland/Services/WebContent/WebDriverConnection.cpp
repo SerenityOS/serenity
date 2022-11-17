@@ -280,6 +280,21 @@ void WebDriverConnection::close_session()
         m_page_host.page().top_level_browsing_context().close();
 }
 
+void WebDriverConnection::set_page_load_strategy(Web::WebDriver::PageLoadStrategy const& page_load_strategy)
+{
+    m_page_load_strategy = page_load_strategy;
+}
+
+void WebDriverConnection::set_unhandled_prompt_behavior(Web::WebDriver::UnhandledPromptBehavior const& unhandled_prompt_behavior)
+{
+    m_unhandled_prompt_behavior = unhandled_prompt_behavior;
+}
+
+void WebDriverConnection::set_strict_file_interactability(bool strict_file_interactability)
+{
+    m_strict_file_interactability = strict_file_interactability;
+}
+
 void WebDriverConnection::set_is_webdriver_active(bool is_webdriver_active)
 {
     m_page_host.set_is_webdriver_active(is_webdriver_active);

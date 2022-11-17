@@ -12,6 +12,7 @@
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
 #include <LibWeb/WebDriver/Capabilities.h>
+#include <LibWeb/WebDriver/TimeoutsConfiguration.h>
 #include <WebDriver/Client.h>
 
 namespace WebDriver {
@@ -72,6 +73,53 @@ void Client::close_session(unsigned session_id)
         dbgln_if(WEBDRIVER_DEBUG, "Unable to shut down session {}: Not found", session_id);
 }
 
+// Step 12 of https://w3c.github.io/webdriver/#dfn-new-sessions
+static void initialize_session_from_capabilities(WebContentConnection& web_content_connection, JsonObject& capabilities)
+{
+    // 1. Let strategy be the result of getting property "pageLoadStrategy" from capabilities.
+    auto const* strategy = capabilities.get_ptr("pageLoadStrategy"sv);
+
+    // 2. If strategy is a string, set the current session’s page loading strategy to strategy. Otherwise, set the page loading strategy to normal and set a property of capabilities with name "pageLoadStrategy" and value "normal".
+    if (strategy && strategy->is_string())
+        web_content_connection.async_set_page_load_strategy(Web::WebDriver::page_load_strategy_from_string(strategy->as_string()));
+    else
+        capabilities.set("pageLoadStrategy"sv, "normal"sv);
+
+    // 3. Let strictFileInteractability be the result of getting property "strictFileInteractability" from capabilities.
+    auto const* strict_file_interactiblity = capabilities.get_ptr("strictFileInteractability"sv);
+
+    // 4. If strictFileInteractability is a boolean, set the current session’s strict file interactability to strictFileInteractability. Otherwise set the current session’s strict file interactability to false.
+    if (strict_file_interactiblity && strict_file_interactiblity->is_bool())
+        web_content_connection.async_set_strict_file_interactability(strict_file_interactiblity->as_bool());
+    else
+        capabilities.set("strictFileInteractability"sv, false);
+
+    // FIXME: 5. Let proxy be the result of getting property "proxy" from capabilities and run the substeps of the first matching statement:
+    // FIXME:     proxy is a proxy configuration object
+    // FIXME:         Take implementation-defined steps to set the user agent proxy using the extracted proxy configuration. If the defined proxy cannot be configured return error with error code session not created.
+    // FIXME:     Otherwise
+    // FIXME:         Set a property of capabilities with name "proxy" and a value that is a new JSON Object.
+
+    // 6. If capabilities has a property with the key "timeouts":
+    if (auto const* timeouts = capabilities.get_ptr("timeouts"sv); timeouts && timeouts->is_object()) {
+        // a. Let timeouts be the result of trying to JSON deserialize as a timeouts configuration the value of the "timeouts" property.
+        // NOTE: This happens on the remote end.
+
+        // b. Make the session timeouts the new timeouts.
+        MUST(web_content_connection.set_timeouts(*timeouts));
+    } else {
+        // 7. Set a property on capabilities with name "timeouts" and value that of the JSON deserialization of the session timeouts.
+        capabilities.set("timeouts"sv, Web::WebDriver::timeouts_object({}));
+    }
+
+    // 8. Apply changes to the user agent for any implementation-defined capabilities selected during the capabilities processing step.
+    auto const* behavior = capabilities.get_ptr("unhandledPromptBehavior"sv);
+    if (behavior && behavior->is_string())
+        web_content_connection.async_set_unhandled_prompt_behavior(Web::WebDriver::unhandled_prompt_behavior_from_string(behavior->as_string()));
+    else
+        capabilities.set("unhandledPromptBehavior"sv, "dismiss and notify"sv);
+}
+
 // 8.1 New Session, https://w3c.github.io/webdriver/#dfn-new-sessions
 // POST /session
 Web::WebDriver::Response Client::new_session(Web::WebDriver::Parameters, JsonValue payload)
@@ -119,6 +167,11 @@ Web::WebDriver::Response Client::new_session(Web::WebDriver::Parameters, JsonVal
     // 10. Append session to active sessions.
     Client::s_sessions.append(move(session));
 
+    // NOTE: We do step 12 before 11 because step 12 mutates the capabilities we set in step 11.
+
+    // 12. Initialize the following from capabilities:
+    initialize_session_from_capabilities(web_content_connection, capabilities.as_object());
+
     // 11. Let body be a JSON Object initialized with:
     JsonObject body;
     // "sessionId"
@@ -127,9 +180,6 @@ Web::WebDriver::Response Client::new_session(Web::WebDriver::Parameters, JsonVal
     // "capabilities"
     //     capabilities
     body.set("capabilities", move(capabilities));
-
-    // FIXME: 12. Initialize the following from capabilities:
-    //            NOTE: See spec for steps
 
     // 13. Set the webdriver-active flag to true.
     web_content_connection.async_set_is_webdriver_active(true);
