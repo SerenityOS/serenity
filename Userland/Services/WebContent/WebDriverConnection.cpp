@@ -1527,27 +1527,40 @@ ErrorOr<void, Web::WebDriver::Error> WebDriverConnection::handle_any_user_prompt
         return {};
 
     // 2. Perform the following substeps based on the current session’s user prompt handler:
-
-    // FIXME: The user prompt handler is a capability-level configuration, which we have no support
-    //        for yet. It defaults to "dismiss and notify", so that is all that is handled here.
-
+    switch (m_unhandled_prompt_behavior) {
     // -> dismiss state
-    //    Dismiss the current user prompt.
+    case Web::WebDriver::UnhandledPromptBehavior::Dismiss:
+        // Dismiss the current user prompt.
+        m_page_host.dismiss_dialog();
+        break;
+
     // -> accept state
-    //    Accept the current user prompt.
+    case Web::WebDriver::UnhandledPromptBehavior::Accept:
+        // Accept the current user prompt.
+        m_page_host.accept_dialog();
+        break;
+
     // -> dismiss and notify state
-    if (true) {
+    case Web::WebDriver::UnhandledPromptBehavior::DismissAndNotify:
         // Dismiss the current user prompt.
         m_page_host.dismiss_dialog();
 
         // Return an annotated unexpected alert open error.
         return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::UnexpectedAlertOpen, "A user dialog is open"sv);
-    }
+
     // -> accept and notify state
-    //    Accept the current user prompt.
-    //    Return an annotated unexpected alert open error.
+    case Web::WebDriver::UnhandledPromptBehavior::AcceptAndNotify:
+        // Accept the current user prompt.
+        m_page_host.accept_dialog();
+
+        // Return an annotated unexpected alert open error.
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::UnexpectedAlertOpen, "A user dialog is open"sv);
+
     // -> ignore state
-    //     Return an annotated unexpected alert open error.
+    case Web::WebDriver::UnhandledPromptBehavior::Ignore:
+        // Return an annotated unexpected alert open error.
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::UnexpectedAlertOpen, "A user dialog is open"sv);
+    }
 
     // 3. Return success.
     return {};
