@@ -214,6 +214,9 @@ public:
     bool is_focused() const;
     void set_focus(bool, FocusSource = FocusSource::Programmatic);
 
+    bool focus_preempted() const { return m_focus_preempted; }
+    void set_focus_preempted(bool b) { m_focus_preempted = b; }
+
     Function<void(bool const, const FocusSource)> on_focus_change;
 
     // Returns true if this widget or one of its descendants is focused.
@@ -440,6 +443,7 @@ private:
     bool m_visible { true };
     bool m_greedy_for_hits { false };
     bool m_auto_focusable { true };
+    bool m_focus_preempted { false };
     bool m_enabled { true };
     bool m_updates_enabled { true };
     bool m_accepts_command_palette { true };

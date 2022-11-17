@@ -120,16 +120,16 @@ void ConnectionToWindowServer::window_deactivated(i32 window_id)
         Core::EventLoop::current().post_event(*window, make<Event>(Event::WindowBecameInactive));
 }
 
-void ConnectionToWindowServer::window_input_entered(i32 window_id)
+void ConnectionToWindowServer::window_input_preempted(i32 window_id)
 {
     if (auto* window = Window::from_window_id(window_id))
-        Core::EventLoop::current().post_event(*window, make<Event>(Event::WindowInputEntered));
+        Core::EventLoop::current().post_event(*window, make<Event>(Event::WindowInputPreempted));
 }
 
-void ConnectionToWindowServer::window_input_left(i32 window_id)
+void ConnectionToWindowServer::window_input_restored(i32 window_id)
 {
     if (auto* window = Window::from_window_id(window_id))
-        Core::EventLoop::current().post_event(*window, make<Event>(Event::WindowInputLeft));
+        Core::EventLoop::current().post_event(*window, make<Event>(Event::WindowInputRestored));
 }
 
 void ConnectionToWindowServer::window_close_request(i32 window_id)

@@ -37,8 +37,8 @@ private:
     virtual void key_up(i32, u32, u32, u32, u32) override;
     virtual void window_activated(i32) override;
     virtual void window_deactivated(i32) override;
-    virtual void window_input_entered(i32) override;
-    virtual void window_input_left(i32) override;
+    virtual void window_input_preempted(i32) override;
+    virtual void window_input_restored(i32) override;
     virtual void window_close_request(i32) override;
     virtual void window_resized(i32, Gfx::IntRect const&) override;
     virtual void window_moved(i32, Gfx::IntRect const&) override;

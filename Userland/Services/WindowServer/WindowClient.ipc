@@ -13,8 +13,8 @@ endpoint WindowClient
     mouse_wheel(i32 window_id, Gfx::IntPoint mouse_position, u32 button, u32 buttons, u32 modifiers, i32 wheel_delta_x, i32 wheel_delta_y, i32 wheel_raw_delta_x, i32 wheel_raw_delta_y) =|
     window_entered(i32 window_id) =|
     window_left(i32 window_id) =|
-    window_input_entered(i32 window_id) =|
-    window_input_left(i32 window_id) =|
+    window_input_preempted(i32 window_id) =|
+    window_input_restored(i32 window_id) =|
     key_down(i32 window_id, u32 code_point, u32 key, u32 modifiers, u32 scancode) =|
     key_up(i32 window_id, u32 code_point, u32 key, u32 modifiers, u32 scancode) =|
     window_activated(i32 window_id) =|
