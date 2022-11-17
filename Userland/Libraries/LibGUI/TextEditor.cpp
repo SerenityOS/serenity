@@ -727,8 +727,8 @@ void TextEditor::paint_event(PaintEvent& event)
                         visual_line_rect.height()
                     };
 
-                    Color background_color = window()->is_active() ? palette().selection() : palette().inactive_selection();
-                    Color text_color = window()->is_active() ? palette().selection_text() : palette().inactive_selection_text();
+                    Color background_color = is_focused() ? palette().selection() : palette().inactive_selection();
+                    Color text_color = is_focused() ? palette().selection_text() : palette().inactive_selection_text();
 
                     painter.fill_rect(selection_rect, background_color);
 
@@ -748,7 +748,7 @@ void TextEditor::paint_event(PaintEvent& event)
         });
     }
 
-    if (is_enabled() && is_focused() && m_cursor_state && !is_displayonly())
+    if (is_enabled() && is_focused() && !focus_preempted() && m_cursor_state && !is_displayonly())
         painter.fill_rect(cursor_content_rect(), palette().text_cursor());
 }
 
