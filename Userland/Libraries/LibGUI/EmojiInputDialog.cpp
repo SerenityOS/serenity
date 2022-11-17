@@ -19,7 +19,6 @@
 #include <LibGUI/Button.h>
 #include <LibGUI/EmojiInputDialog.h>
 #include <LibGUI/EmojiInputDialogGML.h>
-#include <LibGUI/Event.h>
 #include <LibGUI/Frame.h>
 #include <LibGUI/ScrollableContainerWidget.h>
 #include <LibGUI/TextBox.h>
@@ -260,18 +259,6 @@ void EmojiInputDialog::select_first_displayed_emoji()
 
     m_selected_emoji_text = m_first_displayed_emoji->text;
     done(ExecResult::OK);
-}
-
-void EmojiInputDialog::event(Core::Event& event)
-{
-    if (event.type() == Event::KeyDown) {
-        auto& key_event = static_cast<KeyEvent&>(event);
-        if (key_event.key() == Key_Escape) {
-            done(ExecResult::Cancel);
-            return;
-        }
-    }
-    Dialog::event(event);
 }
 
 }

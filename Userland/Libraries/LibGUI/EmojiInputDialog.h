@@ -26,7 +26,6 @@ public:
     String const& selected_emoji_text() const { return m_selected_emoji_text; }
 
 private:
-    virtual void event(Core::Event&) override;
     explicit EmojiInputDialog(Window* parent_window);
 
     Vector<Emoji> supported_emoji();
