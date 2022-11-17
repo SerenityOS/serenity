@@ -199,6 +199,7 @@ CommandPalette::CommandPalette(GUI::Window& parent_window, ScreenPosition screen
 
     m_table_view->set_column_painting_delegate(0, make<ActionIconDelegate>());
     m_table_view->set_model(*m_filter_model);
+    m_table_view->set_focus_proxy(m_text_box);
 
     m_text_box->on_change = [this] {
         m_filter_model->set_filter_term(m_text_box->text());
