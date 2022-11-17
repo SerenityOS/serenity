@@ -229,10 +229,6 @@ CommandPalette::CommandPalette(GUI::Window& parent_window, ScreenPosition screen
             close();
     };
 
-    on_input_preemption = [this](InputPreemptor preemptor) {
-        if (preemptor != InputPreemptor::ContextMenu)
-            close();
-    };
 }
 
 void CommandPalette::collect_actions(GUI::Window& parent_window)

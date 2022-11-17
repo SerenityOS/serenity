@@ -24,13 +24,4 @@ enum class WindowMode {
     _Count,
 };
 
-// InputPreemptors are Objects which take input precedence over the active input
-// window without changing its activity state or joining its modal chain
-enum class InputPreemptor {
-    ContextMenu = 0,
-    MenubarMenu,
-    OtherMenu,
-    Other,
-};
-
 }

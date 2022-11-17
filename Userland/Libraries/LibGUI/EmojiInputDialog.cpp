@@ -144,11 +144,6 @@ EmojiInputDialog::EmojiInputDialog(Window* parent_window)
             close();
     };
 
-    on_input_preemption = [this](InputPreemptor preemptor) {
-        if (preemptor != InputPreemptor::ContextMenu)
-            close();
-    };
-
     m_search_box->on_change = [this]() {
         update_displayed_emoji();
     };

@@ -355,16 +355,6 @@ void MenuManager::set_current_menu(Menu* menu)
     }
 
     m_current_menu = menu;
-
-    auto& wm = WindowManager::the();
-    if (auto* window = wm.active_input_window()) {
-        InputPreemptor preemptor { InputPreemptor::OtherMenu };
-        if (window->rect().contains(m_current_menu->unadjusted_position()))
-            preemptor = InputPreemptor::ContextMenu;
-        else if (!m_current_menu->rect_in_window_menubar().is_null())
-            preemptor = InputPreemptor::MenubarMenu;
-        wm.notify_input_preempted(*window, preemptor);
-    }
 }
 
 Menu* MenuManager::previous_menu(Menu* current)
