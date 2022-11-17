@@ -344,33 +344,91 @@ ThrowCompletionOr<TemporalTimeLikeRecord> to_temporal_time_record(VM& vm, Object
     // 2. Let partial be ? PrepareTemporalFields(temporalTimeLike, « "hour", "microsecond", "millisecond", "minute", "nanosecond", "second" », partial).
     auto* partial = TRY(prepare_temporal_fields(vm, temporal_time_like, { "hour"sv, "microsecond"sv, "millisecond"sv, "minute"sv, "nanosecond"sv, "second"sv }, PrepareTemporalFieldsPartial {}));
 
-    // 3. Let result be a new TemporalTimeLike Record with each field set to undefined.
-    auto result = TemporalTimeLikeRecord {};
-
-    // 4. For each row of Table 4, except the header row, do
-    for (auto& [field, property_name] : temporal_time_like_record_fields<TemporalTimeLikeRecord, Optional<double>>(vm)) {
-        // a. Let field be the Field Name value of the current row.
-        // b. Let propertyName be the Property Name value of the current row.
-
-        // c. Let valueDesc be OrdinaryGetOwnProperty(partial, propertyName).
-        auto value_descriptor = MUST(partial->Object::internal_get_own_property(property_name));
-
-        // d. If valueDesc is not undefined, then
-        if (value_descriptor.has_value()) {
-            // i. Assert: valueDesc is a data Property Descriptor.
-            VERIFY(value_descriptor->is_data_descriptor());
-
-            // ii. Set the field of result whose name is field to ℝ(valueDesc.[[Value]]).
-            result.*field = value_descriptor->value->as_double();
-        }
-        // e. Else if completeness is complete, then
-        else if (completeness == ToTemporalTimeRecordCompleteness::Complete) {
-            // i. Set the field of result whose name is field to 0.
-            result.*field = 0;
-        }
+    TemporalTimeLikeRecord result;
+    // 3. If completeness is complete, then
+    if (completeness == ToTemporalTimeRecordCompleteness::Complete) {
+        // a. Let result be a new TemporalTimeLike Record with each field set to 0.
+        result = TemporalTimeLikeRecord { 0, 0, 0, 0, 0, 0 };
+    }
+    // 4. Else,
+    else {
+        // a. Let result be a new TemporalTimeLike Record with each field set to undefined.
+        result = TemporalTimeLikeRecord {};
     }
 
-    // 6. Return result.
+    // 5. Let hourDesc be OrdinaryGetOwnProperty(partial, "hour").
+    auto hour_desc = MUST(partial->Object::internal_get_own_property(vm.names.hour));
+
+    // 6. If hourDesc is not undefined, then
+    if (hour_desc.has_value()) {
+        // a. Assert: hourDesc is a data Property Descriptor.
+        VERIFY(hour_desc->is_data_descriptor());
+
+        // b. Set result.[[Hour]] to ℝ(hourDesc.[[Value]]).
+        result.hour = hour_desc->value->as_double();
+    }
+
+    // 7. Let minuteDesc be OrdinaryGetOwnProperty(partial, "minute").
+    auto minute_desc = MUST(partial->Object::internal_get_own_property(vm.names.minute));
+
+    // 8. If minuteDesc is not undefined, then
+    if (minute_desc.has_value()) {
+        // a. Assert: minuteDesc is a data Property Descriptor.
+        VERIFY(minute_desc->is_data_descriptor());
+
+        // b. Set result.[[Minute]] to ℝ(minuteDesc.[[Value]]).
+        result.minute = minute_desc->value->as_double();
+    }
+
+    // 9. Let secondDesc be OrdinaryGetOwnProperty(partial, "second").
+    auto second_desc = MUST(partial->Object::internal_get_own_property(vm.names.second));
+
+    // 10. If secondDesc is not undefined, then
+    if (second_desc.has_value()) {
+        // a. Assert: secondDesc is a data Property Descriptor.
+        VERIFY(second_desc->is_data_descriptor());
+
+        // b. Set result.[[Second]] to ℝ(secondDesc.[[Value]]).
+        result.second = second_desc->value->as_double();
+    }
+
+    // 11. Let millisecondDesc be OrdinaryGetOwnProperty(partial, "millisecond").
+    auto millisecond_desc = MUST(partial->Object::internal_get_own_property(vm.names.millisecond));
+
+    // 12. If millisecondDesc is not undefined, then
+    if (millisecond_desc.has_value()) {
+        // a. Assert: millisecondDesc is a data Property Descriptor.
+        VERIFY(millisecond_desc->is_data_descriptor());
+
+        // b. Set result.[[Millisecond]] to ℝ(millisecondDesc.[[Value]]).
+        result.millisecond = millisecond_desc->value->as_double();
+    }
+
+    // 13. Let microsecondDesc be OrdinaryGetOwnProperty(partial, "microsecond").
+    auto microsecond_desc = MUST(partial->Object::internal_get_own_property(vm.names.microsecond));
+
+    // 14. If microsecondDesc is not undefined, then
+    if (microsecond_desc.has_value()) {
+        // a. Assert: microsecondDesc is a data Property Descriptor.
+        VERIFY(microsecond_desc->is_data_descriptor());
+
+        // b. Set result.[[Microsecond]] to ℝ(microsecondDesc.[[Value]]).
+        result.microsecond = microsecond_desc->value->as_double();
+    }
+
+    // 15. Let nanosecondDesc be OrdinaryGetOwnProperty(partial, "nanosecond").
+    auto nanosecond_desc = MUST(partial->Object::internal_get_own_property(vm.names.nanosecond));
+
+    // 16. If nanosecondDesc is not undefined, then
+    if (nanosecond_desc.has_value()) {
+        // a. Assert: nanosecondDesc is a data Property Descriptor.
+        VERIFY(nanosecond_desc->is_data_descriptor());
+
+        // b. Set result.[[Nanosecond]] to ℝ(nanosecondDesc.[[Value]]).
+        result.nanosecond = nanosecond_desc->value->as_double();
+    }
+
+    // 17. Return result.
     return result;
 }
 
