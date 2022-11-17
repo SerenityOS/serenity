@@ -88,7 +88,8 @@ AutocompleteBox::AutocompleteBox(TextEditor& editor)
     : m_editor(editor)
 {
     m_popup_window = GUI::Window::construct(m_editor->window());
-    m_popup_window->set_window_type(GUI::WindowType::Popup);
+    m_popup_window->set_window_type(GUI::WindowType::Autocomplete);
+    m_popup_window->set_obey_widget_min_size(false);
     m_popup_window->set_rect(0, 0, 175, 25);
 
     auto& main_widget = m_popup_window->set_main_widget<GUI::Widget>();
@@ -96,6 +97,8 @@ AutocompleteBox::AutocompleteBox(TextEditor& editor)
     main_widget.set_layout<GUI::VerticalBoxLayout>();
 
     m_suggestion_view = main_widget.add<GUI::TableView>();
+    m_suggestion_view->set_frame_shadow(Gfx::FrameShadow::Plain);
+    m_suggestion_view->set_frame_thickness(1);
     m_suggestion_view->set_column_headers_visible(false);
     m_suggestion_view->set_visible(false);
     m_suggestion_view->on_activation = [&](GUI::ModelIndex const& index) {
@@ -129,6 +132,7 @@ void AutocompleteBox::update_suggestions(Vector<CodeComprehension::AutocompleteR
         m_suggestion_view->set_cursor(m_suggestion_view->model()->index(0), GUI::AbstractView::SelectionUpdate::Set);
 
     m_suggestion_view->set_visible(has_suggestions);
+    m_suggestion_view->set_focus(has_suggestions);
     m_no_suggestions_view->set_visible(!has_suggestions);
     m_popup_window->resize(has_suggestions ? Gfx::IntSize(300, 100) : Gfx::IntSize(175, 25));
 
