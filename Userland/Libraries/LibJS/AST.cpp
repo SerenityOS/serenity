@@ -4647,6 +4647,8 @@ ThrowCompletionOr<void> Program::global_declaration_instantiation(Interpreter& i
         // Note: Already done in step iv. above.
 
         // 4. Insert d as the first element of functionsToInitialize.
+        // NOTE: Since prepending is much slower, we just append
+        //       and iterate in reverse order in step 16 below.
         functions_to_initialize.append(function);
         return {};
     }));
@@ -4757,7 +4759,10 @@ ThrowCompletionOr<void> Program::global_declaration_instantiation(Interpreter& i
     }));
 
     // 16. For each Parse Node f of functionsToInitialize, do
-    for (auto& declaration : functions_to_initialize) {
+    // NOTE: We iterate in reverse order since we appended the functions
+    //       instead of prepending. We append because prepending is much slower
+    //       and we only use the created vector here.
+    for (auto& declaration : functions_to_initialize.in_reverse()) {
         // a. Let fn be the sole element of the BoundNames of f.
         // b. Let fo be InstantiateFunctionObject of f with arguments env and privateEnv.
         auto* function = ECMAScriptFunctionObject::create(realm, declaration.name(), declaration.source_text(), declaration.body(), declaration.parameters(), declaration.function_length(), &global_environment, private_environment, declaration.kind(), declaration.is_strict_mode(), declaration.might_need_arguments_object(), declaration.contains_direct_call_to_eval());
