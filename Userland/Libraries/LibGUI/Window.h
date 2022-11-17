@@ -99,7 +99,6 @@ public:
     Function<void(bool is_active_input)> on_active_input_change;
     Function<void(bool is_preempted)> on_input_preemption_change;
     Function<void(bool is_active_window)> on_active_window_change;
-    Function<void(InputPreemptor)> on_input_preemption;
 
     int x() const { return rect().x(); }
     int y() const { return rect().y(); }
@@ -206,7 +205,6 @@ public:
     static void for_each_window(Badge<ConnectionToWindowServer>, Function<void(Window&)>);
     static void update_all_windows(Badge<ConnectionToWindowServer>);
     void notify_state_changed(Badge<ConnectionToWindowServer>, bool minimized, bool maximized, bool occluded);
-    void notify_input_preempted(Badge<ConnectionToWindowServer>, InputPreemptor);
 
     virtual bool is_visible_for_timer_purposes() const override { return m_visible_for_timer_purposes; }
 
