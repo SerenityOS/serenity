@@ -51,7 +51,9 @@ ErrorOr<TimeoutsConfiguration, Error> json_deserialize_as_a_timeouts_configurati
         auto const& script_duration = value.as_object().get("script"sv);
 
         // 2. If script duration is a number and less than 0 or greater than maximum safe integer, or it is not null, return error with error code invalid argument.
-        if ((script_duration.is_number() && (script_duration.to_i64() < 0 || script_duration.to_i64() > max_safe_integer)) || !script_duration.is_null())
+        if (script_duration.is_number() && (script_duration.to_i64() < 0 || script_duration.to_i64() > max_safe_integer))
+            return Error::from_code(ErrorCode::InvalidArgument, "Invalid script duration");
+        if (!script_duration.is_number() && !script_duration.is_null())
             return Error::from_code(ErrorCode::InvalidArgument, "Invalid script duration");
 
         // 3. Set timeouts’s script timeout to script duration.
