@@ -20,6 +20,7 @@ enum class WindowType {
     Desktop,
     AppletArea,
     Popup,
+    Autocomplete,
     _Count
 };
 
