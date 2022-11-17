@@ -112,6 +112,8 @@ Dialog::ExecResult Dialog::exec()
 
 void Dialog::done(ExecResult result)
 {
+    Window::close();
+
     if (!m_event_loop)
         return;
     m_result = result;
@@ -137,7 +139,6 @@ void Dialog::event(Core::Event& event)
 
 void Dialog::close()
 {
-    Window::close();
     done(ExecResult::Cancel);
 }
 
