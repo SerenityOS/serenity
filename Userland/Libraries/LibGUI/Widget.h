@@ -226,6 +226,9 @@ public:
     Widget const* focus_proxy() const { return m_focus_proxy; }
     void set_focus_proxy(Widget*);
 
+    Vector<WeakPtr<Widget>>& focus_delegators() { return m_focus_delegators; }
+    Vector<WeakPtr<Widget>> const& focus_delegators() const { return m_focus_delegators; }
+
     void set_focus_policy(FocusPolicy policy);
     FocusPolicy focus_policy() const;
 
@@ -406,6 +409,9 @@ protected:
 
     void show_or_hide_tooltip();
 
+    void add_focus_delegator(Widget*);
+    void remove_focus_delegator(Widget*);
+
 private:
     virtual bool is_widget() const final { return true; }
 
@@ -453,6 +459,7 @@ private:
     String m_title { String::empty() };
 
     WeakPtr<Widget> m_focus_proxy;
+    Vector<WeakPtr<Widget>> m_focus_delegators;
     FocusPolicy m_focus_policy { FocusPolicy::NoFocus };
 
     AK::Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> m_override_cursor { Gfx::StandardCursor::None };
