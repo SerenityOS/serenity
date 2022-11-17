@@ -633,6 +633,11 @@ void Widget::update()
     if (rect().is_empty())
         return;
     update(rect());
+
+    for (auto& it : m_focus_delegators) {
+        if (!it.is_null() && !it->rect().is_empty())
+            it->update(it->rect());
+    }
 }
 
 void Widget::update(Gfx::IntRect const& rect)
@@ -726,8 +731,26 @@ void Widget::set_focus_proxy(Widget* proxy)
 {
     if (m_focus_proxy == proxy)
         return;
-
+    if (proxy)
+        proxy->add_focus_delegator(this);
+    else if (m_focus_proxy)
+        m_focus_proxy->remove_focus_delegator(this);
     m_focus_proxy = proxy;
+}
+
+void Widget::add_focus_delegator(Widget* delegator)
+{
+    m_focus_delegators.remove_all_matching([&](auto& entry) {
+        return entry.is_null() || entry == delegator;
+    });
+    m_focus_delegators.append(delegator);
+}
+
+void Widget::remove_focus_delegator(Widget* delegator)
+{
+    m_focus_delegators.remove_first_matching([&](auto& entry) {
+        return entry == delegator;
+    });
 }
 
 FocusPolicy Widget::focus_policy() const
