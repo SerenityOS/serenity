@@ -11,6 +11,7 @@
 #include <AK/Debug.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
+#include <LibWeb/WebDriver/Capabilities.h>
 #include <WebDriver/Client.h>
 
 namespace WebDriver {
@@ -73,7 +74,7 @@ void Client::close_session(unsigned session_id)
 
 // 8.1 New Session, https://w3c.github.io/webdriver/#dfn-new-sessions
 // POST /session
-Web::WebDriver::Response Client::new_session(Web::WebDriver::Parameters, JsonValue)
+Web::WebDriver::Response Client::new_session(Web::WebDriver::Parameters, JsonValue payload)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling POST /session");
 
@@ -90,10 +91,12 @@ Web::WebDriver::Response Client::new_session(Web::WebDriver::Parameters, JsonVal
     // FIXME: 3. If the maximum active sessions is equal to the length of the list of active sessions,
     //           return error with error code session not created.
 
-    // FIXME: 4. Let capabilities be the result of trying to process capabilities with parameters as an argument.
-    auto capabilities = JsonObject {};
+    // 4. Let capabilities be the result of trying to process capabilities with parameters as an argument.
+    auto capabilities = TRY(Web::WebDriver::process_capabilities(payload));
 
-    // FIXME: 5. If capabilities’s is null, return error with error code session not created.
+    // 5. If capabilities’s is null, return error with error code session not created.
+    if (capabilities.is_null())
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::SessionNotCreated, "Could not match capabilities"sv);
 
     // 6. Let session id be the result of generating a UUID.
     // FIXME: Actually create a UUID.
