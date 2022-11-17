@@ -41,10 +41,6 @@ ClockWidget::ClockWidget()
     m_calendar_window->set_frameless(true);
     m_calendar_window->set_resizable(false);
     m_calendar_window->set_minimizable(false);
-    m_calendar_window->on_active_input_change = [this](bool is_active_input) {
-        if (!is_active_input)
-            close();
-    };
 
     auto& root_container = m_calendar_window->set_main_widget<GUI::Frame>();
     root_container.set_fill_with_background_color(true);

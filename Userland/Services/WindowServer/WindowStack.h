@@ -56,10 +56,6 @@ public:
     Window const* active_window() const { return m_active_window; }
     void set_active_window(Window*);
 
-    Window* active_input_window() { return m_active_input_window; }
-    Window const* active_input_window() const { return m_active_input_window; }
-    void set_active_input_window(Window* window) { m_active_input_window = window; }
-
     Optional<HitTestResult> hit_test(Gfx::IntPoint const&) const;
 
     unsigned row() const { return m_row; }
@@ -79,7 +75,6 @@ public:
 
 private:
     WeakPtr<Window> m_active_window;
-    WeakPtr<Window> m_active_input_window;
 
     Window::List m_windows;
     unsigned m_row { 0 };

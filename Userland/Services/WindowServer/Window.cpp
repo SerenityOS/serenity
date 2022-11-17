@@ -450,7 +450,7 @@ void Window::event(Core::Event& event)
         return;
     }
 
-    if (blocking_modal_window()) {
+    if (blocking_modal_window() && type() != WindowType::Popup) {
         // Allow windows to process their inactivity after being blocked
         if (event.type() != Event::WindowDeactivated && event.type() != Event::WindowInputPreempted)
             return;
@@ -978,13 +978,6 @@ Window* Window::modeless_ancestor()
             return parent;
     }
     return nullptr;
-}
-
-bool Window::is_capturing_active_input_from(Window const& window) const
-{
-    if (!is_capturing_input())
-        return false;
-    return parent_window() == &window;
 }
 
 void Window::set_progress(Optional<int> progress)

@@ -115,15 +115,6 @@ ComboBox::ComboBox()
 
     m_list_window = add<Window>(window());
     m_list_window->set_window_type(GUI::WindowType::Popup);
-    m_list_window->set_frameless(true);
-    m_list_window->set_window_mode(WindowMode::CaptureInput);
-    m_list_window->on_active_input_change = [this](bool is_active_input) {
-        if (!is_active_input) {
-            m_open_button->set_enabled(false);
-            close();
-        }
-        m_open_button->set_enabled(true);
-    };
 
     m_list_view = m_list_window->set_main_widget<ListView>();
     m_list_view->set_should_hide_unnecessary_scrollbars(true);

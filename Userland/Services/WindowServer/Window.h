@@ -106,7 +106,7 @@ public:
     bool is_closeable() const { return m_closeable; }
     void set_closeable(bool);
 
-    bool is_resizable() const { return m_resizable && !m_fullscreen; }
+    bool is_resizable() const { return m_type != WindowType::Popup && m_resizable && !m_fullscreen; }
     void set_resizable(bool);
 
     bool is_maximized() const { return m_tile_type == WindowTileType::Maximized; }
@@ -181,9 +181,6 @@ public:
     bool is_modal() const { return m_mode != WindowMode::Modeless; }
     bool is_passive() { return m_mode == WindowMode::Passive; }
     bool is_rendering_above() { return m_mode == WindowMode::RenderAbove; }
-
-    bool is_capturing_input() const { return m_mode == WindowMode::CaptureInput; }
-    bool is_capturing_active_input_from(Window const&) const;
 
     bool is_blocking() const { return m_mode == WindowMode::Blocking; }
     Window* blocking_modal_window();

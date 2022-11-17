@@ -202,7 +202,6 @@ NonnullRefPtr<Action> make_command_palette_action(Window* window)
 {
     auto action = Action::create("&Commands...", { Mod_Ctrl | Mod_Shift, Key_A }, MUST(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/find.png"sv)), [=](auto&) {
         auto command_palette = CommandPalette::construct(*window);
-        command_palette->set_window_mode(GUI::WindowMode::CaptureInput);
         if (command_palette->exec() != GUI::Dialog::ExecResult::OK)
             return;
         auto* action = command_palette->selected_action();

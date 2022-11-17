@@ -752,10 +752,7 @@ bool Widget::is_focused() const
     auto* win = window();
     if (!win)
         return false;
-    // Capturing modals are not active despite being the active
-    // input window. So we can have focus if either we're the active
-    // input window or we're the active window
-    if (win->is_active_input() || win->is_active())
+    if (win->is_focusable())
         return win->focused_widget() == this;
     return false;
 }

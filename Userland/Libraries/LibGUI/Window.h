@@ -37,8 +37,8 @@ public:
 
     bool is_modal() const { return m_window_mode != WindowMode::Modeless; }
     bool is_blocking() const { return m_window_mode == WindowMode::Blocking; }
-    bool is_capturing_input() const { return m_window_mode == WindowMode::CaptureInput; }
 
+    bool is_popup() const { return m_window_type == WindowType::Popup; }
     bool is_autocomplete() const { return m_window_type == WindowType::Autocomplete; }
 
     bool is_fullscreen() const { return m_fullscreen; }
@@ -96,7 +96,6 @@ public:
 
     Function<void()> on_close;
     Function<CloseRequestDecision()> on_close_request;
-    Function<void(bool is_active_input)> on_active_input_change;
     Function<void(bool is_preempted)> on_input_preemption_change;
     Function<void(bool is_active_window)> on_active_window_change;
 
@@ -130,7 +129,7 @@ public:
 
     bool is_visible() const;
     bool is_active() const;
-    bool is_active_input() const { return m_is_active_input; }
+    bool is_focusable() const { return is_active() || is_popup() || is_autocomplete(); }
 
     void show();
     void hide();
@@ -304,7 +303,6 @@ private:
     WindowMode m_window_mode { WindowMode::Modeless };
     AK::Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> m_cursor { Gfx::StandardCursor::None };
     AK::Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> m_effective_cursor { Gfx::StandardCursor::None };
-    bool m_is_active_input { false };
     bool m_has_alpha_channel { false };
     bool m_double_buffering_enabled { true };
     bool m_resizable { true };

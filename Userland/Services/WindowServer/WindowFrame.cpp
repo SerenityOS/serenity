@@ -221,6 +221,12 @@ MultiScaleBitmaps const* WindowFrame::shadow_bitmap() const
         return nullptr;
     case WindowType::WindowSwitcher:
         return nullptr;
+    case WindowType::Popup:
+        if (!WindowManager::the().system_effects().window_shadow())
+            return nullptr;
+        if (!m_window.has_forced_shadow())
+            return nullptr;
+        return s_active_window_shadow;
     default:
         if (!WindowManager::the().system_effects().window_shadow())
             return nullptr;
@@ -280,7 +286,7 @@ Gfx::WindowTheme::WindowState WindowFrame::window_state_for_theme() const
         return Gfx::WindowTheme::WindowState::Highlighted;
     if (&m_window == wm.m_move_window)
         return Gfx::WindowTheme::WindowState::Moving;
-    if (wm.is_active_window_or_capturing_modal(m_window))
+    if (m_window.is_active())
         return Gfx::WindowTheme::WindowState::Active;
     return Gfx::WindowTheme::WindowState::Inactive;
 }
