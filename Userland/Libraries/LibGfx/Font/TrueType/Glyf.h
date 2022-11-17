@@ -10,23 +10,11 @@
 #include <AK/Vector.h>
 #include <LibGfx/AffineTransform.h>
 #include <LibGfx/Bitmap.h>
+#include <LibGfx/Font/PathRasterizer.h>
 #include <LibGfx/Font/TrueType/Tables.h>
 #include <math.h>
 
 namespace TTF {
-
-class Rasterizer {
-public:
-    Rasterizer(Gfx::IntSize);
-    void draw_path(Gfx::Path&);
-    RefPtr<Gfx::Bitmap> accumulate();
-
-private:
-    void draw_line(Gfx::FloatPoint, Gfx::FloatPoint);
-
-    Gfx::IntSize m_size;
-    Vector<float> m_data;
-};
 
 class Loca {
 public:
@@ -101,11 +89,11 @@ public:
             u32 m_offset { 0 };
         };
 
-        void rasterize_impl(Rasterizer&, Gfx::AffineTransform const&) const;
+        void rasterize_impl(Gfx::PathRasterizer&, Gfx::AffineTransform const&) const;
         RefPtr<Gfx::Bitmap> rasterize_simple(i16 ascender, i16 descender, float x_scale, float y_scale) const;
 
         template<typename GlyphCb>
-        void rasterize_composite_loop(Rasterizer& rasterizer, Gfx::AffineTransform const& transform, GlyphCb glyph_callback) const
+        void rasterize_composite_loop(Gfx::PathRasterizer& rasterizer, Gfx::AffineTransform const& transform, GlyphCb glyph_callback) const
         {
             ComponentIterator component_iterator(m_slice);
 
@@ -132,7 +120,7 @@ public:
         {
             u32 width = (u32)(ceilf((m_xmax - m_xmin) * x_scale)) + 1;
             u32 height = (u32)(ceilf((font_ascender - font_descender) * y_scale)) + 1;
-            Rasterizer rasterizer(Gfx::IntSize(width, height));
+            Gfx::PathRasterizer rasterizer(Gfx::IntSize(width, height));
             auto affine = Gfx::AffineTransform().scale(x_scale, -y_scale).translate(-m_xmin, -font_ascender);
 
             rasterize_composite_loop(rasterizer, affine, glyph_callback);
