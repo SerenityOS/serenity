@@ -267,3 +267,107 @@ TEST_CASE(json_parse_fails_on_invalid_number)
 
 #undef EXPECT_JSON_PARSE_TO_FAIL
 }
+
+struct CustomError {
+};
+
+template<typename T>
+class CustomErrorOr {
+public:
+    CustomErrorOr(T)
+        : m_is_error(false)
+    {
+    }
+
+    CustomErrorOr(CustomError)
+        : m_is_error(true)
+    {
+    }
+
+    bool is_error() const { return m_is_error; }
+    CustomError release_error() { return CustomError {}; }
+    T release_value() { return T {}; }
+
+private:
+    bool m_is_error { false };
+};
+
+TEST_CASE(fallible_json_object_for_each)
+{
+    String raw_json = R"(
+    {
+        "name": "anon",
+        "home": "/home/anon",
+        "default_browser": "Ladybird"
+    })";
+
+    auto json = JsonValue::from_string(raw_json).value();
+    auto const& object = json.as_object();
+
+    MUST(object.try_for_each_member([](auto const&, auto const&) -> ErrorOr<void> {
+        return {};
+    }));
+
+    auto result1 = object.try_for_each_member([](auto const&, auto const&) -> ErrorOr<void> {
+        return Error::from_string_view("nanananana"sv);
+    });
+    EXPECT(result1.is_error());
+    EXPECT_EQ(result1.error().string_literal(), "nanananana"sv);
+
+    auto result2 = object.try_for_each_member([](auto const&, auto const&) -> ErrorOr<void, CustomError> {
+        return CustomError {};
+    });
+    EXPECT(result2.is_error());
+    EXPECT((IsSame<decltype(result2.release_error()), CustomError>));
+
+    auto result3 = object.try_for_each_member([](auto const&, auto const&) -> CustomErrorOr<int> {
+        return 42;
+    });
+    EXPECT(!result3.is_error());
+
+    auto result4 = object.try_for_each_member([](auto const&, auto const&) -> CustomErrorOr<int> {
+        return CustomError {};
+    });
+    EXPECT(result4.is_error());
+    EXPECT((IsSame<decltype(result4.release_error()), CustomError>));
+}
+
+TEST_CASE(fallible_json_array_for_each)
+{
+    String raw_json = R"(
+    [
+        "anon",
+        "/home/anon",
+        "Ladybird"
+    ])";
+
+    auto json = JsonValue::from_string(raw_json).value();
+    auto const& array = json.as_array();
+
+    MUST(array.try_for_each([](auto const&) -> ErrorOr<void> {
+        return {};
+    }));
+
+    auto result1 = array.try_for_each([](auto const&) -> ErrorOr<void> {
+        return Error::from_string_view("nanananana"sv);
+    });
+    EXPECT(result1.is_error());
+    EXPECT_EQ(result1.error().string_literal(), "nanananana"sv);
+
+    auto result2 = array.try_for_each([](auto const&) -> ErrorOr<void, CustomError> {
+        return CustomError {};
+    });
+    EXPECT(result2.is_error());
+    EXPECT((IsSame<decltype(result2.release_error()), CustomError>));
+
+    auto result3 = array.try_for_each([](auto const&) -> CustomErrorOr<int> {
+        return 42;
+    });
+    EXPECT(!result3.is_error());
+
+    auto result4 = array.try_for_each([](auto const&) -> CustomErrorOr<int> {
+        return CustomError {};
+    });
+    EXPECT(result4.is_error());
+    EXPECT((IsSame<decltype(result4.release_error()), CustomError>));
+}

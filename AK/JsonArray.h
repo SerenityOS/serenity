@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Concepts.h>
+#include <AK/Error.h>
 #include <AK/JsonArraySerializer.h>
 #include <AK/JsonValue.h>
 #include <AK/Vector.h>
@@ -14,6 +15,9 @@
 namespace AK {
 
 class JsonArray {
+    template<typename Callback>
+    using CallbackErrorType = decltype(declval<Callback>()(declval<JsonValue const&>()).release_error());
+
 public:
     JsonArray() = default;
     ~JsonArray() = default;
@@ -74,6 +78,14 @@ public:
     {
         for (auto const& value : m_values)
             callback(value);
+    }
+
+    template<FallibleFunction<JsonValue const&> Callback>
+    ErrorOr<void, CallbackErrorType<Callback>> try_for_each(Callback&& callback) const
+    {
+        for (auto const& value : m_values)
+            TRY(callback(value));
+        return {};
     }
 
     [[nodiscard]] Vector<JsonValue> const& values() const { return m_values; }
