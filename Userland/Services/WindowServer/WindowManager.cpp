@@ -1424,6 +1424,7 @@ Gfx::IntRect WindowManager::arena_rect_for_type(Screen& screen, WindowType type)
     case WindowType::Applet:
     case WindowType::Notification:
     case WindowType::Popup:
+    case WindowType::Autocomplete:
         return screen.rect();
     default:
         VERIFY_NOT_REACHED();

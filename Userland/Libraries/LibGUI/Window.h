@@ -39,6 +39,8 @@ public:
     bool is_blocking() const { return m_window_mode == WindowMode::Blocking; }
     bool is_capturing_input() const { return m_window_mode == WindowMode::CaptureInput; }
 
+    bool is_autocomplete() const { return m_window_type == WindowType::Autocomplete; }
+
     bool is_fullscreen() const { return m_fullscreen; }
     void set_fullscreen(bool);
 

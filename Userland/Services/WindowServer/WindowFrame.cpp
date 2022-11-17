@@ -210,6 +210,7 @@ MultiScaleBitmaps const* WindowFrame::shadow_bitmap() const
         if (!WindowManager::the().system_effects().menu_shadow())
             return nullptr;
         return s_menu_shadow;
+    case WindowType::Autocomplete:
     case WindowType::Tooltip:
         if (!WindowManager::the().system_effects().tooltip_shadow())
             return nullptr;
