@@ -164,10 +164,22 @@ public:
     }
 #endif
 
+    JsonObject& as_object()
+    {
+        VERIFY(is_object());
+        return *m_value.as_object;
+    }
+
     JsonObject const& as_object() const
     {
         VERIFY(is_object());
         return *m_value.as_object;
+    }
+
+    JsonArray& as_array()
+    {
+        VERIFY(is_array());
+        return *m_value.as_array;
     }
 
     JsonArray const& as_array() const
