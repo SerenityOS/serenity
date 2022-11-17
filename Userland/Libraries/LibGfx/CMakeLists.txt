@@ -17,6 +17,7 @@ set(SOURCES
     Font/BitmapFont.cpp
     Font/Emoji.cpp
     Font/FontDatabase.cpp
+    Font/PathRasterizer.cpp
     Font/ScaledFont.cpp
     Font/TrueType/Cmap.cpp
     Font/TrueType/Font.cpp
