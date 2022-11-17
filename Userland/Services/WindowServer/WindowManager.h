@@ -100,16 +100,6 @@ public:
 
     Window* foremost_popup_window(WindowStack& stack = WindowManager::the().current_window_stack());
     void request_close_fragile_windows(WindowStack& stack = WindowManager::the().current_window_stack());
-    Window* active_input_window()
-    {
-        VERIFY(m_current_window_stack);
-        return m_current_window_stack->active_input_window();
-    }
-    Window const* active_input_window() const
-    {
-        VERIFY(m_current_window_stack);
-        return m_current_window_stack->active_input_window();
-    }
 
     ConnectionFromClient const* active_client() const;
 
@@ -164,9 +154,7 @@ public:
     void set_buttons_switched(bool);
     bool get_buttons_switched() const;
 
-    Window* set_active_input_window(Window*);
-    void restore_active_input_window(Window*);
-    void set_active_window(Window*, bool make_input = true);
+    void set_active_window(Window*);
     void set_hovered_button(Button*);
 
     Button const* cursor_tracking_button() const { return m_cursor_tracking_button.ptr(); }
@@ -187,8 +175,6 @@ public:
     void tell_wms_super_d_key_pressed();
     void tell_wms_super_digit_key_pressed(u8);
     void tell_wms_current_window_stack_changed();
-
-    bool is_active_window_or_capturing_modal(Window&) const;
 
     void check_hide_geometry_overlay(Window&);
 

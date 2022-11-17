@@ -81,10 +81,6 @@ private:
         m_slider_window->set_frameless(true);
         m_slider_window->set_resizable(false);
         m_slider_window->set_minimizable(false);
-        m_slider_window->on_active_input_change = [this](bool is_active_input) {
-            if (!is_active_input)
-                close();
-        };
 
         m_root_container = TRY(m_slider_window->try_set_main_widget<GUI::Frame>());
         m_root_container->set_fill_with_background_color(true);

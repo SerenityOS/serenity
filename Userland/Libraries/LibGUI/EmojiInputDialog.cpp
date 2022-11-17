@@ -100,7 +100,6 @@ EmojiInputDialog::EmojiInputDialog(Window* parent_window)
 
     set_frameless(true);
     set_blocks_emoji_input(true);
-    set_window_mode(GUI::WindowMode::CaptureInput);
     resize(400, 300);
 
     auto& scrollable_container = *main_widget.find_descendant_of_type_named<GUI::ScrollableContainerWidget>("scrollable_container"sv);
@@ -138,11 +137,6 @@ EmojiInputDialog::EmojiInputDialog(Window* parent_window)
 
     scrollable_container.horizontal_scrollbar().set_visible(false);
     update_displayed_emoji();
-
-    on_active_input_change = [this](bool is_active_input) {
-        if (!is_active_input)
-            close();
-    };
 
     m_search_box->on_change = [this]() {
         update_displayed_emoji();
