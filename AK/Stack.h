@@ -63,6 +63,11 @@ public:
         return m_stack.last();
     }
 
+    bool contains_slow(T const& value) const
+    {
+        return m_stack.contains_slow(value);
+    }
+
 private:
     Vector<T, stack_size> m_stack;
 };
