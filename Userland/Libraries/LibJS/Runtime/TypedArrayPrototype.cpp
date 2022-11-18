@@ -1623,7 +1623,12 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::values)
 {
     auto& realm = *vm.current_realm();
 
+    // 1. Let O be the this value.
     auto* typed_array = TRY(typed_array_from_this(vm));
+
+    // FIXME 2. Perform ? ValidateTypedArray(O).
+
+    // 3. Return CreateArrayIterator(O, value).
     return ArrayIterator::create(realm, typed_array, Object::PropertyKind::Value);
 }
 
