@@ -75,7 +75,7 @@ DecoderErrorOr<void> Decoder::decode_frame(ReadonlyBytes frame_data)
         for (auto row = 0u; row < m_parser->m_mi_rows; row++) {
             for (auto column = 0u; column < m_parser->m_mi_cols; column++) {
                 auto index = index_from_row_and_column(row, column, m_parser->m_mi_rows);
-                m_parser->m_prev_segment_ids[index] = m_parser->m_segment_ids[index];
+                m_parser->m_prev_segment_ids[index] = m_parser->m_frame_block_contexts[index].segment_id;
             }
         }
     }
@@ -1813,16 +1813,18 @@ DecoderErrorOr<void> Decoder::update_reference_frames()
 
     // 2. If show_existing_frame is equal to 0, the following applies:
     if (!m_parser->m_show_existing_frame) {
-        VERIFY(m_parser->m_ref_frames.size() == m_parser->m_mi_rows * m_parser->m_mi_cols);
-        VERIFY(m_parser->m_mvs.size() == m_parser->m_mi_rows * m_parser->m_mi_cols);
         // − PrevRefFrames[ row ][ col ][ list ] is set equal to RefFrames[ row ][ col ][ list ] for row = 0..MiRows-1,
         // for col = 0..MiCols-1, for list = 0..1.
         // − PrevMvs[ row ][ col ][ list ][ comp ] is set equal to Mvs[ row ][ col ][ list ][ comp ] for row = 0..MiRows-1,
         // for col = 0..MiCols-1, for list = 0..1, for comp = 0..1.
-
-        // We can copy these.
-        m_parser->m_prev_ref_frames = m_parser->m_ref_frames;
-        m_parser->m_prev_mvs = m_parser->m_mvs;
+        size_t size = m_parser->m_frame_block_contexts.size();
+        m_parser->m_prev_ref_frames.resize_and_keep_capacity(size);
+        m_parser->m_prev_mvs.resize_and_keep_capacity(size);
+        for (size_t i = 0; i < size; i++) {
+            auto context = m_parser->m_frame_block_contexts[i];
+            m_parser->m_prev_ref_frames[i] = context.ref_frames;
+            m_parser->m_prev_mvs[i] = context.primary_motion_vector_pair();
+        }
     }
 
     return {};
