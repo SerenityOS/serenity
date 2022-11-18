@@ -26,7 +26,7 @@ public:
     void enqueue_audio();
 
     void toggle_paused();
-    bool is_playing() { return m_should_play_audio; }
+    bool is_playing() const { return m_should_play_audio; }
 
 private:
     AudioPlayerLoop(TrackManager& track_manager, bool& need_to_write_wav, Audio::WavWriter& wav_writer);
