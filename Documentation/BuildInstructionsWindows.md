@@ -51,3 +51,13 @@ following command in an elevated PowerShell session: \
 You may have to reboot after enabling the WHPX feature.
 
 Afterwards you can start the VM with `Meta/serenity.sh run` as usual.
+
+## Note on Microsoft Store Ubuntu
+
+The Microsoft Store does not have the latest versions of Ubuntu.
+
+Please refrence the following section: 
+
+[Prerequisites](BuildInstructions.md#prerequisites).
+
+

@@ -16,6 +16,14 @@ Optional: `fuse2fs` for [building images without root](https://github.com/Sereni
 On Ubuntu gcc-12 is available in the repositories of 22.04 (Jammy) and later.
 If you are running an older version, you will either need to upgrade, or find an alternative installation source.
 
+On Ubuntu 20.04 (Focal) gcc-12 is not available.
+
+Add the `ubuntu-toolchain-r/test` PPA for WSL Installations or Focal version of Ubuntu.
+
+```console
+sudo add-apt-repository ppa:ubuntu-toolchain-r/test
+```
+
 Next, update your local package information from this repository:
 
 ```console
