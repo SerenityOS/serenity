@@ -24,6 +24,7 @@
 #include <Kernel/CommandLine.h>
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Graphics/Console/BootFramebufferConsole.h>
+#include <Kernel/JailManagement.h>
 #include <Kernel/KSyms.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Panic.h>
