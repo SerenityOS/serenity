@@ -35,6 +35,8 @@ struct [[gnu::aligned(16)]] FPUState
 // FIXME: Remove this once we support SMP in aarch64
 extern Processor* g_current_processor;
 
+constexpr size_t MAX_CPU_COUNT = 1;
+
 class Processor {
     void* m_processor_specific_data[static_cast<size_t>(ProcessorSpecificDataID::__Count)];
 
