@@ -49,7 +49,7 @@ public:
     };
 
     static ErrorOr<Partition> parse_partition(BitStream&, ProbabilityTables const&, SyntaxElementCounter&, bool has_rows, bool has_columns, BlockSubsize block_subsize, u8 num_8x8, Vector<u8> const& above_partition_context, Vector<u8> const& left_partition_context, u32 row, u32 column, bool frame_is_intra);
-    static ErrorOr<PredictionMode> parse_default_intra_mode(BitStream&, ProbabilityTables const&, BlockSubsize mi_size, Optional<Array<PredictionMode, 4> const&> above_context, Optional<Array<PredictionMode, 4> const&> left_context, Array<PredictionMode, 4> const& block_sub_modes, u8 index_x, u8 index_y);
+    static ErrorOr<PredictionMode> parse_default_intra_mode(BitStream&, ProbabilityTables const&, BlockSubsize mi_size, FrameBlockContext above, FrameBlockContext left, Array<PredictionMode, 4> const& block_sub_modes, u8 index_x, u8 index_y);
     static ErrorOr<PredictionMode> parse_default_uv_mode(BitStream&, ProbabilityTables const&, PredictionMode y_mode);
     static ErrorOr<PredictionMode> parse_intra_mode(BitStream&, ProbabilityTables const&, SyntaxElementCounter&, BlockSubsize mi_size);
     static ErrorOr<PredictionMode> parse_sub_intra_mode(BitStream&, ProbabilityTables const&, SyntaxElementCounter&);
@@ -57,14 +57,14 @@ public:
     static ErrorOr<u8> parse_segment_id(BitStream&, u8 const probabilities[7]);
     static ErrorOr<bool> parse_segment_id_predicted(BitStream&, u8 const probabilities[3], u8 above_seg_pred_context, u8 left_seg_pred_context);
     static ErrorOr<PredictionMode> parse_inter_mode(BitStream&, ProbabilityTables const&, SyntaxElementCounter&, u8 mode_context_for_ref_frame_0);
-    static ErrorOr<InterpolationFilter> parse_interpolation_filter(BitStream&, ProbabilityTables const&, SyntaxElementCounter&, Optional<ReferenceFrameType> above_ref_frame, Optional<ReferenceFrameType> left_ref_frame, Optional<InterpolationFilter> above_interpolation_filter, Optional<InterpolationFilter> left_interpolation_filter);
-    static ErrorOr<bool> parse_skip(BitStream&, ProbabilityTables const&, SyntaxElementCounter&, Optional<bool> const& above_skip, Optional<bool> const& left_skip);
-    static ErrorOr<TXSize> parse_tx_size(BitStream&, ProbabilityTables const&, SyntaxElementCounter&, TXSize max_tx_size, Optional<bool> above_skip, Optional<bool> left_skip, Optional<TXSize> above_tx_size, Optional<TXSize> left_tx_size);
-    static ErrorOr<bool> parse_is_inter(BitStream&, ProbabilityTables const&, SyntaxElementCounter&, Optional<bool> above_intra, Optional<bool> left_intra);
-    static ErrorOr<ReferenceMode> parse_comp_mode(BitStream&, ProbabilityTables const&, SyntaxElementCounter&, ReferenceFrameType comp_fixed_ref, Optional<bool> above_single, Optional<bool> left_single, Optional<bool> above_intra, Optional<bool> left_intra, Optional<ReferenceFrameType> above_ref_frame_0, Optional<ReferenceFrameType> left_ref_frame_0);
-    static ErrorOr<bool> parse_comp_ref(BitStream&, ProbabilityTables const&, SyntaxElementCounter&, ReferenceFrameType comp_fixed_ref, ReferenceFramePair comp_var_ref, Optional<bool> above_single, Optional<bool> left_single, Optional<bool> above_intra, Optional<bool> left_intra, Optional<ReferenceFrameType> above_ref_frame_0, Optional<ReferenceFrameType> left_ref_frame_0, Optional<ReferenceFrameType> above_ref_frame_biased, Optional<ReferenceFrameType> left_ref_frame_biased);
-    static ErrorOr<bool> parse_single_ref_part_1(BitStream&, ProbabilityTables const&, SyntaxElementCounter&, Optional<bool> above_single, Optional<bool> left_single, Optional<bool> above_intra, Optional<bool> left_intra, Optional<ReferenceFramePair> above_ref_frame, Optional<ReferenceFramePair> left_ref_frame);
-    static ErrorOr<bool> parse_single_ref_part_2(BitStream&, ProbabilityTables const&, SyntaxElementCounter&, Optional<bool> above_single, Optional<bool> left_single, Optional<bool> above_intra, Optional<bool> left_intra, Optional<ReferenceFramePair> above_ref_frame, Optional<ReferenceFramePair> left_ref_frame);
+    static ErrorOr<InterpolationFilter> parse_interpolation_filter(BitStream&, ProbabilityTables const&, SyntaxElementCounter&, FrameBlockContext above, FrameBlockContext left);
+    static ErrorOr<bool> parse_skip(BitStream&, ProbabilityTables const&, SyntaxElementCounter&, FrameBlockContext above, FrameBlockContext left);
+    static ErrorOr<TXSize> parse_tx_size(BitStream&, ProbabilityTables const&, SyntaxElementCounter&, TXSize max_tx_size, FrameBlockContext above, FrameBlockContext left);
+    static ErrorOr<bool> parse_block_is_inter_predicted(BitStream&, ProbabilityTables const&, SyntaxElementCounter&, FrameBlockContext above, FrameBlockContext left);
+    static ErrorOr<ReferenceMode> parse_comp_mode(BitStream&, ProbabilityTables const&, SyntaxElementCounter&, ReferenceFrameType comp_fixed_ref, FrameBlockContext above, FrameBlockContext left);
+    static ErrorOr<bool> parse_comp_ref(BitStream&, ProbabilityTables const&, SyntaxElementCounter&, ReferenceFrameType comp_fixed_ref, ReferenceFramePair comp_var_ref, u8 variable_reference_index, FrameBlockContext above, FrameBlockContext left);
+    static ErrorOr<bool> parse_single_ref_part_1(BitStream&, ProbabilityTables const&, SyntaxElementCounter&, FrameBlockContext above, FrameBlockContext left);
+    static ErrorOr<bool> parse_single_ref_part_2(BitStream&, ProbabilityTables const&, SyntaxElementCounter&, FrameBlockContext above, FrameBlockContext left);
 
     static ErrorOr<MvJoint> parse_motion_vector_joint(BitStream&, ProbabilityTables const&, SyntaxElementCounter&);
     static ErrorOr<bool> parse_motion_vector_sign(BitStream&, ProbabilityTables const&, SyntaxElementCounter&, u8 component);

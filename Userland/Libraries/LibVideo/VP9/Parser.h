@@ -51,7 +51,6 @@ private:
     template<typename T>
     void clear_context(Vector<Vector<T>>& context, size_t outer_size, size_t inner_size);
     DecoderErrorOr<void> allocate_tile_data();
-    void cleanup_tile_allocations();
 
     /* (6.1) Frame Syntax */
     bool trailing_bits();
@@ -86,6 +85,8 @@ private:
     u8 inv_remap_prob(u8 delta_prob, u8 prob);
     u8 inv_recenter_nonneg(u8 v, u8 m);
     DecoderErrorOr<void> read_coef_probs();
+    FrameBlockContext get_above_context() const;
+    FrameBlockContext get_left_context() const;
     DecoderErrorOr<void> read_skip_prob();
     DecoderErrorOr<void> read_inter_mode_probs();
     DecoderErrorOr<void> read_interp_filter_probs();
@@ -137,7 +138,7 @@ private:
     bool is_inside(i32 row, i32 column);
     void clamp_mv_ref(u8 i);
     MotionVector clamp_mv(MotionVector mvec, i32 border);
-    size_t get_image_index(u32 row, u32 column);
+    size_t get_image_index(u32 row, u32 column) const;
     void get_block_mv(u32 candidate_row, u32 candidate_column, u8 ref_list, bool use_prev);
     void if_same_ref_frame_add_mv(u32 candidate_row, u32 candidate_column, ReferenceFrameType ref_frame, bool use_prev);
     void if_diff_ref_frame_add_mv(u32 candidate_row, u32 candidate_column, ReferenceFrameType ref_frame, bool use_prev);
@@ -234,16 +235,6 @@ private:
     u8 m_num_4x4_w { 0 };
     u8 m_num_4x4_h { 0 };
     PredictionMode m_uv_mode { 0 }; // FIXME: Is u8 the right size?
-    // FIXME: From spec: NOTE – We are using a 2D array to store the SubModes for clarity. It is possible to reduce memory
-    // consumption by only storing one intra mode for each 8x8 horizontal and vertical position, i.e. to use two 1D
-    // arrays instead.
-    Vector<Array<PredictionMode, 4>> m_sub_modes;
-    ReferenceFramePair m_left_ref_frame;
-    ReferenceFramePair m_above_ref_frame;
-    bool m_left_intra { false };
-    bool m_above_intra { false };
-    bool m_left_single { false };
-    bool m_above_single { false };
     // The current block's interpolation filter.
     InterpolationFilter m_interp_filter { EightTap };
     MotionVectorPair m_mv;
@@ -267,25 +258,24 @@ private:
     ReferenceMode m_reference_mode;
     ReferenceFrameType m_comp_fixed_ref;
     ReferenceFramePair m_comp_var_ref;
-    MotionVector m_block_mvs[2][4];
+    // FIXME: Use Array<MotionVectorPair, 4> instead.
+    Array<Array<MotionVector, 4>, 2> m_block_mvs;
     Vector<u8> m_prev_segment_ids;
 
-    Vector<bool> m_skips;
-    Vector<TXSize> m_tx_sizes;
-    Vector<u32> m_mi_sizes;
-    Vector<PredictionMode> m_y_modes;
-    Vector<u8> m_segment_ids;
-    Vector<ReferenceFramePair> m_ref_frames;
-    Vector<ReferenceFramePair> m_prev_ref_frames;
-    Vector<MotionVectorPair> m_mvs;
-    Vector<MotionVectorPair> m_prev_mvs;
+    // FIXME: From spec: NOTE – We are using a 2D array to store the SubModes for clarity. It is possible to reduce memory
+    //        consumption by only storing one intra mode for each 8x8 horizontal and vertical position, i.e. to use two 1D
+    //        arrays instead.
+    //        I think should also apply to other fields that are only accessed relative to the current block. Worth looking
+    //        into how much of this context needs to be stored for the whole frame vs a row or column from the current tile.
+    Vector<FrameBlockContext> m_frame_block_contexts;
+
     MotionVectorPair m_candidate_mv;
     ReferenceFramePair m_candidate_frame;
-    Vector<Array<Array<MotionVector, 4>, 2>> m_sub_mvs;
     u8 m_ref_mv_count { 0 };
     MotionVectorPair m_ref_list_mv;
     bool m_use_prev_frame_mvs;
-    Vector<InterpolationFilter> m_interp_filters;
+    Vector<ReferenceFramePair> m_prev_ref_frames;
+    Vector<MotionVectorPair> m_prev_mvs;
     // Indexed by ReferenceFrame enum.
     u8 m_mode_context[4] { INVALID_CASE };
 
