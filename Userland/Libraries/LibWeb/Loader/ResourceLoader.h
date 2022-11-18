@@ -44,7 +44,10 @@ namespace Web {
 #    error Unknown OS
 #endif
 
-constexpr auto default_user_agent = "Mozilla/5.0 (" OS_STRING "; " CPU_STRING ") LibWeb+LibJS/1.0 Ladybird/1.0"sv;
+#define BROWSER_NAME "Ladybird"
+#define BROWSER_VERSION "1.0"
+
+constexpr auto default_user_agent = "Mozilla/5.0 (" OS_STRING "; " CPU_STRING ") LibWeb+LibJS/1.0 " BROWSER_NAME "/" BROWSER_VERSION ""sv;
 
 class ResourceLoaderConnectorRequest : public RefCounted<ResourceLoaderConnectorRequest> {
 public:
