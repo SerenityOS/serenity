@@ -134,35 +134,32 @@ int getpwent_r(struct passwd* passwd_buf, char* buffer, size_t buffer_size, stru
 
     while (true) {
         if (!s_stream || feof(s_stream)) {
-            errno = EIO;
-            return -1;
+            *passwd_entry_ptr = nullptr;
+            return ENOENT;
         }
 
         if (ferror(s_stream)) {
-            dbgln("getpwent(): Read error: {}", strerror(ferror(s_stream)));
-            errno = EIO;
-            return -1;
+            *passwd_entry_ptr = nullptr;
+            return ferror(s_stream);
         }
 
         ++s_line_number;
         char* s = fgets(buffer, buffer_size, s_stream);
 
-        // Silently tolerate an empty line at the end.
         if ((!s || !s[0]) && feof(s_stream)) {
             *passwd_entry_ptr = nullptr;
-            return 0;
+            return ENOENT;
         }
 
         if (strlen(s) == buffer_size - 1) {
-            errno = ERANGE;
-            return -1;
+            *passwd_entry_ptr = nullptr;
+            return ERANGE;
         }
 
         if (parse_pwddb_entry(buffer, *passwd_buf)) {
             *passwd_entry_ptr = passwd_buf;
             return 0;
         }
-        // Otherwise, proceed to the next line.
     }
 }
 
