@@ -8,12 +8,23 @@
 
 #include <AK/Iterator.h>
 #include <AK/Span.h>
+#include <AK/StdLibExtras.h>
+#include <AK/TypedTransfer.h>
 
 namespace AK {
 
 template<typename T, size_t Size>
 struct Array {
     using ValueType = T;
+
+    // This is a static function because constructors mess up Array's POD-ness.
+    static Array from_span(Span<T> span)
+    {
+        Array array;
+        VERIFY(span.size() == Size);
+        TypedTransfer<T>::copy(array.data(), span.data(), Size);
+        return array;
+    }
 
     [[nodiscard]] constexpr T const* data() const { return __data; }
     [[nodiscard]] constexpr T* data() { return __data; }
