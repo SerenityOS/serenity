@@ -74,7 +74,7 @@ bool SharedIRQHandler::handle_interrupt(RegisterState const& regs)
     for (auto& handler : m_handlers) {
         dbgln_if(INTERRUPT_DEBUG, "Going for Interrupt Handling @ {}, Shared Interrupt {}", i, interrupt_number());
         if (handler.handle_interrupt(regs)) {
-            handler.increment_invoking_counter();
+            handler.increment_call_count();
             was_handled = true;
         }
         dbgln_if(INTERRUPT_DEBUG, "Going for Interrupt Handling @ {}, Shared Interrupt {} - End", i, interrupt_number());

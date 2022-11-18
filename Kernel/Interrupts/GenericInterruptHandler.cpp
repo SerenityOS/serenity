@@ -67,4 +67,9 @@ void GenericInterruptHandler::change_interrupt_number(u8 number)
     register_generic_interrupt_handler(InterruptManagement::acquire_mapped_interrupt_number(interrupt_number()), *this);
 }
 
+void GenericInterruptHandler::increment_call_count()
+{
+    ++m_call_count;
+}
+
 }
