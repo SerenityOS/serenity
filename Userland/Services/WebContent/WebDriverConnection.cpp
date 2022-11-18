@@ -1158,7 +1158,8 @@ Messages::WebDriverClient::ExecuteScriptResponse WebDriverConnection::execute_sc
     // 2. If the current browsing context is no longer open, return error with error code no such window.
     TRY(ensure_open_top_level_browsing_context());
 
-    // FIXME: 3. Handle any user prompts, and return its value if it is an error.
+    // 3. Handle any user prompts, and return its value if it is an error.
+    TRY(handle_any_user_prompts());
 
     // 4., 5.1-5.3.
     auto result = Web::WebDriver::execute_script(m_page_host.page(), body, move(arguments), m_timeouts_configuration.script_timeout);
@@ -1189,7 +1190,8 @@ Messages::WebDriverClient::ExecuteAsyncScriptResponse WebDriverConnection::execu
     // 2. If the current browsing context is no longer open, return error with error code no such window.
     TRY(ensure_open_top_level_browsing_context());
 
-    // FIXME: 3. Handle any user prompts, and return its value if it is an error.
+    // 3. Handle any user prompts, and return its value if it is an error.
+    TRY(handle_any_user_prompts());
 
     // 4., 5.1-5.11.
     auto result = Web::WebDriver::execute_async_script(m_page_host.page(), body, move(arguments), m_timeouts_configuration.script_timeout);
@@ -1217,7 +1219,8 @@ Messages::WebDriverClient::GetAllCookiesResponse WebDriverConnection::get_all_co
     // 1. If the current browsing context is no longer open, return error with error code no such window.
     TRY(ensure_open_top_level_browsing_context());
 
-    // FIXME: 2. Handle any user prompts, and return its value if it is an error.
+    // 2. Handle any user prompts, and return its value if it is an error.
+    TRY(handle_any_user_prompts());
 
     // 3. Let cookies be a new JSON List.
     JsonArray cookies;
@@ -1243,7 +1246,8 @@ Messages::WebDriverClient::GetNamedCookieResponse WebDriverConnection::get_named
     // 1. If the current browsing context is no longer open, return error with error code no such window.
     TRY(ensure_open_top_level_browsing_context());
 
-    // FIXME: 2. Handle any user prompts, and return its value if it is an error.
+    // 2. Handle any user prompts, and return its value if it is an error.
+    TRY(handle_any_user_prompts());
 
     // 3. If the url variable name is equal to a cookie’s cookie name amongst all associated cookies of the current browsing context’s active document, return success with the serialized cookie as data.
     auto* document = m_page_host.page().top_level_browsing_context().active_document();
@@ -1269,7 +1273,9 @@ Messages::WebDriverClient::AddCookieResponse WebDriverConnection::add_cookie(Jso
     // 3. If the current browsing context is no longer open, return error with error code no such window.
     TRY(ensure_open_top_level_browsing_context());
 
-    // FIXME: 4. Handle any user prompts, and return its value if it is an error.
+    // 4. Handle any user prompts, and return its value if it is an error.
+    TRY(handle_any_user_prompts());
+
     // FIXME: 5. If the current browsing context’s document element is a cookie-averse Document object, return error with error code invalid cookie domain.
 
     // 6. If cookie name or cookie value is null, cookie domain is not equal to the current browsing context’s active document’s domain, cookie secure only or cookie HTTP only are not boolean types, or cookie expiry time is not an integer type, or it less than 0 or greater than the maximum safe integer, return error with error code invalid argument.
@@ -1334,7 +1340,8 @@ Messages::WebDriverClient::DeleteCookieResponse WebDriverConnection::delete_cook
     // 1. If the current browsing context is no longer open, return error with error code no such window.
     TRY(ensure_open_top_level_browsing_context());
 
-    // FIXME: 2. Handle any user prompts, and return its value if it is an error.
+    // 2. Handle any user prompts, and return its value if it is an error.
+    TRY(handle_any_user_prompts());
 
     // 3. Delete cookies using the url variable name parameter as the filter argument.
     delete_cookies(name);
@@ -1349,7 +1356,8 @@ Messages::WebDriverClient::DeleteAllCookiesResponse WebDriverConnection::delete_
     // 1. If the current browsing context is no longer open, return error with error code no such window.
     TRY(ensure_open_top_level_browsing_context());
 
-    // FIXME: 2. Handle any user prompts, and return its value if it is an error.
+    // 2. Handle any user prompts, and return its value if it is an error.
+    TRY(handle_any_user_prompts());
 
     // 3. Delete cookies, giving no filtering argument.
     delete_cookies();
