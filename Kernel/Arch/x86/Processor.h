@@ -61,7 +61,9 @@ struct [[gnu::aligned(64), gnu::packed]] FPUState
 class Processor;
 // Note: We only support 64 processors at most at the moment,
 // so allocate 64 slots of inline capacity in the container.
-using ProcessorContainer = Array<Processor*, 64>;
+
+constexpr size_t MAX_CPU_COUNT = 64;
+using ProcessorContainer = Array<Processor*, MAX_CPU_COUNT>;
 
 class Processor {
     friend class ProcessorInfo;
