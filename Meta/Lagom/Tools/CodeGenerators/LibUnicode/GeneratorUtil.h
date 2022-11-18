@@ -51,10 +51,10 @@ struct AK::Traits<Vector<T>> : public GenericTraits<Vector<T>> {
     }
 };
 
-template<typename StorageType, typename IndexType>
+template<typename StorageType>
 class UniqueStorage {
 public:
-    IndexType ensure(StorageType value)
+    size_t ensure(StorageType value)
     {
         // We maintain a set of unique values in two structures: a vector which stores the values in
         // the order they are added, and a hash map which maps that value to its index in the vector.
@@ -68,17 +68,14 @@ public:
             return *index;
 
         m_storage.append(move(value));
-        size_t index = m_storage.size();
 
-        VERIFY(index < NumericLimits<IndexType>::max());
-
-        auto storage_index = static_cast<IndexType>(index);
+        auto storage_index = m_storage.size();
         m_storage_indices.set(m_storage.last(), storage_index);
 
         return storage_index;
     }
 
-    StorageType const& get(IndexType index) const
+    StorageType const& get(size_t index) const
     {
         if (index == 0) {
             static StorageType empty {};
@@ -87,6 +84,17 @@ public:
 
         VERIFY(index <= m_storage.size());
         return m_storage.at(index - 1);
+    }
+
+    StringView type_that_fits() const
+    {
+        if (m_storage.size() <= NumericLimits<u8>::max())
+            return "u8"sv;
+        if (m_storage.size() <= NumericLimits<u16>::max())
+            return "u16"sv;
+        if (m_storage.size() <= NumericLimits<u32>::max())
+            return "u32"sv;
+        return "u64"sv;
     }
 
     void generate(SourceGenerator& generator, StringView type, StringView name, size_t max_values_per_row) requires(!StorageTypeIsList<StorageType>)
@@ -177,13 +185,12 @@ static constexpr Array<Span<@type@ const>, @size@ + 1> @name@ { {
     // clang-format gets confused by the requires() clauses above, and formats this section very weirdly.
 protected:
     Vector<StorageType> m_storage;
-    HashMap<StorageType, IndexType> m_storage_indices;
+    HashMap<StorageType, size_t> m_storage_indices;
     // clang-format on
 };
 
-template<typename StringIndexType>
-class UniqueStringStorage : public UniqueStorage<String, StringIndexType> {
-    using Base = UniqueStorage<String, StringIndexType>;
+class UniqueStringStorage : public UniqueStorage<String> {
+    using Base = UniqueStorage<String>;
 
 public:
     // The goal of the string table generator is to ensure the table is located within the read-only
@@ -275,9 +282,8 @@ struct Alias {
     String alias;
 };
 
-template<typename StringIndexType>
 struct CanonicalLanguageID {
-    static ErrorOr<CanonicalLanguageID> parse(UniqueStringStorage<StringIndexType>& unique_strings, StringView language)
+    static ErrorOr<CanonicalLanguageID> parse(UniqueStringStorage& unique_strings, StringView language)
     {
         CanonicalLanguageID language_id {};
 
@@ -314,10 +320,10 @@ struct CanonicalLanguageID {
         return language_id;
     }
 
-    StringIndexType language { 0 };
-    StringIndexType script { 0 };
-    StringIndexType region { 0 };
-    Vector<StringIndexType> variants {};
+    size_t language { 0 };
+    size_t script { 0 };
+    size_t region { 0 };
+    Vector<size_t> variants {};
 };
 
 inline ErrorOr<NonnullOwnPtr<Core::Stream::BufferedFile>> open_file(StringView path, Core::Stream::OpenMode mode)

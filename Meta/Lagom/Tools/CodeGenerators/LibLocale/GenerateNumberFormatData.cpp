@@ -32,24 +32,6 @@
 #include <LibLocale/PluralRules.h>
 #include <math.h>
 
-using StringIndexType = u16;
-constexpr auto s_string_index_type = "u16"sv;
-
-using NumberFormatIndexType = u16;
-constexpr auto s_number_format_index_type = "u16"sv;
-
-using NumberFormatListIndexType = u16;
-constexpr auto s_number_format_list_index_type = "u16"sv;
-
-using NumericSymbolListIndexType = u8;
-constexpr auto s_numeric_symbol_list_index_type = "u8"sv;
-
-using NumberSystemIndexType = u8;
-constexpr auto s_number_system_index_type = "u8"sv;
-
-using UnitIndexType = u16;
-constexpr auto s_unit_index_type = "u16"sv;
-
 enum class NumberFormatType {
     Standard,
     Compact,
@@ -83,10 +65,10 @@ struct NumberFormat : public Locale::NumberFormat {
             && (identifier_indices == other.identifier_indices);
     }
 
-    StringIndexType zero_format_index { 0 };
-    StringIndexType positive_format_index { 0 };
-    StringIndexType negative_format_index { 0 };
-    Vector<StringIndexType> identifier_indices {};
+    size_t zero_format_index { 0 };
+    size_t positive_format_index { 0 };
+    size_t negative_format_index { 0 };
+    Vector<size_t> identifier_indices {};
 };
 
 template<>
@@ -113,8 +95,8 @@ struct AK::Traits<NumberFormat> : public GenericTraits<NumberFormat> {
     static unsigned hash(NumberFormat const& f) { return f.hash(); }
 };
 
-using NumberFormatList = Vector<NumberFormatIndexType>;
-using NumericSymbolList = Vector<StringIndexType>;
+using NumberFormatList = Vector<size_t>;
+using NumericSymbolList = Vector<size_t>;
 
 struct NumberSystem {
     unsigned hash() const
@@ -150,22 +132,22 @@ struct NumberSystem {
             && (scientific_format == other.scientific_format);
     }
 
-    NumericSymbolListIndexType symbols { 0 };
+    size_t symbols { 0 };
 
     u8 primary_grouping_size { 0 };
     u8 secondary_grouping_size { 0 };
 
-    NumberFormatIndexType decimal_format { 0 };
-    NumberFormatListIndexType decimal_long_formats { 0 };
-    NumberFormatListIndexType decimal_short_formats { 0 };
+    size_t decimal_format { 0 };
+    size_t decimal_long_formats { 0 };
+    size_t decimal_short_formats { 0 };
 
-    NumberFormatIndexType currency_format { 0 };
-    NumberFormatIndexType accounting_format { 0 };
-    NumberFormatListIndexType currency_unit_formats { 0 };
-    NumberFormatListIndexType currency_short_formats { 0 };
+    size_t currency_format { 0 };
+    size_t accounting_format { 0 };
+    size_t currency_unit_formats { 0 };
+    size_t currency_short_formats { 0 };
 
-    NumberFormatIndexType percent_format { 0 };
-    NumberFormatIndexType scientific_format { 0 };
+    size_t percent_format { 0 };
+    size_t scientific_format { 0 };
 };
 
 template<>
@@ -212,10 +194,10 @@ struct Unit {
             && (narrow_formats == other.narrow_formats);
     }
 
-    StringIndexType unit { 0 };
-    NumberFormatListIndexType long_formats { 0 };
-    NumberFormatListIndexType short_formats { 0 };
-    NumberFormatListIndexType narrow_formats { 0 };
+    size_t unit { 0 };
+    size_t long_formats { 0 };
+    size_t short_formats { 0 };
+    size_t narrow_formats { 0 };
 };
 
 template<>
@@ -237,18 +219,18 @@ struct AK::Traits<Unit> : public GenericTraits<Unit> {
 };
 
 struct LocaleData {
-    Vector<NumberSystemIndexType> number_systems;
-    HashMap<String, UnitIndexType> units {};
+    Vector<size_t> number_systems;
+    HashMap<String, size_t> units {};
     u8 minimum_grouping_digits { 0 };
 };
 
 struct CLDR {
-    UniqueStringStorage<StringIndexType> unique_strings;
-    UniqueStorage<NumberFormat, NumberFormatIndexType> unique_formats;
-    UniqueStorage<NumberFormatList, NumberFormatListIndexType> unique_format_lists;
-    UniqueStorage<NumericSymbolList, NumericSymbolListIndexType> unique_symbols;
-    UniqueStorage<NumberSystem, NumberSystemIndexType> unique_systems;
-    UniqueStorage<Unit, UnitIndexType> unique_units;
+    UniqueStringStorage unique_strings;
+    UniqueStorage<NumberFormat> unique_formats;
+    UniqueStorage<NumberFormatList> unique_format_lists;
+    UniqueStorage<NumericSymbolList> unique_symbols;
+    UniqueStorage<NumberSystem> unique_systems;
+    UniqueStorage<Unit> unique_units;
 
     HashMap<String, Array<u32, 10>> number_system_digits;
     Vector<String> number_systems;
@@ -419,7 +401,7 @@ static void parse_number_pattern(Vector<String> patterns, CLDR& cldr, NumberForm
     format.zero_format_index = cldr.unique_strings.ensure(move(zero_format));
 }
 
-static void parse_number_pattern(Vector<String> patterns, CLDR& cldr, NumberFormatType type, NumberFormatIndexType& format_index, NumberSystem* number_system_for_groupings = nullptr)
+static void parse_number_pattern(Vector<String> patterns, CLDR& cldr, NumberFormatType type, size_t& format_index, NumberSystem* number_system_for_groupings = nullptr)
 {
     NumberFormat format {};
     parse_number_pattern(move(patterns), cldr, type, format, number_system_for_groupings);
@@ -453,7 +435,7 @@ static ErrorOr<void> parse_number_systems(String locale_numbers_path, CLDR& cldr
     };
 
     auto parse_number_format = [&](auto const& format_object) {
-        Vector<NumberFormatIndexType> result;
+        Vector<size_t> result;
         result.ensure_capacity(format_object.size());
 
         format_object.for_each_member([&](auto const& key, JsonValue const& value) {
@@ -601,7 +583,7 @@ static ErrorOr<void> parse_number_systems(String locale_numbers_path, CLDR& cldr
     locale.number_systems.ensure_capacity(number_systems.size());
 
     for (auto& number_system : number_systems) {
-        NumberSystemIndexType system_index = 0;
+        size_t system_index = 0;
         if (number_system.has_value())
             system_index = cldr.unique_systems.ensure(number_system.release_value());
 
@@ -727,7 +709,7 @@ static ErrorOr<void> parse_all_locales(String core_path, String numbers_path, St
     TRY(parse_number_system_digits(core_supplemental_path.string(), cldr));
 
     auto remove_variants_from_path = [&](String path) -> ErrorOr<String> {
-        auto parsed_locale = TRY(CanonicalLanguageID<StringIndexType>::parse(cldr.unique_strings, LexicalPath::basename(path)));
+        auto parsed_locale = TRY(CanonicalLanguageID::parse(cldr.unique_strings, LexicalPath::basename(path)));
 
         StringBuilder builder;
         builder.append(cldr.unique_strings.get(parsed_locale.language));
@@ -790,10 +772,10 @@ static ErrorOr<void> generate_unicode_locale_implementation(Core::Stream::Buffer
 {
     StringBuilder builder;
     SourceGenerator generator { builder };
-    generator.set("string_index_type"sv, s_string_index_type);
-    generator.set("number_format_index_type"sv, s_number_format_index_type);
-    generator.set("number_format_list_index_type"sv, s_number_format_list_index_type);
-    generator.set("numeric_symbol_list_index_type"sv, s_numeric_symbol_list_index_type);
+    generator.set("string_index_type"sv, cldr.unique_strings.type_that_fits());
+    generator.set("number_format_index_type"sv, cldr.unique_formats.type_that_fits());
+    generator.set("number_format_list_index_type"sv, cldr.unique_format_lists.type_that_fits());
+    generator.set("numeric_symbol_list_index_type"sv, cldr.unique_symbols.type_that_fits());
     generator.set("identifier_count", String::number(cldr.max_identifier_count));
 
     generator.append(R"~~~(
@@ -870,8 +852,8 @@ struct Unit {
 )~~~");
 
     cldr.unique_formats.generate(generator, "NumberFormatImpl"sv, "s_number_formats"sv, 10);
-    cldr.unique_format_lists.generate(generator, s_number_format_index_type, "s_number_format_lists"sv);
-    cldr.unique_symbols.generate(generator, s_string_index_type, "s_numeric_symbol_lists"sv);
+    cldr.unique_format_lists.generate(generator, cldr.unique_formats.type_that_fits(), "s_number_format_lists"sv);
+    cldr.unique_symbols.generate(generator, cldr.unique_strings.type_that_fits(), "s_numeric_symbol_lists"sv);
     cldr.unique_systems.generate(generator, "NumberSystemData"sv, "s_number_systems"sv, 10);
     cldr.unique_units.generate(generator, "Unit"sv, "s_units"sv, 10);
 
@@ -912,8 +894,8 @@ static constexpr Array<@type@, @size@> @name@ { {)~~~");
     };
 
     generate_mapping(generator, cldr.number_system_digits, "u32"sv, "s_number_systems_digits"sv, "s_number_systems_digits_{}"sv, nullptr, [&](auto const& name, auto const& value) { append_map(name, "u32"sv, value); });
-    generate_mapping(generator, cldr.locales, s_number_system_index_type, "s_locale_number_systems"sv, "s_number_systems_{}"sv, nullptr, [&](auto const& name, auto const& value) { append_map(name, s_number_system_index_type, value.number_systems); });
-    generate_mapping(generator, cldr.locales, s_unit_index_type, "s_locale_units"sv, "s_units_{}"sv, nullptr, [&](auto const& name, auto const& value) { append_map(name, s_unit_index_type, value.units); });
+    generate_mapping(generator, cldr.locales, cldr.unique_systems.type_that_fits(), "s_locale_number_systems"sv, "s_number_systems_{}"sv, nullptr, [&](auto const& name, auto const& value) { append_map(name, cldr.unique_systems.type_that_fits(), value.number_systems); });
+    generate_mapping(generator, cldr.locales, cldr.unique_units.type_that_fits(), "s_locale_units"sv, "s_units_{}"sv, nullptr, [&](auto const& name, auto const& value) { append_map(name, cldr.unique_units.type_that_fits(), value.units); });
 
     generator.append(R"~~~(
 static Optional<NumberSystem> keyword_to_number_system(KeywordNumbers keyword)

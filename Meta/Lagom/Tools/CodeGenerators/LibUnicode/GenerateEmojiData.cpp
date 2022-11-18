@@ -15,11 +15,8 @@
 #include <LibCore/Stream.h>
 #include <LibUnicode/Emoji.h>
 
-using StringIndexType = u16;
-constexpr auto s_string_index_type = "u16"sv;
-
 struct Emoji {
-    StringIndexType name { 0 };
+    size_t name { 0 };
     Optional<String> image_path;
     Unicode::EmojiGroup group;
     String subgroup;
@@ -31,7 +28,7 @@ struct Emoji {
 };
 
 struct EmojiData {
-    UniqueStringStorage<StringIndexType> unique_strings;
+    UniqueStringStorage unique_strings;
     Vector<Emoji> emojis;
 };
 
@@ -180,7 +177,7 @@ static ErrorOr<void> generate_emoji_data_implementation(Core::Stream::BufferedFi
     StringBuilder builder;
     SourceGenerator generator { builder };
 
-    generator.set("string_index_type"sv, s_string_index_type);
+    generator.set("string_index_type"sv, emoji_data.unique_strings.type_that_fits());
     generator.set("emojis_size"sv, String::number(emoji_data.emojis.size()));
 
     generator.append(R"~~~(

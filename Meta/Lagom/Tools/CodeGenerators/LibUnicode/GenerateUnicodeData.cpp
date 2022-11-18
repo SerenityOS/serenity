@@ -20,9 +20,6 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/Stream.h>
 
-using StringIndexType = u16;
-constexpr auto s_string_index_type = "u16"sv;
-
 // Some code points are excluded from UnicodeData.txt, and instead are part of a "range" of code
 // points, as indicated by the "name" field. For example:
 //     3400;<CJK Ideograph Extension A, First>;Lo;0;L;;;;;N;;;;;
@@ -74,7 +71,7 @@ using NormalizationProps = HashMap<String, Vector<Normalization>>;
 
 struct CodePointName {
     CodePointRange code_point_range;
-    StringIndexType name { 0 };
+    size_t name { 0 };
 };
 
 // UnicodeData source: https://www.unicode.org/Public/13.0.0/ucd/UnicodeData.txt
@@ -83,7 +80,7 @@ struct CodePointName {
 struct CodePointData {
     u32 code_point { 0 };
     String name;
-    Optional<StringIndexType> abbreviation;
+    Optional<size_t> abbreviation;
     u8 canonical_combining_class { 0 };
     String bidi_class;
     Optional<CodePointDecomposition> decomposition_mapping;
@@ -101,11 +98,11 @@ struct CodePointData {
 
 struct BlockName {
     CodePointRange code_point_range;
-    StringIndexType name { 0 };
+    size_t name { 0 };
 };
 
 struct UnicodeData {
-    UniqueStringStorage<StringIndexType> unique_strings;
+    UniqueStringStorage unique_strings;
 
     u32 code_points_with_non_zero_combining_class { 0 };
 
@@ -125,8 +122,8 @@ struct UnicodeData {
 
     Vector<CodePointData> code_point_data;
 
-    HashMap<u32, StringIndexType> code_point_abbreviations;
-    HashMap<u32, StringIndexType> code_point_display_name_aliases;
+    HashMap<u32, size_t> code_point_abbreviations;
+    HashMap<u32, size_t> code_point_display_name_aliases;
     Vector<CodePointName> code_point_display_names;
 
     PropList general_categories;
@@ -795,7 +792,7 @@ static ErrorOr<void> generate_unicode_data_implementation(Core::Stream::Buffered
     StringBuilder builder;
     SourceGenerator generator { builder };
 
-    generator.set("string_index_type"sv, s_string_index_type);
+    generator.set("string_index_type"sv, unicode_data.unique_strings.type_that_fits());
     generator.set("largest_special_casing_size", String::number(unicode_data.largest_special_casing_size));
     generator.set("special_casing_size", String::number(unicode_data.special_casing.size()));
 
@@ -947,7 +944,7 @@ static constexpr Array<@mapping_type@, @size@> s_@name@_mappings { {
             generator.set("code_point", String::formatted("{:#x}", data.code_point));
             generator.append("{ @code_point@");
 
-            if constexpr (IsSame<decltype(mapping), Optional<u32>> || IsSame<decltype(mapping), Optional<StringIndexType>>) {
+            if constexpr (IsSame<decltype(mapping), Optional<u32>> || IsSame<decltype(mapping), Optional<size_t>>) {
                 generator.set("mapping", String::formatted("{:#x}", *mapping));
                 generator.append(", @mapping@ },");
             } else if constexpr (IsSame<decltype(mapping), Optional<CodePointDecomposition>>) {

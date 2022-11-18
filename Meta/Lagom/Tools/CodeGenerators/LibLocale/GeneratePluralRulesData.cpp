@@ -19,8 +19,6 @@
 #include <LibCore/Stream.h>
 #include <LibLocale/PluralRules.h>
 
-using StringIndexType = u16;
-
 static String format_identifier(StringView owner, String identifier)
 {
     identifier = identifier.replace("-"sv, "_"sv, ReplaceMode::All);
@@ -214,7 +212,7 @@ struct LocaleData {
 };
 
 struct CLDR {
-    UniqueStringStorage<StringIndexType> unique_strings;
+    UniqueStringStorage unique_strings;
 
     HashMap<String, LocaleData> locales;
 };
@@ -404,7 +402,7 @@ static ErrorOr<void> parse_all_locales(String core_path, String locale_names_pat
     VERIFY(Core::File::is_directory(core_supplemental_path.string()));
 
     auto remove_variants_from_path = [&](String path) -> ErrorOr<String> {
-        auto parsed_locale = TRY(CanonicalLanguageID<StringIndexType>::parse(cldr.unique_strings, LexicalPath::basename(path)));
+        auto parsed_locale = TRY(CanonicalLanguageID::parse(cldr.unique_strings, LexicalPath::basename(path)));
 
         StringBuilder builder;
         builder.append(cldr.unique_strings.get(parsed_locale.language));
