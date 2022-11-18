@@ -16,6 +16,7 @@
 #include <Kernel/KString.h>
 #include <Kernel/Library/LockRefPtr.h>
 #include <Kernel/Locking/SpinlockProtected.h>
+#include <Kernel/Process.h>
 
 namespace Kernel {
 
