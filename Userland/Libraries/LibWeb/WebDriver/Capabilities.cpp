@@ -4,10 +4,12 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Debug.h>
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
 #include <AK/Optional.h>
+#include <LibWeb/Loader/ResourceLoader.h>
 #include <LibWeb/WebDriver/Capabilities.h>
 #include <LibWeb/WebDriver/TimeoutsConfiguration.h>
 
@@ -176,6 +178,115 @@ static ErrorOr<JsonObject, Error> merge_capabilities(JsonObject const& primary, 
     return result;
 }
 
+static bool matches_browser_version(StringView requested_version, StringView required_version)
+{
+    // FIXME: Handle relative (>, >=, <. <=) comparisons. For now, require an exact match.
+    return requested_version == required_version;
+}
+
+static bool matches_platform_name(StringView requested_platform_name, StringView required_platform_name)
+{
+    if (requested_platform_name == required_platform_name)
+        return true;
+
+    // The following platform names are in common usage with well-understood semantics and, when matching capabilities, greatest interoperability can be achieved by honoring them as valid synonyms for well-known Operating Systems:
+    //     "linux"   Any server or desktop system based upon the Linux kernel.
+    //     "mac"     Any version of Apple’s macOS.
+    //     "windows" Any version of Microsoft Windows, including desktop and mobile versions.
+    // This list is not exhaustive.
+
+    // NOTE: Of the synonyms listed in the spec, the only one that differs for us is macOS.
+    //       Further, we are allowed to handle synonyms for SerenityOS.
+    if (requested_platform_name == "mac"sv && required_platform_name == "macos"sv)
+        return true;
+    if (requested_platform_name == "serenity"sv && required_platform_name == "serenityos"sv)
+        return true;
+    return false;
+}
+
+// https://w3c.github.io/webdriver/#dfn-matching-capabilities
+static JsonValue match_capabilities(JsonObject const& capabilities)
+{
+    static auto browser_name = StringView { BROWSER_NAME, strlen(BROWSER_NAME) }.to_lowercase_string();
+    static auto platform_name = StringView { OS_STRING, strlen(OS_STRING) }.to_lowercase_string();
+
+    // 1. Let matched capabilities be a JSON Object with the following entries:
+    JsonObject matched_capabilities;
+    // "browserName"
+    //     ASCII Lowercase name of the user agent as a string.
+    matched_capabilities.set("browserName"sv, browser_name);
+    // "browserVersion"
+    //     The user agent version, as a string.
+    matched_capabilities.set("browserVersion"sv, BROWSER_VERSION);
+    // "platformName"
+    //     ASCII Lowercase name of the current platform as a string.
+    matched_capabilities.set("platformName"sv, platform_name);
+    // "acceptInsecureCerts"
+    //     Boolean initially set to false, indicating the session will not implicitly trust untrusted or self-signed TLS certificates on navigation.
+    matched_capabilities.set("acceptInsecureCerts"sv, false);
+    // "strictFileInteractability"
+    //     Boolean initially set to false, indicating that interactability checks will be applied to <input type=file>.
+    matched_capabilities.set("strictFileInteractability"sv, false);
+    // "setWindowRect"
+    //     Boolean indicating whether the remote end supports all of the resizing and positioning commands.
+    matched_capabilities.set("setWindowRect"sv, true);
+
+    // 2. Optionally add extension capabilities as entries to matched capabilities. The values of these may be elided, and there is no requirement that all extension capabilities be added.
+
+    // 3. For each name and value corresponding to capability’s own properties:
+    auto result = capabilities.try_for_each_member([&](auto const& name, auto const& value) -> ErrorOr<void> {
+        // a. Let match value equal value.
+
+        // b. Run the substeps of the first matching name:
+        // -> "browserName"
+        if (name == "browserName"sv) {
+            // If value is not a string equal to the "browserName" entry in matched capabilities, return success with data null.
+            if (value.as_string() != matched_capabilities.get(name).as_string())
+                return AK::Error::from_string_view("browserName"sv);
+        }
+        // -> "browserVersion"
+        else if (name == "browserVersion"sv) {
+            // Compare value to the "browserVersion" entry in matched capabilities using an implementation-defined comparison algorithm. The comparison is to accept a value that places constraints on the version using the "<", "<=", ">", and ">=" operators.
+            // If the two values do not match, return success with data null.
+            if (!matches_browser_version(value.as_string(), matched_capabilities.get(name).as_string()))
+                return AK::Error::from_string_view("browserVersion"sv);
+        }
+        // -> "platformName"
+        else if (name == "platformName"sv) {
+            // If value is not a string equal to the "platformName" entry in matched capabilities, return success with data null.
+            if (!matches_platform_name(value.as_string(), matched_capabilities.get(name).as_string()))
+                return AK::Error::from_string_view("platformName"sv);
+        }
+        // -> "acceptInsecureCerts"
+        else if (name == "acceptInsecureCerts"sv) {
+            // If value is true and the endpoint node does not support insecure TLS certificates, return success with data null.
+            if (value.as_bool())
+                return AK::Error::from_string_view("acceptInsecureCerts"sv);
+        }
+        // -> "proxy"
+        else if (name == "proxy"sv) {
+            // FIXME: If the endpoint node does not allow the proxy it uses to be configured, or if the proxy configuration defined in value is not one that passes the endpoint node’s implementation-specific validity checks, return success with data null.
+        }
+        // -> Otherwise
+        else {
+            // FIXME: If name is the name of an additional WebDriver capability which defines a matched capability serialization algorithm, let match value be the result of running the matched capability serialization algorithm for capability name with argument value.
+            // FIXME: Otherwise, if name is the key of an extension capability, let match value be the result of trying implementation-specific steps to match on name with value. If the match is not successful, return success with data null.
+        }
+
+        // c. Set a property on matched capabilities with name name and value match value.
+        matched_capabilities.set(name, value);
+        return {};
+    });
+
+    if (result.is_error()) {
+        dbgln_if(WEBDRIVER_DEBUG, "Failed to match capability: {}", result.error());
+        return JsonValue {};
+    }
+
+    // 4. Return success with data matched capabilities.
+    return matched_capabilities;
+}
+
 // https://w3c.github.io/webdriver/#dfn-capabilities-processing
 Response process_capabilities(JsonValue const& parameters)
 {
@@ -241,14 +352,18 @@ Response process_capabilities(JsonValue const& parameters)
         return {};
     }));
 
-    // FIXME: 8. For each capabilities corresponding to an indexed property in merged capabilities:
-    // FIXME:    a. Let matched capabilities be the result of trying to match capabilities with capabilities as an argument.
-    // FIXME:    b. If matched capabilities is not null, return success with data matched capabilities.
+    // 8. For each capabilities corresponding to an indexed property in merged capabilities:
+    for (auto const& capabilities : merged_capabilities.values()) {
+        // a. Let matched capabilities be the result of trying to match capabilities with capabilities as an argument.
+        auto matched_capabilities = match_capabilities(capabilities.as_object());
 
-    // For now, we just assume the first validated capabilties object is a match.
-    return merged_capabilities.take(0);
+        // b. If matched capabilities is not null, return success with data matched capabilities.
+        if (!matched_capabilities.is_null())
+            return matched_capabilities;
+    }
 
     // 9. Return success with data null.
+    return JsonValue {};
 }
 
 }
