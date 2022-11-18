@@ -509,7 +509,7 @@ void handle_interrupt(TrapFrame* trap)
         handler = s_interrupt_handler[irq];
     }
     VERIFY(handler);
-    handler->increment_invoking_counter();
+    handler->increment_call_count();
     handler->handle_interrupt(regs);
     handler->eoi();
 }

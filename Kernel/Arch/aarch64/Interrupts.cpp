@@ -37,7 +37,7 @@ extern "C" void handle_interrupt(TrapFrame const* const)
 
             auto* handler = s_interrupt_handlers[irq];
             VERIFY(handler);
-            handler->increment_invoking_counter();
+            handler->increment_call_count();
             handler->handle_interrupt(regs);
             handler->eoi();
 

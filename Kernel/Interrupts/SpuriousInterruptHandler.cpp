@@ -74,7 +74,7 @@ bool SpuriousInterruptHandler::handle_interrupt(RegisterState const& state)
     if (m_responsible_irq_controller->get_isr() & (1 << interrupt_number())) {
         m_real_irq = true; // remember that we had a real IRQ, when EOI later!
         if (m_real_handler->handle_interrupt(state)) {
-            m_real_handler->increment_invoking_counter();
+            m_real_handler->increment_call_count();
             return true;
         }
         return false;
