@@ -18,9 +18,6 @@
 
 namespace {
 
-using StringIndexType = u16;
-constexpr auto s_string_index_type = "u16"sv;
-
 struct DateTime {
     u16 year { 0 };
     Optional<u8> month;
@@ -43,8 +40,8 @@ struct TimeZoneOffset {
     Optional<i32> dst_rule_index;
     i64 dst_offset { 0 };
 
-    StringIndexType standard_format { 0 };
-    StringIndexType daylight_format { 0 };
+    size_t standard_format { 0 };
+    size_t daylight_format { 0 };
 };
 
 struct DaylightSavingsOffset {
@@ -53,11 +50,11 @@ struct DaylightSavingsOffset {
     Optional<u16> year_to;
     DateTime in_effect;
 
-    StringIndexType format { 0 };
+    size_t format { 0 };
 };
 
 struct TimeZoneData {
-    UniqueStringStorage<StringIndexType> unique_strings;
+    UniqueStringStorage unique_strings;
 
     HashMap<String, Vector<TimeZoneOffset>> time_zones;
     Vector<String> time_zone_names;
@@ -68,7 +65,7 @@ struct TimeZoneData {
 
     HashMap<String, TimeZone::Location> time_zone_coordinates;
 
-    HashMap<String, Vector<StringIndexType>> time_zone_regions;
+    HashMap<String, Vector<size_t>> time_zone_regions;
     Vector<String> time_zone_region_names;
 };
 
@@ -479,7 +476,7 @@ static ErrorOr<void> generate_time_zone_data_implementation(Core::Stream::Buffer
 {
     StringBuilder builder;
     SourceGenerator generator { builder };
-    generator.set("string_index_type"sv, s_string_index_type);
+    generator.set("string_index_type"sv, time_zone_data.unique_strings.type_that_fits());
 
     set_dst_rule_indices(time_zone_data);
 
@@ -578,7 +575,7 @@ static constexpr Array<@type@, @size@> @name@ { {
             append_offsets(name, "DaylightSavingsOffset"sv, dst_offsets);
         });
 
-    generate_mapping(generator, time_zone_data.time_zone_region_names, s_string_index_type, "s_regional_time_zones"sv, "s_regional_time_zones_{}"sv, format_identifier,
+    generate_mapping(generator, time_zone_data.time_zone_region_names, time_zone_data.unique_strings.type_that_fits(), "s_regional_time_zones"sv, "s_regional_time_zones_{}"sv, format_identifier,
         [&](auto const& name, auto const& value) {
             auto const& time_zones = time_zone_data.time_zone_regions.find(value)->value;
 

@@ -22,42 +22,6 @@
 #include <LibCore/File.h>
 #include <LibCore/Stream.h>
 
-using StringIndexType = u32;
-constexpr auto s_string_index_type = "u32"sv;
-
-using DisplayPatternIndexType = u8;
-constexpr auto s_display_pattern_index_type = "u8"sv;
-
-using LanguageListIndexType = u8;
-constexpr auto s_language_list_index_type = "u8"sv;
-
-using TerritoryListIndexType = u8;
-constexpr auto s_territory_list_index_type = "u8"sv;
-
-using ScriptListIndexType = u8;
-constexpr auto s_script_list_index_type = "u8"sv;
-
-using CurrencyListIndexType = u16;
-constexpr auto s_currency_list_index_type = "u16"sv;
-
-using CalendarListIndexType = u8;
-constexpr auto s_calendar_list_index_type = "u8"sv;
-
-using DateFieldListIndexType = u16;
-constexpr auto s_date_field_list_index_type = "u16"sv;
-
-using KeywordListIndexType = u8;
-constexpr auto s_keyword_list_index_type = "u8"sv;
-
-using ListPatternIndexType = u16;
-constexpr auto s_list_pattern_index_type = "u16"sv;
-
-using ListPatternListIndexType = u8;
-constexpr auto s_list_pattern_list_index_type = "u8"sv;
-
-using TextLayoutIndexType = u8;
-constexpr auto s_text_layout_index_type = "u8"sv;
-
 static String format_identifier(StringView owner, String identifier)
 {
     identifier = identifier.replace("-"sv, "_"sv, ReplaceMode::All);
@@ -81,8 +45,8 @@ struct DisplayPattern {
             && (locale_separator == other.locale_separator);
     }
 
-    StringIndexType locale_pattern { 0 };
-    StringIndexType locale_separator { 0 };
+    size_t locale_pattern { 0 };
+    size_t locale_separator { 0 };
 };
 
 template<>
@@ -124,10 +88,10 @@ struct ListPatterns {
 
     StringView type;
     StringView style;
-    StringIndexType start { 0 };
-    StringIndexType middle { 0 };
-    StringIndexType end { 0 };
-    StringIndexType pair { 0 };
+    size_t start { 0 };
+    size_t middle { 0 };
+    size_t end { 0 };
+    size_t pair { 0 };
 };
 
 template<>
@@ -179,57 +143,57 @@ struct AK::Traits<TextLayout> : public GenericTraits<TextLayout> {
     static unsigned hash(TextLayout const& t) { return t.hash(); }
 };
 
-using LanguageList = Vector<StringIndexType>;
-using TerritoryList = Vector<StringIndexType>;
-using ScriptList = Vector<StringIndexType>;
-using CurrencyList = Vector<StringIndexType>;
-using CalendarList = Vector<StringIndexType>;
-using DateFieldList = Vector<StringIndexType>;
-using KeywordList = Vector<StringIndexType>;
-using ListPatternList = Vector<ListPatternIndexType>;
+using LanguageList = Vector<size_t>;
+using TerritoryList = Vector<size_t>;
+using ScriptList = Vector<size_t>;
+using CurrencyList = Vector<size_t>;
+using CalendarList = Vector<size_t>;
+using DateFieldList = Vector<size_t>;
+using KeywordList = Vector<size_t>;
+using ListPatternList = Vector<size_t>;
 
 struct LocaleData {
     String language;
     Optional<String> territory;
     Optional<String> variant;
-    DisplayPatternIndexType display_patterns { 0 };
-    LanguageListIndexType languages { 0 };
-    TerritoryListIndexType territories { 0 };
-    ScriptListIndexType scripts { 0 };
-    CurrencyListIndexType long_currencies { 0 };
-    CurrencyListIndexType short_currencies { 0 };
-    CurrencyListIndexType narrow_currencies { 0 };
-    CurrencyListIndexType numeric_currencies { 0 };
-    CalendarListIndexType calendars { 0 };
-    DateFieldListIndexType long_date_fields { 0 };
-    DateFieldListIndexType short_date_fields { 0 };
-    DateFieldListIndexType narrow_date_fields { 0 };
-    KeywordListIndexType calendar_keywords { 0 };
-    KeywordListIndexType collation_case_keywords { 0 };
-    KeywordListIndexType collation_numeric_keywords { 0 };
-    KeywordListIndexType number_system_keywords { 0 };
-    ListPatternListIndexType list_patterns { 0 };
-    TextLayoutIndexType text_layout { 0 };
+    size_t display_patterns { 0 };
+    size_t languages { 0 };
+    size_t territories { 0 };
+    size_t scripts { 0 };
+    size_t long_currencies { 0 };
+    size_t short_currencies { 0 };
+    size_t narrow_currencies { 0 };
+    size_t numeric_currencies { 0 };
+    size_t calendars { 0 };
+    size_t long_date_fields { 0 };
+    size_t short_date_fields { 0 };
+    size_t narrow_date_fields { 0 };
+    size_t calendar_keywords { 0 };
+    size_t collation_case_keywords { 0 };
+    size_t collation_numeric_keywords { 0 };
+    size_t number_system_keywords { 0 };
+    size_t list_patterns { 0 };
+    size_t text_layout { 0 };
 };
 
 struct LanguageMapping {
-    CanonicalLanguageID<StringIndexType> key {};
-    CanonicalLanguageID<StringIndexType> alias {};
+    CanonicalLanguageID key {};
+    CanonicalLanguageID alias {};
 };
 
 struct CLDR {
-    UniqueStringStorage<StringIndexType> unique_strings;
-    UniqueStorage<DisplayPattern, DisplayPatternIndexType> unique_display_patterns;
-    UniqueStorage<LanguageList, LanguageListIndexType> unique_language_lists;
-    UniqueStorage<TerritoryList, TerritoryListIndexType> unique_territory_lists;
-    UniqueStorage<ScriptList, ScriptListIndexType> unique_script_lists;
-    UniqueStorage<CurrencyList, CurrencyListIndexType> unique_currency_lists;
-    UniqueStorage<CalendarList, CalendarListIndexType> unique_calendar_lists;
-    UniqueStorage<DateFieldList, DateFieldListIndexType> unique_date_field_lists;
-    UniqueStorage<KeywordList, KeywordListIndexType> unique_keyword_lists;
-    UniqueStorage<ListPatterns, ListPatternIndexType> unique_list_patterns;
-    UniqueStorage<ListPatternList, ListPatternListIndexType> unique_list_pattern_lists;
-    UniqueStorage<TextLayout, TextLayoutIndexType> unique_text_layouts;
+    UniqueStringStorage unique_strings;
+    UniqueStorage<DisplayPattern> unique_display_patterns;
+    UniqueStorage<LanguageList> unique_language_lists;
+    UniqueStorage<TerritoryList> unique_territory_lists;
+    UniqueStorage<ScriptList> unique_script_lists;
+    UniqueStorage<CurrencyList> unique_currency_lists;
+    UniqueStorage<CalendarList> unique_calendar_lists;
+    UniqueStorage<DateFieldList> unique_date_field_lists;
+    UniqueStorage<KeywordList> unique_keyword_lists;
+    UniqueStorage<ListPatterns> unique_list_patterns;
+    UniqueStorage<ListPatternList> unique_list_pattern_lists;
+    UniqueStorage<TextLayout> unique_text_layouts;
 
     HashMap<String, LocaleData> locales;
     Vector<Alias> locale_aliases;
@@ -254,11 +218,11 @@ struct CLDR {
 
     Vector<String> list_pattern_types;
     Vector<String> character_orders;
-    HashMap<String, StringIndexType> language_aliases;
-    HashMap<String, StringIndexType> territory_aliases;
-    HashMap<String, StringIndexType> script_aliases;
-    HashMap<String, StringIndexType> variant_aliases;
-    HashMap<String, StringIndexType> subdivision_aliases;
+    HashMap<String, size_t> language_aliases;
+    HashMap<String, size_t> territory_aliases;
+    HashMap<String, size_t> script_aliases;
+    HashMap<String, size_t> variant_aliases;
+    HashMap<String, size_t> subdivision_aliases;
     Vector<LanguageMapping> complex_mappings;
     Vector<LanguageMapping> likely_subtags;
     size_t max_variant_size { 0 };
@@ -276,8 +240,8 @@ struct CLDR {
 
 static ErrorOr<LanguageMapping> parse_language_mapping(CLDR& cldr, StringView key, StringView alias)
 {
-    auto parsed_key = TRY(CanonicalLanguageID<StringIndexType>::parse(cldr.unique_strings, key));
-    auto parsed_alias = TRY(CanonicalLanguageID<StringIndexType>::parse(cldr.unique_strings, alias));
+    auto parsed_key = TRY(CanonicalLanguageID::parse(cldr.unique_strings, key));
+    auto parsed_alias = TRY(CanonicalLanguageID::parse(cldr.unique_strings, alias));
     return LanguageMapping { move(parsed_key), move(parsed_alias) };
 }
 
@@ -914,7 +878,7 @@ static ErrorOr<void> define_aliases_without_scripts(CLDR& cldr)
     };
 
     auto append_alias_without_script = [&](auto const& locale) -> ErrorOr<void> {
-        auto parsed_locale = TRY(CanonicalLanguageID<StringIndexType>::parse(cldr.unique_strings, locale));
+        auto parsed_locale = TRY(CanonicalLanguageID::parse(cldr.unique_strings, locale));
         if ((parsed_locale.language == 0) || (parsed_locale.script == 0) || (parsed_locale.region == 0))
             return {};
 
@@ -961,7 +925,7 @@ static ErrorOr<void> parse_all_locales(String bcp47_path, String core_path, Stri
     TRY(parse_likely_subtags(core_supplemental_path.string(), cldr));
 
     auto remove_variants_from_path = [&](String path) -> ErrorOr<String> {
-        auto parsed_locale = TRY(CanonicalLanguageID<StringIndexType>::parse(cldr.unique_strings, LexicalPath::basename(path)));
+        auto parsed_locale = TRY(CanonicalLanguageID::parse(cldr.unique_strings, LexicalPath::basename(path)));
 
         StringBuilder builder;
         builder.append(cldr.unique_strings.get(parsed_locale.language));
@@ -1088,9 +1052,11 @@ namespace Locale {
 
 static ErrorOr<void> generate_unicode_locale_implementation(Core::Stream::BufferedFile& file, CLDR& cldr)
 {
+    auto string_index_type = cldr.unique_strings.type_that_fits();
+
     StringBuilder builder;
     SourceGenerator generator { builder };
-    generator.set("string_index_type"sv, s_string_index_type);
+    generator.set("string_index_type"sv, string_index_type);
     generator.set("locales_size"sv, String::number(cldr.locales.size()));
     generator.set("territories_size", String::number(cldr.territories.size()));
     generator.set("variants_size", String::number(cldr.max_variant_size));
@@ -1184,15 +1150,15 @@ Span<StringView const> get_available_keyword_values(StringView key)
 )~~~");
 
     cldr.unique_display_patterns.generate(generator, "DisplayPatternImpl"sv, "s_display_patterns"sv, 30);
-    cldr.unique_language_lists.generate(generator, s_string_index_type, "s_language_lists"sv);
-    cldr.unique_territory_lists.generate(generator, s_string_index_type, "s_territory_lists"sv);
-    cldr.unique_script_lists.generate(generator, s_string_index_type, "s_script_lists"sv);
-    cldr.unique_currency_lists.generate(generator, s_string_index_type, "s_currency_lists"sv);
-    cldr.unique_calendar_lists.generate(generator, s_string_index_type, "s_calendar_lists"sv);
-    cldr.unique_date_field_lists.generate(generator, s_string_index_type, "s_date_field_lists"sv);
-    cldr.unique_keyword_lists.generate(generator, s_string_index_type, "s_keyword_lists"sv);
+    cldr.unique_language_lists.generate(generator, string_index_type, "s_language_lists"sv);
+    cldr.unique_territory_lists.generate(generator, string_index_type, "s_territory_lists"sv);
+    cldr.unique_script_lists.generate(generator, string_index_type, "s_script_lists"sv);
+    cldr.unique_currency_lists.generate(generator, string_index_type, "s_currency_lists"sv);
+    cldr.unique_calendar_lists.generate(generator, string_index_type, "s_calendar_lists"sv);
+    cldr.unique_date_field_lists.generate(generator, string_index_type, "s_date_field_lists"sv);
+    cldr.unique_keyword_lists.generate(generator, string_index_type, "s_keyword_lists"sv);
     cldr.unique_list_patterns.generate(generator, "Patterns"sv, "s_list_patterns"sv, 10);
-    cldr.unique_list_pattern_lists.generate(generator, s_list_pattern_index_type, "s_list_pattern_lists"sv);
+    cldr.unique_list_pattern_lists.generate(generator, cldr.unique_list_patterns.type_that_fits(), "s_list_pattern_lists"sv);
     cldr.unique_text_layouts.generate(generator, "TextLayout"sv, "s_text_layouts"sv, 30);
 
     auto append_index = [&](auto index) {
@@ -1239,24 +1205,24 @@ static constexpr Array<@type@, @size@> @name@ { {)~~~");
     auto locales = cldr.locales.keys();
     quick_sort(locales);
 
-    append_mapping(locales, cldr.locales, s_display_pattern_index_type, "s_locale_display_patterns"sv, [&](auto const& locale) { return locale.display_patterns; });
-    append_mapping(locales, cldr.locales, s_language_list_index_type, "s_languages"sv, [&](auto const& locale) { return locale.languages; });
-    append_mapping(locales, cldr.locales, s_territory_list_index_type, "s_territories"sv, [&](auto const& locale) { return locale.territories; });
-    append_mapping(locales, cldr.locales, s_script_list_index_type, "s_scripts"sv, [&](auto const& locale) { return locale.scripts; });
-    append_mapping(locales, cldr.locales, s_currency_list_index_type, "s_long_currencies"sv, [&](auto const& locale) { return locale.long_currencies; });
-    append_mapping(locales, cldr.locales, s_currency_list_index_type, "s_short_currencies"sv, [&](auto const& locale) { return locale.short_currencies; });
-    append_mapping(locales, cldr.locales, s_currency_list_index_type, "s_narrow_currencies"sv, [&](auto const& locale) { return locale.narrow_currencies; });
-    append_mapping(locales, cldr.locales, s_currency_list_index_type, "s_numeric_currencies"sv, [&](auto const& locale) { return locale.numeric_currencies; });
-    append_mapping(locales, cldr.locales, s_calendar_list_index_type, "s_calendars"sv, [&](auto const& locale) { return locale.calendars; });
-    append_mapping(locales, cldr.locales, s_date_field_list_index_type, "s_long_date_fields"sv, [&](auto const& locale) { return locale.long_date_fields; });
-    append_mapping(locales, cldr.locales, s_date_field_list_index_type, "s_short_date_fields"sv, [&](auto const& locale) { return locale.short_date_fields; });
-    append_mapping(locales, cldr.locales, s_date_field_list_index_type, "s_narrow_date_fields"sv, [&](auto const& locale) { return locale.narrow_date_fields; });
-    append_mapping(locales, cldr.locales, s_keyword_list_index_type, "s_calendar_keywords"sv, [&](auto const& locale) { return locale.calendar_keywords; });
-    append_mapping(locales, cldr.locales, s_keyword_list_index_type, "s_collation_case_keywords"sv, [&](auto const& locale) { return locale.collation_case_keywords; });
-    append_mapping(locales, cldr.locales, s_keyword_list_index_type, "s_collation_numeric_keywords"sv, [&](auto const& locale) { return locale.collation_numeric_keywords; });
-    append_mapping(locales, cldr.locales, s_keyword_list_index_type, "s_number_system_keywords"sv, [&](auto const& locale) { return locale.number_system_keywords; });
-    append_mapping(locales, cldr.locales, s_list_pattern_list_index_type, "s_locale_list_patterns"sv, [&](auto const& locale) { return locale.list_patterns; });
-    append_mapping(locales, cldr.locales, s_text_layout_index_type, "s_locale_text_layouts"sv, [&](auto const& locale) { return locale.text_layout; });
+    append_mapping(locales, cldr.locales, cldr.unique_display_patterns.type_that_fits(), "s_locale_display_patterns"sv, [&](auto const& locale) { return locale.display_patterns; });
+    append_mapping(locales, cldr.locales, cldr.unique_language_lists.type_that_fits(), "s_languages"sv, [&](auto const& locale) { return locale.languages; });
+    append_mapping(locales, cldr.locales, cldr.unique_territory_lists.type_that_fits(), "s_territories"sv, [&](auto const& locale) { return locale.territories; });
+    append_mapping(locales, cldr.locales, cldr.unique_script_lists.type_that_fits(), "s_scripts"sv, [&](auto const& locale) { return locale.scripts; });
+    append_mapping(locales, cldr.locales, cldr.unique_currency_lists.type_that_fits(), "s_long_currencies"sv, [&](auto const& locale) { return locale.long_currencies; });
+    append_mapping(locales, cldr.locales, cldr.unique_currency_lists.type_that_fits(), "s_short_currencies"sv, [&](auto const& locale) { return locale.short_currencies; });
+    append_mapping(locales, cldr.locales, cldr.unique_currency_lists.type_that_fits(), "s_narrow_currencies"sv, [&](auto const& locale) { return locale.narrow_currencies; });
+    append_mapping(locales, cldr.locales, cldr.unique_currency_lists.type_that_fits(), "s_numeric_currencies"sv, [&](auto const& locale) { return locale.numeric_currencies; });
+    append_mapping(locales, cldr.locales, cldr.unique_calendar_lists.type_that_fits(), "s_calendars"sv, [&](auto const& locale) { return locale.calendars; });
+    append_mapping(locales, cldr.locales, cldr.unique_date_field_lists.type_that_fits(), "s_long_date_fields"sv, [&](auto const& locale) { return locale.long_date_fields; });
+    append_mapping(locales, cldr.locales, cldr.unique_date_field_lists.type_that_fits(), "s_short_date_fields"sv, [&](auto const& locale) { return locale.short_date_fields; });
+    append_mapping(locales, cldr.locales, cldr.unique_date_field_lists.type_that_fits(), "s_narrow_date_fields"sv, [&](auto const& locale) { return locale.narrow_date_fields; });
+    append_mapping(locales, cldr.locales, cldr.unique_keyword_lists.type_that_fits(), "s_calendar_keywords"sv, [&](auto const& locale) { return locale.calendar_keywords; });
+    append_mapping(locales, cldr.locales, cldr.unique_keyword_lists.type_that_fits(), "s_collation_case_keywords"sv, [&](auto const& locale) { return locale.collation_case_keywords; });
+    append_mapping(locales, cldr.locales, cldr.unique_keyword_lists.type_that_fits(), "s_collation_numeric_keywords"sv, [&](auto const& locale) { return locale.collation_numeric_keywords; });
+    append_mapping(locales, cldr.locales, cldr.unique_keyword_lists.type_that_fits(), "s_number_system_keywords"sv, [&](auto const& locale) { return locale.number_system_keywords; });
+    append_mapping(locales, cldr.locales, cldr.unique_list_pattern_lists.type_that_fits(), "s_locale_list_patterns"sv, [&](auto const& locale) { return locale.list_patterns; });
+    append_mapping(locales, cldr.locales, cldr.unique_text_layouts.type_that_fits(), "s_locale_text_layouts"sv, [&](auto const& locale) { return locale.text_layout; });
 
     generator.append(R"~~~(
 
@@ -1485,7 +1451,7 @@ Optional<StringView> get_locale_@enum_snake@_mapping(StringView locale, StringVi
     };
 
     auto append_alias_search = [&](StringView enum_snake, auto const& aliases) {
-        HashValueMap<StringIndexType> hashes;
+        HashValueMap<size_t> hashes;
         hashes.ensure_capacity(aliases.size());
 
         for (auto const& alias : aliases)
@@ -1495,7 +1461,7 @@ Optional<StringView> get_locale_@enum_snake@_mapping(StringView locale, StringVi
         options.return_type = "StringView"sv;
         options.return_format = "decode_string({})"sv;
 
-        generate_value_from_string(generator, "resolve_{}_alias"sv, s_string_index_type, enum_snake, move(hashes), options);
+        generate_value_from_string(generator, "resolve_{}_alias"sv, string_index_type, enum_snake, move(hashes), options);
     };
 
     append_from_string("Locale"sv, "locale"sv, cldr.locales.keys(), cldr.locale_aliases);

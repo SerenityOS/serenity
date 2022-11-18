@@ -27,54 +27,6 @@
 #include <LibLocale/DateTimeFormat.h>
 #include <LibTimeZone/TimeZone.h>
 
-using StringIndexType = u16;
-constexpr auto s_string_index_type = "u16"sv;
-
-using CalendarPatternIndexType = u16;
-constexpr auto s_calendar_pattern_index_type = "u16"sv;
-
-using CalendarPatternListIndexType = u8;
-constexpr auto s_calendar_pattern_list_index_type = "u8"sv;
-
-using CalendarRangePatternIndexType = u16;
-constexpr auto s_calendar_range_pattern_index_type = "u16"sv;
-
-using CalendarRangePatternListIndexType = u16;
-constexpr auto s_calendar_range_pattern_list_index_type = "u16"sv;
-
-using CalendarFormatIndexType = u8;
-constexpr auto s_calendar_format_index_type = "u8"sv;
-
-using SymbolListIndexType = u16;
-constexpr auto s_symbol_list_index_type = "u16"sv;
-
-using CalendarSymbolsIndexType = u16;
-constexpr auto s_calendar_symbols_index_type = "u16"sv;
-
-using CalendarSymbolsListIndexType = u8;
-constexpr auto s_calendar_symbols_list_index_type = "u8"sv;
-
-using CalendarIndexType = u8;
-constexpr auto s_calendar_index_type = "u8"sv;
-
-using TimeZoneNamesIndexType = u16;
-constexpr auto s_time_zone_index_type = "u16"sv;
-
-using TimeZoneNamesListIndexType = u8;
-constexpr auto s_time_zone_list_index_type = "u8"sv;
-
-using TimeZoneFormatIndexType = u8;
-constexpr auto s_time_zone_format_index_type = "u8"sv;
-
-using DayPeriodIndexType = u8;
-constexpr auto s_day_period_index_type = "u8"sv;
-
-using DayPeriodListIndexType = u8;
-constexpr auto s_day_period_list_index_type = "u8"sv;
-
-using HourCycleListIndexType = u8;
-constexpr auto s_hour_cycle_list_index_type = "u8"sv;
-
 struct CalendarPattern : public Locale::CalendarPattern {
     bool contains_only_date_fields() const
     {
@@ -131,9 +83,9 @@ struct CalendarPattern : public Locale::CalendarPattern {
             && (time_zone_name == other.time_zone_name);
     }
 
-    StringIndexType skeleton_index { 0 };
-    StringIndexType pattern_index { 0 };
-    StringIndexType pattern12_index { 0 };
+    size_t skeleton_index { 0 };
+    size_t pattern_index { 0 };
+    size_t pattern12_index { 0 };
 };
 
 template<>
@@ -196,9 +148,9 @@ struct CalendarRangePattern : public CalendarPattern {
     }
 
     Optional<Locale::CalendarRangePattern::Field> field {};
-    StringIndexType start_range { 0 };
-    StringIndexType separator { 0 };
-    StringIndexType end_range { 0 };
+    size_t start_range { 0 };
+    size_t separator { 0 };
+    size_t end_range { 0 };
 };
 
 template<>
@@ -254,10 +206,10 @@ struct CalendarFormat {
             && (short_format == other.short_format);
     }
 
-    CalendarPatternIndexType full_format { 0 };
-    CalendarPatternIndexType long_format { 0 };
-    CalendarPatternIndexType medium_format { 0 };
-    CalendarPatternIndexType short_format { 0 };
+    size_t full_format { 0 };
+    size_t long_format { 0 };
+    size_t medium_format { 0 };
+    size_t short_format { 0 };
 };
 
 template<>
@@ -278,7 +230,7 @@ struct AK::Traits<CalendarFormat> : public GenericTraits<CalendarFormat> {
     static unsigned hash(CalendarFormat const& c) { return c.hash(); }
 };
 
-using SymbolList = Vector<StringIndexType>;
+using SymbolList = Vector<size_t>;
 
 struct CalendarSymbols {
     unsigned hash() const
@@ -295,9 +247,9 @@ struct CalendarSymbols {
             && (long_symbols == other.long_symbols);
     }
 
-    SymbolListIndexType narrow_symbols { 0 };
-    SymbolListIndexType short_symbols { 0 };
-    SymbolListIndexType long_symbols { 0 };
+    size_t narrow_symbols { 0 };
+    size_t short_symbols { 0 };
+    size_t long_symbols { 0 };
 };
 
 template<>
@@ -317,9 +269,9 @@ struct AK::Traits<CalendarSymbols> : public GenericTraits<CalendarSymbols> {
     static unsigned hash(CalendarSymbols const& c) { return c.hash(); }
 };
 
-using CalendarPatternList = Vector<CalendarPatternIndexType>;
-using CalendarRangePatternList = Vector<CalendarRangePatternIndexType>;
-using CalendarSymbolsList = Vector<CalendarSymbolsIndexType>;
+using CalendarPatternList = Vector<size_t>;
+using CalendarRangePatternList = Vector<size_t>;
+using CalendarSymbolsList = Vector<size_t>;
 
 struct Calendar {
     unsigned hash() const
@@ -347,16 +299,16 @@ struct Calendar {
             && (symbols == other.symbols);
     }
 
-    CalendarFormatIndexType date_formats { 0 };
-    CalendarFormatIndexType time_formats { 0 };
-    CalendarFormatIndexType date_time_formats { 0 };
-    CalendarPatternListIndexType available_formats { 0 };
+    size_t date_formats { 0 };
+    size_t time_formats { 0 };
+    size_t date_time_formats { 0 };
+    size_t available_formats { 0 };
 
-    CalendarRangePatternIndexType default_range_format { 0 };
-    CalendarRangePatternListIndexType range_formats { 0 };
-    CalendarRangePatternListIndexType range12_formats { 0 };
+    size_t default_range_format { 0 };
+    size_t range_formats { 0 };
+    size_t range12_formats { 0 };
 
-    CalendarSymbolsListIndexType symbols { 0 };
+    size_t symbols { 0 };
 };
 
 template<>
@@ -403,14 +355,14 @@ struct TimeZoneNames {
             && (long_generic_name == other.long_generic_name);
     }
 
-    StringIndexType short_standard_name { 0 };
-    StringIndexType long_standard_name { 0 };
+    size_t short_standard_name { 0 };
+    size_t long_standard_name { 0 };
 
-    StringIndexType short_daylight_name { 0 };
-    StringIndexType long_daylight_name { 0 };
+    size_t short_daylight_name { 0 };
+    size_t long_daylight_name { 0 };
 
-    StringIndexType short_generic_name { 0 };
-    StringIndexType long_generic_name { 0 };
+    size_t short_generic_name { 0 };
+    size_t long_generic_name { 0 };
 };
 
 template<>
@@ -455,14 +407,14 @@ struct TimeZoneFormat {
             && (gmt_zero_format == other.gmt_zero_format);
     }
 
-    StringIndexType symbol_ahead_sign { 0 };
-    StringIndexType symbol_ahead_separator { 0 };
+    size_t symbol_ahead_sign { 0 };
+    size_t symbol_ahead_separator { 0 };
 
-    StringIndexType symbol_behind_sign { 0 };
-    StringIndexType symbol_behind_separator { 0 };
+    size_t symbol_behind_sign { 0 };
+    size_t symbol_behind_separator { 0 };
 
-    StringIndexType gmt_format { 0 };
-    StringIndexType gmt_zero_format { 0 };
+    size_t gmt_format { 0 };
+    size_t gmt_zero_format { 0 };
 };
 
 template<>
@@ -522,8 +474,8 @@ struct AK::Traits<DayPeriod> : public GenericTraits<DayPeriod> {
     static unsigned hash(DayPeriod const& d) { return d.hash(); }
 };
 
-using TimeZoneNamesList = Vector<TimeZoneNamesIndexType>;
-using DayPeriodList = Vector<DayPeriodIndexType>;
+using TimeZoneNamesList = Vector<size_t>;
+using DayPeriodList = Vector<size_t>;
 using HourCycleList = Vector<Locale::HourCycle>;
 
 template<>
@@ -535,35 +487,35 @@ struct AK::Formatter<Locale::HourCycle> : Formatter<FormatString> {
 };
 
 struct LocaleData {
-    HashMap<String, CalendarIndexType> calendars;
+    HashMap<String, size_t> calendars;
 
-    TimeZoneNamesListIndexType time_zones { 0 };
-    TimeZoneFormatIndexType time_zone_formats { 0 };
+    size_t time_zones { 0 };
+    size_t time_zone_formats { 0 };
 
-    DayPeriodListIndexType day_periods { 0 };
+    size_t day_periods { 0 };
 };
 
 struct CLDR {
-    UniqueStringStorage<StringIndexType> unique_strings;
-    UniqueStorage<CalendarPattern, CalendarPatternIndexType> unique_patterns;
-    UniqueStorage<CalendarPatternList, CalendarPatternListIndexType> unique_pattern_lists;
-    UniqueStorage<CalendarRangePattern, CalendarRangePatternIndexType> unique_range_patterns;
-    UniqueStorage<CalendarRangePatternList, CalendarRangePatternListIndexType> unique_range_pattern_lists;
-    UniqueStorage<CalendarFormat, CalendarFormatIndexType> unique_formats;
-    UniqueStorage<SymbolList, SymbolListIndexType> unique_symbol_lists;
-    UniqueStorage<CalendarSymbols, CalendarSymbolsIndexType> unique_calendar_symbols;
-    UniqueStorage<CalendarSymbolsList, CalendarSymbolsListIndexType> unique_calendar_symbols_lists;
-    UniqueStorage<Calendar, CalendarIndexType> unique_calendars;
-    UniqueStorage<TimeZoneNames, TimeZoneNamesIndexType> unique_time_zones;
-    UniqueStorage<TimeZoneNamesList, TimeZoneNamesListIndexType> unique_time_zone_lists;
-    UniqueStorage<TimeZoneFormat, TimeZoneFormatIndexType> unique_time_zone_formats;
-    UniqueStorage<DayPeriod, DayPeriodIndexType> unique_day_periods;
-    UniqueStorage<DayPeriodList, DayPeriodListIndexType> unique_day_period_lists;
-    UniqueStorage<HourCycleList, HourCycleListIndexType> unique_hour_cycle_lists;
+    UniqueStringStorage unique_strings;
+    UniqueStorage<CalendarPattern> unique_patterns;
+    UniqueStorage<CalendarPatternList> unique_pattern_lists;
+    UniqueStorage<CalendarRangePattern> unique_range_patterns;
+    UniqueStorage<CalendarRangePatternList> unique_range_pattern_lists;
+    UniqueStorage<CalendarFormat> unique_formats;
+    UniqueStorage<SymbolList> unique_symbol_lists;
+    UniqueStorage<CalendarSymbols> unique_calendar_symbols;
+    UniqueStorage<CalendarSymbolsList> unique_calendar_symbols_lists;
+    UniqueStorage<Calendar> unique_calendars;
+    UniqueStorage<TimeZoneNames> unique_time_zones;
+    UniqueStorage<TimeZoneNamesList> unique_time_zone_lists;
+    UniqueStorage<TimeZoneFormat> unique_time_zone_formats;
+    UniqueStorage<DayPeriod> unique_day_periods;
+    UniqueStorage<DayPeriodList> unique_day_period_lists;
+    UniqueStorage<HourCycleList> unique_hour_cycle_lists;
 
     HashMap<String, LocaleData> locales;
 
-    HashMap<String, HourCycleListIndexType> hour_cycles;
+    HashMap<String, size_t> hour_cycles;
     Vector<String> hour_cycle_regions;
 
     HashMap<String, u8> minimum_days;
@@ -1035,7 +987,7 @@ static Optional<CalendarPattern> parse_date_time_pattern_raw(String pattern, Str
     return format;
 }
 
-static Optional<CalendarPatternIndexType> parse_date_time_pattern(String pattern, String skeleton, CLDR& cldr)
+static Optional<size_t> parse_date_time_pattern(String pattern, String skeleton, CLDR& cldr)
 {
     auto format = parse_date_time_pattern_raw(move(pattern), move(skeleton), cldr);
     if (!format.has_value())
@@ -1241,7 +1193,7 @@ static void generate_missing_patterns(Calendar& calendar, CalendarPatternList& f
 
     for (auto const& date_format : date_formats) {
         auto const& date_time_formats = cldr.unique_formats.get(calendar.date_time_formats);
-        CalendarPatternIndexType date_time_format_index = 0;
+        size_t date_time_format_index = 0;
 
         if (date_format.month == Locale::CalendarPatternStyle::Long) {
             if (date_format.weekday.has_value())
@@ -1534,7 +1486,7 @@ static ErrorOr<void> parse_time_zone_names(String locale_time_zone_names_path, C
     if (meta_zone_object.is_null())
         return {};
 
-    auto parse_name = [&](StringView type, JsonObject const& meta_zone_object, StringView key) -> Optional<StringIndexType> {
+    auto parse_name = [&](StringView type, JsonObject const& meta_zone_object, StringView key) -> Optional<size_t> {
         auto const& names = meta_zone_object.get(type);
         if (!names.is_object())
             return {};
@@ -1690,7 +1642,7 @@ static ErrorOr<void> parse_all_locales(String core_path, String dates_path, CLDR
     auto dates_iterator = TRY(path_to_dir_iterator(move(dates_path)));
 
     auto remove_variants_from_path = [&](String path) -> ErrorOr<String> {
-        auto parsed_locale = TRY(CanonicalLanguageID<StringIndexType>::parse(cldr.unique_strings, LexicalPath::basename(path)));
+        auto parsed_locale = TRY(CanonicalLanguageID::parse(cldr.unique_strings, LexicalPath::basename(path)));
 
         StringBuilder builder;
         builder.append(cldr.unique_strings.get(parsed_locale.language));
@@ -1765,20 +1717,20 @@ static ErrorOr<void> generate_unicode_locale_implementation(Core::Stream::Buffer
 {
     StringBuilder builder;
     SourceGenerator generator { builder };
-    generator.set("string_index_type"sv, s_string_index_type);
-    generator.set("calendar_pattern_index_type"sv, s_calendar_pattern_index_type);
-    generator.set("calendar_pattern_list_index_type"sv, s_calendar_pattern_list_index_type);
-    generator.set("calendar_range_pattern_index_type"sv, s_calendar_range_pattern_index_type);
-    generator.set("calendar_range_pattern_list_index_type"sv, s_calendar_range_pattern_list_index_type);
-    generator.set("calendar_format_index_type"sv, s_calendar_format_index_type);
-    generator.set("symbol_list_index_type"sv, s_symbol_list_index_type);
-    generator.set("calendar_symbols_index_type"sv, s_calendar_symbols_index_type);
-    generator.set("calendar_symbols_list_index_type"sv, s_calendar_symbols_list_index_type);
-    generator.set("calendar_index_type"sv, s_calendar_index_type);
-    generator.set("time_zone_index_type"sv, s_time_zone_index_type);
-    generator.set("time_zone_list_index_type"sv, s_time_zone_list_index_type);
-    generator.set("day_period_index_type"sv, s_day_period_index_type);
-    generator.set("day_period_list_index_type"sv, s_day_period_list_index_type);
+    generator.set("string_index_type"sv, cldr.unique_strings.type_that_fits());
+    generator.set("calendar_pattern_index_type"sv, cldr.unique_patterns.type_that_fits());
+    generator.set("calendar_pattern_list_index_type"sv, cldr.unique_pattern_lists.type_that_fits());
+    generator.set("calendar_range_pattern_index_type"sv, cldr.unique_range_patterns.type_that_fits());
+    generator.set("calendar_range_pattern_list_index_type"sv, cldr.unique_range_pattern_lists.type_that_fits());
+    generator.set("calendar_format_index_type"sv, cldr.unique_formats.type_that_fits());
+    generator.set("symbol_list_index_type"sv, cldr.unique_symbol_lists.type_that_fits());
+    generator.set("calendar_symbols_index_type"sv, cldr.unique_calendar_symbols.type_that_fits());
+    generator.set("calendar_symbols_list_index_type"sv, cldr.unique_calendar_symbols_lists.type_that_fits());
+    generator.set("calendar_index_type"sv, cldr.unique_calendars.type_that_fits());
+    generator.set("time_zone_index_type"sv, cldr.unique_time_zones.type_that_fits());
+    generator.set("time_zone_list_index_type"sv, cldr.unique_time_zone_lists.type_that_fits());
+    generator.set("day_period_index_type"sv, cldr.unique_day_periods.type_that_fits());
+    generator.set("day_period_list_index_type"sv, cldr.unique_day_period_lists.type_that_fits());
 
     generator.append(R"~~~(
 #include <AK/Array.h>
@@ -1889,9 +1841,9 @@ struct CalendarRangePatternImpl {
 )~~~");
 
     cldr.unique_patterns.generate(generator, "CalendarPatternImpl"sv, "s_calendar_patterns"sv, 10);
-    cldr.unique_pattern_lists.generate(generator, s_calendar_pattern_index_type, "s_calendar_pattern_lists"sv);
+    cldr.unique_pattern_lists.generate(generator, cldr.unique_patterns.type_that_fits(), "s_calendar_pattern_lists"sv);
     cldr.unique_range_patterns.generate(generator, "CalendarRangePatternImpl"sv, "s_calendar_range_patterns"sv, 10);
-    cldr.unique_range_pattern_lists.generate(generator, s_calendar_range_pattern_index_type, "s_calendar_range_pattern_lists"sv);
+    cldr.unique_range_pattern_lists.generate(generator, cldr.unique_range_patterns.type_that_fits(), "s_calendar_range_pattern_lists"sv);
 
     generator.append(R"~~~(
 struct CalendarFormatImpl {
@@ -1974,16 +1926,16 @@ struct DayPeriodData {
 )~~~");
 
     cldr.unique_formats.generate(generator, "CalendarFormatImpl"sv, "s_calendar_formats"sv, 10);
-    cldr.unique_symbol_lists.generate(generator, s_string_index_type, "s_symbol_lists"sv);
+    cldr.unique_symbol_lists.generate(generator, cldr.unique_strings.type_that_fits(), "s_symbol_lists"sv);
     cldr.unique_calendar_symbols.generate(generator, "CalendarSymbols"sv, "s_calendar_symbols"sv, 10);
-    cldr.unique_calendar_symbols_lists.generate(generator, s_calendar_symbols_index_type, "s_calendar_symbol_lists"sv);
+    cldr.unique_calendar_symbols_lists.generate(generator, cldr.unique_calendar_symbols.type_that_fits(), "s_calendar_symbol_lists"sv);
     cldr.unique_calendars.generate(generator, "CalendarData"sv, "s_calendars"sv, 10);
     cldr.unique_time_zones.generate(generator, "TimeZoneNames"sv, "s_time_zones"sv, 30);
-    cldr.unique_time_zone_lists.generate(generator, s_time_zone_index_type, "s_time_zone_lists"sv);
+    cldr.unique_time_zone_lists.generate(generator, cldr.unique_time_zones.type_that_fits(), "s_time_zone_lists"sv);
     cldr.unique_time_zone_formats.generate(generator, "TimeZoneFormatImpl"sv, "s_time_zone_formats"sv, 30);
     cldr.unique_day_periods.generate(generator, "DayPeriodData"sv, "s_day_periods"sv, 30);
-    cldr.unique_day_period_lists.generate(generator, s_day_period_index_type, "s_day_period_lists"sv);
-    cldr.unique_hour_cycle_lists.generate(generator, "u8"sv, "s_hour_cycle_lists"sv);
+    cldr.unique_day_period_lists.generate(generator, cldr.unique_day_periods.type_that_fits(), "s_day_period_lists"sv);
+    cldr.unique_hour_cycle_lists.generate(generator, cldr.unique_hour_cycle_lists.type_that_fits(), "s_hour_cycle_lists"sv);
 
     auto append_calendars = [&](String name, auto const& calendars) {
         generator.set("name", name);
@@ -2028,11 +1980,11 @@ static constexpr Array<@type@, @size@> @name@ { {)~~~");
     auto locales = cldr.locales.keys();
     quick_sort(locales);
 
-    generate_mapping(generator, cldr.locales, s_calendar_index_type, "s_locale_calendars"sv, "s_calendars_{}"sv, format_identifier, [&](auto const& name, auto const& value) { append_calendars(name, value.calendars); });
-    append_mapping(locales, cldr.locales, s_time_zone_index_type, "s_locale_time_zones"sv, [](auto const& locale) { return locale.time_zones; });
-    append_mapping(locales, cldr.locales, s_time_zone_format_index_type, "s_locale_time_zone_formats"sv, [](auto const& locale) { return locale.time_zone_formats; });
-    append_mapping(locales, cldr.locales, s_day_period_index_type, "s_locale_day_periods"sv, [](auto const& locale) { return locale.day_periods; });
-    append_mapping(cldr.hour_cycle_regions, cldr.hour_cycles, s_hour_cycle_list_index_type, "s_hour_cycles"sv, [](auto const& hour_cycles) { return hour_cycles; });
+    generate_mapping(generator, cldr.locales, cldr.unique_calendars.type_that_fits(), "s_locale_calendars"sv, "s_calendars_{}"sv, format_identifier, [&](auto const& name, auto const& value) { append_calendars(name, value.calendars); });
+    append_mapping(locales, cldr.locales, cldr.unique_time_zones.type_that_fits(), "s_locale_time_zones"sv, [](auto const& locale) { return locale.time_zones; });
+    append_mapping(locales, cldr.locales, cldr.unique_time_zone_formats.type_that_fits(), "s_locale_time_zone_formats"sv, [](auto const& locale) { return locale.time_zone_formats; });
+    append_mapping(locales, cldr.locales, cldr.unique_day_periods.type_that_fits(), "s_locale_day_periods"sv, [](auto const& locale) { return locale.day_periods; });
+    append_mapping(cldr.hour_cycle_regions, cldr.hour_cycles, cldr.unique_hour_cycle_lists.type_that_fits(), "s_hour_cycles"sv, [](auto const& hour_cycles) { return hour_cycles; });
     append_mapping(cldr.minimum_days_regions, cldr.minimum_days, "u8"sv, "s_minimum_days"sv, [](auto minimum_days) { return minimum_days; });
     append_mapping(cldr.first_day_regions, cldr.first_day, "u8"sv, "s_first_day"sv, [](auto first_day) { return to_underlying(first_day); });
     append_mapping(cldr.weekend_start_regions, cldr.weekend_start, "u8"sv, "s_weekend_start"sv, [](auto weekend_start) { return to_underlying(weekend_start); });

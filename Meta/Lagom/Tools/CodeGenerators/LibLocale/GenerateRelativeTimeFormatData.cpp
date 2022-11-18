@@ -20,12 +20,6 @@
 #include <LibLocale/Locale.h>
 #include <LibLocale/RelativeTimeFormat.h>
 
-using StringIndexType = u16;
-constexpr auto s_string_index_type = "u16"sv;
-
-using RelativeTimeFormatIndexType = u16;
-constexpr auto s_relative_time_format_index_type = "u16"sv;
-
 struct RelativeTimeFormat {
     unsigned hash() const
     {
@@ -49,8 +43,8 @@ struct RelativeTimeFormat {
     String time_unit;
     String style;
     String plurality;
-    StringIndexType tense_or_number { 0 };
-    StringIndexType pattern { 0 };
+    size_t tense_or_number { 0 };
+    size_t pattern { 0 };
 };
 
 template<>
@@ -73,12 +67,12 @@ struct AK::Traits<RelativeTimeFormat> : public GenericTraits<RelativeTimeFormat>
 };
 
 struct LocaleData {
-    Vector<RelativeTimeFormatIndexType> time_units;
+    Vector<size_t> time_units;
 };
 
 struct CLDR {
-    UniqueStringStorage<StringIndexType> unique_strings;
-    UniqueStorage<RelativeTimeFormat, RelativeTimeFormatIndexType> unique_formats;
+    UniqueStringStorage unique_strings;
+    UniqueStorage<RelativeTimeFormat> unique_formats;
 
     HashMap<String, LocaleData> locales;
 };
@@ -147,7 +141,7 @@ static ErrorOr<void> parse_all_locales(String dates_path, CLDR& cldr)
     auto dates_iterator = TRY(path_to_dir_iterator(move(dates_path)));
 
     auto remove_variants_from_path = [&](String path) -> ErrorOr<String> {
-        auto parsed_locale = TRY(CanonicalLanguageID<StringIndexType>::parse(cldr.unique_strings, LexicalPath::basename(path)));
+        auto parsed_locale = TRY(CanonicalLanguageID::parse(cldr.unique_strings, LexicalPath::basename(path)));
 
         StringBuilder builder;
         builder.append(cldr.unique_strings.get(parsed_locale.language));
@@ -195,8 +189,8 @@ static ErrorOr<void> generate_unicode_locale_implementation(Core::Stream::Buffer
 {
     StringBuilder builder;
     SourceGenerator generator { builder };
-    generator.set("string_index_type"sv, s_string_index_type);
-    generator.set("relative_time_format_index_type"sv, s_relative_time_format_index_type);
+    generator.set("string_index_type"sv, cldr.unique_strings.type_that_fits());
+    generator.set("relative_time_format_index_type"sv, cldr.unique_formats.type_that_fits());
 
     generator.append(R"~~~(
 #include <AK/Array.h>
@@ -250,7 +244,7 @@ static constexpr Array<@relative_time_format_index_type@, @size@> @name@ { {)~~~
         generator.append(" } };");
     };
 
-    generate_mapping(generator, cldr.locales, s_relative_time_format_index_type, "s_locale_relative_time_formats"sv, "s_number_systems_digits_{}"sv, nullptr, [&](auto const& name, auto const& value) { append_list(name, value.time_units); });
+    generate_mapping(generator, cldr.locales, cldr.unique_formats.type_that_fits(), "s_locale_relative_time_formats"sv, "s_number_systems_digits_{}"sv, nullptr, [&](auto const& name, auto const& value) { append_list(name, value.time_units); });
 
     generator.append(R"~~~(
 Vector<RelativeTimeFormat> get_relative_time_format_patterns(StringView locale, TimeUnit time_unit, StringView tense_or_number, Style style)
