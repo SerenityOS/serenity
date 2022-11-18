@@ -37,7 +37,7 @@ public:
 
     u8 interrupt_number() const { return m_interrupt_number; }
 
-    u32 call_count() const { return m_call_count; }
+    Span<u32 const> per_cpu_call_counts() const;
 
     virtual size_t sharing_devices_count() const = 0;
     virtual bool is_shared_handler() const = 0;
@@ -57,7 +57,8 @@ protected:
     void disable_remap() { m_disable_remap = true; }
 
 private:
-    Atomic<u32, AK::MemoryOrder::memory_order_relaxed> m_call_count { 0 };
+    Array<u32, MAX_CPU_COUNT> m_per_cpu_call_counts {};
+
     u8 m_interrupt_number { 0 };
     bool m_disable_remap { false };
     bool m_registered { false };
