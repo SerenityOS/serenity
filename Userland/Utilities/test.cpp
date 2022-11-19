@@ -14,7 +14,13 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+// NOTE: We exclude this when building the BuggieBox program because it's already
+// included there.
+#ifndef _BUGGIE_BOX
 bool g_there_was_an_error = false;
+#else
+#    include <BuggieBox/Globals.h>
+#endif
 
 [[noreturn, gnu::format(printf, 1, 2)]] static void fatal_error(char const* format, ...)
 {

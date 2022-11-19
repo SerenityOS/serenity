@@ -3,3 +3,5 @@ set(SOURCES
 )
 
 serenity_lib(LibPCIDB pcidb)
+
+serenity_lib_static(LibPCIDBStatic pcidb)

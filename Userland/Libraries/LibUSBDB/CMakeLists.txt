@@ -3,3 +3,5 @@ set(SOURCES
 )
 
 serenity_lib(LibUSBDB usbdb)
+
+serenity_lib_static(LibUSBDBStatic usbdb)
