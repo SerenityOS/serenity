@@ -618,7 +618,9 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::includes)
     // 5. Let n be ? ToIntegerOrInfinity(fromIndex).
     auto n = TRY(vm.argument(1).to_integer_or_infinity(vm));
 
-    // FIXME: 6. Assert: If fromIndex is undefined, then n is 0.
+    // 6. Assert: If fromIndex is undefined, then n is 0.
+    if (vm.argument(1).is_undefined())
+        VERIFY(n == 0);
 
     auto value_n = Value(n);
     // 7. If n is +∞, return false.
