@@ -357,6 +357,15 @@ ErrorOr<int> open(StringView path, int options, mode_t mode)
     return openat(AT_FDCWD, path, options, mode);
 }
 
+#ifdef AK_OS_SERENITY
+ErrorOr<void> pivot_root(int new_root_fd)
+{
+    Syscall::SC_pivot_root_params params { new_root_fd };
+    int rc = syscall(SC_pivot_root, &params);
+    HANDLE_SYSCALL_RETURN_VALUE("pivot_root", rc, {});
+}
+#endif
+
 ErrorOr<int> openat(int fd, StringView path, int options, mode_t mode)
 {
     if (!path.characters_without_null_termination())

@@ -170,6 +170,10 @@ enum class SearchInPath {
 ErrorOr<void> exec_command(Vector<StringView>& command, bool preserve_env);
 #endif
 
+#ifdef AK_OS_SERENITY
+ErrorOr<void> pivot_root(int new_root_fd);
+#endif
+
 ErrorOr<void> exec(StringView filename, Span<StringView> arguments, SearchInPath, Optional<Span<StringView>> environment = {});
 
 #ifdef AK_OS_SERENITY
