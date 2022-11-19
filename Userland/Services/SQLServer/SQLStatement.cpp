@@ -60,7 +60,7 @@ void SQLStatement::execute()
         return;
     }
 
-    deferred_invoke([this]() mutable {
+    deferred_invoke([this] {
         auto parse_result = parse();
         if (parse_result.is_error()) {
             report_error(parse_result.release_error());

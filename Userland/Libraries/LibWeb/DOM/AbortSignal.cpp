@@ -101,7 +101,7 @@ void AbortSignal::follow(JS::NonnullGCPtr<AbortSignal> parent_signal)
 
     // 3. Otherwise, add the following abort steps to parentSignal:
     // NOTE: `this` and `parent_signal` are protected by AbortSignal using JS::SafeFunction.
-    parent_signal->add_abort_algorithm([this, parent_signal]() mutable {
+    parent_signal->add_abort_algorithm([this, parent_signal] {
         // 1. Signal abort on followingSignal with parentSignal’s abort reason.
         signal_abort(parent_signal->reason());
     });

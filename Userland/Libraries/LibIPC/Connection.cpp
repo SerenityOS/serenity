@@ -172,7 +172,7 @@ ErrorOr<Vector<u8>> ConnectionBase::read_as_much_as_possible_from_socket_without
 
         auto bytes_read = maybe_bytes_read.release_value();
         if (bytes_read.is_empty()) {
-            m_deferred_invoker->schedule([strong_this = NonnullRefPtr(*this)]() mutable {
+            m_deferred_invoker->schedule([strong_this = NonnullRefPtr(*this)] {
                 strong_this->shutdown();
             });
             if (!bytes.is_empty())
@@ -211,7 +211,7 @@ ErrorOr<void> ConnectionBase::drain_messages_from_peer()
     }
 
     if (!m_unprocessed_messages.is_empty()) {
-        m_deferred_invoker->schedule([strong_this = NonnullRefPtr(*this)]() mutable {
+        m_deferred_invoker->schedule([strong_this = NonnullRefPtr(*this)] {
             strong_this->handle_messages();
         });
     }

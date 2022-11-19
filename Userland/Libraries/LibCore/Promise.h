@@ -42,7 +42,7 @@ public:
     RefPtr<Promise<T>> map(T func(Result&))
     {
         RefPtr<Promise<T>> new_promise = Promise<T>::construct();
-        on_resolved = [new_promise, func](Result& result) mutable {
+        on_resolved = [new_promise, func](Result& result) {
             auto t = func(result);
             new_promise->resolve(move(t));
         };

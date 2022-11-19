@@ -123,7 +123,7 @@ void HTMLInputElement::set_files(JS::GCPtr<FileAPI::FileList> files)
 void HTMLInputElement::update_the_file_selection(JS::NonnullGCPtr<FileAPI::FileList> files)
 {
     // 1. Queue an element task on the user interaction task source given element and the following steps:
-    queue_an_element_task(Task::Source::UserInteraction, [this, files]() mutable {
+    queue_an_element_task(Task::Source::UserInteraction, [this, files] {
         // 1. Update element's selected files so that it represents the user's selection.
         this->set_files(files.ptr());
 

@@ -1142,7 +1142,7 @@ WebIDL::ExceptionOr<void> BrowsingContext::traverse_the_history(size_t entry_ind
     if (new_document->ready_state() == "complete"sv) {
         // then queue a global task on the DOM manipulation task source given newDocument's relevant global object to run the following steps:
 
-        queue_global_task(Task::Source::DOMManipulation, relevant_global_object(*new_document), [new_document]() mutable {
+        queue_global_task(Task::Source::DOMManipulation, relevant_global_object(*new_document), [new_document] {
             // 1. If newDocument's page showing flag is true, then abort these steps.
             if (new_document->page_showing())
                 return;
@@ -1211,7 +1211,7 @@ WebIDL::ExceptionOr<void> BrowsingContext::traverse_the_history(size_t entry_ind
     // 20. If hashChanged is true,
     if (hash_changed) {
         // then queue a global task on the DOM manipulation task source given newDocument's relevant global object
-        queue_global_task(Task::Source::DOMManipulation, relevant_global_object(*new_document), [new_document]() mutable {
+        queue_global_task(Task::Source::DOMManipulation, relevant_global_object(*new_document), [new_document] {
             // to fire an event named hashchange at newDocument's relevant global object,
             // using HashChangeEvent, with the oldURL attribute initialized to oldURL
             // and the newURL attribute initialized to newURL.
@@ -1330,7 +1330,7 @@ void BrowsingContext::set_system_visibility_state(VisibilityState visibility_sta
     // has changed to newState, it must queue a task on the user interaction task source to update
     // the visibility state of all the Document objects in the top-level browsing context's document family with newState.
     auto document_family = top_level_browsing_context().document_family();
-    queue_global_task(Task::Source::UserInteraction, Bindings::main_thread_vm().current_realm()->global_object(), [visibility_state, document_family = move(document_family)]() mutable {
+    queue_global_task(Task::Source::UserInteraction, Bindings::main_thread_vm().current_realm()->global_object(), [visibility_state, document_family = move(document_family)] {
         for (auto& document : document_family) {
             document->update_the_visibility_state(visibility_state);
         }

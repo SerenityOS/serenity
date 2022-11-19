@@ -327,7 +327,7 @@ public:
             , m_socket(move(socket))
             , m_job(HTTP::Job::construct(move(request), *m_output_stream))
         {
-            m_job->on_headers_received = [weak_this = make_weak_ptr()](auto& response_headers, auto response_code) mutable {
+            m_job->on_headers_received = [weak_this = make_weak_ptr()](auto& response_headers, auto response_code) {
                 if (auto strong_this = weak_this.strong_ref()) {
                     strong_this->m_response_code = response_code;
                     for (auto& header : response_headers) {
@@ -335,8 +335,8 @@ public:
                     }
                 }
             };
-            m_job->on_finish = [weak_this = make_weak_ptr()](bool success) mutable {
-                Core::deferred_invoke([weak_this, success]() mutable {
+            m_job->on_finish = [weak_this = make_weak_ptr()](bool success) {
+                Core::deferred_invoke([weak_this, success] {
                     if (auto strong_this = weak_this.strong_ref()) {
                         ReadonlyBytes response_bytes { strong_this->m_output_stream->bytes().data(), strong_this->m_output_stream->offset() };
                         auto response_buffer = ByteBuffer::copy(response_bytes).release_value_but_fixme_should_propagate_errors();
@@ -406,7 +406,7 @@ public:
             , m_socket(move(socket))
             , m_job(HTTP::HttpsJob::construct(move(request), *m_output_stream))
         {
-            m_job->on_headers_received = [weak_this = make_weak_ptr()](auto& response_headers, auto response_code) mutable {
+            m_job->on_headers_received = [weak_this = make_weak_ptr()](auto& response_headers, auto response_code) {
                 if (auto strong_this = weak_this.strong_ref()) {
                     strong_this->m_response_code = response_code;
                     for (auto& header : response_headers) {
@@ -414,8 +414,8 @@ public:
                     }
                 }
             };
-            m_job->on_finish = [weak_this = make_weak_ptr()](bool success) mutable {
-                Core::deferred_invoke([weak_this, success]() mutable {
+            m_job->on_finish = [weak_this = make_weak_ptr()](bool success) {
+                Core::deferred_invoke([weak_this, success] {
                     if (auto strong_this = weak_this.strong_ref()) {
                         ReadonlyBytes response_bytes { strong_this->m_output_stream->bytes().data(), strong_this->m_output_stream->offset() };
                         auto response_buffer = ByteBuffer::copy(response_bytes).release_value_but_fixme_should_propagate_errors();
@@ -475,7 +475,7 @@ public:
             , m_socket(move(socket))
             , m_job(Gemini::Job::construct(move(request), *m_output_stream))
         {
-            m_job->on_headers_received = [weak_this = make_weak_ptr()](auto& response_headers, auto response_code) mutable {
+            m_job->on_headers_received = [weak_this = make_weak_ptr()](auto& response_headers, auto response_code) {
                 if (auto strong_this = weak_this.strong_ref()) {
                     strong_this->m_response_code = response_code;
                     for (auto& header : response_headers) {
@@ -483,8 +483,8 @@ public:
                     }
                 }
             };
-            m_job->on_finish = [weak_this = make_weak_ptr()](bool success) mutable {
-                Core::deferred_invoke([weak_this, success]() mutable {
+            m_job->on_finish = [weak_this = make_weak_ptr()](bool success) {
+                Core::deferred_invoke([weak_this, success] {
                     if (auto strong_this = weak_this.strong_ref()) {
                         ReadonlyBytes response_bytes { strong_this->m_output_stream->bytes().data(), strong_this->m_output_stream->offset() };
                         auto response_buffer = ByteBuffer::copy(response_bytes).release_value_but_fixme_should_propagate_errors();
@@ -717,7 +717,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     dbgln("Taking screenshot after {} seconds !", take_screenshot_after);
     auto timer = Core::Timer::create_single_shot(
         take_screenshot_after * 1000,
-        [page_client = move(page_client)]() mutable {
+        [page_client = move(page_client)] {
             // FIXME: Allow passing the output path as argument
             String output_file_path = "output.png";
             dbgln("Saving to {}", output_file_path);

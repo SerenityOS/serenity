@@ -534,7 +534,7 @@ void HTMLHyperlinkElementUtils::follow_the_hyperlink(Optional<String> hyperlink_
     // set to source.
     // FIXME: "navigate" means implementing the navigation algorithm here:
     //        https://html.spec.whatwg.org/multipage/browsing-the-web.html#navigate
-    hyperlink_element_utils_queue_an_element_task(Task::Source::DOMManipulation, [url_string, target]() mutable {
+    hyperlink_element_utils_queue_an_element_task(Task::Source::DOMManipulation, [url_string, target] {
         target->loader().load(url_string, FrameLoader::Type::Navigation);
     });
 }

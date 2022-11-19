@@ -1559,13 +1559,13 @@ void Document::completely_finish_loading()
 
     // 4. If container is an iframe element, then queue an element task on the DOM manipulation task source given container to run the iframe load event steps given container.
     if (container && is<HTML::HTMLIFrameElement>(*container)) {
-        container->queue_an_element_task(HTML::Task::Source::DOMManipulation, [container]() mutable {
+        container->queue_an_element_task(HTML::Task::Source::DOMManipulation, [container] {
             run_iframe_load_event_steps(static_cast<HTML::HTMLIFrameElement&>(*container));
         });
     }
     // 5. Otherwise, if container is non-null, then queue an element task on the DOM manipulation task source given container to fire an event named load at container.
     else if (container) {
-        container->queue_an_element_task(HTML::Task::Source::DOMManipulation, [container]() mutable {
+        container->queue_an_element_task(HTML::Task::Source::DOMManipulation, [container] {
             container->dispatch_event(*DOM::Event::create(container->realm(), HTML::EventNames::load));
         });
     }

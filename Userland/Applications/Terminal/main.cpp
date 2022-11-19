@@ -199,18 +199,18 @@ static ErrorOr<NonnullRefPtr<GUI::Window>> create_find_window(VT::TerminalWidget
     find_forwards->set_fixed_width(25);
     find_forwards->set_icon(TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/downward-triangle.png"sv)));
 
-    find_textbox->on_return_pressed = [find_backwards]() mutable {
+    find_textbox->on_return_pressed = [find_backwards] {
         find_backwards->click();
     };
 
-    find_textbox->on_shift_return_pressed = [find_forwards]() mutable {
+    find_textbox->on_shift_return_pressed = [find_forwards] {
         find_forwards->click();
     };
 
     auto match_case = TRY(main_widget->try_add<GUI::CheckBox>("Case sensitive"));
     auto wrap_around = TRY(main_widget->try_add<GUI::CheckBox>("Wrap around"));
 
-    find_backwards->on_click = [&terminal, find_textbox, match_case, wrap_around](auto) mutable {
+    find_backwards->on_click = [&terminal, find_textbox, match_case, wrap_around](auto) {
         auto needle = find_textbox->text();
         if (needle.is_empty()) {
             return;

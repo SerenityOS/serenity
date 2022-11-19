@@ -285,7 +285,7 @@ void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, Has
 
         if (timeout.has_value() && timeout.value() > 0) {
             auto timer = Platform::Timer::create_single_shot(timeout.value(), nullptr);
-            timer->on_timeout = [timer, protocol_request, timeout_callback = move(timeout_callback)]() mutable {
+            timer->on_timeout = [timer, protocol_request, timeout_callback = move(timeout_callback)] {
                 protocol_request->stop();
                 if (timeout_callback)
                     timeout_callback();

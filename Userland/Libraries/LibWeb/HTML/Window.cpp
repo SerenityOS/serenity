@@ -495,7 +495,7 @@ i32 Window::run_timer_initialization_steps(TimerHandler handler, i32 timeout, JS
     // 8. Assert: initiating script is not null, since this algorithm is always called from some script.
 
     // 9. Let task be a task that runs the following substeps:
-    JS::SafeFunction<void()> task = [this, handler = move(handler), timeout, arguments = move(arguments), repeat, id]() mutable {
+    JS::SafeFunction<void()> task = [this, handler = move(handler), timeout, arguments = move(arguments), repeat, id] {
         // 1. If id does not exist in global's map of active timers, then abort these steps.
         if (!m_timers.contains(id))
             return;
@@ -564,7 +564,7 @@ i32 Window::run_timer_initialization_steps(TimerHandler handler, i32 timeout, JS
 // https://html.spec.whatwg.org/multipage/imagebitmap-and-animations.html#run-the-animation-frame-callbacks
 i32 Window::request_animation_frame_impl(WebIDL::CallbackType& js_callback)
 {
-    return m_animation_frame_callback_driver.add([this, js_callback = JS::make_handle(js_callback)](auto) mutable {
+    return m_animation_frame_callback_driver.add([this, js_callback = JS::make_handle(js_callback)](auto) {
         // 3. Invoke callback, passing now as the only argument,
         auto result = WebIDL::invoke_callback(*js_callback, {}, JS::Value(performance().now()));
 
@@ -802,7 +802,7 @@ void Window::fire_a_page_transition_event(FlyString const& event_name, bool pers
 void Window::queue_microtask_impl(WebIDL::CallbackType& callback)
 {
     // The queueMicrotask(callback) method must queue a microtask to invoke callback,
-    HTML::queue_a_microtask(&associated_document(), [this, &callback]() mutable {
+    HTML::queue_a_microtask(&associated_document(), [this, &callback] {
         auto result = WebIDL::invoke_callback(callback, {});
         // and if callback throws an exception, report the exception.
         if (result.is_error())
@@ -906,7 +906,7 @@ WebIDL::ExceptionOr<void> Window::post_message_impl(JS::Value message, String co
 {
     // FIXME: This is an ad-hoc hack implementation instead, since we don't currently
     //        have serialization and deserialization of messages.
-    HTML::queue_global_task(HTML::Task::Source::PostedMessage, *this, [this, message]() mutable {
+    HTML::queue_global_task(HTML::Task::Source::PostedMessage, *this, [this, message] {
         HTML::MessageEventInit event_init {};
         event_init.data = message;
         event_init.origin = "<origin>";
@@ -961,7 +961,7 @@ void Window::start_an_idle_period()
 
     // 5. Queue a task on the queue associated with the idle-task task source,
     //    which performs the steps defined in the invoke idle callbacks algorithm with window and getDeadline as parameters.
-    HTML::queue_global_task(HTML::Task::Source::IdleTask, *this, [this]() mutable {
+    HTML::queue_global_task(HTML::Task::Source::IdleTask, *this, [this] {
         invoke_idle_callbacks();
     });
 }
@@ -985,7 +985,7 @@ void Window::invoke_idle_callbacks()
             HTML::report_exception(result, realm());
         // 4. If window's list of runnable idle callbacks is not empty, queue a task which performs the steps
         //    in the invoke idle callbacks algorithm with getDeadline and window as a parameters and return from this algorithm
-        HTML::queue_global_task(HTML::Task::Source::IdleTask, *this, [this]() mutable {
+        HTML::queue_global_task(HTML::Task::Source::IdleTask, *this, [this] {
             invoke_idle_callbacks();
         });
     }
