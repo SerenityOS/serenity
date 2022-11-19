@@ -1214,7 +1214,7 @@ ThrowCompletionOr<String> get_substitution(VM& vm, Utf16View const& matched, Utf
     auto replace_string = TRY(replacement.to_utf16_string(vm));
     auto replace_view = replace_string.view();
 
-    StringBuilder result;
+    Vector<u16, 1> result;
 
     for (size_t i = 0; i < replace_view.length_in_code_units(); ++i) {
         u16 curr = replace_view.code_unit_at(i);
@@ -1230,17 +1230,17 @@ ThrowCompletionOr<String> get_substitution(VM& vm, Utf16View const& matched, Utf
             result.append('$');
             ++i;
         } else if (next == '&') {
-            result.append(matched);
+            result.append(matched.data(), matched.length_in_code_units());
             ++i;
         } else if (next == '`') {
             auto substring = str.substring_view(0, position);
-            result.append(substring);
+            result.append(substring.data(), substring.length_in_code_units());
             ++i;
         } else if (next == '\'') {
             auto tail_pos = position + matched.length_in_code_units();
             if (tail_pos < str.length_in_code_units()) {
                 auto substring = str.substring_view(tail_pos);
-                result.append(substring);
+                result.append(substring.data(), substring.length_in_code_units());
             }
             ++i;
         } else if (is_ascii_digit(next)) {
@@ -1253,8 +1253,8 @@ ThrowCompletionOr<String> get_substitution(VM& vm, Utf16View const& matched, Utf
                 auto& value = captures[*capture_position - 1];
 
                 if (!value.is_undefined()) {
-                    auto value_string = TRY(value.to_string(vm));
-                    result.append(value_string);
+                    auto value_string = TRY(value.to_utf16_string(vm));
+                    result.append(value_string.view().data(), value_string.length_in_code_units());
                 }
 
                 i += is_two_digits ? 2 : 1;
@@ -1281,8 +1281,8 @@ ThrowCompletionOr<String> get_substitution(VM& vm, Utf16View const& matched, Utf
                 auto capture = TRY(named_captures.as_object().get(group_name));
 
                 if (!capture.is_undefined()) {
-                    auto capture_string = TRY(capture.to_string(vm));
-                    result.append(capture_string);
+                    auto capture_string = TRY(capture.to_utf16_string(vm));
+                    result.append(capture_string.view().data(), capture_string.length_in_code_units());
                 }
 
                 i = *end_position;
@@ -1292,7 +1292,7 @@ ThrowCompletionOr<String> get_substitution(VM& vm, Utf16View const& matched, Utf
         }
     }
 
-    return result.build();
+    return Utf16String(move(result)).to_utf8();
 }
 
 }
