@@ -275,6 +275,9 @@ void Action::set_text(String text)
     if (m_text == text)
         return;
     m_text = move(text);
+    for_each_toolbar_button([&](auto& button) {
+        button.set_text(m_text);
+    });
     for_each_menu_item([&](auto& menu_item) {
         menu_item.update_from_action({});
     });
