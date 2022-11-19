@@ -811,30 +811,54 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::map)
 // 23.2.3.23 %TypedArray%.prototype.reduce ( callbackfn [ , initialValue ] ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.reduce
 JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::reduce)
 {
+    // 1. Let O be the this value.
+    // 2. Perform ? ValidateTypedArray(O).
     auto* typed_array = TRY(validate_typed_array_from_this(vm));
 
+    // 3. Let len be O.[[ArrayLength]].
     auto length = typed_array->array_length();
 
+    // 4. If IsCallable(callbackfn) is false, throw a TypeError exception.
     auto* callback_function = TRY(callback_from_args(vm, vm.names.reduce.as_string()));
 
+    // 5. If len = 0 and initialValue is not present, throw a TypeError exception.
     if (length == 0 && vm.argument_count() <= 1)
         return vm.throw_completion<TypeError>(ErrorType::ReduceNoInitial);
 
+    // 6. Let k be 0.
     u32 k = 0;
+
+    // 7. Let accumulator be undefined.
     Value accumulator;
+
+    // 8. If initialValue is present, then
     if (vm.argument_count() > 1) {
+        // a. Set accumulator to initialValue.
         accumulator = vm.argument(1);
-    } else {
+    }
+    // 9. Else,
+    else {
+        // a. Let Pk be ! ToString(𝔽(k)).
+        // b. Set accumulator to ! Get(O, Pk).
         accumulator = MUST(typed_array->get(k));
+
+        // c. Set k to k + 1.
         ++k;
     }
 
+    // 10. Repeat, while k < len,
     for (; k < length; ++k) {
+        // a. Let Pk be ! ToString(𝔽(k)).
+        // b. Let kValue be ! Get(O, Pk).
         auto k_value = MUST(typed_array->get(k));
 
+        // c. Set accumulator to ? Call(callbackfn, undefined, « accumulator, kValue, 𝔽(k), O »).
         accumulator = TRY(call(vm, *callback_function, js_undefined(), accumulator, k_value, Value(k), typed_array));
+
+        // d. Set k to k + 1.
     }
 
+    // 11. Return accumulator.
     return accumulator;
 }
 
