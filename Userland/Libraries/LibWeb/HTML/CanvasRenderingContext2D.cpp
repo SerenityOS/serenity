@@ -121,7 +121,7 @@ WebIDL::ExceptionOr<void> CanvasRenderingContext2D::draw_image_internal(CanvasIm
     if (usability == CanvasImageSourceUsability::Bad)
         return {};
 
-    auto const* bitmap = image.visit([](auto const& source) { return source->bitmap(); });
+    auto const* bitmap = image.visit([](auto const& source) -> Gfx::Bitmap const* { return source->bitmap(); });
     if (!bitmap)
         return {};
 

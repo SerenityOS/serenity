@@ -60,25 +60,14 @@ public:
     {
     }
 
-    T* cell()
+    T* cell() const
     {
         if (!m_impl)
             return nullptr;
         return static_cast<T*>(m_impl->cell());
     }
 
-    T const* cell() const
-    {
-        if (!m_impl)
-            return nullptr;
-        return static_cast<T const*>(m_impl->cell());
-    }
-
-    T* ptr()
-    {
-        return cell();
-    }
-    T const* ptr() const
+    T* ptr() const
     {
         return cell();
     }
@@ -88,20 +77,12 @@ public:
         return m_impl.is_null();
     }
 
-    T* operator->()
-    {
-        return cell();
-    }
-    T const* operator->() const
+    T* operator->() const
     {
         return cell();
     }
 
-    T& operator*()
-    {
-        return *cell();
-    }
-    T const& operator*() const
+    T& operator*() const
     {
         return *cell();
     }
@@ -115,8 +96,7 @@ public:
         return cell();
     }
 
-    operator T*() { return cell(); }
-    operator T const*() const { return cell(); }
+    operator T*() const { return cell(); }
 
 private:
     explicit Handle(NonnullRefPtr<HandleImpl> impl)
