@@ -84,12 +84,11 @@ bool TarFileStream::discard_or_error(size_t count)
 TarInputStream::TarInputStream(InputStream& stream)
     : m_stream(stream)
 {
-    if (!m_stream.read_or_error(Bytes(&m_header, sizeof(m_header)))) {
+    if (!m_stream.read_or_error(Bytes(&m_header, sizeof(m_header))) || !m_stream.discard_or_error(block_size - sizeof(TarFileHeader))) {
         m_finished = true;
         m_stream.handle_any_error(); // clear out errors so we don't assert
         return;
     }
-    VERIFY(m_stream.discard_or_error(block_size - sizeof(TarFileHeader)));
 }
 
 static constexpr unsigned long block_ceiling(unsigned long offset)
