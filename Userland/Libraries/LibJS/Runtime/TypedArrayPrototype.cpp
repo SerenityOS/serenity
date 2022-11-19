@@ -667,42 +667,68 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::includes)
 // 23.2.3.17 %TypedArray%.prototype.indexOf ( searchElement [ , fromIndex ] ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.indexof
 JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::index_of)
 {
+    // 1. Let O be the this value.
+    // 2. Perform ? ValidateTypedArray(O).
     auto typed_array = TRY(validate_typed_array_from_this(vm));
 
+    // 3. Let len be O.[[ArrayLength]].
     auto length = typed_array->array_length();
 
+    // 4. If len is 0, return -1𝔽.
     if (length == 0)
         return Value(-1);
 
+    // 5. Let n be ? ToIntegerOrInfinity(fromIndex).
     auto n = TRY(vm.argument(1).to_integer_or_infinity(vm));
 
+    // FIXME: 6. Assert: If fromIndex is undefined, then n is 0.
+
     auto value_n = Value(n);
+    // 7. If n is +∞, return -1𝔽.
     if (value_n.is_positive_infinity())
         return Value(-1);
+    // 8. Else if n is -∞, set n to 0.
     else if (value_n.is_negative_infinity())
         n = 0;
 
     u32 k;
+    // 9. If n ≥ 0, then
     if (n >= 0) {
+        // a. Let k be n.
         k = n;
-    } else {
+    }
+    // 10. Else,
+    else {
+        // a. Let k be len + n.
         auto relative_k = length + n;
+
+        // b. If k < 0, set k to 0.
         if (relative_k < 0)
             relative_k = 0;
         k = relative_k;
     }
 
+    // 11. Repeat, while k < len,
     auto search_element = vm.argument(0);
     for (; k < length; ++k) {
+        // a. Let kPresent be ! HasProperty(O, ! ToString(𝔽(k))).
         auto k_present = MUST(typed_array->has_property(k));
+
+        // b. If kPresent is true, then
         if (k_present) {
+            // i. Let elementK be ! Get(O, ! ToString(𝔽(k))).
             auto element_k = MUST(typed_array->get(k));
 
+            // ii. Let same be IsStrictlyEqual(searchElement, elementK).
+            // iii. If same is true, return 𝔽(k).
             if (is_strictly_equal(search_element, element_k))
                 return Value(k);
         }
+
+        // c. Set k to k + 1.
     }
 
+    // 12. Return -1𝔽.
     return Value(-1);
 }
 
