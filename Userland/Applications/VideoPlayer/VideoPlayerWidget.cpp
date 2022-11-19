@@ -110,15 +110,19 @@ void VideoPlayerWidget::update_play_pause_icon()
     if (!m_playback_manager) {
         m_play_pause_action->set_enabled(false);
         m_play_pause_action->set_icon(m_play_icon);
+        m_play_pause_action->set_text("Play"sv);
         return;
     }
 
     m_play_pause_action->set_enabled(true);
 
-    if (m_playback_manager->is_playing())
+    if (m_playback_manager->is_playing()) {
         m_play_pause_action->set_icon(m_pause_icon);
-    else
+        m_play_pause_action->set_text("Pause"sv);
+    } else {
         m_play_pause_action->set_icon(m_play_icon);
+        m_play_pause_action->set_text("Play"sv);
+    }
 }
 
 void VideoPlayerWidget::resume_playback()
