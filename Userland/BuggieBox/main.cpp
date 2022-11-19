@@ -10,6 +10,7 @@
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
 #include <Userland/BuggieBox/Globals.h>
+#include <Userland/BuggieBox/init.h>
 #include <Userland/Libraries/LibC/unistd.h>
 #include <Userland/Shell/Shell.h>
 
@@ -90,6 +91,7 @@ static constexpr Runner s_runners[] = {
     { "sha512sum"sv, checksum_main },
     { "Shell"sv, sh_main },
     { "["sv, test_main },
+    { "init"sv, buggiebox_init_main },
 };
 
 static ErrorOr<int> run_program(Main::Arguments arguments, LexicalPath const& runbase, bool& found_runner)

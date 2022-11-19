@@ -6,6 +6,7 @@ serenity_component(
 
 set(SOURCES
     main.cpp
+    init.cpp
     ../Shell/main.cpp
     ../Utilities/cat.cpp
     ../Utilities/checksum.cpp
