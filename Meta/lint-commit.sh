@@ -34,6 +34,11 @@ while read -r line; do
     error "Empty line between commit title and body is missing"
   fi
 
+  merge_commit_pattern="^Merge branch"
+  if [[ $line_number -eq 1 ]] && (echo "$line" | grep -E -q "$merge_commit_pattern"); then
+    error "Commit is a git merge commit, use the rebase command instead"
+  fi
+
   category_pattern='^(Revert "|\S+: )'
   if [[ $line_number -eq 1 ]] && (echo "$line" | grep -E -v -q "$category_pattern"); then
     error "Missing category in commit title (if this is a fix up of a previous commit, it should be squashed)"
