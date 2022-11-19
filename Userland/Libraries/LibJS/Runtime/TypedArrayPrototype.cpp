@@ -761,12 +761,12 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::join)
             builder.append(separator);
 
         // b. Let element be ! Get(O, ! ToString(𝔽(k))).
-        auto element = TRY(typed_array->get(i));
+        auto element = MUST(typed_array->get(i));
 
         // c. If element is undefined, let next be the empty String; otherwise, let next be ! ToString(element).
-        if (element.is_nullish())
+        if (element.is_undefined())
             continue;
-        auto next = TRY(element.to_string(vm));
+        auto next = MUST(element.to_string(vm));
 
         // d. Set R to the string-concatenation of R and next.
         builder.append(next);
