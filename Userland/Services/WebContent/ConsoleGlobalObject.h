@@ -42,6 +42,10 @@ private:
     JS_DECLARE_NATIVE_FUNCTION($0_getter);
     // $_, the value of the most recent expression entered into the console
     JS_DECLARE_NATIVE_FUNCTION($__getter);
+    // $(selector, element), equivalent to `(element || document).querySelector(selector)`
+    JS_DECLARE_NATIVE_FUNCTION($_function);
+    // $$(selector, element), equivalent to `(element || document).querySelectorAll(selector)`
+    JS_DECLARE_NATIVE_FUNCTION($$_function);
 
     Web::HTML::Window* m_window_object;
     JS::Value m_most_recent_result { JS::js_undefined() };
