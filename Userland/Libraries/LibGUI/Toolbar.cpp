@@ -59,6 +59,17 @@ private:
             set_text(action.text());
         set_button_style(Gfx::ButtonStyle::Coolbar);
     }
+
+    virtual void set_text(String text) override
+    {
+        auto const* action = this->action();
+        VERIFY(action);
+
+        set_tooltip(tooltip(*action));
+        if (!action->icon())
+            Button::set_text(move(text));
+    }
+
     String tooltip(Action const& action) const
     {
         StringBuilder builder;
