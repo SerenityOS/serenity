@@ -170,6 +170,7 @@ void SoundPlayerWidgetAdvancedView::play_state_changed(Player::PlayState state)
 
     m_play_action->set_enabled(state != PlayState::NoFileLoaded);
     m_play_action->set_icon(state == PlayState::Playing ? m_pause_icon : m_play_icon);
+    m_play_action->set_text(state == PlayState::Playing ? "Pause"sv : "Play"sv);
 
     m_stop_action->set_enabled(state != PlayState::Stopped && state != PlayState::NoFileLoaded);
 
