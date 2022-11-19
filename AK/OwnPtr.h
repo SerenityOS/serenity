@@ -131,35 +131,21 @@ public:
         return NonnullOwnPtr<U>(NonnullOwnPtr<U>::Adopt, static_cast<U&>(*leak_ptr()));
     }
 
-    T* ptr() { return m_ptr; }
-    const T* ptr() const { return m_ptr; }
+    T* ptr() const { return m_ptr; }
 
-    T* operator->()
+    T* operator->() const
     {
         VERIFY(m_ptr);
         return m_ptr;
     }
 
-    const T* operator->() const
-    {
-        VERIFY(m_ptr);
-        return m_ptr;
-    }
-
-    T& operator*()
+    T& operator*() const
     {
         VERIFY(m_ptr);
         return *m_ptr;
     }
 
-    const T& operator*() const
-    {
-        VERIFY(m_ptr);
-        return *m_ptr;
-    }
-
-    operator const T*() const { return m_ptr; }
-    operator T*() { return m_ptr; }
+    operator T*() const { return m_ptr; }
 
     operator bool() { return !!m_ptr; }
 

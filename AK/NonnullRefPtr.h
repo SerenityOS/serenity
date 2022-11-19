@@ -156,47 +156,27 @@ public:
         return *ptr;
     }
 
-    ALWAYS_INLINE RETURNS_NONNULL T* ptr()
-    {
-        return as_nonnull_ptr();
-    }
-    ALWAYS_INLINE RETURNS_NONNULL T const* ptr() const
+    ALWAYS_INLINE RETURNS_NONNULL T* ptr() const
     {
         return as_nonnull_ptr();
     }
 
-    ALWAYS_INLINE RETURNS_NONNULL T* operator->()
-    {
-        return as_nonnull_ptr();
-    }
-    ALWAYS_INLINE RETURNS_NONNULL T const* operator->() const
+    ALWAYS_INLINE RETURNS_NONNULL T* operator->() const
     {
         return as_nonnull_ptr();
     }
 
-    ALWAYS_INLINE T& operator*()
-    {
-        return *as_nonnull_ptr();
-    }
-    ALWAYS_INLINE T const& operator*() const
+    ALWAYS_INLINE T& operator*() const
     {
         return *as_nonnull_ptr();
     }
 
-    ALWAYS_INLINE RETURNS_NONNULL operator T*()
-    {
-        return as_nonnull_ptr();
-    }
-    ALWAYS_INLINE RETURNS_NONNULL operator T const*() const
+    ALWAYS_INLINE RETURNS_NONNULL operator T*() const
     {
         return as_nonnull_ptr();
     }
 
-    ALWAYS_INLINE operator T&()
-    {
-        return *as_nonnull_ptr();
-    }
-    ALWAYS_INLINE operator T const&() const
+    ALWAYS_INLINE operator T&() const
     {
         return *as_nonnull_ptr();
     }
@@ -217,7 +197,8 @@ public:
 
     bool operator==(NonnullRefPtr const& other) const { return m_ptr == other.m_ptr; }
 
-    bool operator==(NonnullRefPtr& other) { return m_ptr == other.m_ptr; }
+    template<typename RawPtr>
+    bool operator==(RawPtr other) const requires(IsPointer<RawPtr>) { return m_ptr == other; }
 
     // clang-format off
 private:

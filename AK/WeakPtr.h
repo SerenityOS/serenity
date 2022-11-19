@@ -117,10 +117,8 @@ public:
     }
 
     T* ptr() const { return unsafe_ptr(); }
-    T* operator->() { return unsafe_ptr(); }
-    const T* operator->() const { return unsafe_ptr(); }
-    operator const T*() const { return unsafe_ptr(); }
-    operator T*() { return unsafe_ptr(); }
+    T* operator->() const { return unsafe_ptr(); }
+    operator T*() const { return unsafe_ptr(); }
 
     [[nodiscard]] T* unsafe_ptr() const
     {

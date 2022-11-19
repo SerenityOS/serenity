@@ -231,31 +231,19 @@ public:
         return NonnullRefPtr<T>(NonnullRefPtr<T>::Adopt, *ptr);
     }
 
-    ALWAYS_INLINE T* ptr() { return as_ptr(); }
-    ALWAYS_INLINE T const* ptr() const { return as_ptr(); }
+    ALWAYS_INLINE T* ptr() const { return as_ptr(); }
 
-    ALWAYS_INLINE T* operator->()
+    ALWAYS_INLINE T* operator->() const
     {
         return as_nonnull_ptr();
     }
 
-    ALWAYS_INLINE T const* operator->() const
-    {
-        return as_nonnull_ptr();
-    }
-
-    ALWAYS_INLINE T& operator*()
+    ALWAYS_INLINE T& operator*() const
     {
         return *as_nonnull_ptr();
     }
 
-    ALWAYS_INLINE T const& operator*() const
-    {
-        return *as_nonnull_ptr();
-    }
-
-    ALWAYS_INLINE operator T const*() const { return as_ptr(); }
-    ALWAYS_INLINE operator T*() { return as_ptr(); }
+    ALWAYS_INLINE operator T*() const { return as_ptr(); }
 
     ALWAYS_INLINE operator bool() { return !is_null(); }
 
@@ -263,17 +251,11 @@ public:
 
     bool operator==(RefPtr const& other) const { return as_ptr() == other.as_ptr(); }
 
-    bool operator==(RefPtr& other) { return as_ptr() == other.as_ptr(); }
-
     template<typename U>
     bool operator==(NonnullRefPtr<U> const& other) const { return as_ptr() == other.m_ptr; }
 
-    template<typename U>
-    bool operator==(NonnullRefPtr<U>& other) { return as_ptr() == other.m_ptr; }
-
-    bool operator==(T const* other) const { return as_ptr() == other; }
-
-    bool operator==(T* other) { return as_ptr() == other; }
+    template<typename RawPtr>
+    bool operator==(RawPtr other) const requires(IsPointer<RawPtr>) { return as_ptr() == other; }
 
     ALWAYS_INLINE bool is_null() const { return !m_ptr; }
 
