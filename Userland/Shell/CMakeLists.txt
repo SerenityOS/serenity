@@ -18,9 +18,14 @@ set(SOURCES
 serenity_lib(LibShell shell)
 target_link_libraries(LibShell PRIVATE LibCore LibLine LibSyntax LibRegex)
 
+serenity_lib_static(LibShellStatic shell)
+target_link_libraries(LibShellStatic PRIVATE LibCoreStatic LibLineStatic LibSyntaxStatic LibRegexStatic)
+
 if (SERENITYOS)
     target_sources(LibShell PRIVATE SyntaxHighlighter.cpp)
+    target_sources(LibShellStatic PRIVATE SyntaxHighlighter.cpp)
     target_link_libraries(LibShell PRIVATE LibCodeComprehension)
+    target_link_libraries(LibShellStatic PRIVATE LibCodeComprehensionStatic)
 endif()
 
 if (ENABLE_FUZZERS)

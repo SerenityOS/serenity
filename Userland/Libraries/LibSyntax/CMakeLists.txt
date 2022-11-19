@@ -3,3 +3,4 @@ set(SOURCES
 )
 
 serenity_lib(LibSyntax syntax)
+serenity_lib_static(LibSyntaxStatic syntax)

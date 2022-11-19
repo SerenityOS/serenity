@@ -148,8 +148,8 @@ endif()
 set_source_files_properties(ssp.cpp PROPERTIES COMPILE_FLAGS "-fno-stack-protector")
 
 add_library(LibCStaticWithoutDeps STATIC ${SOURCES})
-target_link_libraries(LibCStaticWithoutDeps PUBLIC ssp LibTimeZone PRIVATE NoCoverage)
-add_dependencies(LibCStaticWithoutDeps LibSystem LibUBSanitizer)
+target_link_libraries(LibCStaticWithoutDeps PUBLIC ssp_nonshared LibTimeZone PRIVATE NoCoverage)
+add_dependencies(LibCStaticWithoutDeps LibSystemStatic LibUBSanitizerStatic)
 
 add_custom_target(LibCStatic
         COMMAND ${CMAKE_AR} -x $<TARGET_FILE:LibCStaticWithoutDeps>

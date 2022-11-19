@@ -46,3 +46,6 @@ endif()
 
 serenity_lib(LibCore core)
 target_link_libraries(LibCore PRIVATE LibCrypt LibSystem)
+
+serenity_lib_static(LibCoreStatic core)
+target_link_libraries(LibCoreStatic PRIVATE LibCryptStatic LibSystemStatic)

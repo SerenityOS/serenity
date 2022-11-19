@@ -52,3 +52,6 @@ set(SOURCES
 
 serenity_lib(LibGfx gfx)
 target_link_libraries(LibGfx PRIVATE LibCompress LibCore LibCrypto LibTextCodec LibIPC)
+
+serenity_lib_static(LibGfxStatic gfx)
+target_link_libraries(LibGfxStatic PRIVATE LibCompressStatic LibCoreStatic LibCryptoStatic LibTextCodecStatic LibIPCStatic)

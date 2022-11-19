@@ -3,3 +3,5 @@ set(SOURCES
 )
 
 serenity_lib(LibTextCodec textcodec)
+
+serenity_lib_static(LibTextCodecStatic textcodec)

@@ -35,6 +35,10 @@ set(SOURCES
     ../Utilities/uniq.cpp
 )
 
+serenity_lib(LibBuggieBox buggiebox)
+target_compile_definitions(LibBuggieBox PRIVATE -DEXCLUDE_SERENITY_MAIN)
+target_link_libraries(LibBuggieBox PRIVATE LibShellStatic LibGfxStatic LibCoreStatic LibIPCStatic LibRegexStatic LibCompressStatic LibCryptoStatic LibLineStatic)
+
 serenity_bin(BuggieBox)
-target_link_libraries(BuggieBox PRIVATE LibShell LibCompress LibCore LibCrypto LibGfx LibLine LibMain LibRegex)
+target_link_libraries(BuggieBox PRIVATE LibC LibMain LibBuggieBox)
 target_compile_definitions(BuggieBox PRIVATE -DEXCLUDE_SERENITY_MAIN)
