@@ -7,6 +7,7 @@
 
 #include <Kernel/FileSystem/TmpFS/Inode.h>
 #include <Kernel/Process.h>
+#include <Kernel/Storage/StorageManagement.h>
 
 namespace Kernel {
 
@@ -19,6 +20,37 @@ TmpFSInode::TmpFSInode(TmpFS& fs, InodeMetadata const& metadata, LockWeakPtr<Tmp
 }
 
 TmpFSInode::~TmpFSInode() = default;
+
+UNMAP_AFTER_INIT ErrorOr<NonnullLockRefPtr<TmpFSInode>> TmpFSInode::try_create_with_content(Badge<StorageManagement>, TmpFS& fs, InodeMetadata const& metadata, Span<u8> buffer, LockWeakPtr<TmpFSInode> parent)
+{
+    auto inode = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) TmpFSInode(fs, metadata, move(parent))));
+    TRY(inode->add_content_from_initramfs_buffer(buffer));
+    return inode;
+}
+
+UNMAP_AFTER_INIT ErrorOr<NonnullLockRefPtr<TmpFSInode>> TmpFSInode::try_create_as_directory(Badge<StorageManagement>, TmpFS& fs, InodeMetadata const& metadata, LockWeakPtr<TmpFSInode> parent)
+{
+    VERIFY(metadata.is_directory());
+    return adopt_nonnull_lock_ref_or_enomem(new (nothrow) TmpFSInode(fs, metadata, move(parent)));
+}
+
+UNMAP_AFTER_INIT ErrorOr<NonnullLockRefPtr<TmpFSInode>> TmpFSInode::try_create_with_empty_content(Badge<StorageManagement>, TmpFS& fs, InodeMetadata const& metadata, LockWeakPtr<TmpFSInode> parent)
+{
+    VERIFY(!metadata.is_directory());
+    return adopt_nonnull_lock_ref_or_enomem(new (nothrow) TmpFSInode(fs, metadata, move(parent)));
+}
+
+ErrorOr<void> TmpFSInode::add_content_from_initramfs_buffer(Span<u8> buffer)
+{
+    MutexLocker locker(m_inode_lock);
+    VERIFY(!is_directory());
+
+    TRY(ensure_allocated_blocks(0, buffer.size()));
+    auto nwritten = TRY(write_bytes_to_content_space(0, buffer.size(), UserOrKernelBuffer::for_kernel_buffer(buffer.data())));
+    VERIFY(nwritten == buffer.size());
+    m_metadata.size = nwritten;
+    return {};
+}
 
 ErrorOr<NonnullLockRefPtr<TmpFSInode>> TmpFSInode::try_create(TmpFS& fs, InodeMetadata const& metadata, LockWeakPtr<TmpFSInode> parent)
 {

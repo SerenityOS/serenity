@@ -9,6 +9,8 @@
 #include <AK/IntrusiveList.h>
 #include <AK/Types.h>
 #include <Kernel/FileSystem/FileSystem.h>
+#include <Kernel/FileSystem/TmpFS/FileSystem.h>
+#include <Kernel/FileSystem/TmpFS/Inode.h>
 #include <Kernel/Library/NonnullLockRefPtr.h>
 #include <Kernel/Library/NonnullLockRefPtrVector.h>
 #include <Kernel/Storage/DiskPartition.h>
@@ -22,13 +24,37 @@ class ATAController;
 class NVMeController;
 class StorageManagement {
 
+private:
+    static_assert(sizeof(char) == sizeof(u8));
+    struct [[gnu::packed]] InitRAMFSInodeHeader {
+        char magic[6]; // Should be a string of "070707"
+        char dev[6];
+        char inode_number[6];
+        char mode[6];
+        char uid[6];
+        char gid[6];
+        char nlink[6];
+        char rdev[6];
+        char mtime[11];
+        char filename_length[6];
+        char file_size[11];
+    };
+
+    struct [[gnu::packed]] InitRAMFSRegularInodeHeader {
+        InitRAMFSInodeHeader header;
+        char name[];
+    };
+
+    struct [[gnu::packed]] InitRAMFSTrailerInodeHeader {
+        InitRAMFSInodeHeader header;
+        char trailer_name[11];
+    };
+
 public:
     StorageManagement();
     static bool initialized();
-    void initialize(StringView boot_argument, bool force_pio, bool nvme_poll);
+    void initialize(PhysicalAddress initramfs_start, PhysicalAddress initramfs_end, bool force_pio, bool nvme_poll);
     static StorageManagement& the();
-
-    NonnullLockRefPtr<FileSystem> root_filesystem() const;
 
     static MajorNumber storage_type_major_number();
     static MinorNumber generate_storage_minor_number();
@@ -63,12 +89,14 @@ private:
 
     void dump_storage_devices_and_partitions() const;
 
+    ErrorOr<NonnullLockRefPtr<TmpFSInode>> try_create_tmpfs_inode_for_initramfs(TmpFS& fs, PhysicalAddress current_address, TmpFSInode const& parent_directory_inode, InitRAMFSInodeHeader const& header);
+    ErrorOr<NonnullLockRefPtr<TmpFSInode>> ensure_initramfs_path(TmpFSInode& inode, StringView full_name);
+    ErrorOr<void> populate_initramfs(TmpFS& fs, PhysicalAddress initramfs_image_start, PhysicalAddress initramfs_image_end);
+    ErrorOr<NonnullLockRefPtr<TmpFS>> initialize_initramfs(PhysicalAddress initramfs_image_start, PhysicalAddress initramfs_image_end);
+
     ErrorOr<NonnullOwnPtr<Partition::PartitionTable>> try_to_initialize_partition_table(StorageDevice const&) const;
 
-    LockRefPtr<BlockDevice> boot_block_device() const;
-
     StringView m_boot_argument;
-    LockWeakPtr<BlockDevice> m_boot_block_device;
     NonnullLockRefPtrVector<StorageController> m_controllers;
     IntrusiveList<&StorageDevice::m_list_node> m_storage_devices;
 };

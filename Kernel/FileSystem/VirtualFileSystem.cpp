@@ -297,10 +297,10 @@ ErrorOr<void> VirtualFileSystem::mount_root(FileSystem& fs)
     }
 
     m_root_inode = root_inode;
-    if (fs.is_file_backed()) {
-        auto pseudo_path = TRY(static_cast<FileBackedFileSystem&>(fs).file_description().pseudo_path());
-        dmesgln("VirtualFileSystem: mounted root({}) from {} ({})", fs.fsid(), fs.class_name(), pseudo_path);
-        m_file_backed_file_systems_list.with([&](auto& list) {
+    dmesgln("VirtualFileSystem: mounted root({}) from type {}", fs.fsid(), fs.class_name());
+
+    m_file_backed_file_systems_list.with([&](auto& list) {
+        if (fs.is_file_backed())
             list.append(static_cast<FileBackedFileSystem&>(fs));
     });
 

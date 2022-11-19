@@ -66,7 +66,8 @@ has set up before booting the Kernel, don't initialize any driver.
 * **`pci`** - This parameter expects **`ecam`**, **`io`** or **`none`**. When selecting **`none`**
   the kernel will not use PCI resources/devices.
 
-* **`root`** - This parameter configures the device to use as the root file system. It defaults to **`/dev/hda`** if unspecified.
+* **`root`** - This parameter configures the device to use as the root file system. It is unused by the kernel for booting and 
+  it  is exposed to userspace via /proc/root_device node to help it figure out the chosen boot device.
 
 * **`pcspeaker`** - This parameter controls whether the kernel can use the PC speaker or not. It defaults to **`off`** and can be set to **`on`** to enable the PC speaker.
 

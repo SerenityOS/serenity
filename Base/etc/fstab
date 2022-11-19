@@ -8,7 +8,6 @@
 /root	/root	bind	bind,nodev,nosuid
 /var	/var	bind	bind,nodev,nosuid
 /www	/www	bind	bind,nodev,nosuid
-/usr/Tests	/usr/Tests	bind	bind,nodev,ro
 /usr/local	/usr/local	bind	bind,nodev,nosuid
 
 none	/tmp	tmp	nodev,nosuid

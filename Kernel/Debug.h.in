@@ -135,6 +135,10 @@
 #cmakedefine01 INTERRUPT_DEBUG
 #endif
 
+#ifndef INITRAMFS_DEBUG
+#cmakedefine01 INITRAMFS_DEBUG
+#endif
+
 #ifndef IO_DEBUG
 #cmakedefine01 IO_DEBUG
 #endif

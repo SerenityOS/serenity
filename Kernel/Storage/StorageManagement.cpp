@@ -22,6 +22,7 @@
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/FileSystem/Ext2FS/FileSystem.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
+#include <Kernel/KBuffer.h>
 #include <Kernel/Panic.h>
 #include <Kernel/Storage/ATA/AHCI/Controller.h>
 #include <Kernel/Storage/ATA/GenericIDE/Controller.h>
@@ -191,198 +192,6 @@ UNMAP_AFTER_INIT void StorageManagement::enumerate_disk_partitions()
     }
 }
 
-UNMAP_AFTER_INIT Optional<unsigned> StorageManagement::extract_boot_device_partition_number_parameter(StringView device_prefix)
-{
-    VERIFY(m_boot_argument.starts_with(device_prefix));
-    VERIFY(!m_boot_argument.starts_with(partition_uuid_prefix));
-    auto storage_device_relative_address_view = m_boot_argument.substring_view(device_prefix.length());
-    auto parameter_view = storage_device_relative_address_view.find_last_split_view(';');
-    if (parameter_view == storage_device_relative_address_view)
-        return {};
-    if (!parameter_view.starts_with(partition_number_prefix)) {
-        PANIC("StorageManagement: Invalid root boot parameter.");
-    }
-
-    auto parameter_number = parameter_view.substring_view(partition_number_prefix.length()).to_uint<unsigned>();
-    if (!parameter_number.has_value()) {
-        PANIC("StorageManagement: Invalid root boot parameter.");
-    }
-
-    return parameter_number.value();
-}
-
-UNMAP_AFTER_INIT Array<unsigned, 3> StorageManagement::extract_boot_device_address_parameters(StringView device_prefix)
-{
-    VERIFY(!m_boot_argument.starts_with(partition_uuid_prefix));
-    Array<unsigned, 3> address_parameters;
-    auto parameters_view = m_boot_argument.substring_view(device_prefix.length()).find_first_split_view(';');
-    size_t parts_count = 0;
-    bool parse_failure = false;
-    parameters_view.for_each_split_view(':', SplitBehavior::Nothing, [&](StringView parameter_view) {
-        if (parse_failure)
-            return;
-        if (parts_count > 2)
-            return;
-        auto parameter_number = parameter_view.to_uint<unsigned>();
-        if (!parameter_number.has_value()) {
-            parse_failure = true;
-            return;
-        }
-        address_parameters[parts_count] = parameter_number.value();
-        parts_count++;
-    });
-
-    if (parts_count > 3) {
-        dbgln("StorageManagement: Detected {} parts in boot device parameter.", parts_count);
-        PANIC("StorageManagement: Invalid root boot parameter.");
-    }
-    if (parse_failure) {
-        PANIC("StorageManagement: Invalid root boot parameter.");
-    }
-
-    return address_parameters;
-}
-
-UNMAP_AFTER_INIT void StorageManagement::resolve_partition_from_boot_device_parameter(StorageDevice const& chosen_storage_device, StringView boot_device_prefix)
-{
-    auto possible_partition_number = extract_boot_device_partition_number_parameter(boot_device_prefix);
-    if (!possible_partition_number.has_value())
-        return;
-
-    auto partition_number = possible_partition_number.value();
-    if (chosen_storage_device.partitions().size() <= partition_number)
-        PANIC("StorageManagement: Invalid partition number parameter.");
-    m_boot_block_device = chosen_storage_device.partitions()[partition_number];
-}
-
-UNMAP_AFTER_INIT void StorageManagement::determine_hardware_relative_boot_device(StringView relative_hardware_prefix, Function<bool(StorageDevice const&)> filter_device_callback)
-{
-    VERIFY(m_boot_argument.starts_with(relative_hardware_prefix));
-    auto address_parameters = extract_boot_device_address_parameters(relative_hardware_prefix);
-
-    RefPtr<StorageDevice> chosen_storage_device;
-
-    for (auto& storage_device : m_storage_devices) {
-        if (!filter_device_callback(storage_device))
-            continue;
-        auto storage_device_lun = storage_device.logical_unit_number_address();
-        if (storage_device.parent_controller_hardware_relative_id() == address_parameters[0]
-            && storage_device_lun.target_id == address_parameters[1]
-            && storage_device_lun.disk_id == address_parameters[2]) {
-            m_boot_block_device = storage_device;
-            chosen_storage_device = storage_device;
-            break;
-        }
-    }
-
-    if (chosen_storage_device)
-        resolve_partition_from_boot_device_parameter(*chosen_storage_device, relative_hardware_prefix);
-}
-
-UNMAP_AFTER_INIT void StorageManagement::determine_ata_boot_device()
-{
-    determine_hardware_relative_boot_device(ata_device_prefix, [](StorageDevice const& device) -> bool {
-        return device.command_set() == StorageDevice::CommandSet::ATA;
-    });
-}
-
-UNMAP_AFTER_INIT void StorageManagement::determine_nvme_boot_device()
-{
-    determine_hardware_relative_boot_device(nvme_device_prefix, [](StorageDevice const& device) -> bool {
-        return device.command_set() == StorageDevice::CommandSet::NVMe;
-    });
-}
-
-UNMAP_AFTER_INIT void StorageManagement::determine_block_boot_device()
-{
-    VERIFY(m_boot_argument.starts_with(block_device_prefix));
-    auto parameters_view = extract_boot_device_address_parameters(block_device_prefix);
-
-    // Note: We simply fetch the corresponding BlockDevice with the major and minor parameters.
-    // We don't try to accept and resolve a partition number as it will make this code much more
-    // complicated. This rule is also explained in the boot_device_addressing(7) manual page.
-    LockRefPtr<Device> device = DeviceManagement::the().get_device(parameters_view[0], parameters_view[1]);
-    if (device && device->is_block_device())
-        m_boot_block_device = static_ptr_cast<BlockDevice>(device);
-}
-
-UNMAP_AFTER_INIT void StorageManagement::determine_boot_device_with_logical_unit_number()
-{
-    VERIFY(m_boot_argument.starts_with(logical_unit_number_device_prefix));
-    auto address_parameters = extract_boot_device_address_parameters(logical_unit_number_device_prefix);
-
-    RefPtr<StorageDevice> chosen_storage_device;
-
-    for (auto& storage_device : m_storage_devices) {
-        auto storage_device_lun = storage_device.logical_unit_number_address();
-        if (storage_device_lun.controller_id == address_parameters[0]
-            && storage_device_lun.target_id == address_parameters[1]
-            && storage_device_lun.disk_id == address_parameters[2]) {
-            m_boot_block_device = storage_device;
-            chosen_storage_device = storage_device;
-            break;
-        }
-    }
-
-    if (chosen_storage_device)
-        resolve_partition_from_boot_device_parameter(*chosen_storage_device, logical_unit_number_device_prefix);
-}
-
-UNMAP_AFTER_INIT void StorageManagement::determine_boot_device()
-{
-    VERIFY(!m_controllers.is_empty());
-
-    if (m_boot_argument.starts_with(block_device_prefix)) {
-        determine_block_boot_device();
-        return;
-    }
-
-    if (m_boot_argument.starts_with(partition_uuid_prefix)) {
-        determine_boot_device_with_partition_uuid();
-        return;
-    }
-
-    if (m_boot_argument.starts_with(logical_unit_number_device_prefix)) {
-        determine_boot_device_with_logical_unit_number();
-        return;
-    }
-
-    if (m_boot_argument.starts_with(ata_device_prefix)) {
-        determine_ata_boot_device();
-        return;
-    }
-
-    if (m_boot_argument.starts_with(nvme_device_prefix)) {
-        determine_nvme_boot_device();
-        return;
-    }
-    PANIC("StorageManagement: Invalid root boot parameter.");
-}
-
-UNMAP_AFTER_INIT void StorageManagement::determine_boot_device_with_partition_uuid()
-{
-    VERIFY(!m_storage_devices.is_empty());
-    VERIFY(m_boot_argument.starts_with(partition_uuid_prefix));
-
-    auto partition_uuid = UUID(m_boot_argument.substring_view(partition_uuid_prefix.length()), UUID::Endianness::Mixed);
-
-    for (auto& storage_device : m_storage_devices) {
-        for (auto& partition : storage_device.partitions()) {
-            if (partition.metadata().unique_guid().is_zero())
-                continue;
-            if (partition.metadata().unique_guid() == partition_uuid) {
-                m_boot_block_device = partition;
-                break;
-            }
-        }
-    }
-}
-
-LockRefPtr<BlockDevice> StorageManagement::boot_block_device() const
-{
-    return m_boot_block_device.strong_ref();
-}
-
 MajorNumber StorageManagement::storage_type_major_number()
 {
     return 3;
@@ -402,29 +211,9 @@ u32 StorageManagement::generate_controller_id()
     return s_controller_id.fetch_add(1);
 }
 
-NonnullLockRefPtr<FileSystem> StorageManagement::root_filesystem() const
-{
-    auto boot_device_description = boot_block_device();
-    if (!boot_device_description) {
-        dump_storage_devices_and_partitions();
-        PANIC("StorageManagement: Couldn't find a suitable device to boot from");
-    }
-    auto description_or_error = OpenFileDescription::try_create(boot_device_description.release_nonnull());
-    VERIFY(!description_or_error.is_error());
-
-    auto file_system = Ext2FS::try_create(description_or_error.release_value()).release_value();
-
-    if (auto result = file_system->initialize(); result.is_error()) {
-        dump_storage_devices_and_partitions();
-        PANIC("StorageManagement: Couldn't open root filesystem: {}", result.error());
-    }
-    return file_system;
-}
-
-UNMAP_AFTER_INIT void StorageManagement::initialize(StringView root_device, bool force_pio, bool poll)
+UNMAP_AFTER_INIT void StorageManagement::initialize(PhysicalAddress initramfs_start, PhysicalAddress initramfs_end, bool force_pio, bool poll)
 {
     VERIFY(s_storage_device_minor_number == 0);
-    m_boot_argument = root_device;
     if (PCI::Access::is_disabled()) {
 #if ARCH(I386) || ARCH(X86_64)
         // Note: If PCI is disabled, we assume that at least we have an ISA IDE controller
@@ -437,11 +226,110 @@ UNMAP_AFTER_INIT void StorageManagement::initialize(StringView root_device, bool
     enumerate_storage_devices();
     enumerate_disk_partitions();
 
-    determine_boot_device();
-    if (m_boot_block_device.is_null()) {
-        dump_storage_devices_and_partitions();
-        PANIC("StorageManagement: boot device {} not found", m_boot_argument);
+    auto initramfs = MUST(initialize_initramfs(initramfs_start, initramfs_end));
+    if (VirtualFileSystem::the().mount_root(*initramfs).is_error()) {
+        PANIC("VirtualFileSystem::mount_root failed");
     }
+}
+
+static ErrorOr<u32> convert_to_uint_from_inode_field(StringView octal_number)
+{
+    auto number_or_error = AK::StringUtils::convert_to_uint_from_octal<u32>(octal_number);
+    if (!number_or_error.has_value())
+        return Error::from_errno(EINVAL);
+    return number_or_error.value();
+}
+
+UNMAP_AFTER_INIT ErrorOr<NonnullLockRefPtr<TmpFSInode>> StorageManagement::try_create_tmpfs_inode_for_initramfs(TmpFS& fs, PhysicalAddress current_address, TmpFSInode const& parent_directory_inode, InitRAMFSInodeHeader const& header)
+{
+    InodeMetadata metadata;
+    auto inode_number = TRY(convert_to_uint_from_inode_field(StringView { header.inode_number, sizeof(InitRAMFSInodeHeader::inode_number) }));
+    auto filename_length = TRY(convert_to_uint_from_inode_field(StringView { header.filename_length, sizeof(InitRAMFSInodeHeader::filename_length) }));
+    metadata.inode = InodeIdentifier { fs.fsid(), inode_number };
+
+    auto file_size = TRY(convert_to_uint_from_inode_field(StringView { header.file_size, sizeof(InitRAMFSInodeHeader::file_size) }));
+    metadata.size = file_size;
+    auto mode = TRY(convert_to_uint_from_inode_field(StringView { header.mode, sizeof(InitRAMFSInodeHeader::mode) }));
+    metadata.mode = mode;
+
+    metadata.uid = TRY(convert_to_uint_from_inode_field(StringView { header.uid, sizeof(InitRAMFSInodeHeader::uid) }));
+    metadata.gid = TRY(convert_to_uint_from_inode_field(StringView { header.gid, sizeof(InitRAMFSInodeHeader::gid) }));
+    metadata.link_count = TRY(convert_to_uint_from_inode_field(StringView { header.nlink, sizeof(InitRAMFSInodeHeader::nlink) }));
+    metadata.atime = TRY(convert_to_uint_from_inode_field(StringView { header.mtime, sizeof(InitRAMFSInodeHeader::mtime) }));
+    metadata.ctime = TRY(convert_to_uint_from_inode_field(StringView { header.mtime, sizeof(InitRAMFSInodeHeader::mtime) }));
+    metadata.mtime = TRY(convert_to_uint_from_inode_field(StringView { header.mtime, sizeof(InitRAMFSInodeHeader::mtime) }));
+    metadata.dtime = TRY(convert_to_uint_from_inode_field(StringView { header.mtime, sizeof(InitRAMFSInodeHeader::mtime) }));
+    metadata.block_size = PAGE_SIZE;
+    // FIXME: Is this correct in CPIO archives?
+    metadata.block_count = static_cast<blkcnt_t>(static_cast<u64>(metadata.size) / static_cast<u64>(PAGE_SIZE));
+
+    if (Kernel::is_character_device(mode) || Kernel::is_block_device(mode)) {
+        auto dev = TRY(convert_to_uint_from_inode_field(StringView { header.rdev, sizeof(header.rdev) }));
+        metadata.major_device = (dev & 0xfff00) >> 8;
+        metadata.minor_device = (dev & 0xff) | ((dev >> 12) & 0xfff00);
+    }
+    if (metadata.is_directory()) {
+        return TmpFSInode::try_create_as_directory({}, fs, metadata, parent_directory_inode);
+    }
+
+    if (file_size == 0) {
+        return TmpFSInode::try_create_with_empty_content({}, fs, metadata, parent_directory_inode);
+    }
+
+    auto mapping_size = TRY(Memory::page_round_up(sizeof(InitRAMFSInodeHeader) + filename_length + file_size));
+    auto mapping = TRY(Memory::map_typed<u8>(current_address, mapping_size));
+    auto mapped_buffer = Span<u8> { mapping.base_address().offset(sizeof(InitRAMFSInodeHeader) + filename_length).as_ptr(), file_size };
+    return TmpFSInode::try_create_with_content({}, fs, metadata, mapped_buffer, parent_directory_inode);
+}
+
+ErrorOr<NonnullLockRefPtr<TmpFSInode>> StorageManagement::ensure_initramfs_path(TmpFSInode& inode, StringView full_name)
+{
+    auto first_path_part = full_name.find_first_split_view('/');
+    if (first_path_part == full_name)
+        return inode;
+    auto result = inode.lookup(first_path_part);
+    if (result.is_error()) {
+        VERIFY(result.error() != Error::from_errno(ENOENT));
+        return result.release_error();
+    }
+    auto next_inode = static_ptr_cast<TmpFSInode>(result.release_value());
+    return ensure_initramfs_path(*next_inode, full_name.substring_view(1 + first_path_part.length()));
+}
+
+UNMAP_AFTER_INIT ErrorOr<void> StorageManagement::populate_initramfs(TmpFS& fs, PhysicalAddress initramfs_image_start, PhysicalAddress initramfs_image_end)
+{
+    auto& root_inode = static_cast<TmpFSInode&>(fs.root_inode());
+    auto current_address = initramfs_image_start;
+    while (current_address < initramfs_image_end) {
+        if (initramfs_image_end.get() - current_address.get() < sizeof(InitRAMFSInodeHeader))
+            break;
+        if (initramfs_image_end.get() - current_address.get() < sizeof(InitRAMFSInodeHeader))
+            break;
+        auto mapping = TRY(Memory::map_typed<InitRAMFSInodeHeader>(current_address));
+        auto magic = StringView { mapping->magic, sizeof(InitRAMFSInodeHeader::magic) };
+        VERIFY(magic == "070707"sv);
+        auto file_name_length = TRY(convert_to_uint_from_inode_field(StringView { mapping->filename_length, sizeof(InitRAMFSInodeHeader::filename_length) }));
+        auto mapping_with_name = TRY(Memory::map_typed<InitRAMFSRegularInodeHeader>(current_address, sizeof(InitRAMFSInodeHeader) + file_name_length));
+        auto name = StringView { mapping_with_name->name, file_name_length - 1 };
+        if (name == "TRAILER!!!"sv)
+            break;
+        auto mode = TRY(convert_to_uint_from_inode_field(StringView { mapping->mode, sizeof(InitRAMFSInodeHeader::mode) }));
+        auto file_size = TRY(convert_to_uint_from_inode_field(StringView { mapping->file_size, sizeof(InitRAMFSInodeHeader::file_size) }));
+        auto parent_directory_inode = TRY(ensure_initramfs_path(root_inode, name));
+        auto new_inode = TRY(try_create_tmpfs_inode_for_initramfs(fs, current_address, parent_directory_inode, *mapping.ptr()));
+        auto basename = name.find_last_split_view('/');
+        TRY(parent_directory_inode->add_child(new_inode, basename, mode));
+        current_address = current_address.offset(sizeof(InitRAMFSInodeHeader) + file_name_length + file_size);
+    }
+    return {};
+}
+
+UNMAP_AFTER_INIT ErrorOr<NonnullLockRefPtr<TmpFS>> StorageManagement::initialize_initramfs(PhysicalAddress initramfs_image_start, PhysicalAddress initramfs_image_end)
+{
+    auto fs = static_ptr_cast<TmpFS>(TRY(TmpFS::try_create()));
+    TRY(fs->initialize());
+    TRY(populate_initramfs(*fs, initramfs_image_start, initramfs_image_end));
+    return fs;
 }
 
 StorageManagement& StorageManagement::the()

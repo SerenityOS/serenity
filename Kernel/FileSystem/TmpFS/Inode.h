@@ -13,10 +13,17 @@
 
 namespace Kernel {
 
+class StorageManagement;
 class TmpFSInode final : public Inode {
     friend class TmpFS;
 
 public:
+    // Note: This method is being used only during early boot when extracting the initramfs archive to a tmpfs instance.
+    static ErrorOr<NonnullLockRefPtr<TmpFSInode>> try_create_with_content(Badge<StorageManagement>, TmpFS&, InodeMetadata const& metadata, Span<u8> buffer, LockWeakPtr<TmpFSInode> parent);
+
+    static ErrorOr<NonnullLockRefPtr<TmpFSInode>> try_create_with_empty_content(Badge<StorageManagement>, TmpFS&, InodeMetadata const& metadata, LockWeakPtr<TmpFSInode> parent);
+    static ErrorOr<NonnullLockRefPtr<TmpFSInode>> try_create_as_directory(Badge<StorageManagement>, TmpFS&, InodeMetadata const& metadata, LockWeakPtr<TmpFSInode> parent);
+
     virtual ~TmpFSInode() override;
 
     TmpFS& fs() { return static_cast<TmpFS&>(Inode::fs()); }
@@ -45,6 +52,7 @@ private:
     virtual ErrorOr<size_t> write_bytes_locked(off_t, size_t, UserOrKernelBuffer const& buffer, OpenFileDescription*) override;
 
     ErrorOr<size_t> do_io_on_content_space(Memory::Region& mapping_region, size_t offset, size_t io_size, UserOrKernelBuffer& buffer, bool write);
+    ErrorOr<void> add_content_from_initramfs_buffer(Span<u8>);
 
     struct Child {
         NonnullOwnPtr<KString> name;

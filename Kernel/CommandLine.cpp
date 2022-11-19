@@ -185,7 +185,10 @@ UNMAP_AFTER_INIT bool CommandLine::is_force_pio() const
 
 StringView CommandLine::root_device() const
 {
-    return lookup("root"sv).value_or("lun0:0:0"sv);
+    // Note: This is not used by the kernel, but instead this is exposed to userspace
+    // in the /proc/root_device node, so a init program can use this as an indication
+    // on which boot device to mount as the root mount.
+    return lookup("root"sv).value_or(""sv);
 }
 
 bool CommandLine::is_nvme_polling_enabled() const
@@ -292,7 +295,7 @@ UNMAP_AFTER_INIT CommandLine::GraphicsSubsystemMode CommandLine::graphics_subsys
 
 StringView CommandLine::userspace_init() const
 {
-    return lookup("init"sv).value_or("/bin/SystemServer"sv);
+    return lookup("init"sv).value_or("/bin/init"sv);
 }
 
 NonnullOwnPtrVector<KString> CommandLine::userspace_init_args() const

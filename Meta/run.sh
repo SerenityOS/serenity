@@ -297,10 +297,13 @@ fi
 if [ "$SERENITY_ARCH" = "aarch64" ]; then
     SERENITY_KERNEL_AND_INITRD="
     -kernel Kernel/Kernel
+    -initrd initramfs.cpio
     "
 else
     SERENITY_KERNEL_AND_INITRD="
     -kernel Kernel/Prekernel/Kernel
+    -initrd initramfs.cpio
+    -monitor vc
     "
 fi
 
