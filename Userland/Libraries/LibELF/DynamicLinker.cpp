@@ -385,7 +385,7 @@ static Result<void, DlErrorMessage> link_main_library(String const& path, int fl
         VERIFY(!result.is_error());
         auto& object = result.value();
 
-        if (loader.filepath().ends_with("/libsystem.so"sv)) {
+        if (loader.filepath().ends_with("/libsystem.so"sv) || loader.filepath().ends_with("/libbuggiebox.so"sv) || loader.filepath().ends_with("/libbuggiebox.so.serenity"sv)) {
             VERIFY(!loader.text_segments().is_empty());
             for (auto const& segment : loader.text_segments()) {
                 if (syscall(SC_msyscall, segment.address().get())) {
