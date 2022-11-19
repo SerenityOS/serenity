@@ -54,6 +54,7 @@ template<LockRank Rank>
 class RecursiveSpinlock;
 class Scheduler;
 class Socket;
+class StorageManagement;
 class SysFS;
 class SysFSDirectory;
 class SysFSRootDirectory;

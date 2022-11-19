@@ -9,6 +9,8 @@
 #include <AK/IntrusiveList.h>
 #include <AK/Types.h>
 #include <Kernel/FileSystem/FileSystem.h>
+#include <Kernel/FileSystem/RAMFS/FileSystem.h>
+#include <Kernel/FileSystem/RAMFS/Inode.h>
 #include <Kernel/Library/NonnullLockRefPtr.h>
 #include <Kernel/Library/NonnullLockRefPtrVector.h>
 #include <Kernel/Storage/DiskPartition.h>
@@ -24,10 +26,10 @@ class StorageManagement {
 
 public:
     StorageManagement();
-    void initialize(StringView boot_argument, bool force_pio, bool nvme_poll);
+    static bool initialized();
+    void initialize_with_initramfs_as_the_root_filesystem(PhysicalAddress initramfs_start, PhysicalAddress initramfs_end, bool force_pio, bool nvme_poll);
+    void initialize_with_storage_device_for_the_root_filesystem(StringView boot_argument, bool force_pio, bool nvme_poll);
     static StorageManagement& the();
-
-    NonnullLockRefPtr<FileSystem> root_filesystem() const;
 
     static MajorNumber storage_type_major_number();
     static MinorNumber generate_storage_minor_number();
@@ -42,6 +44,8 @@ public:
     void remove_device(StorageDevice&);
 
 private:
+    void enumerate_all_attached_storage_controllers(bool force_pio, bool poll);
+
     void enumerate_pci_controllers(bool force_pio, bool nvme_poll);
     void enumerate_storage_devices();
     void enumerate_disk_partitions();
@@ -63,11 +67,9 @@ private:
 
     ErrorOr<NonnullOwnPtr<Partition::PartitionTable>> try_to_initialize_partition_table(StorageDevice const&) const;
 
-    LockRefPtr<BlockDevice> boot_block_device() const;
-
     StringView m_boot_argument;
-    LockWeakPtr<BlockDevice> m_boot_block_device;
     NonnullLockRefPtrVector<StorageController> m_controllers;
+    LockWeakPtr<BlockDevice> m_boot_block_device;
     IntrusiveList<&StorageDevice::m_list_node> m_storage_devices;
 };
 

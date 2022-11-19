@@ -5,8 +5,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <Kernel/FileSystem/RAMFS/FileSystem.h>
 #include <Kernel/FileSystem/RAMFS/Inode.h>
 #include <Kernel/Process.h>
+#include <Kernel/Storage/StorageManagement.h>
 
 namespace Kernel {
 
@@ -31,6 +33,37 @@ RAMFSInode::RAMFSInode(RAMFS& fs)
 }
 
 RAMFSInode::~RAMFSInode() = default;
+
+UNMAP_AFTER_INIT ErrorOr<NonnullLockRefPtr<RAMFSInode>> RAMFSInode::try_create_with_content(RAMFS& fs, InodeMetadata const& metadata, PhysicalAddress content_blocks_offset, size_t blocks_count, LockWeakPtr<RAMFSInode> parent)
+{
+    auto inode = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) RAMFSInode(fs, metadata, move(parent))));
+    for (size_t block_index = 0; block_index < blocks_count; block_index++) {
+        TRY(inode->attach_initramfs_data_block(content_blocks_offset.offset(block_index * DataBlock::block_size)));
+    }
+    inode->m_metadata.size = metadata.size;
+    inode->set_metadata_dirty(true);
+    return inode;
+}
+
+UNMAP_AFTER_INIT ErrorOr<NonnullLockRefPtr<RAMFSInode>> RAMFSInode::try_create_as_directory(RAMFS& fs, InodeMetadata const& metadata, LockWeakPtr<RAMFSInode> parent)
+{
+    VERIFY(metadata.is_directory());
+    return adopt_nonnull_lock_ref_or_enomem(new (nothrow) RAMFSInode(fs, metadata, move(parent)));
+}
+
+UNMAP_AFTER_INIT ErrorOr<NonnullLockRefPtr<RAMFSInode>> RAMFSInode::try_create_with_empty_content(RAMFS& fs, InodeMetadata const& metadata, LockWeakPtr<RAMFSInode> parent)
+{
+    VERIFY(!metadata.is_directory());
+    return adopt_nonnull_lock_ref_or_enomem(new (nothrow) RAMFSInode(fs, metadata, move(parent)));
+}
+
+ErrorOr<void> RAMFSInode::attach_initramfs_data_block(PhysicalAddress data_block_paddr)
+{
+    MutexLocker locker(m_inode_lock);
+    VERIFY(!is_directory());
+    TRY(m_blocks.try_append(TRY(DataBlock::create_with_known_paddr(data_block_paddr))));
+    return {};
+}
 
 ErrorOr<NonnullLockRefPtr<RAMFSInode>> RAMFSInode::try_create(RAMFS& fs, InodeMetadata const& metadata, LockWeakPtr<RAMFSInode> parent)
 {
@@ -87,6 +120,12 @@ ErrorOr<void> RAMFSInode::replace_child(StringView name, Inode& new_child)
     // TODO: Emit a did_replace_child event.
 
     return {};
+}
+
+ErrorOr<NonnullOwnPtr<RAMFSInode::DataBlock>> RAMFSInode::DataBlock::create_with_known_paddr(PhysicalAddress data_block_paddr)
+{
+    auto data_block_buffer_vmobject = TRY(Memory::AnonymousVMObject::try_create_for_physical_range(data_block_paddr, DataBlock::block_size));
+    return TRY(adopt_nonnull_own_or_enomem(new (nothrow) DataBlock(move(data_block_buffer_vmobject))));
 }
 
 ErrorOr<NonnullOwnPtr<RAMFSInode::DataBlock>> RAMFSInode::DataBlock::create()

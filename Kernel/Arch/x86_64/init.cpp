@@ -191,6 +191,10 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT void init(BootInfo const& boot_info)
             // FIXME: Add support for using initramfs images in such memory regions.
             dbgln("Detected initramfs higher than 4GB, ignoring");
         } else {
+            // FIXME: Although this will work correctly for the rest of the booting sequence,
+            // it also means that the MemoryManager never sees this range of memory as usable, ever again.
+            // Find a way to "free" this region back to MemoryManager after populating the TmpFS root filesystem.
+            multiboot_copy_boot_modules_count = 1;
             multiboot_copy_boot_modules_array[0].start = multiboot_module_ramdisk_physical_start.get();
             multiboot_copy_boot_modules_array[0].end = multiboot_module_ramdisk_physical_end.get();
             if (multiboot_module_ramdisk_physical_string_addr <= PhysicalAddress(0xffffffff)) {
@@ -199,6 +203,8 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT void init(BootInfo const& boot_info)
         }
         if (multiboot_modules_count > 1)
             dbgln("Detected more than one multiboot modules, ignoring the rest.");
+    } else {
+        dbgln("No initramfs image detected, continue booting from storage device.");
     }
 
     // Invoke the constructors needed for the kernel heap
@@ -372,9 +378,15 @@ void init_stage2(void*)
 
     AudioManagement::the().initialize();
 
-    StorageManagement::the().initialize(kernel_command_line().root_device(), kernel_command_line().is_force_pio(), kernel_command_line().is_nvme_polling_enabled());
-    if (VirtualFileSystem::the().mount_root(StorageManagement::the().root_filesystem()).is_error()) {
-        PANIC("VirtualFileSystem::mount_root failed");
+    if (multiboot_modules_count > 0) {
+        StorageManagement::the().initialize_with_initramfs_as_the_root_filesystem(multiboot_module_ramdisk_physical_start,
+            multiboot_module_ramdisk_physical_end,
+            kernel_command_line().is_force_pio(),
+            kernel_command_line().is_nvme_polling_enabled());
+    } else {
+        StorageManagement::the().initialize_with_storage_device_for_the_root_filesystem(kernel_command_line().root_device(),
+            kernel_command_line().is_force_pio(),
+            kernel_command_line().is_nvme_polling_enabled());
     }
 
     // Switch out of early boot mode.

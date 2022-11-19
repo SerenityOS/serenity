@@ -38,6 +38,11 @@ public:
     virtual ErrorOr<void> update_timestamps(Optional<Time> atime, Optional<Time> ctime, Optional<Time> mtime) override;
 
 private:
+    // Note: These methods are being used only during early boot when extracting the initramfs archive to a ramfs instance.
+    static ErrorOr<NonnullLockRefPtr<RAMFSInode>> try_create_with_content(RAMFS&, InodeMetadata const& metadata, PhysicalAddress content_blocks_offset, size_t blocks_count, LockWeakPtr<RAMFSInode> parent);
+    static ErrorOr<NonnullLockRefPtr<RAMFSInode>> try_create_with_empty_content(RAMFS&, InodeMetadata const& metadata, LockWeakPtr<RAMFSInode> parent);
+    static ErrorOr<NonnullLockRefPtr<RAMFSInode>> try_create_as_directory(RAMFS&, InodeMetadata const& metadata, LockWeakPtr<RAMFSInode> parent);
+
     RAMFSInode(RAMFS& fs, InodeMetadata const& metadata, LockWeakPtr<RAMFSInode> parent);
     explicit RAMFSInode(RAMFS& fs);
     static ErrorOr<NonnullLockRefPtr<RAMFSInode>> try_create(RAMFS&, InodeMetadata const& metadata, LockWeakPtr<RAMFSInode> parent);
@@ -48,6 +53,7 @@ private:
     virtual ErrorOr<size_t> write_bytes_locked(off_t, size_t, UserOrKernelBuffer const& buffer, OpenFileDescription*) override;
 
     ErrorOr<size_t> do_io_on_content_space(Memory::Region& mapping_region, size_t offset, size_t io_size, UserOrKernelBuffer& buffer, bool write);
+    ErrorOr<void> attach_initramfs_data_block(PhysicalAddress data_block_paddr);
 
     struct Child {
         NonnullOwnPtr<KString> name;
@@ -71,8 +77,9 @@ private:
         using List = Vector<OwnPtr<DataBlock>>;
 
         static ErrorOr<NonnullOwnPtr<DataBlock>> create();
+        static ErrorOr<NonnullOwnPtr<DataBlock>> create_with_known_paddr(PhysicalAddress data_block_paddr);
 
-        constexpr static size_t block_size = 128 * KiB;
+        constexpr static size_t block_size = 4 * KiB;
 
         Memory::AnonymousVMObject& vmobject() { return *m_content_buffer_vmobject; }
         Memory::AnonymousVMObject const& vmobject() const { return *m_content_buffer_vmobject; }

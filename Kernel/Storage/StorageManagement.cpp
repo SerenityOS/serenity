@@ -20,6 +20,7 @@
 #include <Kernel/Devices/BlockDevice.h>
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/FileSystem/Ext2FS/FileSystem.h>
+#include <Kernel/FileSystem/RAMFS/FileSystem.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/Panic.h>
 #include <Kernel/Storage/ATA/AHCI/Controller.h>
@@ -184,6 +185,23 @@ UNMAP_AFTER_INIT void StorageManagement::enumerate_disk_partitions()
             device.add_partition(disk_partition);
         }
     }
+}
+
+UNMAP_AFTER_INIT void StorageManagement::enumerate_all_attached_storage_controllers(bool force_pio, bool nvme_poll)
+{
+    VERIFY(s_storage_device_minor_number == 0);
+    if (PCI::Access::is_disabled()) {
+#if ARCH(X86_64)
+        // Note: If PCI is disabled, we assume that at least we have an ISA IDE controller
+        // to probe and use
+        auto isa_ide_controller = MUST(ISAIDEController::initialize());
+        m_controllers.append(isa_ide_controller);
+#endif
+    } else {
+        enumerate_pci_controllers(force_pio, nvme_poll);
+    }
+    enumerate_storage_devices();
+    enumerate_disk_partitions();
 }
 
 UNMAP_AFTER_INIT Optional<unsigned> StorageManagement::extract_boot_device_partition_number_parameter(StringView device_prefix)
@@ -385,9 +403,43 @@ UNMAP_AFTER_INIT void StorageManagement::determine_boot_device_with_partition_uu
     }
 }
 
-LockRefPtr<BlockDevice> StorageManagement::boot_block_device() const
+UNMAP_AFTER_INIT void StorageManagement::initialize_with_storage_device_for_the_root_filesystem(StringView root_device, bool force_pio, bool poll)
 {
-    return m_boot_block_device.strong_ref();
+    VERIFY(s_storage_device_minor_number == 0);
+    m_boot_argument = root_device;
+    enumerate_all_attached_storage_controllers(force_pio, poll);
+
+    determine_boot_device();
+    auto boot_block_device = m_boot_block_device.strong_ref();
+    if (boot_block_device.is_null()) {
+        dump_storage_devices_and_partitions();
+        PANIC("StorageManagement: boot device {} not found", m_boot_argument);
+    }
+
+    auto description_or_error = OpenFileDescription::try_create(boot_block_device.release_nonnull());
+    VERIFY(!description_or_error.is_error());
+
+    auto file_system = Ext2FS::try_create(description_or_error.release_value()).release_value();
+
+    if (auto result = file_system->initialize(); result.is_error()) {
+        dump_storage_devices_and_partitions();
+        PANIC("StorageManagement: Couldn't open root filesystem: {}", result.error());
+    }
+
+    if (VirtualFileSystem::the().mount_root(*file_system).is_error()) {
+        PANIC("VirtualFileSystem::mount_root failed");
+    }
+}
+
+UNMAP_AFTER_INIT void StorageManagement::initialize_with_initramfs_as_the_root_filesystem(PhysicalAddress initramfs_start, PhysicalAddress initramfs_end, bool force_pio, bool poll)
+{
+    VERIFY(s_storage_device_minor_number == 0);
+    enumerate_all_attached_storage_controllers(force_pio, poll);
+
+    auto initramfs = MUST(RAMFS::try_create_as_populated_initramfs({}, initramfs_start, initramfs_end));
+    if (VirtualFileSystem::the().mount_root(*initramfs).is_error()) {
+        PANIC("VirtualFileSystem::mount_root failed");
+    }
 }
 
 MajorNumber StorageManagement::storage_type_major_number()
@@ -407,52 +459,6 @@ MinorNumber StorageManagement::generate_partition_minor_number()
 u32 StorageManagement::generate_controller_id()
 {
     return s_controller_id.fetch_add(1);
-}
-
-NonnullLockRefPtr<FileSystem> StorageManagement::root_filesystem() const
-{
-    auto boot_device_description = boot_block_device();
-    if (!boot_device_description) {
-        dump_storage_devices_and_partitions();
-        PANIC("StorageManagement: Couldn't find a suitable device to boot from");
-    }
-    auto description_or_error = OpenFileDescription::try_create(boot_device_description.release_nonnull());
-    VERIFY(!description_or_error.is_error());
-
-    auto file_system = Ext2FS::try_create(description_or_error.release_value()).release_value();
-
-    if (auto result = file_system->initialize(); result.is_error()) {
-        dump_storage_devices_and_partitions();
-        PANIC("StorageManagement: Couldn't open root filesystem: {}", result.error());
-    }
-    return file_system;
-}
-
-UNMAP_AFTER_INIT void StorageManagement::initialize(StringView root_device, bool force_pio, bool poll)
-{
-    VERIFY(s_storage_device_minor_number == 0);
-    m_boot_argument = root_device;
-    if (PCI::Access::is_disabled()) {
-#if ARCH(X86_64)
-        // Note: If PCI is disabled, we assume that at least we have an ISA IDE controller
-        // to probe and use
-        auto isa_ide_controller = MUST(ISAIDEController::initialize());
-        m_controllers.append(isa_ide_controller);
-#endif
-    } else {
-        enumerate_pci_controllers(force_pio, poll);
-    }
-    // Note: Whether PCI bus is present on the system or not, always try to attach
-    // a given ramdisk.
-    m_controllers.append(RamdiskController::initialize());
-    enumerate_storage_devices();
-    enumerate_disk_partitions();
-
-    determine_boot_device();
-    if (m_boot_block_device.is_null()) {
-        dump_storage_devices_and_partitions();
-        PANIC("StorageManagement: boot device {} not found", m_boot_argument);
-    }
 }
 
 StorageManagement& StorageManagement::the()
