@@ -29,6 +29,10 @@ jobs:
                 error: "Commit message lines are too long (maximum allowed is 72 characters, except for URLs)",
               },
               {
+                pattern: /^Merge branch/,
+                error: "Commit is a git merge commit, use the rebase command instead",
+              },
+              {
                 pattern: /^\S.*?\S: .+/,
                 error: "Missing category in commit title (if this is a fix up of a previous commit, it should be squashed)",
               },
