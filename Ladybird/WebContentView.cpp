@@ -804,13 +804,13 @@ void WebContentView::notify_server_did_middle_click_link(Badge<WebContentClient>
 
 void WebContentView::notify_server_did_start_loading(Badge<WebContentClient>, AK::URL const& url)
 {
+    m_url = url;
     emit load_started(url);
 }
 
 void WebContentView::notify_server_did_finish_loading(Badge<WebContentClient>, AK::URL const& url)
 {
-    // FIXME
-    (void)url;
+    m_url = url;
 }
 
 void WebContentView::notify_server_did_request_navigate_back(Badge<WebContentClient>)
