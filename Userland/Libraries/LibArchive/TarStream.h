@@ -75,11 +75,7 @@ inline ErrorOr<void> TarInputStream::for_each_extended_header(F func)
 
     Archive::TarFileStream file_stream = file_contents();
 
-    auto header_size_or_error = header().size();
-    if (header_size_or_error.is_error())
-        return header_size_or_error.release_error();
-    auto header_size = header_size_or_error.release_value();
-
+    auto header_size = TRY(header().size());
     ByteBuffer file_contents_buffer = TRY(ByteBuffer::create_zeroed(header_size));
     VERIFY(file_stream.read(file_contents_buffer) == header_size);
 

@@ -34,8 +34,7 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* data, size_t size)
             return 0;
         }
 
-        auto maybe_error = tar_stream.advance();
-        if (maybe_error.is_error())
+        if (tar_stream.advance().is_error())
             return 0;
     }
 
