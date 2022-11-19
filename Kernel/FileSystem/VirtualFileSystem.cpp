@@ -26,7 +26,7 @@
 namespace Kernel {
 
 static Singleton<VirtualFileSystem> s_the;
-static constexpr int root_mount_flags = MS_NODEV | MS_NOSUID | MS_RDONLY;
+static constexpr int root_mount_flags = 0;
 
 UNMAP_AFTER_INIT void VirtualFileSystem::initialize()
 {
@@ -60,8 +60,106 @@ bool VirtualFileSystem::mount_point_exists_at_inode(InodeIdentifier inode_identi
     });
 }
 
+ErrorOr<void> VirtualFileSystem::pivot_root(Custody& new_root_filesystem_mount_point)
+{
+    NonnullRefPtr<FileSystem> new_root_filesystem = new_root_filesystem_mount_point.inode().fs();
+    if (!new_root_filesystem->root_inode().is_directory())
+        return ENOTDIR;
+    auto new_root_filesystem_mount_path = TRY(new_root_filesystem_mount_point.try_serialize_absolute_path());
+    if (&new_root_filesystem_mount_point.inode() != &new_root_filesystem->root_inode())
+        return EINVAL;
+
+    return m_mounts.with([&](auto& mounts) -> ErrorOr<void> {
+        dbgln("VirtualFileSystem: Setting up new attached root file system {}...", new_root_filesystem->fsid());
+        TRY(new_root_filesystem->mounted_count({}).with([&](auto& mounted_count) -> ErrorOr<void> {
+            // Note: Detach the new root filesystem from its mount point before
+            // we can attach it in /, after really unmounting the old filesystem there.
+            for (size_t i = 0; i < mounts.size(); ++i) {
+                auto& mount = mounts[i];
+                auto mountpoint_path = TRY(mount->absolute_path());
+                if (mountpoint_path->view() == new_root_filesystem_mount_path->view()) {
+                    dbgln("VirtualFileSystem: Unmounting file system {}...", new_root_filesystem->fsid());
+                    (void)mounts.unstable_take(i);
+                    VERIFY(mounted_count > 0);
+                    mounted_count--;
+                }
+            }
+            // Note: We could have the filesystem being mounted just once so it was essentially detached before.
+            VERIFY(mounted_count >= 0);
+            mounted_count++;
+            return {};
+        }));
+
+        // Note: Detach the old root filesystem from its mount point.
+        // FIXME: What will happen if we failed during the detach of the old root filesystem?
+        for (size_t i = 0; i < mounts.size(); ++i) {
+            auto& mount = mounts[i];
+            auto mountpoint_path = TRY(mount->absolute_path());
+            if (mountpoint_path->view() == "/"sv) {
+                NonnullRefPtr<FileSystem> fs = mount->guest_fs();
+                TRY(fs->prepare_to_unmount());
+                fs->mounted_count({}).with([&](auto& mounted_count) {
+                    VERIFY(mounted_count > 0);
+                    if (mounted_count == 1) {
+                        dbgln("VirtualFileSystem: Unmounting file system at /, {} for the last time...", fs->fsid());
+                        m_file_systems_list.with([&](auto& list) {
+                            list.remove(*fs);
+                        });
+                        if (fs->is_file_backed()) {
+                            dbgln("VirtualFileSystem: Unmounting file backed file system at /, {} for the last time...", fs->fsid());
+                            auto& file_backed_fs = static_cast<FileBackedFileSystem&>(*fs);
+                            m_file_backed_file_systems_list.with([&](auto& list) {
+                                list.remove(file_backed_fs);
+                            });
+                        }
+                    } else {
+                        mounted_count--;
+                    }
+                });
+                dbgln("VirtualFileSystem: Unmounting old root file system {}...", fs->fsid());
+                m_root_custody.with([&](auto& root_custody) {
+                    root_custody.clear();
+                });
+                m_root_inode.clear();
+                (void)mounts.unstable_take(i);
+            }
+        }
+
+        auto new_mount = TRY(adopt_nonnull_own_or_enomem(new (nothrow) Mount(*new_root_filesystem, nullptr, root_mount_flags)));
+        auto& root_inode = new_root_filesystem->root_inode();
+        VERIFY(root_inode.is_directory());
+
+        m_root_inode = root_inode;
+        dmesgln("VirtualFileSystem: mounted new root ({}) from type {}", new_root_filesystem->fsid(), new_root_filesystem->class_name());
+
+        mounts.append(move(new_mount));
+
+        RefPtr<Custody> new_root_custody = TRY(Custody::try_create(nullptr, ""sv, *m_root_inode, root_mount_flags));
+        m_root_custody.with([&](auto& root_custody) {
+            swap(root_custody, new_root_custody);
+        });
+
+        // FIXME: Do we want to ensure we just modify the mount table for a certain number of processes
+        // in a jail?
+        // FIXME: Is this the right thing to do when re-mounting a whole new root filesystem? Can we
+        // preserve some "good" Custodies?
+        Process::for_each_ignoring_jails([&](Process& process) {
+            process.current_directory({}).with([&](auto& current_directory) {
+                current_directory.clear();
+            });
+            return IterationDecision::Continue;
+        });
+        return {};
+    });
+}
+
 ErrorOr<void> VirtualFileSystem::mount(FileSystem& fs, Custody& mount_point, int flags)
 {
+    auto custody_path = TRY(mount_point.try_serialize_absolute_path());
+    if (custody_path->view() == "/"sv) {
+        return EPERM;
+    }
+
     auto new_mount = TRY(adopt_nonnull_own_or_enomem(new (nothrow) Mount(fs, &mount_point, flags)));
     return m_mounts.with([&](auto& mounts) -> ErrorOr<void> {
         auto& inode = mount_point.inode();
@@ -139,6 +237,11 @@ ErrorOr<void> VirtualFileSystem::unmount(Custody& mountpoint_custody)
 {
     auto& guest_inode = mountpoint_custody.inode();
     auto custody_path = TRY(mountpoint_custody.try_serialize_absolute_path());
+
+    if (custody_path->view() == "/"sv) {
+        return EPERM;
+    }
+
     dbgln("VirtualFileSystem: unmount called with inode {} on mountpoint {}", guest_inode.identifier(), custody_path->view());
 
     return m_mounts.with([&](auto& mounts) -> ErrorOr<void> {
@@ -199,10 +302,7 @@ ErrorOr<void> VirtualFileSystem::mount_root(FileSystem& fs)
         dmesgln("VirtualFileSystem: mounted root({}) from {} ({})", fs.fsid(), fs.class_name(), pseudo_path);
         m_file_backed_file_systems_list.with([&](auto& list) {
             list.append(static_cast<FileBackedFileSystem&>(fs));
-        });
-    } else {
-        dmesgln("VirtualFileSystem: mounted root({}) from {}", fs.fsid(), fs.class_name());
-    }
+    });
 
     m_file_systems_list.with([&](auto& fs_list) {
         fs_list.append(fs);
@@ -258,15 +358,19 @@ ErrorOr<void> VirtualFileSystem::traverse_directory_inode(Inode& dir_inode, Func
             resolved_inode = mount->guest().identifier();
         else
             resolved_inode = entry.inode;
-
-        // FIXME: This is now broken considering chroot and bind mounts.
-        bool is_root_inode = dir_inode.identifier() == dir_inode.fs().root_inode().identifier();
-        if (is_root_inode && !is_vfs_root(dir_inode.identifier()) && entry.name == "..") {
-            auto mount = find_mount_for_guest(dir_inode.identifier());
-            VERIFY(mount);
-            VERIFY(mount->host());
-            resolved_inode = mount->host()->identifier();
-        }
+        TRY(dir_inode.fs().mounted_count({}).with([&](auto& mounted_count) -> ErrorOr<void> {
+            if (mounted_count == 0)
+                return EIO;
+            // FIXME: This is now broken considering chroot and bind mounts.
+            bool is_root_inode = dir_inode.identifier() == dir_inode.fs().root_inode().identifier();
+            if (is_root_inode && !is_vfs_root(dir_inode.identifier()) && entry.name == "..") {
+                auto mount = find_mount_for_guest(dir_inode.identifier());
+                VERIFY(mount);
+                VERIFY(mount->host());
+                resolved_inode = mount->host()->identifier();
+            }
+            return {};
+        }));
         TRY(callback({ entry.name, resolved_inode, entry.file_type }));
         return {};
     });

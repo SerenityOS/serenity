@@ -130,6 +130,7 @@ enum class NeedsBigProcessLock {
     S(perf_event, NeedsBigProcessLock::Yes)                 \
     S(perf_register_string, NeedsBigProcessLock::Yes)       \
     S(pipe, NeedsBigProcessLock::No)                        \
+    S(pivot_root, NeedsBigProcessLock::No)                  \
     S(pledge, NeedsBigProcessLock::Yes)                     \
     S(poll, NeedsBigProcessLock::Yes)                       \
     S(posix_fallocate, NeedsBigProcessLock::No)             \
@@ -247,6 +248,10 @@ struct SC_open_params {
     StringArgument path;
     int options;
     u16 mode;
+};
+
+struct SC_pivot_root_params {
+    int dirfd;
 };
 
 struct SC_poll_params {

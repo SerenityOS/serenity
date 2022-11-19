@@ -48,6 +48,7 @@ public:
 
     ErrorOr<void> mount_root(FileSystem&);
     ErrorOr<void> mount(FileSystem&, Custody& mount_point, int flags);
+    ErrorOr<void> pivot_root(Custody& new_root_filesystem_mount_point);
     ErrorOr<void> bind_mount(Custody& source, Custody& mount_point, int flags);
     ErrorOr<void> remount(Custody& mount_point, int new_flags);
     ErrorOr<void> unmount(Custody& mount_point);

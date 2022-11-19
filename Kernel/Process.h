@@ -105,6 +105,7 @@ static_assert(sizeof(GlobalFutexKey) == (sizeof(FlatPtr) * 2));
 
 struct LoadResult;
 
+class VirtualFileSystem;
 class Process final
     : public ListedRefCounted<Process, LockType::Spinlock>
     , public LockWeakable<Process> {
@@ -440,6 +441,7 @@ public:
     ErrorOr<FlatPtr> sys$map_time_page();
     ErrorOr<FlatPtr> sys$jail_create(Userspace<Syscall::SC_jail_create_params*> user_params);
     ErrorOr<FlatPtr> sys$jail_attach(Userspace<Syscall::SC_jail_attach_params const*> user_params);
+    ErrorOr<FlatPtr> sys$pivot_root(Userspace<Syscall::SC_pivot_root_params const*>);
 
     template<bool sockname, typename Params>
     ErrorOr<void> get_sock_or_peer_name(Params const&);
@@ -644,6 +646,8 @@ public:
     ErrorOr<NonnullLockRefPtr<Inode>> lookup_children_directory(ProcFS const&, StringView name) const;
     ErrorOr<void> traverse_children_directory(FileSystemID, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)> callback) const;
     ErrorOr<size_t> procfs_get_child_proccess_link(ProcessID child_pid, KBufferBuilder& builder) const;
+
+    SpinlockProtected<RefPtr<Custody>>& current_directory(Badge<VirtualFileSystem>) { return m_current_directory; }
 
 private:
     inline PerformanceEventBuffer* current_perf_events_buffer()

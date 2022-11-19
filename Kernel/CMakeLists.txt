@@ -296,6 +296,7 @@ set(KERNEL_SOURCES
     Syscalls/open.cpp
     Syscalls/perf_event.cpp
     Syscalls/pipe.cpp
+    Syscalls/pivot_root.cpp
     Syscalls/pledge.cpp
     Syscalls/poll.cpp
     Syscalls/prctl.cpp
