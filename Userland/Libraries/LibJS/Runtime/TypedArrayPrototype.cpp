@@ -737,23 +737,44 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::index_of)
 // 23.2.3.18 %TypedArray%.prototype.join ( separator ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.join
 JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::join)
 {
+    // 1. Let O be the this value.
+    // 2. Perform ? ValidateTypedArray(O).
     auto* typed_array = TRY(validate_typed_array_from_this(vm));
+
+    // 3. Let len be O.[[ArrayLength]].
     auto length = typed_array->array_length();
+
+    // 4. If separator is undefined, let sep be ",".
+    // 5. Else, let sep be ? ToString(separator).
     String separator = ",";
     if (!vm.argument(0).is_undefined())
         separator = TRY(vm.argument(0).to_string(vm));
 
+    // 6. Let R be the empty String.
     StringBuilder builder;
+
+    // 7. Let k be 0.
+    // 8. Repeat, while k < len,
     for (size_t i = 0; i < length; ++i) {
+        // a. If k > 0, set R to the string-concatenation of R and sep.
         if (i > 0)
             builder.append(separator);
-        auto value = TRY(typed_array->get(i));
-        if (value.is_nullish())
+
+        // b. Let element be ! Get(O, ! ToString(𝔽(k))).
+        auto element = TRY(typed_array->get(i));
+
+        // c. If element is undefined, let next be the empty String; otherwise, let next be ! ToString(element).
+        if (element.is_nullish())
             continue;
-        auto string = TRY(value.to_string(vm));
-        builder.append(string);
+        auto next = TRY(element.to_string(vm));
+
+        // d. Set R to the string-concatenation of R and next.
+        builder.append(next);
+
+        // e. Set k to k + 1.
     }
 
+    // 9. Return R.
     return js_string(vm, builder.to_string());
 }
 
