@@ -406,7 +406,7 @@ static Result<void, DlErrorMessage> link_main_library(DeprecatedString const& pa
             initialize_libc(*object);
         }
 
-        if (loader.filepath().ends_with("/libsystem.so"sv)) {
+        if (loader.filepath().ends_with("/libsystem.so"sv) || loader.filepath().ends_with("/libbuggiebox.so"sv) || loader.filepath().ends_with("/libbuggiebox.so.serenity"sv)) {
             VERIFY(!loader.text_segments().is_empty());
             for (auto const& segment : loader.text_segments()) {
                 auto flags = static_cast<int>(VirtualMemoryRangeFlags::SyscallCode) | static_cast<int>(VirtualMemoryRangeFlags::Immutable);
