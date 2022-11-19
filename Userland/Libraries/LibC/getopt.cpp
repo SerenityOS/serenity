@@ -321,15 +321,14 @@ bool OptionParser::find_next_option()
     for (m_arg_index = optind; m_arg_index < m_argc && m_argv[m_arg_index]; m_arg_index++) {
         StringView arg = current_arg();
         // Anything that doesn't start with a "-" is not an option.
-        if (!arg.starts_with('-')) {
+        // As a special case, a single "-" is not an option either.
+        // (It's typically used by programs to refer to stdin).
+        if (!arg.starts_with('-') || arg == "-") {
             if (m_stop_on_first_non_option)
                 return false;
             continue;
         }
-        // As a special case, a single "-" is not an option either.
-        // (It's typically used by programs to refer to stdin).
-        if (arg == "-")
-            continue;
+
         // As another special case, a "--" is not an option either, and we stop
         // looking for further options if we encounter it.
         if (arg == "--")
