@@ -171,7 +171,7 @@ void EventTarget::add_an_event_listener(DOMEventListener& listener)
     // 5. If listener’s signal is not null, then add the following abort steps to it:
     if (listener.signal) {
         // NOTE: `this` and `listener` are protected by AbortSignal using JS::SafeFunction.
-        listener.signal->add_abort_algorithm([this, &listener]() mutable {
+        listener.signal->add_abort_algorithm([this, &listener] {
             // 1. Remove an event listener with eventTarget and listener.
             remove_an_event_listener(listener);
         });

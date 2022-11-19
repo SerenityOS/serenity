@@ -47,7 +47,7 @@ ErrorOr<NonnullRefPtr<SettingsWindow>> SettingsWindow::create(String title, Show
 
     if (show_defaults_button == ShowDefaultsButton::Yes) {
         window->m_reset_button = TRY(button_container->try_add<GUI::DialogButton>("Defaults"));
-        window->m_reset_button->on_click = [window = window->make_weak_ptr<SettingsWindow>()](auto) mutable {
+        window->m_reset_button->on_click = [window = window->make_weak_ptr<SettingsWindow>()](auto) {
             window->reset_default_values();
         };
     }
@@ -55,24 +55,24 @@ ErrorOr<NonnullRefPtr<SettingsWindow>> SettingsWindow::create(String title, Show
     TRY(button_container->layout()->try_add_spacer());
 
     window->m_ok_button = TRY(button_container->try_add<GUI::DialogButton>("OK"));
-    window->m_ok_button->on_click = [window = window->make_weak_ptr<SettingsWindow>()](auto) mutable {
+    window->m_ok_button->on_click = [window = window->make_weak_ptr<SettingsWindow>()](auto) {
         window->apply_settings();
         GUI::Application::the()->quit();
     };
 
     window->m_cancel_button = TRY(button_container->try_add<GUI::DialogButton>("Cancel"));
-    window->m_cancel_button->on_click = [window = window->make_weak_ptr<SettingsWindow>()](auto) mutable {
+    window->m_cancel_button->on_click = [window = window->make_weak_ptr<SettingsWindow>()](auto) {
         window->cancel_settings();
         GUI::Application::the()->quit();
     };
 
     window->m_apply_button = TRY(button_container->try_add<GUI::DialogButton>("Apply"));
     window->m_apply_button->set_enabled(false);
-    window->m_apply_button->on_click = [window = window->make_weak_ptr<SettingsWindow>()](auto) mutable {
+    window->m_apply_button->on_click = [window = window->make_weak_ptr<SettingsWindow>()](auto) {
         window->apply_settings();
     };
 
-    window->on_close_request = [window = window->make_weak_ptr<SettingsWindow>()]() mutable -> Window::CloseRequestDecision {
+    window->on_close_request = [window = window->make_weak_ptr<SettingsWindow>()]() -> Window::CloseRequestDecision {
         if (!window->is_modified())
             return Window::CloseRequestDecision::Close;
 

@@ -228,7 +228,7 @@ void EnvironmentSettingsObject::notify_about_rejected_promises(Badge<EventLoop>)
     auto& global = global_object();
 
     // 5. Queue a global task on the DOM manipulation task source given global to run the following substep:
-    queue_global_task(Task::Source::DOMManipulation, global, [this, &global, list = move(list)]() mutable {
+    queue_global_task(Task::Source::DOMManipulation, global, [this, &global, list = move(list)] {
         // 1. For each promise p in list:
         for (auto promise : list) {
 

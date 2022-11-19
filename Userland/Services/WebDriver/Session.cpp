@@ -36,7 +36,7 @@ ErrorOr<NonnullRefPtr<Core::LocalServer>> Session::create_server(String const& s
     auto server = TRY(Core::LocalServer::try_create());
     server->listen(socket_path);
 
-    server->on_accept = [this, promise](auto client_socket) mutable {
+    server->on_accept = [this, promise](auto client_socket) {
         auto maybe_connection = adopt_nonnull_ref_or_enomem(new (nothrow) WebContentConnection(move(client_socket), m_client, session_id()));
         if (maybe_connection.is_error()) {
             promise->resolve(maybe_connection.release_error());
@@ -49,7 +49,7 @@ ErrorOr<NonnullRefPtr<Core::LocalServer>> Session::create_server(String const& s
         promise->resolve({});
     };
 
-    server->on_accept_error = [promise](auto error) mutable {
+    server->on_accept_error = [promise](auto error) {
         promise->resolve(move(error));
     };
 

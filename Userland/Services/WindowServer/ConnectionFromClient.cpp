@@ -234,7 +234,7 @@ void ConnectionFromClient::flash_menubar_menu(i32 window_id, i32 menu_id)
             m_flashed_menu_timer->stop();
         }
 
-        m_flashed_menu_timer = Core::Timer::create_single_shot(75, [weak_window = window.make_weak_ptr<Window>()]() mutable {
+        m_flashed_menu_timer = Core::Timer::create_single_shot(75, [weak_window = window.make_weak_ptr<Window>()] {
             if (!weak_window)
                 return;
             weak_window->menubar().flash_menu(nullptr);

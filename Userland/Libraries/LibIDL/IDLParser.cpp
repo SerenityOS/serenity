@@ -114,7 +114,7 @@ HashMap<String, String> Parser::parse_extended_attributes()
         if (lexer.consume_specific('=')) {
             bool did_open_paren = false;
             auto value = lexer.consume_until(
-                [&did_open_paren](auto ch) mutable {
+                [&did_open_paren](auto ch) {
                     if (ch == '(') {
                         did_open_paren = true;
                         return false;

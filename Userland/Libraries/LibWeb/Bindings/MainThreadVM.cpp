@@ -128,7 +128,7 @@ JS::VM& main_thread_vm()
 
                 // 5. Queue a global task on the DOM manipulation task source given global to fire an event named rejectionhandled at global, using PromiseRejectionEvent,
                 //    with the promise attribute initialized to promise, and the reason attribute initialized to the value of promise's [[PromiseResult]] internal slot.
-                HTML::queue_global_task(HTML::Task::Source::DOMManipulation, global, [&global, &promise]() mutable {
+                HTML::queue_global_task(HTML::Task::Source::DOMManipulation, global, [&global, &promise] {
                     // FIXME: This currently assumes that global is a WindowObject.
                     auto& window = verify_cast<HTML::Window>(global);
 
@@ -178,12 +178,12 @@ JS::VM& main_thread_vm()
         };
 
         // 8.1.5.4.2 HostEnqueueFinalizationRegistryCleanupJob(finalizationRegistry), https://html.spec.whatwg.org/multipage/webappapis.html#hostenqueuefinalizationregistrycleanupjob
-        vm->host_enqueue_finalization_registry_cleanup_job = [](JS::FinalizationRegistry& finalization_registry) mutable {
+        vm->host_enqueue_finalization_registry_cleanup_job = [](JS::FinalizationRegistry& finalization_registry) {
             // 1. Let global be finalizationRegistry.[[Realm]]'s global object.
             auto& global = finalization_registry.realm().global_object();
 
             // 2. Queue a global task on the JavaScript engine task source given global to perform the following steps:
-            HTML::queue_global_task(HTML::Task::Source::JavaScriptEngine, global, [&finalization_registry]() mutable {
+            HTML::queue_global_task(HTML::Task::Source::JavaScriptEngine, global, [&finalization_registry] {
                 // 1. Let entry be finalizationRegistry.[[CleanupCallback]].[[Callback]].[[Realm]]'s environment settings object.
                 auto& entry = host_defined_environment_settings_object(*finalization_registry.cleanup_callback().callback.cell()->realm());
 
@@ -224,7 +224,7 @@ JS::VM& main_thread_vm()
             auto* script = active_script();
 
             // NOTE: This keeps job_settings alive by keeping realm alive, which is holding onto job_settings.
-            HTML::queue_a_microtask(script ? script->settings_object().responsible_document().ptr() : nullptr, [job_settings, job = move(job), script_or_module = move(script_or_module)]() mutable {
+            HTML::queue_a_microtask(script ? script->settings_object().responsible_document().ptr() : nullptr, [job_settings, job = move(job), script_or_module = move(script_or_module)] {
                 // The dummy execution context has to be kept up here to keep it alive for the duration of the function.
                 Optional<JS::ExecutionContext> dummy_execution_context;
 

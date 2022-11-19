@@ -92,7 +92,7 @@ PromiseJob create_promise_reaction_job(VM& vm, PromiseReaction& reaction, Value 
 {
     // 1. Let job be a new Job Abstract Closure with no parameters that captures reaction and argument and performs the following steps when called:
     //    See run_reaction_job for "the following steps".
-    auto job = [&vm, reaction = make_handle(&reaction), argument = make_handle(argument)]() mutable {
+    auto job = [&vm, reaction = make_handle(&reaction), argument = make_handle(argument)] {
         return run_reaction_job(vm, *reaction.cell(), argument.value());
     };
 
