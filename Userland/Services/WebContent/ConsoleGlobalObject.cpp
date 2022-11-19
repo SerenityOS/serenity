@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2021-2022, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -21,8 +21,7 @@ void ConsoleGlobalObject::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
 
-    // $0 magic variable
-    define_native_accessor(realm, "$0", inspected_node_getter, nullptr, 0);
+    define_native_accessor(realm, "$0", $0_getter, nullptr, 0);
 }
 
 void ConsoleGlobalObject::visit_edges(Visitor& visitor)
@@ -92,14 +91,17 @@ JS::ThrowCompletionOr<JS::MarkedVector<JS::Value>> ConsoleGlobalObject::internal
     return m_window_object->internal_own_property_keys();
 }
 
-JS_DEFINE_NATIVE_FUNCTION(ConsoleGlobalObject::inspected_node_getter)
+static JS::ThrowCompletionOr<ConsoleGlobalObject*> get_console(JS::VM& vm)
 {
-    auto* this_object = TRY(vm.this_value().to_object(vm));
-
-    if (!is<ConsoleGlobalObject>(this_object))
+    if (!is<ConsoleGlobalObject>(vm.get_global_object()))
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, "ConsoleGlobalObject");
 
-    auto console_global_object = static_cast<ConsoleGlobalObject*>(this_object);
+    return static_cast<ConsoleGlobalObject*>(&vm.get_global_object());
+}
+
+JS_DEFINE_NATIVE_FUNCTION(ConsoleGlobalObject::$0_getter)
+{
+    auto* console_global_object = TRY(get_console(vm));
     auto& window = *console_global_object->m_window_object;
     auto* inspected_node = window.associated_document().inspected_node();
     if (!inspected_node)
