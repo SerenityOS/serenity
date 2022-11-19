@@ -604,39 +604,61 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::for_each)
 // 23.2.3.16 %TypedArray%.prototype.includes ( searchElement [ , fromIndex ] ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.includes
 JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::includes)
 {
+    // 1. Let O be the this value.
+    // 2. Perform ? ValidateTypedArray(O).
     auto typed_array = TRY(validate_typed_array_from_this(vm));
 
+    // 3. Let len be O.[[ArrayLength]].
     auto length = typed_array->array_length();
 
+    // 4. If len is 0, return false.
     if (length == 0)
         return Value(false);
 
+    // 5. Let n be ? ToIntegerOrInfinity(fromIndex).
     auto n = TRY(vm.argument(1).to_integer_or_infinity(vm));
 
+    // FIXME: 6. Assert: If fromIndex is undefined, then n is 0.
+
     auto value_n = Value(n);
+    // 7. If n is +∞, return false.
     if (value_n.is_positive_infinity())
         return Value(false);
+    // 8. Else if n is -∞, set n to 0.
     else if (value_n.is_negative_infinity())
         n = 0;
 
     u32 k;
+    // 9. If n ≥ 0, then
     if (n >= 0) {
+        // a. Let k be n.
         k = n;
-    } else {
+    }
+    // 10. Else,
+    else {
+        // a. Let k be len + n.
         auto relative_k = length + n;
+
+        // b. If k < 0, set k to 0.
         if (relative_k < 0)
             relative_k = 0;
         k = relative_k;
     }
 
     auto search_element = vm.argument(0);
+    // 11. Repeat, while k < len,
     for (; k < length; ++k) {
+        // a. Let elementK be ! Get(O, ! ToString(𝔽(k))).
         auto element_k = MUST(typed_array->get(k));
 
+        // b. If SameValueZero(searchElement, elementK) is true, return true.
         if (same_value_zero(search_element, element_k))
             return Value(true);
+
+        // c. Set k to k + 1.
     }
 
+    // 12. Return false.
     return Value(false);
 }
 
