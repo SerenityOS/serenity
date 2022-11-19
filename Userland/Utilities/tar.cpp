@@ -159,11 +159,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             if (extract) {
                 String absolute_path = Core::File::absolute_path(filename);
                 auto parent_path = LexicalPath(absolute_path).parent();
-
-                auto header_mode_or_error = header.mode();
-                if (header_mode_or_error.is_error())
-                    return header_mode_or_error.release_error();
-                auto header_mode = header_mode_or_error.release_value();
+                auto header_mode = TRY(header.mode());
 
                 switch (header.type_flag()) {
                 case Archive::TarFileType::NormalFile:
@@ -204,9 +200,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             // Non-global headers should be cleared after every file.
             local_overrides.clear();
 
-            auto maybe_error = tar_stream.advance();
-            if (maybe_error.is_error())
-                return maybe_error.error();
+            TRY(tar_stream.advance());
         }
         file_stream.close();
 

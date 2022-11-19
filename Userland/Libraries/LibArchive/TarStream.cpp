@@ -104,11 +104,7 @@ ErrorOr<void> TarInputStream::advance()
 
     m_generation++;
 
-    auto header_size_or_error = m_header.size();
-    if (header_size_or_error.is_error())
-        return header_size_or_error.release_error();
-    auto header_size = header_size_or_error.release_value();
-
+    auto header_size = TRY(m_header.size());
     VERIFY(m_stream.discard_or_error(block_ceiling(header_size) - m_file_offset));
     m_file_offset = 0;
 
