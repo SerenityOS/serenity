@@ -916,6 +916,7 @@ Gfx::FloatPoint FormattingContext::calculate_static_position(Box const& box) con
             // Easy case: no previous sibling, we're at the top of the containing block.
         }
     } else {
+        x = m_state.get(box).margin_box_left();
         // We're among block siblings, Y can be calculated easily.
         y = compute_box_y_position_with_respect_to_siblings(box);
     }
@@ -986,9 +987,8 @@ void FormattingContext::layout_absolutely_positioned_element(Box const& box, Ava
             - box_state.border_box_right();
         used_offset.set_x(width_of_containing_block + x_offset - box_state.content_width() - box_state.margin_right);
     } else {
-        float x_offset = box_state.margin_box_left()
-            + static_position.x();
-        used_offset.set_x(x_offset);
+        // NOTE: static position is content box position so border_box and margin should not be added
+        used_offset.set_x(static_position.x());
     }
 
     if (!computed_top.is_auto()) {
@@ -1001,9 +1001,8 @@ void FormattingContext::layout_absolutely_positioned_element(Box const& box, Ava
             - box_state.border_box_bottom();
         used_offset.set_y(height_of_containing_block + y_offset - box_state.content_height() - box_state.margin_bottom);
     } else {
-        float y_offset = box_state.margin_box_top()
-            + static_position.y();
-        used_offset.set_y(y_offset);
+        // NOTE: static position is content box position so border_box and margin should not be added
+        used_offset.set_y(static_position.y());
     }
 
     // NOTE: Absolutely positioned boxes are relative to the *padding edge* of the containing block.
