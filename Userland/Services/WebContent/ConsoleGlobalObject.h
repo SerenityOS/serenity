@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2021-2022, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -36,8 +36,8 @@ public:
 private:
     virtual void visit_edges(Visitor&) override;
 
-    // Because $0 is not a nice C++ function name
-    JS_DECLARE_NATIVE_FUNCTION(inspected_node_getter);
+    // $0, the DOM node currently selected in the inspector
+    JS_DECLARE_NATIVE_FUNCTION($0_getter);
 
     Web::HTML::Window* m_window_object;
 };
