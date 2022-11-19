@@ -463,7 +463,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::fill)
     for (; k < final; ++k) {
         // a. Let Pk be ! ToString(𝔽(k)).
         // b. Perform ! Set(O, Pk, value, true).
-        TRY(typed_array->set(k, value, Object::ShouldThrowExceptions::Yes));
+        MUST(typed_array->set(k, value, Object::ShouldThrowExceptions::Yes));
 
         // c. Set k to k + 1.
     }
