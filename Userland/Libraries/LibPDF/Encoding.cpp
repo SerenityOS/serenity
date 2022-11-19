@@ -115,6 +115,7 @@ NonnullRefPtr<Encoding> Encoding::windows_encoding()
     encoding->m_name_mapping.set(#name, name##_code_point);
         ENUMERATE_LATIN_CHARACTER_SET(ENUMERATE)
 #undef ENUMERATE
+        encoding->m_windows = true;
     }
 
     return encoding;
@@ -168,6 +169,14 @@ NonnullRefPtr<Encoding> Encoding::zapf_encoding()
 CharDescriptor const& Encoding::get_char_code_descriptor(u16 char_code) const
 {
     return const_cast<Encoding*>(this)->m_descriptors.ensure(char_code);
+}
+
+bool Encoding::should_map_to_bullet(u16 char_code) const
+{
+    // PDF Annex D table D.2, note 3:
+    // In WinAnsiEncoding, all unused codes greater than 40 (octal) map to the bullet character. However, only
+    // code 225 (octal) shall be specifically assigned to the bullet character; other codes are subject to future re-assignment.
+    return m_windows && char_code > 040 && !m_descriptors.contains(char_code);
 }
 
 }

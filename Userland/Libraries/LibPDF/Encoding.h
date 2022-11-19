@@ -96,7 +96,7 @@
     FN("]", bracketright, 93, 93, 93, 93)                           \
     FN(" ̆", breve, 198, 249, -1, 24)                                \
     FN("¦", brokenbar, -1, -1, 166, 166)                            \
-    FN("•", bullet, 183, 165, 149, 128) /* FIXME: Note 3 */         \
+    FN("•", bullet, 183, 165, 149, 128)                             \
     FN("c", c, 99, 99, 99, 99)                                      \
     FN("ˇ", caron, 207, 255, -1, 25)                                \
     FN("ç", ccedilla, -1, 141, 231, 231)                            \
@@ -647,9 +647,13 @@ public:
 
     CharDescriptor const& get_char_code_descriptor(u16 char_code) const;
 
+    bool should_map_to_bullet(u16 char_code) const;
+
 protected:
     HashMap<u16, CharDescriptor> m_descriptors;
     HashMap<DeprecatedString, u16> m_name_mapping;
+
+    bool m_windows { false };
 };
 
 }
