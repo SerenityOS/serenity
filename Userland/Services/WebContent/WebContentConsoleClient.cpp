@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2021, Brandon Scott <xeon.productions@gmail.com>
  * Copyright (c) 2020, Hunter Salyer <thefalsehonesty@gmail.com>
- * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2021-2022, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -9,12 +9,38 @@
 #include "WebContentConsoleClient.h"
 #include <LibJS/Interpreter.h>
 #include <LibJS/MarkupGenerator.h>
+#include <LibWeb/HTML/PolicyContainers.h>
 #include <LibWeb/HTML/Scripting/ClassicScript.h>
 #include <LibWeb/HTML/Scripting/Environments.h>
 #include <LibWeb/HTML/Window.h>
 #include <WebContent/ConsoleGlobalObject.h>
 
 namespace WebContent {
+
+class ConsoleEnvironmentSettingsObject final : public Web::HTML::EnvironmentSettingsObject {
+    JS_CELL(ConsoleEnvironmentSettingsObject, EnvironmentSettingsObject);
+
+public:
+    ConsoleEnvironmentSettingsObject(NonnullOwnPtr<JS::ExecutionContext> execution_context)
+        : Web::HTML::EnvironmentSettingsObject(move(execution_context))
+    {
+    }
+
+    virtual ~ConsoleEnvironmentSettingsObject() override = default;
+
+    JS::GCPtr<Web::DOM::Document> responsible_document() override { return nullptr; }
+    String api_url_character_encoding() override { return m_api_url_character_encoding; }
+    AK::URL api_base_url() override { return m_url; }
+    Web::HTML::Origin origin() override { return m_origin; }
+    Web::HTML::PolicyContainer policy_container() override { return m_policy_container; }
+    Web::HTML::CanUseCrossOriginIsolatedAPIs cross_origin_isolated_capability() override { return Web::HTML::CanUseCrossOriginIsolatedAPIs::Yes; }
+
+private:
+    String m_api_url_character_encoding;
+    AK::URL m_url;
+    Web::HTML::Origin m_origin;
+    Web::HTML::PolicyContainer m_policy_container;
+};
 
 WebContentConsoleClient::WebContentConsoleClient(JS::Console& console, JS::Realm& realm, ConnectionFromClient& client)
     : ConsoleClient(console)
@@ -26,15 +52,18 @@ WebContentConsoleClient::WebContentConsoleClient(JS::Console& console, JS::Realm
     auto& vm = realm.vm();
     auto& window = static_cast<Web::HTML::Window&>(realm.global_object());
 
-    auto console_global_object = realm.heap().allocate_without_realm<ConsoleGlobalObject>(realm, window);
+    auto console_execution_context = MUST(JS::Realm::initialize_host_defined_realm(
+        vm, [&](JS::Realm& realm) {
+            m_console_global_object = vm.heap().allocate_without_realm<ConsoleGlobalObject>(realm, window);
+            return m_console_global_object;
+        },
+        nullptr));
 
-    // NOTE: We need to push an execution context here for NativeFunction::create() to succeed during global object initialization.
-    auto& eso = Web::Bindings::host_defined_environment_settings_object(realm);
-    vm.push_execution_context(eso.realm_execution_context());
-    console_global_object->initialize(realm);
-    vm.pop_execution_context();
-
-    m_console_global_object = JS::make_handle(console_global_object);
+    auto* console_realm = console_execution_context->realm;
+    m_console_settings = vm.heap().allocate<ConsoleEnvironmentSettingsObject>(*console_realm, move(console_execution_context));
+    auto* intrinsics = vm.heap().allocate<Web::Bindings::Intrinsics>(*console_realm, *console_realm);
+    auto host_defined = make<Web::Bindings::HostDefined>(*m_console_settings, *intrinsics);
+    console_realm->set_host_defined(move(host_defined));
 }
 
 void WebContentConsoleClient::handle_input(String const& js_source)
@@ -42,8 +71,7 @@ void WebContentConsoleClient::handle_input(String const& js_source)
     if (!m_realm)
         return;
 
-    auto& settings = Web::Bindings::host_defined_environment_settings_object(*m_realm);
-    auto script = Web::HTML::ClassicScript::create("(console)", js_source, settings, settings.api_base_url());
+    auto script = Web::HTML::ClassicScript::create("(console)", js_source, *m_console_settings, m_console_settings->api_base_url());
 
     // FIXME: Add parse error printouts back once ClassicScript can report parse errors.
 
