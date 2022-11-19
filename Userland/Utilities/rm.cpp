@@ -16,7 +16,9 @@
 decltype(serenity_main) rm_main;
 ErrorOr<int> rm_main(Main::Arguments arguments)
 {
+#ifndef EXCLUDE_SERENITY_MAIN
     TRY(Core::System::pledge("stdio rpath cpath"));
+#endif
 
     bool recursive = false;
     bool force = false;

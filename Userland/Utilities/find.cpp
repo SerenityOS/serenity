@@ -24,9 +24,15 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
+// NOTE: We exclude this when building the BuggieBox program because it's already
+// included there.
+#ifdef EXCLUDE_SERENITY_MAIN
+#    include <Userland/BuggieBox/Globals.h>
+#else
 bool g_follow_symlinks = false;
 bool g_there_was_an_error = false;
 bool g_have_seen_action_command = false;
+#endif
 
 template<typename... Parameters>
 [[noreturn]] static void fatal_error(CheckedFormatString<Parameters...>&& fmtstr, Parameters const&... parameters)

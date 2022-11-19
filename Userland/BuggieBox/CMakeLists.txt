@@ -29,6 +29,7 @@ set(SOURCES
     ../Utilities/rm.cpp
     ../Utilities/rmdir.cpp
     ../Utilities/tail.cpp
+    ../Utilities/test.cpp
     ../Utilities/tree.cpp
     ../Utilities/umount.cpp
     ../Utilities/uname.cpp
@@ -40,5 +41,6 @@ target_compile_definitions(LibBuggieBox PRIVATE -DEXCLUDE_SERENITY_MAIN)
 target_link_libraries(LibBuggieBox PRIVATE LibShellStatic LibGfxStatic LibCoreStatic LibIPCStatic LibRegexStatic LibCompressStatic LibCryptoStatic LibLineStatic)
 
 serenity_bin(BuggieBox)
+#target_link_libraries(BuggieBox PRIVATE LibC LibMain LibShell LibGfx LibCore LibIPC LibRegex LibCompress LibCrypto LibLine)
 target_link_libraries(BuggieBox PRIVATE LibC LibMain LibBuggieBox)
 target_compile_definitions(BuggieBox PRIVATE -DEXCLUDE_SERENITY_MAIN)

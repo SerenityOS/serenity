@@ -14,7 +14,13 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+// NOTE: We exclude this when building the BuggieBox program because it's already
+// included there.
+#ifdef EXCLUDE_SERENITY_MAIN
+#    include <Userland/BuggieBox/Globals.h>
+#else
 bool g_there_was_an_error = false;
+#endif
 
 [[noreturn, gnu::format(printf, 1, 2)]] static void fatal_error(char const* format, ...)
 {
@@ -597,7 +603,8 @@ static OwnPtr<Condition> parse_complex_expression(char* argv[])
     return command;
 }
 
-ErrorOr<int> serenity_main(Main::Arguments arguments)
+decltype(serenity_main) test_main;
+ErrorOr<int> test_main(Main::Arguments arguments)
 {
     auto maybe_error = Core::System::pledge("stdio rpath");
     if (maybe_error.is_error()) {
@@ -626,3 +633,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return 126;
     return result ? 0 : 1;
 }
+
+#ifndef EXCLUDE_SERENITY_MAIN
+ErrorOr<int> serenity_main(Main::Arguments arguments)
+{
+    return test_main(arguments);
+}
+#endif
