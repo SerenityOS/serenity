@@ -48,19 +48,21 @@ void ImageResource::decode_if_needed() const
         return;
 
     auto image = Platform::ImageCodecPlugin::the().decode_image(encoded_data());
+    m_has_attempted_decode = true;
 
-    if (image.has_value()) {
-        m_loop_count = image.value().loop_count;
-        m_animated = image.value().is_animated;
-        m_decoded_frames.resize(image.value().frames.size());
-        for (size_t i = 0; i < m_decoded_frames.size(); ++i) {
-            auto& frame = m_decoded_frames[i];
-            frame.bitmap = image.value().frames[i].bitmap;
-            frame.duration = image.value().frames[i].duration;
-        }
+    if (!image.has_value()) {
+        dbgln("Could not decode image resource {}", url());
+        return;
     }
 
-    m_has_attempted_decode = true;
+    m_loop_count = image.value().loop_count;
+    m_animated = image.value().is_animated;
+    m_decoded_frames.resize(image.value().frames.size());
+    for (size_t i = 0; i < m_decoded_frames.size(); ++i) {
+        auto& frame = m_decoded_frames[i];
+        frame.bitmap = image.value().frames[i].bitmap;
+        frame.duration = image.value().frames[i].duration;
+    }
 }
 
 Gfx::Bitmap const* ImageResource::bitmap(size_t frame_index) const
