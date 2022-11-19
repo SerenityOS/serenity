@@ -72,20 +72,15 @@ public:
         return *this;
     }
 
-    T* operator->() { return m_ptr; }
-    T const* operator->() const { return m_ptr; }
+    T* operator->() const { return m_ptr; }
 
-    T& operator*() { return *m_ptr; }
-    T const& operator*() const { return *m_ptr; }
+    T& operator*() const { return *m_ptr; }
 
-    T* ptr() { return m_ptr; }
-    T const* ptr() const { return m_ptr; }
+    T* ptr() const { return m_ptr; }
 
-    operator T*() { return m_ptr; }
-    operator T const*() const { return m_ptr; }
+    operator T*() const { return m_ptr; }
 
-    operator T&() { return *m_ptr; }
-    operator T const&() const { return *m_ptr; }
+    operator T&() const { return *m_ptr; }
 
 private:
     T* m_ptr { nullptr };
@@ -181,20 +176,14 @@ public:
         return *this;
     }
 
-    T* operator->() { return m_ptr; }
-    T const* operator->() const { return m_ptr; }
-
-    T& operator*() { return *m_ptr; }
-    T const& operator*() const { return *m_ptr; }
-
-    T* ptr() { return m_ptr; }
-    T const* ptr() const { return m_ptr; }
+    T* operator->() const { return m_ptr; }
+    T& operator*() const { return *m_ptr; }
+    T* ptr() const { return m_ptr; }
 
     operator bool() const { return !!m_ptr; }
     bool operator!() const { return !m_ptr; }
 
-    operator T*() { return m_ptr; }
-    operator T const*() const { return m_ptr; }
+    operator T*() const { return m_ptr; }
 
 private:
     T* m_ptr { nullptr };
