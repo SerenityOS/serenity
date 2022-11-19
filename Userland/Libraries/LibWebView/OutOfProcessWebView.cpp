@@ -300,12 +300,14 @@ void OutOfProcessWebView::notify_server_did_middle_click_link(Badge<WebContentCl
 
 void OutOfProcessWebView::notify_server_did_start_loading(Badge<WebContentClient>, const AK::URL& url)
 {
+    m_url = url;
     if (on_load_start)
         on_load_start(url);
 }
 
 void OutOfProcessWebView::notify_server_did_finish_loading(Badge<WebContentClient>, const AK::URL& url)
 {
+    m_url = url;
     if (on_load_finish)
         on_load_finish(url);
 }
