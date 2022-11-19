@@ -408,26 +408,36 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::every)
 // 23.2.3.9 %TypedArray%.prototype.fill ( value [ , start [ , end ] ] ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.fill
 JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::fill)
 {
+    // 1. Let O be the this value.
+    // 2. Perform ? ValidateTypedArray(O).
     auto typed_array = TRY(validate_typed_array_from_this(vm));
 
+    // 3. Let len be O.[[ArrayLength]].
     auto length = typed_array->array_length();
 
     Value value;
+    // 4. If O.[[ContentType]] is BigInt, set value to ? ToBigInt(value).
     if (typed_array->content_type() == TypedArrayBase::ContentType::BigInt)
         value = TRY(vm.argument(0).to_bigint(vm));
+    // 5. Otherwise, set value to ? ToNumber(value).
     else
         value = TRY(vm.argument(0).to_number(vm));
 
+    // 6. Let relativeStart be ? ToIntegerOrInfinity(start).
     auto relative_start = TRY(vm.argument(1).to_integer_or_infinity(vm));
 
     u32 k;
+    // 7. If relativeStart is -∞, let k be 0.
     if (Value(relative_start).is_negative_infinity())
         k = 0;
+    // 8. Else if relativeStart < 0, let k be max(len + relativeStart, 0).
     else if (relative_start < 0)
         k = max(length + relative_start, 0);
+    // 9. Else, let k be min(relativeStart, len).
     else
         k = min(relative_start, length);
 
+    // 10. If end is undefined, let relativeEnd be len; else let relativeEnd be ? ToIntegerOrInfinity(end).
     double relative_end;
     if (vm.argument(2).is_undefined())
         relative_end = length;
@@ -435,19 +445,30 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::fill)
         relative_end = TRY(vm.argument(2).to_integer_or_infinity(vm));
 
     u32 final;
+    // 11. If relativeEnd is -∞, let final be 0.
     if (Value(relative_end).is_negative_infinity())
         final = 0;
+    // 12. Else if relativeEnd < 0, let final be max(len + relativeEnd, 0).
     else if (relative_end < 0)
         final = max(length + relative_end, 0);
+    // 13. Else, let final be min(relativeEnd, len).
     else
         final = min(relative_end, length);
 
+    // 14. If IsDetachedBuffer(O.[[ViewedArrayBuffer]]) is true, throw a TypeError exception.
     if (typed_array->viewed_array_buffer()->is_detached())
         return vm.throw_completion<TypeError>(ErrorType::DetachedArrayBuffer);
 
-    for (; k < final; ++k)
+    // 15. Repeat, while k < final,
+    for (; k < final; ++k) {
+        // a. Let Pk be ! ToString(𝔽(k)).
+        // b. Perform ! Set(O, Pk, value, true).
         TRY(typed_array->set(k, value, Object::ShouldThrowExceptions::Yes));
 
+        // c. Set k to k + 1.
+    }
+
+    // 16. Return O.
     return typed_array;
 }
 
