@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2021, Brandon Scott <xeon.productions@gmail.com>
  * Copyright (c) 2020, Hunter Salyer <thefalsehonesty@gmail.com>
- * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2021-2022, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -36,6 +36,7 @@ private:
 
     ConnectionFromClient& m_client;
     WeakPtr<JS::Realm> m_realm;
+    JS::GCPtr<class ConsoleEnvironmentSettingsObject> m_console_settings;
     JS::Handle<ConsoleGlobalObject> m_console_global_object;
 
     void clear_output();
