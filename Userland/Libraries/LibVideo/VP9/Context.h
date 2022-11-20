@@ -8,6 +8,11 @@
 #pragma once
 
 #include <AK/Array.h>
+#include <AK/Error.h>
+#include <LibGfx/Size.h>
+#include <LibVideo/Color/CodingIndependentCodePoints.h>
+
+#include <AK/Format.h>
 
 #include "Enums.h"
 #include "MotionVector.h"
@@ -36,6 +41,63 @@ struct Pair {
 
 typedef Pair<ReferenceFrameType> ReferenceFramePair;
 typedef Pair<MotionVector> MotionVectorPair;
+
+template<typename T>
+class Vector2D {
+public:
+    ~Vector2D()
+    {
+        if (m_storage)
+            free(m_storage);
+        m_storage = nullptr;
+        m_width = 0;
+        m_height = 0;
+    }
+
+    ErrorOr<void> try_resize(u32 height, u32 width)
+    {
+        if (height != m_height && width != m_width) {
+            this->~Vector2D();
+            size_t size = height * width;
+            auto* new_storage = static_cast<T*>(malloc(size * sizeof(T)));
+            if (!new_storage)
+                return Error::from_errno(ENOMEM);
+            m_storage = new_storage;
+            m_height = height;
+            m_width = width;
+        }
+
+        return {};
+    }
+
+    u32 height() const { return m_height; }
+    u32 width() const { return m_width; }
+    
+    size_t index_at(u32 row, u32 column) const
+    {
+        VERIFY(row < height());
+        VERIFY(column < width());
+        return row * width() + column;
+    }
+
+    T& operator[](size_t index) { return m_storage[index]; }
+    T const& operator[](size_t index) const { return m_storage[index]; }
+    size_t size() const { return m_height * m_width; }
+
+    T& at(u32 row, u32 column)
+    {
+        return m_storage[index_at(row, column)];
+    }
+    T const& at(u32 row, u32 column) const
+    {
+        return m_storage[index_at(row, column)];
+    }
+
+private:
+    u32 m_height { 0 };
+    u32 m_width { 0 };
+    T* m_storage { nullptr };
+};
 
 struct TokensContext {
     TXSize m_tx_size;
