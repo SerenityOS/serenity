@@ -132,7 +132,7 @@ void HTMLScriptElement::prepare_script()
 
     // 4. If parser document is non-null and the element does not have an async attribute, then set the element's "non-blocking" flag to true.
     if (parser_document && !has_attribute(HTML::AttributeNames::async)) {
-        m_non_blocking = true;
+        m_force_async = true;
     }
 
     // 5. Let source text be the element's child text content.
@@ -184,7 +184,7 @@ void HTMLScriptElement::prepare_script()
     // 9. If parser document is non-null, then set the element's parser document back to parser document and set the element's "non-blocking" flag to false.
     if (parser_document) {
         m_parser_document = parser_document;
-        m_non_blocking = false;
+        m_force_async = false;
     }
 
     // 10. Set the element's "already started" flag.
@@ -366,8 +366,8 @@ void HTMLScriptElement::prepare_script()
 
     // -> If the script's type is "classic", and the element has a src attribute, and the element does not have an async attribute, and the element does not have the "non-blocking" flag set
     // -> If the script's type is "module", and the element does not have an async attribute, and the element does not have the "non-blocking" flag set
-    else if ((m_script_type == ScriptType::Classic && has_attribute(HTML::AttributeNames::src) && !has_attribute(HTML::AttributeNames::async) && !m_non_blocking)
-        || (m_script_type == ScriptType::Module && !has_attribute(HTML::AttributeNames::async) && !m_non_blocking)) {
+    else if ((m_script_type == ScriptType::Classic && has_attribute(HTML::AttributeNames::src) && !has_attribute(HTML::AttributeNames::async) && !m_force_async)
+        || (m_script_type == ScriptType::Module && !has_attribute(HTML::AttributeNames::async) && !m_force_async)) {
         // Add the element to the end of the list of scripts that will execute in order as soon as possible associated with the element's preparation-time document.
         m_preparation_time_document->add_script_to_execute_in_order_as_soon_as_possible({}, *this);
 
