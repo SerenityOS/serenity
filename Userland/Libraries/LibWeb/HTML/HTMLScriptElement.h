@@ -64,13 +64,26 @@ public:
     void when_the_script_is_ready(Function<void()>);
     void begin_delaying_document_load_event(DOM::Document&);
 
+    // https://html.spec.whatwg.org/multipage/scripting.html#parser-document
     JS::GCPtr<DOM::Document> m_parser_document;
+
+    // https://html.spec.whatwg.org/multipage/scripting.html#preparation-time-document
     JS::GCPtr<DOM::Document> m_preparation_time_document;
+
+    // https://html.spec.whatwg.org/multipage/scripting.html#script-force-async
     bool m_non_blocking { false };
+
+    // https://html.spec.whatwg.org/multipage/scripting.html#already-started
     bool m_already_started { false };
+
+    // https://html.spec.whatwg.org/multipage/scripting.html#concept-script-external
     bool m_from_an_external_file { false };
+
     bool m_script_ready { false };
+
+    // https://html.spec.whatwg.org/multipage/scripting.html#ready-to-be-parser-executed
     bool m_ready_to_be_parser_executed { false };
+
     bool m_failed_to_load { false };
 
     enum class ScriptType {
@@ -78,12 +91,16 @@ public:
         Module
     };
 
+    // https://html.spec.whatwg.org/multipage/scripting.html#concept-script-type
     ScriptType m_script_type { ScriptType::Classic };
 
+    // https://html.spec.whatwg.org/multipage/scripting.html#steps-to-run-when-the-result-is-ready
     Function<void()> m_script_ready_callback;
 
+    // https://html.spec.whatwg.org/multipage/scripting.html#concept-script-result
     JS::GCPtr<Script> m_script;
 
+    // https://html.spec.whatwg.org/multipage/scripting.html#concept-script-delay-load
     Optional<DOM::DocumentLoadEventDelayer> m_document_load_event_delayer;
 
     size_t m_source_line_number { 1 };
