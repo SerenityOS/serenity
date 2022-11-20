@@ -28,6 +28,7 @@ set(SOURCES
     ICOLoader.cpp
     ImageDecoder.cpp
     JPGLoader.cpp
+    Layer.cpp
     PBMLoader.cpp
     PGMLoader.cpp
     PNGLoader.cpp

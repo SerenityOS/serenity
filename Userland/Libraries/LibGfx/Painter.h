@@ -13,6 +13,7 @@
 #include <LibGfx/Color.h>
 #include <LibGfx/Font/FontDatabase.h>
 #include <LibGfx/Forward.h>
+#include <LibGfx/Layer.h>
 #include <LibGfx/Point.h>
 #include <LibGfx/Rect.h>
 #include <LibGfx/Size.h>
@@ -67,7 +68,7 @@ public:
     void set_pixel(int x, int y, Color color, bool blend = false) { set_pixel({ x, y }, color, blend); }
     Optional<Color> get_pixel(IntPoint);
     ErrorOr<NonnullRefPtr<Bitmap>> get_region_bitmap(IntRect const&, BitmapFormat format, Optional<IntRect&> actual_region = {});
-    void draw_line(IntPoint, IntPoint, Color, int thickness = 1, LineStyle style = LineStyle::Solid, Color alternate_color = Color::Transparent);
+    void draw_line(IntPoint, IntPoint, Color, int thickness = 1, LineStyle style = LineStyle::Solid, Color alternate_color = Color::Transparent, Optional<NonnullRefPtr<Layer>> = {});
     void draw_triangle_wave(IntPoint, IntPoint, Color color, int amplitude, int thickness = 1);
     void draw_quadratic_bezier_curve(IntPoint control_point, IntPoint, IntPoint, Color, int thickness = 1, LineStyle style = LineStyle::Solid);
     void draw_cubic_bezier_curve(IntPoint control_point_0, IntPoint control_point_1, IntPoint, IntPoint, Color, int thickness = 1, LineStyle style = LineStyle::Solid);
@@ -168,7 +169,7 @@ protected:
     void fill_physical_scanline_with_draw_op(int y, int x, int width, Color color);
     void fill_rect_with_draw_op(IntRect const&, Color);
     void blit_with_opacity(IntPoint, Gfx::Bitmap const&, IntRect const& src_rect, float opacity, bool apply_alpha = true);
-    void draw_physical_pixel(IntPoint, Color, int thickness = 1);
+    void draw_physical_pixel(IntPoint, Color, int thickness = 1, Optional<NonnullRefPtr<Layer>> layer = {});
 
     struct State {
         Font const* font;
@@ -181,7 +182,7 @@ protected:
     State& state() { return m_state_stack.last(); }
     State const& state() const { return m_state_stack.last(); }
 
-    void fill_physical_rect(IntRect const&, Color);
+    void fill_physical_rect(IntRect const&, Color, Optional<NonnullRefPtr<Layer>> layer = {});
 
     IntRect m_clip_origin;
     NonnullRefPtr<Gfx::Bitmap> m_target;

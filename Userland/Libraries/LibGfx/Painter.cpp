@@ -115,15 +115,19 @@ void Painter::clear_rect(IntRect const& a_rect, Color color)
     }
 }
 
-void Painter::fill_physical_rect(IntRect const& physical_rect, Color color)
+void Painter::fill_physical_rect(IntRect const& physical_rect, Color color, Optional<NonnullRefPtr<Layer>> layer)
 {
     // Callers must do clipping.
     ARGB32* dst = m_target->scanline(physical_rect.top()) + physical_rect.left();
     size_t const dst_skip = m_target->pitch() / sizeof(ARGB32);
 
     for (int i = physical_rect.height() - 1; i >= 0; --i) {
-        for (int j = 0; j < physical_rect.width(); ++j)
-            dst[j] = Color::from_argb(dst[j]).blend(color).value();
+        for (int j = 0; j < physical_rect.width(); ++j) {
+            if (layer.has_value())
+                layer->ptr()->add_point({ physical_rect.left() + i, physical_rect.top() + j }, color);
+            else
+                dst[j] = Color::from_argb(dst[j]).blend(color).value();
+        }
         dst += dst_skip;
     }
 }
@@ -482,10 +486,12 @@ void Painter::fill_ellipse(IntRect const& a_rect, Color color)
 
     VERIFY(m_target->rect().contains(rect));
 
+    auto layer = make_ref_counted<Layer>(m_target, color);
+
     for (int i = 1; i < a_rect.height(); i++) {
         float y = a_rect.height() * 0.5 - i;
         float x = a_rect.width() * AK::sqrt(0.25f - y * y / a_rect.height() / a_rect.height());
-        draw_line({ a_rect.x() + a_rect.width() / 2 - (int)x, a_rect.y() + i }, { a_rect.x() + a_rect.width() / 2 + (int)x - 1, a_rect.y() + i }, color);
+        draw_line({ a_rect.x() + a_rect.width() / 2 - (int)x, a_rect.y() + i }, { a_rect.x() + a_rect.width() / 2 + (int)x - 1, a_rect.y() + i }, color, 1, {}, {}, layer);
     }
 }
 
@@ -498,11 +504,13 @@ void Painter::draw_ellipse_intersecting(IntRect const& rect, Color color, int th
 
     auto const center = rect.center();
 
-    auto const draw_real_world_x4 = [this, &color, thickness, center](int x, int y) {
+    auto layer = make_ref_counted<Layer>(m_target, color);
+
+    auto const draw_real_world_x4 = [this, &color, thickness, center, &layer](int x, int y) {
         IntPoint const directions[4] = { { x, y }, { x, -y }, { -x, y }, { -x, -y } };
         for (auto const& delta : directions) {
             auto const point = center + delta;
-            draw_line(point, point, color, thickness);
+            draw_line(point, point, color, thickness, {}, {}, layer);
         }
     };
 
@@ -1904,7 +1912,7 @@ ALWAYS_INLINE void Painter::fill_physical_scanline_with_draw_op(int y, int x, in
     }
 }
 
-void Painter::draw_physical_pixel(IntPoint physical_position, Color color, int thickness)
+void Painter::draw_physical_pixel(IntPoint physical_position, Color color, int thickness, Optional<NonnullRefPtr<Layer>> layer)
 {
     // This always draws a single physical pixel, independent of scale().
     // This should only be called by routines that already handle scale
@@ -1915,16 +1923,20 @@ void Painter::draw_physical_pixel(IntPoint physical_position, Color color, int t
         return;
 
     if (thickness == 1) { // Implies scale() == 1.
+        if (layer.has_value()) {
+            layer->ptr()->add_point(physical_position, color);
+            return;
+        }
         auto& pixel = m_target->scanline(physical_position.y())[physical_position.x()];
         return set_physical_pixel_with_draw_op(pixel, Color::from_argb(pixel).blend(color));
     }
 
     IntRect rect { physical_position, { thickness, thickness } };
     rect.intersect(clip_rect() * scale());
-    fill_physical_rect(rect, color);
+    fill_physical_rect(rect, color, layer);
 }
 
-void Painter::draw_line(IntPoint a_p1, IntPoint a_p2, Color color, int thickness, LineStyle style, Color alternate_color)
+void Painter::draw_line(IntPoint a_p1, IntPoint a_p2, Color color, int thickness, LineStyle style, Color alternate_color, Optional<NonnullRefPtr<Layer>> layer)
 {
     if (thickness <= 0)
         return;
@@ -1958,22 +1970,22 @@ void Painter::draw_line(IntPoint a_p1, IntPoint a_p2, Color color, int thickness
         int max_y = min(point2.y(), clip_rect.bottom());
         if (style == LineStyle::Dotted) {
             for (int y = min_y; y <= max_y; y += thickness * 2)
-                draw_physical_pixel({ x, y }, color, thickness);
+                draw_physical_pixel({ x, y }, color, thickness, layer);
         } else if (style == LineStyle::Dashed) {
             for (int y = min_y; y <= max_y; y += thickness * 6) {
-                draw_physical_pixel({ x, y }, color, thickness);
-                draw_physical_pixel({ x, min(y + thickness, max_y) }, color, thickness);
-                draw_physical_pixel({ x, min(y + thickness * 2, max_y) }, color, thickness);
+                draw_physical_pixel({ x, y }, color, thickness, layer);
+                draw_physical_pixel({ x, min(y + thickness, max_y) }, color, thickness, layer);
+                draw_physical_pixel({ x, min(y + thickness * 2, max_y) }, color, thickness, layer);
                 if (!alternate_color_is_transparent) {
-                    draw_physical_pixel({ x, min(y + thickness * 3, max_y) }, alternate_color, thickness);
-                    draw_physical_pixel({ x, min(y + thickness * 4, max_y) }, alternate_color, thickness);
-                    draw_physical_pixel({ x, min(y + thickness * 5, max_y) }, alternate_color, thickness);
+                    draw_physical_pixel({ x, min(y + thickness * 3, max_y) }, alternate_color, thickness, layer);
+                    draw_physical_pixel({ x, min(y + thickness * 4, max_y) }, alternate_color, thickness, layer);
+                    draw_physical_pixel({ x, min(y + thickness * 5, max_y) }, alternate_color, thickness, layer);
                 }
             }
         } else {
             for (int y = min_y; y <= max_y; y += thickness)
-                draw_physical_pixel({ x, y }, color, thickness);
-            draw_physical_pixel({ x, max_y }, color, thickness);
+                draw_physical_pixel({ x, y }, color, thickness, layer);
+            draw_physical_pixel({ x, max_y }, color, thickness, layer);
         }
         return;
     }
@@ -1993,22 +2005,22 @@ void Painter::draw_line(IntPoint a_p1, IntPoint a_p2, Color color, int thickness
         int max_x = min(point2.x(), clip_rect.right());
         if (style == LineStyle::Dotted) {
             for (int x = min_x; x <= max_x; x += thickness * 2)
-                draw_physical_pixel({ x, y }, color, thickness);
+                draw_physical_pixel({ x, y }, color, thickness, layer);
         } else if (style == LineStyle::Dashed) {
             for (int x = min_x; x <= max_x; x += thickness * 6) {
-                draw_physical_pixel({ x, y }, color, thickness);
-                draw_physical_pixel({ min(x + thickness, max_x), y }, color, thickness);
-                draw_physical_pixel({ min(x + thickness * 2, max_x), y }, color, thickness);
+                draw_physical_pixel({ x, y }, color, thickness, layer);
+                draw_physical_pixel({ min(x + thickness, max_x), y }, color, thickness, layer);
+                draw_physical_pixel({ min(x + thickness * 2, max_x), y }, color, thickness, layer);
                 if (!alternate_color_is_transparent) {
-                    draw_physical_pixel({ min(x + thickness * 3, max_x), y }, alternate_color, thickness);
-                    draw_physical_pixel({ min(x + thickness * 4, max_x), y }, alternate_color, thickness);
-                    draw_physical_pixel({ min(x + thickness * 5, max_x), y }, alternate_color, thickness);
+                    draw_physical_pixel({ min(x + thickness * 3, max_x), y }, alternate_color, thickness, layer);
+                    draw_physical_pixel({ min(x + thickness * 4, max_x), y }, alternate_color, thickness, layer);
+                    draw_physical_pixel({ min(x + thickness * 5, max_x), y }, alternate_color, thickness, layer);
                 }
             }
         } else {
             for (int x = min_x; x <= max_x; x += thickness)
-                draw_physical_pixel({ x, y }, color, thickness);
-            draw_physical_pixel({ max_x, y }, color, thickness);
+                draw_physical_pixel({ x, y }, color, thickness, layer);
+            draw_physical_pixel({ max_x, y }, color, thickness, layer);
         }
         return;
     }
@@ -2038,7 +2050,7 @@ void Painter::draw_line(IntPoint a_p1, IntPoint a_p2, Color color, int thickness
         int y = point1.y();
         for (int x = point1.x(); x <= point2.x(); ++x) {
             if (clip_rect.contains(x, y))
-                draw_physical_pixel({ x, y }, color, thickness);
+                draw_physical_pixel({ x, y }, color, thickness, layer);
             error += delta_error;
             if (error >= dx) {
                 y += y_step;
@@ -2051,7 +2063,7 @@ void Painter::draw_line(IntPoint a_p1, IntPoint a_p2, Color color, int thickness
         int x = point1.x();
         for (int y = point1.y(); y <= point2.y(); ++y) {
             if (clip_rect.contains(x, y))
-                draw_physical_pixel({ x, y }, color, thickness);
+                draw_physical_pixel({ x, y }, color, thickness, layer);
             error += delta_error;
             if (error >= dy) {
                 x += x_step;

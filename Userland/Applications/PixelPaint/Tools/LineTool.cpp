@@ -10,15 +10,14 @@
 #include "LineTool.h"
 #include "../ImageEditor.h"
 #include "../Layer.h"
-#include <AK/Math.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/CheckBox.h>
 #include <LibGUI/Label.h>
-#include <LibGUI/Menu.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/ValueSlider.h>
 #include <LibGfx/AntiAliasingPainter.h>
+#include <LibGfx/Layer.h>
 
 namespace PixelPaint {
 
@@ -65,7 +64,8 @@ void LineTool::draw_using(GUI::Painter& painter, Gfx::IntPoint start_position, G
         };
         aa_painter.draw_line(as_float_point(start_position), as_float_point(end_position), color, thickness);
     } else {
-        painter.draw_line(start_position, end_position, color, thickness);
+        auto layer = make_ref_counted<Gfx::Layer>(painter.target(), color);
+        painter.draw_line(start_position, end_position, color, thickness, {}, {}, layer);
     }
 }
 
