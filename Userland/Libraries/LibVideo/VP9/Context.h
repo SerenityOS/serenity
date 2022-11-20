@@ -93,6 +93,39 @@ public:
         return m_storage[index_at(row, column)];
     }
 
+    template<typename OtherT>
+    ErrorOr<void> try_resize_to_match_other_vector2d(Vector2D<OtherT> const& other)
+    {
+        return try_resize(other.height(), other.width());
+    }
+
+    template<typename OtherT, typename Function>
+    void copy_to(Vector2D<OtherT>& other, Function function)
+    {
+        VERIFY(width() <= other.width());
+        VERIFY(height() <= other.height());
+        for (u32 row = 0; row < height(); row++) {
+            for (u32 column = 0; column < width(); column++)
+                other.at(row, column) = function(at(row, column));
+        }
+    }
+
+    void copy_to(Vector2D<T>& other)
+    {
+        VERIFY(width() <= other.width());
+        VERIFY(height() <= other.height());
+        for (u32 row = 0; row < height(); row++) {
+            auto other_index = other.index_at(row, 0);
+            AK::TypedTransfer<T>::copy(&m_storage[index_at(row, 0)], &other[other_index], width());
+        }
+    }
+
+    void reset()
+    {
+        for (size_t i = 0; i < size(); i++)
+            m_storage[i] = T();
+    }
+
 private:
     u32 m_height { 0 };
     u32 m_width { 0 };
@@ -121,6 +154,27 @@ struct FrameBlockContext {
     InterpolationFilter interpolation_filter { InterpolationFilter::EightTap };
     ReferenceFramePair ref_frames { ReferenceFrameType::None, ReferenceFrameType::None };
     Array<Array<MotionVector, 4>, 2> sub_block_motion_vectors {};
+    u8 segment_id { 0 };
+};
+
+// Block context that is kept between frames until explictly cleared.
+struct PersistentBlockContext {
+    PersistentBlockContext()
+        : available(false)
+    {
+    }
+
+    PersistentBlockContext(FrameBlockContext const& frame_context)
+        : available(frame_context.is_available)
+        , ref_frames(frame_context.ref_frames)
+        , primary_motion_vector_pair(frame_context.primary_motion_vector_pair())
+        , segment_id(frame_context.segment_id)
+    {
+    }
+
+    bool available { false };
+    ReferenceFramePair ref_frames { ReferenceFrameType::None, ReferenceFrameType::None };
+    MotionVectorPair primary_motion_vector_pair {};
     u8 segment_id { 0 };
 };
 

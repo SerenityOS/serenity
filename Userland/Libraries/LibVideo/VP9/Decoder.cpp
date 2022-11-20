@@ -66,14 +66,7 @@ DecoderErrorOr<void> Decoder::decode_frame(ReadonlyBytes frame_data)
     // − show_existing_frame is equal to 0,
     // − segmentation_enabled is equal to 1,
     // − segmentation_update_map is equal to 1.
-    if (!m_parser->m_show_existing_frame && m_parser->m_segmentation_enabled && m_parser->m_segmentation_update_map) {
-        for (auto row = 0u; row < m_parser->m_mi_rows; row++) {
-            for (auto column = 0u; column < m_parser->m_mi_cols; column++) {
-                auto index = index_from_row_and_column(row, column, m_parser->m_mi_rows);
-                m_parser->m_prev_segment_ids[index] = m_parser->m_frame_block_contexts[index].segment_id;
-            }
-        }
-    }
+    // This is handled by update_reference_frames.
 
     // 4. The output process as specified in section 8.9 is invoked.
     if (m_parser->m_show_frame)
@@ -1808,21 +1801,24 @@ DecoderErrorOr<void> Decoder::update_reference_frames()
 
     // 2. If show_existing_frame is equal to 0, the following applies:
     if (!m_parser->m_show_existing_frame) {
+        DECODER_TRY_ALLOC(m_parser->m_previous_block_contexts.try_resize_to_match_other_vector2d(m_parser->m_frame_block_contexts));
         // − PrevRefFrames[ row ][ col ][ list ] is set equal to RefFrames[ row ][ col ][ list ] for row = 0..MiRows-1,
         // for col = 0..MiCols-1, for list = 0..1.
         // − PrevMvs[ row ][ col ][ list ][ comp ] is set equal to Mvs[ row ][ col ][ list ][ comp ] for row = 0..MiRows-1,
         // for col = 0..MiCols-1, for list = 0..1, for comp = 0..1.
-        size_t size = m_parser->m_frame_block_contexts.width() * m_parser->m_frame_block_contexts.height();
-        m_parser->m_prev_ref_frames.resize_and_keep_capacity(size);
-        m_parser->m_prev_mvs.resize_and_keep_capacity(size);
-        for (u32 row = 0; row < m_parser->m_frame_block_contexts.height(); row++) {
-            for (u32 column = 0; column < m_parser->m_frame_block_contexts.width(); column++) {
-                auto index = m_parser->m_frame_block_contexts.index_at(row, column);
-                auto context = m_parser->m_frame_block_contexts[index];
-                m_parser->m_prev_ref_frames[index] = context.ref_frames;
-                m_parser->m_prev_mvs[index] = context.primary_motion_vector_pair();
-            }
-        }
+        // And from decode_frame():
+        // - If all of the following conditions are true, PrevSegmentIds[ row ][ col ] is set equal to
+        // SegmentIds[ row ][ col ] for row = 0..MiRows-1, for col = 0..MiCols-1:
+        //   − show_existing_frame is equal to 0,
+        //   − segmentation_enabled is equal to 1,
+        //   − segmentation_update_map is equal to 1.
+        bool keep_segment_ids = !m_parser->m_show_existing_frame && m_parser->m_segmentation_enabled && m_parser->m_segmentation_update_map;
+        m_parser->m_frame_block_contexts.copy_to(m_parser->m_previous_block_contexts, [keep_segment_ids](FrameBlockContext context) {
+            auto persistent_context = PersistentBlockContext(context);
+            if (!keep_segment_ids)
+                persistent_context.segment_id = 0;
+            return persistent_context;
+        });
     }
 
     return {};

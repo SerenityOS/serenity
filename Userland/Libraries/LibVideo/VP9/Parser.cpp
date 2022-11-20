@@ -494,9 +494,8 @@ void Parser::setup_past_independence()
             m_feature_enabled[i][j] = false;
         }
     }
+    m_previous_block_contexts.reset(); 
     m_segmentation_abs_or_delta_update = false;
-    m_prev_segment_ids.clear_with_capacity();
-    m_prev_segment_ids.resize_and_keep_capacity(m_mi_rows * m_mi_cols);
     m_loop_filter_delta_enabled = true;
     m_loop_filter_ref_deltas[IntraFrame] = 1;
     m_loop_filter_ref_deltas[LastFrame] = 0;
@@ -1111,7 +1110,7 @@ u8 Parser::get_segment_id()
     u8 segment = 7;
     for (size_t y = 0; y < ymis; y++) {
         for (size_t x = 0; x < xmis; x++) {
-            segment = min(segment, m_prev_segment_ids[get_image_index(m_mi_row + y, m_mi_col + x)]);
+            segment = min(segment, m_previous_block_contexts.index_at(m_mi_row + y, m_mi_col + x));
         }
     }
     return segment;
@@ -1498,10 +1497,10 @@ void Parser::add_mv_ref_list(u8 ref_list)
 
 void Parser::get_block_mv(u32 candidate_row, u32 candidate_column, u8 ref_list, bool use_prev)
 {
-    auto index = get_image_index(candidate_row, candidate_column);
     if (use_prev) {
-        m_candidate_mv[ref_list] = m_prev_mvs[index][ref_list];
-        m_candidate_frame[ref_list] = m_prev_ref_frames[index][ref_list];
+        auto const& prev_context = m_previous_block_contexts.at(candidate_row, candidate_column);
+        m_candidate_mv[ref_list] = prev_context.primary_motion_vector_pair[ref_list];
+        m_candidate_frame[ref_list] = prev_context.ref_frames[ref_list];
     } else {
         auto const& current_context = m_frame_block_contexts.at(candidate_row, candidate_column);
         m_candidate_mv[ref_list] = current_context.primary_motion_vector_pair()[ref_list];

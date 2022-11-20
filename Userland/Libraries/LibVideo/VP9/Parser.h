@@ -259,7 +259,6 @@ private:
     ReferenceFramePair m_comp_var_ref;
     // FIXME: Use Array<MotionVectorPair, 4> instead.
     Array<Array<MotionVector, 4>, 2> m_block_mvs;
-    Vector<u8> m_prev_segment_ids;
 
     // FIXME: From spec: NOTE – We are using a 2D array to store the SubModes for clarity. It is possible to reduce memory
     //        consumption by only storing one intra mode for each 8x8 horizontal and vertical position, i.e. to use two 1D
@@ -273,8 +272,7 @@ private:
     u8 m_ref_mv_count { 0 };
     MotionVectorPair m_ref_list_mv;
     bool m_use_prev_frame_mvs;
-    Vector<ReferenceFramePair> m_prev_ref_frames;
-    Vector<MotionVectorPair> m_prev_mvs;
+    Vector2D<PersistentBlockContext> m_previous_block_contexts;
     // Indexed by ReferenceFrame enum.
     u8 m_mode_context[4] { INVALID_CASE };
 
