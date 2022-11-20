@@ -128,7 +128,6 @@ HTMLParser::HTMLParser(DOM::Document& document, StringView input, String const& 
 {
     m_tokenizer.set_parser({}, *this);
     m_document->set_parser({}, *this);
-    m_document->set_should_invalidate_styles_on_attribute_changes(false);
     auto standardized_encoding = TextCodec::get_standardized_encoding(encoding);
     VERIFY(standardized_encoding.has_value());
     m_document->set_encoding(standardized_encoding.value());
@@ -144,7 +143,6 @@ HTMLParser::HTMLParser(DOM::Document& document)
 
 HTMLParser::~HTMLParser()
 {
-    m_document->set_should_invalidate_styles_on_attribute_changes(true);
 }
 
 void HTMLParser::visit_edges(Cell::Visitor& visitor)

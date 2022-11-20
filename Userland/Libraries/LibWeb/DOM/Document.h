@@ -100,9 +100,6 @@ public:
     String referrer() const;
     void set_referrer(String);
 
-    bool should_invalidate_styles_on_attribute_changes() const { return m_should_invalidate_styles_on_attribute_changes; }
-    void set_should_invalidate_styles_on_attribute_changes(bool b) { m_should_invalidate_styles_on_attribute_changes = b; }
-
     void set_url(const AK::URL& url) { m_url = url; }
     AK::URL url() const { return m_url; }
     AK::URL fallback_base_url() const;
