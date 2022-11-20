@@ -2244,75 +2244,114 @@ void HTMLParser::handle_text(HTMLToken& token)
         process_using_the_rules_for(m_insertion_mode, token);
         return;
     }
+
+    // -> An end tag whose tag name is "script"
     if (token.is_end_tag() && token.tag_name() == HTML::TagNames::script) {
-        // Make sure the <script> element has up-to-date text content before preparing the script.
+        // FIXME: If the active speculative HTML parser is null and the JavaScript execution context stack is empty, then perform a microtask checkpoint.
+
+        // Non-standard: Make sure the <script> element has up-to-date text content before preparing the script.
         flush_character_insertions();
 
+        // Let script be the current node (which will be a script element).
         JS::NonnullGCPtr<HTMLScriptElement> script = verify_cast<HTMLScriptElement>(current_node());
 
+        // Pop the current node off the stack of open elements.
         (void)m_stack_of_open_elements.pop();
+
+        // Switch the insertion mode to the original insertion mode.
         m_insertion_mode = m_original_insertion_mode;
+
         // Let the old insertion point have the same value as the current insertion point.
         m_tokenizer.store_insertion_point();
+
         // Let the insertion point be just before the next input character.
         m_tokenizer.update_insertion_point();
+
+        // Increment the parser's script nesting level by one.
         increment_script_nesting_level();
+
+        // If the active speculative HTML parser is null, then prepare the script element script.
+        // This might cause some script to execute, which might cause new characters to be inserted into the tokenizer,
+        // and might cause the tokenizer to output more tokens, resulting in a reentrant invocation of the parser.
         // FIXME: Check if active speculative HTML parser is null.
         script->prepare_script(Badge<HTMLParser> {});
+
+        // Decrement the parser's script nesting level by one.
         decrement_script_nesting_level();
+
+        // If the parser's script nesting level is zero, then set the parser pause flag to false.
         if (script_nesting_level() == 0)
             m_parser_pause_flag = false;
+
         // Let the insertion point have the value of the old insertion point.
         m_tokenizer.restore_insertion_point();
 
-        while (document().pending_parsing_blocking_script()) {
+        // At this stage, if the pending parsing-blocking script is not null, then:
+        if (document().pending_parsing_blocking_script()) {
+            // -> If the script nesting level is not zero:
             if (script_nesting_level() != 0) {
+                // Set the parser pause flag to true,
                 m_parser_pause_flag = true;
-                // FIXME: Abort the processing of any nested invocations of the tokenizer,
-                //        yielding control back to the caller. (Tokenization will resume when
-                //        the caller returns to the "outer" tree construction stage.)
+                // FIXME: and abort the processing of any nested invocations of the tokenizer, yielding control back to the caller.
+                //        (Tokenization will resume when the caller returns to the "outer" tree construction stage.)
                 TODO();
-            } else {
-                auto the_script = document().take_pending_parsing_blocking_script({});
-                m_tokenizer.set_blocked(true);
+            }
 
-                // If the parser's Document has a style sheet that is blocking scripts
-                // or the script's "ready to be parser-executed" flag is not set:
-                // spin the event loop until the parser's Document has no style sheet
-                // that is blocking scripts and the script's "ready to be parser-executed"
-                // flag is set.
-                if (m_document->has_a_style_sheet_that_is_blocking_scripts() || !script->is_ready_to_be_parser_executed()) {
-                    main_thread_event_loop().spin_until([&] {
-                        return !m_document->has_a_style_sheet_that_is_blocking_scripts() && script->is_ready_to_be_parser_executed();
-                    });
+            // Otherwise:
+            else {
+                // While the pending parsing-blocking script is not null:
+                while (document().pending_parsing_blocking_script()) {
+                    // 1. Let the script be the pending parsing-blocking script.
+                    // 2. Set the pending parsing-blocking script to null.
+                    auto the_script = document().take_pending_parsing_blocking_script({});
+
+                    // FIXME: 3. Start the speculative HTML parser for this instance of the HTML parser.
+
+                    // 4. Block the tokenizer for this instance of the HTML parser, such that the event loop will not run tasks that invoke the tokenizer.
+                    m_tokenizer.set_blocked(true);
+
+                    // 5. If the parser's Document has a style sheet that is blocking scripts
+                    //    or the script's ready to be parser-executed is false:
+                    if (m_document->has_a_style_sheet_that_is_blocking_scripts() || script->is_ready_to_be_parser_executed() == false) {
+                        // spin the event loop until the parser's Document has no style sheet that is blocking scripts
+                        // and the script's ready to be parser-executed becomes true.
+                        main_thread_event_loop().spin_until([&] {
+                            return !m_document->has_a_style_sheet_that_is_blocking_scripts() && script->is_ready_to_be_parser_executed();
+                        });
+                    }
+
+                    // 6. If this parser has been aborted in the meantime, return.
+                    if (m_aborted)
+                        return;
+
+                    // FIXME: 7. Stop the speculative HTML parser for this instance of the HTML parser.
+
+                    // 8. Unblock the tokenizer for this instance of the HTML parser, such that tasks that invoke the tokenizer can again be run.
+                    m_tokenizer.set_blocked(false);
+
+                    // 9. Let the insertion point be just before the next input character.
+                    m_tokenizer.update_insertion_point();
+
+                    // 10. Increment the parser's script nesting level by one (it should be zero before this step, so this sets it to one).
+                    VERIFY(script_nesting_level() == 0);
+                    increment_script_nesting_level();
+
+                    // 11. Execute the script element the script.
+                    the_script->execute_script();
+
+                    // 12. Decrement the parser's script nesting level by one.
+                    decrement_script_nesting_level();
+
+                    // If the parser's script nesting level is zero (which it always should be at this point), then set the parser pause flag to false.
+                    VERIFY(script_nesting_level() == 0);
+                    m_parser_pause_flag = false;
+
+                    // 13. Let the insertion point be undefined again.
+                    m_tokenizer.undefine_insertion_point();
                 }
-
-                if (the_script->failed_to_load())
-                    return;
-
-                VERIFY(the_script->is_ready_to_be_parser_executed());
-
-                if (m_aborted)
-                    return;
-
-                m_tokenizer.set_blocked(false);
-
-                // Let the insertion point be just before the next input character.
-                m_tokenizer.update_insertion_point();
-
-                VERIFY(script_nesting_level() == 0);
-                increment_script_nesting_level();
-
-                the_script->execute_script();
-
-                decrement_script_nesting_level();
-                VERIFY(script_nesting_level() == 0);
-                m_parser_pause_flag = false;
-
-                // Let the insertion point be undefined again.
-                m_tokenizer.undefine_insertion_point();
             }
         }
+
         return;
     }
 
