@@ -29,6 +29,9 @@ HTMLLinkElement::~HTMLLinkElement() = default;
 
 void HTMLLinkElement::inserted()
 {
+    if (has_attribute(AttributeNames::disabled) && (m_relationship & Relationship::Stylesheet))
+        return;
+
     HTMLElement::inserted();
 
     if (m_relationship & Relationship::Stylesheet && !(m_relationship & Relationship::Alternate)) {
@@ -92,6 +95,9 @@ void HTMLLinkElement::parse_attribute(FlyString const& name, String const& value
                 m_relationship |= Relationship::Icon;
         }
     }
+
+    if (name == HTML::AttributeNames::disabled && (m_relationship & Relationship::Stylesheet) && m_loaded_style_sheet)
+        document().style_sheets().remove_sheet(*m_loaded_style_sheet);
 }
 
 void HTMLLinkElement::resource_did_fail()
@@ -112,6 +118,16 @@ void HTMLLinkElement::resource_did_load()
         resource_did_load_favicon();
 }
 
+void HTMLLinkElement::did_remove_attribute(FlyString const& attr)
+{
+    if (attr == HTML::AttributeNames::disabled && (m_relationship & Relationship::Stylesheet)) {
+        if (!resource())
+            inserted();
+        else
+            resource_did_load_stylesheet();
+    }
+}
+
 void HTMLLinkElement::resource_did_load_stylesheet()
 {
     VERIFY(m_relationship & Relationship::Stylesheet);
@@ -128,10 +144,16 @@ void HTMLLinkElement::resource_did_load_stylesheet()
         }
     }
 
-    auto* sheet = parse_css_stylesheet(CSS::Parser::ParsingContext(document(), resource()->url()), resource()->encoded_data());
+    CSS::CSSStyleSheet* sheet = m_loaded_style_sheet;
     if (!sheet) {
-        dbgln_if(CSS_LOADER_DEBUG, "HTMLLinkElement: Failed to parse stylesheet: {}", resource()->url());
-        return;
+        sheet = parse_css_stylesheet(CSS::Parser::ParsingContext(document(), resource()->url()), resource()->encoded_data());
+
+        if (!sheet) {
+            dbgln_if(CSS_LOADER_DEBUG, "HTMLLinkElement: Failed to parse stylesheet: {}", resource()->url());
+            return;
+        }
+
+        m_loaded_style_sheet = sheet;
     }
 
     sheet->set_owner_node(this);
@@ -177,6 +199,12 @@ bool HTMLLinkElement::load_favicon_and_use_if_window_is_active()
         }
 
     return false;
+}
+
+void HTMLLinkElement::visit_edges(Cell::Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    visitor.visit(m_loaded_style_sheet);
 }
 
 }

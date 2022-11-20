@@ -39,6 +39,10 @@ private:
     virtual void resource_did_fail() override;
     virtual void resource_did_load() override;
 
+    // ^ HTMLElement
+    virtual void did_remove_attribute(FlyString const&) override;
+    virtual void visit_edges(Cell::Visitor&) override;
+
     void resource_did_load_stylesheet();
     void resource_did_load_favicon();
 
@@ -54,6 +58,7 @@ private:
     };
 
     RefPtr<Resource> m_preload_resource;
+    JS::GCPtr<CSS::CSSStyleSheet> m_loaded_style_sheet;
 
     Optional<DOM::DocumentLoadEventDelayer> m_document_load_event_delayer;
     unsigned m_relationship { 0 };
