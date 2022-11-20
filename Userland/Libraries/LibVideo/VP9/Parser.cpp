@@ -935,9 +935,8 @@ DecoderErrorOr<void> Parser::decode_block(u32 row, u32 column, BlockSubsize subs
     auto above_context = row > 0 ? m_frame_block_contexts.at(row - 1, column) : FrameBlockContext();
     auto left_context = column > m_mi_col_start ? m_frame_block_contexts.at(row, column - 1) : FrameBlockContext();
     TRY(mode_info(row, column, above_context, left_context));
-    m_eob_total = 0;
-    TRY(residual(row, column, above_context.is_available, left_context.is_available));
-    if (m_is_inter && subsize >= Block_8x8 && m_eob_total == 0)
+    auto had_residual_tokens = TRY(residual(row, column, above_context.is_available, left_context.is_available));
+    if (m_is_inter && subsize >= Block_8x8 && !had_residual_tokens)
         m_skip = true;
 
     // Spec doesn't specify whether it might index outside the frame here, but it seems that it can. Ensure that we don't
@@ -1291,8 +1290,9 @@ Gfx::Size<size_t> Parser::get_decoded_size_for_plane(u8 plane)
     return { point.x(), point.y() };
 }
 
-DecoderErrorOr<void> Parser::residual(u32 row, u32 column, bool has_block_above, bool has_block_left)
+DecoderErrorOr<bool> Parser::residual(u32 row, u32 column, bool has_block_above, bool has_block_left)
 {
+    bool had_residual_tokens = false;
     auto block_size = m_mi_size < Block_8x8 ? Block_8x8 : static_cast<BlockSubsize>(m_mi_size);
     for (u8 plane = 0; plane < 3; plane++) {
         auto tx_size = (plane > 0) ? get_uv_tx_size() : m_tx_size;
@@ -1328,6 +1328,7 @@ DecoderErrorOr<void> Parser::residual(u32 row, u32 column, bool has_block_above,
                         TRY(m_decoder.predict_intra(plane, start_x, start_y, has_block_left || x > 0, has_block_above || y > 0, (x + step) < num_4x4_w, tx_size, block_index));
                     if (!m_skip) {
                         non_zero = TRY(tokens(plane, start_x, start_y, tx_size, block_index));
+                        had_residual_tokens = had_residual_tokens || non_zero;
                         TRY(m_decoder.reconstruct(plane, start_x, start_y, tx_size));
                     }
                 }
@@ -1348,7 +1349,7 @@ DecoderErrorOr<void> Parser::residual(u32 row, u32 column, bool has_block_above,
             }
         }
     }
-    return {};
+    return had_residual_tokens;
 }
 
 TXSize Parser::get_uv_tx_size()
@@ -1368,7 +1369,7 @@ BlockSubsize Parser::get_plane_block_size(u32 subsize, u8 plane)
 DecoderErrorOr<bool> Parser::tokens(size_t plane, u32 start_x, u32 start_y, TXSize tx_size, u32 block_index)
 {
     u32 segment_eob = 16 << (tx_size << 1);
-    auto scan = get_scan(plane, tx_size, block_index);
+    auto const* scan = get_scan(plane, tx_size, block_index);
     auto check_eob = true;
     u32 c = 0;
     for (; c < segment_eob; c++) {
@@ -1387,16 +1388,14 @@ DecoderErrorOr<bool> Parser::tokens(size_t plane, u32 start_x, u32 start_y, TXSi
             check_eob = false;
         } else {
             i32 coef = TRY(read_coef(token));
-            auto sign_bit = TRY_READ(m_bit_stream->read_literal(1));
+            bool sign_bit = TRY_READ(m_bit_stream->read_literal(1));
             m_tokens[pos] = sign_bit ? -coef : coef;
             check_eob = true;
         }
     }
-    auto non_zero = c > 0;
-    m_eob_total += non_zero;
     for (u32 i = c; i < segment_eob; i++)
         m_tokens[scan[i]] = 0;
-    return non_zero;
+    return c > 0;
 }
 
 u32 const* Parser::get_scan(size_t plane, TXSize tx_size, u32 block_index)

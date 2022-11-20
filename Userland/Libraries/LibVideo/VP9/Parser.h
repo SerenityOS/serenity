@@ -120,7 +120,7 @@ private:
     DecoderErrorOr<void> assign_mv(bool is_compound);
     DecoderErrorOr<void> read_mv(u8 ref);
     DecoderErrorOr<i32> read_mv_component(u8 component);
-    DecoderErrorOr<void> residual(u32 row, u32 column, bool has_block_above, bool has_block_left);
+    DecoderErrorOr<bool> residual(u32 row, u32 column, bool has_block_above, bool has_block_left);
     TXSize get_uv_tx_size();
     BlockSubsize get_plane_block_size(u32 subsize, u8 plane);
     DecoderErrorOr<bool> tokens(size_t plane, u32 x, u32 y, TXSize tx_size, u32 block_index);
@@ -242,7 +242,6 @@ private:
 
     Vector<u16> m_frame_store[NUM_REF_FRAMES][3];
 
-    u32 m_eob_total { 0 };
     u8 m_tx_type { 0 };
     u8 m_token_cache[1024];
     i32 m_tokens[1024];
