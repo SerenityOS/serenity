@@ -91,7 +91,7 @@ protected:
             if (head_chunk == m_current_chunk)
                 VERIFY(chunk_header.next_chunk == 0);
             auto next_chunk = chunk_header.next_chunk;
-            fn(head_chunk + sizeof(ChunkHeader));
+            fn(head_chunk);
             head_chunk = next_chunk;
         }
     }
@@ -179,10 +179,10 @@ public:
     void destroy_all()
     {
         this->for_each_chunk([&](auto chunk) {
-            auto base_ptr = align_up_to(chunk, alignof(T));
+            auto base_ptr = align_up_to(chunk + sizeof(typename Allocator::ChunkHeader), alignof(T));
             // Compute the offset of the first byte *after* this chunk:
             FlatPtr end_offset = base_ptr + this->m_chunk_size - chunk;
-            if (chunk == this->m_current_chunk + sizeof(typename Allocator::ChunkHeader))
+            if (chunk == this->m_current_chunk)
                 end_offset = this->m_byte_offset_into_current_chunk;
             // Compute the offset of the first byte *after* the last valid object, in case the end of the chunk does not align with the end of an object:
             end_offset = (end_offset / sizeof(T)) * sizeof(T);
