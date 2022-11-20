@@ -59,10 +59,20 @@ public:
 
     virtual void visit_edges(Cell::Visitor&) override;
 
+    // https://html.spec.whatwg.org/multipage/scripting.html#prepare-the-script-element
     void prepare_script();
-    void script_became_ready();
-    void when_the_script_is_ready(Function<void()>);
+
     void begin_delaying_document_load_event(DOM::Document&);
+
+    struct ResultState {
+        struct Uninitialized { };
+        struct Null { };
+    };
+
+    using Result = Variant<ResultState::Uninitialized, ResultState::Null, JS::NonnullGCPtr<HTML::Script>>;
+
+    // https://html.spec.whatwg.org/multipage/scripting.html#mark-as-ready
+    void mark_as_ready(Result);
 
     // https://html.spec.whatwg.org/multipage/scripting.html#parser-document
     JS::GCPtr<DOM::Document> m_parser_document;
@@ -87,18 +97,20 @@ public:
     bool m_failed_to_load { false };
 
     enum class ScriptType {
+        Null,
         Classic,
-        Module
+        Module,
+        ImportMap,
     };
 
     // https://html.spec.whatwg.org/multipage/scripting.html#concept-script-type
-    ScriptType m_script_type { ScriptType::Classic };
+    ScriptType m_script_type { ScriptType::Null };
 
     // https://html.spec.whatwg.org/multipage/scripting.html#steps-to-run-when-the-result-is-ready
-    Function<void()> m_script_ready_callback;
+    Function<void()> m_steps_to_run_when_the_result_is_ready;
 
     // https://html.spec.whatwg.org/multipage/scripting.html#concept-script-result
-    JS::GCPtr<Script> m_script;
+    Result m_result { ResultState::Uninitialized {} };
 
     // https://html.spec.whatwg.org/multipage/scripting.html#concept-script-delay-load
     Optional<DOM::DocumentLoadEventDelayer> m_document_load_event_delayer;
