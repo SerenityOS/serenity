@@ -364,6 +364,7 @@ String Parser::parse_hex_string()
             int hex_value = 0;
 
             for (int i = 0; i < 2; i++) {
+                m_reader.consume_whitespace();
                 auto ch = m_reader.consume();
                 if (ch == '>') {
                     // The hex string contains an odd number of characters, and the last character
@@ -373,7 +374,6 @@ String Parser::parse_hex_string()
                     builder.append(static_cast<char>(hex_value));
                     return builder.to_string();
                 }
-
                 VERIFY(isxdigit(ch));
 
                 hex_value *= 16;
