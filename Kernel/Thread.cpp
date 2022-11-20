@@ -1234,6 +1234,15 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
     auto signal_trampoline_addr = process.signal_trampoline().get();
     regs.set_ip(signal_trampoline_addr);
 
+    // Userspace flags might be invalid for function entry, according to SYSV ABI (section 3.2.1).
+    // Set them to a known-good value to avoid weird handler misbehavior.
+    // Only IF (and the reserved bit 1) are set.
+#if ARCH(I386)
+    regs.set_flags(2 | (regs.eflags & ~safe_eflags_mask));
+#elif ARCH(X86_64)
+    regs.set_flags(2 | (regs.rflags & ~safe_eflags_mask));
+#endif
+
     dbgln_if(SIGNAL_DEBUG, "Thread in state '{}' has been primed with signal handler {:#04x}:{:p} to deliver {}", state_string(), m_regs.cs, m_regs.ip(), signal);
 
     return DispatchSignalResult::Continue;
