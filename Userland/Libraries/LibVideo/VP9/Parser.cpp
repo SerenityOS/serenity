@@ -805,8 +805,7 @@ void Parser::setup_compound_reference_mode()
 
 DecoderErrorOr<void> Parser::allocate_tile_data()
 {
-    auto dimensions = m_mi_rows * m_mi_cols;
-    DECODER_TRY_ALLOC(m_frame_block_contexts.try_resize_and_keep_capacity(dimensions));
+    DECODER_TRY_ALLOC(m_frame_block_contexts.try_resize(m_mi_rows, m_mi_cols));
     return {};
 }
 
@@ -952,10 +951,8 @@ DecoderErrorOr<void> Parser::decode_block(u32 row, u32 col, BlockSubsize subsize
     auto maximum_block_x = min<u32>(num_8x8_blocks_wide_lookup[subsize], m_mi_cols - col);
 
     for (size_t y = 0; y < maximum_block_y; y++) {
-        for (size_t x = 0; x < maximum_block_x; x++) {
-            auto pos = get_image_index(row + y, col + x);
-            m_frame_block_contexts[pos] = FrameBlockContext { true, m_skip, m_tx_size, m_y_mode, m_block_sub_modes, m_interp_filter, m_ref_frame, m_block_mvs, m_segment_id };
-        }
+        for (size_t x = 0; x < maximum_block_x; x++)
+            m_frame_block_contexts.at(row + y, col + x) = FrameBlockContext { true, m_skip, m_tx_size, m_y_mode, m_block_sub_modes, m_interp_filter, m_ref_frame, m_block_mvs, m_segment_id };
     }
     return {};
 }
@@ -1019,14 +1016,14 @@ FrameBlockContext Parser::get_above_context() const
 {
     if (!m_available_u)
         return FrameBlockContext { .is_available = false };
-    return m_frame_block_contexts[get_image_index(m_mi_row - 1, m_mi_col)];
+    return m_frame_block_contexts.at(m_mi_row - 1, m_mi_col);
 }
 
 FrameBlockContext Parser::get_left_context() const
 {
     if (!m_available_l)
         return FrameBlockContext { .is_available = false };
-    return m_frame_block_contexts[get_image_index(m_mi_row, m_mi_col - 1)];
+    return m_frame_block_contexts.at(m_mi_row, m_mi_col - 1);
 }
 
 DecoderErrorOr<void> Parser::read_skip()
@@ -1506,7 +1503,7 @@ void Parser::get_block_mv(u32 candidate_row, u32 candidate_column, u8 ref_list, 
         m_candidate_mv[ref_list] = m_prev_mvs[index][ref_list];
         m_candidate_frame[ref_list] = m_prev_ref_frames[index][ref_list];
     } else {
-        auto current_context = m_frame_block_contexts[index];
+        auto const& current_context = m_frame_block_contexts.at(candidate_row, candidate_column);
         m_candidate_mv[ref_list] = current_context.primary_motion_vector_pair()[ref_list];
         m_candidate_frame[ref_list] = current_context.ref_frames[ref_list];
     }
@@ -1585,9 +1582,8 @@ void Parser::find_mv_refs(ReferenceFrameType reference_frame, i32 block)
         auto candidate = base_coordinates + offset_vector;
 
         if (is_inside(candidate.row(), candidate.column())) {
-            auto candidate_index = get_image_index(candidate.row(), candidate.column());
             different_ref_found = true;
-            auto context = m_frame_block_contexts[candidate_index];
+            auto context = m_frame_block_contexts.at(candidate.row(), candidate.column());
             context_counter += mode_2_counter[to_underlying(context.y_mode)];
 
             for (auto ref_list = 0u; ref_list < 2; ref_list++) {

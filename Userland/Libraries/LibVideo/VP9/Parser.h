@@ -267,7 +267,7 @@ private:
     //        arrays instead.
     //        I think should also apply to other fields that are only accessed relative to the current block. Worth looking
     //        into how much of this context needs to be stored for the whole frame vs a row or column from the current tile.
-    Vector<FrameBlockContext> m_frame_block_contexts;
+    Vector2D<FrameBlockContext> m_frame_block_contexts;
 
     MotionVectorPair m_candidate_mv;
     ReferenceFramePair m_candidate_frame;

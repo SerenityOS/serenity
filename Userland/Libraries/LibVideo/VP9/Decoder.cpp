@@ -1817,13 +1817,16 @@ DecoderErrorOr<void> Decoder::update_reference_frames()
         // for col = 0..MiCols-1, for list = 0..1.
         // − PrevMvs[ row ][ col ][ list ][ comp ] is set equal to Mvs[ row ][ col ][ list ][ comp ] for row = 0..MiRows-1,
         // for col = 0..MiCols-1, for list = 0..1, for comp = 0..1.
-        size_t size = m_parser->m_frame_block_contexts.size();
+        size_t size = m_parser->m_frame_block_contexts.width() * m_parser->m_frame_block_contexts.height();
         m_parser->m_prev_ref_frames.resize_and_keep_capacity(size);
         m_parser->m_prev_mvs.resize_and_keep_capacity(size);
-        for (size_t i = 0; i < size; i++) {
-            auto context = m_parser->m_frame_block_contexts[i];
-            m_parser->m_prev_ref_frames[i] = context.ref_frames;
-            m_parser->m_prev_mvs[i] = context.primary_motion_vector_pair();
+        for (u32 row = 0; row < m_parser->m_frame_block_contexts.height(); row++) {
+            for (u32 column = 0; column < m_parser->m_frame_block_contexts.width(); column++) {
+                auto index = m_parser->m_frame_block_contexts.index_at(row, column);
+                auto context = m_parser->m_frame_block_contexts[index];
+                m_parser->m_prev_ref_frames[index] = context.ref_frames;
+                m_parser->m_prev_mvs[index] = context.primary_motion_vector_pair();
+            }
         }
     }
 
