@@ -394,10 +394,9 @@ void HTMLScriptElement::prepare_script()
     }
 
     // 32. If el's type is "classic" and el has a src attribute, or el's type is "module":
-    if ((m_script_type == ScriptType::Classic && has_attribute(HTML::AttributeNames::src))
-        || m_script_type == ScriptType::Module) {
+    if ((m_script_type == ScriptType::Classic && has_attribute(HTML::AttributeNames::src)) || m_script_type == ScriptType::Module) {
         // 1. Assert: el's result is "uninitialized".
-        VERIFY(m_result.has<ResultState::Uninitialized>());
+        // FIXME: I believe this step to be a spec bug, and it should be removed: https://github.com/whatwg/html/issues/8534
 
         // 2. If el has an async attribute or el's force async is true:
         if (has_attribute(HTML::AttributeNames::async) || m_force_async) {
