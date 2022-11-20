@@ -21,7 +21,7 @@ class HTMLScriptElement final
 public:
     virtual ~HTMLScriptElement() override;
 
-    bool is_non_blocking() const { return m_non_blocking; }
+    bool is_force_async() const { return m_force_async; }
     bool is_ready_to_be_parser_executed() const { return m_ready_to_be_parser_executed; }
     bool failed_to_load() const { return m_failed_to_load; }
 
@@ -29,7 +29,7 @@ public:
     void set_parser_document(Badge<T>, DOM::Document& document) { m_parser_document = &document; }
 
     template<OneOf<XMLDocumentBuilder, HTMLParser> T>
-    void set_non_blocking(Badge<T>, bool b) { m_non_blocking = b; }
+    void set_force_async(Badge<T>, bool b) { m_force_async = b; }
 
     template<OneOf<XMLDocumentBuilder, HTMLParser> T>
     void set_already_started(Badge<T>, bool b) { m_already_started = b; }
@@ -71,7 +71,7 @@ public:
     JS::GCPtr<DOM::Document> m_preparation_time_document;
 
     // https://html.spec.whatwg.org/multipage/scripting.html#script-force-async
-    bool m_non_blocking { false };
+    bool m_force_async { false };
 
     // https://html.spec.whatwg.org/multipage/scripting.html#already-started
     bool m_already_started { false };

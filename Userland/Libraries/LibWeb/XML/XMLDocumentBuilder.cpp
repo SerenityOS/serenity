@@ -66,12 +66,12 @@ void XMLDocumentBuilder::element_start(const XML::Name& name, HashMap<XML::Name,
 
     auto node = DOM::create_element(m_document, name, {});
     // When an XML parser with XML scripting support enabled creates a script element,
-    // it must have its parser document set and its "non-blocking" flag must be unset.
+    // it must have its parser document set and its "force async" flag must be unset.
     // FIXME: If the parser was created as part of the XML fragment parsing algorithm, then the element must be marked as "already started" also.
     if (m_scripting_support == XMLScriptingSupport::Enabled && HTML::TagNames::script == name) {
         auto& script_element = static_cast<HTML::HTMLScriptElement&>(*node);
         script_element.set_parser_document(Badge<XMLDocumentBuilder> {}, m_document);
-        script_element.set_non_blocking(Badge<XMLDocumentBuilder> {}, false);
+        script_element.set_force_async(Badge<XMLDocumentBuilder> {}, false);
     }
     if (HTML::TagNames::template_ == m_current_node->node_name()) {
         // When an XML parser would append a node to a template element, it must instead append it to the template element's template contents (a DocumentFragment node).

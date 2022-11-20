@@ -806,7 +806,7 @@ void HTMLParser::handle_in_head(HTMLToken& token)
         auto element = create_element_for(token, Namespace::HTML, *adjusted_insertion_location.parent);
         auto& script_element = verify_cast<HTMLScriptElement>(*element);
         script_element.set_parser_document(Badge<HTMLParser> {}, document());
-        script_element.set_non_blocking(Badge<HTMLParser> {}, false);
+        script_element.set_force_async(Badge<HTMLParser> {}, false);
         script_element.set_source_line_number({}, token.start_position().line + 1); // FIXME: This +1 is incorrect for script tags whose script does not start on a new line
 
         if (m_parsing_fragment) {
