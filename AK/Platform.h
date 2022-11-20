@@ -19,6 +19,10 @@
 #    define AK_ARCH_AARCH64 1
 #endif
 
+#ifdef __wasm32__
+#    define AK_ARCH_WASM32 1
+#endif
+
 #if (defined(__SIZEOF_POINTER__) && __SIZEOF_POINTER__ == 8) || defined(_WIN64)
 #    define AK_ARCH_64_BIT
 #else
@@ -82,6 +86,10 @@
 #    define AK_OS_ANDROID
 #endif
 // clang-format on
+
+#if defined(__EMSCRIPTEN__)
+#    define AK_OS_EMSCRIPTEN
+#endif
 
 #define ARCH(arch) (defined(AK_ARCH_##arch) && AK_ARCH_##arch)
 

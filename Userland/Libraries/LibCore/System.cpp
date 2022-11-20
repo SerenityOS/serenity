@@ -20,7 +20,6 @@
 #include <stdlib.h>
 #include <sys/ioctl.h>
 #include <sys/mman.h>
-#include <sys/ptrace.h>
 #include <sys/time.h>
 #include <termios.h>
 #include <unistd.h>
@@ -29,6 +28,7 @@
 #    include <LibCore/Account.h>
 #    include <LibSystem/syscall.h>
 #    include <serenity.h>
+#    include <sys/ptrace.h>
 #endif
 
 #if defined(AK_OS_LINUX) && !defined(MFD_CLOEXEC)
@@ -319,7 +319,7 @@ ErrorOr<int> anon_create([[maybe_unused]] size_t size, [[maybe_unused]] int opti
         TRY(close(fd));
         return Error::from_errno(saved_errno);
     }
-#elif defined(AK_OS_MACOS)
+#elif defined(AK_OS_MACOS) || defined(AK_OS_EMSCRIPTEN)
     struct timespec time;
     clock_gettime(CLOCK_REALTIME, &time);
     auto name = String::formatted("/shm-{}{}", (unsigned long)time.tv_sec, (unsigned long)time.tv_nsec);
