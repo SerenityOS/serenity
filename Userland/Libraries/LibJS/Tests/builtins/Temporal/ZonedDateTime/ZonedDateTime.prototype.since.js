@@ -9,8 +9,8 @@ describe("correct behavior", () => {
             [2345679011n, 123456789n, "PT2.222222222S"],
             [123456789n, 0n, "PT0.123456789S"],
             [0n, 123456789n, "-PT0.123456789S"],
-            [123456789123456789n, 0n, "PT34293H33M9.123456789S"],
-            [0n, 123456789123456789n, "-PT34293H33M9.123456789S"],
+            [123456789123456789n, 0n, "PT34293H33M9.123456784S"],
+            [0n, 123456789123456789n, "-PT34293H33M9.123456784S"],
         ];
         const utc = new Temporal.TimeZone("UTC");
         for (const [arg, argOther, expected] of values) {
@@ -34,7 +34,7 @@ describe("correct behavior", () => {
             ["second", "PT9556H5M6S"],
             ["millisecond", "PT9556H5M6.007S"],
             ["microsecond", "PT9556H5M6.007008S"],
-            ["nanosecond", "PT9556H5M6.007008009S"],
+            ["nanosecond", "PT9556H5M6.007008008S"],
         ];
         for (const [smallestUnit, expected] of values) {
             expect(zonedDateTime.since(other, { smallestUnit }).toString()).toBe(expected);
@@ -50,11 +50,11 @@ describe("correct behavior", () => {
             ["month", "P13M2DT4H5M6.007008009S"],
             ["week", "P56W6DT4H5M6.007008009S"],
             ["day", "P398DT4H5M6.007008009S"],
-            ["hour", "PT9556H5M6.007008009S"],
-            ["minute", "PT573365M6.007008009S"],
-            ["second", "PT34401906.007008009S"],
-            ["millisecond", "PT34401906.007008009S"],
-            ["microsecond", "PT34401906.007008009S"],
+            ["hour", "PT9556H5M6.007008008S"],
+            ["minute", "PT573365M6.007008008S"],
+            ["second", "PT34401906.007008008S"],
+            ["millisecond", "PT34401906.007008008S"],
+            ["microsecond", "PT34401906.007008008S"],
             ["nanosecond", "PT34401906.007008008S"],
         ];
         for (const [largestUnit, expected] of values) {
