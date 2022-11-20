@@ -474,6 +474,15 @@ if (BUILD_LAGOM)
 
         add_executable(js ../../Userland/Utilities/js.cpp)
         target_link_libraries(js LibCrypto LibJS LibLine LibLocale LibMain LibTextCodec Threads::Threads)
+        if (EMSCRIPTEN)
+            add_executable(libjs Wasm/js_repl.cpp)
+            target_link_libraries(libjs LibJS)
+            target_link_options(libjs PRIVATE
+                    -sEXPORTED_FUNCTIONS=_initialize_repl,_execute
+                    -sEXPORTED_RUNTIME_METHODS=allocateUTF8
+                    -sERROR_ON_UNDEFINED_SYMBOLS=0
+                    -sENVIRONMENT=web)
+        endif()
 
         add_executable(markdown-check ../../Userland/Utilities/markdown-check.cpp)
         target_link_libraries(markdown-check LibMarkdown LibMain)
