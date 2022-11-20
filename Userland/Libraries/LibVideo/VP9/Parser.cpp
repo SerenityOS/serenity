@@ -929,16 +929,14 @@ size_t Parser::get_image_index(u32 row, u32 column) const
     return row * m_mi_cols + column;
 }
 
-DecoderErrorOr<void> Parser::decode_block(u32 row, u32 col, BlockSubsize subsize)
+DecoderErrorOr<void> Parser::decode_block(u32 row, u32 column, BlockSubsize subsize)
 {
-    m_mi_row = row;
-    m_mi_col = col;
     m_mi_size = subsize;
-    m_available_u = row > 0;
-    m_available_l = col > m_mi_col_start;
-    TRY(mode_info());
+    auto above_context = row > 0 ? m_frame_block_contexts.at(row - 1, column) : FrameBlockContext();
+    auto left_context = column > m_mi_col_start ? m_frame_block_contexts.at(row, column - 1) : FrameBlockContext();
+    TRY(mode_info(row, column, above_context, left_context));
     m_eob_total = 0;
-    TRY(residual());
+    TRY(residual(row, column, above_context.is_available, left_context.is_available));
     if (m_is_inter && subsize >= Block_8x8 && m_eob_total == 0)
         m_skip = true;
 
@@ -947,36 +945,34 @@ DecoderErrorOr<void> Parser::decode_block(u32 row, u32 col, BlockSubsize subsize
     // See here:
     // https://github.com/webmproject/libvpx/blob/705bf9de8c96cfe5301451f1d7e5c90a41c64e5f/vp9/decoder/vp9_decodeframe.c#L917
     auto maximum_block_y = min<u32>(num_8x8_blocks_high_lookup[subsize], m_mi_rows - row);
-    auto maximum_block_x = min<u32>(num_8x8_blocks_wide_lookup[subsize], m_mi_cols - col);
+    auto maximum_block_x = min<u32>(num_8x8_blocks_wide_lookup[subsize], m_mi_cols - column);
 
     for (size_t y = 0; y < maximum_block_y; y++) {
         for (size_t x = 0; x < maximum_block_x; x++)
-            m_frame_block_contexts.at(row + y, col + x) = FrameBlockContext { true, m_skip, m_tx_size, m_y_mode, m_block_sub_modes, m_interp_filter, m_ref_frame, m_block_mvs, m_segment_id };
+            m_frame_block_contexts.at(row + y, column + x) = FrameBlockContext { true, m_skip, m_tx_size, m_y_mode, m_block_sub_modes, m_interp_filter, m_ref_frame, m_block_mvs, m_segment_id };
     }
     return {};
 }
 
-DecoderErrorOr<void> Parser::mode_info()
+DecoderErrorOr<void> Parser::mode_info(u32 row, u32 column, FrameBlockContext above_context, FrameBlockContext left_context)
 {
     if (m_frame_is_intra)
-        TRY(intra_frame_mode_info());
+        TRY(intra_frame_mode_info(above_context, left_context));
     else
-        TRY(inter_frame_mode_info());
+        TRY(inter_frame_mode_info(row, column, above_context, left_context));
     return {};
 }
 
-DecoderErrorOr<void> Parser::intra_frame_mode_info()
+DecoderErrorOr<void> Parser::intra_frame_mode_info(FrameBlockContext above_context, FrameBlockContext left_context)
 {
     TRY(intra_segment_id());
-    TRY(read_skip());
-    TRY(read_tx_size(true));
+    TRY(read_skip(above_context, left_context));
+    TRY(read_tx_size(above_context, left_context, true));
     m_ref_frame[0] = IntraFrame;
     m_ref_frame[1] = None;
     m_is_inter = false;
     // FIXME: This if statement is also present in parse_default_intra_mode. The selection of parameters for
     //        the probability table lookup should be inlined here.
-    auto above_context = get_above_context();
-    auto left_context = get_left_context();
     if (m_mi_size >= Block_8x8) {
         m_y_mode = TRY_READ(TreeParser::parse_default_intra_mode(*m_bit_stream, *m_probability_tables, m_mi_size, above_context, left_context, m_block_sub_modes, 0, 0));
         for (auto& block_sub_mode : m_block_sub_modes)
@@ -1011,26 +1007,12 @@ DecoderErrorOr<void> Parser::intra_segment_id()
     return {};
 }
 
-FrameBlockContext Parser::get_above_context() const
-{
-    if (!m_available_u)
-        return FrameBlockContext { .is_available = false };
-    return m_frame_block_contexts.at(m_mi_row - 1, m_mi_col);
-}
-
-FrameBlockContext Parser::get_left_context() const
-{
-    if (!m_available_l)
-        return FrameBlockContext { .is_available = false };
-    return m_frame_block_contexts.at(m_mi_row, m_mi_col - 1);
-}
-
-DecoderErrorOr<void> Parser::read_skip()
+DecoderErrorOr<void> Parser::read_skip(FrameBlockContext above_context, FrameBlockContext left_context)
 {
     if (seg_feature_active(SEG_LVL_SKIP)) {
         m_skip = true;
     } else {
-        m_skip = TRY_READ(TreeParser::parse_skip(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter, get_above_context(), get_left_context()));
+        m_skip = TRY_READ(TreeParser::parse_skip(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter, above_context, left_context));
     }
     return {};
 }
@@ -1040,37 +1022,37 @@ bool Parser::seg_feature_active(u8 feature)
     return m_segmentation_enabled && m_feature_enabled[m_segment_id][feature];
 }
 
-DecoderErrorOr<void> Parser::read_tx_size(bool allow_select)
+DecoderErrorOr<void> Parser::read_tx_size(FrameBlockContext above_context, FrameBlockContext left_context, bool allow_select)
 {
     m_max_tx_size = max_txsize_lookup[m_mi_size];
     if (allow_select && m_tx_mode == TXModeSelect && m_mi_size >= Block_8x8)
-        m_tx_size = TRY_READ(TreeParser::parse_tx_size(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter, m_max_tx_size, get_above_context(), get_left_context()));
+        m_tx_size = TRY_READ(TreeParser::parse_tx_size(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter, m_max_tx_size, above_context, left_context));
     else
         m_tx_size = min(m_max_tx_size, tx_mode_to_biggest_tx_size[m_tx_mode]);
     return {};
 }
 
-DecoderErrorOr<void> Parser::inter_frame_mode_info()
+DecoderErrorOr<void> Parser::inter_frame_mode_info(u32 row, u32 column, FrameBlockContext above_context, FrameBlockContext left_context)
 {
-    TRY(inter_segment_id());
-    TRY(read_skip());
-    TRY(read_is_inter());
-    TRY(read_tx_size(!m_skip || !m_is_inter));
+    TRY(inter_segment_id(row, column));
+    TRY(read_skip(above_context, left_context));
+    TRY(read_is_inter(above_context, left_context));
+    TRY(read_tx_size(above_context, left_context, !m_skip || !m_is_inter));
     if (m_is_inter) {
-        TRY(inter_block_mode_info());
+        TRY(inter_block_mode_info(row, column, above_context, left_context));
     } else {
         TRY(intra_block_mode_info());
     }
     return {};
 }
 
-DecoderErrorOr<void> Parser::inter_segment_id()
+DecoderErrorOr<void> Parser::inter_segment_id(u32 row, u32 column)
 {
     if (!m_segmentation_enabled) {
         m_segment_id = 0;
         return {};
     }
-    auto predicted_segment_id = get_segment_id();
+    auto predicted_segment_id = get_segment_id(row, column);
     if (!m_segmentation_update_map) {
         m_segment_id = predicted_segment_id;
         return {};
@@ -1080,48 +1062,48 @@ DecoderErrorOr<void> Parser::inter_segment_id()
         return {};
     }
 
-    auto seg_id_predicted = TRY_READ(TreeParser::parse_segment_id_predicted(*m_bit_stream, m_segmentation_pred_prob, m_left_seg_pred_context[m_mi_row], m_above_seg_pred_context[m_mi_col]));
+    auto seg_id_predicted = TRY_READ(TreeParser::parse_segment_id_predicted(*m_bit_stream, m_segmentation_pred_prob, m_left_seg_pred_context[row], m_above_seg_pred_context[column]));
     if (seg_id_predicted)
         m_segment_id = predicted_segment_id;
     else
         m_segment_id = TRY_READ(TreeParser::parse_segment_id(*m_bit_stream, m_segmentation_tree_probs));
 
     for (size_t i = 0; i < num_8x8_blocks_wide_lookup[m_mi_size]; i++) {
-        auto index = m_mi_col + i;
+        auto index = column + i;
         // (7.4.1) AboveSegPredContext[ i ] only needs to be set to 0 for i = 0..MiCols-1.
         if (index < m_above_seg_pred_context.size())
             m_above_seg_pred_context[index] = seg_id_predicted;
     }
     for (size_t i = 0; i < num_8x8_blocks_high_lookup[m_mi_size]; i++) {
-        auto index = m_mi_row + i;
+        auto index = row + i;
         // (7.4.1) LeftSegPredContext[ i ] only needs to be set to 0 for i = 0..MiRows-1.
         if (index < m_above_seg_pred_context.size())
-            m_left_seg_pred_context[m_mi_row + i] = seg_id_predicted;
+            m_left_seg_pred_context[row + i] = seg_id_predicted;
     }
     return {};
 }
 
-u8 Parser::get_segment_id()
+u8 Parser::get_segment_id(u32 row, u32 column)
 {
     auto bw = num_8x8_blocks_wide_lookup[m_mi_size];
     auto bh = num_8x8_blocks_high_lookup[m_mi_size];
-    auto xmis = min(m_mi_cols - m_mi_col, (u32)bw);
-    auto ymis = min(m_mi_rows - m_mi_row, (u32)bh);
+    auto xmis = min(m_mi_cols - column, (u32)bw);
+    auto ymis = min(m_mi_rows - row, (u32)bh);
     u8 segment = 7;
     for (size_t y = 0; y < ymis; y++) {
         for (size_t x = 0; x < xmis; x++) {
-            segment = min(segment, m_previous_block_contexts.index_at(m_mi_row + y, m_mi_col + x));
+            segment = min(segment, m_previous_block_contexts.index_at(row + y, column + x));
         }
     }
     return segment;
 }
 
-DecoderErrorOr<void> Parser::read_is_inter()
+DecoderErrorOr<void> Parser::read_is_inter(FrameBlockContext above_context, FrameBlockContext left_context)
 {
     if (seg_feature_active(SEG_LVL_REF_FRAME))
         m_is_inter = m_feature_data[m_segment_id][SEG_LVL_REF_FRAME] != IntraFrame;
     else
-        m_is_inter = TRY_READ(TreeParser::parse_block_is_inter_predicted(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter, get_above_context(), get_left_context()));
+        m_is_inter = TRY_READ(TreeParser::parse_block_is_inter_predicted(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter, above_context, left_context));
     return {};
 }
 
@@ -1152,13 +1134,13 @@ DecoderErrorOr<void> Parser::intra_block_mode_info()
     return {};
 }
 
-DecoderErrorOr<void> Parser::inter_block_mode_info()
+DecoderErrorOr<void> Parser::inter_block_mode_info(u32 row, u32 column, FrameBlockContext above_context, FrameBlockContext left_context)
 {
-    TRY(read_ref_frames());
+    TRY(read_ref_frames(above_context, left_context));
     for (auto j = 0; j < 2; j++) {
         if (m_ref_frame[j] > IntraFrame) {
-            find_mv_refs(m_ref_frame[j], -1);
-            find_best_ref_mvs(j);
+            find_mv_refs(row, column, m_ref_frame[j], -1);
+            find_best_ref_mvs(row, column, j);
         }
     }
     auto is_compound = m_ref_frame[1] > IntraFrame;
@@ -1168,7 +1150,7 @@ DecoderErrorOr<void> Parser::inter_block_mode_info()
         m_y_mode = TRY_READ(TreeParser::parse_inter_mode(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter, m_mode_context[m_ref_frame[0]]));
     }
     if (m_interpolation_filter == Switchable)
-        m_interp_filter = TRY_READ(TreeParser::parse_interpolation_filter(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter, get_above_context(), get_left_context()));
+        m_interp_filter = TRY_READ(TreeParser::parse_interpolation_filter(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter, above_context, left_context));
     else
         m_interp_filter = m_interpolation_filter;
     if (m_mi_size < Block_8x8) {
@@ -1179,7 +1161,7 @@ DecoderErrorOr<void> Parser::inter_block_mode_info()
                 m_y_mode = TRY_READ(TreeParser::parse_inter_mode(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter, m_mode_context[m_ref_frame[0]]));
                 if (m_y_mode == PredictionMode::NearestMv || m_y_mode == PredictionMode::NearMv) {
                     for (auto j = 0; j < 1 + is_compound; j++)
-                        append_sub8x8_mvs(idy * 2 + idx, j);
+                        append_sub8x8_mvs(row, column, idy * 2 + idx, j);
                 }
                 TRY(assign_mv(is_compound));
                 for (auto y = 0; y < m_num_4x4_h; y++) {
@@ -1203,7 +1185,7 @@ DecoderErrorOr<void> Parser::inter_block_mode_info()
     return {};
 }
 
-DecoderErrorOr<void> Parser::read_ref_frames()
+DecoderErrorOr<void> Parser::read_ref_frames(FrameBlockContext above_context, FrameBlockContext left_context)
 {
     if (seg_feature_active(SEG_LVL_REF_FRAME)) {
         m_ref_frame[0] = static_cast<ReferenceFrameType>(m_feature_data[m_segment_id][SEG_LVL_REF_FRAME]);
@@ -1211,8 +1193,6 @@ DecoderErrorOr<void> Parser::read_ref_frames()
         return {};
     }
     ReferenceMode comp_mode;
-    auto above_context = get_above_context();
-    auto left_context = get_left_context();
     if (m_reference_mode == ReferenceModeSelect)
         comp_mode = TRY_READ(TreeParser::parse_comp_mode(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter, m_comp_fixed_ref, above_context, left_context));
     else
@@ -1311,7 +1291,7 @@ Gfx::Size<size_t> Parser::get_decoded_size_for_plane(u8 plane)
     return { point.x(), point.y() };
 }
 
-DecoderErrorOr<void> Parser::residual()
+DecoderErrorOr<void> Parser::residual(u32 row, u32 column, bool has_block_above, bool has_block_left)
 {
     auto block_size = m_mi_size < Block_8x8 ? Block_8x8 : static_cast<BlockSubsize>(m_mi_size);
     for (u8 plane = 0; plane < 3; plane++) {
@@ -1322,17 +1302,17 @@ DecoderErrorOr<void> Parser::residual()
         auto num_4x4_h = num_4x4_blocks_high_lookup[plane_size];
         auto sub_x = (plane > 0) ? m_subsampling_x : 0;
         auto sub_y = (plane > 0) ? m_subsampling_y : 0;
-        auto base_x = (m_mi_col * 8) >> sub_x;
-        auto base_y = (m_mi_row * 8) >> sub_y;
+        auto base_x = (column * 8) >> sub_x;
+        auto base_y = (row * 8) >> sub_y;
         if (m_is_inter) {
             if (m_mi_size < Block_8x8) {
                 for (auto y = 0; y < num_4x4_h; y++) {
                     for (auto x = 0; x < num_4x4_w; x++) {
-                        TRY(m_decoder.predict_inter(plane, base_x + (4 * x), base_y + (4 * y), 4, 4, (y * num_4x4_w) + x));
+                        TRY(m_decoder.predict_inter(plane, row, column, base_x + (4 * x), base_y + (4 * y), 4, 4, (y * num_4x4_w) + x));
                     }
                 }
             } else {
-                TRY(m_decoder.predict_inter(plane, base_x, base_y, num_4x4_w * 4, num_4x4_h * 4, 0));
+                TRY(m_decoder.predict_inter(plane, row, column, base_x, base_y, num_4x4_w * 4, num_4x4_h * 4, 0));
             }
         }
         auto max_x = (m_mi_cols * 8) >> sub_x;
@@ -1345,7 +1325,7 @@ DecoderErrorOr<void> Parser::residual()
                 auto non_zero = false;
                 if (start_x < max_x && start_y < max_y) {
                     if (!m_is_inter)
-                        TRY(m_decoder.predict_intra(plane, start_x, start_y, m_available_l || x > 0, m_available_u || y > 0, (x + step) < num_4x4_w, tx_size, block_index));
+                        TRY(m_decoder.predict_intra(plane, start_x, start_y, has_block_left || x > 0, has_block_above || y > 0, (x + step) < num_4x4_w, tx_size, block_index));
                     if (!m_skip) {
                         non_zero = TRY(tokens(plane, start_x, start_y, tx_size, block_index));
                         TRY(m_decoder.reconstruct(plane, start_x, start_y, tx_size));
@@ -1541,16 +1521,16 @@ void Parser::if_diff_ref_frame_add_mv(u32 candidate_row, u32 candidate_column, R
     }
 }
 
-MotionVector Parser::clamp_mv(MotionVector vector, i32 border)
+MotionVector Parser::clamp_mv(u32 row, u32 column, MotionVector vector, i32 border)
 {
     i32 blocks_high = num_8x8_blocks_high_lookup[m_mi_size];
     // Casts must be done here to prevent subtraction underflow from wrapping the values.
-    i32 mb_to_top_edge = -8 * (static_cast<i32>(m_mi_row) * MI_SIZE);
-    i32 mb_to_bottom_edge = 8 * ((static_cast<i32>(m_mi_rows) - blocks_high - static_cast<i32>(m_mi_row)) * MI_SIZE);
+    i32 mb_to_top_edge = -8 * (static_cast<i32>(row) * MI_SIZE);
+    i32 mb_to_bottom_edge = 8 * ((static_cast<i32>(m_mi_rows) - blocks_high - static_cast<i32>(row)) * MI_SIZE);
 
     i32 blocks_wide = num_8x8_blocks_wide_lookup[m_mi_size];
-    i32 mb_to_left_edge = -8 * (static_cast<i32>(m_mi_col) * MI_SIZE);
-    i32 mb_to_right_edge = 8 * ((static_cast<i32>(m_mi_cols) - blocks_wide - static_cast<i32>(m_mi_col)) * MI_SIZE);
+    i32 mb_to_left_edge = -8 * (static_cast<i32>(column) * MI_SIZE);
+    i32 mb_to_right_edge = 8 * ((static_cast<i32>(m_mi_cols) - blocks_wide - static_cast<i32>(column)) * MI_SIZE);
 
     return {
         clip_3(mb_to_top_edge - border, mb_to_bottom_edge + border, vector.row()),
@@ -1558,14 +1538,14 @@ MotionVector Parser::clamp_mv(MotionVector vector, i32 border)
     };
 }
 
-void Parser::clamp_mv_ref(u8 i)
+void Parser::clamp_mv_ref(u32 row, u32 column, u8 i)
 {
     MotionVector& vector = m_ref_list_mv[i];
-    vector = clamp_mv(vector, MV_BORDER);
+    vector = clamp_mv(row, column, vector, MV_BORDER);
 }
 
 // 6.5.1 Find MV refs syntax
-void Parser::find_mv_refs(ReferenceFrameType reference_frame, i32 block)
+void Parser::find_mv_refs(u32 row, u32 column, ReferenceFrameType reference_frame, i32 block)
 {
     m_ref_mv_count = 0;
     bool different_ref_found = false;
@@ -1574,7 +1554,7 @@ void Parser::find_mv_refs(ReferenceFrameType reference_frame, i32 block)
     m_ref_list_mv[0] = {};
     m_ref_list_mv[1] = {};
 
-    MotionVector base_coordinates = MotionVector(m_mi_row, m_mi_col);
+    MotionVector base_coordinates = MotionVector(row, column);
 
     for (auto i = 0u; i < 2; i++) {
         auto offset_vector = mv_ref_blocks[m_mi_size][i];
@@ -1612,7 +1592,7 @@ void Parser::find_mv_refs(ReferenceFrameType reference_frame, i32 block)
         }
     }
     if (m_use_prev_frame_mvs)
-        if_same_ref_frame_add_mv(m_mi_row, m_mi_col, reference_frame, true);
+        if_same_ref_frame_add_mv(row, column, reference_frame, true);
 
     if (different_ref_found) {
         for (auto i = 0u; i < MVREF_NEIGHBOURS; i++) {
@@ -1622,11 +1602,11 @@ void Parser::find_mv_refs(ReferenceFrameType reference_frame, i32 block)
         }
     }
     if (m_use_prev_frame_mvs)
-        if_diff_ref_frame_add_mv(m_mi_row, m_mi_col, reference_frame, true);
+        if_diff_ref_frame_add_mv(row, column, reference_frame, true);
 
     m_mode_context[reference_frame] = counter_to_context[context_counter];
     for (auto i = 0u; i < MAX_MV_REF_CANDIDATES; i++)
-        clamp_mv_ref(i);
+        clamp_mv_ref(row, column, i);
 }
 
 bool Parser::use_mv_hp(MotionVector const& vector)
@@ -1634,7 +1614,7 @@ bool Parser::use_mv_hp(MotionVector const& vector)
     return (abs(vector.row()) >> 3) < COMPANDED_MVREF_THRESH && (abs(vector.column()) >> 3) < COMPANDED_MVREF_THRESH;
 }
 
-void Parser::find_best_ref_mvs(u8 ref_list)
+void Parser::find_best_ref_mvs(u32 row, u32 column, u8 ref_list)
 {
     for (auto i = 0u; i < MAX_MV_REF_CANDIDATES; i++) {
         auto delta = m_ref_list_mv[i];
@@ -1647,7 +1627,7 @@ void Parser::find_best_ref_mvs(u8 ref_list)
                 delta_column += delta_column > 0 ? -1 : 1;
         }
         delta = { delta_row, delta_column };
-        m_ref_list_mv[i] = clamp_mv(delta, (BORDERINPIXELS - INTERP_EXTEND) << 3);
+        m_ref_list_mv[i] = clamp_mv(row, column, delta, (BORDERINPIXELS - INTERP_EXTEND) << 3);
     }
 
     m_nearest_mv[ref_list] = m_ref_list_mv[0];
@@ -1655,10 +1635,10 @@ void Parser::find_best_ref_mvs(u8 ref_list)
     m_best_mv[ref_list] = m_ref_list_mv[0];
 }
 
-void Parser::append_sub8x8_mvs(i32 block, u8 ref_list)
+void Parser::append_sub8x8_mvs(u32 row, u32 column, i32 block, u8 ref_list)
 {
     MotionVector sub_8x8_mvs[2];
-    find_mv_refs(m_ref_frame[ref_list], block);
+    find_mv_refs(row, column, m_ref_frame[ref_list], block);
     auto destination_index = 0;
     if (block == 0) {
         for (auto i = 0u; i < 2; i++)

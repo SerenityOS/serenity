@@ -84,8 +84,6 @@ private:
     u8 inv_remap_prob(u8 delta_prob, u8 prob);
     u8 inv_recenter_nonneg(u8 v, u8 m);
     DecoderErrorOr<void> read_coef_probs();
-    FrameBlockContext get_above_context() const;
-    FrameBlockContext get_left_context() const;
     DecoderErrorOr<void> read_skip_prob();
     DecoderErrorOr<void> read_inter_mode_probs();
     DecoderErrorOr<void> read_interp_filter_probs();
@@ -105,24 +103,24 @@ private:
     DecoderErrorOr<void> decode_tile();
     void clear_left_context();
     DecoderErrorOr<void> decode_partition(u32 row, u32 column, BlockSubsize subsize);
-    DecoderErrorOr<void> decode_block(u32 row, u32 col, BlockSubsize subsize);
-    DecoderErrorOr<void> mode_info();
-    DecoderErrorOr<void> intra_frame_mode_info();
+    DecoderErrorOr<void> decode_block(u32 row, u32 column, BlockSubsize subsize);
+    DecoderErrorOr<void> mode_info(u32 row, u32 column, FrameBlockContext above_context, FrameBlockContext left_context);
+    DecoderErrorOr<void> intra_frame_mode_info(FrameBlockContext above_context, FrameBlockContext left_context);
     DecoderErrorOr<void> intra_segment_id();
-    DecoderErrorOr<void> read_skip();
+    DecoderErrorOr<void> read_skip(FrameBlockContext above_context, FrameBlockContext left_context);
     bool seg_feature_active(u8 feature);
-    DecoderErrorOr<void> read_tx_size(bool allow_select);
-    DecoderErrorOr<void> inter_frame_mode_info();
-    DecoderErrorOr<void> inter_segment_id();
-    u8 get_segment_id();
-    DecoderErrorOr<void> read_is_inter();
+    DecoderErrorOr<void> read_tx_size(FrameBlockContext above_context, FrameBlockContext left_context, bool allow_select);
+    DecoderErrorOr<void> inter_frame_mode_info(u32 row, u32 column, FrameBlockContext above_context, FrameBlockContext left_context);
+    DecoderErrorOr<void> inter_segment_id(u32 row, u32 column);
+    u8 get_segment_id(u32 row, u32 column);
+    DecoderErrorOr<void> read_is_inter(FrameBlockContext above_context, FrameBlockContext left_context);
     DecoderErrorOr<void> intra_block_mode_info();
-    DecoderErrorOr<void> inter_block_mode_info();
-    DecoderErrorOr<void> read_ref_frames();
+    DecoderErrorOr<void> inter_block_mode_info(u32 row, u32 column, FrameBlockContext above_context, FrameBlockContext left_context);
+    DecoderErrorOr<void> read_ref_frames(FrameBlockContext above_context, FrameBlockContext left_context);
     DecoderErrorOr<void> assign_mv(bool is_compound);
     DecoderErrorOr<void> read_mv(u8 ref);
     DecoderErrorOr<i32> read_mv_component(u8 component);
-    DecoderErrorOr<void> residual();
+    DecoderErrorOr<void> residual(u32 row, u32 column, bool has_block_above, bool has_block_left);
     TXSize get_uv_tx_size();
     BlockSubsize get_plane_block_size(u32 subsize, u8 plane);
     DecoderErrorOr<bool> tokens(size_t plane, u32 x, u32 y, TXSize tx_size, u32 block_index);
@@ -130,13 +128,13 @@ private:
     DecoderErrorOr<i32> read_coef(Token token);
 
     /* (6.5) Motion Vector Prediction */
-    void find_mv_refs(ReferenceFrameType, i32 block);
-    void find_best_ref_mvs(u8 ref_list);
+    void find_mv_refs(u32 row, u32 column, ReferenceFrameType, i32 block);
+    void find_best_ref_mvs(u32 row, u32 column, u8 ref_list);
     bool use_mv_hp(MotionVector const& delta_mv);
-    void append_sub8x8_mvs(i32 block, u8 ref_list);
+    void append_sub8x8_mvs(u32 row, u32 column, i32 block, u8 ref_list);
     bool is_inside(i32 row, i32 column);
-    void clamp_mv_ref(u8 i);
-    MotionVector clamp_mv(MotionVector mvec, i32 border);
+    void clamp_mv_ref(u32 row, u32 column, u8 i);
+    MotionVector clamp_mv(u32 row, u32 column, MotionVector mvec, i32 border);
     size_t get_image_index(u32 row, u32 column) const;
     void get_block_mv(u32 candidate_row, u32 candidate_column, u8 ref_list, bool use_prev);
     void if_same_ref_frame_add_mv(u32 candidate_row, u32 candidate_column, ReferenceFrameType ref_frame, bool use_prev);
@@ -212,11 +210,7 @@ private:
     u32 m_mi_row_end { 0 };
     u32 m_mi_col_start { 0 };
     u32 m_mi_col_end { 0 };
-    u32 m_mi_row { 0 };
-    u32 m_mi_col { 0 };
     BlockSubsize m_mi_size { 0 };
-    bool m_available_u { false };
-    bool m_available_l { false };
     u8 m_segment_id { 0 };
     // FIXME: Should this be an enum?
     // skip equal to 0 indicates that there may be some transform coefficients to read for this block; skip equal to 1

@@ -721,7 +721,7 @@ MotionVector Decoder::select_motion_vector(u8 plane, u8 ref_list, u32 block_inde
         + m_parser->m_block_mvs[ref_list][2] + m_parser->m_block_mvs[ref_list][3]);
 }
 
-MotionVector Decoder::clamp_motion_vector(u8 plane, MotionVector vector)
+MotionVector Decoder::clamp_motion_vector(u8 plane, u32 block_row, u32 block_column, MotionVector vector)
 {
     // FIXME: This function is named very similarly to Parser::clamp_mv. Rename one or the other?
 
@@ -736,12 +736,12 @@ MotionVector Decoder::clamp_motion_vector(u8 plane, MotionVector vector)
     // The output array clampedMv is specified by the following steps:
     i32 blocks_high = num_8x8_blocks_high_lookup[m_parser->m_mi_size];
     // Casts must be done here to prevent subtraction underflow from wrapping the values.
-    i32 mb_to_top_edge = -(static_cast<i32>(m_parser->m_mi_row * MI_SIZE) * 16) >> subsampling_y;
-    i32 mb_to_bottom_edge = (((static_cast<i32>(m_parser->m_mi_rows) - blocks_high - static_cast<i32>(m_parser->m_mi_row)) * MI_SIZE) * 16) >> subsampling_y;
+    i32 mb_to_top_edge = -(static_cast<i32>(block_row * MI_SIZE) * 16) >> subsampling_y;
+    i32 mb_to_bottom_edge = (((static_cast<i32>(m_parser->m_mi_rows) - blocks_high - static_cast<i32>(block_row)) * MI_SIZE) * 16) >> subsampling_y;
 
     i32 blocks_wide = num_8x8_blocks_wide_lookup[m_parser->m_mi_size];
-    i32 mb_to_left_edge = -(static_cast<i32>(m_parser->m_mi_col * MI_SIZE) * 16) >> subsampling_x;
-    i32 mb_to_right_edge = (((static_cast<i32>(m_parser->m_mi_cols) - blocks_wide - static_cast<i32>(m_parser->m_mi_col)) * MI_SIZE) * 16) >> subsampling_x;
+    i32 mb_to_left_edge = -(static_cast<i32>(block_column * MI_SIZE) * 16) >> subsampling_x;
+    i32 mb_to_right_edge = (((static_cast<i32>(m_parser->m_mi_cols) - blocks_wide - static_cast<i32>(block_column)) * MI_SIZE) * 16) >> subsampling_x;
 
     i32 subpel_left = (INTERP_EXTEND + ((blocks_wide * MI_SIZE) >> subsampling_x)) << SUBPEL_BITS;
     i32 subpel_right = subpel_left - SUBPEL_SHIFTS;
@@ -753,7 +753,7 @@ MotionVector Decoder::clamp_motion_vector(u8 plane, MotionVector vector)
     };
 }
 
-DecoderErrorOr<void> Decoder::predict_inter_block(u8 plane, u8 ref_list, u32 x, u32 y, u32 width, u32 height, u32 block_index, Span<u16> block_buffer)
+DecoderErrorOr<void> Decoder::predict_inter_block(u8 plane, u8 ref_list, u32 block_row, u32 block_column, u32 x, u32 y, u32 width, u32 height, u32 block_index, Span<u16> block_buffer)
 {
     VERIFY(width <= maximum_block_dimensions && height <= maximum_block_dimensions);
     // 2. The motion vector selection process in section 8.5.2.1 is invoked with plane, refList, blockIdx as inputs
@@ -762,7 +762,7 @@ DecoderErrorOr<void> Decoder::predict_inter_block(u8 plane, u8 ref_list, u32 x, 
 
     // 3. The motion vector clamping process in section 8.5.2.2 is invoked with plane, mv as inputs and the output
     // being the clamped motion vector clampedMv
-    auto clamped_vector = clamp_motion_vector(plane, motion_vector);
+    auto clamped_vector = clamp_motion_vector(plane, block_row, block_column, motion_vector);
 
     // 4. The motion vector scaling process in section 8.5.2.3 is invoked with plane, refList, x, y, clampedMv as
     // inputs and the output being the initial location startX, startY, and the step sizes stepX, stepY.
@@ -923,7 +923,7 @@ DecoderErrorOr<void> Decoder::predict_inter_block(u8 plane, u8 ref_list, u32 x, 
     return {};
 }
 
-DecoderErrorOr<void> Decoder::predict_inter(u8 plane, u32 x, u32 y, u32 width, u32 height, u32 block_index)
+DecoderErrorOr<void> Decoder::predict_inter(u8 plane, u32 block_row, u32 block_column, u32 x, u32 y, u32 width, u32 height, u32 block_index)
 {
     // The inter prediction process is invoked for inter coded blocks. When MiSize is smaller than BLOCK_8X8, the
     // prediction is done with a granularity of 4x4 samples, otherwise the whole plane is predicted at the same time.
@@ -942,7 +942,7 @@ DecoderErrorOr<void> Decoder::predict_inter(u8 plane, u32 x, u32 y, u32 width, u
     // 2. through 5.
     Array<u16, maximum_block_size> predicted_buffer;
     auto predicted_span = predicted_buffer.span().trim(width * height);
-    TRY(predict_inter_block(plane, 0, x, y, width, height, block_index, predicted_span));
+    TRY(predict_inter_block(plane, 0, block_row, block_column, x, y, width, height, block_index, predicted_span));
     auto predicted_buffer_at = [&](Span<u16> buffer, u32 row, u32 column) -> u16& {
         return buffer[row * width + column];
     };
@@ -976,7 +976,7 @@ DecoderErrorOr<void> Decoder::predict_inter(u8 plane, u32 x, u32 y, u32 width, u
     // for i = 0..h-1 and j = 0..w-1.
     Array<u16, maximum_block_size> second_predicted_buffer;
     auto second_predicted_span = second_predicted_buffer.span().trim(width * height);
-    TRY(predict_inter_block(plane, 1, x, y, width, height, block_index, second_predicted_span));
+    TRY(predict_inter_block(plane, 1, block_row, block_column, x, y, width, height, block_index, second_predicted_span));
 
     for (auto i = 0u; i < height_in_frame_buffer; i++) {
         for (auto j = 0u; j < width_in_frame_buffer; j++)
