@@ -227,10 +227,32 @@ ErrorOr<ByteBuffer> Filter::decode_flate(ReadonlyBytes bytes, int predictor, int
     return decode_png_prediction(buff, bytes_per_row);
 };
 
-ErrorOr<ByteBuffer> Filter::decode_run_length(ReadonlyBytes)
+ErrorOr<ByteBuffer> Filter::decode_run_length(ReadonlyBytes bytes)
 {
-    // FIXME: Support RunLength decoding
-    TODO();
+    constexpr size_t END_OF_DECODING = 128;
+    ByteBuffer buffer {};
+    while (true) {
+        VERIFY(bytes.size() > 0);
+        auto length = bytes[0];
+        bytes = bytes.slice(1);
+        if (length == END_OF_DECODING) {
+            VERIFY(bytes.is_empty());
+            break;
+        }
+        if (length < 128) {
+            TRY(buffer.try_append(bytes.slice(0, length + 1)));
+            bytes = bytes.slice(length + 1);
+        } else {
+            VERIFY(bytes.size() > 1);
+            auto byte_to_append = bytes[0];
+            bytes = bytes.slice(1);
+            size_t n_chars = 257 - length;
+            for (size_t i = 0; i < n_chars; ++i) {
+                TRY(buffer.try_append(byte_to_append));
+            }
+        }
+    }
+    return buffer;
 };
 
 ErrorOr<ByteBuffer> Filter::decode_ccitt(ReadonlyBytes)
