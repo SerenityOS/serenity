@@ -68,7 +68,9 @@ StackInfo::StackInfo()
     }
     m_base = top_of_stack - m_size;
 #else
-    VERIFY_NOT_REACHED();
+#    pragma message "StackInfo not supported on this platform! Recursion checks and stack scans may not work properly"
+    m_size = (size_t)~0;
+    m_base = 0;
 #endif
 
     m_top = m_base + m_size;
