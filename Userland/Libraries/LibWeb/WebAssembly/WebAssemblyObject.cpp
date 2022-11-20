@@ -84,6 +84,8 @@ void WebAssemblyObject::visit_edges(Visitor& visitor)
             visitor.visit(entry.value);
         for (auto& entry : module_cache.memory_instances)
             visitor.visit(entry.value);
+        for (auto& entry : module_cache.table_instances)
+            visitor.visit(entry.value);
     }
 }
 
