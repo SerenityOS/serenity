@@ -109,7 +109,7 @@ private:
     void end_path_paint();
     PDFErrorOr<void> set_graphics_state_from_dict(NonnullRefPtr<DictObject>);
     void show_text(String const&);
-    PDFErrorOr<NonnullRefPtr<ColorSpace>> get_color_space(Value const&);
+    PDFErrorOr<NonnullRefPtr<ColorSpace>> get_color_space(Value const&, NonnullRefPtr<DictObject>);
 
     ALWAYS_INLINE GraphicsState const& state() const { return m_graphics_state_stack.last(); }
     ALWAYS_INLINE GraphicsState& state() { return m_graphics_state_stack.last(); }

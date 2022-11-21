@@ -29,7 +29,7 @@ struct Page;
 
 class ColorSpace : public RefCounted<ColorSpace> {
 public:
-    static PDFErrorOr<NonnullRefPtr<ColorSpace>> create(Document*, FlyString const& name, Page const& page);
+    static PDFErrorOr<NonnullRefPtr<ColorSpace>> create(Document*, FlyString const& name, NonnullRefPtr<DictObject> resources);
 
     virtual ~ColorSpace() = default;
 
@@ -91,7 +91,7 @@ private:
 
 class ICCBasedColorSpace final : public ColorSpace {
 public:
-    static PDFErrorOr<NonnullRefPtr<ColorSpace>> create(Document*, Page const&, Vector<Value>&& parameters);
+    static PDFErrorOr<NonnullRefPtr<ColorSpace>> create(Document*, NonnullRefPtr<DictObject> resources, Vector<Value>&& parameters);
 
     ~ICCBasedColorSpace() override = default;
 

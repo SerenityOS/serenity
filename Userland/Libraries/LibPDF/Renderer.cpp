@@ -496,14 +496,14 @@ RENDERER_TODO(type3_font_set_glyph_width_and_bbox)
 
 RENDERER_HANDLER(set_stroking_space)
 {
-    state().stroke_color_space = TRY(get_color_space(args[0]));
+    state().stroke_color_space = TRY(get_color_space(args[0], m_page.resources));
     VERIFY(state().stroke_color_space);
     return {};
 }
 
 RENDERER_HANDLER(set_painting_space)
 {
-    state().paint_color_space = TRY(get_color_space(args[0]));
+    state().paint_color_space = TRY(get_color_space(args[0], m_page.resources));
     VERIFY(state().paint_color_space);
     return {};
 }
@@ -701,10 +701,10 @@ void Renderer::show_text(String const& string)
     m_text_matrix.translate(delta_x / text_rendering_matrix.x_scale(), 0.0f);
 }
 
-PDFErrorOr<NonnullRefPtr<ColorSpace>> Renderer::get_color_space(Value const& value)
+PDFErrorOr<NonnullRefPtr<ColorSpace>> Renderer::get_color_space(Value const& value, NonnullRefPtr<DictObject> resources)
 {
     auto name = value.get<NonnullRefPtr<Object>>()->cast<NameObject>()->name();
-    return TRY(ColorSpace::create(m_document, name, m_page));
+    return TRY(ColorSpace::create(m_document, name, resources));
 }
 
 Gfx::AffineTransform const& Renderer::calculate_text_rendering_matrix()
