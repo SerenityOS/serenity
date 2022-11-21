@@ -620,7 +620,38 @@ RENDERER_TODO(shade)
 RENDERER_TODO(inline_image_begin)
 RENDERER_TODO(inline_image_begin_data)
 RENDERER_TODO(inline_image_end)
-RENDERER_TODO(paint_xobject)
+RENDERER_HANDLER(paint_xobject)
+{
+    VERIFY(args.size() > 0);
+    auto resources = extra_resources.value_or(m_page.resources);
+    auto xobject_name = args[0].get<NonnullRefPtr<Object>>()->cast<NameObject>()->name();
+    auto xobjects_dict = MUST(resources->get_dict(m_document, CommonNames::XObject));
+    auto xobject = MUST(xobjects_dict->get_stream(m_document, xobject_name));
+
+    auto subtype = MUST(xobject->dict()->get_name(m_document, CommonNames::Subtype))->name();
+    if (subtype == CommonNames::Image) {
+        dbgln("Skipping image");
+        return {};
+    }
+
+    MUST(handle_save_state({}));
+    Vector<Value> matrix;
+    if (xobject->dict()->contains(CommonNames::Matrix)) {
+        matrix = xobject->dict()->get_array(m_document, CommonNames::Matrix).value()->elements();
+    } else {
+        matrix = Vector { Value { 1 }, Value { 0 }, Value { 0 }, Value { 1 }, Value { 0 }, Value { 0 } };
+    }
+    MUST(handle_concatenate_matrix(matrix));
+    Optional<NonnullRefPtr<DictObject>> xobject_resources {};
+    if (xobject->dict()->contains(CommonNames::Resources)) {
+        xobject_resources = xobject->dict()->get_dict(m_document, CommonNames::Resources).value();
+    }
+    auto operators = TRY(Parser::parse_operators(m_document, xobject->bytes()));
+    for (auto& op : operators)
+        TRY(handle_operator(op, xobject_resources));
+    MUST(handle_restore_state({}));
+    return {};
+}
 
 RENDERER_HANDLER(marked_content_point)
 {
