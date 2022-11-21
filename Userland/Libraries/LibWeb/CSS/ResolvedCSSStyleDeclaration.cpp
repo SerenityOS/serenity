@@ -554,6 +554,17 @@ Optional<StyleProperty> ResolvedCSSStyleDeclaration::property(PropertyID propert
     };
 }
 
+Optional<StyleProperty> ResolvedCSSStyleDeclaration::custom_property(String const& custom_property_name) const
+{
+    const_cast<DOM::Document&>(m_element->document()).update_style();
+    for (auto current_element = m_element.ptr(); current_element; current_element = current_element->parent_element()) {
+        if (auto it = current_element->custom_properties().find(custom_property_name); it != current_element->custom_properties().end())
+            return it->value;
+    }
+
+    return {};
+}
+
 // https://drafts.csswg.org/cssom/#dom-cssstyledeclaration-setproperty
 WebIDL::ExceptionOr<void> ResolvedCSSStyleDeclaration::set_property(PropertyID, StringView, StringView)
 {

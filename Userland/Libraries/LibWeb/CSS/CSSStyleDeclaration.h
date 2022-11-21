@@ -35,6 +35,7 @@ public:
     virtual String item(size_t index) const = 0;
 
     virtual Optional<StyleProperty> property(PropertyID) const = 0;
+    virtual Optional<StyleProperty> custom_property(String const& custom_property_name) const = 0;
 
     virtual WebIDL::ExceptionOr<void> set_property(PropertyID, StringView css_text, StringView priority = ""sv) = 0;
     virtual WebIDL::ExceptionOr<String> remove_property(PropertyID) = 0;
@@ -77,7 +78,7 @@ public:
 
     Vector<StyleProperty> const& properties() const { return m_properties; }
     HashMap<String, StyleProperty> const& custom_properties() const { return m_custom_properties; }
-    Optional<StyleProperty> custom_property(String const& custom_property_name) const { return m_custom_properties.get(custom_property_name); }
+    virtual Optional<StyleProperty> custom_property(String const& custom_property_name) const override;
     size_t custom_property_count() const { return m_custom_properties.size(); }
 
     virtual String serialized() const final override;

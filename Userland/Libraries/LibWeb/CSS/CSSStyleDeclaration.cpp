@@ -70,6 +70,11 @@ Optional<StyleProperty> PropertyOwningCSSStyleDeclaration::property(PropertyID p
     return {};
 }
 
+Optional<StyleProperty> PropertyOwningCSSStyleDeclaration::custom_property(String const& custom_property_name) const
+{
+    return m_custom_properties.get(custom_property_name);
+}
+
 // https://drafts.csswg.org/cssom/#dom-cssstyledeclaration-setproperty
 WebIDL::ExceptionOr<void> PropertyOwningCSSStyleDeclaration::set_property(PropertyID property_id, StringView value, StringView priority)
 {
@@ -198,7 +203,9 @@ String CSSStyleDeclaration::get_property_value(StringView property_name) const
     auto property_id = property_id_from_string(property_name);
     if (property_id == CSS::PropertyID::Invalid)
         return {};
-    auto maybe_property = property(property_id);
+    auto maybe_property = property_id == CSS::PropertyID::Custom
+        ? custom_property(property_name.to_string())
+        : property(property_id);
     if (!maybe_property.has_value())
         return {};
     return maybe_property->value->to_string();
