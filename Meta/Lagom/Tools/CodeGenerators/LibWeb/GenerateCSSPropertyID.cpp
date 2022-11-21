@@ -50,6 +50,7 @@ ErrorOr<void> generate_header_file(JsonObject& properties, Core::Stream::File& f
 #include <AK/StringView.h>
 #include <AK/Traits.h>
 #include <LibWeb/Forward.h>
+#include <AK/GenericLexer.h>
 
 namespace Web::CSS {
 
@@ -195,6 +196,8 @@ PropertyID property_id_from_string(StringView string)
     });
 
     generator.append(R"~~~(
+    if (string.starts_with("--"sv) && string != "--")
+        return PropertyID::Custom;
     return PropertyID::Invalid;
 }
 
