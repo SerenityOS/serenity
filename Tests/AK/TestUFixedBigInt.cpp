@@ -39,15 +39,6 @@ TEST_CASE(identities)
     }
 }
 
-TEST_CASE(sqrt)
-{
-    srand(0);
-    for (int i = 0; i < test_iterations; ++i) {
-        u256 x = get_random<u128>();
-        EXPECT_EQ((x * x).sqrt(), x);
-    }
-}
-
 TEST_CASE(add_overflow_propagation)
 {
     u256 a = NumericLimits<u128>::max();
