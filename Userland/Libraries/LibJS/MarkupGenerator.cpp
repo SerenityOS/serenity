@@ -150,7 +150,7 @@ void MarkupGenerator::trace_to_html(TracebackFrame const& traceback_frame, Strin
         auto last_slash_index = filename.find_last('/');
         return last_slash_index.has_value() ? filename.substring_view(*last_slash_index + 1) : filename;
     };
-    auto filename = escape_html_entities(get_filename_from_path(traceback_frame.source_range.filename));
+    auto filename = escape_html_entities(get_filename_from_path(traceback_frame.source_range.filename()));
     auto trace = String::formatted("at {} ({}:{}:{})", function_name, filename, line, column);
 
     html_output.appendff("&nbsp;&nbsp;{}<br>", trace);

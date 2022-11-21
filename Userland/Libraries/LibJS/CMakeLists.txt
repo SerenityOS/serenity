@@ -244,6 +244,7 @@ set(SOURCES
     Runtime/WeakSetPrototype.cpp
     Runtime/WrappedFunction.cpp
     Script.cpp
+    SourceCode.cpp
     SourceTextModule.cpp
     SyntaxHighlighter.cpp
     SyntheticModule.cpp

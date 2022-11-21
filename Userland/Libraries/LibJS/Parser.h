@@ -343,6 +343,7 @@ private:
         }
     };
 
+    NonnullRefPtr<SourceCode> m_source_code;
     Vector<Position> m_rule_starts;
     ParserState m_state;
     FlyString m_filename;

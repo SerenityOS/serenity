@@ -61,6 +61,18 @@ private:
     ExecutingASTNodeChain m_chain_node;
 };
 
+ASTNode::ASTNode(SourceRange source_range)
+    : m_source_code(source_range.code)
+    , m_start_offset(source_range.start.offset)
+    , m_end_offset(source_range.end.offset)
+{
+}
+
+SourceRange ASTNode::source_range() const
+{
+    return m_source_code->range_from_offsets(m_start_offset, m_end_offset);
+}
+
 String ASTNode::class_name() const
 {
     // NOTE: We strip the "JS::" prefix.
@@ -4792,6 +4804,11 @@ ModuleRequest::ModuleRequest(FlyString module_specifier_, Vector<Assertion> asse
     quick_sort(assertions, [](Assertion const& lhs, Assertion const& rhs) {
         return lhs.key < rhs.key;
     });
+}
+
+String const& SourceRange::filename() const
+{
+    return code->filename();
 }
 
 }

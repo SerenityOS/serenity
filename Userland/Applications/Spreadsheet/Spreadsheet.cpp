@@ -71,7 +71,7 @@ Sheet::Sheet(Workbook& workbook)
                     for (auto& traceback_frame : error.traceback()) {
                         auto& function_name = traceback_frame.function_name;
                         auto& source_range = traceback_frame.source_range;
-                        dbgln("  {} at {}:{}:{}", function_name, source_range.filename, source_range.start.line, source_range.start.column);
+                        dbgln("  {} at {}:{}:{}", function_name, source_range.filename(), source_range.start.line, source_range.start.column);
                     }
                 } else {
                     warnln();
