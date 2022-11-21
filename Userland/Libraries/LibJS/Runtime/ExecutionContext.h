@@ -58,6 +58,9 @@ public:
     Environment* variable_environment { nullptr };       // [[VariableEnvironment]]
     PrivateEnvironment* private_environment { nullptr }; // [[PrivateEnvironment]]
 
+    // Non-standard: This points at something that owns this ExecutionContext, in case it needs to be protected from GC.
+    Cell* context_owner { nullptr };
+
     ASTNode const* current_node { nullptr };
     FlyString function_name;
     Value this_value;
