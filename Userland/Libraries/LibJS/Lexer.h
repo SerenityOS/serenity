@@ -20,8 +20,8 @@ public:
 
     Token next();
 
-    StringView source() const { return m_source; };
-    StringView filename() const { return m_filename; };
+    String const& source() const { return m_source; };
+    String const& filename() const { return m_filename; };
 
     void disallow_html_comments() { m_allow_html_comments = false; };
 
@@ -57,13 +57,13 @@ private:
 
     TokenType consume_regex_literal();
 
-    StringView m_source;
+    String m_source;
     size_t m_position { 0 };
     Token m_current_token;
     char m_current_char { 0 };
     bool m_eof { false };
 
-    StringView m_filename;
+    String m_filename;
     size_t m_line_number { 1 };
     size_t m_line_column { 0 };
 

@@ -8,6 +8,7 @@
 
 #include <AK/StringView.h>
 #include <AK/Types.h>
+#include <LibJS/SourceCode.h>
 
 namespace JS {
 
@@ -20,9 +21,11 @@ struct Position {
 struct SourceRange {
     [[nodiscard]] bool contains(Position const& position) const { return position.offset <= end.offset && position.offset >= start.offset; }
 
-    StringView filename;
+    NonnullRefPtr<SourceCode> code;
     Position start;
     Position end;
+
+    String const& filename() const;
 };
 
 }

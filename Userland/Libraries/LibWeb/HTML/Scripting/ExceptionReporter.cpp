@@ -34,7 +34,7 @@ void report_exception_to_console(JS::Value value, JS::Realm& realm, ErrorInPromi
             for (auto& traceback_frame : error_value.traceback()) {
                 auto& function_name = traceback_frame.function_name;
                 auto& source_range = traceback_frame.source_range;
-                dbgln("  {} at {}:{}:{}", function_name, source_range.filename, source_range.start.line, source_range.start.column);
+                dbgln("  {} at {}:{}:{}", function_name, source_range.filename(), source_range.start.line, source_range.start.column);
             }
             console.report_exception(error_value, error_in_promise == ErrorInPromise::Yes);
 

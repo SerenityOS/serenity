@@ -188,6 +188,8 @@ class Script;
 class Shape;
 class Statement;
 class StringOrSymbol;
+class SourceCode;
+struct SourceRange;
 class SourceTextModule;
 class Symbol;
 class Token;

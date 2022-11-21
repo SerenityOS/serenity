@@ -52,8 +52,7 @@ public:
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const;
     virtual void dump(int indent) const;
 
-    SourceRange const& source_range() const { return m_source_range; }
-    SourceRange& source_range() { return m_source_range; }
+    SourceRange source_range() const;
 
     String class_name() const;
 
@@ -84,13 +83,12 @@ public:
     virtual bool is_class_method() const { return false; }
 
 protected:
-    explicit ASTNode(SourceRange source_range)
-        : m_source_range(source_range)
-    {
-    }
+    explicit ASTNode(SourceRange);
 
 private:
-    SourceRange m_source_range;
+    RefPtr<SourceCode> m_source_code;
+    u32 m_start_offset { 0 };
+    u32 m_end_offset { 0 };
 };
 
 class Statement : public ASTNode {
