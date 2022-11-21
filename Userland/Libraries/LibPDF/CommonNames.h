@@ -74,6 +74,7 @@
     A(HTO)                        \
     A(ICCBased)                   \
     A(ID)                         \
+    A(Image)                      \
     A(Index)                      \
     A(JBIG2Decode)                \
     A(JPXDecode)                  \
@@ -133,6 +134,7 @@
     A(W)                          \
     A(WhitePoint)                 \
     A(Widths)                     \
+    A(XObject)                    \
     A(XYZ)                        \
     A(ca)                         \
     A(op)
