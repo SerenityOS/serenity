@@ -133,10 +133,13 @@ private:
 
 class PageClient {
 public:
+    virtual Page& page() = 0;
+    virtual Page const& page() const = 0;
     virtual bool is_connection_open() const = 0;
     virtual Gfx::Palette palette() const = 0;
     virtual Gfx::IntRect screen_rect() const = 0;
     virtual CSS::PreferredColorScheme preferred_color_scheme() const = 0;
+    virtual void paint(Gfx::IntRect const&, Gfx::Bitmap&) = 0;
     virtual void page_did_change_title(String const&) { }
     virtual void page_did_start_loading(const AK::URL&) { }
     virtual void page_did_create_main_document() { }

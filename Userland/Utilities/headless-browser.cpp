@@ -55,8 +55,8 @@ public:
         return adopt_own(*new HeadlessBrowserPageClient());
     }
 
-    Web::Page& page() { return *m_page; }
-    Web::Page const& page() const { return *m_page; }
+    virtual Web::Page& page() override { return *m_page; }
+    virtual Web::Page const& page() const override { return *m_page; }
 
     Web::Layout::InitialContainingBlock* layout_root()
     {
@@ -71,7 +71,7 @@ public:
         page().load(url);
     }
 
-    void paint(Gfx::IntRect const& content_rect, Gfx::Bitmap& target)
+    virtual void paint(Gfx::IntRect const& content_rect, Gfx::Bitmap& target) override
     {
         Gfx::Painter painter(target);
 
