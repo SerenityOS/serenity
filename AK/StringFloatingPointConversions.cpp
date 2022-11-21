@@ -171,25 +171,14 @@ FloatingPointExponentialForm inner_convert_floating_point_to_decimal_exponential
 
 static u128 multiply(u64 a, u64 b)
 {
-#ifdef __SIZEOF_INT128__
-    unsigned __int128 result = (unsigned __int128)a * b;
-    u64 low = result;
-    u64 high = result >> 64;
-    return u128 { low, high };
-#else
-    return u128 { a }.wide_multiply(u128 { b }).low;
-#endif
+    return UFixedBigInt<64>(a).wide_multiply(b);
 }
 
 template<>
 FloatingPointExponentialForm convert_floating_point_to_decimal_exponential_form<float>(float value)
 {
     auto multiply_and_shift = [](u64 operand, u64 multiplier, i32 shift) {
-#ifdef __SIZEOF_INT128__
-        auto result = (unsigned __int128)operand * multiplier;
-#else
         auto result = multiply(operand, multiplier);
-#endif
         if (shift < 0)
             return static_cast<u64>(result << static_cast<u32>(-shift));
         else
