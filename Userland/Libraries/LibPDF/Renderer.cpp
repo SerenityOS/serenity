@@ -10,7 +10,7 @@
 #include <LibPDF/Renderer.h>
 
 #define RENDERER_HANDLER(name) \
-    PDFErrorOr<void> Renderer::handle_##name([[maybe_unused]] Vector<Value> const& args)
+    PDFErrorOr<void> Renderer::handle_##name([[maybe_unused]] Vector<Value> const& args, [[maybe_unused]] Optional<NonnullRefPtr<DictObject>> extra_resources)
 
 #define RENDERER_TODO(name)                                         \
     RENDERER_HANDLER(name)                                          \
@@ -118,20 +118,20 @@ PDFErrorOr<void> Renderer::render()
     return {};
 }
 
-PDFErrorOr<void> Renderer::handle_operator(Operator const& op)
+PDFErrorOr<void> Renderer::handle_operator(Operator const& op, Optional<NonnullRefPtr<DictObject>> extra_resources)
 {
     switch (op.type()) {
-#define V(name, snake_name, symbol)               \
-    case OperatorType::name:                      \
-        TRY(handle_##snake_name(op.arguments())); \
+#define V(name, snake_name, symbol)                                 \
+    case OperatorType::name:                                        \
+        MUST(handle_##snake_name(op.arguments(), extra_resources)); \
         break;
         ENUMERATE_OPERATORS(V)
 #undef V
     case OperatorType::TextNextLineShowString:
-        TRY(handle_text_next_line_show_string(op.arguments()));
+        MUST(handle_text_next_line_show_string(op.arguments()));
         break;
     case OperatorType::TextNextLineShowStringSetSpacing:
-        TRY(handle_text_next_line_show_string_set_spacing(op.arguments()));
+        MUST(handle_text_next_line_show_string_set_spacing(op.arguments()));
         break;
     }
 
@@ -204,9 +204,9 @@ RENDERER_TODO(set_flatness_tolerance)
 
 RENDERER_HANDLER(set_graphics_state_from_dict)
 {
-    VERIFY(m_page.resources->contains(CommonNames::ExtGState));
+    auto resources = extra_resources.value_or(m_page.resources);
     auto dict_name = MUST(m_document->resolve_to<NameObject>(args[0]))->name();
-    auto ext_gstate_dict = MUST(m_page.resources->get_dict(m_document, CommonNames::ExtGState));
+    auto ext_gstate_dict = MUST(resources->get_dict(m_document, CommonNames::ExtGState));
     auto target_dict = MUST(ext_gstate_dict->get_dict(m_document, dict_name));
     TRY(set_graphics_state_from_dict(target_dict));
     return {};
@@ -421,8 +421,9 @@ RENDERER_HANDLER(text_set_leading)
 
 RENDERER_HANDLER(text_set_font)
 {
+    auto resources = extra_resources.value_or(m_page.resources);
     auto target_font_name = MUST(m_document->resolve_to<NameObject>(args[0]))->name();
-    auto fonts_dictionary = MUST(m_page.resources->get_dict(m_document, CommonNames::Font));
+    auto fonts_dictionary = MUST(resources->get_dict(m_document, CommonNames::Font));
     auto font_dictionary = MUST(fonts_dictionary->get_dict(m_document, target_font_name));
 
     text_state().font_size = args[1].to_float();
@@ -527,14 +528,14 @@ RENDERER_TODO(type3_font_set_glyph_width_and_bbox)
 
 RENDERER_HANDLER(set_stroking_space)
 {
-    state().stroke_color_space = TRY(get_color_space(args[0], m_page.resources));
+    state().stroke_color_space = TRY(get_color_space(args[0], extra_resources.value_or(m_page.resources)));
     VERIFY(state().stroke_color_space);
     return {};
 }
 
 RENDERER_HANDLER(set_painting_space)
 {
-    state().paint_color_space = TRY(get_color_space(args[0], m_page.resources));
+    state().paint_color_space = TRY(get_color_space(args[0], extra_resources.value_or(m_page.resources)));
     VERIFY(state().paint_color_space);
     return {};
 }

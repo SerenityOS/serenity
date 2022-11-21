@@ -97,13 +97,13 @@ private:
 
     PDFErrorOr<void> render();
 
-    PDFErrorOr<void> handle_operator(Operator const&);
+    PDFErrorOr<void> handle_operator(Operator const&, Optional<NonnullRefPtr<DictObject>> = {});
 #define V(name, snake_name, symbol) \
-    PDFErrorOr<void> handle_##snake_name(Vector<Value> const& args);
+    PDFErrorOr<void> handle_##snake_name(Vector<Value> const& args, Optional<NonnullRefPtr<DictObject>> = {});
     ENUMERATE_OPERATORS(V)
 #undef V
-    PDFErrorOr<void> handle_text_next_line_show_string(Vector<Value> const& args);
-    PDFErrorOr<void> handle_text_next_line_show_string_set_spacing(Vector<Value> const& args);
+    PDFErrorOr<void> handle_text_next_line_show_string(Vector<Value> const& args, Optional<NonnullRefPtr<DictObject>> = {});
+    PDFErrorOr<void> handle_text_next_line_show_string_set_spacing(Vector<Value> const& args, Optional<NonnullRefPtr<DictObject>> = {});
 
     void begin_path_paint();
     void end_path_paint();
