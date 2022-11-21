@@ -640,15 +640,13 @@ void FormattingContext::compute_width_for_absolutely_positioned_non_replaced_ele
         return width;
     };
 
-    auto specified_width = computed_values.width().resolved(box, width_of_containing_block_as_length).resolved(box);
-
     // 1. The tentative used width is calculated (without 'min-width' and 'max-width')
-    auto used_width = try_compute_width(specified_width);
+    auto used_width = try_compute_width(calculate_inner_width(box, available_space.width, computed_values.width()));
 
     // 2. The tentative used width is greater than 'max-width', the rules above are applied again,
     //    but this time using the computed value of 'max-width' as the computed value for 'width'.
     if (!computed_values.max_width().is_none()) {
-        auto max_width = computed_values.max_width().resolved(box, width_of_containing_block_as_length).resolved(box);
+        auto max_width = calculate_inner_width(box, available_space.width, computed_values.max_width());
         if (used_width.to_px(box) > max_width.to_px(box)) {
             used_width = try_compute_width(max_width);
         }
@@ -657,7 +655,7 @@ void FormattingContext::compute_width_for_absolutely_positioned_non_replaced_ele
     // 3. If the resulting width is smaller than 'min-width', the rules above are applied again,
     //    but this time using the value of 'min-width' as the computed value for 'width'.
     if (!computed_values.min_width().is_auto()) {
-        auto min_width = computed_values.min_width().resolved(box, width_of_containing_block_as_length).resolved(box);
+        auto min_width = calculate_inner_width(box, available_space.width, computed_values.min_width());
         if (used_width.to_px(box) < min_width.to_px(box)) {
             used_width = try_compute_width(min_width);
         }
@@ -1267,6 +1265,60 @@ float FormattingContext::calculate_max_content_height(Layout::Box const& box, Av
     }
 
     return max_content_height;
+}
+
+CSS::Length FormattingContext::calculate_inner_width(Layout::Box const& box, AvailableSize const& available_width, CSS::Size const& width) const
+{
+    float width_of_containing_block = available_width.to_px();
+    auto width_of_containing_block_as_length_for_resolve = CSS::Length::make_px(width_of_containing_block);
+    if (width.is_auto()) {
+        return width.resolved(box, width_of_containing_block_as_length_for_resolve).resolved(box);
+    }
+
+    if (!available_width.is_definite())
+        width_of_containing_block_as_length_for_resolve = CSS::Length::make_px(0);
+
+    auto& computed_values = box.computed_values();
+    if (computed_values.box_sizing() == CSS::BoxSizing::BorderBox) {
+        auto const padding_left = computed_values.padding().left().resolved(box, width_of_containing_block_as_length_for_resolve).resolved(box);
+        auto const padding_right = computed_values.padding().right().resolved(box, width_of_containing_block_as_length_for_resolve).resolved(box);
+
+        float inner_width = width.resolved(box, width_of_containing_block_as_length_for_resolve).resolved(box).to_px(box)
+            - computed_values.border_left().width
+            - padding_left.to_px(box)
+            - computed_values.border_right().width
+            - padding_right.to_px(box);
+        return CSS::Length::make_px(max(inner_width, 0));
+    }
+
+    return width.resolved(box, width_of_containing_block_as_length_for_resolve).resolved(box);
+}
+
+CSS::Length FormattingContext::calculate_inner_height(Layout::Box const& box, AvailableSize const& available_height, CSS::Size const& height) const
+{
+    float height_of_containing_block = available_height.to_px();
+    auto height_of_containing_block_as_length_for_resolve = CSS::Length::make_px(height_of_containing_block);
+    if (height.is_auto()) {
+        return height.resolved(box, height_of_containing_block_as_length_for_resolve).resolved(box);
+    }
+
+    if (!available_height.is_definite())
+        height_of_containing_block_as_length_for_resolve = CSS::Length::make_px(0);
+
+    auto& computed_values = box.computed_values();
+    if (computed_values.box_sizing() == CSS::BoxSizing::BorderBox) {
+        auto const padding_top = computed_values.padding().left().resolved(box, height_of_containing_block_as_length_for_resolve).resolved(box);
+        auto const padding_bottom = computed_values.padding().right().resolved(box, height_of_containing_block_as_length_for_resolve).resolved(box);
+
+        float inner_height = height.resolved(box, height_of_containing_block_as_length_for_resolve).resolved(box).to_px(box)
+            - computed_values.border_top().width
+            - padding_top.to_px(box)
+            - computed_values.border_bottom().width
+            - padding_bottom.to_px(box);
+        return CSS::Length::make_px(max(inner_height, 0));
+    }
+
+    return height.resolved(box, height_of_containing_block_as_length_for_resolve).resolved(box);
 }
 
 float FormattingContext::containing_block_width_for(Box const& box, LayoutState const& state)

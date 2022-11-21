@@ -60,6 +60,9 @@ public:
     float calculate_fit_content_height(Layout::Box const&, AvailableSpace const&) const;
     float calculate_fit_content_width(Layout::Box const&, AvailableSpace const&) const;
 
+    CSS::Length calculate_inner_width(Layout::Box const&, AvailableSize const&, CSS::Size const& width) const;
+    CSS::Length calculate_inner_height(Layout::Box const&, AvailableSize const&, CSS::Size const& height) const;
+
     virtual float greatest_child_width(Box const&);
 
     float containing_block_width_for(Box const& box) const { return containing_block_width_for(box, m_state); }
