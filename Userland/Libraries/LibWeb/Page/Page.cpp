@@ -4,9 +4,13 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/SourceLocation.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/BrowsingContext.h>
+#include <LibWeb/HTML/EventLoop/EventLoop.h>
+#include <LibWeb/HTML/Scripting/Environments.h>
 #include <LibWeb/Page/Page.h>
+#include <LibWeb/Platform/EventLoopPlugin.h>
 
 namespace Web {
 
@@ -103,6 +107,114 @@ HTML::BrowsingContext& Page::top_level_browsing_context()
 HTML::BrowsingContext const& Page::top_level_browsing_context() const
 {
     return *m_top_level_browsing_context;
+}
+
+template<typename ResponseType>
+static ResponseType spin_event_loop_until_dialog_closed(PageClient& client, Optional<ResponseType>& response, SourceLocation location = SourceLocation::current())
+{
+    auto& event_loop = Web::HTML::current_settings_object().responsible_event_loop();
+
+    ScopeGuard guard { [&] { event_loop.set_execution_paused(false); } };
+    event_loop.set_execution_paused(true);
+
+    Web::Platform::EventLoopPlugin::the().spin_until([&]() {
+        return response.has_value() || !client.is_connection_open();
+    });
+
+    if (!client.is_connection_open()) {
+        dbgln("WebContent client disconnected during {}. Exiting peacefully.", location.function_name());
+        exit(0);
+    }
+
+    return response.release_value();
+}
+
+void Page::did_request_alert(String const& message)
+{
+    m_pending_dialog = PendingDialog::Alert;
+    m_client.page_did_request_alert(message);
+
+    if (!message.is_empty())
+        m_pending_dialog_text = message;
+
+    spin_event_loop_until_dialog_closed(m_client, m_pending_alert_response);
+}
+
+void Page::alert_closed()
+{
+    if (m_pending_dialog == PendingDialog::Alert) {
+        m_pending_dialog = PendingDialog::None;
+        m_pending_alert_response = Empty {};
+        m_pending_dialog_text.clear();
+    }
+}
+
+bool Page::did_request_confirm(String const& message)
+{
+    m_pending_dialog = PendingDialog::Confirm;
+    m_client.page_did_request_confirm(message);
+
+    if (!message.is_empty())
+        m_pending_dialog_text = message;
+
+    return spin_event_loop_until_dialog_closed(m_client, m_pending_confirm_response);
+}
+
+void Page::confirm_closed(bool accepted)
+{
+    if (m_pending_dialog == PendingDialog::Confirm) {
+        m_pending_dialog = PendingDialog::None;
+        m_pending_confirm_response = accepted;
+        m_pending_dialog_text.clear();
+    }
+}
+
+String Page::did_request_prompt(String const& message, String const& default_)
+{
+    m_pending_dialog = PendingDialog::Prompt;
+    m_client.page_did_request_prompt(message, default_);
+
+    if (!message.is_empty())
+        m_pending_dialog_text = message;
+
+    return spin_event_loop_until_dialog_closed(m_client, m_pending_prompt_response);
+}
+
+void Page::prompt_closed(String response)
+{
+    if (m_pending_dialog == PendingDialog::Prompt) {
+        m_pending_dialog = PendingDialog::None;
+        m_pending_prompt_response = move(response);
+        m_pending_dialog_text.clear();
+    }
+}
+
+void Page::dismiss_dialog()
+{
+    switch (m_pending_dialog) {
+    case PendingDialog::None:
+        break;
+    case PendingDialog::Alert:
+        m_client.page_did_request_accept_dialog();
+        break;
+    case PendingDialog::Confirm:
+    case PendingDialog::Prompt:
+        m_client.page_did_request_dismiss_dialog();
+        break;
+    }
+}
+
+void Page::accept_dialog()
+{
+    switch (m_pending_dialog) {
+    case PendingDialog::None:
+        break;
+    case PendingDialog::Alert:
+    case PendingDialog::Confirm:
+    case PendingDialog::Prompt:
+        m_client.page_did_request_accept_dialog();
+        break;
+    }
 }
 
 }

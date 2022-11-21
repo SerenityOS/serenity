@@ -1389,11 +1389,11 @@ Messages::WebDriverClient::DismissAlertResponse WebDriverConnection::dismiss_ale
     TRY(ensure_open_top_level_browsing_context());
 
     // 2. If there is no current user prompt, return error with error code no such alert.
-    if (!m_page_host.has_pending_dialog())
+    if (!m_page_host.page().has_pending_dialog())
         return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::NoSuchAlert, "No user dialog is currently open"sv);
 
     // 3. Dismiss the current user prompt.
-    m_page_host.dismiss_dialog();
+    m_page_host.page().dismiss_dialog();
 
     // 4. Return success with data null.
     return JsonValue {};
@@ -1406,11 +1406,11 @@ Messages::WebDriverClient::AcceptAlertResponse WebDriverConnection::accept_alert
     TRY(ensure_open_top_level_browsing_context());
 
     // 2. If there is no current user prompt, return error with error code no such alert.
-    if (!m_page_host.has_pending_dialog())
+    if (!m_page_host.page().has_pending_dialog())
         return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::NoSuchAlert, "No user dialog is currently open"sv);
 
     // 3. Accept the current user prompt.
-    m_page_host.accept_dialog();
+    m_page_host.page().accept_dialog();
 
     // 4. Return success with data null.
     return JsonValue {};
@@ -1423,11 +1423,11 @@ Messages::WebDriverClient::GetAlertTextResponse WebDriverConnection::get_alert_t
     TRY(ensure_open_top_level_browsing_context());
 
     // 2. If there is no current user prompt, return error with error code no such alert.
-    if (!m_page_host.has_pending_dialog())
+    if (!m_page_host.page().has_pending_dialog())
         return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::NoSuchAlert, "No user dialog is currently open"sv);
 
     // 3. Let message be the text message associated with the current user prompt, or otherwise be null.
-    auto const& message = m_page_host.pending_dialog_text();
+    auto const& message = m_page_host.page().pending_dialog_text();
 
     // 4. Return success with data message.
     if (message.has_value())
@@ -1446,20 +1446,20 @@ Messages::WebDriverClient::SendAlertTextResponse WebDriverConnection::send_alert
     TRY(ensure_open_top_level_browsing_context());
 
     // 4. If there is no current user prompt, return error with error code no such alert.
-    if (!m_page_host.has_pending_dialog())
+    if (!m_page_host.page().has_pending_dialog())
         return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::NoSuchAlert, "No user dialog is currently open"sv);
 
     // 5. Run the substeps of the first matching current user prompt:
-    switch (m_page_host.pending_dialog()) {
+    switch (m_page_host.page().pending_dialog()) {
     // -> alert
     // -> confirm
-    case PageHost::PendingDialog::Alert:
-    case PageHost::PendingDialog::Confirm:
+    case Web::Page::PendingDialog::Alert:
+    case Web::Page::PendingDialog::Confirm:
         // Return error with error code element not interactable.
         return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::ElementNotInteractable, "Only prompt dialogs may receive text"sv);
 
     // -> prompt
-    case PageHost::PendingDialog::Prompt:
+    case Web::Page::PendingDialog::Prompt:
         // Do nothing.
         break;
 
@@ -1547,7 +1547,7 @@ ErrorOr<void, Web::WebDriver::Error> WebDriverConnection::ensure_open_top_level_
 ErrorOr<void, Web::WebDriver::Error> WebDriverConnection::handle_any_user_prompts()
 {
     // 1. If there is no current user prompt, abort these steps and return success.
-    if (!m_page_host.has_pending_dialog())
+    if (!m_page_host.page().has_pending_dialog())
         return {};
 
     // 2. Perform the following substeps based on the current session’s user prompt handler:
@@ -1555,19 +1555,19 @@ ErrorOr<void, Web::WebDriver::Error> WebDriverConnection::handle_any_user_prompt
     // -> dismiss state
     case Web::WebDriver::UnhandledPromptBehavior::Dismiss:
         // Dismiss the current user prompt.
-        m_page_host.dismiss_dialog();
+        m_page_host.page().dismiss_dialog();
         break;
 
     // -> accept state
     case Web::WebDriver::UnhandledPromptBehavior::Accept:
         // Accept the current user prompt.
-        m_page_host.accept_dialog();
+        m_page_host.page().accept_dialog();
         break;
 
     // -> dismiss and notify state
     case Web::WebDriver::UnhandledPromptBehavior::DismissAndNotify:
         // Dismiss the current user prompt.
-        m_page_host.dismiss_dialog();
+        m_page_host.page().dismiss_dialog();
 
         // Return an annotated unexpected alert open error.
         return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::UnexpectedAlertOpen, "A user dialog is open"sv);
@@ -1575,7 +1575,7 @@ ErrorOr<void, Web::WebDriver::Error> WebDriverConnection::handle_any_user_prompt
     // -> accept and notify state
     case Web::WebDriver::UnhandledPromptBehavior::AcceptAndNotify:
         // Accept the current user prompt.
-        m_page_host.accept_dialog();
+        m_page_host.page().accept_dialog();
 
         // Return an annotated unexpected alert open error.
         return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::UnexpectedAlertOpen, "A user dialog is open"sv);
