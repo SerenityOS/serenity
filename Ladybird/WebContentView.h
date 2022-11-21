@@ -156,6 +156,7 @@ public:
     virtual Gfx::IntRect notify_server_did_request_minimize_window() override;
     virtual Gfx::IntRect notify_server_did_request_fullscreen_window() override;
     virtual void notify_server_did_request_file(Badge<WebContentClient>, String const& path, i32) override;
+    virtual void notify_server_did_finish_handling_input_event(bool event_was_accepted) override;
 
 signals:
     void link_hovered(QString, int timeout = 0);
