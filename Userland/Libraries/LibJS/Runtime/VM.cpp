@@ -204,6 +204,8 @@ void VM::gather_roots(HashTable<Cell*>& roots)
             roots.set(execution_context->lexical_environment);
             roots.set(execution_context->variable_environment);
             roots.set(execution_context->private_environment);
+            if (auto* context_owner = execution_context->context_owner)
+                roots.set(context_owner);
             execution_context->script_or_module.visit(
                 [](Empty) {},
                 [&](auto& script_or_module) {
