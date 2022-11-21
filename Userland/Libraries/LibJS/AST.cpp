@@ -1387,13 +1387,13 @@ ThrowCompletionOr<Reference> Expression::to_reference(Interpreter&) const
 
 ThrowCompletionOr<Reference> Identifier::to_reference(Interpreter& interpreter) const
 {
-    if (m_cached_environment_coordinate.has_value()) {
+    if (m_cached_environment_coordinate.is_valid()) {
         Environment* environment = nullptr;
-        if (m_cached_environment_coordinate->index == EnvironmentCoordinate::global_marker) {
+        if (m_cached_environment_coordinate.index == EnvironmentCoordinate::global_marker) {
             environment = &interpreter.vm().current_realm()->global_environment();
         } else {
             environment = interpreter.vm().running_execution_context().lexical_environment;
-            for (size_t i = 0; i < m_cached_environment_coordinate->hops; ++i)
+            for (size_t i = 0; i < m_cached_environment_coordinate.hops; ++i)
                 environment = environment->outer_environment();
             VERIFY(environment);
             VERIFY(environment->is_declarative_environment());
@@ -1406,7 +1406,7 @@ ThrowCompletionOr<Reference> Identifier::to_reference(Interpreter& interpreter) 
 
     auto reference = TRY(interpreter.vm().resolve_binding(string()));
     if (reference.environment_coordinate().has_value())
-        m_cached_environment_coordinate = reference.environment_coordinate();
+        m_cached_environment_coordinate = reference.environment_coordinate().value();
     return reference;
 }
 
