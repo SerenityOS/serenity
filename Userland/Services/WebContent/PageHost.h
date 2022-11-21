@@ -23,10 +23,10 @@ public:
     static NonnullOwnPtr<PageHost> create(ConnectionFromClient& client) { return adopt_own(*new PageHost(client)); }
     virtual ~PageHost();
 
-    Web::Page& page() { return *m_page; }
-    Web::Page const& page() const { return *m_page; }
+    virtual Web::Page& page() override { return *m_page; }
+    virtual Web::Page const& page() const override { return *m_page; }
 
-    void paint(Gfx::IntRect const& content_rect, Gfx::Bitmap&);
+    virtual void paint(Gfx::IntRect const& content_rect, Gfx::Bitmap&) override;
 
     void set_palette_impl(Gfx::PaletteImpl const&);
     void set_viewport_rect(Gfx::IntRect const&);
