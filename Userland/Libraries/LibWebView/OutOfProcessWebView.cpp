@@ -94,7 +94,7 @@ void OutOfProcessWebView::load_empty_document()
 
 void OutOfProcessWebView::paint_event(GUI::PaintEvent& event)
 {
-    GUI::AbstractScrollableWidget::paint_event(event);
+    Super::paint_event(event);
 
     // If the available size is empty, we don't have a front or back bitmap to draw.
     if (available_size().is_empty())
@@ -115,7 +115,7 @@ void OutOfProcessWebView::paint_event(GUI::PaintEvent& event)
 
 void OutOfProcessWebView::resize_event(GUI::ResizeEvent& event)
 {
-    GUI::AbstractScrollableWidget::resize_event(event);
+    Super::resize_event(event);
     handle_resize();
 }
 
@@ -193,7 +193,7 @@ void OutOfProcessWebView::doubleclick_event(GUI::MouseEvent& event)
 
 void OutOfProcessWebView::theme_change_event(GUI::ThemeChangeEvent& event)
 {
-    GUI::AbstractScrollableWidget::theme_change_event(event);
+    Super::theme_change_event(event);
     client().async_update_system_theme(Gfx::current_system_theme_buffer());
     request_repaint();
 }
