@@ -43,6 +43,59 @@ typedef Pair<ReferenceFrameType> ReferenceFramePair;
 typedef Pair<MotionVector> MotionVectorPair;
 
 template<typename T>
+class Vector2D;
+
+template<typename T>
+class Vector2DView {
+public:
+    u32 top() const { return m_top; }
+    u32 left() const { return m_left; }
+    u32 height() const { return m_height; }
+    u32 width() const { return m_width; }
+
+    T const& operator[](size_t index) const { return m_storage[index]; }
+    size_t size() const { return m_storage->size(); }
+
+    T& at(u32 relative_row, u32 relative_column)
+    {
+        VERIFY(relative_row < height());
+        VERIFY(relative_column < width());
+        return m_storage->at(top() + relative_row, left() + relative_column);
+    }
+    T const& at(u32 relative_row, u32 relative_column) const
+    {
+        VERIFY(relative_row < height());
+        VERIFY(relative_column < width());
+        return m_storage->at(top() + relative_row, left() + relative_column);
+    }
+
+    Vector2DView<T> view(u32 top, u32 left, u32 height, u32 width)
+    {
+        VERIFY(top + height <= this->height());
+        VERIFY(left + width <= this->width());
+        return Vector2DView<T>(m_storage, this->top() + top, this->left() + left, height, width);
+    }
+
+private:
+    friend class Vector2D<T>;
+
+    Vector2DView(Vector2D<T>* const storage, u32 top, u32 left, u32 height, u32 width)
+        : m_storage(storage)
+        , m_top(top)
+        , m_left(left)
+        , m_height(height)
+        , m_width(width)
+    {
+    }
+
+    Vector2D<T>* const m_storage;
+    u32 const m_top { 0 };
+    u32 const m_left { 0 };
+    u32 const m_height { 0 };
+    u32 const m_width { 0 };
+};
+
+template<typename T>
 class Vector2D {
 public:
     ~Vector2D()
@@ -72,7 +125,7 @@ public:
 
     u32 height() const { return m_height; }
     u32 width() const { return m_width; }
-    
+
     size_t index_at(u32 row, u32 column) const
     {
         VERIFY(row < height());
@@ -124,6 +177,13 @@ public:
     {
         for (size_t i = 0; i < size(); i++)
             m_storage[i] = T();
+    }
+
+    Vector2DView<T> view(u32 top, u32 left, u32 height, u32 width)
+    {
+        VERIFY(top + height <= this->height());
+        VERIFY(left + width <= this->width());
+        return Vector2DView<T>(this, top, left, height, width);
     }
 
 private:
