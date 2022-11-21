@@ -108,6 +108,11 @@ public:
     }
 
     // ^Web::PageClient
+    virtual bool is_connection_open() const override
+    {
+        return true;
+    }
+
     virtual Gfx::Palette palette() const override
     {
         return Gfx::Palette(*m_palette_impl);
@@ -199,14 +204,12 @@ public:
     {
     }
 
-    virtual bool page_did_request_confirm(String const&) override
+    virtual void page_did_request_confirm(String const&) override
     {
-        return false;
     }
 
-    virtual String page_did_request_prompt(String const&, String const&) override
+    virtual void page_did_request_prompt(String const&, String const&) override
     {
-        return String::empty();
     }
 
     virtual String page_did_request_cookie(AK::URL const&, Web::Cookie::Source) override

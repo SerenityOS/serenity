@@ -83,6 +83,27 @@ public:
     Gfx::IntSize const& window_size() const { return m_window_size; }
     void set_window_size(Gfx::IntSize const& size) { m_window_size = size; }
 
+    void did_request_alert(String const& message);
+    void alert_closed();
+
+    bool did_request_confirm(String const& message);
+    void confirm_closed(bool accepted);
+
+    String did_request_prompt(String const& message, String const& default_);
+    void prompt_closed(String response);
+
+    enum class PendingDialog {
+        None,
+        Alert,
+        Confirm,
+        Prompt,
+    };
+    bool has_pending_dialog() const { return m_pending_dialog != PendingDialog::None; }
+    PendingDialog pending_dialog() const { return m_pending_dialog; }
+    Optional<String> const& pending_dialog_text() const { return m_pending_dialog_text; }
+    void dismiss_dialog();
+    void accept_dialog();
+
 private:
     PageClient& m_client;
 
@@ -102,10 +123,17 @@ private:
 
     Gfx::IntPoint m_window_position {};
     Gfx::IntSize m_window_size {};
+
+    PendingDialog m_pending_dialog { PendingDialog::None };
+    Optional<String> m_pending_dialog_text;
+    Optional<Empty> m_pending_alert_response;
+    Optional<bool> m_pending_confirm_response;
+    Optional<String> m_pending_prompt_response;
 };
 
 class PageClient {
 public:
+    virtual bool is_connection_open() const = 0;
     virtual Gfx::Palette palette() const = 0;
     virtual Gfx::IntRect screen_rect() const = 0;
     virtual CSS::PreferredColorScheme preferred_color_scheme() const = 0;
@@ -131,8 +159,10 @@ public:
     virtual void page_did_request_scroll_to(Gfx::IntPoint const&) { }
     virtual void page_did_request_scroll_into_view(Gfx::IntRect const&) { }
     virtual void page_did_request_alert(String const&) { }
-    virtual bool page_did_request_confirm(String const&) { return false; }
-    virtual String page_did_request_prompt(String const&, String const&) { return {}; }
+    virtual void page_did_request_confirm(String const&) { }
+    virtual void page_did_request_prompt(String const&, String const&) { }
+    virtual void page_did_request_accept_dialog() { }
+    virtual void page_did_request_dismiss_dialog() { }
     virtual String page_did_request_cookie(const AK::URL&, Cookie::Source) { return {}; }
     virtual void page_did_set_cookie(const AK::URL&, Cookie::ParsedCookie const&, Cookie::Source) { }
     virtual void page_did_update_resource_count(i32) { }

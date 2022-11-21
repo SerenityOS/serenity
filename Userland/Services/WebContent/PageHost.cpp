@@ -7,17 +7,13 @@
 
 #include "PageHost.h"
 #include "ConnectionFromClient.h"
-#include <AK/SourceLocation.h>
 #include <LibGfx/Painter.h>
 #include <LibGfx/ShareableBitmap.h>
 #include <LibGfx/SystemTheme.h>
 #include <LibWeb/Cookie/ParsedCookie.h>
 #include <LibWeb/HTML/BrowsingContext.h>
-#include <LibWeb/HTML/EventLoop/EventLoop.h>
-#include <LibWeb/HTML/Scripting/Environments.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
 #include <LibWeb/Painting/PaintableBox.h>
-#include <LibWeb/Platform/EventLoopPlugin.h>
 #include <LibWeb/Platform/Timer.h>
 #include <WebContent/WebContentClientEndpoint.h>
 #include <WebContent/WebDriverConnection.h>
@@ -52,6 +48,11 @@ void PageHost::setup_palette()
     theme->color[(int)Gfx::ColorRole::Window] = Color::Magenta;
     theme->color[(int)Gfx::ColorRole::WindowText] = Color::Cyan;
     m_palette_impl = Gfx::PaletteImpl::create_with_anonymous_buffer(buffer);
+}
+
+bool PageHost::is_connection_open() const
+{
+    return m_client.is_open();
 }
 
 Gfx::Palette PageHost::palette() const
@@ -237,112 +238,44 @@ void PageHost::page_did_request_link_context_menu(Gfx::IntPoint const& content_p
     m_client.async_did_request_link_context_menu(content_position, url, target, modifiers);
 }
 
-template<typename ResponseType>
-static ResponseType spin_event_loop_until_dialog_closed(ConnectionFromClient& client, Optional<ResponseType>& response, SourceLocation location = SourceLocation::current())
-{
-    auto& event_loop = Web::HTML::current_settings_object().responsible_event_loop();
-
-    ScopeGuard guard { [&] { event_loop.set_execution_paused(false); } };
-    event_loop.set_execution_paused(true);
-
-    Web::Platform::EventLoopPlugin::the().spin_until([&]() {
-        return response.has_value() || !client.is_open();
-    });
-
-    if (!client.is_open()) {
-        dbgln("WebContent client disconnected during {}. Exiting peacefully.", location.function_name());
-        exit(0);
-    }
-
-    return response.release_value();
-}
-
 void PageHost::page_did_request_alert(String const& message)
 {
-    m_pending_dialog = PendingDialog::Alert;
     m_client.async_did_request_alert(message);
-
-    if (!message.is_empty())
-        m_pending_dialog_text = message;
-
-    spin_event_loop_until_dialog_closed(m_client, m_pending_alert_response);
 }
 
 void PageHost::alert_closed()
 {
-    if (m_pending_dialog == PendingDialog::Alert) {
-        m_pending_dialog = PendingDialog::None;
-        m_pending_alert_response = Empty {};
-        m_pending_dialog_text.clear();
-    }
+    page().alert_closed();
 }
 
-bool PageHost::page_did_request_confirm(String const& message)
+void PageHost::page_did_request_confirm(String const& message)
 {
-    m_pending_dialog = PendingDialog::Confirm;
     m_client.async_did_request_confirm(message);
-
-    if (!message.is_empty())
-        m_pending_dialog_text = message;
-
-    return spin_event_loop_until_dialog_closed(m_client, m_pending_confirm_response);
 }
 
 void PageHost::confirm_closed(bool accepted)
 {
-    if (m_pending_dialog == PendingDialog::Confirm) {
-        m_pending_dialog = PendingDialog::None;
-        m_pending_confirm_response = accepted;
-        m_pending_dialog_text.clear();
-    }
+    page().confirm_closed(accepted);
 }
 
-String PageHost::page_did_request_prompt(String const& message, String const& default_)
+void PageHost::page_did_request_prompt(String const& message, String const& default_)
 {
-    m_pending_dialog = PendingDialog::Prompt;
     m_client.async_did_request_prompt(message, default_);
-
-    if (!message.is_empty())
-        m_pending_dialog_text = message;
-
-    return spin_event_loop_until_dialog_closed(m_client, m_pending_prompt_response);
 }
 
 void PageHost::prompt_closed(String response)
 {
-    if (m_pending_dialog == PendingDialog::Prompt) {
-        m_pending_dialog = PendingDialog::None;
-        m_pending_prompt_response = move(response);
-        m_pending_dialog_text.clear();
-    }
+    page().prompt_closed(move(response));
 }
 
-void PageHost::dismiss_dialog()
+void PageHost::page_did_request_accept_dialog()
 {
-    switch (m_pending_dialog) {
-    case PendingDialog::None:
-        break;
-    case PendingDialog::Alert:
-        m_client.async_did_request_accept_dialog();
-        break;
-    case PendingDialog::Confirm:
-    case PendingDialog::Prompt:
-        m_client.async_did_request_dismiss_dialog();
-        break;
-    }
+    m_client.async_did_request_accept_dialog();
 }
 
-void PageHost::accept_dialog()
+void PageHost::page_did_request_dismiss_dialog()
 {
-    switch (m_pending_dialog) {
-    case PendingDialog::None:
-        break;
-    case PendingDialog::Alert:
-    case PendingDialog::Confirm:
-    case PendingDialog::Prompt:
-        m_client.async_did_request_accept_dialog();
-        break;
-    }
+    m_client.async_did_request_dismiss_dialog();
 }
 
 void PageHost::page_did_change_favicon(Gfx::Bitmap const& favicon)

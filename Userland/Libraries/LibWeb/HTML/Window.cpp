@@ -426,20 +426,20 @@ WebIDL::ExceptionOr<JS::GCPtr<HTML::WindowProxy>> Window::open_impl(StringView u
 void Window::alert_impl(String const& message)
 {
     if (auto* page = this->page())
-        page->client().page_did_request_alert(message);
+        page->did_request_alert(message);
 }
 
 bool Window::confirm_impl(String const& message)
 {
     if (auto* page = this->page())
-        return page->client().page_did_request_confirm(message);
+        return page->did_request_confirm(message);
     return false;
 }
 
 String Window::prompt_impl(String const& message, String const& default_)
 {
     if (auto* page = this->page())
-        return page->client().page_did_request_prompt(message, default_);
+        return page->did_request_prompt(message, default_);
     return {};
 }
 

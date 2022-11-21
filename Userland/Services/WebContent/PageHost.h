@@ -47,20 +47,9 @@ public:
     void confirm_closed(bool accepted);
     void prompt_closed(String response);
 
-    enum class PendingDialog {
-        None,
-        Alert,
-        Confirm,
-        Prompt,
-    };
-    bool has_pending_dialog() const { return m_pending_dialog != PendingDialog::None; }
-    PendingDialog pending_dialog() const { return m_pending_dialog; }
-    Optional<String> const& pending_dialog_text() const { return m_pending_dialog_text; }
-    void dismiss_dialog();
-    void accept_dialog();
-
 private:
     // ^PageClient
+    virtual bool is_connection_open() const override;
     virtual Gfx::Palette palette() const override;
     virtual Gfx::IntRect screen_rect() const override { return m_screen_rect; }
     virtual Web::CSS::PreferredColorScheme preferred_color_scheme() const override { return m_preferred_color_scheme; }
@@ -84,8 +73,10 @@ private:
     virtual void page_did_create_main_document() override;
     virtual void page_did_finish_loading(const URL&) override;
     virtual void page_did_request_alert(String const&) override;
-    virtual bool page_did_request_confirm(String const&) override;
-    virtual String page_did_request_prompt(String const&, String const&) override;
+    virtual void page_did_request_confirm(String const&) override;
+    virtual void page_did_request_prompt(String const&, String const&) override;
+    virtual void page_did_request_accept_dialog() override;
+    virtual void page_did_request_dismiss_dialog() override;
     virtual void page_did_change_favicon(Gfx::Bitmap const&) override;
     virtual void page_did_request_image_context_menu(Gfx::IntPoint const&, const URL&, String const& target, unsigned modifiers, Gfx::Bitmap const*) override;
     virtual String page_did_request_cookie(const URL&, Web::Cookie::Source) override;
@@ -111,12 +102,6 @@ private:
     Web::CSS::PreferredColorScheme m_preferred_color_scheme { Web::CSS::PreferredColorScheme::Auto };
 
     RefPtr<WebDriverConnection> m_webdriver;
-
-    PendingDialog m_pending_dialog { PendingDialog::None };
-    Optional<String> m_pending_dialog_text;
-    Optional<Empty> m_pending_alert_response;
-    Optional<bool> m_pending_confirm_response;
-    Optional<String> m_pending_prompt_response;
 };
 
 }
