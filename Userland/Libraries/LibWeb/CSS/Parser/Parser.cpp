@@ -5868,6 +5868,7 @@ Optional<CSS::GridRepeat> Parser::parse_repeat(Vector<ComponentValue> const& com
             while (block_tokens.has_next_token()) {
                 auto current_block_token = block_tokens.next_token();
                 line_names.append(current_block_token.token().ident());
+                block_tokens.skip_whitespace();
             }
             line_names_list.append(line_names);
             part_two_tokens.skip_whitespace();
@@ -5966,6 +5967,7 @@ RefPtr<StyleValue> Parser::parse_grid_track_sizes(Vector<ComponentValue> const& 
             while (block_tokens.has_next_token()) {
                 auto current_block_token = block_tokens.next_token();
                 line_names.append(current_block_token.token().ident());
+                block_tokens.skip_whitespace();
             }
             line_names_list.append(line_names);
         } else {
