@@ -1055,3 +1055,10 @@ bool WebContentView::event(QEvent* event)
     }
     return QAbstractScrollArea::event(event);
 }
+
+void WebContentView::notify_server_did_finish_handling_input_event(bool event_was_accepted)
+{
+    // FIXME: Currently Ladybird handles the keyboard shortcuts before passing the event to web content, so
+    //        we don't need to do anything here. But we'll need to once we start asking web content first.
+    (void)event_was_accepted;
+}
