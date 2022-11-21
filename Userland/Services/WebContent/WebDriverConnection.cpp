@@ -17,6 +17,7 @@
 #include <LibWeb/CSS/StyleProperties.h>
 #include <LibWeb/CSS/StyleValue.h>
 #include <LibWeb/Cookie/Cookie.h>
+#include <LibWeb/Cookie/ParsedCookie.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/DOM/ShadowRoot.h>
@@ -29,6 +30,7 @@
 #include <LibWeb/Page/Page.h>
 #include <LibWeb/Platform/EventLoopPlugin.h>
 #include <LibWeb/Platform/Timer.h>
+#include <LibWeb/WebDriver/ExecuteScript.h>
 #include <LibWeb/WebDriver/Screenshot.h>
 #include <WebContent/ConnectionFromClient.h>
 #include <WebContent/WebDriverConnection.h>
@@ -385,7 +387,7 @@ Messages::WebDriverClient::BackResponse WebDriverConnection::back()
     TRY(handle_any_user_prompts());
 
     // 3. Traverse the history by a delta –1 for the current browsing context.
-    m_web_content_client.async_did_request_navigate_back();
+    m_page_client.page_did_request_navigate_back();
 
     // FIXME: 4. If the previous step completed results in a pageHide event firing, wait until pageShow event fires or for the session page load timeout milliseconds to pass, whichever occurs sooner.
     // FIXME: 5. If the previous step completed by the session page load timeout being reached, and user prompts have been handled, return error with error code timeout.
@@ -404,7 +406,7 @@ Messages::WebDriverClient::ForwardResponse WebDriverConnection::forward()
     TRY(handle_any_user_prompts());
 
     // 3. Traverse the history by a delta 1 for the current browsing context.
-    m_web_content_client.async_did_request_navigate_forward();
+    m_page_client.page_did_request_navigate_forward();
 
     // FIXME: 4. If the previous step completed results in a pageHide event firing, wait until pageShow event fires or for the session page load timeout milliseconds to pass, whichever occurs sooner.
     // FIXME: 5. If the previous step completed by the session page load timeout being reached, and user prompts have been handled, return error with error code timeout.
@@ -423,7 +425,7 @@ Messages::WebDriverClient::RefreshResponse WebDriverConnection::refresh()
     TRY(handle_any_user_prompts());
 
     // 3. Initiate an overridden reload of the current top-level browsing context’s active document.
-    m_web_content_client.async_did_request_refresh();
+    m_page_client.page_did_request_refresh();
 
     // FIXME: 4. If url is special except for file:
     // FIXME:     1. Try to wait for navigation to complete.
@@ -571,7 +573,7 @@ Messages::WebDriverClient::SetWindowRectResponse WebDriverConnection::set_window
     if (width.has_value() && height.has_value()) {
         // a. Set the width, in CSS pixels, of the operating system window containing the current top-level browsing context, including any browser chrome and externally drawn window decorations to a value that is as close as possible to width.
         // b. Set the height, in CSS pixels, of the operating system window containing the current top-level browsing context, including any browser chrome and externally drawn window decorations to a value that is as close as possible to height.
-        auto size = m_web_content_client.did_request_resize_window({ *width, *height });
+        auto size = m_page_client.page_did_request_resize_window({ *width, *height });
         window_rect.set_size(size);
     } else {
         window_rect.set_size(m_page_client.page().window_size());
@@ -580,7 +582,7 @@ Messages::WebDriverClient::SetWindowRectResponse WebDriverConnection::set_window
     // 12. If x and y are not null:
     if (x.has_value() && y.has_value()) {
         // a. Run the implementation-specific steps to set the position of the operating system level window containing the current top-level browsing context to the position given by the x and y coordinates.
-        auto position = m_web_content_client.did_request_reposition_window({ *x, *y });
+        auto position = m_page_client.page_did_request_reposition_window({ *x, *y });
         window_rect.set_location(position);
     } else {
         window_rect.set_location(m_page_client.page().window_position());
@@ -650,7 +652,7 @@ Messages::WebDriverClient::FullscreenWindowResponse WebDriverConnection::fullscr
     // 5. FIXME: Call fullscreen an element with the current top-level browsing context’s active document’s document element.
     //           As described in https://fullscreen.spec.whatwg.org/#fullscreen-an-element
     //    NOTE: What we do here is basically `requestFullscreen(options)` with options["navigationUI"]="show"
-    auto rect = m_web_content_client.did_request_fullscreen_window();
+    auto rect = m_page_client.page_did_request_fullscreen_window();
 
     // 6. Return success with data set to the WindowRect object for the current top-level browsing context.
     return serialize_rect(rect);
@@ -1243,7 +1245,7 @@ Messages::WebDriverClient::GetAllCookiesResponse WebDriverConnection::get_all_co
     // 4. For each cookie in all associated cookies of the current browsing context’s active document:
     auto* document = m_page_client.page().top_level_browsing_context().active_document();
 
-    for (auto const& cookie : m_web_content_client.did_request_all_cookies(document->url())) {
+    for (auto const& cookie : m_page_client.page_did_request_all_cookies(document->url())) {
         // 1. Let serialized cookie be the result of serializing cookie.
         auto serialized_cookie = serialize_cookie(cookie);
 
@@ -1267,7 +1269,7 @@ Messages::WebDriverClient::GetNamedCookieResponse WebDriverConnection::get_named
     // 3. If the url variable name is equal to a cookie’s cookie name amongst all associated cookies of the current browsing context’s active document, return success with the serialized cookie as data.
     auto* document = m_page_client.page().top_level_browsing_context().active_document();
 
-    if (auto cookie = m_web_content_client.did_request_named_cookie(document->url(), name); cookie.has_value()) {
+    if (auto cookie = m_page_client.page_did_request_named_cookie(document->url(), name); cookie.has_value()) {
         auto serialized_cookie = serialize_cookie(*cookie);
         return serialized_cookie;
     }
@@ -1340,7 +1342,7 @@ Messages::WebDriverClient::AddCookieResponse WebDriverConnection::add_cookie(Jso
     }
 
     auto* document = m_page_client.page().top_level_browsing_context().active_document();
-    m_web_content_client.async_did_set_cookie(document->url(), cookie, to_underlying(Web::Cookie::Source::Http));
+    m_page_client.page_did_set_cookie(document->url(), cookie, Web::Cookie::Source::Http);
 
     // If there is an error during this step, return error with error code unable to set cookie.
     // NOTE: This probably should only apply to the actual setting of the cookie in the Browser, which cannot fail in our case.
@@ -1469,7 +1471,7 @@ Messages::WebDriverClient::SendAlertTextResponse WebDriverConnection::send_alert
     }
 
     // 6. Perform user agent dependent steps to set the value of current user prompt’s text field to text.
-    m_web_content_client.async_did_request_set_prompt_text(move(text));
+    m_page_client.page_did_request_set_prompt_text(move(text));
 
     // 7. Return success with data null.
     return JsonValue {};
@@ -1593,7 +1595,7 @@ ErrorOr<void, Web::WebDriver::Error> WebDriverConnection::handle_any_user_prompt
 void WebDriverConnection::restore_the_window()
 {
     // To restore the window, given an operating system level window with an associated top-level browsing context, run implementation-specific steps to restore or unhide the window to the visible screen.
-    m_web_content_client.async_did_request_restore_window();
+    m_page_client.page_did_request_restore_window();
 
     // Do not return from this operation until the visibility state of the top-level browsing context’s active document has reached the visible state, or until the operation times out.
     // FIXME: Implement timeouts.
@@ -1607,7 +1609,7 @@ void WebDriverConnection::restore_the_window()
 Gfx::IntRect WebDriverConnection::maximize_the_window()
 {
     // To maximize the window, given an operating system level window with an associated top-level browsing context, run the implementation-specific steps to transition the operating system level window into the maximized window state.
-    auto rect = m_web_content_client.did_request_maximize_window();
+    auto rect = m_page_client.page_did_request_maximize_window();
 
     // Return when the window has completed the transition, or within an implementation-defined timeout.
     return rect;
@@ -1617,7 +1619,7 @@ Gfx::IntRect WebDriverConnection::maximize_the_window()
 Gfx::IntRect WebDriverConnection::iconify_the_window()
 {
     // To iconify the window, given an operating system level window with an associated top-level browsing context, run implementation-specific steps to iconify, minimize, or hide the window from the visible screen.
-    auto rect = m_web_content_client.did_request_minimize_window();
+    auto rect = m_page_client.page_did_request_minimize_window();
 
     // Do not return from this operation until the visibility state of the top-level browsing context’s active document has reached the hidden state, or until the operation times out.
     // FIXME: Implement timeouts.
@@ -1709,13 +1711,13 @@ void WebDriverConnection::delete_cookies(Optional<StringView> const& name)
     // For each cookie among all associated cookies of the current browsing context’s active document, un the substeps of the first matching condition:
     auto* document = m_page_client.page().top_level_browsing_context().active_document();
 
-    for (auto& cookie : m_web_content_client.did_request_all_cookies(document->url())) {
+    for (auto& cookie : m_page_client.page_did_request_all_cookies(document->url())) {
         // -> name is undefined
         // -> name is equal to cookie name
         if (!name.has_value() || name.value() == cookie.name) {
             // Set the cookie expiry time to a Unix timestamp in the past.
             cookie.expiry_time = Core::DateTime::from_timestamp(0);
-            m_web_content_client.async_did_update_cookie(document->url(), cookie);
+            m_page_client.page_did_update_cookie(document->url(), move(cookie));
         }
         // -> Otherwise
         //    Do nothing.

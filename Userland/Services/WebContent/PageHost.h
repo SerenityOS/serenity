@@ -57,6 +57,15 @@ private:
     virtual void page_did_request_cursor_change(Gfx::StandardCursor) override;
     virtual void page_did_layout() override;
     virtual void page_did_change_title(String const&) override;
+    virtual void page_did_request_navigate_back() override;
+    virtual void page_did_request_navigate_forward() override;
+    virtual void page_did_request_refresh() override;
+    virtual Gfx::IntSize page_did_request_resize_window(Gfx::IntSize const&) override;
+    virtual Gfx::IntPoint page_did_request_reposition_window(Gfx::IntPoint const&) override;
+    virtual void page_did_request_restore_window() override;
+    virtual Gfx::IntRect page_did_request_maximize_window() override;
+    virtual Gfx::IntRect page_did_request_minimize_window() override;
+    virtual Gfx::IntRect page_did_request_fullscreen_window() override;
     virtual void page_did_request_scroll(i32, i32) override;
     virtual void page_did_request_scroll_to(Gfx::IntPoint const&) override;
     virtual void page_did_request_scroll_into_view(Gfx::IntRect const&) override;
@@ -74,12 +83,16 @@ private:
     virtual void page_did_request_alert(String const&) override;
     virtual void page_did_request_confirm(String const&) override;
     virtual void page_did_request_prompt(String const&, String const&) override;
+    virtual void page_did_request_set_prompt_text(String const&) override;
     virtual void page_did_request_accept_dialog() override;
     virtual void page_did_request_dismiss_dialog() override;
     virtual void page_did_change_favicon(Gfx::Bitmap const&) override;
     virtual void page_did_request_image_context_menu(Gfx::IntPoint const&, const URL&, String const& target, unsigned modifiers, Gfx::Bitmap const*) override;
+    virtual Vector<Web::Cookie::Cookie> page_did_request_all_cookies(URL const&) override;
+    virtual Optional<Web::Cookie::Cookie> page_did_request_named_cookie(URL const&, String const&) override;
     virtual String page_did_request_cookie(const URL&, Web::Cookie::Source) override;
     virtual void page_did_set_cookie(const URL&, Web::Cookie::ParsedCookie const&, Web::Cookie::Source) override;
+    virtual void page_did_update_cookie(URL const&, Web::Cookie::Cookie) override;
     virtual void page_did_update_resource_count(i32) override;
     virtual void request_file(NonnullRefPtr<Web::FileRequest>&) override;
 
