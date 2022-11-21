@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include <AK/Function.h>
 #include <AK/HashMap.h>
 #include <AK/String.h>
 #include <LibIPC/ConnectionToServer.h>
@@ -93,7 +94,9 @@ private:
     void restore_the_window();
     Gfx::IntRect maximize_the_window();
     Gfx::IntRect iconify_the_window();
-    ErrorOr<JsonArray, Web::WebDriver::Error> find(Web::DOM::ParentNode& start_node, Web::WebDriver::LocationStrategy using_, StringView value);
+
+    using StartNodeGetter = Function<ErrorOr<Web::DOM::ParentNode*, Web::WebDriver::Error>()>;
+    ErrorOr<JsonArray, Web::WebDriver::Error> find(StartNodeGetter&& start_node_getter, Web::WebDriver::LocationStrategy using_, StringView value);
 
     struct ScriptArguments {
         String script;

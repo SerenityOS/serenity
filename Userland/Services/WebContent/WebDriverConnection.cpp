@@ -678,15 +678,19 @@ Messages::WebDriverClient::FindElementResponse WebDriverConnection::find_element
     // 6. Handle any user prompts and return its value if it is an error.
     TRY(handle_any_user_prompts());
 
-    // 7. Let start node be the current browsing context’s document element.
-    auto* start_node = m_page_host.page().top_level_browsing_context().active_document();
+    auto start_node_getter = [this]() -> StartNodeGetter::ReturnType {
+        // 7. Let start node be the current browsing context’s document element.
+        auto* start_node = m_page_host.page().top_level_browsing_context().active_document();
 
-    // 8. If start node is null, return error with error code no such element.
-    if (!start_node)
-        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::NoSuchElement, "document element does not exist"sv);
+        // 8. If start node is null, return error with error code no such element.
+        if (!start_node)
+            return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::NoSuchElement, "document element does not exist"sv);
+
+        return start_node;
+    };
 
     // 9. Let result be the result of trying to Find with start node, location strategy, and selector.
-    auto result = TRY(find(*start_node, *location_strategy, selector));
+    auto result = TRY(find(move(start_node_getter), *location_strategy, selector));
 
     // 10. If result is empty, return error with error code no such element. Otherwise, return the first element of result.
     if (result.is_empty())
@@ -716,15 +720,19 @@ Messages::WebDriverClient::FindElementsResponse WebDriverConnection::find_elemen
     // 6. Handle any user prompts and return its value if it is an error.
     TRY(handle_any_user_prompts());
 
-    // 7. Let start node be the current browsing context’s document element.
-    auto* start_node = m_page_host.page().top_level_browsing_context().active_document();
+    auto start_node_getter = [this]() -> StartNodeGetter::ReturnType {
+        // 7. Let start node be the current browsing context’s document element.
+        auto* start_node = m_page_host.page().top_level_browsing_context().active_document();
 
-    // 8. If start node is null, return error with error code no such element.
-    if (!start_node)
-        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::NoSuchElement, "document element does not exist"sv);
+        // 8. If start node is null, return error with error code no such element.
+        if (!start_node)
+            return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::NoSuchElement, "document element does not exist"sv);
+
+        return start_node;
+    };
 
     // 9. Return the result of trying to Find with start node, location strategy, and selector.
-    return TRY(find(*start_node, *location_strategy, selector));
+    return TRY(find(move(start_node_getter), *location_strategy, selector));
 }
 
 // 12.3.4 Find Element From Element, https://w3c.github.io/webdriver/#dfn-find-element-from-element
@@ -748,11 +756,13 @@ Messages::WebDriverClient::FindElementFromElementResponse WebDriverConnection::f
     // 6. Handle any user prompts and return its value if it is an error.
     TRY(handle_any_user_prompts());
 
-    // 7. Let start node be the result of trying to get a known connected element with url variable element id.
-    auto* start_node = TRY(get_known_connected_element(element_id));
+    auto start_node_getter = [&]() -> StartNodeGetter::ReturnType {
+        // 7. Let start node be the result of trying to get a known connected element with url variable element id.
+        return TRY(get_known_connected_element(element_id));
+    };
 
     // 8. Let result be the value of trying to Find with start node, location strategy, and selector.
-    auto result = TRY(find(*start_node, *location_strategy, selector));
+    auto result = TRY(find(move(start_node_getter), *location_strategy, selector));
 
     // 9. If result is empty, return error with error code no such element. Otherwise, return the first element of result.
     if (result.is_empty())
@@ -782,11 +792,13 @@ Messages::WebDriverClient::FindElementsFromElementResponse WebDriverConnection::
     // 6. Handle any user prompts and return its value if it is an error.
     TRY(handle_any_user_prompts());
 
-    // 7. Let start node be the result of trying to get a known connected element with url variable element id.
-    auto* start_node = TRY(get_known_connected_element(element_id));
+    auto start_node_getter = [&]() -> StartNodeGetter::ReturnType {
+        // 7. Let start node be the result of trying to get a known connected element with url variable element id.
+        return TRY(get_known_connected_element(element_id));
+    };
 
     // 8. Return the result of trying to Find with start node, location strategy, and selector.
-    return TRY(find(*start_node, *location_strategy, selector));
+    return TRY(find(move(start_node_getter), *location_strategy, selector));
 }
 
 // 12.3.6 Find Element From Shadow Root, https://w3c.github.io/webdriver/#find-element-from-shadow-root
@@ -810,11 +822,13 @@ Messages::WebDriverClient::FindElementFromShadowRootResponse WebDriverConnection
     // 6. Handle any user prompts and return its value if it is an error.
     TRY(handle_any_user_prompts());
 
-    // 7. Let start node be the result of trying to get a known shadow root with url variable shadow id.
-    auto* start_node = TRY(get_known_shadow_root(shadow_id));
+    auto start_node_getter = [&]() -> StartNodeGetter::ReturnType {
+        // 7. Let start node be the result of trying to get a known shadow root with url variable shadow id.
+        return TRY(get_known_shadow_root(shadow_id));
+    };
 
     // 8. Let result be the value of trying to Find with start node, location strategy, and selector.
-    auto result = TRY(find(*start_node, *location_strategy, selector));
+    auto result = TRY(find(move(start_node_getter), *location_strategy, selector));
 
     // 9. If result is empty, return error with error code no such element. Otherwise, return the first element of result.
     if (result.is_empty())
@@ -844,11 +858,13 @@ Messages::WebDriverClient::FindElementsFromShadowRootResponse WebDriverConnectio
     // 6. Handle any user prompts and return its value if it is an error.
     TRY(handle_any_user_prompts());
 
-    // 7. Let start node be the result of trying to get a known shadow root with url variable shadow id.
-    auto* start_node = TRY(get_known_shadow_root(shadow_id));
+    auto start_node_getter = [&]() -> StartNodeGetter::ReturnType {
+        // 7. Let start node be the result of trying to get a known shadow root with url variable shadow id.
+        return TRY(get_known_shadow_root(shadow_id));
+    };
 
     // 8. Return the result of trying to Find with start node, location strategy, and selector.
-    return TRY(find(*start_node, *location_strategy, selector));
+    return TRY(find(move(start_node_getter), *location_strategy, selector));
 }
 
 // 12.3.8 Get Active Element, https://w3c.github.io/webdriver/#get-active-element
@@ -1615,7 +1631,7 @@ Gfx::IntRect WebDriverConnection::iconify_the_window()
 }
 
 // https://w3c.github.io/webdriver/#dfn-find
-ErrorOr<JsonArray, Web::WebDriver::Error> WebDriverConnection::find(Web::DOM::ParentNode& start_node, Web::WebDriver::LocationStrategy using_, StringView value)
+ErrorOr<JsonArray, Web::WebDriver::Error> WebDriverConnection::find(StartNodeGetter&& start_node_getter, Web::WebDriver::LocationStrategy using_, StringView value)
 {
     // FIXME: 1. Let end time be the current time plus the session implicit wait timeout.
 
@@ -1626,7 +1642,7 @@ ErrorOr<JsonArray, Web::WebDriver::Error> WebDriverConnection::find(Web::DOM::Pa
     auto selector = value;
 
     // 4. Let elements returned be the result of trying to call the relevant element location strategy with arguments start node, and selector.
-    auto elements = Web::WebDriver::invoke_location_strategy(location_strategy, start_node, selector);
+    auto elements = Web::WebDriver::invoke_location_strategy(location_strategy, *TRY(start_node_getter()), selector);
 
     // 5. If a DOMException, SyntaxError, XPathException, or other error occurs during the execution of the element location strategy, return error invalid selector.
     if (elements.is_error())
