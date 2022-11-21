@@ -1633,7 +1633,8 @@ Gfx::IntRect WebDriverConnection::iconify_the_window()
 // https://w3c.github.io/webdriver/#dfn-find
 ErrorOr<JsonArray, Web::WebDriver::Error> WebDriverConnection::find(StartNodeGetter&& start_node_getter, Web::WebDriver::LocationStrategy using_, StringView value)
 {
-    // FIXME: 1. Let end time be the current time plus the session implicit wait timeout.
+    // 1. Let end time be the current time plus the session implicit wait timeout.
+    auto end_time = Time::now_monotonic() + Time::from_milliseconds(static_cast<i64>(m_timeouts_configuration.implicit_wait_timeout));
 
     // 2. Let location strategy be equal to using.
     auto location_strategy = using_;
@@ -1641,22 +1642,38 @@ ErrorOr<JsonArray, Web::WebDriver::Error> WebDriverConnection::find(StartNodeGet
     // 3. Let selector be equal to value.
     auto selector = value;
 
-    // 4. Let elements returned be the result of trying to call the relevant element location strategy with arguments start node, and selector.
-    auto elements = Web::WebDriver::invoke_location_strategy(location_strategy, *TRY(start_node_getter()), selector);
+    ErrorOr<JS::GCPtr<Web::DOM::NodeList>, Web::WebDriver::Error> maybe_elements { nullptr };
 
-    // 5. If a DOMException, SyntaxError, XPathException, or other error occurs during the execution of the element location strategy, return error invalid selector.
-    if (elements.is_error())
-        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidSelector, String::formatted("The location strategy could not finish: {}", elements.error().message));
+    auto try_to_find_element = [&]() -> decltype(maybe_elements) {
+        // 4. Let elements returned be the result of trying to call the relevant element location strategy with arguments start node, and selector.
+        auto elements = Web::WebDriver::invoke_location_strategy(location_strategy, *TRY(start_node_getter()), selector);
 
-    // FIXME: 6. If elements returned is empty and the current time is less than end time return to step 4. Otherwise, continue to the next step.
+        // 5. If a DOMException, SyntaxError, XPathException, or other error occurs during the execution of the element location strategy, return error invalid selector.
+        if (elements.is_error())
+            return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidSelector, String::formatted("The location strategy could not finish: {}", elements.error().message));
+
+        return elements.release_value();
+    };
+
+    Web::Platform::EventLoopPlugin::the().spin_until([&]() {
+        maybe_elements = try_to_find_element();
+        if (maybe_elements.is_error())
+            return true;
+
+        // 6. If elements returned is empty and the current time is less than end time return to step 4. Otherwise, continue to the next step.
+        return maybe_elements.value()->length() != 0 || Time::now_monotonic() >= end_time;
+    });
+
+    auto elements = TRY(maybe_elements);
+    VERIFY(elements);
 
     // 7. Let result be an empty JSON List.
     JsonArray result;
-    result.ensure_capacity(elements.value()->length());
+    result.ensure_capacity(elements->length());
 
     // 8. For each element in elements returned, append the web element reference object for element, to result.
-    for (size_t i = 0; i < elements.value()->length(); ++i)
-        result.append(web_element_reference_object(*elements.value()->item(i)));
+    for (size_t i = 0; i < elements->length(); ++i)
+        result.append(web_element_reference_object(*elements->item(i)));
 
     // 9. Return success with data result.
     return result;
