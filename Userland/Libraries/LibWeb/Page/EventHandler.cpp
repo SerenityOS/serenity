@@ -649,6 +649,7 @@ bool EventHandler::focus_previous_element()
 constexpr bool should_ignore_keydown_event(u32 code_point)
 {
     // FIXME: There are probably also keys with non-zero code points that should be filtered out.
+    // FIXME: We should take the modifier keys into consideration somehow. This treats "Ctrl+C" as just "c".
     return code_point == 0 || code_point == 27;
 }
 
@@ -666,16 +667,16 @@ bool EventHandler::fire_keyboard_event(FlyString const& event_name, HTML::Browsi
         }
 
         auto event = UIEvents::KeyboardEvent::create_from_platform_event(document->realm(), event_name, key, modifiers, code_point);
-        return focused_element->dispatch_event(*event);
+        return !focused_element->dispatch_event(*event);
     }
 
     // FIXME: De-duplicate this. This is just to prevent wasting a KeyboardEvent allocation when recursing into an (i)frame.
     auto event = UIEvents::KeyboardEvent::create_from_platform_event(document->realm(), event_name, key, modifiers, code_point);
 
     if (JS::GCPtr<HTML::HTMLElement> body = document->body())
-        return body->dispatch_event(*event);
+        return !body->dispatch_event(*event);
 
-    return document->root().dispatch_event(*event);
+    return !document->root().dispatch_event(*event);
 }
 
 bool EventHandler::handle_keydown(KeyCode key, unsigned modifiers, u32 code_point)
