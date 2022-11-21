@@ -29,11 +29,11 @@ class WebDriverConnection final
     C_OBJECT(WebDriverConnection)
 
 public:
-    static ErrorOr<NonnullRefPtr<WebDriverConnection>> connect(ConnectionFromClient& web_content_client, PageHost& page_host, String const& webdriver_ipc_path);
+    static ErrorOr<NonnullRefPtr<WebDriverConnection>> connect(ConnectionFromClient& web_content_client, Web::PageClient& page_client, String const& webdriver_ipc_path);
     virtual ~WebDriverConnection() = default;
 
 private:
-    WebDriverConnection(NonnullOwnPtr<Core::Stream::LocalSocket> socket, ConnectionFromClient& web_content_client, PageHost& page_host);
+    WebDriverConnection(NonnullOwnPtr<Core::Stream::LocalSocket> socket, ConnectionFromClient& web_content_client, Web::PageClient& page_client);
 
     virtual void die() override { }
 
@@ -106,7 +106,7 @@ private:
     void delete_cookies(Optional<StringView> const& name = {});
 
     ConnectionFromClient& m_web_content_client;
-    PageHost& m_page_host;
+    Web::PageClient& m_page_client;
 
     // https://w3c.github.io/webdriver/#dfn-page-load-strategy
     Web::WebDriver::PageLoadStrategy m_page_load_strategy { Web::WebDriver::PageLoadStrategy::Normal };
