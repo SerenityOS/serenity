@@ -280,7 +280,6 @@ void TextEditor::mousedown_event(MouseEvent& event)
     }
 
     m_in_drag_select = true;
-    m_automatic_selection_scroll_timer->start();
 
     set_cursor(text_position_at(event.position()));
 
