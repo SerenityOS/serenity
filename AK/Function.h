@@ -51,6 +51,8 @@ class Function<Out(In...)> {
     AK_MAKE_NONCOPYABLE(Function);
 
 public:
+    using ReturnType = Out;
+
     Function() = default;
     Function(std::nullptr_t)
     {
