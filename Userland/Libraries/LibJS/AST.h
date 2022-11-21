@@ -1212,7 +1212,6 @@ public:
     }
 
     FlyString const& string() const { return m_string; }
-    void set_lexically_bound_function_argument_index(size_t index) { m_lexically_bound_function_argument = index; }
 
     virtual Completion execute(Interpreter&) const override;
     virtual void dump(int indent) const override;
@@ -1223,7 +1222,6 @@ private:
     virtual bool is_identifier() const override { return true; }
 
     FlyString m_string;
-    Optional<size_t> m_lexically_bound_function_argument;
     mutable Optional<EnvironmentCoordinate> m_cached_environment_coordinate;
 };
 

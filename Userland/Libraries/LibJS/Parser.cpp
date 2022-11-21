@@ -222,15 +222,6 @@ public:
     {
         VERIFY(is_top_level() || m_parent_scope);
 
-        if (!m_contains_access_to_arguments_object) {
-            for (auto& it : m_identifier_and_argument_index_associations) {
-                for (auto& identifier : it.value) {
-                    if (!has_declaration(identifier.string()))
-                        identifier.set_lexically_bound_function_argument_index(it.key);
-                }
-            }
-        }
-
         for (size_t i = 0; i < m_functions_to_hoist.size(); i++) {
             auto const& function_declaration = m_functions_to_hoist[i];
             if (m_lexical_names.contains(function_declaration.name()) || m_forbidden_var_names.contains(function_declaration.name()))
@@ -250,11 +241,6 @@ public:
 
         VERIFY(m_parser.m_state.current_scope_pusher == this);
         m_parser.m_state.current_scope_pusher = m_parent_scope;
-    }
-
-    void associate_identifier_with_argument_index(NonnullRefPtr<Identifier> identifier, size_t index)
-    {
-        m_identifier_and_argument_index_associations.ensure(index).append(move(identifier));
     }
 
     void set_contains_await_expression()
@@ -289,7 +275,6 @@ private:
     NonnullRefPtrVector<FunctionDeclaration> m_functions_to_hoist;
 
     Optional<Vector<FunctionDeclaration::Parameter>> m_function_parameters;
-    HashMap<size_t, NonnullRefPtrVector<Identifier>> m_identifier_and_argument_index_associations;
 
     bool m_contains_access_to_arguments_object { false };
     bool m_contains_direct_call_to_eval { false };
