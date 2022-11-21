@@ -35,7 +35,6 @@ public:
     void set_should_show_line_box_borders(bool b) { m_should_show_line_box_borders = b; }
     void set_has_focus(bool);
     void set_is_scripting_enabled(bool);
-    void set_is_webdriver_active(bool);
     void set_window_position(Gfx::IntPoint const&);
     void set_window_size(Gfx::IntSize const&);
 

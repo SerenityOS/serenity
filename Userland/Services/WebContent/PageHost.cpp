@@ -79,11 +79,6 @@ void PageHost::set_is_scripting_enabled(bool is_scripting_enabled)
     page().set_is_scripting_enabled(is_scripting_enabled);
 }
 
-void PageHost::set_is_webdriver_active(bool is_webdriver_active)
-{
-    page().set_is_webdriver_active(is_webdriver_active);
-}
-
 void PageHost::set_window_position(Gfx::IntPoint const& position)
 {
     page().set_window_position(position);
