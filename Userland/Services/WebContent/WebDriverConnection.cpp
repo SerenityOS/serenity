@@ -32,7 +32,6 @@
 #include <LibWeb/Platform/Timer.h>
 #include <LibWeb/WebDriver/ExecuteScript.h>
 #include <LibWeb/WebDriver/Screenshot.h>
-#include <WebContent/ConnectionFromClient.h>
 #include <WebContent/WebDriverConnection.h>
 
 namespace WebContent {
@@ -252,18 +251,17 @@ static ErrorOr<PropertyType, Web::WebDriver::Error> get_property(JsonValue const
     }
 }
 
-ErrorOr<NonnullRefPtr<WebDriverConnection>> WebDriverConnection::connect(ConnectionFromClient& web_content_client, Web::PageClient& page_client, String const& webdriver_ipc_path)
+ErrorOr<NonnullRefPtr<WebDriverConnection>> WebDriverConnection::connect(Web::PageClient& page_client, String const& webdriver_ipc_path)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Trying to connect to {}", webdriver_ipc_path);
     auto socket = TRY(Core::Stream::LocalSocket::connect(webdriver_ipc_path));
 
     dbgln_if(WEBDRIVER_DEBUG, "Connected to WebDriver");
-    return try_create(move(socket), web_content_client, page_client);
+    return try_create(move(socket), page_client);
 }
 
-WebDriverConnection::WebDriverConnection(NonnullOwnPtr<Core::Stream::LocalSocket> socket, ConnectionFromClient& web_content_client, Web::PageClient& page_client)
+WebDriverConnection::WebDriverConnection(NonnullOwnPtr<Core::Stream::LocalSocket> socket, Web::PageClient& page_client)
     : IPC::ConnectionToServer<WebDriverClientEndpoint, WebDriverServerEndpoint>(*this, move(socket))
-    , m_web_content_client(web_content_client)
     , m_page_client(page_client)
     , m_current_window_handle("main"sv)
 {
