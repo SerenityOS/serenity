@@ -92,7 +92,7 @@ void PageHost::set_window_size(Gfx::IntSize const& size)
 ErrorOr<void> PageHost::connect_to_webdriver(String const& webdriver_ipc_path)
 {
     VERIFY(!m_webdriver);
-    m_webdriver = TRY(WebDriverConnection::connect(m_client, *this, webdriver_ipc_path));
+    m_webdriver = TRY(WebDriverConnection::connect(*this, webdriver_ipc_path));
     return {};
 }
 
@@ -161,6 +161,51 @@ void PageHost::page_did_layout()
 void PageHost::page_did_change_title(String const& title)
 {
     m_client.async_did_change_title(title);
+}
+
+void PageHost::page_did_request_navigate_back()
+{
+    m_client.async_did_request_navigate_back();
+}
+
+void PageHost::page_did_request_navigate_forward()
+{
+    m_client.async_did_request_navigate_forward();
+}
+
+void PageHost::page_did_request_refresh()
+{
+    m_client.async_did_request_refresh();
+}
+
+Gfx::IntSize PageHost::page_did_request_resize_window(Gfx::IntSize const& size)
+{
+    return m_client.did_request_resize_window(size);
+}
+
+Gfx::IntPoint PageHost::page_did_request_reposition_window(Gfx::IntPoint const& position)
+{
+    return m_client.did_request_reposition_window(position);
+}
+
+void PageHost::page_did_request_restore_window()
+{
+    m_client.async_did_request_restore_window();
+}
+
+Gfx::IntRect PageHost::page_did_request_maximize_window()
+{
+    return m_client.did_request_maximize_window();
+}
+
+Gfx::IntRect PageHost::page_did_request_minimize_window()
+{
+    return m_client.did_request_minimize_window();
+}
+
+Gfx::IntRect PageHost::page_did_request_fullscreen_window()
+{
+    return m_client.did_request_fullscreen_window();
 }
 
 void PageHost::page_did_request_scroll(i32 x_delta, i32 y_delta)
@@ -258,6 +303,11 @@ void PageHost::page_did_request_prompt(String const& message, String const& defa
     m_client.async_did_request_prompt(message, default_);
 }
 
+void PageHost::page_did_request_set_prompt_text(String const& text)
+{
+    m_client.async_did_request_set_prompt_text(text);
+}
+
 void PageHost::prompt_closed(String response)
 {
     page().prompt_closed(move(response));
@@ -284,6 +334,16 @@ void PageHost::page_did_request_image_context_menu(Gfx::IntPoint const& content_
     m_client.async_did_request_image_context_menu(content_position, url, target, modifiers, bitmap);
 }
 
+Vector<Web::Cookie::Cookie> PageHost::page_did_request_all_cookies(URL const& url)
+{
+    return m_client.did_request_all_cookies(url);
+}
+
+Optional<Web::Cookie::Cookie> PageHost::page_did_request_named_cookie(URL const& url, String const& name)
+{
+    return m_client.did_request_named_cookie(url, name);
+}
+
 String PageHost::page_did_request_cookie(const URL& url, Web::Cookie::Source source)
 {
     auto response = m_client.send_sync_but_allow_failure<Messages::WebContentClient::DidRequestCookie>(move(url), static_cast<u8>(source));
@@ -297,6 +357,11 @@ String PageHost::page_did_request_cookie(const URL& url, Web::Cookie::Source sou
 void PageHost::page_did_set_cookie(const URL& url, Web::Cookie::ParsedCookie const& cookie, Web::Cookie::Source source)
 {
     m_client.async_did_set_cookie(url, cookie, static_cast<u8>(source));
+}
+
+void PageHost::page_did_update_cookie(URL const& url, Web::Cookie::Cookie cookie)
+{
+    m_client.async_did_update_cookie(url, move(cookie));
 }
 
 void PageHost::page_did_update_resource_count(i32 count_waiting)

@@ -17,10 +17,12 @@
 #include <LibGfx/Forward.h>
 #include <LibGfx/Palette.h>
 #include <LibGfx/Point.h>
+#include <LibGfx/Rect.h>
 #include <LibGfx/Size.h>
 #include <LibGfx/StandardCursor.h>
 #include <LibJS/Heap/Handle.h>
 #include <LibWeb/CSS/PreferredColorScheme.h>
+#include <LibWeb/Cookie/Cookie.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/Loader/FileRequest.h>
 
@@ -141,6 +143,15 @@ public:
     virtual CSS::PreferredColorScheme preferred_color_scheme() const = 0;
     virtual void paint(Gfx::IntRect const&, Gfx::Bitmap&) = 0;
     virtual void page_did_change_title(String const&) { }
+    virtual void page_did_request_navigate_back() { }
+    virtual void page_did_request_navigate_forward() { }
+    virtual void page_did_request_refresh() { }
+    virtual Gfx::IntSize page_did_request_resize_window(Gfx::IntSize const&) { return {}; }
+    virtual Gfx::IntPoint page_did_request_reposition_window(Gfx::IntPoint const&) { return {}; }
+    virtual void page_did_request_restore_window() { }
+    virtual Gfx::IntRect page_did_request_maximize_window() { return {}; }
+    virtual Gfx::IntRect page_did_request_minimize_window() { return {}; }
+    virtual Gfx::IntRect page_did_request_fullscreen_window() { return {}; }
     virtual void page_did_start_loading(const AK::URL&) { }
     virtual void page_did_create_main_document() { }
     virtual void page_did_finish_loading(const AK::URL&) { }
@@ -164,10 +175,14 @@ public:
     virtual void page_did_request_alert(String const&) { }
     virtual void page_did_request_confirm(String const&) { }
     virtual void page_did_request_prompt(String const&, String const&) { }
+    virtual void page_did_request_set_prompt_text(String const&) { }
     virtual void page_did_request_accept_dialog() { }
     virtual void page_did_request_dismiss_dialog() { }
+    virtual Vector<Web::Cookie::Cookie> page_did_request_all_cookies(AK::URL const&) { return {}; }
+    virtual Optional<Web::Cookie::Cookie> page_did_request_named_cookie(AK::URL const&, String const&) { return {}; }
     virtual String page_did_request_cookie(const AK::URL&, Cookie::Source) { return {}; }
     virtual void page_did_set_cookie(const AK::URL&, Cookie::ParsedCookie const&, Cookie::Source) { }
+    virtual void page_did_update_cookie(AK::URL const&, Web::Cookie::Cookie) { }
     virtual void page_did_update_resource_count(i32) { }
     virtual void page_did_close_browsing_context(HTML::BrowsingContext const&) { }
 
