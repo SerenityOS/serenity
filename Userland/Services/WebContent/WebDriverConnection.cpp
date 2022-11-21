@@ -297,7 +297,7 @@ void WebDriverConnection::set_strict_file_interactability(bool strict_file_inter
 
 void WebDriverConnection::set_is_webdriver_active(bool is_webdriver_active)
 {
-    m_page_host.set_is_webdriver_active(is_webdriver_active);
+    m_page_host.page().set_is_webdriver_active(is_webdriver_active);
 }
 
 // 9.1 Get Timeouts, https://w3c.github.io/webdriver/#dfn-get-timeouts
