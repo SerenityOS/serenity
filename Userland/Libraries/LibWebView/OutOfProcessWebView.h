@@ -26,6 +26,8 @@ class OutOfProcessWebView final
     , public ViewImplementation {
     C_OBJECT(OutOfProcessWebView);
 
+    using Super = GUI::AbstractScrollableWidget;
+
 public:
     virtual ~OutOfProcessWebView() override;
 
