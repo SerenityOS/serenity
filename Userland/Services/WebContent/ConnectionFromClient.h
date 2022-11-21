@@ -98,6 +98,8 @@ private:
 
     void flush_pending_paint_requests();
 
+    void report_finished_handling_input_event(bool event_was_handled);
+
     NonnullOwnPtr<PageHost> m_page_host;
     struct PaintRequest {
         Gfx::IntRect content_rect;

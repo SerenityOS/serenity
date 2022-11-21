@@ -280,4 +280,9 @@ void WebContentClient::did_request_file(String const& path, i32 request_id)
     m_view.notify_server_did_request_file({}, path, request_id);
 }
 
+void WebContentClient::did_finish_handling_input_event(bool event_was_accepted)
+{
+    m_view.notify_server_did_finish_handling_input_event(event_was_accepted);
+}
+
 }
