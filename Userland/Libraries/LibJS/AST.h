@@ -1222,7 +1222,7 @@ private:
     virtual bool is_identifier() const override { return true; }
 
     FlyString m_string;
-    mutable Optional<EnvironmentCoordinate> m_cached_environment_coordinate;
+    mutable EnvironmentCoordinate m_cached_environment_coordinate;
 };
 
 class PrivateIdentifier final : public Expression {

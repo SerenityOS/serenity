@@ -565,8 +565,11 @@ ThrowCompletionOr<Reference> VM::get_identifier_reference(Environment* environme
 
     // Note: This is an optimization for looking up the same reference.
     Optional<EnvironmentCoordinate> environment_coordinate;
-    if (index.has_value())
-        environment_coordinate = EnvironmentCoordinate { .hops = hops, .index = index.value() };
+    if (index.has_value()) {
+        VERIFY(hops <= NumericLimits<u32>::max());
+        VERIFY(index.value() <= NumericLimits<u32>::max());
+        environment_coordinate = EnvironmentCoordinate { .hops = static_cast<u32>(hops), .index = static_cast<u32>(index.value()) };
+    }
 
     // 3. If exists is true, then
     if (exists) {
