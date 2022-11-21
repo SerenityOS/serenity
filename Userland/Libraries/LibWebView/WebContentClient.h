@@ -76,6 +76,7 @@ private:
     virtual Messages::WebContentClient::DidRequestMinimizeWindowResponse did_request_minimize_window() override;
     virtual Messages::WebContentClient::DidRequestFullscreenWindowResponse did_request_fullscreen_window() override;
     virtual void did_request_file(String const& path, i32) override;
+    virtual void did_finish_handling_input_event(bool event_was_accepted) override;
 
     ViewImplementation& m_view;
 };

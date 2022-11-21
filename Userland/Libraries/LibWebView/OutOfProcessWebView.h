@@ -1,11 +1,13 @@
 /*
  * Copyright (c) 2020-2022, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
+#include <AK/Queue.h>
 #include <AK/URL.h>
 #include <LibGUI/AbstractScrollableWidget.h>
 #include <LibGUI/Widget.h>
@@ -182,6 +184,7 @@ private:
     virtual Gfx::IntRect notify_server_did_request_minimize_window() override;
     virtual Gfx::IntRect notify_server_did_request_fullscreen_window() override;
     virtual void notify_server_did_request_file(Badge<WebContentClient>, String const& path, i32) override;
+    virtual void notify_server_did_finish_handling_input_event(bool event_was_accepted) override;
 
     void request_repaint();
     void handle_resize();
@@ -190,6 +193,10 @@ private:
     WebContentClient& client();
 
     void handle_web_content_process_crash();
+
+    using InputEvent = Variant<GUI::KeyEvent, GUI::MouseEvent>;
+    void enqueue_input_event(InputEvent const&);
+    void process_next_input_event();
 
     AK::URL m_url;
 
@@ -210,6 +217,9 @@ private:
 
     RefPtr<Gfx::Bitmap> m_backup_bitmap;
     RefPtr<GUI::Dialog> m_dialog;
+
+    bool m_is_awaiting_response_for_input_event { false };
+    Queue<InputEvent> m_pending_input_events;
 };
 
 }

@@ -157,37 +157,42 @@ void ConnectionFromClient::flush_pending_paint_requests()
 
 void ConnectionFromClient::mouse_down(Gfx::IntPoint const& position, unsigned int button, unsigned int buttons, unsigned int modifiers)
 {
-    page().handle_mousedown(position, button, buttons, modifiers);
+    report_finished_handling_input_event(page().handle_mousedown(position, button, buttons, modifiers));
 }
 
 void ConnectionFromClient::mouse_move(Gfx::IntPoint const& position, [[maybe_unused]] unsigned int button, unsigned int buttons, unsigned int modifiers)
 {
-    page().handle_mousemove(position, buttons, modifiers);
+    report_finished_handling_input_event(page().handle_mousemove(position, buttons, modifiers));
 }
 
 void ConnectionFromClient::mouse_up(Gfx::IntPoint const& position, unsigned int button, unsigned int buttons, unsigned int modifiers)
 {
-    page().handle_mouseup(position, button, buttons, modifiers);
+    report_finished_handling_input_event(page().handle_mouseup(position, button, buttons, modifiers));
 }
 
 void ConnectionFromClient::mouse_wheel(Gfx::IntPoint const& position, unsigned int button, unsigned int buttons, unsigned int modifiers, i32 wheel_delta_x, i32 wheel_delta_y)
 {
-    page().handle_mousewheel(position, button, buttons, modifiers, wheel_delta_x, wheel_delta_y);
+    report_finished_handling_input_event(page().handle_mousewheel(position, button, buttons, modifiers, wheel_delta_x, wheel_delta_y));
 }
 
 void ConnectionFromClient::doubleclick(Gfx::IntPoint const& position, unsigned int button, unsigned int buttons, unsigned int modifiers)
 {
-    page().handle_doubleclick(position, button, buttons, modifiers);
+    report_finished_handling_input_event(page().handle_doubleclick(position, button, buttons, modifiers));
 }
 
 void ConnectionFromClient::key_down(i32 key, unsigned int modifiers, u32 code_point)
 {
-    page().handle_keydown((KeyCode)key, modifiers, code_point);
+    report_finished_handling_input_event(page().handle_keydown((KeyCode)key, modifiers, code_point));
 }
 
 void ConnectionFromClient::key_up(i32 key, unsigned int modifiers, u32 code_point)
 {
-    page().handle_keyup((KeyCode)key, modifiers, code_point);
+    report_finished_handling_input_event(page().handle_keyup((KeyCode)key, modifiers, code_point));
+}
+
+void ConnectionFromClient::report_finished_handling_input_event(bool event_was_handled)
+{
+    async_did_finish_handling_input_event(event_was_handled);
 }
 
 void ConnectionFromClient::debug_request(String const& request, String const& argument)

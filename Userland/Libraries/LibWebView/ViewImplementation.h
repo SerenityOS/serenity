@@ -66,6 +66,7 @@ public:
     virtual Gfx::IntRect notify_server_did_request_minimize_window() = 0;
     virtual Gfx::IntRect notify_server_did_request_fullscreen_window() = 0;
     virtual void notify_server_did_request_file(Badge<WebContentClient>, String const& path, i32) = 0;
+    virtual void notify_server_did_finish_handling_input_event(bool event_was_accepted) = 0;
 };
 
 }

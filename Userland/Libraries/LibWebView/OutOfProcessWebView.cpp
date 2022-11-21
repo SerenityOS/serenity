@@ -158,37 +158,37 @@ void OutOfProcessWebView::handle_resize()
 
 void OutOfProcessWebView::keydown_event(GUI::KeyEvent& event)
 {
-    client().async_key_down(event.key(), event.modifiers(), event.code_point());
+    enqueue_input_event(event);
 }
 
 void OutOfProcessWebView::keyup_event(GUI::KeyEvent& event)
 {
-    client().async_key_up(event.key(), event.modifiers(), event.code_point());
+    enqueue_input_event(event);
 }
 
 void OutOfProcessWebView::mousedown_event(GUI::MouseEvent& event)
 {
-    client().async_mouse_down(to_content_position(event.position()), event.button(), event.buttons(), event.modifiers());
+    enqueue_input_event(event);
 }
 
 void OutOfProcessWebView::mouseup_event(GUI::MouseEvent& event)
 {
-    client().async_mouse_up(to_content_position(event.position()), event.button(), event.buttons(), event.modifiers());
+    enqueue_input_event(event);
 }
 
 void OutOfProcessWebView::mousemove_event(GUI::MouseEvent& event)
 {
-    client().async_mouse_move(to_content_position(event.position()), event.button(), event.buttons(), event.modifiers());
+    enqueue_input_event(event);
 }
 
 void OutOfProcessWebView::mousewheel_event(GUI::MouseEvent& event)
 {
-    client().async_mouse_wheel(to_content_position(event.position()), event.button(), event.buttons(), event.modifiers(), event.wheel_delta_x(), event.wheel_delta_y());
+    enqueue_input_event(event);
 }
 
 void OutOfProcessWebView::doubleclick_event(GUI::MouseEvent& event)
 {
-    client().async_doubleclick(to_content_position(event.position()), event.button(), event.buttons(), event.modifiers());
+    enqueue_input_event(event);
 }
 
 void OutOfProcessWebView::theme_change_event(GUI::ThemeChangeEvent& event)
@@ -693,6 +693,135 @@ void OutOfProcessWebView::show_event(GUI::ShowEvent&)
 void OutOfProcessWebView::hide_event(GUI::HideEvent&)
 {
     set_system_visibility_state(false);
+}
+
+void OutOfProcessWebView::enqueue_input_event(InputEvent const& event)
+{
+    m_pending_input_events.enqueue(event);
+    process_next_input_event();
+}
+
+void OutOfProcessWebView::process_next_input_event()
+{
+    if (m_pending_input_events.is_empty())
+        return;
+
+    if (m_is_awaiting_response_for_input_event)
+        return;
+    m_is_awaiting_response_for_input_event = true;
+
+    // Send the next event over to the web content to be handled by JS.
+    // We'll later get a message to say whether JS prevented the default event behavior,
+    // at which point we either discard or handle that event, then try and process the next one.
+    auto event = m_pending_input_events.head();
+    event.visit(
+        [this](GUI::KeyEvent const& event) {
+            switch (event.type()) {
+            case GUI::Event::Type::KeyDown:
+                client().async_key_down(event.key(), event.modifiers(), event.code_point());
+                break;
+            case GUI::Event::Type::KeyUp:
+                client().async_key_up(event.key(), event.modifiers(), event.code_point());
+                break;
+            default:
+                dbgln("Unrecognized key event type in OOPWV input event queue: {}", event.type());
+                VERIFY_NOT_REACHED();
+            }
+        },
+        [this](GUI::MouseEvent const& event) {
+            switch (event.type()) {
+            case GUI::Event::Type::MouseDown:
+                client().async_mouse_down(to_content_position(event.position()), event.button(), event.buttons(), event.modifiers());
+                break;
+            case GUI::Event::Type::MouseUp:
+                client().async_mouse_up(to_content_position(event.position()), event.button(), event.buttons(), event.modifiers());
+                break;
+            case GUI::Event::Type::MouseMove:
+                client().async_mouse_move(to_content_position(event.position()), event.button(), event.buttons(), event.modifiers());
+                break;
+            case GUI::Event::Type::MouseWheel:
+                client().async_mouse_wheel(to_content_position(event.position()), event.button(), event.buttons(), event.modifiers(), event.wheel_delta_x(), event.wheel_delta_y());
+                break;
+            case GUI::Event::Type::MouseDoubleClick:
+                client().async_doubleclick(to_content_position(event.position()), event.button(), event.buttons(), event.modifiers());
+                break;
+            default:
+                dbgln("Unrecognized mouse event type in OOPWV input event queue: {}", event.type());
+                VERIFY_NOT_REACHED();
+            }
+        });
+}
+
+void OutOfProcessWebView::notify_server_did_finish_handling_input_event(bool event_was_accepted)
+{
+    VERIFY(m_is_awaiting_response_for_input_event);
+
+    auto event = m_pending_input_events.dequeue();
+    m_is_awaiting_response_for_input_event = false;
+
+    if (!event_was_accepted) {
+        // Here we handle events that were not consumed or cancelled by web content.
+        // That is, we manually implement the steps that would have happened if the original
+        // OutOfProcessWebView::foo_event() had called event.ignore().
+        //
+        // The first step is to give our superclass a chance to handle the event.
+        //
+        // Then, if it does not, we dispatch the event to our parent widget, but limited so
+        // that it will never bubble up to the Window. (Otherwise, it would then dispatch the
+        // event to us since we are the focused widget, and it would go round indefinitely.)
+        //
+        // Finally, any unhandled KeyDown events are propagated to trigger any Actions.
+        event.visit(
+            [this](GUI::KeyEvent& event) {
+                switch (event.type()) {
+                case GUI::Event::Type::KeyDown:
+                    Super::keydown_event(event);
+                    break;
+                case GUI::Event::Type::KeyUp:
+                    Super::keyup_event(event);
+                    break;
+                default:
+                    dbgln("Unhandled key event type in OOPWV input event queue: {}", event.type());
+                    VERIFY_NOT_REACHED();
+                }
+
+                if (!event.is_accepted()) {
+                    parent_widget()->dispatch_event(event, window());
+
+                    // NOTE: If other events can ever trigger shortcuts, propagate those here.
+                    if (!event.is_accepted() && event.type() == GUI::Event::Type::KeyDown)
+                        window()->propagate_shortcuts_up_to_application(event, this);
+                }
+            },
+            [this](GUI::MouseEvent& event) {
+                switch (event.type()) {
+                case GUI::Event::Type::MouseDown:
+                    Super::mousedown_event(event);
+                    break;
+                case GUI::Event::Type::MouseUp:
+                    Super::mouseup_event(event);
+                    break;
+                case GUI::Event::Type::MouseMove:
+                    Super::mousemove_event(event);
+                    break;
+                case GUI::Event::Type::MouseWheel:
+                    Super::mousewheel_event(event);
+                    break;
+                case GUI::Event::Type::MouseDoubleClick:
+                    Super::doubleclick_event(event);
+                    break;
+                default:
+                    dbgln("Unhandled mouse event type in OOPWV input event queue: {}", event.type());
+                    VERIFY_NOT_REACHED();
+                }
+
+                if (!event.is_accepted())
+                    parent_widget()->dispatch_event(event, window());
+                // FIXME: Propagate event for mouse-button shortcuts once that is implemented.
+            });
+    }
+
+    process_next_input_event();
 }
 
 }
