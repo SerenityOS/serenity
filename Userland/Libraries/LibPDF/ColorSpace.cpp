@@ -11,7 +11,7 @@
 
 namespace PDF {
 
-PDFErrorOr<NonnullRefPtr<ColorSpace>> ColorSpace::create(Document* document, FlyString const& name, Page const& page)
+PDFErrorOr<NonnullRefPtr<ColorSpace>> ColorSpace::create(Document* document, FlyString const& name, NonnullRefPtr<DictObject> resources)
 {
     // Simple color spaces with no parameters, which can be specified directly
     if (name == CommonNames::DeviceGray)
@@ -25,7 +25,7 @@ PDFErrorOr<NonnullRefPtr<ColorSpace>> ColorSpace::create(Document* document, Fly
 
     // The color space is a complex color space with parameters that resides in
     // the resource dictionary
-    auto color_space_resource_dict = TRY(page.resources->get_dict(document, CommonNames::ColorSpace));
+    auto color_space_resource_dict = TRY(resources->get_dict(document, CommonNames::ColorSpace));
     if (!color_space_resource_dict->contains(name))
         TODO();
 
@@ -41,7 +41,7 @@ PDFErrorOr<NonnullRefPtr<ColorSpace>> ColorSpace::create(Document* document, Fly
         return TRY(CalRGBColorSpace::create(document, move(parameters)));
 
     if (color_space_name == CommonNames::ICCBased)
-        return TRY(ICCBasedColorSpace::create(document, page, move(parameters)));
+        return TRY(ICCBasedColorSpace::create(document, resources, move(parameters)));
 
     dbgln("Unknown color space: {}", color_space_name);
     TODO();
@@ -261,7 +261,7 @@ Color CalRGBColorSpace::color(Vector<Value> const& arguments) const
     return Color(red, green, blue);
 }
 
-PDFErrorOr<NonnullRefPtr<ColorSpace>> ICCBasedColorSpace::create(Document* document, Page const& page, Vector<Value>&& parameters)
+PDFErrorOr<NonnullRefPtr<ColorSpace>> ICCBasedColorSpace::create(Document* document, NonnullRefPtr<DictObject> resources, Vector<Value>&& parameters)
 {
     if (parameters.is_empty())
         return Error { Error::Type::MalformedPDF, "ICCBased color space expected one parameter" };
@@ -287,7 +287,7 @@ PDFErrorOr<NonnullRefPtr<ColorSpace>> ICCBasedColorSpace::create(Document* docum
         name = TRY(dict->get_name(document, CommonNames::Alternate))->name();
     }
 
-    return TRY(ColorSpace::create(document, name, page));
+    return TRY(ColorSpace::create(document, name, resources));
 }
 
 Color ICCBasedColorSpace::color(Vector<Value> const&) const
