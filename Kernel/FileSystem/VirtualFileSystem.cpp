@@ -55,7 +55,7 @@ bool VirtualFileSystem::mount_point_exists_at_inode(InodeIdentifier inode_identi
 {
     return m_mounts.with([&](auto& mounts) -> bool {
         return any_of(mounts, [&inode_identifier](auto const& existing_mount) {
-            return existing_mount->host() && existing_mount->host()->identifier() == inode_identifier;
+            return existing_mount.host() && existing_mount.host()->identifier() == inode_identifier;
         });
     });
 }
@@ -78,7 +78,10 @@ ErrorOr<void> VirtualFileSystem::mount(FileSystem& fs, Custody& mount_point, int
         new_mount->guest_fs().mounted_count({}).with([&](auto& mounted_count) {
             mounted_count++;
         });
-        mounts.append(move(new_mount));
+
+        // NOTE: Leak the mount pointer so it can be added to the mount list, but it won't be
+        // deleted after being added.
+        mounts.append(*new_mount.leak_ptr());
         return {};
     });
 }
@@ -94,7 +97,10 @@ ErrorOr<void> VirtualFileSystem::bind_mount(Custody& source, Custody& mount_poin
                 mount_point.inode().identifier());
             return EBUSY;
         }
-        mounts.append(move(new_mount));
+
+        // NOTE: Leak the mount pointer so it can be added to the mount list, but it won't be
+        // deleted after being added.
+        mounts.append(*new_mount.leak_ptr());
         return {};
     });
 }
@@ -142,14 +148,13 @@ ErrorOr<void> VirtualFileSystem::unmount(Custody& mountpoint_custody)
     dbgln("VirtualFileSystem: unmount called with inode {} on mountpoint {}", guest_inode.identifier(), custody_path->view());
 
     return m_mounts.with([&](auto& mounts) -> ErrorOr<void> {
-        for (size_t i = 0; i < mounts.size(); ++i) {
-            auto& mount = mounts[i];
-            if (&mount->guest() != &guest_inode)
+        for (auto& mount : mounts) {
+            if (&mount.guest() != &guest_inode)
                 continue;
-            auto mountpoint_path = TRY(mount->absolute_path());
+            auto mountpoint_path = TRY(mount.absolute_path());
             if (custody_path->view() != mountpoint_path->view())
                 continue;
-            NonnullRefPtr<FileSystem> fs = mount->guest_fs();
+            NonnullRefPtr<FileSystem> fs = mount.guest_fs();
             TRY(fs->prepare_to_unmount());
             fs->mounted_count({}).with([&](auto& mounted_count) {
                 VERIFY(mounted_count > 0);
@@ -170,7 +175,9 @@ ErrorOr<void> VirtualFileSystem::unmount(Custody& mountpoint_custody)
                 }
             });
             dbgln("VirtualFileSystem: Unmounting file system {}...", fs->fsid());
-            (void)mounts.unstable_take(i);
+            mount.m_vfs_list_node.remove();
+            // Note: This is balanced by a `new` statement that is happening in various places before inserting the Mount object to the list.
+            delete &mount;
             return {};
         }
         dbgln("VirtualFileSystem: Nothing mounted on inode {}", guest_inode.identifier());
@@ -186,7 +193,6 @@ ErrorOr<void> VirtualFileSystem::mount_root(FileSystem& fs)
     }
 
     auto new_mount = TRY(adopt_nonnull_own_or_enomem(new (nothrow) Mount(fs, nullptr, root_mount_flags)));
-
     auto& root_inode = fs.root_inode();
     if (!root_inode.is_directory()) {
         dmesgln("VirtualFileSystem: root inode ({}) for / is not a directory :(", root_inode.identifier());
@@ -208,12 +214,15 @@ ErrorOr<void> VirtualFileSystem::mount_root(FileSystem& fs)
         fs_list.append(fs);
     });
 
+    fs.mounted_count({}).with([&](auto& mounted_count) {
+        mounted_count++;
+    });
+
     // Note: Actually add a mount for the filesystem and increment the filesystem mounted count
     m_mounts.with([&](auto& mounts) {
-        new_mount->guest_fs().mounted_count({}).with([&](auto& mounted_count) {
-            mounted_count++;
-        });
-        mounts.append(move(new_mount));
+        // NOTE: Leak the mount pointer so it can be added to the mount list, but it won't be
+        // deleted after being added.
+        mounts.append(*new_mount.leak_ptr());
     });
 
     RefPtr<Custody> new_root_custody = TRY(Custody::try_create(nullptr, ""sv, *m_root_inode, root_mount_flags));
@@ -227,8 +236,8 @@ auto VirtualFileSystem::find_mount_for_host(InodeIdentifier id) -> Mount*
 {
     return m_mounts.with([&](auto& mounts) -> Mount* {
         for (auto& mount : mounts) {
-            if (mount->host() && mount->host()->identifier() == id)
-                return mount.ptr();
+            if (mount.host() && mount.host()->identifier() == id)
+                return &mount;
         }
         return nullptr;
     });
@@ -238,8 +247,8 @@ auto VirtualFileSystem::find_mount_for_guest(InodeIdentifier id) -> Mount*
 {
     return m_mounts.with([&](auto& mounts) -> Mount* {
         for (auto& mount : mounts) {
-            if (mount->guest().identifier() == id)
-                return mount.ptr();
+            if (mount.guest().identifier() == id)
+                return &mount;
         }
         return nullptr;
     });
@@ -859,7 +868,7 @@ ErrorOr<void> VirtualFileSystem::for_each_mount(Function<ErrorOr<void>(Mount con
 {
     return m_mounts.with([&](auto& mounts) -> ErrorOr<void> {
         for (auto& mount : mounts)
-            TRY(callback(*mount));
+            TRY(callback(mount));
         return {};
     });
 }

@@ -15,7 +15,10 @@
 
 namespace Kernel {
 
+class VirtualFileSystem;
 class Mount {
+    friend class VirtualFileSystem;
+
 public:
     Mount(FileSystem&, Custody* host_custody, int flags);
     Mount(Inode& source, Custody& host_custody, int flags);
@@ -39,6 +42,8 @@ private:
     NonnullLockRefPtr<FileSystem> m_guest_fs;
     SpinlockProtected<RefPtr<Custody>> m_host_custody;
     int m_flags;
+
+    IntrusiveListNode<Mount> m_vfs_list_node;
 };
 
 }
