@@ -29,7 +29,6 @@ NumericInput::NumericInput()
         auto new_number_opt = builder.to_string().to_int();
         if (!new_number_opt.has_value()) {
             m_needs_text_reset = true;
-            set_text(builder.to_string());
             return;
         } else {
             m_needs_text_reset = false;
