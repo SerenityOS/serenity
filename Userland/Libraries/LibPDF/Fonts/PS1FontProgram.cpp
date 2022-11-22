@@ -67,9 +67,9 @@ PDFErrorOr<void> PS1FontProgram::parse(ReadonlyBytes const& bytes, size_t cleart
             if (word == "readonly") {
                 break;
             } else if (word == "dup") {
-                u32 code_point = TRY(parse_int(reader));
+                u32 char_code = TRY(parse_int(reader));
                 auto name = TRY(parse_word(reader));
-                descriptors.set(code_point, { name.starts_with('/') ? name.substring_view(1) : name.view(), code_point });
+                descriptors.set(char_code, { name.starts_with('/') ? name.substring_view(1) : name.view(), char_code });
             }
         }
         m_encoding = TRY(Encoding::create(descriptors));
@@ -87,9 +87,9 @@ PDFErrorOr<void> PS1FontProgram::parse(ReadonlyBytes const& bytes, size_t cleart
     return parse_encrypted_portion(decrypted);
 }
 
-RefPtr<Gfx::Bitmap> PS1FontProgram::rasterize_glyph(u32 code_point, float width)
+RefPtr<Gfx::Bitmap> PS1FontProgram::rasterize_glyph(u32 char_code, float width)
 {
-    auto path = build_char(code_point, width);
+    auto path = build_char(char_code, width);
     auto bounding_box = path.bounding_box().size();
 
     u32 w = (u32)ceilf(bounding_box.width()) + 1;
@@ -100,9 +100,9 @@ RefPtr<Gfx::Bitmap> PS1FontProgram::rasterize_glyph(u32 code_point, float width)
     return rasterizer.accumulate();
 }
 
-Gfx::Path PS1FontProgram::build_char(u32 code_point, float width)
+Gfx::Path PS1FontProgram::build_char(u32 char_code, float width)
 {
-    auto maybe_glyph = m_glyph_map.get(code_point);
+    auto maybe_glyph = m_glyph_map.get(char_code);
     if (!maybe_glyph.has_value())
         return {};
 
@@ -117,9 +117,9 @@ Gfx::Path PS1FontProgram::build_char(u32 code_point, float width)
     return glyph.path.copy_transformed(transform);
 }
 
-Gfx::FloatPoint PS1FontProgram::glyph_translation(u32 code_point, float width) const
+Gfx::FloatPoint PS1FontProgram::glyph_translation(u32 char_code, float width) const
 {
-    auto maybe_glyph = m_glyph_map.get(code_point);
+    auto maybe_glyph = m_glyph_map.get(char_code);
     if (!maybe_glyph.has_value())
         return {};
 
@@ -477,9 +477,9 @@ PDFErrorOr<void> PS1FontProgram::parse_encrypted_portion(ByteBuffer const& buffe
                 auto line = TRY(decrypt(reader.bytes().slice(reader.offset(), encrypted_size), m_encryption_key, m_lenIV));
                 reader.move_by(encrypted_size);
                 auto name_mapping = m_encoding->name_mapping();
-                auto code_point = name_mapping.ensure(word.substring_view(1));
+                auto char_code = name_mapping.ensure(word.substring_view(1));
                 GlyphParserState state;
-                m_glyph_map.set(code_point, TRY(parse_glyph(line, state)));
+                m_glyph_map.set(char_code, TRY(parse_glyph(line, state)));
             }
         }
     }
