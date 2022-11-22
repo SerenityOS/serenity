@@ -1,10 +1,11 @@
 /*
- * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/LexicalPath.h>
+#include <AK/Platform.h>
 #include <AK/ScopeGuard.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
@@ -453,11 +454,16 @@ ErrorOr<void, File::CopyError> File::copy_file(String const& dst_path, struct st
     }
 
     if (has_flag(preserve_mode, PreserveMode::Timestamps)) {
-        // FIXME: Implement utimens() and use it here.
-        struct utimbuf timbuf;
-        timbuf.actime = src_stat.st_atime;
-        timbuf.modtime = src_stat.st_mtime;
-        if (utime(dst_path.characters(), &timbuf) < 0)
+        struct timespec times[2] = {
+#ifdef AK_OS_MACOS
+            src_stat.st_atimespec,
+            src_stat.st_mtimespec,
+#else
+            src_stat.st_atim,
+            src_stat.st_mtim,
+#endif
+        };
+        if (utimensat(AT_FDCWD, dst_path.characters(), times, 0) < 0)
             return CopyError { errno, false };
     }
 
@@ -503,11 +509,16 @@ ErrorOr<void, File::CopyError> File::copy_directory(String const& dst_path, Stri
     }
 
     if (has_flag(preserve_mode, PreserveMode::Timestamps)) {
-        // FIXME: Implement utimens() and use it here.
-        struct utimbuf timbuf;
-        timbuf.actime = src_stat.st_atime;
-        timbuf.modtime = src_stat.st_atime;
-        if (utime(dst_path.characters(), &timbuf) < 0)
+        struct timespec times[2] = {
+#ifdef AK_OS_MACOS
+            src_stat.st_atimespec,
+            src_stat.st_mtimespec,
+#else
+            src_stat.st_atim,
+            src_stat.st_mtim,
+#endif
+        };
+        if (utimensat(AT_FDCWD, dst_path.characters(), times, 0) < 0)
             return CopyError { errno, false };
     }
 
