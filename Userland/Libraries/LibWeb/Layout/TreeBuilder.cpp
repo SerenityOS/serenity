@@ -84,11 +84,10 @@ static Layout::Node& insertion_parent_for_block_node(Layout::NodeWithStyle& layo
         return layout_parent;
     }
 
-    if (layout_node.is_floating() || layout_node.is_absolutely_positioned()) {
+    // TODO: Floats should probably also be able to have inline siblings
+    if (layout_node.is_absolutely_positioned() && layout_parent.last_child()->children_are_inline()) {
         // Block is out-of-flow, it can have inline siblings if necessary.
-        if (layout_parent.last_child()->children_are_inline()) {
-            return *layout_parent.last_child();
-        }
+        return *layout_parent.last_child();
     }
 
     if (!layout_parent.children_are_inline()) {
