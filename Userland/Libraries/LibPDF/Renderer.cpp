@@ -162,7 +162,7 @@ RENDERER_HANDLER(set_dash_pattern)
     auto dash_array = MUST(m_document->resolve_to<ArrayObject>(args[0]));
     Vector<int> pattern;
     for (auto& element : *dash_array)
-        pattern.append(element.get<int>());
+        pattern.append(element.to_int());
     state().line_dash_pattern = LineDashPattern { pattern, args[1].get<int>() };
     return {};
 }
