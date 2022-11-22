@@ -18,7 +18,7 @@ ErrorOr<FlatPtr> Process::sys$utimensat(Userspace<Syscall::SC_utimensat_params c
     TRY(require_promise(Pledge::fattr));
 
     auto params = TRY(copy_typed_from_user(user_params));
-    auto now = kgettimeofday().to_truncated_seconds();
+    auto now = kgettimeofday().to_timespec();
 
     int dirfd = params.dirfd;
     int follow_symlink = params.flag & AT_SYMLINK_NOFOLLOW ? O_NOFOLLOW_NOERROR : 0;
@@ -27,16 +27,14 @@ ErrorOr<FlatPtr> Process::sys$utimensat(Userspace<Syscall::SC_utimensat_params c
     if (params.times) {
         TRY(copy_from_user(times, params.times, sizeof(times)));
         if (times[0].tv_nsec == UTIME_NOW)
-            times[0].tv_sec = now;
+            times[0] = now;
         if (times[1].tv_nsec == UTIME_NOW)
-            times[1].tv_sec = now;
+            times[1] = now;
     } else {
         // According to POSIX, both access and modification times are set to
         // the current time given a nullptr.
-        times[0].tv_sec = now;
-        times[0].tv_nsec = UTIME_NOW;
-        times[1].tv_sec = now;
-        times[1].tv_nsec = UTIME_NOW;
+        times[0] = now;
+        times[1] = now;
     }
 
     OwnPtr<KString> path;
