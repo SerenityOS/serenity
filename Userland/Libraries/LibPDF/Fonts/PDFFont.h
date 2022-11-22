@@ -6,8 +6,10 @@
 
 #pragma once
 
+#include <AK/HashMap.h>
 #include <LibGfx/Forward.h>
 #include <LibPDF/Document.h>
+#include <LibPDF/Encoding.h>
 
 namespace PDF {
 
@@ -17,6 +19,17 @@ public:
         Type0,
         Type1,
         TrueType
+    };
+
+    // This is used both by Type 1 and TrueType fonts.
+    struct CommonData {
+        RefPtr<StreamObject> to_unicode;
+        RefPtr<Encoding> encoding;
+        HashMap<u16, u16> widths;
+        u16 missing_width;
+        bool is_standard_font;
+
+        PDFErrorOr<void> load_from_dict(Document*, NonnullRefPtr<DictObject>);
     };
 
     static PDFErrorOr<NonnullRefPtr<PDFFont>> create(Document*, NonnullRefPtr<DictObject>);
