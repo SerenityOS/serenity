@@ -347,31 +347,13 @@ RENDERER_HANDLER(text_set_font)
     auto target_font_name = MUST(m_document->resolve_to<NameObject>(args[0]))->name();
     auto fonts_dictionary = MUST(m_page.resources->get_dict(m_document, CommonNames::Font));
     auto font_dictionary = MUST(fonts_dictionary->get_dict(m_document, target_font_name));
-    auto font = TRY(PDFFont::create(m_document, font_dictionary));
-    text_state().font = font;
-
-    // FIXME: We do not yet have the standard 14 fonts, as some of them are not open fonts,
-    //        so we just use LiberationSerif for everything
-
-    auto font_name = MUST(font_dictionary->get_name(m_document, CommonNames::BaseFont))->name().to_lowercase();
-    auto font_view = font_name.view();
-    bool is_bold = font_view.contains("bold"sv);
-    bool is_italic = font_view.contains("italic"sv);
-
-    String font_variant;
-
-    if (is_bold && is_italic) {
-        font_variant = "BoldItalic";
-    } else if (is_bold) {
-        font_variant = "Bold";
-    } else if (is_italic) {
-        font_variant = "Italic";
-    } else {
-        font_variant = "Regular";
-    }
 
     text_state().font_size = args[1].to_float();
-    text_state().font_variant = font_variant;
+
+    auto& text_rendering_matrix = calculate_text_rendering_matrix();
+    auto font_size = text_rendering_matrix.x_scale() * text_state().font_size;
+    auto font = TRY(PDFFont::create(m_document, font_dictionary, font_size));
+    text_state().font = font;
 
     m_text_rendering_matrix_is_dirty = true;
     return {};
@@ -643,36 +625,19 @@ void Renderer::show_text(String const& string)
 {
     auto& text_rendering_matrix = calculate_text_rendering_matrix();
 
-    auto font_type = text_state().font->type();
     auto font_size = text_rendering_matrix.x_scale() * text_state().font_size;
 
     auto glyph_position = text_rendering_matrix.map(Gfx::FloatPoint { 0.0f, 0.0f });
-
-    RefPtr<Gfx::Font> font;
-
-    // For types other than Type 1 and the standard 14 fonts, use Liberation Serif for now
-    if (font_type != PDFFont::Type::Type1 || text_state().font->is_standard_font()) {
-        font = Gfx::FontDatabase::the().get(text_state().font_family, text_state().font_variant, font_size);
-        VERIFY(font);
-
-        // Account for the reversed font baseline
-        glyph_position.set_y(glyph_position.y() - static_cast<float>(font->baseline()));
-    }
 
     auto original_position = glyph_position;
 
     for (auto char_code : string.bytes()) {
         auto code_point = text_state().font->char_code_to_code_point(char_code);
-        auto char_width = text_state().font->get_char_width(char_code, font_size);
+        auto char_width = text_state().font->get_char_width(char_code);
         auto glyph_width = char_width * font_size;
 
-        if (code_point != 0x20) {
-            if (font.is_null()) {
-                text_state().font->draw_glyph(m_painter, glyph_position.to_type<int>(), glyph_width, code_point, state().paint_color);
-            } else {
-                m_painter.draw_glyph(glyph_position.to_type<int>(), code_point, *font, state().paint_color);
-            }
-        }
+        if (code_point != 0x20)
+            text_state().font->draw_glyph(m_painter, glyph_position.to_type<int>(), glyph_width, char_code, state().paint_color);
 
         auto tx = glyph_width;
         tx += text_state().character_spacing;
