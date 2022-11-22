@@ -361,7 +361,7 @@ ErrorOr<void> TmpFSInode::update_timestamps(Optional<Time> atime, Optional<Time>
     if (ctime.has_value())
         m_metadata.ctime = ctime.value();
     if (mtime.has_value())
-        m_metadata.ctime = mtime.value();
+        m_metadata.mtime = mtime.value();
     set_metadata_dirty(true);
     return {};
 }
