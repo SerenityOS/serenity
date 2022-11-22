@@ -198,6 +198,8 @@ void GLContextWidget::keydown_event(GUI::KeyEvent& event)
         window()->set_fullscreen(false);
         return;
     }
+
+    event.ignore();
 }
 
 void GLContextWidget::timer_event(Core::TimerEvent&)
