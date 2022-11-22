@@ -29,7 +29,6 @@ public:
     ~Decoder() override { }
     /* (8.1) General */
     DecoderErrorOr<void> receive_sample(ReadonlyBytes) override;
-    void dump_frame_info();
 
     DecoderErrorOr<NonnullOwnPtr<VideoFrame>> get_decoded_frame() override;
 

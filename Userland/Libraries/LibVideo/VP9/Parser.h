@@ -35,7 +35,6 @@ public:
     explicit Parser(Decoder&);
     ~Parser();
     DecoderErrorOr<void> parse_frame(ReadonlyBytes);
-    void dump_info();
 
 private:
     /* Annex B: Superframes are a method of storing multiple coded frames into a single chunk
