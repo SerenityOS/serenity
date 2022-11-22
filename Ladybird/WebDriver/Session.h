@@ -19,7 +19,7 @@ namespace WebDriver {
 
 class Session {
 public:
-    Session(unsigned session_id, NonnullRefPtr<Client> client);
+    Session(unsigned session_id, NonnullRefPtr<Client> client, Web::WebDriver::LadybirdOptions options);
     ~Session();
 
     unsigned session_id() const { return m_id; }
@@ -35,8 +35,11 @@ public:
 
 private:
     NonnullRefPtr<Client> m_client;
+    Web::WebDriver::LadybirdOptions m_options;
+
     bool m_started { false };
     unsigned m_id { 0 };
+
     RefPtr<WebContentConnection> m_web_content_connection;
     Optional<pid_t> m_browser_pid;
 };

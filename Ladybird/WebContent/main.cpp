@@ -29,6 +29,7 @@
 #include <QSocketNotifier>
 #include <QTimer>
 #include <WebContent/ConnectionFromClient.h>
+#include <WebContent/PageHost.h>
 #include <WebContent/WebDriverConnection.h>
 
 static ErrorOr<void> load_content_filters();
@@ -103,7 +104,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     QSocketNotifier webdriver_notifier(QSocketNotifier::Type::Read);
     RefPtr<WebContent::WebDriverConnection> webdriver_client;
     if (webdriver_fd_passing_socket >= 0)
-        webdriver_client = TRY(create_connection_from_passed_socket<WebContent::WebDriverConnection>(webdriver_fd_passing_socket, "WebDriver"sv, webdriver_notifier, *webcontent_client, webcontent_client->page_host()));
+        webdriver_client = TRY(create_connection_from_passed_socket<WebContent::WebDriverConnection>(webdriver_fd_passing_socket, "WebDriver"sv, webdriver_notifier, webcontent_client->page_host()));
 
     return app.exec();
 }
