@@ -19,6 +19,7 @@
 #include <LibCore/MemoryStream.h>
 #include <LibCore/Stream.h>
 #include <LibCore/System.h>
+#include <LibCore/SystemServerTakeover.h>
 #include <LibCore/Timer.h>
 #include <LibGemini/GeminiRequest.h>
 #include <LibGemini/GeminiResponse.h>
@@ -47,6 +48,7 @@
 #include <LibWebSocket/ConnectionInfo.h>
 #include <LibWebSocket/Message.h>
 #include <LibWebSocket/WebSocket.h>
+#include <WebContent/WebDriverConnection.h>
 
 class HeadlessBrowserPageClient final : public Web::PageClient {
 public:
@@ -107,9 +109,30 @@ public:
         m_screen_rect = screen_rect;
     }
 
+    ErrorOr<void> connect_to_webdriver(StringView webdriver_ipc_path)
+    {
+        VERIFY(!m_webdriver);
+        m_webdriver = TRY(WebContent::WebDriverConnection::connect(*this, webdriver_ipc_path));
+        return {};
+    }
+
+    ErrorOr<void> connect_to_webdriver(int webdriver_fd_passing_socket)
+    {
+        VERIFY(!m_webdriver);
+        VERIFY(webdriver_fd_passing_socket >= 0);
+
+        auto socket = TRY(Core::take_over_socket_from_system_server("WebDriver"sv));
+        m_webdriver = TRY(WebContent::WebDriverConnection::try_create(move(socket), *this));
+        m_webdriver->set_fd_passing_socket(TRY(Core::Stream::LocalSocket::adopt_fd(webdriver_fd_passing_socket)));
+
+        return {};
+    }
+
     // ^Web::PageClient
     virtual bool is_connection_open() const override
     {
+        if (m_webdriver)
+            return m_webdriver->is_open();
         return true;
     }
 
@@ -238,6 +261,8 @@ private:
     RefPtr<Gfx::PaletteImpl> m_palette_impl;
     Gfx::IntRect m_screen_rect { 0, 0, 800, 600 };
     Web::CSS::PreferredColorScheme m_preferred_color_scheme { Web::CSS::PreferredColorScheme::Auto };
+
+    RefPtr<WebContent::WebDriverConnection> m_webdriver;
 };
 
 class ImageCodecPluginHeadless : public Web::Platform::ImageCodecPlugin {
@@ -657,6 +682,36 @@ private:
     HeadlessWebSocketClientManager() { }
 };
 
+static void load_page_for_screenshot_and_exit(HeadlessBrowserPageClient& page_client, int take_screenshot_after)
+{
+    dbgln("Taking screenshot after {} seconds", take_screenshot_after);
+
+    auto timer = Core::Timer::create_single_shot(
+        take_screenshot_after * 1000,
+        [&]() {
+            // FIXME: Allow passing the output path as argument
+            String output_file_path = "output.png";
+            dbgln("Saving to {}", output_file_path);
+
+            if (Core::File::exists(output_file_path))
+                MUST(Core::File::remove(output_file_path, Core::File::RecursionMode::Disallowed, true));
+
+            auto output_file = MUST(Core::Stream::File::open(output_file_path, Core::Stream::OpenMode::Write));
+
+            auto output_rect = page_client.screen_rect();
+            auto output_bitmap = MUST(Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRx8888, output_rect.size()));
+
+            page_client.paint(output_rect, output_bitmap);
+
+            auto image_buffer = Gfx::PNGWriter::encode(output_bitmap);
+            MUST(output_file->write(image_buffer.bytes()));
+
+            exit(0);
+        });
+
+    timer->start();
+}
+
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     int take_screenshot_after = 1;
@@ -664,6 +719,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     StringView resources_folder;
     StringView error_page_url;
     StringView ca_certs_path;
+    StringView webdriver_ipc_path;
+    int webdriver_fd_passing_socket { -1 };
 
     Core::EventLoop event_loop;
     Core::ArgsParser args_parser;
@@ -672,8 +729,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(resources_folder, "Path of the base resources folder (defaults to /res)", "resources", 'r', "resources-root-path");
     args_parser.add_option(error_page_url, "URL for the error page (defaults to file:///res/html/error.html)", "error-page", 'e', "error-page-url");
     args_parser.add_option(ca_certs_path, "The bundled ca certificates file", "certs", 'c', "ca-certs-path");
+    args_parser.add_option(webdriver_ipc_path, "Path to the WebDriver IPC socket", "webdriver-ipc-path", 0, "path");
+    args_parser.add_option(webdriver_fd_passing_socket, "File descriptor of the passing socket for the WebDriver connection", "webdriver-fd-passing-socket", 'd', "webdriver_fd_passing_socket");
     args_parser.add_positional_argument(url, "URL to open", "url", Core::ArgsParser::Required::Yes);
     args_parser.parse(arguments);
+
+    if (!webdriver_ipc_path.is_empty() && webdriver_fd_passing_socket >= 0)
+        return Error::from_string_view("Only one of --webdriver-ipc-path and --webdriver-fd-passing-socket may be used"sv);
 
     Web::Platform::EventLoopPlugin::install(*new Web::Platform::EventLoopPluginSerenity);
     Web::Platform::FontPlugin::install(*new Web::Platform::FontPluginSerenity);
@@ -716,30 +778,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     page_client->set_viewport_rect({ 0, 0, 800, 600 });
     page_client->set_screen_rect({ 0, 0, 800, 600 });
 
-    dbgln("Taking screenshot after {} seconds !", take_screenshot_after);
-    auto timer = Core::Timer::create_single_shot(
-        take_screenshot_after * 1000,
-        [page_client = move(page_client)] {
-            // FIXME: Allow passing the output path as argument
-            String output_file_path = "output.png";
-            dbgln("Saving to {}", output_file_path);
-
-            if (Core::File::exists(output_file_path))
-                [[maybe_unused]]
-                auto ignored = Core::File::remove(output_file_path, Core::File::RecursionMode::Disallowed, true);
-            auto output_file = MUST(Core::Stream::File::open(output_file_path, Core::Stream::OpenMode::Write));
-
-            auto output_rect = page_client->screen_rect();
-            auto output_bitmap = MUST(Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRx8888, output_rect.size()));
-
-            page_client->paint(output_rect, output_bitmap);
-
-            auto image_buffer = Gfx::PNGWriter::encode(output_bitmap);
-            MUST(output_file->write(image_buffer.bytes()));
-
-            exit(0);
-        });
-    timer->start();
+    if (!webdriver_ipc_path.is_empty())
+        TRY(page_client->connect_to_webdriver(webdriver_ipc_path));
+    else if (webdriver_fd_passing_socket >= 0)
+        TRY(page_client->connect_to_webdriver(webdriver_fd_passing_socket));
+    else
+        load_page_for_screenshot_and_exit(*page_client, take_screenshot_after);
 
     return event_loop.exec();
 }
