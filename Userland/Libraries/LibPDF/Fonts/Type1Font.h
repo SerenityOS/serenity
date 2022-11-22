@@ -34,7 +34,7 @@ public:
     u32 char_code_to_code_point(u16 char_code) const override;
     float get_char_width(u16 char_code, float font_size) const override;
 
-    void draw_glyph(Gfx::Painter& painter, Gfx::IntPoint const& point, float width, u32 code_point, Color color) override;
+    void draw_glyph(Gfx::Painter& painter, Gfx::IntPoint const& point, float width, u32 char_code, Color color) override;
 
     Type type() const override { return PDFFont::Type::Type1; }
 

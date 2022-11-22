@@ -120,22 +120,22 @@ float Type1Font::get_char_width(u16 char_code, float) const
     return static_cast<float>(width) / 1000.0f;
 }
 
-void Type1Font::draw_glyph(Gfx::Painter& painter, Gfx::IntPoint const& point, float width, u32 code_point, Color color)
+void Type1Font::draw_glyph(Gfx::Painter& painter, Gfx::IntPoint const& point, float width, u32 char_code, Color color)
 {
     if (!m_data.font_program)
         return;
 
     RefPtr<Gfx::Bitmap> bitmap;
 
-    auto maybe_bitmap = m_glyph_cache.get(code_point);
+    auto maybe_bitmap = m_glyph_cache.get(char_code);
     if (maybe_bitmap.has_value()) {
         bitmap = maybe_bitmap.value();
     } else {
-        bitmap = m_data.font_program->rasterize_glyph(code_point, width);
-        m_glyph_cache.set(code_point, bitmap);
+        bitmap = m_data.font_program->rasterize_glyph(char_code, width);
+        m_glyph_cache.set(char_code, bitmap);
     }
 
-    auto translation = m_data.font_program->glyph_translation(code_point, width);
+    auto translation = m_data.font_program->glyph_translation(char_code, width);
     painter.blit_filtered(point.translated(translation.to_rounded<int>()), *bitmap, bitmap->rect(), [color](Color pixel) -> Color {
         return pixel.multiply(color);
     });
