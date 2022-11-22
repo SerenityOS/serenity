@@ -309,6 +309,13 @@ DecoderErrorOr<Gfx::Size<u32>> Parser::parse_frame_size()
 
 DecoderErrorOr<Gfx::Size<u32>> Parser::parse_render_size(Gfx::Size<u32> frame_size)
 {
+    // FIXME: This function should save this bit as a value in the FrameContext. The bit can be
+    //        used in files where the pixel aspect ratio changes between samples in the video.
+    //        If the bit is set, the pixel aspect ratio should be recalculated, whereas if only
+    //        the frame size has changed and the render size is unadjusted, then the pixel aspect
+    //        ratio should be retained and the new render size determined based on that.
+    //        See the Firefox source code here:
+    //        https://searchfox.org/mozilla-central/source/dom/media/platforms/wrappers/MediaChangeMonitor.cpp#268-276
     if (!TRY_READ(m_bit_stream->read_bit()))
         return frame_size;
     return Gfx::Size<u32> { TRY_READ(m_bit_stream->read_f16()) + 1, TRY_READ(m_bit_stream->read_f16()) + 1 };
