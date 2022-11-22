@@ -82,7 +82,7 @@ u32 Type0Font::char_code_to_code_point(u16 char_code) const
     return char_code;
 }
 
-float Type0Font::get_char_width(u16 char_code, float) const
+float Type0Font::get_char_width(u16 char_code) const
 {
     u16 width;
     if (auto char_code_width = m_widths.get(char_code); char_code_width.has_value()) {

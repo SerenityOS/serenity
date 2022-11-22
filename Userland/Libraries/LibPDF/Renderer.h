@@ -57,8 +57,6 @@ struct TextState {
     float word_spacing { 0.0f };
     float horizontal_scaling { 1.0f };
     float leading { 0.0f };
-    FlyString font_family { "Liberation Serif" };
-    String font_variant { "Regular" };
     float font_size { 12.0f };
     RefPtr<PDFFont> font;
     TextRenderingMode rendering_mode { TextRenderingMode::Fill };
@@ -221,8 +219,6 @@ struct Formatter<PDF::TextState> : Formatter<StringView> {
         builder.appendff("    word_spacing={}\n", state.word_spacing);
         builder.appendff("    horizontal_scaling={}\n", state.horizontal_scaling);
         builder.appendff("    leading={}\n", state.leading);
-        builder.appendff("    font_family={}\n", state.font_family);
-        builder.appendff("    font_variant={}\n", state.font_variant);
         builder.appendff("    font_size={}\n", state.font_size);
         builder.appendff("    rendering_mode={}\n", state.rendering_mode);
         builder.appendff("    rise={}\n", state.rise);

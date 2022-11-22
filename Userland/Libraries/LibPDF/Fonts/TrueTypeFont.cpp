@@ -1,38 +1,46 @@
 /*
  * Copyright (c) 2022, Matthew Olsson <mattco@serenityos.org>
+ * Copyright (c) 2022, Julian Offenhäuser <offenhaeuser@protonmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <LibGfx/Font/ScaledFont.h>
+#include <LibGfx/Font/TrueType/Font.h>
+#include <LibGfx/Painter.h>
 #include <LibPDF/CommonNames.h>
 #include <LibPDF/Fonts/TrueTypeFont.h>
-#include <LibPDF/Fonts/Type1Font.h>
 
 namespace PDF {
 
-PDFErrorOr<NonnullRefPtr<PDFFont>> TrueTypeFont::create(Document* document, NonnullRefPtr<DictObject> dict)
+PDFErrorOr<PDFFont::CommonData> TrueTypeFont::parse_data(Document* document, NonnullRefPtr<DictObject> dict, float font_size)
 {
-    auto font_descriptor = TRY(dict->get_dict(document, CommonNames::FontDescriptor));
+    PDFFont::CommonData data;
+    TRY(data.load_from_dict(document, dict, font_size));
 
-    if (!dict->contains(CommonNames::FontFile2)) {
-        // FIXME: The TTF is one of the standard 14 fonts. These should be built into
-        //        the system, and their attributes hardcoded. Until we have them, just
-        //        treat this as a Type1 font (which are very similar to TTF fonts)
-        return TRY(Type1Font::create(document, dict));
+    if (!data.is_standard_font) {
+        auto descriptor = MUST(dict->get_dict(document, CommonNames::FontDescriptor));
+        if (!descriptor->contains(CommonNames::FontFile2))
+            return data;
+
+        auto font_file_stream = TRY(descriptor->get_stream(document, CommonNames::FontFile2));
+        auto ttf_font = TRY(TTF::Font::try_load_from_externally_owned_memory(font_file_stream->bytes()));
+        data.font = adopt_ref(*new Gfx::ScaledFont(*ttf_font, font_size, font_size));
     }
 
-    auto font_file = TRY(dict->get_stream(document, CommonNames::FontFile2));
-    auto ttf_font = TRY(TTF::Font::try_load_from_externally_owned_memory(font_file->bytes()));
-    auto data = TRY(Type1Font::parse_data(document, dict));
-
-    return adopt_ref(*new TrueTypeFont(ttf_font, move(data)));
+    return data;
 }
 
-TrueTypeFont::TrueTypeFont(NonnullRefPtr<TTF::Font> ttf_font, Type1Font::Data data)
-    : m_ttf_font(ttf_font)
-    , m_data(data)
+PDFErrorOr<NonnullRefPtr<PDFFont>> TrueTypeFont::create(Document* document, NonnullRefPtr<DictObject> dict, float font_size)
 {
+    auto data = TRY(parse_data(document, dict, font_size));
+    return adopt_ref(*new TrueTypeFont(move(data)));
+}
+
+TrueTypeFont::TrueTypeFont(PDFFont::CommonData data)
+    : m_data(data)
+{
+    m_is_standard_font = data.is_standard_font;
 }
 
 u32 TrueTypeFont::char_code_to_code_point(u16 char_code) const
@@ -44,23 +52,27 @@ u32 TrueTypeFont::char_code_to_code_point(u16 char_code) const
     return descriptor.code_point;
 }
 
-float TrueTypeFont::get_char_width(u16 char_code, float font_size) const
+float TrueTypeFont::get_char_width(u16 char_code) const
 {
     u16 width;
     if (auto char_code_width = m_data.widths.get(char_code); char_code_width.has_value()) {
         width = char_code_width.value();
     } else {
         // FIXME: Should we do something with m_data.missing_width here?
-        float units_per_em = m_ttf_font->units_per_em();
-        auto scale = (font_size * DEFAULT_DPI) / (POINTS_PER_INCH * units_per_em);
-
-        auto code_point = char_code_to_code_point(char_code);
-        auto id = m_ttf_font->glyph_id_for_code_point(code_point);
-        auto metrics = m_ttf_font->glyph_metrics(id, scale, scale);
-        width = metrics.advance_width;
+        width = m_data.font->glyph_width(char_code);
     }
 
     return static_cast<float>(width) / 1000.0f;
+}
+
+void TrueTypeFont::draw_glyph(Gfx::Painter& painter, Gfx::IntPoint const& point, float, u32 char_code, Color color)
+{
+    if (!m_data.font)
+        return;
+
+    // Account for the reversed font baseline
+    auto position = point.translated(0, -m_data.font->baseline());
+    painter.draw_glyph(position, char_code, *m_data.font, color);
 }
 
 }
