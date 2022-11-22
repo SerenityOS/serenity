@@ -72,16 +72,16 @@ static ErrorOr<int> stat(StringView file, bool should_follow_links)
 
     outln(")");
 
-    auto print_time = [](time_t t) {
-        outln("{}", Core::DateTime::from_timestamp(t).to_string());
+    auto print_time = [](timespec t) {
+        outln("{}.{:09}", Core::DateTime::from_timestamp(t.tv_sec).to_string(), t.tv_nsec);
     };
 
     out("Accessed: ");
-    print_time(st.st_atime);
+    print_time(st.st_atim);
     out("Modified: ");
-    print_time(st.st_mtime);
+    print_time(st.st_mtim);
     out(" Changed: ");
-    print_time(st.st_ctime);
+    print_time(st.st_ctim);
 
     return 0;
 }
