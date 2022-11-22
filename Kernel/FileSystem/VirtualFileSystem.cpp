@@ -281,7 +281,7 @@ ErrorOr<void> VirtualFileSystem::utime(Credentials const& credentials, StringVie
     if (custody->is_readonly())
         return EROFS;
 
-    TRY(inode.update_timestamps(atime, {}, mtime));
+    TRY(inode.update_timestamps(Time::from_timespec({ atime, 0 }), {}, Time::from_timespec({ mtime, 0 })));
     return {};
 }
 
@@ -296,9 +296,9 @@ ErrorOr<void> VirtualFileSystem::utimensat(Credentials const& credentials, Strin
 
     // NOTE: A standard ext2 inode cannot store nanosecond timestamps.
     TRY(inode.update_timestamps(
-        (atime.tv_nsec != UTIME_OMIT) ? atime.tv_sec : Optional<time_t> {},
+        (atime.tv_nsec != UTIME_OMIT) ? Time::from_timespec(atime) : Optional<Time> {},
         {},
-        (mtime.tv_nsec != UTIME_OMIT) ? mtime.tv_sec : Optional<time_t> {}));
+        (mtime.tv_nsec != UTIME_OMIT) ? Time::from_timespec(mtime) : Optional<Time> {}));
 
     return {};
 }
@@ -412,7 +412,7 @@ ErrorOr<NonnullLockRefPtr<OpenFileDescription>> VirtualFileSystem::open(Credenti
 
     if (should_truncate_file) {
         TRY(inode.truncate(0));
-        TRY(inode.update_timestamps({}, {}, kgettimeofday().to_truncated_seconds()));
+        TRY(inode.update_timestamps({}, {}, kgettimeofday()));
     }
     auto description = TRY(OpenFileDescription::try_create(custody));
     description->set_rw_mode(options);

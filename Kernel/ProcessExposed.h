@@ -78,7 +78,7 @@ public:
     virtual mode_t required_mode() const { return 0444; }
     virtual UserID owner_user() const { return 0; }
     virtual GroupID owner_group() const { return 0; }
-    static time_t modified_time() { return TimeManagement::now().to_timeval().tv_sec; }
+    static Time modified_time() { return TimeManagement::now(); }
 
     virtual void prepare_for_deletion() { }
     virtual ErrorOr<void> refresh_data(OpenFileDescription&) const

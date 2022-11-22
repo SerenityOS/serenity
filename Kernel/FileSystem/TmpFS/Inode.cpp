@@ -28,7 +28,7 @@ ErrorOr<NonnullLockRefPtr<TmpFSInode>> TmpFSInode::try_create(TmpFS& fs, InodeMe
 ErrorOr<NonnullLockRefPtr<TmpFSInode>> TmpFSInode::try_create_root(TmpFS& fs)
 {
     InodeMetadata metadata;
-    auto now = kgettimeofday().to_truncated_seconds();
+    auto now = kgettimeofday();
     metadata.atime = now;
     metadata.ctime = now;
     metadata.mtime = now;
@@ -266,7 +266,7 @@ ErrorOr<void> TmpFSInode::chown(UserID uid, GroupID gid)
 ErrorOr<NonnullLockRefPtr<Inode>> TmpFSInode::create_child(StringView name, mode_t mode, dev_t dev, UserID uid, GroupID gid)
 {
     MutexLocker locker(m_inode_lock);
-    time_t now = kgettimeofday().to_truncated_seconds();
+    auto now = kgettimeofday();
 
     InodeMetadata metadata;
     metadata.mode = mode;
@@ -352,7 +352,7 @@ ErrorOr<void> TmpFSInode::truncate(u64 size)
     return {};
 }
 
-ErrorOr<void> TmpFSInode::update_timestamps(Optional<time_t> atime, Optional<time_t> ctime, Optional<time_t> mtime)
+ErrorOr<void> TmpFSInode::update_timestamps(Optional<Time> atime, Optional<Time> ctime, Optional<Time> mtime)
 {
     MutexLocker locker(m_inode_lock);
 

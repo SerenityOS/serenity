@@ -227,7 +227,7 @@ time_t TimeManagement::ticks_per_second() const
     return m_time_keeper_timer->ticks_per_second();
 }
 
-time_t TimeManagement::boot_time()
+Time TimeManagement::boot_time()
 {
 #if ARCH(I386) || ARCH(X86_64)
     return RTC::boot_time();
@@ -246,14 +246,14 @@ UNMAP_AFTER_INIT TimeManagement::TimeManagement()
     if (ACPI::is_enabled()) {
         if (!ACPI::Parser::the()->x86_specific_flags().cmos_rtc_not_present) {
             RTC::initialize();
-            m_epoch_time.tv_sec += boot_time();
+            m_epoch_time.tv_sec += boot_time().to_timespec().tv_sec;
         } else {
             dmesgln("ACPI: RTC CMOS Not present");
         }
     } else {
         // We just assume that we can access RTC CMOS, if ACPI isn't usable.
         RTC::initialize();
-        m_epoch_time.tv_sec += boot_time();
+        m_epoch_time.tv_sec += boot_time().to_timespec().tv_sec;
     }
     if (probe_non_legacy_hardware_timers) {
         if (!probe_and_set_x86_non_legacy_hardware_timers())
