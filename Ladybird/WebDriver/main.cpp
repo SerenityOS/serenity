@@ -6,6 +6,7 @@
 
 #define AK_DONT_REPLACE_STD
 
+#include "../Utilities.h"
 #include <LibCore/ArgsParser.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/System.h>
@@ -35,6 +36,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         warnln("Invalid port number: {}", port);
         return 1;
     }
+
+    platform_init();
 
     Core::EventLoop loop;
     auto server = TRY(Core::TCPServer::try_create());

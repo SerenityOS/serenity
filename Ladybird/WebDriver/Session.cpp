@@ -11,6 +11,7 @@
 #define AK_DONT_REPLACE_STD
 
 #include "Session.h"
+#include "../Utilities.h"
 #include <LibCore/Stream.h>
 #include <LibCore/System.h>
 #include <WebDriver/Client.h>
@@ -18,8 +19,9 @@
 
 namespace WebDriver {
 
-Session::Session(unsigned session_id, NonnullRefPtr<Client> client)
+Session::Session(unsigned session_id, NonnullRefPtr<Client> client, Web::WebDriver::LadybirdOptions options)
     : m_client(move(client))
+    , m_options(move(options))
     , m_id(session_id)
 {
 }
@@ -51,15 +53,39 @@ ErrorOr<void> Session::start()
 
         auto fd_passing_socket_string = String::number(webcontent_fd_passing_fd);
 
-        char const* argv[] = {
-            "ladybird",
-            "--webdriver-fd-passing-socket",
-            fd_passing_socket_string.characters(),
-            nullptr,
-        };
+        if (m_options.headless) {
+            auto resouces = String::formatted("{}/res", s_serenity_resource_root);
+            auto error_page = String::formatted("{}/res/html/error.html", s_serenity_resource_root);
+            auto certs = String::formatted("{}/etc/ca_certs.ini", s_serenity_resource_root);
 
-        if (execvp("./ladybird", const_cast<char**>(argv)) < 0)
-            perror("execvp");
+            char const* argv[] = {
+                "headless-browser",
+                "--resources",
+                resouces.characters(),
+                "--error-page",
+                error_page.characters(),
+                "--certs",
+                certs.characters(),
+                "--webdriver-fd-passing-socket",
+                fd_passing_socket_string.characters(),
+                "about:blank",
+                nullptr,
+            };
+
+            if (execvp("./_deps/lagom-build/headless-browser", const_cast<char**>(argv)) < 0)
+                perror("execvp");
+        } else {
+            char const* argv[] = {
+                "ladybird",
+                "--webdriver-fd-passing-socket",
+                fd_passing_socket_string.characters(),
+                nullptr,
+            };
+
+            if (execvp("./ladybird", const_cast<char**>(argv)) < 0)
+                perror("execvp");
+        }
+
         VERIFY_NOT_REACHED();
     }
 
