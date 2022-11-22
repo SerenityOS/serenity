@@ -767,7 +767,7 @@ bool WindowFrame::handle_titlebar_icon_mouse_event(MouseEvent const& event)
         // this click, and when we receive the MouseUp event check if
         // it would have been considered a double click, if it weren't
         // for the fact that we opened and closed a window in the meanwhile
-        wm.start_menu_doubleclick(m_window, event);
+        wm.system_menu_doubleclick(m_window, event);
 
         m_window.popup_window_menu(titlebar_rect().bottom_left().translated(rect().location()), WindowMenuDefaultAction::Close);
         return true;
