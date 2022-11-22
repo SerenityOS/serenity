@@ -119,7 +119,7 @@ ErrorOr<size_t> Inode::read_bytes(off_t offset, size_t length, UserOrKernelBuffe
     return read_bytes_locked(offset, length, buffer, open_description);
 }
 
-ErrorOr<void> Inode::update_timestamps([[maybe_unused]] Optional<time_t> atime, [[maybe_unused]] Optional<time_t> ctime, [[maybe_unused]] Optional<time_t> mtime)
+ErrorOr<void> Inode::update_timestamps([[maybe_unused]] Optional<Time> atime, [[maybe_unused]] Optional<Time> ctime, [[maybe_unused]] Optional<Time> mtime)
 {
     return ENOTIMPL;
 }
@@ -238,8 +238,8 @@ void Inode::did_modify_contents()
 {
     // FIXME: What happens if this fails?
     //        ENOTIMPL would be a meaningless error to return here
-    auto time = kgettimeofday().to_truncated_seconds();
-    (void)update_timestamps({}, time, time);
+    auto now = kgettimeofday();
+    (void)update_timestamps({}, now, now);
 
     m_watchers.for_each([&](auto& watcher) {
         watcher->notify_inode_event({}, identifier(), InodeWatcherEvent::Type::ContentModified);

@@ -51,7 +51,7 @@ public:
     Time epoch_time(TimePrecision = TimePrecision::Precise) const;
     void set_epoch_time(Time);
     time_t ticks_per_second() const;
-    static time_t boot_time();
+    static Time boot_time();
 
     bool is_system_timer(HardwareTimerBase const&) const;
 

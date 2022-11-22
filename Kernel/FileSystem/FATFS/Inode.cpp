@@ -34,7 +34,7 @@ FATInode::FATInode(FATFS& fs, FATEntry entry, NonnullOwnPtr<KString> filename)
         .atime = fat_date_time(m_entry.last_accessed_date, { 0 }),
         .ctime = fat_date_time(m_entry.creation_date, m_entry.creation_time),
         .mtime = fat_date_time(m_entry.modification_date, m_entry.modification_time),
-        .dtime = 0,
+        .dtime = {},
         .block_count = 0,
         .block_size = 0,
         .major_device = 0,
@@ -167,12 +167,12 @@ ErrorOr<NonnullOwnPtr<KString>> FATInode::compute_filename(FATEntry& entry, Vect
     VERIFY_NOT_REACHED();
 }
 
-time_t FATInode::fat_date_time(FATPackedDate date, FATPackedTime time)
+Time FATInode::fat_date_time(FATPackedDate date, FATPackedTime time)
 {
     if (date.value == 0)
-        return 0;
+        return Time();
 
-    return Time::from_timestamp(first_fat_year + date.year, date.month, date.day, time.hour, time.minute, time.second * 2, 0).to_seconds();
+    return Time::from_timestamp(first_fat_year + date.year, date.month, date.day, time.hour, time.minute, time.second * 2, 0);
 }
 
 StringView FATInode::byte_terminated_string(StringView string, u8 fill_byte)

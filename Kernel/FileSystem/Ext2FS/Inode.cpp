@@ -477,10 +477,10 @@ InodeMetadata Ext2FSInode::metadata() const
     metadata.uid = m_raw_inode.i_uid;
     metadata.gid = m_raw_inode.i_gid;
     metadata.link_count = m_raw_inode.i_links_count;
-    metadata.atime = m_raw_inode.i_atime;
-    metadata.ctime = m_raw_inode.i_ctime;
-    metadata.mtime = m_raw_inode.i_mtime;
-    metadata.dtime = m_raw_inode.i_dtime;
+    metadata.atime = Time::from_timespec({ m_raw_inode.i_atime, 0 });
+    metadata.ctime = Time::from_timespec({ m_raw_inode.i_ctime, 0 });
+    metadata.mtime = Time::from_timespec({ m_raw_inode.i_mtime, 0 });
+    metadata.dtime = Time::from_timespec({ m_raw_inode.i_dtime, 0 });
     metadata.block_size = fs().block_size();
     metadata.block_count = m_raw_inode.i_blocks;
 
@@ -930,23 +930,23 @@ ErrorOr<NonnullLockRefPtr<Inode>> Ext2FSInode::lookup(StringView name)
     return fs().get_inode({ fsid(), inode_index });
 }
 
-ErrorOr<void> Ext2FSInode::update_timestamps(Optional<time_t> atime, Optional<time_t> ctime, Optional<time_t> mtime)
+ErrorOr<void> Ext2FSInode::update_timestamps(Optional<Time> atime, Optional<Time> ctime, Optional<Time> mtime)
 {
     MutexLocker locker(m_inode_lock);
     if (fs().is_readonly())
         return EROFS;
-    if (atime.value_or(0) > INT32_MAX)
+    if (atime.value_or({}).to_timespec().tv_sec > INT32_MAX)
         return EINVAL;
-    if (ctime.value_or(0) > INT32_MAX)
+    if (ctime.value_or({}).to_timespec().tv_sec > INT32_MAX)
         return EINVAL;
-    if (mtime.value_or(0) > INT32_MAX)
+    if (mtime.value_or({}).to_timespec().tv_sec > INT32_MAX)
         return EINVAL;
     if (atime.has_value())
-        m_raw_inode.i_atime = atime.value();
+        m_raw_inode.i_atime = atime.value().to_timespec().tv_sec;
     if (ctime.has_value())
-        m_raw_inode.i_ctime = ctime.value();
+        m_raw_inode.i_ctime = ctime.value().to_timespec().tv_sec;
     if (mtime.has_value())
-        m_raw_inode.i_mtime = mtime.value();
+        m_raw_inode.i_mtime = mtime.value().to_timespec().tv_sec;
     set_metadata_dirty(true);
     return {};
 }
