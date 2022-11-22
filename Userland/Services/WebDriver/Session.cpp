@@ -17,8 +17,9 @@
 
 namespace WebDriver {
 
-Session::Session(unsigned session_id, NonnullRefPtr<Client> client)
+Session::Session(unsigned session_id, NonnullRefPtr<Client> client, Web::WebDriver::LadybirdOptions options)
     : m_client(move(client))
+    , m_options(move(options))
     , m_id(session_id)
 {
 }
@@ -63,14 +64,26 @@ ErrorOr<void> Session::start()
     auto web_content_socket_path = String::formatted("/tmp/webdriver/session_{}_{}", getpid(), m_id);
     auto web_content_server = TRY(create_server(web_content_socket_path, promise));
 
-    char const* argv[] = {
-        "/bin/Browser",
-        "--webdriver-content-path",
-        web_content_socket_path.characters(),
-        nullptr,
-    };
+    if (m_options.headless) {
+        char const* argv[] = {
+            "/bin/headless-browser",
+            "--webdriver-ipc-path",
+            web_content_socket_path.characters(),
+            "about:blank",
+            nullptr,
+        };
 
-    m_browser_pid = TRY(Core::System::posix_spawn("/bin/Browser"sv, nullptr, nullptr, const_cast<char**>(argv), environ));
+        m_browser_pid = TRY(Core::System::posix_spawn("/bin/headless-browser"sv, nullptr, nullptr, const_cast<char**>(argv), environ));
+    } else {
+        char const* argv[] = {
+            "/bin/Browser",
+            "--webdriver-content-path",
+            web_content_socket_path.characters(),
+            nullptr,
+        };
+
+        m_browser_pid = TRY(Core::System::posix_spawn("/bin/Browser"sv, nullptr, nullptr, const_cast<char**>(argv), environ));
+    }
 
     // FIXME: Allow this to be more asynchronous. For now, this at least allows us to propagate
     //        errors received while accepting the Browser and WebContent sockets.

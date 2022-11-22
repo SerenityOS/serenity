@@ -45,6 +45,27 @@ static Response deserialize_as_an_unhandled_prompt_behavior(JsonValue value)
     return value;
 }
 
+static Response deserialize_as_ladybird_options(JsonValue value)
+{
+    if (!value.is_object())
+        return Error::from_code(ErrorCode::InvalidArgument, "Extension capability serenity:ladybird must be an object"sv);
+
+    auto const& object = value.as_object();
+
+    if (auto const* headless = object.get_ptr("headless"sv); headless && !headless->is_bool())
+        return Error::from_code(ErrorCode::InvalidArgument, "Extension capability serenity:ladybird/headless must be a boolean"sv);
+
+    return value;
+}
+
+static JsonObject default_ladybird_options()
+{
+    JsonObject options;
+    options.set("headless"sv, false);
+
+    return options;
+}
+
 // https://w3c.github.io/webdriver/#dfn-validate-capabilities
 static ErrorOr<JsonObject, Error> validate_capabilities(JsonValue const& capability)
 {
@@ -118,8 +139,12 @@ static ErrorOr<JsonObject, Error> validate_capabilities(JsonValue const& capabil
 
         // FIXME: -> name is the name of an additional WebDriver capability
         // FIXME:     Let deserialized be the result of trying to run the additional capability deserialization algorithm for the extension capability corresponding to name, with argument value.
-        // FIXME: -> name is the key of an extension capability
-        // FIXME:     If name is known to the implementation, let deserialized be the result of trying to deserialize value in an implementation-specific way. Otherwise, let deserialized be set to value.
+
+        // -> name is the key of an extension capability
+        //     If name is known to the implementation, let deserialized be the result of trying to deserialize value in an implementation-specific way. Otherwise, let deserialized be set to value.
+        else if (name == "serenity:ladybird"sv) {
+            deserialized = TRY(deserialize_as_ladybird_options(value));
+        }
 
         // -> The remote end is an endpoint node
         else {
@@ -232,6 +257,7 @@ static JsonValue match_capabilities(JsonObject const& capabilities)
     matched_capabilities.set("setWindowRect"sv, true);
 
     // 2. Optionally add extension capabilities as entries to matched capabilities. The values of these may be elided, and there is no requirement that all extension capabilities be added.
+    matched_capabilities.set("serenity:ladybird"sv, default_ladybird_options());
 
     // 3. For each name and value corresponding to capability’s own properties:
     auto result = capabilities.try_for_each_member([&](auto const& name, auto const& value) -> ErrorOr<void> {
@@ -364,6 +390,17 @@ Response process_capabilities(JsonValue const& parameters)
 
     // 9. Return success with data null.
     return JsonValue {};
+}
+
+LadybirdOptions::LadybirdOptions(JsonObject const& capabilities)
+{
+    auto const* options = capabilities.get_ptr("serenity:ladybird"sv);
+    if (!options || !options->is_object())
+        return;
+
+    auto const* headless = options->as_object().get_ptr("headless"sv);
+    if (headless && headless->is_bool())
+        this->headless = headless->as_bool();
 }
 
 }
