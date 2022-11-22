@@ -1084,7 +1084,7 @@ bool WindowManager::is_considered_doubleclick(MouseEvent const& event, DoubleCli
     return false;
 }
 
-void WindowManager::start_menu_doubleclick(Window& window, MouseEvent const& event)
+void WindowManager::system_menu_doubleclick(Window& window, MouseEvent const& event)
 {
     // This is a special case. Basically, we're trying to determine whether
     // double clicking on the window menu icon happened. In this case, the

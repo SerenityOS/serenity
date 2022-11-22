@@ -52,8 +52,8 @@ private:
     }
 };
 
-TaskbarWindow::TaskbarWindow(NonnullRefPtr<GUI::Menu> start_menu)
-    : m_start_menu(move(start_menu))
+TaskbarWindow::TaskbarWindow(NonnullRefPtr<GUI::Menu> system_menu)
+    : m_system_menu(move(system_menu))
 {
     set_window_type(GUI::WindowType::Taskbar);
     set_title("Taskbar");
@@ -69,7 +69,7 @@ TaskbarWindow::TaskbarWindow(NonnullRefPtr<GUI::Menu> start_menu)
     m_start_button->set_icon_spacing(0);
     auto app_icon = GUI::Icon::default_icon("ladyball"sv);
     m_start_button->set_icon(app_icon.bitmap_for_size(16));
-    m_start_button->set_menu(m_start_menu);
+    m_start_button->set_menu(m_system_menu);
 
     main_widget.add_child(*m_start_button);
     main_widget.add<Taskbar::QuickLaunchWidget>();
@@ -296,10 +296,10 @@ void TaskbarWindow::wm_event(GUI::WMEvent& event)
         break;
     }
     case GUI::Event::WM_SuperKeyPressed: {
-        if (m_start_menu->is_visible()) {
-            m_start_menu->dismiss();
+        if (m_system_menu->is_visible()) {
+            m_system_menu->dismiss();
         } else {
-            m_start_menu->popup(m_start_button->screen_relative_rect().top_left());
+            m_system_menu->popup(m_start_button->screen_relative_rect().top_left());
         }
         break;
     }

@@ -210,7 +210,7 @@ public:
 
     void did_popup_a_menu(Badge<Menu>);
 
-    void start_menu_doubleclick(Window& window, MouseEvent const& event);
+    void system_menu_doubleclick(Window& window, MouseEvent const& event);
     bool is_menu_doubleclick(Window& window, MouseEvent const& event) const;
 
     void minimize_windows(Window&, bool);

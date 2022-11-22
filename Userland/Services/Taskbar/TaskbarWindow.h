@@ -28,7 +28,7 @@ public:
     virtual void config_string_did_change(String const&, String const&, String const&, String const&) override;
 
 private:
-    explicit TaskbarWindow(NonnullRefPtr<GUI::Menu> start_menu);
+    explicit TaskbarWindow(NonnullRefPtr<GUI::Menu> system_menu);
     static void show_desktop_button_clicked(unsigned);
     static void toggle_show_desktop();
     void set_quick_launch_button_data(GUI::Button&, String const&, NonnullRefPtr<Desktop::AppFile>);
@@ -49,7 +49,7 @@ private:
 
     void set_start_button_font(Gfx::Font const&);
 
-    NonnullRefPtr<GUI::Menu> m_start_menu;
+    NonnullRefPtr<GUI::Menu> m_system_menu;
     RefPtr<GUI::Widget> m_task_button_container;
     RefPtr<Gfx::Bitmap> m_default_icon;
 
