@@ -11,6 +11,7 @@
 #include <AK/Error.h>
 #include <AK/RefPtr.h>
 #include <LibCore/Promise.h>
+#include <LibWeb/WebDriver/Capabilities.h>
 #include <LibWeb/WebDriver/Error.h>
 #include <LibWeb/WebDriver/Response.h>
 #include <WebDriver/WebContentConnection.h>
@@ -20,7 +21,7 @@ namespace WebDriver {
 
 class Session {
 public:
-    Session(unsigned session_id, NonnullRefPtr<Client> client);
+    Session(unsigned session_id, NonnullRefPtr<Client> client, Web::WebDriver::LadybirdOptions options);
     ~Session();
 
     unsigned session_id() const { return m_id; }
@@ -39,8 +40,11 @@ private:
     ErrorOr<NonnullRefPtr<Core::LocalServer>> create_server(String const& socket_path, NonnullRefPtr<ServerPromise> promise);
 
     NonnullRefPtr<Client> m_client;
+    Web::WebDriver::LadybirdOptions m_options;
+
     bool m_started { false };
     unsigned m_id { 0 };
+
     RefPtr<WebContentConnection> m_web_content_connection;
     Optional<pid_t> m_browser_pid;
 };

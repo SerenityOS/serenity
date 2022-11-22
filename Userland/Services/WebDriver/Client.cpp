@@ -151,11 +151,11 @@ Web::WebDriver::Response Client::new_session(Web::WebDriver::Parameters, JsonVal
     auto session_id = Client::s_next_session_id++;
 
     // 7. Let session be a new session with the session ID of session id.
-    NonnullOwnPtr<Session> session = make<Session>(session_id, *this);
-    auto start_result = session->start();
-    if (start_result.is_error()) {
+    Web::WebDriver::LadybirdOptions options { capabilities.as_object() };
+    auto session = make<Session>(session_id, *this, move(options));
+
+    if (auto start_result = session->start(); start_result.is_error())
         return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::SessionNotCreated, String::formatted("Failed to start session: {}", start_result.error().string_literal()));
-    }
 
     auto& web_content_connection = session->web_content_connection();
 
