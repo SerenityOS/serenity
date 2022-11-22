@@ -1,15 +1,11 @@
 /*
  * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2020-2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2020-2022, Ali Mohammad Pur <mpfard@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Assertions.h>
-#include <AK/ByteBuffer.h>
-#include <AK/Format.h>
-#include <AK/NonnullOwnPtr.h>
-#include <AK/StringBuilder.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/StandardPaths.h>
@@ -18,63 +14,13 @@
 #include <LibJS/Bytecode/BasicBlock.h>
 #include <LibJS/Bytecode/Generator.h>
 #include <LibJS/Bytecode/Interpreter.h>
-#include <LibJS/Bytecode/PassManager.h>
 #include <LibJS/Console.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Parser.h>
-#include <LibJS/Runtime/Array.h>
-#include <LibJS/Runtime/ArrayBuffer.h>
-#include <LibJS/Runtime/AsyncGenerator.h>
-#include <LibJS/Runtime/BooleanObject.h>
+#include <LibJS/Print.h>
 #include <LibJS/Runtime/ConsoleObject.h>
-#include <LibJS/Runtime/DataView.h>
-#include <LibJS/Runtime/Date.h>
-#include <LibJS/Runtime/DatePrototype.h>
-#include <LibJS/Runtime/ECMAScriptFunctionObject.h>
-#include <LibJS/Runtime/Error.h>
-#include <LibJS/Runtime/FunctionObject.h>
-#include <LibJS/Runtime/GeneratorObject.h>
-#include <LibJS/Runtime/GlobalObject.h>
-#include <LibJS/Runtime/Intl/Collator.h>
-#include <LibJS/Runtime/Intl/DateTimeFormat.h>
-#include <LibJS/Runtime/Intl/DisplayNames.h>
-#include <LibJS/Runtime/Intl/DurationFormat.h>
-#include <LibJS/Runtime/Intl/ListFormat.h>
-#include <LibJS/Runtime/Intl/Locale.h>
-#include <LibJS/Runtime/Intl/NumberFormat.h>
-#include <LibJS/Runtime/Intl/PluralRules.h>
-#include <LibJS/Runtime/Intl/RelativeTimeFormat.h>
-#include <LibJS/Runtime/Intl/Segmenter.h>
-#include <LibJS/Runtime/Intl/Segments.h>
 #include <LibJS/Runtime/JSONObject.h>
-#include <LibJS/Runtime/Map.h>
-#include <LibJS/Runtime/NativeFunction.h>
-#include <LibJS/Runtime/NumberObject.h>
-#include <LibJS/Runtime/Object.h>
-#include <LibJS/Runtime/PrimitiveString.h>
-#include <LibJS/Runtime/Promise.h>
-#include <LibJS/Runtime/ProxyObject.h>
-#include <LibJS/Runtime/RegExpObject.h>
-#include <LibJS/Runtime/Set.h>
-#include <LibJS/Runtime/ShadowRealm.h>
-#include <LibJS/Runtime/Shape.h>
-#include <LibJS/Runtime/StringObject.h>
 #include <LibJS/Runtime/StringPrototype.h>
-#include <LibJS/Runtime/Temporal/Calendar.h>
-#include <LibJS/Runtime/Temporal/Duration.h>
-#include <LibJS/Runtime/Temporal/Instant.h>
-#include <LibJS/Runtime/Temporal/PlainDate.h>
-#include <LibJS/Runtime/Temporal/PlainDateTime.h>
-#include <LibJS/Runtime/Temporal/PlainMonthDay.h>
-#include <LibJS/Runtime/Temporal/PlainTime.h>
-#include <LibJS/Runtime/Temporal/PlainYearMonth.h>
-#include <LibJS/Runtime/Temporal/TimeZone.h>
-#include <LibJS/Runtime/Temporal/ZonedDateTime.h>
-#include <LibJS/Runtime/TypedArray.h>
-#include <LibJS/Runtime/Value.h>
-#include <LibJS/Runtime/WeakMap.h>
-#include <LibJS/Runtime/WeakRef.h>
-#include <LibJS/Runtime/WeakSet.h>
 #include <LibJS/SourceTextModule.h>
 #include <LibLine/Editor.h>
 #include <LibMain/Main.h>
@@ -137,6 +83,23 @@ static RefPtr<Line::Editor> s_editor;
 static String s_history_path = String::formatted("{}/.js-history", Core::StandardPaths::home_directory());
 static int s_repl_line_level = 0;
 static bool s_fail_repl = false;
+
+static ErrorOr<void> print(JS::Value value, Core::Stream::Stream& stream)
+{
+    JS::PrintContext print_context { .vm = *g_vm, .stream = stream, .strip_ansi = s_strip_ansi };
+    return JS::print(value, print_context);
+}
+
+enum class PrintTarget {
+    StandardError,
+    StandardOutput,
+};
+
+static ErrorOr<void> print(JS::Value value, PrintTarget target = PrintTarget::StandardOutput)
+{
+    auto stream = TRY(target == PrintTarget::StandardError ? Core::Stream::File::standard_error() : Core::Stream::File::standard_output());
+    return print(value, *stream);
+}
 
 static String prompt_for_level(int level)
 {
@@ -222,899 +185,6 @@ static String read_next_piece()
     return piece.to_string();
 }
 
-static String strip_ansi(StringView format_string)
-{
-    if (format_string.is_empty())
-        return String::empty();
-
-    StringBuilder builder;
-    size_t i;
-    for (i = 0; i < format_string.length() - 1; ++i) {
-        if (format_string[i] == '\033' && format_string[i + 1] == '[') {
-            while (i < format_string.length() && format_string[i] != 'm')
-                ++i;
-        } else {
-            builder.append(format_string[i]);
-        }
-    }
-    if (i < format_string.length())
-        builder.append(format_string[i]);
-    return builder.to_string();
-}
-
-template<typename... Parameters>
-static void js_out(CheckedFormatString<Parameters...>&& fmtstr, Parameters const&... parameters)
-{
-    if (!s_strip_ansi)
-        return out(move(fmtstr), parameters...);
-    auto stripped_fmtstr = strip_ansi(fmtstr.view());
-    out(stripped_fmtstr, parameters...);
-}
-
-template<typename... Parameters>
-static void js_outln(CheckedFormatString<Parameters...>&& fmtstr, Parameters const&... parameters)
-{
-    if (!s_strip_ansi)
-        return outln(move(fmtstr), parameters...);
-    auto stripped_fmtstr = strip_ansi(fmtstr.view());
-    outln(stripped_fmtstr, parameters...);
-}
-
-inline void js_outln() { outln(); }
-
-static void print_value(JS::Value value, HashTable<JS::Object*>& seen_objects);
-
-static void print_type(FlyString const& name)
-{
-    js_out("[\033[36;1m{}\033[0m]", name);
-}
-
-static void print_separator(bool& first)
-{
-    js_out(first ? " "sv : ", "sv);
-    first = false;
-}
-
-static void print_array(JS::Array const& array, HashTable<JS::Object*>& seen_objects)
-{
-    js_out("[");
-    bool first = true;
-    for (auto it = array.indexed_properties().begin(false); it != array.indexed_properties().end(); ++it) {
-        print_separator(first);
-        auto value_or_error = array.get(it.index());
-        // The V8 repl doesn't throw an exception here, and instead just
-        // prints 'undefined'. We may choose to replicate that behavior in
-        // the future, but for now lets just catch the error
-        if (value_or_error.is_error())
-            return;
-        auto value = value_or_error.release_value();
-        print_value(value, seen_objects);
-    }
-    if (!first)
-        js_out(" ");
-    js_out("]");
-}
-
-static void print_object(JS::Object const& object, HashTable<JS::Object*>& seen_objects)
-{
-    js_out("{{");
-    bool first = true;
-    for (auto& entry : object.indexed_properties()) {
-        print_separator(first);
-        js_out("\"\033[33;1m{}\033[0m\": ", entry.index());
-        auto value_or_error = object.get(entry.index());
-        // The V8 repl doesn't throw an exception here, and instead just
-        // prints 'undefined'. We may choose to replicate that behavior in
-        // the future, but for now lets just catch the error
-        if (value_or_error.is_error())
-            return;
-        auto value = value_or_error.release_value();
-        print_value(value, seen_objects);
-    }
-    for (auto& it : object.shape().property_table_ordered()) {
-        print_separator(first);
-        if (it.key.is_string()) {
-            js_out("\"\033[33;1m{}\033[0m\": ", it.key.to_display_string());
-        } else {
-            js_out("[\033[33;1m{}\033[0m]: ", it.key.to_display_string());
-        }
-        print_value(object.get_direct(it.value.offset), seen_objects);
-    }
-    if (!first)
-        js_out(" ");
-    js_out("}}");
-}
-
-static void print_function(JS::FunctionObject const& function_object, HashTable<JS::Object*>&)
-{
-    if (is<JS::ECMAScriptFunctionObject>(function_object)) {
-        auto const& ecmascript_function_object = static_cast<JS::ECMAScriptFunctionObject const&>(function_object);
-        switch (ecmascript_function_object.kind()) {
-        case JS::FunctionKind::Normal:
-            print_type("Function");
-            break;
-        case JS::FunctionKind::Generator:
-            print_type("GeneratorFunction");
-            break;
-        case JS::FunctionKind::Async:
-            print_type("AsyncFunction");
-            break;
-        case JS::FunctionKind::AsyncGenerator:
-            print_type("AsyncGeneratorFunction");
-            break;
-        default:
-            VERIFY_NOT_REACHED();
-        }
-    } else {
-        print_type(function_object.class_name());
-    }
-    if (is<JS::ECMAScriptFunctionObject>(function_object))
-        js_out(" {}", static_cast<JS::ECMAScriptFunctionObject const&>(function_object).name());
-    else if (is<JS::NativeFunction>(function_object))
-        js_out(" {}", static_cast<JS::NativeFunction const&>(function_object).name());
-}
-
-static void print_date(JS::Date const& date, HashTable<JS::Object*>&)
-{
-    print_type("Date");
-    js_out(" \033[34;1m{}\033[0m", JS::to_date_string(date.date_value()));
-}
-
-static void print_error(JS::Object const& object, HashTable<JS::Object*>& seen_objects)
-{
-    auto name = object.get_without_side_effects(g_vm->names.name).value_or(JS::js_undefined());
-    auto message = object.get_without_side_effects(g_vm->names.message).value_or(JS::js_undefined());
-    if (name.is_accessor() || message.is_accessor()) {
-        print_value(&object, seen_objects);
-    } else {
-        auto name_string = name.to_string_without_side_effects();
-        auto message_string = message.to_string_without_side_effects();
-        print_type(name_string);
-        if (!message_string.is_empty())
-            js_out(" \033[31;1m{}\033[0m", message_string);
-    }
-}
-
-static void print_regexp_object(JS::RegExpObject const& regexp_object, HashTable<JS::Object*>&)
-{
-    print_type("RegExp");
-    js_out(" \033[34;1m/{}/{}\033[0m", regexp_object.escape_regexp_pattern(), regexp_object.flags());
-}
-
-static void print_proxy_object(JS::ProxyObject const& proxy_object, HashTable<JS::Object*>& seen_objects)
-{
-    print_type("Proxy");
-    js_out("\n  target: ");
-    print_value(&proxy_object.target(), seen_objects);
-    js_out("\n  handler: ");
-    print_value(&proxy_object.handler(), seen_objects);
-}
-
-static void print_map(JS::Map const& map, HashTable<JS::Object*>& seen_objects)
-{
-    print_type("Map");
-    js_out(" {{");
-    bool first = true;
-    for (auto const& entry : map) {
-        print_separator(first);
-        print_value(entry.key, seen_objects);
-        js_out(" => ");
-        print_value(entry.value, seen_objects);
-    }
-    if (!first)
-        js_out(" ");
-    js_out("}}");
-}
-
-static void print_set(JS::Set const& set, HashTable<JS::Object*>& seen_objects)
-{
-    print_type("Set");
-    js_out(" {{");
-    bool first = true;
-    for (auto const& entry : set) {
-        print_separator(first);
-        print_value(entry.key, seen_objects);
-    }
-    if (!first)
-        js_out(" ");
-    js_out("}}");
-}
-
-static void print_weak_map(JS::WeakMap const& weak_map, HashTable<JS::Object*>&)
-{
-    print_type("WeakMap");
-    js_out(" ({})", weak_map.values().size());
-    // Note: We could tell you what's actually inside, but not in insertion order.
-}
-
-static void print_weak_set(JS::WeakSet const& weak_set, HashTable<JS::Object*>&)
-{
-    print_type("WeakSet");
-    js_out(" ({})", weak_set.values().size());
-    // Note: We could tell you what's actually inside, but not in insertion order.
-}
-
-static void print_weak_ref(JS::WeakRef const& weak_ref, HashTable<JS::Object*>& seen_objects)
-{
-    print_type("WeakRef");
-    js_out(" ");
-    print_value(weak_ref.value().visit([](Empty) -> JS::Value { return JS::js_undefined(); }, [](auto* value) -> JS::Value { return value; }), seen_objects);
-}
-
-static void print_promise(JS::Promise const& promise, HashTable<JS::Object*>& seen_objects)
-{
-    print_type("Promise");
-    switch (promise.state()) {
-    case JS::Promise::State::Pending:
-        js_out("\n  state: ");
-        js_out("\033[36;1mPending\033[0m");
-        break;
-    case JS::Promise::State::Fulfilled:
-        js_out("\n  state: ");
-        js_out("\033[32;1mFulfilled\033[0m");
-        js_out("\n  result: ");
-        print_value(promise.result(), seen_objects);
-        break;
-    case JS::Promise::State::Rejected:
-        js_out("\n  state: ");
-        js_out("\033[31;1mRejected\033[0m");
-        js_out("\n  result: ");
-        print_value(promise.result(), seen_objects);
-        break;
-    default:
-        VERIFY_NOT_REACHED();
-    }
-}
-
-static void print_array_buffer(JS::ArrayBuffer const& array_buffer, HashTable<JS::Object*>& seen_objects)
-{
-    auto& buffer = array_buffer.buffer();
-    auto byte_length = array_buffer.byte_length();
-    print_type("ArrayBuffer");
-    js_out("\n  byteLength: ");
-    print_value(JS::Value((double)byte_length), seen_objects);
-    if (!byte_length)
-        return;
-    js_outln();
-    for (size_t i = 0; i < byte_length; ++i) {
-        js_out("{:02x}", buffer[i]);
-        if (i + 1 < byte_length) {
-            if ((i + 1) % 32 == 0)
-                js_outln();
-            else if ((i + 1) % 16 == 0)
-                js_out("  ");
-            else
-                js_out(" ");
-        }
-    }
-}
-
-static void print_shadow_realm(JS::ShadowRealm const&, HashTable<JS::Object*>&)
-{
-    // Not much we can show here that would be useful. Realm pointer address?!
-    print_type("ShadowRealm");
-}
-
-static void print_generator(JS::GeneratorObject const&, HashTable<JS::Object*>&)
-{
-    print_type("Generator");
-}
-
-static void print_async_generator(JS::AsyncGenerator const&, HashTable<JS::Object*>&)
-{
-    print_type("AsyncGenerator");
-}
-
-template<typename T>
-static void print_number(T number) requires IsArithmetic<T>
-{
-    js_out("\033[35;1m");
-    js_out("{}", number);
-    js_out("\033[0m");
-}
-
-static void print_typed_array(JS::TypedArrayBase const& typed_array_base, HashTable<JS::Object*>& seen_objects)
-{
-    auto& array_buffer = *typed_array_base.viewed_array_buffer();
-    auto length = typed_array_base.array_length();
-    print_type(typed_array_base.class_name());
-    js_out("\n  length: ");
-    print_value(JS::Value(length), seen_objects);
-    js_out("\n  byteLength: ");
-    print_value(JS::Value(typed_array_base.byte_length()), seen_objects);
-    js_out("\n  buffer: ");
-    print_type("ArrayBuffer");
-    if (array_buffer.is_detached())
-        js_out(" (detached)");
-    js_out(" @ {:p}", &array_buffer);
-    if (!length || array_buffer.is_detached())
-        return;
-    js_outln();
-    // FIXME: This kinda sucks.
-#define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType) \
-    if (is<JS::ClassName>(typed_array_base)) {                                           \
-        js_out("[ ");                                                                    \
-        auto& typed_array = static_cast<JS::ClassName const&>(typed_array_base);         \
-        auto data = typed_array.data();                                                  \
-        for (size_t i = 0; i < length; ++i) {                                            \
-            if (i > 0)                                                                   \
-                js_out(", ");                                                            \
-            print_number(data[i]);                                                       \
-        }                                                                                \
-        js_out(" ]");                                                                    \
-        return;                                                                          \
-    }
-    JS_ENUMERATE_TYPED_ARRAYS
-#undef __JS_ENUMERATE
-    VERIFY_NOT_REACHED();
-}
-
-static void print_data_view(JS::DataView const& data_view, HashTable<JS::Object*>& seen_objects)
-{
-    print_type("DataView");
-    js_out("\n  byteLength: ");
-    print_value(JS::Value(data_view.byte_length()), seen_objects);
-    js_out("\n  byteOffset: ");
-    print_value(JS::Value(data_view.byte_offset()), seen_objects);
-    js_out("\n  buffer: ");
-    print_type("ArrayBuffer");
-    js_out(" @ {:p}", data_view.viewed_array_buffer());
-}
-
-static void print_temporal_calendar(JS::Temporal::Calendar const& calendar, HashTable<JS::Object*>& seen_objects)
-{
-    print_type("Temporal.Calendar");
-    js_out(" ");
-    print_value(JS::js_string(calendar.vm(), calendar.identifier()), seen_objects);
-}
-
-static void print_temporal_duration(JS::Temporal::Duration const& duration, HashTable<JS::Object*>&)
-{
-    print_type("Temporal.Duration");
-    js_out(" \033[34;1m{} y, {} M, {} w, {} d, {} h, {} m, {} s, {} ms, {} us, {} ns\033[0m", duration.years(), duration.months(), duration.weeks(), duration.days(), duration.hours(), duration.minutes(), duration.seconds(), duration.milliseconds(), duration.microseconds(), duration.nanoseconds());
-}
-
-static void print_temporal_instant(JS::Temporal::Instant const& instant, HashTable<JS::Object*>& seen_objects)
-{
-    print_type("Temporal.Instant");
-    js_out(" ");
-    // FIXME: Print human readable date and time, like in print_date() - ideally handling arbitrarily large values since we get a bigint.
-    print_value(&instant.nanoseconds(), seen_objects);
-}
-
-static void print_temporal_plain_date(JS::Temporal::PlainDate const& plain_date, HashTable<JS::Object*>& seen_objects)
-{
-    print_type("Temporal.PlainDate");
-    js_out(" \033[34;1m{:04}-{:02}-{:02}\033[0m", plain_date.iso_year(), plain_date.iso_month(), plain_date.iso_day());
-    js_out("\n  calendar: ");
-    print_value(&plain_date.calendar(), seen_objects);
-}
-
-static void print_temporal_plain_date_time(JS::Temporal::PlainDateTime const& plain_date_time, HashTable<JS::Object*>& seen_objects)
-{
-    print_type("Temporal.PlainDateTime");
-    js_out(" \033[34;1m{:04}-{:02}-{:02} {:02}:{:02}:{:02}.{:03}{:03}{:03}\033[0m", plain_date_time.iso_year(), plain_date_time.iso_month(), plain_date_time.iso_day(), plain_date_time.iso_hour(), plain_date_time.iso_minute(), plain_date_time.iso_second(), plain_date_time.iso_millisecond(), plain_date_time.iso_microsecond(), plain_date_time.iso_nanosecond());
-    js_out("\n  calendar: ");
-    print_value(&plain_date_time.calendar(), seen_objects);
-}
-
-static void print_temporal_plain_month_day(JS::Temporal::PlainMonthDay const& plain_month_day, HashTable<JS::Object*>& seen_objects)
-{
-    print_type("Temporal.PlainMonthDay");
-    // Also has an [[ISOYear]] internal slot, but showing that here seems rather unexpected.
-    js_out(" \033[34;1m{:02}-{:02}\033[0m", plain_month_day.iso_month(), plain_month_day.iso_day());
-    js_out("\n  calendar: ");
-    print_value(&plain_month_day.calendar(), seen_objects);
-}
-
-static void print_temporal_plain_time(JS::Temporal::PlainTime const& plain_time, HashTable<JS::Object*>& seen_objects)
-{
-    print_type("Temporal.PlainTime");
-    js_out(" \033[34;1m{:02}:{:02}:{:02}.{:03}{:03}{:03}\033[0m", plain_time.iso_hour(), plain_time.iso_minute(), plain_time.iso_second(), plain_time.iso_millisecond(), plain_time.iso_microsecond(), plain_time.iso_nanosecond());
-    js_out("\n  calendar: ");
-    print_value(&plain_time.calendar(), seen_objects);
-}
-
-static void print_temporal_plain_year_month(JS::Temporal::PlainYearMonth const& plain_year_month, HashTable<JS::Object*>& seen_objects)
-{
-    print_type("Temporal.PlainYearMonth");
-    // Also has an [[ISODay]] internal slot, but showing that here seems rather unexpected.
-    js_out(" \033[34;1m{:04}-{:02}\033[0m", plain_year_month.iso_year(), plain_year_month.iso_month());
-    js_out("\n  calendar: ");
-    print_value(&plain_year_month.calendar(), seen_objects);
-}
-
-static void print_temporal_time_zone(JS::Temporal::TimeZone const& time_zone, HashTable<JS::Object*>& seen_objects)
-{
-    print_type("Temporal.TimeZone");
-    js_out(" ");
-    print_value(JS::js_string(time_zone.vm(), time_zone.identifier()), seen_objects);
-    if (time_zone.offset_nanoseconds().has_value()) {
-        js_out("\n  offset (ns): ");
-        print_value(JS::Value(*time_zone.offset_nanoseconds()), seen_objects);
-    }
-}
-
-static void print_temporal_zoned_date_time(JS::Temporal::ZonedDateTime const& zoned_date_time, HashTable<JS::Object*>& seen_objects)
-{
-    print_type("Temporal.ZonedDateTime");
-    js_out("\n  epochNanoseconds: ");
-    print_value(&zoned_date_time.nanoseconds(), seen_objects);
-    js_out("\n  timeZone: ");
-    print_value(&zoned_date_time.time_zone(), seen_objects);
-    js_out("\n  calendar: ");
-    print_value(&zoned_date_time.calendar(), seen_objects);
-}
-
-static void print_intl_display_names(JS::Intl::DisplayNames const& display_names, HashTable<JS::Object*>& seen_objects)
-{
-    print_type("Intl.DisplayNames");
-    js_out("\n  locale: ");
-    print_value(js_string(display_names.vm(), display_names.locale()), seen_objects);
-    js_out("\n  type: ");
-    print_value(js_string(display_names.vm(), display_names.type_string()), seen_objects);
-    js_out("\n  style: ");
-    print_value(js_string(display_names.vm(), display_names.style_string()), seen_objects);
-    js_out("\n  fallback: ");
-    print_value(js_string(display_names.vm(), display_names.fallback_string()), seen_objects);
-    if (display_names.has_language_display()) {
-        js_out("\n  languageDisplay: ");
-        print_value(js_string(display_names.vm(), display_names.language_display_string()), seen_objects);
-    }
-}
-
-static void print_intl_locale(JS::Intl::Locale const& locale, HashTable<JS::Object*>& seen_objects)
-{
-    print_type("Intl.Locale");
-    js_out("\n  locale: ");
-    print_value(js_string(locale.vm(), locale.locale()), seen_objects);
-    if (locale.has_calendar()) {
-        js_out("\n  calendar: ");
-        print_value(js_string(locale.vm(), locale.calendar()), seen_objects);
-    }
-    if (locale.has_case_first()) {
-        js_out("\n  caseFirst: ");
-        print_value(js_string(locale.vm(), locale.case_first()), seen_objects);
-    }
-    if (locale.has_collation()) {
-        js_out("\n  collation: ");
-        print_value(js_string(locale.vm(), locale.collation()), seen_objects);
-    }
-    if (locale.has_hour_cycle()) {
-        js_out("\n  hourCycle: ");
-        print_value(js_string(locale.vm(), locale.hour_cycle()), seen_objects);
-    }
-    if (locale.has_numbering_system()) {
-        js_out("\n  numberingSystem: ");
-        print_value(js_string(locale.vm(), locale.numbering_system()), seen_objects);
-    }
-    js_out("\n  numeric: ");
-    print_value(JS::Value(locale.numeric()), seen_objects);
-}
-
-static void print_intl_list_format(JS::Intl::ListFormat const& list_format, HashTable<JS::Object*>& seen_objects)
-{
-    print_type("Intl.ListFormat");
-    js_out("\n  locale: ");
-    print_value(js_string(list_format.vm(), list_format.locale()), seen_objects);
-    js_out("\n  type: ");
-    print_value(js_string(list_format.vm(), list_format.type_string()), seen_objects);
-    js_out("\n  style: ");
-    print_value(js_string(list_format.vm(), list_format.style_string()), seen_objects);
-}
-
-static void print_intl_number_format(JS::Intl::NumberFormat const& number_format, HashTable<JS::Object*>& seen_objects)
-{
-    print_type("Intl.NumberFormat");
-    js_out("\n  locale: ");
-    print_value(js_string(number_format.vm(), number_format.locale()), seen_objects);
-    js_out("\n  dataLocale: ");
-    print_value(js_string(number_format.vm(), number_format.data_locale()), seen_objects);
-    js_out("\n  numberingSystem: ");
-    print_value(js_string(number_format.vm(), number_format.numbering_system()), seen_objects);
-    js_out("\n  style: ");
-    print_value(js_string(number_format.vm(), number_format.style_string()), seen_objects);
-    if (number_format.has_currency()) {
-        js_out("\n  currency: ");
-        print_value(js_string(number_format.vm(), number_format.currency()), seen_objects);
-    }
-    if (number_format.has_currency_display()) {
-        js_out("\n  currencyDisplay: ");
-        print_value(js_string(number_format.vm(), number_format.currency_display_string()), seen_objects);
-    }
-    if (number_format.has_currency_sign()) {
-        js_out("\n  currencySign: ");
-        print_value(js_string(number_format.vm(), number_format.currency_sign_string()), seen_objects);
-    }
-    if (number_format.has_unit()) {
-        js_out("\n  unit: ");
-        print_value(js_string(number_format.vm(), number_format.unit()), seen_objects);
-    }
-    if (number_format.has_unit_display()) {
-        js_out("\n  unitDisplay: ");
-        print_value(js_string(number_format.vm(), number_format.unit_display_string()), seen_objects);
-    }
-    js_out("\n  minimumIntegerDigits: ");
-    print_value(JS::Value(number_format.min_integer_digits()), seen_objects);
-    if (number_format.has_min_fraction_digits()) {
-        js_out("\n  minimumFractionDigits: ");
-        print_value(JS::Value(number_format.min_fraction_digits()), seen_objects);
-    }
-    if (number_format.has_max_fraction_digits()) {
-        js_out("\n  maximumFractionDigits: ");
-        print_value(JS::Value(number_format.max_fraction_digits()), seen_objects);
-    }
-    if (number_format.has_min_significant_digits()) {
-        js_out("\n  minimumSignificantDigits: ");
-        print_value(JS::Value(number_format.min_significant_digits()), seen_objects);
-    }
-    if (number_format.has_max_significant_digits()) {
-        js_out("\n  maximumSignificantDigits: ");
-        print_value(JS::Value(number_format.max_significant_digits()), seen_objects);
-    }
-    js_out("\n  useGrouping: ");
-    print_value(number_format.use_grouping_to_value(number_format.vm()), seen_objects);
-    js_out("\n  roundingType: ");
-    print_value(js_string(number_format.vm(), number_format.rounding_type_string()), seen_objects);
-    js_out("\n  roundingMode: ");
-    print_value(js_string(number_format.vm(), number_format.rounding_mode_string()), seen_objects);
-    js_out("\n  roundingIncrement: ");
-    print_value(JS::Value(number_format.rounding_increment()), seen_objects);
-    js_out("\n  notation: ");
-    print_value(js_string(number_format.vm(), number_format.notation_string()), seen_objects);
-    if (number_format.has_compact_display()) {
-        js_out("\n  compactDisplay: ");
-        print_value(js_string(number_format.vm(), number_format.compact_display_string()), seen_objects);
-    }
-    js_out("\n  signDisplay: ");
-    print_value(js_string(number_format.vm(), number_format.sign_display_string()), seen_objects);
-    js_out("\n  trailingZeroDisplay: ");
-    print_value(js_string(number_format.vm(), number_format.trailing_zero_display_string()), seen_objects);
-}
-
-static void print_intl_date_time_format(JS::Intl::DateTimeFormat& date_time_format, HashTable<JS::Object*>& seen_objects)
-{
-    print_type("Intl.DateTimeFormat");
-    js_out("\n  locale: ");
-    print_value(js_string(date_time_format.vm(), date_time_format.locale()), seen_objects);
-    js_out("\n  pattern: ");
-    print_value(js_string(date_time_format.vm(), date_time_format.pattern()), seen_objects);
-    js_out("\n  calendar: ");
-    print_value(js_string(date_time_format.vm(), date_time_format.calendar()), seen_objects);
-    js_out("\n  numberingSystem: ");
-    print_value(js_string(date_time_format.vm(), date_time_format.numbering_system()), seen_objects);
-    if (date_time_format.has_hour_cycle()) {
-        js_out("\n  hourCycle: ");
-        print_value(js_string(date_time_format.vm(), date_time_format.hour_cycle_string()), seen_objects);
-    }
-    js_out("\n  timeZone: ");
-    print_value(js_string(date_time_format.vm(), date_time_format.time_zone()), seen_objects);
-    if (date_time_format.has_date_style()) {
-        js_out("\n  dateStyle: ");
-        print_value(js_string(date_time_format.vm(), date_time_format.date_style_string()), seen_objects);
-    }
-    if (date_time_format.has_time_style()) {
-        js_out("\n  timeStyle: ");
-        print_value(js_string(date_time_format.vm(), date_time_format.time_style_string()), seen_objects);
-    }
-
-    JS::Intl::for_each_calendar_field(date_time_format.vm(), date_time_format, [&](auto& option, auto const& property, auto const&) -> JS::ThrowCompletionOr<void> {
-        using ValueType = typename RemoveReference<decltype(option)>::ValueType;
-
-        if (!option.has_value())
-            return {};
-
-        js_out("\n  {}: ", property);
-
-        if constexpr (IsIntegral<ValueType>) {
-            print_value(JS::Value(*option), seen_objects);
-        } else {
-            auto name = Locale::calendar_pattern_style_to_string(*option);
-            print_value(js_string(date_time_format.vm(), name), seen_objects);
-        }
-
-        return {};
-    });
-}
-
-static void print_intl_relative_time_format(JS::Intl::RelativeTimeFormat const& date_time_format, HashTable<JS::Object*>& seen_objects)
-{
-    print_type("Intl.RelativeTimeFormat");
-    js_out("\n  locale: ");
-    print_value(js_string(date_time_format.vm(), date_time_format.locale()), seen_objects);
-    js_out("\n  numberingSystem: ");
-    print_value(js_string(date_time_format.vm(), date_time_format.numbering_system()), seen_objects);
-    js_out("\n  style: ");
-    print_value(js_string(date_time_format.vm(), date_time_format.style_string()), seen_objects);
-    js_out("\n  numeric: ");
-    print_value(js_string(date_time_format.vm(), date_time_format.numeric_string()), seen_objects);
-}
-
-static void print_intl_plural_rules(JS::Intl::PluralRules const& plural_rules, HashTable<JS::Object*>& seen_objects)
-{
-    print_type("Intl.PluralRules");
-    js_out("\n  locale: ");
-    print_value(js_string(plural_rules.vm(), plural_rules.locale()), seen_objects);
-    js_out("\n  type: ");
-    print_value(js_string(plural_rules.vm(), plural_rules.type_string()), seen_objects);
-    js_out("\n  minimumIntegerDigits: ");
-    print_value(JS::Value(plural_rules.min_integer_digits()), seen_objects);
-    if (plural_rules.has_min_fraction_digits()) {
-        js_out("\n  minimumFractionDigits: ");
-        print_value(JS::Value(plural_rules.min_fraction_digits()), seen_objects);
-    }
-    if (plural_rules.has_max_fraction_digits()) {
-        js_out("\n  maximumFractionDigits: ");
-        print_value(JS::Value(plural_rules.max_fraction_digits()), seen_objects);
-    }
-    if (plural_rules.has_min_significant_digits()) {
-        js_out("\n  minimumSignificantDigits: ");
-        print_value(JS::Value(plural_rules.min_significant_digits()), seen_objects);
-    }
-    if (plural_rules.has_max_significant_digits()) {
-        js_out("\n  maximumSignificantDigits: ");
-        print_value(JS::Value(plural_rules.max_significant_digits()), seen_objects);
-    }
-    js_out("\n  roundingType: ");
-    print_value(js_string(plural_rules.vm(), plural_rules.rounding_type_string()), seen_objects);
-}
-
-static void print_intl_collator(JS::Intl::Collator const& collator, HashTable<JS::Object*>& seen_objects)
-{
-    print_type("Intl.Collator");
-    out("\n  locale: ");
-    print_value(js_string(collator.vm(), collator.locale()), seen_objects);
-    out("\n  usage: ");
-    print_value(js_string(collator.vm(), collator.usage_string()), seen_objects);
-    out("\n  sensitivity: ");
-    print_value(js_string(collator.vm(), collator.sensitivity_string()), seen_objects);
-    out("\n  caseFirst: ");
-    print_value(js_string(collator.vm(), collator.case_first_string()), seen_objects);
-    out("\n  collation: ");
-    print_value(js_string(collator.vm(), collator.collation()), seen_objects);
-    out("\n  ignorePunctuation: ");
-    print_value(JS::Value(collator.ignore_punctuation()), seen_objects);
-    out("\n  numeric: ");
-    print_value(JS::Value(collator.numeric()), seen_objects);
-}
-
-static void print_intl_segmenter(JS::Intl::Segmenter const& segmenter, HashTable<JS::Object*>& seen_objects)
-{
-    print_type("Intl.Segmenter");
-    out("\n  locale: ");
-    print_value(js_string(segmenter.vm(), segmenter.locale()), seen_objects);
-    out("\n  granularity: ");
-    print_value(js_string(segmenter.vm(), segmenter.segmenter_granularity_string()), seen_objects);
-}
-
-static void print_intl_segments(JS::Intl::Segments const& segments, HashTable<JS::Object*>& seen_objects)
-{
-    print_type("Segments");
-    out("\n  string: ");
-    print_value(js_string(segments.vm(), segments.segments_string()), seen_objects);
-    out("\n  segmenter: ");
-    print_value(&segments.segments_segmenter(), seen_objects);
-}
-
-static void print_intl_duration_format(JS::Intl::DurationFormat const& duration_format, HashTable<JS::Object*>& seen_objects)
-{
-    print_type("Intl.DurationFormat");
-    out("\n  locale: ");
-    print_value(js_string(duration_format.vm(), duration_format.locale()), seen_objects);
-    out("\n  dataLocale: ");
-    print_value(js_string(duration_format.vm(), duration_format.data_locale()), seen_objects);
-    out("\n  numberingSystem: ");
-    print_value(js_string(duration_format.vm(), duration_format.numbering_system()), seen_objects);
-    out("\n  style: ");
-    print_value(js_string(duration_format.vm(), duration_format.style_string()), seen_objects);
-    out("\n  years: ");
-    print_value(js_string(duration_format.vm(), duration_format.years_style_string()), seen_objects);
-    out("\n  yearsDisplay: ");
-    print_value(js_string(duration_format.vm(), duration_format.years_display_string()), seen_objects);
-    out("\n  months: ");
-    print_value(js_string(duration_format.vm(), duration_format.months_style_string()), seen_objects);
-    out("\n  monthsDisplay: ");
-    print_value(js_string(duration_format.vm(), duration_format.months_display_string()), seen_objects);
-    out("\n  weeks: ");
-    print_value(js_string(duration_format.vm(), duration_format.weeks_style_string()), seen_objects);
-    out("\n  weeksDisplay: ");
-    print_value(js_string(duration_format.vm(), duration_format.weeks_display_string()), seen_objects);
-    out("\n  days: ");
-    print_value(js_string(duration_format.vm(), duration_format.days_style_string()), seen_objects);
-    out("\n  daysDisplay: ");
-    print_value(js_string(duration_format.vm(), duration_format.days_display_string()), seen_objects);
-    out("\n  hours: ");
-    print_value(js_string(duration_format.vm(), duration_format.hours_style_string()), seen_objects);
-    out("\n  hoursDisplay: ");
-    print_value(js_string(duration_format.vm(), duration_format.hours_display_string()), seen_objects);
-    out("\n  minutes: ");
-    print_value(js_string(duration_format.vm(), duration_format.minutes_style_string()), seen_objects);
-    out("\n  minutesDisplay: ");
-    print_value(js_string(duration_format.vm(), duration_format.minutes_display_string()), seen_objects);
-    out("\n  seconds: ");
-    print_value(js_string(duration_format.vm(), duration_format.seconds_style_string()), seen_objects);
-    out("\n  secondsDisplay: ");
-    print_value(js_string(duration_format.vm(), duration_format.seconds_display_string()), seen_objects);
-    out("\n  milliseconds: ");
-    print_value(js_string(duration_format.vm(), duration_format.milliseconds_style_string()), seen_objects);
-    out("\n  millisecondsDisplay: ");
-    print_value(js_string(duration_format.vm(), duration_format.milliseconds_display_string()), seen_objects);
-    out("\n  microseconds: ");
-    print_value(js_string(duration_format.vm(), duration_format.microseconds_style_string()), seen_objects);
-    out("\n  microsecondsDisplay: ");
-    print_value(js_string(duration_format.vm(), duration_format.microseconds_display_string()), seen_objects);
-    out("\n  nanoseconds: ");
-    print_value(js_string(duration_format.vm(), duration_format.nanoseconds_style_string()), seen_objects);
-    out("\n  nanosecondsDisplay: ");
-    print_value(js_string(duration_format.vm(), duration_format.nanoseconds_display_string()), seen_objects);
-    if (duration_format.has_fractional_digits()) {
-        out("\n  fractionalDigits: ");
-        print_value(JS::Value(duration_format.fractional_digits()), seen_objects);
-    }
-}
-
-static void print_boolean_object(JS::BooleanObject const& boolean_object, HashTable<JS::Object*>& seen_objects)
-{
-    print_type("Boolean");
-    js_out(" ");
-    print_value(JS::Value(boolean_object.boolean()), seen_objects);
-}
-
-static void print_number_object(JS::NumberObject const& number_object, HashTable<JS::Object*>& seen_objects)
-{
-    print_type("Number");
-    js_out(" ");
-    print_value(JS::Value(number_object.number()), seen_objects);
-}
-
-static void print_string_object(JS::StringObject const& string_object, HashTable<JS::Object*>& seen_objects)
-{
-    print_type("String");
-    js_out(" ");
-    print_value(&string_object.primitive_string(), seen_objects);
-}
-
-static void print_value(JS::Value value, HashTable<JS::Object*>& seen_objects)
-{
-    if (value.is_empty()) {
-        js_out("\033[34;1m<empty>\033[0m");
-        return;
-    }
-
-    if (value.is_object()) {
-        if (seen_objects.contains(&value.as_object())) {
-            // FIXME: Maybe we should only do this for circular references,
-            //        not for all reoccurring objects.
-            js_out("<already printed Object {}>", &value.as_object());
-            return;
-        }
-        seen_objects.set(&value.as_object());
-    }
-
-    if (value.is_object()) {
-        auto& object = value.as_object();
-        if (is<JS::Array>(object))
-            return print_array(static_cast<JS::Array&>(object), seen_objects);
-        if (object.is_function())
-            return print_function(static_cast<JS::FunctionObject&>(object), seen_objects);
-        if (is<JS::Date>(object))
-            return print_date(static_cast<JS::Date&>(object), seen_objects);
-        if (is<JS::Error>(object))
-            return print_error(object, seen_objects);
-
-        auto prototype_or_error = object.internal_get_prototype_of();
-        if (prototype_or_error.has_value() && prototype_or_error.value() != nullptr) {
-            auto& prototype = *prototype_or_error.value();
-            if (&prototype == prototype.shape().realm().intrinsics().error_prototype())
-                return print_error(object, seen_objects);
-        }
-
-        if (is<JS::RegExpObject>(object))
-            return print_regexp_object(static_cast<JS::RegExpObject&>(object), seen_objects);
-        if (is<JS::Map>(object))
-            return print_map(static_cast<JS::Map&>(object), seen_objects);
-        if (is<JS::Set>(object))
-            return print_set(static_cast<JS::Set&>(object), seen_objects);
-        if (is<JS::WeakMap>(object))
-            return print_weak_map(static_cast<JS::WeakMap&>(object), seen_objects);
-        if (is<JS::WeakSet>(object))
-            return print_weak_set(static_cast<JS::WeakSet&>(object), seen_objects);
-        if (is<JS::WeakRef>(object))
-            return print_weak_ref(static_cast<JS::WeakRef&>(object), seen_objects);
-        if (is<JS::DataView>(object))
-            return print_data_view(static_cast<JS::DataView&>(object), seen_objects);
-        if (is<JS::ProxyObject>(object))
-            return print_proxy_object(static_cast<JS::ProxyObject&>(object), seen_objects);
-        if (is<JS::Promise>(object))
-            return print_promise(static_cast<JS::Promise&>(object), seen_objects);
-        if (is<JS::ArrayBuffer>(object))
-            return print_array_buffer(static_cast<JS::ArrayBuffer&>(object), seen_objects);
-        if (is<JS::ShadowRealm>(object))
-            return print_shadow_realm(static_cast<JS::ShadowRealm&>(object), seen_objects);
-        if (is<JS::GeneratorObject>(object))
-            return print_generator(static_cast<JS::GeneratorObject&>(object), seen_objects);
-        if (is<JS::AsyncGenerator>(object))
-            return print_async_generator(static_cast<JS::AsyncGenerator&>(object), seen_objects);
-        if (object.is_typed_array())
-            return print_typed_array(static_cast<JS::TypedArrayBase&>(object), seen_objects);
-        if (is<JS::BooleanObject>(object))
-            return print_boolean_object(static_cast<JS::BooleanObject&>(object), seen_objects);
-        if (is<JS::NumberObject>(object))
-            return print_number_object(static_cast<JS::NumberObject&>(object), seen_objects);
-        if (is<JS::StringObject>(object))
-            return print_string_object(static_cast<JS::StringObject&>(object), seen_objects);
-        if (is<JS::Temporal::Calendar>(object))
-            return print_temporal_calendar(static_cast<JS::Temporal::Calendar&>(object), seen_objects);
-        if (is<JS::Temporal::Duration>(object))
-            return print_temporal_duration(static_cast<JS::Temporal::Duration&>(object), seen_objects);
-        if (is<JS::Temporal::Instant>(object))
-            return print_temporal_instant(static_cast<JS::Temporal::Instant&>(object), seen_objects);
-        if (is<JS::Temporal::PlainDate>(object))
-            return print_temporal_plain_date(static_cast<JS::Temporal::PlainDate&>(object), seen_objects);
-        if (is<JS::Temporal::PlainDateTime>(object))
-            return print_temporal_plain_date_time(static_cast<JS::Temporal::PlainDateTime&>(object), seen_objects);
-        if (is<JS::Temporal::PlainMonthDay>(object))
-            return print_temporal_plain_month_day(static_cast<JS::Temporal::PlainMonthDay&>(object), seen_objects);
-        if (is<JS::Temporal::PlainTime>(object))
-            return print_temporal_plain_time(static_cast<JS::Temporal::PlainTime&>(object), seen_objects);
-        if (is<JS::Temporal::PlainYearMonth>(object))
-            return print_temporal_plain_year_month(static_cast<JS::Temporal::PlainYearMonth&>(object), seen_objects);
-        if (is<JS::Temporal::TimeZone>(object))
-            return print_temporal_time_zone(static_cast<JS::Temporal::TimeZone&>(object), seen_objects);
-        if (is<JS::Temporal::ZonedDateTime>(object))
-            return print_temporal_zoned_date_time(static_cast<JS::Temporal::ZonedDateTime&>(object), seen_objects);
-        if (is<JS::Intl::DisplayNames>(object))
-            return print_intl_display_names(static_cast<JS::Intl::DisplayNames&>(object), seen_objects);
-        if (is<JS::Intl::Locale>(object))
-            return print_intl_locale(static_cast<JS::Intl::Locale&>(object), seen_objects);
-        if (is<JS::Intl::ListFormat>(object))
-            return print_intl_list_format(static_cast<JS::Intl::ListFormat&>(object), seen_objects);
-        if (is<JS::Intl::NumberFormat>(object))
-            return print_intl_number_format(static_cast<JS::Intl::NumberFormat&>(object), seen_objects);
-        if (is<JS::Intl::DateTimeFormat>(object))
-            return print_intl_date_time_format(static_cast<JS::Intl::DateTimeFormat&>(object), seen_objects);
-        if (is<JS::Intl::RelativeTimeFormat>(object))
-            return print_intl_relative_time_format(static_cast<JS::Intl::RelativeTimeFormat&>(object), seen_objects);
-        if (is<JS::Intl::PluralRules>(object))
-            return print_intl_plural_rules(static_cast<JS::Intl::PluralRules&>(object), seen_objects);
-        if (is<JS::Intl::Collator>(object))
-            return print_intl_collator(static_cast<JS::Intl::Collator&>(object), seen_objects);
-        if (is<JS::Intl::Segmenter>(object))
-            return print_intl_segmenter(static_cast<JS::Intl::Segmenter&>(object), seen_objects);
-        if (is<JS::Intl::Segments>(object))
-            return print_intl_segments(static_cast<JS::Intl::Segments&>(object), seen_objects);
-        if (is<JS::Intl::DurationFormat>(object))
-            return print_intl_duration_format(static_cast<JS::Intl::DurationFormat&>(object), seen_objects);
-        return print_object(object, seen_objects);
-    }
-
-    if (value.is_string())
-        js_out("\033[32;1m");
-    else if (value.is_number() || value.is_bigint())
-        js_out("\033[35;1m");
-    else if (value.is_boolean())
-        js_out("\033[33;1m");
-    else if (value.is_null())
-        js_out("\033[33;1m");
-    else if (value.is_undefined())
-        js_out("\033[34;1m");
-    if (value.is_string())
-        js_out("\"");
-    else if (value.is_negative_zero())
-        js_out("-");
-    js_out("{}", value.to_string_without_side_effects());
-    if (value.is_string())
-        js_out("\"");
-    js_out("\033[0m");
-}
-
-static void print(JS::Value value)
-{
-    HashTable<JS::Object*> seen_objects;
-    print_value(value, seen_objects);
-    js_outln();
-}
-
 static bool write_to_file(String const& path)
 {
     int fd = open(path.characters(), O_WRONLY | O_CREAT | O_TRUNC, 0666);
@@ -1141,7 +211,7 @@ static bool write_to_file(String const& path)
     return true;
 }
 
-static bool parse_and_run(JS::Interpreter& interpreter, StringView source, StringView source_name)
+static ErrorOr<bool> parse_and_run(JS::Interpreter& interpreter, StringView source, StringView source_name)
 {
     enum class ReturnEarly {
         No,
@@ -1219,12 +289,13 @@ static bool parse_and_run(JS::Interpreter& interpreter, StringView source, Strin
         }
     }
 
-    auto handle_exception = [&](JS::Value thrown_value) {
-        js_out("Uncaught exception: ");
-        print(thrown_value);
+    auto handle_exception = [&](JS::Value thrown_value) -> ErrorOr<void> {
+        warnln("Uncaught exception: ");
+        TRY(print(thrown_value, PrintTarget::StandardError));
+        warnln();
 
         if (!thrown_value.is_object() || !is<JS::Error>(thrown_value.as_object()))
-            return;
+            return {};
         auto& traceback = static_cast<JS::Error const&>(thrown_value.as_object()).traceback();
         if (traceback.size() > 1) {
             unsigned repetitions = 0;
@@ -1241,15 +312,16 @@ static bool parse_and_run(JS::Interpreter& interpreter, StringView source, Strin
                     // If more than 5 (1 + >4) consecutive function calls with the same name, print
                     // the name only once and show the number of repetitions instead. This prevents
                     // printing ridiculously large call stacks of recursive functions.
-                    js_outln(" -> {}", traceback_frame.function_name);
-                    js_outln(" {} more calls", repetitions);
+                    warnln(" -> {}", traceback_frame.function_name);
+                    warnln(" {} more calls", repetitions);
                 } else {
                     for (size_t j = 0; j < repetitions + 1; ++j)
-                        js_outln(" -> {}", traceback_frame.function_name);
+                        warnln(" -> {}", traceback_frame.function_name);
                 }
                 repetitions = 0;
             }
         }
+        return {};
     };
 
     if (!result.is_error())
@@ -1257,11 +329,15 @@ static bool parse_and_run(JS::Interpreter& interpreter, StringView source, Strin
 
     if (result.is_error()) {
         VERIFY(result.throw_completion().value().has_value());
-        handle_exception(*result.release_error().value());
+        TRY(handle_exception(*result.release_error().value()));
         return false;
-    } else if (s_print_last_result) {
-        print(result.value());
     }
+
+    if (s_print_last_result) {
+        TRY(print(result.value()));
+        warnln();
+    }
+
     return true;
 }
 
@@ -1301,6 +377,7 @@ static JS::ThrowCompletionOr<JS::Value> load_json_impl(JS::VM& vm)
     auto json = JsonValue::from_string(file_contents_or_error.value());
     if (json.is_error())
         return vm.throw_completion<JS::SyntaxError>(JS::ErrorType::JsonMalformed);
+
     return JS::JSONObject::parse_json_value(vm, json.value());
 }
 
@@ -1358,13 +435,13 @@ JS_DEFINE_NATIVE_FUNCTION(ReplObject::exit_interpreter)
 
 JS_DEFINE_NATIVE_FUNCTION(ReplObject::repl_help)
 {
-    js_outln("REPL commands:");
-    js_outln("    exit(code): exit the REPL with specified code. Defaults to 0.");
-    js_outln("    help(): display this menu");
-    js_outln("    loadINI(file): load the given file as INI.");
-    js_outln("    loadJSON(file): load the given file as JSON.");
-    js_outln("    print(value): pretty-print the given JS value.");
-    js_outln("    save(file): write REPL input history to the given file. For example: save(\"foo.txt\")");
+    warnln("REPL commands:");
+    warnln("    exit(code): exit the REPL with specified code. Defaults to 0.");
+    warnln("    help(): display this menu");
+    warnln("    loadINI(file): load the given file as INI.");
+    warnln("    loadJSON(file): load the given file as JSON.");
+    warnln("    print(value): pretty-print the given JS value.");
+    warnln("    save(file): write REPL input history to the given file. For example: save(\"foo.txt\")");
     return JS::js_undefined();
 }
 
@@ -1380,7 +457,12 @@ JS_DEFINE_NATIVE_FUNCTION(ReplObject::load_json)
 
 JS_DEFINE_NATIVE_FUNCTION(ReplObject::print)
 {
-    ::print(vm.argument(0));
+    auto result = ::print(vm.argument(0));
+    if (result.is_error())
+        return g_vm->throw_completion<JS::InternalError>(String::formatted("Failed to print value: {}", result.error()));
+
+    outln();
+
     return JS::js_undefined();
 }
 
@@ -1407,11 +489,16 @@ JS_DEFINE_NATIVE_FUNCTION(ScriptObject::load_json)
 
 JS_DEFINE_NATIVE_FUNCTION(ScriptObject::print)
 {
-    ::print(vm.argument(0));
+    auto result = ::print(vm.argument(0));
+    if (result.is_error())
+        return g_vm->throw_completion<JS::InternalError>(String::formatted("Failed to print value: {}", result.error()));
+
+    outln();
+
     return JS::js_undefined();
 }
 
-static void repl(JS::Interpreter& interpreter)
+static ErrorOr<void> repl(JS::Interpreter& interpreter)
 {
     while (!s_fail_repl) {
         String piece = read_next_piece();
@@ -1419,8 +506,9 @@ static void repl(JS::Interpreter& interpreter)
             continue;
 
         g_repl_statements.append(piece);
-        parse_and_run(interpreter, piece, "REPL"sv);
+        TRY(parse_and_run(interpreter, piece, "REPL"sv));
     }
+    return {};
 }
 
 static Function<void()> interrupt_interpreter;
@@ -1438,7 +526,7 @@ public:
 
     virtual void clear() override
     {
-        js_out("\033[3J\033[H\033[2J");
+        warn("\033[3J\033[H\033[2J");
         m_group_stack_depth = 0;
         fflush(stdout);
     }
@@ -1463,13 +551,13 @@ public:
             for (auto& function_name : trace.stack)
                 builder.appendff("{}-> {}\n", indent, function_name);
 
-            js_outln("{}", builder.string_view());
+            warnln("{}", builder.string_view());
             return JS::js_undefined();
         }
 
         if (log_level == JS::Console::LogLevel::Group || log_level == JS::Console::LogLevel::GroupCollapsed) {
             auto group = arguments.get<JS::Console::Group>();
-            js_outln("{}\033[36;1m{}\033[0m", indent, group.label);
+            warnln("{}\033[36;1m{}\033[0m", indent, group.label);
             m_group_stack_depth++;
             return JS::js_undefined();
         }
@@ -1481,24 +569,24 @@ public:
 
         switch (log_level) {
         case JS::Console::LogLevel::Debug:
-            js_outln("{}\033[36;1m{}\033[0m", indent, output);
+            warnln("{}\033[36;1m{}\033[0m", indent, output);
             break;
         case JS::Console::LogLevel::Error:
         case JS::Console::LogLevel::Assert:
-            js_outln("{}\033[31;1m{}\033[0m", indent, output);
+            warnln("{}\033[31;1m{}\033[0m", indent, output);
             break;
         case JS::Console::LogLevel::Info:
-            js_outln("{}(i) {}", indent, output);
+            warnln("{}(i) {}", indent, output);
             break;
         case JS::Console::LogLevel::Log:
-            js_outln("{}{}", indent, output);
+            warnln("{}{}", indent, output);
             break;
         case JS::Console::LogLevel::Warn:
         case JS::Console::LogLevel::CountReset:
-            js_outln("{}\033[33;1m{}\033[0m", indent, output);
+            warnln("{}\033[33;1m{}\033[0m", indent, output);
             break;
         default:
-            js_outln("{}{}", indent, output);
+            warnln("{}{}", indent, output);
             break;
         }
         return JS::js_undefined();
@@ -1543,20 +631,16 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     // handler then attached to it. The Node.js REPL doesn't warn in this case, so it's something we
     // might want to revisit at a later point and disable warnings for promises created this way.
     g_vm->on_promise_unhandled_rejection = [](auto& promise) {
-        // FIXME: Optionally make print_value() to print to stderr
-        js_out("WARNING: A promise was rejected without any handlers");
-        js_out(" (result: ");
-        HashTable<JS::Object*> seen_objects;
-        print_value(promise.result(), seen_objects);
-        js_outln(")");
+        warn("WARNING: A promise was rejected without any handlers");
+        warn(" (result: ");
+        (void)print(promise.result(), PrintTarget::StandardError);
+        warnln(")");
     };
     g_vm->on_promise_rejection_handled = [](auto& promise) {
-        // FIXME: Optionally make print_value() to print to stderr
-        js_out("WARNING: A handler was added to an already rejected promise");
-        js_out(" (result: ");
-        HashTable<JS::Object*> seen_objects;
-        print_value(promise.result(), seen_objects);
-        js_outln(")");
+        warn("WARNING: A handler was added to an already rejected promise");
+        warn(" (result: ");
+        (void)print(promise.result(), PrintTarget::StandardError);
+        warnln(")");
     };
     OwnPtr<JS::Interpreter> interpreter;
 
@@ -1772,7 +856,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             return results;
         };
         s_editor->on_tab_complete = move(complete);
-        repl(*interpreter);
+        TRY(repl(*interpreter));
         s_editor->save_history(s_history_path);
     } else {
         interpreter = JS::Interpreter::create<ScriptObject>(*g_vm);
@@ -1816,7 +900,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
         // We resolve modules as if it is the first file
 
-        if (!parse_and_run(*interpreter, builder.string_view(), source_name))
+        if (!TRY(parse_and_run(*interpreter, builder.string_view(), source_name)))
             return 1;
     }
 
