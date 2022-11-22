@@ -46,11 +46,6 @@ DecoderErrorOr<void> Decoder::receive_sample(ReadonlyBytes chunk_data)
     return {};
 }
 
-void Decoder::dump_frame_info()
-{
-    m_parser->dump_info();
-}
-
 inline size_t index_from_row_and_column(u32 row, u32 column, u32 stride)
 {
     return row * stride + column;

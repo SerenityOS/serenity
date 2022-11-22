@@ -1687,12 +1687,4 @@ void Parser::append_sub8x8_mvs(i32 block, u8 ref_list)
     m_near_mv[ref_list] = sub_8x8_mvs[1];
 }
 
-void Parser::dump_info()
-{
-    outln("Frame dimensions: {}x{}", m_frame_size.width(), m_frame_size.height());
-    outln("Render dimensions: {}x{}", m_render_size.width(), m_render_size.height());
-    outln("Bit depth: {}", m_bit_depth);
-    outln("Show frame: {}", m_show_frame);
-}
-
 }
