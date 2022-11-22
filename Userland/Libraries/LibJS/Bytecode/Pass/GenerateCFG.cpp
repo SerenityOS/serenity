@@ -90,12 +90,15 @@ void GenerateCFG::perform(PassPipelineExecutable& executable)
             enter_label(&resume_target, current_block);
             continue;
         }
-        default:
-            // Otherwise, pop the current block off, it doesn't jump anywhere.
+        case Throw:
+        case Return:
             iterators.take_last();
             entered_blocks.take_last();
             continue;
-        }
+        default:
+            dbgln("Unhandled terminator instruction: `{}`", instruction.to_deprecated_string(executable.executable));
+            VERIFY_NOT_REACHED();
+        };
     }
 
     finished();
