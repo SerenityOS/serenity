@@ -16,18 +16,18 @@ namespace PDF {
 static bool is_standard_latin_font(FlyString const& font)
 {
     return font.is_one_of(
-        "Times-Roman",
-        "Helvetica",
-        "Courier",
-        "Times-Bold",
-        "Helvetica-Bold",
-        "Courier-Bold",
-        "Times-Italic",
-        "Helvetica-Oblique",
-        "Courier-Oblique",
-        "Times-BoldItalic",
-        "Helvetica-BoldOblique",
-        "Courier-BoldOblique");
+        "Times-Roman", "TimesNewRoman",
+        "Helvetica", "Arial",
+        "Courier", "CourierNew",
+        "Times-Bold", "TimesNewRoman,Bold",
+        "Helvetica-Bold", "Arial,Bold",
+        "Courier-Bold", "CourierNew,Bold",
+        "Times-Italic", "TimesNewRoman,Italic",
+        "Helvetica-Oblique", "Arial,Italic",
+        "Courier-Oblique", "CourierNew,Italic",
+        "Times-BoldItalic", "TimesNewRoman,BoldItalic",
+        "Helvetica-BoldOblique", "Arial,BoldItalic",
+        "Courier-BoldOblique", "CourierNew,BoldItalic");
 }
 
 PDFErrorOr<void> PDFFont::CommonData::load_from_dict(Document* document, NonnullRefPtr<DictObject> dict, float font_size)
