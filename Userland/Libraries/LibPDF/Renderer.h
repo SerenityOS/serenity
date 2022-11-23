@@ -64,8 +64,14 @@ struct TextState {
     bool knockout { true };
 };
 
+struct ClippingPaths {
+    Gfx::Path current;
+    Gfx::Path next;
+};
+
 struct GraphicsState {
     Gfx::AffineTransform ctm;
+    ClippingPaths clipping_paths;
     RefPtr<ColorSpace> stroke_color_space { DeviceGrayColorSpace::the() };
     RefPtr<ColorSpace> paint_color_space { DeviceGrayColorSpace::the() };
     Gfx::Color stroke_color { Gfx::Color::NamedColor::Black };
@@ -95,6 +101,8 @@ private:
     PDFErrorOr<void> handle_text_next_line_show_string(Vector<Value> const& args);
     PDFErrorOr<void> handle_text_next_line_show_string_set_spacing(Vector<Value> const& args);
 
+    void begin_path_paint();
+    void end_path_paint();
     PDFErrorOr<void> set_graphics_state_from_dict(NonnullRefPtr<DictObject>);
     void show_text(String const&);
     PDFErrorOr<NonnullRefPtr<ColorSpace>> get_color_space(Value const&);
