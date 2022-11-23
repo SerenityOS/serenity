@@ -17,7 +17,7 @@ public:
     ~TableFormattingContext();
 
     virtual void run(Box const&, LayoutMode, AvailableSpace const&) override;
-    virtual float automatic_content_height() const override;
+    virtual CSSPixels automatic_content_height() const override;
 
 private:
     void calculate_row_column_grid(Box const&);

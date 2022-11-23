@@ -37,7 +37,7 @@ public:
     ~GridFormattingContext();
 
     virtual void run(Box const&, LayoutMode, AvailableSpace const& available_space) override;
-    virtual float automatic_content_height() const override;
+    virtual CSSPixels automatic_content_height() const override;
 
 private:
     float m_automatic_content_height { 0 };

@@ -24,8 +24,8 @@ public:
     BlockContainer const& containing_block() const { return static_cast<BlockContainer const&>(context_box()); }
 
     virtual void run(Box const&, LayoutMode, AvailableSpace const&) override;
-    virtual float automatic_content_height() const override;
-    virtual float automatic_content_width() const override;
+    virtual CSSPixels automatic_content_height() const override;
+    virtual CSSPixels automatic_content_width() const override;
 
     void dimension_box_on_line(Box const&, LayoutMode);
 

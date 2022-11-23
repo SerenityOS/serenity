@@ -121,11 +121,11 @@ void TableFormattingContext::compute_table_measures()
         auto min_content_width = calculate_min_content_width(cell.box);
         auto max_content_width = calculate_max_content_width(cell.box);
 
-        float min_width = min_content_width;
+        float min_width = min_content_width.value();
         if (!computed_values.min_width().is_auto())
             min_width = max(min_width, computed_values.min_width().resolved(cell.box, width_of_containing_block_as_length).to_px(cell.box));
 
-        float max_width = computed_values.width().is_auto() ? max_content_width : width;
+        float max_width = computed_values.width().is_auto() ? max_content_width.value() : width;
         if (!computed_values.max_width().is_none())
             max_width = min(max_width, computed_values.max_width().resolved(cell.box, width_of_containing_block_as_length).to_px(cell.box));
 
@@ -281,7 +281,7 @@ void TableFormattingContext::run(Box const& box, LayoutMode, AvailableSpace cons
         cell_state.set_content_width(span_width - cell_state.border_box_left() - cell_state.border_box_right());
         auto independent_formatting_context = layout_inside(cell.box, LayoutMode::Normal, cell_state.available_inner_space_or_constraints_from(available_space));
         VERIFY(independent_formatting_context);
-        cell_state.set_content_height(independent_formatting_context->automatic_content_height());
+        cell_state.set_content_height(independent_formatting_context->automatic_content_height().value());
         independent_formatting_context->parent_context_did_dimension_child_root_box();
 
         cell.baseline = box_baseline(m_state, cell.box);
@@ -364,7 +364,7 @@ void TableFormattingContext::run(Box const& box, LayoutMode, AvailableSpace cons
     m_automatic_content_height = total_content_height;
 }
 
-float TableFormattingContext::automatic_content_height() const
+CSSPixels TableFormattingContext::automatic_content_height() const
 {
     return m_automatic_content_height;
 }

@@ -78,7 +78,7 @@ FlexFormattingContext::FlexFormattingContext(LayoutState& state, Box const& flex
 
 FlexFormattingContext::~FlexFormattingContext() = default;
 
-float FlexFormattingContext::automatic_content_height() const
+CSSPixels FlexFormattingContext::automatic_content_height() const
 {
     return m_state.get(flex_container()).content_height();
 }
@@ -584,7 +584,7 @@ float FlexFormattingContext::calculate_indefinite_main_size(FlexItem const& item
         box_state.set_content_width(fit_content_cross_size);
         independent_formatting_context->run(item.box, LayoutMode::Normal, m_available_space_for_items->space);
 
-        return independent_formatting_context->automatic_content_height();
+        return independent_formatting_context->automatic_content_height().value();
     }
 
     return calculate_fit_content_main_size(item);
@@ -825,13 +825,13 @@ void FlexFormattingContext::determine_main_size_of_flex_container()
 
     if (is_row_layout()) {
         if (!flex_container().is_out_of_flow(*parent()) && m_state.get(*flex_container().containing_block()).has_definite_width()) {
-            set_main_size(flex_container(), calculate_stretch_fit_width(flex_container(), m_available_space_for_flex_container->space.width));
+            set_main_size(flex_container(), calculate_stretch_fit_width(flex_container(), m_available_space_for_flex_container->space.width).value());
         } else {
-            set_main_size(flex_container(), calculate_max_content_width(flex_container()));
+            set_main_size(flex_container(), calculate_max_content_width(flex_container()).value());
         }
     } else {
         if (!has_definite_main_size(flex_container()))
-            set_main_size(flex_container(), calculate_max_content_height(flex_container(), m_available_space_for_flex_container->space.width));
+            set_main_size(flex_container(), calculate_max_content_height(flex_container(), m_available_space_for_flex_container->space.width).value());
     }
 }
 
@@ -1108,7 +1108,7 @@ void FlexFormattingContext::determine_hypothetical_cross_size_of_item(FlexItem& 
     auto automatic_cross_size = is_row_layout() ? independent_formatting_context->automatic_content_height()
                                                 : box_state.content_width();
 
-    item.hypothetical_cross_size = css_clamp(automatic_cross_size, clamp_min, clamp_max);
+    item.hypothetical_cross_size = css_clamp(automatic_cross_size.value(), clamp_min, clamp_max);
 }
 
 // https://www.w3.org/TR/css-flexbox-1/#algo-cross-line
@@ -1831,34 +1831,34 @@ float FlexFormattingContext::calculate_cross_max_content_contribution(FlexItem c
 
 float FlexFormattingContext::calculate_min_content_main_size(FlexItem const& item) const
 {
-    return is_row_layout() ? calculate_min_content_width(item.box) : calculate_min_content_height(item.box, m_available_space_for_items->space.width);
+    return is_row_layout() ? calculate_min_content_width(item.box).value() : calculate_min_content_height(item.box, m_available_space_for_items->space.width).value();
 }
 
 float FlexFormattingContext::calculate_fit_content_main_size(FlexItem const& item) const
 {
-    return is_row_layout() ? calculate_fit_content_width(item.box, m_available_space_for_items->space)
-                           : calculate_fit_content_height(item.box, m_available_space_for_items->space);
+    return is_row_layout() ? calculate_fit_content_width(item.box, m_available_space_for_items->space).value()
+                           : calculate_fit_content_height(item.box, m_available_space_for_items->space).value();
 }
 
 float FlexFormattingContext::calculate_fit_content_cross_size(FlexItem const& item) const
 {
-    return !is_row_layout() ? calculate_fit_content_width(item.box, m_available_space_for_items->space)
-                            : calculate_fit_content_height(item.box, m_available_space_for_items->space);
+    return !is_row_layout() ? calculate_fit_content_width(item.box, m_available_space_for_items->space).value()
+                            : calculate_fit_content_height(item.box, m_available_space_for_items->space).value();
 }
 
 float FlexFormattingContext::calculate_max_content_main_size(FlexItem const& item) const
 {
-    return is_row_layout() ? calculate_max_content_width(item.box) : calculate_max_content_height(item.box, m_available_space_for_items->space.width);
+    return is_row_layout() ? calculate_max_content_width(item.box).value() : calculate_max_content_height(item.box, m_available_space_for_items->space.width).value();
 }
 
 float FlexFormattingContext::calculate_min_content_cross_size(FlexItem const& item) const
 {
-    return is_row_layout() ? calculate_min_content_height(item.box, m_available_space_for_items->space.width) : calculate_min_content_width(item.box);
+    return is_row_layout() ? calculate_min_content_height(item.box, m_available_space_for_items->space.width).value() : calculate_min_content_width(item.box).value();
 }
 
 float FlexFormattingContext::calculate_max_content_cross_size(FlexItem const& item) const
 {
-    return is_row_layout() ? calculate_max_content_height(item.box, m_available_space_for_items->space.width) : calculate_max_content_width(item.box);
+    return is_row_layout() ? calculate_max_content_height(item.box, m_available_space_for_items->space.width).value() : calculate_max_content_width(item.box).value();
 }
 
 // https://drafts.csswg.org/css-flexbox-1/#stretched
@@ -1961,7 +1961,7 @@ void FlexFormattingContext::handle_align_content_stretch()
 }
 
 // https://drafts.csswg.org/css-flexbox-1/#abspos-items
-Gfx::FloatPoint FlexFormattingContext::calculate_static_position(Box const& box) const
+CSSPixelPoint FlexFormattingContext::calculate_static_position(Box const& box) const
 {
     // The cross-axis edges of the static-position rectangle of an absolutely-positioned child
     // of a flex container are the content edges of the flex container.
@@ -2060,7 +2060,7 @@ Gfx::FloatPoint FlexFormattingContext::calculate_static_position(Box const& box)
     auto absolute_position_of_abspos_containing_block = absolute_content_rect(*box.containing_block(), m_state).location();
     auto diff = absolute_position_of_flex_container - absolute_position_of_abspos_containing_block;
 
-    return static_position_offset + diff;
+    return (static_position_offset + diff).to_type<CSSPixels>();
 }
 
 }

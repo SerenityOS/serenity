@@ -19,7 +19,7 @@ public:
     virtual bool inhibits_floating() const override { return true; }
 
     virtual void run(Box const&, LayoutMode, AvailableSpace const&) override;
-    virtual float automatic_content_height() const override;
+    virtual CSSPixels automatic_content_height() const override;
 
     Box const& flex_container() const { return context_box(); }
 
@@ -27,7 +27,7 @@ public:
     virtual void determine_width_of_child(Box const&, AvailableSpace const&) override;
     virtual void determine_height_of_child(Box const&, AvailableSpace const&) override;
 
-    virtual Gfx::FloatPoint calculate_static_position(Box const&) const override;
+    virtual CSSPixelPoint calculate_static_position(Box const&) const override;
 
 private:
     [[nodiscard]] bool should_treat_main_size_as_auto(Box const&) const;
