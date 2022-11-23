@@ -236,7 +236,6 @@ private:
     TXSize m_tx_size { TX_4x4 };
     ReferenceFramePair m_ref_frame;
     bool m_is_inter { false };
-    bool m_is_compound { false };
     PredictionMode m_default_intra_mode { PredictionMode::DcPred };
     PredictionMode m_y_mode { 0 };
     PredictionMode m_block_sub_modes[4];
