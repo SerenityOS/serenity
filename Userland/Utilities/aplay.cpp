@@ -64,10 +64,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     // If we're downsampling, we need to appropriately load more samples at once.
     size_t const load_size = static_cast<size_t>(LOAD_CHUNK_SIZE * static_cast<double>(loader->sample_rate()) / static_cast<double>(audio_client->get_sample_rate()));
-    // We assume that the loader can load samples at at least 2x speed (testing confirms 9x-12x for FLAC, 14x for WAV).
-    // Therefore, when the server-side buffer can only play as long as the time it takes us to load a chunk,
-    // we give it new data.
-    unsigned const min_buffer_size = load_size / 2;
 
     auto print_playback_update = [&]() {
         out("\033[u");
@@ -115,7 +111,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 // We're done and the server is done
                 break;
             }
-            while (audio_client->remaining_samples() > min_buffer_size) {
+            while (audio_client->remaining_samples() > load_size) {
                 // The server has enough data for now
                 print_playback_update();
                 usleep(1'000'000 / 10);
