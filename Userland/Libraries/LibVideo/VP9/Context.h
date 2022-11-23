@@ -203,7 +203,7 @@ struct TokensContext {
 struct FrameBlockContext {
     bool is_intra_predicted() const { return ref_frames[0] == ReferenceFrameType::None; }
     bool is_single_reference() const { return ref_frames[1] == ReferenceFrameType::None; }
-    MotionVectorPair primary_motion_vector_pair() const { return { sub_block_motion_vectors[0][3], sub_block_motion_vectors[1][3] }; }
+    MotionVectorPair primary_motion_vector_pair() const { return sub_block_motion_vectors[3]; }
 
     bool is_available { false };
     bool skip_coefficients { false };
@@ -212,7 +212,7 @@ struct FrameBlockContext {
     Array<PredictionMode, 4> sub_modes { PredictionMode::DcPred, PredictionMode::DcPred, PredictionMode::DcPred, PredictionMode::DcPred };
     InterpolationFilter interpolation_filter { InterpolationFilter::EightTap };
     ReferenceFramePair ref_frames { ReferenceFrameType::None, ReferenceFrameType::None };
-    Array<Array<MotionVector, 4>, 2> sub_block_motion_vectors {};
+    Array<MotionVectorPair, 4> sub_block_motion_vectors;
     u8 segment_id { 0 };
 };
 
@@ -382,8 +382,31 @@ struct BlockContext {
     u32 row { 0 };
     u32 column { 0 };
     BlockSubsize size;
+    Gfx::Size<u8> get_size_in_4x4_blocks() const
+    {
+        auto width = num_4x4_blocks_wide_lookup[size];
+        auto height = num_4x4_blocks_high_lookup[size];
+        return Gfx::Size<u8>(width, height);
+    }
 
     Vector2DView<FrameBlockContext> contexts_view;
+
+    u8 segment_id { 0 };
+    bool should_skip_residuals { false };
+
+    TXSize tx_size { TXSize::TX_4x4 };
+
+    ReferenceFramePair reference_frame_types;
+    bool is_inter_predicted() const { return reference_frame_types[0] > ReferenceFrameType::None; }
+    bool is_compound() const { return reference_frame_types[1] > ReferenceFrameType::None; }
+
+    Array<PredictionMode, 4> sub_block_prediction_modes;
+    PredictionMode y_prediction_mode() const { return sub_block_prediction_modes.last(); }
+    PredictionMode& y_prediction_mode() { return sub_block_prediction_modes.last(); }
+    PredictionMode uv_prediction_mode { 0 };
+
+    InterpolationFilter interpolation_filter { EightTap };
+    Array<MotionVectorPair, 4> sub_block_motion_vectors;
 };
 
 }

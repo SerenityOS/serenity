@@ -105,19 +105,19 @@ private:
     DecoderErrorOr<void> decode_block(TileContext&, u32 row, u32 column, BlockSubsize subsize);
     DecoderErrorOr<void> mode_info(BlockContext&, FrameBlockContext above_context, FrameBlockContext left_context);
     DecoderErrorOr<void> intra_frame_mode_info(BlockContext&, FrameBlockContext above_context, FrameBlockContext left_context);
-    DecoderErrorOr<void> intra_segment_id();
-    DecoderErrorOr<void> read_skip(FrameBlockContext above_context, FrameBlockContext left_context);
-    bool seg_feature_active(u8 feature);
-    DecoderErrorOr<void> read_tx_size(BlockContext const&, FrameBlockContext above_context, FrameBlockContext left_context, bool allow_select);
+    DecoderErrorOr<void> set_intra_segment_id(BlockContext&);
+    DecoderErrorOr<bool> read_should_skip_residuals(BlockContext&, FrameBlockContext above_context, FrameBlockContext left_context);
+    bool seg_feature_active(BlockContext const&, u8 feature);
+    DecoderErrorOr<TXSize> read_tx_size(BlockContext&, FrameBlockContext above_context, FrameBlockContext left_context, bool allow_select);
     DecoderErrorOr<void> inter_frame_mode_info(BlockContext&, FrameBlockContext above_context, FrameBlockContext left_context);
-    DecoderErrorOr<void> inter_segment_id(BlockContext const&);
+    DecoderErrorOr<void> set_inter_segment_id(BlockContext&);
     u8 get_segment_id(BlockContext const&);
-    DecoderErrorOr<void> read_is_inter(FrameBlockContext above_context, FrameBlockContext left_context);
+    DecoderErrorOr<bool> read_is_inter(BlockContext&, FrameBlockContext above_context, FrameBlockContext left_context);
     DecoderErrorOr<void> intra_block_mode_info(BlockContext&);
     DecoderErrorOr<void> inter_block_mode_info(BlockContext&, FrameBlockContext above_context, FrameBlockContext left_context);
     DecoderErrorOr<void> read_ref_frames(BlockContext&, FrameBlockContext above_context, FrameBlockContext left_context);
-    DecoderErrorOr<void> assign_mv(BlockContext const&, bool is_compound);
-    DecoderErrorOr<void> read_mv(BlockContext const&, u8 ref);
+    DecoderErrorOr<MotionVectorPair> assign_mv(BlockContext const&);
+    DecoderErrorOr<MotionVector> read_mv(BlockContext const&, u8 ref);
     DecoderErrorOr<i32> read_mv_component(u8 component);
     DecoderErrorOr<bool> residual(BlockContext&, bool has_block_above, bool has_block_left);
     DecoderErrorOr<bool> tokens(BlockContext&, size_t plane, u32 x, u32 y, TXSize tx_size, u32 block_index);
@@ -167,25 +167,6 @@ private:
     Vector<u8> m_above_partition_context;
     Vector<u8> m_left_partition_context;
 
-    u8 m_segment_id { 0 };
-    // FIXME: Should this be an enum?
-    // skip equal to 0 indicates that there may be some transform coefficients to read for this block; skip equal to 1
-    // indicates that there are no transform coefficients.
-    //
-    // skip may be set to 0 even if transform blocks contain immediate end of block markers.
-    bool m_skip { false };
-    TXSize m_max_tx_size { TX_4x4 };
-    TXSize m_tx_size { TX_4x4 };
-    ReferenceFramePair m_ref_frame;
-    bool m_is_inter { false };
-    PredictionMode m_y_mode { 0 };
-    Array<PredictionMode, 4> m_block_sub_modes;
-    u8 m_num_4x4_w { 0 };
-    u8 m_num_4x4_h { 0 };
-    PredictionMode m_uv_mode { 0 }; // FIXME: Is u8 the right size?
-    // The current block's interpolation filter.
-    InterpolationFilter m_interp_filter { EightTap };
-    MotionVectorPair m_mv;
     MotionVectorPair m_near_mv;
     MotionVectorPair m_nearest_mv;
     MotionVectorPair m_best_mv;
@@ -205,8 +186,6 @@ private:
     ReferenceMode m_reference_mode;
     ReferenceFrameType m_comp_fixed_ref;
     ReferenceFramePair m_comp_var_ref;
-    // FIXME: Use Array<MotionVectorPair, 4> instead.
-    Array<Array<MotionVector, 4>, 2> m_block_mvs;
 
     MotionVectorPair m_candidate_mv;
     ReferenceFramePair m_candidate_frame;
