@@ -40,7 +40,7 @@ bool is_compatible_property_descriptor(bool extensible, PropertyDescriptor const
 bool validate_and_apply_property_descriptor(Object*, PropertyKey const&, bool extensible, PropertyDescriptor const&, Optional<PropertyDescriptor> const& current);
 ThrowCompletionOr<Object*> get_prototype_from_constructor(VM&, FunctionObject const& constructor, Object* (Intrinsics::*intrinsic_default_prototype)());
 Object* create_unmapped_arguments_object(VM&, Span<Value> arguments);
-Object* create_mapped_arguments_object(VM&, FunctionObject&, Vector<FunctionNode::Parameter> const&, Span<Value> arguments, Environment&);
+Object* create_mapped_arguments_object(VM&, FunctionObject&, Vector<FunctionParameter> const&, Span<Value> arguments, Environment&);
 
 enum class CanonicalIndexMode {
     DetectNumericRoundtrip,

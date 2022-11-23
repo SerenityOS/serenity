@@ -169,6 +169,7 @@ class Expression;
 class ForStatement;
 class FunctionEnvironment;
 class FunctionNode;
+struct FunctionParameter;
 class GlobalEnvironment;
 class GlobalObject;
 class HandleImpl;

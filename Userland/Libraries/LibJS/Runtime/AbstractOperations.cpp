@@ -1065,7 +1065,7 @@ Object* create_unmapped_arguments_object(VM& vm, Span<Value> arguments)
 }
 
 // 10.4.4.7 CreateMappedArgumentsObject ( func, formals, argumentsList, env ), https://tc39.es/ecma262/#sec-createmappedargumentsobject
-Object* create_mapped_arguments_object(VM& vm, FunctionObject& function, Vector<FunctionNode::Parameter> const& formals, Span<Value> arguments, Environment& environment)
+Object* create_mapped_arguments_object(VM& vm, FunctionObject& function, Vector<FunctionParameter> const& formals, Span<Value> arguments, Environment& environment)
 {
     auto& realm = *vm.current_realm();
 
