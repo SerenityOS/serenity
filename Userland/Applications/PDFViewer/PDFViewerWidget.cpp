@@ -167,6 +167,12 @@ void PDFViewerWidget::initialize_toolbar(GUI::Toolbar& toolbar)
     toolbar.add_action(*m_reset_zoom_action);
     toolbar.add_action(*m_rotate_counterclockwise_action);
     toolbar.add_action(*m_rotate_clockwise_action);
+    toolbar.add_separator();
+
+    m_show_clipping_paths = toolbar.add<GUI::CheckBox>();
+    m_show_clipping_paths->set_text("Show clipping paths");
+    m_show_clipping_paths->set_checked(m_viewer->show_clipping_paths(), GUI::AllowCallback::No);
+    m_show_clipping_paths->on_checked = [&](auto checked) { m_viewer->set_show_clipping_paths(checked); };
 }
 
 void PDFViewerWidget::open_file(Core::File& file)
@@ -214,6 +220,7 @@ void PDFViewerWidget::open_file(Core::File& file)
     m_reset_zoom_action->set_enabled(true);
     m_rotate_counterclockwise_action->set_enabled(true);
     m_rotate_clockwise_action->set_enabled(true);
+    m_show_clipping_paths->set_checked(m_viewer->show_clipping_paths(), GUI::AllowCallback::No);
 
     if (document->outline()) {
         auto outline = document->outline();

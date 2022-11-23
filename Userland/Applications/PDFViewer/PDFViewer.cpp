@@ -45,6 +45,7 @@ PDFViewer::PDFViewer()
     start_timer(30'000);
 
     m_page_view_mode = static_cast<PageViewMode>(Config::read_i32("PDFViewer"sv, "Display"sv, "PageMode"sv, 0));
+    m_rendering_preferences.show_clipping_paths = Config::read_bool("PDFViewer"sv, "Rendering"sv, "ShowClippingPaths"sv, false);
 }
 
 PDF::PDFErrorOr<void> PDFViewer::set_document(RefPtr<PDF::Document> document)
@@ -66,13 +67,14 @@ PDF::PDFErrorOr<void> PDFViewer::set_document(RefPtr<PDF::Document> document)
 
 PDF::PDFErrorOr<NonnullRefPtr<Gfx::Bitmap>> PDFViewer::get_rendered_page(u32 index)
 {
+    auto key = m_zoom_level * (static_cast<int>(m_rendering_preferences.show_clipping_paths) + 1);
     auto& rendered_page_map = m_rendered_page_list[index];
-    auto existing_rendered_page = rendered_page_map.get(m_zoom_level);
+    auto existing_rendered_page = rendered_page_map.get(key);
     if (existing_rendered_page.has_value() && existing_rendered_page.value().rotation == m_rotations)
         return existing_rendered_page.value().bitmap;
 
     auto rendered_page = TRY(render_page(index));
-    rendered_page_map.set(m_zoom_level, { rendered_page, m_rotations });
+    rendered_page_map.set(key, { rendered_page, m_rotations });
     return rendered_page;
 }
 
@@ -160,6 +162,13 @@ void PDFViewer::set_current_page(u32 current_page)
 {
     m_current_page_index = current_page;
     vertical_scrollbar().set_value(m_page_dimension_cache.render_info[current_page].total_height_before_this_page);
+    update();
+}
+
+void PDFViewer::set_show_clipping_paths(bool show_clipping_paths)
+{
+    m_rendering_preferences.show_clipping_paths = show_clipping_paths;
+    Config::write_bool("PDFViewer"sv, "Rendering"sv, "ShowClippingPaths"sv, show_clipping_paths);
     update();
 }
 
@@ -301,7 +310,7 @@ PDF::PDFErrorOr<NonnullRefPtr<Gfx::Bitmap>> PDFViewer::render_page(u32 page_inde
     auto& page_size = m_page_dimension_cache.render_info[page_index].size;
     auto bitmap = TRY(Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, page_size.to_type<int>()));
 
-    TRY(PDF::Renderer::render(*m_document, page, bitmap));
+    TRY(PDF::Renderer::render(*m_document, page, bitmap, m_rendering_preferences));
 
     if (page.rotate + m_rotations != 0) {
         int rotation_count = ((page.rotate + m_rotations) / 90) % 4;
