@@ -661,12 +661,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     StringView resources_folder;
     StringView error_page_url;
     StringView ca_certs_path;
+    String screenshot_output_path = Core::DateTime::now().to_string("screenshot-%Y-%m-%d-%H-%M-%S.png"sv);
 
     Core::EventLoop event_loop;
     Core::ArgsParser args_parser;
     args_parser.set_general_help("This utility runs the Browser in headless mode.");
     args_parser.add_option(take_screenshot_after, "Take a screenshot after [n] seconds (default: 1)", "screenshot", 's', "n");
     args_parser.add_option(resources_folder, "Path of the base resources folder (defaults to /res)", "resources", 'r', "resources-root-path");
+    args_parser.add_option(screenshot_output_path, "Path to save a screenshot (defaults to screenshot-(date & time).png)", "shot-out", 'o', "screenshot-output-path");
     args_parser.add_option(error_page_url, "URL for the error page (defaults to file:///res/html/error.html)", "error-page", 'e', "error-page-url");
     args_parser.add_option(ca_certs_path, "The bundled ca certificates file", "certs", 'c', "ca-certs-path");
     args_parser.add_positional_argument(url, "URL to open", "url", Core::ArgsParser::Required::Yes);
@@ -716,15 +718,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     dbgln("Taking screenshot after {} seconds !", take_screenshot_after);
     auto timer = Core::Timer::create_single_shot(
         take_screenshot_after * 1000,
-        [page_client = move(page_client)] {
-            // FIXME: Allow passing the output path as argument
-            String output_file_path = "output.png";
-            dbgln("Saving to {}", output_file_path);
+        [page_client = move(page_client), screenshot_output_path = move(screenshot_output_path)] {
+            dbgln("Saving to {}", screenshot_output_path);
 
-            if (Core::File::exists(output_file_path))
+            if (Core::File::exists(screenshot_output_path))
                 [[maybe_unused]]
-                auto ignored = Core::File::remove(output_file_path, Core::File::RecursionMode::Disallowed, true);
-            auto output_file = MUST(Core::Stream::File::open(output_file_path, Core::Stream::OpenMode::Write));
+                auto ignored = Core::File::remove(screenshot_output_path, Core::File::RecursionMode::Disallowed, true);
+            auto output_file = MUST(Core::Stream::File::open(screenshot_output_path, Core::Stream::OpenMode::Write));
 
             auto output_rect = page_client->screen_rect();
             auto output_bitmap = MUST(Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRx8888, output_rect.size()));
