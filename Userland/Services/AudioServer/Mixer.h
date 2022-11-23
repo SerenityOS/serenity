@@ -47,12 +47,16 @@ public:
             return false;
 
         if (m_in_chunk_location >= m_current_audio_chunk.size()) {
-            // FIXME: We should send a did_misbehave to the client if the queue is empty,
-            //        but the lifetimes involved mean that we segfault if we try to do that.
             auto result = m_buffer->try_dequeue();
             if (result.is_error()) {
-                if (result.error() == Audio::AudioQueue::QueueStatus::Empty)
-                    dbgln("Audio client can't keep up!");
+                if (result.error() == Audio::AudioQueue::QueueStatus::Empty) {
+                    dbgln("Audio client {} can't keep up!", m_client->client_id());
+                    // Note: Even though we only check client state here, we will probably close the client much earlier.
+                    if (!m_client->is_open()) {
+                        dbgln("Client socket {} has closed, closing audio server connection.", m_client->client_id());
+                        m_client->shutdown();
+                    }
+                }
 
                 return false;
             }
@@ -64,6 +68,8 @@ public:
 
         return true;
     }
+
+    bool is_connected() const { return m_client && m_client->is_open(); }
 
     ConnectionFromClient* client() { return m_client.ptr(); }
 

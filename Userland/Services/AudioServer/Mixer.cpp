@@ -70,7 +70,7 @@ void Mixer::mix()
             }
         }
 
-        active_mix_queues.remove_all_matching([&](auto& entry) { return !entry->client(); });
+        active_mix_queues.remove_all_matching([&](auto& entry) { return !entry->is_connected(); });
 
         Array<Audio::Sample, HARDWARE_BUFFER_SIZE> mixed_buffer;
 
