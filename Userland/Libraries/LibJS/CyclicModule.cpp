@@ -196,9 +196,15 @@ ThrowCompletionOr<Promise*> CyclicModule::evaluate(VM& vm)
         // Note: This will continue this function with module.[[CycleRoot]]
         VERIFY(m_cycle_root && m_cycle_root->m_status == ModuleStatus::Linked && this != m_cycle_root);
         dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] evaluate[{}](vm) deferring to cycle root at {}", this, m_cycle_root);
-        return m_cycle_root->evaluate(vm);
+        return m_cycle_root->proceed_evaluate(vm);
     }
 
+    // Note: Steps 4 onwards are continued in CyclicModule::proceed_evaluate
+    return proceed_evaluate(vm);
+}
+
+ThrowCompletionOr<Promise*> CyclicModule::proceed_evaluate(VM& vm)
+{
     // 4. If module.[[TopLevelCapability]] is not empty, then
     if (m_top_level_capability != nullptr) {
         // a. Return module.[[TopLevelCapability]].[[Promise]].

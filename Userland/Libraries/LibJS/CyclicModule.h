@@ -37,6 +37,8 @@ protected:
 
     virtual void visit_edges(Cell::Visitor&) override;
 
+    virtual ThrowCompletionOr<Promise*> proceed_evaluate(VM& vm);
+
     virtual ThrowCompletionOr<u32> inner_module_linking(VM& vm, Vector<Module*>& stack, u32 index) override;
     virtual ThrowCompletionOr<u32> inner_module_evaluation(VM& vm, Vector<Module*>& stack, u32 index) override;
 
