@@ -305,6 +305,12 @@ public:
     bool high_precision_motion_vectors_allowed { false };
     InterpolationFilter interpolation_filter { InterpolationFilter::Switchable };
 
+    u8 loop_filter_level { 0 };
+    u8 loop_filter_sharpness { 0 };
+    bool loop_filter_delta_enabled { false };
+    Array<i8, MAX_REF_FRAMES> loop_filter_reference_deltas;
+    Array<i8, 2> loop_filter_mode_deltas;
+
     u16 header_size_in_bytes { 0 };
 
 private:
