@@ -311,6 +311,16 @@ public:
     Array<i8, MAX_REF_FRAMES> loop_filter_reference_deltas;
     Array<i8, 2> loop_filter_mode_deltas;
 
+    u8 base_quantizer_index { 0 };
+    i8 y_dc_quantizer_index_delta { 0 };
+    i8 uv_dc_quantizer_index_delta { 0 };
+    i8 uv_ac_quantizer_index_delta { 0 };
+    bool is_lossless() const
+    {
+        // From quantization_params( ) in the spec.
+        return base_quantizer_index == 0 && y_dc_quantizer_index_delta == 0 && uv_dc_quantizer_index_delta == 0 && uv_ac_quantizer_index_delta == 0;
+    }
+
     u16 header_size_in_bytes { 0 };
 
 private:
