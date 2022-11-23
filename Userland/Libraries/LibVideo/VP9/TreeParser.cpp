@@ -80,7 +80,7 @@ ErrorOr<Partition> TreeParser::parse_partition(BitStream& bit_stream, Probabilit
     return value;
 }
 
-ErrorOr<PredictionMode> TreeParser::parse_default_intra_mode(BitStream& bit_stream, ProbabilityTables const& probability_table, BlockSubsize mi_size, Optional<Array<PredictionMode, 4> const&> above_context, Optional<Array<PredictionMode, 4> const&> left_context, PredictionMode block_sub_modes[4], u8 index_x, u8 index_y)
+ErrorOr<PredictionMode> TreeParser::parse_default_intra_mode(BitStream& bit_stream, ProbabilityTables const& probability_table, BlockSubsize mi_size, Optional<Array<PredictionMode, 4> const&> above_context, Optional<Array<PredictionMode, 4> const&> left_context, Array<PredictionMode, 4> const& block_sub_modes, u8 index_x, u8 index_y)
 {
     // FIXME: This should use a struct for the above and left contexts.
 

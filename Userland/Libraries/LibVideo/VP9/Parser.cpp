@@ -1031,9 +1031,8 @@ DecoderErrorOr<void> Parser::intra_frame_mode_info()
             above_context = m_sub_modes[get_image_index(m_mi_row - 1, m_mi_col)];
         if (m_available_l)
             left_context = m_sub_modes[get_image_index(m_mi_row, m_mi_col - 1)];
-        m_default_intra_mode = TRY_READ(TreeParser::parse_default_intra_mode(*m_bit_stream, *m_probability_tables, m_mi_size, above_context, left_context, m_block_sub_modes, 0, 0));
 
-        m_y_mode = m_default_intra_mode;
+        m_y_mode = TRY_READ(TreeParser::parse_default_intra_mode(*m_bit_stream, *m_probability_tables, m_mi_size, above_context, left_context, m_block_sub_modes, 0, 0));
         for (auto& block_sub_mode : m_block_sub_modes)
             block_sub_mode = m_y_mode;
     } else {
@@ -1048,17 +1047,17 @@ DecoderErrorOr<void> Parser::intra_frame_mode_info()
                     above_context = m_sub_modes[get_image_index(m_mi_row - 1, m_mi_col)];
                 if (m_available_l)
                     left_context = m_sub_modes[get_image_index(m_mi_row, m_mi_col - 1)];
-                m_default_intra_mode = TRY_READ(TreeParser::parse_default_intra_mode(*m_bit_stream, *m_probability_tables, m_mi_size, above_context, left_context, m_block_sub_modes, idx, idy));
+                auto sub_mode = TRY_READ(TreeParser::parse_default_intra_mode(*m_bit_stream, *m_probability_tables, m_mi_size, above_context, left_context, m_block_sub_modes, idx, idy));
 
                 for (auto y = 0; y < m_num_4x4_h; y++) {
                     for (auto x = 0; x < m_num_4x4_w; x++) {
                         auto index = (idy + y) * 2 + idx + x;
-                        m_block_sub_modes[index] = m_default_intra_mode;
+                        m_block_sub_modes[index] = sub_mode;
                     }
                 }
             }
         }
-        m_y_mode = m_default_intra_mode;
+        m_y_mode = m_block_sub_modes.last();
     }
     m_uv_mode = TRY_READ(TreeParser::parse_default_uv_mode(*m_bit_stream, *m_probability_tables, m_y_mode));
     return {};

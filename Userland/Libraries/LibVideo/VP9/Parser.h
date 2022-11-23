@@ -236,9 +236,8 @@ private:
     TXSize m_tx_size { TX_4x4 };
     ReferenceFramePair m_ref_frame;
     bool m_is_inter { false };
-    PredictionMode m_default_intra_mode { PredictionMode::DcPred };
     PredictionMode m_y_mode { 0 };
-    PredictionMode m_block_sub_modes[4];
+    Array<PredictionMode, 4> m_block_sub_modes;
     u8 m_num_4x4_w { 0 };
     u8 m_num_4x4_h { 0 };
     PredictionMode m_uv_mode { 0 }; // FIXME: Is u8 the right size?
