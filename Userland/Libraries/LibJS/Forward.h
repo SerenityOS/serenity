@@ -181,6 +181,8 @@ class Intrinsics;
 class Module;
 class NativeFunction;
 class ObjectEnvironment;
+class Parser;
+struct ParserError;
 class PrimitiveString;
 class PromiseCapability;
 class PromiseReaction;

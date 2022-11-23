@@ -43,7 +43,7 @@ private:
 
     JS::GCPtr<JS::Script> m_script_record;
     MutedErrors m_muted_errors { MutedErrors::No };
-    Optional<JS::Parser::Error> m_error_to_rethrow;
+    Optional<JS::ParserError> m_error_to_rethrow;
 };
 
 }

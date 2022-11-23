@@ -31,6 +31,7 @@ set(SOURCES
     MarkupGenerator.cpp
     Module.cpp
     Parser.cpp
+    ParserError.cpp
     Runtime/AbstractOperations.cpp
     Runtime/AggregateError.cpp
     Runtime/AggregateErrorConstructor.cpp

@@ -27,7 +27,7 @@ public:
     };
 
     virtual ~Script() override;
-    static Result<NonnullGCPtr<Script>, Vector<Parser::Error>> parse(StringView source_text, Realm&, StringView filename = {}, HostDefined* = nullptr, size_t line_number_offset = 1);
+    static Result<NonnullGCPtr<Script>, Vector<ParserError>> parse(StringView source_text, Realm&, StringView filename = {}, HostDefined* = nullptr, size_t line_number_offset = 1);
 
     Realm& realm() { return *m_realm; }
     Program const& parse_node() const { return *m_parse_node; }

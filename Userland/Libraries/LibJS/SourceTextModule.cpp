@@ -120,7 +120,7 @@ void SourceTextModule::visit_edges(Cell::Visitor& visitor)
 }
 
 // 16.2.1.6.1 ParseModule ( sourceText, realm, hostDefined ), https://tc39.es/ecma262/#sec-parsemodule
-Result<NonnullGCPtr<SourceTextModule>, Vector<Parser::Error>> SourceTextModule::parse(StringView source_text, Realm& realm, StringView filename, Script::HostDefined* host_defined)
+Result<NonnullGCPtr<SourceTextModule>, Vector<ParserError>> SourceTextModule::parse(StringView source_text, Realm& realm, StringView filename, Script::HostDefined* host_defined)
 {
     // 1. Let body be ParseText(sourceText, Module).
     auto parser = Parser(Lexer(source_text, filename), Program::Type::Module);
