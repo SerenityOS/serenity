@@ -7,6 +7,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibJS/AST.h>
 #include <LibJS/Heap/DeferGC.h>
 #include <LibJS/Module.h>
 #include <LibJS/Runtime/Array.h>

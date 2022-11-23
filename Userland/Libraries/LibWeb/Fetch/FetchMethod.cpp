@@ -5,6 +5,7 @@
  */
 
 #include <AK/Debug.h>
+#include <AK/TypeCasts.h>
 #include <LibJS/Runtime/PromiseCapability.h>
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
 #include <LibWeb/DOM/AbortSignal.h>

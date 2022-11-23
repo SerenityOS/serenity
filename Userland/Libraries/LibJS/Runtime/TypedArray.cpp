@@ -6,6 +6,7 @@
  */
 
 #include <AK/Checked.h>
+#include <AK/TypeCasts.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/ArrayBuffer.h>
 #include <LibJS/Runtime/ArrayBufferConstructor.h>

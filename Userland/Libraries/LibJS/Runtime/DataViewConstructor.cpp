@@ -5,6 +5,7 @@
  */
 
 #include <AK/Checked.h>
+#include <AK/TypeCasts.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/DataView.h>
 #include <LibJS/Runtime/DataViewConstructor.h>
