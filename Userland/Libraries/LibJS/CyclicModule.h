@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <LibJS/AST.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Module.h>
 #include <LibJS/Parser.h>
