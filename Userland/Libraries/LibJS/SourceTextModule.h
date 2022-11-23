@@ -20,7 +20,7 @@ class SourceTextModule final : public CyclicModule {
     JS_CELL(SourceTextModule, CyclicModule);
 
 public:
-    static Result<NonnullGCPtr<SourceTextModule>, Vector<Parser::Error>> parse(StringView source_text, Realm&, StringView filename = {}, Script::HostDefined* host_defined = nullptr);
+    static Result<NonnullGCPtr<SourceTextModule>, Vector<ParserError>> parse(StringView source_text, Realm&, StringView filename = {}, Script::HostDefined* host_defined = nullptr);
 
     Program const& parse_node() const { return *m_ecmascript_code; }
 

@@ -13,6 +13,7 @@
 #include <AK/StringBuilder.h>
 #include <LibJS/AST.h>
 #include <LibJS/Lexer.h>
+#include <LibJS/ParserError.h>
 #include <LibJS/Runtime/FunctionConstructor.h>
 #include <LibJS/SourceRange.h>
 #include <LibJS/Token.h>
@@ -173,36 +174,8 @@ public:
 
     Vector<CallExpression::Argument> parse_arguments();
 
-    struct Error {
-        String message;
-        Optional<Position> position;
-
-        String to_string() const
-        {
-            if (!position.has_value())
-                return message;
-            return String::formatted("{} (line: {}, column: {})", message, position.value().line, position.value().column);
-        }
-
-        String source_location_hint(StringView source, char const spacer = ' ', char const indicator = '^') const
-        {
-            if (!position.has_value())
-                return {};
-            // We need to modify the source to match what the lexer considers one line - normalizing
-            // line terminators to \n is easier than splitting using all different LT characters.
-            String source_string = source.replace("\r\n"sv, "\n"sv, ReplaceMode::All).replace("\r"sv, "\n"sv, ReplaceMode::All).replace(LINE_SEPARATOR_STRING, "\n"sv, ReplaceMode::All).replace(PARAGRAPH_SEPARATOR_STRING, "\n"sv, ReplaceMode::All);
-            StringBuilder builder;
-            builder.append(source_string.split_view('\n', SplitBehavior::KeepEmpty)[position.value().line - 1]);
-            builder.append('\n');
-            for (size_t i = 0; i < position.value().column - 1; ++i)
-                builder.append(spacer);
-            builder.append(indicator);
-            return builder.build();
-        }
-    };
-
     bool has_errors() const { return m_state.errors.size(); }
-    Vector<Error> const& errors() const { return m_state.errors; }
+    Vector<ParserError> const& errors() const { return m_state.errors; }
     void print_errors(bool print_hint = true) const
     {
         for (auto& error : m_state.errors) {
@@ -305,7 +278,7 @@ private:
     struct ParserState {
         Lexer lexer;
         Token current_token;
-        Vector<Error> errors;
+        Vector<ParserError> errors;
         ScopePusher* current_scope_pusher { nullptr };
 
         HashMap<StringView, Optional<Position>> labels_in_scope;
