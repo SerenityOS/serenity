@@ -84,12 +84,16 @@ struct GraphicsState {
     TextState text_state {};
 };
 
+struct RenderingPreferences {
+    bool show_clipping_paths { false };
+};
+
 class Renderer {
 public:
-    static PDFErrorOr<void> render(Document&, Page const&, RefPtr<Gfx::Bitmap>);
+    static PDFErrorOr<void> render(Document&, Page const&, RefPtr<Gfx::Bitmap>, RenderingPreferences preferences);
 
 private:
-    Renderer(RefPtr<Document>, Page const&, RefPtr<Gfx::Bitmap>);
+    Renderer(RefPtr<Document>, Page const&, RefPtr<Gfx::Bitmap>, RenderingPreferences);
 
     PDFErrorOr<void> render();
 
@@ -128,6 +132,7 @@ private:
     Page const& m_page;
     Gfx::Painter m_painter;
     Gfx::AntiAliasingPainter m_anti_aliasing_painter;
+    RenderingPreferences m_rendering_preferences;
 
     Gfx::Path m_current_path;
     Vector<GraphicsState> m_graphics_state_stack;
