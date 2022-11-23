@@ -193,10 +193,12 @@ ThrowCompletionOr<Promise*> CyclicModule::evaluate(VM& vm)
 
     // 3. If module.[[Status]] is evaluating-async or evaluated, set module to module.[[CycleRoot]].
     if (m_status == ModuleStatus::EvaluatingAsync || m_status == ModuleStatus::Evaluated) {
-        // Note: This will continue this function with module.[[CycleRoot]]
-        VERIFY(m_cycle_root && m_cycle_root->m_status == ModuleStatus::Linked && this != m_cycle_root);
-        dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] evaluate[{}](vm) deferring to cycle root at {}", this, m_cycle_root);
-        return m_cycle_root->proceed_evaluate(vm);
+        // Note: Per the spec 'For a module not in a cycle this would be the module itself', thus we can
+        //       continue with this if there isn't a root.
+        if (m_cycle_root) {
+            dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] evaluate[{}](vm) deferring to cycle root at {}", this, m_cycle_root);
+            return m_cycle_root->proceed_evaluate(vm);
+        }
     }
 
     // Note: Steps 4 onwards are continued in CyclicModule::proceed_evaluate
