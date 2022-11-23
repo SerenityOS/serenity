@@ -607,18 +607,18 @@ struct BindingPattern : RefCounted<BindingPattern> {
     Kind kind { Kind::Object };
 };
 
+struct FunctionParameter {
+    Variant<FlyString, NonnullRefPtr<BindingPattern>> binding;
+    RefPtr<Expression> default_value;
+    bool is_rest { false };
+};
+
 class FunctionNode {
 public:
-    struct Parameter {
-        Variant<FlyString, NonnullRefPtr<BindingPattern>> binding;
-        RefPtr<Expression> default_value;
-        bool is_rest { false };
-    };
-
     FlyString const& name() const { return m_name; }
     String const& source_text() const { return m_source_text; }
     Statement const& body() const { return *m_body; }
-    Vector<Parameter> const& parameters() const { return m_parameters; };
+    Vector<FunctionParameter> const& parameters() const { return m_parameters; };
     i32 function_length() const { return m_function_length; }
     bool is_strict_mode() const { return m_is_strict_mode; }
     bool might_need_arguments_object() const { return m_might_need_arguments_object; }
@@ -627,7 +627,7 @@ public:
     FunctionKind kind() const { return m_kind; }
 
 protected:
-    FunctionNode(FlyString name, String source_text, NonnullRefPtr<Statement> body, Vector<Parameter> parameters, i32 function_length, FunctionKind kind, bool is_strict_mode, bool might_need_arguments_object, bool contains_direct_call_to_eval, bool is_arrow_function)
+    FunctionNode(FlyString name, String source_text, NonnullRefPtr<Statement> body, Vector<FunctionParameter> parameters, i32 function_length, FunctionKind kind, bool is_strict_mode, bool might_need_arguments_object, bool contains_direct_call_to_eval, bool is_arrow_function)
         : m_name(move(name))
         , m_source_text(move(source_text))
         , m_body(move(body))
@@ -649,7 +649,7 @@ private:
     FlyString m_name;
     String m_source_text;
     NonnullRefPtr<Statement> m_body;
-    Vector<Parameter> const m_parameters;
+    Vector<FunctionParameter> const m_parameters;
     const i32 m_function_length;
     FunctionKind m_kind;
     bool m_is_strict_mode { false };
@@ -664,7 +664,7 @@ class FunctionDeclaration final
 public:
     static bool must_have_name() { return true; }
 
-    FunctionDeclaration(SourceRange source_range, FlyString const& name, String source_text, NonnullRefPtr<Statement> body, Vector<Parameter> parameters, i32 function_length, FunctionKind kind, bool is_strict_mode, bool might_need_arguments_object, bool contains_direct_call_to_eval)
+    FunctionDeclaration(SourceRange source_range, FlyString const& name, String source_text, NonnullRefPtr<Statement> body, Vector<FunctionParameter> parameters, i32 function_length, FunctionKind kind, bool is_strict_mode, bool might_need_arguments_object, bool contains_direct_call_to_eval)
         : Declaration(source_range)
         , FunctionNode(name, move(source_text), move(body), move(parameters), function_length, kind, is_strict_mode, might_need_arguments_object, contains_direct_call_to_eval, false)
     {
@@ -690,7 +690,7 @@ class FunctionExpression final
 public:
     static bool must_have_name() { return false; }
 
-    FunctionExpression(SourceRange source_range, FlyString const& name, String source_text, NonnullRefPtr<Statement> body, Vector<Parameter> parameters, i32 function_length, FunctionKind kind, bool is_strict_mode, bool might_need_arguments_object, bool contains_direct_call_to_eval, bool is_arrow_function = false)
+    FunctionExpression(SourceRange source_range, FlyString const& name, String source_text, NonnullRefPtr<Statement> body, Vector<FunctionParameter> parameters, i32 function_length, FunctionKind kind, bool is_strict_mode, bool might_need_arguments_object, bool contains_direct_call_to_eval, bool is_arrow_function = false)
         : Expression(source_range)
         , FunctionNode(name, move(source_text), move(body), move(parameters), function_length, kind, is_strict_mode, might_need_arguments_object, contains_direct_call_to_eval, is_arrow_function)
     {

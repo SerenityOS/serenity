@@ -32,8 +32,8 @@ public:
         Global,
     };
 
-    static ECMAScriptFunctionObject* create(Realm&, FlyString name, String source_text, Statement const& ecmascript_code, Vector<FunctionNode::Parameter> parameters, i32 m_function_length, Environment* parent_environment, PrivateEnvironment* private_environment, FunctionKind, bool is_strict, bool might_need_arguments_object = true, bool contains_direct_call_to_eval = true, bool is_arrow_function = false, Variant<PropertyKey, PrivateName, Empty> class_field_initializer_name = {});
-    static ECMAScriptFunctionObject* create(Realm&, FlyString name, Object& prototype, String source_text, Statement const& ecmascript_code, Vector<FunctionNode::Parameter> parameters, i32 m_function_length, Environment* parent_environment, PrivateEnvironment* private_environment, FunctionKind, bool is_strict, bool might_need_arguments_object = true, bool contains_direct_call_to_eval = true, bool is_arrow_function = false, Variant<PropertyKey, PrivateName, Empty> class_field_initializer_name = {});
+    static ECMAScriptFunctionObject* create(Realm&, FlyString name, String source_text, Statement const& ecmascript_code, Vector<FunctionParameter> parameters, i32 m_function_length, Environment* parent_environment, PrivateEnvironment* private_environment, FunctionKind, bool is_strict, bool might_need_arguments_object = true, bool contains_direct_call_to_eval = true, bool is_arrow_function = false, Variant<PropertyKey, PrivateName, Empty> class_field_initializer_name = {});
+    static ECMAScriptFunctionObject* create(Realm&, FlyString name, Object& prototype, String source_text, Statement const& ecmascript_code, Vector<FunctionParameter> parameters, i32 m_function_length, Environment* parent_environment, PrivateEnvironment* private_environment, FunctionKind, bool is_strict, bool might_need_arguments_object = true, bool contains_direct_call_to_eval = true, bool is_arrow_function = false, Variant<PropertyKey, PrivateName, Empty> class_field_initializer_name = {});
 
     virtual void initialize(Realm&) override;
     virtual ~ECMAScriptFunctionObject() override = default;
@@ -44,7 +44,7 @@ public:
     void make_method(Object& home_object);
 
     Statement const& ecmascript_code() const { return m_ecmascript_code; }
-    Vector<FunctionNode::Parameter> const& formal_parameters() const { return m_formal_parameters; };
+    Vector<FunctionParameter> const& formal_parameters() const { return m_formal_parameters; };
 
     virtual FlyString const& name() const override { return m_name; };
     void set_name(FlyString const& name);
@@ -93,7 +93,7 @@ protected:
     virtual Completion ordinary_call_evaluate_body();
 
 private:
-    ECMAScriptFunctionObject(FlyString name, String source_text, Statement const& ecmascript_code, Vector<FunctionNode::Parameter> parameters, i32 m_function_length, Environment* parent_environment, PrivateEnvironment* private_environment, Object& prototype, FunctionKind, bool is_strict, bool might_need_arguments_object, bool contains_direct_call_to_eval, bool is_arrow_function, Variant<PropertyKey, PrivateName, Empty> class_field_initializer_name);
+    ECMAScriptFunctionObject(FlyString name, String source_text, Statement const& ecmascript_code, Vector<FunctionParameter> parameters, i32 m_function_length, Environment* parent_environment, PrivateEnvironment* private_environment, Object& prototype, FunctionKind, bool is_strict, bool might_need_arguments_object, bool contains_direct_call_to_eval, bool is_arrow_function, Variant<PropertyKey, PrivateName, Empty> class_field_initializer_name);
 
     virtual bool is_ecmascript_function_object() const override { return true; }
     virtual void visit_edges(Visitor&) override;
@@ -113,7 +113,7 @@ private:
     // Internal Slots of ECMAScript Function Objects, https://tc39.es/ecma262/#table-internal-slots-of-ecmascript-function-objects
     Environment* m_environment { nullptr };                                  // [[Environment]]
     PrivateEnvironment* m_private_environment { nullptr };                   // [[PrivateEnvironment]]
-    Vector<FunctionNode::Parameter> const m_formal_parameters;               // [[FormalParameters]]
+    Vector<FunctionParameter> const m_formal_parameters;                     // [[FormalParameters]]
     NonnullRefPtr<Statement> m_ecmascript_code;                              // [[ECMAScriptCode]]
     Realm* m_realm { nullptr };                                              // [[Realm]]
     ScriptOrModule m_script_or_module;                                       // [[ScriptOrModule]]

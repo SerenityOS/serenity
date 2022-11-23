@@ -59,7 +59,7 @@ private:
     }
 
 public:
-    static ScopePusher function_scope(Parser& parser, FunctionBody& function_body, Vector<FunctionDeclaration::Parameter> const& parameters)
+    static ScopePusher function_scope(Parser& parser, FunctionBody& function_body, Vector<FunctionParameter> const& parameters)
     {
         ScopePusher scope_pusher(parser, &function_body, ScopeLevel::FunctionTopLevel);
         scope_pusher.m_function_parameters = parameters;
@@ -200,7 +200,7 @@ public:
         return nullptr;
     }
 
-    Vector<FunctionDeclaration::Parameter> const& function_parameters() const
+    Vector<FunctionParameter> const& function_parameters() const
     {
         return *m_function_parameters;
     }
@@ -274,7 +274,7 @@ private:
     HashTable<FlyString> m_forbidden_var_names;
     NonnullRefPtrVector<FunctionDeclaration> m_functions_to_hoist;
 
-    Optional<Vector<FunctionDeclaration::Parameter>> m_function_parameters;
+    Optional<Vector<FunctionParameter>> m_function_parameters;
 
     bool m_contains_access_to_arguments_object { false };
     bool m_contains_direct_call_to_eval { false };
@@ -704,9 +704,9 @@ static bool is_strict_reserved_word(StringView str)
     });
 }
 
-static bool is_simple_parameter_list(Vector<FunctionNode::Parameter> const& parameters)
+static bool is_simple_parameter_list(Vector<FunctionParameter> const& parameters)
 {
-    return all_of(parameters, [](FunctionNode::Parameter const& parameter) {
+    return all_of(parameters, [](FunctionParameter const& parameter) {
         return !parameter.is_rest && parameter.default_value.is_null() && parameter.binding.has<FlyString>();
     });
 }
@@ -756,7 +756,7 @@ RefPtr<FunctionExpression> Parser::try_parse_arrow_function_expression(bool expe
         }
     }
 
-    Vector<FunctionNode::Parameter> parameters;
+    Vector<FunctionParameter> parameters;
     i32 function_length = -1;
     if (expect_parens) {
         // We have parens around the function parameters and can re-use the same parsing
@@ -1343,12 +1343,12 @@ NonnullRefPtr<ClassExpression> Parser::parse_class_expression(bool expect_class_
 
             constructor = create_ast_node<FunctionExpression>(
                 { m_source_code, rule_start.position(), position() }, class_name, "",
-                move(constructor_body), Vector { FunctionNode::Parameter { move(argument_name), nullptr, true } }, 0, FunctionKind::Normal,
+                move(constructor_body), Vector { FunctionParameter { move(argument_name), nullptr, true } }, 0, FunctionKind::Normal,
                 /* is_strict_mode */ true, /* might_need_arguments_object */ false, /* contains_direct_call_to_eval */ false);
         } else {
             constructor = create_ast_node<FunctionExpression>(
                 { m_source_code, rule_start.position(), position() }, class_name, "",
-                move(constructor_body), Vector<FunctionNode::Parameter> {}, 0, FunctionKind::Normal,
+                move(constructor_body), Vector<FunctionParameter> {}, 0, FunctionKind::Normal,
                 /* is_strict_mode */ true, /* might_need_arguments_object */ false, /* contains_direct_call_to_eval */ false);
         }
     }
@@ -2458,7 +2458,7 @@ void Parser::parse_statement_list(ScopeNode& output_node, AllowLabelledFunction 
 }
 
 // FunctionBody, https://tc39.es/ecma262/#prod-FunctionBody
-NonnullRefPtr<FunctionBody> Parser::parse_function_body(Vector<FunctionDeclaration::Parameter> const& parameters, FunctionKind function_kind, bool& contains_direct_call_to_eval)
+NonnullRefPtr<FunctionBody> Parser::parse_function_body(Vector<FunctionParameter> const& parameters, FunctionKind function_kind, bool& contains_direct_call_to_eval)
 {
     auto rule_start = push_start();
     auto function_body = create_ast_node<FunctionBody>({ m_source_code, rule_start.position(), position() });
@@ -2632,14 +2632,14 @@ NonnullRefPtr<FunctionNodeType> Parser::parse_function_node(u16 parse_options, O
         contains_direct_call_to_eval);
 }
 
-Vector<FunctionNode::Parameter> Parser::parse_formal_parameters(int& function_length, u16 parse_options)
+Vector<FunctionParameter> Parser::parse_formal_parameters(int& function_length, u16 parse_options)
 {
     auto rule_start = push_start();
     bool has_default_parameter = false;
     bool has_rest_parameter = false;
     TemporaryChange formal_parameter_context_change { m_state.in_formal_parameter_context, true };
 
-    Vector<FunctionNode::Parameter> parameters;
+    Vector<FunctionParameter> parameters;
 
     auto consume_identifier_or_binding_pattern = [&]() -> Variant<FlyString, NonnullRefPtr<BindingPattern>> {
         if (auto pattern = parse_binding_pattern(AllowDuplicates::No, AllowMemberExpressions::No))
