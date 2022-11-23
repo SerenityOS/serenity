@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <LibJS/AST.h>
 #include <LibJS/Runtime/NativeFunction.h>
 
 namespace JS {
