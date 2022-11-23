@@ -2,6 +2,9 @@ From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Andreas Kling <kling@serenityos.org>
 Date: Sat, 27 Mar 2021 22:05:09 +0100
 Subject: [PATCH] Add SerenityOS platform support
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
 Co-Authored-By: Robin Burchell <robin+git@viroteck.net>
 Co-Authored-By: tgsm <doodrabbit@hotmail.com>
@@ -15,6 +18,7 @@ Co-Authored-By: Kenneth Myhra <kennethmyhra@gmail.com>
 Co-Authored-By: Stephan Unverwerth <s.unverwerth@gmx.de>
 Co-Authored-By: Tim Schumacher <timschumi@gmx.de>
 Co-Authored-By: circl <circl.lastname@gmail.com>
+Co-Authored-By: kleines Filmröllchen <filmroellchen@serenityos.org>
 ---
  CMakeLists.txt                                |  25 +-
  build-scripts/config.sub                      |   3 +
@@ -862,7 +866,7 @@ index 0000000000000000000000000000000000000000..039f0361b3d1b248e218ea69495f58e5
 +/* vi: set ts=4 sw=4 expandtab: */
 diff --git a/src/video/serenity/SDL_serenityvideo.cpp b/src/video/serenity/SDL_serenityvideo.cpp
 new file mode 100644
-index 0000000000000000000000000000000000000000..26ecf9800376d1b83632c3bc9eeb069c18c5a892
+index 0000000000000000000000000000000000000000..ff6542d27500fef99472e2d8d31f8ec785df923b
 --- /dev/null
 +++ b/src/video/serenity/SDL_serenityvideo.cpp
 @@ -0,0 +1,608 @@
@@ -1264,7 +1268,7 @@ index 0000000000000000000000000000000000000000..26ecf9800376d1b83632c3bc9eeb069c
 +            return GUI::Window::CloseRequestDecision::Close;
 +        return GUI::Window::CloseRequestDecision::StayOpen;
 +    };
-+    w->window()->on_active_input_change = [window](bool is_active_input) {
++    w->window()->on_input_preemption_change = [window](bool is_active_input) {
 +        SDL_SetKeyboardFocus(is_active_input ? window : nullptr);
 +    };
 +    SERENITY_PumpEvents(_this);
