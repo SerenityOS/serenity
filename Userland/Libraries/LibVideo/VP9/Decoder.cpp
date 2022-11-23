@@ -77,84 +77,13 @@ DecoderErrorOr<void> Decoder::decode_frame(ReadonlyBytes frame_data)
     return {};
 }
 
-DecoderErrorOr<void> Decoder::create_video_frame(FrameContext const& frame_context)
-{
-    // (8.9) Output process
-
-    // FIXME: If show_existing_frame is set, output from FrameStore[frame_to_show_map_index] here instead.
-
-    // FIXME: The math isn't entirely accurate to spec. output_uv_size is probably incorrect for certain
-    //        sizes, as the spec seems to prefer that the halved sizes be ceiled.
-    u32 decoded_y_width = frame_context.columns() * 8;
-    Gfx::Size<u32> output_y_size = frame_context.size();
-    auto decoded_uv_width = decoded_y_width >> m_parser->m_subsampling_x;
-    Gfx::Size<u32> output_uv_size = {
-        output_y_size.width() >> m_parser->m_subsampling_x,
-        output_y_size.height() >> m_parser->m_subsampling_y,
-    };
-    Array<FixedArray<u16>, 3> output_buffers = {
-        DECODER_TRY_ALLOC(FixedArray<u16>::try_create(output_y_size.width() * output_y_size.height())),
-        DECODER_TRY_ALLOC(FixedArray<u16>::try_create(output_uv_size.width() * output_uv_size.height())),
-        DECODER_TRY_ALLOC(FixedArray<u16>::try_create(output_uv_size.width() * output_uv_size.height())),
-    };
-    for (u8 plane = 0; plane < 3; plane++) {
-        auto& buffer = output_buffers[plane];
-        auto decoded_width = plane == 0 ? decoded_y_width : decoded_uv_width;
-        auto output_size = plane == 0 ? output_y_size : output_uv_size;
-        auto const& decoded_buffer = get_output_buffer(plane);
-
-        for (u32 row = 0; row < output_size.height(); row++) {
-            memcpy(
-                buffer.data() + row * output_size.width(),
-                decoded_buffer.data() + row * decoded_width,
-                output_size.width() * sizeof(*buffer.data()));
-        }
-    }
-
-    auto frame = DECODER_TRY_ALLOC(adopt_nonnull_own_or_enomem(new (nothrow) SubsampledYUVFrame(
-        { output_y_size.width(), output_y_size.height() },
-        m_parser->m_bit_depth, get_cicp_color_space(),
-        m_parser->m_subsampling_x, m_parser->m_subsampling_y,
-        output_buffers[0], output_buffers[1], output_buffers[2])));
-    m_video_frame_queue.enqueue(move(frame));
-
-    return {};
-}
-
-inline size_t buffer_size(size_t width, size_t height)
-{
-    return width * height;
-}
-
-inline size_t buffer_size(Gfx::Size<size_t> size)
-{
-    return buffer_size(size.width(), size.height());
-}
-
-DecoderErrorOr<void> Decoder::allocate_buffers(FrameContext const& frame_context)
-{
-    for (size_t plane = 0; plane < 3; plane++) {
-        auto size = m_parser->get_decoded_size_for_plane(frame_context, plane);
-
-        auto& output_buffer = get_output_buffer(plane);
-        output_buffer.clear_with_capacity();
-        DECODER_TRY_ALLOC(output_buffer.try_resize_and_keep_capacity(buffer_size(size)));
-    }
-    return {};
-}
-
-Vector<u16>& Decoder::get_output_buffer(u8 plane)
-{
-    return m_output_buffers[plane];
-}
-
-inline CodingIndependentCodePoints Decoder::get_cicp_color_space()
+inline CodingIndependentCodePoints get_cicp_color_space(FrameContext const& frame_context)
 {
     ColorPrimaries color_primaries;
     TransferCharacteristics transfer_characteristics;
     MatrixCoefficients matrix_coefficients;
 
-    switch (m_parser->m_color_space) {
+    switch (frame_context.color_config.color_space) {
     case ColorSpace::Unknown:
         color_primaries = ColorPrimaries::Unspecified;
         transfer_characteristics = TransferCharacteristics::Unspecified;
@@ -186,9 +115,9 @@ inline CodingIndependentCodePoints Decoder::get_cicp_color_space()
         // Bit depth doesn't actually matter to our transfer functions since we
         // convert in floats of range 0-1 (for now?), but just for correctness set
         // the TC to match the bit depth here.
-        if (m_parser->m_bit_depth == 12)
+        if (frame_context.color_config.bit_depth == 12)
             transfer_characteristics = TransferCharacteristics::BT2020BitDepth12;
-        else if (m_parser->m_bit_depth == 10)
+        else if (frame_context.color_config.bit_depth == 10)
             transfer_characteristics = TransferCharacteristics::BT2020BitDepth10;
         else
             transfer_characteristics = TransferCharacteristics::BT709;
@@ -204,7 +133,78 @@ inline CodingIndependentCodePoints Decoder::get_cicp_color_space()
         break;
     }
 
-    return { color_primaries, transfer_characteristics, matrix_coefficients, m_parser->m_color_range };
+    return { color_primaries, transfer_characteristics, matrix_coefficients, frame_context.color_config.color_range };
+}
+
+DecoderErrorOr<void> Decoder::create_video_frame(FrameContext const& frame_context)
+{
+    // (8.9) Output process
+
+    // FIXME: If show_existing_frame is set, output from FrameStore[frame_to_show_map_index] here instead.
+
+    // FIXME: The math isn't entirely accurate to spec. output_uv_size is probably incorrect for certain
+    //        sizes, as the spec seems to prefer that the halved sizes be ceiled.
+    u32 decoded_y_width = frame_context.columns() * 8;
+    Gfx::Size<u32> output_y_size = frame_context.size();
+    auto decoded_uv_width = decoded_y_width >> frame_context.color_config.subsampling_x;
+    Gfx::Size<u32> output_uv_size = {
+        output_y_size.width() >> frame_context.color_config.subsampling_x,
+        output_y_size.height() >> frame_context.color_config.subsampling_y,
+    };
+    Array<FixedArray<u16>, 3> output_buffers = {
+        DECODER_TRY_ALLOC(FixedArray<u16>::try_create(output_y_size.width() * output_y_size.height())),
+        DECODER_TRY_ALLOC(FixedArray<u16>::try_create(output_uv_size.width() * output_uv_size.height())),
+        DECODER_TRY_ALLOC(FixedArray<u16>::try_create(output_uv_size.width() * output_uv_size.height())),
+    };
+    for (u8 plane = 0; plane < 3; plane++) {
+        auto& buffer = output_buffers[plane];
+        auto decoded_width = plane == 0 ? decoded_y_width : decoded_uv_width;
+        auto output_size = plane == 0 ? output_y_size : output_uv_size;
+        auto const& decoded_buffer = get_output_buffer(plane);
+
+        for (u32 row = 0; row < output_size.height(); row++) {
+            memcpy(
+                buffer.data() + row * output_size.width(),
+                decoded_buffer.data() + row * decoded_width,
+                output_size.width() * sizeof(*buffer.data()));
+        }
+    }
+
+    auto frame = DECODER_TRY_ALLOC(adopt_nonnull_own_or_enomem(new (nothrow) SubsampledYUVFrame(
+        { output_y_size.width(), output_y_size.height() },
+        frame_context.color_config.bit_depth, get_cicp_color_space(frame_context),
+        frame_context.color_config.subsampling_x, frame_context.color_config.subsampling_y,
+        output_buffers[0], output_buffers[1], output_buffers[2])));
+    m_video_frame_queue.enqueue(move(frame));
+
+    return {};
+}
+
+inline size_t buffer_size(size_t width, size_t height)
+{
+    return width * height;
+}
+
+inline size_t buffer_size(Gfx::Size<size_t> size)
+{
+    return buffer_size(size.width(), size.height());
+}
+
+DecoderErrorOr<void> Decoder::allocate_buffers(FrameContext const& frame_context)
+{
+    for (size_t plane = 0; plane < 3; plane++) {
+        auto size = m_parser->get_decoded_size_for_plane(frame_context, plane);
+
+        auto& output_buffer = get_output_buffer(plane);
+        output_buffer.clear_with_capacity();
+        DECODER_TRY_ALLOC(output_buffer.try_resize_and_keep_capacity(buffer_size(size)));
+    }
+    return {};
+}
+
+Vector<u16>& Decoder::get_output_buffer(u8 plane)
+{
+    return m_output_buffers[plane];
 }
 
 DecoderErrorOr<NonnullOwnPtr<VideoFrame>> Decoder::get_decoded_frame()
@@ -367,8 +367,8 @@ DecoderErrorOr<void> Decoder::predict_intra(u8 plane, BlockContext const& block_
     // If plane is greater than 0, then:
     //  − maxX is set equal to ((MiCols * 8) >> subsampling_x) - 1.
     //  − maxY is set equal to ((MiRows * 8) >> subsampling_y) - 1.
-    auto subsampling_x = plane > 0 ? m_parser->m_subsampling_x : false;
-    auto subsampling_y = plane > 0 ? m_parser->m_subsampling_y : false;
+    auto subsampling_x = plane > 0 ? block_context.frame_context.color_config.subsampling_x : false;
+    auto subsampling_y = plane > 0 ? block_context.frame_context.color_config.subsampling_y : false;
     auto max_x = ((block_context.frame_context.columns() * 8u) >> subsampling_x) - 1u;
     auto max_y = ((block_context.frame_context.rows() * 8u) >> subsampling_y) - 1u;
 
@@ -397,7 +397,7 @@ DecoderErrorOr<void> Decoder::predict_intra(u8 plane, BlockContext const& block_
 
     // NOTE: This value is pre-calculated since it is reused in spec below.
     //       Use this to replace spec text "(1<<(BitDepth-1))".
-    Intermediate half_sample_value = (1 << (m_parser->m_bit_depth - 1));
+    Intermediate half_sample_value = (1 << (block_context.frame_context.color_config.bit_depth - 1));
 
     // The array aboveRow[ i ] for i = 0..size-1 is specified by:
     if (!have_above) {
@@ -594,7 +594,7 @@ DecoderErrorOr<void> Decoder::predict_intra(u8 plane, BlockContext const& block_
         // for i = 0..size-1, for j = 0..size-1.
         for (auto i = 0u; i < block_size; i++) {
             for (auto j = 0u; j < block_size; j++)
-                predicted_sample_at(i, j) = clip_1(m_parser->m_bit_depth, above_row_at(j) + left_column[i] - above_row_at(-1));
+                predicted_sample_at(i, j) = clip_1(block_context.frame_context.color_config.bit_depth, above_row_at(j) + left_column[i] - above_row_at(-1));
         }
         break;
     case PredictionMode::DcPred: {
@@ -643,7 +643,7 @@ DecoderErrorOr<void> Decoder::predict_intra(u8 plane, BlockContext const& block_
         } else {
             // Otherwise (mode is DC_PRED),
             // pred[ i ][ j ] is set equal to 1<<(BitDepth - 1) with i = 0..size-1 and j = 0..size-1.
-            average = 1 << (m_parser->m_bit_depth - 1);
+            average = 1 << (block_context.frame_context.color_config.bit_depth - 1);
         }
 
         // pred[ i ][ j ] is set equal to avg with i = 0..size-1 and j = 0..size-1.
@@ -707,22 +707,22 @@ MotionVector Decoder::select_motion_vector(u8 plane, BlockContext const& block_c
         return m_parser->m_block_mvs[ref_list][block_index];
     // − Otherwise, if subsampling_x is equal to 0 and subsampling_y is equal to 0, mv is set equal to
     // BlockMvs[ refList ][ blockIdx ].
-    if (!m_parser->m_subsampling_x && !m_parser->m_subsampling_y)
+    if (!block_context.frame_context.color_config.subsampling_x && !block_context.frame_context.color_config.subsampling_y)
         return m_parser->m_block_mvs[ref_list][block_index];
     // − Otherwise, if subsampling_x is equal to 0 and subsampling_y is equal to 1, mv[ comp ] is set equal to
     // round_mv_comp_q2( BlockMvs[ refList ][ blockIdx ][ comp ] + BlockMvs[ refList ][ blockIdx + 2 ][ comp ] )
     // for comp = 0..1.
-    if (!m_parser->m_subsampling_x && m_parser->m_subsampling_y)
+    if (!block_context.frame_context.color_config.subsampling_x && block_context.frame_context.color_config.subsampling_y)
         return round_mv_comp_q2(m_parser->m_block_mvs[ref_list][block_index] + m_parser->m_block_mvs[ref_list][block_index + 2]);
     // − Otherwise, if subsampling_x is equal to 1 and subsampling_y is equal to 0, mv[ comp ] is set equal to
     // round_mv_comp_q2( BlockMvs[ refList ][ blockIdx ][ comp ] + BlockMvs[ refList ][ blockIdx + 1 ][ comp ] )
     // for comp = 0..1.
-    if (m_parser->m_subsampling_x && !m_parser->m_subsampling_y)
+    if (block_context.frame_context.color_config.subsampling_x && !block_context.frame_context.color_config.subsampling_y)
         return round_mv_comp_q2(m_parser->m_block_mvs[ref_list][block_index] + m_parser->m_block_mvs[ref_list][block_index + 1]);
     // − Otherwise, (subsampling_x is equal to 1 and subsampling_y is equal to 1), mv[ comp ] is set equal to
     // round_mv_comp_q4( BlockMvs[ refList ][ 0 ][ comp ] + BlockMvs[ refList ][ 1 ][ comp ] +
     // BlockMvs[ refList ][ 2 ][ comp ] + BlockMvs[ refList ][ 3 ][ comp ] ) for comp = 0..1.
-    VERIFY(m_parser->m_subsampling_x && m_parser->m_subsampling_y);
+    VERIFY(block_context.frame_context.color_config.subsampling_x && block_context.frame_context.color_config.subsampling_y);
     return round_mv_comp_q4(m_parser->m_block_mvs[ref_list][0] + m_parser->m_block_mvs[ref_list][1]
         + m_parser->m_block_mvs[ref_list][2] + m_parser->m_block_mvs[ref_list][3]);
 }
@@ -736,8 +736,8 @@ MotionVector Decoder::clamp_motion_vector(u8 plane, BlockContext const& block_co
     // The variables sx and sy are set equal to the subsampling for the current plane as follows:
     // − If plane is equal to 0, sx is set equal to 0 and sy is set equal to 0.
     // − Otherwise, sx is set equal to subsampling_x and sy is set equal to subsampling_y.
-    bool subsampling_x = plane > 0 ? m_parser->m_subsampling_x : false;
-    bool subsampling_y = plane > 0 ? m_parser->m_subsampling_y : false;
+    bool subsampling_x = plane > 0 ? block_context.frame_context.color_config.subsampling_x : false;
+    bool subsampling_y = plane > 0 ? block_context.frame_context.color_config.subsampling_y : false;
 
     // The output array clampedMv is specified by the following steps:
     i32 blocks_high = num_8x8_blocks_high_lookup[block_context.size];
@@ -823,8 +823,8 @@ DecoderErrorOr<void> Decoder::predict_inter_block(u8 plane, BlockContext const& 
     // The variable lumaY is set equal to (plane > 0) ? y << subsampling_y : y.
     // (lumaX and lumaY specify the location of the block to be predicted in the current frame in units of luma
     // samples.)
-    bool subsampling_x = plane > 0 ? m_parser->m_subsampling_x : false;
-    bool subsampling_y = plane > 0 ? m_parser->m_subsampling_y : false;
+    bool subsampling_x = plane > 0 ? block_context.frame_context.color_config.subsampling_x : false;
+    bool subsampling_y = plane > 0 ? block_context.frame_context.color_config.subsampling_y : false;
     i32 luma_x = x << subsampling_x;
     i32 luma_y = y << subsampling_y;
 
@@ -909,7 +909,7 @@ DecoderErrorOr<void> Decoder::predict_inter_block(u8 plane, BlockContext const& 
                     clip_3(0, scaled_right, (samples_start >> 4) + static_cast<i32>(t) - 3));
                 accumulated_samples += subpel_filters[m_parser->m_interp_filter][samples_start & 15][t] * sample;
             }
-            intermediate_buffer_at(row, column) = clip_1(m_parser->m_bit_depth, round_2(accumulated_samples, 7));
+            intermediate_buffer_at(row, column) = clip_1(block_context.frame_context.color_config.bit_depth, round_2(accumulated_samples, 7));
         }
     }
 
@@ -922,7 +922,7 @@ DecoderErrorOr<void> Decoder::predict_inter_block(u8 plane, BlockContext const& 
                 auto sample = intermediate_buffer_at((samples_start >> 4) + t, column);
                 accumulated_samples += subpel_filters[m_parser->m_interp_filter][samples_start & 15][t] * sample;
             }
-            block_buffer_at(row, column) = clip_1(m_parser->m_bit_depth, round_2(accumulated_samples, 7));
+            block_buffer_at(row, column) = clip_1(block_context.frame_context.color_config.bit_depth, round_2(accumulated_samples, 7));
         }
     }
 
@@ -958,8 +958,8 @@ DecoderErrorOr<void> Decoder::predict_inter(u8 plane, BlockContext const& block_
     // The inter predicted samples are then derived as follows:
     auto& frame_buffer = get_output_buffer(plane);
     VERIFY(!frame_buffer.is_empty());
-    auto frame_width = (block_context.frame_context.columns() * 8u) >> (plane > 0 ? m_parser->m_subsampling_x : false);
-    auto frame_height = (block_context.frame_context.rows() * 8u) >> (plane > 0 ? m_parser->m_subsampling_y : false);
+    auto frame_width = (block_context.frame_context.columns() * 8u) >> (plane > 0 ? block_context.frame_context.color_config.subsampling_x : false);
+    auto frame_height = (block_context.frame_context.rows() * 8u) >> (plane > 0 ? block_context.frame_context.color_config.subsampling_y : false);
     auto frame_buffer_at = [&](u32 row, u32 column) -> u16& {
         return frame_buffer[row * frame_width + column];
     };
@@ -992,7 +992,7 @@ DecoderErrorOr<void> Decoder::predict_inter(u8 plane, BlockContext const& block_
     return {};
 }
 
-u16 Decoder::dc_q(u8 b)
+u16 Decoder::dc_q(u8 bit_depth, u8 b)
 {
     // The function dc_q( b ) is specified as dc_qlookup[ (BitDepth-8) >> 1 ][ Clip3( 0, 255, b ) ] where dc_lookup is
     // defined as follows:
@@ -1002,10 +1002,10 @@ u16 Decoder::dc_q(u8 b)
         { 4, 12, 18, 25, 33, 41, 50, 60, 70, 80, 91, 103, 115, 127, 140, 153, 166, 180, 194, 208, 222, 237, 251, 266, 281, 296, 312, 327, 343, 358, 374, 390, 405, 421, 437, 453, 469, 484, 500, 516, 532, 548, 564, 580, 596, 611, 627, 643, 659, 674, 690, 706, 721, 737, 752, 768, 783, 798, 814, 829, 844, 859, 874, 889, 904, 919, 934, 949, 964, 978, 993, 1008, 1022, 1037, 1051, 1065, 1080, 1094, 1108, 1122, 1136, 1151, 1165, 1179, 1192, 1206, 1220, 1234, 1248, 1261, 1275, 1288, 1302, 1315, 1329, 1342, 1368, 1393, 1419, 1444, 1469, 1494, 1519, 1544, 1569, 1594, 1618, 1643, 1668, 1692, 1717, 1741, 1765, 1789, 1814, 1838, 1862, 1885, 1909, 1933, 1957, 1992, 2027, 2061, 2096, 2130, 2165, 2199, 2233, 2267, 2300, 2334, 2367, 2400, 2434, 2467, 2499, 2532, 2575, 2618, 2661, 2704, 2746, 2788, 2830, 2872, 2913, 2954, 2995, 3036, 3076, 3127, 3177, 3226, 3275, 3324, 3373, 3421, 3469, 3517, 3565, 3621, 3677, 3733, 3788, 3843, 3897, 3951, 4005, 4058, 4119, 4181, 4241, 4301, 4361, 4420, 4479, 4546, 4612, 4677, 4742, 4807, 4871, 4942, 5013, 5083, 5153, 5222, 5291, 5367, 5442, 5517, 5591, 5665, 5745, 5825, 5905, 5984, 6063, 6149, 6234, 6319, 6404, 6495, 6587, 6678, 6769, 6867, 6966, 7064, 7163, 7269, 7376, 7483, 7599, 7715, 7832, 7958, 8085, 8214, 8352, 8492, 8635, 8788, 8945, 9104, 9275, 9450, 9639, 9832, 10031, 10245, 10465, 10702, 10946, 11210, 11482, 11776, 12081, 12409, 12750, 13118, 13501, 13913, 14343, 14807, 15290, 15812, 16356, 16943, 17575, 18237, 18949, 19718, 20521, 21387 }
     };
 
-    return dc_qlookup[(m_parser->m_bit_depth - 8) >> 1][clip_3<u8>(0, 255, b)];
+    return dc_qlookup[(bit_depth - 8) >> 1][clip_3<u8>(0, 255, b)];
 }
 
-u16 Decoder::ac_q(u8 b)
+u16 Decoder::ac_q(u8 bit_depth, u8 b)
 {
     // The function ac_q( b ) is specified as ac_qlookup[ (BitDepth-8) >> 1 ][ Clip3( 0, 255, b ) ] where ac_lookup is
     // defined as follows:
@@ -1015,7 +1015,7 @@ u16 Decoder::ac_q(u8 b)
         { 4, 13, 19, 27, 35, 44, 54, 64, 75, 87, 99, 112, 126, 139, 154, 168, 183, 199, 214, 230, 247, 263, 280, 297, 314, 331, 349, 366, 384, 402, 420, 438, 456, 475, 493, 511, 530, 548, 567, 586, 604, 623, 642, 660, 679, 698, 716, 735, 753, 772, 791, 809, 828, 846, 865, 884, 902, 920, 939, 957, 976, 994, 1012, 1030, 1049, 1067, 1085, 1103, 1121, 1139, 1157, 1175, 1193, 1211, 1229, 1246, 1264, 1282, 1299, 1317, 1335, 1352, 1370, 1387, 1405, 1422, 1440, 1457, 1474, 1491, 1509, 1526, 1543, 1560, 1577, 1595, 1627, 1660, 1693, 1725, 1758, 1791, 1824, 1856, 1889, 1922, 1954, 1987, 2020, 2052, 2085, 2118, 2150, 2183, 2216, 2248, 2281, 2313, 2346, 2378, 2411, 2459, 2508, 2556, 2605, 2653, 2701, 2750, 2798, 2847, 2895, 2943, 2992, 3040, 3088, 3137, 3185, 3234, 3298, 3362, 3426, 3491, 3555, 3619, 3684, 3748, 3812, 3876, 3941, 4005, 4069, 4149, 4230, 4310, 4390, 4470, 4550, 4631, 4711, 4791, 4871, 4967, 5064, 5160, 5256, 5352, 5448, 5544, 5641, 5737, 5849, 5961, 6073, 6185, 6297, 6410, 6522, 6650, 6778, 6906, 7034, 7162, 7290, 7435, 7579, 7723, 7867, 8011, 8155, 8315, 8475, 8635, 8795, 8956, 9132, 9308, 9484, 9660, 9836, 10028, 10220, 10412, 10604, 10812, 11020, 11228, 11437, 11661, 11885, 12109, 12333, 12573, 12813, 13053, 13309, 13565, 13821, 14093, 14365, 14637, 14925, 15213, 15502, 15806, 16110, 16414, 16734, 17054, 17390, 17726, 18062, 18414, 18766, 19134, 19502, 19886, 20270, 20670, 21070, 21486, 21902, 22334, 22766, 23214, 23662, 24126, 24590, 25070, 25551, 26047, 26559, 27071, 27599, 28143, 28687, 29247 }
     };
 
-    return ac_qlookup[(m_parser->m_bit_depth - 8) >> 1][clip_3<u8>(0, 255, b)];
+    return ac_qlookup[(bit_depth - 8) >> 1][clip_3<u8>(0, 255, b)];
 }
 
 u8 Decoder::get_qindex()
@@ -1039,7 +1039,7 @@ u8 Decoder::get_qindex()
     return m_parser->m_base_q_idx;
 }
 
-u16 Decoder::get_dc_quant(u8 plane)
+u16 Decoder::get_dc_quant(u8 bit_depth, u8 plane)
 {
     // The function get_dc_quant( plane ) returns the quantizer value for the dc coefficient for a particular plane and
     // is derived as follows:
@@ -1047,10 +1047,10 @@ u16 Decoder::get_dc_quant(u8 plane)
     // − Otherwise, return dc_q( get_qindex( ) + delta_q_uv_dc ).
     // Instead of if { return }, select the value to add and return.
     i8 offset = plane == 0 ? m_parser->m_delta_q_y_dc : m_parser->m_delta_q_uv_dc;
-    return dc_q(static_cast<u8>(get_qindex() + offset));
+    return dc_q(bit_depth, static_cast<u8>(get_qindex() + offset));
 }
 
-u16 Decoder::get_ac_quant(u8 plane)
+u16 Decoder::get_ac_quant(u8 bit_depth, u8 plane)
 {
     // The function get_ac_quant( plane ) returns the quantizer value for the ac coefficient for a particular plane and
     // is derived as follows:
@@ -1058,7 +1058,7 @@ u16 Decoder::get_ac_quant(u8 plane)
     // − Otherwise, return ac_q( get_qindex( ) + delta_q_uv_ac ).
     // Instead of if { return }, select the value to add and return.
     i8 offset = plane == 0 ? 0 : m_parser->m_delta_q_uv_ac;
-    return ac_q(static_cast<u8>(get_qindex() + offset));
+    return ac_q(bit_depth, static_cast<u8>(get_qindex() + offset));
 }
 
 DecoderErrorOr<void> Decoder::reconstruct(u8 plane, BlockContext const& block_context, u32 transform_block_x, u32 transform_block_y, TXSize transform_block_size)
@@ -1075,7 +1075,7 @@ DecoderErrorOr<void> Decoder::reconstruct(u8 plane, BlockContext const& block_co
     // 1. Dequant[ i ][ j ] is set equal to ( Tokens[ i * n0 + j ] * get_ac_quant( plane ) ) / dqDenom
     //    for i = 0..(n0-1), for j = 0..(n0-1)
     Array<Intermediate, maximum_transform_size> dequantized;
-    Intermediate ac_quant = get_ac_quant(plane);
+    Intermediate ac_quant = get_ac_quant(block_context.frame_context.color_config.bit_depth, plane);
     for (auto i = 0u; i < block_size; i++) {
         for (auto j = 0u; j < block_size; j++) {
             auto index = index_from_row_and_column(i, j, block_size);
@@ -1086,22 +1086,22 @@ DecoderErrorOr<void> Decoder::reconstruct(u8 plane, BlockContext const& block_co
     }
 
     // 2. Dequant[ 0 ][ 0 ] is set equal to ( Tokens[ 0 ] * get_dc_quant( plane ) ) / dqDenom
-    dequantized[0] = (m_parser->m_tokens[0] * get_dc_quant(plane)) / dq_denominator;
+    dequantized[0] = (m_parser->m_tokens[0] * get_dc_quant(block_context.frame_context.color_config.bit_depth, plane)) / dq_denominator;
 
     // It is a requirement of bitstream conformance that the values written into the Dequant array in steps 1 and 2
     // are representable by a signed integer with 8 + BitDepth bits.
     for (auto i = 0u; i < block_size * block_size; i++)
-        VERIFY(check_intermediate_bounds(dequantized[i]));
+        VERIFY(check_intermediate_bounds(block_context.frame_context.color_config.bit_depth, dequantized[i]));
 
     // 3. Invoke the 2D inverse transform block process defined in section 8.7.2 with the variable n as input.
     //    The inverse transform outputs are stored back to the Dequant buffer.
-    TRY(inverse_transform_2d(dequantized, log2_of_block_size));
+    TRY(inverse_transform_2d(block_context.frame_context.color_config.bit_depth, dequantized, log2_of_block_size));
 
     // 4. CurrFrame[ plane ][ y + i ][ x + j ] is set equal to Clip1( CurrFrame[ plane ][ y + i ][ x + j ] + Dequant[ i ][ j ] )
     //    for i = 0..(n0-1) and j = 0..(n0-1).
     auto& current_buffer = get_output_buffer(plane);
-    auto subsampling_x = (plane > 0 ? m_parser->m_subsampling_x : 0);
-    auto subsampling_y = (plane > 0 ? m_parser->m_subsampling_y : 0);
+    auto subsampling_x = (plane > 0 ? block_context.frame_context.color_config.subsampling_x : 0);
+    auto subsampling_y = (plane > 0 ? block_context.frame_context.color_config.subsampling_y : 0);
     auto frame_width = (block_context.frame_context.columns() * 8) >> subsampling_x;
     auto frame_height = (block_context.frame_context.rows() * 8) >> subsampling_y;
     auto width_in_frame_buffer = min(block_size, frame_width - transform_block_x);
@@ -1111,7 +1111,7 @@ DecoderErrorOr<void> Decoder::reconstruct(u8 plane, BlockContext const& block_co
         for (auto j = 0u; j < width_in_frame_buffer; j++) {
             auto index = index_from_row_and_column(transform_block_y + i, transform_block_x + j, frame_width);
             auto dequantized_value = dequantized[index_from_row_and_column(i, j, block_size)];
-            current_buffer[index] = clip_1(m_parser->m_bit_depth, current_buffer[index] + dequantized_value);
+            current_buffer[index] = clip_1(block_context.frame_context.color_config.bit_depth, current_buffer[index] + dequantized_value);
         }
     }
 
@@ -1169,14 +1169,14 @@ inline bool check_bounds(i64 value, u8 bits)
     return value >= ~maximum && value <= maximum;
 }
 
-inline bool Decoder::check_intermediate_bounds(Intermediate value)
+inline bool Decoder::check_intermediate_bounds(u8 bit_depth, Intermediate value)
 {
-    i32 maximum = (1 << (8 + m_parser->m_bit_depth - 1)) - 1;
+    i32 maximum = (1 << (8 + bit_depth - 1)) - 1;
     return value >= ~maximum && value <= maximum;
 }
 
 // (8.7.1.1) The function B( a, b, angle, 0 ) performs a butterfly rotation.
-inline void Decoder::butterfly_rotation_in_place(Span<Intermediate> data, size_t index_a, size_t index_b, u8 angle, bool flip)
+inline void Decoder::butterfly_rotation_in_place(u8 bit_depth, Span<Intermediate> data, size_t index_a, size_t index_b, u8 angle, bool flip)
 {
     auto cos = cos64(angle);
     auto sin = sin64(angle);
@@ -1197,12 +1197,12 @@ inline void Decoder::butterfly_rotation_in_place(Span<Intermediate> data, size_t
 
     // It is a requirement of bitstream conformance that the values saved into the array T by this function are
     // representable by a signed integer using 8 + BitDepth bits of precision.
-    VERIFY(check_intermediate_bounds(data[index_a]));
-    VERIFY(check_intermediate_bounds(data[index_b]));
+    VERIFY(check_intermediate_bounds(bit_depth, data[index_a]));
+    VERIFY(check_intermediate_bounds(bit_depth, data[index_b]));
 }
 
 // (8.7.1.1) The function H( a, b, 0 ) performs a Hadamard rotation.
-inline void Decoder::hadamard_rotation_in_place(Span<Intermediate> data, size_t index_a, size_t index_b, bool flip)
+inline void Decoder::hadamard_rotation_in_place(u8 bit_depth, Span<Intermediate> data, size_t index_a, size_t index_b, bool flip)
 {
     // The function H( a, b, 1 ) performs a Hadamard rotation with flipped indices and is specified as follows:
     // 1. The function H( b, a, 0 ) is invoked.
@@ -1222,8 +1222,8 @@ inline void Decoder::hadamard_rotation_in_place(Span<Intermediate> data, size_t 
 
     // It is a requirement of bitstream conformance that the values saved into the array T by this function are
     // representable by a signed integer using 8 + BitDepth bits of precision.
-    VERIFY(check_intermediate_bounds(data[index_a]));
-    VERIFY(check_intermediate_bounds(data[index_b]));
+    VERIFY(check_intermediate_bounds(bit_depth, data[index_a]));
+    VERIFY(check_intermediate_bounds(bit_depth, data[index_b]));
 }
 
 inline DecoderErrorOr<void> Decoder::inverse_discrete_cosine_transform_array_permutation(Span<Intermediate> data, u8 log2_of_block_size)
@@ -1246,7 +1246,7 @@ inline DecoderErrorOr<void> Decoder::inverse_discrete_cosine_transform_array_per
     return {};
 }
 
-inline DecoderErrorOr<void> Decoder::inverse_discrete_cosine_transform(Span<Intermediate> data, u8 log2_of_block_size)
+inline DecoderErrorOr<void> Decoder::inverse_discrete_cosine_transform(u8 bit_depth, Span<Intermediate> data, u8 log2_of_block_size)
 {
     // 2.1. The variable n0 is set equal to 1<<n.
     u8 block_size = 1 << log2_of_block_size;
@@ -1263,14 +1263,14 @@ inline DecoderErrorOr<void> Decoder::inverse_discrete_cosine_transform(Span<Inte
     // 2.5 If n is equal to 2, invoke B( 0, 1, 16, 1 ), otherwise recursively invoke the inverse DCT defined in this
     // section with the variable n set equal to n - 1.
     if (log2_of_block_size == 2)
-        butterfly_rotation_in_place(data, 0, 1, 16, true);
+        butterfly_rotation_in_place(bit_depth, data, 0, 1, 16, true);
     else
-        TRY(inverse_discrete_cosine_transform(data, log2_of_block_size - 1));
+        TRY(inverse_discrete_cosine_transform(bit_depth, data, log2_of_block_size - 1));
 
     // 2.6 Invoke B( n1+i, n0-1-i, 32-brev( 5, n1+i), 0 ) for i = 0..(n2-1).
     for (auto i = 0u; i < quarter_block_size; i++) {
         auto index = half_block_size + i;
-        butterfly_rotation_in_place(data, index, block_size - 1 - i, 32 - brev(5, index), false);
+        butterfly_rotation_in_place(bit_depth, data, index, block_size - 1 - i, 32 - brev(5, index), false);
     }
 
     // 2.7 If n is greater than or equal to 3:
@@ -1279,7 +1279,7 @@ inline DecoderErrorOr<void> Decoder::inverse_discrete_cosine_transform(Span<Inte
         for (auto i = 0u; i < eighth_block_size; i++) {
             for (auto j = 0u; j < 2; j++) {
                 auto index = half_block_size + (4 * i) + (2 * j);
-                hadamard_rotation_in_place(data, index, index + 1, j);
+                hadamard_rotation_in_place(bit_depth, data, index, index + 1, j);
             }
         }
     }
@@ -1292,7 +1292,7 @@ inline DecoderErrorOr<void> Decoder::inverse_discrete_cosine_transform(Span<Inte
                 auto index_a = block_size - log2_of_block_size + 3 - (quarter_block_size * j) - (4 * i);
                 auto index_b = half_block_size + log2_of_block_size - 4 + (quarter_block_size * j) + (4 * i);
                 auto angle = 28 - (16 * i) + (56 * j);
-                butterfly_rotation_in_place(data, index_a, index_b, angle, true);
+                butterfly_rotation_in_place(bit_depth, data, index_a, index_b, angle, true);
             }
         }
 
@@ -1301,7 +1301,7 @@ inline DecoderErrorOr<void> Decoder::inverse_discrete_cosine_transform(Span<Inte
             for (auto j = 0u; j < 4; j++) {
                 auto index_a = half_block_size + (eighth_block_size * j) + i;
                 auto index_b = half_block_size + quarter_block_size - 5 + (eighth_block_size * j) - i;
-                hadamard_rotation_in_place(data, index_a, index_b, (j & 1) != 0);
+                hadamard_rotation_in_place(bit_depth, data, index_a, index_b, (j & 1) != 0);
             }
         }
     }
@@ -1313,7 +1313,7 @@ inline DecoderErrorOr<void> Decoder::inverse_discrete_cosine_transform(Span<Inte
             for (auto j = 0u; j < 2; j++) {
                 auto index_a = block_size - log2_of_block_size + 2 - i - (quarter_block_size * j);
                 auto index_b = half_block_size + log2_of_block_size - 3 + i + (quarter_block_size * j);
-                butterfly_rotation_in_place(data, index_a, index_b, 24 + (48 * j), true);
+                butterfly_rotation_in_place(bit_depth, data, index_a, index_b, 24 + (48 * j), true);
             }
         }
 
@@ -1322,7 +1322,7 @@ inline DecoderErrorOr<void> Decoder::inverse_discrete_cosine_transform(Span<Inte
             for (auto j = 0u; j < 2; j++) {
                 auto index_a = half_block_size + (quarter_block_size * j) + i;
                 auto index_b = half_block_size + quarter_block_size - 1 + (quarter_block_size * j) - i;
-                hadamard_rotation_in_place(data, index_a, index_b, (j & 1) != 0);
+                hadamard_rotation_in_place(bit_depth, data, index_a, index_b, (j & 1) != 0);
             }
         }
     }
@@ -1333,13 +1333,13 @@ inline DecoderErrorOr<void> Decoder::inverse_discrete_cosine_transform(Span<Inte
         for (auto i = 0u; i < eighth_block_size; i++) {
             auto index_a = block_size - eighth_block_size - 1 - i;
             auto index_b = half_block_size + eighth_block_size + i;
-            butterfly_rotation_in_place(data, index_a, index_b, 16, true);
+            butterfly_rotation_in_place(bit_depth, data, index_a, index_b, 16, true);
         }
     }
 
     // 7. Invoke H( i, n0-1-i, 0 ) for i = 0..(n1-1).
     for (auto i = 0u; i < half_block_size; i++)
-        hadamard_rotation_in_place(data, i, block_size - 1 - i, false);
+        hadamard_rotation_in_place(bit_depth, data, i, block_size - 1 - i, false);
 
     return {};
 }
@@ -1393,7 +1393,7 @@ inline void Decoder::inverse_asymmetric_discrete_sine_transform_output_array_per
     }
 }
 
-inline void Decoder::inverse_asymmetric_discrete_sine_transform_4(Span<Intermediate> data)
+inline void Decoder::inverse_asymmetric_discrete_sine_transform_4(u8 bit_depth, Span<Intermediate> data)
 {
     VERIFY(data.size() == 4);
     const i64 sinpi_1_9 = 5283;
@@ -1450,7 +1450,7 @@ inline void Decoder::inverse_asymmetric_discrete_sine_transform_4(Span<Intermedi
     // (8.7.1.1) The inverse asymmetric discrete sine transforms also make use of an intermediate array named S.
     // The values in this array require higher precision to avoid overflow. Using signed integers with 24 +
     // BitDepth bits of precision is enough to avoid overflow.
-    const u8 bits = 24 + m_parser->m_bit_depth;
+    const u8 bits = 24 + bit_depth;
     VERIFY(check_bounds(data[0], bits));
     VERIFY(check_bounds(data[1], bits));
     VERIFY(check_bounds(data[2], bits));
@@ -1494,7 +1494,7 @@ inline void Decoder::hadamard_rotation(Span<S> source, Span<D> destination, size
     destination[index_b] = round_2(a - b, 14);
 }
 
-inline DecoderErrorOr<void> Decoder::inverse_asymmetric_discrete_sine_transform_8(Span<Intermediate> data)
+inline DecoderErrorOr<void> Decoder::inverse_asymmetric_discrete_sine_transform_8(u8 bit_depth, Span<Intermediate> data)
 {
     VERIFY(data.size() == 8);
     // This process does an in-place transform of the array T using:
@@ -1513,7 +1513,7 @@ inline DecoderErrorOr<void> Decoder::inverse_asymmetric_discrete_sine_transform_
         butterfly_rotation(data, high_precision_temp.span(), 2 * i, 1 + (2 * i), 30 - (8 * i), true);
     // (8.7.1.1) NOTE - The values in array S require higher precision to avoid overflow. Using signed integers with
     // 24 + BitDepth bits of precision is enough to avoid overflow.
-    const u8 bits = 24 + m_parser->m_bit_depth;
+    const u8 bits = 24 + bit_depth;
     for (auto i = 0u; i < 8; i++)
         VERIFY(check_bounds(high_precision_temp[i], bits));
     // 3. Invoke SH( i, 4+i ) for i = 0..3.
@@ -1532,11 +1532,11 @@ inline DecoderErrorOr<void> Decoder::inverse_asymmetric_discrete_sine_transform_
 
     // 6. Invoke H( i, 2+i, 0 ) for i = 0..1.
     for (auto i = 0u; i < 2; i++)
-        hadamard_rotation_in_place(data, i, 2 + i, false);
+        hadamard_rotation_in_place(bit_depth, data, i, 2 + i, false);
 
     // 7. Invoke B( 2+4*i, 3+4*i, 16, 1 ) for i = 0..1.
     for (auto i = 0u; i < 2; i++)
-        butterfly_rotation_in_place(data, 2 + (4 * i), 3 + (4 * i), 16, true);
+        butterfly_rotation_in_place(bit_depth, data, 2 + (4 * i), 3 + (4 * i), 16, true);
 
     // 8. Invoke the ADST output array permutation process specified in section 8.7.1.5 with the input variable n
     //    set equal to 3.
@@ -1550,7 +1550,7 @@ inline DecoderErrorOr<void> Decoder::inverse_asymmetric_discrete_sine_transform_
     return {};
 }
 
-inline DecoderErrorOr<void> Decoder::inverse_asymmetric_discrete_sine_transform_16(Span<Intermediate> data)
+inline DecoderErrorOr<void> Decoder::inverse_asymmetric_discrete_sine_transform_16(u8 bit_depth, Span<Intermediate> data)
 {
     VERIFY(data.size() == 16);
     // This process does an in-place transform of the array T using:
@@ -1570,7 +1570,7 @@ inline DecoderErrorOr<void> Decoder::inverse_asymmetric_discrete_sine_transform_
     // (8.7.1.1) The inverse asymmetric discrete sine transforms also make use of an intermediate array named S.
     // The values in this array require higher precision to avoid overflow. Using signed integers with 24 +
     // BitDepth bits of precision is enough to avoid overflow.
-    const u8 bits = 24 + m_parser->m_bit_depth;
+    const u8 bits = 24 + bit_depth;
     for (auto i = 0u; i < 16; i++)
         VERIFY(check_bounds(data[i], bits));
     // 3. Invoke SH( i, 8+i ) for i = 0..7.
@@ -1589,7 +1589,7 @@ inline DecoderErrorOr<void> Decoder::inverse_asymmetric_discrete_sine_transform_
 
     // 6. Invoke H( i, 4+i, 0 ) for i = 0..3.
     for (auto i = 0u; i < 4; i++)
-        hadamard_rotation_in_place(data, i, 4 + i, false);
+        hadamard_rotation_in_place(bit_depth, data, i, 4 + i, false);
 
     // 7. Invoke SB( 4+8*i+3*j, 5+8*i+j, 24-16*j, 1 ) for i = 0..1, for j = 0..1.
     for (auto i = 0u; i < 2; i++)
@@ -1606,11 +1606,11 @@ inline DecoderErrorOr<void> Decoder::inverse_asymmetric_discrete_sine_transform_
     // 9. Invoke H( 8*j+i, 2+8*j+i, 0 ) for i = 0..1, for j = 0..1.
     for (auto i = 0u; i < 2; i++)
         for (auto j = 0u; j < 2; j++)
-            hadamard_rotation_in_place(data, (8 * j) + i, 2 + (8 * j) + i, false);
+            hadamard_rotation_in_place(bit_depth, data, (8 * j) + i, 2 + (8 * j) + i, false);
     // 10. Invoke B( 2+4*j+8*i, 3+4*j+8*i, 48+64*(i^j), 0 ) for i = 0..1, for j = 0..1.
     for (auto i = 0u; i < 2; i++)
         for (auto j = 0u; j < 2; j++)
-            butterfly_rotation_in_place(data, 2 + (4 * j) + (8 * i), 3 + (4 * j) + (8 * i), 48 + (64 * (i ^ j)), false);
+            butterfly_rotation_in_place(bit_depth, data, 2 + (4 * j) + (8 * i), 3 + (4 * j) + (8 * i), 48 + (64 * (i ^ j)), false);
 
     // 11. Invoke the ADST output array permutation process specified in section 8.7.1.5 with the input variable n
     // set equal to 4.
@@ -1626,7 +1626,7 @@ inline DecoderErrorOr<void> Decoder::inverse_asymmetric_discrete_sine_transform_
     return {};
 }
 
-inline DecoderErrorOr<void> Decoder::inverse_asymmetric_discrete_sine_transform(Span<Intermediate> data, u8 log2_of_block_size)
+inline DecoderErrorOr<void> Decoder::inverse_asymmetric_discrete_sine_transform(u8 bit_depth, Span<Intermediate> data, u8 log2_of_block_size)
 {
     // 8.7.1.9 Inverse ADST Process
 
@@ -1637,18 +1637,18 @@ inline DecoderErrorOr<void> Decoder::inverse_asymmetric_discrete_sine_transform(
     // The process to invoke depends on n as follows:
     if (log2_of_block_size == 2) {
         // − If n is equal to 2, invoke the Inverse ADST4 process specified in section 8.7.1.6.
-        inverse_asymmetric_discrete_sine_transform_4(data);
+        inverse_asymmetric_discrete_sine_transform_4(bit_depth, data);
         return {};
     }
     if (log2_of_block_size == 3) {
         // − Otherwise if n is equal to 3, invoke the Inverse ADST8 process specified in section 8.7.1.7.
-        return inverse_asymmetric_discrete_sine_transform_8(data);
+        return inverse_asymmetric_discrete_sine_transform_8(bit_depth, data);
     }
     // − Otherwise (n is equal to 4), invoke the Inverse ADST16 process specified in section 8.7.1.8.
-    return inverse_asymmetric_discrete_sine_transform_16(data);
+    return inverse_asymmetric_discrete_sine_transform_16(bit_depth, data);
 }
 
-DecoderErrorOr<void> Decoder::inverse_transform_2d(Span<Intermediate> dequantized, u8 log2_of_block_size)
+DecoderErrorOr<void> Decoder::inverse_transform_2d(u8 bit_depth, Span<Intermediate> dequantized, u8 log2_of_block_size)
 {
     // This process performs a 2D inverse transform for an array of size 2^n by 2^n stored in the 2D array Dequant.
     // The input to this process is a variable n (log2_of_block_size) that specifies the base 2 logarithm of the width of the transform.
@@ -1679,13 +1679,13 @@ DecoderErrorOr<void> Decoder::inverse_transform_2d(Span<Intermediate> dequantize
             // 1. Invoke the inverse DCT permutation process as specified in section 8.7.1.2 with the input variable n.
             TRY(inverse_discrete_cosine_transform_array_permutation(row, log2_of_block_size));
             // 2. Invoke the inverse DCT process as specified in section 8.7.1.3 with the input variable n.
-            TRY(inverse_discrete_cosine_transform(row, log2_of_block_size));
+            TRY(inverse_discrete_cosine_transform(bit_depth, row, log2_of_block_size));
             break;
         case DCT_ADST:
         case ADST_ADST:
             // 4. Otherwise (TxType is equal to DCT_ADST or TxType is equal to ADST_ADST), invoke the inverse ADST
             //    process as specified in section 8.7.1.9 with input variable n.
-            TRY(inverse_asymmetric_discrete_sine_transform(row, log2_of_block_size));
+            TRY(inverse_asymmetric_discrete_sine_transform(bit_depth, row, log2_of_block_size));
             break;
         default:
             return DecoderError::corrupted("Unknown tx_type"sv);
@@ -1719,13 +1719,13 @@ DecoderErrorOr<void> Decoder::inverse_transform_2d(Span<Intermediate> dequantize
             // 1. Invoke the inverse DCT permutation process as specified in section 8.7.1.2 with the input variable n.
             TRY(inverse_discrete_cosine_transform_array_permutation(column, log2_of_block_size));
             // 2. Invoke the inverse DCT process as specified in section 8.7.1.3 with the input variable n.
-            TRY(inverse_discrete_cosine_transform(column, log2_of_block_size));
+            TRY(inverse_discrete_cosine_transform(bit_depth, column, log2_of_block_size));
             break;
         case ADST_DCT:
         case ADST_ADST:
             // 4. Otherwise (TxType is equal to ADST_DCT or TxType is equal to ADST_ADST), invoke the inverse ADST
             //    process as specified in section 8.7.1.9 with input variable n.
-            TRY(inverse_asymmetric_discrete_sine_transform(column, log2_of_block_size));
+            TRY(inverse_asymmetric_discrete_sine_transform(bit_depth, column, log2_of_block_size));
             break;
         default:
             VERIFY_NOT_REACHED();
@@ -1764,11 +1764,11 @@ DecoderErrorOr<void> Decoder::update_reference_frames(FrameContext const& frame_
             // − RefFrameHeight[ i ] is set equal to FrameHeight.
             m_parser->m_ref_frame_size[i] = frame_context.size();
             // − RefSubsamplingX[ i ] is set equal to subsampling_x.
-            m_parser->m_ref_subsampling_x[i] = m_parser->m_subsampling_x;
+            m_parser->m_ref_subsampling_x[i] = frame_context.color_config.subsampling_x;
             // − RefSubsamplingY[ i ] is set equal to subsampling_y.
-            m_parser->m_ref_subsampling_y[i] = m_parser->m_subsampling_y;
+            m_parser->m_ref_subsampling_y[i] = frame_context.color_config.subsampling_y;
             // − RefBitDepth[ i ] is set equal to BitDepth.
-            m_parser->m_ref_bit_depth[i] = m_parser->m_bit_depth;
+            m_parser->m_ref_bit_depth[i] = frame_context.color_config.bit_depth;
 
             // − FrameStore[ i ][ 0 ][ y ][ x ] is set equal to CurrFrame[ 0 ][ y ][ x ] for x = 0..FrameWidth-1, for y =
             // 0..FrameHeight-1.
@@ -1784,9 +1784,9 @@ DecoderErrorOr<void> Decoder::update_reference_frames(FrameContext const& frame_
                 auto stride = frame_context.columns() * 8;
 
                 if (plane > 0) {
-                    width = (width + m_parser->m_subsampling_x) >> m_parser->m_subsampling_x;
-                    height = (height + m_parser->m_subsampling_y) >> m_parser->m_subsampling_y;
-                    stride >>= m_parser->m_subsampling_x;
+                    width = (width + frame_context.color_config.subsampling_x) >> frame_context.color_config.subsampling_x;
+                    height = (height + frame_context.color_config.subsampling_y) >> frame_context.color_config.subsampling_y;
+                    stride >>= frame_context.color_config.subsampling_x;
                 }
 
                 auto original_buffer = get_output_buffer(plane);

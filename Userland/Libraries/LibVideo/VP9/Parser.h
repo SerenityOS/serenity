@@ -57,7 +57,7 @@ private:
     /* (6.2) Uncompressed Header Syntax */
     DecoderErrorOr<FrameContext> uncompressed_header();
     DecoderErrorOr<void> frame_sync_code();
-    DecoderErrorOr<void> color_config(FrameContext const&);
+    DecoderErrorOr<ColorConfig> parse_color_config(FrameContext const&);
     DecoderErrorOr<void> set_frame_size_and_compute_image_size();
     DecoderErrorOr<Gfx::Size<u32>> parse_frame_size();
     DecoderErrorOr<Gfx::Size<u32>> parse_frame_size_with_refs();
@@ -120,11 +120,9 @@ private:
     DecoderErrorOr<void> read_mv(u8 ref);
     DecoderErrorOr<i32> read_mv_component(u8 component);
     DecoderErrorOr<bool> residual(BlockContext&, bool has_block_above, bool has_block_left);
-    TXSize get_uv_tx_size(BlockSubsize size);
-    BlockSubsize get_plane_block_size(u32 subsize, u8 plane);
     DecoderErrorOr<bool> tokens(BlockContext&, size_t plane, u32 x, u32 y, TXSize tx_size, u32 block_index);
     u32 const* get_scan(BlockContext const&, size_t plane, TXSize tx_size, u32 block_index);
-    DecoderErrorOr<i32> read_coef(Token token);
+    DecoderErrorOr<i32> read_coef(u8 bit_depth, Token token);
 
     /* (6.5) Motion Vector Prediction */
     void find_mv_refs(BlockContext&, ReferenceFrameType, i32 block);
@@ -158,14 +156,10 @@ private:
     bool m_refresh_frame_context { false };
     bool m_frame_parallel_decoding_mode { false };
     u8 m_frame_context_idx { 0 };
-    u8 m_bit_depth { 0 };
-    ColorSpace m_color_space;
-    ColorRange m_color_range;
-    bool m_subsampling_x { false };
-    bool m_subsampling_y { false };
     bool m_is_first_compute_image_size_invoke { true };
     Gfx::Size<u32> m_previous_frame_size { 0, 0 };
     bool m_previous_show_frame { false };
+    ColorConfig m_previous_color_config;
     InterpolationFilter m_interpolation_filter { 0xf };
     u8 m_base_q_idx { 0 };
     i8 m_delta_q_y_dc { 0 };

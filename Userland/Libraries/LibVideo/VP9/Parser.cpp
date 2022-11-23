@@ -105,6 +105,7 @@ DecoderErrorOr<FrameContext> Parser::parse_frame(ReadonlyBytes frame_data)
 
     m_previous_frame_size = frame_context.size();
     m_previous_show_frame = frame_context.shows_a_frame();
+    m_previous_color_config = frame_context.color_config;
 
     return frame_context;
 }
@@ -151,6 +152,7 @@ DecoderErrorOr<ColorRange> Parser::read_color_range()
 DecoderErrorOr<FrameContext> Parser::uncompressed_header()
 {
     FrameContext frame_context;
+    frame_context.color_config = m_previous_color_config;
 
     auto frame_marker = TRY_READ(m_bit_stream->read_bits(2));
     if (frame_marker != 2)
@@ -180,7 +182,7 @@ DecoderErrorOr<FrameContext> Parser::uncompressed_header()
 
     if (m_frame_type == KeyFrame) {
         TRY(frame_sync_code());
-        TRY(color_config(frame_context));
+        frame_context.color_config = TRY(parse_color_config(frame_context));
         frame_size = TRY(parse_frame_size());
         render_size = TRY(parse_render_size(frame_size));
         m_refresh_frame_flags = 0xFF;
@@ -196,14 +198,8 @@ DecoderErrorOr<FrameContext> Parser::uncompressed_header()
 
         if (m_frame_is_intra) {
             TRY(frame_sync_code());
-            if (frame_context.profile > 0) {
-                TRY(color_config(frame_context));
-            } else {
-                m_color_space = Bt601;
-                m_subsampling_x = true;
-                m_subsampling_y = true;
-                m_bit_depth = 8;
-            }
+
+            frame_context.color_config = frame_context.profile > 0 ? TRY(parse_color_config(frame_context)) : ColorConfig();
 
             m_refresh_frame_flags = TRY_READ(m_bit_stream->read_f8());
             frame_size = TRY(parse_frame_size());
@@ -267,39 +263,47 @@ DecoderErrorOr<void> Parser::frame_sync_code()
     return {};
 }
 
-DecoderErrorOr<void> Parser::color_config(FrameContext const& frame_context)
+DecoderErrorOr<ColorConfig> Parser::parse_color_config(FrameContext const& frame_context)
 {
+    // (6.2.2) color_config( )
+    u8 bit_depth;
     if (frame_context.profile >= 2) {
-        m_bit_depth = TRY_READ(m_bit_stream->read_bit()) ? 12 : 10;
+        bit_depth = TRY_READ(m_bit_stream->read_bit()) ? 12 : 10;
     } else {
-        m_bit_depth = 8;
+        bit_depth = 8;
     }
 
-    auto color_space = TRY_READ(m_bit_stream->read_bits(3));
-    VERIFY(color_space <= RGB);
-    m_color_space = static_cast<ColorSpace>(color_space);
+    auto color_space = static_cast<ColorSpace>(TRY_READ(m_bit_stream->read_bits(3)));
+    VERIFY(color_space <= ColorSpace::RGB);
 
-    if (color_space != RGB) {
-        m_color_range = TRY(read_color_range());
+    ColorRange color_range;
+    bool subsampling_x, subsampling_y;
+
+    if (color_space != ColorSpace::RGB) {
+        color_range = TRY(read_color_range());
         if (frame_context.profile == 1 || frame_context.profile == 3) {
-            m_subsampling_x = TRY_READ(m_bit_stream->read_bit());
-            m_subsampling_y = TRY_READ(m_bit_stream->read_bit());
+            subsampling_x = TRY_READ(m_bit_stream->read_bit());
+            subsampling_y = TRY_READ(m_bit_stream->read_bit());
             if (TRY_READ(m_bit_stream->read_bit()))
                 return DecoderError::corrupted("color_config: Subsampling reserved zero was set"sv);
         } else {
-            m_subsampling_x = true;
-            m_subsampling_y = true;
+            subsampling_x = true;
+            subsampling_y = true;
         }
     } else {
-        m_color_range = ColorRange::Full;
+        color_range = ColorRange::Full;
         if (frame_context.profile == 1 || frame_context.profile == 3) {
-            m_subsampling_x = false;
-            m_subsampling_y = false;
+            subsampling_x = false;
+            subsampling_y = false;
             if (TRY_READ(m_bit_stream->read_bit()))
                 return DecoderError::corrupted("color_config: RGB reserved zero was set"sv);
+        } else {
+            // FIXME: Spec does not specify the subsampling value here. Is this an error or should we set a default?
+            VERIFY_NOT_REACHED();
         }
     }
-    return {};
+
+    return ColorConfig { bit_depth, color_space, color_range, subsampling_x, subsampling_y };
 }
 
 DecoderErrorOr<Gfx::Size<u32>> Parser::parse_frame_size()
@@ -1286,7 +1290,7 @@ Gfx::Point<size_t> Parser::get_decoded_point_for_plane(FrameContext const& frame
     (void)frame_context;
     if (plane == 0)
         return { column * 8, row * 8 };
-    return { (column * 8) >> m_subsampling_x, (row * 8) >> m_subsampling_y };
+    return { (column * 8) >> frame_context.color_config.subsampling_x, (row * 8) >> frame_context.color_config.subsampling_y };
 }
 
 Gfx::Size<size_t> Parser::get_decoded_size_for_plane(FrameContext const& frame_context, u8 plane)
@@ -1295,18 +1299,32 @@ Gfx::Size<size_t> Parser::get_decoded_size_for_plane(FrameContext const& frame_c
     return { point.x(), point.y() };
 }
 
+static BlockSubsize get_plane_block_size(bool subsampling_x, bool subsampling_y, u32 subsize, u8 plane)
+{
+    auto sub_x = (plane > 0) ? subsampling_x : 0;
+    auto sub_y = (plane > 0) ? subsampling_y : 0;
+    return ss_size_lookup[subsize][sub_x][sub_y];
+}
+
+static TXSize get_uv_tx_size(bool subsampling_x, bool subsampling_y, TXSize tx_size, BlockSubsize size)
+{
+    if (size < Block_8x8)
+        return TX_4x4;
+    return min(tx_size, max_txsize_lookup[get_plane_block_size(subsampling_x, subsampling_y, size, 1)]);
+}
+
 DecoderErrorOr<bool> Parser::residual(BlockContext& block_context, bool has_block_above, bool has_block_left)
 {
     bool had_residual_tokens = false;
     auto block_size = block_context.size < Block_8x8 ? Block_8x8 : block_context.size;
     for (u8 plane = 0; plane < 3; plane++) {
-        auto tx_size = (plane > 0) ? get_uv_tx_size(block_context.size) : m_tx_size;
+        auto tx_size = (plane > 0) ? get_uv_tx_size(block_context.frame_context.color_config.subsampling_x, block_context.frame_context.color_config.subsampling_y, m_tx_size, block_context.size) : m_tx_size;
         auto step = 1 << tx_size;
-        auto plane_size = get_plane_block_size(block_size, plane);
+        auto plane_size = get_plane_block_size(block_context.frame_context.color_config.subsampling_x, block_context.frame_context.color_config.subsampling_y, block_size, plane);
         auto num_4x4_w = num_4x4_blocks_wide_lookup[plane_size];
         auto num_4x4_h = num_4x4_blocks_high_lookup[plane_size];
-        auto sub_x = (plane > 0) ? m_subsampling_x : 0;
-        auto sub_y = (plane > 0) ? m_subsampling_y : 0;
+        auto sub_x = (plane > 0) ? block_context.frame_context.color_config.subsampling_x : 0;
+        auto sub_y = (plane > 0) ? block_context.frame_context.color_config.subsampling_y : 0;
         auto base_x = (block_context.column * 8) >> sub_x;
         auto base_y = (block_context.row * 8) >> sub_y;
         if (m_is_inter) {
@@ -1357,20 +1375,6 @@ DecoderErrorOr<bool> Parser::residual(BlockContext& block_context, bool has_bloc
     return had_residual_tokens;
 }
 
-TXSize Parser::get_uv_tx_size(BlockSubsize size)
-{
-    if (size < Block_8x8)
-        return TX_4x4;
-    return min(m_tx_size, max_txsize_lookup[get_plane_block_size(size, 1)]);
-}
-
-BlockSubsize Parser::get_plane_block_size(u32 subsize, u8 plane)
-{
-    auto sub_x = (plane > 0) ? m_subsampling_x : 0;
-    auto sub_y = (plane > 0) ? m_subsampling_y : 0;
-    return ss_size_lookup[subsize][sub_x][sub_y];
-}
-
 DecoderErrorOr<bool> Parser::tokens(BlockContext& block_context, size_t plane, u32 start_x, u32 start_y, TXSize tx_size, u32 block_index)
 {
     u32 segment_eob = 16 << (tx_size << 1);
@@ -1380,7 +1384,7 @@ DecoderErrorOr<bool> Parser::tokens(BlockContext& block_context, size_t plane, u
     for (; c < segment_eob; c++) {
         auto pos = scan[c];
         auto band = (tx_size == TX_4x4) ? coefband_4x4[c] : coefband_8x8plus[c];
-        auto tokens_context = TreeParser::get_tokens_context(m_subsampling_x, m_subsampling_y, block_context.frame_context.rows(), block_context.frame_context.columns(), m_above_nonzero_context, m_left_nonzero_context, m_token_cache, tx_size, m_tx_type, plane, start_x, start_y, pos, m_is_inter, band, c);
+        auto tokens_context = TreeParser::get_tokens_context(block_context.frame_context.color_config.subsampling_x, block_context.frame_context.color_config.subsampling_y, block_context.frame_context.rows(), block_context.frame_context.columns(), m_above_nonzero_context, m_left_nonzero_context, m_token_cache, tx_size, m_tx_type, plane, start_x, start_y, pos, m_is_inter, band, c);
         if (check_eob) {
             auto more_coefs = TRY_READ(TreeParser::parse_more_coefficients(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter, tokens_context));
             if (!more_coefs)
@@ -1392,7 +1396,7 @@ DecoderErrorOr<bool> Parser::tokens(BlockContext& block_context, size_t plane, u
             m_tokens[pos] = 0;
             check_eob = false;
         } else {
-            i32 coef = TRY(read_coef(token));
+            i32 coef = TRY(read_coef(block_context.frame_context.color_config.bit_depth, token));
             bool sign_bit = TRY_READ(m_bit_stream->read_literal(1));
             m_tokens[pos] = sign_bit ? -coef : coef;
             check_eob = true;
@@ -1439,15 +1443,15 @@ u32 const* Parser::get_scan(BlockContext const& block_context, size_t plane, TXS
     return default_scan_32x32;
 }
 
-DecoderErrorOr<i32> Parser::read_coef(Token token)
+DecoderErrorOr<i32> Parser::read_coef(u8 bit_depth, Token token)
 {
     auto cat = extra_bits[token][0];
     auto num_extra = extra_bits[token][1];
     u32 coef = extra_bits[token][2];
     if (token == DctValCat6) {
-        for (size_t e = 0; e < (u8)(m_bit_depth - 8); e++) {
+        for (size_t e = 0; e < (u8)(bit_depth - 8); e++) {
             auto high_bit = TRY_READ(m_bit_stream->read_bool(255));
-            coef += high_bit << (5 + m_bit_depth - e);
+            coef += high_bit << (5 + bit_depth - e);
         }
     }
     for (size_t e = 0; e < num_extra; e++) {

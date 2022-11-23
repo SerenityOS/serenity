@@ -74,20 +74,20 @@ private:
     /* (8.6) Reconstruction and Dequantization */
 
     // FIXME: These should be inline or constexpr
-    u16 dc_q(u8 b);
-    u16 ac_q(u8 b);
+    u16 dc_q(u8 bit_depth, u8 b);
+    u16 ac_q(u8 bit_depth, u8 b);
     // Returns the quantizer index for the current block
     u8 get_qindex();
     // Returns the quantizer value for the dc coefficient for a particular plane
-    u16 get_dc_quant(u8 plane);
+    u16 get_dc_quant(u8 bit_depth, u8 plane);
     // Returns the quantizer value for the ac coefficient for a particular plane
-    u16 get_ac_quant(u8 plane);
+    u16 get_ac_quant(u8 bit_depth, u8 plane);
 
     // (8.6.2) Reconstruct process
     DecoderErrorOr<void> reconstruct(u8 plane, BlockContext const&, u32 transform_block_x, u32 transform_block_y, TXSize transform_block_size);
 
     // (8.7) Inverse transform process
-    DecoderErrorOr<void> inverse_transform_2d(Span<Intermediate> dequantized, u8 log2_of_block_size);
+    DecoderErrorOr<void> inverse_transform_2d(u8 bit_depth, Span<Intermediate> dequantized, u8 log2_of_block_size);
 
     // (8.7.1) 1D Transforms
     // (8.7.1.1) Butterfly functions
@@ -95,9 +95,9 @@ private:
     inline i32 cos64(u8 angle);
     inline i32 sin64(u8 angle);
     // The function B( a, b, angle, 0 ) performs a butterfly rotation.
-    inline void butterfly_rotation_in_place(Span<Intermediate> data, size_t index_a, size_t index_b, u8 angle, bool flip);
+    inline void butterfly_rotation_in_place(u8 bit_depth, Span<Intermediate> data, size_t index_a, size_t index_b, u8 angle, bool flip);
     // The function H( a, b, 0 ) performs a Hadamard rotation.
-    inline void hadamard_rotation_in_place(Span<Intermediate> data, size_t index_a, size_t index_b, bool flip);
+    inline void hadamard_rotation_in_place(u8 bit_depth, Span<Intermediate> data, size_t index_a, size_t index_b, bool flip);
     // The function SB( a, b, angle, 0 ) performs a butterfly rotation.
     // Spec defines the source as array T, and the destination array as S.
     template<typename S, typename D>
@@ -111,7 +111,7 @@ private:
     inline i32 round_2(T value, u8 bits);
 
     // Checks whether the value is representable by a signed integer with (8 + bit_depth) bits.
-    inline bool check_intermediate_bounds(Intermediate value);
+    inline bool check_intermediate_bounds(u8 bit_depth, Intermediate value);
 
     // (8.7.1.10) This process does an in-place Walsh-Hadamard transform of the array T (of length 4).
     inline DecoderErrorOr<void> inverse_walsh_hadamard_transform(Span<Intermediate> data, u8 log2_of_block_size, u8 shift);
@@ -119,7 +119,7 @@ private:
     // (8.7.1.2) Inverse DCT array permutation process
     inline DecoderErrorOr<void> inverse_discrete_cosine_transform_array_permutation(Span<Intermediate> data, u8 log2_of_block_size);
     // (8.7.1.3) Inverse DCT process
-    inline DecoderErrorOr<void> inverse_discrete_cosine_transform(Span<Intermediate> data, u8 log2_of_block_size);
+    inline DecoderErrorOr<void> inverse_discrete_cosine_transform(u8 bit_depth, Span<Intermediate> data, u8 log2_of_block_size);
 
     // (8.7.1.4) This process performs the in-place permutation of the array T of length 2 n which is required as the first step of
     // the inverse ADST.
@@ -129,20 +129,18 @@ private:
     inline void inverse_asymmetric_discrete_sine_transform_output_array_permutation(Span<Intermediate> data, u8 log2_of_block_size);
 
     // (8.7.1.6) This process does an in-place transform of the array T to perform an inverse ADST.
-    inline void inverse_asymmetric_discrete_sine_transform_4(Span<Intermediate> data);
+    inline void inverse_asymmetric_discrete_sine_transform_4(u8 bit_depth, Span<Intermediate> data);
     // (8.7.1.7) This process does an in-place transform of the array T using a higher precision array S for intermediate
     // results.
-    inline DecoderErrorOr<void> inverse_asymmetric_discrete_sine_transform_8(Span<Intermediate> data);
+    inline DecoderErrorOr<void> inverse_asymmetric_discrete_sine_transform_8(u8 bit_depth, Span<Intermediate> data);
     // (8.7.1.8) This process does an in-place transform of the array T using a higher precision array S for intermediate
     // results.
-    inline DecoderErrorOr<void> inverse_asymmetric_discrete_sine_transform_16(Span<Intermediate> data);
+    inline DecoderErrorOr<void> inverse_asymmetric_discrete_sine_transform_16(u8 bit_depth, Span<Intermediate> data);
     // (8.7.1.9) This process performs an in-place inverse ADST process on the array T of size 2 n for 2 ≤ n ≤ 4.
-    inline DecoderErrorOr<void> inverse_asymmetric_discrete_sine_transform(Span<Intermediate> data, u8 log2_of_block_size);
+    inline DecoderErrorOr<void> inverse_asymmetric_discrete_sine_transform(u8 bit_depth, Span<Intermediate> data, u8 log2_of_block_size);
 
     /* (8.10) Reference Frame Update Process */
     DecoderErrorOr<void> update_reference_frames(FrameContext const&);
-
-    inline CodingIndependentCodePoints get_cicp_color_space();
 
     NonnullOwnPtr<Parser> m_parser;
 
