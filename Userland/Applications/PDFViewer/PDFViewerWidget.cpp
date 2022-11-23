@@ -37,6 +37,8 @@ PDFViewerWidget::PDFViewerWidget()
     m_viewer = splitter.add<PDFViewer>();
     m_viewer->on_page_change = [&](auto new_page) {
         m_page_text_box->set_current_number(new_page + 1, GUI::AllowCallback::No);
+        m_go_to_prev_page_action->set_enabled(new_page > 0);
+        m_go_to_next_page_action->set_enabled(new_page < m_viewer->document()->get_page_count() - 1);
     };
 
     initialize_toolbar(toolbar);
