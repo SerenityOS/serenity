@@ -8,6 +8,8 @@
 #include <LibJS/CyclicModule.h>
 #include <LibJS/Module.h>
 #include <LibJS/Runtime/ModuleNamespaceObject.h>
+#include <LibJS/Runtime/Promise.h>
+#include <LibJS/Runtime/VM.h>
 
 namespace JS {
 
