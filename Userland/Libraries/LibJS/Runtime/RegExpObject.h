@@ -8,7 +8,6 @@
 
 #include <AK/Optional.h>
 #include <AK/Result.h>
-#include <LibJS/AST.h>
 #include <LibJS/Runtime/Object.h>
 #include <LibRegex/Regex.h>
 
