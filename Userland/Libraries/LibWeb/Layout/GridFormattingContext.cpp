@@ -162,7 +162,7 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
                 sum_of_grid_track_sizes += min(resolve_definite_track_size(track_sizing_function.grid_size()), resolve_definite_track_size(track_sizing_function.grid_size()));
             }
         }
-        column_count = max(1, static_cast<int>(get_free_space_x(available_space) / sum_of_grid_track_sizes));
+        column_count = max(1, static_cast<int>((get_free_space_x(available_space) / sum_of_grid_track_sizes).value()));
 
         // For the purpose of finding the number of auto-repeated tracks in a standalone axis, the UA must
         // floor the track size to a UA-specified value to avoid division by zero. It is suggested that this
@@ -193,7 +193,7 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
                 sum_of_grid_track_sizes += min(resolve_definite_track_size(track_sizing_function.grid_size()), resolve_definite_track_size(track_sizing_function.grid_size()));
             }
         }
-        row_count = max(1, static_cast<int>(get_free_space_y(box) / sum_of_grid_track_sizes));
+        row_count = max(1, static_cast<int>((get_free_space_y(box) / sum_of_grid_track_sizes).value()));
 
         // The auto-fit keyword behaves the same as auto-fill, except that after grid item placement any
         // empty repeated tracks are collapsed. An empty track is one with no in-flow grid items placed into
@@ -1204,7 +1204,7 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
             if (grid_column.min_track_sizing_function.is_flexible_length()) {
                 // See 12.7.1.
                 // Let the hypothetical fr size be the leftover space divided by the flex factor sum.
-                auto hypothetical_fr_size = static_cast<double>(1.0 / column_flex_factor_sum) * free_horizontal_space;
+                auto hypothetical_fr_size = 1.0f / column_flex_factor_sum * free_horizontal_space;
                 // For each flexible track, if the product of the used flex fraction and the track’s flex factor is
                 // greater than the track’s base size, set its base size to that product.
                 grid_column.base_size = max(grid_column.base_size, hypothetical_fr_size);
@@ -1633,7 +1633,7 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
             if (grid_row.min_track_sizing_function.is_flexible_length()) {
                 // See 12.7.1.
                 // Let the hypothetical fr size be the leftover space divided by the flex factor sum.
-                auto hypothetical_fr_size = static_cast<double>(1.0 / row_flex_factor_sum) * free_vertical_space;
+                auto hypothetical_fr_size = 1.0f / row_flex_factor_sum * free_vertical_space;
                 // For each flexible track, if the product of the used flex fraction and the track’s flex factor is
                 // greater than the track’s base size, set its base size to that product.
                 grid_row.base_size = max(grid_row.base_size, hypothetical_fr_size);

@@ -526,14 +526,14 @@ static void paint_text_fragment(PaintContext& context, Layout::TextNode const& t
         DevicePixelPoint baseline_start { fragment_absolute_device_rect.x(), fragment_absolute_device_rect.y() + context.rounded_device_pixels(fragment.baseline()) };
         Utf8View view { text.substring_view(fragment.start(), fragment.length()) };
 
-        painter.draw_text_run(baseline_start.to_type<float>(), view, fragment.layout_node().font(), text_node.computed_values().color());
+        painter.draw_text_run(baseline_start.to_type<int>().to_type<float>(), view, fragment.layout_node().font(), text_node.computed_values().color());
 
         auto selection_rect = context.enclosing_device_rect(fragment.selection_rect(text_node.font())).to_type<int>();
         if (!selection_rect.is_empty()) {
             painter.fill_rect(selection_rect, context.palette().selection());
             Gfx::PainterStateSaver saver(painter);
             painter.add_clip_rect(selection_rect);
-            painter.draw_text_run(baseline_start.to_type<float>(), view, fragment.layout_node().font(), context.palette().selection_text());
+            painter.draw_text_run(baseline_start.to_type<int>().to_type<float>(), view, fragment.layout_node().font(), context.palette().selection_text());
         }
 
         paint_text_decoration(context, painter, text_node, fragment);

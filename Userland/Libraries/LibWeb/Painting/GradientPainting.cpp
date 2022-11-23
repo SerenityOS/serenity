@@ -257,7 +257,7 @@ void paint_linear_gradient(PaintContext& context, DevicePixelRect const& gradien
     auto gradient_length_px = calulate_gradient_length(gradient_rect.size(), sin_angle, cos_angle);
     DevicePixelPoint offset { cos_angle * (gradient_length_px / 2), sin_angle * (gradient_length_px / 2) };
     auto center = gradient_rect.translated(-gradient_rect.location()).center();
-    auto start_point = center.to_type<float>() - offset.to_type<float>();
+    auto start_point = center.to_type<int>().to_type<float>() - offset.to_type<int>().to_type<float>();
     // Rotate gradient line to be horizontal
     auto rotated_start_point_x = start_point.x() * cos_angle - start_point.y() * -sin_angle;
 
@@ -273,9 +273,9 @@ void paint_conic_gradient(PaintContext& context, DevicePixelRect const& gradient
     GradientLine gradient_line(360, data.color_stops);
     float start_angle = (360.0f - data.start_angle) + 90.0f;
     // Translate position/center to the center of the pixel (avoids some funky painting)
-    auto center_point = Gfx::FloatPoint { position }.translated(0.5, 0.5);
+    auto center_point = Gfx::FloatPoint { position.x().value() + 0.5, position.y().value() + 0.5 };
     gradient_line.paint_into_rect(context.painter(), gradient_rect, [&](DevicePixels x, DevicePixels y) {
-        auto point = Gfx::FloatPoint { x, y } - center_point;
+        auto point = Gfx::FloatPoint { x.value(), y.value() } - center_point;
         // FIXME: We could probably get away with some approximation here:
         // Note: We need too floor the angle here or the colors will start to diverge as you get further from the center.
         return floor(fmod((AK::atan2(point.y(), point.x()) * 180.0f / AK::Pi<float> + 360.0f + start_angle), 360.0f));

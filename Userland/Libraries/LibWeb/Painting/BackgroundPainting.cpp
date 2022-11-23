@@ -148,16 +148,16 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
         CSSPixelRect image_rect;
         switch (layer.size_type) {
         case CSS::BackgroundSize::Contain: {
-            float max_width_ratio = background_positioning_area.width() / natural_image_width;
-            float max_height_ratio = background_positioning_area.height() / natural_image_height;
-            float ratio = min(max_width_ratio, max_height_ratio);
+            auto max_width_ratio = background_positioning_area.width() / natural_image_width;
+            auto max_height_ratio = background_positioning_area.height() / natural_image_height;
+            auto ratio = min(max_width_ratio, max_height_ratio);
             image_rect.set_size(natural_image_width * ratio, natural_image_height * ratio);
             break;
         }
         case CSS::BackgroundSize::Cover: {
-            float max_width_ratio = background_positioning_area.width() / natural_image_width;
-            float max_height_ratio = background_positioning_area.height() / natural_image_height;
-            float ratio = max(max_width_ratio, max_height_ratio);
+            auto max_width_ratio = background_positioning_area.width() / natural_image_width;
+            auto max_height_ratio = background_positioning_area.height() / natural_image_height;
+            auto ratio = max(max_width_ratio, max_height_ratio);
             image_rect.set_size(natural_image_width * ratio, natural_image_height * ratio);
             break;
         }
@@ -198,10 +198,10 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
             // where round() is a function that returns the nearest natural number
             // (integer greater than zero).
             if (layer.repeat_x == CSS::Repeat::Round) {
-                image_rect.set_width(background_positioning_area.width() / roundf(background_positioning_area.width() / image_rect.width()));
+                image_rect.set_width(background_positioning_area.width() / round(background_positioning_area.width() / image_rect.width()));
             }
             if (layer.repeat_y == CSS::Repeat::Round) {
-                image_rect.set_height(background_positioning_area.height() / roundf(background_positioning_area.height() / image_rect.height()));
+                image_rect.set_height(background_positioning_area.height() / round(background_positioning_area.height() / image_rect.height()));
             }
 
             // If background-repeat is round for one dimension only and if background-size is auto
@@ -247,7 +247,7 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
             repeat_x = true;
             break;
         case CSS::Repeat::Space: {
-            int whole_images = background_positioning_area.width() / image_rect.width();
+            int whole_images = (background_positioning_area.width() / image_rect.width()).value();
             if (whole_images <= 1) {
                 x_step = image_rect.width();
                 repeat_x = false;
@@ -268,7 +268,7 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
         }
         // Move image_rect to the left-most tile position that is still visible
         if (repeat_x && image_rect.x() > css_clip_rect.x()) {
-            auto x_delta = floor(x_step * ceilf((image_rect.x() - css_clip_rect.x()) / x_step));
+            auto x_delta = floor(x_step * ceil((image_rect.x() - css_clip_rect.x()) / x_step));
             image_rect.set_x(image_rect.x() - x_delta);
         }
 
@@ -278,7 +278,7 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
             repeat_y = true;
             break;
         case CSS::Repeat::Space: {
-            int whole_images = background_positioning_area.height() / image_rect.height();
+            int whole_images = (background_positioning_area.height() / image_rect.height()).value();
             if (whole_images <= 1) {
                 y_step = image_rect.height();
                 repeat_y = false;
@@ -299,7 +299,7 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
         }
         // Move image_rect to the top-most tile position that is still visible
         if (repeat_y && image_rect.y() > css_clip_rect.y()) {
-            auto y_delta = floor(y_step * ceilf((image_rect.y() - css_clip_rect.y()) / y_step));
+            auto y_delta = floor(y_step * ceil((image_rect.y() - css_clip_rect.y()) / y_step));
             image_rect.set_y(image_rect.y() - y_delta);
         }
 

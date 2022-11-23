@@ -38,7 +38,7 @@ void SVGSVGBox::prepare_for_replaced_layout()
         if (w.has_value() && h.has_value()) {
             set_intrinsic_width(*w);
             set_intrinsic_height(*h);
-            set_intrinsic_aspect_ratio(*w / *h);
+            set_intrinsic_aspect_ratio((*w / *h).value());
             return;
         }
     }
@@ -86,7 +86,7 @@ void SVGSVGBox::prepare_for_replaced_layout()
     if (united_rect.has_value()) {
         set_intrinsic_width(united_rect->width());
         set_intrinsic_height(united_rect->height());
-        set_intrinsic_aspect_ratio(united_rect->width() / united_rect->height());
+        set_intrinsic_aspect_ratio((united_rect->width() / united_rect->height()).value());
     }
 }
 

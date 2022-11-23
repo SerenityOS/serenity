@@ -15,178 +15,69 @@
 namespace Web {
 
 /// DevicePixels: A position or length on the physical display.
-class DevicePixels {
-public:
-    constexpr DevicePixels(int value)
-        : m_value(value)
-    {
-    }
+AK_TYPEDEF_DISTINCT_NUMERIC_GENERAL(int, DevicePixels, Arithmetic, CastToUnderlying, Comparison, Increment);
 
-    constexpr int const& value() const { return m_value; }
-    constexpr int& value() { return m_value; }
-    explicit operator int() const { return value(); }
-    explicit operator float() const { return static_cast<float>(value()); }
+template<Arithmetic T>
+constexpr bool operator==(DevicePixels const& left, T const& right) { return left.value() == right; }
 
-    constexpr bool operator==(DevicePixels const& other) const { return m_value == other.m_value; }
-    template<Arithmetic T>
-    constexpr bool operator==(T const& other) const { return m_value == other; }
+template<Arithmetic T>
+constexpr bool operator!=(DevicePixels const& left, T const& right) { return left.value() != right; }
 
-    constexpr bool operator!=(DevicePixels const& other) const { return m_value != other.m_value; }
-    template<Arithmetic T>
-    constexpr bool operator!=(T const& other) const { return m_value != other; }
+template<Arithmetic T>
+constexpr bool operator>(DevicePixels const& left, T const& right) { return left.value() > right; }
 
-    constexpr bool operator>(DevicePixels const& other) const { return m_value > other.m_value; }
-    template<Arithmetic T>
-    constexpr bool operator>(T const& other) const { return m_value > other; }
+template<Arithmetic T>
+constexpr bool operator<(DevicePixels const& left, T const& right) { return left.value() < right; }
 
-    constexpr bool operator<(DevicePixels const& other) const { return m_value < other.m_value; }
-    template<Arithmetic T>
-    constexpr bool operator<(T const& other) const { return m_value < other; }
+template<Arithmetic T>
+constexpr bool operator>=(DevicePixels const& left, T const& right) { return left.value() >= right; }
 
-    constexpr bool operator>=(DevicePixels const& other) const { return m_value >= other.m_value; }
-    template<Arithmetic T>
-    constexpr bool operator>=(T const& other) const { return m_value >= other; }
+template<Arithmetic T>
+constexpr bool operator<=(DevicePixels const& left, T const& right) { return left.value() <= right; }
 
-    constexpr bool operator<=(DevicePixels const& other) const { return m_value <= other.m_value; }
-    template<Arithmetic T>
-    constexpr bool operator<=(T const& other) const { return m_value <= other; }
+template<Arithmetic T>
+constexpr DevicePixels operator*(DevicePixels const& left, T const& right) { return left.value() * right; }
+template<Arithmetic T>
+constexpr DevicePixels operator*(T const& left, DevicePixels const& right) { return right * left; }
 
-    constexpr DevicePixels operator+(DevicePixels const& other) const { return m_value + other.m_value; }
-    constexpr DevicePixels operator-(DevicePixels const& other) const { return m_value - other.m_value; }
-    constexpr DevicePixels operator+() const { return +m_value; }
-    constexpr DevicePixels operator-() const { return -m_value; }
-    constexpr DevicePixels operator++() { return ++m_value; }
-    constexpr DevicePixels operator++(int) { return m_value++; }
-    constexpr DevicePixels operator--() { return --m_value; }
-    constexpr DevicePixels operator--(int) { return m_value--; }
-    template<Arithmetic T>
-    constexpr DevicePixels operator*(T const& other) const { return m_value * other; }
-    template<Arithmetic T>
-    constexpr DevicePixels operator/(T const& other) const { return m_value / other; }
-    constexpr float operator/(DevicePixels const& other) const { return m_value / other.m_value; }
-    template<Arithmetic T>
-    constexpr DevicePixels operator%(T const& other) const { return m_value % other; }
-    constexpr float operator%(DevicePixels const& other) const { return m_value % other.m_value; }
+template<Arithmetic T>
+constexpr DevicePixels operator/(DevicePixels const& left, T const& right) { return left.value() / right; }
 
-    constexpr DevicePixels& operator+=(DevicePixels const& other)
-    {
-        m_value += other.m_value;
-        return *this;
-    }
-
-    constexpr DevicePixels& operator-=(DevicePixels const& other)
-    {
-        m_value -= other.m_value;
-        return *this;
-    }
-
-    constexpr DevicePixels& operator*=(DevicePixels const& other)
-    {
-        m_value *= other.m_value;
-        return *this;
-    }
-
-    constexpr DevicePixels& operator/=(DevicePixels const& other)
-    {
-        m_value /= other.m_value;
-        return *this;
-    }
-
-private:
-    int m_value {};
-};
-
-ALWAYS_INLINE DevicePixels operator*(float const& a, DevicePixels const& b)
-{
-    return b * a;
-}
+template<Arithmetic T>
+constexpr DevicePixels operator%(DevicePixels const& left, T const& right) { return left.value() % right; }
 
 /// CSSPixels: A position or length in CSS "reference pixels", independent of zoom or screen DPI.
 /// See https://www.w3.org/TR/css-values-3/#reference-pixel
-class CSSPixels {
-public:
-    constexpr CSSPixels() = default;
+AK_TYPEDEF_DISTINCT_NUMERIC_GENERAL(float, CSSPixels, Arithmetic, CastToUnderlying, Comparison, Increment);
 
-    template<Arithmetic T>
-    constexpr CSSPixels(T value)
-        : m_value { static_cast<float>(value) }
-    {
-    }
+template<Arithmetic T>
+constexpr bool operator==(CSSPixels const& left, T const& right) { return left.value() == right; }
 
-    constexpr float const& value() const { return m_value; }
-    constexpr float& value() { return m_value; }
-    explicit operator float() const { return value(); }
+template<Arithmetic T>
+constexpr bool operator!=(CSSPixels const& left, T const& right) { return left.value() != right; }
 
-    constexpr bool operator==(CSSPixels const& other) const { return m_value == other.m_value; }
-    template<Arithmetic T>
-    constexpr bool operator==(T const& other) const { return m_value == other; }
+template<Arithmetic T>
+constexpr bool operator>(CSSPixels const& left, T const& right) { return left.value() > right; }
 
-    constexpr bool operator!=(CSSPixels const& other) const { return m_value != other.m_value; }
-    template<Arithmetic T>
-    constexpr bool operator!=(T const& other) const { return m_value != other; }
+template<Arithmetic T>
+constexpr bool operator<(CSSPixels const& left, T const& right) { return left.value() < right; }
 
-    constexpr bool operator>(CSSPixels const& other) const { return m_value > other.m_value; }
-    template<Arithmetic T>
-    constexpr bool operator>(T const& other) const { return m_value > other; }
+template<Arithmetic T>
+constexpr bool operator>=(CSSPixels const& left, T const& right) { return left.value() >= right; }
 
-    constexpr bool operator<(CSSPixels const& other) const { return m_value < other.m_value; }
-    template<Arithmetic T>
-    constexpr bool operator<(T const& other) const { return m_value < other; }
+template<Arithmetic T>
+constexpr bool operator<=(CSSPixels const& left, T const& right) { return left.value() <= right; }
 
-    constexpr bool operator>=(CSSPixels const& other) const { return m_value >= other.m_value; }
-    template<Arithmetic T>
-    constexpr bool operator>=(T const& other) const { return m_value >= other; }
+template<Arithmetic T>
+constexpr CSSPixels operator*(CSSPixels const& left, T const& right) { return left.value() * right; }
+template<Arithmetic T>
+constexpr CSSPixels operator*(T const& left, CSSPixels const& right) { return right * left; }
 
-    constexpr bool operator<=(CSSPixels const& other) const { return m_value <= other.m_value; }
-    template<Arithmetic T>
-    constexpr bool operator<=(T const& other) const { return m_value <= other; }
+template<Arithmetic T>
+constexpr CSSPixels operator/(CSSPixels const& left, T const& right) { return left.value() / right; }
 
-    constexpr CSSPixels operator+(CSSPixels const& other) const { return m_value + other.m_value; }
-    constexpr CSSPixels operator-(CSSPixels const& other) const { return m_value - other.m_value; }
-    constexpr CSSPixels operator+() const { return +m_value; }
-    constexpr CSSPixels operator-() const { return -m_value; }
-    constexpr CSSPixels operator++() { return ++m_value; }
-    constexpr CSSPixels operator++(int) { return m_value++; }
-    constexpr CSSPixels operator--() { return --m_value; }
-    constexpr CSSPixels operator--(int) { return m_value--; }
-    template<Arithmetic T>
-    constexpr CSSPixels operator*(T const& other) const { return m_value * other; }
-    template<Arithmetic T>
-    constexpr CSSPixels operator/(T const& other) const { return m_value / other; }
-    constexpr float operator/(CSSPixels const& other) const { return m_value / other.m_value; }
-
-    constexpr CSSPixels& operator+=(CSSPixels const& other)
-    {
-        m_value += other.m_value;
-        return *this;
-    }
-
-    constexpr CSSPixels& operator-=(CSSPixels const& other)
-    {
-        m_value -= other.m_value;
-        return *this;
-    }
-
-    constexpr CSSPixels& operator*=(CSSPixels const& other)
-    {
-        m_value *= other.m_value;
-        return *this;
-    }
-
-    constexpr CSSPixels& operator/=(CSSPixels const& other)
-    {
-        m_value /= other.m_value;
-        return *this;
-    }
-
-private:
-    float m_value {};
-};
-
-ALWAYS_INLINE CSSPixels operator*(float const& a, CSSPixels const& b)
-{
-    return b * a;
-}
+template<Arithmetic T>
+constexpr CSSPixels operator%(CSSPixels const& left, T const& right) { return left.value() % right; }
 
 using CSSPixelLine = Gfx::Line<CSSPixels>;
 using CSSPixelPoint = Gfx::Point<CSSPixels>;
