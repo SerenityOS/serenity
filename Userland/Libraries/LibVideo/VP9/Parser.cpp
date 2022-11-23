@@ -104,7 +104,7 @@ DecoderErrorOr<FrameContext> Parser::parse_frame(ReadonlyBytes frame_data)
     TRY(refresh_probs());
 
     m_previous_frame_size = frame_context.size();
-    m_previous_show_frame = m_show_frame;
+    m_previous_show_frame = frame_context.shows_a_frame();
 
     return frame_context;
 }
@@ -171,7 +171,8 @@ DecoderErrorOr<FrameContext> Parser::uncompressed_header()
 
     m_last_frame_type = m_frame_type;
     m_frame_type = TRY(read_frame_type());
-    m_show_frame = TRY_READ(m_bit_stream->read_bit());
+    if (!TRY_READ(m_bit_stream->read_bit()))
+        frame_context.set_frame_hidden();
     m_error_resilient_mode = TRY_READ(m_bit_stream->read_bit());
 
     Gfx::Size<u32> frame_size;
@@ -185,7 +186,7 @@ DecoderErrorOr<FrameContext> Parser::uncompressed_header()
         m_refresh_frame_flags = 0xFF;
         m_frame_is_intra = true;
     } else {
-        m_frame_is_intra = !m_show_frame && TRY_READ(m_bit_stream->read_bit());
+        m_frame_is_intra = !frame_context.shows_a_frame() && TRY_READ(m_bit_stream->read_bit());
 
         if (!m_error_resilient_mode) {
             m_reset_frame_context = TRY_READ(m_bit_stream->read_bits(2));

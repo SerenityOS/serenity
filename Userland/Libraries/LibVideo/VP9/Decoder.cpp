@@ -69,7 +69,7 @@ DecoderErrorOr<void> Decoder::decode_frame(ReadonlyBytes frame_data)
     // This is handled by update_reference_frames.
 
     // 4. The output process as specified in section 8.9 is invoked.
-    if (m_parser->m_show_frame)
+    if (frame_context.shows_a_frame())
         TRY(create_video_frame(frame_context));
 
     // 5. The reference frame update process as specified in section 8.10 is invoked.
@@ -79,6 +79,12 @@ DecoderErrorOr<void> Decoder::decode_frame(ReadonlyBytes frame_data)
 
 DecoderErrorOr<void> Decoder::create_video_frame(FrameContext const& frame_context)
 {
+    // (8.9) Output process
+
+    // FIXME: If show_existing_frame is set, output from FrameStore[frame_to_show_map_index] here instead.
+
+    // FIXME: The math isn't entirely accurate to spec. output_uv_size is probably incorrect for certain
+    //        sizes, as the spec seems to prefer that the halved sizes be ceiled.
     u32 decoded_y_width = frame_context.columns() * 8;
     Gfx::Size<u32> output_y_size = frame_context.size();
     auto decoded_uv_width = decoded_y_width >> m_parser->m_subsampling_x;

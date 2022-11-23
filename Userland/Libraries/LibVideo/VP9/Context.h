@@ -237,17 +237,26 @@ struct PersistentBlockContext {
     u8 segment_id { 0 };
 };
 
+enum class FrameShowMode {
+    CreateAndShowNewFrame,
+    ShowExistingFrame,
+    DoNotShowFrame,
+};
+
 struct FrameContext {
 public:
     u8 profile { 0 };
 
-    bool shows_existing_frame() const { return m_show_existing_frame; }
-    u8 existing_frame_index() const { return m_existing_frame_index; }
+    bool shows_a_frame() const { return m_frame_show_mode != FrameShowMode::DoNotShowFrame; }
+    bool shows_a_new_frame() const { return m_frame_show_mode == FrameShowMode::CreateAndShowNewFrame; }
+    bool shows_existing_frame() const { return m_frame_show_mode == FrameShowMode::ShowExistingFrame; }
+    void set_frame_hidden() { m_frame_show_mode = FrameShowMode::DoNotShowFrame; }
     void set_existing_frame_to_show(u8 index)
     {
-        m_show_existing_frame = true;
+        m_frame_show_mode = FrameShowMode::ShowExistingFrame;
         m_existing_frame_index = index;
     }
+    u8 existing_frame_index() const { return m_existing_frame_index; }
 
     Gfx::Size<u32> size() const { return m_size; }
     ErrorOr<void> set_size(Gfx::Size<u32> size)
@@ -273,7 +282,7 @@ public:
 private:
     friend struct TileContext;
 
-    bool m_show_existing_frame { false };
+    FrameShowMode m_frame_show_mode { FrameShowMode::CreateAndShowNewFrame };
     u8 m_existing_frame_index { 0 };
 
     Gfx::Size<u32> m_size { 0, 0 };
