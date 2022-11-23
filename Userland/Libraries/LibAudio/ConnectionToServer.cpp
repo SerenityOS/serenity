@@ -14,6 +14,7 @@
 #include <LibAudio/UserSampleQueue.h>
 #include <LibCore/Event.h>
 #include <LibThreading/Mutex.h>
+#include <sched.h>
 #include <time.h>
 
 namespace Audio {
@@ -58,8 +59,10 @@ void ConnectionToServer::die()
 
 ErrorOr<void> ConnectionToServer::async_enqueue(FixedArray<Sample>&& samples)
 {
-    if (!m_background_audio_enqueuer->is_started())
+    if (!m_background_audio_enqueuer->is_started()) {
         m_background_audio_enqueuer->start();
+        TRY(m_background_audio_enqueuer->set_priority(THREAD_PRIORITY_MAX));
+    }
 
     update_good_sleep_time();
     m_user_queue->append(move(samples));

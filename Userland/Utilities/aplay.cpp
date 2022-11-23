@@ -23,7 +23,7 @@ constexpr size_t LOAD_CHUNK_SIZE = 128 * KiB;
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio rpath sendfd unix thread"));
+    TRY(Core::System::pledge("stdio rpath sendfd unix thread proc"));
 
     StringView path {};
     bool should_loop = false;
@@ -50,7 +50,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
     auto loader = maybe_loader.release_value();
 
-    TRY(Core::System::pledge("stdio sendfd thread"));
+    TRY(Core::System::pledge("stdio sendfd thread proc"));
 
     outln("\033[34;1m Playing\033[0m: {}", path);
     outln("\033[34;1m  Format\033[0m: {} {} Hz, {}-bit, {}",
