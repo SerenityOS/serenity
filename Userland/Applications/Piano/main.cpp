@@ -26,7 +26,7 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio thread rpath cpath wpath recvfd sendfd unix"));
+    TRY(Core::System::pledge("stdio thread rpath cpath wpath recvfd sendfd unix proc"));
 
     auto app = TRY(GUI::Application::try_create(arguments));
 
