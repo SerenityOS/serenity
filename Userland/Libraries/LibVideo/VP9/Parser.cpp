@@ -107,6 +107,8 @@ DecoderErrorOr<FrameContext> Parser::parse_frame(ReadonlyBytes frame_data)
     m_previous_frame_size = frame_context.size();
     m_previous_show_frame = frame_context.shows_a_frame();
     m_previous_color_config = frame_context.color_config;
+    m_previous_loop_filter_ref_deltas = frame_context.loop_filter_reference_deltas;
+    m_previous_loop_filter_mode_deltas = frame_context.loop_filter_mode_deltas;
 
     return frame_context;
 }
@@ -159,7 +161,6 @@ DecoderErrorOr<FrameContext> Parser::uncompressed_header()
         return DecoderError::corrupted("uncompressed_header: Profile 3 reserved bit was non-zero"sv);
 
     if (TRY_READ(m_bit_stream->read_bit())) {
-        m_loop_filter_level = 0;
         frame_context.set_existing_frame_to_show(TRY_READ(m_bit_stream->read_bits(3)));
         return frame_context;
     }
@@ -259,7 +260,7 @@ DecoderErrorOr<FrameContext> Parser::uncompressed_header()
     frame_context.should_replace_probability_context = should_replace_probability_context;
     frame_context.probability_context_index = probability_context_index;
 
-    TRY(loop_filter_params());
+    TRY(loop_filter_params(frame_context));
     TRY(quantization_params());
     TRY(segmentation_params());
     TRY(tile_info(frame_context));
@@ -393,23 +394,26 @@ DecoderErrorOr<InterpolationFilter> Parser::read_interpolation_filter()
     return literal_to_type[TRY_READ(m_bit_stream->read_bits(2))];
 }
 
-DecoderErrorOr<void> Parser::loop_filter_params()
+DecoderErrorOr<void> Parser::loop_filter_params(FrameContext& frame_context)
 {
-    m_loop_filter_level = TRY_READ(m_bit_stream->read_bits(6));
-    m_loop_filter_sharpness = TRY_READ(m_bit_stream->read_bits(3));
-    m_loop_filter_delta_enabled = TRY_READ(m_bit_stream->read_bit());
-    if (m_loop_filter_delta_enabled) {
-        if (TRY_READ(m_bit_stream->read_bit())) {
-            for (auto& loop_filter_ref_delta : m_loop_filter_ref_deltas) {
-                if (TRY_READ(m_bit_stream->read_bit()))
-                    loop_filter_ref_delta = TRY_READ(m_bit_stream->read_s(6));
-            }
-            for (auto& loop_filter_mode_delta : m_loop_filter_mode_deltas) {
-                if (TRY_READ(m_bit_stream->read_bit()))
-                    loop_filter_mode_delta = TRY_READ(m_bit_stream->read_s(6));
-            }
+    frame_context.loop_filter_level = TRY_READ(m_bit_stream->read_bits(6));
+    frame_context.loop_filter_sharpness = TRY_READ(m_bit_stream->read_bits(3));
+    frame_context.loop_filter_delta_enabled = TRY_READ(m_bit_stream->read_bit());
+
+    auto reference_deltas = m_previous_loop_filter_ref_deltas;
+    auto mode_deltas = m_previous_loop_filter_mode_deltas;
+    if (frame_context.loop_filter_delta_enabled && TRY_READ(m_bit_stream->read_bit())) {
+        for (auto& loop_filter_ref_delta : reference_deltas) {
+            if (TRY_READ(m_bit_stream->read_bit()))
+                loop_filter_ref_delta = TRY_READ(m_bit_stream->read_s(6));
+        }
+        for (auto& loop_filter_mode_delta : mode_deltas) {
+            if (TRY_READ(m_bit_stream->read_bit()))
+                loop_filter_mode_delta = TRY_READ(m_bit_stream->read_s(6));
         }
     }
+    frame_context.loop_filter_reference_deltas = reference_deltas;
+    frame_context.loop_filter_mode_deltas = mode_deltas;
 
     return {};
 }
@@ -524,13 +528,11 @@ void Parser::setup_past_independence()
     }
     m_previous_block_contexts.reset();
     m_segmentation_abs_or_delta_update = false;
-    m_loop_filter_delta_enabled = true;
-    m_loop_filter_ref_deltas[IntraFrame] = 1;
-    m_loop_filter_ref_deltas[LastFrame] = 0;
-    m_loop_filter_ref_deltas[GoldenFrame] = -1;
-    m_loop_filter_ref_deltas[AltRefFrame] = -1;
-    for (auto& loop_filter_mode_delta : m_loop_filter_mode_deltas)
-        loop_filter_mode_delta = 0;
+    m_previous_loop_filter_ref_deltas[IntraFrame] = 1;
+    m_previous_loop_filter_ref_deltas[LastFrame] = 0;
+    m_previous_loop_filter_ref_deltas[GoldenFrame] = -1;
+    m_previous_loop_filter_ref_deltas[AltRefFrame] = -1;
+    m_previous_loop_filter_mode_deltas.fill(0);
     m_probability_tables->reset_probs();
 }
 

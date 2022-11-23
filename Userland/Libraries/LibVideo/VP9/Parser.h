@@ -64,7 +64,7 @@ private:
     DecoderErrorOr<Gfx::Size<u32>> parse_render_size(Gfx::Size<u32> frame_size);
     DecoderErrorOr<void> compute_image_size(FrameContext&);
     DecoderErrorOr<InterpolationFilter> read_interpolation_filter();
-    DecoderErrorOr<void> loop_filter_params();
+    DecoderErrorOr<void> loop_filter_params(FrameContext&);
     DecoderErrorOr<void> quantization_params();
     DecoderErrorOr<i8> read_delta_q();
     DecoderErrorOr<void> segmentation_params();
@@ -141,14 +141,13 @@ private:
     Gfx::Point<size_t> get_decoded_point_for_plane(FrameContext const&, u32 row, u32 column, u8 plane);
     Gfx::Size<size_t> get_decoded_size_for_plane(FrameContext const&, u8 plane);
 
-    u8 m_loop_filter_level { 0 };
-    u8 m_loop_filter_sharpness { 0 };
-    bool m_loop_filter_delta_enabled { false };
     bool m_is_first_compute_image_size_invoke { true };
     Gfx::Size<u32> m_previous_frame_size { 0, 0 };
     bool m_previous_show_frame { false };
     ColorConfig m_previous_color_config;
     FrameType m_previous_frame_type { FrameType::KeyFrame };
+    Array<i8, MAX_REF_FRAMES> m_previous_loop_filter_ref_deltas;
+    Array<i8, 2> m_previous_loop_filter_mode_deltas;
     u8 m_base_q_idx { 0 };
     i8 m_delta_q_y_dc { 0 };
     i8 m_delta_q_uv_dc { 0 };
@@ -164,8 +163,6 @@ private:
     bool m_segmentation_abs_or_delta_update { false };
     u16 m_tile_cols_log2 { 0 };
     u16 m_tile_rows_log2 { 0 };
-    i8 m_loop_filter_ref_deltas[MAX_REF_FRAMES];
-    i8 m_loop_filter_mode_deltas[2];
 
     // FIXME: Move above and left contexts to structs
     Array<Vector<bool>, 3> m_above_nonzero_context;
