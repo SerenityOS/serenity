@@ -6,6 +6,7 @@
 
 #include <LibJS/Runtime/AsyncGenerator.h>
 #include <LibJS/Runtime/AsyncGeneratorPrototype.h>
+#include <LibJS/Runtime/AsyncGeneratorRequest.h>
 #include <LibJS/Runtime/GlobalObject.h>
 
 namespace JS {

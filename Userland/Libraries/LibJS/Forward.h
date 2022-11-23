@@ -147,6 +147,7 @@ namespace JS {
 
 class ASTNode;
 class Accessor;
+struct AsyncGeneratorRequest;
 class BigInt;
 class BoundFunction;
 class Cell;
