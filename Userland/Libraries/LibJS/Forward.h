@@ -164,6 +164,7 @@ class Error;
 class ErrorType;
 struct ExecutionContext;
 class Expression;
+class ForStatement;
 class FunctionEnvironment;
 class FunctionNode;
 class GlobalEnvironment;
