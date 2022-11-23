@@ -6,12 +6,13 @@
 
 #pragma once
 
+#include "AK/RefPtr.h"
 #include "NumericInput.h"
 #include "PDFViewer.h"
 #include "SidebarWidget.h"
 #include <LibGUI/Action.h>
 #include <LibGUI/ActionGroup.h>
-#include <LibGUI/TextBox.h>
+#include <LibGUI/CheckBox.h>
 #include <LibGUI/Widget.h>
 
 class PDFViewer;
@@ -45,6 +46,7 @@ private:
     GUI::ActionGroup m_page_view_action_group;
     RefPtr<GUI::Action> m_page_view_mode_single;
     RefPtr<GUI::Action> m_page_view_mode_multiple;
+    RefPtr<GUI::CheckBox> m_show_clipping_paths;
 
     bool m_sidebar_open { false };
     ByteBuffer m_buffer;
