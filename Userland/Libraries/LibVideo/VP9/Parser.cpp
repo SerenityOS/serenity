@@ -79,30 +79,34 @@ Vector<size_t> Parser::parse_superframe_sizes(ReadonlyBytes frame_data)
 }
 
 /* (6.1) */
-DecoderErrorOr<void> Parser::parse_frame(ReadonlyBytes frame_data)
+DecoderErrorOr<FrameContext> Parser::parse_frame(ReadonlyBytes frame_data)
 {
     m_bit_stream = make<BitStream>(frame_data.data(), frame_data.size());
     m_syntax_element_counter = make<SyntaxElementCounter>();
 
-    TRY(uncompressed_header());
+    auto frame_context = TRY(uncompressed_header());
     if (!trailing_bits())
         return DecoderError::corrupted("Trailing bits were non-zero"sv);
-    if (m_header_size_in_bytes == 0)
+    // FIXME: This should not be an error. Spec says that we consume padding bits until the end of the sample.
+    if (frame_context.header_size_in_bytes == 0)
         return DecoderError::corrupted("Frame header is zero-sized"sv);
     m_probability_tables->load_probs(m_frame_context_idx);
     m_probability_tables->load_probs2(m_frame_context_idx);
     m_syntax_element_counter->clear_counts();
 
-    TRY_READ(m_bit_stream->init_bool(m_header_size_in_bytes));
+    TRY_READ(m_bit_stream->init_bool(frame_context.header_size_in_bytes));
     TRY(compressed_header());
     TRY_READ(m_bit_stream->exit_bool());
 
-    TRY(m_decoder.allocate_buffers());
+    TRY(m_decoder.allocate_buffers(frame_context));
 
-    TRY(decode_tiles());
+    TRY(decode_tiles(frame_context));
     TRY(refresh_probs());
 
-    return {};
+    m_previous_frame_size = frame_context.size();
+    m_previous_show_frame = m_show_frame;
+
+    return frame_context;
 }
 
 bool Parser::trailing_bits()
@@ -144,23 +148,25 @@ DecoderErrorOr<ColorRange> Parser::read_color_range()
 }
 
 /* (6.2) */
-DecoderErrorOr<void> Parser::uncompressed_header()
+DecoderErrorOr<FrameContext> Parser::uncompressed_header()
 {
+    FrameContext frame_context;
+
     auto frame_marker = TRY_READ(m_bit_stream->read_bits(2));
     if (frame_marker != 2)
         return DecoderError::corrupted("uncompressed_header: Frame marker must be 2"sv);
+
     auto profile_low_bit = TRY_READ(m_bit_stream->read_bit());
     auto profile_high_bit = TRY_READ(m_bit_stream->read_bit());
-    m_profile = (profile_high_bit << 1u) + profile_low_bit;
-    if (m_profile == 3 && TRY_READ(m_bit_stream->read_bit()))
+    frame_context.profile = (profile_high_bit << 1u) + profile_low_bit;
+    if (frame_context.profile == 3 && TRY_READ(m_bit_stream->read_bit()))
         return DecoderError::corrupted("uncompressed_header: Profile 3 reserved bit was non-zero"sv);
-    m_show_existing_frame = TRY_READ(m_bit_stream->read_bit());
-    if (m_show_existing_frame) {
-        m_frame_to_show_map_index = TRY_READ(m_bit_stream->read_bits(3));
-        m_header_size_in_bytes = 0;
+
+    if (TRY_READ(m_bit_stream->read_bit())) {
         m_refresh_frame_flags = 0;
         m_loop_filter_level = 0;
-        return {};
+        frame_context.set_existing_frame_to_show(TRY_READ(m_bit_stream->read_bits(3)));
+        return frame_context;
     }
 
     m_last_frame_type = m_frame_type;
@@ -168,11 +174,14 @@ DecoderErrorOr<void> Parser::uncompressed_header()
     m_show_frame = TRY_READ(m_bit_stream->read_bit());
     m_error_resilient_mode = TRY_READ(m_bit_stream->read_bit());
 
+    Gfx::Size<u32> frame_size;
+    Gfx::Size<u32> render_size;
+
     if (m_frame_type == KeyFrame) {
         TRY(frame_sync_code());
-        TRY(color_config());
-        m_frame_size = TRY(frame_size());
-        m_render_size = TRY(render_size(m_frame_size));
+        TRY(color_config(frame_context));
+        frame_size = TRY(parse_frame_size());
+        render_size = TRY(parse_render_size(frame_size));
         m_refresh_frame_flags = 0xFF;
         m_frame_is_intra = true;
     } else {
@@ -186,8 +195,8 @@ DecoderErrorOr<void> Parser::uncompressed_header()
 
         if (m_frame_is_intra) {
             TRY(frame_sync_code());
-            if (m_profile > 0) {
-                TRY(color_config());
+            if (frame_context.profile > 0) {
+                TRY(color_config(frame_context));
             } else {
                 m_color_space = Bt601;
                 m_subsampling_x = true;
@@ -196,22 +205,24 @@ DecoderErrorOr<void> Parser::uncompressed_header()
             }
 
             m_refresh_frame_flags = TRY_READ(m_bit_stream->read_f8());
-            m_frame_size = TRY(frame_size());
-            m_render_size = TRY(render_size(m_frame_size));
+            frame_size = TRY(parse_frame_size());
+            render_size = TRY(parse_render_size(frame_size));
         } else {
             m_refresh_frame_flags = TRY_READ(m_bit_stream->read_f8());
             for (auto i = 0; i < 3; i++) {
                 m_ref_frame_idx[i] = TRY_READ(m_bit_stream->read_bits(3));
                 m_ref_frame_sign_bias[LastFrame + i] = TRY_READ(m_bit_stream->read_bit());
             }
-            m_frame_size = TRY(frame_size_with_refs());
-            m_render_size = TRY(render_size(m_frame_size));
+            frame_size = TRY(parse_frame_size_with_refs());
+            render_size = TRY(parse_render_size(frame_size));
             m_allow_high_precision_mv = TRY_READ(m_bit_stream->read_bit());
             TRY(read_interpolation_filter());
         }
     }
 
-    compute_image_size();
+    DECODER_TRY_ALLOC(frame_context.set_size(frame_size));
+    frame_context.render_size = render_size;
+    TRY(compute_image_size(frame_context));
 
     if (!m_error_resilient_mode) {
         m_refresh_frame_context = TRY_READ(m_bit_stream->read_bit());
@@ -237,11 +248,11 @@ DecoderErrorOr<void> Parser::uncompressed_header()
     TRY(loop_filter_params());
     TRY(quantization_params());
     TRY(segmentation_params());
-    TRY(tile_info());
+    TRY(tile_info(frame_context));
 
-    m_header_size_in_bytes = TRY_READ(m_bit_stream->read_f16());
+    frame_context.header_size_in_bytes = TRY_READ(m_bit_stream->read_f16());
 
-    return {};
+    return frame_context;
 }
 
 DecoderErrorOr<void> Parser::frame_sync_code()
@@ -255,9 +266,9 @@ DecoderErrorOr<void> Parser::frame_sync_code()
     return {};
 }
 
-DecoderErrorOr<void> Parser::color_config()
+DecoderErrorOr<void> Parser::color_config(FrameContext const& frame_context)
 {
-    if (m_profile >= 2) {
+    if (frame_context.profile >= 2) {
         m_bit_depth = TRY_READ(m_bit_stream->read_bit()) ? 12 : 10;
     } else {
         m_bit_depth = 8;
@@ -269,7 +280,7 @@ DecoderErrorOr<void> Parser::color_config()
 
     if (color_space != RGB) {
         m_color_range = TRY(read_color_range());
-        if (m_profile == 1 || m_profile == 3) {
+        if (frame_context.profile == 1 || frame_context.profile == 3) {
             m_subsampling_x = TRY_READ(m_bit_stream->read_bit());
             m_subsampling_y = TRY_READ(m_bit_stream->read_bit());
             if (TRY_READ(m_bit_stream->read_bit()))
@@ -280,7 +291,7 @@ DecoderErrorOr<void> Parser::color_config()
         }
     } else {
         m_color_range = ColorRange::Full;
-        if (m_profile == 1 || m_profile == 3) {
+        if (frame_context.profile == 1 || frame_context.profile == 3) {
             m_subsampling_x = false;
             m_subsampling_y = false;
             if (TRY_READ(m_bit_stream->read_bit()))
@@ -290,19 +301,19 @@ DecoderErrorOr<void> Parser::color_config()
     return {};
 }
 
-DecoderErrorOr<Gfx::Size<u32>> Parser::frame_size()
+DecoderErrorOr<Gfx::Size<u32>> Parser::parse_frame_size()
 {
     return Gfx::Size<u32> { TRY_READ(m_bit_stream->read_f16()) + 1, TRY_READ(m_bit_stream->read_f16()) + 1 };
 }
 
-DecoderErrorOr<Gfx::Size<u32>> Parser::render_size(Gfx::Size<u32> frame_size)
+DecoderErrorOr<Gfx::Size<u32>> Parser::parse_render_size(Gfx::Size<u32> frame_size)
 {
     if (!TRY_READ(m_bit_stream->read_bit()))
         return frame_size;
     return Gfx::Size<u32> { TRY_READ(m_bit_stream->read_f16()) + 1, TRY_READ(m_bit_stream->read_f16()) + 1 };
 }
 
-DecoderErrorOr<Gfx::Size<u32>> Parser::frame_size_with_refs()
+DecoderErrorOr<Gfx::Size<u32>> Parser::parse_frame_size_with_refs()
 {
     Optional<Gfx::Size<u32>> size;
     for (auto frame_index : m_ref_frame_idx) {
@@ -315,29 +326,23 @@ DecoderErrorOr<Gfx::Size<u32>> Parser::frame_size_with_refs()
     if (size.has_value())
         return size.value();
 
-    return TRY(frame_size());
+    return TRY(parse_frame_size());
 }
 
-void Parser::compute_image_size()
+DecoderErrorOr<void> Parser::compute_image_size(FrameContext& frame_context)
 {
-    auto new_cols = (m_frame_size.width() + 7u) >> 3u;
-    auto new_rows = (m_frame_size.height() + 7u) >> 3u;
-
     // 7.2.6 Compute image size semantics
     // When compute_image_size is invoked, the following ordered steps occur:
     // 1. If this is the first time compute_image_size is invoked, or if either FrameWidth or FrameHeight have
     // changed in value compared to the previous time this function was invoked, then the segmentation map is
     // cleared to all zeros by setting SegmentId[ row ][ col ] equal to 0 for row = 0..MiRows-1 and col =
     // 0..MiCols-1.
-    bool first_invoke = !m_mi_cols && !m_mi_rows;
-    bool same_size = m_mi_cols == new_cols && m_mi_rows == new_rows;
-    if (first_invoke || !same_size) {
-        // FIXME: Does this ever do anything? Segment IDs are already reset every frame. It's also suspicious
-        //        that spec refers to this as SegmentId rather than SegmentIds (plural). Is this supposed to
-        //        refer to PrevSegmentIds?
-        for (size_t i = 0; i < m_frame_block_contexts.size(); i++)
-            m_frame_block_contexts[i].segment_id = 0;
-    }
+    // FIXME: What does this mean? SegmentIds is scoped to one frame, so it will not contain values here. It's
+    //        also suspicious that spec refers to this as SegmentId rather than SegmentIds (plural). Is this
+    //        supposed to refer to PrevSegmentIds?
+    bool first_invoke = m_is_first_compute_image_size_invoke;
+    m_is_first_compute_image_size_invoke = false;
+    bool same_size = m_previous_frame_size == frame_context.size();
 
     // 2. The variable UsePrevFrameMvs is set equal to 1 if all of the following conditions are true:
     // a. This is not the first time compute_image_size is invoked.
@@ -347,13 +352,8 @@ void Parser::compute_image_size()
     // d. error_resilient_mode is equal to 0.
     // e. FrameIsIntra is equal to 0.
     // Otherwise, UsePrevFrameMvs is set equal to 0.
-    m_use_prev_frame_mvs = !first_invoke && same_size && m_prev_show_frame && !m_error_resilient_mode && !m_frame_is_intra;
-    m_prev_show_frame = m_show_frame;
-
-    m_mi_cols = new_cols;
-    m_mi_rows = new_rows;
-    m_sb64_cols = (m_mi_cols + 7u) >> 3u;
-    m_sb64_rows = (m_mi_rows + 7u) >> 3u;
+    m_use_prev_frame_mvs = !first_invoke && same_size && m_previous_show_frame && !m_error_resilient_mode && !m_frame_is_intra;
+    return {};
 }
 
 DecoderErrorOr<void> Parser::read_interpolation_filter()
@@ -452,10 +452,11 @@ DecoderErrorOr<u8> Parser::read_prob()
     return 255;
 }
 
-DecoderErrorOr<void> Parser::tile_info()
+DecoderErrorOr<void> Parser::tile_info(FrameContext& frame_context)
 {
-    auto min_log2_tile_cols = calc_min_log2_tile_cols();
-    auto max_log2_tile_cols = calc_max_log2_tile_cols();
+    auto superblock_columns = frame_context.superblock_columns();
+    auto min_log2_tile_cols = calc_min_log2_tile_cols(superblock_columns);
+    auto max_log2_tile_cols = calc_max_log2_tile_cols(superblock_columns);
     m_tile_cols_log2 = min_log2_tile_cols;
     while (m_tile_cols_log2 < max_log2_tile_cols) {
         if (TRY_READ(m_bit_stream->read_bit()))
@@ -470,18 +471,18 @@ DecoderErrorOr<void> Parser::tile_info()
     return {};
 }
 
-u16 Parser::calc_min_log2_tile_cols()
+u16 Parser::calc_min_log2_tile_cols(u32 superblock_columns)
 {
     auto min_log_2 = 0u;
-    while ((u32)(MAX_TILE_WIDTH_B64 << min_log_2) < m_sb64_cols)
+    while ((u32)(MAX_TILE_WIDTH_B64 << min_log_2) < superblock_columns)
         min_log_2++;
     return min_log_2;
 }
 
-u16 Parser::calc_max_log2_tile_cols()
+u16 Parser::calc_max_log2_tile_cols(u32 superblock_columns)
 {
     u16 max_log_2 = 1;
-    while ((m_sb64_cols >> max_log_2) >= MIN_TILE_WIDTH_B64)
+    while ((superblock_columns >> max_log_2) >= MIN_TILE_WIDTH_B64)
         max_log_2++;
     return max_log_2 - 1;
 }
@@ -494,7 +495,7 @@ void Parser::setup_past_independence()
             m_feature_enabled[i][j] = false;
         }
     }
-    m_previous_block_contexts.reset(); 
+    m_previous_block_contexts.reset();
     m_segmentation_abs_or_delta_update = false;
     m_loop_filter_delta_enabled = true;
     m_loop_filter_ref_deltas[IntraFrame] = 1;
@@ -802,18 +803,12 @@ void Parser::setup_compound_reference_mode()
     }
 }
 
-DecoderErrorOr<void> Parser::allocate_tile_data()
-{
-    DECODER_TRY_ALLOC(m_frame_block_contexts.try_resize(m_mi_rows, m_mi_cols));
-    return {};
-}
-
-DecoderErrorOr<void> Parser::decode_tiles()
+DecoderErrorOr<void> Parser::decode_tiles(FrameContext& frame_context)
 {
     auto tile_cols = 1 << m_tile_cols_log2;
     auto tile_rows = 1 << m_tile_rows_log2;
-    TRY(allocate_tile_data());
-    clear_above_context();
+    clear_above_context(frame_context);
+
     for (auto tile_row = 0; tile_row < tile_rows; tile_row++) {
         for (auto tile_col = 0; tile_col < tile_cols; tile_col++) {
             auto last_tile = (tile_row == tile_rows - 1) && (tile_col == tile_cols - 1);
@@ -823,12 +818,15 @@ DecoderErrorOr<void> Parser::decode_tiles()
             else
                 tile_size = TRY_READ(m_bit_stream->read_bits(32));
 
-            m_mi_row_start = get_tile_offset(tile_row, m_mi_rows, m_tile_rows_log2);
-            m_mi_row_end = get_tile_offset(tile_row + 1, m_mi_rows, m_tile_rows_log2);
-            m_mi_col_start = get_tile_offset(tile_col, m_mi_cols, m_tile_cols_log2);
-            m_mi_col_end = get_tile_offset(tile_col + 1, m_mi_cols, m_tile_cols_log2);
+            auto rows_start = get_tile_offset(tile_row, frame_context.rows(), m_tile_rows_log2);
+            auto rows_end = get_tile_offset(tile_row + 1, frame_context.rows(), m_tile_rows_log2);
+            auto columns_start = get_tile_offset(tile_col, frame_context.columns(), m_tile_cols_log2);
+            auto columns_end = get_tile_offset(tile_col + 1, frame_context.columns(), m_tile_cols_log2);
+
+            auto tile_context = TileContext(frame_context, rows_start, rows_end, columns_start, columns_end);
+
             TRY_READ(m_bit_stream->init_bool(tile_size));
-            TRY(decode_tile());
+            TRY(decode_tile(tile_context));
             TRY_READ(m_bit_stream->exit_bool());
         }
     }
@@ -851,12 +849,12 @@ void Parser::clear_context(Vector<Vector<T>>& context, size_t outer_size, size_t
         clear_context(sub_vector, inner_size);
 }
 
-void Parser::clear_above_context()
+void Parser::clear_above_context(FrameContext& frame_context)
 {
     for (auto i = 0u; i < m_above_nonzero_context.size(); i++)
-        clear_context(m_above_nonzero_context[i], 2 * m_mi_cols);
-    clear_context(m_above_seg_pred_context, m_mi_cols);
-    clear_context(m_above_partition_context, m_sb64_cols * 8);
+        clear_context(m_above_nonzero_context[i], 2 * frame_context.columns());
+    clear_context(m_above_seg_pred_context, frame_context.columns());
+    clear_context(m_above_partition_context, frame_context.superblock_columns() * 8);
 }
 
 u32 Parser::get_tile_offset(u32 tile_num, u32 mis, u32 tile_size_log2)
@@ -866,51 +864,51 @@ u32 Parser::get_tile_offset(u32 tile_num, u32 mis, u32 tile_size_log2)
     return min(offset, mis);
 }
 
-DecoderErrorOr<void> Parser::decode_tile()
+DecoderErrorOr<void> Parser::decode_tile(TileContext& tile_context)
 {
-    for (auto row = m_mi_row_start; row < m_mi_row_end; row += 8) {
-        clear_left_context();
-        for (auto col = m_mi_col_start; col < m_mi_col_end; col += 8) {
-            TRY(decode_partition(row, col, Block_64x64));
+    for (auto row = tile_context.rows_start; row < tile_context.rows_end; row += 8) {
+        clear_left_context(tile_context);
+        for (auto col = tile_context.columns_start; col < tile_context.columns_end; col += 8) {
+            TRY(decode_partition(tile_context, row, col, Block_64x64));
         }
     }
     return {};
 }
 
-void Parser::clear_left_context()
+void Parser::clear_left_context(TileContext& tile_context)
 {
     for (auto i = 0u; i < m_left_nonzero_context.size(); i++)
-        clear_context(m_left_nonzero_context[i], 2 * m_mi_rows);
-    clear_context(m_left_seg_pred_context, m_mi_rows);
-    clear_context(m_left_partition_context, m_sb64_rows * 8);
+        clear_context(m_left_nonzero_context[i], 2 * tile_context.frame_context.rows());
+    clear_context(m_left_seg_pred_context, tile_context.frame_context.rows());
+    clear_context(m_left_partition_context, tile_context.frame_context.superblock_rows() * 8);
 }
 
-DecoderErrorOr<void> Parser::decode_partition(u32 row, u32 column, BlockSubsize subsize)
+DecoderErrorOr<void> Parser::decode_partition(TileContext& tile_context, u32 row, u32 column, BlockSubsize subsize)
 {
-    if (row >= m_mi_rows || column >= m_mi_cols)
+    if (row >= tile_context.frame_context.rows() || column >= tile_context.frame_context.columns())
         return {};
     u8 num_8x8 = num_8x8_blocks_wide_lookup[subsize];
     auto half_block_8x8 = num_8x8 >> 1;
-    bool has_rows = (row + half_block_8x8) < m_mi_rows;
-    bool has_cols = (column + half_block_8x8) < m_mi_cols;
+    bool has_rows = (row + half_block_8x8) < tile_context.frame_context.rows();
+    bool has_cols = (column + half_block_8x8) < tile_context.frame_context.columns();
     auto partition = TRY_READ(TreeParser::parse_partition(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter, has_rows, has_cols, subsize, num_8x8, m_above_partition_context, m_left_partition_context, row, column, m_frame_is_intra));
 
     auto child_subsize = subsize_lookup[partition][subsize];
     if (child_subsize < Block_8x8 || partition == PartitionNone) {
-        TRY(decode_block(row, column, child_subsize));
+        TRY(decode_block(tile_context, row, column, child_subsize));
     } else if (partition == PartitionHorizontal) {
-        TRY(decode_block(row, column, child_subsize));
+        TRY(decode_block(tile_context, row, column, child_subsize));
         if (has_rows)
-            TRY(decode_block(row + half_block_8x8, column, child_subsize));
+            TRY(decode_block(tile_context, row + half_block_8x8, column, child_subsize));
     } else if (partition == PartitionVertical) {
-        TRY(decode_block(row, column, child_subsize));
+        TRY(decode_block(tile_context, row, column, child_subsize));
         if (has_cols)
-            TRY(decode_block(row, column + half_block_8x8, child_subsize));
+            TRY(decode_block(tile_context, row, column + half_block_8x8, child_subsize));
     } else {
-        TRY(decode_partition(row, column, child_subsize));
-        TRY(decode_partition(row, column + half_block_8x8, child_subsize));
-        TRY(decode_partition(row + half_block_8x8, column, child_subsize));
-        TRY(decode_partition(row + half_block_8x8, column + half_block_8x8, child_subsize));
+        TRY(decode_partition(tile_context, row, column, child_subsize));
+        TRY(decode_partition(tile_context, row, column + half_block_8x8, child_subsize));
+        TRY(decode_partition(tile_context, row + half_block_8x8, column, child_subsize));
+        TRY(decode_partition(tile_context, row + half_block_8x8, column + half_block_8x8, child_subsize));
     }
     if (subsize == Block_8x8 || partition != PartitionSplit) {
         auto above_context = 15 >> b_width_log2_lookup[child_subsize];
@@ -923,65 +921,62 @@ DecoderErrorOr<void> Parser::decode_partition(u32 row, u32 column, BlockSubsize 
     return {};
 }
 
-size_t Parser::get_image_index(u32 row, u32 column) const
+size_t Parser::get_image_index(FrameContext const& frame_context, u32 row, u32 column) const
 {
-    VERIFY(row < m_mi_rows && column < m_mi_cols);
-    return row * m_mi_cols + column;
+    VERIFY(row < frame_context.rows() && column < frame_context.columns());
+    return row * frame_context.columns() + column;
 }
 
-DecoderErrorOr<void> Parser::decode_block(u32 row, u32 column, BlockSubsize subsize)
+DecoderErrorOr<void> Parser::decode_block(TileContext& tile_context, u32 row, u32 column, BlockSubsize subsize)
 {
-    m_mi_size = subsize;
-    auto above_context = row > 0 ? m_frame_block_contexts.at(row - 1, column) : FrameBlockContext();
-    auto left_context = column > m_mi_col_start ? m_frame_block_contexts.at(row, column - 1) : FrameBlockContext();
-    TRY(mode_info(row, column, above_context, left_context));
-    auto had_residual_tokens = TRY(residual(row, column, above_context.is_available, left_context.is_available));
+    auto above_context = row > 0 ? tile_context.frame_block_contexts().at(row - 1, column) : FrameBlockContext();
+    auto left_context = column > tile_context.columns_start ? tile_context.frame_block_contexts().at(row, column - 1) : FrameBlockContext();
+    auto block_context = BlockContext(tile_context, row, column, subsize);
+
+    TRY(mode_info(block_context, above_context, left_context));
+    auto had_residual_tokens = TRY(residual(block_context, above_context.is_available, left_context.is_available));
     if (m_is_inter && subsize >= Block_8x8 && !had_residual_tokens)
         m_skip = true;
 
-    // Spec doesn't specify whether it might index outside the frame here, but it seems that it can. Ensure that we don't
-    // write out of bounds. This check seems consistent with libvpx.
-    // See here:
-    // https://github.com/webmproject/libvpx/blob/705bf9de8c96cfe5301451f1d7e5c90a41c64e5f/vp9/decoder/vp9_decodeframe.c#L917
-    auto maximum_block_y = min<u32>(num_8x8_blocks_high_lookup[subsize], m_mi_rows - row);
-    auto maximum_block_x = min<u32>(num_8x8_blocks_wide_lookup[subsize], m_mi_cols - column);
-
-    for (size_t y = 0; y < maximum_block_y; y++) {
-        for (size_t x = 0; x < maximum_block_x; x++)
-            m_frame_block_contexts.at(row + y, column + x) = FrameBlockContext { true, m_skip, m_tx_size, m_y_mode, m_block_sub_modes, m_interp_filter, m_ref_frame, m_block_mvs, m_segment_id };
+    for (size_t y = 0; y < block_context.contexts_view.height(); y++) {
+        for (size_t x = 0; x < block_context.contexts_view.width(); x++) {
+            auto sub_block_context = FrameBlockContext { true, m_skip, m_tx_size, m_y_mode, m_block_sub_modes, m_interp_filter, m_ref_frame, m_block_mvs, m_segment_id };
+            block_context.contexts_view.at(y, x) = sub_block_context;
+            VERIFY(block_context.frame_block_contexts().at(row + y, column + x).tx_size == sub_block_context.tx_size);
+        }
     }
     return {};
 }
 
-DecoderErrorOr<void> Parser::mode_info(u32 row, u32 column, FrameBlockContext above_context, FrameBlockContext left_context)
+DecoderErrorOr<void> Parser::mode_info(BlockContext& block_context, FrameBlockContext above_context, FrameBlockContext left_context)
 {
     if (m_frame_is_intra)
-        TRY(intra_frame_mode_info(above_context, left_context));
+        TRY(intra_frame_mode_info(block_context, above_context, left_context));
     else
-        TRY(inter_frame_mode_info(row, column, above_context, left_context));
+        TRY(inter_frame_mode_info(block_context, above_context, left_context));
     return {};
 }
 
-DecoderErrorOr<void> Parser::intra_frame_mode_info(FrameBlockContext above_context, FrameBlockContext left_context)
+DecoderErrorOr<void> Parser::intra_frame_mode_info(BlockContext& block_context, FrameBlockContext above_context, FrameBlockContext left_context)
 {
     TRY(intra_segment_id());
     TRY(read_skip(above_context, left_context));
-    TRY(read_tx_size(above_context, left_context, true));
+    TRY(read_tx_size(block_context, above_context, left_context, true));
     m_ref_frame[0] = IntraFrame;
     m_ref_frame[1] = None;
     m_is_inter = false;
     // FIXME: This if statement is also present in parse_default_intra_mode. The selection of parameters for
     //        the probability table lookup should be inlined here.
-    if (m_mi_size >= Block_8x8) {
-        m_y_mode = TRY_READ(TreeParser::parse_default_intra_mode(*m_bit_stream, *m_probability_tables, m_mi_size, above_context, left_context, m_block_sub_modes, 0, 0));
+    if (block_context.size >= Block_8x8) {
+        m_y_mode = TRY_READ(TreeParser::parse_default_intra_mode(*m_bit_stream, *m_probability_tables, block_context.size, above_context, left_context, m_block_sub_modes, 0, 0));
         for (auto& block_sub_mode : m_block_sub_modes)
             block_sub_mode = m_y_mode;
     } else {
-        m_num_4x4_w = num_4x4_blocks_wide_lookup[m_mi_size];
-        m_num_4x4_h = num_4x4_blocks_high_lookup[m_mi_size];
+        m_num_4x4_w = num_4x4_blocks_wide_lookup[block_context.size];
+        m_num_4x4_h = num_4x4_blocks_high_lookup[block_context.size];
         for (auto idy = 0; idy < 2; idy += m_num_4x4_h) {
             for (auto idx = 0; idx < 2; idx += m_num_4x4_w) {
-                auto sub_mode = TRY_READ(TreeParser::parse_default_intra_mode(*m_bit_stream, *m_probability_tables, m_mi_size, above_context, left_context, m_block_sub_modes, idx, idy));
+                auto sub_mode = TRY_READ(TreeParser::parse_default_intra_mode(*m_bit_stream, *m_probability_tables, block_context.size, above_context, left_context, m_block_sub_modes, idx, idy));
 
                 for (auto y = 0; y < m_num_4x4_h; y++) {
                     for (auto x = 0; x < m_num_4x4_w; x++) {
@@ -1021,37 +1016,38 @@ bool Parser::seg_feature_active(u8 feature)
     return m_segmentation_enabled && m_feature_enabled[m_segment_id][feature];
 }
 
-DecoderErrorOr<void> Parser::read_tx_size(FrameBlockContext above_context, FrameBlockContext left_context, bool allow_select)
+DecoderErrorOr<void> Parser::read_tx_size(BlockContext const& block_context, FrameBlockContext above_context, FrameBlockContext left_context, bool allow_select)
 {
-    m_max_tx_size = max_txsize_lookup[m_mi_size];
-    if (allow_select && m_tx_mode == TXModeSelect && m_mi_size >= Block_8x8)
+    // FIXME: This probably doesn't need to set max_tx_size, and can also return the TXSize it reads.
+    m_max_tx_size = max_txsize_lookup[block_context.size];
+    if (allow_select && m_tx_mode == TXModeSelect && block_context.size >= Block_8x8)
         m_tx_size = TRY_READ(TreeParser::parse_tx_size(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter, m_max_tx_size, above_context, left_context));
     else
         m_tx_size = min(m_max_tx_size, tx_mode_to_biggest_tx_size[m_tx_mode]);
     return {};
 }
 
-DecoderErrorOr<void> Parser::inter_frame_mode_info(u32 row, u32 column, FrameBlockContext above_context, FrameBlockContext left_context)
+DecoderErrorOr<void> Parser::inter_frame_mode_info(BlockContext& block_context, FrameBlockContext above_context, FrameBlockContext left_context)
 {
-    TRY(inter_segment_id(row, column));
+    TRY(inter_segment_id(block_context));
     TRY(read_skip(above_context, left_context));
     TRY(read_is_inter(above_context, left_context));
-    TRY(read_tx_size(above_context, left_context, !m_skip || !m_is_inter));
+    TRY(read_tx_size(block_context, above_context, left_context, !m_skip || !m_is_inter));
     if (m_is_inter) {
-        TRY(inter_block_mode_info(row, column, above_context, left_context));
+        TRY(inter_block_mode_info(block_context, above_context, left_context));
     } else {
-        TRY(intra_block_mode_info());
+        TRY(intra_block_mode_info(block_context));
     }
     return {};
 }
 
-DecoderErrorOr<void> Parser::inter_segment_id(u32 row, u32 column)
+DecoderErrorOr<void> Parser::inter_segment_id(BlockContext const& block_context)
 {
     if (!m_segmentation_enabled) {
         m_segment_id = 0;
         return {};
     }
-    auto predicted_segment_id = get_segment_id(row, column);
+    auto predicted_segment_id = get_segment_id(block_context);
     if (!m_segmentation_update_map) {
         m_segment_id = predicted_segment_id;
         return {};
@@ -1061,37 +1057,37 @@ DecoderErrorOr<void> Parser::inter_segment_id(u32 row, u32 column)
         return {};
     }
 
-    auto seg_id_predicted = TRY_READ(TreeParser::parse_segment_id_predicted(*m_bit_stream, m_segmentation_pred_prob, m_left_seg_pred_context[row], m_above_seg_pred_context[column]));
+    auto seg_id_predicted = TRY_READ(TreeParser::parse_segment_id_predicted(*m_bit_stream, m_segmentation_pred_prob, m_left_seg_pred_context[block_context.row], m_above_seg_pred_context[block_context.column]));
     if (seg_id_predicted)
         m_segment_id = predicted_segment_id;
     else
         m_segment_id = TRY_READ(TreeParser::parse_segment_id(*m_bit_stream, m_segmentation_tree_probs));
 
-    for (size_t i = 0; i < num_8x8_blocks_wide_lookup[m_mi_size]; i++) {
-        auto index = column + i;
+    for (size_t i = 0; i < num_8x8_blocks_wide_lookup[block_context.size]; i++) {
+        auto index = block_context.column + i;
         // (7.4.1) AboveSegPredContext[ i ] only needs to be set to 0 for i = 0..MiCols-1.
         if (index < m_above_seg_pred_context.size())
             m_above_seg_pred_context[index] = seg_id_predicted;
     }
-    for (size_t i = 0; i < num_8x8_blocks_high_lookup[m_mi_size]; i++) {
-        auto index = row + i;
+    for (size_t i = 0; i < num_8x8_blocks_high_lookup[block_context.size]; i++) {
+        auto index = block_context.row + i;
         // (7.4.1) LeftSegPredContext[ i ] only needs to be set to 0 for i = 0..MiRows-1.
         if (index < m_above_seg_pred_context.size())
-            m_left_seg_pred_context[row + i] = seg_id_predicted;
+            m_left_seg_pred_context[block_context.row + i] = seg_id_predicted;
     }
     return {};
 }
 
-u8 Parser::get_segment_id(u32 row, u32 column)
+u8 Parser::get_segment_id(BlockContext const& block_context)
 {
-    auto bw = num_8x8_blocks_wide_lookup[m_mi_size];
-    auto bh = num_8x8_blocks_high_lookup[m_mi_size];
-    auto xmis = min(m_mi_cols - column, (u32)bw);
-    auto ymis = min(m_mi_rows - row, (u32)bh);
+    auto bw = num_8x8_blocks_wide_lookup[block_context.size];
+    auto bh = num_8x8_blocks_high_lookup[block_context.size];
+    auto xmis = min(block_context.frame_context.columns() - block_context.column, (u32)bw);
+    auto ymis = min(block_context.frame_context.rows() - block_context.row, (u32)bh);
     u8 segment = 7;
     for (size_t y = 0; y < ymis; y++) {
         for (size_t x = 0; x < xmis; x++) {
-            segment = min(segment, m_previous_block_contexts.index_at(row + y, column + x));
+            segment = min(segment, m_previous_block_contexts.index_at(block_context.row + y, block_context.column + x));
         }
     }
     return segment;
@@ -1106,17 +1102,17 @@ DecoderErrorOr<void> Parser::read_is_inter(FrameBlockContext above_context, Fram
     return {};
 }
 
-DecoderErrorOr<void> Parser::intra_block_mode_info()
+DecoderErrorOr<void> Parser::intra_block_mode_info(BlockContext& block_context)
 {
     m_ref_frame[0] = IntraFrame;
     m_ref_frame[1] = None;
-    if (m_mi_size >= Block_8x8) {
-        m_y_mode = TRY_READ(TreeParser::parse_intra_mode(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter, m_mi_size));
+    if (block_context.size >= Block_8x8) {
+        m_y_mode = TRY_READ(TreeParser::parse_intra_mode(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter, block_context.size));
         for (auto& block_sub_mode : m_block_sub_modes)
             block_sub_mode = m_y_mode;
     } else {
-        m_num_4x4_w = num_4x4_blocks_wide_lookup[m_mi_size];
-        m_num_4x4_h = num_4x4_blocks_high_lookup[m_mi_size];
+        m_num_4x4_w = num_4x4_blocks_wide_lookup[block_context.size];
+        m_num_4x4_h = num_4x4_blocks_high_lookup[block_context.size];
         PredictionMode sub_intra_mode;
         for (auto idy = 0; idy < 2; idy += m_num_4x4_h) {
             for (auto idx = 0; idx < 2; idx += m_num_4x4_w) {
@@ -1133,34 +1129,34 @@ DecoderErrorOr<void> Parser::intra_block_mode_info()
     return {};
 }
 
-DecoderErrorOr<void> Parser::inter_block_mode_info(u32 row, u32 column, FrameBlockContext above_context, FrameBlockContext left_context)
+DecoderErrorOr<void> Parser::inter_block_mode_info(BlockContext& block_context, FrameBlockContext above_context, FrameBlockContext left_context)
 {
     TRY(read_ref_frames(above_context, left_context));
     for (auto j = 0; j < 2; j++) {
         if (m_ref_frame[j] > IntraFrame) {
-            find_mv_refs(row, column, m_ref_frame[j], -1);
-            find_best_ref_mvs(row, column, j);
+            find_mv_refs(block_context, m_ref_frame[j], -1);
+            find_best_ref_mvs(block_context, j);
         }
     }
     auto is_compound = m_ref_frame[1] > IntraFrame;
     if (seg_feature_active(SEG_LVL_SKIP)) {
         m_y_mode = PredictionMode::ZeroMv;
-    } else if (m_mi_size >= Block_8x8) {
+    } else if (block_context.size >= Block_8x8) {
         m_y_mode = TRY_READ(TreeParser::parse_inter_mode(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter, m_mode_context[m_ref_frame[0]]));
     }
     if (m_interpolation_filter == Switchable)
         m_interp_filter = TRY_READ(TreeParser::parse_interpolation_filter(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter, above_context, left_context));
     else
         m_interp_filter = m_interpolation_filter;
-    if (m_mi_size < Block_8x8) {
-        m_num_4x4_w = num_4x4_blocks_wide_lookup[m_mi_size];
-        m_num_4x4_h = num_4x4_blocks_high_lookup[m_mi_size];
+    if (block_context.size < Block_8x8) {
+        m_num_4x4_w = num_4x4_blocks_wide_lookup[block_context.size];
+        m_num_4x4_h = num_4x4_blocks_high_lookup[block_context.size];
         for (auto idy = 0; idy < 2; idy += m_num_4x4_h) {
             for (auto idx = 0; idx < 2; idx += m_num_4x4_w) {
                 m_y_mode = TRY_READ(TreeParser::parse_inter_mode(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter, m_mode_context[m_ref_frame[0]]));
                 if (m_y_mode == PredictionMode::NearestMv || m_y_mode == PredictionMode::NearMv) {
                     for (auto j = 0; j < 1 + is_compound; j++)
-                        append_sub8x8_mvs(row, column, idy * 2 + idx, j);
+                        append_sub8x8_mvs(block_context, idy * 2 + idx, j);
                 }
                 TRY(assign_mv(is_compound));
                 for (auto y = 0; y < m_num_4x4_h; y++) {
@@ -1277,46 +1273,47 @@ DecoderErrorOr<i32> Parser::read_mv_component(u8 component)
     return (mv_sign ? -1 : 1) * static_cast<i32>(magnitude);
 }
 
-Gfx::Point<size_t> Parser::get_decoded_point_for_plane(u32 column, u32 row, u8 plane)
+Gfx::Point<size_t> Parser::get_decoded_point_for_plane(FrameContext const& frame_context, u32 column, u32 row, u8 plane)
 {
+    (void)frame_context;
     if (plane == 0)
         return { column * 8, row * 8 };
     return { (column * 8) >> m_subsampling_x, (row * 8) >> m_subsampling_y };
 }
 
-Gfx::Size<size_t> Parser::get_decoded_size_for_plane(u8 plane)
+Gfx::Size<size_t> Parser::get_decoded_size_for_plane(FrameContext const& frame_context, u8 plane)
 {
-    auto point = get_decoded_point_for_plane(m_mi_cols, m_mi_rows, plane);
+    auto point = get_decoded_point_for_plane(frame_context, frame_context.columns(), frame_context.rows(), plane);
     return { point.x(), point.y() };
 }
 
-DecoderErrorOr<bool> Parser::residual(u32 row, u32 column, bool has_block_above, bool has_block_left)
+DecoderErrorOr<bool> Parser::residual(BlockContext& block_context, bool has_block_above, bool has_block_left)
 {
     bool had_residual_tokens = false;
-    auto block_size = m_mi_size < Block_8x8 ? Block_8x8 : static_cast<BlockSubsize>(m_mi_size);
+    auto block_size = block_context.size < Block_8x8 ? Block_8x8 : block_context.size;
     for (u8 plane = 0; plane < 3; plane++) {
-        auto tx_size = (plane > 0) ? get_uv_tx_size() : m_tx_size;
+        auto tx_size = (plane > 0) ? get_uv_tx_size(block_context.size) : m_tx_size;
         auto step = 1 << tx_size;
         auto plane_size = get_plane_block_size(block_size, plane);
         auto num_4x4_w = num_4x4_blocks_wide_lookup[plane_size];
         auto num_4x4_h = num_4x4_blocks_high_lookup[plane_size];
         auto sub_x = (plane > 0) ? m_subsampling_x : 0;
         auto sub_y = (plane > 0) ? m_subsampling_y : 0;
-        auto base_x = (column * 8) >> sub_x;
-        auto base_y = (row * 8) >> sub_y;
+        auto base_x = (block_context.column * 8) >> sub_x;
+        auto base_y = (block_context.row * 8) >> sub_y;
         if (m_is_inter) {
-            if (m_mi_size < Block_8x8) {
+            if (block_context.size < Block_8x8) {
                 for (auto y = 0; y < num_4x4_h; y++) {
                     for (auto x = 0; x < num_4x4_w; x++) {
-                        TRY(m_decoder.predict_inter(plane, row, column, base_x + (4 * x), base_y + (4 * y), 4, 4, (y * num_4x4_w) + x));
+                        TRY(m_decoder.predict_inter(plane, block_context, base_x + (4 * x), base_y + (4 * y), 4, 4, (y * num_4x4_w) + x));
                     }
                 }
             } else {
-                TRY(m_decoder.predict_inter(plane, row, column, base_x, base_y, num_4x4_w * 4, num_4x4_h * 4, 0));
+                TRY(m_decoder.predict_inter(plane, block_context, base_x, base_y, num_4x4_w * 4, num_4x4_h * 4, 0));
             }
         }
-        auto max_x = (m_mi_cols * 8) >> sub_x;
-        auto max_y = (m_mi_rows * 8) >> sub_y;
+        auto max_x = (block_context.frame_context.columns() * 8) >> sub_x;
+        auto max_y = (block_context.frame_context.rows() * 8) >> sub_y;
         auto block_index = 0;
         for (auto y = 0; y < num_4x4_h; y += step) {
             for (auto x = 0; x < num_4x4_w; x += step) {
@@ -1325,11 +1322,11 @@ DecoderErrorOr<bool> Parser::residual(u32 row, u32 column, bool has_block_above,
                 auto non_zero = false;
                 if (start_x < max_x && start_y < max_y) {
                     if (!m_is_inter)
-                        TRY(m_decoder.predict_intra(plane, start_x, start_y, has_block_left || x > 0, has_block_above || y > 0, (x + step) < num_4x4_w, tx_size, block_index));
+                        TRY(m_decoder.predict_intra(plane, block_context, start_x, start_y, has_block_left || x > 0, has_block_above || y > 0, (x + step) < num_4x4_w, tx_size, block_index));
                     if (!m_skip) {
-                        non_zero = TRY(tokens(plane, start_x, start_y, tx_size, block_index));
+                        non_zero = TRY(tokens(block_context, plane, start_x, start_y, tx_size, block_index));
                         had_residual_tokens = had_residual_tokens || non_zero;
-                        TRY(m_decoder.reconstruct(plane, start_x, start_y, tx_size));
+                        TRY(m_decoder.reconstruct(plane, block_context, start_x, start_y, tx_size));
                     }
                 }
 
@@ -1352,11 +1349,11 @@ DecoderErrorOr<bool> Parser::residual(u32 row, u32 column, bool has_block_above,
     return had_residual_tokens;
 }
 
-TXSize Parser::get_uv_tx_size()
+TXSize Parser::get_uv_tx_size(BlockSubsize size)
 {
-    if (m_mi_size < Block_8x8)
+    if (size < Block_8x8)
         return TX_4x4;
-    return min(m_tx_size, max_txsize_lookup[get_plane_block_size(m_mi_size, 1)]);
+    return min(m_tx_size, max_txsize_lookup[get_plane_block_size(size, 1)]);
 }
 
 BlockSubsize Parser::get_plane_block_size(u32 subsize, u8 plane)
@@ -1366,16 +1363,16 @@ BlockSubsize Parser::get_plane_block_size(u32 subsize, u8 plane)
     return ss_size_lookup[subsize][sub_x][sub_y];
 }
 
-DecoderErrorOr<bool> Parser::tokens(size_t plane, u32 start_x, u32 start_y, TXSize tx_size, u32 block_index)
+DecoderErrorOr<bool> Parser::tokens(BlockContext& block_context, size_t plane, u32 start_x, u32 start_y, TXSize tx_size, u32 block_index)
 {
     u32 segment_eob = 16 << (tx_size << 1);
-    auto const* scan = get_scan(plane, tx_size, block_index);
+    auto const* scan = get_scan(block_context, plane, tx_size, block_index);
     auto check_eob = true;
     u32 c = 0;
     for (; c < segment_eob; c++) {
         auto pos = scan[c];
         auto band = (tx_size == TX_4x4) ? coefband_4x4[c] : coefband_8x8plus[c];
-        auto tokens_context = TreeParser::get_tokens_context(m_subsampling_x, m_subsampling_y, m_mi_rows, m_mi_cols, m_above_nonzero_context, m_left_nonzero_context, m_token_cache, tx_size, m_tx_type, plane, start_x, start_y, pos, m_is_inter, band, c);
+        auto tokens_context = TreeParser::get_tokens_context(m_subsampling_x, m_subsampling_y, block_context.frame_context.rows(), block_context.frame_context.columns(), m_above_nonzero_context, m_left_nonzero_context, m_token_cache, tx_size, m_tx_type, plane, start_x, start_y, pos, m_is_inter, band, c);
         if (check_eob) {
             auto more_coefs = TRY_READ(TreeParser::parse_more_coefficients(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter, tokens_context));
             if (!more_coefs)
@@ -1398,7 +1395,7 @@ DecoderErrorOr<bool> Parser::tokens(size_t plane, u32 start_x, u32 start_y, TXSi
     return c > 0;
 }
 
-u32 const* Parser::get_scan(size_t plane, TXSize tx_size, u32 block_index)
+u32 const* Parser::get_scan(BlockContext const& block_context, size_t plane, TXSize tx_size, u32 block_index)
 {
     if (plane > 0 || tx_size == TX_32x32) {
         m_tx_type = DCT_DCT;
@@ -1406,7 +1403,7 @@ u32 const* Parser::get_scan(size_t plane, TXSize tx_size, u32 block_index)
         if (m_lossless || m_is_inter)
             m_tx_type = DCT_DCT;
         else
-            m_tx_type = mode_to_txfm_map[to_underlying(m_mi_size < Block_8x8 ? m_block_sub_modes[block_index] : m_y_mode)];
+            m_tx_type = mode_to_txfm_map[to_underlying(block_context.size < Block_8x8 ? m_block_sub_modes[block_index] : m_y_mode)];
     } else {
         m_tx_type = mode_to_txfm_map[to_underlying(m_y_mode)];
     }
@@ -1452,15 +1449,15 @@ DecoderErrorOr<i32> Parser::read_coef(Token token)
     return coef;
 }
 
-bool Parser::is_inside(i32 row, i32 column)
+static bool is_inside(TileContext const& tile_context, MotionVector vector)
 {
-    if (row < 0)
+    if (vector.row() < 0)
         return false;
-    if (column < 0)
+    if (vector.column() < 0)
         return false;
-    u32 row_positive = row;
-    u32 column_positive = column;
-    return row_positive < m_mi_rows && column_positive >= m_mi_col_start && column_positive < m_mi_col_end;
+    u32 row_positive = vector.row();
+    u32 column_positive = vector.column();
+    return row_positive < tile_context.frame_context.rows() && column_positive >= tile_context.columns_start && column_positive < tile_context.columns_end;
 }
 
 void Parser::add_mv_ref_list(u8 ref_list)
@@ -1474,23 +1471,23 @@ void Parser::add_mv_ref_list(u8 ref_list)
     m_ref_mv_count++;
 }
 
-void Parser::get_block_mv(u32 candidate_row, u32 candidate_column, u8 ref_list, bool use_prev)
+void Parser::get_block_mv(BlockContext const& block_context, MotionVector candidate_vector, u8 ref_list, bool use_prev)
 {
     if (use_prev) {
-        auto const& prev_context = m_previous_block_contexts.at(candidate_row, candidate_column);
+        auto const& prev_context = m_previous_block_contexts.at(candidate_vector.row(), candidate_vector.column());
         m_candidate_mv[ref_list] = prev_context.primary_motion_vector_pair[ref_list];
         m_candidate_frame[ref_list] = prev_context.ref_frames[ref_list];
     } else {
-        auto const& current_context = m_frame_block_contexts.at(candidate_row, candidate_column);
+        auto const& current_context = block_context.frame_block_contexts().at(candidate_vector.row(), candidate_vector.column());
         m_candidate_mv[ref_list] = current_context.primary_motion_vector_pair()[ref_list];
         m_candidate_frame[ref_list] = current_context.ref_frames[ref_list];
     }
 }
 
-void Parser::if_same_ref_frame_add_mv(u32 candidate_row, u32 candidate_column, ReferenceFrameType ref_frame, bool use_prev)
+void Parser::if_same_ref_frame_add_mv(BlockContext const& block_context, MotionVector candidate_vector, ReferenceFrameType ref_frame, bool use_prev)
 {
     for (auto ref_list = 0u; ref_list < 2; ref_list++) {
-        get_block_mv(candidate_row, candidate_column, ref_list, use_prev);
+        get_block_mv(block_context, candidate_vector, ref_list, use_prev);
         if (m_candidate_frame[ref_list] == ref_frame) {
             add_mv_ref_list(ref_list);
             return;
@@ -1505,10 +1502,10 @@ void Parser::scale_mv(u8 ref_list, ReferenceFrameType ref_frame)
         m_candidate_mv[ref_list] *= -1;
 }
 
-void Parser::if_diff_ref_frame_add_mv(u32 candidate_row, u32 candidate_column, ReferenceFrameType ref_frame, bool use_prev)
+void Parser::if_diff_ref_frame_add_mv(BlockContext const& block_context, MotionVector candidate_vector, ReferenceFrameType ref_frame, bool use_prev)
 {
     for (auto ref_list = 0u; ref_list < 2; ref_list++)
-        get_block_mv(candidate_row, candidate_column, ref_list, use_prev);
+        get_block_mv(block_context, candidate_vector, ref_list, use_prev);
     auto mvs_are_same = m_candidate_mv[0] == m_candidate_mv[1];
     if (m_candidate_frame[0] > ReferenceFrameType::IntraFrame && m_candidate_frame[0] != ref_frame) {
         scale_mv(0, ref_frame);
@@ -1520,16 +1517,16 @@ void Parser::if_diff_ref_frame_add_mv(u32 candidate_row, u32 candidate_column, R
     }
 }
 
-MotionVector Parser::clamp_mv(u32 row, u32 column, MotionVector vector, i32 border)
+MotionVector Parser::clamp_mv(BlockContext const& block_context, MotionVector vector, i32 border)
 {
-    i32 blocks_high = num_8x8_blocks_high_lookup[m_mi_size];
+    i32 blocks_high = num_8x8_blocks_high_lookup[block_context.size];
     // Casts must be done here to prevent subtraction underflow from wrapping the values.
-    i32 mb_to_top_edge = -8 * (static_cast<i32>(row) * MI_SIZE);
-    i32 mb_to_bottom_edge = 8 * ((static_cast<i32>(m_mi_rows) - blocks_high - static_cast<i32>(row)) * MI_SIZE);
+    i32 mb_to_top_edge = -8 * (static_cast<i32>(block_context.row) * MI_SIZE);
+    i32 mb_to_bottom_edge = 8 * ((static_cast<i32>(block_context.frame_context.rows()) - blocks_high - static_cast<i32>(block_context.row)) * MI_SIZE);
 
-    i32 blocks_wide = num_8x8_blocks_wide_lookup[m_mi_size];
-    i32 mb_to_left_edge = -8 * (static_cast<i32>(column) * MI_SIZE);
-    i32 mb_to_right_edge = 8 * ((static_cast<i32>(m_mi_cols) - blocks_wide - static_cast<i32>(column)) * MI_SIZE);
+    i32 blocks_wide = num_8x8_blocks_wide_lookup[block_context.size];
+    i32 mb_to_left_edge = -8 * (static_cast<i32>(block_context.column) * MI_SIZE);
+    i32 mb_to_right_edge = 8 * ((static_cast<i32>(block_context.frame_context.columns()) - blocks_wide - static_cast<i32>(block_context.column)) * MI_SIZE);
 
     return {
         clip_3(mb_to_top_edge - border, mb_to_bottom_edge + border, vector.row()),
@@ -1537,14 +1534,15 @@ MotionVector Parser::clamp_mv(u32 row, u32 column, MotionVector vector, i32 bord
     };
 }
 
-void Parser::clamp_mv_ref(u32 row, u32 column, u8 i)
+void Parser::clamp_mv_ref(BlockContext const& block_context, u8 i)
 {
+    // FIXME: This seems silly and should probably just be written inline in the one place it's used.
     MotionVector& vector = m_ref_list_mv[i];
-    vector = clamp_mv(row, column, vector, MV_BORDER);
+    vector = clamp_mv(block_context, vector, MV_BORDER);
 }
 
 // 6.5.1 Find MV refs syntax
-void Parser::find_mv_refs(u32 row, u32 column, ReferenceFrameType reference_frame, i32 block)
+void Parser::find_mv_refs(BlockContext& block_context, ReferenceFrameType reference_frame, i32 block)
 {
     m_ref_mv_count = 0;
     bool different_ref_found = false;
@@ -1553,15 +1551,15 @@ void Parser::find_mv_refs(u32 row, u32 column, ReferenceFrameType reference_fram
     m_ref_list_mv[0] = {};
     m_ref_list_mv[1] = {};
 
-    MotionVector base_coordinates = MotionVector(row, column);
+    MotionVector base_coordinates = MotionVector(block_context.row, block_context.column);
 
     for (auto i = 0u; i < 2; i++) {
-        auto offset_vector = mv_ref_blocks[m_mi_size][i];
+        auto offset_vector = mv_ref_blocks[block_context.size][i];
         auto candidate = base_coordinates + offset_vector;
 
-        if (is_inside(candidate.row(), candidate.column())) {
+        if (is_inside(block_context.tile_context, candidate)) {
             different_ref_found = true;
-            auto context = m_frame_block_contexts.at(candidate.row(), candidate.column());
+            auto context = block_context.frame_block_contexts().at(candidate.row(), candidate.column());
             context_counter += mode_2_counter[to_underlying(context.y_mode)];
 
             for (auto ref_list = 0u; ref_list < 2; ref_list++) {
@@ -1584,28 +1582,28 @@ void Parser::find_mv_refs(u32 row, u32 column, ReferenceFrameType reference_fram
     }
 
     for (auto i = 2u; i < MVREF_NEIGHBOURS; i++) {
-        MotionVector candidate = base_coordinates + mv_ref_blocks[m_mi_size][i];
-        if (is_inside(candidate.row(), candidate.column())) {
+        MotionVector candidate = base_coordinates + mv_ref_blocks[block_context.size][i];
+        if (is_inside(block_context.tile_context, candidate)) {
             different_ref_found = true;
-            if_same_ref_frame_add_mv(candidate.row(), candidate.column(), reference_frame, false);
+            if_same_ref_frame_add_mv(block_context, candidate, reference_frame, false);
         }
     }
     if (m_use_prev_frame_mvs)
-        if_same_ref_frame_add_mv(row, column, reference_frame, true);
+        if_same_ref_frame_add_mv(block_context, base_coordinates, reference_frame, true);
 
     if (different_ref_found) {
         for (auto i = 0u; i < MVREF_NEIGHBOURS; i++) {
-            MotionVector candidate = base_coordinates + mv_ref_blocks[m_mi_size][i];
-            if (is_inside(candidate.row(), candidate.column()))
-                if_diff_ref_frame_add_mv(candidate.row(), candidate.column(), reference_frame, false);
+            MotionVector candidate = base_coordinates + mv_ref_blocks[block_context.size][i];
+            if (is_inside(block_context.tile_context, candidate))
+                if_diff_ref_frame_add_mv(block_context, candidate, reference_frame, false);
         }
     }
     if (m_use_prev_frame_mvs)
-        if_diff_ref_frame_add_mv(row, column, reference_frame, true);
+        if_diff_ref_frame_add_mv(block_context, base_coordinates, reference_frame, true);
 
     m_mode_context[reference_frame] = counter_to_context[context_counter];
     for (auto i = 0u; i < MAX_MV_REF_CANDIDATES; i++)
-        clamp_mv_ref(row, column, i);
+        clamp_mv_ref(block_context, i);
 }
 
 bool Parser::use_mv_hp(MotionVector const& vector)
@@ -1613,7 +1611,7 @@ bool Parser::use_mv_hp(MotionVector const& vector)
     return (abs(vector.row()) >> 3) < COMPANDED_MVREF_THRESH && (abs(vector.column()) >> 3) < COMPANDED_MVREF_THRESH;
 }
 
-void Parser::find_best_ref_mvs(u32 row, u32 column, u8 ref_list)
+void Parser::find_best_ref_mvs(BlockContext& block_context, u8 ref_list)
 {
     for (auto i = 0u; i < MAX_MV_REF_CANDIDATES; i++) {
         auto delta = m_ref_list_mv[i];
@@ -1626,7 +1624,7 @@ void Parser::find_best_ref_mvs(u32 row, u32 column, u8 ref_list)
                 delta_column += delta_column > 0 ? -1 : 1;
         }
         delta = { delta_row, delta_column };
-        m_ref_list_mv[i] = clamp_mv(row, column, delta, (BORDERINPIXELS - INTERP_EXTEND) << 3);
+        m_ref_list_mv[i] = clamp_mv(block_context, delta, (BORDERINPIXELS - INTERP_EXTEND) << 3);
     }
 
     m_nearest_mv[ref_list] = m_ref_list_mv[0];
@@ -1634,10 +1632,10 @@ void Parser::find_best_ref_mvs(u32 row, u32 column, u8 ref_list)
     m_best_mv[ref_list] = m_ref_list_mv[0];
 }
 
-void Parser::append_sub8x8_mvs(u32 row, u32 column, i32 block, u8 ref_list)
+void Parser::append_sub8x8_mvs(BlockContext& block_context, i32 block, u8 ref_list)
 {
     MotionVector sub_8x8_mvs[2];
-    find_mv_refs(row, column, m_ref_frame[ref_list], block);
+    find_mv_refs(block_context, m_ref_frame[ref_list], block);
     auto destination_index = 0;
     if (block == 0) {
         for (auto i = 0u; i < 2; i++)

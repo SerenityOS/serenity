@@ -12,9 +12,8 @@
 #include <LibGfx/Size.h>
 #include <LibVideo/Color/CodingIndependentCodePoints.h>
 
-#include <AK/Format.h>
-
 #include "Enums.h"
+#include "LookupTables.h"
 #include "MotionVector.h"
 
 namespace Video::VP9 {
@@ -153,7 +152,7 @@ public:
     }
 
     template<typename OtherT, typename Function>
-    void copy_to(Vector2D<OtherT>& other, Function function)
+    void copy_to(Vector2D<OtherT>& other, Function function) const
     {
         VERIFY(width() <= other.width());
         VERIFY(height() <= other.height());
@@ -163,7 +162,7 @@ public:
         }
     }
 
-    void copy_to(Vector2D<T>& other)
+    void copy_to(Vector2D<T>& other) const
     {
         VERIFY(width() <= other.width());
         VERIFY(height() <= other.height());
@@ -236,6 +235,102 @@ struct PersistentBlockContext {
     ReferenceFramePair ref_frames { ReferenceFrameType::None, ReferenceFrameType::None };
     MotionVectorPair primary_motion_vector_pair {};
     u8 segment_id { 0 };
+};
+
+struct FrameContext {
+public:
+    u8 profile { 0 };
+
+    bool shows_existing_frame() const { return m_show_existing_frame; }
+    u8 existing_frame_index() const { return m_existing_frame_index; }
+    void set_existing_frame_to_show(u8 index)
+    {
+        m_show_existing_frame = true;
+        m_existing_frame_index = index;
+    }
+
+    Gfx::Size<u32> size() const { return m_size; }
+    ErrorOr<void> set_size(Gfx::Size<u32> size)
+    {
+        m_size = size;
+
+        // From spec, compute_image_size( )
+        m_rows = (size.height() + 7u) >> 3u;
+        m_columns = (size.width() + 7u) >> 3u;
+        return m_block_contexts.try_resize(m_rows, m_columns);
+    }
+    u32 rows() const { return m_rows; }
+    u32 columns() const { return m_columns; }
+    u32 superblock_rows() const { return (rows() + 7u) >> 3u; }
+    u32 superblock_columns() const { return (columns() + 7u) >> 3u; }
+
+    Vector2D<FrameBlockContext> const& block_contexts() const { return m_block_contexts; }
+
+    Gfx::Size<u32> render_size { 0, 0 };
+
+    u16 header_size_in_bytes { 0 };
+
+private:
+    friend struct TileContext;
+
+    bool m_show_existing_frame { false };
+    u8 m_existing_frame_index { 0 };
+
+    Gfx::Size<u32> m_size { 0, 0 };
+    u32 m_rows { 0 };
+    u32 m_columns { 0 };
+    // FIXME: From spec: NOTE – We are using a 2D array to store the SubModes for clarity. It is possible to reduce memory
+    //        consumption by only storing one intra mode for each 8x8 horizontal and vertical position, i.e. to use two 1D
+    //        arrays instead.
+    //        I think should also apply to other fields that are only accessed relative to the current block. Worth looking
+    //        into how much of this context needs to be stored for the whole frame vs a row or column from the current tile.
+    Vector2D<FrameBlockContext> m_block_contexts;
+};
+
+struct TileContext {
+public:
+    TileContext(FrameContext& frame_context, u32 rows_start, u32 rows_end, u32 columns_start, u32 columns_end)
+        : frame_context(frame_context)
+        , rows_start(rows_start)
+        , rows_end(rows_end)
+        , columns_start(columns_start)
+        , columns_end(columns_end)
+        , block_contexts_view(frame_context.m_block_contexts.view(rows_start, columns_start, rows_end - rows_start, columns_end - columns_start))
+    {
+    }
+
+    Vector2D<FrameBlockContext> const& frame_block_contexts() const { return frame_context.block_contexts(); }
+
+    FrameContext const& frame_context;
+    u32 rows_start { 0 };
+    u32 rows_end { 0 };
+    u32 columns_start { 0 };
+    u32 columns_end { 0 };
+    Vector2DView<FrameBlockContext> block_contexts_view;
+};
+
+struct BlockContext {
+    BlockContext(TileContext& tile_context, u32 row, u32 column, BlockSubsize size)
+        : frame_context(tile_context.frame_context)
+        , tile_context(tile_context)
+        , row(row)
+        , column(column)
+        , size(size)
+        , contexts_view(tile_context.block_contexts_view.view(row - tile_context.rows_start, column - tile_context.columns_start,
+              min<u32>(num_8x8_blocks_high_lookup[size], tile_context.frame_context.rows() - row),
+              min<u32>(num_8x8_blocks_wide_lookup[size], tile_context.frame_context.columns() - column)))
+    {
+    }
+
+    Vector2D<FrameBlockContext> const& frame_block_contexts() const { return frame_context.block_contexts(); }
+
+    FrameContext const& frame_context;
+    TileContext const& tile_context;
+    u32 row { 0 };
+    u32 column { 0 };
+    BlockSubsize size;
+
+    Vector2DView<FrameBlockContext> contexts_view;
 };
 
 }

@@ -42,9 +42,9 @@ private:
     static constexpr size_t maximum_transform_size = 32ULL * 32ULL;
 
     DecoderErrorOr<void> decode_frame(ReadonlyBytes);
-    DecoderErrorOr<void> create_video_frame();
+    DecoderErrorOr<void> create_video_frame(FrameContext const&);
 
-    DecoderErrorOr<void> allocate_buffers();
+    DecoderErrorOr<void> allocate_buffers(FrameContext const&);
     Vector<Intermediate>& get_temp_buffer(u8 plane);
     Vector<u16>& get_output_buffer(u8 plane);
 
@@ -58,18 +58,18 @@ private:
 
     /* (8.5) Prediction Processes */
     // (8.5.1) Intra prediction process
-    DecoderErrorOr<void> predict_intra(u8 plane, u32 x, u32 y, bool have_left, bool have_above, bool not_on_right, TXSize tx_size, u32 block_index);
+    DecoderErrorOr<void> predict_intra(u8 plane, BlockContext const& block_context, u32 x, u32 y, bool have_left, bool have_above, bool not_on_right, TXSize tx_size, u32 block_index);
 
     // (8.5.1) Inter prediction process
-    DecoderErrorOr<void> predict_inter(u8 plane, u32 block_row, u32 block_column, u32 x, u32 y, u32 width, u32 height, u32 block_index);
+    DecoderErrorOr<void> predict_inter(u8 plane, BlockContext const& block_context, u32 x, u32 y, u32 width, u32 height, u32 block_index);
     // (8.5.2.1) Motion vector selection process
-    MotionVector select_motion_vector(u8 plane, u8 ref_list, u32 block_index);
+    MotionVector select_motion_vector(u8 plane, BlockContext const&, u8 ref_list, u32 block_index);
     // (8.5.2.2) Motion vector clamping process
-    MotionVector clamp_motion_vector(u8 plane, u32 block_row, u32 block_column, MotionVector vector);
+    MotionVector clamp_motion_vector(u8 plane, BlockContext const&, u32 block_row, u32 block_column, MotionVector vector);
     // (8.5.2.3) Motion vector scaling process
     DecoderErrorOr<MotionVector> scale_motion_vector(u8 plane, u8 ref_list, u32 x, u32 y, MotionVector vector);
     // From (8.5.1) Inter prediction process, steps 2-5
-    DecoderErrorOr<void> predict_inter_block(u8 plane, u8 ref_list, u32 block_row, u32 block_column, u32 x, u32 y, u32 width, u32 height, u32 block_index, Span<u16> block_buffer);
+    DecoderErrorOr<void> predict_inter_block(u8 plane, BlockContext const&, u8 ref_list, u32 block_row, u32 block_column, u32 x, u32 y, u32 width, u32 height, u32 block_index, Span<u16> block_buffer);
 
     /* (8.6) Reconstruction and Dequantization */
 
@@ -84,7 +84,7 @@ private:
     u16 get_ac_quant(u8 plane);
 
     // (8.6.2) Reconstruct process
-    DecoderErrorOr<void> reconstruct(u8 plane, u32 transform_block_x, u32 transform_block_y, TXSize transform_block_size);
+    DecoderErrorOr<void> reconstruct(u8 plane, BlockContext const&, u32 transform_block_x, u32 transform_block_y, TXSize transform_block_size);
 
     // (8.7) Inverse transform process
     DecoderErrorOr<void> inverse_transform_2d(Span<Intermediate> dequantized, u8 log2_of_block_size);
@@ -140,7 +140,7 @@ private:
     inline DecoderErrorOr<void> inverse_asymmetric_discrete_sine_transform(Span<Intermediate> data, u8 log2_of_block_size);
 
     /* (8.10) Reference Frame Update Process */
-    DecoderErrorOr<void> update_reference_frames();
+    DecoderErrorOr<void> update_reference_frames(FrameContext const&);
 
     inline CodingIndependentCodePoints get_cicp_color_space();
 

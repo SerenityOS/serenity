@@ -34,7 +34,7 @@ class Parser {
 public:
     explicit Parser(Decoder&);
     ~Parser();
-    DecoderErrorOr<void> parse_frame(ReadonlyBytes);
+    DecoderErrorOr<FrameContext> parse_frame(ReadonlyBytes);
 
 private:
     /* Annex B: Superframes are a method of storing multiple coded frames into a single chunk
@@ -49,30 +49,29 @@ private:
     void clear_context(Vector<T>& context, size_t size);
     template<typename T>
     void clear_context(Vector<Vector<T>>& context, size_t outer_size, size_t inner_size);
-    DecoderErrorOr<void> allocate_tile_data();
 
     /* (6.1) Frame Syntax */
     bool trailing_bits();
     DecoderErrorOr<void> refresh_probs();
 
     /* (6.2) Uncompressed Header Syntax */
-    DecoderErrorOr<void> uncompressed_header();
+    DecoderErrorOr<FrameContext> uncompressed_header();
     DecoderErrorOr<void> frame_sync_code();
-    DecoderErrorOr<void> color_config();
+    DecoderErrorOr<void> color_config(FrameContext const&);
     DecoderErrorOr<void> set_frame_size_and_compute_image_size();
-    DecoderErrorOr<Gfx::Size<u32>> frame_size();
-    DecoderErrorOr<Gfx::Size<u32>> frame_size_with_refs();
-    DecoderErrorOr<Gfx::Size<u32>> render_size(Gfx::Size<u32> frame_size);
-    void compute_image_size();
+    DecoderErrorOr<Gfx::Size<u32>> parse_frame_size();
+    DecoderErrorOr<Gfx::Size<u32>> parse_frame_size_with_refs();
+    DecoderErrorOr<Gfx::Size<u32>> parse_render_size(Gfx::Size<u32> frame_size);
+    DecoderErrorOr<void> compute_image_size(FrameContext&);
     DecoderErrorOr<void> read_interpolation_filter();
     DecoderErrorOr<void> loop_filter_params();
     DecoderErrorOr<void> quantization_params();
     DecoderErrorOr<i8> read_delta_q();
     DecoderErrorOr<void> segmentation_params();
     DecoderErrorOr<u8> read_prob();
-    DecoderErrorOr<void> tile_info();
-    u16 calc_min_log2_tile_cols();
-    u16 calc_max_log2_tile_cols();
+    DecoderErrorOr<void> tile_info(FrameContext&);
+    u16 calc_min_log2_tile_cols(u32 superblock_columns);
+    u16 calc_max_log2_tile_cols(u32 superblock_columns);
     void setup_past_independence();
 
     /* (6.3) Compressed Header Syntax */
@@ -97,58 +96,53 @@ private:
     void setup_compound_reference_mode();
 
     /* (6.4) Decode Tiles Syntax */
-    DecoderErrorOr<void> decode_tiles();
-    void clear_above_context();
+    DecoderErrorOr<void> decode_tiles(FrameContext&);
+    void clear_above_context(FrameContext&);
     u32 get_tile_offset(u32 tile_num, u32 mis, u32 tile_size_log2);
-    DecoderErrorOr<void> decode_tile();
-    void clear_left_context();
-    DecoderErrorOr<void> decode_partition(u32 row, u32 column, BlockSubsize subsize);
-    DecoderErrorOr<void> decode_block(u32 row, u32 column, BlockSubsize subsize);
-    DecoderErrorOr<void> mode_info(u32 row, u32 column, FrameBlockContext above_context, FrameBlockContext left_context);
-    DecoderErrorOr<void> intra_frame_mode_info(FrameBlockContext above_context, FrameBlockContext left_context);
+    DecoderErrorOr<void> decode_tile(TileContext&);
+    void clear_left_context(TileContext&);
+    DecoderErrorOr<void> decode_partition(TileContext&, u32 row, u32 column, BlockSubsize subsize);
+    DecoderErrorOr<void> decode_block(TileContext&, u32 row, u32 column, BlockSubsize subsize);
+    DecoderErrorOr<void> mode_info(BlockContext&, FrameBlockContext above_context, FrameBlockContext left_context);
+    DecoderErrorOr<void> intra_frame_mode_info(BlockContext&, FrameBlockContext above_context, FrameBlockContext left_context);
     DecoderErrorOr<void> intra_segment_id();
     DecoderErrorOr<void> read_skip(FrameBlockContext above_context, FrameBlockContext left_context);
     bool seg_feature_active(u8 feature);
-    DecoderErrorOr<void> read_tx_size(FrameBlockContext above_context, FrameBlockContext left_context, bool allow_select);
-    DecoderErrorOr<void> inter_frame_mode_info(u32 row, u32 column, FrameBlockContext above_context, FrameBlockContext left_context);
-    DecoderErrorOr<void> inter_segment_id(u32 row, u32 column);
-    u8 get_segment_id(u32 row, u32 column);
+    DecoderErrorOr<void> read_tx_size(BlockContext const&, FrameBlockContext above_context, FrameBlockContext left_context, bool allow_select);
+    DecoderErrorOr<void> inter_frame_mode_info(BlockContext&, FrameBlockContext above_context, FrameBlockContext left_context);
+    DecoderErrorOr<void> inter_segment_id(BlockContext const&);
+    u8 get_segment_id(BlockContext const&);
     DecoderErrorOr<void> read_is_inter(FrameBlockContext above_context, FrameBlockContext left_context);
-    DecoderErrorOr<void> intra_block_mode_info();
-    DecoderErrorOr<void> inter_block_mode_info(u32 row, u32 column, FrameBlockContext above_context, FrameBlockContext left_context);
+    DecoderErrorOr<void> intra_block_mode_info(BlockContext&);
+    DecoderErrorOr<void> inter_block_mode_info(BlockContext&, FrameBlockContext above_context, FrameBlockContext left_context);
     DecoderErrorOr<void> read_ref_frames(FrameBlockContext above_context, FrameBlockContext left_context);
     DecoderErrorOr<void> assign_mv(bool is_compound);
     DecoderErrorOr<void> read_mv(u8 ref);
     DecoderErrorOr<i32> read_mv_component(u8 component);
-    DecoderErrorOr<bool> residual(u32 row, u32 column, bool has_block_above, bool has_block_left);
-    TXSize get_uv_tx_size();
+    DecoderErrorOr<bool> residual(BlockContext&, bool has_block_above, bool has_block_left);
+    TXSize get_uv_tx_size(BlockSubsize size);
     BlockSubsize get_plane_block_size(u32 subsize, u8 plane);
-    DecoderErrorOr<bool> tokens(size_t plane, u32 x, u32 y, TXSize tx_size, u32 block_index);
-    u32 const* get_scan(size_t plane, TXSize tx_size, u32 block_index);
+    DecoderErrorOr<bool> tokens(BlockContext&, size_t plane, u32 x, u32 y, TXSize tx_size, u32 block_index);
+    u32 const* get_scan(BlockContext const&, size_t plane, TXSize tx_size, u32 block_index);
     DecoderErrorOr<i32> read_coef(Token token);
 
     /* (6.5) Motion Vector Prediction */
-    void find_mv_refs(u32 row, u32 column, ReferenceFrameType, i32 block);
-    void find_best_ref_mvs(u32 row, u32 column, u8 ref_list);
+    void find_mv_refs(BlockContext&, ReferenceFrameType, i32 block);
+    void find_best_ref_mvs(BlockContext&, u8 ref_list);
     bool use_mv_hp(MotionVector const& delta_mv);
-    void append_sub8x8_mvs(u32 row, u32 column, i32 block, u8 ref_list);
-    bool is_inside(i32 row, i32 column);
-    void clamp_mv_ref(u32 row, u32 column, u8 i);
-    MotionVector clamp_mv(u32 row, u32 column, MotionVector mvec, i32 border);
-    size_t get_image_index(u32 row, u32 column) const;
-    void get_block_mv(u32 candidate_row, u32 candidate_column, u8 ref_list, bool use_prev);
-    void if_same_ref_frame_add_mv(u32 candidate_row, u32 candidate_column, ReferenceFrameType ref_frame, bool use_prev);
-    void if_diff_ref_frame_add_mv(u32 candidate_row, u32 candidate_column, ReferenceFrameType ref_frame, bool use_prev);
+    void append_sub8x8_mvs(BlockContext&, i32 block, u8 ref_list);
+    void clamp_mv_ref(BlockContext const&, u8 i);
+    MotionVector clamp_mv(BlockContext const&, MotionVector vector, i32 border);
+    size_t get_image_index(FrameContext const&, u32 row, u32 column) const;
+    void get_block_mv(BlockContext const&, MotionVector candidate_vector, u8 ref_list, bool use_prev);
+    void if_same_ref_frame_add_mv(BlockContext const&, MotionVector candidate_vector, ReferenceFrameType ref_frame, bool use_prev);
+    void if_diff_ref_frame_add_mv(BlockContext const&, MotionVector candidate_vector, ReferenceFrameType ref_frame, bool use_prev);
     void scale_mv(u8 ref_list, ReferenceFrameType ref_frame);
     void add_mv_ref_list(u8 ref_list);
 
-    Gfx::Point<size_t> get_decoded_point_for_plane(u32 row, u32 column, u8 plane);
-    Gfx::Size<size_t> get_decoded_size_for_plane(u8 plane);
+    Gfx::Point<size_t> get_decoded_point_for_plane(FrameContext const&, u32 row, u32 column, u8 plane);
+    Gfx::Size<size_t> get_decoded_size_for_plane(FrameContext const&, u8 plane);
 
-    u8 m_profile { 0 };
-    bool m_show_existing_frame { false };
-    u8 m_frame_to_show_map_index { 0 };
-    u16 m_header_size_in_bytes { 0 };
     u8 m_refresh_frame_flags { 0 };
     u8 m_loop_filter_level { 0 };
     u8 m_loop_filter_sharpness { 0 };
@@ -156,7 +150,6 @@ private:
     FrameType m_frame_type { FrameType::KeyFrame };
     FrameType m_last_frame_type { FrameType::KeyFrame };
     bool m_show_frame { false };
-    bool m_prev_show_frame { false };
     bool m_error_resilient_mode { false };
     bool m_frame_is_intra { false };
     u8 m_reset_frame_context { 0 };
@@ -171,13 +164,9 @@ private:
     ColorRange m_color_range;
     bool m_subsampling_x { false };
     bool m_subsampling_y { false };
-    Gfx::Size<u32> m_frame_size { 0, 0 };
-    Gfx::Size<u32> m_render_size { 0, 0 };
-    bool m_render_and_frame_size_different { false };
-    u32 m_mi_cols { 0 };
-    u32 m_mi_rows { 0 };
-    u32 m_sb64_cols { 0 };
-    u32 m_sb64_rows { 0 };
+    bool m_is_first_compute_image_size_invoke { true };
+    Gfx::Size<u32> m_previous_frame_size { 0, 0 };
+    bool m_previous_show_frame { false };
     InterpolationFilter m_interpolation_filter { 0xf };
     u8 m_base_q_idx { 0 };
     i8 m_delta_q_y_dc { 0 };
@@ -205,12 +194,6 @@ private:
     Vector<u8> m_above_partition_context;
     Vector<u8> m_left_partition_context;
 
-    // FIXME: Move (some?) mi_.. to an array of struct since they are usually used together.
-    u32 m_mi_row_start { 0 };
-    u32 m_mi_row_end { 0 };
-    u32 m_mi_col_start { 0 };
-    u32 m_mi_col_end { 0 };
-    BlockSubsize m_mi_size { 0 };
     u8 m_segment_id { 0 };
     // FIXME: Should this be an enum?
     // skip equal to 0 indicates that there may be some transform coefficients to read for this block; skip equal to 1
@@ -219,7 +202,6 @@ private:
     // skip may be set to 0 even if transform blocks contain immediate end of block markers.
     bool m_skip { false };
     TXSize m_max_tx_size { TX_4x4 };
-    BlockSubsize m_block_subsize { BlockSubsize::Block_4x4 };
     TXSize m_tx_size { TX_4x4 };
     ReferenceFramePair m_ref_frame;
     bool m_is_inter { false };
@@ -252,13 +234,6 @@ private:
     ReferenceFramePair m_comp_var_ref;
     // FIXME: Use Array<MotionVectorPair, 4> instead.
     Array<Array<MotionVector, 4>, 2> m_block_mvs;
-
-    // FIXME: From spec: NOTE – We are using a 2D array to store the SubModes for clarity. It is possible to reduce memory
-    //        consumption by only storing one intra mode for each 8x8 horizontal and vertical position, i.e. to use two 1D
-    //        arrays instead.
-    //        I think should also apply to other fields that are only accessed relative to the current block. Worth looking
-    //        into how much of this context needs to be stored for the whole frame vs a row or column from the current tile.
-    Vector2D<FrameBlockContext> m_frame_block_contexts;
 
     MotionVectorPair m_candidate_mv;
     ReferenceFramePair m_candidate_frame;

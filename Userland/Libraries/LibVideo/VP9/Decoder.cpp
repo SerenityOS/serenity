@@ -55,7 +55,7 @@ DecoderErrorOr<void> Decoder::decode_frame(ReadonlyBytes frame_data)
 {
     // 1. The syntax elements for the coded frame are extracted as specified in sections 6 and 7. The syntax
     // tables include function calls indicating when the block decode processes should be triggered.
-    TRY(m_parser->parse_frame(frame_data));
+    auto frame_context = TRY(m_parser->parse_frame(frame_data));
 
     // 2. If loop_filter_level is not equal to 0, the loop filter process as specified in section 8.8 is invoked once the
     // coded frame has been decoded.
@@ -70,17 +70,17 @@ DecoderErrorOr<void> Decoder::decode_frame(ReadonlyBytes frame_data)
 
     // 4. The output process as specified in section 8.9 is invoked.
     if (m_parser->m_show_frame)
-        TRY(create_video_frame());
+        TRY(create_video_frame(frame_context));
 
     // 5. The reference frame update process as specified in section 8.10 is invoked.
-    TRY(update_reference_frames());
+    TRY(update_reference_frames(frame_context));
     return {};
 }
 
-DecoderErrorOr<void> Decoder::create_video_frame()
+DecoderErrorOr<void> Decoder::create_video_frame(FrameContext const& frame_context)
 {
-    u32 decoded_y_width = m_parser->m_mi_cols * 8;
-    Gfx::Size<u32> output_y_size = m_parser->m_frame_size;
+    u32 decoded_y_width = frame_context.columns() * 8;
+    Gfx::Size<u32> output_y_size = frame_context.size();
     auto decoded_uv_width = decoded_y_width >> m_parser->m_subsampling_x;
     Gfx::Size<u32> output_uv_size = {
         output_y_size.width() >> m_parser->m_subsampling_x,
@@ -125,10 +125,10 @@ inline size_t buffer_size(Gfx::Size<size_t> size)
     return buffer_size(size.width(), size.height());
 }
 
-DecoderErrorOr<void> Decoder::allocate_buffers()
+DecoderErrorOr<void> Decoder::allocate_buffers(FrameContext const& frame_context)
 {
     for (size_t plane = 0; plane < 3; plane++) {
-        auto size = m_parser->get_decoded_size_for_plane(plane);
+        auto size = m_parser->get_decoded_size_for_plane(frame_context, plane);
 
         auto& output_buffer = get_output_buffer(plane);
         output_buffer.clear_with_capacity();
@@ -329,7 +329,7 @@ u8 Decoder::adapt_prob(u8 prob, u8 counts[2])
     return merge_prob(prob, counts[0], counts[1], COUNT_SAT, MAX_UPDATE_FACTOR);
 }
 
-DecoderErrorOr<void> Decoder::predict_intra(u8 plane, u32 x, u32 y, bool have_left, bool have_above, bool not_on_right, TXSize tx_size, u32 block_index)
+DecoderErrorOr<void> Decoder::predict_intra(u8 plane, BlockContext const& block_context, u32 x, u32 y, bool have_left, bool have_above, bool not_on_right, TXSize tx_size, u32 block_index)
 {
     auto& frame_buffer = get_output_buffer(plane);
 
@@ -346,7 +346,7 @@ DecoderErrorOr<void> Decoder::predict_intra(u8 plane, u32 x, u32 y, bool have_le
     PredictionMode mode;
     if (plane > 0)
         mode = m_parser->m_uv_mode;
-    else if (m_parser->m_mi_size >= Block_8x8)
+    else if (block_context.size >= Block_8x8)
         mode = m_parser->m_y_mode;
     else
         mode = m_parser->m_block_sub_modes[block_index];
@@ -363,8 +363,8 @@ DecoderErrorOr<void> Decoder::predict_intra(u8 plane, u32 x, u32 y, bool have_le
     //  − maxY is set equal to ((MiRows * 8) >> subsampling_y) - 1.
     auto subsampling_x = plane > 0 ? m_parser->m_subsampling_x : false;
     auto subsampling_y = plane > 0 ? m_parser->m_subsampling_y : false;
-    auto max_x = ((m_parser->m_mi_cols * 8u) >> subsampling_x) - 1u;
-    auto max_y = ((m_parser->m_mi_rows * 8u) >> subsampling_y) - 1u;
+    auto max_x = ((block_context.frame_context.columns() * 8u) >> subsampling_x) - 1u;
+    auto max_y = ((block_context.frame_context.rows() * 8u) >> subsampling_y) - 1u;
 
     auto const frame_buffer_at = [&](u32 row, u32 column) -> u16& {
         const auto frame_stride = max_x + 1u;
@@ -665,7 +665,7 @@ DecoderErrorOr<void> Decoder::predict_intra(u8 plane, u32 x, u32 y, bool have_le
     return {};
 }
 
-MotionVector Decoder::select_motion_vector(u8 plane, u8 ref_list, u32 block_index)
+MotionVector Decoder::select_motion_vector(u8 plane, BlockContext const& block_context, u8 ref_list, u32 block_index)
 {
     // The inputs to this process are:
     // − a variable plane specifying which plane is being predicted,
@@ -697,7 +697,7 @@ MotionVector Decoder::select_motion_vector(u8 plane, u8 ref_list, u32 block_inde
     // The motion vector array mv is derived as follows:
     // − If plane is equal to 0, or MiSize is greater than or equal to BLOCK_8X8, mv is set equal to
     // BlockMvs[ refList ][ blockIdx ].
-    if (plane == 0 || m_parser->m_mi_size >= Block_8x8)
+    if (plane == 0 || block_context.size >= Block_8x8)
         return m_parser->m_block_mvs[ref_list][block_index];
     // − Otherwise, if subsampling_x is equal to 0 and subsampling_y is equal to 0, mv is set equal to
     // BlockMvs[ refList ][ blockIdx ].
@@ -721,7 +721,7 @@ MotionVector Decoder::select_motion_vector(u8 plane, u8 ref_list, u32 block_inde
         + m_parser->m_block_mvs[ref_list][2] + m_parser->m_block_mvs[ref_list][3]);
 }
 
-MotionVector Decoder::clamp_motion_vector(u8 plane, u32 block_row, u32 block_column, MotionVector vector)
+MotionVector Decoder::clamp_motion_vector(u8 plane, BlockContext const& block_context, u32 block_row, u32 block_column, MotionVector vector)
 {
     // FIXME: This function is named very similarly to Parser::clamp_mv. Rename one or the other?
 
@@ -734,14 +734,14 @@ MotionVector Decoder::clamp_motion_vector(u8 plane, u32 block_row, u32 block_col
     bool subsampling_y = plane > 0 ? m_parser->m_subsampling_y : false;
 
     // The output array clampedMv is specified by the following steps:
-    i32 blocks_high = num_8x8_blocks_high_lookup[m_parser->m_mi_size];
+    i32 blocks_high = num_8x8_blocks_high_lookup[block_context.size];
     // Casts must be done here to prevent subtraction underflow from wrapping the values.
     i32 mb_to_top_edge = -(static_cast<i32>(block_row * MI_SIZE) * 16) >> subsampling_y;
-    i32 mb_to_bottom_edge = (((static_cast<i32>(m_parser->m_mi_rows) - blocks_high - static_cast<i32>(block_row)) * MI_SIZE) * 16) >> subsampling_y;
+    i32 mb_to_bottom_edge = (((static_cast<i32>(block_context.frame_context.rows()) - blocks_high - static_cast<i32>(block_row)) * MI_SIZE) * 16) >> subsampling_y;
 
-    i32 blocks_wide = num_8x8_blocks_wide_lookup[m_parser->m_mi_size];
+    i32 blocks_wide = num_8x8_blocks_wide_lookup[block_context.size];
     i32 mb_to_left_edge = -(static_cast<i32>(block_column * MI_SIZE) * 16) >> subsampling_x;
-    i32 mb_to_right_edge = (((static_cast<i32>(m_parser->m_mi_cols) - blocks_wide - static_cast<i32>(block_column)) * MI_SIZE) * 16) >> subsampling_x;
+    i32 mb_to_right_edge = (((static_cast<i32>(block_context.frame_context.columns()) - blocks_wide - static_cast<i32>(block_column)) * MI_SIZE) * 16) >> subsampling_x;
 
     i32 subpel_left = (INTERP_EXTEND + ((blocks_wide * MI_SIZE) >> subsampling_x)) << SUBPEL_BITS;
     i32 subpel_right = subpel_left - SUBPEL_SHIFTS;
@@ -753,16 +753,16 @@ MotionVector Decoder::clamp_motion_vector(u8 plane, u32 block_row, u32 block_col
     };
 }
 
-DecoderErrorOr<void> Decoder::predict_inter_block(u8 plane, u8 ref_list, u32 block_row, u32 block_column, u32 x, u32 y, u32 width, u32 height, u32 block_index, Span<u16> block_buffer)
+DecoderErrorOr<void> Decoder::predict_inter_block(u8 plane, BlockContext const& block_context, u8 ref_list, u32 block_row, u32 block_column, u32 x, u32 y, u32 width, u32 height, u32 block_index, Span<u16> block_buffer)
 {
     VERIFY(width <= maximum_block_dimensions && height <= maximum_block_dimensions);
     // 2. The motion vector selection process in section 8.5.2.1 is invoked with plane, refList, blockIdx as inputs
     // and the output being the motion vector mv.
-    auto motion_vector = select_motion_vector(plane, ref_list, block_index);
+    auto motion_vector = select_motion_vector(plane, block_context, ref_list, block_index);
 
     // 3. The motion vector clamping process in section 8.5.2.2 is invoked with plane, mv as inputs and the output
     // being the clamped motion vector clampedMv
-    auto clamped_vector = clamp_motion_vector(plane, block_row, block_column, motion_vector);
+    auto clamped_vector = clamp_motion_vector(plane, block_context, block_row, block_column, motion_vector);
 
     // 4. The motion vector scaling process in section 8.5.2.3 is invoked with plane, refList, x, y, clampedMv as
     // inputs and the output being the initial location startX, startY, and the step sizes stepX, stepY.
@@ -791,10 +791,10 @@ DecoderErrorOr<void> Decoder::predict_inter_block(u8 plane, u8 ref_list, u32 blo
     if (m_parser->m_frame_store[reference_frame_index][plane].is_empty())
         return DecoderError::format(DecoderErrorCategory::Corrupted, "Attempted to use reference frame {} that has not been saved", reference_frame_index);
     auto ref_frame_size = m_parser->m_ref_frame_size[reference_frame_index];
-    auto double_frame_size = m_parser->m_frame_size.scaled_by(2);
+    auto double_frame_size = block_context.frame_context.size().scaled_by(2);
     if (double_frame_size.width() < ref_frame_size.width() || double_frame_size.height() < ref_frame_size.height())
         return DecoderError::format(DecoderErrorCategory::Corrupted, "Inter frame size is too small relative to reference frame {}", reference_frame_index);
-    if (!ref_frame_size.scaled_by(16).contains(m_parser->m_frame_size))
+    if (!ref_frame_size.scaled_by(16).contains(block_context.frame_context.size()))
         return DecoderError::format(DecoderErrorCategory::Corrupted, "Inter frame size is too large relative to reference frame {}", reference_frame_index);
 
     // FIXME: Convert all the operations in this function to vector operations supported by
@@ -804,8 +804,8 @@ DecoderErrorOr<void> Decoder::predict_inter_block(u8 plane, u8 ref_list, u32 blo
     // A variable yScale is set equal to (RefFrameHeight[ refIdx ] << REF_SCALE_SHIFT) / FrameHeight.
     // (xScale and yScale specify the size of the reference frame relative to the current frame in units where 16 is
     // equivalent to the reference frame having the same size.)
-    i32 x_scale = (ref_frame_size.width() << REF_SCALE_SHIFT) / m_parser->m_frame_size.width();
-    i32 y_scale = (ref_frame_size.height() << REF_SCALE_SHIFT) / m_parser->m_frame_size.height();
+    i32 x_scale = (ref_frame_size.width() << REF_SCALE_SHIFT) / block_context.frame_context.size().width();
+    i32 y_scale = (ref_frame_size.height() << REF_SCALE_SHIFT) / block_context.frame_context.size().height();
 
     // The variable baseX is set equal to (x * xScale) >> REF_SCALE_SHIFT.
     // The variable baseY is set equal to (y * yScale) >> REF_SCALE_SHIFT.
@@ -923,7 +923,7 @@ DecoderErrorOr<void> Decoder::predict_inter_block(u8 plane, u8 ref_list, u32 blo
     return {};
 }
 
-DecoderErrorOr<void> Decoder::predict_inter(u8 plane, u32 block_row, u32 block_column, u32 x, u32 y, u32 width, u32 height, u32 block_index)
+DecoderErrorOr<void> Decoder::predict_inter(u8 plane, BlockContext const& block_context, u32 x, u32 y, u32 width, u32 height, u32 block_index)
 {
     // The inter prediction process is invoked for inter coded blocks. When MiSize is smaller than BLOCK_8X8, the
     // prediction is done with a granularity of 4x4 samples, otherwise the whole plane is predicted at the same time.
@@ -942,7 +942,7 @@ DecoderErrorOr<void> Decoder::predict_inter(u8 plane, u32 block_row, u32 block_c
     // 2. through 5.
     Array<u16, maximum_block_size> predicted_buffer;
     auto predicted_span = predicted_buffer.span().trim(width * height);
-    TRY(predict_inter_block(plane, 0, block_row, block_column, x, y, width, height, block_index, predicted_span));
+    TRY(predict_inter_block(plane, block_context, 0, block_context.row, block_context.column, x, y, width, height, block_index, predicted_span));
     auto predicted_buffer_at = [&](Span<u16> buffer, u32 row, u32 column) -> u16& {
         return buffer[row * width + column];
     };
@@ -952,8 +952,8 @@ DecoderErrorOr<void> Decoder::predict_inter(u8 plane, u32 block_row, u32 block_c
     // The inter predicted samples are then derived as follows:
     auto& frame_buffer = get_output_buffer(plane);
     VERIFY(!frame_buffer.is_empty());
-    auto frame_width = (m_parser->m_mi_cols * 8u) >> (plane > 0 ? m_parser->m_subsampling_x : false);
-    auto frame_height = (m_parser->m_mi_rows * 8u) >> (plane > 0 ? m_parser->m_subsampling_y : false);
+    auto frame_width = (block_context.frame_context.columns() * 8u) >> (plane > 0 ? m_parser->m_subsampling_x : false);
+    auto frame_height = (block_context.frame_context.rows() * 8u) >> (plane > 0 ? m_parser->m_subsampling_y : false);
     auto frame_buffer_at = [&](u32 row, u32 column) -> u16& {
         return frame_buffer[row * frame_width + column];
     };
@@ -976,7 +976,7 @@ DecoderErrorOr<void> Decoder::predict_inter(u8 plane, u32 block_row, u32 block_c
     // for i = 0..h-1 and j = 0..w-1.
     Array<u16, maximum_block_size> second_predicted_buffer;
     auto second_predicted_span = second_predicted_buffer.span().trim(width * height);
-    TRY(predict_inter_block(plane, 1, block_row, block_column, x, y, width, height, block_index, second_predicted_span));
+    TRY(predict_inter_block(plane, block_context, 1, block_context.row, block_context.column, x, y, width, height, block_index, second_predicted_span));
 
     for (auto i = 0u; i < height_in_frame_buffer; i++) {
         for (auto j = 0u; j < width_in_frame_buffer; j++)
@@ -1055,7 +1055,7 @@ u16 Decoder::get_ac_quant(u8 plane)
     return ac_q(static_cast<u8>(get_qindex() + offset));
 }
 
-DecoderErrorOr<void> Decoder::reconstruct(u8 plane, u32 transform_block_x, u32 transform_block_y, TXSize transform_block_size)
+DecoderErrorOr<void> Decoder::reconstruct(u8 plane, BlockContext const& block_context, u32 transform_block_x, u32 transform_block_y, TXSize transform_block_size)
 {
     // 8.6.2 Reconstruct process
 
@@ -1096,8 +1096,8 @@ DecoderErrorOr<void> Decoder::reconstruct(u8 plane, u32 transform_block_x, u32 t
     auto& current_buffer = get_output_buffer(plane);
     auto subsampling_x = (plane > 0 ? m_parser->m_subsampling_x : 0);
     auto subsampling_y = (plane > 0 ? m_parser->m_subsampling_y : 0);
-    auto frame_width = (m_parser->m_mi_cols * 8) >> subsampling_x;
-    auto frame_height = (m_parser->m_mi_rows * 8) >> subsampling_y;
+    auto frame_width = (block_context.frame_context.columns() * 8) >> subsampling_x;
+    auto frame_height = (block_context.frame_context.rows() * 8) >> subsampling_y;
     auto width_in_frame_buffer = min(block_size, frame_width - transform_block_x);
     auto height_in_frame_buffer = min(block_size, frame_height - transform_block_y);
 
@@ -1742,7 +1742,7 @@ DecoderErrorOr<void> Decoder::inverse_transform_2d(Span<Intermediate> dequantize
     return {};
 }
 
-DecoderErrorOr<void> Decoder::update_reference_frames()
+DecoderErrorOr<void> Decoder::update_reference_frames(FrameContext const& frame_context)
 {
     // This process is invoked as the final step in decoding a frame.
     // The inputs to this process are the samples in the current frame CurrFrame[ plane ][ x ][ y ].
@@ -1756,7 +1756,7 @@ DecoderErrorOr<void> Decoder::update_reference_frames()
         if ((refresh_flags & 1) != 0) {
             // − RefFrameWidth[ i ] is set equal to FrameWidth.
             // − RefFrameHeight[ i ] is set equal to FrameHeight.
-            m_parser->m_ref_frame_size[i] = m_parser->m_frame_size;
+            m_parser->m_ref_frame_size[i] = frame_context.size();
             // − RefSubsamplingX[ i ] is set equal to subsampling_x.
             m_parser->m_ref_subsampling_x[i] = m_parser->m_subsampling_x;
             // − RefSubsamplingY[ i ] is set equal to subsampling_y.
@@ -1773,9 +1773,9 @@ DecoderErrorOr<void> Decoder::update_reference_frames()
             // FIXME: Frame width is not equal to the buffer's stride. If we store the stride of the buffer with the reference
             //        frame, we can just copy the framebuffer data instead. Alternatively, we should crop the output framebuffer.
             for (auto plane = 0u; plane < 3; plane++) {
-                auto width = m_parser->m_frame_size.width();
-                auto height = m_parser->m_frame_size.height();
-                auto stride = m_parser->m_mi_cols * 8;
+                auto width = frame_context.size().width();
+                auto height = frame_context.size().height();
+                auto stride = frame_context.columns() * 8;
 
                 if (plane > 0) {
                     width = (width + m_parser->m_subsampling_x) >> m_parser->m_subsampling_x;
@@ -1800,8 +1800,8 @@ DecoderErrorOr<void> Decoder::update_reference_frames()
     }
 
     // 2. If show_existing_frame is equal to 0, the following applies:
-    if (!m_parser->m_show_existing_frame) {
-        DECODER_TRY_ALLOC(m_parser->m_previous_block_contexts.try_resize_to_match_other_vector2d(m_parser->m_frame_block_contexts));
+    if (!frame_context.shows_existing_frame()) {
+        DECODER_TRY_ALLOC(m_parser->m_previous_block_contexts.try_resize_to_match_other_vector2d(frame_context.block_contexts()));
         // − PrevRefFrames[ row ][ col ][ list ] is set equal to RefFrames[ row ][ col ][ list ] for row = 0..MiRows-1,
         // for col = 0..MiCols-1, for list = 0..1.
         // − PrevMvs[ row ][ col ][ list ][ comp ] is set equal to Mvs[ row ][ col ][ list ][ comp ] for row = 0..MiRows-1,
@@ -1812,8 +1812,8 @@ DecoderErrorOr<void> Decoder::update_reference_frames()
         //   − show_existing_frame is equal to 0,
         //   − segmentation_enabled is equal to 1,
         //   − segmentation_update_map is equal to 1.
-        bool keep_segment_ids = !m_parser->m_show_existing_frame && m_parser->m_segmentation_enabled && m_parser->m_segmentation_update_map;
-        m_parser->m_frame_block_contexts.copy_to(m_parser->m_previous_block_contexts, [keep_segment_ids](FrameBlockContext context) {
+        bool keep_segment_ids = !frame_context.shows_existing_frame() && m_parser->m_segmentation_enabled && m_parser->m_segmentation_update_map;
+        frame_context.block_contexts().copy_to(m_parser->m_previous_block_contexts, [keep_segment_ids](FrameBlockContext context) {
             auto persistent_context = PersistentBlockContext(context);
             if (!keep_segment_ids)
                 persistent_context.segment_id = 0;
