@@ -8,7 +8,6 @@
 
 #include <AK/IDAllocator.h>
 #include <AK/StringBuilder.h>
-#include <LibJS/AST.h>
 #include <LibJS/Heap/DeferGC.h>
 #include <LibJS/Runtime/FunctionObject.h>
 #include <LibWeb/Bindings/MainThreadVM.h>

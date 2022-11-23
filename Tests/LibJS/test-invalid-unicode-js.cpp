@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibJS/Parser.h>
+#include <LibJS/Lexer.h>
 #include <LibTest/TestCase.h>
 
 static bool produces_eof_tokens(JS::Lexer& lexer)
