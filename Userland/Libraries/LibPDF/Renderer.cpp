@@ -21,9 +21,9 @@
 
 namespace PDF {
 
-PDFErrorOr<void> Renderer::render(Document& document, Page const& page, RefPtr<Gfx::Bitmap> bitmap)
+PDFErrorOr<void> Renderer::render(Document& document, Page const& page, RefPtr<Gfx::Bitmap> bitmap, RenderingPreferences rendering_preferences)
 {
-    return Renderer(document, page, bitmap).render();
+    return Renderer(document, page, bitmap, rendering_preferences).render();
 }
 
 static void rect_path(Gfx::Path& path, float x, float y, float width, float height)
@@ -48,12 +48,13 @@ static Gfx::Path rect_path(Gfx::Rect<T> rect)
     return rect_path(rect.x(), rect.y(), rect.width(), rect.height());
 }
 
-Renderer::Renderer(RefPtr<Document> document, Page const& page, RefPtr<Gfx::Bitmap> bitmap)
+Renderer::Renderer(RefPtr<Document> document, Page const& page, RefPtr<Gfx::Bitmap> bitmap, RenderingPreferences rendering_preferences)
     : m_document(document)
     , m_bitmap(bitmap)
     , m_page(page)
     , m_painter(*bitmap)
     , m_anti_aliasing_painter(m_painter)
+    , m_rendering_preferences(rendering_preferences)
 {
     auto media_box = m_page.media_box;
 
@@ -247,6 +248,9 @@ void Renderer::begin_path_paint()
 {
     auto bounding_box = map(state().clipping_paths.current.bounding_box());
     m_painter.clear_clip_rect();
+    if (m_rendering_preferences.show_clipping_paths) {
+        m_painter.stroke_path(rect_path(bounding_box), Color::Black, 1);
+    }
     m_painter.add_clip_rect(bounding_box.to_type<int>());
 }
 
