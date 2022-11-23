@@ -768,7 +768,7 @@ float BlockFormattingContext::greatest_child_width(Box const& box)
     } else {
         box.for_each_child_of_type<Box>([&](Box const& child) {
             if (!child.is_absolutely_positioned())
-                max_width = max(max_width, m_state.get(child).border_box_width());
+                max_width = max(max_width, m_state.get(child).margin_box_width());
         });
     }
     return max_width;
