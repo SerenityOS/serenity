@@ -105,7 +105,10 @@ ErrorOr<void> ConnectionBase::post_message(MessageBuffer buffer)
         dbgln("LibIPC::Connection FIXME Warning, needed {} writes needed to send message of size {}B, this is pretty bad, as it spins on the EventLoop", writes_done, initial_size);
     }
 
-    m_responsiveness_timer->start();
+    // Note: This disables responsiveness detection when an event loop is absent.
+    //       There are no users which both need this feature but don't have an event loop.
+    if (Core::EventLoop::has_been_instantiated())
+        m_responsiveness_timer->start();
     return {};
 }
 
