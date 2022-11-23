@@ -149,10 +149,12 @@ void PDFViewerWidget::initialize_toolbar(GUI::Toolbar& toolbar)
     m_page_view_mode_single = GUI::Action::create_checkable("Single", [&](auto&) {
         m_viewer->set_page_view_mode(PDFViewer::PageViewMode::Single);
     });
+    m_page_view_mode_single->set_status_tip("Show single page at a time");
 
     m_page_view_mode_multiple = GUI::Action::create_checkable("Multiple", [&](auto&) {
         m_viewer->set_page_view_mode(PDFViewer::PageViewMode::Multiple);
     });
+    m_page_view_mode_multiple->set_status_tip("Show multiple pages at a time");
 
     if (m_viewer->page_view_mode() == PDFViewer::PageViewMode::Single) {
         m_page_view_mode_single->set_checked(true);
@@ -163,6 +165,9 @@ void PDFViewerWidget::initialize_toolbar(GUI::Toolbar& toolbar)
     m_page_view_action_group.add_action(*m_page_view_mode_single);
     m_page_view_action_group.add_action(*m_page_view_mode_multiple);
     m_page_view_action_group.set_exclusive(true);
+    toolbar.add_action(*m_page_view_mode_single);
+    toolbar.add_action(*m_page_view_mode_multiple);
+    toolbar.add_separator();
 
     toolbar.add_action(*m_zoom_in_action);
     toolbar.add_action(*m_zoom_out_action);
