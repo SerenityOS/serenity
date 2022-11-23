@@ -7,8 +7,8 @@
 
 #pragma once
 
-#include <LibJS/AST.h>
 #include <LibJS/Bytecode/Generator.h>
+#include <LibJS/Runtime/ClassFieldDefinition.h>
 #include <LibJS/Runtime/ExecutionContext.h>
 #include <LibJS/Runtime/FunctionObject.h>
 
