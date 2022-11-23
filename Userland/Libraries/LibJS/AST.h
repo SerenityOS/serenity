@@ -298,33 +298,33 @@ struct ModuleRequest {
     Vector<Assertion> assertions; // [[Assertions]]
 };
 
+// ImportEntry Record, https://tc39.es/ecma262/#table-importentry-record-fields
+struct ImportEntry {
+    FlyString import_name;       // [[ImportName]] if a String
+    FlyString local_name;        // [[LocalName]]
+    bool is_namespace { false }; // [[ImportName]] if `namespace-object`
+
+    ImportEntry(FlyString import_name_, FlyString local_name_, bool is_namespace_ = false)
+        : import_name(move(import_name_))
+        , local_name(move(local_name_))
+        , is_namespace(is_namespace_)
+    {
+        VERIFY(!is_namespace || import_name.is_null());
+    }
+
+    ModuleRequest const& module_request() const
+    {
+        VERIFY(m_module_request);
+        return *m_module_request;
+    }
+
+private:
+    friend class ImportStatement;
+    ModuleRequest* m_module_request; // [[ModuleRequest]]
+};
+
 class ImportStatement final : public Statement {
 public:
-    // ImportEntry Record, https://tc39.es/ecma262/#table-importentry-record-fields
-    struct ImportEntry {
-        FlyString import_name;       // [[ImportName]] if a String
-        FlyString local_name;        // [[LocalName]]
-        bool is_namespace { false }; // [[ImportName]] if `namespace-object`
-
-        ImportEntry(FlyString import_name_, FlyString local_name_, bool is_namespace_ = false)
-            : import_name(move(import_name_))
-            , local_name(move(local_name_))
-            , is_namespace(is_namespace_)
-        {
-            VERIFY(!is_namespace || import_name.is_null());
-        }
-
-        ModuleRequest const& module_request() const
-        {
-            VERIFY(m_module_request);
-            return *m_module_request;
-        }
-
-    private:
-        friend ImportStatement;
-        ModuleRequest* m_module_request; // [[ModuleRequest]]
-    };
-
     explicit ImportStatement(SourceRange source_range, ModuleRequest from_module, Vector<ImportEntry> entries = {})
         : Statement(source_range)
         , m_module_request(move(from_module))
@@ -348,76 +348,76 @@ private:
     Vector<ImportEntry> m_entries;
 };
 
+// ExportEntry Record, https://tc39.es/ecma262/#table-exportentry-records
+struct ExportEntry {
+    enum class Kind {
+        NamedExport,
+        ModuleRequestAll,
+        ModuleRequestAllButDefault,
+        // EmptyNamedExport is a special type for export {} from "module",
+        // which should import the module without getting any of the exports
+        // however we don't want give it a fake export name which may get
+        // duplicates
+        EmptyNamedExport,
+    } kind;
+
+    FlyString export_name;          // [[ExportName]]
+    FlyString local_or_import_name; // Either [[ImportName]] or [[LocalName]]
+
+    ExportEntry(Kind export_kind, FlyString export_name_, FlyString local_or_import_name_)
+        : kind(export_kind)
+        , export_name(move(export_name_))
+        , local_or_import_name(move(local_or_import_name_))
+    {
+    }
+
+    bool is_module_request() const
+    {
+        return m_module_request != nullptr;
+    }
+
+    static ExportEntry indirect_export_entry(ModuleRequest const& module_request, FlyString export_name, FlyString import_name)
+    {
+        ExportEntry entry { Kind::NamedExport, move(export_name), move(import_name) };
+        entry.m_module_request = &module_request;
+        return entry;
+    }
+
+    ModuleRequest const& module_request() const
+    {
+        VERIFY(m_module_request);
+        return *m_module_request;
+    }
+
+private:
+    ModuleRequest const* m_module_request { nullptr }; // [[ModuleRequest]]
+    friend class ExportStatement;
+
+public:
+    static ExportEntry named_export(FlyString export_name, FlyString local_name)
+    {
+        return ExportEntry { Kind::NamedExport, move(export_name), move(local_name) };
+    }
+
+    static ExportEntry all_but_default_entry()
+    {
+        return ExportEntry { Kind::ModuleRequestAllButDefault, {}, {} };
+    }
+
+    static ExportEntry all_module_request(FlyString export_name)
+    {
+        return ExportEntry { Kind::ModuleRequestAll, move(export_name), {} };
+    }
+
+    static ExportEntry empty_named_export()
+    {
+        return ExportEntry { Kind::EmptyNamedExport, {}, {} };
+    }
+};
+
 class ExportStatement final : public Statement {
 public:
     static FlyString local_name_for_default;
-
-    // ExportEntry Record, https://tc39.es/ecma262/#table-exportentry-records
-    struct ExportEntry {
-        enum class Kind {
-            NamedExport,
-            ModuleRequestAll,
-            ModuleRequestAllButDefault,
-            // EmptyNamedExport is a special type for export {} from "module",
-            // which should import the module without getting any of the exports
-            // however we don't want give it a fake export name which may get
-            // duplicates
-            EmptyNamedExport,
-        } kind;
-
-        FlyString export_name;          // [[ExportName]]
-        FlyString local_or_import_name; // Either [[ImportName]] or [[LocalName]]
-
-        ExportEntry(Kind export_kind, FlyString export_name_, FlyString local_or_import_name_)
-            : kind(export_kind)
-            , export_name(move(export_name_))
-            , local_or_import_name(move(local_or_import_name_))
-        {
-        }
-
-        bool is_module_request() const
-        {
-            return m_module_request != nullptr;
-        }
-
-        static ExportEntry indirect_export_entry(ModuleRequest const& module_request, FlyString export_name, FlyString import_name)
-        {
-            ExportEntry entry { Kind::NamedExport, move(export_name), move(import_name) };
-            entry.m_module_request = &module_request;
-            return entry;
-        }
-
-        ModuleRequest const& module_request() const
-        {
-            VERIFY(m_module_request);
-            return *m_module_request;
-        }
-
-    private:
-        ModuleRequest const* m_module_request { nullptr }; // [[ModuleRequest]]
-        friend ExportStatement;
-
-    public:
-        static ExportEntry named_export(FlyString export_name, FlyString local_name)
-        {
-            return ExportEntry { Kind::NamedExport, move(export_name), move(local_name) };
-        }
-
-        static ExportEntry all_but_default_entry()
-        {
-            return ExportEntry { Kind::ModuleRequestAllButDefault, {}, {} };
-        }
-
-        static ExportEntry all_module_request(FlyString export_name)
-        {
-            return ExportEntry { Kind::ModuleRequestAll, move(export_name), {} };
-        }
-
-        static ExportEntry empty_named_export()
-        {
-            return ExportEntry { Kind::EmptyNamedExport, {}, {} };
-        }
-    };
 
     ExportStatement(SourceRange source_range, RefPtr<ASTNode> statement, Vector<ExportEntry> entries, bool is_default_export, ModuleRequest module_request)
         : Statement(source_range)

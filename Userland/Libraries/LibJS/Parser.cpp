@@ -556,7 +556,7 @@ void Parser::parse_module(Program& program)
         if (export_statement.has_statement())
             continue;
         for (auto& entry : export_statement.entries()) {
-            if (entry.is_module_request() || entry.kind == ExportStatement::ExportEntry::Kind::EmptyNamedExport)
+            if (entry.is_module_request() || entry.kind == ExportEntry::Kind::EmptyNamedExport)
                 return;
 
             auto const& exported_name = entry.local_or_import_name;
@@ -4162,7 +4162,7 @@ NonnullRefPtr<ImportStatement> Parser::parse_import_statement(Program& program)
     bool continue_parsing = true;
 
     struct ImportWithLocation {
-        ImportStatement::ImportEntry entry;
+        ImportEntry entry;
         Position position;
     };
 
@@ -4203,7 +4203,7 @@ NonnullRefPtr<ImportStatement> Parser::parse_import_statement(Program& program)
         if (match_imported_binding()) {
             auto namespace_position = position();
             auto namespace_name = consume().value();
-            entries_with_location.append({ ImportStatement::ImportEntry({}, namespace_name, true), namespace_position });
+            entries_with_location.append({ ImportEntry({}, namespace_name, true), namespace_position });
         } else {
             syntax_error(String::formatted("Unexpected token: {}", m_state.current_token.name()));
         }
@@ -4271,7 +4271,7 @@ NonnullRefPtr<ImportStatement> Parser::parse_import_statement(Program& program)
 
     auto module_request = parse_module_request();
 
-    Vector<ImportStatement::ImportEntry> entries;
+    Vector<ImportEntry> entries;
     entries.ensure_capacity(entries_with_location.size());
 
     for (auto& entry : entries_with_location) {
@@ -4293,8 +4293,6 @@ NonnullRefPtr<ImportStatement> Parser::parse_import_statement(Program& program)
 
 NonnullRefPtr<ExportStatement> Parser::parse_export_statement(Program& program)
 {
-    using ExportEntry = ExportStatement::ExportEntry;
-
     // We use the extended syntax which adds:
     //  ExportDeclaration:
     //      export ExportFromClause FromClause [no LineTerminator here] AssertClause ;
@@ -4572,7 +4570,7 @@ NonnullRefPtr<ExportStatement> Parser::parse_export_statement(Program& program)
             consume_or_insert_semicolon();
     }
 
-    Vector<ExportStatement::ExportEntry> entries;
+    Vector<ExportEntry> entries;
     entries.ensure_capacity(entries_with_location.size());
 
     for (auto& entry : entries_with_location) {
@@ -4582,7 +4580,7 @@ NonnullRefPtr<ExportStatement> Parser::parse_export_statement(Program& program)
         }
 
         for (auto& new_entry : entries) {
-            if (new_entry.kind != ExportStatement::ExportEntry::Kind::EmptyNamedExport && new_entry.export_name == entry.entry.export_name)
+            if (new_entry.kind != ExportEntry::Kind::EmptyNamedExport && new_entry.export_name == entry.entry.export_name)
                 syntax_error(String::formatted("Duplicate export with name: '{}'", entry.entry.export_name), entry.position);
         }
 
