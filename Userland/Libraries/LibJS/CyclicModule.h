@@ -8,7 +8,6 @@
 
 #include <LibJS/Forward.h>
 #include <LibJS/Module.h>
-#include <LibJS/Parser.h>
 
 namespace JS {
 

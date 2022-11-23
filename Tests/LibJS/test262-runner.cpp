@@ -19,6 +19,7 @@
 #include <LibJS/Bytecode/PassManager.h>
 #include <LibJS/Contrib/Test262/GlobalObject.h>
 #include <LibJS/Interpreter.h>
+#include <LibJS/Parser.h>
 #include <LibJS/Runtime/VM.h>
 #include <LibJS/Script.h>
 #include <fcntl.h>
