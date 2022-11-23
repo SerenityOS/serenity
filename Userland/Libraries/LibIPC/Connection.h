@@ -42,6 +42,7 @@ public:
 
     void set_fd_passing_socket(NonnullOwnPtr<Core::Stream::LocalSocket>);
     void set_deferred_invoker(NonnullOwnPtr<DeferredInvoker>);
+    DeferredInvoker& deferred_invoker() { return *m_deferred_invoker; }
 
     bool is_open() const { return m_socket->is_open(); }
     ErrorOr<void> post_message(Message const&);
