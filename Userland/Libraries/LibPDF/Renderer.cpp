@@ -26,6 +26,28 @@ PDFErrorOr<void> Renderer::render(Document& document, Page const& page, RefPtr<G
     return Renderer(document, page, bitmap).render();
 }
 
+static void rect_path(Gfx::Path& path, float x, float y, float width, float height)
+{
+    path.move_to({ x, y });
+    path.line_to({ x + width, y });
+    path.line_to({ x + width, y + height });
+    path.line_to({ x, y + height });
+    path.close();
+}
+
+static Gfx::Path rect_path(float x, float y, float width, float height)
+{
+    Gfx::Path path;
+    rect_path(path, x, y, width, height);
+    return path;
+}
+
+template<typename T>
+static Gfx::Path rect_path(Gfx::Rect<T> rect)
+{
+    return rect_path(rect.x(), rect.y(), rect.width(), rect.height());
+}
+
 Renderer::Renderer(RefPtr<Document> document, Page const& page, RefPtr<Gfx::Bitmap> bitmap)
     : m_document(document)
     , m_bitmap(bitmap)
@@ -53,7 +75,8 @@ Renderer::Renderer(RefPtr<Document> document, Page const& page, RefPtr<Gfx::Bitm
     userspace_matrix.multiply(horizontal_reflection_matrix);
     userspace_matrix.translate(0.0f, -height);
 
-    m_graphics_state_stack.append(GraphicsState { userspace_matrix });
+    auto initial_clipping_path = rect_path(0, 0, width, height);
+    m_graphics_state_stack.append(GraphicsState { userspace_matrix, { initial_clipping_path, initial_clipping_path } });
 
     m_bitmap->fill(Gfx::Color::NamedColor::White);
 }
@@ -212,19 +235,33 @@ RENDERER_HANDLER(path_append_rect)
     //        in the PDF file seem to be correct, with the same flipped-ness as
     //        everything else in a PDF file.
     pos.set_y(m_bitmap->height() - pos.y() - size.height());
-
-    m_current_path.move_to(pos);
-    m_current_path.line_to({ pos.x() + size.width(), pos.y() });
-    m_current_path.line_to({ pos.x() + size.width(), pos.y() + size.height() });
-    m_current_path.line_to({ pos.x(), pos.y() + size.height() });
-    m_current_path.close();
+    rect_path(m_current_path, pos.x(), pos.y(), size.width(), size.height());
     return {};
+}
+
+///
+// Path painting operations
+///
+
+void Renderer::begin_path_paint()
+{
+    auto bounding_box = map(state().clipping_paths.current.bounding_box());
+    m_painter.clear_clip_rect();
+    m_painter.add_clip_rect(bounding_box.to_type<int>());
+}
+
+void Renderer::end_path_paint()
+{
+    m_current_path.clear();
+    m_painter.clear_clip_rect();
+    state().clipping_paths.current = state().clipping_paths.next;
 }
 
 RENDERER_HANDLER(path_stroke)
 {
+    begin_path_paint();
     m_anti_aliasing_painter.stroke_path(m_current_path, state().stroke_color, state().line_width);
-    m_current_path.clear();
+    end_path_paint();
     return {};
 }
 
@@ -237,8 +274,9 @@ RENDERER_HANDLER(path_close_and_stroke)
 
 RENDERER_HANDLER(path_fill_nonzero)
 {
+    begin_path_paint();
     m_anti_aliasing_painter.fill_path(m_current_path, state().paint_color, Gfx::Painter::WindingRule::Nonzero);
-    m_current_path.clear();
+    end_path_paint();
     return {};
 }
 
@@ -250,8 +288,9 @@ RENDERER_HANDLER(path_fill_nonzero_deprecated)
 
 RENDERER_HANDLER(path_fill_evenodd)
 {
+    begin_path_paint();
     m_anti_aliasing_painter.fill_path(m_current_path, state().paint_color, Gfx::Painter::WindingRule::EvenOdd);
-    m_current_path.clear();
+    end_path_paint();
     return {};
 }
 
@@ -285,23 +324,24 @@ RENDERER_HANDLER(path_close_fill_stroke_evenodd)
 
 RENDERER_HANDLER(path_end)
 {
+    begin_path_paint();
+    end_path_paint();
     return {};
 }
 
 RENDERER_HANDLER(path_intersect_clip_nonzero)
 {
-    // FIXME: Support arbitrary path clipping in the painter and utilize that here
-    auto bounding_box = map(m_current_path.bounding_box());
-    m_painter.add_clip_rect(bounding_box.to_type<int>());
+    // FIXME: Support arbitrary path clipping in Path and utilize that here
+    auto next_clipping_bbox = state().clipping_paths.next.bounding_box();
+    next_clipping_bbox.intersect(m_current_path.bounding_box());
+    state().clipping_paths.next = rect_path(next_clipping_bbox);
     return {};
 }
 
 RENDERER_HANDLER(path_intersect_clip_evenodd)
 {
-    // FIXME: Support arbitrary path clipping in the painter and utilize that here
-    auto bounding_box = map(m_current_path.bounding_box());
-    m_painter.add_clip_rect(bounding_box.to_type<int>());
-    return {};
+    // FIXME: Should have different behavior than path_intersect_clip_nonzero
+    return handle_path_intersect_clip_nonzero(args);
 }
 
 RENDERER_HANDLER(text_begin)
