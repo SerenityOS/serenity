@@ -168,7 +168,7 @@ Result<NonnullGCPtr<SourceTextModule>, Vector<Parser::Error>> SourceTextModule::
             VERIFY(export_statement.has_statement());
 
             auto const& entry = export_statement.entries()[0];
-            VERIFY(entry.kind == ExportStatement::ExportEntry::Kind::NamedExport);
+            VERIFY(entry.kind == ExportEntry::Kind::NamedExport);
             VERIFY(!entry.is_module_request());
             VERIFY(import_entries.find_if(
                                      [&](ImportEntry const& import_entry) {
@@ -182,7 +182,7 @@ Result<NonnullGCPtr<SourceTextModule>, Vector<Parser::Error>> SourceTextModule::
 
             // Special case, export {} from "module" should add "module" to
             // required_modules but not any import or export so skip here.
-            if (export_entry.kind == ExportStatement::ExportEntry::Kind::EmptyNamedExport) {
+            if (export_entry.kind == ExportEntry::Kind::EmptyNamedExport) {
                 VERIFY(export_statement.entries().size() == 1);
                 break;
             }
@@ -220,7 +220,7 @@ Result<NonnullGCPtr<SourceTextModule>, Vector<Parser::Error>> SourceTextModule::
                 }
             }
             // b. Else if ee.[[ImportName]] is all-but-default, then
-            else if (export_entry.kind == ExportStatement::ExportEntry::Kind::ModuleRequestAllButDefault) {
+            else if (export_entry.kind == ExportEntry::Kind::ModuleRequestAllButDefault) {
                 // i. Assert: ee.[[ExportName]] is null.
                 VERIFY(export_entry.export_name.is_null());
                 // ii. Append ee to starExportEntries.
@@ -564,7 +564,7 @@ ThrowCompletionOr<ResolvedBinding> SourceTextModule::resolve_export(VM& vm, FlyS
         auto imported_module = TRY(vm.host_resolve_imported_module(NonnullGCPtr<Module>(*this), entry.module_request()));
 
         // ii. If e.[[ImportName]] is all, then
-        if (entry.kind == ExportStatement::ExportEntry::Kind::ModuleRequestAll) {
+        if (entry.kind == ExportEntry::Kind::ModuleRequestAll) {
             // 1. Assert: module does not provide the direct binding for this export.
             // FIXME: What does this mean? / How do we check this
 
