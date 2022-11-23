@@ -5,6 +5,7 @@
  */
 
 #include <AK/Debug.h>
+#include <AK/TypeCasts.h>
 #include <AK/URLParser.h>
 #include <LibJS/Heap/Heap.h>
 #include <LibJS/Runtime/VM.h>

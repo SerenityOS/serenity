@@ -7,6 +7,7 @@
 
 #include <AK/QuickSort.h>
 #include <LibJS/Interpreter.h>
+#include <LibJS/Parser.h>
 #include <LibJS/Runtime/ECMAScriptFunctionObject.h>
 #include <LibJS/Runtime/ModuleEnvironment.h>
 #include <LibJS/SourceTextModule.h>

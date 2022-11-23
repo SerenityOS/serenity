@@ -179,6 +179,7 @@ struct ImportEntry;
 class ImportStatement;
 class Interpreter;
 class Intrinsics;
+class MetaProperty;
 class Module;
 class NativeFunction;
 class ObjectEnvironment;
