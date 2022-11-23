@@ -5,7 +5,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibJS/AST.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/ObjectEnvironment.h>
 

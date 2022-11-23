@@ -6,7 +6,6 @@
  */
 
 #include <AK/Function.h>
-#include <LibJS/AST.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/ErrorPrototype.h>
 #include <LibJS/Runtime/GlobalObject.h>
