@@ -2838,6 +2838,7 @@ void generate_iterator_prototype_implementation(IDL::Interface const& interface)
 
     generator.append(R"~~~(
 #include <AK/Function.h>
+#include <AK/TypeCasts.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/FunctionObject.h>

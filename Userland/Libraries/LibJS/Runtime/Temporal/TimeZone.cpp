@@ -6,6 +6,7 @@
 
 #include <AK/DateTimeLexer.h>
 #include <AK/Time.h>
+#include <AK/TypeCasts.h>
 #include <LibCrypto/BigInt/UnsignedBigInteger.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Date.h>

@@ -8,7 +8,6 @@
 
 #include <AK/Forward.h>
 #include <LibCrypto/Forward.h>
-#include <LibJS/AST.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Heap/MarkedVector.h>
 #include <LibJS/Runtime/CanonicalIndex.h>

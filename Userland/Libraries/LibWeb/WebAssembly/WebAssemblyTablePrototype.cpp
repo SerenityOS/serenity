@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/TypeCasts.h>
 #include <LibJS/Runtime/TypedArray.h>
 #include <LibWeb/WebAssembly/WebAssemblyTableObject.h>
 #include <LibWeb/WebAssembly/WebAssemblyTablePrototype.h>
