@@ -8,7 +8,6 @@
 
 #include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/DeclarativeEnvironment.h>
-#include <LibJS/Runtime/ECMAScriptFunctionObject.h>
 
 namespace JS {
 
