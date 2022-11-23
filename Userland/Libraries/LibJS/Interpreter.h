@@ -11,7 +11,6 @@
 #include <AK/HashMap.h>
 #include <AK/String.h>
 #include <AK/Weakable.h>
-#include <LibJS/AST.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Heap/DeferGC.h>
 #include <LibJS/Heap/Heap.h>
