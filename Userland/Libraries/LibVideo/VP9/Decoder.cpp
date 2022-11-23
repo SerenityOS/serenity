@@ -234,10 +234,10 @@ u8 Decoder::merge_probs(int const* tree, int index, u8* probs, u8* counts, u8 co
     return left_count + right_count;
 }
 
-DecoderErrorOr<void> Decoder::adapt_coef_probs()
+DecoderErrorOr<void> Decoder::adapt_coef_probs(bool is_inter_predicted_frame)
 {
     u8 update_factor;
-    if (m_parser->m_frame_is_intra || m_parser->m_last_frame_type != KeyFrame)
+    if (!is_inter_predicted_frame || m_parser->m_previous_frame_type != FrameType::KeyFrame)
         update_factor = 112;
     else
         update_factor = 128;
@@ -279,7 +279,7 @@ DecoderErrorOr<void> Decoder::adapt_coef_probs()
         }                                                                                                  \
     } while (0)
 
-DecoderErrorOr<void> Decoder::adapt_non_coef_probs()
+DecoderErrorOr<void> Decoder::adapt_non_coef_probs(FrameContext const& frame_context)
 {
     auto& probs = *m_parser->m_probability_tables;
     auto& counter = *m_parser->m_syntax_element_counter;
@@ -295,7 +295,7 @@ DecoderErrorOr<void> Decoder::adapt_non_coef_probs()
     ADAPT_TREE(intra_mode, uv_mode, uv_mode, INTER_MODE_CONTEXTS);
     ADAPT_TREE(partition, partition, partition, INTER_MODE_CONTEXTS);
     ADAPT_PROB_TABLE(skip, SKIP_CONTEXTS);
-    if (m_parser->m_interpolation_filter == Switchable) {
+    if (frame_context.interpolation_filter == Switchable) {
         ADAPT_TREE(interp_filter, interp_filter, interp_filter, INTERP_FILTER_CONTEXTS);
     }
     if (m_parser->m_tx_mode == TXModeSelect) {
@@ -317,7 +317,7 @@ DecoderErrorOr<void> Decoder::adapt_non_coef_probs()
         for (size_t j = 0; j < CLASS0_SIZE; j++)
             adapt_probs(mv_fr_tree, probs.mv_class0_fr_probs()[i][j], counter.m_counts_mv_class0_fr[i][j]);
         adapt_probs(mv_fr_tree, probs.mv_fr_probs()[i], counter.m_counts_mv_fr[i]);
-        if (m_parser->m_allow_high_precision_mv) {
+        if (frame_context.high_precision_motion_vectors_allowed) {
             probs.mv_class0_hp_prob()[i] = adapt_prob(probs.mv_class0_hp_prob()[i], counter.m_counts_mv_class0_hp[i]);
             probs.mv_hp_prob()[i] = adapt_prob(probs.mv_hp_prob()[i], counter.m_counts_mv_hp[i]);
         }
@@ -787,7 +787,7 @@ DecoderErrorOr<void> Decoder::predict_inter_block(u8 plane, BlockContext const& 
 
     // A variable refIdx specifying which reference frame is being used is set equal to
     // ref_frame_idx[ ref_frame[ refList ] - LAST_FRAME ].
-    auto reference_frame_index = m_parser->m_ref_frame_idx[m_parser->m_ref_frame[ref_list] - LastFrame];
+    auto reference_frame_index = block_context.frame_context.reference_frame_indices[m_parser->m_ref_frame[ref_list] - LastFrame];
 
     // It is a requirement of bitstream conformance that all the following conditions are satisfied:
     // − 2 * FrameWidth >= RefFrameWidth[ refIdx ]
@@ -1757,9 +1757,8 @@ DecoderErrorOr<void> Decoder::update_reference_frames(FrameContext const& frame_
 
     // 1. For each value of i from 0 to NUM_REF_FRAMES - 1, the following applies if bit i of refresh_frame_flags
     // is equal to 1 (i.e. if (refresh_frame_flags>>i)&1 is equal to 1):
-    auto refresh_flags = m_parser->m_refresh_frame_flags;
-    for (auto i = 0; i < NUM_REF_FRAMES; i++) {
-        if ((refresh_flags & 1) != 0) {
+    for (u8 i = 0; i < NUM_REF_FRAMES; i++) {
+        if (frame_context.should_update_reference_frame_at_index(i)) {
             // − RefFrameWidth[ i ] is set equal to FrameWidth.
             // − RefFrameHeight[ i ] is set equal to FrameHeight.
             m_parser->m_ref_frame_size[i] = frame_context.size();
@@ -1801,8 +1800,6 @@ DecoderErrorOr<void> Decoder::update_reference_frames(FrameContext const& frame_
                 }
             }
         }
-
-        refresh_flags >>= 1;
     }
 
     // 2. If show_existing_frame is equal to 0, the following applies:

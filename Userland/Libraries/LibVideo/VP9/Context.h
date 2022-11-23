@@ -255,6 +255,13 @@ struct FrameContext {
 public:
     u8 profile { 0 };
 
+    FrameType type { FrameType::KeyFrame };
+    bool is_inter_predicted() const { return type == FrameType::InterFrame; }
+
+    bool error_resilient_mode { false };
+    bool parallel_decoding_mode { false };
+    bool should_replace_probability_context { false };
+
     bool shows_a_frame() const { return m_frame_show_mode != FrameShowMode::DoNotShowFrame; }
     bool shows_a_new_frame() const { return m_frame_show_mode == FrameShowMode::CreateAndShowNewFrame; }
     bool shows_existing_frame() const { return m_frame_show_mode == FrameShowMode::ShowExistingFrame; }
@@ -267,6 +274,11 @@ public:
     u8 existing_frame_index() const { return m_existing_frame_index; }
 
     ColorConfig color_config {};
+
+    u8 reference_frames_to_update_flags { 0 };
+    bool should_update_reference_frame_at_index(u8 index) const { return (reference_frames_to_update_flags & (1 << index)) != 0; }
+
+    u8 probability_context_index { 0 };
 
     Gfx::Size<u32> size() const { return m_size; }
     ErrorOr<void> set_size(Gfx::Size<u32> size)
@@ -286,6 +298,12 @@ public:
     Vector2D<FrameBlockContext> const& block_contexts() const { return m_block_contexts; }
 
     Gfx::Size<u32> render_size { 0, 0 };
+
+    // This group of fields is only needed for inter-predicted frames.
+    Array<u8, 3> reference_frame_indices;
+    Array<bool, LastFrame + 3> reference_frame_sign_biases;
+    bool high_precision_motion_vectors_allowed { false };
+    InterpolationFilter interpolation_filter { InterpolationFilter::Switchable };
 
     u16 header_size_in_bytes { 0 };
 

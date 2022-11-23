@@ -11,9 +11,10 @@
 
 namespace Video::VP9 {
 
-enum FrameType {
+enum class FrameType {
     KeyFrame,
-    NonKeyFrame
+    IntraOnlyFrame,
+    InterFrame
 };
 
 enum ColorSpace : u8 {

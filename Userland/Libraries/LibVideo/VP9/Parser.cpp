@@ -90,19 +90,20 @@ DecoderErrorOr<FrameContext> Parser::parse_frame(ReadonlyBytes frame_data)
     // FIXME: This should not be an error. Spec says that we consume padding bits until the end of the sample.
     if (frame_context.header_size_in_bytes == 0)
         return DecoderError::corrupted("Frame header is zero-sized"sv);
-    m_probability_tables->load_probs(m_frame_context_idx);
-    m_probability_tables->load_probs2(m_frame_context_idx);
+    m_probability_tables->load_probs(frame_context.probability_context_index);
+    m_probability_tables->load_probs2(frame_context.probability_context_index);
     m_syntax_element_counter->clear_counts();
 
     TRY_READ(m_bit_stream->init_bool(frame_context.header_size_in_bytes));
-    TRY(compressed_header());
+    TRY(compressed_header(frame_context));
     TRY_READ(m_bit_stream->exit_bool());
 
     TRY(m_decoder.allocate_buffers(frame_context));
 
     TRY(decode_tiles(frame_context));
-    TRY(refresh_probs());
+    TRY(refresh_probs(frame_context));
 
+    m_previous_frame_type = frame_context.type;
     m_previous_frame_size = frame_context.size();
     m_previous_show_frame = frame_context.shows_a_frame();
     m_previous_color_config = frame_context.color_config;
@@ -119,26 +120,19 @@ bool Parser::trailing_bits()
     return true;
 }
 
-DecoderErrorOr<void> Parser::refresh_probs()
+DecoderErrorOr<void> Parser::refresh_probs(FrameContext const& frame_context)
 {
-    if (!m_error_resilient_mode && !m_frame_parallel_decoding_mode) {
-        m_probability_tables->load_probs(m_frame_context_idx);
-        TRY(m_decoder.adapt_coef_probs());
-        if (!m_frame_is_intra) {
-            m_probability_tables->load_probs2(m_frame_context_idx);
-            TRY(m_decoder.adapt_non_coef_probs());
+    if (!frame_context.error_resilient_mode && !frame_context.parallel_decoding_mode) {
+        m_probability_tables->load_probs(frame_context.probability_context_index);
+        TRY(m_decoder.adapt_coef_probs(frame_context.is_inter_predicted()));
+        if (frame_context.is_inter_predicted()) {
+            m_probability_tables->load_probs2(frame_context.probability_context_index);
+            TRY(m_decoder.adapt_non_coef_probs(frame_context));
         }
     }
-    if (m_refresh_frame_context)
-        m_probability_tables->save_probs(m_frame_context_idx);
+    if (frame_context.should_replace_probability_context)
+        m_probability_tables->save_probs(frame_context.probability_context_index);
     return {};
-}
-
-DecoderErrorOr<FrameType> Parser::read_frame_type()
-{
-    if (TRY_READ(m_bit_stream->read_bit()))
-        return NonKeyFrame;
-    return KeyFrame;
 }
 
 DecoderErrorOr<ColorRange> Parser::read_color_range()
@@ -165,82 +159,105 @@ DecoderErrorOr<FrameContext> Parser::uncompressed_header()
         return DecoderError::corrupted("uncompressed_header: Profile 3 reserved bit was non-zero"sv);
 
     if (TRY_READ(m_bit_stream->read_bit())) {
-        m_refresh_frame_flags = 0;
         m_loop_filter_level = 0;
         frame_context.set_existing_frame_to_show(TRY_READ(m_bit_stream->read_bits(3)));
         return frame_context;
     }
 
-    m_last_frame_type = m_frame_type;
-    m_frame_type = TRY(read_frame_type());
+    bool is_keyframe = !TRY_READ(m_bit_stream->read_bit());
+
     if (!TRY_READ(m_bit_stream->read_bit()))
         frame_context.set_frame_hidden();
-    m_error_resilient_mode = TRY_READ(m_bit_stream->read_bit());
+
+    frame_context.error_resilient_mode = TRY_READ(m_bit_stream->read_bit());
+
+    FrameType type;
 
     Gfx::Size<u32> frame_size;
     Gfx::Size<u32> render_size;
+    u8 reference_frames_to_update_flags = 0xFF; // Save frame to all reference indices by default.
 
-    if (m_frame_type == KeyFrame) {
+    enum class ResetProbabilities : u8 {
+        No = 0,
+        // 1 also means No here, but we don't need to do anything with the No case.
+        OnlyCurrent = 2,
+        All = 3,
+    };
+    ResetProbabilities reset_frame_context = ResetProbabilities::All;
+
+    if (is_keyframe) {
+        type = FrameType::KeyFrame;
         TRY(frame_sync_code());
         frame_context.color_config = TRY(parse_color_config(frame_context));
         frame_size = TRY(parse_frame_size());
         render_size = TRY(parse_render_size(frame_size));
-        m_refresh_frame_flags = 0xFF;
-        m_frame_is_intra = true;
     } else {
-        m_frame_is_intra = !frame_context.shows_a_frame() && TRY_READ(m_bit_stream->read_bit());
-
-        if (!m_error_resilient_mode) {
-            m_reset_frame_context = TRY_READ(m_bit_stream->read_bits(2));
+        if (!frame_context.shows_a_frame() && TRY_READ(m_bit_stream->read_bit())) {
+            type = FrameType::IntraOnlyFrame;
         } else {
-            m_reset_frame_context = 0;
+            type = FrameType::InterFrame;
+            reset_frame_context = ResetProbabilities::No;
         }
 
-        if (m_frame_is_intra) {
+        if (!frame_context.error_resilient_mode)
+            reset_frame_context = static_cast<ResetProbabilities>(TRY_READ(m_bit_stream->read_bits(2)));
+
+        if (type == FrameType::IntraOnlyFrame) {
             TRY(frame_sync_code());
 
             frame_context.color_config = frame_context.profile > 0 ? TRY(parse_color_config(frame_context)) : ColorConfig();
 
-            m_refresh_frame_flags = TRY_READ(m_bit_stream->read_f8());
+            reference_frames_to_update_flags = TRY_READ(m_bit_stream->read_f8());
             frame_size = TRY(parse_frame_size());
             render_size = TRY(parse_render_size(frame_size));
         } else {
-            m_refresh_frame_flags = TRY_READ(m_bit_stream->read_f8());
+            reference_frames_to_update_flags = TRY_READ(m_bit_stream->read_f8());
             for (auto i = 0; i < 3; i++) {
-                m_ref_frame_idx[i] = TRY_READ(m_bit_stream->read_bits(3));
-                m_ref_frame_sign_bias[LastFrame + i] = TRY_READ(m_bit_stream->read_bit());
+                frame_context.reference_frame_indices[i] = TRY_READ(m_bit_stream->read_bits(3));
+                frame_context.reference_frame_sign_biases[LastFrame + i] = TRY_READ(m_bit_stream->read_bit());
             }
-            frame_size = TRY(parse_frame_size_with_refs());
+            frame_size = TRY(parse_frame_size_with_refs(frame_context.reference_frame_indices));
             render_size = TRY(parse_render_size(frame_size));
-            m_allow_high_precision_mv = TRY_READ(m_bit_stream->read_bit());
-            TRY(read_interpolation_filter());
+            frame_context.high_precision_motion_vectors_allowed = TRY_READ(m_bit_stream->read_bit());
+            frame_context.interpolation_filter = TRY(read_interpolation_filter());
         }
     }
 
+    bool should_replace_probability_context = false;
+    bool parallel_decoding_mode = true;
+    if (!frame_context.error_resilient_mode) {
+        should_replace_probability_context = TRY_READ(m_bit_stream->read_bit());
+        parallel_decoding_mode = TRY_READ(m_bit_stream->read_bit());
+    }
+
+    u8 probability_context_index = TRY_READ(m_bit_stream->read_bits(2));
+    switch (reset_frame_context) {
+    case ResetProbabilities::All:
+        setup_past_independence();
+        for (auto i = 0; i < 4; i++) {
+            m_probability_tables->save_probs(i);
+        }
+        probability_context_index = 0;
+        break;
+    case ResetProbabilities::OnlyCurrent:
+        setup_past_independence();
+        m_probability_tables->save_probs(probability_context_index);
+        probability_context_index = 0;
+        break;
+    default:
+        break;
+    }
+
+    frame_context.type = type;
     DECODER_TRY_ALLOC(frame_context.set_size(frame_size));
     frame_context.render_size = render_size;
     TRY(compute_image_size(frame_context));
 
-    if (!m_error_resilient_mode) {
-        m_refresh_frame_context = TRY_READ(m_bit_stream->read_bit());
-        m_frame_parallel_decoding_mode = TRY_READ(m_bit_stream->read_bit());
-    } else {
-        m_refresh_frame_context = false;
-        m_frame_parallel_decoding_mode = true;
-    }
+    frame_context.reference_frames_to_update_flags = reference_frames_to_update_flags;
+    frame_context.parallel_decoding_mode = parallel_decoding_mode;
 
-    m_frame_context_idx = TRY_READ(m_bit_stream->read_bits(2));
-    if (m_frame_is_intra || m_error_resilient_mode) {
-        setup_past_independence();
-        if (m_frame_type == KeyFrame || m_error_resilient_mode || m_reset_frame_context == 3) {
-            for (auto i = 0; i < 4; i++) {
-                m_probability_tables->save_probs(i);
-            }
-        } else if (m_reset_frame_context == 2) {
-            m_probability_tables->save_probs(m_frame_context_idx);
-        }
-        m_frame_context_idx = 0;
-    }
+    frame_context.should_replace_probability_context = should_replace_probability_context;
+    frame_context.probability_context_index = probability_context_index;
 
     TRY(loop_filter_params());
     TRY(quantization_params());
@@ -325,10 +342,10 @@ DecoderErrorOr<Gfx::Size<u32>> Parser::parse_render_size(Gfx::Size<u32> frame_si
     return Gfx::Size<u32> { TRY_READ(m_bit_stream->read_f16()) + 1, TRY_READ(m_bit_stream->read_f16()) + 1 };
 }
 
-DecoderErrorOr<Gfx::Size<u32>> Parser::parse_frame_size_with_refs()
+DecoderErrorOr<Gfx::Size<u32>> Parser::parse_frame_size_with_refs(Array<u8, 3> const& reference_indices)
 {
     Optional<Gfx::Size<u32>> size;
-    for (auto frame_index : m_ref_frame_idx) {
+    for (auto frame_index : reference_indices) {
         if (TRY_READ(m_bit_stream->read_bit())) {
             size.emplace(m_ref_frame_size[frame_index]);
             break;
@@ -364,18 +381,16 @@ DecoderErrorOr<void> Parser::compute_image_size(FrameContext& frame_context)
     // d. error_resilient_mode is equal to 0.
     // e. FrameIsIntra is equal to 0.
     // Otherwise, UsePrevFrameMvs is set equal to 0.
-    m_use_prev_frame_mvs = !first_invoke && same_size && m_previous_show_frame && !m_error_resilient_mode && !m_frame_is_intra;
+    m_use_prev_frame_mvs = !first_invoke && same_size && m_previous_show_frame && !frame_context.error_resilient_mode && frame_context.is_inter_predicted();
     return {};
 }
 
-DecoderErrorOr<void> Parser::read_interpolation_filter()
+DecoderErrorOr<InterpolationFilter> Parser::read_interpolation_filter()
 {
     if (TRY_READ(m_bit_stream->read_bit())) {
-        m_interpolation_filter = Switchable;
-    } else {
-        m_interpolation_filter = literal_to_type[TRY_READ(m_bit_stream->read_bits(2))];
+        return InterpolationFilter::Switchable;
     }
-    return {};
+    return literal_to_type[TRY_READ(m_bit_stream->read_bits(2))];
 }
 
 DecoderErrorOr<void> Parser::loop_filter_params()
@@ -519,23 +534,23 @@ void Parser::setup_past_independence()
     m_probability_tables->reset_probs();
 }
 
-DecoderErrorOr<void> Parser::compressed_header()
+DecoderErrorOr<void> Parser::compressed_header(FrameContext& frame_context)
 {
     TRY(read_tx_mode());
     if (m_tx_mode == TXModeSelect)
         TRY(tx_mode_probs());
     TRY(read_coef_probs());
     TRY(read_skip_prob());
-    if (!m_frame_is_intra) {
+    if (frame_context.is_inter_predicted()) {
         TRY(read_inter_mode_probs());
-        if (m_interpolation_filter == Switchable)
+        if (frame_context.interpolation_filter == Switchable)
             TRY(read_interp_filter_probs());
         TRY(read_is_inter_probs());
-        TRY(frame_reference_mode());
+        TRY(frame_reference_mode(frame_context));
         TRY(frame_reference_mode_probs());
         TRY(read_y_mode_probs());
         TRY(read_partition_probs());
-        TRY(mv_probs());
+        TRY(mv_probs(frame_context));
     }
     return {};
 }
@@ -670,13 +685,13 @@ DecoderErrorOr<void> Parser::read_is_inter_probs()
     return {};
 }
 
-DecoderErrorOr<void> Parser::frame_reference_mode()
+DecoderErrorOr<void> Parser::frame_reference_mode(FrameContext& frame_context)
 {
     // FIXME: These fields and the ones set in setup_compound_reference_mode should probably be contained by a field,
     //        since they are all used to set the reference frames later in one function (I think).
     auto compound_reference_allowed = false;
     for (size_t i = 2; i <= REFS_PER_FRAME; i++) {
-        if (m_ref_frame_sign_bias[i] != m_ref_frame_sign_bias[1])
+        if (frame_context.reference_frame_sign_biases[i] != frame_context.reference_frame_sign_biases[1])
             compound_reference_allowed = true;
     }
     if (compound_reference_allowed) {
@@ -689,7 +704,7 @@ DecoderErrorOr<void> Parser::frame_reference_mode()
                 m_reference_mode = CompoundReference;
             else
                 m_reference_mode = ReferenceModeSelect;
-            setup_compound_reference_mode();
+            setup_compound_reference_mode(frame_context);
         }
     } else {
         m_reference_mode = SingleReference;
@@ -743,7 +758,7 @@ DecoderErrorOr<void> Parser::read_partition_probs()
     return {};
 }
 
-DecoderErrorOr<void> Parser::mv_probs()
+DecoderErrorOr<void> Parser::mv_probs(FrameContext const& frame_context)
 {
     for (auto j = 0; j < MV_JOINTS - 1; j++) {
         auto& mv_joint_probs = m_probability_tables->mv_joint_probs();
@@ -778,7 +793,7 @@ DecoderErrorOr<void> Parser::mv_probs()
         }
     }
 
-    if (m_allow_high_precision_mv) {
+    if (frame_context.high_precision_motion_vectors_allowed) {
         for (auto i = 0; i < 2; i++) {
             auto& mv_class0_hp_prob = m_probability_tables->mv_class0_hp_prob();
             auto& mv_hp_prob = m_probability_tables->mv_hp_prob();
@@ -798,13 +813,13 @@ DecoderErrorOr<u8> Parser::update_mv_prob(u8 prob)
     return prob;
 }
 
-void Parser::setup_compound_reference_mode()
+void Parser::setup_compound_reference_mode(FrameContext& frame_context)
 {
-    if (m_ref_frame_sign_bias[LastFrame] == m_ref_frame_sign_bias[GoldenFrame]) {
+    if (frame_context.reference_frame_sign_biases[LastFrame] == frame_context.reference_frame_sign_biases[GoldenFrame]) {
         m_comp_fixed_ref = AltRefFrame;
         m_comp_var_ref[0] = LastFrame;
         m_comp_var_ref[1] = GoldenFrame;
-    } else if (m_ref_frame_sign_bias[LastFrame] == m_ref_frame_sign_bias[AltRefFrame]) {
+    } else if (frame_context.reference_frame_sign_biases[LastFrame] == frame_context.reference_frame_sign_biases[AltRefFrame]) {
         m_comp_fixed_ref = GoldenFrame;
         m_comp_var_ref[0] = LastFrame;
         m_comp_var_ref[1] = AltRefFrame;
@@ -903,7 +918,7 @@ DecoderErrorOr<void> Parser::decode_partition(TileContext& tile_context, u32 row
     auto half_block_8x8 = num_8x8 >> 1;
     bool has_rows = (row + half_block_8x8) < tile_context.frame_context.rows();
     bool has_cols = (column + half_block_8x8) < tile_context.frame_context.columns();
-    auto partition = TRY_READ(TreeParser::parse_partition(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter, has_rows, has_cols, subsize, num_8x8, m_above_partition_context, m_left_partition_context, row, column, m_frame_is_intra));
+    auto partition = TRY_READ(TreeParser::parse_partition(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter, has_rows, has_cols, subsize, num_8x8, m_above_partition_context, m_left_partition_context, row, column, !tile_context.frame_context.is_inter_predicted()));
 
     auto child_subsize = subsize_lookup[partition][subsize];
     if (child_subsize < Block_8x8 || partition == PartitionNone) {
@@ -962,10 +977,10 @@ DecoderErrorOr<void> Parser::decode_block(TileContext& tile_context, u32 row, u3
 
 DecoderErrorOr<void> Parser::mode_info(BlockContext& block_context, FrameBlockContext above_context, FrameBlockContext left_context)
 {
-    if (m_frame_is_intra)
-        TRY(intra_frame_mode_info(block_context, above_context, left_context));
-    else
+    if (block_context.frame_context.is_inter_predicted())
         TRY(inter_frame_mode_info(block_context, above_context, left_context));
+    else
+        TRY(intra_frame_mode_info(block_context, above_context, left_context));
     return {};
 }
 
@@ -1143,7 +1158,7 @@ DecoderErrorOr<void> Parser::intra_block_mode_info(BlockContext& block_context)
 
 DecoderErrorOr<void> Parser::inter_block_mode_info(BlockContext& block_context, FrameBlockContext above_context, FrameBlockContext left_context)
 {
-    TRY(read_ref_frames(above_context, left_context));
+    TRY(read_ref_frames(block_context, above_context, left_context));
     for (auto j = 0; j < 2; j++) {
         if (m_ref_frame[j] > IntraFrame) {
             find_mv_refs(block_context, m_ref_frame[j], -1);
@@ -1156,10 +1171,10 @@ DecoderErrorOr<void> Parser::inter_block_mode_info(BlockContext& block_context, 
     } else if (block_context.size >= Block_8x8) {
         m_y_mode = TRY_READ(TreeParser::parse_inter_mode(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter, m_mode_context[m_ref_frame[0]]));
     }
-    if (m_interpolation_filter == Switchable)
+    if (block_context.frame_context.interpolation_filter == Switchable)
         m_interp_filter = TRY_READ(TreeParser::parse_interpolation_filter(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter, above_context, left_context));
     else
-        m_interp_filter = m_interpolation_filter;
+        m_interp_filter = block_context.frame_context.interpolation_filter;
     if (block_context.size < Block_8x8) {
         m_num_4x4_w = num_4x4_blocks_wide_lookup[block_context.size];
         m_num_4x4_h = num_4x4_blocks_high_lookup[block_context.size];
@@ -1170,7 +1185,7 @@ DecoderErrorOr<void> Parser::inter_block_mode_info(BlockContext& block_context, 
                     for (auto j = 0; j < 1 + is_compound; j++)
                         append_sub8x8_mvs(block_context, idy * 2 + idx, j);
                 }
-                TRY(assign_mv(is_compound));
+                TRY(assign_mv(block_context, is_compound));
                 for (auto y = 0; y < m_num_4x4_h; y++) {
                     for (auto x = 0; x < m_num_4x4_w; x++) {
                         auto block = (idy + y) * 2 + idx + x;
@@ -1183,7 +1198,7 @@ DecoderErrorOr<void> Parser::inter_block_mode_info(BlockContext& block_context, 
         }
         return {};
     }
-    TRY(assign_mv(is_compound));
+    TRY(assign_mv(block_context, is_compound));
     for (auto ref_list = 0; ref_list < 1 + is_compound; ref_list++) {
         for (auto block = 0; block < 4; block++) {
             m_block_mvs[ref_list][block] = m_mv[ref_list];
@@ -1192,7 +1207,7 @@ DecoderErrorOr<void> Parser::inter_block_mode_info(BlockContext& block_context, 
     return {};
 }
 
-DecoderErrorOr<void> Parser::read_ref_frames(FrameBlockContext above_context, FrameBlockContext left_context)
+DecoderErrorOr<void> Parser::read_ref_frames(BlockContext& block_context, FrameBlockContext above_context, FrameBlockContext left_context)
 {
     if (seg_feature_active(SEG_LVL_REF_FRAME)) {
         m_ref_frame[0] = static_cast<ReferenceFrameType>(m_feature_data[m_segment_id][SEG_LVL_REF_FRAME]);
@@ -1206,8 +1221,8 @@ DecoderErrorOr<void> Parser::read_ref_frames(FrameBlockContext above_context, Fr
         comp_mode = m_reference_mode;
     if (comp_mode == CompoundReference) {
         // FIXME: Make reference frame pairs be indexed by an enum of FixedReference or VariableReference?
-        auto fixed_reference_index = m_ref_frame_sign_bias[m_comp_fixed_ref];
-        auto variable_reference_index = fixed_reference_index == 0 ? 1 : 0;
+        auto fixed_reference_index = block_context.frame_context.reference_frame_sign_biases[m_comp_fixed_ref];
+        auto variable_reference_index = !fixed_reference_index;
 
         // FIXME: Create an enum for compound frame references using names Primary and Secondary.
         auto comp_ref = TRY_READ(TreeParser::parse_comp_ref(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter, m_comp_fixed_ref, m_comp_var_ref, variable_reference_index, above_context, left_context));
@@ -1228,12 +1243,12 @@ DecoderErrorOr<void> Parser::read_ref_frames(FrameBlockContext above_context, Fr
     return {};
 }
 
-DecoderErrorOr<void> Parser::assign_mv(bool is_compound)
+DecoderErrorOr<void> Parser::assign_mv(BlockContext const& block_context, bool is_compound)
 {
     m_mv[1] = {};
     for (auto i = 0; i < 1 + is_compound; i++) {
         if (m_y_mode == PredictionMode::NewMv) {
-            TRY(read_mv(i));
+            TRY(read_mv(block_context, i));
         } else if (m_y_mode == PredictionMode::NearestMv) {
             m_mv[i] = m_nearest_mv[i];
         } else if (m_y_mode == PredictionMode::NearMv) {
@@ -1245,9 +1260,9 @@ DecoderErrorOr<void> Parser::assign_mv(bool is_compound)
     return {};
 }
 
-DecoderErrorOr<void> Parser::read_mv(u8 ref)
+DecoderErrorOr<void> Parser::read_mv(BlockContext const& block_context, u8 ref)
 {
-    m_use_hp = m_allow_high_precision_mv && use_mv_hp(m_best_mv[ref]);
+    m_use_hp = block_context.frame_context.high_precision_motion_vectors_allowed && use_mv_hp(m_best_mv[ref]);
     MotionVector diff_mv;
     auto mv_joint = TRY_READ(TreeParser::parse_motion_vector_joint(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter));
     if (mv_joint == MvJointHzvnz || mv_joint == MvJointHnzvnz)
@@ -1507,10 +1522,10 @@ void Parser::if_same_ref_frame_add_mv(BlockContext const& block_context, MotionV
     }
 }
 
-void Parser::scale_mv(u8 ref_list, ReferenceFrameType ref_frame)
+void Parser::scale_mv(FrameContext const& frame_context, u8 ref_list, ReferenceFrameType ref_frame)
 {
     auto candidate_frame = m_candidate_frame[ref_list];
-    if (m_ref_frame_sign_bias[candidate_frame] != m_ref_frame_sign_bias[ref_frame])
+    if (frame_context.reference_frame_sign_biases[candidate_frame] != frame_context.reference_frame_sign_biases[ref_frame])
         m_candidate_mv[ref_list] *= -1;
 }
 
@@ -1520,11 +1535,11 @@ void Parser::if_diff_ref_frame_add_mv(BlockContext const& block_context, MotionV
         get_block_mv(block_context, candidate_vector, ref_list, use_prev);
     auto mvs_are_same = m_candidate_mv[0] == m_candidate_mv[1];
     if (m_candidate_frame[0] > ReferenceFrameType::IntraFrame && m_candidate_frame[0] != ref_frame) {
-        scale_mv(0, ref_frame);
+        scale_mv(block_context.frame_context, 0, ref_frame);
         add_mv_ref_list(0);
     }
     if (m_candidate_frame[1] > ReferenceFrameType::IntraFrame && m_candidate_frame[1] != ref_frame && !mvs_are_same) {
-        scale_mv(1, ref_frame);
+        scale_mv(block_context.frame_context, 1, ref_frame);
         add_mv_ref_list(1);
     }
 }
@@ -1629,7 +1644,7 @@ void Parser::find_best_ref_mvs(BlockContext& block_context, u8 ref_list)
         auto delta = m_ref_list_mv[i];
         auto delta_row = delta.row();
         auto delta_column = delta.column();
-        if (!m_allow_high_precision_mv || !use_mv_hp(delta)) {
+        if (!block_context.frame_context.high_precision_motion_vectors_allowed || !use_mv_hp(delta)) {
             if (delta_row & 1)
                 delta_row += delta_row > 0 ? -1 : 1;
             if (delta_column & 1)
