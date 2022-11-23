@@ -149,7 +149,6 @@ private:
     bool m_loop_filter_delta_enabled { false };
     FrameType m_frame_type { FrameType::KeyFrame };
     FrameType m_last_frame_type { FrameType::KeyFrame };
-    bool m_show_frame { false };
     bool m_error_resilient_mode { false };
     bool m_frame_is_intra { false };
     u8 m_reset_frame_context { 0 };
