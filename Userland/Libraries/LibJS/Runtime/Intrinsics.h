@@ -60,38 +60,20 @@ public:
     FunctionObject* throw_type_error_function() const { return m_throw_type_error_function; }
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType) \
-    ConstructorName* snake_name##_constructor()                                          \
-    {                                                                                    \
-        return m_##snake_name##_constructor;                                             \
-    }                                                                                    \
-    Object* snake_name##_prototype()                                                     \
-    {                                                                                    \
-        return m_##snake_name##_prototype;                                               \
-    }
+    ConstructorName* snake_name##_constructor();                                         \
+    Object* snake_name##_prototype();
     JS_ENUMERATE_BUILTIN_TYPES
 #undef __JS_ENUMERATE
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName) \
-    Intl::ConstructorName* intl_##snake_name##_constructor()                  \
-    {                                                                         \
-        return m_intl_##snake_name##_constructor;                             \
-    }                                                                         \
-    Object* intl_##snake_name##_prototype()                                   \
-    {                                                                         \
-        return m_intl_##snake_name##_prototype;                               \
-    }
+    Intl::ConstructorName* intl_##snake_name##_constructor();                 \
+    Object* intl_##snake_name##_prototype();
     JS_ENUMERATE_INTL_OBJECTS
 #undef __JS_ENUMERATE
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName) \
-    Temporal::ConstructorName* temporal_##snake_name##_constructor()          \
-    {                                                                         \
-        return m_temporal_##snake_name##_constructor;                         \
-    }                                                                         \
-    Object* temporal_##snake_name##_prototype()                               \
-    {                                                                         \
-        return m_temporal_##snake_name##_prototype;                           \
-    }
+    Temporal::ConstructorName* temporal_##snake_name##_constructor();         \
+    Object* temporal_##snake_name##_prototype();
     JS_ENUMERATE_TEMPORAL_OBJECTS
 #undef __JS_ENUMERATE
 
@@ -112,11 +94,31 @@ public:
 #undef __JS_ENUMERATE
 
 private:
-    Intrinsics() = default;
+    Intrinsics(Realm& realm)
+        : m_realm(realm)
+    {
+    }
 
     virtual void visit_edges(Visitor&) override;
 
     void initialize_intrinsics(Realm&);
+
+#define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType) \
+    void initialize_##snake_name();
+    JS_ENUMERATE_BUILTIN_TYPES
+#undef __JS_ENUMERATE
+
+#define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName) \
+    void initialize_intl_##snake_name();
+    JS_ENUMERATE_INTL_OBJECTS
+#undef __JS_ENUMERATE
+
+#define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName) \
+    void initialize_temporal_##snake_name();
+    JS_ENUMERATE_TEMPORAL_OBJECTS
+#undef __JS_ENUMERATE
+
+    Realm& m_realm;
 
     Shape* m_empty_object_shape { nullptr };
     Shape* m_new_object_shape { nullptr };
