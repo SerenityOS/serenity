@@ -7,10 +7,8 @@
 
 #pragma once
 
-#include <LibJS/AST.h>
 #include <LibJS/CyclicModule.h>
 #include <LibJS/Forward.h>
-#include <LibJS/Parser.h>
 #include <LibJS/Runtime/ExecutionContext.h>
 
 namespace JS {
