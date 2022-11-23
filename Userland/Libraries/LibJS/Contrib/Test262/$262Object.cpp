@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/TypeCasts.h>
 #include <LibJS/Contrib/Test262/$262Object.h>
 #include <LibJS/Contrib/Test262/AgentObject.h>
 #include <LibJS/Contrib/Test262/GlobalObject.h>
