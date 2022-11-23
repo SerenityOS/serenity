@@ -42,10 +42,10 @@ typedef u8 CoefProbs[TX_SIZES][BLOCK_TYPES][REF_TYPES][COEF_BANDS][PREV_COEF_CON
 
 class ProbabilityTables final {
 public:
-    void save_probs(size_t index);
+    void save_probs(u8 index);
     void reset_probs();
-    void load_probs(size_t index);
-    void load_probs2(size_t index);
+    void load_probs(u8 index);
+    void load_probs2(u8 index);
 
     ParetoTable const& pareto_table() const;
     KfPartitionProbs const& kf_partition_probs() const;

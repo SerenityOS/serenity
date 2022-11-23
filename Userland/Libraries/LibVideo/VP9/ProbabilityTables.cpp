@@ -1171,7 +1171,7 @@ KfUVModeProbs const& ProbabilityTables::kf_uv_mode_prob() const
     return constant_kf_uv_mode_prob;
 }
 
-void ProbabilityTables::save_probs(size_t index)
+void ProbabilityTables::save_probs(u8 index)
 {
     m_saved_probability_tables[index] = m_current_probability_table;
 }
@@ -1201,7 +1201,7 @@ void ProbabilityTables::reset_probs()
     __builtin_memcpy(m_current_probability_table.coef_probs, default_coef_probs, sizeof(CoefProbs));
 }
 
-void ProbabilityTables::load_probs(size_t index)
+void ProbabilityTables::load_probs(u8 index)
 {
     auto old_table = m_current_probability_table;
     m_current_probability_table = m_saved_probability_tables.at(index);
@@ -1209,7 +1209,7 @@ void ProbabilityTables::load_probs(size_t index)
     __builtin_memcpy(m_current_probability_table.tx_probs, old_table.tx_probs, sizeof(TxProbs));
 }
 
-void ProbabilityTables::load_probs2(size_t index)
+void ProbabilityTables::load_probs2(u8 index)
 {
     auto new_table = m_saved_probability_tables.at(index);
     __builtin_memcpy(m_current_probability_table.skip_prob, new_table.skip_prob, sizeof(SkipProb));

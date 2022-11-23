@@ -52,7 +52,7 @@ private:
 
     /* (6.1) Frame Syntax */
     bool trailing_bits();
-    DecoderErrorOr<void> refresh_probs();
+    DecoderErrorOr<void> refresh_probs(FrameContext const&);
 
     /* (6.2) Uncompressed Header Syntax */
     DecoderErrorOr<FrameContext> uncompressed_header();
@@ -60,10 +60,10 @@ private:
     DecoderErrorOr<ColorConfig> parse_color_config(FrameContext const&);
     DecoderErrorOr<void> set_frame_size_and_compute_image_size();
     DecoderErrorOr<Gfx::Size<u32>> parse_frame_size();
-    DecoderErrorOr<Gfx::Size<u32>> parse_frame_size_with_refs();
+    DecoderErrorOr<Gfx::Size<u32>> parse_frame_size_with_refs(Array<u8, 3> const& reference_indices);
     DecoderErrorOr<Gfx::Size<u32>> parse_render_size(Gfx::Size<u32> frame_size);
     DecoderErrorOr<void> compute_image_size(FrameContext&);
-    DecoderErrorOr<void> read_interpolation_filter();
+    DecoderErrorOr<InterpolationFilter> read_interpolation_filter();
     DecoderErrorOr<void> loop_filter_params();
     DecoderErrorOr<void> quantization_params();
     DecoderErrorOr<i8> read_delta_q();
@@ -75,7 +75,7 @@ private:
     void setup_past_independence();
 
     /* (6.3) Compressed Header Syntax */
-    DecoderErrorOr<void> compressed_header();
+    DecoderErrorOr<void> compressed_header(FrameContext&);
     DecoderErrorOr<void> read_tx_mode();
     DecoderErrorOr<void> tx_mode_probs();
     DecoderErrorOr<u8> diff_update_prob(u8 prob);
@@ -87,13 +87,13 @@ private:
     DecoderErrorOr<void> read_inter_mode_probs();
     DecoderErrorOr<void> read_interp_filter_probs();
     DecoderErrorOr<void> read_is_inter_probs();
-    DecoderErrorOr<void> frame_reference_mode();
+    DecoderErrorOr<void> frame_reference_mode(FrameContext&);
     DecoderErrorOr<void> frame_reference_mode_probs();
     DecoderErrorOr<void> read_y_mode_probs();
     DecoderErrorOr<void> read_partition_probs();
-    DecoderErrorOr<void> mv_probs();
+    DecoderErrorOr<void> mv_probs(FrameContext const&);
     DecoderErrorOr<u8> update_mv_prob(u8 prob);
-    void setup_compound_reference_mode();
+    void setup_compound_reference_mode(FrameContext&);
 
     /* (6.4) Decode Tiles Syntax */
     DecoderErrorOr<void> decode_tiles(FrameContext&);
@@ -115,9 +115,9 @@ private:
     DecoderErrorOr<void> read_is_inter(FrameBlockContext above_context, FrameBlockContext left_context);
     DecoderErrorOr<void> intra_block_mode_info(BlockContext&);
     DecoderErrorOr<void> inter_block_mode_info(BlockContext&, FrameBlockContext above_context, FrameBlockContext left_context);
-    DecoderErrorOr<void> read_ref_frames(FrameBlockContext above_context, FrameBlockContext left_context);
-    DecoderErrorOr<void> assign_mv(bool is_compound);
-    DecoderErrorOr<void> read_mv(u8 ref);
+    DecoderErrorOr<void> read_ref_frames(BlockContext&, FrameBlockContext above_context, FrameBlockContext left_context);
+    DecoderErrorOr<void> assign_mv(BlockContext const&, bool is_compound);
+    DecoderErrorOr<void> read_mv(BlockContext const&, u8 ref);
     DecoderErrorOr<i32> read_mv_component(u8 component);
     DecoderErrorOr<bool> residual(BlockContext&, bool has_block_above, bool has_block_left);
     DecoderErrorOr<bool> tokens(BlockContext&, size_t plane, u32 x, u32 y, TXSize tx_size, u32 block_index);
@@ -135,32 +135,20 @@ private:
     void get_block_mv(BlockContext const&, MotionVector candidate_vector, u8 ref_list, bool use_prev);
     void if_same_ref_frame_add_mv(BlockContext const&, MotionVector candidate_vector, ReferenceFrameType ref_frame, bool use_prev);
     void if_diff_ref_frame_add_mv(BlockContext const&, MotionVector candidate_vector, ReferenceFrameType ref_frame, bool use_prev);
-    void scale_mv(u8 ref_list, ReferenceFrameType ref_frame);
+    void scale_mv(FrameContext const&, u8 ref_list, ReferenceFrameType ref_frame);
     void add_mv_ref_list(u8 ref_list);
 
     Gfx::Point<size_t> get_decoded_point_for_plane(FrameContext const&, u32 row, u32 column, u8 plane);
     Gfx::Size<size_t> get_decoded_size_for_plane(FrameContext const&, u8 plane);
 
-    u8 m_refresh_frame_flags { 0 };
     u8 m_loop_filter_level { 0 };
     u8 m_loop_filter_sharpness { 0 };
     bool m_loop_filter_delta_enabled { false };
-    FrameType m_frame_type { FrameType::KeyFrame };
-    FrameType m_last_frame_type { FrameType::KeyFrame };
-    bool m_error_resilient_mode { false };
-    bool m_frame_is_intra { false };
-    u8 m_reset_frame_context { 0 };
-    bool m_allow_high_precision_mv { false };
-    u8 m_ref_frame_idx[3];
-    u8 m_ref_frame_sign_bias[LastFrame + 3];
-    bool m_refresh_frame_context { false };
-    bool m_frame_parallel_decoding_mode { false };
-    u8 m_frame_context_idx { 0 };
     bool m_is_first_compute_image_size_invoke { true };
     Gfx::Size<u32> m_previous_frame_size { 0, 0 };
     bool m_previous_show_frame { false };
     ColorConfig m_previous_color_config;
-    InterpolationFilter m_interpolation_filter { 0xf };
+    FrameType m_previous_frame_type { FrameType::KeyFrame };
     u8 m_base_q_idx { 0 };
     i8 m_delta_q_y_dc { 0 };
     i8 m_delta_q_uv_dc { 0 };
