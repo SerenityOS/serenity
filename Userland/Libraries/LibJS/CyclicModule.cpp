@@ -4,8 +4,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibJS/AST.h>
+#include <AK/Debug.h>
+#include <AK/TypeCasts.h>
 #include <LibJS/CyclicModule.h>
+#include <LibJS/Runtime/ModuleRequest.h>
 #include <LibJS/Runtime/PromiseCapability.h>
 #include <LibJS/Runtime/PromiseConstructor.h>
 #include <LibJS/Runtime/VM.h>

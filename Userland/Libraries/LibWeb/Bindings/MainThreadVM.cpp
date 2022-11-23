@@ -7,12 +7,12 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibJS/AST.h>
 #include <LibJS/Heap/DeferGC.h>
 #include <LibJS/Module.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/Environment.h>
 #include <LibJS/Runtime/FinalizationRegistry.h>
+#include <LibJS/Runtime/ModuleRequest.h>
 #include <LibJS/Runtime/NativeFunction.h>
 #include <LibJS/Runtime/VM.h>
 #include <LibWeb/Bindings/Intrinsics.h>

@@ -23,6 +23,7 @@
 #include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/EnvironmentCoordinate.h>
 #include <LibJS/Runtime/FunctionKind.h>
+#include <LibJS/Runtime/ModuleRequest.h>
 #include <LibJS/Runtime/PropertyKey.h>
 #include <LibJS/Runtime/Reference.h>
 #include <LibJS/Runtime/Value.h>
@@ -271,31 +272,6 @@ private:
     NonnullRefPtrVector<Declaration> m_var_declarations;
 
     NonnullRefPtrVector<FunctionDeclaration> m_functions_hoistable_with_annexB_extension;
-};
-
-// 2.9 ModuleRequest Records, https://tc39.es/proposal-import-assertions/#sec-modulerequest-record
-struct ModuleRequest {
-    struct Assertion {
-        String key;
-        String value;
-    };
-
-    ModuleRequest() = default;
-
-    explicit ModuleRequest(FlyString specifier)
-        : module_specifier(move(specifier))
-    {
-    }
-
-    ModuleRequest(FlyString module_specifier, Vector<Assertion> assertions);
-
-    void add_assertion(String key, String value)
-    {
-        assertions.empend(move(key), move(value));
-    }
-
-    FlyString module_specifier;   // [[Specifier]]
-    Vector<Assertion> assertions; // [[Assertions]]
 };
 
 // ImportEntry Record, https://tc39.es/ecma262/#table-importentry-record-fields
