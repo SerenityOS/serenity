@@ -184,6 +184,7 @@ class ObjectEnvironment;
 class Parser;
 struct ParserError;
 class PrimitiveString;
+class Program;
 class PromiseCapability;
 class PromiseReaction;
 class PropertyAttributes;

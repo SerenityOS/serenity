@@ -7,7 +7,6 @@
 #pragma once
 
 #include <AK/NonnullRefPtr.h>
-#include <LibJS/AST.h>
 #include <LibJS/Heap/GCPtr.h>
 #include <LibJS/Heap/Handle.h>
 #include <LibJS/ParserError.h>
