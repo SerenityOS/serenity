@@ -661,7 +661,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     StringView resources_folder;
     StringView error_page_url;
     StringView ca_certs_path;
-    StringView screenshot_output_path;
+    StringView screenshot_output_path = "output.png"sv;
 
     Core::EventLoop event_loop;
     Core::ArgsParser args_parser;
