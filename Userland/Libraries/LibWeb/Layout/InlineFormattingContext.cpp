@@ -44,7 +44,7 @@ float InlineFormattingContext::leftmost_x_offset_at(float y) const
     auto box_in_root_rect = content_box_rect_in_ancestor_coordinate_space(containing_block(), parent().root(), m_state);
     float y_in_root = box_in_root_rect.y() + y;
     auto space = parent().space_used_by_floats(y_in_root);
-    return space.left;
+    return space.left.value();
 }
 
 float InlineFormattingContext::available_space_for_line(float y) const
@@ -58,15 +58,15 @@ float InlineFormattingContext::available_space_for_line(float y) const
     space.left = space.left;
     space.right = min(m_available_space->width.to_px() - space.right, m_available_space->width.to_px());
 
-    return space.right - space.left;
+    return (space.right - space.left).value();
 }
 
-float InlineFormattingContext::automatic_content_width() const
+CSSPixels InlineFormattingContext::automatic_content_width() const
 {
     return m_automatic_content_width;
 }
 
-float InlineFormattingContext::automatic_content_height() const
+CSSPixels InlineFormattingContext::automatic_content_height() const
 {
     return m_automatic_content_height;
 }
@@ -117,8 +117,8 @@ void InlineFormattingContext::dimension_box_on_line(Box const& box, LayoutMode l
         if (is<SVGSVGBox>(box))
             (void)layout_inside(replaced, layout_mode, *m_available_space);
 
-        box_state.set_content_width(compute_width_for_replaced_element(m_state, replaced, *m_available_space));
-        box_state.set_content_height(compute_height_for_replaced_element(m_state, replaced, *m_available_space));
+        box_state.set_content_width(compute_width_for_replaced_element(m_state, replaced, *m_available_space).value());
+        box_state.set_content_height(compute_height_for_replaced_element(m_state, replaced, *m_available_space).value());
         return;
     }
 
@@ -138,7 +138,7 @@ void InlineFormattingContext::dimension_box_on_line(Box const& box, LayoutMode l
             - box_state.border_right
             - box_state.margin_right;
 
-        unconstrained_width = min(max(result.preferred_minimum_width, available_width), result.preferred_width);
+        unconstrained_width = min(max(result.preferred_minimum_width, available_width), result.preferred_width).value();
     } else {
         if (width_value.contains_percentage() && !m_available_space->width.is_definite()) {
             // NOTE: We can't resolve percentages yet. We'll have to wait until after inner layout.
@@ -190,11 +190,11 @@ void InlineFormattingContext::apply_justification_to_fragments(CSS::TextJustify 
         break;
     }
 
-    float excess_horizontal_space = m_available_space->width.to_px() - line_box.width();
+    float excess_horizontal_space = m_available_space->width.to_px().value() - line_box.width();
 
     // Only justify the text if the excess horizontal space is less than or
     // equal to 10%, or if we are not looking at the last line box.
-    if (is_last_line && excess_horizontal_space / m_available_space->width.to_px() > text_justification_threshold)
+    if (is_last_line && excess_horizontal_space / m_available_space->width.to_px().value() > text_justification_threshold)
         return;
 
     float excess_horizontal_space_including_whitespace = excess_horizontal_space;

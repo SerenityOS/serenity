@@ -24,7 +24,7 @@ public:
     ~TableFormattingContext();
 
     virtual void run(Box const&, LayoutMode, AvailableSpace const&) override;
-    virtual float automatic_content_height() const override;
+    virtual CSSPixels automatic_content_height() const override;
 
 private:
     void calculate_column_widths(Box const& row, CSS::Length const& table_width, Vector<ColumnWidth>& column_widths, AvailableSpace const&);

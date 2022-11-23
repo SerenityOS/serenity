@@ -121,7 +121,7 @@ void TableFormattingContext::calculate_column_widths(Box const& row, CSS::Length
 
         if (specified_width.is_auto()) {
             auto width = calculate_max_content_width(cell);
-            cell_state.set_content_width(width);
+            cell_state.set_content_width(width.value());
         } else {
             compute_width(cell, AvailableSpace(AvailableSize::make_indefinite(), AvailableSize::make_indefinite()), LayoutMode::Normal);
         }
@@ -134,8 +134,8 @@ void TableFormattingContext::calculate_column_widths(Box const& row, CSS::Length
             auto max_width = calculate_max_content_width(cell);
             min_width = max(min_width, cell_state.border_box_width());
             max_width = max(max_width, cell_state.border_box_width());
-            column_widths[column_index].min = max(column_widths[column_index].min, min_width);
-            column_widths[column_index].max = max(column_widths[column_index].max, max_width);
+            column_widths[column_index].min = max(column_widths[column_index].min, min_width.value());
+            column_widths[column_index].max = max(column_widths[column_index].max, max_width.value());
             column_widths[column_index].is_auto &= specified_width.is_auto();
         }
         column_index += cell.colspan();
@@ -147,8 +147,8 @@ void TableFormattingContext::calculate_column_widths(Box const& row, CSS::Length
             auto& cell_state = m_state.get_mutable(cell);
             auto min_width = calculate_min_content_width(cell);
             auto max_width = calculate_max_content_width(cell);
-            float missing_min = max(min_width, cell_state.border_box_width());
-            float missing_max = max(max_width, cell_state.border_box_width());
+            float missing_min = max(min_width, cell_state.border_box_width()).value();
+            float missing_max = max(max_width, cell_state.border_box_width()).value();
             for (size_t i = 0; i < colspan; ++i) {
                 missing_min -= column_widths[column_index + i].min;
                 missing_max -= column_widths[column_index + i].max;
@@ -211,7 +211,7 @@ void TableFormattingContext::layout_row(Box const& row, Vector<ColumnWidth>& col
     }
 }
 
-float TableFormattingContext::automatic_content_height() const
+CSSPixels TableFormattingContext::automatic_content_height() const
 {
     return m_automatic_content_height;
 }
