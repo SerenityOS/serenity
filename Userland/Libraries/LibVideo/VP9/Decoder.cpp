@@ -351,11 +351,11 @@ DecoderErrorOr<void> Decoder::predict_intra(u8 plane, BlockContext const& block_
     //     3. Otherwise, mode is set equal to sub_modes[ blockIdx ].
     PredictionMode mode;
     if (plane > 0)
-        mode = m_parser->m_uv_mode;
+        mode = block_context.uv_prediction_mode;
     else if (block_context.size >= Block_8x8)
-        mode = m_parser->m_y_mode;
+        mode = block_context.y_prediction_mode();
     else
-        mode = m_parser->m_block_sub_modes[block_index];
+        mode = block_context.sub_block_prediction_modes[block_index];
 
     // The variable log2Size specifying the base 2 logarithm of the width of the transform block is set equal to txSz + 2.
     u8 log2_of_block_size = tx_size + 2;
@@ -700,31 +700,33 @@ MotionVector Decoder::select_motion_vector(u8 plane, BlockContext const& block_c
         };
     };
 
+    auto vectors = block_context.sub_block_motion_vectors;
+
     // The motion vector array mv is derived as follows:
     // − If plane is equal to 0, or MiSize is greater than or equal to BLOCK_8X8, mv is set equal to
     // BlockMvs[ refList ][ blockIdx ].
     if (plane == 0 || block_context.size >= Block_8x8)
-        return m_parser->m_block_mvs[ref_list][block_index];
+        return vectors[block_index][ref_list];
     // − Otherwise, if subsampling_x is equal to 0 and subsampling_y is equal to 0, mv is set equal to
     // BlockMvs[ refList ][ blockIdx ].
     if (!block_context.frame_context.color_config.subsampling_x && !block_context.frame_context.color_config.subsampling_y)
-        return m_parser->m_block_mvs[ref_list][block_index];
+        return vectors[block_index][ref_list];
     // − Otherwise, if subsampling_x is equal to 0 and subsampling_y is equal to 1, mv[ comp ] is set equal to
     // round_mv_comp_q2( BlockMvs[ refList ][ blockIdx ][ comp ] + BlockMvs[ refList ][ blockIdx + 2 ][ comp ] )
     // for comp = 0..1.
     if (!block_context.frame_context.color_config.subsampling_x && block_context.frame_context.color_config.subsampling_y)
-        return round_mv_comp_q2(m_parser->m_block_mvs[ref_list][block_index] + m_parser->m_block_mvs[ref_list][block_index + 2]);
+        return round_mv_comp_q2(vectors[block_index][ref_list] + vectors[block_index + 2][ref_list]);
     // − Otherwise, if subsampling_x is equal to 1 and subsampling_y is equal to 0, mv[ comp ] is set equal to
     // round_mv_comp_q2( BlockMvs[ refList ][ blockIdx ][ comp ] + BlockMvs[ refList ][ blockIdx + 1 ][ comp ] )
     // for comp = 0..1.
     if (block_context.frame_context.color_config.subsampling_x && !block_context.frame_context.color_config.subsampling_y)
-        return round_mv_comp_q2(m_parser->m_block_mvs[ref_list][block_index] + m_parser->m_block_mvs[ref_list][block_index + 1]);
+        return round_mv_comp_q2(vectors[block_index][ref_list] + vectors[block_index + 1][ref_list]);
     // − Otherwise, (subsampling_x is equal to 1 and subsampling_y is equal to 1), mv[ comp ] is set equal to
     // round_mv_comp_q4( BlockMvs[ refList ][ 0 ][ comp ] + BlockMvs[ refList ][ 1 ][ comp ] +
     // BlockMvs[ refList ][ 2 ][ comp ] + BlockMvs[ refList ][ 3 ][ comp ] ) for comp = 0..1.
     VERIFY(block_context.frame_context.color_config.subsampling_x && block_context.frame_context.color_config.subsampling_y);
-    return round_mv_comp_q4(m_parser->m_block_mvs[ref_list][0] + m_parser->m_block_mvs[ref_list][1]
-        + m_parser->m_block_mvs[ref_list][2] + m_parser->m_block_mvs[ref_list][3]);
+    return round_mv_comp_q4(vectors[0][ref_list] + vectors[1][ref_list]
+        + vectors[2][ref_list] + vectors[3][ref_list]);
 }
 
 MotionVector Decoder::clamp_motion_vector(u8 plane, BlockContext const& block_context, u32 block_row, u32 block_column, MotionVector vector)
@@ -787,7 +789,7 @@ DecoderErrorOr<void> Decoder::predict_inter_block(u8 plane, BlockContext const& 
 
     // A variable refIdx specifying which reference frame is being used is set equal to
     // ref_frame_idx[ ref_frame[ refList ] - LAST_FRAME ].
-    auto reference_frame_index = block_context.frame_context.reference_frame_indices[m_parser->m_ref_frame[ref_list] - LastFrame];
+    auto reference_frame_index = block_context.frame_context.reference_frame_indices[block_context.reference_frame_types[ref_list] - LastFrame];
 
     // It is a requirement of bitstream conformance that all the following conditions are satisfied:
     // − 2 * FrameWidth >= RefFrameWidth[ refIdx ]
@@ -907,7 +909,7 @@ DecoderErrorOr<void> Decoder::predict_inter_block(u8 plane, BlockContext const& 
                 auto sample = reference_frame_buffer_at(
                     clip_3(0, scaled_bottom, (offset_scaled_block_y >> 4) + static_cast<i32>(row) - 3),
                     clip_3(0, scaled_right, (samples_start >> 4) + static_cast<i32>(t) - 3));
-                accumulated_samples += subpel_filters[m_parser->m_interp_filter][samples_start & 15][t] * sample;
+                accumulated_samples += subpel_filters[block_context.interpolation_filter][samples_start & 15][t] * sample;
             }
             intermediate_buffer_at(row, column) = clip_1(block_context.frame_context.color_config.bit_depth, round_2(accumulated_samples, 7));
         }
@@ -920,7 +922,7 @@ DecoderErrorOr<void> Decoder::predict_inter_block(u8 plane, BlockContext const& 
             i32 accumulated_samples = 0;
             for (auto t = 0u; t < 8u; t++) {
                 auto sample = intermediate_buffer_at((samples_start >> 4) + t, column);
-                accumulated_samples += subpel_filters[m_parser->m_interp_filter][samples_start & 15][t] * sample;
+                accumulated_samples += subpel_filters[block_context.interpolation_filter][samples_start & 15][t] * sample;
             }
             block_buffer_at(row, column) = clip_1(block_context.frame_context.color_config.bit_depth, round_2(accumulated_samples, 7));
         }
@@ -942,7 +944,7 @@ DecoderErrorOr<void> Decoder::predict_inter(u8 plane, BlockContext const& block_
     // The outputs of this process are inter predicted samples in the current frame CurrFrame.
 
     // The variable isCompound is set equal to ref_frame[ 1 ] > NONE.
-    auto is_compound = m_parser->m_ref_frame[1] > None;
+    auto is_compound = block_context.reference_frame_types[1] > None;
     // The prediction arrays are formed by the following ordered steps:
     // 1. The variable refList is set equal to 0.
     // 2. through 5.
@@ -1022,9 +1024,9 @@ u8 Decoder::get_base_quantizer_index(BlockContext const& block_context)
 {
     // The function get_qindex( ) returns the quantizer index for the current block and is specified by the following:
     // − If seg_feature_active( SEG_LVL_ALT_Q ) is equal to 1 the following ordered steps apply:
-    if (m_parser->seg_feature_active(SEG_LVL_ALT_Q)) {
+    if (m_parser->seg_feature_active(block_context, SEG_LVL_ALT_Q)) {
         // 1. Set the variable data equal to FeatureData[ segment_id ][ SEG_LVL_ALT_Q ].
-        auto data = m_parser->m_feature_data[m_parser->m_segment_id][SEG_LVL_ALT_Q];
+        auto data = m_parser->m_feature_data[block_context.segment_id][SEG_LVL_ALT_Q];
 
         // 2. If segmentation_abs_or_delta_update is equal to 0, set data equal to base_q_idx + data
         if (!m_parser->m_segmentation_abs_or_delta_update) {
