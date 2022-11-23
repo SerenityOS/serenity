@@ -18,7 +18,7 @@ class Encoding;
 
 class PS1FontProgram : public RefCounted<PS1FontProgram> {
 public:
-    PDFErrorOr<void> parse(ReadonlyBytes const&, size_t cleartext_length, size_t encrypted_length);
+    PDFErrorOr<void> create(ReadonlyBytes const&, RefPtr<Encoding>, size_t cleartext_length, size_t encrypted_length);
 
     RefPtr<Gfx::Bitmap> rasterize_glyph(u32 char_code, float width);
     Gfx::Path build_char(u32 char_code, float width);
