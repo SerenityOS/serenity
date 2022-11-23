@@ -15,7 +15,6 @@
 #include <LibCore/StandardPaths.h>
 #include <LibCore/Stream.h>
 #include <LibCore/System.h>
-#include <LibJS/AST.h>
 #include <LibJS/Bytecode/BasicBlock.h>
 #include <LibJS/Bytecode/Generator.h>
 #include <LibJS/Bytecode/Interpreter.h>
