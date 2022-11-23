@@ -77,17 +77,17 @@ private:
     u16 dc_q(u8 bit_depth, u8 b);
     u16 ac_q(u8 bit_depth, u8 b);
     // Returns the quantizer index for the current block
-    u8 get_qindex();
+    u8 get_base_quantizer_index(BlockContext const&);
     // Returns the quantizer value for the dc coefficient for a particular plane
-    u16 get_dc_quant(u8 bit_depth, u8 plane);
+    u16 get_dc_quantizer(BlockContext const&, u8 plane);
     // Returns the quantizer value for the ac coefficient for a particular plane
-    u16 get_ac_quant(u8 bit_depth, u8 plane);
+    u16 get_ac_quantizer(BlockContext const&, u8 plane);
 
     // (8.6.2) Reconstruct process
     DecoderErrorOr<void> reconstruct(u8 plane, BlockContext const&, u32 transform_block_x, u32 transform_block_y, TXSize transform_block_size);
 
     // (8.7) Inverse transform process
-    DecoderErrorOr<void> inverse_transform_2d(u8 bit_depth, Span<Intermediate> dequantized, u8 log2_of_block_size);
+    DecoderErrorOr<void> inverse_transform_2d(BlockContext const&, Span<Intermediate> dequantized, u8 log2_of_block_size);
 
     // (8.7.1) 1D Transforms
     // (8.7.1.1) Butterfly functions

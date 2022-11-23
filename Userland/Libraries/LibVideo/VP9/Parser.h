@@ -65,7 +65,7 @@ private:
     DecoderErrorOr<void> compute_image_size(FrameContext&);
     DecoderErrorOr<InterpolationFilter> read_interpolation_filter();
     DecoderErrorOr<void> loop_filter_params(FrameContext&);
-    DecoderErrorOr<void> quantization_params();
+    DecoderErrorOr<void> quantization_params(FrameContext&);
     DecoderErrorOr<i8> read_delta_q();
     DecoderErrorOr<void> segmentation_params();
     DecoderErrorOr<u8> read_prob();
@@ -76,7 +76,7 @@ private:
 
     /* (6.3) Compressed Header Syntax */
     DecoderErrorOr<void> compressed_header(FrameContext&);
-    DecoderErrorOr<void> read_tx_mode();
+    DecoderErrorOr<void> read_tx_mode(FrameContext const&);
     DecoderErrorOr<void> tx_mode_probs();
     DecoderErrorOr<u8> diff_update_prob(u8 prob);
     DecoderErrorOr<u8> decode_term_subexp();
@@ -148,11 +148,6 @@ private:
     FrameType m_previous_frame_type { FrameType::KeyFrame };
     Array<i8, MAX_REF_FRAMES> m_previous_loop_filter_ref_deltas;
     Array<i8, 2> m_previous_loop_filter_mode_deltas;
-    u8 m_base_q_idx { 0 };
-    i8 m_delta_q_y_dc { 0 };
-    i8 m_delta_q_uv_dc { 0 };
-    i8 m_delta_q_uv_ac { 0 };
-    bool m_lossless { false };
     u8 m_segmentation_tree_probs[7];
     u8 m_segmentation_pred_prob[3];
     bool m_feature_enabled[8][4];

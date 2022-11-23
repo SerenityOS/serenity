@@ -1018,7 +1018,7 @@ u16 Decoder::ac_q(u8 bit_depth, u8 b)
     return ac_qlookup[(bit_depth - 8) >> 1][clip_3<u8>(0, 255, b)];
 }
 
-u8 Decoder::get_qindex()
+u8 Decoder::get_base_quantizer_index(BlockContext const& block_context)
 {
     // The function get_qindex( ) returns the quantizer index for the current block and is specified by the following:
     // − If seg_feature_active( SEG_LVL_ALT_Q ) is equal to 1 the following ordered steps apply:
@@ -1028,7 +1028,7 @@ u8 Decoder::get_qindex()
 
         // 2. If segmentation_abs_or_delta_update is equal to 0, set data equal to base_q_idx + data
         if (!m_parser->m_segmentation_abs_or_delta_update) {
-            data += m_parser->m_base_q_idx;
+            data += block_context.frame_context.base_quantizer_index;
         }
 
         // 3. Return Clip3( 0, 255, data ).
@@ -1036,29 +1036,33 @@ u8 Decoder::get_qindex()
     }
 
     // − Otherwise, return base_q_idx.
-    return m_parser->m_base_q_idx;
+    return block_context.frame_context.base_quantizer_index;
 }
 
-u16 Decoder::get_dc_quant(u8 bit_depth, u8 plane)
+u16 Decoder::get_dc_quantizer(BlockContext const& block_context, u8 plane)
 {
+    // FIXME: The result of this function can be cached. This does not change per frame.
+
     // The function get_dc_quant( plane ) returns the quantizer value for the dc coefficient for a particular plane and
     // is derived as follows:
     // − If plane is equal to 0, return dc_q( get_qindex( ) + delta_q_y_dc ).
     // − Otherwise, return dc_q( get_qindex( ) + delta_q_uv_dc ).
     // Instead of if { return }, select the value to add and return.
-    i8 offset = plane == 0 ? m_parser->m_delta_q_y_dc : m_parser->m_delta_q_uv_dc;
-    return dc_q(bit_depth, static_cast<u8>(get_qindex() + offset));
+    i8 offset = plane == 0 ? block_context.frame_context.y_dc_quantizer_index_delta : block_context.frame_context.uv_dc_quantizer_index_delta;
+    return dc_q(block_context.frame_context.color_config.bit_depth, static_cast<u8>(get_base_quantizer_index(block_context) + offset));
 }
 
-u16 Decoder::get_ac_quant(u8 bit_depth, u8 plane)
+u16 Decoder::get_ac_quantizer(BlockContext const& block_context, u8 plane)
 {
+    // FIXME: The result of this function can be cached. This does not change per frame.
+
     // The function get_ac_quant( plane ) returns the quantizer value for the ac coefficient for a particular plane and
     // is derived as follows:
     // − If plane is equal to 0, return ac_q( get_qindex( ) ).
     // − Otherwise, return ac_q( get_qindex( ) + delta_q_uv_ac ).
     // Instead of if { return }, select the value to add and return.
-    i8 offset = plane == 0 ? 0 : m_parser->m_delta_q_uv_ac;
-    return ac_q(bit_depth, static_cast<u8>(get_qindex() + offset));
+    i8 offset = plane == 0 ? 0 : block_context.frame_context.uv_ac_quantizer_index_delta;
+    return ac_q(block_context.frame_context.color_config.bit_depth, static_cast<u8>(get_base_quantizer_index(block_context) + offset));
 }
 
 DecoderErrorOr<void> Decoder::reconstruct(u8 plane, BlockContext const& block_context, u32 transform_block_x, u32 transform_block_y, TXSize transform_block_size)
@@ -1075,7 +1079,7 @@ DecoderErrorOr<void> Decoder::reconstruct(u8 plane, BlockContext const& block_co
     // 1. Dequant[ i ][ j ] is set equal to ( Tokens[ i * n0 + j ] * get_ac_quant( plane ) ) / dqDenom
     //    for i = 0..(n0-1), for j = 0..(n0-1)
     Array<Intermediate, maximum_transform_size> dequantized;
-    Intermediate ac_quant = get_ac_quant(block_context.frame_context.color_config.bit_depth, plane);
+    Intermediate ac_quant = get_ac_quantizer(block_context, plane);
     for (auto i = 0u; i < block_size; i++) {
         for (auto j = 0u; j < block_size; j++) {
             auto index = index_from_row_and_column(i, j, block_size);
@@ -1086,7 +1090,7 @@ DecoderErrorOr<void> Decoder::reconstruct(u8 plane, BlockContext const& block_co
     }
 
     // 2. Dequant[ 0 ][ 0 ] is set equal to ( Tokens[ 0 ] * get_dc_quant( plane ) ) / dqDenom
-    dequantized[0] = (m_parser->m_tokens[0] * get_dc_quant(block_context.frame_context.color_config.bit_depth, plane)) / dq_denominator;
+    dequantized[0] = (m_parser->m_tokens[0] * get_dc_quantizer(block_context, plane)) / dq_denominator;
 
     // It is a requirement of bitstream conformance that the values written into the Dequant array in steps 1 and 2
     // are representable by a signed integer with 8 + BitDepth bits.
@@ -1095,7 +1099,7 @@ DecoderErrorOr<void> Decoder::reconstruct(u8 plane, BlockContext const& block_co
 
     // 3. Invoke the 2D inverse transform block process defined in section 8.7.2 with the variable n as input.
     //    The inverse transform outputs are stored back to the Dequant buffer.
-    TRY(inverse_transform_2d(block_context.frame_context.color_config.bit_depth, dequantized, log2_of_block_size));
+    TRY(inverse_transform_2d(block_context, dequantized, log2_of_block_size));
 
     // 4. CurrFrame[ plane ][ y + i ][ x + j ] is set equal to Clip1( CurrFrame[ plane ][ y + i ][ x + j ] + Dequant[ i ][ j ] )
     //    for i = 0..(n0-1) and j = 0..(n0-1).
@@ -1648,7 +1652,7 @@ inline DecoderErrorOr<void> Decoder::inverse_asymmetric_discrete_sine_transform(
     return inverse_asymmetric_discrete_sine_transform_16(bit_depth, data);
 }
 
-DecoderErrorOr<void> Decoder::inverse_transform_2d(u8 bit_depth, Span<Intermediate> dequantized, u8 log2_of_block_size)
+DecoderErrorOr<void> Decoder::inverse_transform_2d(BlockContext const& block_context, Span<Intermediate> dequantized, u8 log2_of_block_size)
 {
     // This process performs a 2D inverse transform for an array of size 2^n by 2^n stored in the 2D array Dequant.
     // The input to this process is a variable n (log2_of_block_size) that specifies the base 2 logarithm of the width of the transform.
@@ -1667,7 +1671,7 @@ DecoderErrorOr<void> Decoder::inverse_transform_2d(u8 bit_depth, Span<Intermedia
 
         // 2. If Lossless is equal to 1, invoke the Inverse WHT process as specified in section 8.7.1.10 with shift equal
         //    to 2.
-        if (m_parser->m_lossless) {
+        if (block_context.frame_context.is_lossless()) {
             TRY(inverse_walsh_hadamard_transform(row, log2_of_block_size, 2));
             continue;
         }
@@ -1679,13 +1683,13 @@ DecoderErrorOr<void> Decoder::inverse_transform_2d(u8 bit_depth, Span<Intermedia
             // 1. Invoke the inverse DCT permutation process as specified in section 8.7.1.2 with the input variable n.
             TRY(inverse_discrete_cosine_transform_array_permutation(row, log2_of_block_size));
             // 2. Invoke the inverse DCT process as specified in section 8.7.1.3 with the input variable n.
-            TRY(inverse_discrete_cosine_transform(bit_depth, row, log2_of_block_size));
+            TRY(inverse_discrete_cosine_transform(block_context.frame_context.color_config.bit_depth, row, log2_of_block_size));
             break;
         case DCT_ADST:
         case ADST_ADST:
             // 4. Otherwise (TxType is equal to DCT_ADST or TxType is equal to ADST_ADST), invoke the inverse ADST
             //    process as specified in section 8.7.1.9 with input variable n.
-            TRY(inverse_asymmetric_discrete_sine_transform(bit_depth, row, log2_of_block_size));
+            TRY(inverse_asymmetric_discrete_sine_transform(block_context.frame_context.color_config.bit_depth, row, log2_of_block_size));
             break;
         default:
             return DecoderError::corrupted("Unknown tx_type"sv);
@@ -1707,7 +1711,7 @@ DecoderErrorOr<void> Decoder::inverse_transform_2d(u8 bit_depth, Span<Intermedia
 
         // 2. If Lossless is equal to 1, invoke the Inverse WHT process as specified in section 8.7.1.10 with shift equal
         //    to 0.
-        if (m_parser->m_lossless) {
+        if (block_context.frame_context.is_lossless()) {
             TRY(inverse_walsh_hadamard_transform(column, log2_of_block_size, 2));
             continue;
         }
@@ -1719,13 +1723,13 @@ DecoderErrorOr<void> Decoder::inverse_transform_2d(u8 bit_depth, Span<Intermedia
             // 1. Invoke the inverse DCT permutation process as specified in section 8.7.1.2 with the input variable n.
             TRY(inverse_discrete_cosine_transform_array_permutation(column, log2_of_block_size));
             // 2. Invoke the inverse DCT process as specified in section 8.7.1.3 with the input variable n.
-            TRY(inverse_discrete_cosine_transform(bit_depth, column, log2_of_block_size));
+            TRY(inverse_discrete_cosine_transform(block_context.frame_context.color_config.bit_depth, column, log2_of_block_size));
             break;
         case ADST_DCT:
         case ADST_ADST:
             // 4. Otherwise (TxType is equal to ADST_DCT or TxType is equal to ADST_ADST), invoke the inverse ADST
             //    process as specified in section 8.7.1.9 with input variable n.
-            TRY(inverse_asymmetric_discrete_sine_transform(bit_depth, column, log2_of_block_size));
+            TRY(inverse_asymmetric_discrete_sine_transform(block_context.frame_context.color_config.bit_depth, column, log2_of_block_size));
             break;
         default:
             VERIFY_NOT_REACHED();
@@ -1737,7 +1741,7 @@ DecoderErrorOr<void> Decoder::inverse_transform_2d(u8 bit_depth, Span<Intermedia
 
         // 6. Otherwise (Lossless is equal to 0), set Dequant[ i ][ j ] equal to Round2( T[ i ], Min( 6, n + 2 ) )
         //    for i = 0..(n0-1).
-        if (!m_parser->m_lossless) {
+        if (!block_context.frame_context.is_lossless()) {
             for (auto i = 0u; i < block_size; i++) {
                 auto index = index_from_row_and_column(i, j, block_size);
                 dequantized[index] = round_2(dequantized[index], min(6, log2_of_block_size + 2));

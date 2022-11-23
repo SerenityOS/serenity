@@ -261,7 +261,7 @@ DecoderErrorOr<FrameContext> Parser::uncompressed_header()
     frame_context.probability_context_index = probability_context_index;
 
     TRY(loop_filter_params(frame_context));
-    TRY(quantization_params());
+    TRY(quantization_params(frame_context));
     TRY(segmentation_params());
     TRY(tile_info(frame_context));
 
@@ -418,13 +418,12 @@ DecoderErrorOr<void> Parser::loop_filter_params(FrameContext& frame_context)
     return {};
 }
 
-DecoderErrorOr<void> Parser::quantization_params()
+DecoderErrorOr<void> Parser::quantization_params(FrameContext& frame_context)
 {
-    m_base_q_idx = TRY_READ(m_bit_stream->read_f8());
-    m_delta_q_y_dc = TRY(read_delta_q());
-    m_delta_q_uv_dc = TRY(read_delta_q());
-    m_delta_q_uv_ac = TRY(read_delta_q());
-    m_lossless = m_base_q_idx == 0 && m_delta_q_y_dc == 0 && m_delta_q_uv_dc == 0 && m_delta_q_uv_ac == 0;
+    frame_context.base_quantizer_index = TRY_READ(m_bit_stream->read_f8());
+    frame_context.y_dc_quantizer_index_delta = TRY(read_delta_q());
+    frame_context.uv_dc_quantizer_index_delta = TRY(read_delta_q());
+    frame_context.uv_ac_quantizer_index_delta = TRY(read_delta_q());
     return {};
 }
 
@@ -538,7 +537,7 @@ void Parser::setup_past_independence()
 
 DecoderErrorOr<void> Parser::compressed_header(FrameContext& frame_context)
 {
-    TRY(read_tx_mode());
+    TRY(read_tx_mode(frame_context));
     if (m_tx_mode == TXModeSelect)
         TRY(tx_mode_probs());
     TRY(read_coef_probs());
@@ -557,9 +556,9 @@ DecoderErrorOr<void> Parser::compressed_header(FrameContext& frame_context)
     return {};
 }
 
-DecoderErrorOr<void> Parser::read_tx_mode()
+DecoderErrorOr<void> Parser::read_tx_mode(FrameContext const& frame_context)
 {
-    if (m_lossless) {
+    if (frame_context.is_lossless()) {
         m_tx_mode = Only_4x4;
     } else {
         auto tx_mode = TRY_READ(m_bit_stream->read_literal(2));
@@ -1429,7 +1428,7 @@ u32 const* Parser::get_scan(BlockContext const& block_context, size_t plane, TXS
     if (plane > 0 || tx_size == TX_32x32) {
         m_tx_type = DCT_DCT;
     } else if (tx_size == TX_4x4) {
-        if (m_lossless || m_is_inter)
+        if (block_context.frame_context.is_lossless() || m_is_inter)
             m_tx_type = DCT_DCT;
         else
             m_tx_type = mode_to_txfm_map[to_underlying(block_context.size < Block_8x8 ? m_block_sub_modes[block_index] : m_y_mode)];
