@@ -181,6 +181,7 @@ class Interpreter;
 class Intrinsics;
 class MetaProperty;
 class Module;
+struct ModuleRequest;
 class NativeFunction;
 class ObjectEnvironment;
 class Parser;

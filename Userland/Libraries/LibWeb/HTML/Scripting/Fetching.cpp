@@ -5,7 +5,7 @@
  */
 
 #include <AK/URLParser.h>
-#include <LibJS/AST.h>
+#include <LibJS/Runtime/ModuleRequest.h>
 #include <LibWeb/HTML/Scripting/Environments.h>
 #include <LibWeb/HTML/Scripting/Fetching.h>
 #include <LibWeb/HTML/Scripting/ModuleScript.h>
