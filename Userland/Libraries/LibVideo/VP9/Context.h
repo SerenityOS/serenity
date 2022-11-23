@@ -243,6 +243,14 @@ enum class FrameShowMode {
     DoNotShowFrame,
 };
 
+struct ColorConfig {
+    u8 bit_depth { 8 };
+    ColorSpace color_space { ColorSpace::Bt601 };
+    ColorRange color_range { ColorRange::Studio };
+    bool subsampling_x { true };
+    bool subsampling_y { true };
+};
+
 struct FrameContext {
 public:
     u8 profile { 0 };
@@ -257,6 +265,8 @@ public:
         m_existing_frame_index = index;
     }
     u8 existing_frame_index() const { return m_existing_frame_index; }
+
+    ColorConfig color_config {};
 
     Gfx::Size<u32> size() const { return m_size; }
     ErrorOr<void> set_size(Gfx::Size<u32> size)
