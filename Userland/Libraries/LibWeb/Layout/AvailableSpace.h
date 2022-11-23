@@ -9,6 +9,7 @@
 #include <AK/DeprecatedString.h>
 #include <AK/Format.h>
 #include <LibWeb/Forward.h>
+#include <LibWeb/PixelUnits.h>
 
 namespace Web::Layout {
 
@@ -21,7 +22,7 @@ public:
         MaxContent,
     };
 
-    static AvailableSize make_definite(float);
+    static AvailableSize make_definite(CSSPixels);
     static AvailableSize make_indefinite();
     static AvailableSize make_min_content();
     static AvailableSize make_max_content();
@@ -32,12 +33,12 @@ public:
     bool is_max_content() const { return m_type == Type::MaxContent; }
     bool is_intrinsic_sizing_constraint() const { return is_min_content() || is_max_content(); }
 
-    float to_px() const
+    CSSPixels to_px() const
     {
         return m_value;
     }
 
-    float to_px_or_zero() const
+    CSSPixels to_px_or_zero() const
     {
         if (!is_definite())
             return 0.0f;
@@ -47,10 +48,10 @@ public:
     DeprecatedString to_deprecated_string() const;
 
 private:
-    AvailableSize(Type type, float);
+    AvailableSize(Type type, CSSPixels);
 
     Type m_type {};
-    float m_value {};
+    CSSPixels m_value {};
 };
 
 class AvailableSpace {

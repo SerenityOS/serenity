@@ -27,7 +27,7 @@ float GridFormattingContext::resolve_definite_track_size(CSS::GridSize const& gr
         return grid_size.length().to_px(box);
     case CSS::GridSize::Type::Percentage:
         if (available_space.width.is_definite())
-            return grid_size.percentage().as_fraction() * available_space.width.to_px();
+            return grid_size.percentage().as_fraction() * available_space.width.to_px().value();
         break;
     default:
         VERIFY_NOT_REACHED();
@@ -72,7 +72,7 @@ float GridFormattingContext::resolve_size(CSS::Size const& size, AvailableSize c
     if (size.is_percentage()) {
         if (!available_size.is_definite())
             return 0;
-        return available_size.to_px() * size.percentage().as_fraction();
+        return available_size.to_px().value() * size.percentage().as_fraction();
     }
     return 0;
 }
@@ -680,7 +680,7 @@ void GridFormattingContext::calculate_sizes_of_columns(Box const& box, Available
             break;
         case CSS::GridSize::Type::Percentage:
             if (available_space.width.is_definite())
-                grid_column.base_size = grid_column.min_track_sizing_function.percentage().as_fraction() * available_space.width.to_px();
+                grid_column.base_size = grid_column.min_track_sizing_function.percentage().as_fraction() * available_space.width.to_px().value();
             break;
         // - An intrinsic sizing function
         // Use an initial base size of zero.
@@ -704,7 +704,7 @@ void GridFormattingContext::calculate_sizes_of_columns(Box const& box, Available
             break;
         case CSS::GridSize::Type::Percentage:
             if (available_space.width.is_definite())
-                grid_column.growth_limit = grid_column.max_track_sizing_function.percentage().as_fraction() * available_space.width.to_px();
+                grid_column.growth_limit = grid_column.max_track_sizing_function.percentage().as_fraction() * available_space.width.to_px().value();
             break;
         // - A flexible sizing function
         // Use an initial growth limit of infinity.
@@ -783,7 +783,7 @@ void GridFormattingContext::calculate_sizes_of_columns(Box const& box, Available
         // the size of the item’s content, it is considered a type of intrinsic size contribution.
         float grid_column_width = 0;
         for (auto& box_of_column : boxes_of_column)
-            grid_column_width = max(grid_column_width, calculate_min_content_width(box_of_column));
+            grid_column_width = max(grid_column_width, calculate_min_content_width(box_of_column).value());
         grid_column.base_size = grid_column_width;
 
         // - For min-content maximums:
@@ -912,7 +912,7 @@ void GridFormattingContext::calculate_sizes_of_columns(Box const& box, Available
         grid_column.space_to_distribute = max(0, (grid_column.growth_limit == -1 ? grid_column.base_size : grid_column.growth_limit) - grid_column.base_size);
     }
 
-    auto remaining_free_space = available_space.width.is_definite() ? available_space.width.to_px() - sum_of_track_sizes : 0;
+    auto remaining_free_space = available_space.width.is_definite() ? available_space.width.to_px().value() - sum_of_track_sizes : 0;
     // 2.2. Distribute space up to limits: Find the item-incurred increase for each spanned track with an
     // affected size by: distributing the space equally among such tracks, freezing a track’s
     // item-incurred increase as its affected size + item-incurred increase reaches its limit (and
@@ -1030,7 +1030,7 @@ void GridFormattingContext::calculate_sizes_of_columns(Box const& box, Available
             sized_column_widths += grid_column.base_size;
     }
     // Let leftover space be the space to fill minus the base sizes of the non-flexible grid tracks.
-    double free_horizontal_space = available_space.width.is_definite() ? available_space.width.to_px() - sized_column_widths : 0;
+    double free_horizontal_space = available_space.width.is_definite() ? available_space.width.to_px().value() - sized_column_widths : 0;
 
     // If the free space is zero or if sizing the grid container under a min-content constraint:
     // The used flex fraction is zero.
@@ -1103,7 +1103,7 @@ void GridFormattingContext::calculate_sizes_of_columns(Box const& box, Available
             used_horizontal_space += grid_column.base_size;
     }
 
-    float remaining_horizontal_space = available_space.width.is_definite() ? available_space.width.to_px() - used_horizontal_space : 0;
+    float remaining_horizontal_space = available_space.width.is_definite() ? available_space.width.to_px().value() - used_horizontal_space : 0;
     auto count_of_auto_max_column_tracks = 0;
     for (auto& grid_column : m_grid_columns) {
         if (grid_column.max_track_sizing_function.is_length() && grid_column.max_track_sizing_function.length().is_auto())
@@ -1241,7 +1241,7 @@ void GridFormattingContext::calculate_sizes_of_rows(Box const& box)
         // the size of the item’s content, it is considered a type of intrinsic size contribution.
         float grid_row_height = 0;
         for (auto& positioned_box : positioned_boxes_of_row)
-            grid_row_height = max(grid_row_height, calculate_min_content_height(positioned_box.box, AvailableSize::make_definite(m_grid_columns[positioned_box.column].base_size)));
+            grid_row_height = max(grid_row_height, calculate_min_content_height(positioned_box.box, AvailableSize::make_definite(m_grid_columns[positioned_box.column].base_size)).value());
         grid_row.base_size = grid_row_height;
 
         // - For min-content maximums:
@@ -1770,7 +1770,7 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
     m_automatic_content_height = total_y;
 }
 
-float GridFormattingContext::automatic_content_height() const
+CSSPixels GridFormattingContext::automatic_content_height() const
 {
     return m_automatic_content_height;
 }
@@ -1802,7 +1802,7 @@ float GridFormattingContext::get_free_space_x(AvailableSpace const& available_sp
     auto sum_base_sizes = 0;
     for (auto& grid_column : m_grid_columns)
         sum_base_sizes += grid_column.base_size;
-    return max(0, available_space.width.to_px() - sum_base_sizes);
+    return max(0, available_space.width.to_px().value() - sum_base_sizes);
 }
 
 float GridFormattingContext::get_free_space_y(Box const& box)

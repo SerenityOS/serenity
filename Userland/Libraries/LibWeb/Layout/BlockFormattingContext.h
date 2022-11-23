@@ -22,7 +22,7 @@ public:
     ~BlockFormattingContext();
 
     virtual void run(Box const&, LayoutMode, AvailableSpace const&) override;
-    virtual float automatic_content_height() const override;
+    virtual CSSPixels automatic_content_height() const override;
 
     bool is_initial() const;
 
@@ -42,7 +42,7 @@ public:
 
     SpaceUsedByFloats space_used_by_floats(float y) const;
 
-    virtual float greatest_child_width(Box const&) override;
+    virtual CSSPixels greatest_child_width(Box const&) override;
 
     void layout_floating_box(Box const& child, BlockContainer const& containing_block, LayoutMode, AvailableSpace const&, float y, LineBuilder* = nullptr);
 

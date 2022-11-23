@@ -9,7 +9,7 @@
 
 namespace Web::Layout {
 
-AvailableSize AvailableSize::make_definite(float value)
+AvailableSize AvailableSize::make_definite(CSSPixels value)
 {
     return AvailableSize { Type::Definite, value };
 }
@@ -49,7 +49,7 @@ DeprecatedString AvailableSpace::to_deprecated_string() const
     return DeprecatedString::formatted("{} x {}", width, height);
 }
 
-AvailableSize::AvailableSize(Type type, float value)
+AvailableSize::AvailableSize(Type type, CSSPixels value)
     : m_type(type)
     , m_value(value)
 {
