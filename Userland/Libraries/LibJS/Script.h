@@ -10,7 +10,7 @@
 #include <LibJS/AST.h>
 #include <LibJS/Heap/GCPtr.h>
 #include <LibJS/Heap/Handle.h>
-#include <LibJS/Parser.h>
+#include <LibJS/ParserError.h>
 #include <LibJS/Runtime/Realm.h>
 
 namespace JS {
