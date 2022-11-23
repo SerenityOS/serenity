@@ -31,8 +31,10 @@ PDFErrorOr<Type1Font::Data> Type1Font::parse_data(Document* document, NonnullRef
         auto length2 = font_file_dict->get_value(CommonNames::Length2).get<int>();
 
         data.font_program = adopt_ref(*new PS1FontProgram());
-        TRY(data.font_program->parse(font_file_stream->bytes(), length1, length2));
-        data.encoding = data.font_program->encoding();
+        TRY(data.font_program->create(font_file_stream->bytes(), data.encoding, length1, length2));
+
+        if (!data.encoding)
+            data.encoding = data.font_program->encoding();
     }
 
     return data;

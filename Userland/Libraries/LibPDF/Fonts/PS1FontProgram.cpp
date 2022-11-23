@@ -44,7 +44,7 @@ enum ExtendedCommand {
     SetCurrentPoint = 33,
 };
 
-PDFErrorOr<void> PS1FontProgram::parse(ReadonlyBytes const& bytes, size_t cleartext_length, size_t encrypted_length)
+PDFErrorOr<void> PS1FontProgram::create(ReadonlyBytes const& bytes, RefPtr<Encoding> encoding, size_t cleartext_length, size_t encrypted_length)
 {
     Reader reader(bytes);
     if (reader.remaining() == 0)
@@ -57,22 +57,28 @@ PDFErrorOr<void> PS1FontProgram::parse(ReadonlyBytes const& bytes, size_t cleart
     if (!seek_name(reader, CommonNames::Encoding))
         return error("Missing encoding array");
 
-    if (TRY(parse_word(reader)) == "StandardEncoding") {
-        m_encoding = Encoding::standard_encoding();
+    if (encoding) {
+        // 9.6.6.2 Encodings for Type 1 Fonts:
+        // An Encoding entry may override a Type 1 font’s mapping from character codes to character names.
+        m_encoding = encoding;
     } else {
-        HashMap<u16, CharDescriptor> descriptors;
+        if (TRY(parse_word(reader)) == "StandardEncoding") {
+            m_encoding = Encoding::standard_encoding();
+        } else {
+            HashMap<u16, CharDescriptor> descriptors;
 
-        while (reader.remaining()) {
-            auto word = TRY(parse_word(reader));
-            if (word == "readonly") {
-                break;
-            } else if (word == "dup") {
-                u32 char_code = TRY(parse_int(reader));
-                auto name = TRY(parse_word(reader));
-                descriptors.set(char_code, { name.starts_with('/') ? name.substring_view(1) : name.view(), char_code });
+            while (reader.remaining()) {
+                auto word = TRY(parse_word(reader));
+                if (word == "readonly") {
+                    break;
+                } else if (word == "dup") {
+                    u32 char_code = TRY(parse_int(reader));
+                    auto name = TRY(parse_word(reader));
+                    descriptors.set(char_code, { name.starts_with('/') ? name.substring_view(1) : name.view(), char_code });
+                }
             }
+            m_encoding = TRY(Encoding::create(descriptors));
         }
-        m_encoding = TRY(Encoding::create(descriptors));
     }
 
     bool found_font_matrix = seek_name(reader, "FontMatrix");
