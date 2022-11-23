@@ -10,7 +10,6 @@
 #include <LibJS/Forward.h>
 #include <LibJS/Module.h>
 #include <LibJS/Parser.h>
-#include <LibJS/Runtime/PromiseCapability.h>
 
 namespace JS {
 
