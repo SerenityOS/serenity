@@ -79,6 +79,7 @@ private:
     PDFErrorOr<LinearizationResult> initialize_linearization_dict();
     PDFErrorOr<void> initialize_linearized_xref_table();
     PDFErrorOr<void> initialize_non_linearized_xref_table();
+    PDFErrorOr<void> validate_xref_table_and_fix_if_necessary();
     PDFErrorOr<void> initialize_hint_tables();
     PDFErrorOr<PageOffsetHintTable> parse_page_offset_hint_table(ReadonlyBytes hint_stream_bytes);
     Vector<PageOffsetHintTableEntry> parse_all_page_offset_hint_table_entries(PageOffsetHintTable const&, ReadonlyBytes hint_stream_bytes);

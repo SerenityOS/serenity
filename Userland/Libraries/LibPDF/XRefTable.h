@@ -68,6 +68,8 @@ public:
             m_entries.append(entry);
     }
 
+    ALWAYS_INLINE Vector<XRefEntry>& entries() { return m_entries; }
+
     [[nodiscard]] ALWAYS_INLINE bool has_object(size_t index) const
     {
         return index < m_entries.size() && m_entries[index].byte_offset != -1;

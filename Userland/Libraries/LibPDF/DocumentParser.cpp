@@ -197,7 +197,7 @@ PDFErrorOr<void> DocumentParser::initialize_linearized_xref_table()
     auto main_xref_table = TRY(parse_xref_table());
     TRY(m_xref_table->merge(move(*main_xref_table)));
 
-    return {};
+    return validate_xref_table_and_fix_if_necessary();
 }
 
 PDFErrorOr<void> DocumentParser::initialize_hint_tables()
@@ -275,6 +275,56 @@ PDFErrorOr<void> DocumentParser::initialize_non_linearized_xref_table()
     m_xref_table = TRY(parse_xref_table());
     if (!m_trailer)
         m_trailer = TRY(parse_file_trailer());
+    return validate_xref_table_and_fix_if_necessary();
+}
+
+PDFErrorOr<void> DocumentParser::validate_xref_table_and_fix_if_necessary()
+{
+    /* While an xref table may start with an object number other than zero, this is
+       very uncommon and likely a sign of a document with broken indices.
+       Like most other PDF parsers seem to do, we still try to salvage the situation.
+       NOTE: This is probably not spec-compliant behavior.*/
+    size_t first_valid_index = 0;
+    while (m_xref_table->byte_offset_for_object(first_valid_index) == invalid_byte_offset)
+        first_valid_index++;
+
+    if (first_valid_index) {
+        auto& entries = m_xref_table->entries();
+
+        bool need_to_rebuild_table = true;
+        for (size_t i = first_valid_index; i < entries.size(); ++i) {
+            if (!entries[i].in_use)
+                continue;
+
+            size_t actual_object_number = 0;
+            if (entries[i].compressed) {
+                auto object_stream_index = m_xref_table->object_stream_for_object(i);
+                auto stream_offset = m_xref_table->byte_offset_for_object(object_stream_index);
+                m_reader.move_to(stream_offset);
+                auto first_number = TRY(parse_number());
+                actual_object_number = first_number.get_u32();
+            } else {
+                auto byte_offset = m_xref_table->byte_offset_for_object(i);
+                m_reader.move_to(byte_offset);
+                auto indirect_value = TRY(parse_indirect_value());
+                actual_object_number = indirect_value->index();
+            }
+
+            if (actual_object_number != i - first_valid_index) {
+                /* Our suspicion was wrong, not all object numbers are shifted equally.
+                   This could mean that the document is hopelessly broken, or it just
+                   starts at a non-zero object index for some reason. */
+                need_to_rebuild_table = false;
+                break;
+            }
+        }
+
+        if (need_to_rebuild_table) {
+            warnln("Broken xref table detected, trying to fix it.");
+            entries.remove(0, first_valid_index);
+        }
+    }
+
     return {};
 }
 
