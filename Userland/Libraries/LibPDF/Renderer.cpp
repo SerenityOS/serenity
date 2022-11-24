@@ -319,8 +319,7 @@ RENDERER_HANDLER(path_fill_nonzero)
 
 RENDERER_HANDLER(path_fill_nonzero_deprecated)
 {
-    TRY(handle_path_fill_nonzero(args));
-    return {};
+    return handle_path_fill_nonzero(args);
 }
 
 RENDERER_HANDLER(path_fill_evenodd)
@@ -334,29 +333,25 @@ RENDERER_HANDLER(path_fill_evenodd)
 RENDERER_HANDLER(path_fill_stroke_nonzero)
 {
     m_anti_aliasing_painter.stroke_path(m_current_path, state().stroke_color, state().line_width);
-    TRY(handle_path_fill_nonzero(args));
-    return {};
+    return handle_path_fill_nonzero(args);
 }
 
 RENDERER_HANDLER(path_fill_stroke_evenodd)
 {
     m_anti_aliasing_painter.stroke_path(m_current_path, state().stroke_color, state().line_width);
-    TRY(handle_path_fill_evenodd(args));
-    return {};
+    return handle_path_fill_evenodd(args);
 }
 
 RENDERER_HANDLER(path_close_fill_stroke_nonzero)
 {
     m_current_path.close();
-    TRY(handle_path_fill_stroke_nonzero(args));
-    return {};
+    return handle_path_fill_stroke_nonzero(args);
 }
 
 RENDERER_HANDLER(path_close_fill_stroke_evenodd)
 {
     m_current_path.close();
-    TRY(handle_path_fill_stroke_evenodd(args));
-    return {};
+    return handle_path_fill_stroke_evenodd(args);
 }
 
 RENDERER_HANDLER(path_end)
