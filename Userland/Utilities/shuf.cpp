@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Ben Wiederhake <BenWiederhake.GitHub@gmx.de>
+ * Copyright (c) 2022, Eli Youngs <eli.m.youngs@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -7,52 +8,63 @@
 #include <AK/Random.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
+#include <LibCore/ArgsParser.h>
+#include <LibCore/Stream.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
-#include <errno.h>
-#include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 
-ErrorOr<int> serenity_main([[maybe_unused]] Main::Arguments arguments)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio"sv));
+    TRY(Core::System::pledge("stdio rpath"));
 
-    Vector<String> lines;
+    Core::ArgsParser args_parser;
+    StringView path;
 
-    char* buffer = nullptr;
-    for (;;) {
-        size_t n = 0;
-        errno = 0;
-        ssize_t buflen = getline(&buffer, &n, stdin);
-        if (buflen == -1 && errno != 0) {
-            perror("getline");
-            exit(1);
+    args_parser.add_positional_argument(path, "File", "file", Core::ArgsParser::Required::No);
+
+    args_parser.parse(arguments);
+
+    auto file = TRY(Core::Stream::File::open_file_or_standard_stream(path, Core::Stream::OpenMode::Read));
+    ByteBuffer buffer = TRY(file->read_all());
+
+    Vector<Bytes> lines;
+
+    auto bytes = buffer.span();
+    size_t line_start = 0;
+    size_t line_length = 0;
+    for (size_t i = 0; i < bytes.size(); ++i) {
+        if (bytes[i] == '\n') {
+            lines.append(bytes.slice(line_start, line_length));
+            line_start = i + 1;
+            line_length = 0;
+        } else {
+            ++line_length;
         }
-        if (buflen == -1)
-            break;
-        lines.append({ buffer, AK::ShouldChomp::Chomp });
     }
-    free(buffer);
+    if (line_length > 0) {
+        lines.append(bytes.slice(line_start));
+    }
 
     if (lines.is_empty())
         return 0;
 
     // Fisher-Yates shuffle
-    String tmp;
+    Bytes tmp;
     for (size_t i = lines.size() - 1; i >= 1; --i) {
         size_t j = get_random_uniform(i + 1);
         // Swap i and j
         if (i == j)
             continue;
-        tmp = move(lines[j]);
-        lines[j] = move(lines[i]);
-        lines[i] = move(tmp);
+        tmp = lines[j];
+        lines[j] = lines[i];
+        lines[i] = tmp;
     }
 
-    for (auto& line : lines) {
-        fputs(line.characters(), stdout);
-        fputc('\n', stdout);
+    Array<u8, 1> output_delimiter = { '\n' };
+    for (auto const& line : lines) {
+        TRY(Core::System::write(STDOUT_FILENO, line));
+        TRY(Core::System::write(STDOUT_FILENO, output_delimiter));
     }
 
     return 0;
