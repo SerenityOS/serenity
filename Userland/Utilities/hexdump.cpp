@@ -1,12 +1,13 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, Eli Youngs <eli.m.youngs@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Array.h>
 #include <LibCore/ArgsParser.h>
-#include <LibCore/File.h>
+#include <LibCore/Stream.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
 #include <ctype.h>
@@ -25,7 +26,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
     TRY(Core::System::pledge("stdio rpath"));
 
     Core::ArgsParser args_parser;
-    char const* path = nullptr;
+    StringView path;
     bool verbose = false;
     Optional<size_t> max_bytes;
 
@@ -35,18 +36,13 @@ ErrorOr<int> serenity_main(Main::Arguments args)
 
     args_parser.parse(args);
 
-    RefPtr<Core::File> file;
+    auto file = TRY(Core::Stream::File::open_file_or_standard_stream(path, Core::Stream::OpenMode::Read));
 
-    if (!path)
-        file = Core::File::standard_input();
-    else
-        file = TRY(Core::File::open(path, Core::OpenMode::ReadOnly));
-
-    auto print_line = [](u8* buf, size_t size) {
-        VERIFY(size <= LINE_LENGTH_BYTES);
+    auto print_line = [](Bytes line) {
+        VERIFY(line.size() <= LINE_LENGTH_BYTES);
         for (size_t i = 0; i < LINE_LENGTH_BYTES; ++i) {
-            if (i < size)
-                out("{:02x} ", buf[i]);
+            if (i < line.size())
+                out("{:02x} ", line[i]);
             else
                 out("   ");
 
@@ -56,9 +52,9 @@ ErrorOr<int> serenity_main(Main::Arguments args)
 
         out("  |");
 
-        for (size_t i = 0; i < size; ++i) {
-            if (isprint(buf[i]))
-                putchar(buf[i]);
+        for (auto const& byte : line) {
+            if (isprint(byte))
+                putchar(byte);
             else
                 putchar('.');
         }
@@ -68,42 +64,42 @@ ErrorOr<int> serenity_main(Main::Arguments args)
     };
 
     Array<u8, BUFSIZ> contents;
-    Span<u8> previous_line;
+    Bytes bytes;
+    Bytes previous_line;
     static_assert(LINE_LENGTH_BYTES * 2 <= contents.size(), "Buffer is too small?!");
-    size_t bytes_in_buffer = 0;
     size_t total_bytes_read = 0;
-    size_t bytes_remaining = 0;
-    size_t bytes_to_read = 0;
 
-    int nread;
     auto state = State::Print;
     bool is_input_remaining = true;
     while (is_input_remaining) {
-        bytes_to_read = BUFSIZ - bytes_in_buffer;
+        auto bytes_to_read = contents.size() - bytes.size();
 
         if (max_bytes.has_value()) {
-            bytes_remaining = max_bytes.value() - total_bytes_read;
+            auto bytes_remaining = max_bytes.value() - total_bytes_read;
             if (bytes_remaining < bytes_to_read) {
                 bytes_to_read = bytes_remaining;
                 is_input_remaining = false;
             }
         }
 
-        nread = file->read(&contents[bytes_in_buffer], (int)bytes_to_read);
-        if (nread <= 0)
-            break;
+        bytes = contents.span().slice(0, bytes_to_read);
+        bytes = TRY(file->read(bytes));
 
-        total_bytes_read += nread;
-        bytes_in_buffer += nread;
+        total_bytes_read += bytes.size();
 
-        size_t offset;
-        for (offset = 0; offset + LINE_LENGTH_BYTES - 1 < bytes_in_buffer; offset += LINE_LENGTH_BYTES) {
+        if (bytes.size() < bytes_to_read) {
+            is_input_remaining = false;
+        }
+
+        while (bytes.size() > LINE_LENGTH_BYTES) {
+            auto current_line = bytes.slice(0, LINE_LENGTH_BYTES);
+            bytes = bytes.slice(LINE_LENGTH_BYTES);
+
             if (verbose) {
-                print_line(&contents[offset], LINE_LENGTH_BYTES);
+                print_line(current_line);
                 continue;
             }
 
-            auto current_line = contents.span().slice(offset, LINE_LENGTH_BYTES);
             bool is_same_contents = (current_line == previous_line);
             if (!is_same_contents)
                 state = State::Print;
@@ -113,7 +109,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
             // Coalesce repeating lines
             switch (state) {
             case State::Print:
-                print_line(&contents[offset], LINE_LENGTH_BYTES);
+                print_line(current_line);
                 break;
             case State::PrintFiller:
                 outln("*");
@@ -124,18 +120,10 @@ ErrorOr<int> serenity_main(Main::Arguments args)
             }
             previous_line = current_line;
         }
-
-        bytes_in_buffer -= offset;
-        VERIFY(bytes_in_buffer < LINE_LENGTH_BYTES);
-        // If we managed to make the buffer exactly full, &contents[BUFSIZ] would blow up.
-        if (bytes_in_buffer > 0) {
-            // Regions cannot overlap due to above static_assert.
-            memcpy(&contents[0], &contents[offset], bytes_in_buffer);
-        }
     }
-    VERIFY(bytes_in_buffer <= LINE_LENGTH_BYTES - 1);
-    if (bytes_in_buffer > 0)
-        print_line(&contents[0], bytes_in_buffer);
+
+    if (bytes.size() > 0)
+        print_line(bytes);
 
     return 0;
 }
