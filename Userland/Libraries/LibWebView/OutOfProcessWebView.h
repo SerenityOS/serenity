@@ -86,7 +86,7 @@ public:
     Function<void(const AK::URL&, String const& target, unsigned modifiers)> on_link_middle_click;
     Function<void(const AK::URL&)> on_link_hover;
     Function<void(String const&)> on_title_change;
-    Function<void(const AK::URL&)> on_load_start;
+    Function<void(const AK::URL&, bool)> on_load_start;
     Function<void(const AK::URL&)> on_load_finish;
     Function<void()> on_navigate_back;
     Function<void()> on_navigate_forward;
@@ -151,7 +151,7 @@ private:
     virtual void notify_server_did_unhover_link(Badge<WebContentClient>) override;
     virtual void notify_server_did_click_link(Badge<WebContentClient>, const AK::URL&, String const& target, unsigned modifiers) override;
     virtual void notify_server_did_middle_click_link(Badge<WebContentClient>, const AK::URL&, String const& target, unsigned modifiers) override;
-    virtual void notify_server_did_start_loading(Badge<WebContentClient>, const AK::URL&, bool is_redirect) override;
+    virtual void notify_server_did_start_loading(Badge<WebContentClient>, const AK::URL&, bool) override;
     virtual void notify_server_did_finish_loading(Badge<WebContentClient>, const AK::URL&) override;
     virtual void notify_server_did_request_navigate_back(Badge<WebContentClient>) override;
     virtual void notify_server_did_request_navigate_forward(Badge<WebContentClient>) override;

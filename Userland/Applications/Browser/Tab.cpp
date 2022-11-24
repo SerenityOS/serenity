@@ -202,9 +202,15 @@ Tab::Tab(BrowserWindow& window)
     m_bookmark_button->set_icon(g_icon_bag.bookmark_contour);
     m_bookmark_button->set_fixed_size(22, 22);
 
-    view().on_load_start = [this](auto& url) {
+    view().on_load_start = [this](auto& url, bool is_redirect) {
         m_navigating_url = url;
         m_loaded = false;
+
+        // If we are loading due to a redirect, we replace the current history entry
+        // with the loaded URL
+        if (is_redirect) {
+            m_history.replace_current(url, title());
+        }
 
         update_status();
 
