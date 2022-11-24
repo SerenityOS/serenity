@@ -229,7 +229,8 @@ public:
     [[nodiscard]] Point end_point_for_aspect_ratio(Point const& previous_end_point, float aspect_ratio) const;
 
     template<typename U>
-    [[nodiscard]] Point<U> to_type() const
+    requires(!IsSame<T, U>)
+        [[nodiscard]] Point<U> to_type() const
     {
         return Point<U>(*this);
     }
