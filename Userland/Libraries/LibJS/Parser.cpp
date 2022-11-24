@@ -497,7 +497,7 @@ NonnullRefPtr<Program> Parser::parse_program(bool starts_in_strict_mode)
     else
         parse_module(program);
 
-    program->source_range().end = position();
+    program->set_end_offset({}, position().offset);
     return program;
 }
 
