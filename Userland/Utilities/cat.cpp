@@ -45,5 +45,5 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
     }
 
-    return 0;
+    return files.size() != paths.size();
 }
