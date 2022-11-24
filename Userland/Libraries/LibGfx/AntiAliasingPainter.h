@@ -20,7 +20,7 @@ public:
     }
 
     void draw_line(FloatPoint const&, FloatPoint const&, Color, float thickness = 1, Painter::LineStyle style = Painter::LineStyle::Solid, Color alternate_color = Color::Transparent);
-    void draw_aliased_line(FloatPoint const&, FloatPoint const&, Color, float thickness = 1, Painter::LineStyle style = Painter::LineStyle::Solid, Color alternate_color = Color::Transparent);
+    void draw_line_for_path(FloatPoint const&, FloatPoint const&, Color, float thickness = 1, Painter::LineStyle style = Painter::LineStyle::Solid, Color alternate_color = Color::Transparent);
     void fill_path(Path&, Color, Painter::WindingRule rule = Painter::WindingRule::Nonzero);
     void stroke_path(Path const&, Color, float thickness);
     void draw_quadratic_bezier_curve(FloatPoint const& control_point, FloatPoint const&, FloatPoint const&, Color, float thickness = 1, Painter::LineStyle style = Painter::LineStyle::Solid);
@@ -77,11 +77,11 @@ private:
 
     void draw_dotted_line(IntPoint, IntPoint, Gfx::Color, int thickness);
 
-    enum class AntiAliasPolicy {
-        OnlyEnds,
-        Full,
+    enum class FixmeEnableHacksForBetterPathPainting {
+        Yes,
+        No,
     };
-    template<AntiAliasPolicy policy>
+    template<FixmeEnableHacksForBetterPathPainting path_hacks>
     void draw_anti_aliased_line(FloatPoint, FloatPoint, Color, float thickness, Painter::LineStyle style, Color alternate_color);
     void stroke_segment_intersection(FloatPoint const& current_line_a, FloatPoint const& current_line_b, FloatLine const& previous_line, Color, float thickness);
     FloatQuad build_rotated_rectangle(FloatPoint const& direction, float width);

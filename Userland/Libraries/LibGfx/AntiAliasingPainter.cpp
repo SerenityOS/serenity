@@ -18,7 +18,7 @@
 
 namespace Gfx {
 
-template<AntiAliasingPainter::AntiAliasPolicy policy>
+template<AntiAliasingPainter::FixmeEnableHacksForBetterPathPainting path_hacks>
 void AntiAliasingPainter::draw_anti_aliased_line(FloatPoint actual_from, FloatPoint actual_to, Color color, float thickness, Painter::LineStyle style, Color)
 {
     // FIXME: Implement this :P
@@ -46,9 +46,11 @@ void AntiAliasingPainter::draw_anti_aliased_line(FloatPoint actual_from, FloatPo
     // Axis-aligned lines:
     if (mapped_from.y() == mapped_to.y()) {
         auto start_point = (mapped_from.x() < mapped_to.x() ? mapped_from : mapped_to).translated(0, -int_thickness / 2);
-        // FIXME: SVG fill_path() hack:
-        // SVG asks for 1px scanlines at floating point y values, if they're not rounded to a pixel they look faint.
-        start_point.set_y(round_to<int>(start_point.y()));
+        if constexpr (path_hacks == FixmeEnableHacksForBetterPathPainting::Yes) {
+            // FIXME: SVG fill_path() hack:
+            // SVG asks for 1px scanlines at floating point y values, if they're not rounded to a pixel they look faint.
+            start_point.set_y(round_to<int>(start_point.y()));
+        }
         return fill_rect(Gfx::FloatRect(start_point, { length, float(int_thickness) }), color);
     }
     if (mapped_from.x() == mapped_to.x()) {
@@ -56,11 +58,14 @@ void AntiAliasingPainter::draw_anti_aliased_line(FloatPoint actual_from, FloatPo
         return fill_rect(Gfx::FloatRect(start_point, { float(int_thickness), length }), color);
     }
 
-    // FIXME: SVG stoke_path() hack:
-    // When painting stokes SVG asks for many thickness * < 1px lines.
-    // It actually wants a thickness * thickness dot centered at that point.
-    if (length < 1.0f)
-        return fill_rect(Gfx::FloatRect::centered_at(mapped_from, { thickness, thickness }), color);
+    if constexpr (path_hacks == FixmeEnableHacksForBetterPathPainting::Yes) {
+        // FIXME: SVG stoke_path() hack:
+        // When painting stokes SVG asks for many thickness * < 1px lines.
+        // It actually wants a thickness * thickness dot centered at that point.
+        // (Technically this should be rotated or a circle, but that currently gives worse results)
+        if (length < 1.0f)
+            return fill_rect(Gfx::FloatRect::centered_at(mapped_from, { thickness, thickness }), color);
+    }
 
     // The painting only works for the positive XY quadrant (because that is easier).
     // So flip things around until we're there:
@@ -145,9 +150,9 @@ void AntiAliasingPainter::draw_anti_aliased_line(FloatPoint actual_from, FloatPo
     }
 }
 
-void AntiAliasingPainter::draw_aliased_line(FloatPoint const& actual_from, FloatPoint const& actual_to, Color color, float thickness, Painter::LineStyle style, Color alternate_color)
+void AntiAliasingPainter::draw_line_for_path(FloatPoint const& actual_from, FloatPoint const& actual_to, Color color, float thickness, Painter::LineStyle style, Color alternate_color)
 {
-    draw_anti_aliased_line<AntiAliasPolicy::OnlyEnds>(actual_from, actual_to, color, thickness, style, alternate_color);
+    draw_anti_aliased_line<FixmeEnableHacksForBetterPathPainting::Yes>(actual_from, actual_to, color, thickness, style, alternate_color);
 }
 
 void AntiAliasingPainter::draw_dotted_line(IntPoint point1, IntPoint point2, Color color, int thickness)
@@ -196,7 +201,7 @@ void AntiAliasingPainter::draw_line(FloatPoint const& actual_from, FloatPoint co
 {
     if (style == Painter::LineStyle::Dotted)
         return draw_dotted_line(actual_from.to_rounded<int>(), actual_to.to_rounded<int>(), color, static_cast<int>(round(thickness)));
-    draw_anti_aliased_line<AntiAliasPolicy::Full>(actual_from, actual_to, color, thickness, style, alternate_color);
+    draw_anti_aliased_line<FixmeEnableHacksForBetterPathPainting::No>(actual_from, actual_to, color, thickness, style, alternate_color);
 }
 
 void AntiAliasingPainter::fill_path(Path& path, Color color, Painter::WindingRule rule)
@@ -263,21 +268,21 @@ void AntiAliasingPainter::stroke_path(Path const& path, Color color, float thick
 void AntiAliasingPainter::draw_elliptical_arc(FloatPoint const& p1, FloatPoint const& p2, FloatPoint const& center, FloatPoint const& radii, float x_axis_rotation, float theta_1, float theta_delta, Color color, float thickness, Painter::LineStyle style)
 {
     Painter::for_each_line_segment_on_elliptical_arc(p1, p2, center, radii, x_axis_rotation, theta_1, theta_delta, [&](FloatPoint const& fp1, FloatPoint const& fp2) {
-        draw_line(fp1, fp2, color, thickness, style);
+        draw_line_for_path(fp1, fp2, color, thickness, style);
     });
 }
 
 void AntiAliasingPainter::draw_quadratic_bezier_curve(FloatPoint const& control_point, FloatPoint const& p1, FloatPoint const& p2, Color color, float thickness, Painter::LineStyle style)
 {
     Painter::for_each_line_segment_on_bezier_curve(control_point, p1, p2, [&](FloatPoint const& fp1, FloatPoint const& fp2) {
-        draw_line(fp1, fp2, color, thickness, style);
+        draw_line_for_path(fp1, fp2, color, thickness, style);
     });
 }
 
 void AntiAliasingPainter::draw_cubic_bezier_curve(FloatPoint const& control_point_0, FloatPoint const& control_point_1, FloatPoint const& p1, FloatPoint const& p2, Color color, float thickness, Painter::LineStyle style)
 {
     Painter::for_each_line_segment_on_cubic_bezier_curve(control_point_0, control_point_1, p1, p2, [&](FloatPoint const& fp1, FloatPoint const& fp2) {
-        draw_line(fp1, fp2, color, thickness, style);
+        draw_line_for_path(fp1, fp2, color, thickness, style);
     });
 }
 
