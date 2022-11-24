@@ -47,7 +47,7 @@ public:
     static Object* create(Realm&, Object* prototype);
 
     virtual void initialize(Realm&) override;
-    virtual ~Object() = default;
+    virtual ~Object();
 
     enum class PropertyKind {
         Key,
@@ -150,6 +150,9 @@ public:
 
     void define_direct_property(PropertyKey const& property_key, Value value, PropertyAttributes attributes) { storage_set(property_key, { value, attributes }); };
     void define_direct_accessor(PropertyKey const&, FunctionObject* getter, FunctionObject* setter, PropertyAttributes attributes);
+
+    using IntrinsicAccessor = Value (*)(Realm&);
+    virtual void define_intrinsic_accessor(PropertyKey const&, PropertyAttributes attributes, IntrinsicAccessor accessor);
 
     void define_native_function(Realm&, PropertyKey const&, SafeFunction<ThrowCompletionOr<Value>(VM&)>, i32 length, PropertyAttributes attributes);
     void define_native_accessor(Realm&, PropertyKey const&, SafeFunction<ThrowCompletionOr<Value>(VM&)> getter, SafeFunction<ThrowCompletionOr<Value>(VM&)> setter, PropertyAttributes attributes);
