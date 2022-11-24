@@ -24,6 +24,8 @@
 
 namespace JS {
 
+static HashMap<Object const*, HashMap<FlyString, Object::IntrinsicAccessor>> s_intrinsics;
+
 // 10.1.12 OrdinaryObjectCreate ( proto [ , additionalInternalSlotsList ] ), https://tc39.es/ecma262/#sec-ordinaryobjectcreate
 Object* Object::create(Realm& realm, Object* prototype)
 {
@@ -65,6 +67,11 @@ Object::Object(Shape& shape)
     : m_shape(&shape)
 {
     m_storage.resize(shape.property_count());
+}
+
+Object::~Object()
+{
+    s_intrinsics.remove(this);
 }
 
 void Object::initialize(Realm&)
@@ -970,6 +977,23 @@ ThrowCompletionOr<bool> Object::set_immutable_prototype(Object* prototype)
     return false;
 }
 
+static Optional<Object::IntrinsicAccessor> find_intrinsic_accessor(Object const* object, PropertyKey const& property_key)
+{
+    if (!property_key.is_string())
+        return {};
+
+    auto intrinsics = s_intrinsics.find(object);
+    if (intrinsics == s_intrinsics.end())
+        return {};
+
+    auto accessor = intrinsics->value.find(property_key.as_string());
+    if (accessor == intrinsics->value.end())
+        return {};
+
+    intrinsics->value.remove(accessor);
+    return move(accessor->value);
+}
+
 Optional<ValueAndAttributes> Object::storage_get(PropertyKey const& property_key) const
 {
     VERIFY(property_key.is_valid());
@@ -987,9 +1011,14 @@ Optional<ValueAndAttributes> Object::storage_get(PropertyKey const& property_key
         auto metadata = shape().lookup(property_key.to_string_or_symbol());
         if (!metadata.has_value())
             return {};
+
+        if (auto accessor = find_intrinsic_accessor(this, property_key); accessor.has_value())
+            const_cast<Object&>(*this).m_storage[metadata->offset] = (*accessor)(shape().realm());
+
         value = m_storage[metadata->offset];
         attributes = metadata->attributes;
     }
+
     return ValueAndAttributes { .value = value, .attributes = attributes };
 }
 
@@ -1011,6 +1040,11 @@ void Object::storage_set(PropertyKey const& property_key, ValueAndAttributes con
         auto index = property_key.as_number();
         m_indexed_properties.put(index, value, attributes);
         return;
+    }
+
+    if (property_key.is_string()) {
+        if (auto intrinsics = s_intrinsics.find(this); intrinsics != s_intrinsics.end())
+            intrinsics->value.remove(property_key.as_string());
     }
 
     auto property_key_string_or_symbol = property_key.to_string_or_symbol();
@@ -1049,6 +1083,11 @@ void Object::storage_delete(PropertyKey const& property_key)
 
     if (property_key.is_number())
         return m_indexed_properties.remove(property_key.as_number());
+
+    if (property_key.is_string()) {
+        if (auto intrinsics = s_intrinsics.find(this); intrinsics != s_intrinsics.end())
+            intrinsics->value.remove(property_key.as_string());
+    }
 
     auto metadata = shape().lookup(property_key.to_string_or_symbol());
     VERIFY(metadata.has_value());
@@ -1096,6 +1135,16 @@ void Object::define_direct_accessor(PropertyKey const& property_key, FunctionObj
         if (setter)
             accessor->set_setter(setter);
     }
+}
+
+void Object::define_intrinsic_accessor(PropertyKey const& property_key, PropertyAttributes attributes, IntrinsicAccessor accessor)
+{
+    VERIFY(property_key.is_string());
+
+    storage_set(property_key, { {}, attributes });
+
+    auto& intrinsics = s_intrinsics.ensure(this);
+    intrinsics.set(property_key.as_string(), move(accessor));
 }
 
 void Object::ensure_shape_is_unique()
