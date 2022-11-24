@@ -7,6 +7,7 @@
 #include <AK/Utf8View.h>
 #include <LibPDF/CommonNames.h>
 #include <LibPDF/Fonts/PDFFont.h>
+#include <LibPDF/Interpolation.h>
 #include <LibPDF/Renderer.h>
 
 #define RENDERER_HANDLER(name) \
@@ -623,9 +624,14 @@ RENDERER_HANDLER(paint_xobject)
     auto xobjects_dict = MUST(resources->get_dict(m_document, CommonNames::XObject));
     auto xobject = MUST(xobjects_dict->get_stream(m_document, xobject_name));
 
+    Optional<NonnullRefPtr<DictObject>> xobject_resources {};
+    if (xobject->dict()->contains(CommonNames::Resources)) {
+        xobject_resources = xobject->dict()->get_dict(m_document, CommonNames::Resources).value();
+    }
+
     auto subtype = MUST(xobject->dict()->get_name(m_document, CommonNames::Subtype))->name();
     if (subtype == CommonNames::Image) {
-        dbgln("Skipping image");
+        TRY(show_image(xobject));
         return {};
     }
 
@@ -637,10 +643,6 @@ RENDERER_HANDLER(paint_xobject)
         matrix = Vector { Value { 1 }, Value { 0 }, Value { 0 }, Value { 1 }, Value { 0 }, Value { 0 } };
     }
     MUST(handle_concatenate_matrix(matrix));
-    Optional<NonnullRefPtr<DictObject>> xobject_resources {};
-    if (xobject->dict()->contains(CommonNames::Resources)) {
-        xobject_resources = xobject->dict()->get_dict(m_document, CommonNames::Resources).value();
-    }
     auto operators = TRY(Parser::parse_operators(m_document, xobject->bytes()));
     for (auto& op : operators)
         TRY(handle_operator(op, xobject_resources));
@@ -757,6 +759,133 @@ void Renderer::show_text(DeprecatedString const& string)
     auto delta_x = glyph_position.x() - original_position.x();
     m_text_rendering_matrix_is_dirty = true;
     m_text_matrix.translate(delta_x / text_rendering_matrix.x_scale(), 0.0f);
+}
+
+PDFErrorOr<NonnullRefPtr<Gfx::Bitmap>> Renderer::load_image(NonnullRefPtr<StreamObject> image)
+{
+    auto image_dict = image->dict();
+    auto filter_object = TRY(image_dict->get_object(m_document, CommonNames::Filter));
+    auto width = image_dict->get_value(CommonNames::Width).get<int>();
+    auto height = image_dict->get_value(CommonNames::Height).get<int>();
+
+    auto is_filter = [&](FlyString const& name) {
+        if (filter_object->is<NameObject>())
+            return filter_object->cast<NameObject>()->name() == name;
+        auto filters = filter_object->cast<ArrayObject>();
+        return MUST(filters->get_name_at(m_document, 0))->name() == name;
+    };
+    if (is_filter(CommonNames::JPXDecode)) {
+        return Error(Error::Type::RenderingUnsupported, "JPXDecode filter");
+    }
+    if (image_dict->contains(CommonNames::ImageMask)) {
+        auto is_mask = image_dict->get_value(CommonNames::ImageMask).get<bool>();
+        if (is_mask) {
+            return Error(Error::Type::RenderingUnsupported, "Image masks");
+        }
+    }
+
+    auto color_space_object = MUST(image_dict->get_object(m_document, CommonNames::ColorSpace));
+    auto color_space = TRY(get_color_space_from_document(color_space_object));
+    auto bits_per_component = image_dict->get_value(CommonNames::BitsPerComponent).get<int>();
+    if (bits_per_component != 8) {
+        return Error(Error::Type::RenderingUnsupported, "Image's bit per component != 8");
+    }
+
+    Vector<float> decode_array;
+    if (image_dict->contains(CommonNames::Decode)) {
+        decode_array = MUST(image_dict->get_array(m_document, CommonNames::Decode))->float_elements();
+    } else {
+        decode_array = color_space->default_decode();
+    }
+    Vector<LinearInterpolation1D> component_value_decoders;
+    component_value_decoders.ensure_capacity(decode_array.size());
+    for (size_t i = 0; i < decode_array.size(); i += 2) {
+        auto dmin = decode_array[i];
+        auto dmax = decode_array[i + 1];
+        component_value_decoders.empend(0.0f, 255.0f, dmin, dmax);
+    }
+
+    if (is_filter(CommonNames::DCTDecode)) {
+        // TODO: stream objects could store Variant<bytes/Bitmap> to avoid seialisation/deserialisation here
+        return TRY(Gfx::Bitmap::try_create_from_serialized_bytes(image->bytes()));
+    }
+
+    auto bitmap = MUST(Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, { width, height }));
+    int x = 0;
+    int y = 0;
+    int const n_components = color_space->number_of_components();
+    auto const bytes_per_component = bits_per_component / 8;
+    Vector<Value> component_values;
+    component_values.resize(n_components);
+    auto content = image->bytes();
+    while (!content.is_empty() && y < height) {
+        auto sample = content.slice(0, bytes_per_component * n_components);
+        content = content.slice(bytes_per_component * n_components);
+        for (int i = 0; i < n_components; ++i) {
+            auto component = sample.slice(0, bytes_per_component);
+            sample = sample.slice(bytes_per_component);
+            component_values[i] = Value { component_value_decoders[i].interpolate(component[0]) };
+        }
+        auto color = color_space->color(component_values);
+        bitmap->set_pixel(x, y, color);
+        ++x;
+        if (x == width) {
+            x = 0;
+            ++y;
+        }
+    }
+    return bitmap;
+}
+
+Gfx::AffineTransform Renderer::calculate_image_space_transformation(int width, int height)
+{
+    // Image space maps to a 1x1 unit of user space and starts at the top-left
+    auto image_space = state().ctm;
+    image_space.multiply(Gfx::AffineTransform(
+        1.0f / width,
+        0.0f,
+        0.0f,
+        -1.0f / height,
+        0.0f,
+        1.0f));
+    return image_space;
+}
+
+void Renderer::show_empty_image(int width, int height)
+{
+    auto image_space_transofmation = calculate_image_space_transformation(width, height);
+    auto image_border = image_space_transofmation.map(Gfx::IntRect { 0, 0, width, height });
+    m_painter.stroke_path(rect_path(image_border), Color::Black, 1);
+}
+
+PDFErrorOr<void> Renderer::show_image(NonnullRefPtr<StreamObject> image)
+{
+    auto image_dict = image->dict();
+    auto width = image_dict->get_value(CommonNames::Width).get<int>();
+    auto height = image_dict->get_value(CommonNames::Height).get<int>();
+
+    if (!m_rendering_preferences.show_images) {
+        show_empty_image(width, height);
+        return {};
+    }
+    auto image_bitmap = TRY(load_image(image));
+    if (image_dict->contains(CommonNames::SMask)) {
+        auto smask_bitmap = TRY(load_image(TRY(image_dict->get_stream(m_document, CommonNames::SMask))));
+        VERIFY(smask_bitmap->rect() == image_bitmap->rect());
+        for (int j = 0; j < image_bitmap->height(); ++j) {
+            for (int i = 0; i < image_bitmap->width(); ++i) {
+                auto image_color = image_bitmap->get_pixel(i, j);
+                auto smask_color = smask_bitmap->get_pixel(i, j);
+                image_color = image_color.with_alpha(smask_color.luminosity());
+                image_bitmap->set_pixel(i, j, image_color);
+            }
+        }
+    }
+
+    auto image_space = calculate_image_space_transformation(width, height);
+    auto image_rect = Gfx::FloatRect { 0, 0, width, height };
+    m_painter.draw_scaled_bitmap_with_transform(image_bitmap->rect(), image_bitmap, image_rect, image_space);
+    return {};
 }
 
 PDFErrorOr<NonnullRefPtr<ColorSpace>> Renderer::get_color_space_from_resources(Value const& value, NonnullRefPtr<DictObject> resources)

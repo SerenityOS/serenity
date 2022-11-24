@@ -37,6 +37,7 @@
     A(DW)                         \
     A(DCTDecode)                  \
     A(DecodeParms)                \
+    A(Decode)                     \
     A(DescendantFonts)            \
     A(Dest)                       \
     A(Dests)                      \
@@ -70,11 +71,13 @@
     A(FontFile3)                  \
     A(Gamma)                      \
     A(H)                          \
+    A(Height)                     \
     A(HT)                         \
     A(HTO)                        \
     A(ICCBased)                   \
     A(ID)                         \
     A(Image)                      \
+    A(ImageMask)                  \
     A(Index)                      \
     A(JBIG2Decode)                \
     A(JPXDecode)                  \
@@ -133,6 +136,7 @@
     A(UserUnit)                   \
     A(W)                          \
     A(WhitePoint)                 \
+    A(Width)                      \
     A(Widths)                     \
     A(XObject)                    \
     A(XYZ)                        \
