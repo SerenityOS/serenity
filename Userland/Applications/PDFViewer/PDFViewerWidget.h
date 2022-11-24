@@ -47,6 +47,7 @@ private:
     RefPtr<GUI::Action> m_page_view_mode_single;
     RefPtr<GUI::Action> m_page_view_mode_multiple;
     RefPtr<GUI::CheckBox> m_show_clipping_paths;
+    RefPtr<GUI::CheckBox> m_show_images;
 
     bool m_sidebar_open { false };
     ByteBuffer m_buffer;

@@ -8,6 +8,7 @@
 #include "PDFViewer.h"
 #include <AK/Array.h>
 #include <AK/BinarySearch.h>
+#include <AK/HashFunctions.h>
 #include <LibConfig/Client.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/MessageBox.h>
@@ -46,6 +47,7 @@ PDFViewer::PDFViewer()
 
     m_page_view_mode = static_cast<PageViewMode>(Config::read_i32("PDFViewer"sv, "Display"sv, "PageMode"sv, 0));
     m_rendering_preferences.show_clipping_paths = Config::read_bool("PDFViewer"sv, "Rendering"sv, "ShowClippingPaths"sv, false);
+    m_rendering_preferences.show_images = Config::read_bool("PDFViewer"sv, "Rendering"sv, "ShowImages"sv, true);
 }
 
 PDF::PDFErrorOr<void> PDFViewer::set_document(RefPtr<PDF::Document> document)
@@ -67,7 +69,7 @@ PDF::PDFErrorOr<void> PDFViewer::set_document(RefPtr<PDF::Document> document)
 
 PDF::PDFErrorOr<NonnullRefPtr<Gfx::Bitmap>> PDFViewer::get_rendered_page(u32 index)
 {
-    auto key = m_zoom_level * (static_cast<int>(m_rendering_preferences.show_clipping_paths) + 1);
+    auto key = pair_int_hash(m_rendering_preferences.hash(), m_zoom_level);
     auto& rendered_page_map = m_rendered_page_list[index];
     auto existing_rendered_page = rendered_page_map.get(key);
     if (existing_rendered_page.has_value() && existing_rendered_page.value().rotation == m_rotations)
@@ -169,6 +171,13 @@ void PDFViewer::set_show_clipping_paths(bool show_clipping_paths)
 {
     m_rendering_preferences.show_clipping_paths = show_clipping_paths;
     Config::write_bool("PDFViewer"sv, "Rendering"sv, "ShowClippingPaths"sv, show_clipping_paths);
+    update();
+}
+
+void PDFViewer::set_show_images(bool show_images)
+{
+    m_rendering_preferences.show_images = show_images;
+    Config::write_bool("PDFViewer"sv, "Rendering"sv, "ShowImages"sv, show_images);
     update();
 }
 

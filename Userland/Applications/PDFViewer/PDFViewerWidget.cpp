@@ -180,6 +180,10 @@ void PDFViewerWidget::initialize_toolbar(GUI::Toolbar& toolbar)
     m_show_clipping_paths->set_text("Show clipping paths");
     m_show_clipping_paths->set_checked(m_viewer->show_clipping_paths(), GUI::AllowCallback::No);
     m_show_clipping_paths->on_checked = [&](auto checked) { m_viewer->set_show_clipping_paths(checked); };
+    m_show_images = toolbar.add<GUI::CheckBox>();
+    m_show_images->set_text("Show images");
+    m_show_images->set_checked(m_viewer->show_images(), GUI::AllowCallback::No);
+    m_show_images->on_checked = [&](auto checked) { m_viewer->set_show_images(checked); };
 }
 
 void PDFViewerWidget::open_file(Core::File& file)
