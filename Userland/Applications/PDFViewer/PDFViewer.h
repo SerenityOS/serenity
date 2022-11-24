@@ -63,6 +63,8 @@ public:
     void set_page_view_mode(PageViewMode);
     bool show_clipping_paths() const { return m_rendering_preferences.show_clipping_paths; }
     void set_show_clipping_paths(bool);
+    bool show_images() const { return m_rendering_preferences.show_images; }
+    void set_show_images(bool);
 
 protected:
     PDFViewer();
