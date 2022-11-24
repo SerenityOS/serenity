@@ -11,7 +11,23 @@
 
 namespace PDF {
 
-PDFErrorOr<NonnullRefPtr<ColorSpace>> ColorSpace::create(Document* document, FlyString const& name, NonnullRefPtr<DictObject> resources)
+#define ENUMERATE(name, ever_needs_parameters) \
+    ColorSpaceFamily ColorSpaceFamily::name { #name, ever_needs_parameters };
+ENUMERATE_COLOR_SPACE_FAMILIES(ENUMERATE);
+#undef ENUMERATE
+
+PDFErrorOr<ColorSpaceFamily> ColorSpaceFamily::get(FlyString const& family_name)
+{
+#define ENUMERATE(f_name, ever_needs_parameters) \
+    if (family_name == f_name.name()) {          \
+        return ColorSpaceFamily::f_name;         \
+    }
+    ENUMERATE_COLOR_SPACE_FAMILIES(ENUMERATE)
+#undef ENUMERATE
+    return Error(Error::Type::MalformedPDF, DeprecatedString::formatted("Unknown ColorSpace family {}", family_name));
+}
+
+PDFErrorOr<NonnullRefPtr<ColorSpace>> ColorSpace::create(FlyString const& name)
 {
     // Simple color spaces with no parameters, which can be specified directly
     if (name == CommonNames::DeviceGray)
@@ -22,14 +38,11 @@ PDFErrorOr<NonnullRefPtr<ColorSpace>> ColorSpace::create(Document* document, Fly
         return DeviceCMYKColorSpace::the();
     if (name == CommonNames::Pattern)
         TODO();
+    VERIFY_NOT_REACHED();
+}
 
-    // The color space is a complex color space with parameters that resides in
-    // the resource dictionary
-    auto color_space_resource_dict = TRY(resources->get_dict(document, CommonNames::ColorSpace));
-    if (!color_space_resource_dict->contains(name))
-        TODO();
-
-    auto color_space_array = TRY(color_space_resource_dict->get_array(document, name));
+PDFErrorOr<NonnullRefPtr<ColorSpace>> ColorSpace::create(Document* document, NonnullRefPtr<ArrayObject> color_space_array)
+{
     auto color_space_name = TRY(color_space_array->get_name_at(document, 0))->name();
 
     Vector<Value> parameters;
@@ -41,7 +54,7 @@ PDFErrorOr<NonnullRefPtr<ColorSpace>> ColorSpace::create(Document* document, Fly
         return TRY(CalRGBColorSpace::create(document, move(parameters)));
 
     if (color_space_name == CommonNames::ICCBased)
-        return TRY(ICCBasedColorSpace::create(document, resources, move(parameters)));
+        return TRY(ICCBasedColorSpace::create(document, move(parameters)));
 
     dbgln("Unknown color space: {}", color_space_name);
     TODO();
@@ -261,7 +274,7 @@ Color CalRGBColorSpace::color(Vector<Value> const& arguments) const
     return Color(red, green, blue);
 }
 
-PDFErrorOr<NonnullRefPtr<ColorSpace>> ICCBasedColorSpace::create(Document* document, NonnullRefPtr<DictObject> resources, Vector<Value>&& parameters)
+PDFErrorOr<NonnullRefPtr<ColorSpace>> ICCBasedColorSpace::create(Document* document, Vector<Value>&& parameters)
 {
     if (parameters.is_empty())
         return Error { Error::Type::MalformedPDF, "ICCBased color space expected one parameter" };
@@ -283,11 +296,16 @@ PDFErrorOr<NonnullRefPtr<ColorSpace>> ICCBasedColorSpace::create(Document* docum
             name = CommonNames::DeviceCMYK;
         else
             VERIFY_NOT_REACHED();
-    } else {
-        name = TRY(dict->get_name(document, CommonNames::Alternate))->name();
+        return ColorSpace::create(name);
     }
 
-    return TRY(ColorSpace::create(document, name, resources));
+    auto alternate_color_space_object = MUST(dict->get_object(document, CommonNames::Alternate));
+    if (alternate_color_space_object->is<NameObject>()) {
+        return ColorSpace::create(alternate_color_space_object->cast<NameObject>()->name());
+    }
+
+    dbgln("Alternate color spaces in array format not supported yet ");
+    TODO();
 }
 
 Color ICCBasedColorSpace::color(Vector<Value> const&) const
