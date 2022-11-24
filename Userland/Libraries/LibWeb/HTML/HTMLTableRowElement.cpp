@@ -23,17 +23,24 @@ HTMLTableRowElement::HTMLTableRowElement(DOM::Document& document, DOM::Qualified
 
 HTMLTableRowElement::~HTMLTableRowElement() = default;
 
+void HTMLTableRowElement::visit_edges(Cell::Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    visitor.visit(m_cells);
+}
+
 // https://html.spec.whatwg.org/multipage/tables.html#dom-tr-cells
 JS::NonnullGCPtr<DOM::HTMLCollection> HTMLTableRowElement::cells() const
 {
     // The cells attribute must return an HTMLCollection rooted at this tr element,
     // whose filter matches only td and th elements that are children of the tr element.
-    // FIXME: This should return the same HTMLCollection object every time,
-    //        but that would cause a reference cycle since HTMLCollection refs the root.
-    return DOM::HTMLCollection::create(const_cast<HTMLTableRowElement&>(*this), [this](Element const& element) {
-        return element.parent() == this
-            && is<HTMLTableCellElement>(element);
-    });
+    if (!m_cells) {
+        m_cells = DOM::HTMLCollection::create(const_cast<HTMLTableRowElement&>(*this), [this](Element const& element) {
+            return element.parent() == this
+                && is<HTMLTableCellElement>(element);
+        });
+    }
+    return *m_cells;
 }
 
 // https://html.spec.whatwg.org/multipage/tables.html#dom-tr-rowindex
