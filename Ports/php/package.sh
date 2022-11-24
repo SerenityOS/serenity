@@ -1,8 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='php'
 useconfigure='true'
-version='8.1.11'
-files="https://www.php.net/distributions/php-${version}.tar.xz php-${version}.tar.xz 3005198d7303f87ab31bc30695de76e8ad62783f806b6ab9744da59fe41cc5bd"
+version='8.1.12'
+files="https://www.php.net/distributions/php-${version}.tar.xz php-${version}.tar.xz 08243359e2204d842082269eedc15f08d2eca726d0e65b93fb11f4bfc51bbbab"
 auth_type='sha256'
 depends=("libiconv" "libxml2" "openssl" "readline" "sqlite" "zlib")
 configopts=(
