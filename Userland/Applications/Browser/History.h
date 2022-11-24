@@ -20,6 +20,7 @@ public:
     void dump() const;
 
     void push(const URL& url, String const& title);
+    void replace_current(const URL& url, String const& title);
     void update_title(String const& title);
     URLTitlePair current() const;
 

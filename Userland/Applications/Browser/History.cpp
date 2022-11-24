@@ -30,6 +30,15 @@ void History::push(const URL& url, String const& title)
     m_current++;
 }
 
+void History::replace_current(const URL& url, String const& title)
+{
+    if (m_current == -1)
+        return;
+
+    m_current--;
+    push(url, title);
+}
+
 History::URLTitlePair History::current() const
 {
     if (m_current == -1)
