@@ -543,10 +543,33 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
         //        specified first, so it's far from ideal.
         border.color = computed_style.color_or_fallback(color_property, *this, computed_values.color());
         border.line_style = computed_style.line_style(style_property).value_or(CSS::LineStyle::None);
-        if (border.line_style == CSS::LineStyle::None)
+        if (border.line_style == CSS::LineStyle::None) {
             border.width = 0;
-        else
-            border.width = computed_style.length_or_fallback(width_property, CSS::Length::make_px(0)).to_px(*this);
+        } else {
+            auto resolve_border_width = [&]() {
+                auto value = computed_style.property(width_property);
+                if (value->is_calculated())
+                    return CSS::Length::make_calculated(value->as_calculated()).to_px(*this);
+                if (value->has_length())
+                    return value->to_length().to_px(*this);
+                if (value->is_identifier()) {
+                    // FIXME: These values should depend on something, e.g. a font size.
+                    switch (value->to_identifier()) {
+                    case CSS::ValueID::Thin:
+                        return 1.0f;
+                    case CSS::ValueID::Medium:
+                        return 3.0f;
+                    case CSS::ValueID::Thick:
+                        return 5.0f;
+                    default:
+                        VERIFY_NOT_REACHED();
+                    }
+                }
+                VERIFY_NOT_REACHED();
+            };
+
+            border.width = resolve_border_width();
+        }
     };
 
     do_border_style(computed_values.border_left(), CSS::PropertyID::BorderLeftWidth, CSS::PropertyID::BorderLeftColor, CSS::PropertyID::BorderLeftStyle);
