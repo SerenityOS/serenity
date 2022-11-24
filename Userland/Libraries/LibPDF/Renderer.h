@@ -86,6 +86,12 @@ struct GraphicsState {
 
 struct RenderingPreferences {
     bool show_clipping_paths { false };
+    bool show_images { true };
+
+    unsigned hash() const
+    {
+        return static_cast<unsigned>(show_clipping_paths) | static_cast<unsigned>(show_images) << 1;
+    }
 };
 
 class Renderer {
@@ -109,6 +115,9 @@ private:
     void end_path_paint();
     PDFErrorOr<void> set_graphics_state_from_dict(NonnullRefPtr<DictObject>);
     void show_text(DeprecatedString const&);
+    PDFErrorOr<NonnullRefPtr<Gfx::Bitmap>> load_image(NonnullRefPtr<StreamObject>);
+    PDFErrorOr<void> show_image(NonnullRefPtr<StreamObject>);
+    void show_empty_image(int width, int height);
     PDFErrorOr<NonnullRefPtr<ColorSpace>> get_color_space_from_resources(Value const&, NonnullRefPtr<DictObject>);
     PDFErrorOr<NonnullRefPtr<ColorSpace>> get_color_space_from_document(NonnullRefPtr<Object>);
 
@@ -127,6 +136,7 @@ private:
     ALWAYS_INLINE Gfx::Rect<T> map(Gfx::Rect<T>) const;
 
     Gfx::AffineTransform const& calculate_text_rendering_matrix();
+    Gfx::AffineTransform calculate_image_space_transformation(int width, int height);
 
     RefPtr<Document> m_document;
     RefPtr<Gfx::Bitmap> m_bitmap;
