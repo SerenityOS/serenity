@@ -16,6 +16,7 @@ public:
         Parse,
         Internal,
         MalformedPDF,
+        RenderingUnsupported
     };
 
     Error(AK::Error error)
@@ -36,6 +37,9 @@ public:
             break;
         case Type::MalformedPDF:
             m_message = DeprecatedString::formatted("Malformed PDF file: {}", message);
+            break;
+        case Type::RenderingUnsupported:
+            m_message = DeprecatedString::formatted("Rendering of feature not supported: {}", message);
             break;
         }
     }
