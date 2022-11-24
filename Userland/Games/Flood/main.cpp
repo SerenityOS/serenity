@@ -8,6 +8,7 @@
 #include "SettingsDialog.h"
 #include <AK/URL.h>
 #include <Games/Flood/FloodWindowGML.h>
+#include <LibColorScheme/ColorScheme.h>
 #include <LibConfig/Client.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/System.h>
@@ -21,49 +22,6 @@
 #include <LibGUI/Window.h>
 #include <LibGfx/Painter.h>
 #include <LibMain/Main.h>
-
-// FIXME: Move this into a library. Also consider simplifying obtaining 'color_scheme_names' in
-// SettingsDialog.cpp and Userland/Applications/TerminalSettings/TerminalSettingsWidget.cpp.
-// Adapted from Libraries/LibVT/TerminalWidget.cpp::TerminalWidget::set_color_scheme.
-static ErrorOr<Vector<Color>> get_color_scheme_from_string(StringView name)
-{
-    if (name.contains('/')) {
-        return Error::from_string_literal("Shenanigans! Color scheme names can't contain slashes.");
-    }
-
-    constexpr StringView color_names[] = {
-        "Black"sv,
-        "Red"sv,
-        "Green"sv,
-        "Yellow"sv,
-        "Blue"sv,
-        "Magenta"sv,
-        "Cyan"sv,
-        "White"sv
-    };
-
-    auto const path = String::formatted("/res/terminal-colors/{}.ini", name);
-    auto color_config_or_error = Core::ConfigFile::open(path);
-    if (color_config_or_error.is_error()) {
-        return Error::from_string_view(String::formatted("Unable to read color scheme file '{}': {}", path, color_config_or_error.error()));
-    }
-    auto const color_config = color_config_or_error.release_value();
-    Vector<Color> colors;
-
-    for (u8 color_index = 0; color_index < 8; ++color_index) {
-        auto const rgb = Gfx::Color::from_string(color_config->read_entry("Bright", color_names[color_index]));
-        if (rgb.has_value())
-            colors.append(Color::from_argb(rgb.value().value()));
-    }
-
-    auto const default_background = Gfx::Color::from_string(color_config->read_entry("Primary", "Background"));
-    if (default_background.has_value())
-        colors.append(default_background.value());
-    else
-        colors.append(Color::DarkGray);
-
-    return colors;
-}
 
 // FIXME: Improve this AI.
 // Currently, this AI always chooses a move that gets the most cells flooded immediately.
@@ -132,11 +90,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (!main_widget.load_from_gml(flood_window_gml))
         VERIFY_NOT_REACHED();
 
-    auto colors_or_error { get_color_scheme_from_string(color_scheme) };
-    if (colors_or_error.is_error())
-        return colors_or_error.release_error();
-    auto colors = colors_or_error.release_value();
-    auto background_color = colors.take_last();
+    ColorScheme::ColorScheme board_color_scheme;
+    TRY(board_color_scheme.set_color_scheme_from_string(color_scheme));
+    auto colors = board_color_scheme.get_bright_colors();
+    Color background_color = Color::DarkGray;
+    if (board_color_scheme.get_background_color().has_value())
+        background_color = board_color_scheme.get_background_color().release_value();
 
     auto board_widget = TRY(main_widget.find_descendant_of_type_named<GUI::Widget>("board_widget_container")->try_add<BoardWidget>(board_rows, board_columns, move(colors), move(background_color)));
     board_widget->board()->randomize();
@@ -182,10 +141,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto start_a_new_game = [&] {
         board_widget->resize_board(board_rows, board_columns);
         board_widget->board()->reset();
-        auto colors_or_error = get_color_scheme_from_string(color_scheme);
-        if (!colors_or_error.is_error()) {
-            auto colors = colors_or_error.release_value();
-            board_widget->set_background_color(colors.take_last());
+        ColorScheme::ColorScheme board_color_scheme;
+        if (!board_color_scheme.set_color_scheme_from_string(color_scheme).is_error()) {
+            Vector<Color> colors = board_color_scheme.get_bright_colors();
+            Color background_color = Color::DarkGray;
+            if (board_color_scheme.get_background_color().has_value())
+                background_color = board_color_scheme.get_background_color().release_value();
+            board_widget->set_background_color(background_color);
             board_widget->board()->set_color_scheme(move(colors));
             board_widget->board()->randomize();
             ai_moves = get_number_of_moves_from_ai(*board_widget->board());
