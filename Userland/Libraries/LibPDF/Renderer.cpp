@@ -523,14 +523,14 @@ RENDERER_TODO(type3_font_set_glyph_width_and_bbox)
 
 RENDERER_HANDLER(set_stroking_space)
 {
-    state().stroke_color_space = TRY(get_color_space(args[0], extra_resources.value_or(m_page.resources)));
+    state().stroke_color_space = TRY(get_color_space_from_resources(args[0], extra_resources.value_or(m_page.resources)));
     VERIFY(state().stroke_color_space);
     return {};
 }
 
 RENDERER_HANDLER(set_painting_space)
 {
-    state().paint_color_space = TRY(get_color_space(args[0], extra_resources.value_or(m_page.resources)));
+    state().paint_color_space = TRY(get_color_space_from_resources(args[0], extra_resources.value_or(m_page.resources)));
     VERIFY(state().paint_color_space);
     return {};
 }
@@ -759,10 +759,28 @@ void Renderer::show_text(DeprecatedString const& string)
     m_text_matrix.translate(delta_x / text_rendering_matrix.x_scale(), 0.0f);
 }
 
-PDFErrorOr<NonnullRefPtr<ColorSpace>> Renderer::get_color_space(Value const& value, NonnullRefPtr<DictObject> resources)
+PDFErrorOr<NonnullRefPtr<ColorSpace>> Renderer::get_color_space_from_resources(Value const& value, NonnullRefPtr<DictObject> resources)
 {
-    auto name = value.get<NonnullRefPtr<Object>>()->cast<NameObject>()->name();
-    return TRY(ColorSpace::create(m_document, name, resources));
+    auto color_space_name = value.get<NonnullRefPtr<Object>>()->cast<NameObject>()->name();
+    auto maybe_color_space_family = ColorSpaceFamily::get(color_space_name);
+    if (!maybe_color_space_family.is_error()) {
+        auto color_space_family = maybe_color_space_family.release_value();
+        if (color_space_family.never_needs_parameters()) {
+            return ColorSpace::create(color_space_name);
+        }
+    }
+    auto color_space_resource_dict = TRY(resources->get_dict(m_document, CommonNames::ColorSpace));
+    auto color_space_array = TRY(color_space_resource_dict->get_array(m_document, color_space_name));
+    return ColorSpace::create(m_document, color_space_array);
+}
+
+PDFErrorOr<NonnullRefPtr<ColorSpace>> Renderer::get_color_space_from_document(NonnullRefPtr<Object> color_space_object)
+{
+    // Pattern cannot be a name in these cases
+    if (color_space_object->is<NameObject>()) {
+        return ColorSpace::create(color_space_object->cast<NameObject>()->name());
+    }
+    return ColorSpace::create(m_document, color_space_object->cast<ArrayObject>());
 }
 
 Gfx::AffineTransform const& Renderer::calculate_text_rendering_matrix()

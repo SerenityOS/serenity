@@ -10,30 +10,51 @@
 #include <LibGfx/Color.h>
 #include <LibPDF/Value.h>
 
-#define ENUMERATE_COLOR_SPACES(V) \
-    V(DeviceGray)                 \
-    V(DeviceRGB)                  \
-    V(DeviceCMYK)                 \
-    V(CalGray)                    \
-    V(CalRGB)                     \
-    V(Lab)                        \
-    V(ICCBased)                   \
-    V(Indexed)                    \
-    V(Pattern)                    \
-    V(Separation)                 \
-    V(DeviceN)
+#define ENUMERATE_COLOR_SPACE_FAMILIES(V) \
+    V(DeviceGray, true)                   \
+    V(DeviceRGB, true)                    \
+    V(DeviceCMYK, true)                   \
+    V(CalGray, false)                     \
+    V(CalRGB, false)                      \
+    V(Lab, false)                         \
+    V(ICCBased, false)                    \
+    V(Indexed, false)                     \
+    V(Pattern, false)                     \
+    V(Separation, false)                  \
+    V(DeviceN, false)
 
 namespace PDF {
 
-struct Page;
+class ColorSpaceFamily {
+public:
+    ColorSpaceFamily(FlyString name, bool never_needs_paramaters_p)
+        : m_name(move(name))
+        , m_never_needs_parameters(never_needs_paramaters_p)
+    {
+    }
+
+    FlyString name() const { return m_name; };
+    bool never_needs_parameters() const { return m_never_needs_parameters; };
+    static PDFErrorOr<ColorSpaceFamily> get(FlyString const&);
+
+#define ENUMERATE(name, ever_needs_parameters) static ColorSpaceFamily name;
+    ENUMERATE_COLOR_SPACE_FAMILIES(ENUMERATE)
+#undef ENUMERATE
+
+private:
+    FlyString m_name;
+    bool m_never_needs_parameters;
+};
 
 class ColorSpace : public RefCounted<ColorSpace> {
 public:
-    static PDFErrorOr<NonnullRefPtr<ColorSpace>> create(Document*, FlyString const& name, NonnullRefPtr<DictObject> resources);
+    static PDFErrorOr<NonnullRefPtr<ColorSpace>> create(FlyString const&);
+    static PDFErrorOr<NonnullRefPtr<ColorSpace>> create(Document*, NonnullRefPtr<ArrayObject>);
 
     virtual ~ColorSpace() = default;
 
     virtual Color color(Vector<Value> const& arguments) const = 0;
+    virtual ColorSpaceFamily const& family() const = 0;
 };
 
 class DeviceGrayColorSpace final : public ColorSpace {
@@ -43,6 +64,7 @@ public:
     ~DeviceGrayColorSpace() override = default;
 
     Color color(Vector<Value> const& arguments) const override;
+    ColorSpaceFamily const& family() const override { return ColorSpaceFamily::DeviceGray; }
 
 private:
     DeviceGrayColorSpace() = default;
@@ -55,6 +77,7 @@ public:
     ~DeviceRGBColorSpace() override = default;
 
     Color color(Vector<Value> const& arguments) const override;
+    ColorSpaceFamily const& family() const override { return ColorSpaceFamily::DeviceRGB; }
 
 private:
     DeviceRGBColorSpace() = default;
@@ -67,6 +90,7 @@ public:
     ~DeviceCMYKColorSpace() override = default;
 
     Color color(Vector<Value> const& arguments) const override;
+    ColorSpaceFamily const& family() const override { return ColorSpaceFamily::DeviceCMYK; }
 
 private:
     DeviceCMYKColorSpace() = default;
@@ -79,6 +103,7 @@ public:
     ~CalRGBColorSpace() override = default;
 
     Color color(Vector<Value> const& arguments) const override;
+    ColorSpaceFamily const& family() const override { return ColorSpaceFamily::CalRGB; }
 
 private:
     CalRGBColorSpace() = default;
@@ -91,11 +116,12 @@ private:
 
 class ICCBasedColorSpace final : public ColorSpace {
 public:
-    static PDFErrorOr<NonnullRefPtr<ColorSpace>> create(Document*, NonnullRefPtr<DictObject> resources, Vector<Value>&& parameters);
+    static PDFErrorOr<NonnullRefPtr<ColorSpace>> create(Document*, Vector<Value>&& parameters);
 
     ~ICCBasedColorSpace() override = default;
 
     Color color(Vector<Value> const& arguments) const override;
+    ColorSpaceFamily const& family() const override { return ColorSpaceFamily::ICCBased; }
 
 private:
     ICCBasedColorSpace() = delete;
