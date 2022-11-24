@@ -33,6 +33,7 @@ HTMLFormElement::~HTMLFormElement() = default;
 void HTMLFormElement::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
+    visitor.visit(m_elements);
     for (auto& element : m_associated_elements)
         visitor.visit(element.ptr());
 }
@@ -185,11 +186,12 @@ static bool is_form_control(DOM::Element const& element)
 // https://html.spec.whatwg.org/multipage/forms.html#dom-form-elements
 JS::NonnullGCPtr<DOM::HTMLCollection> HTMLFormElement::elements() const
 {
-    // FIXME: This should return the same HTMLFormControlsCollection object every time,
-    //        but that would cause a reference cycle since HTMLCollection refs the root.
-    return DOM::HTMLCollection::create(const_cast<HTMLFormElement&>(*this), [](Element const& element) {
-        return is_form_control(element);
-    });
+    if (!m_elements) {
+        m_elements = DOM::HTMLCollection::create(const_cast<HTMLFormElement&>(*this), [](Element const& element) {
+            return is_form_control(element);
+        });
+    }
+    return *m_elements;
 }
 
 // https://html.spec.whatwg.org/multipage/forms.html#dom-form-length
