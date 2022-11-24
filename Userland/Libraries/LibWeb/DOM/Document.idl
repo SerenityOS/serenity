@@ -60,14 +60,14 @@ interface Document : Node {
     HTMLCollection getElementsByTagNameNS(DOMString? namespace, DOMString localName);
     HTMLCollection getElementsByClassName(DOMString className);
 
-    readonly attribute HTMLCollection applets;
-    readonly attribute HTMLCollection anchors;
-    readonly attribute HTMLCollection images;
-    readonly attribute HTMLCollection embeds;
-    readonly attribute HTMLCollection plugins;
-    readonly attribute HTMLCollection links;
-    readonly attribute HTMLCollection forms;
-    readonly attribute HTMLCollection scripts;
+    [SameObject] readonly attribute HTMLCollection applets;
+    [SameObject] readonly attribute HTMLCollection anchors;
+    [SameObject] readonly attribute HTMLCollection images;
+    [SameObject] readonly attribute HTMLCollection embeds;
+    [SameObject] readonly attribute HTMLCollection plugins;
+    [SameObject] readonly attribute HTMLCollection links;
+    [SameObject] readonly attribute HTMLCollection forms;
+    [SameObject] readonly attribute HTMLCollection scripts;
 
     // FIXME: Should return an HTMLAllCollection
     readonly attribute HTMLCollection all;
