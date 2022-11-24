@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/String.h>
+#include <AK/Vector.h>
 #include <LibJS/Forward.h>
 
 namespace JS {
@@ -23,8 +24,12 @@ public:
 private:
     SourceCode(String filename, String code);
 
+    void compute_line_break_offsets() const;
+
     String m_filename;
     String m_code;
+
+    Optional<Vector<size_t>> mutable m_line_break_offsets;
 };
 
 }
