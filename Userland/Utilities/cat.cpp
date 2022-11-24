@@ -1,16 +1,15 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, Lucas Chollet <lucas.chollet@free.fr>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/Stream.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
-#include <fcntl.h>
-#include <string.h>
-#include <unistd.h>
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
@@ -23,42 +22,27 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_positional_argument(paths, "File path", "path", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
 
-    Vector<int> fds;
-    if (paths.is_empty()) {
-        TRY(fds.try_append(STDIN_FILENO));
-    } else {
-        for (auto const& path : paths) {
-            int fd;
-            if (path == "-") {
-                fd = 0;
-            } else {
-                auto fd_or_error = Core::System::open(path, O_RDONLY);
-                if (fd_or_error.is_error()) {
-                    warnln("Failed to open {}: {}", path, fd_or_error.error());
-                    continue;
-                }
-                fd = fd_or_error.release_value();
-            }
-            TRY(fds.try_append(fd));
-        }
+    if (paths.is_empty())
+        paths.append("-"sv);
+
+    Vector<NonnullOwnPtr<Core::Stream::File>> files;
+    TRY(files.try_ensure_capacity(paths.size()));
+
+    for (auto const& path : paths) {
+        if (auto result = Core::Stream::File::open_file_or_standard_stream(path, Core::Stream::OpenMode::Read); result.is_error())
+            warnln("Failed to open {}: {}", path, result.release_error());
+        else
+            files.unchecked_append(result.release_value());
     }
 
     TRY(Core::System::pledge("stdio"));
 
     Array<u8, 32768> buffer;
-    for (auto& fd : fds) {
-        for (;;) {
-            auto buffer_span = buffer.span();
-            auto nread = TRY(Core::System::read(fd, buffer_span));
-            if (nread == 0)
-                break;
-            buffer_span = buffer_span.trim(nread);
-            while (!buffer_span.is_empty()) {
-                auto already_written = TRY(Core::System::write(STDOUT_FILENO, buffer_span));
-                buffer_span = buffer_span.slice(already_written);
-            }
+    for (auto const& file : files) {
+        while (!file->is_eof()) {
+            auto const buffer_span = TRY(file->read(buffer));
+            out("{:s}", buffer_span);
         }
-        TRY(Core::System::close(fd));
     }
 
     return 0;
