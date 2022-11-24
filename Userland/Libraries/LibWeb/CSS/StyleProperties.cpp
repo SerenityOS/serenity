@@ -85,19 +85,6 @@ CSS::Size StyleProperties::size_value(CSS::PropertyID id) const
     return CSS::Size::make_auto();
 }
 
-Length StyleProperties::length_or_fallback(CSS::PropertyID id, Length const& fallback) const
-{
-    auto value = property(id);
-
-    if (value->is_calculated())
-        return Length::make_calculated(value->as_calculated());
-
-    if (value->has_length())
-        return value->to_length();
-
-    return fallback;
-}
-
 LengthPercentage StyleProperties::length_percentage_or_fallback(CSS::PropertyID id, LengthPercentage const& fallback) const
 {
     return length_percentage(id).value_or(fallback);
