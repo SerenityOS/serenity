@@ -114,12 +114,34 @@ Emoji Tag Sequence Flags (limited cross-platform support)
 🏴󠁩󠁥󠁬󠁿 - U+1F3F4 U+E0069 U+E0065 U+E006C U+E007F         IE-L Leinster
 🏴󠁩󠁥󠁭󠁿 - U+1F3F4 U+E0069 U+E0065 U+E006D U+E007F         IE-M Munster
 🏴󠁩󠁥󠁵󠁿 - U+1F3F4 U+E0069 U+E0065 U+E0075 U+E007F         IE-U Ulster
+🏴󠁮󠁯󠀰󠀱󠁿 - U+1F3F4 U+E006E U+E006F U+E0030 U+E0031 U+E007F NO-01 Østfold
 🏴󠁮󠁯󠀰󠀲󠁿 - U+1F3F4 U+E006E U+E006F U+E0030 U+E0032 U+E007F NO-02 Akershus
+🏴󠁮󠁯󠀰󠀳󠁿 - U+1F3F4 U+E006E U+E006F U+E0030 U+E0033 U+E007F NO-03 Oslo
+🏴󠁮󠁯󠀰󠀴󠁿 - U+1F3F4 U+E006E U+E006F U+E0030 U+E0034 U+E007F NO-04 Hedmark
+🏴󠁮󠁯󠀰󠀵󠁿 - U+1F3F4 U+E006E U+E006F U+E0030 U+E0035 U+E007F NO-05 Oppland
+🏴󠁮󠁯󠀰󠀶󠁿 - U+1F3F4 U+E006E U+E006F U+E0030 U+E0036 U+E007F NO-06 Buskerud
 🏴󠁮󠁯󠀰󠀷󠁿 - U+1F3F4 U+E006E U+E006F U+E0030 U+E0037 U+E007F NO-07 Vestfold
 🏴󠁮󠁯󠀰󠀸󠁿 - U+1F3F4 U+E006E U+E006F U+E0030 U+E0038 U+E007F NO-08 Telemark
+🏴󠁮󠁯󠀰󠀹󠁿 - U+1F3F4 U+E006E U+E006F U+E0030 U+E0039 U+E007F NO-09 Aust-Agder
+🏴󠁮󠁯󠀱󠀰󠁿 - U+1F3F4 U+E006E U+E006F U+E0031 U+E0030 U+E007F NO-10 Vest-Agder
 🏴󠁮󠁯󠀱󠀱󠁿 - U+1F3F4 U+E006E U+E006F U+E0031 U+E0031 U+E007F NO-11 Rogaland
+🏴󠁮󠁯󠀱󠀲󠁿 - U+1F3F4 U+E006E U+E006F U+E0031 U+E0032 U+E007F NO-12 Hordaland
+🏴󠁮󠁯󠀱󠀴󠁿 - U+1F3F4 U+E006E U+E006F U+E0031 U+E0034 U+E007F NO-14 Fjordane
+🏴󠁮󠁯󠀱󠀵󠁿 - U+1F3F4 U+E006E U+E006F U+E0031 U+E0035 U+E007F NO-15 Møre og Romsdal
+🏴󠁮󠁯󠀱󠀶󠁿 - U+1F3F4 U+E006E U+E006F U+E0031 U+E0036 U+E007F NO-16 Sør-Trøndelag
+🏴󠁮󠁯󠀱󠀷󠁿 - U+1F3F4 U+E006E U+E006F U+E0031 U+E0037 U+E007F NO-17 Nord-Trøndelag
+🏴󠁮󠁯󠀱󠀸󠁿 - U+1F3F4 U+E006E U+E006F U+E0031 U+E0038 U+E007F NO-18 Nordland
+🏴󠁮󠁯󠀱󠀹󠁿 - U+1F3F4 U+E006E U+E006F U+E0031 U+E0039 U+E007F NO-19 Troms
 🏴󠁮󠁯󠀲󠀰󠁿 - U+1F3F4 U+E006E U+E006F U+E0032 U+E0030 U+E007F NO-20 Finnmark
+🏴󠁮󠁯󠀲󠀱󠁿 - U+1F3F4 U+E006E U+E006F U+E0032 U+E0031 U+E007F NO-21 Svalbard
+🏴󠁮󠁯󠀲󠀲󠁿 - U+1F3F4 U+E006E U+E006F U+E0032 U+E0032 U+E007F NO-22 Jan Mayen
+🏴󠁮󠁯󠀳󠀰󠁿 - U+1F3F4 U+E006E U+E006F U+E0033 U+E0030 U+E007F NO-30 Viken
+🏴󠁮󠁯󠀳󠀴󠁿 - U+1F3F4 U+E006E U+E006F U+E0033 U+E0034 U+E007F NO-34 Innlandet
 🏴󠁮󠁯󠀳󠀸󠁿 - U+1F3F4 U+E006E U+E006F U+E0033 U+E0038 U+E007F NO-38 Vestfold og Telemark
+🏴󠁮󠁯󠀴󠀲󠁿 - U+1F3F4 U+E006E U+E006F U+E0034 U+E0032 U+E007F NO-42 Agder
+🏴󠁮󠁯󠀴󠀶󠁿 - U+1F3F4 U+E006E U+E006F U+E0034 U+E0036 U+E007F NO-46 Vestland
+🏴󠁮󠁯󠀵󠀰󠁿 - U+1F3F4 U+E006E U+E006F U+E0035 U+E0030 U+E007F NO-50 Trøndelag
+🏴󠁮󠁯󠀵󠀴󠁿 - U+1F3F4 U+E006E U+E006F U+E0035 U+E0034 U+E007F NO-54 Troms og Finnmark
 🏴󠁳󠁥󠁭󠁿 - U+1F3F4 U+E0073 U+E0065 U+E006D U+E007F         SE-M  Skåne
 🏴󠁳󠁫󠁢󠁣󠁿 - U+1F3F4 U+E0073 U+E006B U+E0062 U+E0063 U+E007F SK-BC Banská Bystrica
 🏴󠁳󠁫󠁢󠁬󠁿 - U+1F3F4 U+E0073 U+E006B U+E0062 U+E006C U+E007F SK-BL Bratislava
