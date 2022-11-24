@@ -20,10 +20,10 @@ interface HTMLTableElement : HTMLElement {
     HTMLTableSectionElement createTFoot();
     undefined deleteTFoot();
 
-    readonly attribute HTMLCollection tBodies;
+    [SameObject] readonly attribute HTMLCollection tBodies;
     HTMLTableSectionElement createTBody();
 
-    readonly attribute HTMLCollection rows;
+    [SameObject] readonly attribute HTMLCollection rows;
     HTMLTableRowElement insertRow(optional long index = -1);
     undefined deleteRow(long index);
 
