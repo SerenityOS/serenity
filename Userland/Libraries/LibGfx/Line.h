@@ -134,6 +134,13 @@ public:
     void set_a(Point<T> const& a) { m_a = a; }
     void set_b(Point<T> const& b) { m_b = b; }
 
+    template<typename U>
+    requires(!IsSame<T, U>)
+        [[nodiscard]] ALWAYS_INLINE constexpr Line<U> to_type() const
+    {
+        return Line<U>(*this);
+    }
+
     String to_string() const;
 
 private:
