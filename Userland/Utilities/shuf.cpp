@@ -20,21 +20,24 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Core::ArgsParser args_parser;
     StringView path;
+    bool is_zero_terminated = false;
 
     args_parser.add_positional_argument(path, "File", "file", Core::ArgsParser::Required::No);
+    args_parser.add_option(is_zero_terminated, "Split input on \\0, not newline", "zero-terminated", 'z');
 
     args_parser.parse(arguments);
 
     auto file = TRY(Core::Stream::File::open_file_or_standard_stream(path, Core::Stream::OpenMode::Read));
     ByteBuffer buffer = TRY(file->read_all());
 
+    u8 input_delimiter = is_zero_terminated ? '\0' : '\n';
     Vector<Bytes> lines;
 
     auto bytes = buffer.span();
     size_t line_start = 0;
     size_t line_length = 0;
     for (size_t i = 0; i < bytes.size(); ++i) {
-        if (bytes[i] == '\n') {
+        if (bytes[i] == input_delimiter) {
             lines.append(bytes.slice(line_start, line_length));
             line_start = i + 1;
             line_length = 0;
