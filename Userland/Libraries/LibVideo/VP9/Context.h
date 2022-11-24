@@ -410,4 +410,17 @@ struct BlockContext {
     Array<MotionVectorPair, 4> sub_block_motion_vectors;
 };
 
+struct BlockMotionVectorCandidateSet {
+    MotionVector near_vector;
+    MotionVector nearest_vector;
+    MotionVector best_vector;
+};
+
+using BlockMotionVectorCandidates = Pair<BlockMotionVectorCandidateSet>;
+
+struct MotionVectorCandidate {
+    ReferenceFrameType type;
+    MotionVector vector;
+};
+
 }

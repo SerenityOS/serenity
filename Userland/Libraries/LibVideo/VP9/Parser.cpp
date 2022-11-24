@@ -1147,14 +1147,17 @@ DecoderErrorOr<void> Parser::intra_block_mode_info(BlockContext& block_context)
     return {};
 }
 
+static void select_best_reference_motion_vectors(BlockContext& block_context, MotionVectorPair reference_motion_vectors, BlockMotionVectorCandidates& candidates, u8 ref_list);
+
 DecoderErrorOr<void> Parser::inter_block_mode_info(BlockContext& block_context, FrameBlockContext above_context, FrameBlockContext left_context)
 {
     TRY(read_ref_frames(block_context, above_context, left_context));
     VERIFY(block_context.is_inter_predicted());
+    BlockMotionVectorCandidates motion_vector_candidates;
     for (auto j = 0; j < 2; j++) {
         if (block_context.reference_frame_types[j] > IntraFrame) {
-            find_mv_refs(block_context, block_context.reference_frame_types[j], -1);
-            find_best_ref_mvs(block_context, j);
+            auto reference_motion_vectors = find_reference_motion_vectors(block_context, block_context.reference_frame_types[j], -1);
+            select_best_reference_motion_vectors(block_context, reference_motion_vectors, motion_vector_candidates, j);
         }
     }
     if (seg_feature_active(block_context, SEG_LVL_SKIP)) {
@@ -1173,9 +1176,9 @@ DecoderErrorOr<void> Parser::inter_block_mode_info(BlockContext& block_context, 
                 block_context.y_prediction_mode() = TRY_READ(TreeParser::parse_inter_mode(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter, m_mode_context[block_context.reference_frame_types[0]]));
                 if (block_context.y_prediction_mode() == PredictionMode::NearestMv || block_context.y_prediction_mode() == PredictionMode::NearMv) {
                     for (auto j = 0; j < 1 + block_context.is_compound(); j++)
-                        append_sub8x8_mvs(block_context, idy * 2 + idx, j);
+                        select_best_sub_block_reference_motion_vectors(block_context, motion_vector_candidates, idy * 2 + idx, j);
                 }
-                auto new_motion_vector_pair = TRY(assign_mv(block_context));
+                auto new_motion_vector_pair = TRY(get_motion_vector(block_context, motion_vector_candidates));
                 for (auto y = 0; y < size_in_4x4_blocks.height(); y++) {
                     for (auto x = 0; x < size_in_4x4_blocks.width(); x++) {
                         auto sub_block_index = (idy + y) * 2 + idx + x;
@@ -1186,7 +1189,7 @@ DecoderErrorOr<void> Parser::inter_block_mode_info(BlockContext& block_context, 
         }
         return {};
     }
-    auto new_motion_vector_pair = TRY(assign_mv(block_context));
+    auto new_motion_vector_pair = TRY(get_motion_vector(block_context, motion_vector_candidates));
     for (auto block = 0; block < 4; block++)
         block_context.sub_block_motion_vectors[block] = new_motion_vector_pair;
     return {};
@@ -1227,19 +1230,20 @@ DecoderErrorOr<void> Parser::read_ref_frames(BlockContext& block_context, FrameB
     return {};
 }
 
-DecoderErrorOr<MotionVectorPair> Parser::assign_mv(BlockContext const& block_context)
+// assign_mv( isCompound ) in the spec.
+DecoderErrorOr<MotionVectorPair> Parser::get_motion_vector(BlockContext const& block_context, BlockMotionVectorCandidates const& candidates)
 {
     MotionVectorPair result;
     for (auto i = 0; i < 1 + block_context.is_compound(); i++) {
         switch (block_context.y_prediction_mode()) {
         case PredictionMode::NewMv:
-            result[i] = TRY(read_mv(block_context, i));
+            result[i] = TRY(read_motion_vector(block_context, candidates, i));
             break;
         case PredictionMode::NearestMv:
-            result[i] = m_nearest_mv[i];
+            result[i] = candidates[i].nearest_vector;
             break;
         case PredictionMode::NearMv:
-            result[i] = m_near_mv[i];
+            result[i] = candidates[i].near_vector;
             break;
         default:
             result[i] = {};
@@ -1249,20 +1253,28 @@ DecoderErrorOr<MotionVectorPair> Parser::assign_mv(BlockContext const& block_con
     return result;
 }
 
-DecoderErrorOr<MotionVector> Parser::read_mv(BlockContext const& block_context, u8 ref)
+// use_mv_hp( deltaMv ) in the spec.
+static bool should_use_high_precision_motion_vector(MotionVector const& delta_vector)
 {
-    m_use_hp = block_context.frame_context.high_precision_motion_vectors_allowed && use_mv_hp(m_best_mv[ref]);
+    return (abs(delta_vector.row()) >> 3) < COMPANDED_MVREF_THRESH && (abs(delta_vector.column()) >> 3) < COMPANDED_MVREF_THRESH;
+}
+
+// read_mv( ref ) in the spec.
+DecoderErrorOr<MotionVector> Parser::read_motion_vector(BlockContext const& block_context, BlockMotionVectorCandidates const& candidates, u8 reference_index)
+{
+    m_use_hp = block_context.frame_context.high_precision_motion_vectors_allowed && should_use_high_precision_motion_vector(candidates[reference_index].best_vector);
     MotionVector diff_mv;
     auto mv_joint = TRY_READ(TreeParser::parse_motion_vector_joint(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter));
     if (mv_joint == MvJointHzvnz || mv_joint == MvJointHnzvnz)
-        diff_mv.set_row(TRY(read_mv_component(0)));
+        diff_mv.set_row(TRY(read_single_motion_vector_component(0)));
     if (mv_joint == MvJointHnzvz || mv_joint == MvJointHnzvnz)
-        diff_mv.set_column(TRY(read_mv_component(1)));
+        diff_mv.set_column(TRY(read_single_motion_vector_component(1)));
 
-    return m_best_mv[ref] + diff_mv;
+    return candidates[reference_index].best_vector + diff_mv;
 }
 
-DecoderErrorOr<i32> Parser::read_mv_component(u8 component)
+// read_mv_component( comp ) in the spec.
+DecoderErrorOr<i32> Parser::read_single_motion_vector_component(u8 component)
 {
     auto mv_sign = TRY_READ(TreeParser::parse_motion_vector_sign(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter, component));
     auto mv_class = TRY_READ(TreeParser::parse_motion_vector_class(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter, component));
@@ -1462,7 +1474,8 @@ DecoderErrorOr<i32> Parser::read_coef(u8 bit_depth, Token token)
     return coef;
 }
 
-static bool is_inside(TileContext const& tile_context, MotionVector vector)
+// is_inside( candidateR, candidateC ) in the spec.
+static bool motion_vector_is_inside_tile(TileContext const& tile_context, MotionVector vector)
 {
     if (vector.row() < 0)
         return false;
@@ -1473,64 +1486,67 @@ static bool is_inside(TileContext const& tile_context, MotionVector vector)
     return row_positive < tile_context.frame_context.rows() && column_positive >= tile_context.columns_start && column_positive < tile_context.columns_end;
 }
 
-void Parser::add_mv_ref_list(u8 ref_list)
+// add_mv_ref_list( refList ) in the spec.
+static void add_motion_vector_to_list_deduped(MotionVector const& vector, Vector<MotionVector, 2>& list)
 {
-    if (m_ref_mv_count >= 2)
+    if (list.size() >= 2)
         return;
-    if (m_ref_mv_count > 0 && m_candidate_mv[ref_list] == m_ref_list_mv[0])
+    if (list.size() == 1 && vector == list[0])
         return;
 
-    m_ref_list_mv[m_ref_mv_count] = m_candidate_mv[ref_list];
-    m_ref_mv_count++;
+    list.append(vector);
 }
 
-void Parser::get_block_mv(BlockContext const& block_context, MotionVector candidate_vector, u8 ref_list, bool use_prev)
+// get_block_mv( candidateR, candidateC, refList, usePrev ) in the spec.
+MotionVectorCandidate Parser::get_motion_vector_from_current_or_previous_frame(BlockContext const& block_context, MotionVector candidate_vector, u8 ref_list, bool use_prev)
 {
     if (use_prev) {
         auto const& prev_context = m_previous_block_contexts.at(candidate_vector.row(), candidate_vector.column());
-        m_candidate_mv[ref_list] = prev_context.primary_motion_vector_pair[ref_list];
-        m_candidate_frame[ref_list] = prev_context.ref_frames[ref_list];
-    } else {
-        auto const& current_context = block_context.frame_block_contexts().at(candidate_vector.row(), candidate_vector.column());
-        m_candidate_mv[ref_list] = current_context.primary_motion_vector_pair()[ref_list];
-        m_candidate_frame[ref_list] = current_context.ref_frames[ref_list];
+        return { prev_context.ref_frames[ref_list], prev_context.primary_motion_vector_pair[ref_list] };
     }
+
+    auto const& current_context = block_context.frame_block_contexts().at(candidate_vector.row(), candidate_vector.column());
+    return { current_context.ref_frames[ref_list], current_context.primary_motion_vector_pair()[ref_list] };
 }
 
-void Parser::if_same_ref_frame_add_mv(BlockContext const& block_context, MotionVector candidate_vector, ReferenceFrameType ref_frame, bool use_prev)
+// if_same_ref_frame_add_mv( candidateR, candidateC, refFrame, usePrev ) in the spec.
+void Parser::add_motion_vector_if_reference_frame_type_is_same(BlockContext const& block_context, MotionVector candidate_vector, ReferenceFrameType ref_frame, Vector<MotionVector, 2>& list, bool use_prev)
 {
     for (auto ref_list = 0u; ref_list < 2; ref_list++) {
-        get_block_mv(block_context, candidate_vector, ref_list, use_prev);
-        if (m_candidate_frame[ref_list] == ref_frame) {
-            add_mv_ref_list(ref_list);
+        auto candidate = get_motion_vector_from_current_or_previous_frame(block_context, candidate_vector, ref_list, use_prev);
+        if (candidate.type == ref_frame) {
+            add_motion_vector_to_list_deduped(candidate.vector, list);
             return;
         }
     }
 }
 
-void Parser::scale_mv(FrameContext const& frame_context, u8 ref_list, ReferenceFrameType ref_frame)
+// scale_mv( refList, refFrame ) in the spec.
+static void apply_sign_bias_to_motion_vector(FrameContext const& frame_context, MotionVectorCandidate& candidate, ReferenceFrameType ref_frame)
 {
-    auto candidate_frame = m_candidate_frame[ref_list];
-    if (frame_context.reference_frame_sign_biases[candidate_frame] != frame_context.reference_frame_sign_biases[ref_frame])
-        m_candidate_mv[ref_list] *= -1;
+    if (frame_context.reference_frame_sign_biases[candidate.type] != frame_context.reference_frame_sign_biases[ref_frame])
+        candidate.vector *= -1;
 }
 
-void Parser::if_diff_ref_frame_add_mv(BlockContext const& block_context, MotionVector candidate_vector, ReferenceFrameType ref_frame, bool use_prev)
+// if_diff_ref_frame_add_mv( candidateR, candidateC, refFrame, usePrev ) in the spec.
+void Parser::add_motion_vector_if_reference_frame_type_is_different(BlockContext const& block_context, MotionVector candidate_vector, ReferenceFrameType ref_frame, Vector<MotionVector, 2>& list, bool use_prev)
 {
-    for (auto ref_list = 0u; ref_list < 2; ref_list++)
-        get_block_mv(block_context, candidate_vector, ref_list, use_prev);
-    auto mvs_are_same = m_candidate_mv[0] == m_candidate_mv[1];
-    if (m_candidate_frame[0] > ReferenceFrameType::IntraFrame && m_candidate_frame[0] != ref_frame) {
-        scale_mv(block_context.frame_context, 0, ref_frame);
-        add_mv_ref_list(0);
+    auto first_candidate = get_motion_vector_from_current_or_previous_frame(block_context, candidate_vector, 0, use_prev);
+    if (first_candidate.type > ReferenceFrameType::IntraFrame && first_candidate.type != ref_frame) {
+        apply_sign_bias_to_motion_vector(block_context.frame_context, first_candidate, ref_frame);
+        add_motion_vector_to_list_deduped(first_candidate.vector, list);
     }
-    if (m_candidate_frame[1] > ReferenceFrameType::IntraFrame && m_candidate_frame[1] != ref_frame && !mvs_are_same) {
-        scale_mv(block_context.frame_context, 1, ref_frame);
-        add_mv_ref_list(1);
+
+    auto second_candidate = get_motion_vector_from_current_or_previous_frame(block_context, candidate_vector, 1, use_prev);
+    auto mvs_are_same = first_candidate.vector == second_candidate.vector;
+    if (second_candidate.type > ReferenceFrameType::IntraFrame && second_candidate.type != ref_frame && !mvs_are_same) {
+        apply_sign_bias_to_motion_vector(block_context.frame_context, second_candidate, ref_frame);
+        add_motion_vector_to_list_deduped(second_candidate.vector, list);
     }
 }
 
-MotionVector Parser::clamp_mv(BlockContext const& block_context, MotionVector vector, i32 border)
+// This function handles both clamp_mv_row( mvec, border ) and clamp_mv_col( mvec, border ) in the spec.
+static MotionVector clamp_motion_vector(BlockContext const& block_context, MotionVector vector, i32 border)
 {
     i32 blocks_high = num_8x8_blocks_high_lookup[block_context.size];
     // Casts must be done here to prevent subtraction underflow from wrapping the values.
@@ -1547,22 +1563,14 @@ MotionVector Parser::clamp_mv(BlockContext const& block_context, MotionVector ve
     };
 }
 
-void Parser::clamp_mv_ref(BlockContext const& block_context, u8 i)
-{
-    // FIXME: This seems silly and should probably just be written inline in the one place it's used.
-    MotionVector& vector = m_ref_list_mv[i];
-    vector = clamp_mv(block_context, vector, MV_BORDER);
-}
-
 // 6.5.1 Find MV refs syntax
-void Parser::find_mv_refs(BlockContext& block_context, ReferenceFrameType reference_frame, i32 block)
+// find_mv_refs( refFrame, block ) in the spec.
+MotionVectorPair Parser::find_reference_motion_vectors(BlockContext const& block_context, ReferenceFrameType reference_frame, i32 block)
 {
-    m_ref_mv_count = 0;
     bool different_ref_found = false;
     u8 context_counter = 0;
 
-    m_ref_list_mv[0] = {};
-    m_ref_list_mv[1] = {};
+    Vector<MotionVector, 2> list;
 
     MotionVector base_coordinates = MotionVector(block_context.row, block_context.column);
 
@@ -1570,7 +1578,7 @@ void Parser::find_mv_refs(BlockContext& block_context, ReferenceFrameType refere
         auto offset_vector = mv_ref_blocks[block_context.size][i];
         auto candidate = base_coordinates + offset_vector;
 
-        if (is_inside(block_context.tile_context, candidate)) {
+        if (motion_vector_is_inside_tile(block_context.tile_context, candidate)) {
             different_ref_found = true;
             auto context = block_context.frame_block_contexts().at(candidate.row(), candidate.column());
             context_counter += mode_2_counter[to_underlying(context.y_mode)];
@@ -1585,9 +1593,8 @@ void Parser::find_mv_refs(BlockContext& block_context, ReferenceFrameType refere
                         { 3, 3 }
                     };
                     auto index = block >= 0 ? idx_n_column_to_subblock[block][offset_vector.column() == 0] : 3;
-                    m_candidate_mv[ref_list] = context.sub_block_motion_vectors[index][ref_list];
 
-                    add_mv_ref_list(ref_list);
+                    add_motion_vector_to_list_deduped(context.sub_block_motion_vectors[index][ref_list], list);
                     break;
                 }
             }
@@ -1596,84 +1603,88 @@ void Parser::find_mv_refs(BlockContext& block_context, ReferenceFrameType refere
 
     for (auto i = 2u; i < MVREF_NEIGHBOURS; i++) {
         MotionVector candidate = base_coordinates + mv_ref_blocks[block_context.size][i];
-        if (is_inside(block_context.tile_context, candidate)) {
+        if (motion_vector_is_inside_tile(block_context.tile_context, candidate)) {
             different_ref_found = true;
-            if_same_ref_frame_add_mv(block_context, candidate, reference_frame, false);
+            add_motion_vector_if_reference_frame_type_is_same(block_context, candidate, reference_frame, list, false);
         }
     }
     if (m_use_prev_frame_mvs)
-        if_same_ref_frame_add_mv(block_context, base_coordinates, reference_frame, true);
+        add_motion_vector_if_reference_frame_type_is_same(block_context, base_coordinates, reference_frame, list, true);
 
     if (different_ref_found) {
         for (auto i = 0u; i < MVREF_NEIGHBOURS; i++) {
             MotionVector candidate = base_coordinates + mv_ref_blocks[block_context.size][i];
-            if (is_inside(block_context.tile_context, candidate))
-                if_diff_ref_frame_add_mv(block_context, candidate, reference_frame, false);
+            if (motion_vector_is_inside_tile(block_context.tile_context, candidate))
+                add_motion_vector_if_reference_frame_type_is_different(block_context, candidate, reference_frame, list, false);
         }
     }
     if (m_use_prev_frame_mvs)
-        if_diff_ref_frame_add_mv(block_context, base_coordinates, reference_frame, true);
+        add_motion_vector_if_reference_frame_type_is_different(block_context, base_coordinates, reference_frame, list, true);
 
     m_mode_context[reference_frame] = counter_to_context[context_counter];
-    for (auto i = 0u; i < MAX_MV_REF_CANDIDATES; i++)
-        clamp_mv_ref(block_context, i);
+    for (auto i = 0u; i < list.size(); i++) {
+        // clamp_mv_ref( i ) in the spec.
+        list[i] = clamp_motion_vector(block_context, list[i], MV_BORDER);
+    }
+
+    MotionVectorPair result;
+    for (auto i = 0u; i < list.size(); i++)
+        result[i] = list[i];
+    return result;
 }
 
-bool Parser::use_mv_hp(MotionVector const& vector)
-{
-    return (abs(vector.row()) >> 3) < COMPANDED_MVREF_THRESH && (abs(vector.column()) >> 3) < COMPANDED_MVREF_THRESH;
-}
-
-void Parser::find_best_ref_mvs(BlockContext& block_context, u8 ref_list)
+// find_best_ref_mvs( refList ) in the spec.
+static void select_best_reference_motion_vectors(BlockContext& block_context, MotionVectorPair reference_motion_vectors, BlockMotionVectorCandidates& candidates, u8 reference_index)
 {
     for (auto i = 0u; i < MAX_MV_REF_CANDIDATES; i++) {
-        auto delta = m_ref_list_mv[i];
+        auto delta = reference_motion_vectors[i];
         auto delta_row = delta.row();
         auto delta_column = delta.column();
-        if (!block_context.frame_context.high_precision_motion_vectors_allowed || !use_mv_hp(delta)) {
-            if (delta_row & 1)
+        if (!block_context.frame_context.high_precision_motion_vectors_allowed || !should_use_high_precision_motion_vector(delta)) {
+            if ((delta_row & 1) != 0)
                 delta_row += delta_row > 0 ? -1 : 1;
-            if (delta_column & 1)
+            if ((delta_column & 1) != 0)
                 delta_column += delta_column > 0 ? -1 : 1;
         }
         delta = { delta_row, delta_column };
-        m_ref_list_mv[i] = clamp_mv(block_context, delta, (BORDERINPIXELS - INTERP_EXTEND) << 3);
+        reference_motion_vectors[i] = clamp_motion_vector(block_context, delta, (BORDERINPIXELS - INTERP_EXTEND) << 3);
     }
 
-    m_nearest_mv[ref_list] = m_ref_list_mv[0];
-    m_near_mv[ref_list] = m_ref_list_mv[1];
-    m_best_mv[ref_list] = m_ref_list_mv[0];
+    candidates[reference_index].nearest_vector = reference_motion_vectors[0];
+    candidates[reference_index].near_vector = reference_motion_vectors[1];
+    candidates[reference_index].best_vector = reference_motion_vectors[0];
 }
 
-void Parser::append_sub8x8_mvs(BlockContext& block_context, i32 block, u8 ref_list)
+// append_sub8x8_mvs( block, refList ) in the spec.
+void Parser::select_best_sub_block_reference_motion_vectors(BlockContext const& block_context, BlockMotionVectorCandidates& candidates, i32 block, u8 reference_index)
 {
     MotionVector sub_8x8_mvs[2];
-    find_mv_refs(block_context, block_context.reference_frame_types[ref_list], block);
+    MotionVectorPair reference_motion_vectors = find_reference_motion_vectors(block_context, block_context.reference_frame_types[reference_index], block);
     auto destination_index = 0;
     if (block == 0) {
         for (auto i = 0u; i < 2; i++)
-            sub_8x8_mvs[destination_index++] = m_ref_list_mv[i];
+            sub_8x8_mvs[destination_index++] = reference_motion_vectors[i];
     } else if (block <= 2) {
-        sub_8x8_mvs[destination_index++] = block_context.sub_block_motion_vectors[0][ref_list];
+        sub_8x8_mvs[destination_index++] = block_context.sub_block_motion_vectors[0][reference_index];
     } else {
-        sub_8x8_mvs[destination_index++] = block_context.sub_block_motion_vectors[2][ref_list];
+        sub_8x8_mvs[destination_index++] = block_context.sub_block_motion_vectors[2][reference_index];
         for (auto index = 1; index >= 0 && destination_index < 2; index--) {
-            auto block_vector = block_context.sub_block_motion_vectors[index][ref_list];
+            auto block_vector = block_context.sub_block_motion_vectors[index][reference_index];
             if (block_vector != sub_8x8_mvs[0])
                 sub_8x8_mvs[destination_index++] = block_vector;
         }
     }
 
     for (auto n = 0u; n < 2 && destination_index < 2; n++) {
-        auto ref_list_vector = m_ref_list_mv[n];
+        auto ref_list_vector = reference_motion_vectors[n];
         if (ref_list_vector != sub_8x8_mvs[0])
             sub_8x8_mvs[destination_index++] = ref_list_vector;
     }
 
     if (destination_index < 2)
         sub_8x8_mvs[destination_index++] = {};
-    m_nearest_mv[ref_list] = sub_8x8_mvs[0];
-    m_near_mv[ref_list] = sub_8x8_mvs[1];
+    candidates[reference_index].nearest_vector = sub_8x8_mvs[0];
+    candidates[reference_index].near_vector = sub_8x8_mvs[1];
 }
 
 }

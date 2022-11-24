@@ -114,27 +114,21 @@ private:
     DecoderErrorOr<void> intra_block_mode_info(BlockContext&);
     DecoderErrorOr<void> inter_block_mode_info(BlockContext&, FrameBlockContext above_context, FrameBlockContext left_context);
     DecoderErrorOr<void> read_ref_frames(BlockContext&, FrameBlockContext above_context, FrameBlockContext left_context);
-    DecoderErrorOr<MotionVectorPair> assign_mv(BlockContext const&);
-    DecoderErrorOr<MotionVector> read_mv(BlockContext const&, u8 ref);
-    DecoderErrorOr<i32> read_mv_component(u8 component);
+    DecoderErrorOr<MotionVectorPair> get_motion_vector(BlockContext const&, BlockMotionVectorCandidates const&);
+    DecoderErrorOr<MotionVector> read_motion_vector(BlockContext const&, BlockMotionVectorCandidates const&, u8 reference_index);
+    DecoderErrorOr<i32> read_single_motion_vector_component(u8 component);
     DecoderErrorOr<bool> residual(BlockContext&, bool has_block_above, bool has_block_left);
     DecoderErrorOr<bool> tokens(BlockContext&, size_t plane, u32 x, u32 y, TXSize tx_size, u32 block_index);
     u32 const* get_scan(BlockContext const&, size_t plane, TXSize tx_size, u32 block_index);
     DecoderErrorOr<i32> read_coef(u8 bit_depth, Token token);
 
     /* (6.5) Motion Vector Prediction */
-    void find_mv_refs(BlockContext&, ReferenceFrameType, i32 block);
-    void find_best_ref_mvs(BlockContext&, u8 ref_list);
-    bool use_mv_hp(MotionVector const& delta_mv);
-    void append_sub8x8_mvs(BlockContext&, i32 block, u8 ref_list);
-    void clamp_mv_ref(BlockContext const&, u8 i);
-    MotionVector clamp_mv(BlockContext const&, MotionVector vector, i32 border);
+    MotionVectorPair find_reference_motion_vectors(BlockContext const&, ReferenceFrameType, i32 block);
+    void select_best_sub_block_reference_motion_vectors(BlockContext const&, BlockMotionVectorCandidates&, i32 block, u8 ref_list);
     size_t get_image_index(FrameContext const&, u32 row, u32 column) const;
-    void get_block_mv(BlockContext const&, MotionVector candidate_vector, u8 ref_list, bool use_prev);
-    void if_same_ref_frame_add_mv(BlockContext const&, MotionVector candidate_vector, ReferenceFrameType ref_frame, bool use_prev);
-    void if_diff_ref_frame_add_mv(BlockContext const&, MotionVector candidate_vector, ReferenceFrameType ref_frame, bool use_prev);
-    void scale_mv(FrameContext const&, u8 ref_list, ReferenceFrameType ref_frame);
-    void add_mv_ref_list(u8 ref_list);
+    MotionVectorCandidate get_motion_vector_from_current_or_previous_frame(BlockContext const&, MotionVector candidate_vector, u8 ref_list, bool use_prev);
+    void add_motion_vector_if_reference_frame_type_is_same(BlockContext const&, MotionVector candidate_vector, ReferenceFrameType ref_frame, Vector<MotionVector, 2>& list, bool use_prev);
+    void add_motion_vector_if_reference_frame_type_is_different(BlockContext const&, MotionVector candidate_vector, ReferenceFrameType ref_frame, Vector<MotionVector, 2>& list, bool use_prev);
 
     Gfx::Point<size_t> get_decoded_point_for_plane(FrameContext const&, u32 row, u32 column, u8 plane);
     Gfx::Size<size_t> get_decoded_size_for_plane(FrameContext const&, u8 plane);
@@ -163,9 +157,6 @@ private:
     Vector<u8> m_above_partition_context;
     Vector<u8> m_left_partition_context;
 
-    MotionVectorPair m_near_mv;
-    MotionVectorPair m_nearest_mv;
-    MotionVectorPair m_best_mv;
     // FIXME: Move these to a struct to store together in one array.
     Gfx::Size<u32> m_ref_frame_size[NUM_REF_FRAMES];
     bool m_ref_subsampling_x[NUM_REF_FRAMES];
@@ -183,10 +174,6 @@ private:
     ReferenceFrameType m_comp_fixed_ref;
     ReferenceFramePair m_comp_var_ref;
 
-    MotionVectorPair m_candidate_mv;
-    ReferenceFramePair m_candidate_frame;
-    u8 m_ref_mv_count { 0 };
-    MotionVectorPair m_ref_list_mv;
     bool m_use_prev_frame_mvs;
     Vector2D<PersistentBlockContext> m_previous_block_contexts;
     // Indexed by ReferenceFrame enum.
