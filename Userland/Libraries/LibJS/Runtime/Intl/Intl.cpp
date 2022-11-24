@@ -42,16 +42,16 @@ void Intl::initialize(Realm& realm)
     define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm, "Intl"), Attribute::Configurable);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    define_direct_property(vm.names.Collator, realm.intrinsics().intl_collator_constructor(), attr);
-    define_direct_property(vm.names.DateTimeFormat, realm.intrinsics().intl_date_time_format_constructor(), attr);
-    define_direct_property(vm.names.DisplayNames, realm.intrinsics().intl_display_names_constructor(), attr);
-    define_direct_property(vm.names.DurationFormat, realm.intrinsics().intl_duration_format_constructor(), attr);
-    define_direct_property(vm.names.ListFormat, realm.intrinsics().intl_list_format_constructor(), attr);
-    define_direct_property(vm.names.Locale, realm.intrinsics().intl_locale_constructor(), attr);
-    define_direct_property(vm.names.NumberFormat, realm.intrinsics().intl_number_format_constructor(), attr);
-    define_direct_property(vm.names.PluralRules, realm.intrinsics().intl_plural_rules_constructor(), attr);
-    define_direct_property(vm.names.RelativeTimeFormat, realm.intrinsics().intl_relative_time_format_constructor(), attr);
-    define_direct_property(vm.names.Segmenter, realm.intrinsics().intl_segmenter_constructor(), attr);
+    define_intrinsic_accessor(vm.names.Collator, attr, [](auto& realm) -> Value { return realm.intrinsics().intl_collator_constructor(); });
+    define_intrinsic_accessor(vm.names.DateTimeFormat, attr, [](auto& realm) -> Value { return realm.intrinsics().intl_date_time_format_constructor(); });
+    define_intrinsic_accessor(vm.names.DisplayNames, attr, [](auto& realm) -> Value { return realm.intrinsics().intl_display_names_constructor(); });
+    define_intrinsic_accessor(vm.names.DurationFormat, attr, [](auto& realm) -> Value { return realm.intrinsics().intl_duration_format_constructor(); });
+    define_intrinsic_accessor(vm.names.ListFormat, attr, [](auto& realm) -> Value { return realm.intrinsics().intl_list_format_constructor(); });
+    define_intrinsic_accessor(vm.names.Locale, attr, [](auto& realm) -> Value { return realm.intrinsics().intl_locale_constructor(); });
+    define_intrinsic_accessor(vm.names.NumberFormat, attr, [](auto& realm) -> Value { return realm.intrinsics().intl_number_format_constructor(); });
+    define_intrinsic_accessor(vm.names.PluralRules, attr, [](auto& realm) -> Value { return realm.intrinsics().intl_plural_rules_constructor(); });
+    define_intrinsic_accessor(vm.names.RelativeTimeFormat, attr, [](auto& realm) -> Value { return realm.intrinsics().intl_relative_time_format_constructor(); });
+    define_intrinsic_accessor(vm.names.Segmenter, attr, [](auto& realm) -> Value { return realm.intrinsics().intl_segmenter_constructor(); });
 
     define_native_function(realm, vm.names.getCanonicalLocales, get_canonical_locales, 1, attr);
     define_native_function(realm, vm.names.supportedValuesOf, supported_values_of, 1, attr);
