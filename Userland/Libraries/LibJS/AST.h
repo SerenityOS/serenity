@@ -53,7 +53,9 @@ public:
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const;
     virtual void dump(int indent) const;
 
-    SourceRange source_range() const;
+    [[nodiscard]] SourceRange source_range() const;
+
+    void set_end_offset(Badge<Parser>, u32 end_offset) { m_end_offset = end_offset; }
 
     String class_name() const;
 
