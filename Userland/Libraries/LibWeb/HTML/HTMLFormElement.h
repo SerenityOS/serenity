@@ -39,6 +39,8 @@ private:
     bool m_firing_submission_events { false };
 
     Vector<JS::GCPtr<HTMLElement>> m_associated_elements;
+
+    JS::GCPtr<DOM::HTMLCollection> mutable m_elements;
 };
 
 }

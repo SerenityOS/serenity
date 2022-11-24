@@ -12,8 +12,8 @@ interface HTMLFormElement : HTMLElement {
 
     undefined submit();
 
-    // FIXME: Should be [SameObject] and a HTMLFormControlsCollection
-    readonly attribute HTMLCollection elements;
+    // FIXME: Should be a HTMLFormControlsCollection
+    [SameObject] readonly attribute HTMLCollection elements;
 
     readonly attribute unsigned long length;
 
