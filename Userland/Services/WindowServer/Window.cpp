@@ -236,6 +236,9 @@ void Window::update_window_menu_items()
 
     m_window_menu_move_item->set_enabled(m_minimized_state == WindowMinimizedState::None && !is_maximized() && !m_fullscreen);
 
+    if (m_window_menu_always_on_top_item)
+        m_window_menu_always_on_top_item->set_checked(m_always_on_top);
+
     m_window_menu->update_alt_shortcuts_for_items();
 }
 
