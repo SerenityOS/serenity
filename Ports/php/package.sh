@@ -22,7 +22,7 @@ launcher_command="/usr/local/bin/php -a"
 launcher_run_in_terminal="true"
 icon_file="win32/build/php.ico"
 
-export CFLAGS="-I${SERENITY_INSTALL_ROOT}/usr/local/include/libxml2"
+export CFLAGS="-I${SERENITY_INSTALL_ROOT}/usr/include/LibCrypt -I${SERENITY_INSTALL_ROOT}/usr/local/include/libxml2"
 export LIBS='-ldl'
 export LIBXML_CFLAGS='y'
 export LIBXML_LIBS='-lxml2'
