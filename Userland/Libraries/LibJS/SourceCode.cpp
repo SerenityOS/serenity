@@ -54,8 +54,9 @@ void SourceCode::compute_line_break_offsets() const
 
 SourceRange SourceCode::range_from_offsets(u32 start_offset, u32 end_offset) const
 {
+    // If the underlying code is an empty string, the range is 1,1 - 1,1 no matter what.
     if (m_code.is_empty())
-        return { *this, {}, {} };
+        return { *this, { .line = 1, .column = 1, .offset = 0 }, { .line = 1, .column = 1, .offset = 0 } };
 
     if (!m_line_break_offsets.has_value())
         compute_line_break_offsets();
@@ -70,8 +71,8 @@ SourceRange SourceCode::range_from_offsets(u32 start_offset, u32 end_offset) con
         nearest_preceding_line_break_offset = (*m_line_break_offsets)[nearest_line_break_index];
     }
 
-    Position start;
-    Position end;
+    Optional<Position> start;
+    Optional<Position> end;
 
     size_t column = 1;
 
@@ -80,7 +81,8 @@ SourceRange SourceCode::range_from_offsets(u32 start_offset, u32 end_offset) con
     Utf8View view(m_code.view());
     for (auto it = view.iterator_at_byte_offset_without_validation(nearest_preceding_line_break_offset); it != view.end(); ++it) {
 
-        if (start_offset == view.byte_offset_of(it)) {
+        // If we're on or after the start offset, this is the start position.
+        if (!start.has_value() && view.byte_offset_of(it) >= start_offset) {
             start = Position {
                 .line = line,
                 .column = column,
@@ -88,7 +90,8 @@ SourceRange SourceCode::range_from_offsets(u32 start_offset, u32 end_offset) con
             };
         }
 
-        if (end_offset == view.byte_offset_of(it)) {
+        // If we're on or after the end offset, this is the end position.
+        if (!end.has_value() && view.byte_offset_of(it) >= end_offset) {
             end = Position {
                 .line = line,
                 .column = column,
@@ -110,7 +113,12 @@ SourceRange SourceCode::range_from_offsets(u32 start_offset, u32 end_offset) con
         ++column;
     }
 
-    return SourceRange { *this, start, end };
+    // If we didn't find both a start and end position, just return 1,1-1,1.
+    // FIXME: This is a hack. Find a way to return the nicest possible values here.
+    if (!start.has_value() || !end.has_value())
+        return SourceRange { *this, { .line = 1, .column = 1 }, { .line = 1, .column = 1 } };
+
+    return SourceRange { *this, *start, *end };
 }
 
 }
