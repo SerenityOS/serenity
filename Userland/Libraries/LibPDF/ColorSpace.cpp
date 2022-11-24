@@ -73,6 +73,11 @@ Color DeviceGrayColorSpace::color(Vector<Value> const& arguments) const
     return Color(gray, gray, gray);
 }
 
+Vector<float> DeviceGrayColorSpace::default_decode() const
+{
+    return { 0.0f, 1.0f };
+}
+
 NonnullRefPtr<DeviceRGBColorSpace> DeviceRGBColorSpace::the()
 {
     static auto instance = adopt_ref(*new DeviceRGBColorSpace());
@@ -86,6 +91,11 @@ Color DeviceRGBColorSpace::color(Vector<Value> const& arguments) const
     auto g = static_cast<u8>(arguments[1].to_float() * 255.0f);
     auto b = static_cast<u8>(arguments[2].to_float() * 255.0f);
     return Color(r, g, b);
+}
+
+Vector<float> DeviceRGBColorSpace::default_decode() const
+{
+    return { 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f };
 }
 
 NonnullRefPtr<DeviceCMYKColorSpace> DeviceCMYKColorSpace::the()
@@ -102,6 +112,11 @@ Color DeviceCMYKColorSpace::color(Vector<Value> const& arguments) const
     auto y = arguments[2].to_float();
     auto k = arguments[3].to_float();
     return Color::from_cmyk(c, m, y, k);
+}
+
+Vector<float> DeviceCMYKColorSpace::default_decode() const
+{
+    return { 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f };
 }
 
 PDFErrorOr<NonnullRefPtr<CalRGBColorSpace>> CalRGBColorSpace::create(Document* document, Vector<Value>&& parameters)
@@ -274,6 +289,11 @@ Color CalRGBColorSpace::color(Vector<Value> const& arguments) const
     return Color(red, green, blue);
 }
 
+Vector<float> CalRGBColorSpace::default_decode() const
+{
+    return { 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f };
+}
+
 PDFErrorOr<NonnullRefPtr<ColorSpace>> ICCBasedColorSpace::create(Document* document, Vector<Value>&& parameters)
 {
     if (parameters.is_empty())
@@ -309,6 +329,11 @@ PDFErrorOr<NonnullRefPtr<ColorSpace>> ICCBasedColorSpace::create(Document* docum
 }
 
 Color ICCBasedColorSpace::color(Vector<Value> const&) const
+{
+    VERIFY_NOT_REACHED();
+}
+
+Vector<float> ICCBasedColorSpace::default_decode() const
 {
     VERIFY_NOT_REACHED();
 }
