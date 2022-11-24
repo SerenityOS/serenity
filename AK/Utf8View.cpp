@@ -24,6 +24,11 @@ Utf8CodePointIterator Utf8View::iterator_at_byte_offset(size_t byte_offset) cons
     return end();
 }
 
+Utf8CodePointIterator Utf8View::iterator_at_byte_offset_without_validation(size_t byte_offset) const
+{
+    return Utf8CodePointIterator { reinterpret_cast<u8 const*>(m_string.characters_without_null_termination()) + byte_offset, m_string.length() - byte_offset };
+}
+
 size_t Utf8View::byte_offset_of(Utf8CodePointIterator const& it) const
 {
     VERIFY(it.m_ptr >= begin_ptr());

@@ -80,6 +80,8 @@ public:
     Utf8CodePointIterator end() const { return { end_ptr(), 0 }; }
     Utf8CodePointIterator iterator_at_byte_offset(size_t) const;
 
+    Utf8CodePointIterator iterator_at_byte_offset_without_validation(size_t) const;
+
     unsigned char const* bytes() const { return begin_ptr(); }
     size_t byte_length() const { return m_string.length(); }
     size_t byte_offset_of(Utf8CodePointIterator const&) const;
