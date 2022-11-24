@@ -13,7 +13,7 @@ export MAKEJOBS="${MAKEJOBS:-$(nproc)}"
 buildstep() {
     local buildstep_name=$1
     shift
-    if [ -z "$@" ]; then
+    if [ "$#" -eq '0' ]; then
         "${buildstep_name}"
     else
         "$@"
