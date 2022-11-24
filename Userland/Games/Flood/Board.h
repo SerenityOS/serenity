@@ -23,7 +23,7 @@ public:
 
     bool is_flooded() const;
     void set_cell(size_t row, size_t column, Color color);
-    ErrorOr<Color> cell(size_t row, size_t column) const;
+    Color cell(size_t row, size_t column) const;
     auto const& cells() const { return m_cells; }
 
     void clear();
