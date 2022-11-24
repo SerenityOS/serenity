@@ -81,7 +81,13 @@ Tab::Tab(BrowserWindow* window, int webdriver_fd_passing_socket)
         forward();
     });
 
-    QObject::connect(m_view, &WebContentView::load_started, [this](const URL& url) {
+    QObject::connect(m_view, &WebContentView::load_started, [this](const URL& url, bool is_redirect) {
+        // If we are loading due to a redirect, we replace the current history entry
+        // with the loaded URL
+        if (is_redirect) {
+            m_history.replace_current(url, m_title.toUtf8().data());
+        }
+
         m_location_edit->setText(url.to_string().characters());
 
         // Don't add to history if back or forward is pressed

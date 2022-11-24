@@ -802,10 +802,10 @@ void WebContentView::notify_server_did_middle_click_link(Badge<WebContentClient>
     (void)modifiers;
 }
 
-void WebContentView::notify_server_did_start_loading(Badge<WebContentClient>, AK::URL const& url)
+void WebContentView::notify_server_did_start_loading(Badge<WebContentClient>, AK::URL const& url, bool is_redirect)
 {
     m_url = url;
-    emit load_started(url);
+    emit load_started(url, is_redirect);
 }
 
 void WebContentView::notify_server_did_finish_loading(Badge<WebContentClient>, AK::URL const& url)
