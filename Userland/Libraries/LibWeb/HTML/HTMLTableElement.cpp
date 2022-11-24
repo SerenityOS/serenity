@@ -25,6 +25,13 @@ HTMLTableElement::HTMLTableElement(DOM::Document& document, DOM::QualifiedName q
 
 HTMLTableElement::~HTMLTableElement() = default;
 
+void HTMLTableElement::visit_edges(Cell::Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    visitor.visit(m_rows);
+    visitor.visit(m_t_bodies);
+}
+
 void HTMLTableElement::apply_presentational_hints(CSS::StyleProperties& style) const
 {
     for_each_attribute([&](auto& name, auto& value) {
@@ -221,11 +228,17 @@ void HTMLTableElement::delete_t_foot()
     }
 }
 
+// https://html.spec.whatwg.org/multipage/tables.html#dom-table-tbodies
 JS::NonnullGCPtr<DOM::HTMLCollection> HTMLTableElement::t_bodies()
 {
-    return DOM::HTMLCollection::create(*this, [](DOM::Element const& element) {
-        return element.local_name() == TagNames::tbody;
-    });
+    // The tBodies attribute must return an HTMLCollection rooted at the table node,
+    // whose filter matches only tbody elements that are children of the table element.
+    if (!m_t_bodies) {
+        m_t_bodies = DOM::HTMLCollection::create(*this, [](DOM::Element const& element) {
+            return element.local_name() == TagNames::tbody;
+        });
+    }
+    return *m_t_bodies;
 }
 
 JS::NonnullGCPtr<HTMLTableSectionElement> HTMLTableElement::create_t_body()
@@ -252,6 +265,7 @@ JS::NonnullGCPtr<HTMLTableSectionElement> HTMLTableElement::create_t_body()
     return static_cast<HTMLTableSectionElement&>(*tbody);
 }
 
+// https://html.spec.whatwg.org/multipage/tables.html#dom-table-rows
 JS::NonnullGCPtr<DOM::HTMLCollection> HTMLTableElement::rows()
 {
     HTMLTableElement* table_node = this;
@@ -261,23 +275,26 @@ JS::NonnullGCPtr<DOM::HTMLCollection> HTMLTableElement::rows()
     //         still in tree order.
     // How do you sort HTMLCollection?
 
-    return DOM::HTMLCollection::create(*this, [table_node](DOM::Element const& element) {
-        // Only match TR elements which are:
-        // * children of the table element
-        // * children of the thead, tbody, or tfoot elements that are themselves children of the table element
-        if (!is<HTMLTableRowElement>(element)) {
+    if (!m_rows) {
+        m_rows = DOM::HTMLCollection::create(*this, [table_node](DOM::Element const& element) {
+            // Only match TR elements which are:
+            // * children of the table element
+            // * children of the thead, tbody, or tfoot elements that are themselves children of the table element
+            if (!is<HTMLTableRowElement>(element)) {
+                return false;
+            }
+            if (element.parent_element() == table_node)
+                return true;
+
+            if (element.parent_element() && (element.parent_element()->local_name() == TagNames::thead || element.parent_element()->local_name() == TagNames::tbody || element.parent_element()->local_name() == TagNames::tfoot)
+                && element.parent()->parent() == table_node) {
+                return true;
+            }
+
             return false;
-        }
-        if (element.parent_element() == table_node)
-            return true;
-
-        if (element.parent_element() && (element.parent_element()->local_name() == TagNames::thead || element.parent_element()->local_name() == TagNames::tbody || element.parent_element()->local_name() == TagNames::tfoot)
-            && element.parent()->parent() == table_node) {
-            return true;
-        }
-
-        return false;
-    });
+        });
+    }
+    return *m_rows;
 }
 
 WebIDL::ExceptionOr<JS::NonnullGCPtr<HTMLTableRowElement>> HTMLTableElement::insert_row(long index)
