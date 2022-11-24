@@ -22,7 +22,6 @@ char* crypt(char const* key, char const* salt)
 }
 
 static constexpr size_t crypt_salt_max = 16;
-static constexpr size_t sha_string_length = 44;
 
 char* crypt_r(char const* key, char const* salt, struct crypt_data* data)
 {
@@ -31,38 +30,36 @@ char* crypt_r(char const* key, char const* salt, struct crypt_data* data)
         return nullptr;
     }
 
-    if (salt[0] == '$') {
-        if (salt[1] == '5') {
-            char const* salt_value = salt + 3;
-            size_t salt_len = min(strcspn(salt_value, "$"), crypt_salt_max);
-            size_t header_len = salt_len + 3;
-
-            bool fits = String(salt, header_len).copy_characters_to_buffer(data->result, sizeof(data->result));
-            if (!fits) {
-                errno = EINVAL;
-                return nullptr;
-            }
-            data->result[header_len] = '$';
-
-            Crypto::Hash::SHA256 sha;
-            sha.update(StringView { key, strlen(key) });
-            sha.update((u8 const*)salt_value, salt_len);
-
-            auto digest = sha.digest();
-            auto string = encode_base64(ReadonlyBytes(digest.immutable_data(), digest.data_length()));
-
-            fits = string.copy_characters_to_buffer(data->result + header_len + 1, sizeof(data->result) - header_len - 1);
-            if (!fits) {
-                errno = EINVAL;
-                return nullptr;
-            }
-
-            return data->result;
-        }
+    // We only support SHA-256 at the moment
+    if (salt[0] != '$' || salt[1] != '5') {
+        errno = EINVAL;
+        return nullptr;
     }
 
-    // DES crypt is not available.
-    errno = EINVAL;
-    return nullptr;
+    char const* salt_value = salt + 3;
+    size_t salt_len = min(strcspn(salt_value, "$"), crypt_salt_max);
+    size_t header_len = salt_len + 3;
+
+    bool fits = String(salt, header_len).copy_characters_to_buffer(data->result, sizeof(data->result));
+    if (!fits) {
+        errno = EINVAL;
+        return nullptr;
+    }
+    data->result[header_len] = '$';
+
+    Crypto::Hash::SHA256 sha;
+    sha.update(StringView { key, strlen(key) });
+    sha.update(reinterpret_cast<u8 const*>(salt_value), salt_len);
+
+    auto digest = sha.digest();
+    auto string = encode_base64(ReadonlyBytes(digest.immutable_data(), digest.data_length()));
+
+    fits = string.copy_characters_to_buffer(data->result + header_len + 1, sizeof(data->result) - header_len - 1);
+    if (!fits) {
+        errno = EINVAL;
+        return nullptr;
+    }
+
+    return data->result;
 }
 }
