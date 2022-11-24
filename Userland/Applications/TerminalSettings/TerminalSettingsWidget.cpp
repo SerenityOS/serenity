@@ -10,6 +10,7 @@
 #include <AK/QuickSort.h>
 #include <Applications/TerminalSettings/TerminalSettingsMainGML.h>
 #include <Applications/TerminalSettings/TerminalSettingsViewGML.h>
+#include <LibColorScheme/ColorScheme.h>
 #include <LibConfig/Client.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
@@ -119,14 +120,7 @@ TerminalSettingsViewWidget::TerminalSettingsViewWidget()
     // The settings window takes a reference to this vector, so it needs to outlive this scope.
     // As long as we ensure that only one settings window may be open at a time (which we do),
     // this should cause no problems.
-    static Vector<String> color_scheme_names;
-    color_scheme_names.clear();
-    Core::DirIterator iterator("/res/terminal-colors", Core::DirIterator::SkipParentAndBaseDir);
-    while (iterator.has_next()) {
-        auto path = iterator.next_path();
-        color_scheme_names.append(path.replace(".ini"sv, ""sv, ReplaceMode::FirstOnly));
-    }
-    quick_sort(color_scheme_names);
+    static Vector<String> color_scheme_names = ColorScheme::get_color_scheme_names();
     auto& color_scheme_combo = *find_descendant_of_type_named<GUI::ComboBox>("color_scheme_combo");
     color_scheme_combo.set_only_allow_values_from_model(true);
     color_scheme_combo.set_model(*GUI::ItemListModel<String>::create(color_scheme_names));

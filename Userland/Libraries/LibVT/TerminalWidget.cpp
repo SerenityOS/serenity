@@ -13,6 +13,7 @@
 #include <AK/TemporaryChange.h>
 #include <AK/Utf32View.h>
 #include <AK/Utf8View.h>
+#include <LibColorScheme/ColorScheme.h>
 #include <LibConfig/Client.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/MimeData.h>
@@ -1200,57 +1201,29 @@ void TerminalWidget::update_paste_action()
 
 void TerminalWidget::set_color_scheme(StringView name)
 {
-    if (name.contains('/')) {
-        dbgln("Shenanigans! Color scheme names can't contain slashes.");
+    ColorScheme::ColorScheme terminal_color_scheme;
+    if (terminal_color_scheme.set_color_scheme_from_string(name).is_error())
         return;
-    }
 
-    m_color_scheme_name = name;
+    m_show_bold_text_as_bright = terminal_color_scheme.should_show_bold_text_as_bright();
 
-    constexpr StringView color_names[] = {
-        "Black"sv,
-        "Red"sv,
-        "Green"sv,
-        "Yellow"sv,
-        "Blue"sv,
-        "Magenta"sv,
-        "Cyan"sv,
-        "White"sv
-    };
-
-    auto path = String::formatted("/res/terminal-colors/{}.ini", name);
-    auto color_config_or_error = Core::ConfigFile::open(path);
-    if (color_config_or_error.is_error()) {
-        dbgln("Unable to read color scheme file '{}': {}", path, color_config_or_error.error());
-        return;
-    }
-    auto color_config = color_config_or_error.release_value();
-
-    m_show_bold_text_as_bright = color_config->read_bool_entry("Options", "ShowBoldTextAsBright", true);
-
-    auto default_background = Gfx::Color::from_string(color_config->read_entry("Primary", "Background"));
+    auto default_background = terminal_color_scheme.get_background_color();
     if (default_background.has_value())
-        m_default_background_color = default_background.value();
+        m_default_background_color = default_background.release_value();
     else
-        m_default_background_color = Gfx::Color::from_rgb(m_colors[(u8)VT::Color::ANSIColor::Black]);
+        m_default_background_color = m_colors[(u8)VT::Color::ANSIColor::Black];
 
-    auto default_foreground = Gfx::Color::from_string(color_config->read_entry("Primary", "Foreground"));
+    auto default_foreground = terminal_color_scheme.get_foreground_color();
     if (default_foreground.has_value())
-        m_default_foreground_color = default_foreground.value();
+        m_default_foreground_color = default_foreground.release_value();
     else
-        m_default_foreground_color = Gfx::Color::from_rgb(m_colors[(u8)VT::Color::ANSIColor::White]);
+        m_default_foreground_color = m_colors[(u8)VT::Color::ANSIColor::White];
 
-    for (u8 color_idx = 0; color_idx < 8; ++color_idx) {
-        auto rgb = Gfx::Color::from_string(color_config->read_entry("Normal", color_names[color_idx]));
-        if (rgb.has_value())
-            m_colors[color_idx] = rgb.value().value();
-    }
+    for (u8 color_idx = 0; color_idx < 8; ++color_idx)
+        m_colors[color_idx] = terminal_color_scheme.get_colors()[color_idx];
 
-    for (u8 color_idx = 0; color_idx < 8; ++color_idx) {
-        auto rgb = Gfx::Color::from_string(color_config->read_entry("Bright", color_names[color_idx]));
-        if (rgb.has_value())
-            m_colors[color_idx + 8] = rgb.value().value();
-    }
+    for (u8 color_idx = 0; color_idx < 8; ++color_idx)
+        m_colors[color_idx + 8] = terminal_color_scheme.get_bright_colors()[color_idx];
     update();
 }
 
@@ -1268,11 +1241,11 @@ constexpr Gfx::Color TerminalWidget::terminal_color_to_rgb(VT::Color color) cons
     case VT::Color::Kind::RGB:
         return Gfx::Color::from_rgb(color.as_rgb());
     case VT::Color::Kind::Indexed:
-        return Gfx::Color::from_rgb(m_colors[color.as_indexed()]);
+        return m_colors[color.as_indexed()];
     case VT::Color::Kind::Named: {
         auto ansi = color.as_named();
         if ((u16)ansi < 256)
-            return Gfx::Color::from_rgb(m_colors[(u16)ansi]);
+            return m_colors[(u16)ansi];
         else if (ansi == VT::Color::ANSIColor::DefaultForeground)
             return m_default_foreground_color;
         else if (ansi == VT::Color::ANSIColor::DefaultBackground)
