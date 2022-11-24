@@ -22,17 +22,24 @@ HTMLTableSectionElement::HTMLTableSectionElement(DOM::Document& document, DOM::Q
 
 HTMLTableSectionElement::~HTMLTableSectionElement() = default;
 
+void HTMLTableSectionElement::visit_edges(Cell::Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    visitor.visit(m_rows);
+}
+
 // https://html.spec.whatwg.org/multipage/tables.html#dom-tbody-rows
 JS::NonnullGCPtr<DOM::HTMLCollection> HTMLTableSectionElement::rows() const
 {
     // The rows attribute must return an HTMLCollection rooted at this element,
     // whose filter matches only tr elements that are children of this element.
-    // FIXME: This should return the same HTMLCollection object every time,
-    //        but that would cause a reference cycle since HTMLCollection refs the root.
-    return DOM::HTMLCollection::create(const_cast<HTMLTableSectionElement&>(*this), [this](Element const& element) {
-        return element.parent() == this
-            && is<HTMLTableRowElement>(element);
-    });
+    if (!m_rows) {
+        m_rows = DOM::HTMLCollection::create(const_cast<HTMLTableSectionElement&>(*this), [this](Element const& element) {
+            return element.parent() == this
+                && is<HTMLTableRowElement>(element);
+        });
+    }
+    return *m_rows;
 }
 
 // https://html.spec.whatwg.org/multipage/tables.html#dom-tbody-insertrow
