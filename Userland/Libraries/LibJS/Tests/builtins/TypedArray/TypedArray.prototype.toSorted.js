@@ -49,6 +49,28 @@ test("basic functionality", () => {
     });
 });
 
+test("detached buffer", () => {
+    TYPED_ARRAYS.forEach(T => {
+        const typedArray = new T(3);
+        typedArray[0] = 3;
+        typedArray[1] = 1;
+        typedArray[2] = 2;
+
+        const sortedTypedArray = typedArray.toSorted((a, b) => {
+            detachArrayBuffer(typedArray.buffer);
+            return a - b;
+        });
+
+        expect(typedArray[0]).toBeUndefined();
+        expect(typedArray[1]).toBeUndefined();
+        expect(typedArray[2]).toBeUndefined();
+
+        expect(sortedTypedArray[0]).toBe(1);
+        expect(sortedTypedArray[1]).toBe(2);
+        expect(sortedTypedArray[2]).toBe(3);
+    });
+});
+
 describe("errors", () => {
     test("null or undefined this value", () => {
         TYPED_ARRAYS.forEach(T => {
