@@ -52,8 +52,7 @@ private:
     }
 };
 
-TaskbarWindow::TaskbarWindow(NonnullRefPtr<GUI::Menu> system_menu)
-    : m_system_menu(move(system_menu))
+TaskbarWindow::TaskbarWindow()
 {
     set_window_type(GUI::WindowType::Taskbar);
     set_title("Taskbar");
@@ -64,15 +63,8 @@ TaskbarWindow::TaskbarWindow(NonnullRefPtr<GUI::Menu> system_menu)
     main_widget.set_layout<GUI::HorizontalBoxLayout>();
     main_widget.layout()->set_margins({ 2, 3, 0, 3 });
 
-    m_start_button = GUI::Button::construct("Serenity");
-    set_start_button_font(Gfx::FontDatabase::default_font().bold_variant());
-    m_start_button->set_icon_spacing(0);
-    auto app_icon = GUI::Icon::default_icon("ladyball"sv);
-    m_start_button->set_icon(app_icon.bitmap_for_size(16));
-    m_start_button->set_menu(m_system_menu);
-
-    main_widget.add_child(*m_start_button);
-    main_widget.add<Taskbar::QuickLaunchWidget>();
+    m_quick_launch = Taskbar::QuickLaunchWidget::construct();
+    main_widget.add_child(*m_quick_launch);
 
     m_task_button_container = main_widget.add<GUI::Widget>();
     m_task_button_container->set_layout<GUI::HorizontalBoxLayout>();
@@ -97,6 +89,21 @@ TaskbarWindow::TaskbarWindow(NonnullRefPtr<GUI::Menu> system_menu)
 
     auto af_path = String::formatted("{}/{}", Desktop::AppFile::APP_FILES_DIRECTORY, "Assistant.af");
     m_assistant_app_file = Desktop::AppFile::open(af_path);
+}
+
+void TaskbarWindow::add_system_menu(NonnullRefPtr<GUI::Menu> system_menu)
+{
+    m_system_menu = move(system_menu);
+
+    m_start_button = GUI::Button::construct("Serenity");
+    set_start_button_font(Gfx::FontDatabase::default_font().bold_variant());
+    m_start_button->set_icon_spacing(0);
+    auto app_icon = GUI::Icon::default_icon("ladyball"sv);
+    m_start_button->set_icon(app_icon.bitmap_for_size(16));
+    m_start_button->set_menu(m_system_menu);
+
+    GUI::Widget* main = main_widget();
+    main->insert_child_before(*m_start_button, *m_quick_launch);
 }
 
 void TaskbarWindow::config_string_did_change(String const& domain, String const& group, String const& key, String const& value)
@@ -296,6 +303,9 @@ void TaskbarWindow::wm_event(GUI::WMEvent& event)
         break;
     }
     case GUI::Event::WM_SuperKeyPressed: {
+        if (!m_system_menu)
+            break;
+
         if (m_system_menu->is_visible()) {
             m_system_menu->dismiss();
         } else {
