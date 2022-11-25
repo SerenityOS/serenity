@@ -1972,17 +1972,11 @@ Bytecode::CodeGenerationErrorOr<void> ContinueStatement::generate_bytecode(Bytec
     //        We need to execute the finally block, but tell it to resume
     //        execution at the designated block
     if (m_target_label.is_null()) {
-        generator.perform_needed_unwinds<Bytecode::Op::Jump>();
-        generator.emit<Bytecode::Op::Jump>().set_targets(
-            generator.nearest_continuable_scope(),
-            {});
+        generator.generate_continue();
         return {};
     }
 
-    auto target_to_jump_to = generator.perform_needed_unwinds_for_labelled_continue_and_return_target_block(m_target_label);
-    generator.emit<Bytecode::Op::Jump>().set_targets(
-        target_to_jump_to,
-        {});
+    generator.generate_continue(m_target_label);
     return {};
 }
 

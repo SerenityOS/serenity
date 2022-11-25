@@ -45,7 +45,7 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Executable const& e
 
     TemporaryChange restore_executable { m_current_executable, &executable };
     TemporaryChange restore_saved_jump { m_scheduled_jump, static_cast<BasicBlock const*>(nullptr) };
-    VERIFY(m_saved_exception.is_null());
+    TemporaryChange restore_saved_exception { m_saved_exception, {} };
 
     bool pushed_execution_context = false;
     ExecutionContext execution_context(vm().heap());
