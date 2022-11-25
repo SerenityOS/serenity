@@ -97,6 +97,24 @@ inline constexpr int count_leading_zeroes(IntType value)
 #endif
 }
 
+#ifdef __SIZEOF_INT128__
+// This is required for math.cpp internal_scalbn
+inline constexpr int count_leading_zeroes(unsigned __int128 value)
+{
+#    if defined(AK_COMPILER_CLANG) || defined(AK_COMPILER_GCC)
+    return (value > __UINT64_MAX__) ? __builtin_clzll(value >> 64) : 64 + __builtin_clzll(value);
+#    else
+    unsigned __int128 mask = (unsigned __int128)1 << 127;
+    int ret = 0;
+    while ((value & mask) == 0) {
+        ++ret;
+        mask >>= 1;
+    }
+    return ret;
+#    endif
+}
+#endif
+
 // The function will return the number of leading zeroes in the type. If
 // the given number is zero, this function will return the number of bits
 // in the IntType.

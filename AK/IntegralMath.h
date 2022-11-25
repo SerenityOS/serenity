@@ -31,7 +31,7 @@ constexpr T ceil_log2(T x)
         return 0;
 
     T log = AK::log2(x);
-    log += (x & ((1 << (log - 1)) - 1)) != 0;
+    log += (x & ((((T)1) << (log - 1)) - 1)) != 0;
     return log;
 }
 
