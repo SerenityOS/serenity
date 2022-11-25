@@ -2474,8 +2474,7 @@ static Bytecode::CodeGenerationErrorOr<ForInOfHeadEvaluationResult> for_in_of_he
 
         // i. Return Completion Record { [[Type]]: break, [[Value]]: empty, [[Target]]: empty }.
         generator.switch_to_basic_block(nullish_block);
-        generator.perform_needed_unwinds<Bytecode::Op::Jump>(true);
-        generator.emit<Bytecode::Op::Jump>().set_targets(generator.nearest_breakable_scope(), {});
+        generator.generate_break();
 
         generator.switch_to_basic_block(continuation_block);
         // b. Let obj be ! ToObject(exprValue).
