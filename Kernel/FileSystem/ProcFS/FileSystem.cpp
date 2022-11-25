@@ -6,8 +6,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/FileSystem/ProcFS/DirectoryInode.h>
 #include <Kernel/FileSystem/ProcFS/FileSystem.h>
+#include <Kernel/FileSystem/ProcFS/Inode.h>
 #include <Kernel/ProcessExposed.h>
 
 namespace Kernel {
@@ -22,7 +22,7 @@ ProcFS::~ProcFS() = default;
 
 ErrorOr<void> ProcFS::initialize()
 {
-    m_root_inode = static_ptr_cast<ProcFSDirectoryInode>(TRY(ProcFSComponentRegistry::the().root_directory().to_inode(*this)));
+    m_root_inode = TRY(ProcFSComponentRegistry::the().root_directory().to_inode(*this));
     return {};
 }
 

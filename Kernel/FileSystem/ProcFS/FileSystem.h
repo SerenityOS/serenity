@@ -14,18 +14,8 @@
 namespace Kernel {
 
 class ProcFSInode;
-class ProcFSProcessDirectoryInode;
-class ProcFSGlobalInode;
-class ProcFSAssociatedProcessInode;
-class ProcFSProcessSubDirectoryInode;
-
 class ProcFS final : public FileSystem {
     friend class ProcFSInode;
-    friend class ProcFSDirectoryInode;
-    friend class ProcFSProcessDirectoryInode;
-    friend class ProcFSGlobalInode;
-    friend class ProcFSAssociatedProcessInode;
-    friend class ProcFSProcessSubDirectoryInode;
 
 public:
     virtual ~ProcFS() override;
@@ -39,7 +29,7 @@ public:
 private:
     ProcFS();
 
-    LockRefPtr<ProcFSDirectoryInode> m_root_inode;
+    LockRefPtr<ProcFSInode> m_root_inode;
 };
 
 }
