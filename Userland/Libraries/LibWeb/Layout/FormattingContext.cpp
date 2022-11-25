@@ -1317,8 +1317,8 @@ CSS::Length FormattingContext::calculate_inner_height(Layout::Box const& box, Av
 
     auto& computed_values = box.computed_values();
     if (computed_values.box_sizing() == CSS::BoxSizing::BorderBox) {
-        auto const padding_top = computed_values.padding().left().resolved(box, height_of_containing_block_as_length_for_resolve).resolved(box);
-        auto const padding_bottom = computed_values.padding().right().resolved(box, height_of_containing_block_as_length_for_resolve).resolved(box);
+        auto const padding_top = computed_values.padding().top().resolved(box, height_of_containing_block_as_length_for_resolve).resolved(box);
+        auto const padding_bottom = computed_values.padding().bottom().resolved(box, height_of_containing_block_as_length_for_resolve).resolved(box);
 
         float inner_height = height.resolved(box, height_of_containing_block_as_length_for_resolve).resolved(box).to_px(box)
             - computed_values.border_top().width
