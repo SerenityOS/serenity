@@ -19,8 +19,12 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* data, size_t size)
     while (!tar_stream.finished()) {
         auto const& header = tar_stream.header();
 
-        if (!header.content_is_like_extended_header())
-            continue;
+        if (!header.content_is_like_extended_header()) {
+            if (tar_stream.advance().is_error())
+                return 0;
+            else
+                continue;
+        }
 
         switch (header.type_flag()) {
         case Archive::TarFileType::GlobalExtendedHeader:
