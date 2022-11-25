@@ -1276,14 +1276,14 @@ static bool should_use_high_precision_motion_vector(MotionVector const& delta_ve
 DecoderErrorOr<MotionVector> Parser::read_motion_vector(BlockContext const& block_context, BlockMotionVectorCandidates const& candidates, ReferenceIndex reference_index)
 {
     m_use_hp = block_context.frame_context.high_precision_motion_vectors_allowed && should_use_high_precision_motion_vector(candidates[reference_index].best_vector);
-    MotionVector diff_mv;
-    auto mv_joint = TRY_READ(TreeParser::parse_motion_vector_joint(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter));
-    if (mv_joint == MvJointHzvnz || mv_joint == MvJointHnzvnz)
-        diff_mv.set_row(TRY(read_single_motion_vector_component(0)));
-    if (mv_joint == MvJointHnzvz || mv_joint == MvJointHnzvnz)
-        diff_mv.set_column(TRY(read_single_motion_vector_component(1)));
+    MotionVector delta_vector;
+    auto joint = TRY_READ(TreeParser::parse_motion_vector_joint(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter));
+    if ((joint & MotionVectorNonZeroRow) != 0)
+        delta_vector.set_row(TRY(read_single_motion_vector_component(0)));
+    if ((joint & MotionVectorNonZeroColumn) != 0)
+        delta_vector.set_column(TRY(read_single_motion_vector_component(1)));
 
-    return candidates[reference_index].best_vector + diff_mv;
+    return candidates[reference_index].best_vector + delta_vector;
 }
 
 // read_mv_component( comp ) in the spec.
