@@ -234,7 +234,7 @@ void PaintableBox::paint_backdrop_filter(PaintContext& context) const
 {
     auto& backdrop_filter = computed_values().backdrop_filter();
     if (!backdrop_filter.is_none())
-        Painting::apply_backdrop_filter(context, layout_node(), absolute_border_box_rect(), normalized_border_radii_data(), backdrop_filter);
+        Painting::apply_backdrop_filter(context, layout_node(), absolute_border_box_rect().to_type<CSSPixels>(), normalized_border_radii_data(), backdrop_filter);
 }
 
 void PaintableBox::paint_background(PaintContext& context) const
