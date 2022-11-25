@@ -37,6 +37,21 @@ bool FormattingContext::creates_block_formatting_context(Box const& box)
     if (box.is_replaced_box())
         return false;
 
+    // display: table
+    if (box.display().is_table_inside()) {
+        return false;
+    }
+
+    // display: flex
+    if (box.display().is_flex_inside()) {
+        return false;
+    }
+
+    // display: grid
+    if (box.display().is_grid_inside()) {
+        return false;
+    }
+
     // NOTE: This function uses MDN as a reference, not because it's authoritative,
     //       but because they've gathered all the conditions in one convenient location.
 
@@ -85,16 +100,11 @@ bool FormattingContext::creates_block_formatting_context(Box const& box)
         auto parent_display = box.parent()->display();
 
         // Flex items (direct children of the element with display: flex or inline-flex) if they are neither flex nor grid nor table containers themselves.
-        if (parent_display.is_flex_inside()) {
-            if (!box.display().is_flex_inside())
-                return true;
-        }
+        if (parent_display.is_flex_inside())
+            return true;
         // Grid items (direct children of the element with display: grid or inline-grid) if they are neither flex nor grid nor table containers themselves.
-        if (parent_display.is_grid_inside()) {
-            if (!box.display().is_grid_inside()) {
-                return true;
-            }
-        }
+        if (parent_display.is_grid_inside())
+            return true;
     }
 
     // FIXME: Multicol containers (elements where column-count or column-width isn't auto, including elements with column-count: 1).
