@@ -1,7 +1,7 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='bc'
-version='5.2.5'
-files="https://github.com/gavinhoward/bc/releases/download/${version}/bc-${version}.tar.xz bc-${version}.tar.xz 085d1f0d544f34c6e186a4b91e8978702eaa7645e39c630184efd49f17b3dbd5"
+version='6.1.1'
+files="https://github.com/gavinhoward/bc/releases/download/${version}/bc-${version}.tar.xz bc-${version}.tar.xz b6de9e2fa4fcb1902c1686760dd90217543128f0298d418951ab1e9a03964097"
 auth_type='sha256'
 useconfigure='true'
 configscript='configure.sh'
