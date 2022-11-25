@@ -358,10 +358,10 @@ ThrowCompletionOr<TypedArrayBase*> typed_array_create_same_type(VM& vm, TypedArr
     return result;
 }
 
-// 1.2.2.1.2 CompareTypedArrayElements ( x, y, comparefn, buffer ), https://tc39.es/proposal-change-array-by-copy/#sec-comparetypedarrayelements
-ThrowCompletionOr<double> compare_typed_array_elements(VM& vm, Value x, Value y, FunctionObject* comparefn, ArrayBuffer& buffer)
+// 1.2.2.1.2 CompareTypedArrayElements ( x, y, comparefn ), https://tc39.es/proposal-change-array-by-copy/#sec-comparetypedarrayelements
+ThrowCompletionOr<double> compare_typed_array_elements(VM& vm, Value x, Value y, FunctionObject* comparefn)
 {
-    // 1. Assert: Both Type(x) and Type(y) are Number or both are BigInt.
+    // 1. Assert: x is a Number and y is a Number, or x is a BigInt and y is a BigInt.
     VERIFY(((x.is_number() && y.is_number()) || (x.is_bigint() && y.is_bigint())));
 
     // 2. If comparefn is not undefined, then
@@ -370,15 +370,11 @@ ThrowCompletionOr<double> compare_typed_array_elements(VM& vm, Value x, Value y,
         auto value = TRY(call(vm, comparefn, js_undefined(), x, y));
         auto value_number = TRY(value.to_number(vm));
 
-        // b. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
-        if (buffer.is_detached())
-            return vm.throw_completion<TypeError>(ErrorType::DetachedArrayBuffer);
-
-        //  c. If v is NaN, return +0𝔽.
+        // b. If v is NaN, return +0𝔽.
         if (value_number.is_nan())
             return 0;
 
-        // d. Return v.
+        // c. Return v.
         return value_number.as_double();
     }
 

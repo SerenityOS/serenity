@@ -1419,62 +1419,8 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::sort)
     // 5. NOTE: The following closure performs a numeric comparison rather than the string comparison used in 23.1.3.30.
     // 6. Let SortCompare be a new Abstract Closure with parameters (x, y) that captures comparefn and performs the following steps when called:
     Function<ThrowCompletionOr<double>(Value, Value)> sort_compare = [&](auto x, auto y) -> ThrowCompletionOr<double> {
-        // FIXME: Replace the following steps with CompareTypedArrayElements when the change-array-by-copy proposal is
-        //        updated to no longer throw on detached array buffers. See: https://github.com/tc39/ecma262/commit/e0c74e1
-
-        // a.  Assert: Both Type(x) and Type(y) are Number or both are BigInt.
-        VERIFY((x.is_number() && y.is_number()) || (x.is_bigint() && y.is_bigint()));
-
-        // b. If comparefn is not undefined, then
-        if (!compare_fn.is_undefined()) {
-            // i. Let v be ? ToNumber(? Call(comparefn, undefined, « x, y »)).
-            auto result = TRY(call(vm, compare_fn.as_function(), js_undefined(), x, y));
-            auto value = TRY(result.to_number(vm));
-
-            // ii. If v is NaN, return +0𝔽.
-            if (value.is_nan())
-                return 0;
-
-            // iii. Return v.
-            return value.as_double();
-        }
-
-        // c. If x and y are both NaN, return +0𝔽.
-        if (x.is_nan() && y.is_nan())
-            return 0;
-
-        // d. If x is NaN, return 1𝔽.
-        if (x.is_nan())
-            return 1;
-
-        // e. If y is NaN, return -1𝔽.
-        if (y.is_nan())
-            return -1;
-
-        // f. If x < y, return -1𝔽.
-        if (x.is_bigint()
-                ? (x.as_bigint().big_integer() < y.as_bigint().big_integer())
-                : (x.as_double() < y.as_double())) {
-            return -1;
-        }
-
-        // g. If x > y, return 1𝔽.
-        if (x.is_bigint()
-                ? (x.as_bigint().big_integer() > y.as_bigint().big_integer())
-                : (x.as_double() > y.as_double())) {
-            return 1;
-        }
-
-        // h. If x is -0𝔽 and y is +0𝔽, return -1𝔽.
-        if (x.is_negative_zero() && y.is_positive_zero())
-            return -1;
-
-        // i. If x is +0𝔽 and y is -0𝔽, return 1𝔽.
-        if (x.is_positive_zero() && y.is_negative_zero())
-            return 1;
-
-        // j. Return +0𝔽.
-        return 0;
+        // a. Return ? CompareTypedArrayElements(x, y, comparefn).
+        return TRY(compare_typed_array_elements(vm, x, y, compare_fn.is_undefined() ? nullptr : &compare_fn.as_function()));
     };
 
     // 7. Let sortedList be ? SortIndexedProperties(obj, len, SortCompare, false).
@@ -1673,30 +1619,26 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::to_sorted)
     // 3. Perform ? ValidateTypedArray(O).
     auto* typed_array = TRY(validate_typed_array_from_this(vm));
 
-    // 4. Let buffer be obj.[[ViewedArrayBuffer]].
-    auto* array_buffer = typed_array->viewed_array_buffer();
-    VERIFY(array_buffer);
-
-    // 5. Let len be O.[[ArrayLength]].
+    // 4. Let len be O.[[ArrayLength]].
     auto length = typed_array->array_length();
 
-    // 6. Let A be ? TypedArrayCreateSameType(O, « 𝔽(len) »).
+    // 5. Let A be ? TypedArrayCreateSameType(O, « 𝔽(len) »).
     MarkedVector<Value> arguments(vm.heap());
     arguments.empend(length);
     auto* return_array = TRY(typed_array_create_same_type(vm, *typed_array, move(arguments)));
 
-    // 7. NOTE: The following closure performs a numeric comparison rather than the string comparison used in  Array.prototype.toSorted
-    // 8. Let SortCompare be a new Abstract Closure with parameters (x, y) that captures comparefn and buffer and performs the following steps when called:
+    // 6. NOTE: The following closure performs a numeric comparison rather than the string comparison used in  Array.prototype.toSorted
+    // 7. Let SortCompare be a new Abstract Closure with parameters (x, y) that captures comparefn and performs the following steps when called:
     Function<ThrowCompletionOr<double>(Value, Value)> sort_compare = [&](auto x, auto y) -> ThrowCompletionOr<double> {
-        // a. Return ? CompareTypedArrayElements(x, y, comparefn, buffer).
-        return TRY(compare_typed_array_elements(vm, x, y, comparefn.is_undefined() ? nullptr : &comparefn.as_function(), *return_array->viewed_array_buffer()));
+        // a. Return ? CompareTypedArrayElements(x, y, comparefn).
+        return TRY(compare_typed_array_elements(vm, x, y, comparefn.is_undefined() ? nullptr : &comparefn.as_function()));
     };
 
-    // 9. Let sortedList be ? SortIndexedProperties(obj, len, SortCompare, false).
+    // 8. Let sortedList be ? SortIndexedProperties(obj, len, SortCompare, false).
     auto sorted_list = TRY(sort_indexed_properties(vm, *object, length, sort_compare, false));
 
-    // 10. Let j be 0.
-    // 11. Repeat, while j < len,
+    // 9. Let j be 0.
+    // 10. Repeat, while j < len,
     for (size_t j = 0; j < length; j++) {
         // Perform ! Set(A, ! ToString(𝔽(j)), sortedList[j], true).
         MUST(return_array->create_data_property_or_throw(j, sorted_list[j]));
