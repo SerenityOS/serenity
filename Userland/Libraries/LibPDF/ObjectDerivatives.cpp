@@ -50,6 +50,16 @@ DeprecatedString NameObject::to_deprecated_string(int) const
     return builder.to_deprecated_string();
 }
 
+Vector<float> ArrayObject::float_elements() const
+{
+    Vector<float> values;
+    values.ensure_capacity(m_elements.size());
+    for (auto const& value : m_elements) {
+        values.append(value.to_float());
+    }
+    return values;
+}
+
 DeprecatedString ArrayObject::to_deprecated_string(int indent) const
 {
     StringBuilder builder;

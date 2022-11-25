@@ -74,6 +74,7 @@ public:
 
     [[nodiscard]] ALWAYS_INLINE size_t size() const { return m_elements.size(); }
     [[nodiscard]] ALWAYS_INLINE Vector<Value> elements() const { return m_elements; }
+    [[nodiscard]] Vector<float> float_elements() const;
 
     ALWAYS_INLINE auto begin() const { return m_elements.begin(); }
     ALWAYS_INLINE auto end() const { return m_elements.end(); }
