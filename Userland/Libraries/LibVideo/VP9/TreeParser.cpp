@@ -202,8 +202,8 @@ ErrorOr<InterpolationFilter> TreeParser::parse_interpolation_filter(BitStream& b
     // NOTE: SWITCHABLE_FILTERS is not used in the spec for this function. Therefore, the number
     //       was demystified by referencing the reference codec libvpx:
     //       https://github.com/webmproject/libvpx/blob/705bf9de8c96cfe5301451f1d7e5c90a41c64e5f/vp9/common/vp9_pred_common.h#L69
-    u8 left_interp = left.ref_frames[0] > ReferenceFrameType::None ? left.interpolation_filter : SWITCHABLE_FILTERS;
-    u8 above_interp = above.ref_frames[0] > ReferenceFrameType::None ? above.interpolation_filter : SWITCHABLE_FILTERS;
+    u8 left_interp = !left.is_intra_predicted() ? left.interpolation_filter : SWITCHABLE_FILTERS;
+    u8 above_interp = !above.is_intra_predicted() ? above.interpolation_filter : SWITCHABLE_FILTERS;
     u8 context = SWITCHABLE_FILTERS;
     if (above_interp == left_interp || above_interp == SWITCHABLE_FILTERS)
         context = left_interp;
@@ -285,26 +285,26 @@ ErrorOr<ReferenceMode> TreeParser::parse_comp_mode(BitStream& bit_stream, Probab
     u8 context;
     if (above.is_available && left.is_available) {
         if (above.is_single_reference() && left.is_single_reference()) {
-            auto is_above_fixed = above.ref_frames[0] == comp_fixed_ref;
-            auto is_left_fixed = left.ref_frames[0] == comp_fixed_ref;
+            auto is_above_fixed = above.ref_frames.primary == comp_fixed_ref;
+            auto is_left_fixed = left.ref_frames.primary == comp_fixed_ref;
             context = is_above_fixed ^ is_left_fixed;
         } else if (above.is_single_reference()) {
-            auto is_above_fixed = above.ref_frames[0] == comp_fixed_ref;
+            auto is_above_fixed = above.ref_frames.primary == comp_fixed_ref;
             context = 2 + static_cast<u8>(is_above_fixed || above.is_intra_predicted());
         } else if (left.is_single_reference()) {
-            auto is_left_fixed = left.ref_frames[0] == comp_fixed_ref;
+            auto is_left_fixed = left.ref_frames.primary == comp_fixed_ref;
             context = 2 + static_cast<u8>(is_left_fixed || left.is_intra_predicted());
         } else {
             context = 4;
         }
     } else if (above.is_available) {
         if (above.is_single_reference())
-            context = above.ref_frames[0] == comp_fixed_ref;
+            context = above.ref_frames.primary == comp_fixed_ref;
         else
             context = 3;
     } else if (left.is_available) {
         if (left.is_single_reference())
-            context = static_cast<u8>(left.ref_frames[0] == comp_fixed_ref);
+            context = static_cast<u8>(left.ref_frames.primary == comp_fixed_ref);
         else
             context = 3;
     } else {
@@ -317,7 +317,7 @@ ErrorOr<ReferenceMode> TreeParser::parse_comp_mode(BitStream& bit_stream, Probab
     return value;
 }
 
-ErrorOr<bool> TreeParser::parse_comp_ref(BitStream& bit_stream, ProbabilityTables const& probability_table, SyntaxElementCounter& counter, ReferenceFrameType comp_fixed_ref, ReferenceFramePair comp_var_ref, u8 variable_reference_index, FrameBlockContext above, FrameBlockContext left)
+ErrorOr<ReferenceIndex> TreeParser::parse_comp_ref(BitStream& bit_stream, ProbabilityTables const& probability_table, SyntaxElementCounter& counter, ReferenceFrameType comp_fixed_ref, ReferenceFramePair comp_var_ref, ReferenceIndex variable_reference_index, FrameBlockContext above, FrameBlockContext left)
 {
     // FIXME: Above and left contexts should be in structs.
 
@@ -329,24 +329,24 @@ ErrorOr<bool> TreeParser::parse_comp_ref(BitStream& bit_stream, ProbabilityTable
             context = 2;
         } else if (left.is_intra_predicted()) {
             if (above.is_single_reference()) {
-                context = 1 + 2 * (above.ref_frames[0] != comp_var_ref[1]);
+                context = 1 + 2 * (above.ref_frames.primary != comp_var_ref.secondary);
             } else {
-                context = 1 + 2 * (above.ref_frames[variable_reference_index] != comp_var_ref[1]);
+                context = 1 + 2 * (above.ref_frames[variable_reference_index] != comp_var_ref.secondary);
             }
         } else if (above.is_intra_predicted()) {
             if (left.is_single_reference()) {
-                context = 1 + 2 * (left.ref_frames[0] != comp_var_ref[1]);
+                context = 1 + 2 * (left.ref_frames.primary != comp_var_ref.secondary);
             } else {
-                context = 1 + 2 * (left.ref_frames[variable_reference_index] != comp_var_ref[1]);
+                context = 1 + 2 * (left.ref_frames[variable_reference_index] != comp_var_ref.secondary);
             }
         } else {
-            auto var_ref_above = above.is_single_reference() ? above.ref_frames[0] : above.ref_frames[variable_reference_index];
-            auto var_ref_left = left.is_single_reference() ? left.ref_frames[0] : left.ref_frames[variable_reference_index];
-            if (var_ref_above == var_ref_left && comp_var_ref[1] == var_ref_above) {
+            auto var_ref_above = above.is_single_reference() ? above.ref_frames.primary : above.ref_frames[variable_reference_index];
+            auto var_ref_left = left.is_single_reference() ? left.ref_frames.primary : left.ref_frames[variable_reference_index];
+            if (var_ref_above == var_ref_left && comp_var_ref.secondary == var_ref_above) {
                 context = 0;
             } else if (left.is_single_reference() && above.is_single_reference()) {
-                if ((var_ref_above == comp_fixed_ref && var_ref_left == comp_var_ref[0])
-                    || (var_ref_left == comp_fixed_ref && var_ref_above == comp_var_ref[0])) {
+                if ((var_ref_above == comp_fixed_ref && var_ref_left == comp_var_ref.primary)
+                    || (var_ref_left == comp_fixed_ref && var_ref_above == comp_var_ref.primary)) {
                     context = 4;
                 } else if (var_ref_above == var_ref_left) {
                     context = 3;
@@ -356,9 +356,9 @@ ErrorOr<bool> TreeParser::parse_comp_ref(BitStream& bit_stream, ProbabilityTable
             } else if (left.is_single_reference() || above.is_single_reference()) {
                 auto vrfc = left.is_single_reference() ? var_ref_above : var_ref_left;
                 auto rfs = above.is_single_reference() ? var_ref_above : var_ref_left;
-                if (vrfc == comp_var_ref[1] && rfs != comp_var_ref[1]) {
+                if (vrfc == comp_var_ref.secondary && rfs != comp_var_ref.secondary) {
                     context = 1;
-                } else if (rfs == comp_var_ref[1] && vrfc != comp_var_ref[1]) {
+                } else if (rfs == comp_var_ref.secondary && vrfc != comp_var_ref.secondary) {
                     context = 2;
                 } else {
                     context = 4;
@@ -374,9 +374,9 @@ ErrorOr<bool> TreeParser::parse_comp_ref(BitStream& bit_stream, ProbabilityTable
             context = 2;
         } else {
             if (above.is_single_reference()) {
-                context = 3 * static_cast<u8>(above.ref_frames[0] != comp_var_ref[1]);
+                context = 3 * static_cast<u8>(above.ref_frames.primary != comp_var_ref.secondary);
             } else {
-                context = 4 * static_cast<u8>(above.ref_frames[variable_reference_index] != comp_var_ref[1]);
+                context = 4 * static_cast<u8>(above.ref_frames[variable_reference_index] != comp_var_ref.secondary);
             }
         }
     } else if (left.is_available) {
@@ -384,9 +384,9 @@ ErrorOr<bool> TreeParser::parse_comp_ref(BitStream& bit_stream, ProbabilityTable
             context = 2;
         } else {
             if (left.is_single_reference()) {
-                context = 3 * static_cast<u8>(left.ref_frames[0] != comp_var_ref[1]);
+                context = 3 * static_cast<u8>(left.ref_frames.primary != comp_var_ref.secondary);
             } else {
-                context = 4 * static_cast<u8>(left.ref_frames[variable_reference_index] != comp_var_ref[1]);
+                context = 4 * static_cast<u8>(left.ref_frames[variable_reference_index] != comp_var_ref.secondary);
             }
         }
     } else {
@@ -395,8 +395,8 @@ ErrorOr<bool> TreeParser::parse_comp_ref(BitStream& bit_stream, ProbabilityTable
 
     u8 probability = probability_table.comp_ref_prob()[context];
 
-    auto value = TRY(parse_tree<bool>(bit_stream, { binary_tree }, [&](u8) { return probability; }));
-    increment_counter(counter.m_counts_comp_ref[context][value]);
+    auto value = TRY(parse_tree<ReferenceIndex>(bit_stream, { binary_tree }, [&](u8) { return probability; }));
+    increment_counter(counter.m_counts_comp_ref[context][to_underlying(value)]);
     return value;
 }
 
@@ -411,27 +411,27 @@ ErrorOr<bool> TreeParser::parse_single_ref_part_1(BitStream& bit_stream, Probabi
             context = 2;
         } else if (left.is_intra_predicted()) {
             if (above.is_single_reference()) {
-                context = 4 * (above.ref_frames[0] == LastFrame);
+                context = 4 * (above.ref_frames.primary == LastFrame);
             } else {
-                context = 1 + (above.ref_frames[0] == LastFrame || above.ref_frames[1] == LastFrame);
+                context = 1 + (above.ref_frames.primary == LastFrame || above.ref_frames.secondary == LastFrame);
             }
         } else if (above.is_intra_predicted()) {
             if (left.is_single_reference()) {
-                context = 4 * (left.ref_frames[0] == LastFrame);
+                context = 4 * (left.ref_frames.primary == LastFrame);
             } else {
-                context = 1 + (left.ref_frames[0] == LastFrame || left.ref_frames[1] == LastFrame);
+                context = 1 + (left.ref_frames.primary == LastFrame || left.ref_frames.secondary == LastFrame);
             }
         } else {
             if (left.is_single_reference() && above.is_single_reference()) {
-                context = 2 * (above.ref_frames[0] == LastFrame) + 2 * (left.ref_frames[0] == LastFrame);
+                context = 2 * (above.ref_frames.primary == LastFrame) + 2 * (left.ref_frames.primary == LastFrame);
             } else if (!left.is_single_reference() && !above.is_single_reference()) {
-                auto above_used_last_frame = above.ref_frames[0] == LastFrame || above.ref_frames[1] == LastFrame;
-                auto left_used_last_frame = left.ref_frames[0] == LastFrame || left.ref_frames[1] == LastFrame;
+                auto above_used_last_frame = above.ref_frames.primary == LastFrame || above.ref_frames.secondary == LastFrame;
+                auto left_used_last_frame = left.ref_frames.primary == LastFrame || left.ref_frames.secondary == LastFrame;
                 context = 1 + (above_used_last_frame || left_used_last_frame);
             } else {
-                auto single_reference_type = above.is_single_reference() ? above.ref_frames[0] : left.ref_frames[0];
-                auto compound_reference_a_type = above.is_single_reference() ? left.ref_frames[0] : above.ref_frames[0];
-                auto compound_reference_b_type = above.is_single_reference() ? left.ref_frames[1] : above.ref_frames[1];
+                auto single_reference_type = above.is_single_reference() ? above.ref_frames.primary : left.ref_frames.primary;
+                auto compound_reference_a_type = above.is_single_reference() ? left.ref_frames.primary : above.ref_frames.primary;
+                auto compound_reference_b_type = above.is_single_reference() ? left.ref_frames.secondary : above.ref_frames.secondary;
                 context = compound_reference_a_type == LastFrame || compound_reference_b_type == LastFrame;
                 if (single_reference_type == LastFrame)
                     context += 3;
@@ -442,9 +442,9 @@ ErrorOr<bool> TreeParser::parse_single_ref_part_1(BitStream& bit_stream, Probabi
             context = 2;
         } else {
             if (above.is_single_reference()) {
-                context = 4 * (above.ref_frames[0] == LastFrame);
+                context = 4 * (above.ref_frames.primary == LastFrame);
             } else {
-                context = 1 + (above.ref_frames[0] == LastFrame || above.ref_frames[1] == LastFrame);
+                context = 1 + (above.ref_frames.primary == LastFrame || above.ref_frames.secondary == LastFrame);
             }
         }
     } else if (left.is_available) {
@@ -452,9 +452,9 @@ ErrorOr<bool> TreeParser::parse_single_ref_part_1(BitStream& bit_stream, Probabi
             context = 2;
         } else {
             if (left.is_single_reference()) {
-                context = 4 * (left.ref_frames[0] == LastFrame);
+                context = 4 * (left.ref_frames.primary == LastFrame);
             } else {
-                context = 1 + (left.ref_frames[0] == LastFrame || left.ref_frames[1] == LastFrame);
+                context = 1 + (left.ref_frames.primary == LastFrame || left.ref_frames.secondary == LastFrame);
             }
         }
     } else {
@@ -478,47 +478,47 @@ ErrorOr<bool> TreeParser::parse_single_ref_part_2(BitStream& bit_stream, Probabi
             context = 2;
         } else if (left.is_intra_predicted()) {
             if (above.is_single_reference()) {
-                if (above.ref_frames[0] == LastFrame) {
+                if (above.ref_frames.primary == LastFrame) {
                     context = 3;
                 } else {
-                    context = 4 * (above.ref_frames[0] == GoldenFrame);
+                    context = 4 * (above.ref_frames.primary == GoldenFrame);
                 }
             } else {
-                context = 1 + 2 * (above.ref_frames[0] == GoldenFrame || above.ref_frames[1] == GoldenFrame);
+                context = 1 + 2 * (above.ref_frames.primary == GoldenFrame || above.ref_frames.secondary == GoldenFrame);
             }
         } else if (above.is_intra_predicted()) {
             if (left.is_single_reference()) {
-                if (left.ref_frames[0] == LastFrame) {
+                if (left.ref_frames.primary == LastFrame) {
                     context = 3;
                 } else {
-                    context = 4 * (left.ref_frames[0] == GoldenFrame);
+                    context = 4 * (left.ref_frames.primary == GoldenFrame);
                 }
             } else {
-                context = 1 + 2 * (left.ref_frames[0] == GoldenFrame || left.ref_frames[1] == GoldenFrame);
+                context = 1 + 2 * (left.ref_frames.primary == GoldenFrame || left.ref_frames.secondary == GoldenFrame);
             }
         } else {
             if (left.is_single_reference() && above.is_single_reference()) {
-                auto above_last = above.ref_frames[0] == LastFrame;
-                auto left_last = left.ref_frames[0] == LastFrame;
+                auto above_last = above.ref_frames.primary == LastFrame;
+                auto left_last = left.ref_frames.primary == LastFrame;
                 if (above_last && left_last) {
                     context = 3;
                 } else if (above_last) {
-                    context = 4 * (left.ref_frames[0] == GoldenFrame);
+                    context = 4 * (left.ref_frames.primary == GoldenFrame);
                 } else if (left_last) {
-                    context = 4 * (above.ref_frames[0] == GoldenFrame);
+                    context = 4 * (above.ref_frames.primary == GoldenFrame);
                 } else {
-                    context = 2 * (above.ref_frames[0] == GoldenFrame) + 2 * (left.ref_frames[0] == GoldenFrame);
+                    context = 2 * (above.ref_frames.primary == GoldenFrame) + 2 * (left.ref_frames.primary == GoldenFrame);
                 }
             } else if (!left.is_single_reference() && !above.is_single_reference()) {
-                if (above.ref_frames[0] == left.ref_frames[0] && above.ref_frames[1] == left.ref_frames[1]) {
-                    context = 3 * (above.ref_frames[0] == GoldenFrame || above.ref_frames[1] == GoldenFrame);
+                if (above.ref_frames.primary == left.ref_frames.primary && above.ref_frames.secondary == left.ref_frames.secondary) {
+                    context = 3 * (above.ref_frames.primary == GoldenFrame || above.ref_frames.secondary == GoldenFrame);
                 } else {
                     context = 2;
                 }
             } else {
-                auto single_reference_type = above.is_single_reference() ? above.ref_frames[0] : left.ref_frames[0];
-                auto compound_reference_a_type = above.is_single_reference() ? left.ref_frames[0] : above.ref_frames[0];
-                auto compound_reference_b_type = above.is_single_reference() ? left.ref_frames[1] : above.ref_frames[1];
+                auto single_reference_type = above.is_single_reference() ? above.ref_frames.primary : left.ref_frames.primary;
+                auto compound_reference_a_type = above.is_single_reference() ? left.ref_frames.primary : above.ref_frames.primary;
+                auto compound_reference_b_type = above.is_single_reference() ? left.ref_frames.secondary : above.ref_frames.secondary;
                 context = compound_reference_a_type == GoldenFrame || compound_reference_b_type == GoldenFrame;
                 if (single_reference_type == GoldenFrame) {
                     context += 3;
@@ -528,20 +528,20 @@ ErrorOr<bool> TreeParser::parse_single_ref_part_2(BitStream& bit_stream, Probabi
             }
         }
     } else if (above.is_available) {
-        if (above.is_intra_predicted() || (above.ref_frames[0] == LastFrame && above.is_single_reference())) {
+        if (above.is_intra_predicted() || (above.ref_frames.primary == LastFrame && above.is_single_reference())) {
             context = 2;
         } else if (above.is_single_reference()) {
-            context = 4 * (above.ref_frames[0] == GoldenFrame);
+            context = 4 * (above.ref_frames.primary == GoldenFrame);
         } else {
-            context = 3 * (above.ref_frames[0] == GoldenFrame || above.ref_frames[1] == GoldenFrame);
+            context = 3 * (above.ref_frames.primary == GoldenFrame || above.ref_frames.secondary == GoldenFrame);
         }
     } else if (left.is_available) {
-        if (left.is_intra_predicted() || (left.ref_frames[0] == LastFrame && left.is_single_reference())) {
+        if (left.is_intra_predicted() || (left.ref_frames.primary == LastFrame && left.is_single_reference())) {
             context = 2;
         } else if (left.is_single_reference()) {
-            context = 4 * (left.ref_frames[0] == GoldenFrame);
+            context = 4 * (left.ref_frames.primary == GoldenFrame);
         } else {
-            context = 3 * (left.ref_frames[0] == GoldenFrame || left.ref_frames[1] == GoldenFrame);
+            context = 3 * (left.ref_frames.primary == GoldenFrame || left.ref_frames.secondary == GoldenFrame);
         }
     } else {
         context = 2;

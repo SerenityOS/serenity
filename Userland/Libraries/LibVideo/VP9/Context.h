@@ -19,27 +19,30 @@
 namespace Video::VP9 {
 
 template<typename T>
-struct Pair {
-    T a;
-    T b;
+struct ReferencePair {
+    T primary;
+    T secondary;
 
-    T& operator[](u8 index)
+    T& operator[](ReferenceIndex index)
     {
-        if (index == 0)
-            return a;
-        if (index == 1)
-            return b;
-        VERIFY_NOT_REACHED();
+        switch (index) {
+        case ReferenceIndex::Primary:
+            return primary;
+        case ReferenceIndex::Secondary:
+            return secondary;
+        default:
+            VERIFY_NOT_REACHED();
+        }
     }
 
-    T const& operator[](u8 index) const
+    T const& operator[](ReferenceIndex index) const
     {
-        return const_cast<Pair<T>&>(*this)[index];
+        return const_cast<ReferencePair<T>&>(*this)[index];
     }
 };
 
-typedef Pair<ReferenceFrameType> ReferenceFramePair;
-typedef Pair<MotionVector> MotionVectorPair;
+typedef ReferencePair<ReferenceFrameType> ReferenceFramePair;
+typedef ReferencePair<MotionVector> MotionVectorPair;
 
 template<typename T>
 class Vector2D;
@@ -201,8 +204,8 @@ struct TokensContext {
 
 // Block context that is kept for the lifetime of a frame.
 struct FrameBlockContext {
-    bool is_intra_predicted() const { return ref_frames[0] == ReferenceFrameType::None; }
-    bool is_single_reference() const { return ref_frames[1] == ReferenceFrameType::None; }
+    bool is_intra_predicted() const { return ref_frames.primary == ReferenceFrameType::None; }
+    bool is_single_reference() const { return ref_frames.secondary == ReferenceFrameType::None; }
     MotionVectorPair primary_motion_vector_pair() const { return sub_block_motion_vectors[3]; }
 
     bool is_available { false };
@@ -410,8 +413,8 @@ struct BlockContext {
     TXSize tx_size { TXSize::TX_4x4 };
 
     ReferenceFramePair reference_frame_types;
-    bool is_inter_predicted() const { return reference_frame_types[0] > ReferenceFrameType::None; }
-    bool is_compound() const { return reference_frame_types[1] > ReferenceFrameType::None; }
+    bool is_inter_predicted() const { return reference_frame_types.primary != ReferenceFrameType::None; }
+    bool is_compound() const { return reference_frame_types.secondary != ReferenceFrameType::None; }
 
     Array<PredictionMode, 4> sub_block_prediction_modes;
     PredictionMode y_prediction_mode() const { return sub_block_prediction_modes.last(); }
@@ -428,7 +431,7 @@ struct BlockMotionVectorCandidateSet {
     MotionVector best_vector;
 };
 
-using BlockMotionVectorCandidates = Pair<BlockMotionVectorCandidateSet>;
+using BlockMotionVectorCandidates = ReferencePair<BlockMotionVectorCandidateSet>;
 
 struct MotionVectorCandidate {
     ReferenceFrameType type;

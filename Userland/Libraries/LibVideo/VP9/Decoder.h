@@ -63,13 +63,13 @@ private:
     // (8.5.1) Inter prediction process
     DecoderErrorOr<void> predict_inter(u8 plane, BlockContext const& block_context, u32 x, u32 y, u32 width, u32 height, u32 block_index);
     // (8.5.2.1) Motion vector selection process
-    MotionVector select_motion_vector(u8 plane, BlockContext const&, u8 ref_list, u32 block_index);
+    MotionVector select_motion_vector(u8 plane, BlockContext const&, ReferenceIndex, u32 block_index);
     // (8.5.2.2) Motion vector clamping process
     MotionVector clamp_motion_vector(u8 plane, BlockContext const&, u32 block_row, u32 block_column, MotionVector vector);
     // (8.5.2.3) Motion vector scaling process
-    DecoderErrorOr<MotionVector> scale_motion_vector(u8 plane, u8 ref_list, u32 x, u32 y, MotionVector vector);
+    DecoderErrorOr<MotionVector> scale_motion_vector(u8 plane, ReferenceIndex, u32 x, u32 y, MotionVector vector);
     // From (8.5.1) Inter prediction process, steps 2-5
-    DecoderErrorOr<void> predict_inter_block(u8 plane, BlockContext const&, u8 ref_list, u32 block_row, u32 block_column, u32 x, u32 y, u32 width, u32 height, u32 block_index, Span<u16> block_buffer);
+    DecoderErrorOr<void> predict_inter_block(u8 plane, BlockContext const&, ReferenceIndex, u32 block_row, u32 block_column, u32 x, u32 y, u32 width, u32 height, u32 block_index, Span<u16> block_buffer);
 
     /* (8.6) Reconstruction and Dequantization */
 
