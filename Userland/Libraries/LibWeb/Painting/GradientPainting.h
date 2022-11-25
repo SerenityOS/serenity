@@ -37,10 +37,10 @@ struct ConicGradientData {
     ColorStopData color_stops;
 };
 
-LinearGradientData resolve_linear_gradient_data(Layout::Node const&, Gfx::FloatSize const&, CSS::LinearGradientStyleValue const&);
+LinearGradientData resolve_linear_gradient_data(Layout::Node const&, CSSPixelSize const&, CSS::LinearGradientStyleValue const&);
 ConicGradientData resolve_conic_gradient_data(Layout::Node const&, CSS::ConicGradientStyleValue const&);
 
-void paint_linear_gradient(PaintContext&, Gfx::IntRect const&, LinearGradientData const&);
-void paint_conic_gradient(PaintContext&, Gfx::IntRect const&, ConicGradientData const&, Gfx::IntPoint position);
+void paint_linear_gradient(PaintContext&, DevicePixelRect const&, LinearGradientData const&);
+void paint_conic_gradient(PaintContext&, DevicePixelRect const&, ConicGradientData const&, DevicePixelPoint position);
 
 }

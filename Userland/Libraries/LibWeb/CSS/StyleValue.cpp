@@ -1873,13 +1873,13 @@ void LinearGradientStyleValue::resolve_for_size(Layout::Node const& node, Gfx::F
 {
     if (m_resolved.has_value() && m_resolved->size == size)
         return;
-    m_resolved = ResolvedData { Painting::resolve_linear_gradient_data(node, size, *this), size };
+    m_resolved = ResolvedData { Painting::resolve_linear_gradient_data(node, size.to_type<CSSPixels>(), *this), size };
 }
 
 void LinearGradientStyleValue::paint(PaintContext& context, Gfx::IntRect const& dest_rect, CSS::ImageRendering) const
 {
     VERIFY(m_resolved.has_value());
-    Painting::paint_linear_gradient(context, dest_rect, m_resolved->data);
+    Painting::paint_linear_gradient(context, dest_rect.to_type<DevicePixels>(), m_resolved->data);
 }
 
 Gfx::FloatPoint PositionValue::resolved(Layout::Node const& node, Gfx::FloatRect const& rect) const
@@ -2017,7 +2017,7 @@ void ConicGradientStyleValue::resolve_for_size(Layout::Node const& node, Gfx::Fl
 void ConicGradientStyleValue::paint(PaintContext& context, Gfx::IntRect const& dest_rect, CSS::ImageRendering) const
 {
     VERIFY(m_resolved.has_value());
-    Painting::paint_conic_gradient(context, dest_rect, m_resolved->data, m_resolved->position.to_rounded<int>());
+    Painting::paint_conic_gradient(context, dest_rect.to_type<DevicePixels>(), m_resolved->data, context.rounded_device_point(m_resolved->position.to_type<CSSPixels>()));
 }
 
 bool ConicGradientStyleValue::equals(StyleValue const&) const
