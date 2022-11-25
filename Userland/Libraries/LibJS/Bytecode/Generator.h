@@ -216,7 +216,8 @@ public:
     void generate_break();
     void generate_break(DeprecatedFlyString const& break_label);
 
-    Label perform_needed_unwinds_for_labelled_continue_and_return_target_block(DeprecatedFlyString const& continue_label);
+    void generate_continue();
+    void generate_continue(DeprecatedFlyString const& continue_label);
 
     void start_boundary(BlockBoundaryType type) { m_boundaries.append(type); }
     void end_boundary(BlockBoundaryType type)

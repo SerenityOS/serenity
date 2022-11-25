@@ -335,23 +335,62 @@ void Generator::generate_break(DeprecatedFlyString const& break_label)
     VERIFY_NOT_REACHED();
 }
 
-Label Generator::perform_needed_unwinds_for_labelled_continue_and_return_target_block(DeprecatedFlyString const& continue_label)
+void Generator::generate_continue()
+{
+    bool last_was_finally = false;
+    // FIXME: Reduce code duplication
+    for (size_t i = m_boundaries.size(); i > 0; --i) {
+        auto boundary = m_boundaries[i - 1];
+        using enum BlockBoundaryType;
+        switch (boundary) {
+        case Continue:
+            emit<Op::Jump>().set_targets(nearest_continuable_scope(), {});
+            return;
+        case Unwind:
+            if (!last_was_finally)
+                emit<Bytecode::Op::LeaveUnwindContext>();
+            last_was_finally = false;
+            break;
+        case LeaveLexicalEnvironment:
+            emit<Bytecode::Op::LeaveEnvironment>(Bytecode::Op::EnvironmentMode::Lexical);
+            break;
+        case LeaveVariableEnvironment:
+            emit<Bytecode::Op::LeaveEnvironment>(Bytecode::Op::EnvironmentMode::Var);
+            break;
+        case Break:
+            break;
+        case ReturnToFinally: {
+            auto& block = make_block(DeprecatedString::formatted("{}.continue", current_block().name()));
+            emit<Op::ScheduleJump>(Label { block });
+            switch_to_basic_block(block);
+            last_was_finally = true;
+            break;
+        };
+        }
+    }
+    VERIFY_NOT_REACHED();
+}
+
+void Generator::generate_continue(DeprecatedFlyString const& continue_label)
 {
     size_t current_boundary = m_boundaries.size();
-    for (auto& continuable_scope : m_continuable_scopes.in_reverse()) {
+    bool last_was_finally = false;
+    for (auto const& continuable_scope : m_continuable_scopes.in_reverse()) {
         for (; current_boundary > 0; --current_boundary) {
             auto boundary = m_boundaries[current_boundary - 1];
-            // FIXME: Handle ReturnToFinally in a graceful manner
-            //        We need to execute the finally block, but tell it to resume
-            //        execution at the designated label
             if (boundary == BlockBoundaryType::Unwind) {
-                emit<Bytecode::Op::LeaveUnwindContext>();
+                if (!last_was_finally)
+                    emit<Bytecode::Op::LeaveUnwindContext>();
+                last_was_finally = false;
             } else if (boundary == BlockBoundaryType::LeaveLexicalEnvironment) {
                 emit<Bytecode::Op::LeaveEnvironment>(Bytecode::Op::EnvironmentMode::Lexical);
             } else if (boundary == BlockBoundaryType::LeaveVariableEnvironment) {
                 emit<Bytecode::Op::LeaveEnvironment>(Bytecode::Op::EnvironmentMode::Var);
             } else if (boundary == BlockBoundaryType::ReturnToFinally) {
-                // FIXME: We need to enter the `finally`, while still scheduling the continue to happen
+                auto& block = make_block(DeprecatedString::formatted("{}.continue", current_block().name()));
+                emit<Op::ScheduleJump>(Label { block });
+                switch_to_basic_block(block);
+                last_was_finally = true;
             } else if (boundary == BlockBoundaryType::Continue) {
                 // Make sure we don't process this boundary twice if the current continuable scope doesn't contain the target label.
                 --current_boundary;
@@ -359,8 +398,10 @@ Label Generator::perform_needed_unwinds_for_labelled_continue_and_return_target_
             }
         }
 
-        if (continuable_scope.language_label_set.contains_slow(continue_label))
-            return continuable_scope.bytecode_target;
+        if (continuable_scope.language_label_set.contains_slow(continue_label)) {
+            emit<Op::Jump>().set_targets(continuable_scope.bytecode_target, {});
+            return;
+        }
     }
 
     // We must have a continuable scope available that contains the label, as this should be enforced by the parser.
