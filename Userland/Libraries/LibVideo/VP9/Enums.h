@@ -66,6 +66,11 @@ enum ReferenceMode : u8 {
     ReferenceModeSelect = 2,
 };
 
+enum class ReferenceIndex : u8 {
+    Primary = 0,
+    Secondary = 1,
+};
+
 enum BlockSubsize : u8 {
     Block_4x4 = 0,
     Block_4x8 = 1,

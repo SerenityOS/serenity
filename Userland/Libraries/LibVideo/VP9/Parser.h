@@ -114,7 +114,7 @@ private:
     DecoderErrorOr<void> inter_block_mode_info(BlockContext&, FrameBlockContext above_context, FrameBlockContext left_context);
     DecoderErrorOr<void> read_ref_frames(BlockContext&, FrameBlockContext above_context, FrameBlockContext left_context);
     DecoderErrorOr<MotionVectorPair> get_motion_vector(BlockContext const&, BlockMotionVectorCandidates const&);
-    DecoderErrorOr<MotionVector> read_motion_vector(BlockContext const&, BlockMotionVectorCandidates const&, u8 reference_index);
+    DecoderErrorOr<MotionVector> read_motion_vector(BlockContext const&, BlockMotionVectorCandidates const&, ReferenceIndex);
     DecoderErrorOr<i32> read_single_motion_vector_component(u8 component);
     DecoderErrorOr<bool> residual(BlockContext&, bool has_block_above, bool has_block_left);
     DecoderErrorOr<bool> tokens(BlockContext&, size_t plane, u32 x, u32 y, TXSize tx_size, u32 block_index);
@@ -123,9 +123,9 @@ private:
 
     /* (6.5) Motion Vector Prediction */
     MotionVectorPair find_reference_motion_vectors(BlockContext const&, ReferenceFrameType, i32 block);
-    void select_best_sub_block_reference_motion_vectors(BlockContext const&, BlockMotionVectorCandidates&, i32 block, u8 ref_list);
+    void select_best_sub_block_reference_motion_vectors(BlockContext const&, BlockMotionVectorCandidates&, i32 block, ReferenceIndex);
     size_t get_image_index(FrameContext const&, u32 row, u32 column) const;
-    MotionVectorCandidate get_motion_vector_from_current_or_previous_frame(BlockContext const&, MotionVector candidate_vector, u8 ref_list, bool use_prev);
+    MotionVectorCandidate get_motion_vector_from_current_or_previous_frame(BlockContext const&, MotionVector candidate_vector, ReferenceIndex, bool use_prev);
     void add_motion_vector_if_reference_frame_type_is_same(BlockContext const&, MotionVector candidate_vector, ReferenceFrameType ref_frame, Vector<MotionVector, 2>& list, bool use_prev);
     void add_motion_vector_if_reference_frame_type_is_different(BlockContext const&, MotionVector candidate_vector, ReferenceFrameType ref_frame, Vector<MotionVector, 2>& list, bool use_prev);
 

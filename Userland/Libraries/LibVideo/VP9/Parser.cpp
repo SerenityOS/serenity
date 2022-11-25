@@ -1151,23 +1151,25 @@ DecoderErrorOr<void> Parser::intra_block_mode_info(BlockContext& block_context)
     return {};
 }
 
-static void select_best_reference_motion_vectors(BlockContext& block_context, MotionVectorPair reference_motion_vectors, BlockMotionVectorCandidates& candidates, u8 ref_list);
+static void select_best_reference_motion_vectors(BlockContext& block_context, MotionVectorPair reference_motion_vectors, BlockMotionVectorCandidates& candidates, ReferenceIndex);
 
 DecoderErrorOr<void> Parser::inter_block_mode_info(BlockContext& block_context, FrameBlockContext above_context, FrameBlockContext left_context)
 {
     TRY(read_ref_frames(block_context, above_context, left_context));
     VERIFY(block_context.is_inter_predicted());
+
     BlockMotionVectorCandidates motion_vector_candidates;
-    for (auto j = 0; j < 2; j++) {
-        if (block_context.reference_frame_types[j] > IntraFrame) {
-            auto reference_motion_vectors = find_reference_motion_vectors(block_context, block_context.reference_frame_types[j], -1);
-            select_best_reference_motion_vectors(block_context, reference_motion_vectors, motion_vector_candidates, j);
-        }
+    auto reference_motion_vectors = find_reference_motion_vectors(block_context, block_context.reference_frame_types.primary, -1);
+    select_best_reference_motion_vectors(block_context, reference_motion_vectors, motion_vector_candidates, ReferenceIndex::Primary);
+    if (block_context.is_compound()) {
+        auto reference_motion_vectors = find_reference_motion_vectors(block_context, block_context.reference_frame_types.secondary, -1);
+        select_best_reference_motion_vectors(block_context, reference_motion_vectors, motion_vector_candidates, ReferenceIndex::Secondary);
     }
+
     if (seg_feature_active(block_context, SEG_LVL_SKIP)) {
         block_context.y_prediction_mode() = PredictionMode::ZeroMv;
     } else if (block_context.size >= Block_8x8) {
-        block_context.y_prediction_mode() = TRY_READ(TreeParser::parse_inter_mode(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter, m_mode_context[block_context.reference_frame_types[0]]));
+        block_context.y_prediction_mode() = TRY_READ(TreeParser::parse_inter_mode(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter, m_mode_context[block_context.reference_frame_types.primary]));
     }
     if (block_context.frame_context.interpolation_filter == Switchable)
         block_context.interpolation_filter = TRY_READ(TreeParser::parse_interpolation_filter(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter, above_context, left_context));
@@ -1177,10 +1179,11 @@ DecoderErrorOr<void> Parser::inter_block_mode_info(BlockContext& block_context, 
         auto size_in_4x4_blocks = block_context.get_size_in_4x4_blocks();
         for (auto idy = 0; idy < 2; idy += size_in_4x4_blocks.height()) {
             for (auto idx = 0; idx < 2; idx += size_in_4x4_blocks.width()) {
-                block_context.y_prediction_mode() = TRY_READ(TreeParser::parse_inter_mode(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter, m_mode_context[block_context.reference_frame_types[0]]));
+                block_context.y_prediction_mode() = TRY_READ(TreeParser::parse_inter_mode(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter, m_mode_context[block_context.reference_frame_types.primary]));
                 if (block_context.y_prediction_mode() == PredictionMode::NearestMv || block_context.y_prediction_mode() == PredictionMode::NearMv) {
-                    for (auto j = 0; j < 1 + block_context.is_compound(); j++)
-                        select_best_sub_block_reference_motion_vectors(block_context, motion_vector_candidates, idy * 2 + idx, j);
+                    select_best_sub_block_reference_motion_vectors(block_context, motion_vector_candidates, idy * 2 + idx, ReferenceIndex::Primary);
+                    if (block_context.is_compound())
+                        select_best_sub_block_reference_motion_vectors(block_context, motion_vector_candidates, idy * 2 + idx, ReferenceIndex::Secondary);
                 }
                 auto new_motion_vector_pair = TRY(get_motion_vector(block_context, motion_vector_candidates));
                 for (auto y = 0; y < size_in_4x4_blocks.height(); y++) {
@@ -1211,27 +1214,28 @@ DecoderErrorOr<void> Parser::read_ref_frames(BlockContext& block_context, FrameB
     if (compound_mode == ReferenceModeSelect)
         compound_mode = TRY_READ(TreeParser::parse_comp_mode(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter, fixed_reference, above_context, left_context));
     if (compound_mode == CompoundReference) {
-        auto secondary_reference = block_context.frame_context.variable_reference_types;
-        auto fixed_reference_index = block_context.frame_context.reference_frame_sign_biases[fixed_reference];
-        auto variable_reference_index = !fixed_reference_index;
+        auto variable_references = block_context.frame_context.variable_reference_types;
 
-        // FIXME: Create an enum for compound frame references using names Primary and Secondary.
-        auto secondary_reference_selection = TRY_READ(TreeParser::parse_comp_ref(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter, fixed_reference, secondary_reference, variable_reference_index, above_context, left_context));
+        auto fixed_reference_index = ReferenceIndex::Primary;
+        auto variable_reference_index = ReferenceIndex::Secondary;
+        if (block_context.frame_context.reference_frame_sign_biases[fixed_reference])
+            swap(fixed_reference_index, variable_reference_index);
+
+        auto variable_reference_selection = TRY_READ(TreeParser::parse_comp_ref(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter, fixed_reference, variable_references, variable_reference_index, above_context, left_context));
 
         block_context.reference_frame_types[fixed_reference_index] = fixed_reference;
-        block_context.reference_frame_types[variable_reference_index] = secondary_reference[secondary_reference_selection];
+        block_context.reference_frame_types[variable_reference_index] = variable_references[variable_reference_selection];
         return {};
     }
 
     // FIXME: Maybe consolidate this into a tree. Context is different between part 1 and 2 but still, it would look nice here.
+    ReferenceFrameType primary_type = ReferenceFrameType::LastFrame;
     auto single_ref_p1 = TRY_READ(TreeParser::parse_single_ref_part_1(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter, above_context, left_context));
     if (single_ref_p1) {
         auto single_ref_p2 = TRY_READ(TreeParser::parse_single_ref_part_2(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter, above_context, left_context));
-        block_context.reference_frame_types[0] = single_ref_p2 ? AltRefFrame : GoldenFrame;
-    } else {
-        block_context.reference_frame_types[0] = LastFrame;
+        primary_type = single_ref_p2 ? ReferenceFrameType::AltRefFrame : ReferenceFrameType::GoldenFrame;
     }
-    block_context.reference_frame_types[1] = None;
+    block_context.reference_frame_types = { primary_type, ReferenceFrameType::None };
     return {};
 }
 
@@ -1239,22 +1243,26 @@ DecoderErrorOr<void> Parser::read_ref_frames(BlockContext& block_context, FrameB
 DecoderErrorOr<MotionVectorPair> Parser::get_motion_vector(BlockContext const& block_context, BlockMotionVectorCandidates const& candidates)
 {
     MotionVectorPair result;
-    for (auto i = 0; i < 1 + block_context.is_compound(); i++) {
+    auto read_one = [&](ReferenceIndex index) -> DecoderErrorOr<void> {
         switch (block_context.y_prediction_mode()) {
         case PredictionMode::NewMv:
-            result[i] = TRY(read_motion_vector(block_context, candidates, i));
+            result[index] = TRY(read_motion_vector(block_context, candidates, index));
             break;
         case PredictionMode::NearestMv:
-            result[i] = candidates[i].nearest_vector;
+            result[index] = candidates[index].nearest_vector;
             break;
         case PredictionMode::NearMv:
-            result[i] = candidates[i].near_vector;
+            result[index] = candidates[index].near_vector;
             break;
         default:
-            result[i] = {};
+            result[index] = {};
             break;
         }
-    }
+        return {};
+    };
+    TRY(read_one(ReferenceIndex::Primary));
+    if (block_context.is_compound())
+        TRY(read_one(ReferenceIndex::Secondary));
     return result;
 }
 
@@ -1265,7 +1273,7 @@ static bool should_use_high_precision_motion_vector(MotionVector const& delta_ve
 }
 
 // read_mv( ref ) in the spec.
-DecoderErrorOr<MotionVector> Parser::read_motion_vector(BlockContext const& block_context, BlockMotionVectorCandidates const& candidates, u8 reference_index)
+DecoderErrorOr<MotionVector> Parser::read_motion_vector(BlockContext const& block_context, BlockMotionVectorCandidates const& candidates, ReferenceIndex reference_index)
 {
     m_use_hp = block_context.frame_context.high_precision_motion_vectors_allowed && should_use_high_precision_motion_vector(candidates[reference_index].best_vector);
     MotionVector diff_mv;
@@ -1503,22 +1511,22 @@ static void add_motion_vector_to_list_deduped(MotionVector const& vector, Vector
 }
 
 // get_block_mv( candidateR, candidateC, refList, usePrev ) in the spec.
-MotionVectorCandidate Parser::get_motion_vector_from_current_or_previous_frame(BlockContext const& block_context, MotionVector candidate_vector, u8 ref_list, bool use_prev)
+MotionVectorCandidate Parser::get_motion_vector_from_current_or_previous_frame(BlockContext const& block_context, MotionVector candidate_vector, ReferenceIndex reference_index, bool use_prev)
 {
     if (use_prev) {
         auto const& prev_context = m_previous_block_contexts.at(candidate_vector.row(), candidate_vector.column());
-        return { prev_context.ref_frames[ref_list], prev_context.primary_motion_vector_pair[ref_list] };
+        return { prev_context.ref_frames[reference_index], prev_context.primary_motion_vector_pair[reference_index] };
     }
 
     auto const& current_context = block_context.frame_block_contexts().at(candidate_vector.row(), candidate_vector.column());
-    return { current_context.ref_frames[ref_list], current_context.primary_motion_vector_pair()[ref_list] };
+    return { current_context.ref_frames[reference_index], current_context.primary_motion_vector_pair()[reference_index] };
 }
 
 // if_same_ref_frame_add_mv( candidateR, candidateC, refFrame, usePrev ) in the spec.
 void Parser::add_motion_vector_if_reference_frame_type_is_same(BlockContext const& block_context, MotionVector candidate_vector, ReferenceFrameType ref_frame, Vector<MotionVector, 2>& list, bool use_prev)
 {
-    for (auto ref_list = 0u; ref_list < 2; ref_list++) {
-        auto candidate = get_motion_vector_from_current_or_previous_frame(block_context, candidate_vector, ref_list, use_prev);
+    for (auto i = 0u; i < 2; i++) {
+        auto candidate = get_motion_vector_from_current_or_previous_frame(block_context, candidate_vector, static_cast<ReferenceIndex>(i), use_prev);
         if (candidate.type == ref_frame) {
             add_motion_vector_to_list_deduped(candidate.vector, list);
             return;
@@ -1536,13 +1544,13 @@ static void apply_sign_bias_to_motion_vector(FrameContext const& frame_context, 
 // if_diff_ref_frame_add_mv( candidateR, candidateC, refFrame, usePrev ) in the spec.
 void Parser::add_motion_vector_if_reference_frame_type_is_different(BlockContext const& block_context, MotionVector candidate_vector, ReferenceFrameType ref_frame, Vector<MotionVector, 2>& list, bool use_prev)
 {
-    auto first_candidate = get_motion_vector_from_current_or_previous_frame(block_context, candidate_vector, 0, use_prev);
+    auto first_candidate = get_motion_vector_from_current_or_previous_frame(block_context, candidate_vector, ReferenceIndex::Primary, use_prev);
     if (first_candidate.type > ReferenceFrameType::IntraFrame && first_candidate.type != ref_frame) {
         apply_sign_bias_to_motion_vector(block_context.frame_context, first_candidate, ref_frame);
         add_motion_vector_to_list_deduped(first_candidate.vector, list);
     }
 
-    auto second_candidate = get_motion_vector_from_current_or_previous_frame(block_context, candidate_vector, 1, use_prev);
+    auto second_candidate = get_motion_vector_from_current_or_previous_frame(block_context, candidate_vector, ReferenceIndex::Secondary, use_prev);
     auto mvs_are_same = first_candidate.vector == second_candidate.vector;
     if (second_candidate.type > ReferenceFrameType::IntraFrame && second_candidate.type != ref_frame && !mvs_are_same) {
         apply_sign_bias_to_motion_vector(block_context.frame_context, second_candidate, ref_frame);
@@ -1588,8 +1596,9 @@ MotionVectorPair Parser::find_reference_motion_vectors(BlockContext const& block
             auto context = block_context.frame_block_contexts().at(candidate.row(), candidate.column());
             context_counter += mode_2_counter[to_underlying(context.y_mode)];
 
-            for (auto ref_list = 0u; ref_list < 2; ref_list++) {
-                if (context.ref_frames[ref_list] == reference_frame) {
+            for (auto i = 0u; i < 2; i++) {
+                auto reference_index = static_cast<ReferenceIndex>(i);
+                if (context.ref_frames[reference_index] == reference_frame) {
                     // This section up until add_mv_ref_list() is defined in spec as get_sub_block_mv().
                     constexpr u8 idx_n_column_to_subblock[4][2] = {
                         { 1, 2 },
@@ -1599,7 +1608,7 @@ MotionVectorPair Parser::find_reference_motion_vectors(BlockContext const& block
                     };
                     auto index = block >= 0 ? idx_n_column_to_subblock[block][offset_vector.column() == 0] : 3;
 
-                    add_motion_vector_to_list_deduped(context.sub_block_motion_vectors[index][ref_list], list);
+                    add_motion_vector_to_list_deduped(context.sub_block_motion_vectors[index][reference_index], list);
                     break;
                 }
             }
@@ -1634,41 +1643,42 @@ MotionVectorPair Parser::find_reference_motion_vectors(BlockContext const& block
 
     MotionVectorPair result;
     for (auto i = 0u; i < list.size(); i++)
-        result[i] = list[i];
+        result[static_cast<ReferenceIndex>(i)] = list[i];
     return result;
 }
 
 // find_best_ref_mvs( refList ) in the spec.
-static void select_best_reference_motion_vectors(BlockContext& block_context, MotionVectorPair reference_motion_vectors, BlockMotionVectorCandidates& candidates, u8 reference_index)
+static void select_best_reference_motion_vectors(BlockContext& block_context, MotionVectorPair reference_motion_vectors, BlockMotionVectorCandidates& candidates, ReferenceIndex reference_index)
 {
-    for (auto i = 0u; i < MAX_MV_REF_CANDIDATES; i++) {
-        auto delta = reference_motion_vectors[i];
-        auto delta_row = delta.row();
-        auto delta_column = delta.column();
-        if (!block_context.frame_context.high_precision_motion_vectors_allowed || !should_use_high_precision_motion_vector(delta)) {
+    auto adjust_and_clamp_vector = [&](MotionVector& vector) {
+        auto delta_row = vector.row();
+        auto delta_column = vector.column();
+        if (!block_context.frame_context.high_precision_motion_vectors_allowed || !should_use_high_precision_motion_vector(vector)) {
             if ((delta_row & 1) != 0)
                 delta_row += delta_row > 0 ? -1 : 1;
             if ((delta_column & 1) != 0)
                 delta_column += delta_column > 0 ? -1 : 1;
         }
-        delta = { delta_row, delta_column };
-        reference_motion_vectors[i] = clamp_motion_vector(block_context, delta, (BORDERINPIXELS - INTERP_EXTEND) << 3);
-    }
+        vector = { delta_row, delta_column };
+        vector = clamp_motion_vector(block_context, vector, (BORDERINPIXELS - INTERP_EXTEND) << 3);
+    };
+    adjust_and_clamp_vector(reference_motion_vectors.primary);
+    adjust_and_clamp_vector(reference_motion_vectors.secondary);
 
-    candidates[reference_index].nearest_vector = reference_motion_vectors[0];
-    candidates[reference_index].near_vector = reference_motion_vectors[1];
-    candidates[reference_index].best_vector = reference_motion_vectors[0];
+    candidates[reference_index].nearest_vector = reference_motion_vectors.primary;
+    candidates[reference_index].near_vector = reference_motion_vectors.secondary;
+    candidates[reference_index].best_vector = reference_motion_vectors.primary;
 }
 
 // append_sub8x8_mvs( block, refList ) in the spec.
-void Parser::select_best_sub_block_reference_motion_vectors(BlockContext const& block_context, BlockMotionVectorCandidates& candidates, i32 block, u8 reference_index)
+void Parser::select_best_sub_block_reference_motion_vectors(BlockContext const& block_context, BlockMotionVectorCandidates& candidates, i32 block, ReferenceIndex reference_index)
 {
-    MotionVector sub_8x8_mvs[2];
+    Array<MotionVector, 2> sub_8x8_mvs;
     MotionVectorPair reference_motion_vectors = find_reference_motion_vectors(block_context, block_context.reference_frame_types[reference_index], block);
     auto destination_index = 0;
     if (block == 0) {
-        for (auto i = 0u; i < 2; i++)
-            sub_8x8_mvs[destination_index++] = reference_motion_vectors[i];
+        sub_8x8_mvs[destination_index++] = reference_motion_vectors.primary;
+        sub_8x8_mvs[destination_index++] = reference_motion_vectors.secondary;
     } else if (block <= 2) {
         sub_8x8_mvs[destination_index++] = block_context.sub_block_motion_vectors[0][reference_index];
     } else {
@@ -1681,7 +1691,7 @@ void Parser::select_best_sub_block_reference_motion_vectors(BlockContext const& 
     }
 
     for (auto n = 0u; n < 2 && destination_index < 2; n++) {
-        auto ref_list_vector = reference_motion_vectors[n];
+        auto ref_list_vector = reference_motion_vectors[static_cast<ReferenceIndex>(n)];
         if (ref_list_vector != sub_8x8_mvs[0])
             sub_8x8_mvs[destination_index++] = ref_list_vector;
     }

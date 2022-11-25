@@ -671,7 +671,7 @@ DecoderErrorOr<void> Decoder::predict_intra(u8 plane, BlockContext const& block_
     return {};
 }
 
-MotionVector Decoder::select_motion_vector(u8 plane, BlockContext const& block_context, u8 ref_list, u32 block_index)
+MotionVector Decoder::select_motion_vector(u8 plane, BlockContext const& block_context, ReferenceIndex reference_index, u32 block_index)
 {
     // The inputs to this process are:
     // − a variable plane specifying which plane is being predicted,
@@ -706,27 +706,27 @@ MotionVector Decoder::select_motion_vector(u8 plane, BlockContext const& block_c
     // − If plane is equal to 0, or MiSize is greater than or equal to BLOCK_8X8, mv is set equal to
     // BlockMvs[ refList ][ blockIdx ].
     if (plane == 0 || block_context.size >= Block_8x8)
-        return vectors[block_index][ref_list];
+        return vectors[block_index][reference_index];
     // − Otherwise, if subsampling_x is equal to 0 and subsampling_y is equal to 0, mv is set equal to
     // BlockMvs[ refList ][ blockIdx ].
     if (!block_context.frame_context.color_config.subsampling_x && !block_context.frame_context.color_config.subsampling_y)
-        return vectors[block_index][ref_list];
+        return vectors[block_index][reference_index];
     // − Otherwise, if subsampling_x is equal to 0 and subsampling_y is equal to 1, mv[ comp ] is set equal to
     // round_mv_comp_q2( BlockMvs[ refList ][ blockIdx ][ comp ] + BlockMvs[ refList ][ blockIdx + 2 ][ comp ] )
     // for comp = 0..1.
     if (!block_context.frame_context.color_config.subsampling_x && block_context.frame_context.color_config.subsampling_y)
-        return round_mv_comp_q2(vectors[block_index][ref_list] + vectors[block_index + 2][ref_list]);
+        return round_mv_comp_q2(vectors[block_index][reference_index] + vectors[block_index + 2][reference_index]);
     // − Otherwise, if subsampling_x is equal to 1 and subsampling_y is equal to 0, mv[ comp ] is set equal to
     // round_mv_comp_q2( BlockMvs[ refList ][ blockIdx ][ comp ] + BlockMvs[ refList ][ blockIdx + 1 ][ comp ] )
     // for comp = 0..1.
     if (block_context.frame_context.color_config.subsampling_x && !block_context.frame_context.color_config.subsampling_y)
-        return round_mv_comp_q2(vectors[block_index][ref_list] + vectors[block_index + 1][ref_list]);
+        return round_mv_comp_q2(vectors[block_index][reference_index] + vectors[block_index + 1][reference_index]);
     // − Otherwise, (subsampling_x is equal to 1 and subsampling_y is equal to 1), mv[ comp ] is set equal to
     // round_mv_comp_q4( BlockMvs[ refList ][ 0 ][ comp ] + BlockMvs[ refList ][ 1 ][ comp ] +
     // BlockMvs[ refList ][ 2 ][ comp ] + BlockMvs[ refList ][ 3 ][ comp ] ) for comp = 0..1.
     VERIFY(block_context.frame_context.color_config.subsampling_x && block_context.frame_context.color_config.subsampling_y);
-    return round_mv_comp_q4(vectors[0][ref_list] + vectors[1][ref_list]
-        + vectors[2][ref_list] + vectors[3][ref_list]);
+    return round_mv_comp_q4(vectors[0][reference_index] + vectors[1][reference_index]
+        + vectors[2][reference_index] + vectors[3][reference_index]);
 }
 
 MotionVector Decoder::clamp_motion_vector(u8 plane, BlockContext const& block_context, u32 block_row, u32 block_column, MotionVector vector)
@@ -761,12 +761,12 @@ MotionVector Decoder::clamp_motion_vector(u8 plane, BlockContext const& block_co
     };
 }
 
-DecoderErrorOr<void> Decoder::predict_inter_block(u8 plane, BlockContext const& block_context, u8 ref_list, u32 block_row, u32 block_column, u32 x, u32 y, u32 width, u32 height, u32 block_index, Span<u16> block_buffer)
+DecoderErrorOr<void> Decoder::predict_inter_block(u8 plane, BlockContext const& block_context, ReferenceIndex reference_index, u32 block_row, u32 block_column, u32 x, u32 y, u32 width, u32 height, u32 block_index, Span<u16> block_buffer)
 {
     VERIFY(width <= maximum_block_dimensions && height <= maximum_block_dimensions);
     // 2. The motion vector selection process in section 8.5.2.1 is invoked with plane, refList, blockIdx as inputs
     // and the output being the motion vector mv.
-    auto motion_vector = select_motion_vector(plane, block_context, ref_list, block_index);
+    auto motion_vector = select_motion_vector(plane, block_context, reference_index, block_index);
 
     // 3. The motion vector clamping process in section 8.5.2.2 is invoked with plane, mv as inputs and the output
     // being the clamped motion vector clampedMv
@@ -789,7 +789,7 @@ DecoderErrorOr<void> Decoder::predict_inter_block(u8 plane, BlockContext const& 
 
     // A variable refIdx specifying which reference frame is being used is set equal to
     // ref_frame_idx[ ref_frame[ refList ] - LAST_FRAME ].
-    auto reference_frame_index = block_context.frame_context.reference_frame_indices[block_context.reference_frame_types[ref_list] - LastFrame];
+    auto reference_frame_index = block_context.frame_context.reference_frame_indices[block_context.reference_frame_types[reference_index] - LastFrame];
 
     // It is a requirement of bitstream conformance that all the following conditions are satisfied:
     // − 2 * FrameWidth >= RefFrameWidth[ refIdx ]
@@ -943,14 +943,12 @@ DecoderErrorOr<void> Decoder::predict_inter(u8 plane, BlockContext const& block_
     // − a variable blockIdx, specifying how much of the block has already been predicted in units of 4x4 samples.
     // The outputs of this process are inter predicted samples in the current frame CurrFrame.
 
-    // The variable isCompound is set equal to ref_frame[ 1 ] > NONE.
-    auto is_compound = block_context.reference_frame_types[1] > None;
     // The prediction arrays are formed by the following ordered steps:
     // 1. The variable refList is set equal to 0.
     // 2. through 5.
     Array<u16, maximum_block_size> predicted_buffer;
     auto predicted_span = predicted_buffer.span().trim(width * height);
-    TRY(predict_inter_block(plane, block_context, 0, block_context.row, block_context.column, x, y, width, height, block_index, predicted_span));
+    TRY(predict_inter_block(plane, block_context, ReferenceIndex::Primary, block_context.row, block_context.column, x, y, width, height, block_index, predicted_span));
     auto predicted_buffer_at = [&](Span<u16> buffer, u32 row, u32 column) -> u16& {
         return buffer[row * width + column];
     };
@@ -969,9 +967,10 @@ DecoderErrorOr<void> Decoder::predict_inter(u8 plane, BlockContext const& block_
     auto width_in_frame_buffer = min(width, frame_width - x);
     auto height_in_frame_buffer = min(height, frame_height - y);
 
+    // The variable isCompound is set equal to ref_frame[ 1 ] > NONE.
     // − If isCompound is equal to 0, CurrFrame[ plane ][ y + i ][ x + j ] is set equal to preds[ 0 ][ i ][ j ] for i = 0..h-1
     // and j = 0..w-1.
-    if (!is_compound) {
+    if (!block_context.is_compound()) {
         for (auto i = 0u; i < height_in_frame_buffer; i++) {
             for (auto j = 0u; j < width_in_frame_buffer; j++)
                 frame_buffer_at(y + i, x + j) = predicted_buffer_at(predicted_span, i, j);
@@ -984,7 +983,7 @@ DecoderErrorOr<void> Decoder::predict_inter(u8 plane, BlockContext const& block_
     // for i = 0..h-1 and j = 0..w-1.
     Array<u16, maximum_block_size> second_predicted_buffer;
     auto second_predicted_span = second_predicted_buffer.span().trim(width * height);
-    TRY(predict_inter_block(plane, block_context, 1, block_context.row, block_context.column, x, y, width, height, block_index, second_predicted_span));
+    TRY(predict_inter_block(plane, block_context, ReferenceIndex::Secondary, block_context.row, block_context.column, x, y, width, height, block_index, second_predicted_span));
 
     for (auto i = 0u; i < height_in_frame_buffer; i++) {
         for (auto j = 0u; j < width_in_frame_buffer; j++)
