@@ -27,33 +27,33 @@ public:
     virtual Gfx::Bitmap const* bitmap() const = 0;
 
     String const& title() const { return m_title; }
-    String const& subtitle() const { return m_subtitle; }
+    String const& tooltip() const { return m_tooltip; }
     int score() const { return m_score; }
     bool equals(Result const& other) const
     {
         return typeid(this) == typeid(&other)
             && title() == other.title()
-            && subtitle() == other.subtitle();
+            && tooltip() == other.tooltip();
     }
 
 protected:
-    Result(String title, String subtitle, int score = 0)
+    Result(String title, String tooltip, int score = 0)
         : m_title(move(title))
-        , m_subtitle(move(subtitle))
+        , m_tooltip(move(tooltip))
         , m_score(score)
     {
     }
 
 private:
     String m_title;
-    String m_subtitle;
+    String m_tooltip;
     int m_score { 0 };
 };
 
 class AppResult final : public Result {
 public:
-    AppResult(RefPtr<Gfx::Bitmap> bitmap, String title, String subtitle, NonnullRefPtr<Desktop::AppFile> af, int score)
-        : Result(move(title), move(subtitle), score)
+    AppResult(RefPtr<Gfx::Bitmap> bitmap, String title, String tooltip, NonnullRefPtr<Desktop::AppFile> af, int score)
+        : Result(move(title), move(tooltip), score)
         , m_app_file(move(af))
         , m_bitmap(move(bitmap))
     {
@@ -71,7 +71,7 @@ private:
 class CalculatorResult final : public Result {
 public:
     explicit CalculatorResult(String title)
-        : Result(move(title), "'Enter' will copy to clipboard"sv, 100)
+        : Result(move(title), "Copy to Clipboard"sv, 100)
         , m_bitmap(GUI::Icon::default_icon("app-calculator"sv).bitmap_for_size(16))
     {
     }
@@ -115,7 +115,7 @@ private:
 class URLResult final : public Result {
 public:
     explicit URLResult(const URL& url)
-        : Result(url.to_string(), "'Enter' will open this URL in the browser"sv, 50)
+        : Result(url.to_string(), "Open URL in Browser"sv, 50)
         , m_bitmap(GUI::Icon::default_icon("app-browser"sv).bitmap_for_size(16))
     {
     }
