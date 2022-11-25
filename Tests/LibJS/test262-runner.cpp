@@ -560,7 +560,7 @@ void __assertion_failed(char const* assertion)
     handle_failed_assert(assertion);
 }
 #else
-#    if AK_OS_EMSCRIPTEN
+#    ifdef AK_OS_EMSCRIPTEN
 extern "C" __attribute__((__noreturn__)) void __assert_fail(char const* assertion, char const* file, int line, char const* function)
 #    else
 extern "C" __attribute__((__noreturn__)) void __assert_fail(char const* assertion, char const* file, unsigned int line, char const* function)
