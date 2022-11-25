@@ -113,10 +113,9 @@ enum class PredictionMode : u8 {
 };
 
 enum MvJoint : u8 {
-    MvJointZero = 0,
-    MvJointHnzvz = 1,
-    MvJointHzvnz = 2,
-    MvJointHnzvnz = 3,
+    MotionVectorAllZero = 0,
+    MotionVectorNonZeroColumn = 1,
+    MotionVectorNonZeroRow = 2,
 };
 
 enum MvClass : u8 {

@@ -142,9 +142,9 @@ static constexpr int interp_filter_tree[4] = {
     -EightTapSmooth, -EightTapSharp
 };
 static constexpr int mv_joint_tree[6] = {
-    -MvJointZero, 2,
-    -MvJointHnzvz, 4,
-    -MvJointHzvnz, -MvJointHnzvnz
+    -MotionVectorAllZero, 2,
+    -MotionVectorNonZeroColumn, 4,
+    -MotionVectorNonZeroRow, -(MotionVectorNonZeroColumn | MotionVectorNonZeroRow)
 };
 static constexpr int mv_class_tree[20] = {
     -MvClass0, 2,
