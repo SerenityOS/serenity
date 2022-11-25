@@ -124,6 +124,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                     VERIFY_NOT_REACHED();
                 }
 
+                TRY(tar_stream.advance());
                 continue;
             }
 
@@ -141,6 +142,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                     long_name.append(reinterpret_cast<char*>(buffer.data()), bytes_read);
 
                 local_overrides.set("path", long_name.to_string());
+                TRY(tar_stream.advance());
                 continue;
             }
             default:
