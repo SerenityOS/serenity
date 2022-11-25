@@ -163,14 +163,14 @@ ErrorOr<PredictionMode> TreeParser::parse_uv_mode(BitStream& bit_stream, Probabi
     return value;
 }
 
-ErrorOr<u8> TreeParser::parse_segment_id(BitStream& bit_stream, u8 const probabilities[7])
+ErrorOr<u8> TreeParser::parse_segment_id(BitStream& bit_stream, Array<u8, 7> const& probabilities)
 {
     auto value = TRY(parse_tree<u8>(bit_stream, { segment_tree }, [&](u8 node) { return probabilities[node]; }));
     // Segment ID is not counted.
     return value;
 }
 
-ErrorOr<bool> TreeParser::parse_segment_id_predicted(BitStream& bit_stream, u8 const probabilities[3], u8 above_seg_pred_context, u8 left_seg_pred_context)
+ErrorOr<bool> TreeParser::parse_segment_id_predicted(BitStream& bit_stream, Array<u8, 3> const& probabilities, u8 above_seg_pred_context, u8 left_seg_pred_context)
 {
     auto context = left_seg_pred_context + above_seg_pred_context;
     auto value = TRY(parse_tree<bool>(bit_stream, { binary_tree }, [&](u8) { return probabilities[context]; }));

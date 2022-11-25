@@ -110,6 +110,11 @@ DecoderErrorOr<FrameContext> Parser::parse_frame(ReadonlyBytes frame_data)
     m_previous_loop_filter_ref_deltas = frame_context.loop_filter_reference_deltas;
     m_previous_loop_filter_mode_deltas = frame_context.loop_filter_mode_deltas;
 
+    if (frame_context.segmentation_enabled) {
+        m_previous_should_use_absolute_segment_base_quantizer = frame_context.should_use_absolute_segment_base_quantizer;
+        m_previous_segmentation_features = frame_context.segmentation_features;
+    }
+
     return frame_context;
 }
 
@@ -265,7 +270,7 @@ DecoderErrorOr<FrameContext> Parser::uncompressed_header()
 
     TRY(loop_filter_params(frame_context));
     TRY(quantization_params(frame_context));
-    TRY(segmentation_params());
+    TRY(segmentation_params(frame_context));
     TRY(parse_tile_counts(frame_context));
 
     frame_context.header_size_in_bytes = TRY_READ(m_bit_stream->read_f16());
@@ -437,19 +442,25 @@ DecoderErrorOr<i8> Parser::read_delta_q()
     return 0;
 }
 
-DecoderErrorOr<void> Parser::segmentation_params()
+DecoderErrorOr<void> Parser::segmentation_params(FrameContext& frame_context)
 {
-    m_segmentation_enabled = TRY_READ(m_bit_stream->read_bit());
-    if (!m_segmentation_enabled)
+    frame_context.segmentation_enabled = TRY_READ(m_bit_stream->read_bit());
+    if (!frame_context.segmentation_enabled)
         return {};
 
-    m_segmentation_update_map = TRY_READ(m_bit_stream->read_bit());
-    if (m_segmentation_update_map) {
-        for (auto& segmentation_tree_prob : m_segmentation_tree_probs)
+    frame_context.should_use_absolute_segment_base_quantizer = m_previous_should_use_absolute_segment_base_quantizer;
+    frame_context.segmentation_features = m_previous_segmentation_features;
+
+    if (TRY_READ(m_bit_stream->read_bit())) {
+        frame_context.use_full_segment_id_tree = true;
+        for (auto& segmentation_tree_prob : frame_context.full_segment_id_tree_probabilities)
             segmentation_tree_prob = TRY(read_prob());
-        m_segmentation_temporal_update = TRY_READ(m_bit_stream->read_bit());
-        for (auto& segmentation_pred_prob : m_segmentation_pred_prob)
-            segmentation_pred_prob = m_segmentation_temporal_update ? TRY(read_prob()) : 255;
+
+        if (TRY_READ(m_bit_stream->read_bit())) {
+            frame_context.use_predicted_segment_id_tree = true;
+            for (auto& segmentation_pred_prob : frame_context.predicted_segment_id_tree_probabilities)
+                segmentation_pred_prob = TRY(read_prob());
+        }
     }
 
     auto segmentation_update_data = (TRY_READ(m_bit_stream->read_bit()));
@@ -457,21 +468,19 @@ DecoderErrorOr<void> Parser::segmentation_params()
     if (!segmentation_update_data)
         return {};
 
-    m_segmentation_abs_or_delta_update = TRY_READ(m_bit_stream->read_bit());
+    frame_context.should_use_absolute_segment_base_quantizer = TRY_READ(m_bit_stream->read_bit());
     for (auto i = 0; i < MAX_SEGMENTS; i++) {
         for (auto j = 0; j < SEG_LVL_MAX; j++) {
-            auto feature_value = 0;
-            auto feature_enabled = TRY_READ(m_bit_stream->read_bit());
-            m_feature_enabled[i][j] = feature_enabled;
-            if (feature_enabled) {
+            auto& feature = frame_context.segmentation_features[i][j];
+            feature.enabled = TRY_READ(m_bit_stream->read_bit());
+            if (feature.enabled) {
                 auto bits_to_read = segmentation_feature_bits[j];
-                feature_value = TRY_READ(m_bit_stream->read_bits(bits_to_read));
+                feature.value = TRY_READ(m_bit_stream->read_bits(bits_to_read));
                 if (segmentation_feature_signed[j]) {
                     if (TRY_READ(m_bit_stream->read_bit()))
-                        feature_value = -feature_value;
+                        feature.value = -feature.value;
                 }
             }
-            m_feature_data[i][j] = feature_value;
         }
     }
 
@@ -524,19 +533,15 @@ DecoderErrorOr<void> Parser::parse_tile_counts(FrameContext& frame_context)
 
 void Parser::setup_past_independence()
 {
-    for (auto i = 0; i < 8; i++) {
-        for (auto j = 0; j < 4; j++) {
-            m_feature_data[i][j] = 0;
-            m_feature_enabled[i][j] = false;
-        }
-    }
     m_previous_block_contexts.reset();
-    m_segmentation_abs_or_delta_update = false;
     m_previous_loop_filter_ref_deltas[IntraFrame] = 1;
     m_previous_loop_filter_ref_deltas[LastFrame] = 0;
     m_previous_loop_filter_ref_deltas[GoldenFrame] = -1;
     m_previous_loop_filter_ref_deltas[AltRefFrame] = -1;
     m_previous_loop_filter_mode_deltas.fill(0);
+    m_previous_should_use_absolute_segment_base_quantizer = false;
+    for (auto& segment_levels : m_previous_segmentation_features)
+        segment_levels.fill({ false, 0 });
     m_probability_tables->reset_probs();
 }
 
@@ -1026,8 +1031,8 @@ DecoderErrorOr<void> Parser::intra_frame_mode_info(BlockContext& block_context, 
 
 DecoderErrorOr<void> Parser::set_intra_segment_id(BlockContext& block_context)
 {
-    if (m_segmentation_enabled && m_segmentation_update_map)
-        block_context.segment_id = TRY_READ(TreeParser::parse_segment_id(*m_bit_stream, m_segmentation_tree_probs));
+    if (block_context.frame_context.segmentation_enabled && block_context.frame_context.use_full_segment_id_tree)
+        block_context.segment_id = TRY_READ(TreeParser::parse_segment_id(*m_bit_stream, block_context.frame_context.full_segment_id_tree_probabilities));
     else
         block_context.segment_id = 0;
     return {};
@@ -1042,7 +1047,7 @@ DecoderErrorOr<bool> Parser::read_should_skip_residuals(BlockContext& block_cont
 
 bool Parser::seg_feature_active(BlockContext const& block_context, u8 feature)
 {
-    return m_segmentation_enabled && m_feature_enabled[block_context.segment_id][feature];
+    return block_context.frame_context.segmentation_features[block_context.segment_id][feature].enabled;
 }
 
 DecoderErrorOr<TXSize> Parser::read_tx_size(BlockContext& block_context, FrameBlockContext above_context, FrameBlockContext left_context, bool allow_select)
@@ -1069,25 +1074,25 @@ DecoderErrorOr<void> Parser::inter_frame_mode_info(BlockContext& block_context, 
 
 DecoderErrorOr<void> Parser::set_inter_segment_id(BlockContext& block_context)
 {
-    if (!m_segmentation_enabled) {
+    if (!block_context.frame_context.segmentation_enabled) {
         block_context.segment_id = 0;
         return {};
     }
     auto predicted_segment_id = get_segment_id(block_context);
-    if (!m_segmentation_update_map) {
+    if (!block_context.frame_context.use_full_segment_id_tree) {
         block_context.segment_id = predicted_segment_id;
         return {};
     }
-    if (!m_segmentation_temporal_update) {
-        block_context.segment_id = TRY_READ(TreeParser::parse_segment_id(*m_bit_stream, m_segmentation_tree_probs));
+    if (!block_context.frame_context.use_predicted_segment_id_tree) {
+        block_context.segment_id = TRY_READ(TreeParser::parse_segment_id(*m_bit_stream, block_context.frame_context.full_segment_id_tree_probabilities));
         return {};
     }
 
-    auto seg_id_predicted = TRY_READ(TreeParser::parse_segment_id_predicted(*m_bit_stream, m_segmentation_pred_prob, m_left_seg_pred_context[block_context.row], m_above_seg_pred_context[block_context.column]));
+    auto seg_id_predicted = TRY_READ(TreeParser::parse_segment_id_predicted(*m_bit_stream, block_context.frame_context.predicted_segment_id_tree_probabilities, m_left_seg_pred_context[block_context.row], m_above_seg_pred_context[block_context.column]));
     if (seg_id_predicted)
         block_context.segment_id = predicted_segment_id;
     else
-        block_context.segment_id = TRY_READ(TreeParser::parse_segment_id(*m_bit_stream, m_segmentation_tree_probs));
+        block_context.segment_id = TRY_READ(TreeParser::parse_segment_id(*m_bit_stream, block_context.frame_context.full_segment_id_tree_probabilities));
 
     for (size_t i = 0; i < num_8x8_blocks_wide_lookup[block_context.size]; i++) {
         auto index = block_context.column + i;
@@ -1122,7 +1127,7 @@ u8 Parser::get_segment_id(BlockContext const& block_context)
 DecoderErrorOr<bool> Parser::read_is_inter(BlockContext& block_context, FrameBlockContext above_context, FrameBlockContext left_context)
 {
     if (seg_feature_active(block_context, SEG_LVL_REF_FRAME))
-        return m_feature_data[block_context.segment_id][SEG_LVL_REF_FRAME] != IntraFrame;
+        return block_context.frame_context.segmentation_features[block_context.segment_id][SEG_LVL_REF_FRAME].value != IntraFrame;
     return TRY_READ(TreeParser::parse_block_is_inter_predicted(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter, above_context, left_context));
 }
 
@@ -1205,7 +1210,7 @@ DecoderErrorOr<void> Parser::inter_block_mode_info(BlockContext& block_context, 
 DecoderErrorOr<void> Parser::read_ref_frames(BlockContext& block_context, FrameBlockContext above_context, FrameBlockContext left_context)
 {
     if (seg_feature_active(block_context, SEG_LVL_REF_FRAME)) {
-        block_context.reference_frame_types = { static_cast<ReferenceFrameType>(m_feature_data[block_context.segment_id][SEG_LVL_REF_FRAME]), None };
+        block_context.reference_frame_types = { static_cast<ReferenceFrameType>(block_context.frame_context.segmentation_features[block_context.segment_id][SEG_LVL_REF_FRAME].value), None };
         return {};
     }
 

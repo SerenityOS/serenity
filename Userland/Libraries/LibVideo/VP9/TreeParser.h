@@ -54,8 +54,8 @@ public:
     static ErrorOr<PredictionMode> parse_intra_mode(BitStream&, ProbabilityTables const&, SyntaxElementCounter&, BlockSubsize mi_size);
     static ErrorOr<PredictionMode> parse_sub_intra_mode(BitStream&, ProbabilityTables const&, SyntaxElementCounter&);
     static ErrorOr<PredictionMode> parse_uv_mode(BitStream&, ProbabilityTables const&, SyntaxElementCounter&, PredictionMode y_mode);
-    static ErrorOr<u8> parse_segment_id(BitStream&, u8 const probabilities[7]);
-    static ErrorOr<bool> parse_segment_id_predicted(BitStream&, u8 const probabilities[3], u8 above_seg_pred_context, u8 left_seg_pred_context);
+    static ErrorOr<u8> parse_segment_id(BitStream&, Array<u8, 7> const& probabilities);
+    static ErrorOr<bool> parse_segment_id_predicted(BitStream&, Array<u8, 3> const& probabilities, u8 above_seg_pred_context, u8 left_seg_pred_context);
     static ErrorOr<PredictionMode> parse_inter_mode(BitStream&, ProbabilityTables const&, SyntaxElementCounter&, u8 mode_context_for_ref_frame_0);
     static ErrorOr<InterpolationFilter> parse_interpolation_filter(BitStream&, ProbabilityTables const&, SyntaxElementCounter&, FrameBlockContext above, FrameBlockContext left);
     static ErrorOr<bool> parse_skip(BitStream&, ProbabilityTables const&, SyntaxElementCounter&, FrameBlockContext above, FrameBlockContext left);
