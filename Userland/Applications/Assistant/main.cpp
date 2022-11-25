@@ -37,89 +37,16 @@ struct AppState {
     String last_query;
 };
 
-class ResultRow final : public GUI::Widget {
+class ResultRow final : public GUI::Button {
     C_OBJECT(ResultRow)
-public:
-    void set_image(RefPtr<Gfx::Bitmap> bitmap)
-    {
-        m_image->set_bitmap(bitmap);
-    }
-    void set_title(String text)
-    {
-        m_title->set_text(move(text));
-    }
-    void set_subtitle(String text)
-    {
-        if (text.is_empty()) {
-            if (m_subtitle)
-                m_subtitle->remove_from_parent();
-            m_subtitle = nullptr;
-            return;
-        }
-        if (!m_subtitle) {
-            m_subtitle = m_label_container->add<GUI::Label>();
-            m_subtitle->set_text_alignment(Gfx::TextAlignment::CenterLeft);
-        }
-        m_subtitle->set_text(move(text));
-    }
-    void set_is_highlighted(bool value)
-    {
-        if (m_is_highlighted == value)
-            return;
-
-        m_is_highlighted = value;
-        m_title->set_font_weight(value ? 700 : 400);
-    }
-
-    Function<void()> on_selected;
-
-private:
     ResultRow()
     {
-        auto& layout = set_layout<GUI::HorizontalBoxLayout>();
-        layout.set_spacing(12);
-        layout.set_margins(4);
-
-        m_image = add<GUI::ImageWidget>();
-
-        m_label_container = add<GUI::Widget>();
-        m_label_container->set_layout<GUI::VerticalBoxLayout>();
-        m_label_container->set_fixed_height(30);
-
-        m_title = m_label_container->add<GUI::Label>();
-        m_title->set_text_alignment(Gfx::TextAlignment::CenterLeft);
-
-        set_shrink_to_fit(true);
-        set_fill_with_background_color(true);
         set_greedy_for_hits(true);
+        set_fixed_height(36);
+        set_text_alignment(Gfx::TextAlignment::CenterLeft);
+        set_button_style(Gfx::ButtonStyle::Coolbar);
+        set_focus_policy(GUI::FocusPolicy::NoFocus);
     }
-
-    void mousedown_event(GUI::MouseEvent&) override
-    {
-        set_background_role(ColorRole::MenuBase);
-    }
-
-    void mouseup_event(GUI::MouseEvent&) override
-    {
-        set_background_role(ColorRole::NoRole);
-        on_selected();
-    }
-
-    void enter_event(Core::Event&) override
-    {
-        set_background_role(ColorRole::HoverHighlight);
-    }
-
-    void leave_event(Core::Event&) override
-    {
-        set_background_role(ColorRole::NoRole);
-    }
-
-    RefPtr<GUI::ImageWidget> m_image;
-    RefPtr<GUI::Widget> m_label_container;
-    RefPtr<GUI::Label> m_title;
-    RefPtr<GUI::Label> m_subtitle;
-    bool m_is_highlighted { false };
 };
 
 class Database {
@@ -218,17 +145,16 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     container.set_fill_with_background_color(true);
     container.set_frame_shape(Gfx::FrameShape::Window);
     auto& layout = container.set_layout<GUI::VerticalBoxLayout>();
-    layout.set_margins({ 8, 8, 0 });
+    layout.set_margins({ 8 });
 
     auto& text_box = container.add<GUI::TextBox>();
     auto& results_container = container.add<GUI::Widget>();
     auto& results_layout = results_container.set_layout<GUI::VerticalBoxLayout>();
-    results_layout.set_margins({ 10, 0 });
 
     auto mark_selected_item = [&]() {
         for (size_t i = 0; i < app_state.visible_result_count; ++i) {
             auto& row = static_cast<Assistant::ResultRow&>(results_container.child_widgets()[i]);
-            row.set_is_highlighted(i == app_state.selected_index);
+            row.set_font_weight(i == app_state.selected_index ? 700 : 400);
         }
     };
 
@@ -285,14 +211,15 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto update_ui_timer = Core::Timer::create_single_shot(10, [&] {
         results_container.remove_all_children();
+        results_layout.set_margins(app_state.visible_result_count ? GUI::Margins { 4, 0, 0, 0 } : GUI::Margins { 0 });
 
         for (size_t i = 0; i < app_state.visible_result_count; ++i) {
             auto& result = app_state.results[i];
             auto& match = results_container.add<Assistant::ResultRow>();
-            match.set_image(result.bitmap());
-            match.set_title(result.title());
-            match.set_subtitle(result.subtitle());
-            match.on_selected = [&result]() {
+            match.set_icon(result.bitmap());
+            match.set_text(move(result.title()));
+            match.set_tooltip(move(result.tooltip()));
+            match.on_click = [&result](auto) {
                 result.activate();
                 GUI::Application::the()->quit();
             };
