@@ -49,6 +49,7 @@ public:
     // 11. Contexts, https://w3c.github.io/webdriver/#contexts
     virtual Response get_window_handle(Parameters parameters, JsonValue payload) = 0;
     virtual Response close_window(Parameters parameters, JsonValue payload) = 0;
+    virtual Response switch_to_window(Parameters parameters, JsonValue payload) = 0;
     virtual Response get_window_handles(Parameters parameters, JsonValue payload) = 0;
     virtual Response get_window_rect(Parameters parameters, JsonValue payload) = 0;
     virtual Response set_window_rect(Parameters parameters, JsonValue payload) = 0;
