@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include "LibGUI/Window.h"
 #include "ShutdownDialog.h"
 #include "TaskbarWindow.h"
 #include <AK/Debug.h>
@@ -34,15 +35,7 @@
 #include <unistd.h>
 
 static ErrorOr<Vector<String>> discover_apps_and_categories();
-struct WindowRefence {
-    GUI::Window* window { nullptr };
-    GUI::Window* get()
-    {
-        VERIFY(window);
-        return window;
-    }
-};
-static ErrorOr<NonnullRefPtr<GUI::Menu>> build_system_menu(WindowRefence&);
+static ErrorOr<NonnullRefPtr<GUI::Menu>> build_system_menu(GUI::Window&);
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
@@ -64,15 +57,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     TRY(Core::System::pledge("stdio recvfd sendfd proc exec rpath"));
 
-    // FIXME: Have to awkwardly pass a reference to the window pointer to build_system_menu(), that will be resolved later.
-    // (It is always valid at use)
-    WindowRefence window_ref {};
-    auto menu = TRY(build_system_menu(window_ref));
-    menu->realize_menu_if_needed();
-
     auto window = TRY(TaskbarWindow::try_create());
+
+    auto menu = TRY(build_system_menu(*window));
+    menu->realize_menu_if_needed();
     window->add_system_menu(menu);
-    window_ref.window = window.ptr();
 
     window->show();
 
@@ -122,13 +111,13 @@ ErrorOr<Vector<String>> discover_apps_and_categories()
     return sorted_app_categories;
 }
 
-ErrorOr<NonnullRefPtr<GUI::Menu>> build_system_menu(WindowRefence& window_ref)
+ErrorOr<NonnullRefPtr<GUI::Menu>> build_system_menu(GUI::Window& window)
 {
     Vector<String> const sorted_app_categories = TRY(discover_apps_and_categories());
     auto system_menu = TRY(GUI::Menu::try_create("\xE2\x9A\xA1")); // HIGH VOLTAGE SIGN
 
     system_menu->add_action(GUI::Action::create("&About SerenityOS", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/ladyball.png"sv).release_value_but_fixme_should_propagate_errors(), [&](auto&) {
-        GUI::Process::spawn_or_show_error(window_ref.get(), "/bin/About"sv);
+        GUI::Process::spawn_or_show_error(&window, "/bin/About"sv);
     }));
 
     system_menu->add_separator();
@@ -270,12 +259,12 @@ ErrorOr<NonnullRefPtr<GUI::Menu>> build_system_menu(WindowRefence& window_ref)
     };
 
     system_menu->add_action(GUI::Action::create("&Settings", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-settings.png"sv).release_value_but_fixme_should_propagate_errors(), [&](auto&) {
-        GUI::Process::spawn_or_show_error(window_ref.get(), "/bin/Settings"sv);
+        GUI::Process::spawn_or_show_error(&window, "/bin/Settings"sv);
     }));
 
     system_menu->add_separator();
     system_menu->add_action(GUI::Action::create("&Help", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-help.png"sv).release_value_but_fixme_should_propagate_errors(), [&](auto&) {
-        GUI::Process::spawn_or_show_error(window_ref.get(), "/bin/Help"sv);
+        GUI::Process::spawn_or_show_error(&window, "/bin/Help"sv);
     }));
     system_menu->add_action(GUI::Action::create("&Run...", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-run.png"sv).release_value_but_fixme_should_propagate_errors(), [](auto&) {
         posix_spawn_file_actions_t spawn_actions;
