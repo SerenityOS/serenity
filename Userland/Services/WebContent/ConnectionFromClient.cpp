@@ -149,7 +149,7 @@ void ConnectionFromClient::paint(Gfx::IntRect const& content_rect, i32 backing_s
 void ConnectionFromClient::flush_pending_paint_requests()
 {
     for (auto& pending_paint : m_pending_paint_requests) {
-        m_page_host->paint(pending_paint.content_rect, *pending_paint.bitmap);
+        m_page_host->paint(pending_paint.content_rect.to_type<Web::DevicePixels>(), *pending_paint.bitmap);
         async_did_paint(pending_paint.content_rect, pending_paint.bitmap_id);
     }
     m_pending_paint_requests.clear();
@@ -461,9 +461,9 @@ Messages::WebContentServer::TakeDocumentScreenshotResponse ConnectionFromClient:
         return { {} };
 
     auto const& content_size = m_page_host->content_size();
-    Gfx::IntRect rect { { 0, 0 }, content_size };
+    Web::DevicePixelRect rect { { 0, 0 }, content_size };
 
-    auto bitmap = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, rect.size()).release_value_but_fixme_should_propagate_errors();
+    auto bitmap = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, rect.size().to_type<int>()).release_value_but_fixme_should_propagate_errors();
     m_page_host->paint(rect, *bitmap);
 
     return { bitmap->to_shareable_bitmap() };

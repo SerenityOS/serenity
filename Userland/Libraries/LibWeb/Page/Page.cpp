@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -54,14 +55,71 @@ Gfx::Palette Page::palette() const
     return m_client.palette();
 }
 
-Gfx::IntRect Page::screen_rect() const
+// https://w3c.github.io/csswg-drafts/cssom-view-1/#web-exposed-screen-area
+CSSPixelRect Page::web_exposed_screen_area() const
 {
-    return m_client.screen_rect();
+    auto device_pixel_rect = m_client.screen_rect();
+    auto scale = client().device_pixels_per_css_pixel();
+    return {
+        device_pixel_rect.x().value() / scale,
+        device_pixel_rect.y().value() / scale,
+        device_pixel_rect.width().value() / scale,
+        device_pixel_rect.height().value() / scale
+    };
 }
 
 CSS::PreferredColorScheme Page::preferred_color_scheme() const
 {
     return m_client.preferred_color_scheme();
+}
+
+CSSPixelPoint Page::device_to_css_point(DevicePixelPoint point) const
+{
+    return {
+        point.x().value() / client().device_pixels_per_css_pixel(),
+        point.y().value() / client().device_pixels_per_css_pixel(),
+    };
+}
+
+DevicePixelPoint Page::css_to_device_point(CSSPixelPoint point) const
+{
+    return {
+        point.x().value() * client().device_pixels_per_css_pixel(),
+        point.y().value() * client().device_pixels_per_css_pixel(),
+    };
+}
+
+CSSPixelRect Page::device_to_css_rect(DevicePixelRect rect) const
+{
+    auto scale = client().device_pixels_per_css_pixel();
+    return {
+        rect.x().value() / scale,
+        rect.y().value() / scale,
+        rect.width().value() / scale,
+        rect.height().value() / scale
+    };
+}
+
+DevicePixelRect Page::enclosing_device_rect(CSSPixelRect rect) const
+{
+    auto scale = client().device_pixels_per_css_pixel();
+    return {
+        floorf(rect.x().value() * scale),
+        floorf(rect.y().value() * scale),
+        ceilf(rect.width().value() * scale),
+        ceilf(rect.height().value() * scale)
+    };
+}
+
+DevicePixelRect Page::rounded_device_rect(CSSPixelRect rect) const
+{
+    auto scale = client().device_pixels_per_css_pixel();
+    return {
+        roundf(rect.x().value() * scale),
+        roundf(rect.y().value() * scale),
+        roundf(rect.width().value() * scale),
+        roundf(rect.height().value() * scale)
+    };
 }
 
 bool Page::handle_mousewheel(Gfx::IntPoint position, unsigned button, unsigned buttons, unsigned modifiers, int wheel_delta_x, int wheel_delta_y)

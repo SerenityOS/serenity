@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2022, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -25,6 +26,7 @@
 #include <LibWeb/Cookie/Cookie.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/Loader/FileRequest.h>
+#include <LibWeb/PixelUnits.h>
 
 namespace Web {
 
@@ -54,6 +56,12 @@ public:
 
     void load_html(StringView, const AK::URL&);
 
+    CSSPixelPoint device_to_css_point(DevicePixelPoint) const;
+    DevicePixelPoint css_to_device_point(CSSPixelPoint) const;
+    CSSPixelRect device_to_css_rect(DevicePixelRect) const;
+    DevicePixelRect enclosing_device_rect(CSSPixelRect) const;
+    DevicePixelRect rounded_device_rect(CSSPixelRect) const;
+
     bool handle_mouseup(Gfx::IntPoint, unsigned button, unsigned buttons, unsigned modifiers);
     bool handle_mousedown(Gfx::IntPoint, unsigned button, unsigned buttons, unsigned modifiers);
     bool handle_mousemove(Gfx::IntPoint, unsigned buttons, unsigned modifiers);
@@ -64,7 +72,7 @@ public:
     bool handle_keyup(KeyCode, unsigned modifiers, u32 code_point);
 
     Gfx::Palette palette() const;
-    Gfx::IntRect screen_rect() const;
+    CSSPixelRect web_exposed_screen_area() const;
     CSS::PreferredColorScheme preferred_color_scheme() const;
 
     bool is_same_origin_policy_enabled() const { return m_same_origin_policy_enabled; }
@@ -139,9 +147,10 @@ public:
     virtual Page const& page() const = 0;
     virtual bool is_connection_open() const = 0;
     virtual Gfx::Palette palette() const = 0;
-    virtual Gfx::IntRect screen_rect() const = 0;
+    virtual DevicePixelRect screen_rect() const = 0;
+    virtual float device_pixels_per_css_pixel() const = 0;
     virtual CSS::PreferredColorScheme preferred_color_scheme() const = 0;
-    virtual void paint(Gfx::IntRect const&, Gfx::Bitmap&) = 0;
+    virtual void paint(DevicePixelRect const&, Gfx::Bitmap&) = 0;
     virtual void page_did_change_title(DeprecatedString const&) { }
     virtual void page_did_request_navigate_back() { }
     virtual void page_did_request_navigate_forward() { }

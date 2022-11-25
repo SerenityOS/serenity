@@ -104,10 +104,10 @@ Web::Layout::InitialContainingBlock* PageHost::layout_root()
     return document->layout_node();
 }
 
-void PageHost::paint(Gfx::IntRect const& content_rect, Gfx::Bitmap& target)
+void PageHost::paint(Web::DevicePixelRect const& content_rect, Gfx::Bitmap& target)
 {
     Gfx::Painter painter(target);
-    Gfx::IntRect bitmap_rect { {}, content_rect.size() };
+    Gfx::IntRect bitmap_rect { {}, content_rect.size().to_type<int>() };
 
     if (auto* document = page().top_level_browsing_context().active_document())
         document->update_layout();
@@ -118,9 +118,9 @@ void PageHost::paint(Gfx::IntRect const& content_rect, Gfx::Bitmap& target)
         return;
     }
 
-    Web::PaintContext context(painter, palette(), content_rect.top_left());
+    Web::PaintContext context(painter, palette(), content_rect.top_left().to_type<int>());
     context.set_should_show_line_box_borders(m_should_show_line_box_borders);
-    context.set_viewport_rect(content_rect);
+    context.set_viewport_rect(content_rect.to_type<int>());
     context.set_has_focus(m_has_focus);
     layout_root->paint_all_phases(context);
 }
@@ -152,10 +152,10 @@ void PageHost::page_did_layout()
     auto* layout_root = this->layout_root();
     VERIFY(layout_root);
     if (layout_root->paint_box()->has_overflow())
-        m_content_size = enclosing_int_rect(layout_root->paint_box()->scrollable_overflow_rect().value()).size();
+        m_content_size = page().enclosing_device_rect(layout_root->paint_box()->scrollable_overflow_rect().value().to_type<Web::CSSPixels>()).size();
     else
-        m_content_size = enclosing_int_rect(layout_root->paint_box()->absolute_rect()).size();
-    m_client.async_did_layout(m_content_size);
+        m_content_size = page().enclosing_device_rect(layout_root->paint_box()->absolute_rect().to_type<Web::CSSPixels>()).size();
+    m_client.async_did_layout(m_content_size.to_type<int>());
 }
 
 void PageHost::page_did_change_title(DeprecatedString const& title)
