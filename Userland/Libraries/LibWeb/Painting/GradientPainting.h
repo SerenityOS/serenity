@@ -41,12 +41,12 @@ struct RadialGradientData {
     ColorStopData color_stops;
 };
 
-LinearGradientData resolve_linear_gradient_data(Layout::Node const&, Gfx::FloatSize, CSS::LinearGradientStyleValue const&);
+LinearGradientData resolve_linear_gradient_data(Layout::Node const&, CSSPixelSize, CSS::LinearGradientStyleValue const&);
 ConicGradientData resolve_conic_gradient_data(Layout::Node const&, CSS::ConicGradientStyleValue const&);
-RadialGradientData resolve_radial_gradient_data(Layout::Node const&, Gfx::FloatSize, CSS::RadialGradientStyleValue const&);
+RadialGradientData resolve_radial_gradient_data(Layout::Node const&, CSSPixelSize, CSS::RadialGradientStyleValue const&);
 
-void paint_linear_gradient(PaintContext&, Gfx::IntRect const&, LinearGradientData const&);
-void paint_conic_gradient(PaintContext&, Gfx::IntRect const&, ConicGradientData const&, Gfx::IntPoint position);
-void paint_radial_gradient(PaintContext&, Gfx::IntRect const&, RadialGradientData const&, Gfx::IntPoint position, Gfx::FloatSize size);
+void paint_linear_gradient(PaintContext&, DevicePixelRect const&, LinearGradientData const&);
+void paint_conic_gradient(PaintContext&, DevicePixelRect const&, ConicGradientData const&, DevicePixelPoint position);
+void paint_radial_gradient(PaintContext&, DevicePixelRect const&, RadialGradientData const&, DevicePixelPoint position, Gfx::FloatSize size);
 
 }

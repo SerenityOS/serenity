@@ -20,17 +20,19 @@ static float normalized_gradient_angle_radians(float gradient_angle)
     return real_angle * (AK::Pi<float> / 180);
 }
 
-static float calulate_gradient_length(Gfx::IntSize gradient_size, float sin_angle, float cos_angle)
+template<typename T>
+static float calculate_gradient_length(Gfx::Size<T> gradient_size, float sin_angle, float cos_angle)
 {
-    return AK::fabs(gradient_size.height() * sin_angle) + AK::fabs(gradient_size.width() * cos_angle);
+    return AK::fabs(gradient_size.height().value() * sin_angle) + AK::fabs(gradient_size.width().value() * cos_angle);
 }
 
-static float calulate_gradient_length(Gfx::IntSize gradient_size, float gradient_angle)
+template<typename T>
+static float calculate_gradient_length(Gfx::Size<T> gradient_size, float gradient_angle)
 {
     float angle = normalized_gradient_angle_radians(gradient_angle);
     float sin_angle, cos_angle;
     AK::sincos(angle, sin_angle, cos_angle);
-    return calulate_gradient_length(gradient_size, sin_angle, cos_angle);
+    return calculate_gradient_length(gradient_size, sin_angle, cos_angle);
 }
 
 static ColorStopData resolve_color_stop_positions(auto const& color_stop_list, auto resolve_position_to_float, bool repeating)
@@ -129,10 +131,10 @@ static ColorStopData resolve_color_stop_positions(auto const& color_stop_list, a
     return { resolved_color_stops, repeat_length };
 }
 
-LinearGradientData resolve_linear_gradient_data(Layout::Node const& node, Gfx::FloatSize gradient_size, CSS::LinearGradientStyleValue const& linear_gradient)
+LinearGradientData resolve_linear_gradient_data(Layout::Node const& node, CSSPixelSize gradient_size, CSS::LinearGradientStyleValue const& linear_gradient)
 {
-    auto gradient_angle = linear_gradient.angle_degrees(gradient_size);
-    auto gradient_length_px = calulate_gradient_length(gradient_size.to_rounded<int>(), gradient_angle);
+    auto gradient_angle = linear_gradient.angle_degrees(gradient_size.to_type<float>());
+    auto gradient_length_px = calculate_gradient_length(gradient_size, gradient_angle);
     auto gradient_length = CSS::Length::make_px(gradient_length_px);
 
     auto resolved_color_stops = resolve_color_stop_positions(
@@ -155,13 +157,13 @@ ConicGradientData resolve_conic_gradient_data(Layout::Node const& node, CSS::Con
     return { conic_gradient.angle_degrees(), resolved_color_stops };
 }
 
-RadialGradientData resolve_radial_gradient_data(Layout::Node const& node, Gfx::FloatSize gradient_size, CSS::RadialGradientStyleValue const& radial_gradient)
+RadialGradientData resolve_radial_gradient_data(Layout::Node const& node, CSSPixelSize gradient_size, CSS::RadialGradientStyleValue const& radial_gradient)
 {
     // Start center, goes right to ending point, where the gradient line intersects the ending shape
     auto gradient_length = CSS::Length::make_px(gradient_size.width());
     auto resolved_color_stops = resolve_color_stop_positions(
         radial_gradient.color_stop_list(), [&](auto const& length_percentage) {
-            return length_percentage.resolved(node, gradient_length).to_px(node) / gradient_size.width();
+            return length_percentage.resolved(node, gradient_length).to_px(node) / gradient_size.width().value();
         },
         radial_gradient.is_repeating());
     return { resolved_color_stops };
@@ -241,12 +243,12 @@ public:
         return color;
     }
 
-    ALWAYS_INLINE void paint_into_rect(Gfx::Painter& painter, Gfx::IntRect const& rect, auto location_transform)
+    void paint_into_rect(Gfx::Painter& painter, DevicePixelRect rect, auto location_transform)
     {
-        for (int y = 0; y < rect.height(); y++) {
-            for (int x = 0; x < rect.width(); x++) {
+        for (DevicePixels y = 0; y < rect.height(); y++) {
+            for (DevicePixels x = 0; x < rect.width(); x++) {
                 auto gradient_color = sample_color(location_transform(x, y));
-                painter.set_pixel(rect.x() + x, rect.y() + y, gradient_color, gradient_color.alpha() < 255);
+                painter.set_pixel((rect.x() + x).value(), (rect.y() + y).value(), gradient_color, gradient_color.alpha() < 255);
             }
         }
     }
@@ -257,33 +259,33 @@ private:
     Vector<Gfx::Color, 1024> m_gradient_line_colors;
 };
 
-void paint_linear_gradient(PaintContext& context, Gfx::IntRect const& gradient_rect, LinearGradientData const& data)
+void paint_linear_gradient(PaintContext& context, DevicePixelRect const& gradient_rect, LinearGradientData const& data)
 {
     float angle = normalized_gradient_angle_radians(data.gradient_angle);
     float sin_angle, cos_angle;
     AK::sincos(angle, sin_angle, cos_angle);
 
     // Full length of the gradient
-    auto gradient_length_px = round_to<int>(calulate_gradient_length(gradient_rect.size(), sin_angle, cos_angle));
-    Gfx::FloatPoint offset { cos_angle * (gradient_length_px / 2), sin_angle * (gradient_length_px / 2) };
+    auto gradient_length = calculate_gradient_length(gradient_rect.size(), sin_angle, cos_angle);
+    DevicePixelPoint offset { cos_angle * (gradient_length / 2), sin_angle * (gradient_length / 2) };
     auto center = gradient_rect.translated(-gradient_rect.location()).center();
-    auto start_point = center.to_type<float>() - offset;
+    auto start_point = center.to_type<int>() - offset.to_type<int>();
     // Rotate gradient line to be horizontal
     auto rotated_start_point_x = start_point.x() * cos_angle - start_point.y() * -sin_angle;
 
-    GradientLine gradient_line(gradient_length_px, data.color_stops);
-    gradient_line.paint_into_rect(context.painter(), gradient_rect, [&](int x, int y) {
-        return (x * cos_angle - (gradient_rect.height() - y) * -sin_angle) - rotated_start_point_x;
+    GradientLine gradient_line(gradient_length, data.color_stops);
+    gradient_line.paint_into_rect(context.painter(), gradient_rect, [&](DevicePixels x, DevicePixels y) {
+        return (x.value() * cos_angle - (gradient_rect.height() - y).value() * -sin_angle) - rotated_start_point_x;
     });
 }
 
-void paint_conic_gradient(PaintContext& context, Gfx::IntRect const& gradient_rect, ConicGradientData const& data, Gfx::IntPoint position)
+void paint_conic_gradient(PaintContext& context, DevicePixelRect const& gradient_rect, ConicGradientData const& data, DevicePixelPoint position)
 {
     // FIXME: Do we need/want sub-degree accuracy for the gradient line?
     GradientLine gradient_line(360, data.color_stops);
     float start_angle = (360.0f - data.start_angle) + 90.0f;
     // Translate position/center to the center of the pixel (avoids some funky painting)
-    auto center_point = Gfx::FloatPoint { position }.translated(0.5, 0.5);
+    auto center_point = Gfx::FloatPoint { position.to_type<int>() }.translated(0.5, 0.5);
     // The flooring can make gradients that want soft edges look worse, so only floor if we have hard edges.
     // Which makes sure the hard edge stay hard edges :^)
     bool should_floor_angles = false;
@@ -294,24 +296,24 @@ void paint_conic_gradient(PaintContext& context, Gfx::IntRect const& gradient_re
             break;
         }
     }
-    gradient_line.paint_into_rect(context.painter(), gradient_rect, [&](int x, int y) {
-        auto point = Gfx::FloatPoint { x, y } - center_point;
+    gradient_line.paint_into_rect(context.painter(), gradient_rect, [&](DevicePixels x, DevicePixels y) {
+        auto point = Gfx::FloatPoint { x.value(), y.value() } - center_point;
         // FIXME: We could probably get away with some approximation here:
         auto loc = fmod((AK::atan2(point.y(), point.x()) * 180.0f / AK::Pi<float> + 360.0f + start_angle), 360.0f);
         return should_floor_angles ? floor(loc) : loc;
     });
 }
 
-void paint_radial_gradient(PaintContext& context, Gfx::IntRect const& gradient_rect, RadialGradientData const& data, Gfx::IntPoint center, Gfx::FloatSize size)
+void paint_radial_gradient(PaintContext& context, DevicePixelRect const& gradient_rect, RadialGradientData const& data, DevicePixelPoint center, Gfx::FloatSize size)
 {
     // A conservative guesstimate on how many colors we need to generate:
     auto max_dimension = max(gradient_rect.width(), gradient_rect.height());
-    int max_visible_gradient = max(max_dimension / 2, min(size.width(), max_dimension));
+    int max_visible_gradient = max(max_dimension.value() / 2, min(size.width(), max_dimension.value()));
     GradientLine gradient_line(max_visible_gradient, data.color_stops);
-    auto center_point = Gfx::FloatPoint { center }.translated(0.5, 0.5);
-    gradient_line.paint_into_rect(context.painter(), gradient_rect, [&](int x, int y) {
+    auto center_point = Gfx::FloatPoint { center.to_type<int>() }.translated(0.5, 0.5);
+    gradient_line.paint_into_rect(context.painter(), gradient_rect, [&](DevicePixels x, DevicePixels y) {
         // FIXME: See if there's a more efficient calculation we do there :^)
-        auto point = (Gfx::FloatPoint { x, y } - center_point);
+        auto point = context.scale_to_css_point({ x, y }).to_type<float>() - center_point;
         auto gradient_x = point.x() / size.width();
         auto gradient_y = point.y() / size.height();
         return AK::sqrt(gradient_x * gradient_x + gradient_y * gradient_y) * max_visible_gradient;
