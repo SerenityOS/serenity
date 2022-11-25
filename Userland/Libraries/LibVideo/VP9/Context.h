@@ -331,6 +331,11 @@ public:
 
     TXMode transform_mode;
 
+    // This group also is only needed for inter-predicted frames.
+    ReferenceMode reference_mode;
+    ReferenceFrameType fixed_reference_type;
+    ReferenceFramePair variable_reference_types;
+
 private:
     friend struct TileContext;
 

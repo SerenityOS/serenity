@@ -86,12 +86,11 @@ private:
     DecoderErrorOr<void> read_interp_filter_probs();
     DecoderErrorOr<void> read_is_inter_probs();
     DecoderErrorOr<void> frame_reference_mode(FrameContext&);
-    DecoderErrorOr<void> frame_reference_mode_probs();
+    DecoderErrorOr<void> frame_reference_mode_probs(FrameContext const&);
     DecoderErrorOr<void> read_y_mode_probs();
     DecoderErrorOr<void> read_partition_probs();
     DecoderErrorOr<void> mv_probs(FrameContext const&);
     DecoderErrorOr<u8> update_mv_prob(u8 prob);
-    void setup_compound_reference_mode(FrameContext&);
 
     /* (6.4) Decode Tiles Syntax */
     DecoderErrorOr<void> decode_tiles(FrameContext&);
@@ -169,9 +168,6 @@ private:
     u8 m_token_cache[1024];
     i32 m_tokens[1024];
     bool m_use_hp { false };
-    ReferenceMode m_reference_mode;
-    ReferenceFrameType m_comp_fixed_ref;
-    ReferenceFramePair m_comp_var_ref;
 
     bool m_use_prev_frame_mvs;
     Vector2D<FrameBlockContext> m_reusable_frame_block_contexts;
