@@ -175,6 +175,7 @@ private:
     ReferenceFramePair m_comp_var_ref;
 
     bool m_use_prev_frame_mvs;
+    Vector2D<FrameBlockContext> m_reusable_frame_block_contexts;
     Vector2D<PersistentBlockContext> m_previous_block_contexts;
     // Indexed by ReferenceFrame enum.
     u8 m_mode_context[4] { INVALID_CASE };

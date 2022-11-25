@@ -147,7 +147,10 @@ DecoderErrorOr<ColorRange> Parser::read_color_range()
 /* (6.2) */
 DecoderErrorOr<FrameContext> Parser::uncompressed_header()
 {
-    FrameContext frame_context;
+    // NOTE: m_reusable_frame_block_contexts does not need to retain any data between frame decodes.
+    //       This is only stored so that we don't need to allocate a frame's block contexts on each
+    //       call to this function, since it will rarely change sizes.
+    FrameContext frame_context { m_reusable_frame_block_contexts };
     frame_context.color_config = m_previous_color_config;
 
     auto frame_marker = TRY_READ(m_bit_stream->read_bits(2));

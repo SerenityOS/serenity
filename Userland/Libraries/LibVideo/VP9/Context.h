@@ -253,6 +253,11 @@ struct ColorConfig {
 
 struct FrameContext {
 public:
+    FrameContext(Vector2D<FrameBlockContext>& contexts)
+        : m_block_contexts(contexts)
+    {
+    }
+
     u8 profile { 0 };
 
     FrameType type { FrameType::KeyFrame };
@@ -338,7 +343,7 @@ private:
     //        arrays instead.
     //        I think should also apply to other fields that are only accessed relative to the current block. Worth looking
     //        into how much of this context needs to be stored for the whole frame vs a row or column from the current tile.
-    Vector2D<FrameBlockContext> m_block_contexts;
+    Vector2D<FrameBlockContext>& m_block_contexts;
 };
 
 struct TileContext {
