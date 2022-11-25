@@ -481,6 +481,36 @@ Messages::WebDriverClient::CloseWindowResponse WebDriverConnection::close_window
     return get_window_handles().take_response();
 }
 
+// 11.3 Switch to Window, https://w3c.github.io/webdriver/#dfn-switch-to-window
+Messages::WebDriverClient::SwitchToWindowResponse WebDriverConnection::switch_to_window(JsonValue const& payload)
+{
+    // 1. Let handle be the result of getting the property "handle" from the parameters argument.
+    // 2. If handle is undefined, return error with error code invalid argument.
+    auto handle = TRY(get_property(payload, "handle"sv));
+
+    // 3. If there is an active user prompt, that prevents the focusing of another top-level browsing
+    //    context, return error with error code unexpected alert open.
+    if (m_page_client.page().has_pending_dialog())
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::UnexpectedAlertOpen, "A user dialog is open"sv);
+
+    // 4. If handle is equal to the associated window handle for some top-level browsing context in the
+    //    current session, let context be the that browsing context, and set the current top-level
+    //    browsing context with context.
+    //    Otherwise, return error with error code no such window.
+    auto const& maybe_window = m_windows.get(handle);
+
+    if (!maybe_window.has_value())
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::NoSuchWindow, "Window not found");
+
+    m_current_window_handle = handle;
+
+    // FIXME: 5. Update any implementation-specific state that would result from the user selecting the current
+    //          browsing context for interaction, without altering OS-level focus.
+
+    // 6. Return success with data null.
+    return JsonValue {};
+}
+
 // 11.4 Get Window Handles, https://w3c.github.io/webdriver/#dfn-get-window-handles
 Messages::WebDriverClient::GetWindowHandlesResponse WebDriverConnection::get_window_handles()
 {

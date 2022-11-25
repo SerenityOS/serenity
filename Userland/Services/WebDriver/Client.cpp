@@ -322,6 +322,15 @@ Web::WebDriver::Response Client::close_window(Web::WebDriver::Parameters paramet
     return open_windows;
 }
 
+// 11.3 Switch to Window, https://w3c.github.io/webdriver/#dfn-switch-to-window
+// POST /session/{session id}/window
+Web::WebDriver::Response Client::switch_to_window(Web::WebDriver::Parameters parameters, AK::JsonValue payload)
+{
+    dbgln_if(WEBDRIVER_DEBUG, "Handling POST /session/<session_id>/window");
+    auto* session = TRY(find_session_with_id(parameters[0]));
+    return session->web_content_connection().switch_to_window(payload);
+}
+
 // 11.4 Get Window Handles, https://w3c.github.io/webdriver/#dfn-get-window-handles
 // GET /session/{session id}/window/handles
 Web::WebDriver::Response Client::get_window_handles(Web::WebDriver::Parameters parameters, JsonValue)
