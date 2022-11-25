@@ -59,6 +59,12 @@ public:
     {
         m_pending_jump = &label.block();
     }
+    void schedule_jump(Label const& label)
+    {
+        m_scheduled_jump = &label.block();
+        VERIFY(unwind_contexts().last().finalizer);
+        jump(Label { *unwind_contexts().last().finalizer });
+    }
     void do_return(Value return_value) { m_return_value = return_value; }
 
     void enter_unwind_context(Optional<Label> handler_target, Optional<Label> finalizer_target);
@@ -102,6 +108,7 @@ private:
     Realm& m_realm;
     Vector<Variant<NonnullOwnPtr<RegisterWindow>, RegisterWindow*>> m_register_windows;
     Optional<BasicBlock const*> m_pending_jump;
+    BasicBlock const* m_scheduled_jump { nullptr };
     Value m_return_value;
     Handle<Value> m_saved_return_value;
     Executable const* m_current_executable { nullptr };

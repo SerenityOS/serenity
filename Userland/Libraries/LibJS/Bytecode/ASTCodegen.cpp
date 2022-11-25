@@ -2168,17 +2168,11 @@ Bytecode::CodeGenerationErrorOr<void> BreakStatement::generate_bytecode(Bytecode
     //        We need to execute the finally block, but tell it to resume
     //        execution at the designated block
     if (m_target_label.is_null()) {
-        generator.perform_needed_unwinds<Bytecode::Op::Jump>(true);
-        generator.emit<Bytecode::Op::Jump>().set_targets(
-            generator.nearest_breakable_scope(),
-            {});
+        generator.generate_break();
         return {};
     }
 
-    auto target_to_jump_to = generator.perform_needed_unwinds_for_labelled_break_and_return_target_block(m_target_label);
-    generator.emit<Bytecode::Op::Jump>().set_targets(
-        target_to_jump_to,
-        {});
+    generator.generate_break(m_target_label);
     return {};
 }
 
@@ -2192,6 +2186,7 @@ Bytecode::CodeGenerationErrorOr<void> TryStatement::generate_bytecode(Bytecode::
     Bytecode::BasicBlock* next_block { nullptr };
 
     if (m_finalizer) {
+        // FIXME: See notes in Op.h->ScheduleJump
         auto& finalizer_block = generator.make_block();
         generator.switch_to_basic_block(finalizer_block);
         generator.emit<Bytecode::Op::LeaveUnwindContext>();

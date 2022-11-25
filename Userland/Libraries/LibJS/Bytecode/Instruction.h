@@ -78,6 +78,7 @@
     O(ResolveThisBinding)            \
     O(Return)                        \
     O(RightShift)                    \
+    O(ScheduleJump)                  \
     O(SetVariable)                   \
     O(Store)                         \
     O(StrictlyEquals)                \
