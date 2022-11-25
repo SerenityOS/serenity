@@ -85,10 +85,6 @@ static Layout::Node& insertion_parent_for_block_node(Layout::NodeWithStyle& layo
         return layout_parent;
     }
 
-    if ((layout_node.is_absolutely_positioned() || layout_node.is_floating()) && layout_parent.last_child()->children_are_inline() && layout_parent.last_child()->is_anonymous()) {
-        return *layout_parent.last_child();
-    }
-
     if (!layout_parent.children_are_inline()) {
         // Parent block has block-level children, insert this block into parent.
         return layout_parent;
