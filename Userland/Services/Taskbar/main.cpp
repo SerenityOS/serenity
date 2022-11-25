@@ -70,7 +70,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto menu = TRY(build_system_menu(window_ref));
     menu->realize_menu_if_needed();
 
-    auto window = TRY(TaskbarWindow::try_create(move(menu)));
+    auto window = TRY(TaskbarWindow::try_create());
+    window->add_system_menu(menu);
     window_ref.window = window.ptr();
 
     window->show();
