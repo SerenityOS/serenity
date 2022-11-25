@@ -790,6 +790,12 @@ void Call::replace_references_impl(Register from, Register to)
         m_this_value = to;
 }
 
+ThrowCompletionOr<void> ScheduleJump::execute_impl(Bytecode::Interpreter& interpreter) const
+{
+    interpreter.schedule_jump(m_target);
+    return {};
+}
+
 ThrowCompletionOr<void> LeaveEnvironment::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     if (m_mode == EnvironmentMode::Lexical)
@@ -1263,6 +1269,11 @@ DeprecatedString EnterUnwindContext::to_deprecated_string_impl(Bytecode::Executa
     auto handler_string = m_handler_target.has_value() ? DeprecatedString::formatted("{}", *m_handler_target) : "<empty>";
     auto finalizer_string = m_finalizer_target.has_value() ? DeprecatedString::formatted("{}", *m_finalizer_target) : "<empty>";
     return DeprecatedString::formatted("EnterUnwindContext handler:{} finalizer:{} entry:{}", handler_string, finalizer_string, m_entry_point);
+}
+
+DeprecatedString ScheduleJump::to_deprecated_string_impl(Bytecode::Executable const&) const
+{
+    return DeprecatedString::formatted("ScheduleJump {}", m_target);
 }
 
 DeprecatedString LeaveEnvironment::to_deprecated_string_impl(Bytecode::Executable const&) const

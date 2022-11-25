@@ -44,6 +44,7 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Executable const& e
     dbgln_if(JS_BYTECODE_DEBUG, "Bytecode::Interpreter will run unit {:p}", &executable);
 
     TemporaryChange restore_executable { m_current_executable, &executable };
+    TemporaryChange restore_saved_jump { m_scheduled_jump, static_cast<BasicBlock const*>(nullptr) };
     VERIFY(m_saved_exception.is_null());
 
     bool pushed_execution_context = false;
@@ -217,7 +218,14 @@ ThrowCompletionOr<void> Interpreter::continue_pending_unwind(Label const& resume
         return {};
     }
 
-    jump(resume_label);
+    if (m_scheduled_jump) {
+        // FIXME: If we `break` or `continue` in the finally, we need to clear
+        //        this field
+        jump(Label { *m_scheduled_jump });
+        m_scheduled_jump = nullptr;
+    } else {
+        jump(resume_label);
+    }
     return {};
 }
 

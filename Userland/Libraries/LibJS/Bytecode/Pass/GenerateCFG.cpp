@@ -134,6 +134,10 @@ static void generate_cfg_for_block(BasicBlock const& current_block, PassPipeline
             if (auto const* finalizer = unwind_frames.last()->finalizer)
                 enter_label(Label { *finalizer }, current_block);
             return;
+        case ScheduleJump:
+            enter_label(Label { *unwind_frames.last()->finalizer }, current_block);
+            enter_label(static_cast<Op::ScheduleJump const&>(instruction).target(), *unwind_frames.last()->finalizer);
+            return;
         default:
             dbgln("Unhandled terminator instruction: `{}`", instruction.to_deprecated_string(executable.executable));
             VERIFY_NOT_REACHED();
