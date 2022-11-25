@@ -73,15 +73,12 @@ private:
 
     /* (8.6) Reconstruction and Dequantization */
 
-    // FIXME: These should be inline or constexpr
-    u16 dc_q(u8 bit_depth, u8 b);
-    u16 ac_q(u8 bit_depth, u8 b);
     // Returns the quantizer index for the current block
-    u8 get_base_quantizer_index(BlockContext const&);
+    static u8 get_base_quantizer_index(BlockContext const&);
     // Returns the quantizer value for the dc coefficient for a particular plane
-    u16 get_dc_quantizer(BlockContext const&, u8 plane);
+    static u16 get_dc_quantizer(BlockContext const&, u8 plane);
     // Returns the quantizer value for the ac coefficient for a particular plane
-    u16 get_ac_quantizer(BlockContext const&, u8 plane);
+    static u16 get_ac_quantizer(BlockContext const&, u8 plane);
 
     // (8.6.2) Reconstruct process
     DecoderErrorOr<void> reconstruct(u8 plane, BlockContext const&, u32 transform_block_x, u32 transform_block_y, TXSize transform_block_size);

@@ -254,6 +254,11 @@ struct ColorConfig {
     bool subsampling_y { true };
 };
 
+struct SegmentFeature {
+    bool enabled { false };
+    u8 value { 0 };
+};
+
 struct FrameContext {
 public:
     FrameContext(Vector2D<FrameBlockContext>& contexts)
@@ -329,6 +334,15 @@ public:
         // From quantization_params( ) in the spec.
         return base_quantizer_index == 0 && y_dc_quantizer_index_delta == 0 && uv_dc_quantizer_index_delta == 0 && uv_ac_quantizer_index_delta == 0;
     }
+
+    bool segmentation_enabled { false };
+    // Note: We can use Optional<Array<...>> for these tree probabilities, but unfortunately it seems to have measurable performance overhead.
+    bool use_full_segment_id_tree { false };
+    Array<u8, 7> full_segment_id_tree_probabilities;
+    bool use_predicted_segment_id_tree { false };
+    Array<u8, 3> predicted_segment_id_tree_probabilities;
+    bool should_use_absolute_segment_base_quantizer { false };
+    Array<Array<SegmentFeature, SEG_LVL_MAX>, MAX_SEGMENTS> segmentation_features;
 
     u16 header_size_in_bytes { 0 };
 
