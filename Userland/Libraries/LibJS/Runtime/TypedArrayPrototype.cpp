@@ -1640,8 +1640,8 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::to_sorted)
     // 9. Let j be 0.
     // 10. Repeat, while j < len,
     for (size_t j = 0; j < length; j++) {
-        // Perform ! Set(A, ! ToString(𝔽(j)), sortedList[j], true).
-        MUST(return_array->create_data_property_or_throw(j, sorted_list[j]));
+        // a. Perform ! Set(A, ! ToString(𝔽(j)), sortedList[j], true).
+        MUST(return_array->set(j, sorted_list[j], Object::ShouldThrowExceptions::Yes));
         // b. Set j to j + 1.
     }
 
