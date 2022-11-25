@@ -1,0 +1,8 @@
+#import <DOM/HTMLCollection.idl>
+#import <HTML/RadioNodeList.idl>
+
+[Exposed=Window]
+interface HTMLFormControlsCollection : HTMLCollection {
+  getter (RadioNodeList or Element)? namedItem(DOMString name);
+};
+

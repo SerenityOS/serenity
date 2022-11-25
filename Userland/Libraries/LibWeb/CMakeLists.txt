@@ -202,6 +202,7 @@ set(SOURCES
     HTML/HTMLEmbedElement.cpp
     HTML/HTMLFieldSetElement.cpp
     HTML/HTMLFontElement.cpp
+    HTML/HTMLFormControlsCollection.cpp
     HTML/HTMLFormElement.cpp
     HTML/HTMLFrameElement.cpp
     HTML/HTMLFrameSetElement.cpp
@@ -272,6 +273,7 @@ set(SOURCES
     HTML/Parser/StackOfOpenElements.cpp
     HTML/Path2D.cpp
     HTML/PromiseRejectionEvent.cpp
+    HTML/RadioNodeList.cpp
     HTML/Scripting/ClassicScript.cpp
     HTML/Scripting/Environments.cpp
     HTML/Scripting/ExceptionReporter.cpp

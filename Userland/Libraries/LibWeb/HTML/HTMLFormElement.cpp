@@ -10,6 +10,7 @@
 #include <LibWeb/HTML/EventNames.h>
 #include <LibWeb/HTML/HTMLButtonElement.h>
 #include <LibWeb/HTML/HTMLFieldSetElement.h>
+#include <LibWeb/HTML/HTMLFormControlsCollection.h>
 #include <LibWeb/HTML/HTMLFormElement.h>
 #include <LibWeb/HTML/HTMLInputElement.h>
 #include <LibWeb/HTML/HTMLObjectElement.h>
@@ -184,10 +185,10 @@ static bool is_form_control(DOM::Element const& element)
 }
 
 // https://html.spec.whatwg.org/multipage/forms.html#dom-form-elements
-JS::NonnullGCPtr<DOM::HTMLCollection> HTMLFormElement::elements() const
+JS::NonnullGCPtr<HTML::HTMLFormControlsCollection> HTMLFormElement::elements() const
 {
     if (!m_elements) {
-        m_elements = DOM::HTMLCollection::create(const_cast<HTMLFormElement&>(*this), [](Element const& element) {
+        m_elements = HTML::HTMLFormControlsCollection::create(const_cast<HTMLFormElement&>(*this), [](Element const& element) {
             return is_form_control(element);
         });
     }

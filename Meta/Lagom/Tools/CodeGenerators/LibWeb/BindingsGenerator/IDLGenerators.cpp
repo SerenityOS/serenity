@@ -36,6 +36,7 @@ static bool is_platform_object(Type const& type)
         "NamedNodeMap"sv,
         "Node"sv,
         "Path2D"sv,
+        "RadioNodeList"sv,
         "Range"sv,
         "ReadableStream"sv,
         "Request"sv,

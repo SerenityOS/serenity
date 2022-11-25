@@ -1,0 +1,6 @@
+#import <DOM/NodeList.idl>
+
+[Exposed=Window]
+interface RadioNodeList : NodeList {
+  attribute DOMString value;
+};

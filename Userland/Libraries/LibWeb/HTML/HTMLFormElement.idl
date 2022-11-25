@@ -1,4 +1,4 @@
-#import <DOM/HTMLCollection.idl>
+#import <HTML/HTMLFormControlsCollection.idl>
 #import <HTML/HTMLElement.idl>
 
 // https://html.spec.whatwg.org/multipage/semantics.html#htmlformelement
@@ -12,8 +12,7 @@ interface HTMLFormElement : HTMLElement {
 
     undefined submit();
 
-    // FIXME: Should be a HTMLFormControlsCollection
-    [SameObject] readonly attribute HTMLCollection elements;
+    [SameObject] readonly attribute HTMLFormControlsCollection elements;
 
     readonly attribute unsigned long length;
 

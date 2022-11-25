@@ -7,6 +7,7 @@
 #pragma once
 
 #include <LibWeb/HTML/HTMLElement.h>
+#include <LibWeb/HTML/HTMLFormControlsCollection.h>
 #include <LibWeb/HTML/HTMLInputElement.h>
 
 namespace Web::HTML {
@@ -28,7 +29,7 @@ public:
     void add_associated_element(Badge<FormAssociatedElement>, HTMLElement&);
     void remove_associated_element(Badge<FormAssociatedElement>, HTMLElement&);
 
-    JS::NonnullGCPtr<DOM::HTMLCollection> elements() const;
+    JS::NonnullGCPtr<HTML::HTMLFormControlsCollection> elements() const;
     unsigned length() const;
 
 private:
@@ -40,7 +41,7 @@ private:
 
     Vector<JS::GCPtr<HTMLElement>> m_associated_elements;
 
-    JS::GCPtr<DOM::HTMLCollection> mutable m_elements;
+    JS::GCPtr<HTML::HTMLFormControlsCollection> mutable m_elements;
 };
 
 }
