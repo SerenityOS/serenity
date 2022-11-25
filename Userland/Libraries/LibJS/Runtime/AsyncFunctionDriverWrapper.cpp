@@ -36,8 +36,8 @@ ThrowCompletionOr<Value> AsyncFunctionDriverWrapper::react_to_async_task_complet
     auto& realm = *vm.current_realm();
 
     auto generator_result = is_successful
-        ? m_generator_object->next_impl(vm, value, {})
-        : m_generator_object->next_impl(vm, {}, value);
+        ? m_generator_object->resume(vm, value, {})
+        : m_generator_object->resume_abrupt(vm, throw_completion(value), {});
 
     if (generator_result.is_throw_completion()) {
         VERIFY(generator_result.throw_completion().type() == Completion::Type::Throw);
