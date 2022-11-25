@@ -194,6 +194,11 @@ ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::try_create_with_anonymous_buffer(BitmapFo
     return adopt_nonnull_ref_or_enomem(new (nothrow) Bitmap(format, move(buffer), size, scale_factor, palette));
 }
 
+ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::try_create_from_serialized_byte_buffer(ByteBuffer&& buffer)
+{
+    return try_create_from_serialized_bytes(buffer.bytes());
+}
+
 /// Read a bitmap as described by:
 /// - actual size
 /// - width
@@ -203,9 +208,9 @@ ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::try_create_with_anonymous_buffer(BitmapFo
 /// - palette count
 /// - palette data (= palette count * BGRA8888)
 /// - image data (= actual size * u8)
-ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::try_create_from_serialized_byte_buffer(ByteBuffer&& buffer)
+ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::try_create_from_serialized_bytes(ReadonlyBytes bytes)
 {
-    InputMemoryStream stream { buffer };
+    InputMemoryStream stream { bytes };
     size_t actual_size;
     unsigned width;
     unsigned height;
