@@ -57,10 +57,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto magnifier = TRY(window->try_set_main_widget<MagnifierWidget>());
 
     auto file_menu = TRY(window->try_add_menu("&File"));
-    TRY(file_menu->try_add_action(GUI::CommonActions::make_quit_action([&](auto&) {
-        app->quit();
-    })));
-
     TRY(file_menu->try_add_action(GUI::CommonActions::make_save_as_action([&](auto&) {
         AK::DeprecatedString filename = "file for saving";
         auto do_save = [&]() -> ErrorOr<void> {
@@ -83,6 +79,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             GUI::MessageBox::show(window, "Unable to save file.\n"sv, "Error"sv, GUI::MessageBox::Type::Error);
             warnln("Error saving bitmap to {}: {}", filename, result.error().string_literal());
         }
+    })));
+    TRY(file_menu->try_add_separator());
+    TRY(file_menu->try_add_action(GUI::CommonActions::make_quit_action([&](auto&) {
+        app->quit();
     })));
 
     auto size_action_group = make<GUI::ActionGroup>();
