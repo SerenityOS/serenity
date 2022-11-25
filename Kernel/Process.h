@@ -815,7 +815,7 @@ public:
         }
 
         virtual InodeIndex component_index() const override;
-        virtual ErrorOr<NonnullLockRefPtr<Inode>> to_inode(ProcFS const& procfs_instance) const override;
+        virtual ErrorOr<NonnullLockRefPtr<ProcFSInode>> to_inode(ProcFS const& procfs_instance) const override;
         virtual ErrorOr<void> traverse_as_directory(FileSystemID, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)>) const override;
         virtual mode_t required_mode() const override { return 0555; }
 

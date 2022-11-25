@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/FileSystem/ProcFS/DirectoryInode.h>
-#include <Kernel/FileSystem/ProcFS/LinkInode.h>
+#include <Kernel/FileSystem/ProcFS/Inode.h>
 #include <Kernel/KBufferBuilder.h>
 #include <Kernel/PerformanceEventBuffer.h>
 #include <Kernel/Process.h>
@@ -125,14 +124,14 @@ ErrorOr<size_t> ProcFSExposedLink::read_bytes(off_t offset, size_t count, UserOr
     return nread;
 }
 
-ErrorOr<NonnullLockRefPtr<Inode>> ProcFSExposedLink::to_inode(ProcFS const& procfs_instance) const
+ErrorOr<NonnullLockRefPtr<ProcFSInode>> ProcFSExposedLink::to_inode(ProcFS const& procfs_instance) const
 {
-    return TRY(ProcFSLinkInode::try_create(procfs_instance, *this));
+    return TRY(ProcFSInode::try_create_as_global_link_inode(procfs_instance, *this));
 }
 
-ErrorOr<NonnullLockRefPtr<Inode>> ProcFSExposedDirectory::to_inode(ProcFS const& procfs_instance) const
+ErrorOr<NonnullLockRefPtr<ProcFSInode>> ProcFSExposedDirectory::to_inode(ProcFS const& procfs_instance) const
 {
-    return TRY(ProcFSDirectoryInode::try_create(procfs_instance, *this));
+    return TRY(ProcFSInode::try_create_as_directory_inode(procfs_instance, *this));
 }
 
 void ProcFSExposedDirectory::add_component(ProcFSExposedComponent const&)

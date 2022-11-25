@@ -8,7 +8,7 @@
 #include <AK/JsonObjectSerializer.h>
 #include <AK/JsonValue.h>
 #include <Kernel/FileSystem/Custody.h>
-#include <Kernel/FileSystem/ProcFS/ProcessPropertyInode.h>
+#include <Kernel/FileSystem/ProcFS/Inode.h>
 #include <Kernel/InterruptDisabler.h>
 #include <Kernel/KBufferBuilder.h>
 #include <Kernel/Memory/AnonymousVMObject.h>
@@ -65,12 +65,12 @@ ErrorOr<NonnullLockRefPtr<Inode>> Process::lookup_stacks_directory(ProcFS const&
         return ENOENT;
     auto needle = maybe_needle.release_value();
 
-    ErrorOr<NonnullLockRefPtr<ProcFSProcessPropertyInode>> thread_stack_inode { ENOENT };
+    ErrorOr<NonnullLockRefPtr<ProcFSInode>> thread_stack_inode { ENOENT };
     for_each_thread([&](Thread const& thread) {
         int tid = thread.tid().value();
         VERIFY(!(tid < 0));
         if (needle == (unsigned)tid) {
-            thread_stack_inode = ProcFSProcessPropertyInode::try_create_for_thread_stack(procfs, thread.tid(), pid());
+            thread_stack_inode = ProcFSInode::try_create_as_thread_stack_inode(procfs, thread.tid(), pid());
             return IterationDecision::Break;
         }
         return IterationDecision::Continue;
@@ -105,7 +105,7 @@ ErrorOr<NonnullLockRefPtr<Inode>> Process::lookup_children_directory(ProcFS cons
     if (!child_process || child_process->ppid() != pid())
         return ENOENT;
 
-    return TRY(ProcFSProcessPropertyInode::try_create_for_child_process_link(procfs, *maybe_pid, pid()));
+    return TRY(ProcFSInode::try_create_as_child_process_link_inode(procfs, *maybe_pid, pid()));
 }
 
 ErrorOr<size_t> Process::procfs_get_child_proccess_link(ProcessID child_pid, KBufferBuilder& builder) const
@@ -153,7 +153,7 @@ ErrorOr<NonnullLockRefPtr<Inode>> Process::lookup_file_descriptions_directory(Pr
     if (!m_fds.with_shared([&](auto& fds) { return fds.get_if_valid(*maybe_index); }))
         return ENOENT;
 
-    return TRY(ProcFSProcessPropertyInode::try_create_for_file_description_link(procfs, *maybe_index, pid()));
+    return TRY(ProcFSInode::try_create_as_file_description_link_inode(procfs, *maybe_index, pid()));
 }
 
 ErrorOr<void> Process::procfs_get_pledge_stats(KBufferBuilder& builder) const

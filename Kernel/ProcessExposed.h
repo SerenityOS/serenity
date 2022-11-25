@@ -86,7 +86,7 @@ public:
         return {};
     }
 
-    virtual ErrorOr<NonnullLockRefPtr<Inode>> to_inode(ProcFS const& procfs_instance) const = 0;
+    virtual ErrorOr<NonnullLockRefPtr<ProcFSInode>> to_inode(ProcFS const& procfs_instance) const = 0;
 
     virtual InodeIndex component_index() const { return m_component_index; }
 
@@ -119,7 +119,7 @@ public:
     }
     virtual mode_t required_mode() const override { return 0555; }
 
-    virtual ErrorOr<NonnullLockRefPtr<Inode>> to_inode(ProcFS const& procfs_instance) const override final;
+    virtual ErrorOr<NonnullLockRefPtr<ProcFSInode>> to_inode(ProcFS const& procfs_instance) const override final;
 
 protected:
     explicit ProcFSExposedDirectory(StringView name);
@@ -130,7 +130,7 @@ protected:
 
 class ProcFSExposedLink : public ProcFSExposedComponent {
 public:
-    virtual ErrorOr<NonnullLockRefPtr<Inode>> to_inode(ProcFS const& procfs_instance) const override final;
+    virtual ErrorOr<NonnullLockRefPtr<ProcFSInode>> to_inode(ProcFS const& procfs_instance) const override final;
 
     virtual ErrorOr<size_t> read_bytes(off_t offset, size_t count, UserOrKernelBuffer& buffer, OpenFileDescription* description) const override;
 
