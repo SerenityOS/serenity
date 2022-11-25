@@ -151,7 +151,7 @@ jobs:
           mv wasm-new-results.json ../../libjs-website/wasm/data/results.json
 
       - name: Deploy to GitHub pages
-        uses: JamesIves/github-pages-deploy-action@4.1.1
+        uses: JamesIves/github-pages-deploy-action@v4.4.1
         with:
           git-config-name: BuggieBot
           git-config-email: buggiebot@serenityos.org
@@ -182,7 +182,7 @@ jobs:
           cpack -D CPACK_INSTALL_CMAKE_PROJECTS="$(pwd)/_deps/lagom-build;js;js;/"
 
       - name: Upload js package
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3.1.1
         with:
           name: serenity-js
           path: libjs-test262/Build/serenity-js.tar.gz
