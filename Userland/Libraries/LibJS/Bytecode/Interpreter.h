@@ -22,6 +22,7 @@ struct RegisterWindow {
     MarkedVector<Value> registers;
     MarkedVector<Environment*> saved_lexical_environments;
     MarkedVector<Environment*> saved_variable_environments;
+    Vector<UnwindInfo> unwind_contexts;
 };
 
 class Interpreter {
@@ -52,6 +53,7 @@ public:
 
     auto& saved_lexical_environment_stack() { return window().saved_lexical_environments; }
     auto& saved_variable_environment_stack() { return window().saved_variable_environments; }
+    auto& unwind_contexts() { return window().unwind_contexts; }
 
     void jump(Label const& label)
     {
@@ -98,7 +100,6 @@ private:
     Optional<BasicBlock const*> m_pending_jump;
     Value m_return_value;
     Executable const* m_current_executable { nullptr };
-    Vector<UnwindInfo> m_unwind_contexts;
     Handle<Value> m_saved_exception;
     OwnPtr<JS::Interpreter> m_ast_interpreter;
     BasicBlock const* m_current_block { nullptr };

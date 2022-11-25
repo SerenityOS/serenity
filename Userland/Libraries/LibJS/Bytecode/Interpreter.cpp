@@ -65,7 +65,7 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Executable const& e
     if (in_frame)
         m_register_windows.append(in_frame);
     else
-        m_register_windows.append(make<RegisterWindow>(MarkedVector<Value>(vm().heap()), MarkedVector<Environment*>(vm().heap()), MarkedVector<Environment*>(vm().heap())));
+        m_register_windows.append(make<RegisterWindow>(MarkedVector<Value>(vm().heap()), MarkedVector<Environment*>(vm().heap()), MarkedVector<Environment*>(vm().heap()), Vector<UnwindInfo> {}));
 
     registers().resize(executable.number_of_registers);
 
@@ -81,9 +81,9 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Executable const& e
             if (ran_or_error.is_error()) {
                 auto exception_value = *ran_or_error.throw_completion().value();
                 m_saved_exception = make_handle(exception_value);
-                if (m_unwind_contexts.is_empty())
+                if (unwind_contexts().is_empty())
                     break;
-                auto& unwind_context = m_unwind_contexts.last();
+                auto& unwind_context = unwind_contexts().last();
                 if (unwind_context.executable != m_current_executable)
                     break;
                 if (unwind_context.handler) {
@@ -92,7 +92,7 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Executable const& e
 
                     // If there's no finalizer, there's nowhere for the handler block to unwind to, so the unwind context is no longer needed.
                     if (!unwind_context.finalizer)
-                        m_unwind_contexts.take_last();
+                        unwind_contexts().take_last();
 
                     accumulator() = exception_value;
                     m_saved_exception = {};
@@ -101,7 +101,7 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Executable const& e
                 }
                 if (unwind_context.finalizer) {
                     m_current_block = unwind_context.finalizer;
-                    m_unwind_contexts.take_last();
+                    unwind_contexts().take_last();
                     will_jump = true;
                     break;
                 }
@@ -179,12 +179,12 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Executable const& e
 
 void Interpreter::enter_unwind_context(Optional<Label> handler_target, Optional<Label> finalizer_target)
 {
-    m_unwind_contexts.empend(m_current_executable, handler_target.has_value() ? &handler_target->block() : nullptr, finalizer_target.has_value() ? &finalizer_target->block() : nullptr);
+    unwind_contexts().empend(m_current_executable, handler_target.has_value() ? &handler_target->block() : nullptr, finalizer_target.has_value() ? &finalizer_target->block() : nullptr);
 }
 
 void Interpreter::leave_unwind_context()
 {
-    m_unwind_contexts.take_last();
+    unwind_contexts().take_last();
 }
 
 ThrowCompletionOr<void> Interpreter::continue_pending_unwind(Label const& resume_label)
