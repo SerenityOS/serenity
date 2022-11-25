@@ -298,6 +298,7 @@ public:
     Vector2D<FrameBlockContext> const& block_contexts() const { return m_block_contexts; }
 
     Gfx::Size<u32> render_size { 0, 0 };
+    Gfx::Size<u16> log2_of_tile_counts { 0, 0 };
 
     // This group of fields is only needed for inter-predicted frames.
     Array<u8, 3> reference_frame_indices;

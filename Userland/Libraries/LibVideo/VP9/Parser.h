@@ -69,9 +69,7 @@ private:
     DecoderErrorOr<i8> read_delta_q();
     DecoderErrorOr<void> segmentation_params();
     DecoderErrorOr<u8> read_prob();
-    DecoderErrorOr<void> tile_info(FrameContext&);
-    u16 calc_min_log2_tile_cols(u32 superblock_columns);
-    u16 calc_max_log2_tile_cols(u32 superblock_columns);
+    DecoderErrorOr<void> parse_tile_counts(FrameContext&);
     void setup_past_independence();
 
     /* (6.3) Compressed Header Syntax */
@@ -156,8 +154,6 @@ private:
     bool m_segmentation_update_map { false };
     bool m_segmentation_temporal_update { false };
     bool m_segmentation_abs_or_delta_update { false };
-    u16 m_tile_cols_log2 { 0 };
-    u16 m_tile_rows_log2 { 0 };
 
     // FIXME: Move above and left contexts to structs
     Array<Vector<bool>, 3> m_above_nonzero_context;
