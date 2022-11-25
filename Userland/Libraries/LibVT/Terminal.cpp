@@ -781,7 +781,7 @@ void Terminal::scroll_up(u16 region_top, u16 region_bottom, size_t count)
     }
     // Set dirty flag on swapped lines.
     // The other lines have implicitly been set dirty by being cleared.
-    for (u16 row = region_top; row <= region_bottom - count; ++row)
+    for (u16 row = region_top; row + count <= region_bottom; ++row)
         active_buffer()[row].set_dirty(true);
     m_client.terminal_history_changed(history_delta);
 }
