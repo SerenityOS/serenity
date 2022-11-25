@@ -1600,6 +1600,8 @@ Bytecode::CodeGenerationErrorOr<void> YieldExpression::generate_bytecode(Bytecod
 
     if (m_argument)
         TRY(m_argument->generate_bytecode(generator));
+    else
+        generator.emit<Bytecode::Op::LoadImmediate>(js_undefined());
 
     auto& continuation_block = generator.make_block();
     generator.emit<Bytecode::Op::Yield>(Bytecode::Label { continuation_block });
