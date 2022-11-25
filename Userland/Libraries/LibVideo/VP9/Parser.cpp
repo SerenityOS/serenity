@@ -553,7 +553,7 @@ DecoderErrorOr<void> Parser::compressed_header(FrameContext& frame_context)
             TRY(read_interp_filter_probs());
         TRY(read_is_inter_probs());
         TRY(frame_reference_mode(frame_context));
-        TRY(frame_reference_mode_probs());
+        TRY(frame_reference_mode_probs(frame_context));
         TRY(read_y_mode_probs());
         TRY(read_partition_probs());
         TRY(mv_probs(frame_context));
@@ -690,49 +690,68 @@ DecoderErrorOr<void> Parser::read_is_inter_probs()
     return {};
 }
 
+static void setup_compound_reference_mode(FrameContext& frame_context)
+{
+    ReferenceFrameType fixed_reference;
+    ReferenceFramePair variable_references;
+    if (frame_context.reference_frame_sign_biases[LastFrame] == frame_context.reference_frame_sign_biases[GoldenFrame]) {
+        fixed_reference = AltRefFrame;
+        variable_references = { LastFrame, GoldenFrame };
+    } else if (frame_context.reference_frame_sign_biases[LastFrame] == frame_context.reference_frame_sign_biases[AltRefFrame]) {
+        fixed_reference = GoldenFrame;
+        variable_references = { LastFrame, AltRefFrame };
+    } else {
+        fixed_reference = LastFrame;
+        variable_references = { GoldenFrame, AltRefFrame };
+    }
+    frame_context.fixed_reference_type = fixed_reference;
+    frame_context.variable_reference_types = variable_references;
+}
+
 DecoderErrorOr<void> Parser::frame_reference_mode(FrameContext& frame_context)
 {
-    // FIXME: These fields and the ones set in setup_compound_reference_mode should probably be contained by a field,
-    //        since they are all used to set the reference frames later in one function (I think).
     auto compound_reference_allowed = false;
     for (size_t i = 2; i <= REFS_PER_FRAME; i++) {
         if (frame_context.reference_frame_sign_biases[i] != frame_context.reference_frame_sign_biases[1])
             compound_reference_allowed = true;
     }
+    ReferenceMode reference_mode;
     if (compound_reference_allowed) {
         auto non_single_reference = TRY_READ(m_bit_stream->read_literal(1));
         if (non_single_reference == 0) {
-            m_reference_mode = SingleReference;
+            reference_mode = SingleReference;
         } else {
             auto reference_select = TRY_READ(m_bit_stream->read_literal(1));
             if (reference_select == 0)
-                m_reference_mode = CompoundReference;
+                reference_mode = CompoundReference;
             else
-                m_reference_mode = ReferenceModeSelect;
-            setup_compound_reference_mode(frame_context);
+                reference_mode = ReferenceModeSelect;
         }
     } else {
-        m_reference_mode = SingleReference;
+        reference_mode = SingleReference;
     }
+    frame_context.reference_mode = reference_mode;
+    if (reference_mode != SingleReference)
+        setup_compound_reference_mode(frame_context);
     return {};
 }
 
-DecoderErrorOr<void> Parser::frame_reference_mode_probs()
+DecoderErrorOr<void> Parser::frame_reference_mode_probs(FrameContext const& frame_context)
 {
-    if (m_reference_mode == ReferenceModeSelect) {
+    if (frame_context.reference_mode == ReferenceModeSelect) {
         for (auto i = 0; i < COMP_MODE_CONTEXTS; i++) {
             auto& comp_mode_prob = m_probability_tables->comp_mode_prob();
             comp_mode_prob[i] = TRY(diff_update_prob(comp_mode_prob[i]));
         }
     }
-    if (m_reference_mode != CompoundReference) {
+    if (frame_context.reference_mode != CompoundReference) {
         for (auto i = 0; i < REF_CONTEXTS; i++) {
             auto& single_ref_prob = m_probability_tables->single_ref_prob();
             single_ref_prob[i][0] = TRY(diff_update_prob(single_ref_prob[i][0]));
             single_ref_prob[i][1] = TRY(diff_update_prob(single_ref_prob[i][1]));
         }
     }
-    if (m_reference_mode != SingleReference) {
+    if (frame_context.reference_mode != SingleReference) {
         for (auto i = 0; i < REF_CONTEXTS; i++) {
             auto& comp_ref_prob = m_probability_tables->comp_ref_prob();
             comp_ref_prob[i] = TRY(diff_update_prob(comp_ref_prob[i]));
@@ -816,23 +835,6 @@ DecoderErrorOr<u8> Parser::update_mv_prob(u8 prob)
         return (TRY_READ(m_bit_stream->read_literal(7)) << 1u) | 1u;
     }
     return prob;
-}
-
-void Parser::setup_compound_reference_mode(FrameContext& frame_context)
-{
-    if (frame_context.reference_frame_sign_biases[LastFrame] == frame_context.reference_frame_sign_biases[GoldenFrame]) {
-        m_comp_fixed_ref = AltRefFrame;
-        m_comp_var_ref[0] = LastFrame;
-        m_comp_var_ref[1] = GoldenFrame;
-    } else if (frame_context.reference_frame_sign_biases[LastFrame] == frame_context.reference_frame_sign_biases[AltRefFrame]) {
-        m_comp_fixed_ref = GoldenFrame;
-        m_comp_var_ref[0] = LastFrame;
-        m_comp_var_ref[1] = AltRefFrame;
-    } else {
-        m_comp_fixed_ref = LastFrame;
-        m_comp_var_ref[0] = GoldenFrame;
-        m_comp_var_ref[1] = AltRefFrame;
-    }
 }
 
 DecoderErrorOr<void> Parser::decode_tiles(FrameContext& frame_context)
@@ -1203,23 +1205,24 @@ DecoderErrorOr<void> Parser::read_ref_frames(BlockContext& block_context, FrameB
         block_context.reference_frame_types = { static_cast<ReferenceFrameType>(m_feature_data[block_context.segment_id][SEG_LVL_REF_FRAME]), None };
         return {};
     }
-    ReferenceMode comp_mode;
-    if (m_reference_mode == ReferenceModeSelect)
-        comp_mode = TRY_READ(TreeParser::parse_comp_mode(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter, m_comp_fixed_ref, above_context, left_context));
-    else
-        comp_mode = m_reference_mode;
-    if (comp_mode == CompoundReference) {
-        // FIXME: Make reference frame pairs be indexed by an enum of FixedReference or VariableReference?
-        auto fixed_reference_index = block_context.frame_context.reference_frame_sign_biases[m_comp_fixed_ref];
+
+    ReferenceMode compound_mode = block_context.frame_context.reference_mode;
+    auto fixed_reference = block_context.frame_context.fixed_reference_type;
+    if (compound_mode == ReferenceModeSelect)
+        compound_mode = TRY_READ(TreeParser::parse_comp_mode(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter, fixed_reference, above_context, left_context));
+    if (compound_mode == CompoundReference) {
+        auto secondary_reference = block_context.frame_context.variable_reference_types;
+        auto fixed_reference_index = block_context.frame_context.reference_frame_sign_biases[fixed_reference];
         auto variable_reference_index = !fixed_reference_index;
 
         // FIXME: Create an enum for compound frame references using names Primary and Secondary.
-        auto comp_ref = TRY_READ(TreeParser::parse_comp_ref(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter, m_comp_fixed_ref, m_comp_var_ref, variable_reference_index, above_context, left_context));
+        auto secondary_reference_selection = TRY_READ(TreeParser::parse_comp_ref(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter, fixed_reference, secondary_reference, variable_reference_index, above_context, left_context));
 
-        block_context.reference_frame_types[fixed_reference_index] = m_comp_fixed_ref;
-        block_context.reference_frame_types[variable_reference_index] = m_comp_var_ref[comp_ref];
+        block_context.reference_frame_types[fixed_reference_index] = fixed_reference;
+        block_context.reference_frame_types[variable_reference_index] = secondary_reference[secondary_reference_selection];
         return {};
     }
+
     // FIXME: Maybe consolidate this into a tree. Context is different between part 1 and 2 but still, it would look nice here.
     auto single_ref_p1 = TRY_READ(TreeParser::parse_single_ref_part_1(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter, above_context, left_context));
     if (single_ref_p1) {
