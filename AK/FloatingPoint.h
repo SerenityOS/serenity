@@ -15,6 +15,26 @@ namespace AK {
 template<typename T>
 union FloatExtractor;
 
+#ifdef AK_HAS_FLOAT_128
+template<>
+union FloatExtractor<f128> {
+    static constexpr int mantissa_bits = 112;
+    static constexpr unsigned __int128 mantissa_max = (((unsigned __int128)1) << 112) - 1;
+    static constexpr int exponent_bias = 16383;
+    static constexpr int exponent_bits = 15;
+    static constexpr unsigned exponent_max = 32767;
+    struct {
+        unsigned __int128 mantissa : 112;
+        unsigned exponent : 15;
+        unsigned sign : 1;
+    };
+    f128 d;
+};
+// Validate that f128 and the FloatExtractor union are 128 bits.
+static_assert(sizeof(f128) == 16);
+static_assert(sizeof(FloatExtractor<f128>) == 16);
+#endif
+
 #ifdef AK_HAS_FLOAT_80
 template<>
 union FloatExtractor<f80> {
