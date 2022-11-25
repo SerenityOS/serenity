@@ -263,7 +263,7 @@ DecoderErrorOr<FrameContext> Parser::uncompressed_header()
     TRY(loop_filter_params(frame_context));
     TRY(quantization_params(frame_context));
     TRY(segmentation_params());
-    TRY(tile_info(frame_context));
+    TRY(parse_tile_counts(frame_context));
 
     frame_context.header_size_in_bytes = TRY_READ(m_bit_stream->read_f16());
 
@@ -482,26 +482,7 @@ DecoderErrorOr<u8> Parser::read_prob()
     return 255;
 }
 
-DecoderErrorOr<void> Parser::tile_info(FrameContext& frame_context)
-{
-    auto superblock_columns = frame_context.superblock_columns();
-    auto min_log2_tile_cols = calc_min_log2_tile_cols(superblock_columns);
-    auto max_log2_tile_cols = calc_max_log2_tile_cols(superblock_columns);
-    m_tile_cols_log2 = min_log2_tile_cols;
-    while (m_tile_cols_log2 < max_log2_tile_cols) {
-        if (TRY_READ(m_bit_stream->read_bit()))
-            m_tile_cols_log2++;
-        else
-            break;
-    }
-    m_tile_rows_log2 = TRY_READ(m_bit_stream->read_bit());
-    if (m_tile_rows_log2) {
-        m_tile_rows_log2 += TRY_READ(m_bit_stream->read_bit());
-    }
-    return {};
-}
-
-u16 Parser::calc_min_log2_tile_cols(u32 superblock_columns)
+static u16 calc_min_log2_of_tile_columns(u32 superblock_columns)
 {
     auto min_log_2 = 0u;
     while ((u32)(MAX_TILE_WIDTH_B64 << min_log_2) < superblock_columns)
@@ -509,12 +490,33 @@ u16 Parser::calc_min_log2_tile_cols(u32 superblock_columns)
     return min_log_2;
 }
 
-u16 Parser::calc_max_log2_tile_cols(u32 superblock_columns)
+static u16 calc_max_log2_tile_cols(u32 superblock_columns)
 {
     u16 max_log_2 = 1;
     while ((superblock_columns >> max_log_2) >= MIN_TILE_WIDTH_B64)
         max_log_2++;
     return max_log_2 - 1;
+}
+
+DecoderErrorOr<void> Parser::parse_tile_counts(FrameContext& frame_context)
+{
+    auto superblock_columns = frame_context.superblock_columns();
+
+    auto log2_of_tile_columns = calc_min_log2_of_tile_columns(superblock_columns);
+    auto log2_of_tile_columns_maximum = calc_max_log2_tile_cols(superblock_columns);
+    while (log2_of_tile_columns < log2_of_tile_columns_maximum) {
+        if (TRY_READ(m_bit_stream->read_bit()))
+            log2_of_tile_columns++;
+        else
+            break;
+    }
+
+    u16 log2_of_tile_rows = TRY_READ(m_bit_stream->read_bit());
+    if (log2_of_tile_rows > 0) {
+        log2_of_tile_rows += TRY_READ(m_bit_stream->read_bit());
+    }
+    frame_context.log2_of_tile_counts = Gfx::Size<u16>(log2_of_tile_columns, log2_of_tile_rows);
+    return {};
 }
 
 void Parser::setup_past_independence()
@@ -833,8 +835,9 @@ void Parser::setup_compound_reference_mode(FrameContext& frame_context)
 
 DecoderErrorOr<void> Parser::decode_tiles(FrameContext& frame_context)
 {
-    auto tile_cols = 1 << m_tile_cols_log2;
-    auto tile_rows = 1 << m_tile_rows_log2;
+    auto log2_dimensions = frame_context.log2_of_tile_counts;
+    auto tile_cols = 1 << log2_dimensions.width();
+    auto tile_rows = 1 << log2_dimensions.height();
     clear_above_context(frame_context);
 
     for (auto tile_row = 0; tile_row < tile_rows; tile_row++) {
@@ -846,10 +849,10 @@ DecoderErrorOr<void> Parser::decode_tiles(FrameContext& frame_context)
             else
                 tile_size = TRY_READ(m_bit_stream->read_bits(32));
 
-            auto rows_start = get_tile_offset(tile_row, frame_context.rows(), m_tile_rows_log2);
-            auto rows_end = get_tile_offset(tile_row + 1, frame_context.rows(), m_tile_rows_log2);
-            auto columns_start = get_tile_offset(tile_col, frame_context.columns(), m_tile_cols_log2);
-            auto columns_end = get_tile_offset(tile_col + 1, frame_context.columns(), m_tile_cols_log2);
+            auto rows_start = get_tile_offset(tile_row, frame_context.rows(), log2_dimensions.height());
+            auto rows_end = get_tile_offset(tile_row + 1, frame_context.rows(), log2_dimensions.height());
+            auto columns_start = get_tile_offset(tile_col, frame_context.columns(), log2_dimensions.width());
+            auto columns_end = get_tile_offset(tile_col + 1, frame_context.columns(), log2_dimensions.width());
 
             auto tile_context = TileContext(frame_context, rows_start, rows_end, columns_start, columns_end);
 
