@@ -1591,6 +1591,25 @@ Bytecode::CodeGenerationErrorOr<void> YieldExpression::generate_bytecode(Bytecod
 {
     VERIFY(generator.is_in_generator_function());
 
+    auto received_completion_register = generator.allocate_register();
+    auto received_completion_type_register = generator.allocate_register();
+    auto received_completion_value_register = generator.allocate_register();
+
+    auto type_identifier = generator.intern_identifier("type");
+    auto value_identifier = generator.intern_identifier("value");
+
+    auto get_received_completion_type_and_value = [&]() {
+        // The accumulator is set to an object, for example: { "type": 1 (normal), value: 1337 }
+        generator.emit<Bytecode::Op::Store>(received_completion_register);
+
+        generator.emit<Bytecode::Op::GetById>(type_identifier);
+        generator.emit<Bytecode::Op::Store>(received_completion_type_register);
+
+        generator.emit<Bytecode::Op::Load>(received_completion_register);
+        generator.emit<Bytecode::Op::GetById>(value_identifier);
+        generator.emit<Bytecode::Op::Store>(received_completion_value_register);
+    };
+
     if (m_is_yield_from) {
         return Bytecode::CodeGenerationError {
             this,
@@ -1606,6 +1625,41 @@ Bytecode::CodeGenerationErrorOr<void> YieldExpression::generate_bytecode(Bytecod
     auto& continuation_block = generator.make_block();
     generator.emit<Bytecode::Op::Yield>(Bytecode::Label { continuation_block });
     generator.switch_to_basic_block(continuation_block);
+    get_received_completion_type_and_value();
+
+    auto& normal_completion_continuation_block = generator.make_block();
+    auto& throw_completion_continuation_block = generator.make_block();
+
+    generator.emit<Bytecode::Op::LoadImmediate>(Value(to_underlying(Completion::Type::Normal)));
+    generator.emit<Bytecode::Op::StrictlyEquals>(received_completion_type_register);
+    generator.emit<Bytecode::Op::JumpConditional>(
+        Bytecode::Label { normal_completion_continuation_block },
+        Bytecode::Label { throw_completion_continuation_block });
+
+    auto& throw_value_block = generator.make_block();
+    auto& return_value_block = generator.make_block();
+
+    generator.switch_to_basic_block(throw_completion_continuation_block);
+    generator.emit<Bytecode::Op::LoadImmediate>(Value(to_underlying(Completion::Type::Throw)));
+    generator.emit<Bytecode::Op::StrictlyEquals>(received_completion_type_register);
+
+    // If type is not equal to "throw" or "normal", assume it's "return".
+    generator.emit<Bytecode::Op::JumpConditional>(
+        Bytecode::Label { throw_value_block },
+        Bytecode::Label { return_value_block });
+
+    generator.switch_to_basic_block(throw_value_block);
+    generator.emit<Bytecode::Op::Load>(received_completion_value_register);
+    generator.perform_needed_unwinds<Bytecode::Op::Throw>();
+    generator.emit<Bytecode::Op::Throw>();
+
+    generator.switch_to_basic_block(return_value_block);
+    generator.emit<Bytecode::Op::Load>(received_completion_value_register);
+    generator.perform_needed_unwinds<Bytecode::Op::Yield>();
+    generator.emit<Bytecode::Op::Yield>(nullptr);
+
+    generator.switch_to_basic_block(normal_completion_continuation_block);
+    generator.emit<Bytecode::Op::Load>(received_completion_value_register);
     return {};
 }
 

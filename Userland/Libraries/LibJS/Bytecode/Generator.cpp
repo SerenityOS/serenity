@@ -29,6 +29,8 @@ CodeGenerationErrorOr<NonnullOwnPtr<Executable>> Generator::generate(ASTNode con
         auto& start_block = generator.make_block();
         generator.emit<Bytecode::Op::Yield>(Label { start_block });
         generator.switch_to_basic_block(start_block);
+        // NOTE: This doesn't have to handle received throw/return completions, as GeneratorObject::resume_abrupt
+        //       will not enter the generator from the SuspendedStart state and immediately completes the generator.
     }
     TRY(node.generate_bytecode(generator));
     if (generator.is_in_generator_or_async_function()) {
