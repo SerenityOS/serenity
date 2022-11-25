@@ -9,6 +9,7 @@
 
 #include <LibGfx/Rect.h>
 #include <LibWeb/Page/Page.h>
+#include <LibWeb/PixelUnits.h>
 #include <WebContent/Forward.h>
 
 namespace WebContent {
@@ -26,11 +27,12 @@ public:
     virtual Web::Page& page() override { return *m_page; }
     virtual Web::Page const& page() const override { return *m_page; }
 
-    virtual void paint(Gfx::IntRect const& content_rect, Gfx::Bitmap&) override;
+    virtual void paint(Web::DevicePixelRect const& content_rect, Gfx::Bitmap&) override;
 
     void set_palette_impl(Gfx::PaletteImpl const&);
     void set_viewport_rect(Gfx::IntRect const&);
-    void set_screen_rects(Vector<Gfx::IntRect, 4> const& rects, size_t main_screen_index) { m_screen_rect = rects[main_screen_index]; };
+    void set_screen_rects(Vector<Gfx::IntRect, 4> const& rects, size_t main_screen_index) { m_screen_rect = rects[main_screen_index].to_type<Web::DevicePixels>(); }
+    void set_screen_display_scale(float device_pixels_per_css_pixel) { m_screen_display_scale = device_pixels_per_css_pixel; }
     void set_preferred_color_scheme(Web::CSS::PreferredColorScheme);
     void set_should_show_line_box_borders(bool b) { m_should_show_line_box_borders = b; }
     void set_has_focus(bool);
@@ -38,7 +40,7 @@ public:
     void set_window_position(Gfx::IntPoint);
     void set_window_size(Gfx::IntSize);
 
-    Gfx::IntSize content_size() const { return m_content_size; }
+    Web::DevicePixelSize content_size() const { return m_content_size; }
 
     ErrorOr<void> connect_to_webdriver(DeprecatedString const& webdriver_ipc_path);
 
@@ -50,7 +52,8 @@ private:
     // ^PageClient
     virtual bool is_connection_open() const override;
     virtual Gfx::Palette palette() const override;
-    virtual Gfx::IntRect screen_rect() const override { return m_screen_rect; }
+    virtual Web::DevicePixelRect screen_rect() const override { return m_screen_rect; }
+    virtual float device_pixels_per_css_pixel() const override { return m_screen_display_scale; }
     virtual Web::CSS::PreferredColorScheme preferred_color_scheme() const override { return m_preferred_color_scheme; }
     virtual void page_did_invalidate(Gfx::IntRect const&) override;
     virtual void page_did_change_selection() override;
@@ -104,8 +107,10 @@ private:
     ConnectionFromClient& m_client;
     NonnullOwnPtr<Web::Page> m_page;
     RefPtr<Gfx::PaletteImpl> m_palette_impl;
-    Gfx::IntRect m_screen_rect;
-    Gfx::IntSize m_content_size;
+    Web::DevicePixelRect m_screen_rect;
+    Web::DevicePixelSize m_content_size;
+    // FIXME: Actually set this based on the device's pixel ratio.
+    float m_screen_display_scale { 1.0f };
     bool m_should_show_line_box_borders { false };
     bool m_has_focus { false };
 

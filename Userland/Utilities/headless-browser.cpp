@@ -73,23 +73,24 @@ public:
         page().load(url);
     }
 
-    virtual void paint(Gfx::IntRect const& content_rect, Gfx::Bitmap& target) override
+    virtual void paint(Web::DevicePixelRect const& content_rect, Gfx::Bitmap& target) override
     {
         Gfx::Painter painter(target);
+        Gfx::IntRect int_content_rect { content_rect.x().value(), content_rect.y().value(), content_rect.width().value(), content_rect.height().value() };
 
         if (auto* document = page().top_level_browsing_context().active_document())
             document->update_layout();
 
-        painter.fill_rect({ {}, content_rect.size() }, palette().base());
+        painter.fill_rect({ {}, int_content_rect.size() }, palette().base());
 
         auto* layout_root = this->layout_root();
         if (!layout_root) {
             return;
         }
 
-        Web::PaintContext context(painter, palette(), content_rect.top_left());
+        Web::PaintContext context(painter, palette(), int_content_rect.top_left());
         context.set_should_show_line_box_borders(false);
-        context.set_viewport_rect(content_rect);
+        context.set_viewport_rect(int_content_rect);
         context.set_has_focus(true);
         layout_root->paint_all_phases(context);
     }
@@ -104,7 +105,7 @@ public:
         page().top_level_browsing_context().set_viewport_rect(viewport_rect);
     }
 
-    void set_screen_rect(Gfx::IntRect screen_rect)
+    void set_screen_rect(Web::DevicePixelRect screen_rect)
     {
         m_screen_rect = screen_rect;
     }
@@ -141,9 +142,14 @@ public:
         return Gfx::Palette(*m_palette_impl);
     }
 
-    virtual Gfx::IntRect screen_rect() const override
+    virtual Web::DevicePixelRect screen_rect() const override
     {
         return m_screen_rect;
+    }
+
+    virtual float device_pixels_per_css_pixel() const override
+    {
+        return 1.0f;
     }
 
     virtual Web::CSS::PreferredColorScheme preferred_color_scheme() const override
@@ -259,7 +265,7 @@ private:
     NonnullOwnPtr<Web::Page> m_page;
 
     RefPtr<Gfx::PaletteImpl> m_palette_impl;
-    Gfx::IntRect m_screen_rect { 0, 0, 800, 600 };
+    Web::DevicePixelRect m_screen_rect { 0, 0, 800, 600 };
     Web::CSS::PreferredColorScheme m_preferred_color_scheme { Web::CSS::PreferredColorScheme::Auto };
 
     RefPtr<WebContent::WebDriverConnection> m_webdriver;
@@ -699,7 +705,7 @@ static void load_page_for_screenshot_and_exit(HeadlessBrowserPageClient& page_cl
             auto output_file = MUST(Core::Stream::File::open(output_file_path, Core::Stream::OpenMode::Write));
 
             auto output_rect = page_client.screen_rect();
-            auto output_bitmap = MUST(Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRx8888, output_rect.size()));
+            auto output_bitmap = MUST(Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRx8888, output_rect.size().to_type<int>()));
 
             page_client.paint(output_rect, output_bitmap);
 

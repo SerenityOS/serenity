@@ -673,12 +673,12 @@ Optional<CSS::MediaFeatureValue> Window::query_media_feature(CSS::MediaFeatureID
     // FIXME: device-aspect-ratio
     case CSS::MediaFeatureID::DeviceHeight:
         if (auto* page = this->page()) {
-            return CSS::MediaFeatureValue(CSS::Length::make_px(page->screen_rect().height()));
+            return CSS::MediaFeatureValue(CSS::Length::make_px(page->web_exposed_screen_area().height().value()));
         }
         return CSS::MediaFeatureValue(0);
     case CSS::MediaFeatureID::DeviceWidth:
         if (auto* page = this->page()) {
-            return CSS::MediaFeatureValue(CSS::Length::make_px(page->screen_rect().width()));
+            return CSS::MediaFeatureValue(CSS::Length::make_px(page->web_exposed_screen_area().width().value()));
         }
         return CSS::MediaFeatureValue(0);
     case CSS::MediaFeatureID::DisplayMode:
