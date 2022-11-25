@@ -226,9 +226,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
 
         mark_selected_item();
-
-        auto window_height = app_state.visible_result_count * 40 + text_box.height() + 28;
-        window->resize(GUI::Desktop::the().rect().width() / 3, window_height);
+        Core::deferred_invoke([&] { window->resize(GUI::Desktop::the().rect().width() / 3, {}); });
     });
 
     db.on_new_results = [&](auto results) {
@@ -243,9 +241,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     };
 
     window->set_window_type(GUI::WindowType::Popup);
-    window->set_obey_widget_min_size(false);
     window->set_forced_shadow(true);
-    window->resize(GUI::Desktop::the().rect().width() / 3, 46);
+    window->resize(GUI::Desktop::the().rect().width() / 3, {});
     window->center_on_screen();
     window->move_to(window->x(), window->y() - (GUI::Desktop::the().rect().height() * 0.33));
     window->show();
