@@ -88,6 +88,7 @@ private:
     virtual Messages::WebDriverClient::SendAlertTextResponse send_alert_text(JsonValue const& payload) override;
     virtual Messages::WebDriverClient::TakeScreenshotResponse take_screenshot() override;
     virtual Messages::WebDriverClient::TakeElementScreenshotResponse take_element_screenshot(String const& element_id) override;
+    virtual Messages::WebDriverClient::PrintPageResponse print_page() override;
 
     ErrorOr<void, Web::WebDriver::Error> ensure_open_top_level_browsing_context();
     ErrorOr<void, Web::WebDriver::Error> handle_any_user_prompts();

@@ -53,4 +53,5 @@ endpoint WebDriverClient {
     send_alert_text(JsonValue payload) => (Web::WebDriver::Response response)
     take_screenshot() => (Web::WebDriver::Response response)
     take_element_screenshot(String element_id) => (Web::WebDriver::Response response)
+    print_page() => (Web::WebDriver::Response response)
 }
