@@ -68,8 +68,8 @@ extern ctor_func_t end_heap_ctors[];
 extern ctor_func_t start_ctors[];
 extern ctor_func_t end_ctors[];
 
-extern size_t __stack_chk_guard;
-READONLY_AFTER_INIT size_t __stack_chk_guard __attribute__((used));
+extern uintptr_t __stack_chk_guard;
+READONLY_AFTER_INIT uintptr_t __stack_chk_guard __attribute__((used));
 
 extern "C" u8 start_of_safemem_text[];
 extern "C" u8 end_of_safemem_text[];
@@ -234,7 +234,7 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT void init(BootInfo const& boot_info)
     // Initialize TimeManagement before using randomness!
     TimeManagement::initialize(0);
 
-    __stack_chk_guard = get_fast_random<size_t>();
+    __stack_chk_guard = get_fast_random<uintptr_t>();
 
     ProcFSComponentRegistry::initialize();
     JailManagement::the();
