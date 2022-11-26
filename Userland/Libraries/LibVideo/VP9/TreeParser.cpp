@@ -229,7 +229,7 @@ ErrorOr<bool> TreeParser::parse_skip(BitStream& bit_stream, ProbabilityTables co
     return value;
 }
 
-ErrorOr<TXSize> TreeParser::parse_tx_size(BitStream& bit_stream, ProbabilityTables const& probability_table, SyntaxElementCounter& counter, TXSize max_tx_size, FrameBlockContext above, FrameBlockContext left)
+ErrorOr<TransformSize> TreeParser::parse_tx_size(BitStream& bit_stream, ProbabilityTables const& probability_table, SyntaxElementCounter& counter, TransformSize max_tx_size, FrameBlockContext above, FrameBlockContext left)
 {
     // FIXME: Above and left contexts should be in structs.
 
@@ -255,7 +255,7 @@ ErrorOr<TXSize> TreeParser::parse_tx_size(BitStream& bit_stream, ProbabilityTabl
 
     u8 const* probabilities = probability_table.tx_probs()[max_tx_size][context];
 
-    auto value = TRY(parse_tree<TXSize>(bit_stream, tree, [&](u8 node) { return probabilities[node]; }));
+    auto value = TRY(parse_tree<TransformSize>(bit_stream, tree, [&](u8 node) { return probabilities[node]; }));
     increment_counter(counter.m_counts_tx_size[max_tx_size][context][value]);
     return value;
 }
@@ -624,7 +624,7 @@ ErrorOr<bool> TreeParser::parse_motion_vector_hp(BitStream& bit_stream, Probabil
     return value;
 }
 
-TokensContext TreeParser::get_tokens_context(bool subsampling_x, bool subsampling_y, u32 rows, u32 columns, Array<Vector<bool>, 3> const& above_nonzero_context, Array<Vector<bool>, 3> const& left_nonzero_context, u8 token_cache[1024], TXSize tx_size, TransformSet transform_set, u8 plane, u32 start_x, u32 start_y, u16 position, bool is_inter, u8 band, u16 coef_index)
+TokensContext TreeParser::get_tokens_context(bool subsampling_x, bool subsampling_y, u32 rows, u32 columns, Array<Vector<bool>, 3> const& above_nonzero_context, Array<Vector<bool>, 3> const& left_nonzero_context, u8 token_cache[1024], TransformSize tx_size, TransformSet transform_set, u8 plane, u32 start_x, u32 start_y, u16 position, bool is_inter, u8 band, u16 coef_index)
 {
     u8 context;
     if (coef_index == 0) {

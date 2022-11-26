@@ -336,7 +336,7 @@ u8 Decoder::adapt_prob(u8 prob, u8 counts[2])
     return merge_prob(prob, counts[0], counts[1], COUNT_SAT, MAX_UPDATE_FACTOR);
 }
 
-DecoderErrorOr<void> Decoder::predict_intra(u8 plane, BlockContext const& block_context, u32 x, u32 y, bool have_left, bool have_above, bool not_on_right, TXSize tx_size, u32 block_index)
+DecoderErrorOr<void> Decoder::predict_intra(u8 plane, BlockContext const& block_context, u32 x, u32 y, bool have_left, bool have_above, bool not_on_right, TransformSize tx_size, u32 block_index)
 {
     auto& frame_buffer = get_output_buffer(plane);
 
@@ -413,7 +413,7 @@ DecoderErrorOr<void> Decoder::predict_intra(u8 plane, BlockContext const& block_
     }
 
     // The array aboveRow[ i ] for i = size..2*size-1 is specified by:
-    if (have_above && not_on_right && tx_size == TXSize::TX_4x4) {
+    if (have_above && not_on_right && tx_size == TransformSize::TX_4x4) {
         // 1. If haveAbove is equal to 1 and notOnRight is equal to 1 and txSz is equal to 0,
         //    aboveRow[ i ] is set equal to CurrFrame[ plane ][ y-1 ][ Min(maxX, x+i) ].
         for (auto i = block_size; i < block_size * 2; i++)
@@ -1067,7 +1067,7 @@ u16 Decoder::get_ac_quantizer(BlockContext const& block_context, u8 plane)
     return ac_q(block_context.frame_context.color_config.bit_depth, static_cast<u8>(get_base_quantizer_index(block_context) + offset));
 }
 
-DecoderErrorOr<void> Decoder::reconstruct(u8 plane, BlockContext const& block_context, u32 transform_block_x, u32 transform_block_y, TXSize transform_block_size, TransformSet transform_set)
+DecoderErrorOr<void> Decoder::reconstruct(u8 plane, BlockContext const& block_context, u32 transform_block_x, u32 transform_block_y, TransformSize transform_block_size, TransformSet transform_set)
 {
     // 8.6.2 Reconstruct process
 

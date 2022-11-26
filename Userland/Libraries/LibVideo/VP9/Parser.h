@@ -79,13 +79,13 @@ private:
 
     /* (6.3) Compressed Header Syntax */
     DecoderErrorOr<void> compressed_header(FrameContext&);
-    DecoderErrorOr<TXMode> read_tx_mode(FrameContext const&);
+    DecoderErrorOr<TransformMode> read_tx_mode(FrameContext const&);
     DecoderErrorOr<void> tx_mode_probs();
     DecoderErrorOr<u8> diff_update_prob(u8 prob);
     DecoderErrorOr<u8> decode_term_subexp();
     u8 inv_remap_prob(u8 delta_prob, u8 prob);
     u8 inv_recenter_nonneg(u8 v, u8 m);
-    DecoderErrorOr<void> read_coef_probs(TXMode);
+    DecoderErrorOr<void> read_coef_probs(TransformMode);
     DecoderErrorOr<void> read_skip_prob();
     DecoderErrorOr<void> read_inter_mode_probs();
     DecoderErrorOr<void> read_interp_filter_probs();
@@ -110,7 +110,7 @@ private:
     DecoderErrorOr<void> set_intra_segment_id(BlockContext&);
     DecoderErrorOr<bool> read_should_skip_residuals(BlockContext&, FrameBlockContext above_context, FrameBlockContext left_context);
     static bool seg_feature_active(BlockContext const&, u8 feature);
-    DecoderErrorOr<TXSize> read_tx_size(BlockContext&, FrameBlockContext above_context, FrameBlockContext left_context, bool allow_select);
+    DecoderErrorOr<TransformSize> read_tx_size(BlockContext&, FrameBlockContext above_context, FrameBlockContext left_context, bool allow_select);
     DecoderErrorOr<void> inter_frame_mode_info(BlockContext&, FrameBlockContext above_context, FrameBlockContext left_context);
     DecoderErrorOr<void> set_inter_segment_id(BlockContext&);
     u8 get_segment_id(BlockContext const&);
@@ -122,7 +122,7 @@ private:
     DecoderErrorOr<MotionVector> read_motion_vector(BlockContext const&, BlockMotionVectorCandidates const&, ReferenceIndex);
     DecoderErrorOr<i32> read_single_motion_vector_component(u8 component);
     DecoderErrorOr<bool> residual(BlockContext&, bool has_block_above, bool has_block_left);
-    DecoderErrorOr<bool> tokens(BlockContext&, size_t plane, u32 x, u32 y, TXSize tx_size, TransformSet);
+    DecoderErrorOr<bool> tokens(BlockContext&, size_t plane, u32 x, u32 y, TransformSize tx_size, TransformSet);
     DecoderErrorOr<i32> read_coef(u8 bit_depth, Token token);
 
     /* (6.5) Motion Vector Prediction */

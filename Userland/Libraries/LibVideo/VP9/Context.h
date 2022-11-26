@@ -113,7 +113,7 @@ public:
 
     u16 header_size_in_bytes { 0 };
 
-    TXMode transform_mode;
+    TransformMode transform_mode;
 
     // This group also is only needed for inter-predicted frames.
     ReferenceMode reference_mode;
@@ -189,7 +189,7 @@ struct BlockContext {
     u8 segment_id { 0 };
     bool should_skip_residuals { false };
 
-    TXSize tx_size { TXSize::TX_4x4 };
+    TransformSize tx_size { TransformSize::TX_4x4 };
 
     ReferenceFramePair reference_frame_types;
     bool is_inter_predicted() const { return reference_frame_types.primary != ReferenceFrameType::None; }

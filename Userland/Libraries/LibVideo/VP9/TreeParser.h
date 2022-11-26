@@ -20,7 +20,7 @@ class Parser;
 struct FrameBlockContext;
 
 struct TokensContext {
-    TXSize m_tx_size;
+    TransformSize m_tx_size;
     bool m_is_uv_plane;
     bool m_is_inter;
     u8 m_band;
@@ -69,7 +69,7 @@ public:
     static ErrorOr<PredictionMode> parse_inter_mode(BitStream&, ProbabilityTables const&, SyntaxElementCounter&, u8 mode_context_for_ref_frame_0);
     static ErrorOr<InterpolationFilter> parse_interpolation_filter(BitStream&, ProbabilityTables const&, SyntaxElementCounter&, FrameBlockContext above, FrameBlockContext left);
     static ErrorOr<bool> parse_skip(BitStream&, ProbabilityTables const&, SyntaxElementCounter&, FrameBlockContext above, FrameBlockContext left);
-    static ErrorOr<TXSize> parse_tx_size(BitStream&, ProbabilityTables const&, SyntaxElementCounter&, TXSize max_tx_size, FrameBlockContext above, FrameBlockContext left);
+    static ErrorOr<TransformSize> parse_tx_size(BitStream&, ProbabilityTables const&, SyntaxElementCounter&, TransformSize max_tx_size, FrameBlockContext above, FrameBlockContext left);
     static ErrorOr<bool> parse_block_is_inter_predicted(BitStream&, ProbabilityTables const&, SyntaxElementCounter&, FrameBlockContext above, FrameBlockContext left);
     static ErrorOr<ReferenceMode> parse_comp_mode(BitStream&, ProbabilityTables const&, SyntaxElementCounter&, ReferenceFrameType comp_fixed_ref, FrameBlockContext above, FrameBlockContext left);
     static ErrorOr<ReferenceIndex> parse_comp_ref(BitStream&, ProbabilityTables const&, SyntaxElementCounter&, ReferenceFrameType comp_fixed_ref, ReferenceFramePair comp_var_ref, ReferenceIndex variable_reference_index, FrameBlockContext above, FrameBlockContext left);
@@ -86,7 +86,7 @@ public:
     static ErrorOr<u8> parse_motion_vector_fr(BitStream&, ProbabilityTables const&, SyntaxElementCounter&, u8 component);
     static ErrorOr<bool> parse_motion_vector_hp(BitStream&, ProbabilityTables const&, SyntaxElementCounter&, u8 component, bool use_hp);
 
-    static TokensContext get_tokens_context(bool subsampling_x, bool subsampling_y, u32 rows, u32 columns, Array<Vector<bool>, 3> const& above_nonzero_context, Array<Vector<bool>, 3> const& left_nonzero_context, u8 token_cache[1024], TXSize, TransformSet, u8 plane, u32 start_x, u32 start_y, u16 position, bool is_inter, u8 band, u16 coef_index);
+    static TokensContext get_tokens_context(bool subsampling_x, bool subsampling_y, u32 rows, u32 columns, Array<Vector<bool>, 3> const& above_nonzero_context, Array<Vector<bool>, 3> const& left_nonzero_context, u8 token_cache[1024], TransformSize, TransformSet, u8 plane, u32 start_x, u32 start_y, u16 position, bool is_inter, u8 band, u16 coef_index);
     static ErrorOr<bool> parse_more_coefficients(BitStream&, ProbabilityTables const&, SyntaxElementCounter&, TokensContext const& context);
     static ErrorOr<Token> parse_token(BitStream&, ProbabilityTables const&, SyntaxElementCounter&, TokensContext const& context);
 };

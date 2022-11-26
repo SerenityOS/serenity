@@ -14,7 +14,7 @@
 namespace Video::VP9 {
 
 static constexpr InterpolationFilter literal_to_type[4] = { EightTapSmooth, EightTap, EightTapSharp, Bilinear };
-static constexpr TXSize tx_mode_to_biggest_tx_size[TX_MODES] = { TX_4x4, TX_8x8, TX_16x16, TX_32x32, TX_32x32 };
+static constexpr TransformSize tx_mode_to_biggest_tx_size[TX_MODES] = { TX_4x4, TX_8x8, TX_16x16, TX_32x32, TX_32x32 };
 static constexpr u8 segmentation_feature_bits[SEG_LVL_MAX] = { 8, 6, 2, 0 };
 static constexpr bool segmentation_feature_signed[SEG_LVL_MAX] = { true, true, false, false };
 static constexpr u8 inv_map_table[MAX_PROB] = {
@@ -186,7 +186,7 @@ static constexpr u8 mi_height_log2_lookup[BLOCK_SIZES] = { 0, 0, 0, 0, 1, 0, 1, 
 static constexpr u8 num_8x8_blocks_high_lookup[BLOCK_SIZES] = { 1, 1, 1, 1, 2, 1, 2, 4, 2, 4, 8, 4, 8 };
 static constexpr u8 size_group_lookup[BLOCK_SIZES] = { 0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3, 3 };
 
-static constexpr TXSize max_txsize_lookup[BLOCK_SIZES] = {
+static constexpr TransformSize max_txsize_lookup[BLOCK_SIZES] = {
     TX_4x4,
     TX_4x4,
     TX_4x4,

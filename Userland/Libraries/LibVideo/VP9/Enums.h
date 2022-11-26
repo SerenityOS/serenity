@@ -45,7 +45,7 @@ enum ReferenceFrameType : u8 {
     AltRefFrame = 3,
 };
 
-enum TXMode : u8 {
+enum TransformMode : u8 {
     Only_4x4 = 0,
     Allow_8x8 = 1,
     Allow_16x16 = 2,
@@ -53,7 +53,7 @@ enum TXMode : u8 {
     TXModeSelect = 4,
 };
 
-enum TXSize : u8 {
+enum TransformSize : u8 {
     TX_4x4 = 0,
     TX_8x8 = 1,
     TX_16x16 = 2,

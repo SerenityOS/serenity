@@ -567,16 +567,16 @@ DecoderErrorOr<void> Parser::compressed_header(FrameContext& frame_context)
     return {};
 }
 
-DecoderErrorOr<TXMode> Parser::read_tx_mode(FrameContext const& frame_context)
+DecoderErrorOr<TransformMode> Parser::read_tx_mode(FrameContext const& frame_context)
 {
     if (frame_context.is_lossless()) {
-        return TXMode::Only_4x4;
+        return TransformMode::Only_4x4;
     }
 
     auto tx_mode = TRY_READ(m_bit_stream->read_literal(2));
     if (tx_mode == Allow_32x32)
         tx_mode += TRY_READ(m_bit_stream->read_literal(1));
-    return static_cast<TXMode>(tx_mode);
+    return static_cast<TransformMode>(tx_mode);
 }
 
 DecoderErrorOr<void> Parser::tx_mode_probs()
@@ -640,7 +640,7 @@ u8 Parser::inv_recenter_nonneg(u8 v, u8 m)
     return m + (v >> 1u);
 }
 
-DecoderErrorOr<void> Parser::read_coef_probs(TXMode transform_mode)
+DecoderErrorOr<void> Parser::read_coef_probs(TransformMode transform_mode)
 {
     auto max_tx_size = tx_mode_to_biggest_tx_size[transform_mode];
     for (u8 tx_size = 0; tx_size <= max_tx_size; tx_size++) {
@@ -1051,7 +1051,7 @@ bool Parser::seg_feature_active(BlockContext const& block_context, u8 feature)
     return block_context.frame_context.segmentation_features[block_context.segment_id][feature].enabled;
 }
 
-DecoderErrorOr<TXSize> Parser::read_tx_size(BlockContext& block_context, FrameBlockContext above_context, FrameBlockContext left_context, bool allow_select)
+DecoderErrorOr<TransformSize> Parser::read_tx_size(BlockContext& block_context, FrameBlockContext above_context, FrameBlockContext left_context, bool allow_select)
 {
     auto max_tx_size = max_txsize_lookup[block_context.size];
     if (allow_select && block_context.frame_context.transform_mode == TXModeSelect && block_context.size >= Block_8x8)
@@ -1331,12 +1331,12 @@ Gfx::Size<size_t> Parser::get_decoded_size_for_plane(FrameContext const& frame_c
     return { point.x(), point.y() };
 }
 
-static TXSize get_uv_tx_size(TXSize tx_size, BlockSubsize size_for_plane)
+static TransformSize get_uv_tx_size(TransformSize tx_size, BlockSubsize size_for_plane)
 {
     return min(tx_size, max_txsize_lookup[size_for_plane]);
 }
 
-static TransformSet select_transform_type(BlockContext const& block_context, u8 plane, TXSize tx_size, u32 block_index)
+static TransformSet select_transform_type(BlockContext const& block_context, u8 plane, TransformSize tx_size, u32 block_index)
 {
     if (plane > 0 || tx_size == TX_32x32)
         return TransformSet { TransformType::DCT, TransformType::DCT };
@@ -1415,7 +1415,7 @@ DecoderErrorOr<bool> Parser::residual(BlockContext& block_context, bool has_bloc
     return block_had_non_zero_tokens;
 }
 
-static u16 const* get_scan(TXSize tx_size, TransformSet transform_set)
+static u16 const* get_scan(TransformSize tx_size, TransformSet transform_set)
 {
     constexpr TransformSet adst_dct { TransformType::ADST, TransformType::DCT };
     constexpr TransformSet dct_adst { TransformType::DCT, TransformType::ADST };
@@ -1444,7 +1444,7 @@ static u16 const* get_scan(TXSize tx_size, TransformSet transform_set)
     return default_scan_32x32;
 }
 
-DecoderErrorOr<bool> Parser::tokens(BlockContext& block_context, size_t plane, u32 start_x, u32 start_y, TXSize tx_size, TransformSet transform_set)
+DecoderErrorOr<bool> Parser::tokens(BlockContext& block_context, size_t plane, u32 start_x, u32 start_y, TransformSize tx_size, TransformSet transform_set)
 {
     u16 segment_eob = 16 << (tx_size << 1);
     auto const* scan = get_scan(tx_size, transform_set);
