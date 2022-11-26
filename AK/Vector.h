@@ -729,6 +729,18 @@ public:
         MUST(try_resize_and_keep_capacity(new_size));
     }
 
+    void shrink_to_fit()
+    {
+        if (size() == capacity())
+            return;
+        Vector new_vector;
+        new_vector.ensure_capacity(size());
+        for (auto& element : *this) {
+            new_vector.unchecked_append(move(element));
+        }
+        *this = move(new_vector);
+    }
+
     using ConstIterator = SimpleIterator<Vector const, VisibleType const>;
     using Iterator = SimpleIterator<Vector, VisibleType>;
     using ReverseIterator = SimpleReverseIterator<Vector, VisibleType>;
