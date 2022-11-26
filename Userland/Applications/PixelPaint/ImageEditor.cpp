@@ -417,6 +417,7 @@ void ImageEditor::keydown_event(GUI::KeyEvent& event)
 {
     if (event.key() == Key_Delete && !m_image->selection().is_empty() && active_layer()) {
         active_layer()->erase_selection(m_image->selection());
+        did_complete_action("Erase Selection"sv);
         return;
     }
 
