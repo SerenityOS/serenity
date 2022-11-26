@@ -299,7 +299,7 @@ DecoderErrorOr<void> Decoder::adapt_non_coef_probs(FrameContext const& frame_con
     if (frame_context.interpolation_filter == Switchable) {
         ADAPT_TREE(interp_filter, interp_filter, interp_filter, INTERP_FILTER_CONTEXTS);
     }
-    if (frame_context.transform_mode == TXModeSelect) {
+    if (frame_context.transform_mode == TransformMode::Select) {
         for (size_t i = 0; i < TX_SIZE_CONTEXTS; i++) {
             auto& tx_probs = probs.tx_probs();
             auto& tx_counts = counter.m_counts_tx_size;
