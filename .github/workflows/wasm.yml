@@ -69,6 +69,7 @@ jobs:
             -S ${{ github.workspace }}/Meta/Lagom \
             -DLagomTools_DIR=${{ github.workspace }}/Build/lagom-tools/share/LagomTools \
             -DBUILD_LAGOM=ON \
+            -DBUILD_SHARED_LIBS=OFF
       - name: "Build libjs.{js,wasm}"
         run: |
           ninja -C ${{ github.workspace }}/Build/wasm libjs.js
