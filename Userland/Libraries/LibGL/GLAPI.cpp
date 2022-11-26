@@ -15,29 +15,31 @@
 extern GL::GLContext* g_gl_context;
 
 // Transposes input matrices (column-major) to our Matrix (row-major).
-template<typename I, typename O>
-static constexpr Matrix4x4<O> transpose_input_matrix(I const* matrix)
+template<typename I>
+constexpr FloatMatrix4x4 transpose_input_matrix(I const* matrix)
 {
-    if constexpr (IsSame<I, O>) {
-        // clang-format off
-        return {
-            matrix[0], matrix[4], matrix[8], matrix[12],
-            matrix[1], matrix[5], matrix[9], matrix[13],
-            matrix[2], matrix[6], matrix[10], matrix[14],
-            matrix[3], matrix[7], matrix[11], matrix[15],
-        };
-        // clang-format on
-    }
-
-    Array<O, 16> elements;
+    Array<float, 16> elements;
     for (size_t i = 0; i < 16; ++i)
-        elements[i] = static_cast<O>(matrix[i]);
+        elements[i] = static_cast<float>(matrix[i]);
     // clang-format off
     return {
         elements[0], elements[4], elements[8], elements[12],
         elements[1], elements[5], elements[9], elements[13],
         elements[2], elements[6], elements[10], elements[14],
         elements[3], elements[7], elements[11], elements[15],
+    };
+    // clang-format on
+}
+
+template<>
+constexpr FloatMatrix4x4 transpose_input_matrix(float const* matrix)
+{
+    // clang-format off
+    return {
+        matrix[0], matrix[4], matrix[8], matrix[12],
+        matrix[1], matrix[5], matrix[9], matrix[13],
+        matrix[2], matrix[6], matrix[10], matrix[14],
+        matrix[3], matrix[7], matrix[11], matrix[15],
     };
     // clang-format on
 }
@@ -620,12 +622,12 @@ void glLoadIdentity()
 
 void glLoadMatrixd(GLdouble const* matrix)
 {
-    g_gl_context->gl_load_matrix(transpose_input_matrix<double, float>(matrix));
+    g_gl_context->gl_load_matrix(transpose_input_matrix(matrix));
 }
 
 void glLoadMatrixf(GLfloat const* matrix)
 {
-    g_gl_context->gl_load_matrix(transpose_input_matrix<float, float>(matrix));
+    g_gl_context->gl_load_matrix(transpose_input_matrix(matrix));
 }
 
 void glMap1d(GLenum target, GLdouble u1, GLdouble u2, GLint stride, GLint order, GLdouble const* points)
@@ -738,12 +740,12 @@ void glMultiTexCoord4f(GLenum target, GLfloat s, GLfloat t, GLfloat r, GLfloat q
 
 void glMultMatrixd(GLdouble const* matrix)
 {
-    g_gl_context->gl_mult_matrix(transpose_input_matrix<double, float>(matrix));
+    g_gl_context->gl_mult_matrix(transpose_input_matrix(matrix));
 }
 
 void glMultMatrixf(GLfloat const* matrix)
 {
-    g_gl_context->gl_mult_matrix(transpose_input_matrix<float, float>(matrix));
+    g_gl_context->gl_mult_matrix(transpose_input_matrix(matrix));
 }
 
 void glNewList(GLuint list, GLenum mode)
