@@ -52,6 +52,8 @@ ErrorOr<int> serenity_main(Main::Arguments args)
     bool suppress_errors = false;
     bool colored_output = isatty(STDOUT_FILENO);
     bool count_lines = false;
+    size_t before_context = 0;
+    size_t after_context = 0;
 
     size_t matched_line_count = 0;
 
@@ -128,6 +130,8 @@ ErrorOr<int> serenity_main(Main::Arguments args)
     });
     args_parser.add_option(count_lines, "Output line count instead of line contents", "count", 'c');
     args_parser.add_positional_argument(files, "File(s) to process", "file", Core::ArgsParser::Required::No);
+    args_parser.add_option(after_context, "Print NUM lines of trailing context", "after-context", 'A', "NUM");
+    args_parser.add_option(before_context, "Print NUM lines of leading context", "before-context", 'B', "NUM");
     args_parser.parse(args);
 
     // mock grep behavior: if -e is omitted, use first positional argument as pattern
@@ -148,11 +152,41 @@ ErrorOr<int> serenity_main(Main::Arguments args)
             }
         }
 
+        auto print_context = [&](StringView filename, size_t line_number, bool before) {
+            // FIXME: I am **very** naive
+            auto file = Core::File::construct(filename);
+            if (!file->open(Core::OpenMode::ReadOnly)) {
+                if (!suppress_errors)
+                    warnln("Failed to open {}: {}", filename, file->error_string());
+                return;
+            }
+            if (!(before_context || after_context))
+                return;
+            auto file_size_or_error = Core::File::size(filename);
+            for (size_t context_line_number = 1; file->can_read_line(); ++context_line_number) {
+                auto file_size = file_size_or_error.release_value();
+                auto line = file->read_line(file_size);
+
+                bool within_before_context_window = before && context_line_number < line_number && context_line_number >= line_number - before_context;
+                bool within_after_context_window = !before && context_line_number > line_number && context_line_number <= line_number + after_context;
+                if (within_after_context_window || within_before_context_window) {
+                    for (auto& re : regular_expressions) {
+                        auto result = re.match(line, PosixFlags::Global);
+                        if (result.success ^ invert_match)
+                            return;
+                    }
+                    if (line_numbers)
+                        out(colored_output ? "\x1B[35m{}:\x1B[0m"sv : "{}:"sv, context_line_number);
+                    outln("{}"sv, line);
+                }
+            }
+        };
+
         auto matches = [&](StringView str, StringView filename, size_t line_number, bool print_filename, bool is_binary) {
             size_t last_printed_char_pos { 0 };
             if (is_binary && binary_mode == BinaryFileMode::Skip)
                 return false;
-
+            auto file = Core::File::construct(filename);
             for (auto& re : regular_expressions) {
                 auto result = re.match(str, PosixFlags::Global);
                 if (!(result.success ^ invert_match))
@@ -169,6 +203,8 @@ ErrorOr<int> serenity_main(Main::Arguments args)
                 if (is_binary && binary_mode == BinaryFileMode::Binary) {
                     outln(colored_output ? "binary file \x1B[34m{}\x1B[0m matches"sv : "binary file {} matches"sv, filename);
                 } else {
+                    if (before_context > 0)
+                        print_context(filename, line_number, true);
                     if ((result.matches.size() || invert_match) && print_filename)
                         out(colored_output ? "\x1B[34m{}:\x1B[0m"sv : "{}:"sv, filename);
                     if ((result.matches.size() || invert_match) && line_numbers)
@@ -176,6 +212,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
 
                     for (auto& match : result.matches) {
                         auto pre_match_length = match.global_offset - last_printed_char_pos;
+
                         out(colored_output ? "{}\x1B[32m{}\x1B[0m"sv : "{}{}"sv,
                             pre_match_length > 0 ? StringView(&str[last_printed_char_pos], pre_match_length) : ""sv,
                             match.view.to_string());
@@ -183,6 +220,8 @@ ErrorOr<int> serenity_main(Main::Arguments args)
                     }
                     auto remaining_length = str.length() - last_printed_char_pos;
                     outln("{}", remaining_length > 0 ? StringView(&str[last_printed_char_pos], remaining_length) : ""sv);
+                    if (after_context > 0)
+                        print_context(filename, line_number, false);
                 }
 
                 return true;
@@ -209,9 +248,8 @@ ErrorOr<int> serenity_main(Main::Arguments args)
                 return false;
             }
 
-            auto file_size = file_size_or_error.release_value();
-
             for (size_t line_number = 1; file->can_read_line(); ++line_number) {
+                auto file_size = file_size_or_error.release_value();
                 auto line = file->read_line(file_size);
                 auto is_binary = memchr(line.characters(), 0, line.length()) != nullptr;
 

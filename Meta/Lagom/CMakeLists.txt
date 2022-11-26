@@ -501,6 +501,9 @@ if (BUILD_LAGOM)
         add_executable(xml ../../Userland/Utilities/xml.cpp)
         target_link_libraries(xml LibCore LibXML LibMain)
 
+        add_executable(grep ../../Userland/Utilities/grep.cpp)
+        target_link_libraries(grep LibCore LibRegex LibMain)
+
         enable_testing()
         # LibTest
         file(GLOB LIBTEST_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibTest/*.cpp")
