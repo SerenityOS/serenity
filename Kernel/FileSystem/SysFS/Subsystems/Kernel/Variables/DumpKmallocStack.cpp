@@ -11,7 +11,7 @@
 namespace Kernel {
 
 UNMAP_AFTER_INIT SysFSDumpKmallocStacks::SysFSDumpKmallocStacks(SysFSDirectory const& parent_directory)
-    : SysFSSystemBoolean(parent_directory)
+    : SysFSSystemBooleanVariable(parent_directory)
 {
 }
 
