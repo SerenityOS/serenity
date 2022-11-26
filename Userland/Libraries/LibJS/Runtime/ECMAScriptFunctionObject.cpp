@@ -577,6 +577,11 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
         MUST(var_environment->set_mutable_binding(vm, declaration.name(), function, false));
     }
 
+    if (is<DeclarativeEnvironment>(*lex_environment))
+        static_cast<DeclarativeEnvironment*>(lex_environment)->shrink_to_fit();
+    if (is<DeclarativeEnvironment>(*var_environment))
+        static_cast<DeclarativeEnvironment*>(var_environment)->shrink_to_fit();
+
     return {};
 }
 
