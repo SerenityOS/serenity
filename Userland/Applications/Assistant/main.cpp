@@ -7,17 +7,21 @@
 
 #include "Providers.h"
 #include <AK/Error.h>
+#include <AK/LexicalPath.h>
 #include <AK/QuickSort.h>
 #include <AK/String.h>
 #include <AK/Try.h>
 #include <LibCore/LockFile.h>
 #include <LibCore/System.h>
+#include <LibDesktop/Launcher.h>
+#include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Event.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/ImageWidget.h>
 #include <LibGUI/Label.h>
+#include <LibGUI/Menu.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/TextBox.h>
 #include <LibGfx/Palette.h>
@@ -46,7 +50,27 @@ class ResultRow final : public GUI::Button {
         set_text_alignment(Gfx::TextAlignment::CenterLeft);
         set_button_style(Gfx::ButtonStyle::Coolbar);
         set_focus_policy(GUI::FocusPolicy::NoFocus);
+
+        on_context_menu_request = [this](auto& event) {
+            if (!m_context_menu) {
+                m_context_menu = GUI::Menu::construct();
+
+                if (LexicalPath path { text() }; path.is_absolute()) {
+                    m_context_menu->add_action(GUI::Action::create("&Show in File Manager", MUST(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-file-manager.png"sv)), [=](auto&) {
+                        Desktop::Launcher::open(URL::create_with_file_scheme(path.dirname(), path.basename()));
+                    }));
+                    m_context_menu->add_separator();
+                }
+
+                m_context_menu->add_action(GUI::Action::create("&Copy as Text", MUST(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-copy.png"sv)), [&](auto&) {
+                    GUI::Clipboard::the().set_plain_text(text());
+                }));
+            }
+            m_context_menu->popup(event.screen_position());
+        };
     }
+
+    RefPtr<GUI::Menu> m_context_menu;
 };
 
 class Database {
