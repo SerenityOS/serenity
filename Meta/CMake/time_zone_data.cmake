@@ -1,6 +1,6 @@
 include(${CMAKE_CURRENT_LIST_DIR}/utils.cmake)
 
-set(TZDB_PATH "${CMAKE_BINARY_DIR}/TZDB" CACHE PATH "Download location for TZDB files")
+set(TZDB_PATH "${SERENITY_CACHE_DIR}/TZDB" CACHE PATH "Download location for TZDB files")
 
 set(TZDB_VERSION 2022g)
 set(TZDB_VERSION_FILE "${TZDB_PATH}/version.txt")

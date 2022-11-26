@@ -3,7 +3,7 @@ parameters:
   arch: 'i686'
   toolchain: 'gcc'
   coverage: 'OFF'
-  build_directory: ''
+  download_cache_path: ''
   ccache_version: 1 # Increment this number if CI has trouble with ccache.
   serenity_ccache_path: ''
   serenity_ccache_size: '5G'
@@ -64,7 +64,7 @@ steps:
         key: '"time_zone_data" | Meta/CMake/time_zone_data.cmake | "$(timestamp)"'
         restoreKeys: |
             "time_zone_data" | Meta/CMake/time_zone_data.cmake
-        path: $(Build.SourcesDirectory)/${{ parameters.build_directory }}/TZDB
+        path: $(Build.SourcesDirectory)/${{ parameters.download_cache_path }}/TZDB
       displayName: 'TimeZoneData Cache'
 
     - task: Cache@2
@@ -72,7 +72,7 @@ steps:
         key: '"unicode_data" | Meta/CMake/unicode_data.cmake | "$(timestamp)"'
         restoreKeys: |
             "unicode_data" | Meta/CMake/unicode_data.cmake
-        path: $(Build.SourcesDirectory)/${{ parameters.build_directory }}/UCD
+        path: $(Build.SourcesDirectory)/${{ parameters.download_cache_path }}/UCD
       displayName: 'UnicodeData Cache'
 
     - task: Cache@2
@@ -80,5 +80,5 @@ steps:
         key: '"unicode_locale" | Meta/CMake/locale_data.cmake | "$(timestamp)"'
         restoreKeys: |
             "unicode_locale" | Meta/CMake/locale_data.cmake
-        path: $(Build.SourcesDirectory)/${{ parameters.build_directory }}/CLDR
+        path: $(Build.SourcesDirectory)/${{ parameters.download_cache_path }}/CLDR
       displayName: 'UnicodeLocale Cache'

@@ -238,6 +238,7 @@ cmd_with_target() {
     else
         SUPER_BUILD_DIR="$BUILD_DIR"
         CMAKE_ARGS+=("-DCMAKE_INSTALL_PREFIX=$SERENITY_SOURCE_DIR/Build/lagom-install")
+        CMAKE_ARGS+=("-DSERENITY_CACHE_DIR=${SERENITY_SOURCE_DIR}/Build/caches")
     fi
     export PATH="$SERENITY_SOURCE_DIR/Toolchain/Local/cmake/bin":$PATH
 }

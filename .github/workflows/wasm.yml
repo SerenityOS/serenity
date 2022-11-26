@@ -29,26 +29,23 @@ jobs:
           gcc --version
       - name: "Create build directories"
         run: |
-          mkdir -p ${{ github.workspace }}/Build/lagom-tools/TZDB
-          mkdir -p ${{ github.workspace }}/Build/wasm/UCD
-          mkdir -p ${{ github.workspace }}/Build/wasm/CLDR
+          mkdir -p ${{ github.workspace }}/Build/caches/TZDB
+          mkdir -p ${{ github.workspace }}/Build/caches/UCD
+          mkdir -p ${{ github.workspace }}/Build/caches/CLDR
       - name: "TimeZoneData cache"
         uses: actions/cache@03e00da99d75a2204924908e1cca7902cafce66b
         with:
-          path: ${{ github.workspace }}/Build/lagom-tools/TZDB
+          path: ${{ github.workspace }}/Build/caches/TZDB
           key: TimeZoneData-${{ hashFiles('Meta/CMake/time_zone_data.cmake') }}
-      - name: "Copy over TZDB cache"
-        run: |
-          cp -r ${{ github.workspace }}/Build/lagom-tools/TZDB ${{ github.workspace }}/Build/wasm/TZDB
       - name: "UnicodeData cache"
         uses: actions/cache@03e00da99d75a2204924908e1cca7902cafce66b
         with:
-          path: ${{ github.workspace }}/Build/wasm/UCD
+          path: ${{ github.workspace }}/Build/caches/UCD
           key: UnicodeData-${{ hashFiles('Meta/CMake/unicode_data.cmake') }}
       - name: "UnicodeLocale cache"
         uses: actions/cache@03e00da99d75a2204924908e1cca7902cafce66b
         with:
-          path: ${{ github.workspace }}/Build/wasm/CLDR
+          path: ${{ github.workspace }}/Build/caches/CLDR
           key: UnicodeLocale-${{ hashFiles('Meta/CMake/locale_data.cmake') }}
       - name: "Build host lagom tools"
         run: |
@@ -56,11 +53,12 @@ jobs:
             -B ${{ github.workspace }}/Build/lagom-tools \
             -S ${{ github.workspace }}/Meta/Lagom \
             -DBUILD_LAGOM=OFF \
+            -DSERENITY_CACHE_DIR=${{ github.workspace }}/Build/caches \
             -DCMAKE_C_COMPILER=gcc-12 \
             -DCMAKE_CXX_COMPILER=g++-12 \
             -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/Build/lagom-tools \
             -Dpackage=LagomTools
-          
+
           ninja -C ${{ github.workspace }}/Build/lagom-tools install
       - name: "Create wasm build environment"
         run: |
@@ -69,6 +67,7 @@ jobs:
             -S ${{ github.workspace }}/Meta/Lagom \
             -DLagomTools_DIR=${{ github.workspace }}/Build/lagom-tools/share/LagomTools \
             -DBUILD_LAGOM=ON \
+            -DSERENITY_CACHE_DIR=${{ github.workspace }}/Build/caches \
             -DBUILD_SHARED_LIBS=OFF
       - name: "Build libjs.{js,wasm}"
         run: |
