@@ -280,6 +280,14 @@ public:
         m_children.append(move(child));
     }
 
+    void shrink_to_fit()
+    {
+        m_children.shrink_to_fit();
+        m_lexical_declarations.shrink_to_fit();
+        m_var_declarations.shrink_to_fit();
+        m_functions_hoistable_with_annexB_extension.shrink_to_fit();
+    }
+
     NonnullRefPtrVector<Statement> const& children() const { return m_children; }
     virtual void dump(int indent) const override;
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;

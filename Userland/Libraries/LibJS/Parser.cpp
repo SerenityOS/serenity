@@ -1807,6 +1807,7 @@ NonnullRefPtr<ObjectExpression> Parser::parse_object_expression()
         m_state.invalid_property_range_in_object_expression.set(object_expression_offset, invalid_object_literal_property_range->start);
     }
 
+    properties.shrink_to_fit();
     return create_ast_node<ObjectExpression>(
         { m_source_code, rule_start.position(), position() },
         move(properties));
@@ -1835,6 +1836,8 @@ NonnullRefPtr<ArrayExpression> Parser::parse_array_expression()
     }
 
     consume(TokenType::BracketClose);
+
+    elements.shrink_to_fit();
     return create_ast_node<ArrayExpression>({ m_source_code, rule_start.position(), position() }, move(elements));
 }
 
@@ -2022,6 +2025,7 @@ NonnullRefPtr<Expression> Parser::parse_expression(int min_precedence, Associati
             consume();
             expressions.append(parse_expression(2));
         }
+        expressions.shrink_to_fit();
         expression = create_ast_node<SequenceExpression>({ m_source_code, rule_start.position(), position() }, move(expressions));
     }
     return expression;
@@ -2461,6 +2465,8 @@ void Parser::parse_statement_list(ScopeNode& output_node, AllowLabelledFunction 
             break;
         }
     }
+
+    output_node.shrink_to_fit();
 }
 
 // FunctionBody, https://tc39.es/ecma262/#prod-FunctionBody
@@ -2729,6 +2735,8 @@ Vector<FunctionParameter> Parser::parse_formal_parameters(int& function_length, 
     // Otherwise, we need a closing parenthesis (which is consumed elsewhere). If we get neither, it's an error.
     if (!match(TokenType::Eof) && !match(TokenType::ParenClose))
         expected(Token::name(TokenType::ParenClose));
+
+    parameters.shrink_to_fit();
     return parameters;
 }
 
@@ -3032,6 +3040,8 @@ NonnullRefPtr<VariableDeclaration> Parser::parse_variable_declaration(bool for_l
     }
     if (!for_loop_variable_declaration)
         consume_or_insert_semicolon();
+
+    declarations.shrink_to_fit();
 
     auto declaration = create_ast_node<VariableDeclaration>({ m_source_code, rule_start.position(), position() }, declaration_kind, move(declarations));
     return declaration;
