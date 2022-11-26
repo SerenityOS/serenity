@@ -786,10 +786,24 @@ Completion ECMAScriptFunctionObject::ordinary_call_evaluate_body()
 {
     auto& vm = this->vm();
     auto& realm = *vm.current_realm();
-    auto* bytecode_interpreter = Bytecode::Interpreter::current();
 
     if (m_kind == FunctionKind::AsyncGenerator)
         return vm.throw_completion<InternalError>(ErrorType::NotImplemented, "Async Generator function execution");
+
+    auto* bytecode_interpreter = Bytecode::Interpreter::current();
+
+    // The bytecode interpreter can execute generator functions while the AST interpreter cannot.
+    // This simply makes it create a new bytecode interpreter when one doesn't exist when executing a generator function.
+    // Doing so makes it automatically switch to the bytecode interpreter to execute any future code until it exits the generator. See below.
+    // This allows us to keep all of the existing functionality that works in AST while adding generator support on top of it.
+    // However, this does cause an awkward situation with features not supported in bytecode, where features that work outside of generators with AST
+    // suddenly stop working inside of generators.
+    // This is a stop gap until bytecode mode becomes the default.
+    OwnPtr<Bytecode::Interpreter> temp_bc_interpreter;
+    if (m_kind == FunctionKind::Generator && !bytecode_interpreter) {
+        temp_bc_interpreter = make<Bytecode::Interpreter>(realm);
+        bytecode_interpreter = temp_bc_interpreter.ptr();
+    }
 
     if (bytecode_interpreter) {
         if (!m_bytecode_executable) {

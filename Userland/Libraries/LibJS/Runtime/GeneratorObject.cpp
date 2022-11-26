@@ -103,11 +103,16 @@ ThrowCompletionOr<Value> GeneratorObject::execute(VM& vm, Completion const& comp
     completion_object->define_direct_property(vm.names.value, completion.value().value(), default_attributes);
 
     auto* bytecode_interpreter = Bytecode::Interpreter::current();
+
+    // If we're coming from a context which has no bytecode interpreter, e.g. from AST mode calling Generate.prototype.next,
+    // we need to make one to be able to continue, as generators are only supported in bytecode mode.
+    // See also ECMAScriptFunctionObject::ordinary_call_evaluate_body where this is done as well.
     OwnPtr<Bytecode::Interpreter> temp_bc_interpreter;
     if (!bytecode_interpreter) {
         temp_bc_interpreter = make<Bytecode::Interpreter>(realm);
         bytecode_interpreter = temp_bc_interpreter.ptr();
     }
+
     VERIFY(bytecode_interpreter);
 
     auto const* next_block = generated_continuation(m_previous_value);
