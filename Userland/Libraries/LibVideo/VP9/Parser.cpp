@@ -9,6 +9,7 @@
 #include <LibGfx/Point.h>
 #include <LibGfx/Size.h>
 
+#include "Context.h"
 #include "Decoder.h"
 #include "Parser.h"
 #include "Utilities.h"

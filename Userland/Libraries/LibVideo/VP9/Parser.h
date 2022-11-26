@@ -16,7 +16,7 @@
 #include <LibVideo/DecoderError.h>
 
 #include "BitStream.h"
-#include "Context.h"
+#include "ContextStorage.h"
 #include "LookupTables.h"
 #include "MotionVector.h"
 #include "ProbabilityTables.h"
@@ -26,6 +26,11 @@
 namespace Video::VP9 {
 
 class Decoder;
+
+struct FrameContext;
+struct TileContext;
+struct BlockContext;
+struct MotionVectorCandidate;
 
 class Parser {
     friend class TreeParser;

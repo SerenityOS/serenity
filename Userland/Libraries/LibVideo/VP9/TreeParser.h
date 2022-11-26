@@ -8,7 +8,7 @@
 #pragma once
 
 #include "BitStream.h"
-#include "Context.h"
+#include "ContextStorage.h"
 #include "Enums.h"
 #include "ProbabilityTables.h"
 #include "SyntaxElementCounter.h"
@@ -16,6 +16,16 @@
 namespace Video::VP9 {
 
 class Parser;
+
+struct FrameBlockContext;
+
+struct TokensContext {
+    TXSize m_tx_size;
+    bool m_is_uv_plane;
+    bool m_is_inter;
+    u8 m_band;
+    u8 m_context_index;
+};
 
 class TreeParser {
 public:
