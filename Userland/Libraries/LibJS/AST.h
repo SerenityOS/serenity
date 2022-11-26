@@ -1713,7 +1713,7 @@ private:
 
 class ObjectProperty final : public ASTNode {
 public:
-    enum class Type {
+    enum class Type : u8 {
         KeyValue,
         Getter,
         Setter,
@@ -1723,10 +1723,10 @@ public:
 
     ObjectProperty(SourceRange source_range, NonnullRefPtr<Expression> key, RefPtr<Expression> value, Type property_type, bool is_method)
         : ASTNode(source_range)
-        , m_key(move(key))
-        , m_value(move(value))
         , m_property_type(property_type)
         , m_is_method(is_method)
+        , m_key(move(key))
+        , m_value(move(value))
     {
     }
 
@@ -1744,10 +1744,10 @@ public:
     virtual Completion execute(Interpreter&) const override;
 
 private:
-    NonnullRefPtr<Expression> m_key;
-    RefPtr<Expression> m_value;
     Type m_property_type;
     bool m_is_method { false };
+    NonnullRefPtr<Expression> m_key;
+    RefPtr<Expression> m_value;
 };
 
 class ObjectExpression final : public Expression {
