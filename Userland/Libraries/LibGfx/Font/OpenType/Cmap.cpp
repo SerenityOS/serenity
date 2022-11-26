@@ -75,10 +75,12 @@ Optional<Cmap::Subtable> Cmap::subtable(u32 index) const
     return Subtable(subtable_slice, platform_id, encoding_id);
 }
 
-// FIXME: This only handles formats 4 (SegmentToDelta) and 12 (SegmentedCoverage) for now.
+// FIXME: Implement the missing formats.
 u32 Cmap::Subtable::glyph_id_for_code_point(u32 code_point) const
 {
     switch (format()) {
+    case Format::ByteEncoding:
+        return glyph_id_for_code_point_table_0(code_point);
     case Format::SegmentToDelta:
         return glyph_id_for_code_point_table_4(code_point);
     case Format::SegmentedCoverage:
@@ -86,6 +88,14 @@ u32 Cmap::Subtable::glyph_id_for_code_point(u32 code_point) const
     default:
         return 0;
     }
+}
+
+u32 Cmap::Subtable::glyph_id_for_code_point_table_0(u32 code_point) const
+{
+    if (code_point > 255)
+        return 0;
+
+    return m_slice.at((u32)Table0Offsets::GlyphIdArray + code_point);
 }
 
 u32 Cmap::Subtable::glyph_id_for_code_point_table_4(u32 code_point) const
