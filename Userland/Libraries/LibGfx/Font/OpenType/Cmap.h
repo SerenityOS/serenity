@@ -52,6 +52,9 @@ public:
         Format format() const;
 
     private:
+        enum class Table0Offsets {
+            GlyphIdArray = 6
+        };
         enum class Table4Offsets {
             SegCountX2 = 6,
             EndConstBase = 14,
@@ -75,6 +78,7 @@ public:
             Record = 12,
         };
 
+        u32 glyph_id_for_code_point_table_0(u32 code_point) const;
         u32 glyph_id_for_code_point_table_4(u32 code_point) const;
         u32 glyph_id_for_code_point_table_12(u32 code_point) const;
 
