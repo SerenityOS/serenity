@@ -67,7 +67,7 @@ public:
     [[nodiscard]] TreeNode* down_node(size_t);
     [[nodiscard]] bool is_leaf() const { return m_is_leaf; }
 
-    Key const& operator[](size_t) const;
+    Key const& operator[](size_t index) const { return m_entries[index]; }
     bool insert(Key const&);
     bool update_key_pointer(Key const&);
     TreeNode* node_for(Key const&);

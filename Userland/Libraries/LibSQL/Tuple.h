@@ -49,8 +49,8 @@ public:
     [[nodiscard]] bool is_null() const { return m_data.is_empty(); }
     [[nodiscard]] bool has(String const& name) const { return index_of(name).has_value(); }
 
-    Value const& operator[](size_t ix) const;
-    Value& operator[](size_t ix);
+    Value const& operator[](size_t ix) const { return m_data[ix]; }
+    Value& operator[](size_t ix) { return m_data[ix]; }
     Value const& operator[](String const& name) const;
     Value& operator[](String const& name);
     void append(Value const&);

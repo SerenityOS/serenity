@@ -91,18 +91,6 @@ Optional<size_t> Tuple::index_of(String name) const
     return {};
 }
 
-Value const& Tuple::operator[](size_t ix) const
-{
-    VERIFY(ix < m_data.size());
-    return m_data[ix];
-}
-
-Value& Tuple::operator[](size_t ix)
-{
-    VERIFY(ix < m_data.size());
-    return m_data[ix];
-}
-
 Value const& Tuple::operator[](String const& name) const
 {
     auto index = index_of(name);
