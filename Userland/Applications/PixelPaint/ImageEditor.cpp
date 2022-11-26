@@ -426,6 +426,7 @@ void ImageEditor::keydown_event(GUI::KeyEvent& event)
 
     if (event.key() == Key_Escape && !m_image->selection().is_empty()) {
         m_image->selection().clear();
+        did_complete_action("Clear Selection"sv);
         return;
     }
 

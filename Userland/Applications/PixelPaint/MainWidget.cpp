@@ -359,18 +359,21 @@ void MainWidget::initialize_menubar(GUI::Window& window)
         if (!editor->active_layer())
             return;
         editor->image().selection().merge(editor->active_layer()->relative_rect(), PixelPaint::Selection::MergeMode::Set);
+        editor->did_complete_action("Select All"sv);
     }));
     m_edit_menu->add_action(GUI::Action::create(
         "Clear &Selection", g_icon_bag.clear_selection, [&](auto&) {
             auto* editor = current_image_editor();
             VERIFY(editor);
             editor->image().selection().clear();
+            editor->did_complete_action("Clear Selection"sv);
         }));
     m_edit_menu->add_action(GUI::Action::create(
         "&Invert Selection", g_icon_bag.invert_selection, [&](auto&) {
             auto* editor = current_image_editor();
             VERIFY(editor);
             editor->image().selection().invert();
+            editor->did_complete_action("Invert Selection"sv);
         }));
 
     m_edit_menu->add_separator();
