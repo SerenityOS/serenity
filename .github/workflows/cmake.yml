@@ -130,26 +130,27 @@ jobs:
           ccache -s
       - name: Create build directory
         run: |
-          mkdir -p ${{ github.workspace }}/Build/${{ matrix.arch }}/TZDB
-          mkdir -p ${{ github.workspace }}/Build/${{ matrix.arch }}/UCD
-          mkdir -p ${{ github.workspace }}/Build/${{ matrix.arch }}/CLDR
+          mkdir -p ${{ github.workspace }}/Build/${{ matrix.arch }}
+          mkdir -p ${{ github.workspace }}/Build/caches/TZDB
+          mkdir -p ${{ github.workspace }}/Build/caches/UCD
+          mkdir -p ${{ github.workspace }}/Build/caches/CLDR
       - name: TimeZoneData cache
         # TODO: Change the version to the released version when https://github.com/actions/cache/pull/489 (or 571) is merged.
         uses: actions/cache@03e00da99d75a2204924908e1cca7902cafce66b
         with:
-          path: ${{ github.workspace }}/Build/${{ matrix.arch }}/TZDB
+          path: ${{ github.workspace }}/Build/caches/TZDB
           key: TimeZoneData-${{ hashFiles('Meta/CMake/time_zone_data.cmake') }}
       - name: UnicodeData cache
         # TODO: Change the version to the released version when https://github.com/actions/cache/pull/489 (or 571) is merged.
         uses: actions/cache@03e00da99d75a2204924908e1cca7902cafce66b
         with:
-          path: ${{ github.workspace }}/Build/${{ matrix.arch }}/UCD
+          path: ${{ github.workspace }}/Build/caches/UCD
           key: UnicodeData-${{ hashFiles('Meta/CMake/unicode_data.cmake') }}
       - name: UnicodeLocale Cache
         # TODO: Change the version to the released version when https://github.com/actions/cache/pull/489 (or 571) is merged.
         uses: actions/cache@03e00da99d75a2204924908e1cca7902cafce66b
         with:
-          path: ${{ github.workspace }}/Build/${{ matrix.arch }}/CLDR
+          path: ${{ github.workspace }}/Build/caches/CLDR
           key: UnicodeLocale-${{ hashFiles('Meta/CMake/locale_data.cmake') }}
       - name: Create build environment with extra debug options
         # Build the entire project with all available debug options turned on, to prevent code rot.

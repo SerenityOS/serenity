@@ -27,7 +27,7 @@ jobs:
         arch: '${{ parameters.arch }}'
         coverage: '${{ parameters.coverage }}'
         toolchain: 'clang'
-        build_directory: 'Build/${{ parameters.arch }}clang'
+        download_cache_path: 'Build/caches'
         toolchain_ccache_path: '$(LLVM_CCACHE_DIR)'
         toolchain_ccache_size: '$(LLVM_CCACHE_MAXSIZE)'
         serenity_ccache_path: '$(SERENITY_CCACHE_DIR)'

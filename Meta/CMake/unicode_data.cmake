@@ -1,7 +1,7 @@
 include(${CMAKE_CURRENT_LIST_DIR}/utils.cmake)
 
 set(UCD_VERSION 15.0.0)
-set(UCD_PATH "${CMAKE_BINARY_DIR}/UCD" CACHE PATH "Download location for UCD files")
+set(UCD_PATH "${SERENITY_CACHE_DIR}/UCD" CACHE PATH "Download location for UCD files")
 set(UCD_VERSION_FILE "${UCD_PATH}/version.txt")
 
 set(UCD_ZIP_URL "https://www.unicode.org/Public/${UCD_VERSION}/ucd/UCD.zip")
