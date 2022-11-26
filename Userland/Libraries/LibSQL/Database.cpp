@@ -196,7 +196,7 @@ ErrorOr<void> Database::insert(Row& row)
     // TODO Check constraints
 
     row.set_pointer(m_heap->new_record_pointer());
-    row.next_pointer(row.table()->pointer());
+    row.set_next_pointer(row.table()->pointer());
     TRY(update(row));
 
     // TODO update indexes defined on table.
