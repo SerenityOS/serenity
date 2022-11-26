@@ -14,7 +14,7 @@
 
 namespace Kernel {
 
-class SysFSDumpKmallocStacks final : public SysFSSystemBoolean {
+class SysFSDumpKmallocStacks final : public SysFSSystemBooleanVariable {
 public:
     virtual StringView name() const override { return "kmalloc_stacks"sv; }
     static NonnullLockRefPtr<SysFSDumpKmallocStacks> must_create(SysFSDirectory const&);

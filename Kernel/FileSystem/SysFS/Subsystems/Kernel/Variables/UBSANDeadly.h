@@ -13,7 +13,7 @@
 
 namespace Kernel {
 
-class SysFSUBSANDeadly final : public SysFSSystemBoolean {
+class SysFSUBSANDeadly final : public SysFSSystemBooleanVariable {
 public:
     virtual StringView name() const override { return "ubsan_is_deadly"sv; }
     static NonnullLockRefPtr<SysFSUBSANDeadly> must_create(SysFSDirectory const&);

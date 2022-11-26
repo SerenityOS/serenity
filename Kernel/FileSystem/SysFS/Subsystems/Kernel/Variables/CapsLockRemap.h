@@ -14,7 +14,7 @@
 
 namespace Kernel {
 
-class SysFSCapsLockRemap final : public SysFSSystemBoolean {
+class SysFSCapsLockRemap final : public SysFSSystemBooleanVariable {
 public:
     virtual StringView name() const override { return "caps_lock_to_ctrl"sv; }
     static NonnullLockRefPtr<SysFSCapsLockRemap> must_create(SysFSDirectory const&);

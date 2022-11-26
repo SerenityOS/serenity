@@ -22,9 +22,9 @@
 
 namespace Kernel {
 
-class SysFSSystemBoolean : public SysFSGlobalInformation {
+class SysFSSystemBooleanVariable : public SysFSGlobalInformation {
 protected:
-    explicit SysFSSystemBoolean(SysFSDirectory const& parent_directory)
+    explicit SysFSSystemBooleanVariable(SysFSDirectory const& parent_directory)
         : SysFSGlobalInformation(parent_directory)
     {
     }
