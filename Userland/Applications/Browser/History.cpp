@@ -35,6 +35,7 @@ void History::replace_current(const URL& url, String const& title)
     if (m_current == -1)
         return;
 
+    m_items.remove(m_current);
     m_current--;
     push(url, title);
 }
