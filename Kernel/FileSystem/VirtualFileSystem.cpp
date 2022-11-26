@@ -723,7 +723,9 @@ static bool hard_link_allowed(Credentials const& credentials, Inode const& inode
 
 ErrorOr<void> VirtualFileSystem::link(Credentials const& credentials, StringView old_path, StringView new_path, Custody& base)
 {
-    auto old_custody = TRY(resolve_path(credentials, old_path, base));
+    // NOTE: To prevent unveil bypass by creating an hardlink after unveiling a path as read-only,
+    // check that if write permission is allowed by the veil info on the old_path.
+    auto old_custody = TRY(resolve_path(credentials, old_path, base, nullptr, O_RDWR));
     auto& old_inode = old_custody->inode();
 
     RefPtr<Custody> parent_custody;
