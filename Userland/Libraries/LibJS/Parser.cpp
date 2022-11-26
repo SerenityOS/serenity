@@ -2350,7 +2350,7 @@ NonnullRefPtr<Expression> Parser::parse_call_expression(NonnullRefPtr<Expression
     if (is<SuperExpression>(*lhs))
         return create_ast_node<SuperCall>({ m_source_code, rule_start.position(), position() }, move(arguments));
 
-    return create_ast_node<CallExpression>({ m_source_code, rule_start.position(), position() }, move(lhs), move(arguments));
+    return CallExpression::create({ m_source_code, rule_start.position(), position() }, move(lhs), arguments.span());
 }
 
 NonnullRefPtr<NewExpression> Parser::parse_new_expression()
@@ -2380,7 +2380,7 @@ NonnullRefPtr<NewExpression> Parser::parse_new_expression()
         consume(TokenType::ParenClose);
     }
 
-    return create_ast_node<NewExpression>({ m_source_code, rule_start.position(), position() }, move(callee), move(arguments));
+    return NewExpression::create({ m_source_code, rule_start.position(), position() }, move(callee), move(arguments));
 }
 
 NonnullRefPtr<YieldExpression> Parser::parse_yield_expression()

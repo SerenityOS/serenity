@@ -1472,25 +1472,40 @@ public:
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
 };
 
-class CallExpression : public Expression {
-public:
-    struct Argument {
-        NonnullRefPtr<Expression> value;
-        bool is_spread;
-    };
+struct CallExpressionArgument {
+    NonnullRefPtr<Expression> value;
+    bool is_spread;
+};
 
-    CallExpression(SourceRange source_range, NonnullRefPtr<Expression> callee, Vector<Argument> arguments = {})
-        : Expression(source_range)
-        , m_callee(move(callee))
-        , m_arguments(move(arguments))
-    {
-    }
+class CallExpression : public ASTNodeWithTailArray<CallExpression, Expression, CallExpressionArgument> {
+    friend class ASTNodeWithTailArray;
+
+public:
+    using Argument = CallExpressionArgument;
+
+    static NonnullRefPtr<CallExpression> create(SourceRange, NonnullRefPtr<Expression> callee, Span<Argument const> arguments);
 
     virtual Completion execute(Interpreter&) const override;
     virtual void dump(int indent) const override;
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
 
     Expression const& callee() const { return m_callee; }
+
+    Span<Argument const> arguments() const { return tail_span(); }
+
+protected:
+    CallExpression(SourceRange source_range, NonnullRefPtr<Expression> callee, Span<Argument const> arguments)
+        : ASTNodeWithTailArray(move(source_range), arguments)
+        , m_callee(move(callee))
+    {
+    }
+
+private:
+    struct ThisAndCallee {
+        Value this_value;
+        Value callee;
+    };
+    ThrowCompletionOr<ThisAndCallee> compute_this_and_callee(Interpreter&, Reference const&) const;
 
 protected:
     virtual bool is_call_expression() const override { return true; }
@@ -1499,27 +1514,26 @@ protected:
     Optional<DeprecatedString> expression_string() const;
 
     NonnullRefPtr<Expression> m_callee;
-    Vector<Argument> const m_arguments;
-
-private:
-    struct ThisAndCallee {
-        Value this_value;
-        Value callee;
-    };
-    ThrowCompletionOr<ThisAndCallee> compute_this_and_callee(Interpreter&, Reference const&) const;
 };
 
 class NewExpression final : public CallExpression {
+    friend class ASTNodeWithTailArray;
+
 public:
-    NewExpression(SourceRange source_range, NonnullRefPtr<Expression> callee, Vector<Argument> arguments = {})
-        : CallExpression(source_range, move(callee), move(arguments))
-    {
-    }
+    static NonnullRefPtr<NewExpression> create(SourceRange, NonnullRefPtr<Expression> callee, Span<Argument const> arguments);
 
     virtual Completion execute(Interpreter&) const override;
 
     virtual bool is_new_expression() const override { return true; }
+
+private:
+    NewExpression(SourceRange source_range, NonnullRefPtr<Expression> callee, Span<Argument const> arguments)
+        : CallExpression(move(source_range), move(callee), arguments)
+    {
+    }
 };
+
+static_assert(sizeof(NewExpression) == sizeof(CallExpression), "Adding members to NewExpression will break CallExpression memory layout");
 
 class SuperCall final : public Expression {
 public:

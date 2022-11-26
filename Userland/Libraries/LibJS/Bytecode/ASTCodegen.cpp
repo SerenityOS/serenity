@@ -1551,7 +1551,7 @@ Bytecode::CodeGenerationErrorOr<void> CallExpression::generate_bytecode(Bytecode
         generator.emit<Bytecode::Op::Store>(callee_reg);
     }
 
-    TRY(arguments_to_array_for_call(generator, m_arguments));
+    TRY(arguments_to_array_for_call(generator, arguments()));
 
     Bytecode::Op::Call::CallType call_type;
     if (is<NewExpression>(*this)) {

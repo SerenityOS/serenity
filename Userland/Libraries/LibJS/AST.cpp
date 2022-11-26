@@ -372,7 +372,7 @@ ThrowCompletionOr<CallExpression::ThisAndCallee> CallExpression::compute_this_an
 }
 
 // 13.3.8.1 Runtime Semantics: ArgumentListEvaluation, https://tc39.es/ecma262/#sec-runtime-semantics-argumentlistevaluation
-static ThrowCompletionOr<void> argument_list_evaluation(Interpreter& interpreter, Vector<CallExpression::Argument> const& arguments, MarkedVector<Value>& list)
+static ThrowCompletionOr<void> argument_list_evaluation(Interpreter& interpreter, Span<CallExpression::Argument const> const arguments, MarkedVector<Value>& list)
 {
     auto& vm = interpreter.vm();
     list.ensure_capacity(arguments.size());
@@ -406,7 +406,7 @@ Completion NewExpression::execute(Interpreter& interpreter) const
     // 4. Else,
     //    a. Let argList be ? ArgumentListEvaluation of arguments.
     MarkedVector<Value> arg_list(vm.heap());
-    TRY(argument_list_evaluation(interpreter, m_arguments, arg_list));
+    TRY(argument_list_evaluation(interpreter, arguments(), arg_list));
 
     // 5. If IsConstructor(constructor) is false, throw a TypeError exception.
     if (!constructor.is_constructor())
@@ -451,7 +451,7 @@ Completion CallExpression::execute(Interpreter& interpreter) const
     VERIFY(!callee.is_empty());
 
     MarkedVector<Value> arg_list(vm.heap());
-    TRY(argument_list_evaluation(interpreter, m_arguments, arg_list));
+    TRY(argument_list_evaluation(interpreter, arguments(), arg_list));
 
     if (!callee.is_function())
         return throw_type_error_for_callee(interpreter, callee, "function"sv);
@@ -2183,7 +2183,7 @@ void CallExpression::dump(int indent) const
     else
         outln("CallExpression");
     m_callee->dump(indent + 1);
-    for (auto& argument : m_arguments)
+    for (auto& argument : arguments())
         argument.value->dump(indent + 1);
 }
 
@@ -3216,7 +3216,7 @@ ThrowCompletionOr<OptionalChain::ReferenceAndValue> OptionalChain::to_reference_
 
         auto expression = reference.visit(
             [&](Call const& call) -> NonnullRefPtr<Expression> {
-                return create_ast_node<CallExpression>(source_range(),
+                return CallExpression::create(source_range(),
                     create_ast_node<SyntheticReferenceExpression>(source_range(), base_reference, base),
                     call.arguments);
             },
@@ -4821,6 +4821,16 @@ ModuleRequest::ModuleRequest(FlyString module_specifier_, Vector<Assertion> asse
 DeprecatedString const& SourceRange::filename() const
 {
     return code->filename();
+}
+
+NonnullRefPtr<CallExpression> CallExpression::create(SourceRange source_range, NonnullRefPtr<Expression> callee, Span<Argument const> arguments)
+{
+    return ASTNodeWithTailArray::create<CallExpression>(arguments.size(), move(source_range), move(callee), arguments);
+}
+
+NonnullRefPtr<NewExpression> NewExpression::create(SourceRange source_range, NonnullRefPtr<Expression> callee, Span<Argument const> arguments)
+{
+    return ASTNodeWithTailArray::create<NewExpression>(arguments.size(), move(source_range), move(callee), arguments);
 }
 
 }
