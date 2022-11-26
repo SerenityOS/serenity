@@ -82,6 +82,7 @@ private:
     virtual Web::WebDriver::Response send_alert_text(Web::WebDriver::Parameters parameters, JsonValue payload) override;
     virtual Web::WebDriver::Response take_screenshot(Web::WebDriver::Parameters parameters, JsonValue payload) override;
     virtual Web::WebDriver::Response take_element_screenshot(Web::WebDriver::Parameters parameters, JsonValue payload) override;
+    virtual Web::WebDriver::Response print_page(Web::WebDriver::Parameters parameters, JsonValue payload) override;
 
     static NonnullOwnPtrVector<Session> s_sessions;
     static Atomic<unsigned> s_next_session_id;

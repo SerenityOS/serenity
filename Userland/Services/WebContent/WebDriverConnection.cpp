@@ -1533,6 +1533,13 @@ Messages::WebDriverClient::TakeElementScreenshotResponse WebDriverConnection::ta
     return encoded_string;
 }
 
+// 18.1 Print Page, https://w3c.github.io/webdriver/#dfn-print-page
+Messages::WebDriverClient::PrintPageResponse WebDriverConnection::print_page()
+{
+    // FIXME: Actually implement this :^)
+    return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::UnsupportedOperation, "Print not implemented"sv);
+}
+
 // https://w3c.github.io/webdriver/#dfn-no-longer-open
 ErrorOr<void, Web::WebDriver::Error> WebDriverConnection::ensure_open_top_level_browsing_context()
 {

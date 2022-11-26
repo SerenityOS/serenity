@@ -96,6 +96,9 @@ public:
     virtual Response take_screenshot(Parameters parameters, JsonValue payload) = 0;
     virtual Response take_element_screenshot(Parameters parameters, JsonValue payload) = 0;
 
+    // 18. Print, https://w3c.github.io/webdriver/#print
+    virtual Response print_page(Parameters parameters, JsonValue payload) = 0;
+
 protected:
     Client(NonnullOwnPtr<Core::Stream::BufferedTCPSocket>, Core::Object* parent);
 
