@@ -90,8 +90,10 @@ protected:
     explicit ASTNode(SourceRange);
 
 private:
-    RefPtr<SourceCode> m_source_code;
+    // NOTE: These members are carefully ordered so that `m_start_offset` is packed with the padding after RefCounted::m_ref_count.
+    //       This creates a 4-byte padding hole after `m_end_offset` which is used to pack subclasses better.
     u32 m_start_offset { 0 };
+    RefPtr<SourceCode> m_source_code;
     u32 m_end_offset { 0 };
 };
 
