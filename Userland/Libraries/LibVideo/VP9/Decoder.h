@@ -81,10 +81,10 @@ private:
     static u16 get_ac_quantizer(BlockContext const&, u8 plane);
 
     // (8.6.2) Reconstruct process
-    DecoderErrorOr<void> reconstruct(u8 plane, BlockContext const&, u32 transform_block_x, u32 transform_block_y, TXSize transform_block_size, u8 transform_type);
+    DecoderErrorOr<void> reconstruct(u8 plane, BlockContext const&, u32 transform_block_x, u32 transform_block_y, TXSize transform_block_size, TransformSet);
 
     // (8.7) Inverse transform process
-    DecoderErrorOr<void> inverse_transform_2d(BlockContext const&, Span<Intermediate> dequantized, u8 log2_of_block_size, u8 transform_type);
+    DecoderErrorOr<void> inverse_transform_2d(BlockContext const&, Span<Intermediate> dequantized, u8 log2_of_block_size, TransformSet);
 
     // (8.7.1) 1D Transforms
     // (8.7.1.1) Butterfly functions

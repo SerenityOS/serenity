@@ -43,10 +43,6 @@ namespace Video::VP9 {
 #define PARTITION_TYPES 4
 #define TX_SIZES 4
 #define TX_MODES 5
-#define DCT_DCT 0
-#define ADST_DCT 1
-#define DCT_ADST 2
-#define ADST_ADST 3
 #define MB_MODE_COUNT 14
 #define INTRA_MODES 10
 #define INTER_MODES 4

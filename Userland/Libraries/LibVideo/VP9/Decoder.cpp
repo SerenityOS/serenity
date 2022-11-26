@@ -1066,7 +1066,7 @@ u16 Decoder::get_ac_quantizer(BlockContext const& block_context, u8 plane)
     return ac_q(block_context.frame_context.color_config.bit_depth, static_cast<u8>(get_base_quantizer_index(block_context) + offset));
 }
 
-DecoderErrorOr<void> Decoder::reconstruct(u8 plane, BlockContext const& block_context, u32 transform_block_x, u32 transform_block_y, TXSize transform_block_size, u8 transform_type)
+DecoderErrorOr<void> Decoder::reconstruct(u8 plane, BlockContext const& block_context, u32 transform_block_x, u32 transform_block_y, TXSize transform_block_size, TransformSet transform_set)
 {
     // 8.6.2 Reconstruct process
 
@@ -1100,7 +1100,7 @@ DecoderErrorOr<void> Decoder::reconstruct(u8 plane, BlockContext const& block_co
 
     // 3. Invoke the 2D inverse transform block process defined in section 8.7.2 with the variable n as input.
     //    The inverse transform outputs are stored back to the Dequant buffer.
-    TRY(inverse_transform_2d(block_context, dequantized, log2_of_block_size, transform_type));
+    TRY(inverse_transform_2d(block_context, dequantized, log2_of_block_size, transform_set));
 
     // 4. CurrFrame[ plane ][ y + i ][ x + j ] is set equal to Clip1( CurrFrame[ plane ][ y + i ][ x + j ] + Dequant[ i ][ j ] )
     //    for i = 0..(n0-1) and j = 0..(n0-1).
@@ -1653,7 +1653,7 @@ inline DecoderErrorOr<void> Decoder::inverse_asymmetric_discrete_sine_transform(
     return inverse_asymmetric_discrete_sine_transform_16(bit_depth, data);
 }
 
-DecoderErrorOr<void> Decoder::inverse_transform_2d(BlockContext const& block_context, Span<Intermediate> dequantized, u8 log2_of_block_size, u8 transform_type)
+DecoderErrorOr<void> Decoder::inverse_transform_2d(BlockContext const& block_context, Span<Intermediate> dequantized, u8 log2_of_block_size, TransformSet transform_set)
 {
     // This process performs a 2D inverse transform for an array of size 2^n by 2^n stored in the 2D array Dequant.
     // The input to this process is a variable n (log2_of_block_size) that specifies the base 2 logarithm of the width of the transform.
@@ -1676,9 +1676,8 @@ DecoderErrorOr<void> Decoder::inverse_transform_2d(BlockContext const& block_con
             TRY(inverse_walsh_hadamard_transform(row, log2_of_block_size, 2));
             continue;
         }
-        switch (transform_type) {
-        case DCT_DCT:
-        case ADST_DCT:
+        switch (transform_set.second_transform) {
+        case TransformType::DCT:
             // Otherwise, if TxType is equal to DCT_DCT or TxType is equal to ADST_DCT, apply an inverse DCT as
             // follows:
             // 1. Invoke the inverse DCT permutation process as specified in section 8.7.1.2 with the input variable n.
@@ -1686,8 +1685,7 @@ DecoderErrorOr<void> Decoder::inverse_transform_2d(BlockContext const& block_con
             // 2. Invoke the inverse DCT process as specified in section 8.7.1.3 with the input variable n.
             TRY(inverse_discrete_cosine_transform(block_context.frame_context.color_config.bit_depth, row, log2_of_block_size));
             break;
-        case DCT_ADST:
-        case ADST_ADST:
+        case TransformType::ADST:
             // 4. Otherwise (TxType is equal to DCT_ADST or TxType is equal to ADST_ADST), invoke the inverse ADST
             //    process as specified in section 8.7.1.9 with input variable n.
             TRY(inverse_asymmetric_discrete_sine_transform(block_context.frame_context.color_config.bit_depth, row, log2_of_block_size));
@@ -1716,9 +1714,8 @@ DecoderErrorOr<void> Decoder::inverse_transform_2d(BlockContext const& block_con
             TRY(inverse_walsh_hadamard_transform(column, log2_of_block_size, 2));
             continue;
         }
-        switch (transform_type) {
-        case DCT_DCT:
-        case DCT_ADST:
+        switch (transform_set.first_transform) {
+        case TransformType::DCT:
             // Otherwise, if TxType is equal to DCT_DCT or TxType is equal to DCT_ADST, apply an inverse DCT as
             // follows:
             // 1. Invoke the inverse DCT permutation process as specified in section 8.7.1.2 with the input variable n.
@@ -1726,8 +1723,7 @@ DecoderErrorOr<void> Decoder::inverse_transform_2d(BlockContext const& block_con
             // 2. Invoke the inverse DCT process as specified in section 8.7.1.3 with the input variable n.
             TRY(inverse_discrete_cosine_transform(block_context.frame_context.color_config.bit_depth, column, log2_of_block_size));
             break;
-        case ADST_DCT:
-        case ADST_ADST:
+        case TransformType::ADST:
             // 4. Otherwise (TxType is equal to ADST_DCT or TxType is equal to ADST_ADST), invoke the inverse ADST
             //    process as specified in section 8.7.1.9 with input variable n.
             TRY(inverse_asymmetric_discrete_sine_transform(block_context.frame_context.color_config.bit_depth, column, log2_of_block_size));

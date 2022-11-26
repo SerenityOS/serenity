@@ -1344,13 +1344,13 @@ static TXSize get_uv_tx_size(bool subsampling_x, bool subsampling_y, TXSize tx_s
     return min(tx_size, max_txsize_lookup[get_plane_block_size(subsampling_x, subsampling_y, size, 1)]);
 }
 
-static u8 select_transform_type(BlockContext const& block_context, u8 plane, TXSize tx_size, u32 block_index)
+static TransformSet select_transform_type(BlockContext const& block_context, u8 plane, TXSize tx_size, u32 block_index)
 {
     if (plane > 0 || tx_size == TX_32x32)
-        return DCT_DCT;
+        return TransformSet { TransformType::DCT, TransformType::DCT };
     if (tx_size == TX_4x4) {
         if (block_context.frame_context.is_lossless() || block_context.is_inter_predicted())
-            return DCT_DCT;
+            return TransformSet { TransformType::DCT, TransformType::DCT };
 
         return mode_to_txfm_map[to_underlying(block_context.size < Block_8x8 ? block_context.sub_block_prediction_modes[block_index] : block_context.y_prediction_mode())];
     }
@@ -1395,10 +1395,10 @@ DecoderErrorOr<bool> Parser::residual(BlockContext& block_context, bool has_bloc
                     if (!block_context.is_inter_predicted())
                         TRY(m_decoder.predict_intra(plane, block_context, start_x, start_y, has_block_left || x > 0, has_block_above || y > 0, (x + step) < num_4x4_w, tx_size, block_index));
                     if (!block_context.should_skip_residuals) {
-                        auto transform_type = select_transform_type(block_context, plane, tx_size, block_index);
-                        non_zero = TRY(tokens(block_context, plane, start_x, start_y, tx_size, transform_type));
+                        auto transform_set = select_transform_type(block_context, plane, tx_size, block_index);
+                        non_zero = TRY(tokens(block_context, plane, start_x, start_y, tx_size, transform_set));
                         had_residual_tokens = had_residual_tokens || non_zero;
-                        TRY(m_decoder.reconstruct(plane, block_context, start_x, start_y, tx_size, transform_type));
+                        TRY(m_decoder.reconstruct(plane, block_context, start_x, start_y, tx_size, transform_set));
                     }
                 }
 
@@ -1421,42 +1421,45 @@ DecoderErrorOr<bool> Parser::residual(BlockContext& block_context, bool has_bloc
     return had_residual_tokens;
 }
 
-static u16 const* get_scan(TXSize tx_size, u8 transform_type)
+static u16 const* get_scan(TXSize tx_size, TransformSet transform_set)
 {
+    constexpr TransformSet adst_dct { TransformType::ADST, TransformType::DCT };
+    constexpr TransformSet dct_adst { TransformType::DCT, TransformType::ADST };
+
     if (tx_size == TX_4x4) {
-        if (transform_type == ADST_DCT)
+        if (transform_set == adst_dct)
             return row_scan_4x4;
-        if (transform_type == DCT_ADST)
+        if (transform_set == dct_adst)
             return col_scan_4x4;
         return default_scan_4x4;
     }
     if (tx_size == TX_8x8) {
-        if (transform_type == ADST_DCT)
+        if (transform_set == adst_dct)
             return row_scan_8x8;
-        if (transform_type == DCT_ADST)
+        if (transform_set == dct_adst)
             return col_scan_8x8;
         return default_scan_8x8;
     }
     if (tx_size == TX_16x16) {
-        if (transform_type == ADST_DCT)
+        if (transform_set == adst_dct)
             return row_scan_16x16;
-        if (transform_type == DCT_ADST)
+        if (transform_set == dct_adst)
             return col_scan_16x16;
         return default_scan_16x16;
     }
     return default_scan_32x32;
 }
 
-DecoderErrorOr<bool> Parser::tokens(BlockContext& block_context, size_t plane, u32 start_x, u32 start_y, TXSize tx_size, u8 transform_type)
+DecoderErrorOr<bool> Parser::tokens(BlockContext& block_context, size_t plane, u32 start_x, u32 start_y, TXSize tx_size, TransformSet transform_set)
 {
     u16 segment_eob = 16 << (tx_size << 1);
-    auto const* scan = get_scan(tx_size, transform_type);
+    auto const* scan = get_scan(tx_size, transform_set);
     auto check_eob = true;
     u16 coef_index = 0;
     for (; coef_index < segment_eob; coef_index++) {
         auto pos = scan[coef_index];
         auto band = (tx_size == TX_4x4) ? coefband_4x4[coef_index] : coefband_8x8plus[coef_index];
-        auto tokens_context = TreeParser::get_tokens_context(block_context.frame_context.color_config.subsampling_x, block_context.frame_context.color_config.subsampling_y, block_context.frame_context.rows(), block_context.frame_context.columns(), m_above_nonzero_context, m_left_nonzero_context, m_token_cache, tx_size, transform_type, plane, start_x, start_y, pos, block_context.is_inter_predicted(), band, coef_index);
+        auto tokens_context = TreeParser::get_tokens_context(block_context.frame_context.color_config.subsampling_x, block_context.frame_context.color_config.subsampling_y, block_context.frame_context.rows(), block_context.frame_context.columns(), m_above_nonzero_context, m_left_nonzero_context, m_token_cache, tx_size, transform_set, plane, start_x, start_y, pos, block_context.is_inter_predicted(), band, coef_index);
         if (check_eob) {
             auto more_coefs = TRY_READ(TreeParser::parse_more_coefficients(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter, tokens_context));
             if (!more_coefs)

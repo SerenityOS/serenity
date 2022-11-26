@@ -624,7 +624,7 @@ ErrorOr<bool> TreeParser::parse_motion_vector_hp(BitStream& bit_stream, Probabil
     return value;
 }
 
-TokensContext TreeParser::get_tokens_context(bool subsampling_x, bool subsampling_y, u32 rows, u32 columns, Array<Vector<bool>, 3> const& above_nonzero_context, Array<Vector<bool>, 3> const& left_nonzero_context, u8 token_cache[1024], TXSize tx_size, u8 tx_type, u8 plane, u32 start_x, u32 start_y, u16 position, bool is_inter, u8 band, u16 coef_index)
+TokensContext TreeParser::get_tokens_context(bool subsampling_x, bool subsampling_y, u32 rows, u32 columns, Array<Vector<bool>, 3> const& above_nonzero_context, Array<Vector<bool>, 3> const& left_nonzero_context, u8 token_cache[1024], TXSize tx_size, TransformSet transform_set, u8 plane, u32 start_x, u32 start_y, u16 position, bool is_inter, u8 band, u16 coef_index)
 {
     u8 context;
     if (coef_index == 0) {
@@ -652,10 +652,10 @@ TokensContext TreeParser::get_tokens_context(bool subsampling_x, bool subsamplin
         auto a = i > 0 ? (i - 1) * n + j : 0;
         auto a2 = i * n + j - 1;
         if (i > 0 && j > 0) {
-            if (tx_type == DCT_ADST) {
+            if (transform_set == TransformSet { TransformType::DCT, TransformType::ADST }) {
                 neighbor_0 = a;
                 neighbor_1 = a;
-            } else if (tx_type == ADST_DCT) {
+            } else if (transform_set == TransformSet { TransformType::ADST, TransformType::DCT }) {
                 neighbor_0 = a2;
                 neighbor_1 = a2;
             } else {
