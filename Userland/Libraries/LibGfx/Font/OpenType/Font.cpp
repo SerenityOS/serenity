@@ -510,6 +510,9 @@ ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_offset(ReadonlyBytes buffer, u3
                 cmap.set_active_index(i);
                 break;
             }
+        } else if (platform.value() == Cmap::Subtable::Platform::Macintosh) {
+            cmap.set_active_index(i);
+            break;
         }
     }
 
