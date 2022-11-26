@@ -329,6 +329,8 @@ public:
 
     u16 header_size_in_bytes { 0 };
 
+    TXMode transform_mode;
+
 private:
     friend struct TileContext;
 
