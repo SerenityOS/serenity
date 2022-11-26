@@ -16,6 +16,7 @@
 #include "Enums.h"
 #include "LookupTables.h"
 #include "MotionVector.h"
+#include "Utilities.h"
 
 namespace Video::VP9 {
 
@@ -178,11 +179,9 @@ struct BlockContext {
     u32 row { 0 };
     u32 column { 0 };
     BlockSubsize size;
-    Gfx::Size<u8> get_size_in_4x4_blocks() const
+    Gfx::Size<u8> get_size_in_sub_blocks() const
     {
-        auto width = num_4x4_blocks_wide_lookup[size];
-        auto height = num_4x4_blocks_high_lookup[size];
-        return Gfx::Size<u8>(width, height);
+        return block_size_to_sub_blocks(size);
     }
 
     Vector2DView<FrameBlockContext> contexts_view;
