@@ -117,8 +117,7 @@ private:
     DecoderErrorOr<MotionVector> read_motion_vector(BlockContext const&, BlockMotionVectorCandidates const&, ReferenceIndex);
     DecoderErrorOr<i32> read_single_motion_vector_component(u8 component);
     DecoderErrorOr<bool> residual(BlockContext&, bool has_block_above, bool has_block_left);
-    DecoderErrorOr<bool> tokens(BlockContext&, size_t plane, u32 x, u32 y, TXSize tx_size, u32 block_index);
-    u32 const* get_scan(BlockContext const&, size_t plane, TXSize tx_size, u32 block_index);
+    DecoderErrorOr<bool> tokens(BlockContext&, size_t plane, u32 x, u32 y, TXSize tx_size, u8 transform_type);
     DecoderErrorOr<i32> read_coef(u8 bit_depth, Token token);
 
     /* (6.5) Motion Vector Prediction */
@@ -158,7 +157,6 @@ private:
 
     Vector<u16> m_frame_store[NUM_REF_FRAMES][3];
 
-    u8 m_tx_type { 0 };
     u8 m_token_cache[1024];
     i32 m_tokens[1024];
     bool m_use_hp { false };
