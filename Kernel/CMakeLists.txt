@@ -196,8 +196,10 @@ set(KERNEL_SOURCES
     FileSystem/SysFS/Subsystems/Kernel/Network/UDP.cpp
     FileSystem/SysFS/Subsystems/Kernel/Variables/BooleanVariable.cpp
     FileSystem/SysFS/Subsystems/Kernel/Variables/CapsLockRemap.cpp
+    FileSystem/SysFS/Subsystems/Kernel/Variables/CoredumpDirectory.cpp
     FileSystem/SysFS/Subsystems/Kernel/Variables/Directory.cpp
     FileSystem/SysFS/Subsystems/Kernel/Variables/DumpKmallocStack.cpp
+    FileSystem/SysFS/Subsystems/Kernel/Variables/StringVariable.cpp
     FileSystem/SysFS/Subsystems/Kernel/Variables/UBSANDeadly.cpp
     FileSystem/TmpFS/FileSystem.cpp
     FileSystem/TmpFS/Inode.cpp
