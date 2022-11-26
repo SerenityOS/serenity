@@ -9,6 +9,7 @@
 
 #include <AK/ByteBuffer.h>
 #include <AK/JsonObjectSerializer.h>
+#include <AK/Singleton.h>
 #include <Kernel/Coredump.h>
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/OpenFileDescription.h>
@@ -22,7 +23,14 @@
 
 #define INCLUDE_USERSPACE_HEAP_MEMORY_IN_COREDUMPS 0
 
+static Singleton<SpinlockProtected<OwnPtr<KString>>> s_coredump_directory_path;
+
 namespace Kernel {
+
+SpinlockProtected<OwnPtr<KString>>& Coredump::directory_path()
+{
+    return s_coredump_directory_path;
+}
 
 bool Coredump::FlatRegionData::looks_like_userspace_heap_region() const
 {

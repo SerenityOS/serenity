@@ -11,6 +11,7 @@
 #include <AK/Vector.h>
 #include <Kernel/Forward.h>
 #include <Kernel/Library/NonnullLockRefPtr.h>
+#include <Kernel/Locking/SpinlockProtected.h>
 #include <Kernel/Memory/Region.h>
 
 namespace Kernel {
@@ -18,6 +19,7 @@ namespace Kernel {
 class Coredump {
 public:
     static ErrorOr<NonnullOwnPtr<Coredump>> try_create(NonnullLockRefPtr<Process>, StringView output_path);
+    static SpinlockProtected<OwnPtr<KString>>& directory_path();
 
     ~Coredump() = default;
     ErrorOr<void> write();

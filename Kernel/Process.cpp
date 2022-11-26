@@ -696,7 +696,16 @@ ErrorOr<void> Process::dump_core()
     VERIFY(is_dumpable());
     VERIFY(should_generate_coredump());
     dbgln("Generating coredump for pid: {}", pid().value());
-    auto coredump_path = TRY(KString::formatted("/tmp/coredump/{}_{}_{}", name(), pid().value(), kgettimeofday().to_truncated_seconds()));
+    auto coredump_directory_path = TRY(Coredump::directory_path().with([&](auto& coredump_directory_path) -> ErrorOr<NonnullOwnPtr<KString>> {
+        if (coredump_directory_path)
+            return KString::try_create(coredump_directory_path->view());
+        return KString::try_create(""sv);
+    }));
+    if (coredump_directory_path->view() == ""sv) {
+        dbgln("Generating coredump for pid {} failed because coredump directory was not set.", pid().value());
+        return {};
+    }
+    auto coredump_path = TRY(KString::formatted("{}/{}_{}_{}", coredump_directory_path->view(), name(), pid().value(), kgettimeofday().to_truncated_seconds()));
     auto coredump = TRY(Coredump::try_create(*this, coredump_path->view()));
     return coredump->write();
 }
