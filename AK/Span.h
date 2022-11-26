@@ -266,6 +266,8 @@ using Bytes = Span<u8>;
 
 }
 
+#if USING_AK_GLOBALLY
 using AK::Bytes;
 using AK::ReadonlyBytes;
 using AK::Span;
+#endif

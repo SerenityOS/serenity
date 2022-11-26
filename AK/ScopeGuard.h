@@ -50,5 +50,7 @@ private:
 
 }
 
+#if USING_AK_GLOBALLY
 using AK::ArmedScopeGuard;
 using AK::ScopeGuard;
+#endif

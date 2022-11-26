@@ -281,10 +281,12 @@ static constexpr Complex<T> cexp(Complex<T> const& a)
 }
 }
 
+#    if USING_AK_GLOBALLY
 using AK::approx_eq;
 using AK::cexp;
 using AK::Complex;
 using AK::complex_imag_unit;
 using AK::complex_real_unit;
+#    endif
 
 #endif

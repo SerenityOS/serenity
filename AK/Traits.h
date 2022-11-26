@@ -76,5 +76,7 @@ requires(Detail::IsPointerOfType<char, T>) struct Traits<T> : public GenericTrai
 
 }
 
+#if USING_AK_GLOBALLY
 using AK::GenericTraits;
 using AK::Traits;
+#endif

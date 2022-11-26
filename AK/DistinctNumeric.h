@@ -344,4 +344,6 @@ struct Traits<AK::DistinctNumeric<T, X, Opts...>> : public GenericTraits<AK::Dis
     static constexpr auto hash(DistinctNumeric<T, X, Opts...> const& d) { return Traits<T>::hash(d.value()); }
 };
 
+#if USING_AK_GLOBALLY
 using AK::DistinctNumeric;
+#endif

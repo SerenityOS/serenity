@@ -197,5 +197,7 @@ inline Atomic<FlatPtr> BumpAllocator<use_mmap, size>::s_unused_allocation_cache 
 
 }
 
+#if USING_AK_GLOBALLY
 using AK::BumpAllocator;
 using AK::UniformBumpAllocator;
+#endif

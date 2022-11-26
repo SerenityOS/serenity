@@ -364,4 +364,6 @@ private:
 
 }
 
+#if USING_AK_GLOBALLY
 using AK::Optional;
+#endif

@@ -32,4 +32,6 @@ template<IterableContainer Container>
 
 }
 
+#if USING_AK_GLOBALLY
 using AK::all_of;
+#endif

@@ -67,4 +67,6 @@ constexpr auto binary_search(
 
 }
 
+#if USING_AK_GLOBALLY
 using AK::binary_search;
+#endif

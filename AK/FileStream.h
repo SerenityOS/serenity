@@ -168,7 +168,9 @@ private:
 
 }
 
+#    if USING_AK_GLOBALLY
 using AK::InputFileStream;
 using AK::OutputFileStream;
+#    endif
 
 #endif

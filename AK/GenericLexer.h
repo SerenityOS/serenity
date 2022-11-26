@@ -239,7 +239,9 @@ constexpr auto is_quote = is_any_of("'\""sv);
 
 }
 
+#if USING_AK_GLOBALLY
 using AK::GenericLexer;
 using AK::is_any_of;
 using AK::is_path_separator;
 using AK::is_quote;
+#endif

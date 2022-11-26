@@ -436,5 +436,7 @@ private:
 
 }
 
+#if USING_AK_GLOBALLY
 using AK::DisjointChunks;
 using AK::DisjointSpans;
+#endif

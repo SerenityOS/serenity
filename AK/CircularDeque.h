@@ -41,4 +41,6 @@ public:
 
 }
 
+#if USING_AK_GLOBALLY
 using AK::CircularDeque;
+#endif

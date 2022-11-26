@@ -56,4 +56,6 @@ private:
 
 }
 
+#if USING_AK_GLOBALLY
 using AK::Ptr32;
+#endif

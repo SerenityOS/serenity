@@ -125,5 +125,7 @@ public:
 
 }
 
+#if USING_AK_GLOBALLY
 using AK::Error;
 using AK::ErrorOr;
+#endif

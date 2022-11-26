@@ -614,6 +614,8 @@ template<typename T, typename... Ts>
 inline constexpr bool IsOneOfIgnoringCV = (IsSameIgnoringCV<T, Ts> || ...);
 
 }
+
+#if USING_AK_GLOBALLY
 using AK::Detail::AddConst;
 using AK::Detail::AddConstToReferencedType;
 using AK::Detail::AddLvalueReference;
@@ -683,3 +685,4 @@ using AK::Detail::RemoveVolatile;
 using AK::Detail::TrueType;
 using AK::Detail::UnderlyingType;
 using AK::Detail::Void;
+#endif

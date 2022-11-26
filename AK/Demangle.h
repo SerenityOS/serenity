@@ -26,6 +26,8 @@ inline String demangle(StringView name)
 
 }
 
+#    if USING_AK_GLOBALLY
 using AK::demangle;
+#    endif
 
 #endif

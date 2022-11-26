@@ -225,4 +225,6 @@ struct JsonArraySerializer<void> {
 
 }
 
+#if USING_AK_GLOBALLY
 using AK::JsonArraySerializer;
+#endif

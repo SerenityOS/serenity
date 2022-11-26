@@ -40,4 +40,6 @@ FloatingPointExponentialForm convert_floating_point_to_decimal_exponential_form(
 
 }
 
+#if USING_AK_GLOBALLY
 using AK::convert_floating_point_to_decimal_exponential_form;
+#endif

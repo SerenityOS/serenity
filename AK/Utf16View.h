@@ -125,4 +125,6 @@ struct AK::Formatter<AK::Utf16View> : Formatter<FormatString> {
     }
 };
 
+#if USING_AK_GLOBALLY
 using AK::Utf16View;
+#endif

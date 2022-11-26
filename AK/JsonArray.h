@@ -114,4 +114,6 @@ inline typename Builder::OutputType JsonArray::serialized() const
 
 }
 
+#if USING_AK_GLOBALLY
 using AK::JsonArray;
+#endif

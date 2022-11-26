@@ -357,5 +357,7 @@ struct CaseInsensitiveStringViewTraits : public Traits<StringView> {
     return AK::StringView(cstring, length);
 }
 
+#if USING_AK_GLOBALLY
 using AK::CaseInsensitiveStringViewTraits;
 using AK::StringView;
+#endif

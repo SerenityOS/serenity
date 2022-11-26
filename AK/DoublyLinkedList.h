@@ -201,4 +201,6 @@ private:
 
 }
 
+#if USING_AK_GLOBALLY
 using AK::DoublyLinkedList;
+#endif

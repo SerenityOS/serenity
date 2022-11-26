@@ -775,4 +775,6 @@ constexpr T ceil(T num)
 #undef AARCH64_INSTRUCTION
 }
 
+#if USING_AK_GLOBALLY
 using AK::round_to;
+#endif

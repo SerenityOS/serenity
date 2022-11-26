@@ -220,4 +220,6 @@ Tuple(Args... args) -> Tuple<Args...>;
 
 }
 
+#if USING_AK_GLOBALLY
 using AK::Tuple;
+#endif

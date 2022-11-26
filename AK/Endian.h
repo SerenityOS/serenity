@@ -145,6 +145,8 @@ requires(HasFormatter<T>) struct Formatter<BigEndian<T>> : Formatter<T> {
 
 }
 
+#if USING_AK_GLOBALLY
 using AK::BigEndian;
 using AK::LittleEndian;
 using AK::NetworkOrdered;
+#endif

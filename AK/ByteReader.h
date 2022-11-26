@@ -55,4 +55,6 @@ struct ByteReader {
 
 }
 
+#if USING_AK_GLOBALLY
 using AK::ByteReader;
+#endif

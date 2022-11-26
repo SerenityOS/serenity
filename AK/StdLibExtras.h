@@ -178,6 +178,7 @@ __DEFINE_GENERIC_ABS(long double, 0.0L, fabsl);
 
 }
 
+#if USING_AK_GLOBALLY
 using AK::array_size;
 using AK::ceil_div;
 using AK::clamp;
@@ -189,3 +190,4 @@ using AK::mix;
 using AK::RawPtr;
 using AK::swap;
 using AK::to_underlying;
+#endif

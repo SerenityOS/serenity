@@ -65,4 +65,6 @@ private:
 
 }
 
+#if USING_AK_GLOBALLY
 using AK::URLParser;
+#endif

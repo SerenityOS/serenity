@@ -39,9 +39,11 @@ static constexpr Array<StringView, 12> short_month_names = {
 
 }
 
+#if USING_AK_GLOBALLY
 using AK::long_day_names;
 using AK::long_month_names;
 using AK::micro_day_names;
 using AK::mini_day_names;
 using AK::short_day_names;
 using AK::short_month_names;
+#endif

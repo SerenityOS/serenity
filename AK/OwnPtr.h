@@ -224,7 +224,9 @@ struct Traits<OwnPtr<T>> : public GenericTraits<OwnPtr<T>> {
 
 }
 
+#if USING_AK_GLOBALLY
 using AK::adopt_nonnull_own_or_enomem;
 using AK::adopt_own_if_nonnull;
 using AK::OwnPtr;
 using AK::try_make;
+#endif

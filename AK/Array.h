@@ -111,5 +111,7 @@ constexpr static auto iota_array(T const offset = {})
 
 }
 
+#if USING_AK_GLOBALLY
 using AK::Array;
 using AK::iota_array;
+#endif

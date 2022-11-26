@@ -828,4 +828,6 @@ Vector(Args... args) -> Vector<CommonType<Args...>>;
 
 }
 
+#if USING_AK_GLOBALLY
 using AK::Vector;
+#endif

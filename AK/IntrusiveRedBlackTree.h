@@ -235,5 +235,7 @@ using IntrusiveRedBlackTree = Detail::IntrusiveRedBlackTree<
 
 }
 
+#if USING_AK_GLOBALLY
 using AK::IntrusiveRedBlackTree;
 using AK::IntrusiveRedBlackTreeNode;
+#endif

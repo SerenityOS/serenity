@@ -143,4 +143,6 @@ public:
 
 }
 
+#if USING_AK_GLOBALLY
 using AK::DateTimeLexer;
+#endif

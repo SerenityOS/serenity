@@ -123,4 +123,6 @@ struct ArbitrarySizedEnum : public T {
 
 }
 
+#if USING_AK_GLOBALLY
 using AK::ArbitrarySizedEnum;
+#endif

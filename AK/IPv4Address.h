@@ -176,4 +176,6 @@ struct Formatter<IPv4Address> : Formatter<String> {
 
 }
 
+#if USING_AK_GLOBALLY
 using AK::IPv4Address;
+#endif

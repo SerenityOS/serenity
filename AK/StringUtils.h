@@ -109,8 +109,10 @@ size_t count(StringView, StringView needle);
 
 }
 
+#if USING_AK_GLOBALLY
 using AK::CaseSensitivity;
 using AK::ReplaceMode;
 using AK::SplitBehavior;
 using AK::TrimMode;
 using AK::TrimWhitespace;
+#endif

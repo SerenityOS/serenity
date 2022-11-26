@@ -114,4 +114,6 @@ struct LEB128 {
 
 }
 
+#if USING_AK_GLOBALLY
 using AK::LEB128;
+#endif

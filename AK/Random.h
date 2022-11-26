@@ -55,6 +55,8 @@ u32 get_random_uniform(u32 max_bounds);
 
 }
 
+#if USING_AK_GLOBALLY
 using AK::fill_with_random;
 using AK::get_random;
 using AK::get_random_uniform;
+#endif

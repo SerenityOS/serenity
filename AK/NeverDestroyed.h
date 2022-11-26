@@ -40,4 +40,6 @@ private:
 
 }
 
+#if USING_AK_GLOBALLY
 using AK::NeverDestroyed;
+#endif

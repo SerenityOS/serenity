@@ -239,5 +239,7 @@ private:
 
 }
 
+#if USING_AK_GLOBALLY
 using AK::InputBitStream;
 using AK::OutputBitStream;
+#endif

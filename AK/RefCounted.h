@@ -72,5 +72,7 @@ public:
 
 }
 
+#if USING_AK_GLOBALLY
 using AK::RefCounted;
 using AK::RefCountedBase;
+#endif
