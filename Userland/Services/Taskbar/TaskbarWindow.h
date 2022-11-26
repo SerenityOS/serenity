@@ -7,13 +7,13 @@
 #pragma once
 
 #include "ClockWidget.h"
-#include "Taskbar/QuickLaunchWidget.h"
 #include "WindowList.h"
 #include <LibConfig/Listener.h>
 #include <LibDesktop/AppFile.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/ShareableBitmap.h>
+#include <Services/Taskbar/QuickLaunchWidget.h>
 #include <Services/WindowServer/ScreenLayout.h>
 
 class TaskbarWindow final : public GUI::Window
