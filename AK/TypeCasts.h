@@ -45,5 +45,7 @@ ALWAYS_INLINE CopyConst<InputType, OutputType>& verify_cast(InputType& input)
 
 }
 
+#if USING_AK_GLOBALLY
 using AK::is;
 using AK::verify_cast;
+#endif

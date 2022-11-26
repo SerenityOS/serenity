@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <AK/Platform.h>
+
 namespace AK {
 
 template<typename T, typename U>
@@ -24,4 +26,6 @@ template<typename T, typename U>
 
 }
 
+#if USING_AK_GLOBALLY
 using AK::bit_cast;
+#endif

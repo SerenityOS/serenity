@@ -172,6 +172,7 @@ constexpr u32 to_ascii_base36_digit(u32 digit)
 
 }
 
+#if USING_AK_GLOBALLY
 using AK::is_ascii;
 using AK::is_ascii_alpha;
 using AK::is_ascii_alphanumeric;
@@ -199,3 +200,4 @@ using AK::parse_ascii_hex_digit;
 using AK::to_ascii_base36_digit;
 using AK::to_ascii_lowercase;
 using AK::to_ascii_uppercase;
+#endif

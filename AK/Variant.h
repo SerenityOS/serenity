@@ -491,5 +491,7 @@ private:
 
 }
 
+#if USING_AK_GLOBALLY
 using AK::Empty;
 using AK::Variant;
+#endif

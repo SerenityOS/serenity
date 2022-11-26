@@ -35,4 +35,6 @@ using IntrusiveListRelaxedConst = Detail::IntrusiveListRelaxedConst<
 
 }
 
+#if USING_AK_GLOBALLY
 using AK::IntrusiveListRelaxedConst;
+#endif

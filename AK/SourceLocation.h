@@ -49,4 +49,6 @@ struct AK::Formatter<AK::SourceLocation> : AK::Formatter<FormatString> {
     }
 };
 
+#if USING_AK_GLOBALLY
 using AK::SourceLocation;
+#endif

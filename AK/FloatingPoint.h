@@ -232,6 +232,7 @@ constexpr float convert_to_native_float(I input) { return float_to_float<SingleF
 
 }
 
+#if USING_AK_GLOBALLY
 using AK::DoubleFloatingPointBits;
 using AK::FloatExtractor;
 using AK::FloatingPointBits;
@@ -242,3 +243,4 @@ using AK::convert_from_native_float;
 using AK::convert_to_native_double;
 using AK::convert_to_native_float;
 using AK::float_to_float;
+#endif

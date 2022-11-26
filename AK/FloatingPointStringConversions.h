@@ -80,6 +80,8 @@ FloatingPointParseResults<T> parse_first_hexfloat_until_zero_character(char cons
 
 }
 
+#if USING_AK_GLOBALLY
 using AK::parse_first_floating_point;
 using AK::parse_first_hexfloat_until_zero_character;
 using AK::parse_floating_point_completely;
+#endif

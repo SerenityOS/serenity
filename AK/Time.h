@@ -353,6 +353,7 @@ inline bool operator!=(const T& a, const T& b)
 
 }
 
+#if USING_AK_GLOBALLY
 using AK::day_of_week;
 using AK::day_of_year;
 using AK::days_in_month;
@@ -375,3 +376,4 @@ using AK::operator>;
 using AK::operator>=;
 using AK::operator==;
 using AK::operator!=;
+#endif

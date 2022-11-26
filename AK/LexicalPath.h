@@ -95,4 +95,6 @@ struct Formatter<LexicalPath> : Formatter<StringView> {
 
 };
 
+#if USING_AK_GLOBALLY
 using AK::LexicalPath;
+#endif

@@ -461,5 +461,7 @@ using IntrusiveList = Detail::IntrusiveList<
 
 }
 
+#if USING_AK_GLOBALLY
 using AK::IntrusiveList;
 using AK::IntrusiveListNode;
+#endif

@@ -74,5 +74,7 @@ inline Userspace<T> static_ptr_cast(Userspace<U> const& ptr)
 
 }
 
+#if USING_AK_GLOBALLY
 using AK::static_ptr_cast;
 using AK::Userspace;
+#endif

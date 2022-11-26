@@ -132,5 +132,7 @@ private:
 
 }
 
+#if USING_AK_GLOBALLY
 using AK::Utf8CodePointIterator;
 using AK::Utf8View;
+#endif

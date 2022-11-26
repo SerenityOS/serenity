@@ -185,8 +185,10 @@ struct Formatter<NonnullOwnPtr<T>> : Formatter<const T*> {
 
 }
 
-#if !defined(KERNEL)
+#if USING_AK_GLOBALLY
+#    if !defined(KERNEL)
 using AK::adopt_own;
 using AK::make;
-#endif
+#    endif
 using AK::NonnullOwnPtr;
+#endif

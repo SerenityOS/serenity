@@ -335,6 +335,8 @@ InputStream& operator>>(InputStream& stream, String& string);
 
 }
 
+#if USING_AK_GLOBALLY
 using AK::CaseInsensitiveStringTraits;
 using AK::escape_html_entities;
 using AK::String;
+#endif

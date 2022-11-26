@@ -22,5 +22,7 @@ namespace AK {
 [[nodiscard]] String encode_base64(ReadonlyBytes);
 }
 
+#if USING_AK_GLOBALLY
 using AK::decode_base64;
 using AK::encode_base64;
+#endif

@@ -724,5 +724,8 @@ private:
 };
 }
 
+#if USING_AK_GLOBALLY
+using AK::HashSetResult;
 using AK::HashTable;
 using AK::OrderedHashTable;
+#endif

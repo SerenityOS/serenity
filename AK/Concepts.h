@@ -121,6 +121,7 @@ concept FallibleFunction = requires(Func&& func, Args&&... args) {
 // clang-format on
 }
 
+#if USING_AK_GLOBALLY
 using AK::Concepts::Arithmetic;
 using AK::Concepts::ArrayLike;
 using AK::Concepts::Enum;
@@ -138,3 +139,4 @@ using AK::Concepts::Signed;
 using AK::Concepts::SpecializationOf;
 using AK::Concepts::Unsigned;
 using AK::Concepts::VoidFunction;
+#endif

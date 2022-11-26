@@ -39,6 +39,8 @@ String encode_hex(ReadonlyBytes);
 
 }
 
+#if USING_AK_GLOBALLY
 using AK::decode_hex;
 using AK::decode_hex_digit;
 using AK::encode_hex;
+#endif

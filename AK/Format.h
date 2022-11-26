@@ -698,16 +698,17 @@ struct Formatter<ErrorOr<T, ErrorType>> : Formatter<FormatString> {
 
 } // namespace AK
 
-#ifdef KERNEL
+#if USING_AK_GLOBALLY
+#    ifdef KERNEL
 using AK::critical_dmesgln;
 using AK::dmesgln;
-#else
+#    else
 using AK::out;
 using AK::outln;
 
 using AK::warn;
 using AK::warnln;
-#endif
+#    endif
 
 using AK::dbgln;
 
@@ -715,8 +716,10 @@ using AK::CheckedFormatString;
 using AK::FormatIfSupported;
 using AK::FormatString;
 
-#define dbgln_if(flag, fmt, ...)       \
-    do {                               \
-        if constexpr (flag)            \
-            dbgln(fmt, ##__VA_ARGS__); \
-    } while (0)
+#    define dbgln_if(flag, fmt, ...)       \
+        do {                               \
+            if constexpr (flag)            \
+                dbgln(fmt, ##__VA_ARGS__); \
+        } while (0)
+
+#endif

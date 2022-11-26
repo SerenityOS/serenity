@@ -290,4 +290,6 @@ struct Formatter<JsonValue> : Formatter<StringView> {
 
 }
 
+#if USING_AK_GLOBALLY
 using AK::JsonValue;
+#endif

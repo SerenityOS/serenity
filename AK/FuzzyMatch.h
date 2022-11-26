@@ -19,5 +19,7 @@ FuzzyMatchResult fuzzy_match(StringView needle, StringView haystack);
 
 }
 
+#if USING_AK_GLOBALLY
 using AK::fuzzy_match;
 using AK::FuzzyMatchResult;
+#endif

@@ -452,5 +452,7 @@ constexpr Checked<T> make_checked(T value)
 
 }
 
+#if USING_AK_GLOBALLY
 using AK::Checked;
 using AK::make_checked;
+#endif

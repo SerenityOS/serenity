@@ -299,4 +299,6 @@ struct Formatter<IPv6Address> : Formatter<String> {
 
 }
 
+#if USING_AK_GLOBALLY
 using AK::IPv6Address;
+#endif

@@ -442,5 +442,7 @@ public:
 };
 }
 
+#if USING_AK_GLOBALLY
 using AK::Atomic;
 using AK::full_memory_barrier;
+#endif

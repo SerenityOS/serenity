@@ -119,6 +119,8 @@ struct Formatter<StringImpl> : Formatter<StringView> {
 
 }
 
+#if USING_AK_GLOBALLY
 using AK::Chomp;
 using AK::NoChomp;
 using AK::StringImpl;
+#endif

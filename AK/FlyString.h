@@ -101,4 +101,6 @@ struct Traits<FlyString> : public GenericTraits<FlyString> {
 
 }
 
+#if USING_AK_GLOBALLY
 using AK::FlyString;
+#endif

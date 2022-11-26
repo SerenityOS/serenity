@@ -262,4 +262,6 @@ ErrorOr<JsonObjectSerializer<Builder>> JsonArraySerializer<Builder>::add_object(
 
 }
 
+#if USING_AK_GLOBALLY
 using AK::JsonObjectSerializer;
+#endif

@@ -66,8 +66,10 @@ constexpr void for_each_type_zipped(F&& f)
 
 }
 
+#if USING_AK_GLOBALLY
 using AK::for_each_type;
 using AK::for_each_type_zipped;
 using AK::TypeList;
 using AK::TypeListElement;
 using AK::TypeWrapper;
+#endif

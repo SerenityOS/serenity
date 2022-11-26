@@ -151,4 +151,6 @@ void quick_sort(Collection& collection)
 
 }
 
+#if USING_AK_GLOBALLY
 using AK::quick_sort;
+#endif

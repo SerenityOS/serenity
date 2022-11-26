@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <AK/Platform.h>
+
 namespace AK {
 
 template<typename T>
@@ -26,4 +28,6 @@ private:
 
 }
 
+#if USING_AK_GLOBALLY
 using AK::TemporaryChange;
+#endif

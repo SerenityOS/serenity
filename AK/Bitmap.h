@@ -191,4 +191,6 @@ private:
 
 }
 
+#if USING_AK_GLOBALLY
 using AK::Bitmap;
+#endif

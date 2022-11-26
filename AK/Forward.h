@@ -146,6 +146,7 @@ class [[nodiscard]] ErrorOr;
 
 }
 
+#if USING_AK_GLOBALLY
 using AK::Array;
 using AK::Atomic;
 using AK::Badge;
@@ -199,9 +200,11 @@ using AK::Utf8CodePointIterator;
 using AK::Utf8View;
 using AK::Vector;
 
-#ifdef KERNEL
+#    ifdef KERNEL
 using AK::LockRefPtr;
 using AK::LockRefPtrTraits;
 using AK::NonnullLockRefPtr;
 using AK::NonnullLockRefPtrVector;
+#    endif
+
 #endif

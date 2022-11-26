@@ -272,7 +272,9 @@ private:
 
 }
 
+#if USING_AK_GLOBALLY
 using AK::DuplexMemoryStream;
 using AK::InputMemoryStream;
 using AK::InputStream;
 using AK::OutputMemoryStream;
+#endif

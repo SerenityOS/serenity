@@ -129,4 +129,6 @@ struct NumericLimits<long double> {
 
 }
 
+#if USING_AK_GLOBALLY
 using AK::NumericLimits;
+#endif

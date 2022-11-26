@@ -1,11 +1,15 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2022, Nico Weber <thakis@chromium.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
+
+#ifndef USING_AK_GLOBALLY
+#    define USING_AK_GLOBALLY 1
+#endif
 
 #ifdef __i386__
 #    define AK_ARCH_I386 1

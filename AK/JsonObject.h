@@ -243,4 +243,6 @@ inline typename Builder::OutputType JsonValue::serialized() const
 
 }
 
+#if USING_AK_GLOBALLY
 using AK::JsonObject;
+#endif

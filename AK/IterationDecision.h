@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <AK/Platform.h>
+
 namespace AK {
 
 enum class IterationDecision {
@@ -15,4 +17,6 @@ enum class IterationDecision {
 
 }
 
+#if USING_AK_GLOBALLY
 using AK::IterationDecision;
+#endif

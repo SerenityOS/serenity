@@ -243,5 +243,7 @@ private:
 
 }
 
+#if USING_AK_GLOBALLY
 using AK::HashMap;
 using AK::OrderedHashMap;
+#endif

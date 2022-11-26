@@ -178,4 +178,6 @@ WeakPtr<T> make_weak_ptr_if_nonnull(T const* ptr)
 
 }
 
+#if USING_AK_GLOBALLY
 using AK::WeakPtr;
+#endif

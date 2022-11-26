@@ -47,4 +47,6 @@ constexpr u32 case_insensitive_string_hash(char const* characters, size_t length
 
 }
 
+#if USING_AK_GLOBALLY
 using AK::string_hash;
+#endif

@@ -76,5 +76,7 @@ inline bool timing_safe_compare(void const* b1, void const* b2, size_t len)
 
 }
 
+#if USING_AK_GLOBALLY
 using AK::secure_zero;
 using AK::timing_safe_compare;
+#endif
