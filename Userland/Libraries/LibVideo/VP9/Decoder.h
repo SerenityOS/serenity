@@ -58,7 +58,7 @@ private:
 
     /* (8.5) Prediction Processes */
     // (8.5.1) Intra prediction process
-    DecoderErrorOr<void> predict_intra(u8 plane, BlockContext const& block_context, u32 x, u32 y, bool have_left, bool have_above, bool not_on_right, TXSize tx_size, u32 block_index);
+    DecoderErrorOr<void> predict_intra(u8 plane, BlockContext const& block_context, u32 x, u32 y, bool have_left, bool have_above, bool not_on_right, TransformSize tx_size, u32 block_index);
 
     // (8.5.1) Inter prediction process
     DecoderErrorOr<void> predict_inter(u8 plane, BlockContext const& block_context, u32 x, u32 y, u32 width, u32 height, u32 block_index);
@@ -81,7 +81,7 @@ private:
     static u16 get_ac_quantizer(BlockContext const&, u8 plane);
 
     // (8.6.2) Reconstruct process
-    DecoderErrorOr<void> reconstruct(u8 plane, BlockContext const&, u32 transform_block_x, u32 transform_block_y, TXSize transform_block_size, TransformSet);
+    DecoderErrorOr<void> reconstruct(u8 plane, BlockContext const&, u32 transform_block_x, u32 transform_block_y, TransformSize transform_block_size, TransformSet);
 
     // (8.7) Inverse transform process
     DecoderErrorOr<void> inverse_transform_2d(BlockContext const&, Span<Intermediate> dequantized, u8 log2_of_block_size, TransformSet);

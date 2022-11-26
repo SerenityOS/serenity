@@ -86,7 +86,7 @@ inline T pixels_to_blocks(T pixels)
     return sub_blocks_to_blocks(pixels_to_sub_blocks(pixels));
 }
 
-inline u8 transform_size_to_sub_blocks(TXSize transform_size)
+inline u8 transform_size_to_sub_blocks(TransformSize transform_size)
 {
     return 1 << transform_size;
 }
