@@ -1012,13 +1012,13 @@ DecoderErrorOr<void> Parser::intra_frame_mode_info(BlockContext& block_context, 
         for (auto& block_sub_mode : block_context.sub_block_prediction_modes)
             block_sub_mode = mode;
     } else {
-        auto size_in_4x4_blocks = block_context.get_size_in_4x4_blocks();
-        for (auto idy = 0; idy < 2; idy += size_in_4x4_blocks.height()) {
-            for (auto idx = 0; idx < 2; idx += size_in_4x4_blocks.width()) {
+        auto size_in_sub_blocks = block_context.get_size_in_sub_blocks();
+        for (auto idy = 0; idy < 2; idy += size_in_sub_blocks.height()) {
+            for (auto idx = 0; idx < 2; idx += size_in_sub_blocks.width()) {
                 auto sub_mode = TRY_READ(TreeParser::parse_default_intra_mode(*m_bit_stream, *m_probability_tables, block_context.size, above_context, left_context, block_context.sub_block_prediction_modes, idx, idy));
 
-                for (auto y = 0; y < size_in_4x4_blocks.height(); y++) {
-                    for (auto x = 0; x < size_in_4x4_blocks.width(); x++) {
+                for (auto y = 0; y < size_in_sub_blocks.height(); y++) {
+                    for (auto x = 0; x < size_in_sub_blocks.width(); x++) {
                         auto index = (idy + y) * 2 + idx + x;
                         block_context.sub_block_prediction_modes[index] = sub_mode;
                     }
@@ -1142,12 +1142,12 @@ DecoderErrorOr<void> Parser::intra_block_mode_info(BlockContext& block_context)
         for (auto& block_sub_mode : sub_modes)
             block_sub_mode = mode;
     } else {
-        auto size_in_4x4_blocks = block_context.get_size_in_4x4_blocks();
-        for (auto idy = 0; idy < 2; idy += size_in_4x4_blocks.height()) {
-            for (auto idx = 0; idx < 2; idx += size_in_4x4_blocks.width()) {
+        auto size_in_sub_blocks = block_context.get_size_in_sub_blocks();
+        for (auto idy = 0; idy < 2; idy += size_in_sub_blocks.height()) {
+            for (auto idx = 0; idx < 2; idx += size_in_sub_blocks.width()) {
                 auto sub_intra_mode = TRY_READ(TreeParser::parse_sub_intra_mode(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter));
-                for (auto y = 0; y < size_in_4x4_blocks.height(); y++) {
-                    for (auto x = 0; x < size_in_4x4_blocks.width(); x++)
+                for (auto y = 0; y < size_in_sub_blocks.height(); y++) {
+                    for (auto x = 0; x < size_in_sub_blocks.width(); x++)
                         sub_modes[(idy + y) * 2 + idx + x] = sub_intra_mode;
                 }
             }
@@ -1182,9 +1182,9 @@ DecoderErrorOr<void> Parser::inter_block_mode_info(BlockContext& block_context, 
     else
         block_context.interpolation_filter = block_context.frame_context.interpolation_filter;
     if (block_context.size < Block_8x8) {
-        auto size_in_4x4_blocks = block_context.get_size_in_4x4_blocks();
-        for (auto idy = 0; idy < 2; idy += size_in_4x4_blocks.height()) {
-            for (auto idx = 0; idx < 2; idx += size_in_4x4_blocks.width()) {
+        auto size_in_sub_blocks = block_context.get_size_in_sub_blocks();
+        for (auto idy = 0; idy < 2; idy += size_in_sub_blocks.height()) {
+            for (auto idx = 0; idx < 2; idx += size_in_sub_blocks.width()) {
                 block_context.y_prediction_mode() = TRY_READ(TreeParser::parse_inter_mode(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter, m_mode_context[block_context.reference_frame_types.primary]));
                 if (block_context.y_prediction_mode() == PredictionMode::NearestMv || block_context.y_prediction_mode() == PredictionMode::NearMv) {
                     select_best_sub_block_reference_motion_vectors(block_context, motion_vector_candidates, idy * 2 + idx, ReferenceIndex::Primary);
@@ -1192,8 +1192,8 @@ DecoderErrorOr<void> Parser::inter_block_mode_info(BlockContext& block_context, 
                         select_best_sub_block_reference_motion_vectors(block_context, motion_vector_candidates, idy * 2 + idx, ReferenceIndex::Secondary);
                 }
                 auto new_motion_vector_pair = TRY(get_motion_vector(block_context, motion_vector_candidates));
-                for (auto y = 0; y < size_in_4x4_blocks.height(); y++) {
-                    for (auto x = 0; x < size_in_4x4_blocks.width(); x++) {
+                for (auto y = 0; y < size_in_sub_blocks.height(); y++) {
+                    for (auto x = 0; x < size_in_sub_blocks.width(); x++) {
                         auto sub_block_index = (idy + y) * 2 + idx + x;
                         block_context.sub_block_motion_vectors[sub_block_index] = new_motion_vector_pair;
                     }
@@ -1331,18 +1331,9 @@ Gfx::Size<size_t> Parser::get_decoded_size_for_plane(FrameContext const& frame_c
     return { point.x(), point.y() };
 }
 
-static BlockSubsize get_plane_block_size(bool subsampling_x, bool subsampling_y, u32 subsize, u8 plane)
+static TXSize get_uv_tx_size(TXSize tx_size, BlockSubsize size_for_plane)
 {
-    auto sub_x = (plane > 0) ? subsampling_x : 0;
-    auto sub_y = (plane > 0) ? subsampling_y : 0;
-    return ss_size_lookup[subsize][sub_x][sub_y];
-}
-
-static TXSize get_uv_tx_size(bool subsampling_x, bool subsampling_y, TXSize tx_size, BlockSubsize size)
-{
-    if (size < Block_8x8)
-        return TX_4x4;
-    return min(tx_size, max_txsize_lookup[get_plane_block_size(subsampling_x, subsampling_y, size, 1)]);
+    return min(tx_size, max_txsize_lookup[size_for_plane]);
 }
 
 static TransformSet select_transform_type(BlockContext const& block_context, u8 plane, TXSize tx_size, u32 block_index)
@@ -1361,65 +1352,67 @@ static TransformSet select_transform_type(BlockContext const& block_context, u8 
 
 DecoderErrorOr<bool> Parser::residual(BlockContext& block_context, bool has_block_above, bool has_block_left)
 {
-    bool had_residual_tokens = false;
-    auto block_size = block_context.size < Block_8x8 ? Block_8x8 : block_context.size;
+    bool block_had_non_zero_tokens = false;
     for (u8 plane = 0; plane < 3; plane++) {
-        auto tx_size = (plane > 0) ? get_uv_tx_size(block_context.frame_context.color_config.subsampling_x, block_context.frame_context.color_config.subsampling_y, block_context.tx_size, block_context.size) : block_context.tx_size;
-        auto step = 1 << tx_size;
-        auto plane_size = get_plane_block_size(block_context.frame_context.color_config.subsampling_x, block_context.frame_context.color_config.subsampling_y, block_size, plane);
-        auto num_4x4_w = num_4x4_blocks_wide_lookup[plane_size];
-        auto num_4x4_h = num_4x4_blocks_high_lookup[plane_size];
-        auto sub_x = (plane > 0) ? block_context.frame_context.color_config.subsampling_x : 0;
-        auto sub_y = (plane > 0) ? block_context.frame_context.color_config.subsampling_y : 0;
-        auto base_x = (block_context.column * 8) >> sub_x;
-        auto base_y = (block_context.row * 8) >> sub_y;
+        auto plane_subsampling_x = (plane > 0) ? block_context.frame_context.color_config.subsampling_x : 0;
+        auto plane_subsampling_y = (plane > 0) ? block_context.frame_context.color_config.subsampling_y : 0;
+        auto plane_size = ss_size_lookup[block_context.size < Block_8x8 ? Block_8x8 : block_context.size][plane_subsampling_x][plane_subsampling_y];
+        auto transform_size = get_uv_tx_size(block_context.tx_size, plane_size);
+        auto transform_size_in_sub_blocks = transform_size_to_sub_blocks(transform_size);
+        auto block_size_in_sub_blocks = block_size_to_sub_blocks(plane_size);
+
+        auto base_x_in_pixels = (blocks_to_pixels(block_context.column)) >> plane_subsampling_x;
+        auto base_y_in_pixels = (blocks_to_pixels(block_context.row)) >> plane_subsampling_y;
         if (block_context.is_inter_predicted()) {
             if (block_context.size < Block_8x8) {
-                for (auto y = 0; y < num_4x4_h; y++) {
-                    for (auto x = 0; x < num_4x4_w; x++) {
-                        TRY(m_decoder.predict_inter(plane, block_context, base_x + (4 * x), base_y + (4 * y), 4, 4, (y * num_4x4_w) + x));
+                for (auto y = 0; y < block_size_in_sub_blocks.height(); y++) {
+                    for (auto x = 0; x < block_size_in_sub_blocks.width(); x++) {
+                        TRY(m_decoder.predict_inter(plane, block_context, base_x_in_pixels + sub_blocks_to_pixels(x), base_y_in_pixels + sub_blocks_to_pixels(y), sub_blocks_to_pixels(1), sub_blocks_to_pixels(1), (y * block_size_in_sub_blocks.width()) + x));
                     }
                 }
             } else {
-                TRY(m_decoder.predict_inter(plane, block_context, base_x, base_y, num_4x4_w * 4, num_4x4_h * 4, 0));
+                TRY(m_decoder.predict_inter(plane, block_context, base_x_in_pixels, base_y_in_pixels, sub_blocks_to_pixels(block_size_in_sub_blocks.width()), sub_blocks_to_pixels(block_size_in_sub_blocks.height()), 0));
             }
         }
-        auto max_x = (block_context.frame_context.columns() * 8) >> sub_x;
-        auto max_y = (block_context.frame_context.rows() * 8) >> sub_y;
-        auto block_index = 0;
-        for (auto y = 0; y < num_4x4_h; y += step) {
-            for (auto x = 0; x < num_4x4_w; x += step) {
-                auto start_x = base_x + (4 * x);
-                auto start_y = base_y + (4 * y);
-                auto non_zero = false;
-                if (start_x < max_x && start_y < max_y) {
+
+        auto frame_right_in_pixels = (blocks_to_pixels(block_context.frame_context.columns())) >> plane_subsampling_x;
+        auto frame_bottom_in_pixels = (blocks_to_pixels(block_context.frame_context.rows())) >> plane_subsampling_y;
+
+        auto sub_block_index = 0;
+        for (auto y = 0; y < block_size_in_sub_blocks.height(); y += transform_size_in_sub_blocks) {
+            for (auto x = 0; x < block_size_in_sub_blocks.width(); x += transform_size_in_sub_blocks) {
+                auto transform_x_in_px = base_x_in_pixels + sub_blocks_to_pixels(x);
+                auto transform_y_in_px = base_y_in_pixels + sub_blocks_to_pixels(y);
+
+                auto sub_block_had_non_zero_tokens = false;
+                if (transform_x_in_px < frame_right_in_pixels && transform_y_in_px < frame_bottom_in_pixels) {
                     if (!block_context.is_inter_predicted())
-                        TRY(m_decoder.predict_intra(plane, block_context, start_x, start_y, has_block_left || x > 0, has_block_above || y > 0, (x + step) < num_4x4_w, tx_size, block_index));
+                        TRY(m_decoder.predict_intra(plane, block_context, transform_x_in_px, transform_y_in_px, has_block_left || x > 0, has_block_above || y > 0, (x + transform_size_in_sub_blocks) < block_size_in_sub_blocks.width(), transform_size, sub_block_index));
                     if (!block_context.should_skip_residuals) {
-                        auto transform_set = select_transform_type(block_context, plane, tx_size, block_index);
-                        non_zero = TRY(tokens(block_context, plane, start_x, start_y, tx_size, transform_set));
-                        had_residual_tokens = had_residual_tokens || non_zero;
-                        TRY(m_decoder.reconstruct(plane, block_context, start_x, start_y, tx_size, transform_set));
+                        auto transform_set = select_transform_type(block_context, plane, transform_size, sub_block_index);
+                        sub_block_had_non_zero_tokens = TRY(tokens(block_context, plane, transform_x_in_px, transform_y_in_px, transform_size, transform_set));
+                        block_had_non_zero_tokens = block_had_non_zero_tokens || sub_block_had_non_zero_tokens;
+                        TRY(m_decoder.reconstruct(plane, block_context, transform_x_in_px, transform_y_in_px, transform_size, transform_set));
                     }
                 }
 
-                auto& above_sub_context = m_above_nonzero_context[plane];
-                auto above_sub_context_index = start_x >> 2;
-                auto above_sub_context_end = min(above_sub_context_index + step, above_sub_context.size());
-                for (; above_sub_context_index < above_sub_context_end; above_sub_context_index++)
-                    above_sub_context[above_sub_context_index] = non_zero;
+                auto& above_sub_block_context = m_above_nonzero_context[plane];
+                auto above_sub_block_context_index = pixels_to_sub_blocks(transform_x_in_px);
+                auto above_sub_block_context_end = min(above_sub_block_context_index + transform_size_in_sub_blocks, above_sub_block_context.size());
+                for (; above_sub_block_context_index < above_sub_block_context_end; above_sub_block_context_index++)
+                    above_sub_block_context[above_sub_block_context_index] = sub_block_had_non_zero_tokens;
 
-                auto& left_sub_context = m_left_nonzero_context[plane];
-                auto left_sub_context_index = start_y >> 2;
-                auto left_sub_context_end = min(left_sub_context_index + step, left_sub_context.size());
-                for (; left_sub_context_index < left_sub_context_end; left_sub_context_index++)
-                    left_sub_context[left_sub_context_index] = non_zero;
+                auto& left_sub_block_context = m_left_nonzero_context[plane];
+                auto left_sub_block_context_index = pixels_to_sub_blocks(transform_y_in_px);
+                auto left_sub_block_context_end = min(left_sub_block_context_index + transform_size_in_sub_blocks, left_sub_block_context.size());
+                for (; left_sub_block_context_index < left_sub_block_context_end; left_sub_block_context_index++)
+                    left_sub_block_context[left_sub_block_context_index] = sub_block_had_non_zero_tokens;
 
-                block_index++;
+                sub_block_index++;
             }
         }
     }
-    return had_residual_tokens;
+    return block_had_non_zero_tokens;
 }
 
 static u16 const* get_scan(TXSize tx_size, TransformSet transform_set)
