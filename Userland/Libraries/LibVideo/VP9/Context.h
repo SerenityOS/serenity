@@ -82,7 +82,7 @@ public:
 
     // This group of fields is only needed for inter-predicted frames.
     Array<u8, 3> reference_frame_indices;
-    Array<bool, LastFrame + 3> reference_frame_sign_biases;
+    Array<bool, ReferenceFrameType::LastFrame + 3> reference_frame_sign_biases;
     bool high_precision_motion_vectors_allowed { false };
     InterpolationFilter interpolation_filter { InterpolationFilter::Switchable };
 

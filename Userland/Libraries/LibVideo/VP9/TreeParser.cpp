@@ -411,29 +411,29 @@ ErrorOr<bool> TreeParser::parse_single_ref_part_1(BitStream& bit_stream, Probabi
             context = 2;
         } else if (left.is_intra_predicted()) {
             if (above.is_single_reference()) {
-                context = 4 * (above.ref_frames.primary == LastFrame);
+                context = 4 * (above.ref_frames.primary == ReferenceFrameType::LastFrame);
             } else {
-                context = 1 + (above.ref_frames.primary == LastFrame || above.ref_frames.secondary == LastFrame);
+                context = 1 + (above.ref_frames.primary == ReferenceFrameType::LastFrame || above.ref_frames.secondary == ReferenceFrameType::LastFrame);
             }
         } else if (above.is_intra_predicted()) {
             if (left.is_single_reference()) {
-                context = 4 * (left.ref_frames.primary == LastFrame);
+                context = 4 * (left.ref_frames.primary == ReferenceFrameType::LastFrame);
             } else {
-                context = 1 + (left.ref_frames.primary == LastFrame || left.ref_frames.secondary == LastFrame);
+                context = 1 + (left.ref_frames.primary == ReferenceFrameType::LastFrame || left.ref_frames.secondary == ReferenceFrameType::LastFrame);
             }
         } else {
             if (left.is_single_reference() && above.is_single_reference()) {
-                context = 2 * (above.ref_frames.primary == LastFrame) + 2 * (left.ref_frames.primary == LastFrame);
+                context = 2 * (above.ref_frames.primary == ReferenceFrameType::LastFrame) + 2 * (left.ref_frames.primary == ReferenceFrameType::LastFrame);
             } else if (!left.is_single_reference() && !above.is_single_reference()) {
-                auto above_used_last_frame = above.ref_frames.primary == LastFrame || above.ref_frames.secondary == LastFrame;
-                auto left_used_last_frame = left.ref_frames.primary == LastFrame || left.ref_frames.secondary == LastFrame;
+                auto above_used_last_frame = above.ref_frames.primary == ReferenceFrameType::LastFrame || above.ref_frames.secondary == ReferenceFrameType::LastFrame;
+                auto left_used_last_frame = left.ref_frames.primary == ReferenceFrameType::LastFrame || left.ref_frames.secondary == ReferenceFrameType::LastFrame;
                 context = 1 + (above_used_last_frame || left_used_last_frame);
             } else {
                 auto single_reference_type = above.is_single_reference() ? above.ref_frames.primary : left.ref_frames.primary;
                 auto compound_reference_a_type = above.is_single_reference() ? left.ref_frames.primary : above.ref_frames.primary;
                 auto compound_reference_b_type = above.is_single_reference() ? left.ref_frames.secondary : above.ref_frames.secondary;
-                context = compound_reference_a_type == LastFrame || compound_reference_b_type == LastFrame;
-                if (single_reference_type == LastFrame)
+                context = compound_reference_a_type == ReferenceFrameType::LastFrame || compound_reference_b_type == ReferenceFrameType::LastFrame;
+                if (single_reference_type == ReferenceFrameType::LastFrame)
                     context += 3;
             }
         }
@@ -442,9 +442,9 @@ ErrorOr<bool> TreeParser::parse_single_ref_part_1(BitStream& bit_stream, Probabi
             context = 2;
         } else {
             if (above.is_single_reference()) {
-                context = 4 * (above.ref_frames.primary == LastFrame);
+                context = 4 * (above.ref_frames.primary == ReferenceFrameType::LastFrame);
             } else {
-                context = 1 + (above.ref_frames.primary == LastFrame || above.ref_frames.secondary == LastFrame);
+                context = 1 + (above.ref_frames.primary == ReferenceFrameType::LastFrame || above.ref_frames.secondary == ReferenceFrameType::LastFrame);
             }
         }
     } else if (left.is_available) {
@@ -452,9 +452,9 @@ ErrorOr<bool> TreeParser::parse_single_ref_part_1(BitStream& bit_stream, Probabi
             context = 2;
         } else {
             if (left.is_single_reference()) {
-                context = 4 * (left.ref_frames.primary == LastFrame);
+                context = 4 * (left.ref_frames.primary == ReferenceFrameType::LastFrame);
             } else {
-                context = 1 + (left.ref_frames.primary == LastFrame || left.ref_frames.secondary == LastFrame);
+                context = 1 + (left.ref_frames.primary == ReferenceFrameType::LastFrame || left.ref_frames.secondary == ReferenceFrameType::LastFrame);
             }
         }
     } else {
@@ -478,40 +478,40 @@ ErrorOr<bool> TreeParser::parse_single_ref_part_2(BitStream& bit_stream, Probabi
             context = 2;
         } else if (left.is_intra_predicted()) {
             if (above.is_single_reference()) {
-                if (above.ref_frames.primary == LastFrame) {
+                if (above.ref_frames.primary == ReferenceFrameType::LastFrame) {
                     context = 3;
                 } else {
-                    context = 4 * (above.ref_frames.primary == GoldenFrame);
+                    context = 4 * (above.ref_frames.primary == ReferenceFrameType::GoldenFrame);
                 }
             } else {
-                context = 1 + 2 * (above.ref_frames.primary == GoldenFrame || above.ref_frames.secondary == GoldenFrame);
+                context = 1 + 2 * (above.ref_frames.primary == ReferenceFrameType::GoldenFrame || above.ref_frames.secondary == ReferenceFrameType::GoldenFrame);
             }
         } else if (above.is_intra_predicted()) {
             if (left.is_single_reference()) {
-                if (left.ref_frames.primary == LastFrame) {
+                if (left.ref_frames.primary == ReferenceFrameType::LastFrame) {
                     context = 3;
                 } else {
-                    context = 4 * (left.ref_frames.primary == GoldenFrame);
+                    context = 4 * (left.ref_frames.primary == ReferenceFrameType::GoldenFrame);
                 }
             } else {
-                context = 1 + 2 * (left.ref_frames.primary == GoldenFrame || left.ref_frames.secondary == GoldenFrame);
+                context = 1 + 2 * (left.ref_frames.primary == ReferenceFrameType::GoldenFrame || left.ref_frames.secondary == ReferenceFrameType::GoldenFrame);
             }
         } else {
             if (left.is_single_reference() && above.is_single_reference()) {
-                auto above_last = above.ref_frames.primary == LastFrame;
-                auto left_last = left.ref_frames.primary == LastFrame;
+                auto above_last = above.ref_frames.primary == ReferenceFrameType::LastFrame;
+                auto left_last = left.ref_frames.primary == ReferenceFrameType::LastFrame;
                 if (above_last && left_last) {
                     context = 3;
                 } else if (above_last) {
-                    context = 4 * (left.ref_frames.primary == GoldenFrame);
+                    context = 4 * (left.ref_frames.primary == ReferenceFrameType::GoldenFrame);
                 } else if (left_last) {
-                    context = 4 * (above.ref_frames.primary == GoldenFrame);
+                    context = 4 * (above.ref_frames.primary == ReferenceFrameType::GoldenFrame);
                 } else {
-                    context = 2 * (above.ref_frames.primary == GoldenFrame) + 2 * (left.ref_frames.primary == GoldenFrame);
+                    context = 2 * (above.ref_frames.primary == ReferenceFrameType::GoldenFrame) + 2 * (left.ref_frames.primary == ReferenceFrameType::GoldenFrame);
                 }
             } else if (!left.is_single_reference() && !above.is_single_reference()) {
                 if (above.ref_frames.primary == left.ref_frames.primary && above.ref_frames.secondary == left.ref_frames.secondary) {
-                    context = 3 * (above.ref_frames.primary == GoldenFrame || above.ref_frames.secondary == GoldenFrame);
+                    context = 3 * (above.ref_frames.primary == ReferenceFrameType::GoldenFrame || above.ref_frames.secondary == ReferenceFrameType::GoldenFrame);
                 } else {
                     context = 2;
                 }
@@ -519,29 +519,29 @@ ErrorOr<bool> TreeParser::parse_single_ref_part_2(BitStream& bit_stream, Probabi
                 auto single_reference_type = above.is_single_reference() ? above.ref_frames.primary : left.ref_frames.primary;
                 auto compound_reference_a_type = above.is_single_reference() ? left.ref_frames.primary : above.ref_frames.primary;
                 auto compound_reference_b_type = above.is_single_reference() ? left.ref_frames.secondary : above.ref_frames.secondary;
-                context = compound_reference_a_type == GoldenFrame || compound_reference_b_type == GoldenFrame;
-                if (single_reference_type == GoldenFrame) {
+                context = compound_reference_a_type == ReferenceFrameType::GoldenFrame || compound_reference_b_type == ReferenceFrameType::GoldenFrame;
+                if (single_reference_type == ReferenceFrameType::GoldenFrame) {
                     context += 3;
-                } else if (single_reference_type != AltRefFrame) {
+                } else if (single_reference_type != ReferenceFrameType::AltRefFrame) {
                     context = 1 + (2 * context);
                 }
             }
         }
     } else if (above.is_available) {
-        if (above.is_intra_predicted() || (above.ref_frames.primary == LastFrame && above.is_single_reference())) {
+        if (above.is_intra_predicted() || (above.ref_frames.primary == ReferenceFrameType::LastFrame && above.is_single_reference())) {
             context = 2;
         } else if (above.is_single_reference()) {
-            context = 4 * (above.ref_frames.primary == GoldenFrame);
+            context = 4 * (above.ref_frames.primary == ReferenceFrameType::GoldenFrame);
         } else {
-            context = 3 * (above.ref_frames.primary == GoldenFrame || above.ref_frames.secondary == GoldenFrame);
+            context = 3 * (above.ref_frames.primary == ReferenceFrameType::GoldenFrame || above.ref_frames.secondary == ReferenceFrameType::GoldenFrame);
         }
     } else if (left.is_available) {
-        if (left.is_intra_predicted() || (left.ref_frames.primary == LastFrame && left.is_single_reference())) {
+        if (left.is_intra_predicted() || (left.ref_frames.primary == ReferenceFrameType::LastFrame && left.is_single_reference())) {
             context = 2;
         } else if (left.is_single_reference()) {
-            context = 4 * (left.ref_frames.primary == GoldenFrame);
+            context = 4 * (left.ref_frames.primary == ReferenceFrameType::GoldenFrame);
         } else {
-            context = 3 * (left.ref_frames.primary == GoldenFrame || left.ref_frames.secondary == GoldenFrame);
+            context = 3 * (left.ref_frames.primary == ReferenceFrameType::GoldenFrame || left.ref_frames.secondary == ReferenceFrameType::GoldenFrame);
         }
     } else {
         context = 2;

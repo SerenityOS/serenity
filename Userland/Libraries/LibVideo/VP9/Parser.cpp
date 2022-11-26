@@ -224,7 +224,7 @@ DecoderErrorOr<FrameContext> Parser::uncompressed_header()
             reference_frames_to_update_flags = TRY_READ(m_bit_stream->read_f8());
             for (auto i = 0; i < 3; i++) {
                 frame_context.reference_frame_indices[i] = TRY_READ(m_bit_stream->read_bits(3));
-                frame_context.reference_frame_sign_biases[LastFrame + i] = TRY_READ(m_bit_stream->read_bit());
+                frame_context.reference_frame_sign_biases[ReferenceFrameType::LastFrame + i] = TRY_READ(m_bit_stream->read_bit());
             }
             frame_size = TRY(parse_frame_size_with_refs(frame_context.reference_frame_indices));
             render_size = TRY(parse_render_size(frame_size));
@@ -535,10 +535,10 @@ DecoderErrorOr<void> Parser::parse_tile_counts(FrameContext& frame_context)
 void Parser::setup_past_independence()
 {
     m_previous_block_contexts.reset();
-    m_previous_loop_filter_ref_deltas[IntraFrame] = 1;
-    m_previous_loop_filter_ref_deltas[LastFrame] = 0;
-    m_previous_loop_filter_ref_deltas[GoldenFrame] = -1;
-    m_previous_loop_filter_ref_deltas[AltRefFrame] = -1;
+    m_previous_loop_filter_ref_deltas[ReferenceFrameType::None] = 1;
+    m_previous_loop_filter_ref_deltas[ReferenceFrameType::LastFrame] = 0;
+    m_previous_loop_filter_ref_deltas[ReferenceFrameType::GoldenFrame] = -1;
+    m_previous_loop_filter_ref_deltas[ReferenceFrameType::AltRefFrame] = -1;
     m_previous_loop_filter_mode_deltas.fill(0);
     m_previous_should_use_absolute_segment_base_quantizer = false;
     for (auto& segment_levels : m_previous_segmentation_features)
@@ -700,15 +700,15 @@ static void setup_compound_reference_mode(FrameContext& frame_context)
 {
     ReferenceFrameType fixed_reference;
     ReferenceFramePair variable_references;
-    if (frame_context.reference_frame_sign_biases[LastFrame] == frame_context.reference_frame_sign_biases[GoldenFrame]) {
-        fixed_reference = AltRefFrame;
-        variable_references = { LastFrame, GoldenFrame };
-    } else if (frame_context.reference_frame_sign_biases[LastFrame] == frame_context.reference_frame_sign_biases[AltRefFrame]) {
-        fixed_reference = GoldenFrame;
-        variable_references = { LastFrame, AltRefFrame };
+    if (frame_context.reference_frame_sign_biases[ReferenceFrameType::LastFrame] == frame_context.reference_frame_sign_biases[ReferenceFrameType::GoldenFrame]) {
+        fixed_reference = ReferenceFrameType::AltRefFrame;
+        variable_references = { ReferenceFrameType::LastFrame, ReferenceFrameType::GoldenFrame };
+    } else if (frame_context.reference_frame_sign_biases[ReferenceFrameType::LastFrame] == frame_context.reference_frame_sign_biases[ReferenceFrameType::AltRefFrame]) {
+        fixed_reference = ReferenceFrameType::GoldenFrame;
+        variable_references = { ReferenceFrameType::LastFrame, ReferenceFrameType::AltRefFrame };
     } else {
-        fixed_reference = LastFrame;
-        variable_references = { GoldenFrame, AltRefFrame };
+        fixed_reference = ReferenceFrameType::LastFrame;
+        variable_references = { ReferenceFrameType::GoldenFrame, ReferenceFrameType::AltRefFrame };
     }
     frame_context.fixed_reference_type = fixed_reference;
     frame_context.variable_reference_types = variable_references;
@@ -1128,7 +1128,7 @@ u8 Parser::get_segment_id(BlockContext const& block_context)
 DecoderErrorOr<bool> Parser::read_is_inter(BlockContext& block_context, FrameBlockContext above_context, FrameBlockContext left_context)
 {
     if (seg_feature_active(block_context, SEG_LVL_REF_FRAME))
-        return block_context.frame_context.segmentation_features[block_context.segment_id][SEG_LVL_REF_FRAME].value != IntraFrame;
+        return block_context.frame_context.segmentation_features[block_context.segment_id][SEG_LVL_REF_FRAME].value != ReferenceFrameType::None;
     return TRY_READ(TreeParser::parse_block_is_inter_predicted(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter, above_context, left_context));
 }
 
@@ -1211,7 +1211,7 @@ DecoderErrorOr<void> Parser::inter_block_mode_info(BlockContext& block_context, 
 DecoderErrorOr<void> Parser::read_ref_frames(BlockContext& block_context, FrameBlockContext above_context, FrameBlockContext left_context)
 {
     if (seg_feature_active(block_context, SEG_LVL_REF_FRAME)) {
-        block_context.reference_frame_types = { static_cast<ReferenceFrameType>(block_context.frame_context.segmentation_features[block_context.segment_id][SEG_LVL_REF_FRAME].value), None };
+        block_context.reference_frame_types = { static_cast<ReferenceFrameType>(block_context.frame_context.segmentation_features[block_context.segment_id][SEG_LVL_REF_FRAME].value), ReferenceFrameType::None };
         return {};
     }
 
@@ -1552,14 +1552,14 @@ static void apply_sign_bias_to_motion_vector(FrameContext const& frame_context, 
 void Parser::add_motion_vector_if_reference_frame_type_is_different(BlockContext const& block_context, MotionVector candidate_vector, ReferenceFrameType ref_frame, Vector<MotionVector, 2>& list, bool use_prev)
 {
     auto first_candidate = get_motion_vector_from_current_or_previous_frame(block_context, candidate_vector, ReferenceIndex::Primary, use_prev);
-    if (first_candidate.type > ReferenceFrameType::IntraFrame && first_candidate.type != ref_frame) {
+    if (first_candidate.type > ReferenceFrameType::None && first_candidate.type != ref_frame) {
         apply_sign_bias_to_motion_vector(block_context.frame_context, first_candidate, ref_frame);
         add_motion_vector_to_list_deduped(first_candidate.vector, list);
     }
 
     auto second_candidate = get_motion_vector_from_current_or_previous_frame(block_context, candidate_vector, ReferenceIndex::Secondary, use_prev);
     auto mvs_are_same = first_candidate.vector == second_candidate.vector;
-    if (second_candidate.type > ReferenceFrameType::IntraFrame && second_candidate.type != ref_frame && !mvs_are_same) {
+    if (second_candidate.type > ReferenceFrameType::None && second_candidate.type != ref_frame && !mvs_are_same) {
         apply_sign_bias_to_motion_vector(block_context.frame_context, second_candidate, ref_frame);
         add_motion_vector_to_list_deduped(second_candidate.vector, list);
     }
