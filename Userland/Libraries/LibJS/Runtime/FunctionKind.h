@@ -8,7 +8,7 @@
 
 namespace JS {
 
-enum class FunctionKind {
+enum class FunctionKind : u8 {
     Normal,
     Generator,
     Async,
