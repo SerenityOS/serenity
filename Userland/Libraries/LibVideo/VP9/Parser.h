@@ -74,13 +74,13 @@ private:
 
     /* (6.3) Compressed Header Syntax */
     DecoderErrorOr<void> compressed_header(FrameContext&);
-    DecoderErrorOr<void> read_tx_mode(FrameContext const&);
+    DecoderErrorOr<TXMode> read_tx_mode(FrameContext const&);
     DecoderErrorOr<void> tx_mode_probs();
     DecoderErrorOr<u8> diff_update_prob(u8 prob);
     DecoderErrorOr<u8> decode_term_subexp();
     u8 inv_remap_prob(u8 delta_prob, u8 prob);
     u8 inv_recenter_nonneg(u8 v, u8 m);
-    DecoderErrorOr<void> read_coef_probs();
+    DecoderErrorOr<void> read_coef_probs(TXMode);
     DecoderErrorOr<void> read_skip_prob();
     DecoderErrorOr<void> read_inter_mode_probs();
     DecoderErrorOr<void> read_interp_filter_probs();
@@ -169,7 +169,6 @@ private:
     u8 m_token_cache[1024];
     i32 m_tokens[1024];
     bool m_use_hp { false };
-    TXMode m_tx_mode;
     ReferenceMode m_reference_mode;
     ReferenceFrameType m_comp_fixed_ref;
     ReferenceFramePair m_comp_var_ref;

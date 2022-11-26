@@ -542,10 +542,10 @@ void Parser::setup_past_independence()
 
 DecoderErrorOr<void> Parser::compressed_header(FrameContext& frame_context)
 {
-    TRY(read_tx_mode(frame_context));
-    if (m_tx_mode == TXModeSelect)
+    frame_context.transform_mode = TRY(read_tx_mode(frame_context));
+    if (frame_context.transform_mode == TXModeSelect)
         TRY(tx_mode_probs());
-    TRY(read_coef_probs());
+    TRY(read_coef_probs(frame_context.transform_mode));
     TRY(read_skip_prob());
     if (frame_context.is_inter_predicted()) {
         TRY(read_inter_mode_probs());
@@ -561,17 +561,16 @@ DecoderErrorOr<void> Parser::compressed_header(FrameContext& frame_context)
     return {};
 }
 
-DecoderErrorOr<void> Parser::read_tx_mode(FrameContext const& frame_context)
+DecoderErrorOr<TXMode> Parser::read_tx_mode(FrameContext const& frame_context)
 {
     if (frame_context.is_lossless()) {
-        m_tx_mode = Only_4x4;
-    } else {
-        auto tx_mode = TRY_READ(m_bit_stream->read_literal(2));
-        if (tx_mode == Allow_32x32)
-            tx_mode += TRY_READ(m_bit_stream->read_literal(1));
-        m_tx_mode = static_cast<TXMode>(tx_mode);
+        return TXMode::Only_4x4;
     }
-    return {};
+
+    auto tx_mode = TRY_READ(m_bit_stream->read_literal(2));
+    if (tx_mode == Allow_32x32)
+        tx_mode += TRY_READ(m_bit_stream->read_literal(1));
+    return static_cast<TXMode>(tx_mode);
 }
 
 DecoderErrorOr<void> Parser::tx_mode_probs()
@@ -635,9 +634,9 @@ u8 Parser::inv_recenter_nonneg(u8 v, u8 m)
     return m + (v >> 1u);
 }
 
-DecoderErrorOr<void> Parser::read_coef_probs()
+DecoderErrorOr<void> Parser::read_coef_probs(TXMode transform_mode)
 {
-    auto max_tx_size = tx_mode_to_biggest_tx_size[m_tx_mode];
+    auto max_tx_size = tx_mode_to_biggest_tx_size[transform_mode];
     for (u8 tx_size = 0; tx_size <= max_tx_size; tx_size++) {
         auto update_probs = TRY_READ(m_bit_stream->read_literal(1));
         if (update_probs == 1) {
@@ -1047,9 +1046,9 @@ bool Parser::seg_feature_active(BlockContext const& block_context, u8 feature)
 DecoderErrorOr<TXSize> Parser::read_tx_size(BlockContext& block_context, FrameBlockContext above_context, FrameBlockContext left_context, bool allow_select)
 {
     auto max_tx_size = max_txsize_lookup[block_context.size];
-    if (allow_select && m_tx_mode == TXModeSelect && block_context.size >= Block_8x8)
+    if (allow_select && block_context.frame_context.transform_mode == TXModeSelect && block_context.size >= Block_8x8)
         return (TRY_READ(TreeParser::parse_tx_size(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter, max_tx_size, above_context, left_context)));
-    return min(max_tx_size, tx_mode_to_biggest_tx_size[m_tx_mode]);
+    return min(max_tx_size, tx_mode_to_biggest_tx_size[block_context.frame_context.transform_mode]);
 }
 
 DecoderErrorOr<void> Parser::inter_frame_mode_info(BlockContext& block_context, FrameBlockContext above_context, FrameBlockContext left_context)
