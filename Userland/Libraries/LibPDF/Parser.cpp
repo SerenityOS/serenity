@@ -170,6 +170,8 @@ PDFErrorOr<NonnullRefPtr<IndirectValue>> Parser::parse_indirect_value()
 
 PDFErrorOr<Value> Parser::parse_number()
 {
+    m_reader.consume_whitespace();
+
     size_t start_offset = m_reader.offset();
     bool is_float = false;
     bool consumed_digit = false;
