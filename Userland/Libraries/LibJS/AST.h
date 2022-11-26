@@ -678,10 +678,10 @@ private:
     Vector<FunctionParameter> const m_parameters;
     const i32 m_function_length;
     FunctionKind m_kind;
-    bool m_is_strict_mode { false };
-    bool m_might_need_arguments_object { false };
-    bool m_contains_direct_call_to_eval { false };
-    bool m_is_arrow_function { false };
+    bool m_is_strict_mode : 1 { false };
+    bool m_might_need_arguments_object : 1 { false };
+    bool m_contains_direct_call_to_eval : 1 { false };
+    bool m_is_arrow_function : 1 { false };
 };
 
 class FunctionDeclaration final
