@@ -38,7 +38,7 @@ void AntiAliasingPainter::draw_anti_aliased_line(FloatPoint actual_from, FloatPo
     //
     // Please delete this code and implement it!
 
-    auto int_thickness = round_to<int>(thickness);
+    int int_thickness = AK::ceil(thickness);
     auto mapped_from = m_transform.map(actual_from);
     auto mapped_to = m_transform.map(actual_to);
     auto length = mapped_to.distance_from(mapped_from);
@@ -48,14 +48,14 @@ void AntiAliasingPainter::draw_anti_aliased_line(FloatPoint actual_from, FloatPo
         auto start_point = (mapped_from.x() < mapped_to.x() ? mapped_from : mapped_to).translated(0, -int_thickness / 2);
         if constexpr (path_hacks == FixmeEnableHacksForBetterPathPainting::Yes) {
             // FIXME: SVG fill_path() hack:
-            // SVG asks for 1px scanlines at floating point y values, if they're not rounded to a pixel they look faint.
-            start_point.set_y(round_to<int>(start_point.y()));
+            // SVG asks for 1px scanlines at floating point y values, if they're not snapped to a pixel they look faint.
+            start_point.set_y(floorf(start_point.y()));
         }
-        return fill_rect(Gfx::FloatRect(start_point, { length, float(int_thickness) }), color);
+        return fill_rect(Gfx::FloatRect(start_point, { length, thickness }), color);
     }
     if (mapped_from.x() == mapped_to.x()) {
         auto start_point = (mapped_from.y() < mapped_to.y() ? mapped_from : mapped_to).translated(-int_thickness / 2, 0);
-        return fill_rect(Gfx::FloatRect(start_point, { float(int_thickness), length }), color);
+        return fill_rect(Gfx::FloatRect(start_point, { thickness, length }), color);
     }
 
     if constexpr (path_hacks == FixmeEnableHacksForBetterPathPainting::Yes) {
@@ -90,12 +90,12 @@ void AntiAliasingPainter::draw_anti_aliased_line(FloatPoint actual_from, FloatPo
             point.y() * cos_inverse_angle + point.x() * sin_inverse_angle);
     };
 
-    Gfx::FloatRect line_rect({ -(int_thickness * 255) / 2.0f, 0 }, Gfx::FloatSize(int_thickness * 255, length * 255));
+    Gfx::FloatRect line_rect({ -(thickness * 255) / 2.0f, 0 }, Gfx::FloatSize(thickness * 255, length * 255));
 
     auto gradient = delta.y() / delta.x();
     // Work out how long we need to scan along the X-axis to reach the other side of the line.
     // E.g. for a vertical line this would be `thickness', in general it is this:
-    int scan_line_length = AK::ceil(AK::sqrt((gradient * gradient + 1) * int_thickness * int_thickness) / gradient);
+    int scan_line_length = AK::ceil(AK::sqrt((gradient * gradient + 1) * thickness * thickness) / gradient);
 
     auto x_gradient = 1 / gradient;
     int x_step = floorf(x_gradient);
