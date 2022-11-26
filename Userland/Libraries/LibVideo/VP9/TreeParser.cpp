@@ -235,9 +235,9 @@ ErrorOr<TransformSize> TreeParser::parse_tx_size(BitStream& bit_stream, Probabil
 
     // Tree
     TreeParser::TreeSelection tree { tx_size_8_tree };
-    if (max_tx_size == TX_16x16)
+    if (max_tx_size == Transform_16x16)
         tree = { tx_size_16_tree };
-    if (max_tx_size == TX_32x32)
+    if (max_tx_size == Transform_32x32)
         tree = { tx_size_32_tree };
 
     // Probabilities
