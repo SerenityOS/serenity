@@ -39,7 +39,6 @@ public:
     u32 size() const { return m_end_of_file; }
     ErrorOr<ByteBuffer> read_block(u32);
     [[nodiscard]] u32 new_record_pointer();
-    [[nodiscard]] bool has_block(u32 block) const { return block < size(); }
     [[nodiscard]] bool valid() const { return static_cast<bool>(m_file); }
 
     u32 schemas_root() const { return m_schemas_root; }
