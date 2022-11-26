@@ -10,12 +10,12 @@
 
 namespace Kernel {
 
-ErrorOr<void> SysFSSystemBoolean::try_generate(KBufferBuilder& builder)
+ErrorOr<void> SysFSSystemBooleanVariable::try_generate(KBufferBuilder& builder)
 {
     return builder.appendff("{}\n", static_cast<int>(value()));
 }
 
-ErrorOr<size_t> SysFSSystemBoolean::write_bytes(off_t, size_t count, UserOrKernelBuffer const& buffer, OpenFileDescription*)
+ErrorOr<size_t> SysFSSystemBooleanVariable::write_bytes(off_t, size_t count, UserOrKernelBuffer const& buffer, OpenFileDescription*)
 {
     MutexLocker locker(m_refresh_lock);
     // Note: We do all of this code before taking the spinlock because then we disable
@@ -39,7 +39,7 @@ ErrorOr<size_t> SysFSSystemBoolean::write_bytes(off_t, size_t count, UserOrKerne
     });
 }
 
-ErrorOr<void> SysFSSystemBoolean::truncate(u64 size)
+ErrorOr<void> SysFSSystemBooleanVariable::truncate(u64 size)
 {
     if (size != 0)
         return EPERM;
