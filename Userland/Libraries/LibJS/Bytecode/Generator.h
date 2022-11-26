@@ -57,7 +57,7 @@ public:
         grow(sizeof(OpType));
         new (slot) OpType(forward<Args>(args)...);
         if constexpr (OpType::IsTerminator)
-            m_current_basic_block->terminate({});
+            m_current_basic_block->terminate({}, static_cast<Instruction const*>(slot));
         return *static_cast<OpType*>(slot);
     }
 
@@ -76,7 +76,7 @@ public:
         grow(size_to_allocate);
         new (slot) OpType(forward<Args>(args)...);
         if constexpr (OpType::IsTerminator)
-            m_current_basic_block->terminate({});
+            m_current_basic_block->terminate({}, static_cast<Instruction const*>(slot));
         return *static_cast<OpType*>(slot);
     }
 
