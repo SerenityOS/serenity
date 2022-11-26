@@ -9,6 +9,7 @@
 #include <LibGfx/Size.h>
 #include <LibVideo/Color/CodingIndependentCodePoints.h>
 
+#include "Context.h"
 #include "Decoder.h"
 #include "Utilities.h"
 
