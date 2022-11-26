@@ -69,6 +69,9 @@ ErrorOr<int> serenity_main(Main::Arguments args)
     bool suppress_errors = false;
     bool colored_output = isatty(STDOUT_FILENO);
     bool count_lines = false;
+    size_t before_context = 0;
+    size_t after_context = 0;
+    size_t context = 0;
 
     size_t matched_line_count = 0;
 
@@ -146,7 +149,17 @@ ErrorOr<int> serenity_main(Main::Arguments args)
     });
     args_parser.add_option(count_lines, "Output line count instead of line contents", "count", 'c');
     args_parser.add_positional_argument(files, "File(s) to process", "file", Core::ArgsParser::Required::No);
+    args_parser.add_option(after_context, "Print NUM lines of trailing context", "after-context", 'A', "NUM");
+    args_parser.add_option(before_context, "Print NUM lines of leading context", "before-context", 'B', "NUM");
+    args_parser.add_option(context, "Print NUM lines of output context", "context", 'C', "NUM");
     args_parser.parse(args);
+
+    if (context > 0) {
+        if (before_context == 0)
+            before_context = context;
+        if (after_context == 0)
+            after_context = context;
+    }
 
     // mock grep behavior: if -e is omitted, use first positional argument as pattern
     if (patterns.size() == 0 && files.size())
@@ -167,11 +180,69 @@ ErrorOr<int> serenity_main(Main::Arguments args)
             }
         }
 
-        auto matches = [&](StringView str, StringView filename, size_t line_number, bool print_filename, bool is_binary) {
+        auto print_context = [&](StringView filename, size_t line_number, bool before, Vector<StringView> const& buffer) {
+            if (!files.size()) {
+                if (before) {
+                    // Print from buffered data
+                    for (size_t i = line_number - before_context - 1; i < line_number - 1; ++i) {
+                        auto line = buffer[i];
+                        if (line_numbers)
+                            out(colored_output ? "\x1B[35m{}:\x1B[0m"sv : "{}:"sv, i);
+                        out("{}"sv, line);
+                    }
+                } else {
+                    // Print from stdin
+                    char* line = nullptr;
+                    size_t line_len = 0;
+                    size_t context_line_number = line_number;
+                    while ((getline(&line, &line_len, stdin)) != -1) {
+                        context_line_number++;
+                        if (line_numbers)
+                            out(colored_output ? "\x1B[35m{}:\x1B[0m"sv : "{}:"sv, context_line_number);
+                        out("{}", line);
+                    }
+                }
+            } else {
+                // Print from file
+                auto file = Core::File::construct(filename);
+                if (!file->open(Core::OpenMode::ReadOnly)) {
+                    if (!suppress_errors) {
+                        warnln("Failed to open {}: {}", filename, file->error_string());
+                    }
+                    return;
+                }
+
+                auto file_size_or_error = Core::File::size(filename);
+                if (file_size_or_error.is_error()) {
+                    if (!suppress_errors)
+                        warnln("Failed to retrieve size of {}: {}", filename, strerror(file_size_or_error.error().code()));
+                    return;
+                }
+                auto file_size = file_size_or_error.release_value();
+
+                for (size_t context_line_number = 1; file->can_read_line(); ++context_line_number) {
+                    auto line = file->read_line(file_size);
+
+                    bool within_before_context_window = before && context_line_number < line_number && context_line_number >= line_number - before_context;
+                    bool within_after_context_window = !before && context_line_number > line_number && context_line_number <= line_number + after_context;
+                    if (within_after_context_window || within_before_context_window) {
+                        for (auto& re : regular_expressions) {
+                            auto result = re.match(line, PosixFlags::Global);
+                            if (result.success ^ invert_match)
+                                return;
+                        }
+                        if (line_numbers)
+                            out(colored_output ? "\x1B[35m{}:\x1B[0m"sv : "{}:"sv, context_line_number);
+                        outln("{}"sv, line);
+                    }
+                }
+            }
+        };
+
+        auto matches = [&](StringView str, StringView filename, size_t line_number, bool print_filename, bool is_binary, Vector<StringView> const& buffer = {}) {
             size_t last_printed_char_pos { 0 };
             if (is_binary && binary_mode == BinaryFileMode::Skip)
                 return false;
-
             for (auto& re : regular_expressions) {
                 auto result = re.match(str, PosixFlags::Global);
                 if (!(result.success ^ invert_match))
@@ -188,6 +259,9 @@ ErrorOr<int> serenity_main(Main::Arguments args)
                 if (is_binary && binary_mode == BinaryFileMode::Binary) {
                     outln(colored_output ? "binary file \x1B[34m{}\x1B[0m matches"sv : "binary file {} matches"sv, filename);
                 } else {
+
+                    if (before_context > 0)
+                        print_context(filename, line_number, true, buffer);
                     if ((result.matches.size() || invert_match) && print_filename)
                         out(colored_output ? "\x1B[34m{}:\x1B[0m"sv : "{}:"sv, filename);
                     if ((result.matches.size() || invert_match) && line_numbers)
@@ -195,6 +269,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
 
                     for (auto& match : result.matches) {
                         auto pre_match_length = match.global_offset - last_printed_char_pos;
+
                         out(colored_output ? "{}\x1B[32m{}\x1B[0m"sv : "{}{}"sv,
                             pre_match_length > 0 ? StringView(&str[last_printed_char_pos], pre_match_length) : ""sv,
                             match.view.to_deprecated_string());
@@ -202,6 +277,8 @@ ErrorOr<int> serenity_main(Main::Arguments args)
                     }
                     auto remaining_length = str.length() - last_printed_char_pos;
                     outln("{}", remaining_length > 0 ? StringView(&str[last_printed_char_pos], remaining_length) : ""sv);
+                    if (after_context > 0)
+                        print_context(filename, line_number, false, buffer);
                 }
 
                 return true;
@@ -227,7 +304,6 @@ ErrorOr<int> serenity_main(Main::Arguments args)
                     warnln("Failed to retrieve size of {}: {}", filename, strerror(file_size_or_error.error().code()));
                 return false;
             }
-
             auto file_size = file_size_or_error.release_value();
 
             for (size_t line_number = 1; file->can_read_line(); ++line_number) {
@@ -270,6 +346,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
             ssize_t nread = 0;
             ScopeGuard free_line = [line] { free(line); };
             size_t line_number = 0;
+            Vector<StringView> buffer;
             while ((nread = getline(&line, &line_len, stdin)) != -1) {
                 VERIFY(nread > 0);
                 if (line[nread - 1] == '\n')
@@ -277,12 +354,13 @@ ErrorOr<int> serenity_main(Main::Arguments args)
                 // Human-readable indexes start at 1, so it's fine to increment already.
                 line_number += 1;
                 StringView line_view(line, nread);
+                buffer.append(line_view);
                 bool is_binary = line_view.contains('\0');
 
                 if (is_binary && binary_mode == BinaryFileMode::Skip)
                     return 1;
 
-                auto matched = matches(line_view, "stdin"sv, line_number, false, is_binary);
+                auto matched = matches(line_view, "stdin"sv, line_number, false, is_binary, buffer);
                 did_match_something = did_match_something || matched;
                 if (matched && is_binary && binary_mode == BinaryFileMode::Binary)
                     break;
