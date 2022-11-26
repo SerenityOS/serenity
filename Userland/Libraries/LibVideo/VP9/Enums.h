@@ -54,10 +54,10 @@ enum TransformMode : u8 {
 };
 
 enum TransformSize : u8 {
-    TX_4x4 = 0,
-    TX_8x8 = 1,
-    TX_16x16 = 2,
-    TX_32x32 = 3,
+    Transform_4x4 = 0,
+    Transform_8x8 = 1,
+    Transform_16x16 = 2,
+    Transform_32x32 = 3,
 };
 
 enum class TransformType : u8 {

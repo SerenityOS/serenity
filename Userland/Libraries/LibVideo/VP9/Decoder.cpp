@@ -303,9 +303,9 @@ DecoderErrorOr<void> Decoder::adapt_non_coef_probs(FrameContext const& frame_con
         for (size_t i = 0; i < TX_SIZE_CONTEXTS; i++) {
             auto& tx_probs = probs.tx_probs();
             auto& tx_counts = counter.m_counts_tx_size;
-            adapt_probs(tx_size_8_tree, tx_probs[TX_8x8][i], tx_counts[TX_8x8][i]);
-            adapt_probs(tx_size_16_tree, tx_probs[TX_16x16][i], tx_counts[TX_16x16][i]);
-            adapt_probs(tx_size_32_tree, tx_probs[TX_32x32][i], tx_counts[TX_32x32][i]);
+            adapt_probs(tx_size_8_tree, tx_probs[Transform_8x8][i], tx_counts[Transform_8x8][i]);
+            adapt_probs(tx_size_16_tree, tx_probs[Transform_16x16][i], tx_counts[Transform_16x16][i]);
+            adapt_probs(tx_size_32_tree, tx_probs[Transform_32x32][i], tx_counts[Transform_32x32][i]);
         }
     }
     adapt_probs(mv_joint_tree, probs.mv_joint_probs(), counter.m_counts_mv_joint);
@@ -413,7 +413,7 @@ DecoderErrorOr<void> Decoder::predict_intra(u8 plane, BlockContext const& block_
     }
 
     // The array aboveRow[ i ] for i = size..2*size-1 is specified by:
-    if (have_above && not_on_right && tx_size == TransformSize::TX_4x4) {
+    if (have_above && not_on_right && tx_size == Transform_4x4) {
         // 1. If haveAbove is equal to 1 and notOnRight is equal to 1 and txSz is equal to 0,
         //    aboveRow[ i ] is set equal to CurrFrame[ plane ][ y-1 ][ Min(maxX, x+i) ].
         for (auto i = block_size; i < block_size * 2; i++)
@@ -1071,8 +1071,8 @@ DecoderErrorOr<void> Decoder::reconstruct(u8 plane, BlockContext const& block_co
 {
     // 8.6.2 Reconstruct process
 
-    // The variable dqDenom is set equal to 2 if txSz is equal to TX_32X32, otherwise dqDenom is set equal to 1.
-    Intermediate dq_denominator = transform_block_size == TX_32x32 ? 2 : 1;
+    // The variable dqDenom is set equal to 2 if txSz is equal to Transform_32X32, otherwise dqDenom is set equal to 1.
+    Intermediate dq_denominator = transform_block_size == Transform_32x32 ? 2 : 1;
     // The variable n (specifying the base 2 logarithm of the width of the transform block) is set equal to 2 + txSz.
     u8 log2_of_block_size = 2u + transform_block_size;
     // The variable n0 (specifying the width of the transform block) is set equal to 1 << n.

@@ -14,7 +14,7 @@
 namespace Video::VP9 {
 
 static constexpr InterpolationFilter literal_to_type[4] = { EightTapSmooth, EightTap, EightTapSharp, Bilinear };
-static constexpr TransformSize tx_mode_to_biggest_tx_size[TX_MODES] = { TX_4x4, TX_8x8, TX_16x16, TX_32x32, TX_32x32 };
+static constexpr TransformSize tx_mode_to_biggest_tx_size[TX_MODES] = { Transform_4x4, Transform_8x8, Transform_16x16, Transform_32x32, Transform_32x32 };
 static constexpr u8 segmentation_feature_bits[SEG_LVL_MAX] = { 8, 6, 2, 0 };
 static constexpr bool segmentation_feature_signed[SEG_LVL_MAX] = { true, true, false, false };
 static constexpr u8 inv_map_table[MAX_PROB] = {
@@ -123,15 +123,15 @@ static constexpr int segment_tree[14] = {
 };
 static constexpr int binary_tree[2] = { 0, -1 };
 static constexpr int tx_size_32_tree[6] = {
-    -TX_4x4, 2,
-    -TX_8x8, 4,
-    -TX_16x16, -TX_32x32
+    -Transform_4x4, 2,
+    -Transform_8x8, 4,
+    -Transform_16x16, -Transform_32x32
 };
 static constexpr int tx_size_16_tree[4] = {
-    -TX_4x4, 2,
-    -TX_8x8, -TX_16x16
+    -Transform_4x4, 2,
+    -Transform_8x8, -Transform_16x16
 };
-static constexpr int tx_size_8_tree[2] = { -TX_4x4, -TX_8x8 };
+static constexpr int tx_size_8_tree[2] = { -Transform_4x4, -Transform_8x8 };
 static constexpr int inter_mode_tree[6] = {
     -to_underlying(PredictionMode::ZeroMv), 2,
     -to_underlying(PredictionMode::NearestMv), 4,
@@ -187,19 +187,19 @@ static constexpr u8 num_8x8_blocks_high_lookup[BLOCK_SIZES] = { 1, 1, 1, 1, 2, 1
 static constexpr u8 size_group_lookup[BLOCK_SIZES] = { 0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3, 3 };
 
 static constexpr TransformSize max_txsize_lookup[BLOCK_SIZES] = {
-    TX_4x4,
-    TX_4x4,
-    TX_4x4,
-    TX_8x8,
-    TX_8x8,
-    TX_8x8,
-    TX_16x16,
-    TX_16x16,
-    TX_16x16,
-    TX_32x32,
-    TX_32x32,
-    TX_32x32,
-    TX_32x32,
+    Transform_4x4,
+    Transform_4x4,
+    Transform_4x4,
+    Transform_8x8,
+    Transform_8x8,
+    Transform_8x8,
+    Transform_16x16,
+    Transform_16x16,
+    Transform_16x16,
+    Transform_32x32,
+    Transform_32x32,
+    Transform_32x32,
+    Transform_32x32,
 };
 
 static constexpr BlockSubsize ss_size_lookup[BLOCK_SIZES][2][2] = {
