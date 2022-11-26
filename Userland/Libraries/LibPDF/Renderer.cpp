@@ -43,9 +43,17 @@ static Gfx::Path rect_path(float x, float y, float width, float height)
 }
 
 template<typename T>
+static void rect_path(Gfx::Path& path, Gfx::Rect<T> rect)
+{
+    return rect_path(path, rect.x(), rect.y(), rect.width(), rect.height());
+}
+
+template<typename T>
 static Gfx::Path rect_path(Gfx::Rect<T> rect)
 {
-    return rect_path(rect.x(), rect.y(), rect.width(), rect.height());
+    Gfx::Path path;
+    rect_path(path, rect);
+    return path;
 }
 
 Renderer::Renderer(RefPtr<Document> document, Page const& page, RefPtr<Gfx::Bitmap> bitmap, RenderingPreferences rendering_preferences)
@@ -229,14 +237,8 @@ RENDERER_HANDLER(path_close)
 
 RENDERER_HANDLER(path_append_rect)
 {
-    auto pos = map(args[0].to_float(), args[1].to_float());
-    auto size = map(Gfx::FloatSize { args[2].to_float(), args[3].to_float() });
-
-    // FIXME: Why do we need to flip the y axis of rectangles here? The coordinates
-    //        in the PDF file seem to be correct, with the same flipped-ness as
-    //        everything else in a PDF file.
-    pos.set_y(m_bitmap->height() - pos.y() - size.height());
-    rect_path(m_current_path, pos.x(), pos.y(), size.width(), size.height());
+    auto rect = Gfx::FloatRect(args[0].to_float(), args[1].to_float(), args[2].to_float(), args[3].to_float());
+    rect_path(m_current_path, map(rect));
     return {};
 }
 
@@ -624,8 +626,7 @@ RENDERER_TODO(compatibility_end)
 template<typename T>
 Gfx::Point<T> Renderer::map(T x, T y) const
 {
-    auto mapped = state().ctm.map(Gfx::Point<T> { x, y });
-    return { mapped.x(), static_cast<T>(m_bitmap->height()) - mapped.y() };
+    return state().ctm.map(Gfx::Point<T> { x, y });
 }
 
 template<typename T>
