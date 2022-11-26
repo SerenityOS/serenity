@@ -14,7 +14,7 @@
 #ifndef _DYNAMIC_LOADER
 extern "C" {
 
-extern size_t __stack_chk_guard;
+extern uintptr_t __stack_chk_guard;
 extern bool s_global_initializers_ran;
 
 int main(int, char**, char**);

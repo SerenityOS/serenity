@@ -20,8 +20,8 @@
 #endif
 
 // Defined in the linker script
-extern size_t __stack_chk_guard;
-size_t __stack_chk_guard __attribute__((used));
+extern uintptr_t __stack_chk_guard;
+uintptr_t __stack_chk_guard __attribute__((used));
 extern "C" [[noreturn]] void __stack_chk_fail();
 
 extern "C" u8 start_of_prekernel_image[];
