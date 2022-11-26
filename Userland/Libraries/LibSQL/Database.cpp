@@ -223,7 +223,7 @@ ErrorOr<void> Database::update(Row& tuple)
     VERIFY(m_table_cache.get(tuple.table()->key().hash()).has_value());
     // TODO Check constraints
     m_serializer.reset();
-    m_serializer.serialize_and_write<Tuple>(tuple, tuple.pointer());
+    m_serializer.serialize_and_write<Tuple>(tuple);
 
     // TODO update indexes defined on table.
     return {};

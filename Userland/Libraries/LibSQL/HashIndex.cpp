@@ -140,7 +140,7 @@ bool HashBucket::insert(Key const& key)
         return false;
     }
     m_entries.append(key);
-    m_hash_index.serializer().serialize_and_write(*this, pointer());
+    m_hash_index.serializer().serialize_and_write(*this);
     return true;
 }
 
@@ -226,10 +226,10 @@ HashIndex::HashIndex(Serializer& serializer, NonnullRefPtr<TupleDescriptor> cons
     } else {
         auto bucket = append_bucket(0u, 1u, new_record_pointer());
         bucket->m_inflated = true;
-        serializer.serialize_and_write(*bucket, bucket->pointer());
+        serializer.serialize_and_write(*bucket);
         bucket = append_bucket(1u, 1u, new_record_pointer());
         bucket->m_inflated = true;
-        serializer.serialize_and_write(*bucket, bucket->pointer());
+        serializer.serialize_and_write(*bucket);
         m_nodes.append(first_node);
         write_directory_to_write_ahead_log();
     }
@@ -283,7 +283,7 @@ HashBucket* HashIndex::get_bucket_for_insert(Key const& key)
                 }
                 if (moved > 0) {
                     dbgln_if(SQL_DEBUG, "Moved {} entries from bucket #{} to #{}", moved, base_index, ix);
-                    serializer().serialize_and_write(*sub_bucket, sub_bucket->pointer());
+                    serializer().serialize_and_write(*sub_bucket);
                 }
                 total_moved += moved;
             }
@@ -292,7 +292,7 @@ HashBucket* HashIndex::get_bucket_for_insert(Key const& key)
             else
                 dbgln_if(SQL_DEBUG, "Nothing redistributed from bucket #{}", base_index);
             bucket->set_local_depth(bucket->local_depth() + 1);
-            serializer().serialize_and_write(*bucket, bucket->pointer());
+            serializer().serialize_and_write(*bucket);
             write_directory_to_write_ahead_log();
 
             auto bucket_after_redistribution = get_bucket(key_hash % size());
@@ -327,7 +327,7 @@ void HashIndex::write_directory_to_write_ahead_log()
     size_t num_node = 0u;
     while (offset < size()) {
         HashDirectoryNode node(*this, num_node, offset);
-        serializer().serialize_and_write(node, node.pointer());
+        serializer().serialize_and_write(node);
         offset += node.number_of_pointers();
     }
 }

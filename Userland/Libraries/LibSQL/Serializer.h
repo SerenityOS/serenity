@@ -108,12 +108,12 @@ public:
     void serialize(String const&);
 
     template<typename T>
-    bool serialize_and_write(T const& t, u32 pointer)
+    bool serialize_and_write(T const& t)
     {
         VERIFY(m_heap.ptr() != nullptr);
         reset();
         serialize<T>(t);
-        m_heap->add_to_wal(pointer, m_buffer);
+        m_heap->add_to_wal(t.pointer(), m_buffer);
         return true;
     }
 

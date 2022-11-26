@@ -754,4 +754,23 @@ TEST_CASE(binary_operator_failure)
     expect_failure(move(result), '&');
 }
 
+TEST_CASE(describe_large_table_after_persist)
+{
+    ScopeGuard guard([]() { unlink(db_name); });
+    {
+        auto database = SQL::Database::construct(db_name);
+        EXPECT(!database->open().is_error());
+
+        auto result = execute(database, "CREATE TABLE Cookies ( name TEXT, value TEXT, same_site INTEGER, creation_time INTEGER, last_access_time INTEGER, expiry_time INTEGER, domain TEXT, path TEXT, secure INTEGER, http_only INTEGER, host_only INTEGER, persistent INTEGER );");
+        EXPECT_EQ(result.command(), SQL::SQLCommand::Create);
+    }
+    {
+        auto database = SQL::Database::construct(db_name);
+        EXPECT(!database->open().is_error());
+
+        auto result = execute(database, "DESCRIBE TABLE Cookies;");
+        EXPECT_EQ(result.size(), 12u);
+    }
+}
+
 }

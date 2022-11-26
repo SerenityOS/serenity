@@ -172,7 +172,7 @@ bool TreeNode::update_key_pointer(Key const& key)
             if (m_entries[ix].pointer() != key.pointer()) {
                 m_entries[ix].set_pointer(key.pointer());
                 dump_if(SQL_DEBUG, "To WAL");
-                tree().serializer().serialize_and_write<TreeNode>(*this, pointer());
+                tree().serializer().serialize_and_write<TreeNode>(*this);
             }
             return true;
         }
@@ -277,7 +277,7 @@ void TreeNode::just_insert(Key const& key, TreeNode* right)
                 split();
             } else {
                 dump_if(SQL_DEBUG, "To WAL");
-                tree().serializer().serialize_and_write(*this, pointer());
+                tree().serializer().serialize_and_write(*this);
             }
             return;
         }
@@ -289,7 +289,7 @@ void TreeNode::just_insert(Key const& key, TreeNode* right)
         split();
     } else {
         dump_if(SQL_DEBUG, "To WAL");
-        tree().serializer().serialize_and_write(*this, pointer());
+        tree().serializer().serialize_and_write(*this);
     }
 }
 
@@ -327,9 +327,9 @@ void TreeNode::split()
     auto median = m_entries.take_last();
 
     dump_if(SQL_DEBUG, "Split Left To WAL");
-    tree().serializer().serialize_and_write(*this, pointer());
+    tree().serializer().serialize_and_write(*this);
     new_node->dump_if(SQL_DEBUG, "Split Right to WAL");
-    tree().serializer().serialize_and_write(*new_node, pointer());
+    tree().serializer().serialize_and_write(*new_node);
 
     m_up->just_insert(median, new_node);
 }
