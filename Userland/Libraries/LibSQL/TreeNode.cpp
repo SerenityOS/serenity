@@ -197,21 +197,13 @@ bool TreeNode::insert_in_leaf(Key const& key)
     return true;
 }
 
-Key const& TreeNode::operator[](size_t ix) const
-{
-    VERIFY(ix < size());
-    return m_entries[ix];
-}
-
 u32 TreeNode::down_pointer(size_t ix) const
 {
-    VERIFY(ix < m_down.size());
     return m_down[ix].pointer();
 }
 
 TreeNode* TreeNode::down_node(size_t ix)
 {
-    VERIFY(ix < m_down.size());
     return m_down[ix].node();
 }
 
