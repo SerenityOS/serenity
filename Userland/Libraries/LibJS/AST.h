@@ -1782,9 +1782,9 @@ class MemberExpression final : public Expression {
 public:
     MemberExpression(SourceRange source_range, NonnullRefPtr<Expression> object, NonnullRefPtr<Expression> property, bool computed = false)
         : Expression(source_range)
+        , m_computed(computed)
         , m_object(move(object))
         , m_property(move(property))
-        , m_computed(computed)
     {
     }
 
@@ -1804,9 +1804,9 @@ public:
 private:
     virtual bool is_member_expression() const override { return true; }
 
+    bool m_computed { false };
     NonnullRefPtr<Expression> m_object;
     NonnullRefPtr<Expression> m_property;
-    bool m_computed { false };
 };
 
 class OptionalChain final : public Expression {
