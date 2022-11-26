@@ -231,4 +231,9 @@ void DeclarativeEnvironment::initialize_or_set_mutable_binding(Badge<ScopeNode>,
     MUST(initialize_or_set_mutable_binding(vm, name, value));
 }
 
+void DeclarativeEnvironment::shrink_to_fit()
+{
+    m_bindings.shrink_to_fit();
+}
+
 }

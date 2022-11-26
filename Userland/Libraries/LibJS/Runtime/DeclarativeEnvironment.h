@@ -57,6 +57,8 @@ public:
     ThrowCompletionOr<void> set_mutable_binding_direct(VM&, size_t index, Value, bool strict);
     ThrowCompletionOr<Value> get_binding_value_direct(VM&, size_t index, bool strict);
 
+    void shrink_to_fit();
+
 private:
     ThrowCompletionOr<void> initialize_binding_direct(VM&, Binding&, Value);
     ThrowCompletionOr<Value> get_binding_value_direct(VM&, Binding&, bool strict);
