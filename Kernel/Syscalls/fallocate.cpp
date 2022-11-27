@@ -12,11 +12,13 @@
 
 namespace Kernel {
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/posix_fallocate.html
 ErrorOr<FlatPtr> Process::sys$posix_fallocate(int fd, Userspace<off_t const*> userspace_offset, Userspace<off_t const*> userspace_length)
 {
     VERIFY_NO_PROCESS_BIG_LOCK(this);
     TRY(require_promise(Pledge::stdio));
 
+    // [EINVAL] The len argument is less than zero, or the offset argument is less than zero, or the underlying file system does not support this operation.
     auto offset = TRY(copy_typed_from_user(userspace_offset));
     if (offset < 0)
         return EINVAL;
@@ -31,9 +33,12 @@ ErrorOr<FlatPtr> Process::sys$posix_fallocate(int fd, Userspace<off_t const*> us
         return EFBIG;
 
     auto description = TRY(open_file_description(fd));
+
+    // [EBADF] The fd argument references a file that was opened without write permission.
     if (!description->is_writable())
         return EBADF;
 
+    // [ESPIPE] The fd argument is associated with a pipe or FIFO.
     if (description->is_fifo())
         return ESPIPE;
 
