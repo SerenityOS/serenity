@@ -16,7 +16,6 @@
 #include <LibGUI/Model.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/ValueSlider.h>
-#include <LibGfx/BitmapMixer.h>
 
 namespace PixelPaint {
 
@@ -33,17 +32,13 @@ void LassoSelectTool::on_mousedown(Layer* layer, MouseEvent& event)
     if (selection_bitmap_result.is_error())
         return;
 
-    auto preview_bitmap_result = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, layer->content_bitmap().size());
-    if (preview_bitmap_result.is_error())
-        return;
-
     m_selection_bitmap = selection_bitmap_result.release_value();
-    m_preview_bitmap = preview_bitmap_result.release_value();
     m_start_position = layer_event.position();
     m_most_recent_position = layer_event.position();
     m_top_left = m_start_position;
     m_bottom_right = m_start_position;
-
+    m_preview_path.clear();
+    m_preview_path.move_to(editor_stroke_position(m_most_recent_position, 1).to_type<float>());
     m_selection_bitmap->set_pixel(m_most_recent_position, Gfx::Color::Black);
 
     m_selecting = true;
@@ -74,10 +69,8 @@ void LassoSelectTool::on_mousemove(Layer* layer, MouseEvent& event)
     if (new_position.y() > m_bottom_right.y())
         m_bottom_right.set_y(new_position.y());
 
-    auto preview_painter = Gfx::Painter(*m_preview_bitmap);
-    auto preview_start = editor_stroke_position(m_most_recent_position, 1);
     auto preview_end = editor_stroke_position(new_position, 1);
-    preview_painter.draw_line(preview_start, preview_end, Gfx::Color::Black, AK::max(1 * m_editor->scale(), 1));
+    m_preview_path.line_to(preview_end.to_type<float>());
 
     auto selection_painter = Gfx::Painter(*m_selection_bitmap);
     selection_painter.draw_line(m_most_recent_position, new_position, Gfx::Color::Black);
@@ -145,17 +138,13 @@ void LassoSelectTool::flood_lasso_selection(Gfx::Bitmap& lasso_bitmap, Gfx::IntP
 
 void LassoSelectTool::on_second_paint(Layer const* layer, GUI::PaintEvent& event)
 {
-
     if (!m_selecting)
         return;
-
-    if (m_preview_bitmap.is_null())
-        return;
-
     GUI::Painter painter(*m_editor);
     painter.add_clip_rect(event.rect());
-
-    painter.blit(layer->location(), *m_preview_bitmap, m_preview_bitmap->rect());
+    if (layer)
+        painter.translate(editor_layer_location(*layer));
+    painter.stroke_path(m_preview_path, Gfx::Color::Black, 1);
 }
 
 bool LassoSelectTool::on_keydown(GUI::KeyEvent const& key_event)
@@ -165,7 +154,7 @@ bool LassoSelectTool::on_keydown(GUI::KeyEvent const& key_event)
         if (m_selecting) {
             m_selecting = false;
             m_selection_bitmap.clear();
-            m_preview_bitmap.clear();
+            m_preview_path.clear();
             return true;
         }
     }
