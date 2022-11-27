@@ -146,15 +146,9 @@ public:
     }
 
 private:
-    unsigned m_buttons;
-    unsigned m_wheel_delta_acc;
-    bool m_show_scroll_wheel;
-    MainFrame()
-        : m_buttons { 0 }
-        , m_wheel_delta_acc { 0 }
-        , m_show_scroll_wheel { false }
-    {
-    }
+    unsigned m_buttons { 0 };
+    unsigned m_wheel_delta_acc { 0 };
+    bool m_show_scroll_wheel { false };
 };
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
