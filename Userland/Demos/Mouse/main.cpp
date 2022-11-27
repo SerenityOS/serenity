@@ -143,8 +143,9 @@ public:
         m_wheel_delta_acc = (m_wheel_delta_acc + event.wheel_delta_y() + 36) % 36;
         m_show_scroll_wheel = true;
         update();
-        if (!has_timer())
-            start_timer(500);
+        if (has_timer())
+            stop_timer();
+        start_timer(500);
     }
 
 private:
