@@ -79,13 +79,15 @@ public:
         auto secondary_pressed = m_buttons & GUI::MouseButton::Secondary;
 
         if (primary_secondary_switched ? secondary_pressed : primary_pressed) {
-            painter.fill_rect({ 31, 21, 34, 44 }, Color::Blue);
-            painter.draw_triangle({ 30, 21 }, { 65, 21 }, { 65, 12 }, Color::Blue);
+            auto button_color = primary_secondary_switched ? Color::LightBlue : Color::MidBlue;
+            painter.fill_rect({ 31, 21, 34, 44 }, button_color);
+            painter.draw_triangle({ 30, 21 }, { 65, 21 }, { 65, 12 }, button_color);
         }
 
         if (primary_secondary_switched ? primary_pressed : secondary_pressed) {
-            painter.fill_rect({ 96, 21, 34, 44 }, Color::Blue);
-            painter.draw_triangle({ 96, 12 }, { 96, 21 }, { 132, 21 }, Color::Blue);
+            auto button_color = primary_secondary_switched ? Color::MidBlue : Color::LightBlue;
+            painter.fill_rect({ 96, 21, 34, 44 }, button_color);
+            painter.draw_triangle({ 96, 12 }, { 96, 21 }, { 132, 21 }, button_color);
         }
 
         if (m_buttons & GUI::MouseButton::Middle)
