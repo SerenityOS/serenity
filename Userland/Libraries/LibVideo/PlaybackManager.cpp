@@ -106,6 +106,11 @@ Time PlaybackManager::duration()
 
 void PlaybackManager::on_decoder_error(DecoderError error)
 {
+    // If we don't switch to playing/paused before stopping/becoming corrupted, the player will crash
+    // due to the invalid playback time.
+    if (is_seeking())
+        end_seek();
+
     switch (error.category()) {
     case DecoderErrorCategory::EndOfStream:
         dbgln_if(PLAYBACK_MANAGER_DEBUG, "{}", error.string_literal());
