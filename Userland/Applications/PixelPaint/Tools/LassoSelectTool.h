@@ -11,6 +11,7 @@
 
 #include <AK/Vector.h>
 #include <LibGUI/Widget.h>
+#include <LibGfx/Path.h>
 
 namespace PixelPaint {
 
@@ -36,7 +37,7 @@ private:
     Gfx::IntPoint m_start_position;
     Gfx::IntPoint m_most_recent_position;
     RefPtr<Gfx::Bitmap> m_selection_bitmap;
-    RefPtr<Gfx::Bitmap> m_preview_bitmap;
+    Gfx::Path m_preview_path;
 
     Gfx::IntPoint m_top_left;
     Gfx::IntPoint m_bottom_right;
