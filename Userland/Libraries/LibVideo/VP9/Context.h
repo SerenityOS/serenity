@@ -9,6 +9,7 @@
 
 #include <AK/Array.h>
 #include <AK/Error.h>
+#include <AK/FixedArray.h>
 #include <LibGfx/Size.h>
 #include <LibVideo/Color/CodingIndependentCodePoints.h>
 
@@ -139,16 +140,49 @@ private:
     Vector2D<FrameBlockContext>& m_block_contexts;
 };
 
+static ErrorOr<NonZeroTokens> create_non_zero_tokens(u32 size_in_sub_blocks, bool subsampling)
+{
+    return NonZeroTokens {
+        TRY(FixedArray<bool>::try_create(size_in_sub_blocks)),
+        TRY(FixedArray<bool>::try_create(size_in_sub_blocks >>= subsampling)),
+        TRY(FixedArray<bool>::try_create(size_in_sub_blocks)),
+    };
+}
+
+template<typename T>
+static Span<T> safe_slice(FixedArray<T>& array, u32 start, u32 size)
+{
+    return array.span().slice(start, min(size, array.size() - start));
+}
+
+static NonZeroTokensView create_non_zero_tokens_view(NonZeroTokens& non_zero_tokens, u32 start_in_sub_blocks, u32 size_in_sub_blocks, bool subsampling)
+{
+    NonZeroTokensView result;
+    // Y plane
+    result[0] = safe_slice(non_zero_tokens[0], start_in_sub_blocks, size_in_sub_blocks);
+    // UV planes
+    start_in_sub_blocks >>= subsampling;
+    size_in_sub_blocks >>= subsampling;
+    result[1] = safe_slice(non_zero_tokens[1], start_in_sub_blocks, size_in_sub_blocks);
+    result[2] = safe_slice(non_zero_tokens[2], start_in_sub_blocks, size_in_sub_blocks);
+    return result;
+}
+
 struct TileContext {
 public:
-    TileContext(FrameContext& frame_context, u32 rows_start, u32 rows_end, u32 columns_start, u32 columns_end)
-        : frame_context(frame_context)
-        , rows_start(rows_start)
-        , rows_end(rows_end)
-        , columns_start(columns_start)
-        , columns_end(columns_end)
-        , block_contexts_view(frame_context.m_block_contexts.view(rows_start, columns_start, rows_end - rows_start, columns_end - columns_start))
+    static ErrorOr<TileContext> try_create(FrameContext& frame_context, u32 rows_start, u32 rows_end, u32 columns_start, u32 columns_end)
     {
+        auto context_view = frame_context.m_block_contexts.view(rows_start, columns_start, rows_end - rows_start, columns_end - columns_start);
+
+        return TileContext {
+            frame_context,
+            rows_start,
+            rows_end,
+            columns_start,
+            columns_end,
+            context_view,
+            TRY(create_non_zero_tokens(blocks_to_sub_blocks(rows_end - rows_start), frame_context.color_config.subsampling_y)),
+        };
     }
 
     Vector2D<FrameBlockContext> const& frame_block_contexts() const { return frame_context.block_contexts(); }
@@ -158,20 +192,33 @@ public:
     u32 rows_end { 0 };
     u32 columns_start { 0 };
     u32 columns_end { 0 };
+    u32 rows() const { return rows_end - rows_start; }
+    u32 columns() const { return columns_end - columns_start; }
     Vector2DView<FrameBlockContext> block_contexts_view;
+
+    NonZeroTokens left_non_zero_tokens;
 };
 
 struct BlockContext {
-    BlockContext(TileContext& tile_context, u32 row, u32 column, BlockSubsize size)
-        : frame_context(tile_context.frame_context)
-        , tile_context(tile_context)
-        , row(row)
-        , column(column)
-        , size(size)
-        , contexts_view(tile_context.block_contexts_view.view(row - tile_context.rows_start, column - tile_context.columns_start,
-              min<u32>(num_8x8_blocks_high_lookup[size], tile_context.frame_context.rows() - row),
-              min<u32>(num_8x8_blocks_wide_lookup[size], tile_context.frame_context.columns() - column)))
+    static BlockContext create(TileContext& tile_context, u32 row, u32 column, BlockSubsize size)
     {
+        auto contexts_view = tile_context.block_contexts_view.view(
+            row - tile_context.rows_start,
+            column - tile_context.columns_start,
+            min<u32>(num_8x8_blocks_high_lookup[size], tile_context.frame_context.rows() - row),
+            min<u32>(num_8x8_blocks_wide_lookup[size], tile_context.frame_context.columns() - column));
+
+        auto size_in_sub_blocks = block_size_to_sub_blocks(get_subsampled_block_size(size, false, false));
+
+        return BlockContext {
+            .frame_context = tile_context.frame_context,
+            .tile_context = tile_context,
+            .row = row,
+            .column = column,
+            .size = size,
+            .contexts_view = contexts_view,
+            .left_non_zero_tokens = create_non_zero_tokens_view(tile_context.left_non_zero_tokens, blocks_to_sub_blocks(row - tile_context.rows_start), size_in_sub_blocks.height(), tile_context.frame_context.color_config.subsampling_y),
+        };
     }
 
     Vector2D<FrameBlockContext> const& frame_block_contexts() const { return frame_context.block_contexts(); }
@@ -193,22 +240,24 @@ struct BlockContext {
 
     TransformSize transform_size { Transform_4x4 };
 
-    ReferenceFramePair reference_frame_types;
+    ReferenceFramePair reference_frame_types {};
     bool is_inter_predicted() const { return reference_frame_types.primary != ReferenceFrameType::None; }
     bool is_compound() const { return reference_frame_types.secondary != ReferenceFrameType::None; }
 
-    Array<PredictionMode, 4> sub_block_prediction_modes;
+    Array<PredictionMode, 4> sub_block_prediction_modes {};
     PredictionMode y_prediction_mode() const { return sub_block_prediction_modes.last(); }
     PredictionMode& y_prediction_mode() { return sub_block_prediction_modes.last(); }
     PredictionMode uv_prediction_mode { 0 };
 
     InterpolationFilter interpolation_filter { EightTap };
-    Array<MotionVectorPair, 4> sub_block_motion_vectors;
+    Array<MotionVectorPair, 4> sub_block_motion_vectors {};
 
-    Array<i32, 1024> residual_tokens;
+    Array<i32, 1024> residual_tokens {};
 
     // Indexed by ReferenceFrame enum.
-    Array<u8, 4> mode_context;
+    Array<u8, 4> mode_context {};
+
+    NonZeroTokensView left_non_zero_tokens;
 };
 
 struct BlockMotionVectorCandidateSet {

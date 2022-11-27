@@ -148,7 +148,6 @@ private:
 
     // FIXME: Move above and left contexts to structs
     Array<Vector<bool>, 3> m_above_nonzero_context;
-    Array<Vector<bool>, 3> m_left_nonzero_context;
     Vector<u8> m_above_seg_pred_context;
     Vector<u8> m_left_seg_pred_context;
     Vector<u8> m_above_partition_context;

@@ -626,11 +626,9 @@ ErrorOr<bool> TreeParser::parse_motion_vector_hp(BitStream& bit_stream, Probabil
     return value;
 }
 
-TokensContext TreeParser::get_context_for_first_token(BlockContext const& block_context, Array<Vector<bool>, 3> const& above_non_zero_tokens, Array<Vector<bool>, 3> const& left_non_zero_tokens, TransformSize transform_size, u8 plane, u32 sub_block_column, u32 sub_block_row, bool is_inter, u8 band)
+TokensContext TreeParser::get_context_for_first_token(BlockContext const& block_context, Array<Vector<bool>, 3> const& above_non_zero_tokens, NonZeroTokensView left_non_zero_tokens_in_block, TransformSize transform_size, u8 plane, u32 sub_block_column, u32 sub_block_row, bool is_inter, u8 band)
 {
     auto subsampling_x = plane > 0 ? block_context.frame_context.color_config.subsampling_x : false;
-    auto subsampling_y = plane > 0 ? block_context.frame_context.color_config.subsampling_y : false;
-    auto transform_top_in_sub_blocks = (blocks_to_sub_blocks(block_context.row) >> subsampling_y) + sub_block_row;
     auto transform_left_in_sub_blocks = (blocks_to_sub_blocks(block_context.column) >> subsampling_x) + sub_block_column;
     u8 transform_size_in_sub_blocks = transform_size_to_sub_blocks(transform_size);
     bool above_has_non_zero_tokens = false;
@@ -641,8 +639,8 @@ TokensContext TreeParser::get_context_for_first_token(BlockContext const& block_
         }
     }
     bool left_has_non_zero_tokens = false;
-    for (u8 y = 0; y < transform_size_in_sub_blocks && y < left_non_zero_tokens[plane].size() - transform_top_in_sub_blocks; y++) {
-        if (left_non_zero_tokens[plane][transform_top_in_sub_blocks + y]) {
+    for (u8 y = 0; y < transform_size_in_sub_blocks && y < left_non_zero_tokens_in_block[plane].size() - sub_block_row; y++) {
+        if (left_non_zero_tokens_in_block[plane][sub_block_row + y]) {
             left_has_non_zero_tokens = true;
             break;
         }

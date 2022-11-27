@@ -864,7 +864,7 @@ DecoderErrorOr<void> Parser::decode_tiles(FrameContext& frame_context)
             auto columns_start = get_tile_offset(tile_col, frame_context.columns(), log2_dimensions.width());
             auto columns_end = get_tile_offset(tile_col + 1, frame_context.columns(), log2_dimensions.width());
 
-            auto tile_context = TileContext(frame_context, rows_start, rows_end, columns_start, columns_end);
+            auto tile_context = DECODER_TRY_ALLOC(TileContext::try_create(frame_context, rows_start, rows_end, columns_start, columns_end));
 
             TRY_READ(m_bit_stream->init_bool(tile_size));
             TRY(decode_tile(tile_context));
@@ -918,8 +918,8 @@ DecoderErrorOr<void> Parser::decode_tile(TileContext& tile_context)
 
 void Parser::clear_left_context(TileContext& tile_context)
 {
-    for (auto i = 0u; i < m_left_nonzero_context.size(); i++)
-        clear_context(m_left_nonzero_context[i], 2 * tile_context.frame_context.rows());
+    for (auto& context_for_plane : tile_context.left_non_zero_tokens)
+        context_for_plane.fill_with(false);
     clear_context(m_left_seg_pred_context, tile_context.frame_context.rows());
     clear_context(m_left_partition_context, tile_context.frame_context.superblock_rows() * 8);
 }
@@ -972,7 +972,7 @@ DecoderErrorOr<void> Parser::decode_block(TileContext& tile_context, u32 row, u3
 {
     auto above_context = row > 0 ? tile_context.frame_block_contexts().at(row - 1, column) : FrameBlockContext();
     auto left_context = column > tile_context.columns_start ? tile_context.frame_block_contexts().at(row, column - 1) : FrameBlockContext();
-    auto block_context = BlockContext(tile_context, row, column, subsize);
+    auto block_context = BlockContext::create(tile_context, row, column, subsize);
 
     TRY(mode_info(block_context, above_context, left_context));
     auto had_residual_tokens = TRY(residual(block_context, above_context.is_available, left_context.is_available));
@@ -1355,9 +1355,9 @@ DecoderErrorOr<bool> Parser::residual(BlockContext& block_context, bool has_bloc
     bool block_had_non_zero_tokens = false;
     Array<u8, 1024> token_cache;
     for (u8 plane = 0; plane < 3; plane++) {
-        auto plane_subsampling_x = (plane > 0) ? block_context.frame_context.color_config.subsampling_x : 0;
-        auto plane_subsampling_y = (plane > 0) ? block_context.frame_context.color_config.subsampling_y : 0;
-        auto plane_size = ss_size_lookup[block_context.size < Block_8x8 ? Block_8x8 : block_context.size][plane_subsampling_x][plane_subsampling_y];
+        auto plane_subsampling_x = (plane > 0) ? block_context.frame_context.color_config.subsampling_x : false;
+        auto plane_subsampling_y = (plane > 0) ? block_context.frame_context.color_config.subsampling_y : false;
+        auto plane_size = get_subsampled_block_size(block_context.size, plane_subsampling_x, plane_subsampling_y);
         auto transform_size = get_uv_transform_size(block_context.transform_size, plane_size);
         auto transform_size_in_sub_blocks = transform_size_to_sub_blocks(transform_size);
         auto block_size_in_sub_blocks = block_size_to_sub_blocks(plane_size);
@@ -1380,8 +1380,8 @@ DecoderErrorOr<bool> Parser::residual(BlockContext& block_context, bool has_bloc
         auto frame_bottom_in_pixels = (blocks_to_pixels(block_context.frame_context.rows())) >> plane_subsampling_y;
 
         auto sub_block_index = 0;
-        for (auto y = 0; y < block_size_in_sub_blocks.height(); y += transform_size_in_sub_blocks) {
-            for (auto x = 0; x < block_size_in_sub_blocks.width(); x += transform_size_in_sub_blocks) {
+        for (u32 y = 0; y < block_size_in_sub_blocks.height(); y += transform_size_in_sub_blocks) {
+            for (u32 x = 0; x < block_size_in_sub_blocks.width(); x += transform_size_in_sub_blocks) {
                 auto transform_x_in_px = base_x_in_pixels + sub_blocks_to_pixels(x);
                 auto transform_y_in_px = base_y_in_pixels + sub_blocks_to_pixels(y);
 
@@ -1403,11 +1403,10 @@ DecoderErrorOr<bool> Parser::residual(BlockContext& block_context, bool has_bloc
                 for (; above_sub_block_context_index < above_sub_block_context_end; above_sub_block_context_index++)
                     above_sub_block_context[above_sub_block_context_index] = sub_block_had_non_zero_tokens;
 
-                auto& left_sub_block_context = m_left_nonzero_context[plane];
-                auto left_sub_block_context_index = pixels_to_sub_blocks(transform_y_in_px);
-                auto left_sub_block_context_end = min(left_sub_block_context_index + transform_size_in_sub_blocks, left_sub_block_context.size());
-                for (; left_sub_block_context_index < left_sub_block_context_end; left_sub_block_context_index++)
-                    left_sub_block_context[left_sub_block_context_index] = sub_block_had_non_zero_tokens;
+                auto& left_sub_block_context = block_context.left_non_zero_tokens[plane];
+                auto transform_bottom_in_sub_blocks = min(y + transform_size_in_sub_blocks, left_sub_block_context.size());
+                for (size_t inside_y = y; inside_y < transform_bottom_in_sub_blocks; inside_y++)
+                    left_sub_block_context[inside_y] = sub_block_had_non_zero_tokens;
 
                 sub_block_index++;
             }
@@ -1459,7 +1458,7 @@ DecoderErrorOr<bool> Parser::tokens(BlockContext& block_context, size_t plane, u
         auto token_position = scan[coef_index];
         TokensContext tokens_context;
         if (coef_index == 0)
-            tokens_context = TreeParser::get_context_for_first_token(block_context, m_above_nonzero_context, m_left_nonzero_context, transform_size, plane, sub_block_column, sub_block_row, block_context.is_inter_predicted(), band);
+            tokens_context = TreeParser::get_context_for_first_token(block_context, m_above_nonzero_context, block_context.left_non_zero_tokens, transform_size, plane, sub_block_column, sub_block_row, block_context.is_inter_predicted(), band);
         else
             tokens_context = TreeParser::get_context_for_other_tokens(token_cache, transform_size, transform_set, plane, token_position, block_context.is_inter_predicted(), band);
 
