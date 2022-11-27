@@ -391,7 +391,7 @@ DecoderErrorOr<void> Parser::compute_image_size(FrameContext& frame_context)
     // d. error_resilient_mode is equal to 0.
     // e. FrameIsIntra is equal to 0.
     // Otherwise, UsePrevFrameMvs is set equal to 0.
-    m_use_prev_frame_mvs = !first_invoke && same_size && m_previous_show_frame && !frame_context.error_resilient_mode && frame_context.is_inter_predicted();
+    frame_context.use_previous_frame_motion_vectors = !first_invoke && same_size && m_previous_show_frame && !frame_context.error_resilient_mode && frame_context.is_inter_predicted();
     return {};
 }
 
@@ -1634,7 +1634,7 @@ MotionVectorPair Parser::find_reference_motion_vectors(BlockContext const& block
             add_motion_vector_if_reference_frame_type_is_same(block_context, candidate, reference_frame, list, false);
         }
     }
-    if (m_use_prev_frame_mvs)
+    if (block_context.frame_context.use_previous_frame_motion_vectors)
         add_motion_vector_if_reference_frame_type_is_same(block_context, base_coordinates, reference_frame, list, true);
 
     if (different_ref_found) {
@@ -1644,7 +1644,7 @@ MotionVectorPair Parser::find_reference_motion_vectors(BlockContext const& block
                 add_motion_vector_if_reference_frame_type_is_different(block_context, candidate, reference_frame, list, false);
         }
     }
-    if (m_use_prev_frame_mvs)
+    if (block_context.frame_context.use_previous_frame_motion_vectors)
         add_motion_vector_if_reference_frame_type_is_different(block_context, base_coordinates, reference_frame, list, true);
 
     m_mode_context[reference_frame] = counter_to_context[context_counter];

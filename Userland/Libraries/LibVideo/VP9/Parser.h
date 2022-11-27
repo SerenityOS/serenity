@@ -162,7 +162,6 @@ private:
 
     Vector<u16> m_frame_store[NUM_REF_FRAMES][3];
 
-    bool m_use_prev_frame_mvs;
     Vector2D<FrameBlockContext> m_reusable_frame_block_contexts;
     Vector2D<PersistentBlockContext> m_previous_block_contexts;
     // Indexed by ReferenceFrame enum.
