@@ -126,8 +126,8 @@ private:
     DecoderErrorOr<i32> read_coef(u8 bit_depth, Token token);
 
     /* (6.5) Motion Vector Prediction */
-    MotionVectorPair find_reference_motion_vectors(BlockContext const&, ReferenceFrameType, i32 block);
-    void select_best_sub_block_reference_motion_vectors(BlockContext const&, BlockMotionVectorCandidates&, i32 block, ReferenceIndex);
+    MotionVectorPair find_reference_motion_vectors(BlockContext&, ReferenceFrameType, i32 block);
+    void select_best_sub_block_reference_motion_vectors(BlockContext&, BlockMotionVectorCandidates&, i32 block, ReferenceIndex);
     size_t get_image_index(FrameContext const&, u32 row, u32 column) const;
     MotionVectorCandidate get_motion_vector_from_current_or_previous_frame(BlockContext const&, MotionVector candidate_vector, ReferenceIndex, bool use_prev);
     void add_motion_vector_if_reference_frame_type_is_same(BlockContext const&, MotionVector candidate_vector, ReferenceFrameType ref_frame, Vector<MotionVector, 2>& list, bool use_prev);
@@ -164,8 +164,6 @@ private:
 
     Vector2D<FrameBlockContext> m_reusable_frame_block_contexts;
     Vector2D<PersistentBlockContext> m_previous_block_contexts;
-    // Indexed by ReferenceFrame enum.
-    u8 m_mode_context[4] { INVALID_CASE };
 
     OwnPtr<BitStream> m_bit_stream;
     OwnPtr<ProbabilityTables> m_probability_tables;
