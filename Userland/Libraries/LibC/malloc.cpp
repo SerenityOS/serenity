@@ -22,17 +22,19 @@
 #include <sys/mman.h>
 #include <syscall.h>
 
+static bool s_heap_is_stable = true;
+
 class PthreadMutexLocker {
 public:
     ALWAYS_INLINE explicit PthreadMutexLocker(pthread_mutex_t& mutex)
         : m_mutex(mutex)
     {
         lock();
-        __heap_is_stable = false;
+        s_heap_is_stable = false;
     }
     ALWAYS_INLINE ~PthreadMutexLocker()
     {
-        __heap_is_stable = true;
+        s_heap_is_stable = true;
         unlock();
     }
     ALWAYS_INLINE void lock() { pthread_mutex_lock(&m_mutex); }
@@ -45,7 +47,6 @@ private:
 #define RECYCLE_BIG_ALLOCATIONS
 
 static pthread_mutex_t s_malloc_mutex = PTHREAD_MUTEX_INITIALIZER;
-bool __heap_is_stable = true;
 
 constexpr size_t number_of_hot_chunked_blocks_to_keep_around = 16;
 constexpr size_t number_of_cold_chunked_blocks_to_keep_around = 16;
@@ -706,6 +707,11 @@ void serenity_dump_malloc_stats()
     dbgln("number of hot keeps: {}", g_malloc_stats.number_of_hot_keeps);
     dbgln("number of cold keeps: {}", g_malloc_stats.number_of_cold_keeps);
     dbgln("number of frees: {}", g_malloc_stats.number_of_frees);
+}
+
+bool __heap_is_stable()
+{
+    return s_heap_is_stable;
 }
 
 bool __set_allocation_enabled(bool new_value)

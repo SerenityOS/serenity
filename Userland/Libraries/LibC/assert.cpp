@@ -19,7 +19,7 @@ extern bool __stdio_is_initialized;
 
 void __assertion_failed(char const* msg)
 {
-    if (__heap_is_stable) {
+    if (__heap_is_stable()) {
         dbgln("ASSERTION FAILED: {}", msg);
         if (__stdio_is_initialized)
             warnln("ASSERTION FAILED: {}", msg);
