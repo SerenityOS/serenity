@@ -49,6 +49,10 @@ create_ast_node(SourceRange range, Args&&... args)
 class ASTNode : public RefCounted<ASTNode> {
 public:
     virtual ~ASTNode() = default;
+
+    // NOTE: This is here to stop ASAN complaining about mismatch between new/delete sizes in ASTNodeWithTailArray.
+    void operator delete(void* ptr) { ::operator delete(ptr); }
+
     virtual Completion execute(Interpreter&) const = 0;
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const;
     virtual void dump(int indent) const;
@@ -95,6 +99,46 @@ private:
     u32 m_start_offset { 0 };
     RefPtr<SourceCode> m_source_code;
     u32 m_end_offset { 0 };
+};
+
+// This is a helper class that packs an array of T after the AST node, all in the same allocation.
+template<typename Derived, typename Base, typename T>
+class ASTNodeWithTailArray : public Base {
+public:
+    virtual ~ASTNodeWithTailArray() override
+    {
+        for (auto& value : tail_span())
+            value.~T();
+    }
+
+    Span<T const> tail_span() const { return { tail_data(), tail_size() }; }
+
+    T const* tail_data() const { return reinterpret_cast<T const*>(reinterpret_cast<uintptr_t>(this) + sizeof(Derived)); }
+    size_t tail_size() const { return m_tail_size; }
+
+protected:
+    template<typename ActualDerived = Derived, typename... Args>
+    static NonnullRefPtr<ActualDerived> create(size_t tail_size, SourceRange source_range, Args&&... args)
+    {
+        static_assert(sizeof(ActualDerived) == sizeof(Derived), "This leaf class cannot add more members");
+        static_assert(alignof(ActualDerived) % alignof(T) == 0, "Need padding for tail array");
+        auto memory = ::operator new(sizeof(ActualDerived) + tail_size * sizeof(T));
+        return adopt_ref(*::new (memory) ActualDerived(move(source_range), forward<Args>(args)...));
+    }
+
+    ASTNodeWithTailArray(SourceRange source_range, Span<T const> values)
+        : Base(move(source_range))
+        , m_tail_size(values.size())
+    {
+        VERIFY(values.size() <= NumericLimits<u32>::max());
+        for (size_t i = 0; i < values.size(); ++i)
+            new (&tail_data()[i]) T(values[i]);
+    }
+
+private:
+    T* tail_data() { return reinterpret_cast<T*>(reinterpret_cast<uintptr_t>(this) + sizeof(Derived)); }
+
+    u32 m_tail_size { 0 };
 };
 
 class Statement : public ASTNode {
