@@ -1799,10 +1799,16 @@ NonnullRefPtr<ObjectExpression> Parser::parse_object_expression()
     }
 
     consume(TokenType::CurlyClose);
+
+    if (invalid_object_literal_property_range.has_value()) {
+        size_t object_expression_offset = rule_start.position().offset;
+        VERIFY(!m_state.invalid_property_range_in_object_expression.contains(object_expression_offset));
+        m_state.invalid_property_range_in_object_expression.set(object_expression_offset, invalid_object_literal_property_range->start);
+    }
+
     return create_ast_node<ObjectExpression>(
         { m_source_code, rule_start.position(), position() },
-        move(properties),
-        move(invalid_object_literal_property_range));
+        move(properties));
 }
 
 NonnullRefPtr<ArrayExpression> Parser::parse_array_expression()
@@ -1939,8 +1945,8 @@ NonnullRefPtr<Expression> Parser::parse_expression(int min_precedence, Associati
     auto [expression, should_continue_parsing] = parse_primary_expression();
     auto check_for_invalid_object_property = [&](auto& expression) {
         if (is<ObjectExpression>(*expression)) {
-            if (auto range = static_cast<ObjectExpression&>(*expression).invalid_property_range(); range.has_value())
-                syntax_error("Invalid property in object literal", range->start);
+            if (auto start_offset = m_state.invalid_property_range_in_object_expression.get(expression->start_offset()); start_offset.has_value())
+                syntax_error("Invalid property in object literal", start_offset.value());
         }
     };
     if (is<Identifier>(*expression) && m_state.current_scope_pusher) {

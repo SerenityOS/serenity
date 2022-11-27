@@ -1691,10 +1691,9 @@ private:
 
 class ObjectExpression final : public Expression {
 public:
-    explicit ObjectExpression(SourceRange source_range, NonnullRefPtrVector<ObjectProperty> properties = {}, Optional<SourceRange> first_invalid_property_range = {})
+    explicit ObjectExpression(SourceRange source_range, NonnullRefPtrVector<ObjectProperty> properties = {})
         : Expression(source_range)
         , m_properties(move(properties))
-        , m_first_invalid_property_range(move(first_invalid_property_range))
     {
     }
 
@@ -1702,13 +1701,10 @@ public:
     virtual void dump(int indent) const override;
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
 
-    Optional<SourceRange> const& invalid_property_range() const { return m_first_invalid_property_range; }
-
 private:
     virtual bool is_object_expression() const override { return true; }
 
     NonnullRefPtrVector<ObjectProperty> m_properties;
-    Optional<SourceRange> m_first_invalid_property_range;
 };
 
 class ArrayExpression final : public Expression {
