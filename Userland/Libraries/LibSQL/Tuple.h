@@ -70,7 +70,7 @@ public:
     [[nodiscard]] u32 hash() const;
 
 protected:
-    [[nodiscard]] Optional<size_t> index_of(String) const;
+    [[nodiscard]] Optional<size_t> index_of(StringView) const;
     void copy_from(Tuple const&);
     virtual void serialize(Serializer&) const;
     virtual void deserialize(Serializer&);

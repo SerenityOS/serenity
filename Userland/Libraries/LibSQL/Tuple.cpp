@@ -79,13 +79,12 @@ Tuple& Tuple::operator=(Tuple const& other)
     return *this;
 }
 
-Optional<size_t> Tuple::index_of(String name) const
+Optional<size_t> Tuple::index_of(StringView name) const
 {
-    auto n = move(name);
     for (auto ix = 0u; ix < m_descriptor->size(); ix++) {
         auto& part = (*m_descriptor)[ix];
-        if (part.name == n) {
-            return (int)ix;
+        if (part.name == name) {
+            return ix;
         }
     }
     return {};
