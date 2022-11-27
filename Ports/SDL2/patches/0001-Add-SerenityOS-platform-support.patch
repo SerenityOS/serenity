@@ -38,9 +38,9 @@ Co-Authored-By: kleines Filmröllchen <filmroellchen@serenityos.org>
  src/video/serenity/SDL_serenitymessagebox.h   |  38 ++
  src/video/serenity/SDL_serenitymouse.cpp      | 142 ++++
  src/video/serenity/SDL_serenitymouse.h        |  39 ++
- src/video/serenity/SDL_serenityvideo.cpp      | 608 ++++++++++++++++++
+ src/video/serenity/SDL_serenityvideo.cpp      | 611 ++++++++++++++++++
  src/video/serenity/SDL_serenityvideo.h        | 101 +++
- 20 files changed, 1303 insertions(+), 25 deletions(-)
+ 20 files changed, 1306 insertions(+), 25 deletions(-)
  create mode 100644 src/audio/serenity/SDL_serenityaudio.cpp
  create mode 100644 src/audio/serenity/SDL_serenityaudio.h
  create mode 100644 src/video/serenity/SDL_serenityevents.cpp
@@ -866,10 +866,10 @@ index 0000000000000000000000000000000000000000..039f0361b3d1b248e218ea69495f58e5
 +/* vi: set ts=4 sw=4 expandtab: */
 diff --git a/src/video/serenity/SDL_serenityvideo.cpp b/src/video/serenity/SDL_serenityvideo.cpp
 new file mode 100644
-index 0000000000000000000000000000000000000000..ff6542d27500fef99472e2d8d31f8ec785df923b
+index 0000000000000000000000000000000000000000..9c7d4f3f5cedf86ae885330aaf6fae7ec88be286
 --- /dev/null
 +++ b/src/video/serenity/SDL_serenityvideo.cpp
-@@ -0,0 +1,608 @@
+@@ -0,0 +1,611 @@
 +/*
 +  Simple DirectMedia Layer
 +  Copyright (C) 1997-2019 Sam Lantinga <slouken@libsdl.org>
@@ -1268,8 +1268,11 @@ index 0000000000000000000000000000000000000000..ff6542d27500fef99472e2d8d31f8ec7
 +            return GUI::Window::CloseRequestDecision::Close;
 +        return GUI::Window::CloseRequestDecision::StayOpen;
 +    };
-+    w->window()->on_input_preemption_change = [window](bool is_active_input) {
-+        SDL_SetKeyboardFocus(is_active_input ? window : nullptr);
++    w->window()->on_active_window_change = [window](bool is_active_window) {
++        SDL_SetKeyboardFocus(is_active_window ? window : nullptr);
++    };
++    w->window()->on_input_preemption_change = [window](bool is_preempted) {
++        SDL_SetKeyboardFocus(is_preempted ? nullptr : window);
 +    };
 +    SERENITY_PumpEvents(_this);
 +
