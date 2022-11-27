@@ -31,6 +31,7 @@ public:
     {
 
         m_show_scroll_wheel = false;
+        m_double_clicked_buttons = 0;
         stop_timer();
         update();
     }
@@ -74,9 +75,11 @@ public:
 
         painter.stroke_path(path, Color::Black, 1);
 
+        auto buttons = m_buttons | m_double_clicked_buttons;
+
         auto primary_secondary_switched = GUI::ConnectionToWindowServer::the().get_buttons_switched();
-        auto primary_pressed = m_buttons & GUI::MouseButton::Primary;
-        auto secondary_pressed = m_buttons & GUI::MouseButton::Secondary;
+        auto primary_pressed = buttons & GUI::MouseButton::Primary;
+        auto secondary_pressed = buttons & GUI::MouseButton::Secondary;
 
         if (primary_secondary_switched ? secondary_pressed : primary_pressed) {
             auto button_color = primary_secondary_switched ? Color::LightBlue : Color::MidBlue;
@@ -90,13 +93,13 @@ public:
             painter.draw_triangle({ 96, 12 }, { 96, 21 }, { 132, 21 }, button_color);
         }
 
-        if (m_buttons & GUI::MouseButton::Middle)
+        if (buttons & GUI::MouseButton::Middle)
             painter.fill_rect({ 66, 13, 29, 52 }, Color::Blue);
 
-        if (m_buttons & GUI::MouseButton::Forward)
+        if (buttons & GUI::MouseButton::Forward)
             painter.fill_rect({ 26, 44, 4, 16 }, Color::Blue);
 
-        if (m_buttons & GUI::MouseButton::Backward)
+        if (buttons & GUI::MouseButton::Backward)
             painter.fill_rect({ 26, 71, 4, 16 }, Color::Blue);
 
         if (m_show_scroll_wheel) {
@@ -148,10 +151,20 @@ public:
         start_timer(500);
     }
 
+    void doubleclick_event(GUI::MouseEvent& event) override
+    {
+        m_double_clicked_buttons |= event.button();
+        update();
+        if (has_timer())
+            stop_timer();
+        start_timer(500);
+    }
+
 private:
     unsigned m_buttons { 0 };
     unsigned m_wheel_delta_acc { 0 };
     bool m_show_scroll_wheel { false };
+    unsigned m_double_clicked_buttons { 0 };
 };
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
