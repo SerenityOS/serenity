@@ -22,6 +22,7 @@ set(LIBC_SOURCES
     link.cpp
     locale.cpp
     malloc.cpp
+    malloc_integration.cpp
     math.cpp
     mntent.cpp
     net.cpp
@@ -167,6 +168,8 @@ set_property(
         APPEND
         PROPERTY ADDITIONAL_CLEAN_FILES ${TEMP_OBJ_FILES}
 )
+
+list(REMOVE_ITEM SOURCES malloc.cpp)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -nolibc")
 serenity_libc(LibC c)

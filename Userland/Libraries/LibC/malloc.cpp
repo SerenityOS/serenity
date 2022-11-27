@@ -11,6 +11,7 @@
 #include <AK/Vector.h>
 #include <LibELF/AuxiliaryVector.h>
 #include <assert.h>
+#include <bits/malloc_integration.h>
 #include <errno.h>
 #include <mallocdefs.h>
 #include <pthread.h>
@@ -537,17 +538,15 @@ static void free_impl(void* ptr)
         os_free(block, ChunkedBlock::block_size);
     }
 }
+}
 
-// https://pubs.opengroup.org/onlinepubs/9699919799/functions/malloc.html
-void* malloc(size_t size)
+ErrorOr<void*> __malloc(size_t size)
 {
     MemoryAuditingSuppressor suppressor;
     auto ptr_or_error = malloc_impl(size, 16, CallerWillInitializeMemory::No);
 
-    if (ptr_or_error.is_error()) {
-        errno = ptr_or_error.error().code();
-        return nullptr;
-    }
+    if (ptr_or_error.is_error())
+        return ptr_or_error.release_error();
 
     if (s_profiling)
         perf_event(PERF_EVENT_MALLOC, size, reinterpret_cast<FlatPtr>(ptr_or_error.value()));
@@ -556,7 +555,7 @@ void* malloc(size_t size)
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/free.html
-void free(void* ptr)
+void __free(void* ptr)
 {
     MemoryAuditingSuppressor suppressor;
     if (s_profiling)
@@ -566,27 +565,23 @@ void free(void* ptr)
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/calloc.html
-void* calloc(size_t count, size_t size)
+ErrorOr<void*> __calloc(size_t count, size_t size)
 {
     MemoryAuditingSuppressor suppressor;
-    if (Checked<size_t>::multiplication_would_overflow(count, size)) {
-        errno = ENOMEM;
-        return nullptr;
-    }
+    if (Checked<size_t>::multiplication_would_overflow(count, size))
+        return ENOMEM;
     size_t new_size = count * size;
     auto ptr_or_error = malloc_impl(new_size, 16, CallerWillInitializeMemory::Yes);
 
-    if (ptr_or_error.is_error()) {
-        errno = ptr_or_error.error().code();
-        return nullptr;
-    }
+    if (ptr_or_error.is_error())
+        return ptr_or_error.release_error();
 
     memset(ptr_or_error.value(), 0, new_size);
     return ptr_or_error.value();
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/posix_memalign.html
-int posix_memalign(void** memptr, size_t alignment, size_t size)
+int __posix_memalign(void** memptr, size_t alignment, size_t size)
 {
     MemoryAuditingSuppressor suppressor;
     auto ptr_or_error = malloc_impl(size, alignment, CallerWillInitializeMemory::No);
@@ -598,20 +593,13 @@ int posix_memalign(void** memptr, size_t alignment, size_t size)
     return 0;
 }
 
-void* aligned_alloc(size_t alignment, size_t size)
+ErrorOr<void*> __aligned_alloc(size_t alignment, size_t size)
 {
     MemoryAuditingSuppressor suppressor;
-    auto ptr_or_error = malloc_impl(size, alignment, CallerWillInitializeMemory::No);
-
-    if (ptr_or_error.is_error()) {
-        errno = ptr_or_error.error().code();
-        return nullptr;
-    }
-
-    return ptr_or_error.value();
+    return malloc_impl(size, alignment, CallerWillInitializeMemory::No);
 }
 
-size_t malloc_size(void const* ptr)
+size_t __malloc_size(void const* ptr)
 {
     MemoryAuditingSuppressor suppressor;
     if (!ptr)
@@ -626,33 +614,36 @@ size_t malloc_size(void const* ptr)
     return size;
 }
 
-size_t malloc_good_size(size_t size)
+size_t __malloc_good_size(size_t size)
 {
     size_t good_size;
     allocator_for_size(size, good_size);
     return good_size;
 }
 
-void* realloc(void* ptr, size_t size)
+ErrorOr<void*> __realloc(void* ptr, size_t size)
 {
     MemoryAuditingSuppressor suppressor;
     if (!ptr)
-        return malloc(size);
+        return __malloc(size);
     if (!size) {
-        free(ptr);
+        __free(ptr);
         return nullptr;
     }
 
-    auto existing_allocation_size = malloc_size(ptr);
+    auto existing_allocation_size = __malloc_size(ptr);
 
     if (size <= existing_allocation_size) {
         ue_notify_realloc(ptr, size);
         return ptr;
     }
-    auto* new_ptr = malloc(size);
+    auto new_ptr_or_error = __malloc(size);
+    if (new_ptr_or_error.is_error())
+        return new_ptr_or_error;
+    auto* new_ptr = new_ptr_or_error.value();
     if (new_ptr) {
         memcpy(new_ptr, ptr, min(existing_allocation_size, size));
-        free(ptr);
+        __free(ptr);
     }
     return new_ptr;
 }
@@ -684,7 +675,7 @@ void __malloc_init()
     new (&big_allocators()[0])(BigAllocator);
 }
 
-void serenity_dump_malloc_stats()
+void __serenity_dump_malloc_stats()
 {
     dbgln("# malloc() calls: {}", g_malloc_stats.number_of_malloc_calls);
     dbgln();
@@ -709,12 +700,12 @@ void serenity_dump_malloc_stats()
     dbgln("number of frees: {}", g_malloc_stats.number_of_frees);
 }
 
-bool __heap_is_stable()
+bool ___heap_is_stable()
 {
     return s_heap_is_stable;
 }
 
-bool __set_allocation_enabled(bool new_value)
+bool ___set_allocation_enabled(bool new_value)
 {
 #ifndef NO_TLS
     auto old_state = s_allocation_enabled;
@@ -724,5 +715,4 @@ bool __set_allocation_enabled(bool new_value)
     (void)new_value;
     return true;
 #endif
-}
 }

@@ -84,6 +84,7 @@ function(serenity_libc target_name fs_name)
     serenity_install_sources()
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -nostdlib -fpic")
     add_library(${target_name} SHARED ${SOURCES})
+    target_compile_options(${target_name} PUBLIC -D_SHARED_LIBC)
     install(TARGETS ${target_name} DESTINATION ${CMAKE_INSTALL_LIBDIR})
     set_target_properties(${target_name} PROPERTIES OUTPUT_NAME ${fs_name})
     # Avoid creating a dependency cycle between system libraries and the C++ standard library. This is necessary

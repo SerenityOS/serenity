@@ -33,7 +33,9 @@ int* __errno_location()
 void __libc_init()
 {
     __auxiliary_vector_init();
+#ifndef _SHARED_LIBC
     __malloc_init();
+#endif
     __stdio_init();
 }
 

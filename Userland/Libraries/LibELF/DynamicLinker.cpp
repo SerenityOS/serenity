@@ -26,10 +26,12 @@
 #include <LibELF/DynamicObject.h>
 #include <LibELF/Hashes.h>
 #include <bits/dlfcn_integration.h>
+#include <bits/malloc_integration.h>
 #include <dlfcn.h>
 #include <fcntl.h>
 #include <pthread.h>
 #include <string.h>
+#include <sys/internals.h>
 #include <sys/types.h>
 #include <syscall.h>
 
@@ -251,13 +253,21 @@ static void initialize_libc(DynamicObject& libc)
     // we have to initialize libc just after it is loaded.
     // Also, we can't just mark `__libc_init` with "__attribute__((constructor))"
     // because it uses getenv() internally, so `environ` has to be initialized before we call `__libc_init`.
-    auto res = libc.lookup_symbol("environ"sv);
-    VERIFY(res.has_value());
-    *((char***)res.value().address.as_ptr()) = s_envp;
+
+    auto update_libc_variable = [&libc]<typename T>(StringView const& name, T value) {
+        auto res = libc.lookup_symbol(name);
+        if (!res.has_value()) {
+            dbgln("Symbol {} not found in LibC.", name);
+            VERIFY_NOT_REACHED();
+        }
+        *((T*)res.value().address.as_ptr()) = value;
+    };
+
+    update_libc_variable("environ"sv, s_envp);
 
     // __stack_chk_guard should be initialized before anything significant (read: global constructors) is running.
     // This is not done in __libc_init, as we definitely have to return from that, and it might affect Loader as well.
-    res = libc.lookup_symbol("__stack_chk_guard"sv);
+    auto res = libc.lookup_symbol("__stack_chk_guard"sv);
     VERIFY(res.has_value());
     void* stack_guard = res.value().address.as_ptr();
     arc4random_buf(stack_guard, sizeof(uintptr_t));
@@ -268,33 +278,29 @@ static void initialize_libc(DynamicObject& libc)
     ((char*)stack_guard)[0] = 0;
 #endif
 
-    res = libc.lookup_symbol("__environ_is_malloced"sv);
-    VERIFY(res.has_value());
-    *((bool*)res.value().address.as_ptr()) = false;
+    update_libc_variable("__environ_is_malloced"sv, false);
 
     res = libc.lookup_symbol("exit"sv);
     VERIFY(res.has_value());
     s_libc_exit = (LibCExitFunction)res.value().address.as_ptr();
 
-    res = libc.lookup_symbol("__dl_iterate_phdr"sv);
-    VERIFY(res.has_value());
-    *((DlIteratePhdrFunction*)res.value().address.as_ptr()) = __dl_iterate_phdr;
+    update_libc_variable("__dl_iterate_phdr"sv, __dl_iterate_phdr);
+    update_libc_variable("__dlclose"sv, __dlclose);
+    update_libc_variable("__dlopen"sv, __dlopen);
+    update_libc_variable("__dlsym"sv, __dlsym);
+    update_libc_variable("__dladdr"sv, __dladdr);
 
-    res = libc.lookup_symbol("__dlclose"sv);
-    VERIFY(res.has_value());
-    *((DlCloseFunction*)res.value().address.as_ptr()) = __dlclose;
-
-    res = libc.lookup_symbol("__dlopen"sv);
-    VERIFY(res.has_value());
-    *((DlOpenFunction*)res.value().address.as_ptr()) = __dlopen;
-
-    res = libc.lookup_symbol("__dlsym"sv);
-    VERIFY(res.has_value());
-    *((DlSymFunction*)res.value().address.as_ptr()) = __dlsym;
-
-    res = libc.lookup_symbol("__dladdr"sv);
-    VERIFY(res.has_value());
-    *((DlAddrFunction*)res.value().address.as_ptr()) = __dladdr;
+    update_libc_variable("__malloc"sv, __malloc);
+    update_libc_variable("__free"sv, __free);
+    update_libc_variable("__calloc"sv, __calloc);
+    update_libc_variable("__posix_memalign"sv, __posix_memalign);
+    update_libc_variable("__aligned_alloc"sv, __aligned_alloc);
+    update_libc_variable("__malloc_size"sv, __malloc_size);
+    update_libc_variable("__malloc_good_size"sv, __malloc_good_size);
+    update_libc_variable("__realloc"sv, __realloc);
+    update_libc_variable("__serenity_dump_malloc_stats"sv, __serenity_dump_malloc_stats);
+    update_libc_variable("___heap_is_stable"sv, ___heap_is_stable);
+    update_libc_variable("___set_allocation_enabled"sv, ___set_allocation_enabled);
 
     res = libc.lookup_symbol("__libc_init"sv);
     VERIFY(res.has_value());
