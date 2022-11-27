@@ -56,6 +56,7 @@ public:
         MidRed,
         MidBlue,
         MidMagenta,
+        LightBlue,
     };
 
     constexpr Color() = default;
@@ -545,6 +546,9 @@ constexpr Color::Color(NamedColor named)
         break;
     case WarmGray:
         rgb = { 212, 208, 200 };
+        break;
+    case LightBlue:
+        rgb = { 173, 216, 230 };
         break;
     default:
         VERIFY_NOT_REACHED();
