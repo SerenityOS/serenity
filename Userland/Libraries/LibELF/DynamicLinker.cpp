@@ -13,6 +13,7 @@
 #include <AK/HashTable.h>
 #include <AK/LexicalPath.h>
 #include <AK/NonnullRefPtrVector.h>
+#include <AK/Platform.h>
 #include <AK/ScopeGuard.h>
 #include <AK/Vector.h>
 #include <LibC/bits/pthread_integration.h>
@@ -258,7 +259,14 @@ static void initialize_libc(DynamicObject& libc)
     // This is not done in __libc_init, as we definitely have to return from that, and it might affect Loader as well.
     res = libc.lookup_symbol("__stack_chk_guard"sv);
     VERIFY(res.has_value());
-    arc4random_buf(res.value().address.as_ptr(), sizeof(uintptr_t));
+    void* stack_guard = res.value().address.as_ptr();
+    arc4random_buf(stack_guard, sizeof(uintptr_t));
+
+#ifdef AK_ARCH_64_BIT
+    // For 64-bit platforms we include an additional hardening: zero the first byte of the stack guard to avoid
+    // leaking or overwriting the stack guard with C-style string functions.
+    ((char*)stack_guard)[0] = 0;
+#endif
 
     res = libc.lookup_symbol("__environ_is_malloced"sv);
     VERIFY(res.has_value());
