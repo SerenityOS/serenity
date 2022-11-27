@@ -643,7 +643,7 @@ u8 Parser::inv_recenter_nonneg(u8 v, u8 m)
 DecoderErrorOr<void> Parser::read_coef_probs(TransformMode transform_mode)
 {
     auto max_tx_size = tx_mode_to_biggest_tx_size[transform_mode];
-    for (u8 tx_size = 0; tx_size <= max_tx_size; tx_size++) {
+    for (u8 transform_size = 0; transform_size <= max_tx_size; transform_size++) {
         auto update_probs = TRY_READ(m_bit_stream->read_literal(1));
         if (update_probs == 1) {
             for (auto i = 0; i < 2; i++) {
@@ -652,7 +652,7 @@ DecoderErrorOr<void> Parser::read_coef_probs(TransformMode transform_mode)
                         auto max_l = (k == 0) ? 3 : 6;
                         for (auto l = 0; l < max_l; l++) {
                             for (auto m = 0; m < 3; m++) {
-                                auto& prob = m_probability_tables->coef_probs()[tx_size][i][j][k][l][m];
+                                auto& prob = m_probability_tables->coef_probs()[transform_size][i][j][k][l][m];
                                 prob = TRY(diff_update_prob(prob));
                             }
                         }
@@ -981,9 +981,9 @@ DecoderErrorOr<void> Parser::decode_block(TileContext& tile_context, u32 row, u3
 
     for (size_t y = 0; y < block_context.contexts_view.height(); y++) {
         for (size_t x = 0; x < block_context.contexts_view.width(); x++) {
-            auto sub_block_context = FrameBlockContext { true, block_context.should_skip_residuals, block_context.tx_size, block_context.y_prediction_mode(), block_context.sub_block_prediction_modes, block_context.interpolation_filter, block_context.reference_frame_types, block_context.sub_block_motion_vectors, block_context.segment_id };
+            auto sub_block_context = FrameBlockContext { true, block_context.should_skip_residuals, block_context.transform_size, block_context.y_prediction_mode(), block_context.sub_block_prediction_modes, block_context.interpolation_filter, block_context.reference_frame_types, block_context.sub_block_motion_vectors, block_context.segment_id };
             block_context.contexts_view.at(y, x) = sub_block_context;
-            VERIFY(block_context.frame_block_contexts().at(row + y, column + x).tx_size == sub_block_context.tx_size);
+            VERIFY(block_context.frame_block_contexts().at(row + y, column + x).transform_size == sub_block_context.transform_size);
         }
     }
     return {};
@@ -1004,7 +1004,7 @@ DecoderErrorOr<void> Parser::intra_frame_mode_info(BlockContext& block_context, 
     VERIFY(!block_context.is_inter_predicted());
     TRY(set_intra_segment_id(block_context));
     block_context.should_skip_residuals = TRY(read_should_skip_residuals(block_context, above_context, left_context));
-    block_context.tx_size = TRY(read_tx_size(block_context, above_context, left_context, true));
+    block_context.transform_size = TRY(read_tx_size(block_context, above_context, left_context, true));
     // FIXME: This if statement is also present in parse_default_intra_mode. The selection of parameters for
     //        the probability table lookup should be inlined here.
     if (block_context.size >= Block_8x8) {
@@ -1064,7 +1064,7 @@ DecoderErrorOr<void> Parser::inter_frame_mode_info(BlockContext& block_context, 
     TRY(set_inter_segment_id(block_context));
     block_context.should_skip_residuals = TRY(read_should_skip_residuals(block_context, above_context, left_context));
     auto is_inter = TRY(read_is_inter(block_context, above_context, left_context));
-    block_context.tx_size = TRY(read_tx_size(block_context, above_context, left_context, !block_context.should_skip_residuals || !is_inter));
+    block_context.transform_size = TRY(read_tx_size(block_context, above_context, left_context, !block_context.should_skip_residuals || !is_inter));
     if (is_inter) {
         TRY(inter_block_mode_info(block_context, above_context, left_context));
     } else {
@@ -1331,16 +1331,16 @@ Gfx::Size<size_t> Parser::get_decoded_size_for_plane(FrameContext const& frame_c
     return { point.x(), point.y() };
 }
 
-static TransformSize get_uv_tx_size(TransformSize tx_size, BlockSubsize size_for_plane)
+static TransformSize get_uv_transform_size(TransformSize transform_size, BlockSubsize size_for_plane)
 {
-    return min(tx_size, max_txsize_lookup[size_for_plane]);
+    return min(transform_size, max_txsize_lookup[size_for_plane]);
 }
 
-static TransformSet select_transform_type(BlockContext const& block_context, u8 plane, TransformSize tx_size, u32 block_index)
+static TransformSet select_transform_type(BlockContext const& block_context, u8 plane, TransformSize transform_size, u32 block_index)
 {
-    if (plane > 0 || tx_size == Transform_32x32)
+    if (plane > 0 || transform_size == Transform_32x32)
         return TransformSet { TransformType::DCT, TransformType::DCT };
-    if (tx_size == Transform_4x4) {
+    if (transform_size == Transform_4x4) {
         if (block_context.frame_context.is_lossless() || block_context.is_inter_predicted())
             return TransformSet { TransformType::DCT, TransformType::DCT };
 
@@ -1357,7 +1357,7 @@ DecoderErrorOr<bool> Parser::residual(BlockContext& block_context, bool has_bloc
         auto plane_subsampling_x = (plane > 0) ? block_context.frame_context.color_config.subsampling_x : 0;
         auto plane_subsampling_y = (plane > 0) ? block_context.frame_context.color_config.subsampling_y : 0;
         auto plane_size = ss_size_lookup[block_context.size < Block_8x8 ? Block_8x8 : block_context.size][plane_subsampling_x][plane_subsampling_y];
-        auto transform_size = get_uv_tx_size(block_context.tx_size, plane_size);
+        auto transform_size = get_uv_transform_size(block_context.transform_size, plane_size);
         auto transform_size_in_sub_blocks = transform_size_to_sub_blocks(transform_size);
         auto block_size_in_sub_blocks = block_size_to_sub_blocks(plane_size);
 
@@ -1415,26 +1415,26 @@ DecoderErrorOr<bool> Parser::residual(BlockContext& block_context, bool has_bloc
     return block_had_non_zero_tokens;
 }
 
-static u16 const* get_scan(TransformSize tx_size, TransformSet transform_set)
+static u16 const* get_scan(TransformSize transform_size, TransformSet transform_set)
 {
     constexpr TransformSet adst_dct { TransformType::ADST, TransformType::DCT };
     constexpr TransformSet dct_adst { TransformType::DCT, TransformType::ADST };
 
-    if (tx_size == Transform_4x4) {
+    if (transform_size == Transform_4x4) {
         if (transform_set == adst_dct)
             return row_scan_4x4;
         if (transform_set == dct_adst)
             return col_scan_4x4;
         return default_scan_4x4;
     }
-    if (tx_size == Transform_8x8) {
+    if (transform_size == Transform_8x8) {
         if (transform_set == adst_dct)
             return row_scan_8x8;
         if (transform_set == dct_adst)
             return col_scan_8x8;
         return default_scan_8x8;
     }
-    if (tx_size == Transform_16x16) {
+    if (transform_size == Transform_16x16) {
         if (transform_set == adst_dct)
             return row_scan_16x16;
         if (transform_set == dct_adst)
@@ -1444,16 +1444,16 @@ static u16 const* get_scan(TransformSize tx_size, TransformSet transform_set)
     return default_scan_32x32;
 }
 
-DecoderErrorOr<bool> Parser::tokens(BlockContext& block_context, size_t plane, u32 start_x, u32 start_y, TransformSize tx_size, TransformSet transform_set)
+DecoderErrorOr<bool> Parser::tokens(BlockContext& block_context, size_t plane, u32 start_x, u32 start_y, TransformSize transform_size, TransformSet transform_set)
 {
-    u16 segment_eob = 16 << (tx_size << 1);
-    auto const* scan = get_scan(tx_size, transform_set);
+    u16 segment_eob = 16 << (transform_size << 1);
+    auto const* scan = get_scan(transform_size, transform_set);
     auto check_eob = true;
     u16 coef_index = 0;
     for (; coef_index < segment_eob; coef_index++) {
         auto pos = scan[coef_index];
-        auto band = (tx_size == Transform_4x4) ? coefband_4x4[coef_index] : coefband_8x8plus[coef_index];
-        auto tokens_context = TreeParser::get_tokens_context(block_context.frame_context.color_config.subsampling_x, block_context.frame_context.color_config.subsampling_y, block_context.frame_context.rows(), block_context.frame_context.columns(), m_above_nonzero_context, m_left_nonzero_context, m_token_cache, tx_size, transform_set, plane, start_x, start_y, pos, block_context.is_inter_predicted(), band, coef_index);
+        auto band = (transform_size == Transform_4x4) ? coefband_4x4[coef_index] : coefband_8x8plus[coef_index];
+        auto tokens_context = TreeParser::get_tokens_context(block_context.frame_context.color_config.subsampling_x, block_context.frame_context.color_config.subsampling_y, block_context.frame_context.rows(), block_context.frame_context.columns(), m_above_nonzero_context, m_left_nonzero_context, m_token_cache, transform_size, transform_set, plane, start_x, start_y, pos, block_context.is_inter_predicted(), band, coef_index);
         if (check_eob) {
             auto more_coefs = TRY_READ(TreeParser::parse_more_coefficients(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter, tokens_context));
             if (!more_coefs)

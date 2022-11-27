@@ -122,7 +122,7 @@ private:
     DecoderErrorOr<MotionVector> read_motion_vector(BlockContext const&, BlockMotionVectorCandidates const&, ReferenceIndex);
     DecoderErrorOr<i32> read_single_motion_vector_component(u8 component);
     DecoderErrorOr<bool> residual(BlockContext&, bool has_block_above, bool has_block_left);
-    DecoderErrorOr<bool> tokens(BlockContext&, size_t plane, u32 x, u32 y, TransformSize tx_size, TransformSet);
+    DecoderErrorOr<bool> tokens(BlockContext&, size_t plane, u32 x, u32 y, TransformSize, TransformSet);
     DecoderErrorOr<i32> read_coef(u8 bit_depth, Token token);
 
     /* (6.5) Motion Vector Prediction */

@@ -189,7 +189,7 @@ struct BlockContext {
     u8 segment_id { 0 };
     bool should_skip_residuals { false };
 
-    TransformSize tx_size { Transform_4x4 };
+    TransformSize transform_size { Transform_4x4 };
 
     ReferenceFramePair reference_frame_types;
     bool is_inter_predicted() const { return reference_frame_types.primary != ReferenceFrameType::None; }
