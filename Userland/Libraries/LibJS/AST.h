@@ -54,6 +54,7 @@ public:
     virtual void dump(int indent) const;
 
     [[nodiscard]] SourceRange source_range() const;
+    u32 start_offset() const { return m_start_offset; }
 
     void set_end_offset(Badge<Parser>, u32 end_offset) { m_end_offset = end_offset; }
 

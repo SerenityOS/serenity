@@ -47,27 +47,26 @@ static Vector<ModuleRequest> module_requests(Program& program, Vector<String> co
     // A List of all the ModuleSpecifier strings used by the module represented by this record to request the importation of a module.
     // Note: The List is source text occurrence ordered!
     struct RequestedModuleAndSourceIndex {
-        u64 source_index { 0 };
+        u32 source_offset { 0 };
         ModuleRequest* module_request { nullptr };
     };
 
     Vector<RequestedModuleAndSourceIndex> requested_modules_with_indices;
 
-    for (auto& import_statement : program.imports()) {
-        requested_modules_with_indices.empend(import_statement.source_range().start.offset, &import_statement.module_request());
-    }
+    for (auto& import_statement : program.imports())
+        requested_modules_with_indices.empend(import_statement.start_offset(), &import_statement.module_request());
 
     for (auto& export_statement : program.exports()) {
         for (auto& export_entry : export_statement.entries()) {
             if (!export_entry.is_module_request())
                 continue;
-            requested_modules_with_indices.empend(export_statement.source_range().start.offset, &export_statement.module_request());
+            requested_modules_with_indices.empend(export_statement.start_offset(), &export_statement.module_request());
         }
     }
 
     // Note: The List is source code occurrence ordered. https://tc39.es/proposal-import-assertions/#table-cyclic-module-fields
     quick_sort(requested_modules_with_indices, [&](RequestedModuleAndSourceIndex const& lhs, RequestedModuleAndSourceIndex const& rhs) {
-        return lhs.source_index < rhs.source_index;
+        return lhs.source_offset < rhs.source_offset;
     });
 
     Vector<ModuleRequest> requested_modules_in_source_order;
