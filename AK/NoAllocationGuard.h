@@ -13,7 +13,7 @@
 #    include <Kernel/Arch/Processor.h>
 #    include <Kernel/Heap/kmalloc.h>
 #else
-#    include <LibC/mallocdefs.h>
+#    include <LibC/sys/internals.h>
 #endif
 
 namespace AK {
@@ -24,9 +24,8 @@ class NoAllocationGuard {
 
 public:
     NoAllocationGuard()
-        : m_allocation_enabled_previously(get_thread_allocation_state())
+        : m_allocation_enabled_previously(set_thread_allocation_state(false))
     {
-        set_thread_allocation_state(false);
     }
 
     ~NoAllocationGuard()
@@ -35,26 +34,17 @@ public:
     }
 
 private:
-    static bool get_thread_allocation_state()
+    static bool set_thread_allocation_state(bool value)
     {
 #if defined(KERNEL)
-        return Processor::current_thread()->get_allocation_enabled();
-#elif defined(AK_OS_SERENITY)
-        // This extern thread-local lives in our LibC, which doesn't exist on other systems.
-        return s_allocation_enabled;
-#else
-        return true;
-#endif
-    }
-
-    static void set_thread_allocation_state(bool value)
-    {
-#if defined(KERNEL)
+        auto old_state = Processor::current_thread()->get_allocation_enabled();
         Processor::current_thread()->set_allocation_enabled(value);
+        return old_state;
 #elif defined(AK_OS_SERENITY)
-        s_allocation_enabled = value;
+        return __set_allocation_enabled(value);
 #else
         (void)value;
+        return true;
 #endif
     }
 

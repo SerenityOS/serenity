@@ -707,4 +707,16 @@ void serenity_dump_malloc_stats()
     dbgln("number of cold keeps: {}", g_malloc_stats.number_of_cold_keeps);
     dbgln("number of frees: {}", g_malloc_stats.number_of_frees);
 }
+
+bool __set_allocation_enabled(bool new_value)
+{
+#ifndef NO_TLS
+    auto old_state = s_allocation_enabled;
+    s_allocation_enabled = new_value;
+    return old_state;
+#else
+    (void)new_value;
+    return true;
+#endif
+}
 }

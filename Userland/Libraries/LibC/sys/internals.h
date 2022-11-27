@@ -22,6 +22,8 @@ extern bool __stdio_is_initialized;
 extern bool __heap_is_stable;
 extern void* __auxiliary_vector;
 
+extern bool __set_allocation_enabled(bool);
+
 int __cxa_atexit(AtExitFunction exit_function, void* parameter, void* dso_handle);
 void __cxa_finalize(void* dso_handle);
 __attribute__((noreturn)) void __cxa_pure_virtual(void) __attribute__((weak));
