@@ -624,7 +624,7 @@ ErrorOr<bool> TreeParser::parse_motion_vector_hp(BitStream& bit_stream, Probabil
     return value;
 }
 
-TokensContext TreeParser::get_tokens_context(bool subsampling_x, bool subsampling_y, u32 rows, u32 columns, Array<Vector<bool>, 3> const& above_nonzero_context, Array<Vector<bool>, 3> const& left_nonzero_context, u8 token_cache[1024], TransformSize transform_size, TransformSet transform_set, u8 plane, u32 start_x, u32 start_y, u16 position, bool is_inter, u8 band, u16 coef_index)
+TokensContext TreeParser::get_tokens_context(bool subsampling_x, bool subsampling_y, u32 rows, u32 columns, Array<Vector<bool>, 3> const& above_nonzero_context, Array<Vector<bool>, 3> const& left_nonzero_context, Array<u8, 1024> token_cache, TransformSize transform_size, TransformSet transform_set, u8 plane, u32 start_x, u32 start_y, u16 position, bool is_inter, u8 band, u16 coef_index)
 {
     u8 context;
     if (coef_index == 0) {

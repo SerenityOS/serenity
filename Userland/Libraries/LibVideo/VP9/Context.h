@@ -202,6 +202,8 @@ struct BlockContext {
 
     InterpolationFilter interpolation_filter { EightTap };
     Array<MotionVectorPair, 4> sub_block_motion_vectors;
+
+    Array<i32, 1024> residual_tokens;
 };
 
 struct BlockMotionVectorCandidateSet {

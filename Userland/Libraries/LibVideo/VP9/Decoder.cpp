@@ -1087,12 +1087,12 @@ DecoderErrorOr<void> Decoder::reconstruct(u8 plane, BlockContext const& block_co
             auto index = index_from_row_and_column(i, j, block_size);
             if (index == 0)
                 continue;
-            dequantized[index] = (m_parser->m_tokens[index] * ac_quant) / dq_denominator;
+            dequantized[index] = (block_context.residual_tokens[index] * ac_quant) / dq_denominator;
         }
     }
 
     // 2. Dequant[ 0 ][ 0 ] is set equal to ( Tokens[ 0 ] * get_dc_quant( plane ) ) / dqDenom
-    dequantized[0] = (m_parser->m_tokens[0] * get_dc_quantizer(block_context, plane)) / dq_denominator;
+    dequantized[0] = (block_context.residual_tokens[0] * get_dc_quantizer(block_context, plane)) / dq_denominator;
 
     // It is a requirement of bitstream conformance that the values written into the Dequant array in steps 1 and 2
     // are representable by a signed integer with 8 + BitDepth bits.

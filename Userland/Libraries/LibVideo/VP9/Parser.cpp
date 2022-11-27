@@ -1353,6 +1353,7 @@ static TransformSet select_transform_type(BlockContext const& block_context, u8 
 DecoderErrorOr<bool> Parser::residual(BlockContext& block_context, bool has_block_above, bool has_block_left)
 {
     bool block_had_non_zero_tokens = false;
+    Array<u8, 1024> token_cache;
     for (u8 plane = 0; plane < 3; plane++) {
         auto plane_subsampling_x = (plane > 0) ? block_context.frame_context.color_config.subsampling_x : 0;
         auto plane_subsampling_y = (plane > 0) ? block_context.frame_context.color_config.subsampling_y : 0;
@@ -1390,7 +1391,7 @@ DecoderErrorOr<bool> Parser::residual(BlockContext& block_context, bool has_bloc
                         TRY(m_decoder.predict_intra(plane, block_context, transform_x_in_px, transform_y_in_px, has_block_left || x > 0, has_block_above || y > 0, (x + transform_size_in_sub_blocks) < block_size_in_sub_blocks.width(), transform_size, sub_block_index));
                     if (!block_context.should_skip_residuals) {
                         auto transform_set = select_transform_type(block_context, plane, transform_size, sub_block_index);
-                        sub_block_had_non_zero_tokens = TRY(tokens(block_context, plane, transform_x_in_px, transform_y_in_px, transform_size, transform_set));
+                        sub_block_had_non_zero_tokens = TRY(tokens(block_context, plane, transform_x_in_px, transform_y_in_px, transform_size, transform_set, token_cache));
                         block_had_non_zero_tokens = block_had_non_zero_tokens || sub_block_had_non_zero_tokens;
                         TRY(m_decoder.reconstruct(plane, block_context, transform_x_in_px, transform_y_in_px, transform_size, transform_set));
                     }
@@ -1444,35 +1445,37 @@ static u16 const* get_scan(TransformSize transform_size, TransformSet transform_
     return default_scan_32x32;
 }
 
-DecoderErrorOr<bool> Parser::tokens(BlockContext& block_context, size_t plane, u32 start_x, u32 start_y, TransformSize transform_size, TransformSet transform_set)
+DecoderErrorOr<bool> Parser::tokens(BlockContext& block_context, size_t plane, u32 start_x, u32 start_y, TransformSize transform_size, TransformSet transform_set, Array<u8, 1024> token_cache)
 {
-    u16 segment_eob = 16 << (transform_size << 1);
+    block_context.residual_tokens.fill(0);
+
     auto const* scan = get_scan(transform_size, transform_set);
-    auto check_eob = true;
+
+    auto check_for_more_coefficients = true;
     u16 coef_index = 0;
+    u16 segment_eob = 16 << (transform_size << 1);
     for (; coef_index < segment_eob; coef_index++) {
         auto pos = scan[coef_index];
         auto band = (transform_size == Transform_4x4) ? coefband_4x4[coef_index] : coefband_8x8plus[coef_index];
-        auto tokens_context = TreeParser::get_tokens_context(block_context.frame_context.color_config.subsampling_x, block_context.frame_context.color_config.subsampling_y, block_context.frame_context.rows(), block_context.frame_context.columns(), m_above_nonzero_context, m_left_nonzero_context, m_token_cache, transform_size, transform_set, plane, start_x, start_y, pos, block_context.is_inter_predicted(), band, coef_index);
-        if (check_eob) {
-            auto more_coefs = TRY_READ(TreeParser::parse_more_coefficients(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter, tokens_context));
-            if (!more_coefs)
-                break;
-        }
+        auto tokens_context = TreeParser::get_tokens_context(block_context.frame_context.color_config.subsampling_x, block_context.frame_context.color_config.subsampling_y, block_context.frame_context.rows(), block_context.frame_context.columns(), m_above_nonzero_context, m_left_nonzero_context, token_cache, transform_size, transform_set, plane, start_x, start_y, pos, block_context.is_inter_predicted(), band, coef_index);
+
+        if (check_for_more_coefficients && !TRY_READ(TreeParser::parse_more_coefficients(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter, tokens_context)))
+            break;
+
         auto token = TRY_READ(TreeParser::parse_token(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter, tokens_context));
-        m_token_cache[pos] = energy_class[token];
+        token_cache[pos] = energy_class[token];
+
+        i32 coef;
         if (token == ZeroToken) {
-            m_tokens[pos] = 0;
-            check_eob = false;
+            coef = 0;
+            check_for_more_coefficients = false;
         } else {
-            i32 coef = TRY(read_coef(block_context.frame_context.color_config.bit_depth, token));
-            bool sign_bit = TRY_READ(m_bit_stream->read_literal(1));
-            m_tokens[pos] = sign_bit ? -coef : coef;
-            check_eob = true;
+            coef = TRY(read_coef(block_context.frame_context.color_config.bit_depth, token));
+            check_for_more_coefficients = true;
         }
+        block_context.residual_tokens[pos] = coef;
     }
-    for (u16 i = coef_index; i < segment_eob; i++)
-        m_tokens[scan[i]] = 0;
+
     return coef_index > 0;
 }
 
@@ -1480,7 +1483,7 @@ DecoderErrorOr<i32> Parser::read_coef(u8 bit_depth, Token token)
 {
     auto cat = extra_bits[token][0];
     auto num_extra = extra_bits[token][1];
-    u32 coef = extra_bits[token][2];
+    i32 coef = extra_bits[token][2];
     if (token == DctValCat6) {
         for (size_t e = 0; e < (u8)(bit_depth - 8); e++) {
             auto high_bit = TRY_READ(m_bit_stream->read_bool(255));
@@ -1491,6 +1494,8 @@ DecoderErrorOr<i32> Parser::read_coef(u8 bit_depth, Token token)
         auto coef_bit = TRY_READ(m_bit_stream->read_bool(cat_probs[cat][e]));
         coef += coef_bit << (num_extra - 1 - e);
     }
+    bool sign_bit = TRY_READ(m_bit_stream->read_literal(1));
+    coef = sign_bit ? -coef : coef;
     return coef;
 }
 
