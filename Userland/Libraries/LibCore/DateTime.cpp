@@ -163,6 +163,13 @@ String DateTime::to_string(StringView format) const
             case 'j':
                 builder.appendff("{:03}", tm.tm_yday + 1);
                 break;
+            case 'l': {
+                int display_hour = tm.tm_hour % 12;
+                if (display_hour == 0)
+                    display_hour = 12;
+                builder.appendff("{:2}", display_hour);
+                break;
+            }
             case 'm':
                 builder.appendff("{:02}", tm.tm_mon + 1);
                 break;
