@@ -615,7 +615,9 @@ inline constexpr bool IsOneOfIgnoringCV = (IsSameIgnoringCV<T, Ts> || ...);
 
 }
 
-#if USING_AK_GLOBALLY
+#if !USING_AK_GLOBALLY
+namespace AK {
+#endif
 using AK::Detail::AddConst;
 using AK::Detail::AddConstToReferencedType;
 using AK::Detail::AddLvalueReference;
@@ -685,4 +687,6 @@ using AK::Detail::RemoveVolatile;
 using AK::Detail::TrueType;
 using AK::Detail::UnderlyingType;
 using AK::Detail::Void;
+#if !USING_AK_GLOBALLY
+}
 #endif
