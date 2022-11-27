@@ -142,12 +142,12 @@ void PolygonalSelectTool::on_second_paint(Layer const* layer, GUI::PaintEvent& e
     for (size_t i = 0; i < m_polygon_points.size() - 1; i++) {
         auto preview_start = editor_stroke_position(m_polygon_points.at(i), 1);
         auto preview_end = editor_stroke_position(m_polygon_points.at(i + 1), 1);
-        painter.draw_line(preview_start, preview_end, Color::Black, AK::max(m_editor->scale(), 1));
+        painter.draw_line(preview_start, preview_end, Color::Black, 1);
     }
 
     auto last_line_start = editor_stroke_position(m_polygon_points.at(m_polygon_points.size() - 1), 1);
     auto last_line_stop = editor_stroke_position(m_last_selecting_cursor_position, 1);
-    painter.draw_line(last_line_start, last_line_stop, Color::Black, AK::max(m_editor->scale(), 1));
+    painter.draw_line(last_line_start, last_line_stop, Color::Black, 1);
 }
 
 bool PolygonalSelectTool::on_keydown(GUI::KeyEvent const& key_event)
