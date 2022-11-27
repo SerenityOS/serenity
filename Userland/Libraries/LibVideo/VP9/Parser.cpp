@@ -1281,19 +1281,19 @@ static bool should_use_high_precision_motion_vector(MotionVector const& delta_ve
 // read_mv( ref ) in the spec.
 DecoderErrorOr<MotionVector> Parser::read_motion_vector(BlockContext const& block_context, BlockMotionVectorCandidates const& candidates, ReferenceIndex reference_index)
 {
-    m_use_hp = block_context.frame_context.high_precision_motion_vectors_allowed && should_use_high_precision_motion_vector(candidates[reference_index].best_vector);
+    auto use_high_precision = block_context.frame_context.high_precision_motion_vectors_allowed && should_use_high_precision_motion_vector(candidates[reference_index].best_vector);
     MotionVector delta_vector;
     auto joint = TRY_READ(TreeParser::parse_motion_vector_joint(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter));
     if ((joint & MotionVectorNonZeroRow) != 0)
-        delta_vector.set_row(TRY(read_single_motion_vector_component(0)));
+        delta_vector.set_row(TRY(read_single_motion_vector_component(0, use_high_precision)));
     if ((joint & MotionVectorNonZeroColumn) != 0)
-        delta_vector.set_column(TRY(read_single_motion_vector_component(1)));
+        delta_vector.set_column(TRY(read_single_motion_vector_component(1, use_high_precision)));
 
     return candidates[reference_index].best_vector + delta_vector;
 }
 
 // read_mv_component( comp ) in the spec.
-DecoderErrorOr<i32> Parser::read_single_motion_vector_component(u8 component)
+DecoderErrorOr<i32> Parser::read_single_motion_vector_component(u8 component, bool use_high_precision)
 {
     auto mv_sign = TRY_READ(TreeParser::parse_motion_vector_sign(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter, component));
     auto mv_class = TRY_READ(TreeParser::parse_motion_vector_class(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter, component));
@@ -1301,7 +1301,7 @@ DecoderErrorOr<i32> Parser::read_single_motion_vector_component(u8 component)
     if (mv_class == MvClass0) {
         auto mv_class0_bit = TRY_READ(TreeParser::parse_motion_vector_class0_bit(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter, component));
         auto mv_class0_fr = TRY_READ(TreeParser::parse_motion_vector_class0_fr(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter, component, mv_class0_bit));
-        auto mv_class0_hp = TRY_READ(TreeParser::parse_motion_vector_class0_hp(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter, component, m_use_hp));
+        auto mv_class0_hp = TRY_READ(TreeParser::parse_motion_vector_class0_hp(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter, component, use_high_precision));
         magnitude = ((mv_class0_bit << 3) | (mv_class0_fr << 1) | mv_class0_hp) + 1;
     } else {
         u32 bits = 0;
@@ -1311,7 +1311,7 @@ DecoderErrorOr<i32> Parser::read_single_motion_vector_component(u8 component)
         }
         magnitude = CLASS0_SIZE << (mv_class + 2);
         auto mv_fr = TRY_READ(TreeParser::parse_motion_vector_fr(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter, component));
-        auto mv_hp = TRY_READ(TreeParser::parse_motion_vector_hp(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter, component, m_use_hp));
+        auto mv_hp = TRY_READ(TreeParser::parse_motion_vector_hp(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter, component, use_high_precision));
         magnitude += ((bits << 3) | (mv_fr << 1) | mv_hp) + 1;
     }
     return (mv_sign ? -1 : 1) * static_cast<i32>(magnitude);

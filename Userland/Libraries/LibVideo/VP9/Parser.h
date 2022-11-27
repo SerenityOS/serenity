@@ -120,7 +120,7 @@ private:
     DecoderErrorOr<void> read_ref_frames(BlockContext&, FrameBlockContext above_context, FrameBlockContext left_context);
     DecoderErrorOr<MotionVectorPair> get_motion_vector(BlockContext const&, BlockMotionVectorCandidates const&);
     DecoderErrorOr<MotionVector> read_motion_vector(BlockContext const&, BlockMotionVectorCandidates const&, ReferenceIndex);
-    DecoderErrorOr<i32> read_single_motion_vector_component(u8 component);
+    DecoderErrorOr<i32> read_single_motion_vector_component(u8 component, bool use_high_precision);
     DecoderErrorOr<bool> residual(BlockContext&, bool has_block_above, bool has_block_left);
     DecoderErrorOr<bool> tokens(BlockContext&, size_t plane, u32 x, u32 y, TransformSize, TransformSet, Array<u8, 1024> token_cache);
     DecoderErrorOr<i32> read_coef(u8 bit_depth, Token token);
@@ -161,8 +161,6 @@ private:
     u8 m_ref_bit_depth[NUM_REF_FRAMES];
 
     Vector<u16> m_frame_store[NUM_REF_FRAMES][3];
-
-    bool m_use_hp { false };
 
     bool m_use_prev_frame_mvs;
     Vector2D<FrameBlockContext> m_reusable_frame_block_contexts;
