@@ -42,65 +42,47 @@ public:
         painter.add_clip_rect(event.rect());
         painter.fill_rect(frame_inner_rect(), Color::White);
 
-        Gfx::Path path;
-        // draw mouse outline
-        path.move_to({ 30, 140 });
-        path.line_to({ 30, 20 });
-        path.line_to({ 65, 12 });
-        path.line_to({ 95, 12 });
-        path.line_to({ 130, 20 });
-        path.line_to({ 130, 140 });
-        path.line_to({ 30, 140 });
-
-        // draw button separator
-        path.move_to({ 30, 65 });
-        path.line_to({ 130, 65 });
-
-        path.move_to({ 65, 65 });
-        path.line_to({ 65, 13 });
-
-        path.move_to({ 95, 65 });
-        path.line_to({ 95, 13 });
-
-        // draw fw and back button outlines
-        path.move_to({ 30, 43 });
-        path.line_to({ 25, 43 });
-        path.line_to({ 25, 60 });
-        path.line_to({ 30, 60 });
-
-        path.move_to({ 30, 70 });
-        path.line_to({ 25, 70 });
-        path.line_to({ 25, 87 });
-        path.line_to({ 30, 87 });
-
-        painter.stroke_path(path, Color::Black, 1);
-
         auto buttons = m_buttons | m_double_clicked_buttons;
 
         auto primary_secondary_switched = GUI::ConnectionToWindowServer::the().get_buttons_switched();
         auto primary_pressed = buttons & GUI::MouseButton::Primary;
         auto secondary_pressed = buttons & GUI::MouseButton::Secondary;
 
+        Gfx::Path path;
+
+        // draw left button
+        path.move_to({ 30, 65 });
+        path.line_to({ 30, 20 });
+        path.line_to({ 65, 12 });
+        path.line_to({ 65, 65 });
         if (primary_secondary_switched ? secondary_pressed : primary_pressed) {
             auto button_color = primary_secondary_switched ? Color::LightBlue : Color::MidBlue;
-            painter.fill_rect({ 31, 21, 34, 44 }, button_color);
-            painter.draw_triangle({ 30, 21 }, { 65, 21 }, { 65, 12 }, button_color);
+            painter.fill_path(path, button_color);
         }
+        painter.stroke_path(path, Color::Black, 1);
+        path.clear();
 
+        // draw right button
+        path.move_to({ 95, 65 });
+        path.line_to({ 95, 12 });
+        path.line_to({ 130, 20 });
+        path.line_to({ 130, 65 });
         if (primary_secondary_switched ? primary_pressed : secondary_pressed) {
             auto button_color = primary_secondary_switched ? Color::MidBlue : Color::LightBlue;
-            painter.fill_rect({ 96, 21, 34, 44 }, button_color);
-            painter.draw_triangle({ 96, 12 }, { 96, 21 }, { 132, 21 }, button_color);
+            painter.fill_path(path, button_color);
         }
+        painter.stroke_path(path, Color::Black, 1);
+        path.clear();
 
+        // draw middle button
+        path.move_to({ 65, 65 });
+        path.line_to({ 65, 12 });
+        path.line_to({ 95, 12 });
+        path.line_to({ 95, 65 });
         if (buttons & GUI::MouseButton::Middle)
-            painter.fill_rect({ 66, 13, 29, 52 }, Color::Blue);
-
-        if (buttons & GUI::MouseButton::Forward)
-            painter.fill_rect({ 26, 44, 4, 16 }, Color::Blue);
-
-        if (buttons & GUI::MouseButton::Backward)
-            painter.fill_rect({ 26, 71, 4, 16 }, Color::Blue);
+            painter.fill_path(path, Color::Blue);
+        painter.stroke_path(path, Color::Black, 1);
+        path.clear();
 
         if (m_show_scroll_wheel) {
             auto radius = 10;
@@ -127,6 +109,35 @@ public:
             painter.draw_line(p1, p2, Color::Red, 2);
             painter.draw_line(p3, p4, Color::Red, 2);
         }
+
+        // draw mouse outline
+        path.move_to({ 30, 140 });
+        path.line_to({ 30, 65 });
+        path.line_to({ 130, 65 });
+        path.line_to({ 130, 140 });
+        path.line_to({ 30, 140 });
+        painter.stroke_path(path, Color::Black, 1);
+        path.clear();
+
+        // draw forward button
+        path.move_to({ 30, 43 });
+        path.line_to({ 25, 43 });
+        path.line_to({ 25, 60 });
+        path.line_to({ 30, 60 });
+        if (buttons & GUI::MouseButton::Forward)
+            painter.fill_rect({ 26, 44, 4, 16 }, Color::Blue);
+        painter.stroke_path(path, Color::Black, 1);
+        path.clear();
+
+        // draw back button
+        path.move_to({ 30, 70 });
+        path.line_to({ 25, 70 });
+        path.line_to({ 25, 87 });
+        path.line_to({ 30, 87 });
+        if (buttons & GUI::MouseButton::Backward)
+            painter.fill_rect({ 26, 71, 4, 16 }, Color::Blue);
+        painter.stroke_path(path, Color::Black, 1);
+        path.clear();
     }
 
     void mousedown_event(GUI::MouseEvent& event) override
