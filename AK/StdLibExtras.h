@@ -17,13 +17,13 @@
 #include <AK/Assertions.h>
 
 template<typename T, typename U>
-constexpr auto round_up_to_power_of_two(T value, U power_of_two) requires(IsIntegral<T>&& IsIntegral<U>)
+constexpr auto round_up_to_power_of_two(T value, U power_of_two) requires(AK::Detail::IsIntegral<T>&& AK::Detail::IsIntegral<U>)
 {
     return ((value - 1) & ~(power_of_two - 1)) + power_of_two;
 }
 
 template<typename T>
-constexpr bool is_power_of_two(T value) requires(IsIntegral<T>)
+constexpr bool is_power_of_two(T value) requires(AK::Detail::IsIntegral<T>)
 {
     return value && !((value) & (value - 1));
 }

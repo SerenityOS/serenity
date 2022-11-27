@@ -72,7 +72,7 @@ using mode_t = unsigned short;
 #    endif
 #endif
 
-using FlatPtr = Conditional<sizeof(void*) == 8, u64, u32>;
+using FlatPtr = AK::Detail::Conditional<sizeof(void*) == 8, u64, u32>;
 
 constexpr u64 KiB = 1024;
 constexpr u64 MiB = KiB * KiB;
