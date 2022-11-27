@@ -1119,10 +1119,9 @@ private:
 
 class StringLiteral final : public Literal {
 public:
-    explicit StringLiteral(SourceRange source_range, String value, bool is_use_strict_directive = false)
+    explicit StringLiteral(SourceRange source_range, String value)
         : Literal(source_range)
         , m_value(move(value))
-        , m_is_use_strict_directive(is_use_strict_directive)
     {
     }
 
@@ -1131,13 +1130,11 @@ public:
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
 
     StringView value() const { return m_value; }
-    bool is_use_strict_directive() const { return m_is_use_strict_directive; };
 
 private:
     virtual bool is_string_literal() const override { return true; }
 
     String m_value;
-    bool m_is_use_strict_directive;
 };
 
 class NullLiteral final : public Literal {
