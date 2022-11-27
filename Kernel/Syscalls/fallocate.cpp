@@ -51,7 +51,6 @@ ErrorOr<FlatPtr> Process::sys$posix_fallocate(int fd, Userspace<off_t const*> us
     //       truncate instead
     TRY(file.inode().truncate(checked_size.value()));
 
-    // FIXME: ENOSPC: There is not enough space left on the device containing the file referred to by fd.
     // FIXME: EINTR: A signal was caught during execution.
     return 0;
 }
