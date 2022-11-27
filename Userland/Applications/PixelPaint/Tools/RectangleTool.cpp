@@ -219,6 +219,7 @@ GUI::Widget* RectangleTool::get_properties_widget()
         aa_enable_checkbox.on_checked = [&](bool checked) {
             m_antialias_enabled = checked;
         };
+        aa_enable_checkbox.set_checked(true);
 
         auto& aspect_container = mode_extras_container.add<GUI::Widget>();
         aspect_container.set_layout<GUI::VerticalBoxLayout>();

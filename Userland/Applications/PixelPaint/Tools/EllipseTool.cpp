@@ -173,7 +173,7 @@ GUI::Widget* EllipseTool::get_properties_widget()
                 m_fill_mode = FillMode::Fill;
         };
 
-        aa_enable_checkbox.set_checked(false);
+        aa_enable_checkbox.set_checked(true);
         outline_mode_radio.set_checked(true);
 
         auto& aspect_container = m_properties_widget->add<GUI::Widget>();
