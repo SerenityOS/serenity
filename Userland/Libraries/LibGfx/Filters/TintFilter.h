@@ -15,17 +15,20 @@ class TintFilter : public ColorFilter {
 public:
     TintFilter(Color color, float amount)
         : ColorFilter(amount)
-        , m_color(color)
+        , m_color(Color::from_rgb(color.value()))
     {
     }
+
+    virtual bool amount_handled_in_filter() const override { return true; }
 
     virtual StringView class_name() const override { return "TintFilter"sv; }
 
 protected:
-    Color convert_color(Color) override
+    Color convert_color(Color dest) override
     {
-        // Note: ColorFilter will blend by amount
-        return m_color;
+        return Color::from_rgb(dest.value())
+            .mixed_with(m_color, m_amount)
+            .with_alpha(dest.alpha());
     };
 
 private:
