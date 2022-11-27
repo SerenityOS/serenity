@@ -282,6 +282,7 @@ private:
         ScopePusher* current_scope_pusher { nullptr };
 
         HashMap<StringView, Optional<Position>> labels_in_scope;
+        HashMap<size_t, Position> invalid_property_range_in_object_expression;
         HashTable<StringView>* referenced_private_names { nullptr };
 
         bool strict_mode { false };
