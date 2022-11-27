@@ -53,6 +53,8 @@ public:
     }
     u8 existing_frame_index() const { return m_existing_frame_index; }
 
+    bool use_previous_frame_motion_vectors { false };
+
     ColorConfig color_config {};
 
     u8 reference_frames_to_update_flags { 0 };
