@@ -183,12 +183,9 @@ static constexpr Array<Span<@type@ const>, @size@ + 1> @name@ { {
 )~~~");
     }
 
-    // clang-format off
-    // clang-format gets confused by the requires() clauses above, and formats this section very weirdly.
 protected:
     Vector<StorageType> m_storage;
     HashMap<StorageType, size_t> m_storage_indices;
-    // clang-format on
 };
 
 class UniqueStringStorage : public UniqueStorage<String> {

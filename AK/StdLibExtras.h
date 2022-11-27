@@ -30,10 +30,6 @@ requires(AK::Detail::IsIntegral<T>)
     return value && !((value) & (value - 1));
 }
 
-// HACK: clang-format does not format this correctly because of the requires clause above.
-// Disabling formatting for that doesn't help either.
-//
-// clang-format off
 #ifndef AK_DONT_REPLACE_STD
 namespace std { // NOLINT(cert-dcl58-cpp) Names in std to aid tools
 
@@ -60,9 +56,8 @@ constexpr T&& move(T& arg)
 
 }
 #else
-#include <utility>
+#    include <utility>
 #endif
-// clang-format on
 
 using std::forward;
 using std::move;

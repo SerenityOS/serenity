@@ -216,10 +216,8 @@ public:
         other.exchange(ptr);
     }
 
-    // clang-format off
 private:
     NonnullLockRefPtr() = delete;
-    // clang-format on
 
     ALWAYS_INLINE T* as_ptr() const
     {
