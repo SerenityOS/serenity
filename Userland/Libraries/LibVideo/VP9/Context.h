@@ -206,6 +206,9 @@ struct BlockContext {
     Array<MotionVectorPair, 4> sub_block_motion_vectors;
 
     Array<i32, 1024> residual_tokens;
+
+    // Indexed by ReferenceFrame enum.
+    Array<u8, 4> mode_context;
 };
 
 struct BlockMotionVectorCandidateSet {

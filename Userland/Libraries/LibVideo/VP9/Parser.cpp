@@ -1175,7 +1175,7 @@ DecoderErrorOr<void> Parser::inter_block_mode_info(BlockContext& block_context, 
     if (seg_feature_active(block_context, SEG_LVL_SKIP)) {
         block_context.y_prediction_mode() = PredictionMode::ZeroMv;
     } else if (block_context.size >= Block_8x8) {
-        block_context.y_prediction_mode() = TRY_READ(TreeParser::parse_inter_mode(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter, m_mode_context[block_context.reference_frame_types.primary]));
+        block_context.y_prediction_mode() = TRY_READ(TreeParser::parse_inter_mode(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter, block_context.mode_context[block_context.reference_frame_types.primary]));
     }
     if (block_context.frame_context.interpolation_filter == Switchable)
         block_context.interpolation_filter = TRY_READ(TreeParser::parse_interpolation_filter(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter, above_context, left_context));
@@ -1185,7 +1185,7 @@ DecoderErrorOr<void> Parser::inter_block_mode_info(BlockContext& block_context, 
         auto size_in_sub_blocks = block_context.get_size_in_sub_blocks();
         for (auto idy = 0; idy < 2; idy += size_in_sub_blocks.height()) {
             for (auto idx = 0; idx < 2; idx += size_in_sub_blocks.width()) {
-                block_context.y_prediction_mode() = TRY_READ(TreeParser::parse_inter_mode(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter, m_mode_context[block_context.reference_frame_types.primary]));
+                block_context.y_prediction_mode() = TRY_READ(TreeParser::parse_inter_mode(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter, block_context.mode_context[block_context.reference_frame_types.primary]));
                 if (block_context.y_prediction_mode() == PredictionMode::NearestMv || block_context.y_prediction_mode() == PredictionMode::NearMv) {
                     select_best_sub_block_reference_motion_vectors(block_context, motion_vector_candidates, idy * 2 + idx, ReferenceIndex::Primary);
                     if (block_context.is_compound())
@@ -1590,7 +1590,7 @@ static MotionVector clamp_motion_vector(BlockContext const& block_context, Motio
 
 // 6.5.1 Find MV refs syntax
 // find_mv_refs( refFrame, block ) in the spec.
-MotionVectorPair Parser::find_reference_motion_vectors(BlockContext const& block_context, ReferenceFrameType reference_frame, i32 block)
+MotionVectorPair Parser::find_reference_motion_vectors(BlockContext& block_context, ReferenceFrameType reference_frame, i32 block)
 {
     bool different_ref_found = false;
     u8 context_counter = 0;
@@ -1626,6 +1626,7 @@ MotionVectorPair Parser::find_reference_motion_vectors(BlockContext const& block
             }
         }
     }
+    block_context.mode_context[reference_frame] = counter_to_context[context_counter];
 
     for (auto i = 2u; i < MVREF_NEIGHBOURS; i++) {
         MotionVector candidate = base_coordinates + mv_ref_blocks[block_context.size][i];
@@ -1647,7 +1648,6 @@ MotionVectorPair Parser::find_reference_motion_vectors(BlockContext const& block
     if (block_context.frame_context.use_previous_frame_motion_vectors)
         add_motion_vector_if_reference_frame_type_is_different(block_context, base_coordinates, reference_frame, list, true);
 
-    m_mode_context[reference_frame] = counter_to_context[context_counter];
     for (auto i = 0u; i < list.size(); i++) {
         // clamp_mv_ref( i ) in the spec.
         list[i] = clamp_motion_vector(block_context, list[i], MV_BORDER);
@@ -1683,7 +1683,7 @@ static void select_best_reference_motion_vectors(BlockContext& block_context, Mo
 }
 
 // append_sub8x8_mvs( block, refList ) in the spec.
-void Parser::select_best_sub_block_reference_motion_vectors(BlockContext const& block_context, BlockMotionVectorCandidates& candidates, i32 block, ReferenceIndex reference_index)
+void Parser::select_best_sub_block_reference_motion_vectors(BlockContext& block_context, BlockMotionVectorCandidates& candidates, i32 block, ReferenceIndex reference_index)
 {
     Array<MotionVector, 2> sub_8x8_mvs;
     MotionVectorPair reference_motion_vectors = find_reference_motion_vectors(block_context, block_context.reference_frame_types[reference_index], block);
