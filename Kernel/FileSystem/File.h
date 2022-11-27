@@ -115,6 +115,8 @@ public:
     virtual bool is_socket() const { return false; }
     virtual bool is_inode_watcher() const { return false; }
 
+    virtual bool is_regular_file() const { return false; }
+
     virtual FileBlockerSet& blocker_set() { return m_blocker_set; }
 
     size_t attach_count() const { return m_attach_count; }

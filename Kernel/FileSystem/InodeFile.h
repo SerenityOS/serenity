@@ -49,6 +49,8 @@ public:
     virtual bool is_inode() const override { return true; }
 
 private:
+    virtual bool is_regular_file() const override;
+
     explicit InodeFile(NonnullLockRefPtr<Inode>&&);
     NonnullLockRefPtr<Inode> m_inode;
 };

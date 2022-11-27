@@ -120,4 +120,9 @@ ErrorOr<void> InodeFile::chmod(Credentials const& credentials, OpenFileDescripti
     return VirtualFileSystem::the().chmod(credentials, *description.custody(), mode);
 }
 
+bool InodeFile::is_regular_file() const
+{
+    return inode().metadata().is_regular_file();
+}
+
 }
