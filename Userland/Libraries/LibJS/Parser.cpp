@@ -462,6 +462,7 @@ bool Parser::parse_directive(ScopeNode& body)
 {
     bool found_use_strict = false;
     while (!done() && match(TokenType::StringLiteral)) {
+        auto raw_value = m_state.current_token.original_value();
         // It cannot be a labelled function since we hit a string literal.
         auto statement = parse_statement(AllowLabelledFunction::No);
         body.append(statement);
@@ -472,8 +473,7 @@ bool Parser::parse_directive(ScopeNode& body)
         if (!is<StringLiteral>(expression))
             break;
 
-        auto& string_literal = static_cast<StringLiteral const&>(expression);
-        if (string_literal.is_use_strict_directive()) {
+        if (raw_value.is_one_of("'use strict'"sv, "\"use strict\"")) {
             found_use_strict = true;
 
             if (m_state.string_legacy_octal_escape_sequence_in_scope)
@@ -1865,9 +1865,7 @@ NonnullRefPtr<StringLiteral> Parser::parse_string_literal(Token const& token, St
         }
     }
 
-    auto is_use_strict_directive = string_literal_type == StringLiteralType::Normal && (token.value() == "'use strict'" || token.value() == "\"use strict\"");
-
-    return create_ast_node<StringLiteral>({ m_source_code, rule_start.position(), position() }, string, is_use_strict_directive);
+    return create_ast_node<StringLiteral>({ m_source_code, rule_start.position(), position() }, string);
 }
 
 NonnullRefPtr<TemplateLiteral> Parser::parse_template_literal(bool is_tagged)
