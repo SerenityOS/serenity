@@ -210,10 +210,8 @@ public:
         return m_ptr == other;
     }
 
-    // clang-format off
 private:
     NonnullRefPtr() = delete;
-    // clang-format on
 
     ALWAYS_INLINE RETURNS_NONNULL T* as_nonnull_ptr() const
     {

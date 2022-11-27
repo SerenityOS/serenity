@@ -2540,8 +2540,6 @@ Optional<ECMA262Parser::PropertyEscape> ECMA262Parser::read_unicode_property_esc
 {
     consume(TokenType::LeftCurly, Error::InvalidPattern);
 
-    // Note: clang-format is disabled here because it doesn't handle templated lambdas yet.
-    // clang-format off
     auto read_until = [&]<typename... Ts>(Ts&&... terminators) {
         auto start_token = m_parser_state.current_token;
         size_t offset = 0;
@@ -2554,7 +2552,6 @@ Optional<ECMA262Parser::PropertyEscape> ECMA262Parser::read_unicode_property_esc
 
         return StringView { start_token.value().characters_without_null_termination(), offset };
     };
-    // clang-format on
 
     StringView property_type;
     StringView property_name = read_until("="sv, "}"sv);

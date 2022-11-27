@@ -41,12 +41,10 @@ namespace Core {
 // This class is designed to be transferred over IPC and mmap()ed into multiple processes' memory.
 // It is a synthetic pointer to the actual shared memory, which is abstracted away from the user.
 // FIXME: Make this independent of shared memory, so that we can move it to AK.
-// clang-format off
 template<typename T, size_t Size = 32>
 // Size must be a power of two, which speeds up the modulus operations for indexing.
 requires(popcount(Size) == 1)
 class SharedSingleProducerCircularQueue final {
-    // clang-format on
 
 public:
     using ValueType = T;

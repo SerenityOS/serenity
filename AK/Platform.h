@@ -76,8 +76,6 @@
 #    define AK_OS_WINDOWS
 #endif
 
-// FIXME: Remove clang-format suppression after https://github.com/llvm/llvm-project/issues/56602 resolved
-// clang-format off
 #if defined(__ANDROID__)
 #    define STR(x) __STR(x)
 #    define __STR(x) #x
@@ -89,7 +87,6 @@
 #    undef __STR
 #    define AK_OS_ANDROID
 #endif
-// clang-format on
 
 #if defined(__EMSCRIPTEN__)
 #    define AK_OS_EMSCRIPTEN
