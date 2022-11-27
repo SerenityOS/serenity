@@ -244,9 +244,9 @@ ErrorOr<TransformSize> TreeParser::parse_tx_size(BitStream& bit_stream, Probabil
     auto above_context = max_tx_size;
     auto left_context = max_tx_size;
     if (above.is_available && !above.skip_coefficients)
-        above_context = above.tx_size;
+        above_context = above.transform_size;
     if (left.is_available && !left.skip_coefficients)
-        left_context = left.tx_size;
+        left_context = left.transform_size;
     if (!left.is_available)
         left_context = above_context;
     if (!above.is_available)
@@ -624,7 +624,7 @@ ErrorOr<bool> TreeParser::parse_motion_vector_hp(BitStream& bit_stream, Probabil
     return value;
 }
 
-TokensContext TreeParser::get_tokens_context(bool subsampling_x, bool subsampling_y, u32 rows, u32 columns, Array<Vector<bool>, 3> const& above_nonzero_context, Array<Vector<bool>, 3> const& left_nonzero_context, u8 token_cache[1024], TransformSize tx_size, TransformSet transform_set, u8 plane, u32 start_x, u32 start_y, u16 position, bool is_inter, u8 band, u16 coef_index)
+TokensContext TreeParser::get_tokens_context(bool subsampling_x, bool subsampling_y, u32 rows, u32 columns, Array<Vector<bool>, 3> const& above_nonzero_context, Array<Vector<bool>, 3> const& left_nonzero_context, u8 token_cache[1024], TransformSize transform_size, TransformSet transform_set, u8 plane, u32 start_x, u32 start_y, u16 position, bool is_inter, u8 band, u16 coef_index)
 {
     u8 context;
     if (coef_index == 0) {
@@ -632,7 +632,7 @@ TokensContext TreeParser::get_tokens_context(bool subsampling_x, bool subsamplin
         auto sy = plane > 0 ? subsampling_y : false;
         auto max_x = (2 * columns) >> sx;
         auto max_y = (2 * rows) >> sy;
-        u8 numpts = 1 << tx_size;
+        u8 numpts = 1 << transform_size;
         auto x4 = start_x >> 2;
         auto y4 = start_y >> 2;
         u32 above = 0;
@@ -646,7 +646,7 @@ TokensContext TreeParser::get_tokens_context(bool subsampling_x, bool subsamplin
         context = above + left;
     } else {
         u32 neighbor_0, neighbor_1;
-        auto n = 4 << tx_size;
+        auto n = 4 << transform_size;
         auto i = position / n;
         auto j = position % n;
         auto a = i > 0 ? (i - 1) * n + j : 0;
@@ -672,7 +672,7 @@ TokensContext TreeParser::get_tokens_context(bool subsampling_x, bool subsamplin
         context = (1 + token_cache[neighbor_0] + token_cache[neighbor_1]) >> 1;
     }
 
-    return TokensContext { tx_size, plane > 0, is_inter, band, context };
+    return TokensContext { transform_size, plane > 0, is_inter, band, context };
 }
 
 ErrorOr<bool> TreeParser::parse_more_coefficients(BitStream& bit_stream, ProbabilityTables const& probability_table, SyntaxElementCounter& counter, TokensContext const& context)

@@ -202,7 +202,7 @@ struct FrameBlockContext {
 
     bool is_available { false };
     bool skip_coefficients { false };
-    TransformSize tx_size { Transform_4x4 };
+    TransformSize transform_size { Transform_4x4 };
     PredictionMode y_mode { PredictionMode::DcPred };
     Array<PredictionMode, 4> sub_modes { PredictionMode::DcPred, PredictionMode::DcPred, PredictionMode::DcPred, PredictionMode::DcPred };
     InterpolationFilter interpolation_filter { InterpolationFilter::EightTap };
