@@ -37,7 +37,8 @@ ErrorOr<FlatPtr> Process::sys$posix_fallocate(int fd, Userspace<off_t const*> us
     if (description->is_fifo())
         return ESPIPE;
 
-    if (!S_ISREG(TRY(description->file().stat()).st_mode))
+    // [ENODEV] The fd argument does not refer to a regular file.
+    if (!description->file().is_regular_file())
         return ENODEV;
 
     VERIFY(description->file().is_inode());
