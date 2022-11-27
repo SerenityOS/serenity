@@ -1400,4 +1400,14 @@ ErrorOr<String> readlink(StringView pathname)
 #endif
 }
 
+#ifdef AK_OS_SERENITY
+ErrorOr<void> posix_fallocate(int fd, off_t offset, off_t length)
+{
+    int rc = ::posix_fallocate(fd, offset, length);
+    if (rc != 0)
+        return Error::from_syscall("posix_fallocate"sv, -rc);
+    return {};
+}
+#endif
+
 }
