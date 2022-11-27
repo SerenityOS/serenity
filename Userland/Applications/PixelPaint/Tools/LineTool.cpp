@@ -169,6 +169,7 @@ GUI::Widget* LineTool::get_properties_widget()
         aa_enable_checkbox.on_checked = [&](bool checked) {
             m_antialias_enabled = checked;
         };
+        aa_enable_checkbox.set_checked(true);
     }
 
     return m_properties_widget.ptr();
