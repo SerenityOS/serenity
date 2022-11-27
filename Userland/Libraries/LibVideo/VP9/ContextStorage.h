@@ -248,4 +248,7 @@ struct ColorConfig {
 struct BlockMotionVectorCandidateSet;
 using BlockMotionVectorCandidates = ReferencePair<BlockMotionVectorCandidateSet>;
 
+using NonZeroTokens = Array<FixedArray<bool>, 3>;
+using NonZeroTokensView = Array<Span<bool>, 3>;
+
 }
