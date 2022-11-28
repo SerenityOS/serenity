@@ -16,7 +16,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Core::ArgsParser args_parser;
 
     StringView pid_argument {};
-    StringView cmd_argument {};
+    Vector<StringView> command;
     bool wait = false;
     bool free = false;
     bool enable = false;
@@ -33,7 +33,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(disable, "Disable", nullptr, 'd');
     args_parser.add_option(free, "Free the profiling buffer for the associated process(es).", nullptr, 'f');
     args_parser.add_option(wait, "Enable profiling and wait for user input to disable.", nullptr, 'w');
-    args_parser.add_option(cmd_argument, "Command", nullptr, 'c', "command");
     args_parser.add_option(Core::ArgsParser::Option {
         Core::ArgsParser::OptionArgumentMode::Required,
         "Enable tracking specific event type", nullptr, 't', "event_type",
@@ -59,6 +58,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             }
             return true;
         } });
+    args_parser.add_positional_argument(command, "Command to profile", "command", Core::ArgsParser::Required::No);
+    args_parser.set_stop_on_first_non_option(true);
 
     auto print_types = [] {
         outln();
@@ -70,7 +71,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         exit(0);
     }
 
-    if (pid_argument.is_empty() && cmd_argument.is_empty() && !all_processes) {
+    if (pid_argument.is_empty() && command.is_empty() && !all_processes) {
         args_parser.print_usage(stdout, arguments.argv[0]);
         print_types();
         return 0;
@@ -109,11 +110,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return 0;
     }
 
-    auto cmd_parts = StringView(cmd_argument).split_view(' ');
-
     dbgln("Enabling profiling for PID {}", getpid());
     TRY(Core::System::profiling_enable(getpid(), event_mask));
-    TRY(Core::System::exec(cmd_parts[0], cmd_parts, Core::System::SearchInPath::Yes));
+    TRY(Core::System::exec(command[0], command, Core::System::SearchInPath::Yes));
 
     return 0;
 }
