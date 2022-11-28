@@ -636,13 +636,22 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::cosh)
 // 21.3.2.34 Math.tanh ( x ), https://tc39.es/ecma262/#sec-math.tanh
 JS_DEFINE_NATIVE_FUNCTION(MathObject::tanh)
 {
+    // 1. Let n be ? ToNumber(x).
     auto number = TRY(vm.argument(0).to_number(vm));
-    if (number.is_nan())
-        return js_nan();
+
+    // 2. If n is NaN, n is +0𝔽, or n is -0𝔽, return n.
+    if (number.is_nan() || number.is_positive_zero() || number.is_negative_zero())
+        return number;
+
+    // 3. If n is +∞𝔽, return 1𝔽.
     if (number.is_positive_infinity())
         return Value(1);
+
+    // 4. If n is -∞𝔽, return -1𝔽.
     if (number.is_negative_infinity())
         return Value(-1);
+
+    // 5. Return an implementation-approximated Number value representing the result of the hyperbolic tangent of ℝ(n).
     return Value(::tanh(number.as_double()));
 }
 
