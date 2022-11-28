@@ -10,7 +10,6 @@
 #include <AK/Array.h>
 #include <AK/OwnPtr.h>
 #include <AK/Span.h>
-#include <AK/Vector.h>
 #include <LibGfx/Size.h>
 #include <LibVideo/Color/CodingIndependentCodePoints.h>
 #include <LibVideo/DecoderError.h>
@@ -139,13 +138,7 @@ private:
     bool m_previous_should_use_absolute_segment_base_quantizer;
     Array<Array<SegmentFeature, SEG_LVL_MAX>, MAX_SEGMENTS> m_previous_segmentation_features;
 
-    // FIXME: Move these to a struct to store together in one array.
-    Gfx::Size<u32> m_ref_frame_size[NUM_REF_FRAMES];
-    bool m_ref_subsampling_x[NUM_REF_FRAMES];
-    bool m_ref_subsampling_y[NUM_REF_FRAMES];
-    u8 m_ref_bit_depth[NUM_REF_FRAMES];
-
-    Vector<u16> m_frame_store[NUM_REF_FRAMES][3];
+    ReferenceFrame m_reference_frames[NUM_REF_FRAMES];
 
     Vector2D<FrameBlockContext> m_reusable_frame_block_contexts;
     Vector2D<PersistentBlockContext> m_previous_block_contexts;

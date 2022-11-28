@@ -9,6 +9,7 @@
 
 #include <AK/Array.h>
 #include <AK/Error.h>
+#include <AK/Vector.h>
 #include <LibGfx/Size.h>
 #include <LibVideo/Color/CodingIndependentCodePoints.h>
 
@@ -256,5 +257,15 @@ using SegmentationPredictionContextView = Span<u8>;
 
 using PartitionContext = FixedArray<u8>;
 using PartitionContextView = Span<u8>;
+
+struct ReferenceFrame {
+    Gfx::Size<u32> size { 0, 0 };
+    bool subsampling_x { false };
+    bool subsampling_y { false };
+    u8 bit_depth { 0 };
+    Array<Vector<u16>, 3> frame_planes {};
+
+    bool is_valid() { return bit_depth > 0; }
+};
 
 }
