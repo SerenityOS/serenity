@@ -1686,11 +1686,10 @@ void Painter::do_draw_text(IntRect const& rect, Utf8View const& text, Font const
 
     TextLayout layout(&font, text, rect);
 
-    static int const line_spacing = 4;
-    int line_height = font.pixel_size() + line_spacing;
+    int line_height = font.pixel_size() + LINE_SPACING;
 
-    auto lines = layout.lines(elision, wrapping, line_spacing);
-    auto bounding_rect = layout.bounding_rect(wrapping, line_spacing);
+    auto lines = layout.lines(elision, wrapping, LINE_SPACING);
+    auto bounding_rect = layout.bounding_rect(wrapping, LINE_SPACING);
 
     switch (alignment) {
     case TextAlignment::TopCenter:
