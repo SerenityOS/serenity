@@ -127,7 +127,7 @@ void InlineFormattingContext::dimension_box_on_line(Box const& box, LayoutMode l
 
     auto const& width_value = box.computed_values().width();
     float unconstrained_width = 0;
-    if (width_value.is_auto()) {
+    if (should_treat_width_as_auto(box, *m_available_space)) {
         auto result = calculate_shrink_to_fit_widths(box);
 
         auto available_width = m_available_space->width.to_px()
