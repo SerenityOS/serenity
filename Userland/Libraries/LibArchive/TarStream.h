@@ -8,20 +8,20 @@
 #pragma once
 
 #include <AK/Span.h>
-#include <AK/Stream.h>
 #include <LibArchive/Tar.h>
+#include <LibCore/Stream.h>
 
 namespace Archive {
 
 class TarInputStream;
 
-class TarFileStream : public InputStream {
+class TarFileStream : public Core::Stream::Stream {
 public:
-    size_t read(Bytes) override;
-    bool unreliable_eof() const override;
-
-    bool read_or_error(Bytes) override;
-    bool discard_or_error(size_t count) override;
+    virtual ErrorOr<Bytes> read(Bytes) override;
+    virtual ErrorOr<size_t> write(ReadonlyBytes) override;
+    virtual bool is_eof() const override;
+    virtual bool is_open() const override { return true; };
+    virtual void close() override {};
 
 private:
     TarFileStream(TarInputStream& stream);
@@ -77,7 +77,7 @@ inline ErrorOr<void> TarInputStream::for_each_extended_header(F func)
 
     auto header_size = TRY(header().size());
     ByteBuffer file_contents_buffer = TRY(ByteBuffer::create_zeroed(header_size));
-    VERIFY(file_stream.read(file_contents_buffer) == header_size);
+    VERIFY(TRY(file_stream.read(file_contents_buffer)).size() == header_size);
 
     StringView file_contents { file_contents_buffer };
 

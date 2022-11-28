@@ -136,10 +136,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 StringBuilder long_name;
 
                 Array<u8, buffer_size> buffer;
-                size_t bytes_read;
 
-                while ((bytes_read = file_stream.read(buffer)) > 0)
-                    long_name.append(reinterpret_cast<char*>(buffer.data()), bytes_read);
+                while (!file_stream.is_eof()) {
+                    auto slice = TRY(file_stream.read(buffer));
+                    long_name.append(reinterpret_cast<char*>(slice.data()), slice.size());
+                }
 
                 local_overrides.set("path", long_name.to_string());
                 TRY(tar_stream.advance());
@@ -171,9 +172,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                     int fd = TRY(Core::System::open(absolute_path, O_CREAT | O_WRONLY, header_mode));
 
                     Array<u8, buffer_size> buffer;
-                    size_t bytes_read;
-                    while ((bytes_read = file_stream.read(buffer)) > 0)
-                        TRY(Core::System::write(fd, buffer.span().slice(0, bytes_read)));
+                    while (!file_stream.is_eof()) {
+                        auto slice = TRY(file_stream.read(buffer));
+                        TRY(Core::System::write(fd, slice));
+                    }
 
                     TRY(Core::System::close(fd));
                     break;

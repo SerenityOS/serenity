@@ -17,29 +17,24 @@ TarFileStream::TarFileStream(TarInputStream& tar_stream)
 {
 }
 
-size_t TarFileStream::read(Bytes bytes)
+ErrorOr<Bytes> TarFileStream::read(Bytes bytes)
 {
-    // verify that the stream has not advanced
+    // Verify that the stream has not advanced.
     VERIFY(m_tar_stream.m_generation == m_generation);
 
-    if (has_any_error())
-        return 0;
-
-    auto header_size_or_error = m_tar_stream.header().size();
-    if (header_size_or_error.is_error())
-        return 0;
-    auto header_size = header_size_or_error.release_value();
+    auto header_size = TRY(m_tar_stream.header().size());
 
     auto to_read = min(bytes.size(), header_size - m_tar_stream.m_file_offset);
 
     auto nread = m_tar_stream.m_stream.read(bytes.trim(to_read));
     m_tar_stream.m_file_offset += nread;
-    return nread;
+
+    return bytes.slice(0, nread);
 }
 
-bool TarFileStream::unreliable_eof() const
+bool TarFileStream::is_eof() const
 {
-    // verify that the stream has not advanced
+    // Verify that the stream has not advanced.
     VERIFY(m_tar_stream.m_generation == m_generation);
 
     auto header_size_or_error = m_tar_stream.header().size();
@@ -51,34 +46,10 @@ bool TarFileStream::unreliable_eof() const
         || m_tar_stream.m_file_offset >= header_size;
 }
 
-bool TarFileStream::read_or_error(Bytes bytes)
+ErrorOr<size_t> TarFileStream::write(ReadonlyBytes)
 {
-    // verify that the stream has not advanced
-    VERIFY(m_tar_stream.m_generation == m_generation);
-
-    if (read(bytes) < bytes.size()) {
-        set_fatal_error();
-        return false;
-    }
-
-    return true;
-}
-
-bool TarFileStream::discard_or_error(size_t count)
-{
-    // verify that the stream has not advanced
-    VERIFY(m_tar_stream.m_generation == m_generation);
-
-    auto header_size_or_error = m_tar_stream.header().size();
-    if (header_size_or_error.is_error())
-        return false;
-    auto header_size = header_size_or_error.release_value();
-
-    if (count > header_size - m_tar_stream.m_file_offset) {
-        return false;
-    }
-    m_tar_stream.m_file_offset += count;
-    return m_tar_stream.m_stream.discard_or_error(count);
+    // This is purely for wrapping and representing file contents in an archive.
+    VERIFY_NOT_REACHED();
 }
 
 TarInputStream::TarInputStream(InputStream& stream)
