@@ -204,7 +204,7 @@ MainWidget::MainWidget()
     });
     m_vim_emulation_setting_action->set_checked(false);
 
-    m_find_replace_action = GUI::Action::create("&Find/Replace...", { Mod_Ctrl, Key_F }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/find.png"sv).release_value_but_fixme_should_propagate_errors(), [this](auto&) {
+    m_find_replace_action = GUI::Action::create("&Find/Replace...", { Mod_Ctrl | Mod_Shift, Key_F }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/find.png"sv).release_value_but_fixme_should_propagate_errors(), [this](auto&) {
         m_find_replace_widget->set_visible(true);
         m_find_widget->set_visible(true);
         m_replace_widget->set_visible(true);
