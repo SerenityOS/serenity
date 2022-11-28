@@ -24,6 +24,9 @@ void AntiAliasingPainter::draw_anti_aliased_line(FloatPoint actual_from, FloatPo
     // FIXME: Implement this :P
     VERIFY(style == Painter::LineStyle::Solid);
 
+    if (color.alpha() == 0)
+        return;
+
     // FIMXE:
     // This is not a proper line drawing algorithm.
     // It's hack-ish AA rotated rectangle painting.
