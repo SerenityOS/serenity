@@ -215,6 +215,35 @@ ErrorOr<void> Database::insert(Row& row)
     return {};
 }
 
+ErrorOr<void> Database::remove(Row& row)
+{
+    auto& table = row.table();
+    VERIFY(m_table_cache.get(table.key().hash()).has_value());
+
+    if (table.pointer() == row.pointer()) {
+        auto table_key = table.key();
+        table_key.set_pointer(row.next_pointer());
+        m_tables->update_key_pointer(table_key);
+
+        table.set_pointer(row.next_pointer());
+        return {};
+    }
+
+    for (auto pointer = table.pointer(); pointer;) {
+        auto current = m_serializer.deserialize_block<Row>(pointer, table, pointer);
+
+        if (current.next_pointer() == row.pointer()) {
+            current.set_next_pointer(row.next_pointer());
+            TRY(update(current));
+            break;
+        }
+
+        pointer = current.next_pointer();
+    }
+
+    return {};
+}
+
 ErrorOr<void> Database::update(Row& tuple)
 {
     VERIFY(m_table_cache.get(tuple.table().key().hash()).has_value());
