@@ -886,22 +886,6 @@ DecoderErrorOr<void> Parser::decode_tiles(FrameContext& frame_context)
     return {};
 }
 
-template<typename T>
-void Parser::clear_context(Vector<T>& context, size_t size)
-{
-    context.resize_and_keep_capacity(size);
-    __builtin_memset(context.data(), 0, sizeof(T) * size);
-}
-
-template<typename T>
-void Parser::clear_context(Vector<Vector<T>>& context, size_t outer_size, size_t inner_size)
-{
-    if (context.size() < outer_size)
-        context.resize(outer_size);
-    for (auto& sub_vector : context)
-        clear_context(sub_vector, inner_size);
-}
-
 u32 Parser::get_tile_offset(u32 tile_num, u32 mis, u32 tile_size_log2)
 {
     u32 super_blocks = (mis + 7) >> 3u;

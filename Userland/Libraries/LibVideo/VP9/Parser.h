@@ -49,12 +49,6 @@ private:
     DecoderErrorOr<FrameType> read_frame_type();
     DecoderErrorOr<ColorRange> read_color_range();
 
-    /* Utilities */
-    template<typename T>
-    void clear_context(Vector<T>& context, size_t size);
-    template<typename T>
-    void clear_context(Vector<Vector<T>>& context, size_t outer_size, size_t inner_size);
-
     /* (6.1) Frame Syntax */
     bool trailing_bits();
     DecoderErrorOr<void> refresh_probs(FrameContext const&);
