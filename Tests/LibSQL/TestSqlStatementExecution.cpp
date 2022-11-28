@@ -768,4 +768,122 @@ TEST_CASE(describe_large_table_after_persist)
     }
 }
 
+TEST_CASE(delete_single_row)
+{
+    ScopeGuard guard([]() { unlink(db_name); });
+    {
+        auto database = SQL::Database::construct(db_name);
+        EXPECT(!database->open().is_error());
+
+        create_table(database);
+        for (auto count = 0; count < 10; ++count) {
+            auto result = execute(database, String::formatted("INSERT INTO TestSchema.TestTable VALUES ( 'T{}', {} );", count, count));
+            EXPECT_EQ(result.size(), 1u);
+        }
+
+        auto result = execute(database, "SELECT * FROM TestSchema.TestTable;");
+        EXPECT_EQ(result.size(), 10u);
+    }
+    {
+        auto database = SQL::Database::construct(db_name);
+        EXPECT(!database->open().is_error());
+
+        execute(database, "DELETE FROM TestSchema.TestTable WHERE (IntColumn = 4);");
+
+        auto result = execute(database, "SELECT IntColumn FROM TestSchema.TestTable ORDER BY IntColumn;");
+        EXPECT_EQ(result.size(), 9u);
+
+        for (auto i = 0u; i < 4; ++i)
+            EXPECT_EQ(result[i].row[0], i);
+        for (auto i = 5u; i < 9; ++i)
+            EXPECT_EQ(result[i].row[0], i + 1);
+    }
+    {
+        auto database = SQL::Database::construct(db_name);
+        EXPECT(!database->open().is_error());
+
+        auto result = execute(database, "SELECT IntColumn FROM TestSchema.TestTable ORDER BY IntColumn;");
+        EXPECT_EQ(result.size(), 9u);
+
+        for (auto i = 0u; i < 4; ++i)
+            EXPECT_EQ(result[i].row[0], i);
+        for (auto i = 5u; i < 9; ++i)
+            EXPECT_EQ(result[i].row[0], i + 1);
+    }
+}
+
+TEST_CASE(delete_multiple_rows)
+{
+    ScopeGuard guard([]() { unlink(db_name); });
+    {
+        auto database = SQL::Database::construct(db_name);
+        EXPECT(!database->open().is_error());
+
+        create_table(database);
+        for (auto count = 0; count < 10; ++count) {
+            auto result = execute(database, String::formatted("INSERT INTO TestSchema.TestTable VALUES ( 'T{}', {} );", count, count));
+            EXPECT_EQ(result.size(), 1u);
+        }
+
+        auto result = execute(database, "SELECT * FROM TestSchema.TestTable;");
+        EXPECT_EQ(result.size(), 10u);
+    }
+    {
+        auto database = SQL::Database::construct(db_name);
+        EXPECT(!database->open().is_error());
+
+        execute(database, "DELETE FROM TestSchema.TestTable WHERE (IntColumn >= 4);");
+
+        auto result = execute(database, "SELECT IntColumn FROM TestSchema.TestTable ORDER BY IntColumn;");
+        EXPECT_EQ(result.size(), 4u);
+
+        for (auto i = 0u; i < result.size(); ++i)
+            EXPECT_EQ(result[i].row[0], i);
+    }
+    {
+        auto database = SQL::Database::construct(db_name);
+        EXPECT(!database->open().is_error());
+
+        auto result = execute(database, "SELECT IntColumn FROM TestSchema.TestTable ORDER BY IntColumn;");
+        EXPECT_EQ(result.size(), 4u);
+
+        for (auto i = 0u; i < result.size(); ++i)
+            EXPECT_EQ(result[i].row[0], i);
+    }
+}
+
+TEST_CASE(delete_all_rows)
+{
+    ScopeGuard guard([]() { unlink(db_name); });
+    {
+        auto database = SQL::Database::construct(db_name);
+        EXPECT(!database->open().is_error());
+
+        create_table(database);
+        for (auto count = 0; count < 10; ++count) {
+            auto result = execute(database, String::formatted("INSERT INTO TestSchema.TestTable VALUES ( 'T{}', {} );", count, count));
+            EXPECT_EQ(result.size(), 1u);
+        }
+
+        auto result = execute(database, "SELECT * FROM TestSchema.TestTable;");
+        EXPECT_EQ(result.size(), 10u);
+    }
+    {
+        auto database = SQL::Database::construct(db_name);
+        EXPECT(!database->open().is_error());
+
+        execute(database, "DELETE FROM TestSchema.TestTable;");
+
+        auto result = execute(database, "SELECT * FROM TestSchema.TestTable;");
+        EXPECT(result.is_empty());
+    }
+    {
+        auto database = SQL::Database::construct(db_name);
+        EXPECT(!database->open().is_error());
+
+        auto result = execute(database, "SELECT * FROM TestSchema.TestTable;");
+        EXPECT(result.is_empty());
+    }
+}
+
 }

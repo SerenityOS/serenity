@@ -44,6 +44,7 @@ public:
     ErrorOr<Vector<Row>> select_all(TableDef const&);
     ErrorOr<Vector<Row>> match(TableDef const&, Key const&);
     ErrorOr<void> insert(Row&);
+    ErrorOr<void> remove(Row&);
     ErrorOr<void> update(Row&);
 
 private:

@@ -1,6 +1,7 @@
 set(SOURCES
     AST/CreateSchema.cpp
     AST/CreateTable.cpp
+    AST/Delete.cpp
     AST/Describe.cpp
     AST/Expression.cpp
     AST/Insert.cpp
