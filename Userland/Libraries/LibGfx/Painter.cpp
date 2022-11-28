@@ -1833,11 +1833,10 @@ void Painter::set_pixel(IntPoint const& p, Color color, bool blend)
     if (!clip_rect().contains(point / scale()))
         return;
     auto& dst = m_target->scanline(point.y())[point.x()];
-    if (!blend) {
+    if (!blend)
         dst = color.value();
-    } else {
+    else if (color.alpha())
         dst = Color::from_argb(dst).blend(color).value();
-    }
 }
 
 Optional<Color> Painter::get_pixel(IntPoint const& p)
