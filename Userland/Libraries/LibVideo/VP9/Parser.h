@@ -99,7 +99,6 @@ private:
 
     /* (6.4) Decode Tiles Syntax */
     DecoderErrorOr<void> decode_tiles(FrameContext&);
-    void clear_above_context(FrameContext&);
     u32 get_tile_offset(u32 tile_num, u32 mis, u32 tile_size_log2);
     DecoderErrorOr<void> decode_tile(TileContext&);
     void clear_left_context(TileContext&);
@@ -145,10 +144,6 @@ private:
     Array<i8, 2> m_previous_loop_filter_mode_deltas;
     bool m_previous_should_use_absolute_segment_base_quantizer;
     Array<Array<SegmentFeature, SEG_LVL_MAX>, MAX_SEGMENTS> m_previous_segmentation_features;
-
-    // FIXME: Move above and left contexts to structs
-    Vector<u8> m_above_partition_context;
-    Vector<u8> m_left_partition_context;
 
     // FIXME: Move these to a struct to store together in one array.
     Gfx::Size<u32> m_ref_frame_size[NUM_REF_FRAMES];

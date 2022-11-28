@@ -254,4 +254,7 @@ using NonZeroTokensView = Array<Span<bool>, 3>;
 using SegmentationPredictionContext = FixedArray<u8>;
 using SegmentationPredictionContextView = Span<u8>;
 
+using PartitionContext = FixedArray<u8>;
+using PartitionContextView = Span<u8>;
+
 }
