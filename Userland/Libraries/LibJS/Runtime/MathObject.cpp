@@ -390,10 +390,23 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::atanh)
 // 21.3.2.21 Math.log1p ( x ), https://tc39.es/ecma262/#sec-math.log1p
 JS_DEFINE_NATIVE_FUNCTION(MathObject::log1p)
 {
-    auto value = TRY(vm.argument(0).to_number(vm)).as_double();
-    if (value < -1)
+    // 1. Let n be ? ToNumber(x).
+    auto number = TRY(vm.argument(0).to_number(vm));
+
+    // 2. If n is NaN, n is +0𝔽, n is -0𝔽, or n is +∞𝔽, return n.
+    if (number.is_nan() || number.is_positive_zero() || number.is_negative_zero() || number.is_positive_infinity())
+        return number;
+
+    // 3. If n is -1𝔽, return -∞𝔽.
+    if (number.as_double() == -1.)
+        return js_negative_infinity();
+
+    // 4. If n < -1𝔽, return NaN.
+    if (number.as_double() < -1.)
         return js_nan();
-    return Value(::log1p(value));
+
+    // 5. Return an implementation-approximated Number value representing the result of the natural logarithm of 1 + ℝ(n).
+    return Value(::log1p(number.as_double()));
 }
 
 // 21.3.2.9 Math.cbrt ( x ), https://tc39.es/ecma262/#sec-math.cbrt
