@@ -714,4 +714,72 @@ ErrorOr<int> LocalSocket::release_fd()
     return fd;
 }
 
+WrappedAKInputStream::WrappedAKInputStream(NonnullOwnPtr<InputStream> stream)
+    : m_stream(move(stream))
+{
+}
+
+ErrorOr<Bytes> WrappedAKInputStream::read(Bytes bytes)
+{
+    auto bytes_read = m_stream->read(bytes);
+
+    if (m_stream->has_any_error())
+        return Error::from_string_literal("Underlying InputStream indicated an error");
+
+    return bytes.slice(0, bytes_read);
+}
+
+ErrorOr<size_t> WrappedAKInputStream::write(ReadonlyBytes)
+{
+    VERIFY_NOT_REACHED();
+}
+
+bool WrappedAKInputStream::is_eof() const
+{
+    return m_stream->unreliable_eof();
+}
+
+bool WrappedAKInputStream::is_open() const
+{
+    return true;
+}
+
+void WrappedAKInputStream::close()
+{
+}
+
+WrappedAKOutputStream::WrappedAKOutputStream(NonnullOwnPtr<OutputStream> stream)
+    : m_stream(move(stream))
+{
+}
+
+ErrorOr<Bytes> WrappedAKOutputStream::read(Bytes)
+{
+    VERIFY_NOT_REACHED();
+}
+
+ErrorOr<size_t> WrappedAKOutputStream::write(ReadonlyBytes bytes)
+{
+    auto bytes_written = m_stream->write(bytes);
+
+    if (m_stream->has_any_error())
+        return Error::from_string_literal("Underlying OutputStream indicated an error");
+
+    return bytes_written;
+}
+
+bool WrappedAKOutputStream::is_eof() const
+{
+    VERIFY_NOT_REACHED();
+}
+
+bool WrappedAKOutputStream::is_open() const
+{
+    return true;
+}
+
+void WrappedAKOutputStream::close()
+{
+}
+
 }
