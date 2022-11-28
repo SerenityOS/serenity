@@ -17,6 +17,7 @@ namespace Video::VP9 {
 
 class Parser;
 
+struct BlockContext;
 struct FrameBlockContext;
 
 struct TokensContext {
@@ -86,7 +87,8 @@ public:
     static ErrorOr<u8> parse_motion_vector_fr(BitStream&, ProbabilityTables const&, SyntaxElementCounter&, u8 component);
     static ErrorOr<bool> parse_motion_vector_hp(BitStream&, ProbabilityTables const&, SyntaxElementCounter&, u8 component, bool use_hp);
 
-    static TokensContext get_tokens_context(bool subsampling_x, bool subsampling_y, u32 rows, u32 columns, Array<Vector<bool>, 3> const& above_nonzero_context, Array<Vector<bool>, 3> const& left_nonzero_context, Array<u8, 1024> token_cache, TransformSize, TransformSet, u8 plane, u32 start_x, u32 start_y, u16 position, bool is_inter, u8 band, u16 coef_index);
+    static TokensContext get_context_for_first_token(BlockContext const& block_context, Array<Vector<bool>, 3> const& above_non_zero_tokens, Array<Vector<bool>, 3> const& left_non_zero_tokens, TransformSize transform_size, u8 plane, u32 sub_block_column, u32 sub_block_row, bool is_inter, u8 band);
+    static TokensContext get_context_for_other_tokens(Array<u8, 1024> token_cache, TransformSize transform_size, TransformSet transform_set, u8 plane, u16 token_position, bool is_inter, u8 band);
     static ErrorOr<bool> parse_more_coefficients(BitStream&, ProbabilityTables const&, SyntaxElementCounter&, TokensContext const& context);
     static ErrorOr<Token> parse_token(BitStream&, ProbabilityTables const&, SyntaxElementCounter&, TokensContext const& context);
 };

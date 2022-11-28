@@ -7,10 +7,12 @@
 
 #include <AK/Function.h>
 
+#include "Context.h"
 #include "Enums.h"
 #include "LookupTables.h"
 #include "Parser.h"
 #include "TreeParser.h"
+#include "Utilities.h"
 
 namespace Video::VP9 {
 
@@ -624,54 +626,62 @@ ErrorOr<bool> TreeParser::parse_motion_vector_hp(BitStream& bit_stream, Probabil
     return value;
 }
 
-TokensContext TreeParser::get_tokens_context(bool subsampling_x, bool subsampling_y, u32 rows, u32 columns, Array<Vector<bool>, 3> const& above_nonzero_context, Array<Vector<bool>, 3> const& left_nonzero_context, Array<u8, 1024> token_cache, TransformSize transform_size, TransformSet transform_set, u8 plane, u32 start_x, u32 start_y, u16 position, bool is_inter, u8 band, u16 coef_index)
+TokensContext TreeParser::get_context_for_first_token(BlockContext const& block_context, Array<Vector<bool>, 3> const& above_non_zero_tokens, Array<Vector<bool>, 3> const& left_non_zero_tokens, TransformSize transform_size, u8 plane, u32 sub_block_column, u32 sub_block_row, bool is_inter, u8 band)
 {
-    u8 context;
-    if (coef_index == 0) {
-        auto sx = plane > 0 ? subsampling_x : false;
-        auto sy = plane > 0 ? subsampling_y : false;
-        auto max_x = (2 * columns) >> sx;
-        auto max_y = (2 * rows) >> sy;
-        u8 numpts = 1 << transform_size;
-        auto x4 = start_x >> 2;
-        auto y4 = start_y >> 2;
-        u32 above = 0;
-        u32 left = 0;
-        for (size_t i = 0; i < numpts; i++) {
-            if (x4 + i < max_x)
-                above |= above_nonzero_context[plane][x4 + i];
-            if (y4 + i < max_y)
-                left |= left_nonzero_context[plane][y4 + i];
+    auto subsampling_x = plane > 0 ? block_context.frame_context.color_config.subsampling_x : false;
+    auto subsampling_y = plane > 0 ? block_context.frame_context.color_config.subsampling_y : false;
+    auto transform_top_in_sub_blocks = (blocks_to_sub_blocks(block_context.row) >> subsampling_y) + sub_block_row;
+    auto transform_left_in_sub_blocks = (blocks_to_sub_blocks(block_context.column) >> subsampling_x) + sub_block_column;
+    u8 transform_size_in_sub_blocks = transform_size_to_sub_blocks(transform_size);
+    bool above_has_non_zero_tokens = false;
+    for (u8 x = 0; x < transform_size_in_sub_blocks && x < above_non_zero_tokens[plane].size() - transform_left_in_sub_blocks; x++) {
+        if (above_non_zero_tokens[plane][transform_left_in_sub_blocks + x]) {
+            above_has_non_zero_tokens = true;
+            break;
         }
-        context = above + left;
-    } else {
-        u32 neighbor_0, neighbor_1;
-        auto n = 4 << transform_size;
-        auto i = position / n;
-        auto j = position % n;
-        auto a = i > 0 ? (i - 1) * n + j : 0;
-        auto a2 = i * n + j - 1;
-        if (i > 0 && j > 0) {
-            if (transform_set == TransformSet { TransformType::DCT, TransformType::ADST }) {
-                neighbor_0 = a;
-                neighbor_1 = a;
-            } else if (transform_set == TransformSet { TransformType::ADST, TransformType::DCT }) {
-                neighbor_0 = a2;
-                neighbor_1 = a2;
-            } else {
-                neighbor_0 = a;
-                neighbor_1 = a2;
-            }
-        } else if (i > 0) {
-            neighbor_0 = a;
-            neighbor_1 = a;
-        } else {
-            neighbor_0 = a2;
-            neighbor_1 = a2;
+    }
+    bool left_has_non_zero_tokens = false;
+    for (u8 y = 0; y < transform_size_in_sub_blocks && y < left_non_zero_tokens[plane].size() - transform_top_in_sub_blocks; y++) {
+        if (left_non_zero_tokens[plane][transform_top_in_sub_blocks + y]) {
+            left_has_non_zero_tokens = true;
+            break;
         }
-        context = (1 + token_cache[neighbor_0] + token_cache[neighbor_1]) >> 1;
     }
 
+    u8 context = above_has_non_zero_tokens + left_has_non_zero_tokens;
+    return TokensContext { transform_size, plane > 0, is_inter, band, context };
+}
+
+TokensContext TreeParser::get_context_for_other_tokens(Array<u8, 1024> token_cache, TransformSize transform_size, TransformSet transform_set, u8 plane, u16 token_position, bool is_inter, u8 band)
+{
+    auto transform_size_in_pixels = sub_blocks_to_pixels(transform_size_to_sub_blocks(transform_size));
+    auto log2_of_transform_size = transform_size + 2;
+    auto pixel_y = token_position >> log2_of_transform_size;
+    auto pixel_x = token_position - (pixel_y << log2_of_transform_size);
+    auto above_token_energy = pixel_y > 0 ? (pixel_y - 1) * transform_size_in_pixels + pixel_x : 0;
+    auto left_token_energy = pixel_y * transform_size_in_pixels + pixel_x - 1;
+
+    u32 neighbor_a, neighbor_b;
+    if (pixel_y > 0 && pixel_x > 0) {
+        if (transform_set == TransformSet { TransformType::DCT, TransformType::ADST }) {
+            neighbor_a = above_token_energy;
+            neighbor_b = above_token_energy;
+        } else if (transform_set == TransformSet { TransformType::ADST, TransformType::DCT }) {
+            neighbor_a = left_token_energy;
+            neighbor_b = left_token_energy;
+        } else {
+            neighbor_a = above_token_energy;
+            neighbor_b = left_token_energy;
+        }
+    } else if (pixel_y > 0) {
+        neighbor_a = above_token_energy;
+        neighbor_b = above_token_energy;
+    } else {
+        neighbor_a = left_token_energy;
+        neighbor_b = left_token_energy;
+    }
+
+    u8 context = (1 + token_cache[neighbor_a] + token_cache[neighbor_b]) >> 1;
     return TokensContext { transform_size, plane > 0, is_inter, band, context };
 }
 
