@@ -41,6 +41,10 @@ public:
     /// is returned once EOF is encountered. The block size determines the size
     /// of newly allocated chunks while reading.
     virtual ErrorOr<ByteBuffer> read_all(size_t block_size = 4096);
+    /// Discards the given number of bytes from the stream.
+    /// Unless specifically overwritten, this just uses read() to read into an
+    /// internal stack-based buffer.
+    virtual ErrorOr<void> discard(size_t discarded_bytes);
 
     virtual bool is_writable() const { return false; }
     /// Tries to write the entire contents of the buffer. It is possible for
@@ -97,6 +101,9 @@ public:
     /// Shrinks or extends the stream to the given size. Returns an errno in
     /// the case of an error.
     virtual ErrorOr<void> truncate(off_t length) = 0;
+    /// Seeks until after the given amount of bytes to be discarded instead of
+    /// reading and discarding everything manually;
+    virtual ErrorOr<void> discard(size_t discarded_bytes) override;
 };
 
 /// The Socket class is the base class for all concrete BSD-style socket
@@ -973,6 +980,7 @@ class WrappedAKInputStream final : public Stream {
 public:
     WrappedAKInputStream(NonnullOwnPtr<InputStream> stream);
     virtual ErrorOr<Bytes> read(Bytes) override;
+    virtual ErrorOr<void> discard(size_t discarded_bytes) override;
     virtual ErrorOr<size_t> write(ReadonlyBytes) override;
     virtual bool is_eof() const override;
     virtual bool is_open() const override;
