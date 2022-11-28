@@ -36,7 +36,7 @@ public:
     static ErrorOr<NonnullOwnPtr<TarInputStream>> construct(NonnullOwnPtr<Core::Stream::Stream>);
     ErrorOr<void> advance();
     bool finished() const { return m_stream->is_eof(); }
-    bool valid() const;
+    ErrorOr<bool> valid() const;
     TarFileHeader const& header() const { return m_header; }
     TarFileStream file_contents();
 
