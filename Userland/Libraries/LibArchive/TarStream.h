@@ -45,6 +45,7 @@ public:
 
 private:
     TarInputStream(NonnullOwnPtr<Core::Stream::Stream>);
+    ErrorOr<void> load_next_header();
 
     TarFileHeader m_header;
     NonnullOwnPtr<Core::Stream::Stream> m_stream;
