@@ -604,7 +604,6 @@ DecoderErrorOr<void> Decoder::predict_intra(u8 plane, u32 x, u32 y, bool have_le
         }
         break;
     case PredictionMode::DcPred: {
-        // FIXME: All indices are set equally below, use memset.
         Intermediate average = 0;
 
         if (have_left && have_above) {
