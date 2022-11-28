@@ -51,16 +51,8 @@ void CookieJar::set_cookie(const URL& url, Web::Cookie::ParsedCookie const& pars
 
 // This is based on https://www.rfc-editor.org/rfc/rfc6265#section-5.3 as store_cookie() below
 // however the whole ParsedCookie->Cookie conversion is skipped.
-void CookieJar::update_cookie(URL const& url, Web::Cookie::Cookie cookie)
+void CookieJar::update_cookie(Web::Cookie::Cookie cookie)
 {
-    auto domain = canonicalize_domain(url);
-    if (!domain.has_value())
-        return;
-
-    // 6. If the canonicalized request-host does not domain-match the domain-attribute: Ignore the cookie entirely and abort these steps.
-    if (!domain_matches(domain.value(), cookie.domain))
-        return;
-
     // 11. If the cookie store contains a cookie with the same name, domain, and path as the newly created cookie:
     CookieStorageKey key { cookie.name, cookie.domain, cookie.path };
 

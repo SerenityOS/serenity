@@ -235,9 +235,9 @@ void WebContentClient::did_set_cookie(AK::URL const& url, Web::Cookie::ParsedCoo
     m_view.notify_server_did_set_cookie({}, url, cookie, static_cast<Web::Cookie::Source>(source));
 }
 
-void WebContentClient::did_update_cookie(AK::URL const& url, Web::Cookie::Cookie const& cookie)
+void WebContentClient::did_update_cookie(Web::Cookie::Cookie const& cookie)
 {
-    m_view.notify_server_did_update_cookie({}, url, cookie);
+    m_view.notify_server_did_update_cookie({}, cookie);
 }
 
 void WebContentClient::did_update_resource_count(i32 count_waiting)

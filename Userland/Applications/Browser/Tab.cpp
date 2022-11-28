@@ -397,9 +397,9 @@ Tab::Tab(BrowserWindow& window)
             on_set_cookie(url, cookie, source);
     };
 
-    view().on_update_cookie = [this](auto& url, auto& cookie) {
+    view().on_update_cookie = [this](auto& cookie) {
         if (on_update_cookie)
-            on_update_cookie(url, cookie);
+            on_update_cookie(cookie);
     };
 
     view().on_get_source = [this](auto& url, auto& source) {
@@ -695,7 +695,7 @@ void Tab::show_storage_inspector()
         m_storage_widget = storage_window->set_main_widget<StorageWidget>();
         m_storage_widget->on_update_cookie = [this](Web::Cookie::Cookie cookie) {
             if (on_update_cookie)
-                on_update_cookie(url(), move(cookie));
+                on_update_cookie(move(cookie));
         };
     }
 

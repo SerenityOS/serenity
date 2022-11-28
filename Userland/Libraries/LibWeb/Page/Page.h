@@ -182,7 +182,7 @@ public:
     virtual Optional<Web::Cookie::Cookie> page_did_request_named_cookie(AK::URL const&, DeprecatedString const&) { return {}; }
     virtual DeprecatedString page_did_request_cookie(const AK::URL&, Cookie::Source) { return {}; }
     virtual void page_did_set_cookie(const AK::URL&, Cookie::ParsedCookie const&, Cookie::Source) { }
-    virtual void page_did_update_cookie(AK::URL const&, Web::Cookie::Cookie) { }
+    virtual void page_did_update_cookie(Web::Cookie::Cookie) { }
     virtual void page_did_update_resource_count(i32) { }
     virtual void page_did_close_browsing_context(HTML::BrowsingContext const&) { }
 

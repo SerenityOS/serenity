@@ -603,8 +603,8 @@ void BrowserWindow::create_new_tab(URL url, bool activate)
         m_cookie_jar.dump_cookies();
     };
 
-    new_tab.on_update_cookie = [this](auto const& url, auto cookie) {
-        m_cookie_jar.update_cookie(url, move(cookie));
+    new_tab.on_update_cookie = [this](auto cookie) {
+        m_cookie_jar.update_cookie(move(cookie));
     };
 
     new_tab.on_get_cookies_entries = [this]() {
