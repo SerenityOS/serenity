@@ -74,6 +74,9 @@ set(SOURCES
     DOM/AbstractRange.cpp
     DOM/Attr.cpp
     DOM/Attr.idl
+    DOM/ARIAMixin.cpp
+    DOM/ARIAMixin.idl
+    DOM/ARIARoleNames.cpp
     DOM/CDATASection.cpp
     DOM/CharacterData.cpp
     DOM/CharacterData.idl

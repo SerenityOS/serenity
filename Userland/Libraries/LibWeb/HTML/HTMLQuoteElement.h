@@ -16,6 +16,8 @@ class HTMLQuoteElement final : public HTMLElement {
 public:
     virtual ~HTMLQuoteElement() override;
 
+    virtual FlyString default_role() const override;
+
 private:
     HTMLQuoteElement(DOM::Document&, DOM::QualifiedName);
 };

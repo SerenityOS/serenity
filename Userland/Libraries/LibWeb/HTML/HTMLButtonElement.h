@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <LibWeb/DOM/ARIARoleNames.h>
 #include <LibWeb/HTML/FormAssociatedElement.h>
 #include <LibWeb/HTML/HTMLElement.h>
 
@@ -52,6 +53,9 @@ public:
     // ^HTMLElement
     // https://html.spec.whatwg.org/multipage/forms.html#category-label
     virtual bool is_labelable() const override { return true; }
+
+    // https://www.w3.org/TR/html-aria/#el-button
+    virtual FlyString default_role() const override { return DOM::ARIARoleNames::button; }
 
 private:
     HTMLButtonElement(DOM::Document&, DOM::QualifiedName);

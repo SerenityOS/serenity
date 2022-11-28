@@ -120,6 +120,8 @@ public:
     // https://html.spec.whatwg.org/multipage/forms.html#category-label
     virtual bool is_labelable() const override { return type_state() != TypeAttributeState::Hidden; }
 
+    virtual FlyString default_role() const override;
+
 private:
     HTMLInputElement(DOM::Document&, DOM::QualifiedName);
 

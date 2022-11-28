@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <LibWeb/DOM/ARIARoleNames.h>
 #include <LibWeb/HTML/HTMLElement.h>
 
 namespace Web::HTML {
@@ -20,6 +21,11 @@ public:
     JS::NonnullGCPtr<DOM::HTMLCollection> rows() const;
     WebIDL::ExceptionOr<JS::NonnullGCPtr<HTMLTableRowElement>> insert_row(long index);
     WebIDL::ExceptionOr<void> delete_row(long index);
+
+    // https://www.w3.org/TR/html-aria/#el-tbody
+    // https://www.w3.org/TR/html-aria/#el-tfoot
+    // https://www.w3.org/TR/html-aria/#el-thead
+    virtual FlyString default_role() const override { return DOM::ARIARoleNames::rowgroup; }
 
 private:
     HTMLTableSectionElement(DOM::Document&, DOM::QualifiedName);

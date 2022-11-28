@@ -50,6 +50,8 @@ private:
     {
         queue_an_element_task(source, move(steps));
     }
+
+    virtual FlyString default_role() const override;
 };
 
 }

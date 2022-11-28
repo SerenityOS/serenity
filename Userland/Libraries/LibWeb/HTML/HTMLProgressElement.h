@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <LibWeb/DOM/ARIARoleNames.h>
 #include <LibWeb/HTML/HTMLElement.h>
 
 namespace Web::HTML {
@@ -31,6 +32,9 @@ public:
     virtual bool is_labelable() const override { return true; }
 
     bool using_system_appearance() const;
+
+    // https://www.w3.org/TR/html-aria/#el-progress
+    virtual FlyString default_role() const override { return DOM::ARIARoleNames::progressbar; }
 
 private:
     HTMLProgressElement(DOM::Document&, DOM::QualifiedName);

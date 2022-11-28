@@ -30,6 +30,8 @@ public:
 
     bool disabled() const;
 
+    virtual FlyString default_role() const override;
+
 private:
     friend class Bindings::OptionConstructor;
     friend class HTMLSelectElement;

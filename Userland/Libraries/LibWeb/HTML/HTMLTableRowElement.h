@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <LibWeb/DOM/ARIARoleNames.h>
 #include <LibWeb/HTML/HTMLElement.h>
 
 namespace Web::HTML {
@@ -22,6 +23,9 @@ public:
     int section_row_index() const;
     WebIDL::ExceptionOr<JS::NonnullGCPtr<HTMLTableCellElement>> insert_cell(i32 index);
     WebIDL::ExceptionOr<void> delete_cell(i32 index);
+
+    // https://www.w3.org/TR/html-aria/#el-tr
+    virtual FlyString default_role() const override { return DOM::ARIARoleNames::row; }
 
 private:
     HTMLTableRowElement(DOM::Document&, DOM::QualifiedName);
