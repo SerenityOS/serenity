@@ -92,7 +92,7 @@ private:
     virtual Optional<Web::Cookie::Cookie> page_did_request_named_cookie(URL const&, DeprecatedString const&) override;
     virtual DeprecatedString page_did_request_cookie(const URL&, Web::Cookie::Source) override;
     virtual void page_did_set_cookie(const URL&, Web::Cookie::ParsedCookie const&, Web::Cookie::Source) override;
-    virtual void page_did_update_cookie(URL const&, Web::Cookie::Cookie) override;
+    virtual void page_did_update_cookie(Web::Cookie::Cookie) override;
     virtual void page_did_update_resource_count(i32) override;
     virtual void request_file(NonnullRefPtr<Web::FileRequest>&) override;
 

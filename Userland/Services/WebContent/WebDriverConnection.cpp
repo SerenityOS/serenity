@@ -1752,7 +1752,7 @@ void WebDriverConnection::delete_cookies(Optional<StringView> const& name)
         if (!name.has_value() || name.value() == cookie.name) {
             // Set the cookie expiry time to a Unix timestamp in the past.
             cookie.expiry_time = Core::DateTime::from_timestamp(0);
-            m_page_client.page_did_update_cookie(document->url(), move(cookie));
+            m_page_client.page_did_update_cookie(move(cookie));
         }
         // -> Otherwise
         //    Do nothing.
