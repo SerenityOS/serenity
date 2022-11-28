@@ -10,7 +10,6 @@ add_subdirectory(LanguageClients)
 
 compile_gml(Dialogs/NewProjectDialog.gml Dialogs/NewProjectDialogGML.h new_project_dialog_gml)
 compile_gml(Dialogs/Git/GitCommitDialog.gml Dialogs/Git/GitCommitDialogGML.h git_commit_dialog_gml)
-compile_gml(FindWidget.gml FindWidgetGML.h find_widget_gml)
 
 set(SOURCES
     CodeDocument.cpp
@@ -28,7 +27,6 @@ set(SOURCES
     Editor.cpp
     EditorWrapper.cpp
     FindInFilesWidget.cpp
-    FindWidget.cpp
     Git/DiffViewer.cpp
     Git/GitFilesModel.cpp
     Git/GitFilesView.cpp
@@ -54,7 +52,6 @@ set(SOURCES
 set(GENERATED_SOURCES
     Dialogs/Git/GitCommitDialogGML.h
     Dialogs/NewProjectDialogGML.h
-    FindWidgetGML.h
 )
 
 serenity_app(HackStudio ICON app-hack-studio)
