@@ -50,6 +50,11 @@ inline BlockSubsize get_subsampled_block_size(BlockSubsize size, bool subsamplin
     return ss_size_lookup[size < Block_8x8 ? Block_8x8 : size][subsampling_x][subsampling_y];
 }
 
+inline Gfx::Size<u8> block_size_to_blocks(BlockSubsize size)
+{
+    return Gfx::Size<u8>(num_8x8_blocks_wide_lookup[size], num_8x8_blocks_high_lookup[size]);
+}
+
 inline Gfx::Size<u8> block_size_to_sub_blocks(BlockSubsize size)
 {
     return Gfx::Size<u8>(num_4x4_blocks_wide_lookup[size], num_4x4_blocks_high_lookup[size]);

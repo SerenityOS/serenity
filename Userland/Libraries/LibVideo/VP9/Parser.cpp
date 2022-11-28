@@ -851,6 +851,7 @@ DecoderErrorOr<void> Parser::decode_tiles(FrameContext& frame_context)
 
     clear_above_context(frame_context);
     NonZeroTokens above_non_zero_tokens = DECODER_TRY_ALLOC(create_non_zero_tokens(blocks_to_sub_blocks(frame_context.columns()), frame_context.color_config.subsampling_x));
+    SegmentationPredictionContext above_segmentation_ids = DECODER_TRY_ALLOC(SegmentationPredictionContext::try_create(frame_context.columns()));
 
     // FIXME: To implement tiled decoding, we'll need to pre-parse the tile positions and sizes into a 2D vector of ReadonlyBytes,
     //        then run through each column of tiles in top to bottom order afterward. Each column can be sent to a worker thread
@@ -871,8 +872,9 @@ DecoderErrorOr<void> Parser::decode_tiles(FrameContext& frame_context)
             auto columns_end = get_tile_offset(tile_col + 1, frame_context.columns(), log2_dimensions.width());
 
             auto above_non_zero_tokens_view = create_non_zero_tokens_view(above_non_zero_tokens, blocks_to_sub_blocks(columns_start), blocks_to_sub_blocks(columns_end - columns_start), frame_context.color_config.subsampling_x);
+            auto above_segmentation_ids_for_tile = safe_slice(above_segmentation_ids.span(), columns_start, columns_end - columns_start);
 
-            auto tile_context = DECODER_TRY_ALLOC(TileContext::try_create(frame_context, rows_start, rows_end, columns_start, columns_end, above_non_zero_tokens_view));
+            auto tile_context = DECODER_TRY_ALLOC(TileContext::try_create(frame_context, rows_start, rows_end, columns_start, columns_end, above_non_zero_tokens_view, above_segmentation_ids_for_tile));
 
             TRY_READ(m_bit_stream->init_bool(tile_size));
             TRY(decode_tile(tile_context));
@@ -900,7 +902,6 @@ void Parser::clear_context(Vector<Vector<T>>& context, size_t outer_size, size_t
 
 void Parser::clear_above_context(FrameContext& frame_context)
 {
-    clear_context(m_above_seg_pred_context, frame_context.columns());
     clear_context(m_above_partition_context, frame_context.superblock_columns() * 8);
 }
 
@@ -926,7 +927,7 @@ void Parser::clear_left_context(TileContext& tile_context)
 {
     for (auto& context_for_plane : tile_context.left_non_zero_tokens)
         context_for_plane.fill_with(false);
-    clear_context(m_left_seg_pred_context, tile_context.frame_context.rows());
+    tile_context.left_segmentation_ids.fill_with(0);
     clear_context(m_left_partition_context, tile_context.frame_context.superblock_rows() * 8);
 }
 
@@ -1095,24 +1096,20 @@ DecoderErrorOr<void> Parser::set_inter_segment_id(BlockContext& block_context)
         return {};
     }
 
-    auto seg_id_predicted = TRY_READ(TreeParser::parse_segment_id_predicted(*m_bit_stream, block_context.frame_context.predicted_segment_id_tree_probabilities, m_left_seg_pred_context[block_context.row], m_above_seg_pred_context[block_context.column]));
+    auto above_segmentation_id = block_context.tile_context.above_segmentation_ids[block_context.row - block_context.tile_context.rows_start];
+    auto left_segmentation_id = block_context.tile_context.left_segmentation_ids[block_context.column - block_context.tile_context.columns_start];
+    auto seg_id_predicted = TRY_READ(TreeParser::parse_segment_id_predicted(*m_bit_stream, block_context.frame_context.predicted_segment_id_tree_probabilities, above_segmentation_id, left_segmentation_id));
     if (seg_id_predicted)
         block_context.segment_id = predicted_segment_id;
     else
         block_context.segment_id = TRY_READ(TreeParser::parse_segment_id(*m_bit_stream, block_context.frame_context.full_segment_id_tree_probabilities));
 
-    for (size_t i = 0; i < num_8x8_blocks_wide_lookup[block_context.size]; i++) {
-        auto index = block_context.column + i;
-        // (7.4.1) AboveSegPredContext[ i ] only needs to be set to 0 for i = 0..MiCols-1.
-        if (index < m_above_seg_pred_context.size())
-            m_above_seg_pred_context[index] = seg_id_predicted;
-    }
-    for (size_t i = 0; i < num_8x8_blocks_high_lookup[block_context.size]; i++) {
-        auto index = block_context.row + i;
-        // (7.4.1) LeftSegPredContext[ i ] only needs to be set to 0 for i = 0..MiRows-1.
-        if (index < m_above_seg_pred_context.size())
-            m_left_seg_pred_context[block_context.row + i] = seg_id_predicted;
-    }
+    // (7.4.1) AboveSegPredContext[ i ] only needs to be set to 0 for i = 0..MiCols-1.
+    // This is taken care of by the slicing in BlockContext.
+    block_context.above_segmentation_ids.fill(seg_id_predicted);
+    // (7.4.1) LeftSegPredContext[ i ] only needs to be set to 0 for i = 0..MiRows-1.
+    // This is taken care of by the slicing in BlockContext.
+    block_context.left_segmentation_ids.fill(seg_id_predicted);
     return {};
 }
 
