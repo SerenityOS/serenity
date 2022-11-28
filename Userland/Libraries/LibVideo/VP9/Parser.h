@@ -92,7 +92,6 @@ private:
 
     /* (6.4) Decode Tiles Syntax */
     DecoderErrorOr<void> decode_tiles(FrameContext&);
-    u32 get_tile_offset(u32 tile_num, u32 mis, u32 tile_size_log2);
     DecoderErrorOr<void> decode_tile(TileContext&);
     void clear_left_context(TileContext&);
     DecoderErrorOr<void> decode_partition(TileContext&, u32 row, u32 column, BlockSubsize subsize);
