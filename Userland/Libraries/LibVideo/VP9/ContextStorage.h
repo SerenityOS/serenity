@@ -251,4 +251,7 @@ using BlockMotionVectorCandidates = ReferencePair<BlockMotionVectorCandidateSet>
 using NonZeroTokens = Array<FixedArray<bool>, 3>;
 using NonZeroTokensView = Array<Span<bool>, 3>;
 
+using SegmentationPredictionContext = FixedArray<u8>;
+using SegmentationPredictionContextView = Span<u8>;
+
 }

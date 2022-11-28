@@ -147,8 +147,6 @@ private:
     Array<Array<SegmentFeature, SEG_LVL_MAX>, MAX_SEGMENTS> m_previous_segmentation_features;
 
     // FIXME: Move above and left contexts to structs
-    Vector<u8> m_above_seg_pred_context;
-    Vector<u8> m_left_seg_pred_context;
     Vector<u8> m_above_partition_context;
     Vector<u8> m_left_partition_context;
 

@@ -175,7 +175,7 @@ static NonZeroTokensView create_non_zero_tokens_view(NonZeroTokens& non_zero_tok
 
 struct TileContext {
 public:
-    static ErrorOr<TileContext> try_create(FrameContext& frame_context, u32 rows_start, u32 rows_end, u32 columns_start, u32 columns_end, NonZeroTokensView above_non_zero_tokens)
+    static ErrorOr<TileContext> try_create(FrameContext& frame_context, u32 rows_start, u32 rows_end, u32 columns_start, u32 columns_end, NonZeroTokensView above_non_zero_tokens, SegmentationPredictionContextView above_segmentation_ids)
     {
         auto context_view = frame_context.m_block_contexts.view(rows_start, columns_start, rows_end - rows_start, columns_end - columns_start);
 
@@ -187,7 +187,9 @@ public:
             columns_end,
             context_view,
             above_non_zero_tokens,
+            above_segmentation_ids,
             TRY(create_non_zero_tokens(blocks_to_sub_blocks(rows_end - rows_start), frame_context.color_config.subsampling_y)),
+            TRY(SegmentationPredictionContext::try_create(rows_end - rows_start)),
         };
     }
 
@@ -203,7 +205,9 @@ public:
     Vector2DView<FrameBlockContext> block_contexts_view;
 
     NonZeroTokensView above_non_zero_tokens;
+    SegmentationPredictionContextView above_segmentation_ids;
     NonZeroTokens left_non_zero_tokens;
+    SegmentationPredictionContext left_segmentation_ids;
 };
 
 struct BlockContext {
@@ -215,6 +219,7 @@ struct BlockContext {
             min<u32>(num_8x8_blocks_high_lookup[size], tile_context.frame_context.rows() - row),
             min<u32>(num_8x8_blocks_wide_lookup[size], tile_context.frame_context.columns() - column));
 
+        auto size_in_blocks = block_size_to_blocks(size);
         auto size_in_sub_blocks = block_size_to_sub_blocks(get_subsampled_block_size(size, false, false));
 
         return BlockContext {
@@ -225,7 +230,9 @@ struct BlockContext {
             .size = size,
             .contexts_view = contexts_view,
             .above_non_zero_tokens = create_non_zero_tokens_view(tile_context.above_non_zero_tokens, blocks_to_sub_blocks(column - tile_context.columns_start), size_in_sub_blocks.width(), tile_context.frame_context.color_config.subsampling_x),
+            .above_segmentation_ids = safe_slice(tile_context.above_segmentation_ids, column - tile_context.columns_start, size_in_blocks.width()),
             .left_non_zero_tokens = create_non_zero_tokens_view(tile_context.left_non_zero_tokens, blocks_to_sub_blocks(row - tile_context.rows_start), size_in_sub_blocks.height(), tile_context.frame_context.color_config.subsampling_y),
+            .left_segmentation_ids = safe_slice(tile_context.left_segmentation_ids.span(), row - tile_context.rows_start, size_in_blocks.height()),
         };
     }
 
@@ -266,7 +273,9 @@ struct BlockContext {
     Array<u8, 4> mode_context {};
 
     NonZeroTokensView above_non_zero_tokens;
+    SegmentationPredictionContextView above_segmentation_ids;
     NonZeroTokensView left_non_zero_tokens;
+    SegmentationPredictionContextView left_segmentation_ids;
 };
 
 struct BlockMotionVectorCandidateSet {
