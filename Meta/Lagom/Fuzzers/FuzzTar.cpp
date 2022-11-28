@@ -25,9 +25,6 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* data, size_t size)
 
     auto tar_stream = tar_stream_or_error.release_value();
 
-    if (!tar_stream->valid())
-        return 0;
-
     while (!tar_stream->finished()) {
         auto const& header = tar_stream->header();
 

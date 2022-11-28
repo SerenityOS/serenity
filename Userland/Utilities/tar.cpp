@@ -88,11 +88,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }());
 
         auto tar_stream = TRY(Archive::TarInputStream::construct(move(input_stream)));
-        // FIXME: implement ErrorOr<TarInputStream>?
-        if (!tar_stream->valid()) {
-            warnln("the provided file is not a well-formatted ustar file");
-            return 1;
-        }
 
         HashMap<String, String> global_overrides;
         HashMap<String, String> local_overrides;

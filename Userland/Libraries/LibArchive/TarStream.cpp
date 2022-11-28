@@ -56,13 +56,7 @@ ErrorOr<NonnullOwnPtr<TarInputStream>> TarInputStream::construct(NonnullOwnPtr<C
 {
     auto tar_stream = TRY(adopt_nonnull_own_or_enomem(new (nothrow) TarInputStream(move(stream))));
 
-    // Try and read the header.
-    auto header_span = TRY(tar_stream->m_stream->read(Bytes(&tar_stream->m_header, sizeof(m_header))));
-    if (header_span.size() != sizeof(m_header))
-        return Error::from_string_literal("Failed to read the entire header");
-
-    // Discard the rest of the block.
-    TRY(tar_stream->m_stream->discard(block_size - sizeof(TarFileHeader)));
+    TRY(tar_stream->load_next_header());
 
     return tar_stream;
 }
@@ -89,7 +83,13 @@ ErrorOr<void> TarInputStream::advance()
     TRY(m_stream->discard(block_ceiling(file_size) - m_file_offset));
     m_file_offset = 0;
 
-    // FIXME: This is not unlike the initial initialization. Maybe we should merge those two.
+    TRY(load_next_header());
+
+    return {};
+}
+
+ErrorOr<void> TarInputStream::load_next_header()
+{
     auto header_span = TRY(m_stream->read(Bytes(&m_header, sizeof(m_header))));
     if (header_span.size() != sizeof(m_header))
         return Error::from_string_literal("Failed to read the entire header");
