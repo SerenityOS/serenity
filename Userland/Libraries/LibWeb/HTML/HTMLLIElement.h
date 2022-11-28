@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <LibWeb/DOM/ARIARoleNames.h>
 #include <LibWeb/HTML/HTMLElement.h>
 
 namespace Web::HTML {
@@ -15,6 +16,9 @@ class HTMLLIElement final : public HTMLElement {
 
 public:
     virtual ~HTMLLIElement() override;
+
+    // https://www.w3.org/TR/html-aria/#el-li
+    virtual FlyString default_role() const override { return DOM::ARIARoleNames::listitem; };
 
 private:
     HTMLLIElement(DOM::Document&, DOM::QualifiedName);

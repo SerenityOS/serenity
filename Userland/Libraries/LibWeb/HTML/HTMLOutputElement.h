@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <LibWeb/DOM/ARIARoleNames.h>
 #include <LibWeb/HTML/FormAssociatedElement.h>
 #include <LibWeb/HTML/HTMLElement.h>
 
@@ -42,6 +43,9 @@ public:
     virtual bool is_labelable() const override { return true; }
 
     virtual void reset_algorithm() override;
+
+    // https://www.w3.org/TR/html-aria/#el-output
+    virtual FlyString default_role() const override { return DOM::ARIARoleNames::status; }
 
 private:
     HTMLOutputElement(DOM::Document&, DOM::QualifiedName);

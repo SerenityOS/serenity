@@ -156,4 +156,18 @@ DeprecatedString const& HTMLSelectElement::type() const
     return select_multiple;
 }
 
+FlyString HTMLSelectElement::default_role() const
+{
+    // https://www.w3.org/TR/html-aria/#el-select-multiple-or-size-greater-1
+    if (has_attribute("multiple"))
+        return DOM::ARIARoleNames::listbox;
+    if (has_attribute("size")) {
+        auto size_attribute = attribute("size").to_int();
+        if (size_attribute.has_value() && size_attribute.value() > 1)
+            return DOM::ARIARoleNames::listbox;
+    }
+    // https://www.w3.org/TR/html-aria/#el-select
+    return DOM::ARIARoleNames::combobox;
+}
+
 }

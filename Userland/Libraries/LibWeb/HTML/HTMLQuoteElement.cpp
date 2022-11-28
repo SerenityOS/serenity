@@ -4,7 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Assertions.h>
 #include <LibWeb/Bindings/Intrinsics.h>
+#include <LibWeb/DOM/ARIARoleNames.h>
 #include <LibWeb/HTML/HTMLQuoteElement.h>
 
 namespace Web::HTML {
@@ -16,5 +18,16 @@ HTMLQuoteElement::HTMLQuoteElement(DOM::Document& document, DOM::QualifiedName q
 }
 
 HTMLQuoteElement::~HTMLQuoteElement() = default;
+
+FlyString HTMLQuoteElement::default_role() const
+{
+    // https://www.w3.org/TR/html-aria/#el-blockquote
+    if (local_name() == TagNames::blockquote)
+        return DOM::ARIARoleNames::blockquote;
+    // https://www.w3.org/TR/html-aria/#el-q
+    if (local_name() == TagNames::q)
+        return DOM::ARIARoleNames::generic;
+    VERIFY_NOT_REACHED();
+}
 
 }
