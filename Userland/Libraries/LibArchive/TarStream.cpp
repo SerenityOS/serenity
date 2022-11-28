@@ -26,10 +26,10 @@ ErrorOr<Bytes> TarFileStream::read(Bytes bytes)
 
     auto to_read = min(bytes.size(), header_size - m_tar_stream.m_file_offset);
 
-    auto nread = m_tar_stream.m_stream.read(bytes.trim(to_read));
-    m_tar_stream.m_file_offset += nread;
+    auto slice = TRY(m_tar_stream.m_stream->read(bytes.trim(to_read)));
+    m_tar_stream.m_file_offset += slice.size();
 
-    return bytes.slice(0, nread);
+    return slice;
 }
 
 bool TarFileStream::is_eof() const
@@ -42,7 +42,7 @@ bool TarFileStream::is_eof() const
         return true;
     auto header_size = header_size_or_error.release_value();
 
-    return m_tar_stream.m_stream.unreliable_eof()
+    return m_tar_stream.m_stream->is_eof()
         || m_tar_stream.m_file_offset >= header_size;
 }
 
@@ -52,14 +52,24 @@ ErrorOr<size_t> TarFileStream::write(ReadonlyBytes)
     VERIFY_NOT_REACHED();
 }
 
-TarInputStream::TarInputStream(InputStream& stream)
-    : m_stream(stream)
+ErrorOr<NonnullOwnPtr<TarInputStream>> TarInputStream::construct(NonnullOwnPtr<Core::Stream::Stream> stream)
 {
-    if (!m_stream.read_or_error(Bytes(&m_header, sizeof(m_header))) || !m_stream.discard_or_error(block_size - sizeof(TarFileHeader))) {
-        m_finished = true;
-        m_stream.handle_any_error(); // clear out errors so we don't assert
-        return;
-    }
+    auto tar_stream = TRY(adopt_nonnull_own_or_enomem(new (nothrow) TarInputStream(move(stream))));
+
+    // Try and read the header.
+    auto header_span = TRY(tar_stream->m_stream->read(Bytes(&tar_stream->m_header, sizeof(m_header))));
+    if (header_span.size() != sizeof(m_header))
+        return Error::from_string_literal("Failed to read the entire header");
+
+    // Discard the rest of the block.
+    TRY(tar_stream->m_stream->discard(block_size - sizeof(TarFileHeader)));
+
+    return tar_stream;
+}
+
+TarInputStream::TarInputStream(NonnullOwnPtr<Core::Stream::Stream> stream)
+    : m_stream(move(stream))
+{
 }
 
 static constexpr unsigned long block_ceiling(unsigned long offset)
@@ -69,26 +79,27 @@ static constexpr unsigned long block_ceiling(unsigned long offset)
 
 ErrorOr<void> TarInputStream::advance()
 {
-    if (m_finished)
-        return Error::from_string_literal("Attempted to read a finished stream");
+    if (finished())
+        return Error::from_string_literal("Attempted to advance a finished stream");
 
     m_generation++;
 
-    auto header_size = TRY(m_header.size());
-    VERIFY(m_stream.discard_or_error(block_ceiling(header_size) - m_file_offset));
+    // Discard the pending bytes of the current entry.
+    auto file_size = TRY(m_header.size());
+    TRY(m_stream->discard(block_ceiling(file_size) - m_file_offset));
     m_file_offset = 0;
 
-    if (!m_stream.read_or_error(Bytes(&m_header, sizeof(m_header)))) {
-        m_finished = true;
-        m_stream.handle_any_error(); // clear out errors so we don't assert
-        return Error::from_string_literal("Failed to read the header");
-    }
-    if (!valid()) {
-        m_finished = true;
-        return {};
-    }
+    // FIXME: This is not unlike the initial initialization. Maybe we should merge those two.
+    auto header_span = TRY(m_stream->read(Bytes(&m_header, sizeof(m_header))));
+    if (header_span.size() != sizeof(m_header))
+        return Error::from_string_literal("Failed to read the entire header");
 
-    VERIFY(m_stream.discard_or_error(block_size - sizeof(TarFileHeader)));
+    if (!valid())
+        return Error::from_string_literal("Header is not valid");
+
+    // Discard the rest of the header block.
+    TRY(m_stream->discard(block_size - sizeof(TarFileHeader)));
+
     return {};
 }
 
@@ -111,7 +122,7 @@ bool TarInputStream::valid() const
 
 TarFileStream TarInputStream::file_contents()
 {
-    VERIFY(!m_finished);
+    VERIFY(!finished());
     return TarFileStream(*this);
 }
 

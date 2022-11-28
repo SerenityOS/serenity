@@ -33,9 +33,9 @@ private:
 
 class TarInputStream {
 public:
-    TarInputStream(InputStream&);
+    static ErrorOr<NonnullOwnPtr<TarInputStream>> construct(NonnullOwnPtr<Core::Stream::Stream>);
     ErrorOr<void> advance();
-    bool finished() const { return m_finished; }
+    bool finished() const { return m_stream->is_eof(); }
     bool valid() const;
     TarFileHeader const& header() const { return m_header; }
     TarFileStream file_contents();
@@ -44,11 +44,12 @@ public:
     ErrorOr<void> for_each_extended_header(F func);
 
 private:
+    TarInputStream(NonnullOwnPtr<Core::Stream::Stream>);
+
     TarFileHeader m_header;
-    InputStream& m_stream;
+    NonnullOwnPtr<Core::Stream::Stream> m_stream;
     unsigned long m_file_offset { 0 };
     int m_generation { 0 };
-    bool m_finished { false };
 
     friend class TarFileStream;
 };
