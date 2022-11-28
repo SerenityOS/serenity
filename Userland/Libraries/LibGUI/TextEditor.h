@@ -440,6 +440,7 @@ private:
 
     Optional<size_t> m_search_result_index;
     Vector<GUI::TextRange> m_search_results;
+    RefPtr<IncrementalSearchBanner> m_search_banner;
 };
 
 }
