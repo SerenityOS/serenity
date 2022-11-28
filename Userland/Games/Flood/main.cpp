@@ -132,10 +132,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (!main_widget.load_from_gml(flood_window_gml))
         VERIFY_NOT_REACHED();
 
-    auto colors_or_error { get_color_scheme_from_string(color_scheme) };
-    if (colors_or_error.is_error())
-        return colors_or_error.release_error();
-    auto colors = colors_or_error.release_value();
+    auto colors = TRY(get_color_scheme_from_string(color_scheme));
     auto background_color = colors.take_last();
 
     auto board_widget = TRY(main_widget.find_descendant_of_type_named<GUI::Widget>("board_widget_container")->try_add<BoardWidget>(board_rows, board_columns, move(colors), move(background_color)));
@@ -176,23 +173,19 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         Config::write_i32("Flood"sv, ""sv, "board_columns"sv, board_columns);
         Config::write_string("Flood"sv, ""sv, "color_scheme"sv, color_scheme);
 
+        auto colors = MUST(get_color_scheme_from_string(color_scheme));
+        board_widget->set_background_color(colors.take_last());
+        board_widget->board()->set_color_scheme(move(colors));
+
         GUI::MessageBox::show(settings_dialog, "New settings have been saved and will be applied on a new game"sv, "Settings Changed Successfully"sv, GUI::MessageBox::Type::Information);
     };
 
     auto start_a_new_game = [&] {
         board_widget->resize_board(board_rows, board_columns);
         board_widget->board()->reset();
-        auto colors_or_error = get_color_scheme_from_string(color_scheme);
-        if (!colors_or_error.is_error()) {
-            auto colors = colors_or_error.release_value();
-            board_widget->set_background_color(colors.take_last());
-            board_widget->board()->set_color_scheme(move(colors));
-            board_widget->board()->randomize();
-            ai_moves = get_number_of_moves_from_ai(*board_widget->board());
-            moves_made = 0;
-        } else {
-            GUI::MessageBox::show(window, "The chosen color scheme could not be set"sv, "Choose another one and try again"sv, GUI::MessageBox::Type::Error);
-        }
+        board_widget->board()->randomize();
+        ai_moves = get_number_of_moves_from_ai(*board_widget->board());
+        moves_made = 0;
         update();
         window->update();
     };
