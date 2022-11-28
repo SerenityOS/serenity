@@ -73,6 +73,22 @@ ErrorOr<ByteBuffer> Stream::read_all_impl(size_t block_size, size_t expected_fil
     return data;
 }
 
+ErrorOr<void> Stream::discard(size_t discarded_bytes)
+{
+    // Note: This was chosen arbitrarily.
+    // Note: This can't be PAGE_SIZE because it is defined to sysconf() on Lagom.
+    constexpr size_t continuous_read_size = 4096;
+
+    Array<u8, continuous_read_size> buffer;
+
+    while (discarded_bytes > 0) {
+        auto slice = TRY(read(buffer.span().slice(0, min(discarded_bytes, continuous_read_size))));
+        discarded_bytes -= slice.size();
+    }
+
+    return {};
+}
+
 bool Stream::write_or_error(ReadonlyBytes buffer)
 {
     VERIFY(buffer.size());
@@ -118,6 +134,12 @@ ErrorOr<off_t> SeekableStream::size()
 
     TRY(seek(original_position, SeekMode::SetPosition));
     return seek_result.value();
+}
+
+ErrorOr<void> SeekableStream::discard(size_t discarded_bytes)
+{
+    TRY(seek(discarded_bytes, SeekMode::FromCurrentPosition));
+    return {};
 }
 
 ErrorOr<NonnullOwnPtr<File>> File::open(StringView filename, OpenMode mode, mode_t permissions)
@@ -727,6 +749,14 @@ ErrorOr<Bytes> WrappedAKInputStream::read(Bytes bytes)
         return Error::from_string_literal("Underlying InputStream indicated an error");
 
     return bytes.slice(0, bytes_read);
+}
+
+ErrorOr<void> WrappedAKInputStream::discard(size_t discarded_bytes)
+{
+    if (!m_stream->discard_or_error(discarded_bytes))
+        return Error::from_string_literal("Underlying InputStream indicated an error");
+
+    return {};
 }
 
 ErrorOr<size_t> WrappedAKInputStream::write(ReadonlyBytes)
