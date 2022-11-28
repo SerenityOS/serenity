@@ -34,7 +34,6 @@ for i in ( \
             (nl 1) \
             (ntpquery 1) \
             (passwd 1) \
-            (profile 1) \
             (readelf 1) \
             (shot 1) \
             (sql 1) \

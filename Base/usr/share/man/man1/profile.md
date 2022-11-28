@@ -1,14 +1,18 @@
 ## Name
 
-profile
+profile - Process or system profiler
 
 ## Synopsis
 
-```sh
-$ profile [-p PID] [-a] [-e] [-d] [-f] [-w] [-c command] [-t event_type]
+```**sh
+$ profile [-p PID] [-a] [-e] [-d] [-f] [-w] [-t event_type] [COMMAND_TO_PROFILE]
 ```
 
-## Options:
+## Description
+
+`profile` records profiling information that can then be read with `ProfileViewer`.
+
+## Options
 
 * `-p PID`: Target PID
 * `-a`: Profile all processes (super-user only), result at /sys/kernel/profile
@@ -16,9 +20,25 @@ $ profile [-p PID] [-a] [-e] [-d] [-f] [-w] [-c command] [-t event_type]
 * `-d`: Disable
 * `-f`: Free the profiling buffer for the associated process(es).
 * `-w`: Enable profiling and wait for user input to disable.
-* `-c command`: Command
 * `-t event_type`: Enable tracking specific event type
 
 Event type can be one of: sample, context_switch, page_fault, syscall, read, kmalloc and kfree.
 
-<!-- Auto-generated through ArgsParser -->
+## Examples
+
+```sh
+# Enable whole-system profiling
+$ profile -ae
+# ...then, to stop
+$ profile -ad
+
+# Profile a running process, with PID 42
+$ profile -p 42
+
+# Profile syscalls made by echo
+$ profile -t syscall -- echo "Hello friends!"
+```
+
+## See also
+
+* [`Profiler`(1)](help://man/1/Profiler) GUI for viewing profiling data produced by `profile`.
