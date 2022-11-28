@@ -12,6 +12,10 @@
 #include "Decoder.h"
 #include "Utilities.h"
 
+#if defined(AK_COMPILER_GCC)
+#    pragma GCC optimize("O3")
+#endif
+
 namespace Video::VP9 {
 
 Decoder::Decoder()
