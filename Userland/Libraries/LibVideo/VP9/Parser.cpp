@@ -1391,7 +1391,7 @@ DecoderErrorOr<bool> Parser::residual(BlockContext& block_context, bool has_bloc
                         TRY(m_decoder.predict_intra(plane, block_context, transform_x_in_px, transform_y_in_px, has_block_left || x > 0, has_block_above || y > 0, (x + transform_size_in_sub_blocks) < block_size_in_sub_blocks.width(), transform_size, sub_block_index));
                     if (!block_context.should_skip_residuals) {
                         auto transform_set = select_transform_type(block_context, plane, transform_size, sub_block_index);
-                        sub_block_had_non_zero_tokens = TRY(tokens(block_context, plane, transform_x_in_px, transform_y_in_px, transform_size, transform_set, token_cache));
+                        sub_block_had_non_zero_tokens = TRY(tokens(block_context, plane, x, y, transform_size, transform_set, token_cache));
                         block_had_non_zero_tokens = block_had_non_zero_tokens || sub_block_had_non_zero_tokens;
                         TRY(m_decoder.reconstruct(plane, block_context, transform_x_in_px, transform_y_in_px, transform_size, transform_set));
                     }
@@ -1445,7 +1445,7 @@ static u16 const* get_scan(TransformSize transform_size, TransformSet transform_
     return default_scan_32x32;
 }
 
-DecoderErrorOr<bool> Parser::tokens(BlockContext& block_context, size_t plane, u32 start_x, u32 start_y, TransformSize transform_size, TransformSet transform_set, Array<u8, 1024> token_cache)
+DecoderErrorOr<bool> Parser::tokens(BlockContext& block_context, size_t plane, u32 sub_block_column, u32 sub_block_row, TransformSize transform_size, TransformSet transform_set, Array<u8, 1024> token_cache)
 {
     block_context.residual_tokens.fill(0);
 
@@ -1453,17 +1453,21 @@ DecoderErrorOr<bool> Parser::tokens(BlockContext& block_context, size_t plane, u
 
     auto check_for_more_coefficients = true;
     u16 coef_index = 0;
-    u16 segment_eob = 16 << (transform_size << 1);
-    for (; coef_index < segment_eob; coef_index++) {
-        auto pos = scan[coef_index];
+    u16 transform_pixel_count = 16 << (transform_size << 1);
+    for (; coef_index < transform_pixel_count; coef_index++) {
         auto band = (transform_size == Transform_4x4) ? coefband_4x4[coef_index] : coefband_8x8plus[coef_index];
-        auto tokens_context = TreeParser::get_tokens_context(block_context.frame_context.color_config.subsampling_x, block_context.frame_context.color_config.subsampling_y, block_context.frame_context.rows(), block_context.frame_context.columns(), m_above_nonzero_context, m_left_nonzero_context, token_cache, transform_size, transform_set, plane, start_x, start_y, pos, block_context.is_inter_predicted(), band, coef_index);
+        auto token_position = scan[coef_index];
+        TokensContext tokens_context;
+        if (coef_index == 0)
+            tokens_context = TreeParser::get_context_for_first_token(block_context, m_above_nonzero_context, m_left_nonzero_context, transform_size, plane, sub_block_column, sub_block_row, block_context.is_inter_predicted(), band);
+        else
+            tokens_context = TreeParser::get_context_for_other_tokens(token_cache, transform_size, transform_set, plane, token_position, block_context.is_inter_predicted(), band);
 
         if (check_for_more_coefficients && !TRY_READ(TreeParser::parse_more_coefficients(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter, tokens_context)))
             break;
 
         auto token = TRY_READ(TreeParser::parse_token(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter, tokens_context));
-        token_cache[pos] = energy_class[token];
+        token_cache[token_position] = energy_class[token];
 
         i32 coef;
         if (token == ZeroToken) {
@@ -1473,7 +1477,7 @@ DecoderErrorOr<bool> Parser::tokens(BlockContext& block_context, size_t plane, u
             coef = TRY(read_coef(block_context.frame_context.color_config.bit_depth, token));
             check_for_more_coefficients = true;
         }
-        block_context.residual_tokens[pos] = coef;
+        block_context.residual_tokens[token_position] = coef;
     }
 
     return coef_index > 0;
