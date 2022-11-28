@@ -104,20 +104,30 @@ ErrorOr<void> TarInputStream::advance()
     m_generation++;
 
     auto header_size = TRY(m_header.size());
-    VERIFY(m_stream.discard_or_error(block_ceiling(header_size) - m_file_offset));
+
+    if (!m_stream.discard_or_error(block_ceiling(header_size) - m_file_offset)) {
+        m_finished = true;
+        m_stream.handle_any_error(); // clear out errors so we don't assert
+        return Error::from_string_literal("Failed to discard leading padding");
+    }
+
     m_file_offset = 0;
 
     if (!m_stream.read_or_error(Bytes(&m_header, sizeof(m_header)))) {
         m_finished = true;
         m_stream.handle_any_error(); // clear out errors so we don't assert
-        return Error::from_string_literal("Failed to read the header");
-    }
-    if (!valid()) {
-        m_finished = true;
-        return {};
+        return Error::from_string_literal("Failed to read header contents");
     }
 
-    VERIFY(m_stream.discard_or_error(block_size - sizeof(TarFileHeader)));
+    if (!m_stream.discard_or_error(block_size - sizeof(TarFileHeader))) {
+        m_finished = true;
+        m_stream.handle_any_error(); // clear out errors so we don't assert
+        return Error::from_string_literal("Failed to discard final padding");
+    }
+
+    if (!valid())
+        m_finished = true;
+
     return {};
 }
 
