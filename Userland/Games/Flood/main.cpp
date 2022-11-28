@@ -72,27 +72,27 @@ static ErrorOr<Vector<Color>> get_color_scheme_from_string(StringView name)
 // A fairly simple way to improve this would be to test deeper moves and then choose the most efficient sequence.
 static int get_number_of_moves_from_ai(Board const& board)
 {
-    Board optimal_board { board };
-    auto const color_scheme = optimal_board.get_color_scheme();
-    optimal_board.set_current_color(optimal_board.cell(0, 0));
+    Board ai_board { board };
+    auto const color_scheme = ai_board.get_color_scheme();
+    ai_board.set_current_value(ai_board.cell(0, 0));
     int moves { 0 };
-    while (!optimal_board.is_flooded()) {
+    while (!ai_board.is_flooded()) {
         ++moves;
         int most_painted = 0;
-        Color optimal_color = optimal_board.cell(0, 0);
+        int best_value = ai_board.cell(0, 0);
         for (size_t i = 0; i < color_scheme.size(); ++i) {
-            Board test_board { optimal_board };
-            test_board.set_current_color(color_scheme[i]);
-            // The first update applies the current color, and the second update is done to obtain the new area.
-            test_board.update_colors();
-            int new_area = test_board.update_colors(true);
+            Board test_board { ai_board };
+            test_board.set_current_value(i);
+            // The first update applies the current value, and the second update is done to obtain the new area.
+            test_board.update_values();
+            int new_area = test_board.update_values(true);
             if (new_area > most_painted) {
                 most_painted = new_area;
-                optimal_color = color_scheme[i];
+                best_value = i;
             }
         }
-        optimal_board.set_current_color(optimal_color);
-        optimal_board.update_colors();
+        ai_board.set_current_value(best_value);
+        ai_board.update_values();
     }
     return moves;
 }
@@ -199,10 +199,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     board_widget->on_move = [&](Board::RowAndColumn row_and_column) {
         auto const [row, column] = row_and_column;
-        board_widget->board()->set_current_color(board_widget->board()->cell(row, column));
-        if (board_widget->board()->get_previous_color() != board_widget->board()->get_current_color()) {
+        board_widget->board()->set_current_value(board_widget->board()->cell(row, column));
+        if (board_widget->board()->get_previous_value() != board_widget->board()->get_current_value()) {
             ++moves_made;
-            board_widget->board()->update_colors();
+            board_widget->board()->update_values();
             update();
             if (board_widget->board()->is_flooded()) {
                 String dialog_text("You have tied with the AI."sv);

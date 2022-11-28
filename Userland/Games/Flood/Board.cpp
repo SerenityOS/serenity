@@ -17,17 +17,17 @@ void Board::clear()
 {
     for (size_t row = 0; row < m_rows; ++row) {
         for (size_t column = 0; column < m_columns; ++column) {
-            set_cell(row, column, Color::Transparent);
+            set_cell(row, column, 0);
         }
     }
 }
 
 bool Board::is_flooded() const
 {
-    auto first_cell_color = cell(0, 0);
+    auto first_cell_value = cell(0, 0);
     for (size_t row = 0; row < rows(); ++row) {
         for (size_t column = 0; column < columns(); ++column) {
-            if (first_cell_color == cell(row, column))
+            if (first_cell_value == cell(row, column))
                 continue;
             return false;
         }
@@ -39,11 +39,9 @@ void Board::randomize()
 {
     for (size_t row = 0; row < m_rows; ++row) {
         for (size_t column = 0; column < m_columns; ++column) {
-            auto const& color = m_colors[get_random_uniform(m_colors.size())];
-            set_cell(row, column, color);
+            set_cell(row, column, get_random_uniform(m_colors.size()));
         }
     }
-    set_current_color(cell(0, 0));
 }
 
 void Board::resize(size_t rows, size_t columns)
@@ -57,22 +55,22 @@ void Board::resize(size_t rows, size_t columns)
         m_cells[row].resize(columns);
 }
 
-void Board::set_cell(size_t row, size_t column, Color color)
+void Board::set_cell(size_t row, size_t column, int value)
 {
     VERIFY(row < m_rows && column < m_columns);
 
-    m_cells[row][column] = color;
+    m_cells[row][column] = value;
 }
 
-Color Board::cell(size_t row, size_t column) const
+int Board::cell(size_t row, size_t column) const
 {
     return m_cells[row][column];
 }
 
-void Board::set_current_color(Color new_color)
+void Board::set_current_value(int new_value)
 {
-    m_previous_color = m_current_color;
-    m_current_color = new_color;
+    m_previous_value = m_current_value;
+    m_current_value = new_value;
 }
 
 void Board::set_color_scheme(Vector<Color> colors)
@@ -84,17 +82,17 @@ void Board::set_color_scheme(Vector<Color> colors)
 void Board::reset()
 {
     clear();
-    set_current_color(Color::Transparent);
-    m_previous_color = Color::Transparent;
+    m_current_value = 0;
+    m_previous_value = 0;
 }
 
 // Adapted from Userland/PixelPaint/Tools/BucketTool.cpp::flood_fill.
-u32 Board::update_colors(bool only_calculate_flooded_area)
+u32 Board::update_values(bool only_calculate_flooded_area)
 {
     Queue<Gfx::IntPoint> points_to_visit;
 
     points_to_visit.enqueue({ 0, 0 });
-    set_cell(0, 0, get_current_color());
+    set_cell(0, 0, get_current_value());
 
     Vector<Vector<bool>> visited_board;
     visited_board.resize(cells().size());
@@ -115,12 +113,12 @@ u32 Board::update_colors(bool only_calculate_flooded_area)
         for (auto candidate_point : candidate_points) {
             if (candidate_point.y() >= static_cast<int>(m_rows) || candidate_point.x() >= static_cast<int>(m_columns) || candidate_point.y() < 0 || candidate_point.x() < 0)
                 continue;
-            if (!visited_board[candidate_point.y()][candidate_point.x()] && cell(candidate_point.y(), candidate_point.x()) == (only_calculate_flooded_area ? get_current_color() : get_previous_color())) {
+            if (!visited_board[candidate_point.y()][candidate_point.x()] && cell(candidate_point.y(), candidate_point.x()) == (only_calculate_flooded_area ? get_current_value() : get_previous_value())) {
                 ++painted;
                 points_to_visit.enqueue(candidate_point);
                 visited_board[candidate_point.y()][candidate_point.x()] = true;
                 if (!only_calculate_flooded_area)
-                    set_cell(candidate_point.y(), candidate_point.x(), get_current_color());
+                    set_cell(candidate_point.y(), candidate_point.x(), get_current_value());
             }
         }
     }

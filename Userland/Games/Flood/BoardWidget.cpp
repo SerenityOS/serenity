@@ -62,7 +62,7 @@ void BoardWidget::paint_event(GUI::PaintEvent& event)
             int cell_y = row * cell_size + board_offset.height();
 
             Gfx::Rect cell_rect(cell_x, cell_y, cell_size, cell_size);
-            Color fill_color = m_board->cell(row, column);
+            Color fill_color = m_board->get_color_scheme()[m_board->cell(row, column)];
             painter.fill_rect(cell_rect, fill_color);
         }
     }
