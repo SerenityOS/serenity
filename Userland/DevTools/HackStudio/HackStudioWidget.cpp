@@ -1509,11 +1509,6 @@ void HackStudioWidget::create_view_menu(GUI::Window& window)
     view_menu.add_action(*m_locations_history_back_action);
     view_menu.add_action(*m_locations_history_forward_action);
 
-    auto search_action = GUI::Action::create("&Search", { Mod_Ctrl, Key_F }, [this](auto&) {
-        current_editor_wrapper().search_action();
-    });
-    view_menu.add_action(search_action);
-
     view_menu.add_separator();
 
     view_menu.add_action(GUI::CommonActions::make_fullscreen_action([&](auto&) {
