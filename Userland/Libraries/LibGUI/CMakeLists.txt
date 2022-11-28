@@ -1,6 +1,7 @@
 compile_gml(EmojiInputDialog.gml EmojiInputDialogGML.h emoji_input_dialog_gml)
 compile_gml(FontPickerDialog.gml FontPickerDialogGML.h font_picker_dialog_gml)
 compile_gml(FilePickerDialog.gml FilePickerDialogGML.h file_picker_dialog_gml)
+compile_gml(IncrementalSearchBanner.gml IncrementalSearchBannerGML.h incremental_search_banner_gml)
 compile_gml(PasswordInputDialog.gml PasswordInputDialogGML.h password_input_dialog_gml)
 
 set(SOURCES
@@ -57,6 +58,7 @@ set(SOURCES
     Icon.cpp
     IconView.cpp
     ImageWidget.cpp
+    IncrementalSearchBanner.cpp
     INILexer.cpp
     INISyntaxHighlighter.cpp
     InputBox.cpp
@@ -133,6 +135,7 @@ set(GENERATED_SOURCES
     EmojiInputDialogGML.h
     FilePickerDialogGML.h
     FontPickerDialogGML.h
+    IncrementalSearchBannerGML.h
     PasswordInputDialogGML.h
 )
 

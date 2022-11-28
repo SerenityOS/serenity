@@ -56,6 +56,7 @@ public:
 
     void scroll_to_top();
     void scroll_to_bottom();
+    void update_scrollbar_ranges();
 
     void set_automatic_scrolling_timer(bool active);
     virtual Gfx::IntPoint automatic_scroll_delta_from_position(Gfx::IntPoint const&) const;
@@ -89,7 +90,6 @@ protected:
     virtual void on_automatic_scrolling_timer_fired() {};
     int autoscroll_threshold() const { return m_autoscroll_threshold; }
     void update_scrollbar_visibility();
-    void update_scrollbar_ranges();
 
 private:
     class AbstractScrollableWidgetScrollbar final : public Scrollbar {

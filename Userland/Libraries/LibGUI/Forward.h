@@ -37,6 +37,7 @@ class HorizontalSlider;
 class Icon;
 class IconView;
 class ImageWidget;
+class IncrementalSearchBanner;
 class JsonArrayModel;
 class KeyEvent;
 class Label;
