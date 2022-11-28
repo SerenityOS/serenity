@@ -526,7 +526,7 @@ public:
 
     virtual void clear() override
     {
-        warn("\033[3J\033[H\033[2J");
+        out("\033[3J\033[H\033[2J");
         m_group_stack_depth = 0;
         fflush(stdout);
     }
@@ -551,13 +551,13 @@ public:
             for (auto& function_name : trace.stack)
                 builder.appendff("{}-> {}\n", indent, function_name);
 
-            warnln("{}", builder.string_view());
+            outln("{}", builder.string_view());
             return JS::js_undefined();
         }
 
         if (log_level == JS::Console::LogLevel::Group || log_level == JS::Console::LogLevel::GroupCollapsed) {
             auto group = arguments.get<JS::Console::Group>();
-            warnln("{}\033[36;1m{}\033[0m", indent, group.label);
+            outln("{}\033[36;1m{}\033[0m", indent, group.label);
             m_group_stack_depth++;
             return JS::js_undefined();
         }
@@ -569,24 +569,24 @@ public:
 
         switch (log_level) {
         case JS::Console::LogLevel::Debug:
-            warnln("{}\033[36;1m{}\033[0m", indent, output);
+            outln("{}\033[36;1m{}\033[0m", indent, output);
             break;
         case JS::Console::LogLevel::Error:
         case JS::Console::LogLevel::Assert:
-            warnln("{}\033[31;1m{}\033[0m", indent, output);
+            outln("{}\033[31;1m{}\033[0m", indent, output);
             break;
         case JS::Console::LogLevel::Info:
-            warnln("{}(i) {}", indent, output);
+            outln("{}(i) {}", indent, output);
             break;
         case JS::Console::LogLevel::Log:
-            warnln("{}{}", indent, output);
+            outln("{}{}", indent, output);
             break;
         case JS::Console::LogLevel::Warn:
         case JS::Console::LogLevel::CountReset:
-            warnln("{}\033[33;1m{}\033[0m", indent, output);
+            outln("{}\033[33;1m{}\033[0m", indent, output);
             break;
         default:
-            warnln("{}{}", indent, output);
+            outln("{}{}", indent, output);
             break;
         }
         return JS::js_undefined();
