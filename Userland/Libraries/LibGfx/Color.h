@@ -257,11 +257,12 @@ public:
 
     constexpr float distance_squared_to(Color const& other) const
     {
-        int a = other.red() - red();
-        int b = other.green() - green();
-        int c = other.blue() - blue();
-        int d = other.alpha() - alpha();
-        return (a * a + b * b + c * c + d * d) / (4.0f * 255.0f * 255.0f);
+        int delta_red = other.red() - red();
+        int delta_green = other.green() - green();
+        int delta_blue = other.blue() - blue();
+        int delta_alpha = other.alpha() - alpha();
+        auto rgb_distance = (delta_red * delta_red + delta_green * delta_green + delta_blue * delta_blue) / (3.0f * 255 * 255);
+        return delta_alpha * delta_alpha / (2.0f * 255 * 255) + rgb_distance * alpha() * other.alpha() / (255 * 255);
     }
 
     constexpr u8 luminosity() const
