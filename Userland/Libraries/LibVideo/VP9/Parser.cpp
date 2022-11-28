@@ -1421,7 +1421,7 @@ DecoderErrorOr<bool> Parser::residual(BlockContext& block_context, bool has_bloc
     return had_residual_tokens;
 }
 
-static u32 const* get_scan(TXSize tx_size, u8 transform_type)
+static u16 const* get_scan(TXSize tx_size, u8 transform_type)
 {
     if (tx_size == TX_4x4) {
         if (transform_type == ADST_DCT)
@@ -1449,14 +1449,14 @@ static u32 const* get_scan(TXSize tx_size, u8 transform_type)
 
 DecoderErrorOr<bool> Parser::tokens(BlockContext& block_context, size_t plane, u32 start_x, u32 start_y, TXSize tx_size, u8 transform_type)
 {
-    u32 segment_eob = 16 << (tx_size << 1);
+    u16 segment_eob = 16 << (tx_size << 1);
     auto const* scan = get_scan(tx_size, transform_type);
     auto check_eob = true;
-    u32 c = 0;
-    for (; c < segment_eob; c++) {
-        auto pos = scan[c];
-        auto band = (tx_size == TX_4x4) ? coefband_4x4[c] : coefband_8x8plus[c];
-        auto tokens_context = TreeParser::get_tokens_context(block_context.frame_context.color_config.subsampling_x, block_context.frame_context.color_config.subsampling_y, block_context.frame_context.rows(), block_context.frame_context.columns(), m_above_nonzero_context, m_left_nonzero_context, m_token_cache, tx_size, transform_type, plane, start_x, start_y, pos, block_context.is_inter_predicted(), band, c);
+    u16 coef_index = 0;
+    for (; coef_index < segment_eob; coef_index++) {
+        auto pos = scan[coef_index];
+        auto band = (tx_size == TX_4x4) ? coefband_4x4[coef_index] : coefband_8x8plus[coef_index];
+        auto tokens_context = TreeParser::get_tokens_context(block_context.frame_context.color_config.subsampling_x, block_context.frame_context.color_config.subsampling_y, block_context.frame_context.rows(), block_context.frame_context.columns(), m_above_nonzero_context, m_left_nonzero_context, m_token_cache, tx_size, transform_type, plane, start_x, start_y, pos, block_context.is_inter_predicted(), band, coef_index);
         if (check_eob) {
             auto more_coefs = TRY_READ(TreeParser::parse_more_coefficients(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter, tokens_context));
             if (!more_coefs)
@@ -1474,9 +1474,9 @@ DecoderErrorOr<bool> Parser::tokens(BlockContext& block_context, size_t plane, u
             check_eob = true;
         }
     }
-    for (u32 i = c; i < segment_eob; i++)
+    for (u16 i = coef_index; i < segment_eob; i++)
         m_tokens[scan[i]] = 0;
-    return c > 0;
+    return coef_index > 0;
 }
 
 DecoderErrorOr<i32> Parser::read_coef(u8 bit_depth, Token token)
