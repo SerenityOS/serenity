@@ -415,6 +415,11 @@ bool Value::operator==(int value) const
     return to_int() == value;
 }
 
+bool Value::operator==(u32 value) const
+{
+    return to_u32() == value;
+}
+
 bool Value::operator==(double value) const
 {
     return to_double() == value;
