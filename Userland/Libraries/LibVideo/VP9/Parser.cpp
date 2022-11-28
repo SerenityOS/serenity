@@ -852,6 +852,10 @@ DecoderErrorOr<void> Parser::decode_tiles(FrameContext& frame_context)
     clear_above_context(frame_context);
     NonZeroTokens above_non_zero_tokens = DECODER_TRY_ALLOC(create_non_zero_tokens(blocks_to_sub_blocks(frame_context.columns()), frame_context.color_config.subsampling_x));
 
+    // FIXME: To implement tiled decoding, we'll need to pre-parse the tile positions and sizes into a 2D vector of ReadonlyBytes,
+    //        then run through each column of tiles in top to bottom order afterward. Each column can be sent to a worker thread
+    //        for execution. Each worker thread will want to create a set of above contexts sized to its tile width, then provide
+    //        those to each tile as it decodes them.
     for (auto tile_row = 0; tile_row < tile_rows; tile_row++) {
         for (auto tile_col = 0; tile_col < tile_cols; tile_col++) {
             auto last_tile = (tile_row == tile_rows - 1) && (tile_col == tile_cols - 1);
