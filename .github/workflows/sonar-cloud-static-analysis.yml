@@ -80,7 +80,7 @@ jobs:
 
       - name: Toolchain cache
         # TODO: Change the version to the released version when https://github.com/actions/cache/pull/489 (or 571) is merged.
-        uses: actions/cache@03e00da99d75a2204924908e1cca7902cafce66b
+        uses: actions/cache@a69fd45b198a30728f59413841c51692afc50844
         env:
           # This job should always read the cache, never populate it.
           CACHE_SKIP_SAVE: true

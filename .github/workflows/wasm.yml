@@ -33,7 +33,7 @@ jobs:
           mkdir -p ${{ github.workspace }}/Build/wasm/UCD
           mkdir -p ${{ github.workspace }}/Build/wasm/CLDR
       - name: "TimeZoneData cache"
-        uses: actions/cache@03e00da99d75a2204924908e1cca7902cafce66b
+        uses: actions/cache@a69fd45b198a30728f59413841c51692afc50844
         with:
           path: ${{ github.workspace }}/Build/lagom-tools/TZDB
           key: TimeZoneData-${{ hashFiles('Meta/CMake/time_zone_data.cmake') }}
@@ -41,12 +41,12 @@ jobs:
         run: |
           cp -r ${{ github.workspace }}/Build/lagom-tools/TZDB ${{ github.workspace }}/Build/wasm/TZDB
       - name: "UnicodeData cache"
-        uses: actions/cache@03e00da99d75a2204924908e1cca7902cafce66b
+        uses: actions/cache@a69fd45b198a30728f59413841c51692afc50844
         with:
           path: ${{ github.workspace }}/Build/wasm/UCD
           key: UnicodeData-${{ hashFiles('Meta/CMake/unicode_data.cmake') }}
       - name: "UnicodeLocale cache"
-        uses: actions/cache@03e00da99d75a2204924908e1cca7902cafce66b
+        uses: actions/cache@a69fd45b198a30728f59413841c51692afc50844
         with:
           path: ${{ github.workspace }}/Build/wasm/CLDR
           key: UnicodeLocale-${{ hashFiles('Meta/CMake/locale_data.cmake') }}
