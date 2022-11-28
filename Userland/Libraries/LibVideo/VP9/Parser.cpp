@@ -845,6 +845,13 @@ DecoderErrorOr<u8> Parser::update_mv_prob(u8 prob)
     return prob;
 }
 
+static u32 get_tile_offset(u32 tile_start, u32 frame_size_in_blocks, u32 tile_size_log2)
+{
+    u32 superblocks = blocks_ceiled_to_superblocks(frame_size_in_blocks);
+    u32 offset = superblocks_to_blocks((tile_start * superblocks) >> tile_size_log2);
+    return min(offset, frame_size_in_blocks);
+}
+
 DecoderErrorOr<void> Parser::decode_tiles(FrameContext& frame_context)
 {
     auto log2_dimensions = frame_context.log2_of_tile_counts;
@@ -886,13 +893,6 @@ DecoderErrorOr<void> Parser::decode_tiles(FrameContext& frame_context)
         }
     }
     return {};
-}
-
-u32 Parser::get_tile_offset(u32 tile_num, u32 mis, u32 tile_size_log2)
-{
-    u32 super_blocks = (mis + 7) >> 3u;
-    u32 offset = ((tile_num * super_blocks) >> tile_size_log2) << 3u;
-    return min(offset, mis);
 }
 
 DecoderErrorOr<void> Parser::decode_tile(TileContext& tile_context)
