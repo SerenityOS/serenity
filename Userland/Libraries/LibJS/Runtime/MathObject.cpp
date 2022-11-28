@@ -600,9 +600,14 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::log10)
 // 21.3.2.31 Math.sinh ( x ), https://tc39.es/ecma262/#sec-math.sinh
 JS_DEFINE_NATIVE_FUNCTION(MathObject::sinh)
 {
+    // 1. Let n be ? ToNumber(x).
     auto number = TRY(vm.argument(0).to_number(vm));
-    if (number.is_nan())
-        return js_nan();
+
+    // 2. If n is not finite or n is either +0𝔽 or -0𝔽, return n.
+    if (!number.is_finite_number() || number.is_positive_zero() || number.is_negative_zero())
+        return number;
+
+    // 3. Return an implementation-approximated Number value representing the result of the hyperbolic sine of ℝ(n).
     return Value(::sinh(number.as_double()));
 }
 
