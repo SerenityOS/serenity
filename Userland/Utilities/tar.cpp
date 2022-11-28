@@ -15,6 +15,7 @@
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
 #include <LibCore/FileStream.h>
+#include <LibCore/Stream.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
 #include <fcntl.h>
@@ -61,22 +62,34 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 
     if (list || extract) {
-        auto file = Core::File::standard_input();
-
-        if (!archive_file.is_empty())
-            file = TRY(Core::File::open(archive_file, Core::OpenMode::ReadOnly));
-
         if (!directory.is_empty())
             TRY(Core::System::chdir(directory));
 
-        Core::InputFileStream file_stream(file);
-        Compress::GzipDecompressor gzip_stream(file_stream);
+        // FIXME: Remove these once we have smart pointers everywhere in LibArchive and LibCompress (or just ported the whole stack to Core::Stream).
+        // Until then, we have to hold on to _some_ instance of the file AK::Stream.
+        // Note that this is only in use together with gzip.
+        OwnPtr<Core::InputFileStream> file_stream;
 
-        InputStream& file_input_stream = file_stream;
-        InputStream& gzip_input_stream = gzip_stream;
-        Archive::TarInputStream tar_stream((gzip) ? gzip_input_stream : file_input_stream);
+        auto input_stream = TRY([&]() -> ErrorOr<NonnullOwnPtr<Core::Stream::Stream>> {
+            if (gzip) {
+                // FIXME: Port gzip to Core::Stream.
+                auto file = Core::File::standard_input();
+
+                if (!archive_file.is_empty())
+                    file = TRY(Core::File::open(archive_file, Core::OpenMode::ReadOnly));
+
+                file_stream = adopt_own(*new Core::InputFileStream(file));
+                NonnullOwnPtr<InputStream> gzip_stream = make<Compress::GzipDecompressor>(*file_stream);
+
+                return make<Core::Stream::WrappedAKInputStream>(move(gzip_stream));
+            } else {
+                return TRY(Core::Stream::File::open_file_or_standard_stream(archive_file, Core::Stream::OpenMode::Read));
+            }
+        }());
+
+        auto tar_stream = TRY(Archive::TarInputStream::construct(move(input_stream)));
         // FIXME: implement ErrorOr<TarInputStream>?
-        if (!tar_stream.valid()) {
+        if (!tar_stream->valid()) {
             warnln("the provided file is not a well-formatted ustar file");
             return 1;
         }
@@ -98,14 +111,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             return {};
         };
 
-        while (!tar_stream.finished()) {
-            Archive::TarFileHeader const& header = tar_stream.header();
+        while (!tar_stream->finished()) {
+            Archive::TarFileHeader const& header = tar_stream->header();
 
             // Handle meta-entries earlier to avoid consuming the file content stream.
             if (header.content_is_like_extended_header()) {
                 switch (header.type_flag()) {
                 case Archive::TarFileType::GlobalExtendedHeader: {
-                    TRY(tar_stream.for_each_extended_header([&](StringView key, StringView value) {
+                    TRY(tar_stream->for_each_extended_header([&](StringView key, StringView value) {
                         if (value.length() == 0)
                             global_overrides.remove(key);
                         else
@@ -114,7 +127,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                     break;
                 }
                 case Archive::TarFileType::ExtendedHeader: {
-                    TRY(tar_stream.for_each_extended_header([&](StringView key, StringView value) {
+                    TRY(tar_stream->for_each_extended_header([&](StringView key, StringView value) {
                         local_overrides.set(key, value);
                     }));
                     break;
@@ -124,11 +137,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                     VERIFY_NOT_REACHED();
                 }
 
-                TRY(tar_stream.advance());
+                TRY(tar_stream->advance());
                 continue;
             }
 
-            Archive::TarFileStream file_stream = tar_stream.file_contents();
+            Archive::TarFileStream file_stream = tar_stream->file_contents();
 
             // Handle other header types that don't just have an effect on extraction.
             switch (header.type_flag()) {
@@ -143,7 +156,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 }
 
                 local_overrides.set("path", long_name.to_string());
-                TRY(tar_stream.advance());
+                TRY(tar_stream->advance());
                 continue;
             }
             default:
@@ -204,9 +217,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             // Non-global headers should be cleared after every file.
             local_overrides.clear();
 
-            TRY(tar_stream.advance());
+            TRY(tar_stream->advance());
         }
-        file_stream.close();
 
         return 0;
     }
