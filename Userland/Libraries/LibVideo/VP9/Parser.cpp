@@ -848,7 +848,9 @@ DecoderErrorOr<void> Parser::decode_tiles(FrameContext& frame_context)
     auto log2_dimensions = frame_context.log2_of_tile_counts;
     auto tile_cols = 1 << log2_dimensions.width();
     auto tile_rows = 1 << log2_dimensions.height();
+
     clear_above_context(frame_context);
+    NonZeroTokens above_non_zero_tokens = DECODER_TRY_ALLOC(create_non_zero_tokens(blocks_to_sub_blocks(frame_context.columns()), frame_context.color_config.subsampling_x));
 
     for (auto tile_row = 0; tile_row < tile_rows; tile_row++) {
         for (auto tile_col = 0; tile_col < tile_cols; tile_col++) {
@@ -864,7 +866,9 @@ DecoderErrorOr<void> Parser::decode_tiles(FrameContext& frame_context)
             auto columns_start = get_tile_offset(tile_col, frame_context.columns(), log2_dimensions.width());
             auto columns_end = get_tile_offset(tile_col + 1, frame_context.columns(), log2_dimensions.width());
 
-            auto tile_context = DECODER_TRY_ALLOC(TileContext::try_create(frame_context, rows_start, rows_end, columns_start, columns_end));
+            auto above_non_zero_tokens_view = create_non_zero_tokens_view(above_non_zero_tokens, blocks_to_sub_blocks(columns_start), blocks_to_sub_blocks(columns_end - columns_start), frame_context.color_config.subsampling_x);
+
+            auto tile_context = DECODER_TRY_ALLOC(TileContext::try_create(frame_context, rows_start, rows_end, columns_start, columns_end, above_non_zero_tokens_view));
 
             TRY_READ(m_bit_stream->init_bool(tile_size));
             TRY(decode_tile(tile_context));
@@ -892,8 +896,6 @@ void Parser::clear_context(Vector<Vector<T>>& context, size_t outer_size, size_t
 
 void Parser::clear_above_context(FrameContext& frame_context)
 {
-    for (auto i = 0u; i < m_above_nonzero_context.size(); i++)
-        clear_context(m_above_nonzero_context[i], 2 * frame_context.columns());
     clear_context(m_above_seg_pred_context, frame_context.columns());
     clear_context(m_above_partition_context, frame_context.superblock_columns() * 8);
 }
@@ -1397,11 +1399,10 @@ DecoderErrorOr<bool> Parser::residual(BlockContext& block_context, bool has_bloc
                     }
                 }
 
-                auto& above_sub_block_context = m_above_nonzero_context[plane];
-                auto above_sub_block_context_index = pixels_to_sub_blocks(transform_x_in_px);
-                auto above_sub_block_context_end = min(above_sub_block_context_index + transform_size_in_sub_blocks, above_sub_block_context.size());
-                for (; above_sub_block_context_index < above_sub_block_context_end; above_sub_block_context_index++)
-                    above_sub_block_context[above_sub_block_context_index] = sub_block_had_non_zero_tokens;
+                auto& above_sub_block_tokens = block_context.above_non_zero_tokens[plane];
+                auto transform_right_in_sub_blocks = min(x + transform_size_in_sub_blocks, above_sub_block_tokens.size());
+                for (size_t inside_x = x; inside_x < transform_right_in_sub_blocks; inside_x++)
+                    above_sub_block_tokens[inside_x] = sub_block_had_non_zero_tokens;
 
                 auto& left_sub_block_context = block_context.left_non_zero_tokens[plane];
                 auto transform_bottom_in_sub_blocks = min(y + transform_size_in_sub_blocks, left_sub_block_context.size());
@@ -1458,7 +1459,7 @@ DecoderErrorOr<bool> Parser::tokens(BlockContext& block_context, size_t plane, u
         auto token_position = scan[coef_index];
         TokensContext tokens_context;
         if (coef_index == 0)
-            tokens_context = TreeParser::get_context_for_first_token(block_context, m_above_nonzero_context, block_context.left_non_zero_tokens, transform_size, plane, sub_block_column, sub_block_row, block_context.is_inter_predicted(), band);
+            tokens_context = TreeParser::get_context_for_first_token(block_context.above_non_zero_tokens, block_context.left_non_zero_tokens, transform_size, plane, sub_block_column, sub_block_row, block_context.is_inter_predicted(), band);
         else
             tokens_context = TreeParser::get_context_for_other_tokens(token_cache, transform_size, transform_set, plane, token_position, block_context.is_inter_predicted(), band);
 
