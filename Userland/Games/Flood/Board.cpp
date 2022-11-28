@@ -24,10 +24,10 @@ void Board::clear()
 
 bool Board::is_flooded() const
 {
-    auto first_cell_color = cell(0, 0).release_value();
+    auto first_cell_color = cell(0, 0);
     for (size_t row = 0; row < rows(); ++row) {
         for (size_t column = 0; column < columns(); ++column) {
-            if (first_cell_color == cell(row, column).release_value())
+            if (first_cell_color == cell(row, column))
                 continue;
             return false;
         }
@@ -43,7 +43,7 @@ void Board::randomize()
             set_cell(row, column, color);
         }
     }
-    set_current_color(cell(0, 0).release_value());
+    set_current_color(cell(0, 0));
 }
 
 void Board::resize(size_t rows, size_t columns)
@@ -64,11 +64,8 @@ void Board::set_cell(size_t row, size_t column, Color color)
     m_cells[row][column] = color;
 }
 
-ErrorOr<Color> Board::cell(size_t row, size_t column) const
+Color Board::cell(size_t row, size_t column) const
 {
-    if (row >= m_rows || column >= m_columns)
-        return Error::from_string_literal("No such cell.");
-
     return m_cells[row][column];
 }
 
@@ -116,9 +113,9 @@ u32 Board::update_colors(bool only_calculate_flooded_area)
             current_point.moved_down(1)
         };
         for (auto candidate_point : candidate_points) {
-            if (cell(candidate_point.y(), candidate_point.x()).is_error())
+            if (candidate_point.y() >= static_cast<int>(m_rows) || candidate_point.x() >= static_cast<int>(m_columns) || candidate_point.y() < 0 || candidate_point.x() < 0)
                 continue;
-            if (!visited_board[candidate_point.y()][candidate_point.x()] && cell(candidate_point.y(), candidate_point.x()).release_value() == (only_calculate_flooded_area ? get_current_color() : get_previous_color())) {
+            if (!visited_board[candidate_point.y()][candidate_point.x()] && cell(candidate_point.y(), candidate_point.x()) == (only_calculate_flooded_area ? get_current_color() : get_previous_color())) {
                 ++painted;
                 points_to_visit.enqueue(candidate_point);
                 visited_board[candidate_point.y()][candidate_point.x()] = true;

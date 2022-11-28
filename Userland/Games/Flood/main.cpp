@@ -74,12 +74,12 @@ static int get_number_of_moves_from_ai(Board const& board)
 {
     Board optimal_board { board };
     auto const color_scheme = optimal_board.get_color_scheme();
-    optimal_board.set_current_color(optimal_board.cell(0, 0).release_value());
+    optimal_board.set_current_color(optimal_board.cell(0, 0));
     int moves { 0 };
     while (!optimal_board.is_flooded()) {
         ++moves;
         int most_painted = 0;
-        Color optimal_color = optimal_board.cell(0, 0).release_value();
+        Color optimal_color = optimal_board.cell(0, 0);
         for (size_t i = 0; i < color_scheme.size(); ++i) {
             Board test_board { optimal_board };
             test_board.set_current_color(color_scheme[i]);
@@ -199,7 +199,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     board_widget->on_move = [&](Board::RowAndColumn row_and_column) {
         auto const [row, column] = row_and_column;
-        board_widget->board()->set_current_color(board_widget->board()->cell(row, column).release_value());
+        board_widget->board()->set_current_color(board_widget->board()->cell(row, column));
         if (board_widget->board()->get_previous_color() != board_widget->board()->get_current_color()) {
             ++moves_made;
             board_widget->board()->update_colors();
