@@ -69,14 +69,14 @@ public:
         m_size = size;
 
         // From spec, compute_image_size( )
-        m_rows = (size.height() + 7u) >> 3u;
-        m_columns = (size.width() + 7u) >> 3u;
+        m_rows = pixels_to_blocks(size.height() + 7u);
+        m_columns = pixels_to_blocks(size.width() + 7u);
         return m_block_contexts.try_resize(m_rows, m_columns);
     }
     u32 rows() const { return m_rows; }
     u32 columns() const { return m_columns; }
-    u32 superblock_rows() const { return (rows() + 7u) >> 3u; }
-    u32 superblock_columns() const { return (columns() + 7u) >> 3u; }
+    u32 superblock_rows() const { return blocks_to_superblocks(rows() + 7u); }
+    u32 superblock_columns() const { return blocks_to_superblocks(columns() + 7u); }
 
     Vector2D<FrameBlockContext> const& block_contexts() const { return m_block_contexts; }
 

@@ -61,6 +61,18 @@ inline Gfx::Size<u8> block_size_to_sub_blocks(BlockSubsize size)
 }
 
 template<Integral T>
+inline T blocks_to_superblocks(T blocks)
+{
+    return blocks >> 3;
+}
+
+template<Integral T>
+inline T superblocks_to_blocks(T superblocks)
+{
+    return superblocks << 3;
+}
+
+template<Integral T>
 inline T blocks_to_sub_blocks(T blocks)
 {
     return blocks << 1;
