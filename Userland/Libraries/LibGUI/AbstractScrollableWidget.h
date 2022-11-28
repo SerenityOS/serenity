@@ -50,6 +50,10 @@ public:
     Widget& corner_widget() { return *m_corner_widget; }
     Widget const& corner_widget() const { return *m_corner_widget; }
 
+    void set_banner_widget(Widget*);
+    Widget* banner_widget() { return m_banner_widget; }
+    Widget const* banner_widget() const { return m_banner_widget; }
+
     void scroll_to_top();
     void scroll_to_bottom();
 
@@ -58,6 +62,7 @@ public:
 
     int width_occupied_by_vertical_scrollbar() const;
     int height_occupied_by_horizontal_scrollbar() const;
+    int height_occupied_by_banner_widget() const;
 
     virtual Margins content_margins() const override;
 
@@ -111,6 +116,7 @@ private:
     RefPtr<AbstractScrollableWidgetScrollbar> m_vertical_scrollbar;
     RefPtr<AbstractScrollableWidgetScrollbar> m_horizontal_scrollbar;
     RefPtr<Widget> m_corner_widget;
+    WeakPtr<Widget> m_banner_widget;
     Gfx::IntSize m_content_size;
     Gfx::IntSize m_min_content_size;
     Gfx::IntSize m_size_occupied_by_fixed_elements;

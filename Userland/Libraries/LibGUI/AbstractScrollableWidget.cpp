@@ -40,6 +40,19 @@ AbstractScrollableWidget::AbstractScrollableWidget()
     };
 }
 
+void AbstractScrollableWidget::set_banner_widget(Widget* widget)
+{
+    if (m_banner_widget == widget)
+        return;
+    if (m_banner_widget)
+        remove_child(*m_banner_widget);
+    if (!widget)
+        return;
+
+    m_banner_widget = widget;
+    add_child(*m_banner_widget);
+}
+
 void AbstractScrollableWidget::handle_wheel_event(MouseEvent& event, Widget& event_source)
 {
     if (!m_scrollbars_enabled) {
@@ -77,16 +90,25 @@ void AbstractScrollableWidget::mousewheel_event(MouseEvent& event)
 void AbstractScrollableWidget::custom_layout()
 {
     auto inner_rect = frame_inner_rect_for_size(size());
+    int height_wanted_by_banner_widget = m_banner_widget && m_banner_widget->is_visible() ? m_banner_widget->effective_min_size().height().as_int() : 0;
     int height_wanted_by_horizontal_scrollbar = m_horizontal_scrollbar->is_visible() ? m_horizontal_scrollbar->effective_min_size().height().as_int() : 0;
     int width_wanted_by_vertical_scrollbar = m_vertical_scrollbar->is_visible() ? m_vertical_scrollbar->effective_min_size().width().as_int() : 0;
+
+    if (m_banner_widget && m_banner_widget->is_visible()) {
+        m_banner_widget->set_relative_rect(
+            inner_rect.left(),
+            inner_rect.top(),
+            inner_rect.width(),
+            height_wanted_by_banner_widget);
+    }
 
     {
         int vertical_scrollbar_width = m_vertical_scrollbar->effective_min_size().width().as_int();
         m_vertical_scrollbar->set_relative_rect(
             inner_rect.right() + 1 - vertical_scrollbar_width,
-            inner_rect.top(),
+            inner_rect.top() + height_wanted_by_banner_widget,
             vertical_scrollbar_width,
-            inner_rect.height() - height_wanted_by_horizontal_scrollbar);
+            inner_rect.height() - height_wanted_by_horizontal_scrollbar - height_wanted_by_banner_widget);
     }
 
     {
@@ -160,7 +182,7 @@ void AbstractScrollableWidget::update_scrollbar_visibility()
         if (m_min_content_size == Gfx::IntSize {})
             effective_min_content_size = m_content_size;
         int horizontal_buffer = rect().width() - 2 * frame_thickness() - effective_min_content_size.width();
-        int vertical_buffer = rect().height() - 2 * frame_thickness() - effective_min_content_size.height();
+        int vertical_buffer = rect().height() - 2 * frame_thickness() - effective_min_content_size.height() - height_occupied_by_banner_widget();
         bool horizontal_scrollbar_should_be_visible = false, vertical_scrollbar_should_be_visible = false;
         vertical_scrollbar_should_be_visible = vertical_buffer < 0;
         if (vertical_scrollbar_should_be_visible)
@@ -198,6 +220,11 @@ void AbstractScrollableWidget::set_size_occupied_by_fixed_elements(Gfx::IntSize 
     update_scrollbar_ranges();
 }
 
+int AbstractScrollableWidget::height_occupied_by_banner_widget() const
+{
+    return m_banner_widget && m_banner_widget->is_visible() ? m_banner_widget->height() : 0;
+}
+
 int AbstractScrollableWidget::height_occupied_by_horizontal_scrollbar() const
 {
     return m_horizontal_scrollbar->is_visible() ? m_horizontal_scrollbar->height() : 0;
@@ -210,7 +237,7 @@ int AbstractScrollableWidget::width_occupied_by_vertical_scrollbar() const
 
 Margins AbstractScrollableWidget::content_margins() const
 {
-    return Frame::content_margins() + Margins { 0, width_occupied_by_vertical_scrollbar(), height_occupied_by_horizontal_scrollbar(), 0 };
+    return Frame::content_margins() + Margins { height_occupied_by_banner_widget(), width_occupied_by_vertical_scrollbar(), height_occupied_by_horizontal_scrollbar(), 0 };
 }
 
 Gfx::IntRect AbstractScrollableWidget::visible_content_rect() const
@@ -312,7 +339,8 @@ Gfx::IntRect AbstractScrollableWidget::widget_inner_rect() const
 {
     auto rect = frame_inner_rect();
     rect.set_width(rect.width() - width_occupied_by_vertical_scrollbar());
-    rect.set_height(rect.height() - height_occupied_by_horizontal_scrollbar());
+    rect.set_height(rect.height() - height_occupied_by_horizontal_scrollbar() - height_occupied_by_banner_widget());
+    rect.set_top(rect.top() + height_occupied_by_banner_widget());
     return rect;
 }
 
@@ -336,7 +364,9 @@ Optional<UISize> AbstractScrollableWidget::calculated_min_size() const
 {
     auto vertical_scrollbar = m_vertical_scrollbar->effective_min_size().height().as_int();
     auto horizontal_scrollbar = m_horizontal_scrollbar->effective_min_size().width().as_int();
-    return { { horizontal_scrollbar + corner_widget().width() + frame_thickness() * 2, vertical_scrollbar + corner_widget().height() + frame_thickness() * 2 } };
+    auto banner = m_banner_widget && m_banner_widget->is_visible() ? m_banner_widget->effective_min_size().width().as_int() : 0;
+    auto max_width = max(banner, horizontal_scrollbar + corner_widget().width() + frame_thickness() * 2);
+    return { { max_width, vertical_scrollbar + corner_widget().height() + frame_thickness() * 2 + height_occupied_by_banner_widget() } };
 }
 
 }
