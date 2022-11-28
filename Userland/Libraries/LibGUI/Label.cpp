@@ -117,9 +117,7 @@ void Label::size_to_fit()
 
 int Label::text_calculated_preferred_height() const
 {
-    // FIXME: The 4 is taken from Gfx::Painter and should be available as
-    //        a constant instead.
-    return Gfx::TextLayout(&font(), Utf8View { m_text }, text_rect()).bounding_rect(Gfx::TextWrapping::Wrap, 4).height();
+    return Gfx::TextLayout(&font(), Utf8View { m_text }, text_rect()).bounding_rect(Gfx::TextWrapping::Wrap, Gfx::Painter::LINE_SPACING).height();
 }
 
 Optional<UISize> Label::calculated_preferred_size() const

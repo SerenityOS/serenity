@@ -25,6 +25,8 @@ namespace Gfx {
 
 class Painter {
 public:
+    static constexpr int LINE_SPACING = 4;
+
     explicit Painter(Gfx::Bitmap&);
     ~Painter() = default;
 
