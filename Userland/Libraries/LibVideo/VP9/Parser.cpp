@@ -357,7 +357,9 @@ DecoderErrorOr<Gfx::Size<u32>> Parser::parse_frame_size_with_refs(Array<u8, 3> c
     Optional<Gfx::Size<u32>> size;
     for (auto frame_index : reference_indices) {
         if (TRY_READ(m_bit_stream->read_bit())) {
-            size.emplace(m_ref_frame_size[frame_index]);
+            if (!m_reference_frames[frame_index].is_valid())
+                return DecoderError::corrupted("Frame size referenced a frame that does not exist"sv);
+            size.emplace(m_reference_frames[frame_index].size);
             break;
         }
     }
