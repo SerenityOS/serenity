@@ -159,31 +159,38 @@ ThrowCompletionOr<NumberFormat*> initialize_number_format(VM& vm, NumberFormat& 
         default_max_fraction_digits = style == NumberFormat::Style::Percent ? 0 : 3;
     }
 
-    // 18. Let notation be ? GetOption(options, "notation", "string", « "standard", "scientific", "engineering", "compact" », "standard").
-    auto notation = TRY(get_option(vm, *options, vm.names.notation, OptionType::String, { "standard"sv, "scientific"sv, "engineering"sv, "compact"sv }, "standard"sv));
-
-    // 19. Set numberFormat.[[Notation]] to notation.
-    number_format.set_notation(notation.as_string().string());
-
-    // 20. Perform ? SetNumberFormatDigitOptions(numberFormat, options, mnfdDefault, mxfdDefault, notation).
-    TRY(set_number_format_digit_options(vm, number_format, *options, default_min_fraction_digits, default_max_fraction_digits, number_format.notation()));
-
-    // 21. Let roundingIncrement be ? GetNumberOption(options, "roundingIncrement", 1, 5000, 1).
+    // 18. Let roundingIncrement be ? GetNumberOption(options, "roundingIncrement", 1, 5000, 1).
     auto rounding_increment = TRY(get_number_option(vm, *options, vm.names.roundingIncrement, 1, 5000, 1));
 
-    // 22. If roundingIncrement is not in « 1, 2, 5, 10, 20, 25, 50, 100, 200, 250, 500, 1000, 2000, 2500, 5000 », throw a RangeError exception.
+    // 19. If roundingIncrement is not in « 1, 2, 5, 10, 20, 25, 50, 100, 200, 250, 500, 1000, 2000, 2500, 5000 », throw a RangeError exception.
     static constexpr auto sanctioned_rounding_increments = AK::Array { 1, 2, 5, 10, 20, 25, 50, 100, 200, 250, 500, 1000, 2000, 2500, 5000 };
 
     if (!sanctioned_rounding_increments.span().contains_slow(*rounding_increment))
         return vm.throw_completion<RangeError>(ErrorType::IntlInvalidRoundingIncrement, *rounding_increment);
 
-    // 23. If roundingIncrement is not 1 and numberFormat.[[RoundingType]] is not fractionDigits, throw a TypeError exception.
-    if ((rounding_increment != 1) && (number_format.rounding_type() != NumberFormatBase::RoundingType::FractionDigits))
-        return vm.throw_completion<TypeError>(ErrorType::IntlInvalidRoundingIncrementForRoundingType, *rounding_increment, number_format.rounding_type_string());
+    // 20. If roundingIncrement is not 1, set mxfdDefault to mnfdDefault.
+    if (rounding_increment != 1)
+        default_max_fraction_digits = default_min_fraction_digits;
 
-    // 24. If roundingIncrement is not 1 and numberFormat.[[MaximumFractionDigits]] is not equal to numberFormat.[[MinimumFractionDigits]], throw a RangeError exception.
-    if ((rounding_increment != 1) && (number_format.max_fraction_digits() != number_format.min_fraction_digits()))
-        return vm.throw_completion<RangeError>(ErrorType::IntlInvalidRoundingIncrementForFractionDigits, *rounding_increment);
+    // 21. Let notation be ? GetOption(options, "notation", "string", « "standard", "scientific", "engineering", "compact" », "standard").
+    auto notation = TRY(get_option(vm, *options, vm.names.notation, OptionType::String, { "standard"sv, "scientific"sv, "engineering"sv, "compact"sv }, "standard"sv));
+
+    // 22. Set numberFormat.[[Notation]] to notation.
+    number_format.set_notation(notation.as_string().string());
+
+    // 23. Perform ? SetNumberFormatDigitOptions(numberFormat, options, mnfdDefault, mxfdDefault, notation).
+    TRY(set_number_format_digit_options(vm, number_format, *options, default_min_fraction_digits, default_max_fraction_digits, number_format.notation()));
+
+    // 24. If roundingIncrement is not 1, then
+    if (rounding_increment != 1) {
+        // a. If numberFormat.[[RoundingType]] is not fractionDigits, throw a TypeError exception.
+        if (number_format.rounding_type() != NumberFormatBase::RoundingType::FractionDigits)
+            return vm.throw_completion<TypeError>(ErrorType::IntlInvalidRoundingIncrementForRoundingType, *rounding_increment, number_format.rounding_type_string());
+
+        // b. If numberFormat.[[MaximumFractionDigits]] is not equal to numberFormat.[[MinimumFractionDigits]], throw a RangeError exception.
+        if (number_format.max_fraction_digits() != number_format.min_fraction_digits())
+            return vm.throw_completion<RangeError>(ErrorType::IntlInvalidRoundingIncrementForFractionDigits, *rounding_increment);
+    }
 
     // 25. Set numberFormat.[[RoundingIncrement]] to roundingIncrement.
     number_format.set_rounding_increment(*rounding_increment);

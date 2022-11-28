@@ -348,11 +348,7 @@ describe("correct behavior", () => {
 
         [1, 2, 5, 10, 20, 25, 50, 100, 200, 250, 500, 1000, 2000, 2500, 5000].forEach(
             roundingIncrement => {
-                const en2 = new Intl.NumberFormat("en", {
-                    roundingIncrement: roundingIncrement,
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                });
+                const en2 = new Intl.NumberFormat("en", { roundingIncrement: roundingIncrement });
                 expect(en2.resolvedOptions().roundingIncrement).toBe(roundingIncrement);
             }
         );
