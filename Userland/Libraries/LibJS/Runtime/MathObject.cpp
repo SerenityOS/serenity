@@ -297,10 +297,23 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::acos)
 // 21.3.2.3 Math.acosh ( x ), https://tc39.es/ecma262/#sec-math.acosh
 JS_DEFINE_NATIVE_FUNCTION(MathObject::acosh)
 {
-    auto value = TRY(vm.argument(0).to_number(vm)).as_double();
-    if (value < 1)
+    // 1. Let n be ? ToNumber(x).
+    auto number = TRY(vm.argument(0).to_number(vm));
+
+    // 2. If n is NaN or n is +∞𝔽, return n.
+    if (number.is_nan() || number.is_positive_infinity())
+        return number;
+
+    // 3. If n is 1𝔽, return +0𝔽.
+    if (number.as_double() == 1.0)
+        return Value(0.0);
+
+    // 4. If n < 1𝔽, return NaN.
+    if (number.as_double() < 1)
         return js_nan();
-    return Value(::acosh(value));
+
+    // 5. Return an implementation-approximated Number value representing the result of the inverse hyperbolic cosine of ℝ(n).
+    return Value(::acosh(number.as_double()));
 }
 
 // 21.3.2.4 Math.asin ( x ), https://tc39.es/ecma262/#sec-math.asin
