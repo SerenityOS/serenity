@@ -94,8 +94,8 @@ ErrorOr<void> TarInputStream::load_next_header()
     if (header_span.size() != sizeof(m_header))
         return Error::from_string_literal("Failed to read the entire header");
 
-    if (!valid())
-        return Error::from_string_literal("Header is not valid");
+    if (!TRY(valid()))
+        return Error::from_string_literal("Header has an invalid magic or checksum");
 
     // Discard the rest of the header block.
     TRY(m_stream->discard(block_size - sizeof(TarFileHeader)));
@@ -103,7 +103,7 @@ ErrorOr<void> TarInputStream::load_next_header()
     return {};
 }
 
-bool TarInputStream::valid() const
+ErrorOr<bool> TarInputStream::valid() const
 {
     auto const header_magic = header().magic();
     auto const header_version = header().version();
@@ -114,10 +114,7 @@ bool TarInputStream::valid() const
         return false;
 
     // POSIX.1-1988 tar does not have magic numbers, so we also need to verify the header checksum.
-    if (header().checksum().is_error())
-        return false;
-
-    return header().checksum().release_value() == header().expected_checksum();
+    return TRY(header().checksum()) == header().expected_checksum();
 }
 
 TarFileStream TarInputStream::file_contents()
