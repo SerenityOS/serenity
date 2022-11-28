@@ -364,10 +364,27 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::atan)
 // 21.3.2.7 Math.atanh ( x ), https://tc39.es/ecma262/#sec-math.atanh
 JS_DEFINE_NATIVE_FUNCTION(MathObject::atanh)
 {
-    auto value = TRY(vm.argument(0).to_number(vm)).as_double();
-    if (value > 1 || value < -1)
+    // 1. Let n be ? ToNumber(x).
+    auto number = TRY(vm.argument(0).to_number(vm));
+
+    // 2. If n is NaN, n is +0𝔽, or n is -0𝔽, return n.
+    if (number.is_nan() || number.is_positive_zero() || number.is_negative_zero())
+        return number;
+
+    // 3. If n > 1𝔽 or n < -1𝔽, return NaN.
+    if (number.as_double() > 1. || number.as_double() < -1.)
         return js_nan();
-    return Value(::atanh(value));
+
+    // 4. If n is 1𝔽, return +∞𝔽.
+    if (number.as_double() == 1.)
+        return js_infinity();
+
+    // 5. If n is -1𝔽, return -∞𝔽.
+    if (number.as_double() == -1.)
+        return js_negative_infinity();
+
+    // 6. Return an implementation-approximated Number value representing the result of the inverse hyperbolic tangent of ℝ(n).
+    return Value(::atanh(number.as_double()));
 }
 
 // 21.3.2.21 Math.log1p ( x ), https://tc39.es/ecma262/#sec-math.log1p
