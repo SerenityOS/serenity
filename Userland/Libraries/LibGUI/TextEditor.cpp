@@ -18,6 +18,7 @@
 #include <LibGUI/Clipboard.h>
 #include <LibGUI/EditingEngine.h>
 #include <LibGUI/EmojiInputDialog.h>
+#include <LibGUI/IncrementalSearchBanner.h>
 #include <LibGUI/InputBox.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Painter.h>
@@ -63,6 +64,8 @@ TextEditor::TextEditor(Type type)
     if (is_multi_line()) {
         set_font(Gfx::FontDatabase::default_fixed_width_font());
         set_wrapping_mode(WrappingMode::WrapAtWords);
+        m_search_banner = GUI::IncrementalSearchBanner::construct(*this);
+        set_banner_widget(m_search_banner);
     }
     vertical_scrollbar().set_step(line_height());
     m_cursor = { 0, 0 };
@@ -208,6 +211,7 @@ TextPosition TextEditor::text_position_at(Gfx::IntPoint const& widget_position) 
     content_position.translate_by(horizontal_scrollbar().value(), vertical_scrollbar().value());
     content_position.translate_by(-(m_horizontal_content_padding + ruler_width() + gutter_width()), 0);
     content_position.translate_by(-frame_thickness(), -frame_thickness());
+    content_position.translate_by(0, -height_occupied_by_banner_widget());
     return text_position_at_content_position(content_position);
 }
 
@@ -442,6 +446,7 @@ void TextEditor::paint_event(PaintEvent& event)
     }
 
     painter.translate(frame_thickness(), frame_thickness());
+    painter.translate(0, height_occupied_by_banner_widget());
 
     if (!is_multi_line() && m_icon) {
         Gfx::IntRect icon_rect { icon_padding(), 1, icon_size(), icon_size() };
@@ -893,6 +898,11 @@ void TextEditor::keydown_event(KeyEvent& event)
         }
     }
 
+    if (is_multi_line() && !event.shift() && !event.alt() && event.ctrl() && event.key() == KeyCode::Key_F) {
+        m_search_banner->show();
+        return;
+    }
+
     if (m_editing_engine->on_key(event))
         return;
 
@@ -1308,6 +1318,7 @@ Gfx::IntRect TextEditor::line_widget_rect(size_t line_index) const
     rect.set_width(frame_inner_rect().width());
     rect.translate_by(0, -(vertical_scrollbar().value()));
     rect.translate_by(0, frame_thickness());
+    rect.translate_by(0, height_occupied_by_banner_widget());
     rect.intersect(frame_inner_rect());
     return rect;
 }
