@@ -44,7 +44,7 @@ inline void increment_counter(u8& counter)
     counter = min(static_cast<u32>(counter) + 1, 255);
 }
 
-ErrorOr<Partition> TreeParser::parse_partition(BitStream& bit_stream, ProbabilityTables const& probability_table, SyntaxElementCounter& counter, bool has_rows, bool has_columns, BlockSubsize block_subsize, u8 num_8x8, Vector<u8> const& above_partition_context, Vector<u8> const& left_partition_context, u32 row, u32 column, bool frame_is_intra)
+ErrorOr<Partition> TreeParser::parse_partition(BitStream& bit_stream, ProbabilityTables const& probability_table, SyntaxElementCounter& counter, bool has_rows, bool has_columns, BlockSubsize block_subsize, u8 num_8x8, PartitionContextView above_partition_context, PartitionContextView left_partition_context, u32 row, u32 column, bool frame_is_intra)
 {
     // Tree array
     TreeParser::TreeSelection tree = { PartitionSplit };
@@ -61,7 +61,11 @@ ErrorOr<Partition> TreeParser::parse_partition(BitStream& bit_stream, Probabilit
     auto bsl = mi_width_log2_lookup[block_subsize];
     auto block_offset = mi_width_log2_lookup[Block_64x64] - bsl;
     for (auto i = 0; i < num_8x8; i++) {
+        if (column + i >= above_partition_context.size())
+            dbgln("column={}, i={}, size={}", column, i, above_partition_context.size());
         above |= above_partition_context[column + i];
+        if (row + i >= left_partition_context.size())
+            dbgln("row={}, i={}, size={}", row, i, left_partition_context.size());
         left |= left_partition_context[row + i];
     }
     above = (above & (1 << block_offset)) > 0;

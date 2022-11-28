@@ -73,6 +73,12 @@ inline T superblocks_to_blocks(T superblocks)
 }
 
 template<Integral T>
+inline T blocks_ceiled_to_superblocks(T blocks)
+{
+    return blocks_to_superblocks(blocks + 7);
+}
+
+template<Integral T>
 inline T blocks_to_sub_blocks(T blocks)
 {
     return blocks << 1;

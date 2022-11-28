@@ -75,8 +75,8 @@ public:
     }
     u32 rows() const { return m_rows; }
     u32 columns() const { return m_columns; }
-    u32 superblock_rows() const { return blocks_to_superblocks(rows() + 7u); }
-    u32 superblock_columns() const { return blocks_to_superblocks(columns() + 7u); }
+    u32 superblock_rows() const { return blocks_ceiled_to_superblocks(rows()); }
+    u32 superblock_columns() const { return blocks_ceiled_to_superblocks(columns()); }
 
     Vector2D<FrameBlockContext> const& block_contexts() const { return m_block_contexts; }
 
@@ -175,9 +175,11 @@ static NonZeroTokensView create_non_zero_tokens_view(NonZeroTokens& non_zero_tok
 
 struct TileContext {
 public:
-    static ErrorOr<TileContext> try_create(FrameContext& frame_context, u32 rows_start, u32 rows_end, u32 columns_start, u32 columns_end, NonZeroTokensView above_non_zero_tokens, SegmentationPredictionContextView above_segmentation_ids)
+    static ErrorOr<TileContext> try_create(FrameContext& frame_context, u32 rows_start, u32 rows_end, u32 columns_start, u32 columns_end, PartitionContextView above_partition_context, NonZeroTokensView above_non_zero_tokens, SegmentationPredictionContextView above_segmentation_ids)
     {
-        auto context_view = frame_context.m_block_contexts.view(rows_start, columns_start, rows_end - rows_start, columns_end - columns_start);
+        auto width = columns_end - columns_start;
+        auto height = rows_end - rows_start;
+        auto context_view = frame_context.m_block_contexts.view(rows_start, columns_start, height, width);
 
         return TileContext {
             frame_context,
@@ -186,10 +188,12 @@ public:
             columns_start,
             columns_end,
             context_view,
+            above_partition_context,
             above_non_zero_tokens,
             above_segmentation_ids,
-            TRY(create_non_zero_tokens(blocks_to_sub_blocks(rows_end - rows_start), frame_context.color_config.subsampling_y)),
-            TRY(SegmentationPredictionContext::try_create(rows_end - rows_start)),
+            TRY(PartitionContext::try_create(superblocks_to_blocks(blocks_ceiled_to_superblocks(height)))),
+            TRY(create_non_zero_tokens(blocks_to_sub_blocks(height), frame_context.color_config.subsampling_y)),
+            TRY(SegmentationPredictionContext::try_create(height)),
         };
     }
 
@@ -204,8 +208,10 @@ public:
     u32 columns() const { return columns_end - columns_start; }
     Vector2DView<FrameBlockContext> block_contexts_view;
 
+    PartitionContextView above_partition_context;
     NonZeroTokensView above_non_zero_tokens;
     SegmentationPredictionContextView above_segmentation_ids;
+    PartitionContext left_partition_context;
     NonZeroTokens left_non_zero_tokens;
     SegmentationPredictionContext left_segmentation_ids;
 };

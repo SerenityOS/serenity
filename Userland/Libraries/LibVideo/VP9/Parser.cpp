@@ -849,7 +849,7 @@ DecoderErrorOr<void> Parser::decode_tiles(FrameContext& frame_context)
     auto tile_cols = 1 << log2_dimensions.width();
     auto tile_rows = 1 << log2_dimensions.height();
 
-    clear_above_context(frame_context);
+    PartitionContext above_partition_context = DECODER_TRY_ALLOC(PartitionContext::try_create(superblocks_to_blocks(frame_context.superblock_columns())));
     NonZeroTokens above_non_zero_tokens = DECODER_TRY_ALLOC(create_non_zero_tokens(blocks_to_sub_blocks(frame_context.columns()), frame_context.color_config.subsampling_x));
     SegmentationPredictionContext above_segmentation_ids = DECODER_TRY_ALLOC(SegmentationPredictionContext::try_create(frame_context.columns()));
 
@@ -860,7 +860,7 @@ DecoderErrorOr<void> Parser::decode_tiles(FrameContext& frame_context)
     for (auto tile_row = 0; tile_row < tile_rows; tile_row++) {
         for (auto tile_col = 0; tile_col < tile_cols; tile_col++) {
             auto last_tile = (tile_row == tile_rows - 1) && (tile_col == tile_cols - 1);
-            u64 tile_size;
+            size_t tile_size;
             if (last_tile)
                 tile_size = m_bit_stream->bytes_remaining();
             else
@@ -871,10 +871,12 @@ DecoderErrorOr<void> Parser::decode_tiles(FrameContext& frame_context)
             auto columns_start = get_tile_offset(tile_col, frame_context.columns(), log2_dimensions.width());
             auto columns_end = get_tile_offset(tile_col + 1, frame_context.columns(), log2_dimensions.width());
 
+            auto width = columns_end - columns_start;
+            auto above_partition_context_for_tile = above_partition_context.span().slice(columns_start, superblocks_to_blocks(blocks_ceiled_to_superblocks(width)));
             auto above_non_zero_tokens_view = create_non_zero_tokens_view(above_non_zero_tokens, blocks_to_sub_blocks(columns_start), blocks_to_sub_blocks(columns_end - columns_start), frame_context.color_config.subsampling_x);
             auto above_segmentation_ids_for_tile = safe_slice(above_segmentation_ids.span(), columns_start, columns_end - columns_start);
 
-            auto tile_context = DECODER_TRY_ALLOC(TileContext::try_create(frame_context, rows_start, rows_end, columns_start, columns_end, above_non_zero_tokens_view, above_segmentation_ids_for_tile));
+            auto tile_context = DECODER_TRY_ALLOC(TileContext::try_create(frame_context, rows_start, rows_end, columns_start, columns_end, above_partition_context_for_tile, above_non_zero_tokens_view, above_segmentation_ids_for_tile));
 
             TRY_READ(m_bit_stream->init_bool(tile_size));
             TRY(decode_tile(tile_context));
@@ -900,11 +902,6 @@ void Parser::clear_context(Vector<Vector<T>>& context, size_t outer_size, size_t
         clear_context(sub_vector, inner_size);
 }
 
-void Parser::clear_above_context(FrameContext& frame_context)
-{
-    clear_context(m_above_partition_context, frame_context.superblock_columns() * 8);
-}
-
 u32 Parser::get_tile_offset(u32 tile_num, u32 mis, u32 tile_size_log2)
 {
     u32 super_blocks = (mis + 7) >> 3u;
@@ -928,7 +925,7 @@ void Parser::clear_left_context(TileContext& tile_context)
     for (auto& context_for_plane : tile_context.left_non_zero_tokens)
         context_for_plane.fill_with(false);
     tile_context.left_segmentation_ids.fill_with(0);
-    clear_context(m_left_partition_context, tile_context.frame_context.superblock_rows() * 8);
+    tile_context.left_partition_context.fill_with(0);
 }
 
 DecoderErrorOr<void> Parser::decode_partition(TileContext& tile_context, u32 row, u32 column, BlockSubsize subsize)
@@ -939,7 +936,9 @@ DecoderErrorOr<void> Parser::decode_partition(TileContext& tile_context, u32 row
     auto half_block_8x8 = num_8x8 >> 1;
     bool has_rows = (row + half_block_8x8) < tile_context.frame_context.rows();
     bool has_cols = (column + half_block_8x8) < tile_context.frame_context.columns();
-    auto partition = TRY_READ(TreeParser::parse_partition(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter, has_rows, has_cols, subsize, num_8x8, m_above_partition_context, m_left_partition_context, row, column, !tile_context.frame_context.is_inter_predicted()));
+    u32 row_in_tile = row - tile_context.rows_start;
+    u32 column_in_tile = column - tile_context.columns_start;
+    auto partition = TRY_READ(TreeParser::parse_partition(*m_bit_stream, *m_probability_tables, *m_syntax_element_counter, has_rows, has_cols, subsize, num_8x8, tile_context.above_partition_context, tile_context.left_partition_context.span(), row_in_tile, column_in_tile, !tile_context.frame_context.is_inter_predicted()));
 
     auto child_subsize = subsize_lookup[partition][subsize];
     if (child_subsize < Block_8x8 || partition == PartitionNone) {
@@ -962,8 +961,8 @@ DecoderErrorOr<void> Parser::decode_partition(TileContext& tile_context, u32 row
         auto above_context = 15 >> b_width_log2_lookup[child_subsize];
         auto left_context = 15 >> b_height_log2_lookup[child_subsize];
         for (size_t i = 0; i < num_8x8; i++) {
-            m_above_partition_context[column + i] = above_context;
-            m_left_partition_context[row + i] = left_context;
+            tile_context.above_partition_context[column_in_tile + i] = above_context;
+            tile_context.left_partition_context[row_in_tile + i] = left_context;
         }
     }
     return {};
