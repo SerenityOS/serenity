@@ -700,7 +700,7 @@ Optional<HitTestResult> PaintableWithLines::hit_test(Gfx::FloatPoint const& posi
                 return HitTestResult { *fragment.layout_node().paintable(), fragment.text_index_at(position.x()) };
             }
             if (fragment_absolute_rect.top() <= position.y())
-                last_good_candidate = HitTestResult { *fragment.layout_node().paintable(), fragment.text_index_at(position.x()) };
+                last_good_candidate = HitTestResult { *fragment.layout_node().paintable(), fragment.length() + 1 };
         }
     }
 
