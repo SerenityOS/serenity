@@ -20,9 +20,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Core::ArgsParser args_parser;
     StringView path;
+    Optional<size_t> head_count;
     bool is_zero_terminated = false;
 
     args_parser.add_positional_argument(path, "File", "file", Core::ArgsParser::Required::No);
+    args_parser.add_option(head_count, "Output at most \"count\" lines", "head-count", 'n', "count");
     args_parser.add_option(is_zero_terminated, "Split input on \\0, not newline", "zero-terminated", 'z');
 
     args_parser.parse(arguments);
@@ -65,8 +67,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 
     Array<u8, 1> output_delimiter = { '\n' };
-    for (auto const& line : lines) {
-        TRY(Core::System::write(STDOUT_FILENO, line));
+    for (size_t i = 0; i < min(head_count.value_or(lines.size()), lines.size()); ++i) {
+        TRY(Core::System::write(STDOUT_FILENO, lines.at(i)));
         TRY(Core::System::write(STDOUT_FILENO, output_delimiter));
     }
 
