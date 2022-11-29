@@ -432,13 +432,14 @@ public:
     template<typename Matches>
     bool has_overload_with_matching_argument_at_index(size_t index, Matches matches)
     {
-        for (auto const& item : m_items) {
+        for (size_t i = 0; i < m_items.size(); ++i) {
+            auto const& item = m_items[i];
             if (matches(item.types[index], item.optionality_values[index])) {
-                m_last_matching_item = &item;
+                m_last_matching_item_index = i;
                 return true;
             }
         }
-        m_last_matching_item = nullptr;
+        m_last_matching_item_index = {};
         return false;
     }
 
@@ -449,7 +450,7 @@ private:
     Vector<Item> m_items;
     size_t m_argument_count;
 
-    Item const* m_last_matching_item { nullptr };
+    Optional<size_t> m_last_matching_item_index;
 };
 
 }
