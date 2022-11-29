@@ -44,7 +44,8 @@ void AntiAliasingPainter::draw_anti_aliased_line(FloatPoint actual_from, FloatPo
     int int_thickness = AK::ceil(thickness);
     auto mapped_from = m_transform.map(actual_from);
     auto mapped_to = m_transform.map(actual_to);
-    auto length = mapped_to.distance_from(mapped_from);
+    auto distance = mapped_to.distance_from(mapped_from);
+    auto length = distance + 1;
 
     // Axis-aligned lines:
     if (mapped_from.y() == mapped_to.y()) {
@@ -63,10 +64,10 @@ void AntiAliasingPainter::draw_anti_aliased_line(FloatPoint actual_from, FloatPo
 
     if constexpr (path_hacks == FixmeEnableHacksForBetterPathPainting::Yes) {
         // FIXME: SVG stoke_path() hack:
-        // When painting stokes SVG asks for many thickness * < 1px lines.
-        // It actually wants a thickness * thickness dot centered at that point.
+        // When painting stokes SVG asks for many very short lines...
+        // These look better just painted as dots/AA rectangles
         // (Technically this should be rotated or a circle, but that currently gives worse results)
-        if (length < 1.0f)
+        if (distance < 1.0f)
             return fill_rect(Gfx::FloatRect::centered_at(mapped_from, { thickness, thickness }), color);
     }
 
