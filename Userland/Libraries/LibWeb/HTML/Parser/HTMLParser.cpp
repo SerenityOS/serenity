@@ -484,45 +484,63 @@ void HTMLParser::handle_initial(HTMLToken& token)
     process_using_the_rules_for(InsertionMode::BeforeHTML, token);
 }
 
+// https://html.spec.whatwg.org/multipage/parsing.html#the-before-html-insertion-mode
 void HTMLParser::handle_before_html(HTMLToken& token)
 {
+    // -> A DOCTYPE token
     if (token.is_doctype()) {
+        // Parse error. Ignore the token.
         log_parse_error();
         return;
     }
 
+    // -> A comment token
     if (token.is_comment()) {
+        // Insert a comment as the last child of the Document object.
         auto comment = realm().heap().allocate<DOM::Comment>(realm(), document(), token.comment());
         MUST(document().append_child(*comment));
         return;
     }
 
+    // -> A character token that is one of U+0009 CHARACTER TABULATION, U+000A LINE FEED (LF), U+000C FORM FEED (FF), U+000D CARRIAGE RETURN (CR), or U+0020 SPACE
     if (token.is_character() && token.is_parser_whitespace()) {
+        // Ignore the token.
         return;
     }
 
+    // -> A start tag whose tag name is "html"
     if (token.is_start_tag() && token.tag_name() == HTML::TagNames::html) {
+        // Create an element for the token in the HTML namespace, with the Document as the intended parent. Append it to the Document object. Put this element in the stack of open elements.
         auto element = create_element_for(token, Namespace::HTML, document());
         MUST(document().append_child(*element));
         m_stack_of_open_elements.push(move(element));
+
+        // Switch the insertion mode to "before head".
         m_insertion_mode = InsertionMode::BeforeHead;
         return;
     }
 
+    // -> An end tag whose tag name is one of: "head", "body", "html", "br"
     if (token.is_end_tag() && token.tag_name().is_one_of(HTML::TagNames::head, HTML::TagNames::body, HTML::TagNames::html, HTML::TagNames::br)) {
+        // Act as described in the "anything else" entry below.
         goto AnythingElse;
     }
 
+    // -> Any other end tag
     if (token.is_end_tag()) {
+        // Parse error. Ignore the token.
         log_parse_error();
         return;
     }
 
+    // -> Anything else
 AnythingElse:
+    // Create an html element whose node document is the Document object. Append it to the Document object. Put this element in the stack of open elements.
     auto element = create_element(document(), HTML::TagNames::html, Namespace::HTML);
     MUST(document().append_child(*element));
     m_stack_of_open_elements.push(element);
-    // FIXME: If the Document is being loaded as part of navigation of a browsing context, then: run the application cache selection algorithm with no manifest, passing it the Document object.
+
+    // Switch the insertion mode to "before head", then reprocess the token.
     m_insertion_mode = InsertionMode::BeforeHead;
     process_using_the_rules_for(InsertionMode::BeforeHead, token);
     return;
