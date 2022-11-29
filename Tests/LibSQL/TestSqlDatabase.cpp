@@ -172,7 +172,6 @@ TEST_CASE(get_schema_from_database)
         EXPECT(!db->open().is_error());
         auto schema_or_error = db->get_schema("TestSchema");
         EXPECT(!schema_or_error.is_error());
-        EXPECT(schema_or_error.value());
     }
 }
 

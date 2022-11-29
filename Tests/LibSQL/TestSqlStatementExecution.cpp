@@ -71,7 +71,6 @@ TEST_CASE(create_schema)
     create_schema(database);
     auto schema_or_error = database->get_schema("TESTSCHEMA");
     EXPECT(!schema_or_error.is_error());
-    EXPECT(schema_or_error.value());
 }
 
 TEST_CASE(create_table)

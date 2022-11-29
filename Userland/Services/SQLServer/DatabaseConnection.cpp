@@ -41,7 +41,7 @@ DatabaseConnection::DatabaseConnection(String database_name, int client_id)
         m_database = SQL::Database::construct(String::formatted("/home/anon/sql/{}.db", m_database_name));
         auto client_connection = ConnectionFromClient::client_connection_for(m_client_id);
         if (auto maybe_error = m_database->open(); maybe_error.is_error()) {
-            client_connection->async_connection_error(m_connection_id, (int)SQL::SQLErrorCode::InternalError, maybe_error.error().string_literal());
+            client_connection->async_connection_error(m_connection_id, to_underlying(maybe_error.error().error()), maybe_error.error().error_string());
             return;
         }
         m_accept_statements = true;
