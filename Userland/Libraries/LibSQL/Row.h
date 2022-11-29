@@ -6,8 +6,7 @@
 
 #pragma once
 
-#include <AK/ByteBuffer.h>
-#include <AK/RefPtr.h>
+#include <AK/NonnullRefPtr.h>
 #include <LibSQL/Forward.h>
 #include <LibSQL/Meta.h>
 #include <LibSQL/Tuple.h>
@@ -26,19 +25,21 @@ namespace SQL {
  */
 class Row : public Tuple {
 public:
-    explicit Row(RefPtr<TableDef>, u32 pointer = 0);
+    explicit Row(NonnullRefPtr<TableDef>, u32 pointer = 0);
     virtual ~Row() override = default;
 
     [[nodiscard]] u32 next_pointer() const { return m_next_pointer; }
     void set_next_pointer(u32 ptr) { m_next_pointer = ptr; }
 
-    RefPtr<TableDef> table() const { return m_table; }
+    TableDef const& table() const { return *m_table; }
+    TableDef& table() { return *m_table; }
+
     [[nodiscard]] virtual size_t length() const override { return Tuple::length() + sizeof(u32); }
     virtual void serialize(Serializer&) const override;
     virtual void deserialize(Serializer&) override;
 
 private:
-    RefPtr<TableDef> m_table;
+    NonnullRefPtr<TableDef> m_table;
     u32 m_next_pointer { 0 };
 };
 
