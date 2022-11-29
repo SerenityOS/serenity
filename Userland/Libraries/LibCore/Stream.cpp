@@ -807,4 +807,50 @@ void WrappedAKOutputStream::close()
 {
 }
 
+WrapInAKInputStream::WrapInAKInputStream(Core::Stream::Stream& stream)
+    : m_stream(stream)
+{
+}
+
+size_t WrapInAKInputStream::read(Bytes bytes)
+{
+    if (has_any_error())
+        return 0;
+
+    auto data_or_error = m_stream.read(bytes);
+    if (data_or_error.is_error()) {
+        set_fatal_error();
+        return 0;
+    }
+
+    return data_or_error.value().size();
+}
+
+bool WrapInAKInputStream::unreliable_eof() const
+{
+    return m_stream.is_eof();
+}
+
+bool WrapInAKInputStream::read_or_error(Bytes bytes)
+{
+    if (read(bytes) < bytes.size()) {
+        set_fatal_error();
+        return false;
+    }
+
+    return true;
+}
+
+bool WrapInAKInputStream::discard_or_error(size_t count)
+{
+    auto maybe_error = m_stream.discard(count);
+
+    if (maybe_error.is_error()) {
+        set_fatal_error();
+        return false;
+    }
+
+    return true;
+}
+
 }

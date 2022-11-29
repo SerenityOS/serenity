@@ -1030,4 +1030,17 @@ private:
     NonnullOwnPtr<OutputStream> m_stream;
 };
 
+// Note: This is only a temporary hack, to break up the task of moving away from AK::Stream into smaller parts.
+class WrapInAKInputStream final : public InputStream {
+public:
+    WrapInAKInputStream(Core::Stream::Stream& stream);
+    virtual size_t read(Bytes) override;
+    virtual bool unreliable_eof() const override;
+    virtual bool read_or_error(Bytes) override;
+    virtual bool discard_or_error(size_t count) override;
+
+private:
+    Core::Stream::Stream& m_stream;
+};
+
 }
