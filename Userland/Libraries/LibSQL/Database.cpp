@@ -199,25 +199,25 @@ ErrorOr<Vector<Row>> Database::match(TableDef const& table, Key const& key)
 
 ErrorOr<void> Database::insert(Row& row)
 {
-    VERIFY(m_table_cache.get(row.table()->key().hash()).has_value());
+    VERIFY(m_table_cache.get(row.table().key().hash()).has_value());
     // TODO Check constraints
 
     row.set_pointer(m_heap->new_record_pointer());
-    row.set_next_pointer(row.table()->pointer());
+    row.set_next_pointer(row.table().pointer());
     TRY(update(row));
 
     // TODO update indexes defined on table.
 
-    auto table_key = row.table()->key();
+    auto table_key = row.table().key();
     table_key.set_pointer(row.pointer());
     VERIFY(m_tables->update_key_pointer(table_key));
-    row.table()->set_pointer(row.pointer());
+    row.table().set_pointer(row.pointer());
     return {};
 }
 
 ErrorOr<void> Database::update(Row& tuple)
 {
-    VERIFY(m_table_cache.get(tuple.table()->key().hash()).has_value());
+    VERIFY(m_table_cache.get(tuple.table().key().hash()).has_value());
     // TODO Check constraints
     m_serializer.reset();
     m_serializer.serialize_and_write<Tuple>(tuple);

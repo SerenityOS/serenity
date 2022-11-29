@@ -9,9 +9,9 @@
 
 namespace SQL {
 
-Row::Row(RefPtr<TableDef> table, u32 pointer)
+Row::Row(NonnullRefPtr<TableDef> table, u32 pointer)
     : Tuple(table->to_tuple_descriptor())
-    , m_table(table)
+    , m_table(move(table))
 {
     set_pointer(pointer);
 }
