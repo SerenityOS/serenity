@@ -648,11 +648,11 @@ Web::WebDriver::Response Client::take_element_screenshot(Web::WebDriver::Paramet
 
 // 18.1 Print Page, https://w3c.github.io/webdriver/#dfn-print-page
 // POST /session/{session id}/print
-Web::WebDriver::Response Client::print_page(Web::WebDriver::Parameters parameters, JsonValue)
+Web::WebDriver::Response Client::print_page(Web::WebDriver::Parameters parameters, JsonValue payload)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling POST /session/<session id>/print");
     auto* session = TRY(find_session_with_id(parameters[0]));
-    return session->web_content_connection().print_page();
+    return session->web_content_connection().print_page(payload);
 }
 
 }

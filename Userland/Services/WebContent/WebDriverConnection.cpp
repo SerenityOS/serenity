@@ -8,9 +8,11 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Base64.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
 #include <AK/Vector.h>
+#include <LibGUI/Desktop.h>
 #include <LibJS/Runtime/JSONObject.h>
 #include <LibJS/Runtime/Value.h>
 #include <LibWeb/CSS/PropertyID.h>
@@ -1534,10 +1536,112 @@ Messages::WebDriverClient::TakeElementScreenshotResponse WebDriverConnection::ta
 }
 
 // 18.1 Print Page, https://w3c.github.io/webdriver/#dfn-print-page
-Messages::WebDriverClient::PrintPageResponse WebDriverConnection::print_page()
+Messages::WebDriverClient::PrintPageResponse WebDriverConnection::print_page(JsonValue const& payload)
 {
-    // FIXME: Actually implement this :^)
-    return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::UnsupportedOperation, "Print not implemented"sv);
+    // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
+    TRY(ensure_open_top_level_browsing_context());
+
+    // 2. Handle any user prompts and return its value if it is an error.
+    TRY(handle_any_user_prompts());
+
+    // 3. Let orientation be the result of getting a property with default named orientation and with default "portrait" from the parameters argument.
+    // 4. If orientation is not a String or does not have one of the values "landscape" or "portrait", return error with error code invalid argument.
+    auto orientation = (payload.as_object().get_ptr("orientation"sv) ? TRY(get_property(payload, "orientation"sv)) : "portrait");
+    if (orientation != "landscape" || orientation != "portrait") {
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, String::formatted("Orientation '{}' is invalid", orientation));
+    }
+
+    // 5. Let scale be the result of getting a property with default named scale and with default 1 from the parameters argument.
+    // 6. If scale is not a Number, or is less than 0.1 or greater than 2 return error with error code invalid argument.
+    auto scale = (payload.as_object().get_ptr("scale"sv) ? TRY(get_property(payload, "scale"sv)).to_int() : 1);
+    if (scale < 0.1 || scale > 2) {
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, String::formatted("Scale '{}' is invalid", scale));
+    }
+
+    // 7. Let background be the result of getting a property with default named background and with default false from the parameters argument.
+    // 8. If background is not a Boolean return error with error code invalid argument.
+    auto background = (payload.as_object().get_ptr("background"sv) ? TRY(get_property(payload, "background"sv)).to_bool() : false);
+
+    // 9. Let page be the result of getting a property with default named page and with a default of an empty Object from the parameters argument.
+    auto page = (payload.as_object().get_ptr("page"sv) ? TRY(get_property(payload, "page"sv)) : Core::Object());
+
+    // 10. Let pageWidth be the result of getting a property with default named width and with a default of 21.59 from page.
+    auto pageWidth = (page.as_object().get_ptr("width"sv) ? TRY(get_property(page, "width"sv)).to_double() : 21.59);
+
+    // 11. Let pageHeight be the result of getting a property with default named height and with a default of 27.94 from page.
+    auto pageHeight = (page.as_object().get_ptr("height"sv) ? TRY(get_property(page, "height"sv)).to_double() : 27.94);
+
+    // 12. If either of pageWidth or pageHeight is not a Number, or is less then 0, return error with error code invalid argument.
+    if (pageWidth < 0) {
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, String::formatted("Page width '{}' is invalid", pageWidth));
+    }
+    if (pageHeight < 0) {
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, String::formatted("Page height '{}' is invalid", pageHeight));
+    }
+
+    // 13. Let margin be the result of getting a property with default named margin and with a default of an empty Object from the parameters argument.
+    auto margin = (payload.as_object().get_ptr("margin"sv) ? TRY(get_property(payload, "margin"sv)) : Core::Object());
+
+    // 14. Let marginTop be the result of getting a property with default named top and with a default of 1 from margin.
+    auto marginTop = (margin.as_object().get_ptr("top"sv) ? TRY(get_property(margin, "top"sv)).to_int() : 1);
+
+    // 15. Let marginBottom be the result of getting a property with default named bottom and with a default of 1 from margin.
+    auto marginBottom = (margin.as_object().get_ptr("bottom"sv) ? TRY(get_property(margin, "bottom"sv)).to_int() : 1);
+
+    // 16. Let marginLeft be the result of getting a property with default named left and with a default of 1 from margin.
+    auto marginLeft = (margin.as_object().get_ptr("left"sv) ? TRY(get_property(margin, "left"sv)).to_int() : 1);
+
+    // 17. Let marginRight be the result of getting a property with default named right and with a default of 1 from margin.
+    auto marginRight = (margin.as_object().get_ptr("right"sv) ? TRY(get_property(margin, "right"sv)).to_int() : 1);
+
+    // 18. If any of marginTop, marginBottom, marginLeft, or marginRight is not a Number, or is less then 0, return error with error code invalid argument.
+    if (marginTop < 0) {
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, String::formatted("Margin top '{}' is invalid", marginTop));
+    }
+    if (marginBottom < 0) {
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, String::formatted("Margin bottom '{}' is invalid", marginBottom));
+    }
+    if (marginLeft < 0) {
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, String::formatted("Margin left '{}' is invalid", marginLeft));
+    }
+    if (marginRight < 0) {
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, String::formatted("Margin right '{}' is invalid", marginRight));
+    }
+
+    // 19. Let shrinkToFit be the result of getting a property with default named shrinkToFit and with default true from the parameters argument.
+    // 20. If shrinkToFit is not a Boolean return error with error code invalid argument.
+    auto shrinkToFit = (payload.as_object().get_ptr("shrinkToFit"sv) ? TRY(get_property(payload, "shrinkToFit"sv)).to_bool() : true);
+
+    // 21. Let pageRanges be the result of getting a property with default named pageRanges from the parameters argument with default of an empty Array.
+    // 22. If pageRanges is not an Array return error with error code invalid argument.
+    auto pageRanges = (payload.as_object().get_ptr("pageRanges"sv) ? TRY(get_property(payload, "pageRanges"sv)) : { 0 });
+
+    // 23. FIXME: When the user agent is next to run the animation frame callbacks, let pdfData be the result of trying to take UA-specific steps to generate a paginated representation of the current browsing context, with the CSS media type set to print, encoded as a PDF, with the following paper settings:
+    //    FIXME: Property    Value
+    //    FIXME: Width in cm    pageWidth if orientation is "portrait" otherwise pageHeight
+    //    FIXME: Height in cm    pageHeight if orientation is "portrait" otherwise pageWidth
+    //    FIXME: Top margin, in cm    marginTop
+    //    FIXME: Bottom margin, in cm    marginBottom
+    //    FIXME: Left margin, in cm    marginLeft
+    //    FIXME: Right margin, in cm    marginRight
+    //    FIXME: In addition, the following formatting hints should be applied by the UA:
+    //
+    //    FIXME: If scale is not equal to 1
+    //    FIXME: Zoom the size of the content by a factor scale
+    //    FIXME: If background is false
+    //    FIXME: Suppress output of background images
+    //    FIXME: If shrinkToFit is true
+    //    FIXME: Resize the content to match the page width, overriding any page width specified in the content
+
+    // 24. FIXME: If pageRanges is not an empty Array, Let pages be the result of trying to parse a page range with arguments pageRanges and the number of pages contained in pdfData, then remove any pages from pdfData whose one-based index is not contained in pages
+
+    // 25. FIXME: Let encoding result be the result of calling Base64 Encode on pdfData.
+
+    // 26. FIXME: Let encoded string be encoding result’s data.
+
+    // 27. FIXME: Return success with data encoded string
+
+    return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::UnsupportedOperation, "Print not fully implemented"sv);
 }
 
 // https://w3c.github.io/webdriver/#dfn-no-longer-open
