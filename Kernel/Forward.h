@@ -13,7 +13,7 @@ namespace Kernel {
 
 class BlockDevice;
 class CharacterDevice;
-class Coredump;
+class CoredumpFile;
 class Credentials;
 class Custody;
 class Device;

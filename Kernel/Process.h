@@ -136,7 +136,7 @@ public:
     MAKE_ALIGNED_ALLOCATED(Process, PAGE_SIZE);
 
     friend class Thread;
-    friend class Coredump;
+    friend class CoredumpFile;
 
     auto with_protected_data(auto&& callback) const
     {
@@ -560,7 +560,7 @@ public:
     ErrorOr<void> set_coredump_property(NonnullOwnPtr<KString> key, NonnullOwnPtr<KString> value);
     ErrorOr<void> try_set_coredump_property(StringView key, StringView value);
 
-    NonnullLockRefPtrVector<Thread> const& threads_for_coredump(Badge<Coredump>) const { return m_threads_for_coredump; }
+    NonnullLockRefPtrVector<Thread> const& threads_for_coredump(Badge<CoredumpFile>) const { return m_threads_for_coredump; }
 
     PerformanceEventBuffer* perf_events() { return m_perf_event_buffer; }
     PerformanceEventBuffer const* perf_events() const { return m_perf_event_buffer; }

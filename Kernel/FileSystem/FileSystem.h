@@ -33,6 +33,7 @@ public:
     virtual StringView class_name() const = 0;
     virtual Inode& root_inode() = 0;
     virtual bool supports_watchers() const { return false; }
+    virtual bool supports_watchers_only_on_root_inode() const { return false; }
 
     bool is_readonly() const { return m_readonly; }
 
@@ -41,6 +42,7 @@ public:
     virtual unsigned total_inode_count() const { return 0; }
     virtual unsigned free_inode_count() const { return 0; }
 
+    virtual ErrorOr<void> prepare_after_mount_first_time() { return {}; }
     ErrorOr<void> prepare_to_unmount();
 
     struct DirectoryEntryView {

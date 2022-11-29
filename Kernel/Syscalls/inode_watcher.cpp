@@ -51,6 +51,10 @@ ErrorOr<FlatPtr> Process::sys$inode_watcher_add_watch(Userspace<Syscall::SC_inod
     auto custody = TRY(VirtualFileSystem::the().resolve_path(credentials(), path->view(), current_directory()));
     if (!custody->inode().fs().supports_watchers())
         return ENOTSUP;
+    // NOTE: Some filesystems only support watching the root inode as there's no mechanism to
+    // update any other inode (because they are not registered).
+    if (custody->inode().fs().supports_watchers_only_on_root_inode() && (&custody->inode() != &custody->inode().fs().root_inode()))
+        return ENOTSUP;
 
     return TRY(inode_watcher->register_inode(custody->inode(), params.event_mask));
 }

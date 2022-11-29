@@ -40,7 +40,7 @@ set(KERNEL_SOURCES
     Bus/VirtIO/Queue.cpp
     Bus/VirtIO/RNG.cpp
     CommandLine.cpp
-    Coredump.cpp
+    CoredumpFile.cpp
     Credentials.cpp
     Devices/AsyncDeviceRequest.cpp
     Devices/Audio/AC97.cpp
@@ -109,6 +109,8 @@ set(KERNEL_SOURCES
     FileSystem/AnonymousFile.cpp
     FileSystem/BlockBasedFileSystem.cpp
     FileSystem/Custody.cpp
+    FileSystem/CoredumpFS/FileSystem.cpp
+    FileSystem/CoredumpFS/Inode.cpp
     FileSystem/DevPtsFS/FileSystem.cpp
     FileSystem/DevPtsFS/Inode.cpp
     FileSystem/Ext2FS/FileSystem.cpp
@@ -196,7 +198,6 @@ set(KERNEL_SOURCES
     FileSystem/SysFS/Subsystems/Kernel/Network/UDP.cpp
     FileSystem/SysFS/Subsystems/Kernel/Variables/BooleanVariable.cpp
     FileSystem/SysFS/Subsystems/Kernel/Variables/CapsLockRemap.cpp
-    FileSystem/SysFS/Subsystems/Kernel/Variables/CoredumpDirectory.cpp
     FileSystem/SysFS/Subsystems/Kernel/Variables/Directory.cpp
     FileSystem/SysFS/Subsystems/Kernel/Variables/DumpKmallocStack.cpp
     FileSystem/SysFS/Subsystems/Kernel/Variables/StringVariable.cpp

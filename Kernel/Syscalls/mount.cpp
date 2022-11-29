@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <Kernel/FileSystem/CoredumpFS/FileSystem.h>
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/DevPtsFS/FileSystem.h>
 #include <Kernel/FileSystem/Ext2FS/FileSystem.h>
@@ -33,19 +34,21 @@ static constexpr FileSystemInitializer s_initializers[] = {
     { "devpts"sv, "DevPtsFS"sv, false, false, false, {}, DevPtsFS::try_create },
     { "sys"sv, "SysFS"sv, false, false, false, {}, SysFS::try_create },
     { "tmp"sv, "TmpFS"sv, false, false, false, {}, TmpFS::try_create },
+    { "coredump"sv, "CoredumpFS"sv, false, false, false, {}, CoredumpFS::try_create },
     { "ext2"sv, "Ext2FS"sv, true, true, true, Ext2FS::try_create, {} },
     { "9p"sv, "Plan9FS"sv, true, true, true, Plan9FS::try_create, {} },
     { "iso9660"sv, "ISO9660FS"sv, true, true, true, ISO9660FS::try_create, {} },
     { "fat"sv, "FATFS"sv, true, true, true, FATFS::try_create, {} },
 };
 
-static ErrorOr<NonnullLockRefPtr<FileSystem>> find_or_create_filesystem_instance(StringView fs_type, OpenFileDescription* possible_description)
+static ErrorOr<NonnullLockRefPtr<FileSystem>> find_or_create_filesystem_instance(StringView fs_type, OpenFileDescription* possible_description, bool& created_synthetic_instance)
 {
     for (auto& initializer_entry : s_initializers) {
         if (fs_type != initializer_entry.short_name && fs_type != initializer_entry.name)
             continue;
         if (!initializer_entry.requires_open_file_description) {
             VERIFY(initializer_entry.create);
+            created_synthetic_instance = true;
             NonnullLockRefPtr<FileSystem> fs = TRY(initializer_entry.create());
             return fs;
         }
@@ -63,6 +66,7 @@ static ErrorOr<NonnullLockRefPtr<FileSystem>> find_or_create_filesystem_instance
             dbgln("mount: this is not a seekable file");
             return ENODEV;
         }
+        created_synthetic_instance = false;
         return TRY(VirtualFileSystem::the().find_already_existing_or_create_file_backed_file_system(description, initializer_entry.create_with_fd));
     }
     return ENODEV;
@@ -112,17 +116,23 @@ ErrorOr<FlatPtr> Process::sys$mount(Userspace<Syscall::SC_mount_params const*> u
 
     LockRefPtr<FileSystem> fs;
 
+    bool created_synthetic_instance = false;
     if (!description_or_error.is_error()) {
         auto description = description_or_error.release_value();
-        fs = TRY(find_or_create_filesystem_instance(fs_type, description.ptr()));
+        fs = TRY(find_or_create_filesystem_instance(fs_type, description.ptr(), created_synthetic_instance));
         auto source_pseudo_path = TRY(description->pseudo_path());
         dbgln("mount: attempting to mount {} on {}", source_pseudo_path, target);
     } else {
-        fs = TRY(find_or_create_filesystem_instance(fs_type, {}));
+        fs = TRY(find_or_create_filesystem_instance(fs_type, {}, created_synthetic_instance));
     }
 
     TRY(fs->initialize());
     TRY(VirtualFileSystem::the().mount(*fs, target_custody, params.flags));
+    if (created_synthetic_instance) {
+        // FIXME: What is a reasonable thing to do if we fail here?
+        // Should we use an ArmedScopeGuard to delete the mount and the filesystem?
+        TRY(fs->prepare_after_mount_first_time());
+    }
     return 0;
 }
 

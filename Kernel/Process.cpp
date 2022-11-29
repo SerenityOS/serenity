@@ -9,7 +9,7 @@
 #include <AK/Time.h>
 #include <AK/Types.h>
 #include <Kernel/API/Syscall.h>
-#include <Kernel/Coredump.h>
+#include <Kernel/CoredumpFile.h>
 #include <Kernel/Credentials.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Devices/DeviceManagement.h>
@@ -19,6 +19,7 @@
 #endif
 #include <Kernel/API/POSIX/errno.h>
 #include <Kernel/Devices/NullDevice.h>
+#include <Kernel/FileSystem/CoredumpFS/FileSystem.h>
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/OpenFileDescription.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
@@ -696,18 +697,15 @@ ErrorOr<void> Process::dump_core()
     VERIFY(is_dumpable());
     VERIFY(should_generate_coredump());
     dbgln("Generating coredump for pid: {}", pid().value());
-    auto coredump_directory_path = TRY(Coredump::directory_path().with([&](auto& coredump_directory_path) -> ErrorOr<NonnullOwnPtr<KString>> {
-        if (coredump_directory_path)
-            return KString::try_create(coredump_directory_path->view());
-        return KString::try_create(""sv);
-    }));
-    if (coredump_directory_path->view() == ""sv) {
-        dbgln("Generating coredump for pid {} failed because coredump directory was not set.", pid().value());
+    auto coredump_file = TRY(CoredumpFile::try_create(*this));
+    CoredumpFile::all_instances().with([&](auto& list) {
+        list.append(coredump_file);
+    });
+    TRY(CoredumpFS::for_each([&](CoredumpFS& fs) -> ErrorOr<void> {
+        TRY(fs.notify_on_new_coredump({}, pid()));
         return {};
-    }
-    auto coredump_path = TRY(KString::formatted("{}/{}_{}_{}", coredump_directory_path->view(), name(), pid().value(), kgettimeofday().to_truncated_seconds()));
-    auto coredump = TRY(Coredump::try_create(*this, coredump_path->view()));
-    return coredump->write();
+    }));
+    return {};
 }
 
 ErrorOr<void> Process::dump_perfcore()

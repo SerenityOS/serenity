@@ -465,20 +465,8 @@ static ErrorOr<void> create_tmp_coredump_directory()
     auto old_umask = umask(0);
     // FIXME: the coredump directory should be made read-only once CrashDaemon is no longer responsible for compressing coredumps
     TRY(Core::System::mkdir("/tmp/coredump"sv, 0777));
+    TRY(Core::System::mount(-1, "/tmp/coredump"sv, "coredump"sv, 0));
     umask(old_umask);
-    return {};
-}
-
-static ErrorOr<void> set_default_coredump_directory()
-{
-    dbgln("Setting /tmp/coredump as the coredump directory");
-    auto sysfs_coredump_directory_variable_fd = TRY(Core::System::open("/sys/kernel/variables/coredump_directory"sv, O_RDWR));
-    ScopeGuard close_on_exit([&] {
-        close(sysfs_coredump_directory_variable_fd);
-    });
-    auto tmp_coredump_directory_path = "/tmp/coredump"sv;
-    auto nwritten = TRY(Core::System::write(sysfs_coredump_directory_variable_fd, tmp_coredump_directory_path.bytes()));
-    VERIFY(static_cast<size_t>(nwritten) == tmp_coredump_directory_path.length());
     return {};
 }
 
@@ -501,13 +489,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (!user) {
         TRY(mount_all_filesystems());
         TRY(prepare_synthetic_filesystems());
+        TRY(create_tmp_coredump_directory());
     }
 
     TRY(Core::System::pledge("stdio proc exec tty accept unix rpath wpath cpath chown fattr id sigaction"));
 
     if (!user) {
-        TRY(create_tmp_coredump_directory());
-        TRY(set_default_coredump_directory());
         TRY(create_tmp_semaphore_directory());
         TRY(determine_system_mode());
     }
