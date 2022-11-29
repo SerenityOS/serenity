@@ -24,9 +24,10 @@ Database::Database(String name)
 {
 }
 
-ErrorOr<void> Database::open()
+ResultOr<void> Database::open()
 {
     TRY(m_heap->open());
+
     m_schemas = BTree::construct(m_serializer, SchemaDef::index_def()->to_tuple_descriptor(), m_heap->schemas_root());
     m_schemas->on_new_root = [&]() {
         m_heap->set_schemas_root(m_schemas->root());
@@ -43,17 +44,22 @@ ErrorOr<void> Database::open()
     };
 
     m_open = true;
-    auto default_schema = TRY(get_schema("default"));
-    if (!default_schema) {
-        default_schema = SchemaDef::construct("default");
-        TRY(add_schema(*default_schema));
-    }
 
-    auto master_schema = TRY(get_schema("master"));
-    if (!master_schema) {
-        master_schema = SchemaDef::construct("master");
-        TRY(add_schema(*master_schema));
-    }
+    auto ensure_schema_exists = [&](auto schema_name) -> ResultOr<NonnullRefPtr<SchemaDef>> {
+        if (auto result = get_schema(schema_name); result.is_error()) {
+            if (result.error().error() != SQLErrorCode::SchemaDoesNotExist)
+                return result.release_error();
+
+            auto schema_def = SchemaDef::construct(schema_name);
+            TRY(add_schema(*schema_def));
+            return schema_def;
+        } else {
+            return result.release_value();
+        }
+    };
+
+    (void)TRY(ensure_schema_exists("default"sv));
+    auto master_schema = TRY(ensure_schema_exists("master"sv));
 
     auto table_def = TRY(get_table("master", "internal_describe_table"));
     if (!table_def) {
@@ -75,13 +81,12 @@ ErrorOr<void> Database::commit()
     return {};
 }
 
-ErrorOr<void> Database::add_schema(SchemaDef const& schema)
+ResultOr<void> Database::add_schema(SchemaDef const& schema)
 {
     VERIFY(is_open());
-    if (!m_schemas->insert(schema.key())) {
-        warnln("Duplicate schema name {}"sv, schema.name());
-        return Error::from_string_literal("Duplicate schema name");
-    }
+
+    if (!m_schemas->insert(schema.key()))
+        return Result { SQLCommand::Unknown, SQLErrorCode::SchemaExists, schema.name() };
     return {};
 }
 
@@ -92,24 +97,25 @@ Key Database::get_schema_key(String const& schema_name)
     return key;
 }
 
-ErrorOr<RefPtr<SchemaDef>> Database::get_schema(String const& schema)
+ResultOr<NonnullRefPtr<SchemaDef>> Database::get_schema(String const& schema)
 {
     VERIFY(is_open());
+
     auto schema_name = schema;
-    if (schema.is_null() || schema.is_empty())
-        schema_name = "default";
+    if (schema.is_empty())
+        schema_name = "default"sv;
+
     Key key = get_schema_key(schema_name);
-    auto schema_def_opt = m_schema_cache.get(key.hash());
-    if (schema_def_opt.has_value()) {
-        return RefPtr<SchemaDef>(schema_def_opt.value());
-    }
+    if (auto it = m_schema_cache.find(key.hash()); it != m_schema_cache.end())
+        return it->value;
+
     auto schema_iterator = m_schemas->find(key);
-    if (schema_iterator.is_end() || (*schema_iterator != key)) {
-        return RefPtr<SchemaDef>(nullptr);
-    }
-    auto ret = SchemaDef::construct(*schema_iterator);
-    m_schema_cache.set(key.hash(), ret);
-    return RefPtr<SchemaDef>(ret);
+    if (schema_iterator.is_end() || (*schema_iterator != key))
+        return Result { SQLCommand::Unknown, SQLErrorCode::SchemaDoesNotExist, schema_name };
+
+    auto schema_def = SchemaDef::construct(*schema_iterator);
+    m_schema_cache.set(key.hash(), schema_def);
+    return schema_def;
 }
 
 ErrorOr<void> Database::add_table(TableDef& table)
@@ -132,7 +138,7 @@ Key Database::get_table_key(String const& schema_name, String const& table_name)
     return key;
 }
 
-ErrorOr<RefPtr<TableDef>> Database::get_table(String const& schema, String const& name)
+ResultOr<RefPtr<TableDef>> Database::get_table(String const& schema, String const& name)
 {
     VERIFY(is_open());
     auto schema_name = schema;
@@ -147,10 +153,6 @@ ErrorOr<RefPtr<TableDef>> Database::get_table(String const& schema, String const
         return RefPtr<TableDef>(nullptr);
     }
     auto schema_def = TRY(get_schema(schema));
-    if (!schema_def) {
-        warnln("Schema '{}' does not exist"sv, schema);
-        return Error::from_string_literal("Schema does not exist");
-    }
     auto ret = TableDef::construct(schema_def, name);
     ret->set_pointer((*table_iterator).pointer());
     m_table_cache.set(key.hash(), ret);

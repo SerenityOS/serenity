@@ -11,13 +11,8 @@ namespace SQL::AST {
 
 ResultOr<ResultSet> CreateTable::execute(ExecutionContext& context) const
 {
-    auto schema_name = m_schema_name.is_empty() ? String { "default"sv } : m_schema_name;
-
-    auto schema_def = TRY(context.database->get_schema(schema_name));
-    if (!schema_def)
-        return Result { SQLCommand::Create, SQLErrorCode::SchemaDoesNotExist, schema_name };
-
-    auto table_def = TRY(context.database->get_table(schema_name, m_table_name));
+    auto schema_def = TRY(context.database->get_schema(m_schema_name));
+    auto table_def = TRY(context.database->get_table(m_schema_name, m_table_name));
     if (table_def) {
         if (m_is_error_if_table_exists)
             return Result { SQLCommand::Create, SQLErrorCode::TableExists, m_table_name };
