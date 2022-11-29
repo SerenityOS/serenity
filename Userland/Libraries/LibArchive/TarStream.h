@@ -35,7 +35,7 @@ class TarInputStream {
 public:
     static ErrorOr<NonnullOwnPtr<TarInputStream>> construct(NonnullOwnPtr<Core::Stream::Stream>);
     ErrorOr<void> advance();
-    bool finished() const { return m_stream->is_eof(); }
+    bool finished() const { return m_found_end_of_archive || m_stream->is_eof(); }
     ErrorOr<bool> valid() const;
     TarFileHeader const& header() const { return m_header; }
     TarFileStream file_contents();
@@ -51,6 +51,7 @@ private:
     NonnullOwnPtr<Core::Stream::Stream> m_stream;
     unsigned long m_file_offset { 0 };
     int m_generation { 0 };
+    bool m_found_end_of_archive { false };
 
     friend class TarFileStream;
 };
