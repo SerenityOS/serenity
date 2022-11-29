@@ -12,16 +12,9 @@ namespace SQL::AST {
 ResultOr<ResultSet> CreateTable::execute(ExecutionContext& context) const
 {
     auto schema_def = TRY(context.database->get_schema(m_schema_name));
-    auto table_def = TRY(context.database->get_table(m_schema_name, m_table_name));
-    if (table_def) {
-        if (m_is_error_if_table_exists)
-            return Result { SQLCommand::Create, SQLErrorCode::TableExists, m_table_name };
-        return ResultSet { SQLCommand::Create };
-    }
+    auto table_def = TableDef::construct(schema_def, m_table_name);
 
-    table_def = TableDef::construct(schema_def, m_table_name);
-
-    for (auto& column : m_columns) {
+    for (auto const& column : m_columns) {
         SQLType type;
 
         if (column.type_name()->name().is_one_of("VARCHAR"sv, "TEXT"sv))
@@ -38,7 +31,11 @@ ResultOr<ResultSet> CreateTable::execute(ExecutionContext& context) const
         table_def->append_column(column.name(), type);
     }
 
-    TRY(context.database->add_table(*table_def));
+    if (auto result = context.database->add_table(*table_def); result.is_error()) {
+        if (result.error().error() != SQLErrorCode::TableExists || m_is_error_if_table_exists)
+            return result.release_error();
+    }
+
     return ResultSet { SQLCommand::Create };
 }
 

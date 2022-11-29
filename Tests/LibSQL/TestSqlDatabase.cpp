@@ -44,10 +44,7 @@ NonnullRefPtr<SQL::TableDef> setup_table(SQL::Database& db)
 
 void insert_into_table(SQL::Database& db, int count)
 {
-    auto table_or_error = db.get_table("TestSchema", "TestTable");
-    EXPECT(!table_or_error.is_error());
-    auto table = table_or_error.value();
-    EXPECT(table);
+    auto table = MUST(db.get_table("TestSchema", "TestTable"));
 
     for (int ix = 0; ix < count; ix++) {
         SQL::Row row(*table);
@@ -63,10 +60,7 @@ void insert_into_table(SQL::Database& db, int count)
 
 void verify_table_contents(SQL::Database& db, int expected_count)
 {
-    auto table_or_error = db.get_table("TestSchema", "TestTable");
-    EXPECT(!table_or_error.is_error());
-    auto table = table_or_error.value();
-    EXPECT(table);
+    auto table = MUST(db.get_table("TestSchema", "TestTable"));
 
     int sum = 0;
     int count = 0;
@@ -196,10 +190,8 @@ TEST_CASE(get_table_from_database)
     {
         auto db = SQL::Database::construct("/tmp/test.db");
         EXPECT(!db->open().is_error());
-        auto table_or_error = db->get_table("TestSchema", "TestTable");
-        EXPECT(!table_or_error.is_error());
-        auto table = table_or_error.value();
-        EXPECT(table);
+
+        auto table = MUST(db->get_table("TestSchema", "TestTable"));
         EXPECT_EQ(table->name(), "TestTable");
         EXPECT_EQ(table->num_columns(), 2u);
     }
