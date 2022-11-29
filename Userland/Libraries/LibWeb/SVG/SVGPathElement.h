@@ -27,8 +27,9 @@ private:
     SVGPathElement(DOM::Document&, DOM::QualifiedName);
 
     Vector<PathInstruction> m_instructions;
-    Gfx::FloatPoint m_previous_control_point = {};
     Optional<Gfx::Path> m_path;
 };
+
+Gfx::Path path_from_path_instructions(Span<PathInstruction const>);
 
 }

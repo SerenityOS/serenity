@@ -99,15 +99,13 @@ void SVGPathElement::parse_attribute(FlyString const& name, String const& value)
     }
 }
 
-Gfx::Path& SVGPathElement::get_path()
+Gfx::Path path_from_path_instructions(Span<PathInstruction const> instructions)
 {
-    if (m_path.has_value())
-        return m_path.value();
-
     Gfx::Path path;
+    Gfx::FloatPoint previous_control_point;
     PathInstructionType last_instruction = PathInstructionType::Invalid;
 
-    for (auto& instruction : m_instructions) {
+    for (auto& instruction : instructions) {
         // If the first path element uses relative coordinates, we treat them as absolute by making them relative to (0, 0).
         auto last_point = path.segments().is_empty() ? Gfx::FloatPoint { 0, 0 } : path.segments().last().point();
 
@@ -181,24 +179,24 @@ Gfx::Path& SVGPathElement::get_path()
 
             if (absolute) {
                 path.quadratic_bezier_curve_to(through, point);
-                m_previous_control_point = through;
+                previous_control_point = through;
             } else {
                 auto control_point = through + last_point;
                 path.quadratic_bezier_curve_to(control_point, point + last_point);
-                m_previous_control_point = control_point;
+                previous_control_point = control_point;
             }
             break;
         }
         case PathInstructionType::SmoothQuadraticBezierCurve: {
             clear_last_control_point = false;
 
-            if (m_previous_control_point.is_null()
+            if (previous_control_point.is_null()
                 || ((last_instruction != PathInstructionType::QuadraticBezierCurve) && (last_instruction != PathInstructionType::SmoothQuadraticBezierCurve))) {
-                m_previous_control_point = last_point;
+                previous_control_point = last_point;
             }
 
-            auto dx_end_control = last_point.dx_relative_to(m_previous_control_point);
-            auto dy_end_control = last_point.dy_relative_to(m_previous_control_point);
+            auto dx_end_control = last_point.dx_relative_to(previous_control_point);
+            auto dy_end_control = last_point.dy_relative_to(previous_control_point);
             auto control_point = Gfx::FloatPoint { last_point.x() + dx_end_control, last_point.y() + dy_end_control };
 
             Gfx::FloatPoint end_point = { data[0], data[1] };
@@ -209,7 +207,7 @@ Gfx::Path& SVGPathElement::get_path()
                 path.quadratic_bezier_curve_to(control_point, end_point + last_point);
             }
 
-            m_previous_control_point = control_point;
+            previous_control_point = control_point;
             break;
         }
 
@@ -226,24 +224,24 @@ Gfx::Path& SVGPathElement::get_path()
             }
             path.cubic_bezier_curve_to(c1, c2, p2);
 
-            m_previous_control_point = c2;
+            previous_control_point = c2;
             break;
         }
 
         case PathInstructionType::SmoothCurve: {
             clear_last_control_point = false;
 
-            if (m_previous_control_point.is_null()
+            if (previous_control_point.is_null()
                 || ((last_instruction != PathInstructionType::Curve) && (last_instruction != PathInstructionType::SmoothCurve))) {
-                m_previous_control_point = last_point;
+                previous_control_point = last_point;
             }
 
             // 9.5.2. Reflected control points https://svgwg.org/svg2-draft/paths.html#ReflectedControlPoints
             // If the current point is (curx, cury) and the final control point of the previous path segment is (oldx2, oldy2),
             // then the reflected point (i.e., (newx1, newy1), the first control point of the current path segment) is:
             // (newx1, newy1) = (curx - (oldx2 - curx), cury - (oldy2 - cury))
-            auto reflected_previous_control_x = last_point.x() - m_previous_control_point.dx_relative_to(last_point);
-            auto reflected_previous_control_y = last_point.y() - m_previous_control_point.dy_relative_to(last_point);
+            auto reflected_previous_control_x = last_point.x() - previous_control_point.dx_relative_to(last_point);
+            auto reflected_previous_control_y = last_point.y() - previous_control_point.dy_relative_to(last_point);
             Gfx::FloatPoint c1 = Gfx::FloatPoint { reflected_previous_control_x, reflected_previous_control_y };
             Gfx::FloatPoint c2 = { data[0], data[1] };
             Gfx::FloatPoint p2 = { data[2], data[3] };
@@ -253,7 +251,7 @@ Gfx::Path& SVGPathElement::get_path()
             }
             path.cubic_bezier_curve_to(c1, c2, p2);
 
-            m_previous_control_point = c2;
+            previous_control_point = c2;
             break;
         }
         case PathInstructionType::Invalid:
@@ -261,12 +259,19 @@ Gfx::Path& SVGPathElement::get_path()
         }
 
         if (clear_last_control_point) {
-            m_previous_control_point = Gfx::FloatPoint {};
+            previous_control_point = Gfx::FloatPoint {};
         }
         last_instruction = instruction.type;
     }
 
-    m_path = path;
+    return path;
+}
+
+Gfx::Path& SVGPathElement::get_path()
+{
+    if (!m_path.has_value()) {
+        m_path = path_from_path_instructions(m_instructions);
+    }
     return m_path.value();
 }
 
