@@ -411,3 +411,56 @@ length value, and as a minimum two lengths with an auto. -->
   <div class="grid-item" style="grid-column: 2 / span 1">1</div>
   <div class="grid-item">2</div>
 </div>
+
+<!-- Column end and span -->
+<p>There should be a column spanning 8 units, and then one spanning 4</p>
+<div 
+  class="grid-container"
+  style="
+    grid-template-columns: repeat(12,minmax(0,5fr));
+  ">
+  <div class="grid-item"
+  style="
+    grid-column-end: span 8;
+  ">1</div>
+  <div class="grid-item"
+  style="
+    grid-column-end: span 4;
+  ">2</div>
+</div>
+
+<!-- Column start span takes priority over column end span -->
+<p>There should be a column spanning 4 units, and then one spanning 8</p>
+<div 
+  class="grid-container"
+  style="
+    grid-template-columns: repeat(12,minmax(0,5fr));
+  ">
+  <div class="grid-item"
+  style="
+    grid-column-start: span 4;
+    grid-column-end: span 8;
+  ">1</div>
+  <div class="grid-item"
+  style="
+    grid-column-start: span 8;
+    grid-column-end: span 4;
+  ">2</div>
+</div>
+
+<!-- Row end and span -->
+<p>There should be a row spanning 2 units, and then one spanning 3</p>
+<div 
+  class="grid-container"
+  style="
+    grid-template-rows: repeat(5, 20px);
+  ">
+  <div class="grid-item"
+  style="
+    grid-row-end: span 2;
+  ">1</div>
+  <div class="grid-item"
+  style="
+    grid-row-end: span 3;
+  ">2</div>
+</div>
