@@ -25,11 +25,6 @@ ResultOr<ResultSet> Insert::execute(ExecutionContext& context) const
 {
     auto table_def = TRY(context.database->get_table(m_schema_name, m_table_name));
 
-    if (!table_def) {
-        auto schema_name = m_schema_name.is_empty() ? String("default"sv) : m_schema_name;
-        return Result { SQLCommand::Insert, SQLErrorCode::TableDoesNotExist, String::formatted("{}.{}", schema_name, m_table_name) };
-    }
-
     Row row(table_def);
     for (auto& column : m_column_names) {
         if (!row.has(column))

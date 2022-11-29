@@ -37,9 +37,9 @@ public:
     static Key get_schema_key(String const&);
     ResultOr<NonnullRefPtr<SchemaDef>> get_schema(String const&);
 
-    ErrorOr<void> add_table(TableDef& table);
+    ResultOr<void> add_table(TableDef& table);
     static Key get_table_key(String const&, String const&);
-    ResultOr<RefPtr<TableDef>> get_table(String const&, String const&);
+    ResultOr<NonnullRefPtr<TableDef>> get_table(String const&, String const&);
 
     ErrorOr<Vector<Row>> select_all(TableDef const&);
     ErrorOr<Vector<Row>> match(TableDef const&, Key const&);
@@ -57,7 +57,7 @@ private:
     RefPtr<BTree> m_table_columns;
 
     HashMap<u32, NonnullRefPtr<SchemaDef>> m_schema_cache;
-    HashMap<u32, RefPtr<TableDef>> m_table_cache;
+    HashMap<u32, NonnullRefPtr<TableDef>> m_table_cache;
 };
 
 }

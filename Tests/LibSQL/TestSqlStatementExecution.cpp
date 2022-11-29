@@ -81,7 +81,6 @@ TEST_CASE(create_table)
     create_table(database);
     auto table_or_error = database->get_table("TESTSCHEMA", "TESTTABLE");
     EXPECT(!table_or_error.is_error());
-    EXPECT(table_or_error.value());
 }
 
 TEST_CASE(insert_into_table)
@@ -93,9 +92,7 @@ TEST_CASE(insert_into_table)
     auto result = execute(database, "INSERT INTO TestSchema.TestTable ( TextColumn, IntColumn ) VALUES ( 'Test', 42 );");
     EXPECT(result.size() == 1);
 
-    auto table_or_error = database->get_table("TESTSCHEMA", "TESTTABLE");
-    EXPECT(!table_or_error.is_error());
-    auto table = table_or_error.value();
+    auto table = MUST(database->get_table("TESTSCHEMA", "TESTTABLE"));
 
     int count = 0;
     auto rows_or_error = database->select_all(*table);
@@ -172,9 +169,8 @@ TEST_CASE(insert_without_column_names)
     auto result = execute(database, "INSERT INTO TestSchema.TestTable VALUES ('Test_1', 42), ('Test_2', 43);");
     EXPECT(result.size() == 2);
 
-    auto table_or_error = database->get_table("TESTSCHEMA", "TESTTABLE");
-    EXPECT(!table_or_error.is_error());
-    auto rows_or_error = database->select_all(*(table_or_error.value()));
+    auto table = MUST(database->get_table("TESTSCHEMA", "TESTTABLE"));
+    auto rows_or_error = database->select_all(*table);
     EXPECT(!rows_or_error.is_error());
     EXPECT_EQ(rows_or_error.value().size(), 2u);
 }

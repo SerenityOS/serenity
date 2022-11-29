@@ -61,12 +61,14 @@ ResultOr<void> Database::open()
     (void)TRY(ensure_schema_exists("default"sv));
     auto master_schema = TRY(ensure_schema_exists("master"sv));
 
-    auto table_def = TRY(get_table("master", "internal_describe_table"));
-    if (!table_def) {
-        auto describe_internal_table = TableDef::construct(master_schema, "internal_describe_table");
-        describe_internal_table->append_column("Name", SQLType::Text);
-        describe_internal_table->append_column("Type", SQLType::Text);
-        TRY(add_table(*describe_internal_table));
+    if (auto result = get_table("master"sv, "internal_describe_table"sv); result.is_error()) {
+        if (result.error().error() != SQLErrorCode::TableDoesNotExist)
+            return result.release_error();
+
+        auto internal_describe_table = TableDef::construct(master_schema, "internal_describe_table");
+        internal_describe_table->append_column("Name", SQLType::Text);
+        internal_describe_table->append_column("Type", SQLType::Text);
+        TRY(add_table(*internal_describe_table));
     }
 
     return {};
@@ -118,16 +120,18 @@ ResultOr<NonnullRefPtr<SchemaDef>> Database::get_schema(String const& schema)
     return schema_def;
 }
 
-ErrorOr<void> Database::add_table(TableDef& table)
+ResultOr<void> Database::add_table(TableDef& table)
 {
     VERIFY(is_open());
-    if (!m_tables->insert(table.key())) {
-        warnln("Duplicate table name '{}'.'{}'"sv, table.parent()->name(), table.name());
-        return Error::from_string_literal("Duplicate table name");
-    }
+
+    if (!m_tables->insert(table.key()))
+        return Result { SQLCommand::Unknown, SQLErrorCode::TableExists, table.name() };
+
     for (auto& column : table.columns()) {
-        VERIFY(m_table_columns->insert(column.key()));
+        if (!m_table_columns->insert(column.key()))
+            VERIFY_NOT_REACHED();
     }
+
     return {};
 }
 
@@ -138,32 +142,33 @@ Key Database::get_table_key(String const& schema_name, String const& table_name)
     return key;
 }
 
-ResultOr<RefPtr<TableDef>> Database::get_table(String const& schema, String const& name)
+ResultOr<NonnullRefPtr<TableDef>> Database::get_table(String const& schema, String const& name)
 {
     VERIFY(is_open());
+
     auto schema_name = schema;
-    if (schema.is_null() || schema.is_empty())
-        schema_name = "default";
+    if (schema.is_empty())
+        schema_name = "default"sv;
+
     Key key = get_table_key(schema_name, name);
-    auto table_def_opt = m_table_cache.get(key.hash());
-    if (table_def_opt.has_value())
-        return RefPtr<TableDef>(table_def_opt.value());
+    if (auto it = m_table_cache.find(key.hash()); it != m_table_cache.end())
+        return it->value;
+
     auto table_iterator = m_tables->find(key);
-    if (table_iterator.is_end() || (*table_iterator != key)) {
-        return RefPtr<TableDef>(nullptr);
-    }
+    if (table_iterator.is_end() || (*table_iterator != key))
+        return Result { SQLCommand::Unknown, SQLErrorCode::TableDoesNotExist, String::formatted("{}.{}", schema_name, name) };
+
     auto schema_def = TRY(get_schema(schema));
-    auto ret = TableDef::construct(schema_def, name);
-    ret->set_pointer((*table_iterator).pointer());
-    m_table_cache.set(key.hash(), ret);
-    auto hash = ret->hash();
-    auto column_key = ColumnDef::make_key(ret);
-    for (auto column_iterator = m_table_columns->find(column_key);
-         !column_iterator.is_end() && ((*column_iterator)["table_hash"].to_u32().value() == hash);
-         column_iterator++) {
-        ret->append_column(*column_iterator);
-    }
-    return RefPtr<TableDef>(ret);
+    auto table_def = TableDef::construct(schema_def, name);
+    table_def->set_pointer((*table_iterator).pointer());
+    m_table_cache.set(key.hash(), table_def);
+
+    auto table_hash = table_def->hash();
+    auto column_key = ColumnDef::make_key(table_def);
+    for (auto it = m_table_columns->find(column_key); !it.is_end() && ((*it)["table_hash"].to_u32().value() == table_hash); ++it)
+        table_def->append_column(*it);
+
+    return table_def;
 }
 
 ErrorOr<Vector<Row>> Database::select_all(TableDef const& table)
