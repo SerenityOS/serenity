@@ -28,9 +28,11 @@ __thread int h_errno;
 static hostent __gethostbyname_buffer;
 static in_addr_t __gethostbyname_address;
 static in_addr_t* __gethostbyname_address_list_buffer[2];
+static char* __gethostbyname_alias_list_buffer[1];
 
 static hostent __gethostbyaddr_buffer;
 static in_addr_t* __gethostbyaddr_address_list_buffer[2];
+static char* __gethostbyaddr_alias_list_buffer[1];
 // IPCCompiler depends on LibC. Because of this, it cannot be compiled
 // before LibC is. However, the lookup magic can only be obtained from the
 // endpoint itself if IPCCompiler has compiled the IPC file, so this creates
@@ -98,7 +100,8 @@ hostent* gethostbyname(char const* name)
     if (ipv4_address.has_value()) {
         gethostbyname_name_buffer = ipv4_address.value().to_string();
         __gethostbyname_buffer.h_name = const_cast<char*>(gethostbyname_name_buffer.characters());
-        __gethostbyname_buffer.h_aliases = nullptr;
+        __gethostbyname_alias_list_buffer[0] = nullptr;
+        __gethostbyname_buffer.h_aliases = __gethostbyname_alias_list_buffer;
         __gethostbyname_buffer.h_addrtype = AF_INET;
         new (&__gethostbyname_address) IPv4Address(ipv4_address.value());
         __gethostbyname_address_list_buffer[0] = &__gethostbyname_address;
@@ -197,7 +200,8 @@ hostent* gethostbyname(char const* name)
 
     gethostbyname_name_buffer = name;
     __gethostbyname_buffer.h_name = const_cast<char*>(gethostbyname_name_buffer.characters());
-    __gethostbyname_buffer.h_aliases = nullptr;
+    __gethostbyname_alias_list_buffer[0] = nullptr;
+    __gethostbyname_buffer.h_aliases = __gethostbyname_alias_list_buffer;
     __gethostbyname_buffer.h_addrtype = AF_INET;
     __gethostbyname_address_list_buffer[0] = &__gethostbyname_address;
     __gethostbyname_address_list_buffer[1] = nullptr;
@@ -296,7 +300,8 @@ hostent* gethostbyaddr(void const* addr, socklen_t addr_size, int type)
 
     gethostbyaddr_name_buffer = move(string_impl);
     __gethostbyaddr_buffer.h_name = buffer;
-    __gethostbyaddr_buffer.h_aliases = nullptr;
+    __gethostbyaddr_alias_list_buffer[0] = nullptr;
+    __gethostbyaddr_buffer.h_aliases = __gethostbyaddr_alias_list_buffer;
     __gethostbyaddr_buffer.h_addrtype = AF_INET;
     // FIXME: Should we populate the hostent's address list here with a sockaddr_in for the provided host?
     __gethostbyaddr_address_list_buffer[0] = nullptr;
