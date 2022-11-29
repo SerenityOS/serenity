@@ -8,6 +8,7 @@
 #pragma once
 
 #include <LibCompress/Deflate.h>
+#include <LibCore/Stream.h>
 #include <LibCrypto/Checksum/CRC32.h>
 
 namespace Compress {
@@ -37,32 +38,33 @@ struct Flags {
     static constexpr u8 MAX = FTEXT | FHCRC | FEXTRA | FNAME | FCOMMENT;
 };
 
-class GzipDecompressor final : public InputStream {
+class GzipDecompressor final : public Core::Stream::Stream {
 public:
-    GzipDecompressor(InputStream&);
+    GzipDecompressor(NonnullOwnPtr<Core::Stream::Stream>);
     ~GzipDecompressor();
 
-    size_t read(Bytes) override;
-    bool read_or_error(Bytes) override;
-    bool discard_or_error(size_t) override;
+    virtual ErrorOr<Bytes> read(Bytes) override;
+    virtual ErrorOr<size_t> write(ReadonlyBytes) override;
+    virtual bool is_eof() const override;
+    virtual bool is_open() const override { return true; }
+    virtual void close() override {};
 
-    bool unreliable_eof() const override;
-    bool handle_any_error() override;
-
-    static Optional<ByteBuffer> decompress_all(ReadonlyBytes);
+    static ErrorOr<ByteBuffer> decompress_all(ReadonlyBytes);
     static Optional<DeprecatedString> describe_header(ReadonlyBytes);
     static bool is_likely_compressed(ReadonlyBytes bytes);
 
 private:
     class Member {
     public:
-        Member(BlockHeader header, InputStream& stream)
+        Member(BlockHeader header, Core::Stream::Stream& stream)
             : m_header(header)
-            , m_stream(stream)
+            , m_adapted_ak_stream(make<Core::Stream::WrapInAKInputStream>(stream))
+            , m_stream(*m_adapted_ak_stream)
         {
         }
 
         BlockHeader m_header;
+        NonnullOwnPtr<InputStream> m_adapted_ak_stream;
         DeflateDecompressor m_stream;
         Crypto::Checksum::CRC32 m_checksum;
         size_t m_nread { 0 };
@@ -71,7 +73,7 @@ private:
     Member const& current_member() const { return m_current_member.value(); }
     Member& current_member() { return m_current_member.value(); }
 
-    InputStream& m_input_stream;
+    NonnullOwnPtr<Core::Stream::Stream> m_input_stream;
     u8 m_partial_header[sizeof(BlockHeader)];
     size_t m_partial_header_offset { 0 };
     Optional<Member> m_current_member;

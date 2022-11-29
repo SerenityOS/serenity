@@ -92,6 +92,6 @@ TEST_CASE(gzip_round_trip)
     auto compressed = Compress::GzipCompressor::compress_all(original);
     EXPECT(compressed.has_value());
     auto uncompressed = Compress::GzipDecompressor::decompress_all(compressed.value());
-    EXPECT(uncompressed.has_value());
+    EXPECT(!uncompressed.is_error());
     EXPECT(uncompressed.value() == original);
 }

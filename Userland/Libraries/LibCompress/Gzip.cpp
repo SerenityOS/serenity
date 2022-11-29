@@ -10,6 +10,7 @@
 #include <AK/DeprecatedString.h>
 #include <AK/MemoryStream.h>
 #include <LibCore/DateTime.h>
+#include <LibCore/MemoryStream.h>
 
 namespace Compress {
 
@@ -38,8 +39,8 @@ bool BlockHeader::supported_by_implementation() const
     return true;
 }
 
-GzipDecompressor::GzipDecompressor(InputStream& stream)
-    : m_input_stream(stream)
+GzipDecompressor::GzipDecompressor(NonnullOwnPtr<Core::Stream::Stream> stream)
+    : m_input_stream(move(stream))
 {
 }
 
@@ -48,12 +49,11 @@ GzipDecompressor::~GzipDecompressor()
     m_current_member.clear();
 }
 
-// FIXME: Again, there are surely a ton of bugs because the code doesn't check for read errors.
-size_t GzipDecompressor::read(Bytes bytes)
+ErrorOr<Bytes> GzipDecompressor::read(Bytes bytes)
 {
     size_t total_read = 0;
     while (total_read < bytes.size()) {
-        if (has_any_error() || m_eof)
+        if (is_eof())
             break;
 
         auto slice = bytes.slice(total_read);
@@ -63,26 +63,19 @@ size_t GzipDecompressor::read(Bytes bytes)
             current_member().m_checksum.update(slice.trim(nread));
             current_member().m_nread += nread;
 
-            if (current_member().m_stream.handle_any_error()) {
-                set_fatal_error();
-                break;
-            }
+            if (current_member().m_stream.handle_any_error())
+                return Error::from_string_literal("Underlying DeflateDecompressor indicated an error");
 
             if (nread < slice.size()) {
                 LittleEndian<u32> crc32, input_size;
-                m_input_stream >> crc32 >> input_size;
+                TRY(m_input_stream->read(crc32.bytes()));
+                TRY(m_input_stream->read(input_size.bytes()));
 
-                if (crc32 != current_member().m_checksum.digest()) {
-                    // FIXME: Somehow the checksum is incorrect?
+                if (crc32 != current_member().m_checksum.digest())
+                    return Error::from_string_literal("Stored CRC32 does not match the calculated CRC32 of the current member");
 
-                    set_fatal_error();
-                    break;
-                }
-
-                if (input_size != current_member().m_nread) {
-                    set_fatal_error();
-                    break;
-                }
+                if (input_size != current_member().m_nread)
+                    return Error::from_string_literal("Input size does not match the number of read bytes");
 
                 m_current_member.clear();
 
@@ -93,12 +86,12 @@ size_t GzipDecompressor::read(Bytes bytes)
             total_read += nread;
             continue;
         } else {
-            m_partial_header_offset += m_input_stream.read(Bytes { m_partial_header, sizeof(BlockHeader) }.slice(m_partial_header_offset));
+            auto current_partial_header_slice = Bytes { m_partial_header, sizeof(BlockHeader) }.slice(m_partial_header_offset);
+            auto current_partial_header_data = TRY(m_input_stream->read(current_partial_header_slice));
+            m_partial_header_offset += current_partial_header_data.size();
 
-            if (m_input_stream.handle_any_error() || m_input_stream.unreliable_eof()) {
-                m_eof = true;
+            if (is_eof())
                 break;
-            }
 
             if (m_partial_header_offset < sizeof(BlockHeader)) {
                 break; // partial header read
@@ -107,51 +100,45 @@ size_t GzipDecompressor::read(Bytes bytes)
 
             BlockHeader header = *(reinterpret_cast<BlockHeader*>(m_partial_header));
 
-            if (!header.valid_magic_number() || !header.supported_by_implementation()) {
-                set_fatal_error();
-                break;
-            }
+            if (!header.valid_magic_number())
+                return Error::from_string_literal("Header does not have a valid magic number");
+
+            if (!header.supported_by_implementation())
+                return Error::from_string_literal("Header is not supported by implementation");
 
             if (header.flags & Flags::FEXTRA) {
                 LittleEndian<u16> subfield_id, length;
-                m_input_stream >> subfield_id >> length;
-                m_input_stream.discard_or_error(length);
+                TRY(m_input_stream->read(subfield_id.bytes()));
+                TRY(m_input_stream->read(length.bytes()));
+                TRY(m_input_stream->discard(length));
             }
 
-            auto discard_string = [&]() {
+            auto discard_string = [&]() -> ErrorOr<void> {
                 char next_char;
                 do {
-                    m_input_stream >> next_char;
-                    if (m_input_stream.has_any_error()) {
-                        set_fatal_error();
-                        break;
-                    }
+                    TRY(m_input_stream->read({ &next_char, sizeof(next_char) }));
                 } while (next_char);
+
+                return {};
             };
 
-            if (header.flags & Flags::FNAME) {
-                discard_string();
-                if (has_any_error())
-                    break;
-            }
+            if (header.flags & Flags::FNAME)
+                TRY(discard_string());
 
-            if (header.flags & Flags::FCOMMENT) {
-                discard_string();
-                if (has_any_error())
-                    break;
-            }
+            if (header.flags & Flags::FCOMMENT)
+                TRY(discard_string());
 
             if (header.flags & Flags::FHCRC) {
                 LittleEndian<u16> crc16;
-                m_input_stream >> crc16;
+                TRY(m_input_stream->read(crc16.bytes()));
                 // FIXME: we should probably verify this instead of just assuming it matches
             }
 
-            m_current_member.emplace(header, m_input_stream);
+            m_current_member.emplace(header, *m_input_stream);
             continue;
         }
     }
-    return total_read;
+    return bytes.slice(0, total_read);
 }
 
 Optional<DeprecatedString> GzipDecompressor::describe_header(ReadonlyBytes bytes)
@@ -167,57 +154,26 @@ Optional<DeprecatedString> GzipDecompressor::describe_header(ReadonlyBytes bytes
     return DeprecatedString::formatted("last modified: {}, original size {}", Core::DateTime::from_timestamp(header.modification_time).to_deprecated_string(), (u32)original_size);
 }
 
-bool GzipDecompressor::read_or_error(Bytes bytes)
+ErrorOr<ByteBuffer> GzipDecompressor::decompress_all(ReadonlyBytes bytes)
 {
-    if (read(bytes) < bytes.size()) {
-        set_fatal_error();
-        return false;
-    }
-
-    return true;
-}
-
-bool GzipDecompressor::discard_or_error(size_t count)
-{
-    u8 buffer[4096];
-
-    size_t ndiscarded = 0;
-    while (ndiscarded < count) {
-        if (unreliable_eof()) {
-            set_fatal_error();
-            return false;
-        }
-
-        ndiscarded += read({ buffer, min<size_t>(count - ndiscarded, sizeof(buffer)) });
-    }
-
-    return true;
-}
-
-Optional<ByteBuffer> GzipDecompressor::decompress_all(ReadonlyBytes bytes)
-{
-    InputMemoryStream memory_stream { bytes };
-    GzipDecompressor gzip_stream { memory_stream };
+    auto memory_stream = TRY(Core::Stream::MemoryStream::construct(bytes));
+    auto gzip_stream = make<GzipDecompressor>(move(memory_stream));
     DuplexMemoryStream output_stream;
 
-    u8 buffer[4096];
-    while (!gzip_stream.has_any_error() && !gzip_stream.unreliable_eof()) {
-        auto const nread = gzip_stream.read({ buffer, sizeof(buffer) });
-        output_stream.write_or_error({ buffer, nread });
+    auto buffer = TRY(ByteBuffer::create_uninitialized(4096));
+    while (!gzip_stream->is_eof()) {
+        auto const data = TRY(gzip_stream->read(buffer));
+        output_stream.write_or_error(data);
     }
-
-    if (gzip_stream.handle_any_error())
-        return {};
 
     return output_stream.copy_into_contiguous_buffer();
 }
 
-bool GzipDecompressor::unreliable_eof() const { return m_eof; }
+bool GzipDecompressor::is_eof() const { return m_input_stream->is_eof(); }
 
-bool GzipDecompressor::handle_any_error()
+ErrorOr<size_t> GzipDecompressor::write(ReadonlyBytes)
 {
-    bool handled_errors = m_input_stream.handle_any_error();
-    return Stream::handle_any_error() || handled_errors;
+    VERIFY_NOT_REACHED();
 }
 
 GzipCompressor::GzipCompressor(OutputStream& stream)

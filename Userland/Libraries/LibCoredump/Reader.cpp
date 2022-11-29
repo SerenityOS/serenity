@@ -67,8 +67,8 @@ Reader::Reader(ReadonlyBytes coredump_bytes)
 Optional<ByteBuffer> Reader::decompress_coredump(ReadonlyBytes raw_coredump)
 {
     auto decompressed_coredump = Compress::GzipDecompressor::decompress_all(raw_coredump);
-    if (decompressed_coredump.has_value())
-        return decompressed_coredump;
+    if (!decompressed_coredump.is_error())
+        return decompressed_coredump.release_value();
 
     // If we didn't manage to decompress it, try and parse it as decompressed coredump
     auto bytebuffer = ByteBuffer::copy(raw_coredump);
