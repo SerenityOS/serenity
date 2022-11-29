@@ -754,19 +754,17 @@ void AntiAliasingPainter::stroke_segment_intersection(FloatPoint const& current_
         }
     }
 
-    m_intersection_edge_path.clear();
-    m_intersection_edge_path.move_to(current_rotated_90deg);
+    Path intersection_edge_path;
+    intersection_edge_path.move_to(current_rotated_90deg);
     if (edge_spike_90.has_value())
-        m_intersection_edge_path.line_to(edge_spike_90.value());
-    m_intersection_edge_path.line_to(previous_rotated_270deg);
-
-    m_intersection_edge_path.line_to(current_rotated_270deg);
+        intersection_edge_path.line_to(edge_spike_90.value());
+    intersection_edge_path.line_to(previous_rotated_270deg);
+    intersection_edge_path.line_to(current_rotated_270deg);
     if (edge_spike_270.has_value())
-        m_intersection_edge_path.line_to(edge_spike_270.value());
-    m_intersection_edge_path.line_to(previous_rotated_90deg);
-    m_intersection_edge_path.close();
-
-    fill_path(m_intersection_edge_path, color);
+        intersection_edge_path.line_to(edge_spike_270.value());
+    intersection_edge_path.line_to(previous_rotated_90deg);
+    intersection_edge_path.close();
+    fill_path(intersection_edge_path, color);
 }
 
 // rotates a rectangle around 0,0

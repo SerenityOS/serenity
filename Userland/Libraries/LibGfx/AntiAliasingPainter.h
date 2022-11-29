@@ -88,8 +88,6 @@ private:
 
     Painter& m_underlying_painter;
     AffineTransform m_transform;
-    Path m_intersection_edge_path;
-    Path m_rotated_rectangle_path;
 };
 
 }
