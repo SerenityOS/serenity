@@ -646,7 +646,11 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
             // column span, overflow the number of columns in the implicit grid, as determined earlier in this
             // algorithm.
             auto column_start = 0;
-            auto column_span = child_box.computed_values().grid_column_start().is_span() ? child_box.computed_values().grid_column_start().raw_value() : 1;
+            auto column_span = 1;
+            if (child_box.computed_values().grid_column_start().is_span())
+                column_span = child_box.computed_values().grid_column_start().raw_value();
+            else if (child_box.computed_values().grid_column_end().is_span())
+                column_span = child_box.computed_values().grid_column_end().raw_value();
             // https://drafts.csswg.org/css-grid/#auto-placement-algo
             // 8.5. Grid Item Placement Algorithm
             // 3.3. If the largest column span among all the items without a definite column position is larger
@@ -654,7 +658,11 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
             // that column span.
             occupation_grid.maybe_add_column(column_span);
             auto row_start = 0;
-            auto row_span = child_box.computed_values().grid_row_start().is_span() ? child_box.computed_values().grid_row_start().raw_value() : 1;
+            auto row_span = 1;
+            if (child_box.computed_values().grid_row_start().is_span())
+                row_span = child_box.computed_values().grid_row_start().raw_value();
+            else if (child_box.computed_values().grid_row_end().is_span())
+                row_span = child_box.computed_values().grid_row_end().raw_value();
             auto found_unoccupied_area = false;
             for (int row_index = auto_placement_cursor_y; row_index < occupation_grid.row_count(); row_index++) {
                 for (int column_index = auto_placement_cursor_x; column_index < occupation_grid.column_count(); column_index++) {
