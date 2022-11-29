@@ -52,7 +52,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
         AK::Optional<ByteBuffer> output_bytes;
         if (decompress)
-            output_bytes = Compress::GzipDecompressor::decompress_all(input_bytes);
+            output_bytes = TRY(Compress::GzipDecompressor::decompress_all(input_bytes));
         else
             output_bytes = Compress::GzipCompressor::compress_all(input_bytes);
 

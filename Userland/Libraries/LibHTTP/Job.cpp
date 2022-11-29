@@ -37,8 +37,8 @@ static Optional<ByteBuffer> handle_content_encoding(ByteBuffer const& buf, Depre
         dbgln_if(JOB_DEBUG, "Job::handle_content_encoding: buf is gzip compressed!");
 
         auto uncompressed = Compress::GzipDecompressor::decompress_all(buf);
-        if (!uncompressed.has_value()) {
-            dbgln("Job::handle_content_encoding: Gzip::decompress() failed.");
+        if (uncompressed.is_error()) {
+            dbgln("Job::handle_content_encoding: Gzip::decompress() failed: {}", uncompressed.error());
             return {};
         }
 

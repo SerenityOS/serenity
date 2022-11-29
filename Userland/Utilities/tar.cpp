@@ -65,27 +65,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         if (!directory.is_empty())
             TRY(Core::System::chdir(directory));
 
-        // FIXME: Remove these once we have smart pointers everywhere in LibArchive and LibCompress (or just ported the whole stack to Core::Stream).
-        // Until then, we have to hold on to _some_ instance of the file AK::Stream.
-        // Note that this is only in use together with gzip.
-        OwnPtr<Core::InputFileStream> file_stream;
+        NonnullOwnPtr<Core::Stream::Stream> input_stream = TRY(Core::Stream::File::open_file_or_standard_stream(archive_file, Core::Stream::OpenMode::Read));
 
-        auto input_stream = TRY([&]() -> ErrorOr<NonnullOwnPtr<Core::Stream::Stream>> {
-            if (gzip) {
-                // FIXME: Port gzip to Core::Stream.
-                auto file = Core::File::standard_input();
-
-                if (!archive_file.is_empty())
-                    file = TRY(Core::File::open(archive_file, Core::OpenMode::ReadOnly));
-
-                file_stream = adopt_own(*new Core::InputFileStream(file));
-                NonnullOwnPtr<InputStream> gzip_stream = make<Compress::GzipDecompressor>(*file_stream);
-
-                return make<Core::Stream::WrappedAKInputStream>(move(gzip_stream));
-            } else {
-                return TRY(Core::Stream::File::open_file_or_standard_stream(archive_file, Core::Stream::OpenMode::Read));
-            }
-        }());
+        if (gzip)
+            input_stream = make<Compress::GzipDecompressor>(move(input_stream));
 
         auto tar_stream = TRY(Archive::TarInputStream::construct(move(input_stream)));
 
