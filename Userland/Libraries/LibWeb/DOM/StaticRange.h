@@ -21,7 +21,7 @@ struct StaticRangeInit {
 };
 
 class StaticRange final : public AbstractRange {
-    WEB_PLATFORM_OBJECT(StaticRange, JS::Object);
+    WEB_PLATFORM_OBJECT(StaticRange, AbstractRange);
 
 public:
     static WebIDL::ExceptionOr<StaticRange*> construct_impl(JS::Realm&, StaticRangeInit& init);
