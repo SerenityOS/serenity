@@ -214,9 +214,9 @@ int EffectiveOverloadSet::distinguishing_argument_index()
 
 void EffectiveOverloadSet::remove_all_other_entries()
 {
-    m_items.remove_all_matching([this](auto const& item) {
-        return &item != m_last_matching_item;
-    });
+    Vector<Item> new_items;
+    new_items.append(m_items[*m_last_matching_item_index]);
+    m_items = move(new_items);
 }
 
 }
