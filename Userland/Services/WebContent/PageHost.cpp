@@ -378,4 +378,9 @@ void PageHost::request_file(NonnullRefPtr<Web::FileRequest>& file_request)
     m_client.request_file(file_request);
 }
 
+NonnullOwnPtr<Web::PageClient> PageHost::new_client_from_current()
+{
+    return PageHost::create(m_client);
+}
+
 }

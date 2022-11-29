@@ -243,6 +243,11 @@ public:
         request->on_file_request_finish(file);
     }
 
+    NonnullOwnPtr<Web::PageClient> new_client_from_current() override
+    {
+        return HeadlessBrowserPageClient::create();
+    }
+
 private:
     HeadlessBrowserPageClient()
         : m_page(make<Web::Page>(*this))

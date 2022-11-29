@@ -54,6 +54,7 @@ private:
     virtual Messages::WebDriverClient::CloseWindowResponse close_window() override;
     virtual Messages::WebDriverClient::SwitchToWindowResponse switch_to_window(JsonValue const& payload) override;
     virtual Messages::WebDriverClient::GetWindowHandlesResponse get_window_handles() override;
+    virtual Messages::WebDriverClient::NewWindowResponse new_window(JsonValue const& payload) override;
     virtual Messages::WebDriverClient::GetWindowRectResponse get_window_rect() override;
     virtual Messages::WebDriverClient::SetWindowRectResponse set_window_rect(JsonValue const& payload) override;
     virtual Messages::WebDriverClient::MaximizeWindowResponse maximize_window() override;
@@ -125,6 +126,7 @@ private:
     struct Window {
         DeprecatedString handle;
         bool is_open { false };
+        NonnullOwnPtr<Web::PageClient> client;
     };
     HashMap<DeprecatedString, Window> m_windows;
     DeprecatedString m_current_window_handle;

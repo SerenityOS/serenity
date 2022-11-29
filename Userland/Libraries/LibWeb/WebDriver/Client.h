@@ -51,6 +51,7 @@ public:
     virtual Response close_window(Parameters parameters, JsonValue payload) = 0;
     virtual Response switch_to_window(Parameters parameters, JsonValue payload) = 0;
     virtual Response get_window_handles(Parameters parameters, JsonValue payload) = 0;
+    virtual Response new_window(Parameters parameters, JsonValue payload) = 0;
     virtual Response get_window_rect(Parameters parameters, JsonValue payload) = 0;
     virtual Response set_window_rect(Parameters parameters, JsonValue payload) = 0;
     virtual Response maximize_window(Parameters parameters, JsonValue payload) = 0;

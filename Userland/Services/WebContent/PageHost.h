@@ -98,6 +98,7 @@ private:
     virtual void page_did_update_cookie(Web::Cookie::Cookie) override;
     virtual void page_did_update_resource_count(i32) override;
     virtual void request_file(NonnullRefPtr<Web::FileRequest>&) override;
+    virtual NonnullOwnPtr<PageClient> new_client_from_current() override;
 
     explicit PageHost(ConnectionFromClient&);
 
