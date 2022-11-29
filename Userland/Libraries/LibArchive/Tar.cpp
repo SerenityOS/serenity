@@ -30,6 +30,16 @@ void TarFileHeader::calculate_checksum()
     VERIFY(String::formatted("{:06o}", expected_checksum()).copy_characters_to_buffer(m_checksum, sizeof(m_checksum)));
 }
 
+bool TarFileHeader::is_zero_block() const
+{
+    u8 const* buffer = reinterpret_cast<u8 const*>(this);
+    for (size_t i = 0; i < sizeof(TarFileHeader); ++i) {
+        if (buffer[i] != 0)
+            return false;
+    }
+    return true;
+}
+
 bool TarFileHeader::content_is_like_extended_header() const
 {
     return type_flag() == TarFileType::ExtendedHeader || type_flag() == TarFileType::GlobalExtendedHeader;

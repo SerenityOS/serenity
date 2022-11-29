@@ -90,15 +90,29 @@ ErrorOr<void> TarInputStream::advance()
 
 ErrorOr<void> TarInputStream::load_next_header()
 {
-    auto header_span = TRY(m_stream->read(Bytes(&m_header, sizeof(m_header))));
-    if (header_span.size() != sizeof(m_header))
-        return Error::from_string_literal("Failed to read the entire header");
+    size_t number_of_consecutive_zero_blocks = 0;
+    while (true) {
+        auto header_span = TRY(m_stream->read(Bytes(&m_header, sizeof(m_header))));
+        if (header_span.size() != sizeof(m_header))
+            return Error::from_string_literal("Failed to read the entire header");
+
+        // Discard the rest of the header block.
+        TRY(m_stream->discard(block_size - sizeof(TarFileHeader)));
+
+        if (!header().is_zero_block())
+            break;
+
+        number_of_consecutive_zero_blocks++;
+
+        // Two zero blocks in a row marks the end of the archive.
+        if (number_of_consecutive_zero_blocks >= 2) {
+            m_found_end_of_archive = true;
+            return {};
+        }
+    }
 
     if (!TRY(valid()))
         return Error::from_string_literal("Header has an invalid magic or checksum");
-
-    // Discard the rest of the header block.
-    TRY(m_stream->discard(block_size - sizeof(TarFileHeader)));
 
     return {};
 }
