@@ -26,11 +26,7 @@ namespace SQL {
  */
 class Row : public Tuple {
 public:
-    Row();
-    explicit Row(TupleDescriptor const&);
     explicit Row(RefPtr<TableDef>, u32 pointer = 0);
-    Row(RefPtr<TableDef>, u32, Serializer&);
-    Row(Row const&) = default;
     virtual ~Row() override = default;
 
     [[nodiscard]] u32 next_pointer() const { return m_next_pointer; }
@@ -40,9 +36,6 @@ public:
     [[nodiscard]] virtual size_t length() const override { return Tuple::length() + sizeof(u32); }
     virtual void serialize(Serializer&) const override;
     virtual void deserialize(Serializer&) override;
-
-protected:
-    void copy_from(Row const&);
 
 private:
     RefPtr<TableDef> m_table;
