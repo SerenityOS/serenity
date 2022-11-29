@@ -27,7 +27,7 @@ public:
     virtual float automatic_content_height() const override;
 
 private:
-    void calculate_column_widths(Box const& row, CSS::Length const& table_width, Vector<ColumnWidth>& column_widths, AvailableSpace const&);
+    void calculate_column_widths(Box const& row, CSS::Length const& table_width, Vector<ColumnWidth>& column_widths);
     void layout_row(Box const& row, Vector<ColumnWidth>& column_widths, AvailableSpace const&);
 
     float m_automatic_content_height { 0 };
