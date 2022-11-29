@@ -1,11 +1,14 @@
 /*
  * Copyright (c) 2022, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/HTML/Path2D.h>
+#include <LibWeb/SVG/AttributeParser.h>
+#include <LibWeb/SVG/SVGPathElement.h>
 
 namespace Web::HTML {
 
@@ -33,13 +36,22 @@ Path2D::Path2D(JS::Realm& realm, Optional<Variant<JS::Handle<Path2D>, String>> c
         return;
     }
 
-    dbgln("TODO: Implement constructing Path2D object with an SVG path string");
+    // 4. Let svgPath be the result of parsing and interpreting path according to SVG 2's rules for path data. [SVG]
+    auto path_instructions = SVG::AttributeParser::parse_path_data(path->get<String>());
+    auto svg_path = SVG::path_from_path_instructions(path_instructions);
 
-    // FIXME: 4. Let svgPath be the result of parsing and interpreting path according to SVG 2's rules for path data. [SVG]
-    // FIXME: 5. Let (x, y) be the last point in svgPath.
-    // FIXME: 6. Add all the subpaths, if any, from svgPath to output.
-    // FIXME: 7. Create a new subpath in output with (x, y) as the only point in the subpath.
-    // FIXME: 8. Return output.
+    if (!svg_path.segments().is_empty()) {
+        // 5. Let (x, y) be the last point in svgPath.
+        auto xy = svg_path.segments().last().point();
+
+        // 6. Add all the subpaths, if any, from svgPath to output.
+        this->path() = move(svg_path);
+
+        // 7. Create a new subpath in output with (x, y) as the only point in the subpath.
+        this->move_to(xy.x(), xy.y());
+    }
+
+    // 8. Return output.
 }
 
 Path2D::~Path2D() = default;
