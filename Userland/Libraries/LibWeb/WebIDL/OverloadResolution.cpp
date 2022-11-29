@@ -159,10 +159,15 @@ JS::ThrowCompletionOr<ResolvedOverload> resolve_overload(JS::VM& vm, IDL::Effect
         //    - a union type, nullable union type, or annotated union type that has one of the above types in its flattened member types
         //    then remove from S all other entries.
         else if (value.is_object() && is<Bindings::PlatformObject>(value.as_object())
-            && has_overload_with_argument_type_or_subtype_matching(overloads, i, [](IDL::Type const& type) {
-                   // FIXME: - an interface type that V implements
+            && has_overload_with_argument_type_or_subtype_matching(overloads, i, [value](IDL::Type const& type) {
+                   // - an interface type that V implements
+                   if (static_cast<Bindings::PlatformObject const&>(value.as_object()).implements_interface(type.name()))
+                       return true;
+
+                   // - object
                    if (type.is_object())
                        return true;
+
                    return false;
                })) {
             overloads.remove_all_other_entries();
