@@ -142,4 +142,14 @@ describe("special left hand sides", () => {
             eval("for (f() of [0]) { expect().fail() }");
         }).toThrowWithMessage(ReferenceError, "Invalid left-hand side in assignment");
     });
+
+    test("Cannot change constant declaration in body", () => {
+        const vals = [];
+        for (const v of [1, 2]) {
+            expect(() => v++).toThrowWithMessage(TypeError, "Invalid assignment to const variable");
+            vals.push(v);
+        }
+
+        expect(vals).toEqual([1, 2]);
+    });
 });

@@ -921,12 +921,22 @@ struct ForInOfHeadState {
         else {
             VERIFY(expression_lhs && is<VariableDeclaration>(*expression_lhs));
             iteration_environment = new_declarative_environment(*interpreter.lexical_environment());
+
             auto& for_declaration = static_cast<VariableDeclaration const&>(*expression_lhs);
+
+            // 14.7.5.4 Runtime Semantics: ForDeclarationBindingInstantiation, https://tc39.es/ecma262/#sec-runtime-semantics-fordeclarationbindinginstantiation
+            // 1. For each element name of the BoundNames of ForBinding, do
             for_declaration.for_each_bound_name([&](auto const& name) {
-                if (for_declaration.declaration_kind() == DeclarationKind::Const)
-                    MUST(iteration_environment->create_immutable_binding(vm, name, false));
-                else
-                    MUST(iteration_environment->create_mutable_binding(vm, name, true));
+                // a. If IsConstantDeclaration of LetOrConst is true, then
+                if (for_declaration.is_constant_declaration()) {
+                    // i. Perform ! environment.CreateImmutableBinding(name, true).
+                    MUST(iteration_environment->create_immutable_binding(vm, name, true));
+                }
+                // b. Else,
+                else {
+                    // i. Perform ! environment.CreateMutableBinding(name, false).
+                    MUST(iteration_environment->create_mutable_binding(vm, name, false));
+                }
             });
             interpreter.vm().running_execution_context().lexical_environment = iteration_environment;
 
