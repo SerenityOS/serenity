@@ -24,6 +24,48 @@
 
 namespace Core::Stream {
 
+template<DerivedFrom<Core::Stream::Stream> T>
+class Handle {
+public:
+    template<DerivedFrom<T> U>
+    Handle(NonnullOwnPtr<U> handle)
+        : m_handle(adopt_own<T>(*handle.leak_ptr()))
+    {
+    }
+
+    // This is made `explicit` to not accidentally create a non-owning Handle,
+    // which may not always be intended.
+    explicit Handle(T& handle)
+        : m_handle(&handle)
+    {
+    }
+
+    T* ptr()
+    {
+        if (m_handle.template has<T*>())
+            return m_handle.template get<T*>();
+        else
+            return m_handle.template get<NonnullOwnPtr<T>>();
+    }
+
+    T const* ptr() const
+    {
+        if (m_handle.template has<T*>())
+            return m_handle.template get<T*>();
+        else
+            return m_handle.template get<NonnullOwnPtr<T>>();
+    }
+
+    T* operator->() { return ptr(); }
+    T const* operator->() const { return ptr(); }
+
+    T& operator*() { return *ptr(); }
+    T const& operator*() const { return *ptr(); }
+
+private:
+    Variant<NonnullOwnPtr<T>, T*> m_handle;
+};
+
 /// The base, abstract class for stream operations. This class defines the
 /// operations one can perform on every stream in LibCore.
 class Stream {
