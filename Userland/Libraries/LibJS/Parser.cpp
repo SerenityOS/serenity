@@ -1559,6 +1559,11 @@ NonnullRefPtr<RegExpLiteral> Parser::parse_regexp_literal()
     return create_ast_node<RegExpLiteral>(move(range), move(parsed_regex), move(parsed_pattern), move(parsed_flags), pattern.to_string(), move(flags));
 }
 
+static bool is_simple_assignment_target(Expression const& expression, bool allow_web_reality_call_expression = true)
+{
+    return is<Identifier>(expression) || is<MemberExpression>(expression) || (allow_web_reality_call_expression && is<CallExpression>(expression));
+}
+
 NonnullRefPtr<Expression> Parser::parse_unary_prefixed_expression()
 {
     auto rule_start = push_start();
@@ -1569,9 +1574,7 @@ NonnullRefPtr<Expression> Parser::parse_unary_prefixed_expression()
         consume();
         auto rhs_start = position();
         auto rhs = parse_expression(precedence, associativity);
-        // FIXME: Apparently for functions this should also not be enforced on a parser level,
-        // other engines throw ReferenceError for ++foo()
-        if (!is<Identifier>(*rhs) && !is<MemberExpression>(*rhs))
+        if (!is_simple_assignment_target(*rhs))
             syntax_error(String::formatted("Right-hand side of prefix increment operator must be identifier or member expression, got {}", rhs->class_name()), rhs_start);
 
         if (m_state.strict_mode && is<Identifier>(*rhs)) {
@@ -1586,9 +1589,7 @@ NonnullRefPtr<Expression> Parser::parse_unary_prefixed_expression()
         consume();
         auto rhs_start = position();
         auto rhs = parse_expression(precedence, associativity);
-        // FIXME: Apparently for functions this should also not be enforced on a parser level,
-        // other engines throw ReferenceError for --foo()
-        if (!is<Identifier>(*rhs) && !is<MemberExpression>(*rhs))
+        if (!is_simple_assignment_target(*rhs))
             syntax_error(String::formatted("Right-hand side of prefix decrement operator must be identifier or member expression, got {}", rhs->class_name()), rhs_start);
 
         if (m_state.strict_mode && is<Identifier>(*rhs)) {
@@ -2145,9 +2146,7 @@ Parser::ExpressionResult Parser::parse_secondary_expression(NonnullRefPtr<Expres
         return expression;
     }
     case TokenType::PlusPlus:
-        // FIXME: Apparently for functions this should also not be enforced on a parser level,
-        // other engines throw ReferenceError for foo()++
-        if (!is<Identifier>(*lhs) && !is<MemberExpression>(*lhs))
+        if (!is_simple_assignment_target(*lhs))
             syntax_error(String::formatted("Left-hand side of postfix increment operator must be identifier or member expression, got {}", lhs->class_name()));
 
         if (m_state.strict_mode && is<Identifier>(*lhs)) {
@@ -2159,9 +2158,7 @@ Parser::ExpressionResult Parser::parse_secondary_expression(NonnullRefPtr<Expres
         consume();
         return create_ast_node<UpdateExpression>({ m_source_code, rule_start.position(), position() }, UpdateOp::Increment, move(lhs));
     case TokenType::MinusMinus:
-        // FIXME: Apparently for functions this should also not be enforced on a parser level,
-        // other engines throw ReferenceError for foo()--
-        if (!is<Identifier>(*lhs) && !is<MemberExpression>(*lhs))
+        if (!is_simple_assignment_target(*lhs))
             syntax_error(String::formatted("Left-hand side of postfix increment operator must be identifier or member expression, got {}", lhs->class_name()));
 
         if (m_state.strict_mode && is<Identifier>(*lhs)) {
@@ -2293,13 +2290,18 @@ NonnullRefPtr<AssignmentExpression> Parser::parse_assignment_expression(Assignme
             }
         }
     }
-    if (!is<Identifier>(*lhs) && !is<MemberExpression>(*lhs) && !is<CallExpression>(*lhs)) {
+
+    // Note: The web reality is that all but &&=, ||= and ??= do allow left hand side CallExpresions.
+    //       These are the exception as they are newer.
+    auto has_web_reality_assignment_target_exceptions = assignment_op != AssignmentOp::AndAssignment
+        && assignment_op != AssignmentOp::OrAssignment
+        && assignment_op != AssignmentOp::NullishAssignment;
+
+    if (!is_simple_assignment_target(*lhs, has_web_reality_assignment_target_exceptions)) {
         syntax_error("Invalid left-hand side in assignment");
     } else if (m_state.strict_mode && is<Identifier>(*lhs)) {
         auto const& name = static_cast<Identifier const&>(*lhs).string();
         check_identifier_name_for_assignment_validity(name);
-    } else if (m_state.strict_mode && is<CallExpression>(*lhs)) {
-        syntax_error("Cannot assign to function call");
     }
     auto rhs = parse_expression(min_precedence, associativity, forbidden);
     return create_ast_node<AssignmentExpression>({ m_source_code, rule_start.position(), position() }, assignment_op, move(lhs), move(rhs));
