@@ -1022,14 +1022,24 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
             { CSS::ValueID::XLarge, 1.5 },
             { CSS::ValueID::XxLarge, 2.0 },
             { CSS::ValueID::XxxLarge, 3.0 },
+            { CSS::ValueID::Smaller, 0.8 },
+            { CSS::ValueID::Larger, 1.25 },
         };
+
         auto const identifier = static_cast<IdentifierStyleValue const&>(*font_size).id();
+
+        // https://w3c.github.io/csswg-drafts/css-fonts/#valdef-font-size-relative-size
+        // TODO: If the parent element has a keyword font size in the absolute size keyword mapping table,
+        //       larger may compute the font size to the next entry in the table,
+        //       and smaller may compute the font size to the previous entry in the table.
         if (identifier == CSS::ValueID::Smaller || identifier == CSS::ValueID::Larger) {
-            // FIXME: Should be based on parent element
-        } else {
-            auto const multiplier = absolute_size_mapping.get(identifier).value_or(1.0);
-            font_size_in_px *= multiplier;
+            if (parent_element && parent_element->computed_css_values()) {
+                font_size_in_px = parent_element->computed_css_values()->computed_font().pixel_metrics().size;
+            }
         }
+        auto const multiplier = absolute_size_mapping.get(identifier).value_or(1.0);
+        font_size_in_px *= multiplier;
+
     } else {
         float root_font_size = root_element_font_size();
 
