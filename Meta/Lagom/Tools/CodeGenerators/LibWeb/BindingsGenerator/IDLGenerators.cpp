@@ -2574,6 +2574,8 @@ void @prototype_class@::initialize(JS::Realm& realm)
     }
 
     generator.append(R"~~~(
+    define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm, "@name@"), JS::Attribute::Configurable);
+
     Object::initialize(realm);
 }
 )~~~");
