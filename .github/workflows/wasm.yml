@@ -1,5 +1,12 @@
 name: Build Wasm Modules
-on: [ push, pull_request ]
+on:
+  pull_request:
+    paths:
+      - "AK/**"
+      - "Userland/Libraries/LibJS/**"
+      - "Userland/Libraries/LibWasm/**"
+      - "Userland/Libraries/LibWeb/**"
+  push:
 
 env:
   SERENITY_SOURCE_DIR: ${{ github.workspace }}
