@@ -462,8 +462,8 @@ void TypedArrayBase::visit_edges(Visitor& visitor)
         return vm().names.ClassName.as_string();                                                                                 \
     }                                                                                                                            \
                                                                                                                                  \
-    PrototypeName::PrototypeName(Realm& realm)                                                                                   \
-        : Object(*realm.intrinsics().typed_array_prototype())                                                                    \
+    PrototypeName::PrototypeName(Object& prototype)                                                                              \
+        : Object(prototype)                                                                                                      \
     {                                                                                                                            \
     }                                                                                                                            \
                                                                                                                                  \
@@ -478,8 +478,8 @@ void TypedArrayBase::visit_edges(Visitor& visitor)
         define_direct_property(vm.names.BYTES_PER_ELEMENT, Value((i32)sizeof(Type)), 0);                                         \
     }                                                                                                                            \
                                                                                                                                  \
-    ConstructorName::ConstructorName(Realm& realm)                                                                               \
-        : TypedArrayConstructor(realm.vm().names.ClassName.as_string(), *realm.intrinsics().typed_array_constructor())           \
+    ConstructorName::ConstructorName(Realm& realm, Object& prototype)                                                            \
+        : TypedArrayConstructor(realm.vm().names.ClassName.as_string(), prototype)                                               \
     {                                                                                                                            \
     }                                                                                                                            \
                                                                                                                                  \

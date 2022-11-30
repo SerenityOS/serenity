@@ -259,12 +259,27 @@ void Intrinsics::initialize_intrinsics(Realm& realm)
     m_object_prototype_to_string_function = &object_prototype()->get_without_side_effects(vm.names.toString).as_function();
 }
 
+template<typename T>
+constexpr inline bool IsTypedArrayConstructor = false;
+
+#define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType) \
+    template<>                                                                           \
+    constexpr inline bool IsTypedArrayConstructor<ConstructorName> = true;
+JS_ENUMERATE_TYPED_ARRAYS
+#undef __JS_ENUMERATE
+
 #define __JS_ENUMERATE_INNER(ClassName, snake_name, PrototypeName, ConstructorName, Namespace, snake_namespace)                                          \
     void Intrinsics::initialize_##snake_namespace##snake_name()                                                                                          \
     {                                                                                                                                                    \
         auto& vm = this->vm();                                                                                                                           \
-        m_##snake_namespace##snake_name##_prototype = heap().allocate<Namespace::PrototypeName>(m_realm, m_realm);                                       \
-        m_##snake_namespace##snake_name##_constructor = heap().allocate<Namespace::ConstructorName>(m_realm, m_realm);                                   \
+                                                                                                                                                         \
+        if constexpr (IsTypedArrayConstructor<Namespace::ConstructorName>) {                                                                             \
+            m_##snake_namespace##snake_name##_prototype = heap().allocate<Namespace::PrototypeName>(m_realm, *typed_array_prototype());                  \
+            m_##snake_namespace##snake_name##_constructor = heap().allocate<Namespace::ConstructorName>(m_realm, m_realm, *typed_array_constructor());   \
+        } else {                                                                                                                                         \
+            m_##snake_namespace##snake_name##_prototype = heap().allocate<Namespace::PrototypeName>(m_realm, m_realm);                                   \
+            m_##snake_namespace##snake_name##_constructor = heap().allocate<Namespace::ConstructorName>(m_realm, m_realm);                               \
+        }                                                                                                                                                \
                                                                                                                                                          \
         /* FIXME: Add these special cases to JS_ENUMERATE_NATIVE_OBJECTS */                                                                              \
         if constexpr (IsSame<Namespace::ConstructorName, BigIntConstructor>)                                                                             \
