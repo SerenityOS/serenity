@@ -153,6 +153,8 @@ public:
     int double_click_speed() const;
     void set_buttons_switched(bool);
     bool get_buttons_switched() const;
+    void set_natural_scroll(bool);
+    bool is_natural_scroll() const;
 
     void set_active_window(Window*);
     void set_hovered_button(Button*);
@@ -433,6 +435,7 @@ private:
     int m_max_distance_for_double_click { 4 };
     bool m_previous_event_was_super_keydown { false };
     bool m_buttons_switched { false };
+    bool m_natural_scroll { false };
     bool m_theme_overridden { false };
 
     WeakPtr<Window> m_hovered_window;
