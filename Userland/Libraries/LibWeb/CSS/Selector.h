@@ -29,8 +29,10 @@ public:
         ProgressValue,
         ProgressBar,
         Placeholder,
+
+        // Keep this last.
+        PseudoElementCount,
     };
-    static auto constexpr PseudoElementCount = to_underlying(PseudoElement::ProgressBar) + 1;
 
     struct SimpleSelector {
         enum class Type {
@@ -227,6 +229,8 @@ constexpr StringView pseudo_element_name(Selector::PseudoElement pseudo_element)
         return "-webkit-progress-value"sv;
     case Selector::PseudoElement::Placeholder:
         return "placeholder"sv;
+    case Selector::PseudoElement::PseudoElementCount:
+        break;
     }
     VERIFY_NOT_REACHED();
 }

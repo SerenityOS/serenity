@@ -508,6 +508,9 @@ void dump_selector(StringBuilder& builder, CSS::Selector const& selector)
                 case CSS::Selector::PseudoElement::Placeholder:
                     pseudo_element_description = "placeholder";
                     break;
+                case CSS::Selector::PseudoElement::PseudoElementCount:
+                    VERIFY_NOT_REACHED();
+                    break;
                 }
 
                 builder.appendff(" pseudo_element={}", pseudo_element_description);
