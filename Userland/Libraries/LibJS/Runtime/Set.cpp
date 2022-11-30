@@ -15,14 +15,18 @@ Set* Set::create(Realm& realm)
 
 Set::Set(Object& prototype)
     : Object(prototype)
-    , m_values(*prototype.shape().realm().intrinsics().map_prototype())
 {
+}
+
+void Set::initialize(Realm& realm)
+{
+    m_values = Map::create(realm);
 }
 
 void Set::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    static_cast<Object&>(m_values).visit_edges(visitor);
+    visitor.visit(m_values);
 }
 
 }

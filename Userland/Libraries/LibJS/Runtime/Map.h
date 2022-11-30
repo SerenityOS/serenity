@@ -19,9 +19,6 @@ namespace JS {
 class Map : public Object {
     JS_OBJECT(Map, Object);
 
-    // NOTE: This awkwardness is due to Set using a Map internally.
-    friend class Set;
-
 public:
     static Map* create(Realm&);
 
