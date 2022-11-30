@@ -699,8 +699,23 @@ Optional<HitTestResult> PaintableWithLines::hit_test(CSSPixelPoint position, Hit
                     return fragment.layout_node().paintable()->hit_test(position, type);
                 return HitTestResult { *fragment.layout_node().paintable(), fragment.text_index_at(position.x().value()) };
             }
-            if (fragment_absolute_rect.top() <= position.y())
+
+            // If we reached this point, the position is not within the fragment. However, the fragment start or end might be the place to place the cursor.
+            // This determines whether the fragment is a good candidate for the position. The last such good fragment is chosen.
+            // The best candidate is either the end of the line above, the beginning of the line below, or the beginning or end of the current line.
+            // We arbitrarily choose to consider the end of the line above and ignore the beginning of the line below.
+            // If we knew the direction of selection, we could make a better choice.
+            if (fragment_absolute_rect.bottom() <= position.y()) { // fully below the fragment
                 last_good_candidate = HitTestResult { *fragment.layout_node().paintable(), fragment.start() + fragment.length() };
+            } else if (fragment_absolute_rect.top() <= position.y()) { // vertically within the fragment
+                if (position.x() < fragment_absolute_rect.left()) {    // left of the fragment
+                    if (!last_good_candidate.has_value()) {            // first fragment of the line
+                        last_good_candidate = HitTestResult { *fragment.layout_node().paintable(), fragment.start() };
+                    }
+                } else { // right of the fragment
+                    last_good_candidate = HitTestResult { *fragment.layout_node().paintable(), fragment.start() + fragment.length() };
+                }
+            }
         }
     }
 
