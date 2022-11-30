@@ -12,7 +12,9 @@
 #include "Language.h"
 #include <AK/ByteBuffer.h>
 #include <AK/Debug.h>
+#include <AK/JsonParser.h>
 #include <AK/LexicalPath.h>
+#include <LibConfig/Client.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
 #include <LibCore/Timer.h>
@@ -78,6 +80,10 @@ Editor::Editor()
     add_custom_context_menu_action(*m_move_execution_to_line_action);
 
     set_gutter_visible(true);
+
+    if (Config::read_string("HackStudio"sv, "Global"sv, "DocumentationSearchPaths"sv).is_empty()) {
+        Config::write_string("HackStudio"sv, "Global"sv, "DocumentationSearchPaths"sv, "[\"/usr/share/man/man2\", \"/usr/share/man/man3\"]"sv);
+    }
 }
 
 ErrorOr<void> Editor::initialize_tooltip_window()
@@ -181,12 +187,27 @@ static HashMap<String, String>& man_paths()
 {
     static HashMap<String, String> paths;
     if (paths.is_empty()) {
-        // FIXME: This should also search man3, possibly other places..
-        Core::DirIterator it("/usr/share/man/man2", Core::DirIterator::Flags::SkipDots);
-        while (it.has_next()) {
-            auto path = it.next_full_path();
-            auto title = LexicalPath::title(path);
-            paths.set(title, path);
+        auto json = Config::read_string("HackStudio"sv, "Global"sv, "DocumentationSearchPaths"sv);
+        AK::JsonParser parser(json);
+
+        auto value_or_error = parser.parse();
+        if (value_or_error.is_error())
+            return paths;
+
+        auto value = value_or_error.release_value();
+        if (!value.is_array())
+            return paths;
+
+        for (auto& json_value : value.as_array().values()) {
+            if (!json_value.is_string())
+                continue;
+
+            Core::DirIterator it(json_value.as_string(), Core::DirIterator::Flags::SkipDots);
+            while (it.has_next()) {
+                auto path = it.next_full_path();
+                auto title = LexicalPath::title(path);
+                paths.set(title, path);
+            }
         }
     }
 
