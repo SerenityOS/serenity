@@ -78,8 +78,7 @@ static Optional<ByteBuffer> handle_content_encoding(ByteBuffer const& buf, Strin
     } else if (content_encoding == "br") {
         dbgln_if(JOB_DEBUG, "Job::handle_content_encoding: buf is brotli compressed!");
 
-        // FIXME: MemoryStream is both read and write, however we only need the read part here
-        auto bufstream_result = Core::Stream::MemoryStream::construct({ const_cast<u8*>(buf.data()), buf.size() });
+        auto bufstream_result = Core::Stream::MemoryStream::construct({ buf.data(), buf.size() });
         if (bufstream_result.is_error()) {
             dbgln("Job::handle_content_encoding: MemoryStream::construct() failed.");
             return {};
