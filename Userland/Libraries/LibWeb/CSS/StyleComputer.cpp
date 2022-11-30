@@ -7,6 +7,7 @@
  */
 
 #include <AK/Debug.h>
+#include <AK/HashMap.h>
 #include <AK/QuickSort.h>
 #include <AK/TemporaryChange.h>
 #include <LibGfx/Font/Font.h>
@@ -1007,30 +1008,27 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
 
     bool bold = weight > Gfx::FontWeight::Regular;
 
+    // FIXME: Should be based on "user's default font size"
     float font_size_in_px = 16;
 
     if (font_size->is_identifier()) {
-        switch (static_cast<IdentifierStyleValue const&>(*font_size).id()) {
-        case CSS::ValueID::XxSmall:
-        case CSS::ValueID::XSmall:
-        case CSS::ValueID::Small:
-        case CSS::ValueID::Medium:
-            // FIXME: Should be based on "user's default font size"
-            font_size_in_px = 16;
-            break;
-        case CSS::ValueID::Large:
-        case CSS::ValueID::XLarge:
-        case CSS::ValueID::XxLarge:
-        case CSS::ValueID::XxxLarge:
-            // FIXME: Should be based on "user's default font size"
-            font_size_in_px = 12;
-            break;
-        case CSS::ValueID::Smaller:
-        case CSS::ValueID::Larger:
+        // https://w3c.github.io/csswg-drafts/css-fonts/#absolute-size-mapping
+        AK::HashMap<Web::CSS::ValueID, float> absolute_size_mapping = {
+            { CSS::ValueID::XxSmall, 0.6 },
+            { CSS::ValueID::XSmall, 0.75 },
+            { CSS::ValueID::Small, 8.0 / 9.0 },
+            { CSS::ValueID::Medium, 1.0 },
+            { CSS::ValueID::Large, 1.2 },
+            { CSS::ValueID::XLarge, 1.5 },
+            { CSS::ValueID::XxLarge, 2.0 },
+            { CSS::ValueID::XxxLarge, 3.0 },
+        };
+        auto const identifier = static_cast<IdentifierStyleValue const&>(*font_size).id();
+        if (identifier == CSS::ValueID::Smaller || identifier == CSS::ValueID::Larger) {
             // FIXME: Should be based on parent element
-            break;
-        default:
-            break;
+        } else {
+            auto const multiplier = absolute_size_mapping.get(identifier).value_or(1.0);
+            font_size_in_px *= multiplier;
         }
     } else {
         float root_font_size = root_element_font_size();
