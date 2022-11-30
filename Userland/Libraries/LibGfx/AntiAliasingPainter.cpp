@@ -687,15 +687,18 @@ void AntiAliasingPainter::fill_rect_with_rounded_corners(IntRect const& a_rect, 
 
 void AntiAliasingPainter::stroke_segment_intersection(FloatPoint const& current_line_a, FloatPoint const& current_line_b, FloatLine const& previous_line, Color color, float thickness)
 {
-    // starting point of the current line is where the last line ended... this is an intersection
+    // FIXME: This is currently drawn in slightly the wrong place most of the time.
+    // FIXME: This is sometimes drawn when the intersection would not be visible anyway.
+
+    // Starting point of the current line is where the last line ended... this is an intersection.
     auto intersection = current_line_a;
     auto previous_line_b = (previous_line.a());
 
-    // if both are straight lines we can simply draw a rectangle at the intersection
+    // If both are straight lines we can simply draw a rectangle at the intersection.
     if ((current_line_a.x() == current_line_b.x() || current_line_a.y() == current_line_b.y()) && (previous_line.a().x() == previous_line.b().x() || previous_line.a().y() == previous_line.b().y())) {
         intersection = m_transform.map(current_line_a);
 
-        // adjust coordinates to handle rounding offsets
+        // Adjust coordinates to handle rounding offsets.
         auto intersection_rect = IntSize(thickness, thickness);
         float drawing_edge_offset = fmodf(thickness, 2.0f) < 0.5f && thickness > 3 ? 1 : 0;
         auto integer_part = [](float x) { return floorf(x); };
@@ -720,20 +723,20 @@ void AntiAliasingPainter::stroke_segment_intersection(FloatPoint const& current_
     float scale_to_move_current = (thickness / 2) / intersection.distance_from(current_line_b);
     float scale_to_move_previous = (thickness / 2) / intersection.distance_from(previous_line_b);
 
-    // move the point on the line by half of the thickness
+    // Move the point on the line by half of the thickness.
     double offset_current_edge_x = scale_to_move_current * (current_line_b.x() - intersection.x());
     double offset_current_edge_y = scale_to_move_current * (current_line_b.y() - intersection.y());
     double offset_prev_edge_x = scale_to_move_previous * (previous_line_b.x() - intersection.x());
     double offset_prev_edge_y = scale_to_move_previous * (previous_line_b.y() - intersection.y());
 
-    // rotate the point by 90 and 270 degrees to get the points for both edges
+    // Rotate the point by 90 and 270 degrees to get the points for both edges.
     double rad_90deg = 0.5 * M_PI;
     FloatPoint current_rotated_90deg = { (offset_current_edge_x * cos(rad_90deg) - offset_current_edge_y * sin(rad_90deg)), (offset_current_edge_x * sin(rad_90deg) + offset_current_edge_y * cos(rad_90deg)) };
     FloatPoint current_rotated_270deg = intersection - current_rotated_90deg;
     FloatPoint previous_rotated_90deg = { (offset_prev_edge_x * cos(rad_90deg) - offset_prev_edge_y * sin(rad_90deg)), (offset_prev_edge_x * sin(rad_90deg) + offset_prev_edge_y * cos(rad_90deg)) };
     FloatPoint previous_rotated_270deg = intersection - previous_rotated_90deg;
 
-    // translate coordinates to the intersection point
+    // Translate coordinates to the intersection point.
     current_rotated_90deg += intersection;
     previous_rotated_90deg += intersection;
 
@@ -767,15 +770,15 @@ void AntiAliasingPainter::stroke_segment_intersection(FloatPoint const& current_
     fill_path(intersection_edge_path, color);
 }
 
-// rotates a rectangle around 0,0
 FloatQuad AntiAliasingPainter::build_rotated_rectangle(FloatPoint const& direction, float width)
 {
+    // Rotates a rectangle around 0,0
     double half_size = width / 2;
     double radian = atan2(direction.y(), direction.x());
     if (radian < 0) {
         radian += (2 * M_PI);
     }
-    // rotated by: (xcosθ−ysinθ ,xsinθ+ycosθ)
+    // Rotated by: (xcosθ−ysinθ ,xsinθ+ycosθ)
     // p1     p2
     //
     //   x,y
