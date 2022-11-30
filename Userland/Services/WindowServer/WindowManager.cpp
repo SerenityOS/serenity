@@ -83,6 +83,7 @@ void WindowManager::reload_config()
 
     m_double_click_speed = m_config->read_num_entry("Input", "DoubleClickSpeed", 250);
     m_buttons_switched = m_config->read_bool_entry("Mouse", "ButtonsSwitched", false);
+    m_natural_scroll = m_config->read_bool_entry("Mouse", "NaturalScroll", false);
     m_cursor_highlight_radius = m_config->read_num_entry("Mouse", "CursorHighlightRadius", 25);
     Color default_highlight_color = Color::NamedColor::Red;
     default_highlight_color.set_alpha(110);
@@ -303,6 +304,19 @@ void WindowManager::set_buttons_switched(bool switched)
 bool WindowManager::get_buttons_switched() const
 {
     return m_buttons_switched;
+}
+
+void WindowManager::set_natural_scroll(bool inverted)
+{
+    m_natural_scroll = inverted;
+    dbgln("Saving scroll inverted state {} to config file at {}", inverted, m_config->filename());
+    m_config->write_bool_entry("Mouse", "NaturalScroll", inverted);
+    sync_config_to_disk();
+}
+
+bool WindowManager::is_natural_scroll() const
+{
+    return m_natural_scroll;
 }
 
 WindowStack& WindowManager::window_stack_for_window(Window& window)

@@ -70,9 +70,14 @@ void EventLoop::drain_mouse()
             state.x = packet.x;
             state.y = packet.y;
         }
-        state.z += packet.z;
         state.w += packet.w;
         state_is_sent = false;
+
+        // Invert scroll direction if checked in the settings.
+        if (WindowManager::the().is_natural_scroll())
+            state.z -= packet.z;
+        else
+            state.z += packet.z;
 
         if (packet.buttons != state.buttons) {
             state.buttons = packet.buttons;

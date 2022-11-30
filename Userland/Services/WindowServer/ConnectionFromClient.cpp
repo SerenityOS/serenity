@@ -1110,6 +1110,16 @@ Messages::WindowServer::GetButtonsSwitchedResponse ConnectionFromClient::get_but
     return WindowManager::the().get_buttons_switched();
 }
 
+void ConnectionFromClient::set_natural_scroll(bool inverted)
+{
+    WindowManager::the().set_natural_scroll(inverted);
+}
+
+Messages::WindowServer::IsNaturalScrollResponse ConnectionFromClient::is_natural_scroll()
+{
+    return WindowManager::the().is_natural_scroll();
+}
+
 void ConnectionFromClient::set_unresponsive(bool unresponsive)
 {
     if (m_unresponsive == unresponsive)
