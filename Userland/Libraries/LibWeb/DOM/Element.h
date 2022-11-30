@@ -206,7 +206,7 @@ private:
 
     Vector<FlyString> m_classes;
 
-    Array<JS::GCPtr<Layout::Node>, CSS::Selector::PseudoElementCount> m_pseudo_element_nodes;
+    Array<JS::GCPtr<Layout::Node>, to_underlying(CSS::Selector::PseudoElement::PseudoElementCount)> m_pseudo_element_nodes;
 };
 
 template<>
