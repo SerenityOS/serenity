@@ -62,14 +62,14 @@ JS::NonnullGCPtr<HTMLCanvasElement> CanvasRenderingContext2D::canvas_for_binding
 
 void CanvasRenderingContext2D::fill_rect(float x, float y, float width, float height)
 {
-    auto painter = this->painter();
-    if (!painter)
+    auto painter = this->antialiased_painter();
+    if (!painter.has_value())
         return;
 
     auto& drawing_state = this->drawing_state();
 
     auto rect = drawing_state.transform.map(Gfx::FloatRect(x, y, width, height));
-    painter->fill_rect(enclosing_int_rect(rect), drawing_state.fill_style);
+    painter->fill_rect(rect, drawing_state.fill_style);
     did_draw(rect);
 }
 
@@ -86,23 +86,26 @@ void CanvasRenderingContext2D::clear_rect(float x, float y, float width, float h
 
 void CanvasRenderingContext2D::stroke_rect(float x, float y, float width, float height)
 {
-    auto painter = this->painter();
-    if (!painter)
+    auto painter = this->antialiased_painter();
+    if (!painter.has_value())
         return;
 
     auto& drawing_state = this->drawing_state();
 
     auto rect = drawing_state.transform.map(Gfx::FloatRect(x, y, width, height));
+    // We could remove the rounding here, but the lines look better when they have whole number pixel endponts.
+    auto top_left = drawing_state.transform.map(Gfx::FloatPoint(x, y)).to_rounded<float>();
+    auto top_right = drawing_state.transform.map(Gfx::FloatPoint(x + width - 1, y)).to_rounded<float>();
+    auto bottom_left = drawing_state.transform.map(Gfx::FloatPoint(x, y + height - 1)).to_rounded<float>();
+    auto bottom_right = drawing_state.transform.map(Gfx::FloatPoint(x + width - 1, y + height - 1)).to_rounded<float>();
 
-    auto top_left = drawing_state.transform.map(Gfx::FloatPoint(x, y)).to_type<int>();
-    auto top_right = drawing_state.transform.map(Gfx::FloatPoint(x + width - 1, y)).to_type<int>();
-    auto bottom_left = drawing_state.transform.map(Gfx::FloatPoint(x, y + height - 1)).to_type<int>();
-    auto bottom_right = drawing_state.transform.map(Gfx::FloatPoint(x + width - 1, y + height - 1)).to_type<int>();
-
-    painter->draw_line(top_left, top_right, drawing_state.stroke_style, drawing_state.line_width);
-    painter->draw_line(top_right, bottom_right, drawing_state.stroke_style, drawing_state.line_width);
-    painter->draw_line(bottom_right, bottom_left, drawing_state.stroke_style, drawing_state.line_width);
-    painter->draw_line(bottom_left, top_left, drawing_state.stroke_style, drawing_state.line_width);
+    Gfx::Path path;
+    path.move_to(top_left);
+    path.line_to(top_right);
+    path.line_to(bottom_right);
+    path.line_to(bottom_left);
+    path.line_to(top_left);
+    painter->stroke_path(path, drawing_state.stroke_style, drawing_state.line_width);
 
     did_draw(rect);
 }
@@ -173,14 +176,22 @@ void CanvasRenderingContext2D::did_draw(Gfx::FloatRect const&)
     canvas_element().layout_node()->set_needs_display();
 }
 
-OwnPtr<Gfx::Painter> CanvasRenderingContext2D::painter()
+Gfx::Painter* CanvasRenderingContext2D::painter()
 {
     if (!canvas_element().bitmap()) {
         if (!canvas_element().create_bitmap())
-            return {};
+            return nullptr;
+        m_painter = make<Gfx::Painter>(*canvas_element().bitmap());
     }
+    return m_painter.ptr();
+}
 
-    return make<Gfx::Painter>(*canvas_element().bitmap());
+Optional<Gfx::AntiAliasingPainter> CanvasRenderingContext2D::antialiased_painter()
+{
+    auto painter = this->painter();
+    if (painter)
+        return Gfx::AntiAliasingPainter { *painter };
+    return {};
 }
 
 void CanvasRenderingContext2D::fill_text(String const& text, float x, float y, Optional<double> max_width)
@@ -214,8 +225,8 @@ void CanvasRenderingContext2D::begin_path()
 
 void CanvasRenderingContext2D::stroke_internal(Gfx::Path const& path)
 {
-    auto painter = this->painter();
-    if (!painter)
+    auto painter = this->antialiased_painter();
+    if (!painter.has_value())
         return;
 
     auto& drawing_state = this->drawing_state();
@@ -238,8 +249,8 @@ void CanvasRenderingContext2D::stroke(Path2D const& path)
 
 void CanvasRenderingContext2D::fill_internal(Gfx::Path& path, String const& fill_rule)
 {
-    auto painter = this->painter();
-    if (!painter)
+    auto painter = this->antialiased_painter();
+    if (!painter.has_value())
         return;
 
     path.close_all_subpaths();
