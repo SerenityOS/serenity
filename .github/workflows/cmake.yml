@@ -1,7 +1,16 @@
 name: Build, lint, and test
 
-on: [push, pull_request]
-
+on:
+  pull_request:
+    paths-ignore:
+      - "**/azure-pipelines.yml"
+      - "**/README.md"
+      - "Documentation/**"
+  push:
+    paths-ignore:
+      - "**/azure-pipelines.yml"
+      - "**/README.md"
+      - "Documentation/**"
 env:
   # Don't mix these up!
   # runner.workspace = /home/runner/work/serenity

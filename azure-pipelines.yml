@@ -3,6 +3,11 @@ trigger:
   branches:
     include:
     - master
+  paths:
+    exclude:
+    - .github/
+    - README.md
+    - Documentation/*
 
 stages:
   - stage: Lagom
