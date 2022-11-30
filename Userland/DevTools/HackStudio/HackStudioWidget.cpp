@@ -318,6 +318,8 @@ bool HackStudioWidget::open_file(String const& full_filename, size_t line, size_
     if (editor_wrapper_or_none.has_value()) {
         set_current_editor_wrapper(editor_wrapper_or_none.release_value());
         return true;
+    } else if (active_file().is_empty() && !current_editor().document().is_modified() && !full_filename.is_empty()) {
+        // Replace "Untitled" blank file since it hasn't been modified
     } else {
         add_new_editor(*m_current_editor_tab_widget);
     }
