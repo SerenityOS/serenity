@@ -114,21 +114,21 @@ Emoji Tag Sequence Flags (limited cross-platform support)
 🏴󠁩󠁥󠁬󠁿 - U+1F3F4 U+E0069 U+E0065 U+E006C U+E007F         IE-L Leinster
 🏴󠁩󠁥󠁭󠁿 - U+1F3F4 U+E0069 U+E0065 U+E006D U+E007F         IE-M Munster
 🏴󠁩󠁥󠁵󠁿 - U+1F3F4 U+E0069 U+E0065 U+E0075 U+E007F         IE-U Ulster
-🏴󠁬󠁲󠁢󠁭󠁿 - U+1F3F4_U+E006C_U+E0072_U+E0062_U+E006D_U+E007F LR-BM Bomi
-🏴󠁬󠁲󠁢󠁧󠁿 - U+1F3F4_U+E006C_U+E0072_U+E0062_U+E0067_U+E007F LR-BG Bong
-🏴󠁬󠁲󠁧󠁰󠁿 - U+1F3F4_U+E006C_U+E0072_U+E0067_U+E0070_U+E007F LR-GP Gbarpolu
-🏴󠁬󠁲󠁧󠁢󠁿 - U+1F3F4_U+E006C_U+E0072_U+E0067_U+E0062_U+E007F LR-GB Grand Bassa
-🏴󠁬󠁲󠁣󠁭󠁿 - U+1F3F4_U+E006C_U+E0072_U+E0063_U+E006D_U+E007F LR-CM Grand Cape Mount
-🏴󠁬󠁲󠁧󠁧󠁿 - U+1F3F4_U+E006C_U+E0072_U+E0067_U+E0067_U+E007F LR-GG Grand Gedeh
-🏴󠁬󠁲󠁧󠁫󠁿 - U+1F3F4_U+E006C_U+E0072_U+E0067_U+E006B_U+E007F LR-GK Grand Kru
-🏴󠁬󠁲󠁬󠁯󠁿 - U+1F3F4_U+E006C_U+E0072_U+E006C_U+E006F_U+E007F LR-LO Lofa
-🏴󠁬󠁲󠁭󠁧󠁿 - U+1F3F4_U+E006C_U+E0072_U+E006D_U+E0067_U+E007F LR-MG Margibi
-🏴󠁬󠁲󠁭󠁯󠁿 - U+1F3F4_U+E006C_U+E0072_U+E006D_U+E006F_U+E007F LR-MO Montserrado
-🏴󠁬󠁲󠁭󠁹󠁿 - U+1F3F4_U+E006C_U+E0072_U+E006D_U+E0079_U+E007F LR-MY Maryland
-🏴󠁬󠁲󠁮󠁩󠁿 - U+1F3F4_U+E006C_U+E0072_U+E006E_U+E0069_U+E007F LR-NI Nimba
-🏴󠁬󠁲󠁲󠁩󠁿 - U+1F3F4_U+E006C_U+E0072_U+E0072_U+E0069_U+E007F LR-RI Rivercess
-🏴󠁬󠁲󠁲󠁧󠁿 - U+1F3F4_U+E006C_U+E0072_U+E0072_U+E0067_U+E007F LR-RG River Gee
-🏴󠁬󠁲󠁳󠁩󠁿 - U+1F3F4_U+E006C_U+E0072_U+E0073_U+E0069_U+E007F LR-SI Sinoe
+🏴󠁬󠁲󠁢󠁭󠁿 - U+1F3F4 U+E006C U+E0072 U+E0062 U+E006D U+E007F LR-BM Bomi
+🏴󠁬󠁲󠁢󠁧󠁿 - U+1F3F4 U+E006C U+E0072 U+E0062 U+E0067 U+E007F LR-BG Bong
+🏴󠁬󠁲󠁧󠁰󠁿 - U+1F3F4 U+E006C U+E0072 U+E0067 U+E0070 U+E007F LR-GP Gbarpolu
+🏴󠁬󠁲󠁧󠁢󠁿 - U+1F3F4 U+E006C U+E0072 U+E0067 U+E0062 U+E007F LR-GB Grand Bassa
+🏴󠁬󠁲󠁣󠁭󠁿 - U+1F3F4 U+E006C U+E0072 U+E0063 U+E006D U+E007F LR-CM Grand Cape Mount
+🏴󠁬󠁲󠁧󠁧󠁿 - U+1F3F4 U+E006C U+E0072 U+E0067 U+E0067 U+E007F LR-GG Grand Gedeh
+🏴󠁬󠁲󠁧󠁫󠁿 - U+1F3F4 U+E006C U+E0072 U+E0067 U+E006B U+E007F LR-GK Grand Kru
+🏴󠁬󠁲󠁬󠁯󠁿 - U+1F3F4 U+E006C U+E0072 U+E006C U+E006F U+E007F LR-LO Lofa
+🏴󠁬󠁲󠁭󠁧󠁿 - U+1F3F4 U+E006C U+E0072 U+E006D U+E0067 U+E007F LR-MG Margibi
+🏴󠁬󠁲󠁭󠁯󠁿 - U+1F3F4 U+E006C U+E0072 U+E006D U+E006F U+E007F LR-MO Montserrado
+🏴󠁬󠁲󠁭󠁹󠁿 - U+1F3F4 U+E006C U+E0072 U+E006D U+E0079 U+E007F LR-MY Maryland
+🏴󠁬󠁲󠁮󠁩󠁿 - U+1F3F4 U+E006C U+E0072 U+E006E U+E0069 U+E007F LR-NI Nimba
+🏴󠁬󠁲󠁲󠁩󠁿 - U+1F3F4 U+E006C U+E0072 U+E0072 U+E0069 U+E007F LR-RI Rivercess
+🏴󠁬󠁲󠁲󠁧󠁿 - U+1F3F4 U+E006C U+E0072 U+E0072 U+E0067 U+E007F LR-RG River Gee
+🏴󠁬󠁲󠁳󠁩󠁿 - U+1F3F4 U+E006C U+E0072 U+E0073 U+E0069 U+E007F LR-SI Sinoe
 🏴󠁮󠁯󠀰󠀱󠁿 - U+1F3F4 U+E006E U+E006F U+E0030 U+E0031 U+E007F NO-01 Østfold
 🏴󠁮󠁯󠀰󠀲󠁿 - U+1F3F4 U+E006E U+E006F U+E0030 U+E0032 U+E007F NO-02 Akershus
 🏴󠁮󠁯󠀰󠀳󠁿 - U+1F3F4 U+E006E U+E006F U+E0030 U+E0033 U+E007F NO-03 Oslo
