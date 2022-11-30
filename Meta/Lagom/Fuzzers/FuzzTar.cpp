@@ -12,8 +12,7 @@
 
 extern "C" int LLVMFuzzerTestOneInput(uint8_t const* data, size_t size)
 {
-    // FIXME: Create a ReadonlyBytes variant of Core::Stream::MemoryStream.
-    auto input_stream_or_error = Core::Stream::MemoryStream::construct(Bytes { const_cast<uint8_t*>(data), size });
+    auto input_stream_or_error = Core::Stream::MemoryStream::construct({ data, size });
 
     if (input_stream_or_error.is_error())
         return 0;

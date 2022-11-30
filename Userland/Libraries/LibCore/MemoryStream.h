@@ -22,6 +22,11 @@ public:
         return adopt_nonnull_own_or_enomem<MemoryStream>(new (nothrow) MemoryStream(bytes));
     }
 
+    static ErrorOr<NonnullOwnPtr<MemoryStream>> construct(ReadonlyBytes bytes)
+    {
+        return adopt_nonnull_own_or_enomem<MemoryStream>(new (nothrow) MemoryStream(bytes));
+    }
+
     virtual bool is_eof() const override { return m_offset >= m_bytes.size(); }
     virtual bool is_open() const override { return true; }
     // FIXME: It doesn't make sense to close an memory stream. Therefore, we don't do anything here. Is that fine?
@@ -67,6 +72,8 @@ public:
 
     virtual ErrorOr<size_t> write(ReadonlyBytes bytes) override
     {
+        VERIFY(m_writing_enabled);
+
         // FIXME: Can this not error?
         auto const nwritten = bytes.copy_trimmed_to(m_bytes.slice(m_offset));
         m_offset += nwritten;
@@ -81,7 +88,11 @@ public:
         return true;
     }
 
-    Bytes bytes() { return m_bytes; }
+    Bytes bytes()
+    {
+        VERIFY(m_writing_enabled);
+        return m_bytes;
+    }
     ReadonlyBytes bytes() const { return m_bytes; }
     size_t offset() const { return m_offset; }
     size_t remaining() const { return m_bytes.size() - m_offset; }
@@ -92,9 +103,16 @@ protected:
     {
     }
 
+    explicit MemoryStream(ReadonlyBytes bytes)
+        : m_bytes({ const_cast<u8*>(bytes.data()), bytes.size() })
+        , m_writing_enabled(false)
+    {
+    }
+
 private:
     Bytes m_bytes;
     size_t m_offset { 0 };
+    bool m_writing_enabled { true };
 };
 
 }
