@@ -9,6 +9,7 @@
 
 #include <AK/Variant.h>
 #include <LibGfx/AffineTransform.h>
+#include <LibGfx/AntiAliasingPainter.h>
 #include <LibGfx/Color.h>
 #include <LibGfx/Forward.h>
 #include <LibGfx/Painter.h>
@@ -101,7 +102,8 @@ private:
     void did_draw(Gfx::FloatRect const&);
     PreparedText prepare_text(String const& text, float max_width = INFINITY);
 
-    OwnPtr<Gfx::Painter> painter();
+    Gfx::Painter* painter();
+    Optional<Gfx::AntiAliasingPainter> antialiased_painter();
 
     HTMLCanvasElement& canvas_element();
     HTMLCanvasElement const& canvas_element() const;
@@ -110,6 +112,7 @@ private:
     void fill_internal(Gfx::Path&, String const& fill_rule);
 
     JS::NonnullGCPtr<HTMLCanvasElement> m_element;
+    OwnPtr<Gfx::Painter> m_painter;
 
     // https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-origin-clean
     bool m_origin_clean { true };
