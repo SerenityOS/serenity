@@ -53,7 +53,7 @@
     }
 
     @GUI::GroupBox {
-        title: "Scroll Wheel Step Size"
+        title: "Scroll Wheel"
         fixed_height: 106
         layout: @GUI::VerticalBoxLayout {
             margins: [6]
@@ -79,7 +79,7 @@
 
         @GUI::Widget {
             layout: @GUI::HorizontalBoxLayout {
-                margins: [8]
+                margins: [4, 0, 2, 8]
                 spacing: 8
             }
 
@@ -97,10 +97,19 @@
                 min: 0
                 max: 100
                 value: 50
-                fixed_width: 100
+                preferred_width: "opportunistic_grow"
             }
 
-            @GUI::Layout::Spacer {}
+            @GUI::Widget {
+                fixed_width: 16
+            }
+
+            @GUI::CheckBox {
+                name: "natural_scroll_checkbox"
+                text: "Natural scrolling"
+                tooltip: "Content follows motion instead of the viewport,\nalso commonly referred to as \"reverse scrolling\"."
+                preferred_width: 108
+            }
         }
     }
 
