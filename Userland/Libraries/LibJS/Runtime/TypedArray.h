@@ -484,7 +484,7 @@ ThrowCompletionOr<double> compare_typed_array_elements(VM&, Value x, Value y, Fu
         virtual ~PrototypeName() override;                                                  \
                                                                                             \
     private:                                                                                \
-        PrototypeName(Realm&);                                                              \
+        PrototypeName(Object& prototype);                                                   \
     };                                                                                      \
     class ConstructorName final : public TypedArrayConstructor {                            \
         JS_OBJECT(ConstructorName, TypedArrayConstructor);                                  \
@@ -497,7 +497,7 @@ ThrowCompletionOr<double> compare_typed_array_elements(VM&, Value x, Value y, Fu
         virtual ThrowCompletionOr<Object*> construct(FunctionObject& new_target) override;  \
                                                                                             \
     private:                                                                                \
-        explicit ConstructorName(Realm&);                                                   \
+        explicit ConstructorName(Realm&, Object& prototype);                                \
         virtual bool has_constructor() const override                                       \
         {                                                                                   \
             return true;                                                                    \
