@@ -228,16 +228,15 @@ void AntiAliasingPainter::stroke_path(Path const& path, Color color, float thick
             cursor = segment.point();
             break;
         case Segment::Type::LineTo:
-            if (!first_line.has_value())
-                first_line = FloatLine(cursor, segment.point());
-
             draw_line(cursor, segment.point(), color, thickness);
-            if (previous_was_line) {
-                stroke_segment_intersection(cursor, segment.point(), last_line, color, thickness);
+            if (thickness > 1) {
+                if (!first_line.has_value())
+                    first_line = FloatLine(cursor, segment.point());
+                if (previous_was_line)
+                    stroke_segment_intersection(cursor, segment.point(), last_line, color, thickness);
+                last_line.set_a(cursor);
+                last_line.set_b(segment.point());
             }
-
-            last_line.set_a(cursor);
-            last_line.set_b(segment.point());
             cursor = segment.point();
             break;
         case Segment::Type::QuadraticBezierCurveTo: {
@@ -264,8 +263,8 @@ void AntiAliasingPainter::stroke_path(Path const& path, Color color, float thick
         previous_was_line = segment.type() == Segment::Type::LineTo;
     }
 
-    // check if the figure was started and closed as line at the same position
-    if (previous_was_line && path.segments().size() >= 2 && path.segments().first().point() == cursor && (path.segments().first().type() == Segment::Type::LineTo || (path.segments().first().type() == Segment::Type::MoveTo && path.segments()[1].type() == Segment::Type::LineTo)))
+    // Check if the figure was started and closed as line at the same position.
+    if (thickness > 1 && previous_was_line && path.segments().size() >= 2 && path.segments().first().point() == cursor && (path.segments().first().type() == Segment::Type::LineTo || (path.segments().first().type() == Segment::Type::MoveTo && path.segments()[1].type() == Segment::Type::LineTo)))
         stroke_segment_intersection(first_line.value().a(), first_line.value().b(), last_line, color, thickness);
 }
 
