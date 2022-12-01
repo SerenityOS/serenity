@@ -1,0 +1,105 @@
+name: Package the js repl as a binary artifact
+
+on: [push]
+
+env:
+  SERENITY_SOURCE_DIR: ${{ github.workspace }}
+
+jobs:
+  build-and-package:
+    runs-on: ${{ matrix.os }}
+    if: always() && github.repository == 'SerenityOS/serenity' && github.ref == 'refs/heads/master'
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-22.04]
+        package_type: [Linux-x86_64]
+        include:
+          - os: macos-12
+            package_type: macOS-universal2
+
+    concurrency:
+      group: ${{ github.workflow }}-${{ matrix.os }}
+      cancel-in-progress: true
+
+    steps:
+      - name: Checkout SerenityOS/serenity
+        uses: actions/checkout@v3
+
+      - name: Install dependencies Ubuntu
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ninja-build unzip gcc-12 g++-12
+        if: ${{ matrix.os == 'ubuntu-22.04' }}
+
+      - name: Install dependencies macOS
+        run: |
+          brew install bash ninja unzip
+        if: ${{ matrix.os == 'macos-12' }}
+
+      - name: Check versions Ubuntu
+        run: |
+          ninja --version; gcc-12 --version; g++-12 --version
+        if: ${{ matrix.os == 'ubuntu-22.04' }}
+
+      - name: Check versions macOS
+        run: |
+          ninja --version; clang++ --version
+        if: ${{ matrix.os == 'macos-12' }}
+
+      - name: Create build directory
+        run: |
+          mkdir -p Build/TZDB
+          mkdir -p Build/UCD
+          mkdir -p Build/CLDR
+
+      - name: TimeZoneData cache
+        # TODO: Change the version to the released version when https://github.com/actions/cache/pull/489 (or 571) is merged.
+        uses: actions/cache@03e00da99d75a2204924908e1cca7902cafce66b
+        with:
+          path: ${{ github.workspace }}/libjs-test262/Build/TZDB
+          key: TimeZoneData-${{ hashFiles('Meta/CMake/time_zone_data.cmake') }}
+
+      - name: UnicodeData cache
+        # TODO: Change the version to the released version when https://github.com/actions/cache/pull/489 (or 571) is merged.
+        uses: actions/cache@03e00da99d75a2204924908e1cca7902cafce66b
+        with:
+          path: ${{ github.workspace }}/libjs-test262/Build/UCD
+          key: UnicodeData-${{ hashFiles('Meta/CMake/unicode_data.cmake') }}
+
+      - name: UnicodeLocale cache
+        # TODO: Change the version to the released version when https://github.com/actions/cache/pull/489 (or 571) is merged.
+        uses: actions/cache@03e00da99d75a2204924908e1cca7902cafce66b
+        with:
+          path: ${{ github.workspace }}/libjs-test262/Build/CLDR
+          key: UnicodeData-${{ hashFiles('Meta/CMake/locale_data.cmake') }}
+
+      - name: Create build directory Ubuntu
+        run: |
+          cmake -S Meta/Lagom -B Build -G Ninja \
+            -DCMAKE_C_COMPILER=gcc-12 \
+            -DCMAKE_CXX_COMPILER=g++-12 \
+            -DBUILD_LAGOM=ON
+        if: ${{ matrix.os == 'ubuntu-22.04' }}
+
+      - name: Create build directory macOS
+        run: |
+          # Note: We are using Apple Clang to create Universal binary
+          cmake -S Meta/Lagom -B Build -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64" \
+            -DBUILD_LAGOM=ON
+        if: ${{ matrix.os == 'macos-12' }}
+
+      - name: Build and package js
+        working-directory: Build
+        run: |
+          ninja js
+          cpack
+
+      - name: Upload js package
+        uses: actions/upload-artifact@v3.1.1
+        with:
+          name: serenity-js-${{ matrix.package_type }}
+          path: Build/serenity-js*.tar.gz
+          retention-days: 7
