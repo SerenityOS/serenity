@@ -66,6 +66,8 @@ public:
     String value() const;
     WebIDL::ExceptionOr<void> set_value(String);
 
+    Optional<String> placeholder_value() const;
+
     bool checked() const { return m_checked; }
     enum class ChangeSource {
         Programmatic,

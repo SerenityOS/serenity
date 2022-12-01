@@ -13,6 +13,7 @@
 #include <LibWeb/DOM/ParentNode.h>
 #include <LibWeb/DOM/ShadowRoot.h>
 #include <LibWeb/Dump.h>
+#include <LibWeb/HTML/HTMLInputElement.h>
 #include <LibWeb/HTML/HTMLProgressElement.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
 #include <LibWeb/Layout/ListItemBox.h>
@@ -290,6 +291,28 @@ void TreeBuilder::create_layout_tree(DOM::Node& dom_node, TreeBuilder::Context& 
             pop_parent();
             progress.set_pseudo_element_node({}, CSS::Selector::PseudoElement::ProgressBar, progress_bar);
             progress.set_pseudo_element_node({}, CSS::Selector::PseudoElement::ProgressValue, progress_value);
+        }
+    }
+
+    if (is<HTML::HTMLInputElement>(dom_node)) {
+        auto& input_element = static_cast<HTML::HTMLInputElement&>(dom_node);
+
+        if (auto placeholder_value = input_element.placeholder_value(); placeholder_value.has_value()) {
+            auto placeholder_style = style_computer.compute_style(input_element, CSS::Selector::PseudoElement::Placeholder);
+            auto placeholder = DOM::Element::create_layout_node_for_display_type(document, placeholder_style->display(), placeholder_style, nullptr);
+
+            auto* text = document.heap().allocate<DOM::Text>(document.realm(), document, *placeholder_value);
+            auto* text_node = document.heap().allocate_without_realm<Layout::TextNode>(document, *text);
+            text_node->set_generated(true);
+
+            push_parent(verify_cast<NodeWithStyle>(*layout_node));
+            push_parent(verify_cast<NodeWithStyle>(*placeholder));
+            insert_node_into_inline_or_block_ancestor(*text_node, text_node->display(), AppendOrPrepend::Append);
+            pop_parent();
+            insert_node_into_inline_or_block_ancestor(*placeholder, placeholder->display(), AppendOrPrepend::Append);
+            pop_parent();
+
+            input_element.set_pseudo_element_node({}, CSS::Selector::PseudoElement::Placeholder, placeholder);
         }
     }
 }

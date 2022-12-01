@@ -49,6 +49,10 @@ input[type=submit], input[type=button], input[type=reset], input[type=checkbox],
     cursor: unset;
 }
 
+input::placeholder {
+    color: rgb(117, 117, 117);
+}
+
 button, input[type=submit], input[type=button], input[type=reset] {
     padding: 1px 4px;
     background-color: -libweb-palette-button;
