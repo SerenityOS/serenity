@@ -33,6 +33,7 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(difference);
     JS_DECLARE_NATIVE_FUNCTION(symmetric_difference);
     JS_DECLARE_NATIVE_FUNCTION(is_subset_of);
+    JS_DECLARE_NATIVE_FUNCTION(is_superset_of);
 
     JS_DECLARE_NATIVE_FUNCTION(size_getter);
 };

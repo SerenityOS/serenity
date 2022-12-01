@@ -37,6 +37,7 @@ void SetPrototype::initialize(Realm& realm)
     define_native_function(realm, vm.names.difference, difference, 1, attr);
     define_native_function(realm, vm.names.symmetricDifference, symmetric_difference, 1, attr);
     define_native_function(realm, vm.names.isSubsetOf, is_subset_of, 1, attr);
+    define_native_function(realm, vm.names.isSupersetOf, is_superset_of, 1, attr);
     define_native_accessor(realm, vm.names.size, size_getter, {}, Attribute::Configurable);
 
     define_direct_property(vm.names.keys, get_without_side_effects(vm.names.values), attr);
@@ -468,6 +469,50 @@ JS_DEFINE_NATIVE_FUNCTION(SetPrototype::is_subset_of)
     }
 
     // 7. Return true.
+    return true;
+}
+
+// 6 Set.prototype.isSupersetOf ( other ), https://tc39.es/proposal-set-methods/#sec-set.prototype.issupersetof
+JS_DEFINE_NATIVE_FUNCTION(SetPrototype::is_superset_of)
+{
+    // 1. Let O be the this value.
+    // 2. Perform ? RequireInternalSlot(O, [[SetData]]).
+    auto* set = TRY(typed_this_object(vm));
+
+    // 3. Let otherRec be ? GetSetRecord(other).
+    auto other_record = TRY(get_set_record(vm, vm.argument(0)));
+
+    // 4. Let thisSize be the number of elements in O.[[SetData]].
+    auto this_size = set->set_size();
+
+    // 5. If thisSize < otherRec.[[Size]], return false.
+    if (this_size < other_record.size)
+        return false;
+
+    // 6. Let keysIter be ? GetKeysIterator(otherRec).
+    auto keys_iterator = TRY(get_keys_iterator(vm, other_record));
+
+    // 7. Let next be true.
+    auto next = true;
+
+    // 8. Repeat, while next is not false,
+    while (next) {
+        // a. Set next to ? IteratorStep(keysIter).
+        auto* iterator_result = TRY(iterator_step(vm, keys_iterator));
+        next = iterator_result;
+
+        // b. If next is not false, then
+        if (next) {
+            // i. Let nextValue be ? IteratorValue(next).
+            auto next_value = TRY(iterator_value(vm, *iterator_result));
+
+            // ii. If SetDataHas(O.[[SetData]], nextValue) is false, return false.
+            if (!set->set_has(next_value))
+                return false;
+        }
+    }
+
+    // 9. Return true.
     return true;
 }
 
