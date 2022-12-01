@@ -301,6 +301,7 @@ namespace JS {
     P(isSafeInteger)                         \
     P(isSealed)                              \
     P(isSubsetOf)                            \
+    P(isSupersetOf)                          \
     P(isView)                                \
     P(isoDay)                                \
     P(isoHour)                               \
