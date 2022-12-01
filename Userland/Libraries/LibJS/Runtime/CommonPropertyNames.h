@@ -526,6 +526,7 @@ namespace JS {
     P(toTimeString)                          \
     P(toUpperCase)                           \
     P(toUTCString)                           \
+    P(toWellFormed)                          \
     P(toZonedDateTime)                       \
     P(toZonedDateTimeISO)                    \
     P(trace)                                 \

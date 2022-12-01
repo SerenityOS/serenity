@@ -59,6 +59,7 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(to_lowercase);
     JS_DECLARE_NATIVE_FUNCTION(to_string);
     JS_DECLARE_NATIVE_FUNCTION(to_uppercase);
+    JS_DECLARE_NATIVE_FUNCTION(to_well_formed);
     JS_DECLARE_NATIVE_FUNCTION(trim);
     JS_DECLARE_NATIVE_FUNCTION(trim_end);
     JS_DECLARE_NATIVE_FUNCTION(trim_start);
