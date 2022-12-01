@@ -171,6 +171,7 @@ void StringPrototype::initialize(Realm& realm)
     define_native_function(realm, vm.names.toLowerCase, to_lowercase, 0, attr);
     define_native_function(realm, vm.names.toString, to_string, 0, attr);
     define_native_function(realm, vm.names.toUpperCase, to_uppercase, 0, attr);
+    define_native_function(realm, vm.names.toWellFormed, to_well_formed, 0, attr);
     define_native_function(realm, vm.names.trim, trim, 0, attr);
     define_native_function(realm, vm.names.trimEnd, trim_end, 0, attr);
     define_native_function(realm, vm.names.trimStart, trim_start, 0, attr);
@@ -978,6 +979,46 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::to_uppercase)
     auto string = TRY(ak_string_from(vm));
     auto uppercase = Unicode::to_unicode_uppercase_full(string);
     return js_string(vm, move(uppercase));
+}
+
+// 22.1.3.11 String.prototype.toWellFormed ( )
+JS_DEFINE_NATIVE_FUNCTION(StringPrototype::to_well_formed)
+{
+    // 1. Let O be ? RequireObjectCoercible(this value).
+    // 2. Let S be ? ToString(O).
+    auto string = TRY(utf16_string_from(vm));
+
+    // 3. Let strLen be the length of S.
+    auto length = string.length_in_code_units();
+
+    // 4. Let k be 0.
+    size_t k = 0;
+
+    // 5. Let result be the empty String.
+    StringBuilder result;
+
+    // 6. Repeat, while k < strLen,
+    while (k < length) {
+        // a. Let cp be CodePointAt(S, k).
+        auto code_point = JS::code_point_at(string.view(), k);
+
+        // b. If cp.[[IsUnpairedSurrogate]] is true, then
+        if (code_point.is_unpaired_surrogate) {
+            // i. Set result to the string-concatenation of result and 0xFFFD (REPLACEMENT CHARACTER).
+            result.append_code_point(0xfffd);
+        }
+        // c. Else,
+        else {
+            // i. Set result to the string-concatenation of result and UTF16EncodeCodePoint(cp.[[CodePoint]]).
+            result.append_code_point(code_point.code_point);
+        }
+
+        // d. Set k to k + cp.[[CodeUnitCount]].
+        k += code_point.code_unit_count;
+    }
+
+    // 7. Return result.
+    return js_string(vm, result.build());
 }
 
 ThrowCompletionOr<String> trim_string(VM& vm, Value input_value, TrimMode where)
