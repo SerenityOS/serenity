@@ -287,6 +287,7 @@ namespace JS {
     P(inLeapYear)                            \
     P(input)                                 \
     P(instant)                               \
+    P(intersection)                          \
     P(is)                                    \
     P(isArray)                               \
     P(isExtensible)                          \
