@@ -52,8 +52,8 @@ JS_DEFINE_NATIVE_FUNCTION(TimeZonePrototype::id_getter)
     // 2. Perform ? RequireInternalSlot(timeZone, [[InitializedTemporalTimeZone]]).
     auto* time_zone = TRY(typed_this_object(vm));
 
-    // 3. Return ? ToString(timeZone).
-    return js_string(vm, TRY(Value(time_zone).to_string(vm)));
+    // 3. Return timeZone.[[Identifier]].
+    return js_string(vm, time_zone->identifier());
 }
 
 // 11.4.4 Temporal.TimeZone.prototype.getOffsetNanosecondsFor ( instant ), https://tc39.es/proposal-temporal/#sec-temporal.timezone.prototype.getoffsetnanosecondsfor

@@ -73,8 +73,8 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::id_getter)
     // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
     auto* calendar = TRY(typed_this_object(vm));
 
-    // 3. Return ? ToString(calendar).
-    return { js_string(vm, TRY(Value(calendar).to_string(vm))) };
+    // 3. Return calendar.[[Identifier]].
+    return { js_string(vm, calendar->identifier()) };
 }
 
 // 12.4.4 Temporal.Calendar.prototype.dateFromFields ( fields [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.datefromfields
