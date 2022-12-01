@@ -581,6 +581,7 @@ struct CommonPropertyNames {
     PropertyKey register_ { "register", PropertyKey::StringMayBeNumber::No };
     PropertyKey return_ { "return", PropertyKey::StringMayBeNumber::No };
     PropertyKey throw_ { "throw", PropertyKey::StringMayBeNumber::No };
+    PropertyKey union_ { "union", PropertyKey::StringMayBeNumber::No };
     PropertyKey xor_ { "xor", PropertyKey::StringMayBeNumber::No };
     PropertyKey inputAlias { "$_", PropertyKey::StringMayBeNumber::No };
     PropertyKey lastMatchAlias { "$&", PropertyKey::StringMayBeNumber::No };

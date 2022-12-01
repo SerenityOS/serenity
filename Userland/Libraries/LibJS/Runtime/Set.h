@@ -36,6 +36,8 @@ public:
     auto begin() { return m_values->begin(); }
     auto end() const { return m_values->end(); }
 
+    NonnullGCPtr<Set> copy() const;
+
 private:
     explicit Set(Object& prototype);
 
