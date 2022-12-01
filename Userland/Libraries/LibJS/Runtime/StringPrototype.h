@@ -38,6 +38,7 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(ends_with);
     JS_DECLARE_NATIVE_FUNCTION(includes);
     JS_DECLARE_NATIVE_FUNCTION(index_of);
+    JS_DECLARE_NATIVE_FUNCTION(is_well_formed);
     JS_DECLARE_NATIVE_FUNCTION(last_index_of);
     JS_DECLARE_NATIVE_FUNCTION(locale_compare);
     JS_DECLARE_NATIVE_FUNCTION(match);

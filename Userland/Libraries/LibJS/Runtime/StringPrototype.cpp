@@ -81,6 +81,32 @@ static Optional<size_t> string_index_of(Utf16View const& string, Utf16View const
     return {};
 }
 
+// 7.2.9 Static Semantics: IsStringWellFormedUnicode ( string )
+static bool is_string_well_formed_unicode(Utf16View string)
+{
+    // 1. Let strLen be the length of string.
+    auto length = string.length_in_code_units();
+
+    // 2. Let k be 0.
+    size_t k = 0;
+
+    // 3. Repeat, while k ≠ strLen,
+    while (k != length) {
+        // a. Let cp be CodePointAt(string, k).
+        auto code_point = code_point_at(string, k);
+
+        // b. If cp.[[IsUnpairedSurrogate]] is true, return false.
+        if (code_point.is_unpaired_surrogate)
+            return false;
+
+        // c. Set k to k + cp.[[CodeUnitCount]].
+        k += code_point.code_unit_count;
+    }
+
+    // 4. Return true.
+    return true;
+}
+
 // 11.1.4 CodePointAt ( string, position ), https://tc39.es/ecma262/#sec-codepointat
 CodePoint code_point_at(Utf16View const& string, size_t position)
 {
@@ -124,6 +150,7 @@ void StringPrototype::initialize(Realm& realm)
     define_native_function(realm, vm.names.endsWith, ends_with, 1, attr);
     define_native_function(realm, vm.names.includes, includes, 1, attr);
     define_native_function(realm, vm.names.indexOf, index_of, 1, attr);
+    define_native_function(realm, vm.names.isWellFormed, is_well_formed, 0, attr);
     define_native_function(realm, vm.names.lastIndexOf, last_index_of, 1, attr);
     define_native_function(realm, vm.names.localeCompare, locale_compare, 1, attr);
     define_native_function(realm, vm.names.match, match, 1, attr);
@@ -343,6 +370,17 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::index_of)
 
     auto index = string_index_of(utf16_string_view, utf16_search_view, start);
     return index.has_value() ? Value(*index) : Value(-1);
+}
+
+// 22.1.3.10 String.prototype.isWellFormed ( ), https://tc39.es/proposal-is-usv-string/#sec-string.prototype.iswellformed
+JS_DEFINE_NATIVE_FUNCTION(StringPrototype::is_well_formed)
+{
+    // 1. Let O be ? RequireObjectCoercible(this value).
+    // 2. Let S be ? ToString(O).
+    auto string = TRY(utf16_string_from(vm));
+
+    // 3. Return IsStringWellFormedUnicode(S).
+    return is_string_well_formed_unicode(string.view());
 }
 
 // 22.1.3.10 String.prototype.lastIndexOf ( searchString [ , position ] ), https://tc39.es/ecma262/#sec-string.prototype.lastindexof
