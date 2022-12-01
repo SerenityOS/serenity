@@ -8,6 +8,7 @@
 #include <AK/Checked.h>
 #include <AK/PrintfImplementation.h>
 #include <AK/StdLibExtras.h>
+#include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/StringView.h>
 #include <AK/UnicodeUtils.h>
@@ -114,6 +115,11 @@ DeprecatedString StringBuilder::to_deprecated_string() const
 DeprecatedString StringBuilder::build() const
 {
     return to_deprecated_string();
+}
+
+ErrorOr<String> StringBuilder::to_string() const
+{
+    return String::from_utf8(string_view());
 }
 #endif
 

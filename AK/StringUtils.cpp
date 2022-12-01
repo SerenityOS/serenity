@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <awesomekling@gmail.com>
+ * Copyright (c) 2018-2022, Andreas Kling <awesomekling@gmail.com>
  * Copyright (c) 2020, Fei Wu <f.eiwu@yahoo.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -9,6 +9,7 @@
 #include <AK/MemMem.h>
 #include <AK/Memory.h>
 #include <AK/Optional.h>
+#include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/StringUtils.h>
 #include <AK/StringView.h>
@@ -532,6 +533,35 @@ DeprecatedString replace(StringView str, StringView needle, StringView replaceme
     }
     replaced_string.append(str.substring_view(last_position, str.length() - last_position));
     return replaced_string.build();
+}
+
+ErrorOr<String> replace(String const& haystack, StringView needle, StringView replacement, ReplaceMode replace_mode)
+{
+    if (haystack.is_empty())
+        return haystack;
+
+    // FIXME: Propagate Vector allocation failures (or do this without putting positions in a vector)
+    Vector<size_t> positions;
+    if (replace_mode == ReplaceMode::All) {
+        positions = haystack.bytes_as_string_view().find_all(needle);
+        if (!positions.size())
+            return haystack;
+    } else {
+        auto pos = haystack.bytes_as_string_view().find(needle);
+        if (!pos.has_value())
+            return haystack;
+        positions.append(pos.value());
+    }
+
+    StringBuilder replaced_string;
+    size_t last_position = 0;
+    for (auto& position : positions) {
+        replaced_string.append(haystack.bytes_as_string_view().substring_view(last_position, position - last_position));
+        replaced_string.append(replacement);
+        last_position = position + needle.length();
+    }
+    replaced_string.append(haystack.bytes_as_string_view().substring_view(last_position, haystack.bytes_as_string_view().length() - last_position));
+    return replaced_string.to_string();
 }
 #endif
 

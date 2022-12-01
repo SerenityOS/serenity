@@ -103,6 +103,8 @@ DeprecatedString to_titlecase(StringView);
 DeprecatedString invert_case(StringView);
 
 DeprecatedString replace(StringView, StringView needle, StringView replacement, ReplaceMode);
+ErrorOr<String> replace(String const&, StringView needle, StringView replacement, ReplaceMode);
+
 size_t count(StringView, StringView needle);
 
 }

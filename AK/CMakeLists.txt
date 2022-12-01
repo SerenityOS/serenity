@@ -15,6 +15,7 @@ set(AK_SOURCES
     LexicalPath.cpp
     Random.cpp
     StackInfo.cpp
+    String.cpp
     StringBuilder.cpp
     StringFloatingPointConversions.cpp
     StringImpl.cpp
