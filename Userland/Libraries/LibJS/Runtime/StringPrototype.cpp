@@ -46,6 +46,7 @@ static ThrowCompletionOr<Utf16String> utf16_string_from(VM& vm)
 }
 
 // 22.1.3.21.1 SplitMatch ( S, q, R ), https://tc39.es/ecma262/#sec-splitmatch
+// FIXME: This no longer exists in the spec!
 static Optional<size_t> split_match(Utf16View const& haystack, size_t start, Utf16View const& needle)
 {
     auto r = needle.length_in_code_units();
