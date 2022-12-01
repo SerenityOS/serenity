@@ -282,6 +282,8 @@
     M(TemporalPropertyMustBeFinite, "Property must not be Infinity")                                                                    \
     M(TemporalPropertyMustBePositiveInteger, "Property must be a positive integer")                                                     \
     M(TemporalTimeZoneOffsetStringMismatch, "Time zone offset string mismatch: '{}' is not equal to '{}'")                              \
+    M(TemporalUnexpectedCalendarObject, "Got unexpected Calendar object in conversion to TimeZone")                                     \
+    M(TemporalUnexpectedTimeZoneObject, "Got unexpected TimeZone object in conversion to Calendar")                                     \
     M(TemporalUnknownCriticalAnnotation, "Unknown annotation key in critical annotation: '{}'")                                         \
     M(TemporalZonedDateTimeRoundZeroOrNegativeLengthDay, "Cannot round a ZonedDateTime in a calendar or time zone that has zero or "    \
                                                          "negative length days")                                                        \

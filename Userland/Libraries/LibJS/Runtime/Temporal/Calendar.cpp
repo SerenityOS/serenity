@@ -20,6 +20,7 @@
 #include <LibJS/Runtime/Temporal/PlainMonthDay.h>
 #include <LibJS/Runtime/Temporal/PlainTime.h>
 #include <LibJS/Runtime/Temporal/PlainYearMonth.h>
+#include <LibJS/Runtime/Temporal/TimeZone.h>
 #include <LibJS/Runtime/Temporal/ZonedDateTime.h>
 #include <LibJS/Runtime/Value.h>
 
@@ -446,16 +447,27 @@ ThrowCompletionOr<Object*> to_temporal_calendar(VM& vm, Value temporal_calendar_
         if (is<ZonedDateTime>(temporal_calendar_like_object))
             return &static_cast<ZonedDateTime&>(temporal_calendar_like_object).calendar();
 
-        // c. If ? HasProperty(temporalCalendarLike, "calendar") is false, return temporalCalendarLike.
+        // c. If temporalCalendarLike has an [[InitializedTemporalTimeZone]] internal slot, throw a RangeError exception.
+        if (is<TimeZone>(temporal_calendar_like_object))
+            return vm.throw_completion<RangeError>(ErrorType::TemporalUnexpectedTimeZoneObject);
+
+        // d. If ? HasProperty(temporalCalendarLike, "calendar") is false, return temporalCalendarLike.
         if (!TRY(temporal_calendar_like_object.has_property(vm.names.calendar)))
             return &temporal_calendar_like_object;
 
-        // d. Set temporalCalendarLike to ? Get(temporalCalendarLike, "calendar").
+        // e. Set temporalCalendarLike to ? Get(temporalCalendarLike, "calendar").
         temporal_calendar_like = TRY(temporal_calendar_like_object.get(vm.names.calendar));
 
-        // e. If Type(temporalCalendarLike) is Object and ? HasProperty(temporalCalendarLike, "calendar") is false, return temporalCalendarLike.
-        if (temporal_calendar_like.is_object() && !TRY(temporal_calendar_like.as_object().has_property(vm.names.calendar)))
-            return &temporal_calendar_like.as_object();
+        // f. If Type(temporalCalendarLike) is Object, then
+        if (temporal_calendar_like.is_object()) {
+            // i. If temporalCalendarLike has an [[InitializedTemporalTimeZone]] internal slot, throw a RangeError exception.
+            if (is<TimeZone>(temporal_calendar_like.as_object()))
+                return vm.throw_completion<RangeError>(ErrorType::TemporalUnexpectedTimeZoneObject);
+
+            // ii. If ? HasProperty(temporalCalendarLike, "calendar") is false, return temporalCalendarLike.
+            if (!TRY(temporal_calendar_like.as_object().has_property(vm.names.calendar)))
+                return &temporal_calendar_like.as_object();
+        }
     }
 
     // 2. Let identifier be ? ToString(temporalCalendarLike).

@@ -43,3 +43,15 @@ describe("normal behavior", () => {
         expect(madeObservableHasPropertyLookup).toBeFalse();
     });
 });
+
+describe("errors", () => {
+    test("Calendar from TimeZone", () => {
+        const timeZone = new Temporal.TimeZone("UTC");
+        expect(() => {
+            Temporal.Calendar.from(timeZone);
+        }).toThrowWithMessage(
+            RangeError,
+            "Got unexpected TimeZone object in conversion to Calendar"
+        );
+    });
+});
