@@ -30,6 +30,7 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(values);
     JS_DECLARE_NATIVE_FUNCTION(union_);
     JS_DECLARE_NATIVE_FUNCTION(intersection);
+    JS_DECLARE_NATIVE_FUNCTION(difference);
 
     JS_DECLARE_NATIVE_FUNCTION(size_getter);
 };
