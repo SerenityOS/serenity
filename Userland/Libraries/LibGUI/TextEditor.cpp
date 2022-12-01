@@ -1022,7 +1022,7 @@ void TextEditor::keydown_event(KeyEvent& event)
         if (m_highlighter != nullptr) {
             auto prefix = m_highlighter->comment_prefix().value_or(""sv);
             auto suffix = m_highlighter->comment_suffix().value_or(""sv);
-            auto range = has_selection() ? selection() : TextRange { { m_cursor.line(), m_cursor.column() }, { m_cursor.line(), m_cursor.column() } };
+            auto range = has_selection() ? selection().normalized() : TextRange { { m_cursor.line(), m_cursor.column() }, { m_cursor.line(), m_cursor.column() } };
 
             auto is_already_commented = true;
             for (size_t i = range.start().line(); i <= range.end().line(); i++) {
