@@ -148,6 +148,7 @@ namespace JS {
     P(deleteProperty)                        \
     P(deref)                                 \
     P(description)                           \
+    P(difference)                            \
     P(direction)                             \
     P(disambiguation)                        \
     P(done)                                  \
