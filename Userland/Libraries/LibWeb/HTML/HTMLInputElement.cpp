@@ -317,6 +317,47 @@ WebIDL::ExceptionOr<void> HTMLInputElement::set_value(String value)
     return {};
 }
 
+// https://html.spec.whatwg.org/multipage/input.html#the-input-element:attr-input-placeholder-3
+static bool is_allowed_to_have_placeholder(HTML::HTMLInputElement::TypeAttributeState state)
+{
+    switch (state) {
+    case HTML::HTMLInputElement::TypeAttributeState::Text:
+    case HTML::HTMLInputElement::TypeAttributeState::Search:
+    case HTML::HTMLInputElement::TypeAttributeState::URL:
+    case HTML::HTMLInputElement::TypeAttributeState::Telephone:
+    case HTML::HTMLInputElement::TypeAttributeState::Email:
+    case HTML::HTMLInputElement::TypeAttributeState::Password:
+    case HTML::HTMLInputElement::TypeAttributeState::Number:
+        return true;
+    default:
+        return false;
+    }
+}
+
+// https://html.spec.whatwg.org/multipage/input.html#attr-input-placeholder
+Optional<String> HTMLInputElement::placeholder_value() const
+{
+    if (!m_text_node || !m_text_node->data().is_empty())
+        return {};
+    if (!is_allowed_to_have_placeholder(type_state()))
+        return {};
+    if (!has_attribute(HTML::AttributeNames::placeholder))
+        return {};
+
+    auto placeholder = attribute(HTML::AttributeNames::placeholder);
+
+    if (placeholder.contains('\r') || placeholder.contains('\n')) {
+        StringBuilder builder;
+        for (auto ch : placeholder) {
+            if (ch != '\r' && ch != '\n')
+                builder.append(ch);
+        }
+        placeholder = builder.to_string();
+    }
+
+    return placeholder;
+}
+
 void HTMLInputElement::create_shadow_tree_if_needed()
 {
     if (shadow_root())
