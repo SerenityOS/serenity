@@ -36,6 +36,7 @@ void SetPrototype::initialize(Realm& realm)
     define_native_function(realm, vm.names.intersection, intersection, 1, attr);
     define_native_function(realm, vm.names.difference, difference, 1, attr);
     define_native_function(realm, vm.names.symmetricDifference, symmetric_difference, 1, attr);
+    define_native_function(realm, vm.names.isSubsetOf, is_subset_of, 1, attr);
     define_native_accessor(realm, vm.names.size, size_getter, {}, Attribute::Configurable);
 
     define_direct_property(vm.names.keys, get_without_side_effects(vm.names.values), attr);
@@ -437,6 +438,37 @@ JS_DEFINE_NATIVE_FUNCTION(SetPrototype::symmetric_difference)
 
     // 10. Return result.
     return result;
+}
+
+// 5 Set.prototype.isSubsetOf ( other ), https://tc39.es/proposal-set-methods/#sec-set.prototype.issubsetof
+JS_DEFINE_NATIVE_FUNCTION(SetPrototype::is_subset_of)
+{
+    // 1. Let O be the this value.
+    // 2. Perform ? RequireInternalSlot(O, [[SetData]]).
+    auto* set = TRY(typed_this_object(vm));
+
+    // 3. Let otherRec be ? GetSetRecord(other).
+    auto other_record = TRY(get_set_record(vm, vm.argument(0)));
+
+    // 4. Let thisSize be the number of elements in O.[[SetData]].
+    auto this_size = set->set_size();
+
+    // 5. If thisSize > otherRec.[[Size]], return false.
+    if (this_size > other_record.size)
+        return false;
+
+    // 6. For each element e of O.[[SetData]], do
+    for (auto& element : *set) {
+        // a. Let inOther be ToBoolean(? Call(otherRec.[[Has]], otherRec.[[Set]], « e »)).
+        auto in_other = TRY(call(vm, *other_record.has, other_record.set, element.key)).to_boolean();
+
+        // b. If inOther is false, return false.
+        if (!in_other)
+            return false;
+    }
+
+    // 7. Return true.
+    return true;
 }
 
 }

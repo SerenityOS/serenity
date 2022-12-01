@@ -300,6 +300,7 @@ namespace JS {
     P(isPrototypeOf)                         \
     P(isSafeInteger)                         \
     P(isSealed)                              \
+    P(isSubsetOf)                            \
     P(isView)                                \
     P(isoDay)                                \
     P(isoHour)                               \
