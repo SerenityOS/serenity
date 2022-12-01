@@ -38,6 +38,7 @@ void SetPrototype::initialize(Realm& realm)
     define_native_function(realm, vm.names.symmetricDifference, symmetric_difference, 1, attr);
     define_native_function(realm, vm.names.isSubsetOf, is_subset_of, 1, attr);
     define_native_function(realm, vm.names.isSupersetOf, is_superset_of, 1, attr);
+    define_native_function(realm, vm.names.isDisjointFrom, is_disjoint_from, 1, attr);
     define_native_accessor(realm, vm.names.size, size_getter, {}, Attribute::Configurable);
 
     define_direct_property(vm.names.keys, get_without_side_effects(vm.names.values), attr);
@@ -513,6 +514,61 @@ JS_DEFINE_NATIVE_FUNCTION(SetPrototype::is_superset_of)
     }
 
     // 9. Return true.
+    return true;
+}
+
+// 7 Set.prototype.isDisjointFrom ( other ), https://tc39.es/proposal-set-methods/#sec-set.prototype.isdisjointfrom
+JS_DEFINE_NATIVE_FUNCTION(SetPrototype::is_disjoint_from)
+{
+    // 1. Let O be the this value.
+    // 2. Perform ? RequireInternalSlot(O, [[SetData]]).
+    auto* set = TRY(typed_this_object(vm));
+
+    // 3. Let otherRec be ? GetSetRecord(other).
+    auto other_record = TRY(get_set_record(vm, vm.argument(0)));
+
+    // 4. Let thisSize be the number of elements in O.[[SetData]].
+    auto this_size = set->set_size();
+
+    // 5. If thisSize ≤ otherRec.[[Size]], then
+    if (this_size <= other_record.size) {
+        // a. For each element e of O.[[SetData]], do
+        for (auto& element : *set) {
+            // i. If e is not empty, then
+            //     1. Let inOther be ToBoolean(? Call(otherRec.[[Has]], otherRec.[[Set]], « e »)).
+            auto in_other = TRY(call(vm, *other_record.has, other_record.set, element.key)).to_boolean();
+            //     2. If inOther is true, return false.
+            if (in_other)
+                return false;
+        }
+    }
+    // 6. Else,
+    else {
+        // a. Let keysIter be ? GetKeysIterator(otherRec).
+        auto keys_iterator = TRY(get_keys_iterator(vm, other_record));
+
+        // b. Let next be true.
+        auto next = true;
+
+        // c. Repeat, while next is not false,
+        while (next) {
+            // i. Set next to ? IteratorStep(keysIter).
+            auto* iterator_result = TRY(iterator_step(vm, keys_iterator));
+            next = iterator_result;
+
+            // ii. If next is not false, then
+            if (next) {
+                // 1. Let nextValue be ? IteratorValue(next).
+                auto next_value = TRY(iterator_value(vm, *iterator_result));
+
+                // 2. If SetDataHas(O.[[SetData]], nextValue) is true, return false.
+                if (set->set_has(next_value))
+                    return false;
+            }
+        }
+    }
+
+    // 7. Return true.
     return true;
 }
 
