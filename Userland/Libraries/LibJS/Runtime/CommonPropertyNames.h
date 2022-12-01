@@ -488,6 +488,7 @@ namespace JS {
     P(sup)                                   \
     P(supportedLocalesOf)                    \
     P(supportedValuesOf)                     \
+    P(symmetricDifference)                   \
     P(tan)                                   \
     P(tanh)                                  \
     P(test)                                  \

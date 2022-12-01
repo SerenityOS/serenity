@@ -35,6 +35,7 @@ void SetPrototype::initialize(Realm& realm)
     define_native_function(realm, vm.names.union_, union_, 1, attr);
     define_native_function(realm, vm.names.intersection, intersection, 1, attr);
     define_native_function(realm, vm.names.difference, difference, 1, attr);
+    define_native_function(realm, vm.names.symmetricDifference, symmetric_difference, 1, attr);
     define_native_accessor(realm, vm.names.size, size_getter, {}, Attribute::Configurable);
 
     define_direct_property(vm.names.keys, get_without_side_effects(vm.names.values), attr);
@@ -372,6 +373,61 @@ JS_DEFINE_NATIVE_FUNCTION(SetPrototype::difference)
                     // a. Remove nextValue from resultSetData.
                     result->set_remove(next_value);
                 }
+            }
+        }
+    }
+
+    // 8. Let result be OrdinaryObjectCreate(%Set.prototype%, « [[SetData]] »).
+    // 9. Set result.[[SetData]] to resultSetData.
+
+    // 10. Return result.
+    return result;
+}
+
+// 4 Set.prototype.symmetricDifference ( other ), https://tc39.es/proposal-set-methods/#sec-set.prototype.symmetricdifference
+JS_DEFINE_NATIVE_FUNCTION(SetPrototype::symmetric_difference)
+{
+    // 1. Let O be the this value.
+    // 2. Perform ? RequireInternalSlot(O, [[SetData]]).
+    auto* set = TRY(typed_this_object(vm));
+
+    // 3. Let otherRec be ? GetSetRecord(other).
+    auto other_record = TRY(get_set_record(vm, vm.argument(0)));
+
+    // 4. Let keysIter be ? GetKeysIterator(otherRec).
+    auto keys_iterator = TRY(get_keys_iterator(vm, other_record));
+
+    // 5. Let resultSetData be a copy of O.[[SetData]].
+    auto result = set->copy();
+
+    // 6. Let next be true.
+    auto next = true;
+
+    // 7. Repeat, while next is not false,
+    while (next) {
+        // a. Set next to ? IteratorStep(keysIter).
+        auto* iterator_result = TRY(iterator_step(vm, keys_iterator));
+        next = iterator_result;
+
+        // b. If next is not false, then
+        if (next) {
+            // i. Let nextValue be ? IteratorValue(next).
+            auto next_value = TRY(iterator_value(vm, *iterator_result));
+
+            // ii. If nextValue is -0𝔽, set nextValue to +0𝔽.
+            if (next_value.is_negative_zero())
+                next_value = Value(0);
+
+            // iii. Let inResult be SetDataHas(resultSetData, nextValue).
+            // iv. If SetDataHas(O.[[SetData]], nextValue) is true, then
+            if (set->set_has(next_value)) {
+                // 1. If inResult is true, remove nextValue from resultSetData.
+                result->set_remove(next_value);
+            }
+            // v. Else,
+            else {
+                // 1. If inResult is false, append nextValue to resultSetData.
+                result->set_add(next_value);
             }
         }
     }
