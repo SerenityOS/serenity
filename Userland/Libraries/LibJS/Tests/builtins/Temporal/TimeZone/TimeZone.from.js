@@ -64,3 +64,15 @@ describe("normal behavior", () => {
         expect(madeObservableHasPropertyLookup).toBeFalse();
     });
 });
+
+describe("errors", () => {
+    test("TimeZone from Calendar", () => {
+        const calendar = new Temporal.Calendar("iso8601");
+        expect(() => {
+            Temporal.TimeZone.from(calendar);
+        }).toThrowWithMessage(
+            RangeError,
+            "Got unexpected Calendar object in conversion to TimeZone"
+        );
+    });
+});
