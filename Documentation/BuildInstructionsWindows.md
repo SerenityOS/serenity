@@ -30,7 +30,8 @@ access the linux filesystem at `\\wsl$`, so for example, the project would be at
 ## Setting up QEMU
 
 Grab the latest QEMU binaries from [here](https://www.qemu.org/download/#windows) and install them. At a minimum you
-will need to install the tools as well as the system emulators for i386 and x86_64.
+will need to install the tools, the system emulators for i386 and x86_64, and
+the DLL libraries.
 
 ![QEMU Components](QEMU_Components.png)
 
