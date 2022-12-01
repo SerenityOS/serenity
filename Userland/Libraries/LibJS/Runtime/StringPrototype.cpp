@@ -981,7 +981,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::to_uppercase)
     return js_string(vm, move(uppercase));
 }
 
-// 22.1.3.11 String.prototype.toWellFormed ( )
+// 22.1.3.11 String.prototype.toWellFormed ( ), https://tc39.es/proposal-is-usv-string/#sec-string.prototype.towellformed
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::to_well_formed)
 {
     // 1. Let O be ? RequireObjectCoercible(this value).
