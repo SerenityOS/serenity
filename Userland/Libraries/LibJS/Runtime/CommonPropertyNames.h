@@ -291,6 +291,7 @@ namespace JS {
     P(intersection)                          \
     P(is)                                    \
     P(isArray)                               \
+    P(isDisjointFrom)                        \
     P(isExtensible)                          \
     P(isFinite)                              \
     P(isFrozen)                              \
