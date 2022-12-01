@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Idan Horowitz <idan.horowitz@serenityos.org>
+ * Copyright (c) 2021-2022, Idan Horowitz <idan.horowitz@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -7,6 +7,8 @@
 #include <AK/HashTable.h>
 #include <AK/TypeCasts.h>
 #include <LibJS/Runtime/AbstractOperations.h>
+#include <LibJS/Runtime/FunctionObject.h>
+#include <LibJS/Runtime/IteratorOperations.h>
 #include <LibJS/Runtime/SetIterator.h>
 #include <LibJS/Runtime/SetPrototype.h>
 
@@ -111,6 +113,75 @@ JS_DEFINE_NATIVE_FUNCTION(SetPrototype::size_getter)
 {
     auto* set = TRY(typed_this_object(vm));
     return Value(set->set_size());
+}
+
+// 8 Set Records, https://tc39.es/proposal-set-methods/#sec-set-records
+struct SetRecord {
+    NonnullGCPtr<Object> set;          // [[Set]]
+    double size { 0 };                 // [[Size]
+    NonnullGCPtr<FunctionObject> has;  // [[Has]]
+    NonnullGCPtr<FunctionObject> keys; // [[Keys]]
+};
+
+// 9 GetSetRecord ( obj ), https://tc39.es/proposal-set-methods/#sec-getsetrecord
+static ThrowCompletionOr<SetRecord> get_set_record(VM& vm, Value value)
+{
+    // 1. If obj is not an Object, throw a TypeError exception.
+    if (!value.is_object())
+        return vm.throw_completion<TypeError>(ErrorType::NotAnObject, value.to_string_without_side_effects());
+    auto const& object = value.as_object();
+
+    // 2. Let rawSize be ? Get(obj, "size").
+    auto raw_size = TRY(object.get(vm.names.size));
+
+    // 3. Let numSize be ? ToNumber(rawSize).
+    auto number_size = TRY(raw_size.to_number(vm));
+
+    // 4. NOTE: If rawSize is undefined, then numSize will be NaN.
+    // 5. If numSize is NaN, throw a TypeError exception.
+    if (number_size.is_nan())
+        return vm.throw_completion<TypeError>(ErrorType::IntlNumberIsNaN, "size"sv);
+
+    // 6. Let intSize be ! ToIntegerOrInfinity(numSize).
+    auto integer_size = MUST(number_size.to_integer_or_infinity(vm));
+
+    // 7. Let has be ? Get(obj, "has").
+    auto has = TRY(object.get(vm.names.has));
+
+    // 8. If IsCallable(has) is false, throw a TypeError exception.
+    if (!has.is_function())
+        return vm.throw_completion<TypeError>(ErrorType::NotAFunction, has.to_string_without_side_effects());
+
+    // 9. Let keys be ? Get(obj, "keys").
+    auto keys = TRY(object.get(vm.names.keys));
+
+    // 10. If IsCallable(keys) is false, throw a TypeError exception.
+    if (!keys.is_function())
+        return vm.throw_completion<TypeError>(ErrorType::NotAFunction, keys.to_string_without_side_effects());
+
+    // 11. Return a new Set Record { [[Set]]: obj, [[Size]]: intSize, [[Has]]: has, [[Keys]]: keys }.
+    return SetRecord { .set = object, .size = integer_size, .has = has.as_function(), .keys = keys.as_function() };
+}
+
+// 10 GetKeysIterator ( setRec ), https://tc39.es/proposal-set-methods/#sec-getkeysiterator
+static ThrowCompletionOr<Iterator> get_keys_iterator(VM& vm, SetRecord const& set_record)
+{
+    // 1. Let keysIter be ? Call(setRec.[[Keys]], setRec.[[Set]]).
+    auto keys_iterator = TRY(call(vm, *set_record.keys, set_record.set));
+
+    // 2. If keysIter is not an Object, throw a TypeError exception.
+    if (!keys_iterator.is_object())
+        return vm.throw_completion<TypeError>(ErrorType::NotAnObject, keys_iterator.to_string_without_side_effects());
+
+    // 3. Let nextMethod be ? Get(keysIter, "next").
+    auto next_method = TRY(keys_iterator.as_object().get(vm.names.next));
+
+    // 4. If IsCallable(nextMethod) is false, throw a TypeError exception.
+    if (!next_method.is_function())
+        return vm.throw_completion<TypeError>(ErrorType::NotAFunction, next_method.to_string_without_side_effects());
+
+    // 5. Return a new Iterator Record { [[Iterator]]: keysIter, [[NextMethod]]: nextMethod, [[Done]]: false }.
+    return Iterator { .iterator = &keys_iterator.as_object(), .next_method = next_method, .done = false };
 }
 
 }
