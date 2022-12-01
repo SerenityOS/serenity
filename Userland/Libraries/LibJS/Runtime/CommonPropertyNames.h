@@ -308,6 +308,7 @@ namespace JS {
     P(isoNanosecond)                         \
     P(isoSecond)                             \
     P(isoYear)                               \
+    P(isWellFormed)                          \
     P(isWordLike)                            \
     P(italics)                               \
     P(join)                                  \
