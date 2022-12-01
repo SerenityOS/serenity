@@ -28,6 +28,7 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(for_each);
     JS_DECLARE_NATIVE_FUNCTION(has);
     JS_DECLARE_NATIVE_FUNCTION(values);
+    JS_DECLARE_NATIVE_FUNCTION(union_);
 
     JS_DECLARE_NATIVE_FUNCTION(size_getter);
 };

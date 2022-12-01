@@ -32,6 +32,7 @@ void SetPrototype::initialize(Realm& realm)
     define_native_function(realm, vm.names.forEach, for_each, 1, attr);
     define_native_function(realm, vm.names.has, has, 1, attr);
     define_native_function(realm, vm.names.values, values, 0, attr);
+    define_native_function(realm, vm.names.union_, union_, 1, attr);
     define_native_accessor(realm, vm.names.size, size_getter, {}, Attribute::Configurable);
 
     define_direct_property(vm.names.keys, get_without_side_effects(vm.names.values), attr);
@@ -182,6 +183,53 @@ static ThrowCompletionOr<Iterator> get_keys_iterator(VM& vm, SetRecord const& se
 
     // 5. Return a new Iterator Record { [[Iterator]]: keysIter, [[NextMethod]]: nextMethod, [[Done]]: false }.
     return Iterator { .iterator = &keys_iterator.as_object(), .next_method = next_method, .done = false };
+}
+
+// 1 Set.prototype.union ( other ), https://tc39.es/proposal-set-methods/#sec-set.prototype.union
+JS_DEFINE_NATIVE_FUNCTION(SetPrototype::union_)
+{
+    // 1. Let O be the this value.
+    // 2. Perform ? RequireInternalSlot(O, [[SetData]]).
+    auto* set = TRY(typed_this_object(vm));
+
+    // 3. Let otherRec be ? GetSetRecord(other).
+    auto other_record = TRY(get_set_record(vm, vm.argument(0)));
+
+    // 4. Let keysIter be ? GetKeysIterator(otherRec).
+    auto keys_iterator = TRY(get_keys_iterator(vm, other_record));
+
+    // 5. Let resultSetData be a copy of O.[[SetData]].
+    auto result = set->copy();
+
+    // 6. Let next be true.
+    auto next = true;
+
+    // 7. Repeat, while next is not false,
+    while (next) {
+        // a. Set next to ? IteratorStep(keysIter).
+        auto* iterator_result = TRY(iterator_step(vm, keys_iterator));
+        next = iterator_result;
+
+        // b. If next is not false, then
+        if (next) {
+            // i. Let nextValue be ? IteratorValue(next).
+            auto next_value = TRY(iterator_value(vm, *iterator_result));
+
+            // ii. If nextValue is -0𝔽, set nextValue to +0𝔽.
+            if (next_value.is_negative_zero())
+                next_value = Value(0);
+
+            // iii. If SetDataHas(resultSetData, nextValue) is false, then
+            //     1. Append nextValue to resultSetData.
+            result->set_add(next_value);
+        }
+    }
+
+    // 8. Let result be OrdinaryObjectCreate(%Set.prototype%, « [[SetData]] »).
+    // 9. Set result.[[SetData]] to resultSetData.
+
+    // 10. Return result.
+    return result;
 }
 
 }
