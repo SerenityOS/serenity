@@ -163,7 +163,7 @@ RadialGradientData resolve_radial_gradient_data(Layout::Node const& node, Gfx::F
         radial_gradient.color_stop_list(), [&](auto const& length_percentage) {
             return length_percentage.resolved(node, gradient_length).to_px(node) / gradient_size.width();
         },
-        false);
+        radial_gradient.is_repeating());
     return { resolved_color_stops };
 }
 

@@ -2655,7 +2655,13 @@ RefPtr<StyleValue> Parser::parse_radial_gradient_function(ComponentValue const& 
     if (!component_value.is_function())
         return {};
 
+    auto repeating_gradient = GradientRepeating::No;
+
     auto function_name = component_value.function().name();
+
+    function_name = consume_if_starts_with(function_name, "repeating-"sv, [&] {
+        repeating_gradient = GradientRepeating::Yes;
+    });
 
     if (!function_name.equals_ignoring_case("radial-gradient"sv))
         return {};
@@ -2786,7 +2792,7 @@ RefPtr<StyleValue> Parser::parse_radial_gradient_function(ComponentValue const& 
     if (!color_stops.has_value())
         return {};
 
-    return RadialGradientStyleValue::create(ending_shape, size, at_position, move(*color_stops));
+    return RadialGradientStyleValue::create(ending_shape, size, at_position, move(*color_stops), repeating_gradient);
 }
 
 Optional<PositionValue> Parser::parse_position(TokenStream<ComponentValue>& tokens, PositionValue initial_value)
