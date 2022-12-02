@@ -58,13 +58,11 @@ private:
     public:
         Member(BlockHeader header, Core::Stream::Stream& stream)
             : m_header(header)
-            , m_adapted_ak_stream(make<Core::Stream::WrapInAKInputStream>(stream))
-            , m_stream(*m_adapted_ak_stream)
+            , m_stream(Core::Stream::Handle<Core::Stream::Stream>(stream))
         {
         }
 
         BlockHeader m_header;
-        NonnullOwnPtr<InputStream> m_adapted_ak_stream;
         DeflateDecompressor m_stream;
         Crypto::Checksum::CRC32 m_checksum;
         size_t m_nread { 0 };
