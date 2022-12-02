@@ -133,7 +133,7 @@ ErrorOr<NonnullOwnPtr<Stream::LocalSocket>> LocalServer::accept()
     (void)fcntl(accepted_fd, F_SETFD, FD_CLOEXEC);
 #endif
 
-    return Stream::LocalSocket::adopt_fd(accepted_fd);
+    return Stream::LocalSocket::adopt_fd(accepted_fd, Stream::PreventSIGPIPE::Yes);
 }
 
 }
