@@ -46,13 +46,13 @@ size_t PIT::ticks_per_second() const
 
 void PIT::set_periodic()
 {
-    // FIXME: Implement it...
-    VERIFY_NOT_REACHED();
+    IO::out8(PIT_CTL, TIMER0_CTL | WRITE_WORD | MODE_SQUARE_WAVE);
+    m_periodic = true;
 }
 void PIT::set_non_periodic()
 {
-    // FIXME: Implement it...
-    VERIFY_NOT_REACHED();
+    IO::out8(PIT_CTL, TIMER0_CTL | WRITE_WORD | MODE_ONESHOT);
+    m_periodic = false;
 }
 
 void PIT::reset_to_default_ticks_per_second()
