@@ -1,6 +1,7 @@
 var describe;
 var test;
 var expect;
+var withinSameSecond;
 
 // Stores the results of each test and suite. Has a terrible
 // name to avoid name collision.
@@ -610,5 +611,27 @@ class ExpectationError extends Error {
             result: "skip",
             duration: 0,
         };
+    };
+
+    withinSameSecond = callback => {
+        let callbackDuration;
+        for (let tries = 0; tries < 5; tries++) {
+            const start = Temporal.Now.instant();
+            const result = callback();
+            const end = Temporal.Now.instant();
+            if (start.epochSeconds !== end.epochSeconds) {
+                callbackDuration = start.until(end);
+                continue;
+            }
+            return result;
+        }
+        throw new ExpectationError(
+            `Tried to execute callback '${callback}' 5 times within the same second but ` +
+                `failed. Make sure the callback does as little work as possible (the last run ` +
+                `took ${callbackDuration.total(
+                    "milliseconds"
+                )} ms) and the machine is not overloaded. If you see this ` +
+                `error appearing in the CI it is most likely a flaky failure!`
+        );
     };
 })();

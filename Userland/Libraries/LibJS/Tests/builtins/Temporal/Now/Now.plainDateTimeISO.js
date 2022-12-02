@@ -35,12 +35,12 @@ describe("correct behavior", () => {
             },
         };
 
-        const plainDateTime = Temporal.Now.plainDateTimeISO("UTC");
-        const plainDateTimeWithOffset = Temporal.Now.plainDateTimeISO(timeZone);
+        const [plainDateTime, plainDateTimeWithOffset] = withinSameSecond(() => {
+            return [Temporal.Now.plainDateTimeISO("UTC"), Temporal.Now.plainDateTimeISO(timeZone)];
+        });
 
         if (plainDateTime.year !== plainDateTimeWithOffset.year) return;
 
-        // Let's hope the duration between the above two lines is less than a second :^)
         const differenceSeconds =
             plainDateTimeToEpochSeconds(plainDateTimeWithOffset) -
             plainDateTimeToEpochSeconds(plainDateTime);
@@ -55,12 +55,12 @@ describe("correct behavior", () => {
             },
         };
 
-        const plainDateTime = Temporal.Now.plainDateTimeISO("UTC");
-        const plainDateTimeWithOffset = Temporal.Now.plainDateTimeISO(timeZone);
+        const [plainDateTime, plainDateTimeWithOffset] = withinSameSecond(() => {
+            return [Temporal.Now.plainDateTimeISO("UTC"), Temporal.Now.plainDateTimeISO(timeZone)];
+        });
 
         if (plainDateTime.year !== plainDateTimeWithOffset.year) return;
 
-        // Let's hope the duration between the above two lines is less than a second :^)
         const differenceSeconds =
             plainDateTimeToEpochSeconds(plainDateTimeWithOffset) -
             plainDateTimeToEpochSeconds(plainDateTime);
