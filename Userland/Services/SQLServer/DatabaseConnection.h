@@ -8,6 +8,7 @@
 
 #include <LibCore/Object.h>
 #include <LibSQL/Database.h>
+#include <LibSQL/Result.h>
 #include <SQLServer/Forward.h>
 
 namespace SQLServer {
@@ -23,7 +24,7 @@ public:
     int client_id() const { return m_client_id; }
     RefPtr<SQL::Database> database() { return m_database; }
     void disconnect();
-    int prepare_statement(DeprecatedString const& sql);
+    SQL::ResultOr<int> prepare_statement(StringView sql);
 
 private:
     DatabaseConnection(DeprecatedString database_name, int client_id);

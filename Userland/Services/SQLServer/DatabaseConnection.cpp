@@ -67,19 +67,20 @@ void DatabaseConnection::disconnect()
     });
 }
 
-int DatabaseConnection::prepare_statement(DeprecatedString const& sql)
+SQL::ResultOr<int> DatabaseConnection::prepare_statement(StringView sql)
 {
     dbgln_if(SQLSERVER_DEBUG, "DatabaseConnection::prepare_statement(connection_id {}, database '{}', sql '{}'", connection_id(), m_database_name, sql);
+
+    if (!m_accept_statements)
+        return SQL::Result { SQL::SQLCommand::Unknown, SQL::SQLErrorCode::DatabaseUnavailable };
+
     auto client_connection = ConnectionFromClient::client_connection_for(client_id());
     if (!client_connection) {
         warnln("Cannot notify client of database disconnection. Client disconnected");
-        return -1;
+        return SQL::Result { SQL::SQLCommand::Unknown, SQL::SQLErrorCode::InternalError, "Client disconnected"sv };
     }
-    if (!m_accept_statements) {
-        client_connection->async_execution_error(-1, (int)SQL::SQLErrorCode::DatabaseUnavailable, m_database_name);
-        return -1;
-    }
-    auto statement = SQLStatement::construct(*this, sql);
+
+    auto statement = TRY(SQLStatement::create(*this, sql));
     return statement->statement_id();
 }
 

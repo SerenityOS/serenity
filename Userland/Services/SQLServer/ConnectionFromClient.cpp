@@ -54,15 +54,21 @@ void ConnectionFromClient::disconnect(int connection_id)
 Messages::SQLServer::PrepareStatementResponse ConnectionFromClient::prepare_statement(int connection_id, DeprecatedString const& sql)
 {
     dbgln_if(SQLSERVER_DEBUG, "ConnectionFromClient::prepare_statement(connection_id: {}, sql: '{}')", connection_id, sql);
+
     auto database_connection = DatabaseConnection::connection_for(connection_id);
-    if (database_connection) {
-        auto statement_id = database_connection->prepare_statement(sql);
-        dbgln_if(SQLSERVER_DEBUG, "ConnectionFromClient::prepare_statement -> statement_id = {}", statement_id);
-        return { statement_id };
-    } else {
+    if (!database_connection) {
         dbgln("Database connection has disappeared");
         return { -1 };
     }
+
+    auto result = database_connection->prepare_statement(sql);
+    if (result.is_error()) {
+        dbgln_if(SQLSERVER_DEBUG, "Could not parse SQL statement: {}", result.error().error_string());
+        return { -1 };
+    }
+
+    dbgln_if(SQLSERVER_DEBUG, "ConnectionFromClient::prepare_statement -> statement_id = {}", result.value());
+    return { result.value() };
 }
 
 void ConnectionFromClient::execute_statement(int statement_id)
