@@ -41,7 +41,7 @@ Messages::SQLServer::ConnectResponse ConnectionFromClient::connect(DeprecatedStr
     return { database_connection->connection_id() };
 }
 
-void ConnectionFromClient::disconnect(int connection_id)
+void ConnectionFromClient::disconnect(u64 connection_id)
 {
     dbgln_if(SQLSERVER_DEBUG, "ConnectionFromClient::disconnect(connection_id: {})", connection_id);
     auto database_connection = DatabaseConnection::connection_for(connection_id);
@@ -51,27 +51,27 @@ void ConnectionFromClient::disconnect(int connection_id)
         dbgln("Database connection has disappeared");
 }
 
-Messages::SQLServer::PrepareStatementResponse ConnectionFromClient::prepare_statement(int connection_id, DeprecatedString const& sql)
+Messages::SQLServer::PrepareStatementResponse ConnectionFromClient::prepare_statement(u64 connection_id, DeprecatedString const& sql)
 {
     dbgln_if(SQLSERVER_DEBUG, "ConnectionFromClient::prepare_statement(connection_id: {}, sql: '{}')", connection_id, sql);
 
     auto database_connection = DatabaseConnection::connection_for(connection_id);
     if (!database_connection) {
         dbgln("Database connection has disappeared");
-        return { -1 };
+        return { {} };
     }
 
     auto result = database_connection->prepare_statement(sql);
     if (result.is_error()) {
         dbgln_if(SQLSERVER_DEBUG, "Could not parse SQL statement: {}", result.error().error_string());
-        return { -1 };
+        return { {} };
     }
 
     dbgln_if(SQLSERVER_DEBUG, "ConnectionFromClient::prepare_statement -> statement_id = {}", result.value());
     return { result.value() };
 }
 
-void ConnectionFromClient::execute_statement(int statement_id, Vector<SQL::Value> const& placeholder_values)
+void ConnectionFromClient::execute_statement(u64 statement_id, Vector<SQL::Value> const& placeholder_values)
 {
     dbgln_if(SQLSERVER_DEBUG, "ConnectionFromClient::execute_query_statement(statement_id: {})", statement_id);
     auto statement = SQLStatement::statement_for(statement_id);
@@ -80,7 +80,7 @@ void ConnectionFromClient::execute_statement(int statement_id, Vector<SQL::Value
         statement->execute(move(const_cast<Vector<SQL::Value>&>(placeholder_values)));
     } else {
         dbgln_if(SQLSERVER_DEBUG, "Statement has disappeared");
-        async_execution_error(statement_id, (int)SQL::SQLErrorCode::StatementUnavailable, DeprecatedString::formatted("{}", statement_id));
+        async_execution_error(statement_id, SQL::SQLErrorCode::StatementUnavailable, DeprecatedString::formatted("{}", statement_id));
     }
 }
 

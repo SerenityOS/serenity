@@ -76,7 +76,7 @@ public:
 
         m_sql_client = SQL::SQLClient::try_create().release_value_but_fixme_should_propagate_errors();
 
-        m_sql_client->on_connected = [this](int connection_id, DeprecatedString const& connected_to_database) {
+        m_sql_client->on_connected = [this](auto connection_id, auto const& connected_to_database) {
             outln("Connected to \033[33;1m{}\033[0m", connected_to_database);
             m_current_database = connected_to_database;
             m_pending_database = "";
@@ -84,7 +84,7 @@ public:
             read_sql();
         };
 
-        m_sql_client->on_execution_success = [this](int, bool has_results, int updated, int created, int deleted) {
+        m_sql_client->on_execution_success = [this](auto, auto has_results, auto updated, auto created, auto deleted) {
             if (updated != 0 || created != 0 || deleted != 0) {
                 outln("{} row(s) updated, {} created, {} deleted", updated, created, deleted);
             }
@@ -93,35 +93,35 @@ public:
             }
         };
 
-        m_sql_client->on_next_result = [](int, Vector<DeprecatedString> const& row) {
+        m_sql_client->on_next_result = [](auto, auto const& row) {
             StringBuilder builder;
             builder.join(", "sv, row);
             outln("{}", builder.build());
         };
 
-        m_sql_client->on_results_exhausted = [this](int, int total_rows) {
+        m_sql_client->on_results_exhausted = [this](auto, auto total_rows) {
             outln("{} row(s)", total_rows);
             read_sql();
         };
 
-        m_sql_client->on_connection_error = [this](int, int code, DeprecatedString const& message) {
+        m_sql_client->on_connection_error = [this](auto, auto code, auto const& message) {
             outln("\033[33;1mConnection error:\033[0m {}", message);
-            m_loop.quit(code);
+            m_loop.quit(to_underlying(code));
         };
 
-        m_sql_client->on_execution_error = [this](int, int, DeprecatedString const& message) {
+        m_sql_client->on_execution_error = [this](auto, auto, auto const& message) {
             outln("\033[33;1mExecution error:\033[0m {}", message);
             read_sql();
         };
 
-        m_sql_client->on_disconnected = [this](int) {
+        m_sql_client->on_disconnected = [this](auto) {
             if (m_pending_database.is_empty()) {
                 outln("Disconnected from \033[33;1m{}\033[0m and terminating", m_current_database);
                 m_loop.quit(0);
             } else {
                 outln("Disconnected from \033[33;1m{}\033[0m", m_current_database);
                 m_current_database = "";
-                m_sql_client->connect(m_pending_database);
+                m_sql_client->async_connect(m_pending_database);
             }
         };
 
@@ -137,7 +137,7 @@ public:
     void connect(DeprecatedString const& database_name)
     {
         if (m_current_database.is_empty()) {
-            m_sql_client->connect(database_name);
+            m_sql_client->async_connect(database_name);
         } else {
             m_pending_database = database_name;
             m_sql_client->async_disconnect(m_connection_id);
@@ -169,7 +169,7 @@ private:
     DeprecatedString m_pending_database {};
     DeprecatedString m_current_database {};
     AK::RefPtr<SQL::SQLClient> m_sql_client { nullptr };
-    int m_connection_id { 0 };
+    u64 m_connection_id { 0 };
     Core::EventLoop m_loop;
     OwnPtr<Core::Stream::BufferedFile> m_input_file { nullptr };
     bool m_quit_when_files_read { false };
@@ -290,9 +290,8 @@ private:
                 m_loop.deferred_invoke([this]() {
                     read_sql();
                 });
-        } else {
-            auto statement_id = m_sql_client->prepare_statement(m_connection_id, piece);
-            m_sql_client->async_execute_statement(statement_id, {});
+        } else if (auto statement_id = m_sql_client->prepare_statement(m_connection_id, piece); statement_id.has_value()) {
+            m_sql_client->async_execute_statement(*statement_id, {});
         }
 
         // ...But m_keep_running can also be set to false by a command handler.

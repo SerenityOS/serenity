@@ -12,17 +12,16 @@
 
 namespace SQLServer {
 
-static HashMap<int, NonnullRefPtr<SQLStatement>> s_statements;
+static HashMap<u64, NonnullRefPtr<SQLStatement>> s_statements;
+static u64 s_next_statement_id = 0;
 
-RefPtr<SQLStatement> SQLStatement::statement_for(int statement_id)
+RefPtr<SQLStatement> SQLStatement::statement_for(u64 statement_id)
 {
     if (s_statements.contains(statement_id))
         return *s_statements.get(statement_id).value();
     dbgln_if(SQLSERVER_DEBUG, "Invalid statement_id {}", statement_id);
     return nullptr;
 }
-
-static int s_next_statement_id = 0;
 
 SQL::ResultOr<NonnullRefPtr<SQLStatement>> SQLStatement::create(DatabaseConnection& connection, StringView sql)
 {
@@ -54,7 +53,7 @@ void SQLStatement::report_error(SQL::Result result)
     remove_from_parent();
 
     if (client_connection)
-        client_connection->async_execution_error(statement_id(), (int)result.error(), result.error_string());
+        client_connection->async_execution_error(statement_id(), result.error(), result.error_string());
     else
         warnln("Cannot return execution error. Client disconnected");
 
@@ -129,7 +128,7 @@ void SQLStatement::next()
             next();
         });
     } else {
-        client_connection->async_results_exhausted(statement_id(), (int)m_index);
+        client_connection->async_results_exhausted(statement_id(), m_index);
     }
 }
 

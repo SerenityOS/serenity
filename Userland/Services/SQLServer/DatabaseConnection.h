@@ -19,20 +19,20 @@ class DatabaseConnection final : public Core::Object {
 public:
     ~DatabaseConnection() override = default;
 
-    static RefPtr<DatabaseConnection> connection_for(int connection_id);
-    int connection_id() const { return m_connection_id; }
+    static RefPtr<DatabaseConnection> connection_for(u64 connection_id);
+    u64 connection_id() const { return m_connection_id; }
     int client_id() const { return m_client_id; }
     RefPtr<SQL::Database> database() { return m_database; }
     void disconnect();
-    SQL::ResultOr<int> prepare_statement(StringView sql);
+    SQL::ResultOr<u64> prepare_statement(StringView sql);
 
 private:
     DatabaseConnection(DeprecatedString database_name, int client_id);
 
     RefPtr<SQL::Database> m_database { nullptr };
     DeprecatedString m_database_name;
-    int m_connection_id;
-    int m_client_id;
+    u64 m_connection_id { 0 };
+    int m_client_id { 0 };
     bool m_accept_statements { false };
 };
 

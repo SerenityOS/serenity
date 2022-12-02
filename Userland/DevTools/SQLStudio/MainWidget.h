@@ -65,7 +65,7 @@ private:
     Optional<DeprecatedString> read_next_line_of_editor();
     size_t m_current_line_for_parsing { 0 };
     int m_editor_line_level { 0 };
-    int m_connection_id { 0 };
+    u64 m_connection_id { 0 };
 };
 
 }

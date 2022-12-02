@@ -25,8 +25,8 @@ public:
     static SQL::ResultOr<NonnullRefPtr<SQLStatement>> create(DatabaseConnection&, StringView sql);
     ~SQLStatement() override = default;
 
-    static RefPtr<SQLStatement> statement_for(int statement_id);
-    int statement_id() const { return m_statement_id; }
+    static RefPtr<SQLStatement> statement_for(u64 statement_id);
+    u64 statement_id() const { return m_statement_id; }
     DatabaseConnection* connection() { return dynamic_cast<DatabaseConnection*>(parent()); }
     void execute(Vector<SQL::Value> placeholder_values);
 
@@ -37,7 +37,7 @@ private:
     void next();
     void report_error(SQL::Result);
 
-    int m_statement_id;
+    u64 m_statement_id { 0 };
     size_t m_index { 0 };
     NonnullRefPtr<SQL::AST::Statement> m_statement;
     Optional<SQL::ResultSet> m_result {};

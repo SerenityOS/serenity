@@ -214,13 +214,13 @@ MainWidget::MainWidget()
     m_statusbar->segment(2).set_fixed_width(font().width("Ln 0000, Col 000"sv) + font().max_glyph_width());
 
     m_sql_client = SQL::SQLClient::try_create().release_value_but_fixme_should_propagate_errors();
-    m_sql_client->on_execution_success = [this](int, bool, int, int, int) {
+    m_sql_client->on_execution_success = [this](auto, auto, auto, auto, auto) {
         read_next_sql_statement_of_editor();
     };
-    m_sql_client->on_next_result = [this](int, Vector<DeprecatedString> const& row) {
+    m_sql_client->on_next_result = [this](auto, auto const& row) {
         m_results.append(row);
     };
-    m_sql_client->on_results_exhausted = [this](int, int) {
+    m_sql_client->on_results_exhausted = [this](auto, auto) {
         if (m_results.size() == 0)
             return;
         if (m_results[0].size() == 0)
@@ -478,8 +478,8 @@ DeprecatedString MainWidget::read_next_sql_statement_of_editor()
             m_editor_line_level = last_token_ended_statement ? 0 : (m_editor_line_level > 0 ? m_editor_line_level : 1);
     } while ((m_editor_line_level > 0) || piece.is_empty());
 
-    auto statement_id = m_sql_client->prepare_statement(m_connection_id, piece.to_deprecated_string());
-    m_sql_client->async_execute_statement(statement_id, {});
+    if (auto statement_id = m_sql_client->prepare_statement(m_connection_id, piece.to_deprecated_string()); statement_id.has_value())
+        m_sql_client->async_execute_statement(*statement_id, {});
 
     return piece.to_deprecated_string();
 }
