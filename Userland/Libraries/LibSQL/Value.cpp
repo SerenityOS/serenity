@@ -6,6 +6,8 @@
  */
 
 #include <AK/NumericLimits.h>
+#include <LibIPC/Decoder.h>
+#include <LibIPC/Encoder.h>
 #include <LibSQL/AST/AST.h>
 #include <LibSQL/Serializer.h>
 #include <LibSQL/TupleDescriptor.h>
@@ -666,4 +668,92 @@ ResultOr<NonnullRefPtr<TupleDescriptor>> Value::infer_tuple_descriptor(Vector<Va
     return descriptor;
 }
 
+}
+
+template<>
+bool IPC::encode(Encoder& encoder, SQL::Value const& value)
+{
+    auto type_flags = to_underlying(value.type());
+    if (value.is_null())
+        type_flags |= SQL::sql_type_null_as_flag;
+
+    encoder << type_flags;
+    if (value.is_null())
+        return true;
+
+    switch (value.type()) {
+    case SQL::SQLType::Null:
+        break;
+    case SQL::SQLType::Text:
+        encoder << value.to_deprecated_string();
+        break;
+    case SQL::SQLType::Integer:
+        encoder << value.to_int().value();
+        break;
+    case SQL::SQLType::Float:
+        encoder << value.to_double().value();
+        break;
+    case SQL::SQLType::Boolean:
+        encoder << value.to_bool().value();
+        break;
+    case SQL::SQLType::Tuple:
+        encoder << value.to_vector().value();
+        break;
+    }
+
+    return true;
+}
+
+template<>
+ErrorOr<void> IPC::decode(Decoder& decoder, SQL::Value& value)
+{
+    UnderlyingType<SQL::SQLType> type_flags;
+    TRY(decoder.decode(type_flags));
+
+    if ((type_flags & SQL::sql_type_null_as_flag) && (type_flags != SQL::sql_type_null_as_flag)) {
+        type_flags &= ~SQL::sql_type_null_as_flag;
+
+        value = SQL::Value(static_cast<SQL::SQLType>(type_flags));
+        return {};
+    }
+
+    switch (static_cast<SQL::SQLType>(type_flags)) {
+    case SQL::SQLType::Null:
+        break;
+    case SQL::SQLType::Text: {
+        DeprecatedString text;
+        TRY(decoder.decode(text));
+        value = move(text);
+        break;
+    }
+    case SQL::SQLType::Integer: {
+        int number { 0 };
+        TRY(decoder.decode(number));
+        value = number;
+        break;
+    }
+    case SQL::SQLType::Float: {
+        double number { 0.0 };
+        TRY(decoder.decode(number));
+        value = number;
+        break;
+    }
+    case SQL::SQLType::Boolean: {
+        bool boolean { false };
+        TRY(decoder.decode(boolean));
+        value = boolean;
+        break;
+    }
+    case SQL::SQLType::Tuple: {
+        Vector<SQL::Value> tuple;
+        TRY(decoder.decode(tuple));
+
+        if (auto result = value.assign_tuple(move(tuple)); result.is_error())
+            return Error::from_errno(to_underlying(result.error().error()));
+
+        break;
+    }
+    }
+
+    return {};
 }

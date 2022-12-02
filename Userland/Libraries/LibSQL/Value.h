@@ -13,6 +13,7 @@
 #include <AK/StringView.h>
 #include <AK/Variant.h>
 #include <AK/Vector.h>
+#include <LibIPC/Forward.h>
 #include <LibSQL/Forward.h>
 #include <LibSQL/Result.h>
 #include <LibSQL/Type.h>
@@ -129,3 +130,13 @@ struct AK::Formatter<SQL::Value> : Formatter<StringView> {
         return Formatter<StringView>::format(builder, value.to_deprecated_string());
     }
 };
+
+namespace IPC {
+
+template<>
+bool encode(Encoder&, SQL::Value const&);
+
+template<>
+ErrorOr<void> decode(Decoder&, SQL::Value&);
+
+}
