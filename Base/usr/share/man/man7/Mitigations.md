@@ -103,6 +103,8 @@ Special restrictions on filesystem also apply:
 - Read accesses is forbidden by default to all nodes in `/sys/kernel` directory, except for:
     `df`, `interrupts`, `keymap`, `memstat`, `processes`, `stats` and `uptime`.
 - Write access is forbidden to kernel variables (which are located in `/sys/kernel/variables`).
+- Open access is forbidden to all device nodes except for `/dev/full`, `/dev/null`, `/dev/zero`, `/dev/random` and various
+    other TTY/PTY devices (not including Kernel virtual consoles).
 
 It was first added in the following [commit](https://github.com/SerenityOS/serenity/commit/5e062414c11df31ed595c363990005eef00fa263),
 for kernel support, and the following commits added basic userspace utilities:
