@@ -21,12 +21,11 @@ namespace Core::Stream {
 
 /// A stream wrapper class that allows you to read arbitrary amounts of bits
 /// in big-endian order from another stream.
-/// Note that this stream does not own its underlying stream, it merely takes a reference.
 class BigEndianInputBitStream : public Stream {
 public:
-    static ErrorOr<NonnullOwnPtr<BigEndianInputBitStream>> construct(Stream& stream)
+    static ErrorOr<NonnullOwnPtr<BigEndianInputBitStream>> construct(Handle<Stream> stream)
     {
-        return adopt_nonnull_own_or_enomem<BigEndianInputBitStream>(new BigEndianInputBitStream(stream));
+        return adopt_nonnull_own_or_enomem<BigEndianInputBitStream>(new BigEndianInputBitStream(move(stream)));
     }
 
     // ^Stream
@@ -34,18 +33,18 @@ public:
     {
         if (m_current_byte.has_value() && is_aligned_to_byte_boundary()) {
             bytes[0] = m_current_byte.release_value();
-            return m_stream.read(bytes.slice(1));
+            return m_stream->read(bytes.slice(1));
         }
         align_to_byte_boundary();
-        return m_stream.read(bytes);
+        return m_stream->read(bytes);
     }
-    virtual ErrorOr<size_t> write(ReadonlyBytes bytes) override { return m_stream.write(bytes); }
-    virtual ErrorOr<void> write_entire_buffer(ReadonlyBytes bytes) override { return m_stream.write_entire_buffer(bytes); }
-    virtual bool is_eof() const override { return m_stream.is_eof() && !m_current_byte.has_value(); }
-    virtual bool is_open() const override { return m_stream.is_open(); }
+    virtual ErrorOr<size_t> write(ReadonlyBytes bytes) override { return m_stream->write(bytes); }
+    virtual ErrorOr<void> write_entire_buffer(ReadonlyBytes bytes) override { return m_stream->write_entire_buffer(bytes); }
+    virtual bool is_eof() const override { return m_stream->is_eof() && !m_current_byte.has_value(); }
+    virtual bool is_open() const override { return m_stream->is_open(); }
     virtual void close() override
     {
-        m_stream.close();
+        m_stream->close();
         align_to_byte_boundary();
     }
 
@@ -98,7 +97,7 @@ public:
                 }
             } else {
                 auto temp_buffer = TRY(ByteBuffer::create_uninitialized(1));
-                TRY(m_stream.read(temp_buffer.bytes()));
+                TRY(m_stream->read(temp_buffer.bytes()));
                 m_current_byte = temp_buffer[0];
                 m_bit_offset = 0;
             }
@@ -119,28 +118,27 @@ public:
     ALWAYS_INLINE bool is_aligned_to_byte_boundary() const { return m_bit_offset == 0; }
 
 private:
-    BigEndianInputBitStream(Stream& stream)
-        : m_stream(stream)
+    BigEndianInputBitStream(Handle<Stream> stream)
+        : m_stream(move(stream))
     {
     }
 
     Optional<u8> m_current_byte;
     size_t m_bit_offset { 0 };
-    Stream& m_stream;
+    Handle<Stream> m_stream;
 };
 
 /// A stream wrapper class that allows you to read arbitrary amounts of bits
 /// in little-endian order from another stream.
-/// Note that this stream does not own its underlying stream, it merely takes a reference.
 class LittleEndianInputBitStream : public Stream {
 public:
-    static ErrorOr<NonnullOwnPtr<LittleEndianInputBitStream>> construct(Stream& stream)
+    static ErrorOr<NonnullOwnPtr<LittleEndianInputBitStream>> construct(Handle<Stream> stream)
     {
-        return adopt_nonnull_own_or_enomem<LittleEndianInputBitStream>(new LittleEndianInputBitStream(stream));
+        return adopt_nonnull_own_or_enomem<LittleEndianInputBitStream>(new LittleEndianInputBitStream(move(stream)));
     }
 
-    LittleEndianInputBitStream(Stream& stream)
-        : m_stream(stream)
+    LittleEndianInputBitStream(Handle<Stream> stream)
+        : m_stream(move(stream))
     {
     }
 
@@ -149,18 +147,18 @@ public:
     {
         if (m_current_byte.has_value() && is_aligned_to_byte_boundary()) {
             bytes[0] = m_current_byte.release_value();
-            return m_stream.read(bytes.slice(1));
+            return m_stream->read(bytes.slice(1));
         }
         align_to_byte_boundary();
-        return m_stream.read(bytes);
+        return m_stream->read(bytes);
     }
-    virtual ErrorOr<size_t> write(ReadonlyBytes bytes) override { return m_stream.write(bytes); }
-    virtual ErrorOr<void> write_entire_buffer(ReadonlyBytes bytes) override { return m_stream.write_entire_buffer(bytes); }
-    virtual bool is_eof() const override { return m_stream.is_eof() && !m_current_byte.has_value(); }
-    virtual bool is_open() const override { return m_stream.is_open(); }
+    virtual ErrorOr<size_t> write(ReadonlyBytes bytes) override { return m_stream->write(bytes); }
+    virtual ErrorOr<void> write_entire_buffer(ReadonlyBytes bytes) override { return m_stream->write_entire_buffer(bytes); }
+    virtual bool is_eof() const override { return m_stream->is_eof() && !m_current_byte.has_value(); }
+    virtual bool is_open() const override { return m_stream->is_open(); }
     virtual void close() override
     {
-        m_stream.close();
+        m_stream->close();
         align_to_byte_boundary();
     }
 
@@ -209,7 +207,7 @@ public:
                 }
             } else {
                 auto temp_buffer = TRY(ByteBuffer::create_uninitialized(1));
-                auto read_bytes = TRY(m_stream.read(temp_buffer.bytes()));
+                auto read_bytes = TRY(m_stream->read(temp_buffer.bytes()));
                 if (read_bytes.is_empty())
                     return Error::from_string_literal("eof");
                 m_current_byte = temp_buffer[0];
@@ -236,7 +234,7 @@ public:
 private:
     Optional<u8> m_current_byte;
     size_t m_bit_offset { 0 };
-    Stream& m_stream;
+    Handle<Stream> m_stream;
 };
 
 }
