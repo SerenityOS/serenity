@@ -171,6 +171,7 @@ namespace SQL::AST {
     __ENUMERATE_SQL_TOKEN("_blob_", BlobLiteral, Blob)                    \
     __ENUMERATE_SQL_TOKEN("_eof_", Eof, Invalid)                          \
     __ENUMERATE_SQL_TOKEN("_invalid_", Invalid, Invalid)                  \
+    __ENUMERATE_SQL_TOKEN("?", Placeholder, Operator)                     \
     __ENUMERATE_SQL_TOKEN("&", Ampersand, Operator)                       \
     __ENUMERATE_SQL_TOKEN("*", Asterisk, Operator)                        \
     __ENUMERATE_SQL_TOKEN(",", Comma, Punctuation)                        \
