@@ -49,6 +49,9 @@ ErrorOr<NonnullRefPtr<SlideObject>> SlideObject::parse_slide_object(JsonObject c
 SlideObject::SlideObject()
 {
     REGISTER_RECT_PROPERTY("rect", rect, set_rect);
+    REGISTER_ENUM_PROPERTY("role", role, set_role, ObjectRole,
+        { ObjectRole::Default, "default" },
+        { ObjectRole::TitleObject, "title" }, );
 
     register_property(
         "frames",

@@ -21,6 +21,11 @@
 #include <LibGfx/TextAlignment.h>
 #include <LibImageDecoderClient/Client.h>
 
+enum class ObjectRole {
+    Default,
+    TitleObject,
+};
+
 // Anything that can be on a slide.
 // For properties set in the file, we re-use the Core::Object property facility.
 class SlideObject : public Core::Object {
@@ -42,11 +47,15 @@ public:
     HashTable<unsigned> const& frames() const { return m_frames; }
     void set_frames(HashTable<unsigned> frames) { m_frames = move(frames); }
 
+    ObjectRole role() const { return m_role; }
+    void set_role(ObjectRole role) { m_role = role; }
+
 protected:
     SlideObject();
 
     Gfx::IntRect m_rect;
     HashTable<unsigned> m_frames {};
+    ObjectRole m_role { ObjectRole::Default };
 };
 
 // Objects with a foreground color.

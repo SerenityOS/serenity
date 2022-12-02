@@ -7,7 +7,6 @@
 #include "Slide.h"
 #include <AK/JsonObject.h>
 #include <AK/NonnullRefPtrVector.h>
-#include <AK/StringUtils.h>
 #include <AK/TypeCasts.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Painter.h>
@@ -23,9 +22,6 @@ Slide::Slide(NonnullRefPtrVector<SlideObject> slide_objects, DeprecatedString ti
 
 ErrorOr<Slide> Slide::parse_slide(JsonObject const& slide_json, NonnullRefPtr<GUI::Window> window)
 {
-    // FIXME: Use the text with the "title" role for a title, if there is no title given.
-    auto title = slide_json.get("title"sv).as_string_or("Untitled slide");
-
     auto frame_count = slide_json.get("frames"sv).to_number<unsigned>(1);
 
     auto const& maybe_slide_objects = slide_json.get("objects"sv);
@@ -42,6 +38,12 @@ ErrorOr<Slide> Slide::parse_slide(JsonObject const& slide_json, NonnullRefPtr<GU
         auto slide_object = TRY(SlideObject::parse_slide_object(slide_object_json, window));
         slide_objects.append(move(slide_object));
     }
+
+    // For the title, we either use the slide's explicit title, or the text of a "role=title" text object, or a fallback of "Untitled slide".
+    auto title = slide_json.get("title"sv).as_string_or(
+        slide_objects.first_matching([&](auto const& object) { return object->role() == ObjectRole::TitleObject; })
+            .flat_map([&](auto object) -> Optional<DeprecatedString> { return is<Text>(*object) ? static_ptr_cast<Text>(object)->text() : Optional<DeprecatedString> {}; })
+            .value_or("Untitled slide"));
 
     return Slide { move(slide_objects), title, frame_count };
 }
