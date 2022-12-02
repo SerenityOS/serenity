@@ -63,7 +63,7 @@ struct Endpoint {
 
 static bool is_primitive_type(DeprecatedString const& type)
 {
-    return type.is_one_of("u8", "i8", "u16", "i16", "u32", "i32", "u64", "i64", "bool", "double", "float", "int", "unsigned", "unsigned int");
+    return type.is_one_of("u8", "i8", "u16", "i16", "u32", "i32", "u64", "i64", "size_t", "bool", "double", "float", "int", "unsigned", "unsigned int");
 }
 
 static bool is_simple_type(DeprecatedString const& type)
