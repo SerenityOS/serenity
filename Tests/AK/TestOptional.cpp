@@ -9,6 +9,7 @@
 
 #include <AK/DeprecatedString.h>
 #include <AK/Optional.h>
+#include <AK/String.h>
 #include <AK/Vector.h>
 
 TEST_CASE(basic_optional)
@@ -268,4 +269,25 @@ TEST_CASE(comparison_reference)
     EXPECT_NE(opt0, opt1);
     EXPECT_EQ(opt1, opt2);
     EXPECT_NE(opt1, opt3);
+}
+
+TEST_CASE(flat_map)
+{
+    Optional<int> some = { 7 };
+    Optional<float> none;
+
+    auto increment = [](auto& i) { return i + 1; };
+    auto make_none = []([[maybe_unused]] auto& param) { return Optional<decltype(param)> {}; };
+
+    EXPECT(!none.flat_map(increment).has_value());
+
+    auto incremented = some.flat_map(increment);
+    EXPECT(incremented.has_value());
+    EXPECT_EQ(incremented.value(), 8);
+
+    EXPECT(!none.flat_map(make_none).has_value());
+    EXPECT(!some.flat_map(make_none).has_value());
+
+    auto to_string = [](auto& i) { return String::number(i); };
+    EXPECT(some.flat_map(to_string).value().has_value());
 }
