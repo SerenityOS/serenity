@@ -46,6 +46,11 @@ void Presentation::next_frame()
 {
     m_current_frame_in_slide++;
     if (m_current_frame_in_slide >= current_slide().frame_count()) {
+        // If we're on the last frame of the last slide, don't change anything.
+        if (m_current_slide.value() + 1 >= m_slides.size()) {
+            m_current_frame_in_slide--;
+            return;
+        }
         m_current_frame_in_slide = 0;
         m_current_slide = min(m_current_slide.value() + 1u, m_slides.size() - 1);
     }
