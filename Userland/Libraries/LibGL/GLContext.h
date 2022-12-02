@@ -15,10 +15,10 @@
 #include <AK/Tuple.h>
 #include <AK/Variant.h>
 #include <AK/Vector.h>
-#include <LibGL/Buffer/Buffer.h>
 #include <LibGL/NameAllocator.h>
 #include <LibGL/Tex/Texture.h>
 #include <LibGL/Tex/TextureUnit.h>
+#include <LibGPU/Buffer.h>
 #include <LibGPU/Device.h>
 #include <LibGPU/DeviceInfo.h>
 #include <LibGPU/Driver.h>
@@ -547,9 +547,9 @@ private:
 
     // Buffer objects
     NameAllocator m_buffer_name_allocator;
-    HashMap<GLuint, RefPtr<Buffer>> m_allocated_buffers;
-    RefPtr<Buffer> m_array_buffer;
-    RefPtr<Buffer> m_element_array_buffer;
+    HashMap<GLuint, RefPtr<GPU::Buffer>> m_allocated_buffers;
+    RefPtr<GPU::Buffer> m_array_buffer;
+    RefPtr<GPU::Buffer> m_element_array_buffer;
 };
 
 ErrorOr<NonnullOwnPtr<GLContext>> create_context(Gfx::Bitmap&);

@@ -1,4 +1,5 @@
 set(SOURCES
+    Buffer.cpp
     Clipper.cpp
     Device.cpp
     Image.cpp

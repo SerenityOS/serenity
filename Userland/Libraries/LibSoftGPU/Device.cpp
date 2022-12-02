@@ -16,6 +16,7 @@
 #include <LibGfx/Painter.h>
 #include <LibGfx/Vector2.h>
 #include <LibGfx/Vector3.h>
+#include <LibSoftGPU/Buffer.h>
 #include <LibSoftGPU/Config.h>
 #include <LibSoftGPU/Device.h>
 #include <LibSoftGPU/Image.h>
@@ -1624,6 +1625,11 @@ NonnullRefPtr<GPU::Image> Device::create_image(GPU::PixelFormat const& pixel_for
     VERIFY(max_levels > 0);
 
     return adopt_ref(*new Image(this, pixel_format, width, height, depth, max_levels));
+}
+
+NonnullRefPtr<GPU::Buffer> Device::create_buffer()
+{
+    return adopt_ref(*new Buffer());
 }
 
 void Device::set_sampler_config(unsigned sampler, GPU::SamplerConfig const& config)

@@ -10,6 +10,7 @@
 #include <AK/Array.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/Vector.h>
+#include <LibGPU/Buffer.h>
 #include <LibGPU/DeviceInfo.h>
 #include <LibGPU/Enums.h>
 #include <LibGPU/Image.h>
@@ -56,6 +57,7 @@ public:
     virtual LightModelParameters light_model() const = 0;
 
     virtual NonnullRefPtr<Image> create_image(PixelFormat const&, u32 width, u32 height, u32 depth, u32 max_levels) = 0;
+    virtual NonnullRefPtr<Buffer> create_buffer() = 0;
 
     virtual void set_sampler_config(unsigned, SamplerConfig const&) = 0;
     virtual void set_light_state(unsigned, Light const&) = 0;

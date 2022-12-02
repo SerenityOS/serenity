@@ -6,7 +6,7 @@
 
 #include "Buffer.h"
 
-namespace GL {
+namespace SoftGPU {
 
 ErrorOr<void> Buffer::set_data(void const* data, size_t size)
 {
@@ -23,7 +23,7 @@ void Buffer::replace_data(void const* data, size_t offset, size_t size)
     m_data.overwrite(offset, data, size);
 }
 
-size_t Buffer::size()
+size_t Buffer::size() const
 {
     return m_data.size();
 }

@@ -28,7 +28,7 @@ void GLContext::gl_bind_buffer(GLenum target, GLuint buffer)
         }
 
         if (!target_buffer) {
-            target_buffer = adopt_ref(*new Buffer());
+            target_buffer = m_rasterizer->create_buffer();
             m_allocated_buffers.set(buffer, target_buffer);
         }
     }
@@ -80,7 +80,7 @@ void GLContext::gl_delete_buffers(GLsizei n, GLuint const* buffers)
         if (buffer_object == m_allocated_buffers.end() || buffer_object->value.is_null())
             continue;
 
-        Buffer* buffer = buffer_object->value;
+        auto buffer = buffer_object->value;
 
         if (m_array_buffer == buffer)
             m_array_buffer = nullptr;
