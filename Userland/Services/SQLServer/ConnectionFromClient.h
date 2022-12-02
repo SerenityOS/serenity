@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/HashMap.h>
+#include <AK/Vector.h>
 #include <LibIPC/ConnectionFromClient.h>
 #include <SQLServer/SQLClientEndpoint.h>
 #include <SQLServer/SQLServerEndpoint.h>
@@ -29,7 +30,7 @@ private:
 
     virtual Messages::SQLServer::ConnectResponse connect(DeprecatedString const&) override;
     virtual Messages::SQLServer::PrepareStatementResponse prepare_statement(int, DeprecatedString const&) override;
-    virtual void execute_statement(int) override;
+    virtual void execute_statement(int, Vector<SQL::Value> const& placeholder_values) override;
     virtual void disconnect(int) override;
 };
 

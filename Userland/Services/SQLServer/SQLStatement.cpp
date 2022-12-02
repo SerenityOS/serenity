@@ -61,19 +61,20 @@ void SQLStatement::report_error(SQL::Result result)
     m_result = {};
 }
 
-void SQLStatement::execute()
+void SQLStatement::execute(Vector<SQL::Value> placeholder_values)
 {
     dbgln_if(SQLSERVER_DEBUG, "SQLStatement::execute(statement_id {}", statement_id());
+
     auto client_connection = ConnectionFromClient::client_connection_for(connection()->client_id());
     if (!client_connection) {
         warnln("Cannot yield next result. Client disconnected");
         return;
     }
 
-    deferred_invoke([this] {
+    deferred_invoke([this, placeholder_values = move(placeholder_values)] {
         VERIFY(!connection()->database().is_null());
 
-        auto execution_result = m_statement->execute(connection()->database().release_nonnull());
+        auto execution_result = m_statement->execute(connection()->database().release_nonnull(), placeholder_values);
         if (execution_result.is_error()) {
             report_error(execution_result.release_error());
             return;

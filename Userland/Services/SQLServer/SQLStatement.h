@@ -8,6 +8,7 @@
 
 #include <AK/DeprecatedString.h>
 #include <AK/NonnullRefPtr.h>
+#include <AK/Vector.h>
 #include <LibCore/Object.h>
 #include <LibSQL/AST/AST.h>
 #include <LibSQL/Result.h>
@@ -27,7 +28,7 @@ public:
     static RefPtr<SQLStatement> statement_for(int statement_id);
     int statement_id() const { return m_statement_id; }
     DatabaseConnection* connection() { return dynamic_cast<DatabaseConnection*>(parent()); }
-    void execute();
+    void execute(Vector<SQL::Value> placeholder_values);
 
 private:
     SQLStatement(DatabaseConnection&, NonnullRefPtr<SQL::AST::Statement> statement);

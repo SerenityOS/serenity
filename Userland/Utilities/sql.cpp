@@ -292,7 +292,7 @@ private:
                 });
         } else {
             auto statement_id = m_sql_client->prepare_statement(m_connection_id, piece);
-            m_sql_client->async_execute_statement(statement_id);
+            m_sql_client->async_execute_statement(statement_id, {});
         }
 
         // ...But m_keep_running can also be set to false by a command handler.
