@@ -123,6 +123,21 @@ as long as it doesn't hurt other security measures.
 We also consider performance metrics, so a tradeoff between two mostly-contradictive metrics
 is to be discussed when an issue arises.
 
+## No hardcoded userspace paths
+
+To ensure the kernel stays flexible to future changes, we should not put hardcoded
+paths or assume where filesystem items (nor where filesystems are mounted) reside on - we should
+always let userspace to inform the kernel about paths and assume nothing else.
+Even when it's obvious some file will always be located in a certain path, it is considered
+a violation of an abstraction layer to hardcode it in the kernel code, because we put an hard effort
+to keep the abstractions we have intact and clean.
+
+There's one exception to this rule - the kernel will use a `dbgln` statement to
+warn the user in case that the dynamic loader is not the usual binary we use.
+To generalize the exception a bit more - debug messages (being used sparingly) with
+assumption of paths could be OK, as long as they never have any functional implication
+on the user.
+
 ## Documentation
 
 As with any documentation, it's always good to see more of it, either with a new manual page,
