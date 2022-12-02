@@ -166,7 +166,7 @@ ErrorOr<NonnullLockRefPtr<OpenFileDescription>> ConsolePort::open(int options)
     if (!m_open)
         m_console.send_open_control_message(m_port, true);
 
-    return File::open(options);
+    return Device::open(options);
 }
 
 }

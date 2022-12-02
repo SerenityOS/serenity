@@ -58,6 +58,16 @@ ErrorOr<NonnullOwnPtr<KString>> Device::pseudo_path(OpenFileDescription const&) 
     return KString::formatted("device:{},{}", major(), minor());
 }
 
+ErrorOr<NonnullLockRefPtr<OpenFileDescription>> Device::open(int options)
+{
+    TRY(Process::current().jail().with([&](auto& my_jail) -> ErrorOr<void> {
+        if (my_jail && !is_openable_by_jailed_processes())
+            return Error::from_errno(EPERM);
+        return {};
+    }));
+    return File::open(options);
+}
+
 void Device::process_next_queued_request(Badge<AsyncDeviceRequest>, AsyncDeviceRequest const& completed_request)
 {
     SpinlockLocker lock(m_requests_lock);
