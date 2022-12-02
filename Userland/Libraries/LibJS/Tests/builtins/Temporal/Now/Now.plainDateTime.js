@@ -37,12 +37,15 @@ describe("correct behavior", () => {
             },
         };
 
-        const plainDateTime = Temporal.Now.plainDateTime(calendar, "UTC");
-        const plainDateTimeWithOffset = Temporal.Now.plainDateTime(calendar, timeZone);
+        const [plainDateTime, plainDateTimeWithOffset] = withinSameSecond(() => {
+            return [
+                Temporal.Now.plainDateTime(calendar, "UTC"),
+                Temporal.Now.plainDateTime(calendar, timeZone),
+            ];
+        });
 
         if (plainDateTime.year !== plainDateTimeWithOffset.year) return;
 
-        // Let's hope the duration between the above two lines is less than a second :^)
         const differenceSeconds =
             plainDateTimeToEpochSeconds(plainDateTimeWithOffset) -
             plainDateTimeToEpochSeconds(plainDateTime);
@@ -58,12 +61,15 @@ describe("correct behavior", () => {
             },
         };
 
-        const plainDateTime = Temporal.Now.plainDateTime(calendar, "UTC");
-        const plainDateTimeWithOffset = Temporal.Now.plainDateTime(calendar, timeZone);
+        const [plainDateTime, plainDateTimeWithOffset] = withinSameSecond(() => {
+            return [
+                Temporal.Now.plainDateTime(calendar, "UTC"),
+                Temporal.Now.plainDateTime(calendar, timeZone),
+            ];
+        });
 
         if (plainDateTime.year !== plainDateTimeWithOffset.year) return;
 
-        // Let's hope the duration between the above two lines is less than a second :^)
         const differenceSeconds =
             plainDateTimeToEpochSeconds(plainDateTimeWithOffset) -
             plainDateTimeToEpochSeconds(plainDateTime);
