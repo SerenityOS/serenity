@@ -29,12 +29,26 @@ namespace Gfx {
     C(ActiveWindowTitleStripes)    \
     C(Base)                        \
     C(BaseText)                    \
+    C(Black)                       \
+    C(Blue)                        \
+    C(BrightBlack)                 \
+    C(BrightBlue)                  \
+    C(BrightCyan)                  \
+    C(BrightGreen)                 \
+    C(BrightMagenta)               \
+    C(BrightRed)                   \
+    C(BrightWhite)                 \
+    C(BrightYellow)                \
     C(Button)                      \
     C(ButtonText)                  \
+    C(ColorSchemeBackground)       \
+    C(ColorSchemeForeground)       \
+    C(Cyan)                        \
     C(DisabledTextFront)           \
     C(DisabledTextBack)            \
     C(DesktopBackground)           \
     C(FocusOutline)                \
+    C(Green)                       \
     C(Gutter)                      \
     C(GutterBorder)                \
     C(HighlightWindowBorder1)      \
@@ -53,6 +67,7 @@ namespace Gfx {
     C(InactiveWindowTitleShadow)   \
     C(InactiveWindowTitleStripes)  \
     C(Link)                        \
+    C(Magenta)                     \
     C(MenuBase)                    \
     C(MenuBaseText)                \
     C(MenuSelection)               \
@@ -64,6 +79,7 @@ namespace Gfx {
     C(MovingWindowTitleShadow)     \
     C(MovingWindowTitleStripes)    \
     C(PlaceholderText)             \
+    C(Red)                         \
     C(RubberBandBorder)            \
     C(RubberBandFill)              \
     C(Ruler)                       \
@@ -98,13 +114,16 @@ namespace Gfx {
     C(Tray)                        \
     C(TrayText)                    \
     C(VisitedLink)                 \
+    C(White)                       \
     C(Window)                      \
-    C(WindowText)
+    C(WindowText)                  \
+    C(Yellow)
 
 #define ENUMERATE_ALIGNMENT_ROLES(C) \
     C(TitleAlignment)
 
 #define ENUMERATE_FLAG_ROLES(C) \
+    C(BoldTextAsBright)         \
     C(IsDark)                   \
     C(TitleButtonsIconOnly)
 
@@ -121,7 +140,8 @@ namespace Gfx {
     C(ActiveWindowShadow)       \
     C(TaskbarShadow)            \
     C(MenuShadow)               \
-    C(TooltipShadow)
+    C(TooltipShadow)            \
+    C(ColorScheme)
 
 enum class ColorRole {
     NoRole,

@@ -40,8 +40,23 @@ ErrorOr<Core::AnonymousBuffer> load_system_theme(Core::ConfigFile const& file)
     auto get_color = [&](auto& name) {
         auto color_string = file.read_entry("Colors", name);
         auto color = Color::from_string(color_string);
-        if (!color.has_value())
-            return Color(Color::Black);
+        if (!color.has_value()) {
+            auto maybe_color_config = Core::ConfigFile::open(data->path[(int)PathRole::ColorScheme]);
+            if (maybe_color_config.is_error())
+                maybe_color_config = Core::ConfigFile::open("/res/color-schemes/Default.ini");
+            auto color_config = maybe_color_config.release_value();
+            if (name == "ColorSchemeBackground"sv)
+                color = Gfx::Color::from_string(color_config->read_entry("Primary", "Background"));
+            else if (name == "ColorSchemeForeground"sv)
+                color = Gfx::Color::from_string(color_config->read_entry("Primary", "Foreground"));
+            else if (strncmp(name, "Bright", 6) == 0)
+                color = Gfx::Color::from_string(color_config->read_entry("Bright", name + 6));
+            else
+                color = Gfx::Color::from_string(color_config->read_entry("Normal", name));
+
+            if (!color.has_value())
+                return Color(Color::Black);
+        }
         return color.value();
     };
 
@@ -107,6 +122,21 @@ ErrorOr<Core::AnonymousBuffer> load_system_theme(Core::ConfigFile const& file)
         return &path[0];
     };
 
+#define ENCODE_PATH(x, allow_empty)                                                                              \
+    do {                                                                                                         \
+        auto path = get_path(#x, (int)PathRole::x, allow_empty);                                                 \
+        memcpy(data->path[(int)PathRole::x], path, min(strlen(path) + 1, sizeof(data->path[(int)PathRole::x]))); \
+        data->path[(int)PathRole::x][sizeof(data->path[(int)PathRole::x]) - 1] = '\0';                           \
+    } while (0)
+
+    ENCODE_PATH(TitleButtonIcons, false);
+    ENCODE_PATH(ActiveWindowShadow, true);
+    ENCODE_PATH(InactiveWindowShadow, true);
+    ENCODE_PATH(TaskbarShadow, true);
+    ENCODE_PATH(MenuShadow, true);
+    ENCODE_PATH(TooltipShadow, true);
+    ENCODE_PATH(ColorScheme, true);
+
 #undef __ENUMERATE_COLOR_ROLE
 #define __ENUMERATE_COLOR_ROLE(role) \
     data->color[(int)ColorRole::role] = get_color(#role).value();
@@ -131,19 +161,12 @@ ErrorOr<Core::AnonymousBuffer> load_system_theme(Core::ConfigFile const& file)
     ENUMERATE_METRIC_ROLES(__ENUMERATE_METRIC_ROLE)
 #undef __ENUMERATE_METRIC_ROLE
 
-#define ENCODE_PATH(x, allow_empty)                                                                              \
-    do {                                                                                                         \
-        auto path = get_path(#x, (int)PathRole::x, allow_empty);                                                 \
-        memcpy(data->path[(int)PathRole::x], path, min(strlen(path) + 1, sizeof(data->path[(int)PathRole::x]))); \
-        data->path[(int)PathRole::x][sizeof(data->path[(int)PathRole::x]) - 1] = '\0';                           \
-    } while (0)
-
-    ENCODE_PATH(TitleButtonIcons, false);
-    ENCODE_PATH(ActiveWindowShadow, true);
-    ENCODE_PATH(InactiveWindowShadow, true);
-    ENCODE_PATH(TaskbarShadow, true);
-    ENCODE_PATH(MenuShadow, true);
-    ENCODE_PATH(TooltipShadow, true);
+    data->flag[(int)FlagRole::BoldTextAsBright] = true;
+    auto maybe_color_config = Core::ConfigFile::open(data->path[(int)PathRole::ColorScheme]);
+    if (!maybe_color_config.is_error()) {
+        auto color_config = maybe_color_config.release_value();
+        data->flag[(int)FlagRole::BoldTextAsBright] = color_config->read_bool_entry("Options", "ShowBoldTextAsBright", true);
+    }
 
     return buffer;
 }
