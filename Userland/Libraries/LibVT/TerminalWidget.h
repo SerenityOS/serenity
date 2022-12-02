@@ -94,7 +94,7 @@ public:
 
     void set_font_and_resize_to_fit(Gfx::Font const&);
 
-    void set_color_scheme(StringView);
+    void update_color_scheme();
 
     void set_logical_focus(bool);
 
@@ -174,7 +174,7 @@ private:
     // Snapshot of m_hovered_href when opening a context menu for a hyperlink.
     DeprecatedString m_context_menu_href;
 
-    unsigned m_colors[256];
+    Gfx::Color m_colors[256];
     Gfx::Color m_default_foreground_color;
     Gfx::Color m_default_background_color;
     bool m_show_bold_text_as_bright { true };

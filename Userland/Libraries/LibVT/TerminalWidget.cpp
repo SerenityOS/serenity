@@ -148,8 +148,7 @@ TerminalWidget::TerminalWidget(int ptm_fd, bool automatic_size_policy)
 
     update_copy_action();
     update_paste_action();
-
-    set_color_scheme(Config::read_string("Terminal"sv, "Window"sv, "ColorScheme"sv, "Default"sv));
+    update_color_scheme();
 }
 
 Gfx::IntRect TerminalWidget::glyph_rect(u16 row, u16 column)
@@ -197,7 +196,9 @@ void TerminalWidget::focusout_event(GUI::FocusEvent& event)
 
 void TerminalWidget::event(Core::Event& event)
 {
-    if (event.type() == GUI::Event::WindowBecameActive)
+    if (event.type() == GUI::Event::ThemeChange)
+        update_color_scheme();
+    else if (event.type() == GUI::Event::WindowBecameActive)
         set_logical_focus(true);
     else if (event.type() == GUI::Event::WindowBecameInactive)
         set_logical_focus(false);
@@ -1198,59 +1199,32 @@ void TerminalWidget::update_paste_action()
     m_paste_action->set_enabled(mime_type.starts_with("text/"sv) && !data.is_empty());
 }
 
-void TerminalWidget::set_color_scheme(StringView name)
+void TerminalWidget::update_color_scheme()
 {
-    if (name.contains('/')) {
-        dbgln("Shenanigans! Color scheme names can't contain slashes.");
-        return;
-    }
+    auto const& palette = GUI::Widget::palette();
 
-    m_color_scheme_name = name;
+    m_show_bold_text_as_bright = palette.bold_text_as_bright();
 
-    constexpr StringView color_names[] = {
-        "Black"sv,
-        "Red"sv,
-        "Green"sv,
-        "Yellow"sv,
-        "Blue"sv,
-        "Magenta"sv,
-        "Cyan"sv,
-        "White"sv
-    };
+    m_default_background_color = palette.background();
+    m_default_foreground_color = palette.foreground();
 
-    auto path = DeprecatedString::formatted("/res/color-schemes/{}.ini", name);
-    auto color_config_or_error = Core::ConfigFile::open(path);
-    if (color_config_or_error.is_error()) {
-        dbgln("Unable to read color scheme file '{}': {}", path, color_config_or_error.error());
-        return;
-    }
-    auto color_config = color_config_or_error.release_value();
+    m_colors[0] = palette.black();
+    m_colors[1] = palette.red();
+    m_colors[2] = palette.green();
+    m_colors[3] = palette.yellow();
+    m_colors[4] = palette.blue();
+    m_colors[5] = palette.magenta();
+    m_colors[6] = palette.cyan();
+    m_colors[7] = palette.white();
+    m_colors[8] = palette.bright_black();
+    m_colors[9] = palette.bright_red();
+    m_colors[10] = palette.bright_green();
+    m_colors[11] = palette.bright_yellow();
+    m_colors[12] = palette.bright_blue();
+    m_colors[13] = palette.bright_magenta();
+    m_colors[14] = palette.bright_cyan();
+    m_colors[15] = palette.bright_white();
 
-    m_show_bold_text_as_bright = color_config->read_bool_entry("Options", "ShowBoldTextAsBright", true);
-
-    auto default_background = Gfx::Color::from_string(color_config->read_entry("Primary", "Background"));
-    if (default_background.has_value())
-        m_default_background_color = default_background.value();
-    else
-        m_default_background_color = Gfx::Color::from_rgb(m_colors[(u8)VT::Color::ANSIColor::Black]);
-
-    auto default_foreground = Gfx::Color::from_string(color_config->read_entry("Primary", "Foreground"));
-    if (default_foreground.has_value())
-        m_default_foreground_color = default_foreground.value();
-    else
-        m_default_foreground_color = Gfx::Color::from_rgb(m_colors[(u8)VT::Color::ANSIColor::White]);
-
-    for (u8 color_idx = 0; color_idx < 8; ++color_idx) {
-        auto rgb = Gfx::Color::from_string(color_config->read_entry("Normal", color_names[color_idx]));
-        if (rgb.has_value())
-            m_colors[color_idx] = rgb.value().value();
-    }
-
-    for (u8 color_idx = 0; color_idx < 8; ++color_idx) {
-        auto rgb = Gfx::Color::from_string(color_config->read_entry("Bright", color_names[color_idx]));
-        if (rgb.has_value())
-            m_colors[color_idx + 8] = rgb.value().value();
-    }
     update();
 }
 
@@ -1268,11 +1242,11 @@ constexpr Gfx::Color TerminalWidget::terminal_color_to_rgb(VT::Color color) cons
     case VT::Color::Kind::RGB:
         return Gfx::Color::from_rgb(color.as_rgb());
     case VT::Color::Kind::Indexed:
-        return Gfx::Color::from_rgb(m_colors[color.as_indexed()]);
+        return m_colors[color.as_indexed()];
     case VT::Color::Kind::Named: {
         auto ansi = color.as_named();
         if ((u16)ansi < 256)
-            return Gfx::Color::from_rgb(m_colors[(u16)ansi]);
+            return m_colors[(u16)ansi];
         else if (ansi == VT::Color::ANSIColor::DefaultForeground)
             return m_default_foreground_color;
         else if (ansi == VT::Color::ANSIColor::DefaultBackground)
