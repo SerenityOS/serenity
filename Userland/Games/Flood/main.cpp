@@ -42,7 +42,7 @@ static ErrorOr<Vector<Color>> get_color_scheme_from_string(StringView name)
         "White"sv
     };
 
-    auto const path = DeprecatedString::formatted("/res/terminal-colors/{}.ini", name);
+    auto const path = DeprecatedString::formatted("/res/color-schemes/{}.ini", name);
     auto color_config_or_error = Core::ConfigFile::open(path);
     if (color_config_or_error.is_error()) {
         return Error::from_string_view(DeprecatedString::formatted("Unable to read color scheme file '{}': {}", path, color_config_or_error.error()));
