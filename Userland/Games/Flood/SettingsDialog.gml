@@ -40,21 +40,6 @@
 
     @GUI::Widget {
         layout: @GUI::HorizontalBoxLayout {
-            spacing: 4
-        }
-
-        @GUI::Label {
-            text: "Color scheme"
-            text_alignment: "CenterLeft"
-        }
-
-        @GUI::ComboBox {
-            name: "color_scheme_combo"
-        }
-    }
-
-    @GUI::Widget {
-        layout: @GUI::HorizontalBoxLayout {
             spacing: 10
         }
 
