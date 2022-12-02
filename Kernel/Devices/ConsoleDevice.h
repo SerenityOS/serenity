@@ -28,6 +28,8 @@ public:
     virtual ErrorOr<size_t> read(OpenFileDescription&, u64, Kernel::UserOrKernelBuffer&, size_t) override;
     virtual ErrorOr<size_t> write(OpenFileDescription&, u64, Kernel::UserOrKernelBuffer const&, size_t) override;
     virtual StringView class_name() const override { return "Console"sv; }
+    // ^Device
+    virtual bool is_openable_by_jailed_processes() const override { return true; }
 
     void put_char(char);
 

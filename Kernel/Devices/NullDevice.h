@@ -20,6 +20,10 @@ public:
 
 private:
     NullDevice();
+
+    // ^Device
+    virtual bool is_openable_by_jailed_processes() const override { return true; }
+
     // ^CharacterDevice
     virtual ErrorOr<size_t> read(OpenFileDescription&, u64, UserOrKernelBuffer&, size_t) override;
     virtual ErrorOr<size_t> write(OpenFileDescription&, u64, UserOrKernelBuffer const&, size_t) override;

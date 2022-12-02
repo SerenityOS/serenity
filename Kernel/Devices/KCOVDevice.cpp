@@ -74,7 +74,7 @@ ErrorOr<NonnullLockRefPtr<OpenFileDescription>> KCOVDevice::open(int options)
     kcov_instance->set_state(KCOVInstance::OPENED);
     proc_instance->set(pid, kcov_instance);
 
-    return File::open(options);
+    return Device::open(options);
 }
 
 ErrorOr<void> KCOVDevice::ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg)

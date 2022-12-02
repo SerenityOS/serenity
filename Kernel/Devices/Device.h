@@ -43,6 +43,7 @@ public:
     MinorNumber minor() const { return m_minor; }
 
     virtual ErrorOr<NonnullOwnPtr<KString>> pseudo_path(OpenFileDescription const&) const override;
+    virtual ErrorOr<NonnullLockRefPtr<OpenFileDescription>> open(int options) override;
 
     UserID uid() const { return m_uid; }
     GroupID gid() const { return m_gid; }
@@ -50,6 +51,7 @@ public:
     virtual bool is_device() const override { return true; }
     virtual void will_be_destroyed() override;
     virtual void after_inserting();
+    virtual bool is_openable_by_jailed_processes() const { return false; }
     void process_next_queued_request(Badge<AsyncDeviceRequest>, AsyncDeviceRequest const&);
 
     template<typename AsyncRequestType, typename... Args>

@@ -26,6 +26,9 @@ public:
     virtual FileBlockerSet& blocker_set() override;
 
 private:
+    // ^Device
+    virtual bool is_openable_by_jailed_processes() const override { return true; }
+
     // ^TTY
     virtual ErrorOr<NonnullOwnPtr<KString>> pseudo_name() const override;
     virtual ErrorOr<size_t> on_tty_write(UserOrKernelBuffer const&, size_t) override;
