@@ -85,17 +85,4 @@
             text: "Blinking cursor"
         }
     }
-
-    @GUI::GroupBox {
-        title: "Color Scheme"
-        preferred_height: "fit"
-        layout: @GUI::VerticalBoxLayout {
-            margins: [16, 8, 8]
-            spacing: 16
-        }
-
-        @GUI::ComboBox {
-            name: "color_scheme_combo"
-        }
-    }
 }

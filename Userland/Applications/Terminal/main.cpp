@@ -72,19 +72,15 @@ public:
     {
         VERIFY(domain == "Terminal");
 
-        if (group == "Window") {
-            if (key == "Bell") {
-                auto bell_mode = VT::TerminalWidget::BellMode::Visible;
-                if (value == "AudibleBeep")
-                    bell_mode = VT::TerminalWidget::BellMode::AudibleBeep;
-                if (value == "Visible")
-                    bell_mode = VT::TerminalWidget::BellMode::Visible;
-                if (value == "Disabled")
-                    bell_mode = VT::TerminalWidget::BellMode::Disabled;
-                m_parent_terminal.set_bell_mode(bell_mode);
-            } else if (key == "ColorScheme") {
-                m_parent_terminal.set_color_scheme(value);
-            }
+        if (group == "Window" && key == "Bell") {
+            auto bell_mode = VT::TerminalWidget::BellMode::Visible;
+            if (value == "AudibleBeep")
+                bell_mode = VT::TerminalWidget::BellMode::AudibleBeep;
+            if (value == "Visible")
+                bell_mode = VT::TerminalWidget::BellMode::Visible;
+            if (value == "Disabled")
+                bell_mode = VT::TerminalWidget::BellMode::Disabled;
+            m_parent_terminal.set_bell_mode(bell_mode);
         } else if (group == "Text" && key == "Font") {
             auto font = Gfx::FontDatabase::the().get_by_name(value);
             if (font.is_null())
