@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Daniel Bertalan <dani@danielbertalan.dev>
+ * Copyright (c) 2022, kleines Filmröllchen <filmroellchen@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -318,6 +319,58 @@ public:
         }
     }
 
+    // If your function returns a clean value, that value is wrapped in a new Optional.
+    // If your function returns an ErrorOr, that error is propagated before the new Optional is returned.
+    // If your function returns an Optional, that Optional is returned as-is.
+    template<typename F,
+        typename MappedType = decltype(declval<F>()(declval<T&>())),
+        auto IsErrorOr = IsSpecializationOf<MappedType, ErrorOr>,
+        auto IsOptional = IsSpecializationOf<MappedType, Optional>,
+        typename OptionalType = Conditional<IsOptional, MappedType, Optional<ConditionallyResultType<IsErrorOr, MappedType>>>>
+    ALWAYS_INLINE Conditional<IsErrorOr, ErrorOr<OptionalType>, OptionalType> flat_map(F&& mapper)
+    {
+        if constexpr (IsErrorOr) {
+            if (m_has_value)
+                return OptionalType { TRY(mapper(value())) };
+            return OptionalType {};
+        } else if constexpr (IsOptional) {
+            if (m_has_value)
+                return mapper(value());
+            return OptionalType {};
+        } else {
+            if (m_has_value)
+                return OptionalType { mapper(value()) };
+
+            return OptionalType {};
+        }
+    }
+
+    // If your function returns a clean value, that value is wrapped in a new Optional.
+    // If your function returns an ErrorOr, that error is propagated before the new Optional is returned.
+    // If your function returns an Optional, that Optional is returned as-is.
+    template<typename F,
+        typename MappedType = decltype(declval<F>()(declval<T&>())),
+        auto IsErrorOr = IsSpecializationOf<MappedType, ErrorOr>,
+        auto IsOptional = IsSpecializationOf<MappedType, Optional>,
+        typename OptionalType = Conditional<IsOptional, MappedType, Optional<ConditionallyResultType<IsErrorOr, MappedType>>>>
+    ALWAYS_INLINE Conditional<IsErrorOr, ErrorOr<OptionalType>, OptionalType> flat_map(F&& mapper) const
+    {
+        if constexpr (IsErrorOr) {
+            if (m_has_value)
+                return OptionalType { TRY(mapper(value())) };
+            return OptionalType {};
+        } else if constexpr (IsOptional) {
+            if (m_has_value)
+                return mapper(value());
+            return OptionalType {};
+        } else {
+            if (m_has_value)
+                return OptionalType { mapper(value()) };
+
+            return OptionalType {};
+        }
+    }
+
 private:
     alignas(T) u8 m_storage[sizeof(T)];
     bool m_has_value { false };
@@ -532,6 +585,58 @@ public:
         if constexpr (IsErrorOr) {
             if (m_pointer != nullptr)
                 return OptionalType { TRY(mapper(value())) };
+            return OptionalType {};
+        } else {
+            if (m_pointer != nullptr)
+                return OptionalType { mapper(value()) };
+
+            return OptionalType {};
+        }
+    }
+
+    // If your function returns a clean value, that value is wrapped in a new Optional.
+    // If your function returns an ErrorOr, that error is propagated before the new Optional is returned.
+    // If your function returns an Optional, that Optional is returned as-is.
+    template<typename F,
+        typename MappedType = decltype(declval<F>()(declval<T&>())),
+        auto IsErrorOr = IsSpecializationOf<MappedType, ErrorOr>,
+        auto IsOptional = IsSpecializationOf<MappedType, Optional>,
+        typename OptionalType = Conditional<IsOptional, MappedType, Optional<ConditionallyResultType<IsErrorOr, MappedType>>>>
+    ALWAYS_INLINE Conditional<IsErrorOr, ErrorOr<OptionalType>, OptionalType> flat_map(F&& mapper)
+    {
+        if constexpr (IsErrorOr) {
+            if (m_pointer != nullptr)
+                return OptionalType { TRY(mapper(value())) };
+            return OptionalType {};
+        } else if constexpr (IsOptional) {
+            if (m_pointer != nullptr)
+                return mapper(value());
+            return OptionalType {};
+        } else {
+            if (m_pointer != nullptr)
+                return OptionalType { mapper(value()) };
+
+            return OptionalType {};
+        }
+    }
+
+    // If your function returns a clean value, that value is wrapped in a new Optional.
+    // If your function returns an ErrorOr, that error is propagated before the new Optional is returned.
+    // If your function returns an Optional, that Optional is returned as-is.
+    template<typename F,
+        typename MappedType = decltype(declval<F>()(declval<T&>())),
+        auto IsErrorOr = IsSpecializationOf<MappedType, ErrorOr>,
+        auto IsOptional = IsSpecializationOf<MappedType, Optional>,
+        typename OptionalType = Conditional<IsOptional, MappedType, Optional<ConditionallyResultType<IsErrorOr, MappedType>>>>
+    ALWAYS_INLINE Conditional<IsErrorOr, ErrorOr<OptionalType>, OptionalType> flat_map(F&& mapper) const
+    {
+        if constexpr (IsErrorOr) {
+            if (m_pointer != nullptr)
+                return OptionalType { TRY(mapper(value())) };
+            return OptionalType {};
+        } else if constexpr (IsOptional) {
+            if (m_pointer != nullptr)
+                return mapper(value());
             return OptionalType {};
         } else {
             if (m_pointer != nullptr)
