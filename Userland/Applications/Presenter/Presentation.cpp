@@ -197,8 +197,10 @@ void Presentation::paint(Gfx::Painter& painter) const
     painter.clear_rect(painter.clip_rect(), Color::White);
     current_slide().paint(painter, m_current_frame_in_slide.value(), scale);
 
-    // FIXME: Move the footer format to user settings and make it configurable by the presentation file itself.
-    painter.draw_text(painter.clip_rect(), format_footer("{presentation_title}: {slide_title} ({slide_number}/{slides_total}), frame {slide_frame_number}, last modified {date}"sv), Gfx::TextAlignment::BottomCenter);
+    // FIXME: Allow overriding the format with user settings.
+    painter.draw_text(painter.clip_rect(),
+        format_footer(m_metadata.get("footer-center").value_or("{presentation_title}: {slide_title} ({slide_number}/{slides_total}), frame {slide_frame_number}, last modified {date}"sv)),
+        Gfx::TextAlignment::BottomCenter);
 }
 
 DeprecatedString Presentation::format_footer(StringView format) const
