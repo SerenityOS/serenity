@@ -770,29 +770,4 @@ void AntiAliasingPainter::stroke_segment_intersection(FloatPoint const& current_
     fill_path(intersection_edge_path, color);
 }
 
-FloatQuad AntiAliasingPainter::build_rotated_rectangle(FloatPoint const& direction, float width)
-{
-    // Rotates a rectangle around 0,0
-    double half_size = width / 2;
-    double radian = atan2(direction.y(), direction.x());
-    if (radian < 0) {
-        radian += (2 * M_PI);
-    }
-    // Rotated by: (xcosθ−ysinθ ,xsinθ+ycosθ)
-    // p1     p2
-    //
-    //   x,y
-    //
-    // p4     p3
-    double cos_radian = cos(radian);
-    double sin_radian = sin(radian);
-
-    // FIXME: Performing the rotation with AffineTransform::rotate_quad seems to generate more glitches at the edges than rotating manually
-    return FloatQuad(
-        { ((-half_size * cos_radian) - (-half_size * sin_radian)), ((-half_size * sin_radian) + (-half_size * cos_radian)) },
-        { ((half_size * cos_radian) - (-half_size * sin_radian)), ((half_size * sin_radian) + (-half_size * cos_radian)) },
-        { ((half_size * cos_radian)) - (half_size * sin_radian), ((half_size * sin_radian) + (half_size * cos_radian)) },
-        { ((-half_size * cos_radian) - (half_size * sin_radian)), ((-half_size * sin_radian) + (half_size * cos_radian)) });
-}
-
 }
