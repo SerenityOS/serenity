@@ -21,7 +21,8 @@ post_install() {
     cp -r "${workdir}/fonts" "${SERENITY_INSTALL_ROOT}/res/"
     cp -r "${workdir}/color-palettes" "${SERENITY_INSTALL_ROOT}/res/"
     cp -r "${workdir}/emoji" "${SERENITY_INSTALL_ROOT}/res/"
-    cp -r "${workdir}/terminal-colors" "${SERENITY_INSTALL_ROOT}/res/"
+    # FIXME: Update this path upstream.
+    cp -r "${workdir}/terminal-colors/*" "${SERENITY_INSTALL_ROOT}/res/color-schemes/"
     cp -r "${workdir}/wallpapers" "${SERENITY_INSTALL_ROOT}/res/"
     cp "${workdir}/emoji-theming.txt" "${SERENITY_INSTALL_ROOT}/home/anon/Documents/emoji-theming.txt"
 }

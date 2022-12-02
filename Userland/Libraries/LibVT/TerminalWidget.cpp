@@ -1218,7 +1218,7 @@ void TerminalWidget::set_color_scheme(StringView name)
         "White"sv
     };
 
-    auto path = DeprecatedString::formatted("/res/terminal-colors/{}.ini", name);
+    auto path = DeprecatedString::formatted("/res/color-schemes/{}.ini", name);
     auto color_config_or_error = Core::ConfigFile::open(path);
     if (color_config_or_error.is_error()) {
         dbgln("Unable to read color scheme file '{}': {}", path, color_config_or_error.error());

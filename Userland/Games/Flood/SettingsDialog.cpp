@@ -48,7 +48,7 @@ SettingsDialog::SettingsDialog(GUI::Window* parent, size_t board_rows, size_t bo
 
     static Vector<DeprecatedString> color_scheme_names;
     color_scheme_names.clear();
-    Core::DirIterator iterator("/res/terminal-colors", Core::DirIterator::SkipParentAndBaseDir);
+    Core::DirIterator iterator("/res/color-schemes", Core::DirIterator::SkipParentAndBaseDir);
     while (iterator.has_next()) {
         auto path = iterator.next_path();
         color_scheme_names.append(path.replace(".ini"sv, ""sv, ReplaceMode::FirstOnly));
