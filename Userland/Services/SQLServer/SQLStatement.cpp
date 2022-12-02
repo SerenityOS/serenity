@@ -43,7 +43,7 @@ SQLStatement::SQLStatement(DatabaseConnection& connection, NonnullRefPtr<SQL::AS
     s_statements.set(m_statement_id, *this);
 }
 
-void SQLStatement::report_error(SQL::Result result)
+void SQLStatement::report_error(SQL::Result result, u64 execution_id)
 {
     dbgln_if(SQLSERVER_DEBUG, "SQLStatement::report_error(statement_id {}, error {}", statement_id(), result.error_string());
 
@@ -53,29 +53,34 @@ void SQLStatement::report_error(SQL::Result result)
     remove_from_parent();
 
     if (client_connection)
-        client_connection->async_execution_error(statement_id(), result.error(), result.error_string());
+        client_connection->async_execution_error(statement_id(), execution_id, result.error(), result.error_string());
     else
         warnln("Cannot return execution error. Client disconnected");
 
     m_result = {};
 }
 
-void SQLStatement::execute(Vector<SQL::Value> placeholder_values)
+Optional<u64> SQLStatement::execute(Vector<SQL::Value> placeholder_values)
 {
     dbgln_if(SQLSERVER_DEBUG, "SQLStatement::execute(statement_id {}", statement_id());
 
     auto client_connection = ConnectionFromClient::client_connection_for(connection()->client_id());
     if (!client_connection) {
         warnln("Cannot yield next result. Client disconnected");
-        return;
+        return {};
     }
 
-    deferred_invoke([this, placeholder_values = move(placeholder_values)] {
+    auto execution_id = m_next_execution_id++;
+    m_ongoing_executions.set(execution_id);
+
+    deferred_invoke([this, placeholder_values = move(placeholder_values), execution_id] {
         VERIFY(!connection()->database().is_null());
 
         auto execution_result = m_statement->execute(connection()->database().release_nonnull(), placeholder_values);
+        m_ongoing_executions.remove(execution_id);
+
         if (execution_result.is_error()) {
-            report_error(execution_result.release_error());
+            report_error(execution_result.release_error(), execution_id);
             return;
         }
 
@@ -88,13 +93,15 @@ void SQLStatement::execute(Vector<SQL::Value> placeholder_values)
         m_result = execution_result.release_value();
 
         if (should_send_result_rows()) {
-            client_connection->async_execution_success(statement_id(), true, 0, 0, 0);
+            client_connection->async_execution_success(statement_id(), execution_id, true, 0, 0, 0);
             m_index = 0;
-            next();
+            next(execution_id);
         } else {
-            client_connection->async_execution_success(statement_id(), false, 0, m_result->size(), 0);
+            client_connection->async_execution_success(statement_id(), execution_id, false, 0, m_result->size(), 0);
         }
     });
+
+    return execution_id;
 }
 
 bool SQLStatement::should_send_result_rows() const
@@ -113,22 +120,24 @@ bool SQLStatement::should_send_result_rows() const
     }
 }
 
-void SQLStatement::next()
+void SQLStatement::next(u64 execution_id)
 {
     VERIFY(!m_result->is_empty());
+
     auto client_connection = ConnectionFromClient::client_connection_for(connection()->client_id());
     if (!client_connection) {
         warnln("Cannot yield next result. Client disconnected");
         return;
     }
+
     if (m_index < m_result->size()) {
         auto& tuple = m_result->at(m_index++).row;
-        client_connection->async_next_result(statement_id(), tuple.to_deprecated_string_vector());
-        deferred_invoke([this]() {
-            next();
+        client_connection->async_next_result(statement_id(), execution_id, tuple.to_deprecated_string_vector());
+        deferred_invoke([this, execution_id]() {
+            next(execution_id);
         });
     } else {
-        client_connection->async_results_exhausted(statement_id(), m_index);
+        client_connection->async_results_exhausted(statement_id(), execution_id, m_index);
     }
 }
 

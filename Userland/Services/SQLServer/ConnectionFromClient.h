@@ -30,7 +30,7 @@ private:
 
     virtual Messages::SQLServer::ConnectResponse connect(DeprecatedString const&) override;
     virtual Messages::SQLServer::PrepareStatementResponse prepare_statement(u64, DeprecatedString const&) override;
-    virtual void execute_statement(u64, Vector<SQL::Value> const& placeholder_values) override;
+    virtual Messages::SQLServer::ExecuteStatementResponse execute_statement(u64, Vector<SQL::Value> const& placeholder_values) override;
     virtual void disconnect(u64) override;
 };
 

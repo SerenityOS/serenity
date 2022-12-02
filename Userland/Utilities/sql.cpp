@@ -84,7 +84,7 @@ public:
             read_sql();
         };
 
-        m_sql_client->on_execution_success = [this](auto, auto has_results, auto updated, auto created, auto deleted) {
+        m_sql_client->on_execution_success = [this](auto, auto, auto has_results, auto updated, auto created, auto deleted) {
             if (updated != 0 || created != 0 || deleted != 0) {
                 outln("{} row(s) updated, {} created, {} deleted", updated, created, deleted);
             }
@@ -93,13 +93,13 @@ public:
             }
         };
 
-        m_sql_client->on_next_result = [](auto, auto const& row) {
+        m_sql_client->on_next_result = [](auto, auto, auto const& row) {
             StringBuilder builder;
             builder.join(", "sv, row);
             outln("{}", builder.build());
         };
 
-        m_sql_client->on_results_exhausted = [this](auto, auto total_rows) {
+        m_sql_client->on_results_exhausted = [this](auto, auto, auto total_rows) {
             outln("{} row(s)", total_rows);
             read_sql();
         };
@@ -109,7 +109,7 @@ public:
             m_loop.quit(to_underlying(code));
         };
 
-        m_sql_client->on_execution_error = [this](auto, auto, auto const& message) {
+        m_sql_client->on_execution_error = [this](auto, auto, auto, auto const& message) {
             outln("\033[33;1mExecution error:\033[0m {}", message);
             read_sql();
         };

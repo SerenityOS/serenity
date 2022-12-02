@@ -4,6 +4,6 @@ endpoint SQLServer
 {
     connect(DeprecatedString name) => (u64 connection_id)
     prepare_statement(u64 connection_id, DeprecatedString statement) => (Optional<u64> statement_id)
-    execute_statement(u64 statement_id, Vector<SQL::Value> placeholder_values) =|
+    execute_statement(u64 statement_id, Vector<SQL::Value> placeholder_values) => (Optional<u64> execution_id)
     disconnect(u64 connection_id) =|
 }

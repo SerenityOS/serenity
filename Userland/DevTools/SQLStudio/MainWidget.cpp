@@ -214,13 +214,13 @@ MainWidget::MainWidget()
     m_statusbar->segment(2).set_fixed_width(font().width("Ln 0000, Col 000"sv) + font().max_glyph_width());
 
     m_sql_client = SQL::SQLClient::try_create().release_value_but_fixme_should_propagate_errors();
-    m_sql_client->on_execution_success = [this](auto, auto, auto, auto, auto) {
+    m_sql_client->on_execution_success = [this](auto, auto, auto, auto, auto, auto) {
         read_next_sql_statement_of_editor();
     };
-    m_sql_client->on_next_result = [this](auto, auto const& row) {
+    m_sql_client->on_next_result = [this](auto, auto, auto const& row) {
         m_results.append(row);
     };
-    m_sql_client->on_results_exhausted = [this](auto, auto) {
+    m_sql_client->on_results_exhausted = [this](auto, auto, auto) {
         if (m_results.size() == 0)
             return;
         if (m_results[0].size() == 0)

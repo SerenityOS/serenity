@@ -4,9 +4,9 @@ endpoint SQLClient
 {
     connected(u64 connection_id, DeprecatedString connected_to_database) =|
     connection_error(u64 connection_id, SQL::SQLErrorCode code, DeprecatedString message) =|
-    execution_success(u64 statement_id, bool has_results, size_t created, size_t updated, size_t deleted) =|
-    next_result(u64 statement_id, Vector<DeprecatedString> row) =|
-    results_exhausted(u64 statement_id, size_t total_rows) =|
-    execution_error(u64 statement_id, SQL::SQLErrorCode code, DeprecatedString message) =|
+    execution_success(u64 statement_id, u64 execution_id, bool has_results, size_t created, size_t updated, size_t deleted) =|
+    next_result(u64 statement_id, u64 execution_id, Vector<DeprecatedString> row) =|
+    results_exhausted(u64 statement_id, u64 execution_id, size_t total_rows) =|
+    execution_error(u64 statement_id, u64 execution_id, SQL::SQLErrorCode code, DeprecatedString message) =|
     disconnected(u64 connection_id) =|
 }
