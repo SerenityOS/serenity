@@ -1,10 +1,12 @@
+#include <LibSQL/Result.h>
+
 endpoint SQLClient
 {
-    connected(int connection_id, DeprecatedString connected_to_database) =|
-    connection_error(int connection_id, int code, DeprecatedString message) =|
-    execution_success(int statement_id, bool has_results, int created, int updated, int deleted) =|
-    next_result(int statement_id, Vector<DeprecatedString> row) =|
-    results_exhausted(int statement_id, int total_rows) =|
-    execution_error(int statement_id, int code, DeprecatedString message) =|
-    disconnected(int connection_id) =|
+    connected(u64 connection_id, DeprecatedString connected_to_database) =|
+    connection_error(u64 connection_id, SQL::SQLErrorCode code, DeprecatedString message) =|
+    execution_success(u64 statement_id, bool has_results, size_t created, size_t updated, size_t deleted) =|
+    next_result(u64 statement_id, Vector<DeprecatedString> row) =|
+    results_exhausted(u64 statement_id, size_t total_rows) =|
+    execution_error(u64 statement_id, SQL::SQLErrorCode code, DeprecatedString message) =|
+    disconnected(u64 connection_id) =|
 }

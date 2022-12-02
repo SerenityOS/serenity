@@ -11,17 +11,16 @@
 
 namespace SQLServer {
 
-static HashMap<int, NonnullRefPtr<DatabaseConnection>> s_connections;
+static HashMap<u64, NonnullRefPtr<DatabaseConnection>> s_connections;
+static u64 s_next_connection_id = 0;
 
-RefPtr<DatabaseConnection> DatabaseConnection::connection_for(int connection_id)
+RefPtr<DatabaseConnection> DatabaseConnection::connection_for(u64 connection_id)
 {
     if (s_connections.contains(connection_id))
         return *s_connections.get(connection_id).value();
     dbgln_if(SQLSERVER_DEBUG, "Invalid connection_id {}", connection_id);
     return nullptr;
 }
-
-static int s_next_connection_id = 0;
 
 DatabaseConnection::DatabaseConnection(DeprecatedString database_name, int client_id)
     : Object()
@@ -31,17 +30,18 @@ DatabaseConnection::DatabaseConnection(DeprecatedString database_name, int clien
 {
     if (LexicalPath path(m_database_name); (path.title() != m_database_name) || (path.dirname() != ".")) {
         auto client_connection = ConnectionFromClient::client_connection_for(m_client_id);
-        client_connection->async_connection_error(m_connection_id, (int)SQL::SQLErrorCode::InvalidDatabaseName, m_database_name);
+        client_connection->async_connection_error(m_connection_id, SQL::SQLErrorCode::InvalidDatabaseName, m_database_name);
         return;
     }
 
     dbgln_if(SQLSERVER_DEBUG, "DatabaseConnection {} initiating connection with database '{}'", connection_id(), m_database_name);
     s_connections.set(m_connection_id, *this);
+
     deferred_invoke([this]() {
         m_database = SQL::Database::construct(DeprecatedString::formatted("/home/anon/sql/{}.db", m_database_name));
         auto client_connection = ConnectionFromClient::client_connection_for(m_client_id);
         if (auto maybe_error = m_database->open(); maybe_error.is_error()) {
-            client_connection->async_connection_error(m_connection_id, to_underlying(maybe_error.error().error()), maybe_error.error().error_string());
+            client_connection->async_connection_error(m_connection_id, maybe_error.error().error(), maybe_error.error().error_string());
             return;
         }
         m_accept_statements = true;
@@ -67,7 +67,7 @@ void DatabaseConnection::disconnect()
     });
 }
 
-SQL::ResultOr<int> DatabaseConnection::prepare_statement(StringView sql)
+SQL::ResultOr<u64> DatabaseConnection::prepare_statement(StringView sql)
 {
     dbgln_if(SQLSERVER_DEBUG, "DatabaseConnection::prepare_statement(connection_id {}, database '{}', sql '{}'", connection_id(), m_database_name, sql);
 

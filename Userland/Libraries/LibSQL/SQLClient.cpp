@@ -9,35 +9,35 @@
 
 namespace SQL {
 
-void SQLClient::connected(int connection_id, DeprecatedString const& connected_to_database)
+void SQLClient::connected(u64 connection_id, DeprecatedString const& connected_to_database)
 {
     if (on_connected)
         on_connected(connection_id, connected_to_database);
 }
 
-void SQLClient::disconnected(int connection_id)
+void SQLClient::disconnected(u64 connection_id)
 {
     if (on_disconnected)
         on_disconnected(connection_id);
 }
 
-void SQLClient::connection_error(int connection_id, int code, DeprecatedString const& message)
+void SQLClient::connection_error(u64 connection_id, SQLErrorCode const& code, DeprecatedString const& message)
 {
     if (on_connection_error)
         on_connection_error(connection_id, code, message);
     else
-        warnln("Connection error for connection_id {}: {} ({})", connection_id, message, code);
+        warnln("Connection error for connection_id {}: {} ({})", connection_id, message, to_underlying(code));
 }
 
-void SQLClient::execution_error(int statement_id, int code, DeprecatedString const& message)
+void SQLClient::execution_error(u64 statement_id, SQLErrorCode const& code, DeprecatedString const& message)
 {
     if (on_execution_error)
         on_execution_error(statement_id, code, message);
     else
-        warnln("Execution error for statement_id {}: {} ({})", statement_id, message, code);
+        warnln("Execution error for statement_id {}: {} ({})", statement_id, message, to_underlying(code));
 }
 
-void SQLClient::execution_success(int statement_id, bool has_results, int created, int updated, int deleted)
+void SQLClient::execution_success(u64 statement_id, bool has_results, size_t created, size_t updated, size_t deleted)
 {
     if (on_execution_success)
         on_execution_success(statement_id, has_results, created, updated, deleted);
@@ -45,7 +45,7 @@ void SQLClient::execution_success(int statement_id, bool has_results, int create
         outln("{} row(s) created, {} updated, {} deleted", created, updated, deleted);
 }
 
-void SQLClient::next_result(int statement_id, Vector<DeprecatedString> const& row)
+void SQLClient::next_result(u64 statement_id, Vector<DeprecatedString> const& row)
 {
     if (on_next_result) {
         on_next_result(statement_id, row);
@@ -61,7 +61,7 @@ void SQLClient::next_result(int statement_id, Vector<DeprecatedString> const& ro
     outln();
 }
 
-void SQLClient::results_exhausted(int statement_id, int total_rows)
+void SQLClient::results_exhausted(u64 statement_id, size_t total_rows)
 {
     if (on_results_exhausted)
         on_results_exhausted(statement_id, total_rows);
