@@ -7,6 +7,7 @@
 #include "Presentation.h"
 #include <AK/Forward.h>
 #include <AK/JsonObject.h>
+#include <AK/SourceGenerator.h>
 #include <LibCore/Stream.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Forward.h>
@@ -40,6 +41,39 @@ StringView Presentation::author() const
     if (m_metadata.contains("author"sv))
         return m_metadata.get("author"sv)->view();
     return "Unknown Author"sv;
+}
+
+Core::DateTime Presentation::last_modified() const
+{
+    auto maybe_time = m_metadata.get("last-modified"sv);
+    Optional<Core::DateTime> maybe_parsed_time;
+    if (maybe_time.has_value()) {
+        // FIXME: possibly allow more ISO 8601 formats, for now only full date+time is possible.
+        maybe_parsed_time = Core::DateTime::parse("%Y-%m-%dT%H:%M:%S"sv, maybe_time.value());
+    }
+
+    if (!maybe_parsed_time.has_value())
+        maybe_parsed_time = Core::DateTime::now();
+
+    return maybe_parsed_time.release_value();
+}
+
+unsigned Presentation::total_frame_count() const
+{
+    // FIXME: This would be nicer with a reduction function.
+    unsigned frame_count = 0;
+    for (auto const& slide : m_slides)
+        frame_count += slide.frame_count();
+    return frame_count;
+}
+
+unsigned Presentation::global_frame_number() const
+{
+    unsigned frame_count = 0;
+    for (size_t i = 0; i < m_current_slide.value(); ++i)
+        frame_count += m_slides[i].frame_count();
+    frame_count += m_current_frame_in_slide.value() + 1;
+    return frame_count;
 }
 
 void Presentation::next_frame()
@@ -163,4 +197,26 @@ void Presentation::paint(Gfx::Painter& painter) const
     // FIXME: Fill the background with a color depending on the color scheme
     painter.clear_rect(painter.clip_rect(), Color::White);
     current_slide().paint(painter, m_current_frame_in_slide.value(), scale);
+
+    // FIXME: Move the footer format to user settings and make it configurable by the presentation file itself.
+    painter.draw_text(painter.clip_rect(), format_footer("{presentation_title}: {slide_title} ({slide_number}/{slides_total}), frame {slide_frame_number}, last modified {date}"sv), Gfx::TextAlignment::BottomCenter);
+}
+
+DeprecatedString Presentation::format_footer(StringView format) const
+{
+    StringBuilder footer;
+    SourceGenerator footer_generator { footer, '{', '}' };
+    footer_generator.set("presentation_title"sv, title());
+    footer_generator.set("slide_title"sv, current_slide().title());
+    footer_generator.set("author"sv, author());
+    footer_generator.set("slides_total"sv, DeprecatedString::number(m_slides.size()));
+    footer_generator.set("frames_total"sv, DeprecatedString::number(total_frame_count()));
+    footer_generator.set("frame_number"sv, DeprecatedString::number(global_frame_number()));
+    footer_generator.set("slide_number"sv, DeprecatedString::number(current_slide_number() + 1));
+    footer_generator.set("slide_frames_total"sv, DeprecatedString::number(current_slide().frame_count()));
+    footer_generator.set("slide_frame_number"sv, DeprecatedString::number(current_frame_in_slide_number() + 1));
+    footer_generator.set("date"sv, last_modified().to_deprecated_string());
+
+    footer_generator.append(format);
+    return footer_generator.as_string();
 }
