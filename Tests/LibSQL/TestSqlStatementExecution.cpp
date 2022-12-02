@@ -21,24 +21,30 @@ namespace {
 
 constexpr char const* db_name = "/tmp/test.db";
 
-SQL::ResultOr<SQL::ResultSet> try_execute(NonnullRefPtr<SQL::Database> database, DeprecatedString const& sql)
+SQL::ResultOr<SQL::ResultSet> try_execute(NonnullRefPtr<SQL::Database> database, DeprecatedString const& sql, Vector<SQL::Value> placeholder_values = {})
 {
     auto parser = SQL::AST::Parser(SQL::AST::Lexer(sql));
     auto statement = parser.next_statement();
     EXPECT(!parser.has_errors());
     if (parser.has_errors())
         outln("{}", parser.errors()[0].to_deprecated_string());
-    return statement->execute(move(database));
+    return statement->execute(move(database), placeholder_values);
 }
 
-SQL::ResultSet execute(NonnullRefPtr<SQL::Database> database, DeprecatedString const& sql)
+SQL::ResultSet execute(NonnullRefPtr<SQL::Database> database, DeprecatedString const& sql, Vector<SQL::Value> placeholder_values = {})
 {
-    auto result = try_execute(move(database), sql);
+    auto result = try_execute(move(database), sql, move(placeholder_values));
     if (result.is_error()) {
         outln("{}", result.release_error().error_string());
         VERIFY_NOT_REACHED();
     }
     return result.release_value();
+}
+
+template<typename... Args>
+Vector<SQL::Value> placeholders(Args&&... args)
+{
+    return { SQL::Value(forward<Args>(args))... };
 }
 
 void create_schema(NonnullRefPtr<SQL::Database> database)
@@ -173,6 +179,59 @@ TEST_CASE(insert_without_column_names)
     auto rows_or_error = database->select_all(*table);
     EXPECT(!rows_or_error.is_error());
     EXPECT_EQ(rows_or_error.value().size(), 2u);
+}
+
+TEST_CASE(insert_with_placeholders)
+{
+    ScopeGuard guard([]() { unlink(db_name); });
+
+    auto database = SQL::Database::construct(db_name);
+    EXPECT(!database->open().is_error());
+    create_table(database);
+
+    {
+        auto result = try_execute(database, "INSERT INTO TestSchema.TestTable VALUES (?, ?);");
+        EXPECT(result.is_error());
+        EXPECT_EQ(result.error().error(), SQL::SQLErrorCode::InvalidNumberOfPlaceholderValues);
+
+        result = try_execute(database, "INSERT INTO TestSchema.TestTable VALUES (?, ?);", placeholders("Test_1"sv));
+        EXPECT(result.is_error());
+        EXPECT_EQ(result.error().error(), SQL::SQLErrorCode::InvalidNumberOfPlaceholderValues);
+
+        result = try_execute(database, "INSERT INTO TestSchema.TestTable VALUES (?, ?);", placeholders(42, 42));
+        EXPECT(result.is_error());
+        EXPECT_EQ(result.error().error(), SQL::SQLErrorCode::InvalidValueType);
+
+        result = try_execute(database, "INSERT INTO TestSchema.TestTable VALUES (?, ?);", placeholders("Test_1"sv, "Test_2"sv));
+        EXPECT(result.is_error());
+        EXPECT_EQ(result.error().error(), SQL::SQLErrorCode::InvalidValueType);
+    }
+    {
+        auto result = execute(database, "INSERT INTO TestSchema.TestTable VALUES (?, ?);", placeholders("Test_1"sv, 42));
+        EXPECT_EQ(result.size(), 1u);
+
+        result = execute(database, "SELECT TextColumn, IntColumn FROM TestSchema.TestTable ORDER BY TextColumn;");
+        EXPECT_EQ(result.size(), 1u);
+
+        EXPECT_EQ(result[0].row[0], "Test_1"sv);
+        EXPECT_EQ(result[0].row[1], 42);
+    }
+    {
+        auto result = execute(database, "INSERT INTO TestSchema.TestTable VALUES (?, ?), (?, ?);", placeholders("Test_2"sv, 43, "Test_3"sv, 44));
+        EXPECT_EQ(result.size(), 2u);
+
+        result = execute(database, "SELECT TextColumn, IntColumn FROM TestSchema.TestTable ORDER BY TextColumn;");
+        EXPECT_EQ(result.size(), 3u);
+
+        EXPECT_EQ(result[0].row[0], "Test_1"sv);
+        EXPECT_EQ(result[0].row[1], 42);
+
+        EXPECT_EQ(result[1].row[0], "Test_2"sv);
+        EXPECT_EQ(result[1].row[1], 43);
+
+        EXPECT_EQ(result[2].row[0], "Test_3"sv);
+        EXPECT_EQ(result[2].row[1], 44);
+    }
 }
 
 TEST_CASE(select_from_empty_table)

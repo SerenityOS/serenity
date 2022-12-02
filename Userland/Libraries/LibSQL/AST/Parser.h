@@ -19,6 +19,7 @@ namespace Limits {
 // https://www.sqlite.org/limits.html
 constexpr size_t maximum_expression_tree_depth = 1000;
 constexpr size_t maximum_subquery_depth = 100;
+constexpr size_t maximum_bound_parameters = 1000;
 }
 
 class Parser {
@@ -52,6 +53,7 @@ private:
         Vector<Error> m_errors;
         size_t m_current_expression_depth { 0 };
         size_t m_current_subquery_depth { 0 };
+        size_t m_bound_parameters { 0 };
     };
 
     NonnullRefPtr<Statement> parse_statement();
@@ -71,6 +73,7 @@ private:
     NonnullRefPtr<Expression> parse_secondary_expression(NonnullRefPtr<Expression> primary);
     bool match_secondary_expression() const;
     RefPtr<Expression> parse_literal_value_expression();
+    RefPtr<Expression> parse_bind_parameter_expression();
     RefPtr<Expression> parse_column_name_expression(DeprecatedString with_parsed_identifier = {}, bool with_parsed_period = false);
     RefPtr<Expression> parse_unary_operator_expression();
     RefPtr<Expression> parse_binary_operator_expression(NonnullRefPtr<Expression> lhs);

@@ -300,7 +300,8 @@ private:
 
 struct ExecutionContext {
     NonnullRefPtr<Database> database;
-    class Statement const* statement;
+    Statement const* statement { nullptr };
+    Span<Value const> placeholder_values {};
     Tuple* current_row { nullptr };
 };
 
@@ -359,6 +360,21 @@ private:
 class NullLiteral : public Expression {
 public:
     virtual ResultOr<Value> evaluate(ExecutionContext&) const override;
+};
+
+class Placeholder : public Expression {
+public:
+    explicit Placeholder(size_t parameter_index)
+        : m_parameter_index(parameter_index)
+    {
+    }
+
+    size_t parameter_index() const { return m_parameter_index; }
+
+    virtual ResultOr<Value> evaluate(ExecutionContext&) const override;
+
+private:
+    size_t m_parameter_index { 0 };
 };
 
 class NestedExpression : public Expression {
@@ -729,7 +745,7 @@ private:
 
 class Statement : public ASTNode {
 public:
-    ResultOr<ResultSet> execute(AK::NonnullRefPtr<Database> database) const;
+    ResultOr<ResultSet> execute(AK::NonnullRefPtr<Database> database, Span<Value const> placeholder_values = {}) const;
 
     virtual ResultOr<ResultSet> execute(ExecutionContext&) const
     {

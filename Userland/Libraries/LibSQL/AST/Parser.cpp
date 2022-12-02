@@ -401,7 +401,6 @@ NonnullRefPtr<Expression> Parser::parse_expression()
     if (match_secondary_expression())
         expression = parse_secondary_expression(move(expression));
 
-    // FIXME: Parse 'bind-parameter'.
     // FIXME: Parse 'function-name'.
     // FIXME: Parse 'raise-function'.
 
@@ -412,6 +411,9 @@ NonnullRefPtr<Expression> Parser::parse_expression()
 NonnullRefPtr<Expression> Parser::parse_primary_expression()
 {
     if (auto expression = parse_literal_value_expression())
+        return expression.release_nonnull();
+
+    if (auto expression = parse_bind_parameter_expression())
         return expression.release_nonnull();
 
     if (auto expression = parse_column_name_expression())
@@ -524,6 +526,21 @@ RefPtr<Expression> Parser::parse_literal_value_expression()
     }
     if (consume_if(TokenType::Null))
         return create_ast_node<NullLiteral>();
+
+    return {};
+}
+
+// https://sqlite.org/lang_expr.html#varparam
+RefPtr<Expression> Parser::parse_bind_parameter_expression()
+{
+    // FIXME: Support ?NNN, :AAAA, @AAAA, and $AAAA forms.
+    if (consume_if(TokenType::Placeholder)) {
+        auto parameter = m_parser_state.m_bound_parameters;
+        if (++m_parser_state.m_bound_parameters > Limits::maximum_bound_parameters)
+            syntax_error(DeprecatedString::formatted("Exceeded maximum number of bound parameters {}", Limits::maximum_bound_parameters));
+
+        return create_ast_node<Placeholder>(parameter);
+    }
 
     return {};
 }

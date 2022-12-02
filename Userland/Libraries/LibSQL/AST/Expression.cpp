@@ -29,6 +29,13 @@ ResultOr<Value> NullLiteral::evaluate(ExecutionContext&) const
     return Value {};
 }
 
+ResultOr<Value> Placeholder::evaluate(ExecutionContext& context) const
+{
+    if (parameter_index() >= context.placeholder_values.size())
+        return Result { SQLCommand::Unknown, SQLErrorCode::InvalidNumberOfPlaceholderValues };
+    return context.placeholder_values[parameter_index()];
+}
+
 ResultOr<Value> NestedExpression::evaluate(ExecutionContext& context) const
 {
     return expression()->evaluate(context);

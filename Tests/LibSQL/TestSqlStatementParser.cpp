@@ -752,6 +752,13 @@ TEST_CASE(nested_subquery_limit)
     EXPECT(parse(DeprecatedString::formatted("SELECT * FROM ({});"sv, subquery)).is_error());
 }
 
+TEST_CASE(bound_parameter_limit)
+{
+    auto subquery = DeprecatedString::repeated("?, "sv, SQL::AST::Limits::maximum_bound_parameters);
+    EXPECT(!parse(DeprecatedString::formatted("INSERT INTO table_name VALUES ({}42);"sv, subquery)).is_error());
+    EXPECT(parse(DeprecatedString::formatted("INSERT INTO table_name VALUES ({}?);"sv, subquery)).is_error());
+}
+
 TEST_CASE(describe_table)
 {
     EXPECT(parse("DESCRIBE"sv).is_error());

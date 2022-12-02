@@ -131,6 +131,19 @@ TEST_CASE(null_literal)
     validate("NULL"sv);
 }
 
+TEST_CASE(bind_parameter)
+{
+    auto validate = [](StringView sql) {
+        auto result = parse(sql);
+        EXPECT(!result.is_error());
+
+        auto expression = result.release_value();
+        EXPECT(is<SQL::AST::Placeholder>(*expression));
+    };
+
+    validate("?"sv);
+}
+
 TEST_CASE(column_name)
 {
     EXPECT(parse(".column_name"sv).is_error());
