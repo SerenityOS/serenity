@@ -47,7 +47,4 @@ void Slide::paint(Gfx::Painter& painter, unsigned int current_frame, Gfx::FloatS
         if (object.is_visible_during_frame(current_frame))
             object.paint(painter, display_scale);
     }
-
-    // FIXME: Move this to user settings.
-    painter.draw_text(painter.clip_rect(), title(), Gfx::TextAlignment::BottomCenter);
 }

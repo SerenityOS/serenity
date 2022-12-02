@@ -12,6 +12,7 @@
 #include <AK/HashMap.h>
 #include <AK/NonnullOwnPtr.h>
 #include <AK/Vector.h>
+#include <LibCore/DateTime.h>
 #include <LibGfx/Painter.h>
 #include <LibGfx/Size.h>
 
@@ -28,11 +29,15 @@ public:
 
     StringView title() const;
     StringView author() const;
+    Core::DateTime last_modified() const;
     Gfx::IntSize normative_size() const { return m_normative_size; }
 
     Slide const& current_slide() const { return m_slides[m_current_slide.value()]; }
     unsigned current_slide_number() const { return m_current_slide.value(); }
     unsigned current_frame_in_slide_number() const { return m_current_frame_in_slide.value(); }
+
+    unsigned total_frame_count() const;
+    unsigned global_frame_number() const;
 
     void next_frame();
     void previous_frame();
@@ -40,6 +45,14 @@ public:
 
     // This assumes that the caller has clipped the painter to exactly the display area.
     void paint(Gfx::Painter& painter) const;
+
+    // Formats a footer with user-supplied formatting parameters.
+    // {presentation_title}, {slide_title}, {author}, {slides_total}, {frames_total}, {date}
+    // {slide_number}: Slide number
+    // {slide_frame_number}: Number of frame within slide
+    // {slide_frames_total}: Total number of frames within the current slide
+    // {frame_number}: Counts all frames on all slides
+    DeprecatedString format_footer(StringView format) const;
 
 private:
     static HashMap<DeprecatedString, DeprecatedString> parse_metadata(JsonObject const& metadata_object);
