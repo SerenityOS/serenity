@@ -84,7 +84,6 @@ private:
     template<FixmeEnableHacksForBetterPathPainting path_hacks>
     void draw_anti_aliased_line(FloatPoint, FloatPoint, Color, float thickness, Painter::LineStyle style, Color alternate_color);
     void stroke_segment_intersection(FloatPoint const& current_line_a, FloatPoint const& current_line_b, FloatLine const& previous_line, Color, float thickness);
-    FloatQuad build_rotated_rectangle(FloatPoint const& direction, float width);
 
     Painter& m_underlying_painter;
     AffineTransform m_transform;
