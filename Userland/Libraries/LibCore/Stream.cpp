@@ -435,13 +435,13 @@ ErrorOr<Bytes> PosixSocketHelper::read(Bytes buffer, int flags)
     return buffer.trim(nread);
 }
 
-ErrorOr<size_t> PosixSocketHelper::write(ReadonlyBytes buffer)
+ErrorOr<size_t> PosixSocketHelper::write(ReadonlyBytes buffer, int flags)
 {
     if (!is_open()) {
         return Error::from_errno(ENOTCONN);
     }
 
-    return TRY(System::send(m_fd, buffer.data(), buffer.size(), 0));
+    return TRY(System::send(m_fd, buffer.data(), buffer.size(), flags));
 }
 
 void PosixSocketHelper::close()
@@ -574,9 +574,9 @@ ErrorOr<NonnullOwnPtr<UDPSocket>> UDPSocket::connect(SocketAddress const& addres
     return socket;
 }
 
-ErrorOr<NonnullOwnPtr<LocalSocket>> LocalSocket::connect(String const& path)
+ErrorOr<NonnullOwnPtr<LocalSocket>> LocalSocket::connect(String const& path, PreventSIGPIPE prevent_sigpipe)
 {
-    auto socket = TRY(adopt_nonnull_own_or_enomem(new (nothrow) LocalSocket()));
+    auto socket = TRY(adopt_nonnull_own_or_enomem(new (nothrow) LocalSocket(prevent_sigpipe)));
 
     auto fd = TRY(create_fd(SocketDomain::Local, SocketType::Stream));
     socket->m_helper.set_fd(fd);
@@ -587,13 +587,13 @@ ErrorOr<NonnullOwnPtr<LocalSocket>> LocalSocket::connect(String const& path)
     return socket;
 }
 
-ErrorOr<NonnullOwnPtr<LocalSocket>> LocalSocket::adopt_fd(int fd)
+ErrorOr<NonnullOwnPtr<LocalSocket>> LocalSocket::adopt_fd(int fd, PreventSIGPIPE prevent_sigpipe)
 {
     if (fd < 0) {
         return Error::from_errno(EBADF);
     }
 
-    auto socket = TRY(adopt_nonnull_own_or_enomem(new (nothrow) LocalSocket()));
+    auto socket = TRY(adopt_nonnull_own_or_enomem(new (nothrow) LocalSocket(prevent_sigpipe)));
     socket->m_helper.set_fd(fd);
     socket->setup_notifier();
     return socket;
