@@ -49,6 +49,29 @@ ErrorOr<NonnullRefPtr<SlideObject>> SlideObject::parse_slide_object(JsonObject c
 SlideObject::SlideObject()
 {
     REGISTER_RECT_PROPERTY("rect", rect, set_rect);
+
+    register_property(
+        "frames",
+        [this] {
+            auto const& frames = this->frames();
+            JsonArray json_frames;
+            for (auto element : frames)
+                json_frames.append(element);
+
+            return json_frames;
+        },
+        [this](auto& value) {
+            if (!value.is_array())
+                return false;
+
+            HashTable<unsigned> frames;
+            auto const& values = value.as_array().values();
+            for (auto const& element : values)
+                frames.set(element.template to_number<unsigned>(0));
+            this->set_frames(frames);
+
+            return true;
+        });
 }
 
 // FIXME: Consider drawing a placeholder box instead.

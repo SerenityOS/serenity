@@ -7,14 +7,17 @@
 #include "Slide.h"
 #include <AK/JsonObject.h>
 #include <AK/NonnullRefPtrVector.h>
+#include <AK/StringUtils.h>
+#include <AK/TypeCasts.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Painter.h>
 #include <LibGfx/Size.h>
 #include <LibGfx/TextAlignment.h>
 
-Slide::Slide(NonnullRefPtrVector<SlideObject> slide_objects, DeprecatedString title)
+Slide::Slide(NonnullRefPtrVector<SlideObject> slide_objects, DeprecatedString title, unsigned frame_count)
     : m_slide_objects(move(slide_objects))
     , m_title(move(title))
+    , m_frame_count(frame_count)
 {
 }
 
@@ -22,6 +25,8 @@ ErrorOr<Slide> Slide::parse_slide(JsonObject const& slide_json, NonnullRefPtr<GU
 {
     // FIXME: Use the text with the "title" role for a title, if there is no title given.
     auto title = slide_json.get("title"sv).as_string_or("Untitled slide");
+
+    auto frame_count = slide_json.get("frames"sv).to_number<unsigned>(1);
 
     auto const& maybe_slide_objects = slide_json.get("objects"sv);
     if (!maybe_slide_objects.is_array())
@@ -38,7 +43,7 @@ ErrorOr<Slide> Slide::parse_slide(JsonObject const& slide_json, NonnullRefPtr<GU
         slide_objects.append(move(slide_object));
     }
 
-    return Slide { move(slide_objects), title };
+    return Slide { move(slide_objects), title, frame_count };
 }
 
 void Slide::paint(Gfx::Painter& painter, unsigned int current_frame, Gfx::FloatSize display_scale) const
