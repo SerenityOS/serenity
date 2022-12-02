@@ -29,26 +29,26 @@ void SQLClient::connection_error(u64 connection_id, SQLErrorCode const& code, De
         warnln("Connection error for connection_id {}: {} ({})", connection_id, message, to_underlying(code));
 }
 
-void SQLClient::execution_error(u64 statement_id, SQLErrorCode const& code, DeprecatedString const& message)
+void SQLClient::execution_error(u64 statement_id, u64 execution_id, SQLErrorCode const& code, DeprecatedString const& message)
 {
     if (on_execution_error)
-        on_execution_error(statement_id, code, message);
+        on_execution_error(statement_id, execution_id, code, message);
     else
         warnln("Execution error for statement_id {}: {} ({})", statement_id, message, to_underlying(code));
 }
 
-void SQLClient::execution_success(u64 statement_id, bool has_results, size_t created, size_t updated, size_t deleted)
+void SQLClient::execution_success(u64 statement_id, u64 execution_id, bool has_results, size_t created, size_t updated, size_t deleted)
 {
     if (on_execution_success)
-        on_execution_success(statement_id, has_results, created, updated, deleted);
+        on_execution_success(statement_id, execution_id, has_results, created, updated, deleted);
     else
         outln("{} row(s) created, {} updated, {} deleted", created, updated, deleted);
 }
 
-void SQLClient::next_result(u64 statement_id, Vector<DeprecatedString> const& row)
+void SQLClient::next_result(u64 statement_id, u64 execution_id, Vector<DeprecatedString> const& row)
 {
     if (on_next_result) {
-        on_next_result(statement_id, row);
+        on_next_result(statement_id, execution_id, row);
         return;
     }
     bool first = true;
@@ -61,10 +61,10 @@ void SQLClient::next_result(u64 statement_id, Vector<DeprecatedString> const& ro
     outln();
 }
 
-void SQLClient::results_exhausted(u64 statement_id, size_t total_rows)
+void SQLClient::results_exhausted(u64 statement_id, u64 execution_id, size_t total_rows)
 {
     if (on_results_exhausted)
-        on_results_exhausted(statement_id, total_rows);
+        on_results_exhausted(statement_id, execution_id, total_rows);
     else
         outln("{} total row(s)", total_rows);
 }

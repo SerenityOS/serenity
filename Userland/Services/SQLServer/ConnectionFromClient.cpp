@@ -71,17 +71,19 @@ Messages::SQLServer::PrepareStatementResponse ConnectionFromClient::prepare_stat
     return { result.value() };
 }
 
-void ConnectionFromClient::execute_statement(u64 statement_id, Vector<SQL::Value> const& placeholder_values)
+Messages::SQLServer::ExecuteStatementResponse ConnectionFromClient::execute_statement(u64 statement_id, Vector<SQL::Value> const& placeholder_values)
 {
     dbgln_if(SQLSERVER_DEBUG, "ConnectionFromClient::execute_query_statement(statement_id: {})", statement_id);
+
     auto statement = SQLStatement::statement_for(statement_id);
     if (statement && statement->connection()->client_id() == client_id()) {
         // FIXME: Support taking parameters from IPC requests.
-        statement->execute(move(const_cast<Vector<SQL::Value>&>(placeholder_values)));
-    } else {
-        dbgln_if(SQLSERVER_DEBUG, "Statement has disappeared");
-        async_execution_error(statement_id, SQL::SQLErrorCode::StatementUnavailable, DeprecatedString::formatted("{}", statement_id));
+        return statement->execute(move(const_cast<Vector<SQL::Value>&>(placeholder_values)));
     }
+
+    dbgln_if(SQLSERVER_DEBUG, "Statement has disappeared");
+    async_execution_error(statement_id, -1, SQL::SQLErrorCode::StatementUnavailable, DeprecatedString::formatted("{}", statement_id));
+    return { {} };
 }
 
 }
