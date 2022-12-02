@@ -42,6 +42,8 @@ void Board::randomize()
             set_cell(row, column, get_random_uniform(m_colors.size()));
         }
     }
+    m_previous_value = m_cells[0][0];
+    m_current_value = m_cells[0][0];
 }
 
 void Board::resize(size_t rows, size_t columns)

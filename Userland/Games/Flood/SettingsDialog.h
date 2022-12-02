@@ -14,12 +14,10 @@ class SettingsDialog : public GUI::Dialog {
 public:
     size_t board_rows() const { return m_board_rows; }
     size_t board_columns() const { return m_board_columns; }
-    StringView color_scheme() const { return m_color_scheme; }
 
 private:
-    SettingsDialog(GUI::Window* parent, size_t board_rows, size_t board_columns, StringView color_scheme);
+    SettingsDialog(GUI::Window* parent, size_t board_rows, size_t board_columns);
 
     size_t m_board_rows;
     size_t m_board_columns;
-    DeprecatedString m_color_scheme;
 };

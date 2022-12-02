@@ -9,7 +9,6 @@
 #include <AK/URL.h>
 #include <Games/Flood/FloodWindowGML.h>
 #include <LibConfig/Client.h>
-#include <LibCore/ConfigFile.h>
 #include <LibCore/System.h>
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/Action.h>
@@ -21,49 +20,6 @@
 #include <LibGUI/Window.h>
 #include <LibGfx/Painter.h>
 #include <LibMain/Main.h>
-
-// FIXME: Move this into a library. Also consider simplifying obtaining 'color_scheme_names' in
-// SettingsDialog.cpp and Userland/Applications/TerminalSettings/TerminalSettingsWidget.cpp.
-// Adapted from Libraries/LibVT/TerminalWidget.cpp::TerminalWidget::set_color_scheme.
-static ErrorOr<Vector<Color>> get_color_scheme_from_string(StringView name)
-{
-    if (name.contains('/')) {
-        return Error::from_string_literal("Shenanigans! Color scheme names can't contain slashes.");
-    }
-
-    constexpr StringView color_names[] = {
-        "Black"sv,
-        "Red"sv,
-        "Green"sv,
-        "Yellow"sv,
-        "Blue"sv,
-        "Magenta"sv,
-        "Cyan"sv,
-        "White"sv
-    };
-
-    auto const path = DeprecatedString::formatted("/res/color-schemes/{}.ini", name);
-    auto color_config_or_error = Core::ConfigFile::open(path);
-    if (color_config_or_error.is_error()) {
-        return Error::from_string_view(DeprecatedString::formatted("Unable to read color scheme file '{}': {}", path, color_config_or_error.error()));
-    }
-    auto const color_config = color_config_or_error.release_value();
-    Vector<Color> colors;
-
-    for (u8 color_index = 0; color_index < 8; ++color_index) {
-        auto const rgb = Gfx::Color::from_string(color_config->read_entry("Bright", color_names[color_index]));
-        if (rgb.has_value())
-            colors.append(Color::from_argb(rgb.value().value()));
-    }
-
-    auto const default_background = Gfx::Color::from_string(color_config->read_entry("Primary", "Background"));
-    if (default_background.has_value())
-        colors.append(default_background.value());
-    else
-        colors.append(Color::DarkGray);
-
-    return colors;
-}
 
 // FIXME: Improve this AI.
 // Currently, this AI always chooses a move that gets the most cells flooded immediately.
@@ -118,11 +74,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     size_t board_rows = Config::read_i32("Flood"sv, ""sv, "board_rows"sv, 16);
     size_t board_columns = Config::read_i32("Flood"sv, ""sv, "board_columns"sv, 16);
-    DeprecatedString color_scheme = Config::read_string("Flood"sv, ""sv, "color_scheme"sv, "Default"sv);
 
     Config::write_i32("Flood"sv, ""sv, "board_rows"sv, board_rows);
     Config::write_i32("Flood"sv, ""sv, "board_columns"sv, board_columns);
-    Config::write_string("Flood"sv, ""sv, "color_scheme"sv, color_scheme);
 
     window->set_double_buffering_enabled(false);
     window->set_title("Flood");
@@ -132,10 +86,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (!main_widget.load_from_gml(flood_window_gml))
         VERIFY_NOT_REACHED();
 
-    auto colors = TRY(get_color_scheme_from_string(color_scheme));
-    auto background_color = colors.take_last();
-
-    auto board_widget = TRY(main_widget.find_descendant_of_type_named<GUI::Widget>("board_widget_container")->try_add<BoardWidget>(board_rows, board_columns, move(colors), move(background_color)));
+    auto board_widget = TRY(main_widget.find_descendant_of_type_named<GUI::Widget>("board_widget_container")->try_add<BoardWidget>(board_rows, board_columns));
     board_widget->board()->randomize();
     int ai_moves = get_number_of_moves_from_ai(*board_widget->board());
     int moves_made = 0;
@@ -161,21 +112,15 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     update();
 
     auto change_settings = [&] {
-        auto settings_dialog = SettingsDialog::construct(window, board_rows, board_columns, color_scheme);
+        auto settings_dialog = SettingsDialog::construct(window, board_rows, board_columns);
         if (settings_dialog->exec() != GUI::Dialog::ExecResult::OK)
             return;
 
         board_rows = settings_dialog->board_rows();
         board_columns = settings_dialog->board_columns();
-        color_scheme = settings_dialog->color_scheme();
 
         Config::write_i32("Flood"sv, ""sv, "board_rows"sv, board_rows);
         Config::write_i32("Flood"sv, ""sv, "board_columns"sv, board_columns);
-        Config::write_string("Flood"sv, ""sv, "color_scheme"sv, color_scheme);
-
-        auto colors = MUST(get_color_scheme_from_string(color_scheme));
-        board_widget->set_background_color(colors.take_last());
-        board_widget->board()->set_color_scheme(move(colors));
 
         GUI::MessageBox::show(settings_dialog, "New settings have been saved and will be applied on a new game"sv, "Settings Changed Successfully"sv, GUI::MessageBox::Type::Information);
     };

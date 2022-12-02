@@ -8,12 +8,28 @@
 
 #include <LibGUI/Menu.h>
 #include <LibGUI/Painter.h>
+#include <LibGfx/Palette.h>
 
-BoardWidget::BoardWidget(size_t rows, size_t columns, Vector<Color> colors, Color background_color)
+BoardWidget::BoardWidget(size_t rows, size_t columns)
     : m_board(make<Board>(rows, columns))
-    , m_background_color(background_color)
 {
-    m_board->set_color_scheme(move(colors));
+    update_color_scheme();
+}
+
+void BoardWidget::update_color_scheme()
+{
+    auto const& palette = GUI::Widget::palette();
+    m_board->set_color_scheme({
+        palette.bright_black(),
+        palette.bright_red(),
+        palette.bright_green(),
+        palette.bright_yellow(),
+        palette.bright_blue(),
+        palette.bright_magenta(),
+        palette.bright_cyan(),
+        palette.bright_white(),
+    });
+    m_background_color = palette.background();
 }
 
 void BoardWidget::resize_board(size_t rows, size_t columns)
@@ -21,11 +37,6 @@ void BoardWidget::resize_board(size_t rows, size_t columns)
     if (columns == m_board->columns() && rows == m_board->rows())
         return;
     m_board->resize(rows, columns);
-}
-
-void BoardWidget::set_background_color(Color const background)
-{
-    m_background_color = background;
 }
 
 int BoardWidget::get_cell_size() const
@@ -43,6 +54,13 @@ Gfx::IntSize BoardWidget::get_board_offset() const
         (width() - cell_size * m_board->columns()) / 2,
         (height() - cell_size * m_board->rows()) / 2,
     };
+}
+
+void BoardWidget::event(Core::Event& event)
+{
+    if (event.type() == GUI::Event::ThemeChange)
+        update_color_scheme();
+    GUI::Frame::event(event);
 }
 
 void BoardWidget::paint_event(GUI::PaintEvent& event)
