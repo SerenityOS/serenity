@@ -140,8 +140,30 @@ public:
     Color syntax_member() const { return color(ColorRole::SyntaxMember); }
     Color syntax_parameter() const { return color(ColorRole::SyntaxParameter); }
 
+    Color background() const { return color(ColorRole::ColorSchemeBackground); }
+    Color foreground() const { return color(ColorRole::ColorSchemeForeground); }
+
+    Color black() const { return color(ColorRole::Black); }
+    Color red() const { return color(ColorRole::Red); }
+    Color green() const { return color(ColorRole::Green); }
+    Color yellow() const { return color(ColorRole::Yellow); }
+    Color blue() const { return color(ColorRole::Blue); }
+    Color magenta() const { return color(ColorRole::Magenta); }
+    Color cyan() const { return color(ColorRole::Cyan); }
+    Color white() const { return color(ColorRole::White); }
+
+    Color bright_black() const { return color(ColorRole::BrightBlack); }
+    Color bright_red() const { return color(ColorRole::BrightRed); }
+    Color bright_green() const { return color(ColorRole::BrightGreen); }
+    Color bright_yellow() const { return color(ColorRole::BrightYellow); }
+    Color bright_blue() const { return color(ColorRole::BrightBlue); }
+    Color bright_magenta() const { return color(ColorRole::BrightMagenta); }
+    Color bright_cyan() const { return color(ColorRole::BrightCyan); }
+    Color bright_white() const { return color(ColorRole::BrightWhite); }
+
     Gfx::TextAlignment title_alignment() const { return alignment(AlignmentRole::TitleAlignment); }
 
+    bool bold_text_as_bright() const { return flag(FlagRole::BoldTextAsBright); }
     bool is_dark() const { return flag(FlagRole::IsDark); }
     bool title_buttons_icon_only() const { return flag(FlagRole::TitleButtonsIconOnly); }
 
