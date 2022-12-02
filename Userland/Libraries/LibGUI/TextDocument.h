@@ -246,6 +246,27 @@ private:
     TextRange m_range;
 };
 
+class InsertLineCommand : public TextDocumentUndoCommand {
+public:
+    enum class InsertPosition {
+        Above,
+        Below,
+    };
+
+    InsertLineCommand(TextDocument&, TextPosition, DeprecatedString&&, InsertPosition);
+    virtual ~InsertLineCommand() = default;
+    virtual void undo() override;
+    virtual void redo() override;
+    virtual DeprecatedString action_text() const override;
+
+private:
+    size_t compute_line_number() const;
+
+    TextPosition m_cursor;
+    DeprecatedString m_text;
+    InsertPosition m_pos;
+};
+
 class ReplaceAllTextCommand final : public GUI::TextDocumentUndoCommand {
 
 public:

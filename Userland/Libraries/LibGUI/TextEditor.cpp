@@ -890,6 +890,17 @@ void TextEditor::keydown_event(KeyEvent& event)
         try_update_autocomplete();
     } };
 
+    if (is_multi_line() && !event.alt() && event.ctrl() && event.key() == KeyCode::Key_Return) {
+        if (!is_editable())
+            return;
+
+        size_t indent_length = current_line().leading_spaces();
+        DeprecatedString indent = current_line().to_utf8().substring(0, indent_length);
+        auto insert_pos = event.shift() ? InsertLineCommand::InsertPosition::Above : InsertLineCommand::InsertPosition::Below;
+        execute<InsertLineCommand>(m_cursor, move(indent), insert_pos);
+        return;
+    }
+
     if (is_multi_line() && !event.shift() && !event.alt() && event.ctrl() && event.key() == KeyCode::Key_Space) {
         if (m_autocomplete_provider) {
             try_show_autocomplete(UserRequestedAutocomplete::Yes);
