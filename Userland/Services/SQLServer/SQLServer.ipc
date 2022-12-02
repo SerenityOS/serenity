@@ -1,7 +1,9 @@
+#include <LibSQL/Value.h>
+
 endpoint SQLServer
 {
     connect(DeprecatedString name) => (int connection_id)
     prepare_statement(int connection_id, DeprecatedString statement) => (int statement_id)
-    execute_statement(int statement_id) =|
+    execute_statement(int statement_id, Vector<SQL::Value> placeholder_values) =|
     disconnect(int connection_id) =|
 }

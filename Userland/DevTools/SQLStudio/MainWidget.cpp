@@ -479,7 +479,7 @@ DeprecatedString MainWidget::read_next_sql_statement_of_editor()
     } while ((m_editor_line_level > 0) || piece.is_empty());
 
     auto statement_id = m_sql_client->prepare_statement(m_connection_id, piece.to_deprecated_string());
-    m_sql_client->async_execute_statement(statement_id);
+    m_sql_client->async_execute_statement(statement_id, {});
 
     return piece.to_deprecated_string();
 }
