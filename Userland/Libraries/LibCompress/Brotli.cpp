@@ -29,7 +29,7 @@ ErrorOr<size_t> BrotliDecompressionStream::CanonicalCode::read_symbol(LittleEndi
 }
 
 BrotliDecompressionStream::BrotliDecompressionStream(Stream& stream)
-    : m_input_stream(stream)
+    : m_input_stream(Core::Stream::Handle(stream))
 {
 }
 
