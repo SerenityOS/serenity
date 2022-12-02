@@ -31,9 +31,7 @@ void Presentation::append_slide(Slide slide)
 
 StringView Presentation::title() const
 {
-    if (m_metadata.contains("title"sv))
-        return m_metadata.get("title"sv)->view();
-    return "Untitled Presentation"sv;
+    return m_metadata.get("title"sv).value_or(m_metadata.get("file-name"sv).value_or("Untitled Presentation"sv));
 }
 
 StringView Presentation::author() const
@@ -134,6 +132,7 @@ ErrorOr<NonnullOwnPtr<Presentation>> Presentation::load_from_file(StringView fil
     auto const& raw_metadata = maybe_metadata.as_object();
     auto metadata = parse_metadata(raw_metadata);
     auto size = TRY(parse_presentation_size(raw_metadata));
+    metadata.set("file-name", file_name);
 
     auto presentation = Presentation::construct(size, metadata);
 
