@@ -19,8 +19,20 @@ public:
     {
     }
 
-    void draw_line(FloatPoint const&, FloatPoint const&, Color, float thickness = 1, Painter::LineStyle style = Painter::LineStyle::Solid, Color alternate_color = Color::Transparent);
-    void draw_line_for_path(FloatPoint const&, FloatPoint const&, Color, float thickness = 1, Painter::LineStyle style = Painter::LineStyle::Solid, Color alternate_color = Color::Transparent);
+    enum class LineLengthMode {
+        // E.g. A line from 0,1 -> 2,1 is 3px long
+        PointToPoint,
+        // E.g. A line from 0,1 -> 2,1 is 2px long
+        Distance
+    };
+
+    void draw_line(FloatPoint const&, FloatPoint const&, Color, float thickness = 1, Painter::LineStyle style = Painter::LineStyle::Solid, Color alternate_color = Color::Transparent, LineLengthMode line_length_mode = LineLengthMode::PointToPoint);
+    void draw_line_for_path(FloatPoint const&, FloatPoint const&, Color, float thickness = 1, Painter::LineStyle style = Painter::LineStyle::Solid, Color alternate_color = Color::Transparent, LineLengthMode line_length_mode = LineLengthMode::PointToPoint);
+    void draw_line_for_fill_path(FloatPoint const& from, FloatPoint const& to, Color color, float thickness = 1)
+    {
+        draw_line_for_path(from, to, color, thickness, Painter::LineStyle::Solid, Color {}, LineLengthMode::Distance);
+    }
+
     void fill_path(Path&, Color, Painter::WindingRule rule = Painter::WindingRule::Nonzero);
     void stroke_path(Path const&, Color, float thickness);
     void draw_quadratic_bezier_curve(FloatPoint const& control_point, FloatPoint const&, FloatPoint const&, Color, float thickness = 1, Painter::LineStyle style = Painter::LineStyle::Solid);
@@ -81,8 +93,10 @@ private:
         Yes,
         No,
     };
+
     template<FixmeEnableHacksForBetterPathPainting path_hacks>
-    void draw_anti_aliased_line(FloatPoint, FloatPoint, Color, float thickness, Painter::LineStyle style, Color alternate_color);
+    void draw_anti_aliased_line(FloatPoint, FloatPoint, Color, float thickness, Painter::LineStyle style, Color alternate_color, LineLengthMode line_length_mode = LineLengthMode::PointToPoint);
+
     void stroke_segment_intersection(FloatPoint const& current_line_a, FloatPoint const& current_line_b, FloatLine const& previous_line, Color, float thickness);
 
     Painter& m_underlying_painter;

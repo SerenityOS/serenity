@@ -19,7 +19,7 @@
 namespace Gfx {
 
 template<AntiAliasingPainter::FixmeEnableHacksForBetterPathPainting path_hacks>
-void AntiAliasingPainter::draw_anti_aliased_line(FloatPoint actual_from, FloatPoint actual_to, Color color, float thickness, Painter::LineStyle style, Color)
+void AntiAliasingPainter::draw_anti_aliased_line(FloatPoint actual_from, FloatPoint actual_to, Color color, float thickness, Painter::LineStyle style, Color, LineLengthMode line_length_mode)
 {
     // FIXME: Implement this :P
     VERIFY(style == Painter::LineStyle::Solid);
@@ -45,7 +45,7 @@ void AntiAliasingPainter::draw_anti_aliased_line(FloatPoint actual_from, FloatPo
     auto mapped_from = m_transform.map(actual_from);
     auto mapped_to = m_transform.map(actual_to);
     auto distance = mapped_to.distance_from(mapped_from);
-    auto length = distance + 1;
+    auto length = distance + (line_length_mode == LineLengthMode::PointToPoint);
 
     // Axis-aligned lines:
     if (mapped_from.y() == mapped_to.y()) {
@@ -107,7 +107,7 @@ void AntiAliasingPainter::draw_anti_aliased_line(FloatPoint actual_from, FloatPo
     float x_error = 0;
     float x_error_per_y = x_gradient - x_step;
 
-    auto y_offset = int_thickness;
+    auto y_offset = int_thickness + 1;
     auto x_offset = int(x_gradient * y_offset);
     int const line_start_x = mapped_from.x();
     int const line_start_y = mapped_from.y();
@@ -154,9 +154,9 @@ void AntiAliasingPainter::draw_anti_aliased_line(FloatPoint actual_from, FloatPo
     }
 }
 
-void AntiAliasingPainter::draw_line_for_path(FloatPoint const& actual_from, FloatPoint const& actual_to, Color color, float thickness, Painter::LineStyle style, Color alternate_color)
+void AntiAliasingPainter::draw_line_for_path(FloatPoint const& actual_from, FloatPoint const& actual_to, Color color, float thickness, Painter::LineStyle style, Color alternate_color, LineLengthMode line_length_mode)
 {
-    draw_anti_aliased_line<FixmeEnableHacksForBetterPathPainting::Yes>(actual_from, actual_to, color, thickness, style, alternate_color);
+    draw_anti_aliased_line<FixmeEnableHacksForBetterPathPainting::Yes>(actual_from, actual_to, color, thickness, style, alternate_color, line_length_mode);
 }
 
 void AntiAliasingPainter::draw_dotted_line(IntPoint point1, IntPoint point2, Color color, int thickness)
@@ -201,11 +201,11 @@ void AntiAliasingPainter::draw_dotted_line(IntPoint point1, IntPoint point2, Col
     }
 }
 
-void AntiAliasingPainter::draw_line(FloatPoint const& actual_from, FloatPoint const& actual_to, Color color, float thickness, Painter::LineStyle style, Color alternate_color)
+void AntiAliasingPainter::draw_line(FloatPoint const& actual_from, FloatPoint const& actual_to, Color color, float thickness, Painter::LineStyle style, Color alternate_color, LineLengthMode line_length_mode)
 {
     if (style == Painter::LineStyle::Dotted)
         return draw_dotted_line(actual_from.to_rounded<int>(), actual_to.to_rounded<int>(), color, static_cast<int>(round(thickness)));
-    draw_anti_aliased_line<FixmeEnableHacksForBetterPathPainting::No>(actual_from, actual_to, color, thickness, style, alternate_color);
+    draw_anti_aliased_line<FixmeEnableHacksForBetterPathPainting::No>(actual_from, actual_to, color, thickness, style, alternate_color, line_length_mode);
 }
 
 void AntiAliasingPainter::fill_path(Path& path, Color color, Painter::WindingRule rule)
