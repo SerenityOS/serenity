@@ -1232,10 +1232,10 @@ public:
 
     using Size = Variant<Extent, CircleSize, EllipseSize>;
 
-    static NonnullRefPtr<RadialGradientStyleValue> create(EndingShape ending_shape, Size size, PositionValue position, Vector<LinearColorStopListElement> color_stop_list)
+    static NonnullRefPtr<RadialGradientStyleValue> create(EndingShape ending_shape, Size size, PositionValue position, Vector<LinearColorStopListElement> color_stop_list, GradientRepeating repeating)
     {
         VERIFY(color_stop_list.size() >= 2);
-        return adopt_ref(*new RadialGradientStyleValue(ending_shape, size, position, move(color_stop_list)));
+        return adopt_ref(*new RadialGradientStyleValue(ending_shape, size, position, move(color_stop_list), repeating));
     }
 
     virtual String to_string() const override;
@@ -1255,15 +1255,18 @@ public:
 
     Gfx::FloatSize resolve_size(Layout::Node const&, Gfx::FloatPoint, Gfx::FloatRect const&) const;
 
+    bool is_repeating() const { return m_repeating == GradientRepeating::Yes; }
+
     virtual ~RadialGradientStyleValue() override = default;
 
 private:
-    RadialGradientStyleValue(EndingShape ending_shape, Size size, PositionValue position, Vector<LinearColorStopListElement> color_stop_list)
+    RadialGradientStyleValue(EndingShape ending_shape, Size size, PositionValue position, Vector<LinearColorStopListElement> color_stop_list, GradientRepeating repeating)
         : AbstractImageStyleValue(Type::RadialGradient)
         , m_ending_shape(ending_shape)
         , m_size(size)
         , m_position(position)
         , m_color_stop_list(move(color_stop_list))
+        , m_repeating(repeating)
     {
     }
 
@@ -1271,6 +1274,7 @@ private:
     Size m_size;
     PositionValue m_position;
     Vector<LinearColorStopListElement> m_color_stop_list;
+    GradientRepeating m_repeating;
 
     struct ResolvedData {
         Painting::RadialGradientData data;

@@ -1984,6 +1984,8 @@ bool PositionValue::operator==(PositionValue const& other) const
 String RadialGradientStyleValue::to_string() const
 {
     StringBuilder builder;
+    if (is_repeating())
+        builder.append("repeating-"sv);
     builder.appendff("radial-gradient({} "sv,
         m_ending_shape == EndingShape::Circle ? "circle"sv : "ellipse"sv);
 
