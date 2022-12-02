@@ -919,6 +919,55 @@ void RemoveTextCommand::undo()
     m_document.set_all_cursors(new_cursor);
 }
 
+InsertLineCommand::InsertLineCommand(TextDocument& document, TextPosition cursor, DeprecatedString&& text, InsertPosition pos)
+    : TextDocumentUndoCommand(document)
+    , m_cursor(cursor)
+    , m_text(move(text))
+    , m_pos(pos)
+{
+}
+
+void InsertLineCommand::redo()
+{
+    size_t line_number = compute_line_number();
+    m_document.insert_line(line_number, make<TextDocumentLine>(m_document, m_text));
+    m_document.set_all_cursors(TextPosition { line_number, m_document.line(line_number).length() });
+}
+
+void InsertLineCommand::undo()
+{
+    size_t line_number = compute_line_number();
+    m_document.remove_line(line_number);
+    m_document.set_all_cursors(m_cursor);
+}
+
+size_t InsertLineCommand::compute_line_number() const
+{
+    if (m_pos == InsertPosition::Above)
+        return m_cursor.line();
+
+    if (m_pos == InsertPosition::Below)
+        return m_cursor.line() + 1;
+
+    VERIFY_NOT_REACHED();
+}
+
+DeprecatedString InsertLineCommand::action_text() const
+{
+    StringBuilder action_text_builder;
+    action_text_builder.append("Insert Line"sv);
+
+    if (m_pos == InsertPosition::Above) {
+        action_text_builder.append(" (Above)"sv);
+    } else if (m_pos == InsertPosition::Below) {
+        action_text_builder.append(" (Below)"sv);
+    } else {
+        VERIFY_NOT_REACHED();
+    }
+
+    return action_text_builder.to_deprecated_string();
+}
+
 ReplaceAllTextCommand::ReplaceAllTextCommand(GUI::TextDocument& document, DeprecatedString const& text, GUI::TextRange const& range, DeprecatedString const& action_text)
     : TextDocumentUndoCommand(document)
     , m_text(text)
