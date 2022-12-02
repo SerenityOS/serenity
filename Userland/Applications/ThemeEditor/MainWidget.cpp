@@ -183,6 +183,29 @@ static const PropertyTab syntax_highlighting_tab {
     }
 };
 
+static const PropertyTab color_scheme_tab {
+    "Color Scheme",
+    {
+        { "General",
+            { { Gfx::ColorRole::Black },
+                { Gfx::ColorRole::Red },
+                { Gfx::ColorRole::Green },
+                { Gfx::ColorRole::Yellow },
+                { Gfx::ColorRole::Blue },
+                { Gfx::ColorRole::Magenta },
+                { Gfx::ColorRole::Cyan },
+                { Gfx::ColorRole::White },
+                { Gfx::ColorRole::BrightBlack },
+                { Gfx::ColorRole::BrightRed },
+                { Gfx::ColorRole::BrightGreen },
+                { Gfx::ColorRole::BrightYellow },
+                { Gfx::ColorRole::BrightBlue },
+                { Gfx::ColorRole::BrightMagenta },
+                { Gfx::ColorRole::BrightCyan },
+                { Gfx::ColorRole::BrightWhite } } },
+    }
+};
+
 MainWidget::MainWidget()
     : m_current_palette(GUI::Application::the()->palette())
 {
@@ -195,6 +218,7 @@ MainWidget::MainWidget()
     add_property_tab(window_tab);
     add_property_tab(widgets_tab);
     add_property_tab(syntax_highlighting_tab);
+    add_property_tab(color_scheme_tab);
 
     build_override_controls();
 }
