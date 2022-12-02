@@ -368,7 +368,7 @@ bool connect_to_inspector_server()
         return false;
     }
     auto inspector_server_path = maybe_path.value();
-    auto maybe_socket = Stream::LocalSocket::connect(inspector_server_path);
+    auto maybe_socket = Stream::LocalSocket::connect(inspector_server_path, Stream::PreventSIGPIPE::Yes);
     if (maybe_socket.is_error()) {
         dbgln("connect_to_inspector_server: Failed to connect: {}", maybe_socket.error());
         return false;
