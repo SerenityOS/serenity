@@ -48,8 +48,8 @@ static bool unpack_zip_member(Archive::ZipMember zip_member, bool quiet)
     }
     case Archive::ZipCompressionMethod::Deflate: {
         auto decompressed_data = Compress::DeflateDecompressor::decompress_all(zip_member.compressed_data);
-        if (!decompressed_data.has_value()) {
-            warnln("Failed decompressing file {}", zip_member.name);
+        if (decompressed_data.is_error()) {
+            warnln("Failed decompressing file {}: {}", zip_member.name, decompressed_data.error());
             return false;
         }
         if (decompressed_data.value().size() != zip_member.uncompressed_size) {

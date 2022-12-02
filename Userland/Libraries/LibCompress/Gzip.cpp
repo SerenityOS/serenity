@@ -59,14 +59,11 @@ ErrorOr<Bytes> GzipDecompressor::read(Bytes bytes)
         auto slice = bytes.slice(total_read);
 
         if (m_current_member.has_value()) {
-            size_t nread = current_member().m_stream.read(slice);
-            current_member().m_checksum.update(slice.trim(nread));
-            current_member().m_nread += nread;
+            auto current_slice = TRY(current_member().m_stream.read(slice));
+            current_member().m_checksum.update(current_slice);
+            current_member().m_nread += current_slice.size();
 
-            if (current_member().m_stream.handle_any_error())
-                return Error::from_string_literal("Underlying DeflateDecompressor indicated an error");
-
-            if (nread < slice.size()) {
+            if (current_slice.size() < slice.size()) {
                 LittleEndian<u32> crc32, input_size;
                 TRY(m_input_stream->read(crc32.bytes()));
                 TRY(m_input_stream->read(input_size.bytes()));
@@ -79,11 +76,11 @@ ErrorOr<Bytes> GzipDecompressor::read(Bytes bytes)
 
                 m_current_member.clear();
 
-                total_read += nread;
+                total_read += current_slice.size();
                 continue;
             }
 
-            total_read += nread;
+            total_read += current_slice.size();
             continue;
         } else {
             auto current_partial_header_slice = Bytes { m_partial_header, sizeof(BlockHeader) }.slice(m_partial_header_offset);

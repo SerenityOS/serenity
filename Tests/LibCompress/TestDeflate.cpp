@@ -10,6 +10,8 @@
 #include <AK/MemoryStream.h>
 #include <AK/Random.h>
 #include <LibCompress/Deflate.h>
+#include <LibCore/InputBitStream.h>
+#include <LibCore/MemoryStream.h>
 #include <cstring>
 
 TEST_CASE(canonical_code_simple)
@@ -27,11 +29,11 @@ TEST_CASE(canonical_code_simple)
     };
 
     auto const huffman = Compress::CanonicalCode::from_bytes(code).value();
-    auto memory_stream = InputMemoryStream { input };
-    auto bit_stream = InputBitStream { memory_stream };
+    auto memory_stream = MUST(Core::Stream::MemoryStream::construct(input));
+    auto bit_stream = MUST(Core::Stream::LittleEndianInputBitStream::construct(move(memory_stream)));
 
     for (size_t idx = 0; idx < 9; ++idx)
-        EXPECT_EQ(huffman.read_symbol(bit_stream), output[idx]);
+        EXPECT_EQ(MUST(huffman.read_symbol(*bit_stream)), output[idx]);
 }
 
 TEST_CASE(canonical_code_complex)
@@ -47,11 +49,11 @@ TEST_CASE(canonical_code_complex)
     };
 
     auto const huffman = Compress::CanonicalCode::from_bytes(code).value();
-    auto memory_stream = InputMemoryStream { input };
-    auto bit_stream = InputBitStream { memory_stream };
+    auto memory_stream = MUST(Core::Stream::MemoryStream::construct(input));
+    auto bit_stream = MUST(Core::Stream::LittleEndianInputBitStream::construct(move(memory_stream)));
 
     for (size_t idx = 0; idx < 12; ++idx)
-        EXPECT_EQ(huffman.read_symbol(bit_stream), output[idx]);
+        EXPECT_EQ(MUST(huffman.read_symbol(*bit_stream)), output[idx]);
 }
 
 TEST_CASE(deflate_decompress_compressed_block)
@@ -118,7 +120,7 @@ TEST_CASE(deflate_round_trip_store)
     auto compressed = Compress::DeflateCompressor::compress_all(original, Compress::DeflateCompressor::CompressionLevel::STORE);
     EXPECT(compressed.has_value());
     auto uncompressed = Compress::DeflateDecompressor::decompress_all(compressed.value());
-    EXPECT(uncompressed.has_value());
+    EXPECT(!uncompressed.is_error());
     EXPECT(uncompressed.value() == original);
 }
 
@@ -130,7 +132,7 @@ TEST_CASE(deflate_round_trip_compress)
     auto compressed = Compress::DeflateCompressor::compress_all(original, Compress::DeflateCompressor::CompressionLevel::FAST);
     EXPECT(compressed.has_value());
     auto uncompressed = Compress::DeflateDecompressor::decompress_all(compressed.value());
-    EXPECT(uncompressed.has_value());
+    EXPECT(!uncompressed.is_error());
     EXPECT(uncompressed.value() == original);
 }
 
@@ -143,7 +145,7 @@ TEST_CASE(deflate_round_trip_compress_large)
     auto compressed = Compress::DeflateCompressor::compress_all(original, Compress::DeflateCompressor::CompressionLevel::FAST);
     EXPECT(compressed.has_value());
     auto uncompressed = Compress::DeflateDecompressor::decompress_all(compressed.value());
-    EXPECT(uncompressed.has_value());
+    EXPECT(!uncompressed.is_error());
     EXPECT(uncompressed.value() == original);
 }
 

@@ -60,12 +60,14 @@ static Optional<ByteBuffer> handle_content_encoding(ByteBuffer const& buf, Depre
             // "Note: Some non-conformant implementations send the "deflate"
             //        compressed data without the zlib wrapper."
             dbgln_if(JOB_DEBUG, "Job::handle_content_encoding: Zlib::decompress_all() failed. Trying DeflateDecompressor::decompress_all()");
-            uncompressed = Compress::DeflateDecompressor::decompress_all(buf);
+            auto uncompressed_or_error = Compress::DeflateDecompressor::decompress_all(buf);
 
-            if (!uncompressed.has_value()) {
-                dbgln("Job::handle_content_encoding: DeflateDecompressor::decompress_all() failed.");
+            if (uncompressed_or_error.is_error()) {
+                dbgln("Job::handle_content_encoding: DeflateDecompressor::decompress_all() failed: {}", uncompressed_or_error.error());
                 return {};
             }
+
+            uncompressed = uncompressed_or_error.release_value();
         }
 
         if constexpr (JOB_DEBUG) {

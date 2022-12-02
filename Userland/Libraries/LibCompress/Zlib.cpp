@@ -44,7 +44,10 @@ Zlib::Zlib(ZlibHeader header, ReadonlyBytes data)
 
 Optional<ByteBuffer> Zlib::decompress()
 {
-    return DeflateDecompressor::decompress_all(m_data_bytes);
+    auto buffer_or_error = DeflateDecompressor::decompress_all(m_data_bytes);
+    if (buffer_or_error.is_error())
+        return {};
+    return buffer_or_error.release_value();
 }
 
 Optional<ByteBuffer> Zlib::decompress_all(ReadonlyBytes bytes)

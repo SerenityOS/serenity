@@ -13,13 +13,15 @@
 #include <AK/Endian.h>
 #include <AK/Vector.h>
 #include <LibCompress/DeflateTables.h>
+#include <LibCore/InputBitStream.h>
+#include <LibCore/Stream.h>
 
 namespace Compress {
 
 class CanonicalCode {
 public:
     CanonicalCode() = default;
-    u32 read_symbol(InputBitStream&) const;
+    ErrorOr<u32> read_symbol(Core::Stream::LittleEndianInputBitStream&) const;
     void write_symbol(OutputBitStream&, u32) const;
 
     static CanonicalCode const& fixed_literal_codes();
@@ -37,13 +39,13 @@ private:
     Array<u16, 288> m_bit_code_lengths {};
 };
 
-class DeflateDecompressor final : public InputStream {
+class DeflateDecompressor final : public Core::Stream::Stream {
 private:
     class CompressedBlock {
     public:
         CompressedBlock(DeflateDecompressor&, CanonicalCode literal_codes, Optional<CanonicalCode> distance_codes);
 
-        bool try_read_more();
+        ErrorOr<bool> try_read_more();
 
     private:
         bool m_eof { false };
@@ -57,7 +59,7 @@ private:
     public:
         UncompressedBlock(DeflateDecompressor&, size_t);
 
-        bool try_read_more();
+        ErrorOr<bool> try_read_more();
 
     private:
         DeflateDecompressor& m_decompressor;
@@ -74,22 +76,21 @@ public:
     friend CompressedBlock;
     friend UncompressedBlock;
 
-    DeflateDecompressor(InputStream&);
+    DeflateDecompressor(Core::Stream::Handle<Core::Stream::Stream> stream);
     ~DeflateDecompressor();
 
-    size_t read(Bytes) override;
-    bool read_or_error(Bytes) override;
-    bool discard_or_error(size_t) override;
+    virtual ErrorOr<Bytes> read(Bytes) override;
+    virtual ErrorOr<size_t> write(ReadonlyBytes) override;
+    virtual bool is_eof() const override;
+    virtual bool is_open() const override;
+    virtual void close() override;
 
-    bool unreliable_eof() const override;
-    bool handle_any_error() override;
-
-    static Optional<ByteBuffer> decompress_all(ReadonlyBytes);
+    static ErrorOr<ByteBuffer> decompress_all(ReadonlyBytes);
 
 private:
-    u32 decode_length(u32);
-    u32 decode_distance(u32);
-    void decode_codes(CanonicalCode& literal_code, Optional<CanonicalCode>& distance_code);
+    ErrorOr<u32> decode_length(u32);
+    ErrorOr<u32> decode_distance(u32);
+    ErrorOr<void> decode_codes(CanonicalCode& literal_code, Optional<CanonicalCode>& distance_code);
 
     bool m_read_final_bock { false };
 
@@ -99,7 +100,7 @@ private:
         UncompressedBlock m_uncompressed_block;
     };
 
-    InputBitStream m_input_stream;
+    Core::Stream::Handle<Core::Stream::LittleEndianInputBitStream> m_input_stream;
     CircularDuplexStream<32 * KiB> m_output_stream;
 };
 
