@@ -198,6 +198,18 @@
         .grad-radial-4 {
             background-image: radial-gradient(200px 100px ellipse at 25% 50%, yellow, #009966, purple);
         }
+
+        .grad-radial-repeat-1 {
+            background-image: repeating-radial-gradient(#e66465, #9198e5 20%);
+        }
+
+        .grad-radial-repeat-2 {
+            background-image: repeating-radial-gradient(closest-side, #3f87a6, #ebf8e1, #f69d3c);
+        }
+
+        .grad-radial-repeat-3 {
+            background-image: repeating-radial-gradient(circle at 100%, #333, #333 10px, #eee 10px, #eee 20px);
+        }
     </style>
   </head>
   <body>
@@ -253,6 +265,10 @@
     <div class="rect grad-radial-2"></div>
     <div class="rect grad-radial-3"></div>
     <div class="rect grad-radial-4"></div>
+    <b>Repeating radial gradients</b><br>
+    <div class="rect grad-radial-repeat-1"></div>
+    <div class="rect grad-radial-repeat-2"></div>
+    <div class="rect grad-radial-repeat-3"></div>
   </body>
   <script>
     const boxes = document.querySelectorAll(".box, .rect");
