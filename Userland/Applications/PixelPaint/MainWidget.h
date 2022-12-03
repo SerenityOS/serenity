@@ -120,6 +120,8 @@ private:
     RefPtr<GUI::Action> m_move_active_layer_down_action;
     RefPtr<GUI::Action> m_move_active_layer_up_action;
 
+    RefPtr<GUI::Action> m_flatten_image_action;
+
     Gfx::IntPoint m_last_image_editor_mouse_position;
 };
 

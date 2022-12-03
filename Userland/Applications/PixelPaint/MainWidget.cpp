@@ -798,13 +798,15 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
         m_layer_menu->popup(event.screen_position());
     };
     m_layer_menu->add_separator();
-    m_layer_menu->add_action(GUI::Action::create(
+
+    m_flatten_image_action = GUI::Action::create(
         "Fl&atten Image", { Mod_Ctrl, Key_F }, g_icon_bag.flatten_image, [&](auto&) {
             auto* editor = current_image_editor();
             VERIFY(editor);
             editor->image().flatten_all_layers();
             editor->did_complete_action("Flatten Image"sv);
-        }));
+        });
+    m_layer_menu->add_action(*m_flatten_image_action);
 
     m_layer_menu->add_action(GUI::Action::create(
         "&Merge Visible", { Mod_Ctrl, Key_M }, g_icon_bag.merge_visible, [&](auto&) {
@@ -1113,6 +1115,7 @@ void MainWidget::update_action_states_after_layer_stack_change()
         m_move_active_layer_to_back_action->set_enabled(false);
         m_move_active_layer_up_action->set_enabled(false);
         m_move_active_layer_down_action->set_enabled(false);
+        m_flatten_image_action->set_enabled(false);
         return;
     }
 
@@ -1129,6 +1132,8 @@ void MainWidget::update_action_states_after_layer_stack_change()
 
     m_move_active_layer_to_front_action->set_enabled(layer_count > 1 && !active_layer_is_frontmost);
     m_move_active_layer_to_back_action->set_enabled(layer_count > 1 && !active_layer_is_backmost);
+
+    m_flatten_image_action->set_enabled(layer_count >= 2);
 }
 
 ImageEditor& MainWidget::create_new_editor(NonnullRefPtr<Image> image)
