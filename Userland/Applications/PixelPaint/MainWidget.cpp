@@ -743,7 +743,8 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     m_layer_menu->add_action(*m_move_active_layer_to_back_action);
 
     m_layer_menu->add_separator();
-    m_layer_menu->add_action(GUI::Action::create(
+
+    m_move_active_layer_up_action = GUI::Action::create(
         "Move Active Layer &Up", { Mod_Ctrl, Key_PageUp }, g_icon_bag.active_layer_up, [&](auto&) {
             auto* editor = current_image_editor();
             VERIFY(editor);
@@ -751,8 +752,10 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
             if (!active_layer)
                 return;
             editor->image().move_layer_up(*active_layer);
-        }));
-    m_layer_menu->add_action(GUI::Action::create(
+        });
+    m_layer_menu->add_action(*m_move_active_layer_up_action);
+
+    m_move_active_layer_down_action = GUI::Action::create(
         "Move Active Layer &Down", { Mod_Ctrl, Key_PageDown }, g_icon_bag.active_layer_down, [&](auto&) {
             auto* editor = current_image_editor();
             VERIFY(editor);
@@ -760,7 +763,9 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
             if (!active_layer)
                 return;
             editor->image().move_layer_down(*active_layer);
-        }));
+        });
+    m_layer_menu->add_action(*m_move_active_layer_down_action);
+
     m_layer_menu->add_separator();
     m_layer_menu->add_action(GUI::Action::create(
         "&Remove Active Layer", { Mod_Ctrl, Key_D }, g_icon_bag.delete_layer, [&](auto&) {
@@ -1106,6 +1111,8 @@ void MainWidget::update_action_states_after_layer_stack_change()
         m_merge_active_layer_down_action->set_enabled(false);
         m_move_active_layer_to_front_action->set_enabled(false);
         m_move_active_layer_to_back_action->set_enabled(false);
+        m_move_active_layer_up_action->set_enabled(false);
+        m_move_active_layer_down_action->set_enabled(false);
         return;
     }
 
@@ -1116,6 +1123,9 @@ void MainWidget::update_action_states_after_layer_stack_change()
 
     m_merge_active_layer_up_action->set_enabled(layer_count > 1 && !active_layer_is_frontmost);
     m_merge_active_layer_down_action->set_enabled(layer_count > 1 && !active_layer_is_backmost);
+
+    m_move_active_layer_up_action->set_enabled(layer_count > 1 && !active_layer_is_frontmost);
+    m_move_active_layer_down_action->set_enabled(layer_count > 1 && !active_layer_is_backmost);
 
     m_move_active_layer_to_front_action->set_enabled(layer_count > 1 && !active_layer_is_frontmost);
     m_move_active_layer_to_back_action->set_enabled(layer_count > 1 && !active_layer_is_backmost);
