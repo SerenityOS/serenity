@@ -131,6 +131,11 @@ private:
     RefPtr<GUI::Action> m_crop_active_layer_to_selection_action;
     RefPtr<GUI::Action> m_crop_active_layer_to_content_action;
 
+    RefPtr<GUI::Action> m_select_previous_layer_action;
+    RefPtr<GUI::Action> m_select_next_layer_action;
+    RefPtr<GUI::Action> m_select_top_layer_action;
+    RefPtr<GUI::Action> m_select_bottom_layer_action;
+
     Gfx::IntPoint m_last_image_editor_mouse_position;
 };
 

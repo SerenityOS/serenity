@@ -701,22 +701,30 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
 
     m_layer_menu->add_separator();
 
-    m_layer_menu->add_action(GUI::Action::create(
+    m_select_previous_layer_action = GUI::Action::create(
         "Select &Previous Layer", { 0, Key_PageUp }, g_icon_bag.previous_layer, [&](auto&) {
             m_layer_list_widget->cycle_through_selection(1);
-        }));
-    m_layer_menu->add_action(GUI::Action::create(
+        });
+    m_layer_menu->add_action(*m_select_previous_layer_action);
+
+    m_select_next_layer_action = GUI::Action::create(
         "Select &Next Layer", { 0, Key_PageDown }, g_icon_bag.next_layer, [&](auto&) {
             m_layer_list_widget->cycle_through_selection(-1);
-        }));
-    m_layer_menu->add_action(GUI::Action::create(
+        });
+    m_layer_menu->add_action(*m_select_next_layer_action);
+
+    m_select_top_layer_action = GUI::Action::create(
         "Select &Top Layer", { 0, Key_Home }, g_icon_bag.top_layer, [&](auto&) {
             m_layer_list_widget->select_top_layer();
-        }));
-    m_layer_menu->add_action(GUI::Action::create(
+        });
+    m_layer_menu->add_action(*m_select_top_layer_action);
+
+    m_select_bottom_layer_action = GUI::Action::create(
         "Select B&ottom Layer", { 0, Key_End }, g_icon_bag.bottom_layer, [&](auto&) {
             m_layer_list_widget->select_bottom_layer();
-        }));
+        });
+    m_layer_menu->add_action(*m_select_bottom_layer_action);
+
     m_layer_menu->add_separator();
     m_move_active_layer_to_front_action = GUI::CommonActions::make_move_to_front_action(
         [&](auto&) {
@@ -1137,6 +1145,10 @@ void MainWidget::update_action_states_after_layer_stack_change()
         m_rotate_active_layer_counterclockwise_action->set_enabled(false);
         m_crop_active_layer_to_selection_action->set_enabled(false);
         m_crop_active_layer_to_content_action->set_enabled(false);
+        m_select_previous_layer_action->set_enabled(false);
+        m_select_next_layer_action->set_enabled(false);
+        m_select_top_layer_action->set_enabled(false);
+        m_select_bottom_layer_action->set_enabled(false);
         return;
     }
 
@@ -1164,6 +1176,11 @@ void MainWidget::update_action_states_after_layer_stack_change()
     m_rotate_active_layer_counterclockwise_action->set_enabled(editor.active_layer() != nullptr);
     m_crop_active_layer_to_selection_action->set_enabled(editor.active_layer() != nullptr);
     m_crop_active_layer_to_content_action->set_enabled(editor.active_layer() != nullptr);
+
+    m_select_previous_layer_action->set_enabled(layer_count > 1 && !active_layer_is_frontmost);
+    m_select_next_layer_action->set_enabled(layer_count > 1 && !active_layer_is_backmost);
+    m_select_top_layer_action->set_enabled(layer_count > 1 && !active_layer_is_frontmost);
+    m_select_bottom_layer_action->set_enabled(layer_count > 1 && !active_layer_is_backmost);
 }
 
 ImageEditor& MainWidget::create_new_editor(NonnullRefPtr<Image> image)
