@@ -19,16 +19,16 @@
         }
 
         @GUI::Button {
-            name: "next_button"
-            icon: "/res/icons/16x16/go-down.png"
+            name: "previous_button"
+            icon: "/res/icons/16x16/go-up.png"
             fixed_width: 18
             button_style: "Coolbar"
             focus_policy: "NoFocus"
         }
 
         @GUI::Button {
-            name: "previous_button"
-            icon: "/res/icons/16x16/go-up.png"
+            name: "next_button"
+            icon: "/res/icons/16x16/go-down.png"
             fixed_width: 18
             button_style: "Coolbar"
             focus_policy: "NoFocus"
