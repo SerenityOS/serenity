@@ -718,7 +718,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
             m_layer_list_widget->select_bottom_layer();
         }));
     m_layer_menu->add_separator();
-    m_layer_menu->add_action(GUI::CommonActions::make_move_to_front_action(
+    m_move_active_layer_to_front_action = GUI::CommonActions::make_move_to_front_action(
         [&](auto&) {
             auto* editor = current_image_editor();
             VERIFY(editor);
@@ -727,8 +727,10 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
                 return;
             editor->image().move_layer_to_front(*active_layer);
             editor->layers_did_change();
-        }));
-    m_layer_menu->add_action(GUI::CommonActions::make_move_to_back_action(
+        });
+    m_layer_menu->add_action(*m_move_active_layer_to_front_action);
+
+    m_move_active_layer_to_back_action = GUI::CommonActions::make_move_to_back_action(
         [&](auto&) {
             auto* editor = current_image_editor();
             VERIFY(editor);
@@ -737,7 +739,9 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
                 return;
             editor->image().move_layer_to_back(*active_layer);
             editor->layers_did_change();
-        }));
+        });
+    m_layer_menu->add_action(*m_move_active_layer_to_back_action);
+
     m_layer_menu->add_separator();
     m_layer_menu->add_action(GUI::Action::create(
         "Move Active Layer &Up", { Mod_Ctrl, Key_PageUp }, g_icon_bag.active_layer_up, [&](auto&) {
@@ -1100,13 +1104,21 @@ void MainWidget::update_action_states_after_layer_stack_change()
     if (!layer_count) {
         m_merge_active_layer_up_action->set_enabled(false);
         m_merge_active_layer_down_action->set_enabled(false);
+        m_move_active_layer_to_front_action->set_enabled(false);
+        m_move_active_layer_to_back_action->set_enabled(false);
         return;
     }
 
     auto& editor = *current_image_editor();
 
-    m_merge_active_layer_up_action->set_enabled(layer_count > 1 && editor.active_layer() && &editor.image().layer(layer_count - 1) != editor.active_layer());
-    m_merge_active_layer_down_action->set_enabled(layer_count > 1 && editor.active_layer() && &editor.image().layer(0) != editor.active_layer());
+    bool active_layer_is_frontmost = editor.active_layer() && &editor.image().layer(layer_count - 1) == editor.active_layer();
+    bool active_layer_is_backmost = editor.active_layer() && &editor.image().layer(0) == editor.active_layer();
+
+    m_merge_active_layer_up_action->set_enabled(layer_count > 1 && !active_layer_is_frontmost);
+    m_merge_active_layer_down_action->set_enabled(layer_count > 1 && !active_layer_is_backmost);
+
+    m_move_active_layer_to_front_action->set_enabled(layer_count > 1 && !active_layer_is_frontmost);
+    m_move_active_layer_to_back_action->set_enabled(layer_count > 1 && !active_layer_is_backmost);
 }
 
 ImageEditor& MainWidget::create_new_editor(NonnullRefPtr<Image> image)
