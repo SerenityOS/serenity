@@ -22,7 +22,7 @@ class SQLClient
 
     Function<void(u64, u64, SQLErrorCode, DeprecatedString const&)> on_execution_error;
     Function<void(u64, u64, bool, size_t, size_t, size_t)> on_execution_success;
-    Function<void(u64, u64, Vector<DeprecatedString> const&)> on_next_result;
+    Function<void(u64, u64, Span<SQL::Value const>)> on_next_result;
     Function<void(u64, u64, size_t)> on_results_exhausted;
 
 private:
@@ -32,7 +32,7 @@ private:
     }
 
     virtual void execution_success(u64 statement_id, u64 execution_id, bool has_results, size_t created, size_t updated, size_t deleted) override;
-    virtual void next_result(u64 statement_id, u64 execution_id, Vector<DeprecatedString> const&) override;
+    virtual void next_result(u64 statement_id, u64 execution_id, Vector<SQL::Value> const&) override;
     virtual void results_exhausted(u64 statement_id, u64 execution_id, size_t total_rows) override;
     virtual void execution_error(u64 statement_id, u64 execution_id, SQLErrorCode const& code, DeprecatedString const& message) override;
 };

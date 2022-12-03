@@ -176,15 +176,6 @@ DeprecatedString Tuple::to_deprecated_string() const
     return builder.build();
 }
 
-Vector<DeprecatedString> Tuple::to_deprecated_string_vector() const
-{
-    Vector<DeprecatedString> ret;
-    for (auto& value : m_data) {
-        ret.append(value.to_deprecated_string());
-    }
-    return ret;
-}
-
 void Tuple::copy_from(Tuple const& other)
 {
     if (*m_descriptor != *other.m_descriptor) {
