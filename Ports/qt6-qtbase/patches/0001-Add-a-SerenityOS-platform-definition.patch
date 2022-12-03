@@ -15,10 +15,10 @@ Subject: [PATCH] Add a SerenityOS platform definition
  create mode 100644 mkspecs/serenity-g++/qplatformdefs.h
 
 diff --git a/cmake/QtBuild.cmake b/cmake/QtBuild.cmake
-index 6bd255b..ed466b7 100644
+index bb7049e76a65cd8fea0ad4aca2f29bdbefbdc86d..df4c9d07f2984ea8ab02d54004335a2d4377f78b 100644
 --- a/cmake/QtBuild.cmake
 +++ b/cmake/QtBuild.cmake
-@@ -325,6 +325,8 @@ elseif(APPLE)
+@@ -326,6 +326,8 @@ elseif(APPLE)
      set(QT_DEFAULT_MKSPEC macx-clang)
  elseif(WASM)
      set(QT_DEFAULT_MKSPEC wasm-emscripten)
@@ -29,7 +29,7 @@ index 6bd255b..ed466b7 100644
      set(QT_ENABLE_CXX_EXTENSIONS ON)
 diff --git a/mkspecs/serenity-g++/qmake.conf b/mkspecs/serenity-g++/qmake.conf
 new file mode 100644
-index 0000000..3808b5a
+index 0000000000000000000000000000000000000000..3808b5a269788a32d4aa74aa629b519df80d1000
 --- /dev/null
 +++ b/mkspecs/serenity-g++/qmake.conf
 @@ -0,0 +1,25 @@
@@ -60,7 +60,7 @@ index 0000000..3808b5a
 +load(qt_config)
 diff --git a/mkspecs/serenity-g++/qplatformdefs.h b/mkspecs/serenity-g++/qplatformdefs.h
 new file mode 100644
-index 0000000..1f0dd98
+index 0000000000000000000000000000000000000000..1f0dd9819abb1f8dac52250d24aa8d0763f05445
 --- /dev/null
 +++ b/mkspecs/serenity-g++/qplatformdefs.h
 @@ -0,0 +1,87 @@
@@ -152,10 +152,10 @@ index 0000000..1f0dd98
 +
 +#endif // QPLATFORMDEFS_H
 diff --git a/src/corelib/global/qsystemdetection.h b/src/corelib/global/qsystemdetection.h
-index c8f9804..5c534c4 100644
+index cbbe613e40cd20110b9aa31177d95e0a18bdf9fa..82b3f84800f8c5bf3a7a4567ea55f6a8a4681b13 100644
 --- a/src/corelib/global/qsystemdetection.h
 +++ b/src/corelib/global/qsystemdetection.h
-@@ -72,6 +72,7 @@
+@@ -36,6 +36,7 @@
       ANDROID  - Android platform
       HAIKU    - Haiku
       WEBOS    - LG WebOS
@@ -163,7 +163,7 @@ index c8f9804..5c534c4 100644
  
     The following operating systems have variants:
       LINUX    - both Q_OS_LINUX and Q_OS_ANDROID are defined when building for Android
-@@ -165,6 +166,8 @@
+@@ -129,6 +130,8 @@
  #  define Q_OS_VXWORKS
  #elif defined(__HAIKU__)
  #  define Q_OS_HAIKU
@@ -173,7 +173,7 @@ index c8f9804..5c534c4 100644
  #else
  #  error "Qt has not been ported to this OS - see http://www.qt-project.org/"
 diff --git a/src/gui/CMakeLists.txt b/src/gui/CMakeLists.txt
-index 1e212b2..b12c819 100644
+index 36dae764d75bf2c3a641ce0776f307755b4ead44..0ab63742665dd7da1259fdfbbb2cc8dab5450578 100644
 --- a/src/gui/CMakeLists.txt
 +++ b/src/gui/CMakeLists.txt
 @@ -29,6 +29,8 @@ if (QT_FEATURE_gui)
@@ -186,10 +186,10 @@ index 1e212b2..b12c819 100644
          set(_default_platform "xcb")
      endif()
 diff --git a/util/cmake/helper.py b/util/cmake/helper.py
-index e55a941..87260f3 100644
+index f40ea4d61f0d1d658b6715c55cb70c1eadb59a25..d8940f09595c887771f12c0e584936907174c540 100644
 --- a/util/cmake/helper.py
 +++ b/util/cmake/helper.py
-@@ -767,6 +767,7 @@ platform_mapping = {
+@@ -696,6 +696,7 @@ platform_mapping = {
      "macx": "MACOS",
      "macos": "MACOS",
      "macx-icc": "(MACOS AND ICC)",

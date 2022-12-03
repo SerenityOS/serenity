@@ -11,10 +11,10 @@ whatever for now.
  1 file changed, 6 insertions(+)
 
 diff --git a/src/corelib/kernel/qcoreapplication.cpp b/src/corelib/kernel/qcoreapplication.cpp
-index 009aa28..9c0cb52 100644
+index 4d69ca9a17d2e24911e92792062a0ab264b83758..527a8ee672d7416b7b915d33d6711e9a1aed2e46 100644
 --- a/src/corelib/kernel/qcoreapplication.cpp
 +++ b/src/corelib/kernel/qcoreapplication.cpp
-@@ -2760,6 +2760,12 @@ QStringList QCoreApplication::libraryPathsLocked()
+@@ -2746,6 +2746,12 @@ QStringList QCoreApplication::libraryPathsLocked()
          }
  #endif // Q_OS_DARWIN
  

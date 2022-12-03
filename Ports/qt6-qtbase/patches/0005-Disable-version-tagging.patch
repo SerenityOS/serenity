@@ -11,10 +11,10 @@ and other related ELF objects
  2 files changed, 3 insertions(+), 1 deletion(-)
 
 diff --git a/cmake/QtBuild.cmake b/cmake/QtBuild.cmake
-index ed466b7..30668af 100644
+index df4c9d07f2984ea8ab02d54004335a2d4377f78b..d46017ddcc0c439bdae478f3dcb1e342fbf4083d 100644
 --- a/cmake/QtBuild.cmake
 +++ b/cmake/QtBuild.cmake
-@@ -327,6 +327,8 @@ elseif(WASM)
+@@ -328,6 +328,8 @@ elseif(WASM)
      set(QT_DEFAULT_MKSPEC wasm-emscripten)
  elseif(SERENITYOS)
      set(QT_DEFAULT_MKSPEC serenity-g++)
@@ -24,15 +24,15 @@ index ed466b7..30668af 100644
      # Certain POSIX defines are not set if we don't compile with -std=gnuXX
      set(QT_ENABLE_CXX_EXTENSIONS ON)
 diff --git a/src/corelib/global/qversiontagging.cpp b/src/corelib/global/qversiontagging.cpp
-index b5e524b..a7547a3 100644
+index a8191869cc87be91097e83dda3c6d2dcb566674f..fb129c8b3194ee0a34787545fcb022feaa870214 100644
 --- a/src/corelib/global/qversiontagging.cpp
 +++ b/src/corelib/global/qversiontagging.cpp
-@@ -42,7 +42,7 @@
- #define SYM QT_MANGLE_NAMESPACE(qt_version_tag)
- //#define SSYM QT_STRINGIFY(SYM)
+@@ -21,7 +21,7 @@ extern "C" {
+ //
+ // [1] https://sourceware.org/binutils/docs/as/Symver.html
  
--#if defined(Q_CC_GNU) && defined(Q_OF_ELF) && !defined(Q_OS_ANDROID)
-+#if defined(Q_CC_GNU) && defined(Q_OF_ELF) && !defined(Q_OS_ANDROID) && !defined(QT_NO_VERSION_TAGGING)
+-#if defined(Q_CC_GNU) && defined(Q_OF_ELF)
++#if defined(Q_CC_GNU) && defined(Q_OF_ELF) && !defined(QT_NO_VERSION_TAGGING)
  #  define make_versioned_symbol2(sym, m, n, separator)     \
-     Q_CORE_EXPORT extern const char sym ## _ ## m ## _ ## n = 0; \
+     Q_CORE_EXPORT extern __attribute__((alias("_" SSYM))) const char sym ## _ ## m ## _ ## n; \
      asm(".symver " QT_STRINGIFY(sym) "_" QT_STRINGIFY(m) "_" QT_STRINGIFY(n) ", " \

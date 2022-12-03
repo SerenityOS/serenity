@@ -31,3 +31,10 @@ Disable version tagging
 This is necessary because as of now, Serenity doesn't support DT_VERSYM
 and other related ELF objects
 
+## `0006-Serenity-Disable-local-domain-name-lookup-via-resolv.patch`
+
+Serenity: Disable local domain name lookup via resolv
+
+Serenity doesn't support /etc/resolv.conf or the structures in
+<resolv.h> to do Unix-like domain name resolution.
+

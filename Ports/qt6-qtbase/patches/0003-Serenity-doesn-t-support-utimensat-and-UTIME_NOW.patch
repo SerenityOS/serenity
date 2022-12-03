@@ -8,10 +8,10 @@ Subject: [PATCH] Serenity doesn't support utimensat and UTIME_NOW
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/qmake/library/ioutils.cpp b/qmake/library/ioutils.cpp
-index 719d3b5..5490e82 100644
+index 5a5c45526498f1c8b7ff84353c7d07bb5c1157da..98341c916d0da36a9f154569a23bb2fc0f6b8526 100644
 --- a/qmake/library/ioutils.cpp
 +++ b/qmake/library/ioutils.cpp
-@@ -262,7 +262,7 @@ bool IoUtils::touchFile(const QString &targetFileName, const QString &referenceF
+@@ -237,7 +237,7 @@ bool IoUtils::touchFile(const QString &targetFileName, const QString &referenceF
          *errorString = fL1S("Cannot stat() reference file %1: %2.").arg(referenceFileName, fL1S(strerror(errno)));
          return false;
      }
