@@ -124,6 +124,13 @@ private:
     RefPtr<GUI::Action> m_merge_visible_layers_action;
     RefPtr<GUI::Action> m_remove_active_layer_action;
 
+    RefPtr<GUI::Action> m_flip_active_layer_horizontally_action;
+    RefPtr<GUI::Action> m_flip_active_layer_vertically_action;
+    RefPtr<GUI::Action> m_rotate_active_layer_clockwise_action;
+    RefPtr<GUI::Action> m_rotate_active_layer_counterclockwise_action;
+    RefPtr<GUI::Action> m_crop_active_layer_to_selection_action;
+    RefPtr<GUI::Action> m_crop_active_layer_to_content_action;
+
     Gfx::IntPoint m_last_image_editor_mouse_position;
 };
 

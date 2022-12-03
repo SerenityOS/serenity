@@ -844,7 +844,8 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     m_layer_menu->add_action(*m_merge_active_layer_down_action);
 
     m_layer_menu->add_separator();
-    m_layer_menu->add_action(GUI::Action::create(
+
+    m_flip_active_layer_vertically_action = GUI::Action::create(
         "Flip Layer &Vertically", g_icon_bag.edit_flip_vertical, [&](auto&) {
             auto* editor = current_image_editor();
             VERIFY(editor);
@@ -853,8 +854,10 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
                 return;
             active_layer->flip(Gfx::Orientation::Vertical);
             editor->did_complete_action("Flip Layer Vertically"sv);
-        }));
-    m_layer_menu->add_action(GUI::Action::create(
+        });
+    m_layer_menu->add_action(*m_flip_active_layer_vertically_action);
+
+    m_flip_active_layer_horizontally_action = GUI::Action::create(
         "Flip Layer &Horizontally", g_icon_bag.edit_flip_horizontal, [&](auto&) {
             auto* editor = current_image_editor();
             VERIFY(editor);
@@ -863,10 +866,12 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
                 return;
             active_layer->flip(Gfx::Orientation::Horizontal);
             editor->did_complete_action("Flip Layer Horizontally"sv);
-        }));
+        });
+    m_layer_menu->add_action(*m_flip_active_layer_horizontally_action);
+
     m_layer_menu->add_separator();
 
-    m_layer_menu->add_action(GUI::Action::create("Rotate Layer &Counterclockwise", TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-rotate-ccw.png"sv)),
+    m_rotate_active_layer_counterclockwise_action = GUI::Action::create("Rotate Layer &Counterclockwise", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-rotate-ccw.png"sv).release_value_but_fixme_should_propagate_errors(),
         [&](auto&) {
             auto* editor = current_image_editor();
             VERIFY(editor);
@@ -875,9 +880,10 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
                 return;
             active_layer->rotate(Gfx::RotationDirection::CounterClockwise);
             editor->did_complete_action("Rotate Layer Counterclockwise"sv);
-        }));
+        });
+    m_layer_menu->add_action(*m_rotate_active_layer_counterclockwise_action);
 
-    m_layer_menu->add_action(GUI::Action::create("Rotate Layer Clock&wise", TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-rotate-cw.png"sv)),
+    m_rotate_active_layer_clockwise_action = GUI::Action::create("Rotate Layer Clock&wise", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-rotate-cw.png"sv).release_value_but_fixme_should_propagate_errors(),
         [&](auto&) {
             auto* editor = current_image_editor();
             VERIFY(editor);
@@ -886,10 +892,11 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
                 return;
             active_layer->rotate(Gfx::RotationDirection::Clockwise);
             editor->did_complete_action("Rotate Layer Clockwise"sv);
-        }));
+        });
+    m_layer_menu->add_action(*m_rotate_active_layer_clockwise_action);
 
     m_layer_menu->add_separator();
-    m_layer_menu->add_action(GUI::Action::create(
+    m_crop_active_layer_to_selection_action = GUI::Action::create(
         "&Crop Layer to Selection", g_icon_bag.crop, [&](auto&) {
             auto* editor = current_image_editor();
             VERIFY(editor);
@@ -903,8 +910,10 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
             active_layer->set_location(intersection.location());
             editor->image().selection().clear();
             editor->did_complete_action("Crop Layer to Selection"sv);
-        }));
-    m_layer_menu->add_action(GUI::Action::create(
+        });
+    m_layer_menu->add_action(*m_crop_active_layer_to_selection_action);
+
+    m_crop_active_layer_to_content_action = GUI::Action::create(
         "&Crop Layer to Content", g_icon_bag.crop, [&](auto&) {
             auto* editor = current_image_editor();
             VERIFY(editor);
@@ -917,7 +926,8 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
             active_layer->crop(content_bounding_rect.value());
             active_layer->set_location(content_bounding_rect->location());
             editor->did_complete_action("Crop Layer to Content"sv);
-        }));
+        });
+    m_layer_menu->add_action(*m_crop_active_layer_to_content_action);
 
     m_filter_menu = window.add_menu("&Filter");
 
@@ -1121,6 +1131,12 @@ void MainWidget::update_action_states_after_layer_stack_change()
         m_flatten_image_action->set_enabled(false);
         m_remove_active_layer_action->set_enabled(false);
         m_merge_visible_layers_action->set_enabled(false);
+        m_flip_active_layer_horizontally_action->set_enabled(false);
+        m_flip_active_layer_vertically_action->set_enabled(false);
+        m_rotate_active_layer_clockwise_action->set_enabled(false);
+        m_rotate_active_layer_counterclockwise_action->set_enabled(false);
+        m_crop_active_layer_to_selection_action->set_enabled(false);
+        m_crop_active_layer_to_content_action->set_enabled(false);
         return;
     }
 
@@ -1142,6 +1158,12 @@ void MainWidget::update_action_states_after_layer_stack_change()
     m_merge_visible_layers_action->set_enabled(layer_count >= 2);
 
     m_remove_active_layer_action->set_enabled(editor.active_layer() != nullptr);
+    m_flip_active_layer_horizontally_action->set_enabled(editor.active_layer() != nullptr);
+    m_flip_active_layer_vertically_action->set_enabled(editor.active_layer() != nullptr);
+    m_rotate_active_layer_clockwise_action->set_enabled(editor.active_layer() != nullptr);
+    m_rotate_active_layer_counterclockwise_action->set_enabled(editor.active_layer() != nullptr);
+    m_crop_active_layer_to_selection_action->set_enabled(editor.active_layer() != nullptr);
+    m_crop_active_layer_to_content_action->set_enabled(editor.active_layer() != nullptr);
 }
 
 ImageEditor& MainWidget::create_new_editor(NonnullRefPtr<Image> image)
