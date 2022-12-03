@@ -681,6 +681,12 @@ void ImageEditor::image_did_change_rect(Gfx::IntRect const& new_image_rect)
     relayout();
 }
 
+void ImageEditor::image_did_modify_layer_stack()
+{
+    if (on_layer_stack_change)
+        on_layer_stack_change();
+}
+
 void ImageEditor::image_select_layer(Layer* layer)
 {
     set_active_layer(layer);

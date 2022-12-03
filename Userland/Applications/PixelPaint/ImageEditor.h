@@ -89,6 +89,8 @@ public:
     Function<void(void)> on_leave;
     Function<void(bool modified)> on_modified_change;
 
+    Function<void()> on_layer_stack_change;
+
     bool request_close();
 
     void save_project_as();
@@ -144,6 +146,7 @@ private:
 
     virtual void image_did_change(Gfx::IntRect const&) override;
     virtual void image_did_change_rect(Gfx::IntRect const&) override;
+    virtual void image_did_modify_layer_stack() override;
     virtual void image_select_layer(Layer*) override;
 
     virtual void selection_did_change() override;
