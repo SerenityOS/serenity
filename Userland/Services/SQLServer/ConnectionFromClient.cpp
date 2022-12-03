@@ -37,8 +37,10 @@ void ConnectionFromClient::die()
 Messages::SQLServer::ConnectResponse ConnectionFromClient::connect(DeprecatedString const& database_name)
 {
     dbgln_if(SQLSERVER_DEBUG, "ConnectionFromClient::connect(database_name: {})", database_name);
-    auto database_connection = DatabaseConnection::construct(database_name, client_id());
-    return { database_connection->connection_id() };
+
+    if (auto database_connection = DatabaseConnection::create(database_name, client_id()); !database_connection.is_error())
+        return { database_connection.value()->connection_id() };
+    return { {} };
 }
 
 void ConnectionFromClient::disconnect(u64 connection_id)
