@@ -810,13 +810,14 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
         });
     m_layer_menu->add_action(*m_flatten_image_action);
 
-    m_layer_menu->add_action(GUI::Action::create(
+    m_merge_visible_layers_action = GUI::Action::create(
         "&Merge Visible", { Mod_Ctrl, Key_M }, g_icon_bag.merge_visible, [&](auto&) {
             auto* editor = current_image_editor();
             VERIFY(editor);
             editor->image().merge_visible_layers();
             editor->did_complete_action("Merge Visible"sv);
-        }));
+        });
+    m_layer_menu->add_action(*m_merge_visible_layers_action);
 
     m_merge_active_layer_up_action = GUI::Action::create(
         "Merge &Active Layer Up", g_icon_bag.merge_active_layer_up, [&](auto&) {
@@ -1119,6 +1120,7 @@ void MainWidget::update_action_states_after_layer_stack_change()
         m_move_active_layer_down_action->set_enabled(false);
         m_flatten_image_action->set_enabled(false);
         m_remove_active_layer_action->set_enabled(false);
+        m_merge_visible_layers_action->set_enabled(false);
         return;
     }
 
@@ -1137,6 +1139,7 @@ void MainWidget::update_action_states_after_layer_stack_change()
     m_move_active_layer_to_back_action->set_enabled(layer_count > 1 && !active_layer_is_backmost);
 
     m_flatten_image_action->set_enabled(layer_count >= 2);
+    m_merge_visible_layers_action->set_enabled(layer_count >= 2);
 
     m_remove_active_layer_action->set_enabled(editor.active_layer() != nullptr);
 }
