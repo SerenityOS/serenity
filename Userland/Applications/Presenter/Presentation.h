@@ -58,8 +58,8 @@ private:
     static HashMap<DeprecatedString, DeprecatedString> parse_metadata(JsonObject const& metadata_object);
     static ErrorOr<Gfx::IntSize> parse_presentation_size(JsonObject const& metadata_object);
 
-    Presentation(Gfx::IntSize normative_size, HashMap<DeprecatedString, DeprecatedString> metadata);
-    static NonnullOwnPtr<Presentation> construct(Gfx::IntSize normative_size, HashMap<DeprecatedString, DeprecatedString> metadata);
+    Presentation(Gfx::IntSize normative_size, HashMap<DeprecatedString, DeprecatedString> metadata, HashMap<DeprecatedString, JsonObject> templates);
+    static NonnullOwnPtr<Presentation> construct(Gfx::IntSize normative_size, HashMap<DeprecatedString, DeprecatedString> metadata, HashMap<DeprecatedString, JsonObject> templates);
 
     void append_slide(Slide slide);
 
@@ -67,6 +67,7 @@ private:
     // This is not a pixel size, but an abstract size used by the slide objects for relative positioning.
     Gfx::IntSize m_normative_size;
     HashMap<DeprecatedString, DeprecatedString> m_metadata;
+    HashMap<DeprecatedString, JsonObject> m_templates;
 
     Checked<unsigned> m_current_slide { 0 };
     Checked<unsigned> m_current_frame_in_slide { 0 };
