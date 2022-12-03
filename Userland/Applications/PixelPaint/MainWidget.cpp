@@ -767,7 +767,8 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     m_layer_menu->add_action(*m_move_active_layer_down_action);
 
     m_layer_menu->add_separator();
-    m_layer_menu->add_action(GUI::Action::create(
+
+    m_remove_active_layer_action = GUI::Action::create(
         "&Remove Active Layer", { Mod_Ctrl, Key_D }, g_icon_bag.delete_layer, [&](auto&) {
             auto* editor = current_image_editor();
             VERIFY(editor);
@@ -792,7 +793,8 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
                 editor->layers_did_change();
                 m_layer_list_widget->select_top_layer();
             }
-        }));
+        });
+    m_layer_menu->add_action(*m_remove_active_layer_action);
 
     m_layer_list_widget->on_context_menu_request = [&](auto& event) {
         m_layer_menu->popup(event.screen_position());
@@ -1116,6 +1118,7 @@ void MainWidget::update_action_states_after_layer_stack_change()
         m_move_active_layer_up_action->set_enabled(false);
         m_move_active_layer_down_action->set_enabled(false);
         m_flatten_image_action->set_enabled(false);
+        m_remove_active_layer_action->set_enabled(false);
         return;
     }
 
@@ -1134,6 +1137,8 @@ void MainWidget::update_action_states_after_layer_stack_change()
     m_move_active_layer_to_back_action->set_enabled(layer_count > 1 && !active_layer_is_backmost);
 
     m_flatten_image_action->set_enabled(layer_count >= 2);
+
+    m_remove_active_layer_action->set_enabled(editor.active_layer() != nullptr);
 }
 
 ImageEditor& MainWidget::create_new_editor(NonnullRefPtr<Image> image)
