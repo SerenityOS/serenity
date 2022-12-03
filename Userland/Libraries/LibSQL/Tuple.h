@@ -37,7 +37,6 @@ public:
 
     [[nodiscard]] DeprecatedString to_deprecated_string() const;
     explicit operator DeprecatedString() const { return to_deprecated_string(); }
-    [[nodiscard]] Vector<DeprecatedString> to_deprecated_string_vector() const;
 
     bool operator<(Tuple const& other) const { return compare(other) < 0; }
     bool operator<=(Tuple const& other) const { return compare(other) <= 0; }
@@ -68,6 +67,8 @@ public:
     [[nodiscard]] int compare(Tuple const&) const;
     [[nodiscard]] int match(Tuple const&) const;
     [[nodiscard]] u32 hash() const;
+
+    [[nodiscard]] Vector<Value> take_data() { return move(m_data); }
 
 protected:
     [[nodiscard]] Optional<size_t> index_of(StringView) const;

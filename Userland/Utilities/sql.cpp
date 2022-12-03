@@ -85,7 +85,7 @@ public:
             }
         };
 
-        m_sql_client->on_next_result = [](auto, auto, auto const& row) {
+        m_sql_client->on_next_result = [](auto, auto, auto row) {
             StringBuilder builder;
             builder.join(", "sv, row);
             outln("{}", builder.build());

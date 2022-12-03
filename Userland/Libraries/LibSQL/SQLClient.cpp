@@ -25,12 +25,13 @@ void SQLClient::execution_success(u64 statement_id, u64 execution_id, bool has_r
         outln("{} row(s) created, {} updated, {} deleted", created, updated, deleted);
 }
 
-void SQLClient::next_result(u64 statement_id, u64 execution_id, Vector<DeprecatedString> const& row)
+void SQLClient::next_result(u64 statement_id, u64 execution_id, Vector<SQL::Value> const& row)
 {
     if (on_next_result) {
         on_next_result(statement_id, execution_id, row);
         return;
     }
+
     bool first = true;
     for (auto& column : row) {
         if (!first)

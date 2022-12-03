@@ -24,6 +24,7 @@
 #include <LibSQL/AST/Lexer.h>
 #include <LibSQL/AST/Token.h>
 #include <LibSQL/SQLClient.h>
+#include <LibSQL/Value.h>
 
 #include "MainWidget.h"
 #include "ScriptEditor.h"
@@ -224,8 +225,12 @@ MainWidget::MainWidget()
     m_sql_client->on_execution_success = [this](auto, auto, auto, auto, auto, auto) {
         read_next_sql_statement_of_editor();
     };
-    m_sql_client->on_next_result = [this](auto, auto, auto const& row) {
-        m_results.append(row);
+    m_sql_client->on_next_result = [this](auto, auto, auto row) {
+        m_results.append({});
+        m_results.last().ensure_capacity(row.size());
+
+        for (auto const& value : row)
+            m_results.last().unchecked_append(value.to_deprecated_string());
     };
     m_sql_client->on_results_exhausted = [this](auto, auto, auto) {
         if (m_results.size() == 0)
