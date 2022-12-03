@@ -33,18 +33,16 @@ public:
 private:
     SQLStatement(DatabaseConnection&, NonnullRefPtr<SQL::AST::Statement> statement);
 
-    bool should_send_result_rows() const;
-    void next(u64 execution_id);
+    bool should_send_result_rows(SQL::ResultSet const& result) const;
+    void next(u64 execution_id, SQL::ResultSet result, size_t result_size);
     void report_error(SQL::Result, u64 execution_id);
 
     u64 m_statement_id { 0 };
-    size_t m_index { 0 };
 
     HashTable<u64> m_ongoing_executions;
     u64 m_next_execution_id { 0 };
 
     NonnullRefPtr<SQL::AST::Statement> m_statement;
-    Optional<SQL::ResultSet> m_result {};
 };
 
 }
