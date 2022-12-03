@@ -53,7 +53,7 @@ In the file format, slide objects are JSON objects with the following basic pro
 -   `rect`: (4-element array of integers: `[left, top, width, height]`, optional) Specifies the bounding box of the object. Is mandatory for most types.
 -   `frames`: (array of integers) Specifies on which frames this object is visible. The first frame is frame 0. A frame's number might exceed the number of frames in the slide, that just means that that frame specification is disregarded.
 -   `role`: (string, optional) Specifies a semantic role of this object in the slide. The only currently recognized role is `title`. If an object with this role has extractable text (for example, if it is a text object itself), that text will be used as the slide title if there is no slide title provided with the slide itself.
--   `templates`: (array of strings, optional) IDs of templates to apply to this object.
+-   `templates`: (array of strings, optional) IDs of templates to apply to this object. Later templates overwrite earlier templates.
 -   `color`: (string, a LibGUI-recognized color specification such as a hex color, optional) Foreground color for this object. This property applies to many graphical objects who have one foreground color, such as text or geometric primitives.
 
 The following types with their own special properties exist:

@@ -20,7 +20,7 @@ Slide::Slide(NonnullRefPtrVector<SlideObject> slide_objects, DeprecatedString ti
 {
 }
 
-ErrorOr<Slide> Slide::parse_slide(JsonObject const& slide_json, NonnullRefPtr<GUI::Window> window)
+ErrorOr<Slide> Slide::parse_slide(JsonObject const& slide_json, HashMap<DeprecatedString, JsonObject> const& templates, NonnullRefPtr<GUI::Window> window)
 {
     auto frame_count = slide_json.get("frames"sv).to_number<unsigned>(1);
 
@@ -35,7 +35,7 @@ ErrorOr<Slide> Slide::parse_slide(JsonObject const& slide_json, NonnullRefPtr<GU
             return Error::from_string_view("Slides must be objects"sv);
         auto const& slide_object_json = maybe_slide_object_json.as_object();
 
-        auto slide_object = TRY(SlideObject::parse_slide_object(slide_object_json, window));
+        auto slide_object = TRY(SlideObject::parse_slide_object(slide_object_json, templates, window));
         slide_objects.append(move(slide_object));
     }
 

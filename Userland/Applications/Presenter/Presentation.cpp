@@ -13,15 +13,16 @@
 #include <LibGfx/Forward.h>
 #include <errno_codes.h>
 
-Presentation::Presentation(Gfx::IntSize normative_size, HashMap<DeprecatedString, DeprecatedString> metadata)
+Presentation::Presentation(Gfx::IntSize normative_size, HashMap<DeprecatedString, DeprecatedString> metadata, HashMap<DeprecatedString, JsonObject> templates)
     : m_normative_size(normative_size)
     , m_metadata(move(metadata))
+    , m_templates(move(templates))
 {
 }
 
-NonnullOwnPtr<Presentation> Presentation::construct(Gfx::IntSize normative_size, HashMap<DeprecatedString, DeprecatedString> metadata)
+NonnullOwnPtr<Presentation> Presentation::construct(Gfx::IntSize normative_size, HashMap<DeprecatedString, DeprecatedString> metadata, HashMap<DeprecatedString, JsonObject> templates)
 {
-    return NonnullOwnPtr<Presentation>(NonnullOwnPtr<Presentation>::Adopt, *new Presentation(normative_size, move(metadata)));
+    return NonnullOwnPtr<Presentation>(NonnullOwnPtr<Presentation>::Adopt, *new Presentation(normative_size, move(metadata), move(templates)));
 }
 
 void Presentation::append_slide(Slide slide)
@@ -129,12 +130,27 @@ ErrorOr<NonnullOwnPtr<Presentation>> Presentation::load_from_file(StringView fil
     if (maybe_metadata.is_null() || !maybe_metadata.is_object() || maybe_slides.is_null() || !maybe_slides.is_array())
         return Error::from_string_view("Metadata or slides in incorrect format"sv);
 
+    auto const& maybe_templates = global_object.get("templates"sv);
+    if (!maybe_templates.is_null() && !maybe_templates.is_object())
+        return Error::from_string_view("Templates are not an object"sv);
+    HashMap<DeprecatedString, JsonObject> templates;
+
+    if (!maybe_templates.is_null()) {
+        auto json_templates = maybe_templates.as_object();
+        TRY(json_templates.try_for_each_member([&](auto const& template_id, auto const& template_data) -> ErrorOr<void> {
+            if (!template_data.is_object())
+                return Error::from_string_view("Template is not an object"sv);
+            templates.set(template_id, template_data.as_object());
+            return {};
+        }));
+    }
+
     auto const& raw_metadata = maybe_metadata.as_object();
     auto metadata = parse_metadata(raw_metadata);
     auto size = TRY(parse_presentation_size(raw_metadata));
     metadata.set("file-name", file_name);
 
-    auto presentation = Presentation::construct(size, metadata);
+    auto presentation = Presentation::construct(size, metadata, templates);
 
     auto const& slides = maybe_slides.as_array();
     for (auto const& maybe_slide : slides.values()) {
@@ -142,7 +158,7 @@ ErrorOr<NonnullOwnPtr<Presentation>> Presentation::load_from_file(StringView fil
             return Error::from_string_view("Slides must be objects"sv);
         auto const& slide_object = maybe_slide.as_object();
 
-        auto slide = TRY(Slide::parse_slide(slide_object, window));
+        auto slide = TRY(Slide::parse_slide(slide_object, templates, window));
         presentation->append_slide(move(slide));
     }
 

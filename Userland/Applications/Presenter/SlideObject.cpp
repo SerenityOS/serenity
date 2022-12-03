@@ -18,7 +18,7 @@
 #include <LibGfx/TextWrapping.h>
 #include <LibImageDecoderClient/Client.h>
 
-ErrorOr<NonnullRefPtr<SlideObject>> SlideObject::parse_slide_object(JsonObject const& slide_object_json, NonnullRefPtr<GUI::Window> window)
+ErrorOr<NonnullRefPtr<SlideObject>> SlideObject::parse_slide_object(JsonObject const& slide_object_json, HashMap<DeprecatedString, JsonObject> const& templates, NonnullRefPtr<GUI::Window> window)
 {
     auto const& maybe_type = slide_object_json.get("type"sv);
     if (!maybe_type.is_string())
@@ -33,13 +33,37 @@ ErrorOr<NonnullRefPtr<SlideObject>> SlideObject::parse_slide_object(JsonObject c
     else
         return Error::from_string_view("Unsupported slide object type"sv);
 
-    slide_object_json.for_each_member([&](auto const& key, auto const& value) {
-        if (key == "type"sv)
+    auto assign_property = [&](auto const& key, auto const& value) {
+        if (key == "type"sv || key == "templates"sv)
             return;
         auto successful = object->set_property(key, value);
         if (!successful)
             dbgln("Storing {:15} = {:20} on slide object type {:8} failed, ignoring.", key, value, type);
-    });
+    };
+
+    // First, assign properties from the templates.
+    auto const& used_templates = slide_object_json.get("templates"sv);
+    if (!used_templates.is_null()) {
+        if (!used_templates.is_array())
+            return Error::from_string_view("Slide object templates are not an array"sv);
+
+        Vector<DeprecatedString> used_template_ids;
+        used_template_ids.ensure_capacity(used_templates.as_array().size());
+        used_templates.as_array().for_each([&](auto const& template_id) {
+            used_template_ids.append(template_id.to_deprecated_string());
+        });
+
+        for (auto const& template_id : used_template_ids) {
+            auto referenced_template = templates.get(template_id);
+            if (!referenced_template.has_value())
+                return Error::from_string_view("Undefined template used in a slide object"sv);
+
+            referenced_template.value().for_each_member(assign_property);
+        }
+    }
+
+    // Then, assign properties from the object itself, which always have priority.
+    slide_object_json.for_each_member(assign_property);
 
     return object.release_nonnull();
 }

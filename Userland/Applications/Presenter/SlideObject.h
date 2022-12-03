@@ -34,7 +34,7 @@ class SlideObject : public Core::Object {
 public:
     virtual ~SlideObject() = default;
 
-    static ErrorOr<NonnullRefPtr<SlideObject>> parse_slide_object(JsonObject const& slide_object_json, NonnullRefPtr<GUI::Window> window);
+    static ErrorOr<NonnullRefPtr<SlideObject>> parse_slide_object(JsonObject const& slide_object_json, HashMap<DeprecatedString, JsonObject> const& templates, NonnullRefPtr<GUI::Window> window);
 
     bool is_visible_during_frame([[maybe_unused]] unsigned frame_number) const { return m_frames.is_empty() || m_frames.contains(frame_number); }
 
