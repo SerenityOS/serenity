@@ -5,7 +5,6 @@
  */
 
 #include <AK/LexicalPath.h>
-#include <SQLServer/ConnectionFromClient.h>
 #include <SQLServer/DatabaseConnection.h>
 #include <SQLServer/SQLStatement.h>
 
@@ -22,63 +21,40 @@ RefPtr<DatabaseConnection> DatabaseConnection::connection_for(u64 connection_id)
     return nullptr;
 }
 
-DatabaseConnection::DatabaseConnection(DeprecatedString database_name, int client_id)
+ErrorOr<NonnullRefPtr<DatabaseConnection>> DatabaseConnection::create(DeprecatedString database_name, int client_id)
+{
+    if (LexicalPath path(database_name); (path.title() != database_name) || (path.dirname() != "."))
+        return Error::from_string_view("Invalid database name"sv);
+
+    auto database = SQL::Database::construct(DeprecatedString::formatted("/home/anon/sql/{}.db", database_name));
+    if (auto result = database->open(); result.is_error()) {
+        warnln("Could not open database: {}", result.error().error_string());
+        return Error::from_string_view("Could not open database"sv);
+    }
+
+    return adopt_nonnull_ref_or_enomem(new (nothrow) DatabaseConnection(move(database), move(database_name), client_id));
+}
+
+DatabaseConnection::DatabaseConnection(NonnullRefPtr<SQL::Database> database, DeprecatedString database_name, int client_id)
     : Object()
+    , m_database(move(database))
     , m_database_name(move(database_name))
     , m_connection_id(s_next_connection_id++)
     , m_client_id(client_id)
 {
-    if (LexicalPath path(m_database_name); (path.title() != m_database_name) || (path.dirname() != ".")) {
-        auto client_connection = ConnectionFromClient::client_connection_for(m_client_id);
-        client_connection->async_connection_error(m_connection_id, SQL::SQLErrorCode::InvalidDatabaseName, m_database_name);
-        return;
-    }
-
-    dbgln_if(SQLSERVER_DEBUG, "DatabaseConnection {} initiating connection with database '{}'", connection_id(), m_database_name);
+    dbgln_if(SQLSERVER_DEBUG, "DatabaseConnection {} initiatedconnection with database '{}'", connection_id(), m_database_name);
     s_connections.set(m_connection_id, *this);
-
-    deferred_invoke([this]() {
-        m_database = SQL::Database::construct(DeprecatedString::formatted("/home/anon/sql/{}.db", m_database_name));
-        auto client_connection = ConnectionFromClient::client_connection_for(m_client_id);
-        if (auto maybe_error = m_database->open(); maybe_error.is_error()) {
-            client_connection->async_connection_error(m_connection_id, maybe_error.error().error(), maybe_error.error().error_string());
-            return;
-        }
-        m_accept_statements = true;
-        if (client_connection)
-            client_connection->async_connected(m_connection_id, m_database_name);
-        else
-            warnln("Cannot notify client of database connection. Client disconnected");
-    });
 }
 
 void DatabaseConnection::disconnect()
 {
     dbgln_if(SQLSERVER_DEBUG, "DatabaseConnection::disconnect(connection_id {}, database '{}'", connection_id(), m_database_name);
-    m_accept_statements = false;
-    deferred_invoke([this]() {
-        m_database = nullptr;
-        s_connections.remove(m_connection_id);
-        auto client_connection = ConnectionFromClient::client_connection_for(client_id());
-        if (client_connection)
-            client_connection->async_disconnected(m_connection_id);
-        else
-            warnln("Cannot notify client of database disconnection. Client disconnected");
-    });
+    s_connections.remove(connection_id());
 }
 
 SQL::ResultOr<u64> DatabaseConnection::prepare_statement(StringView sql)
 {
     dbgln_if(SQLSERVER_DEBUG, "DatabaseConnection::prepare_statement(connection_id {}, database '{}', sql '{}'", connection_id(), m_database_name, sql);
-
-    if (!m_accept_statements)
-        return SQL::Result { SQL::SQLCommand::Unknown, SQL::SQLErrorCode::DatabaseUnavailable };
-
-    auto client_connection = ConnectionFromClient::client_connection_for(client_id());
-    if (!client_connection) {
-        warnln("Cannot notify client of database disconnection. Client disconnected");
-        return SQL::Result { SQL::SQLCommand::Unknown, SQL::SQLErrorCode::InternalError, "Client disconnected"sv };
-    }
 
     auto statement = TRY(SQLStatement::create(*this, sql));
     return statement->statement_id();

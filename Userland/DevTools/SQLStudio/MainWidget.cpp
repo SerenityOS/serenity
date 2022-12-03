@@ -145,9 +145,16 @@ MainWidget::MainWidget()
     m_run_script_action = GUI::Action::create("Run script", { Mod_Alt, Key_F9 }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/play.png"sv).release_value_but_fixme_should_propagate_errors(), [&](auto&) {
         m_results.clear();
         m_current_line_for_parsing = 0;
+
         // TODO select the database to use in UI.
-        m_connection_id = m_sql_client->connect("test");
-        read_next_sql_statement_of_editor();
+        constexpr auto database_name = "Test"sv;
+
+        if (auto connection_id = m_sql_client->connect(database_name); connection_id.has_value()) {
+            m_connection_id = connection_id.release_value();
+            read_next_sql_statement_of_editor();
+        } else {
+            warnln("\033[33;1mCould not connect to:\033[0m {}", database_name);
+        }
     });
 
     auto& toolbar_container = add<GUI::ToolbarContainer>();

@@ -74,9 +74,7 @@ Optional<u64> SQLStatement::execute(Vector<SQL::Value> placeholder_values)
     m_ongoing_executions.set(execution_id);
 
     deferred_invoke([this, placeholder_values = move(placeholder_values), execution_id] {
-        VERIFY(!connection()->database().is_null());
-
-        auto execution_result = m_statement->execute(connection()->database().release_nonnull(), placeholder_values);
+        auto execution_result = m_statement->execute(connection()->database(), placeholder_values);
         m_ongoing_executions.remove(execution_id);
 
         if (execution_result.is_error()) {

@@ -76,14 +76,6 @@ public:
 
         m_sql_client = SQL::SQLClient::try_create().release_value_but_fixme_should_propagate_errors();
 
-        m_sql_client->on_connected = [this](auto connection_id, auto const& connected_to_database) {
-            outln("Connected to \033[33;1m{}\033[0m", connected_to_database);
-            m_current_database = connected_to_database;
-            m_pending_database = "";
-            m_connection_id = connection_id;
-            read_sql();
-        };
-
         m_sql_client->on_execution_success = [this](auto, auto, auto has_results, auto updated, auto created, auto deleted) {
             if (updated != 0 || created != 0 || deleted != 0) {
                 outln("{} row(s) updated, {} created, {} deleted", updated, created, deleted);
@@ -104,25 +96,9 @@ public:
             read_sql();
         };
 
-        m_sql_client->on_connection_error = [this](auto, auto code, auto const& message) {
-            outln("\033[33;1mConnection error:\033[0m {}", message);
-            m_loop.quit(to_underlying(code));
-        };
-
         m_sql_client->on_execution_error = [this](auto, auto, auto, auto const& message) {
             outln("\033[33;1mExecution error:\033[0m {}", message);
             read_sql();
-        };
-
-        m_sql_client->on_disconnected = [this](auto) {
-            if (m_pending_database.is_empty()) {
-                outln("Disconnected from \033[33;1m{}\033[0m and terminating", m_current_database);
-                m_loop.quit(0);
-            } else {
-                outln("Disconnected from \033[33;1m{}\033[0m", m_current_database);
-                m_current_database = "";
-                m_sql_client->async_connect(m_pending_database);
-            }
         };
 
         if (!database_name.is_empty())
@@ -136,11 +112,18 @@ public:
 
     void connect(DeprecatedString const& database_name)
     {
-        if (m_current_database.is_empty()) {
-            m_sql_client->async_connect(database_name);
+        if (!m_database_name.is_empty()) {
+            m_sql_client->disconnect(m_connection_id);
+            m_database_name = {};
+        }
+
+        if (auto connection_id = m_sql_client->connect(database_name); connection_id.has_value()) {
+            outln("Connected to \033[33;1m{}\033[0m", database_name);
+            m_database_name = database_name;
+            m_connection_id = *connection_id;
         } else {
-            m_pending_database = database_name;
-            m_sql_client->async_disconnect(m_connection_id);
+            warnln("\033[33;1mCould not connect to:\033[0m {}", database_name);
+            m_loop.quit(1);
         }
     }
 
@@ -158,6 +141,7 @@ public:
 
     auto run()
     {
+        read_sql();
         return m_loop.exec();
     }
 
@@ -166,8 +150,7 @@ private:
     RefPtr<Line::Editor> m_editor { nullptr };
     int m_repl_line_level { 0 };
     bool m_keep_running { true };
-    DeprecatedString m_pending_database {};
-    DeprecatedString m_current_database {};
+    DeprecatedString m_database_name {};
     AK::RefPtr<SQL::SQLClient> m_sql_client { nullptr };
     u64 m_connection_id { 0 };
     Core::EventLoop m_loop;
@@ -280,7 +263,8 @@ private:
         // m_keep_running can be set to false when the file we are reading
         // from is exhausted...
         if (!m_keep_running) {
-            m_sql_client->async_disconnect(m_connection_id);
+            m_sql_client->disconnect(m_connection_id);
+            m_loop.quit(0);
             return;
         }
 
@@ -296,7 +280,8 @@ private:
 
         // ...But m_keep_running can also be set to false by a command handler.
         if (!m_keep_running) {
-            m_sql_client->async_disconnect(m_connection_id);
+            m_sql_client->disconnect(m_connection_id);
+            m_loop.quit(0);
             return;
         }
     };

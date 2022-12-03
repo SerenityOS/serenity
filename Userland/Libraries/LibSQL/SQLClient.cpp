@@ -9,26 +9,6 @@
 
 namespace SQL {
 
-void SQLClient::connected(u64 connection_id, DeprecatedString const& connected_to_database)
-{
-    if (on_connected)
-        on_connected(connection_id, connected_to_database);
-}
-
-void SQLClient::disconnected(u64 connection_id)
-{
-    if (on_disconnected)
-        on_disconnected(connection_id);
-}
-
-void SQLClient::connection_error(u64 connection_id, SQLErrorCode const& code, DeprecatedString const& message)
-{
-    if (on_connection_error)
-        on_connection_error(connection_id, code, message);
-    else
-        warnln("Connection error for connection_id {}: {} ({})", connection_id, message, to_underlying(code));
-}
-
 void SQLClient::execution_error(u64 statement_id, u64 execution_id, SQLErrorCode const& code, DeprecatedString const& message)
 {
     if (on_execution_error)
