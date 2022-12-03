@@ -110,14 +110,16 @@ typedef uint16_t Elf64_Quarter;
 #define ELFDATANUM 3  /* number of data encode defines */
 
 /* e_ident[] Operating System/ABI */
-#define ELFOSABI_SYSV 0         /* UNIX System V ABI */
-#define ELFOSABI_HPUX 1         /* HP-UX operating system */
-#define ELFOSABI_NETBSD 2       /* NetBSD */
-#define ELFOSABI_LINUX 3        /* GNU/Linux */
-#define ELFOSABI_HURD 4         /* GNU/Hurd */
-#define ELFOSABI_86OPEN 5       /* 86Open common IA32 ABI */
-#define ELFOSABI_SOLARIS 6      /* Solaris */
-#define ELFOSABI_MONTEREY 7     /* Monterey */
+#define ELFOSABI_SYSV 0   /* UNIX System V ABI */
+#define ELFOSABI_HPUX 1   /* HP-UX operating system */
+#define ELFOSABI_NETBSD 2 /* NetBSD */
+#define ELFOSABI_LINUX 3  /* GNU/Linux */
+#define ELFOSABI_GNU ELFOSABI_LINUX
+#define ELFOSABI_HURD 4     /* GNU/Hurd */
+#define ELFOSABI_86OPEN 5   /* 86Open common IA32 ABI */
+#define ELFOSABI_SOLARIS 6  /* Solaris */
+#define ELFOSABI_MONTEREY 7 /* Monterey */
+#define ELFOSABI_AIX ELFOSABI_MONTEREY
 #define ELFOSABI_IRIX 8         /* IRIX */
 #define ELFOSABI_FREEBSD 9      /* FreeBSD */
 #define ELFOSABI_TRU64 10       /* TRU64 UNIX */
@@ -196,6 +198,7 @@ typedef struct {
 #define EM_SPARC32PLUS 18 /* Enhanced instruction set SPARC */
 #define EM_PPC 20         /* PowerPC */
 #define EM_PPC64 21       /* PowerPC 64 */
+#define EM_S390 22        /* IBM S390 */
 #define EM_ARM 40         /* Advanced RISC Machines ARM */
 #define EM_ALPHA 41       /* DEC ALPHA */
 #define EM_SH 42          /* Hitachi/Renesas Super-H */
