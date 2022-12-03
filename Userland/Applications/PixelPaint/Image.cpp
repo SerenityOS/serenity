@@ -392,13 +392,13 @@ void Image::merge_visible_layers()
 
 void Image::merge_active_layer_up(Layer& layer)
 {
-    if (m_layers.size() < 2)
-        return;
+    // NOTE: The action for this should be disabled if there are fewer than 2 layers.
+    VERIFY(m_layers.size() >= 2);
+
     size_t layer_index = this->index_of(layer);
-    if ((layer_index + 1) == m_layers.size()) {
-        dbgln("Cannot merge layer up: layer is already at the top");
-        return; // FIXME: Notify user of error properly.
-    }
+
+    // NOTE: The action for this should be disabled if the active layer is already topmost.
+    VERIFY((layer_index + 1) != m_layers.size());
 
     auto& layer_above = m_layers.at(layer_index + 1);
     GUI::Painter painter(layer_above.content_bitmap());
@@ -409,13 +409,13 @@ void Image::merge_active_layer_up(Layer& layer)
 
 void Image::merge_active_layer_down(Layer& layer)
 {
-    if (m_layers.size() < 2)
-        return;
+    // NOTE: The action for this should be disabled if there are fewer than 2 layers.
+    VERIFY(m_layers.size() >= 2);
+
     int layer_index = this->index_of(layer);
-    if (layer_index == 0) {
-        dbgln("Cannot merge layer down: layer is already at the bottom");
-        return; // FIXME: Notify user of error properly.
-    }
+
+    // NOTE: The action for this should be disabled if the active layer is already bottommost.
+    VERIFY(layer_index != 0);
 
     auto& layer_below = m_layers.at(layer_index - 1);
     GUI::Painter painter(layer_below.content_bitmap());

@@ -107,6 +107,8 @@ MainWidget::MainWidget()
         };
         // Ensure that our undo/redo actions are in sync with the current editor.
         image_editor_did_update_undo_stack();
+
+        update_action_states_after_layer_stack_change();
     };
 }
 
@@ -803,7 +805,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
             editor->did_complete_action("Merge Visible"sv);
         }));
 
-    m_layer_menu->add_action(GUI::Action::create(
+    m_merge_active_layer_up_action = GUI::Action::create(
         "Merge &Active Layer Up", g_icon_bag.merge_active_layer_up, [&](auto&) {
             auto* editor = current_image_editor();
             VERIFY(editor);
@@ -812,9 +814,10 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
                 return;
             editor->image().merge_active_layer_up(*active_layer);
             editor->did_complete_action("Merge Active Layer Up"sv);
-        }));
+        });
+    m_layer_menu->add_action(*m_merge_active_layer_up_action);
 
-    m_layer_menu->add_action(GUI::Action::create(
+    m_merge_active_layer_down_action = GUI::Action::create(
         "M&erge Active Layer Down", { Mod_Ctrl, Key_E }, g_icon_bag.merge_active_layer_down, [&](auto&) {
             auto* editor = current_image_editor();
             VERIFY(editor);
@@ -823,7 +826,8 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
                 return;
             editor->image().merge_active_layer_down(*active_layer);
             editor->did_complete_action("Merge Active Layer Down"sv);
-        }));
+        });
+    m_layer_menu->add_action(*m_merge_active_layer_down_action);
 
     m_layer_menu->add_separator();
     m_layer_menu->add_action(GUI::Action::create(
@@ -1090,6 +1094,21 @@ ImageEditor* MainWidget::current_image_editor()
     return verify_cast<PixelPaint::ImageEditor>(m_tab_widget->active_widget());
 }
 
+void MainWidget::update_action_states_after_layer_stack_change()
+{
+    auto layer_count = current_image_editor() ? current_image_editor()->image().layer_count() : 0;
+    if (!layer_count) {
+        m_merge_active_layer_up_action->set_enabled(false);
+        m_merge_active_layer_down_action->set_enabled(false);
+        return;
+    }
+
+    auto& editor = *current_image_editor();
+
+    m_merge_active_layer_up_action->set_enabled(layer_count > 1 && editor.active_layer() && &editor.image().layer(layer_count - 1) != editor.active_layer());
+    m_merge_active_layer_down_action->set_enabled(layer_count > 1 && editor.active_layer() && &editor.image().layer(0) != editor.active_layer());
+}
+
 ImageEditor& MainWidget::create_new_editor(NonnullRefPtr<Image> image)
 {
     auto& image_editor = m_tab_widget->add_tab<PixelPaint::ImageEditor>("Untitled", image);
@@ -1099,6 +1118,11 @@ ImageEditor& MainWidget::create_new_editor(NonnullRefPtr<Image> image)
             return;
         m_layer_list_widget->set_selected_layer(layer);
         m_layer_properties_widget->set_layer(layer);
+        update_action_states_after_layer_stack_change();
+    };
+
+    image_editor.on_layer_stack_change = [&] {
+        update_action_states_after_layer_stack_change();
     };
 
     image_editor.on_title_change = [&](auto const& title) {

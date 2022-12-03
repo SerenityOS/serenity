@@ -48,6 +48,8 @@ public:
 private:
     MainWidget();
 
+    void update_action_states_after_layer_stack_change();
+
     ImageEditor* current_image_editor();
     ImageEditor& create_new_editor(NonnullRefPtr<Image>);
     ErrorOr<void> create_image_from_clipboard();
@@ -108,6 +110,9 @@ private:
 
     RefPtr<GUI::Action> m_layer_via_copy;
     RefPtr<GUI::Action> m_layer_via_cut;
+
+    RefPtr<GUI::Action> m_merge_active_layer_up_action;
+    RefPtr<GUI::Action> m_merge_active_layer_down_action;
 
     Gfx::IntPoint m_last_image_editor_mouse_position;
 };
