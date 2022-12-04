@@ -51,6 +51,7 @@ size_t UserSampleQueue::size()
 size_t UserSampleQueue::remaining_samples()
 {
     Threading::MutexLocker lock(m_sample_mutex);
+    VERIFY(m_backing_samples.size() >= m_samples_to_discard);
     return m_backing_samples.size() - m_samples_to_discard;
 }
 
