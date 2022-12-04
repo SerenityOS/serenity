@@ -11,6 +11,7 @@
 #include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/Application.h>
+#include <LibGUI/ColorPicker.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Menubar.h>
@@ -121,6 +122,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             magnifier->show_grid(action.is_checked());
         });
 
+    auto choose_grid_color_action = GUI::Action::create(
+        "Choose Grid &Color", [&](auto& action [[maybe_unused]]) {
+            auto dialog = GUI::ColorPicker::construct(magnifier->grid_color(), window, "Magnifier: choose grid color");
+            dialog->set_color_has_alpha_channel(true);
+            if (dialog->exec() == GUI::Dialog::ExecResult::OK)
+                magnifier->set_grid_color(dialog->color());
+        });
+
     size_action_group->add_action(two_x_action);
     size_action_group->add_action(four_x_action);
     size_action_group->add_action(eight_x_action);
@@ -136,6 +145,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(view_menu->try_add_action(pause_action));
     TRY(view_menu->try_add_action(lock_location_action));
     TRY(view_menu->try_add_action(show_grid_action));
+    TRY(view_menu->try_add_action(choose_grid_color_action));
 
     auto timeline_menu = TRY(window->try_add_menu("&Timeline"));
     auto previous_frame_action = GUI::Action::create(

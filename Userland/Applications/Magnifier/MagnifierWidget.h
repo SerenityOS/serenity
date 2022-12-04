@@ -22,6 +22,8 @@ public:
     void set_scale_factor(int scale_factor);
     virtual void set_color_filter(OwnPtr<Gfx::ColorBlindnessFilter>) override;
     void show_grid(bool);
+    Gfx::Color grid_color() { return m_grid_color; }
+    void set_grid_color(Gfx::Color);
 
     void pause_capture(bool pause)
     {
@@ -50,4 +52,5 @@ private:
     bool m_pause_capture { false };
     Optional<Gfx::IntPoint> m_locked_location {};
     bool m_show_grid { false };
+    Gfx::Color m_grid_color { 255, 0, 255, 100 };
 };
