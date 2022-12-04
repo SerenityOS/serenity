@@ -198,7 +198,7 @@ bool FrameLoader::parse_document(DOM::Document& document, ByteBuffer const& data
     if (mime_type == "text/gemini")
         return build_gemini_document(document, data);
 
-    return false;
+    return build_text_document(document, data);
 }
 
 bool FrameLoader::load(LoadRequest& request, Type type)
@@ -289,6 +289,7 @@ bool FrameLoader::load(const AK::URL& url, Type type)
     dbgln_if(SPAM_DEBUG, "FrameLoader::load: {}", url);
 
     if (!url.is_valid()) {
+        dbgln("frameloader invalid url {}", url);
         load_error_page(url, "Invalid URL");
         return false;
     }
