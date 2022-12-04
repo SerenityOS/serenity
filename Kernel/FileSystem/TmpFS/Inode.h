@@ -38,6 +38,7 @@ public:
 
 private:
     TmpFSInode(TmpFS& fs, InodeMetadata const& metadata, LockWeakPtr<TmpFSInode> parent);
+    explicit TmpFSInode(TmpFS& fs);
     static ErrorOr<NonnullLockRefPtr<TmpFSInode>> try_create(TmpFS&, InodeMetadata const& metadata, LockWeakPtr<TmpFSInode> parent);
     static ErrorOr<NonnullLockRefPtr<TmpFSInode>> try_create_root(TmpFS&);
 
@@ -83,6 +84,8 @@ private:
 
         NonnullLockRefPtr<Memory::AnonymousVMObject> m_content_buffer_vmobject;
     };
+
+    bool const m_root_directory_inode { false };
 
     DataBlock::List m_blocks;
     Child::List m_children;

@@ -32,7 +32,9 @@ private:
 
     LockRefPtr<TmpFSInode> m_root_inode;
 
-    unsigned m_next_inode_index { 1 };
+    // NOTE: We start by assigning InodeIndex of 2, because 0 is invalid and 1
+    // is reserved for the root directory inode.
+    unsigned m_next_inode_index { 2 };
     unsigned next_inode_index();
 };
 
