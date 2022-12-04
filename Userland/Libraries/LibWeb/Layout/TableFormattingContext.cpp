@@ -176,6 +176,28 @@ void TableFormattingContext::distribute_width_to_columns(float extra_width)
         column.used_width += ((column.max_width - column.min_width) / grid_max) * extra_width;
 }
 
+void TableFormattingContext::determine_intrisic_size_of_table_container(AvailableSpace const& available_space)
+{
+    auto const& table_box = context_box();
+    auto& table_box_state = m_state.get_mutable(table_box);
+
+    if (available_space.width.is_min_content()) {
+        // The min-content width of a table is the width required to fit all of its columns min-content widths and its undistributable spaces.
+        float grid_min = 0.0f;
+        for (auto& column : m_columns)
+            grid_min += column.min_width;
+        table_box_state.set_content_width(grid_min);
+    }
+
+    if (available_space.width.is_max_content()) {
+        // The max-content width of a table is the width required to fit all of its columns max-content widths and its undistributable spaces.
+        float grid_max = 0.0f;
+        for (auto& column : m_columns)
+            grid_max += column.max_width;
+        table_box_state.set_content_width(grid_max);
+    }
+}
+
 void TableFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const& available_space)
 {
     float total_content_height = 0;
@@ -185,6 +207,11 @@ void TableFormattingContext::run(Box const& box, LayoutMode, AvailableSpace cons
 
     // Compute the minimum width of each column.
     compute_table_measures();
+
+    if (available_space.width.is_intrinsic_sizing_constraint()) {
+        determine_intrisic_size_of_table_container(available_space);
+        return;
+    }
 
     // Compute the width of the table.
     float extra_width = 0;
