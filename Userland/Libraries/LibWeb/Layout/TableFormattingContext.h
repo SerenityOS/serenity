@@ -38,6 +38,7 @@ private:
     struct Row {
         Box& box;
         float used_width { 0 };
+        float baseline { 0 };
     };
 
     struct Cell {
@@ -46,6 +47,7 @@ private:
         size_t row_index;
         size_t column_span;
         size_t raw_span;
+        float baseline { 0 };
     };
 
     Vector<Cell> m_cells;

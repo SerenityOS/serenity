@@ -251,8 +251,11 @@ void TableFormattingContext::run(Box const& box, LayoutMode, AvailableSpace cons
 
         BlockFormattingContext::compute_height(cell.box, AvailableSpace(AvailableSize::make_indefinite(), AvailableSize::make_indefinite()));
 
-        Row& row = m_rows[cell.row_index];
+        cell.baseline = box_baseline(m_state, cell.box);
+
+        auto& row = m_rows[cell.row_index];
         row.used_width = max(row.used_width, cell_state.border_box_height());
+        row.baseline = max(row.baseline, cell.baseline);
     }
 
     for (size_t y = 0; y < m_rows.size(); y++) {
@@ -293,7 +296,29 @@ void TableFormattingContext::run(Box const& box, LayoutMode, AvailableSpace cons
     for (auto& cell : m_cells) {
         auto& cell_state = m_state.get_mutable(cell.box);
         auto& row_state = m_state.get(m_rows[cell.row_index].box);
-        cell_state.set_content_height(row_state.content_height() - cell_state.border_box_top() - cell_state.border_box_bottom());
+        float const cell_border_box_height = cell_state.content_height() + cell_state.border_box_top() + cell_state.border_box_bottom();
+        float const row_content_height = row_state.content_height();
+        auto const& vertical_align = cell.box.computed_values().vertical_align();
+        if (vertical_align.has<CSS::VerticalAlign>()) {
+            switch (vertical_align.get<CSS::VerticalAlign>()) {
+            case CSS::VerticalAlign::Middle: {
+                cell_state.padding_top += (row_content_height - cell_border_box_height) / 2;
+                cell_state.padding_bottom += (row_content_height - cell_border_box_height) / 2;
+                break;
+            }
+            // FIXME: implement actual 'top' and 'bottom' support instead of fall back to 'baseline'
+            case CSS::VerticalAlign::Top:
+            case CSS::VerticalAlign::Bottom:
+            case CSS::VerticalAlign::Baseline: {
+                cell_state.padding_top += m_rows[cell.row_index].baseline - cell.baseline;
+                cell_state.padding_bottom += row_content_height - cell_border_box_height;
+                break;
+            }
+            default:
+                VERIFY_NOT_REACHED();
+            }
+        }
+
         cell_state.offset = row_state.offset.translated(cell_state.border_box_left() + m_columns[cell.column_index].left_offset, cell_state.border_box_top());
     }
 
