@@ -22,6 +22,7 @@ public:
     TableCellBox const* next_cell() const { return next_sibling_of_type<TableCellBox>(); }
 
     size_t colspan() const;
+    size_t rowspan() const;
 
     static CSS::Display static_display() { return CSS::Display { CSS::Display::Internal::TableCell }; }
 };
