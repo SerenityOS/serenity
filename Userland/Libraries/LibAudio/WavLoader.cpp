@@ -18,7 +18,7 @@ namespace Audio {
 
 static constexpr size_t const maximum_wav_size = 1 * GiB; // FIXME: is there a more appropriate size limit?
 
-WavLoaderPlugin::WavLoaderPlugin(OwnPtr<Core::Stream::SeekableStream> stream)
+WavLoaderPlugin::WavLoaderPlugin(NonnullOwnPtr<Core::Stream::SeekableStream> stream)
     : LoaderPlugin(move(stream))
 {
 }
@@ -142,9 +142,6 @@ LoaderSamples WavLoaderPlugin::samples_from_pcm_data(Bytes const& data, size_t s
 
 LoaderSamples WavLoaderPlugin::get_more_samples(size_t max_samples_to_read_from_input)
 {
-    if (!m_stream)
-        return LoaderError { LoaderError::Category::Internal, static_cast<size_t>(m_loaded_samples), "No stream; initialization failed" };
-
     auto remaining_samples = m_total_samples - m_loaded_samples;
     if (remaining_samples <= 0)
         return FixedArray<Sample> {};
@@ -189,9 +186,6 @@ MaybeLoaderError WavLoaderPlugin::seek(int sample_index)
 // Specification reference: http://www-mmsp.ece.mcgill.ca/Documents/AudioFormats/WAVE/WAVE.html
 MaybeLoaderError WavLoaderPlugin::parse_header()
 {
-    if (!m_stream)
-        return LoaderError { LoaderError::Category::Internal, 0, "No stream" };
-
     bool ok = true;
     size_t bytes_read = 0;
 

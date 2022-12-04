@@ -30,7 +30,7 @@ using MaybeLoaderError = Result<void, LoaderError>;
 
 class LoaderPlugin {
 public:
-    explicit LoaderPlugin(OwnPtr<Core::Stream::SeekableStream> stream);
+    explicit LoaderPlugin(NonnullOwnPtr<Core::Stream::SeekableStream> stream);
     virtual ~LoaderPlugin() = default;
 
     virtual LoaderSamples get_more_samples(size_t max_bytes_to_read_from_input = 128 * KiB) = 0;
@@ -58,7 +58,7 @@ public:
     Vector<PictureData> const& pictures() const { return m_pictures; };
 
 protected:
-    OwnPtr<Core::Stream::SeekableStream> m_stream;
+    NonnullOwnPtr<Core::Stream::SeekableStream> m_stream;
 
     Vector<PictureData> m_pictures;
 };
