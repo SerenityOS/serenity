@@ -173,8 +173,8 @@ endpoint WindowServer
     set_double_click_speed(int speed) =|
     get_double_click_speed() => (int speed)
 
-    set_buttons_switched(bool switched) =|
-    get_buttons_switched() => (bool switched)
+    set_mouse_buttons_switched(bool switched) =|
+    are_mouse_buttons_switched() => (bool switched)
 
     set_natural_scroll(bool inverted) =|
     is_natural_scroll() => (bool inverted)

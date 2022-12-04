@@ -151,8 +151,8 @@ public:
     void set_scroll_step_size(unsigned);
     void set_double_click_speed(int);
     int double_click_speed() const;
-    void set_buttons_switched(bool);
-    bool get_buttons_switched() const;
+    void set_mouse_buttons_switched(bool);
+    bool are_mouse_buttons_switched() const;
     void set_natural_scroll(bool);
     bool is_natural_scroll() const;
 
@@ -434,7 +434,7 @@ private:
     int m_double_click_speed { 0 };
     int m_max_distance_for_double_click { 4 };
     bool m_previous_event_was_super_keydown { false };
-    bool m_buttons_switched { false };
+    bool m_mouse_buttons_switched { false };
     bool m_natural_scroll { false };
     bool m_theme_overridden { false };
 

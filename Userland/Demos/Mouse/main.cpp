@@ -44,7 +44,7 @@ public:
 
         auto buttons = m_buttons | m_double_clicked_buttons;
 
-        auto primary_secondary_switched = GUI::ConnectionToWindowServer::the().get_buttons_switched();
+        auto primary_secondary_switched = GUI::ConnectionToWindowServer::the().are_mouse_buttons_switched();
         auto primary_pressed = buttons & GUI::MouseButton::Primary;
         auto secondary_pressed = buttons & GUI::MouseButton::Secondary;
 

@@ -1100,14 +1100,14 @@ Messages::WindowServer::GetDoubleClickSpeedResponse ConnectionFromClient::get_do
     return WindowManager::the().double_click_speed();
 }
 
-void ConnectionFromClient::set_buttons_switched(bool switched)
+void ConnectionFromClient::set_mouse_buttons_switched(bool switched)
 {
-    WindowManager::the().set_buttons_switched(switched);
+    WindowManager::the().set_mouse_buttons_switched(switched);
 }
 
-Messages::WindowServer::GetButtonsSwitchedResponse ConnectionFromClient::get_buttons_switched()
+Messages::WindowServer::AreMouseButtonsSwitchedResponse ConnectionFromClient::are_mouse_buttons_switched()
 {
-    return WindowManager::the().get_buttons_switched();
+    return WindowManager::the().are_mouse_buttons_switched();
 }
 
 void ConnectionFromClient::set_natural_scroll(bool inverted)

@@ -176,8 +176,8 @@ private:
     virtual Messages::WindowServer::GetScreenBitmapAroundCursorResponse get_screen_bitmap_around_cursor(Gfx::IntSize) override;
     virtual void set_double_click_speed(i32) override;
     virtual Messages::WindowServer::GetDoubleClickSpeedResponse get_double_click_speed() override;
-    virtual void set_buttons_switched(bool) override;
-    virtual Messages::WindowServer::GetButtonsSwitchedResponse get_buttons_switched() override;
+    virtual void set_mouse_buttons_switched(bool) override;
+    virtual Messages::WindowServer::AreMouseButtonsSwitchedResponse are_mouse_buttons_switched() override;
     virtual void set_natural_scroll(bool) override;
     virtual Messages::WindowServer::IsNaturalScrollResponse is_natural_scroll() override;
     virtual void set_window_modified(i32, bool) override;

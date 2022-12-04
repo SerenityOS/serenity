@@ -51,8 +51,8 @@ MouseWidget::MouseWidget()
         set_modified(true);
     };
 
-    m_switch_buttons_checkbox = *find_descendant_of_type_named<GUI::CheckBox>("switch_buttons_input");
-    m_switch_buttons_checkbox->set_checked(GUI::ConnectionToWindowServer::the().get_buttons_switched(), GUI::AllowCallback::No);
+    m_switch_buttons_checkbox = *find_descendant_of_type_named<GUI::CheckBox>("switch_buttons_checkbox");
+    m_switch_buttons_checkbox->set_checked(GUI::ConnectionToWindowServer::the().are_mouse_buttons_switched(), GUI::AllowCallback::No);
     m_switch_buttons_checkbox->on_checked = [&](auto) {
         set_modified(true);
     };
@@ -74,7 +74,7 @@ void MouseWidget::apply_settings()
     GUI::ConnectionToWindowServer::the().async_set_mouse_acceleration(factor);
     GUI::ConnectionToWindowServer::the().async_set_scroll_step_size(m_scroll_length_spinbox->value());
     GUI::ConnectionToWindowServer::the().async_set_double_click_speed(m_double_click_speed_slider->value());
-    GUI::ConnectionToWindowServer::the().async_set_buttons_switched(m_switch_buttons_checkbox->is_checked());
+    GUI::ConnectionToWindowServer::the().async_set_mouse_buttons_switched(m_switch_buttons_checkbox->is_checked());
     GUI::ConnectionToWindowServer::the().async_set_natural_scroll(m_natural_scroll_checkbox->is_checked());
 }
 
