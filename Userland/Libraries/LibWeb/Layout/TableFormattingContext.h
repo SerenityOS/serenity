@@ -11,13 +11,6 @@
 
 namespace Web::Layout {
 
-struct ColumnWidth {
-    float min { 0 };
-    float max { 0 };
-    float used { 0 };
-    bool is_auto { true };
-};
-
 class TableFormattingContext final : public BlockFormattingContext {
 public:
     explicit TableFormattingContext(LayoutState&, BlockContainer const&, FormattingContext* parent);
@@ -27,10 +20,37 @@ public:
     virtual float automatic_content_height() const override;
 
 private:
-    void calculate_column_widths(Box const& row, CSS::Length const& table_width, Vector<ColumnWidth>& column_widths, AvailableSpace const&);
-    void layout_row(Box const& row, Vector<ColumnWidth>& column_widths, AvailableSpace const&);
+    void calculate_row_column_grid(Box const&);
+    void compute_table_measures();
+    void compute_table_width(float&);
+    void distribute_width_to_columns(float extra_width);
+    void determine_intrisic_size_of_table_container(AvailableSpace const& available_space);
 
     float m_automatic_content_height { 0 };
+
+    struct Column {
+        float left_offset { 0 };
+        float min_width { 0 };
+        float max_width { 0 };
+        float used_width { 0 };
+    };
+
+    struct Row {
+        Box& box;
+        float used_width { 0 };
+    };
+
+    struct Cell {
+        Box& box;
+        size_t column_index;
+        size_t row_index;
+        size_t column_span;
+        size_t raw_span;
+    };
+
+    Vector<Cell> m_cells;
+    Vector<Column> m_columns;
+    Vector<Row> m_rows;
 };
 
 }
