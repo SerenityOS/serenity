@@ -199,11 +199,11 @@ void Scrollbar::paint_event(PaintEvent& event)
         painter.fill_rect_with_dither_pattern(rect_to_fill, palette().button(), palette().button().lightened(0.77f));
     }
 
-    bool decrement_pressed = (m_pressed_component == Component::DecrementButton) && (m_pressed_component == m_hovered_component);
-    bool increment_pressed = (m_pressed_component == Component::IncrementButton) && (m_pressed_component == m_hovered_component);
+    bool decrement_pressed = (m_pressed_component == Component::DecrementButton) && (m_pressed_component == m_hovered_component) && !is_min();
+    bool increment_pressed = (m_pressed_component == Component::IncrementButton) && (m_pressed_component == m_hovered_component) && !is_max();
 
-    Gfx::StylePainter::paint_button(painter, decrement_button_rect(), palette(), Gfx::ButtonStyle::ThickCap, decrement_pressed, hovered_component_for_painting == Component::DecrementButton);
-    Gfx::StylePainter::paint_button(painter, increment_button_rect(), palette(), Gfx::ButtonStyle::ThickCap, increment_pressed, hovered_component_for_painting == Component::IncrementButton);
+    Gfx::StylePainter::paint_button(painter, decrement_button_rect(), palette(), Gfx::ButtonStyle::ThickCap, decrement_pressed, hovered_component_for_painting == Component::DecrementButton && !is_min());
+    Gfx::StylePainter::paint_button(painter, increment_button_rect(), palette(), Gfx::ButtonStyle::ThickCap, increment_pressed, hovered_component_for_painting == Component::IncrementButton && !is_max());
 
     if (length(orientation()) >= default_button_size() * 2) {
         auto decrement_location = decrement_button_rect().location().translated(3, 3);
@@ -211,14 +211,14 @@ void Scrollbar::paint_event(PaintEvent& event)
             decrement_location.translate_by(1, 1);
         if (!has_scrubber() || !is_enabled())
             painter.draw_triangle(decrement_location + Gfx::IntPoint { 1, 1 }, orientation() == Orientation::Vertical ? s_up_arrow_coords : s_left_arrow_coords, palette().threed_highlight());
-        painter.draw_triangle(decrement_location, orientation() == Orientation::Vertical ? s_up_arrow_coords : s_left_arrow_coords, (has_scrubber() && is_enabled()) ? palette().button_text() : palette().threed_shadow1());
+        painter.draw_triangle(decrement_location, orientation() == Orientation::Vertical ? s_up_arrow_coords : s_left_arrow_coords, (has_scrubber() && is_enabled() && !is_min()) ? palette().button_text() : palette().threed_shadow1());
 
         auto increment_location = increment_button_rect().location().translated(3, 3);
         if (increment_pressed)
             increment_location.translate_by(1, 1);
         if (!has_scrubber() || !is_enabled())
             painter.draw_triangle(increment_location + Gfx::IntPoint { 1, 1 }, orientation() == Orientation::Vertical ? s_down_arrow_coords : s_right_arrow_coords, palette().threed_highlight());
-        painter.draw_triangle(increment_location, orientation() == Orientation::Vertical ? s_down_arrow_coords : s_right_arrow_coords, (has_scrubber() && is_enabled()) ? palette().button_text() : palette().threed_shadow1());
+        painter.draw_triangle(increment_location, orientation() == Orientation::Vertical ? s_down_arrow_coords : s_right_arrow_coords, (has_scrubber() && is_enabled() && !is_max()) ? palette().button_text() : palette().threed_shadow1());
     }
 
     if (has_scrubber() && !scrubber_rect().is_null())
@@ -263,11 +263,15 @@ void Scrollbar::mousedown_event(MouseEvent& event)
     m_pressed_component = component_at_position(m_last_mouse_position);
 
     if (m_pressed_component == Component::DecrementButton) {
+        if (is_min())
+            return;
         set_automatic_scrolling_active(true, Component::DecrementButton);
         update();
         return;
     }
     if (m_pressed_component == Component::IncrementButton) {
+        if (is_max())
+            return;
         set_automatic_scrolling_active(true, Component::IncrementButton);
         update();
         return;
