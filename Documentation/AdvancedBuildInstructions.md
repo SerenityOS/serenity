@@ -213,3 +213,11 @@ of parallel compile tasks be setting the `MAKEJOBS` environment variable to a nu
 Once the build script finishes, you can use it to compile SerenityOS. Either set the `SERENITY_TOOLCHAIN` build
 option to `Clang` as shown [above](#cmake-build-options), or pass `Clang` as the TOOLCHAIN option to
 `Meta/serenity.sh`, for example: `Meta/serenity.sh run i686 Clang`.
+
+## Clang-format updates
+
+There 3 options to acquire an updated clang-format tool:
+1) If you have a Debian-based (apt-based) distribution, refer to [SelfHostedRunners.md](https://github.com/SerenityOS/serenity/blob/master/Documentation/SelfHostedRunners.md) document to learn more about using the LLVM apt repositories to install the latest clang-format tool.
+2) Compile using `Toolchain/BuildClang.sh` as being pointed above use the compiled `Toolchain/Local/clang/bin/clang-format` binary.
+3) Compile LLVM from source as pointed [here](https://llvm.org/docs/GettingStarted.html#compiling-the-llvm-suite-source-code).
+    

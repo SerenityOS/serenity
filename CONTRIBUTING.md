@@ -40,7 +40,7 @@ Nobody is perfect, and sometimes we mess things up. That said, here are some goo
 **Do:**
 
 * Write in idiomatic SerenityOS C++20, using the `AK` containers in all code.
-* Conform to the project coding style found in [CodingStyle.md](https://github.com/SerenityOS/serenity/blob/master/Documentation/CodingStyle.md). Use `clang-format` (version 14 or later) to automatically format C++ files.
+* Conform to the project coding style found in [CodingStyle.md](https://github.com/SerenityOS/serenity/blob/master/Documentation/CodingStyle.md). Use `clang-format` (version 15 or later) to automatically format C++ files. See [AdvancedBuildInstructions.md](https://github.com/SerenityOS/serenity/blob/master/Documentation/CodingStyle.md) in Clang-format updates section to check how to acquire the tool.
 * Choose expressive variable, function and class names. Make it as obvious as possible what the code is doing.
 * Split your changes into separate, atomic commits (i.e. A commit per feature or fix, where the build, tests and the system are all functioning).
 * Make sure your commits are rebased on the master branch.
