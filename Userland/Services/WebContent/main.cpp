@@ -32,6 +32,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
     TRY(Core::System::unveil("/sys/kernel/processes", "r"));
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil("/etc/timezone", "r"));
+    TRY(Core::System::unveil("/usr/lib", "r"));
     TRY(Core::System::unveil("/tmp/session/%sid/portal/request", "rw"));
     TRY(Core::System::unveil("/tmp/session/%sid/portal/image", "rw"));
     TRY(Core::System::unveil("/tmp/session/%sid/portal/websocket", "rw"));
