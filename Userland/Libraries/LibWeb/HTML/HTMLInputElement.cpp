@@ -589,6 +589,10 @@ DeprecatedString HTMLInputElement::value_sanitization_algorithm(DeprecatedString
         // https://html.spec.whatwg.org/multipage/input.html#date-state-(type=date):value-sanitization-algorithm
         if (!is_valid_date_string(value))
             return "";
+    } else if (type_state() == HTMLInputElement::TypeAttributeState::Month) {
+        // https://html.spec.whatwg.org/multipage/input.html#month-state-(type=month):value-sanitization-algorithm
+        if (!is_valid_month_string(value))
+            return "";
     } else if (type_state() == HTMLInputElement::TypeAttributeState::Color) {
         // https://html.spec.whatwg.org/multipage/input.html#color-state-(type=color):value-sanitization-algorithm
         // If the value of the element is a valid simple color, then set it to the value of the element converted to ASCII lowercase;
