@@ -27,6 +27,7 @@ public:
         if (!pause)
             m_frame_offset_from_head = 0;
     }
+    void lock_location(bool);
     void display_previous_frame();
     void display_next_frame();
     RefPtr<Gfx::Bitmap> current_bitmap() const { return m_grabbed_bitmap; };
@@ -45,4 +46,5 @@ private:
     CircularQueue<RefPtr<Gfx::Bitmap>, 512> m_grabbed_bitmaps {};
     ssize_t m_frame_offset_from_head { 0 };
     bool m_pause_capture { false };
+    Optional<Gfx::IntPoint> m_locked_location {};
 };
