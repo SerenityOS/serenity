@@ -14,20 +14,33 @@ namespace Audio {
 DSP::MDCT<12> MP3LoaderPlugin::s_mdct_12;
 DSP::MDCT<36> MP3LoaderPlugin::s_mdct_36;
 
-MP3LoaderPlugin::MP3LoaderPlugin(StringView path)
-    : LoaderPlugin(path)
+MP3LoaderPlugin::MP3LoaderPlugin(OwnPtr<Core::Stream::SeekableStream> stream)
+    : LoaderPlugin(move(stream))
 {
 }
 
-MP3LoaderPlugin::MP3LoaderPlugin(Bytes buffer)
-    : LoaderPlugin(buffer)
+Result<NonnullOwnPtr<MP3LoaderPlugin>, LoaderError> MP3LoaderPlugin::try_create(StringView path)
 {
+    auto stream = LOADER_TRY(Core::Stream::BufferedFile::create(LOADER_TRY(Core::Stream::File::open(path, Core::Stream::OpenMode::Read))));
+    auto loader = make<MP3LoaderPlugin>(move(stream));
+
+    LOADER_TRY(loader->initialize());
+
+    return loader;
+}
+
+Result<NonnullOwnPtr<MP3LoaderPlugin>, LoaderError> MP3LoaderPlugin::try_create(Bytes buffer)
+{
+    auto stream = LOADER_TRY(Core::Stream::MemoryStream::construct(buffer));
+    auto loader = make<MP3LoaderPlugin>(move(stream));
+
+    LOADER_TRY(loader->initialize());
+
+    return loader;
 }
 
 MaybeLoaderError MP3LoaderPlugin::initialize()
 {
-    LOADER_TRY(LoaderPlugin::initialize());
-
     m_bitstream = LOADER_TRY(Core::Stream::BigEndianInputBitStream::construct(*m_stream));
 
     TRY(synchronize());

@@ -18,22 +18,36 @@ namespace Audio {
 
 static constexpr size_t const maximum_wav_size = 1 * GiB; // FIXME: is there a more appropriate size limit?
 
-WavLoaderPlugin::WavLoaderPlugin(StringView path)
-    : LoaderPlugin(path)
+WavLoaderPlugin::WavLoaderPlugin(OwnPtr<Core::Stream::SeekableStream> stream)
+    : LoaderPlugin(move(stream))
 {
+}
+
+Result<NonnullOwnPtr<WavLoaderPlugin>, LoaderError> WavLoaderPlugin::try_create(StringView path)
+{
+    auto stream = LOADER_TRY(Core::Stream::BufferedFile::create(LOADER_TRY(Core::Stream::File::open(path, Core::Stream::OpenMode::Read))));
+    auto loader = make<WavLoaderPlugin>(move(stream));
+
+    LOADER_TRY(loader->initialize());
+
+    return loader;
+}
+
+Result<NonnullOwnPtr<WavLoaderPlugin>, LoaderError> WavLoaderPlugin::try_create(Bytes buffer)
+{
+    auto stream = LOADER_TRY(Core::Stream::MemoryStream::construct(buffer));
+    auto loader = make<WavLoaderPlugin>(move(stream));
+
+    LOADER_TRY(loader->initialize());
+
+    return loader;
 }
 
 MaybeLoaderError WavLoaderPlugin::initialize()
 {
-    LOADER_TRY(LoaderPlugin::initialize());
+    LOADER_TRY(parse_header());
 
-    TRY(parse_header());
     return {};
-}
-
-WavLoaderPlugin::WavLoaderPlugin(Bytes buffer)
-    : LoaderPlugin(buffer)
-{
 }
 
 template<typename SampleReader>

@@ -21,14 +21,16 @@ struct FlacTest : Test::TestCase {
 
     void run() const
     {
-        auto loader = Audio::FlacLoaderPlugin { m_path.string() };
-        if (auto result = loader.initialize(); result.is_error()) {
+        auto result = Audio::FlacLoaderPlugin::try_create(m_path.string());
+        if (result.is_error()) {
             FAIL(String::formatted("{} (at {})", result.error().description, result.error().index));
             return;
         }
 
+        auto loader = result.release_value();
+
         while (true) {
-            auto maybe_samples = loader.get_more_samples(2 * MiB);
+            auto maybe_samples = loader->get_more_samples(2 * MiB);
             if (maybe_samples.is_error()) {
                 FAIL(String::formatted("{} (at {})", maybe_samples.error().description, maybe_samples.error().index));
                 return;

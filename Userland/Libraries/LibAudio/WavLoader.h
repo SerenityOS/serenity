@@ -29,10 +29,9 @@ static constexpr unsigned const WAVE_FORMAT_EXTENSIBLE = 0xFFFE; // Determined b
 // Parses and reads audio data from a WAV file.
 class WavLoaderPlugin : public LoaderPlugin {
 public:
-    explicit WavLoaderPlugin(StringView path);
-    explicit WavLoaderPlugin(Bytes buffer);
-
-    virtual MaybeLoaderError initialize() override;
+    explicit WavLoaderPlugin(OwnPtr<Core::Stream::SeekableStream> stream);
+    static Result<NonnullOwnPtr<WavLoaderPlugin>, LoaderError> try_create(StringView path);
+    static Result<NonnullOwnPtr<WavLoaderPlugin>, LoaderError> try_create(Bytes buffer);
 
     virtual LoaderSamples get_more_samples(size_t max_samples_to_read_from_input = 128 * KiB) override;
 
@@ -50,6 +49,8 @@ public:
     virtual PcmSampleFormat pcm_format() override { return m_sample_format; }
 
 private:
+    MaybeLoaderError initialize();
+
     MaybeLoaderError parse_header();
 
     LoaderSamples samples_from_pcm_data(Bytes const& data, size_t samples_to_read) const;
