@@ -181,7 +181,7 @@ public:
         this->for_each_chunk([&](auto chunk) {
             auto base_ptr = align_up_to(chunk + sizeof(typename Allocator::ChunkHeader), alignof(T));
             // Compute the offset of the first byte *after* this chunk:
-            FlatPtr end_offset = base_ptr + this->m_chunk_size - chunk;
+            FlatPtr end_offset = base_ptr + this->m_chunk_size - chunk - sizeof(typename Allocator::ChunkHeader);
             if (chunk == this->m_current_chunk)
                 end_offset = this->m_byte_offset_into_current_chunk;
             // Compute the offset of the first byte *after* the last valid object, in case the end of the chunk does not align with the end of an object:
