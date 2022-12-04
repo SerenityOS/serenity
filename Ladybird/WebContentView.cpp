@@ -457,12 +457,12 @@ void WebContentView::update_viewport_rect()
     request_repaint();
 }
 
-void WebContentView::debug_request(String const& request, String const& argument)
+void WebContentView::debug_request(DeprecatedString const& request, DeprecatedString const& argument)
 {
     client().async_debug_request(request, argument);
 }
 
-void WebContentView::run_javascript(String const& js_source)
+void WebContentView::run_javascript(DeprecatedString const& js_source)
 {
     client().async_run_javascript(js_source);
 }
@@ -473,7 +473,7 @@ void WebContentView::did_output_js_console_message(i32 message_index)
         m_console_widget->notify_about_new_console_message(message_index);
 }
 
-void WebContentView::did_get_js_console_messages(i32 start_index, Vector<String> message_types, Vector<String> messages)
+void WebContentView::did_get_js_console_messages(i32 start_index, Vector<DeprecatedString> message_types, Vector<DeprecatedString> messages)
 {
     if (m_console_widget)
         m_console_widget->handle_console_messages(start_index, message_types, messages);
@@ -588,15 +588,15 @@ void WebContentView::create_client()
         MUST(Core::System::close(ui_fd_passing_fd));
         MUST(Core::System::close(ui_fd));
 
-        String takeover_string;
+        DeprecatedString takeover_string;
         if (auto* socket_takeover = getenv("SOCKET_TAKEOVER"))
-            takeover_string = String::formatted("{} WebContent:{}", socket_takeover, wc_fd);
+            takeover_string = DeprecatedString::formatted("{} WebContent:{}", socket_takeover, wc_fd);
         else
-            takeover_string = String::formatted("WebContent:{}", wc_fd);
+            takeover_string = DeprecatedString::formatted("WebContent:{}", wc_fd);
         MUST(Core::System::setenv("SOCKET_TAKEOVER"sv, takeover_string, true));
 
-        auto webcontent_fd_passing_socket_string = String::number(wc_fd_passing_fd);
-        auto webdriver_fd_passing_socket_string = String::number(m_webdriver_fd_passing_socket);
+        auto webcontent_fd_passing_socket_string = DeprecatedString::number(wc_fd_passing_fd);
+        auto webdriver_fd_passing_socket_string = DeprecatedString::number(m_webdriver_fd_passing_socket);
 
         char const* argv[] = {
             "WebContent",
@@ -647,7 +647,7 @@ void WebContentView::create_client()
         });
     };
 
-    client().async_update_system_theme(Gfx::load_system_theme(String::formatted("{}/res/themes/Default.ini", s_serenity_resource_root)));
+    client().async_update_system_theme(Gfx::load_system_theme(DeprecatedString::formatted("{}/res/themes/Default.ini", s_serenity_resource_root)));
     client().async_update_system_fonts(Gfx::FontDatabase::default_font_query(), Gfx::FontDatabase::fixed_width_font_query(), Gfx::FontDatabase::window_title_font_query());
 
     // FIXME: Get the screen rect.
@@ -666,17 +666,17 @@ void WebContentView::handle_web_content_process_crash()
     handle_resize();
     StringBuilder builder;
     builder.append("<html><head><title>Crashed: "sv);
-    builder.append(escape_html_entities(m_url.to_string()));
+    builder.append(escape_html_entities(m_url.to_deprecated_string()));
     builder.append("</title></head><body>"sv);
     builder.append("<h1>Web page crashed"sv);
     if (!m_url.host().is_empty()) {
         builder.appendff(" on {}", escape_html_entities(m_url.host()));
     }
     builder.append("</h1>"sv);
-    auto escaped_url = escape_html_entities(m_url.to_string());
+    auto escaped_url = escape_html_entities(m_url.to_deprecated_string());
     builder.appendff("The web page <a href=\"{}\">{}</a> has crashed.<br><br>You can reload the page to try again.", escaped_url, escaped_url);
     builder.append("</body></html>"sv);
-    load_html(builder.to_string(), m_url);
+    load_html(builder.to_deprecated_string(), m_url);
 }
 
 void WebContentView::notify_server_did_paint(Badge<WebContentClient>, i32 bitmap_id)
@@ -732,9 +732,9 @@ void WebContentView::notify_server_did_layout(Badge<WebContentClient>, Gfx::IntS
     horizontalScrollBar()->setPageStep(m_viewport_rect.width());
 }
 
-void WebContentView::notify_server_did_change_title(Badge<WebContentClient>, String const& title)
+void WebContentView::notify_server_did_change_title(Badge<WebContentClient>, DeprecatedString const& title)
 {
-    emit title_changed(qstring_from_akstring(title));
+    emit title_changed(qstring_from_ak_deprecated_string(title));
 }
 
 void WebContentView::notify_server_did_request_scroll(Badge<WebContentClient>, i32 x_delta, i32 y_delta)
@@ -761,12 +761,12 @@ void WebContentView::notify_server_did_request_scroll_into_view(Badge<WebContent
     }
 }
 
-void WebContentView::notify_server_did_enter_tooltip_area(Badge<WebContentClient>, Gfx::IntPoint const& content_position, String const& tooltip)
+void WebContentView::notify_server_did_enter_tooltip_area(Badge<WebContentClient>, Gfx::IntPoint const& content_position, DeprecatedString const& tooltip)
 {
     auto widget_position = to_widget(content_position);
     QToolTip::showText(
         mapToGlobal(QPoint(widget_position.x(), widget_position.y())),
-        qstring_from_akstring(tooltip),
+        qstring_from_ak_deprecated_string(tooltip),
         this);
 }
 
@@ -777,7 +777,7 @@ void WebContentView::notify_server_did_leave_tooltip_area(Badge<WebContentClient
 
 void WebContentView::notify_server_did_hover_link(Badge<WebContentClient>, AK::URL const& url)
 {
-    emit link_hovered(qstring_from_akstring(url.to_string()));
+    emit link_hovered(qstring_from_ak_deprecated_string(url.to_deprecated_string()));
 }
 
 void WebContentView::notify_server_did_unhover_link(Badge<WebContentClient>)
@@ -785,7 +785,7 @@ void WebContentView::notify_server_did_unhover_link(Badge<WebContentClient>)
     emit link_unhovered();
 }
 
-void WebContentView::notify_server_did_click_link(Badge<WebContentClient>, AK::URL const& url, String const& target, unsigned int modifiers)
+void WebContentView::notify_server_did_click_link(Badge<WebContentClient>, AK::URL const& url, DeprecatedString const& target, unsigned int modifiers)
 {
     // FIXME
     (void)url;
@@ -795,7 +795,7 @@ void WebContentView::notify_server_did_click_link(Badge<WebContentClient>, AK::U
     // on_link_click(url, target, modifiers);
 }
 
-void WebContentView::notify_server_did_middle_click_link(Badge<WebContentClient>, AK::URL const& url, String const& target, unsigned int modifiers)
+void WebContentView::notify_server_did_middle_click_link(Badge<WebContentClient>, AK::URL const& url, DeprecatedString const& target, unsigned int modifiers)
 {
     (void)url;
     (void)target;
@@ -834,14 +834,14 @@ void WebContentView::notify_server_did_request_context_menu(Badge<WebContentClie
     (void)content_position;
 }
 
-void WebContentView::notify_server_did_request_link_context_menu(Badge<WebContentClient>, Gfx::IntPoint const& content_position, AK::URL const& url, String const&, unsigned)
+void WebContentView::notify_server_did_request_link_context_menu(Badge<WebContentClient>, Gfx::IntPoint const& content_position, AK::URL const& url, DeprecatedString const&, unsigned)
 {
     // FIXME
     (void)content_position;
     (void)url;
 }
 
-void WebContentView::notify_server_did_request_image_context_menu(Badge<WebContentClient>, Gfx::IntPoint const& content_position, AK::URL const& url, String const&, unsigned, Gfx::ShareableBitmap const& bitmap)
+void WebContentView::notify_server_did_request_image_context_menu(Badge<WebContentClient>, Gfx::IntPoint const& content_position, AK::URL const& url, DeprecatedString const&, unsigned, Gfx::ShareableBitmap const& bitmap)
 {
     // FIXME
     (void)content_position;
@@ -849,45 +849,45 @@ void WebContentView::notify_server_did_request_image_context_menu(Badge<WebConte
     (void)bitmap;
 }
 
-void WebContentView::notify_server_did_request_alert(Badge<WebContentClient>, String const& message)
+void WebContentView::notify_server_did_request_alert(Badge<WebContentClient>, DeprecatedString const& message)
 {
-    m_dialog = new QMessageBox(QMessageBox::Icon::Warning, "Ladybird", qstring_from_akstring(message), QMessageBox::StandardButton::Ok, this);
+    m_dialog = new QMessageBox(QMessageBox::Icon::Warning, "Ladybird", qstring_from_ak_deprecated_string(message), QMessageBox::StandardButton::Ok, this);
     m_dialog->exec();
 
     client().async_alert_closed();
     m_dialog = nullptr;
 }
 
-void WebContentView::notify_server_did_request_confirm(Badge<WebContentClient>, String const& message)
+void WebContentView::notify_server_did_request_confirm(Badge<WebContentClient>, DeprecatedString const& message)
 {
-    m_dialog = new QMessageBox(QMessageBox::Icon::Question, "Ladybird", qstring_from_akstring(message), QMessageBox::StandardButton::Ok | QMessageBox::StandardButton::Cancel, this);
+    m_dialog = new QMessageBox(QMessageBox::Icon::Question, "Ladybird", qstring_from_ak_deprecated_string(message), QMessageBox::StandardButton::Ok | QMessageBox::StandardButton::Cancel, this);
     auto result = m_dialog->exec();
 
     client().async_confirm_closed(result == QMessageBox::StandardButton::Ok || result == QDialog::Accepted);
     m_dialog = nullptr;
 }
 
-void WebContentView::notify_server_did_request_prompt(Badge<WebContentClient>, String const& message, String const& default_)
+void WebContentView::notify_server_did_request_prompt(Badge<WebContentClient>, DeprecatedString const& message, DeprecatedString const& default_)
 {
     m_dialog = new QInputDialog(this);
     auto& dialog = static_cast<QInputDialog&>(*m_dialog);
 
     dialog.setWindowTitle("Ladybird");
-    dialog.setLabelText(qstring_from_akstring(message));
-    dialog.setTextValue(qstring_from_akstring(default_));
+    dialog.setLabelText(qstring_from_ak_deprecated_string(message));
+    dialog.setTextValue(qstring_from_ak_deprecated_string(default_));
 
     if (dialog.exec() == QDialog::Accepted)
-        client().async_prompt_closed(akstring_from_qstring(dialog.textValue()));
+        client().async_prompt_closed(ak_deprecated_string_from_qstring(dialog.textValue()));
     else
         client().async_prompt_closed({});
 
     m_dialog = nullptr;
 }
 
-void WebContentView::notify_server_did_request_set_prompt_text(Badge<WebContentClient>, String const& message)
+void WebContentView::notify_server_did_request_set_prompt_text(Badge<WebContentClient>, DeprecatedString const& message)
 {
     if (m_dialog && is<QInputDialog>(*m_dialog))
-        static_cast<QInputDialog&>(*m_dialog).setTextValue(qstring_from_akstring(message));
+        static_cast<QInputDialog&>(*m_dialog).setTextValue(qstring_from_ak_deprecated_string(message));
 }
 
 void WebContentView::notify_server_did_request_accept_dialog(Badge<WebContentClient>)
@@ -907,18 +907,18 @@ void WebContentView::get_source()
     client().async_get_source();
 }
 
-void WebContentView::notify_server_did_get_source(AK::URL const& url, String const& source)
+void WebContentView::notify_server_did_get_source(AK::URL const& url, DeprecatedString const& source)
 {
-    emit got_source(url, qstring_from_akstring(source));
+    emit got_source(url, qstring_from_ak_deprecated_string(source));
 }
 
-void WebContentView::notify_server_did_get_dom_tree(String const& dom_tree)
+void WebContentView::notify_server_did_get_dom_tree(DeprecatedString const& dom_tree)
 {
     if (on_get_dom_tree)
         on_get_dom_tree(dom_tree);
 }
 
-void WebContentView::notify_server_did_get_dom_node_properties(i32 node_id, String const& specified_style, String const& computed_style, String const& custom_properties, String const& node_box_sizing)
+void WebContentView::notify_server_did_get_dom_node_properties(i32 node_id, DeprecatedString const& specified_style, DeprecatedString const& computed_style, DeprecatedString const& custom_properties, DeprecatedString const& node_box_sizing)
 {
     if (on_get_dom_node_properties)
         on_get_dom_node_properties(node_id, specified_style, computed_style, custom_properties, node_box_sizing);
@@ -930,7 +930,7 @@ void WebContentView::notify_server_did_output_js_console_message(i32 message_ind
         m_console_widget->notify_about_new_console_message(message_index);
 }
 
-void WebContentView::notify_server_did_get_js_console_messages(i32 start_index, Vector<String> const& message_types, Vector<String> const& messages)
+void WebContentView::notify_server_did_get_js_console_messages(i32 start_index, Vector<DeprecatedString> const& message_types, Vector<DeprecatedString> const& messages)
 {
     if (m_console_widget)
         m_console_widget->handle_console_messages(start_index, message_types, messages);
@@ -954,14 +954,14 @@ Vector<Web::Cookie::Cookie> WebContentView::notify_server_did_request_all_cookie
     return {};
 }
 
-Optional<Web::Cookie::Cookie> WebContentView::notify_server_did_request_named_cookie(Badge<WebContentClient>, AK::URL const& url, String const& name)
+Optional<Web::Cookie::Cookie> WebContentView::notify_server_did_request_named_cookie(Badge<WebContentClient>, AK::URL const& url, DeprecatedString const& name)
 {
     if (on_get_named_cookie)
         return on_get_named_cookie(url, name);
     return {};
 }
 
-String WebContentView::notify_server_did_request_cookie(Badge<WebContentClient>, AK::URL const& url, Web::Cookie::Source source)
+DeprecatedString WebContentView::notify_server_did_request_cookie(Badge<WebContentClient>, AK::URL const& url, Web::Cookie::Source source)
 {
     if (on_get_cookie)
         return on_get_cookie(url, source);
@@ -1016,7 +1016,7 @@ Gfx::IntRect WebContentView::notify_server_did_request_fullscreen_window()
     return emit fullscreen_window();
 }
 
-void WebContentView::notify_server_did_request_file(Badge<WebContentClient>, String const& path, i32 request_id)
+void WebContentView::notify_server_did_request_file(Badge<WebContentClient>, DeprecatedString const& path, i32 request_id)
 {
     auto file = Core::File::open(path, Core::OpenMode::ReadOnly);
     if (file.is_error())

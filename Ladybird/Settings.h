@@ -8,7 +8,7 @@
 
 #define AK_DONT_REPLACE_STD
 
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 #include <QSettings>
 
 namespace Browser {

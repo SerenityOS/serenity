@@ -79,7 +79,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (Core::File::exists(raw_url))
         url = URL::create_with_file_scheme(Core::File::real_path_for(raw_url));
     else if (!url.is_valid())
-        url = String::formatted("http://{}", raw_url);
+        url = DeprecatedString::formatted("http://{}", raw_url);
 
     if (url.is_valid())
         window.view().load(url);

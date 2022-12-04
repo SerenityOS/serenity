@@ -41,7 +41,7 @@ public slots:
     void enable_dark_color_scheme();
 
 private:
-    void debug_request(String const& request, String const& argument = "");
+    void debug_request(DeprecatedString const& request, DeprecatedString const& argument = "");
 
     QTabWidget* m_tabs_container { nullptr };
     NonnullOwnPtrVector<Tab> m_tabs;

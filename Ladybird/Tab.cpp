@@ -17,7 +17,7 @@
 #include <QPoint>
 #include <QResizeEvent>
 
-extern String s_serenity_resource_root;
+extern DeprecatedString s_serenity_resource_root;
 extern Browser::Settings* s_settings;
 
 Tab::Tab(BrowserWindow* window, int webdriver_fd_passing_socket)
@@ -88,7 +88,7 @@ Tab::Tab(BrowserWindow* window, int webdriver_fd_passing_socket)
             m_history.replace_current(url, m_title.toUtf8().data());
         }
 
-        m_location_edit->setText(url.to_string().characters());
+        m_location_edit->setText(url.to_deprecated_string().characters());
 
         // Don't add to history if back or forward is pressed
         if (!m_is_history_navigation) {
@@ -167,7 +167,7 @@ void Tab::navigate(QString url)
 {
     if (!url.startsWith("http://", Qt::CaseInsensitive) && !url.startsWith("https://", Qt::CaseInsensitive) && !url.startsWith("file://", Qt::CaseInsensitive))
         url = "http://" + url;
-    view().load(akstring_from_qstring(url));
+    view().load(ak_deprecated_string_from_qstring(url));
 }
 
 void Tab::back()
@@ -177,7 +177,7 @@ void Tab::back()
 
     m_is_history_navigation = true;
     m_history.go_back();
-    view().load(m_history.current().url.to_string());
+    view().load(m_history.current().url.to_deprecated_string());
 }
 
 void Tab::forward()
@@ -187,7 +187,7 @@ void Tab::forward()
 
     m_is_history_navigation = true;
     m_history.go_forward();
-    view().load(m_history.current().url.to_string());
+    view().load(m_history.current().url.to_deprecated_string());
 }
 
 void Tab::home()
@@ -198,7 +198,7 @@ void Tab::home()
 void Tab::reload()
 {
     m_is_history_navigation = true;
-    view().load(m_history.current().url.to_string());
+    view().load(m_history.current().url.to_deprecated_string());
 }
 
 void Tab::location_edit_return_pressed()
@@ -209,7 +209,7 @@ void Tab::location_edit_return_pressed()
 void Tab::page_title_changed(QString title)
 {
     m_title = title;
-    m_history.update_title(akstring_from_qstring(m_title));
+    m_history.update_title(ak_deprecated_string_from_qstring(m_title));
     emit title_changed(tab_index(), std::move(title));
 }
 
@@ -223,7 +223,7 @@ int Tab::tab_index()
     return m_window->tab_index(this);
 }
 
-void Tab::debug_request(String const& request, String const& argument)
+void Tab::debug_request(DeprecatedString const& request, DeprecatedString const& argument)
 {
     if (request == "dump-history")
         m_history.dump();

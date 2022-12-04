@@ -6,11 +6,11 @@
 
 #pragma once
 
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 #include <QString>
 
-AK::String akstring_from_qstring(QString const&);
-QString qstring_from_akstring(AK::String const&);
+AK::DeprecatedString ak_deprecated_string_from_qstring(QString const&);
+QString qstring_from_ak_deprecated_string(AK::DeprecatedString const&);
 void platform_init();
 
-extern String s_serenity_resource_root;
+extern DeprecatedString s_serenity_resource_root;

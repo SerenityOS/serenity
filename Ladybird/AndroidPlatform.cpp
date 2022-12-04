@@ -6,10 +6,10 @@
 
 #define AK_DONT_REPLACE_STD
 
+#include <AK/DeprecatedString.h>
 #include <AK/LexicalPath.h>
 #include <AK/Platform.h>
 #include <AK/ScopeGuard.h>
-#include <AK/String.h>
 #include <LibArchive/Tar.h>
 #include <LibArchive/TarStream.h>
 #include <LibCore/Directory.h>
@@ -31,11 +31,11 @@
 //    nor include it in libladybird_<arch>.so
 #include <LibMain/Main.cpp> // NOLINT(bugprone-suspicious-include)
 
-extern String s_serenity_resource_root;
+extern DeprecatedString s_serenity_resource_root;
 
 void android_platform_init();
 static void extract_ladybird_resources();
-static ErrorOr<void> extract_tar_archive(String archive_file, String output_directory);
+static ErrorOr<void> extract_tar_archive(DeprecatedString archive_file, DeprecatedString output_directory);
 
 void android_platform_init()
 {
@@ -53,24 +53,24 @@ void android_platform_init()
 void extract_ladybird_resources()
 {
     qDebug() << "serenity resource root is " << s_serenity_resource_root.characters();
-    auto file_or_error = Core::System::open(String::formatted("{}/res/icons/16x16/app-browser.png", s_serenity_resource_root), O_RDONLY);
+    auto file_or_error = Core::System::open(DeprecatedString::formatted("{}/res/icons/16x16/app-browser.png", s_serenity_resource_root), O_RDONLY);
     if (file_or_error.is_error()) {
         qDebug() << "Unable to open test file file as expected, extracting asssets...";
 
-        MUST(extract_tar_archive(String::formatted("{}/ladybird-assets.tar", s_serenity_resource_root), s_serenity_resource_root));
+        MUST(extract_tar_archive(DeprecatedString::formatted("{}/ladybird-assets.tar", s_serenity_resource_root), s_serenity_resource_root));
     } else {
         qDebug() << "Opened app-browser.png test file, good to go!";
         qDebug() << "Hopefully no developer changed the asset files and expected them to be re-extracted!";
     }
 }
 
-ErrorOr<void> extract_tar_archive(String archive_file, String output_directory)
+ErrorOr<void> extract_tar_archive(DeprecatedString archive_file, DeprecatedString output_directory)
 {
     constexpr size_t buffer_size = 4096;
 
     auto file = TRY(Core::File::open(archive_file, Core::OpenMode::ReadOnly));
 
-    String old_pwd = TRY(Core::System::getcwd());
+    DeprecatedString old_pwd = TRY(Core::System::getcwd());
 
     TRY(Core::System::chdir(output_directory));
     ScopeGuard go_back = [&old_pwd] { MUST(Core::System::chdir(old_pwd)); };
@@ -83,16 +83,16 @@ ErrorOr<void> extract_tar_archive(String archive_file, String output_directory)
         return Error::from_errno(EINVAL);
     }
 
-    HashMap<String, String> global_overrides;
-    HashMap<String, String> local_overrides;
+    HashMap<DeprecatedString, DeprecatedString> global_overrides;
+    HashMap<DeprecatedString, DeprecatedString> local_overrides;
 
-    auto get_override = [&](StringView key) -> Optional<String> {
-        Optional<String> maybe_local = local_overrides.get(key);
+    auto get_override = [&](StringView key) -> Optional<DeprecatedString> {
+        Optional<DeprecatedString> maybe_local = local_overrides.get(key);
 
         if (maybe_local.has_value())
             return maybe_local;
 
-        Optional<String> maybe_global = global_overrides.get(key);
+        Optional<DeprecatedString> maybe_global = global_overrides.get(key);
 
         if (maybe_global.has_value())
             return maybe_global;
@@ -142,7 +142,7 @@ ErrorOr<void> extract_tar_archive(String archive_file, String output_directory)
             while ((bytes_read = file_stream.read(buffer)) > 0)
                 long_name.append(reinterpret_cast<char*>(buffer.data()), bytes_read);
 
-            local_overrides.set("path", long_name.to_string());
+            local_overrides.set("path", long_name.to_deprecated_string());
             continue;
         }
         default:
@@ -153,9 +153,9 @@ ErrorOr<void> extract_tar_archive(String archive_file, String output_directory)
         LexicalPath path = LexicalPath(header.filename());
         if (!header.prefix().is_empty())
             path = path.prepend(header.prefix());
-        String filename = get_override("path"sv).value_or(path.string());
+        DeprecatedString filename = get_override("path"sv).value_or(path.string());
 
-        String absolute_path = Core::File::absolute_path(filename);
+        DeprecatedString absolute_path = Core::File::absolute_path(filename);
         auto parent_path = LexicalPath(absolute_path).parent();
 
         switch (header.type_flag()) {

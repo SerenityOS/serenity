@@ -7,19 +7,19 @@
 #define AK_DONT_REPLACE_STD
 
 #include "FontPluginQt.h"
-#include <AK/String.h>
+#include <AK/DeprecatedString.h>
 #include <LibGfx/Font/FontDatabase.h>
 #include <QFont>
 #include <QFontInfo>
 
-extern String s_serenity_resource_root;
+extern DeprecatedString s_serenity_resource_root;
 
 namespace Ladybird {
 
 FontPluginQt::FontPluginQt()
 {
     // Load the default SerenityOS fonts...
-    Gfx::FontDatabase::set_default_fonts_lookup_path(String::formatted("{}/res/fonts", s_serenity_resource_root));
+    Gfx::FontDatabase::set_default_fonts_lookup_path(DeprecatedString::formatted("{}/res/fonts", s_serenity_resource_root));
 
     // ...and also anything we can find in /usr/share/fonts
     Gfx::FontDatabase::the().load_all_fonts_from_path("/usr/share/fonts");
@@ -63,7 +63,7 @@ void FontPluginQt::update_generic_fonts()
 
     m_generic_font_names.resize(static_cast<size_t>(Web::Platform::GenericFont::__Count));
 
-    auto update_mapping = [&](Web::Platform::GenericFont generic_font, QFont::StyleHint qfont_style_hint, Vector<String> fallbacks = {}) {
+    auto update_mapping = [&](Web::Platform::GenericFont generic_font, QFont::StyleHint qfont_style_hint, Vector<DeprecatedString> fallbacks = {}) {
         QFont qt_font;
         qt_font.setStyleHint(qfont_style_hint);
         QFontInfo qt_info(qt_font);
@@ -90,11 +90,11 @@ void FontPluginQt::update_generic_fonts()
 
     // Fallback fonts to look for if Gfx::Font can't load the font suggested by Qt.
     // The lists are basically arbitrary, taken from https://www.w3.org/Style/Examples/007/fonts.en.html
-    Vector<String> cursive_fallbacks { "Comic Sans MS", "Comic Sans", "Apple Chancery", "Bradley Hand", "Brush Script MT", "Snell Roundhand", "URW Chancery L" };
-    Vector<String> fantasy_fallbacks { "Impact", "Luminari", "Chalkduster", "Jazz LET", "Blippo", "Stencil Std", "Marker Felt", "Trattatello" };
-    Vector<String> monospace_fallbacks { "Andale Mono", "Courier New", "Courier", "FreeMono", "OCR A Std", "DejaVu Sans Mono", "Liberation Mono", "Csilla" };
-    Vector<String> sans_serif_fallbacks { "Arial", "Helvetica", "Verdana", "Trebuchet MS", "Gill Sans", "Noto Sans", "Avantgarde", "Optima", "Arial Narrow", "Liberation Sans", "Katica" };
-    Vector<String> serif_fallbacks { "Times", "Times New Roman", "Didot", "Georgia", "Palatino", "Bookman", "New Century Schoolbook", "American Typewriter", "Liberation Serif", "Roman" };
+    Vector<DeprecatedString> cursive_fallbacks { "Comic Sans MS", "Comic Sans", "Apple Chancery", "Bradley Hand", "Brush Script MT", "Snell Roundhand", "URW Chancery L" };
+    Vector<DeprecatedString> fantasy_fallbacks { "Impact", "Luminari", "Chalkduster", "Jazz LET", "Blippo", "Stencil Std", "Marker Felt", "Trattatello" };
+    Vector<DeprecatedString> monospace_fallbacks { "Andale Mono", "Courier New", "Courier", "FreeMono", "OCR A Std", "DejaVu Sans Mono", "Liberation Mono", "Csilla" };
+    Vector<DeprecatedString> sans_serif_fallbacks { "Arial", "Helvetica", "Verdana", "Trebuchet MS", "Gill Sans", "Noto Sans", "Avantgarde", "Optima", "Arial Narrow", "Liberation Sans", "Katica" };
+    Vector<DeprecatedString> serif_fallbacks { "Times", "Times New Roman", "Didot", "Georgia", "Palatino", "Bookman", "New Century Schoolbook", "American Typewriter", "Liberation Serif", "Roman" };
 
     update_mapping(Web::Platform::GenericFont::Cursive, QFont::StyleHint::Cursive, cursive_fallbacks);
     update_mapping(Web::Platform::GenericFont::Fantasy, QFont::StyleHint::Fantasy, fantasy_fallbacks);
@@ -107,7 +107,7 @@ void FontPluginQt::update_generic_fonts()
     update_mapping(Web::Platform::GenericFont::UiSerif, QFont::StyleHint::Serif, serif_fallbacks);
 }
 
-String FontPluginQt::generic_font_name(Web::Platform::GenericFont generic_font)
+DeprecatedString FontPluginQt::generic_font_name(Web::Platform::GenericFont generic_font)
 {
     return m_generic_font_names[static_cast<size_t>(generic_font)];
 }

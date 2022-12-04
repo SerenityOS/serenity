@@ -9,8 +9,8 @@
 
 #pragma once
 
+#include <AK/DeprecatedString.h>
 #include <AK/Function.h>
-#include <AK/String.h>
 #include <AK/Vector.h>
 #include <QWidget>
 
@@ -26,12 +26,12 @@ public:
     virtual ~ConsoleWidget() = default;
 
     void notify_about_new_console_message(i32 message_index);
-    void handle_console_messages(i32 start_index, Vector<String> const& message_types, Vector<String> const& messages);
+    void handle_console_messages(i32 start_index, Vector<DeprecatedString> const& message_types, Vector<DeprecatedString> const& messages);
     void print_source_line(StringView);
     void print_html(StringView);
     void reset();
 
-    Function<void(String const&)> on_js_input;
+    Function<void(DeprecatedString const&)> on_js_input;
     Function<void(i32)> on_request_messages;
 
 private:

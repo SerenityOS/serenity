@@ -32,7 +32,7 @@ int ModelTranslator::rowCount(QModelIndex const& parent) const
 static QVariant convert_variant(GUI::Variant const& value)
 {
     if (value.is_string())
-        return qstring_from_akstring(value.as_string());
+        return qstring_from_ak_deprecated_string(value.as_string());
     if (value.is_icon()) {
         auto const& gui_icon = value.as_icon();
         auto bitmap = gui_icon.bitmap_for_size(16);

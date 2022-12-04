@@ -19,7 +19,7 @@ public:
     static NonnullRefPtr<WebSocketClientManagerLadybird> create();
 
     virtual ~WebSocketClientManagerLadybird() override;
-    virtual RefPtr<Web::WebSockets::WebSocketClientSocket> connect(AK::URL const&, String const& origin) override;
+    virtual RefPtr<Web::WebSockets::WebSocketClientSocket> connect(AK::URL const&, DeprecatedString const& origin) override;
 
 private:
     WebSocketClientManagerLadybird();

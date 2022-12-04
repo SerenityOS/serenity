@@ -40,7 +40,7 @@ ConsoleClient::ConsoleClient(JS::Console& console, JS::Realm& realm, SimpleWebVi
     m_console_global_object = JS::make_handle(console_global_object);
 }
 
-void ConsoleClient::handle_input(String const& js_source)
+void ConsoleClient::handle_input(DeprecatedString const& js_source)
 {
     if (!m_realm)
         return;
@@ -69,7 +69,7 @@ void ConsoleClient::handle_input(String const& js_source)
         print_html(JS::MarkupGenerator::html_from_value(*result.value()));
 }
 
-void ConsoleClient::print_html(String const& line)
+void ConsoleClient::print_html(DeprecatedString const& line)
 {
     m_message_log.append({ .type = ConsoleOutput::Type::HTML, .data = line });
     m_view.did_output_js_console_message(m_message_log.size() - 1);
@@ -81,7 +81,7 @@ void ConsoleClient::clear_output()
     m_view.did_output_js_console_message(m_message_log.size() - 1);
 }
 
-void ConsoleClient::begin_group(String const& label, bool start_expanded)
+void ConsoleClient::begin_group(DeprecatedString const& label, bool start_expanded)
 {
     m_message_log.append({ .type = start_expanded ? ConsoleOutput::Type::BeginGroup : ConsoleOutput::Type::BeginGroupCollapsed, .data = label });
     m_view.did_output_js_console_message(m_message_log.size() - 1);
@@ -105,8 +105,8 @@ void ConsoleClient::send_messages(i32 start_index)
     }
 
     // FIXME: Replace with a single Vector of message structs
-    Vector<String> message_types;
-    Vector<String> messages;
+    Vector<DeprecatedString> message_types;
+    Vector<DeprecatedString> messages;
     message_types.ensure_capacity(messages_to_send);
     messages.ensure_capacity(messages_to_send);
 
@@ -164,11 +164,11 @@ JS::ThrowCompletionOr<JS::Value> ConsoleClient::printer(JS::Console::LogLevel lo
 
     if (log_level == JS::Console::LogLevel::Group || log_level == JS::Console::LogLevel::GroupCollapsed) {
         auto group = arguments.get<JS::Console::Group>();
-        begin_group(String::formatted("<span style='{}'>{}</span>", styling, escape_html_entities(group.label)), log_level == JS::Console::LogLevel::Group);
+        begin_group(DeprecatedString::formatted("<span style='{}'>{}</span>", styling, escape_html_entities(group.label)), log_level == JS::Console::LogLevel::Group);
         return JS::js_undefined();
     }
 
-    auto output = String::join(' ', arguments.get<JS::MarkedVector<JS::Value>>());
+    auto output = DeprecatedString::join(' ', arguments.get<JS::MarkedVector<JS::Value>>());
     m_console.output_debug_message(log_level, output);
 
     StringBuilder html;

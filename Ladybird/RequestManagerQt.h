@@ -27,7 +27,7 @@ public:
     virtual void prefetch_dns(AK::URL const&) override { }
     virtual void preconnect(AK::URL const&) override { }
 
-    virtual RefPtr<Web::ResourceLoaderConnectorRequest> start_request(String const& method, AK::URL const&, HashMap<String, String> const& request_headers, ReadonlyBytes request_body, Core::ProxyData const&) override;
+    virtual RefPtr<Web::ResourceLoaderConnectorRequest> start_request(DeprecatedString const& method, AK::URL const&, HashMap<DeprecatedString, DeprecatedString> const& request_headers, ReadonlyBytes request_body, Core::ProxyData const&) override;
 
 private slots:
     void reply_finished(QNetworkReply*);
@@ -38,7 +38,7 @@ private:
     class Request
         : public Web::ResourceLoaderConnectorRequest {
     public:
-        static ErrorOr<NonnullRefPtr<Request>> create(QNetworkAccessManager& qnam, String const& method, AK::URL const& url, HashMap<String, String> const& request_headers, ReadonlyBytes request_body, Core::ProxyData const&);
+        static ErrorOr<NonnullRefPtr<Request>> create(QNetworkAccessManager& qnam, DeprecatedString const& method, AK::URL const& url, HashMap<DeprecatedString, DeprecatedString> const& request_headers, ReadonlyBytes request_body, Core::ProxyData const&);
 
         virtual ~Request() override;
 

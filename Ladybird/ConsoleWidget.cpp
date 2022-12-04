@@ -40,7 +40,7 @@ ConsoleWidget::ConsoleWidget()
     bottom_container->layout()->addWidget(m_input);
 
     QObject::connect(m_input, &QLineEdit::returnPressed, [this] {
-        auto js_source = akstring_from_qstring(m_input->text());
+        auto js_source = ak_deprecated_string_from_qstring(m_input->text());
 
         if (js_source.is_whitespace())
             return;
@@ -91,7 +91,7 @@ void ConsoleWidget::notify_about_new_console_message(i32 message_index)
         request_console_messages();
 }
 
-void ConsoleWidget::handle_console_messages(i32 start_index, Vector<String> const& message_types, Vector<String> const& messages)
+void ConsoleWidget::handle_console_messages(i32 start_index, Vector<DeprecatedString> const& message_types, Vector<DeprecatedString> const& messages)
 {
     i32 end_index = start_index + message_types.size() - 1;
     if (end_index <= m_highest_received_message_index) {

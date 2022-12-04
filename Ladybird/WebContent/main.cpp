@@ -34,7 +34,7 @@
 
 static ErrorOr<void> load_content_filters();
 
-extern String s_serenity_resource_root;
+extern DeprecatedString s_serenity_resource_root;
 
 struct DeferredInvokerQt final : IPC::DeferredInvoker {
     virtual ~DeferredInvokerQt() = default;
@@ -80,11 +80,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Web::ResourceLoader::initialize(RequestManagerQt::create());
     Web::WebSockets::WebSocketClientManager::initialize(Ladybird::WebSocketClientManagerLadybird::create());
 
-    Web::FrameLoader::set_default_favicon_path(String::formatted("{}/res/icons/16x16/app-browser.png", s_serenity_resource_root));
+    Web::FrameLoader::set_default_favicon_path(DeprecatedString::formatted("{}/res/icons/16x16/app-browser.png", s_serenity_resource_root));
 
     Web::Platform::FontPlugin::install(*new Ladybird::FontPluginQt);
 
-    Web::FrameLoader::set_error_page_url(String::formatted("file://{}/res/html/error.html", s_serenity_resource_root));
+    Web::FrameLoader::set_error_page_url(DeprecatedString::formatted("file://{}/res/html/error.html", s_serenity_resource_root));
 
     auto maybe_content_filter_error = load_content_filters();
     if (maybe_content_filter_error.is_error())
@@ -111,9 +111,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
 static ErrorOr<void> load_content_filters()
 {
-    auto file_or_error = Core::Stream::File::open(String::formatted("{}/home/anon/.config/BrowserContentFilters.txt", s_serenity_resource_root), Core::Stream::OpenMode::Read);
+    auto file_or_error = Core::Stream::File::open(DeprecatedString::formatted("{}/home/anon/.config/BrowserContentFilters.txt", s_serenity_resource_root), Core::Stream::OpenMode::Read);
     if (file_or_error.is_error())
-        file_or_error = Core::Stream::File::open(String::formatted("{}/res/ladybird/BrowserContentFilters.txt", s_serenity_resource_root), Core::Stream::OpenMode::Read);
+        file_or_error = Core::Stream::File::open(DeprecatedString::formatted("{}/res/ladybird/BrowserContentFilters.txt", s_serenity_resource_root), Core::Stream::OpenMode::Read);
     if (file_or_error.is_error())
         return file_or_error.release_error();
     auto file = file_or_error.release_value();
