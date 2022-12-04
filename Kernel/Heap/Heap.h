@@ -14,6 +14,11 @@
 
 namespace Kernel {
 
+enum class CallerWillInitializeMemory {
+    No,
+    Yes,
+};
+
 template<size_t CHUNK_SIZE, unsigned HEAP_SCRUB_BYTE_ALLOC = 0, unsigned HEAP_SCRUB_BYTE_FREE = 0>
 class Heap {
     AK_MAKE_NONCOPYABLE(Heap);
@@ -63,7 +68,7 @@ public:
         return needed_chunks * CHUNK_SIZE + (needed_chunks + 7) / 8;
     }
 
-    void* allocate(size_t size)
+    void* allocate(size_t size, CallerWillInitializeMemory caller_will_initialize_memory)
     {
         // We need space for the AllocationHeader at the head of the block.
         size_t real_size = size + sizeof(AllocationHeader);
@@ -92,8 +97,10 @@ public:
         m_bitmap.set_range_and_verify_that_all_bits_flip(first_chunk.value(), chunks_needed, true);
 
         m_allocated_chunks += chunks_needed;
-        if constexpr (HEAP_SCRUB_BYTE_ALLOC != 0) {
-            __builtin_memset(ptr, HEAP_SCRUB_BYTE_ALLOC, (chunks_needed * CHUNK_SIZE) - sizeof(AllocationHeader));
+        if (caller_will_initialize_memory == CallerWillInitializeMemory::No) {
+            if constexpr (HEAP_SCRUB_BYTE_ALLOC != 0) {
+                __builtin_memset(ptr, HEAP_SCRUB_BYTE_ALLOC, (chunks_needed * CHUNK_SIZE) - sizeof(AllocationHeader));
+            }
         }
         return ptr;
     }
