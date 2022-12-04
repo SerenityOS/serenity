@@ -182,7 +182,7 @@
             }
 
             @GUI::CheckBox {
-                name: "switch_buttons_input"
+                name: "switch_buttons_checkbox"
                 text: "Switch primary and secondary buttons"
             }
         }

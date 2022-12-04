@@ -82,7 +82,7 @@ void WindowManager::reload_config()
     apply_workspace_settings(workspace_rows, workspace_columns, false);
 
     m_double_click_speed = m_config->read_num_entry("Input", "DoubleClickSpeed", 250);
-    m_buttons_switched = m_config->read_bool_entry("Mouse", "ButtonsSwitched", false);
+    m_mouse_buttons_switched = m_config->read_bool_entry("Mouse", "ButtonsSwitched", false);
     m_natural_scroll = m_config->read_bool_entry("Mouse", "NaturalScroll", false);
     m_cursor_highlight_radius = m_config->read_num_entry("Mouse", "CursorHighlightRadius", 25);
     Color default_highlight_color = Color::NamedColor::Red;
@@ -293,17 +293,17 @@ int WindowManager::double_click_speed() const
     return m_double_click_speed;
 }
 
-void WindowManager::set_buttons_switched(bool switched)
+void WindowManager::set_mouse_buttons_switched(bool switched)
 {
-    m_buttons_switched = switched;
+    m_mouse_buttons_switched = switched;
     dbgln("Saving mouse buttons switched state {} to config file at {}", switched, m_config->filename());
     m_config->write_bool_entry("Mouse", "ButtonsSwitched", switched);
     sync_config_to_disk();
 }
 
-bool WindowManager::get_buttons_switched() const
+bool WindowManager::are_mouse_buttons_switched() const
 {
-    return m_buttons_switched;
+    return m_mouse_buttons_switched;
 }
 
 void WindowManager::set_natural_scroll(bool inverted)
