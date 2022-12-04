@@ -25,11 +25,10 @@ ThemesSettingsWidget::ThemesSettingsWidget(bool& background_settings_changed)
 
     size_t current_theme_index;
     auto current_theme_name = GUI::ConnectionToWindowServer::the().get_system_theme();
-    auto theme_overridden = GUI::ConnectionToWindowServer::the().is_system_theme_overridden();
     m_theme_names.ensure_capacity(m_themes.size());
     for (auto& theme_meta : m_themes) {
         m_theme_names.append(theme_meta.name);
-        if (!theme_overridden && current_theme_name == theme_meta.name) {
+        if (current_theme_name == theme_meta.name) {
             m_selected_theme = &theme_meta;
             current_theme_index = m_theme_names.size() - 1;
         }
