@@ -320,8 +320,8 @@ bool GLContextWidget::load_file(Core::File& file)
     }
 
     auto new_mesh = m_mesh_loader->load(file);
-    if (new_mesh.is_null()) {
-        GUI::MessageBox::show(window(), DeprecatedString::formatted("Reading \"{}\" failed.", filename), "Error"sv, GUI::MessageBox::Type::Error);
+    if (new_mesh.is_error()) {
+        GUI::MessageBox::show(window(), DeprecatedString::formatted("Reading \"{}\" failed: {}", filename, new_mesh.release_error()), "Error"sv, GUI::MessageBox::Type::Error);
         return false;
     }
 
@@ -358,7 +358,7 @@ bool GLContextWidget::load_file(Core::File& file)
         dbgln("3DFileViewer: Couldn't load texture for {}", filename);
     }
 
-    m_mesh = new_mesh;
+    m_mesh = new_mesh.release_value();
     dbgln("3DFileViewer: mesh has {} triangles.", m_mesh->triangle_count());
 
     return true;
