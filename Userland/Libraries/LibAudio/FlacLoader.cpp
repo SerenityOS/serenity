@@ -25,20 +25,33 @@
 
 namespace Audio {
 
-FlacLoaderPlugin::FlacLoaderPlugin(StringView path)
-    : LoaderPlugin(path)
+FlacLoaderPlugin::FlacLoaderPlugin(OwnPtr<Core::Stream::SeekableStream> stream)
+    : LoaderPlugin(move(stream))
 {
 }
 
-FlacLoaderPlugin::FlacLoaderPlugin(Bytes buffer)
-    : LoaderPlugin(buffer)
+Result<NonnullOwnPtr<FlacLoaderPlugin>, LoaderError> FlacLoaderPlugin::try_create(StringView path)
 {
+    auto stream = LOADER_TRY(Core::Stream::BufferedFile::create(LOADER_TRY(Core::Stream::File::open(path, Core::Stream::OpenMode::Read))));
+    auto loader = make<FlacLoaderPlugin>(move(stream));
+
+    LOADER_TRY(loader->initialize());
+
+    return loader;
+}
+
+Result<NonnullOwnPtr<FlacLoaderPlugin>, LoaderError> FlacLoaderPlugin::try_create(Bytes buffer)
+{
+    auto stream = LOADER_TRY(Core::Stream::MemoryStream::construct(buffer));
+    auto loader = make<FlacLoaderPlugin>(move(stream));
+
+    LOADER_TRY(loader->initialize());
+
+    return loader;
 }
 
 MaybeLoaderError FlacLoaderPlugin::initialize()
 {
-    LOADER_TRY(LoaderPlugin::initialize());
-
     TRY(parse_header());
     TRY(reset());
     return {};

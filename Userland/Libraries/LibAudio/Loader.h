@@ -30,11 +30,8 @@ using MaybeLoaderError = Result<void, LoaderError>;
 
 class LoaderPlugin {
 public:
-    explicit LoaderPlugin(StringView path);
-    explicit LoaderPlugin(Bytes buffer);
+    explicit LoaderPlugin(OwnPtr<Core::Stream::SeekableStream> stream);
     virtual ~LoaderPlugin() = default;
-
-    virtual MaybeLoaderError initialize() = 0;
 
     virtual LoaderSamples get_more_samples(size_t max_bytes_to_read_from_input = 128 * KiB) = 0;
 
@@ -61,10 +58,7 @@ public:
     Vector<PictureData> const& pictures() const { return m_pictures; };
 
 protected:
-    StringView m_path;
     OwnPtr<Core::Stream::SeekableStream> m_stream;
-    // The constructor might set this so that we can initialize the data stream later.
-    Optional<Bytes> m_backing_memory;
 
     Vector<PictureData> m_pictures;
 };
